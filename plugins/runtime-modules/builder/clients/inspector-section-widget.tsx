@@ -48,22 +48,15 @@ import type { PhiInspectorWidgetLabels } from "../../../../components/widgets/la
 import type { PhiInspectorWidgetReferenceOption } from "./inspector-config-field";
 import type { PhiRenderableBlockAnchor } from "../../../../types";
 import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode } from "../../../../types/cms";
-import type {
-  PhiCmsPaddingWidgetConfig,
-} from "../../../../types/cms-config";
+import { readPhiSurface } from "../../../../types/surface";
 import type { PhiCmsGeometryWidgetConfig } from "../../../../components/widgets/config/geometry";
-import { mergePhiCmsConfigValues } from "../../../../types/cms-config";
 import { normalizePhiPaddingWidgetConfig } from "../../../../types/cms-config";
-import {
-  resolvePhiBuilderRootNodeDefaultsFromConfig,
-} from "../root-node-normalization";
 import {
   usePhiBuilderModuleMetas,
 } from "../plugin-meta-store";
 import {
   findPhiBuilderLayoutNodeById,
   findPhiBuilderWidgetNodeByIdInLayouts,
-  findPhiBuilderWidgetNodeByIdInWidgets,
 } from "../node-finders";
 import { createPhiMediaPickerAssetControllerRoutes } from "../../../../components/media/asset-controller-routes";
 
@@ -109,57 +102,16 @@ function collectWidgetReferenceOptionsFromDrafts(
       continue;
     }
 
-    if (draft.rootNodeKind === "widget" && draft.rootNodeId != null && draft.rootNodeTypeKey) {
-      options.push({
-        value: String(draft.rootNodeId),
-        label: draft.rootNodeTitle?.trim() || `Widget ${draft.rootNodeId}`,
-        widgetType: draft.rootNodeTypeKey,
-      });
-    }
-    collectWidgetReferenceOptionsFromWidgets(draft.rootNodeChildWidgets, options);
-    collectWidgetReferenceOptionsFromLayouts(draft.rootNodeChildLayouts, options);
+    collectWidgetReferenceOptionsFromLayouts(draft.rootNode ? [draft.rootNode] : [], options);
   }
 
   return options;
 }
 
 /**
- * The Inspector's draft for a root node, from its parsed config and what the node already knows about
- * itself. Whatever `known` carries wins over what the config says; absent, the config and the node
- * kind's defaults answer.
+ * The Inspector's view of a Layout node -- the Region's root Layout or one nested in it, read the same
+ * way: its config over its Layout's defaults, and what the Inspector reads off that config.
  */
-function resolveDraftFromRootConfig(
-  parsedConfig: Record<string, unknown>,
-  known: Pick<
-    PhiDeveloperBuilderRegionDraft,
-    | "rootNodeId"
-    | "rootNodeTypeKey"
-    | "rootNodeKind"
-    | "rootNodeTitle"
-    | "rootNodeAnchor"
-    | "rootNodeGeometry"
-    | "rootNodePadding"
-    | "rootNodeSurface"
-  >,
-): PhiDeveloperBuilderStructureNodeDraft {
-  const rootNodeDefaults = resolvePhiBuilderRootNodeDefaultsFromConfig(parsedConfig);
-
-  return {
-    ...(parsedConfig as Record<string, unknown>),
-    ...(known.rootNodeGeometry ?? {}),
-    rootNodeId: known.rootNodeId,
-    rootNodeTypeKey: known.rootNodeTypeKey,
-    rootNodeKind: known.rootNodeKind,
-    rootNodeTitle: known.rootNodeTitle,
-    rootNodeAnchor: known.rootNodeAnchor,
-    rootNodePadding: mergePhiCmsConfigValues<PhiCmsPaddingWidgetConfig>(
-      rootNodeDefaults.rootNodePadding,
-      known.rootNodePadding ?? normalizePhiPaddingWidgetConfig(parsedConfig),
-    ),
-    rootNodeSurface: known.rootNodeSurface ?? rootNodeDefaults.rootNodeSurface,
-  };
-}
-
 function resolveDraftFromLayoutNode(
   node: PhiCmsLayoutRenderNode | null,
   meta?: PhiBuilderContainerMeta | null,
@@ -168,50 +120,22 @@ function resolveDraftFromLayoutNode(
     return null;
   }
 
-  const parsedConfig: Record<string, unknown> = {
+  const config: Record<string, unknown> = {
     ...(meta?.defaultConfig ?? {}),
     ...(node.config ?? {}),
   };
 
-  return resolveDraftFromRootConfig(parsedConfig, {
-    rootNodeId: node.id,
-    rootNodeTypeKey: node.widgetType,
-    rootNodeKind: "layout",
-    rootNodeTitle: node.label,
+  return {
+    node,
+    config,
     // A stored placement name is taken as it is; only an anchor object is resolved.
-    rootNodeAnchor:
-      (typeof parsedConfig.anchor === "string" && isPhiAnchorWidgetPlacement(parsedConfig.anchor)
-        ? parsedConfig.anchor
-        : resolvePhiAnchorPlacement(parsedConfig.anchor as PhiRenderableBlockAnchor | null | undefined)) ?? null,
-  });
-}
-
-function resolveDraftFromRootNodeDraft(
-  draft: PhiDeveloperBuilderRegionDraft | null,
-  meta?: PhiBuilderContainerMeta | null,
-): PhiDeveloperBuilderStructureNodeDraft | null {
-  if (!draft) {
-    return null;
-  }
-
-  const parsedRootConfig: Record<string, unknown> = {
-    ...(meta?.defaultConfig ?? {}),
-    ...(draft.rootNodeConfig ?? (draft as Record<string, unknown>)),
+    anchor:
+      (typeof config.anchor === "string" && isPhiAnchorWidgetPlacement(config.anchor)
+        ? config.anchor
+        : resolvePhiAnchorPlacement(config.anchor as PhiRenderableBlockAnchor | null | undefined)) ?? null,
+    padding: normalizePhiPaddingWidgetConfig(config),
+    surface: readPhiSurface(config.surface),
   };
-
-  return resolveDraftFromRootConfig(parsedRootConfig, {
-    rootNodeGeometry: draft.rootNodeGeometry,
-    rootNodeId: draft.rootNodeId ?? null,
-    rootNodeTypeKey: draft.rootNodeTypeKey ?? null,
-    rootNodeKind: draft.rootNodeKind ?? null,
-    rootNodeTitle: draft.rootNodeTitle ?? null,
-    rootNodeAnchor:
-      draft.rootNodeAnchor ??
-      resolvePhiAnchorPlacement(parsedRootConfig.anchor as PhiRenderableBlockAnchor | null | undefined) ??
-      null,
-    rootNodePadding: draft.rootNodePadding,
-    rootNodeSurface: draft.rootNodeSurface,
-  });
 }
 
 type PhiBuilderInspectorSectionWidgetClientProps = {
@@ -258,36 +182,26 @@ function usePhiBuilderInspectorSectionState(signalRoutes?: PhiSignalRouteSet) {
   const selectedRootDraft = selectedRootRegionKey
     ? resolveRegionDraftKey(regionDrafts, area, selectedRootRegionKey, pageKey)
     : null;
-  const selectedRootNodeId = selectedRootDraft?.rootNodeId ?? null;
-  const selectedNestedLayoutNode =
-    selectedRootDraft && nodeId != null && nodeId !== selectedRootNodeId
-      ? findPhiBuilderLayoutNodeById(selectedRootDraft.rootNodeChildLayouts ?? [], nodeId)
-      : null;
+  // The root Layout is found like every Layout below it.
+  const selectedRootLayouts = selectedRootDraft?.rootNode ? [selectedRootDraft.rootNode] : [];
+  const selectedLayoutNode =
+    nodeKind === "layout" && nodeId != null ? findPhiBuilderLayoutNodeById(selectedRootLayouts, nodeId) : null;
   const selectedWidgetNode =
-    selectedRootDraft && nodeId != null
-      ? findPhiBuilderWidgetNodeByIdInWidgets(selectedRootDraft.rootNodeChildWidgets ?? [], nodeId) ??
-        findPhiBuilderWidgetNodeByIdInLayouts(selectedRootDraft.rootNodeChildLayouts ?? [], nodeId)
-      : null;
+    nodeId != null ? findPhiBuilderWidgetNodeByIdInLayouts(selectedRootLayouts, nodeId) : null;
   /*
    * Which plugin the selection is, asked in the order that can only answer about the selection itself.
    *
-   * The root node's type belongs to the root node. Reaching for it whenever a nested layout was not
-   * found in the draft answers with a DIFFERENT block: the Inspector then read its fields off the root
-   * -- a Content wrapper declares nothing but padding -- and the Settings panel, which hides itself when
-   * a layout declares no settings, hid for every layout on the page. The header kept the right name the
-   * whole time, because `PhiInspectorTitle` resolves the plugin from `nodeKey` instead.
-   *
-   * So the root's type is used only where the selection IS the root, and everything else falls back to
-   * `nodeKey`, which is what the title already matches on. A missing draft now costs the fields of the
-   * block that is selected, never the fields of another one.
+   * Only the selected node's own type answers. Reaching for another block's type whenever the
+   * selection was not found in the draft answers with a DIFFERENT block: the Inspector then read its
+   * fields off the root -- a Content wrapper declares nothing but padding -- and the Settings panel,
+   * which hides itself when a layout declares no settings, hid for every layout on the page. So a node
+   * not found falls back to `nodeKey`, which is what `PhiInspectorTitle` matches on as well.
    */
   const selectedStructureTypeKey =
     nodeKind === "widget"
       ? selectedWidgetNode?.widgetType ?? nodeKey
       : nodeKind === "layout"
-        ? selectedNestedLayoutNode?.widgetType
-          ?? (nodeId == null || nodeId === selectedRootNodeId ? selectedRootDraft?.rootNodeTypeKey : null)
-          ?? nodeKey
+        ? selectedLayoutNode?.widgetType ?? nodeKey
         : nodeKey;
   const selectedStructurePlugin = activeBuilderPlugins.find((plugin) =>
     plugin.kind === nodeKind &&
@@ -305,15 +219,10 @@ function usePhiBuilderInspectorSectionState(signalRoutes?: PhiSignalRouteSet) {
       : null) ?? selectedLayoutAnchor;
   const selectedSignalRouteScope: PhiSignalScope =
     selectedRootRegionKey && isPhiBuilderPageScopedRegion(selectedRootRegionKey) ? "page" : "area";
-  const selectedStructureDraft =
-    resolveDraftFromLayoutNode(
-      selectedNestedLayoutNode,
-      selectedStructurePlugin?.kind !== "widget" ? selectedStructurePlugin : null,
-    ) ??
-    resolveDraftFromRootNodeDraft(
-      selectedRootDraft,
-      selectedStructurePlugin?.kind !== "widget" ? selectedStructurePlugin : null,
-    );
+  const selectedStructureDraft = resolveDraftFromLayoutNode(
+    selectedLayoutNode,
+    selectedStructurePlugin?.kind !== "widget" ? selectedStructurePlugin : null,
+  );
   const widgetReferenceOptions = collectWidgetReferenceOptionsFromDrafts(regionDrafts, area, pageKey);
   const emitInspectorControllerAction = (value: Record<string, unknown>) => {
     const routes = signalRoutes?.emits?.filter((route) => route.capabilityId === "change") ?? [];

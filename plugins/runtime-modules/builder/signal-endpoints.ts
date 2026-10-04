@@ -151,42 +151,13 @@ export function collectPhiBuilderSignalEndpointsFromDrafts({
       }),
     );
 
-    if (draft.rootNodeId != null && draft.rootNodeTypeKey && draft.rootNodeKind === "widget") {
-      const widgetPlugin = resolveBuilderPluginMeta(builderPlugins, "widget", draft.rootNodeTypeKey);
-      if (widgetPlugin && widgetPlugin.kind === "widget") {
-        endpoints.push(
-          ...resolvePhiWidgetSignalEndpoints({
-            blockId: draft.rootNodeId,
-            label: draft.rootNodeTitle ?? draft.rootNodeId,
-            typeKey: widgetPlugin.typeKey,
-            config: draft.rootNodeConfig ?? null,
-            runtimeSignals: widgetPlugin.runtimeSignals,
-            signalSubcontrols: widgetPlugin.signalSubcontrols,
-            surfacePolicy: widgetPlugin.surface,
-            routeScope,
-          }),
-        );
-      }
-    }
-
-    if (draft.rootNodeId != null && draft.rootNodeTypeKey && draft.rootNodeKind === "layout") {
-      const layoutPlugin = resolveBuilderPluginMeta(builderPlugins, "layout", draft.rootNodeTypeKey);
-      if (layoutPlugin && layoutPlugin.kind !== "widget") {
-        endpoints.push(
-          ...resolvePhiLayoutSignalEndpoints({
-            blockId: draft.rootNodeId,
-            label: draft.rootNodeTitle ?? draft.rootNodeId,
-            typeKey: layoutPlugin.typeKey,
-            kind: "layout",
-            runtimeSignals: layoutPlugin.runtimeSignals,
-            routeScope,
-          }),
-        );
-      }
-    }
-
-    collectWidgetSignalEndpointsFromNodes({ widgets: draft.rootNodeChildWidgets, builderPlugins, routeScope, endpoints });
-    collectLayoutSignalEndpointsFromNodes({ layouts: draft.rootNodeChildLayouts, builderPlugins, routeScope, endpoints });
+    // The root Layout answers like every Layout below it.
+    collectLayoutSignalEndpointsFromNodes({
+      layouts: draft.rootNode ? [draft.rootNode] : [],
+      builderPlugins,
+      routeScope,
+      endpoints,
+    });
   }
 
   return endpoints;

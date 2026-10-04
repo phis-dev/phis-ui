@@ -10,7 +10,6 @@ import { usePhiBuilderModuleMetas } from "../plugin-meta-store";
 import {
   findPhiBuilderLayoutNodeById,
   findPhiBuilderWidgetNodeByIdInLayouts,
-  findPhiBuilderWidgetNodeByIdInWidgets,
 } from "../node-finders";
 import { resolveRegionDraftKey } from "../developer-region-drafts";
 import {
@@ -56,19 +55,18 @@ export function PhiBuilderInspectorTitleWidgetClient({
     const rootDraft = selectedRootRegionKey
       ? resolveRegionDraftKey(regionDrafts, area, selectedRootRegionKey, pageKey)
       : null;
-    const nestedLayout = nodeKind === "layout" && rootDraft && nodeId != null
-      ? findPhiBuilderLayoutNodeById(rootDraft.rootNodeChildLayouts ?? [], nodeId)
+    const rootLayouts = rootDraft?.rootNode ? [rootDraft.rootNode] : [];
+    const layout = nodeKind === "layout" && nodeId != null
+      ? findPhiBuilderLayoutNodeById(rootLayouts, nodeId)
       : null;
-    const widget = nodeKind === "widget" && rootDraft && nodeId != null
-      ? findPhiBuilderWidgetNodeByIdInWidgets(rootDraft.rootNodeChildWidgets ?? [], nodeId) ??
-        findPhiBuilderWidgetNodeByIdInLayouts(rootDraft.rootNodeChildLayouts ?? [], nodeId)
+    const widget = nodeKind === "widget" && nodeId != null
+      ? findPhiBuilderWidgetNodeByIdInLayouts(rootLayouts, nodeId)
       : null;
     const fallback = nodeKind === "layout" ? inspectorLabels.layout : inspectorLabels.widget;
     return {
       kind: fallback,
       color: nodeKind === "layout" ? "green" : "orange",
-      name: plugin?.title ?? nestedLayout?.label ?? widget?.label ??
-        (nodeKind === "layout" ? rootDraft?.rootNodeTitle : null) ?? fallback,
+      name: plugin?.title ?? layout?.label ?? widget?.label ?? fallback,
       origin: plugin ? `${plugin.pluginKey}/${plugin.typeKey}` : nodeKey,
     };
   }, [area, inspectorLabels, nodeId, nodeKey, nodeKind, pageKey, plugins, regionDrafts, regionLabels, selectedRootRegionKey]);

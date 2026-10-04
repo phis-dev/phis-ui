@@ -17,12 +17,6 @@ import {
   PHI_BUILDER_SHELL_REGION_KEYS,
 } from "./region-keys";
 import { getPhiBuilderDefaultRegionDraft } from "./region-defaults";
-import {
-  buildPhiBuilderRootNodeRenderConfig,
-  normalizePhiBuilderRootNodeDraft,
-  readPhiBuilderRootNodeDraftFields,
-  type PhiBuilderRootNodeDraft,
-} from "./root-node-normalization";
 import { serializePhiDeveloperBuilderRegionConfig } from "./region-hydration";
 import { stripPhiResolvedAssetProjections } from "../../../components/media/image-presentation";
 import { resolvePhiBuilderCmsStoragePath } from "../../../helpers/cms-paths";
@@ -127,7 +121,7 @@ type CmsAreaModulesWritePayload = {
   baseline?: CmsAreaPresetWritePayload;
 };
 
-type SerializedRoot = {
+export type SerializedRoot = {
   rootLayoutNodeId: PhiCmsInstanceId;
   layoutNodes: PhiCmsLayoutNode[];
   contentWidgets: Array<Omit<PhiCmsContentWidgetNode, "resolvedContent"> & {
@@ -216,12 +210,8 @@ function collectDraftNodeIds(draft: PhiDeveloperBuilderRegionDraft) {
     }
   };
 
-  pushId(draft.rootNodeId);
-  for (const childLayout of draft.rootNodeChildLayouts ?? []) {
-    visitLayout(childLayout);
-  }
-  for (const childWidget of draft.rootNodeChildWidgets ?? []) {
-    pushId(childWidget.id);
+  if (draft.rootNode) {
+    visitLayout(draft.rootNode);
   }
 
   return ids;
@@ -293,14 +283,15 @@ function resolvePhiCmsWidgetContentBinding(
  * nobody is editing, and necessary for one: a Shell preset serialized outside a Canvas has no
  * metadata to ask, and refusing there would mean refusing to store the Shell that already exists.
  */
-type PhiBuilderContentBindingSource = "derive" | "carry";
+export type PhiBuilderContentBindingSource = "derive" | "carry";
 
-function serializeRootDraft(
+export function serializePhiBuilderRootDraft(
   draft: PhiDeveloperBuilderRegionDraft,
   widgetMetasByType: ReadonlyMap<string, PhiBuilderWidgetMeta>,
   bindings: PhiBuilderContentBindingSource = "derive",
 ): SerializedRoot {
-  if (!draft.rootNodeTypeKey || !draft.rootNodeKind || draft.rootNodeKind === "widget") {
+  const rootNode = draft.rootNode;
+  if (!rootNode) {
     throw new Error("CMS persistence requires a layout root node.");
   }
   const layoutNodes: PhiCmsLayoutNode[] = [];
@@ -356,39 +347,19 @@ function serializeRootDraft(
     return inputId;
   }
 
-  const normalizedRootNode = normalizePhiBuilderRootNodeDraft({
-    id: draft.rootNodeId ?? null,
-    typeKey: draft.rootNodeTypeKey,
-    kind: draft.rootNodeKind,
-    packageName: draft.rootNodePackageName ?? null,
-    ...readPhiBuilderRootNodeDraftFields(draft),
-  } satisfies PhiBuilderRootNodeDraft);
-  const rootLayoutNodeId = readPersistableNodeId(draft.rootNodeId);
+  const rootLayoutNodeId = readPersistableNodeId(rootNode.id);
   if (rootLayoutNodeId == null) {
     throw new Error("CMS persistence requires a canonical root instance id.");
   }
 
-  layoutNodes.push({
+  // The root Layout is stored like every Layout below it; only its place in the Region is fixed.
+  serializeLayout({
+    ...rootNode,
     id: rootLayoutNodeId,
-    siteId: -1,
-    parentLayoutNodeId: null,
-    widgetType: normalizedRootNode.typeKey,
     slotIndex: 0,
     sortOrder: 0,
-    status: 0,
-    flags: 0,
-    visibilityMask: 0,
-    label: normalizedRootNode.title ?? "Root",
-    config: stripTransientConfig(buildPhiBuilderRootNodeRenderConfig(normalizedRootNode, "editor")),
-  });
-
-  for (const childLayout of normalizedRootNode.childLayouts ?? []) {
-    serializeLayout(childLayout, rootLayoutNodeId);
-  }
-
-  for (const childWidget of normalizedRootNode.childWidgets ?? []) {
-    serializeWidget(childWidget, rootLayoutNodeId);
-  }
+    label: rootNode.label ?? "Root",
+  }, null);
 
   return {
     rootLayoutNodeId,
@@ -912,7 +883,7 @@ function buildAreaStructureWritePayload(
     throw new Error("Area preset save needs all area region drafts loaded to avoid deleting unchanged shell regions.");
   }
   const areaDraftEntries = allAreaDrafts.filter(
-    (entry): entry is [typeof PHI_BUILDER_SHELL_REGION_KEYS[number], PhiDeveloperBuilderRegionDraft] => entry[1].rootNodeTypeKey != null,
+    (entry): entry is [typeof PHI_BUILDER_SHELL_REGION_KEYS[number], PhiDeveloperBuilderRegionDraft] => entry[1].rootNode != null,
   );
 
   const layoutNodes: PhiCmsLayoutNode[] = [];
@@ -921,7 +892,7 @@ function buildAreaStructureWritePayload(
   }> = [];
   assertUniqueDraftNodeIds(areaDraftEntries.map(([, draft]) => draft));
   const regions = areaDraftEntries.map(([regionKey, draft], index) => {
-    const serializedRegion = serializeRootDraft(draft, widgetMetasByType, bindings);
+    const serializedRegion = serializePhiBuilderRootDraft(draft, widgetMetasByType, bindings);
     layoutNodes.push(...serializedRegion.layoutNodes);
     contentWidgets.push(...serializedRegion.contentWidgets);
     return {
@@ -1028,7 +999,7 @@ export async function savePhiDeveloperBuilderDraft(
     .map((regionKey) => [regionKey, regionDrafts[getPhiBuilderRegionDraftKey(area, regionKey, pageKey)] ?? null] as const)
     .filter((entry): entry is [typeof PHI_BUILDER_PAGE_REGION_KEYS[number], PhiDeveloperBuilderRegionDraft] => entry[1] != null);
   const pageDraftEntries = allPageDraftEntries
-    .filter((entry): entry is [typeof PHI_BUILDER_PAGE_REGION_KEYS[number], PhiDeveloperBuilderRegionDraft] => entry[1]?.rootNodeTypeKey != null);
+    .filter((entry): entry is [typeof PHI_BUILDER_PAGE_REGION_KEYS[number], PhiDeveloperBuilderRegionDraft] => entry[1]?.rootNode != null);
   let savedScopes = 0;
   let revisionId: number | null = null;
   let savedDraftState: CmsDraftWriteState | null = null;
@@ -1077,7 +1048,7 @@ export async function savePhiDeveloperBuilderDraft(
     assertUniqueDraftNodeIds(pageDraftEntries.map(([, draft]) => draft));
 
     for (const [regionKey, draft] of pageDraftEntries) {
-      const serializedRegion = serializeRootDraft(draft, widgetMetasByType);
+      const serializedRegion = serializePhiBuilderRootDraft(draft, widgetMetasByType);
       pageRootIds[regionKey] = serializedRegion.rootLayoutNodeId;
       layoutNodes.push(...serializedRegion.layoutNodes);
       contentWidgets.push(...serializedRegion.contentWidgets);
@@ -1201,18 +1172,7 @@ export function createPhiDeveloperBuilderInitialPageDrafts(input: {
   for (const regionKey of PHI_BUILDER_PAGE_REGION_KEYS) {
     drafts[getPhiBuilderRegionDraftKey(input.area, regionKey, input.pageKey)] = {
       ...getPhiBuilderDefaultRegionDraft(regionKey),
-      rootNodeId: null,
-      rootNodeTypeKey: null,
-      rootNodeKind: null,
-      rootNodeTitle: null,
-      rootNodePackageName: null,
-      rootNodeConfig: null,
-      rootNodeGeometry: null,
-      rootNodeAnchor: null,
-      rootNodePadding: null,
-      rootNodeSurface: null,
-      rootNodeChildLayouts: [],
-      rootNodeChildWidgets: [],
+      rootNode: null,
     };
   }
 

@@ -611,32 +611,14 @@ function pruneRegionDraftSignalRoutes(
   draft: PhiDeveloperBuilderRegionDraft,
   targets: readonly PhiSignalRouteReceiverTarget[],
 ): PhiDeveloperBuilderRegionDraft {
-  const rootNodeConfig = draft.rootNodeConfig
-    ? prunePhiSignalRoutesFromConfig(draft.rootNodeConfig, targets)
-    : draft.rootNodeConfig;
+  const rootNode = draft.rootNode ? pruneLayoutNodeSignalRoutes(draft.rootNode, targets) : draft.rootNode;
   const regionConfig = draft.regionConfig
     ? prunePhiSignalRoutesFromConfig(draft.regionConfig, targets)
     : draft.regionConfig;
-  const rootNodeChildLayouts = (draft.rootNodeChildLayouts ?? []).map((node) =>
-    pruneLayoutNodeSignalRoutes(node, targets),
-  );
-  const rootNodeChildWidgets = (draft.rootNodeChildWidgets ?? []).map((node) =>
-    pruneWidgetNodeSignalRoutes(node, targets),
-  );
-  const unchanged = rootNodeConfig === draft.rootNodeConfig &&
-    regionConfig === draft.regionConfig &&
-    rootNodeChildLayouts.every((node, index) => node === draft.rootNodeChildLayouts?.[index]) &&
-    rootNodeChildWidgets.every((node, index) => node === draft.rootNodeChildWidgets?.[index]);
 
-  return unchanged
+  return rootNode === draft.rootNode && regionConfig === draft.regionConfig
     ? draft
-    : {
-        ...draft,
-        rootNodeConfig,
-        regionConfig,
-        rootNodeChildLayouts,
-        rootNodeChildWidgets,
-      };
+    : { ...draft, rootNode, regionConfig };
 }
 
 function draftCanOwnRoutesToDeletedReceiver(

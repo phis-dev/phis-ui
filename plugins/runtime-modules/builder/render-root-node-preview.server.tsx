@@ -18,7 +18,8 @@ import {
 } from "./preview-transport";
 import { getPhiBuilderRegionDraftKey } from "./region-keys";
 import {
-  readPhiBuilderRootNodeDraftFields,
+  normalizePhiBuilderRootNodeDraft,
+  readPhiBuilderRootNodeDraft,
   type PhiBuilderRootNodeDraft,
 } from "./root-node-normalization";
 import { resolvePhiRenderableBlockGeometry } from "../../../types/renderable-block-geometry";
@@ -99,25 +100,8 @@ function mergePreviewTreeNodes(
   };
 }
 
-function resolvePreviewRootNodeKind(kind: PhiBuilderPreviewRegionDraft["rootNodeKind"]): "layout" | "widget" | null {
-  if (kind === "layout" || kind === "widget") {
-    return kind;
-  }
-
-  return null;
-}
-
 function resolveRootNodeFromPreviewDraft(draft: PhiBuilderPreviewRegionDraft | null | undefined): PhiBuilderRootNodePreviewInput | null {
-  if (!draft?.rootNodeTypeKey) {
-    return null;
-  }
-
-  return {
-    id: draft.rootNodeId ?? null,
-    typeKey: draft.rootNodeTypeKey,
-    kind: resolvePreviewRootNodeKind(draft.rootNodeKind ?? null),
-    ...readPhiBuilderRootNodeDraftFields(draft),
-  };
+  return draft?.rootNode ? readPhiBuilderRootNodeDraft(draft.rootNode) : null;
 }
 
 function buildPreviewSnapshotNodes(snapshot: PhiBuilderPreviewSnapshot | null) {
@@ -262,7 +246,7 @@ export async function PhiBuilderRootNodeServerPreview({
   extraPreviewNodes,
 }: PhiBuilderRootNodeServerPreviewProps): Promise<ReactNode> {
   const rootSlotChildKind = rootNode.kind === "widget" ? "widget" : "layout";
-  const rootGeometry = resolvePhiRenderableBlockGeometry(rootNode.rootNodeGeometry);
+  const rootGeometry = resolvePhiRenderableBlockGeometry(normalizePhiBuilderRootNodeDraft(rootNode).rootNodeGeometry);
   const tree = buildPreviewTree(rootNode, regionType, regionConfig);
 
   if (!tree) {

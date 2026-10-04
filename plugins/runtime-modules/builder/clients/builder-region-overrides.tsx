@@ -17,8 +17,8 @@ export function PhiBuilderCanvasRegionOverrides({ children }: { children: ReactN
     const siderLeft = resolveRegionDraftKey(regionDrafts, area, "sider_left", pageKey) ?? getDefaultRegionDraft("sider_left");
     return {
       preview: builderMode === "preview",
-      pageSiderRight: { visible: siderRight.rootNodeTypeKey != null, width: resolvePhiBuilderSiderWidth(siderRight) },
-      structureSiderLeft: { visible: siderLeft.rootNodeTypeKey != null, width: resolvePhiBuilderSiderWidth(siderLeft), fullHeight: siderLeft.regionConfig?.fullHeight === true },
+      pageSiderRight: { visible: siderRight.rootNode != null, width: resolvePhiBuilderSiderWidth(siderRight) },
+      structureSiderLeft: { visible: siderLeft.rootNode != null, width: resolvePhiBuilderSiderWidth(siderLeft), fullHeight: siderLeft.regionConfig?.fullHeight === true },
     };
   }, [area, builderMode, pageKey, regionDrafts]);
   return <PhiAuthoringRegionOverridesProvider value={value}>{children}</PhiAuthoringRegionOverridesProvider>;

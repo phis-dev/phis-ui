@@ -12,7 +12,7 @@ export function getPhiBuilderDefaultRegionDraft(regionKey: string | null): PhiDe
         },
         zIndex: 210,
         surface: null,
-        rootNodeSurface: null,
+        rootNode: null,
       };
     case "header_main":
       return {
@@ -23,7 +23,7 @@ export function getPhiBuilderDefaultRegionDraft(regionKey: string | null): PhiDe
         },
         zIndex: 200,
         surface: null,
-        rootNodeSurface: null,
+        rootNode: null,
       };
     case "header_bottom":
       return {
@@ -32,7 +32,7 @@ export function getPhiBuilderDefaultRegionDraft(regionKey: string | null): PhiDe
         size: undefined,
         zIndex: 220,
         surface: null,
-        rootNodeSurface: null,
+        rootNode: null,
       };
     case "sider_left":
       return {
@@ -43,7 +43,7 @@ export function getPhiBuilderDefaultRegionDraft(regionKey: string | null): PhiDe
         },
         zIndex: 300,
         surface: null,
-        rootNodeSurface: null,
+        rootNode: null,
       };
     case "sider_right":
       return {
@@ -54,7 +54,7 @@ export function getPhiBuilderDefaultRegionDraft(regionKey: string | null): PhiDe
         },
         zIndex: 100,
         surface: null,
-        rootNodeSurface: null,
+        rootNode: null,
       };
     case "footer_top":
       return {
@@ -63,7 +63,7 @@ export function getPhiBuilderDefaultRegionDraft(regionKey: string | null): PhiDe
         size: undefined,
         zIndex: 220,
         surface: null,
-        rootNodeSurface: null,
+        rootNode: null,
       };
     case "footer_main":
       return {
@@ -72,7 +72,7 @@ export function getPhiBuilderDefaultRegionDraft(regionKey: string | null): PhiDe
         size: undefined,
         zIndex: 200,
         surface: null,
-        rootNodeSurface: null,
+        rootNode: null,
       };
     case "footer_bottom":
       return {
@@ -81,7 +81,7 @@ export function getPhiBuilderDefaultRegionDraft(regionKey: string | null): PhiDe
         size: undefined,
         zIndex: 210,
         surface: null,
-        rootNodeSurface: null,
+        rootNode: null,
       };
     default:
       return {
@@ -90,7 +90,7 @@ export function getPhiBuilderDefaultRegionDraft(regionKey: string | null): PhiDe
         size: undefined,
         zIndex: 0,
         surface: null,
-        rootNodeSurface: null,
+        rootNode: null,
       };
   }
 }

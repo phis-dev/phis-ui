@@ -1,16 +1,28 @@
 import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode } from "../../../types/cms";
 import type { PhiCmsPaddingWidgetConfig } from "../../../types/cms-config";
-import { mergePhiCmsConfigValues, normalizePhiPaddingWidgetConfig } from "../../../types/cms-config";
-import type { PhiCmsGeometryWidgetConfig } from "../../../components/widgets/config/geometry";
+import { normalizePhiPaddingWidgetConfig } from "../../../types/cms-config";
 import {
-  resolvePhiRenderableBlockAnchor,
+  normalizePhiGeometryWidgetConfig,
+  type PhiCmsGeometryWidgetConfig,
+} from "../../../components/widgets/config/geometry";
+import {
+  isPhiAnchorWidgetPlacement,
   type PhiAnchorWidgetPlacement,
 } from "../../../components/controls/phi-anchor-control-contract";
+import { resolvePhiAnchorPlacement } from "../../../components/layouts/phi-layout-contract";
 import type { PhiRenderableBlockRenderMode } from "../../../types";
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
-import type { PhiBuilderPreviewRegionDraft, PhiBuilderRootNodeKind } from "./preview-transport";
+import type { PhiBuilderRootNodeKind } from "./preview-transport";
 import { readPhiSurface, type PhiSurface } from "../../../types/surface";
 
+/**
+ * A Layout node as the Canvas renders it at the top of a scaffold: the Region's root Layout and every
+ * Layout nested in it alike.
+ *
+ * It carries what the node is -- its id, type, label, config and children -- and nothing else. Its
+ * anchor, inset, Surface and geometry live in `rootNodeConfig`, as they do in every node, and are read
+ * from there (`normalizePhiBuilderRootNodeDraft`); nothing keeps a second copy that could disagree.
+ */
 export type PhiBuilderRootNodeDraft = {
   id?: PhiCmsInstanceId | null;
   typeKey: string;
@@ -18,108 +30,57 @@ export type PhiBuilderRootNodeDraft = {
   title?: string | null;
   packageName?: string | null;
   rootNodeConfig?: Record<string, unknown> | null;
-  rootNodeGeometry?: PhiCmsGeometryWidgetConfig | null;
-  rootNodeAnchor?: PhiAnchorWidgetPlacement | null;
-  rootNodePadding?: PhiCmsPaddingWidgetConfig | null;
-  rootNodeSurface?: PhiSurface | null;
   childLayouts?: PhiCmsLayoutRenderNode[];
   childWidgets?: PhiCmsContentWidgetNode[];
 };
 
-/**
- * What a region draft says about its root node, as a root node draft reads it: every field but the ones
- * that name the node (`id`, `typeKey`, `kind`, `packageName`), which each caller answers for itself.
- */
-export function readPhiBuilderRootNodeDraftFields(
-  draft: Pick<
-    PhiBuilderPreviewRegionDraft,
-    | "rootNodeTitle"
-    | "rootNodeConfig"
-    | "rootNodeGeometry"
-    | "rootNodeAnchor"
-    | "rootNodePadding"
-    | "rootNodeSurface"
-    | "rootNodeChildLayouts"
-    | "rootNodeChildWidgets"
-  >,
-): Omit<PhiBuilderRootNodeDraft, "id" | "typeKey" | "kind" | "packageName"> {
+/** The scaffold's input for one Layout node: the node itself, nothing derived. */
+export function readPhiBuilderRootNodeDraft(node: PhiCmsLayoutRenderNode): PhiBuilderRootNodeDraft {
+  const segments = node.widgetType.split("/").filter(Boolean);
   return {
-    title: draft.rootNodeTitle ?? null,
-    rootNodeConfig: draft.rootNodeConfig ?? null,
-    rootNodeGeometry: draft.rootNodeGeometry ?? null,
-    rootNodeAnchor: draft.rootNodeAnchor ?? null,
-    rootNodePadding: draft.rootNodePadding ?? null,
-    rootNodeSurface: draft.rootNodeSurface ?? null,
-    childLayouts: draft.rootNodeChildLayouts ?? [],
-    childWidgets: draft.rootNodeChildWidgets ?? [],
+    id: node.id,
+    typeKey: node.widgetType,
+    kind: "layout",
+    title: node.label ?? null,
+    packageName: segments.length < 2 ? null : segments.slice(0, -1).join("/"),
+    rootNodeConfig: node.config ?? null,
+    childLayouts: node.childLayouts ?? [],
+    childWidgets: node.childWidgets ?? [],
   };
 }
 
-export type PhiBuilderRootNodeDefaults = {
+/** What the scaffold reads off a node's config, read once and never stored. */
+export type PhiBuilderRootNodeView = PhiBuilderRootNodeDraft & {
+  rootNodeGeometry: PhiCmsGeometryWidgetConfig | null;
+  rootNodeAnchor: PhiAnchorWidgetPlacement | null;
   rootNodePadding: PhiCmsPaddingWidgetConfig | null;
   rootNodeSurface: PhiSurface | null;
 };
 
-export function resolvePhiBuilderRootNodeDefaults(
-  resolvedConfig?: Record<string, unknown> | null,
-): PhiBuilderRootNodeDefaults {
-  return resolvePhiBuilderRootNodeDefaultsFromConfig(resolvedConfig ?? {});
-}
-
-export function resolvePhiBuilderRootNodeDefaultsFromConfig(
-  resolvedConfig: Record<string, unknown>,
-): PhiBuilderRootNodeDefaults {
-  return {
-    rootNodePadding: normalizePhiPaddingWidgetConfig(resolvedConfig),
-    rootNodeSurface: readPhiSurface(resolvedConfig.surface),
-  };
-}
-
-export function normalizePhiBuilderRootNodeDraft(rootNode: PhiBuilderRootNodeDraft): PhiBuilderRootNodeDraft {
-  const defaults = resolvePhiBuilderRootNodeDefaults(rootNode.rootNodeConfig ?? null);
+export function normalizePhiBuilderRootNodeDraft(rootNode: PhiBuilderRootNodeDraft): PhiBuilderRootNodeView {
+  const config = rootNode.rootNodeConfig ?? {};
+  const anchor = config.anchor;
 
   return {
     ...rootNode,
-    rootNodeGeometry: rootNode.rootNodeGeometry ?? null,
-    rootNodeAnchor: rootNode.rootNodeAnchor ?? null,
-    rootNodePadding: mergePhiCmsConfigValues<PhiCmsPaddingWidgetConfig>(
-      defaults.rootNodePadding,
-      rootNode.rootNodePadding,
-    ),
-    rootNodeSurface: rootNode.rootNodeSurface ?? defaults.rootNodeSurface,
+    rootNodeConfig: config,
+    rootNodeGeometry: normalizePhiGeometryWidgetConfig(config),
+    rootNodeAnchor: (isPhiAnchorWidgetPlacement(anchor)
+      ? anchor
+      : resolvePhiAnchorPlacement(anchor as Parameters<typeof resolvePhiAnchorPlacement>[0])) ?? null,
+    rootNodePadding: normalizePhiPaddingWidgetConfig(config),
+    rootNodeSurface: readPhiSurface(config.surface),
     childLayouts: rootNode.childLayouts ?? [],
     childWidgets: rootNode.childWidgets ?? [],
   };
 }
 
+/** The node's config as its Layout plugin parses it: the stored config, in the render mode asked for. */
 export function buildPhiBuilderRootNodeRenderConfig(
   rootNode: PhiBuilderRootNodeDraft,
   renderMode: PhiRenderableBlockRenderMode,
 ): Record<string, unknown> {
-  const normalizedRootNode = normalizePhiBuilderRootNodeDraft(rootNode);
-  const parsedRootNodeConfig = { ...(normalizedRootNode.rootNodeConfig ?? {}) };
-  delete parsedRootNodeConfig.renderMode;
-  // The Surface is stated once, by the draft; the root config may carry the draft's copy of it.
-  delete parsedRootNodeConfig.surface;
-  delete parsedRootNodeConfig.rootNodeSurface;
-  const geometry = normalizedRootNode.rootNodeGeometry;
-  const padding = normalizedRootNode.rootNodePadding;
-  const anchor = resolvePhiRenderableBlockAnchor(normalizedRootNode.rootNodeAnchor);
-
-  return {
-    ...parsedRootNodeConfig,
-    renderMode,
-    ...(anchor == null ? {} : { anchor }),
-    ...(normalizedRootNode.rootNodeSurface == null ? {} : { surface: normalizedRootNode.rootNodeSurface }),
-    ...(geometry?.zIndex == null ? {} : { zIndex: geometry.zIndex }),
-    ...(geometry?.size == null ? {} : { size: geometry.size }),
-    ...(geometry?.minSize == null ? {} : { minSize: geometry.minSize }),
-    ...(geometry?.maxSize == null ? {} : { maxSize: geometry.maxSize }),
-    ...(padding?.padding == null ? {} : { padding: padding.padding }),
-    ...(padding?.gap == null ? {} : { gap: padding.gap }),
-    ...(padding?.paddingTop == null ? {} : { paddingTop: padding.paddingTop }),
-    ...(padding?.paddingRight == null ? {} : { paddingRight: padding.paddingRight }),
-    ...(padding?.paddingBottom == null ? {} : { paddingBottom: padding.paddingBottom }),
-    ...(padding?.paddingLeft == null ? {} : { paddingLeft: padding.paddingLeft }),
-  };
+  const config = { ...(rootNode.rootNodeConfig ?? {}) };
+  delete config.renderMode;
+  return { ...config, renderMode };
 }

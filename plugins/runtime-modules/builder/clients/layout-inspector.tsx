@@ -140,9 +140,9 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
 }: PhiDeveloperBuilderLayoutInspectorWidgetClientProps) {
   const isPreviewMode = builderMode === "preview";
   const isTargetKind = selectedStructureNodeKind === "layout";
-  const resolvedLayoutAnchor = currentDraft?.rootNodeAnchor ?? selectedLayoutAnchor;
-  const resolvedLayoutPadding = currentDraft?.rootNodePadding ?? null;
-  const currentDraftRecord = currentDraft as Record<string, unknown> | null;
+  const resolvedLayoutAnchor = currentDraft?.anchor ?? selectedLayoutAnchor;
+  const resolvedLayoutPadding = currentDraft?.padding ?? null;
+  const currentDraftRecord = currentDraft?.config ?? null;
   const layoutDefaultConfigRecord = selectedStructureDefaultConfig;
   const currentLayoutConfigRecord = {
     ...(layoutDefaultConfigRecord ?? {}),
@@ -187,15 +187,15 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
     if (ownSlot.state === "hidden") ownSlot.show();
   }, [ownSlot, settingsHasContent]);
   const gridOccupiedSlotIndices = gridPlacementField && currentDraft
-    ? [...new Set([...(currentDraft.rootNodeChildLayouts ?? []), ...(currentDraft.rootNodeChildWidgets ?? [])].map((child) => child.slotIndex))]
+    ? [...new Set([...currentDraft.node.childLayouts, ...currentDraft.node.childWidgets].map((child) => child.slotIndex))]
         .sort((left, right) => left - right)
     : [];
-  const signalEndpoints = currentDraft?.rootNodeId == null
+  const signalEndpoints = currentDraft == null
     ? []
     : resolvePhiLayoutSignalEndpoints({
-        blockId: currentDraft.rootNodeId,
-        label: currentDraft.rootNodeTitle ?? currentDraft.rootNodeId,
-        typeKey: currentDraft.rootNodeTypeKey,
+        blockId: currentDraft.node.id,
+        label: currentDraft.node.label ?? currentDraft.node.id,
+        typeKey: currentDraft.node.widgetType,
         kind: "layout",
         runtimeSignals: selectedStructurePlugin?.runtimeSignals ?? null,
         routeScope: signalRouteScope,
@@ -373,7 +373,7 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                       children: (
                         <PhiSurfaceControl
                           disabled={isPreviewMode}
-                          value={currentDraft?.rootNodeSurface ?? null}
+                          value={currentDraft?.surface ?? null}
                           onChange={(surface) => onSurfaceChange?.(surface)}
                           labels={surfaceLabels?.parts}
                           backgroundLabels={backgroundLabels}

@@ -1,44 +1,71 @@
 import { describe, expect, it } from "vitest";
 
-import { readPhiBuilderRootNodeDraftFields } from "./root-node-normalization";
+import type { PhiCmsLayoutRenderNode } from "../../../types/cms";
+import { createPhiDraftCmsInstanceId } from "../../../types/cms-instance-id";
+import {
+  buildPhiBuilderRootNodeRenderConfig,
+  normalizePhiBuilderRootNodeDraft,
+  readPhiBuilderRootNodeDraft,
+} from "./root-node-normalization";
 
-describe("readPhiBuilderRootNodeDraftFields", () => {
-  it("reads every root node field a region draft carries", () => {
-    const childLayouts = [{ id: "l1" }] as never[];
-    const childWidgets = [{ id: "w1" }] as never[];
-    expect(readPhiBuilderRootNodeDraftFields({
-      rootNodeTitle: "Hero",
-      rootNodeConfig: { gap: 8 },
-      rootNodeGeometry: { width: "100%" } as never,
-      rootNodeAnchor: "topLeft",
-      rootNodePadding: { top: 4 } as never,
-      rootNodeSurface: { background: { base: { kind: "color", color: "#000" } }, shadow: "soft" },
-      rootNodeChildLayouts: childLayouts,
-      rootNodeChildWidgets: childWidgets,
-    })).toEqual({
-      title: "Hero",
-      rootNodeConfig: { gap: 8 },
-      rootNodeGeometry: { width: "100%" },
-      rootNodeAnchor: "topLeft",
-      rootNodePadding: { top: 4 },
-      rootNodeSurface: { background: { base: { kind: "color", color: "#000" } }, shadow: "soft" },
-      childLayouts,
-      childWidgets,
-    });
-  });
+const ROOT = createPhiDraftCmsInstanceId({ domain: "page", draftRevisionId: 1, sequence: 1 });
 
-  it("answers null for absent values and empty lists for absent children", () => {
-    const fields = readPhiBuilderRootNodeDraftFields({});
-    expect(fields).toEqual({
-      title: null,
-      rootNodeConfig: null,
-      rootNodeGeometry: null,
-      rootNodeAnchor: null,
-      rootNodePadding: null,
-      rootNodeSurface: null,
+function layoutNode(config: Record<string, unknown>): PhiCmsLayoutRenderNode {
+  return {
+    id: ROOT,
+    siteId: -1,
+    parentLayoutNodeId: null,
+    widgetType: "@phis/ui/modules/core/layouts/split-card",
+    slotIndex: 0,
+    sortOrder: 0,
+    status: 0,
+    flags: 0,
+    visibilityMask: 0,
+    label: "Split Card",
+    config,
+    childLayouts: [],
+    childWidgets: [],
+  };
+}
+
+describe("readPhiBuilderRootNodeDraft", () => {
+  it("takes the node as it is, nothing derived", () => {
+    const draft = readPhiBuilderRootNodeDraft(layoutNode({ gap: 8 }));
+    expect(draft).toEqual({
+      id: ROOT,
+      typeKey: "@phis/ui/modules/core/layouts/split-card",
+      kind: "layout",
+      title: "Split Card",
+      packageName: "@phis/ui/modules/core/layouts",
+      rootNodeConfig: { gap: 8 },
       childLayouts: [],
       childWidgets: [],
     });
-    expect(Object.keys(fields)).not.toContain("packageName");
+  });
+});
+
+describe("normalizePhiBuilderRootNodeDraft", () => {
+  it("reads anchor, inset and Surface off the config, the one place they are stated", () => {
+    const surface = { background: { base: { kind: "color" as const, color: "#000" } }, shadow: "soft" as const };
+    const view = normalizePhiBuilderRootNodeDraft(readPhiBuilderRootNodeDraft(layoutNode({
+      anchor: "center",
+      padding: 12,
+      surface,
+    })));
+    expect(view.rootNodeAnchor).toBe("center");
+    expect(view.rootNodePadding).toMatchObject({ padding: 12 });
+    expect(view.rootNodeSurface).toMatchObject(surface);
+  });
+
+  it("has no Surface once the config has none -- nothing else can bring one back", () => {
+    const view = normalizePhiBuilderRootNodeDraft(readPhiBuilderRootNodeDraft(layoutNode({ gap: 8 })));
+    expect(view.rootNodeSurface).toBeNull();
+  });
+});
+
+describe("buildPhiBuilderRootNodeRenderConfig", () => {
+  it("hands on the stored config in the render mode asked for", () => {
+    const draft = readPhiBuilderRootNodeDraft(layoutNode({ gap: 8, renderMode: "live" }));
+    expect(buildPhiBuilderRootNodeRenderConfig(draft, "editor")).toEqual({ gap: 8, renderMode: "editor" });
   });
 });

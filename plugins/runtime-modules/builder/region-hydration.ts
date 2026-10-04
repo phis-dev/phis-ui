@@ -1,4 +1,3 @@
-import { normalizePhiGeometryWidgetConfig } from "../../../components/widgets/config/geometry";
 import { stripPhiResolvedAssetProjections } from "../../../components/media/image-presentation";
 import type {
   PhiCmsContentWidgetNode,
@@ -18,16 +17,12 @@ import type {
 } from "../../../types/renderable-block";
 import { readPhiLengthValue, type PhiCssLength } from "../../../types/length";
 import { getPhiBuilderDefaultRegionDraft } from "./region-defaults";
-import { resolvePhiBuilderRootNodeDefaults } from "./root-node-normalization";
 import {
   getPhiBuilderRegionDraftKey,
   PHI_BUILDER_PAGE_REGION_KEYS,
   PHI_BUILDER_SHELL_REGION_KEYS,
   type PhiBuilderRegionKey,
 } from "./region-keys";
-import { resolvePhiAnchorPlacement } from "../../../components/layouts/phi-layout-contract";
-import { splitPhiCmsLayoutNamespacedTypeKey } from "../../../constants/cms-layout-types";
-import { isPhiAnchorWidgetPlacement } from "../../../components/controls/phi-anchor-control-contract";
 import { readPhiSurface } from "../../../types/surface";
 
 type JsonRecord = Record<string, unknown>;
@@ -149,20 +144,6 @@ function buildLayoutRenderTree(tree: PhiBuilderHydrationTree, rootLayoutNodeId: 
   return createNode(rootLayoutNodeId);
 }
 
-function resolveRootNodeKind(widgetType: string) {
-  splitPhiCmsLayoutNamespacedTypeKey(widgetType);
-  return "layout" as const;
-}
-
-function resolveRootNodePackageName(widgetType: string) {
-  const segments = widgetType.split("/").filter(Boolean);
-  if (segments.length < 2) {
-    return null;
-  }
-
-  return segments.slice(0, -1).join("/");
-}
-
 function normalizeHydratedChildLayouts(nodes: PhiCmsLayoutRenderNode[]): PhiCmsLayoutRenderNode[] {
   return nodes.map((node) => ({
     ...node,
@@ -181,11 +162,6 @@ function buildRegionDraft(
   rootNode: PhiCmsLayoutRenderNode | null,
 ): PhiDeveloperBuilderRegionDraft {
   const fallback = getPhiBuilderDefaultRegionDraft(regionKey);
-  const resolvedRootNodeKind = rootNode ? resolveRootNodeKind(rootNode.widgetType) : null;
-  const rootNodeDefaults =
-    rootNode && resolvedRootNodeKind
-      ? resolvePhiBuilderRootNodeDefaults(rootNode.config ?? null)
-      : { rootNodePadding: null, rootNodeSurface: null };
 
   return {
     ...fallback,
@@ -199,21 +175,14 @@ function buildRegionDraft(
       ? regionConfig.zIndex
       : fallback.zIndex,
     surface: readPhiSurface(regionConfig.surface),
-    rootNodeId: rootNode?.id ?? null,
-    rootNodeTypeKey: rootNode?.widgetType ?? null,
-    rootNodeKind: resolvedRootNodeKind,
-    rootNodeTitle: rootNode?.label ?? null,
-    rootNodePackageName: rootNode ? resolveRootNodePackageName(rootNode.widgetType) : null,
-    rootNodeConfig: rootNode?.config ?? null,
-    rootNodeGeometry: rootNode ? normalizePhiGeometryWidgetConfig(rootNode.config) : null,
-    rootNodeAnchor:
-      (isPhiAnchorWidgetPlacement(rootNode?.config?.anchor)
-        ? rootNode.config.anchor
-        : resolvePhiAnchorPlacement(rootNode?.config?.anchor as Parameters<typeof resolvePhiAnchorPlacement>[0])) ?? null,
-    rootNodePadding: rootNodeDefaults.rootNodePadding,
-    rootNodeSurface: rootNodeDefaults.rootNodeSurface,
-    rootNodeChildLayouts: rootNode ? normalizeHydratedChildLayouts(rootNode.childLayouts ?? []) : [],
-    rootNodeChildWidgets: rootNode ? normalizeHydratedChildWidgets(rootNode.childWidgets ?? []) : [],
+    // The root Layout as the node it is in the tree; its config is the one copy of what it says.
+    rootNode: rootNode
+      ? {
+        ...rootNode,
+        childLayouts: normalizeHydratedChildLayouts(rootNode.childLayouts ?? []),
+        childWidgets: normalizeHydratedChildWidgets(rootNode.childWidgets ?? []),
+      }
+      : null,
   };
 }
 

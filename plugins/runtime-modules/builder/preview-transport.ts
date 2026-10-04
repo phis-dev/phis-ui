@@ -1,10 +1,5 @@
-import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode } from "../../../types/cms";
-import type {
-  PhiCmsPaddingWidgetConfig,
-} from "../../../types/cms-config";
+import type { PhiCmsLayoutRenderNode } from "../../../types/cms";
 import type { PhiCmsGeometryWidgetConfig } from "../../../components/widgets/config/geometry";
-import type { PhiAnchorWidgetPlacement } from "../../../components/controls/phi-anchor-control-contract";
-import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import type { PhiRuntimeModuleId } from "../../../types/cms-plugins";
 import { isPhiRecord } from "../../../helpers/is-record";
 import type { PhiSurface } from "../../../types/surface";
@@ -16,21 +11,14 @@ export const PHI_BUILDER_PREVIEW_TTL_MS = 1000 * 60 * 30;
 export type PhiBuilderRootNodeKind = "layout" | "widget" | null;
 
 export type PhiBuilderPreviewRegionDraft = PhiCmsGeometryWidgetConfig & {
-  /** The Region's own look; the root node's is `rootNodeSurface`. */
+  /** The Region's own look; the root Layout's is its `config.surface`. */
   surface?: PhiSurface | null;
   regionConfig?: Record<string, unknown> | null;
-  rootNodeId?: PhiCmsInstanceId | null;
-  rootNodeTypeKey?: string | null;
-  rootNodeKind?: PhiBuilderRootNodeKind;
-  rootNodeTitle?: string | null;
-  rootNodePackageName?: string | null;
-  rootNodeConfig?: Record<string, unknown> | null;
-  rootNodeGeometry?: PhiCmsGeometryWidgetConfig | null;
-  rootNodeAnchor?: PhiAnchorWidgetPlacement | null;
-  rootNodePadding?: PhiCmsPaddingWidgetConfig | null;
-  rootNodeSurface?: PhiSurface | null;
-  rootNodeChildLayouts?: PhiCmsLayoutRenderNode[];
-  rootNodeChildWidgets?: PhiCmsContentWidgetNode[];
+  /**
+   * The Region's root Layout: one Layout node like every node nested in it, edited, rendered and
+   * stored the same way. Its look is its `config.surface`; the Region's own is `surface` above.
+   */
+  rootNode?: PhiCmsLayoutRenderNode | null;
 };
 
 export type PhiBuilderPreviewSnapshot = {

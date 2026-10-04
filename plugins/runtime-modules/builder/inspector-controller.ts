@@ -10,7 +10,6 @@ import type { PhiBuilderInspectorAction } from "./inspector-actions";
 import {
   findPhiBuilderLayoutNodeById,
   findPhiBuilderWidgetNodeByIdInLayouts,
-  findPhiBuilderWidgetNodeByIdInWidgets,
 } from "./node-finders";
 import {
   getDefaultRegionDraft,
@@ -186,10 +185,8 @@ function patchSelectedWidgetDraftNode(
     return false;
   }
 
-  const selectedWidgetNode =
-    findPhiBuilderWidgetNodeByIdInWidgets(selectedRootDraft.rootNodeChildWidgets ?? [], state.nodeId) ??
-    findPhiBuilderWidgetNodeByIdInLayouts(selectedRootDraft.rootNodeChildLayouts ?? [], state.nodeId);
-  if (!selectedWidgetNode) {
+  const rootNode = selectedRootDraft.rootNode;
+  if (!rootNode || !findPhiBuilderWidgetNodeByIdInLayouts([rootNode], state.nodeId)) {
     return false;
   }
 
@@ -197,12 +194,7 @@ function patchSelectedWidgetDraftNode(
     draftKey,
     {
       ...selectedRootDraft,
-      rootNodeChildWidgets: patchWidgetNodeById(selectedRootDraft.rootNodeChildWidgets ?? [], state.nodeId, patchNode),
-      rootNodeChildLayouts: patchWidgetNodeByIdInLayouts(
-        selectedRootDraft.rootNodeChildLayouts ?? [],
-        state.nodeId,
-        patchNode,
-      ),
+      rootNode: patchWidgetNodeByIdInLayouts([rootNode], state.nodeId, patchNode)[0],
     },
     {
       historyContext: resolveInspectorHistoryContext(state, state.selectedRootRegionKey),
@@ -241,12 +233,13 @@ function patchSelectedStructureDraftConfig(
     state.selectedRootRegionKey,
     state.pageKey,
   );
-  const selectedRootNodeId = selectedRootDraft?.rootNodeId ?? null;
-  const selectedNestedLayoutNode =
-    selectedRootDraft && state.nodeId !== selectedRootNodeId
-      ? findPhiBuilderLayoutNodeById(selectedRootDraft.rootNodeChildLayouts ?? [], state.nodeId)
-      : null;
-  if (!selectedRootDraft || !selectedNestedLayoutNode) {
+  /*
+   * The selected Layout, wherever it stands: the Region's root Layout is found and patched the same
+   * way as every Layout below it, so both behave alike in the Inspector.
+   */
+  const rootNode = selectedRootDraft?.rootNode ?? null;
+  const selectedLayoutNode = rootNode ? findPhiBuilderLayoutNodeById([rootNode], state.nodeId) : null;
+  if (!selectedRootDraft || !rootNode || !selectedLayoutNode) {
     return false;
   }
 
@@ -254,57 +247,15 @@ function patchSelectedStructureDraftConfig(
     draftKey,
     {
       ...selectedRootDraft,
-      rootNodeChildLayouts: patchLayoutNodeById(
-        selectedRootDraft.rootNodeChildLayouts ?? [],
+      rootNode: patchLayoutNodeById(
+        [rootNode],
         state.nodeId,
         guardPhiBuilderConfigPatch(
           state.area,
-          selectedNestedLayoutNode.widgetType,
+          selectedLayoutNode.widgetType,
           patchConfig,
         ),
-      ),
-    },
-    {
-      historyContext: resolveInspectorHistoryContext(state, state.selectedRootRegionKey),
-      historyLabel: "Update layout",
-      historyCoalesceKey: resolveInspectorCoalesceKey(state, draftKey, field),
-    },
-  );
-
-  return true;
-}
-
-function patchSelectedRootStructureConfig(
-  state: PhiDeveloperBuilderWorkspaceState,
-  field: string,
-  patch: Record<string, unknown>,
-  /** How the root's config takes the patch, where merging it in would leave an old value standing. */
-  patchRootConfig: (config: Record<string, unknown>) => Record<string, unknown> = (config) => ({
-    ...config,
-    ...patch,
-  }),
-) {
-  if (!state.selectedRootRegionKey) {
-    return false;
-  }
-
-  const draftKey = getPhiBuilderRegionDraftKey(state.area, state.selectedRootRegionKey, state.pageKey);
-  const selectedRootDraft = resolveRegionDraftKey(
-    getPhiDeveloperRegionDraftsSnapshot(),
-    state.area,
-    state.selectedRootRegionKey,
-    state.pageKey,
-  );
-  if (!selectedRootDraft) {
-    return false;
-  }
-
-  setPhiDeveloperRegionDraft(
-    draftKey,
-    {
-      ...selectedRootDraft,
-      rootNodeConfig: patchRootConfig(selectedRootDraft.rootNodeConfig ?? {}),
-      ...patch,
+      )[0],
     },
     {
       historyContext: resolveInspectorHistoryContext(state, state.selectedRootRegionKey),
@@ -411,9 +362,7 @@ export function runPhiDeveloperBuilderInspectorAction(
       return;
     }
 
-    if (!patchSelectedStructureDraftConfig(state, "anchor", (config) => ({ ...config, anchor: selectedLayoutAnchor }))) {
-      patchSelectedRootStructureConfig(state, "anchor", { rootNodeAnchor: selectedLayoutAnchor });
-    }
+    patchSelectedStructureDraftConfig(state, "anchor", (config) => ({ ...config, anchor: selectedLayoutAnchor }));
     builderWorkspaceStore.patch(defaultArea, (current) => ({
       ...current,
       selectedLayoutAnchor: selectedLayoutAnchor as PhiAnchorWidgetPlacement,
@@ -423,18 +372,16 @@ export function runPhiDeveloperBuilderInspectorAction(
 
   if (action.kind === "patchSelectedLayoutPadding") {
     const padding = action.padding == null ? null : readRecordPatch(action.padding);
-    if (!patchSelectedStructureDraftConfig(state, "padding", (config) => ({
+    patchSelectedStructureDraftConfig(state, "padding", (config) => ({
       ...config,
       ...resolvePaddingPatch(padding as PhiCmsPaddingWidgetConfig | null),
-    }))) {
-      patchSelectedRootStructureConfig(state, "padding", { rootNodePadding: padding });
-    }
+    }));
     return;
   }
 
   if (action.kind === "patchSelectedLayoutSurface") {
     const surface = action.surface;
-    if (!patchSelectedStructureDraftConfig(state, "surface", (config) => {
+    patchSelectedStructureDraftConfig(state, "surface", (config) => {
       const next = { ...config };
       if (surface == null) {
         delete next.surface;
@@ -442,33 +389,15 @@ export function runPhiDeveloperBuilderInspectorAction(
         next.surface = surface;
       }
       return next;
-    })) {
-      /*
-       * The root's config carries its Surface as well, and the draft falls back on it where
-       * `rootNodeSurface` is empty -- so taking the Surface away has to take it out of the config too,
-       * or None would bring the old look straight back.
-       */
-      patchSelectedRootStructureConfig(state, "surface", { rootNodeSurface: surface }, (config) => {
-        const next = { ...config };
-        delete next.rootNodeSurface;
-        if (surface == null) {
-          delete next.surface;
-        } else {
-          next.surface = surface;
-        }
-        return next;
-      });
-    }
+    });
     return;
   }
 
   if (action.kind === "patchSelectedLayoutConfig" && typeof action.key === "string") {
     const nextValue = action.value ?? undefined;
-    if (!patchSelectedStructureDraftConfig(state, action.key, (config) => ({
+    patchSelectedStructureDraftConfig(state, action.key, (config) => ({
       ...config,
       [action.key as string]: nextValue,
-    }))) {
-      patchSelectedRootStructureConfig(state, action.key, { [action.key]: nextValue });
-    }
+    }));
   }
 }

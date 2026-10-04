@@ -6,11 +6,7 @@ import { usePhiConfig } from "../../../components/root/phi-config-provider";
 import { PhiEditScaffoldDrawer } from "./edit-scaffold-drawer";
 import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode, PhiResolvedCmsRenderableTree } from "../../../types/cms";
 import { comparePhiCmsInstanceIds, type PhiCmsInstanceId } from "../../../types/cms-instance-id";
-import { normalizePhiPaddingWidgetConfig } from "../../../types/cms-config";
 import type { PhiBlockRuntime } from "../../../types/widget-runtime";
-import type { PhiCmsGeometryWidgetConfig } from "../../../components/widgets/config/geometry";
-import { readPhiSurface } from "../../../types/surface";
-import { resolvePhiAnchorPlacement } from "../../../components/layouts/phi-layout-contract";
 import { PhiSlotChildFrame } from "../../../plugins/runtime/phi-slot-child-frame";
 import {
   PhiLayoutDeleteButtonOverlay,
@@ -35,7 +31,7 @@ import {
 import { usePhiRuntimeModuleState } from "../../../components/runtime/runtime-module-context";
 import { PhiCmsRenderDiagnostic } from "../../../components/cms/phi-cms-render-diagnostic";
 import { PhiCmsRenderErrorBoundary } from "../../../components/cms/phi-cms-render-error-boundary";
-import { isPhiAnchorWidgetPlacement, type PhiAnchorWidgetPlacement } from "../../../components/controls/phi-anchor-control-contract";
+import type { PhiAnchorWidgetPlacement } from "../../../components/controls/phi-anchor-control-contract";
 import type { PhiEffectsWidgetLabels } from "../../../components/widgets/label-types/effects";
 import type { PhiAuthoringToolsLabels } from "../../../components/widgets/label-types/authoring-tools";
 import { PhiAuthoringToolsLabelsProvider } from "../../../components/widgets/client/shared/phi-authoring-tools-labels";
@@ -66,6 +62,7 @@ import {
 import {
   buildPhiBuilderRootNodeRenderConfig,
   normalizePhiBuilderRootNodeDraft,
+  readPhiBuilderRootNodeDraft,
 } from "./root-node-normalization";
 import { resolvePhiRenderableBlockGeometry } from "../../../types/renderable-block-geometry";
 import { resolvePhiRootScaffoldProperties } from "./builder-geometry";
@@ -1070,22 +1067,11 @@ function formatLayoutScaffoldLabel(
   return formatPhiScaffoldLabel(name, `${typeName} ${kindLabel}`, typeName);
 }
 
-function resolveLayoutNodeRootProps(node: PhiCmsLayoutRenderNode) {
+/** A Layout node as the scaffold takes it: the node, and the anchor its slots are edited at. */
+export function resolveLayoutNodeRootProps(node: PhiCmsLayoutRenderNode) {
   return {
-    id: node.id,
-    typeKey: node.widgetType,
-    kind: "layout" as const,
-    title: node.label ?? undefined,
-    editSlotAnchor:
-      (typeof node.config.anchor === "string" && isPhiAnchorWidgetPlacement(node.config.anchor)
-        ? node.config.anchor
-        : resolvePhiAnchorPlacement(node.config.anchor as Parameters<typeof resolvePhiAnchorPlacement>[0])) ?? undefined,
-    rootNodeConfig: node.config,
-    rootNodeGeometry: node.config as PhiCmsGeometryWidgetConfig,
-    rootNodePadding: normalizePhiPaddingWidgetConfig(node.config),
-    rootNodeSurface: readPhiSurface(node.config.surface),
-    childLayouts: node.childLayouts,
-    childWidgets: node.childWidgets,
+    ...readPhiBuilderRootNodeDraft(node),
+    editSlotAnchor: normalizePhiBuilderRootNodeDraft(readPhiBuilderRootNodeDraft(node)).rootNodeAnchor ?? undefined,
   };
 }
 
@@ -1698,7 +1684,9 @@ export function renderPhiRootNodeScaffold(
   const renderChildLayoutNode = (node: PhiCmsLayoutRenderNode) => {
     const nodeKind = "layout" as const;
     const rootProps = resolveLayoutNodeRootProps(node);
-    const rootPropsGeometry = resolvePhiRenderableBlockGeometry(rootProps.rootNodeGeometry);
+    const rootPropsGeometry = resolvePhiRenderableBlockGeometry(
+      normalizePhiBuilderRootNodeDraft(rootProps).rootNodeGeometry,
+    );
     return (
       <PhiAuthoringLayoutEffectsPreviewFrame
         type={node.widgetType}

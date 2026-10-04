@@ -4,7 +4,6 @@ import type { PhiCollectionProviderResourceDescriptor } from "../../../types/col
 import type { PhiRuntimeModuleDataProviderDescriptor } from "../contracts";
 import {
   findPhiBuilderWidgetNodeByIdInLayouts,
-  findPhiBuilderWidgetNodeByIdInWidgets,
 } from "./node-finders";
 import { resolveRegionDraftKey } from "./developer-region-drafts";
 import { getPhiDeveloperRegionDraftsSnapshot } from "./developer-workspace-store";
@@ -30,9 +29,7 @@ export function findPhiBuilderSelectedWidgetNode(state: PhiDeveloperBuilderWorks
   if (!draft) {
     return null;
   }
-  return findPhiBuilderWidgetNodeByIdInWidgets(draft.rootNodeChildWidgets ?? [], state.nodeId) ??
-    findPhiBuilderWidgetNodeByIdInLayouts(draft.rootNodeChildLayouts ?? [], state.nodeId) ??
-    null;
+  return findPhiBuilderWidgetNodeByIdInLayouts(draft.rootNode ? [draft.rootNode] : [], state.nodeId) ?? null;
 }
 
 /**

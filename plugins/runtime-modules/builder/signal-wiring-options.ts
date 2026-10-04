@@ -28,7 +28,6 @@ import {
 import {
   findPhiBuilderLayoutNodeById,
   findPhiBuilderWidgetNodeByIdInLayouts,
-  findPhiBuilderWidgetNodeByIdInWidgets,
 } from "./node-finders";
 import { resolveRegionDraftKey } from "./developer-region-drafts";
 import { builderWorkspaceStore, getPhiDeveloperRegionDraftsSnapshot , getPhiDeveloperBuilderStateSnapshot } from "./developer-workspace-store";
@@ -136,8 +135,7 @@ export function resolvePhiBuilderSelectedSignalEndpoints(state: PhiDeveloperBuil
     return [];
   }
   if (state.nodeKind === "widget") {
-    const widget = findPhiBuilderWidgetNodeByIdInWidgets(draft.rootNodeChildWidgets ?? [], state.nodeId) ??
-      findPhiBuilderWidgetNodeByIdInLayouts(draft.rootNodeChildLayouts ?? [], state.nodeId);
+    const widget = findPhiBuilderWidgetNodeByIdInLayouts(draft.rootNode ? [draft.rootNode] : [], state.nodeId);
     const plugin = widget
       ? plugins.find((candidate) => candidate.kind === "widget" &&
         (candidate.typeKey === widget.widgetType || `${candidate.pluginKey}/${candidate.typeKey}` === widget.widgetType))
@@ -160,7 +158,8 @@ export function resolvePhiBuilderSelectedSignalEndpoints(state: PhiDeveloperBuil
       : [];
   }
   if (state.nodeKind === "layout") {
-    const layout = findPhiBuilderLayoutNodeById(draft.rootNodeChildLayouts ?? [], state.nodeId);
+    // The root Layout is found like every Layout below it.
+    const layout = findPhiBuilderLayoutNodeById(draft.rootNode ? [draft.rootNode] : [], state.nodeId);
     const plugin = layout
       ? plugins.find((candidate) => candidate.kind !== "widget" &&
         (candidate.typeKey === layout.widgetType || `${candidate.pluginKey}/${candidate.typeKey}` === layout.widgetType))

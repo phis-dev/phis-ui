@@ -1,4 +1,4 @@
-import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode } from "../../../types/cms";
+import type { PhiCmsLayoutRenderNode } from "../../../types/cms";
 import type { PhiCmsPaddingWidgetConfig } from "../../../types/cms-config";
 import type {
   PhiRenderableBlockEffects,
@@ -7,7 +7,6 @@ import type {
 import type { PhiBuilderAreaKey } from "../../../constants/cms-areas";
 import type { PhiCmsGeometryWidgetConfig } from "../../../components/widgets/config/geometry";
 import type { PhiAnchorWidgetPlacement } from "../../../components/controls/phi-anchor-control-contract";
-import type { PhiBuilderRootNodeKind } from "./preview-transport";
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import type { PhiWorkspaceCatalogState } from "../../../components/workspace/catalog-state";
 import type { PhiCmsPresetSource } from "../../../types/cms-module-descriptors";
@@ -26,30 +25,30 @@ export type PhiBuilderChromeControls = {
 };
 
 export type PhiDeveloperBuilderRegionDraft = PhiCmsGeometryWidgetConfig & {
-  /** The Region's own look; the root node's is `rootNodeSurface`. */
+  /** The Region's own look; the root Layout's is its `config.surface`. */
   surface?: PhiSurface | null;
   regionConfig?: Record<string, unknown> | null;
-  rootNodeId?: PhiCmsInstanceId | null;
-  rootNodeTypeKey?: string | null;
-  rootNodeKind?: PhiBuilderRootNodeKind;
-  rootNodeTitle?: string | null;
-  rootNodePackageName?: string | null;
-  rootNodeConfig?: Record<string, unknown> | null;
-  rootNodeGeometry?: PhiCmsGeometryWidgetConfig | null;
-  rootNodeAnchor?: PhiAnchorWidgetPlacement | null;
-  rootNodePadding?: PhiCmsPaddingWidgetConfig | null;
-  rootNodeSurface?: PhiSurface | null;
-  rootNodeChildLayouts?: PhiCmsLayoutRenderNode[];
-  rootNodeChildWidgets?: PhiCmsContentWidgetNode[];
+  /**
+   * The Region's root Layout: one Layout node like every node nested in it, edited, rendered and
+   * stored the same way. Its look is its `config.surface`; the Region's own is `surface` above.
+   */
+  rootNode?: PhiCmsLayoutRenderNode | null;
 };
 
+
 /**
- * The Inspector's draft for one node inside a Region, a Layout or the root.
+ * The Inspector's view of the selected Layout, the Region's root Layout or one nested in it alike.
  *
- * Its look is `rootNodeSurface`; the Region's own `surface` belongs to the Region draft and means
- * nothing here, which is why it is left out rather than filled with a stand-in.
+ * `config` is the node's config over its Layout's defaults, the way the Settings read it; anchor, inset
+ * and Surface are read off it once. Nothing here is stored -- every edit goes to the node's config.
  */
-export type PhiDeveloperBuilderStructureNodeDraft = Omit<PhiDeveloperBuilderRegionDraft, "surface">;
+export type PhiDeveloperBuilderStructureNodeDraft = {
+  node: PhiCmsLayoutRenderNode;
+  config: Record<string, unknown>;
+  anchor: PhiAnchorWidgetPlacement | null;
+  padding: PhiCmsPaddingWidgetConfig | null;
+  surface: PhiSurface | null;
+};
 
 export type PhiDeveloperBuilderPageMetaDraft = {
   title?: string | null;

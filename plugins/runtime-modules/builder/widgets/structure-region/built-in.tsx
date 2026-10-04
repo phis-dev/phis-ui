@@ -19,7 +19,6 @@ import {
   resolvePhiBackgroundWidgetStyle,
 } from "../../../../../components/widgets/config/background";
 import { combinePhiBoxShadows, resolvePhiShadow } from "../../../../../helpers/layout-style";
-import { normalizePhiGeometryWidgetConfig } from "../../../../../components/widgets/config/geometry";
 import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode } from "../../../../../types/cms";
 import { readPhiCmsInstanceId, type PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
 import type { PhiCmsRegionConfig } from "../../../../../types";
@@ -42,14 +41,16 @@ import {
 import { resolvePhiShellRegionTypography, resolvePhiShellRegionZIndex } from "../../../../../helpers/shell-region-style";
 import { phiCmsRegionAcceptsWidget, resolvePhiCmsRegionType } from "../../../../../helpers/cms-region-keys";
 import { usePhiRuntimeModuleState } from "../../../../../components/runtime/runtime-module-context";
-import { renderPhiRootNodeScaffold } from "../../../../../plugins/runtime-modules/builder/render-root-node-scaffold";
+import {
+  renderPhiRootNodeScaffold,
+  resolveLayoutNodeRootProps,
+} from "../../../../../plugins/runtime-modules/builder/render-root-node-scaffold";
 import { PhiBuilderInsertPickerControl } from "../../../../../components/controls/phi-builder-insert-picker-control";
 import {
-  buildPhiBuilderRootNodeRenderConfig,
-  normalizePhiBuilderRootNodeDraft,
-  readPhiBuilderRootNodeDraftFields,
-  resolvePhiBuilderRootNodeDefaults,
-} from "../../../../../plugins/runtime-modules/builder/root-node-normalization";
+  readPhiBuilderRegionRootChildLayouts,
+  readPhiBuilderRegionRootChildWidgets,
+  withPhiBuilderRegionRootChildren,
+} from "../../../../../plugins/runtime-modules/builder/region-root-node";
 import { compactPhiCmsSequentialChildren, compactsPhiCmsSequentialSlots } from "../../../../../plugins/runtime-modules/builder/sequential-slot-helpers";
 import { findPhiBuilderLayoutNodeById } from "../../../../../plugins/runtime-modules/builder/node-finders";
 import {
@@ -79,7 +80,6 @@ import type { PhiStructureRegionPickItem } from "./config";
 import type { PhiAuthoringToolsLabels } from "../../../../../components/widgets/label-types/authoring-tools";
 import type { PhiEffectsWidgetLabels } from "../../../../../components/widgets/label-types/effects";
 import type { PhiBuilderChromeWidgetLabels } from "../../../../../components/widgets/label-types/builder-chrome";
-import { isPhiAnchorWidgetPlacement } from "../../../../../components/controls/phi-anchor-control-contract";
 import { resolvePhiWidgetSignalSubcontrolAddresses } from "../../../../../components/widgets/signals/signal-endpoints";
 import { createPhiBuilderRegionHistoryContext } from "../../../../../plugins/runtime-modules/builder/history";
 import {
@@ -121,116 +121,55 @@ type PhiStructureRegionWidgetProps = {
   containerClassName?: string;
 };
 
+/** The Region's root Layout placed into another tree, at the slot it is moved to. */
 function buildStructureRootLayoutNode(
   draft: PhiDeveloperBuilderRegionDraft,
   parentLayoutNodeId: PhiCmsInstanceId,
   slotIndex: number,
 ): PhiCmsLayoutRenderNode | null {
-  if (
-    draft.rootNodeId == null ||
-    !draft.rootNodeTypeKey ||
-    draft.rootNodeKind !== "layout"
-  ) {
+  if (!draft.rootNode) {
     return null;
   }
 
-  const normalized = normalizePhiBuilderRootNodeDraft({
-    id: draft.rootNodeId,
-    typeKey: draft.rootNodeTypeKey,
-    kind: draft.rootNodeKind,
-    packageName: draft.rootNodePackageName ?? null,
-    ...readPhiBuilderRootNodeDraftFields(draft),
-  });
-  const config = buildPhiBuilderRootNodeRenderConfig(normalized, "editor");
-  delete config.renderMode;
-
   return {
-    id: draft.rootNodeId,
-    siteId: -1,
+    ...draft.rootNode,
     parentLayoutNodeId,
-    widgetType: draft.rootNodeTypeKey,
     slotIndex,
     sortOrder: 0,
-    status: 0,
-    flags: 0,
-    visibilityMask: 0,
-    label: draft.rootNodeTitle ?? "Root",
-    config: {
-      ...config,
-      builderKind: draft.rootNodeKind,
-    },
-    childLayouts: draft.rootNodeChildLayouts ?? [],
-    childWidgets: draft.rootNodeChildWidgets ?? [],
+    label: draft.rootNode.label ?? "Root",
+    childLayouts: draft.rootNode.childLayouts ?? [],
+    childWidgets: draft.rootNode.childWidgets ?? [],
   };
 }
 
 function clearStructureRootNode(
   draft: PhiDeveloperBuilderRegionDraft,
 ): PhiDeveloperBuilderRegionDraft {
-  return {
-    ...draft,
-    rootNodeId: null,
-    rootNodeTypeKey: null,
-    rootNodeKind: null,
-    rootNodeTitle: null,
-    rootNodePackageName: null,
-    rootNodeConfig: null,
-    rootNodeGeometry: null,
-    rootNodeAnchor: null,
-    rootNodePadding: null,
-    rootNodeSurface: null,
-    rootNodeChildLayouts: [],
-    rootNodeChildWidgets: [],
-  };
+  return { ...draft, rootNode: null };
 }
 
 function copyStructureRootNode(
   targetDraft: PhiDeveloperBuilderRegionDraft,
   sourceDraft: PhiDeveloperBuilderRegionDraft,
 ): PhiDeveloperBuilderRegionDraft {
-  return {
-    ...targetDraft,
-    rootNodeId: sourceDraft.rootNodeId ?? null,
-    rootNodeTypeKey: sourceDraft.rootNodeTypeKey ?? null,
-    rootNodeKind: sourceDraft.rootNodeKind ?? null,
-    rootNodeTitle: sourceDraft.rootNodeTitle ?? null,
-    rootNodePackageName: sourceDraft.rootNodePackageName ?? null,
-    rootNodeConfig: sourceDraft.rootNodeConfig ?? null,
-    rootNodeGeometry: sourceDraft.rootNodeGeometry ?? null,
-    rootNodeAnchor: sourceDraft.rootNodeAnchor ?? null,
-    rootNodePadding: sourceDraft.rootNodePadding ?? null,
-    rootNodeSurface: sourceDraft.rootNodeSurface ?? null,
-    rootNodeChildLayouts: sourceDraft.rootNodeChildLayouts ?? [],
-    rootNodeChildWidgets: sourceDraft.rootNodeChildWidgets ?? [],
-  };
+  return { ...targetDraft, rootNode: sourceDraft.rootNode ?? null };
 }
 
+/** A Layout made the Region's root: the same node, now standing at the top of the Region. */
 function promoteStructureLayoutToRoot(
   targetDraft: PhiDeveloperBuilderRegionDraft,
   node: PhiCmsLayoutRenderNode,
 ): PhiDeveloperBuilderRegionDraft {
-  const rootNodeKind = "layout" as const;
-  const rootNodeDefaults = resolvePhiBuilderRootNodeDefaults(
-    node.config,
-  );
-  const { pluginKey } = splitPhiCmsLayoutNamespacedTypeKey(node.widgetType);
-
   return {
     ...targetDraft,
-    rootNodeId: node.id,
-    rootNodeTypeKey: node.widgetType,
-    rootNodeKind,
-    rootNodeTitle: node.label ?? null,
-    rootNodePackageName: pluginKey,
-    rootNodeConfig: node.config,
-    rootNodeGeometry: normalizePhiGeometryWidgetConfig(node.config),
-    rootNodeAnchor: isPhiAnchorWidgetPlacement(node.config.anchor)
-      ? node.config.anchor
-      : null,
-    rootNodePadding: rootNodeDefaults.rootNodePadding,
-    rootNodeSurface: rootNodeDefaults.rootNodeSurface,
-    rootNodeChildLayouts: node.childLayouts ?? [],
-    rootNodeChildWidgets: node.childWidgets ?? [],
+    rootNode: {
+      ...node,
+      parentLayoutNodeId: null,
+      slotIndex: 0,
+      sortOrder: 0,
+      childLayouts: node.childLayouts ?? [],
+      childWidgets: node.childWidgets ?? [],
+    },
   };
 }
 
@@ -305,21 +244,6 @@ function compactStructureSequentialLayouts(
       childWidgets: compacted.childWidgets,
     };
   });
-}
-
-function resolvePickItemPackageName(item: PhiStructureRegionPickItem) {
-  const raw = item.packageName ?? item.origin ?? "";
-
-  if (!raw) {
-    return null;
-  }
-
-  const parts = raw.split("/");
-  if (raw.startsWith("@") && parts.length >= 2) {
-    return `${parts[0]}/${parts[1]}`;
-  }
-
-  return parts[0] ?? raw;
 }
 
 function resolveSlotBodyMinHeight(
@@ -738,9 +662,9 @@ export function PhiStructureRegionScaffold({
     fallbackPageDraft ??
     getDefaultRegionDraft(config.regionKey);
   const draftGeometry = resolvePhiRenderableBlockGeometry(effectiveDraft);
-  const rootNodeDefinition = effectiveDraft?.rootNodeKind == null || !effectiveDraft.rootNodeTypeKey
-    ? null
-    : layoutMetasByType.get(effectiveDraft.rootNodeTypeKey) ?? null;
+  const rootNodeDefinition = effectiveDraft?.rootNode
+    ? layoutMetasByType.get(effectiveDraft.rootNode.widgetType) ?? null
+    : null;
   const offsetTop = effectiveDraft?.offsetTop ?? 0;
   const shouldFillAvailableHeight =
     isFullHeightRegion &&
@@ -810,7 +734,7 @@ export function PhiStructureRegionScaffold({
     slotKind === "structure",
   );
   const slotBodyFallbackHeight = slotBodyMinHeight ?? `${resolvedFallbackMinHeight}px`;
-  const hasRootNode = effectiveDraft?.rootNodeTypeKey != null;
+  const hasRootNode = effectiveDraft?.rootNode != null;
   const shouldUseFallbackBodyHeightForRoot =
     shouldFillAvailableHeight;
   const resolvedRootBodyHeight =
@@ -821,12 +745,21 @@ export function PhiStructureRegionScaffold({
           (shouldStretchAvailableHeight ? "100%" : undefined)
         )
       : undefined;
-  const rootNodeId = effectiveDraft?.rootNodeId ?? null;
-  const rootNodeKind = effectiveDraft?.rootNodeKind ?? null;
-  const rootNodeTypeKey = effectiveDraft?.rootNodeTypeKey ?? "";
-  const rootNodeChildLayouts = effectiveDraft?.rootNodeChildLayouts ?? [];
-  const rootNodeChildWidgets = effectiveDraft?.rootNodeChildWidgets ?? [];
-  const resolvedRootNodeAnchor = effectiveDraft?.rootNodeAnchor ?? builderState.selectedLayoutAnchor;
+  const rootNode = effectiveDraft?.rootNode ?? null;
+  const rootNodeId = rootNode?.id ?? null;
+  const rootNodeKind = rootNode ? ("layout" as const) : null;
+  const rootNodeTypeKey = rootNode?.widgetType ?? "";
+  const rootNodeChildLayouts = readPhiBuilderRegionRootChildLayouts(effectiveDraft);
+  const rootNodeChildWidgets = readPhiBuilderRegionRootChildWidgets(effectiveDraft);
+  // The root Layout's anchor is read off its config, as every Layout's is.
+  const rootNodeProps = rootNode ? resolveLayoutNodeRootProps(rootNode) : null;
+  const resolvedRootNodeAnchor = rootNodeProps?.editSlotAnchor ?? builderState.selectedLayoutAnchor;
+  /** The draft patch that gives the root Layout these children; a side left out stays as it is. */
+  const rootChildren = (children: {
+    childLayouts?: PhiCmsLayoutRenderNode[];
+    childWidgets?: PhiCmsContentWidgetNode[];
+  }): Partial<PhiDeveloperBuilderRegionDraft> =>
+    rootNode ? { rootNode: withPhiBuilderRegionRootChildren({ rootNode }, children).rootNode } : {};
   const resolveNextSlotSortOrder = (slotIndex: number) => {
     const slotChildren = [
       ...rootNodeChildLayouts.filter((layout) => layout.slotIndex === slotIndex),
@@ -879,19 +812,7 @@ export function PhiStructureRegionScaffold({
     });
 
     if (targetNodeId === rootNodeId) {
-      updateDraftAndPruneSignalRoutes({
-        rootNodeId: null,
-        rootNodeTypeKey: null,
-        rootNodeKind: null,
-      rootNodeTitle: null,
-      rootNodePackageName: null,
-      rootNodeGeometry: null,
-      rootNodePadding: null,
-      rootNodeAnchor: null,
-      rootNodeSurface: null,
-        rootNodeChildLayouts: [],
-        rootNodeChildWidgets: [],
-      }, deletedAddresses);
+      updateDraftAndPruneSignalRoutes({ rootNode: null }, deletedAddresses);
       return;
     }
 
@@ -914,10 +835,7 @@ export function PhiStructureRegionScaffold({
           childWidgets: nextChildWidgets,
         };
 
-    updateDraftAndPruneSignalRoutes({
-      rootNodeChildLayouts: compactedChildren.childLayouts,
-      rootNodeChildWidgets: compactedChildren.childWidgets,
-    }, deletedAddresses);
+    updateDraftAndPruneSignalRoutes(rootChildren({ childLayouts: compactedChildren.childLayouts, childWidgets: compactedChildren.childWidgets }), deletedAddresses);
   };
   const updateWidgetNodeConfig = (node: PhiCmsContentWidgetNode, configPatch: Record<string, unknown>) => {
     if (isPreviewMode || !hasRootNode) {
@@ -956,38 +874,21 @@ export function PhiStructureRegionScaffold({
 
     if (removedSubcontrolAddresses.length > 0) {
       updateDraftAndPruneSignalRoutes(
-        {
-          rootNodeChildLayouts: nextChildLayouts,
-          rootNodeChildWidgets: nextChildWidgets,
-        },
+        rootChildren({ childLayouts: nextChildLayouts, childWidgets: nextChildWidgets }),
         removedSubcontrolAddresses,
       );
       return;
     }
 
-    updateDraft({
-      rootNodeChildLayouts: nextChildLayouts,
-      rootNodeChildWidgets: nextChildWidgets,
-    });
+    updateDraft(rootChildren({ childLayouts: nextChildLayouts, childWidgets: nextChildWidgets }));
   };
   const updateLayoutNodeConfig = (node: PhiCmsLayoutRenderNode, configPatch: Record<string, unknown>) => {
     if (isPreviewMode || !hasRootNode) {
       return;
     }
 
-    if (node.id === rootNodeId) {
-      updateDraft({
-        rootNodeConfig: {
-          ...(effectiveDraft?.rootNodeConfig ?? {}),
-          ...configPatch,
-        },
-      });
-      return;
-    }
-
-    updateDraft({
-      rootNodeChildLayouts: updateLayoutChildConfigById(rootNodeChildLayouts, node.id, configPatch),
-    });
+    // The root Layout's config is patched like every Layout's below it.
+    updateDraft(rootNode ? { rootNode: updateLayoutChildConfigById([rootNode], node.id, configPatch)[0] } : {});
   };
   const resolveStructureDragData = (
     node: {
@@ -1051,19 +952,19 @@ export function PhiStructureRegionScaffold({
             payload.pageKey,
           )
         ] ?? null;
-      if (!sourceDraft?.rootNodeId || !sourceDraft.rootNodeTypeKey) {
+      if (!sourceDraft?.rootNode) {
         return false;
       }
       draggedNode =
-        payload.nodeId === sourceDraft.rootNodeId
+        payload.nodeId === sourceDraft.rootNode?.id
           ? buildStructureRootLayoutNode(
               sourceDraft,
               target.parentLayoutNodeId,
               target.slotIndex,
             )
           : extractStructureNode(
-              sourceDraft.rootNodeChildLayouts ?? [],
-              sourceDraft.rootNodeChildWidgets ?? [],
+              readPhiBuilderRegionRootChildLayouts(sourceDraft),
+              readPhiBuilderRegionRootChildWidgets(sourceDraft),
               payload.nodeId,
               payload.nodeKind,
             ).node;
@@ -1167,13 +1068,13 @@ export function PhiStructureRegionScaffold({
     }
 
     const { sourceDraft } = resolveWidgetSwapSourceDraft(payload);
-    if (!sourceDraft?.rootNodeId || !sourceDraft.rootNodeTypeKey) {
+    if (!sourceDraft?.rootNode) {
       return false;
     }
 
     return extractStructureNode(
-      sourceDraft.rootNodeChildLayouts ?? [],
-      sourceDraft.rootNodeChildWidgets ?? [],
+      readPhiBuilderRegionRootChildLayouts(sourceDraft),
+      readPhiBuilderRegionRootChildWidgets(sourceDraft),
       payload.nodeId,
       "widget",
     ).node != null;
@@ -1187,7 +1088,7 @@ export function PhiStructureRegionScaffold({
     }
 
     const { sourceDraftKey, sourceDraft } = resolveWidgetSwapSourceDraft(payload);
-    if (!sourceDraft?.rootNodeId) {
+    if (!sourceDraft?.rootNode?.id) {
       return;
     }
 
@@ -1204,11 +1105,7 @@ export function PhiStructureRegionScaffold({
       }
       setPhiDeveloperRegionDraft(
         draftKey,
-        {
-          ...effectiveDraft,
-          rootNodeChildLayouts: swapped.childLayouts,
-          rootNodeChildWidgets: swapped.childWidgets,
-        },
+        withPhiBuilderRegionRootChildren(effectiveDraft, { childLayouts: swapped.childLayouts, childWidgets: swapped.childWidgets }),
         {
           historyContext,
           historyLabel: "Swap widgets",
@@ -1219,9 +1116,9 @@ export function PhiStructureRegionScaffold({
 
     const swapped = swapPhiStructureWidgetsAcrossTrees({
       source: {
-        childLayouts: sourceDraft.rootNodeChildLayouts ?? [],
-        childWidgets: sourceDraft.rootNodeChildWidgets ?? [],
-        rootNodeId: sourceDraft.rootNodeId,
+        childLayouts: readPhiBuilderRegionRootChildLayouts(sourceDraft),
+        childWidgets: readPhiBuilderRegionRootChildWidgets(sourceDraft),
+        rootNodeId: sourceDraft.rootNode?.id,
         widgetId: payload.nodeId,
       },
       target: {
@@ -1236,16 +1133,8 @@ export function PhiStructureRegionScaffold({
     }
     setPhiDeveloperRegionDraftsWithHistory(
       {
-        [sourceDraftKey]: {
-          ...sourceDraft,
-          rootNodeChildLayouts: swapped.source.childLayouts,
-          rootNodeChildWidgets: swapped.source.childWidgets,
-        },
-        [draftKey]: {
-          ...effectiveDraft,
-          rootNodeChildLayouts: swapped.target.childLayouts,
-          rootNodeChildWidgets: swapped.target.childWidgets,
-        },
+        [sourceDraftKey]: withPhiBuilderRegionRootChildren(sourceDraft, { childLayouts: swapped.source.childLayouts, childWidgets: swapped.source.childWidgets }),
+        [draftKey]: withPhiBuilderRegionRootChildren(effectiveDraft, { childLayouts: swapped.target.childLayouts, childWidgets: swapped.target.childWidgets }),
       },
       {
         historyContext,
@@ -1305,11 +1194,11 @@ export function PhiStructureRegionScaffold({
       );
       const sourceDraft =
         getPhiDeveloperRegionDraftsSnapshot()[sourceDraftKey] ?? null;
-      if (!sourceDraft?.rootNodeId || !sourceDraft.rootNodeTypeKey) {
+      if (!sourceDraft?.rootNode) {
         return;
       }
       const movingSourceRoot =
-        payload.nodeId === sourceDraft.rootNodeId &&
+        payload.nodeId === sourceDraft.rootNode?.id &&
         (payload.nodeKind === "layout");
       const sourceRootNode = movingSourceRoot
         ? buildStructureRootLayoutNode(
@@ -1325,8 +1214,8 @@ export function PhiStructureRegionScaffold({
             node: sourceRootNode,
           }
         : extractStructureNode(
-            sourceDraft.rootNodeChildLayouts ?? [],
-            sourceDraft.rootNodeChildWidgets ?? [],
+            readPhiBuilderRegionRootChildLayouts(sourceDraft),
+            readPhiBuilderRegionRootChildWidgets(sourceDraft),
             payload.nodeId,
             payload.nodeKind,
           );
@@ -1439,7 +1328,7 @@ export function PhiStructureRegionScaffold({
         nextTargetWidgets = compactedTarget.childWidgets;
       }
 
-      const sourceRootDefinition = layoutMetasByType.get(sourceDraft.rootNodeTypeKey!) ?? null;
+      const sourceRootDefinition = layoutMetasByType.get(sourceDraft.rootNode!.widgetType) ?? null;
       let nextSourceLayouts = compactStructureSequentialLayouts(
         extractedSource.childLayouts,
         layoutMetasByType,
@@ -1458,17 +1347,8 @@ export function PhiStructureRegionScaffold({
         {
           [sourceDraftKey]: movingSourceRoot
             ? clearStructureRootNode(sourceDraft)
-            : {
-                ...sourceDraft,
-                rootNodeChildLayouts: nextSourceLayouts,
-                rootNodeChildWidgets: nextSourceWidgets,
-              },
-          [draftKey]: {
-            ...(effectiveDraft ?? getDefaultRegionDraft(config.regionKey)),
-            rootNodeChildLayouts:
-              compactStructureSequentialLayouts(nextTargetLayouts, layoutMetasByType),
-            rootNodeChildWidgets: nextTargetWidgets,
-          },
+            : withPhiBuilderRegionRootChildren(sourceDraft, { childLayouts: nextSourceLayouts, childWidgets: nextSourceWidgets }),
+          [draftKey]: withPhiBuilderRegionRootChildren((effectiveDraft ?? getDefaultRegionDraft(config.regionKey)), { childLayouts: compactStructureSequentialLayouts(nextTargetLayouts, layoutMetasByType), childWidgets: nextTargetWidgets }),
         },
         {
           historyContext,
@@ -1594,12 +1474,7 @@ export function PhiStructureRegionScaffold({
 
     setPhiDeveloperRegionDraft(
       draftKey,
-      {
-        ...(effectiveDraft ?? getDefaultRegionDraft(config.regionKey)),
-        rootNodeChildLayouts:
-          compactStructureSequentialLayouts(nextChildLayouts, layoutMetasByType),
-        rootNodeChildWidgets: nextChildWidgets,
-      },
+      withPhiBuilderRegionRootChildren((effectiveDraft ?? getDefaultRegionDraft(config.regionKey)), { childLayouts: compactStructureSequentialLayouts(nextChildLayouts, layoutMetasByType), childWidgets: nextChildWidgets }),
       {
         historyContext,
         historyLabel: "Move structure node",
@@ -1632,26 +1507,16 @@ export function PhiStructureRegionScaffold({
           payload.pageKey,
         )
       ] ?? null;
-    if (
-      !sourceDraft?.rootNodeId ||
-      !sourceDraft.rootNodeTypeKey ||
-      !sourceDraft.rootNodeKind
-    ) {
+    if (!sourceDraft?.rootNode) {
       return false;
     }
 
-    const movingSourceRoot = payload.nodeId === sourceDraft.rootNodeId;
-    if (
-      movingSourceRoot &&
-      sourceDraft.rootNodeKind !== "layout"
-    ) {
-      return false;
-    }
+    const movingSourceRoot = payload.nodeId === sourceDraft.rootNode.id;
     const extractedSource = movingSourceRoot
       ? null
       : extractStructureNode(
-          sourceDraft.rootNodeChildLayouts ?? [],
-          sourceDraft.rootNodeChildWidgets ?? [],
+          readPhiBuilderRegionRootChildLayouts(sourceDraft),
+          readPhiBuilderRegionRootChildWidgets(sourceDraft),
           payload.nodeId,
           payload.nodeKind,
         );
@@ -1677,12 +1542,12 @@ export function PhiStructureRegionScaffold({
     );
     const sourceDraft =
       getPhiDeveloperRegionDraftsSnapshot()[sourceDraftKey]!;
-    const movingSourceRoot = payload.nodeId === sourceDraft.rootNodeId;
+    const movingSourceRoot = payload.nodeId === sourceDraft.rootNode?.id;
     const extractedSource = movingSourceRoot
       ? null
       : extractStructureNode(
-          sourceDraft.rootNodeChildLayouts ?? [],
-          sourceDraft.rootNodeChildWidgets ?? [],
+          readPhiBuilderRegionRootChildLayouts(sourceDraft),
+          readPhiBuilderRegionRootChildWidgets(sourceDraft),
           payload.nodeId,
           payload.nodeKind,
         );
@@ -1695,7 +1560,7 @@ export function PhiStructureRegionScaffold({
       nextSourceDraft = clearStructureRootNode(sourceDraft);
       nextTargetDraft = copyStructureRootNode(targetBase, sourceDraft);
     } else {
-      const sourceRootDefinition = layoutMetasByType.get(sourceDraft.rootNodeTypeKey!) ?? null;
+      const sourceRootDefinition = layoutMetasByType.get(sourceDraft.rootNode!.widgetType) ?? null;
       let nextSourceLayouts = compactStructureSequentialLayouts(
         extractedSource!.childLayouts,
         layoutMetasByType,
@@ -1709,11 +1574,7 @@ export function PhiStructureRegionScaffold({
         nextSourceLayouts = compactedSource.childLayouts;
         nextSourceWidgets = compactedSource.childWidgets;
       }
-      nextSourceDraft = {
-        ...sourceDraft,
-        rootNodeChildLayouts: nextSourceLayouts,
-        rootNodeChildWidgets: nextSourceWidgets,
-      };
+      nextSourceDraft = withPhiBuilderRegionRootChildren(sourceDraft, { childLayouts: nextSourceLayouts, childWidgets: nextSourceWidgets });
       nextTargetDraft = promoteStructureLayoutToRoot(
         targetBase,
         extractedSource!.node as PhiCmsLayoutRenderNode,
@@ -1772,21 +1633,12 @@ export function PhiStructureRegionScaffold({
     return activeModules.layoutTypes.has(`${pluginKey}/${typeKey}`);
   });
   const pickerPlacement = config.regionKey === "sider_left" ? "right" : "top";
-  const rootNodeScaffold = hasRootNode
+  const rootNodeScaffold = rootNodeProps
     ? renderPhiRootNodeScaffold({
+      // The root Layout is scaffolded from its node, as every Layout below it is.
+      ...rootNodeProps,
       regionKey: config.regionKey,
-      id: rootNodeId,
-      typeKey: rootNodeTypeKey,
-      kind: rootNodeKind,
-      title: effectiveDraft?.rootNodeTitle ?? null,
-      packageName: effectiveDraft?.rootNodePackageName ?? null,
       editSlotAnchor: resolvedRootNodeAnchor,
-      rootNodeConfig: effectiveDraft?.rootNodeConfig ?? null,
-      rootNodeGeometry: effectiveDraft?.rootNodeGeometry ?? null,
-      rootNodePadding: effectiveDraft?.rootNodePadding ?? null,
-      rootNodeSurface: effectiveDraft?.rootNodeSurface ?? null,
-      childLayouts: rootNodeChildLayouts,
-      childWidgets: rootNodeChildWidgets,
     }, openSlot, openRootInspector, deleteRootNode, updateWidgetNodeConfig, updateLayoutNodeConfig, {
       effectsLabels,
       authoringToolsLabels,
@@ -1851,26 +1703,21 @@ export function PhiStructureRegionScaffold({
       );
       updateDraft(
         !targetsRootLayout
-          ? {
-              rootNodeChildLayouts: appendWidgetChildById(
+          ? rootChildren({ childLayouts: appendWidgetChildById(
                 rootNodeChildLayouts,
                 parentLayoutNodeId,
                 nextWidget,
                 compactSequential,
-              ),
-            }
+              ) })
           : compactSequential
             ? (() => {
                 const nextChildren = compactPhiCmsSequentialChildren({
                   childLayouts: rootNodeChildLayouts,
                   childWidgets: [...rootNodeChildWidgets, nextWidget],
                 });
-                return {
-                  rootNodeChildLayouts: nextChildren.childLayouts,
-                  rootNodeChildWidgets: nextChildren.childWidgets,
-                };
+                return rootChildren({ childLayouts: nextChildren.childLayouts, childWidgets: nextChildren.childWidgets });
               })()
-            : { rootNodeChildWidgets: [...rootNodeChildWidgets, nextWidget] },
+            : rootChildren({ childWidgets: [...rootNodeChildWidgets, nextWidget] }),
       );
     } else if (
       isSlotInsertion
@@ -1915,44 +1762,25 @@ export function PhiStructureRegionScaffold({
       }
       updateDraft(
         !targetsRootLayout
-          ? {
-              rootNodeChildLayouts: appendLayoutChildById(
+          ? rootChildren({ childLayouts: appendLayoutChildById(
                 rootNodeChildLayouts,
                 parentLayoutNodeId,
                 nextLayout,
                 compactSequential,
-              ),
-            }
+              ) })
           : compactSequential
             ? (() => {
                 const nextChildren = compactPhiCmsSequentialChildren({
                   childLayouts: [...rootNodeChildLayouts, nextLayout],
                   childWidgets: rootNodeChildWidgets,
                 });
-                return {
-                  rootNodeChildLayouts: nextChildren.childLayouts,
-                  rootNodeChildWidgets: nextChildren.childWidgets,
-                };
+                return rootChildren({ childLayouts: nextChildren.childLayouts, childWidgets: nextChildren.childWidgets });
               })()
-            : { rootNodeChildLayouts: [...rootNodeChildLayouts, nextLayout] },
+            : rootChildren({ childLayouts: [...rootNodeChildLayouts, nextLayout] }),
       );
     } else if (!hasRootNode) {
-      const resolvedDefaultConfig = resolveInsertedItemDefaultConfig(item);
-      const rootNodeDefaults = resolvePhiBuilderRootNodeDefaults(resolvedDefaultConfig);
-      updateDraft({
-        rootNodeId: instanceId,
-        rootNodeTypeKey: item.key,
-        rootNodeKind: item.kind,
-        rootNodeTitle: item.title,
-        rootNodePackageName: resolvePickItemPackageName(item),
-        rootNodeConfig: resolvedDefaultConfig,
-        rootNodeGeometry: null,
-        rootNodeAnchor: item.defaultAnchor ?? null,
-        rootNodePadding: rootNodeDefaults.rootNodePadding,
-        rootNodeSurface: rootNodeDefaults.rootNodeSurface,
-        rootNodeChildLayouts: [],
-        rootNodeChildWidgets: [],
-      });
+      // The root Layout is created like every Layout below it.
+      updateDraft({ rootNode: buildInsertedLayoutNode(item, instanceId, null, 0, 0) });
     } else {
       /*
        * Nothing matched, and a pick that does nothing must at least say so.
@@ -2025,7 +1853,7 @@ export function PhiStructureRegionScaffold({
     }
 
     // Seed the structure workspace exactly once per draft key.
-    // An empty draft with `rootNodeTypeKey: null` is still a valid loaded state,
+    // An empty draft with `rootNode: null` is still a valid loaded state,
     // for example after deleting the region root layout or after loading a
     // persisted empty shell region from the server.
     if (regionDraft != null) {
@@ -2040,12 +1868,12 @@ export function PhiStructureRegionScaffold({
       return;
     }
 
-    if (!fallbackPageDraft || fallbackPageDraft.rootNodeTypeKey == null) {
+    if (!fallbackPageDraft || fallbackPageDraft.rootNode == null) {
       return;
     }
 
     // Seed the page workspace exactly once per draft key.
-    // An empty draft with `rootNodeTypeKey: null` is still a valid loaded state,
+    // An empty draft with `rootNode: null` is still a valid loaded state,
     // for example after deleting the page root layout or after loading a
     // persisted empty page region from the server.
     if (regionDraft != null) {

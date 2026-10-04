@@ -2,7 +2,6 @@ import { readPhiSignalRouteSet, type PhiSignalRouteSet } from "../../../types/si
 import {
   findPhiBuilderLayoutNodeById,
   findPhiBuilderWidgetNodeByIdInLayouts,
-  findPhiBuilderWidgetNodeByIdInWidgets,
 } from "./node-finders";
 import { resolveRegionDraftKey } from "./developer-region-drafts";
 import {
@@ -35,19 +34,13 @@ function resolveSelectedSignalRouteConfig(
     return null;
   }
 
-  if (state.nodeId === draft.rootNodeId) {
-    return draft.rootNodeConfig ?? null;
-  }
-
+  const rootLayouts = draft.rootNode ? [draft.rootNode] : [];
   if (state.nodeKind === "widget") {
-    return (
-      findPhiBuilderWidgetNodeByIdInWidgets(draft.rootNodeChildWidgets ?? [], state.nodeId) ??
-      findPhiBuilderWidgetNodeByIdInLayouts(draft.rootNodeChildLayouts ?? [], state.nodeId)
-    )?.config ?? null;
+    return findPhiBuilderWidgetNodeByIdInLayouts(rootLayouts, state.nodeId)?.config ?? null;
   }
 
   if (state.nodeKind === "layout") {
-    return findPhiBuilderLayoutNodeById(draft.rootNodeChildLayouts ?? [], state.nodeId)?.config ?? null;
+    return findPhiBuilderLayoutNodeById(rootLayouts, state.nodeId)?.config ?? null;
   }
 
   return null;

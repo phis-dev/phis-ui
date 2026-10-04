@@ -79,7 +79,7 @@ export const PHI_STRUCTURE_REGION_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiStructure
         } as Partial<Record<PhiDeveloperBuilderArea, Partial<Record<string, PhiDeveloperBuilderRegionDraft | null>>>>
       : undefined;
     const resolvedPreviewDraft = isPhiBuilderPageScopedRegion(regionKey) ? resolvedPageDraft : resolvedStructureDraft;
-    if (snapshot && resolvedPreviewDraft?.rootNodeTypeKey == null) {
+    if (snapshot && resolvedPreviewDraft?.rootNode == null) {
       return null;
     }
 
