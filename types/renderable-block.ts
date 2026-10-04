@@ -1,8 +1,6 @@
 import type { PhiMotionEasing } from "../helpers/motion";
-import type { CSSProperties } from "react";
 import type { PhiCmsInstanceId } from "./cms-instance-id";
 import type { PhiViewerAccessPolicy, PhiViewportFlags } from "./access";
-import type { PhiShadow, PhiLayoutEffectId } from "./layout-style";
 import type { PhiResponsiveValue } from "./responsive";
 import type { PhiSurface } from "./surface";
 
@@ -195,11 +193,12 @@ export type PhiRenderableBlockBase = {
   anchor?: PhiRenderableBlockAnchor;
   zIndex?: number;
   opacity?: number;
-  background?: CSSProperties["background"] | Record<string, unknown> | null;
-  border?: CSSProperties["border"] | Record<string, unknown> | null;
-  effect?: PhiLayoutEffectId;
-  shadow?: PhiShadow;
-  /** What the block's box looks like: ground, edge, depth, and the mode its content takes. */
+  /**
+   * What the block's box looks like: ground, edge, depth, and the mode its content takes.
+   *
+   * Who draws it depends on the block: a Layout and a Region draw their own, a Widget's is drawn by its
+   * slot frame unless its plugin says `surface: "own"` (the Widget draws it) or `"none"` (nobody does).
+   */
   surface?: PhiSurface;
   className?: string;
   size?: PhiRenderableBlockResponsiveSize;

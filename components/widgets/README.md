@@ -51,6 +51,11 @@ and loading are [MODULES.md](../../MODULES.md); signal capabilities, routes, and
   `parsePhiControlConfig(...)`.
 - A Widget declares a `slotSizePolicy` when it needs more than the default `intrinsic`. Renderers read the
   policy; they never branch on a Widget type to decide fill behavior.
+- A Widget's look -- ground, edge, depth -- is the block's `surface` ([LAYOUTING.md](../../LAYOUTING.md#surface)),
+  drawn by the slot frame. A Widget that has to draw it inside its own box declares `surface: "own"` and
+  reads `config.surface` through `resolvePhiSurfaceStyle`; one that has no look of its own declares
+  `surface: "none"`. A Widget never adds background, border or shadow fields of its own for the box it
+  sits in.
 - Interactive Controls consume the resolved `theme.shape.controls` shape ([THEME.md](../../THEME.md#control-shape));
   Widgets never persist raw radii or map shape names themselves.
 - Config is persisted sparsely: absent, empty, or default values are omitted, and `parseConfig` restores

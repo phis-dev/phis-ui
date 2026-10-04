@@ -11,6 +11,7 @@ import type {
 import type { PhiRenderableBlockAnchor, PhiRenderableBlockBase } from "./renderable-block";
 import type { PhiCmsRegionOwnership } from "../helpers/cms-region-keys";
 import type { PhiSlotSizePolicy } from "./slot-size-policy";
+import type { PhiSurfacePolicy } from "./surface";
 import type {
   PhiCmsContentWidgetNode,
   PhiCmsLayoutRenderNode,
@@ -421,6 +422,15 @@ export type PhiCmsWidgetPlugin<TConfig> = {
   translatesOwnText?: true;
   slotSizePolicy: PhiSlotSizePolicy;
   /**
+   * Who draws the node's Surface (`config.surface`).
+   *
+   * `frame`, the answer when a Widget says nothing, has the slot frame draw it around whatever the Widget
+   * renders: ground, edge and depth on the box the Widget sits in. `own` hands it to the Widget, which
+   * reads `config.surface` itself -- a card whose picture zooms under the pointer needs the ground inside
+   * its own box. `none` says the Widget has no Surface at all, and the Inspector offers none.
+   */
+  surface?: PhiSurfacePolicy;
+  /**
    * The kind of Region this Widget needs, where standing in the other kind would break it.
    *
    * Declared by the few Widgets it matters to and left out by the rest, which stand anywhere. "shell"
@@ -460,6 +470,7 @@ export type PhiCmsWidgetPluginDefinition<TConfig> = Pick<
   | "contentBinding"
   | "translatesOwnText"
   | "slotSizePolicy"
+  | "surface"
   | "requiredRegionOwnership"
   | "defaultConfig"
   | "fields"
@@ -486,6 +497,7 @@ export type PhiCmsBuilderWidgetPlugin<TConfig> = Pick<
   | "requiredRuntimeControllers"
   | "requiredDataProviders"
   | "slotSizePolicy"
+  | "surface"
   | "defaultConfig"
   | "fields"
   | "parseConfig"
@@ -512,6 +524,7 @@ export type PhiCmsServerWidgetPlugin<TConfig> = Pick<
   | "signalSubcontrols"
   | "requiredRuntimeControllers"
   | "slotSizePolicy"
+  | "surface"
   | "defaultConfig"
   | "fields"
   | "parseConfig"
@@ -547,6 +560,8 @@ export type PhiCmsRuntimeRenderRegistry = {
   renderIssuesByLayoutType: ReadonlyMap<string, PhiCmsRenderIssue>;
   ownerModuleIdByWidgetType: ReadonlyMap<string, PhiRuntimeModuleId>;
   widgetSlotSizePoliciesByType: ReadonlyMap<string, PhiSlotSizePolicy | undefined>;
+  /** Each Widget's answer to who draws its Surface; only types that do not leave it to the frame. */
+  widgetSurfacePoliciesByType: ReadonlyMap<string, PhiSurfacePolicy>;
   /**
    * The block base a Widget declares in its `defaultConfig`, for the nodes that declare none.
    *
@@ -773,6 +788,7 @@ export type PhiRuntimeModuleClientWidgetDefinition = {
   title: string;
   signalSubcontrols?: readonly PhiCmsWidgetSignalSubcontrolCollection[];
   slotSizePolicy: PhiSlotSizePolicy;
+  surface?: PhiSurfacePolicy;
   renderPolicies: PhiRuntimeModuleRenderPolicies;
 };
 

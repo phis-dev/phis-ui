@@ -24,7 +24,7 @@ import type {
   PhiRenderableBlockVisibility,
 } from "../../types/renderable-block";
 import type { PhiCmsInstanceId } from "../../types/cms-instance-id";
-import { readPhiShadow } from "../../types/layout-style";
+import { readPhiSurface, type PhiSurface } from "../../types/surface";
 import { normalizeRenderableBlockAnchor } from "../../helpers/renderable-block-anchor";
 import {
   inferPhiSignalValueType,
@@ -327,6 +327,13 @@ function applyPhiRenderableBlockRuntimePatch(
   return normalizePhiRenderableBlockRuntime(next) ?? next;
 }
 
+function patchPhiRenderableBlockSurface(
+  current: PhiSurface | undefined,
+  patch: Record<string, unknown>,
+): PhiSurface | undefined {
+  return readPhiSurface({ ...(current ?? {}), ...patch }) ?? undefined;
+}
+
 function canUseRenderableBlockCapability(
   state: PhiRenderableBlockRuntimeState,
   capability: keyof NonNullable<PhiRenderableBlockRuntimeState["capabilities"]>,
@@ -334,7 +341,7 @@ function canUseRenderableBlockCapability(
   return state.capabilities?.[capability] !== false;
 }
 
-function applyPhiRenderableBlockSignal(
+export function applyPhiRenderableBlockSignal(
   current: PhiRenderableBlockRuntimeState,
   channel: PhiRenderableBlockSignalChannel,
   action: PhiSignalAction,
@@ -363,14 +370,19 @@ function applyPhiRenderableBlockSignal(
     return { ...current, enabled: typeof value === "boolean" ? value : true };
   }
 
+  /*
+   * A Signal for one part of the Surface replaces that part and leaves the others as they stand; `null`
+   * takes the part away. The Surface is read again afterwards, so a value no part reads changes nothing.
+   */
   if (channel === "background" || channel === "border") {
-    if (value == null) {
-      return { ...current, [channel]: null };
+    if (value != null && (typeof value !== "object" || Array.isArray(value))) {
+      return current;
     }
-
-    return typeof value === "object" && !Array.isArray(value)
-      ? { ...current, [channel]: value }
-      : current;
+    // A line sent by Signal is drawn as sent, whatever source the stored Surface names for its edge.
+    const patch = channel === "border" && value != null
+      ? { border: value, borderSource: "custom" }
+      : { [channel]: value };
+    return { ...current, surface: patchPhiRenderableBlockSurface(current.surface, patch) };
   }
 
   if (
@@ -393,7 +405,7 @@ function applyPhiRenderableBlockSignal(
   }
 
   if (channel === "shadow") {
-    return { ...current, shadow: readPhiShadow(value) };
+    return { ...current, surface: patchPhiRenderableBlockSurface(current.surface, { shadow: value }) };
   }
 
   if (channel === "zIndex") {
@@ -548,16 +560,13 @@ function resolvePhiRenderableBlockRuntimeState(
     anchor: normalizeRenderableBlockAnchor(input.anchor) ?? undefined,
     zIndex: input.zIndex ?? 0,
     opacity: input.opacity ?? 1,
-    effect: input.effect,
     className: input.className,
     size: normalizePhiRenderableBlockSize(input.size),
     minSize: normalizePhiRenderableBlockSize(input.minSize),
     maxSize: normalizePhiRenderableBlockSize(input.maxSize),
     collapsedSizeHint: normalizePhiRenderableBlockSize(input.collapsedSizeHint),
     capabilities: normalizePhiRenderableBlockCapabilities(input.capabilities),
-    background: input.background ?? undefined,
-    border: input.border ?? undefined,
-    shadow: input.shadow ?? undefined,
+    surface: input.surface ?? undefined,
     effects: input.effects ?? undefined,
     effectsState: input.effectsState,
     runtime: resolvePhiRenderableBlockRuntimeValue(input.blockId, input.runtime),
@@ -620,8 +629,8 @@ function resolvePhiRenderableBlockSignalOverrides(
     return { runtime: next.runtime };
   }
 
-  if (channel === "shadow") {
-    return { shadow: next.shadow };
+  if (channel === "background" || channel === "border" || channel === "shadow") {
+    return { surface: next.surface };
   }
 
   if (channel === "zIndex") {

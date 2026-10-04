@@ -1,9 +1,5 @@
-export const PHI_LAYOUT_EFFECT_IDS = ["glass", "haze", "blur", "dim"] as const;
-
-export type PhiLayoutEffectId = (typeof PHI_LAYOUT_EFFECT_IDS)[number];
-
 /**
- * The Effects that are a pane rather than a treatment of the surface itself.
+ * The Background filters that are a pane rather than a treatment of the paint itself.
  *
  * `glass` and `haze` are the same thing at two strengths: a sheet that frosts what shows through it.
  * `glass` is the frosted pane, `haze` the barely clouded one -- both a smaller radius and more of the
@@ -29,10 +25,6 @@ export type PhiCustomShadow = {
 };
 
 export type PhiShadow = PhiShadowId | PhiCustomShadow;
-
-export function isPhiLayoutEffectId(value: unknown): value is PhiLayoutEffectId {
-  return typeof value === "string" && PHI_LAYOUT_EFFECT_IDS.includes(value as PhiLayoutEffectId);
-}
 
 export function isPhiShadowId(value: unknown): value is PhiShadowId {
   return typeof value === "string" && PHI_SHADOW_IDS.includes(value as PhiShadowId);

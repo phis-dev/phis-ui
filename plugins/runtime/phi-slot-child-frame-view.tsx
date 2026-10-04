@@ -7,19 +7,19 @@ import type {
 
 import type {
   PhiRenderableBlock,
-  PhiRenderableBlockBase,
   PhiSlotSizePolicy,
   PhiCmsInstanceId,
 } from "../../types";
+import type { PhiSurfacePolicy } from "../../types/surface";
 import {
   resolveRenderableBlockEffectsAttributes,
   resolveRenderableBlockEffectsStyle,
   resolveRenderableBlockStaticEffectsStyle,
   resolveRenderableBlockViewportEffects,
 } from "../../helpers/renderable-block-effects";
-import { resolvePhiBorderWidgetStyle } from "../../helpers/border-widget-style";
-import { resolvePhiBackgroundWidgetStyle } from "../../components/widgets/config/background";
-import { combinePhiBoxShadows, resolvePhiShadow } from "../../helpers/layout-style";
+import { resolvePhiSurfaceStyle } from "../../helpers/surface-style";
+import { PHI_LAYOUT_SURFACE_RADIUS } from "../../components/layouts/phi-layout-contract";
+import { PhiSurfaceGroundLayer } from "../../components/surface/phi-surface-ground";
 import {
   buildPhiSlotChildClassName,
   buildPhiSlotChildDataAttributes,
@@ -37,6 +37,11 @@ import type { PhiRenderableBlockReceiver } from "../../components/runtime/render
 export type PhiSlotChildFrameViewProps = {
   kind: PhiSlotChildKind;
   slotSizePolicy?: PhiSlotSizePolicy | null;
+  /**
+   * Who draws a Widget's Surface, from its plugin; the frame draws it only under `frame`, the answer
+   * when nothing is said. A Layout's frame never draws one -- the Layout draws its own.
+   */
+  surfacePolicy?: PhiSurfacePolicy | null;
   blockId?: PhiCmsInstanceId | null;
   receiver?: PhiRenderableBlockReceiver | null;
   config?: Partial<PhiRenderableBlock> | null;
@@ -54,18 +59,6 @@ export type PhiSlotChildFrameViewProps = {
   onPointerLeave?: PointerEventHandler<HTMLDivElement>;
   children: ReactNode;
 };
-
-function resolvePhiSlotChildBorderStyle(border: PhiRenderableBlockBase["border"]): CSSProperties {
-  if (border == null) {
-    return {};
-  }
-  if (typeof border === "string") {
-    return { border };
-  }
-  return typeof border === "object" && !Array.isArray(border)
-    ? resolvePhiBorderWidgetStyle(border)
-    : {};
-}
 
 export function requiresPhiSlotChildEffectsObserver(
   config: Partial<PhiRenderableBlock> | null | undefined,
@@ -86,6 +79,7 @@ export function requiresPhiSlotChildEffectsObserver(
 export function PhiSlotChildFrameView({
   kind,
   slotSizePolicy,
+  surfacePolicy,
   blockId,
   receiver,
   config,
@@ -125,9 +119,9 @@ export function PhiSlotChildFrameView({
   const effectsAttributes = disableEffects
     ? undefined
     : resolveRenderableBlockEffectsAttributes(resolvedConfig);
-  const resolvedBackgroundStyle = resolvedConfig.background == null
-    ? {}
-    : resolvePhiBackgroundWidgetStyle(resolvedConfig.background);
+  const surface = kind === "widget" && (surfacePolicy ?? "frame") === "frame"
+    ? resolvePhiSurfaceStyle(resolvedConfig.surface, { cornerFallback: PHI_LAYOUT_SURFACE_RADIUS })
+    : null;
 
   return (
     <div
@@ -156,17 +150,8 @@ export function PhiSlotChildFrameView({
       style={{
         ...resolvePhiSlotChildBaseStyle(policy),
         ...resolvePhiSlotChildSizeStyle(geometry, policy),
-        ...resolvedBackgroundStyle,
-        ...resolvePhiSlotChildBorderStyle(resolvedConfig.border),
+        ...surface?.style,
         ...(resolvedConfig.zIndex == null ? {} : { zIndex: resolvedConfig.zIndex }),
-        ...(kind !== "widget"
-          ? {}
-          : {
-              boxShadow: combinePhiBoxShadows(
-                resolvedBackgroundStyle.boxShadow,
-                resolvePhiShadow(resolvedConfig.shadow),
-              ),
-            }),
         ...(resolvedConfig.opacity == null ? {} : { opacity: resolvedConfig.opacity }),
         ...(resolvedEnabled
           ? {}
@@ -182,6 +167,7 @@ export function PhiSlotChildFrameView({
       onClickCapture={onClickCapture}
       onPointerLeave={onPointerLeave}
     >
+      <PhiSurfaceGroundLayer ground={surface?.ground ?? null} />
       {children}
     </div>
   );

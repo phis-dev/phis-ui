@@ -828,6 +828,12 @@ export async function resolvePhiRuntimeRenderRegistry({
     widgetSlotSizePoliciesByType: new Map(
       widgetEntries.map(([type, entry]) => [type, entry.definition.slotSizePolicy]),
     ),
+    widgetSurfacePoliciesByType: new Map(
+      widgetEntries.flatMap(([type, entry]) => {
+        const policy = entry.definition.surface;
+        return policy == null || policy === "frame" ? [] : [[type, policy] as const];
+      }),
+    ),
     /*
      * What a Widget states about its own block, for the nodes that state nothing.
      *

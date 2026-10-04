@@ -67,6 +67,7 @@ export function buildPhiBuilderModuleAuthoringCatalog({
         title: widget.definition.title,
         signalSubcontrols: widget.definition.signalSubcontrols,
         slotSizePolicy: widget.definition.slotSizePolicy,
+        surface: widget.definition.surface,
         renderPolicies: widget.renderPolicies,
       })),
       layoutTypes: layouts.map(buildPhiRuntimeModuleLayoutType),

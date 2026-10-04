@@ -134,7 +134,7 @@ Common serializable config may express:
 - one shared declarative mask config with `appearance: "transparent" | "normal" | "blurred"`,
   `allowOutsideInteraction`, and `closable`; visual presentation, outside interaction, and dismissal are
   independent semantic axes shared by Modal and Drawer;
-- shared size bounds, background, border, shadow, and semantic effect;
+- shared size bounds and a Surface (background with its filter, border, shadow);
 - Modal-specific centering and canonical `controlSize`;
 - Drawer-specific placement, size, maximum size, resizing, and nested push behavior;
 - persisted signal routes.

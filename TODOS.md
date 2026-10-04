@@ -584,7 +584,7 @@ built. Remove an entry when it is done.
 
   Every renderable block carries `size`, `minSize`, `maxSize` and `collapsedSizeHint`, each a
   `{ width?, height? }` (types/renderable-block.ts). `PhiCmsOverlayConfig` carries none of them: it
-  extends `PhiCmsContainerChromeConfig`, which is padding, background, border, shadow and effect and no
+  extends `PhiCmsContainerChromeConfig`, which is padding and a Surface and no
   geometry at all (types/cms-container.ts). So the Overlay grew three fields of its own, each weaker
   than the one it stands in for -- `width` is a width with no height, the Drawer's `size` is a single
   length under the same name the block contract uses for a pair, and `maxSize` is a bare number under

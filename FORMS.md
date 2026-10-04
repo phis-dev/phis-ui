@@ -385,7 +385,7 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
 | `openActionKey` | The Table action key that opens a record, default `edit`. |
 | `signalRoutes` | The Widget's routes. |
 | `maxFormWidth` | How wide the form itself may get, measured at the fields rather than around the box. Defaults to `PHI_LAYOUT.contentMax`; see below. |
-| block geometry | `maxSize`, `minSize`, `size`, background, border, shadow -- read from the node like any other Widget. They measure the block the slot frame draws, which is the box *around* the Form's own. |
+| block geometry | `maxSize`, `minSize`, `size`, `surface` -- read from the node like any other Widget. They measure the block the slot frame draws, which is the box *around* the Form's own. |
 
 - **A Form is capped at the reading measure unless the placement says otherwise.** `maxFormWidth` is
   declared as `PHI_LAYOUT.contentMax` (610) in the Widget's `defaultConfig`, the measure

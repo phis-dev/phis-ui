@@ -9,6 +9,7 @@ import type {
 import { comparePhiCmsInstanceIds, type PhiCmsInstanceId } from "../../types/cms-instance-id";
 import type { PhiBlockRuntime, PhiSignalScope } from "../../types";
 import type { PhiRenderableBlock, PhiRenderableBlockBase, PhiRenderableBlockRuntime } from "../../types/renderable-block";
+import type { PhiSurfacePolicy } from "../../types/surface";
 import type {
   PhiCmsLayoutPlugin,
   PhiCmsPreviewWidgetPlugin,
@@ -653,6 +654,7 @@ function wrapPhiRenderedSlotChild(
   options: {
     kind: PhiSlotChildKind;
     slotSizePolicy?: PhiCmsRuntimeWidgetPlugin<unknown>["slotSizePolicy"] | PhiCmsLayoutPlugin<unknown>["slotSizePolicy"];
+    surfacePolicy?: PhiSurfacePolicy | null;
     blockId?: PhiCmsInstanceId | null;
     config?: Partial<PhiRenderableBlock> | null | undefined;
     key: string;
@@ -695,6 +697,7 @@ function wrapPhiRenderedSlotChild(
       key={options.key}
       kind={options.kind}
       slotSizePolicy={options.slotSizePolicy}
+      surfacePolicy={options.surfacePolicy}
       blockId={options.blockId}
       config={options.config}
       runtime={options.signalRuntime}
@@ -792,6 +795,7 @@ function buildRenderedChildEntries(
         element: wrapPhiRenderedSlotChild(renderContentWidget(child, context), {
           kind: "widget",
           slotSizePolicy: context.runtimeRegistry.widgetSlotSizePoliciesByType.get(child.widgetType),
+          surfacePolicy: context.runtimeRegistry.widgetSurfacePoliciesByType.get(child.widgetType),
           blockId: child.id,
           config: child.config as Partial<PhiRenderableBlock> | null | undefined,
           key: `widget-${child.id}`,

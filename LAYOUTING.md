@@ -76,6 +76,20 @@ layer of its own -- a softened or moving picture -- the ground the Layout render
 `PhiSurfaceGroundLayer`. No second path decorates a Layout from outside: the Builder hands the Surface to
 the Layout like any other prop, so the Canvas draws what the page will.
 
+A Widget's Surface is the node's `config.surface` as well, and who draws it is the Widget plugin's
+`surface` metadatum (`PhiSurfacePolicy`):
+
+- `frame` (the answer when a plugin says nothing) -- the slot frame draws it on the box the Widget sits
+  in, with the same resolver, the same corner fallback as a Layout and the same ground layer;
+- `own` -- the Widget reads `config.surface` and draws it itself, for a Widget whose ground has to live
+  inside its own box (a card whose picture zooms under the pointer);
+- `none` -- the Widget has no Surface, and the Inspector offers none.
+
+A Layout's slot frame never draws a Surface: the Layout draws its own, and a second ground under it would
+double every pane and every shadow. The renderer reads the policy from the runtime registry
+(`widgetSurfacePoliciesByType`), the Builder from the Widget's client definition; neither branches on a
+Widget type.
+
 ### Where a Surface's outline comes from
 
 `borderSource` is `none`, `theme`, or `custom` (`types/cms-border-source.ts`).

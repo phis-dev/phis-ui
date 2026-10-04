@@ -24,6 +24,7 @@ import { resolvePhiCmsBorderSource } from "../types/cms-border-source";
 import { resolvePhiSourcedBorderStyle } from "../helpers/border-widget-style";
 import { resolvePhiSurfaceStyle } from "../helpers/surface-style";
 import { PhiCmsRegionStatic } from "../components/regions/phi-cms-region-static";
+import { PhiSlotChildFrameView } from "../plugins/runtime/phi-slot-child-frame-view";
 import { resolvePhiBuilderPreviewRegionConfig } from "../plugins/runtime-modules/builder/render-root-node-preview.server";
 import { parsePhiCmsContentLayoutConfig, parsePhiCmsGridLayoutConfig } from "../types/cms-config";
 import { resolvePhiGridSlotPlacement } from "../components/layouts/phi-grid-contract";
@@ -347,6 +348,26 @@ assert.equal(
   "theme",
   "A stated source always wins: the reading rule only answers where nothing was stated.",
 );
+
+/*
+ * A Widget's Surface is drawn once. The slot frame draws it unless the Widget's plugin keeps it (`own`)
+ * or has none (`none`), and a Layout's frame never draws it -- the Layout draws its own, and a second
+ * ground under it would double every glass pane and every shadow.
+ */
+{
+  const surface = { background: { base: { kind: "color" as const, color: "#123456" } }, shadow: "soft" as const };
+  const frameMarkup = (props: Partial<Parameters<typeof PhiSlotChildFrameView>[0]>) =>
+    renderToStaticMarkup(createElement(
+      PhiSlotChildFrameView,
+      { kind: "widget", config: { surface }, ...props } as Parameters<typeof PhiSlotChildFrameView>[0],
+      createElement("span", null, "content"),
+    ));
+  assert.match(frameMarkup({}), /background-color:#123456/u, "The frame draws a Widget's Surface by default.");
+  assert.match(frameMarkup({ surfacePolicy: "frame" }), /box-shadow:/u, "The frame draws the Surface's depth.");
+  assert.doesNotMatch(frameMarkup({ surfacePolicy: "own" }), /#123456/u, "A Widget that owns its Surface draws it itself.");
+  assert.doesNotMatch(frameMarkup({ surfacePolicy: "none" }), /#123456/u, "A Widget without a Surface gets none.");
+  assert.doesNotMatch(frameMarkup({ kind: "layout" }), /#123456/u, "A Layout's frame leaves the Surface to the Layout.");
+}
 
 /*
  * And the corner follows the source. `custom` is the one source that reads a configured radius, so

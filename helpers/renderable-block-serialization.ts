@@ -23,7 +23,6 @@ import type {
   PhiRenderableBlockViewportEffectRangePoint,
   PhiRenderableBlockViewportEffectUnit,
 } from "../types";
-import { isPhiLayoutEffectId, readPhiShadow } from "../types/layout-style";
 import { readPhiCmsInstanceId } from "../types/cms-instance-id";
 import { readPhiSurface } from "../types/surface";
 import {
@@ -483,8 +482,6 @@ function normalizeRenderableBlockBase(value: unknown): PhiRenderableBlockBase {
       ? value.zIndex
       : PHI_RENDERABLE_BLOCK_DEFAULT_Z_INDEX,
     opacity: normalizeRenderableBlockOpacity(value.opacity) ?? PHI_RENDERABLE_BLOCK_DEFAULT_OPACITY,
-    effect: isPhiLayoutEffectId(value.effect) ? value.effect : undefined,
-    shadow: readPhiShadow(value.shadow),
     surface: readPhiSurface(value.surface) ?? undefined,
     className: typeof value.className === "string" ? value.className : undefined,
     size: normalizeRenderableBlockSize(value.size),
@@ -730,12 +727,6 @@ export function stripRenderableBlockDefaults(
   }
   if (normalized.opacity !== PHI_RENDERABLE_BLOCK_DEFAULT_OPACITY) {
     next.opacity = normalized.opacity;
-  }
-  if (normalized.effect !== undefined) {
-    next.effect = normalized.effect;
-  }
-  if (normalized.shadow !== undefined) {
-    next.shadow = normalized.shadow;
   }
   if (normalized.surface !== undefined) {
     next.surface = normalized.surface;

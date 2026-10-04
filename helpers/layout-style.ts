@@ -2,9 +2,7 @@ import type { CSSProperties } from "react";
 
 import { PHI_COLOR, PHI_SHADOW } from "../theme/antd-css-var-contract";
 import {
-  isPhiGlassLayoutEffectId,
   type PhiGlassLayoutEffectId,
-  type PhiLayoutEffectId,
   type PhiShadow,
 } from "../types/layout-style";
 
@@ -30,21 +28,6 @@ function resolvePhiGlassBackground(
   return `color-mix(in srgb, ${base} ${strengthPercent}%, transparent)`;
 }
 
-export const PHI_LAYOUT_EFFECT_DEFINITIONS = {
-  glass: {
-    backdropFilter: PHI_GLASS_LAYOUT_EFFECT_DEFINITIONS.glass.filter,
-  },
-  haze: {
-    backdropFilter: PHI_GLASS_LAYOUT_EFFECT_DEFINITIONS.haze.filter,
-  },
-  blur: {
-    filter: "blur(6px)",
-  },
-  dim: {
-    filter: "brightness(0.85)",
-  },
-} as const satisfies Record<PhiLayoutEffectId, Readonly<CSSProperties>>;
-
 export const PHI_SHADOW_DEFINITIONS = {
   none: "none",
   soft: PHI_SHADOW.tertiary,
@@ -65,31 +48,27 @@ export function resolvePhiLayoutEffectStyle({
   effect,
   background,
 }: {
-  effect?: PhiLayoutEffectId | null;
+  effect?: PhiGlassLayoutEffectId | null;
   background?: CSSProperties["background"];
 }): CSSProperties | undefined {
   if (effect == null) {
     return undefined;
   }
 
-  if (isPhiGlassLayoutEffectId(effect)) {
-    const glass = PHI_GLASS_LAYOUT_EFFECT_DEFINITIONS[effect];
-    /*
-     * The ground as `backgroundColor`, never as the `background` shorthand.
-     *
-     * Callers spread this into an inline style that also carries longhands, from an authored Background
-     * config or from the Shell Chrome Overlay, and React warns when a rerender has to drop a longhand
-     * from an element whose shorthand is still set. The value is always a colour, so the longhand says
-     * the same thing without the shorthand's silent resets.
-     */
-    return {
-      backgroundColor: resolvePhiGlassBackground(background, glass.strengthPercent),
-      backdropFilter: glass.filter,
-      WebkitBackdropFilter: glass.filter,
-    };
-  }
-
-  return PHI_LAYOUT_EFFECT_DEFINITIONS[effect];
+  const glass = PHI_GLASS_LAYOUT_EFFECT_DEFINITIONS[effect];
+  /*
+   * The ground as `backgroundColor`, never as the `background` shorthand.
+   *
+   * Callers spread this into an inline style that also carries longhands, from an authored Background
+   * config or from the Shell Chrome Overlay, and React warns when a rerender has to drop a longhand
+   * from an element whose shorthand is still set. The value is always a colour, so the longhand says
+   * the same thing without the shorthand's silent resets.
+   */
+  return {
+    backgroundColor: resolvePhiGlassBackground(background, glass.strengthPercent),
+    backdropFilter: glass.filter,
+    WebkitBackdropFilter: glass.filter,
+  };
 }
 
 export function composePhiLayoutEffectStyle(

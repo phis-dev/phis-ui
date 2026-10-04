@@ -4,9 +4,9 @@ import { isPhiRecord } from "../../helpers/is-record";
 /**
  * Backgrounds bind an Asset by id, but drawing one needs facts the config cannot hold: the delivery
  * revision, the variant version a focal change bumps, the focal rectangle, and the intrinsic size.
- * Content Widgets
- * already get theirs from a projection (`resolvedContent`); this is the same move for the Region,
- * Layout, and Overlay configs a page or a Builder draft renders.
+ * A Content Widget's own pictures come from its own projection (`resolvedContent`); this is the same
+ * move for the Region, Layout, and Overlay configs a page or a Builder draft renders, and for the
+ * Surface of every Content Widget.
  *
  * Collecting and applying are pure and live here so the live render and the Builder share one rule.
  * Only fetching differs: the server resolves in bulk through the reference gateway, the Builder reads
@@ -15,7 +15,9 @@ import { isPhiRecord } from "../../helpers/is-record";
  *
  * The walk is shape-driven rather than key-driven on purpose. Background bases sit under `background`,
  * `backgroundConfig`, `surface.background`, and slot-level keys, and a new container would otherwise
- * silently render a stale crop until someone remembered to extend a key list.
+ * silently render a stale crop until someone remembered to extend a key list. A Content Widget is the
+ * exception: only its `surface` is walked, because the rest of its config is the Widget's own and its
+ * own pictures are already projected by `resolvedContent`.
  */
 
 export const PHI_BACKGROUND_RESOLVED_ASSET_KEY = "resolvedAsset";
@@ -26,6 +28,7 @@ type PhiBackgroundProjectableTree = {
   regions: readonly { config: Record<string, unknown> }[];
   layoutNodes: readonly { config: Record<string, unknown> }[];
   overlays: readonly { config: Record<string, unknown> }[];
+  contentWidgets: readonly { config: Record<string, unknown> }[];
 };
 
 /** An Asset-bound image background: the only shape that needs a delivery projection. */
@@ -68,6 +71,9 @@ export function collectPhiBackgroundAssetIds(
     if (!tree) continue;
     for (const node of [...tree.regions, ...tree.layoutNodes, ...tree.overlays]) {
       collectFrom(node.config, assetIds);
+    }
+    for (const widget of tree.contentWidgets) {
+      collectFrom(widget.config?.surface, assetIds);
     }
   }
 
@@ -125,10 +131,16 @@ export function applyPhiBackgroundAssetProjection<T extends PhiBackgroundProject
     config: projectInto(node.config, assets) as Record<string, unknown>,
   });
 
+  const withSurfaceProjection = <N extends { config: Record<string, unknown> }>(widget: N): N =>
+    widget.config?.surface == null
+      ? widget
+      : { ...widget, config: { ...widget.config, surface: projectInto(widget.config.surface, assets) } };
+
   return {
     ...tree,
     regions: tree.regions.map(withProjection),
     layoutNodes: tree.layoutNodes.map(withProjection),
     overlays: tree.overlays.map(withProjection),
+    contentWidgets: tree.contentWidgets.map(withSurfaceProjection),
   };
 }

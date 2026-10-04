@@ -4,8 +4,6 @@ import type { CSSProperties, ReactNode } from "react";
 import { useState } from "react";
 
 import { PhiButtonControl } from "../../controls/phi-button-control";
-import { type PhiCmsBackgroundWidgetConfig } from "../../widgets/config/background";
-import type { PhiCmsBorderWidgetConfig } from "../../../types/cms-config";
 import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
 import { resolvePhiShellRegionZIndex } from "../../../helpers/shell-region-style";
 import type { PhiCmsRegionConfig, PhiCmsRegionKey } from "../../../types";
@@ -79,9 +77,7 @@ export function PhiCmsRegionContainerClient({
     minSize: initialConfig?.minSize,
     maxSize: initialConfig?.maxSize,
     collapsedSizeHint: initialConfig?.collapsedSizeHint,
-    background: initialConfig?.surface?.background ?? undefined,
-    border: initialConfig?.surface?.border ?? undefined,
-    shadow: initialConfig?.surface?.shadow ?? undefined,
+    surface: initialConfig?.surface ?? undefined,
     effects: initialConfig?.effects,
     runtime: {
       ...runtime,
@@ -90,8 +86,6 @@ export function PhiCmsRegionContainerClient({
     },
   });
   const resolvedVisibility = blockRuntime.state.visibility ?? "visible";
-  const runtimeBackground = blockRuntime.state.background;
-  const runtimeBorder = blockRuntime.state.border;
   const config: PhiCmsRegionConfig = {
     ...(initialConfig ?? {}),
     visibility: resolvedVisibility,
@@ -107,22 +101,8 @@ export function PhiCmsRegionContainerClient({
     zIndex: blockRuntime.state.zIndex,
     opacity: blockRuntime.state.opacity,
     effects: blockRuntime.state.effects,
-    /*
-     * The Surface as it stands now: what a Signal set for a part wins over what the Region stored, and a
-     * part no Signal touched is the stored one.
-     */
-    surface: {
-      ...(initialConfig?.surface ?? {}),
-      background:
-        runtimeBackground && typeof runtimeBackground === "object" && !Array.isArray(runtimeBackground)
-          ? runtimeBackground as PhiCmsBackgroundWidgetConfig
-          : initialConfig?.surface?.background ?? null,
-      border:
-        runtimeBorder && typeof runtimeBorder === "object" && !Array.isArray(runtimeBorder)
-          ? runtimeBorder as PhiCmsBorderWidgetConfig
-          : initialConfig?.surface?.border ?? null,
-      shadow: blockRuntime.state.shadow ?? initialConfig?.surface?.shadow ?? null,
-    },
+    // The Surface as it stands now: the stored one with whatever Signals have set for its parts.
+    surface: blockRuntime.state.surface ?? null,
   };
   const [collapsed, setCollapsed] = useState(false);
 

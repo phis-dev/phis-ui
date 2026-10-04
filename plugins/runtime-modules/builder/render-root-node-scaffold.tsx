@@ -50,6 +50,7 @@ import type {
   PhiRuntimeModuleClientWidgetDefinition,
 } from "../../../types";
 import type { PhiRenderableBlockBase, PhiRenderableBlockEffects, PhiSlotSizePolicy } from "../../../types";
+import type { PhiSurfacePolicy } from "../../../types/surface";
 import {
   PHI_VIEWER_ACCESS_ANYONE,
   intersectPhiInheritedViewportFlags,
@@ -234,6 +235,7 @@ function PhiAuthoringWidgetLoader({
         <PhiSlotChildFrame
           kind="widget"
           slotSizePolicy={slotSizePolicy ?? definition.slotSizePolicy}
+          surfacePolicy={definition.surface}
           blockId={null}
           config={config}
           disableEffects
@@ -544,6 +546,7 @@ function findPhiWidgetAuthoringTextTarget(
 function PhiWidgetEffectsPreviewFrame({
   kind,
   slotSizePolicy,
+  surfacePolicy,
   blockId,
   regionKey,
   config: committedConfig,
@@ -558,6 +561,7 @@ function PhiWidgetEffectsPreviewFrame({
 }: {
   kind: "widget";
   slotSizePolicy?: Parameters<typeof PhiSlotChildFrame>[0]["slotSizePolicy"];
+  surfacePolicy?: PhiSurfacePolicy;
   blockId?: PhiCmsInstanceId | null;
   regionKey: string | null;
   config: Partial<PhiRenderableBlockBase>;
@@ -861,6 +865,7 @@ function PhiWidgetEffectsPreviewFrame({
         <PhiSlotChildFrame
           kind={kind}
           slotSizePolicy={slotSizePolicy}
+          surfacePolicy={surfacePolicy}
           blockId={blockId}
           config={config}
           disableEffects
@@ -892,6 +897,7 @@ function PhiWidgetEffectsPreviewFrame({
         key={`effects-preview-${previewRunId}`}
         kind={kind}
         slotSizePolicy={slotSizePolicy}
+        surfacePolicy={surfacePolicy}
         blockId={blockId}
         config={previewConfig}
         disableEffects={!isPreviewing}
@@ -1322,6 +1328,7 @@ function resolvePhiRootNodeRenderedBody(
             key={`widget-${widget.id}`}
             kind="widget"
             slotSizePolicy={plugin.slotSizePolicy}
+            surfacePolicy={definition.surface}
             blockId={widget.id}
             regionKey={regionKey}
             config={editorConfig as Partial<PhiRenderableBlockBase>}
@@ -1339,6 +1346,7 @@ function resolvePhiRootNodeRenderedBody(
           key={`widget-${widget.id}`}
           kind="widget"
           slotSizePolicy={plugin.slotSizePolicy}
+          surfacePolicy={definition.surface}
           blockId={widget.id}
           regionKey={regionKey}
           config={editorConfig as Partial<PhiRenderableBlockBase>}

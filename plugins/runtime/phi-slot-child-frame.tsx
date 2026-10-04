@@ -12,6 +12,7 @@ import type {
   PhiSlotSizePolicy,
   PhiCmsInstanceId,
 } from "../../types";
+import type { PhiSurfacePolicy } from "../../types/surface";
 import type { PhiRenderableBlockReceiver } from "../../components/runtime/renderable-block-runtime";
 import { createPhiSignalAddress } from "../../types/signals";
 import {
@@ -25,6 +26,7 @@ import { PhiRuntimeRenderClientType } from "../../constants/runtime-render-clien
 export type PhiSlotChildFrameProps = {
   kind: PhiSlotChildKind;
   slotSizePolicy?: PhiSlotSizePolicy | null;
+  surfacePolicy?: PhiSurfacePolicy | null;
   blockId?: PhiCmsInstanceId | null;
   config?: Partial<PhiRenderableBlock> | null;
   runtime?: PhiRenderableBlockRuntime;
@@ -87,6 +89,7 @@ export function PhiSlotChildFrame(props: PhiSlotChildFrameProps) {
     <PhiSlotChildFrameView
       kind={kind}
       slotSizePolicy={props.slotSizePolicy}
+      surfacePolicy={props.surfacePolicy}
       blockId={blockId}
       receiver={receiver}
       config={config}
