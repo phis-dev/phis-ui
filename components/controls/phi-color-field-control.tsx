@@ -25,6 +25,8 @@ export type PhiColorFieldControlProps = {
   tokenKey?: string;
   disabled?: boolean;
   mode?: PhiColorPickerMode;
+  /** Whether the trigger writes the value out beside the swatch; left out, a single colour does. */
+  showText?: boolean;
   placement?: PhiPickerPlacement;
   allowClear?: boolean;
   children?: ReactNode;
@@ -56,6 +58,7 @@ export function PhiColorFieldControl({
   tokenKey,
   disabled = false,
   mode = "single",
+  showText,
   placement,
   allowClear,
   children,
@@ -100,6 +103,7 @@ export function PhiColorFieldControl({
       ) : null}
       <PhiColorControl
         mode={mode}
+        showText={showText}
         placement={placement}
         disabled={disabled}
         allowClear={allowClear}

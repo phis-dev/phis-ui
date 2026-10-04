@@ -3327,6 +3327,8 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                         <PhiColorControl
                           mode="single"
                           allowClear
+                          // A part's row is narrow: the swatch says the colour, the value would overflow it.
+                          showText={false}
                           value={part.color ?? null}
                           presets={PHI_COLOR_PICKER_PRESETS}
                           onChange={(next) => updateWordmarkPart(index, { color: next })}

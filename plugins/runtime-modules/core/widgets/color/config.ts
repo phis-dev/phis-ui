@@ -9,11 +9,15 @@ import {
   parsePhiControlStateConfig,
 } from "../../../../../components/widgets/config/control-signal-config";
 
+/** What the trigger shows: the swatch with its value written out, or the swatch alone. */
+export type PhiColorWidgetDisplay = "value" | "swatch";
+
 export type PhiColorWidgetConfig = {
   label?: string;
   value?: string;
   defaultValue?: string;
   mode?: PhiCmsConfigFieldColorMode;
+  display?: PhiColorWidgetDisplay;
   signalRoutes?: PhiSignalRouteSet | null;
   key?: string;
   allowClear?: boolean;
@@ -30,6 +34,11 @@ function readColorMode(value: unknown): PhiCmsConfigFieldColorMode | undefined {
   return undefined;
 }
 
+function readColorDisplay(value: unknown): PhiColorWidgetDisplay | undefined {
+  const display = readString(value);
+  return display === "value" || display === "swatch" ? display : undefined;
+}
+
 export function parsePhiColorWidgetConfig(config: Record<string, unknown>): PhiColorWidgetConfig {
   const controlState = parsePhiControlStateConfig(config, {
     key: "color",
@@ -41,6 +50,7 @@ export function parsePhiColorWidgetConfig(config: Record<string, unknown>): PhiC
     value: readString(config.value),
     defaultValue: readString(config.defaultValue),
     mode: readColorMode(config.mode),
+    display: readColorDisplay(config.display),
     allowClear: readBoolean(config.allowClear),
   };
 }
@@ -69,13 +79,23 @@ export const PHI_COLOR_WIDGET_DEFINITION = {
         { value: "both", label: "Both" },
       ],
     },
+    {
+      key: "display",
+      type: "choice",
+      label: "Display",
+      options: [
+        { value: "value", label: "Swatch and value" },
+        { value: "swatch", label: "Swatch only" },
+      ],
+    },
     { key: "value", type: "color", label: "Value", mode: "both" },
     { key: "defaultValue", type: "color", label: "Default Value", mode: "both" },
     { key: "allowClear", type: "boolean", label: "Allow Clear" },
     ...PHI_CONTROL_STATE_FIELDS,
   ],
   defaultConfig: {
-    mode: "both",
+    mode: "single",
+    display: "value",
     key: "color",
   },
   parseConfig: parsePhiColorWidgetConfig,
