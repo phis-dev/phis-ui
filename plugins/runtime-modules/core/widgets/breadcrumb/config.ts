@@ -27,6 +27,7 @@ export const PHI_BREADCRUMB_WIDGET_DEFINITION = {
   title: "Breadcrumb",
   description: "Generic breadcrumb trail for page and header contexts.",
   category: "navigation",
+  icon: "antd:dash-outlined",
   iconFamily: "navigation",
   fields: [
     { key: "rootLabel", type: "string", label: "Root Label" },
@@ -45,6 +46,7 @@ export const PHI_BREADCRUMB_WIDGET_DEFINITION = {
   | "title"
   | "description"
   | "category"
+  | "icon"
   | "iconFamily"
   | "fields"
   | "parseConfig"
