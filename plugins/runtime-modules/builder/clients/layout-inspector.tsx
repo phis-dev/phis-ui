@@ -1,20 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import { usePhiBaseLayoutOwnSlotController } from "../../../../components/layouts/phi-layout-slot-state";
 import { PhiBackgroundControl, type PhiBackgroundControlProps } from "../../../../components/controls/phi-background-control";
 import { PhiBorderControl } from "../../../../components/controls/phi-border-control";
 import { PhiSurfaceControl } from "../../../../components/controls/phi-surface-control";
 import type { PhiInspectorSurfaceLabels } from "./inspector-surface-labels";
+import type { PhiInspectorWidgetLabels } from "../../../../components/widgets/label-types/inspector";
 import { PhiShadowControl } from "../../../../components/controls/phi-shadow-control";
 import { PhiViewportVisibilityControl } from "../../../../components/controls/phi-viewport-visibility-control";
 import { PhiPlacementMatrixControl } from "../../../../components/controls/phi-placement-matrix-control";
-import { PhiSelectControl } from "../../../../components/controls/phi-select-control";
-import { PhiNumberControl } from "../../../../components/controls/phi-number-control";
 import type { PhiBackgroundWidgetLabels } from "../../../../components/widgets/label-types/background";
 import type { PhiBorderWidgetLabels } from "../../../../components/widgets/label-types/border";
 import { PhiInspectorSectionContent } from "./inspector-section-content";
+import { PhiGridPlacementSettings } from "./grid-placement-settings";
 import {
   resolvePhiLayoutSignalEndpoints,
   resolvePhiSignalEndpointCapabilities,
@@ -26,7 +26,6 @@ import type { PhiColorPickerLabels } from "../../../../components/widgets/label-
 import type { PhiIconPickerControlLabels } from "../../../../components/widgets/label-types/icon-picker";
 import type {
   PhiCmsBorderWidgetConfig,
-  PhiCmsGridLayoutSlotPlacementConfig,
   PhiCmsPaddingWidgetConfig,
 } from "../../../../types/cms-config";
 import type { PhiCmsBackgroundWidgetConfig } from "../../../../components/widgets/config/background";
@@ -48,7 +47,6 @@ import {
   isPhiInspectorConfigFieldVisible,
   renderPhiInspectorPaddingConfigControl,
   renderPhiInspectorConfigField,
-  renderPhiInspectorSettingsRow,
 } from "./inspector-config-field";
 import type {
   PhiSignalRoute,
@@ -62,7 +60,7 @@ import { PhiTypographyControl } from "../../../../components/controls/phi-typogr
 
 const PHI_GAP_SM = "var(--ant-padding-sm)";
 
-type PhiCmsChromeConfigField = Extract<PhiCmsConfigField, { type: "padding" | "background" | "border" | "shadow" | "slot-placement" }>;
+type PhiCmsChromeConfigField = Extract<PhiCmsConfigField, { type: "padding" | "background" | "border" | "shadow" | "grid-placement" }>;
 
 function isPhiCmsChromeConfigField(field: PhiCmsConfigField): field is PhiCmsChromeConfigField {
   return (
@@ -70,7 +68,7 @@ function isPhiCmsChromeConfigField(field: PhiCmsConfigField): field is PhiCmsChr
     || field.type === "background"
     || field.type === "border"
     || field.type === "shadow"
-    || field.type === "slot-placement"
+    || field.type === "grid-placement"
   );
 }
 
@@ -102,6 +100,7 @@ type PhiDeveloperBuilderLayoutInspectorWidgetClientProps = {
   onConfigChange?: (key: string, value: unknown) => void;
   paddingLabels?: PhiPaddingWidgetLabels;
   surfaceLabels?: PhiInspectorSurfaceLabels;
+  gridLabels?: PhiInspectorWidgetLabels["grid"];
   backgroundLabels?: PhiBackgroundWidgetLabels;
   borderLabels?: PhiBorderWidgetLabels;
   signalsLabels?: PhiSignalsWidgetLabels;
@@ -128,6 +127,7 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
   onConfigChange,
   paddingLabels,
   surfaceLabels,
+  gridLabels,
   backgroundLabels,
   borderLabels,
   signalsLabels,
@@ -156,12 +156,12 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
   const chromeFields = declaredFields
     .filter(isPhiCmsChromeConfigField)
     .filter((field) => isPhiInspectorConfigFieldVisible(field, currentLayoutConfigRecord))
-    .filter((field) => field.type !== "slot-placement");
-  const slotPlacementField =
+    .filter((field) => field.type !== "grid-placement");
+  const gridPlacementField =
     declaredFields
       .filter(isPhiCmsChromeConfigField)
       .filter((field) => isPhiInspectorConfigFieldVisible(field, currentLayoutConfigRecord))
-      .find((field) => field.type === "slot-placement") ?? null;
+      .find((field) => field.type === "grid-placement") ?? null;
 
   /*
    * The Settings panel hides itself when the layout declares nothing for it. It is the Drawer's first
@@ -175,7 +175,7 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
    */
   const settingsAnswerIsKnown = selectedStructurePlugin != null;
   const settingsHasContent = !settingsAnswerIsKnown || !isTargetKind || section !== "settings"
-    || settingsFields.length > 0 || slotPlacementField != null
+    || settingsFields.length > 0 || gridPlacementField != null
     || chromeFields.some((field) => field.type !== "padding");
   const ownSlot = usePhiBaseLayoutOwnSlotController();
   useEffect(() => {
@@ -186,96 +186,10 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
     }
     if (ownSlot.state === "hidden") ownSlot.show();
   }, [ownSlot, settingsHasContent]);
-  const resolveGridSlotPlacements = (value: unknown): PhiCmsGridLayoutSlotPlacementConfig[] => {
-    if (!Array.isArray(value)) {
-      return [];
-    }
-
-    return value.flatMap((entry) => {
-      if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
-        return [];
-      }
-
-      const slotIndex = typeof entry.slotIndex === "number" ? entry.slotIndex : null;
-      if (slotIndex == null) {
-        return [];
-      }
-
-      const readResponsive = (key: "span" | "offset") => {
-        const input = entry[key];
-        if (!input || typeof input !== "object" || Array.isArray(input)) return undefined;
-        const record = input as Record<string, unknown>;
-        return {
-          compact: typeof record.compact === "number" ? record.compact : undefined,
-          medium: typeof record.medium === "number" ? record.medium : undefined,
-          wide: typeof record.wide === "number" ? record.wide : undefined,
-        };
-      };
-
-      return [
-        {
-          slotIndex,
-          span: readResponsive("span"),
-          offset: readResponsive("offset"),
-        },
-      ];
-    });
-  };
-  const resolvedCurrentSlotPlacements = resolveGridSlotPlacements(currentDraftRecord?.slotPlacements);
-  const resolvedSlotPlacements =
-    resolvedCurrentSlotPlacements.length > 0
-      ? resolvedCurrentSlotPlacements
-      : resolveGridSlotPlacements(layoutDefaultConfigRecord?.slotPlacements);
-  const gridSlotDefinitions = slotPlacementField
-    ? [...(selectedStructurePlugin?.slots ?? [])].sort((left, right) => left.slotIndex - right.slotIndex)
+  const gridOccupiedSlotIndices = gridPlacementField && currentDraft
+    ? [...new Set([...(currentDraft.rootNodeChildLayouts ?? []), ...(currentDraft.rootNodeChildWidgets ?? [])].map((child) => child.slotIndex))]
+        .sort((left, right) => left - right)
     : [];
-  const [selectedGridSlotOverride, setSelectedGridSlotOverride] = useState<number | null>(null);
-  const selectedGridSlotIndex =
-    selectedGridSlotOverride != null && gridSlotDefinitions.some((slot) => slot.slotIndex === selectedGridSlotOverride)
-      ? selectedGridSlotOverride
-      : gridSlotDefinitions[0]?.slotIndex ?? null;
-  const updateGridSlotPlacement = (
-    slotIndex: number,
-    field: "span" | "offset",
-    profile: "compact" | "medium" | "wide",
-    value: number | null,
-  ) => {
-    if (!slotPlacementField || !onConfigChange) {
-      return;
-    }
-
-    const nextSlotPlacements = [...resolvedSlotPlacements];
-    const existingIndex = nextSlotPlacements.findIndex((entry) => entry.slotIndex === slotIndex);
-    const existingEntry =
-      existingIndex >= 0
-        ? nextSlotPlacements[existingIndex]
-        : {
-            slotIndex,
-          };
-    const currentResponsive = existingEntry[field] ?? {};
-    const nextResponsive = { ...currentResponsive, [profile]: value == null ? undefined : value };
-    const nextEntry: PhiCmsGridLayoutSlotPlacementConfig = {
-      ...existingEntry,
-      [field]: Object.values(nextResponsive).some((entry) => entry != null) ? nextResponsive : undefined,
-    };
-
-    if (nextEntry.span == null && nextEntry.offset == null) {
-      if (existingIndex >= 0) {
-        nextSlotPlacements.splice(existingIndex, 1);
-      }
-    } else if (existingIndex >= 0) {
-      nextSlotPlacements[existingIndex] = nextEntry;
-    } else {
-      nextSlotPlacements.push(nextEntry);
-    }
-
-    onConfigChange(
-      slotPlacementField.key,
-      nextSlotPlacements.length > 0 ? nextSlotPlacements.sort((left, right) => left.slotIndex - right.slotIndex) : null,
-    );
-  };
-  const selectedGridSlotPlacement =
-    selectedGridSlotIndex == null ? null : resolvedSlotPlacements.find((entry) => entry.slotIndex === selectedGridSlotIndex) ?? null;
   const signalEndpoints = currentDraft?.rootNodeId == null
     ? []
     : resolvePhiLayoutSignalEndpoints({
@@ -373,7 +287,7 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
           <PhiInspectorSectionContent
             sectionKey={section ?? "settings"}
             sections={[
-              ...(settingsFields.length > 0 || slotPlacementField || declaredCardSections.length > 0
+              ...(settingsFields.length > 0 || gridPlacementField || declaredCardSections.length > 0
                 ? [
                     {
                       key: "settings",
@@ -402,70 +316,16 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                                 : undefined,
                             }),
                           )}
-                          {slotPlacementField && selectedGridSlotIndex != null
-                            ? (
-                                <>
-                                  {renderPhiInspectorSettingsRow(
-                                    "Slot",
-                                    <PhiSelectControl
-                                      options={gridSlotDefinitions.map((slot) => ({
-                                          value: String(slot.slotIndex),
-                                          label: String(slot.slotIndex),
-                                      }))}
-                                      value={String(selectedGridSlotIndex)}
-                                      disabled={isPreviewMode}
-                                      style={{ width: "100%" }}
-                                      onChange={(nextValue) => setSelectedGridSlotOverride(Number(nextValue))}
-                                    />,
-                                    "grid-slot-index",
-                                  )}
-                                  {(["compact", "medium", "wide"] as const).flatMap((profile) => ([
-                                    renderPhiInspectorSettingsRow(
-                                      `${profile} span`,
-                                      <PhiNumberControl
-                                        disabled={isPreviewMode || !onConfigChange}
-                                        value={selectedGridSlotPlacement?.span?.[profile] ?? null}
-                                        min={1}
-                                        max={24}
-                                        precision={0}
-                                        placeholder="6"
-                                        style={{ width: "100%" }}
-                                        onChange={(nextValue) => updateGridSlotPlacement(
-                                          selectedGridSlotIndex,
-                                          "span",
-                                          profile,
-                                          typeof nextValue === "number" && Number.isFinite(nextValue)
-                                            ? Math.min(24, Math.max(1, Math.round(nextValue)))
-                                            : null,
-                                        )}
-                                      />,
-                                      `grid-slot-${profile}-span`,
-                                    ),
-                                    renderPhiInspectorSettingsRow(
-                                      `${profile} offset`,
-                                      <PhiNumberControl
-                                        disabled={isPreviewMode || !onConfigChange}
-                                        value={selectedGridSlotPlacement?.offset?.[profile] ?? null}
-                                        min={0}
-                                        max={23}
-                                        precision={0}
-                                        placeholder="0"
-                                        style={{ width: "100%" }}
-                                        onChange={(nextValue) => updateGridSlotPlacement(
-                                          selectedGridSlotIndex,
-                                          "offset",
-                                          profile,
-                                          typeof nextValue === "number" && Number.isFinite(nextValue)
-                                            ? Math.min(23, Math.max(0, Math.round(nextValue)))
-                                            : null,
-                                        )}
-                                      />,
-                                      `grid-slot-${profile}-offset`,
-                                    ),
-                                  ]))}
-                                </>
-                              )
-                            : null}
+                          {gridPlacementField ? (
+                            <PhiGridPlacementSettings
+                              config={currentDraftRecord ?? {}}
+                              defaultConfig={layoutDefaultConfigRecord}
+                              occupiedSlotIndices={gridOccupiedSlotIndices}
+                              labels={gridLabels}
+                              disabled={isPreviewMode}
+                              onConfigChange={onConfigChange}
+                            />
+                          ) : null}
                           {declaredCardSections.map((entry) => (
                             <PhiFlexControl key={entry.section.key} vertical gap={8} style={{ width: "100%", minWidth: 0 }}>
                               <PhiTypographyControl>{entry.section.title}</PhiTypographyControl>

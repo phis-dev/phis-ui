@@ -24,17 +24,18 @@ export const PHI_GRID_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsGridLayoutConfig> 
       gap={config.gap}
       anchor={config.anchor}
       editSlotAnchor={resolvePhiLayoutAnchor(config.anchor)}
-      columnGap={config.columnGap}
+      columns={config.columns}
       slotPlacements={config.slotPlacements}
-      align={config.align}
-      justify={config.justify}
-      wrap={config.wrap}
       size={config.size}
       minSize={config.minSize}
       maxSize={config.maxSize}
       collapsedSizeHint={config.collapsedSizeHint}
       surface={config.surface}
       padding={config.padding}
+      paddingTop={config.paddingTop}
+      paddingRight={config.paddingRight}
+      paddingBottom={config.paddingBottom}
+      paddingLeft={config.paddingLeft}
       labelEnd={config.labelEnd}
     />
   )),

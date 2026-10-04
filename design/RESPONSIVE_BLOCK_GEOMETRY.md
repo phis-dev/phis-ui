@@ -257,6 +257,6 @@ geometry, `readResponsiveCssSize` in the config parser so a stored profile value
 normalisation, and the geometry Control reading and writing the `compact` entry alone rather than
 flattening what it cannot show.
 
-**Next:** the container declarations and the stylesheet, then the Inspector control. The Grid's missing per-profile default
-(`PHI_GRID_LAYOUT_DEFAULT_SPAN`, one constant for all three profiles) is a separate item in TODOS.md and
-uses the same `PhiResponsiveValue` form; it is not a dependency in either direction.
+**Next:** the container declarations and the stylesheet, then the Inspector control. The Grid's per-profile default
+(`PHI_GRID_LAYOUT_DEFAULT_COLUMNS`, settled in TODOS.md) uses the same `PhiResponsiveValue` form; it is
+not a dependency in either direction.

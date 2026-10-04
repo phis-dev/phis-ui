@@ -137,7 +137,8 @@ built. Remove an entry when it is done.
     property in its condition. Building it changes `PhiRenderableBlockBase` and needs operator approval.
 
     The one profile system that was built and fed by nobody is settled (2026-09-26): the Grid's
-    fallback span is a profile value now, `PHI_GRID_LAYOUT_DEFAULT_SPAN` = 24 / 12 / 6, and it lives in
+    fallback is a profile value, since 2026-10-04 a column count the Grid states itself
+    (`columns`, default `PHI_GRID_LAYOUT_DEFAULT_COLUMNS` = 1 / 2 / 4), and it lives in
     `components/layouts/phi-grid-contract.ts` beside the placement it feeds rather than in the client,
     so it is tested with it. A Grid whose slots carry no authored span reflows: one per row below 377,
     two below 610, four above. It did not before -- four abreast at every width, only narrower, because

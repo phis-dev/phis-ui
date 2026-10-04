@@ -28,6 +28,10 @@ export const PHI_MASONRY_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsMasonryLayoutCo
       maxSize={config.maxSize}
       collapsedSizeHint={config.collapsedSizeHint}
       padding={config.padding}
+      paddingTop={config.paddingTop}
+      paddingRight={config.paddingRight}
+      paddingBottom={config.paddingBottom}
+      paddingLeft={config.paddingLeft}
       labelEnd={config.labelEnd}
     />
   )),

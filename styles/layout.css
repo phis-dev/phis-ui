@@ -359,7 +359,7 @@
  * form grid above does -- so the markup the server sends already stands where it stays. The Grid's
  * Layout box is the `phi-grid` container and is measured inside its padding, as a form is.
  *
- * The column gap is padding, not `column-gap`: a `column-gap` falls between all 24 tracks, so a 16px
+ * The gap across is padding, not `column-gap`: a `column-gap` falls between all 24 tracks, so a 16px
  * gap made 368px the narrowest a Grid could be. Each slot insets its content by its share of the gaps,
  * `lead` 24ths of one before it and `trail` 24ths after, which puts its edges where a `column-gap` did
  * while there is room and narrows the slots when there is not. Every slot writes all nine properties;
@@ -371,6 +371,12 @@
     calc(var(--phi-grid-column-gap, 0px) * var(--phi-grid-slot-lead-compact, 0) / 24);
   padding-inline-end:
     calc(var(--phi-grid-column-gap, 0px) * var(--phi-grid-slot-trail-compact, 0) / 24);
+}
+
+/* The edit overlay draws the columns of the width the Grid is at, one guide set per width. */
+.phi-grid-layout__guide--medium,
+.phi-grid-layout__guide--wide {
+  display: none;
 }
 
 /*
@@ -385,6 +391,14 @@
     padding-inline-end:
       calc(var(--phi-grid-column-gap, 0px) * var(--phi-grid-slot-trail-medium, 0) / 24);
   }
+
+  .phi-grid-layout__guide--compact {
+    display: none;
+  }
+
+  .phi-grid-layout__guide--medium {
+    display: block;
+  }
 }
 
 @container phi-grid (min-width: 610px) {
@@ -394,6 +408,14 @@
       calc(var(--phi-grid-column-gap, 0px) * var(--phi-grid-slot-lead-wide, 0) / 24);
     padding-inline-end:
       calc(var(--phi-grid-column-gap, 0px) * var(--phi-grid-slot-trail-wide, 0) / 24);
+  }
+
+  .phi-grid-layout__guide--medium {
+    display: none;
+  }
+
+  .phi-grid-layout__guide--wide {
+    display: block;
   }
 }
 

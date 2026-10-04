@@ -82,12 +82,8 @@ export async function buildPhiDefaultAdminLocalesPageTree({
         label: labels.contentLabel,
         config: {
           gap: PHI_SPACE.base,
-          columns: 24,
-          slotPlacements: [
-            { slotIndex: 0, span: { compact: 24, medium: 24, wide: 24 }, offset: { compact: 0, medium: 0, wide: 0 } },
-            { slotIndex: 1, span: { compact: 24, medium: 24, wide: 24 }, offset: { compact: 0, medium: 0, wide: 0 } },
-          ],
-          margin: 0,
+          // One slot a row at every width: the form and the list stand under one another.
+          columns: { compact: 1, medium: 1, wide: 1 },
           padding: 0,
         },
       }),

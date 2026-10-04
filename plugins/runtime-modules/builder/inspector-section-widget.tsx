@@ -150,6 +150,7 @@ export async function PhiBuilderInspectorSectionWidget({
             borderLabels={borderLabels}
             paddingLabels={paddingLabels}
             surfaceLabels={surfaceLabels}
+            gridLabels={inspectorLabels.grid}
             colorPickerLabels={colorPickerLabels}
             iconPickerLabels={iconPickerLabels}
           />

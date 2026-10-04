@@ -3,37 +3,43 @@ import type { CSSProperties, ReactNode } from "react";
 import type { PhiBaseLayoutProps } from "./phi-layout-view-model";
 import type { PhiRenderableBlockAnchor } from "../../types";
 import type { PhiAnchorWidgetPlacement } from "../controls/phi-anchor-control-contract";
-import {
-  resolvePhiResponsiveValue,
-  type PhiResolvedResponsiveValue,
-  type PhiResponsiveValue,
-} from "../../types/responsive";
+import type { PhiResolvedResponsiveValue, PhiResponsiveValue } from "../../types/responsive";
 import {
   PHI_CONTAINER_BREAKPOINT_COL3,
   PHI_CONTAINER_BREAKPOINT_CONTENT,
 } from "../../theme/phi-container-breakpoints";
 
+/** How many slots a row of a Grid holds, at one width. Each divides the 24 tracks evenly. */
+export const PHI_GRID_COLUMN_COUNTS = [1, 2, 3, 4, 6] as const;
+
+export type PhiGridColumnCount = (typeof PHI_GRID_COLUMN_COUNTS)[number];
+
+export function isPhiGridColumnCount(value: unknown): value is PhiGridColumnCount {
+  return PHI_GRID_COLUMN_COUNTS.includes(value as PhiGridColumnCount);
+}
+
 /**
- * What a slot spans when its Grid was never told.
+ * How many slots a row holds when the Grid was never told.
  *
- * One constant for all three profiles stood here before -- six tracks, four per row -- and a Grid whose
- * slots carry no authored span therefore never reflowed: four abreast at 320px and at 1600px alike,
- * only narrower, because the 24 tracks are `minmax(0, 1fr)` and shrink. The wrapping that did happen was
- * the cursor running past column 24, not an answer to the room.
- *
- * So the default is a profile value like every other placement: the whole row where there is no room to
- * share, two abreast in the middle, four where the Grid is at least as wide as the content column. An
- * author who names a span still names it and nothing here applies.
- *
- * At `compact` the row is full, so an offset has nothing left to push into and is clamped away. That is
- * the answer rather than an accident: a slot cannot be indented in a room that holds one slot.
+ * The whole row where there is no room to share, two abreast in the middle, four where the Grid is at
+ * least as wide as the content column. One constant for all three widths stood here before -- four per
+ * row -- and a Grid nobody told never reflowed: four abreast at 320px and at 1600px alike, only
+ * narrower.
  */
-export const PHI_GRID_LAYOUT_DEFAULT_SPAN: PhiResolvedResponsiveValue<number> = {
-  compact: 24,
-  medium: 12,
-  wide: 6,
+export const PHI_GRID_LAYOUT_DEFAULT_COLUMNS: PhiResolvedResponsiveValue<PhiGridColumnCount> = {
+  compact: 1,
+  medium: 2,
+  wide: 4,
 };
 
+/**
+ * A slot that is not one column wide, or does not start where the previous one ended.
+ *
+ * Both counted in the Grid's columns at that width -- "two columns", "indented by one" -- not in the
+ * 24 tracks underneath, which an author had to divide by hand before: three abreast was a span of 8.
+ * A width the placement says nothing about is the plain slot there, one column and no indent; it does
+ * not inherit from a narrower width, because a column means something else at every width.
+ */
 export type PhiGridLayoutSlotPlacement = {
   slotIndex: number;
   span?: PhiResponsiveValue<number>;
@@ -42,35 +48,42 @@ export type PhiGridLayoutSlotPlacement = {
 
 export type PhiGridLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
   slots: ReactNode[];
+  /** The distance between slots, across and down. */
   gap?: CSSProperties["gap"];
-  columnGap?: CSSProperties["columnGap"];
+  columns?: PhiResponsiveValue<number>;
   slotPlacements?: PhiGridLayoutSlotPlacement[];
-  align?: CSSProperties["alignItems"];
-  justify?: CSSProperties["justifyContent"];
   anchor?: PhiRenderableBlockAnchor;
   editSlotAnchor?: PhiAnchorWidgetPlacement | null;
-  wrap?: boolean | CSSProperties["flexWrap"];
-  slotStyle?: CSSProperties;
 };
 
+/** The Grid's columns at every width: what was stated where it is a column count, the default elsewhere. */
+export function resolvePhiGridColumns(
+  columns: PhiResponsiveValue<number> | undefined,
+): PhiResolvedResponsiveValue<PhiGridColumnCount> {
+  const read = (profile: PhiGridLayoutProfile) => {
+    const stated = columns?.[profile];
+    return isPhiGridColumnCount(stated) ? stated : PHI_GRID_LAYOUT_DEFAULT_COLUMNS[profile];
+  };
+  return { compact: read("compact"), medium: read("medium"), wide: read("wide") };
+}
+
+/**
+ * What a slot spans and skips at one width, in the 24 tracks.
+ *
+ * Clamped to the row: a slot wider than the row is the row, and an indent that leaves no room is
+ * dropped -- a Grid whose columns were reduced keeps its slots rather than losing them.
+ */
 export function resolvePhiGridSlotPlacement(
   slotPlacements: PhiGridLayoutSlotPlacement[] | undefined,
   slotIndex: number,
-  profile: "compact" | "medium" | "wide",
-  fallbackSpan: number,
+  profile: PhiGridLayoutProfile,
+  columns: PhiGridColumnCount,
 ) {
   const placement = slotPlacements?.find((candidate) => candidate.slotIndex === slotIndex);
-  const span = resolvePhiResponsiveValue(placement?.span, {
-    compact: fallbackSpan,
-    medium: fallbackSpan,
-    wide: fallbackSpan,
-  })[profile];
-  const offset = resolvePhiResponsiveValue(placement?.offset, {
-    compact: 0,
-    medium: 0,
-    wide: 0,
-  })[profile];
-  return { span, offset };
+  const span = Math.max(1, Math.min(columns, placement?.span?.[profile] ?? 1));
+  const offset = Math.max(0, Math.min(columns - span, placement?.offset?.[profile] ?? 0));
+  const tracks = 24 / columns;
+  return { span: span * tracks, offset: offset * tracks };
 }
 
 export type PhiGridSlotColumns = {
@@ -82,7 +95,7 @@ export type PhiGridSlotColumns = {
 /**
  * Where each slot stands on the 24 tracks, in flow.
  *
- * `offset` counts unused columns before a slot, the way a Grid column's offset does elsewhere, so a
+ * `offset` counts unused tracks before a slot, the way a Grid column's offset does elsewhere, so a
  * slot with none starts where the previous one ended and a row holds as many slots as fit. Written as
  * an absolute line (`offset + 1`) instead, every slot without an offset started on column 1 -- and a
  * definite start on column 1 for every item is a new row for every item, so three cards spanning six
@@ -93,24 +106,21 @@ export type PhiGridSlotColumns = {
 export function resolvePhiGridSlotColumns(
   slotPlacements: PhiGridLayoutSlotPlacement[] | undefined,
   slotIndices: readonly number[],
-  profile: "compact" | "medium" | "wide",
-  fallbackSpan: number,
-  columns = 24,
+  profile: PhiGridLayoutProfile,
+  columns: PhiGridColumnCount,
 ): Map<number, PhiGridSlotColumns> {
   const resolved = new Map<number, PhiGridSlotColumns>();
   let cursor = 1;
 
   for (const slotIndex of slotIndices) {
-    const placement = resolvePhiGridSlotPlacement(slotPlacements, slotIndex, profile, fallbackSpan);
-    const span = Math.max(1, Math.min(columns, placement.span));
-    const offset = Math.max(0, Math.min(columns - span, placement.offset));
+    const { span, offset } = resolvePhiGridSlotPlacement(slotPlacements, slotIndex, profile, columns);
     let start = cursor + offset;
-    if (start + span - 1 > columns) {
+    if (start + span - 1 > 24) {
       start = 1 + offset;
     }
     resolved.set(slotIndex, { start, span });
     cursor = start + span;
-    if (cursor > columns) {
+    if (cursor > 24) {
       cursor = 1;
     }
   }
@@ -149,12 +159,13 @@ export const PHI_GRID_RESPONSIVE_MIN_WIDTH = {
 export function resolvePhiGridSlotProfileColumns(
   slotPlacements: PhiGridLayoutSlotPlacement[] | undefined,
   slotIndices: readonly number[],
+  columns: PhiResolvedResponsiveValue<PhiGridColumnCount> = PHI_GRID_LAYOUT_DEFAULT_COLUMNS,
 ): Map<number, PhiResolvedResponsiveValue<PhiGridSlotColumns>> {
   const [compact, medium, wide] = PHI_GRID_LAYOUT_PROFILES.map((profile) => resolvePhiGridSlotColumns(
     slotPlacements,
     slotIndices,
     profile,
-    PHI_GRID_LAYOUT_DEFAULT_SPAN[profile],
+    columns[profile],
   ));
   const resolved = new Map<number, PhiResolvedResponsiveValue<PhiGridSlotColumns>>();
   for (const slotIndex of slotIndices) {

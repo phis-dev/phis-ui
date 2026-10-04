@@ -1,48 +1,49 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  PHI_GRID_LAYOUT_DEFAULT_SPAN,
+  PHI_GRID_LAYOUT_DEFAULT_COLUMNS,
+  resolvePhiGridColumns,
   resolvePhiGridSlotColumnProperties,
   resolvePhiGridSlotColumns,
   resolvePhiGridSlotGapShares,
+  resolvePhiGridSlotPlacement,
   resolvePhiGridSlotProfileColumns,
 } from "./phi-grid-contract";
 
 /*
- * Slots flow. A slot with no offset starts where the one before it ended, and a row holds as many as
- * fit; written as absolute lines, three six-track cards all started on column 1 and stood under one
- * another.
+ * Slots flow. A slot with no indent starts where the one before it ended, and a row holds as many as
+ * fit; written as absolute lines, three cards all started on column 1 and stood under one another.
  */
 describe("where the Grid's slots stand", () => {
-  it("lays slots without offsets side by side", () => {
-    const columns = resolvePhiGridSlotColumns(undefined, [0, 1, 2], "medium", 6);
+  it("lays slots without indents side by side", () => {
+    const columns = resolvePhiGridSlotColumns(undefined, [0, 1, 2], "medium", 4);
     expect(columns.get(0)).toEqual({ start: 1, span: 6 });
     expect(columns.get(1)).toEqual({ start: 7, span: 6 });
     expect(columns.get(2)).toEqual({ start: 13, span: 6 });
   });
 
   it("wraps to the next row when a slot no longer fits", () => {
-    const columns = resolvePhiGridSlotColumns(undefined, [0, 1, 2], "medium", 12);
+    const columns = resolvePhiGridSlotColumns(undefined, [0, 1, 2], "medium", 2);
     expect(columns.get(2)).toEqual({ start: 1, span: 12 });
   });
 
-  it("counts an offset as unused columns before the slot", () => {
+  it("counts an indent as unused columns before the slot", () => {
     const columns = resolvePhiGridSlotColumns(
-      [{ slotIndex: 1, offset: { compact: 2 }, span: { compact: 8 } }],
+      [{ slotIndex: 1, offset: { wide: 1 }, span: { wide: 2 } }],
       [0, 1],
       "wide",
-      6,
+      4,
     );
     expect(columns.get(0)).toEqual({ start: 1, span: 6 });
-    expect(columns.get(1)).toEqual({ start: 9, span: 8 });
+    expect(columns.get(1)).toEqual({ start: 13, span: 12 });
   });
 
-  it("starts a full-width slot on its own row and the next one on a fresh row", () => {
+  it("starts a whole-row slot on its own row and the next one on a fresh row", () => {
     const columns = resolvePhiGridSlotColumns(
-      [{ slotIndex: 1, span: { compact: 24 } }],
+      [{ slotIndex: 1, span: { wide: 4 } }],
       [0, 1, 2],
-      "compact",
-      6,
+      "wide",
+      4,
     );
     expect(columns.get(1)).toEqual({ start: 1, span: 24 });
     expect(columns.get(2)).toEqual({ start: 1, span: 6 });
@@ -50,43 +51,44 @@ describe("where the Grid's slots stand", () => {
 });
 
 /*
- * A Grid nobody told still answers the room.
- *
- * The default used to be one number for all three profiles, so a Grid whose slots carry no span stood
- * four abreast at every width and only grew narrower.
+ * A placement is counted in the Grid's columns at that width, and what it says of one width says
+ * nothing of another: a column is something else at every width.
  */
-describe("what a slot spans when nothing was authored", () => {
-  const columnsFor = (profile: "compact" | "medium" | "wide") =>
-    resolvePhiGridSlotColumns(undefined, [0, 1, 2, 3], profile, PHI_GRID_LAYOUT_DEFAULT_SPAN[profile]);
+describe("a slot's placement in columns", () => {
+  it("turns columns into tracks", () => {
+    expect(resolvePhiGridSlotPlacement([{ slotIndex: 0, span: { wide: 2 } }], 0, "wide", 3))
+      .toEqual({ span: 16, offset: 0 });
+  });
 
-  it("gives each slot the whole row where there is no room to share", () => {
-    const columns = columnsFor("compact");
+  it("does not carry a narrower width's placement to a wider one", () => {
+    const placements = [{ slotIndex: 0, span: { medium: 2 }, offset: { medium: 0 } }];
+    expect(resolvePhiGridSlotPlacement(placements, 0, "wide", 4)).toEqual({ span: 6, offset: 0 });
+  });
+
+  it("keeps a placement wider than the row to the row and drops an indent with no room", () => {
+    const placements = [{ slotIndex: 0, span: { medium: 3 }, offset: { medium: 1 } }];
+    expect(resolvePhiGridSlotPlacement(placements, 0, "medium", 2)).toEqual({ span: 24, offset: 0 });
+  });
+});
+
+/*
+ * A Grid nobody told still answers the room: one slot a row where there is no room to share, two in
+ * the middle, four where the Grid is as wide as the content column.
+ */
+describe("how many slots a row holds", () => {
+  it("defaults to one, two and four", () => {
+    expect(resolvePhiGridColumns(undefined)).toEqual(PHI_GRID_LAYOUT_DEFAULT_COLUMNS);
+    expect(PHI_GRID_LAYOUT_DEFAULT_COLUMNS).toEqual({ compact: 1, medium: 2, wide: 4 });
+  });
+
+  it("takes what was stated where it is a column count, and the default elsewhere", () => {
+    expect(resolvePhiGridColumns({ medium: 3, wide: 5 })).toEqual({ compact: 1, medium: 3, wide: 4 });
+  });
+
+  it("gives each slot the whole row where it holds one", () => {
+    const columns = resolvePhiGridSlotColumns(undefined, [0, 1], "compact", 1);
     expect(columns.get(0)).toEqual({ start: 1, span: 24 });
     expect(columns.get(1)).toEqual({ start: 1, span: 24 });
-    expect(columns.get(3)).toEqual({ start: 1, span: 24 });
-  });
-
-  it("puts two abreast in the middle", () => {
-    const columns = columnsFor("medium");
-    expect(columns.get(0)).toEqual({ start: 1, span: 12 });
-    expect(columns.get(1)).toEqual({ start: 13, span: 12 });
-    expect(columns.get(2)).toEqual({ start: 1, span: 12 });
-  });
-
-  it("puts four abreast where the Grid is as wide as the content column", () => {
-    const columns = columnsFor("wide");
-    expect(columns.get(0)).toEqual({ start: 1, span: 6 });
-    expect(columns.get(3)).toEqual({ start: 19, span: 6 });
-  });
-
-  it("clamps an offset away where the default already fills the row", () => {
-    const columns = resolvePhiGridSlotColumns(
-      [{ slotIndex: 0, offset: { compact: 4 } }],
-      [0],
-      "compact",
-      PHI_GRID_LAYOUT_DEFAULT_SPAN.compact,
-    );
-    expect(columns.get(0)).toEqual({ start: 1, span: 24 });
   });
 });
 
@@ -95,7 +97,7 @@ describe("what a slot spans when nothing was authored", () => {
  * stands where it stays rather than at `compact` until a measurement after hydration.
  */
 describe("the columns a slot carries for every width", () => {
-  it("answers each profile with its own default span", () => {
+  it("answers each width with the Grid's own columns", () => {
     const columns = resolvePhiGridSlotProfileColumns(undefined, [0, 1]);
     expect(columns.get(1)).toEqual({
       compact: { start: 1, span: 24 },
@@ -106,8 +108,9 @@ describe("the columns a slot carries for every width", () => {
 
   it("writes the three answers as the custom properties the stylesheet reads", () => {
     const columns = resolvePhiGridSlotProfileColumns(
-      [{ slotIndex: 0, span: { compact: 24, wide: 8 } }],
+      [{ slotIndex: 0, span: { medium: 2, wide: 1 } }],
       [0],
+      { compact: 1, medium: 2, wide: 3 },
     );
     expect(resolvePhiGridSlotColumnProperties(columns.get(0))).toEqual({
       "--phi-grid-slot-columns-compact": "1 / span 24",

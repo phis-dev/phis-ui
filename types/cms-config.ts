@@ -39,6 +39,7 @@ import { applyPhiLayoutDefaults } from "../helpers/cms-layout-defaults";
 import { resolvePhiLayoutDefaults } from "../helpers/cms-layout-defaults";
 import { normalizeRenderableBlockAnchor } from "../helpers/renderable-block-anchor";
 import { isPhiRecord } from "../helpers/is-record";
+import { PHI_GRID_COLUMN_COUNTS, isPhiGridColumnCount } from "../components/layouts/phi-grid-contract";
 
 export type PhiCmsPluginConfigBase = Record<string, unknown>;
 
@@ -365,14 +366,17 @@ export type PhiCmsGridLayoutSlotPlacementConfig = {
   offset?: PhiResponsiveValue<number>;
 };
 
-export type PhiCmsGridLayoutConfig = PhiCmsDirectionalLayoutConfigBase & {
+/**
+ * A Grid: how many slots a row holds at each width, and the slots that are wider or indented.
+ *
+ * `gap` is the distance between slots, across and down; `anchor` places each slot's content in its
+ * cell (LAYOUTING.md, "Grid slot placement").
+ */
+export type PhiCmsGridLayoutConfig = PhiCmsLayerBase & {
+  gap?: CSSProperties["gap"];
   anchor?: PhiRenderableBlockAnchor;
-  columnGap?: CSSProperties["columnGap"];
+  columns?: PhiResponsiveValue<number>;
   slotPlacements?: PhiCmsGridLayoutSlotPlacementConfig[];
-  slotBackground?: string;
-  slotBorder?: string;
-  slotBorderRadius?: CSSProperties["borderRadius"];
-  slotShadow?: PhiShadow;
 };
 
 export type PhiCmsThreeColumnLayoutConfig = PhiCmsDirectionalLayoutConfigBase & {
@@ -416,18 +420,15 @@ function readRenderableBlockAnchorOrPlacement(value: unknown): PhiRenderableBloc
     : undefined;
 }
 
-function readGridResponsivePlacement(
+function readGridResponsiveCount(
   value: unknown,
-  minimum: number,
-  maximum: number,
+  accepts: (candidate: number) => boolean,
 ): PhiResponsiveValue<number> | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
   const record = value as Record<string, unknown>;
   const read = (key: "compact" | "medium" | "wide") => {
     const candidate = readNumber(record[key]);
-    return Number.isInteger(candidate) && candidate != null && candidate >= minimum && candidate <= maximum
-      ? candidate
-      : undefined;
+    return candidate != null && Number.isInteger(candidate) && accepts(candidate) ? candidate : undefined;
   };
   const responsive = { compact: read("compact"), medium: read("medium"), wide: read("wide") };
   return responsive.compact != null || responsive.medium != null || responsive.wide != null
@@ -435,6 +436,13 @@ function readGridResponsivePlacement(
     : undefined;
 }
 
+const PHI_GRID_MAX_COLUMNS = Math.max(...PHI_GRID_COLUMN_COUNTS);
+
+/*
+ * Counted in the Grid's columns, so a span is at most the widest row and an indent one less. Whether
+ * they fit the row at a given width is answered where the row is known, by clamping
+ * (`resolvePhiGridSlotPlacement`): a Grid whose columns were reduced keeps its stated placements.
+ */
 function readGridSlotPlacement(value: unknown, slotIndexFromArray?: number): PhiCmsGridLayoutSlotPlacementConfig | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return null;
@@ -446,36 +454,9 @@ function readGridSlotPlacement(value: unknown, slotIndexFromArray?: number): Phi
     return null;
   }
 
-  const span = readGridResponsivePlacement(slot.span, 1, 24);
-  const offset = readGridResponsivePlacement(slot.offset, 0, 23);
+  const span = readGridResponsiveCount(slot.span, (candidate) => candidate >= 1 && candidate <= PHI_GRID_MAX_COLUMNS);
+  const offset = readGridResponsiveCount(slot.offset, (candidate) => candidate >= 0 && candidate < PHI_GRID_MAX_COLUMNS);
   if (!span && !offset) return null;
-  /*
-   * The rule is about two numbers an author stated, so a profile where no span was stated has nothing
-   * to check.
-   *
-   * A span of six used to be invented here for the check, matching the one constant the Grid fell back
-   * to. The fallback is a profile value now (`PHI_GRID_LAYOUT_DEFAULT_SPAN`, 24/12/6), and repeating it
-   * here would reject stored placements rather than describe them: at `compact` the default fills the
-   * row, so any stated offset beside an absent span would fail a rule the author never broke. What
-   * happens instead is what always happened to an offset with no room -- `resolvePhiGridSlotColumns`
-   * clamps it to the tracks that are left.
-   */
-  const statedSpan = {
-    compact: span?.compact,
-    medium: span?.medium ?? span?.compact,
-    wide: span?.wide ?? span?.medium ?? span?.compact,
-  };
-  const resolvedOffset = {
-    compact: offset?.compact ?? 0,
-    medium: offset?.medium ?? offset?.compact ?? 0,
-    wide: offset?.wide ?? offset?.medium ?? offset?.compact ?? 0,
-  };
-  for (const profile of ["compact", "medium", "wide"] as const) {
-    const profileSpan = statedSpan[profile];
-    if (profileSpan != null && resolvedOffset[profile] + profileSpan > 24) {
-      throw new Error(`Grid slot ${slotIndex} ${profile} offset plus span exceeds 24.`);
-    }
-  }
   return { slotIndex, span, offset };
 }
 
@@ -584,6 +565,10 @@ export function parsePhiCmsMasonryLayoutConfig(
       ...readRenderableBlockConfig(config),
       labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
       padding: readCssSize(config.padding),
+      paddingLeft: readCssSize(config.paddingLeft),
+      paddingRight: readCssSize(config.paddingRight),
+      paddingTop: readCssSize(config.paddingTop),
+      paddingBottom: readCssSize(config.paddingBottom),
       columns: readNumber(config.columns),
       minColumnWidth: readPhiLengthValue(config.minColumnWidth) ?? undefined,
       gap: readCssSize(config.gap),
@@ -767,24 +752,18 @@ export function parsePhiCmsGridLayoutConfig(
       ...readRenderableBlockConfig(config),
       labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
       padding: readCssSize(config.padding),
+      paddingLeft: readCssSize(config.paddingLeft),
+      paddingRight: readCssSize(config.paddingRight),
+      paddingTop: readCssSize(config.paddingTop),
+      paddingBottom: readCssSize(config.paddingBottom),
       gap: readCssSize(config.gap),
       anchor: readRenderableBlockAnchorOrPlacement(config.anchor),
-      columnGap: readCssSize(config.columnGap),
-      align: readString(config.align) as CSSProperties["alignItems"] | undefined,
-      justify: readString(config.justify) as CSSProperties["justifyContent"] | undefined,
-      wrap:
-        readBoolean(config.wrap) ??
-        (readString(config.wrap) as CSSProperties["flexWrap"] | undefined) ??
-        false,
+      columns: readGridResponsiveCount(config.columns, isPhiGridColumnCount),
       slotPlacements: Array.isArray(config.slotPlacements)
         ? config.slotPlacements
             .map((slot, slotIndex) => readGridSlotPlacement(slot, slotIndex))
             .filter((slot): slot is PhiCmsGridLayoutSlotPlacementConfig => slot !== null)
         : undefined,
-      slotBackground: readString(config.slotBackground),
-      slotBorder: readString(config.slotBorder),
-      slotBorderRadius: readCssSize(config.slotBorderRadius),
-      slotShadow: readPhiShadow(config.slotShadow),
     },
     resolvePhiLayoutDefaults("grid"),
   );

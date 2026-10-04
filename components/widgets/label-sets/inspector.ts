@@ -38,6 +38,12 @@ const PHI_INSPECTOR_WIDGET_LABEL_SET = definePhiLabelSet({
     tone_light: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.tone.light,
     tone_dark: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.tone.dark,
     tone_inverse: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.tone.inverse,
+    grid_columns: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.grid.columns,
+    grid_distribution: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.grid.distribution,
+    grid_slot: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.grid.slot,
+    grid_profile_compact: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.grid.profiles.compact,
+    grid_profile_medium: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.grid.profiles.medium,
+    grid_profile_wide: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.grid.profiles.wide,
   },
 });
 
@@ -75,6 +81,16 @@ export async function getPhiInspectorWidgetLabels(
       light: labels.tone_light,
       dark: labels.tone_dark,
       inverse: labels.tone_inverse,
+    },
+    grid: {
+      columns: labels.grid_columns,
+      distribution: labels.grid_distribution,
+      slot: labels.grid_slot,
+      profiles: {
+        compact: labels.grid_profile_compact,
+        medium: labels.grid_profile_medium,
+        wide: labels.grid_profile_wide,
+      },
     },
   };
 }

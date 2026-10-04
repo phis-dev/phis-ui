@@ -110,22 +110,27 @@ assert.deepEqual(
 );
 
 const responsiveGridConfig = parsePhiCmsGridLayoutConfig({
+  columns: { compact: 1, medium: 2, wide: 5 },
   slotPlacements: [{
     slotIndex: 1,
-    span: { compact: 24, medium: 16 },
-    offset: { compact: 0, medium: 8 },
+    span: { compact: 1, medium: 2, wide: 9 },
+    offset: { wide: 1 },
   }],
 });
 assert.deepEqual(
-  resolvePhiGridSlotPlacement(responsiveGridConfig.slotPlacements, 1, "wide", 6),
-  { span: 16, offset: 8 },
-  "wide Grid placement must cascade from the nearest narrower container profile.",
+  responsiveGridConfig.columns,
+  { compact: 1, medium: 2, wide: undefined },
+  "A Grid's columns must be one of the counts that divide its 24 tracks.",
 );
-assert.throws(
-  () => parsePhiCmsGridLayoutConfig({
-    slotPlacements: [{ slotIndex: 0, span: { compact: 20 }, offset: { compact: 5 } }],
-  }),
-  /offset plus span exceeds 24/,
+assert.deepEqual(
+  responsiveGridConfig.slotPlacements,
+  [{ slotIndex: 1, span: { compact: 1, medium: 2, wide: undefined }, offset: { compact: undefined, medium: undefined, wide: 1 } }],
+  "A Grid slot's placement is counted in columns, at most the widest row.",
+);
+assert.deepEqual(
+  resolvePhiGridSlotPlacement(responsiveGridConfig.slotPlacements, 1, "wide", 4),
+  { span: 6, offset: 6 },
+  "A width the placement states no span for is one column wide.",
 );
 assert.deepEqual(
   resolvePhiPaddingStyle({ padding: 8, paddingRight: "var(--ant-padding)" }),

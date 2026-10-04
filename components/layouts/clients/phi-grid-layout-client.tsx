@@ -15,8 +15,13 @@ import { PhiBaseLayout } from "../phi-base-layout";
 import { resolvePhiLayoutDefaults } from "../../../helpers/cms-layout-defaults";
 import { resolvePhiLayoutSlotChildSizing } from "./phi-layout-anchored-overlay";
 import {
+  PHI_GRID_LAYOUT_PROFILES,
+  resolvePhiGridColumns,
   resolvePhiGridSlotColumnProperties,
+  resolvePhiGridSlotGapShares,
   resolvePhiGridSlotProfileColumns,
+  type PhiGridColumnCount,
+  type PhiGridLayoutProfile,
 } from "../phi-grid-contract";
 import {
   isPhiLayoutAuthoringRender,
@@ -48,20 +53,35 @@ function resolveGridSlotPlacementStyle(slot: ReactNode): CSSProperties {
 }
 
 /*
- * The 24 track guides of the edit overlay, each inset by its share of the column gap the same way a
- * slot is (`resolvePhiGridSlotGapShares`): the tracks are flush, so a guide that filled its track would
- * draw one continuous band where the operator is meant to see columns and the gaps between them.
+ * The edit overlay's guides: one per column of the row, for every width, and the Grid's container
+ * queries show the set its width answers (`styles/layout.css`, `.phi-grid-layout__guide`). Each is inset
+ * by its share of the gap the same way a slot is (`resolvePhiGridSlotGapShares`): the tracks are flush,
+ * so a guide that filled its tracks would draw one continuous band where the operator is meant to see
+ * columns and the gaps between them.
  */
-function resolveGridGuideStyle(index: number): CSSProperties {
-  return {
-    minWidth: 0,
-    minHeight: "100%",
-    marginInlineStart: `calc(var(--phi-grid-column-gap, 0px) * ${index} / 24)`,
-    marginInlineEnd: `calc(var(--phi-grid-column-gap, 0px) * ${23 - index} / 24)`,
-    border: "1px dashed var(--phi-debug-layer-slot-border)",
-    borderRadius: "var(--ant-border-radius)",
-    background: "var(--phi-debug-layer-slot-background-soft)",
-  };
+function renderGridGuides(profile: PhiGridLayoutProfile, columns: PhiGridColumnCount) {
+  const tracks = 24 / columns;
+  return Array.from({ length: columns }, (_, index) => {
+    const placement = { start: index * tracks + 1, span: tracks };
+    const shares = resolvePhiGridSlotGapShares(placement);
+    return (
+      <div
+        key={`grid-guide-${profile}-${index}`}
+        className={`phi-grid-layout__guide phi-grid-layout__guide--${profile}`}
+        style={{
+          gridColumn: `${placement.start} / span ${placement.span}`,
+          gridRow: 1,
+          minWidth: 0,
+          minHeight: "100%",
+          marginInlineStart: `calc(var(--phi-grid-column-gap, 0px) * ${shares.lead} / 24)`,
+          marginInlineEnd: `calc(var(--phi-grid-column-gap, 0px) * ${shares.trail} / 24)`,
+          border: "1px dashed var(--phi-debug-layer-slot-border)",
+          borderRadius: "var(--ant-border-radius)",
+          background: "var(--phi-debug-layer-slot-background-soft)",
+        }}
+      />
+    );
+  });
 }
 
 export function PhiGridLayout({
@@ -78,15 +98,12 @@ export function PhiGridLayout({
   });
   const {
     gap = PHI_GRID_LAYOUT_DEFAULTS.gap as number | string,
-    columnGap,
+    columns,
     slotPlacements,
     anchor,
     editSlotAnchor,
-    align,
-    justify,
     renderMode,
     style,
-    slotStyle,
     editSlotAction,
     editRenderInsertControl,
     editSlotLabels,
@@ -99,23 +116,13 @@ export function PhiGridLayout({
   } = layoutProps;
   const resolvedGap = normalizePhiCssSize(gap) ?? (PHI_GRID_LAYOUT_DEFAULTS.gap as number | string);
   /*
-   * One gap for both axes, and the column gap only where somebody said so.
-   *
-   * `gap` is the Grid's distance between its slots; it reached `row-gap` alone, and `columnGap` was the
-   * only one of the two with a field in the Inspector. So the vertical distance could not be set at all
-   * and the horizontal was the only thing that moved -- two halves of one idea, one of them unreachable.
-   * A stated column gap still wins, which is what a Grid wants that holds rows apart and columns flush;
-   * the panel preset is exactly that and says its `0` out loud.
-   */
-  const resolvedColumnGap = normalizePhiCssSize(columnGap) ?? resolvedGap;
-  /*
-   * One reading of the anchor, in the grid spelling, and the author's own `align`/`justify` wherever it
-   * says nothing. The edit anchor arrives as one of the nine words, where every axis is stated; the
-   * config anchor arrives as the pair, where an axis may be missing and stays missing.
+   * One reading of the anchor, in the grid spelling. The edit anchor arrives as one of the nine words,
+   * where every axis is stated; the config anchor arrives as the pair, where an axis may be missing and
+   * stays missing.
    */
   const placement = resolvePhiPlacement(editSlotAnchor ?? anchor);
-  const resolvedAlignItems = phiGridPlacementWord(placement.block) ?? align;
-  const resolvedJustifyContent = phiGridPlacementWord(placement.inline) ?? justify;
+  const resolvedAlignItems = phiGridPlacementWord(placement.block);
+  const resolvedJustifyContent = phiGridPlacementWord(placement.inline);
   const slotPlacementMargins = resolvePhiSlotPlacementMargins({
     inline: phiPlacementFromWord(resolvedJustifyContent),
     block: null,
@@ -138,9 +145,11 @@ export function PhiGridLayout({
    * where the Form measures inside the padding. The container is now the Layout's own box, so a Grid
    * and a Form of the same room answer the same profile (LAYOUTING.md, "Grid slot placement").
    */
+  const resolvedColumns = resolvePhiGridColumns(columns);
   const slotColumns = resolvePhiGridSlotProfileColumns(
     slotPlacements,
     isEditMode ? [...occupiedSlotIndices, nextInsertSlotIndex] : occupiedSlotIndices,
+    resolvedColumns,
   );
   const renderedSlots: ReactNode[] = slots.map((slot, slotIndex) => {
     if (slot === null || slot === undefined || slot === false) {
@@ -164,7 +173,6 @@ export function PhiGridLayout({
           justifyContent: resolvedJustifyContent,
           // The same placement as margins, for a child stretched to the cell and capped; see the Layout contract.
           ...slotPlacementMargins,
-          ...(slotStyle ?? {}),
         } as CSSProperties}
       >
         <div style={resolveGridSlotPlacementStyle(slot)}>
@@ -233,15 +241,12 @@ export function PhiGridLayout({
         display: "grid",
         gridTemplateColumns: "repeat(24, minmax(0, 1fr))",
         gap: 0,
-        rowGap: resolvedGap,
         alignContent: "start",
         pointerEvents: "none",
         zIndex: -1,
       }}
     >
-      {Array.from({ length: 24 }, (_, index) => (
-        <div key={`grid-guide-${index}`} style={resolveGridGuideStyle(index)} />
-      ))}
+      {PHI_GRID_LAYOUT_PROFILES.flatMap((profile) => renderGridGuides(profile, resolvedColumns[profile]))}
     </div>
   ) : null;
 
@@ -276,7 +281,7 @@ export function PhiGridLayout({
          */
         columnGap: 0,
         rowGap: resolvedGap,
-        ["--phi-grid-column-gap" as string]: normalizePhiCssSize(resolvedColumnGap),
+        ["--phi-grid-column-gap" as string]: resolvedGap,
         alignContent: "start",
         gridAutoFlow: "row",
         minWidth: 0,

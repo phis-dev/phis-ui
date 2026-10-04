@@ -215,13 +215,13 @@ export const PHI_COLLAPSIBLE_LAYOUT_DEFINITION = {
       key: "headerPadding",
       type: "choice",
       label: "Header Padding",
-      optionsProvider: { providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.spacingScale, params: { family: "padding" } },
+      optionsProvider: { providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.spacingScale },
     },
     {
       key: "innerPadding",
       type: "choice",
       label: "Inner Padding",
-      optionsProvider: { providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.spacingScale, params: { family: "padding" } },
+      optionsProvider: { providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.spacingScale },
     },
   ],
   runtimeSignals: {
@@ -463,31 +463,18 @@ export const PHI_GRID_LAYOUT_DEFINITION = {
   typeKey: "grid",
   slotSizePolicy: "fill",
   title: "Grid",
-  description: "Container-responsive 24-column slot grid using Phi responsive profiles.",
+  description: "Slots in rows, as many to a row as the Grid's own width allows.",
   category: "structure",
   iconName: "grid",
   defaultConfig: resolvePhiLayoutDefaults("grid"),
   fields: [
-    ...PHI_LAYOUT_PADDING_FIELDS,
     /*
-     * `gap` is the distance on both axes, `columnGap` overrides it on the horizontal one.
-     *
-     * Only the second had a field, and it reaches `column-gap` alone, so the vertical distance was
-     * whatever a default or a preset had written and no operator could change it.
+     * The gap is the Paddings panel's, between the slots across and down; a second field for it here
+     * and a third for the distance across alone said one thing three times.
      */
-    {
-      key: "gap",
-      type: "choice",
-      label: "Gap",
-      optionsProvider: { providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.spacingScale },
-    },
-    {
-      key: "columnGap",
-      type: "choice",
-      label: "Col Gap",
-      optionsProvider: { providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.spacingScale },
-    },
-    { key: "slotPlacements", type: "slot-placement", label: "Slot placement" },
+    ...PHI_LAYOUT_PADDING_FIELDS,
+    /* How many slots a row holds at each width, and the slots that are wider or indented. */
+    { key: "columns", type: "grid-placement", label: "Columns" },
   ],
   slots: [...PHI_CMS_GRID_LAYOUT_SLOTS],
 } satisfies PhiCmsLayoutPluginDefinition<PhiCmsGridLayoutConfig>;

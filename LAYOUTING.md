@@ -429,34 +429,35 @@ plain. Nothing writes the profile answers to CSS yet; that is
 
 ### Grid slot placement
 
-`PhiGridLayout` owns one 24-unit logical grid. Every populated slot may declare presentation-only
-placement with a responsive `span` and `offset`, using the shared `compact`, `medium`, and `wide`
-profiles. `span` is an integer from `1` through `24`; `offset` is an integer from `0` through `23`,
-defaults to `0`, and counts unused columns before the slot in flow: slots stand in source order from the
-logical inline start, each after the one before it, and a slot that no longer fits starts the next row
-(`resolvePhiGridSlotColumns`). `offset + span` must not exceed `24` in any profile that states a span.
-Responsive values use the shared smaller-to-larger cascade.
+A Grid states how many slots a row holds at each of the shared `compact`, `medium` and `wide`
+profiles: `columns`, one of 1, 2, 3, 4 or 6 per profile, which all divide the 24 tracks underneath. A
+Grid that states none holds `PHI_GRID_LAYOUT_DEFAULT_COLUMNS` -- 1 at `compact`, 2 at `medium`, 4 at
+`wide`: the whole row where there is no room to share, two abreast in the middle, four where the Grid is
+at least as wide as the content column. That is all most Grids need; no slot has to say anything.
 
-A slot that states no span takes the profile default, `PHI_GRID_LAYOUT_DEFAULT_SPAN` -- 24 at `compact`,
-12 at `medium`, 6 at `wide`: the whole row where there is no room to share, two abreast in the middle,
-four where the Grid is at least as wide as the content column. It was one constant for all three
-profiles, so a Grid whose slots carried no authored span never reflowed -- four abreast at 320px and at
-1600px alike, only narrower, because the tracks are `minmax(0, 1fr)`. Because the `compact` default fills
-the row, an offset has nothing to push into there and is clamped away; that is also why the rule above
-is stated of the profiles that name a span, rather than of an invented one.
+A slot that is not one column wide, or does not start where the previous one ended, says so in
+`slotPlacements`: a responsive `span` (columns wide) and `offset` (columns indented), both counted in the
+Grid's columns at that profile -- "two columns", not a span of 12 tracks. Slots stand in source order,
+each after the one before it, and a slot that no longer fits starts the next row
+(`resolvePhiGridSlotColumns`). A profile the placement says nothing about is the plain slot there, one
+column and no indent; placements do not cascade from narrower profiles, because a column means something
+else at every profile. A span wider than the row is the row and an indent with no room left is dropped
+(`resolvePhiGridSlotPlacement`), so a Grid whose columns were reduced keeps its placements. The spans
+used to be stated in 24ths, per slot and per profile, and three abreast was a span of 8 an author had to
+work out.
 
-`gap` is the distance between slots on both axes; `columnGap` overrides it on the horizontal one and is
-what a Grid states that holds its rows apart and its columns flush. `gap` used to reach `row-gap` alone
-while only `columnGap` had a field, so the vertical distance was whatever a default or a preset had
-written and no operator could reach it.
+`gap` is the distance between slots, across and down, and it is the Paddings panel's gap like every
+other Layout's. The Grid had two more fields for it -- a Settings `gap` writing the same key and a
+`columnGap` overriding it across -- so one distance was said three times.
 
-The column gap falls between slots, not between tracks. The 24 tracks are flush (`column-gap: 0`) and
+The gap across falls between slots, not between tracks. The 24 tracks are flush (`column-gap: 0`) and
 each slot insets its content by its share of the gap (`resolvePhiGridSlotGapShares`): a slot on line `s`
 spanning `n` tracks takes `(s - 1) / 24` of a gap before it and `(25 - s - n) / 24` after, so two slots
 side by side hold exactly one gap between them and every edge stands where a `column-gap` put it. A
 `column-gap` fell on all 23 track boundaries whether a slot ended there or not, which made `23 x gap`
 (368px at 16px) the narrowest a Grid could be; below it the Grid ran over its box. Now a Grid without
-that room narrows its slots instead. The Builder's track guides take the same shares.
+that room narrows its slots instead. The Builder's guides -- one per column of the profile the Grid is
+at -- take the same shares.
 
 The effective profile is resolved from the Grid Layout's own inline size -- its content box, inside its
 padding, the width the tracks have -- on the same shared Phi thresholds as responsive Forms
@@ -473,7 +474,7 @@ The Grid's outer element is its Layout box (`.phi-layout`); the Builder's track 
 it rather than beside it in a wrapper, which kept the fill rules (`.phi-slot-child--block-fill >
 .phi-layout`) from ever reaching a Grid. Being a size container, the Grid's width cannot come from its
 content: it takes the width its slot gives, as its `fill` policy says. Slot source order remains the logical, focus, accessibility, and authoring order;
-offset changes presentation only and must not reorder or synthesize slots.
+an indent changes presentation only and must not reorder or synthesize slots.
 
 Placement belongs to the owning Grid Layout config. A Grid must not inspect a child Widget type, Form
 descriptor, Provider, Controller, field placement, or submitted values to infer it. Conversely, a child

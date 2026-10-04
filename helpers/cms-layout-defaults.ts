@@ -3,6 +3,7 @@ import type { PhiLayoutKind } from "../components/layouts/phi-layout-contract";
 import { PHI_RENDERABLE_BLOCK_DEFAULT_ANCHOR } from "./renderable-block-defaults";
 import { isPhiRecord } from "./is-record";
 import { PHI_SURFACE_CARD } from "./surface-presets";
+import { PHI_GRID_LAYOUT_DEFAULT_COLUMNS } from "../components/layouts/phi-grid-contract";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -79,17 +80,10 @@ const PHI_FLEX_VERTICAL_LAYOUT_PAGE_BASE_PRESET = {
 
 export const PHI_GRID_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     gap: 0,
-    align: undefined,
-    justify: undefined,
-    wrap: false,
+    columns: { ...PHI_GRID_LAYOUT_DEFAULT_COLUMNS },
 };
 const PHI_GRID_LAYOUT_PANEL_PRESET = {
     gap: PHI_SPACE.base,
-    // Rows apart, columns flush: stated, because an absent column gap follows the gap now.
-    columnGap: 0,
-    align: undefined,
-    justify: undefined,
-    wrap: false,
     padding: PHI_SPACE.base,
 } as const;
 

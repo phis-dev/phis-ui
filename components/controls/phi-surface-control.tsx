@@ -7,7 +7,7 @@ import { PhiBorderControl } from "./phi-border-control";
 import { PhiFlexControl } from "./phi-flex-control";
 import { PhiSegmentedControl } from "./phi-segmented-control";
 import { PhiShadowControl } from "./phi-shadow-control";
-import { PhiTypographyControl } from "./phi-typography-control";
+import { PhiDividerControl } from "./phi-divider-control";
 import type { PhiBackgroundWidgetLabels } from "../widgets/label-types/background";
 import type { PhiBorderWidgetLabels } from "../widgets/label-types/border";
 import type { PhiColorPickerLabels } from "../widgets/label-types/color-picker";
@@ -158,7 +158,7 @@ export function PhiSurfaceControl({
   return (
     <PhiFlexControl vertical gap="middle" style={{ width: "100%", minWidth: 0 }}>
       <PhiFlexControl vertical gap="small" style={{ width: "100%", minWidth: 0 }}>
-        <PhiTypographyControl strong>{labels.style}</PhiTypographyControl>
+        <PhiDividerControl titlePlacement="start" style={{ marginBlock: 0 }}>{labels.style}</PhiDividerControl>
         <PhiSegmentedControl<PhiSurfacePresetId | "none" | "custom">
           value={style}
           options={[
@@ -172,7 +172,7 @@ export function PhiSurfaceControl({
         />
       </PhiFlexControl>
       <PhiFlexControl vertical gap="small" style={{ width: "100%", minWidth: 0 }}>
-        <PhiTypographyControl strong>{labels.tone}</PhiTypographyControl>
+        <PhiDividerControl titlePlacement="start" style={{ marginBlock: 0 }}>{labels.tone}</PhiDividerControl>
         <PhiSegmentedControl<PhiSurfaceTone>
           value={current.tone ?? "inherit"}
           options={PHI_SURFACE_TONES.map((tone) => ({ value: tone, label: labels.tones[tone] }))}
@@ -184,7 +184,7 @@ export function PhiSurfaceControl({
       {style === "custom" ? (
         <>
           <PhiFlexControl vertical gap="small" style={{ width: "100%", minWidth: 0 }}>
-            <PhiTypographyControl strong>{labels.background}</PhiTypographyControl>
+            <PhiDividerControl titlePlacement="start" style={{ marginBlock: 0 }}>{labels.background}</PhiDividerControl>
             <PhiBackgroundControl
               mode="control"
               disabled={isDisabled}
@@ -198,7 +198,7 @@ export function PhiSurfaceControl({
             />
           </PhiFlexControl>
           <PhiFlexControl vertical gap="small" style={{ width: "100%", minWidth: 0 }}>
-            <PhiTypographyControl strong>{labels.border}</PhiTypographyControl>
+            <PhiDividerControl titlePlacement="start" style={{ marginBlock: 0 }}>{labels.border}</PhiDividerControl>
             <PhiSegmentedControl<PhiCmsBorderSource>
               value={borderSource}
               options={PHI_CMS_BORDER_SOURCES.map((source) => ({
@@ -222,7 +222,7 @@ export function PhiSurfaceControl({
             ) : null}
           </PhiFlexControl>
           <PhiFlexControl vertical gap="small" style={{ width: "100%", minWidth: 0 }}>
-            <PhiTypographyControl strong>{labels.shadow}</PhiTypographyControl>
+            <PhiDividerControl titlePlacement="start" style={{ marginBlock: 0 }}>{labels.shadow}</PhiDividerControl>
             <PhiShadowControl
               mode="control"
               disabled={isDisabled}
