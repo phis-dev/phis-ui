@@ -108,6 +108,7 @@ export const PHI_DATE_PICKER_WIDGET_DEFINITION = {
   title: "Date Picker",
   description: "Reusable date, period, date-time, and range input.",
   category: "form",
+  icon: "antd:calendar-outlined",
   iconFamily: "form",
   slotSizePolicy: "intrinsic",
   runtimeSignals: {

@@ -17,6 +17,7 @@ export const PHI_FORM_WIDGET_DEFINITION = {
   title: "Form",
   category: "form",
   description: "Renders a Preset Form contributed by an active Runtime module.",
+  icon: "antd:edit-outlined",
   iconFamily: "form",
   slotSizePolicy: "fill-inline",
   requiredRuntimeControllers: requirePhiRuntimeFormControllerForWidget,
@@ -197,6 +198,7 @@ export const PHI_FORM_WIDGET_DEFINITION = {
   | "title"
   | "description"
   | "category"
+  | "icon"
   | "iconFamily"
   | "slotSizePolicy"
   | "requiredRuntimeControllers"

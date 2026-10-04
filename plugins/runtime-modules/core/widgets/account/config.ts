@@ -24,6 +24,7 @@ export const PHI_ACCOUNT_WIDGET_DEFINITION = {
   title: "Account",
   description: "Viewer account control with guest and authenticated states.",
   category: "navigation",
+  icon: "antd:user-outlined",
   iconFamily: "navigation",
   fields: [],
   parseConfig: parsePhiAccountWidgetConfig,
@@ -36,6 +37,7 @@ export const PHI_ACCOUNT_WIDGET_DEFINITION = {
   | "title"
   | "description"
   | "category"
+  | "icon"
   | "iconFamily"
   | "fields"
   | "parseConfig"

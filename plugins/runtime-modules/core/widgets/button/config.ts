@@ -89,6 +89,7 @@ export const PHI_BUTTON_WIDGET_DEFINITION = {
   title: "Button",
   description: "Reusable command button that emits a configured runtime signal.",
   category: "form",
+  icon: "antd:edit-outlined",
   iconFamily: "form",
   translatesOwnText: true,
   slotSizePolicy: "intrinsic",
@@ -152,6 +153,7 @@ export const PHI_BUTTON_WIDGET_DEFINITION = {
   | "title"
   | "description"
   | "category"
+  | "icon"
   | "iconFamily"
   | "slotSizePolicy"
   | "runtimeSignals"
