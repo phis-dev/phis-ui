@@ -47,6 +47,13 @@ If their fetch layer uses `cache: "no-store"`, the underlying request is still d
   - Emptied by `getResolvedSiteConfig(...)` whenever Core's `translationMarkers` differ from the ones the process saw last: the global entries for the global marker, the Site's entries for its own. Core moves them on every translation write (phis-server TRANSLATIONS.md, "Change markers").
   - Label sets (`gateway/label-set.ts`) are not cached as sets; they read their texts through this cache.
 
+## Theme Resolution
+
+- `resolvePhiRootThemeState(...)` / `clearPhiRootThemeStates()`
+  - File: `components/root/phi-root-theme-resolver.ts`
+  - Per-process, at most 16 resolved root Themes (least recently read evicted), keyed by a hash of what they are resolved from: the Theme record, the fonts and the palette block it follows. A changed Theme is a new key, so nothing invalidates it and nothing can go stale; the bound only keeps it small, since a Site has one published Theme and Builder drafts are resolved in the browser.
+  - The state is frozen: every page that resolves the same Theme is handed the same object.
+
 ## Form Guard Fetching
 
 - `GET /api/site/forms?phase=guard` (`gateway/site-form-route.ts`), called by the browser when a form whose descriptor declares `guard` mounts (`components/forms/form-guard-client.ts`).

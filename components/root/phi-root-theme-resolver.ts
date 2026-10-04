@@ -197,16 +197,64 @@ export type PhiRootThemeState = {
   chromeOverlayVariables: PhiShellChromeOverlayVariables;
 };
 
+/*
+ * Resolved states, by what they are resolved from.
+ *
+ * Every page resolves the Site's Theme for both modes, and for a Theme that has not changed the answer
+ * is the same every time: about 3-4 ms of derivation per request for nothing (measured 04.10.2026). The
+ * key is the content -- Theme record, fonts, the palette block it follows -- so a changed Theme is a new
+ * key, and nothing here has to be told about a publish or can go stale; it holds per process and needs
+ * no coordination between processes. A Site has one published Theme, and drafts from the Builder are
+ * resolved in the browser, so a handful of entries is all this ever holds; the bound only keeps it so.
+ */
+const PHI_ROOT_THEME_STATE_LIMIT = 16;
+const rootThemeStates = new Map<string, PhiRootThemeState>();
+
+function freezeDeep<T>(value: T): T {
+  if (value && typeof value === "object" && !Object.isFrozen(value)) {
+    Object.freeze(value);
+    for (const entry of Object.values(value)) freezeDeep(entry);
+  }
+  return value;
+}
+
+/** Forget every resolved state. For tests. */
+export function clearPhiRootThemeStates() {
+  rootThemeStates.clear();
+}
+
 export function resolvePhiRootThemeState(input: {
   siteTheme: PhiSiteTheme;
   fonts: PhiRootThemeFonts;
   presets: readonly PhiThemePresetPlugin[];
 }): PhiRootThemeState {
-  return {
+  const key = createPhiAntdThemeCssVarKey("state", {
+    siteTheme: input.siteTheme,
+    fonts: input.fonts,
+    preset: resolvePhiThemePresetPlugin(input.presets, input.siteTheme?.preset),
+  });
+  const known = rootThemeStates.get(key);
+  if (known) {
+    // Read last, evicted last.
+    rootThemeStates.delete(key);
+    rootThemeStates.set(key, known);
+    return known;
+  }
+
+  /*
+   * Frozen, because every page that resolves this Theme is handed the same object: a reader that
+   * wrote into it would be writing into every other page's Theme.
+   */
+  const state = freezeDeep<PhiRootThemeState>({
     themes: {
       light: resolvePhiRootTheme({ ...input, mode: "light" }).theme,
       dark: resolvePhiRootTheme({ ...input, mode: "dark" }).theme,
     },
     chromeOverlayVariables: resolvePhiShellChromeOverlayVariables(input.siteTheme.root),
-  };
+  });
+  rootThemeStates.set(key, state);
+  if (rootThemeStates.size > PHI_ROOT_THEME_STATE_LIMIT) {
+    rootThemeStates.delete(rootThemeStates.keys().next().value!);
+  }
+  return state;
 }

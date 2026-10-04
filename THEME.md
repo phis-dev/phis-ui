@@ -298,6 +298,8 @@ The published Theme has one server projection and one client projection:
   `theme` signal); until it has resolved, the frame keeps the Theme it has. The resolver, the Shell region
   styles and the Overlay are not on any first load, and `scripts/validate-area-client-reach.mjs` holds the
   root to that (`ROOT_SERVER_RESOLVED_THEME_FILES`).
+- The Server resolves a Theme once per process: `resolvePhiRootThemeState(...)` keeps the resolved state by
+  the content it was resolved from and hands it out frozen ([gateway/CACHES.md](./gateway/CACHES.md#theme-resolution)).
 
 ## The stated vocabulary
 
