@@ -278,6 +278,11 @@ function patchSelectedRootStructureConfig(
   state: PhiDeveloperBuilderWorkspaceState,
   field: string,
   patch: Record<string, unknown>,
+  /** How the root's config takes the patch, where merging it in would leave an old value standing. */
+  patchRootConfig: (config: Record<string, unknown>) => Record<string, unknown> = (config) => ({
+    ...config,
+    ...patch,
+  }),
 ) {
   if (!state.selectedRootRegionKey) {
     return false;
@@ -298,10 +303,7 @@ function patchSelectedRootStructureConfig(
     draftKey,
     {
       ...selectedRootDraft,
-      rootNodeConfig: {
-        ...(selectedRootDraft.rootNodeConfig ?? {}),
-        ...patch,
-      },
+      rootNodeConfig: patchRootConfig(selectedRootDraft.rootNodeConfig ?? {}),
       ...patch,
     },
     {
@@ -441,7 +443,21 @@ export function runPhiDeveloperBuilderInspectorAction(
       }
       return next;
     })) {
-      patchSelectedRootStructureConfig(state, "surface", { rootNodeSurface: surface });
+      /*
+       * The root's config carries its Surface as well, and the draft falls back on it where
+       * `rootNodeSurface` is empty -- so taking the Surface away has to take it out of the config too,
+       * or None would bring the old look straight back.
+       */
+      patchSelectedRootStructureConfig(state, "surface", { rootNodeSurface: surface }, (config) => {
+        const next = { ...config };
+        delete next.rootNodeSurface;
+        if (surface == null) {
+          delete next.surface;
+        } else {
+          next.surface = surface;
+        }
+        return next;
+      });
     }
     return;
   }
