@@ -4,7 +4,7 @@ import { PHI_BACKGROUND_BLUR_FILTER } from "../components/widgets/config/backgro
 import { readPhiSurface } from "../types/surface";
 import { phiSurfaceDrawsChrome, resolvePhiSurfaceStyle } from "./surface-style";
 import { PHI_THEME_BORDER_LINE } from "./border-widget-style";
-import { PHI_LAYOUT_CARD_SURFACE, PHI_LAYOUT_WASH_SURFACE } from "./cms-layout-defaults";
+import { PHI_SURFACE_CARD, PHI_SURFACE_WASH, resolvePhiSurfacePresetId } from "./surface-presets";
 
 const picture = {
   base: { kind: "image" as const, sourceKind: "url" as const, sourceUrl: "https://example.test/ground.jpg" },
@@ -153,14 +153,27 @@ describe("a Surface in another mode", () => {
 
 describe("the Layout surfaces a Preset writes", () => {
   it("reads both as plain Surfaces", () => {
-    expect(readPhiSurface(PHI_LAYOUT_CARD_SURFACE)).not.toBeNull();
-    expect(readPhiSurface(PHI_LAYOUT_WASH_SURFACE)).not.toBeNull();
+    expect(readPhiSurface(PHI_SURFACE_CARD)).not.toBeNull();
+    expect(readPhiSurface(PHI_SURFACE_WASH)).not.toBeNull();
   });
 
   it("draws a wash as a filling with no line and no depth", () => {
-    const style = resolvePhiSurfaceStyle(readPhiSurface(PHI_LAYOUT_WASH_SURFACE)).style;
+    const style = resolvePhiSurfaceStyle(readPhiSurface(PHI_SURFACE_WASH)).style;
     expect(style.backgroundColor).toBe("var(--ant-color-fill-quaternary)");
     expect(style.border).toBe("none");
     expect(style.boxShadow).toBe("none");
+  });
+});
+
+describe("which named look a Surface is", () => {
+  it("names a preset whatever its mode", () => {
+    expect(resolvePhiSurfacePresetId(PHI_SURFACE_CARD)).toBe("card");
+    expect(resolvePhiSurfacePresetId({ ...PHI_SURFACE_WASH, tone: "dark" })).toBe("wash");
+  });
+
+  it("says none for no look and custom for changed values", () => {
+    expect(resolvePhiSurfacePresetId(null)).toBe("none");
+    expect(resolvePhiSurfacePresetId({ tone: "dark" })).toBe("none");
+    expect(resolvePhiSurfacePresetId({ ...PHI_SURFACE_CARD, shadow: "strong" })).toBe("custom");
   });
 });

@@ -46,17 +46,31 @@ The shared fields are:
 - the shared renderable-block geometry, visibility, access, and transition fields
 
 Layout-family plugins add only topology-specific or explicitly family-specific fields. A family must
-not duplicate shared parsing or serialization, and it never declares chrome of its own. The Split Card
-is two halves on the golden ratio with a gap and a shared `slotPadding`; it may wear one Surface behind
-both, but a card is what stands in a half. Its panel creation preset draws no Surface, and the Pages
-built on it (sign-in, registration, password reset, confirmation, contact) put a Layout wearing
-`PHI_LAYOUT_CARD_SURFACE` (`helpers/cms-layout-defaults.ts`) into each half, so they read as two cards
-on the page's ground. Where the Split Card itself stands on a container, the halves take
-`PHI_LAYOUT_WASH_SURFACE` instead: the Theme's quietest filling, no line, no depth -- the Form Widget's
-`wash` step in Surface values. Both are plain Surface values a Preset writes; nothing stores their names. One Surface across a Region's full width reads as the page itself, not as a card.
+not duplicate shared parsing or serialization, and it never declares chrome of its own.
+
+The Split Card is two cards on the golden ratio (`components/layouts/split-card-geometry.ts`), and its
+Surface is the cards': each card draws the edge, corner, depth, pane and mode (`PhiSplitCardHalf`). The
+Background runs once across both cards and shows only inside them -- each card's ground layer is as wide
+as the Split Card's content box (`100cqw`, the Split Card being the query container) and moved by the
+card's own offset, so a picture or a gradient goes on behind the right card instead of starting again.
+Around and between the cards the Split Card is transparent. A moving Background does not move there:
+each card would move a copy of its own. Its fields are the Paddings panel -- `padding` outside, `gap`
+between the cards -- and the Surface; a card has no inset of its own, so what stands in a half sets it,
+usually a Layout with padding, as on the sign-in, registration, password reset, confirmation and contact
+Pages.
+
+The named looks a Surface can start from are plain values in `helpers/surface-presets.ts`:
+`PHI_SURFACE_CARD` (container ground, quiet line, soft shadow) and `PHI_SURFACE_WASH` (the Theme's
+quietest filling, no line, no depth -- the Form Widget's `wash` step in Surface values). A Preset writes
+them, and the Inspector's style switch writes the same values -- None, Card, Wash, and Custom once they
+were changed; nothing stores their names.
 
 Canonical defaults are neutral: no margin, no padding, and no Surface -- so no ground, no line, no
-corner, no depth. A Layout never adds implicit inner padding around its slot content; a Region that
+corner, no depth. The Split Card is the one exception: it stands with `padding` and `gap` at the base
+step, because two cards flush against each other and the Region's edge are not a split anybody means, and
+it is created wearing `PHI_SURFACE_CARD` (`PHI_SPLIT_CARD_LAYOUT_CREATION_CONFIG`). The Surface is a
+creation value, not a default: a default is put back under a node that states nothing, so an author who
+took the cards away would get them back. A Layout never adds implicit inner padding around its slot content; a Region that
 needs padded composition configures padding on its Layout or on the Region itself. A first-party creation preset may provide an initial visible-container configuration,
 but creation presets are input to the node factory only. Their values are materialized as normal
 Layout config and the preset name is never persisted or interpreted at render time.

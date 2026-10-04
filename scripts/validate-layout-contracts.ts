@@ -25,6 +25,7 @@ import { resolvePhiSourcedBorderStyle } from "../helpers/border-widget-style";
 import { resolvePhiSurfaceStyle } from "../helpers/surface-style";
 import { PhiCmsRegionStatic } from "../components/regions/phi-cms-region-static";
 import { PhiSlotChildFrameView } from "../plugins/runtime/phi-slot-child-frame-view";
+import { PhiSplitCardLayout } from "../components/layouts/clients/phi-split-card-layout-client";
 import { resolvePhiBuilderPreviewRegionConfig } from "../plugins/runtime-modules/builder/render-root-node-preview.server";
 import { parsePhiCmsContentLayoutConfig, parsePhiCmsGridLayoutConfig } from "../types/cms-config";
 import { resolvePhiGridSlotPlacement } from "../components/layouts/phi-grid-contract";
@@ -278,9 +279,17 @@ assert.equal(
   "Background motion is valid only for an image owned by the same Background config.",
 );
 
+/*
+ * LAYOUTING.md: canonical defaults are neutral, with one exception. A Split Card is inserted spaced --
+ * off the Region's edge, between and inside its halves -- because two halves flush against each other
+ * and the edge are not a split anybody inserts on purpose. Its ground and line stay neutral like
+ * everyone else's.
+ */
+const PHI_SPACED_DEFAULT_KEYS: Readonly<Record<string, readonly string[]>> = { split: ["padding"] };
 for (const layoutKind of layoutKinds) {
   const defaults = resolvePhiLayoutDefaults(layoutKind);
   for (const key of chromeKeys) {
+    if (PHI_SPACED_DEFAULT_KEYS[layoutKind]?.includes(key)) continue;
     assert.equal(defaults[key], undefined, `${layoutKind}.${key} must be visually neutral.`);
   }
 
@@ -393,6 +402,35 @@ assert.equal(
   assert.doesNotMatch(frameMarkup({ surfacePolicy: "own" }), /#123456/u, "A Widget that owns its Surface draws it itself.");
   assert.doesNotMatch(frameMarkup({ surfacePolicy: "none" }), /#123456/u, "A Widget without a Surface gets none.");
   assert.doesNotMatch(frameMarkup({ kind: "layout" }), /#123456/u, "A Layout's frame leaves the Surface to the Layout.");
+}
+
+/*
+ * LAYOUTING.md, Split Card: two cards wear the one Surface -- each its own edge and depth -- and the
+ * Background runs once across both, so each card's ground lies across the whole content box and is moved
+ * by the card's offset. Between and around the cards nothing is painted.
+ */
+{
+  const markup = renderToStaticMarkup(createElement(PhiSplitCardLayout, {
+    blockId: "split",
+    gap: "20px",
+    surface: {
+      background: { base: { kind: "color", color: "#123456" } },
+      borderSource: "theme",
+      shadow: "soft",
+    },
+    slots: [createElement("span", { key: "a" }, "left"), createElement("span", { key: "b" }, "right")],
+  }));
+  const box = markup.match(/<div[^>]*class="phi-layout" style="([^"]*)"/u)?.[1] ?? "";
+  assert.doesNotMatch(box, /background|box-shadow|border:/u, "The Split Card's own box paints nothing.");
+  assert.match(box, /container-type:inline-size/u, "The Split Card is the container its cards measure against.");
+  assert.equal((markup.match(/box-shadow:/gu) ?? []).length, 2, "Each of the two cards casts its own shadow.");
+  const paints = [...markup.matchAll(/data-phi-surface-ground-paint="true" style="([^"]*)"/gu)].map((match) => match[1]);
+  assert.equal(paints.length, 2, "Each card carries its part of the one Background.");
+  assert.ok(paints.every((paint) => paint.includes("#123456")), "Both parts are the same paint.");
+  assert.ok(paints.every((paint) => paint.includes("width:100cqw")), "Each part is as wide as both cards together.");
+  assert.match(paints[0]!, /left:0px/u, "The left card shows the Background from its start.");
+  assert.match(paints[1]!, /left:calc\(-1 \* \(\(\(100cqw - 20px\) \/ 2\.61803398875\) \+ 20px\)\)/u,
+    "The right card shows it from past the left card and the gap.");
 }
 
 /*

@@ -20,7 +20,7 @@ import {
   PHI_SEQUENCE_TRANSITION_MIN_MS,
   PHI_SEQUENCE_TRANSITION_STEP_MS,
 } from "../../helpers/motion";
-import { resolvePhiLayoutDefaults } from "../../helpers/cms-layout-defaults";
+import { PHI_SPLIT_CARD_LAYOUT_CREATION_CONFIG, resolvePhiLayoutDefaults } from "../../helpers/cms-layout-defaults";
 import { PHI_RENDERABLE_BLOCK_DEFAULT_ANCHOR } from "../../helpers/renderable-block-defaults";
 import { PHI_LAYOUT_PADDING_FIELDS } from "../../helpers/layout-padding-field";
 import type { PhiCmsLayoutPluginDefinition } from "../../types/cms-plugins";
@@ -513,14 +513,12 @@ export const PHI_SPLIT_CARD_LAYOUT_DEFINITION = {
   defaultAnchor: PHI_CENTRED_SLOT_DEFAULT_ANCHOR,
   slotSizePolicy: "fill",
   title: "Split Card",
-  description: "One card split into a left and a right slot.",
+  description: "Two cards on the golden ratio, one Surface for both.",
   category: "structure",
   iconName: "split-card",
-  defaultConfig: resolvePhiLayoutDefaults("split"),
-  fields: [
-    ...PHI_LAYOUT_PADDING_FIELDS,
-    { key: "slotPadding", type: "length", label: "Slot Padding", min: 0 },
-  ],
+  defaultConfig: { ...PHI_SPLIT_CARD_LAYOUT_CREATION_CONFIG },
+  // The outer inset and the gap between the cards are the Paddings panel's; the rest is the Surface.
+  fields: [...PHI_LAYOUT_PADDING_FIELDS],
   slots: [...PHI_CMS_SPLIT_LAYOUT_SLOTS],
 } satisfies PhiCmsLayoutPluginDefinition<PhiCmsSplitCardLayoutConfig>;
 

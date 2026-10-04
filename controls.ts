@@ -175,6 +175,12 @@ export { PhiCardControl } from "./components/controls/phi-card-control";
 export type { PhiCardControlProps } from "./components/controls/phi-card-control";
 export { PhiEmptyControl } from "./components/controls/phi-empty-control";
 export type { PhiEmptyControlProps } from "./components/controls/phi-empty-control";
+export { PhiFlexControl } from "./components/controls/phi-flex-control";
+export type { PhiFlexControlProps } from "./components/controls/phi-flex-control";
+export { PhiSkeletonControl } from "./components/controls/phi-skeleton-control";
+export type { PhiSkeletonControlProps } from "./components/controls/phi-skeleton-control";
+export { PhiTypographyControl } from "./components/controls/phi-typography-control";
+export type { PhiTypographyControlProps } from "./components/controls/phi-typography-control";
 export {
   PHI_CONFIRM_PLACEMENTS,
   PhiConfirmControl,

@@ -1,7 +1,8 @@
-import { PHI_COLOR, PHI_MARGIN, PHI_SPACE } from "../theme/antd-css-var-contract";
+import { PHI_MARGIN, PHI_SPACE } from "../theme/antd-css-var-contract";
 import type { PhiLayoutKind } from "../components/layouts/phi-layout-contract";
 import { PHI_RENDERABLE_BLOCK_DEFAULT_ANCHOR } from "./renderable-block-defaults";
 import { isPhiRecord } from "./is-record";
+import { PHI_SURFACE_CARD } from "./surface-presets";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -172,56 +173,28 @@ const PHI_COLLAPSIBLE_LAYOUT_PANEL_PRESET = {
 
 /** A split card centres what stands in its cards, on both axes, unless it says otherwise. */
 const PHI_SPLIT_CARD_LAYOUT_DEFAULT_ANCHOR = { horizontal: "center", vertical: "middle" } as const;
+/*
+ * A Split Card stands spaced: off its Region's edge and between its cards by the base step. The one
+ * Layout whose canonical defaults are not neutral, because two cards flush against each other and the
+ * Region's edge are not a split anybody means.
+ */
 export const PHI_SPLIT_CARD_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     anchor: PHI_SPLIT_CARD_LAYOUT_DEFAULT_ANCHOR,
-    gap: 0,
+    gap: PHI_SPACE.base,
+    padding: PHI_SPACE.base,
 };
-/**
- * A card on the page: the Site's container ground, its quiet line, the soft shadow. What a Layout wears
- * when a Preset makes it a card -- the two halves of a Split Card, for one.
- */
-export const PHI_LAYOUT_CARD_SURFACE = {
-    background: {
-      base: { kind: "color", color: PHI_COLOR.bgContainer },
-      overlay: null,
-      filter: null,
-    },
-    borderSource: "custom",
-    border: {
-      borderWidth: 1,
-      borderStyle: "solid",
-      borderColor: PHI_COLOR.borderSecondary,
-    },
-    shadow: "soft",
-} as const;
-
-/**
- * The quietest ground the Theme has: a filling and nothing else -- no line, no depth. For a Layout that
- * already stands on a container and only needs its content set off from it; the Form Widget's `wash`
- * step, in Surface values. The fill is translucent, so on the page's own ground it all but disappears:
- * a Layout standing there wants `PHI_LAYOUT_CARD_SURFACE`.
- */
-export const PHI_LAYOUT_WASH_SURFACE = {
-    background: {
-      base: { kind: "color", color: PHI_COLOR.fillQuaternary },
-      overlay: null,
-      filter: null,
-    },
-    borderSource: "none",
-    shadow: "none",
-} as const;
 
 /*
- * Two halves on the golden ratio with a gap between them. The Split Card draws no card itself: a card is
- * what stands in a half -- a Layout wearing `PHI_LAYOUT_CARD_SURFACE`, or `PHI_LAYOUT_WASH_SURFACE` where
- * the Split Card already stands on a container -- so each half reads as a card of its own.
+ * What a Split Card is created with: spaced, and its two halves drawn as cards. The Surface is the
+ * creation's and not a default -- a default is put back under a node that states nothing, and a Split
+ * Card whose author took the cards away would have them back on the next render.
  */
-const PHI_SPLIT_CARD_LAYOUT_PANEL_PRESET = {
-    anchor: PHI_SPLIT_CARD_LAYOUT_DEFAULT_ANCHOR,
-    gap: PHI_SPACE.base,
-    // The cards stand off the Region's edge as far as they stand off each other.
-    padding: PHI_SPACE.base,
+export const PHI_SPLIT_CARD_LAYOUT_CREATION_CONFIG = {
+    ...PHI_SPLIT_CARD_LAYOUT_DEFAULTS,
+    surface: PHI_SURFACE_CARD,
 } as const;
+
+const PHI_SPLIT_CARD_LAYOUT_PANEL_PRESET = PHI_SPLIT_CARD_LAYOUT_CREATION_CONFIG;
 
 export const PHI_THREE_COLUMN_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     balancedSides: true,

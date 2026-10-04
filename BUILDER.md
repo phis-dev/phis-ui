@@ -520,7 +520,9 @@ Each Collapsible slot contains one Builder-Module section Widget. The sections a
 - Layout Inspector: settings, anchor, padding, viewport, surface, signals
 - Widget Inspector: settings, geometry, viewport, surface, signals
 
-The surface section is one `PhiSurfaceControl` for every kind of node: background (with its filter and
+The surface section is one `PhiSurfaceControl` for every kind of node: a style switch that writes a
+named look's values (`helpers/surface-presets.ts`: None, Card, Wash; Custom once they were changed),
+background (with its filter and
 motion), where the line comes from (`none`, `theme`, `custom`) and the line itself, the mode (`tone`), and
 shadow. It hands on
 the whole Surface and the Controller stores it as the node's `surface` (`patchSelectedRegionDraft`,

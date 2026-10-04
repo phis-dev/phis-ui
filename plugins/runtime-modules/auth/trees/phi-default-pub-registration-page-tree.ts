@@ -8,7 +8,6 @@ import {
 } from "../../../../constants/cms-layout-types";
 import { PhiCmsPageType, PhiCmsRegionType } from "../../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
-import { PHI_LAYOUT_CARD_SURFACE } from "../../../../helpers/cms-layout-defaults";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import { PHI_SHARED_FORM_IDS } from "../../../../components/forms/shared-form-ids";
 
@@ -70,8 +69,8 @@ export async function buildPhiDefaultPubRegistrationPageTree({
         slotIndex: PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX.Left,
         sortOrder: 0,
         label: "pub registration aside layout",
-        // One of the Split Card's two cards; the Split Card itself draws none.
-        config: { padding: PHI_SPACE.base, surface: PHI_LAYOUT_CARD_SURFACE },
+        // The inset of the Split Card's left card, which has none of its own.
+        config: { padding: PHI_SPACE.base },
       }),
       nodes.layout({
         creationPreset: { layoutKind: "verticalflex", preset: "panel" },
@@ -81,7 +80,7 @@ export async function buildPhiDefaultPubRegistrationPageTree({
         slotIndex: PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX.Right,
         sortOrder: 0,
         label: "pub registration form layout",
-        config: { padding: PHI_SPACE.base, surface: PHI_LAYOUT_CARD_SURFACE },
+        config: { padding: PHI_SPACE.base },
       }),
     ],
     contentWidgets: [

@@ -30,13 +30,25 @@ const PHI_SURFACE_GROUND_HOST: CSSProperties = {
  */
 const PHI_SURFACE_GROUND_BLEED = `${-2 * PHI_BACKGROUND_BLUR_RADIUS_PX}px`;
 
+/**
+ * Where the paint lies when it is larger than the box: one picture across several boxes, each showing
+ * its own part of it. `left` and `width` in CSS lengths relative to the box; the box clips the rest.
+ */
+export type PhiSurfaceGroundFrame = {
+  left: string;
+  width: string;
+};
+
 export function PhiSurfaceGroundLayer({
   ground,
   className,
+  frame,
 }: {
   ground: PhiSurfaceGround | null | undefined;
   /** For a caller that moves the paint itself, a hover zoom for one. */
   className?: string;
+  /** The paint's own extent, where it reaches past the box (the Split Card's two cards). */
+  frame?: PhiSurfaceGroundFrame;
 }) {
   if (!ground) {
     return null;
@@ -55,6 +67,11 @@ export function PhiSurfaceGroundLayer({
           ...ground.paint,
           position: "absolute",
           inset: ground.filter ? PHI_SURFACE_GROUND_BLEED : 0,
+          ...(frame
+            ? ground.filter
+              ? { left: `calc(${frame.left} + ${PHI_SURFACE_GROUND_BLEED})`, width: `calc(${frame.width} - 2 * ${PHI_SURFACE_GROUND_BLEED})`, right: "auto" }
+              : { left: frame.left, width: frame.width, right: "auto" }
+            : {}),
           ...(ground.filter ? { filter: ground.filter } : {}),
         }}
       />

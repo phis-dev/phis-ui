@@ -4,8 +4,8 @@ import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import type { PhiImageAssetVariantKeyValue } from "../../../../../types/media";
 import { readPhiLinkTarget, type PhiLinkTarget } from "../../../../../types/references";
 import { readPhiMediaImageSourceConfig } from "../../../../../components/widgets/config/image-source-parser";
+import { PHI_SURFACE_CARD } from "../../../../../helpers/surface-presets";
 import {
-  PHI_CARD_DEFAULT_SURFACE,
   PHI_CARD_HEADING_LEVELS,
   PHI_CARD_HOVER_EFFECTS,
   PHI_CARD_ICON_PLACEMENTS,
@@ -114,7 +114,7 @@ export const PHI_CARD_WIDGET_DEFINITION = {
    */
   surface: "own",
   // A block default, so a card a Preset places reads the same as one dropped in the Builder.
-  defaultConfig: { surface: PHI_CARD_DEFAULT_SURFACE },
+  defaultConfig: { surface: PHI_SURFACE_CARD },
   fields: [
     { key: "eyebrow", type: "string", label: "Eyebrow" },
     { key: "title", type: "string", label: "Title" },

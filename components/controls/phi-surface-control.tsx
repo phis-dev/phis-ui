@@ -17,8 +17,17 @@ import {
 } from "../../types/cms-border-source";
 import type { PhiBackgroundFilter } from "../../types/layout-style";
 import { PHI_SURFACE_TONES, type PhiSurface, type PhiSurfaceTone } from "../../types/surface";
+import {
+  PHI_SURFACE_PRESET_IDS,
+  PHI_SURFACE_PRESETS,
+  resolvePhiSurfacePresetId,
+  type PhiSurfacePresetId,
+} from "../../helpers/surface-presets";
 
 export type PhiSurfaceControlLabels = {
+  /** The style switch: no look, a named look, or values of the author's own. */
+  style: string;
+  styles: Record<PhiSurfacePresetId | "none" | "custom", string>;
   background: string;
   border: string;
   shadow: string;
@@ -27,6 +36,8 @@ export type PhiSurfaceControlLabels = {
 };
 
 const PHI_SURFACE_CONTROL_DEFAULT_LABELS: PhiSurfaceControlLabels = {
+  style: "Style",
+  styles: { none: "None", card: "Card", wash: "Wash", custom: "Custom" },
   background: "Background",
   border: "Border",
   shadow: "Shadow",
@@ -76,6 +87,9 @@ function withPart(current: PhiSurface, patch: Partial<PhiSurface>): PhiSurface |
  * A Surface (`PhiSurface`) as one Control: its ground, its edge and its depth, each drawn by the Control
  * that owns that part.
  *
+ * The style switch on top starts from a named look (`helpers/surface-presets.ts`) and writes its values;
+ * the parts below edit them, and the switch says `custom` once they no longer are that look.
+ *
  * Every box that has a look is edited with it -- a Region, a Layout, a Widget -- so the three parts read
  * the same everywhere, and each change hands on the whole Surface with the other parts untouched.
  *
@@ -103,9 +117,33 @@ export function PhiSurfaceControl({
   const isDisabled = disabled || !onChange;
   const patch = (part: Partial<PhiSurface>) => onChange?.(withPart(current, part));
   const borderSource = resolvePhiCmsBorderSource(current.borderSource, current.border);
+  const style = resolvePhiSurfacePresetId(value);
+  /*
+   * Choosing a style writes that style's values and keeps the mode; `none` takes the look away and keeps
+   * the mode as well. `custom` is not a choice -- it is what the switch says once the values were changed.
+   */
+  const chooseStyle = (next: PhiSurfacePresetId | "none" | "custom") => {
+    if (next === "custom") return;
+    const look = next === "none" ? {} : PHI_SURFACE_PRESETS[next];
+    onChange?.(withPart({ ...look, ...(current.tone ? { tone: current.tone } : {}) }, {}));
+  };
 
   return (
     <PhiFlexControl vertical gap="middle" style={{ width: "100%", minWidth: 0 }}>
+      <PhiFlexControl vertical gap="small" style={{ width: "100%", minWidth: 0 }}>
+        <PhiTypographyControl strong>{labels.style}</PhiTypographyControl>
+        <PhiSegmentedControl<PhiSurfacePresetId | "none" | "custom">
+          value={style}
+          options={[
+            { value: "none", label: labels.styles.none },
+            ...PHI_SURFACE_PRESET_IDS.map((id) => ({ value: id, label: labels.styles[id] })),
+            ...(style === "custom" ? [{ value: "custom" as const, label: labels.styles.custom }] : []),
+          ]}
+          block
+          disabled={isDisabled}
+          onChange={chooseStyle}
+        />
+      </PhiFlexControl>
       <PhiFlexControl vertical gap="small" style={{ width: "100%", minWidth: 0 }}>
         <PhiTypographyControl strong>{labels.background}</PhiTypographyControl>
         <PhiBackgroundControl

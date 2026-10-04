@@ -236,7 +236,7 @@ record's source text instead of its localized version.
   while an Asset loads, a plain placeholder for every foreign address. The blur is read from the resolved
   Asset, never stored in a node's config. `preview` opens it in `PhiLightboxImageControl`, the one place
   the lightbox lives.
-- The Card Widget draws its own Surface (`surface: "own"`, default `PHI_CARD_DEFAULT_SURFACE`) rather than
+- The Card Widget draws its own Surface (`surface: "own"`, default `PHI_SURFACE_CARD`) rather than
   a `PhiCardControl` box. It carries a picture at the top (`PhiImageControl`, any variant; the box takes
   the variant's proportion, and the canvas says when the variant is narrower than the card) and an `icon`
   by name (`iconPlacement` `inline` before the heading or `top`, over the picture on a ground of its own).

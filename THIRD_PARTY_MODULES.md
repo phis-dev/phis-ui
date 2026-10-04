@@ -194,10 +194,15 @@ The Module half never imports the Add-on half, and the Add-on half never imports
 - CSS shipped by the package needs `"sideEffects": ["**/*.css"]` instead of `false`.
 
 Modules use Phi Controls for supported presentation and do not import Ant Design directly where a Phi
-Control exists: inline feedback is `PhiAlertControl`, anchored confirmation `PhiConfirmControl`, and
-application messages and notifications are sent with `usePhiApplicationFeedback`
+Control exists: inline feedback is `PhiAlertControl`, anchored confirmation `PhiConfirmControl`, text
+`PhiTypographyControl`, the arrangement inside one Widget `PhiFlexControl` (a gap, not `Space`), a
+placeholder `PhiSkeletonControl`, and a count on a button the `badge` of `PhiButtonControl`; icons are
+drawn with `PhiIcon` by name (`@phis/ui/navigation`), never imported from `@ant-design/icons`.
+Application messages and notifications are sent with `usePhiApplicationFeedback`
 (`@phis/ui/runtime/signal-client`). A missing reusable capability is a Core contract extension, not a
-package-local Ant Design path.
+package-local Ant Design path. The one place a Module renders Ant Design itself is where it supplies the
+component a Control delegates to -- a calendar adapter for `PhiCalendarControl` -- and there it uses
+what Ant Design draws, since that is what it is supplying.
 
 ## Distribution and commercial Modules
 

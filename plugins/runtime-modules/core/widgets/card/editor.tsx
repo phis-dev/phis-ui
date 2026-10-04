@@ -8,7 +8,7 @@ import { usePhiAuthoringAssetDetails } from "../../../../../components/media/use
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 import type { PhiCmsCardWidgetConfig } from "./config";
 import { PhiCardWidgetClient } from "../../../../../components/widgets/shared/card-body-client";
-import { PHI_CARD_DEFAULT_SURFACE } from "../../../../../components/widgets/shared/card-vocabulary";
+import { PHI_SURFACE_CARD } from "../../../../../helpers/surface-presets";
 
 export type PhiCardWidgetEditorProps = {
   config: PhiCmsCardWidgetConfig;
@@ -78,7 +78,7 @@ export function PhiCardWidgetEditor({ config, title }: PhiCardWidgetEditorProps)
         }}
         config={{
           // A node that states no Surface takes the card's declared one, as the page render does.
-          surface: config.surface ?? PHI_CARD_DEFAULT_SURFACE,
+          surface: config.surface ?? PHI_SURFACE_CARD,
           image: presentation.url
             ? {
                 presentation,

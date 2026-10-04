@@ -383,10 +383,13 @@ export type PhiCmsThreeColumnLayoutConfig = PhiCmsDirectionalLayoutConfigBase & 
   contentAlign?: CSSProperties["alignItems"];
 };
 
+/**
+ * Two cards on the golden ratio. The Layout's Surface is the cards' -- each half draws its edge, corner,
+ * depth and pane -- and its Background runs once across both and shows only inside them. What stands in
+ * a half sets its own inset; a half has none of its own.
+ */
 export type PhiCmsSplitCardLayoutConfig = PhiCmsLayerBase & {
   gap?: CSSProperties["gap"];
-  /** The inset of each half, the same for both; the card itself is the Layout's Surface. */
-  slotPadding?: CSSProperties["padding"];
 };
 
 export type PhiCmsMasonryLayoutConfig = PhiCmsLayerBase & {
@@ -829,7 +832,6 @@ export function parsePhiCmsSplitCardLayoutConfig(
       padding: readCssSize(config.padding),
       paddingTop: readCssSize(config.paddingTop),
       paddingBottom: readCssSize(config.paddingBottom),
-      slotPadding: readCssSize(config.slotPadding),
     },
     resolvePhiLayoutDefaults("split"),
   );

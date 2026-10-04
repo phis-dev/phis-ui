@@ -15,6 +15,14 @@ export type PhiInspectorWidgetLabels = {
     surface: string;
     signals: string;
   };
+  /** The style switch of a Surface: no look, a named look, or values of the author's own. */
+  surfaceStyle: {
+    title: string;
+    none: string;
+    card: string;
+    wash: string;
+    custom: string;
+  };
   /** The mode a Surface draws its content in (`tone`). */
   tone: {
     title: string;
@@ -41,6 +49,13 @@ export const PHI_INSPECTOR_WIDGET_DEFAULT_LABELS: PhiInspectorWidgetLabels = {
     shadow: "Shadow",
     surface: "Surface",
     signals: "Signals",
+  },
+  surfaceStyle: {
+    title: "Style",
+    none: "None",
+    card: "Card",
+    wash: "Wash",
+    custom: "Custom",
   },
   tone: {
     title: "Mode",

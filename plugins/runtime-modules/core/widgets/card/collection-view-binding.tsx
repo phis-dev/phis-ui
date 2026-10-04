@@ -11,7 +11,7 @@ import { PhiCollectionViewControl } from "../../../../../components/controls/phi
 import { PhiEmptyControl } from "../../../../../components/controls/phi-empty-control";
 import { PhiTextControl } from "../../../../../components/controls/phi-text-control";
 import { PhiCardWidgetClient, type PhiCardWidgetClientConfig } from "../../../../../components/widgets/shared/card-body-client";
-import { PHI_CARD_DEFAULT_SURFACE } from "../../../../../components/widgets/shared/card-vocabulary";
+import { PHI_SURFACE_CARD } from "../../../../../helpers/surface-presets";
 import { resolvePhiImagePresentation } from "../../../../../components/media/image-presentation";
 import { normalizePhiCssSize } from "../../../../../components/layouts/phi-layout-contract";
 import { usePhiSearchDraft } from "../../../../../components/widgets/client/shared/phi-search-draft";
@@ -92,7 +92,7 @@ function buildCard(item: Record<string, unknown>, card: PhiCmsCollectionCardPres
    */
   const imageUrl = readPath(item, card?.imageUrl) ?? readPath(item, "coverUrl") ?? readPath(item, "imageUrl");
   const config: PhiCardWidgetClientConfig = {
-    surface: PHI_CARD_DEFAULT_SURFACE,
+    surface: PHI_SURFACE_CARD,
     image: imageUrl
       ? {
           presentation: resolvePhiImagePresentation({ sourceKind: "url", sourceUrl: imageUrl }),

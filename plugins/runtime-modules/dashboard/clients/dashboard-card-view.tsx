@@ -12,7 +12,8 @@ import type {
   PhiDashboardCardRow,
 } from "../../../../types/dashboard-cards";
 import { PhiCardWidgetClient } from "../../../../components/widgets/shared/card-body-client";
-import { PHI_CARD_DEFAULT_SURFACE, type PhiCardWidgetBody } from "../../../../components/widgets/shared/card-vocabulary";
+import { type PhiCardWidgetBody } from "../../../../components/widgets/shared/card-vocabulary";
+import { PHI_SURFACE_CARD } from "../../../../helpers/surface-presets";
 import { PhiCollectionViewControl } from "../../../../components/controls/phi-collection-view-control";
 import { PhiAlertControl } from "../../../../components/controls/phi-alert-control";
 import { PhiEmptyControl } from "../../../../components/controls/phi-empty-control";
@@ -138,7 +139,7 @@ function PhiDashboardCard({
         ...(payload?.meta ? { meta: payload.meta } : {}),
       }}
       config={{
-        surface: PHI_CARD_DEFAULT_SURFACE,
+        surface: PHI_SURFACE_CARD,
         variant: "compact",
         body: CARD_BODY_BY_FORM[row.form] ?? "text",
         ...(row.href ? { href: row.href } : {}),

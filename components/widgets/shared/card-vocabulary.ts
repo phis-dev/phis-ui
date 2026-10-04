@@ -1,5 +1,3 @@
-import type { PhiSurface } from "../../../types/surface";
-
 /*
  * The Card Widget's words, apart from its Client half: the Widget's definition is read on the server, and
  * a value imported from the Client file would make that file a client reference of every route.
@@ -45,14 +43,4 @@ export type PhiCardIconPlacement = (typeof PHI_CARD_ICON_PLACEMENTS)[number];
 export const PHI_CARD_HOVER_EFFECTS = ["none", "lift", "zoom"] as const;
 export type PhiCardHoverEffect = (typeof PHI_CARD_HOVER_EFFECTS)[number];
 
-/**
- * What a card looks like when nobody said: the Site's container ground, its line, the quiet shadow.
- * The Card Widget declares it as its block default; a card drawn from data -- a Collection's, a
- * Dashboard's -- takes it as well, so every card on a page is the same object.
- */
-export const PHI_CARD_DEFAULT_SURFACE = {
-  background: { base: { kind: "color", color: "var(--ant-color-bg-container)" } },
-  borderSource: "theme",
-  shadow: "soft",
-} as const satisfies PhiSurface;
 

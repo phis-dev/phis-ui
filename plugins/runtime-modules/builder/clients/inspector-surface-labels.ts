@@ -11,6 +11,13 @@ export function resolvePhiInspectorSurfaceLabels(labels: PhiInspectorWidgetLabel
   return {
     section: labels.sections.surface,
     parts: {
+      style: labels.surfaceStyle.title,
+      styles: {
+        none: labels.surfaceStyle.none,
+        card: labels.surfaceStyle.card,
+        wash: labels.surfaceStyle.wash,
+        custom: labels.surfaceStyle.custom,
+      },
       background: labels.sections.background,
       border: labels.sections.border,
       shadow: labels.sections.shadow,
