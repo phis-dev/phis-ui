@@ -144,12 +144,12 @@ export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
     (field) => isPhiInspectorConfigFieldVisible(field, currentWidgetSettingsConfigRecord),
   );
   /*
-   * A Widget that has no Surface (`surface: "none"`) gets no Surface section: the panel hides itself,
-   * the way the Layout Settings panel does when there is nothing to set. Nothing is decided before the
-   * Widget's metadata has arrived -- not known is not "none".
+   * Only a Widget that asks for a Surface (`surface: "frame"` or `"own"`) gets the Surface section; for
+   * the rest the panel hides itself, the way the Layout Settings panel does when there is nothing to set.
+   * Nothing is decided before the Widget's metadata has arrived -- not known is not "none".
    */
   const surfaceSectionHidden = section === "surface" && isTargetKind
-    && selectedStructureWidgetMeta != null && selectedStructureWidgetMeta.surface === "none";
+    && selectedStructureWidgetMeta != null && (selectedStructureWidgetMeta.surface ?? "none") === "none";
   const ownSlot = usePhiBaseLayoutOwnSlotController();
   useEffect(() => {
     if (!ownSlot || section !== "surface") return;

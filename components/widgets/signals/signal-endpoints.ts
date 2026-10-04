@@ -270,7 +270,7 @@ export function resolvePhiWidgetSignalEndpoints({
     label: label?.trim() || typeKey?.trim() || `cms:${blockId}`,
     runtimeSignals,
     routeScope,
-    inheritedListens: (surfacePolicy ?? "frame") === "frame"
+    inheritedListens: surfacePolicy === "frame"
       ? PHI_RENDERABLE_BLOCK_RECEIVE_BINDINGS
       : PHI_RENDERABLE_BLOCK_RECEIVE_BINDINGS.filter((binding) =>
         !PHI_RENDERABLE_BLOCK_SURFACE_CHANNELS.has(binding.channel)),

@@ -831,7 +831,7 @@ export async function resolvePhiRuntimeRenderRegistry({
     widgetSurfacePoliciesByType: new Map(
       widgetEntries.flatMap(([type, entry]) => {
         const policy = entry.definition.surface;
-        return policy == null || policy === "frame" ? [] : [[type, policy] as const];
+        return policy == null || policy === "none" ? [] : [[type, policy] as const];
       }),
     ),
     /*

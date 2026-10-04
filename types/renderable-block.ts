@@ -197,7 +197,8 @@ export type PhiRenderableBlockBase = {
    * What the block's box looks like: ground, edge, depth, and the mode its content takes.
    *
    * Who draws it depends on the block: a Layout and a Region draw their own, a Widget's is drawn by its
-   * slot frame unless its plugin says `surface: "own"` (the Widget draws it) or `"none"` (nobody does).
+   * slot frame when its plugin says `surface: "frame"`, by the Widget itself when it says `"own"`, and by
+   * nobody otherwise.
    */
   surface?: PhiSurface;
   className?: string;

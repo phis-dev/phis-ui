@@ -97,6 +97,6 @@ export const PHI_RENDERABLE_BLOCK_RECEIVE_CHANNELS: ReadonlySet<string> = new Se
 
 /**
  * The channels that change a block's Surface. A Widget whose slot frame does not draw its Surface
- * (`surface: "own"` or `"none"`) has nobody to answer them, so it does not offer them.
+ * (`surface: "own"`, `"none"` or nothing stated) has nobody to answer them, so it does not offer them.
  */
 export const PHI_RENDERABLE_BLOCK_SURFACE_CHANNELS: ReadonlySet<string> = new Set(["background", "border", "shadow"]);

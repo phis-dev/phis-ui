@@ -120,7 +120,7 @@ export function PhiSlotChildFrameView({
   const effectsAttributes = disableEffects
     ? undefined
     : resolveRenderableBlockEffectsAttributes(resolvedConfig);
-  const surface = kind === "widget" && (surfacePolicy ?? "frame") === "frame"
+  const surface = kind === "widget" && surfacePolicy === "frame"
     ? resolvePhiSurfaceStyle(resolvedConfig.surface, { cornerFallback: PHI_LAYOUT_SURFACE_RADIUS })
     : null;
 

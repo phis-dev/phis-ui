@@ -424,10 +424,11 @@ export type PhiCmsWidgetPlugin<TConfig> = {
   /**
    * Who draws the node's Surface (`config.surface`).
    *
-   * `frame`, the answer when a Widget says nothing, has the slot frame draw it around whatever the Widget
-   * renders: ground, edge and depth on the box the Widget sits in. `own` hands it to the Widget, which
-   * reads `config.surface` itself -- a card whose picture zooms under the pointer needs the ground inside
-   * its own box. `none` says the Widget has no Surface at all, and the Inspector offers none.
+   * `frame` has the slot frame draw it around whatever the Widget renders: ground, edge and depth on the
+   * box the Widget sits in. `own` hands it to the Widget, which reads `config.surface` itself -- a card
+   * whose picture zooms under the pointer needs the ground inside its own box. `none`, the answer when a
+   * Widget says nothing, says the Widget has no Surface at all, and the Inspector offers none: a Widget
+   * gets a Surface only by asking for one.
    */
   surface?: PhiSurfacePolicy;
   /**

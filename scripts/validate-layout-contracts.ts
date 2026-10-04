@@ -385,8 +385,8 @@ assert.equal(
 );
 
 /*
- * A Widget's Surface is drawn once. The slot frame draws it unless the Widget's plugin keeps it (`own`)
- * or has none (`none`), and a Layout's frame never draws it -- the Layout draws its own, and a second
+ * A Widget's Surface is drawn once. The slot frame draws it only when the Widget's plugin asks it to
+ * (`frame`), never when the Widget keeps it (`own`), has none (`none`) or states nothing, and a Layout's frame never draws it -- the Layout draws its own, and a second
  * ground under it would double every glass pane and every shadow.
  */
 {
@@ -397,7 +397,8 @@ assert.equal(
       { kind: "widget", config: { surface }, ...props } as Parameters<typeof PhiSlotChildFrameView>[0],
       createElement("span", null, "content"),
     ));
-  assert.match(frameMarkup({}), /background-color:#123456/u, "The frame draws a Widget's Surface by default.");
+  assert.doesNotMatch(frameMarkup({}), /#123456/u, "A Widget that asks for no Surface gets none.");
+  assert.match(frameMarkup({ surfacePolicy: "frame" }), /background-color:#123456/u, "The frame draws a Widget's Surface on request.");
   assert.match(frameMarkup({ surfacePolicy: "frame" }), /box-shadow:/u, "The frame draws the Surface's depth.");
   assert.doesNotMatch(frameMarkup({ surfacePolicy: "own" }), /#123456/u, "A Widget that owns its Surface draws it itself.");
   assert.doesNotMatch(frameMarkup({ surfacePolicy: "none" }), /#123456/u, "A Widget without a Surface gets none.");
