@@ -79,7 +79,6 @@ export type PhiCardWidgetClientConfig = {
   imageFit?: "cover" | "contain" | "fill";
   imagePosition?: string;
   alt?: string;
-  blurDataUrl?: string;
   href?: string;
   newTab?: boolean;
   actionHref?: string;

@@ -59,46 +59,19 @@ export function PhiImageWidgetEditor({ config, onChange }: PhiImageWidgetEditorP
 
     const previousVariantKey = previousVariantKeyRef.current;
     previousVariantKeyRef.current = variantKey;
-    const variant = variantKey == null
-      ? null
-      : resolvedAssetDetails.variants?.find((item) => item.variantKey === variantKey) ?? null;
-
-    if (variantKey != null) {
-      const nextConfig: Partial<PhiCmsImageWidgetConfig> = {
-        blurDataUrl: variant?.blurDataUrl ?? resolvedAssetDetails.blurDataUrl ?? undefined,
-        variantVersion: resolvedAssetDetails.variantVersion ?? null,
-      };
-      if (
-        (config?.blurDataUrl ?? undefined) === nextConfig.blurDataUrl &&
-        (config?.variantVersion ?? null) === nextConfig.variantVersion
-      ) {
-        return;
-      }
-
-      onChange?.(nextConfig);
+    /*
+     * The version of the renditions travels with the node, so a new rendition of the same picture is
+     * noticed; it is refreshed whenever a variant is chosen and when the choice goes back to the original.
+     * The blur is not copied: the page takes it from the Asset it resolves.
+     */
+    const choseVariantOrOriginal = variantKey != null || previousVariantKey != null;
+    const variantVersion = resolvedAssetDetails.variantVersion ?? null;
+    if (!choseVariantOrOriginal || (config?.variantVersion ?? null) === variantVersion) {
       return;
     }
-
-    const selectedOriginal =
-      previousVariantKey != null && variantKey == null;
-    if (selectedOriginal) {
-      const nextConfig: Partial<PhiCmsImageWidgetConfig> = {
-        blurDataUrl: resolvedAssetDetails.blurDataUrl ?? undefined,
-        variantVersion: resolvedAssetDetails.variantVersion ?? null,
-      };
-      if (
-        (config?.blurDataUrl ?? undefined) === nextConfig.blurDataUrl &&
-        (config?.variantVersion ?? null) === nextConfig.variantVersion
-      ) {
-        return;
-      }
-
-      onChange?.(nextConfig);
-      return;
-    }
+    onChange?.({ variantVersion });
   }, [
     assetId,
-    config?.blurDataUrl,
     config?.variantVersion,
     resolvedAssetDetails,
     variantKey,

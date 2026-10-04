@@ -1,7 +1,5 @@
 "use client";
 
-import NextImage from "next/image";
-
 import type { PhiClientBlockBaseProps } from "../../../../../types";
 import type { PhiCmsImageWidgetConfig } from "./config";
 import { isPhiMediaAssetOriginalOptimizable, isPhiMediaAssetPublic } from "../../../../../constants/media";
@@ -11,7 +9,7 @@ import type { PhiImageWidgetLabels } from "../../../../../components/widgets/lab
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { resolvePhiMaskStyle } from "../../../../../components/widgets/config/mask";
 import { PhiEmptyControl } from "../../../../../components/controls/phi-empty-control";
-import { PhiLightboxImageControl } from "../../../../../components/controls/phi-lightbox-image-control";
+import { PhiImageControl } from "../../../../../components/controls/phi-image-control";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
@@ -35,10 +33,6 @@ export type PhiImageWidgetProps = PhiClientBlockBaseProps<
   focalRect?: unknown;
   authoringAssetVariantPreview?: boolean;
 };
-
-function isTrustedSource(sourceKind: PhiCmsImageWidgetConfig["sourceKind"], trusted: boolean | undefined) {
-  return sourceKind === "asset" || trusted === true;
-}
 
 function resolveImageDimension(
   overrideSize: boolean,
@@ -86,16 +80,12 @@ export function PhiImageWidget({
   const overrideSize = config?.imageSize != null;
   const width = resolveImageDimension(overrideSize, config?.imageSize?.width, presentation.width);
   const height = resolveImageDimension(overrideSize, config?.imageSize?.height, presentation.height);
-  const blurDataUrl = config?.blurDataUrl ?? resolvedAsset?.blurDataUrl ?? null;
   const alt = (sourceKind === "asset"
     ? (resolvedAsset?.altText ?? "")
     : (config?.alt ?? resolvedAsset?.altText ?? "")).trim();
   const title = (sourceKind === "asset"
     ? (resolvedAsset?.title ?? "")
     : (config?.title ?? resolvedAsset?.title ?? "")).trim();
-  const fit = presentation.fit;
-  const objectPosition = presentation.objectPosition;
-  const authoringVariantCropStyle = presentation.simulatedCropStyle;
   const isPublicAsset = isPhiMediaAssetPublic(
     resolvedAsset?.deliveryPolicy,
     resolvedAsset?.lifecycleStatus,
@@ -107,9 +97,6 @@ export function PhiImageWidget({
   const optimizable = presentation.kind === "generated-variant"
     ? isPublicAsset
     : resolvedAsset != null && isPhiMediaAssetOriginalOptimizable(resolvedAsset);
-  const previewMode = config?.previewMode ?? "none";
-  const preload = config?.preload === true && isPublicAsset;
-  const trusted = isTrustedSource(sourceKind, config?.trusted);
   const renderedWidth = formatImageSize(width);
   const renderedHeight = formatImageSize(height);
   const maskStyle = resolvePhiMaskStyle(config?.mask);
@@ -149,74 +136,27 @@ export function PhiImageWidget({
     );
   }
 
-  const wrapperStyle = {
-    position: authoringVariantCropStyle ? "relative" : undefined,
-    width: renderedWidth ?? "100%",
-    height: renderedHeight,
-    maxWidth: "100%",
-    ...radiusStyle,
-    ...maskStyle,
-    overflow: authoringVariantCropStyle || Object.values(radiusStyle).some((value) => value != null)
-      ? "hidden"
-      : undefined,
-    lineHeight: 0,
-  } as const;
-
-  const imageStyle = {
-    objectFit: fit,
-    objectPosition,
-    display: "block",
-    width: "100%",
-    height: renderedHeight ? "100%" : "auto",
-    ...authoringVariantCropStyle,
-    ...radiusStyle,
-  } as const;
-
-  if (previewMode === "lightbox") {
-    return (
-      <div style={wrapperStyle}>
-        <PhiLightboxImageControl
-          alt={alt}
-          src={renderUrl}
-          title={title || undefined}
-          width={typeof width === "number" ? width : undefined}
-          height={typeof height === "number" ? height : undefined}
-          style={imageStyle}
-        />
-      </div>
-    );
-  }
-
-  if (trusted && typeof width === "number" && typeof height === "number") {
-    return (
-      <div style={wrapperStyle}>
-        <NextImage
-          alt={alt}
-          src={renderUrl}
-          title={title || undefined}
-          width={width}
-          height={height}
-          sizes={config?.sizes?.trim() || undefined}
-          unoptimized={!optimizable}
-          placeholder={blurDataUrl ? "blur" : undefined}
-          blurDataURL={blurDataUrl || undefined}
-          preload={preload}
-          style={imageStyle}
-        />
-      </div>
-    );
-  }
-
   return (
-    <div style={wrapperStyle}>
-      <img
-        alt={alt}
-        src={renderUrl}
-        title={title || undefined}
-        width={typeof width === "number" ? width : undefined}
-        height={typeof height === "number" ? height : undefined}
-        style={imageStyle}
-      />
-    </div>
+    <PhiImageControl
+      presentation={presentation}
+      source={sourceKind === "asset" ? "asset" : config?.trusted === true ? "trusted-url" : "url"}
+      alt={alt}
+      title={title || undefined}
+      width={width}
+      height={height}
+      blurDataUrl={resolvedAsset?.blurDataUrl}
+      optimizable={optimizable}
+      sizes={config?.sizes}
+      preload={config?.preload === true && isPublicAsset}
+      preview={(config?.previewMode ?? "none") === "lightbox"}
+      style={{
+        ...radiusStyle,
+        ...maskStyle,
+        overflow: presentation.simulatedCropStyle || Object.values(radiusStyle).some((value) => value != null)
+          ? "hidden"
+          : undefined,
+      }}
+      imageStyle={radiusStyle}
+    />
   );
 }

@@ -30,7 +30,6 @@ export type PhiMediaImageSourceConfig = (
 ) & {
   trusted?: boolean;
   alt?: string;
-  blurDataUrl?: string;
   previewMode?: "none" | "native" | "lightbox";
   sizes?: string;
   preload?: boolean;

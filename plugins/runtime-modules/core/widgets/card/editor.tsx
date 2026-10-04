@@ -47,7 +47,6 @@ export function PhiCardWidgetEditor({ config, title }: PhiCardWidgetEditorProps)
         imageFit: presentation.fit,
         imagePosition: presentation.objectPosition,
         alt: config.alt,
-        blurDataUrl: config.blurDataUrl,
         href: config.href,
         newTab: config.newTab,
         actionHref: config.actionHref,

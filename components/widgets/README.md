@@ -230,6 +230,12 @@ record's source text instead of its localized version.
   configured `fit` and `objectPosition`, with the focal rectangle as the position fallback. A generated
   `cover` variant is already the server-owned focal crop and renders proportionally with centered cover;
   it is never stretched or cropped again.
+- A Widget that shows a picture draws it with `PhiImageControl`, handing it the answer of
+  `resolvePhiImagePresentation` -- never `next/image` or an `<img>` of its own. The Control decides how the
+  picture arrives: `next/image` for an Asset (and for a URL a Preset marked `trusted`), the Asset's blur
+  while an Asset loads, a plain placeholder for every foreign address. The blur is read from the resolved
+  Asset, never stored in a node's config. `preview` opens it in `PhiLightboxImageControl`, the one place
+  the lightbox lives.
 - The Card Widget has `variant` `default`, `compact`, or `featured`, `highlight`, `href`, and an explicit
   CTA (`actionLabel`, `actionHref`). Asset sources persist `assetId` and optional `variantKey`; only `url`
   sources persist `sourceUrl`.

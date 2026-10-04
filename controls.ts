@@ -90,6 +90,8 @@ export { PhiShadowControl } from "./components/controls/phi-shadow-control";
 export type { PhiShadowControlProps } from "./components/controls/phi-shadow-control";
 export { PhiSurfaceControl } from "./components/controls/phi-surface-control";
 export type { PhiSurfaceControlLabels, PhiSurfaceControlProps } from "./components/controls/phi-surface-control";
+export { PhiImageControl } from "./components/controls/phi-image-control";
+export type { PhiImageControlProps, PhiImageControlSource } from "./components/controls/phi-image-control";
 export { PhiGeometryControl } from "./components/controls/phi-geometry-control";
 export type { PhiGeometryControlProps } from "./components/controls/phi-geometry-control";
 export { PhiSliderControl } from "./components/controls/phi-slider-control";

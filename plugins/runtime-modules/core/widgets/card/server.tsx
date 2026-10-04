@@ -89,7 +89,6 @@ export async function PhiCardWidget({
           imageFit: presentation.fit,
           imagePosition: presentation.objectPosition,
           alt: config?.alt ?? resolvedAsset?.altText ?? undefined,
-          blurDataUrl: resolvedAsset?.blurDataUrl ?? config?.blurDataUrl ?? undefined,
           href: config?.href,
           newTab: config?.newTab,
           actionHref: config?.actionHref,

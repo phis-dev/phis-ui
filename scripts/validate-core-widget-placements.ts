@@ -38,7 +38,6 @@ const PLACEMENT_ONLY_KEYS: Readonly<Record<string, Readonly<Record<string, strin
   image: {
     assetId: "set by the media picker on the canvas",
     variantVersion: "copied from the picked asset, so a new rendition is noticed",
-    blurDataUrl: "copied from the picked asset",
     mask: CANVAS,
     sizes: "a Preset's responsive hint to the browser; nothing an author sets per image",
     trusted: "a Preset vouching for a foreign URL; in the Inspector it would switch the check off",

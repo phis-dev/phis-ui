@@ -402,7 +402,6 @@ function normalizePhiBackgroundBase(value: unknown): PhiCmsBackgroundWidgetConfi
     const normalized = {
       kind: "image" as const,
       trusted: readBoolean(raw.trusted) ?? false,
-      blurDataUrl: readString(raw.blurDataUrl),
       // The projection wins; the raw value stays readable for content persisted before it existed.
       focalRect: resolvedAsset?.focalRect ?? raw.focalRect,
       resolvedAsset,

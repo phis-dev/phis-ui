@@ -23,7 +23,6 @@ type PhiWidgetImageToolButtonCommonPatch = {
   trusted?: boolean;
   /** Cleared when the image changes: a fixed size chosen for one image is no answer for the next. */
   imageSize?: undefined;
-  blurDataUrl?: string;
 };
 
 export type PhiWidgetImageToolButtonPatch = PhiWidgetImageToolButtonCommonPatch & (
@@ -104,7 +103,6 @@ export function PhiWidgetImageToolButton({
       variantVersion: asset.variantVersion ?? null,
       trusted: false,
       imageSize: undefined,
-      blurDataUrl: asset.blurDataUrl ?? undefined,
     });
   };
 
@@ -117,7 +115,6 @@ export function PhiWidgetImageToolButton({
           sourceKind: "url",
           sourceUrl: undefined,
           imageSize: undefined,
-          blurDataUrl: undefined,
         });
       }}
     />
