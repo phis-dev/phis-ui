@@ -512,7 +512,7 @@ export const PHI_SPLIT_CARD_LAYOUT_DEFINITION = {
   creationConfig: { ...PHI_SPLIT_CARD_LAYOUT_CREATION_CONFIG },
   // The outer inset and the gap between the cards are the Paddings panel's; the rest is the Surface.
   fields: [
-    { key: "swapRatio", type: "boolean", label: "Swap cards" },
+    { key: "swapRatio", type: "boolean", label: "Swap ratio" },
     ...PHI_LAYOUT_PADDING_FIELDS,
   ],
   slots: [...PHI_CMS_SPLIT_LAYOUT_SLOTS],
