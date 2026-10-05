@@ -1,10 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
 import ts from "typescript";
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+import { repositoryRoot } from "./lib/repo-root.mjs";
+import { readSourceSync } from "./lib/text.mjs";
+
+const root = repositoryRoot;
 const runtimeModulesDirectory = path.join(root, "plugins/runtime-modules");
 
 function readOwnerProjectionFiles(fileName) {
@@ -53,12 +55,8 @@ for (const projectionRoot of ["area-contributions", "client-area-contributions",
   }
 }
 
-function readSource(relativePath) {
-  return fs.readFileSync(path.join(root, relativePath), "utf8");
-}
-
 function readImportedNames(relativePath, predicate) {
-  const sourceText = readSource(relativePath);
+  const sourceText = readSourceSync(relativePath);
   const source = ts.createSourceFile(
     relativePath,
     sourceText,
@@ -150,7 +148,7 @@ function readDefinitionTypeKeys(relativeDirectory, definitionSuffix) {
   for (const relativePath of files) {
     const source = ts.createSourceFile(
       relativePath,
-      readSource(relativePath),
+      readSourceSync(relativePath),
       ts.ScriptTarget.Latest,
       true,
       ts.ScriptKind.TS,
@@ -236,7 +234,7 @@ const widgetTypeKeysByDefinition = readDefinitionTypeKeys(
   "WIDGET_DEFINITION",
 );
 const ownedWidgetDefinitions = widgetManifestFiles.flatMap((file) => {
-  const source = readSource(file);
+  const source = readSourceSync(file);
   const importedDefinitions = readImportedNames(file, (name) => name.endsWith("_WIDGET_DEFINITION"));
   const declaredDefinitions = [...source.matchAll(/definition:\s+(PHI_[A-Z0-9_]+_WIDGET_DEFINITION),/g)]
     .map((match) => match[1]);
@@ -252,7 +250,7 @@ assertSameMembers(
 );
 
 const widgetDefinitionsByOwnerFile = new Map(widgetManifestFiles.map((file) => {
-  const source = readSource(file);
+  const source = readSourceSync(file);
   const definitions = [...source.matchAll(/defineFirstPartyWidget\(\{([\s\S]*?)\n\s*\}\),/g)]
     .map((match) => {
       const definition = match[1].match(/definition:\s+(PHI_[A-Z0-9_]+_WIDGET_DEFINITION),/);
@@ -289,7 +287,7 @@ const clientAuthoringFileByOwnerFile = new Map(widgetManifestFiles.map((ownerFil
 const clientAuthoringDefinitions = [...clientAuthoringFileByOwnerFile].flatMap(
   ([ownerFile, clientFile]) => {
     const definitions = [
-      ...readSource(clientFile).matchAll(/\n\s+(PHI_[A-Z0-9_]+_WIDGET_DEFINITION),\n\s+\(\) => import/g),
+      ...readSourceSync(clientFile).matchAll(/\n\s+(PHI_[A-Z0-9_]+_WIDGET_DEFINITION),\n\s+\(\) => import/g),
     ].map((match) => match[1]);
     assertSameMembers(
       `${clientFile} owner module`,
@@ -313,7 +311,7 @@ for (const file of widgetManifestFiles) {
     continue;
   }
   const moduleIds = [
-    ...readSource(file).matchAll(/ownerModuleId:\s+(PHI_[A-Z0-9_]+_RUNTIME_MODULE_ID),/g),
+    ...readSourceSync(file).matchAll(/ownerModuleId:\s+(PHI_[A-Z0-9_]+_RUNTIME_MODULE_ID),/g),
   ].map((match) => match[1]);
   if (new Set(moduleIds).size !== 1) {
     throw new Error(`${file} must declare exactly one owner module id.`);
@@ -325,13 +323,13 @@ const layoutManifestFiles = [
   "plugins/runtime-modules/builder/layouts.ts",
 ];
 const ownedLayoutPlugins = layoutManifestFiles.flatMap((file) => [
-  ...readSource(file).matchAll(/module\.(PHI_[A-Z0-9_]+_LAYOUT_PLUGIN)\)/g),
+  ...readSourceSync(file).matchAll(/module\.(PHI_[A-Z0-9_]+_LAYOUT_PLUGIN)\)/g),
 ].map((match) => match[1]));
 
 assertUnique("Owned layout plugins", ownedLayoutPlugins);
 
 const registeredLayoutDefinitions = [
-  ...readSource("components/layouts/layout-definitions.ts")
+  ...readSourceSync("components/layouts/layout-definitions.ts")
     .matchAll(/export const (PHI_[A-Z0-9_]+_LAYOUT_DEFINITION) = \{/g),
 ].map((match) => match[1]);
 const layoutPluginFiles = fs.readdirSync(path.join(root, "components/layouts/plugins"))
@@ -339,7 +337,7 @@ const layoutPluginFiles = fs.readdirSync(path.join(root, "components/layouts/plu
   .sort()
   .map((file) => `components/layouts/plugins/${file}`);
 const layoutDefinitionPluginPairs = layoutPluginFiles.flatMap((file) => {
-  const source = readSource(file);
+  const source = readSourceSync(file);
   const plugin = source.match(/export const (PHI_[A-Z0-9_]+_LAYOUT_PLUGIN)[^=]*= \{/);
   const definition = source.match(/\.\.\.(PHI_[A-Z0-9_]+_LAYOUT_DEFINITION),/);
   if (!plugin || !definition) {
@@ -352,7 +350,7 @@ const layoutDefinitionPluginPairs = layoutPluginFiles.flatMap((file) => {
 });
 const ownedLayoutDefinitionsByManifest = new Map(layoutManifestFiles.map((file) => [
   file,
-  [...readSource(file).matchAll(/define(?:Core|Builder)Layout\(\s*(PHI_[A-Z0-9_]+_LAYOUT_DEFINITION),/g)]
+  [...readSourceSync(file).matchAll(/define(?:Core|Builder)Layout\(\s*(PHI_[A-Z0-9_]+_LAYOUT_DEFINITION),/g)]
     .map((match) => match[1]),
 ]));
 const ownedLayoutDefinitions = [...ownedLayoutDefinitionsByManifest.values()].flat();
@@ -390,7 +388,7 @@ assertSameMembers(
 
 for (const file of layoutManifestFiles) {
   const moduleIds = [
-    ...readSource(file).matchAll(/ownerModuleId:\s+(PHI_[A-Z0-9_]+_RUNTIME_MODULE_ID),/g),
+    ...readSourceSync(file).matchAll(/ownerModuleId:\s+(PHI_[A-Z0-9_]+_RUNTIME_MODULE_ID),/g),
   ].map((match) => match[1]);
   if (new Set(moduleIds).size !== 1) {
     throw new Error(`${file} must declare exactly one layout owner module id.`);
@@ -399,7 +397,7 @@ for (const file of layoutManifestFiles) {
 
 // Es gibt kein Sammelverzeichnis mehr: jedes Modul haelt seine Definition selbst.
 const moduleDefinitionFiles = readOwnerProjectionFiles("definition.ts");
-const moduleDefinitionsSource = moduleDefinitionFiles.map(readSource).join("\n");
+const moduleDefinitionsSource = moduleDefinitionFiles.map(readSourceSync).join("\n");
 const moduleDefinitionNames = [
   ...moduleDefinitionsSource.matchAll(
     /export const (PHI_[A-Z0-9_]+_RUNTIME_MODULE_DEFINITION) = (?:\{|definePhiAreaBaseRuntimeModuleDefinition\(\{)/g,
@@ -411,7 +409,7 @@ const areaContributionFiles = fs.readdirSync(path.join(runtimeModulesDirectory, 
   .map((file) => `plugins/runtime-modules/area-contributions/${file}`);
 const areaContributionSources = areaContributionFiles
   .concat(readOwnerProjectionFiles("server.ts"))
-  .map(readSource)
+  .map(readSourceSync)
   .join("\n");
 const catalogModuleDefinitionNames = [
   ...areaContributionSources.matchAll(/definition:\s+(PHI_[A-Z0-9_]+_RUNTIME_MODULE_DEFINITION),/g),
@@ -427,11 +425,11 @@ const clientAreaContributionFiles = fs.readdirSync(path.join(runtimeModulesDirec
   .map((file) => `plugins/runtime-modules/client-area-contributions/${file}`);
 const clientAreaContributionSources = clientAreaContributionFiles
   .concat(readOwnerProjectionFiles("client.ts"))
-  .map(readSource)
+  .map(readSourceSync)
   .join("\n");
 const controllerClientManifestModuleIds = [
   ...clientAreaContributionSources.matchAll(/moduleId:\s+(PHI_[A-Z0-9_]+_RUNTIME_MODULE_ID)/g),
-  ...readSource("plugins/runtime-modules/client-manifests/common.ts").matchAll(/\[\s*(PHI_[A-Z0-9_]+_RUNTIME_MODULE_ID),/g),
+  ...readSourceSync("plugins/runtime-modules/client-manifests/common.ts").matchAll(/\[\s*(PHI_[A-Z0-9_]+_RUNTIME_MODULE_ID),/g),
 ].map((match) => match[1]);
 const authoringClientContributionFiles = fs.readdirSync(path.join(runtimeModulesDirectory, "client-authoring-providers"))
   .filter((file) => file.endsWith(".tsx"))
@@ -439,7 +437,7 @@ const authoringClientContributionFiles = fs.readdirSync(path.join(runtimeModules
   .map((file) => `plugins/runtime-modules/client-authoring-providers/${file}`);
 const authoringClientContributionSources = authoringClientContributionFiles
   .concat(readOwnerProjectionFiles("authoring-client.tsx"))
-  .map(readSource)
+  .map(readSourceSync)
   .join("\n");
 const authoringClientManifestModuleIds = [
   ...authoringClientContributionSources.matchAll(/moduleId:\s+(PHI_[A-Z0-9_]+_RUNTIME_MODULE_ID)/g),
@@ -449,7 +447,7 @@ const expectedClientModuleIds = moduleDefinitionNames.map((name) =>
   name.replace("_DEFINITION", "_ID"),
 );
 const expectedControllerClientModuleIds = moduleDefinitionFiles.flatMap((file) => {
-  const source = readSource(file);
+  const source = readSourceSync(file);
   if (!/controllerType:\s+PHI_[A-Z0-9_]+_CONTROLLER_TYPE,/u.test(source)) {
     return [];
   }
@@ -473,7 +471,7 @@ function screamingSnake(pascalCase) {
 }
 
 function readDirectServerAreaModuleIds(area) {
-  const source = readSource(`plugins/runtime-modules/area-contributions/${area}.ts`);
+  const source = readSourceSync(`plugins/runtime-modules/area-contributions/${area}.ts`);
   return [
     ...source.matchAll(/moduleId:\s+(PHI_[A-Z0-9_]+_RUNTIME_MODULE_DEFINITION)\.moduleId/g),
     ...source.matchAll(/\[(PHI_[A-Z0-9_]+_RUNTIME_MODULE_DEFINITION),\s*"PHI_[A-Z0-9_]+_RUNTIME_MODULE"\]/g),
@@ -490,18 +488,18 @@ function readDirectServerAreaModuleIds(area) {
 
 function readDirectClientAreaModuleIds(area) {
   return [
-    ...readSource(`plugins/runtime-modules/client-area-contributions/${area}.tsx`)
+    ...readSourceSync(`plugins/runtime-modules/client-area-contributions/${area}.tsx`)
       .matchAll(/moduleId:\s+(PHI_[A-Z0-9_]+_RUNTIME_MODULE_ID)/g),
-    ...readSource(`plugins/runtime-modules/client-area-contributions/${area}.tsx`)
+    ...readSourceSync(`plugins/runtime-modules/client-area-contributions/${area}.tsx`)
       .matchAll(/^\s*(PHI_[A-Z0-9_]+_RUNTIME_MODULE_CONTROLLER_CLIENT_AREA_CONTRIBUTION),?$/gm),
   ].map((match) => match[1].replace("_CONTROLLER_CLIENT_AREA_CONTRIBUTION", "_ID"));
 }
 
 function readDirectAuthoringAreaModuleIds(area) {
   return [
-    ...readSource(`plugins/runtime-modules/client-authoring-providers/${area}.tsx`)
+    ...readSourceSync(`plugins/runtime-modules/client-authoring-providers/${area}.tsx`)
       .matchAll(/moduleId:\s+(PHI_[A-Z0-9_]+_RUNTIME_MODULE_ID)/g),
-    ...readSource(`plugins/runtime-modules/client-authoring-providers/${area}.tsx`)
+    ...readSourceSync(`plugins/runtime-modules/client-authoring-providers/${area}.tsx`)
       .matchAll(/^\s*(PHI_[A-Z0-9_]+_RUNTIME_MODULE_AUTHORING_CLIENT_CONTRIBUTION),?$/gm),
   ].map((match) => match[1].replace("_AUTHORING_CLIENT_CONTRIBUTION", "_ID"));
 }
@@ -509,7 +507,7 @@ function readDirectAuthoringAreaModuleIds(area) {
 const commonClientModuleIds = [
   ...readDirectClientAreaModuleIds("common"),
   ...[
-    ...readSource("plugins/runtime-modules/client-manifests/common.ts")
+    ...readSourceSync("plugins/runtime-modules/client-manifests/common.ts")
       .matchAll(/\[\s*(PHI_[A-Z0-9_]+_RUNTIME_MODULE_ID),/g),
   ].map((match) => match[1]),
 ];
@@ -554,7 +552,7 @@ function readDefinitionModuleId(body) {
 
 const exclusiveAreaEntries = [
   ...moduleDefinitionFiles.flatMap((file) => [
-    ...readSource(file).matchAll(
+    ...readSourceSync(file).matchAll(
       /export const PHI_[A-Z0-9_]+_RUNTIME_MODULE_DEFINITION = \{([\s\S]*?)\n\} satisfies PhiRuntimeModuleDefinition;/g,
     ),
   ].flatMap((match) => {
@@ -564,7 +562,7 @@ const exclusiveAreaEntries = [
     return moduleId && exclusiveArea ? [`${moduleId}:${exclusiveArea}`] : [];
   })),
   ...moduleDefinitionFiles.flatMap((file) => [
-    ...readSource(file).matchAll(
+    ...readSourceSync(file).matchAll(
       /export const PHI_[A-Z0-9_]+_RUNTIME_MODULE_DEFINITION = definePhiAreaBaseRuntimeModuleDefinition\(\{([\s\S]*?)\n\}\);/g,
     ),
   ].flatMap((match) => {
@@ -591,12 +589,12 @@ const expectedExclusiveAreaEntries = [
 ];
 const dataProviderManifestFiles = readOwnerProjectionFiles("data-providers.ts");
 const dataProviderKeys = dataProviderManifestFiles.flatMap((file) => [
-  ...readSource(file).matchAll(/key:\s+(PHI_[A-Z0-9_]+_RUNTIME_DATA_PROVIDER_KEYS)\.([A-Za-z0-9_]+),/g),
+  ...readSourceSync(file).matchAll(/key:\s+(PHI_[A-Z0-9_]+_RUNTIME_DATA_PROVIDER_KEYS)\.([A-Za-z0-9_]+),/g),
 ].map((match) => `${match[1]}.${match[2]}`));
 const dataProviderAuthoringModesByKey = new Map();
 for (const file of dataProviderManifestFiles) {
   const definitions = [
-    ...readSource(file).matchAll(/\{\s*key:\s+PHI_[A-Z0-9_]+_RUNTIME_DATA_PROVIDER_KEYS\.([A-Za-z0-9_]+),([\s\S]*?)\n\s*\},/g),
+    ...readSourceSync(file).matchAll(/\{\s*key:\s+PHI_[A-Z0-9_]+_RUNTIME_DATA_PROVIDER_KEYS\.([A-Za-z0-9_]+),([\s\S]*?)\n\s*\},/g),
   ];
   for (const [, key, body] of definitions) {
     const executionMode = body.match(/executionMode:\s*"(static|live)"/)?.[1];
@@ -604,13 +602,13 @@ for (const file of dataProviderManifestFiles) {
     if (!executionMode || !authoringMode) {
       throw new Error(`${file}: data provider "${key}" has no executionMode or authoringMode.`);
     }
-    const keySymbol = readSource(file)
+    const keySymbol = readSourceSync(file)
       .match(/PHI_[A-Z0-9_]+_RUNTIME_DATA_PROVIDER_KEYS/)?.[0];
     dataProviderAuthoringModesByKey.set(`${keySymbol}.${key}`, authoringMode);
   }
 }
 const dataProviderDescriptorSymbols = dataProviderManifestFiles.flatMap((file) => [
-  ...readSource(file).matchAll(/export const (PHI_[A-Z0-9_]+_RUNTIME_DATA_PROVIDER_DESCRIPTORS)\s*=/g),
+  ...readSourceSync(file).matchAll(/export const (PHI_[A-Z0-9_]+_RUNTIME_DATA_PROVIDER_DESCRIPTORS)\s*=/g),
 ].map((match) => match[1]));
 const moduleDefinitionDataProviderSymbols = [
   ...moduleDefinitionsSource.matchAll(/dataProviders:\s+(PHI_[A-Z0-9_]+_RUNTIME_DATA_PROVIDER_DESCRIPTORS),/g),
@@ -620,7 +618,7 @@ const moduleDefinitionDataProviderSymbols = [
 const dataProviderClientFiles = readOwnerProjectionFiles("client-data-providers.ts")
   .concat(readOwnerProjectionFiles("client.ts"));
 const dataProviderClientKeys = dataProviderClientFiles.flatMap((file) => [
-  ...readSource(file).matchAll(
+  ...readSourceSync(file).matchAll(
     /key:\s+(PHI_[A-Z0-9_]+_RUNTIME_DATA_PROVIDER_KEYS)\.([A-Za-z0-9_]+),([\s\S]*?)\n\s*\},/g,
   ),
 ].map((match) => {

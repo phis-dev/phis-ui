@@ -1,6 +1,9 @@
-import { readdir, readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
+
+import { repositoryRoot } from "./lib/repo-root.mjs";
+import { listSourceFiles } from "./lib/source-files.mjs";
 
 // A server component that imports from a client barrel pins the barrel's whole module
 // evaluation through the generated client reference: the browser then loads every module the
@@ -23,21 +26,6 @@ const scannedRoots = [
   "types",
 ];
 
-const repositoryRoot = process.cwd();
-
-async function collectSourceFiles(root) {
-  const entries = await readdir(root, { withFileTypes: true });
-  const files = [];
-  for (const entry of entries) {
-    const entryPath = path.join(root, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...(await collectSourceFiles(entryPath)));
-    } else if (/\.(ts|tsx)$/.test(entry.name) && !entry.name.endsWith(".d.ts")) {
-      files.push(entryPath);
-    }
-  }
-  return files;
-}
 
 function hasUseClientDirective(source) {
   // The directive must appear in the file prologue, before the first import.
@@ -68,7 +56,7 @@ for (const root of scannedRoots) {
   const absoluteRoot = path.join(repositoryRoot, root);
   let files;
   try {
-    files = await collectSourceFiles(absoluteRoot);
+    files = await listSourceFiles(absoluteRoot);
   } catch {
     continue;
   }

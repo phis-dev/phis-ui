@@ -2,6 +2,8 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
+import { repositoryRoot } from "./lib/repo-root.mjs";
+
 /**
  * Every shared form provider is paired with its implementation, by name and exactly once.
  *
@@ -20,7 +22,6 @@ import process from "node:process";
  * what the repaired registry states: each provider is named by its key, no key is missing, none is
  * paired twice, and the positional spelling does not return.
  */
-const repositoryRoot = process.cwd();
 
 const REGISTRY_FILE = "components/forms/shared-form-provider-registry.tsx";
 const CONTRACT_FILE = "components/forms/form-provider-contract.ts";

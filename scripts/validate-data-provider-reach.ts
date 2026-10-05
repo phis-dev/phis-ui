@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
-import process from "node:process";
 
 import { PHI_CMS_AREA_KEYS, type PhiCmsAreaKey } from "../constants/cms-areas";
 import { PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/catalog";
 import { createPhiDefaultAreaRuntimeModuleIds } from "../plugins/runtime-modules/area-module-defaults";
 import { isPhiRuntimeAreaBaseModuleId } from "../plugins/runtime-modules/area-definitions";
+import { repositoryRoot } from "./lib/repo-root.mjs";
 import { listPhiPresetTreeFiles } from "./preset-tree-files";
 
 /*
@@ -34,7 +34,6 @@ import { listPhiPresetTreeFiles } from "./preset-tree-files";
  * rather than passed over -- a check that silently skips what it cannot read is worse than none.
  */
 
-const repositoryRoot = process.cwd();
 const manifestDirectory = path.join(repositoryRoot, "plugins/runtime-modules/client-manifests");
 const runtimeModulesDirectory = path.join(repositoryRoot, "plugins/runtime-modules");
 

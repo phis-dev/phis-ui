@@ -1,4 +1,5 @@
-import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode } from "../../../types/cms";
+import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode, PhiCmsPageNode } from "../../../types/cms";
+import { PHI_VIEWER_ACCESS_ANYONE } from "../../../types/access";
 import type { PhiCmsPaddingWidgetConfig } from "../../../types/cms-config";
 import { normalizePhiPaddingWidgetConfig } from "../../../types/cms-config";
 import {
@@ -83,4 +84,53 @@ export function buildPhiBuilderRootNodeRenderConfig(
   const config = { ...(rootNode.rootNodeConfig ?? {}) };
   delete config.renderMode;
   return { ...config, renderMode };
+}
+
+/**
+ * The root Layout as a render node: the Canvas, its update pass and the renderable tree each built this
+ * from the normalized draft, and only the config they put on it differed.
+ */
+export function buildPhiBuilderRootLayoutRenderNode(
+  rootNode: Pick<PhiBuilderRootNodeDraft, "typeKey" | "title" | "childLayouts" | "childWidgets"> & { id: PhiCmsInstanceId },
+  config: Record<string, unknown>,
+): PhiCmsLayoutRenderNode {
+  return {
+    id: rootNode.id,
+    siteId: -1,
+    parentLayoutNodeId: null,
+    widgetType: rootNode.typeKey,
+    slotIndex: 0,
+    sortOrder: 0,
+    status: 0,
+    flags: 0,
+    visibilityMask: 0,
+    label: rootNode.title ?? "Root",
+    config,
+    childLayouts: rootNode.childLayouts ?? [],
+    childWidgets: rootNode.childWidgets ?? [],
+  };
+}
+
+/** The Page a Builder preview stands in: no Site, no path, every Region root unset but the content's. */
+export function buildPhiBuilderPreviewPageNode(contentRootLayoutNodeId: PhiCmsInstanceId | null): PhiCmsPageNode {
+  return {
+    id: -1,
+    siteId: -1,
+    areaMask: 0,
+    path: "",
+    pageType: 0,
+    status: 0,
+    flags: 0,
+    visibilityMask: 0,
+    accessPolicy: PHI_VIEWER_ACCESS_ANYONE,
+    titleMsgId: null,
+    descriptionMsgId: null,
+    heroRootLayoutNodeId: null,
+    headerBottomRootLayoutNodeId: null,
+    siderRightRootLayoutNodeId: null,
+    footerTopRootLayoutNodeId: null,
+    drawerRightRootLayoutNodeId: null,
+    contentRootLayoutNodeId,
+    layoutConfig: {},
+  };
 }

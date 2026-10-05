@@ -4,13 +4,13 @@ import { useCallback, useMemo } from "react";
 
 import type { PhiRuntimeControllerPlugin } from "../../../../types";
 import {
-  findPhiSignalRoutesByCapabilityId,
   type PhiSignalValue,
 } from "../../../../types/signals";
 import { readPhiTableSelectionSignalValue } from "../../../../types/table-signal-values";
 import { createPhiRuntimeControllerClient } from "../../../../components/runtime/runtime-controller-client-factory";
 import { PHI_GROUPS_OPTIONS_REVISION } from "../services/options-revision";
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../components/runtime/runtime-signal-bus";
+import { dispatchPhiSignalCapability } from "../../../../components/runtime/runtime-signal-identity";
 import { usePhiRuntimeConditionStateResponder } from "../../../../components/runtime/runtime-condition-state-responder";
 import {
   PHI_GROUPS_RUNTIME_CONTROLLER_DEFINITION,
@@ -44,25 +44,7 @@ function PhiGroupsControllerView({
     capabilityId: string,
     value: PhiSignalValue,
     correlationId: string,
-  ) => {
-    for (const route of findPhiSignalRoutesByCapabilityId(emitRoutes, capabilityId)) {
-      if (route.receiver == null || (route.valueType === "json" && !route.valueSchema)) {
-        continue;
-      }
-      dispatchSignal({
-        scope: route.scope,
-        sender: address,
-        receiver: route.receiver,
-        channel: route.channel,
-        action: route.action,
-        value: route.valueType === "none" ? null : value,
-        valueType: route.valueType,
-        valueSchema: route.valueSchema ?? null,
-        correlationId,
-        timestamp: Date.now(),
-      });
-    }
-  }, [address, dispatchSignal, emitRoutes]);
+  ) => dispatchPhiSignalCapability(dispatchSignal, address, emitRoutes, capabilityId, value, correlationId), [address, dispatchSignal, emitRoutes]);
 
   // No selection means no group, and the membership table answers that with an empty list rather than
   // with every membership on the Site.

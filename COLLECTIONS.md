@@ -54,7 +54,7 @@ panels: key, title
 defaultForWidget (at most one per Provider)
 ```
 
-The Widget's `source` is a `PhiCollectionProviderDataSource`: the shared `PhiRuntimeDataProviderBinding`
+The Widget's `source` is a `PhiProviderResourceSource` (`types/runtime-data-provider.ts`): the shared `PhiRuntimeDataProviderBinding`
 (`providerKey`, optional `scopeKey`, optional `params`) plus `resourceKey`.
 
 The executable Client is created with `createPhiCollectionProviderClient` from

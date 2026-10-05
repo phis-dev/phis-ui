@@ -1,6 +1,10 @@
-import { readdir, readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
+
+import { repositoryRoot } from "./lib/repo-root.mjs";
+import { listSourceFiles, repositoryRelativeListing } from "./lib/source-files.mjs";
+import { lineOf } from "./lib/text.mjs";
 
 /**
  * An Overlay that opens on a Table's action says which action it is.
@@ -25,7 +29,6 @@ import process from "node:process";
  * found by brace balance rather than by pattern, because the routes that matter sit several objects
  * deep and a looser scan reads a neighbour's route as this Overlay's.
  */
-const repositoryRoot = process.cwd();
 
 const presetDirectories = ["components/regions/presets"];
 const presetFilePattern = /(^|\/)presets\.tsx?$|(^|\/)presets\/|(^|\/)trees\/|^\/[a-z-]+-preset(-tree)?\.tsx?$/u;
@@ -39,18 +42,6 @@ const openActionKeyPattern = /\bopenActionKey\s*:/u;
 // Stated as nothing is stated as nothing: `parsePhiCmsOverlayConfig` reads a missing key and a `null`
 // one into the same `null`, and `matchesOpenAction` refuses both.
 const emptyOpenActionKeyPattern = /\bopenActionKey\s*:\s*(null|undefined)\b/u;
-
-async function listSourceFiles(directory) {
-  const absolute = path.join(repositoryRoot, directory);
-  const entries = await readdir(absolute, { withFileTypes: true, recursive: true });
-  return entries
-    .filter((entry) => entry.isFile() && /\.tsx?$/u.test(entry.name))
-    .map((entry) => path.relative(repositoryRoot, path.join(entry.parentPath ?? entry.path, entry.name)));
-}
-
-function lineOf(source, index) {
-  return source.slice(0, index).split("\n").length;
-}
 
 /**
  * The positions of every brace that is code, so a brace inside a string or a comment counts for nothing.
@@ -146,8 +137,8 @@ function readOpenRoutes(overlayText, braces, offset) {
 
 const failures = [];
 const presetFiles = [
-  ...(await Promise.all(presetDirectories.map(listSourceFiles))).flat(),
-  ...(await listSourceFiles(moduleRoot)).filter((file) =>
+  ...(await Promise.all(presetDirectories.map((directory) => listSourceFiles(directory, repositoryRelativeListing)))).flat(),
+  ...(await listSourceFiles(moduleRoot, repositoryRelativeListing)).filter((file) =>
     presetFilePattern.test(file.slice(moduleRoot.length))),
 ];
 

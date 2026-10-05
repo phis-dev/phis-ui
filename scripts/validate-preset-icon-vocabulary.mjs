@@ -1,6 +1,10 @@
-import { readdir, readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
+
+import { repositoryRoot } from "./lib/repo-root.mjs";
+import { listSourceFiles, repositoryRelativeListing } from "./lib/source-files.mjs";
+import { lineOf } from "./lib/text.mjs";
 
 /**
  * An icon a preset names is already resolved when it names it.
@@ -21,7 +25,6 @@ import process from "node:process";
  * the other prefixes writes them too, and it is out of reach here by where it lives rather than by a
  * list somebody has to keep.
  */
-const repositoryRoot = process.cwd();
 
 const presetDirectories = ["components/regions/presets"];
 /*
@@ -38,18 +41,6 @@ const forbiddenIconPrefixes = new Map([
   ["iconify:", "fetched from Iconify's API by the visitor's browser"],
   ["asset:", "a file a freshly activated Site does not have"],
 ]);
-
-async function listSourceFiles(directory) {
-  const absolute = path.join(repositoryRoot, directory);
-  const entries = await readdir(absolute, { withFileTypes: true, recursive: true });
-  return entries
-    .filter((entry) => entry.isFile() && /\.tsx?$/u.test(entry.name))
-    .map((entry) => path.relative(repositoryRoot, path.join(entry.parentPath ?? entry.path, entry.name)));
-}
-
-function lineOf(source, index) {
-  return source.slice(0, index).split("\n").length;
-}
 
 /*
  * And the `antd:` names a preset may use: the ones that resolve.
@@ -77,8 +68,8 @@ let antdIconNames = 0;
 
 const failures = [];
 const presetFiles = [
-  ...(await Promise.all(presetDirectories.map(listSourceFiles))).flat(),
-  ...(await listSourceFiles(moduleRoot)).filter((file) =>
+  ...(await Promise.all(presetDirectories.map((directory) => listSourceFiles(directory, repositoryRelativeListing)))).flat(),
+  ...(await listSourceFiles(moduleRoot, repositoryRelativeListing)).filter((file) =>
     presetFilePattern.test(file.slice(moduleRoot.length))),
 ];
 

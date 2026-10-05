@@ -68,12 +68,12 @@ The root export (`@phis/ui`) is not an integration surface; import from the grou
 
 | Group | Entry points |
 | --- | --- |
-| Next.js Site | `next/area-route`, `next/areas/<area>`, `next/areas/<area>-client`, `next/root-route`, `next/site-bridge`, `next/site-proxy`, `next/proxy-runtime`, `next/route-handlers`, `next/seo-routes`, `next/cache-handler`, `next/runtime-module-client-boundary` |
+| Next.js Site | `next/area-route`, `next/areas/<area>`, `next/areas/<area>-client`, `next/root-route`, `next/root-error-page`, `next/global-error`, `next/site-bridge`, `next/site-proxy`, `next/proxy-runtime`, `next/route-handlers`, `next/seo-routes`, `next/overlay-zones`, `next/overlay-zones-client`, `next/cache-handler`, `next/runtime-module-client-boundary` |
 | CMS rendering | `cms`, `cms/root-layout`, `cms/root-page`, `cms/root-slot-page`, `cms/error-page`, `cms/request`, `cms/plugins`, `cms/plugins/<area>` |
-| Module packages | `module`, `module/client`, `module/authoring-client`, `module/projection`, `module/projection/client`, `module/projection/authoring-client`, `module/site-modules`, `module/site-modules-client` |
-| Runtime Clients | `runtime`, `runtime/controller-client`, `runtime/render-client`, `runtime/signal-client`, `runtime/data-provider-client`, `runtime/authoring-client`, `runtime/authoring-manifest-client`, `runtime/calendar-adapter-client`, `runtime/client-manifests/<area>` |
-| UI | `widgets`, `widget-config`, `controls`, `controls/config`, `controls/date-time`, `layouts`, `shells`, `root`, `navigation`, `forms`, `media`, `references`, `state`, `theme` |
-| Builder | `builder`, `builder-api-route` |
+| Module packages | `module`, `module/client`, `module/authoring-client`, `module/labels`, `module/projection`, `module/projection/client`, `module/projection/authoring-client`, `module/site-modules`, `module/site-modules-client` |
+| Runtime Clients | `runtime`, `runtime/controller-client`, `runtime/render-client`, `runtime/signal-client`, `runtime/data-provider-client`, `runtime/authoring-client`, `runtime/authoring-manifest-client`, `runtime/calendar-adapter-client`, `runtime/user-state-client`, `runtime/client-manifests/<area>` |
+| UI | `widgets`, `core-widgets`, `widget-config`, `controls`, `controls/config`, `controls/date-time`, `layouts`, `shells`, `root`, `navigation`, `forms`, `forms/client`, `media`, `references`, `state`, `theme` |
+| Builder | `builder-api-route` |
 | Contracts and helpers | `types`, `constants`, `helpers`, `helpers/site-runtime`, `server-helpers`, `net` |
 | Plugin helpers | `plugins/factories/widget-builder-plugin`, `plugins/registries/runtime-controller-core`, `plugins/registries/runtime-controllers` |
 

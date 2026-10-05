@@ -5,7 +5,6 @@ import { useCallback, useMemo, useState } from "react";
 import type { PhiRuntimeControllerPlugin } from "../../../../types";
 import {
   findPhiSignalRoutesByCapabilityId,
-  resolvePhiSignalRouteValue,
   type PhiSignalAddress,
   type PhiSignalValue,
 } from "../../../../types/signals";
@@ -17,6 +16,7 @@ import { readPhiOverlayCloseRequest } from "../../../../types/cms-overlay";
 import { createPhiRuntimeControllerClient } from "../../../../components/runtime/runtime-controller-client-factory";
 import { usePhiRuntimeConditionStateResponder } from "../../../../components/runtime/runtime-condition-state-responder";
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../components/runtime/runtime-signal-bus";
+import { dispatchPhiSignalCapability } from "../../../../components/runtime/runtime-signal-identity";
 import {
   PHI_THREADS_RUNTIME_CONTROLLER_DEFINITION,
   type PhiThreadsControllerConfig,
@@ -85,25 +85,7 @@ function PhiThreadsControllerView({
     capabilityId: string,
     value: PhiSignalValue,
     correlationId: string,
-  ) => {
-    for (const route of findPhiSignalRoutesByCapabilityId(emitRoutes, capabilityId)) {
-      if (route.receiver == null || (route.valueType === "json" && !route.valueSchema)) {
-        continue;
-      }
-      dispatchSignal({
-        scope: route.scope,
-        sender: address,
-        receiver: route.receiver,
-        channel: route.channel,
-        action: route.action,
-        value: resolvePhiSignalRouteValue(route, value),
-        valueType: route.valueType,
-        valueSchema: route.valueSchema ?? null,
-        correlationId,
-        timestamp: Date.now(),
-      });
-    }
-  }, [address, dispatchSignal, emitRoutes]);
+  ) => dispatchPhiSignalCapability(dispatchSignal, address, emitRoutes, capabilityId, value, correlationId), [address, dispatchSignal, emitRoutes]);
 
   /*
    * Which Form is the dialog's, read off the wiring rather than from an id in this file.

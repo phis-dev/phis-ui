@@ -173,6 +173,21 @@ exports complete Widgets only.
 - `PhiCollectionLayoutControl` and `PhiMediaAssetTileControl` are the one grid/masonry/stack
   presentation and the one media tile; asset surfaces compose them instead of new tile renderers.
 
+### What the primitive sweep taught
+
+- Every Ant Design primitive sits behind a Phi Control; `scripts/validate-control-boundaries.mjs` names
+  them all and allows nothing it does not name. A primitive that joins its children through a React
+  context (`Space.Compact`) has to stay a wrapper -- `PhiCompactGroupControl` -- because the
+  border-collapsing classes come from that context, not from CSS.
+- `Space` and `Flex` differ in two ways no typechecker sees: a horizontal `Space` centres its children
+  where `Flex` stretches, and `Space` is `inline-flex` where `Flex` is `flex`, which inside a table cell
+  follows the cell's `text-align`. Sites that moved from one to the other state `align` and `display`
+  themselves.
+- A list is `PhiEntryListControl` -- a name, a line, a state and one action -- never antd `List` or a
+  virtualised list: a list of ten thousand rows publishes a Data Provider and gets search, sorting,
+  paging and authorization with it. Virtualisation earns its place only where thousands of rows stay
+  mounted, and no surface here has made that case yet.
+
 ## Control Widgets and signals
 
 Generic control Widgets reuse the capability sets in `signals/control-signal-capabilities.ts`.

@@ -15,7 +15,7 @@ import type {
   PhiSignalScope,
   PhiSignalValue,
 } from "../../types";
-import { findPhiSignalRoutesByCapabilityId } from "../../types/signals";
+import { findPhiSignalRoutesByCapabilityId, resolvePhiSignalRouteValue } from "../../types/signals";
 import { usePhiSignalDispatcher, type PhiSignalInput } from "./runtime-signal-bus";
 
 export type PhiSignalIdentity = {
@@ -123,6 +123,38 @@ export function emitPhiSignalCapability(
       valueSchema: route.valueSchema ?? null,
       receiver: route.receiver,
       ...(correlationId ? { correlationId } : {}),
+    });
+  }
+}
+
+/**
+ * The same, for a Controller that dispatches under its own address rather than through an emitter: one
+ * declared output, delivered through every route the Page wrote for it. A route with no receiver, or a
+ * JSON route with no schema, is skipped rather than sent -- SIGNALS.md makes the schema part of matching,
+ * and a payload nobody can check is worse than none. The value is shaped by the route
+ * (`resolvePhiSignalRouteValue`): `none` carries nothing, a `fieldKey` wraps it.
+ */
+export function dispatchPhiSignalCapability(
+  dispatchSignal: ReturnType<typeof usePhiSignalDispatcher>,
+  sender: PhiSignalAddress,
+  routes: readonly PhiSignalRoute[] | null | undefined,
+  capabilityId: string,
+  value: PhiSignalValue,
+  correlationId: string,
+) {
+  for (const route of findPhiSignalRoutesByCapabilityId(routes, capabilityId)) {
+    if (route.receiver == null || (route.valueType === "json" && !route.valueSchema)) continue;
+    dispatchSignal({
+      scope: route.scope,
+      sender,
+      receiver: route.receiver,
+      channel: route.channel,
+      action: route.action,
+      value: resolvePhiSignalRouteValue(route, value),
+      valueType: route.valueType,
+      valueSchema: route.valueSchema ?? null,
+      correlationId,
+      timestamp: Date.now(),
     });
   }
 }

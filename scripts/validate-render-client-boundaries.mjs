@@ -1,7 +1,11 @@
-import { readdir, readFile } from "node:fs/promises";
-import { existsSync, statSync } from "node:fs";
+import { readdir } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
+
+import { resolveSpecifier, readStaticImports as readStaticStatements } from "./lib/module-resolution.mjs";
+import { repositoryRoot } from "./lib/repo-root.mjs";
+import { listSourceFiles } from "./lib/source-files.mjs";
+import { readSource } from "./lib/text.mjs";
 
 // A client implementation that a server module imports as a value becomes a client reference of
 // every route whose server graph reaches it -- the RSC manifest names it, and the browser loads its
@@ -20,8 +24,6 @@ import process from "node:process";
 // media.ts, navigation.ts) re-export client components as the package's public API and are not part
 // of any route's server graph; they are deliberately not treated as entries here.
 
-const repositoryRoot = process.cwd();
-const sourceExtensions = [".ts", ".tsx"];
 const layoutClientDirectory = path.join(repositoryRoot, "components/layouts/clients");
 const renderClientManifestDirectory = path.join(
   repositoryRoot,
@@ -30,60 +32,6 @@ const renderClientManifestDirectory = path.join(
 const nextEntryDirectory = path.join(repositoryRoot, "next");
 const scannedRoots = ["components", "gateway", "helpers", "net", "next", "plugins", "server-helpers", "theme"];
 
-function resolveModuleFile(candidate) {
-  if (existsSync(candidate) && statSync(candidate).isFile() && /\.tsx?$/.test(candidate)) {
-    return candidate;
-  }
-  for (const extension of sourceExtensions) {
-    if (existsSync(candidate + extension)) {
-      return candidate + extension;
-    }
-  }
-  for (const extension of sourceExtensions) {
-    const indexPath = path.join(candidate, `index${extension}`);
-    if (existsSync(indexPath)) {
-      return indexPath;
-    }
-  }
-  return null;
-}
-
-function resolveSpecifier(specifier, importingFile) {
-  if (specifier.startsWith(".")) {
-    return resolveModuleFile(path.resolve(path.dirname(importingFile), specifier));
-  }
-  if (specifier === "@phis/ui") {
-    return resolveModuleFile(path.join(repositoryRoot, "index"));
-  }
-  if (specifier.startsWith("@phis/ui/")) {
-    return resolveModuleFile(path.join(repositoryRoot, specifier.slice("@phis/ui/".length)));
-  }
-  return null;
-}
-
-async function collectSourceFiles(root) {
-  const files = [];
-  // A root that cannot be read is a validator that checks less than it says; it fails instead.
-  const entries = await readdir(root, { withFileTypes: true });
-  for (const entry of entries) {
-    const entryPath = path.join(root, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...(await collectSourceFiles(entryPath)));
-    } else if (/\.(ts|tsx)$/.test(entry.name) && !entry.name.endsWith(".d.ts")) {
-      files.push(entryPath);
-    }
-  }
-  return files;
-}
-
-const sourceCache = new Map();
-async function readSource(file) {
-  if (!sourceCache.has(file)) {
-    sourceCache.set(file, await readFile(file, "utf8"));
-  }
-  return sourceCache.get(file);
-}
-
 function hasUseClientDirective(source) {
   // The directive must appear in the file prologue, before the first import.
   const firstImport = source.search(/\bimport\b/);
@@ -91,23 +39,8 @@ function hasUseClientDirective(source) {
 }
 
 // Every static import or re-export, with the statement text so a violation can quote it.
-const statementPattern =
-  /(?:^|\n)\s*((?:import|export)\b[^;'"]*?\bfrom\s*(['"])([^'"]+)\2|import\s*(['"])([^'"]+)\4)\s*;?/g;
-
 function readStaticImports(source, importingFile) {
-  const imports = [];
-  for (const match of source.matchAll(statementPattern)) {
-    const statement = match[1].replace(/\s+/g, " ").trim();
-    const specifier = match[3] ?? match[5];
-    const target = resolveSpecifier(specifier, importingFile);
-    if (!target) {
-      continue;
-    }
-    // "import type" is erased; "import { type X }" is not, under verbatimModuleSyntax.
-    const typeOnly = /^(?:import|export)\s+type\b/.test(statement);
-    imports.push({ target, statement, typeOnly });
-  }
-  return imports;
+  return readStaticStatements(source, importingFile, { consumeTrailingWhitespace: true });
 }
 
 // A dynamic import inside a server module still registers a client reference for the route -- it
@@ -125,12 +58,12 @@ function readDynamicImports(source, importingFile) {
 
 const failures = [];
 const allSourceFiles = (
-  await Promise.all(scannedRoots.map((root) => collectSourceFiles(path.join(repositoryRoot, root))))
+  await Promise.all(scannedRoots.map((root) => listSourceFiles(path.join(repositoryRoot, root))))
 ).flat();
 
 // The clients an Area loads through PhiRuntimeModuleRenderClientHost, read off the manifests.
 const registeredClients = new Map();
-for (const manifestFile of await collectSourceFiles(renderClientManifestDirectory)) {
+for (const manifestFile of await listSourceFiles(renderClientManifestDirectory)) {
   const source = await readSource(manifestFile);
   for (const match of source.matchAll(/\bimport\(\s*["']([^"']+)["']\s*\)/g)) {
     const target = resolveSpecifier(match[1], manifestFile);
@@ -143,7 +76,7 @@ for (const manifestFile of await collectSourceFiles(renderClientManifestDirector
 // Rule 1: a layout client behind a "use client" directive is reached from outside its own
 // directory by type only, and the implementation is registered for the Host to load.
 const layoutClients = new Set();
-for (const file of await collectSourceFiles(layoutClientDirectory)) {
+for (const file of await listSourceFiles(layoutClientDirectory)) {
   if (hasUseClientDirective(await readSource(file))) {
     layoutClients.add(file);
   }
@@ -196,7 +129,7 @@ for (const [client, referencedFrom] of layoutClientReferencedFrom) {
 // the client graph, reached only from client modules; if any server module reachable from the Next
 // entries imports such a client -- statically or dynamically -- the indirection is undone.
 const nextEntries = [];
-for (const file of await collectSourceFiles(nextEntryDirectory)) {
+for (const file of await listSourceFiles(nextEntryDirectory)) {
   if (!hasUseClientDirective(await readSource(file))) {
     nextEntries.push(file);
   }

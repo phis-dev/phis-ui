@@ -1,8 +1,23 @@
-import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
-const repositoryRoot = process.cwd();
+import { repositoryRoot } from "./lib/repo-root.mjs";
+import { listSourceFiles } from "./lib/source-files.mjs";
+import { readSource } from "./lib/text.mjs";
+
+const scriptExtensions = [".js", ".jsx", ".ts", ".tsx", ".cjs", ".cjsx", ".cts", ".ctsx", ".mjs", ".mjsx", ".mts", ".mtsx"];
+const repositoryListing = {
+  includeDeclarations: true,
+  relativeTo: repositoryRoot,
+  skipDirectories: ["node_modules", ".next", "dist", ".git", "scripts"],
+};
+const listTypeScriptSources = (relativeDirectory) =>
+  listSourceFiles(relativeDirectory, { ...repositoryListing, extensions: scriptExtensions, skipDirectories: [] });
+const listRepositorySources = () =>
+  listSourceFiles(".", { ...repositoryListing, extensions: scriptExtensions, excludePattern: /\.test\.[cm]?[jt]sx?$/u });
+const listStyledSources = () =>
+  listSourceFiles(".", { ...repositoryListing, extensions: [...scriptExtensions, ".css"] });
+
 const inputPrimitives = new Set([
   "AutoComplete",
   "Button",
@@ -358,22 +373,6 @@ function readAntdTypeImports(source) {
   return names;
 }
 
-async function listRepositorySources(relativeDirectory = ".") {
-  const skipped = new Set(["node_modules", ".next", "dist", ".git", "scripts"]);
-  const entries = await readdir(path.join(repositoryRoot, relativeDirectory), { withFileTypes: true });
-  const files = [];
-  for (const entry of entries) {
-    if (skipped.has(entry.name)) continue;
-    const relativePath = relativeDirectory === "." ? entry.name : path.join(relativeDirectory, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...await listRepositorySources(relativePath));
-    } else if (/\.[cm]?[jt]sx?$/u.test(entry.name) && !/\.test\.[cm]?[jt]sx?$/u.test(entry.name)) {
-      files.push(relativePath);
-    }
-  }
-  return files;
-}
-
 function readAntdNamedImports(source) {
   const names = [];
   // `[^}]*`, not a lazy `[\s\S]*?`: the lazy form starts at the first `import {` in the file and runs on
@@ -388,24 +387,6 @@ function readAntdNamedImports(source) {
     }
   }
   return names;
-}
-
-async function readSource(relativePath) {
-  return readFile(path.join(repositoryRoot, relativePath), "utf8");
-}
-
-async function listTypeScriptSources(relativeDirectory) {
-  const entries = await readdir(path.join(repositoryRoot, relativeDirectory), { withFileTypes: true });
-  const files = [];
-  for (const entry of entries) {
-    const relativePath = path.join(relativeDirectory, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...await listTypeScriptSources(relativePath));
-    } else if (/\.[cm]?[jt]sx?$/u.test(entry.name)) {
-      files.push(relativePath);
-    }
-  }
-  return files;
 }
 
 const failures = [];
@@ -741,22 +722,6 @@ function readAntdVariableTokenName(variable) {
       return SPACING_SEGMENTS.has(segment) ? segment.toUpperCase() : segment[0].toUpperCase() + segment.slice(1);
     })
     .join("");
-}
-
-async function listStyledSources(relativeDirectory = ".") {
-  const skipped = new Set(["node_modules", ".next", "dist", ".git", "scripts"]);
-  const entries = await readdir(path.join(repositoryRoot, relativeDirectory), { withFileTypes: true });
-  const files = [];
-  for (const entry of entries) {
-    if (skipped.has(entry.name)) continue;
-    const relativePath = relativeDirectory === "." ? entry.name : path.join(relativeDirectory, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...await listStyledSources(relativePath));
-    } else if (/\.(?:[cm]?[jt]sx?|css)$/u.test(entry.name)) {
-      files.push(relativePath);
-    }
-  }
-  return files;
 }
 
 const themeVocabularySource = await readSource("theme/phi-theme-tokens.ts");

@@ -1,18 +1,25 @@
 import { createHash } from "node:crypto";
-import { readFile, readdir } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
-import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
-const repositoryRoot = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "..",
-);
+import { repositoryRoot } from "./lib/repo-root.mjs";
+import { listSourceFiles } from "./lib/source-files.mjs";
+
 const packageManifest = JSON.parse(
   await readFile(path.join(repositoryRoot, "package.json"), "utf8"),
 );
-const sourceFiles = await collectSourceFiles(repositoryRoot);
+const sourceFiles = await listSourceFiles(repositoryRoot, {
+  extensions: [".ts", ".tsx", ".mjs"],
+  skipDirectories: ["node_modules", "dist", "scripts"],
+  skipDotEntries: true,
+  regularFilesOnly: true,
+  // Plain JavaScript a package entry points at, such as the cache handler Next loads by path.
+  rootFiles: ["index.js"],
+  relativeTo: repositoryRoot,
+  sort: true,
+});
 const sourceFileSet = new Set(sourceFiles);
 const moduleInfo = new Map();
 
@@ -135,40 +142,6 @@ function buildEntryReport(entry) {
     clientFileCount: clientReachable.size,
     clientBytes: sumBytes(clientReachable),
   };
-}
-
-async function collectSourceFiles(directory, prefix = "") {
-  const entries = await readdir(directory, { withFileTypes: true });
-  const files = [];
-
-  for (const entry of entries) {
-    if (
-      entry.name === "node_modules" ||
-      entry.name === "dist" ||
-      entry.name === "scripts" ||
-      entry.name.startsWith(".")
-    ) {
-      continue;
-    }
-    const relativePath = path.posix.join(prefix, entry.name);
-    const absolutePath = path.join(directory, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...await collectSourceFiles(absolutePath, relativePath));
-    } else if (
-      entry.isFile() &&
-      (
-        /\.(?:ts|tsx)$/u.test(entry.name) ||
-        // Plain JavaScript a package entry points at, such as the cache handler Next loads by path.
-        /\.mjs$/u.test(entry.name) ||
-        (prefix === "" && entry.name === "index.js")
-      ) &&
-      !entry.name.endsWith(".d.ts")
-    ) {
-      files.push(relativePath);
-    }
-  }
-
-  return files.sort();
 }
 
 function findExactDuplicateFiles() {

@@ -29,7 +29,7 @@ import { PhiLink } from "../../../../../components/navigation/phi-link";
 import { PhiIcon } from "../../../../../components/shell/phi-icon";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
-import { usePhiSignalEmitter, usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
+import { emitPhiSignalCapability, usePhiSignalEmitter, usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
 import { usePhiApplicationFeedback } from "../../../../../components/runtime/use-phi-application-feedback";
 import { usePhiTableBinding } from "../../../../../components/tables/client/phi-table-binding";
 import { PhiTableBindingControl } from "../../../../../components/tables/client/phi-table-binding-control";
@@ -71,7 +71,6 @@ import {
   type PhiRuntimeConditionExpression,
 } from "../../../../../types/runtime-condition";
 import {
-  findPhiSignalRoutesByCapabilityId,
   isPhiControllerSignalAddress,
   type PhiSignal,
   type PhiSignalRoute,
@@ -361,21 +360,7 @@ export function PhiTableWidgetClient({
     capabilityId: string,
     value: PhiSignalValue,
     correlationId?: string,
-  ) => {
-    for (const route of findPhiSignalRoutesByCapabilityId(emitRoutes, capabilityId)) {
-      if (route.receiver == null || (route.valueType === "json" && !route.valueSchema)) continue;
-      emitSignal({
-        scope: route.scope,
-        channel: route.channel,
-        action: route.action,
-        value: route.valueType === "none" ? null : value,
-        valueType: route.valueType,
-        valueSchema: route.valueSchema ?? null,
-        receiver: route.receiver,
-        correlationId,
-      });
-    }
-  }, [emitRoutes, emitSignal]);
+  ) => emitPhiSignalCapability(emitSignal, emitRoutes, capabilityId, value, correlationId), [emitRoutes, emitSignal]);
   const validateResource = useCallback((candidate: import("../../../../../types/table-widget").PhiTableProviderResourceDescriptor) => {
     const contractError = validatePhiTableWidgetBinding(config, candidate)[0];
     if (contractError) return contractError;

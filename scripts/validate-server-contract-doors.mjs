@@ -2,6 +2,8 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
+import { repositoryRoot } from "./lib/repo-root.mjs";
+
 /**
  * The doors a Module's Server half reads export no Client implementation as a value.
  *
@@ -13,7 +15,6 @@ import process from "node:process";
  * Area the Module does not serve. Client implementations belong in doors of their own
  * (`@phis/ui/forms/client`).
  */
-const repositoryRoot = process.cwd();
 const manifest = JSON.parse(readFileSync(path.join(repositoryRoot, "package.json"), "utf8"));
 
 const SERVER_CONTRACT_DOORS = [

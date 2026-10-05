@@ -1,7 +1,8 @@
 import { readdir, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
+
+import { repositoryRoot } from "./lib/repo-root.mjs";
 
 /**
  * Every Widget a Module runs must also be a Widget it can be authored with.
@@ -16,7 +17,7 @@ import { fileURLToPath } from "node:url";
  * step by hand: adding a Widget means adding the same `PHI_..._DEFINITION` to both.
  */
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const root = repositoryRoot;
 const modulesDir = resolve(root, "plugins/runtime-modules");
 
 function readDefinitionNames(source, pattern) {

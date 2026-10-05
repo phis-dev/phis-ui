@@ -30,8 +30,8 @@ import {
   writePhiDataDragPayload,
 } from "../../../../../components/runtime/client/phi-data-dnd";
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
-import { usePhiSignalEmitter, usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
-import { findPhiSignalRoutesByCapabilityId, type PhiSignalValue } from "../../../../../types/signals";
+import { emitPhiSignalCapability, usePhiSignalEmitter, usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
+import { type PhiSignalValue } from "../../../../../types/signals";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 import { PhiIcon } from "../../../../../components/shell/phi-icon";
 
@@ -97,21 +97,7 @@ export function PhiTreeWidgetClient({ config, labels }: { config: PhiTreeWidgetC
     capabilityId: string,
     value: PhiSignalValue,
     correlationId?: string,
-  ) => {
-    for (const route of findPhiSignalRoutesByCapabilityId(emitRoutes, capabilityId)) {
-      if (route.receiver == null || route.valueType === "json" && !route.valueSchema) continue;
-      emitSignal({
-        scope: route.scope,
-        channel: route.channel,
-        action: route.action,
-        value: route.valueType === "none" ? null : value,
-        valueType: route.valueType,
-        valueSchema: route.valueSchema ?? null,
-        receiver: route.receiver,
-        correlationId,
-      });
-    }
-  }, [emitRoutes, emitSignal]);
+  ) => emitPhiSignalCapability(emitSignal, emitRoutes, capabilityId, value, correlationId), [emitRoutes, emitSignal]);
   const source = useMemo(() => config.source ? { ...config.source, params: bindingParams } : null, [bindingParams, config.source]);
   const binding = usePhiTreeBinding({
     source,

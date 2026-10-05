@@ -1,6 +1,8 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+
+import { repositoryRoot } from "./lib/repo-root.mjs";
+import { collectSourceFiles } from "./lib/source-files.mjs";
 
 /**
  * Dependencies run one way: Modules stand on the Foundation, and nothing stands on a Module (MODULES.md,
@@ -32,14 +34,13 @@ import { fileURLToPath } from "node:url";
  * Naming a Module by its id as data -- a string -- is not a reference and stays allowed.
  */
 
-const packageRoot = fileURLToPath(new URL("..", import.meta.url));
 const runtimeModulesDir = "plugins/runtime-modules/";
 const sourceExtensions = [".ts", ".tsx", ".mts"];
-const skippedDirectories = new Set(["node_modules", ".git", ".next", "dist", "scripts"]);
+const skippedDirectories = ["node_modules", ".git", ".next", "dist", "scripts"];
 
 const moduleNames = new Set(
-  readdirSync(path.join(packageRoot, runtimeModulesDir)).filter((entry) => {
-    const directory = path.join(packageRoot, runtimeModulesDir, entry);
+  readdirSync(path.join(repositoryRoot, runtimeModulesDir)).filter((entry) => {
+    const directory = path.join(repositoryRoot, runtimeModulesDir, entry);
     return statSync(directory).isDirectory() &&
       (existsSync(path.join(directory, "module.ts")) || existsSync(path.join(directory, "module.tsx")));
   }),
@@ -53,7 +54,7 @@ function collectExportTargets(value: unknown, into: Set<string>) {
   }
 }
 const packageDoors = new Set<string>();
-const packageManifest = JSON.parse(readFileSync(path.join(packageRoot, "package.json"), "utf8"));
+const packageManifest = JSON.parse(readFileSync(path.join(repositoryRoot, "package.json"), "utf8"));
 collectExportTargets(packageManifest.exports, packageDoors);
 
 type PhiPackageLayer =
@@ -74,19 +75,6 @@ function classify(relativePath: string): PhiPackageLayer {
     return { kind: "door" };
   }
   return { kind: "foundation" };
-}
-
-function collectSourceFiles(directory: string, into: string[]) {
-  for (const entry of readdirSync(directory, { withFileTypes: true })) {
-    if (entry.isDirectory()) {
-      if (!skippedDirectories.has(entry.name)) {
-        collectSourceFiles(path.join(directory, entry.name), into);
-      }
-    } else if (sourceExtensions.some((extension) => entry.name.endsWith(extension)) &&
-      !entry.name.endsWith(".d.ts")) {
-      into.push(path.join(directory, entry.name));
-    }
-  }
 }
 
 function resolveImport(importingFile: string, specifier: string): string | null {
@@ -119,8 +107,7 @@ const importPattern = new RegExp(
   "g",
 );
 
-const sourceFiles: string[] = [];
-collectSourceFiles(packageRoot, sourceFiles);
+const sourceFiles = collectSourceFiles(repositoryRoot, { extensions: sourceExtensions, skipDirectories: skippedDirectories });
 const problems: string[] = [];
 
 const importsByFile = new Map<string, string[]>();
@@ -128,9 +115,9 @@ for (const file of sourceFiles) {
   const targets: string[] = [];
   for (const match of stripComments(readFileSync(file, "utf8")).matchAll(importPattern)) {
     const target = resolveImport(file, match[2] ?? match[4] ?? match[6]!);
-    if (target !== null) targets.push(path.relative(packageRoot, target));
+    if (target !== null) targets.push(path.relative(repositoryRoot, target));
   }
-  importsByFile.set(path.relative(packageRoot, file), targets);
+  importsByFile.set(path.relative(repositoryRoot, file), targets);
 }
 
 /*
@@ -199,7 +186,7 @@ function findUiRuntimeReach(start: string): string | null {
     const file = queue.pop()!;
     if (seen.has(file)) continue;
     seen.add(file);
-    const relativePath = path.relative(packageRoot, file);
+    const relativePath = path.relative(repositoryRoot, file);
     if (relativePath.startsWith("gateway/")) return relativePath;
     const edges = valueImportsOf(file);
     const offender = edges.externals.find((specifier) => uiRuntimeSpecifierPattern.test(specifier));
@@ -210,10 +197,10 @@ function findUiRuntimeReach(start: string): string | null {
 }
 
 for (const file of sourceFiles) {
-  const relativePath = path.relative(packageRoot, file);
+  const relativePath = path.relative(repositoryRoot, file);
   if (!contractLayerPattern.test(relativePath)) continue;
   for (const target of valueImportsOf(file).locals) {
-    const targetPath = path.relative(packageRoot, target);
+    const targetPath = path.relative(repositoryRoot, target);
     if (!uiLayerPattern.test(targetPath)) continue;
     const reach = findUiRuntimeReach(target);
     if (reach !== null) {
@@ -339,7 +326,7 @@ const nodeUseByFile = new Map<string, boolean>();
 function usesNode(relativePath: string) {
   let answer = nodeUseByFile.get(relativePath);
   if (answer === undefined) {
-    const code = stripComments(readFileSync(path.join(packageRoot, relativePath), "utf8"));
+    const code = stripComments(readFileSync(path.join(repositoryRoot, relativePath), "utf8"));
     answer = /\bfrom\s*["']node:|\bimport\(\s*["']node:/u.test(code) ||
       (/\bprocess\./u.test(code) && !/\bdeclare const process\b/u.test(code));
     nodeUseByFile.set(relativePath, answer);

@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import process from "node:process";
 
 import { PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/catalog";
+import { repositoryRoot } from "./lib/repo-root.mjs";
 import { listPhiPresetTreeFiles } from "./preset-tree-files";
 
 /*
@@ -34,7 +34,6 @@ const PHI_CONTROLLER_DEMANDING_CAPABILITIES = new Map([
   ["authWorkflowRequest", "plugins/runtime-modules/auth/widgets/auth-workflow/config.ts"],
 ]);
 
-const repositoryRoot = process.cwd();
 
 /* Each demanding capability is still read by a requirement resolver, or this list has gone stale. */
 for (const [capability, resolverFile] of PHI_CONTROLLER_DEMANDING_CAPABILITIES) {

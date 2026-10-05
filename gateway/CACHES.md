@@ -7,9 +7,9 @@ This document collects the cache and invalidation touchpoints in `gateway/*`.
 - `readPhiSiteReadCache(key, load)` / `clearPhiSiteReadCache()`
   - File: `gateway/site-read-cache.ts`
   - Per-process cache of what a Site reads from Core on every render. Used outside development by:
-    - `getResolvedSiteConfig(...)` in `gateway/site-config.ts`, refreshed every `PHI_SITE_CONFIG_REFRESH_MS` (2 s)
+    - `getResolvedSiteConfig(...)` in `gateway/site-config.ts`, refreshed every `PHI_SITE_CONFIG_REFRESH_MS` (3 s)
     - `fetchSiteNavigationOverlay(...)` in `gateway/site-nav.ts` (not for `revision` or review requests), with the 60 s TTL
-  - Cleared by `buildPhiSiteProxyHandlers(...)` (`gateway/site-proxy.ts`) after every accepted POST/PUT/PATCH/DELETE through `/api/site`, so the author sees the change at once in the process the write passed through.
+  - Cleared by `buildPhiSiteProxyHandlers(...)` (`gateway/site-proxy.ts`) after every POST/PUT/PATCH/DELETE through `/api/site` that Core accepted *through this door*, so the author sees the change at once in the process the write passed through. A write the Site answers locally (`/api/site/forms`, which relays a Form to Core through its own resolution) does not clear it; what such a write changes reaches this process the way it reaches every other one, through the marker on the next config refresh.
   - Cleared in every other process when a config refresh finds that `readMarker` moved: everything but the fresh config goes. Core moves the marker on any change to the Site row and on every publish of a Page, Area, Navigation or Theme; drafts do not move it (phis-server DB.md, `phis.site_read_marker`). A publish through any process thus reaches all of them within about the refresh interval.
   - The TTL ends what the marker does not see, such as a Logo Asset whose content was replaced under the same id.
   - The underlying fetches are `no-store`. Next cache tags are not used: `revalidateTag` reaches only the Site process that ran it.

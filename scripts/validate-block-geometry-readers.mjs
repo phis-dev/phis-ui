@@ -1,6 +1,9 @@
-import { readdir, readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
+
+import { repositoryRoot } from "./lib/repo-root.mjs";
+import { listSourceFiles } from "./lib/source-files.mjs";
 
 /**
  * A block's geometry is read once.
@@ -16,7 +19,6 @@ import process from "node:process";
  * resolver fails, and an allowance that nothing uses any more fails too, so the lists stay an inventory
  * rather than a permission nobody rereads.
  */
-const repositoryRoot = process.cwd();
 
 const resolverPath = "types/renderable-block-geometry.ts";
 const resolverImportPattern = /from\s+"[^"]*\/renderable-block-geometry"/;
@@ -60,30 +62,18 @@ const interpretationPatterns = [
   },
 ];
 
-const skippedDirectories = new Set(["node_modules", "dist", ".next", "scripts", ".git"]);
-
-async function listSourceFiles(directory) {
-  const entries = await readdir(directory, { withFileTypes: true });
-  const files = [];
-  for (const entry of entries) {
-    if (entry.isDirectory()) {
-      if (!skippedDirectories.has(entry.name)) {
-        files.push(...(await listSourceFiles(path.join(directory, entry.name))));
-      }
-      continue;
-    }
-    if (/\.(ts|tsx|mjs)$/.test(entry.name) && !/\.test\.tsx?$/.test(entry.name)) {
-      files.push(path.join(directory, entry.name));
-    }
-  }
-  return files;
-}
+const sourceFileOptions = {
+  extensions: [".ts", ".tsx", ".mjs"],
+  skipDirectories: ["node_modules", "dist", ".next", "scripts", ".git"],
+  includeTests: false,
+  includeDeclarations: true,
+};
 
 const failures = [];
 const readersSeen = new Set();
 const allowancesSeen = new Set();
 
-for (const file of await listSourceFiles(repositoryRoot)) {
+for (const file of await listSourceFiles(repositoryRoot, sourceFileOptions)) {
   const relativePath = path.relative(repositoryRoot, file).split(path.sep).join("/");
   if (relativePath === resolverPath) {
     continue;

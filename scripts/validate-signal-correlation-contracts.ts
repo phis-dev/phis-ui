@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 
 import ts from "typescript";
 
+import { forEachDescendant, unwrapCallback } from "./lib/ts-ast";
+
 /**
  * A signal sent while handling another signal keeps the correlation id it was caused by.
  *
@@ -114,20 +116,6 @@ function namesAnInventedCorrelation(property: ts.ObjectLiteralElementLike) {
   return ts.isStringLiteral(value)
     || ts.isTemplateExpression(value)
     || ts.isNoSubstitutionTemplateLiteral(value);
-}
-
-/** `usePhiSignalListener(fn)` and `usePhiSignalListener(useCallback(fn, deps))` are the same listener. */
-function unwrapCallback(node: ts.Expression | undefined): ts.ArrowFunction | ts.FunctionExpression | null {
-  let candidate = node;
-  while (candidate && ts.isCallExpression(candidate)) {
-    candidate = candidate.arguments[0];
-  }
-  return candidate && (ts.isArrowFunction(candidate) || ts.isFunctionExpression(candidate)) ? candidate : null;
-}
-
-function forEachDescendant(node: ts.Node, visit: (node: ts.Node) => void) {
-  visit(node);
-  ts.forEachChild(node, (child) => forEachDescendant(child, visit));
 }
 
 /** The functions a node sits inside, innermost first, ending with `null` for the file itself. */

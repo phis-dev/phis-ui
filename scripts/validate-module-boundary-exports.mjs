@@ -2,6 +2,10 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
+import { readValueImportTargets } from "./lib/module-resolution.mjs";
+import { repositoryRoot } from "./lib/repo-root.mjs";
+import { readSourceSync, stripComments } from "./lib/text.mjs";
+
 // Which of this package's doors a Module package may open from a file the browser reaches.
 //
 // A Module outside `@phis/ui` reaches this package only through `package.json#exports`, and several of
@@ -27,66 +31,22 @@ import process from "node:process";
 // Static edges only. A `dynamic(() => import(...))` inside Client code is a separate chunk and a
 // separate question; what makes a barrel dangerous is that it is pulled in eagerly.
 
-const repositoryRoot = process.cwd();
 const write = process.argv.includes("--write");
-const sourceExtensions = [".ts", ".tsx"];
-
-function resolveModuleFile(base) {
-  for (const candidate of [base, ...sourceExtensions.map((extension) => `${base}${extension}`),
-    ...sourceExtensions.map((extension) => path.join(base, `index${extension}`))]) {
-    if (existsSync(candidate) && !candidate.endsWith(path.sep)) {
-      try {
-        if (readFileSync(candidate) != null) {
-          return candidate;
-        }
-      } catch {
-        // A directory read throws; that is a miss and not a fault.
-      }
-    }
-  }
-  return null;
-}
-
-function resolveSpecifier(specifier, importingFile) {
-  if (specifier.startsWith(".")) {
-    return resolveModuleFile(path.resolve(path.dirname(importingFile), specifier));
-  }
-  if (specifier === "@phis/ui") {
-    return resolveModuleFile(path.join(repositoryRoot, "index"));
-  }
-  if (specifier.startsWith("@phis/ui/")) {
-    return resolveModuleFile(path.join(repositoryRoot, specifier.slice("@phis/ui/".length)));
-  }
-  return null;
-}
 
 const sourceCache = new Map();
 function readSource(file) {
   if (!sourceCache.has(file)) {
-    const raw = readFileSync(file, "utf8");
+    const raw = readSourceSync(file);
     // Comments quote imports as often as code makes them; neither kind may count as an edge.
-    const code = raw.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`])\/\/.*$/gm, "$1");
+    const code = stripComments(raw);
     sourceCache.set(file, { raw, code });
   }
   return sourceCache.get(file);
 }
 
-const staticStatementPattern =
-  /(?:^|\n)\s*((?:import|export)\b[^;'"]*?\bfrom\s*(['"])([^'"]+)\2|import\s*(['"])([^'"]+)\4)/g;
-
+// A bare candidate counts here when any readable file stands there, not only a .ts/.tsx one.
 function readStaticImports(file) {
-  const imports = [];
-  for (const match of readSource(file).code.matchAll(staticStatementPattern)) {
-    // "import type" is erased; "import { type X }" is not, under verbatimModuleSyntax.
-    if (/^(?:import|export)\s+type\b/.test(match[1].trim())) {
-      continue;
-    }
-    const target = resolveSpecifier(match[3] ?? match[5], file);
-    if (target) {
-      imports.push(target);
-    }
-  }
-  return imports;
+  return readValueImportTargets(readSource(file).code, file, { matchAnyReadableFile: true });
 }
 
 /** Why a file may not be reached from the browser, or null. Named, because the message says which. */

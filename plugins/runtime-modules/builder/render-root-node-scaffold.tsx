@@ -47,10 +47,7 @@ import type {
 } from "../../../types";
 import type { PhiRenderableBlockBase, PhiRenderableBlockEffects, PhiSlotSizePolicy } from "../../../types";
 import type { PhiSurfacePolicy } from "../../../types/surface";
-import {
-  PHI_VIEWER_ACCESS_ANYONE,
-  intersectPhiInheritedViewportFlags,
-} from "../../../types/access";
+import { intersectPhiInheritedViewportFlags } from "../../../types/access";
 import type { PhiBuilderRootNodeDraft } from "./root-node-normalization";
 import { mergeRenderableBlockDefaults } from "../../../helpers/renderable-block-serialization";
 import { PHI_RENDERABLE_BLOCK_DEFAULT_TRANSITION } from "../../../helpers/renderable-block-defaults";
@@ -60,6 +57,8 @@ import {
   PhiWidgetScaffoldPopupProvider,
 } from "../../../components/widgets/client/shared/phi-widget-scaffold-popup";
 import {
+  buildPhiBuilderPreviewPageNode,
+  buildPhiBuilderRootLayoutRenderNode,
   buildPhiBuilderRootNodeRenderConfig,
   normalizePhiBuilderRootNodeDraft,
   readPhiBuilderRootNodeDraft,
@@ -1154,42 +1153,12 @@ function resolvePhiRootNodeRenderedBody(
     normalizedRootNode.rootNodeConfig?.viewportFlags,
   );
 
-  const syntheticRootNode = {
-    id: normalizedRootNode.id,
-    siteId: -1,
-    widgetType: normalizedRootNode.typeKey,
-    slotIndex: 0,
-    sortOrder: 0,
-    status: 0,
-    flags: 0,
-    visibilityMask: 0,
-    label: normalizedRootNode.title ?? "Root",
-    config: buildPhiBuilderRootNodeRenderConfig(normalizedRootNode, renderMode),
-    parentLayoutNodeId: null,
-    childLayouts: normalizedRootNode.childLayouts ?? [],
-    childWidgets: normalizedRootNode.childWidgets ?? [],
-  } satisfies PhiCmsLayoutRenderNode;
+  const syntheticRootNode = buildPhiBuilderRootLayoutRenderNode(
+    { ...normalizedRootNode, id: normalizedRootNode.id },
+    buildPhiBuilderRootNodeRenderConfig(normalizedRootNode, renderMode),
+  );
   const previewTree = demandControllerContext?.tree ?? {
-    page: {
-      id: -1,
-      siteId: -1,
-      areaMask: 0,
-      path: "",
-      pageType: 0,
-      status: 0,
-      flags: 0,
-      visibilityMask: 0,
-      accessPolicy: PHI_VIEWER_ACCESS_ANYONE,
-      titleMsgId: null,
-      descriptionMsgId: null,
-      heroRootLayoutNodeId: null,
-      headerBottomRootLayoutNodeId: null,
-      siderRightRootLayoutNodeId: null,
-      footerTopRootLayoutNodeId: null,
-      drawerRightRootLayoutNodeId: null,
-      contentRootLayoutNodeId: null,
-      layoutConfig: {},
-    },
+    page: buildPhiBuilderPreviewPageNode(null),
     regions: [],
     overlays: [],
     layoutNodes: [],
@@ -1546,21 +1515,10 @@ export function renderPhiRootNodeScaffold(
     options?.inheritedViewportFlags,
     rootNodeRenderableConfig.viewportFlags,
   );
-  const syntheticRootNodeForUpdates = {
-    id: normalizedRootNode.id,
-    siteId: -1,
-    widgetType: normalizedRootNode.typeKey,
-    slotIndex: 0,
-    sortOrder: 0,
-    status: 0,
-    flags: 0,
-    visibilityMask: 0,
-    label: normalizedRootNode.title ?? "Root",
-    config: normalizedRootNode.rootNodeConfig ?? {},
-    parentLayoutNodeId: null,
-    childLayouts: normalizedRootNode.childLayouts ?? [],
-    childWidgets: normalizedRootNode.childWidgets ?? [],
-  } satisfies PhiCmsLayoutRenderNode;
+  const syntheticRootNodeForUpdates = buildPhiBuilderRootLayoutRenderNode(
+    { ...normalizedRootNode, id: normalizedRootNode.id },
+    normalizedRootNode.rootNodeConfig ?? {},
+  );
   const wrapRootScaffoldChild = (child: ReactNode) => (
     <PhiLayoutEffectsPreviewFrame
       kind="layout"

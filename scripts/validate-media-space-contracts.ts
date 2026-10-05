@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 
 import { PhiMediaAssetFlags, PhiMediaKind } from "../constants/media";
 import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../plugins/runtime-modules/asset/ids";
@@ -71,8 +70,8 @@ import {
 } from "../plugins/runtime-modules/asset/media-page-ids";
 import { createPhiAssetControllerAddress } from "../components/media/asset-controller-address";
 import { createPhiMediaPickerAssetControllerRoutes } from "../components/media/asset-controller-routes";
+import { readSource } from "./lib/text.mjs";
 
-const readSource = (path: string) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 // ---------------------------------------------------------------------------
 // Space isolation
@@ -747,9 +746,6 @@ await assert.rejects(
  * unavailable. Both Builder surfaces mount the same declared set.
  */
 {
-  const { readFile } = await import("node:fs/promises");
-  const readSource = async (relativePath: string) =>
-    readFile(new URL(`../${relativePath}`, import.meta.url), "utf8");
   // The Module that owns a provider declares whether the Builder's chrome may read it. A list inside
   // the Builder could only ever name first-party providers, so the declaration lives with the owner.
   const assetProviders = await readSource("plugins/runtime-modules/asset/data-providers.ts");

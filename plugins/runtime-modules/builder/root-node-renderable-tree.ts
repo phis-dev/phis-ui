@@ -8,12 +8,13 @@ import type {
 import type { PhiCmsRegionConfig } from "../../../types";
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import { readPhiSurface } from "../../../types/surface";
-import { PHI_VIEWER_ACCESS_ANYONE } from "../../../types/access";
 import { normalizePhiPaddingWidgetConfig } from "../../../types/cms-config";
 import {
+  type PhiBuilderRootNodeDraft,
+  buildPhiBuilderPreviewPageNode,
+  buildPhiBuilderRootLayoutRenderNode,
   buildPhiBuilderRootNodeRenderConfig,
   normalizePhiBuilderRootNodeDraft,
-  type PhiBuilderRootNodeDraft,
 } from "./root-node-normalization";
 
 function collectLayoutNodes(
@@ -114,21 +115,10 @@ export function buildPhiBuilderRootNodeRenderableTree({
   if (normalizedRootNode.id == null) {
     return null;
   }
-  const rootLayout: PhiCmsLayoutRenderNode = {
-    id: normalizedRootNode.id,
-    siteId: -1,
-    parentLayoutNodeId: null,
-    widgetType: normalizedRootNode.typeKey,
-    slotIndex: 0,
-    sortOrder: 0,
-    status: 0,
-    flags: 0,
-    visibilityMask: 0,
-    label: normalizedRootNode.title ?? "Root",
-    config: buildPhiBuilderRootNodeRenderConfig(normalizedRootNode, renderMode),
-    childLayouts: normalizedRootNode.childLayouts ?? [],
-    childWidgets: normalizedRootNode.childWidgets ?? [],
-  };
+  const rootLayout = buildPhiBuilderRootLayoutRenderNode(
+    { ...normalizedRootNode, id: normalizedRootNode.id },
+    buildPhiBuilderRootNodeRenderConfig(normalizedRootNode, renderMode),
+  );
   const layoutNodes: PhiCmsLayoutNode[] = [];
   const contentWidgets: PhiCmsContentWidgetNode[] = [];
 
@@ -136,26 +126,7 @@ export function buildPhiBuilderRootNodeRenderableTree({
   collectWidgetNodes(rootLayout, contentWidgets, renderMode);
 
   return {
-    page: {
-      id: -1,
-      siteId: -1,
-      areaMask: 0,
-      path: "",
-      pageType: 0,
-      status: 0,
-      flags: 0,
-      visibilityMask: 0,
-      accessPolicy: PHI_VIEWER_ACCESS_ANYONE,
-      titleMsgId: null,
-      descriptionMsgId: null,
-      heroRootLayoutNodeId: null,
-      headerBottomRootLayoutNodeId: null,
-      siderRightRootLayoutNodeId: null,
-      footerTopRootLayoutNodeId: null,
-      drawerRightRootLayoutNodeId: null,
-      contentRootLayoutNodeId: rootLayout.id,
-      layoutConfig: {},
-    },
+    page: buildPhiBuilderPreviewPageNode(rootLayout.id),
     regions: [
       {
         id: -1,

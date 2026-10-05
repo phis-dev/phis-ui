@@ -1,12 +1,11 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 
 import { PhiGroupMembershipFlags } from "../constants/site-groups";
 import { canPhiViewerManageSomeGroup } from "../plugins/runtime-modules/groups/page-visibility";
 import { PHI_GROUPS_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../plugins/runtime-modules/groups/data-providers";
 import { PHI_GROUPS_RUNTIME_DATA_PROVIDER_KEYS } from "../plugins/runtime-modules/groups/ids";
+import { readSource } from "./lib/text.mjs";
 
-const readSource = (path: string) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const claim = (flags: number) => ({
   providerId: "@phis/server/core" as const,
   key: "docs-team",

@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 
 import ts from "typescript";
 
+import { forEachDescendant, unwrapCallback } from "./lib/ts-ast";
+
 /**
  * A listener that reads signals addressed to an address must name that address.
  *
@@ -47,20 +49,6 @@ const sourcePaths = execFileSync("git", ["ls-files", "*.ts", "*.tsx"], { cwd: pa
    * file has no contract to check.
    */
   .filter((path) => existsSync(resolve(path)));
-
-function forEachDescendant(node: ts.Node, visit: (node: ts.Node) => void) {
-  visit(node);
-  ts.forEachChild(node, (child) => forEachDescendant(child, visit));
-}
-
-/** `usePhiSignalListener(fn)` and `usePhiSignalListener(useCallback(fn, deps))` are the same listener. */
-function unwrapCallback(node: ts.Expression | undefined): ts.ArrowFunction | ts.FunctionExpression | null {
-  let candidate = node;
-  while (candidate && ts.isCallExpression(candidate)) {
-    candidate = candidate.arguments[0];
-  }
-  return candidate && (ts.isArrowFunction(candidate) || ts.isFunctionExpression(candidate)) ? candidate : null;
-}
 
 /**
  * One address, written the way the file happens to write it.

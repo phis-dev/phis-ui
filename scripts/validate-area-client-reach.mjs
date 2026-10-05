@@ -1,6 +1,10 @@
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
+
+import { readValueImportTargets, resolveSpecifier } from "./lib/module-resolution.mjs";
+import { repositoryRoot } from "./lib/repo-root.mjs";
+import { readSourceSync, stripComments } from "./lib/text.mjs";
 
 // Which Client code a route ships is decided by its server graph, not by what it renders.
 //
@@ -35,9 +39,7 @@ import process from "node:process";
 //      hydration reaches the Controller or the Widget.
 // The Builder is exempt; it carries every Area's Modules on purpose.
 
-const repositoryRoot = process.cwd();
 const runtimeModulesDirectory = path.join(repositoryRoot, "plugins/runtime-modules");
-const sourceExtensions = [".ts", ".tsx"];
 
 /**
  * The Client references the document shell is allowed to put on every route.
@@ -106,43 +108,12 @@ const EDITING_CONTROL_PATTERN =
 /** Modules every Area carries (area-contributions/common.ts). */
 const COMMON_AREA_CONTRIBUTIONS = "plugins/runtime-modules/area-contributions/common.ts";
 
-function resolveModuleFile(candidate) {
-  if (existsSync(candidate) && statSync(candidate).isFile() && /\.tsx?$/.test(candidate)) {
-    return candidate;
-  }
-  for (const extension of sourceExtensions) {
-    if (existsSync(candidate + extension)) {
-      return candidate + extension;
-    }
-  }
-  for (const extension of sourceExtensions) {
-    const indexPath = path.join(candidate, `index${extension}`);
-    if (existsSync(indexPath)) {
-      return indexPath;
-    }
-  }
-  return null;
-}
-
-function resolveSpecifier(specifier, importingFile) {
-  if (specifier.startsWith(".")) {
-    return resolveModuleFile(path.resolve(path.dirname(importingFile), specifier));
-  }
-  if (specifier === "@phis/ui") {
-    return resolveModuleFile(path.join(repositoryRoot, "index"));
-  }
-  if (specifier.startsWith("@phis/ui/")) {
-    return resolveModuleFile(path.join(repositoryRoot, specifier.slice("@phis/ui/".length)));
-  }
-  return null;
-}
-
 const sourceCache = new Map();
 function readSource(file) {
   if (!sourceCache.has(file)) {
-    const raw = readFileSync(file, "utf8");
+    const raw = readSourceSync(file);
     // Comments quote imports as often as code makes them; neither kind may count as an edge.
-    const code = raw.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`])\/\/.*$/gm, "$1");
+    const code = stripComments(raw);
     sourceCache.set(file, { raw, code });
   }
   return sourceCache.get(file);
@@ -154,22 +125,8 @@ function isClientModule(file) {
   return /(^|\n)\s*(['"])use client\2\s*;?/.test(raw.slice(0, firstImport >= 0 ? firstImport : 512));
 }
 
-const staticStatementPattern =
-  /(?:^|\n)\s*((?:import|export)\b[^;'"]*?\bfrom\s*(['"])([^'"]+)\2|import\s*(['"])([^'"]+)\4)/g;
-
 function readStaticImports(file) {
-  const imports = [];
-  for (const match of readSource(file).code.matchAll(staticStatementPattern)) {
-    // "import type" is erased; "import { type X }" is not, under verbatimModuleSyntax.
-    if (/^(?:import|export)\s+type\b/.test(match[1].trim())) {
-      continue;
-    }
-    const target = resolveSpecifier(match[3] ?? match[5], file);
-    if (target) {
-      imports.push(target);
-    }
-  }
-  return imports;
+  return readValueImportTargets(readSource(file).code, file);
 }
 
 function readDynamicImports(file) {

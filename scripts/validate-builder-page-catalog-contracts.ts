@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
 
 import {
   resolvePhiBuilderActivePageCatalog,
@@ -7,6 +7,8 @@ import {
   resolvePhiBuilderPageKeyFromCatalogPath,
 } from "../helpers/cms-page-catalog";
 import { createPhiPageReference } from "../types/references";
+import { fromRepositoryRoot } from "./lib/repo-root.mjs";
+import { collectSourceFiles } from "./lib/source-files.mjs";
 
 const catalog = resolvePhiBuilderActivePageCatalog(
   "public",
@@ -73,23 +75,13 @@ const OFFERING_MARKERS = [
   "buildPhiBuilderNavigationPageDragSourceKey",
 ] as const;
 const ACTIVE_CATALOG_READER = "resolvePhiBuilderActivePageCatalog";
-const BUILDER_ROOT = new URL("../plugins/runtime-modules/builder/", import.meta.url);
+const BUILDER_ROOT = fromRepositoryRoot("plugins/runtime-modules/builder");
 
-function collectSourceFiles(directory: URL): URL[] {
-  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const child = new URL(`${entry.name}${entry.isDirectory() ? "/" : ""}`, directory);
-    if (entry.isDirectory()) {
-      return collectSourceFiles(child);
-    }
-    return /\.tsx?$/u.test(entry.name) && !/\.test\.tsx?$/u.test(entry.name) ? [child] : [];
-  });
-}
-
-const offendingSurfaces = collectSourceFiles(BUILDER_ROOT).flatMap((file) => {
+const offendingSurfaces = collectSourceFiles(BUILDER_ROOT, { includeTests: false, includeDeclarations: true }).flatMap((file) => {
   const source = readFileSync(file, "utf8");
   const offers = OFFERING_MARKERS.some((marker) => source.includes(marker));
   return offers && source.includes(ACTIVE_CATALOG_READER)
-    ? [file.pathname.slice(file.pathname.indexOf("/plugins/") + 1)]
+    ? [file.slice(file.indexOf("/plugins/") + 1)]
     : [];
 });
 

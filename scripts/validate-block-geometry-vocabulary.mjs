@@ -1,6 +1,10 @@
-import { readdir, readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
+
+import { repositoryRoot } from "./lib/repo-root.mjs";
+import { listSourceFiles, repositoryRelativeListing } from "./lib/source-files.mjs";
+import { lineOf } from "./lib/text.mjs";
 
 /**
  * A block states its geometry in one vocabulary.
@@ -16,7 +20,6 @@ import process from "node:process";
  * modal's width, a table column and a toolbar field are different vocabularies belonging to different
  * things, and they are out of reach here by construction rather than by a list somebody has to keep.
  */
-const repositoryRoot = process.cwd();
 
 const scannedDirectories = [
   "components/regions/presets",
@@ -37,14 +40,6 @@ const layoutNodeMarkers = [
   /\bnodes\.layout\(\{/g,
   /\bcreationPreset:\s*\{\s*layoutKind:/g,
 ];
-
-async function listSourceFiles(directory) {
-  const absolute = path.join(repositoryRoot, directory);
-  const entries = await readdir(absolute, { withFileTypes: true, recursive: true });
-  return entries
-    .filter((entry) => entry.isFile() && /\.tsx?$/u.test(entry.name))
-    .map((entry) => path.relative(repositoryRoot, path.join(entry.parentPath ?? entry.path, entry.name)));
-}
 
 /**
  * The index just past the object literal opening at `openIndex`, or -1 where it never closes.
@@ -146,15 +141,11 @@ function readTopLevelKeys(source, openIndex, closeIndex) {
   return keys;
 }
 
-function lineOf(source, index) {
-  return source.slice(0, index).split("\n").length;
-}
-
 const failures = [];
 let layoutNodesChecked = 0;
 
 for (const directory of scannedDirectories) {
-  for (const file of await listSourceFiles(directory)) {
+  for (const file of await listSourceFiles(directory, repositoryRelativeListing)) {
     const source = await readFile(path.join(repositoryRoot, file), "utf8");
     const starts = new Set();
     for (const marker of layoutNodeMarkers) {

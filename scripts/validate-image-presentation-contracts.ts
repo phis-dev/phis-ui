@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 
 import {
   PhiImageAssetVariantKey,
@@ -20,6 +19,7 @@ import {
   resolvePhiBackgroundWidgetStyle,
   serializePhiBackgroundBaseCss,
 } from "../components/widgets/config/background";
+import { readSource } from "./lib/text.mjs";
 
 /**
  * The contract these assertions defend: an original Asset and a generated variant are DIFFERENT
@@ -28,7 +28,6 @@ import {
  * make that distinction the same way, which is why `resolvePhiImagePresentation` owns it alone.
  */
 
-const readSource = (path: string) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 const ASSET_ID = 4711;
 const ORIGINAL_URL = "/api/site/media/4711/content";
