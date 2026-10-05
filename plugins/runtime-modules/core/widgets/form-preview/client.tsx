@@ -1,5 +1,6 @@
 "use client";
 
+import { isPhiRecord } from "../../../../../helpers/is-record";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { buildPhiDataSourceUrl, type PhiApiDataSource } from "../../../../../gateway/data-source";
 import type { PhiCmsInstanceId } from "../../../../../types";
@@ -36,7 +37,7 @@ type PhiFormPreviewState = {
 };
 
 function readPreviewFields(value: unknown): Readonly<Record<string, string>> {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  if (!isPhiRecord(value)) return {};
   const fields: Record<string, string> = {};
   for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
     const text = typeof entry === "string" ? entry.trim() : "";

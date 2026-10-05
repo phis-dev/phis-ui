@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { readPhiDotPath } from "../../../../../helpers/dot-path";
 
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { PhiDescriptionListControl } from "../../../../../components/controls/phi-description-list-control";
@@ -23,14 +24,6 @@ export type PhiRecordWidgetClientProps = {
   config: PhiRecordWidgetConfig;
   labels?: PhiRecordWidgetLabels;
 };
-
-/** A Provider field, dotted for a value that sits inside another one. */
-function readRecordValue(record: Record<string, unknown>, path: string) {
-  return path.split(".").filter(Boolean).reduce<unknown>((current, segment) =>
-    current && typeof current === "object" && !Array.isArray(current)
-      ? (current as Record<string, unknown>)[segment]
-      : undefined, record);
-}
 
 export function PhiRecordWidgetClient({
   config,
@@ -154,7 +147,7 @@ export function PhiRecordWidgetClient({
         key: field.key,
         label: field.label,
         full: field.full,
-        value: renderPhiValueContent(readRecordValue(record, field.fieldKey), field, "block"),
+        value: renderPhiValueContent(readPhiDotPath(record, field.fieldKey), field, "block"),
       }))}
     />
   );

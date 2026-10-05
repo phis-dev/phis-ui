@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../helpers/is-record";
 export const PHI_CONTROL_SHAPES = ["square", "subtle", "rounded", "pill"] as const;
 export type PhiControlShape = (typeof PHI_CONTROL_SHAPES)[number];
 
@@ -28,7 +29,7 @@ export function readPhiControlShapeCorners(value: unknown): PhiControlShapeCorne
   if (value === undefined || value === null) {
     return null;
   }
-  if (typeof value !== "object" || Array.isArray(value)) {
+  if (!isPhiRecord(value)) {
     throw new Error(`Control shape must name its four corners, got ${JSON.stringify(value)}.`);
   }
   const record = value as Record<string, unknown>;

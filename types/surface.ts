@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../helpers/is-record";
 import {
   normalizePhiBackgroundWidgetConfig,
   type PhiCmsBackgroundWidgetConfig,
@@ -66,16 +67,16 @@ export type PhiSurfacePolicy = (typeof PHI_SURFACE_POLICIES)[number];
  * nothing.
  */
 export function readPhiSurface(value: unknown): PhiSurface | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  if (!isPhiRecord(value)) {
     return null;
   }
 
   const raw = value as Record<string, unknown>;
-  const background = raw.background && typeof raw.background === "object" && !Array.isArray(raw.background)
+  const background = isPhiRecord(raw.background)
     ? normalizePhiBackgroundWidgetConfig(raw.background)
     : null;
   const borderSource = readPhiCmsBorderSource(raw.borderSource);
-  const border = raw.border && typeof raw.border === "object" && !Array.isArray(raw.border)
+  const border = isPhiRecord(raw.border)
     ? readPhiCmsBorderWidgetConfig(raw.border) ?? null
     : null;
   const shadow = readPhiShadow(raw.shadow) ?? null;

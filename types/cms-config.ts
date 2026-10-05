@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { normalizePhiRenderableBlockResponsiveSize } from "../helpers/renderable-block-normalizers";
 import { readPhiControlSize, type PhiControlSize } from "./control";
 import { readPhiCmsMountPolicy, type PhiCmsMountPolicy } from "./cms-mount-policy";
 import {
@@ -22,7 +23,6 @@ import {
   readCssSize,
   readNumber,
   readRenderableBlockConfig,
-  readRenderableBlockSize,
   readString,
 } from "../components/widgets/config/parser-primitives";
 import type {
@@ -128,7 +128,7 @@ function readStringArray(value: unknown): string[] | undefined {
 }
 
 export function normalizePhiPaddingWidgetConfig(config: unknown): PhiCmsPaddingWidgetConfig | null {
-  if (!config || typeof config !== "object" || Array.isArray(config)) {
+  if (!isPhiRecord(config)) {
     return null;
   }
 
@@ -415,7 +415,7 @@ function readGridResponsiveCount(
   value: unknown,
   accepts: (candidate: number) => boolean,
 ): PhiResponsiveValue<number> | undefined {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  if (!isPhiRecord(value)) return undefined;
   const record = value as Record<string, unknown>;
   const read = (key: "compact" | "medium" | "wide") => {
     const candidate = readNumber(record[key]);
@@ -435,7 +435,7 @@ const PHI_GRID_MAX_COLUMNS = Math.max(...PHI_GRID_COLUMN_COUNTS);
  * (`resolvePhiGridSlotPlacement`): a Grid whose columns were reduced keeps its stated placements.
  */
 function readGridSlotPlacement(value: unknown, slotIndexFromArray?: number): PhiCmsGridLayoutSlotPlacementConfig | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  if (!isPhiRecord(value)) {
     return null;
   }
 
@@ -474,7 +474,7 @@ export function parsePhiCmsContentLayoutConfig(
        * siblings are what a block turns into on its way to CSS, not something a preset writes. The
        * constraints never had the second way at all -- nothing has ever read a flat `maxWidth`.
        */
-      size: readRenderableBlockSize(config.size),
+      size: normalizePhiRenderableBlockResponsiveSize(config.size),
       margin: readCssSize(config.margin),
       labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
       padding: readCssSize(config.padding),

@@ -1,5 +1,6 @@
 "use client";
 
+import { isPhiRecord } from "../../../../helpers/is-record";
 import { createElement, useCallback, useEffect, useRef, useState } from "react";
 import type { PhiRuntimeControllerPlugin, PhiSignal, PhiSignalAddress } from "../../../../types";
 import { createPhiRuntimeControllerClient } from "../../../../components/runtime/runtime-controller-client-factory";
@@ -71,9 +72,9 @@ function PhiLocalizationControllerMount({ address }: { address: PhiSignalAddress
     if (signal.channel === "localizationWorkspace" &&
       signal.action === "change" &&
       signal.valueSchema === PHI_SIGNAL_VALUE_SCHEMAS.localizationWorkspace &&
-      signal.value && typeof signal.value === "object" && !Array.isArray(signal.value)) {
+      isPhiRecord(signal.value)) {
       const value = signal.value as Record<string, unknown>;
-      const query = value.query && typeof value.query === "object" && !Array.isArray(value.query)
+      const query = isPhiRecord(value.query)
         ? value.query as Record<string, unknown>
         : {};
       filtersRef.current = {

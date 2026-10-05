@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../../../helpers/is-record";
 import type { CSSProperties } from "react";
 
 import type { PhiMediaImageSourceConfig } from "../../../types/media";
@@ -174,7 +175,7 @@ export function resolvePhiBackgroundParallaxDefaultStrength(travel: PhiBackgroun
 }
 
 function readBackgroundResolvedAsset(value: unknown): PhiImageDeliveryProjection | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  if (!isPhiRecord(value)) {
     return null;
   }
 
@@ -204,7 +205,7 @@ function readBackgroundStops(value: unknown): PhiBackgroundGradientStop[] | unde
   }
 
   const stops = value.map((stop): PhiBackgroundGradientStop | null => {
-    if (!stop || typeof stop !== "object" || Array.isArray(stop)) {
+    if (!isPhiRecord(stop)) {
       return null;
     }
     const raw = stop as Record<string, unknown>;
@@ -386,7 +387,7 @@ function normalizePhiBackgroundBase(value: unknown): PhiCmsBackgroundWidgetConfi
   if (typeof value === "string") {
     return readPhiBackgroundBaseCss(value);
   }
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  if (!isPhiRecord(value)) return null;
 
   const raw = value as Record<string, unknown>;
   const kind = readString(raw.kind);
@@ -446,7 +447,7 @@ function readBackgroundPatternInk(value: unknown): PhiBackgroundPatternInk | nul
 }
 
 function readBackgroundOverlay(value: unknown): PhiBackgroundOverlay | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  if (!isPhiRecord(value)) return null;
   const raw = value as Record<string, unknown>;
   const kind = readString(raw.kind);
   if (kind === "color") {
@@ -470,7 +471,7 @@ function readBackgroundOverlay(value: unknown): PhiBackgroundOverlay | null {
   const patternKey = isPhiBackgroundPatternKey(raw.patternKey)
     ? raw.patternKey
     : PHI_DEFAULT_BACKGROUND_PATTERN_KEY;
-  const rawValues = raw.values && typeof raw.values === "object" && !Array.isArray(raw.values)
+  const rawValues = isPhiRecord(raw.values)
     ? raw.values as Record<string, unknown>
     : {};
   const values = Object.fromEntries(
@@ -492,7 +493,7 @@ function readBackgroundOverlay(value: unknown): PhiBackgroundOverlay | null {
 }
 
 function readBackgroundMotion(value: unknown): PhiBackgroundMotion | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  if (!isPhiRecord(value)) return null;
   const raw = value as Record<string, unknown>;
   const mode = readString(raw.mode);
   if (mode !== "fixed" && mode !== "parallax" && mode !== "static") return null;
@@ -525,7 +526,7 @@ export function normalizePhiBackgroundWidgetConfig(config: unknown): PhiCmsBackg
       motion: null,
     };
   }
-  if (!config || typeof config !== "object" || Array.isArray(config)) {
+  if (!isPhiRecord(config)) {
     return { base: { kind: "none" }, overlay: null, filter: null, motion: null };
   }
 

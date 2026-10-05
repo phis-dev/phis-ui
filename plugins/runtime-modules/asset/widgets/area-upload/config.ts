@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../../../../../helpers/is-record";
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsAreaUploadWidgetConfig } from "../../../../../types/media";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
@@ -10,7 +11,7 @@ import {
 } from "../../../../../components/widgets/config/parser-primitives";
 
 export function normalizePhiCmsAreaUploadWidgetConfig(config: unknown): PhiCmsAreaUploadWidgetConfig {
-  if (!config || typeof config !== "object" || Array.isArray(config)) {
+  if (!isPhiRecord(config)) {
     return {
       allowDelete: true,
       multiple: true,

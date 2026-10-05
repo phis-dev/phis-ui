@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../../../helpers/is-record";
 import type { PhiRenderableBlockEffects } from "../../../types/renderable-block";
 
 export const PHI_BUILDER_EFFECTS_SECTIONS = ["appearance", "transitions", "viewport"] as const;
@@ -39,7 +40,7 @@ export function splitPhiBuilderEffectsFormValues(
 }
 
 function readRecord(value: unknown) {
-  return value && typeof value === "object" && !Array.isArray(value)
+  return isPhiRecord(value)
     ? value as Record<string, unknown>
     : {};
 }
@@ -47,7 +48,7 @@ function readRecord(value: unknown) {
 function withoutRowKeys<TValue extends Record<string, unknown>>(value: unknown) {
   if (!Array.isArray(value)) return [];
   return value.flatMap((entry) => {
-    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return [];
+    if (!isPhiRecord(entry)) return [];
     const row = { ...(entry as Record<string, unknown>) };
     delete row.__rowKey;
     return [row as TValue];

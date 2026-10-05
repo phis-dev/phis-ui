@@ -1,4 +1,6 @@
+import { isPhiRecord } from "../../../../../helpers/is-record";
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import { readBoolean, readNumber, readString } from "../../../../../components/widgets/config/parser-primitives";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import type { PhiAnchorWidgetPlacement } from "../../../../../components/controls/phi-anchor-control-contract";
 import type { PhiCmsRegionOwnership } from "../../../../../helpers/cms-region-keys";
@@ -31,18 +33,6 @@ export type PhiStructureRegionWidgetConfig = {
   pickItems?: PhiStructureRegionPickItem[];
   fallbackMinHeight?: number;
 };
-
-function readString(value: unknown) {
-  return typeof value === "string" && value.trim().length > 0 ? value : undefined;
-}
-
-function readBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
-}
-
-function readNumber(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
-}
 
 function readPickItems(value: unknown): PhiStructureRegionPickItem[] | undefined {
   if (!Array.isArray(value)) {
@@ -86,7 +76,7 @@ function readPickItems(value: unknown): PhiStructureRegionPickItem[] | undefined
             ? (record.defaultAnchor as PhiAnchorWidgetPlacement)
             : null,
         defaultConfig:
-          record.defaultConfig && typeof record.defaultConfig === "object" && !Array.isArray(record.defaultConfig)
+          isPhiRecord(record.defaultConfig)
             ? { ...(record.defaultConfig as Record<string, unknown>) }
             : null,
       };

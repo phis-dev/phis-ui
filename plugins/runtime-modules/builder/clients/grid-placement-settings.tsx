@@ -1,5 +1,6 @@
 "use client";
 
+import { isPhiRecord } from "../../../../helpers/is-record";
 import { useState } from "react";
 
 import { PhiSelectControl } from "../../../../components/controls/phi-select-control";
@@ -26,7 +27,7 @@ const PHI_GRID_COLUMN_OPTIONS = PHI_GRID_COLUMN_COUNTS.map((count) => ({
 }));
 
 function readResponsiveCount(value: unknown): PhiResponsiveValue<number> | undefined {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  if (!isPhiRecord(value)) return undefined;
   const record = value as Record<string, unknown>;
   const read = (profile: PhiGridLayoutProfile) =>
     typeof record[profile] === "number" ? record[profile] as number : undefined;
@@ -36,7 +37,7 @@ function readResponsiveCount(value: unknown): PhiResponsiveValue<number> | undef
 function readSlotPlacements(value: unknown): PhiCmsGridLayoutSlotPlacementConfig[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((entry) => {
-    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return [];
+    if (!isPhiRecord(entry)) return [];
     const record = entry as Record<string, unknown>;
     if (typeof record.slotIndex !== "number") return [];
     return [{

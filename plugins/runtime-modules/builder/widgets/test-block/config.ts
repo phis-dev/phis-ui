@@ -1,4 +1,5 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import { normalizePhiRenderableBlockResponsiveSize } from "../../../../../helpers/renderable-block-normalizers";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PHI_WIDGET_DIMENSION_PLUGIN_FIELDS } from "../../../../../helpers/widget-dimension-plugin-fields";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
@@ -6,7 +7,6 @@ import type { PhiRenderableBlockResponsiveSize } from "../../../../../types/rend
 import {
   readCssSize,
   readRenderableBlockConfig,
-  readRenderableBlockSize,
   readString,
   type PhiCmsWidgetConfigBase,
 } from "../../../../../components/widgets/config/parser-primitives";
@@ -21,7 +21,7 @@ export type PhiCmsTestBlockWidgetConfig = PhiCmsWidgetConfigBase & {
 export function parsePhiCmsTestBlockWidgetConfig(
   config: Record<string, unknown>,
 ): PhiCmsTestBlockWidgetConfig {
-  const size = readRenderableBlockSize(config.size) ?? {
+  const size = normalizePhiRenderableBlockResponsiveSize(config.size) ?? {
     width: readCssSize(config.width) ?? 100,
     height: readCssSize(config.height) ?? 100,
   };

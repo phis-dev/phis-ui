@@ -1,6 +1,13 @@
 "use client";
 
+import { isPhiRecord } from "../../../../helpers/is-record";
 import { PHI_OBSERVABILITY_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
+import {
+  buildPhiTablePageParams,
+  createPhiTableProviderRequestInit,
+  readPhiTableRows,
+  readPhiTableStringFilter,
+} from "../../../../components/widgets/client/shared/phi-table-provider-request";
 import {
   PhiTableProviderError,
   type PhiTableProviderRecordRequest,
@@ -15,11 +22,6 @@ type LogsResponse = {
   total?: unknown;
   error?: unknown;
 };
-
-function readStringFilter(query: PhiTableQuery, key: string) {
-  const value = query.filters?.[key];
-  return typeof value === "string" ? value.trim() : "";
-}
 
 function readStringArrayFilter(query: PhiTableQuery, key: string) {
   const value = query.filters?.[key];
@@ -38,15 +40,12 @@ async function loadRows({
   if (resourceKey !== "logs") {
     throw new PhiTableProviderError("resource-not-found", `Unknown Observability resource "${resourceKey}".`);
   }
-  const params = new URLSearchParams({
-    page: String(query.page && query.page > 0 ? query.page : 1),
-    pageSize: String(query.pageSize && query.pageSize > 0 ? query.pageSize : 25),
-  });
-  const service = readStringFilter(query, "service");
+  const params = buildPhiTablePageParams(query);
+  const service = readPhiTableStringFilter(query, "service");
   const levels = readStringArrayFilter(query, "level");
-  const event = readStringFilter(query, "event");
-  const area = readStringFilter(query, "area");
-  const since = readStringFilter(query, "since");
+  const event = readPhiTableStringFilter(query, "event");
+  const area = readPhiTableStringFilter(query, "area");
+  const since = readPhiTableStringFilter(query, "since");
   const search = query.search?.trim() ?? "";
   if (service) params.set("service", service);
   if (levels.length > 0) params.set("level", levels.join(","));
@@ -55,11 +54,7 @@ async function loadRows({
   if (since) params.set("since", since);
   if (search.length >= 3) params.set("q", search);
 
-  const response = await fetch(`/api/site/admin/logs?${params.toString()}`, {
-      cache: "no-store",
-      credentials: "include",
-      signal,
-  });
+  const response = await fetch(`/api/site/admin/logs?${params.toString()}`, createPhiTableProviderRequestInit(signal));
   const payload = await response.json().catch(() => null) as LogsResponse | null;
   if (!response.ok || !payload || !Array.isArray(payload.rows)) {
     throw new PhiTableProviderError(
@@ -67,8 +62,7 @@ async function loadRows({
       typeof payload?.error === "string" ? payload.error : `Logs request failed with status ${response.status}.`,
     );
   }
-  const rows = payload.rows.filter((row): row is Record<string, unknown> =>
-    Boolean(row) && typeof row === "object" && !Array.isArray(row));
+  const rows = readPhiTableRows(payload.rows);
   return {
     rows,
     total: typeof payload.total === "number" && Number.isFinite(payload.total) ? payload.total : rows.length,
@@ -84,13 +78,12 @@ async function readRecord({
     throw new PhiTableProviderError("record-not-found", "A valid Observability log identity is required.");
   }
   const params = new URLSearchParams({ id: String(rowIdentity) });
-  const response = await fetch(`/api/site/admin/logs/detail?${params.toString()}`, {
-    cache: "no-store",
-    credentials: "include",
-    signal,
-  });
+  const response = await fetch(
+    `/api/site/admin/logs/detail?${params.toString()}`,
+    createPhiTableProviderRequestInit(signal),
+  );
   const payload = await response.json().catch(() => null) as { record?: unknown; error?: unknown } | null;
-  if (!response.ok || !payload?.record || typeof payload.record !== "object" || Array.isArray(payload.record)) {
+  if (!response.ok || !isPhiRecord(payload?.record)) {
     throw new PhiTableProviderError(
       "record-read-failed",
       typeof payload?.error === "string" ? payload.error : `Log detail request failed with status ${response.status}.`,

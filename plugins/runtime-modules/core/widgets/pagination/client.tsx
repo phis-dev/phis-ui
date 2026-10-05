@@ -1,5 +1,6 @@
 "use client";
 
+import { isPhiRecord } from "../../../../../helpers/is-record";
 import { useState } from "react";
 
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
@@ -19,7 +20,7 @@ function normalizePaginationValue(value: Partial<PhiPaginationValue>, fallback: 
 }
 
 function coercePaginationValue(value: unknown, fallback: PhiPaginationValue): PhiPaginationValue | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  if (!isPhiRecord(value)) {
     return null;
   }
 

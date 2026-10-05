@@ -7,6 +7,7 @@ export {
   isPhiRuntimeDataProviderKey,
   type PhiRuntimeDataProviderKey,
 } from "@phis/contracts/controls";
+import { isPhiRecord } from "../helpers/is-record";
 import { isPhiRuntimeDataProviderKey as isProviderKey, type PhiRuntimeDataProviderKey } from "@phis/contracts/controls";
 
 export type PhiRuntimeDataProviderKind = "options" | "table" | "tree" | "collection";
@@ -33,7 +34,7 @@ export type PhiProviderResourceSource = PhiRuntimeDataProviderBinding & {
 
 /** Reads a stored source; anything without a namespaced Provider key and a resource is no source. */
 export function readPhiProviderResourceSource(value: unknown): PhiProviderResourceSource | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  if (!isPhiRecord(value)) {
     return null;
   }
   const record = value as Record<string, unknown>;
@@ -42,7 +43,7 @@ export function readPhiProviderResourceSource(value: unknown): PhiProviderResour
     return null;
   }
   const scopeKey = typeof record.scopeKey === "string" && record.scopeKey.trim() ? record.scopeKey.trim() : undefined;
-  const params = record.params && typeof record.params === "object" && !Array.isArray(record.params)
+  const params = isPhiRecord(record.params)
     ? record.params as Record<string, unknown>
     : undefined;
   return {

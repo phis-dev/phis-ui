@@ -1,5 +1,6 @@
 "use client";
 
+import { isPhiRecord } from "../../../../../helpers/is-record";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { PhiAuthWorkflowBody } from "../../../../../components/widgets/client/auth-workflow-body";
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
@@ -31,9 +32,9 @@ export type PhiAuthWorkflowWidgetClientProps = {
  * and this draws whatever it is told.
  */
 function readWorkflow(value: unknown): PhiAuthWorkflow | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  if (!isPhiRecord(value)) return null;
   const workflow = (value as { workflow?: unknown }).workflow;
-  return workflow && typeof workflow === "object" && !Array.isArray(workflow)
+  return isPhiRecord(workflow)
     ? workflow as PhiAuthWorkflow
     : null;
 }

@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../helpers/is-record";
 import { cache } from "react";
 import "server-only";
 
@@ -98,7 +99,7 @@ export type PhiPublicAreaWithPublishedPages = {
 };
 
 function readPublishedPublicPage(entry: unknown): PhiPublishedPublicPage {
-  if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+  if (!isPhiRecord(entry)) {
     throw new Error("Invalid published Public Page projection.");
   }
   const value = entry as Record<string, unknown>;

@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../../helpers/is-record";
 export function flattenPhiFormLabels(
   value: unknown,
   prefix = "",
@@ -11,7 +12,7 @@ export function flattenPhiFormLabels(
       }
       return;
     }
-    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+    if (!isPhiRecord(entry)) {
       return;
     }
     for (const [key, child] of Object.entries(entry)) {

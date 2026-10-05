@@ -1,5 +1,6 @@
 "use client";
 
+import { isPhiRecord } from "../../../../helpers/is-record";
 import {
   createPhiControlOptionsProviderClient,
   type PhiControlOptionsProviderContext,
@@ -7,10 +8,10 @@ import {
 import { PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
 
 function readOptions(value: unknown) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return [];
+  if (!isPhiRecord(value)) return [];
   const locales = (value as Record<string, unknown>).platformLocales;
   return Array.isArray(locales) ? locales.flatMap((entry) => {
-    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return [];
+    if (!isPhiRecord(entry)) return [];
     const record = entry as Record<string, unknown>;
     return typeof record.code === "string"
       ? [{ value: record.code, label: typeof record.label === "string" ? `${record.label} (${record.code})` : record.code }]
@@ -19,15 +20,15 @@ function readOptions(value: unknown) {
 }
 
 function readSiteLocaleOptions(value: unknown, localeKey: "availableLocales" | "targetLocales" = "availableLocales") {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return { options: [] };
+  if (!isPhiRecord(value)) return { options: [] };
   const record = value as Record<string, unknown>;
-  const site = record.site && typeof record.site === "object" && !Array.isArray(record.site)
+  const site = isPhiRecord(record.site)
     ? record.site as Record<string, unknown>
     : {};
   const locales = Array.isArray(site[localeKey]) ? site[localeKey] : [];
   return {
     options: locales.flatMap((entry) => {
-      if (!entry || typeof entry !== "object" || Array.isArray(entry)) return [];
+      if (!isPhiRecord(entry)) return [];
       const locale = entry as Record<string, unknown>;
       return typeof locale.code === "string"
         ? [{ value: locale.code, label: typeof locale.label === "string" ? `${locale.label} (${locale.code})` : locale.code }]
@@ -38,11 +39,11 @@ function readSiteLocaleOptions(value: unknown, localeKey: "availableLocales" | "
 }
 
 function readContextOptions(value: unknown) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return { options: [] };
+  if (!isPhiRecord(value)) return { options: [] };
   const contexts = (value as Record<string, unknown>).contexts;
   return {
     options: [{ value: "all", label: "All" }, ...(Array.isArray(contexts) ? contexts.flatMap((entry) => {
-      if (!entry || typeof entry !== "object" || Array.isArray(entry)) return [];
+      if (!isPhiRecord(entry)) return [];
       const context = entry as Record<string, unknown>;
       return typeof context.context === "string" && context.context.trim() !== ""
         ? [{

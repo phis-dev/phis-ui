@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../../../../../helpers/is-record";
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import {
@@ -35,7 +36,7 @@ function readLimit(value: unknown) {
 }
 
 export function normalizePhiNewsListWidgetConfig(config: unknown): PhiNewsListWidgetConfig {
-  const raw = config && typeof config === "object" && !Array.isArray(config)
+  const raw = isPhiRecord(config)
     ? (config as Record<string, unknown>)
     : {};
   return {

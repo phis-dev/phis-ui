@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useMemo, useState, type ReactNode } from "react";
+import { readPhiDotPath } from "../../../../helpers/dot-path";
 import { PhiDividerControl } from "../../../../components/controls/phi-divider-control";
 import { usePhiConfig } from "../../../../components/root/phi-config-provider";
 
@@ -128,10 +129,7 @@ export function readPhiInspectorConfigPathValue(
   config: Record<string, unknown> | null | undefined,
   path: string,
 ): unknown {
-  return path.split(".").filter(Boolean).reduce<unknown>((current, segment) =>
-    current && typeof current === "object" && !Array.isArray(current)
-      ? (current as Record<string, unknown>)[segment]
-      : undefined, config);
+  return readPhiDotPath(config, path);
 }
 
 function writePhiInspectorConfigPathValue(
@@ -147,7 +145,7 @@ function writePhiInspectorConfigPathValue(
   let target = next;
   for (const segment of segments.slice(0, -1)) {
     const current = target[segment];
-    const child = current && typeof current === "object" && !Array.isArray(current)
+    const child = isPhiRecord(current)
       ? { ...(current as Record<string, unknown>) }
       : {};
     target[segment] = child;
@@ -185,7 +183,7 @@ export function resolvePhiInspectorDimensionValue(value: unknown): PhiRenderable
     };
   }
 
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  if (!isPhiRecord(value)) {
     return null;
   }
 
@@ -217,7 +215,7 @@ function resolveInspectorColorMode(
 }
 
 function normalizeInspectorBorderValue(value: unknown): PhiCmsBorderWidgetConfig | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  if (!isPhiRecord(value)) {
     return null;
   }
 
@@ -226,8 +224,7 @@ function normalizeInspectorBorderValue(value: unknown): PhiCmsBorderWidgetConfig
 
 function readPhiInspectorCollectionItems(value: unknown): Record<string, unknown>[] {
   return Array.isArray(value)
-    ? value.filter((item): item is Record<string, unknown> =>
-        Boolean(item) && typeof item === "object" && !Array.isArray(item))
+    ? value.filter(isPhiRecord)
     : [];
 }
 

@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../helpers/is-record";
 import type { PhiCmsContainerChromeConfig } from "./cms-container";
 import { readPhiSurface } from "./surface";
 import { readPhiSignalRouteSet, type PhiSignalRouteSet } from "./signals";
@@ -96,7 +97,7 @@ function readSize(value: unknown) {
 }
 
 function readResponsiveSize(value: unknown): PhiCmsOverlayResponsiveSize | undefined {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  if (!isPhiRecord(value)) return undefined;
   const record = value as Record<string, unknown>;
   const size = {
     compact: readSize(record.compact),
@@ -109,7 +110,7 @@ function readResponsiveSize(value: unknown): PhiCmsOverlayResponsiveSize | undef
 }
 
 function readMask(value: unknown): PhiCmsOverlayMaskConfig {
-  const record = value && typeof value === "object" && !Array.isArray(value)
+  const record = isPhiRecord(value)
     ? value as Record<string, unknown>
     : {};
   const appearance = (PHI_CMS_OVERLAY_MASK_APPEARANCES as readonly unknown[]).includes(record.appearance)
@@ -148,7 +149,7 @@ export function isPhiCmsOverlayType(value: unknown): value is PhiCmsOverlayType 
 }
 
 export function readPhiOverlayCloseRequest(value: unknown): PhiOverlayCloseRequest | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  if (!isPhiRecord(value)) return null;
   const record = value as Record<string, unknown>;
   const source = record.source;
   if (!(PHI_OVERLAY_CLOSE_SOURCES as readonly unknown[]).includes(source)) return null;

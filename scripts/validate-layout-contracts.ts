@@ -110,8 +110,8 @@ assert.deepEqual(
 
 assert.deepEqual(
   parsePhiCmsContentLayoutConfig({ size: { width: 400 } }).size,
-  { width: 400, height: undefined },
-  "A Layout config states geometry as `size`.",
+  { width: 400 },
+  "A Layout config states geometry as `size`; an axis it does not state is left out, not set undefined.",
 );
 
 const responsiveGridConfig = parsePhiCmsGridLayoutConfig({

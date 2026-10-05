@@ -1,14 +1,8 @@
 import { readPhiMotionEasing } from "./motion";
 import type {
-  PhiRenderableBlock,
   PhiRenderableBlockAnchor,
   PhiRenderableBlockBase,
-  PhiRenderableBlockCapabilities,
   PhiRenderableBlockEffects,
-  PhiRenderableBlockInteractionState,
-  PhiRenderableBlockRuntime,
-  PhiRenderableBlockRuntimeContext,
-  PhiRenderableBlockSize,
   PhiRenderableBlockTransition,
   PhiRenderableBlockTransitionAxis,
   PhiRenderableBlockTransitionDirection,
@@ -23,7 +17,6 @@ import type {
   PhiRenderableBlockViewportEffectRangePoint,
   PhiRenderableBlockViewportEffectUnit,
 } from "../types";
-import { readPhiCmsInstanceId } from "../types/cms-instance-id";
 import { readPhiSurface } from "../types/surface";
 import {
   PHI_VIEWER_ACCESS_ANYONE,
@@ -44,31 +37,12 @@ import {
   createPhiRenderableBlockDefaults,
 } from "./renderable-block-defaults";
 import { isPhiRecord } from "./is-record";
+import {
+  normalizePhiRenderableBlockResponsiveSize,
+  normalizePhiRenderableBlockSize,
+  stripPhiRenderableBlockSize,
+} from "./renderable-block-normalizers";
 import { normalizeRenderableBlockAnchor } from "./renderable-block-anchor";
-
-type JsonRecord = Record<string, unknown>;
-
-function normalizeRenderableBlockSize(value: unknown): PhiRenderableBlockSize | undefined {
-  if (typeof value === "number" || typeof value === "string") {
-    return { width: value };
-  }
-
-  if (!isPhiRecord(value)) {
-    return undefined;
-  }
-
-  const width = value.width;
-  const height = value.height;
-
-  if (width == null && height == null) {
-    return undefined;
-  }
-
-  return {
-    ...(width == null ? {} : { width: width as PhiRenderableBlockSize["width"] }),
-    ...(height == null ? {} : { height: height as PhiRenderableBlockSize["height"] }),
-  };
-}
 
 function normalizeRenderableBlockOpacity(value: unknown): number | undefined {
   if (typeof value !== "number" || !Number.isFinite(value)) {
@@ -351,104 +325,6 @@ function normalizeRenderableBlockEffects(value: unknown): PhiRenderableBlockEffe
   };
 }
 
-function normalizeRenderableBlockCapabilities(
-  value: unknown,
-): PhiRenderableBlockCapabilities | undefined {
-  if (!isPhiRecord(value)) {
-    return undefined;
-  }
-
-  const next: PhiRenderableBlockCapabilities = {};
-  let hasValue = false;
-
-  for (const key of ["selectable", "draggable", "hoverable", "activatable", "focusable", "droppable"] as const) {
-    const candidate = value[key];
-    if (typeof candidate === "boolean") {
-      next[key] = candidate;
-      hasValue = true;
-    }
-  }
-
-  return hasValue ? next : undefined;
-}
-
-function normalizeRenderableBlockRuntimeContext(
-  value: unknown,
-): PhiRenderableBlockRuntimeContext | undefined {
-  if (!isPhiRecord(value)) {
-    return undefined;
-  }
-
-  const next: PhiRenderableBlockRuntimeContext = {};
-  let hasValue = false;
-
-  if (typeof value.siteKey === "string" || value.siteKey === null) {
-    next.siteKey = value.siteKey;
-    hasValue = true;
-  }
-  if (typeof value.publicUrl === "string" || value.publicUrl === null) {
-    next.publicUrl = value.publicUrl;
-    hasValue = true;
-  }
-  if (typeof value.defaultLang === "string" || value.defaultLang === null) {
-    next.defaultLang = value.defaultLang;
-    hasValue = true;
-  }
-  if (typeof value.area === "string" || value.area === null) {
-    next.area = value.area;
-    hasValue = true;
-  }
-  if (typeof value.pageKey === "string" || value.pageKey === null) {
-    next.pageKey = value.pageKey;
-    hasValue = true;
-  }
-  if (typeof value.regionKey === "string" || value.regionKey === null) {
-    next.regionKey = value.regionKey;
-    hasValue = true;
-  }
-  const blockId = readPhiCmsInstanceId(value.blockId);
-  if (blockId || value.blockId === null) {
-    next.blockId = blockId ?? null;
-    hasValue = true;
-  }
-
-  return hasValue ? next : undefined;
-}
-
-function normalizeRenderableBlockInteractionState(
-  value: unknown,
-): PhiRenderableBlockInteractionState | undefined {
-  if (!isPhiRecord(value)) {
-    return undefined;
-  }
-
-  const next: PhiRenderableBlockInteractionState = {};
-  let hasValue = false;
-
-  for (const key of ["selected", "hovered", "dragging", "focused", "active"] as const) {
-    const candidate = value[key];
-    if (typeof candidate === "boolean") {
-      next[key] = candidate;
-      hasValue = true;
-    }
-  }
-
-  return hasValue ? next : undefined;
-}
-
-function normalizeRenderableBlockRuntime(value: unknown): PhiRenderableBlockRuntime | undefined {
-  const context = normalizeRenderableBlockRuntimeContext(value);
-  const interaction = normalizeRenderableBlockInteractionState(value);
-  if (!context && !interaction) {
-    return undefined;
-  }
-
-  return {
-    ...context,
-    ...interaction,
-  };
-}
-
 function normalizeRenderableBlockBase(value: unknown): PhiRenderableBlockBase {
   if (!isPhiRecord(value)) {
     return createPhiRenderableBlockDefaults();
@@ -484,32 +360,11 @@ function normalizeRenderableBlockBase(value: unknown): PhiRenderableBlockBase {
     opacity: normalizeRenderableBlockOpacity(value.opacity) ?? PHI_RENDERABLE_BLOCK_DEFAULT_OPACITY,
     surface: readPhiSurface(value.surface) ?? undefined,
     className: typeof value.className === "string" ? value.className : undefined,
-    size: normalizeRenderableBlockSize(value.size),
-    minSize: normalizeRenderableBlockSize(value.minSize),
-    maxSize: normalizeRenderableBlockSize(value.maxSize),
-    collapsedSizeHint: normalizeRenderableBlockSize(value.collapsedSizeHint),
+    size: normalizePhiRenderableBlockResponsiveSize(value.size),
+    minSize: normalizePhiRenderableBlockResponsiveSize(value.minSize),
+    maxSize: normalizePhiRenderableBlockResponsiveSize(value.maxSize),
+    collapsedSizeHint: normalizePhiRenderableBlockSize(value.collapsedSizeHint),
     effects: normalizeRenderableBlockEffects(value.effects),
-  };
-}
-
-/* Generic over the length: the same stripping serves a profile pair and a plain one. */
-function stripRenderableBlockSize<TLength>(
-  value: { width?: TLength | null; height?: TLength | null } | null | undefined,
-) {
-  if (!value) {
-    return undefined;
-  }
-
-  const width = value.width ?? undefined;
-  const height = value.height ?? undefined;
-
-  if (width == null && height == null) {
-    return undefined;
-  }
-
-  return {
-    ...(width == null ? {} : { width }),
-    ...(height == null ? {} : { height }),
   };
 }
 
@@ -539,26 +394,6 @@ function stripRenderableBlockAnchor(
       ? {}
       : { vertical: normalized.vertical }),
   };
-}
-
-function stripRenderableBlockCapabilities(
-  value: PhiRenderableBlockCapabilities | null | undefined,
-): PhiRenderableBlockCapabilities | undefined {
-  if (!value) {
-    return undefined;
-  }
-
-  const next: PhiRenderableBlockCapabilities = {};
-  let hasValue = false;
-
-  for (const key of ["selectable", "draggable", "hoverable", "activatable", "focusable", "droppable"] as const) {
-    if (value[key] === false) {
-      next[key] = false;
-      hasValue = true;
-    }
-  }
-
-  return hasValue ? next : undefined;
 }
 
 function stripRenderableBlockEffects(
@@ -735,22 +570,22 @@ export function stripRenderableBlockDefaults(
     next.className = normalized.className;
   }
 
-  const size = stripRenderableBlockSize(normalized.size);
+  const size = stripPhiRenderableBlockSize(normalized.size);
   if (size) {
     next.size = size;
   }
 
-  const minSize = stripRenderableBlockSize(normalized.minSize);
+  const minSize = stripPhiRenderableBlockSize(normalized.minSize);
   if (minSize) {
     next.minSize = minSize;
   }
 
-  const maxSize = stripRenderableBlockSize(normalized.maxSize);
+  const maxSize = stripPhiRenderableBlockSize(normalized.maxSize);
   if (maxSize) {
     next.maxSize = maxSize;
   }
 
-  const collapsedSizeHint = stripRenderableBlockSize(normalized.collapsedSizeHint);
+  const collapsedSizeHint = stripPhiRenderableBlockSize(normalized.collapsedSizeHint);
   if (collapsedSizeHint) {
     next.collapsedSizeHint = collapsedSizeHint;
   }
@@ -758,41 +593,6 @@ export function stripRenderableBlockDefaults(
   const effects = stripRenderableBlockEffects(normalized.effects);
   if (effects) {
     next.effects = effects;
-  }
-
-  return next;
-}
-
-export function deserializeRenderableBlock(
-  value: unknown,
-): PhiRenderableBlock {
-  if (!isPhiRecord(value)) {
-    return {
-      ...createPhiRenderableBlockDefaults(),
-    };
-  }
-
-  return {
-    ...mergeRenderableBlockDefaults(value),
-    capabilities: normalizeRenderableBlockCapabilities(value.capabilities),
-    runtime: normalizeRenderableBlockRuntime(value.runtime),
-  };
-}
-
-export function serializeRenderableBlock(
-  value: Partial<PhiRenderableBlock> | null | undefined,
-): JsonRecord {
-  if (!value) {
-    return {};
-  }
-
-  const next: JsonRecord = {
-    ...stripRenderableBlockDefaults(value),
-  };
-
-  const capabilities = stripRenderableBlockCapabilities(value.capabilities);
-  if (capabilities) {
-    next.capabilities = capabilities;
   }
 
   return next;

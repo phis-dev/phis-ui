@@ -2,6 +2,11 @@
 
 import { PhisThreadStatus } from "../../../../constants/threads";
 import {
+  buildPhiTablePageParams,
+  createPhiTableProviderRequestInit,
+  readPhiTableRows,
+} from "../../../../components/widgets/client/shared/phi-table-provider-request";
+import {
   PhiTableProviderError,
   type PhiTableProviderMutationRequest,
   type PhiTableProviderQueryRequest,
@@ -17,13 +22,6 @@ import {
 } from "../../../../components/widgets/client/shared/phi-table-provider-response";
 
 const API_PATH = "/api/site/threads";
-
-const requestInit = (signal: AbortSignal | undefined): RequestInit => ({
-  cache: "no-store",
-  credentials: "include",
-  headers: { accept: "application/json" },
-  signal,
-});
 
 type ApiResponse = {
   rows?: unknown;
@@ -53,10 +51,7 @@ function readIntegerFilter(query: PhiTableProviderQueryRequest["query"], key: st
  * nothing to sort by rather than offering a control that does nothing.
  */
 function buildThreadQuery(query: PhiTableProviderQueryRequest["query"]) {
-  const search = new URLSearchParams({
-    page: String(query.page && query.page > 0 ? query.page : 1),
-    pageSize: String(query.pageSize && query.pageSize > 0 ? query.pageSize : 25),
-  });
+  const search = buildPhiTablePageParams(query);
   const kind = readIntegerFilter(query, "kind");
   const status = readIntegerFilter(query, "status");
   const unreadOnly = query.filters?.unreadOnly;
@@ -84,13 +79,6 @@ function readThreadRow(row: Record<string, unknown>) {
   };
 }
 
-function readRows(value: unknown) {
-  return Array.isArray(value)
-    ? value.filter((row): row is Record<string, unknown> =>
-        Boolean(row) && typeof row === "object" && !Array.isArray(row))
-    : [];
-}
-
 async function queryThreadTable({
   resourceKey,
   query,
@@ -100,10 +88,10 @@ async function queryThreadTable({
     throw new PhiTableProviderError("resource-not-found", `Unknown conversation resource "${resourceKey}".`);
   }
   const payload = await readPhiTableProviderResponse<ApiResponse>(
-    await fetch(`${API_PATH}?${buildThreadQuery(query).toString()}`, requestInit(signal)),
+    await fetch(`${API_PATH}?${buildThreadQuery(query).toString()}`, createPhiTableProviderRequestInit(signal)),
     RESPONSE_OPTIONS,
   );
-  const rows = readRows(payload?.rows).map(readThreadRow);
+  const rows = readPhiTableRows(payload?.rows).map(readThreadRow);
   return {
     rows,
     total: typeof payload?.total === "number" ? payload.total : rows.length,
@@ -148,7 +136,7 @@ async function mutateThreadTable(request: PhiTableProviderMutationRequest) {
       `Unsupported conversation action "${request.actionKey}".`,
     );
   }
-  const init = requestInit(request.signal);
+  const init = createPhiTableProviderRequestInit(request.signal);
   await readPhiTableProviderResponse<ApiResponse>(
     await fetch(`${API_PATH}/${readThreadId(request.rowIdentity)}`, {
       ...init,

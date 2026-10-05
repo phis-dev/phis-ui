@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../../../../../helpers/is-record";
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsAssetInspectorWidgetConfig } from "../../../../../types/media";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
@@ -5,7 +6,7 @@ import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../../ids";
 import { readPhiSignalRouteSet } from "../../../../../types/signals";
 
 export function normalizePhiCmsAssetInspectorWidgetConfig(config: unknown): PhiCmsAssetInspectorWidgetConfig {
-  const record = config && typeof config === "object" && !Array.isArray(config)
+  const record = isPhiRecord(config)
     ? config as Record<string, unknown>
     : {};
   return {

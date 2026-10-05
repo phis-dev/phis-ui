@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../helpers/is-record";
 /**
  * What a Controller says about the draft it holds, on the `draftStatus` channel.
  *
@@ -27,7 +28,7 @@ function isPhiDraftStatus(value: unknown): value is PhiDraftStatus {
 }
 
 export function readPhiDraftStatusSignalValue(value: unknown): PhiDraftStatusSignalValue | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  if (!isPhiRecord(value)) {
     return null;
   }
   const record = value as Record<string, unknown>;

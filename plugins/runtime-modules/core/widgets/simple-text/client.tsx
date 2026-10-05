@@ -1,5 +1,6 @@
 "use client";
 
+import { isPhiRecord } from "../../../../../helpers/is-record";
 import { useState } from "react";
 
 import {
@@ -146,7 +147,7 @@ export function PhiSimpleTextWidgetClient({
     if (signal.channel !== "textStyle" || signal.action !== "change") {
       return;
     }
-    const stylePayload = signal.value && typeof signal.value === "object" && !Array.isArray(signal.value)
+    const stylePayload = isPhiRecord(signal.value)
       ? signal.value as Record<string, unknown>
       : {};
 

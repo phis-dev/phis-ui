@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../../helpers/is-record";
 export type MediaFocalRect = {
   x: number;
   y: number;
@@ -10,7 +11,7 @@ export function clampRectValue(value: number) {
 }
 
 export function normalizeMediaFocalRect(value: unknown): MediaFocalRect | null {
-  if (value === null || value === undefined || typeof value !== "object" || Array.isArray(value)) {
+  if (!isPhiRecord(value)) {
     return null;
   }
 

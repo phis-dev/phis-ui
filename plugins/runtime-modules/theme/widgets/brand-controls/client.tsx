@@ -1,5 +1,6 @@
 "use client";
 
+import { isPhiRecord } from "../../../../../helpers/is-record";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 import type { PhiColorPickerLabels } from "../../../../../components/widgets/label-types/color-picker";
@@ -523,7 +524,7 @@ function resolveThemeKey(config?: PhiBuilderBrandWidgetConfig | null) {
 }
 
 function normalizeTheme(input: unknown, fallback: ThemePayload): ThemePayload {
-  if (!input || typeof input !== "object" || Array.isArray(input)) {
+  if (!isPhiRecord(input)) {
     return fallback;
   }
 

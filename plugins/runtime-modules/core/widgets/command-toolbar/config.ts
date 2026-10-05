@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../../../../../helpers/is-record";
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type {
   PhiCommandToolbarButtonConfig,
@@ -68,7 +69,7 @@ function readButtonEmitValue(value: unknown): PhiSignalValue | undefined {
 }
 
 function readCommandButtonEmitConfig(value: unknown): PhiCommandToolbarButtonEmitConfig | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  if (!isPhiRecord(value)) {
     return null;
   }
 
@@ -95,7 +96,7 @@ function readCommandButtonEmits(value: unknown): PhiCommandToolbarButtonEmitConf
 }
 
 function readCommandButtonConfig(value: unknown): PhiCommandToolbarButtonConfig | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  if (!isPhiRecord(value)) {
     return null;
   }
 

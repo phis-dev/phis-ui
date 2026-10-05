@@ -1,5 +1,6 @@
 "use client";
 
+import { isPhiRecord } from "../../../helpers/is-record";
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
@@ -1274,7 +1275,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         completePhiDeveloperBuilderEffectsEditor(
           defaultArea,
           effectsRequest,
-          nextEffects && typeof nextEffects === "object" && !Array.isArray(nextEffects)
+          isPhiRecord(nextEffects)
             ? nextEffects
             : undefined,
         );

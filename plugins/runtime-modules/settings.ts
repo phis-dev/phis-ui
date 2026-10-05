@@ -13,15 +13,7 @@ import type { PhisDeclarableThreadKind } from "../../types/threads";
 import type { PhiDeclaredModuleSeed } from "../../types/seed";
 import type { PhiRuntimeModuleDefinition, PhiRuntimeModuleId } from "./contracts";
 import { isPhiRuntimeAreaBaseModuleId } from "./area-definitions";
-
-export function isPhiRuntimeModuleId(value: unknown): value is PhiRuntimeModuleId {
-  if (typeof value !== "string") {
-    return false;
-  }
-  const trimmed = value.trim();
-  const separatorIndex = trimmed.lastIndexOf("/");
-  return separatorIndex > 0 && separatorIndex < trimmed.length - 1;
-}
+import { isPhiRuntimeModuleId } from "../../constants/module-identity";
 
 export function readPhiRuntimeModuleIds(value: unknown): PhiRuntimeModuleId[] | null {
   if (!Array.isArray(value)) {
@@ -29,10 +21,12 @@ export function readPhiRuntimeModuleIds(value: unknown): PhiRuntimeModuleId[] | 
   }
 
   const moduleIds = value.map((candidate, index) => {
+    // The one reading of a Module id (`constants/module-identity.ts`): a bare `<package>/<key>` used to
+    // pass here and fail in the catalog, which read the marker this did not ask for.
     if (!isPhiRuntimeModuleId(candidate)) {
       throw new Error(`runtimeModules[${index}] must be a namespaced module id.`);
     }
-    return candidate.trim() as PhiRuntimeModuleId;
+    return candidate;
   });
   const uniqueModuleIds = new Set(moduleIds);
   if (uniqueModuleIds.size !== moduleIds.length) {

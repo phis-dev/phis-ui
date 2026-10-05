@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../../../helpers/is-record";
 import type {
   PhiAnyCmsBuilderPlugin,
   PhiBuilderContainerMeta,
@@ -15,7 +16,7 @@ function resolveBuilderIconKey(pluginKey: string, iconName?: string | null) {
 }
 
 function cloneDefaultConfig(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" && !Array.isArray(value) ? { ...value } : null;
+  return isPhiRecord(value) ? { ...value } : null;
 }
 
 export function buildPhiBuilderPluginMeta(plugin: PhiAnyCmsBuilderPlugin): PhiBuilderPluginMeta {

@@ -1,5 +1,6 @@
 "use client";
 
+import { readPhiDotPath } from "../../helpers/dot-path";
 import {
   createContext,
   createElement,
@@ -180,10 +181,7 @@ export function resolvePhiControlOptionsDependencies(
   let satisfied = true;
   for (const dependency of dependencies) {
     const source = dependency.source === "form" ? sources.form : sources.config;
-    const value = dependency.valuePath.split(".").filter(Boolean).reduce<unknown>((current, segment) =>
-      current && typeof current === "object" && !Array.isArray(current)
-        ? (current as Record<string, unknown>)[segment]
-        : undefined, source ?? undefined);
+    const value = readPhiDotPath(source ?? undefined, dependency.valuePath);
     // An empty string is no value: a cleared select reports one, and asking the route with it would
     // narrow to nothing rather than to the parent that is missing.
     const present = value != null && value !== "";
@@ -201,10 +199,7 @@ export function readPhiControlOptionsProviderSourceValue(
   if (!path) {
     return undefined;
   }
-  return path.split(".").filter(Boolean).reduce<unknown>((current, segment) =>
-    current && typeof current === "object" && !Array.isArray(current)
-      ? (current as Record<string, unknown>)[segment]
-      : undefined, context.sourceConfig);
+  return readPhiDotPath(context.sourceConfig, path);
 }
 
 function subscribeEmptyProvider() {

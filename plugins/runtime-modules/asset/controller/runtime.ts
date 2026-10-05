@@ -1,5 +1,6 @@
 "use client";
 
+import { isPhiRecord } from "../../../../helpers/is-record";
 import { useCallback, useEffect, useState } from "react";
 
 import {
@@ -228,10 +229,10 @@ export function usePhiAssetRuntimeController(mountScope: "site" | "area" | "page
         (signal.value as { actionKey?: unknown }).actionKey === "createFolder"
       ) {
         const collectionQuery = (signal.value as { query?: unknown }).query;
-        const filters = collectionQuery && typeof collectionQuery === "object" && !Array.isArray(collectionQuery)
+        const filters = isPhiRecord(collectionQuery)
           ? (collectionQuery as { filters?: unknown }).filters
           : null;
-        const folderId = filters && typeof filters === "object" && !Array.isArray(filters)
+        const folderId = isPhiRecord(filters)
           ? (filters as { folderId?: unknown }).folderId
           : null;
         setFolderRequest({
@@ -327,14 +328,14 @@ export function usePhiAssetRuntimeController(mountScope: "site" | "area" | "page
           setPhiImagePreviewSearchQuery(PHI_ASSET_CONTROLLER_STORE_KEY, signal.value);
           return;
         }
-        if (signal.value && typeof signal.value === "object" && !Array.isArray(signal.value)) {
+        if (isPhiRecord(signal.value)) {
           const queryValue = (signal.value as { searchQuery?: unknown }).searchQuery;
           setPhiImagePreviewSearchQuery(PHI_ASSET_CONTROLLER_STORE_KEY, typeof queryValue === "string" ? queryValue : "");
         }
         return;
       }
 
-      if (signal.channel === PHI_ASSET_SIGNAL_CHANNELS.pagination && signal.value && typeof signal.value === "object" && !Array.isArray(signal.value)) {
+      if (signal.channel === PHI_ASSET_SIGNAL_CHANNELS.pagination && isPhiRecord(signal.value)) {
         const value = signal.value as { page?: unknown; pageSize?: unknown };
         if (typeof value.pageSize === "number" && Number.isInteger(value.pageSize) && value.pageSize > 0) {
           setPhiImagePreviewPageSize(PHI_ASSET_CONTROLLER_STORE_KEY, value.pageSize);

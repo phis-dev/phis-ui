@@ -1,5 +1,6 @@
 "use client";
 
+import { isPhiRecord } from "../../helpers/is-record";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
@@ -17,15 +18,19 @@ import {
 import type {
   PhiRenderableBlock,
   PhiRenderableBlockCapabilities,
-  PhiRenderableBlockInteractionState,
   PhiRenderableBlockRuntime,
-  PhiRenderableBlockRuntimeContext,
   PhiRenderableBlockSize,
   PhiRenderableBlockVisibility,
 } from "../../types/renderable-block";
 import type { PhiCmsInstanceId } from "../../types/cms-instance-id";
 import { readPhiSurface, type PhiSurface } from "../../types/surface";
 import { normalizeRenderableBlockAnchor } from "../../helpers/renderable-block-anchor";
+import {
+  normalizePhiRenderableBlockCapabilities,
+  normalizePhiRenderableBlockResponsiveSize,
+  normalizePhiRenderableBlockRuntime,
+  stripPhiRenderableBlockSize,
+} from "../../helpers/renderable-block-normalizers";
 import {
   inferPhiSignalValueType,
   usePhiSignalDispatcher,
@@ -177,128 +182,6 @@ function resolvePhiRenderableBlockSignalScope(
     : resolvePhiRenderableBlockReceiverScope(receiver, explicitScope);
 }
 
-/*
- * Generic over the length, because the same stripping serves both pairs: a block's `size` may name a
- * value per profile, its `collapsedSizeHint` may not, and this only ever drops an empty pair.
- */
-function normalizePhiRenderableBlockSize<TLength>(
-  value: { width?: TLength | null; height?: TLength | null } | null | undefined,
-) {
-  if (!value || typeof value !== "object") {
-    return undefined;
-  }
-
-  const width = value.width ?? undefined;
-  const height = value.height ?? undefined;
-
-  if (width == null && height == null) {
-    return undefined;
-  }
-
-  return {
-    ...(width == null ? {} : { width }),
-    ...(height == null ? {} : { height }),
-  };
-}
-
-function normalizePhiRenderableBlockCapabilities(
-  value: PhiRenderableBlockCapabilities | null | undefined,
-) {
-  if (!value || typeof value !== "object") {
-    return undefined;
-  }
-
-  const next: PhiRenderableBlockCapabilities = {};
-  let hasValue = false;
-  for (const key of ["selectable", "draggable", "hoverable", "activatable", "focusable", "droppable"] as const) {
-    const candidate = value[key];
-    if (typeof candidate === "boolean") {
-      next[key] = candidate;
-      hasValue = true;
-    }
-  }
-
-  return hasValue ? next : undefined;
-}
-
-function normalizePhiRenderableBlockRuntimeContext(value: PhiRenderableBlockRuntimeContext | null | undefined) {
-  if (!value || typeof value !== "object") {
-    return undefined;
-  }
-
-  const next: PhiRenderableBlockRuntimeContext = {};
-  let hasValue = false;
-
-  if (typeof value.siteKey === "string" || value.siteKey === null) {
-    next.siteKey = value.siteKey;
-    hasValue = true;
-  }
-  if (typeof value.publicUrl === "string" || value.publicUrl === null) {
-    next.publicUrl = value.publicUrl;
-    hasValue = true;
-  }
-  if (typeof value.defaultLang === "string" || value.defaultLang === null) {
-    next.defaultLang = value.defaultLang;
-    hasValue = true;
-  }
-  if (typeof value.area === "string" || value.area === null) {
-    next.area = value.area;
-    hasValue = true;
-  }
-  if (typeof value.pageKey === "string" || value.pageKey === null) {
-    next.pageKey = value.pageKey;
-    hasValue = true;
-  }
-  if (typeof value.regionKey === "string" || value.regionKey === null) {
-    next.regionKey = value.regionKey;
-    hasValue = true;
-  }
-  if (typeof value.blockId === "string" || typeof value.blockId === "number" || value.blockId === null) {
-    next.blockId = value.blockId;
-    hasValue = true;
-  }
-
-  return hasValue ? next : undefined;
-}
-
-function normalizePhiRenderableBlockInteractionState(
-  value: PhiRenderableBlockInteractionState | null | undefined,
-) {
-  if (!value || typeof value !== "object") {
-    return undefined;
-  }
-
-  const next: PhiRenderableBlockInteractionState = {};
-  let hasValue = false;
-
-  for (const key of ["selected", "hovered", "dragging", "focused", "active"] as const) {
-    const candidate = value[key];
-    if (typeof candidate === "boolean") {
-      next[key] = candidate;
-      hasValue = true;
-    }
-  }
-
-  return hasValue ? next : undefined;
-}
-
-function normalizePhiRenderableBlockRuntime(value: PhiRenderableBlockRuntime | null | undefined) {
-  if (!value || typeof value !== "object") {
-    return undefined;
-  }
-
-  const context = normalizePhiRenderableBlockRuntimeContext(value);
-  const interaction = normalizePhiRenderableBlockInteractionState(value);
-  if (!context && !interaction) {
-    return undefined;
-  }
-
-  return {
-    ...context,
-    ...interaction,
-  };
-}
-
 function resolvePhiRenderableBlockRuntimeValue(
   blockId: PhiCmsInstanceId | null | undefined,
   value: PhiRenderableBlockRuntime | null | undefined,
@@ -375,7 +258,7 @@ export function applyPhiRenderableBlockSignal(
    * takes the part away. The Surface is read again afterwards, so a value no part reads changes nothing.
    */
   if (channel === "background" || channel === "border") {
-    if (value != null && (typeof value !== "object" || Array.isArray(value))) {
+    if (value != null && (!isPhiRecord(value))) {
       return current;
     }
     // A line sent by Signal is drawn as sent, whatever source the stored Surface names for its edge.
@@ -438,7 +321,7 @@ export function applyPhiRenderableBlockSignal(
       channel === "size" ? "size" :
       channel === "minSize" ? "minSize" :
       "maxSize";
-    const nextSize = normalizePhiRenderableBlockSize(value as PhiRenderableBlockSize | null | undefined);
+    const nextSize = normalizePhiRenderableBlockResponsiveSize(value);
     return nextSize ? { ...current, [sizeKey]: nextSize } : current;
   }
 
@@ -561,10 +444,10 @@ function resolvePhiRenderableBlockRuntimeState(
     zIndex: input.zIndex ?? 0,
     opacity: input.opacity ?? 1,
     className: input.className,
-    size: normalizePhiRenderableBlockSize(input.size),
-    minSize: normalizePhiRenderableBlockSize(input.minSize),
-    maxSize: normalizePhiRenderableBlockSize(input.maxSize),
-    collapsedSizeHint: normalizePhiRenderableBlockSize(input.collapsedSizeHint),
+    size: stripPhiRenderableBlockSize(input.size),
+    minSize: stripPhiRenderableBlockSize(input.minSize),
+    maxSize: stripPhiRenderableBlockSize(input.maxSize),
+    collapsedSizeHint: stripPhiRenderableBlockSize(input.collapsedSizeHint),
     capabilities: normalizePhiRenderableBlockCapabilities(input.capabilities),
     surface: input.surface ?? undefined,
     effects: input.effects ?? undefined,

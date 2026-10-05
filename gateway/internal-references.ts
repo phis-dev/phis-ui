@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../helpers/is-record";
 import "server-only";
 
 import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
@@ -18,7 +19,7 @@ export type PhiResolvedInternalReferences = {
 };
 
 function readResolvedPage(entry: unknown): PhiResolvedPageReference {
-  if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+  if (!isPhiRecord(entry)) {
     throw new Error("Invalid internal Page reference projection.");
   }
   const value = entry as Record<string, unknown>;
@@ -35,7 +36,7 @@ function readResolvedPage(entry: unknown): PhiResolvedPageReference {
 }
 
 function readResolvedAsset(entry: unknown): PhiPublicMediaAssetReference {
-  if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+  if (!isPhiRecord(entry)) {
     throw new Error("Invalid internal Asset reference projection.");
   }
   const value = entry as Record<string, unknown>;

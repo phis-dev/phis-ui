@@ -1,5 +1,6 @@
 "use client";
 
+import { isPhiRecord } from "../../../helpers/is-record";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -292,7 +293,7 @@ function PhiAuthControllerView({
        */
       if (payload?.complete === false) {
         const next = payload.workflow;
-        if (next && typeof next === "object" && !Array.isArray(next)) {
+        if (isPhiRecord(next)) {
           setWorkflow(next as PhiAuthWorkflow);
         }
         return;

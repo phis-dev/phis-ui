@@ -1,6 +1,7 @@
 "use client";
 
 import { PHI_AUTH_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
+import { isPhiRecord } from "../../../../helpers/is-record";
 import {
   PhiTableProviderError,
   type PhiTableProviderMutationRequest,
@@ -31,7 +32,7 @@ type ApiResponse = {
 };
 
 function flattenValidation(row: InstallationRow) {
-  const validation = row.validation && typeof row.validation === "object" && !Array.isArray(row.validation)
+  const validation = isPhiRecord(row.validation)
     ? row.validation as Record<string, unknown>
     : null;
   return {
@@ -64,8 +65,7 @@ async function loadInstallations(signal?: AbortSignal) {
     RESPONSE_OPTIONS,
   );
   return (Array.isArray(result?.installations) ? result.installations : [])
-    .filter((row): row is InstallationRow =>
-      Boolean(row) && typeof row === "object" && !Array.isArray(row))
+    .filter((row): row is InstallationRow => isPhiRecord(row))
     .map(flattenValidation);
 }
 
@@ -129,7 +129,7 @@ async function mutateInstallation(request: PhiTableProviderMutationRequest) {
       }),
       RESPONSE_OPTIONS,
     );
-    const row = result?.installation && typeof result.installation === "object" && !Array.isArray(result.installation)
+    const row = isPhiRecord(result?.installation)
       ? flattenValidation(result.installation as InstallationRow) as Record<string, unknown>
       : null;
     const canonicalValue = row?.[request.fieldKey];

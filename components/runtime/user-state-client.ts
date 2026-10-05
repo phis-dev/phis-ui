@@ -1,5 +1,6 @@
 "use client";
 
+import { isPhiRecord } from "../../helpers/is-record";
 import { readPhisUserStateWrite } from "../../constants/user-state";
 import { readPhiJsonError, requestPhiJson } from "../../helpers/client-json-request";
 import type {
@@ -46,7 +47,7 @@ export async function fetchPhiUserState(signal?: AbortSignal) {
     throw new PhiUserStateError("failed", `user_state_read_failed:${status}`);
   }
   const state = payload?.state;
-  return state && typeof state === "object" && !Array.isArray(state)
+  return isPhiRecord(state)
     ? state as Readonly<Record<string, PhisUserStateStoredValue>>
     : {};
 }

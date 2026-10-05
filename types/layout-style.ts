@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../helpers/is-record";
 /**
  * The Background filters that are a pane rather than a treatment of the paint itself.
  *
@@ -35,7 +36,7 @@ export function readPhiShadow(value: unknown): PhiShadow | undefined {
     return value;
   }
 
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  if (!isPhiRecord(value)) {
     return undefined;
   }
 

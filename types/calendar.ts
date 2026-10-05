@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../helpers/is-record";
 import type { ReactNode } from "react";
 
 import type { PhiControlSize, PhiControlVariant } from "./control";
@@ -185,13 +186,13 @@ export function isPhiIsoTime(value: unknown): value is string {
 }
 
 export function isPhiCalendarDate(value: unknown): value is PhiCalendarDate {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  if (!isPhiRecord(value)) return false;
   const candidate = value as Record<string, unknown>;
   return typeof candidate.calendar === "string" && candidate.calendar.length > 0 && isPhiIsoDate(candidate.isoDate);
 }
 
 export function isPhiCalendarDisabledDateRule(value: unknown): value is PhiCalendarDisabledDateRule {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  if (!isPhiRecord(value)) return false;
   const candidate = value as Record<string, unknown>;
   if (candidate.kind === "before" || candidate.kind === "after" || candidate.kind === "date") {
     return isPhiCalendarDate(candidate.date);
@@ -204,7 +205,7 @@ export function isPhiCalendarDisabledDateRule(value: unknown): value is PhiCalen
 }
 
 export function isPhiTemporalSelection(value: unknown): value is PhiTemporalSelection {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  if (!isPhiRecord(value)) return false;
   const candidate = value as Record<string, unknown>;
   if (candidate.mode === "single") return candidate.value === null || isPhiTemporalValue(candidate.value);
   if (candidate.mode === "range") {
@@ -215,7 +216,7 @@ export function isPhiTemporalSelection(value: unknown): value is PhiTemporalSele
 }
 
 export function isPhiCalendarViewport(value: unknown): value is PhiCalendarViewport {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  if (!isPhiRecord(value)) return false;
   const candidate = value as Record<string, unknown>;
   return typeof candidate.calendar === "string" && candidate.calendar.length > 0 &&
     typeof candidate.timeZone === "string" && candidate.timeZone.length > 0 &&
@@ -225,7 +226,7 @@ export function isPhiCalendarViewport(value: unknown): value is PhiCalendarViewp
 }
 
 export function isPhiCalendarEvent(value: unknown): value is PhiCalendarEvent {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  if (!isPhiRecord(value)) return false;
   const candidate = value as Record<string, unknown>;
   if (typeof candidate.id !== "string" || !candidate.id ||
     typeof candidate.title !== "string" || typeof candidate.allDay !== "boolean") {
@@ -241,7 +242,7 @@ export function isPhiCalendarEvent(value: unknown): value is PhiCalendarEvent {
 }
 
 export function isPhiTemporalValue(value: unknown): value is PhiTemporalValue {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  if (!isPhiRecord(value)) return false;
   const candidate = value as Record<string, unknown>;
   if (candidate.kind === "date") return isPhiCalendarDate(candidate.value);
   if (candidate.kind === "datetime") {

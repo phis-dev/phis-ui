@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../../../helpers/is-record";
 import { PhiCmsFlags } from "../../../constants/phi-cms";
 import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode } from "../../../types/cms";
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
@@ -268,7 +269,7 @@ function patchSelectedStructureDraftConfig(
 }
 
 function readRecordPatch(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" && !Array.isArray(value)
+  return isPhiRecord(value)
     ? value as Record<string, unknown>
     : null;
 }

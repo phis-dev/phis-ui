@@ -1,5 +1,6 @@
 "use client";
 
+import { isPhiRecord } from "../../helpers/is-record";
 import { useEffect, useMemo, useState } from "react";
 
 import { PhiMediaKind } from "../../constants/media";
@@ -38,7 +39,7 @@ export type PhiSiteFontAssetOption = {
 
 function readFontAssetMetrics(asset: PhiMediaAssetTile): PhiFontMetrics | null {
   const meta = asset.meta?.font;
-  if (!meta || typeof meta !== "object" || Array.isArray(meta)) return null;
+  if (!isPhiRecord(meta)) return null;
   const record = meta as Record<string, unknown>;
   // The management tile carries `meta` as stored; only a shape with its unit grid is worth drawing from.
   return typeof record.unitsPerEm === "number" && record.unitsPerEm > 0 ? (record as unknown as PhiFontMetrics) : null;

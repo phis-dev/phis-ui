@@ -1,4 +1,5 @@
 import type { PhiProviderResourceSource } from "./runtime-data-provider";
+import { readPhiDotPath } from "../helpers/dot-path";
 import type { PhiControlPresentationConfig, PhiFeedbackLevel } from "./control";
 import type { PhiCssLength } from "./length";
 import type { PhiControlOption, PhiControlOptionsProviderConfig } from "../components/controls/phi-control-options";
@@ -810,15 +811,10 @@ export function readPhiTableRowOptions(
   field: Pick<PhiTableProviderFieldDefinition, "rowOptionsPath">,
 ): readonly PhiControlOption<string>[] | null {
   if (!row || !field.rowOptionsPath) return null;
-  const value = field.rowOptionsPath.split(".").filter(Boolean).reduce<unknown>(
-    (current, segment) => current && typeof current === "object" && !Array.isArray(current)
-      ? (current as Record<string, unknown>)[segment]
-      : undefined,
-    row,
-  );
+  const value = readPhiDotPath(row, field.rowOptionsPath);
   if (!Array.isArray(value)) return null;
   return value.flatMap((entry): PhiControlOption<string>[] => {
-    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return [];
+    if (!isPhiRecord(entry)) return [];
     const record = entry as Record<string, unknown>;
     return typeof record.value === "string" && typeof record.label === "string"
       ? [{

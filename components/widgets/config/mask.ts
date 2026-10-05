@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../../../helpers/is-record";
 import type { CSSProperties } from "react";
 
 import { readBoolean, readCssSize, readNumber, readString } from "./parser-primitives";
@@ -181,7 +182,7 @@ function readMaskRotation(value: unknown) {
 }
 
 export function normalizePhiMaskConfig(value: unknown): PhiMaskConfig | undefined {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  if (!isPhiRecord(value)) {
     return undefined;
   }
 

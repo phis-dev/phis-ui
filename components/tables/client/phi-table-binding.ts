@@ -1,5 +1,6 @@
 "use client";
 
+import { isPhiRecord } from "../../../helpers/is-record";
 import {
   useCallback,
   useEffect,
@@ -582,7 +583,7 @@ export function usePhiTableBinding({
               ? Array.isArray(value) && value.every((entry) => typeof entry === "string")
               : action.valueType === "number[]"
                 ? Array.isArray(value) && value.every((entry) => typeof entry === "number" && Number.isFinite(entry))
-                : Boolean(value) && typeof value === "object" && !Array.isArray(value);
+                : isPhiRecord(value);
     if (!valueValid) {
       const valueError = new PhiTableProviderError(
         "action-value-invalid",

@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../../../../../helpers/is-record";
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsMediaPickerWidgetConfig } from "../../../../../types/media";
 import { normalizePhiMediaKind, PhiMediaKind } from "../../../../../constants/media";
@@ -22,7 +23,7 @@ const PHI_MEDIA_PICKER_DATA_SOURCE = {
 } as const satisfies PhiProviderResourceSource;
 
 export function normalizePhiCmsMediaPickerWidgetConfig(config: unknown): PhiCmsMediaPickerWidgetConfig {
-  if (!config || typeof config !== "object" || Array.isArray(config)) {
+  if (!isPhiRecord(config)) {
     return {
       mediaType: PhiMediaKind.Image,
       presentationFlags: null,

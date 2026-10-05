@@ -1,5 +1,6 @@
 "use client";
 
+import { isPhiRecord } from "../../../../helpers/is-record";
 import { useEffect, useMemo, useState } from "react";
 
 import type { PhiSignalAddress } from "../../../../types";
@@ -81,7 +82,7 @@ export function usePhiChoiceController<TConfig extends PhiChoiceControlConfig>({
       if (capabilityId !== "options") {
         return false;
       }
-      const value = signal.value && typeof signal.value === "object" && !Array.isArray(signal.value)
+      const value = isPhiRecord(signal.value)
         ? (signal.value as { options?: unknown }).options
         : undefined;
       setSentOptions({ source: configuredOptions, options: readPhiControlOptions(value) });

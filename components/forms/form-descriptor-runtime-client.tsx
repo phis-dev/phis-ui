@@ -1,5 +1,6 @@
 "use client";
 
+import { isPhiRecord } from "../../helpers/is-record";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { PhiSignalAddress, PhiSignalValue } from "../../types/signals";
@@ -366,7 +367,7 @@ export function PhiFormDescriptorRuntimeClient({
       const raw = window.sessionStorage.getItem(draftStorageKey);
       if (!raw) return;
       const parsed: unknown = JSON.parse(raw);
-      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      if (isPhiRecord(parsed)) {
         formRef.current?.setFieldsValue(parsed as Record<string, unknown>);
       }
     } catch {

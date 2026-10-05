@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../../helpers/is-record";
 import type { PhiImagePreviewApiRecord } from "./phi-image-preview-data";
 import { buildPhiMediaClientDigest } from "./media-upload-digest";
 import { PHIS_AREA_HEADER, buildPhiMediaRequestHeaders } from "./phi-media-request-headers";
@@ -439,7 +440,7 @@ export async function initPhiMediaUploadSession(
     : null;
   const presentationFlags = Number.isInteger(options?.presentationFlags) && (options?.presentationFlags ?? 0) >= 0 ? options?.presentationFlags : null;
   const meta =
-    options?.meta && typeof options.meta === "object" && !Array.isArray(options.meta)
+    isPhiRecord(options?.meta)
       ? options.meta
       : null;
   // The Space is named the way every Media route names one -- as a query parameter -- while the Folder

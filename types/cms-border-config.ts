@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../helpers/is-record";
 import {
   readCssSize,
   readNumber,
@@ -11,7 +12,7 @@ import type { PhiCmsBorderWidgetConfig } from "./cms-config";
  * something every page should download for it.
  */
 export function readPhiCmsBorderWidgetConfig(value: unknown): PhiCmsBorderWidgetConfig | undefined {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  if (!isPhiRecord(value)) {
     const border = readString(value);
     if (border == null) {
       return undefined;

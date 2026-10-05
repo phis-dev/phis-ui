@@ -1,6 +1,12 @@
 "use client";
 
 import { useCallback, useMemo, useRef, type ReactNode } from "react";
+import {
+  buildPhiTablePageParams,
+  createPhiTableProviderRequestInit,
+  readPhiTableRows,
+  readPhiTableStringFilter,
+} from "../../../../components/widgets/client/shared/phi-table-provider-request";
 
 import { PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
@@ -39,22 +45,10 @@ type ApiResponse = {
   updatedAt?: unknown;
 };
 
-function readRows(value: unknown) {
-  return Array.isArray(value) ? value.filter(isPhiRecord) : [];
-}
-
-function readStringFilter(query: PhiTableQuery, key: string) {
-  const value = query.filters?.[key];
-  return typeof value === "string" ? value.trim() : "";
-}
-
 const RESPONSE_OPTIONS: ReadPhiTableProviderResponseOptions = { subject: "Localization" };
 
 function buildQueryParams(query: PhiTableQuery) {
-  const params = new URLSearchParams({
-    page: String(query.page && query.page > 0 ? query.page : 1),
-    pageSize: String(query.pageSize && query.pageSize > 0 ? query.pageSize : 25),
-  });
+  const params = buildPhiTablePageParams(query);
   const search = query.search?.trim() ?? "";
   if (search) params.set("search", search);
   return params;
@@ -65,20 +59,15 @@ async function loadSiteTranslations({
   signal,
 }: PhiTableProviderQueryRequest): Promise<PhiTableProviderQueryResult> {
   const params = buildQueryParams(query);
-  const locale = readStringFilter(query, "locale");
+  const locale = readPhiTableStringFilter(query, "locale");
   if (locale) params.set("locale", locale);
   const result = await readPhiTableProviderResponse<ApiResponse>(
-    await fetch(`${ADMIN_LOCALES_API_PATH}?${params.toString()}`, {
-      cache: "no-store",
-      credentials: "include",
-      headers: { accept: "application/json" },
-      signal,
-    }),
+    await fetch(`${ADMIN_LOCALES_API_PATH}?${params.toString()}`, createPhiTableProviderRequestInit(signal)),
     RESPONSE_OPTIONS,
   );
   const translations = isPhiRecord(result?.translations) ? result.translations : {};
   const selectedLocale = typeof result?.selectedLocale === "string" ? result.selectedLocale : "";
-  const rows = readRows(translations.rows).map((row) => ({
+  const rows = readPhiTableRows(translations.rows).map((row) => ({
     ...row,
     sourceContext:
       typeof row.sourceContext === "string" && row.sourceContext.trim()
@@ -98,7 +87,7 @@ async function loadSiteTranslations({
       : undefined,
     facets: {
       site: isPhiRecord(result?.site) ? result.site : {},
-      platformLocales: readRows(result?.platformLocales),
+      platformLocales: readPhiTableRows(result?.platformLocales),
       selectedLocale,
     },
   };
@@ -109,24 +98,19 @@ async function loadEditorTranslations({
   signal,
 }: PhiTableProviderQueryRequest): Promise<PhiTableProviderQueryResult> {
   const params = buildQueryParams(query);
-  const locale = readStringFilter(query, "locale");
-  const context = readStringFilter(query, "context");
-  const status = readStringFilter(query, "status");
+  const locale = readPhiTableStringFilter(query, "locale");
+  const context = readPhiTableStringFilter(query, "context");
+  const status = readPhiTableStringFilter(query, "status");
   if (locale) params.set("locale", locale);
   if (context && context !== "all") params.set("ctx", context);
   if (status) params.set("status", status);
   const result = await readPhiTableProviderResponse<ApiResponse>(
-    await fetch(`${EDITOR_TRANSLATIONS_API_PATH}?${params.toString()}`, {
-      cache: "no-store",
-      credentials: "include",
-      headers: { accept: "application/json" },
-      signal,
-    }),
+    await fetch(`${EDITOR_TRANSLATIONS_API_PATH}?${params.toString()}`, createPhiTableProviderRequestInit(signal)),
     RESPONSE_OPTIONS,
   );
   const translations = isPhiRecord(result?.translations) ? result.translations : {};
   const selectedLocale = typeof result?.selectedLocale === "string" ? result.selectedLocale : "";
-  const rows = readRows(translations.rows).map((row) => ({
+  const rows = readPhiTableRows(translations.rows).map((row) => ({
     ...row,
     status: row.hasTranslation === true ? "translated" : "missing",
   }));
@@ -140,20 +124,15 @@ async function loadEditorTranslations({
     facets: {
       sourceLocale: typeof result?.sourceLocale === "string" ? result.sourceLocale : "",
       selectedLocale,
-      availableLocales: readRows(site.availableLocales),
-      contexts: readRows(result?.contexts),
+      availableLocales: readPhiTableRows(site.availableLocales),
+      contexts: readPhiTableRows(result?.contexts),
     },
   };
 }
 
 async function loadSiteLocaleSettings(signal: AbortSignal) {
   const result = await readPhiTableProviderResponse<ApiResponse>(
-    await fetch(`${ADMIN_LOCALES_API_PATH}?page=1&pageSize=1`, {
-      cache: "no-store",
-      credentials: "include",
-      headers: { accept: "application/json" },
-      signal,
-    }),
+    await fetch(`${ADMIN_LOCALES_API_PATH}?page=1&pageSize=1`, createPhiTableProviderRequestInit(signal)),
     RESPONSE_OPTIONS,
   );
   const site = isPhiRecord(result?.site) ? result.site : {};
@@ -161,7 +140,7 @@ async function loadSiteLocaleSettings(signal: AbortSignal) {
     id: "site",
     sourceLocale: typeof site.sourceLocale === "string" ? site.sourceLocale : "",
     defaultLocale: typeof site.defaultLocale === "string" ? site.defaultLocale : "",
-    availableLocales: readRows(site.availableLocales).flatMap((entry) =>
+    availableLocales: readPhiTableRows(site.availableLocales).flatMap((entry) =>
       typeof entry.code === "string" ? [entry.code] : []),
   };
 }
@@ -190,8 +169,8 @@ export function PhiLocalizationTableProviderClient({ children }: { children: Rea
             ...(data.facets ?? {}),
             query: {
               locale: typeof data.facets?.selectedLocale === "string" ? data.facets.selectedLocale : "",
-              context: readStringFilter(request.query, "context"),
-              status: readStringFilter(request.query, "status") || "all",
+              context: readPhiTableStringFilter(request.query, "context"),
+              status: readPhiTableStringFilter(request.query, "status") || "all",
               search: request.query.search?.trim() ?? "",
             },
           },

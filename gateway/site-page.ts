@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../helpers/is-record";
 import { cache } from "react";
 import "server-only";
 
@@ -198,7 +199,7 @@ export const getSiteCmsPageCatalog = cache(async function getSiteCmsPageCatalog(
   const payload = (await response.json().catch(() => null)) as { pages?: unknown } | null;
   if (!Array.isArray(payload?.pages)) return [];
   return payload.pages.map((entry) => {
-    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+    if (!isPhiRecord(entry)) {
       throw new Error("CMS Page catalog contains an invalid entry.");
     }
     const page = entry as Record<string, unknown>;

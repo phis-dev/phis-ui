@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../../helpers/is-record";
 import type {
   PhiCmsFormWidgetCardConfig,
   PhiCmsFormWidgetFeedbackConfig,
@@ -78,7 +79,7 @@ export type PhiCmsFormWidgetConfig = PhiCmsWidgetConfigBase & {
 };
 
 function readRecord(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object" && !Array.isArray(value)
+  return isPhiRecord(value)
     ? { ...(value as Record<string, unknown>) }
     : {};
 }

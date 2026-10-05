@@ -1,8 +1,14 @@
 "use client";
 
 import { useCallback, useMemo, useRef, type ReactNode } from "react";
+import {
+  buildPhiTablePageParams,
+  createPhiTableProviderRequestInit,
+  readPhiTableRows,
+  readPhiTableStringFilter,
+} from "../../../../components/widgets/client/shared/phi-table-provider-request";
+import { readNumber } from "../../../../components/widgets/config/parser-primitives";
 
-import { isPhiRecord } from "../../../../helpers/is-record";
 import {
   PhiTableProviderError,
   type PhiTableProviderMutationRequest,
@@ -35,10 +41,6 @@ type NewsApiResponse = {
   tags?: unknown;
 };
 
-function readNumber(value: unknown, fallback: number) {
-  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
-}
-
 /**
  * The store's status as the Table speaks it.
  *
@@ -52,19 +54,11 @@ function readStatusWord(status: unknown) {
   return String(status ?? "");
 }
 
-function readStringFilter(query: PhiTableQuery, key: string) {
-  const value = query.filters?.[key];
-  return typeof value === "string" ? value.trim() : "";
-}
-
 function buildQueryParams(query: PhiTableQuery) {
-  const params = new URLSearchParams({
-    page: String(query.page && query.page > 0 ? query.page : 1),
-    pageSize: String(query.pageSize && query.pageSize > 0 ? query.pageSize : 25),
-  });
+  const params = buildPhiTablePageParams(query);
   const search = query.search?.trim() ?? "";
   if (search) params.set("search", search);
-  const status = readStringFilter(query, "status");
+  const status = readPhiTableStringFilter(query, "status");
   // "all" is the Table's way of saying no filter, and the endpoint reads anything it does not know as none.
   if (status && status !== "all") params.set("status", status);
   return params;
@@ -75,22 +69,17 @@ async function loadEntries({
   signal,
 }: PhiTableProviderQueryRequest): Promise<PhiTableProviderQueryResult> {
   const result = await readPhiTableProviderResponse<NewsApiResponse>(
-    await fetch(`${NEWS_API_PATH}?${buildQueryParams(query).toString()}`, {
-      cache: "no-store",
-      credentials: "include",
-      headers: { accept: "application/json" },
-      signal,
-    }),
+    await fetch(`${NEWS_API_PATH}?${buildQueryParams(query).toString()}`, createPhiTableProviderRequestInit(signal)),
     RESPONSE_OPTIONS,
   );
 
-  const rows = (Array.isArray(result?.entries) ? result.entries.filter(isPhiRecord) : [])
+  const rows = readPhiTableRows(result?.entries)
     .map((row) => ({ ...row, status: readStatusWord(row.status) }));
   return {
     rows,
-    total: readNumber(result?.total, rows.length),
-    page: readNumber(result?.page, 1),
-    pageSize: readNumber(result?.pageSize, rows.length || 25),
+    total: readNumber(result?.total) ?? rows.length,
+    page: readNumber(result?.page) ?? 1,
+    pageSize: readNumber(result?.pageSize) ?? (rows.length || 25),
     /*
      * The tags the Site already uses, answered beside the page. It is a facet rather than a second request
      * because it is the same question: what is in these entries.

@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../helpers/is-record";
 import type { PhiControlOption } from "../components/controls/phi-control-options";
 import { PHI_CORE_THEME_SET_KEY, PHI_CORE_THEME_SETS, type PhiThemeSetBlock } from "./phi-theme-blocks";
 import { PHI_DEFAULT_THEME_PRESET_KEY } from "./phi-theme-presets";
@@ -67,11 +68,11 @@ export function createPhiThemeDerivation(set: Pick<PhiThemeSetBlock, "key" | "ve
 }
 
 function readPhiThemeDerivation(value: unknown): PhiThemeDerivation | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  if (!isPhiRecord(value)) {
     return null;
   }
   const set = (value as { set?: unknown }).set;
-  if (!set || typeof set !== "object" || Array.isArray(set)) {
+  if (!isPhiRecord(set)) {
     return null;
   }
   const { key, version, title } = set as { key?: unknown; version?: unknown; title?: unknown };

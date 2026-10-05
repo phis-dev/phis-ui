@@ -1,8 +1,9 @@
+import { isPhiRecord } from "../helpers/is-record";
 import type { PhiRenderableBlockSize } from "./renderable-block";
 import { readPhiCssLengthPart, serializePhiCssLength } from "./length";
 
 export function readPhiDimensionValue(value: unknown): PhiRenderableBlockSize | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  if (!isPhiRecord(value)) {
     return null;
   }
 

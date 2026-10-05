@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../../../../../helpers/is-record";
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import type { PhiBuilderChromeControlsWidgetConfig } from "./server";
@@ -5,7 +6,7 @@ import type { PhiBuilderChromeControlsWidgetConfig } from "./server";
 export type { PhiBuilderChromeControlsWidgetConfig } from "./server";
 
 function parsePhiBuilderChromeControlsWidgetConfig(value: unknown): PhiBuilderChromeControlsWidgetConfig {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  if (!isPhiRecord(value)) {
     return {};
   }
 

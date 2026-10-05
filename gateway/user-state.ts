@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../helpers/is-record";
 import { cache } from "react";
 import "server-only";
 
@@ -66,7 +67,7 @@ export const getPhiUserState = cache(async function getPhiUserState({
   }
 
   const payload = (await response.json()) as { state?: unknown };
-  if (!payload.state || typeof payload.state !== "object" || Array.isArray(payload.state)) {
+  if (!isPhiRecord(payload.state)) {
     throw new Error("User state answered without a state object.");
   }
 

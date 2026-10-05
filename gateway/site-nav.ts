@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../helpers/is-record";
 import "server-only";
 
 import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
@@ -92,7 +93,7 @@ export async function fetchSiteNavigationScopes({
     throw new Error("Missing site navigation scopes payload.");
   }
   return payload.scopes.flatMap((scope) => {
-    if (!scope || typeof scope !== "object" || Array.isArray(scope)) {
+    if (!isPhiRecord(scope)) {
       return [];
     }
     const record = scope as Record<string, unknown>;

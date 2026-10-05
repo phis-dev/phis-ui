@@ -1,5 +1,6 @@
 "use client";
 
+import { isPhiRecord } from "../../../helpers/is-record";
 import type { PhiCollectionProviderResourceDescriptor } from "../../../types/collection-provider";
 import type { PhiRuntimeModuleDataProviderDescriptor } from "../contracts";
 import {
@@ -45,7 +46,7 @@ export function readPhiBuilderBoundCollectionResource(
   dataProviders: readonly PhiRuntimeModuleDataProviderDescriptor[],
 ): PhiCollectionProviderResourceDescriptor | null {
   const source = config?.source;
-  if (!source || typeof source !== "object" || Array.isArray(source)) {
+  if (!isPhiRecord(source)) {
     return null;
   }
   const { providerKey, resourceKey } = source as { providerKey?: unknown; resourceKey?: unknown };

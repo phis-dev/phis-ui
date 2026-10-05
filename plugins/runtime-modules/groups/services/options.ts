@@ -1,5 +1,7 @@
 "use client";
 
+import { isPhiRecord } from "../../../../helpers/is-record";
+import { readPhiTableRows } from "../../../../components/widgets/client/shared/phi-table-provider-request";
 import {
   createPhiControlOptionsProviderClient,
   type PhiControlOptionsProviderContext,
@@ -42,13 +44,9 @@ async function loadJson(path: string, failure: string) {
   return payload;
 }
 
+/** The rows of a listing answer, or none where the answer is not a record. */
 function readRows(value: unknown) {
-  return Array.isArray((value as { rows?: unknown } | null)?.rows)
-    ? ((value as { rows: unknown[] }).rows).filter(
-        (row): row is Record<string, unknown> =>
-          Boolean(row) && typeof row === "object" && !Array.isArray(row),
-      )
-    : [];
+  return readPhiTableRows(isPhiRecord(value) ? value.rows : undefined);
 }
 
 /** A row's id field as an Option value: a positive integer or a non-blank string, else none. */

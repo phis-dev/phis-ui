@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../../../helpers/is-record";
 import { stripPhiResolvedAssetProjections } from "../../../components/media/image-presentation";
 import type {
   PhiCmsContentWidgetNode,
@@ -13,7 +14,6 @@ import {
 } from "./developer-workspace-types";
 import type {
   PhiRenderableBlockResponsiveSize,
-  PhiRenderableBlockSize,
 } from "../../../types/renderable-block";
 import { readPhiLengthValue, type PhiCssLength } from "../../../types/length";
 import { getPhiBuilderDefaultRegionDraft } from "./region-defaults";
@@ -24,6 +24,7 @@ import {
   type PhiBuilderRegionKey,
 } from "./region-keys";
 import { readPhiSurface } from "../../../types/surface";
+import { normalizePhiRenderableBlockSize } from "../../../helpers/renderable-block-normalizers";
 import { hasPhiFlag, readPhiFlags } from "../../../helpers/flags";
 import { PhiCmsFlags } from "../../../constants/phi-cms";
 
@@ -60,41 +61,9 @@ const BUILDER_REGION_KEYS = [...PHI_BUILDER_SHELL_REGION_KEYS, ...PHI_BUILDER_PA
 type PhiBuilderHydrationTree = Pick<PhiResolvedCmsPageTree, "regions" | "layoutNodes" | "contentWidgets">;
 
 function toJsonRecord(value: unknown) {
-  return value && typeof value === "object" && !Array.isArray(value)
+  return isPhiRecord(value)
     ? (value as JsonRecord)
     : {};
-}
-
-function readGeometrySize(value: unknown) {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
-  }
-
-  if (typeof value === "string") {
-    const trimmed = value.trim();
-    return trimmed.length > 0 ? trimmed : null;
-  }
-
-  return null;
-}
-
-function readRenderableBlockSize(value: unknown): PhiRenderableBlockSize | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return null;
-  }
-
-  const raw = value as Record<string, unknown>;
-  const width = readGeometrySize(raw.width);
-  const height = readGeometrySize(raw.height);
-
-  if (width == null && height == null) {
-    return null;
-  }
-
-  return {
-    ...(width == null ? {} : { width }),
-    ...(height == null ? {} : { height }),
-  };
 }
 
 function isPhiBuilderRegionKey(value: string): value is PhiBuilderRegionKey {
@@ -170,9 +139,9 @@ function buildRegionDraft(
     regionConfig: toJsonRecord(regionConfig),
     sticky: hasPhiFlag(readPhiFlags(regionConfig.flags), PhiCmsFlags.Sticky),
     offsetTop: readPhiLengthValue(regionConfig.offsetTop) ?? fallback.offsetTop,
-    size: readRenderableBlockSize(regionConfig.size) ?? fallback.size,
-    minSize: readRenderableBlockSize(regionConfig.minSize) ?? fallback.minSize,
-    maxSize: readRenderableBlockSize(regionConfig.maxSize) ?? fallback.maxSize,
+    size: normalizePhiRenderableBlockSize(regionConfig.size) ?? fallback.size,
+    minSize: normalizePhiRenderableBlockSize(regionConfig.minSize) ?? fallback.minSize,
+    maxSize: normalizePhiRenderableBlockSize(regionConfig.maxSize) ?? fallback.maxSize,
     zIndex: typeof regionConfig.zIndex === "number" && Number.isInteger(regionConfig.zIndex)
       ? regionConfig.zIndex
       : fallback.zIndex,

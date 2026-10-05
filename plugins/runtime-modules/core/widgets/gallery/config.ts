@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../../../../../helpers/is-record";
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import {
@@ -114,7 +115,7 @@ function readGalleryImages(value: unknown): PhiGalleryImage[] {
   if (value === undefined || value === null) return [];
   if (!Array.isArray(value)) fail("images", value, "an array of pictures");
   return value.map((entry, index) => {
-    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+    if (!isPhiRecord(entry)) {
       fail(`images[${index}]`, entry, "an object with a url");
     }
     const record = entry as Record<string, unknown>;

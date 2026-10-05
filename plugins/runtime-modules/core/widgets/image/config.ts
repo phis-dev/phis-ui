@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../../../../../helpers/is-record";
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type {
   PhiImageWidgetFit,
@@ -43,7 +44,7 @@ export type PhiCmsImageWidgetConfig = PhiCmsWidgetConfigBase &
   };
 
 function readImageSize(value: unknown): PhiImageWidgetSize | undefined {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  if (!isPhiRecord(value)) {
     return undefined;
   }
   const record = value as Record<string, unknown>;
@@ -63,7 +64,7 @@ function readImageFit(value: unknown): PhiImageWidgetFit {
 }
 
 export function normalizePhiImageWidgetConfig(config: unknown): PhiCmsImageWidgetConfig {
-  if (!config || typeof config !== "object" || Array.isArray(config)) {
+  if (!isPhiRecord(config)) {
     return {
       ...readRenderableBlockConfig({}),
       sourceKind: "url",

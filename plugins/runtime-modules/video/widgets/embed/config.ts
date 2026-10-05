@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../../../../../helpers/is-record";
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { isPhiVideoProviderKey, type PhiVideoProviderKey } from "../../../../../types/video";
@@ -70,7 +71,7 @@ export type PhiVideoEmbedWidgetConfig = PhiCmsWidgetConfigBase & {
 };
 
 export function normalizePhiVideoEmbedWidgetConfig(config: unknown): PhiVideoEmbedWidgetConfig {
-  if (!config || typeof config !== "object" || Array.isArray(config)) {
+  if (!isPhiRecord(config)) {
     return {
       ...readRenderableBlockConfig({}),
       providerKey: undefined,

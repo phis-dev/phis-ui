@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../../helpers/is-record";
 import type { PhiSignal } from "../../types";
 import { readPhiCmsInstanceId } from "../../types/cms-instance-id";
 
@@ -40,7 +41,7 @@ export function isPhiStackSignalMessage(value: unknown): value is PhiStackSignal
 
 export function resolvePhiStackSignalMessage(signal: PhiSignal): PhiStackSignalMessage | null {
   const value = signal.value;
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  if (!isPhiRecord(value)) {
     return null;
   }
 

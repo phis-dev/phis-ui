@@ -1,3 +1,4 @@
+import { isPhiRecord } from "./is-record";
 import type { PhiBuilderAreaKey } from "../constants/cms-areas";
 import { createPhiDefaultAreaRuntimeModuleIds } from "../plugins/runtime-modules/area-module-defaults";
 import { readPhiRuntimeModuleIds } from "../plugins/runtime-modules/settings";
@@ -35,7 +36,7 @@ export function readPhiAreaConfigNamespace(
   namespace: PhiAreaConfigNamespace,
 ): Record<string, unknown> | undefined {
   const value = config?.[namespace];
-  return value && typeof value === "object" && !Array.isArray(value)
+  return isPhiRecord(value)
     ? value as Record<string, unknown>
     : undefined;
 }
@@ -99,7 +100,7 @@ export function readPhiAreaRootRoute(
   const value = readPhiAreaConfigNamespace(config, PHI_AREA_CONFIG_SHELL_NAMESPACE)?.[
     PHI_AREA_ROOT_ROUTE_KEY
   ];
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  if (!isPhiRecord(value)) {
     return null;
   }
   const record = value as Record<string, unknown>;
@@ -312,7 +313,7 @@ export function readPhiAreaMeta(
   config: Record<string, unknown> | null | undefined,
 ): PhiAreaMeta | null {
   const value = readPhiAreaConfigNamespace(config, PHI_AREA_CONFIG_SHELL_NAMESPACE)?.[PHI_AREA_META_KEY];
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  if (!isPhiRecord(value)) {
     return null;
   }
   const record = value as Record<string, unknown>;
@@ -365,7 +366,7 @@ export function isPhiAssignablePublicRoutePath(value: unknown): value is string 
 }
 
 function readPublicRoutePathAssignment(value: unknown): PhiPublicRoutePathAssignment | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  if (!isPhiRecord(value)) {
     return null;
   }
   const record = value as Record<string, unknown>;

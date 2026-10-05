@@ -1,5 +1,6 @@
 "use client";
 
+import { isPhiRecord } from "../../../../../helpers/is-record";
 import type { PhiTreeWidgetLabels } from "../../../../../components/widgets/label-types/tree";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -169,9 +170,9 @@ export function PhiTreeWidgetClient({ config, labels }: { config: PhiTreeWidgetC
       binding.setQuery({ ...binding.query, search: "" });
     } else if (route.capabilityId === "reload") {
       binding.reload();
-    } else if (route.capabilityId === "bindingParamsChange" && signal.value && typeof signal.value === "object" && !Array.isArray(signal.value)) {
+    } else if (route.capabilityId === "bindingParamsChange" && isPhiRecord(signal.value)) {
       const params = (signal.value as Record<string, unknown>).params;
-      if (params && typeof params === "object" && !Array.isArray(params)) {
+      if (isPhiRecord(params)) {
         setBindingParams((current) => ({ ...current, ...params as Record<string, unknown> }));
       }
     } else if (route.capabilityId === "selectionChange" && Array.isArray(signal.value)) {
@@ -180,7 +181,7 @@ export function PhiTreeWidgetClient({ config, labels }: { config: PhiTreeWidgetC
       binding.setCheckedNodeIdentities(signal.value.filter((value): value is string => typeof value === "string"));
     } else if (route.capabilityId === "expansionChange" && Array.isArray(signal.value)) {
       binding.setExpandedNodeIdentities(signal.value.filter((value): value is string => typeof value === "string"));
-    } else if (route.capabilityId === "actionActivate" && signal.value && typeof signal.value === "object" && !Array.isArray(signal.value)) {
+    } else if (route.capabilityId === "actionActivate" && isPhiRecord(signal.value)) {
       const request = signal.value as Record<string, unknown>;
       const action = [...(config.features.actions?.toolbar ?? []), ...(config.features.actions?.node ?? []), ...(config.features.actions?.selection ?? [])]
         .find((candidate) => candidate.key === request.actionKey);

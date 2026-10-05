@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../helpers/is-record";
 /**
  * What a conversation signal carries.
  *
@@ -26,7 +27,7 @@ export type PhiThreadSignalValue = {
 };
 
 export function readPhiThreadSignalValue(value: unknown): PhiThreadSignalValue | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  if (!isPhiRecord(value)) {
     return null;
   }
   const threadId = (value as { threadId?: unknown }).threadId;

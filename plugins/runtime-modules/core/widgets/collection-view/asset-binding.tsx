@@ -1,5 +1,6 @@
 "use client";
 
+import { isPhiRecord } from "../../../../../helpers/is-record";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { PhiMediaAssetFlags, PhiMediaKind } from "../../../../../constants/media";
@@ -151,7 +152,7 @@ export function PhiAssetCollectionViewBinding({
     signalRoutes: config.signalRoutes,
     valueType: "json",
     typeKey: "collection-view",
-    coerceValue: (nextValue) => nextValue && typeof nextValue === "object" && !Array.isArray(nextValue)
+    coerceValue: (nextValue) => isPhiRecord(nextValue)
       ? nextValue as Record<string, unknown>
       : null,
   });

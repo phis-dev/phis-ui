@@ -1,5 +1,6 @@
 "use client";
 
+import { isPhiRecord } from "../../helpers/is-record";
 import { useMemo, useRef, useState } from "react";
 
 import type { PhiFormFieldProviderProps } from "./form-provider-registry";
@@ -23,7 +24,7 @@ type RecordValue = Record<string, unknown>;
 
 function readRecords(value: unknown): RecordValue[] {
   return Array.isArray(value)
-    ? value.filter((entry): entry is RecordValue => Boolean(entry) && typeof entry === "object" && !Array.isArray(entry)).map((entry) => ({ ...entry }))
+    ? value.filter((entry): entry is RecordValue => isPhiRecord(entry)).map((entry) => ({ ...entry }))
     : [];
 }
 
@@ -34,7 +35,7 @@ function setPath(record: RecordValue, path: string, value: unknown) {
   let cursor = next;
   for (const segment of segments.slice(0, -1)) {
     const child = cursor[segment];
-    const cloned = child && typeof child === "object" && !Array.isArray(child) ? { ...(child as RecordValue) } : {};
+    const cloned = isPhiRecord(child) ? { ...(child as RecordValue) } : {};
     cursor[segment] = cloned;
     cursor = cloned;
   }
@@ -45,7 +46,7 @@ function setPath(record: RecordValue, path: string, value: unknown) {
 function readControlOptions(value: unknown): PhiControlOption<string | number>[] | undefined {
   if (!Array.isArray(value)) return undefined;
   const options = value.flatMap((entry) => {
-    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return [];
+    if (!isPhiRecord(entry)) return [];
     const option = entry as RecordValue;
     if (typeof option.value !== "string" && typeof option.value !== "number") return [];
     return [{
@@ -59,7 +60,7 @@ function readControlOptions(value: unknown): PhiControlOption<string | number>[]
 }
 
 function readTableCellEditor(value: unknown): PhiTableControlCellEditor | undefined {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  if (!isPhiRecord(value)) return undefined;
   const editor = value as RecordValue;
   const type = editor.type;
   if (
@@ -73,7 +74,7 @@ function readTableCellEditor(value: unknown): PhiTableControlCellEditor | undefi
     type !== "date" &&
     type !== "datetime"
   ) return undefined;
-  const constraints = editor.constraints && typeof editor.constraints === "object" && !Array.isArray(editor.constraints)
+  const constraints = isPhiRecord(editor.constraints)
     ? editor.constraints as RecordValue
     : null;
   return {
@@ -138,20 +139,20 @@ export function PhiCompoundTableFormControl({
   const config = field.config ?? {};
   const identityPath = typeof config.rowIdentityPath === "string" ? config.rowIdentityPath : "id";
   const locked = disabled === true || readOnly === true;
-  const addConfig = config.add && typeof config.add === "object" && !Array.isArray(config.add)
+  const addConfig = isPhiRecord(config.add)
     ? config.add as RecordValue
     : null;
-  const removeConfig = config.remove && typeof config.remove === "object" && !Array.isArray(config.remove)
+  const removeConfig = isPhiRecord(config.remove)
     ? config.remove as RecordValue
     : null;
   const addEnabled = addConfig?.enabled === true;
   const removeEnabled = removeConfig?.enabled === true;
   const addLabel = typeof addConfig?.label === "string" ? addConfig.label : "Add";
   const removeLabel = typeof removeConfig?.label === "string" ? removeConfig.label : "Remove";
-  const addSourceFields = addConfig?.sourceFields && typeof addConfig.sourceFields === "object" && !Array.isArray(addConfig.sourceFields)
+  const addSourceFields = isPhiRecord(addConfig?.sourceFields)
     ? addConfig.sourceFields as RecordValue
     : null;
-  const addResetFields = addConfig?.resetFields && typeof addConfig.resetFields === "object" && !Array.isArray(addConfig.resetFields)
+  const addResetFields = isPhiRecord(addConfig?.resetFields)
     ? addConfig.resetFields as RecordValue
     : null;
   const rawColumns = useMemo(
@@ -159,7 +160,7 @@ export function PhiCompoundTableFormControl({
     [config.columns],
   );
   const columns = useMemo<PhiTableControlColumn<RecordValue>[]>(() => rawColumns.flatMap((entry) => {
-    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return [];
+    if (!isPhiRecord(entry)) return [];
     const column = entry as RecordValue;
     const key = typeof column.key === "string" ? column.key : "";
     const fieldPath = typeof column.fieldPath === "string" ? column.fieldPath : key;
@@ -204,7 +205,7 @@ export function PhiCompoundTableFormControl({
   const columnOrder = renderedColumns.map((column) => column.key);
   const layout = (config.layout && typeof config.layout === "object" ? config.layout : { mode: "auto", overflowX: "auto" }) as PhiTableLayoutConfig;
   const appendRow = () => {
-    let defaultRow = addConfig?.defaultRow && typeof addConfig.defaultRow === "object" && !Array.isArray(addConfig.defaultRow)
+    let defaultRow = isPhiRecord(addConfig?.defaultRow)
       ? { ...(addConfig.defaultRow as RecordValue) }
       : {};
     const formValues = formContext?.getValues() ?? {};

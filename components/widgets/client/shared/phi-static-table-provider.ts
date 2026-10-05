@@ -1,4 +1,5 @@
 import type { PhiRuntimeDataProviderKey } from "../../../../types/runtime-data-provider";
+import { readPhiDotPath } from "../../../../helpers/dot-path";
 import {
   PhiTableProviderError,
   type PhiTableProviderMutationRequest,
@@ -14,13 +15,6 @@ export type PhiStaticTableResource = {
   descriptor: PhiTableProviderResourceDescriptor;
   rows: readonly Record<string, unknown>[];
 };
-
-function readValue(row: Record<string, unknown>, path: string) {
-  return path.split(".").filter(Boolean).reduce<unknown>((current, segment) =>
-    current && typeof current === "object" && !Array.isArray(current)
-      ? (current as Record<string, unknown>)[segment]
-      : undefined, row);
-}
 
 /*
  * One ordering for a column whatever its cells hold: two numbers compare as numbers, anything else as
@@ -53,7 +47,7 @@ function preserveMatchingAncestry(
   const parentPath = resource.hierarchy?.parentRowIdentityPath;
   if (!parentPath) return matches;
   const byIdentity = new Map(rows.flatMap((row) => {
-    const identity = readValue(row, resource.rowIdentityPath);
+    const identity = readPhiDotPath(row, resource.rowIdentityPath);
     return typeof identity === "string" || typeof identity === "number"
       ? [[String(identity), row] as const]
       : [];
@@ -63,7 +57,7 @@ function preserveMatchingAncestry(
     let current = byIdentity.get(identity);
     const visited = new Set<string>();
     while (current) {
-      const parent = readValue(current, parentPath);
+      const parent = readPhiDotPath(current, parentPath);
       if (typeof parent !== "string" && typeof parent !== "number") break;
       const parentIdentity = String(parent);
       if (visited.has(parentIdentity)) break;
@@ -82,13 +76,13 @@ function orderHierarchyRows(
   const parentPath = resource.hierarchy?.parentRowIdentityPath;
   if (!parentPath) return [...rows];
   const identities = new Set(rows.flatMap((row) => {
-    const identity = readValue(row, resource.rowIdentityPath);
+    const identity = readPhiDotPath(row, resource.rowIdentityPath);
     return typeof identity === "string" || typeof identity === "number" ? [String(identity)] : [];
   }));
   const children = new Map<string, Record<string, unknown>[]>();
   const roots: Record<string, unknown>[] = [];
   for (const row of rows) {
-    const parent = readValue(row, parentPath);
+    const parent = readPhiDotPath(row, parentPath);
     const parentIdentity = typeof parent === "string" || typeof parent === "number" ? String(parent) : null;
     if (!parentIdentity || !identities.has(parentIdentity)) {
       roots.push(row);
@@ -101,7 +95,7 @@ function orderHierarchyRows(
   const ordered: Record<string, unknown>[] = [];
   const visited = new Set<string>();
   const append = (row: Record<string, unknown>) => {
-    const identity = readValue(row, resource.rowIdentityPath);
+    const identity = readPhiDotPath(row, resource.rowIdentityPath);
     const key = typeof identity === "string" || typeof identity === "number" ? String(identity) : null;
     if (!key || visited.has(key)) return;
     visited.add(key);
@@ -133,7 +127,7 @@ export function readPhiStaticTableRecord(
     );
   }
   const row = resource.rows.find((candidate) =>
-    String(readValue(candidate, resource.descriptor.rowIdentityPath) ?? "") === String(identity));
+    String(readPhiDotPath(candidate, resource.descriptor.rowIdentityPath) ?? "") === String(identity));
   if (!row) {
     throw new PhiTableProviderError(
       "row-not-found",
@@ -154,9 +148,9 @@ export function queryPhiStaticTableResource(
     const matchesSearch = !search || Object.values(row).some((value) =>
       String(value ?? "").toLocaleLowerCase().includes(search));
     const matchesFilters = Object.entries(request.query.filters ?? {}).every(([key, filter]) =>
-      matchesFilter(readValue(row, key), filter));
+      matchesFilter(readPhiDotPath(row, key), filter));
     if (matchesSearch && matchesFilters) {
-      const identity = readValue(row, resource.descriptor.rowIdentityPath);
+      const identity = readPhiDotPath(row, resource.descriptor.rowIdentityPath);
       if (typeof identity === "string" || typeof identity === "number") {
         matchingIdentities.add(String(identity));
       }
@@ -164,7 +158,7 @@ export function queryPhiStaticTableResource(
   }
   const visibleIdentities = preserveMatchingAncestry(rows, matchingIdentities, resource.descriptor);
   rows = rows.filter((row) => {
-    const identity = readValue(row, resource.descriptor.rowIdentityPath);
+    const identity = readPhiDotPath(row, resource.descriptor.rowIdentityPath);
     return (typeof identity === "string" || typeof identity === "number") &&
       visibleIdentities.has(String(identity));
   });
@@ -172,8 +166,8 @@ export function queryPhiStaticTableResource(
     rows.sort((left, right) => {
       for (const sort of request.query.sorts ?? []) {
         const comparison = compareSortValues(
-          readValue(left, sort.key),
-          readValue(right, sort.key),
+          readPhiDotPath(left, sort.key),
+          readPhiDotPath(right, sort.key),
           sort.direction,
         );
         if (comparison !== 0) return comparison;

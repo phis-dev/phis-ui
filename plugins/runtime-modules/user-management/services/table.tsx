@@ -1,13 +1,20 @@
 "use client";
 
+import { isPhiRecord } from "../../../../helpers/is-record";
 import { PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
+import {
+  buildPhiTablePageParams,
+  createPhiTableProviderRequestInit,
+  readPhiPositiveInteger,
+  readPhiTableRows,
+  readPhiTableStringFilter,
+} from "../../../../components/widgets/client/shared/phi-table-provider-request";
 import {
   PhiTableProviderError,
   type PhiTableProviderMutationRequest,
   type PhiTableProviderQueryRequest,
   type PhiTableProviderQueryResult,
   type PhiTableProviderRecordRequest,
-  type PhiTableQuery,
 } from "../../../../types/table-widget";
 import { createPhiTableProviderClient } from "../../../../components/widgets/client/shared/phi-table-provider";
 import { PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../../../../plugins/runtime-modules/user-management/data-providers";
@@ -29,40 +36,16 @@ type ApiResponse = {
   error?: unknown;
 };
 
-function readStringFilter(query: PhiTableQuery, key: string) {
-  const value = query.filters?.[key];
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function readPositiveInteger(value: unknown) {
-  if (typeof value === "number" && Number.isInteger(value) && value > 0) return value;
-  if (typeof value !== "string") return null;
-  const parsed = Number.parseInt(value, 10);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-}
-
-function readRows(value: unknown) {
-  return Array.isArray(value)
-    ? value.filter(
-        (row): row is Record<string, unknown> =>
-          Boolean(row) && typeof row === "object" && !Array.isArray(row),
-      )
-    : [];
-}
-
 const RESPONSE_OPTIONS: ReadPhiTableProviderResponseOptions = { subject: "User Management" };
 
 async function loadUsers({
   query,
   signal,
 }: PhiTableProviderQueryRequest): Promise<PhiTableProviderQueryResult> {
-  const params = new URLSearchParams({
-    page: String(query.page && query.page > 0 ? query.page : 1),
-    pageSize: String(query.pageSize && query.pageSize > 0 ? query.pageSize : 20),
-  });
+  const params = buildPhiTablePageParams(query, 20);
   const search = query.search?.trim() ?? "";
-  const accountType = readStringFilter(query, "accountType");
-  const enabled = readStringFilter(query, "enabled");
+  const accountType = readPhiTableStringFilter(query, "accountType");
+  const enabled = readPhiTableStringFilter(query, "enabled");
   if (search) params.set("search", search);
   if (accountType) params.set("accountType", accountType);
   if (enabled) params.set("enabled", enabled);
@@ -73,15 +56,10 @@ async function loadUsers({
   }
 
   const result = await readPhiTableProviderResponse<ApiResponse>(
-    await fetch(`${API_PATH}?${params.toString()}`, {
-      cache: "no-store",
-      credentials: "include",
-      headers: { accept: "application/json" },
-      signal,
-    }),
+    await fetch(`${API_PATH}?${params.toString()}`, createPhiTableProviderRequestInit(signal)),
     RESPONSE_OPTIONS,
   );
-  const rows = readRows(result?.rows);
+  const rows = readPhiTableRows(result?.rows);
   if (typeof result?.siteTotal !== "number" || !Number.isFinite(result.siteTotal) || result.siteTotal < 0) {
     throw new PhiTableProviderError("invalid-response", "User Management site total is invalid.");
   }
@@ -100,7 +78,7 @@ async function loadUserSessions({
   query,
   signal,
 }: PhiTableProviderQueryRequest): Promise<PhiTableProviderQueryResult> {
-  const userId = readPositiveInteger(query.filters?.userId);
+  const userId = readPhiPositiveInteger(query.filters?.userId);
   if (!userId) {
     return { rows: [], total: 0 };
   }
@@ -109,16 +87,11 @@ async function loadUserSessions({
     limit: String(query.pageSize && query.pageSize > 0 ? query.pageSize : 25),
   });
   const result = await readPhiTableProviderResponse<ApiResponse>(
-    await fetch(`${API_PATH}?${params.toString()}`, {
-      cache: "no-store",
-      credentials: "include",
-      headers: { accept: "application/json" },
-      signal,
-    }),
+    await fetch(`${API_PATH}?${params.toString()}`, createPhiTableProviderRequestInit(signal)),
     RESPONSE_OPTIONS,
   );
   const now = Date.now();
-  const rows = readRows(result?.sessions).map((row) => {
+  const rows = readPhiTableRows(result?.sessions).map((row) => {
     const revokedAt = typeof row.revokedAt === "string" ? row.revokedAt : null;
     const expiresAt = typeof row.expiresAt === "string" ? row.expiresAt : null;
     return {
@@ -134,21 +107,16 @@ async function loadUserSessions({
 }
 
 async function readUserRecord({ rowIdentity, signal }: PhiTableProviderRecordRequest) {
-  const userId = readPositiveInteger(rowIdentity);
+  const userId = readPhiPositiveInteger(rowIdentity);
   if (!userId) {
     throw new PhiTableProviderError("invalid-query", "User record reading requires a positive user id.");
   }
   const params = new URLSearchParams({ userId: String(userId) });
   const result = await readPhiTableProviderResponse<ApiResponse>(
-    await fetch(`${API_PATH}?${params.toString()}`, {
-      cache: "no-store",
-      credentials: "include",
-      headers: { accept: "application/json" },
-      signal,
-    }),
+    await fetch(`${API_PATH}?${params.toString()}`, createPhiTableProviderRequestInit(signal)),
     RESPONSE_OPTIONS,
   );
-  if (!result?.user || typeof result.user !== "object" || Array.isArray(result.user)) {
+  if (!isPhiRecord(result?.user)) {
     throw new PhiTableProviderError("invalid-response", "User record response is invalid.");
   }
   const user = result.user as Record<string, unknown>;
@@ -191,14 +159,14 @@ async function mutateUser(request: PhiTableProviderMutationRequest) {
   } else if (request.kind !== "action") {
     throw new PhiTableProviderError("mutation-not-supported", "User Management does not support this Table mutation.");
   } else if (request.actionKey === "create") {
-    if (!request.actionValue || typeof request.actionValue !== "object" || Array.isArray(request.actionValue)) {
+    if (!isPhiRecord(request.actionValue)) {
       throw new PhiTableProviderError("invalid-action-value", "Create action requires user values.");
     }
     init.method = "POST";
     init.headers = { ...init.headers, "content-type": "application/json" };
     init.body = JSON.stringify(request.actionValue);
   } else if (request.actionKey === "update") {
-    if (!request.actionValue || typeof request.actionValue !== "object" || Array.isArray(request.actionValue)) {
+    if (!isPhiRecord(request.actionValue)) {
       throw new PhiTableProviderError("invalid-action-value", "Update action requires user values.");
     }
     init.method = "PUT";

@@ -172,7 +172,7 @@ export function readPhiCoreRuntimeNotificationSignalValue(
 export function readPhiCoreRuntimeNavigateValue(
   value: unknown,
 ): PhiCoreRuntimeNavigateValue | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  if (!isPhiRecord(value)) return null;
   const record = value as Record<string, unknown>;
   const path = readPhiInternalPath(record.path);
   if (path === null) return null;

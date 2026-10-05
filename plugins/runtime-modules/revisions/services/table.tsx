@@ -1,6 +1,7 @@
 "use client";
 
 import { PHI_REVISIONS_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
+import { readNumber } from "../../../../components/widgets/config/parser-primitives";
 import { isPhiBuilderAreaKey, isPhiCmsAreaKey } from "../../../../constants/cms-areas";
 import { hasPhiCmsPresetUpdate } from "../../../../plugins/runtime-modules/preset-version";
 import {
@@ -291,14 +292,6 @@ async function deleteRevisions(
   return body as PhiBuilderRevisionDeleteResponse;
 }
 
-function readNumber(value: unknown): number | null {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
-}
-
-function readBoolean(value: unknown) {
-  return value === true;
-}
-
 function formatTemplate(template: string, ...values: Array<number | string | null | undefined>) {
   let result = template;
   values.forEach((value, index) => {
@@ -324,9 +317,9 @@ function formatPageMetaChangeLabel(
   pageMeta: Record<string, unknown> | null,
 ) {
   const changed = [
-    readBoolean(pageMeta?.titleChanged) ? labels.messages.titleField : "",
-    readBoolean(pageMeta?.descriptionChanged) ? labels.messages.descriptionField : "",
-    readBoolean(pageMeta?.indexChanged) ? labels.messages.indexingField : "",
+    pageMeta?.titleChanged === true ? labels.messages.titleField : "",
+    pageMeta?.descriptionChanged === true ? labels.messages.descriptionField : "",
+    pageMeta?.indexChanged === true ? labels.messages.indexingField : "",
   ].filter(Boolean);
   /*
    * Composed rather than enumerated. Two fields were two named labels and one pair; a third turns that

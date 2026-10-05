@@ -1,6 +1,12 @@
 "use client";
 
+import { isPhiRecord } from "../../../../helpers/is-record";
 import { PHI_GROUPS_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
+import {
+  createPhiTableProviderRequestInit,
+  readPhiPositiveInteger,
+  readPhiTableRows,
+} from "../../../../components/widgets/client/shared/phi-table-provider-request";
 import { normalizePhiGroupMembershipFlags } from "../../../../constants/site-groups";
 import {
   PhiTableProviderError,
@@ -38,31 +44,10 @@ type ApiResponse = {
   message?: unknown;
 };
 
-function readRows(value: unknown) {
-  return Array.isArray(value)
-    ? value.filter((row): row is Record<string, unknown> =>
-        Boolean(row) && typeof row === "object" && !Array.isArray(row))
-    : [];
-}
-
-function readPositiveInteger(value: unknown) {
-  if (typeof value === "number" && Number.isInteger(value) && value > 0) return value;
-  if (typeof value !== "string") return null;
-  const parsed = Number.parseInt(value, 10);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-}
-
 const RESPONSE_OPTIONS: ReadPhiTableProviderResponseOptions = {
   subject: "Groups",
   errorKeys: ["message", "error"],
 };
-
-const requestInit = (signal: AbortSignal | undefined): RequestInit => ({
-  cache: "no-store",
-  credentials: "include",
-  headers: { accept: "application/json" },
-  signal,
-});
 
 async function loadRowsFrom(
   path: string,
@@ -70,10 +55,10 @@ async function loadRowsFrom(
   mapRow: (row: Record<string, unknown>) => Record<string, unknown> = (row) => row,
 ) {
   const result = await readPhiTableProviderResponse<ApiResponse>(
-    await fetch(path, requestInit(signal)),
+    await fetch(path, createPhiTableProviderRequestInit(signal)),
     RESPONSE_OPTIONS,
   );
-  const rows = readRows(result?.rows).map(mapRow);
+  const rows = readPhiTableRows(result?.rows).map(mapRow);
   return { rows, total: typeof result?.total === "number" ? result.total : rows.length };
 }
 
@@ -91,17 +76,17 @@ async function loadGroupMembers({
   query,
   signal,
 }: PhiTableProviderQueryRequest): Promise<PhiTableProviderQueryResult> {
-  const groupId = readPositiveInteger(query.filters?.groupId);
+  const groupId = readPhiPositiveInteger(query.filters?.groupId);
   // No group selected is an empty list, not an error: the table simply has nothing to show yet.
   if (!groupId) return { rows: [], total: 0 };
   const result = await readPhiTableProviderResponse<ApiResponse>(
-    await fetch(`${API_PATH}?groupId=${groupId}`, requestInit(signal)),
+    await fetch(`${API_PATH}?groupId=${groupId}`, createPhiTableProviderRequestInit(signal)),
     RESPONSE_OPTIONS,
   );
   // What this actor may do in this group, as the control plane sees it -- the interface never works it
   // out from a level of its own.
   const manages = Boolean((result as { group?: { manages?: unknown } } | null)?.group?.manages);
-  const rows = readRows(result?.members).map((row) => ({
+  const rows = readPhiTableRows(result?.members).map((row) => ({
     ...row,
     groupId,
     // The row identity carries both halves, because a membership is a pair and a mutation request
@@ -133,14 +118,14 @@ async function queryGroupsTable(request: PhiTableProviderQueryRequest) {
  * particular write touched.
  */
 async function mutateGroups(request: PhiTableProviderMutationRequest) {
-  const init: RequestInit = requestInit(request.signal);
+  const init: RequestInit = createPhiTableProviderRequestInit(request.signal);
 
   if (request.resourceKey === "groups" && request.kind === "action") {
     if (request.actionKey === "refresh") {
       return { status: "accepted" as const, invalidation: "view" as const };
     }
     if (request.actionKey === "create") {
-      if (!request.actionValue || typeof request.actionValue !== "object" || Array.isArray(request.actionValue)) {
+      if (!isPhiRecord(request.actionValue)) {
         throw new PhiTableProviderError("invalid-action-value", "Create action requires a key and a name.");
       }
       await readPhiTableProviderResponse<ApiResponse>(
@@ -171,7 +156,7 @@ async function mutateGroups(request: PhiTableProviderMutationRequest) {
           `Unsupported Groups action "${request.actionKey}".`,
         );
       }
-      const groupId = readPositiveInteger(request.rowIdentity);
+      const groupId = readPhiPositiveInteger(request.rowIdentity);
       if (!groupId) {
         throw new PhiTableProviderError("invalid-query", "Retiring a group needs the group.");
       }
@@ -210,7 +195,7 @@ async function mutateGroups(request: PhiTableProviderMutationRequest) {
       );
     }
     await readPhiTableProviderResponse<ApiResponse>(
-      await fetch(`${API_PATH}?groupId=${readPositiveInteger(request.rowIdentity)}`, {
+      await fetch(`${API_PATH}?groupId=${readPhiPositiveInteger(request.rowIdentity)}`, {
         ...init,
         method: "PATCH",
         headers: { ...init.headers, "content-type": "application/json" },
@@ -237,8 +222,8 @@ async function mutateGroups(request: PhiTableProviderMutationRequest) {
     ? String(request.rowIdentity ?? "")
     : "";
   const [rawGroupId, rawUserId] = identity.split(":", 2);
-  const groupId = readPositiveInteger(rawGroupId);
-  const userId = readPositiveInteger(rawUserId);
+  const groupId = readPhiPositiveInteger(rawGroupId);
+  const userId = readPhiPositiveInteger(rawUserId);
   if (!groupId || !userId) {
     throw new PhiTableProviderError("invalid-query", "A membership change needs a group and a member.");
   }

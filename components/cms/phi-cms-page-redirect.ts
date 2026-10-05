@@ -1,3 +1,4 @@
+import { isPhiRecord } from "../../helpers/is-record";
 import { permanentRedirect, redirect } from "next/navigation";
 
 import { PhiCmsPageType } from "../../constants/phi-cms";
@@ -9,18 +10,14 @@ type RedirectResolution = {
   permanent: boolean;
 };
 
-function isPlainRecord(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === "object" && !Array.isArray(value);
-}
-
 function readRedirectConfig(layoutConfig: Record<string, unknown> | null | undefined): PhiCmsPageRedirectConfig | null {
   const rawRedirect = layoutConfig?.redirect;
-  if (!isPlainRecord(rawRedirect)) {
+  if (!isPhiRecord(rawRedirect)) {
     return null;
   }
 
   const rawTarget = rawRedirect.target;
-  if (!isPlainRecord(rawTarget)) {
+  if (!isPhiRecord(rawTarget)) {
     return null;
   }
 

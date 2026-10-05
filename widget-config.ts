@@ -12,7 +12,12 @@ export {
   readNavItems,
   readNumber,
   readRenderableBlockConfig,
-  readRenderableBlockSize,
   readString,
 } from "./components/widgets/config/parser-primitives";
 export type { PhiCmsWidgetConfigBase } from "./components/widgets/config/parser-primitives";
+/* A block's size and lengths are read where every other reader of a block reads them (D1). */
+export {
+  normalizePhiRenderableBlockResponsiveSize,
+  normalizePhiRenderableBlockSize,
+  readPhiResponsiveLength,
+} from "./helpers/renderable-block-normalizers";
