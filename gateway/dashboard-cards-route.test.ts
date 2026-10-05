@@ -177,8 +177,8 @@ describe("buildPhiDashboardCardsRouteHandler", () => {
     expect(ids).toEqual([CORE_CARD]);
   });
 
-  it("keeps the other Modules' cards when one contributor's list throws", async () => {
-    const ids = await listedCardIds(siteWith({
+  it("answers a contributor whose list throws with one error card in its name, beside the others", async () => {
+    const response = await ask(siteWith({
       [CORE]: {
         listCards: () => {
           throw new Error("no.");
@@ -187,15 +187,27 @@ describe("buildPhiDashboardCardsRouteHandler", () => {
       },
       [LOCALIZATION]: offers(card(LOCALIZATION_CARD)),
     }));
-    expect(ids).toEqual([LOCALIZATION_CARD]);
+    const body = (await response.json()) as { cards: readonly PhiDashboardCardRow[] };
+    expect(body.cards.map((row) => row.cardId)).toEqual([
+      LOCALIZATION_CARD,
+      createPhiDashboardCardId(CORE, "unavailable"),
+    ]);
+    const failed = body.cards[1]!;
+    expect(failed.title).toBe(CORE);
+    expect(failed.payload?.error).toBe("no.");
   });
 
-  it("keeps the other Modules' cards when one contributor cannot be loaded", async () => {
-    const ids = await listedCardIds(siteWith({
+  it("answers a contributor that cannot be loaded with one error card, not with silence", async () => {
+    const response = await ask(siteWith({
       [CORE]: new Error("no."),
       [LOCALIZATION]: offers(card(LOCALIZATION_CARD)),
     }));
-    expect(ids).toEqual([LOCALIZATION_CARD]);
+    const body = (await response.json()) as { cards: readonly PhiDashboardCardRow[] };
+    expect(body.cards.map((row) => row.cardId)).toEqual([
+      LOCALIZATION_CARD,
+      createPhiDashboardCardId(CORE, "unavailable"),
+    ]);
+    expect(body.cards[1]!.payload?.error).toBe("no.");
   });
 
   it("leaves out a card this viewer may not see", async () => {

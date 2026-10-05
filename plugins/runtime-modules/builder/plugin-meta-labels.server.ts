@@ -3,6 +3,7 @@ import "server-only";
 import type { PhiBlockRuntime } from "../../../types/widget-runtime";
 import { PHI_TR_CTX_WEB_UI_LABEL, createGlobalTranslator } from "../../../gateway/tr";
 import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
+import { logRuntimeEvent } from "../../../net/log";
 import type { PhiBuilderModuleAuthoringCatalogEntry } from "./module-authoring-catalog";
 import { mapPhiBuilderPluginMetaText } from "./plugin-meta-labels";
 
@@ -62,12 +63,27 @@ export async function localizePhiBuilderModuleAuthoringCatalog(
       internalToken: readPhiServerApiCredentials().internalToken,
       locale,
     });
-    const translated = await translator
-      .trBulk(sources, PHI_TR_CTX_WEB_UI_LABEL)
-      .catch(() => sources);
-    sources.forEach((source, index) => {
-      translations.set(source, translated[index] ?? source);
-    });
+    /*
+     * A failed batch is not written into the per-process cache: cached, the source texts would stand as
+     * this locale's translations until the process restarts. They are shown for this request, the
+     * failure is logged, and the next request asks again.
+     */
+    let translated: string[] | null = null;
+    try {
+      translated = await translator.trBulk(sources, PHI_TR_CTX_WEB_UI_LABEL);
+    } catch (error) {
+      logRuntimeEvent("warn", "builder.plugin_labels.translation_failed", {
+        message: "Plugin labels could not be translated; the source texts are shown for this request.",
+        area: "builder",
+        error,
+        meta: { locale, count: sources.length },
+      });
+    }
+    if (translated) {
+      sources.forEach((source, index) => {
+        translations.set(source, translated![index] ?? source);
+      });
+    }
   }
 
   return entries.map((entry) => ({

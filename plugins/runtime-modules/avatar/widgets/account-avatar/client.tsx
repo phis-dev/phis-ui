@@ -71,11 +71,13 @@ export function PhiAccountAvatarWidgetClient({ labels, config }: PhiAccountAvata
     fetchPhiViewerAvatar(controller.signal)
       .then((value) => setAvatar(value))
       .catch(() => {
-        // A read that fails leaves the placeholder standing. It is a picture; saying so twice with an
-        // alert would be louder than the thing is worth.
+        // A read that fails is not "no picture": the placeholder would invite a second upload of a
+        // picture that is there. The Widget has an error line, and this is what it is for.
+        if (controller.signal.aborted) return;
+        setError(labels.feedback.errorGeneric);
       });
     return () => controller.abort();
-  }, [revision]);
+  }, [labels.feedback.errorGeneric, revision]);
 
   const overlayAddress = useMemo(
     () => createPhiSignalAddress("cms", PHI_AVATAR_OVERLAY_IDS.overlayPicker),

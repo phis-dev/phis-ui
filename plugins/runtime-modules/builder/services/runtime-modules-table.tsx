@@ -253,6 +253,23 @@ export function leavesPublicWithoutSignIn(
   );
 }
 
+/**
+ * The switch stays where it is when the Site could not say what the Module draws.
+ *
+ * The deactivation dialog's promise is "this is what you would stop drawing"; without the answer it
+ * would have promised nothing is lost on no evidence (audit of 05.10.2026, B9/O10).
+ */
+function rejectUsageUnknown(error: unknown): PhiTableProviderMutationResult {
+  return {
+    status: "rejected",
+    invalidation: "none",
+    errorCode: "module-usage-unavailable",
+    message: `Could not read what this Module draws on the Site: ${
+      error instanceof Error && error.message ? error.message : "the request failed"
+    }. Nothing was changed.`,
+  };
+}
+
 function readMissingLabels(params: Record<string, unknown> | undefined) {
   const labels = readLabelMap(params, "missingLabels");
   return labels?.missing && labels.missingHint
@@ -500,7 +517,9 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
        *
        * Read from the Site rather than from anything the Builder holds: the blocks sit in stored page
        * trees, which no workspace loads. Nothing is applied while the answer is pending -- the switch
-       * springs back and the dialog is what completes the gesture.
+       * springs back and the dialog is what completes the gesture. A read that fails throws out of here
+       * and the mutation is refused with the reason: the dialog may only say "nothing is in use" when
+       * the Site has said so.
        */
       const askAboutBlocksInUse = async (cmsAreas: readonly PhiCmsAreaKey[]) => {
         if (proposedActive) {
@@ -520,8 +539,7 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
             }]
           : [];
         for (const areaKey of areas) {
-          const entries = await loadPhiBuilderModuleBlockUsage(areaKey, definition.moduleId)
-            .catch(() => []);
+          const entries = await loadPhiBuilderModuleBlockUsage(areaKey, definition.moduleId);
           for (const entry of entries) {
             usage.push({
               key: `${areaKey}:${entry.kind}:${entry.pageScopeId ?? entry.presetKey ?? "shell"}`,
@@ -573,8 +591,12 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
         if (askAboutPublicAddresses(definition.eligibleAreas)) {
           return { status: "rejected", invalidation: "none", errorCode: "public-address-taken" };
         }
-        if (await askAboutBlocksInUse(definition.eligibleAreas)) {
-          return { status: "rejected", invalidation: "none", errorCode: "module-in-use" };
+        try {
+          if (await askAboutBlocksInUse(definition.eligibleAreas)) {
+            return { status: "rejected", invalidation: "none", errorCode: "module-in-use" };
+          }
+        } catch (error) {
+          return rejectUsageUnknown(error);
         }
         try {
           applyAreaChange(definition.eligibleAreas);
@@ -613,8 +635,12 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
       if (askAboutPublicAddresses([areaKey])) {
         return { status: "rejected", invalidation: "none", errorCode: "public-address-taken" };
       }
-      if (await askAboutBlocksInUse([areaKey])) {
-        return { status: "rejected", invalidation: "none", errorCode: "module-in-use" };
+      try {
+        if (await askAboutBlocksInUse([areaKey])) {
+          return { status: "rejected", invalidation: "none", errorCode: "module-in-use" };
+        }
+      } catch (error) {
+        return rejectUsageUnknown(error);
       }
       try {
         applyAreaChange([areaKey]);

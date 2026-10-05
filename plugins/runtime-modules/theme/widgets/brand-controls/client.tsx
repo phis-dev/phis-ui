@@ -147,6 +147,7 @@ import {
   type PhiControlShapeCorners,
 } from "../../../../../theme/phi-control-shape";
 import { PhiAccordionControl } from "../../../../../components/controls/phi-accordion-control";
+import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { PhiCardControl } from "../../../../../components/controls/phi-card-control";
 import { PhiThemeScopeControl } from "../../../../../components/controls/phi-theme-scope-control";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
@@ -2617,6 +2618,13 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
     <PhiFlexControl vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0, opacity: loading ? 0.65 : 1 }}>
       {siteFontFaceCss ? (
         <style href="phi-theme-font-picker-faces" precedence="default" dangerouslySetInnerHTML={{ __html: siteFontFaceCss }} />
+      ) : null}
+      {siteFontAssets.error ? (
+        <PhiAlertControl
+          level="error"
+          title="The Site's own typefaces could not be read."
+          description={siteFontAssets.error}
+        />
       ) : null}
       <PhiCardControl size="small">
         <PhiAccordionControl

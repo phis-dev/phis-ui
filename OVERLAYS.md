@@ -230,7 +230,9 @@ zones the first time it opens (`types/cms-overlay-zones.ts`, `next/overlay-zones
 the same Area again for the viewer the request carries, runs the Area's access guard, and answers only
 for an Overlay that viewer's tree contains. The shell opens at once and shows a placeholder until the
 zones arrive; zones are kept for the address they were rendered at, so a client navigation asks again on
-the next open. A failed request closes the Overlay and logs the error, and the next open asks again.
+the next open. A failed request, or an answer that this viewer has no such Overlay here, leaves the shell
+open with the failure in its body and logs it; closing the shell forgets the failure, so the next open
+asks again. Closing it by itself was the earlier answer, and it left a click that did nothing.
 
 The Controllers go with the zones. The Area leaves out what the Widgets of a deferred Overlay ask for
 (`excludedOverlayIds` in `materializePhiRuntimeControllerSettings`, decided by the same

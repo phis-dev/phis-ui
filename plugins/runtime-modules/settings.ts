@@ -14,6 +14,7 @@ import type { PhiDeclaredModuleSeed } from "../../types/seed";
 import type { PhiRuntimeModuleDefinition, PhiRuntimeModuleId } from "./contracts";
 import { isPhiRuntimeAreaBaseModuleId } from "./area-definitions";
 import { isPhiRuntimeModuleId } from "../../constants/module-identity";
+import { logRuntimeEvent } from "../../net/log";
 
 export function readPhiRuntimeModuleIds(value: unknown): PhiRuntimeModuleId[] | null {
   if (!Array.isArray(value)) {
@@ -144,6 +145,15 @@ export function readPhiRuntimeModuleIdsForArea(
   return reading;
 }
 
+/**
+ * The stored selection, cut to what this build can serve.
+ *
+ * The tolerant reader, for a selection that was written by an earlier build or another Site: a Module
+ * that is gone, ineligible or locked is left out and named in the log, and the Builder shows it as an
+ * unresolved row ("Not in this build") until the next save drops it. Writes go through
+ * `assertPhiRuntimeModuleIdsAllowedForArea`, which refuses the same cases outright -- a selection may
+ * be read past what it names, never written past it (MODULES.md, "Module selection").
+ */
 export function resolvePhiRuntimeModuleIdsForArea(
   area: string,
   moduleIds: readonly PhiRuntimeModuleId[] | null | undefined,
@@ -151,10 +161,11 @@ export function resolvePhiRuntimeModuleIdsForArea(
 ): PhiRuntimeModuleId[] {
   const reading = readPhiRuntimeModuleIdsForArea(area, moduleIds, moduleDefinitions);
   if (reading.unresolved.length > 0) {
-    console.warn(
-      "[phi-runtime-modules] Stored Module selection names Modules this build cannot serve.",
-      { area, unresolved: reading.unresolved },
-    );
+    logRuntimeEvent("warn", "runtime_modules.selection.unresolved", {
+      message: "Stored Module selection names Modules this build cannot serve.",
+      area,
+      meta: { unresolved: reading.unresolved },
+    });
   }
   return reading.moduleIds;
 }

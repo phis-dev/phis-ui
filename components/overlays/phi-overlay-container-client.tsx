@@ -32,6 +32,7 @@ import { registerPhiSignalInstance } from "../runtime/runtime-signal-registry";
 import { usePhiSignalRuntimePartition } from "../runtime/runtime-signal-partition";
 import { PhiModalControl } from "../controls/phi-modal-control";
 import { PhiDrawerControl } from "../controls/phi-drawer-control";
+import { PhiAlertControl } from "../controls/phi-alert-control";
 import { usePhiOverlayZonesLoaderIfAny } from "./phi-overlay-zones-loader";
 import type {
   PhiCmsLoadedOverlayZones,
@@ -59,6 +60,28 @@ type PhiLoadedOverlayZones = {
   key: string;
   zones: PhiCmsLoadedOverlayZones;
 };
+
+/**
+ * The zones could not be had, said in the body where they would have been.
+ *
+ * Closing the Overlay instead left the visitor with a click that did nothing and a message in a console
+ * nobody reads. The shell stays open with the failure in it; closing it forgets the failure, so the next
+ * open asks again.
+ */
+type PhiFailedOverlayZones = {
+  key: string;
+  failure: string;
+};
+
+function renderOverlayZonesFailure(failure: string) {
+  return (
+    <PhiAlertControl
+      level="error"
+      title="This content could not be shown."
+      description={failure}
+    />
+  );
+}
 
 /** Stands where the body will be while the zones are on their way, so the shell opens at once. */
 const PHI_OVERLAY_ZONES_PENDING = (
@@ -136,7 +159,7 @@ export function PhiOverlayContainerClient({
   const pathname = usePathname() ?? "/";
   const emitSignal = usePhiSignalEmitter(receiver);
   const loadZones = usePhiOverlayZonesLoaderIfAny();
-  const [loadedZones, setLoadedZones] = useState<PhiLoadedOverlayZones | null>(null);
+  const [loadedZones, setLoadedZones] = useState<PhiLoadedOverlayZones | PhiFailedOverlayZones | null>(null);
   const listenRoutes = useMemo(() => config.signalRoutes?.listens ?? [], [config.signalRoutes?.listens]);
 
   useEffect(() => registerPhiSignalInstance(signalPartition, {
@@ -165,6 +188,8 @@ export function PhiOverlayContainerClient({
 
   const updateOpen = useCallback((nextOpen: boolean) => {
     if (nextOpen) setHasOpened(true);
+    // A failed load is forgotten on close, so the next open asks the server again.
+    if (!nextOpen) setLoadedZones((current) => current && "failure" in current ? null : current);
     setOpen(nextOpen);
   }, []);
 
@@ -173,8 +198,8 @@ export function PhiOverlayContainerClient({
    *
    * Kept per request and address: an Area Overlay outlives client navigations, and its zones were
    * rendered for the page under it -- a link target resolves against it -- so another address asks again
-   * the next time it opens. Asking fails into a closed Overlay and a logged error; the next open asks
-   * again rather than showing an empty shell.
+   * the next time it opens. Asking fails into the open shell, which shows the failure in its body; the
+   * next open asks again (`PhiFailedOverlayZones`).
    */
   const deferredZonesKey = deferredZones ? `${JSON.stringify(deferredZones)}@${pathname}` : null;
   useEffect(() => {
@@ -186,20 +211,27 @@ export function PhiOverlayContainerClient({
     loadZones(deferredZones).then((zones) => {
       if (cancelled) return;
       if (!zones) {
+        // The server answered, and the answer is that this viewer has no such Overlay to see here.
         console.error(`Overlay ${overlayId} could not be rendered for this viewer.`);
-        updateOpen(false);
+        setLoadedZones({
+          key: deferredZonesKey,
+          failure: "It is not available to you on this page.",
+        });
         return;
       }
       setLoadedZones({ key: deferredZonesKey, zones });
     }, (error: unknown) => {
       if (cancelled) return;
       console.error(`Overlay ${overlayId} could not be loaded.`, error);
-      updateOpen(false);
+      setLoadedZones({
+        key: deferredZonesKey,
+        failure: error instanceof Error && error.message ? error.message : "The request failed.",
+      });
     });
     return () => {
       cancelled = true;
     };
-  }, [deferredZones, deferredZonesKey, loadZones, loadedZones?.key, open, overlayId, updateOpen]);
+  }, [deferredZones, deferredZonesKey, loadZones, loadedZones?.key, open, overlayId]);
 
   useEffect(() => {
     if (emittedOpenRef.current === open) return;
@@ -295,7 +327,9 @@ export function PhiOverlayContainerClient({
   const zones: PhiCmsOverlayZones | null = !deferredZones
     ? { header, body, footer }
     : loadedZones && loadedZones.key === deferredZonesKey
-      ? loadedZones.zones
+      ? "failure" in loadedZones
+        ? { header: null, body: renderOverlayZonesFailure(loadedZones.failure), footer: null }
+        : loadedZones.zones
       : open ? { header: null, body: PHI_OVERLAY_ZONES_PENDING, footer: null } : null;
   /*
    * The Controllers that came with the zones, mounted for as long as this Overlay is, open or not.
@@ -303,7 +337,7 @@ export function PhiOverlayContainerClient({
    * Taken from the last load even after a navigation made its zones stale: the next open asks again and
    * the new answer takes their place, while a Controller in the middle of something keeps its state.
    */
-  const zoneControllers = loadedZones?.zones.controllers ?? null;
+  const zoneControllers = loadedZones && "zones" in loadedZones ? loadedZones.zones.controllers : null;
   /*
    * The container draws its Surface through the Drawer or Modal primitive's own box, which has no layer
    * beneath its content to give a softened paint: a `blur` Filter there paints unsoftened, the way every

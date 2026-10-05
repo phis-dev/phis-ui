@@ -28,7 +28,9 @@ import {
 } from "../server-helpers/runtime";
 import { runWithPhiRequestRuntime } from "../server-helpers/request-runtime";
 import type { PhiCmsSiteBridge, PhiRuntimeModuleId } from "../types/cms-plugins";
+import { logRuntimeEvent } from "../net/log";
 import {
+  createPhiDashboardCardId,
   isPhiDashboardCardId,
   type PhiDashboardCardContext,
   type PhiDashboardCardDescriptor,
@@ -170,31 +172,65 @@ async function resolveDashboardCardScope({
 }
 
 /**
- * The card providers of the Modules this Area actually runs.
+ * The card providers of the Modules this Area actually runs, and the Modules whose provider did not load.
  *
  * Keyed by Module so a payload request can find the one that owns a card without asking the other
  * eleven, and loaded here rather than at module scope because a Site whose Dashboard nobody opens
- * should never pull a provider into its graph.
+ * should never pull a provider into its graph. A contribution that fails to load is kept by name: the
+ * list answers for it with one error card (`buildContributorFailureRow`) rather than with silence.
  */
 async function loadActiveCardProviders(
   bridge: PhiCmsSiteBridge,
   activeModuleIds: ReadonlySet<PhiRuntimeModuleId>,
 ) {
-  const loaded = await Promise.all(
+  const providers: Array<readonly [PhiRuntimeModuleId, PhiDashboardCardProvider]> = [];
+  const failures = new Map<PhiRuntimeModuleId, string>();
+  await Promise.all(
     [...activeModuleIds].map(async (moduleId) => {
       const contribution = bridge.runtimeModuleCatalog.get(moduleId)?.dashboardCards;
       if (!contribution) {
-        return null;
+        return;
       }
       try {
-        return [moduleId, await contribution.load()] as const;
+        providers.push([moduleId, await contribution.load()] as const);
       } catch (error) {
-        console.warn("[phi-dashboard-cards] Card provider failed to load.", { moduleId, error });
-        return null;
+        failures.set(moduleId, describeError(error, "The card provider could not be loaded."));
+        logRuntimeEvent("warn", "dashboard.cards.provider_load_failed", {
+          message: "Card provider failed to load.",
+          pluginKey: moduleId,
+          error,
+        });
       }
     }),
   );
-  return loaded.filter((entry): entry is NonNullable<typeof entry> => entry !== null);
+  return { providers, failures };
+}
+
+function describeError(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
+/**
+ * The one row a Module gets when it could not say which cards it has.
+ *
+ * A contributor whose provider did not load, or whose list threw, used to leave nothing behind -- and a
+ * Dashboard with a gap where a Module's cards should be reads as "this Module has no cards", which is a
+ * different statement from "this Module is broken". The row is in the Module's own namespace, carries
+ * its first payload already, and that payload is the error, so the card View draws it the way it draws
+ * any card whose payload failed (DASHBOARD.md, "A failure is one card").
+ */
+function buildContributorFailureRow(moduleId: PhiRuntimeModuleId, message: string): PhiDashboardCardRow {
+  const cardId = createPhiDashboardCardId(moduleId, "unavailable");
+  return {
+    cardId,
+    form: "stat",
+    title: moduleId,
+    payload: {
+      cardId,
+      error: message,
+      resolvedAt: new Date().toISOString(),
+    },
+  };
 }
 
 /**
@@ -226,10 +262,15 @@ async function resolveCardPayload(
   try {
     return await runWithPhiRequestRuntime(scopeRuntime, () => provider.resolveCard(cardId, cardContext));
   } catch (error) {
-    console.warn("[phi-dashboard-cards] Card payload failed.", { card: cardId, error });
+    logRuntimeEvent("warn", "dashboard.cards.payload_failed", {
+      message: "Card payload failed.",
+      targetType: "dashboard-card",
+      targetId: cardId,
+      error,
+    });
     return {
       cardId,
-      error: error instanceof Error ? error.message : "This card could not be resolved.",
+      error: describeError(error, "This card could not be resolved."),
       resolvedAt: new Date().toISOString(),
     };
   }
@@ -277,7 +318,7 @@ export function buildPhiDashboardCardsRouteHandler({
         return jsonResponse({ cards: [] } satisfies PhiDashboardCardsListResponse);
       }
       const { activeModuleIds, routeTable, cardContext, scopeRuntime } = scope;
-      const providers = await loadActiveCardProviders(bridge, activeModuleIds);
+      const { providers, failures } = await loadActiveCardProviders(bridge, activeModuleIds);
 
       if (card) {
         const owner = providers.find(([moduleId]) => ownsCardId(moduleId, card));
@@ -289,8 +330,8 @@ export function buildPhiDashboardCardsRouteHandler({
 
       /*
        * Every Module is asked at once. One that throws loses its own cards and nobody else's, which is
-       * the list-half of the same promise the payloads keep: a broken contributor is a gap, not a blank
-       * Dashboard.
+       * the list-half of the same promise the payloads keep: a broken contributor is one error card in
+       * its own name, not a blank Dashboard and not a quiet gap.
        */
       const lists = await Promise.all(
         providers.map(async ([moduleId, provider]) => {
@@ -301,16 +342,23 @@ export function buildPhiDashboardCardsRouteHandler({
             );
             return cards.filter((descriptor) => {
               if (!ownsCardId(moduleId, descriptor.cardId)) {
-                console.warn("[phi-dashboard-cards] Module offered a card it does not own.", {
-                  moduleId,
-                  cardId: descriptor.cardId,
+                logRuntimeEvent("warn", "dashboard.cards.foreign_card_refused", {
+                  message: "Module offered a card it does not own.",
+                  pluginKey: moduleId,
+                  targetType: "dashboard-card",
+                  targetId: descriptor.cardId,
                 });
                 return false;
               }
               return canPhiViewerAccess(cardContext.viewer, descriptor.accessPolicy);
             });
           } catch (error) {
-            console.warn("[phi-dashboard-cards] Card list failed.", { moduleId, error });
+            logRuntimeEvent("warn", "dashboard.cards.list_failed", {
+              message: "Card list failed.",
+              pluginKey: moduleId,
+              error,
+            });
+            failures.set(moduleId, describeError(error, "The card list could not be read."));
             return [];
           }
         }),
@@ -355,10 +403,18 @@ export function buildPhiDashboardCardsRouteHandler({
           ? { ...row, payload: await resolveCardPayload(owner[1], row.cardId, cardContext, scopeRuntime) }
           : row;
       }));
+      const failureRows = [...failures.entries()]
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([moduleId, message]) => buildContributorFailureRow(moduleId, message));
 
-      return jsonResponse({ cards } satisfies PhiDashboardCardsListResponse);
+      return jsonResponse({ cards: [...cards, ...failureRows] } satisfies PhiDashboardCardsListResponse);
     } catch (error) {
-      console.warn("[phi-dashboard-cards] Request failed.", { area, card, error });
+      logRuntimeEvent("warn", "dashboard.cards.request_failed", {
+        message: "Dashboard cards request failed.",
+        area,
+        error,
+        meta: { card },
+      });
       return jsonResponse({ error: "unavailable" }, 503);
     }
   };

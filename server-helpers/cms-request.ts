@@ -38,6 +38,7 @@ import {
   resolvePhiBackgroundAssetProjection,
 } from "../components/widgets/helpers/background-reference-resolver.server";
 import type { PhiCapabilitySnapshot } from "../types/server-capabilities";
+import { logRuntimeEvent } from "../net/log";
 import { getPhiCmsPage, getPhiExactSiteArea } from "./cms";
 import { buildPhiLocalCmsAreaPayload } from "./cms-area";
 import { resolvePhiAreaPageReferencePath, resolvePhiAreaRootRouteDecision } from "./area-root-route";
@@ -202,12 +203,19 @@ export function resolveActivePresetModuleKeys(
         serverCapabilities,
       );
       if (!bindingResolution.available) {
-        console.warn("[phi-runtime-modules] Server capability requirement unavailable.", {
-          moduleId: moduleKey,
-          providerId: definition.serverBinding.providerId,
-          state: bindingResolution.state,
-          diagnosticCode: bindingResolution.diagnosticCode,
-          missingCapabilities: bindingResolution.missingCapabilities,
+        // The Module is selected and installed, and the server half it needs is not there. It stays off
+        // for the whole Area -- and the log names it, because the page it leaves looks like a page the
+        // Site chose.
+        logRuntimeEvent("warn", "runtime_modules.server_capability.unavailable", {
+          message: "A selected Module is off: its server capability requirement is unavailable.",
+          area,
+          pluginKey: moduleKey,
+          meta: {
+            providerId: definition.serverBinding.providerId,
+            state: bindingResolution.state,
+            diagnosticCode: bindingResolution.diagnosticCode,
+            missingCapabilities: bindingResolution.missingCapabilities,
+          },
         });
         continue;
       }

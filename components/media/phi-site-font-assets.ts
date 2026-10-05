@@ -51,10 +51,16 @@ function readFontAssetLabel(asset: PhiMediaAssetTile) {
   return asset.title?.trim() || asset.originalName.trim();
 }
 
+/**
+ * `error` is the library saying it could not be read: the catalogue families are still a usable list,
+ * but a Site typeface that is not in it is not "gone", and a picker that showed the list without a word
+ * let an author believe their upload had failed.
+ */
 export function usePhiSiteFontAssets(enabled = true) {
   const { provider } = usePhiCollectionProvider(PHI_ASSET_COLLECTION_DATA_SOURCE);
   const [assets, setAssets] = useState<PhiMediaAssetTile[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!enabled || !provider) return;
@@ -62,6 +68,7 @@ export function usePhiSiteFontAssets(enabled = true) {
     // The request is the external state this mirrors; loading starts with it, inside the same effect.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
+    setError(null);
     void provider.query({
       resourceKey: PHI_ASSET_COLLECTION_DATA_SOURCE.resourceKey,
       query: {
@@ -74,10 +81,16 @@ export function usePhiSiteFontAssets(enabled = true) {
       signal: abortController.signal,
     }).then((data) => {
       if (abortController.signal.aborted) return;
+      if (data.error) {
+        setAssets([]);
+        setError(data.error);
+        return;
+      }
       setAssets(data.items.filter((item): item is PhiMediaAssetTile => Boolean(item)));
-    }).catch(() => {
-      // A library that cannot be read leaves the catalogue families, which is a usable list.
-      if (!abortController.signal.aborted) setAssets([]);
+    }).catch((cause: unknown) => {
+      if (abortController.signal.aborted) return;
+      setAssets([]);
+      setError(cause instanceof Error && cause.message ? cause.message : "The Media library could not be read.");
     }).finally(() => {
       if (!abortController.signal.aborted) setLoading(false);
     });
@@ -99,5 +112,5 @@ export function usePhiSiteFontAssets(enabled = true) {
     [assets],
   );
 
-  return { options, loading };
+  return { options, loading, error };
 }

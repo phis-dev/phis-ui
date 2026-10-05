@@ -1,18 +1,15 @@
 import "server-only";
 
 import { phiRuntime } from "./phi-runtime";
-import { readPhiCmsNodeVisibleWhen } from "../helpers/cms-node-visibility";
+import { logRuntimeEvent } from "../net/log";
 import {
-  collectPhiRuntimeValueConditions,
-  type PhiRuntimeFeatureState,
-} from "../types/runtime-condition";
+  collectPhiCmsNodeFeatureNamespaces,
+  readPhiCmsNodeVisibleWhen,
+} from "../helpers/cms-node-visibility";
+import type { PhiRuntimeFeatureState } from "../types/runtime-condition";
 import type { PhiBlockRuntime } from "../types";
 import type { PhiCmsRuntimeRenderRegistry } from "../types/cms-plugins";
 import type { PhiResolvedCmsRenderableTree } from "../types/cms";
-
-function readNamespace(valuePath: string) {
-  return valuePath.split(".")[0]?.trim() ?? "";
-}
 
 /**
  * Which Modules this page needs an answer from, read off the conditions it actually carries.
@@ -25,30 +22,44 @@ export function collectPhiCmsFeatureNamespaces(
 ): Set<string> {
   const namespaces = new Set<string>();
   for (const node of [...tree.overlays, ...tree.layoutNodes, ...tree.contentWidgets]) {
-    for (const condition of collectPhiRuntimeValueConditions(readPhiCmsNodeVisibleWhen(node.config))) {
-      if (condition.source !== "feature") continue;
-      const namespace = readNamespace(condition.valuePath);
-      if (namespace) namespaces.add(namespace);
+    for (const namespace of collectPhiCmsNodeFeatureNamespaces(readPhiCmsNodeVisibleWhen(node.config))) {
+      namespaces.add(namespace);
     }
   }
   return namespaces;
 }
 
 /**
+ * What the Modules answered, and which of them could not be asked.
+ *
+ * `features` is null when the tree asks nothing. `failures` names every namespace the tree asked about
+ * that has no answer -- no active Module publishes it, its loader threw, or its resolver did -- with
+ * the reason, so the renderer can say so where the node would have stood instead of leaving a hole
+ * that reads as "the Module has nothing to show".
+ */
+export type PhiCmsTreeFeatureResolution = {
+  features: PhiRuntimeFeatureState | null;
+  failures: ReadonlyMap<string, string>;
+};
+
+/**
  * What the active Modules say about this Site, for the namespaces this page asked about.
  *
  * A Module that cannot answer is left out rather than guessed at: its namespace stays absent, every
  * condition over it reads `unavailable`, and the node it guards stays hidden. For a sign-in that is the
- * right way round -- a method whose configuration could not be read is not a method to offer.
+ * right way round -- a method whose configuration could not be read is not a method to offer. The
+ * failure itself is not swallowed: it is logged with the namespace, and handed back in `failures` for
+ * the renderer to show the author (`renderCmsDiagnostic`, code `feature-unavailable`).
  */
 export async function resolvePhiCmsTreeFeatures(
   tree: Pick<PhiResolvedCmsRenderableTree, "layoutNodes" | "contentWidgets" | "overlays">,
   registry: Pick<PhiCmsRuntimeRenderRegistry, "featureResolverLoadersByNamespace">,
-  runtime: Pick<PhiBlockRuntime, "site" | "locale">,
-): Promise<PhiRuntimeFeatureState | null> {
+  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area">,
+): Promise<PhiCmsTreeFeatureResolution> {
   const namespaces = collectPhiCmsFeatureNamespaces(tree);
+  const failures = new Map<string, string>();
   if (namespaces.size === 0) {
-    return null;
+    return { features: null, failures };
   }
 
   const rt = phiRuntime(runtime);
@@ -61,12 +72,23 @@ export async function resolvePhiCmsTreeFeatures(
 
   const resolved = await Promise.all([...namespaces].map(async (namespace) => {
     const load = registry.featureResolverLoadersByNamespace.get(namespace);
-    if (!load) return null;
+    if (!load) {
+      failures.set(namespace, `No active Module publishes the "${namespace}" features.`);
+      return null;
+    }
     try {
       const resolve = await load();
       return [namespace, await resolve(context)] as const;
     } catch (error) {
-      console.error(`Failed to resolve "${namespace}" features for this render.`, error);
+      const message = error instanceof Error ? error.message : String(error);
+      failures.set(namespace, message);
+      logRuntimeEvent("error", "cms.features.resolve_failed", {
+        message: `Failed to resolve "${namespace}" features for this render.`,
+        siteKey: rt.siteKey,
+        area: runtime.area,
+        error,
+        meta: { namespace },
+      });
       return null;
     }
   }));
@@ -75,5 +97,5 @@ export async function resolvePhiCmsTreeFeatures(
   for (const entry of resolved) {
     if (entry) features[entry[0]] = entry[1];
   }
-  return features;
+  return { features, failures };
 }

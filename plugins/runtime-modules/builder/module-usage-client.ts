@@ -38,5 +38,9 @@ export async function loadPhiBuilderModuleBlockUsage(
   if (!response.ok) {
     throw new Error(body?.error ?? "Failed to read Module usage.");
   }
-  return Array.isArray(body?.usage) ? body.usage : [];
+  if (!Array.isArray(body?.usage)) {
+    // An answer without the list is not "nothing in use"; the question has to be asked again.
+    throw new Error("Module usage answer carries no usage list.");
+  }
+  return body.usage;
 }

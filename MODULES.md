@@ -349,6 +349,26 @@ does not get there by being registered in the luckier tree -- that would make co
 position nobody chose deliberately -- it keeps what must survive somewhere that survives. Consequently
 nothing may be held in a Page-hosted Controller that a Page after it depends on.
 
+### Module selection: one tolerant reader, one strict writer
+
+A stored selection may name a Module this build cannot serve: one that was uninstalled, one the Area is
+not eligible for, one that is locked. Two readers answer that, deliberately:
+
+- `resolvePhiRuntimeModuleIdsForArea` (`plugins/runtime-modules/settings.ts`) reads past such an entry.
+  The Area renders with what it can, the entry is logged (`runtime_modules.selection.unresolved`), and the
+  Builder's Modules table shows it as an unresolved row ("Not in this build") until the next save drops
+  it. A Site must not stop rendering because a Module was removed from its build.
+- `assertPhiRuntimeModuleIdsAllowedForArea` refuses the same cases outright, and every write goes
+  through it. What may be read past is never written past.
+
+The same shape holds for a selected Module whose server capability requirement is unavailable
+(`resolveActivePresetModuleKeys`): it stays off for the whole Area, and the log names it
+(`runtime_modules.server_capability.unavailable`). Neither path is quiet; both were, before 05.10.2026.
+
+A Widget that asks for a Controller no active Module owns (`requiredRuntimeControllers`) is a contract
+error and throws at materialization: rendered without it, the Widget's signals would go to an address
+nobody holds and the page would look fine.
+
 ## Render modes and diagnostics
 
 A rendered artifact runs in one of these modes: `runtime` (normal mounted rendering in any Area),
@@ -370,6 +390,15 @@ node-local error: the node renders the shared "not renderable" diagnostic block
 (`components/cms/phi-cms-render-diagnostic-client.tsx`) and logs a warning. `missing-module` shows only
 the block; other failures also raise one deduplicated notification. Invalid manifests, duplicate
 ownership, and invalid Area selections are hard errors before rendering starts.
+
+Two further codes say what a hole would otherwise hide. `feature-unavailable`: a node whose `visibleWhen`
+reads a feature namespace that could not be resolved this render (no active Module publishes it, or its
+resolver threw) renders the diagnostic in a workspace, with the namespace and the reason, instead of
+standing as a node that waits; on a live page it stays absent and the resolver's failure is logged
+(`cms.features.resolve_failed`). `missing-node`: a Region or Overlay zone whose root layout node is not in
+the tree is a stored inconsistency, logged (`cms.render.region_root_missing`) and shown in the zone's place
+in a workspace. On a live page the diagnostic renders nothing, by design (O7 of the 05.10.2026 audit): a
+visitor cannot repair a Module, and the warning is written either way.
 
 ## Definition and Controller
 

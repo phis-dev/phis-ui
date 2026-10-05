@@ -48,10 +48,12 @@ import {
 } from "../../plugins/runtime-modules/render-mode";
 import { filterPhiCmsRenderableTreeForViewer } from "../../helpers/cms-access-policy";
 import {
+  collectPhiCmsNodeFeatureNamespaces,
   readPhiCmsNodeVisibleWhen,
   readPhiCmsServerPageConditionState,
   resolvePhiCmsNodeVisibility,
 } from "../../helpers/cms-node-visibility";
+import { logRuntimeEvent } from "../../net/log";
 import type {
   PhiRuntimeConditionExpression,
   PhiRuntimeFeatureState,
@@ -146,12 +148,54 @@ function renderCmsDiagnostic(
   renderMode: string,
   error?: unknown,
 ) {
-  console.warn("[phi-cms-layout-renderer] CMS block is not renderable.", {
-    issue,
-    renderMode,
+  logRuntimeEvent("warn", "cms.render.block_not_renderable", {
+    message: `${issue.kind} "${issue.type}" is not renderable (${issue.code}).`,
+    pluginKey: issue.moduleId ?? null,
+    targetType: issue.kind,
+    targetId: issue.blockId == null ? null : String(issue.blockId),
     error,
+    meta: { code: issue.code, detail: issue.detail ?? null, renderMode },
   });
   return renderMode === "live" ? null : <PhiCmsRenderDiagnostic issue={issue} />;
+}
+
+/**
+ * A node whose condition reads a Module that could not be asked, said in the node's place.
+ *
+ * Absent features leave the condition `unavailable`, and `unavailable` is what the gate waits on for an
+ * answer the browser may still give -- so a failed resolver used to look exactly like a node waiting:
+ * nothing drawn, nothing said. The failure is the server's and is settled here, as a diagnostic on a
+ * workspace and as a logged absence on a live page.
+ */
+function renderFeatureUnavailableDiagnostic(
+  node: Pick<PhiCmsContentWidgetNode, "id" | "widgetType" | "config">,
+  kind: PhiCmsRenderIssue["kind"],
+  moduleId: PhiCmsRenderIssue["moduleId"],
+  failures: ReadonlyMap<string, string>,
+  namespaces: ReadonlySet<string>,
+) {
+  const detail = [...namespaces]
+    .filter((namespace) => failures.has(namespace))
+    .map((namespace) => `"${namespace}": ${failures.get(namespace)}`)
+    .join(" ");
+  return renderCmsDiagnostic({
+    code: "feature-unavailable",
+    kind,
+    type: node.widgetType,
+    blockId: node.id,
+    moduleId,
+    detail: `Its visibility reads features that could not be resolved. ${detail}`,
+  }, readPhiRuntimeTreeRenderMode(node.config));
+}
+
+function hasFailedFeatureNamespace(
+  namespaces: ReadonlySet<string>,
+  failures: ReadonlyMap<string, string>,
+) {
+  for (const namespace of namespaces) {
+    if (failures.has(namespace)) return true;
+  }
+  return false;
 }
 
 function wrapPhiRuntimeModuleUiProvider(
@@ -184,6 +228,8 @@ type PhiCmsRenderContext = Pick<PhiCmsLayoutRendererProps, "runtime" | "tree"> &
   signalParticipants: ReadonlySet<string>;
   /** What the active Modules reported for the namespaces this tree asks about, or null if it asks none. */
   features: PhiRuntimeFeatureState | null;
+  /** The namespaces this tree asked about that have no answer, with the reason. */
+  featureFailures: ReadonlyMap<string, string>;
   /** Where this tree's Page targets lead, resolved in one pass, or null if it links to none. */
   links: PhiResolvedLinkTargets | null;
 };
@@ -311,7 +357,18 @@ function buildLayoutTree(
       region,
       root: createNode(region.rootLayoutNodeId),
     }))
-    .filter((entry) => entry.root !== null);
+    .filter((entry) => {
+      if (entry.root !== null) return true;
+      // A Region that names a root the tree does not hold is a stored inconsistency; the Region cannot
+      // be drawn, and it must not pass for a Region with nothing in it.
+      logRuntimeEvent("warn", "cms.render.region_root_missing", {
+        message: `Region ${entry.region.id} names root layout node ${entry.region.rootLayoutNodeId}, which the tree does not contain.`,
+        targetType: "region",
+        targetId: String(entry.region.id),
+        meta: { regionType: entry.region.regionType, rootLayoutNodeId: String(entry.region.rootLayoutNodeId) },
+      });
+      return false;
+    });
 }
 
 /** Everything one Overlay's zones are rendered from, computed once per tree. */
@@ -323,7 +380,8 @@ export type PhiCmsOverlayRenderContext = {
   createNode: ReturnType<typeof buildLayoutNodeResolver>;
   signalParticipants: Set<string>;
   signalRuntime: PhiRenderableBlockRuntime;
-  features: Awaited<ReturnType<typeof resolvePhiCmsTreeFeatures>>;
+  features: PhiRuntimeFeatureState | null;
+  featureFailures: ReadonlyMap<string, string>;
   links: Awaited<ReturnType<typeof resolvePhiCmsTreeLinkTargets>>;
 };
 
@@ -338,7 +396,7 @@ export async function preparePhiCmsOverlayRenderContext({
   registry: PhiResolvedRuntimeRenderRegistry;
   signalScope: Extract<PhiSignalScope, "area" | "page">;
 }): Promise<PhiCmsOverlayRenderContext> {
-  const [features, links] = await Promise.all([
+  const [featureResolution, links] = await Promise.all([
     resolvePhiCmsTreeFeatures(tree, registry, runtime),
     resolvePhiCmsTreeLinkTargets(tree, runtime),
   ]);
@@ -358,7 +416,8 @@ export async function preparePhiCmsOverlayRenderContext({
       area: runtime.area,
       pageKey: runtime.page?.path ?? null,
     },
-    features,
+    features: featureResolution.features,
+    featureFailures: featureResolution.failures,
     links,
   };
 }
@@ -373,7 +432,16 @@ export function renderPhiCmsOverlayZones(
   const renderRoot = (layoutId: PhiCmsInstanceId | null, zone: "header" | "body" | "footer") => {
     if (layoutId == null) return null;
     const root = createNode(layoutId);
-    if (!root) return null;
+    if (!root) {
+      // The Overlay names a root the tree does not hold: a stored inconsistency, not an empty zone.
+      return renderCmsDiagnostic({
+        code: "missing-node",
+        kind: "layout",
+        type: `overlay:${overlay.overlayType}`,
+        blockId: overlay.id,
+        detail: `The ${zone} zone names layout node ${layoutId}, which the tree does not contain.`,
+      }, readPhiRuntimeTreeRenderMode(overlay.config));
+    }
     return wrapPhiRenderedSlotChild(renderLayoutNode(root, {
       runtime,
       tree,
@@ -384,6 +452,7 @@ export function renderPhiCmsOverlayZones(
       runtimeRegistry: registry,
       signalParticipants,
       features: context.features,
+      featureFailures: context.featureFailures,
       links: context.links,
     }), {
       kind: "layout",
@@ -751,13 +820,30 @@ function buildRenderedChildEntries(
 ): PhiRenderedChildEntry[] {
   const page = readPhiCmsServerPageConditionState(context.runtime);
   const features = context.features;
+  const failures = context.featureFailures;
   return [
-    ...node.childLayouts.flatMap((child) => {
+    ...node.childLayouts.flatMap((child): PhiRenderedChildEntry[] => {
       const visibleWhen = readPhiCmsNodeVisibleWhen(child.config);
       const visibility = resolvePhiCmsNodeVisibility(visibleWhen, page, features);
       if (visibility === "omit") return [];
       const resolvedLayoutPlugin = resolvePhiRuntimeLayoutPluginByTypeKey(child.widgetType, context.layoutPluginsByType);
       const layoutPlugin = resolvedLayoutPlugin;
+      const namespaces = collectPhiCmsNodeFeatureNamespaces(visibleWhen);
+      if (visibility === "gate" && hasFailedFeatureNamespace(namespaces, failures)) {
+        return [{
+          slotIndex: child.slotIndex,
+          sortOrder: child.sortOrder,
+          id: child.id,
+          kind: "layout" as const,
+          element: renderFeatureUnavailableDiagnostic(
+            child,
+            "layout",
+            context.runtimeRegistry.ownerModuleIdByLayoutType.get(resolveLayoutRegistryType(child.widgetType)) ?? null,
+            failures,
+            namespaces,
+          ),
+        }];
+      }
 
       return [{
         slotIndex: child.slotIndex,
@@ -783,10 +869,26 @@ function buildRenderedChildEntries(
         }),
       }];
     }),
-    ...node.childWidgets.flatMap((child) => {
+    ...node.childWidgets.flatMap((child): PhiRenderedChildEntry[] => {
       const visibleWhen = readPhiCmsNodeVisibleWhen(child.config);
       const visibility = resolvePhiCmsNodeVisibility(visibleWhen, page, features);
       if (visibility === "omit") return [];
+      const namespaces = collectPhiCmsNodeFeatureNamespaces(visibleWhen);
+      if (visibility === "gate" && hasFailedFeatureNamespace(namespaces, failures)) {
+        return [{
+          slotIndex: child.slotIndex,
+          sortOrder: child.sortOrder,
+          id: child.id,
+          kind: "widget" as const,
+          element: renderFeatureUnavailableDiagnostic(
+            child,
+            "widget",
+            context.runtimeRegistry.ownerModuleIdByWidgetType.get(child.widgetType) ?? null,
+            failures,
+            namespaces,
+          ),
+        }];
+      }
       return [{
         slotIndex: child.slotIndex,
         sortOrder: child.sortOrder,
@@ -973,7 +1075,7 @@ export async function PhiCmsLayoutRenderer({
     viewer: runtime.viewer,
     registry,
   });
-  const [features, links] = await Promise.all([
+  const [{ features, failures: featureFailures }, links] = await Promise.all([
     resolvePhiCmsTreeFeatures(filteredTree, registry, runtime),
     resolvePhiCmsTreeLinkTargets(filteredTree, runtime),
   ]);
@@ -1012,6 +1114,7 @@ export async function PhiCmsLayoutRenderer({
           runtimeRegistry: registry,
           signalParticipants,
           features,
+          featureFailures,
           links,
         }), {
           kind: "layout",

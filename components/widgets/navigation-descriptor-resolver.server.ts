@@ -15,6 +15,7 @@ import {
   resolvePhiCmsActiveNavigationSurfaces,
   resolvePhiCmsRoutePresetByPageId,
 } from "../../plugins/runtime-modules/descriptor-compiler";
+import { logRuntimeEvent } from "../../net/log";
 import { phiRuntime } from "../../server-helpers/phi-runtime";
 import { getPhiRequestNavigationContext } from "../../server-helpers/request-runtime";
 import type {
@@ -180,7 +181,22 @@ export async function resolvePhiDescriptorNavigationItems(
     const translator = runtime.area === "builder"
       ? createGlobalTranslator(options)
       : createSiteTranslator({ ...options, siteKey: rt.siteKey });
-    const translated = await translator.trBulk(labels, PHI_TR_CTX_WEB_UI_LABEL).catch(() => labels);
+    /*
+     * A batch that fails leaves these labels in their source language for this render, and says so: the
+     * translation cache keeps nothing from a failed request (`gateway/tr.ts`), so the next render asks
+     * again. What must not happen is the quiet version, where a Site reads in the wrong language for a
+     * day and no log names the hour it started.
+     */
+    const translated = await translator.trBulk(labels, PHI_TR_CTX_WEB_UI_LABEL).catch((error: unknown) => {
+      logRuntimeEvent("warn", "navigation.labels.translation_failed", {
+        message: "Navigation labels could not be translated; the source texts are shown for this render.",
+        siteKey: rt.siteKey,
+        area: runtime.area,
+        error,
+        meta: { locale: runtime.locale.current, sourceLocale: sourceLocale ?? null, count: labels.length },
+      });
+      return labels;
+    });
     labels.forEach((source, index) => {
       translatedLabels.set(
         navigationLabelKey({ defaultMessage: source, ...(sourceLocale ? { sourceLocale } : {}) }),

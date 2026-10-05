@@ -123,7 +123,11 @@ What the split buys:
   the sum. The first answer does wait for that slowest one, which is the price of one shared context
   instead of N chains; a card that stays slow belongs in a Module that answers from a figure it keeps.
 - **A failure is one card.** A payload that throws leaves an error in its own card instead of an empty
-  Dashboard.
+  Dashboard. A contributor that fails before it has cards -- its provider does not load, or its list
+  throws -- gets one error card in its own namespace (`<module>/cards/unavailable`, titled with the
+  Module id) carrying the error as its first payload. The gap where a Module's cards should be is never
+  silent: silence reads as "this Module has nothing to show", which is a different statement from "this
+  Module is broken", and the audit of 05.10.2026 found the two indistinguishable.
 - **The waiting state is legible.** Because the descriptor already carries title, mark and target, a
   card that has not resolved reads as *Support -- loading*, not as a grey box.
 - **A rule dissolved.** An earlier draft required contributions to be cheap. They no longer have to be,

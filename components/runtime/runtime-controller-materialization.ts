@@ -256,14 +256,17 @@ function materializeWidgetSettings({
       plugin,
     })) {
       if (!allowedControllerTypes.has(materializedSetting.type)) {
-        console.warn("[phi-runtime-controller-materialization] Missing runtime controller policy.", {
-          ownerMountScope,
-          controllerType: materializedSetting.type,
-          controllerInstanceKey: materializedSetting.instanceKey,
-          widgetId: widget.id,
-          widgetType: widget.widgetType,
-        });
-        continue;
+        /*
+         * A Widget asked for a Controller no active Module owns. Dropping the requirement renders the
+         * Widget without the thing it declared it needs: its signals go to an address nobody holds, and
+         * the page looks fine. The declaration is the Widget's contract with its Module, so this is a
+         * contract error and is reported as one -- the renderer shows it in the Widget's place.
+         */
+        throw new Error(
+          `${widget.widgetType}.requiredRuntimeControllers: Controller "${materializedSetting.type}" ` +
+          `(instance "${materializedSetting.instanceKey}") is not owned by an active Module in this ` +
+          `${ownerMountScope} scope (Widget ${widget.id}).`,
+        );
       }
 
       const key = buildSettingKey(materializedSetting);

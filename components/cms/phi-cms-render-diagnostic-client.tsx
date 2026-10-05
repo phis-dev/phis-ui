@@ -14,6 +14,8 @@ function formatKind(kind: PhiCmsRenderIssue["kind"]) {
 }
 
 function buildIssueTitle(issue: PhiCmsRenderIssue) {
+  if (issue.code === "feature-unavailable") return `${formatKind(issue.kind)} visibility unresolved`;
+  if (issue.code === "missing-node") return `${formatKind(issue.kind)} root missing`;
   return `${formatKind(issue.kind)} not renderable`;
 }
 
@@ -22,9 +24,13 @@ function buildIssueDescription(issue: PhiCmsRenderIssue) {
     ? issue.moduleId
       ? `Missing module: ${issue.moduleId}.`
       : "The required active module is unavailable."
-    : issue.moduleId
-      ? `Module: ${issue.moduleId}.`
-      : "The required renderer is unavailable.";
+    : issue.code === "feature-unavailable"
+      ? "A Module its condition reads could not be asked this render."
+      : issue.code === "missing-node"
+        ? "The stored tree names a node it does not contain."
+        : issue.moduleId
+          ? `Module: ${issue.moduleId}.`
+          : "The required renderer is unavailable.";
   return `${issue.type}. ${moduleDescription}${issue.detail ? ` ${issue.detail}` : ""}`;
 }
 

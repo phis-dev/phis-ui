@@ -1,4 +1,5 @@
 import {
+  collectPhiRuntimeValueConditions,
   evaluatePhiRuntimeConditionExpression,
   readPhiRuntimeConditionExpression,
   type PhiRuntimeConditionExpression,
@@ -19,6 +20,26 @@ export function readPhiCmsNodeVisibleWhen(
   config: Record<string, unknown>,
 ): PhiRuntimeConditionExpression | null {
   return readPhiRuntimeConditionExpression(config.visibleWhen);
+}
+
+/**
+ * The feature namespaces a condition reads: the first segment of every `feature` value path.
+ *
+ * A page collects these to know which Modules to ask (`server-helpers/cms-node-features.ts`), and the
+ * renderer reads them again per node to tell a node that waits for the browser from one whose Module
+ * could not be asked at all.
+ */
+export function collectPhiCmsNodeFeatureNamespaces(
+  visibleWhen: PhiRuntimeConditionExpression | null,
+): Set<string> {
+  const namespaces = new Set<string>();
+  if (!visibleWhen) return namespaces;
+  for (const condition of collectPhiRuntimeValueConditions(visibleWhen)) {
+    if (condition.source !== "feature") continue;
+    const namespace = condition.valuePath.split(".")[0]?.trim() ?? "";
+    if (namespace) namespaces.add(namespace);
+  }
+  return namespaces;
 }
 
 /**

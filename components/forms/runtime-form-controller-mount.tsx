@@ -94,16 +94,18 @@ function isPhiRuntimeFormSubmitSignalValue(value: unknown): value is PhiRuntimeF
  * The Area the Form was drawn in, and the browser's CSRF token. The relay used to mint a CSRF pair of
  * its own for each submit, which proved nothing about the page that sent it; now it forwards this one,
  * and a handler that declares CSRF refuses a submit without it. Every submit carries the token, because
- * which handler needs one is the server's catalog, not the page's. A token that cannot be had is left
- * out, and a handler that needs none -- a contact form -- still goes through.
+ * which handler needs one is the server's catalog, not the page's. A token that cannot be had fails the
+ * submit here, with the token's own message (`readPhiCsrfToken` throws rather than returning null):
+ * sent without it, the submit was refused by the handler and the Form showed a generic error that named
+ * nothing.
  */
 async function submitPhiFormToRelay(value: PhiRuntimeFormSubmitSignalValue, area: string | null) {
-  const csrfToken = await readPhiCsrfToken().catch(() => "");
+  const csrfToken = await readPhiCsrfToken();
   return fetch("/api/site/forms", {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      ...(csrfToken ? { "x-csrf-token": csrfToken } : {}),
+      "x-csrf-token": csrfToken,
     },
     body: JSON.stringify({
       formId: value.formId,

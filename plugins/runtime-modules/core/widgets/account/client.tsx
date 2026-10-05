@@ -171,10 +171,11 @@ export function PhiAccountWidgetClient({
       .then((avatar) => {
         setViewerAvatarSrc(avatar?.thumbnailUrl ?? avatar?.previewUrl ?? avatar?.deliveryUrl ?? null);
       })
-      .catch(() => {
-        // No picture is the ordinary answer, and a failed read is indistinguishable from it here. The
-        // initials carry the trigger either way.
-        setViewerAvatarSrc(null);
+      .catch((error: unknown) => {
+        // A failed read is not "no picture". The menu trigger has no line for an error, so the last
+        // picture it had stays, and the failure is written where an operator looks for it.
+        if (controller.signal.aborted) return;
+        console.error("[phi-account-widget] The viewer's avatar could not be read.", error);
       });
     return () => controller.abort();
   }, [avatarRevision, state.kind]);

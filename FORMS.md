@@ -590,7 +590,9 @@ The relay's options are `upstreamBaseUrl`, `buildHeaders`, `timeoutMs`, optional
 Requests:
 
 - `POST /api/site/forms` with `{ formId, phase: "submit" | "confirm", area, values }`, and the
-  browser's CSRF token in `x-csrf-token`. Nothing else in the body is read.
+  browser's CSRF token in `x-csrf-token`. Nothing else in the body is read. The browser does not send a
+  submit without the token: a token it cannot read fails the submit on the `error` channel with the
+  token's own message, instead of a refusal from the handler the Form could only show as a generic error.
 - `GET /api/site/forms?phase=guard&formId=<id>&area=<area>` issues a guard token.
 - `GET /api/site/forms?phase=preview&formId=<id>&token=<token>&area=<area>` reads a preview through the
   Form's `preview` handler Provider.

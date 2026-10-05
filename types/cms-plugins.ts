@@ -575,7 +575,11 @@ export type PhiCmsRenderIssueCode =
   | "missing-renderer"
   | "renderer-load-failed"
   | "render-failed"
-  | "invalid-render-output";
+  | "invalid-render-output"
+  /** A node whose `visibleWhen` reads a feature namespace whose Module could not be asked this render. */
+  | "feature-unavailable"
+  /** A Region or Overlay zone names a root layout node the tree does not contain. */
+  | "missing-node";
 
 export type PhiCmsRenderIssue = {
   code: PhiCmsRenderIssueCode;
