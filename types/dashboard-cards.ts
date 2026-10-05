@@ -169,4 +169,13 @@ export type PhiDashboardCardRow = {
   description?: string;
   mark?: string;
   href?: string;
+  /**
+   * The card's first payload, resolved with the list.
+   *
+   * The list used to carry descriptors only, and every card then asked for its payload in a request
+   * of its own -- each resolving the locale, the viewer, the capabilities and the Area again, so a
+   * Dashboard of five cards cost six request chains. The first paint comes with the list now; a
+   * refresh asks the card's own endpoint, one card at a time (DASHBOARD.md section 3).
+   */
+  payload?: PhiDashboardCardPayload;
 };

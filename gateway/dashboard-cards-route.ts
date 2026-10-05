@@ -34,8 +34,10 @@ import {
   type PhiDashboardCardDescriptor,
   type PhiDashboardCardId,
   type PhiDashboardCardPayload,
+  type PhiDashboardCardProvider,
   type PhiDashboardCardRow,
 } from "../types/dashboard-cards";
+import type { PhiBlockRuntime } from "../types/widget-runtime";
 import type { PhiSiteAreaBridgeLoader } from "./site-area-bridges";
 
 /**
@@ -239,6 +241,32 @@ function ownsCardId(moduleId: PhiRuntimeModuleId, cardId: string) {
   return isPhiDashboardCardId(cardId) && cardId.startsWith(`${moduleId}/cards/`);
 }
 
+/**
+ * One card's payload, from the Module that owns it.
+ *
+ * A payload that throws is this card saying so, not the request failing. The card is on screen
+ * already -- it was in the list -- so the honest answer is an error in it rather than a status the
+ * browser can only report as "unavailable". The same answer whether the card came with the list or was
+ * asked for on its own.
+ */
+async function resolveCardPayload(
+  provider: PhiDashboardCardProvider,
+  cardId: PhiDashboardCardId,
+  cardContext: PhiDashboardCardContext,
+  scopeRuntime: PhiBlockRuntime,
+): Promise<PhiDashboardCardPayload> {
+  try {
+    return await runWithPhiRequestRuntime(scopeRuntime, () => provider.resolveCard(cardId, cardContext));
+  } catch (error) {
+    console.warn("[phi-dashboard-cards] Card payload failed.", { card: cardId, error });
+    return {
+      cardId,
+      error: error instanceof Error ? error.message : "This card could not be resolved.",
+      resolvedAt: new Date().toISOString(),
+    };
+  }
+}
+
 export function buildPhiDashboardCardsRouteHandler({
   loadAreaBridge,
 }: {
@@ -288,25 +316,7 @@ export function buildPhiDashboardCardsRouteHandler({
         if (!owner) {
           return json({ error: "unknown_card" }, 404);
         }
-        /*
-         * A payload that throws is this card saying so, not the request failing. The card is on screen
-         * already -- it was in the list -- so the honest answer is an error in it rather than a status
-         * the browser can only report as "unavailable".
-         */
-        try {
-          const payload = await runWithPhiRequestRuntime(
-            scopeRuntime,
-            () => owner[1].resolveCard(card as PhiDashboardCardId, cardContext),
-          );
-          return json(payload satisfies PhiDashboardCardPayload);
-        } catch (error) {
-          console.warn("[phi-dashboard-cards] Card payload failed.", { card, error });
-          return json({
-            cardId: card as PhiDashboardCardId,
-            error: error instanceof Error ? error.message : "This card could not be resolved.",
-            resolvedAt: new Date().toISOString(),
-          } satisfies PhiDashboardCardPayload);
-        }
+        return json(await resolveCardPayload(owner[1], card as PhiDashboardCardId, cardContext, scopeRuntime));
       }
 
       /*
@@ -346,7 +356,7 @@ export function buildPhiDashboardCardsRouteHandler({
        * is the one order that is stable across restarts and decided by nobody, and it holds until the
        * Site's own decisions arrive to replace it.
        */
-      const cards = lists
+      const rows = lists
         .flat()
         .sort((left, right) => left.cardId.localeCompare(right.cardId))
         .map((descriptor): PhiDashboardCardRow => ({
@@ -361,6 +371,22 @@ export function buildPhiDashboardCardsRouteHandler({
             return href ? { href } : {};
           })(),
         }));
+
+      /*
+       * Each card's first payload, with the list and from the context this request already resolved.
+       *
+       * Asked for one by one from the browser, every card re-resolved the locale, the viewer, the
+       * capabilities and the Area for itself -- five cards, six request chains, some thirty Core calls
+       * for one Dashboard. Resolved here they share one context and run side by side; a payload that
+       * throws is still an error in its own row. The card endpoint above stays for what comes later,
+       * one card at a time: a refresh.
+       */
+      const cards = await Promise.all(rows.map(async (row) => {
+        const owner = providers.find(([moduleId]) => ownsCardId(moduleId, row.cardId));
+        return owner
+          ? { ...row, payload: await resolveCardPayload(owner[1], row.cardId, cardContext, scopeRuntime) }
+          : row;
+      }));
 
       return json({ cards } satisfies PhiDashboardCardsListResponse);
     } catch (error) {

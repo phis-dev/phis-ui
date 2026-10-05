@@ -131,6 +131,38 @@ describe("buildPhiDashboardCardsRouteHandler", () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
   });
 
+  it("answers the list with each card's first payload, from one resolution of the request", async () => {
+    const response = await ask(siteWith({
+      [CORE]: {
+        listCards: () => [card(CORE_CARD)],
+        resolveCard: (cardId) => ({ cardId, value: "42", resolvedAt: "2026-10-05T00:00:00.000Z", error: null }),
+      },
+      [LOCALIZATION]: offers(card(LOCALIZATION_CARD)),
+    }));
+    const body = (await response.json()) as { cards: readonly PhiDashboardCardRow[] };
+    expect(body.cards.map((row) => [row.cardId, row.payload?.value ?? null])).toEqual([
+      [CORE_CARD, "42"],
+      [LOCALIZATION_CARD, null],
+    ]);
+    expect(body.cards.every((row) => row.payload?.cardId === row.cardId)).toBe(true);
+  });
+
+  it("keeps a failed first payload inside its own row", async () => {
+    const response = await ask(siteWith({
+      [CORE]: {
+        listCards: () => [card(CORE_CARD)],
+        resolveCard: () => {
+          throw new Error("Core would not say.");
+        },
+      },
+      [LOCALIZATION]: offers(card(LOCALIZATION_CARD)),
+    }));
+    const body = (await response.json()) as { cards: readonly PhiDashboardCardRow[] };
+    expect(body.cards).toHaveLength(2);
+    expect(body.cards[0]?.payload).toMatchObject({ cardId: CORE_CARD, error: "Core would not say." });
+    expect(body.cards[1]?.payload?.error).toBeNull();
+  });
+
   it("leaves out a card its own Module does not own", async () => {
     const ids = await listedCardIds(siteWith({
       [CORE]: offers(card(CORE_CARD), card(LOCALIZATION_CARD)),

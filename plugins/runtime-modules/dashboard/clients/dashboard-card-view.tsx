@@ -22,14 +22,15 @@ import { isPhiRecord } from "../../../../helpers/is-record";
 /**
  * A Dashboard, drawn.
  *
- * The list arrives as ordinary Collection rows and each card then resolves its own payload, which is
- * the one thing the shared card View could not do: it maps fields of a row onto a card and is finished.
- * A Dashboard's rows come from N Modules that each do real work, so the cost profile is inverted and
- * the View is too.
+ * The list arrives as ordinary Collection rows, each carrying its first payload; a card resolves its own
+ * payload only where a row came without one -- the door a refresh will go through, one card at a time
+ * (DASHBOARD.md section 3). That is the one thing the shared card View could not do: it maps fields of
+ * a row onto a card and is finished. A Dashboard's rows come from N Modules that each do real work, so
+ * the cost profile is inverted and the View is too.
  *
- * What the split buys is visible here: twelve cards resolve in parallel, a payload that fails leaves an
- * error in its own card, and a card that has not resolved reads as itself -- because its title, mark
- * and target were in the descriptor and are already on screen.
+ * What the split buys is visible here: a payload that fails leaves an error in its own card, and a
+ * card that has not resolved reads as itself -- because its title, mark and target were in the
+ * descriptor and are already on screen.
  */
 
 /** A card at the width a card is still a card at, matching the shared card View's floor. */
@@ -57,11 +58,13 @@ function readRows(binding: PhiCollectionViewBindingModel) {
 }
 
 /**
- * One card, and its own request.
+ * One card, and its own request where the list did not bring its payload.
  *
  * No timer of its own, deliberately and checkably: a card fetches when it is asked and never on a
  * schedule it keeps itself, because pausing, staggering and backing off can only be decided where all
- * twelve are visible. Until the Controller is that clock, being asked means being mounted.
+ * twelve are visible. Until the Controller is that clock, being asked means being mounted without a
+ * payload -- which, with the list answering it, nothing on this page does today. The path stays so the
+ * clock has a door to knock on.
  */
 function PhiDashboardCard({
   row,
@@ -81,6 +84,7 @@ function PhiDashboardCard({
    * card's answer.
    */
   const requestKey = `${area}\u0000${pathname}\u0000${row.cardId}`;
+  const delivered = row.payload ?? null;
   const [resolved, setResolved] = useState<{
     key: string;
     payload: PhiDashboardCardPayload | null;
@@ -88,6 +92,9 @@ function PhiDashboardCard({
   } | null>(null);
 
   useEffect(() => {
+    if (delivered) {
+      return;
+    }
     const controller = new AbortController();
     const params = new URLSearchParams({ area, path: pathname, card: row.cardId });
     fetch(`/api/site/dashboard-cards?${params.toString()}`, {
@@ -115,9 +122,11 @@ function PhiDashboardCard({
         });
       });
     return () => controller.abort();
-  }, [area, pathname, requestKey, row.cardId]);
+  }, [area, delivered, pathname, requestKey, row.cardId]);
 
-  const current = resolved?.key === requestKey ? resolved : null;
+  const current = delivered
+    ? { key: requestKey, payload: delivered, failure: null }
+    : resolved?.key === requestKey ? resolved : null;
   const payload = current?.payload ?? null;
   const error = current?.failure ?? payload?.error ?? null;
   return (

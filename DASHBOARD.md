@@ -2,9 +2,10 @@
 
 **Status: the contribution, the fan-in and the two phases are built; the clock and the Site's decisions
 are not.** What exists is sections 1 to 3, 5, 6 and 8: a Module contributes card descriptors
-(`types/dashboard-cards.ts`, `dashboardCards` on the catalog entry), the Site answers the list and each
-payload at `/api/site/dashboard-cards` (`gateway/dashboard-cards-route.ts`), the `dashboard` Module fans
-them in through one Collection provider, and its card View resolves each payload on its own
+(`types/dashboard-cards.ts`, `dashboardCards` on the catalog entry), the Site answers the list, each card's
+first payload with it, and each payload on its own at `/api/site/dashboard-cards`
+(`gateway/dashboard-cards-route.ts`), the `dashboard` Module fans them in through one Collection
+provider, and its card View asks for a payload only where a row arrived without one
 (`plugins/runtime-modules/dashboard/`). The Admin Dashboard is the first page drawn this way, with cards
 from `core`, `user-management` and `localization`; the App, Accounting and Editor Dashboards draw the
 same Collection, and `threads` puts the first card on the App one.
@@ -98,9 +99,16 @@ to forbid.
 never learns another Module's paths. Cards that try to be a page are how Dashboards become unusable,
 and the size of the card is the only thing stopping them.
 
-## 3. Two phases: the list, then each payload
+## 3. Two phases: the list with each first payload, then each card on its own
 
-The list arrives in one answer. **Each card then resolves its own payload.**
+The list arrives in one answer and carries each card's first payload. **After that, each card
+resolves its own payload**: the card endpoint (`?card=<id>`) is the door a refresh goes through, one
+card at a time, and a row that arrives without a payload is fetched by its card the same way.
+
+The first paint used to be the second phase as well: the list carried descriptors only, and every card
+then asked for its payload in a request of its own -- each resolving the locale, the viewer, the
+capabilities and the Area again. Five cards cost six request chains and some thirty Core calls. Resolved
+with the list they share one context and run side by side on the server, which is where the data is.
 
 This is deliberately unlike the Media collection, which returns rows and images and shows one
 collection-wide skeleton while its single query is in flight. That is right for Media: its rows come
@@ -110,8 +118,10 @@ contract is too.
 
 What the split buys:
 
-- **No slowest contributor.** Twelve cards resolve in parallel; the page is as slow as the slowest
-  *one*, not as the sum.
+- **No slowest contributor, on refresh.** Twelve payloads resolve in parallel, on the server for the
+  first paint and in the browser for a refresh; the Dashboard is as slow as the slowest *one*, not as
+  the sum. The first answer does wait for that slowest one, which is the price of one shared context
+  instead of N chains; a card that stays slow belongs in a Module that answers from a figure it keeps.
 - **A failure is one card.** A payload that throws leaves an error in its own card instead of an empty
   Dashboard.
 - **The waiting state is legible.** Because the descriptor already carries title, mark and target, a
@@ -119,8 +129,9 @@ What the split buys:
 - **A rule dissolved.** An earlier draft required contributions to be cheap. They no longer have to be,
   which is better: a mechanism that makes a rule unnecessary beats the rule.
 
-**One request per card, and no chains.** What a card needs, its endpoint assembles server-side, where
-the data is and a join costs nothing. A card that fetches, learns what to fetch next, and fetches
+**One resolution per card, and no chains.** What a card needs, its provider assembles server-side,
+where the data is and a join costs nothing -- with the list or through its endpoint, the provider is
+the same. A card that fetches, learns what to fetch next, and fetches
 again turns its own depth into wall-clock that cannot be parallelized away -- invisible with three
 cards on a local database, and the slowest thing on the Site with twelve Modules. An image loading
 after the payload is not a chain, and neither is paging inside a card somebody has clicked into: the
