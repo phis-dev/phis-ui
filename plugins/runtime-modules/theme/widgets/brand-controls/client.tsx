@@ -1771,6 +1771,14 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
   }
 
   async function publishTheme(correlationId?: string) {
+    /*
+     * Publish takes what is on screen. The server publishes a saved revision, so an unsaved draft is
+     * saved first and that revision goes live; publishing `revisionId` as it stood would have put the
+     * last save live and then replaced every panel with it, dropping the unsaved edits without a word.
+     */
+    if (!isSameThemePayload(stateRef.current.draft, savedThemeRef.current)) {
+      await saveTheme(undefined, { notify: false, correlationId });
+    }
     const current = stateRef.current;
     if (current.revisionId == null) {
       throw new Error("No saved theme draft found to publish.");

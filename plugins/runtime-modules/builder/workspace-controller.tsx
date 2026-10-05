@@ -382,7 +382,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     pageMetaLabels,
     state,
   });
-  const { reportSaved } = usePhiBuilderDraftStatusController({
+  const { captureHistoryHead, reportSaved } = usePhiBuilderDraftStatusController({
     commandWorkspace,
     effectiveArea,
     effectiveNavKey,
@@ -395,6 +395,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     effectiveNavKey,
     effectivePageKey,
     pathname,
+    captureHistoryHead,
     reportSaved,
     shellPresetDraftsByArea,
     state,

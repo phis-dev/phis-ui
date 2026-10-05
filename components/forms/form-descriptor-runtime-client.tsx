@@ -187,10 +187,27 @@ export function PhiFormDescriptorRuntimeClient({
     });
   }, [bindingError, configuredInitialValues, provider, resource?.recordRead, source]);
 
+  /*
+   * The one record read in flight. Every new read aborts the one before it, and unmount aborts the
+   * last: two reads racing meant the slower one wrote `record` and `recordIdentityRef` last, so a Form
+   * opened on row B could show row A and save into it.
+   */
+  const recordLoadRef = useRef<AbortController | null>(null);
+  const beginRecordLoad = useCallback(() => {
+    recordLoadRef.current?.abort();
+    const abortController = new AbortController();
+    recordLoadRef.current = abortController;
+    return abortController;
+  }, []);
+  useEffect(() => () => {
+    recordLoadRef.current?.abort();
+    recordLoadRef.current = null;
+  }, []);
+
   const loadRecord = useCallback(async (rowIdentity: PhiTableRowIdentity | null) => {
     setLoading(true);
     setError(null);
-    const abortController = new AbortController();
+    const abortController = beginRecordLoad();
     const signal = abortController.signal;
     try {
       const values = await readRecord(rowIdentity, signal);
@@ -205,11 +222,11 @@ export function PhiFormDescriptorRuntimeClient({
     } finally {
       if (!signal.aborted) setLoading(false);
     }
-  }, [readRecord]);
+  }, [beginRecordLoad, readRecord]);
 
   useEffect(() => {
     if (!source || widgetConfig?.openActionKey) return;
-    const abortController = new AbortController();
+    const abortController = beginRecordLoad();
     void readRecord(null, abortController.signal).then((values) => {
       if (abortController.signal.aborted) return;
       recordIdentityRef.current = null;
@@ -224,7 +241,7 @@ export function PhiFormDescriptorRuntimeClient({
       if (!abortController.signal.aborted) setLoading(false);
     });
     return () => abortController.abort();
-  }, [readRecord, source, widgetConfig?.openActionKey]);
+  }, [beginRecordLoad, readRecord, source, widgetConfig?.openActionKey]);
 
   usePhiSignalListener(useCallback((signal) => {
     if (signal.receiver !== identity.receiver && signal.receiver !== "broadcast") return;

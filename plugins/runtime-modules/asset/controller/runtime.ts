@@ -385,7 +385,13 @@ export function usePhiAssetRuntimeController(mountScope: "site" | "area" | "page
           assetId: asset.id,
           imageUrl: asset.previewUrl ?? asset.deliveryUrl,
           imageAlt: asset.altText ?? asset.title ?? asset.originalName,
-          folderPath: buildPhiMediaFolderNamePath(state.folders, asset.folderId),
+          /*
+           * The field is `folderId`, a Select whose options carry the id as a string (`valueMode: "id"`).
+           * Handing it the name path under another key left the Select empty, and a submit that only
+           * changed the alt text then sent `folderId: null` -- which the server reads as "move to the
+           * root folder".
+           */
+          folderId: asset.folderId == null ? null : String(asset.folderId),
           title: asset.title ?? "",
           altText: asset.altText ?? "",
           presentationFlags: ASSET_FORM_FLAG_VALUES.filter((flag) => (asset.presentationFlags & flag) === flag).map(String),

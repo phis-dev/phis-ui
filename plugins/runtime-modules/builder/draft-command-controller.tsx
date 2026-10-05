@@ -7,6 +7,7 @@ import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
 import { usePhiSignalDispatcher } from "../../../components/runtime/runtime-signal-bus";
 import { usePhiApplicationFeedback } from "../../../components/runtime/use-phi-application-feedback";
 import { createPhiBuilderControllerAddress } from "./controller/address";
+import type { PhiBuilderSavedHistoryHead } from "./draft-status-controller";
 import { createPhiDefaultAreaRuntimeModuleIds } from "../area-module-defaults";
 import { getPhiBuilderDefaultRegionDraft } from "./region-defaults";
 import {
@@ -93,6 +94,7 @@ export function usePhiBuilderDraftCommandController({
   effectiveNavKey,
   effectivePageKey,
   pathname,
+  captureHistoryHead,
   reportSaved,
   shellPresetDraftsByArea,
   state,
@@ -102,8 +104,14 @@ export function usePhiBuilderDraftCommandController({
   effectiveNavKey: string;
   effectivePageKey: string;
   pathname: string | null;
-  /** Tells the draft status what a save or publish of the workspace on screen stored. */
-  reportSaved: (status: "draft" | "published", revisionId: number | null) => void;
+  /** The undo-history head as a save or publish begins, read before the drafts are snapshotted. */
+  captureHistoryHead: () => PhiBuilderSavedHistoryHead;
+  /** Tells the draft status what a save or publish of the workspace on screen stored, and at which head. */
+  reportSaved: (
+    status: "draft" | "published",
+    revisionId: number | null,
+    savedAt: PhiBuilderSavedHistoryHead,
+  ) => void;
   shellPresetDraftsByArea: Record<string, Record<string, PhiDeveloperBuilderRegionDraft>>;
   state: PhiDeveloperBuilderWorkspaceState;
 }) {
@@ -245,6 +253,7 @@ export function usePhiBuilderDraftCommandController({
         showMessage({ level: "info", content: "No module selection changes to save." });
         return;
       }
+      const savedAt = captureHistoryHead();
       let lastRevisionId: number | null = null;
       for (const area of areas) {
         const modulesResult = await savePhiDeveloperBuilderModulesDraft(
@@ -265,7 +274,7 @@ export function usePhiBuilderDraftCommandController({
         );
         lastRevisionId = modulesResult.revisionId;
       }
-      reportSaved("draft", lastRevisionId);
+      reportSaved("draft", lastRevisionId, savedAt);
       showMessage({
         level: "success",
         content: areas.length === 1
@@ -275,6 +284,7 @@ export function usePhiBuilderDraftCommandController({
       return;
     }
 
+    const savedAt = captureHistoryHead();
     const result = workspaceKind === "navigation"
       ? await Promise.resolve().then(async () => {
           const navigationDraft = await resolveCurrentNavigationDraft();
@@ -294,7 +304,7 @@ export function usePhiBuilderDraftCommandController({
           },
         );
 
-    reportSaved("draft", result.revisionId);
+    reportSaved("draft", result.revisionId, savedAt);
     if (!("savedScopes" in result)) {
       const navigationDraft = await resolveCurrentNavigationDraft();
       setPhiBuilderNavigationDraft(effectiveNavKey, {
@@ -321,6 +331,7 @@ export function usePhiBuilderDraftCommandController({
         showMessage({ level: "info", content: "No module selection changes to publish." });
         return;
       }
+      const savedAt = captureHistoryHead();
       for (const area of areas) {
         await publishPhiDeveloperBuilderModulesDraft(
           state,
@@ -332,7 +343,7 @@ export function usePhiBuilderDraftCommandController({
         );
       }
       clearPhiBuilderModuleAreasDirty(defaultArea);
-      reportSaved("published", null);
+      reportSaved("published", null, savedAt);
       showMessage({
         level: "success",
         content: areas.length === 1
@@ -342,6 +353,7 @@ export function usePhiBuilderDraftCommandController({
       return;
     }
 
+    const savedAt = captureHistoryHead();
     if (workspaceKind === "navigation") {
       const navigationDraft = await resolveCurrentNavigationDraft();
       const published = await publishPhiBuilderNavigationDraft(navigationDraft);
@@ -362,7 +374,7 @@ export function usePhiBuilderDraftCommandController({
       );
     }
 
-    reportSaved("published", null);
+    reportSaved("published", null, savedAt);
     showMessage({ level: "success", content: "Published CMS draft." });
   }
 
@@ -523,7 +535,7 @@ export function usePhiBuilderDraftCommandController({
             workspace: "modules",
             area: defaultArea,
           }));
-          reportSaved("published", null);
+          reportSaved("published", null, captureHistoryHead());
           showMessage({ level: "success", content: "Reset Module drafts." });
         } catch (error) {
           showMessage({ level: "error", content: error instanceof Error ? error.message : "Module reset failed." });
@@ -598,7 +610,7 @@ export function usePhiBuilderDraftCommandController({
               area: effectiveArea,
               pageKey: effectivePageKey,
             }));
-            reportSaved("draft", result.revisionId);
+            reportSaved("draft", result.revisionId, captureHistoryHead());
             showMessage({ level: "success", content: "Saved page delete draft." });
             return;
           }
@@ -650,7 +662,7 @@ export function usePhiBuilderDraftCommandController({
             area: effectiveArea,
             pageKey: effectivePageKey,
           }));
-          reportSaved("published", null);
+          reportSaved("published", null, captureHistoryHead());
           showMessage({ level: "success", content: "Reset page draft." });
         } catch (error) {
           showMessage({ level: "error", content: error instanceof Error ? error.message : "Page reset failed." });
@@ -679,7 +691,7 @@ export function usePhiBuilderDraftCommandController({
             area: effectiveArea,
             navKey: effectiveNavKey,
           }));
-          reportSaved("published", null);
+          reportSaved("published", null, captureHistoryHead());
           dispatchSignal({
             scope: "area",
             channel: "navigation",

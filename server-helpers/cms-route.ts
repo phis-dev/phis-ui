@@ -74,6 +74,14 @@ export async function resolveCmsRootRoute(
   const localeConfig = await fetchSiteLocaleConfig(runtimeOptions);
   const normalizedLocale = normalizeSiteLocale(normalizedRoot, localeConfig);
 
+  /*
+   * The requested address is the one the browser sent, in its own spelling. The canonical one carries
+   * the Site's spelling of the locale (`pt-BR`), and `canonicalHrefUnlessCurrent` compares exactly, so
+   * building the requested side from the lowercased root made every regional locale a forward onto
+   * itself -- `/pt-BR/x` was told its canonical address is `/pt-BR/x`, and the client asked again.
+   */
+  const requestedRoot = root.trim();
+
   return {
     rootKind: "locale",
     root: normalizedLocale,
@@ -82,7 +90,7 @@ export async function resolveCmsRootRoute(
     cmsPath: buildCmsPathFromSegments(normalizedSegments),
     canonicalHref: canonicalHrefUnlessCurrent(
       buildCanonicalHref(normalizedLocale, normalizedSegments),
-      buildCanonicalHref(normalizedRoot, normalizedSegments),
+      buildCanonicalHref(requestedRoot, normalizedSegments),
     ),
   };
 }

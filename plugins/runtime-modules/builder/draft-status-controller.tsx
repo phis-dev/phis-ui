@@ -25,6 +25,9 @@ type PhiBuilderStoredDraftStatus = {
 };
 
 /** A history scope nothing records into, for the screens that report no draft. */
+/** What `captureHistoryHead` hands out and `reportSaved` takes back; opaque to everyone in between. */
+export type PhiBuilderSavedHistoryHead = { readonly head: unknown };
+
 const PHI_BUILDER_NO_DRAFT_HISTORY_CONTEXT = "draft-status:none";
 
 type PhiBuilderDraftStatusTarget = {
@@ -236,8 +239,22 @@ export function usePhiBuilderDraftStatusController({
     createPhiBuilderControllerAddress(),
   );
 
-  /** A save or publish of the workspace on screen: the state it stored, and history as it stands. */
-  function reportSaved(status: "draft" | "published", revisionId: number | null) {
+  /**
+   * The head of the workspace's undo history, taken as a save or publish begins -- before the drafts
+   * are read for the payload. A save awaits the server, and an edit made while it waits is in no stored
+   * revision; stamping the head from after the await would have called that edit saved, and a reload
+   * would have dropped it without a word. The token goes back in through `reportSaved`.
+   */
+  const captureHistoryHead = useCallback((): PhiBuilderSavedHistoryHead => ({
+    head: historyContext === null ? null : phiBuilderHistory.getHead(historyContext),
+  }), [historyContext]);
+
+  /** A save or publish of the workspace on screen: the state it stored, and the head it was taken at. */
+  function reportSaved(
+    status: "draft" | "published",
+    revisionId: number | null,
+    savedAt: PhiBuilderSavedHistoryHead,
+  ) {
     if (targetUrl === null) {
       return;
     }
@@ -246,9 +263,9 @@ export function usePhiBuilderDraftStatusController({
       status,
       revisionId,
       error: null,
-      savedHead: historyContext === null ? null : phiBuilderHistory.getHead(historyContext),
+      savedHead: savedAt.head,
     });
   }
 
-  return { reportSaved };
+  return { captureHistoryHead, reportSaved };
 }
