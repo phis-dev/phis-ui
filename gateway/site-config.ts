@@ -1,9 +1,8 @@
 import "server-only";
 
-import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
 import { syncPhiTranslationChangeMarkers } from "../helpers/translation-cache";
 import { clearPhiSiteReadCache, readPhiSiteReadCache } from "./site-read-cache";
-import { throwPhiCmsGatewayError } from "./errors";
+import { fetchPhiSiteApi } from "./site-api-request";
 import type { PhiSiteConfig } from "../types/site-config";
 
 export type GetResolvedSiteConfigOptions = {
@@ -59,23 +58,15 @@ async function fetchSiteConfig(
   { apiBaseUrl, internalToken, siteKey }: GetResolvedSiteConfigOptions,
   cacheKey: string,
 ): Promise<PhiSiteConfig> {
-  const response = await fetch(buildApiUrl(apiBaseUrl, "/api/v1/site"), {
-    headers: buildApiHeaders({
-      token: internalToken,
-      siteKey,
-      includeToken: true,
-      includeSiteKey: true,
-      gateway: true,
-    }),
-    cache: "no-store",
+  const payload = await fetchPhiSiteApi<{ site?: PhiSiteConfig }>({
+    context: "fetchSiteConfig",
+    apiBaseUrl,
+    internalToken,
+    siteKey,
+    path: "/api/v1/site",
+    failure: "Failed to fetch site config",
   });
-
-  if (!response.ok) {
-    throwPhiCmsGatewayError(`Failed to fetch site config (${response.status}).`, response.status);
-  }
-
-  const payload = (await response.json()) as { site?: PhiSiteConfig };
-  if (!payload.site) {
+  if (!payload?.site) {
     throw new Error("Missing site config payload.");
   }
 

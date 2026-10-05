@@ -1,8 +1,7 @@
 import { cache } from "react";
 import "server-only";
 
-import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
-import { throwPhiCmsGatewayError } from "./errors";
+import { fetchPhiSiteApi } from "./site-api-request";
 
 export type PhiSiteMediaSettings = {
   userSpacesEnabled: boolean;
@@ -41,39 +40,18 @@ export const getResolvedSiteMediaSettings = cache(async function getResolvedSite
   internalToken,
   siteKey,
 }: GetResolvedSiteMediaSettingsOptions): Promise<PhiSiteMediaSettingsResult> {
-  if (!apiBaseUrl.trim()) {
-    throw new Error("Missing apiBaseUrl for getResolvedSiteMediaSettings.");
-  }
-  if (!internalToken.trim()) {
-    throw new Error("Missing internalToken for getResolvedSiteMediaSettings.");
-  }
-  if (!siteKey.trim()) {
-    throw new Error("Missing siteKey for getResolvedSiteMediaSettings.");
-  }
-
-  const response = await fetch(buildApiUrl(apiBaseUrl, "/api/v1/site/media/settings"), {
-    headers: buildApiHeaders({
-      token: internalToken,
-      siteKey,
-      includeToken: true,
-      includeSiteKey: true,
-      gateway: true,
-    }),
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    throwPhiCmsGatewayError(
-      `Failed to fetch site media settings (${response.status}).`,
-      response.status,
-    );
-  }
-
-  const payload = (await response.json()) as {
+  const payload = await fetchPhiSiteApi<{
     media?: PhiSiteMediaSettings;
     addonSpaces?: readonly PhiSiteAddonMediaSpace[];
-  };
-  if (typeof payload.media?.userSpacesEnabled !== "boolean") {
+  }>({
+    context: "getResolvedSiteMediaSettings",
+    apiBaseUrl,
+    internalToken,
+    siteKey,
+    path: "/api/v1/site/media/settings",
+    failure: "Failed to fetch site media settings",
+  });
+  if (typeof payload?.media?.userSpacesEnabled !== "boolean") {
     throw new Error("Missing site media settings payload.");
   }
 

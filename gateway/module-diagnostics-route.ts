@@ -1,3 +1,4 @@
+import { jsonResponse } from "./route-handler-helpers";
 import "server-only";
 
 import type { NextRequest } from "next/server";
@@ -40,13 +41,6 @@ export type PhiSiteModuleDiagnosticsReport = {
   unavailable: readonly PhiSiteModuleDiagnostic[];
 };
 
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "content-type": "application/json" },
-  });
-}
-
 export function buildPhiSiteModuleDiagnosticsRouteHandler({
   loadAreaBridge,
 }: {
@@ -56,13 +50,13 @@ export function buildPhiSiteModuleDiagnosticsRouteHandler({
     const bridges = await loadPhiSiteAreaBridges(loadAreaBridge);
     const anyRuntime = bridges.find(([, bridge]) => bridge.runtime)?.[1].runtime;
     if (!anyRuntime) {
-      return json({ error: "no_site_runtime" }, 503);
+      return jsonResponse({ error: "no_site_runtime" }, 503);
     }
     const { apiBaseUrl, internalToken, siteKey } = anyRuntime;
 
     // An operator's check, not a public one: it names which Modules a Site lost and why.
     if (!internalToken || request.headers.get(PHIS_TOKEN_HEADER)?.trim() !== internalToken) {
-      return json({ error: "unauthorized" }, 401);
+      return jsonResponse({ error: "unauthorized" }, 401);
     }
 
     const snapshot = await getPhiCapabilitySnapshot({ apiBaseUrl, internalToken, siteKey })
@@ -107,6 +101,6 @@ export function buildPhiSiteModuleDiagnosticsRouteHandler({
       offeredCapabilities,
       unavailable,
     };
-    return json(report, report.ok ? 200 : 409);
+    return jsonResponse(report, report.ok ? 200 : 409);
   };
 }

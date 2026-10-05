@@ -2,10 +2,9 @@ import { isPhiRecord } from "../helpers/is-record";
 import { cache } from "react";
 import "server-only";
 
-import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
 import type { PhiCmsReviewParams } from "../server-helpers/cms-review";
 import type { PhiResolvedCmsPagePayload } from "../types/cms";
-import { throwPhiCmsGatewayError } from "./errors";
+import { fetchPhiSiteApi } from "./site-api-request";
 import type { PhiCmsPresetIdentity } from "../types/cms-module-descriptors";
 import type { PhiPageReference } from "../types/references";
 
@@ -43,53 +42,33 @@ export const getResolvedCmsPage = cache(async function getResolvedCmsPage({
   cookieHeader,
   sourcePreset,
 }: GetResolvedCmsPageOptions): Promise<PhiResolvedCmsPagePayload | null> {
-  if (!apiBaseUrl.trim()) {
-    throw new Error("Missing apiBaseUrl for getResolvedCmsPage.");
-  }
-  if (!internalToken.trim()) {
-    throw new Error("Missing internalToken for getResolvedCmsPage.");
-  }
-  if (!siteKey.trim()) {
-    throw new Error("Missing siteKey for getResolvedCmsPage.");
-  }
-
-  const url = new URL(buildApiUrl(apiBaseUrl, "/api/v1/site/page"));
-  url.searchParams.set("path", path);
+  const searchParams = new URLSearchParams({ path });
   if (sourcePreset) {
-    url.searchParams.set("ownerModuleId", sourcePreset.ownerModuleId);
-    url.searchParams.set("presetKey", sourcePreset.presetKey);
+    searchParams.set("ownerModuleId", sourcePreset.ownerModuleId);
+    searchParams.set("presetKey", sourcePreset.presetKey);
   }
   if (Number.isInteger(revision) && (revision as number) > 0) {
-    url.searchParams.set("revision", String(revision));
+    searchParams.set("revision", String(revision));
   }
   if (review?.kind === "page") {
-    url.searchParams.set("reviewKind", review.kind);
-    url.searchParams.set("reviewRevision", String(review.revisionId));
+    searchParams.set("reviewKind", review.kind);
+    searchParams.set("reviewRevision", String(review.revisionId));
   }
-
-  const response = await fetch(url.toString(), {
-    headers: buildApiHeaders({
-      token: internalToken,
-      siteKey,
-      locale,
-      includeToken: true,
-      includeSiteKey: true,
-      includeLocale: true,
-      gateway: true,
-      cookie: cookieHeader,
-    }),
-    cache: "no-store",
+  const payload = await fetchPhiSiteApi<PhiResolvedCmsPagePayload | null>({
+    context: "getResolvedCmsPage",
+    apiBaseUrl,
+    internalToken,
+    siteKey,
+    path: "/api/v1/site/page",
+    searchParams,
+    locale,
+    cookieHeader,
+    failure: "Failed to fetch resolved CMS page",
+    notFoundIsNull: true,
   });
-
-  if (response.status === 404) {
+  if (payload === null) {
     return null;
   }
-
-  if (!response.ok) {
-    throwPhiCmsGatewayError(`Failed to fetch resolved CMS page (${response.status}).`, response.status);
-  }
-
-  const payload = (await response.json()) as PhiResolvedCmsPagePayload | null;
   if (!payload?.page?.page) {
     throw new Error("Missing CMS page payload.");
   }
@@ -107,50 +86,31 @@ export const getCurrentCmsPageDraft = cache(async function getCurrentCmsPageDraf
   cookieHeader,
   sourcePreset,
 }: Omit<GetResolvedCmsPageOptions, "revision"> & { area?: string }): Promise<PhiResolvedCmsPagePayload | null> {
-  if (!apiBaseUrl.trim()) {
-    throw new Error("Missing apiBaseUrl for getCurrentCmsPageDraft.");
-  }
-  if (!internalToken.trim()) {
-    throw new Error("Missing internalToken for getCurrentCmsPageDraft.");
-  }
-  if (!siteKey.trim()) {
-    throw new Error("Missing siteKey for getCurrentCmsPageDraft.");
-  }
-
-  const url = new URL(buildApiUrl(apiBaseUrl, "/api/site/cms/page/draft"));
+  const searchParams = new URLSearchParams();
   if (sourcePreset) {
-    url.searchParams.set("ownerModuleId", sourcePreset.ownerModuleId);
-    url.searchParams.set("presetKey", sourcePreset.presetKey);
+    searchParams.set("ownerModuleId", sourcePreset.ownerModuleId);
+    searchParams.set("presetKey", sourcePreset.presetKey);
   } else {
-    url.searchParams.set("path", path);
+    searchParams.set("path", path);
   }
   if (area?.trim()) {
-    url.searchParams.set("area", area.trim());
+    searchParams.set("area", area.trim());
   }
-
-  const response = await fetch(url.toString(), {
-    headers: buildApiHeaders({
-      token: internalToken,
-      siteKey,
-      locale,
-      includeToken: true,
-      includeSiteKey: true,
-      includeLocale: true,
-      gateway: true,
-      cookie: cookieHeader,
-    }),
-    cache: "no-store",
+  const payload = await fetchPhiSiteApi<PhiResolvedCmsPagePayload | null>({
+    context: "getCurrentCmsPageDraft",
+    apiBaseUrl,
+    internalToken,
+    siteKey,
+    path: "/api/site/cms/page/draft",
+    searchParams,
+    locale,
+    cookieHeader,
+    failure: "Failed to fetch current CMS page draft",
+    notFoundIsNull: true,
   });
-
-  if (response.status === 404) {
+  if (payload === null) {
     return null;
   }
-
-  if (!response.ok) {
-    throwPhiCmsGatewayError(`Failed to fetch current CMS page draft (${response.status}).`, response.status);
-  }
-
-  const payload = (await response.json()) as PhiResolvedCmsPagePayload | null;
   if (!payload?.page?.page) {
     throw new Error("Missing CMS page draft payload.");
   }
@@ -173,30 +133,19 @@ export const getSiteCmsPageCatalog = cache(async function getSiteCmsPageCatalog(
   locale?: string;
   cookieHeader?: string | null;
 }): Promise<PhiSiteCmsPageCatalogEntry[]> {
-  if (!apiBaseUrl.trim()) throw new Error("Missing apiBaseUrl for getSiteCmsPageCatalog.");
-  if (!internalToken.trim()) throw new Error("Missing internalToken for getSiteCmsPageCatalog.");
-  if (!siteKey.trim()) throw new Error("Missing siteKey for getSiteCmsPageCatalog.");
   if (!area.trim()) throw new Error("Missing area for getSiteCmsPageCatalog.");
 
-  const url = new URL(buildApiUrl(apiBaseUrl, "/api/site/cms/pages"));
-  url.searchParams.set("area", area);
-  const response = await fetch(url.toString(), {
-    headers: buildApiHeaders({
-      token: internalToken,
-      siteKey,
-      locale,
-      includeToken: true,
-      includeSiteKey: true,
-      includeLocale: true,
-      gateway: true,
-      cookie: cookieHeader,
-    }),
-    cache: "no-store",
+  const payload = await fetchPhiSiteApi<{ pages?: unknown } | null>({
+    context: "getSiteCmsPageCatalog",
+    apiBaseUrl,
+    internalToken,
+    siteKey,
+    path: "/api/site/cms/pages",
+    searchParams: { area },
+    locale,
+    cookieHeader,
+    failure: "Failed to fetch CMS Page catalog",
   });
-  if (!response.ok) {
-    throwPhiCmsGatewayError(`Failed to fetch CMS Page catalog (${response.status}).`, response.status);
-  }
-  const payload = (await response.json().catch(() => null)) as { pages?: unknown } | null;
   if (!Array.isArray(payload?.pages)) return [];
   return payload.pages.map((entry) => {
     if (!isPhiRecord(entry)) {

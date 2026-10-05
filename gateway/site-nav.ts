@@ -1,8 +1,7 @@
 import { isPhiRecord } from "../helpers/is-record";
 import "server-only";
 
-import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
-import { throwPhiCmsGatewayError } from "./errors";
+import { fetchPhiSiteApi } from "./site-api-request";
 import type { PhiCmsReviewParams } from "../server-helpers/cms-review";
 import type { PhiCmsNavigationOverlay } from "../types/cms-module-descriptors";
 import { readPhiSiteReadCache } from "./site-read-cache";
@@ -41,26 +40,19 @@ export async function fetchSiteNavigationFolderTarget({
   area: string;
   path: string;
 }): Promise<string | null> {
-  const url = new URL(buildApiUrl(apiBaseUrl, "/api/v1/site/nav/folder"));
-  url.searchParams.set("area", area);
-  url.searchParams.set("path", path);
-  const response = await fetch(url, {
-    headers: buildApiHeaders({
-      token: internalToken,
-      siteKey,
-      includeToken: true,
-      includeSiteKey: true,
-      gateway: true,
-    }),
-    cache: "no-store",
+  const payload = await fetchPhiSiteApi<{ reference?: unknown }>({
+    context: "fetchSiteNavigationFolderTarget",
+    apiBaseUrl,
+    internalToken,
+    siteKey,
+    path: "/api/v1/site/nav/folder",
+    searchParams: { area, path },
+    failure: "Failed to resolve folder address",
+    notFoundIsNull: true,
   });
-  if (response.status === 404) {
+  if (payload === null) {
     return null;
   }
-  if (!response.ok) {
-    throwPhiCmsGatewayError(`Failed to resolve folder address (${response.status}).`, response.status);
-  }
-  const payload = (await response.json()) as { reference?: unknown };
   return typeof payload.reference === "string" ? payload.reference : null;
 }
 
@@ -69,27 +61,15 @@ export async function fetchSiteNavigationScopes({
   internalToken,
   siteKey,
 }: Pick<FetchSiteNavOptions, "apiBaseUrl" | "internalToken" | "siteKey">): Promise<PhiSiteNavigationScope[]> {
-  const response = await fetch(
-    buildApiUrl(apiBaseUrl, "/api/v1/site/nav/scopes"),
-    {
-      headers: buildApiHeaders({
-        token: internalToken,
-        siteKey,
-        includeToken: true,
-        includeSiteKey: true,
-        gateway: true,
-      }),
-      cache: "no-store",
-    },
-  );
-  if (!response.ok) {
-    throwPhiCmsGatewayError(
-      `Failed to fetch site navigation scopes (${response.status}).`,
-      response.status,
-    );
-  }
-  const payload = (await response.json()) as { scopes?: unknown };
-  if (!Array.isArray(payload.scopes)) {
+  const payload = await fetchPhiSiteApi<{ scopes?: unknown }>({
+    context: "fetchSiteNavigationScopes",
+    apiBaseUrl,
+    internalToken,
+    siteKey,
+    path: "/api/v1/site/nav/scopes",
+    failure: "Failed to fetch site navigation scopes",
+  });
+  if (!Array.isArray(payload?.scopes)) {
     throw new Error("Missing site navigation scopes payload.");
   }
   return payload.scopes.flatMap((scope) => {
@@ -119,15 +99,6 @@ export async function fetchSiteNavigationOverlay({
   review,
   cookieHeader,
 }: FetchSiteNavOptions): Promise<PhiCmsNavigationOverlay | null> {
-  if (!apiBaseUrl.trim()) {
-    throw new Error("Missing apiBaseUrl for fetchSiteNavigationOverlay.");
-  }
-  if (!internalToken.trim()) {
-    throw new Error("Missing internalToken for fetchSiteNavigationOverlay.");
-  }
-  if (!siteKey.trim()) {
-    throw new Error("Missing siteKey for fetchSiteNavigationOverlay.");
-  }
   if (!navKey.trim()) {
     throw new Error("Missing navKey for fetchSiteNavigationOverlay.");
   }
@@ -147,10 +118,10 @@ export async function fetchSiteNavigationOverlay({
     search.set("reviewRevision", String(review.revisionId));
   }
 
-  const url = buildApiUrl(apiBaseUrl, `/api/v1/site/nav?${search.toString()}`);
   // A revision or a review asks for a draft the author is looking at, never what visitors get.
   const readsDraft = search.has("revision") || search.has("reviewKind");
-  const load = () => fetchNavigationOverlay(url, internalToken, siteKey, readsDraft ? cookieHeader : undefined);
+  const load = () =>
+    fetchNavigationOverlay(apiBaseUrl, internalToken, siteKey, search, readsDraft ? cookieHeader : undefined);
   if (process.env.NODE_ENV === "development" || readsDraft) {
     return load();
   }
@@ -158,32 +129,26 @@ export async function fetchSiteNavigationOverlay({
 }
 
 async function fetchNavigationOverlay(
-  url: string,
+  apiBaseUrl: string,
   internalToken: string,
   siteKey: string,
+  search: URLSearchParams,
   cookieHeader: string | undefined,
 ): Promise<PhiCmsNavigationOverlay | null> {
-  const response = await fetch(url, {
-    headers: buildApiHeaders({
-      token: internalToken,
-      siteKey,
-      includeToken: true,
-      includeSiteKey: true,
-      gateway: true,
-      cookie: cookieHeader,
-    }),
-    cache: "no-store",
+  const payload = await fetchPhiSiteApi<{ overlay?: PhiCmsNavigationOverlay }>({
+    context: "fetchSiteNavigationOverlay",
+    apiBaseUrl,
+    internalToken,
+    siteKey,
+    path: "/api/v1/site/nav",
+    searchParams: search,
+    cookieHeader,
+    failure: "Failed to fetch site nav",
+    notFoundIsNull: true,
   });
-
-  if (response.status === 404) {
+  if (payload === null) {
     return null;
   }
-
-  if (!response.ok) {
-    throwPhiCmsGatewayError(`Failed to fetch site nav (${response.status}).`, response.status);
-  }
-
-  const payload = (await response.json()) as { overlay?: PhiCmsNavigationOverlay };
   if (!payload.overlay || typeof payload.overlay !== "object") {
     throw new Error("Missing site navigation overlay payload.");
   }

@@ -1,8 +1,7 @@
 import { cache } from "react";
 import "server-only";
 
-import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
-import { throwPhiCmsGatewayError } from "./errors";
+import { fetchPhiSiteApi } from "./site-api-request";
 
 export type PhiSiteAuthAdminSettings = {
   policy: {
@@ -33,33 +32,15 @@ export const getResolvedSiteAuthAdminSettings = cache(async function getResolved
   internalToken,
   siteKey,
 }: GetResolvedSiteAuthAdminSettingsOptions): Promise<PhiSiteAuthAdminSettings> {
-  if (!apiBaseUrl.trim()) {
-    throw new Error("Missing apiBaseUrl for getResolvedSiteAuthAdminSettings.");
-  }
-  if (!internalToken.trim()) {
-    throw new Error("Missing internalToken for getResolvedSiteAuthAdminSettings.");
-  }
-  if (!siteKey.trim()) {
-    throw new Error("Missing siteKey for getResolvedSiteAuthAdminSettings.");
-  }
-
-  const response = await fetch(buildApiUrl(apiBaseUrl, "/api/v1/site/auth/settings"), {
-    headers: buildApiHeaders({
-      token: internalToken,
-      siteKey,
-      includeToken: true,
-      includeSiteKey: true,
-      gateway: true,
-    }),
-    cache: "no-store",
+  const payload = await fetchPhiSiteApi<{ auth?: PhiSiteAuthAdminSettings }>({
+    context: "getResolvedSiteAuthAdminSettings",
+    apiBaseUrl,
+    internalToken,
+    siteKey,
+    path: "/api/v1/site/auth/settings",
+    failure: "Failed to fetch site auth settings",
   });
-
-  if (!response.ok) {
-    throwPhiCmsGatewayError(`Failed to fetch site auth settings (${response.status}).`, response.status);
-  }
-
-  const payload = (await response.json()) as { auth?: PhiSiteAuthAdminSettings };
-  if (typeof payload.auth?.policy?.registrationMode !== "string") {
+  if (typeof payload?.auth?.policy?.registrationMode !== "string") {
     throw new Error("Missing site auth settings payload.");
   }
 

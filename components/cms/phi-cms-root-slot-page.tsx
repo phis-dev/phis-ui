@@ -7,18 +7,7 @@ import { hasRenderableRegionRoot } from "./phi-cms-region-helpers";
 import { loadPhiCmsRootRequest } from "../../server-helpers/cms-root";
 import { resolvePhiCmsPageRedirect } from "./phi-cms-page-redirect";
 import { isPhiCmsGatewayAuthError } from "../../gateway/errors";
-import { PhiRuntimeControllerServerHost } from "../runtime/runtime-controller-server-host";
-import { materializePhiRuntimeControllerSettings } from "../runtime/runtime-controller-materialization";
-import {
-  resolvePhiCmsAreaRuntimeModuleScope,
-  resolvePhiCmsTreeRuntimeRegistry,
-} from "./phi-cms-runtime-registry";
-import { PhiRuntimeModuleDataProviderHost } from "../runtime/runtime-module-data-provider-host";
-import { resolvePhiRuntimeControllerDefinitions } from "../../plugins/runtime-modules/resolver";
-import {
-  buildPhiRuntimeModuleAccessRegistry,
-  filterPhiCmsRenderableTreeForViewer,
-} from "../../helpers/cms-access-policy";
+import { PhiCmsPageRuntimeHosts, resolvePhiCmsPageRenderScope } from "./phi-cms-page-render-scope";
 
 export type PhiCmsRootSlotPageProps = {
   root: string;
@@ -107,63 +96,25 @@ export async function PhiCmsRootSlotPage({
     return null;
   }
 
-  const runtimeModuleScope = await resolvePhiCmsAreaRuntimeModuleScope({
-    cmsBridge,
-    area: resolvedRequest.runtime.area,
-    areaPreset: resolvedRequest.areaPreset,
-    serverCapabilities: resolvedRequest.serverCapabilities,
-  });
-  const filteredPageTree = filterPhiCmsRenderableTreeForViewer({
-    tree: resolvedRequest.page,
-    viewer: resolvedRequest.runtime.viewer,
-    registry: buildPhiRuntimeModuleAccessRegistry(runtimeModuleScope.moduleSet),
-  });
-  const runtimeRegistry = await resolvePhiCmsTreeRuntimeRegistry({
-    moduleScope: runtimeModuleScope,
-    trees: [filteredPageTree],
-  });
-  const filteredRegion = findRenderableRegion(filteredPageTree, regionType);
+  const scope = await resolvePhiCmsPageRenderScope({ cmsBridge, resolvedRequest, regionTypes: [regionType] });
+  const filteredRegion = findRenderableRegion(scope.filteredPageTree, regionType);
   if (
     !filteredRegion ||
-    !hasRenderableRegionRoot(filteredPageTree, filteredRegion.rootLayoutNodeId)
+    !hasRenderableRegionRoot(scope.filteredPageTree, filteredRegion.rootLayoutNodeId)
   ) {
     return null;
   }
-  const pageControllerSettings = materializePhiRuntimeControllerSettings({
-    tree: filteredPageTree,
-    ownerMountScope: "page",
-    widgetPluginsByType: runtimeModuleScope.widgetDefinitionsByType,
-    baseSettings: resolvedRequest.page.controllerSettings ?? null,
-    activeControllerTypes: [...runtimeModuleScope.moduleSet.controllerDescriptorsByType.keys()],
-    regionTypes: [regionType],
-  });
-  const controllerDefinitionsByType = await resolvePhiRuntimeControllerDefinitions({
-    catalog: cmsBridge.runtimeModuleCatalog,
-    moduleSet: runtimeModuleScope.moduleSet,
-    settings: pageControllerSettings,
-  });
 
   return (
-    <PhiRuntimeModuleDataProviderHost
-      providerKeys={[...runtimeRegistry.dataProviderDescriptorsByKey.keys()]}
-    >
-      {pageControllerSettings.length > 0 ? (
-        <PhiRuntimeControllerServerHost
-          controllers={pageControllerSettings}
-          runtime={resolvedRequest.runtime as PhiBlockRuntime}
-          registry={controllerDefinitionsByType}
-          controllerModuleIdsByType={runtimeModuleScope.moduleSet.ownerModuleIdByControllerType}
-          runtimeModuleCatalog={runtimeRegistry.runtimeModuleCatalog}
-        />
-      ) : null}
+    <PhiCmsPageRuntimeHosts scope={scope} runtime={resolvedRequest.runtime as PhiBlockRuntime}>
       <PhiCmsLayoutRenderer
-        tree={filteredPageTree}
+        tree={scope.filteredPageTree}
         runtime={resolvedRequest.runtime as PhiBlockRuntime}
         regionClassName={resolveSlotClassName(regionType)}
         regionTypes={[regionType]}
         stackGap={resolveSlotStackGap(regionType)}
-        registry={runtimeRegistry}
+        registry={scope.runtimeRegistry}
       />
-    </PhiRuntimeModuleDataProviderHost>
+    </PhiCmsPageRuntimeHosts>
   );
 }

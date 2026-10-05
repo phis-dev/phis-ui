@@ -2,10 +2,9 @@ import { isPhiRecord } from "../helpers/is-record";
 import { cache } from "react";
 import "server-only";
 
-import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
 import type { PhiCmsReviewParams } from "../server-helpers/cms-review";
 import type { PhiResolvedCmsAreaPresetPayload } from "../types/cms";
-import { throwPhiCmsGatewayError } from "./errors";
+import { fetchPhiSiteApi } from "./site-api-request";
 import type { PhiCmsPresetIdentity } from "../types/cms-module-descriptors";
 
 export type GetExactSiteAreaOptions = {
@@ -32,51 +31,33 @@ export const getExactSiteArea = cache(async function getExactSiteArea({
   cookieHeader,
   sourcePreset,
 }: GetExactSiteAreaOptions): Promise<PhiResolvedCmsAreaPresetPayload | null> {
-  if (!apiBaseUrl.trim()) {
-    throw new Error("Missing apiBaseUrl for getExactSiteArea.");
-  }
-  if (!internalToken.trim()) {
-    throw new Error("Missing internalToken for getExactSiteArea.");
-  }
-  if (!siteKey.trim()) {
-    throw new Error("Missing siteKey for getExactSiteArea.");
-  }
-
-  const url = new URL(buildApiUrl(apiBaseUrl, "/api/v1/site/area"));
-  url.searchParams.set("path", path);
-  url.searchParams.set("ownerModuleId", sourcePreset.ownerModuleId);
-  url.searchParams.set("presetKey", sourcePreset.presetKey);
+  const searchParams = new URLSearchParams({
+    path,
+    ownerModuleId: sourcePreset.ownerModuleId,
+    presetKey: sourcePreset.presetKey,
+  });
   if (Number.isInteger(revision) && (revision as number) > 0) {
-    url.searchParams.set("revision", String(revision));
+    searchParams.set("revision", String(revision));
   }
   if (review?.kind === "area") {
-    url.searchParams.set("reviewKind", review.kind);
-    url.searchParams.set("reviewRevision", String(review.revisionId));
+    searchParams.set("reviewKind", review.kind);
+    searchParams.set("reviewRevision", String(review.revisionId));
   }
-
-  const response = await fetch(url.toString(), {
-    headers: buildApiHeaders({
-      token: internalToken,
-      siteKey,
-      locale,
-      includeToken: true,
-      includeSiteKey: true,
-      includeLocale: true,
-      gateway: true,
-      cookie: cookieHeader,
-    }),
-    cache: "no-store",
+  const payload = await fetchPhiSiteApi<PhiResolvedCmsAreaPresetPayload | null>({
+    context: "getExactSiteArea",
+    apiBaseUrl,
+    internalToken,
+    siteKey,
+    path: "/api/v1/site/area",
+    searchParams,
+    locale,
+    cookieHeader,
+    failure: "Failed to fetch exact CMS area",
+    notFoundIsNull: true,
   });
-
-  if (response.status === 404) {
+  if (payload === null) {
     return null;
   }
-
-  if (!response.ok) {
-    throwPhiCmsGatewayError(`Failed to fetch exact CMS area (${response.status}).`, response.status);
-  }
-
-  const payload = (await response.json()) as PhiResolvedCmsAreaPresetPayload | null;
   if (!payload?.preset?.preset) {
     throw new Error("Missing CMS area payload.");
   }
@@ -138,31 +119,24 @@ export async function getPublicSiteAreaWithPublishedPages({
   sourcePreset,
 }: Pick<GetExactSiteAreaOptions, "apiBaseUrl" | "internalToken" | "siteKey" | "locale" | "sourcePreset">):
   Promise<PhiPublicAreaWithPublishedPages> {
-  const url = new URL(buildApiUrl(apiBaseUrl, "/api/v1/site/area"));
-  url.searchParams.set("path", "/");
-  url.searchParams.set("ownerModuleId", sourcePreset.ownerModuleId);
-  url.searchParams.set("presetKey", sourcePreset.presetKey);
-  url.searchParams.set("include", "publishedPages");
-
-  const response = await fetch(url.toString(), {
-    headers: buildApiHeaders({
-      token: internalToken,
-      siteKey,
-      locale,
-      includeToken: true,
-      includeSiteKey: true,
-      includeLocale: true,
-      gateway: true,
-      userAgent: "phis-ui-sitemap/1.0",
-    }),
-    cache: "no-store",
+  const payload = await fetchPhiSiteApi<
+    Partial<PhiResolvedCmsAreaPresetPayload> & { preset?: unknown; publishedPages?: unknown }
+  >({
+    context: "getPublicSiteAreaWithPublishedPages",
+    apiBaseUrl,
+    internalToken,
+    siteKey,
+    path: "/api/v1/site/area",
+    searchParams: {
+      path: "/",
+      ownerModuleId: sourcePreset.ownerModuleId,
+      presetKey: sourcePreset.presetKey,
+      include: "publishedPages",
+    },
+    locale,
+    failure: "Failed to fetch the Public Area with its Pages",
+    userAgent: "phis-ui-sitemap/1.0",
   });
-  if (!response.ok) {
-    throwPhiCmsGatewayError(`Failed to fetch the Public Area with its Pages (${response.status}).`, response.status);
-  }
-
-  const payload = (await response.json().catch(() => null)) as
-    (Partial<PhiResolvedCmsAreaPresetPayload> & { preset?: unknown; publishedPages?: unknown }) | null;
   if (!payload || !Array.isArray(payload.publishedPages)) {
     throw new Error("Missing published Public Page projection.");
   }
@@ -182,44 +156,25 @@ export const getCurrentSiteAreaDraft = cache(async function getCurrentSiteAreaDr
   cookieHeader,
   sourcePreset,
 }: Omit<GetExactSiteAreaOptions, "revision">): Promise<PhiResolvedCmsAreaPresetPayload | null> {
-  if (!apiBaseUrl.trim()) {
-    throw new Error("Missing apiBaseUrl for getCurrentSiteAreaDraft.");
-  }
-  if (!internalToken.trim()) {
-    throw new Error("Missing internalToken for getCurrentSiteAreaDraft.");
-  }
-  if (!siteKey.trim()) {
-    throw new Error("Missing siteKey for getCurrentSiteAreaDraft.");
-  }
-
-  const url = new URL(buildApiUrl(apiBaseUrl, "/api/site/cms/area/draft"));
-  url.searchParams.set("area", area?.trim() ? area.trim() : path === "/" ? "public" : path.replace(/^\//, ""));
-  url.searchParams.set("ownerModuleId", sourcePreset.ownerModuleId);
-  url.searchParams.set("presetKey", sourcePreset.presetKey);
-
-  const response = await fetch(url.toString(), {
-    headers: buildApiHeaders({
-      token: internalToken,
-      siteKey,
-      locale,
-      includeToken: true,
-      includeSiteKey: true,
-      includeLocale: true,
-      gateway: true,
-      cookie: cookieHeader,
-    }),
-    cache: "no-store",
+  const payload = await fetchPhiSiteApi<PhiResolvedCmsAreaPresetPayload | null>({
+    context: "getCurrentSiteAreaDraft",
+    apiBaseUrl,
+    internalToken,
+    siteKey,
+    path: "/api/site/cms/area/draft",
+    searchParams: {
+      area: area?.trim() ? area.trim() : path === "/" ? "public" : path.replace(/^\//, ""),
+      ownerModuleId: sourcePreset.ownerModuleId,
+      presetKey: sourcePreset.presetKey,
+    },
+    locale,
+    cookieHeader,
+    failure: "Failed to fetch current CMS area draft",
+    notFoundIsNull: true,
   });
-
-  if (response.status === 404) {
+  if (payload === null) {
     return null;
   }
-
-  if (!response.ok) {
-    throwPhiCmsGatewayError(`Failed to fetch current CMS area draft (${response.status}).`, response.status);
-  }
-
-  const payload = (await response.json()) as PhiResolvedCmsAreaPresetPayload | null;
   if (!payload?.preset?.preset) {
     throw new Error("Missing CMS area draft payload.");
   }

@@ -1,13 +1,12 @@
+import { jsonResponse, readPhiInternalRequestPath, splitPhiRequestPath } from "./route-handler-helpers";
 import "server-only";
 
 import type { NextRequest } from "next/server";
 
 import {
   isPhiCmsAreaKey,
-  resolvePhiCmsAreaMask,
   type PhiCmsAreaKey,
 } from "../constants/cms-areas";
-import { readPhiInternalPath } from "../helpers/internal-path";
 import { canPhiViewerAccess } from "../types/access";
 import {
   readPhiAreaLandingSelection,
@@ -20,45 +19,15 @@ import {
   resolvePhiCmsDescriptorCatalog,
   resolvePhiCmsRoutePreset,
 } from "../plugins/runtime-modules/descriptor-compiler";
-import {
-  resolveActivePresetModuleKeys,
-  resolvePhiCmsRequest,
-} from "../server-helpers/cms-request";
+import { resolveActivePresetModuleKeys } from "../server-helpers/cms-request";
+import { resolvePhiCmsLookup } from "../server-helpers/cms-lookup";
 import { getPhiCmsPage, getPhiExactSiteArea } from "../server-helpers/cms";
 import { resolveCmsRootRoute } from "../server-helpers/cms-route";
-import {
-  buildPhiBlockRuntime,
-  loadPhiSiteRequestContext,
-} from "../server-helpers/runtime";
-import { runWithPhiRequestRuntime } from "../server-helpers/request-runtime";
+import { loadPhiSiteRequestContext } from "../server-helpers/runtime";
 import { resolvePhiCmsPageRedirect } from "../components/cms/phi-cms-page-redirect";
 import type { PhiCmsSiteBridge } from "../types/cms-plugins";
 import type { PhiSiteAreaBridgeLoader } from "./site-area-bridges";
 import type { PhiSiteRequestContext } from "../types/site-request-context";
-
-function readInternalPath(value: string | null, requestUrl: string) {
-  const normalized = readPhiInternalPath(value);
-  if (normalized === null) {
-    return null;
-  }
-  try {
-    return new URL(normalized, requestUrl).pathname;
-  } catch {
-    return null;
-  }
-}
-
-function splitTargetPath(pathname: string) {
-  const segments = pathname.split("/").filter(Boolean).map((segment) => {
-    try {
-      return decodeURIComponent(segment);
-    } catch {
-      return segment;
-    }
-  });
-  const [root, ...path] = segments;
-  return root ? { root, path } : null;
-}
 
 function resolveAreaStoragePath(path: string, area: PhiCmsAreaKey) {
   if (area === "public") {
@@ -71,13 +40,6 @@ function resolveAreaStoragePath(path: string, area: PhiCmsAreaKey) {
   return path.startsWith(`${prefix}/`)
     ? normalizePhiCmsRoutePath(path.slice(prefix.length))
     : null;
-}
-
-function json(payload: unknown, status = 200) {
-  return Response.json(payload, {
-    status,
-    headers: { "cache-control": "no-store" },
-  });
 }
 
 /**
@@ -109,54 +71,12 @@ async function resolveAreaRootDestinationHref({
   cookieHeader: string;
   requestContext: PhiSiteRequestContext;
 }): Promise<string | null> {
-  const bridgeRuntime = bridge.runtime;
-  if (!bridgeRuntime) {
+  if (!bridge.runtime) {
     return null;
   }
-  const { siteKey, apiBaseUrl, internalToken } = bridgeRuntime;
 
   try {
-    /*
-     * A route handler has no request runtime bound, and a lookup deliberately binds none -- but the
-     * helpers under the resolution (translations, locale fetches) read one globally. The scope below
-     * gives them a runtime for exactly this unit of work, isolated from everything outside it.
-     */
-    const scopeRuntime = buildPhiBlockRuntime({
-      requestContext,
-      areaMask: resolvePhiCmsAreaMask(area),
-    });
-    const resolved = await runWithPhiRequestRuntime(scopeRuntime, () => resolvePhiCmsRequest({
-      siteKey,
-      locale,
-      area,
-      path,
-      cookieHeader,
-      apiBaseUrl,
-      internalToken,
-      requestContext,
-      runtimeModuleCatalog: bridge.runtimeModuleCatalog,
-      purpose: "lookup",
-      loadExactCmsArea: (requestPath, sourcePreset) =>
-        getPhiExactSiteArea({
-          path: requestPath,
-          siteKey,
-          apiBaseUrl,
-          internalToken,
-          locale,
-          cookieHeader,
-          sourcePreset,
-        }),
-      loadResolvedCmsPage: (requestPath, sourcePreset) =>
-        getPhiCmsPage({
-          path: requestPath,
-          siteKey,
-          apiBaseUrl,
-          internalToken,
-          locale,
-          cookieHeader,
-          sourcePreset,
-        }),
-    }));
+    const resolved = await resolvePhiCmsLookup({ bridge, area, locale, path, cookieHeader, requestContext });
     if (!resolved) {
       return null;
     }
@@ -175,22 +95,22 @@ export function buildPhiNavigationTargetRouteHandler({
   return async function GET(request: NextRequest) {
     const requestUrl = new URL(request.url);
     const area = requestUrl.searchParams.get("area")?.trim().toLowerCase() ?? "";
-    const pathname = readInternalPath(requestUrl.searchParams.get("path"), request.url);
+    const pathname = readPhiInternalRequestPath(requestUrl.searchParams.get("path"), request.url);
 
     if (!isPhiCmsAreaKey(area) || !pathname) {
-      return json({ available: false }, 400);
+      return jsonResponse({ available: false }, 400);
     }
 
     const bridge = await loadAreaBridge(area);
-    const target = splitTargetPath(pathname);
+    const target = splitPhiRequestPath(pathname);
     if (!bridge?.runtime || !target) {
-      return json({ available: false });
+      return jsonResponse({ available: false });
     }
 
     try {
       const resolvedRoute = await resolveCmsRootRoute(target.root, target.path, bridge.runtime);
       if (resolvedRoute.area !== area) {
-        return json({ available: false });
+        return jsonResponse({ available: false });
       }
 
       const cookieHeader = request.headers.get("cookie") ?? "";
@@ -209,7 +129,7 @@ export function buildPhiNavigationTargetRouteHandler({
         !shellBinding ||
         !canPhiViewerAccess(requestContext.viewer, areaDefinition.accessPolicy)
       ) {
-        return json({ available: false });
+        return jsonResponse({ available: false });
       }
 
       const sourcePreset = {
@@ -267,7 +187,7 @@ export function buildPhiNavigationTargetRouteHandler({
           })
         : null;
 
-      return json({
+      return jsonResponse({
         available,
         canonicalHref: resolvedRoute.canonicalHref,
         destinationHref,
@@ -278,7 +198,7 @@ export function buildPhiNavigationTargetRouteHandler({
         pathname,
         error,
       });
-      return json({ available: false });
+      return jsonResponse({ available: false });
     }
   };
 }

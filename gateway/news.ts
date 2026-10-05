@@ -1,9 +1,8 @@
 import "server-only";
 
-import { PHIS_SITE_KEY_HEADER } from "../constants/http-headers";
 import { isPhiRecord } from "../helpers/is-record";
 import type { PhiSiteNewsEntry } from "../types/news";
-import { throwPhiCmsGatewayError } from "./errors";
+import { fetchPhiSiteApi } from "./site-api-request";
 
 export type FetchPhiSiteNewsOptions = {
   apiBaseUrl: string;
@@ -66,32 +65,20 @@ function readNewsEntry(value: unknown): PhiSiteNewsEntry | null {
  * age to reason about.
  */
 export async function fetchPhiSiteNews(options: FetchPhiSiteNewsOptions): Promise<PhiSiteNewsEntry[]> {
-  if (!options.apiBaseUrl.trim()) {
-    throw new Error("Missing apiBaseUrl for fetchPhiSiteNews.");
-  }
-  if (!options.siteKey.trim()) {
-    throw new Error("Missing siteKey for fetchPhiSiteNews.");
-  }
-
   if (!Number.isInteger(options.limit) || options.limit <= 0) {
     throw new Error("fetchPhiSiteNews needs a positive integer limit.");
   }
-  const response = await fetch(`${options.apiBaseUrl}/api/v1/news?${new URLSearchParams({ limit: String(options.limit) })}`, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${options.internalToken}`,
-      [PHIS_SITE_KEY_HEADER]: options.siteKey,
-      "accept-language": options.locale,
-      "user-agent": "phis-ui-news/1.0",
-    },
-    cache: "no-store",
+  const payload = await fetchPhiSiteApi<unknown>({
+    context: "fetchPhiSiteNews",
+    apiBaseUrl: options.apiBaseUrl,
+    internalToken: options.internalToken,
+    siteKey: options.siteKey,
+    path: "/api/v1/news",
+    searchParams: { limit: String(options.limit) },
+    locale: options.locale,
+    failure: "News fetch failed",
+    userAgent: "phis-ui-news/1.0",
   });
-  if (!response.ok) {
-    throwPhiCmsGatewayError(`News fetch failed (${response.status}).`, response.status);
-  }
-
-  const payload = await response.json().catch(() => null);
   if (!isPhiRecord(payload) || !Array.isArray(payload.news)) {
     throw new Error("News answered without a list.");
   }

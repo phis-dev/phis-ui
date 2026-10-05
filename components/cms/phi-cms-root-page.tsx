@@ -14,19 +14,8 @@ import {
 import { resolvePhiCmsPageRedirect, performPhiCmsPageRedirect } from "./phi-cms-page-redirect";
 import { PhiCmsPageMetaSignalEmitter } from "./phi-cms-page-meta-signal-emitter";
 import { isPhiCmsGatewayAuthError } from "../../gateway/errors";
-import { PhiRuntimeControllerServerHost } from "../runtime/runtime-controller-server-host";
-import { materializePhiRuntimeControllerSettings } from "../runtime/runtime-controller-materialization";
 import { PhiCmsRegionType } from "../../constants/phi-cms";
-import {
-  resolvePhiCmsAreaRuntimeModuleScope,
-  resolvePhiCmsTreeRuntimeRegistry,
-} from "./phi-cms-runtime-registry";
-import { PhiRuntimeModuleDataProviderHost } from "../runtime/runtime-module-data-provider-host";
-import { resolvePhiRuntimeControllerDefinitions } from "../../plugins/runtime-modules/resolver";
-import {
-  buildPhiRuntimeModuleAccessRegistry,
-  filterPhiCmsRenderableTreeForViewer,
-} from "../../helpers/cms-access-policy";
+import { PhiCmsPageRuntimeHosts, resolvePhiCmsPageRenderScope } from "./phi-cms-page-render-scope";
 
 export type PhiCmsRootPageProps = {
   root: string;
@@ -108,49 +97,15 @@ export async function PhiCmsRootPage({
     isRevisionPreview,
   });
 
-  const runtimeModuleScope = await resolvePhiCmsAreaRuntimeModuleScope({
+  const scope = await resolvePhiCmsPageRenderScope({
     cmsBridge,
-    area: resolvedRequest.runtime.area,
-    areaPreset: resolvedRequest.areaPreset,
-    serverCapabilities: resolvedRequest.serverCapabilities,
-  });
-  const filteredPageTree = filterPhiCmsRenderableTreeForViewer({
-    tree: resolvedRequest.page,
-    viewer: resolvedRequest.runtime.viewer,
-    registry: buildPhiRuntimeModuleAccessRegistry(runtimeModuleScope.moduleSet),
-  });
-  const runtimeRegistry = await resolvePhiCmsTreeRuntimeRegistry({
-    moduleScope: runtimeModuleScope,
-    trees: [filteredPageTree],
-  });
-  const pageControllerSettings = materializePhiRuntimeControllerSettings({
-    tree: filteredPageTree,
-    ownerMountScope: "page",
-    widgetPluginsByType: runtimeModuleScope.widgetDefinitionsByType,
-    baseSettings: resolvedRequest.page.controllerSettings ?? null,
-    activeControllerTypes: [...runtimeModuleScope.moduleSet.controllerDescriptorsByType.keys()],
+    resolvedRequest,
     regionTypes: [PhiCmsRegionType.Content],
     includeOverlays: true,
   });
-  const controllerDefinitionsByType = await resolvePhiRuntimeControllerDefinitions({
-    catalog: cmsBridge.runtimeModuleCatalog,
-    moduleSet: runtimeModuleScope.moduleSet,
-    settings: pageControllerSettings,
-  });
 
   return (
-    <PhiRuntimeModuleDataProviderHost
-      providerKeys={[...runtimeRegistry.dataProviderDescriptorsByKey.keys()]}
-    >
-      {pageControllerSettings.length > 0 ? (
-        <PhiRuntimeControllerServerHost
-          controllers={pageControllerSettings}
-          runtime={resolvedRequest.runtime}
-          registry={controllerDefinitionsByType}
-          controllerModuleIdsByType={runtimeModuleScope.moduleSet.ownerModuleIdByControllerType}
-          runtimeModuleCatalog={runtimeRegistry.runtimeModuleCatalog}
-        />
-      ) : null}
+    <PhiCmsPageRuntimeHosts scope={scope} runtime={resolvedRequest.runtime}>
       <PhiCmsPageMetaSignalEmitter
         area={resolvedRequest.runtime.area}
         pagePath={resolvedRequest.runtime.page?.path ?? null}
@@ -159,10 +114,10 @@ export async function PhiCmsRootPage({
         description={resolvedRequest.runtime.page?.description ?? null}
       />
       <PhiCmsPageRenderer
-        tree={filteredPageTree}
+        tree={scope.filteredPageTree}
         runtime={resolvedRequest.runtime}
-        registry={runtimeRegistry}
+        registry={scope.runtimeRegistry}
       />
-    </PhiRuntimeModuleDataProviderHost>
+    </PhiCmsPageRuntimeHosts>
   );
 }

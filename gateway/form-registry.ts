@@ -1,7 +1,6 @@
 import { cache } from "react";
 import "server-only";
 
-import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
 import type { PhiRuntimeModuleFormDefinition } from "../components/forms/form-registry";
 import {
   resolvePhiFormDefinition,
@@ -14,7 +13,7 @@ import type { PhiRuntimeModuleId } from "../types/cms-module-descriptors";
 import type { PhiFormId } from "../types/form-id";
 import { isPhiFormId, normalizePhiFormId } from "../types/form-id";
 import { isPhiRecord } from "../helpers/is-record";
-import { throwPhiCmsGatewayError } from "./errors";
+import { fetchPhiSiteApi } from "./site-api-request";
 
 export const PHI_FORM_DEFINITION_STATUS = {
   workingDraft: 0,
@@ -176,30 +175,16 @@ export const fetchFormRegistry = cache(async function fetchFormRegistry({
   internalToken,
   siteKey,
 }: FormRegistryRequestOptions): Promise<PhiFormRegistryRecord[]> {
-  if (!apiBaseUrl.trim()) {
-    throw new Error("Missing apiBaseUrl for fetchFormRegistry.");
-  }
-  if (!internalToken.trim()) {
-    throw new Error("Missing internalToken for fetchFormRegistry.");
-  }
-  if (!siteKey.trim()) {
-    throw new Error("Missing siteKey for fetchFormRegistry.");
-  }
-
-  const response = await fetch(buildApiUrl(apiBaseUrl, "/api/v1/forms/registry"), {
-    headers: buildApiHeaders({
-      token: internalToken,
+  return normalizeRegistryResponse(
+    await fetchPhiSiteApi<unknown>({
+      context: "fetchFormRegistry",
+      apiBaseUrl,
+      internalToken,
       siteKey,
-      includeToken: true,
-      includeSiteKey: true,
-      gateway: true,
+      path: "/api/v1/forms/registry",
+      failure: "Failed to fetch form registry",
     }),
-    cache: "no-store",
-  });
-  if (!response.ok) {
-    throwPhiCmsGatewayError(`Failed to fetch form registry (${response.status}).`, response.status);
-  }
-  return normalizeRegistryResponse(await response.json().catch(() => null));
+  );
 });
 
 export async function listResolvedFormDefinitions({

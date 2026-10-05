@@ -1,8 +1,7 @@
 import { cache } from "react";
 import "server-only";
 
-import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
-import { throwPhiCmsGatewayError } from "./errors";
+import { fetchPhiSiteApi } from "./site-api-request";
 
 export type PhiSiteStats = {
   userCount: number;
@@ -19,33 +18,15 @@ export const getResolvedSiteStats = cache(async function getResolvedSiteStats({
   internalToken,
   siteKey,
 }: GetResolvedSiteStatsOptions): Promise<PhiSiteStats> {
-  if (!apiBaseUrl.trim()) {
-    throw new Error("Missing apiBaseUrl for getResolvedSiteStats.");
-  }
-  if (!internalToken.trim()) {
-    throw new Error("Missing internalToken for getResolvedSiteStats.");
-  }
-  if (!siteKey.trim()) {
-    throw new Error("Missing siteKey for getResolvedSiteStats.");
-  }
-
-  const response = await fetch(buildApiUrl(apiBaseUrl, "/api/v1/site/stats"), {
-    headers: buildApiHeaders({
-      token: internalToken,
-      siteKey,
-      includeToken: true,
-      includeSiteKey: true,
-      gateway: true,
-    }),
-    cache: "no-store",
+  const payload = await fetchPhiSiteApi<{ stats?: PhiSiteStats }>({
+    context: "getResolvedSiteStats",
+    apiBaseUrl,
+    internalToken,
+    siteKey,
+    path: "/api/v1/site/stats",
+    failure: "Failed to fetch site stats",
   });
-
-  if (!response.ok) {
-    throwPhiCmsGatewayError(`Failed to fetch site stats (${response.status}).`, response.status);
-  }
-
-  const payload = (await response.json()) as { stats?: PhiSiteStats };
-  if (typeof payload.stats?.userCount !== "number") {
+  if (typeof payload?.stats?.userCount !== "number") {
     throw new Error("Missing site stats payload.");
   }
 

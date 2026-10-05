@@ -1,10 +1,14 @@
 import {
-  PhiFlexVerticalLayout as PhiFlexVerticalLayoutView,
-  type PhiFlexVerticalLayoutProps,
-} from "./clients/phi-flex-vertical-layout-client";
+  PhiFlexLayout as PhiFlexLayoutView,
+  type PhiFlexLayoutProps,
+} from "./clients/phi-flex-layout-client";
 
-export type { PhiFlexVerticalLayoutProps } from "./clients/phi-flex-vertical-layout-client";
+/** The Flex Layout in a column: gap and anchor, none of the row's distribution, wrapping or separators. */
+export type PhiFlexVerticalLayoutProps = Omit<
+  PhiFlexLayoutProps,
+  "distribution" | "wrap" | "verticalSeparators" | "separatorBeforeFirst" | "separatorSpan"
+>;
 
 export function PhiFlexVerticalLayout(props: PhiFlexVerticalLayoutProps) {
-  return <PhiFlexVerticalLayoutView {...props} />;
+  return <PhiFlexLayoutView {...props} layoutKind="verticalflex" />;
 }

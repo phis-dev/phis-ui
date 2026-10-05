@@ -4,6 +4,7 @@ import { PHIS_SITE_KEY_HEADER } from "../constants/http-headers";
 import type { PhiAuthWorkflow, PhiPublicAuthManifest } from "../types/auth-manifest";
 import { isPhiRecord } from "../helpers/is-record";
 import { throwPhiCmsGatewayError } from "./errors";
+import { fetchPhiSiteApi } from "./site-api-request";
 
 export type FetchPhiPublicAuthOptions = {
   apiBaseUrl: string;
@@ -42,23 +43,17 @@ function readManifest(value: unknown): PhiPublicAuthManifest | null {
 export async function fetchPhiPublicAuthManifest(
   options: FetchPhiPublicAuthOptions,
 ): Promise<PhiPublicAuthManifest> {
-  if (!options.apiBaseUrl.trim()) {
-    throw new Error("Missing apiBaseUrl for fetchPhiPublicAuthManifest.");
-  }
-  if (!options.siteKey.trim()) {
-    throw new Error("Missing siteKey for fetchPhiPublicAuthManifest.");
-  }
-
-  const response = await fetch(`${options.apiBaseUrl}/api/v1/auth/manifest`, {
-    method: "GET",
-    headers: buildHeaders(options, "phis-ui-auth-manifest/1.0"),
-    cache: "no-store",
-  });
-  if (!response.ok) {
-    throwPhiCmsGatewayError(`Auth manifest fetch failed (${response.status}).`, response.status);
-  }
-
-  const manifest = readManifest(await response.json().catch(() => null));
+  const manifest = readManifest(
+    await fetchPhiSiteApi<unknown>({
+      context: "fetchPhiPublicAuthManifest",
+      apiBaseUrl: options.apiBaseUrl,
+      internalToken: options.internalToken,
+      siteKey: options.siteKey,
+      path: "/api/v1/auth/manifest",
+      failure: "Auth manifest fetch failed",
+      userAgent: "phis-ui-auth-manifest/1.0",
+    }),
+  );
   if (!manifest) {
     throw new Error("Missing auth manifest payload.");
   }

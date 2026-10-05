@@ -1,3 +1,4 @@
+import { jsonResponse, readPhiInternalRequestPath, splitPhiRequestPath } from "./route-handler-helpers";
 import "server-only";
 
 import type { NextRequest } from "next/server";
@@ -7,7 +8,6 @@ import {
   resolvePhiCmsAreaMask,
   type PhiCmsAreaKey,
 } from "../constants/cms-areas";
-import { readPhiInternalPath } from "../helpers/internal-path";
 import { canPhiViewerAccess } from "../types/access";
 import { localizeAreaPath } from "../helpers/locale";
 import {
@@ -55,38 +55,6 @@ import type { PhiSiteAreaBridgeLoader } from "./site-area-bridges";
 export type PhiDashboardCardsListResponse = {
   cards: readonly PhiDashboardCardRow[];
 };
-
-function json(payload: unknown, status = 200) {
-  return Response.json(payload, {
-    status,
-    headers: { "cache-control": "no-store" },
-  });
-}
-
-/** An internal path, and only one: a card request never leaves this Site. */
-function readInternalPath(value: string | null, requestUrl: string) {
-  const normalized = readPhiInternalPath(value);
-  if (normalized === null) {
-    return null;
-  }
-  try {
-    return new URL(normalized, requestUrl).pathname;
-  } catch {
-    return null;
-  }
-}
-
-function splitTargetPath(pathname: string) {
-  const segments = pathname.split("/").filter(Boolean).map((segment) => {
-    try {
-      return decodeURIComponent(segment);
-    } catch {
-      return segment;
-    }
-  });
-  const [root, ...path] = segments;
-  return root ? { root, path } : null;
-}
 
 /**
  * The path a card's target resolves to, or none.
@@ -275,17 +243,17 @@ export function buildPhiDashboardCardsRouteHandler({
   return async function GET(request: NextRequest) {
     const requestUrl = new URL(request.url);
     const area = requestUrl.searchParams.get("area")?.trim().toLowerCase() ?? "";
-    const pathname = readInternalPath(requestUrl.searchParams.get("path"), request.url);
+    const pathname = readPhiInternalRequestPath(requestUrl.searchParams.get("path"), request.url);
     const card = requestUrl.searchParams.get("card")?.trim() ?? "";
 
     if (!isPhiCmsAreaKey(area) || !pathname || (card && !isPhiDashboardCardId(card))) {
-      return json({ error: "bad_request" }, 400);
+      return jsonResponse({ error: "bad_request" }, 400);
     }
 
     const bridge = await loadAreaBridge(area);
-    const target = splitTargetPath(pathname);
+    const target = splitPhiRequestPath(pathname);
     if (!bridge?.runtime || !target) {
-      return json({ cards: [] } satisfies PhiDashboardCardsListResponse);
+      return jsonResponse({ cards: [] } satisfies PhiDashboardCardsListResponse);
     }
 
     try {
@@ -296,7 +264,7 @@ export function buildPhiDashboardCardsRouteHandler({
        */
       const resolvedRoute = await resolveCmsRootRoute(target.root, target.path, bridge.runtime);
       if (resolvedRoute.area !== area) {
-        return json({ cards: [] } satisfies PhiDashboardCardsListResponse);
+        return jsonResponse({ cards: [] } satisfies PhiDashboardCardsListResponse);
       }
       const scope = await resolveDashboardCardScope({
         bridge,
@@ -306,7 +274,7 @@ export function buildPhiDashboardCardsRouteHandler({
         cookieHeader: request.headers.get("cookie") ?? "",
       });
       if (!scope) {
-        return json({ cards: [] } satisfies PhiDashboardCardsListResponse);
+        return jsonResponse({ cards: [] } satisfies PhiDashboardCardsListResponse);
       }
       const { activeModuleIds, routeTable, cardContext, scopeRuntime } = scope;
       const providers = await loadActiveCardProviders(bridge, activeModuleIds);
@@ -314,9 +282,9 @@ export function buildPhiDashboardCardsRouteHandler({
       if (card) {
         const owner = providers.find(([moduleId]) => ownsCardId(moduleId, card));
         if (!owner) {
-          return json({ error: "unknown_card" }, 404);
+          return jsonResponse({ error: "unknown_card" }, 404);
         }
-        return json(await resolveCardPayload(owner[1], card as PhiDashboardCardId, cardContext, scopeRuntime));
+        return jsonResponse(await resolveCardPayload(owner[1], card as PhiDashboardCardId, cardContext, scopeRuntime));
       }
 
       /*
@@ -388,10 +356,10 @@ export function buildPhiDashboardCardsRouteHandler({
           : row;
       }));
 
-      return json({ cards } satisfies PhiDashboardCardsListResponse);
+      return jsonResponse({ cards } satisfies PhiDashboardCardsListResponse);
     } catch (error) {
       console.warn("[phi-dashboard-cards] Request failed.", { area, card, error });
-      return json({ error: "unavailable" }, 503);
+      return jsonResponse({ error: "unavailable" }, 503);
     }
   };
 }

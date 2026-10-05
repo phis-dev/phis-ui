@@ -1,8 +1,7 @@
 import { cache } from "react";
 import "server-only";
 
-import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
-import { throwPhiCmsGatewayError } from "./errors";
+import { fetchPhiSiteApi } from "./site-api-request";
 
 /**
  * How much of a person's inbox is waiting for them.
@@ -36,40 +35,21 @@ export const getPhiThreadInboxStats = cache(async function getPhiThreadInboxStat
   siteKey,
   cookieHeader,
 }: GetPhiThreadInboxStatsOptions): Promise<PhiThreadInboxStats> {
-  if (!apiBaseUrl.trim()) {
-    throw new Error("Missing apiBaseUrl for getPhiThreadInboxStats.");
-  }
-  if (!internalToken.trim()) {
-    throw new Error("Missing internalToken for getPhiThreadInboxStats.");
-  }
   if (!cookieHeader.trim()) {
     throw new Error("An inbox count needs the viewer's session.");
   }
 
-  const response = await fetch(
-    buildApiUrl(apiBaseUrl, "/api/site/threads?unreadOnly=1&pageSize=1"),
-    {
-      headers: buildApiHeaders({
-        token: internalToken,
-        siteKey,
-        includeToken: true,
-        includeSiteKey: true,
-        gateway: true,
-        cookie: cookieHeader,
-      }),
-      cache: "no-store",
-    },
-  );
-
-  if (!response.ok) {
-    throwPhiCmsGatewayError(
-      `Failed to read the conversation inbox (${response.status}).`,
-      response.status,
-    );
-  }
-
-  const payload = (await response.json()) as { total?: unknown };
-  if (typeof payload.total !== "number" || !Number.isFinite(payload.total)) {
+  const payload = await fetchPhiSiteApi<{ total?: unknown }>({
+    context: "getPhiThreadInboxStats",
+    apiBaseUrl,
+    internalToken,
+    siteKey,
+    path: "/api/site/threads",
+    searchParams: { unreadOnly: "1", pageSize: "1" },
+    cookieHeader,
+    failure: "Failed to read the conversation inbox",
+  });
+  if (typeof payload?.total !== "number" || !Number.isFinite(payload.total)) {
     throw new Error("The conversation inbox answered without a total.");
   }
 

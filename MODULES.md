@@ -330,7 +330,8 @@ it never handles browser signals.
 **How long an instance lives follows from which host mounts it, and there are two.**
 `PhiRuntimeControllerServerHost` appears in `components/cms/phi-cms-root-layout.tsx`, materialized from
 the Layout tree with `ownerMountScope: "area"`, and again in `components/cms/phi-cms-root-page.tsx` and
-`phi-cms-root-slot-page.tsx`, materialized from the Page tree with `ownerMountScope: "page"`. Which tree
+`phi-cms-root-slot-page.tsx` (both through `phi-cms-page-render-scope.tsx`), materialized from the Page
+tree with `ownerMountScope: "page"`. Which tree
 asks for a Controller is what decides its host, so:
 
 - A Controller reached through the Layout tree is mounted by the Area's Layout segment and **survives a

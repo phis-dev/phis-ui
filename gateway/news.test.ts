@@ -48,10 +48,11 @@ describe("fetchPhiSiteNews", () => {
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     // The cut travels to Core, which translates only what the page will show.
     expect(url).toBe("https://core.test/api/v1/news?limit=10");
-    const headers = init.headers as Record<string, string>;
-    expect(headers["accept-language"]).toBe("de");
-    expect(headers["x-phis-site-key"]).toBe("site");
-    expect(headers.Authorization).toBe("Bearer token");
+    // The Gateway's own headers, as every reader of Core sends them (gateway/site-api-request.ts).
+    const headers = new Headers(init.headers);
+    expect(headers.get("x-locale")).toBe("de");
+    expect(headers.get("x-phis-site-key")).toBe("site");
+    expect(headers.get("x-phis-token")).toBe("token");
   });
 
   it("refuses to ask without a count, rather than asking for everything", async () => {

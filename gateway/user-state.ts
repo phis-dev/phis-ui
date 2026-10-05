@@ -2,10 +2,9 @@ import { isPhiRecord } from "../helpers/is-record";
 import { cache } from "react";
 import "server-only";
 
-import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
 import { isPhisUserStateKey } from "../constants/user-state";
 import type { PhisUserStateStoredValue } from "../types/user-state";
-import { throwPhiCmsGatewayError } from "./errors";
+import { fetchPhiSiteApi } from "./site-api-request";
 
 /**
  * What this Site's Modules kept about the person looking, read while the page is rendered.
@@ -40,34 +39,20 @@ export const getPhiUserState = cache(async function getPhiUserState({
   siteKey,
   cookieHeader,
 }: GetPhiUserStateOptions): Promise<PhiUserState> {
-  if (!apiBaseUrl.trim()) {
-    throw new Error("Missing apiBaseUrl for getPhiUserState.");
-  }
-  if (!internalToken.trim()) {
-    throw new Error("Missing internalToken for getPhiUserState.");
-  }
   if (!cookieHeader.trim()) {
     throw new Error("User state needs the viewer's session.");
   }
 
-  const response = await fetch(buildApiUrl(apiBaseUrl, "/api/site/user-state"), {
-    headers: buildApiHeaders({
-      token: internalToken,
-      siteKey,
-      includeToken: true,
-      includeSiteKey: true,
-      gateway: true,
-      cookie: cookieHeader,
-    }),
-    cache: "no-store",
+  const payload = await fetchPhiSiteApi<{ state?: unknown }>({
+    context: "getPhiUserState",
+    apiBaseUrl,
+    internalToken,
+    siteKey,
+    path: "/api/site/user-state",
+    cookieHeader,
+    failure: "Failed to read user state",
   });
-
-  if (!response.ok) {
-    throwPhiCmsGatewayError(`Failed to read user state (${response.status}).`, response.status);
-  }
-
-  const payload = (await response.json()) as { state?: unknown };
-  if (!isPhiRecord(payload.state)) {
+  if (!isPhiRecord(payload?.state)) {
     throw new Error("User state answered without a state object.");
   }
 
@@ -79,7 +64,7 @@ export const getPhiUserState = cache(async function getPhiUserState({
    * reader from having to wonder, and there is nothing a caller could do with it anyway.
    */
   const state: Record<string, PhisUserStateStoredValue> = {};
-  for (const [key, value] of Object.entries(payload.state as Record<string, unknown>)) {
+  for (const [key, value] of Object.entries(payload?.state as Record<string, unknown>)) {
     if (isPhisUserStateKey(key)) {
       state[key] = value as PhisUserStateStoredValue;
     }

@@ -9,38 +9,11 @@ import {
 } from "../phi-layout-contract";
 import { PhiStackLayout } from "../phi-stack-layout";
 import { definePhiLayoutRenderers } from "../layout-plugin-renderers";
-import type { PhiCmsLayoutRenderNode } from "../../../types/cms";
-import { comparePhiCmsInstanceIds } from "../../../types/cms-instance-id";
+import { resolvePhiLayoutSlotMeta } from "../layout-slot-meta";
 import { PHI_STACK_LAYOUT_DEFINITION } from "../layout-definitions";
 
 function resolvePhiStackSlotKeys() {
   return PHI_CMS_STACK_LAYOUT_SLOTS.map((slot) => slot.key);
-}
-
-function resolvePhiStackSlotMeta(node: PhiCmsLayoutRenderNode) {
-  const labelsBySlotIndex = new Map<number, string>();
-  const occupiedSlotIndices = new Set<number>();
-  const children = [
-    ...(node.childLayouts ?? []).map((child) => ({ ...child, _kindOrder: 0 })),
-    ...(node.childWidgets ?? []).map((child) => ({ ...child, _kindOrder: 1 })),
-  ].sort((left, right) => left.slotIndex - right.slotIndex || left.sortOrder - right.sortOrder || left._kindOrder - right._kindOrder || comparePhiCmsInstanceIds(left.id, right.id));
-
-  for (const child of children) {
-    occupiedSlotIndices.add(child.slotIndex);
-    const label = child.label?.trim();
-    if (label && !labelsBySlotIndex.has(child.slotIndex)) {
-      labelsBySlotIndex.set(child.slotIndex, label);
-    }
-  }
-
-  return PHI_CMS_STACK_LAYOUT_SLOTS
-    .filter((slot) => occupiedSlotIndices.has(slot.slotIndex))
-    .map((slot) => ({
-      key: slot.key,
-      label: labelsBySlotIndex.get(slot.slotIndex) ?? slot.label,
-      slotIndex: slot.slotIndex,
-      hasContent: true,
-    }));
 }
 
 export const PHI_STACK_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsStackLayoutConfig> = {
@@ -56,7 +29,7 @@ export const PHI_STACK_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsStackLayoutConfig
       layoutKind="stack"
       slots={renderSequentialSlotChildren(node)}
       slotKeys={resolvePhiStackSlotKeys()}
-      slotMeta={resolvePhiStackSlotMeta(node)}
+      slotMeta={resolvePhiLayoutSlotMeta(node, PHI_CMS_STACK_LAYOUT_SLOTS)}
       renderMode={renderMode}
       defaultActiveSlotKey={config.defaultActiveSlotKey}
       slotDisplay={config.slotDisplay}

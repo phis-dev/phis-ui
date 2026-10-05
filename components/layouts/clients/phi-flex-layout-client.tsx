@@ -22,10 +22,15 @@ import {
 import { PhiLayoutSurfaceBox } from "../phi-layout-surface-box";
 import { PHI_CMS_MAX_LAYOUT_SLOTS } from "../../../constants/cms-layout-types";
 
-const PHI_FLEX_LAYOUT_DEFAULTS = resolvePhiLayoutDefaults("flex");
-
 type PhiFlexLayoutDistribution = "anchor" | "between" | "around" | "evenly";
 
+/**
+ * The Flex Layout, in a row or -- as `layoutKind: "verticalflex"` -- in a column.
+ *
+ * The column used to be a second component of its own, 105 lines the same as this one and the rest a
+ * copy that had drifted; this one already branched on the axis everywhere it matters. The row's
+ * distribution, wrapping and separators are the row's; the column states gap and anchor.
+ */
 export type PhiFlexLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
   slots: ReactNode[];
   gap?: CSSProperties["gap"];
@@ -50,14 +55,16 @@ export function PhiFlexLayout({
     capabilities: layoutProps.capabilities,
     renderMode: layoutProps.renderMode,
   });
+  const resolvedVertical = layoutProps.layoutKind === "verticalflex";
+  const layoutDefaults = resolvePhiLayoutDefaults(resolvedVertical ? "verticalflex" : "flex");
   const {
     layoutKind = "flex",
-    gap = PHI_FLEX_LAYOUT_DEFAULTS.gap as number | string,
-    distribution = (PHI_FLEX_LAYOUT_DEFAULTS.distribution as PhiFlexLayoutDistribution | undefined) ?? "anchor",
-    wrap = PHI_FLEX_LAYOUT_DEFAULTS.wrap as boolean | CSSProperties["flexWrap"] | undefined,
+    gap = layoutDefaults.gap as number | string,
+    distribution = (layoutDefaults.distribution as PhiFlexLayoutDistribution | undefined) ?? "anchor",
+    wrap = layoutDefaults.wrap as boolean | CSSProperties["flexWrap"] | undefined,
     verticalSeparators = false,
     separatorBeforeFirst = false,
-    separatorSpan = PHI_FLEX_LAYOUT_DEFAULTS.separatorSpan as number | string,
+    separatorSpan = layoutDefaults.separatorSpan as number | string,
     editSlotAnchor,
     renderMode,
     padding,
@@ -72,9 +79,8 @@ export function PhiFlexLayout({
     style,
     labelEnd,
   } = layoutProps;
-  const resolvedVertical = false;
   const resolvedSlotStates = resolvePhiBaseLayoutSlotStates(slots.length, layoutProps.initialSlotStates);
-  const resolvedGap = normalizePhiCssSize(gap) ?? (PHI_FLEX_LAYOUT_DEFAULTS.gap as number | string);
+  const resolvedGap = normalizePhiCssSize(gap) ?? (layoutDefaults.gap as number | string);
   const resolvedRenderMode = renderMode ?? "live";
   const isEditMode = resolvedRenderMode === "editor";
   const {
@@ -179,12 +185,73 @@ export function PhiFlexLayout({
     }
 
     const slotSizing = resolvePhiLayoutSlotChildSizing(child);
-    const shouldFillMainAxis = resolvedVertical ? slotSizing.stretchesBlock : slotSizing.stretchesInline;
-    const shouldFillCrossAxis = resolvedVertical ? slotSizing.stretchesInline : slotSizing.stretchesBlock;
-    const minMainSize = resolvedVertical ? slotSizing.minBlockSize : slotSizing.minInlineSize;
-    const maxMainSize = resolvedVertical ? slotSizing.maxBlockSize : slotSizing.maxInlineSize;
-    const minCrossSize = resolvedVertical ? slotSizing.minInlineSize : slotSizing.minBlockSize;
-    const maxCrossSize = resolvedVertical ? slotSizing.maxInlineSize : slotSizing.maxBlockSize;
+    const collapsedStyle = slotState === "collapsed"
+      ? {
+          width: 0,
+          minWidth: 0,
+          maxWidth: 0,
+          height: 0,
+          minHeight: 0,
+          maxHeight: 0,
+          flexBasis: 0,
+          flexGrow: 0,
+          flexShrink: 0,
+          overflow: "hidden",
+          opacity: 0,
+          pointerEvents: "none" as const,
+        }
+      : {};
+
+    if (resolvedVertical) {
+      const shouldFillMainAxis = slotSizing.stretchesBlock;
+      const shouldFillCrossAxis = slotSizing.stretchesInline;
+      return (
+        <div
+          key={`content-${index}`}
+          className={phiLayoutSlotClassName(isAuthoringRender)}
+          data-phi-layout-has-content={phiLayoutSlotContentMarker(isAuthoringRender, true)}
+          style={{
+            flexGrow: shouldFillMainAxis ? 1 : 0,
+            flexShrink: shouldFillMainAxis ? 1 : 0,
+            flexBasis: "auto",
+            ...collapsedStyle,
+            width: shouldFillCrossAxis ? "100%" : undefined,
+            height: shouldFillMainAxis ? "100%" : undefined,
+            minWidth: 0,
+            minHeight: 0,
+            alignSelf: shouldFillCrossAxis ? "stretch" : undefined,
+            display: "flex",
+            flexDirection: "column",
+            /*
+             * The slot carries the Layout's own cross-axis alignment, because the slot is scaffolding and
+             * the anchor is about the content. A slot is as wide as what it holds wants to be, and a child
+             * that caps its width -- a column of copy at a readable measure -- is narrower than that: it
+             * then stands at the left edge of a centred slot, which reads as "not centred" and is.
+             *
+             * Except where the child fills, which has to be stretched: `width: 100%` inside a shrink-to-fit
+             * box is circular and resolves to zero, and a centred flex item is shrink-to-fit. That is not
+             * a reason to give up the placement, though -- a filling child that also caps itself leaves
+             * room over, and the placement margins put it in the middle of that room
+             * instead. Stretching and placing are two jobs, and `align-items` can only do one of them.
+             */
+            alignItems: shouldFillCrossAxis ? "stretch" : resolvedFlowAlignment.alignItems,
+            ...resolvePhiSlotPlacementMargins({
+              inline: shouldFillCrossAxis ? phiPlacementFromWord(resolvedFlowAlignment.alignItems) : null,
+              block: null,
+            }),
+          } as CSSProperties}
+        >
+          {child}
+        </div>
+      );
+    }
+
+    const shouldFillMainAxis = slotSizing.stretchesInline;
+    const shouldFillCrossAxis = slotSizing.stretchesBlock;
+    const minMainSize = slotSizing.minInlineSize;
+    const maxMainSize = slotSizing.maxInlineSize;
+    const minCrossSize = slotSizing.minBlockSize;
+    const maxCrossSize = slotSizing.maxBlockSize;
     const shouldWrap = resolvedWrap != null && resolvedWrap !== "nowrap";
     const usesMinMainBasis = shouldWrap && minMainSize != null;
     const canShrinkWithinMax = shouldWrap && maxMainSize != null;
@@ -194,11 +261,8 @@ export function PhiFlexLayout({
         : shouldFillMainAxis
           ? 0
           : "auto";
-    const placesInline = resolvedVertical ? shouldFillCrossAxis : shouldFillMainAxis;
     const slotPlacementMargins = resolvePhiSlotPlacementMargins({
-      inline: placesInline
-        ? phiPlacementFromWord(resolvedVertical ? resolvedFlowAlignment.alignItems : resolvedJustifyContent)
-        : null,
+      inline: shouldFillMainAxis ? phiPlacementFromWord(resolvedJustifyContent) : null,
       block: null,
     });
 
@@ -211,39 +275,21 @@ export function PhiFlexLayout({
           flexGrow: shouldFillMainAxis ? 1 : 0,
           flexShrink: shouldFillMainAxis || usesMinMainBasis || canShrinkWithinMax ? 1 : 0,
           flexBasis,
-          ...(slotState === "collapsed"
-            ? {
-                width: 0,
-                minWidth: 0,
-                maxWidth: 0,
-                height: 0,
-                minHeight: 0,
-                maxHeight: 0,
-                flexBasis: 0,
-                flexGrow: 0,
-                flexShrink: 0,
-                overflow: "hidden",
-                opacity: 0,
-                pointerEvents: "none" as const,
-              }
-            : {}),
-          width: resolvedVertical ? (shouldFillCrossAxis ? "100%" : undefined) : undefined,
-          height: resolvedVertical
-            ? shouldFillMainAxis ? "100%" : undefined
-            : shouldFillCrossAxis ? "100%" : undefined,
-          minWidth: resolvedVertical ? (minCrossSize ?? 0) : (minMainSize ?? 0),
-          minHeight: resolvedVertical ? (minMainSize ?? 0) : (minCrossSize ?? 0),
-          maxWidth: resolvedVertical ? maxCrossSize : maxMainSize,
-          maxHeight: resolvedVertical ? maxMainSize : maxCrossSize,
+          ...collapsedStyle,
+          height: shouldFillCrossAxis ? "100%" : undefined,
+          minWidth: minMainSize ?? 0,
+          minHeight: minCrossSize ?? 0,
+          maxWidth: maxMainSize,
+          maxHeight: maxCrossSize,
           alignSelf: shouldFillCrossAxis ? "stretch" : undefined,
           display: "flex",
           flexDirection: "column",
           /*
            * The inline placement again, as the margins a child that fills and caps itself is moved by.
            * In a row the inline axis is the main one, so a slot that grows and holds a capped child
-           * places it by the Layout's `justify-content`; in a column it is the cross axis and the slot's
-           * own alignment. A slot that does not grow is as wide as its child and states `0`, which is
-           * what stops a Flex Vertical further up from placing this Layout's children.
+           * places it by the Layout's `justify-content`. A slot that does not grow is as wide as its
+           * child and states `0`, which is what stops a Flex Vertical further up from placing this
+           * Layout's children.
            */
           ...slotPlacementMargins,
         } as CSSProperties}

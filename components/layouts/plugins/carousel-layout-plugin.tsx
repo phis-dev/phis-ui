@@ -7,44 +7,11 @@ import { parsePhiCmsCarouselLayoutConfig } from "../../../types/cms-config";
 import { resolvePhiLayoutAnchor } from "../phi-layout-contract";
 import { PhiCarouselLayout } from "../phi-carousel-layout";
 import { definePhiLayoutRenderers } from "../layout-plugin-renderers";
-import type { PhiCmsLayoutRenderNode } from "../../../types/cms";
-import { comparePhiCmsInstanceIds } from "../../../types/cms-instance-id";
+import { resolvePhiLayoutSlotMeta } from "../layout-slot-meta";
 import { PHI_CAROUSEL_LAYOUT_DEFINITION } from "../layout-definitions";
 
 function resolvePhiCarouselSlotKeys() {
   return PHI_CMS_CAROUSEL_LAYOUT_SLOTS.map((slot) => slot.key);
-}
-
-/**
- * What the pager Widgets are told this Carousel holds.
- *
- * Only the filled slots, named the way the person who filled them named them, because a Segmented
- * offering twelve entries for three pictures would be a list of mostly nothing.
- */
-function resolvePhiCarouselSlotMeta(node: PhiCmsLayoutRenderNode) {
-  const labelsBySlotIndex = new Map<number, string>();
-  const occupiedSlotIndices = new Set<number>();
-  const children = [
-    ...(node.childLayouts ?? []).map((child) => ({ ...child, _kindOrder: 0 })),
-    ...(node.childWidgets ?? []).map((child) => ({ ...child, _kindOrder: 1 })),
-  ].sort((left, right) => left.slotIndex - right.slotIndex || left.sortOrder - right.sortOrder || left._kindOrder - right._kindOrder || comparePhiCmsInstanceIds(left.id, right.id));
-
-  for (const child of children) {
-    occupiedSlotIndices.add(child.slotIndex);
-    const label = child.label?.trim();
-    if (label && !labelsBySlotIndex.has(child.slotIndex)) {
-      labelsBySlotIndex.set(child.slotIndex, label);
-    }
-  }
-
-  return PHI_CMS_CAROUSEL_LAYOUT_SLOTS
-    .filter((slot) => occupiedSlotIndices.has(slot.slotIndex))
-    .map((slot) => ({
-      key: slot.key,
-      label: labelsBySlotIndex.get(slot.slotIndex) ?? slot.label,
-      slotIndex: slot.slotIndex,
-      hasContent: true,
-    }));
 }
 
 export const PHI_CAROUSEL_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsCarouselLayoutConfig> = {
@@ -60,7 +27,7 @@ export const PHI_CAROUSEL_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsCarouselLayout
       layoutKind="carousel"
       slots={renderSequentialSlotChildren(node)}
       slotKeys={resolvePhiCarouselSlotKeys()}
-      slotMeta={resolvePhiCarouselSlotMeta(node)}
+      slotMeta={resolvePhiLayoutSlotMeta(node, PHI_CMS_CAROUSEL_LAYOUT_SLOTS)}
       renderMode={renderMode}
       defaultActiveSlotKey={config.defaultActiveSlotKey}
       visibleSlots={config.visibleSlots}

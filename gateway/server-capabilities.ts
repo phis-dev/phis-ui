@@ -1,13 +1,12 @@
 import "server-only";
 
-import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
 import type {
   PhiCapabilityDescriptor,
   PhiCapabilityProvider,
   PhiCapabilitySnapshot,
   PhiCapabilityState,
 } from "../types/server-capabilities";
-import { throwPhiCmsGatewayError } from "./errors";
+import { fetchPhiSiteApi } from "./site-api-request";
 
 const PROVIDER_ID_PATTERN = /^@[^/]+\/[^/]+(?:\/[^/]+)*$/;
 const CAPABILITY_ID_PATTERN = /^@[^/]+\/[^:]+:v[1-9]\d*$/;
@@ -92,23 +91,16 @@ export async function getPhiCapabilitySnapshot({
   internalToken: string;
   siteKey: string;
 }): Promise<PhiCapabilitySnapshot> {
-  const response = await fetch(buildApiUrl(apiBaseUrl, "/api/v1/site/capabilities"), {
-    headers: buildApiHeaders({
-      token: internalToken,
+  const snapshot = parseSnapshot(
+    await fetchPhiSiteApi<unknown>({
+      context: "getPhiCapabilitySnapshot",
+      apiBaseUrl,
+      internalToken,
       siteKey,
-      includeToken: true,
-      includeSiteKey: true,
-      gateway: true,
+      path: "/api/v1/site/capabilities",
+      failure: "Failed to resolve server capabilities",
     }),
-    cache: "no-store",
-  });
-  if (!response.ok) {
-    throwPhiCmsGatewayError(
-      `Failed to resolve server capabilities (${response.status}).`,
-      response.status,
-    );
-  }
-  const snapshot = parseSnapshot(await response.json());
+  );
   if (snapshot.siteKey !== siteKey) {
     throw new Error("Server capability snapshot belongs to a different site.");
   }

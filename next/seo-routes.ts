@@ -2,7 +2,6 @@ import "server-only";
 
 import { createHash } from "node:crypto";
 
-import { resolvePhiCmsAreaMask } from "../constants/cms-areas";
 import { resolvePhiCmsPageRedirect } from "../components/cms/phi-cms-page-redirect";
 import { getPublicSiteAreaWithPublishedPages, type PhiPublishedPublicPage } from "../gateway/site-area";
 import {
@@ -25,10 +24,10 @@ import {
   resolvePhiCmsAreaShellPresetBinding,
   resolvePhiCmsDescriptorCatalog,
 } from "../plugins/runtime-modules/descriptor-compiler";
-import { getPhiCmsPage, getPhiExactSiteArea } from "../server-helpers/cms";
-import { resolveActivePresetModuleKeys, resolvePhiCmsRequest } from "../server-helpers/cms-request";
-import { runWithPhiRequestRuntime } from "../server-helpers/request-runtime";
-import { buildPhiBlockRuntime, loadPhiSiteRequestContext } from "../server-helpers/runtime";
+import { getPhiExactSiteArea } from "../server-helpers/cms";
+import { resolveActivePresetModuleKeys } from "../server-helpers/cms-request";
+import { resolvePhiCmsLookup } from "../server-helpers/cms-lookup";
+import { loadPhiSiteRequestContext } from "../server-helpers/runtime";
 import type { PhiSiteRequestContext } from "../types/site-request-context";
 import { fetchSiteLocaleConfig } from "../server-helpers/site-locale";
 import type { PhiCmsSiteBridge } from "../types/cms-plugins";
@@ -123,44 +122,15 @@ async function isPhiSitemapCandidateListed(
   context: PhiPublicSeoContext,
   path: string,
 ): Promise<boolean> {
-  const { siteKey, apiBaseUrl, internalToken } = context.bridgeRuntime;
   const { locale, requestContext } = context;
-  const scopeRuntime = buildPhiBlockRuntime({
-    requestContext,
-    areaMask: resolvePhiCmsAreaMask("public"),
-  });
-  const resolved = await runWithPhiRequestRuntime(scopeRuntime, () => resolvePhiCmsRequest({
-    siteKey,
-    locale,
+  const resolved = await resolvePhiCmsLookup({
+    bridge,
     area: "public",
+    locale,
     path,
     cookieHeader: "",
-    apiBaseUrl,
-    internalToken,
     requestContext,
-    runtimeModuleCatalog: bridge.runtimeModuleCatalog,
-    purpose: "lookup",
-    loadExactCmsArea: (requestPath, sourcePreset) =>
-      getPhiExactSiteArea({
-        path: requestPath,
-        siteKey,
-        apiBaseUrl,
-        internalToken,
-        locale,
-        cookieHeader: "",
-        sourcePreset,
-      }),
-    loadResolvedCmsPage: (requestPath, sourcePreset) =>
-      getPhiCmsPage({
-        path: requestPath,
-        siteKey,
-        apiBaseUrl,
-        internalToken,
-        locale,
-        cookieHeader: "",
-        sourcePreset,
-      }),
-  }));
+  });
 
   return resolved != null
     && resolvePhiCmsPageRedirect(resolved.page.page, locale) == null
