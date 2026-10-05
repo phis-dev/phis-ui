@@ -90,8 +90,8 @@ describe("a package covering a Public base Page", () => {
   });
 
   it("keeps the base navigation item, leading to the path the package now answers", () => {
-    const { catalog, activeModuleIds } = compile(withPackages(buildPackageEntry(ACME_ID, ["/contact"])));
-    const header = resolvePhiCmsActiveNavigationSurfaces({ catalog, area: "public", activeModuleIds })
+    const { catalog, activeModuleIds, table } = compile(withPackages(buildPackageEntry(ACME_ID, ["/contact"])));
+    const header = resolvePhiCmsActiveNavigationSurfaces({ catalog, area: "public", activeModuleIds, routeTable: table })
       .find((surface) => surface.navKey === "public:header");
     const contact = header?.items.find((item) =>
       item.target?.kind === "module" &&

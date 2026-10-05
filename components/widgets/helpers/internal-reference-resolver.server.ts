@@ -1,7 +1,7 @@
 import "server-only";
 
 import { resolveSiteInternalReferences } from "../../../gateway/internal-references";
-import { resolvePhiCmsRouteDescriptorByPageId } from "../../../plugins/runtime-modules/descriptor-compiler";
+import { resolvePhiCmsRoutePresetByPageId } from "../../../plugins/runtime-modules/descriptor-compiler";
 import { resolvePhiNavHref } from "../../../helpers/locale";
 import { phiRuntime } from "../../../server-helpers/phi-runtime";
 import type { PhiCmsAreaKey } from "../../../constants/cms-areas";
@@ -76,14 +76,15 @@ export async function resolvePhiWidgetInternalReferences(input: {
     .then(({ maybeGetPhiRequestNavigationContext }) => maybeGetPhiRequestNavigationContext(area));
   for (const rawReference of pageReferences) {
     if (!navigationContext || pagePaths.has(rawReference)) continue;
-    const { catalog, activeModuleIds } = navigationContext;
     const reference = readPhiPageReference(rawReference);
     if (!reference || reference.target.kind !== "module") continue;
-    const route = resolvePhiCmsRouteDescriptorByPageId(catalog, reference.target.pageId);
-    // A reference resolves to the address the route has, or to nothing when no Module carries it. Who
-    // is reading does not enter: the same reference names the same Page for everybody in the Area.
-    if (route && route.area === area && activeModuleIds.has(route.ownerModuleId)) {
-      pagePaths.set(reference.reference, href(route.path));
+    // A reference resolves to the address the Area's active route table answers it on, or to nothing
+    // when no active Module carries it. Who is reading does not enter: the same reference names the same
+    // Page for everybody in the Area. The table and not the catalog, so a reassigned Public address and
+    // an awarded root slot are what the link says.
+    const route = resolvePhiCmsRoutePresetByPageId(navigationContext.routeTable, reference.target.pageId);
+    if (route) {
+      pagePaths.set(reference.reference, href(route.descriptor.path));
     }
   }
 

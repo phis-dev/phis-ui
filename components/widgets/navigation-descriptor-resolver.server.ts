@@ -13,7 +13,7 @@ import {
 import {
   resolvePhiCmsNavigationOverlay,
   resolvePhiCmsActiveNavigationSurfaces,
-  resolvePhiCmsRouteDescriptorByPageId,
+  resolvePhiCmsRoutePresetByPageId,
 } from "../../plugins/runtime-modules/descriptor-compiler";
 import { phiRuntime } from "../../server-helpers/phi-runtime";
 import { getPhiRequestNavigationContext } from "../../server-helpers/request-runtime";
@@ -100,11 +100,12 @@ export async function resolvePhiDescriptorNavigationItems(
     return null;
   }
 
-  const { catalog, activeModuleIds } = getPhiRequestNavigationContext(runtime.area);
+  const { catalog, activeModuleIds, routeTable } = getPhiRequestNavigationContext(runtime.area);
   const descriptorSurface = resolvePhiCmsActiveNavigationSurfaces({
     catalog,
     area: runtime.area,
     activeModuleIds,
+    routeTable,
     viewer: runtime.viewer,
   }).find((candidate) => candidate.navKey === normalizedNavKey);
   if (!descriptorSurface && !overlay) {
@@ -116,26 +117,26 @@ export async function resolvePhiDescriptorNavigationItems(
       if (item.target?.kind !== "page" || item.target.resolvedPath || item.target.deleted === true) return item;
       const reference = readPhiPageReference(item.target.reference);
       if (!reference || reference.target.kind !== "module") return item;
-      const route = resolvePhiCmsRouteDescriptorByPageId(catalog, reference.target.pageId);
       /*
-       * Whether the address exists, which is Module selection and nothing about this reader.
+       * Whether the address exists and where, which is the Area's active route table and nothing about
+       * this reader: the table holds only the routes that answer, on the address this Site gave them.
        *
-       * Checked against the Area the target named rather than the one this Navigation sits in. For a
-       * target in another Area the answer stops here: `activeModuleIds` is this Area's, and which
-       * Modules answer in another is a fact the request never read. Reading the route's path anyway
-       * would point a link at an address that is only served where that Module is switched on --
-       * exactly the guess `REFERENCES.md` forbids. A Site Page in another Area is a different matter
-       * and resolves normally; only a Module Page needs the activation nobody here has.
+       * Answered only for a target in this Area. For another Area the answer stops here: the table is
+       * this Area's, and which Modules answer in another is a fact the request never read. Reading the
+       * catalog's path anyway would point a link at an address that is only served where that Module is
+       * switched on -- exactly the guess `REFERENCES.md` forbids. A Site Page in another Area is a
+       * different matter and resolves normally; only a Module Page needs the activation nobody here has.
        */
       const targetArea = item.target.area ?? runtime.area;
-      const available = route != null && route.area === targetArea &&
-        targetArea === runtime.area && activeModuleIds.has(route.ownerModuleId);
+      const route = targetArea === runtime.area
+        ? resolvePhiCmsRoutePresetByPageId(routeTable, reference.target.pageId)?.descriptor ?? null
+        : null;
       return {
         ...item,
         target: {
           ...item.target,
-          resolvedPath: available ? route.path : null,
-          deleted: !available,
+          resolvedPath: route?.path ?? null,
+          deleted: route == null,
         },
       };
     }),

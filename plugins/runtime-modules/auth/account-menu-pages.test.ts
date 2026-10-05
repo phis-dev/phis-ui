@@ -29,16 +29,14 @@ function appAccountSurfaceItems() {
   const entries = createPhiAppRuntimeModuleCatalog();
   const activeModuleIds = new Set<PhiRuntimeModuleId>([...entries.keys()]);
   const catalog = resolvePhiCmsDescriptorCatalog(entries);
-  const surfaces = resolvePhiCmsActiveNavigationSurfaces({ catalog, area: "app", activeModuleIds });
+  const routeTable = compilePhiCmsActiveRouteTable({ catalog, area: "app", activeModuleIds });
+  const surfaces = resolvePhiCmsActiveNavigationSurfaces({ catalog, area: "app", activeModuleIds, routeTable });
   const surface = surfaces.find((candidate) => candidate.navKey === APP_ACCOUNT_NAV_KEY);
   expect(surface, `the App declares a ${APP_ACCOUNT_NAV_KEY} surface`).toBeDefined();
 
   // The menu renders the anchor's children, which is where both account Pages hang.
   const anchor = surface!.items.find((item) => item.children.length > 0);
-  return {
-    items: anchor?.children ?? [],
-    routeTable: compilePhiCmsActiveRouteTable({ catalog, area: "app", activeModuleIds }),
-  };
+  return { items: anchor?.children ?? [], routeTable };
 }
 
 function targetPresetKeys(items: readonly PhiCmsResolvedNavigationItem[]) {

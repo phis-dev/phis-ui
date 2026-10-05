@@ -6,6 +6,7 @@ import {
   type PhiBuilderAreaKey,
 } from "../../../constants/cms-areas";
 import {
+  compilePhiCmsActiveRouteTable,
   resolvePhiCmsActiveNavigationSurfaces,
   resolvePhiCmsDescriptorCatalog,
 } from "../../../plugins/runtime-modules/descriptor-compiler";
@@ -49,10 +50,13 @@ export async function buildPhiBuilderNavigationSurfacesByArea(
       areaDefinition.baseModuleId,
       ...(optionalModuleIdsByArea[builderArea] ?? []),
     ]);
+    // The declared table: this catalog names surfaces and entries, and reads no Area config, so a
+    // Public address the Site reassigned shows here as the Module declared it.
     const declaredSurfaces = resolvePhiCmsActiveNavigationSurfaces({
       catalog,
       area,
       activeModuleIds,
+      routeTable: compilePhiCmsActiveRouteTable({ catalog, area, activeModuleIds }),
     });
     const declaredKeys = new Set(declaredSurfaces.map((surface) => surface.navKey));
     const customSurfaces = persistedScopes

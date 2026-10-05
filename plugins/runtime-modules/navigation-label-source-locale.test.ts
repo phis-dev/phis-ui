@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { createPhiPublicRuntimeModuleCatalog } from "./area-catalogs/public";
 import {
+  compilePhiCmsActiveRouteTable,
   resolvePhiCmsActiveNavigationSurfaces,
   resolvePhiCmsDescriptorCatalog,
   resolvePhiCmsNavigationOverlay,
@@ -19,10 +20,12 @@ import type { PhiCmsInstanceId } from "../../types/cms-instance-id";
 function publicHeader() {
   const entries = createPhiPublicRuntimeModuleCatalog();
   const catalog = resolvePhiCmsDescriptorCatalog(entries);
+  const activeModuleIds = new Set([...entries.keys()]);
   const surface = resolvePhiCmsActiveNavigationSurfaces({
     catalog,
     area: "public",
-    activeModuleIds: new Set([...entries.keys()]),
+    activeModuleIds,
+    routeTable: compilePhiCmsActiveRouteTable({ catalog, area: "public", activeModuleIds }),
   }).find((candidate) => candidate.navKey === "public:header");
   if (!surface) throw new Error("The Public Area declares a header Navigation.");
   return surface;

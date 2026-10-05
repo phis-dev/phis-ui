@@ -767,7 +767,13 @@ export function compilePhiCmsDescriptorCatalog({
         [injection.item],
         `${contributionLabel}/${injection.navKey}`,
       );
-      const allSurfaceKeys = allInjectionKeysBySurface.get(injection.navKey) ?? new Set<string>();
+      /*
+       * Seeded with the surface's own keys: an injected key that equals a base item's is the same
+       * collision as two injections sharing one, and refusing it here is what keeps every read of the
+       * surface from refusing it instead (`registerNode`).
+       */
+      const allSurfaceKeys = allInjectionKeysBySurface.get(injection.navKey)
+        ?? new Set(collectNavigationItemKeys(surface.items, surface.navKey));
       for (const itemKey of itemKeys) {
         if (allSurfaceKeys.has(itemKey)) {
           throw new Error(`${injection.navKey}: duplicate injected item key "${itemKey}".`);
@@ -789,6 +795,45 @@ export function compilePhiCmsDescriptorCatalog({
       );
     }
   }
+
+  /*
+   * Every item's parent on a surface, base items and injected ones alike, read once per surface. What
+   * `before` and `after` need to know: the item they name has to stand beside them, under the same
+   * parent, or the read of the surface finds no such sibling and refuses the whole surface.
+   */
+  const navigationParentsBySurface = new Map<string, Map<string, string | null>>();
+  const readNavigationParents = (area: PhiCmsAreaKey, surface: NonNullable<PhiCmsAreaDefinition["navigationSurfaces"]>[number]) => {
+    const surfaceKey = `${area}\u001f${surface.navKey}`;
+    const known = navigationParentsBySurface.get(surfaceKey);
+    if (known) {
+      return known;
+    }
+    const parents = new Map<string, string | null>();
+    const visit = (
+      items: readonly (PhiCmsNavigationBaseItemDescriptor | PhiCmsNavigationInjectionItemDescriptor)[],
+      parent: string | null,
+    ) => {
+      for (const item of items) {
+        parents.set(item.itemKey, parent);
+        visit(item.children ?? [], item.itemKey);
+      }
+    };
+    visit(surface.items, null);
+    for (const contribution of navigationContributions) {
+      if (contribution.area !== area || contribution.injection.navKey !== surface.navKey) {
+        continue;
+      }
+      const placement = contribution.injection.anchor !== undefined
+        ? surface.anchors?.[contribution.injection.anchor] ?? null
+        : null;
+      const parent = placement
+        ? placement.parentItemKey
+        : "parentItemKey" in contribution.injection ? contribution.injection.parentItemKey ?? null : null;
+      visit([contribution.injection.item], parent);
+    }
+    navigationParentsBySurface.set(surfaceKey, parents);
+    return parents;
+  };
 
   // Anchors are checked once every injection key is known, so a Module may anchor on its own item as
   // well as on an exported base one -- which is what lets a Module contribute a small subtree.
@@ -819,6 +864,17 @@ export function compilePhiCmsDescriptorCatalog({
     assertAnchor(injection.parentItemKey, "parent item");
     assertAnchor(injection.before, "before anchor");
     assertAnchor(injection.after, "after anchor");
+    const siblingAnchor = injection.before ?? injection.after;
+    if (siblingAnchor != null) {
+      const parents = readNavigationParents(contributionArea, surface);
+      const expectedParent = injection.parentItemKey ?? null;
+      if (parents.get(siblingAnchor) !== expectedParent) {
+        throw new Error(
+          `${contributionLabel}: ${injection.before ? "before" : "after"} anchor "${siblingAnchor}" is ` +
+          `not a sibling under "${expectedParent ?? "root"}".`,
+        );
+      }
+    }
   }
 
   return {
@@ -1077,13 +1133,18 @@ type ResolvedNavigationNode = {
  * What an item points at, if anything currently answers there.
  *
  * Reading a navigation surface may not fail. An item can name a route that no longer answers -- a Module
- * switched off, a path the Module lost when another one took it over -- and the honest response is the
- * one already given to a route the viewer may not reach: the entry is not shown. Refusing belongs to the
- * write that produced the state, not to every read afterwards.
+ * switched off, a root application the Site did not answer -- and the honest response is the one already
+ * given to a route the viewer may not reach: the entry is not shown. Refusing belongs to the write that
+ * produced the state, not to every read afterwards.
+ *
+ * Answered from the Area's active route table and not from the catalog: the table holds the address the
+ * route answers on *this* Site -- a Public path the Site reassigned, a root slot it awarded -- and only
+ * the routes that answer at all. Reading the catalog's path here sent the Auth Module's header entry to
+ * `/register` after the Site had moved registration to `/signup`, and kept a root applicant the Site had
+ * turned down in the sidebar, linking `/`.
  */
 function resolveNavigationTarget(
-  catalog: PhiCmsCompiledDescriptorCatalog,
-  activeRouteIdentityKeys: ReadonlySet<string>,
+  routeTable: PhiCmsActiveRouteTable,
   ownerModuleId: PhiRuntimeModuleId,
   routePresetKey: string | undefined,
   overlay?: { presetKey: string; nodeKey: string } | null,
@@ -1101,8 +1162,8 @@ function resolveNavigationTarget(
   if (!routePresetKey) {
     return null;
   }
-  const route = resolvePhiCmsRoutePresetByIdentity(catalog, ownerModuleId, routePresetKey);
-  if (!route || !activeRouteIdentityKeys.has(buildPhiCmsPresetIdentityKey(ownerModuleId, routePresetKey))) {
+  const route = routeTable.byPageId.get(createPhiPresetCmsPageId({ ownerModuleId, presetKey: routePresetKey }));
+  if (!route) {
     return null;
   }
   return {
@@ -1115,15 +1176,14 @@ function resolveNavigationTarget(
 
 function buildResolvedNavigationNode(
   catalog: PhiCmsCompiledDescriptorCatalog,
-  activeRouteIdentityKeys: ReadonlySet<string>,
+  routeTable: PhiCmsActiveRouteTable,
   navKey: string,
   ownerModuleId: PhiRuntimeModuleId,
   descriptor: PhiCmsNavigationBaseItemDescriptor | PhiCmsNavigationInjectionItemDescriptor,
   injection: ResolvedNavigationNode["injection"],
 ): ResolvedNavigationNode {
   const target = resolveNavigationTarget(
-    catalog,
-    activeRouteIdentityKeys,
+    routeTable,
     ownerModuleId,
     descriptor.routePresetKey,
     descriptor.overlayPresetKey && descriptor.overlayNodeKey
@@ -1131,7 +1191,7 @@ function buildResolvedNavigationNode(
       : null,
   );
   const intrinsicChildren = (descriptor.children ?? []).map((child) =>
-    buildResolvedNavigationNode(catalog, activeRouteIdentityKeys, navKey, ownerModuleId, child, null),
+    buildResolvedNavigationNode(catalog, routeTable, navKey, ownerModuleId, child, null),
   );
   const sourceLocale = catalog.sourceLocaleByModuleId.get(ownerModuleId);
   if (!sourceLocale) {
@@ -1273,11 +1333,14 @@ export function resolvePhiCmsActiveNavigationSurfaces({
   catalog,
   area,
   activeModuleIds,
+  routeTable,
   viewer,
 }: {
   catalog: PhiCmsCompiledDescriptorCatalog;
   area: PhiCmsAreaKey;
   activeModuleIds: ReadonlySet<PhiRuntimeModuleId>;
+  /** The Area's active route table (`compilePhiCmsActiveRouteTable`): what answers, and where. */
+  routeTable: PhiCmsActiveRouteTable;
   viewer?: PhiAccessViewer;
 }): readonly PhiCmsResolvedNavigationSurface[] {
   const definition = catalog.areaDefinitions.get(area);
@@ -1287,19 +1350,19 @@ export function resolvePhiCmsActiveNavigationSurfaces({
   if (!activeModuleIds.has(definition.baseModuleId)) {
     throw new Error(`Area "${area}" base module "${definition.baseModuleId}" is not active.`);
   }
+  if (routeTable.area !== area) {
+    throw new Error(`Area "${area}" was handed the route table of Area "${routeTable.area}".`);
+  }
 
   /*
    * Which routes exist, and nothing about who is reading.
    *
-   * A route is in or out by Module selection alone. An entry may still hide from one reader -- that is
+   * A route is in or out by Module selection and the Site's answers alone -- the active route table is
+   * that set, with the address each route answers on. An entry may still hide from one reader -- that is
    * the next block, and it is the entry's own statement -- but the set of addresses this Area answers is
    * one set (ACCESS.md).
    */
-  const activeRoutes = (catalog.routesByArea.get(area) ?? [])
-    .map(({ descriptor }) => descriptor)
-    .filter(({ ownerModuleId }) => activeModuleIds.has(ownerModuleId));
-  const activeRouteIdentityKeys = new Set(activeRoutes.map((route) =>
-    buildPhiCmsPresetIdentityKey(route.ownerModuleId, route.presetKey)));
+  const activeRoutes = [...routeTable.byPageId.values()];
   /*
    * Whether this reader is shown the entry, which is a different question from whether the address
    * answers. An entry says this for itself; it is never read off the route it points at, because the
@@ -1316,16 +1379,20 @@ export function resolvePhiCmsActiveNavigationSurfaces({
   };
 
   return (definition.navigationSurfaces ?? []).map((surface) => {
+    /*
+     * Every root is registered, the hidden ones too. Visibility is this reader's question and is asked
+     * where the tree is materialized; registering only what this reader sees made a root hidden from
+     * them an "unavailable" parent, so an injection under it refused the surface for that reader alone.
+     */
     const roots = surface.items
       .map((item) => buildResolvedNavigationNode(
         catalog,
-        activeRouteIdentityKeys,
+        routeTable,
         surface.navKey,
         definition.baseModuleId,
         item,
         null,
-      ))
-      .filter(isNavigationNodeVisible);
+      ));
     const injectedRoots: ResolvedNavigationNode[] = [];
     const injectedByParent = new Map<string, ResolvedNavigationNode[]>();
     const nodesByKey = new Map<string, ResolvedNavigationNode>();
@@ -1367,7 +1434,7 @@ export function resolvePhiCmsActiveNavigationSurfaces({
         const parentItemKey = placement ? placement.parentItemKey : descriptor.parentItemKey!;
         const node = buildResolvedNavigationNode(
           catalog,
-          activeRouteIdentityKeys,
+          routeTable,
           surface.navKey,
           contributorId,
           descriptor.item,

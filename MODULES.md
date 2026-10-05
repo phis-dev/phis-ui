@@ -736,7 +736,11 @@ addressed by its path.
   syntax, route-mount exports, Theme identity, shell composition -- without running a tree loader.
   `compilePhiCmsActiveRouteTable` builds one Area's active route table. Building it never refuses: where
   two active routes want one address, the first claim answers and the second is absent, which hides its
-  navigation entry. Requests resolve the table by path; Builder targets resolve it by Page id.
+  navigation entry. Requests resolve the table by path; Builder targets resolve it by Page id. Navigation
+  entries and Module Page references resolve their target through the same table
+  (`resolvePhiCmsActiveNavigationSurfaces` takes it), so an entry links the address the Site assigned, and
+  an entry whose route is not in the table hides -- never through the catalog, whose path is only what the
+  Module declared.
 - An Area may export a route mount such as `settings`: a `mountKey` bound to an href-less navigation
   container. A route that opts in with `mount: { mountKey }` places its navigation entry there. A mount
   composes navigation, never paths.

@@ -339,13 +339,6 @@ export async function resolvePhiCmsRequest({
       requestedAreaKey,
     ),
   };
-  if (ownsRequestState) {
-    setPhiRequestRuntime(runtimeWithAuthProvider);
-    setPhiRequestNavigationContext(requestedAreaKey, catalog, activeModuleKeys);
-  }
-  const areaAllowed = canPhiViewerAccess(runtime.viewer, areaShellBinding.descriptor.area === requestedAreaKey
-    ? catalog.areaDefinitions.get(requestedAreaKey)?.accessPolicy
-    : undefined);
   const routeTable = compilePhiCmsActiveRouteTable({
     catalog,
     area: requestedAreaKey,
@@ -353,6 +346,13 @@ export async function resolvePhiCmsRequest({
     publicRoutePaths: readPhiAreaPublicRoutePaths(effectiveAreaPreset?.preset.preset.config),
     landingSelection: readPhiAreaLandingSelection(effectiveAreaPreset?.preset.preset.config),
   });
+  if (ownsRequestState) {
+    setPhiRequestRuntime(runtimeWithAuthProvider);
+    setPhiRequestNavigationContext(requestedAreaKey, catalog, activeModuleKeys, routeTable);
+  }
+  const areaAllowed = canPhiViewerAccess(runtime.viewer, areaShellBinding.descriptor.area === requestedAreaKey
+    ? catalog.areaDefinitions.get(requestedAreaKey)?.accessPolicy
+    : undefined);
   const routeBinding = areaOwnedStoragePath && areaAllowed
     ? resolvePhiCmsRoutePreset(routeTable, areaOwnedStoragePath)
     : null;
@@ -384,8 +384,7 @@ export async function resolvePhiCmsRequest({
         requestedStoragePath: areaOwnedStoragePath,
         runtime: runtimeWithAuthProvider,
         area: requestedAreaKey,
-        catalog,
-        activeModuleIds: activeModuleKeys,
+        routeTable,
       })
     : null;
   /*
@@ -407,8 +406,7 @@ export async function resolvePhiCmsRequest({
         runtime: runtimeWithAuthProvider,
         reference: folderTargetReference as PhiPageReference,
         area: requestedAreaKey,
-        catalog,
-        activeModuleIds: activeModuleKeys,
+        routeTable,
       })
     : null;
   const folderRedirectPage = folderTargetPath && folderTargetPath !== areaOwnedStoragePath

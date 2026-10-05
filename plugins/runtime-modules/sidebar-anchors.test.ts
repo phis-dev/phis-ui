@@ -5,7 +5,7 @@ import {
   PHI_BUILDER_PAGE_PRESET_VERSION,
 } from "../../components/regions/presets/phi-builder-page-preset-version";
 import type { PhiCmsAreaKey } from "../../constants/cms-areas";
-import { PHI_VIEWER_ACCESS_SITE_ADMIN } from "../../types/access";
+import { PHI_VIEWER_ACCESS_SITE_ADMIN, type PhiAccessViewer } from "../../types/access";
 import type {
   PhiCmsAreaDefinition,
   PhiCmsNavigationInjectionDescriptor,
@@ -20,6 +20,7 @@ import type {
 import { PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG } from "./catalog";
 import { createPhiRuntimeModuleCatalog } from "./contracts";
 import {
+  compilePhiCmsActiveRouteTable,
   resolvePhiCmsActiveNavigationSurfaces,
   resolvePhiCmsDescriptorCatalog,
 } from "./descriptor-compiler";
@@ -49,8 +50,12 @@ describe("the first-party sidebars", () => {
       ...(catalog.routesByArea.get(area) ?? []).map(({ descriptor }) => descriptor.ownerModuleId),
       ...(catalog.moduleNavigationByArea.get(area) ?? []).map(({ ownerModuleId }) => ownerModuleId),
     ]);
-    const surface = resolvePhiCmsActiveNavigationSurfaces({ catalog, area, activeModuleIds })
-      .find(({ navKey }) => navKey === `${area}:sidebar`);
+    const surface = resolvePhiCmsActiveNavigationSurfaces({
+      catalog,
+      area,
+      activeModuleIds,
+      routeTable: compilePhiCmsActiveRouteTable({ catalog, area, activeModuleIds }),
+    }).find(({ navKey }) => navKey === `${area}:sidebar`);
     return outline(surface!.items);
   }
 
@@ -298,20 +303,26 @@ describe("navigation anchors", () => {
     },
   }];
 
-  function sidebar(modules: readonly PhiRuntimeModuleCatalogEntry[]) {
+  function sidebar(
+    modules: readonly PhiRuntimeModuleCatalogEntry[],
+    options: { definition?: PhiCmsAreaDefinition; viewer?: PhiAccessViewer } = {},
+  ) {
     const catalog = resolvePhiCmsDescriptorCatalog(createPhiRuntimeModuleCatalog([
       entry(PLATFORM_ID, [], "platform"),
       base,
       ...modules,
-    ], [areaDefinition]));
+    ], [options.definition ?? areaDefinition]));
+    const activeModuleIds = new Set([
+      PLATFORM_ID,
+      BASE_ID,
+      ...modules.map((module) => module.definition.moduleId),
+    ]);
     const [surface] = resolvePhiCmsActiveNavigationSurfaces({
       catalog,
       area: "app",
-      activeModuleIds: new Set([
-        PLATFORM_ID,
-        BASE_ID,
-        ...modules.map((module) => module.definition.moduleId),
-      ]),
+      activeModuleIds,
+      routeTable: compilePhiCmsActiveRouteTable({ catalog, area: "app", activeModuleIds }),
+      ...(options.viewer ? { viewer: options.viewer } : {}),
     });
     return outline(surface!.items);
   }
@@ -366,6 +377,72 @@ describe("navigation anchors", () => {
       // Behind the container it named, and ahead of the Area's `end`, which is the very bottom.
       "legacy-after",
       "shop-end",
+    ]);
+  });
+
+  /*
+   * Three refusals that used to pass the compile and fail the read: the compiler saw only what an
+   * injection said about itself, and the surface, read later, met a key it already had, an anchor at
+   * another depth, or a parent one reader could not see. A read may not fail, so the compile has to.
+   */
+  it("refuses an injected key that is already an item of the surface", () => {
+    const acme = "@acme/shop/modules/shop" as const;
+    const taken: PhiCmsRoutePresetDescriptor = {
+      ...page(acme, "shop-main"),
+      navigation: [{
+        navKey: "app:sidebar",
+        anchor: "main",
+        item: { itemKey: OWN_KEY, label: { defaultMessage: "shop-main" }, routePresetKey: "shop-main" },
+      }],
+    };
+    expect(() => sidebar([entry(acme, [taken])])).toThrow(/duplicate injected item key/);
+  });
+
+  it("refuses a before or after anchor that is not a sibling", () => {
+    const legacy = "@legacy/pkg/modules/legacy" as const;
+    // OWN_KEY is exported and stands at the root; the entry asks to stand inside Settings, beside it.
+    expect(() => sidebar([
+      entry(legacy, [page(legacy, "legacy-inside", { parentItemKey: SETTINGS_KEY, before: OWN_KEY })]),
+    ])).toThrow(/not a sibling under/);
+  });
+
+  it("keeps a surface readable for a viewer the parent of an injection hides from", () => {
+    const STAFF_KEY = "@test/pkg/modules/base/nav/staff";
+    const withStaffContainer: PhiCmsAreaDefinition = {
+      ...areaDefinition,
+      navigationSurfaces: areaDefinition.navigationSurfaces!.map((surface) => ({
+        ...surface,
+        items: [
+          ...surface.items,
+          {
+            itemKey: STAFF_KEY,
+            label: { defaultMessage: "Staff" },
+            accessPolicy: PHI_VIEWER_ACCESS_SITE_ADMIN,
+            children: [{
+              itemKey: `${STAFF_KEY}/general`,
+              label: { defaultMessage: "Staff general" },
+              routePresetKey: "base-general",
+            }],
+          },
+        ],
+        exportedItemKeys: [...(surface.exportedItemKeys ?? []), STAFF_KEY],
+      })),
+    };
+    const acme = "@acme/shop/modules/shop" as const;
+    const modules = [entry(acme, [page(acme, "shop-staff", { parentItemKey: STAFF_KEY })])];
+    expect(sidebar(modules, { definition: withStaffContainer })).toEqual([
+      "Own",
+      "Staff",
+      "  Staff general",
+      "  shop-staff",
+      "Settings",
+      "  General",
+    ]);
+    const visitor: PhiAccessViewer = { access: "public", roleClaims: [], groupClaims: [] };
+    expect(sidebar(modules, { definition: withStaffContainer, viewer: visitor })).toEqual([
+      "Own",
+      "Settings",
+      "  General",
     ]);
   });
 

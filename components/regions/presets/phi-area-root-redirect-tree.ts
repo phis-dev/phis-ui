@@ -1,5 +1,8 @@
 import type { PhiCmsAreaKey } from "../../../constants/cms-areas";
-import { resolvePhiCmsActiveNavigationSurfaces } from "../../../plugins/runtime-modules/descriptor-compiler";
+import {
+  compilePhiCmsActiveRouteTable,
+  resolvePhiCmsActiveNavigationSurfaces,
+} from "../../../plugins/runtime-modules/descriptor-compiler";
 import type {
   PhiCmsCompiledDescriptorCatalog,
   PhiRuntimeModuleId,
@@ -50,10 +53,16 @@ export function buildPhiAreaRootRedirectTree({
    * surface here would give two people in the same Area two different roots -- and it is what made the
    * root a viewer-dependent answer, which ACCESS.md now forbids and which the proxy cannot cache.
    */
+  /*
+   * Compiled here from what the build context carries. This tree is the Area's own root and is served
+   * only while no Site answer changed the table -- a chosen root applicant replaces it, and Public, the
+   * one Area with assignable addresses, has no sidebar root -- so the plain compile is the table.
+   */
   const surface = resolvePhiCmsActiveNavigationSurfaces({
     catalog,
     area,
     activeModuleIds,
+    routeTable: compilePhiCmsActiveRouteTable({ catalog, area, activeModuleIds }),
   }).find((candidate) => candidate.navKey === navKey);
   const targetPath = surface
     ? findFirstPhiCmsNavigationLinkPath(surface.items, page.path)

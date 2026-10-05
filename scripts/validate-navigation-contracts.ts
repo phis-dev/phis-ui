@@ -266,17 +266,19 @@ function createCatalog(
 }
 
 const catalog = resolvePhiCmsDescriptorCatalog(createCatalog());
+const surfaceModuleIds = new Set([
+  PLATFORM_MODULE_ID,
+  BASE_MODULE_ID,
+  MODULE_A_ID,
+  MODULE_B_ID,
+  MODULE_D_ID,
+  MOUNTED_MODULE_ID,
+]);
 const [surface] = resolvePhiCmsActiveNavigationSurfaces({
   catalog,
   area: "public",
-  activeModuleIds: new Set([
-    PLATFORM_MODULE_ID,
-    BASE_MODULE_ID,
-    MODULE_A_ID,
-    MODULE_B_ID,
-    MODULE_D_ID,
-    MOUNTED_MODULE_ID,
-  ]),
+  activeModuleIds: surfaceModuleIds,
+  routeTable: compilePhiCmsActiveRouteTable({ catalog, area: "public", activeModuleIds: surfaceModuleIds }),
 });
 assert(surface);
 /*

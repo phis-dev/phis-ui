@@ -1,11 +1,7 @@
 import type { PhiCmsAreaKey } from "../constants/cms-areas";
 import { PhiCmsPageType, PhiCmsStatus } from "../constants/phi-cms";
-import { resolvePhiCmsRouteDescriptorByPageId } from "../plugins/runtime-modules/descriptor-compiler";
 import type { PhiResolvedCmsPagePayload, PhiResolvedCmsPageTree } from "../types/cms";
-import type {
-  PhiCmsCompiledDescriptorCatalog,
-  PhiRuntimeModuleId,
-} from "../types/cms-module-descriptors";
+import type { PhiCmsActiveRouteTable } from "../types/cms-module-descriptors";
 import { readPhiPageReference, type PhiPageReference } from "../types/references";
 
 /**
@@ -34,23 +30,17 @@ export type PhiAreaRootRouteDecision =
  */
 export function resolvePhiAreaModulePageReferencePath({
   reference,
-  area,
-  catalog,
-  activeModuleIds,
+  routeTable,
 }: {
   reference: PhiPageReference;
-  area: PhiCmsAreaKey;
-  catalog: PhiCmsCompiledDescriptorCatalog;
-  activeModuleIds: ReadonlySet<PhiRuntimeModuleId>;
+  /** The Area's active route table: a Page not in it is not served, and a Page in it answers on its path. */
+  routeTable: PhiCmsActiveRouteTable;
 }): string | null {
   const parsed = readPhiPageReference(reference);
   if (parsed?.target.kind !== "module") {
     return null;
   }
-  const route = resolvePhiCmsRouteDescriptorByPageId(catalog, parsed.target.pageId);
-  return route && route.area === area && activeModuleIds.has(route.ownerModuleId)
-    ? route.path
-    : null;
+  return routeTable.byPageId.get(parsed.target.pageId)?.path ?? null;
 }
 
 /**

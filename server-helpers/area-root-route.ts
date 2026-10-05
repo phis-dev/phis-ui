@@ -8,10 +8,7 @@ import {
 } from "../helpers/cms-area-root-route";
 import type { PhiCmsAreaKey } from "../constants/cms-areas";
 import type { PhiBlockRuntime } from "../types";
-import type {
-  PhiCmsCompiledDescriptorCatalog,
-  PhiRuntimeModuleId,
-} from "../types/cms-module-descriptors";
+import type { PhiCmsActiveRouteTable } from "../types/cms-module-descriptors";
 import { readPhiPageReference, type PhiPageReference } from "../types/references";
 import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
 
@@ -26,26 +23,19 @@ export async function resolvePhiAreaPageReferencePath({
   runtime,
   reference,
   area,
-  catalog,
-  activeModuleIds,
+  routeTable,
 }: {
   runtime: PhiBlockRuntime;
   reference: PhiPageReference;
   area: PhiCmsAreaKey;
-  catalog: PhiCmsCompiledDescriptorCatalog;
-  activeModuleIds: ReadonlySet<PhiRuntimeModuleId>;
+  routeTable: PhiCmsActiveRouteTable;
 }): Promise<string | null> {
   const parsed = readPhiPageReference(reference);
   if (!parsed) {
     return null;
   }
   if (parsed.target.kind === "module") {
-    return resolvePhiAreaModulePageReferencePath({
-      reference,
-      area,
-      catalog,
-      activeModuleIds,
-    });
+    return resolvePhiAreaModulePageReferencePath({ reference, routeTable });
   }
 
   const projection = await resolveSiteInternalReferences({
@@ -72,15 +62,13 @@ export async function resolvePhiAreaRootRouteDecision({
   requestedStoragePath,
   runtime,
   area,
-  catalog,
-  activeModuleIds,
+  routeTable,
 }: {
   config: Record<string, unknown> | null | undefined;
   requestedStoragePath: string | null;
   runtime: PhiBlockRuntime;
   area: PhiCmsAreaKey;
-  catalog: PhiCmsCompiledDescriptorCatalog;
-  activeModuleIds: ReadonlySet<PhiRuntimeModuleId>;
+  routeTable: PhiCmsActiveRouteTable;
 }): Promise<PhiAreaRootRouteDecision | null> {
   if (requestedStoragePath !== "/") {
     return null;
@@ -97,8 +85,7 @@ export async function resolvePhiAreaRootRouteDecision({
     runtime,
     reference: rootRoute.target,
     area,
-    catalog,
-    activeModuleIds,
+    routeTable,
   });
   // A target that resolves to the root is the root: forwarding there is a loop, and the preset's
   // navigation-derived answer is the better one.

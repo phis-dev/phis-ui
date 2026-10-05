@@ -8,7 +8,8 @@ import { readPhiAreaPresetRuntimeModuleIds, readPhiAreaRootRoute } from "../../h
 import { PhiCmsPageType } from "../../constants/phi-cms";
 import { createPhiBuilderRuntimeModuleCatalog } from "./catalog";
 import { createPhiDefaultAreaRuntimeModuleIds } from "./area-module-defaults";
-import { resolvePhiCmsDescriptorCatalog } from "./descriptor-compiler";
+import { compilePhiCmsActiveRouteTable, resolvePhiCmsDescriptorCatalog } from "./descriptor-compiler";
+import type { PhiCmsAreaKey } from "../../constants/cms-areas";
 import { PHI_DASHBOARD_RUNTIME_MODULE_ID } from "./dashboard/ids";
 import type { PhiResolvedCmsPageTree } from "../../types/cms";
 import type { PhiRuntimeModuleId } from "../../types/cms-module-descriptors";
@@ -25,7 +26,7 @@ import { createPhiPageReference } from "../../types/references";
 
 const catalog = resolvePhiCmsDescriptorCatalog(createPhiBuilderRuntimeModuleCatalog());
 const builderModuleIds = new Set<PhiRuntimeModuleId>([
-  "@phis/ui/builder" as PhiRuntimeModuleId,
+  catalog.areaDefinitions.get("builder")!.baseModuleId,
   ...createPhiDefaultAreaRuntimeModuleIds("builder"),
 ]);
 
@@ -35,15 +36,17 @@ const dashboardReference = createPhiPageReference({
   presetKey: "builder-dashboard-page",
 });
 
+function tableOf(area: PhiCmsAreaKey, activeModuleIds: ReadonlySet<PhiRuntimeModuleId>) {
+  return compilePhiCmsActiveRouteTable({ catalog, area, activeModuleIds });
+}
+
 function resolveDashboard(overrides: {
-  area?: Parameters<typeof resolvePhiAreaModulePageReferencePath>[0]["area"];
+  area?: PhiCmsAreaKey;
   activeModuleIds?: ReadonlySet<PhiRuntimeModuleId>;
 } = {}) {
   return resolvePhiAreaModulePageReferencePath({
     reference: dashboardReference,
-    area: overrides.area ?? "builder",
-    catalog,
-    activeModuleIds: overrides.activeModuleIds ?? builderModuleIds,
+    routeTable: tableOf(overrides.area ?? "builder", overrides.activeModuleIds ?? builderModuleIds),
   });
 }
 
@@ -111,16 +114,17 @@ describe("resolving a Module-carried target", () => {
     });
     const resolved = resolvePhiAreaModulePageReferencePath({
       reference: settingsReference,
-      area: "admin",
-      catalog,
-      activeModuleIds: new Set<PhiRuntimeModuleId>(["@phis/ui/modules/admin" as PhiRuntimeModuleId]),
+      routeTable: tableOf("admin", new Set<PhiRuntimeModuleId>(["@phis/ui/modules/admin" as PhiRuntimeModuleId])),
     });
 
     expect(resolved).toMatch(/^\/phis\/ui\/settings\//u);
   });
 
   it("resolves nothing across Areas, where the same path means another page", () => {
-    expect(resolveDashboard({ area: "admin" })).toBeNull();
+    expect(resolveDashboard({
+      area: "admin",
+      activeModuleIds: new Set<PhiRuntimeModuleId>(["@phis/ui/modules/admin" as PhiRuntimeModuleId]),
+    })).toBeNull();
   });
 });
 

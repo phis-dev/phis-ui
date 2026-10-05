@@ -111,6 +111,7 @@ for (const [area, definition] of catalog.areaDefinitions) {
     catalog,
     area,
     activeModuleIds,
+    routeTable: table,
   });
   navigationSurfaceCount += navigationSurfaces.length;
   if (area === "builder") {
@@ -245,6 +246,7 @@ const publicBaseHeader = resolvePhiCmsActiveNavigationSurfaces({
   catalog: publicCatalog,
   area: "public",
   activeModuleIds: publicBaseModuleIds,
+  routeTable: publicBaseRoutes,
 }).find(({ navKey }) => navKey === "public:header");
 assert(publicBaseHeader);
 assert.equal(
@@ -276,6 +278,7 @@ const publicWithAuthHeader = resolvePhiCmsActiveNavigationSurfaces({
   catalog: publicCatalog,
   area: "public",
   activeModuleIds: publicWithAuthModuleIds,
+  routeTable: publicWithAuthRoutes,
 }).find(({ navKey }) => navKey === "public:header");
 assert(publicWithAuthHeader);
 assert.equal(
@@ -362,6 +365,7 @@ const adminNavigationSurfaces = resolvePhiCmsActiveNavigationSurfaces({
   catalog,
   area: "admin",
   activeModuleIds: adminFeatureModuleIds,
+  routeTable: adminFeatureRoutes,
 });
 const adminNavigationItems = adminNavigationSurfaces
   .find((surface) => surface.navKey === "admin:sidebar")?.items;
@@ -381,6 +385,7 @@ const adminNavigationPathsForRole = (roleFlags: number) => resolvePhiCmsActiveNa
   catalog,
   area: "admin",
   activeModuleIds: adminFeatureModuleIds,
+  routeTable: adminFeatureRoutes,
   viewer: {
     access: "authenticated",
     roleClaims: [{ providerId: "@phis/server/core", flags: roleFlags }],
@@ -550,6 +555,7 @@ const builderNavigationItems = resolvePhiCmsActiveNavigationSurfaces({
   catalog,
   area: "builder",
   activeModuleIds: builderFeatureModuleIds,
+  routeTable: builderFeatureRoutes,
 }).find((surface) => surface.navKey === "builder:sidebar")?.items;
 // Every Area but Public puts a Module's routes under its package, so these read `/phis/ui/...` and a
 // second package could not reach them however it named its own pages.

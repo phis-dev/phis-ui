@@ -15,22 +15,51 @@ import {
   compilePhiCmsActiveRouteTable,
   resolvePhiCmsAreaShellPresetBinding,
   resolvePhiCmsDescriptorCatalog,
-  resolvePhiCmsRoutePreset,
+  resolvePhiCmsRoutePresetByPageId,
 } from "../plugins/runtime-modules/descriptor-compiler";
+import { PHI_PUBLIC_LOGIN_ROUTE_IDENTITY } from "../constants/public-login-route";
+import { createPhiPresetCmsPageId } from "../types/cms-instance-id";
 import { resolveActivePresetModuleKeys } from "./cms-request";
 import type { PhiCmsSiteBridge } from "../types/cms-plugins";
 import { PHIS_REQUEST_PATH_HEADER, PHIS_REQUEST_SEARCH_HEADER } from "../constants/http-headers";
 import type { PhiCapabilitySnapshot } from "../types/server-capabilities";
+import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
 
+/** The address the Auth Module declares for signing in; what a Site that reassigned it answers is in the table. */
 const PHI_PUBLIC_LOGIN_PATH = "/login";
+const PHI_PUBLIC_LOGIN_PAGE_ID = createPhiPresetCmsPageId(PHI_PUBLIC_LOGIN_ROUTE_IDENTITY);
 
 /**
- * Resolves the canonical Public login href, or `null` when no active Auth Module owns that route.
+ * The server this Site talks to, as the bridge states it.
  *
- * `AUTHENTICATION.md` section 6 keeps `/login` the stable replacement route and requires protected
- * access to fail closed where nobody owns it. Disabling the Auth Module is permitted and has no runtime
- * fallback, so the route can genuinely be absent -- and a guard that assumes it lands the visitor on a
- * 404 that reports a missing page where access is refused.
+ * A bridge without a Site key cannot ask Core anything, and asking with an empty key used to be answered
+ * by Core's refusal, swallowed, and read as "no login configured" -- a configuration fault dressed as a
+ * fact about the Site. It is an error here, and it says what is missing.
+ */
+function readPhiBridgeApiOptions(cmsBridge: PhiCmsSiteBridge) {
+  const siteKey = cmsBridge.runtime?.siteKey?.trim();
+  if (!siteKey) {
+    throw new Error("PhiCmsSiteBridge.runtime.siteKey is required to resolve the Public login route.");
+  }
+  return {
+    apiBaseUrl: cmsBridge.runtime?.apiBaseUrl ?? readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: cmsBridge.runtime?.internalToken ?? readPhiServerApiCredentials().internalToken,
+    siteKey,
+  };
+}
+
+/**
+ * Resolves the Public login href, or `null` when no active Auth Module owns the login route.
+ *
+ * `AUTHENTICATION.md` section 6 requires protected access to fail closed where nobody owns the login
+ * route. Disabling the Auth Module is permitted and has no runtime fallback, so the route can genuinely
+ * be absent -- and a guard that assumes it lands the visitor on a 404 that reports a missing page where
+ * access is refused.
+ *
+ * The route is looked up by its Page identity in the Area's active route table, not by `/login`: the
+ * path is the Site's to assign (`publicRoutePaths`), and a guard that asked for `/login` after the Site
+ * had moved signing in to `/sign-in` either sent visitors to whatever Module had taken `/login` or
+ * reported "no login" and shut the Area.
  *
  * Only the redirect path pays for this: an unauthenticated visitor reaching a staff Area.
  */
@@ -46,7 +75,7 @@ export const resolvePhiPublicLoginHref = cache(async function resolvePhiPublicLo
      * This bridge does not carry the Public Area definition -- a staff Area catalog deliberately does
      * not, which is what keeps its module graph small. The route cannot be verified from here, and
      * "cannot tell" is not "absent": refusing would strand a visitor on a Site with a working sign-in
-     * page. Offer the canonical path instead. An absent login route now answers a real 404 of its own
+     * page. Offer the declared path instead. An absent login route now answers a real 404 of its own
      * rather than a 200 with the 404 page, so the visitor still learns the truth.
      */
     return localizeAreaPath(locale, "public", PHI_PUBLIC_LOGIN_PATH);
@@ -54,17 +83,15 @@ export const resolvePhiPublicLoginHref = cache(async function resolvePhiPublicLo
 
   const cookieStore = await cookies();
   const areaPreset = await getPhiExactSiteArea({
-    path: PHI_PUBLIC_LOGIN_PATH,
-    apiBaseUrl: cmsBridge.runtime?.apiBaseUrl,
-    internalToken: cmsBridge.runtime?.internalToken,
-    siteKey: cmsBridge.runtime?.siteKey ?? "",
+    path: "/",
+    ...readPhiBridgeApiOptions(cmsBridge),
     locale,
     cookieHeader: cookieStore.toString(),
     sourcePreset: {
       ownerModuleId: shellBinding.descriptor.ownerModuleId,
       presetKey: shellBinding.descriptor.presetKey,
     },
-  }).catch(() => null);
+  });
 
   const activeModuleIds = resolveActivePresetModuleKeys(
     cmsBridge.runtimeModuleCatalog,
@@ -80,9 +107,8 @@ export const resolvePhiPublicLoginHref = cache(async function resolvePhiPublicLo
     landingSelection: readPhiAreaLandingSelection(areaPreset?.preset.preset.config),
   });
 
-  return resolvePhiCmsRoutePreset(routeTable, PHI_PUBLIC_LOGIN_PATH)
-    ? localizeAreaPath(locale, "public", PHI_PUBLIC_LOGIN_PATH)
-    : null;
+  const login = resolvePhiCmsRoutePresetByPageId(routeTable, PHI_PUBLIC_LOGIN_PAGE_ID);
+  return login ? localizeAreaPath(locale, "public", login.descriptor.path) : null;
 });
 
 /**
@@ -100,19 +126,15 @@ export async function resolvePhiUnauthenticatedLoginHref(
    * German login. Only if the Site cannot be reached is it the language this software is written in,
    * the one this process is certain to have text for.
    */
-  const locale = await resolvePhiRequestLocale({
-    apiBaseUrl: cmsBridge.runtime?.apiBaseUrl ?? "",
-    internalToken: cmsBridge.runtime?.internalToken ?? "",
-    siteKey: cmsBridge.runtime?.siteKey ?? "",
-  }).catch(() => PHI_CANONICAL_SOURCE_LOCALE);
-  // The snapshot has to be loaded here rather than defaulted to null: a module whose server binding
-  // cannot be checked resolves as unavailable, which would drop the Auth Module and make every refusal
-  // look like "no login configured".
-  const serverCapabilities = await getPhiCapabilitySnapshot({
-    apiBaseUrl: cmsBridge.runtime?.apiBaseUrl ?? "",
-    internalToken: cmsBridge.runtime?.internalToken ?? "",
-    siteKey: cmsBridge.runtime?.siteKey ?? "",
-  }).catch(() => null);
+  const api = readPhiBridgeApiOptions(cmsBridge);
+  const locale = await resolvePhiRequestLocale(api).catch(() => PHI_CANONICAL_SOURCE_LOCALE);
+  /*
+   * The snapshot has to be loaded, and a failure to load it has to be an error: a module whose server
+   * binding cannot be checked resolves as unavailable, which would drop the Auth Module and make every
+   * refusal look like "no login configured". Swallowing the failure into `null` did exactly that
+   * whenever Core did not answer for a moment.
+   */
+  const serverCapabilities = await getPhiCapabilitySnapshot(api);
   const login = await resolvePhiPublicLoginHref(cmsBridge, locale, serverCapabilities);
   if (!login) {
     return null;

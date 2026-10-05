@@ -6,6 +6,7 @@ import { cache } from "react";
 
 import type { PhiBlockRuntime } from "../types";
 import type {
+  PhiCmsActiveRouteTable,
   PhiCmsCompiledDescriptorCatalog,
   PhiRuntimeModuleId,
 } from "../types/cms-module-descriptors";
@@ -16,6 +17,8 @@ type PhiRequestRuntimeStore = {
   navigationByArea: Map<PhiCmsAreaKey, {
     catalog: PhiCmsCompiledDescriptorCatalog;
     activeModuleIds: ReadonlySet<PhiRuntimeModuleId>;
+    /** What the Area answers and where: every link to a Module Page is read off this, never the catalog. */
+    routeTable: PhiCmsActiveRouteTable;
   }>;
 };
 
@@ -83,9 +86,10 @@ export function setPhiRequestNavigationContext(
   area: PhiCmsAreaKey,
   catalog: PhiCmsCompiledDescriptorCatalog,
   activeModuleIds: ReadonlySet<PhiRuntimeModuleId>,
+  routeTable: PhiCmsActiveRouteTable,
 ) {
   const store = getPhiRequestRuntimeStore();
-  const context = { catalog, activeModuleIds };
+  const context = { catalog, activeModuleIds, routeTable };
   store.navigationByArea.set(area, context);
   return context;
 }

@@ -6,7 +6,7 @@ import path from "node:path";
 
 import { PhiBaseRole } from "../constants/phi-base-roles";
 import { PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/catalog";
-import { resolvePhiCmsDescriptorCatalog } from "../plugins/runtime-modules/descriptor-compiler";
+import { compilePhiCmsActiveRouteTable, resolvePhiCmsDescriptorCatalog } from "../plugins/runtime-modules/descriptor-compiler";
 import { PHI_OBSERVABILITY_RUNTIME_MODULE_ID } from "../plugins/runtime-modules/observability/ids";
 import { PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID } from "../plugins/runtime-modules/user-management/ids";
 import {
@@ -316,7 +316,13 @@ function withRequestScope<T>(
   work: () => Promise<T>,
 ) {
   return runWithPhiRequestRuntime(runtime as PhiBlockRuntime, () => {
-    setPhiRequestNavigationContext(runtime.area as PhiCmsAreaKey, catalog, activeModuleIds);
+    const area = runtime.area as PhiCmsAreaKey;
+    setPhiRequestNavigationContext(
+      area,
+      catalog,
+      activeModuleIds,
+      compilePhiCmsActiveRouteTable({ catalog, area, activeModuleIds }),
+    );
     return work();
   });
 }

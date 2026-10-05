@@ -25,10 +25,15 @@ import {
 } from "./request-runtime";
 import { buildPhiBlockRuntime, loadPhiSiteRequestContext } from "./runtime";
 import {
+  compilePhiCmsActiveRouteTable,
   composePhiCmsActiveAreaOverlayPresets,
   resolvePhiCmsAreaShellPresetBinding,
   resolvePhiCmsDescriptorCatalog,
 } from "../plugins/runtime-modules/descriptor-compiler";
+import {
+  readPhiAreaLandingSelection,
+  readPhiAreaPublicRoutePaths,
+} from "../helpers/cms-area-config";
 import { resolvePhiAuthUiRuntimeProjection } from "./auth-ui-provider";
 import { resolveActivePresetModuleKeys } from "./cms-request";
 import {
@@ -230,6 +235,17 @@ const loadPhiCmsRootScopeCached = cache(async function loadPhiCmsRootScopeCached
     baseResolvedAreaPreset ? { preset: baseResolvedAreaPreset } : null,
     requestContext.serverCapabilities,
   );
+  /*
+   * The same table the page request compiles, from the same Area config: what the shell's navigation
+   * links has to be what the request answers, assigned Public addresses and the awarded root included.
+   */
+  const routeTable = compilePhiCmsActiveRouteTable({
+    catalog: descriptorCatalog,
+    area: resolvedRoute.area,
+    activeModuleIds,
+    publicRoutePaths: readPhiAreaPublicRoutePaths(baseResolvedAreaPreset?.preset.config),
+    landingSelection: readPhiAreaLandingSelection(baseResolvedAreaPreset?.preset.config),
+  });
   const composedAreaPreset = baseResolvedAreaPreset
     ? await composePhiCmsActiveAreaOverlayPresets({
         tree: baseResolvedAreaPreset,
@@ -264,8 +280,9 @@ const loadPhiCmsRootScopeCached = cache(async function loadPhiCmsRootScopeCached
   setPhiRequestRuntime(runtimeWithAuthProvider);
   setPhiRequestNavigationContext(
     resolvedRoute.area,
-    resolvePhiCmsDescriptorCatalog(cmsBridge.runtimeModuleCatalog),
+    descriptorCatalog,
     activeModuleIds,
+    routeTable,
   );
 
   return {

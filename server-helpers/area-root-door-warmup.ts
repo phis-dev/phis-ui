@@ -2,9 +2,16 @@ import "server-only";
 
 import { peekPhiAreaRootDoor, rememberPhiAreaRootDoor } from "../gateway/area-root-door";
 import { findFirstPhiCmsNavigationLinkPath } from "../components/regions/presets/navigation-redirect";
-import { resolvePhiCmsActiveNavigationSurfaces } from "../plugins/runtime-modules/descriptor-compiler";
+import {
+  compilePhiCmsActiveRouteTable,
+  resolvePhiCmsActiveNavigationSurfaces,
+} from "../plugins/runtime-modules/descriptor-compiler";
 import { resolvePhiAreaRootRouteNavKey } from "../plugins/runtime-modules/area-root-route";
 import { resolvePhiAreaRootRouteDecision } from "./area-root-route";
+import {
+  readPhiAreaLandingSelection,
+  readPhiAreaPublicRoutePaths,
+} from "../helpers/cms-area-config";
 import { localizeAreaPath } from "../helpers/locale";
 import type { PhiCmsAreaKey } from "../constants/cms-areas";
 import type { PhiBlockRuntime } from "../types";
@@ -63,13 +70,19 @@ export async function warmPhiAreaRootDoor({
    * nothing to remember: the proxy stays cold for this Area and the render answers, which is correct
    * because the render does not forward either.
    */
+  const routeTable = compilePhiCmsActiveRouteTable({
+    catalog,
+    area,
+    activeModuleIds,
+    publicRoutePaths: readPhiAreaPublicRoutePaths(config),
+    landingSelection: readPhiAreaLandingSelection(config),
+  });
   const decision = await resolvePhiAreaRootRouteDecision({
     config,
     requestedStoragePath: "/",
     runtime,
     area,
-    catalog,
-    activeModuleIds,
+    routeTable,
   });
   if (decision?.kind === "page") {
     return;
@@ -84,7 +97,7 @@ export async function warmPhiAreaRootDoor({
   const areaLocalPath = decision?.kind === "forward"
     ? decision.path
     : findFirstPhiCmsNavigationLinkPath(
-      resolvePhiCmsActiveNavigationSurfaces({ catalog, area, activeModuleIds })
+      resolvePhiCmsActiveNavigationSurfaces({ catalog, area, activeModuleIds, routeTable })
         .find((surface) => surface.navKey === resolvePhiAreaRootRouteNavKey(area))
         ?.items ?? [],
       "/",
