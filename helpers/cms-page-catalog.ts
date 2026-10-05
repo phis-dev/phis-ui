@@ -78,7 +78,7 @@ function findPagePathSegments(
   return null;
 }
 
-function findPageNodePath(
+export function findPhiPageNodePath(
   pages: PhiPresetPageNode[],
   targetKey: string,
   prefix: PhiPresetPageNode[] = [],
@@ -90,7 +90,7 @@ function findPageNodePath(
     }
 
     const childPath = page.children
-      ? findPageNodePath(page.children, targetKey, currentPath)
+      ? findPhiPageNodePath(page.children, targetKey, currentPath)
       : null;
     if (childPath) {
       return childPath;
@@ -156,7 +156,7 @@ export function resolvePhiBuilderActivePageKey(
   pages: readonly PhiPresetPageNode[],
 ) {
   const normalizedPageKey = requestedPageKey?.trim() ?? "";
-  if (normalizedPageKey && findPageNodePath([...pages], normalizedPageKey)) {
+  if (normalizedPageKey && findPhiPageNodePath([...pages], normalizedPageKey)) {
     return normalizedPageKey;
   }
 
@@ -171,14 +171,14 @@ export function resolvePhiBuilderPagePresetSource(
   pageKey: string,
   pages: readonly PhiPresetPageNode[],
 ) {
-  return findPageNodePath([...pages], pageKey)?.at(-1)?.sourcePreset ?? null;
+  return findPhiPageNodePath([...pages], pageKey)?.at(-1)?.sourcePreset ?? null;
 }
 
 export function resolvePhiBuilderPageDefaultFlags(
   pageKey: string,
   pages: readonly PhiPresetPageNode[],
 ) {
-  return findPageNodePath([...pages], pageKey)?.at(-1)?.defaultPageFlags ?? 0;
+  return findPhiPageNodePath([...pages], pageKey)?.at(-1)?.defaultPageFlags ?? 0;
 }
 
 export function normalizePhiBuilderCmsCatalogPath(value: string) {
@@ -225,7 +225,7 @@ export function resolvePhiBuilderCmsStoragePathForCatalog(
   pageKey: string,
   pages: readonly PhiPresetPageNode[],
 ) {
-  const node = findPageNodePath([...pages], pageKey)?.at(-1);
+  const node = findPhiPageNodePath([...pages], pageKey)?.at(-1);
   if (!node) {
     throw new Error(`Page "${area}:${pageKey}" is not present in the active Builder Page catalog.`);
   }
@@ -250,7 +250,7 @@ export function findPhiBuilderCatalogPathForCatalog(
   pageKey: string,
   pages: readonly PhiPresetPageNode[],
 ) {
-  return findPageNodePath([...pages], pageKey)
+  return findPhiPageNodePath([...pages], pageKey)
     ? resolvePhiBuilderCatalogPathForCatalog(area, pageKey, pages)
     : null;
 }
@@ -261,7 +261,7 @@ export function resolvePhiBuilderCatalogPathForCatalog(
   pageKey: string,
   pages: readonly PhiPresetPageNode[],
 ) {
-  const node = findPageNodePath([...pages], pageKey)?.at(-1);
+  const node = findPhiPageNodePath([...pages], pageKey)?.at(-1);
   if (node?.catalogPath) {
     return normalizePhiBuilderCmsCatalogPath(node.catalogPath);
   }

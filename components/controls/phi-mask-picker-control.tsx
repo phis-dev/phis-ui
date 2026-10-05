@@ -5,6 +5,7 @@ import { Flex, Typography } from "antd";
 
 import {
   mergePhiMaskConfigDefaults,
+  mergePhiMaskConfigPatch,
   PHI_MASK_PRESET_OPTIONS,
   resolvePhiMaskStyle,
   type PhiMaskConfig,
@@ -41,14 +42,6 @@ export type PhiMaskPickerControlProps = PhiPickerTransactionCallbacks<PhiMaskCon
 
 function resolveInitialMode(mask: PhiMaskConfig | null | undefined): PhiMaskPickerMode {
   return mask?.source === "asset" ? "asset" : "preset";
-}
-
-function mergeMask(value: PhiMaskConfig | null | undefined, patch: PhiMaskConfig): PhiMaskConfig {
-  return {
-    ...mergePhiMaskConfigDefaults(value),
-    ...patch,
-    enabled: patch.enabled ?? true,
-  };
 }
 
 function renderMaskPreview(mask: PhiMaskConfig, label: string, selected = false) {
@@ -101,7 +94,7 @@ export function PhiMaskPickerControl({
   const resolvedMask = mergePhiMaskConfigDefaults(picker.value);
 
   const patchMask = (patch: PhiMaskConfig) => {
-    picker.changeValue(mergeMask(picker.value, patch));
+    picker.changeValue(mergePhiMaskConfigPatch(picker.value, patch));
   };
 
   const selectPreset = (preset: PhiMaskPreset) => {

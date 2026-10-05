@@ -9,8 +9,6 @@ import {
   PHI_ICON_PICKER_CONTROL_DEFAULT_LABELS,
   type PhiIconPickerControlLabels,
 } from "../label-types/icon-picker";
-import type { PhiBlockRuntime } from "../../../types";
-import { buildPhiWidgetLabelTranslatorOptions } from "./runtime-options";
 
 /**
  * What the icon picker says.
@@ -75,10 +73,4 @@ export async function getPhiIconPickerLabels(
       clear: labels.action_clear,
     },
   };
-}
-
-export function getPhiIconPickerLabelsForRuntime(
-  runtime: Pick<PhiBlockRuntime, "locale" | "site">,
-) {
-  return getPhiIconPickerLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
 }

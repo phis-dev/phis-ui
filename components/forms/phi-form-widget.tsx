@@ -1,3 +1,4 @@
+import { normalizePhiFormKey } from "../../helpers/form-id";
 import type { ReactNode } from "react";
 import type { PhiBlockRuntime } from "../../types";
 import type { PhiCmsRuntimeRenderRegistry } from "../../types/cms-plugins";
@@ -30,10 +31,6 @@ export type PhiFormWidgetProps = {
   features?: PhiRuntimeFeatureState | null;
 };
 
-function normalizeFormId(value: string) {
-  return value.trim().toLowerCase();
-}
-
 export async function PhiFormWidget({
   runtime,
   registry,
@@ -42,7 +39,7 @@ export async function PhiFormWidget({
   config,
   features = null,
 }: PhiFormWidgetProps) {
-  const normalizedFormId = normalizeFormId(formId);
+  const normalizedFormId = normalizePhiFormKey(formId);
   if (!normalizedFormId) {
     return null;
   }

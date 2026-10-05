@@ -33,7 +33,6 @@ import {
 import {
   buildPhiThemeCustomColorPalette,
   resolvePhiThemePaletteCustomColors,
-  resolvePhiThemePresetCustomColors,
 } from "../../../../../theme/phi-theme-palette";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { usePhiThemeBlockCatalog } from "../../../../../components/root/phi-theme-block-catalog-provider";
@@ -2379,7 +2378,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                         {...pickerTransaction}
                         tokenKey="custom6"
                         value={customPalette.custom6}
-                        defaultValue={resolvePhiThemePresetCustomColors(selectedPreset, previewMode).custom6}
+                        defaultValue={resolvePhiThemePaletteCustomColors(selectedPreset.palette, previewMode).custom6}
                         disabled={saving}
                         customColors={customColorOptions}
                         presets={PHI_COLOR_PICKER_PRESETS}
@@ -2409,7 +2408,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                             label={item.label}
                             tokenKey={item.key}
                             value={item.value}
-                            defaultValue={resolvePhiThemePresetCustomColors(selectedPreset, previewMode)[item.key as PhiThemeCustomColorKey]}
+                            defaultValue={resolvePhiThemePaletteCustomColors(selectedPreset.palette, previewMode)[item.key as PhiThemeCustomColorKey]}
                             disabled={saving}
                             customColors={customColorOptions}
                             presets={PHI_COLOR_PICKER_PRESETS}

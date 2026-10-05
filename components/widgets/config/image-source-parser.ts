@@ -6,10 +6,6 @@ export function readPhiImageSourceKind(value: unknown): "url" | "asset" {
   return readString(value) === "asset" ? "asset" : "url";
 }
 
-export function readPhiImageVariantKey(value: unknown) {
-  return normalizePhiImageAssetVariantKey(value);
-}
-
 export function readPhiMediaImageSourceConfig(
   value: Record<string, unknown>,
 ): PhiMediaImageSourceConfig {
@@ -17,7 +13,7 @@ export function readPhiMediaImageSourceConfig(
     return {
       sourceKind: "asset",
       assetId: readNumber(value.assetId),
-      variantKey: readPhiImageVariantKey(value.variantKey),
+      variantKey: normalizePhiImageAssetVariantKey(value.variantKey),
       variantVersion: readNumber(value.variantVersion),
     };
   }

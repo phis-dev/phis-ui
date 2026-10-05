@@ -1,7 +1,8 @@
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../../components/widgets/label-sets/runtime-options";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { renderPhiWidgetPreviewPlaceholder } from "../../../../../plugins/factories/widget-renderers";
 import { getPhiEffectsWidgetLabels } from "../../../../../components/widgets/label-sets/effects";
-import { getPhiAuthoringToolsLabelsForRuntime } from "../../../../../components/widgets/label-sets/authoring-tools";
+import { getPhiAuthoringToolsLabels } from "../../../../../components/widgets/label-sets/authoring-tools";
 import {
   PHI_BUILDER_PREVIEW_SEARCH_PARAM,
 } from "../../../../../plugins/runtime-modules/builder/preview-transport";
@@ -46,7 +47,7 @@ export const PHI_STRUCTURE_REGION_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiStructure
         internalToken: readPhiServerApiCredentials().internalToken,
         locale: runtime.locale.current,
       }),
-      getPhiAuthoringToolsLabelsForRuntime(runtime),
+      getPhiAuthoringToolsLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
     ]);
     const fallbackStructureDraft =
       currentStructureDrafts.drafts[`${currentStructureDrafts.area}:${regionKey}`] ?? null;

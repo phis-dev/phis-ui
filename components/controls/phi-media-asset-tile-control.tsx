@@ -1,5 +1,6 @@
 "use client";
 
+import { resolvePhiMediaAssetTypeLabel } from "../media/asset-type-label";
 import { Flex, Typography } from "antd";
 import NextImage from "next/image";
 import type { CSSProperties } from "react";
@@ -19,32 +20,6 @@ import {
 } from "./phi-collection-layout-control";
 import { PhiSkeletonControl } from "./phi-skeleton-control";
 import { PhiIcon } from "../shell/phi-icon";
-
-function resolveAssetTypeLabel(kind: string, contentType: string, originalName: string) {
-  const normalizedContentType = contentType.trim().toLowerCase();
-  if (kind === PhiMediaKind.Image) {
-    const subtype = normalizedContentType.startsWith("image/")
-      ? normalizedContentType.split("/", 2)[1]
-      : null;
-    if (subtype) {
-      return subtype.split(";")[0].trim();
-    }
-
-    return normalizedContentType || "image";
-  }
-
-  const extension = originalName.trim().split(".").pop()?.trim().toLowerCase();
-  if (extension && extension !== originalName.trim().toLowerCase()) {
-    return extension;
-  }
-
-  const [, subtype] = normalizedContentType.split("/", 2);
-  if (subtype) {
-    return subtype.split(";")[0].trim();
-  }
-
-  return kind;
-}
 
 export type PhiMediaAssetTileControlProps = {
   asset: PhiMediaAssetTile;
@@ -244,7 +219,7 @@ export function PhiMediaAssetTileControl({
                 fontSize: assetTileLabelFontSize,
               }}
             >
-              {resolveAssetTypeLabel(asset.kind, asset.contentType, asset.originalName)}
+              {resolvePhiMediaAssetTypeLabel(asset.kind, asset.contentType, asset.originalName)}
             </Typography.Text>
           ) : <span />}
           {showDeleteAction && onDelete ? (

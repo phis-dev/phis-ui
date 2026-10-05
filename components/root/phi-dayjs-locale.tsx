@@ -1,5 +1,6 @@
 "use client";
 
+import { normalizePhiLocaleKey } from "../../helpers/locale";
 import type { ReactNode } from "react";
 import { useEffect } from "react";
 
@@ -112,10 +113,6 @@ const PHI_DAYJS_LOCALE_LOADERS: Record<PhiDayjsLocaleKey, () => Promise<DayjsLoc
  */
 let appliedDayjsLocaleName = "en";
 
-function normalizeLocaleKey(input: string | null | undefined) {
-  return input?.trim().replace(/_/g, "-").toLowerCase() ?? "";
-}
-
 const PHI_DAYJS_LOCALE_RESOLUTIONS = new Map<string, PhiDayjsLocaleResolution>();
 
 function registerDayjsLocale(
@@ -123,7 +120,7 @@ function registerDayjsLocale(
   aliases: readonly string[] = [],
 ) {
   for (const value of [resolution.key, resolution.localeName, ...aliases]) {
-    const normalized = normalizeLocaleKey(value);
+    const normalized = normalizePhiLocaleKey(value);
     if (normalized) {
       PHI_DAYJS_LOCALE_RESOLUTIONS.set(normalized, resolution);
     }
@@ -173,7 +170,7 @@ registerDayjsLocale({ key: "zh-cn", localeName: "zh-cn" }, ["zh", "zh-hans", "zh
 registerDayjsLocale({ key: "zh-tw", localeName: "zh-tw" }, ["zh-hant", "zh-hk"]);
 
 export function resolvePhiDayjsLocale(locale: string | null | undefined): PhiDayjsLocaleResolution {
-  const normalized = normalizeLocaleKey(locale);
+  const normalized = normalizePhiLocaleKey(locale);
   if (!normalized) {
     return { key: "en", localeName: "en" };
   }

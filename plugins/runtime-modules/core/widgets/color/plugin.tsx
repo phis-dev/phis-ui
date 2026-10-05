@@ -1,8 +1,9 @@
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../../components/widgets/label-sets/runtime-options";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import { PHI_COLOR_WIDGET_DEFINITION, type PhiColorWidgetConfig } from "./config";
-import { getPhiColorPickerLabelsForRuntime } from "../../../../../components/widgets/label-sets/color-picker";
+import { getPhiColorPickerLabels } from "../../../../../components/widgets/label-sets/color-picker";
 
 export const PHI_COLOR_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiColorWidgetConfig> = {
   ...PHI_COLOR_WIDGET_DEFINITION,
@@ -12,7 +13,7 @@ export const PHI_COLOR_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiColorWidgetConfig> =
       componentProps={{
         blockId: widget.id,
         config,
-        labels: await getPhiColorPickerLabelsForRuntime(runtime),
+        labels: await getPhiColorPickerLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
       }}
     />
   ),
@@ -22,7 +23,7 @@ export const PHI_COLOR_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiColorWidgetConfig> =
       componentProps={{
         blockId: widget.id,
         config,
-        labels: await getPhiColorPickerLabelsForRuntime(runtime),
+        labels: await getPhiColorPickerLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
         disabled: true,
         signalsEnabled: false,
       }}

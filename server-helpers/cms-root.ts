@@ -1,3 +1,4 @@
+import { parsePhiRequestSearchParamsHeader, type PhiRequestSearchParams } from "./request-search-params";
 import "server-only";
 
 import { cache } from "react";
@@ -53,7 +54,7 @@ export type LoadPhiCmsRootRequestArgs = {
   cmsBridge: PhiCmsSiteBridge;
 };
 
-type PhiCmsRequestSearchParams = Record<string, string | undefined>;
+type PhiCmsRequestSearchParams = PhiRequestSearchParams;
 
 type PhiCmsServerRequest = {
   pathname?: string;
@@ -66,30 +67,6 @@ type PhiCmsServerRequest = {
    */
   clientNavigation?: boolean;
 };
-
-/**
- * The request's query, as far as this render knows it.
- *
- * An empty result and no result are different answers and must stay that way: the proxy sets this header
- * on every page it forwards, so a header that is present and empty means "this page was opened without a
- * query" -- something a condition can be decided on -- while an absent header means nobody said, and a
- * condition over it has to wait for the browser. Collapsing the two made every page without a query
- * indistinguishable from a page rendered outside the proxy.
- */
-function parseSearchParamsHeader(rawValue: string | null | undefined) {
-  if (rawValue == null) {
-    return undefined;
-  }
-
-  const source = rawValue.startsWith("?") ? rawValue.slice(1) : rawValue;
-  const params = new URLSearchParams(source);
-  const normalized: PhiCmsRequestSearchParams = {};
-  for (const [key, value] of params.entries()) {
-    normalized[key] = value;
-  }
-
-  return normalized;
-}
 
 function attachRuntimeRequest(
   resolvedRequest: PhiResolvedCmsRequest | null,
@@ -146,7 +123,7 @@ async function loadPhiCmsServerRequest(
   return {
     request: {
       pathname: normalizeRequestPathname(requestHeaders.get(PHIS_REQUEST_PATH_HEADER)),
-      searchParams: parseSearchParamsHeader(requestHeaders.get(PHIS_REQUEST_SEARCH_HEADER)),
+      searchParams: parsePhiRequestSearchParamsHeader(requestHeaders.get(PHIS_REQUEST_SEARCH_HEADER)),
       clientNavigation: requestHeaders.get(PHIS_CLIENT_NAVIGATION_HEADER) === "1",
     },
     cookieHeader: cookieStore.toString(),

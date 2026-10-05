@@ -18,7 +18,7 @@ import type { PhiBuilderPluginMeta } from "../../../types/builder";
 
 const pendingDraftCreations = new Map<string, Promise<void>>();
 
-export function getPhiBuilderDraftAllocationKey(
+function getPhiBuilderDraftAllocationKey(
   area: PhiDeveloperBuilderArea,
   pageKey: string,
   regionKey: string,

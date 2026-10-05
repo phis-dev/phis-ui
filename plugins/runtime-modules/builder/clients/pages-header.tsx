@@ -5,10 +5,10 @@ import { useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import {
-  resolvePhiBuilderCatalogPathForCatalog,
-  resolvePhiBuilderActivePageKey,
   type PhiBuilderPageCatalogArea,
-  type PhiPresetPageNode,
+  findPhiPageNodePath,
+  resolvePhiBuilderActivePageKey,
+  resolvePhiBuilderCatalogPathForCatalog,
 } from "../../../../helpers/cms-page-catalog";
 import {
   resolvePhiBuilderOfferedPageCatalog,
@@ -39,28 +39,6 @@ import {
 import { emitPhiPageTitleInputSignal } from "../page-title-signal";
 import { PhiFlexControl } from "../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../components/controls/phi-typography-control";
-
-function findPageNodePath(
-  nodes: PhiPresetPageNode[],
-  targetKey: string,
-  prefix: PhiPresetPageNode[] = [],
-): PhiPresetPageNode[] | null {
-  for (const node of nodes) {
-    const currentPath = [...prefix, node];
-    if (node.key === targetKey) {
-      return currentPath;
-    }
-
-    const childPath = node.children
-      ? findPageNodePath(node.children, targetKey, currentPath)
-      : null;
-    if (childPath) {
-      return childPath;
-    }
-  }
-
-  return null;
-}
 
 function PhiDeveloperBuilderPagesHeaderTitleField({
   area,
@@ -189,7 +167,7 @@ export function PhiDeveloperBuilderPagesHeaderSection({
   const pageTree = resolvePhiBuilderOfferedPageCatalog(offeredCatalogState, area);
   const pageSelectionReady = catalogHydrated && pageCatalogHydratedByArea[area] === true && pageKey.length > 0;
   const selectedPath = pageSelectionReady
-    ? findPageNodePath(pageTree, pageKey) ?? [{ key: pageKey, title: pageKey }]
+    ? findPhiPageNodePath(pageTree, pageKey) ?? [{ key: pageKey, title: pageKey }]
     : [];
   const selectedPageTitle = selectedPath.at(-1)?.title ?? pageKey;
   const catalogPath = pageSelectionReady
@@ -199,7 +177,7 @@ export function PhiDeveloperBuilderPagesHeaderSection({
   const isPreviewMode = builderMode === "preview";
 
   function navigateToPage(nextPageKey: string, nextTitle?: string | null) {
-    const nextPagePath = findPageNodePath(pageTree, nextPageKey);
+    const nextPagePath = findPhiPageNodePath(pageTree, nextPageKey);
     const nextPageTitle = nextTitle?.trim() || nextPagePath?.at(-1)?.title || nextPageKey;
     dispatchPhiDeveloperBuilderState(emitSignal, "public", {
       area,

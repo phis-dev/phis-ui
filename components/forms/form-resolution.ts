@@ -1,3 +1,4 @@
+import { normalizePhiFormKey } from "../../helpers/form-id";
 import "server-only";
 
 import type { PhiBlockRuntime, PhiSignalAddress } from "../../types";
@@ -107,10 +108,6 @@ function deepMergeRecords(base: AnyRecord, override: AnyRecord): AnyRecord {
   return result;
 }
 
-function normalizeFormId(value: string) {
-  return value.trim().toLowerCase();
-}
-
 export function buildPhiFormRenderTarget<TDefinition extends PhiFormDefinitionLike>(
   definition: TDefinition,
   source: PhiFormDefinitionSource,
@@ -119,7 +116,7 @@ export function buildPhiFormRenderTarget<TDefinition extends PhiFormDefinitionLi
     key: definition.formId,
     id: definition.id ?? null,
     ownerModuleId: definition.ownerModuleId,
-    formId: normalizeFormId(definition.formId),
+    formId: normalizePhiFormKey(definition.formId),
     version: definition.version,
     source,
   };
@@ -148,7 +145,7 @@ export function resolvePhiFormDefinition<TDefinition extends PhiFormDefinitionLi
         ...overrideDefinition,
         id: overrideDefinition.id,
         ownerModuleId: overrideDefinition.ownerModuleId,
-        formId: normalizeFormId(overrideDefinition.formId || presetDefinition.formId),
+        formId: normalizePhiFormKey(overrideDefinition.formId || presetDefinition.formId),
         title: overrideDefinition.title || presetDefinition.title,
         description: overrideDefinition.description ?? presetDefinition.description,
         category: overrideDefinition.category ?? presetDefinition.category,

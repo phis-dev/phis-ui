@@ -1,17 +1,14 @@
 "use client";
 
+import { createPhiEmptyTemporalSelection } from "./selection";
 import { useState } from "react";
 
 import { PhiDatePickerControl } from "../../../../../components/controls/phi-date-picker-control";
 import { isPhiTemporalSelection, type PhiTemporalSelection } from "../../../../../types/calendar";
-import type { PhiDateInputWidgetConfig } from "./config";
+import {
+  type PhiDateInputWidgetConfig,
+} from "./config";
 import { usePhiControlSignalController } from "../../../../../components/widgets/client/shared/phi-control-signals";
-
-function createEmptySelection(mode: PhiDateInputWidgetConfig["selectionMode"]): PhiTemporalSelection {
-  if (mode === "range") return { mode: "range", start: null, end: null };
-  if (mode === "multiple") return { mode: "multiple", values: [] };
-  return { mode: "single", value: null };
-}
 
 export function PhiDateInputWidget({
   config,
@@ -29,9 +26,9 @@ export function PhiDateInputWidget({
     signalsEnabled,
     initialDisabled: config.disabled,
     initialReadOnly: config.readOnly,
-    clearValue: createEmptySelection(config.selectionMode),
+    clearValue: createPhiEmptyTemporalSelection(config.selectionMode),
     onSetValue: setSelection,
-    onClear: () => setSelection(createEmptySelection(config.selectionMode)),
+    onClear: () => setSelection(createPhiEmptyTemporalSelection(config.selectionMode)),
     coerceValue: (value) => isPhiTemporalSelection(value) ? value : null,
   });
   return (

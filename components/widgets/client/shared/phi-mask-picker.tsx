@@ -14,7 +14,7 @@ import {
 import { PHI_MEDIA_WIDGET_DEFAULT_LABELS } from "../../../media/media-widget-labels";
 import { PHI_SEARCH_WIDGET_DEFAULT_LABELS } from "../../label-types/search";
 import {
-  mergePhiMaskConfigDefaults,
+  mergePhiMaskConfigPatch,
   type PhiMaskConfig,
 } from "../../config/mask";
 import { PhiMaskPickerControl } from "../../../controls/phi-mask-picker-control";
@@ -45,14 +45,6 @@ export type PhiMaskPickerButtonProps = {
   buttonIcon?: ReactNode;
   placement?: PhiPickerPlacement;
 };
-
-function mergeMask(value: PhiMaskConfig | null | undefined, patch: PhiMaskConfig): PhiMaskConfig {
-  return {
-    ...mergePhiMaskConfigDefaults(value),
-    ...patch,
-    enabled: patch.enabled ?? true,
-  };
-}
 
 function parseIconifyIcon(value: string | null | undefined): ParsedIconifyIcon | null {
   if (!value?.startsWith("iconify:")) return null;
@@ -99,7 +91,7 @@ export function PhiMaskPickerButton({
   }, [popup]);
 
   const applyAsset = useCallback((asset: { id: number; deliveryUrl: string }) => {
-    onChange(mergeMask(value, {
+    onChange(mergePhiMaskConfigPatch(value, {
       source: "asset",
       assetId: asset.id,
       assetUrl: asset.deliveryUrl,
@@ -108,7 +100,7 @@ export function PhiMaskPickerButton({
   }, [onChange, updateOpen, value]);
 
   const clearAsset = useCallback(() => {
-    onChange(mergeMask(value, {
+    onChange(mergePhiMaskConfigPatch(value, {
       source: "preset",
       preset: "circle",
       assetId: undefined,

@@ -181,7 +181,7 @@ export const PHI_COMMAND_TOOLBAR_MAX_BUTTONS = 12;
  * What a new button shows. It has an icon so that Show Labels has something to switch between: a button
  * without one keeps its label whatever the toolbar says, or it would be an empty box.
  */
-export const PHI_COMMAND_TOOLBAR_DEFAULT_BUTTON_ICON = "antd:star-outlined";
+const PHI_COMMAND_TOOLBAR_DEFAULT_BUTTON_ICON = "antd:star-outlined";
 
 /**
  * A new button: the first free `buttonN` key, labelled after it, sending its key as the command. The

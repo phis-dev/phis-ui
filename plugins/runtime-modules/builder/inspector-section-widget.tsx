@@ -1,3 +1,4 @@
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../components/widgets/label-sets/runtime-options";
 import type { PhiBlockRuntime } from "../../../types";
 import type { PhiCmsRuntimeRenderRegistry } from "../../../types/cms-plugins";
 import type { PhiSignalRouteSet } from "../../../types/signals";
@@ -8,8 +9,8 @@ import { getPhiGeometryWidgetLabels } from "../../../components/widgets/label-se
 import { getPhiSignalsWidgetLabels } from "../../../components/widgets/label-sets/signals";
 import { getPhiInspectorWidgetLabels } from "../../../components/widgets/label-sets/inspector";
 import { resolvePhiInspectorSurfaceLabels } from "./clients/inspector-surface-labels";
-import { getPhiColorPickerLabelsForRuntime } from "../../../components/widgets/label-sets/color-picker";
-import { getPhiIconPickerLabelsForRuntime } from "../../../components/widgets/label-sets/icon-picker";
+import { getPhiColorPickerLabels } from "../../../components/widgets/label-sets/color-picker";
+import { getPhiIconPickerLabels } from "../../../components/widgets/label-sets/icon-picker";
 import {
   PhiBuilderLayoutInspectorSectionWidgetClient,
   PhiBuilderRegionInspectorSectionWidgetClient,
@@ -110,8 +111,8 @@ export async function PhiBuilderInspectorSectionWidget({
       internalToken: readPhiServerApiCredentials().internalToken,
       locale: runtime.locale.current,
     }),
-    getPhiColorPickerLabelsForRuntime(runtime),
-    getPhiIconPickerLabelsForRuntime(runtime),
+    getPhiColorPickerLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
+    getPhiIconPickerLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
     getPhiInspectorWidgetLabels({
       apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
       internalToken: readPhiServerApiCredentials().internalToken,

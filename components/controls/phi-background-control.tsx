@@ -19,15 +19,16 @@ import type {
 import {
   PHI_BACKGROUND_BASE_KINDS,
   PHI_BACKGROUND_IMAGE_SOURCE_KINDS,
-  type PhiBackgroundImageSourceKind,
   PHI_BACKGROUND_MOTION_MODES,
   PHI_BACKGROUND_OVERLAY_DEFAULT_OPACITY,
   PHI_BACKGROUND_PARALLAX_DEFAULT_STRENGTH,
-  phiBackgroundSupportsFilter,
-  resolvePhiBackgroundParallaxDefaultStrength,
+  type PhiBackgroundImageSourceKind,
   normalizePhiBackgroundWidgetConfig,
+  phiBackgroundDirectionToDegrees,
+  phiBackgroundSupportsFilter,
   readPhiBackgroundGradientCss,
   readPhiBackgroundPatternInkFromCss,
+  resolvePhiBackgroundParallaxDefaultStrength,
   resolvePhiBackgroundWidgetStyle,
   serializePhiBackgroundBaseCss,
   serializePhiBackgroundPatternInkCss,
@@ -149,25 +150,6 @@ const BACKGROUND_DIRECTION_OPTIONS: Array<{ value: PhiBackgroundDirection; label
   { value: "270deg", label: "←" },
   { value: "315deg", label: "↖" },
 ];
-
-function directionToDegrees(direction: PhiBackgroundDirection) {
-  if (direction.endsWith("deg")) {
-    return Number(direction.replace(/deg$/, ""));
-  }
-
-  switch (direction) {
-    case "to right":
-      return 90;
-    case "to left":
-      return 270;
-    case "to bottom":
-      return 180;
-    case "to top":
-      return 0;
-  }
-
-  return 90;
-}
 
 function degreesToDirection(value: number) {
   const rounded = Math.max(0, Math.min(360, Math.round(value)));
@@ -607,14 +589,14 @@ export function PhiBackgroundControl({
     value: PhiBackgroundDirection,
     onDirectionChange: (direction: PhiBackgroundDirection) => void,
   ) {
-    const resolvedDegrees = directionToDegrees(value) % 360;
+    const resolvedDegrees = phiBackgroundDirectionToDegrees(value) % 360;
     return (
       <>
         {BACKGROUND_DIRECTION_OPTIONS.map((option) => (
           <Button
             key={option.value}
             aria-label={option.value}
-            type={directionToDegrees(option.value) === resolvedDegrees ? "primary" : "default"}
+            type={phiBackgroundDirectionToDegrees(option.value) === resolvedDegrees ? "primary" : "default"}
             disabled={isDisabled}
             onClick={() => onDirectionChange(option.value)}
             style={{ minWidth: token.controlHeight, paddingInline: 0 }}
@@ -641,7 +623,7 @@ export function PhiBackgroundControl({
             min={0}
             max={360}
             step={1}
-            value={directionToDegrees(value)}
+            value={phiBackgroundDirectionToDegrees(value)}
             disabled={isDisabled}
             suffix="°"
             onChange={(next) => onDirectionChange(degreesToDirection(typeof next === "number" ? next : 90))}

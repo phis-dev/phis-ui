@@ -20,6 +20,11 @@ function normalizeLocaleCode(value: string | null | undefined) {
   return (value ?? "").trim().replace(/_/g, "-");
 }
 
+/** A locale as a lookup key: spelling fixed and lower-cased, so `de_AT`, `de-at` and `de-AT` are one key. */
+export function normalizePhiLocaleKey(value: string | null | undefined) {
+  return normalizeLocaleCode(value).toLowerCase();
+}
+
 function normalizeAvailableLocales(availableLocales: readonly string[] | null | undefined) {
   if (!availableLocales?.length) {
     return [];

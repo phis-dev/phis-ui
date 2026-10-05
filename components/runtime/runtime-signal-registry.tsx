@@ -51,7 +51,7 @@ export function matchesPhiSignalRuntimeContext(
   );
 }
 
-function resolveDeliveryPartition(partition: PhiSignalRuntimePartition, signal: PhiSignal) {
+export function resolvePhiSignalDeliveryPartition(partition: PhiSignalRuntimePartition, signal: PhiSignal) {
   return signal.scope === "site"
     ? resolvePhiSiteSignalRuntimePartition(partition)
     : partition;
@@ -105,7 +105,7 @@ export function resolvePhiSignalDeliverability(
     return "undeliverable";
   }
 
-  const deliveryPartition = resolveDeliveryPartition(partition, signal);
+  const deliveryPartition = resolvePhiSignalDeliveryPartition(partition, signal);
   // Which receivers a scope admits is the contract's sentence; phi-server refuses the same
   // combinations on the way in, and until 2026-09-07 each side had written them out for itself.
   if (readPhiSignalReceiverScopeProblem(signal.scope, signal.receiver)) {
@@ -131,13 +131,6 @@ export function resolvePhiSignalDeliverability(
   return (deliveryPartition.receiverListenerCounts.get(signal.receiver) ?? 0) > 0
     ? "deliverable"
     : "pending";
-}
-
-export function resolvePhiSignalDeliveryPartition(
-  partition: PhiSignalRuntimePartition,
-  signal: PhiSignal,
-) {
-  return resolveDeliveryPartition(partition, signal);
 }
 
 export function registerPhiSignalInstance(

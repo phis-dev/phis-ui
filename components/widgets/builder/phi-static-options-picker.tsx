@@ -1,5 +1,6 @@
 "use client";
 
+import { stopPhiOverlayEvent } from "../../../helpers/overlay-events";
 import { useCallback, useMemo, useRef, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
 
 import {
@@ -86,10 +87,6 @@ function validateEditorRows(
     return labels.valuesUnique;
   }
   return null;
-}
-
-function stopOverlayEvent(event: { stopPropagation: () => void }) {
-  event.stopPropagation();
 }
 
 function PhiStaticOptionsTableProvider({
@@ -315,7 +312,7 @@ export function PhiStaticOptionsToolButton({
           * and click at its root; pointer events are not among them, which is why this stays a wrapper of
           * its own rather than something the Dialog does for every caller.
           */}
-        <div onClick={stopOverlayEvent} onPointerDown={stopOverlayEvent} style={{ minWidth: 0 }}>
+        <div onClick={stopPhiOverlayEvent} onPointerDown={stopPhiOverlayEvent} style={{ minWidth: 0 }}>
           <PhiStaticOptionsTableProvider rows={rows} setRows={setRows} nextRowId={nextRowId}>
             <PhiStaticOptionsTable disabled={disabled} />
           </PhiStaticOptionsTableProvider>

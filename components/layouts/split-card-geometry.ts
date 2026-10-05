@@ -6,7 +6,7 @@ import type { PhiSurfaceGroundFrame } from "../surface/phi-surface-ground";
  */
 
 /** The golden ratio the two cards stand in: the larger one is φ times as wide as the smaller. */
-export const PHI_SPLIT_CARD_RATIO = 1.61803398875;
+const PHI_SPLIT_CARD_RATIO = 1.61803398875;
 
 /** Both cards in units of the left one: 1 + φ, written out so the CSS carries no float residue. */
 const PHI_SPLIT_CARD_SHARES = "2.61803398875";

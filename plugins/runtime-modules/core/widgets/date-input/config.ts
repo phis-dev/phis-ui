@@ -1,3 +1,4 @@
+import { createPhiEmptyTemporalSelection } from "./selection";
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type {
   PhiCalendarAdapterKey,
@@ -44,12 +45,6 @@ export type PhiDateInputWidgetConfig = PhiControlConfig & {
 
 const EMPTY_SELECTION: PhiTemporalSelection = { mode: "single", value: null };
 
-function createEmptySelection(mode: PhiCalendarSelectionMode): PhiTemporalSelection {
-  if (mode === "range") return { mode: "range", start: null, end: null };
-  if (mode === "multiple") return { mode: "multiple", values: [] };
-  return EMPTY_SELECTION;
-}
-
 function readTimeZone(value: unknown) {
   const timeZone = readString(value);
   if (!timeZone) return "UTC";
@@ -83,7 +78,7 @@ export function parsePhiDateInputWidgetConfig(config: Record<string, unknown>): 
     precision,
     selection: isPhiTemporalSelection(config.selection) && config.selection.mode === selectionMode
       ? config.selection
-      : createEmptySelection(selectionMode),
+      : createPhiEmptyTemporalSelection(selectionMode),
     showTime: readBoolean(config.showTime),
     timeZone: readTimeZone(config.timeZone),
     format: readString(config.format),

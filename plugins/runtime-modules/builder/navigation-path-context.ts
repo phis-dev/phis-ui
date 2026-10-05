@@ -1,3 +1,4 @@
+import { flattenPhiPresetPages } from "./page-tree-walk";
 import type { PhiBuilderNavigationItem } from "../../../helpers/cms-navigation-catalog";
 import { resolvePhiCmsAreaAsBuilderArea, type PhiBuilderAreaKey } from "../../../constants/cms-areas";
 import {
@@ -7,10 +8,6 @@ import {
 } from "../../../helpers/cms-page-catalog";
 import { resolvePhiBuilderCmsStoragePath, resolvePhiBuilderNavigationTargetPath } from "../../../helpers/cms-paths";
 import type { PhiDeveloperBuilderWorkspaceState } from "./developer-workspace-types";
-
-function flattenPages(pages: readonly PhiPresetPageNode[]): PhiPresetPageNode[] {
-  return pages.flatMap((page) => [page, ...flattenPages(page.children ?? [])]);
-}
 
 type NavigationPageTarget = {
   /** What the table shows, with the Area prefix the Builder addresses the Page by. */
@@ -47,7 +44,7 @@ export function createPhiBuilderNavigationPathContext(
       state.persistedPageCatalogByArea,
     );
     const pagePaths = new Map<string, NavigationPageTarget>(
-      flattenPages(areaPages).filter((page) => page.reference).map((page) => [page.reference!, {
+      flattenPhiPresetPages(areaPages).filter((page) => page.reference).map((page) => [page.reference!, {
         path: resolvePhiBuilderNavigationTargetPath(area, page.key, areaPages),
         address: normalizePhiBuilderCmsCatalogPath(resolvePhiBuilderCmsStoragePath(area, page.key, areaPages)),
         deleted: page.tombstoned === true,
@@ -59,7 +56,7 @@ export function createPhiBuilderNavigationPathContext(
   };
 
   const { pages, pagePaths } = readArea(state.area);
-  const pageOptions = flattenPages(pages)
+  const pageOptions = flattenPhiPresetPages(pages)
     .filter((page) => page.reference && page.tombstoned !== true)
     .map((page) => ({ value: page.reference!, label: pagePaths.get(page.reference!)!.path }));
   const resolveLinkPath = (item: PhiBuilderNavigationItem) => {

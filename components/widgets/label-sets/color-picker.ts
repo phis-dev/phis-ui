@@ -9,8 +9,6 @@ import {
   PHI_COLOR_PICKER_DEFAULT_LABELS,
   type PhiColorPickerLabels,
 } from "../label-types/color-picker";
-import type { PhiBlockRuntime } from "../../../types";
-import { buildPhiWidgetLabelTranslatorOptions } from "./runtime-options";
 
 const PHI_COLOR_PICKER_LABEL_SET = definePhiLabelSet({
   key: "widget:color-picker",
@@ -57,10 +55,4 @@ export async function getPhiColorPickerLabels(options: PhiGlobalTranslatorOption
       gray: labels.color_gray,
     },
   };
-}
-
-export function getPhiColorPickerLabelsForRuntime(
-  runtime: Pick<PhiBlockRuntime, "locale" | "site">,
-) {
-  return getPhiColorPickerLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
 }

@@ -50,13 +50,6 @@ export function resolvePhiThemePaletteCustomColors(
   };
 }
 
-export function resolvePhiThemePresetCustomColors(
-  preset: PhiThemePresetPlugin,
-  mode: PhiThemeMode,
-): PhiThemeCustomColorPalette {
-  return resolvePhiThemePaletteCustomColors(preset.palette, mode);
-}
-
 /** The custom colours a Site renders: the palette it follows with the Site's own palette on top. */
 export function resolvePhiPublishedThemeCustomColors(
   siteTheme: PhiThemeCustomColorSource,

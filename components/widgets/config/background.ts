@@ -35,6 +35,20 @@ export type { PhiBackgroundNoiseGrain } from "./background-pattern-contract";
 
 export type PhiBackgroundDirection = "to right" | "to left" | "to bottom" | "to top" | `${number}deg`;
 
+const PHI_BACKGROUND_DIRECTION_DEGREES = {
+  "to top": 0,
+  "to right": 90,
+  "to bottom": 180,
+  "to left": 270,
+} as const satisfies Record<Exclude<PhiBackgroundDirection, `${number}deg`>, number>;
+
+/** A direction as degrees, clockwise from the top the way CSS gradients count. */
+export function phiBackgroundDirectionToDegrees(direction: PhiBackgroundDirection) {
+  return direction.endsWith("deg")
+    ? Number.parseFloat(direction)
+    : PHI_BACKGROUND_DIRECTION_DEGREES[direction as keyof typeof PHI_BACKGROUND_DIRECTION_DEGREES];
+}
+
 export type PhiBackgroundGradientStop = {
   color: string;
   percent: number;

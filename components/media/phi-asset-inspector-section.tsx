@@ -1,6 +1,7 @@
 "use client";
 
 
+import { resolvePhiMediaAssetTypeLabel } from "./asset-type-label";
 import NextImage from "next/image";
 import type { CSSProperties } from "react";
 
@@ -37,11 +38,6 @@ function formatBytes(bytes: number | null | undefined) {
   return `${value.toFixed(value >= 10 || unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
 }
 
-function resolveAssetTypeLabel(contentType: string) {
-  const [, subtype] = contentType.trim().toLowerCase().split("/", 2);
-  return subtype?.split(";", 1)[0]?.trim() || contentType.trim() || null;
-}
-
 function resolvePreviewFrame(
   asset: PhiMediaAsset,
   selectedVariantKey: PhiImageAssetVariantKeyValue | null,
@@ -56,7 +52,7 @@ function resolvePreviewFrame(
       fitAxis: variant.width >= variant.height ? "width" as const : "height" as const,
       fixedCropBox: variant.width === variant.height && variant.width <= 256 ? variant.width : null,
       label: `${variant.width} × ${variant.height}`,
-      kindLabel: resolveAssetTypeLabel(asset.contentType) ?? asset.kind,
+      kindLabel: resolvePhiMediaAssetTypeLabel(asset.kind, asset.contentType, asset.originalName),
     };
   }
   const displayDimensions = resolvePhiMediaAssetDisplayDimensions(asset);
@@ -68,8 +64,8 @@ function resolvePreviewFrame(
     fit: "contain" as const,
     fitAxis: width && height && height > width ? "height" as const : "width" as const,
     fixedCropBox: null,
-    label: width && height ? `${width} × ${height}` : resolveAssetTypeLabel(asset.contentType),
-    kindLabel: resolveAssetTypeLabel(asset.contentType) ?? asset.kind,
+    label: width && height ? `${width} × ${height}` : resolvePhiMediaAssetTypeLabel(asset.kind, asset.contentType, asset.originalName),
+    kindLabel: resolvePhiMediaAssetTypeLabel(asset.kind, asset.contentType, asset.originalName),
   };
 }
 

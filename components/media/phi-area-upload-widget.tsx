@@ -1,5 +1,6 @@
 "use client";
 
+import { resolvePhiMediaAssetTypeLabel } from "./asset-type-label";
 import { PhiTagControl } from "../controls/phi-tag-control";
 import { PhiButtonControl } from "../controls/phi-button-control";
 import NextImage from "next/image";
@@ -134,32 +135,6 @@ function resolveUploadErrorMessage(error: unknown, labels: PhiAreaUploadWidgetLa
     errorDuplicate: labels.assetExistsLabel,
     errorStorageUnreachable: labels.uploadStorageUnreachableText,
   });
-}
-
-function resolveAssetTypeLabel(kind: PhiMediaAssetTile["kind"], contentType: string, originalName: string) {
-  const normalizedContentType = contentType.trim().toLowerCase();
-  if (kind === "image") {
-    const subtype = normalizedContentType.startsWith("image/")
-      ? normalizedContentType.split("/", 2)[1]
-      : null;
-    if (subtype) {
-      return subtype.split(";")[0].trim();
-    }
-
-    return normalizedContentType || "image";
-  }
-
-  const extension = originalName.trim().split(".").pop()?.trim().toLowerCase();
-  if (extension && extension !== originalName.trim().toLowerCase()) {
-    return extension;
-  }
-
-  const [, subtype] = normalizedContentType.split("/", 2);
-  if (subtype) {
-    return subtype.split(";")[0].trim();
-  }
-
-  return kind;
 }
 
 function resolveUploadWallDisplayDimensions(item: Pick<UploadWallItem, "contentType" | "width" | "height">) {
@@ -492,7 +467,7 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
                 </PhiFlexControl>
                 <PhiFlexControl align="center" justify="space-between" gap={8} wrap>
                   <PhiTypographyControl type="secondary" ellipsis style={{ display: "block", minWidth: 0 }}>
-                    {resolveAssetTypeLabel(item.kind, item.contentType, item.originalName)}
+                    {resolvePhiMediaAssetTypeLabel(item.kind, item.contentType, item.originalName)}
                   </PhiTypographyControl>
                   {allowDelete && item.assetId > 0 ? (
                     <PhiButtonControl

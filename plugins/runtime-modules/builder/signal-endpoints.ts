@@ -1,5 +1,6 @@
 "use client";
 
+import { isPhiCmsShellOwnedRegion } from "../../../helpers/cms-region-keys";
 import type { PhiRuntimeControllerSetting } from "../../../types";
 import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode } from "../../../types/cms";
 import type { PhiSignalScope } from "../../../types/signals";
@@ -13,7 +14,7 @@ import {
 import { resolvePhiRuntimeAreaDefinition } from "../../../plugins/runtime-modules/area-definitions";
 import { resolvePhiRuntimeModuleIdsForArea } from "../../../plugins/runtime-modules/settings";
 import { getPhiRegionWidgetLabelEntry, type PhiRegionWidgetLabels } from "../../../components/widgets/label-types/region";
-import { isPhiBuilderPageScopedRegion, isPhiBuilderShellRegion } from "./region-keys";
+import { isPhiBuilderPageScopedRegion, } from "./region-keys";
 import type { PhiBuilderPluginMeta } from "../../../types/builder";
 import type {
   PhiDeveloperBuilderRegionDraft,
@@ -132,7 +133,7 @@ export function collectPhiBuilderSignalEndpointsFromDrafts({
     const isPageDraft = draftKey.startsWith(pagePrefix);
     const regionKey = isPageDraft ? draftKey.slice(pagePrefix.length) : draftKey.slice(areaPrefix.length);
     const isPageRegion = isPhiBuilderPageScopedRegion(regionKey);
-    const isShellRegion = isPhiBuilderShellRegion(regionKey);
+    const isShellRegion = isPhiCmsShellOwnedRegion(regionKey);
     if (
       !regionKey ||
       regionKey.includes(":") ||

@@ -1,3 +1,4 @@
+import { normalizePhiFormKey } from "../helpers/form-id";
 import "server-only";
 
 import type { PhiFormDefinitionLike } from "../components/forms/form-resolution";
@@ -49,14 +50,6 @@ type PhiFormDefinitionLikeWithPreview = Pick<
   defaultConfig?: Record<string, unknown>;
 };
 
-function normalizeFormId(value: string) {
-  return value.trim().toLowerCase();
-}
-
-function normalizeSubmitHandlerKey(value: string) {
-  return value.trim().toLowerCase();
-}
-
 function normalizeCategory(value: string | null | undefined): PhiFormSubmitCategory | null {
   if (value == null) {
     return null;
@@ -100,7 +93,7 @@ function resolveSubmitCategory(submitHandlerKey: string, explicitCategory?: stri
     return category;
   }
 
-  const normalizedKey = normalizeSubmitHandlerKey(submitHandlerKey);
+  const normalizedKey = normalizePhiFormKey(submitHandlerKey);
   if (normalizedKey.startsWith("auth.")) {
     return "auth";
   }
@@ -197,8 +190,8 @@ function readPreviewHandlerKey(
 export function buildPhiFormSubmitRoute(
   input: PhiFormSubmitRouteInput,
 ): PhiFormSubmitRoute {
-  const formId = normalizeFormId(input.formId);
-  const submitHandlerKey = normalizeSubmitHandlerKey(input.submitHandlerKey);
+  const formId = normalizePhiFormKey(input.formId);
+  const submitHandlerKey = normalizePhiFormKey(input.submitHandlerKey);
   const category = resolveSubmitCategory(submitHandlerKey, input.category);
   const endpointKey = resolveEndpointKey(input);
   const upstreamPath =
@@ -267,7 +260,7 @@ export function buildPhiFormSubmitRouteFromHandlerProvider(
 export function buildPhiFormPreviewDescriptor(
   input: Pick<PhiFormPreviewDescriptor, "formId">,
 ): PhiFormPreviewDescriptor {
-  return { formId: normalizeFormId(input.formId) };
+  return { formId: normalizePhiFormKey(input.formId) };
 }
 
 export function buildPhiFormPreviewDescriptorFromDefinition(

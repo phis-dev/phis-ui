@@ -1,5 +1,6 @@
 "use client";
 
+import { flattenPhiPresetPages } from "../page-tree-walk";
 import { useMemo, useRef, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 
@@ -73,10 +74,6 @@ const PHI_NAVIGATION_NOT_FOUND_LABEL = "404";
 
 function resolveNavigationTableType(item: PhiBuilderNavigationItem) {
   return item.kind === "link" && item.external === true ? "external" : item.kind;
-}
-
-function flattenPages(pages: readonly PhiPresetPageNode[]): PhiPresetPageNode[] {
-  return pages.flatMap((page) => [page, ...flattenPages(page.children ?? [])]);
 }
 
 type NavigationPathContext = ReturnType<typeof createPhiBuilderNavigationPathContext>;
@@ -252,7 +249,7 @@ function createPageNavigationItem(
   const parsed = readPhiInternalReference(reference);
   const pageReference = parsed?.kind === "page" ? parsed.reference : null;
   const page = pageReference
-    ? flattenPages(pages).find((candidate) => candidate.reference === pageReference)
+    ? flattenPhiPresetPages(pages).find((candidate) => candidate.reference === pageReference)
     : null;
   return page ? {
     id, source: "custom", ownerModuleId: null, kind: "link", label: page.title,

@@ -9,9 +9,7 @@ import {
   PHI_AUTHORING_TOOLS_DEFAULT_LABELS,
   type PhiAuthoringToolsLabels,
 } from "../label-types/authoring-tools";
-import type { PhiBlockRuntime } from "../../../types";
 import { getPhiIconPickerLabels } from "./icon-picker";
-import { buildPhiWidgetLabelTranslatorOptions } from "./runtime-options";
 
 /**
  * Every one of these is a caption on a button, so none of them is a message label: they name what the
@@ -128,10 +126,4 @@ export async function getPhiAuthoringToolsLabels(
     },
     iconPicker,
   };
-}
-
-export function getPhiAuthoringToolsLabelsForRuntime(
-  runtime: Pick<PhiBlockRuntime, "locale" | "site">,
-) {
-  return getPhiAuthoringToolsLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
 }

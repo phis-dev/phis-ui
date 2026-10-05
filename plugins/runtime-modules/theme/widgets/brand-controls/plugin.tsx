@@ -1,3 +1,4 @@
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../../components/widgets/label-sets/runtime-options";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { PhiWidgetPreviewFallback } from "../../../../../components/widgets/built-in/widget-preview";
 import {
@@ -15,7 +16,7 @@ import {
   PHI_BUILDER_BRAND_THEME_PREVIEW_WIDGET_DEFINITION,
   type PhiBuilderBrandWidgetConfig,
 } from "./config";
-import { getPhiColorPickerLabelsForRuntime } from "../../../../../components/widgets/label-sets/color-picker";
+import { getPhiColorPickerLabels } from "../../../../../components/widgets/label-sets/color-picker";
 
 export const PHI_BUILDER_BRAND_THEME_CONTROLS_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiBuilderBrandWidgetConfig> = {
   ...PHI_BUILDER_BRAND_THEME_CONTROLS_WIDGET_DEFINITION,
@@ -23,7 +24,7 @@ export const PHI_BUILDER_BRAND_THEME_CONTROLS_WIDGET_PLUGIN: PhiCmsWidgetPlugin<
     <PhiBuilderBrandThemeControlsWidgetClient
       runtime={runtime}
       config={config}
-      colorPickerLabels={await getPhiColorPickerLabelsForRuntime(runtime)}
+      colorPickerLabels={await getPhiColorPickerLabels(buildPhiWidgetLabelTranslatorOptions(runtime))}
     />
   ),
   renderPreview: ({ widget }) => (

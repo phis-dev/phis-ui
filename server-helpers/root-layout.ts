@@ -9,6 +9,7 @@ import type { PhiResolvedLocale } from "../helpers/site-locale-config";
 import { getPhiCmsReviewRevision, resolvePhiCmsReviewParams } from "./cms-review";
 import { resolvePhiResolvedRequestLocale } from "./request-locale";
 import { PHIS_REQUEST_SEARCH_HEADER } from "../constants/http-headers";
+import { parsePhiRequestSearchParamsHeader } from "./request-search-params";
 
 export type PhiRootLayoutContext = {
   site: Awaited<ReturnType<typeof getResolvedSiteConfig>>;
@@ -20,21 +21,6 @@ export type LoadPhiRootLayoutContextOptions = {
   internalToken: string;
   siteKey: string;
 };
-
-function parseSearchParamsHeader(rawValue: string | null | undefined) {
-  if (!rawValue?.trim()) {
-    return undefined;
-  }
-
-  const source = rawValue.startsWith("?") ? rawValue.slice(1) : rawValue;
-  const params = new URLSearchParams(source);
-  const normalized: Record<string, string | undefined> = {};
-  for (const [key, value] of params.entries()) {
-    normalized[key] = value;
-  }
-
-  return Object.keys(normalized).length > 0 ? normalized : undefined;
-}
 
 async function resolveRootReviewSite({
   site,
@@ -89,7 +75,7 @@ export async function loadPhiRootLayoutContext({
 }: LoadPhiRootLayoutContextOptions): Promise<PhiRootLayoutContext> {
   const requestHeaders = await headers();
   const cookieHeader = requestHeaders.get("cookie");
-  const searchParams = parseSearchParamsHeader(requestHeaders.get(PHIS_REQUEST_SEARCH_HEADER));
+  const searchParams = parsePhiRequestSearchParamsHeader(requestHeaders.get(PHIS_REQUEST_SEARCH_HEADER));
   const [site, resolvedLocale] = await Promise.all([
     getResolvedSiteConfig({
       apiBaseUrl,

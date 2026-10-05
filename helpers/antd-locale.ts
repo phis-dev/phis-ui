@@ -1,3 +1,4 @@
+import { normalizePhiLocaleKey } from "./locale";
 import type { Locale } from "antd/es/locale";
 
 type AntdLocaleModule = {
@@ -43,15 +44,11 @@ type PhiAntdLocaleKey =
   | "zh_CN"
   | "zh_TW";
 
-function normalizeLocaleKey(input: string | null | undefined) {
-  return input?.trim().replace(/_/g, "-").toLowerCase() ?? "";
-}
-
 const PHI_ANTD_LOCALE_KEY_BY_LOCALE = new Map<string, PhiAntdLocaleKey>();
 
 function registerAntdLocaleKey(key: PhiAntdLocaleKey, locales: readonly string[]) {
   for (const locale of locales) {
-    const normalized = normalizeLocaleKey(locale);
+    const normalized = normalizePhiLocaleKey(locale);
     if (normalized) {
       PHI_ANTD_LOCALE_KEY_BY_LOCALE.set(normalized, key);
     }
@@ -137,7 +134,7 @@ const PHI_ANTD_LOCALE_LOADERS: Record<PhiAntdLocaleKey, () => Promise<AntdLocale
 };
 
 export function resolvePhiAntdLocaleKey(locale: string | null | undefined): PhiAntdLocaleKey {
-  const normalized = normalizeLocaleKey(locale);
+  const normalized = normalizePhiLocaleKey(locale);
   return PHI_ANTD_LOCALE_KEY_BY_LOCALE.get(normalized) ?? "en_GB";
 }
 

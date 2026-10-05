@@ -239,3 +239,12 @@ export function mergePhiMaskConfigDefaults(mask: PhiMaskConfig | null | undefine
     ...(mask ?? {}),
   };
 }
+
+/** A picker's change on top of the current mask: the defaults filled, the patch applied, the mask enabled. */
+export function mergePhiMaskConfigPatch(mask: PhiMaskConfig | null | undefined, patch: PhiMaskConfig): PhiMaskConfig {
+  return {
+    ...mergePhiMaskConfigDefaults(mask),
+    ...patch,
+    enabled: patch.enabled ?? true,
+  };
+}

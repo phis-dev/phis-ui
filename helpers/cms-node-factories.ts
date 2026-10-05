@@ -56,10 +56,6 @@ export type PhiCmsWidgetPlacementFields<
   config?: PhiCmsWidgetPlacementConfig<TTypeKey, TPluginKey>;
 };
 
-export function buildPhiCmsWidgetTypeKey(pluginKey: string, typeKey: string): string {
-  return buildPhiCmsWidgetNamespacedTypeKey(pluginKey, typeKey);
-}
-
 export function buildPhiCmsLayoutNode({
   pluginKey,
   typeKey,

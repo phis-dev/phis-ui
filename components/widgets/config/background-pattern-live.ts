@@ -1,3 +1,4 @@
+import { phiBackgroundDirectionToDegrees } from "./background";
 import type { PhiBackgroundDirection } from "./background";
 import {
   PHI_CORE_BACKGROUND_PATTERN_KEYS,
@@ -59,14 +60,6 @@ function resolveDirection(values: PhiBackgroundPatternValues): PhiBackgroundDire
     : "45deg";
 }
 
-function directionToDegrees(direction: PhiBackgroundDirection) {
-  if (direction.endsWith("deg")) return Number.parseFloat(direction);
-  if (direction === "to top") return 0;
-  if (direction === "to right") return 90;
-  if (direction === "to bottom") return 180;
-  return 270;
-}
-
 /**
  * One tiled family of shapes, in the coordinates of its own tile.
  *
@@ -90,7 +83,7 @@ function resolvePatternShapeFamilies(
     const lineWidth = Math.max(1, scale / 4);
     return [{
       tile: scale,
-      rotate: directionToDegrees(resolveDirection(values)),
+      rotate: phiBackgroundDirectionToDegrees(resolveDirection(values)),
       shapes: `<rect width="${scale}" height="${lineWidth}" fill="#fff"/>`,
     }];
   }
@@ -122,7 +115,7 @@ function resolvePatternShapeFamilies(
   }
 
   if (patternKey === PHI_CORE_BACKGROUND_PATTERN_KEYS.crosshatch) {
-    const degrees = directionToDegrees(resolveDirection(values));
+    const degrees = phiBackgroundDirectionToDegrees(resolveDirection(values));
     return [degrees, degrees + 90].map((rotate) => ({
       tile: scale,
       rotate,
@@ -144,7 +137,7 @@ function resolvePatternInkPaint(ink: PhiBackgroundPatternInk) {
     return { defs: "", paint: ink.color };
   }
 
-  const radians = (directionToDegrees(ink.direction) * Math.PI) / 180;
+  const radians = (phiBackgroundDirectionToDegrees(ink.direction) * Math.PI) / 180;
   const dx = Math.sin(radians) / 2;
   const dy = Math.cos(radians) / 2;
   const stops = ink.stops

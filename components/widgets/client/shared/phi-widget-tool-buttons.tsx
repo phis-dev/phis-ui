@@ -1,5 +1,6 @@
 "use client";
 
+import { stopPhiOverlayEvent } from "../../../../helpers/overlay-events";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { formatUrl } from "@lexical/link";
@@ -39,14 +40,6 @@ import { PHI_Z_INDEX } from "../../../../theme/phi-tokens";
 import { PhiFlexControl } from "../../../controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../controls/phi-typography-control";
 import { PhiIcon } from "../../../shell/phi-icon";
-
-function stopOverlayEvent(event: { stopPropagation: () => void }) {
-  event.stopPropagation();
-}
-
-function stopOverlayMouseEvent(event: { preventDefault?: () => void; stopPropagation: () => void }) {
-  event.stopPropagation();
-}
 
 function preserveEditorSelectionMouseEvent(event: { preventDefault?: () => void; stopPropagation: () => void }) {
   event.preventDefault?.();
@@ -119,10 +112,10 @@ export function PhiWidgetColorToolButton({
       onOpenChange={popup.setOpen}
       renderPanel={(panel) => (
         <div
-          onClick={stopOverlayEvent}
+          onClick={stopPhiOverlayEvent}
           onMouseDown={preserveEditorSelectionMouseEvent}
-          onPointerDown={stopOverlayEvent}
-          onKeyDown={stopOverlayEvent}
+          onPointerDown={stopPhiOverlayEvent}
+          onKeyDown={stopPhiOverlayEvent}
         >
           {panel}
         </div>
@@ -136,8 +129,8 @@ export function PhiWidgetColorToolButton({
     >
       <span
         onMouseDown={preserveEditorSelectionMouseEvent}
-        onClick={stopOverlayEvent}
-        onPointerDown={stopOverlayEvent}
+        onClick={stopPhiOverlayEvent}
+        onPointerDown={stopPhiOverlayEvent}
         style={{ display: "inline-flex" }}
       >
         <PhiButtonControl
@@ -188,9 +181,9 @@ export function PhiWidgetTypographyToolButton({
           vertical
           gap={8}
           style={{ minWidth: 220 }}
-          onClick={stopOverlayEvent}
-          onMouseDown={stopOverlayMouseEvent}
-          onPointerDown={stopOverlayEvent}
+          onClick={stopPhiOverlayEvent}
+          onMouseDown={stopPhiOverlayEvent}
+          onPointerDown={stopPhiOverlayEvent}
         >
           <label>
             <PhiTypographyControl style={{ display: "block", marginBottom: 4 }}>
@@ -232,9 +225,9 @@ export function PhiWidgetTypographyToolButton({
       }
     >
       <span
-        onMouseDown={stopOverlayMouseEvent}
-        onClick={stopOverlayEvent}
-        onPointerDown={stopOverlayEvent}
+        onMouseDown={stopPhiOverlayEvent}
+        onClick={stopPhiOverlayEvent}
+        onPointerDown={stopPhiOverlayEvent}
         style={{ display: "inline-flex" }}
       >
         <PhiButtonControl
@@ -329,9 +322,9 @@ export function PhiHtmlWidgetToolbarTools({
   return (
     <>
       <span
-        onClick={stopOverlayEvent}
-        onMouseDown={stopOverlayMouseEvent}
-        onPointerDown={stopOverlayEvent}
+        onClick={stopPhiOverlayEvent}
+        onMouseDown={stopPhiOverlayEvent}
+        onPointerDown={stopPhiOverlayEvent}
         style={{ display: "inline-flex", minWidth: 84 }}
       >
         <PhiSelectControl<PhiHtmlWidgetBlockType>
@@ -360,9 +353,9 @@ export function PhiHtmlWidgetToolbarTools({
         content={
           <PhiFlexControl
             gap={4}
-            onClick={stopOverlayEvent}
+            onClick={stopPhiOverlayEvent}
             onMouseDown={preserveEditorSelectionMouseEvent}
-            onPointerDown={stopOverlayEvent}
+            onPointerDown={stopPhiOverlayEvent}
           >
             {PHI_HTML_WIDGET_ALIGNMENT_OPTIONS.map((option) => (
               <PhiButtonControl
@@ -384,8 +377,8 @@ export function PhiHtmlWidgetToolbarTools({
       >
         <span
           onMouseDown={preserveEditorSelectionMouseEvent}
-          onClick={stopOverlayEvent}
-          onPointerDown={stopOverlayEvent}
+          onClick={stopPhiOverlayEvent}
+          onPointerDown={stopPhiOverlayEvent}
           style={{ display: "inline-flex" }}
         >
           <PhiButtonControl
@@ -410,9 +403,9 @@ export function PhiHtmlWidgetToolbarTools({
           <PhiFlexControl
             vertical
             gap={8}
-            onClick={stopOverlayEvent}
+            onClick={stopPhiOverlayEvent}
             onMouseDown={preserveEditorSelectionMouseEvent}
-            onPointerDown={stopOverlayEvent}
+            onPointerDown={stopPhiOverlayEvent}
           >
             {PHI_HTML_WIDGET_STYLE_TOGGLES.map((toggle) => (
               <div key={toggle.key} onMouseDown={preserveEditorSelectionMouseEvent}>
@@ -440,8 +433,8 @@ export function PhiHtmlWidgetToolbarTools({
       >
         <span
           onMouseDown={preserveEditorSelectionMouseEvent}
-          onClick={stopOverlayEvent}
-          onPointerDown={stopOverlayEvent}
+          onClick={stopPhiOverlayEvent}
+          onPointerDown={stopPhiOverlayEvent}
           style={{ display: "inline-flex" }}
         >
           <PhiButtonControl
@@ -490,9 +483,9 @@ export function PhiHtmlWidgetToolbarTools({
           <PhiFlexControl
             vertical
             gap={8}
-            onClick={stopOverlayEvent}
-            onMouseDown={stopOverlayMouseEvent}
-            onPointerDown={stopOverlayEvent}
+            onClick={stopPhiOverlayEvent}
+            onMouseDown={stopPhiOverlayEvent}
+            onPointerDown={stopPhiOverlayEvent}
           >
             <PhiPageReferencePicker
               onSelect={(selection) => {
@@ -506,7 +499,7 @@ export function PhiHtmlWidgetToolbarTools({
               value={linkDraft}
               placeholder="https://example.com"
               onChange={(nextValue) => setLinkDraft(nextValue ?? "")}
-              onKeyDown={stopOverlayEvent}
+              onKeyDown={stopPhiOverlayEvent}
             />
             <PhiFlexControl gap={8} justify="space-between">
               <PhiButtonControl
@@ -540,9 +533,9 @@ export function PhiHtmlWidgetToolbarTools({
         }
       >
         <span
-          onMouseDown={stopOverlayMouseEvent}
-          onClick={stopOverlayEvent}
-          onPointerDown={stopOverlayEvent}
+          onMouseDown={stopPhiOverlayEvent}
+          onClick={stopPhiOverlayEvent}
+          onPointerDown={stopPhiOverlayEvent}
           style={{ display: "inline-flex" }}
         >
           <PhiButtonControl
@@ -649,9 +642,9 @@ export function PhiWidgetCountToolButton({
         <PhiFlexControl
           vertical
           gap={8}
-          onClick={stopOverlayEvent}
-          onMouseDown={stopOverlayMouseEvent}
-          onPointerDown={stopOverlayEvent}
+          onClick={stopPhiOverlayEvent}
+          onMouseDown={stopPhiOverlayEvent}
+          onPointerDown={stopPhiOverlayEvent}
         >
           <PhiTypographyControl type="secondary">{label}</PhiTypographyControl>
           <PhiNumberControl
@@ -662,7 +655,7 @@ export function PhiWidgetCountToolButton({
             onChange={setDraftCount}
             onBlur={commit}
             onKeyDown={(event) => {
-              stopOverlayEvent(event);
+              stopPhiOverlayEvent(event);
               if (event.key === "Enter") commit();
             }}
           />
@@ -670,9 +663,9 @@ export function PhiWidgetCountToolButton({
       }
     >
       <span
-        onMouseDown={stopOverlayMouseEvent}
-        onClick={stopOverlayEvent}
-        onPointerDown={stopOverlayEvent}
+        onMouseDown={stopPhiOverlayEvent}
+        onClick={stopPhiOverlayEvent}
+        onPointerDown={stopPhiOverlayEvent}
         style={{ display: "inline-flex" }}
       >
         <PhiButtonControl

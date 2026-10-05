@@ -1,5 +1,6 @@
 "use client";
 
+import { stopPhiOverlayEvent } from "../../helpers/overlay-events";
 import { useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 import { Flex, Typography } from "antd";
@@ -120,14 +121,6 @@ const ICON_BUTTON_GRID_STYLE = {
   gap: 4,
   width: "100%",
 } as const;
-
-function stopOverlayEvent(event: { stopPropagation: () => void }) {
-  event.stopPropagation();
-}
-
-function stopOverlayMouseEvent(event: { preventDefault?: () => void; stopPropagation: () => void }) {
-  event.stopPropagation();
-}
 
 function parseIconValue(value: string | null | undefined): {
   mode: PhiIconPickerControlMode;
@@ -356,9 +349,9 @@ export function PhiIconPickerControl({
 
   const triggerButton = (
     <span
-      onMouseDown={stopOverlayMouseEvent}
-      onPointerDown={stopOverlayEvent}
-      onClick={stopOverlayEvent}
+      onMouseDown={stopPhiOverlayEvent}
+      onPointerDown={stopPhiOverlayEvent}
+      onClick={stopPhiOverlayEvent}
       style={{ display: "inline-flex", width: buttonBlock ? "100%" : undefined }}
     >
       <PhiButtonControl
@@ -401,9 +394,9 @@ export function PhiIconPickerControl({
         <Flex
           vertical
           gap={token.paddingXS}
-          onClick={stopOverlayEvent}
-          onMouseDown={stopOverlayMouseEvent}
-          onPointerDown={stopOverlayEvent}
+          onClick={stopPhiOverlayEvent}
+          onMouseDown={stopPhiOverlayEvent}
+          onPointerDown={stopPhiOverlayEvent}
           style={{ width: 280 }}
         >
           <PhiSegmentedControl<PhiIconPickerControlMode>
