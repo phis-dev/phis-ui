@@ -1,27 +1,9 @@
-import type { PhiShellTheme } from "../components/shell/shell-types";
-import type {
-  PhiSiteFontSlots,
-  PhiSiteThemeBrand,
-  PhiSiteThemeContact,
-  PhiSiteThemeRoot,
-} from "./site-theme";
-import type { PhiThemeMode, PhiThemePalette } from "../theme/phi-theme-presets";
+import type { PhiThemeMode } from "../theme/phi-theme-presets";
 import type { PhiThemeModePreference } from "../theme/phi-theme-mode";
-import type { PhiThemeBlockSelection } from "../theme/phi-theme-composition";
-import type { PhiThemeDerivation } from "../theme/phi-theme-selection";
-import type { PhiControlShapeCorners } from "../theme/phi-control-shape";
-import type { PhiThemeButtons } from "../theme/phi-button-shadow";
-import type { PhiThemeTypography } from "../theme/phi-theme-typography";
+import type { PhiCmsAreaKey } from "@phis/contracts/cms";
 import type { PhiViewerAddonRoleClaim, PhiViewerGroupClaim, PhiViewerRoleClaim } from "./access";
+import type { PhiSiteTheme } from "./site-config";
 import type { PhiControllerSignalAddress, PhiSignalAddress } from "./signals";
-
-export type PhiWidgetAreaKey =
-  | "public"
-  | "app"
-  | "admin"
-  | "builder"
-  | "editor"
-  | "accounting";
 
 export type PhiWidgetViewerAccess = "public" | "authenticated";
 export type PhiWidgetThemeMode = PhiThemeMode;
@@ -45,48 +27,50 @@ export type PhiBlockRuntimeSite = {
     label: string;
   }>;
   defaultLocale: string;
-  store?: {
+  store: {
     enabled: boolean;
   };
   themeRevision?: {
     publishedRevisionId: number | null;
     workingDraftRevisionId: number | null;
   };
-  theme?: {
-    mode: PhiWidgetThemeMode;
-    /** Which Theme blocks the Site follows; `preset` remains the palette of a Theme written before. */
-    blocks?: PhiThemeBlockSelection | null;
-    /** The Set this Theme was derived from; a record for the Theme workspace, never read to render. */
-    derivedFrom?: PhiThemeDerivation | null;
-    preset?: string | null;
-    presetVersion?: number | null;
-    shape?: {
-      controls?: PhiControlShapeCorners | null;
-    } | null;
-    fonts?: PhiSiteFontSlots | null;
-    brand?: PhiSiteThemeBrand;
-    contact?: PhiSiteThemeContact;
-    shell?: PhiShellTheme;
-    root?: PhiSiteThemeRoot | null;
-    palette?: PhiThemePalette | null;
-    style?: {
-      token?: Record<string, unknown>;
-    } | null;
-    buttons?: PhiThemeButtons | null;
-    typography?: PhiThemeTypography | null;
-    components?: Record<string, Record<string, unknown>> | null;
-  };
+  theme?: PhiBlockRuntimeSiteTheme;
+};
+
+/**
+ * The Site's Theme as a Widget reads it: the record the server answered, whole, with the mode decided.
+ *
+ * One type and not a second list of fields. The runtime copy used to name the Theme's fields by hand
+ * and the converter (`server-helpers/runtime.ts`) copied them by hand too, so `blocks`, `derivedFrom`,
+ * `shape`, `buttons` and `typography` were promised here and never arrived -- a Widget reading
+ * `runtime.site.theme.shape` got `undefined` from a type that said otherwise.
+ */
+export type PhiBlockRuntimeSiteTheme = Omit<PhiSiteTheme, "mode"> & {
+  mode: PhiWidgetThemeMode;
+};
+
+/**
+ * A Site as the server resolved it for a request: the parts a block may do without are answered.
+ *
+ * Stated once. The request context and the runtime loader each kept a copy of this with a hand-written
+ * Theme inside, three listings of one record that had drifted apart in which fields they knew.
+ */
+export type PhiResolvedBlockRuntimeSite = PhiBlockRuntimeSite & {
+  name: string;
+  hostname: string;
+  themeRevision: NonNullable<PhiBlockRuntimeSite["themeRevision"]>;
+  theme: PhiBlockRuntimeSiteTheme;
 };
 
 export type PhiBlockRuntimeLocale = {
   current: string;
 };
 
-export type PhiBlockRuntimeArea = PhiWidgetAreaKey;
+export type PhiBlockRuntimeArea = PhiCmsAreaKey;
 
 export type PhiBlockRuntimeViewer = {
   access: PhiWidgetViewerAccess;
-  resolvedArea?: PhiWidgetAreaKey | null;
+  resolvedArea?: PhiCmsAreaKey | null;
   roleClaims: readonly PhiViewerRoleClaim[];
   groupClaims: readonly PhiViewerGroupClaim[];
   /** Absent where a surface never carried them, which denies an `addon-roles` policy. */

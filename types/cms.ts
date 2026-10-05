@@ -1,4 +1,5 @@
 import type { PhiRuntimeControllerSetting, PhiRuntimeModuleId } from "./cms-plugins";
+import type { PhiCmsAreaKey } from "@phis/contracts/cms";
 import type { PhiCmsInstanceId } from "./cms-instance-id";
 import type { PhiCmsPresetSource } from "./cms-module-descriptors";
 import type { PhiViewerAccessPolicy } from "./access";
@@ -39,7 +40,7 @@ export type PhiCmsPageNode = {
 };
 
 export type PhiCmsPageRedirectTarget = {
-  area: "public" | "app" | "admin" | "builder" | "editor" | "accounting";
+  area: PhiCmsAreaKey;
   path: string;
 };
 

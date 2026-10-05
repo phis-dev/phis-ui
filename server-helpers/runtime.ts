@@ -2,18 +2,15 @@ import "server-only";
 import { hasPhiSiteSessionCookie } from "../constants/site-cookies";
 
 import { cache } from "react";
-import { resolvePhiCmsAreaKey } from "../constants/cms-areas";
+import { resolvePhiCmsAreaKey, type PhiCmsAreaKey } from "../constants/cms-areas";
 import { resolvePhiRuntimeConfig } from "../helpers/phis-runtime";
 import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
 import { getResolvedSiteConfig } from "../gateway/site-config";
 import { getPhiCapabilitySnapshot } from "../gateway/server-capabilities";
 import type {
-  PhiWidgetAreaKey,
   PhiBlockRuntime,
-  PhiBlockRuntimeSite,
-  PhiWidgetThemeMode,
+  PhiResolvedBlockRuntimeSite,
 } from "../types/widget-runtime";
-import type { PhiSiteFontSlots } from "../types/site-theme";
 import {
   normalizePhiThemeModePreference,
   readPhiColorSchemeHintFromCookieHeader,
@@ -23,33 +20,9 @@ import {
 import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
 import type { PhiSiteRequestContext } from "../types/site-request-context";
 
-type PhiWidgetSiteTheme = NonNullable<PhiBlockRuntime["site"]["theme"]>;
+type PhiResolvedWidgetRuntimeSite = PhiResolvedBlockRuntimeSite;
 
-type PhiResolvedWidgetRuntimeSite = PhiBlockRuntimeSite & {
-  name: string;
-  hostname: string;
-  availableLocales: Array<{
-    code: string;
-    label: string;
-  }>;
-  store: {
-    enabled: boolean;
-  };
-  themeRevision: {
-    publishedRevisionId: number | null;
-    workingDraftRevisionId: number | null;
-  };
-  theme: {
-    mode: PhiWidgetThemeMode;
-    fonts?: PhiSiteFontSlots | null;
-    brand?: PhiWidgetSiteTheme["brand"];
-    contact?: PhiWidgetSiteTheme["contact"];
-    shell?: PhiWidgetSiteTheme["shell"];
-    root?: PhiWidgetSiteTheme["root"];
-  };
-};
-
-function requirePhiViewerArea(area: PhiWidgetAreaKey | null | undefined): PhiWidgetAreaKey {
+function requirePhiViewerArea(area: PhiCmsAreaKey | null | undefined): PhiCmsAreaKey {
   if (!area) {
     throw new Error("The auth viewer answered a signed-in session without its Area.");
   }
@@ -70,10 +43,6 @@ export type PhiCmsRuntimeInfo = {
   viewer: PhiViewerState;
 };
 
-export function resolvePhiWidgetAreaKey(areaMask: number): PhiWidgetAreaKey {
-  return resolvePhiCmsAreaKey(areaMask);
-}
-
 export function buildPhiBlockRuntime({
   requestContext,
   areaMask,
@@ -88,7 +57,7 @@ export function buildPhiBlockRuntime({
   return {
     site: requestContext.site,
     locale: requestContext.locale,
-    area: resolvePhiWidgetAreaKey(areaMask),
+    area: resolvePhiCmsAreaKey(areaMask),
     viewer: requestContext.viewer,
     ...(page ? { page } : {}),
     ...(request ? { request } : {}),
@@ -119,22 +88,15 @@ export async function getPhiCmsRuntimeInfo({
     hostname: site.hostname,
     availableLocales: site.availableLocales,
     defaultLocale: site.defaultLocale,
-    store: {
-      enabled: Boolean(site.store?.enabled),
-    },
+    store: site.store,
     themeRevision: site.themeRevision,
+    /*
+     * The Theme record whole, with the mode decided: a Site that never chose one is light, which is the
+     * one default the Theme has. Copying fields by name here lost five of them (types/widget-runtime.ts).
+     */
     theme: {
-      mode: site.theme?.mode === "dark" ? "dark" : "light",
-      ...(site.theme?.preset ? { preset: site.theme.preset } : {}),
-      ...(site.theme?.presetVersion != null ? { presetVersion: site.theme.presetVersion } : {}),
-      ...(site.theme?.fonts ? { fonts: site.theme.fonts } : {}),
-      ...(site.theme?.brand ? { brand: site.theme.brand } : {}),
-      ...(site.theme?.contact ? { contact: site.theme.contact } : {}),
-      ...(site.theme?.shell ? { shell: site.theme.shell } : {}),
-      ...(site.theme?.root ? { root: site.theme.root } : {}),
-      ...(site.theme?.palette ? { palette: site.theme.palette } : {}),
-      ...(site.theme?.style ? { style: site.theme.style } : {}),
-      ...(site.theme?.components ? { components: site.theme.components } : {}),
+      ...site.theme,
+      mode: site.theme.mode ?? "light",
     },
   };
 
@@ -199,7 +161,7 @@ export async function getPhiCmsRuntimeInfo({
 
   const payload = (await response.json()) as {
     authenticated?: boolean;
-    area?: PhiWidgetAreaKey | null;
+    area?: PhiCmsAreaKey | null;
     user?: {
       id?: number | null;
       name?: string | null;

@@ -104,7 +104,7 @@ export {
   listResolvedFormDefinitions,
 } from "./gateway/form-registry";
 export {
-  buildPhiFormSubmitDescriptor,
+  buildPhiFormSubmitRoute,
   buildPhiFormPreviewDescriptor,
   buildPhiFormPreviewDescriptorFromDefinition,
   resolvePhiFormSubmitTarget,
@@ -173,13 +173,15 @@ export type {
   ListResolvedFormDefinitionsOptions,
 } from "./gateway/form-registry";
 export type {
-  PhiFormSubmitCategory,
   PhiFormPreviewDescriptor,
-  PhiFormSubmitDescriptor,
-  PhiFormSubmitMethod,
   PhiFormSubmitTarget,
-  PhiFormSubmitTransport,
 } from "./gateway/form-submit";
+export type {
+  PhiFormSubmitCategory,
+  PhiFormSubmitMethod,
+  PhiFormSubmitRoute,
+  PhiFormSubmitTransport,
+} from "./types/form-submit-route";
 export type {
   PhiDataLoadOptions,
   PhiDataQuery,

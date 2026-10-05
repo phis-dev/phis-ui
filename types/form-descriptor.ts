@@ -5,7 +5,7 @@ import type {
   PhiFormSubmitCategory,
   PhiFormSubmitMethod,
   PhiFormSubmitTransport,
-} from "../gateway/form-submit";
+} from "./form-submit-route";
 
 /*
  * The descriptor itself is stored by phis-server and written by Module presets and the Form Builder, so

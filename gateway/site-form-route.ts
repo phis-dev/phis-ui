@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import {
-  buildPhiFormSubmitDescriptorFromHandlerProvider,
+  buildPhiFormSubmitRouteFromHandlerProvider,
   resolvePhiFormSubmitTarget,
 } from "./form-submit";
 import { resolvePhiServerFormHandler } from "./form-handler-resolution";
@@ -316,7 +316,7 @@ export function buildPhiSiteFormRouteHandlers({
     appendCredentialCookieForPolicy(
       previewHeaders,
       request,
-      buildPhiFormSubmitDescriptorFromHandlerProvider(resolved.formId, resolved.provider).credentialPolicy,
+      buildPhiFormSubmitRouteFromHandlerProvider(resolved.formId, resolved.provider).credentialPolicy,
     );
     return proxyJson(
       `${resolved.provider.upstreamPath}?token=${encodeURIComponent(token)}`,
@@ -358,7 +358,7 @@ export function buildPhiSiteFormRouteHandlers({
       if (!resolved) {
         return toJsonResponse({ ok: false, error: "Form handler is not active for this Area." }, 404);
       }
-      const descriptor = buildPhiFormSubmitDescriptorFromHandlerProvider(resolved.formId, resolved.provider);
+      const descriptor = buildPhiFormSubmitRouteFromHandlerProvider(resolved.formId, resolved.provider);
       if (descriptor.transport !== "relay") {
         // The relay is the only transport that is carried out; relaying a handler that declared another
         // would send its values somewhere it never asked them to go.

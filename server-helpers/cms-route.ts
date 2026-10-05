@@ -12,12 +12,13 @@ import { maybeGetPhiRequestRuntime } from "./request-runtime";
 import { resolvePhiRequestLocale } from "./request-locale";
 import { fetchSiteLocaleConfig, type FetchSiteLocaleConfigOptions } from "./site-locale";
 import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
+import type { PhiCmsAreaKey } from "../constants/cms-areas";
 
 export type PhiResolvedRootRoute = {
   rootKind: "locale" | "area";
   root: string;
   locale: string;
-  area: "public" | "app" | "admin" | "builder" | "editor" | "accounting";
+  area: PhiCmsAreaKey;
   cmsPath: string;
   canonicalHref: string | null;
 };

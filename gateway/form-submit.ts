@@ -5,39 +5,25 @@ import type {
   PhiFormHandlerCredentialPolicy,
   PhiFormHandlerProviderDescriptor,
 } from "../types/form-descriptor";
-
-export type PhiFormSubmitCategory = "auth" | "account" | "forms" | "site";
-
-export type PhiFormSubmitTransport = "relay" | "api" | "serverAction";
-
-export type PhiFormSubmitMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-
-export type PhiFormSubmitDescriptor = {
-  formId: string;
-  submitHandlerKey: string;
-  category: PhiFormSubmitCategory;
-  transport: PhiFormSubmitTransport;
-  method: PhiFormSubmitMethod;
-  endpointKey: string | null;
-  actionKey: string | null;
-  upstreamPath: string | null;
-  csrfPath: string | null;
-  requiresCsrf: boolean;
-  credentialPolicy: PhiFormHandlerCredentialPolicy;
-};
+import type {
+  PhiFormSubmitCategory,
+  PhiFormSubmitMethod,
+  PhiFormSubmitRoute,
+  PhiFormSubmitTransport,
+} from "../types/form-submit-route";
 
 export type PhiFormPreviewDescriptor = {
   formId: string;
 };
 
-export type PhiFormSubmitTarget = PhiFormSubmitDescriptor & {
+export type PhiFormSubmitTarget = PhiFormSubmitRoute & {
   upstreamPath: string | null;
   csrfPath: string | null;
   requiresCsrf: boolean;
   routeTarget: string;
 };
 
-type PhiFormSubmitDescriptorInput = {
+type PhiFormSubmitRouteInput = {
   formId: string;
   submitHandlerKey: string;
   category?: string | null;
@@ -153,7 +139,7 @@ function readConfigPath(
 }
 
 function resolveEndpointKey(
-  input: PhiFormSubmitDescriptorInput,
+  input: PhiFormSubmitRouteInput,
 ): string | null {
   const explicitEndpointKey =
     typeof input.endpointKey === "string" && input.endpointKey.trim()
@@ -208,9 +194,9 @@ function readPreviewHandlerKey(
   return readConfigString(config, "previewHandlerKey");
 }
 
-export function buildPhiFormSubmitDescriptor(
-  input: PhiFormSubmitDescriptorInput,
-): PhiFormSubmitDescriptor {
+export function buildPhiFormSubmitRoute(
+  input: PhiFormSubmitRouteInput,
+): PhiFormSubmitRoute {
   const formId = normalizeFormId(input.formId);
   const submitHandlerKey = normalizeSubmitHandlerKey(input.submitHandlerKey);
   const category = resolveSubmitCategory(submitHandlerKey, input.category);
@@ -243,7 +229,7 @@ export function buildPhiFormSubmitDescriptor(
 }
 
 export function resolvePhiFormSubmitTarget(
-  descriptor: PhiFormSubmitDescriptor,
+  descriptor: PhiFormSubmitRoute,
 ): PhiFormSubmitTarget {
   const upstreamPath = resolveUpstreamPath(
     descriptor.category,
@@ -260,11 +246,11 @@ export function resolvePhiFormSubmitTarget(
   };
 }
 
-export function buildPhiFormSubmitDescriptorFromHandlerProvider(
+export function buildPhiFormSubmitRouteFromHandlerProvider(
   formId: string,
   provider: PhiFormHandlerProviderDescriptor,
-): PhiFormSubmitDescriptor {
-  return buildPhiFormSubmitDescriptor({
+): PhiFormSubmitRoute {
+  return buildPhiFormSubmitRoute({
     formId,
     submitHandlerKey: provider.handlerKey,
     category: provider.category,

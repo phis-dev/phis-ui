@@ -9,14 +9,11 @@ import {
   PHI_CONTAINER_BREAKPOINT_CONTENT,
 } from "../../theme/phi-container-breakpoints";
 
-/** How many slots a row of a Grid holds, at one width. Each divides the 24 tracks evenly. */
-export const PHI_GRID_COLUMN_COUNTS = [1, 2, 3, 4, 6] as const;
+// The counts live in the contract layer (`constants/grid-columns.ts`), where the config parser reads
+// them without pulling a Layout module into `@phis/ui/types`; the Layout keeps offering them here.
+import { isPhiGridColumnCount, PHI_GRID_COLUMN_COUNTS, type PhiGridColumnCount } from "../../constants/grid-columns";
 
-export type PhiGridColumnCount = (typeof PHI_GRID_COLUMN_COUNTS)[number];
-
-export function isPhiGridColumnCount(value: unknown): value is PhiGridColumnCount {
-  return PHI_GRID_COLUMN_COUNTS.includes(value as PhiGridColumnCount);
-}
+export { isPhiGridColumnCount, PHI_GRID_COLUMN_COUNTS, type PhiGridColumnCount };
 
 /**
  * How many slots a row holds when the Grid was never told.

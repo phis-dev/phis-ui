@@ -4,8 +4,8 @@ import { readFile } from "node:fs/promises";
 import { NextRequest } from "next/server";
 
 import {
-  buildPhiFormSubmitDescriptor,
-  buildPhiFormSubmitDescriptorFromHandlerProvider,
+  buildPhiFormSubmitRoute,
+  buildPhiFormSubmitRouteFromHandlerProvider,
   resolvePhiFormSubmitTarget,
 } from "../gateway/form-submit";
 import { buildPhiSiteFormRouteHandlers } from "../gateway/site-form-route";
@@ -37,13 +37,13 @@ const provider = (credentialPolicy: "none" | "site-session" | "auth-link") => ({
 } satisfies PhiFormHandlerProviderDescriptor);
 
 for (const policy of ["none", "site-session", "auth-link"] as const) {
-  const descriptor = buildPhiFormSubmitDescriptorFromHandlerProvider("@test/pkg/modules/module/forms/test", provider(policy));
+  const descriptor = buildPhiFormSubmitRouteFromHandlerProvider("@test/pkg/modules/module/forms/test", provider(policy));
   assert.equal(descriptor.credentialPolicy, policy);
   assert.equal(resolvePhiFormSubmitTarget(descriptor).upstreamPath, `/api/v1/forms/${policy}`);
 }
 
 assert.equal(
-  resolvePhiFormSubmitTarget(buildPhiFormSubmitDescriptorFromHandlerProvider(
+  resolvePhiFormSubmitTarget(buildPhiFormSubmitRouteFromHandlerProvider(
     "@test/pkg/modules/module/forms/test",
     { ...provider("site-session"), endpointKey: "ignored", upstreamPath: "/api/v1/forms/authoritative" },
   )).upstreamPath,
@@ -53,7 +53,7 @@ assert.equal(
 // A Provider that names no credential policy gets none. The closed default is the whole point: an
 // omission must never widen what a submission may carry.
 assert.equal(
-  buildPhiFormSubmitDescriptor({ formId: "f", submitHandlerKey: "forms.contact" }).credentialPolicy,
+  buildPhiFormSubmitRoute({ formId: "f", submitHandlerKey: "forms.contact" }).credentialPolicy,
   "none",
 );
 
@@ -65,14 +65,14 @@ for (const [handlerKey, category] of [
   ["forms.contact", "forms"],
   ["anything.else", "forms"],
 ] as const) {
-  assert.equal(buildPhiFormSubmitDescriptor({ formId: "f", submitHandlerKey: handlerKey }).category, category);
+  assert.equal(buildPhiFormSubmitRoute({ formId: "f", submitHandlerKey: handlerKey }).category, category);
 }
 assert.equal(
-  buildPhiFormSubmitDescriptor({ formId: "f", submitHandlerKey: "auth.login", category: "forms" }).category,
+  buildPhiFormSubmitRoute({ formId: "f", submitHandlerKey: "auth.login", category: "forms" }).category,
   "forms",
 );
 assert.throws(
-  () => buildPhiFormSubmitDescriptor({
+  () => buildPhiFormSubmitRoute({
     formId: "f",
     submitHandlerKey: "auth.login",
     category: "nonsense",
@@ -88,19 +88,19 @@ for (const [category, prefix] of [
   ["forms", "/api/forms"],
   ["site", "/api/site/forms"],
 ] as const) {
-  const withKey = buildPhiFormSubmitDescriptor({
+  const withKey = buildPhiFormSubmitRoute({
     formId: "f",
     submitHandlerKey: "x.y",
     category,
     endpointKey: "/subscribe",
   });
   assert.equal(resolvePhiFormSubmitTarget(withKey).upstreamPath, `${prefix}/subscribe`);
-  const bare = buildPhiFormSubmitDescriptor({ formId: "f", submitHandlerKey: "x.y", category });
+  const bare = buildPhiFormSubmitRoute({ formId: "f", submitHandlerKey: "x.y", category });
   assert.equal(resolvePhiFormSubmitTarget(bare).upstreamPath, prefix);
 }
 
 // Identity and transport normalization.
-const normalized = buildPhiFormSubmitDescriptor({
+const normalized = buildPhiFormSubmitRoute({
   formId: "  @Phis/UI/Modules/Public/Forms/Contact  ",
   submitHandlerKey: "  Forms.Contact  ",
   upstreamPath: "api/v1/forms/contact",
@@ -119,11 +119,11 @@ for (const [transport, expected] of [
   ["relay", "relay"],
   [null, "relay"],
 ] as const) {
-  assert.equal(buildPhiFormSubmitDescriptor({ formId: "f", submitHandlerKey: "x", transport }).transport, expected);
+  assert.equal(buildPhiFormSubmitRoute({ formId: "f", submitHandlerKey: "x", transport }).transport, expected);
 }
 for (const transport of ["server-action", "nonsense"]) {
   assert.throws(
-    () => buildPhiFormSubmitDescriptor({ formId: "f", submitHandlerKey: "x", transport }),
+    () => buildPhiFormSubmitRoute({ formId: "f", submitHandlerKey: "x", transport }),
     /Unknown form submit transport/,
   );
 }
@@ -132,16 +132,16 @@ for (const [method, expected] of [
   ["DELETE", "DELETE"],
   [null, "POST"],
 ] as const) {
-  assert.equal(buildPhiFormSubmitDescriptor({ formId: "f", submitHandlerKey: "x", method }).method, expected);
+  assert.equal(buildPhiFormSubmitRoute({ formId: "f", submitHandlerKey: "x", method }).method, expected);
 }
 for (const method of ["get", "nonsense"]) {
   assert.throws(
-    () => buildPhiFormSubmitDescriptor({ formId: "f", submitHandlerKey: "x", method }),
+    () => buildPhiFormSubmitRoute({ formId: "f", submitHandlerKey: "x", method }),
     /Unknown form submit method/,
   );
 }
 assert.equal(
-  resolvePhiFormSubmitTarget(buildPhiFormSubmitDescriptor({
+  resolvePhiFormSubmitTarget(buildPhiFormSubmitRoute({
     formId: "f",
     submitHandlerKey: "auth.login",
   })).routeTarget,

@@ -11,13 +11,10 @@ import type {
 } from "./renderable-block";
 import type { PhiCssLength } from "./length";
 
-export type PhiCmsAreaKey =
-  | "public"
-  | "app"
-  | "admin"
-  | "builder"
-  | "editor"
-  | "accounting";
+// The Area names are the contract's (`PHI_CMS_AREA_KEYS`); a copy here would be a seventh place to add one.
+import type { PhiCmsAreaKey } from "@phis/contracts/cms";
+
+export type { PhiCmsAreaKey };
 
 export type PhiCmsRegionKey =
   | "header_top"

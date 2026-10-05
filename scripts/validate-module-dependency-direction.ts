@@ -134,6 +134,98 @@ for (const file of sourceFiles) {
 }
 
 /*
+ * The contract layer does not compile the UI.
+ *
+ * `types/` and `constants/` are what `@phis/ui/types` and `@phis/ui/constants` ship, and a Module reads
+ * them without wanting a Component or a gateway. A type-only import is erased when the file is compiled
+ * and binds nothing. A value import compiles its target, and everything that target compiles, into every
+ * consumer of the contract: `types/cms-config.ts` once pulled a Layout module in for a list of grid
+ * column counts, and a type in `types/form-descriptor.ts` named a `server-only` gateway. What is
+ * refused is therefore not the import but what it reaches: a value import from `components/` or
+ * `gateway/` whose runtime graph holds React, Ant Design, `server-only` or a gateway module. A pure parser
+ * under `components/widgets/config/` passes, because compiling it costs the contract nothing it does not
+ * already carry; where such a module belongs is a separate question (helpers/, by the look of it).
+ */
+const contractLayerPattern = /^(types|constants)\//u;
+const uiLayerPattern = /^(components|gateway)\//u;
+const valueImportPattern = new RegExp(
+  [
+    String.raw`\b(import|export)\s+(type\s+)?(\*(?:\s+as\s+[\w$]+)?|\{[^}]*\}|[\w$]+(?:\s*,\s*\{[^}]*\})?)\s*from\s*(['"])([^'"]+)\4`,
+    String.raw`\bimport\s*(['"])([^'"]+)\6`,
+  ].join("|"),
+  "g",
+);
+const uiRuntimeSpecifierPattern = /^(react|react-dom|server-only|antd|antd\/|@ant-design\/)/u;
+
+/** The value edges of one file: what it compiles, as local files and as bare specifiers. */
+function readValueImports(file: string) {
+  const locals: string[] = [];
+  const externals: string[] = [];
+  for (const match of stripComments(readFileSync(file, "utf8")).matchAll(valueImportPattern)) {
+    const sideEffectSpecifier = match[7];
+    if (sideEffectSpecifier !== undefined) {
+      const target = resolveImport(file, sideEffectSpecifier);
+      if (target === null) externals.push(sideEffectSpecifier);
+      else locals.push(target);
+      continue;
+    }
+    const [, , typeKeyword, clause, , specifier] = match;
+    const typeOnly = typeKeyword !== undefined ||
+      (clause!.startsWith("{") && clause!.slice(1, -1).split(",").every((entry) =>
+        entry.trim() === "" || entry.trim().startsWith("type ")));
+    if (typeOnly) continue;
+    const target = resolveImport(file, specifier!);
+    if (target === null) externals.push(specifier!);
+    else locals.push(target);
+  }
+  return { locals, externals };
+}
+
+const valueImportsByFile = new Map<string, ReturnType<typeof readValueImports>>();
+function valueImportsOf(file: string) {
+  let edges = valueImportsByFile.get(file);
+  if (!edges) {
+    edges = readValueImports(file);
+    valueImportsByFile.set(file, edges);
+  }
+  return edges;
+}
+
+/** What a value import of `start` compiles that a contract must not: the first offender, or null. */
+function findUiRuntimeReach(start: string): string | null {
+  const seen = new Set<string>();
+  const queue = [start];
+  while (queue.length > 0) {
+    const file = queue.pop()!;
+    if (seen.has(file)) continue;
+    seen.add(file);
+    const relativePath = path.relative(packageRoot, file);
+    if (relativePath.startsWith("gateway/")) return relativePath;
+    const edges = valueImportsOf(file);
+    const offender = edges.externals.find((specifier) => uiRuntimeSpecifierPattern.test(specifier));
+    if (offender) return `${relativePath} -> ${offender}`;
+    queue.push(...edges.locals);
+  }
+  return null;
+}
+
+for (const file of sourceFiles) {
+  const relativePath = path.relative(packageRoot, file);
+  if (!contractLayerPattern.test(relativePath)) continue;
+  for (const target of valueImportsOf(file).locals) {
+    const targetPath = path.relative(packageRoot, target);
+    if (!uiLayerPattern.test(targetPath)) continue;
+    const reach = findUiRuntimeReach(target);
+    if (reach !== null) {
+      problems.push(
+        `${relativePath} -> ${targetPath}: the contract layer may not compile the UI; this value import ` +
+          `reaches ${reach}. Import the type, or move the value into constants/, types/ or helpers/.`,
+      );
+    }
+  }
+}
+
+/*
  * The module system's files that reach a Module, through other module-system files or directly: the
  * catalogs and manifests. The rest of the module system -- contracts, the descriptor compiler, the
  * Area definitions -- is what the Foundation builds on, and it may only stay that while nothing in it

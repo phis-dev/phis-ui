@@ -35,7 +35,7 @@ import { applyPhiLayoutDefaults } from "../helpers/cms-layout-defaults";
 import { resolvePhiLayoutDefaults } from "../helpers/cms-layout-defaults";
 import { normalizeRenderableBlockAnchor } from "../helpers/renderable-block-anchor";
 import { isPhiRecord } from "../helpers/is-record";
-import { PHI_GRID_COLUMN_COUNTS, isPhiGridColumnCount } from "../components/layouts/phi-grid-contract";
+import { PHI_GRID_COLUMN_COUNTS, isPhiGridColumnCount } from "../constants/grid-columns";
 
 export type PhiCmsPluginConfigBase = Record<string, unknown>;
 

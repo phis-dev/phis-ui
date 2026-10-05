@@ -7,6 +7,7 @@ import type {
 } from "./site-theme";
 import type { PhiThemePalette } from "../theme/phi-theme-presets";
 import type { PhiThemeBlockSelection } from "../theme/phi-theme-composition";
+import type { PhiThemeDerivation } from "../theme/phi-theme-selection";
 import type { PhiControlShapeCorners } from "../theme/phi-control-shape";
 import type { PhiThemeButtons } from "../theme/phi-button-shadow";
 import type { PhiThemeTypography } from "../theme/phi-theme-typography";
@@ -26,6 +27,8 @@ export type PhiSiteTheme = {
    * a Theme had three parts, where `preset` alone named the palette and still does.
    */
   blocks?: PhiThemeBlockSelection | null;
+  /** The Set this Theme was derived from; a record for the Theme workspace, never read to render. */
+  derivedFrom?: PhiThemeDerivation | null;
   preset?: string | null;
   presetVersion?: number | null;
   shape?: {
@@ -80,7 +83,8 @@ export type PhiSiteConfig = {
   hostname: string;
   defaultLocale: string;
   availableLocales: PhiSiteLocaleOption[];
-  store?: {
+  /** Whether the Site runs a store; the server computes it for every Site, so it is never absent. */
+  store: {
     enabled: boolean;
   };
   theme: PhiSiteTheme;
