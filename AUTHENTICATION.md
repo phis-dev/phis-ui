@@ -65,8 +65,8 @@ The App security surface is post-login self-service. Mandatory factor enrollment
 completion remains part of the Public Auth workflow and may reuse the same Auth-owned enrollment
 components in a restricted mode; it must not grant access to App merely to render enrollment.
 
-The Admin route opts into the Area-owned `settings` route mount, which places its navigation entry inside
-the Settings container. Its path comes from its package, as every route outside Public does:
+The Admin route places its navigation entry on the Area's `settings` anchor, inside the Settings
+container. Its path comes from its package, as every route outside Public does:
 
 ```text
 /admin/phis/ui/settings/authentication

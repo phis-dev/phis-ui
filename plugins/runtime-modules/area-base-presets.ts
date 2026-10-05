@@ -170,7 +170,6 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
     area: "app" as const,
     title: "Profile",
     path: "/settings/profile",
-    mount: { mountKey: "settings" },
     loadTree: ({ page, runtime }: PhiCmsDescriptorBuildContext) =>
       import("./app/trees/phi-default-app-profile-page-tree")
         .then((module) => module.buildPhiDefaultAppProfilePageTree({ page, runtime })),

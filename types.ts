@@ -24,7 +24,6 @@ export * from "./types/cms-instance-id";
 export {
   type PhiCmsAreaDefinition,
   type PhiCmsAreaOverlayPresetDescriptor,
-  type PhiCmsAreaRouteMountDescriptor,
   type PhiCmsAreaShellCompositionSource,
   type PhiCmsAreaShellPresetBinding,
   type PhiCmsAreaShellPresetDescriptor,
@@ -46,8 +45,6 @@ export {
   type PhiCmsNavigationSurfaceDescriptor,
   type PhiCmsPresetIdentity,
   type PhiCmsPresetSource,
-  type PhiCmsRouteMountKey,
-  type PhiCmsRouteMountReference,
   type PhiCmsRoutePresetBinding,
   type PhiCmsRoutePresetDescriptor,
   type PhiCmsThemeBlockBinding,

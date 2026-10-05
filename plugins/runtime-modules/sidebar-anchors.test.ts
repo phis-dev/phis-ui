@@ -160,7 +160,6 @@ describe("buildPhiSidebarRoutePresetDescriptor", () => {
       loadTree,
     });
     expect(descriptor.presetVersion).toBe(1 + PHI_BASE_PAGE_LAYOUT_VERSION);
-    expect(descriptor.mount).toEqual({ mountKey: "settings" });
     expect(descriptor.navigation?.[0]?.item.accessPolicy).toEqual(PHI_VIEWER_ACCESS_SITE_ADMIN);
   });
 
@@ -178,7 +177,6 @@ describe("buildPhiSidebarRoutePresetDescriptor", () => {
       loadTree,
     });
     expect(descriptor.presetVersion).toBe(7);
-    expect(descriptor.mount).toEqual({ mountKey: "settings" });
     expect(descriptor.navigation?.[0]?.item.accessPolicy).toBeUndefined();
   });
 });
@@ -194,7 +192,6 @@ describe("navigation anchors", () => {
     baseModuleId: BASE_ID,
     shellPresetKey: "base-shell",
     accessPolicy: { access: "anyone" },
-    routeMounts: [{ mountKey: "settings", navKey: "app:sidebar", parentItemKey: SETTINGS_KEY }],
     navigationSurfaces: [{
       navKey: "app:sidebar",
       label: { defaultMessage: "Sidebar" },
@@ -272,9 +269,6 @@ describe("navigation anchors", () => {
       area: "app",
       title: name,
       path: `/${name}`,
-      ...(injection && "anchor" in injection && injection.anchor === "settings"
-        ? { mount: { mountKey: "settings" } }
-        : {}),
       ...(injection
         ? {
             navigation: [{
@@ -450,7 +444,6 @@ describe("navigation anchors", () => {
     const acme = "@acme/shop/modules/shop" as const;
     const withoutSettings: PhiCmsAreaDefinition = {
       ...areaDefinition,
-      routeMounts: [],
       navigationSurfaces: areaDefinition.navigationSurfaces!.map((surface) => ({
         ...surface,
         anchors: { main: { parentItemKey: null, position: "body" } },

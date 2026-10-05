@@ -15,25 +15,6 @@ import type { PhiCmsInstanceId } from "./cms-instance-id";
 
 export type PhiRuntimeModuleId = `${string}/${string}`;
 
-export type PhiCmsRouteMountKey = string;
-
-/**
- * A published name a Module can hang a navigation entry under.
- *
- * A mount says nothing about paths -- every route outside Public is under its own package already, so
- * the address is unique without it. What it still does is let one package put its entry inside a
- * container another package owns, without hardcoding that container's item key.
- */
-export type PhiCmsAreaRouteMountDescriptor = {
-  mountKey: PhiCmsRouteMountKey;
-  navKey: `${PhiCmsAreaKey}:${string}`;
-  parentItemKey: string;
-};
-
-export type PhiCmsRouteMountReference = {
-  mountKey: PhiCmsRouteMountKey;
-};
-
 export type PhiCmsPresetIdentity = {
   ownerModuleId: PhiRuntimeModuleId;
   presetKey: string;
@@ -49,7 +30,6 @@ export type PhiCmsAreaDefinition = {
   shellPresetKey: string;
   accessPolicy: PhiViewerAccessPolicy;
   navigationSurfaces?: readonly PhiCmsNavigationSurfaceDescriptor[];
-  routeMounts?: readonly PhiCmsAreaRouteMountDescriptor[];
 };
 
 export type PhiCmsAreaShellCompositionSource = PhiCmsPresetIdentity & {
@@ -99,7 +79,6 @@ export type PhiCmsRoutePresetDescriptor = PhiCmsPresetIdentity & {
    * not an address it needs to do its work.
    */
   landingPage?: true;
-  mount?: PhiCmsRouteMountReference;
   title: string;
   /**
    * The `PhiCmsFlags` a Page of this route starts out with.

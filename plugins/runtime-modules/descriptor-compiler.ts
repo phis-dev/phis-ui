@@ -79,7 +79,6 @@ import {
 
 const PHI_CMS_REGION_TYPE_VALUES = new Set<number>(Object.values(PhiCmsRegionType));
 const PHI_ROUTE_PARAMETER_PATTERN = /^:[A-Za-z][A-Za-z0-9_]*$/;
-const PHI_ROUTE_MOUNT_KEY_PATTERN = /^[a-z][a-z0-9-]*$/;
 const PHI_NAVIGATION_ANCHORS = new Set<string>([
   "start",
   "main",
@@ -145,24 +144,12 @@ export function normalizePhiCmsRoutePath(value: string): `/${string}` {
  * the Module's own, so it keeps the address it asks for.
  *
  * The rule itself is `resolvePhiRuntimeModuleAreaRoutePath`, shared with everything that links to a
- * Module route rather than serves one; what this function adds is the Area mount check and the
- * insistence that a declared path arrives normalized.
+ * Module route rather than serves one; what this function adds is the insistence that a declared path
+ * arrives normalized.
  */
 function resolvePhiCmsNamespacedRouteDescriptor(
   descriptor: PhiCmsRoutePresetDescriptor,
-  areaDefinition: PhiCmsAreaDefinition,
 ): PhiCmsRoutePresetDescriptor {
-  if (descriptor.mount) {
-    const mount = (areaDefinition.routeMounts ?? []).find(
-      (candidate) => candidate.mountKey === descriptor.mount?.mountKey,
-    );
-    if (!mount) {
-      throw new Error(
-        `${descriptor.ownerModuleId}/${descriptor.presetKey}: Area "${descriptor.area}" ` +
-        `does not declare route mount "${descriptor.mount.mountKey}".`,
-      );
-    }
-  }
   if (descriptor.area === "public" || descriptor.path === "/") {
     return descriptor;
   }
@@ -346,40 +333,6 @@ function assertAreaDefinitions(
         }
       }
     }
-    const routeMountKeys = new Set<string>();
-    for (const mount of definition.routeMounts ?? []) {
-      if (
-        !PHI_ROUTE_MOUNT_KEY_PATTERN.test(mount.mountKey) ||
-        routeMountKeys.has(mount.mountKey)
-      ) {
-        throw new Error(
-          `Area "${definition.area}" declares invalid or duplicate route mount "${mount.mountKey}".`,
-        );
-      }
-      routeMountKeys.add(mount.mountKey);
-      const surface = (definition.navigationSurfaces ?? []).find(
-        (candidate) => candidate.navKey === mount.navKey,
-      );
-      if (!surface) {
-        throw new Error(
-          `Area "${definition.area}" route mount "${mount.mountKey}" references ` +
-          `unknown navigation surface "${mount.navKey}".`,
-        );
-      }
-      if (!(surface.exportedItemKeys ?? []).includes(mount.parentItemKey)) {
-        throw new Error(
-          `Area "${definition.area}" route mount "${mount.mountKey}" parent ` +
-          `"${mount.parentItemKey}" is not exported.`,
-        );
-      }
-      const parent = findNavigationItemDescriptor(surface.items, mount.parentItemKey);
-      if (!parent || parent.routePresetKey) {
-        throw new Error(
-          `Area "${definition.area}" route mount "${mount.mountKey}" parent ` +
-          `"${mount.parentItemKey}" must be a navigation container.`,
-        );
-      }
-    }
     definitionsByArea.set(definition.area, definition);
   }
   return definitionsByArea;
@@ -512,7 +465,7 @@ export function compilePhiCmsDescriptorCatalog({
           `${moduleId}/${descriptor.presetKey}: owner module is not eligible for Area "${descriptor.area}".`,
         );
       }
-      const resolvedDescriptor = resolvePhiCmsNamespacedRouteDescriptor(descriptor, areaDefinition);
+      const resolvedDescriptor = resolvePhiCmsNamespacedRouteDescriptor(descriptor);
       const compiled = compilePhiCmsRoutePattern(resolvedDescriptor);
       routeByIdentity.set(identity, resolvedDescriptor);
       routeByPageId.set(

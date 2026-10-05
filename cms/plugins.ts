@@ -68,9 +68,6 @@ export type {
   PhiCmsDescriptorBuildContext,
   PhiCmsRoutePresetBinding,
   PhiCmsRoutePresetDescriptor,
-  PhiCmsRouteMountKey,
-  PhiCmsAreaRouteMountDescriptor,
-  PhiCmsRouteMountReference,
   PhiCmsThemePresetBinding,
   PhiCmsThemePresetDescriptor,
 } from "../types/cms-module-descriptors";

@@ -29,9 +29,10 @@ visit. What differs is only whose record is written, and the container treats th
 
 ## 2. Routing
 
-An Area that offers Module configuration declares exactly one Area-owned `settings` route mount. Modules
-contribute Settings pages by opting into that mount, which is how their entry reaches the container
-without the Module having to know the container's item key.
+An Area that offers Module configuration declares exactly one `settings` anchor on its sidebar, bound to
+the Area-owned Settings container. Modules contribute Settings pages by placing their navigation entry
+on that anchor (`anchor: "settings"`), which is how their entry reaches the container without the Module
+having to know the container's item key.
 
 A Settings page addresses itself like any other route outside Public: under its own package.
 
@@ -42,10 +43,10 @@ A Settings page addresses itself like any other route outside Public: under its 
 `@phis/ui/modules/admin` declaring `/settings/general` in the Admin Area is therefore served at
 `/admin/phis/ui/settings/general`, and the Auth Module's `/settings/authentication` at
 `/admin/phis/ui/settings/authentication`.
-Collisions between packages are impossible by construction, and the mount says nothing about the path -- it
-places the navigation entry, nothing more.
+Collisions between packages are impossible by construction, and the anchor says nothing about the path --
+it places the navigation entry, nothing more.
 
-Each mounted Settings route declares its own access policy. Access is enforced per route; the Settings
+Each Settings route declares its own access policy. Access is enforced per route; the Settings
 container itself adds no access of its own.
 
 The container has no address of its own and no redirect. It is a navigation node whose children are
@@ -56,9 +57,8 @@ target hides.
 ## 3. Navigation
 
 Settings navigation lives in the Area sidebar: the sidebar surface (`admin:sidebar`,
-`builder:sidebar`) declares one exported "Settings" container item, and the `settings` route mount
-(`routeMounts` in `plugins/runtime-modules/area-definitions.ts`) targets that surface with the container
-as its `parentItemKey`. There is no separate `<area>:settings` navigation surface and no in-content Settings navigation.
+`builder:sidebar`) declares one exported "Settings" container item, and the surface's `settings` anchor
+(`anchors` in `plugins/runtime-modules/area-definitions.ts`) names that container as its `parentItemKey`. There is no separate `<area>:settings` navigation surface and no in-content Settings navigation.
 
 The sidebar is rendered by the persistent Area shell (the root layout), which survives client-side
 navigation between pages. This placement is deliberate and normative: per-path content (content

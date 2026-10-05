@@ -69,11 +69,6 @@ const areaDefinition: PhiCmsAreaDefinition = {
   baseModuleId: BASE_MODULE_ID,
   shellPresetKey: "base-shell",
   accessPolicy: { access: "anyone" },
-  routeMounts: [{
-    mountKey: "settings",
-    navKey: "public:header",
-    parentItemKey: SETTINGS_ITEM_KEY,
-  }],
   navigationSurfaces: [{
     navKey: "public:header",
     label: { defaultMessage: "Header" },
@@ -137,7 +132,6 @@ function createRoute({
   itemKey,
   injection,
   routePresetKey = presetKey,
-  mountKey,
 }: {
   moduleId: PhiRuntimeModuleId;
   presetKey: string;
@@ -147,7 +141,6 @@ function createRoute({
     navKey?: `public:${string}`;
   };
   routePresetKey?: string;
-  mountKey?: string;
 }): PhiCmsRoutePresetDescriptor {
   return {
     ownerModuleId: moduleId,
@@ -156,7 +149,6 @@ function createRoute({
     area: "public",
     title: presetKey,
     path,
-    ...(mountKey ? { mount: { mountKey } } : {}),
     navigation: [{
       navKey: injection.navKey ?? "public:header",
       parentItemKey: injection.parentItemKey,
@@ -200,7 +192,6 @@ const mountedRoute = createRoute({
   moduleId: MOUNTED_MODULE_ID,
   presetKey: "module-c-settings",
   path: "/settings/module-c",
-  mountKey: "settings",
   itemKey: MOUNTED_MODULE_ITEM_KEY,
   injection: { parentItemKey: SETTINGS_ITEM_KEY },
 });
@@ -470,19 +461,6 @@ assert.throws(
     tombstones: [],
   }),
   /cannot be applied/,
-);
-
-const undeclaredMountRoute = createRoute({
-  moduleId: MODULE_A_ID,
-  presetKey: "undeclared-mount",
-  path: "/",
-  mountKey: "missing",
-  itemKey: "@test/pkg/modules/module-a/nav/undeclared-mount",
-  injection: { parentItemKey: SETTINGS_ITEM_KEY },
-});
-assert.throws(
-  () => resolvePhiCmsDescriptorCatalog(createCatalog([undeclaredMountRoute])),
-  /does not declare route mount "missing"/,
 );
 
 const undeclaredSurfaceRoute = createRoute({

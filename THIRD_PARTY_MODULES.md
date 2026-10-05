@@ -910,8 +910,8 @@ Routes, Area shells, overlays, navigation injections, and Themes are descriptors
 entry ([MODULES.md](./MODULES.md#descriptor-identity-and-instantiation)). Modules never create physical
 Next.js routes. Outside Public, a route answers under its package: `/orders` in `@acme/shop` is served
 at `/acme/shop/orders` -- the scope loses its `@`, and the module key is not part of it. Public carries no
-namespace, and `/` is an application for the Area root slot. An Area may export a route mount such as
-`settings`; a route opts in with `mount: { mountKey: "settings" }`. A Module references its own Pages
+namespace, and `/` is an application for the Area root slot. A Settings page is placed by its navigation
+entry's `anchor: "settings"` (section 8a, Navigation); there is no route mount. A Module references its own Pages
 through `(ownerModuleId, presetKey)`, never through a literal path.
 
 ## 8. Export the Client and Authoring contributions
@@ -1013,8 +1013,8 @@ first-party Module and refuses an unknown one. A Module package composes its own
 Client manifest carry. The authoring editor is built from Controls in `@phis/ui/controls`.
 
 **Navigation.** Place a sidebar entry by role, not by somebody's item key: `anchor: "start"` (top of the
-sidebar), `"main"` (the body, ahead of Settings), `"settings"` (inside the Area's Settings container;
-mount the route with `mount: { mountKey: "settings" }`), or `"end"` (the very bottom). Each Area decides
+sidebar), `"main"` (the body, ahead of Settings), `"settings"` (inside the Area's Settings container), or
+`"end"` (the very bottom). Each Area decides
 where its anchors are, and one it does not declare -- `settings` in an Area without a Settings container
 -- is refused. The entry is `{ navKey: "<area>:sidebar", anchor, item }`, with no `parentItemKey`.
 Entries sharing an anchor, and an injection that names neither an anchor nor an item, are ordered by

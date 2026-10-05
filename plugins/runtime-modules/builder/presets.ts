@@ -54,7 +54,6 @@ const BUILDER_SETTINGS_ROUTES = [
     area: "builder" as const,
     title: "General",
     path: "/settings/general",
-    mount: { mountKey: "settings" },
     loadTree: ({ page, runtime }) =>
       import("./trees/phi-default-builder-settings-page-tree")
         .then((module) => module.buildPhiDefaultBuilderSettingsPageTree({ page, runtime })),

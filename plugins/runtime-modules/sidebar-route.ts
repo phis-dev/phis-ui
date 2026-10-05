@@ -51,8 +51,8 @@ export type PhiSidebarAreaKey = keyof typeof PHI_SIDEBAR_AREA_ROUTE_DEFAULTS;
  * A Page a Module contributes together with its entry in an Area sidebar.
  *
  * The entry is placed by role, never by somebody else's item key: `start`, `main`, `settings` or `end`,
- * and the Area decides where that is. `settings` also mounts the route in the Area's Settings mount,
- * as every Settings Page does, and takes the Area's policy for who sees Settings entries.
+ * and the Area decides where that is. `settings` is the Area's Settings container, and an entry there
+ * takes the Area's policy for who sees Settings entries.
  *
  * The entry's label is the Page's title, and it names the route by its preset key. Further entries for
  * the same Page -- one in the account menu, say -- follow it unchanged.
@@ -93,7 +93,6 @@ export function buildPhiSidebarRoutePresetDescriptor({
     area,
     title,
     path,
-    ...(settings ? { mount: { mountKey: "settings" as const } } : {}),
     navigation: [{
       navKey: resolvePhiAreaRootRouteNavKey(area),
       anchor,

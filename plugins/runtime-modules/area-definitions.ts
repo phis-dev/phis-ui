@@ -197,18 +197,6 @@ export const PHI_APP_RUNTIME_AREA_DEFINITIONS = [
     baseModuleId: PHI_APP_RUNTIME_MODULE_ID,
     shellPresetKey: "app-area-preset",
     accessPolicy: PHI_VIEWER_ACCESS_AUTHENTICATED,
-    /*
-     * The one place a Module offers what a signed-in person can decide about their own account.
-     *
-     * Same mount as Admin and Builder declare, and the same container with no address of its own
-     * (SETTINGS.md sections 2 and 3). What differs is the subject: there a Module says how it behaves
-     * for everybody who visits the Site, here what this one person has settled for themselves.
-     */
-    routeMounts: [{
-      mountKey: "settings",
-      navKey: "app:sidebar",
-      parentItemKey: PHI_APP_SETTINGS_NAV_ITEM_KEY,
-    }],
     navigationSurfaces: [
       {
         navKey: "app:header",
@@ -303,11 +291,6 @@ export const PHI_ADMIN_RUNTIME_AREA_DEFINITIONS = [
     baseModuleId: PHI_ADMIN_RUNTIME_MODULE_ID,
     shellPresetKey: "admin-area-preset",
     accessPolicy: PHI_VIEWER_ACCESS_DEVELOPER_TOOLS,
-    routeMounts: [{
-      mountKey: "settings",
-      navKey: "admin:sidebar",
-      parentItemKey: PHI_ADMIN_SETTINGS_NAV_ITEM_KEY,
-    }],
     navigationSurfaces: [
       {
         navKey: "admin:sidebar",
@@ -364,11 +347,6 @@ export const PHI_BUILDER_RUNTIME_AREA_DEFINITIONS = [
     baseModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
     shellPresetKey: "builder-area-preset",
     accessPolicy: PHI_VIEWER_ACCESS_STRUCTURE_AUTHORING,
-    routeMounts: [{
-      mountKey: "settings",
-      navKey: "builder:sidebar",
-      parentItemKey: PHI_BUILDER_SETTINGS_NAV_ITEM_KEY,
-    }],
     navigationSurfaces: [{
       navKey: "builder:sidebar",
       label: label("Builder sidebar navigation"),

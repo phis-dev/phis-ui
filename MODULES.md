@@ -733,7 +733,7 @@ addressed by its path.
 - Route paths are exact or contain at most one whole-segment parameter (`/news/:id`). Catch-alls,
   optional segments, regexes, match callbacks, and several dynamic segments are rejected.
 - `compilePhiCmsDescriptorCatalog` validates the installed descriptor set -- ownership, versions, route
-  syntax, route-mount exports, Theme identity, shell composition -- without running a tree loader.
+  syntax, navigation anchors, Theme identity, shell composition -- without running a tree loader.
   `compilePhiCmsActiveRouteTable` builds one Area's active route table. Building it never refuses: where
   two active routes want one address, the first claim answers and the second is absent, which hides its
   navigation entry. Requests resolve the table by path; Builder targets resolve it by Page id. Navigation
@@ -741,9 +741,10 @@ addressed by its path.
   (`resolvePhiCmsActiveNavigationSurfaces` takes it), so an entry links the address the Site assigned, and
   an entry whose route is not in the table hides -- never through the catalog, whose path is only what the
   Module declared.
-- An Area may export a route mount such as `settings`: a `mountKey` bound to an href-less navigation
-  container. A route that opts in with `mount: { mountKey }` places its navigation entry there. A mount
-  composes navigation, never paths.
+- There is no route mount. A route that belongs in an Area's Settings container says so through its
+  navigation entry (`anchor: "settings"`, below); the Area's `anchors.settings` names the container. The
+  earlier `mount: { mountKey }` on a route and `routeMounts` on an Area said the same thing a second time
+  and placed nothing, so they are gone.
 - Navigation descriptors inject only into surfaces an Area declares. An entry in an Area sidebar is
   placed by role: `anchor: "start" | "main" | "settings" | "end"`, and the surface's `anchors` say what
   each means in that Area. Every sidebar declares `start` (the top, ahead of the Area's own entries),

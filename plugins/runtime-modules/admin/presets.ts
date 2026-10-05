@@ -54,7 +54,6 @@ const ADMIN_OWNED_ROUTES = [
     presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
     title: "General",
     path: "/settings/general",
-    mount: { mountKey: "settings" },
     loadTree: ({ page, runtime }: PhiCmsDescriptorBuildContext) =>
       import("./trees/phi-default-admin-settings-page-tree")
         .then((module) => module.buildPhiDefaultAdminSettingsPageTree({ page, runtime })),
