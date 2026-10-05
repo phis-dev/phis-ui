@@ -461,6 +461,16 @@ export type PhiCmsWidgetPlugin<TConfig> = {
   renderPreview: PhiBivariantCallback<[PhiCmsWidgetPluginRenderArgs<TConfig>], ReactNode>;
 };
 
+/**
+ * Everything a Widget declares about itself, and nothing it renders.
+ *
+ * The one declarative shape. The Builder reads only this -- its metadata, Inspector fields and config
+ * parser -- and the Server, the Builder and the Runtime plugins below are this shape plus the function
+ * each of them renders with. There used to be six hand-kept `Pick` lists, and three of them had lost
+ * fields the others had: a Server plugin could not declare `requiredDataProviders`, the Builder meta read
+ * `contentBinding` through an `"x" in plugin` branch, and a Module's `translatesOwnText` travelled on a
+ * plugin whose type did not know it.
+ */
 export type PhiCmsWidgetPluginDefinition<TConfig> = Pick<
   PhiCmsWidgetPlugin<TConfig>,
   | "kind"
@@ -490,57 +500,15 @@ export type PhiCmsWidgetPluginDefinition<TConfig> = Pick<
 
 export type PhiCmsBuilderWidgetEditorInteraction = "inert" | "authoring";
 
-export type PhiCmsBuilderWidgetPlugin<TConfig> = Pick<
-  PhiCmsWidgetPlugin<TConfig>,
-  | "kind"
-  | "pluginKey"
-  | "typeKey"
-  | "title"
-  | "description"
-  | "category"
-  | "tags"
-  | "icon"
-  | "iconName"
-  | "iconFamily"
-  | "commercial"
-  | "runtimeSignals"
-  | "signalSubcontrols"
-  | "requiredRuntimeControllers"
-  | "requiredDataProviders"
-  | "slotSizePolicy"
-  | "surface"
-  | "defaultConfig"
-  | "fields"
-  | "parseConfig"
-> & {
+export type PhiCmsBuilderWidgetPlugin<TConfig> = PhiCmsWidgetPluginDefinition<TConfig> & {
   editorInteraction?: PhiCmsBuilderWidgetEditorInteraction;
   renderEditor: PhiBivariantCallback<[PhiCmsBuilderWidgetRenderArgs<TConfig>], ReactNode>;
   renderEditorTools?: PhiBivariantCallback<[PhiCmsBuilderWidgetRenderArgs<TConfig>], ReactNode>;
 };
 
-export type PhiCmsServerWidgetPlugin<TConfig> = Pick<
+export type PhiCmsServerWidgetPlugin<TConfig> = PhiCmsWidgetPluginDefinition<TConfig> & Pick<
   PhiCmsWidgetPlugin<TConfig>,
-  | "kind"
-  | "pluginKey"
-  | "typeKey"
-  | "title"
-  | "description"
-  | "category"
-  | "tags"
-  | "icon"
-  | "iconName"
-  | "iconFamily"
-  | "commercial"
-  | "runtimeSignals"
-  | "signalSubcontrols"
-  | "requiredRuntimeControllers"
-  | "slotSizePolicy"
-  | "surface"
-  | "defaultConfig"
-  | "fields"
-  | "parseConfig"
-  | "render"
-  | "renderPreview"
+  "render" | "renderPreview"
 >;
 
 export type PhiCmsRuntimeWidgetPlugin<TConfig> = PhiCmsWidgetPluginDefinition<TConfig> & Pick<

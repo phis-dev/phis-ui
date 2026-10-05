@@ -12,11 +12,9 @@ export function createPhiCmsBuilderWidgetPlugin<TConfig>(
   definition: PhiCmsWidgetPluginDefinition<TConfig>,
   renderEditor: (args: PhiCmsWidgetPluginRenderArgs<TConfig>) => ReactNode,
 ): PhiCmsBuilderWidgetPlugin<TConfig> {
-  const { contentBinding: _contentBinding, ...builderDefinition } = definition;
-  void _contentBinding;
-
+  // The definition whole: the Builder plugin is the declaration plus its editor, nothing taken away.
   return {
-    ...builderDefinition,
+    ...definition,
     renderEditor,
   };
 }
