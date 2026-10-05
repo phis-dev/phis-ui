@@ -1,7 +1,8 @@
 import "server-only";
 
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../../gateway/tr";
-import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../../gateway/label-set";
+import { definePhiRuntimeModuleLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../../gateway/label-set";
+import { PHI_DASHBOARD_RUNTIME_MODULE_IDENTITY } from "../ids";
 
 /**
  * What the page says, which is now all it says.
@@ -9,7 +10,7 @@ import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../
  * The figures moved out with the cards: a card's own words belong to the Module that offers it, and a
  * label set here would have been this page translating on three other Modules' behalf.
  */
-const PHI_ADMIN_DASHBOARD_PAGE_LABEL_SET = definePhiLabelSet({
+const PHI_ADMIN_DASHBOARD_PAGE_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_DASHBOARD_RUNTIME_MODULE_IDENTITY, {
   key: "preset:admin-dashboard-page",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {

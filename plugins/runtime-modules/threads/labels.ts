@@ -1,9 +1,10 @@
 import "server-only";
 
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
-import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
+import { definePhiRuntimeModuleLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
+import { PHI_THREADS_RUNTIME_MODULE_IDENTITY } from "./ids";
 
-const PHI_THREAD_CONVERSATION_LABEL_SET = definePhiLabelSet({
+const PHI_THREAD_CONVERSATION_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_THREADS_RUNTIME_MODULE_IDENTITY, {
   key: "widget:thread-conversation",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
@@ -58,7 +59,7 @@ const PHI_THREAD_CONVERSATION_LABEL_SET = definePhiLabelSet({
  * Its own set rather than a corner of the conversation's: this is the Page's title in a navigation
  * menu and in a browser tab, and a Site that renames the Page renames one thing.
  */
-const PHI_THREAD_PAGE_LABEL_SET = definePhiLabelSet({
+const PHI_THREAD_PAGE_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_THREADS_RUNTIME_MODULE_IDENTITY, {
   key: "page:threads",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
@@ -170,7 +171,7 @@ export async function getPhiThreadPageLabels(options: PhiGlobalTranslatorOptions
  * message is here, which is also what makes it translatable: the old panel carried its English inside
  * a client component, where no translator could reach it.
  */
-const PHI_THREAD_FORM_LABEL_SET = definePhiLabelSet({
+const PHI_THREAD_FORM_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_THREADS_RUNTIME_MODULE_IDENTITY, {
   key: "@phis/ui/modules/threads/labels/forms",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {

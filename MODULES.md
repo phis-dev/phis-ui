@@ -457,8 +457,10 @@ That Module locale is inherited by all package-authored user-facing copy owned b
 Module title and description, Widget and Layout metadata, Forms and validation labels, Provider/Table/
 Tree presentation labels, preset copy, navigation injections, dialogs, actions, and tooltips. A child
 artifact must not introduce another source locale or silently mix source languages. Module-owned Label
-Sets use the shared Runtime-Module Label-Set helper so the owner definition remains the single source of
-this inheritance.
+Sets use the shared Runtime-Module Label-Set helper (`definePhiRuntimeModuleLabelSet`) with the Module's
+identity -- `PHI_<MODULE>_RUNTIME_MODULE_IDENTITY` in its `ids.ts`, which the owner definition spreads --
+so the source locale is stated once and every Label Set inherits it. A Label Set lives in the Module that
+owns it, never under `components/`.
 
 Module-authored copy is translated through the global translation domain and shared across Sites. The
 server localizes Authoring catalog metadata before serialization; Clients must not invoke translation

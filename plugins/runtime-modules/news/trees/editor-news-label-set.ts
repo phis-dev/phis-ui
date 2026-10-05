@@ -1,7 +1,8 @@
 import "server-only";
 
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../../gateway/tr";
-import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../../gateway/label-set";
+import { definePhiRuntimeModuleLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../../gateway/label-set";
+import { PHI_NEWS_RUNTIME_MODULE_IDENTITY } from "../ids";
 
 /**
  * What the News page in the Editor says about itself.
@@ -10,7 +11,7 @@ import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../
  * Widget's label set, because those words belong to the Table wherever a Site places it and not to this
  * one Page.
  */
-const PHI_EDITOR_NEWS_PAGE_LABEL_SET = definePhiLabelSet({
+const PHI_EDITOR_NEWS_PAGE_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_NEWS_RUNTIME_MODULE_IDENTITY, {
   key: "preset:editor-news-page",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {

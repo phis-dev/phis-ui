@@ -24,7 +24,7 @@ import {
   readPhiThreadAddressId,
   type PhiThreadWidgetConfig,
 } from "../thread-widget-config";
-import type { PhiThreadConversationLabels } from "../../../../../components/widgets/label-sets/threads";
+import type { PhiThreadConversationLabels } from "../../labels";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 

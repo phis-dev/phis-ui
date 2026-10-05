@@ -1,9 +1,10 @@
 import "server-only";
 
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
-import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
+import { definePhiRuntimeModuleLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
+import { PHI_GROUPS_RUNTIME_MODULE_IDENTITY } from "./ids";
 
-const PHI_GROUPS_FORM_LABEL_SET = definePhiLabelSet({
+const PHI_GROUPS_FORM_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_GROUPS_RUNTIME_MODULE_IDENTITY, {
   key: "@phis/ui/modules/groups/labels/forms",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {

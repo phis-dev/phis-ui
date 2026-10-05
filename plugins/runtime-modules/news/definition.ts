@@ -3,7 +3,7 @@ import type { PhiRuntimeModuleDefinition } from "../contracts";
 import { PHI_CORE_SERVER_BINDING } from "../../../types/server-capabilities";
 import { PHI_NEWS_FORM_HANDLER_PROVIDER_DESCRIPTORS } from "./forms";
 import { PHI_NEWS_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "./data-providers";
-import { PHI_NEWS_RUNTIME_MODULE_ID } from "./ids";
+import { PHI_NEWS_RUNTIME_MODULE_IDENTITY } from "./ids";
 
 /**
  * The face of a Core content type, and nothing more.
@@ -22,7 +22,7 @@ import { PHI_NEWS_RUNTIME_MODULE_ID } from "./ids";
  * sees them rather than where the Page stands.
  */
 export const PHI_NEWS_RUNTIME_MODULE_DEFINITION = {
-  moduleId: PHI_NEWS_RUNTIME_MODULE_ID,
+  ...PHI_NEWS_RUNTIME_MODULE_IDENTITY,
   kind: "module",
   eligibleAreas: ["public", "editor"] as const satisfies readonly PhiCmsAreaKey[],
   serverBinding: PHI_CORE_SERVER_BINDING,

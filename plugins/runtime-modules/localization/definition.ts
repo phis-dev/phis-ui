@@ -3,13 +3,13 @@ import { PHI_LOCALIZATION_CONTROLLER_TYPE } from "../../../plugins/runtime-modul
 import type { PhiCmsAreaKey } from "../../../constants/cms-areas";
 import type { PhiRuntimeModuleDefinition } from "../contracts";
 import { buildPhiRuntimeModuleControllerDescriptor } from "../contracts";
-import { PHI_LOCALIZATION_RUNTIME_MODULE_ID } from "./ids";
+import { PHI_LOCALIZATION_RUNTIME_MODULE_IDENTITY } from "./ids";
 import { PHI_LOCALIZATION_FORM_HANDLER_PROVIDER_DESCRIPTORS } from "../../../plugins/runtime-modules/localization/forms";
 import { PHI_CORE_SERVER_BINDING } from "../../../types/server-capabilities";
 import { PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "./data-providers";
 
 export const PHI_LOCALIZATION_RUNTIME_MODULE_DEFINITION = {
-  moduleId: PHI_LOCALIZATION_RUNTIME_MODULE_ID,
+  ...PHI_LOCALIZATION_RUNTIME_MODULE_IDENTITY,
   kind: "module",
   eligibleAreas: ["admin", "editor"] as const satisfies readonly PhiCmsAreaKey[],
   serverBinding: PHI_CORE_SERVER_BINDING,

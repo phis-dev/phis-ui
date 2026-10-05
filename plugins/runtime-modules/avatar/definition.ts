@@ -1,6 +1,6 @@
 import type { PhiCmsAreaKey } from "../../../constants/cms-areas";
 import type { PhiRuntimeModuleDefinition } from "../contracts";
-import { PHI_AVATAR_RUNTIME_MODULE_ID } from "./ids";
+import { PHI_AVATAR_RUNTIME_MODULE_IDENTITY } from "./ids";
 import { PHI_AVATAR_USER_SPACE_MEDIA_KINDS } from "./media-spaces";
 import { PHI_CORE_SERVER_BINDING } from "../../../types/server-capabilities";
 
@@ -17,7 +17,7 @@ import { PHI_CORE_SERVER_BINDING } from "../../../types/server-capabilities";
  * pinned to the Site Space, so no other Area has a use for it.
  */
 export const PHI_AVATAR_RUNTIME_MODULE_DEFINITION = {
-  moduleId: PHI_AVATAR_RUNTIME_MODULE_ID,
+  ...PHI_AVATAR_RUNTIME_MODULE_IDENTITY,
   kind: "module",
   eligibleAreas: ["app"] as const satisfies readonly PhiCmsAreaKey[],
   serverBinding: PHI_CORE_SERVER_BINDING,

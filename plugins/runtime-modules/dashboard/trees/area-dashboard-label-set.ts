@@ -1,7 +1,8 @@
 import "server-only";
 
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../../gateway/tr";
-import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../../gateway/label-set";
+import { definePhiRuntimeModuleLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../../gateway/label-set";
+import { PHI_DASHBOARD_RUNTIME_MODULE_IDENTITY } from "../ids";
 
 /**
  * What the Dashboards that were not written for one Area say.
@@ -14,7 +15,7 @@ import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../
  * One key per Area rather than a lookup by name, because a label set's keys are what a translator sees
  * and a computed key is a message nobody can find.
  */
-const PHI_AREA_DASHBOARD_PAGE_LABEL_SET = definePhiLabelSet({
+const PHI_AREA_DASHBOARD_PAGE_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_DASHBOARD_RUNTIME_MODULE_IDENTITY, {
   key: "preset:area-dashboard-page",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {

@@ -11,7 +11,7 @@ import {
   type PhiMarkdownBlock,
 } from "../../../../../components/widgets/shared/markdown-body-client";
 import { PHI_SPACE } from "../../../../../theme/antd-css-var-contract";
-import type { PhiNewsListLabels } from "../../../../../components/widgets/label-sets/news";
+import type { PhiNewsListLabels } from "../../labels";
 
 /**
  * One entry as the server prepared it.

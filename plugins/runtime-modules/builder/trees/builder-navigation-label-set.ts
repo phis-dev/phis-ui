@@ -1,9 +1,10 @@
 import "server-only";
 
-import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../../gateway/label-set";
+import { definePhiRuntimeModuleLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../../gateway/label-set";
+import { PHI_BUILDER_RUNTIME_MODULE_IDENTITY } from "../ids";
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../../gateway/tr";
 
-const PHI_BUILDER_NAVIGATION_PAGE_LABEL_SET = definePhiLabelSet({
+const PHI_BUILDER_NAVIGATION_PAGE_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_BUILDER_RUNTIME_MODULE_IDENTITY, {
   key: "preset:builder-navigation-page",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {

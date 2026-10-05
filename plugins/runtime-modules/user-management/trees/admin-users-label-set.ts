@@ -1,9 +1,10 @@
 import "server-only";
 
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../../gateway/tr";
-import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../../gateway/label-set";
+import { definePhiRuntimeModuleLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../../gateway/label-set";
+import { PHI_USER_MANAGEMENT_RUNTIME_MODULE_IDENTITY } from "../ids";
 
-const PHI_ADMIN_USERS_PAGE_LABEL_SET = definePhiLabelSet({
+const PHI_ADMIN_USERS_PAGE_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_USER_MANAGEMENT_RUNTIME_MODULE_IDENTITY, {
   key: "preset:admin-users-page",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {

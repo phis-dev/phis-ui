@@ -1,7 +1,8 @@
 import "server-only";
 
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../../gateway/tr";
-import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../../gateway/label-set";
+import { definePhiRuntimeModuleLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../../gateway/label-set";
+import { PHI_NEWS_RUNTIME_MODULE_IDENTITY } from "../ids";
 
 /**
  * What the News table says, wherever a Site places it.
@@ -9,7 +10,7 @@ import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../
  * The words of the surface, not of the entries: an entry's own title arrives from Core in the Site's
  * source language, because this is where it is written rather than read.
  */
-const PHI_EDITOR_NEWS_WIDGET_LABEL_SET = definePhiLabelSet({
+const PHI_EDITOR_NEWS_WIDGET_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_NEWS_RUNTIME_MODULE_IDENTITY, {
   key: "widget:editor-news",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {

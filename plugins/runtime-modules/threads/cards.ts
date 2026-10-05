@@ -1,7 +1,8 @@
 import "server-only";
 
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
-import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
+import { definePhiRuntimeModuleLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
+import { PHI_THREADS_RUNTIME_MODULE_IDENTITY } from "./ids";
 import { getPhiThreadInboxStats } from "../../../gateway/thread-inbox-stats";
 import { PHI_VIEWER_ACCESS_AUTHENTICATED } from "../../../types/access";
 import {
@@ -28,7 +29,7 @@ import { PHI_THREADS_RUNTIME_MODULE_ID } from "./ids";
  * nowhere, and the Area guard is what keeps that from being possible rather than merely unlikely.
  */
 
-const PHI_THREADS_DASHBOARD_CARD_LABEL_SET = definePhiLabelSet({
+const PHI_THREADS_DASHBOARD_CARD_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_THREADS_RUNTIME_MODULE_IDENTITY, {
   key: "cards:threads-inbox",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {

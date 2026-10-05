@@ -3,13 +3,13 @@ import { PHI_USER_MANAGEMENT_CONTROLLER_TYPE } from "../../../plugins/runtime-mo
 import type { PhiCmsAreaKey } from "../../../constants/cms-areas";
 import type { PhiRuntimeModuleDefinition } from "../contracts";
 import { buildPhiRuntimeModuleControllerDescriptor } from "../contracts";
-import { PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID } from "./ids";
+import { PHI_USER_MANAGEMENT_RUNTIME_MODULE_IDENTITY } from "./ids";
 import { PHI_CORE_SERVER_BINDING } from "../../../types/server-capabilities";
 import { PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "./data-providers";
 import { PHI_USER_MANAGEMENT_FORM_HANDLER_PROVIDER_DESCRIPTORS } from "../../../plugins/runtime-modules/user-management/forms";
 
 export const PHI_USER_MANAGEMENT_RUNTIME_MODULE_DEFINITION = {
-  moduleId: PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
+  ...PHI_USER_MANAGEMENT_RUNTIME_MODULE_IDENTITY,
   kind: "module",
   eligibleAreas: ["admin"] as const satisfies readonly PhiCmsAreaKey[],
   serverBinding: PHI_CORE_SERVER_BINDING,

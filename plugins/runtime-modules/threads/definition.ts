@@ -1,7 +1,7 @@
 import type { PhiCmsAreaKey } from "../../../constants/cms-areas";
 import { buildPhiRuntimeModuleControllerDescriptor, type PhiRuntimeModuleDefinition } from "../contracts";
 import { PHI_CORE_SERVER_BINDING } from "../../../types/server-capabilities";
-import { PHI_THREADS_RUNTIME_MODULE_ID } from "./ids";
+import { PHI_THREADS_RUNTIME_MODULE_IDENTITY } from "./ids";
 import { PHI_THREADS_CONTROLLER_TYPE } from "./controller/address";
 import { PHI_THREADS_RUNTIME_CONTROLLER_DEFINITION } from "./controller/definition";
 import { PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "./data-providers";
@@ -21,7 +21,7 @@ import { PHI_THREADS_USER_SPACE_MEDIA_KINDS } from "./media-spaces";
  * that thing, not a Site deciding to show conversations.
  */
 export const PHI_THREADS_RUNTIME_MODULE_DEFINITION = {
-  moduleId: PHI_THREADS_RUNTIME_MODULE_ID,
+  ...PHI_THREADS_RUNTIME_MODULE_IDENTITY,
   kind: "module",
   eligibleAreas: ["app"] as const satisfies readonly PhiCmsAreaKey[],
   serverBinding: PHI_CORE_SERVER_BINDING,

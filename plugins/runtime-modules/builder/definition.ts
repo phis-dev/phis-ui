@@ -2,13 +2,13 @@ import { PHI_BUILDER_RUNTIME_CONTROLLER_DEFINITION } from "./controller/definiti
 import { PHI_BUILDER_CONTROLLER_TYPE } from "./controller/address";
 import { buildPhiRuntimeModuleControllerDescriptor } from "../contracts";
 import { definePhiAreaBaseRuntimeModuleDefinition } from "../area-base-definition";
-import { PHI_BUILDER_RUNTIME_MODULE_ID } from "./ids";
+import { PHI_BUILDER_RUNTIME_MODULE_IDENTITY } from "./ids";
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "./data-providers";
 import { PHI_CORE_SERVER_BINDING } from "../../../types/server-capabilities";
 
 export const PHI_BUILDER_RUNTIME_MODULE_DEFINITION = definePhiAreaBaseRuntimeModuleDefinition({
   area: "builder",
-  moduleId: PHI_BUILDER_RUNTIME_MODULE_ID,
+  ...PHI_BUILDER_RUNTIME_MODULE_IDENTITY,
   serverBinding: PHI_CORE_SERVER_BINDING,
   controllerType: PHI_BUILDER_CONTROLLER_TYPE,
   controller: buildPhiRuntimeModuleControllerDescriptor(PHI_BUILDER_RUNTIME_CONTROLLER_DEFINITION),

@@ -1,7 +1,8 @@
 import "server-only";
 
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
-import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
+import { definePhiRuntimeModuleLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
+import { PHI_USER_MANAGEMENT_RUNTIME_MODULE_IDENTITY } from "./ids";
 import { getResolvedSiteStats } from "../../../gateway/site-stats";
 import {
   createPhiDashboardCardId,
@@ -22,7 +23,7 @@ import { PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID } from "./ids";
  * provider calling Core directly.
  */
 
-const PHI_USER_MANAGEMENT_DASHBOARD_CARD_LABEL_SET = definePhiLabelSet({
+const PHI_USER_MANAGEMENT_DASHBOARD_CARD_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_USER_MANAGEMENT_RUNTIME_MODULE_IDENTITY, {
   key: "cards:user-management-accounts",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {

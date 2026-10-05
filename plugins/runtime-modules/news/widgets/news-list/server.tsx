@@ -1,6 +1,6 @@
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
-import { getPhiNewsListLabels } from "../../../../../components/widgets/label-sets/news";
+import { getPhiNewsListLabels } from "../../labels";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { fetchPhiSiteNews } from "../../../../../gateway/news";
 import { formatPhiDate } from "../../../../../helpers/format-date-time";

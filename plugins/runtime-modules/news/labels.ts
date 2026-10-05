@@ -1,7 +1,8 @@
 import "server-only";
 
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
-import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
+import { definePhiRuntimeModuleLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
+import { PHI_NEWS_RUNTIME_MODULE_IDENTITY } from "./ids";
 
 /**
  * What the News list says around the entries, which is everything the Site did not write itself.
@@ -10,7 +11,7 @@ import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../
  * repeats them. What is left is the frame: the state where a Site has published nothing yet, and the one
  * sentence to show when the read did not come back.
  */
-const PHI_NEWS_LIST_LABEL_SET = definePhiLabelSet({
+const PHI_NEWS_LIST_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_NEWS_RUNTIME_MODULE_IDENTITY, {
   key: "widget:news-list",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {

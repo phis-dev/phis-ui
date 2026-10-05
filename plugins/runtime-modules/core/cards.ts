@@ -1,7 +1,8 @@
 import "server-only";
 
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
-import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
+import { definePhiRuntimeModuleLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
+import { PHI_CORE_RUNTIME_MODULE_IDENTITY } from "./ids";
 import {
   createPhiDashboardCardId,
   type PhiDashboardCardContext,
@@ -22,7 +23,7 @@ import { PHI_CORE_RUNTIME_MODULE_ID } from "./ids";
  * process, which is the process this uptime is of.
  */
 
-const PHI_CORE_DASHBOARD_CARD_LABEL_SET = definePhiLabelSet({
+const PHI_CORE_DASHBOARD_CARD_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_CORE_RUNTIME_MODULE_IDENTITY, {
   key: "cards:core-runtime",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {

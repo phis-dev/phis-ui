@@ -543,6 +543,15 @@ const builderClientAreaModuleIds = Object.values(areaContributionFilesByArea).fl
 ).concat(commonClientModuleIds);
 areaModuleIds.builder = [builderServerAreaModuleIds, builderClientAreaModuleIds];
 
+/**
+ * The Module id a definition states: written as `moduleId: PHI_X_RUNTIME_MODULE_ID` or, since the Label
+ * Sets inherit the identity from `ids.ts`, spread in as `...PHI_X_RUNTIME_MODULE_IDENTITY`.
+ */
+function readDefinitionModuleId(body) {
+  return body.match(/moduleId:\s+(PHI_[A-Z0-9_]+_RUNTIME_MODULE_ID),/)?.[1] ??
+    body.match(/\.\.\.(PHI_[A-Z0-9_]+)_RUNTIME_MODULE_IDENTITY,/)?.[1]?.concat("_RUNTIME_MODULE_ID");
+}
+
 const exclusiveAreaEntries = [
   ...moduleDefinitionFiles.flatMap((file) => [
     ...readSource(file).matchAll(
@@ -550,7 +559,7 @@ const exclusiveAreaEntries = [
     ),
   ].flatMap((match) => {
     const body = match[1];
-    const moduleId = body.match(/moduleId:\s+(PHI_[A-Z0-9_]+_RUNTIME_MODULE_ID),/)?.[1];
+    const moduleId = readDefinitionModuleId(body);
     const exclusiveArea = body.match(/eligibleAreas:\s*\["([a-z]+)"\]/)?.[1];
     return moduleId && exclusiveArea ? [`${moduleId}:${exclusiveArea}`] : [];
   })),
@@ -560,7 +569,7 @@ const exclusiveAreaEntries = [
     ),
   ].flatMap((match) => {
     const body = match[1];
-    const moduleId = body.match(/moduleId:\s+(PHI_[A-Z0-9_]+_RUNTIME_MODULE_ID),/)?.[1];
+    const moduleId = readDefinitionModuleId(body);
     const exclusiveArea = body.match(/area:\s*"([a-z]+)"/)?.[1];
     return moduleId && exclusiveArea ? [`${moduleId}:${exclusiveArea}`] : [];
   })),

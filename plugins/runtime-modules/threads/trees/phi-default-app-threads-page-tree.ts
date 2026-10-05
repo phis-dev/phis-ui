@@ -24,7 +24,7 @@ import { createPhiRuntimeFormControllerAddress } from "../../../../components/fo
 import { PHI_THREADS_FORM_IDS } from "../forms";
 import { PHI_COLOR, PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "../../../../components/regions/presets/phi-base-page-layout";
-import { getPhiThreadPageLabels } from "../../../../components/widgets/label-sets/threads";
+import { getPhiThreadPageLabels } from "../labels";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 
 const SYNTHETIC_APP_THREADS_REGION_IDS = {

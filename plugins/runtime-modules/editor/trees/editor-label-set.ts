@@ -1,9 +1,10 @@
 import "server-only";
 
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../../gateway/tr";
-import { definePhiLabelSet, getPhiLabelSet } from "../../../../gateway/label-set";
+import { definePhiRuntimeModuleLabelSet, getPhiLabelSet } from "../../../../gateway/label-set";
+import { PHI_EDITOR_RUNTIME_MODULE_IDENTITY } from "../ids";
 
-const PHI_EDITOR_AREA_LABEL_SET = definePhiLabelSet({
+const PHI_EDITOR_AREA_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_EDITOR_RUNTIME_MODULE_IDENTITY, {
   key: "preset:editor-area",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {

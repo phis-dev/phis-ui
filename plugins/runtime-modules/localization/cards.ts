@@ -1,7 +1,8 @@
 import "server-only";
 
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
-import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
+import { definePhiRuntimeModuleLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
+import { PHI_LOCALIZATION_RUNTIME_MODULE_IDENTITY } from "./ids";
 import { formatPhiTranslation } from "../../../helpers/translation-format";
 import { maybeGetPhiRequestRuntime } from "../../../server-helpers/request-runtime";
 import {
@@ -22,7 +23,7 @@ import { PHI_LOCALIZATION_RUNTIME_MODULE_ID } from "./ids";
  * could act on.
  */
 
-const PHI_LOCALIZATION_DASHBOARD_CARD_LABEL_SET = definePhiLabelSet({
+const PHI_LOCALIZATION_DASHBOARD_CARD_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_LOCALIZATION_RUNTIME_MODULE_IDENTITY, {
   key: "cards:localization-locales",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {

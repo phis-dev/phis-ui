@@ -111,7 +111,7 @@ const PHI_THREADS_NEW_CONVERSATION_FORM_DESCRIPTOR: PhiFormDescriptor = {
 async function loadLabels(
   context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0],
 ) {
-  const { getPhiThreadFormLabels } = await import("../../../components/widgets/label-sets/threads");
+  const { getPhiThreadFormLabels } = await import("./labels");
   const credentials = readPhiServerApiCredentials();
   const labels = await getPhiThreadFormLabels({
     apiBaseUrl: credentials.apiBaseUrl,
