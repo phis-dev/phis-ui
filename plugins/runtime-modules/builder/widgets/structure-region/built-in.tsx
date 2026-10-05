@@ -393,6 +393,49 @@ function appendWidgetChildById(
   });
 }
 
+/**
+ * A moved node put into its target: under the root or under a Layout, as a Widget or a Layout, with the
+ * sequential compaction the target asks for. The two drop paths -- within a Region and across Regions --
+ * carried this four-way block twice.
+ */
+function insertStructureNodeIntoTarget({
+  childLayouts,
+  childWidgets,
+  movedNode,
+  parentLayoutNodeId,
+  targetsRoot,
+  compact,
+}: {
+  childLayouts: PhiCmsLayoutRenderNode[];
+  childWidgets: PhiCmsContentWidgetNode[];
+  movedNode: PhiCmsLayoutRenderNode | PhiCmsContentWidgetNode;
+  parentLayoutNodeId: PhiCmsInstanceId;
+  targetsRoot: boolean;
+  compact: boolean;
+}): { childLayouts: PhiCmsLayoutRenderNode[]; childWidgets: PhiCmsContentWidgetNode[] } {
+  let nextLayouts = childLayouts;
+  let nextWidgets = childWidgets;
+  if (targetsRoot) {
+    if (compact) {
+      const inserted = insertPhiCmsSequentialChild(nextLayouts, nextWidgets, movedNode);
+      nextLayouts = inserted.childLayouts;
+      nextWidgets = inserted.childWidgets;
+    } else if ("contentId" in movedNode) {
+      nextWidgets = [...nextWidgets, movedNode];
+    } else {
+      nextLayouts = [...nextLayouts, movedNode];
+    }
+  } else if ("contentId" in movedNode) {
+    nextLayouts = appendWidgetChildById(nextLayouts, parentLayoutNodeId, movedNode, compact);
+  } else {
+    nextLayouts = appendLayoutChildById(nextLayouts, parentLayoutNodeId, movedNode, compact);
+  }
+  if (targetsRoot && compact) {
+    return compactPhiCmsSequentialChildren({ childLayouts: nextLayouts, childWidgets: nextWidgets });
+  }
+  return { childLayouts: nextLayouts, childWidgets: nextWidgets };
+}
+
 function insertPhiCmsSequentialChild(
   childLayouts: PhiCmsLayoutRenderNode[],
   childWidgets: PhiCmsContentWidgetNode[],
@@ -473,23 +516,6 @@ function collectLayoutNodeSignalAddresses(
   }
 }
 
-function findLayoutNodeById(
-  nodes: readonly PhiCmsLayoutRenderNode[],
-  targetNodeId: PhiCmsInstanceId,
-): PhiCmsLayoutRenderNode | null {
-  for (const node of nodes) {
-    if (node.id === targetNodeId) {
-      return node;
-    }
-    const child = findLayoutNodeById(node.childLayouts ?? [], targetNodeId);
-    if (child) {
-      return child;
-    }
-  }
-
-  return null;
-}
-
 function collectDeletedNodeSignalAddresses({
   targetNodeId,
   targetNodeKind,
@@ -524,7 +550,7 @@ function collectDeletedNodeSignalAddresses({
     return [createPhiSignalAddress("cms", targetNodeId)];
   }
 
-  const targetLayout = findLayoutNodeById(childLayouts, targetNodeId);
+  const targetLayout = findPhiBuilderLayoutNodeById(childLayouts, targetNodeId);
   if (targetLayout) {
     collectLayoutNodeSignalAddresses(targetLayout, addresses);
   } else if (targetNodeKind) {
@@ -1277,58 +1303,15 @@ export function PhiStructureRegionScaffold({
         slotIndex: target.slotIndex,
         sortOrder: Math.max(0, extractedSource.node.sortOrder),
       };
-      let nextTargetLayouts = rootNodeChildLayouts;
-      let nextTargetWidgets = rootNodeChildWidgets;
       const targetsRoot = target.parentLayoutNodeId === rootNodeId;
-      if ("contentId" in movedNode) {
-        if (targetsRoot) {
-          if (compactTarget) {
-            const inserted = insertPhiCmsSequentialChild(
-              nextTargetLayouts,
-              nextTargetWidgets,
-              movedNode,
-            );
-            nextTargetLayouts = inserted.childLayouts;
-            nextTargetWidgets = inserted.childWidgets;
-          } else {
-            nextTargetWidgets = [...nextTargetWidgets, movedNode];
-          }
-        } else {
-          nextTargetLayouts = appendWidgetChildById(
-            nextTargetLayouts,
-            target.parentLayoutNodeId,
-            movedNode,
-            compactTarget,
-          );
-        }
-      } else if (targetsRoot) {
-        if (compactTarget) {
-          const inserted = insertPhiCmsSequentialChild(
-            nextTargetLayouts,
-            nextTargetWidgets,
-            movedNode,
-          );
-          nextTargetLayouts = inserted.childLayouts;
-          nextTargetWidgets = inserted.childWidgets;
-        } else {
-          nextTargetLayouts = [...nextTargetLayouts, movedNode];
-        }
-      } else {
-        nextTargetLayouts = appendLayoutChildById(
-          nextTargetLayouts,
-          target.parentLayoutNodeId,
-          movedNode,
-          compactTarget,
-        );
-      }
-      if (targetsRoot && compactTarget) {
-        const compactedTarget = compactPhiCmsSequentialChildren({
-          childLayouts: nextTargetLayouts,
-          childWidgets: nextTargetWidgets,
-        });
-        nextTargetLayouts = compactedTarget.childLayouts;
-        nextTargetWidgets = compactedTarget.childWidgets;
-      }
+      const { childLayouts: nextTargetLayouts, childWidgets: nextTargetWidgets } = insertStructureNodeIntoTarget({
+        childLayouts: rootNodeChildLayouts,
+        childWidgets: rootNodeChildWidgets,
+        movedNode,
+        parentLayoutNodeId: target.parentLayoutNodeId,
+        targetsRoot,
+        compact: compactTarget,
+      });
 
       const sourceRootDefinition = layoutMetasByType.get(sourceDraft.rootNode!.widgetType) ?? null;
       let nextSourceLayouts = compactStructureSequentialLayouts(
@@ -1420,59 +1403,14 @@ export function PhiStructureRegionScaffold({
       slotIndex: insertionSlotIndex,
       sortOrder: Math.max(0, extracted.node.sortOrder),
     };
-    let nextChildLayouts = extracted.childLayouts;
-    let nextChildWidgets = extracted.childWidgets;
-
-    if ("contentId" in movedNode) {
-      if (targetsRoot) {
-        if (compactSequential) {
-          const inserted = insertPhiCmsSequentialChild(
-            nextChildLayouts,
-            nextChildWidgets,
-            movedNode,
-          );
-          nextChildLayouts = inserted.childLayouts;
-          nextChildWidgets = inserted.childWidgets;
-        } else {
-          nextChildWidgets = [...nextChildWidgets, movedNode];
-        }
-      } else {
-        nextChildLayouts = appendWidgetChildById(
-          nextChildLayouts,
-          target.parentLayoutNodeId,
-          movedNode,
-          compactSequential,
-        );
-      }
-    } else if (targetsRoot) {
-      if (compactSequential) {
-        const inserted = insertPhiCmsSequentialChild(
-          nextChildLayouts,
-          nextChildWidgets,
-          movedNode,
-        );
-        nextChildLayouts = inserted.childLayouts;
-        nextChildWidgets = inserted.childWidgets;
-      } else {
-        nextChildLayouts = [...nextChildLayouts, movedNode];
-      }
-    } else {
-      nextChildLayouts = appendLayoutChildById(
-        nextChildLayouts,
-        target.parentLayoutNodeId,
-        movedNode,
-        compactSequential,
-      );
-    }
-
-    if (targetsRoot && compactSequential) {
-      const compacted = compactPhiCmsSequentialChildren({
-        childLayouts: nextChildLayouts,
-        childWidgets: nextChildWidgets,
-      });
-      nextChildLayouts = compacted.childLayouts;
-      nextChildWidgets = compacted.childWidgets;
-    }
+    const { childLayouts: nextChildLayouts, childWidgets: nextChildWidgets } = insertStructureNodeIntoTarget({
+      childLayouts: extracted.childLayouts,
+      childWidgets: extracted.childWidgets,
+      movedNode,
+      parentLayoutNodeId: target.parentLayoutNodeId,
+      targetsRoot,
+      compact: compactSequential,
+    });
 
     setPhiDeveloperRegionDraft(
       draftKey,
@@ -1971,44 +1909,30 @@ export function PhiStructureRegionScaffold({
     slotIndex: number;
     targetNodeId: PhiCmsInstanceId;
   }) {
-    const isActiveTarget = isPicking
-      && slotPickerContext?.slotIndex === slotIndex
-      && slotPickerContext.targetNodeId === targetNodeId;
-    return (
-      <PhiBuilderInsertPickerControl
-        key={`insert-picker:${targetNodeId}:${slotIndex}`}
-        open={isActiveTarget}
-        trigger={trigger}
-        items={availablePickItems}
-        section={pickSection}
-        packageFilters={pickPackageFilters}
-        widgetCategoryFilters={widgetCategoryFilters}
-        allowLayoutSection={slotPickerContext?.allowLayoutSection ?? true}
-        allowWidgetSection={slotPickerContext?.allowWidgetSection ?? false}
-        placement={pickerPlacement}
-        labels={pickerLabels}
-        onOpenChange={(nextOpen) => {
-          if (!nextOpen && isActiveTarget) closePicker();
-        }}
-        onSectionChange={setPickSection}
-        onPackageFiltersChange={setPickPackageFilters}
-        onWidgetCategoryFiltersChange={(filters) => {
-          patchPhiDeveloperBuilderState("public", { pickerWidgetCategoryFilters: filters });
-        }}
-        onChange={(item) => void insertPickedItem(item)}
-      />
-    );
+    return renderPickerControl({
+      key: `insert-picker:${targetNodeId}:${slotIndex}`,
+      isActiveTarget: isPicking
+        && slotPickerContext?.slotIndex === slotIndex
+        && slotPickerContext.targetNodeId === targetNodeId,
+      trigger,
+    });
   }
 
   function renderRegionPicker(trigger: ReactElement) {
     if (hasRootNode) return trigger;
 
-    const isActiveTarget = isPicking
-      && slotPickerContext?.slotIndex == null
-      && slotPickerContext?.targetNodeId == null;
+    return renderPickerControl({
+      key: `insert-picker:region:${config.regionKey}`,
+      isActiveTarget: isPicking && slotPickerContext?.slotIndex == null && slotPickerContext?.targetNodeId == null,
+      trigger,
+    });
+  }
+
+  /** The one picker, opened for a slot or for an empty Region; only the key and what makes it active differ. */
+  function renderPickerControl({ key, isActiveTarget, trigger }: { key: string; isActiveTarget: boolean; trigger: ReactElement }) {
     return (
       <PhiBuilderInsertPickerControl
-        key={`insert-picker:region:${config.regionKey}`}
+        key={key}
         open={isActiveTarget}
         trigger={trigger}
         items={availablePickItems}

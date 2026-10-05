@@ -66,7 +66,10 @@ kept in a Server entry. Fields marked optional may be left out of the input
   rejects a Form whose submit, confirm, or preview key has no handler Provider of the same phase owned by
   the same Module.
 - A descriptor with a `labelSetKey` requires `loadLabels`; `resolvePhiFormLabels` throws without it.
-  Literal-only Forms need no loader.
+  Literal-only Forms need no loader. A loader is written with `createPhiFormLabelSetLoader(load, select)`
+  (`components/forms/shared-form-loaders.ts`): `load` imports the Label Set's getter, `select` picks and
+  renames what the descriptor's keys are called out of it. The import, the credentials, the locale and the
+  flattening are the loader's; a Module form states only its mapping.
 - A definition has no render callback. Everything a Form shows comes from its descriptor; everything a
   Form does around it (submit, links, success) comes from the Form Widget.
 - The active Module set rejects a Form whose field or validation Provider keys are not declared by an

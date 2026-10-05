@@ -1,3 +1,4 @@
+import { createPhiFormLabelSetLoader } from "../../../components/forms/shared-form-loaders";
 import { PHI_BASE_ROLE_OPTIONS } from "../../../constants/phi-base-role-metadata";
 import { PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/user-management/ids";
 import type {
@@ -7,7 +8,6 @@ import type {
 } from "../../../types";
 import { createPhiFormId } from "../../../types/form-id";
 import { PHI_SHARED_PACKAGE_NAME } from "../../../types/signals";
-import { flattenPhiFormLabels } from "../../../components/forms/form-labels";
 import {
   PHI_FORM_FIELD_PROVIDER_KEYS,
   PHI_FORM_VALIDATION_PROVIDER_KEYS,
@@ -15,7 +15,6 @@ import {
 } from "../../../components/forms/form-provider-contract";
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
 import { createPhiUserManagementControllerAddress } from "./controller/address";
-import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 export const PHI_USER_MANAGEMENT_FORM_IDS = {
   create: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "user-management/create"),
@@ -152,16 +151,9 @@ function descriptor(
   };
 }
 
-async function loadLabels(
-  context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0],
-) {
-  const { getPhiAdminUsersTableWidgetLabels } = await import("../../../components/widgets/label-sets/admin-users");
-  const labels = await getPhiAdminUsersTableWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: context.runtime.locale.current,
-  });
-  return flattenPhiFormLabels({
+const loadLabels = createPhiFormLabelSetLoader(
+  () => import("../../../components/widgets/label-sets/admin-users").then((module) => module.getPhiAdminUsersTableWidgetLabels),
+  (labels) => ({
     firstName: labels.editor.firstName,
     firstNameRequired: labels.editor.firstName,
     lastName: labels.editor.lastName,
@@ -183,8 +175,8 @@ async function loadLabels(
     saving: labels.editor.saveButton,
     cancel: labels.confirm.cancel,
     ...Object.fromEntries(PHI_BASE_ROLE_OPTIONS.map((option) => [`role_${option.value}`, option.label])),
-  });
-}
+  }),
+);
 
 export const PHI_USER_MANAGEMENT_RUNTIME_MODULE_FORMS = [
   definePhiRuntimeModuleForm({

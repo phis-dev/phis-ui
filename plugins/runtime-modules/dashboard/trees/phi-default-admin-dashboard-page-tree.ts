@@ -1,16 +1,9 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../../types/cms-instance-id";
 import { PHI_DASHBOARD_RUNTIME_MODULE_ID } from "../ids";
-import {
-  PHI_DASHBOARD_CARD_DATA_PROVIDER_KEY,
-  PHI_DASHBOARD_CARD_RESOURCE_KEY,
-} from "../../../../constants/dashboard-card-provider-keys";
-import { PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS } from "../../../../constants/cms-layout-types";
-import { PhiCmsPageType } from "../../../../constants/phi-cms";
-import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import type { PhiBlockRuntime } from "../../../../types";
-import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "../../../../components/regions/presets/phi-base-page-layout";
 import { getPhiAdminDashboardPageLabels } from "./admin-dashboard-label-set";
+import { buildPhiDashboardCardsPageTree } from "./dashboard-cards-page-tree";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 
 /**
@@ -49,55 +42,12 @@ export async function buildPhiDefaultAdminDashboardPageTree({
     internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
-
-  const scaffold = buildPhiBasePageContentScaffold({
+  return buildPhiDashboardCardsPageTree({
     page,
+    area: "admin",
     regionId: SYNTHETIC_ADMIN_DASHBOARD_REGION_IDS.regionContent,
+    widgetId: SYNTHETIC_ADMIN_DASHBOARD_WIDGET_IDS.widgetCards,
+    labels,
+    descriptionSource: "Review the current site status and core runtime counters at a glance.",
   });
-
-  const nodes = createPhiCmsPresetNodes(page);
-  return {
-    page: nodes.page({ pageType: PhiCmsPageType.Standard }),
-    pageMeta: {
-      title: { msgId: 0, source: "Dashboard", value: labels.pageTitle },
-      description: {
-        msgId: 0,
-        source: "Review the current site status and core runtime counters at a glance.",
-        value: labels.pageDescription,
-      },
-    },
-    overlays: [],
-    regions: [scaffold.region],
-    layoutNodes: [scaffold.layoutNode],
-    contentWidgets: [
-      nodes.widget({
-        id: SYNTHETIC_ADMIN_DASHBOARD_WIDGET_IDS.widgetCards,
-        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
-        typeKey: "collection-view",
-        slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
-        sortOrder: 0,
-        label: "admin dashboard cards",
-        config: {
-          presentation: {
-            mode: "grid",
-            emptyDescription: labels.emptyDescription,
-          },
-          features: {
-            // No toolbar of its own: what a card shows and when it is asked again is the contribution's
-            // business and, later, the Controller's. A reload button that refreshed the list but not the
-            // payloads would be a button that lies.
-            tools: { mode: "external" },
-            pagination: { enabled: false },
-          },
-          source: {
-            providerKey: PHI_DASHBOARD_CARD_DATA_PROVIDER_KEY,
-            resourceKey: PHI_DASHBOARD_CARD_RESOURCE_KEY,
-            // Which Dashboard this is. A page belongs to one Area, so the preset that places the Widget
-            // is what knows it; the path it stands on is read live, because that is what a Site changes.
-            params: { area: "admin" },
-          },
-        },
-      }),
-    ],
-  };
 }

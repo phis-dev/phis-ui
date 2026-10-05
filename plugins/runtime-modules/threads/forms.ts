@@ -1,10 +1,10 @@
+import { createPhiFormLabelSetLoader } from "../../../components/forms/shared-form-loaders";
 import type {
   PhiFormDescriptor,
   PhiFormHandlerProviderDescriptor,
 } from "../../../types";
 import { createPhiFormId } from "../../../types/form-id";
 import { PHI_SHARED_PACKAGE_NAME } from "../../../types/signals";
-import { flattenPhiFormLabels } from "../../../components/forms/form-labels";
 import {
   PHI_FORM_FIELD_PROVIDER_KEYS,
   PHI_FORM_UPLOAD_LABEL_KEYS,
@@ -14,7 +14,6 @@ import {
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
 import { PhisThreadKind } from "../../../constants/threads";
 import { PHI_THREADS_USER_SPACE_MEDIA_KINDS } from "./media-spaces";
-import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 import { PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS, PHI_THREADS_RUNTIME_MODULE_ID } from "./ids";
 
 export const PHI_THREADS_FORM_IDS = {
@@ -108,17 +107,9 @@ const PHI_THREADS_NEW_CONVERSATION_FORM_DESCRIPTOR: PhiFormDescriptor = {
   },
 };
 
-async function loadLabels(
-  context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0],
-) {
-  const { getPhiThreadFormLabels } = await import("./labels");
-  const credentials = readPhiServerApiCredentials();
-  const labels = await getPhiThreadFormLabels({
-    apiBaseUrl: credentials.apiBaseUrl,
-    internalToken: credentials.internalToken,
-    locale: context.runtime.locale.current,
-  });
-  return flattenPhiFormLabels({
+const loadLabels = createPhiFormLabelSetLoader(
+  () => import("./labels").then((module) => module.getPhiThreadFormLabels),
+  (labels) => ({
     people: labels.peopleLabel,
     peoplePlaceholder: labels.peoplePlaceholder,
     peopleHint: labels.peopleHint,
@@ -152,8 +143,8 @@ async function loadLabels(
     [PHI_FORM_UPLOAD_LABEL_KEYS.errorQuotaExceeded]: labels.replyErrorQuotaExceeded,
     [PHI_FORM_UPLOAD_LABEL_KEYS.errorSpaceUnavailable]: labels.replyErrorSpaceUnavailable,
     [PHI_FORM_UPLOAD_LABEL_KEYS.errorStorageUnreachable]: labels.replyErrorStorageUnreachable,
-  });
-}
+  }),
+);
 
 /**
  * Writing into the conversation that is open, as a declared Form.

@@ -1,13 +1,12 @@
+import { createPhiFormLabelSetLoader } from "../../../components/forms/shared-form-loaders";
 import type { PhiFormDescriptor } from "../../../types";
 import { createPhiFormId } from "../../../types/form-id";
 import { PHI_SHARED_PACKAGE_NAME } from "../../../types/signals";
-import { flattenPhiFormLabels } from "../../../components/forms/form-labels";
 import {
   PHI_FORM_FIELD_PROVIDER_KEYS,
   PHI_FORM_VALIDATION_PROVIDER_KEYS,
 } from "../../../components/forms/form-provider-contract";
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
-import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 import { PHI_REVISIONS_RUNTIME_MODULE_ID } from "./ids";
 
 export const PHI_REVISIONS_FORM_IDS = {
@@ -48,20 +47,13 @@ const PHI_REVISIONS_DELETE_AREA_FORM_DESCRIPTOR: PhiFormDescriptor = {
   ],
 };
 
-async function loadLabels(
-  context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0],
-) {
-  const { getPhiBuilderRevisionsWidgetLabels } = await import("../../../components/widgets/label-sets/revisions");
-  const labels = await getPhiBuilderRevisionsWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: context.runtime.locale.current,
-  });
-  return flattenPhiFormLabels({
+const loadLabels = createPhiFormLabelSetLoader(
+  () => import("../../../components/widgets/label-sets/revisions").then((module) => module.getPhiBuilderRevisionsWidgetLabels),
+  (labels) => ({
     areaKey: labels.deleteArea.field,
     areaKeyRequired: labels.deleteArea.fieldRequired,
-  });
-}
+  }),
+);
 
 export const PHI_REVISIONS_RUNTIME_MODULE_FORMS = [
   definePhiRuntimeModuleForm({

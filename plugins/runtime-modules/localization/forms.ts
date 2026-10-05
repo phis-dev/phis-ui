@@ -1,5 +1,5 @@
+import { createPhiFormLabelSetLoader } from "../../../components/forms/shared-form-loaders";
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
-import { flattenPhiFormLabels } from "../../../components/forms/form-labels";
 import {
   PHI_FORM_FIELD_PROVIDER_KEYS,
   PHI_FORM_VALIDATION_PROVIDER_KEYS,
@@ -10,7 +10,6 @@ import type { PhiFormDescriptor, PhiFormHandlerProviderDescriptor } from "../../
 import { PHI_LOCALIZATION_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/localization/ids";
 import { PHI_SHARED_PACKAGE_NAME } from "../../../types/signals";
 import { PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_KEYS } from "./ids";
-import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 export const PHI_LOCALIZATION_FORM_IDS = {
   siteLocales: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "localization/site-locales"),
@@ -62,14 +61,9 @@ function translationDescriptor(formId: string): PhiFormDescriptor {
   };
 }
 
-async function loadAdminLabels(context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0]) {
-  const { getPhiAdminLocalesWidgetLabels } = await import("../../../components/widgets/label-sets/admin-locales");
-  const labels = await getPhiAdminLocalesWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: context.runtime.locale.current,
-  });
-  return flattenPhiFormLabels({
+const loadAdminLabels = createPhiFormLabelSetLoader(
+  () => import("../../../components/widgets/label-sets/admin-locales").then((module) => module.getPhiAdminLocalesWidgetLabels),
+  (labels) => ({
     defaultLocaleLabel: labels.defaultLocaleLabel,
     availableLocalesLabel: labels.availableLocalesLabel,
     actions: { submitLabel: labels.saveLocalesLabel },
@@ -82,24 +76,19 @@ async function loadAdminLabels(context: Parameters<NonNullable<ReturnType<typeof
     translationLabel: labels.edit.translationLabel,
     translationPlaceholder: labels.edit.translationLabel,
     saveError: labels.errors.save,
-  });
-}
+  }),
+);
 
-async function loadEditorLabels(context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0]) {
-  const { getPhiEditorTranslationsWidgetLabels } = await import("./trees/editor-translations-widget-label-set");
-  const labels = await getPhiEditorTranslationsWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: context.runtime.locale.current,
-  });
-  return flattenPhiFormLabels({
+const loadEditorLabels = createPhiFormLabelSetLoader(
+  () => import("./trees/editor-translations-widget-label-set").then((module) => module.getPhiEditorTranslationsWidgetLabels),
+  (labels) => ({
     saveLabel: labels.actions.save,
     savingLabel: labels.actions.save,
     translationLabel: labels.columns.translation,
     translationPlaceholder: labels.translationPlaceholder,
     saveError: labels.errors.save,
-  });
-}
+  }),
+);
 
 export const PHI_LOCALIZATION_RUNTIME_MODULE_FORMS = [
   definePhiRuntimeModuleForm({

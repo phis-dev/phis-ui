@@ -1,9 +1,19 @@
 import type { PhiFormInitialValuesLoader, PhiFormLabelSetLoader } from "./form-resolution";
 
-export function createPhiFormLabelSetLoader(
+/**
+ * A Form's labels from a Label Set: the Set is loaded when the Form is rendered, read in the page's
+ * language, and flattened to the keys the descriptor names.
+ *
+ * `select` picks and renames: a Form that calls a field `name` while the Set says `fields.siteName`
+ * states that mapping here. Ten Module forms used to spell the whole loader for themselves to do only
+ * that -- the dynamic import, the credentials, the locale, the flattening -- and the one thing that was
+ * theirs stood in the middle of it.
+ */
+export function createPhiFormLabelSetLoader<TLabels>(
   load: () => Promise<
-    (options: { apiBaseUrl: string; internalToken: string; locale: string }) => Promise<unknown>
+    (options: { apiBaseUrl: string; internalToken: string; locale: string }) => Promise<TLabels>
   >,
+  select?: (labels: TLabels) => unknown,
 ): PhiFormLabelSetLoader {
   return async ({ runtime }) => {
     const [{ flattenPhiFormLabels }, { phiRuntime }, loadLabels] = await Promise.all([
@@ -12,11 +22,12 @@ export function createPhiFormLabelSetLoader(
       load(),
     ]);
     const rt = phiRuntime(runtime);
-    return flattenPhiFormLabels(await loadLabels({
+    const labels = await loadLabels({
       apiBaseUrl: rt.apiBaseUrl,
       internalToken: rt.internalToken,
       locale: runtime.locale.current,
-    }));
+    });
+    return flattenPhiFormLabels(select ? select(labels) : labels);
   };
 }
 

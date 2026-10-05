@@ -1,3 +1,4 @@
+import { createPhiFormLabelSetLoader } from "../../../components/forms/shared-form-loaders";
 import { PHI_GROUPS_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/groups/ids";
 import type {
   PhiFormDescriptor,
@@ -5,7 +6,6 @@ import type {
 } from "../../../types";
 import { createPhiFormId } from "../../../types/form-id";
 import { PHI_SHARED_PACKAGE_NAME } from "../../../types/signals";
-import { flattenPhiFormLabels } from "../../../components/forms/form-labels";
 import {
   PHI_FORM_FIELD_PROVIDER_KEYS,
   PHI_FORM_VALIDATION_PROVIDER_KEYS,
@@ -14,7 +14,6 @@ import {
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
 import { PHI_GROUPS_RUNTIME_DATA_PROVIDER_KEYS } from "./ids";
 import { PhiGroupMembershipFlags } from "../../../constants/site-groups";
-import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 export const PHI_GROUPS_FORM_IDS = {
   create: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "groups/create"),
@@ -124,16 +123,9 @@ const PHI_GROUPS_MEMBERSHIP_FORM_DESCRIPTOR: PhiFormDescriptor = {
   },
 };
 
-async function loadLabels(
-  context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0],
-) {
-  const { getPhiGroupFormLabels } = await import("./labels");
-  const labels = await getPhiGroupFormLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: context.runtime.locale.current,
-  });
-  return flattenPhiFormLabels({
+const loadLabels = createPhiFormLabelSetLoader(
+  () => import("./labels").then((module) => module.getPhiGroupFormLabels),
+  (labels) => ({
     key: labels.fields.key,
     keyHint: labels.fields.keyHint,
     keyRequired: labels.fields.keyRequired,
@@ -150,8 +142,8 @@ async function loadLabels(
     levelAuthor: labels.levels.author,
     levelEditor: labels.levels.editor,
     levelManager: labels.levels.manager,
-  });
-}
+  }),
+);
 
 export const PHI_GROUPS_RUNTIME_MODULE_FORMS = [
   definePhiRuntimeModuleForm({

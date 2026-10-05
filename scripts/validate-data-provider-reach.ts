@@ -108,6 +108,34 @@ for (const [moduleId, entry] of PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG) {
   }
 }
 
+/*
+ * A preset file no loader names may still be drawn: a body two trees share (the Dashboard's card
+ * Collection, placed by Admin's tree and the generic Area's) is reached through the trees that import
+ * it, and is drawn in every Area they are. It inherits their Areas and owners, so the check below asks
+ * of it what it asks of them, rather than losing the question because the file moved.
+ */
+for (const name of presetFilesByName.keys()) {
+  if (areasByPresetName.has(name)) {
+    continue;
+  }
+  const importPattern = new RegExp(`from\\s+["'][^"']*/${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}["']`, "u");
+  for (const [importerName, importerFile] of presetFilesByName) {
+    if (importerName === name || !importPattern.test(read(importerFile))) {
+      continue;
+    }
+    for (const area of areasByPresetName.get(importerName) ?? []) {
+      const areas = areasByPresetName.get(name) ?? new Set<PhiCmsAreaKey>();
+      areas.add(area);
+      areasByPresetName.set(name, areas);
+    }
+    for (const owner of ownersByPresetName.get(importerName) ?? []) {
+      const owners = ownersByPresetName.get(name) ?? new Set<string>();
+      owners.add(owner);
+      ownersByPresetName.set(name, owners);
+    }
+  }
+}
+
 /**
  * Every provider key a Module's Client definitions register, by the const the manifests spread.
  *

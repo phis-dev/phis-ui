@@ -1,3 +1,4 @@
+import { createPhiFormLabelSetLoader } from "../../../components/forms/shared-form-loaders";
 import { PHI_ADMIN_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/admin/ids";
 import type {
   PhiFormDescriptor,
@@ -5,14 +6,12 @@ import type {
 } from "../../../types";
 import { createPhiFormId } from "../../../types/form-id";
 import { PHI_SHARED_PACKAGE_NAME } from "../../../types/signals";
-import { flattenPhiFormLabels } from "../../../components/forms/form-labels";
 import {
   PHI_FORM_FIELD_PROVIDER_KEYS,
   PHI_FORM_VALIDATION_PROVIDER_KEYS,
   createPhiSharedFormProviderKey,
 } from "../../../components/forms/form-provider-contract";
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
-import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 export const PHI_ADMIN_SETTINGS_FORM_IDS = {
   general: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "admin/settings-general"),
@@ -81,16 +80,9 @@ const PHI_ADMIN_SETTINGS_GENERAL_FORM_DESCRIPTOR: PhiFormDescriptor = {
   },
 };
 
-async function loadLabels(
-  context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0],
-) {
-  const { getPhiAdminSettingsWidgetLabels } = await import("../../../components/widgets/label-sets/admin-settings");
-  const labels = await getPhiAdminSettingsWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: context.runtime.locale.current,
-  });
-  return flattenPhiFormLabels({
+const loadLabels = createPhiFormLabelSetLoader(
+  () => import("../../../components/widgets/label-sets/admin-settings").then((module) => module.getPhiAdminSettingsWidgetLabels),
+  (labels) => ({
     name: labels.fields.siteName,
     nameRequired: labels.fields.siteName,
     hostname: labels.fields.hostname,
@@ -102,8 +94,8 @@ async function loadLabels(
     supportEmailRequired: labels.fields.supportEmail,
     supportEmailInvalid: labels.feedback.errorInvalidSupportEmail,
     actions: { submitLabel: labels.submitLabel },
-  });
-}
+  }),
+);
 
 export const PHI_ADMIN_RUNTIME_MODULE_FORMS = [
   definePhiRuntimeModuleForm({

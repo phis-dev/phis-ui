@@ -1,20 +1,13 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../../types/cms-instance-id";
 import { PHI_DASHBOARD_RUNTIME_MODULE_ID } from "../ids";
-import {
-  PHI_DASHBOARD_CARD_DATA_PROVIDER_KEY,
-  PHI_DASHBOARD_CARD_RESOURCE_KEY,
-} from "../../../../constants/dashboard-card-provider-keys";
-import { PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS } from "../../../../constants/cms-layout-types";
-import { PhiCmsPageType } from "../../../../constants/phi-cms";
-import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import type { PhiBlockRuntime } from "../../../../types";
-import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "../../../../components/regions/presets/phi-base-page-layout";
 import {
   getPhiAreaDashboardPageLabels,
   type PhiAreaDashboardKey,
 } from "./area-dashboard-label-set";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
+import { buildPhiDashboardCardsPageTree } from "./dashboard-cards-page-tree";
 
 /**
  * The Dashboard an Area gets when it has nothing more specific to show.
@@ -62,47 +55,12 @@ export async function buildPhiDefaultAreaDashboardPageTree({
     internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   }, area);
-  const scaffold = buildPhiBasePageContentScaffold({
+  return buildPhiDashboardCardsPageTree({
     page,
+    area,
     regionId,
+    widgetId: widgetIds.widgetCards,
+    labels,
+    descriptionSource: "",
   });
-
-  const nodes = createPhiCmsPresetNodes(page);
-  return {
-    page: nodes.page({ pageType: PhiCmsPageType.Standard }),
-    pageMeta: {
-      title: { msgId: 0, source: "Dashboard", value: labels.pageTitle },
-      description: { msgId: 0, source: "", value: labels.pageDescription },
-    },
-    overlays: [],
-    regions: [scaffold.region],
-    layoutNodes: [scaffold.layoutNode],
-    contentWidgets: [
-      nodes.widget({
-        id: widgetIds.widgetCards,
-        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
-        typeKey: "collection-view",
-        slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
-        sortOrder: 0,
-        label: `${area} dashboard cards`,
-        config: {
-          presentation: {
-            mode: "grid",
-            emptyDescription: labels.emptyDescription,
-          },
-          features: {
-            // No toolbar of its own, for the reason the Admin Dashboard states: a reload that refreshed
-            // the list but not the payloads would be a button that lies.
-            tools: { mode: "external" },
-            pagination: { enabled: false },
-          },
-          source: {
-            providerKey: PHI_DASHBOARD_CARD_DATA_PROVIDER_KEY,
-            resourceKey: PHI_DASHBOARD_CARD_RESOURCE_KEY,
-            params: { area },
-          },
-        },
-      }),
-    ],
-  };
 }

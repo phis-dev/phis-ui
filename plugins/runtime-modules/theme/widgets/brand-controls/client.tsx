@@ -600,9 +600,7 @@ function mergeThemeFontSlot(
   const fonts = { ...(theme.fonts ?? {}) };
   if (family) fonts[slot] = family;
   else delete fonts[slot];
-  return Object.keys(fonts).length > 0
-    ? { ...theme, fonts }
-    : Object.fromEntries(Object.entries(theme).filter(([key]) => key !== "fonts")) as ThemePayload;
+  return Object.keys(fonts).length > 0 ? { ...theme, fonts } : omitThemeFields(theme, "fonts");
 }
 
 /**
@@ -615,9 +613,7 @@ function mergeThemeHeadingFont(theme: ThemePayload, heading: PhiThemeHeadingFont
   const typography = { ...(theme.typography ?? {}) };
   if (heading === "body") delete typography.headings;
   else typography.headings = heading;
-  return Object.keys(typography).length > 0
-    ? { ...theme, typography }
-    : Object.fromEntries(Object.entries(theme).filter(([key]) => key !== "typography")) as ThemePayload;
+  return Object.keys(typography).length > 0 ? { ...theme, typography } : omitThemeFields(theme, "typography");
 }
 
 function mergeThemeControlShape(theme: ThemePayload, controls: PhiControlShapeCorners): ThemePayload {
@@ -779,11 +775,6 @@ function countThemePaletteLeaves(palette: PhiThemePalette | null | undefined) {
   );
 }
 
-function readTokenColor(token: Record<string, unknown>, key: string, fallback: string) {
-  const value = token[key];
-  return typeof value === "string" && value.trim() ? value : fallback;
-}
-
 function readEffectiveTokenString(token: Record<string, unknown>, key: string, fallback: string) {
   const value = token[key];
   return typeof value === "string" && value.trim() ? value : fallback;
@@ -877,8 +868,10 @@ const renderPhiThemeRootBackgroundMediaPicker: NonNullable<PhiBackgroundControlP
     );
   };
 
-function mergeThemeRootBackground(
+/** The Theme root's ground (`background`) or its chrome overlay (`chrome`) for one colour mode. */
+function mergeThemeRootSurface(
   theme: ThemePayload,
+  surface: "background" | "chrome",
   mode: "light" | "dark",
   value: PhiCmsBackgroundWidgetConfig,
 ): ThemePayload {
@@ -886,8 +879,8 @@ function mergeThemeRootBackground(
     ...theme,
     root: {
       ...(theme.root ?? {}),
-      background: {
-        ...(theme.root?.background ?? {}),
+      [surface]: {
+        ...(theme.root?.[surface] ?? {}),
         [mode]: value,
       },
     },
@@ -909,23 +902,6 @@ function mergeThemeChromeShadow(
           ...(theme.root?.chrome?.shadow ?? {}),
           [family]: value,
         },
-      },
-    },
-  };
-}
-
-function mergeThemeChromeOverlay(
-  theme: ThemePayload,
-  mode: "light" | "dark",
-  value: PhiCmsBackgroundWidgetConfig,
-): ThemePayload {
-  return {
-    ...theme,
-    root: {
-      ...(theme.root ?? {}),
-      chrome: {
-        ...(theme.root?.chrome ?? {}),
-        [mode]: value,
       },
     },
   };
@@ -1114,34 +1090,46 @@ function emitThemeState(
   draftStatus: "draft" | "published" = "draft",
   correlationId?: string,
 ) {
-  const sender = createPhiThemeControllerAddress();
   const receiver = "broadcast" as const;
-
-  dispatchSignal({
-    scope: "area",
-    channel: PHI_THEME_SIGNAL_CHANNELS.brandTheme,
-    action: "change",
-    value: {
-      theme,
-      revisionId,
-      draftStatus,
-      themeKey: DEFAULT_THEME_KEY,
-    },
-      valueType: "json",
-      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.brandTheme,
-      sender,
-      receiver,
-    correlationId,
-    timestamp: Date.now(),
-  });
-
+  dispatchBrandThemeSignal(dispatchSignal, { receiver, theme, revisionId, draftStatus, correlationId });
   dispatchSignal({
     scope: "area",
     channel: PHI_THEME_SIGNAL_CHANNELS.presetSelect,
     action: "change",
     value: selectionValue,
     valueType: "string",
-    sender,
+    sender: createPhiThemeControllerAddress(),
+    receiver,
+    correlationId,
+    timestamp: Date.now(),
+  });
+}
+
+/** The Theme as one Signal, to everybody or to the one Widget that asked; both emitters send this. */
+function dispatchBrandThemeSignal(
+  dispatchSignal: ReturnType<typeof usePhiSignalDispatcher>,
+  {
+    receiver,
+    theme,
+    revisionId,
+    draftStatus,
+    correlationId,
+  }: {
+    receiver: PhiSignalAddress | "broadcast";
+    theme: ThemePayload;
+    revisionId: number | null;
+    draftStatus: "draft" | "published";
+    correlationId: string | undefined;
+  },
+) {
+  dispatchSignal({
+    scope: "area",
+    channel: PHI_THEME_SIGNAL_CHANNELS.brandTheme,
+    action: "change",
+    value: { theme, revisionId, draftStatus, themeKey: DEFAULT_THEME_KEY },
+    valueType: "json",
+    valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.brandTheme,
+    sender: createPhiThemeControllerAddress(),
     receiver,
     correlationId,
     timestamp: Date.now(),
@@ -1243,18 +1231,7 @@ function emitThemeStateTo(
   draftStatus: "draft" | "published",
   correlationId: string,
 ) {
-  dispatchSignal({
-    scope: "area",
-    channel: PHI_THEME_SIGNAL_CHANNELS.brandTheme,
-    action: "change",
-    value: { theme, revisionId, draftStatus, themeKey: DEFAULT_THEME_KEY },
-    valueType: "json",
-    valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.brandTheme,
-    sender: createPhiThemeControllerAddress(),
-    receiver,
-    correlationId,
-    timestamp: Date.now(),
-  });
+  dispatchBrandThemeSignal(dispatchSignal, { receiver, theme, revisionId, draftStatus, correlationId });
 }
 
 /**
@@ -2429,9 +2406,9 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
               const seedAuthored =
                 Object.prototype.hasOwnProperty.call(ownPalette.seed ?? {}, section.key) ||
                 Object.prototype.hasOwnProperty.call(ownPalette.modes?.[previewMode]?.seed ?? {}, section.key);
-              const seedDefaultValue = readTokenColor(computedToken, section.key, section.fallback);
+              const seedDefaultValue = readEffectiveTokenString(computedToken, section.key, section.fallback);
               const seedValue = seedAuthored
-                ? readTokenColor(colorToken, section.key, seedDefaultValue)
+                ? readEffectiveTokenString(colorToken, section.key, seedDefaultValue)
                 : seedDefaultValue;
 
               return {
@@ -2470,7 +2447,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                   <PhiFlexControl wrap="wrap" style={{ minWidth: 0, columnGap: clientToken.paddingXXS, rowGap: clientToken.paddingSM }}>
                     {section.derived.map((item) => {
                       const overridden = Object.prototype.hasOwnProperty.call(ownOverrides, item.key);
-                      const fallback = readTokenColor(computedToken, item.key, section.fallback);
+                      const fallback = readEffectiveTokenString(computedToken, item.key, section.fallback);
                       return (
                         <div
                           key={item.key}
@@ -2485,7 +2462,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                               {...pickerTransaction}
                               label={item.label}
                               tokenKey={item.key}
-                              value={overridden ? readTokenColor(colorToken, item.key, fallback) : fallback}
+                              value={overridden ? readEffectiveTokenString(colorToken, item.key, fallback) : fallback}
                               defaultValue={fallback}
                               disabled={saving}
                               customColors={customColorOptions}
@@ -2557,6 +2534,27 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
     controlHeight: readEffectiveTokenNumber(styleTokenInput, "controlHeight", PHI_CONTROL_HEIGHTS.md),
     controlHeightLG: readEffectiveTokenNumber(styleTokenInput, "controlHeightLG", PHI_CONTROL_HEIGHTS.lg),
   };
+
+  /** One row per size step: a label and the preset picker; Border Radius and Control Height share it. */
+  const renderPresetSizeRows = (
+    items: ReadonlyArray<{ key: string; label: string; value: number; fallbackPreset: PhiStyleSizePresetKey }>,
+    options: Parameters<typeof PhiPresetSizeControl<PhiStyleSizePresetKey>>[0]["options"],
+  ) => (
+    <PhiFlexControl vertical gap={clientToken.paddingXS}>
+      {items.map((item) => (
+        <PhiFlexControl key={item.key} align="center" gap={clientToken.paddingSM} wrap="nowrap">
+          <PhiTypographyControl style={{ flex: `0 0 ${fieldLabelWidth}px` }}>{item.label}</PhiTypographyControl>
+          <PhiPresetSizeControl<PhiStyleSizePresetKey>
+            disabled={saving}
+            value={item.value}
+            fallbackKey={item.fallbackPreset}
+            options={options}
+            onChange={(value) => updateToken({ [item.key]: value })}
+          />
+        </PhiFlexControl>
+      ))}
+    </PhiFlexControl>
+  );
   const wireframe = readEffectiveTokenBoolean(styleTokenInput, "wireframe", true);
   const baseFontSize = readEffectiveTokenNumber(styleTokenInput, "fontSize", 12);
 
@@ -2685,50 +2683,20 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
             {
               key: "radius",
               label: <PhiTypographyControl strong>Border Radius</PhiTypographyControl>,
-              children: (
-                <PhiFlexControl vertical gap={clientToken.paddingXS}>
-                  {[
-                    { key: "borderRadiusSM", label: "Small", value: radiusValues.borderRadiusSM, fallbackPreset: "xs" },
-                    { key: "borderRadius", label: "Base", value: radiusValues.borderRadius, fallbackPreset: "sm" },
-                    { key: "borderRadiusLG", label: "Large", value: radiusValues.borderRadiusLG, fallbackPreset: "base" },
-                  ].map((item) => (
-                    <PhiFlexControl key={item.key} align="center" gap={clientToken.paddingSM} wrap="nowrap">
-                      <PhiTypographyControl style={{ flex: `0 0 ${fieldLabelWidth}px` }}>{item.label}</PhiTypographyControl>
-                      <PhiPresetSizeControl<PhiStyleSizePresetKey>
-                        disabled={saving}
-                        value={item.value}
-                        fallbackKey={item.fallbackPreset as PhiStyleSizePresetKey}
-                        options={PHI_STYLE_RADIUS_PRESET_OPTIONS}
-                        onChange={(value) => updateToken({ [item.key]: value })}
-                      />
-                    </PhiFlexControl>
-                  ))}
-                </PhiFlexControl>
-              ),
+              children: renderPresetSizeRows([
+                { key: "borderRadiusSM", label: "Small", value: radiusValues.borderRadiusSM, fallbackPreset: "xs" },
+                { key: "borderRadius", label: "Base", value: radiusValues.borderRadius, fallbackPreset: "sm" },
+                { key: "borderRadiusLG", label: "Large", value: radiusValues.borderRadiusLG, fallbackPreset: "base" },
+              ], PHI_STYLE_RADIUS_PRESET_OPTIONS),
             },
             {
               key: "controlHeight",
               label: <PhiTypographyControl strong>Control Height</PhiTypographyControl>,
-              children: (
-                <PhiFlexControl vertical gap={clientToken.paddingXS}>
-                  {[
-                    { key: "controlHeightSM", label: "Small", value: controlHeightValues.controlHeightSM, fallbackPreset: "base" },
-                    { key: "controlHeight", label: "Base", value: controlHeightValues.controlHeight, fallbackPreset: "md" },
-                    { key: "controlHeightLG", label: "Large", value: controlHeightValues.controlHeightLG, fallbackPreset: "lg" },
-                  ].map((item) => (
-                    <PhiFlexControl key={item.key} align="center" gap={clientToken.paddingSM} wrap="nowrap">
-                      <PhiTypographyControl style={{ flex: `0 0 ${fieldLabelWidth}px` }}>{item.label}</PhiTypographyControl>
-                      <PhiPresetSizeControl<PhiStyleSizePresetKey>
-                        disabled={saving}
-                        value={item.value}
-                        fallbackKey={item.fallbackPreset as PhiStyleSizePresetKey}
-                        options={PHI_STYLE_CONTROL_HEIGHT_PRESET_OPTIONS}
-                        onChange={(value) => updateToken({ [item.key]: value })}
-                      />
-                    </PhiFlexControl>
-                  ))}
-                </PhiFlexControl>
-              ),
+              children: renderPresetSizeRows([
+                { key: "controlHeightSM", label: "Small", value: controlHeightValues.controlHeightSM, fallbackPreset: "base" },
+                { key: "controlHeight", label: "Base", value: controlHeightValues.controlHeight, fallbackPreset: "md" },
+                { key: "controlHeightLG", label: "Large", value: controlHeightValues.controlHeightLG, fallbackPreset: "lg" },
+              ], PHI_STYLE_CONTROL_HEIGHT_PRESET_OPTIONS),
             },
             {
               key: "fontFamily",
@@ -2875,7 +2843,7 @@ function mergeThemeSetChoice(
 
 /** Every font slot an author set, so the Set's fonts block is what shows. */
 function clearThemeAuthoredFonts(theme: ThemePayload): ThemePayload {
-  return Object.fromEntries(Object.entries(theme).filter(([key]) => key !== "fonts")) as ThemePayload;
+  return omitThemeFields(theme, "fonts");
 }
 
 function formatShapeLabel(shape: PhiControlShape) {
@@ -3603,7 +3571,7 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
                         mode={mode}
                         disabled={isSamePhiBackgroundConfig(rootBackground, otherRootBackground)}
                         onCopy={() =>
-                          publishDraft(mergeThemeRootBackground(state.draft, otherMode, rootBackground))}
+                          publishDraft(mergeThemeRootSurface(state.draft, "background", otherMode, rootBackground))}
                       />
                     </PhiFlexControl>
                   </PhiFlexControl>
@@ -3615,7 +3583,7 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
                     imageSourceKinds={PHI_ROOT_BACKGROUND_IMAGE_SOURCE_KINDS}
                     renderMediaPicker={renderPhiThemeRootBackgroundMediaPicker}
                     editTransaction={editTransaction}
-                    onChange={(value) => publishDraft(mergeThemeRootBackground(state.draft, mode, value))}
+                    onChange={(value) => publishDraft(mergeThemeRootSurface(state.draft, "background", mode, value))}
                   />
                 </PhiFlexControl>
               ),
@@ -3640,7 +3608,7 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
                         mode={mode}
                         disabled={isSamePhiBackgroundConfig(chromeOverlay, otherChromeOverlay)}
                         onCopy={() =>
-                          publishDraft(mergeThemeChromeOverlay(state.draft, otherMode, chromeOverlay))}
+                          publishDraft(mergeThemeRootSurface(state.draft, "chrome", otherMode, chromeOverlay))}
                       />
                     </PhiFlexControl>
                   </PhiFlexControl>
@@ -3653,7 +3621,7 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
                     imageSourceKinds={PHI_SHELL_CHROME_OVERLAY_IMAGE_SOURCE_KINDS}
                     renderMediaPicker={renderPhiThemeRootBackgroundMediaPicker}
                     editTransaction={editTransaction}
-                    onChange={(value) => publishDraft(mergeThemeChromeOverlay(state.draft, mode, value))}
+                    onChange={(value) => publishDraft(mergeThemeRootSurface(state.draft, "chrome", mode, value))}
                   />
                 </PhiFlexControl>
               ),
@@ -3979,48 +3947,30 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
   const previewSwatchColor = readEffectiveTokenString(previewEffectiveToken, "colorPrimary", "#1677ff");
   const previewLinkHoverColor = readEffectiveTokenString(previewEffectiveToken, "colorLinkHover", previewLinkColor);
   const previewLinkActiveColor = readEffectiveTokenString(previewEffectiveToken, "colorLinkActive", previewLinkColor);
-  const statusPreviewItems = [
-    {
-      key: "info",
-      label: "Info",
-      color: readEffectiveTokenString(previewEffectiveToken, "colorInfoText", readEffectiveTokenString(previewEffectiveToken, "colorInfo", "#1677ff")),
-      background: readEffectiveTokenString(previewEffectiveToken, "colorInfoBg", previewCardBackground),
-      border: readEffectiveTokenString(previewEffectiveToken, "colorInfoBorder", previewLinkColor),
-      hoverColor: readEffectiveTokenString(previewEffectiveToken, "colorInfoTextHover", readEffectiveTokenString(previewEffectiveToken, "colorInfoHover", "#4096ff")),
-      hoverBackground: readEffectiveTokenString(previewEffectiveToken, "colorInfoBgHover", previewCardBackground),
-      hoverBorder: readEffectiveTokenString(previewEffectiveToken, "colorInfoBorderHover", readEffectiveTokenString(previewEffectiveToken, "colorInfoHover", "#4096ff")),
-    },
-    {
-      key: "success",
-      label: "Success",
-      color: readEffectiveTokenString(previewEffectiveToken, "colorSuccessText", readEffectiveTokenString(previewEffectiveToken, "colorSuccess", "#52c41a")),
-      background: readEffectiveTokenString(previewEffectiveToken, "colorSuccessBg", previewCardBackground),
-      border: readEffectiveTokenString(previewEffectiveToken, "colorSuccessBorder", readEffectiveTokenString(previewEffectiveToken, "colorSuccess", "#52c41a")),
-      hoverColor: readEffectiveTokenString(previewEffectiveToken, "colorSuccessTextHover", readEffectiveTokenString(previewEffectiveToken, "colorSuccessHover", "#73d13d")),
-      hoverBackground: readEffectiveTokenString(previewEffectiveToken, "colorSuccessBgHover", previewCardBackground),
-      hoverBorder: readEffectiveTokenString(previewEffectiveToken, "colorSuccessBorderHover", readEffectiveTokenString(previewEffectiveToken, "colorSuccessHover", "#73d13d")),
-    },
-    {
-      key: "warning",
-      label: "Warning",
-      color: readEffectiveTokenString(previewEffectiveToken, "colorWarningText", readEffectiveTokenString(previewEffectiveToken, "colorWarning", "#faad14")),
-      background: readEffectiveTokenString(previewEffectiveToken, "colorWarningBg", previewCardBackground),
-      border: readEffectiveTokenString(previewEffectiveToken, "colorWarningBorder", readEffectiveTokenString(previewEffectiveToken, "colorWarning", "#faad14")),
-      hoverColor: readEffectiveTokenString(previewEffectiveToken, "colorWarningTextHover", readEffectiveTokenString(previewEffectiveToken, "colorWarningHover", "#ffc53d")),
-      hoverBackground: readEffectiveTokenString(previewEffectiveToken, "colorWarningBgHover", previewCardBackground),
-      hoverBorder: readEffectiveTokenString(previewEffectiveToken, "colorWarningBorderHover", readEffectiveTokenString(previewEffectiveToken, "colorWarningHover", "#ffc53d")),
-    },
-    {
-      key: "error",
-      label: "Error",
-      color: readEffectiveTokenString(previewEffectiveToken, "colorErrorText", readEffectiveTokenString(previewEffectiveToken, "colorError", "#ff4d4f")),
-      background: readEffectiveTokenString(previewEffectiveToken, "colorErrorBg", previewCardBackground),
-      border: readEffectiveTokenString(previewEffectiveToken, "colorErrorBorder", readEffectiveTokenString(previewEffectiveToken, "colorError", "#ff4d4f")),
-      hoverColor: readEffectiveTokenString(previewEffectiveToken, "colorErrorTextHover", readEffectiveTokenString(previewEffectiveToken, "colorErrorHover", "#ff7875")),
-      hoverBackground: readEffectiveTokenString(previewEffectiveToken, "colorErrorBgHover", previewCardBackground),
-      hoverBorder: readEffectiveTokenString(previewEffectiveToken, "colorErrorBorderHover", readEffectiveTokenString(previewEffectiveToken, "colorErrorHover", "#ff7875")),
-    },
-  ];
+  /*
+   * Four status colours, one shape: text, ground and border, each with its hover. Info's border falls
+   * back to the link colour where the others fall back to their own base, which is how it always was.
+   */
+  const statusPreviewItems = ([
+    { key: "info", label: "Info", prefix: "colorInfo", base: "#1677ff", hover: "#4096ff", borderFallback: previewLinkColor },
+    { key: "success", label: "Success", prefix: "colorSuccess", base: "#52c41a", hover: "#73d13d" },
+    { key: "warning", label: "Warning", prefix: "colorWarning", base: "#faad14", hover: "#ffc53d" },
+    { key: "error", label: "Error", prefix: "colorError", base: "#ff4d4f", hover: "#ff7875" },
+  ] as const).map(({ key, label, prefix, base, hover, ...item }) => {
+    const read = (suffix: string, fallback: string) => readEffectiveTokenString(previewEffectiveToken, `${prefix}${suffix}`, fallback);
+    const baseColor = read("", base);
+    const hoverColor = read("Hover", hover);
+    return {
+      key,
+      label,
+      color: read("Text", baseColor),
+      background: read("Bg", previewCardBackground),
+      border: read("Border", "borderFallback" in item ? item.borderFallback : baseColor),
+      hoverColor: read("TextHover", hoverColor),
+      hoverBackground: read("BgHover", previewCardBackground),
+      hoverBorder: read("BorderHover", hoverColor),
+    };
+  });
   const fontPreviewItems = [
     {
       key: "body",

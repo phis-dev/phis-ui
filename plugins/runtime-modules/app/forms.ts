@@ -1,17 +1,16 @@
+import { createPhiFormLabelSetLoader } from "../../../components/forms/shared-form-loaders";
 import type {
   PhiFormDescriptor,
   PhiFormHandlerProviderDescriptor,
 } from "../../../types";
 import { createPhiFormId } from "../../../types/form-id";
 import { PHI_SHARED_PACKAGE_NAME } from "../../../types/signals";
-import { flattenPhiFormLabels } from "../../../components/forms/form-labels";
 import {
   PHI_FORM_FIELD_PROVIDER_KEYS,
   createPhiSharedFormProviderKey,
 } from "../../../components/forms/form-provider-contract";
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../constants/core-data-provider-keys";
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
-import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 import { PHI_APP_RUNTIME_MODULE_ID } from "./ids";
 
 /**
@@ -175,70 +174,42 @@ const themeDescriptor: PhiFormDescriptor = {
   layout: { gap: { compact: "sm", medium: "base" } },
 };
 
-async function loadNameLabels(
-  context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0],
-) {
-  const { getPhiProfileNameWidgetLabels } = await import("../../../components/widgets/label-sets/profile");
-  const labels = await getPhiProfileNameWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: context.runtime.locale.current,
-  });
-  return flattenPhiFormLabels({
+const loadNameLabels = createPhiFormLabelSetLoader(
+  () => import("../../../components/widgets/label-sets/profile").then((module) => module.getPhiProfileNameWidgetLabels),
+  (labels) => ({
     firstName: labels.fields.firstName,
     lastName: labels.fields.lastName,
     companyName: labels.fields.companyName,
     successTitle: labels.feedback.successTitle,
     successText: labels.feedback.successText,
     actions: { submitLabel: labels.submitLabel },
-  });
-}
+  }),
+);
 
-async function loadNewsletterLabels(
-  context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0],
-) {
-  const { getPhiProfileOverviewWidgetLabels } = await import("../../../components/widgets/label-sets/profile");
-  const labels = await getPhiProfileOverviewWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: context.runtime.locale.current,
-  });
-  return flattenPhiFormLabels({
+const loadNewsletterLabels = createPhiFormLabelSetLoader(
+  () => import("../../../components/widgets/label-sets/profile").then((module) => module.getPhiProfileOverviewWidgetLabels),
+  (labels) => ({
     newsletter: labels.newsletterLabel,
     newsletterDescription: labels.newsletterDescription,
-  });
-}
+  }),
+);
 
-async function loadLocaleLabels(
-  context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0],
-) {
-  const { getPhiProfileLocaleWidgetLabels } = await import("../../../components/widgets/label-sets/profile");
-  const labels = await getPhiProfileLocaleWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: context.runtime.locale.current,
-  });
-  return flattenPhiFormLabels({
+const loadLocaleLabels = createPhiFormLabelSetLoader(
+  () => import("../../../components/widgets/label-sets/profile").then((module) => module.getPhiProfileLocaleWidgetLabels),
+  (labels) => ({
     fieldLabel: labels.fieldLabel,
-  });
-}
+  }),
+);
 
-async function loadThemeLabels(
-  context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0],
-) {
-  const { getPhiProfileThemeWidgetLabels } = await import("../../../components/widgets/label-sets/profile");
-  const labels = await getPhiProfileThemeWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: context.runtime.locale.current,
-  });
-  return flattenPhiFormLabels({
+const loadThemeLabels = createPhiFormLabelSetLoader(
+  () => import("../../../components/widgets/label-sets/profile").then((module) => module.getPhiProfileThemeWidgetLabels),
+  (labels) => ({
     fieldLabel: labels.fieldLabel,
     modeSystem: labels.modes.system,
     modeLight: labels.modes.light,
     modeDark: labels.modes.dark,
-  });
-}
+  }),
+);
 
 export const PHI_APP_RUNTIME_MODULE_FORMS = [
   definePhiRuntimeModuleForm({

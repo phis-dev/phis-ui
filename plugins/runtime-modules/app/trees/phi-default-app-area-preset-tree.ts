@@ -1,13 +1,9 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../../types/cms-instance-id";
 import { PHI_APP_RUNTIME_MODULE_ID } from "../ids";
-import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../../constants/cms-layout-types";
-import { PhiCmsFlags, PhiCmsRegionType } from "../../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
-import { resolvePhiShellMetric } from "../../../../helpers/shell-region-style";
+import { buildPhiAreaShellSiderLeftNodes } from "../../../../components/regions/presets/phi-area-shell-preset-nodes";
 import type { PhiResolvedCmsPageTree, PhiCmsPageNode } from "../../../../types/cms";
 import type { PhiBlockRuntime } from "../../../../types";
-import { PHI_LAYOUT } from "../../../../theme/phi-tokens";
-import { PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import { createPhiDefaultAreaRuntimeModuleIds } from "../../area-module-defaults";
 
 const SYNTHETIC_APP_REGION_IDS = {
@@ -45,69 +41,17 @@ export async function buildPhiDefaultAppAreaPresetTree({
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
-  const shellSiderLeftOffsetTop = resolvePhiShellMetric(runtime.site.theme?.shell, "offsetTop", {
-    family: "sider",
-    region: "left",
-  });
-  const shellSiderLeftWidth = resolvePhiShellMetric(runtime.site.theme?.shell, "width", {
-    family: "sider",
-    region: "left",
-  });
-  const resolvedShellLeftWidth =
-    shellSiderLeftWidth ?? PHI_LAYOUT.sidebarWidth;
   const nodes = createPhiCmsPresetNodes(page);
-
   return {
     page,
     runtimeModuleIds: createPhiDefaultAreaRuntimeModuleIds("app"),
     overlays: [],
-    regions: [nodes.region({
-      id: SYNTHETIC_APP_REGION_IDS.regionSiderLeft,
-      regionType: PhiCmsRegionType.SiderLeft,
-      rootLayoutNodeId: SYNTHETIC_APP_LAYOUT_IDS.layoutSiderLeft,
-      // Between the header and the content, which is where it is read.
-      sortOrder: 25,
-      // Structure only: the frame's look is the Theme's (SHELL.md, Shell Chrome Overlay).
-      config: {
-        flags: PhiCmsFlags.Sticky | PhiCmsFlags.FullHeight | PhiCmsFlags.Collapsible,
-        size: { width: `${resolvedShellLeftWidth}px` },
-        ...(typeof shellSiderLeftOffsetTop === "number" ? { offsetTop: shellSiderLeftOffsetTop } : { offsetTop: 0 }),
-      },
-    })],
-    layoutNodes: [
-      nodes.layout({
-        creationPreset: { layoutKind: "verticalflex", preset: "panel" },
-        typeKey: "flex-vertical",
-        id: SYNTHETIC_APP_LAYOUT_IDS.layoutSiderLeft,
-        parentLayoutNodeId: null,
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-        sortOrder: 0,
-        label: "app sider left stack",
-        config: {
-          anchor: {
-            horizontal: "center",
-            vertical: "top",
-          },
-          gap: 0,
-          padding: PHI_SPACE.xs,
-          paddingTop: 0,
-        },
-      }),
-    ],
-    contentWidgets: [
-      nodes.widget({
-        typeKey: "sidebar-navigation",
-        id: SYNTHETIC_APP_WIDGET_IDS.widgetSiderLeftNav,
-        parentLayoutNodeId: SYNTHETIC_APP_LAYOUT_IDS.layoutSiderLeft,
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-        sortOrder: 0,
-        label: "app sider left navigation",
-        config: {
-          side: "left",
-          width: resolvedShellLeftWidth,
-          navKey: "app:sidebar",
-        },
-      }),
-    ],
+    ...buildPhiAreaShellSiderLeftNodes({
+      nodes,
+      runtime,
+      labelPrefix: "app",
+      navKey: "app:sidebar",
+      ids: { ...SYNTHETIC_APP_REGION_IDS, ...SYNTHETIC_APP_LAYOUT_IDS, ...SYNTHETIC_APP_WIDGET_IDS },
+    }),
   };
 }
