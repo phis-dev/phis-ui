@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 
 import {
   PhiDeveloperBuilderStructureCanvas,
   type PhiDeveloperBuilderStructureCanvasProps,
 } from "./structure-canvas";
 import {
+  getPhiDeveloperRegionDraftsSnapshot,
   mergePhiDeveloperRegionDrafts,
   usePhiDeveloperBuilderStateValue,
-  usePhiDeveloperRegionDrafts,
+  usePhiDeveloperRegionDraftsValue,
 } from "../developer-workspace-store";
 import type {
   PhiDeveloperBuilderArea,
@@ -57,7 +58,6 @@ export function PhiDeveloperBuilderCanvasWidgetClient({
   const area = usePhiDeveloperBuilderStateValue("public", (state) => state.area);
   const pageKey = usePhiDeveloperBuilderStateValue("public", (state) => state.pageKey);
   const builderMode = usePhiDeveloperBuilderStateValue("public", (state) => state.builderMode);
-  const regionDrafts = usePhiDeveloperRegionDrafts();
   const builderModuleMetas = usePhiBuilderModuleMetas(targetArea);
   const pickItems = useMemo(
     () => buildPhiStructureRegionPickItems(builderModuleMetas.plugins),
@@ -65,6 +65,25 @@ export function PhiDeveloperBuilderCanvasWidgetClient({
   );
   const isStructureWorkspace = workspace === "structure";
   const isPagesWorkspace = workspace === "pages";
+
+  /*
+   * Which of this workspace's drafts are not in the store, as one string. The Canvas used to subscribe
+   * to the whole draft map for this question, so every write to any draft re-rendered it and, below it,
+   * every Region scaffold on the canvas with its whole tree. The Regions read their own draft now
+   * (`structure-canvas.tsx`); this widget renders when the set of missing drafts changes and not before.
+   */
+  const hydrationDraftKeys = useMemo(() => (
+    isStructureWorkspace
+      ? PHI_BUILDER_SHELL_REGION_KEYS.map((regionKey) => getPhiBuilderRegionDraftKey(area, regionKey, pageKey))
+      : isPagesWorkspace
+        ? PHI_BUILDER_PAGE_REGION_KEYS.map((regionKey) => getPhiBuilderRegionDraftKey(area, regionKey, pageKey))
+        : []
+  ), [area, isPagesWorkspace, isStructureWorkspace, pageKey]);
+  const missingDraftKeys = usePhiDeveloperRegionDraftsValue(useCallback(
+    (drafts: Record<string, PhiDeveloperBuilderRegionDraft>) =>
+      hydrationDraftKeys.filter((draftKey) => drafts[draftKey] == null).join("\u0000"),
+    [hydrationDraftKeys],
+  ));
 
   useEffect(() => {
     if (!isStructureWorkspace && !isPagesWorkspace) {
@@ -75,6 +94,7 @@ export function PhiDeveloperBuilderCanvasWidgetClient({
       mergePhiDeveloperRegionDrafts(previewRegionDrafts as Record<string, PhiDeveloperBuilderRegionDraft>);
     }
 
+    const regionDrafts = getPhiDeveloperRegionDraftsSnapshot();
     const shellDraftKeys = PHI_BUILDER_SHELL_REGION_KEYS
       .map((regionKey) => getPhiBuilderRegionDraftKey(area, regionKey, pageKey));
     const pageDraftKeys = PHI_BUILDER_PAGE_REGION_KEYS
@@ -107,12 +127,13 @@ export function PhiDeveloperBuilderCanvasWidgetClient({
       return;
     }
 
+    // `missingDraftKeys` is the reason to run again; the snapshot inside is what is read.
   }, [
     isPagesWorkspace,
     isStructureWorkspace,
+    missingDraftKeys,
     pageDraftsByScope,
     previewRegionDrafts,
-    regionDrafts,
     area,
     builderMode,
     pageKey,
@@ -127,7 +148,6 @@ export function PhiDeveloperBuilderCanvasWidgetClient({
         area={area}
         pageKey={pageKey}
         shellTheme={shellTheme}
-        regionDrafts={regionDrafts}
         pageDraftsByScope={pageDraftsByScope}
         serverPreviewRegions={serverPreviewRegions}
         pickItems={pickItems}
@@ -145,7 +165,6 @@ export function PhiDeveloperBuilderCanvasWidgetClient({
         area={area}
         pageKey={pageKey}
         shellTheme={shellTheme}
-        regionDrafts={regionDrafts}
         serverPreviewRegions={serverPreviewRegions}
         pickItems={pickItems}
         regionLabels={regionLabels}

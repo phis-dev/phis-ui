@@ -2270,37 +2270,66 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
     BRAND_THEME_COLOR_SECTION_KEYS,
   );
 
-  const themeComposition = resolvePhiThemeComposition(state.draft, themeBlocks);
-  const selectedPreset = resolveThemePayloadPreset(state.draft, themePresets);
   /*
-   * What the tab shows is what the Site renders: the palette block with the draft's palette on top,
-   * resolved for the mode being edited. The seeds the author owns are the ones present in the draft's
-   * palette, shared or under this mode; the derived overrides live under this mode alone.
+   * Everything the panel derives from the draft, derived once per draft and mode. The panel renders
+   * on every picker step and again on the Controller's echo of it, and each render used to resolve the
+   * colour tokens twice and the whole alias derivation on top -- for some seventy colour fields that
+   * then redrew. Kept until the draft, the mode, the blocks or the presets change.
    */
-  const colorToken = resolvePhiThemeColorTokens(selectedPreset, state.draft.palette, previewMode);
-  const ownPalette = state.draft.palette ?? {};
-  const ownOverrides = ownPalette.modes?.[previewMode]?.overrides ?? {};
-  /*
-   * The same colour without the author's derived overrides: what a derived control falls back to, and
-   * what its "Reset override" hands back. Seeds stay in, so the algorithm derives from the author's seed.
-   */
-  const baseColorToken = resolvePhiThemeColorTokens(
+  const customLabel = colorPickerLabels?.custom ?? "Custom";
+  const {
+    themeComposition,
     selectedPreset,
-    mergeThemePaletteMode(state.draft, previewMode, (current) => ({ ...current, overrides: {} })).palette,
-    previewMode,
-  );
-  const customPalette = resolveThemeCustomPalette(state.draft, selectedPreset, previewMode);
-  const customColorOptions = PHI_THEME_CUSTOM_COLOR_KEYS.map((key, index) => ({
-    key,
-    label: `${colorPickerLabels?.custom ?? "Custom"} ${index + 1}`,
-    value: customPalette[key],
-  }));
-  // What the algorithm derives for the mode being edited: the Foundation's resolver, which is the one
-  // the preview and the live render use too.
-  const computedToken = resolvePhiAntdAliasTokens(previewMode, {
-    ...buildPhiEffectiveNonColorThemeTokens(state.draft),
-    ...baseColorToken,
-  });
+    colorToken,
+    ownPalette,
+    ownOverrides,
+    customPalette,
+    customColorOptions,
+    computedToken,
+  } = useMemo(() => {
+    const themeComposition = resolvePhiThemeComposition(state.draft, themeBlocks);
+    const selectedPreset = resolveThemePayloadPreset(state.draft, themePresets);
+    /*
+     * What the tab shows is what the Site renders: the palette block with the draft's palette on top,
+     * resolved for the mode being edited. The seeds the author owns are the ones present in the draft's
+     * palette, shared or under this mode; the derived overrides live under this mode alone.
+     */
+    const colorToken = resolvePhiThemeColorTokens(selectedPreset, state.draft.palette, previewMode);
+    const ownPalette = state.draft.palette ?? {};
+    const ownOverrides = ownPalette.modes?.[previewMode]?.overrides ?? {};
+    /*
+     * The same colour without the author's derived overrides: what a derived control falls back to, and
+     * what its "Reset override" hands back. Seeds stay in, so the algorithm derives from the author's
+     * seed.
+     */
+    const baseColorToken = resolvePhiThemeColorTokens(
+      selectedPreset,
+      mergeThemePaletteMode(state.draft, previewMode, (current) => ({ ...current, overrides: {} })).palette,
+      previewMode,
+    );
+    const customPalette = resolveThemeCustomPalette(state.draft, selectedPreset, previewMode);
+    const customColorOptions = PHI_THEME_CUSTOM_COLOR_KEYS.map((key, index) => ({
+      key,
+      label: `${customLabel} ${index + 1}`,
+      value: customPalette[key],
+    }));
+    // What the algorithm derives for the mode being edited: the Foundation's resolver, which is the one
+    // the preview and the live render use too.
+    const computedToken = resolvePhiAntdAliasTokens(previewMode, {
+      ...buildPhiEffectiveNonColorThemeTokens(state.draft),
+      ...baseColorToken,
+    });
+    return {
+      themeComposition,
+      selectedPreset,
+      colorToken,
+      ownPalette,
+      ownOverrides,
+      customPalette,
+      customColorOptions,
+      computedToken,
+    };
+  }, [customLabel, previewMode, state.draft, themeBlocks, themePresets]);
 
   return (
     <PhiFlexControl vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0, opacity: loading ? 0.65 : 1 }}>
@@ -3834,7 +3863,10 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
    * and the parts nobody chose are the block's. Resolving here rather than in the state keeps the draft
    * that travels back to the Controller free of anything that was only worked out for display.
    */
-  const previewThemeResolved = resolvePhiThemeRuntimePayload(previewTheme, themeBlocks).theme;
+  const previewThemeResolved = useMemo(
+    () => resolvePhiThemeRuntimePayload(previewTheme, themeBlocks).theme,
+    [previewTheme, themeBlocks],
+  );
   const [hoveredStatusKey, setHoveredStatusKey] = useState<string | null>(null);
   const [previewTableSearch, setPreviewTableSearch] = useState("");
   /*
@@ -3857,15 +3889,22 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
     serif: previewFontStacks.serif.stack,
     display: previewFontStacks.display.stack,
   });
-  const previewTokenInput = {
+  /*
+   * The preview's tokens, derived once per draft and mode. The preview renders on every picker step,
+   * on every hover over a status sample and on every keystroke in its sample field, and each render used
+   * to run the colour resolution, the alias derivation and the component shaping again -- and handed
+   * `PhiThemeScopeControl` a new token object, which wrote a new set of CSS variables each time.
+   */
+  const previewBodyFontStack = previewFontStacks.body.stack;
+  const previewMonoFontStack = previewFontStacks.mono.stack;
+  const previewEffectiveToken = useMemo(() => resolvePhiAntdAliasTokens(mode, {
     ...buildPhiEffectiveNonColorThemeTokens(previewThemeResolved),
     ...resolvePhiThemeColorTokens(previewPreset, previewThemeResolved.palette, mode),
     ...(previewThemeResolved.style?.token ?? {}),
     // The draft's lettering, applied as the root theme applies the Site's: body text and code.
-    ...(previewFontStacks.body.stack ? { fontFamily: previewFontStacks.body.stack } : {}),
-    ...(previewFontStacks.mono.stack ? { fontFamilyCode: previewFontStacks.mono.stack } : {}),
-  };
-  const previewEffectiveToken = resolvePhiAntdAliasTokens(mode, previewTokenInput);
+    ...(previewBodyFontStack ? { fontFamily: previewBodyFontStack } : {}),
+    ...(previewMonoFontStack ? { fontFamilyCode: previewMonoFontStack } : {}),
+  }), [mode, previewBodyFontStack, previewMonoFontStack, previewPreset, previewThemeResolved]);
   type PreviewRow = { key: string; name: string; status: string } & Record<string, unknown>;
   const columns: readonly PhiTableControlColumn<PreviewRow>[] = [
     { title: "Name", key: "name", fieldPath: "name", sizing: { mode: "fill" } },
@@ -3901,16 +3940,21 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
    * identity as well is part of it: two shapes with otherwise equal tokens would hash to one key and
    * serve each other from cache.
    */
-  const previewControlShape = resolvePhiControlShape(previewThemeResolved.shape?.controls);
-  const previewShapedComponents = applyPhiSurfaceShapeComponentTokens(
-    applyPhiControlShapeComponentTokens(
-      { ...(applyPhiButtonShadowComponentTokens(previewThemeResolved.components, previewThemeResolved.buttons, mode) ?? {}) },
+  const { previewControlShape, previewShapedComponents } = useMemo(() => {
+    const previewControlShape = resolvePhiControlShape(previewThemeResolved.shape?.controls);
+    return {
       previewControlShape,
-      previewEffectiveToken,
-    ),
-    previewControlShape,
-    previewEffectiveToken,
-  );
+      previewShapedComponents: applyPhiSurfaceShapeComponentTokens(
+        applyPhiControlShapeComponentTokens(
+          { ...(applyPhiButtonShadowComponentTokens(previewThemeResolved.components, previewThemeResolved.buttons, mode) ?? {}) },
+          previewControlShape,
+          previewEffectiveToken,
+        ),
+        previewControlShape,
+        previewEffectiveToken,
+      ),
+    };
+  }, [mode, previewEffectiveToken, previewThemeResolved]);
   const previewCardBackground = readEffectiveTokenString(previewEffectiveToken, "colorBgContainer", mode === "dark" ? "#141414" : "#ffffff");
   const previewSurfaceBackground = readEffectiveTokenString(previewEffectiveToken, "colorBgLayout", mode === "dark" ? "#000000" : "#f5f5f5");
   /*

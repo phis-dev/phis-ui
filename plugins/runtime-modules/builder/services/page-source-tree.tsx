@@ -15,7 +15,7 @@ import {
   buildPhiBuilderNavigationPageDragSourceKey,
 } from "../navigation-widget-runtime";
 import { hasPhiBuilderNavigableContent, isPhiBuilderNavigablePage } from "../navigation-folder-drop";
-import { usePhiDeveloperBuilderStateValue } from "../developer-workspace-store";
+import { getPhiDeveloperBuilderStateSnapshot, usePhiDeveloperBuilderStateValue } from "../developer-workspace-store";
 
 /*
  * Folders are nodes of their own. A folder has no route, but neither does a Navigation container, which
@@ -57,7 +57,17 @@ function isBuilderArea(value: unknown): value is PhiBuilderAreaKey {
 }
 
 export function PhiBuilderPageSourceTreeProviderClient({ children }: { children: ReactNode }) {
-  const state = usePhiDeveloperBuilderStateValue("public", (value) => value);
+  /*
+   * The slices the offered catalog is built from; the query reads the state when it runs. Subscribed
+   * to the whole state, every selection renewed the registration and reloaded the tree.
+   */
+  const area = usePhiDeveloperBuilderStateValue("public", (state) => state.area);
+  const customPages = usePhiDeveloperBuilderStateValue("public", (state) => state.customPages);
+  const modulePresetPagesByArea = usePhiDeveloperBuilderStateValue("public", (state) => state.modulePresetPagesByArea);
+  const navigationSurfacesByArea = usePhiDeveloperBuilderStateValue("public", (state) => state.navigationSurfacesByArea);
+  const persistedPageCatalogByArea = usePhiDeveloperBuilderStateValue("public", (state) => state.persistedPageCatalogByArea);
+  const runtimeModuleIdsByArea = usePhiDeveloperBuilderStateValue("public", (state) => state.runtimeModuleIdsByArea);
+  const areaRootRoutes = usePhiDeveloperBuilderStateValue("public", (state) => state.areaRootRoutes);
   const registration = useMemo<PhiTreeProviderRegistration>(() => {
     const descriptor = PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS.find((candidate) =>
       candidate.key === PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.pageSourceTree);
@@ -66,19 +76,20 @@ export function PhiBuilderPageSourceTreeProviderClient({ children }: { children:
       resources: descriptor?.kind === "tree" ? descriptor.resources.map((resource) => ({
         ...resource,
         bindingFields: resource.bindingFields?.map((field) => field.key === "area"
-          ? { ...field, defaultValue: state.area }
+          ? { ...field, defaultValue: area }
           : field),
       })) : [],
       query: async (request) => {
-        const area = isBuilderArea(request.params?.area) ? request.params.area : state.area;
+        const state = getPhiDeveloperBuilderStateSnapshot("public");
+        const requestedArea = isBuilderArea(request.params?.area) ? request.params.area : state.area;
         /*
          * What the Area answers with, not what is installed in it. The active catalog mirrors the route
          * declarations, so a base Module Page that a Site package covers is still in it -- and this tree
          * offered both, two rows reading `/home`, one of them an address nobody is ever served. Dragging
          * that one into a Navigation authors a link to a Page the Site does not answer with.
          */
-        const pages = resolvePhiBuilderOfferedPageCatalog(state, area);
-        const nodes = flattenPages(area, pages, pages);
+        const pages = resolvePhiBuilderOfferedPageCatalog(state, requestedArea);
+        const nodes = flattenPages(requestedArea, pages, pages);
         const search = request.query.search?.trim().toLocaleLowerCase();
         return {
           nodes: search
@@ -91,6 +102,8 @@ export function PhiBuilderPageSourceTreeProviderClient({ children }: { children:
         };
       },
     };
-  }, [state]);
+    // The catalog's identity; the query reads the snapshot, so the rule cannot see that these matter.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [area, areaRootRoutes, customPages, modulePresetPagesByArea, navigationSurfacesByArea, persistedPageCatalogByArea, runtimeModuleIdsByArea]);
   return <PhiTreeProviderClient registration={registration}>{children}</PhiTreeProviderClient>;
 }

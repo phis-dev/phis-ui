@@ -1035,6 +1035,17 @@ export function usePhiDeveloperRegionDraft(draftKey: string) {
   return builderRegionDraftStore.useStoreSelector("default", (drafts) => drafts[draftKey] ?? null);
 }
 
+/**
+ * A derived reading of the region drafts. The caller renders when the selected value changes and not
+ * when any draft does -- which is what a Canvas asking "which of my drafts are missing" needs, and what
+ * subscribing to the whole map could not give it.
+ */
+export function usePhiDeveloperRegionDraftsValue<TSelected>(
+  selector: (drafts: Record<string, PhiDeveloperBuilderRegionDraft>) => TSelected,
+) {
+  return builderRegionDraftStore.useStoreSelector("default", selector);
+}
+
 const mergedWorkspaceSnapshots = new Map<
   string,
   { tool: PhiDeveloperBuilderState; catalog: PhiWorkspaceCatalogState; merged: PhiDeveloperBuilderWorkspaceState }

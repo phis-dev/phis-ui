@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import type { PhiBackgroundControlProps } from "../../../../components/controls/phi-background-control";
 import { PhiMediaPickerBinding } from "../../../../components/media/phi-media-picker-binding";
 import { PHI_MEDIA_WIDGET_DEFAULT_LABELS } from "../../../../components/media/media-widget-labels";
@@ -173,21 +173,33 @@ function usePhiBuilderInspectorSectionState(signalRoutes?: PhiSignalRouteSet) {
   const activeDataProviderDescriptors = activeModuleMetas.dataProviders;
   const activeCalendarAdapterDescriptors = activeModuleMetas.calendarAdapters;
   const activeVideoProviderDescriptors = activeModuleMetas.videoProviders;
+  /*
+   * Every Inspector section runs this hook, so what it works out per render is worked out fifteen
+   * times. The lookups and the two tree searches are kept until the drafts or the selection move; the
+   * draft map itself is still subscribed to as a whole, because the reference options below read every
+   * draft of the page.
+   */
   const regionDrafts = usePhiDeveloperRegionDrafts();
   const selectedRegionKey =
     nodeKind === "region" ? nodeKey.replace(/^region:/, "") : null;
-  const currentRegionDraft = selectedRegionKey
-    ? resolveRegionDraftKey(regionDrafts, area, selectedRegionKey, pageKey)
-    : null;
-  const selectedRootDraft = selectedRootRegionKey
-    ? resolveRegionDraftKey(regionDrafts, area, selectedRootRegionKey, pageKey)
-    : null;
+  const currentRegionDraft = useMemo(
+    () => selectedRegionKey ? resolveRegionDraftKey(regionDrafts, area, selectedRegionKey, pageKey) : null,
+    [area, pageKey, regionDrafts, selectedRegionKey],
+  );
+  const selectedRootDraft = useMemo(
+    () => selectedRootRegionKey ? resolveRegionDraftKey(regionDrafts, area, selectedRootRegionKey, pageKey) : null,
+    [area, pageKey, regionDrafts, selectedRootRegionKey],
+  );
   // The root Layout is found like every Layout below it.
-  const selectedRootLayouts = selectedRootDraft?.rootNode ? [selectedRootDraft.rootNode] : [];
-  const selectedLayoutNode =
-    nodeKind === "layout" && nodeId != null ? findPhiBuilderLayoutNodeById(selectedRootLayouts, nodeId) : null;
-  const selectedWidgetNode =
-    nodeId != null ? findPhiBuilderWidgetNodeByIdInLayouts(selectedRootLayouts, nodeId) : null;
+  const { selectedLayoutNode, selectedWidgetNode } = useMemo(() => {
+    const selectedRootLayouts = selectedRootDraft?.rootNode ? [selectedRootDraft.rootNode] : [];
+    return {
+      selectedLayoutNode:
+        nodeKind === "layout" && nodeId != null ? findPhiBuilderLayoutNodeById(selectedRootLayouts, nodeId) : null,
+      selectedWidgetNode:
+        nodeId != null ? findPhiBuilderWidgetNodeByIdInLayouts(selectedRootLayouts, nodeId) : null,
+    };
+  }, [nodeId, nodeKind, selectedRootDraft]);
   /*
    * Which plugin the selection is, asked in the order that can only answer about the selection itself.
    *
@@ -223,7 +235,10 @@ function usePhiBuilderInspectorSectionState(signalRoutes?: PhiSignalRouteSet) {
     selectedLayoutNode,
     selectedStructurePlugin?.kind !== "widget" ? selectedStructurePlugin : null,
   );
-  const widgetReferenceOptions = collectWidgetReferenceOptionsFromDrafts(regionDrafts, area, pageKey);
+  const widgetReferenceOptions = useMemo(
+    () => collectWidgetReferenceOptionsFromDrafts(regionDrafts, area, pageKey),
+    [area, pageKey, regionDrafts],
+  );
   const emitInspectorControllerAction = (value: Record<string, unknown>) => {
     const routes = signalRoutes?.emits?.filter((route) => route.capabilityId === "change") ?? [];
     if (routes.length === 0) return;

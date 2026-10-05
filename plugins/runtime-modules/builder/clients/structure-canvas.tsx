@@ -5,7 +5,7 @@ import type { CSSProperties, ReactNode } from "react";
 
 import { PhiCmsRegionType } from "../../../../constants/phi-cms";
 import { resolvePhiBuilderSiderWidth } from "../builder-geometry";
-import { usePhiDeveloperBuilderStateValue } from "../developer-workspace-store";
+import { usePhiDeveloperBuilderStateValue, usePhiDeveloperRegionDraft } from "../developer-workspace-store";
 import type {
   PhiDeveloperBuilderArea,
   PhiDeveloperBuilderRegionDraft,
@@ -50,7 +50,6 @@ export type PhiDeveloperBuilderStructureCanvasProps = {
   area: string;
   pageKey: string;
   shellTheme?: PhiShellRegionTheme;
-  regionDrafts: Record<string, PhiDeveloperBuilderRegionDraft>;
   pageDraftsByScope?: PhiBuilderPageDraftsMapByScope;
   serverPreviewRegions?: Partial<Record<PhiDeveloperBuilderCanvasRegionKey, ReactNode>>;
   pickItems: readonly PhiStructureRegionPickItem[];
@@ -206,12 +205,88 @@ const PHI_PAGES_WORKSPACE_SPEC: PhiDeveloperBuilderWorkspaceNode[] = [
   },
 ];
 
+/**
+ * One Region of the canvas, reading its own draft.
+ *
+ * The Canvas used to hand every Region the whole draft map, so a write to any draft re-rendered all of
+ * them, each rebuilding its renderable tree and re-registering its demand Controllers. A Region that
+ * subscribes to its own key renders when its draft changes and sits still otherwise.
+ */
+function PhiDeveloperBuilderCanvasRegion({
+  node,
+  area,
+  pageKey,
+  isPagesWorkspace,
+  slotKind,
+  pickItems,
+  pageDraftsByScope,
+  serverPreview,
+  regionLabels,
+  pickerLabels,
+}: {
+  node: PhiDeveloperBuilderRegionSpec;
+  area: string;
+  pageKey: string;
+  isPagesWorkspace: boolean;
+  slotKind: "content" | "structure";
+  pickItems: readonly PhiStructureRegionPickItem[];
+  pageDraftsByScope?: PhiBuilderPageDraftsMapByScope;
+  serverPreview: ReactNode | null;
+  regionLabels: PhiRegionWidgetLabels;
+  pickerLabels: PhiBuilderCanvasPickerLabels;
+}) {
+  const currentDraft = usePhiDeveloperRegionDraft(getPhiBuilderRegionDraftKey(
+    area,
+    node.regionKey,
+    isPhiBuilderPageScopedRegion(node.regionKey) ? pageKey : null,
+  ));
+  const regionLabel = regionLabels.regions[node.title];
+  const structureDraftsByArea =
+    !isPagesWorkspace && currentDraft != null
+      ? ({
+          [area as PhiDeveloperBuilderArea]: currentDraft,
+        } as Partial<Record<PhiDeveloperBuilderArea, PhiDeveloperBuilderRegionDraft | null>>)
+      : undefined;
+  const pageDraft =
+    isPagesWorkspace
+      ? pageDraftsByScope?.[area as PhiDeveloperBuilderArea]?.[pageKey]?.[`${area}:${pageKey}:${node.regionKey}`] ?? null
+      : null;
+  const resolvedPageDraftsByScope =
+    isPagesWorkspace && pageDraft != null
+      ? ({
+          [area]: {
+            [pageKey]: pageDraft,
+          },
+        } as Partial<Record<PhiDeveloperBuilderArea, Partial<Record<string, PhiDeveloperBuilderRegionDraft | null>>>>)
+      : undefined;
+
+  return (
+    <PhiStructureRegionScaffold
+      config={{
+        slotKind,
+        regionKey: node.regionKey,
+        title: regionLabel.title,
+        subtitle: node.subtitle ? regionLabels.structure.surface[node.subtitle] : null,
+        allowSelect: true,
+        allowInsert: true,
+        pickItems: [...pickItems],
+        fallbackMinHeight:
+          isPagesWorkspace && (node.regionKey === "hero" || node.regionKey === "content") ? 180 : undefined,
+      }}
+      structureDraftsByArea={structureDraftsByArea}
+      pageDraftsByScope={resolvedPageDraftsByScope}
+      serverPreview={serverPreview}
+      pickerLabels={pickerLabels}
+      containerClassName="phi-builder-workspace-region-scaffold"
+    />
+  );
+}
+
 export function PhiDeveloperBuilderStructureCanvas({
   workspace = "structure",
   builderMode,
   area,
   pageKey,
-  regionDrafts,
   pageDraftsByScope,
   serverPreviewRegions,
   pickItems,
@@ -225,58 +300,29 @@ export function PhiDeveloperBuilderStructureCanvas({
   const workspaceSpec = isPagesWorkspace ? PHI_PAGES_WORKSPACE_SPEC : PHI_STRUCTURE_WORKSPACE_SPEC;
   const slotKind = isPagesWorkspace ? "content" : "structure";
 
-  const resolveWorkspaceDraft = (regionKey: PhiDeveloperBuilderCanvasRegionKey) => {
-    return regionDrafts[getPhiBuilderRegionDraftKey(
-      area,
-      regionKey,
-      isPhiBuilderPageScopedRegion(regionKey) ? pageKey : null,
-    )] ?? null;
-  };
+  /*
+   * The two Sider drafts are the only ones this component reads itself, for the split's column widths.
+   * Every other Region reads its own draft inside `PhiDeveloperBuilderCanvasRegion`, so a write to one
+   * Region re-renders that Region and not the canvas with all of them.
+   */
+  const siderLeftDraft = usePhiDeveloperRegionDraft(getPhiBuilderRegionDraftKey(area, "sider_left", null));
+  const siderRightDraft = usePhiDeveloperRegionDraft(getPhiBuilderRegionDraftKey(area, "sider_right", null));
 
-  const renderRegion = (node: PhiDeveloperBuilderRegionSpec) => {
-    const regionLabel = regionLabels.regions[node.title];
-    const currentDraft = resolveWorkspaceDraft(node.regionKey);
-    const structureDraftsByArea =
-      !isPagesWorkspace && currentDraft != null
-        ? ({
-            [area as PhiDeveloperBuilderArea]: currentDraft,
-          } as Partial<Record<PhiDeveloperBuilderArea, PhiDeveloperBuilderRegionDraft | null>>)
-        : undefined;
-    const pageDraft =
-      isPagesWorkspace
-        ? pageDraftsByScope?.[area as PhiDeveloperBuilderArea]?.[pageKey]?.[`${area}:${pageKey}:${node.regionKey}`] ?? null
-        : null;
-    const resolvedPageDraftsByScope =
-      isPagesWorkspace && pageDraft != null
-        ? ({
-            [area]: {
-              [pageKey]: pageDraft,
-            },
-          } as Partial<Record<PhiDeveloperBuilderArea, Partial<Record<string, PhiDeveloperBuilderRegionDraft | null>>>>)
-        : undefined;
-
-    return (
-      <PhiStructureRegionScaffold
-        key={node.regionKey}
-        config={{
-          slotKind,
-          regionKey: node.regionKey,
-          title: regionLabel.title,
-          subtitle: node.subtitle ? regionLabels.structure.surface[node.subtitle] : null,
-          allowSelect: true,
-          allowInsert: true,
-          pickItems: [...pickItems],
-          fallbackMinHeight:
-            isPagesWorkspace && (node.regionKey === "hero" || node.regionKey === "content") ? 180 : undefined,
-        }}
-        structureDraftsByArea={structureDraftsByArea}
-        pageDraftsByScope={resolvedPageDraftsByScope}
-        serverPreview={serverPreviewRegions?.[node.regionKey] ?? null}
-        pickerLabels={pickerLabels}
-        containerClassName="phi-builder-workspace-region-scaffold"
-      />
-    );
-  };
+  const renderRegion = (node: PhiDeveloperBuilderRegionSpec) => (
+    <PhiDeveloperBuilderCanvasRegion
+      key={node.regionKey}
+      node={node}
+      area={area}
+      pageKey={pageKey}
+      isPagesWorkspace={isPagesWorkspace}
+      slotKind={slotKind}
+      pickItems={pickItems}
+      pageDraftsByScope={pageDraftsByScope}
+      serverPreview={serverPreviewRegions?.[node.regionKey] ?? null}
+      regionLabels={regionLabels}
+      pickerLabels={pickerLabels}
+    />
+  );
 
   const renderWorkspaceNode = (node: PhiDeveloperBuilderWorkspaceNode): ReactNode => {
     switch (node.kind) {
@@ -320,14 +366,12 @@ export function PhiDeveloperBuilderStructureCanvas({
           const secondChild = node.children[1];
 
           if (firstChild?.kind === "region" && firstChild.regionKey === "sider_left") {
-            const draft = resolveWorkspaceDraft("sider_left");
-            const width = resolvePhiBuilderSiderWidth(draft);
+            const width = resolvePhiBuilderSiderWidth(siderLeftDraft);
             return `${width} minmax(0, 1fr)`;
           }
 
           if (secondChild?.kind === "region" && secondChild.regionKey === "sider_right") {
-            const draft = resolveWorkspaceDraft("sider_right");
-            const width = resolvePhiBuilderSiderWidth(draft);
+            const width = resolvePhiBuilderSiderWidth(siderRightDraft);
             return `minmax(0, 1fr) ${width}`;
           }
 

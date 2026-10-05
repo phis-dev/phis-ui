@@ -268,11 +268,21 @@ function createPageNavigationItem(
 export function PhiBuilderNavigationTableProviderClient({ children }: { children: ReactNode }) {
   const searchParams = useSearchParams();
   const navigationSearchValue = searchParams.get(PHI_BUILDER_NAVIGATION_KEY_SEARCH_PARAM);
-  const builderState = usePhiDeveloperBuilderStateValue("public", (state) => state);
+  /*
+   * Only what the rows are built from is subscribed to. A new registration re-queries every table bound
+   * to this provider, and subscribed to the whole state it was renewed by every selection, every open
+   * Inspector and every slider step -- each one a reload of the navigation. The functions below read the
+   * state snapshot when they run; these subscriptions only say when a change is worth a new registration.
+   */
+  const area = usePhiDeveloperBuilderStateValue("public", (state) => state.area);
+  const customPages = usePhiDeveloperBuilderStateValue("public", (state) => state.customPages);
+  const modulePresetPagesByArea = usePhiDeveloperBuilderStateValue("public", (state) => state.modulePresetPagesByArea);
+  const persistedPageCatalogByArea = usePhiDeveloperBuilderStateValue("public", (state) => state.persistedPageCatalogByArea);
+  const navigationSurfacesByArea = usePhiDeveloperBuilderStateValue("public", (state) => state.navigationSurfacesByArea);
   const activeNavigationKey = resolvePhiBuilderNavigationWidgetNavKey(
     undefined,
     navigationSearchValue,
-    builderState.area,
+    area,
   );
   const activeNavigationDraft = usePhiBuilderNavigationDraft(activeNavigationKey);
   const loaded = useRef(new Map<string, LoadedNavigation>());
@@ -635,14 +645,17 @@ export function PhiBuilderNavigationTableProviderClient({ children }: { children
         bindingFields: "bindingFields" in resource ? resource.bindingFields?.map((field) => field.key === "navKey"
           ? {
               ...field,
-              defaultValue: resolvePhiBuilderNavigationWidgetNavKey(undefined, navigationSearchValue, builderState.area),
+              defaultValue: resolvePhiBuilderNavigationWidgetNavKey(undefined, navigationSearchValue, area),
             }
           : field) : undefined,
       })) : [],
       query,
       mutate,
     };
-  }, [activeNavigationDraft, activeNavigationKey, builderState, navigationSearchValue]);
+    // The catalog slices are the identity of the rows; the functions read the snapshot, so the rule
+    // cannot see that they matter.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeNavigationDraft, activeNavigationKey, area, customPages, modulePresetPagesByArea, navigationSearchValue, navigationSurfacesByArea, persistedPageCatalogByArea]);
 
   return <PhiTableProviderClient registration={registration}>{children}</PhiTableProviderClient>;
 }

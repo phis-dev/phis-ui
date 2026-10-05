@@ -21,6 +21,7 @@ import {
   answerPhiBuilderPublicRouteCollision,
   openPhiBuilderModuleDeactivationRequest,
   openPhiBuilderPublicRouteCollisionRequest,
+  getPhiDeveloperBuilderStateSnapshot,
   usePhiDeveloperBuilderStateValue,
 } from "../developer-workspace-store";
 import { loadPhiBuilderModuleBlockUsage } from "../module-usage-client";
@@ -339,7 +340,15 @@ function buildRuntimeModuleDetailRows(
 }
 
 export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { children: ReactNode }) {
-  const builderState = usePhiDeveloperBuilderStateValue("public", (state) => state);
+  /*
+   * The three slices the rows are read from, and only those: subscribed to the whole state, every
+   * selection renewed the registration and reloaded the table. `query` and `mutate` read the state when
+   * they run -- which is also what a mutation has to do, since the answer it writes back is to the
+   * selection as it stands then, not as it stood when the provider registered.
+   */
+  const runtimeModuleDefinitions = usePhiDeveloperBuilderStateValue("public", (state) => state.runtimeModuleDefinitions);
+  const runtimeModuleIdsByArea = usePhiDeveloperBuilderStateValue("public", (state) => state.runtimeModuleIdsByArea);
+  const unresolvedModuleIdsByArea = usePhiDeveloperBuilderStateValue("public", (state) => state.unresolvedModuleIdsByArea);
 
   const registration = useMemo<PhiTableProviderRegistration>(() => {
     const descriptor = PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS.find((candidate) =>
@@ -361,6 +370,7 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
     }
 
     const query = async (request: PhiTableProviderQueryRequest) => {
+      const builderState = getPhiDeveloperBuilderStateSnapshot("public");
       if (request.resourceKey === DETAIL_RESOURCE_KEY) {
         const moduleId = typeof request.params?.moduleId === "string" ? request.params.moduleId : "";
         const areaLabels = readAreaLabels(request.params);
@@ -432,6 +442,7 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
     const mutate = async (
       request: PhiTableProviderMutationRequest,
     ): Promise<PhiTableProviderMutationResult> => {
+      const builderState = getPhiDeveloperBuilderStateSnapshot("public");
       if (request.resourceKey === MODULE_USAGE_RESOURCE_KEY) {
         return { status: "rejected", invalidation: "none", errorCode: "unsupported-mutation" };
       }
@@ -629,7 +640,9 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
       query,
       mutate,
     };
-  }, [builderState]);
+    // The rows' identity; the functions read the snapshot, so the rule cannot see that these matter.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [runtimeModuleDefinitions, runtimeModuleIdsByArea, unresolvedModuleIdsByArea]);
 
   return <PhiTableProviderClient registration={registration}>{children}</PhiTableProviderClient>;
 }
