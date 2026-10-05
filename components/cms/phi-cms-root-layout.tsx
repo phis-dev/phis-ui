@@ -199,7 +199,10 @@ export async function PhiCmsAreaBoundary({
        * Remembering it here rather than in the Page is deliberate: this Layout is what a client
        * navigation re-runs, and the Page below it may never render once this forwards.
        */
-      if (request.pathname?.replace(/\/+$/u, "").toLowerCase() === `/${resolvedRoute.area}`) {
+      if (
+        !isRevisionPreview &&
+        request.pathname?.replace(/\/+$/u, "").toLowerCase() === `/${resolvedRoute.area}`
+      ) {
         rememberPhiAreaRootDoor(resolvedRoute.area, pageRedirect.href);
       }
       /*
@@ -223,14 +226,20 @@ export async function PhiCmsAreaBoundary({
    * Any request in this Area teaches the proxy where the Area's root leads, so the first client
    * navigation into it does not have to be the one that pays (server-helpers/area-root-door-warmup.ts).
    * It answers from data this render already loaded and does nothing once a door is known.
+   *
+   * Not from a revision preview, here or above: the Area it loaded is then a draft or a reviewed
+   * revision, and a door learned from it would forward every visitor for the next half hour to where
+   * an unpublished Area points.
    */
-  await warmPhiAreaRootDoor({
-    area: resolvedRoute.area,
-    config: rootScope.resolvedAreaPreset?.preset.config,
-    runtime,
-    catalog: resolvePhiCmsDescriptorCatalog(cmsBridge.runtimeModuleCatalog),
-    activeModuleIds: runtimeModuleScope.moduleSet.activeModuleIds,
-  });
+  if (!isRevisionPreview) {
+    await warmPhiAreaRootDoor({
+      area: resolvedRoute.area,
+      config: rootScope.resolvedAreaPreset?.preset.config,
+      runtime,
+      catalog: resolvePhiCmsDescriptorCatalog(cmsBridge.runtimeModuleCatalog),
+      activeModuleIds: runtimeModuleScope.moduleSet.activeModuleIds,
+    });
+  }
 
   return (
     <PhiSignalRuntimePartitionProvider

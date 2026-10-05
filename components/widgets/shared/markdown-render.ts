@@ -115,12 +115,21 @@ function normalizePotentialPhiScheme(value: string) {
   return current.replace(/[\u0000-\u0020]+/gu, "").toLowerCase();
 }
 
+/*
+ * The schemes a link or picture in a fetched document may carry: the same list the inline path allows
+ * (`projectInternalMarkdownNodes`). A relative address is resolved against the document and comes out
+ * `http(s):`; an absolute one is kept only on this list. Resolving first and trusting whatever `URL`
+ * accepted let `javascript:` and `data:` through here while the inline path refused them.
+ */
+const PHI_EXTERNAL_DOCUMENT_URL_SCHEMES = /^(?:https?:|mailto:|tel:)$/iu;
+
 function resolveExternalDocumentUrl(value: string, sourceUrl: string) {
   const normalized = value.trim();
   if (!normalized || normalizePotentialPhiScheme(normalized).startsWith("phis:")) return null;
-  if (normalized.startsWith("#") || /^(?:https?:|mailto:|tel:)/iu.test(normalized)) return normalized;
+  if (normalized.startsWith("#")) return normalized;
   try {
-    return new URL(normalized, sourceUrl).toString();
+    const resolved = new URL(normalized, sourceUrl);
+    return PHI_EXTERNAL_DOCUMENT_URL_SCHEMES.test(resolved.protocol) ? resolved.toString() : null;
   } catch {
     return null;
   }

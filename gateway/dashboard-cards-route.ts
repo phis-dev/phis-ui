@@ -7,6 +7,7 @@ import {
   resolvePhiCmsAreaMask,
   type PhiCmsAreaKey,
 } from "../constants/cms-areas";
+import { readPhiInternalPath } from "../helpers/internal-path";
 import { canPhiViewerAccess } from "../types/access";
 import { localizeAreaPath } from "../helpers/locale";
 import {
@@ -62,8 +63,8 @@ function json(payload: unknown, status = 200) {
 
 /** An internal path, and only one: a card request never leaves this Site. */
 function readInternalPath(value: string | null, requestUrl: string) {
-  const normalized = value?.trim() ?? "";
-  if (!normalized.startsWith("/") || normalized.startsWith("//")) {
+  const normalized = readPhiInternalPath(value);
+  if (normalized === null) {
     return null;
   }
   try {

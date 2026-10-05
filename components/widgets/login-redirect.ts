@@ -1,13 +1,10 @@
 import { requestPhiJson } from "../../helpers/client-json-request";
+import { readPhiInternalPath } from "../../helpers/internal-path";
 import { localizeAreaPath, localizePath, stripLocaleAndAreaFromPathname } from "../../helpers/locale";
 
+/** Where to go after signing in, if it is an address on this Site (helpers/internal-path.ts). */
 export function normalizeLoginRedirectTarget(value: string | null | undefined) {
-  const normalized = value?.trim() ?? "";
-  if (!normalized || !normalized.startsWith("/") || normalized.startsWith("//")) {
-    return null;
-  }
-
-  return normalized;
+  return readPhiInternalPath(value);
 }
 
 export function resolvePostLoginTarget(pathname: string, locale: string, area: string) {

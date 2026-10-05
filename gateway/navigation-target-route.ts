@@ -7,6 +7,7 @@ import {
   resolvePhiCmsAreaMask,
   type PhiCmsAreaKey,
 } from "../constants/cms-areas";
+import { readPhiInternalPath } from "../helpers/internal-path";
 import { canPhiViewerAccess } from "../types/access";
 import {
   readPhiAreaLandingSelection,
@@ -36,11 +37,10 @@ import type { PhiSiteAreaBridgeLoader } from "./site-area-bridges";
 import type { PhiSiteRequestContext } from "../types/site-request-context";
 
 function readInternalPath(value: string | null, requestUrl: string) {
-  const normalized = value?.trim() ?? "";
-  if (!normalized.startsWith("/") || normalized.startsWith("//")) {
+  const normalized = readPhiInternalPath(value);
+  if (normalized === null) {
     return null;
   }
-
   try {
     return new URL(normalized, requestUrl).pathname;
   } catch {

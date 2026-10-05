@@ -203,6 +203,14 @@ A Navigation item states its own policy or is shown to everybody the Area admits
 saying something about the menu, never about the address: the address still answers, and a container
 whose every child hides is not drawn because nothing is left under it.
 
+**The Area gate steps aside for a preview only where Core has already decided.** A request that reads the
+Area or the Page as a revision (`revision`, or a review of kind `area` or `page`) is answered by Core only
+to a viewer it allows to preview, and a refusal arrives as 401/403 before anything renders; for such a
+request the Area access guard does not run (`hasPhiCmsAuthorizedPreviewRead`, server-helpers/cms-review.ts).
+A review of kind `navigation` or `theme` changes neither read -- the Area and the Page come back live and
+unauthorized -- so the gate applies as for any other request. Nor does a preview teach the proxy where an
+Area's root leads (gateway/area-root-door.ts): what it loaded may be a draft.
+
 **What a Module does instead.** A Module that may not show a given person what its Page holds answers
 that *inside* the Page -- in its tree loader, so nothing it will not show is resolved, fetched or
 mounted. That answer is a body and not a status line: a refusal raised below the Area shell arrives

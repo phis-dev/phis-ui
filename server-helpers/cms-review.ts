@@ -57,6 +57,27 @@ export function getPhiCmsReviewRevision(
   return review?.kind === kind ? review.revisionId : null;
 }
 
+/**
+ * Whether this request reads the Area or the Page as a revision Core had to authorize.
+ *
+ * `revision` and a review of kind `area` or `page` are passed on to Core's Area and Page reads, and
+ * Core answers them only to a viewer it allows to preview (`requireSiteCmsPreviewApiContext`); a
+ * refusal comes back as 401/403 before anything renders. That is what lets the Area access guard step
+ * aside for such a request: somebody else has already decided. A review of kind `navigation` or
+ * `theme` changes neither read -- the Area and the Page come back live, unauthorized -- so it is no
+ * reason to step aside. Deciding on "any valid review" did exactly that, and
+ * `?reviewKind=navigation&reviewRevision=1` showed an anonymous visitor a staff Area's shell.
+ */
+export function hasPhiCmsAuthorizedPreviewRead(
+  searchParams?: Record<string, string | undefined>,
+) {
+  if (resolvePhiCmsRevisionFromSearchParams(searchParams) != null) {
+    return true;
+  }
+  const review = resolvePhiCmsReviewParams(searchParams);
+  return review?.kind === "area" || review?.kind === "page";
+}
+
 export function resolvePhiCmsRevisionFromSearchParams(
   searchParams?: Record<string, string | undefined>,
 ) {

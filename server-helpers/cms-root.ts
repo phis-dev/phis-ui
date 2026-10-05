@@ -14,6 +14,7 @@ import { resolveCmsRootRoute } from "./cms-route";
 import { buildPhiLocalCmsAreaPayload } from "./cms-area";
 import { getPhiExactSiteArea } from "./cms";
 import {
+  hasPhiCmsAuthorizedPreviewRead,
   resolvePhiCmsReviewParams,
   resolvePhiCmsRevisionFromSearchParams,
   resolvePhiCmsThemeReviewRequestContext,
@@ -102,10 +103,11 @@ function attachRuntimeRequest(
   };
 }
 
+/** Whether the Area access guard may step aside: only where Core authorized the read (cms-review.ts). */
 export function hasPhiCmsRevisionPreview(
   searchParams?: PhiCmsRequestSearchParams,
 ) {
-  return resolvePhiCmsRevisionFromSearchParams(searchParams) != null || resolvePhiCmsReviewParams(searchParams) != null;
+  return hasPhiCmsAuthorizedPreviewRead(searchParams);
 }
 
 /*

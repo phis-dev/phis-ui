@@ -57,7 +57,14 @@ function isPhiThemeModuleImage(base: ThemeImageBase | null | undefined) {
 }
 
 function isPhiThemeCarriedSource(source: unknown) {
-  return typeof source === "string" && (source.startsWith("data:image/") || source.startsWith("/"));
+  if (typeof source !== "string") return false;
+  /*
+   * A path on this origin starts with one slash and nothing slash-like after it: `//host/x` is a
+   * scheme-relative address, and `/\host/x` is the same thing once a browser has normalised the
+   * backslash. Either would have been fetched from somebody else's server and copied into the
+   * library as if the Module had shipped it.
+   */
+  return source.startsWith("data:image/") || /^\/(?![\\/])/u.test(source);
 }
 
 function readPhiDataUrlContentType(source: string) {

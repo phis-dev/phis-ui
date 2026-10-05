@@ -192,7 +192,10 @@ Widgets and Controllers consume only the Site runtime's same-origin `/api/auth/*
 maps that facade to canonical `@phis/server` `/api/v1/auth/*`, injects trusted Site/server context, and keeps
 server tokens and provider secrets outside the browser.
 
-Successful login navigation resolves an explicit `next` path inside the server-selected user Area. The
+Successful login navigation resolves an explicit `next` path inside the server-selected user Area. Every
+client reader of such a path (`normalizeLoginRedirectTarget`, the Core Runtime Controller's `path`
+navigation, the internal route handlers) applies phis-server's rule through `helpers/internal-path.ts`:
+one leading slash, no second slash or backslash after it, no control characters. The
 Site must expose `/api/site/navigation-target` with `buildPhiNavigationTargetRouteHandler` and the Site's
 Area bridges. The handler checks the active, access-filtered Phi route/page catalog; a missing target falls
 back to that Area's root instead of relying on the status of Next's catch-all route.

@@ -6,6 +6,7 @@ import {
   PHI_FEEDBACK_LEVELS,
   type PhiFeedbackLevel,
 } from "./control";
+import { readPhiInternalPath } from "../helpers/internal-path";
 import { isPhiRecord } from "../helpers/is-record";
 
 export const PHI_CORE_RUNTIME_FEEDBACK_LEVELS = PHI_FEEDBACK_LEVELS;
@@ -173,8 +174,8 @@ export function readPhiCoreRuntimeNavigateValue(
 ): PhiCoreRuntimeNavigateValue | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const record = value as Record<string, unknown>;
-  const path = typeof record.path === "string" ? record.path.trim() : "";
-  if (!path.startsWith("/") || path.startsWith("//")) return null;
+  const path = readPhiInternalPath(record.path);
+  if (path === null) return null;
   return {
     path,
     ...(record.replace === true ? { replace: true } : {}),
