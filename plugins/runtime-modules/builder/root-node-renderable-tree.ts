@@ -1,4 +1,4 @@
-import { PhiCmsRegionType } from "../../../constants/phi-cms";
+import { PhiCmsFlags, PhiCmsRegionType } from "../../../constants/phi-cms";
 import type {
   PhiCmsContentWidgetNode,
   PhiCmsLayoutNode,
@@ -79,7 +79,7 @@ function resolveRegionConfig(
   const surfaceConfig = surface == null ? {} : { surface };
   if (regionType === PhiCmsRegionType.SiderLeft || regionType === PhiCmsRegionType.SiderRight) {
     return {
-      fullHeight: true,
+      flags: PhiCmsFlags.FullHeight,
       size: {
         width: "100%",
         height: "100%",

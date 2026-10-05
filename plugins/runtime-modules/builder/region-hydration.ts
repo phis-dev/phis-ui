@@ -24,12 +24,14 @@ import {
   type PhiBuilderRegionKey,
 } from "./region-keys";
 import { readPhiSurface } from "../../../types/surface";
+import { hasPhiFlag, readPhiFlags } from "../../../helpers/flags";
+import { PhiCmsFlags } from "../../../constants/phi-cms";
 
 type JsonRecord = Record<string, unknown>;
 
 type BuilderPersistedRegionConfig = {
-  fullHeight?: boolean;
-  sticky?: boolean;
+  /** The Region's behaviour bits (`PhiCmsFlags`); `Sticky` is the draft's own `sticky` on its way out. */
+  flags?: number;
   offsetTop?: PhiCssLength;
   size?: PhiRenderableBlockResponsiveSize;
   minSize?: PhiRenderableBlockResponsiveSize;
@@ -166,7 +168,7 @@ function buildRegionDraft(
   return {
     ...fallback,
     regionConfig: toJsonRecord(regionConfig),
-    sticky: typeof regionConfig.sticky === "boolean" ? regionConfig.sticky : fallback.sticky,
+    sticky: hasPhiFlag(readPhiFlags(regionConfig.flags), PhiCmsFlags.Sticky),
     offsetTop: readPhiLengthValue(regionConfig.offsetTop) ?? fallback.offsetTop,
     size: readRenderableBlockSize(regionConfig.size) ?? fallback.size,
     minSize: readRenderableBlockSize(regionConfig.minSize) ?? fallback.minSize,
@@ -226,7 +228,9 @@ export function serializePhiDeveloperBuilderRegionConfig(
     ...toJsonRecord(draft.regionConfig),
   } as BuilderPersistedRegionConfig;
 
-  base.sticky = draft.sticky ?? false;
+  base.flags = draft.sticky
+    ? readPhiFlags(base.flags) | PhiCmsFlags.Sticky
+    : readPhiFlags(base.flags) & ~PhiCmsFlags.Sticky;
   base.offsetTop = draft.offsetTop ?? 0;
 
   if (draft.size?.width != null || draft.size?.height != null) {

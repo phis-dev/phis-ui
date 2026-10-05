@@ -3,6 +3,8 @@
 import { useMemo, type ReactNode } from "react";
 
 import { resolvePhiBuilderSiderWidth } from "../builder-geometry";
+import { hasPhiConfigFlag } from "../../../../helpers/flags";
+import { PhiCmsFlags } from "../../../../constants/phi-cms";
 import { PhiAuthoringRegionOverridesProvider } from "../../../../components/runtime/authoring-region-overrides";
 import { getDefaultRegionDraft, resolveRegionDraftKey } from "../developer-region-drafts";
 import { usePhiDeveloperBuilderStateValue, usePhiDeveloperRegionDrafts } from "../developer-workspace-store";
@@ -18,7 +20,7 @@ export function PhiBuilderCanvasRegionOverrides({ children }: { children: ReactN
     return {
       preview: builderMode === "preview",
       pageSiderRight: { visible: siderRight.rootNode != null, width: resolvePhiBuilderSiderWidth(siderRight) },
-      structureSiderLeft: { visible: siderLeft.rootNode != null, width: resolvePhiBuilderSiderWidth(siderLeft), fullHeight: siderLeft.regionConfig?.fullHeight === true },
+      structureSiderLeft: { visible: siderLeft.rootNode != null, width: resolvePhiBuilderSiderWidth(siderLeft), fullHeight: hasPhiConfigFlag(siderLeft.regionConfig, PhiCmsFlags.FullHeight) },
     };
   }, [area, builderMode, pageKey, regionDrafts]);
   return <PhiAuthoringRegionOverridesProvider value={value}>{children}</PhiAuthoringRegionOverridesProvider>;

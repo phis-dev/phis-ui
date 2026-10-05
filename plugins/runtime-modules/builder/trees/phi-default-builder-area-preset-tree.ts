@@ -7,7 +7,7 @@ import {
   PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS,
   PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX,
 } from "../../../../constants/cms-layout-types";
-import { PhiCmsRegionType, PhiCmsStatus } from "../../../../constants/phi-cms";
+import { PhiCmsFlags, PhiCmsRegionType, PhiCmsStatus } from "../../../../constants/phi-cms";
 import { PHI_CMS_AREA_KEYS } from "../../../../constants/cms-areas";
 import { buildPhiCmsLayoutNode } from "../../../../helpers/cms-node-factories";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
@@ -337,7 +337,6 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
         rootLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderTop,
         sortOrder: -10,
         config: {
-          sticky: false,
           /*
            * No Effect, Shadow, border, or ground of its own (SHELL.md, Shell Chrome Overlay).
            *
@@ -356,7 +355,7 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
         rootLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderMain,
         sortOrder: 0,
         config: {
-          sticky: true,
+          flags: PhiCmsFlags.Sticky,
           // No chrome of its own, for the reason given on `header_top` above.
           size: { height: `${headerMainHeight}px` },
           offsetTop: 0,
@@ -368,9 +367,7 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
         rootLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutSiderLeft,
         sortOrder: 10,
         config: {
-          sticky: true,
-          fullHeight: true,
-          collapsible: true,
+          flags: PhiCmsFlags.Sticky | PhiCmsFlags.FullHeight | PhiCmsFlags.Collapsible,
           /*
            * No border either, for the reason the Effect went: it is the preset authoring the frame's
            * appearance. It drew a hard light line down the seam between the Sider and the Header
@@ -824,7 +821,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               rootLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderBottom,
               sortOrder: 5,
               config: {
-                sticky: true,
+                flags: PhiCmsFlags.Sticky,
                 // No chrome of its own, for the reason given on `header_top` above.
                 size: { height: `${resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "bottom")}px` },
                 offsetTop: resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "main"),

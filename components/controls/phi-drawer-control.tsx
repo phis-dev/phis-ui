@@ -3,15 +3,15 @@
 import dynamic from "next/dynamic";
 import { useState, useSyncExternalStore } from "react";
 
-import type { PhiCmsOverlayConfig, PhiCmsOverlaySize } from "../../types/cms-overlay";
+import type { PhiCmsOverlayConfig, PhiCmsOverlaySize, PhiOverlayPushBehaviour } from "../../types/cms-overlay";
 import type { PhiOverlayControlCommonProps } from "./phi-overlay-control-contract";
 
 export type PhiDrawerControlProps = PhiOverlayControlCommonProps & {
   placement?: PhiCmsOverlayConfig["placement"];
   size?: PhiCmsOverlaySize;
   maxSize?: number;
-  resizable?: PhiCmsOverlayConfig["resizable"];
-  push?: PhiCmsOverlayConfig["push"];
+  resizable?: boolean;
+  push?: PhiOverlayPushBehaviour;
   zIndex?: number;
 };
 

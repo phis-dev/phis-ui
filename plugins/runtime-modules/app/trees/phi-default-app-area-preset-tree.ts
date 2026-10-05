@@ -1,7 +1,7 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../../types/cms-instance-id";
 import { PHI_APP_RUNTIME_MODULE_ID } from "../ids";
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../../constants/cms-layout-types";
-import { PhiCmsRegionType } from "../../../../constants/phi-cms";
+import { PhiCmsFlags, PhiCmsRegionType } from "../../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import { resolvePhiShellMetric } from "../../../../helpers/shell-region-style";
 import type { PhiResolvedCmsPageTree, PhiCmsPageNode } from "../../../../types/cms";
@@ -69,11 +69,9 @@ export async function buildPhiDefaultAppAreaPresetTree({
       sortOrder: 25,
       // Structure only: the frame's look is the Theme's (SHELL.md, Shell Chrome Overlay).
       config: {
-        sticky: true,
-        fullHeight: true,
+        flags: PhiCmsFlags.Sticky | PhiCmsFlags.FullHeight | PhiCmsFlags.Collapsible,
         size: { width: `${resolvedShellLeftWidth}px` },
         ...(typeof shellSiderLeftOffsetTop === "number" ? { offsetTop: shellSiderLeftOffsetTop } : { offsetTop: 0 }),
-        collapsible: true,
       },
     })],
     layoutNodes: [

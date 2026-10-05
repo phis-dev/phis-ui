@@ -130,25 +130,34 @@ values themselves.
 Common serializable config may express:
 
 - `title`;
-- `closable`, `keyboard`, and semantic `mountPolicy`;
-- one shared declarative mask config with `appearance: "transparent" | "normal" | "blurred"`,
-  `allowOutsideInteraction`, and `closable`; visual presentation, outside interaction, and dismissal are
-  independent semantic axes shared by Modal and Drawer;
+- semantic `mountPolicy`;
+- `flags`: the Overlay's yes-or-no answers as `PhiCmsFlags` bits. A stored config states such an answer
+  as a bit, never as a boolean field, and each bit names the departure from the plain Overlay, so an
+  unset flag set is every default at once: `NoCloseButton`, `NoEscapeClose`, `Centered`, `Resizable`,
+  `Push`, `MaskPassesPointer`, `MaskKeepsOpen`;
+- one shared declarative mask config with `appearance: "transparent" | "normal" | "blurred"`; whether the
+  mask stops the pointer and whether a click on it dismisses are the two mask flags, so visual
+  presentation, outside interaction, and dismissal stay independent semantic axes shared by Modal and
+  Drawer;
 - shared size bounds and a Surface (background with its filter, border, shadow);
-- Modal-specific centering and canonical `controlSize`;
-- Drawer-specific placement, size, maximum size, resizing, and nested push behavior;
+- Modal-specific centering (`Centered`) and canonical `controlSize`;
+- Drawer-specific placement, size, maximum size, resizing (`Resizable`), and nested push behavior
+  (`Push`, with `pushDistance` stating how far);
 - persisted signal routes.
 
-The two `closable` fields have separate, non-overlapping meanings:
+`resolvePhiCmsOverlayBehaviour` (types/cms-overlay.ts) reads the flags into the words the Controls take:
+`closable`, `keyboard`, `centered`, `resizable`, `push`, and a `PhiOverlayMaskBehaviour`. The Controls
+are the only place those booleans exist; nothing stores them.
 
-- top-level Overlay `closable` controls only whether the Header chrome renders its close button;
-- `mask.closable` controls only whether an outside pointer action requests dismissal; and
-- `keyboard` independently controls whether Escape requests dismissal.
+The three dismissal flags have separate, non-overlapping meanings:
 
-Setting top-level `closable: false` does not disable mask or Escape dismissal. An Overlay that may close
-only through an authoritative Controller/signal uses top-level `closable: false`, `keyboard: false`, and
-`mask.closable: false`. Its `allowOutsideInteraction` value still independently determines whether an
-outside pointer action is captured or reaches the background.
+- `NoCloseButton` controls only whether the Header chrome renders its close button;
+- `MaskKeepsOpen` controls only whether an outside pointer action requests dismissal; and
+- `NoEscapeClose` independently controls whether Escape requests dismissal.
+
+Setting `NoCloseButton` does not disable mask or Escape dismissal. An Overlay that may close only through
+an authoritative Controller/signal sets all three. `MaskPassesPointer` still independently determines
+whether an outside pointer action is captured or reaches the background.
 
 `closeMode` is `immediate` by default and is suitable only when closing cannot abandon or commit pending
 transactional state. With `request`, user dismissal keeps the Overlay open and emits one typed,
@@ -299,8 +308,9 @@ Modal and Drawer use exactly one mask contract. `appearance` controls presentati
 Presets never persist backdrop colors, blur radii, Ant Design mask props, or representation-specific mask
 config. Theme/Core owns those values and both Overlay Controls use one shared adapter resolver.
 
-`allowOutsideInteraction` controls whether pointer input may reach content behind the Overlay.
-`closable` controls whether an outside pointer action requests dismissal. Their required behavior is:
+`MaskPassesPointer` controls whether pointer input may reach content behind the Overlay (the Control's
+`allowOutsideInteraction`). `MaskKeepsOpen` controls whether an outside pointer action requests dismissal
+(the Control's mask `closable`, inverted). Their required behavior is:
 
 | Outside interaction | Closable | Result |
 | --- | --- | --- |

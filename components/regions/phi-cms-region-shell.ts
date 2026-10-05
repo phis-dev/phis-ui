@@ -244,20 +244,20 @@ export function resolvePhiCmsRegionShell({
   const siderCollapsedWidth =
     normalizeCssLength(config.collapsedWidth) ?? resolvePhiShellSiderCollapsedWidth(shellTheme);
   const top = normalizeCssLength(config.offsetTop) ?? 0;
-  const sticky = config.sticky === true;
+  const sticky = hasPhiFlag(config.flags, PhiCmsFlags.Sticky);
   /*
    * Full height is a Sider's behaviour and nobody else's (LAYOUTING.md: "where the Region family
    * supports it"). The static renderer used to give every Region kind the viewport-height `calc` when
    * the flag was set, the client one only a Sider.
    */
-  const fullHeight = isSider && config.fullHeight === true;
+  const fullHeight = isSider && hasPhiFlag(config.flags, PhiCmsFlags.FullHeight);
   const stuck = isHeader ? sticky : isSider && (sticky || fullHeight);
   const blockSize = geometry.block.size?.css;
   const fullHeightSize =
     fullHeight && !blockSize
       ? `calc(100dvh - ${typeof top === "number" ? `${top}px` : top})`
       : blockSize;
-  const zIndex = config.zIndex ?? resolvePhiShellRegionZIndex(regionKey, config.fullHeight === true);
+  const zIndex = config.zIndex ?? resolvePhiShellRegionZIndex(regionKey, hasPhiFlag(config.flags, PhiCmsFlags.FullHeight));
 
   /*
    * A Background config that paints nothing is not an authored ground. The Builder writes one onto every

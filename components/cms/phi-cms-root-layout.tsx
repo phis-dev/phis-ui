@@ -1,6 +1,7 @@
 import { forbidden, notFound, redirect, unauthorized } from "next/navigation";
 
-import { PhiCmsRegionType } from "../../constants/phi-cms";
+import { PhiCmsFlags, PhiCmsRegionType } from "../../constants/phi-cms";
+import { hasPhiConfigFlag } from "../../helpers/flags";
 import type { PhiResolvedCmsAreaPresetTree } from "../../types/cms";
 import type { PhiCmsSiteBridge } from "../../types/cms-plugins";
 import { PhiCmsShell } from "../shell/phi-cms-shell";
@@ -395,7 +396,7 @@ export async function PhiCmsAreaShell({
         />
       ) : undefined}
       siderRight={siderRight}
-      siderLeftFullHeight={siderLeftRegion?.config?.fullHeight === true && hasRenderableSiderLeft}
+      siderLeftFullHeight={hasPhiConfigFlag(siderLeftRegion?.config, PhiCmsFlags.FullHeight) && hasRenderableSiderLeft}
       footerTop={footerTop}
       drawer={drawer}
       footerMain={hasRenderableFooterMain ? (

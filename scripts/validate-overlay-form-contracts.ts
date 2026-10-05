@@ -8,8 +8,10 @@ import {
   PHI_OVERLAY_FOOTER_PRESENTATIONS,
   parsePhiCmsOverlayConfig,
   readPhiOverlayCloseRequest,
+  resolvePhiCmsOverlayBehaviour,
 } from "../types/cms-overlay";
 import { resolvePhiOverlayMaskPresentation } from "../components/controls/phi-overlay-control-contract";
+import { PhiCmsFlags } from "../constants/phi-cms";
 import {
   evaluatePhiRuntimeConditionExpression,
   matchesPhiRuntimeValueCondition,
@@ -175,18 +177,25 @@ assert.equal(parsePhiCmsOverlayConfig({ width: { compact: "90%", medium: 720 } }
 assert.equal(parsePhiCmsOverlayConfig({ size: 480 }, "drawer").size, 480);
 assert.equal(parsePhiCmsOverlayConfig({ size: 480 }, "modal").size, undefined);
 assert.equal(parsePhiCmsOverlayConfig({ controlSize: "wide" }).controlSize, undefined);
-assert.deepEqual(parsePhiCmsOverlayConfig({}).mask, {
+assert.deepEqual(parsePhiCmsOverlayConfig({}).mask, { appearance: "normal" });
+assert.deepEqual(resolvePhiCmsOverlayBehaviour(parsePhiCmsOverlayConfig({})).mask, {
   appearance: "normal",
   allowOutsideInteraction: false,
   closable: true,
 });
-assert.deepEqual(parsePhiCmsOverlayConfig({
+assert.deepEqual(resolvePhiCmsOverlayBehaviour(parsePhiCmsOverlayConfig({
+  flags: PhiCmsFlags.MaskKeepsOpen | PhiCmsFlags.NoEscapeClose | PhiCmsFlags.Push,
+  mask: { appearance: "transparent" },
+  pushDistance: 180,
+})), {
+  closable: true,
+  keyboard: false,
+  centered: false,
+  resizable: false,
+  push: { distance: 180 },
   mask: { appearance: "transparent", allowOutsideInteraction: false, closable: false },
-}).mask, {
-  appearance: "transparent",
-  allowOutsideInteraction: false,
-  closable: false,
 });
+assert.throws(() => parsePhiCmsOverlayConfig({ flags: true }), /"flags" must be a non-negative integer/);
 assert.deepEqual(resolvePhiOverlayMaskPresentation({
   appearance: "transparent",
   allowOutsideInteraction: false,
@@ -361,7 +370,8 @@ assert.match(
   /isStructurePage \|\| isPagesPage[\s\S]*?creationPreset: \{ layoutKind: "verticalflex", preset: "panel" \},[\s\S]*?typeKey: "flex-vertical"/u,
 );
 assert.match(builderPresetSource, /appearance: "transparent"/u);
-assert.match(builderPresetSource, /allowOutsideInteraction: false/u);
+// The inspector Drawer keeps the pointer from the Canvas beneath it: no `MaskPassesPointer` on any Builder Overlay.
+assert.doesNotMatch(builderPresetSource, /MaskPassesPointer/u);
 assert.match(builderPresetSource, /innerPadding: PHI_SPACE\.sm/u);
 assert.match(builderPresetSource, /defaultOpenSlotKeys: \["slot_0"\]/u);
 assert.match(

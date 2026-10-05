@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef } from "react";
 
 import { PhiStructureRegionLayout } from "../../../../components/layouts/phi-structure-region-layout";
+import { hasPhiConfigFlag } from "../../../../helpers/flags";
+import { PhiCmsFlags } from "../../../../constants/phi-cms";
 import type { PhiDeveloperBuilderStructureCanvasProps } from "./structure-canvas";
 import {
   mergePhiDeveloperRegionDrafts,
@@ -110,9 +112,10 @@ export function PhiDeveloperBuilderShellsWorkspaceWidgetClient({
    * state.
    */
   const siderLeftDraftKey = getPhiBuilderRegionDraftKey(area, "sider_left", pageKey);
-  const siderLeftFullHeight = (
-    regionDrafts[siderLeftDraftKey] ?? structureShellDrafts?.[siderLeftDraftKey]
-  )?.regionConfig?.fullHeight === true;
+  const siderLeftFullHeight = hasPhiConfigFlag(
+    (regionDrafts[siderLeftDraftKey] ?? structureShellDrafts?.[siderLeftDraftKey])?.regionConfig,
+    PhiCmsFlags.FullHeight,
+  );
 
   const renderStructureRegion = (
     regionKey: "header_top" | "header_main" | "sider_left" | "footer_main" | "footer_bottom",

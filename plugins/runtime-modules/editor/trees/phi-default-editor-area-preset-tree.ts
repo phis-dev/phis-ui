@@ -5,7 +5,7 @@ import {
   PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS,
   PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX,
 } from "../../../../constants/cms-layout-types";
-import { PhiCmsRegionType } from "../../../../constants/phi-cms";
+import { PhiCmsFlags, PhiCmsRegionType } from "../../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import { buildPhiHeaderTopActionsLayoutNode } from "../../../../components/regions/presets/phi-header-top-actions-layout";
 import { resolvePhiShellHeaderHeight, resolvePhiShellMetric } from "../../../../helpers/shell-region-style";
@@ -84,7 +84,6 @@ export async function buildPhiDefaultEditorAreaPresetTree({
         sortOrder: 10,
         // Structure only: the frame's look is the Theme's (SHELL.md, Shell Chrome Overlay).
         config: {
-          sticky: false,
           size: { height: `${resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "top")}px` },
         },
       }),
@@ -94,7 +93,7 @@ export async function buildPhiDefaultEditorAreaPresetTree({
         rootLayoutNodeId: SYNTHETIC_EDITOR_LAYOUT_IDS.layoutHeaderMain,
         sortOrder: 20,
         config: {
-          sticky: true,
+          flags: PhiCmsFlags.Sticky,
           size: { height: `${resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "main")}px` },
           offsetTop: typeof shellHeaderMainOffsetTop === "number" ? shellHeaderMainOffsetTop : 0,
         },
@@ -105,11 +104,9 @@ export async function buildPhiDefaultEditorAreaPresetTree({
         rootLayoutNodeId: SYNTHETIC_EDITOR_LAYOUT_IDS.layoutSiderLeft,
         sortOrder: 25,
         config: {
-          sticky: true,
-          fullHeight: true,
+          flags: PhiCmsFlags.Sticky | PhiCmsFlags.FullHeight | PhiCmsFlags.Collapsible,
           size: { width: `${resolvedShellLeftWidth}px` },
           ...(typeof shellSiderLeftOffsetTop === "number" ? { offsetTop: shellSiderLeftOffsetTop } : { offsetTop: 0 }),
-          collapsible: true,
         },
       }),
     ],

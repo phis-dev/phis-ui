@@ -271,7 +271,9 @@ last line is 25. This is CSS Grid's own counting and no other counting is used.
 Regions own shell and page placement rather than child topology. They may configure:
 
 - visibility, enabled state, viewport behavior, size bounds, opacity, and z-index;
-- sticky/full-height/collapse behavior where the Region family supports it;
+- sticky/full-height/collapse behavior where the Region family supports it, as `PhiCmsFlags` bits in the
+  config's `flags` (`Sticky`, `FullHeight`, `Collapsible`): a stored config states a yes-or-no answer as a
+  bit, never as a boolean field;
 - a `surface` (see [Surface](#surface));
 - `padding`, `paddingTop`, `paddingRight`, `paddingBottom`, and `paddingLeft`.
 

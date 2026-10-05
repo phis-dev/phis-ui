@@ -7,6 +7,8 @@ import type {
   PhiSignalScope,
 } from "../../types";
 import { isPhiCmsPageOwnedRegion } from "../../helpers/cms-region-keys";
+import { hasPhiFlag } from "../../helpers/flags";
+import { PhiCmsFlags } from "../../constants/phi-cms";
 import { PhiCmsRegionStatic } from "./phi-cms-region-static";
 import {
   resolveRenderableBlockEffectsAttributes,
@@ -54,7 +56,7 @@ export function PhiCmsRegionContainer({
     resolveRenderableBlockViewportEffects(effectsConfig).length > 0;
   const requiresClientEnhancement =
     signalParticipant ||
-    config?.collapsible === true ||
+    hasPhiFlag(config?.flags, PhiCmsFlags.Collapsible) ||
     requiresEffectsObserver ||
     resolvePhiBackgroundMotion(config?.surface?.background) != null;
 

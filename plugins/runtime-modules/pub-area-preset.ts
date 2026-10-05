@@ -1,3 +1,4 @@
+import { PhiCmsFlags } from "../../constants/phi-cms";
 import { PHI_PADDING } from "../../theme/phi-tokens";
 import type { PhiCmsAreaPreset, PhiCmsResolvedRegion } from "../../types";
 import { createPhiDefaultAreaRuntimeModuleIds } from "./area-module-defaults";
@@ -9,7 +10,6 @@ const PUB_HEADER_TOP_REGION: PhiCmsResolvedRegion = {
   visibilityMask: 0,
   sortOrder: -10,
   config: {
-    sticky: false,
     offsetTop: 0,
   },
   rootLayoutNodeId: null,
@@ -34,7 +34,7 @@ const PUB_HEADER_MAIN_REGION: PhiCmsResolvedRegion = {
    * tree is built (`resolvePhiShellHeaderHeight`).
    */
   config: {
-    sticky: true,
+    flags: PhiCmsFlags.Sticky,
     offsetTop: 0,
   },
   rootLayoutNodeId: null,

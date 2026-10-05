@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { createPhiCmsPresetNodes } from "./cms-preset-nodes";
-import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../constants/phi-cms";
+import { PhiCmsFlags, PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../constants/phi-cms";
 import { PHI_VIEWER_ACCESS_ANYONE } from "../types/access";
 import { createPhiPresetCmsInstanceIdMap } from "../types/cms-instance-id";
 import type { PhiCmsPageNode } from "../types/cms";
@@ -74,13 +74,13 @@ describe("createPhiCmsPresetNodes frame factories", () => {
       flags: 8,
       visibilityMask: 1,
       sortOrder: -10,
-      config: { sticky: true },
+      config: { flags: PhiCmsFlags.Sticky },
     });
     expect(region).toMatchObject({
       status: DRAFT,
       flags: 8,
       visibilityMask: 1,
-      config: { sticky: true },
+      config: { flags: PhiCmsFlags.Sticky },
     });
   });
 

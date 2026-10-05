@@ -1,3 +1,4 @@
+import { PhiCmsFlags } from "../../constants/phi-cms";
 import { describe, expect, it } from "vitest";
 
 import { resolvePhiCmsRegionShell, type PhiCmsRegionShellInput } from "./phi-cms-region-shell";
@@ -62,12 +63,12 @@ describe("region shell geometry", () => {
   });
 
   it("gives full height to a Sider only, with a minimum that holds", () => {
-    const sider = resolve({ regionKey: "sider_left", config: { fullHeight: true, offsetTop: 55 } });
+    const sider = resolve({ regionKey: "sider_left", config: { flags: PhiCmsFlags.FullHeight, offsetTop: 55 } });
     expect(sider.style.height).toBe("calc(100dvh - 55px)");
     expect(sider.style.minHeight).toBe("calc(100dvh - 55px)");
     expect(sider.style.position).toBe("sticky");
 
-    const header = resolve({ regionKey: "header_main", config: { fullHeight: true } });
+    const header = resolve({ regionKey: "header_main", config: { flags: PhiCmsFlags.FullHeight } });
     expect(header.style.height).toBeUndefined();
   });
 

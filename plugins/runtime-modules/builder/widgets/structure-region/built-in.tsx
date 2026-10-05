@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties, ReactElement, ReactNode } from "react";
 
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
+import { hasPhiConfigFlag } from "../../../../../helpers/flags";
+import { PhiCmsFlags } from "../../../../../constants/phi-cms";
 import {
   buildPhiCmsLayoutNamespacedTypeKey,
   splitPhiCmsLayoutNamespacedTypeKey,
@@ -668,7 +670,7 @@ export function PhiStructureRegionScaffold({
   const offsetTop = effectiveDraft?.offsetTop ?? 0;
   const shouldFillAvailableHeight =
     isFullHeightRegion &&
-    effectiveDraft?.regionConfig?.fullHeight !== false &&
+    hasPhiConfigFlag(effectiveDraft?.regionConfig, PhiCmsFlags.FullHeight) &&
     draftGeometry.block.size == null &&
     draftGeometry.block.min == null &&
     draftGeometry.block.max == null;

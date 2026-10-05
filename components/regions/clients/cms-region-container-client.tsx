@@ -7,6 +7,8 @@ import { PhiButtonControl } from "../../controls/phi-button-control";
 import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
 import { PhiSurfaceTone } from "../../surface/phi-surface-tone";
 import { resolvePhiShellRegionZIndex } from "../../../helpers/shell-region-style";
+import { hasPhiFlag } from "../../../helpers/flags";
+import { PhiCmsFlags } from "../../../constants/phi-cms";
 import type { PhiCmsRegionConfig, PhiCmsRegionKey } from "../../../types";
 
 import { PhiBackgroundMotionLayer } from "../../cms/clients/phi-background-motion-layer-lazy";
@@ -72,7 +74,7 @@ export function PhiCmsRegionContainerClient({
     enabled: initialConfig?.enabled,
     zIndex:
       initialConfig?.zIndex ??
-      resolvePhiShellRegionZIndex(regionKey, initialConfig?.fullHeight === true),
+      resolvePhiShellRegionZIndex(regionKey, hasPhiFlag(initialConfig?.flags, PhiCmsFlags.FullHeight)),
     opacity: initialConfig?.opacity,
     size: initialConfig?.size,
     minSize: initialConfig?.minSize,
@@ -173,8 +175,8 @@ export function PhiCmsRegionContainerClient({
   }
 
   const isRightSider = regionKey === "sider_right";
-  const collapsible = config.collapsible === true;
-  const isFullHeight = config.fullHeight === true;
+  const collapsible = hasPhiFlag(config.flags, PhiCmsFlags.Collapsible);
+  const isFullHeight = hasPhiFlag(config.flags, PhiCmsFlags.FullHeight);
   const isCollapsed = collapsible && collapsed;
   const collapsedWidth = shell.siderCollapsedWidth;
   const collapseIcon = typeof config.collapseIcon === "string" ? config.collapseIcon : undefined;

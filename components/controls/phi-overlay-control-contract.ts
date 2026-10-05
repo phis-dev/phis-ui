@@ -6,9 +6,9 @@ import {
 } from "../../theme/phi-container-breakpoints";
 import type { PhiCmsMountPolicy } from "../../types/cms-mount-policy";
 import type {
-  PhiCmsOverlayMaskConfig,
   PhiCmsOverlaySize,
   PhiOverlayCloseSource,
+  PhiOverlayMaskBehaviour,
 } from "../../types/cms-overlay";
 import {
   resolvePhiResponsiveValue,
@@ -29,7 +29,7 @@ export type PhiOverlayControlCommonProps = {
   footer?: ReactNode;
   closable?: boolean;
   keyboard?: boolean;
-  mask?: PhiCmsOverlayMaskConfig;
+  mask?: PhiOverlayMaskBehaviour;
   mountPolicy?: PhiCmsMountPolicy;
   containerStyle?: CSSProperties;
   onDismiss?: (source: PhiOverlayCloseSource) => void;
@@ -40,7 +40,7 @@ export const PHI_OVERLAY_DEFAULT_MASK = {
   appearance: "normal",
   allowOutsideInteraction: false,
   closable: true,
-} as const satisfies PhiCmsOverlayMaskConfig;
+} as const satisfies PhiOverlayMaskBehaviour;
 
 /**
  * How the mask is drawn and whether it stands between the pointer and the page behind the Overlay.
@@ -53,7 +53,7 @@ export const PHI_OVERLAY_DEFAULT_MASK = {
  * Modal stands in a wrapper that covers the viewport and takes the outside click itself, so a Modal that
  * lets the pointer through has to open that wrapper too -- the mask style alone left it a wall.
  */
-export function resolvePhiOverlayMaskPresentation(mask: PhiCmsOverlayMaskConfig) {
+export function resolvePhiOverlayMaskPresentation(mask: PhiOverlayMaskBehaviour) {
   const capturesOutsidePointer = !mask.allowOutsideInteraction || mask.closable;
   return {
     capturesOutsidePointer,

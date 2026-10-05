@@ -38,17 +38,20 @@ export type PhiCmsLayerConfig = Record<string, unknown> & {
 
 export type PhiCmsRegionConfig = Record<string, unknown> & PhiCmsContainerChromeConfig & {
   visibility?: PhiRenderableBlockVisibility;
+  /**
+   * The block runtime's live answer, merged in by the client renderer for the shell resolver; a stored
+   * config never states it (BUILDER.md, renderable blocks).
+   */
   enabled?: boolean;
   mode?: "light" | "dark";
-  sticky?: boolean;
-  fullHeight?: boolean;
-  collapsible?: boolean;
+  /**
+   * The Region's behaviour as `PhiCmsFlags` bits: `Sticky`, `FullHeight`, `Collapsible`, and `Collapsed`
+   * for the Builder preview. Read with `hasPhiFlag`; a Region stored on a Page has no row of its own, so
+   * its behaviour lives here and not on a row's `flags`.
+   */
   flags?: number;
   collapsedWidth?: CSSProperties["width"];
   collapseIcon?: string;
-  centered?: boolean;
-  mobileOnly?: boolean;
-  desktopOnly?: boolean;
   size?: PhiRenderableBlockResponsiveSize;
   minSize?: PhiRenderableBlockResponsiveSize;
   maxSize?: PhiRenderableBlockResponsiveSize;

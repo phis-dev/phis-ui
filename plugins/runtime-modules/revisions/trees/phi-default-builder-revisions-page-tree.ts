@@ -3,7 +3,7 @@ import {
   PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS,
   PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX,
 } from "../../../../constants/cms-layout-types";
-import { PhiCmsRegionType, PhiCmsStatus } from "../../../../constants/phi-cms";
+import { PhiCmsFlags, PhiCmsRegionType, PhiCmsStatus } from "../../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import { resolvePhiShellHeaderHeight } from "../../../../helpers/shell-region-style";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
@@ -122,7 +122,7 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
         rootLayoutNodeId: PHI_REVISIONS_PAGE_LAYOUT_IDS.layoutHeaderBottom,
         sortOrder: 5,
         config: {
-          sticky: true,
+          flags: PhiCmsFlags.Sticky,
           size: { height: `${resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "bottom")}px` },
           offsetTop: resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "main"),
         },

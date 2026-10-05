@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 
 import { PHI_SPACE } from "../../theme/antd-css-var-contract";
 import type { PhiCmsMountPolicy } from "../../types/cms-mount-policy";
-import type { PhiCmsOverlayMaskConfig, PhiOverlayCloseSource } from "../../types/cms-overlay";
+import type { PhiOverlayCloseSource, PhiOverlayMaskBehaviour } from "../../types/cms-overlay";
 import type { PhiControlSize } from "../../types/control";
 import { PhiAlertControl, type PhiAlertControlProps } from "./phi-alert-control";
 import { PhiButtonControl } from "./phi-button-control";
@@ -77,7 +77,7 @@ export type PhiDialogControlProps = {
   centered?: boolean;
   closable?: boolean;
   keyboard?: boolean;
-  mask?: PhiCmsOverlayMaskConfig;
+  mask?: PhiOverlayMaskBehaviour;
   mountPolicy?: PhiCmsMountPolicy;
   /** A styling hook for a surface that mounts the Dialog inside its own popup container. */
   rootClassName?: string;

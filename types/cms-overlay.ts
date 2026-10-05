@@ -7,6 +7,8 @@ import {
 } from "./cms-mount-policy";
 import type { PhiResponsiveValue } from "./responsive";
 import { readPhiControlSize, type PhiControlSize } from "./control";
+import { PhiCmsFlags } from "@phis/contracts/cms";
+import { hasPhiFlag, readPhiFlags } from "../helpers/flags";
 
 export const PHI_CMS_OVERLAY_TYPES = ["modal", "drawer"] as const;
 export type PhiCmsOverlayType = (typeof PHI_CMS_OVERLAY_TYPES)[number];
@@ -16,11 +18,23 @@ export type PhiOverlayFooterPresentation = (typeof PHI_OVERLAY_FOOTER_PRESENTATI
 export const PHI_CMS_OVERLAY_MASK_APPEARANCES = ["transparent", "normal", "blurred"] as const;
 export type PhiCmsOverlayMaskAppearance = (typeof PHI_CMS_OVERLAY_MASK_APPEARANCES)[number];
 
+/**
+ * The stored mask: how it is drawn. Whether it stops the pointer and whether a click on it closes the
+ * Overlay are the Overlay's `flags` (`MaskPassesPointer`, `MaskKeepsOpen`), read into
+ * `PhiOverlayMaskBehaviour` for the Controls.
+ */
 export type PhiCmsOverlayMaskConfig = {
   appearance: PhiCmsOverlayMaskAppearance;
+};
+
+/** The mask as a Control is handed it: its look and the two answers the flags give. */
+export type PhiOverlayMaskBehaviour = PhiCmsOverlayMaskConfig & {
   allowOutsideInteraction: boolean;
   closable: boolean;
 };
+
+/** Whether a Drawer pushes a nested one aside, and how far when it says. */
+export type PhiOverlayPushBehaviour = boolean | { distance: PhiCmsOverlaySize };
 
 export type PhiCmsOverlaySize = string | number;
 /** A Modal width per responsive mode; unset modes cascade from the nearest smaller one that is set. */
@@ -40,17 +54,20 @@ type PhiOverlayChromeConfig = Omit<
 export type PhiCmsOverlayConfig = PhiOverlayChromeConfig & {
   title: string | null;
   controlSize?: PhiControlSize;
-  closable: boolean;
-  keyboard: boolean;
+  /**
+   * The Overlay's yes-or-no answers as `PhiCmsFlags` bits: `NoCloseButton`, `NoEscapeClose`, `Centered`,
+   * `Resizable`, `Push`, `MaskPassesPointer`, `MaskKeepsOpen`. Unset is the plain Overlay;
+   * `resolvePhiCmsOverlayBehaviour` reads them into what the Controls take.
+   */
+  flags: number;
   mountPolicy: PhiCmsMountPolicy;
   mask: PhiCmsOverlayMaskConfig;
-  centered: boolean;
   width?: PhiCmsOverlaySize | PhiCmsOverlayResponsiveSize;
   size?: PhiCmsOverlaySize;
   placement: "top" | "right" | "bottom" | "left";
   maxSize?: number;
-  resizable: boolean;
-  push: boolean | { distance: string | number };
+  /** How far a pushing Drawer (`Push`) moves the one beneath; unset leaves it the Control's distance. */
+  pushDistance?: PhiCmsOverlaySize;
   closeMode: "immediate" | "request";
   /**
    * Which Table action this Overlay opens for, when it is opened by one.
@@ -69,10 +86,6 @@ export type PhiCmsOverlayConfig = PhiOverlayChromeConfig & {
   openActionKey: string | null;
   signalRoutes: PhiSignalRouteSet | null;
 };
-
-function readBoolean(value: unknown, fallback: boolean) {
-  return typeof value === "boolean" ? value : fallback;
-}
 
 function readSize(value: unknown) {
   return typeof value === "number" && Number.isFinite(value)
@@ -102,20 +115,32 @@ function readMask(value: unknown): PhiCmsOverlayMaskConfig {
   const appearance = (PHI_CMS_OVERLAY_MASK_APPEARANCES as readonly unknown[]).includes(record.appearance)
     ? record.appearance as PhiCmsOverlayMaskAppearance
     : "normal";
-  return {
-    appearance,
-    allowOutsideInteraction: readBoolean(record.allowOutsideInteraction, false),
-    closable: readBoolean(record.closable, true),
-  };
+  return { appearance };
 }
 
-function readPush(value: unknown): PhiCmsOverlayConfig["push"] {
-  if (typeof value === "boolean") return value;
-  if (value && typeof value === "object" && !Array.isArray(value)) {
-    const distance = readSize((value as Record<string, unknown>).distance);
-    if (distance !== undefined) return { distance };
-  }
-  return false;
+/**
+ * What the Overlay's flags say, in the words the Controls take.
+ *
+ * The bits name the departure from the plain Overlay (a close button, Escape closes, the mask stops the
+ * pointer and closes on a click), so an unset flag set reads as every default at once.
+ */
+export function resolvePhiCmsOverlayBehaviour(config: Pick<PhiCmsOverlayConfig, "flags" | "mask" | "pushDistance">) {
+  const push: PhiOverlayPushBehaviour = hasPhiFlag(config.flags, PhiCmsFlags.Push)
+    ? (config.pushDistance === undefined ? true : { distance: config.pushDistance })
+    : false;
+  const mask: PhiOverlayMaskBehaviour = {
+    appearance: config.mask.appearance,
+    allowOutsideInteraction: hasPhiFlag(config.flags, PhiCmsFlags.MaskPassesPointer),
+    closable: !hasPhiFlag(config.flags, PhiCmsFlags.MaskKeepsOpen),
+  };
+  return {
+    closable: !hasPhiFlag(config.flags, PhiCmsFlags.NoCloseButton),
+    keyboard: !hasPhiFlag(config.flags, PhiCmsFlags.NoEscapeClose),
+    centered: hasPhiFlag(config.flags, PhiCmsFlags.Centered),
+    resizable: hasPhiFlag(config.flags, PhiCmsFlags.Resizable),
+    push,
+    mask,
+  };
 }
 
 export function isPhiCmsOverlayType(value: unknown): value is PhiCmsOverlayType {
@@ -143,12 +168,10 @@ export function parsePhiCmsOverlayConfig(
   return {
     title: typeof rawConfig.title === "string" && rawConfig.title.trim() ? rawConfig.title.trim() : null,
     controlSize: readPhiControlSize(rawConfig.controlSize),
-    closable: readBoolean(rawConfig.closable, true),
-    keyboard: readBoolean(rawConfig.keyboard, true),
+    flags: readPhiFlags(rawConfig.flags),
     // An Overlay is shut far more often than it is open, so the cheap end is the right default.
     mountPolicy: readPhiCmsMountPolicy(rawConfig.mountPolicy, "remount"),
     mask: readMask(rawConfig.mask),
-    centered: readBoolean(rawConfig.centered, false),
     width: overlayType === "modal"
       ? readSize(rawConfig.width) ?? readResponsiveSize(rawConfig.width)
       : undefined,
@@ -157,8 +180,7 @@ export function parsePhiCmsOverlayConfig(
       ? placement
       : "right",
     maxSize,
-    resizable: readBoolean(rawConfig.resizable, false),
-    push: readPush(rawConfig.push),
+    pushDistance: readSize(rawConfig.pushDistance),
     closeMode: rawConfig.closeMode === "request" ? "request" : "immediate",
     openActionKey: typeof rawConfig.openActionKey === "string" && rawConfig.openActionKey.trim()
       ? rawConfig.openActionKey.trim()

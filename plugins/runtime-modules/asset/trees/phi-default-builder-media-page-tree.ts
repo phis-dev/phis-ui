@@ -2,7 +2,7 @@ import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
   PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS,
 } from "../../../../constants/cms-layout-types";
-import { PhiCmsRegionType, PhiCmsStatus } from "../../../../constants/phi-cms";
+import { PhiCmsFlags, PhiCmsRegionType, PhiCmsStatus } from "../../../../constants/phi-cms";
 import { PhiMediaKind } from "../../../../constants/media";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import { resolvePhiShellHeaderHeight } from "../../../../helpers/shell-region-style";
@@ -84,11 +84,7 @@ export async function buildPhiDefaultBuilderMediaPageTree({
           mountPolicy: "lazy-keep",
           // A clear pane: the Canvas shows through, frosted.
           surface: { background: { base: { kind: "color", color: "transparent" }, filter: "glass" } },
-          mask: {
-            appearance: "transparent",
-            allowOutsideInteraction: false,
-            closable: true,
-          },
+          mask: { appearance: "transparent" },
           signalRoutes: {
             listens: [
               {
@@ -124,14 +120,10 @@ export async function buildPhiDefaultBuilderMediaPageTree({
         config: {
           title: mediaLabels?.editor.focalRectLabel ?? "Focal rectangle",
           controlSize: "large",
-          centered: true,
+          flags: PhiCmsFlags.Centered,
           mountPolicy: "remount",
           closeMode: "immediate",
-          mask: {
-            appearance: "normal",
-            allowOutsideInteraction: false,
-            closable: true,
-          },
+          mask: { appearance: "normal" },
           signalRoutes: {
             listens: [
               {
@@ -168,14 +160,10 @@ export async function buildPhiDefaultBuilderMediaPageTree({
           title: mediaLabels?.editor.createFolderTitle ?? "Create folder",
           controlSize: "medium",
           width: { compact: "calc(100vw - 32px)", medium: 480, wide: 520 },
-          centered: true,
+          flags: PhiCmsFlags.Centered,
           mountPolicy: "remount",
           closeMode: "immediate",
-          mask: {
-            appearance: "normal",
-            allowOutsideInteraction: false,
-            closable: true,
-          },
+          mask: { appearance: "normal" },
           signalRoutes: {
             listens: [
               {
@@ -208,7 +196,7 @@ export async function buildPhiDefaultBuilderMediaPageTree({
         rootLayoutNodeId: PHI_ASSET_MEDIA_PAGE_LAYOUT_IDS.layoutHeaderBottom,
         sortOrder: 5,
         config: {
-          sticky: true,
+          flags: PhiCmsFlags.Sticky,
           size: { height: `${resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "bottom")}px` },
           offsetTop: resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "main"),
         },

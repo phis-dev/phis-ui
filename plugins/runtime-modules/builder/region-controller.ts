@@ -1,4 +1,5 @@
-import { PhiCmsRegionType } from "../../../constants/phi-cms";
+import { PhiCmsFlags, PhiCmsRegionType } from "../../../constants/phi-cms";
+import { readPhiFlags } from "../../../helpers/flags";
 import { getDefaultRegionDraft, resolveRegionDraftKey } from "./developer-region-drafts";
 import { getPhiBuilderRegionDraftKey } from "./region-keys";
 import {
@@ -46,10 +47,12 @@ export function applyPhiDeveloperBuilderSiderLeftMode(
   const currentDraft =
     resolveRegionDraftKey(regionDrafts, area, "sider_left", pageKey) ??
     getDefaultRegionDraft("sider_left");
+  const currentFlags = readPhiFlags(currentDraft.regionConfig?.flags);
   const nextRegionConfig = {
     ...(currentDraft.regionConfig ?? {}),
-    fullHeight: checked,
-    sticky: checked,
+    flags: checked
+      ? currentFlags | PhiCmsFlags.FullHeight
+      : currentFlags & ~PhiCmsFlags.FullHeight,
   } as NonNullable<PhiDeveloperBuilderRegionDraft["regionConfig"]>;
 
   delete nextRegionConfig.height;
@@ -75,6 +78,7 @@ export function applyPhiDeveloperBuilderSiderLeftMode(
     draftKey,
     {
       ...currentDraft,
+      sticky: checked,
       zIndex: nextZIndex,
       size: nextSize,
       minSize: nextMinSize,

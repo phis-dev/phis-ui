@@ -112,11 +112,7 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
         size: 377,
         mountPolicy: "lazy-keep",
         surface: { background: { base: { kind: "none" }, filter: "glass" } },
-        mask: {
-          appearance: "transparent",
-          allowOutsideInteraction: false,
-          closable: true,
-        },
+        mask: { appearance: "transparent" },
         signalRoutes: {
           emits: [{ routeKey: `builder-${view}-inspector-visibility`, capabilityId: "openChange", scope: "area", channel: "inspectorVisibility", action: "change", valueType: "boolean", receiver: createPhiBuilderControllerAddress() }],
           listens: [

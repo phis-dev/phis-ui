@@ -1,7 +1,7 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../../types/cms-instance-id";
 import { PHI_DASHBOARD_RUNTIME_MODULE_ID } from "../ids";
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../../constants/cms-layout-types";
-import { PhiCmsPageType, PhiCmsRegionType } from "../../../../constants/phi-cms";
+import { PhiCmsFlags, PhiCmsPageType, PhiCmsRegionType } from "../../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import { resolvePhiShellHeaderHeight } from "../../../../helpers/shell-region-style";
 
@@ -70,7 +70,7 @@ export async function buildPhiDefaultBuilderDashboardPageTree({
         rootLayoutNodeId: SYNTHETIC_BUILDER_DASHBOARD_LAYOUT_IDS.layoutHeaderBottom,
         sortOrder: 25,
         config: {
-          sticky: true,
+          flags: PhiCmsFlags.Sticky,
           /*
            * No Effect or Shadow of its own, like every other Builder Header. A `glass` authored here
            * frosts this one Region against the Site's Shell Chrome Overlay, so the Dashboard's Header

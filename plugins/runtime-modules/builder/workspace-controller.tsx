@@ -4,6 +4,8 @@ import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { createPhiSignalAddress, createPhiSignalSubcontrolAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
+import { hasPhiConfigFlag } from "../../../helpers/flags";
+import { PhiCmsFlags } from "../../../constants/phi-cms";
 import { readPhiTableBindingParamsSignalValue } from "../../../types/table-signal-values";
 import type {
   PhiRuntimeModuleDefinition,
@@ -360,7 +362,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     siderLeftDraft ??
     shellPresetDraftsByArea[effectiveArea]?.[siderLeftDraftKey] ??
     getDefaultRegionDraft("sider_left");
-  const siderLeftFullHeight = resolvedSiderLeftDraft.regionConfig?.fullHeight === true;
+  const siderLeftFullHeight = hasPhiConfigFlag(resolvedSiderLeftDraft.regionConfig, PhiCmsFlags.FullHeight);
   const handledSiderLayoutRef = useRef<{
     draftKey: string;
     fullHeight: boolean;

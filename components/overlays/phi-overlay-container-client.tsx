@@ -7,6 +7,7 @@ import type { PhiCmsInstanceId } from "../../types/cms-instance-id";
 import { shouldPhiCmsContentStayMounted } from "../../types/cms-mount-policy";
 import {
   parsePhiCmsOverlayConfig,
+  resolvePhiCmsOverlayBehaviour,
   type PhiOverlayCloseSource,
   type PhiCmsOverlayType,
 } from "../../types/cms-overlay";
@@ -104,6 +105,7 @@ export function PhiOverlayContainerClient({
     () => parsePhiCmsOverlayConfig(JSON.parse(configKey) as Record<string, unknown>, overlayType),
     [configKey, overlayType],
   );
+  const behaviour = useMemo(() => resolvePhiCmsOverlayBehaviour(config), [config]);
   const receiver = useMemo(() => createPhiSignalAddress("cms", overlayId), [overlayId]);
   const signalPartition = usePhiSignalRuntimePartition();
   const [open, setOpen] = useState(false);
@@ -319,15 +321,15 @@ export function PhiOverlayContainerClient({
         header={renderZone(zones?.header)}
         body={renderZone(zones?.body)}
         footer={renderZone(zones?.footer)}
-        closable={config.closable}
-        keyboard={config.keyboard}
-        mask={config.mask}
+        closable={behaviour.closable}
+        keyboard={behaviour.keyboard}
+        mask={behaviour.mask}
         mountPolicy={config.mountPolicy}
         placement={config.placement}
         size={config.size}
         maxSize={config.maxSize}
-        resizable={config.resizable}
-        push={config.push}
+        resizable={behaviour.resizable}
+        push={behaviour.push}
         containerStyle={surfaceStyle}
         onDismiss={requestClose}
       />
@@ -344,11 +346,11 @@ export function PhiOverlayContainerClient({
       header={renderZone(zones?.header)}
       body={renderZone(zones?.body)}
       footer={renderZone(zones?.footer)}
-      closable={config.closable}
-      keyboard={config.keyboard}
-      mask={config.mask}
+      closable={behaviour.closable}
+      keyboard={behaviour.keyboard}
+      mask={behaviour.mask}
       mountPolicy={config.mountPolicy}
-      centered={config.centered}
+      centered={behaviour.centered}
       controlSize={runtimeControlSize ?? config.controlSize}
       size={runtimeSize}
       width={config.width}
