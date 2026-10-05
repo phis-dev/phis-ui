@@ -29,6 +29,7 @@ import {
   UNDO_COMMAND,
   type BaseSelection,
   type ElementFormatType,
+  type EditorState,
   type LexicalEditor,
   getStyleObjectFromCSS,
   configExtension,
@@ -317,7 +318,21 @@ function PhiHtmlWidgetEditorChangePlugin({
   onChange?: (html: string) => void;
 }) {
   const [editor] = useLexicalComposerContext();
+  /*
+   * The state the editor last reached, kept and not yet read. Serialising it to HTML and sanitising that
+   * twice is the expensive half of every update, and the result was wanted only on blur -- so it is made
+   * there, once, from the last state, and a keystroke costs the editor nothing beyond itself.
+   */
+  const pendingStateRef = useRef<EditorState | null>(null);
   const emitChange = useEffectEvent(() => {
+    const pendingState = pendingStateRef.current;
+    if (pendingState) {
+      pendingStateRef.current = null;
+      latestHtmlRef.current = pendingState.read(() => sanitizePhiHtmlWidgetMarkup(
+        $generateHtmlFromNodes(editor),
+        { allowInternalReferences: true },
+      ));
+    }
     const nextHtml = latestHtmlRef.current;
     if (nextHtml === html) {
       return;
@@ -327,12 +342,9 @@ function PhiHtmlWidgetEditorChangePlugin({
 
   useEffect(() => {
     return editor.registerUpdateListener(({ editorState }) => {
-      latestHtmlRef.current = editorState.read(() => sanitizePhiHtmlWidgetMarkup(
-        $generateHtmlFromNodes(editor),
-        { allowInternalReferences: true },
-      ));
+      pendingStateRef.current = editorState;
     });
-  }, [editor, latestHtmlRef]);
+  }, [editor]);
 
   useEffect(() => {
     return editor.registerCommand(

@@ -416,17 +416,38 @@ function usePhiDeveloperBuilderWorkspaceController(
       runtimeModuleIdsByArea,
     ],
   );
-  const runtimeModuleIdsPreloadKey = serializeRuntimeModuleIds(
-    Object.values(runtimeModuleIdsByArea).flat(),
+  /*
+   * The preload's identities, serialised once per preload and not once per render. The Controller
+   * re-renders on every Inspector keystroke and every slider step, and each render was stringifying the
+   * whole Module catalogue, every preset Page and every navigation surface to learn that nothing changed.
+   */
+  const runtimeModuleIdsPreloadKey = useMemo(
+    () => serializeRuntimeModuleIds(Object.values(runtimeModuleIdsByArea).flat()),
+    [runtimeModuleIdsByArea],
   );
-  const runtimeModuleDefinitionsPreloadKey = serializeRuntimeModuleDefinitions(runtimeModuleDefinitions);
-  const modulePresetPagesPreloadKey = JSON.stringify(activePreloadCatalogs.modulePresetPagesByArea);
-  const areaPresetSourcesPreloadKey = JSON.stringify(areaPresetSourcesByArea);
-  const navigationSurfacesPreloadKey = JSON.stringify(activePreloadCatalogs.navigationSurfacesByArea);
-  const unresolvedModuleIdsPreloadKey = JSON.stringify(unresolvedModuleIdsByArea);
-  const publicRouteClaimsPreloadKey = JSON.stringify(publicRouteClaims);
-  const publicRoutePathsPreloadKey = JSON.stringify(publicRoutePaths);
-  const areaRootRoutesPreloadKey = JSON.stringify(areaRootRoutesByArea);
+  const runtimeModuleDefinitionsPreloadKey = useMemo(
+    () => serializeRuntimeModuleDefinitions(runtimeModuleDefinitions),
+    [runtimeModuleDefinitions],
+  );
+  const modulePresetPagesPreloadKey = useMemo(
+    () => JSON.stringify(activePreloadCatalogs.modulePresetPagesByArea),
+    [activePreloadCatalogs.modulePresetPagesByArea],
+  );
+  const areaPresetSourcesPreloadKey = useMemo(
+    () => JSON.stringify(areaPresetSourcesByArea),
+    [areaPresetSourcesByArea],
+  );
+  const navigationSurfacesPreloadKey = useMemo(
+    () => JSON.stringify(activePreloadCatalogs.navigationSurfacesByArea),
+    [activePreloadCatalogs.navigationSurfacesByArea],
+  );
+  const unresolvedModuleIdsPreloadKey = useMemo(
+    () => JSON.stringify(unresolvedModuleIdsByArea),
+    [unresolvedModuleIdsByArea],
+  );
+  const publicRouteClaimsPreloadKey = useMemo(() => JSON.stringify(publicRouteClaims), [publicRouteClaims]);
+  const publicRoutePathsPreloadKey = useMemo(() => JSON.stringify(publicRoutePaths), [publicRoutePaths]);
+  const areaRootRoutesPreloadKey = useMemo(() => JSON.stringify(areaRootRoutesByArea), [areaRootRoutesByArea]);
   /*
    * The Areas' root routes, handed to every workspace rather than to /shells alone.
    *
@@ -440,7 +461,7 @@ function usePhiDeveloperBuilderWorkspaceController(
   }, [areaRootRoutesPreloadKey]);
 
   // What the Areas said about being found, read from the same revision and set the same way.
-  const areaMetaPreloadKey = JSON.stringify(areaMetaByArea);
+  const areaMetaPreloadKey = useMemo(() => JSON.stringify(areaMetaByArea), [areaMetaByArea]);
   useEffect(() => {
     setPhiDeveloperBuilderAreaMetaBaseline(areaMetaByArea);
     // eslint-disable-next-line react-hooks/exhaustive-deps

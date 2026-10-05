@@ -3,6 +3,7 @@
 import {
   Fragment,
   forwardRef,
+  useCallback,
   useEffect,
   useId,
   useImperativeHandle,
@@ -23,7 +24,10 @@ import type {
   PhiFormFieldDescriptor,
 } from "../../types/form-descriptor";
 import { PHI_FORM_GRID_TRACKS } from "../../types/form-descriptor";
-import { evaluatePhiRuntimeConditionExpression } from "../../types/runtime-condition";
+import {
+  collectPhiRuntimeValueConditions,
+  evaluatePhiRuntimeConditionExpression,
+} from "../../types/runtime-condition";
 import type {
   PhiFormFieldProviderProps,
   PhiFormFieldTypeProvider,
@@ -136,6 +140,39 @@ function resolveHoneypotStyle(
     height: 1,
     overflow: "hidden",
   } satisfies React.CSSProperties;
+}
+
+/**
+ * The form fields whose values the descriptor reads: everything a `visibleWhen` or `disabledWhen` asks
+ * of the form, and every options dependency that points into it. Top-level keys, because that is what
+ * a form store is keyed by and what a watch can be narrowed to.
+ */
+function collectPhiFormWatchedKeys(fields: PhiFormDescriptor["fields"]): readonly string[] {
+  const keys = new Set<string>();
+  for (const field of fields) {
+    for (const expression of [field.visibleWhen, field.disabledWhen]) {
+      if (!expression) continue;
+      for (const condition of collectPhiRuntimeValueConditions(expression)) {
+        if (condition.source === "form") keys.add(condition.valuePath.split(".")[0] ?? "");
+      }
+    }
+    for (const dependency of field.optionsProvider?.dependencies ?? []) {
+      if (dependency.source === "form") keys.add(dependency.valuePath.split(".")[0] ?? "");
+    }
+  }
+  keys.delete("");
+  return [...keys].sort();
+}
+
+function pickPhiFormWatchedValues(
+  values: Record<string, unknown> | null | undefined,
+  keys: readonly string[],
+): Record<string, unknown> {
+  const picked: Record<string, unknown> = {};
+  for (const key of keys) {
+    if (values && key in values) picked[key] = values[key];
+  }
+  return picked;
 }
 
 function PhiResolvedFormFieldControl({
@@ -427,7 +464,22 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
     onValidationFailed?.({ valid: false, errors });
   };
 
-  const formValues = Form.useWatch((values) => values, { form, preserve: true }) ?? resolvedInitialValues;
+  /*
+   * Only what the descriptor reads is watched. `useWatch` re-renders this whole form -- and with it every
+   * field, its rules and its options resolution -- whenever the selected value changes, compared as JSON.
+   * Watching every value made each keystroke in any field a render of all of them; watching the handful
+   * of keys that conditions and options dependencies name makes it a render only when one of those moves.
+   */
+  const watchedFormKeys = useMemo(() => collectPhiFormWatchedKeys(descriptor.fields), [descriptor.fields]);
+  const selectWatchedFormValues = useCallback(
+    (values: Record<string, unknown>) => pickPhiFormWatchedValues(values, watchedFormKeys),
+    [watchedFormKeys],
+  );
+  const watchedFormValues = Form.useWatch(selectWatchedFormValues, { form, preserve: true });
+  const formValues = useMemo(
+    () => watchedFormValues ?? pickPhiFormWatchedValues(resolvedInitialValues, watchedFormKeys),
+    [resolvedInitialValues, watchedFormKeys, watchedFormValues],
+  );
   const fieldFormContext = useMemo(() => ({
     getValues: () => form.getFieldsValue(true),
     setValues: (values: Record<string, unknown>) => {
