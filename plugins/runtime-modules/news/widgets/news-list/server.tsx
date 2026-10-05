@@ -38,6 +38,7 @@ export async function PhiNewsListWidget({ config, runtime }: PhiNewsListWidgetPr
       internalToken: rt.internalToken,
       siteKey: rt.siteKey,
       locale,
+      limit: settings.limit,
     });
   } catch {
     return <PhiAlertControl level="warning" showIcon title={labels.unavailable} />;
@@ -61,7 +62,7 @@ export async function PhiNewsListWidget({ config, runtime }: PhiNewsListWidgetPr
   const { resolveMarkdownRenderData } = await import("../../../../../components/widgets/shared/markdown-render");
 
   const views: PhiNewsListEntryView[] = await Promise.all(
-    entries.slice(0, settings.limit).map(async (entry, index) => {
+    entries.map(async (entry, index) => {
       // Core answers the slug where an entry has one; the index is the fallback for an entry that has
       // none, so two entries can never share a React key -- or a heading anchor.
       const id = entry.id || entry.slug || `news-${index}`;

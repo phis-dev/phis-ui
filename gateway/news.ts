@@ -11,6 +11,11 @@ export type FetchPhiSiteNewsOptions = {
   siteKey: string;
   /** The language the page is being drawn in; Core resolves each entry's text for it. */
   locale: string;
+  /**
+   * How many entries the caller will show, newest first. Core cuts the list there before it translates,
+   * so a Site with years of News does not pay for translating all of them to draw ten.
+   */
+  limit: number;
 };
 
 function readString(value: unknown) {
@@ -68,7 +73,10 @@ export async function fetchPhiSiteNews(options: FetchPhiSiteNewsOptions): Promis
     throw new Error("Missing siteKey for fetchPhiSiteNews.");
   }
 
-  const response = await fetch(`${options.apiBaseUrl}/api/v1/news`, {
+  if (!Number.isInteger(options.limit) || options.limit <= 0) {
+    throw new Error("fetchPhiSiteNews needs a positive integer limit.");
+  }
+  const response = await fetch(`${options.apiBaseUrl}/api/v1/news?${new URLSearchParams({ limit: String(options.limit) })}`, {
     method: "GET",
     headers: {
       Accept: "application/json",

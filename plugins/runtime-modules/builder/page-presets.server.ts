@@ -196,25 +196,20 @@ function resolvePresetFetchPath(area: PhiDeveloperBuilderArea, storagePath: stri
  * The presets belong in the catalog for the same reason the folder is in the tree: they are what put
  * it there. A preset Page cannot shadow anything by being here, because a binding is preferred above.
  */
-const resolvePhiBuilderPageStoragePath = cache(async function resolvePhiBuilderPageStoragePath({
-  apiBaseUrl,
-  internalToken,
-  siteKey,
-  locale,
-  cookieHeader,
-  area,
-  pageKey,
-  runtimeModuleCatalog,
-}: {
-  apiBaseUrl: string;
-  internalToken: string;
-  siteKey: string;
-  locale: string;
-  cookieHeader: string;
-  area: PhiDeveloperBuilderArea;
-  pageKey: string;
-  runtimeModuleCatalog: PhiRuntimeModuleCatalog;
-}) {
+/*
+ * Positional and primitive, so React's `cache` sees the same question twice: it compares arguments by
+ * identity, and an options object built at each call site made every call a miss.
+ */
+const resolvePhiBuilderPageStoragePath = cache(async function resolvePhiBuilderPageStoragePath(
+  apiBaseUrl: string,
+  internalToken: string,
+  siteKey: string,
+  locale: string,
+  cookieHeader: string,
+  area: PhiDeveloperBuilderArea,
+  pageKey: string,
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
+) {
   const persistedPages = await getSiteCmsPageCatalog({
     apiBaseUrl,
     internalToken,
@@ -230,6 +225,65 @@ const resolvePhiBuilderPageStoragePath = cache(async function resolvePhiBuilderP
     { [area]: persistedPages },
   );
   return resolvePhiBuilderCmsStoragePathForCatalog(area, pageKey, catalog);
+});
+
+/**
+ * What the Site stores about one Page: the open draft, else what is published (read only where there is
+ * no draft), else nothing. One read per request for the drafts and the meta, which used to fetch it
+ * twice -- and, through `cache` keyed on fresh objects, could have read two revisions of it.
+ *
+ * The preset identity travels as two strings for the same reason the rest is positional: `cache`
+ * compares by identity, and an object would never match.
+ */
+const loadPhiBuilderPageSource = cache(async function loadPhiBuilderPageSource(
+  apiBaseUrl: string,
+  internalToken: string,
+  siteKey: string,
+  locale: string,
+  area: PhiDeveloperBuilderArea,
+  pageKey: string,
+  storagePath: string,
+  fetchPath: string,
+  sourcePresetOwnerModuleId: PhiRuntimeModuleId | null,
+  sourcePresetKey: string | null,
+) {
+  const cookieHeader = (await cookies()).toString();
+  const sourcePreset = sourcePresetOwnerModuleId && sourcePresetKey
+    ? { ownerModuleId: sourcePresetOwnerModuleId, presetKey: sourcePresetKey }
+    : null;
+  const draftPage = await getCurrentCmsPageDraft({
+    apiBaseUrl,
+    internalToken,
+    siteKey,
+    area,
+    path: storagePath,
+    locale,
+    cookieHeader,
+    sourcePreset,
+  }).catch((error) => {
+    throw new Error(
+      `Failed to resolve builder draft page for area "${area}" page "${pageKey}" at "${storagePath}".`,
+      { cause: error },
+    );
+  });
+  if (draftPage?.page) {
+    return { draftPage, resolvedPage: null };
+  }
+  const resolvedPage = await getResolvedCmsPage({
+    apiBaseUrl,
+    internalToken,
+    siteKey,
+    path: fetchPath,
+    locale,
+    cookieHeader,
+    sourcePreset,
+  }).catch((error) => {
+    throw new Error(
+      `Failed to resolve builder page for area "${area}" page "${pageKey}" at "${fetchPath}".`,
+      { cause: error },
+    );
+  });
+  return { draftPage, resolvedPage };
 });
 
 const buildPageDraftsForScope = cache(async function buildPageDraftsForScope(
@@ -253,7 +307,7 @@ const buildPageDraftsForScope = cache(async function buildPageDraftsForScope(
   const presetBinding = presetResolution?.binding ?? null;
   const cookieHeader = (await cookies()).toString();
   const storagePath = presetBinding?.descriptor.path ??
-    await resolvePhiBuilderPageStoragePath({
+    await resolvePhiBuilderPageStoragePath(
       apiBaseUrl,
       internalToken,
       siteKey,
@@ -262,29 +316,20 @@ const buildPageDraftsForScope = cache(async function buildPageDraftsForScope(
       area,
       pageKey,
       runtimeModuleCatalog,
-    });
+    );
   const fetchPath = resolvePresetFetchPath(area, storagePath);
-  const sourcePreset = presetBinding
-    ? {
-        ownerModuleId: presetBinding.descriptor.ownerModuleId,
-        presetKey: presetBinding.descriptor.presetKey,
-      }
-    : null;
-  const draftPage = await getCurrentCmsPageDraft({
+  const { draftPage, resolvedPage } = await loadPhiBuilderPageSource(
     apiBaseUrl,
     internalToken,
     siteKey,
-    area,
-    path: storagePath,
     locale,
-    cookieHeader,
-    sourcePreset,
-  }).catch((error) => {
-    throw new Error(
-      `Failed to resolve builder draft page for area "${area}" page "${pageKey}" at "${storagePath}".`,
-      { cause: error },
-    );
-  });
+    area,
+    pageKey,
+    storagePath,
+    fetchPath,
+    presetBinding?.descriptor.ownerModuleId ?? null,
+    presetBinding?.descriptor.presetKey ?? null,
+  );
 
   if (draftPage?.page) {
     const drafts = await buildPhiProjectedBuilderRegionDrafts(
@@ -298,21 +343,6 @@ const buildPageDraftsForScope = cache(async function buildPageDraftsForScope(
       [pageKey]: drafts,
     };
   }
-
-  const resolvedPage = await getResolvedCmsPage({
-    apiBaseUrl,
-    internalToken,
-    siteKey,
-    path: fetchPath,
-    locale,
-    cookieHeader,
-    sourcePreset,
-  }).catch((error) => {
-    throw new Error(
-      `Failed to resolve builder page for area "${area}" page "${pageKey}" at "${fetchPath}".`,
-      { cause: error },
-    );
-  });
 
   if (resolvedPage?.page) {
     const drafts = await buildPhiProjectedBuilderRegionDrafts(
@@ -452,37 +482,29 @@ async function buildPageMetaForScope(
   const presetBinding = presetResolution?.binding ?? null;
   const cookieHeader = (await cookies()).toString();
   const storagePath = presetBinding?.descriptor.path ??
-    await resolvePhiBuilderPageStoragePath({
-      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-      internalToken: readPhiServerApiCredentials().internalToken,
-      siteKey: runtime.site.key,
-      locale: runtime.locale.current,
+    await resolvePhiBuilderPageStoragePath(
+      readPhiServerApiCredentials().apiBaseUrl,
+      readPhiServerApiCredentials().internalToken,
+      runtime.site.key,
+      runtime.locale.current,
       cookieHeader,
       area,
       pageKey,
       runtimeModuleCatalog,
-    });
+    );
   const fetchPath = resolvePresetFetchPath(area, storagePath);
-  const sourcePreset = presetBinding
-    ? {
-        ownerModuleId: presetBinding.descriptor.ownerModuleId,
-        presetKey: presetBinding.descriptor.presetKey,
-      }
-    : null;
-  const draftPage = await getCurrentCmsPageDraft({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    siteKey: runtime.site.key,
+  const { draftPage, resolvedPage } = await loadPhiBuilderPageSource(
+    readPhiServerApiCredentials().apiBaseUrl,
+    readPhiServerApiCredentials().internalToken,
+    runtime.site.key,
+    runtime.locale.current,
     area,
-    path: storagePath,
-    locale: runtime.locale.current,
-    cookieHeader,
-    sourcePreset,
-  }).catch((error) => {
-    throw new Error(`Failed to resolve builder page draft meta for "${area}" at "${storagePath}".`, {
-      cause: error,
-    });
-  });
+    pageKey,
+    storagePath,
+    fetchPath,
+    presetBinding?.descriptor.ownerModuleId ?? null,
+    presetBinding?.descriptor.presetKey ?? null,
+  );
 
   if (draftPage?.page?.pageMeta) {
     return {
@@ -502,19 +524,6 @@ async function buildPageMetaForScope(
     };
   }
 
-  const resolvedPage = await getResolvedCmsPage({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    siteKey: runtime.site.key,
-    path: fetchPath,
-    locale: runtime.locale.current,
-    cookieHeader,
-    sourcePreset,
-  }).catch((error) => {
-    throw new Error(`Failed to resolve builder page meta for "${area}" at "${fetchPath}".`, {
-      cause: error,
-    });
-  });
 
   if (resolvedPage?.page?.pageMeta) {
     return {

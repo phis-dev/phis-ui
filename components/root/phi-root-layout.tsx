@@ -117,15 +117,7 @@ export async function PhiRootLayout({
     ...themeBlocks,
     palettes: themePresets,
   });
-  const siteTheme = await projectPhiSiteThemeRootBackground(siteThemeRecord, { apiBaseUrl, internalToken, siteKey });
-  const antdLocale = await loadPhiAntdLocale(resolvedLocale?.locale ?? resolvedLocale?.intlLocale);
   const resolvedThemeMode = resolvePhiThemeMode(themeModePreference, browserColorScheme);
-  // What the Core Runtime Controller says when a sign-out it was asked for fails.
-  const sessionLabels = await getPhiSessionLabels({
-    apiBaseUrl,
-    internalToken,
-    locale: resolvedLocale?.locale ?? site.defaultLocale,
-  });
 
   // Keep the basiset explicit and self-hosted; accent/display stay as open slots for later.
   /*
@@ -133,12 +125,27 @@ export async function PhiRootLayout({
    * owns, it arrives with its own `@font-face` rules, and the stack those rules need is not a family
    * name the catalogue could map.
    */
-  const assetFonts = await resolvePhiSiteThemeFonts(siteThemeRecord?.fonts, {
-    apiBaseUrl,
-    internalToken,
-    siteKey,
-    locale: resolvedLocale?.locale ?? site.defaultLocale,
-  });
+  /*
+   * Four reads that depend on nothing but what is already here, started together. One after the other
+   * they put the two `references` lookups (the root Background, the Theme fonts) into different ticks,
+   * so the batch that joins them never formed and every Public view paid for both.
+   */
+  const [siteTheme, antdLocale, sessionLabels, assetFonts] = await Promise.all([
+    projectPhiSiteThemeRootBackground(siteThemeRecord, { apiBaseUrl, internalToken, siteKey }),
+    loadPhiAntdLocale(resolvedLocale?.locale ?? resolvedLocale?.intlLocale),
+    // What the Core Runtime Controller says when a sign-out it was asked for fails.
+    getPhiSessionLabels({
+      apiBaseUrl,
+      internalToken,
+      locale: resolvedLocale?.locale ?? site.defaultLocale,
+    }),
+    resolvePhiSiteThemeFonts(siteThemeRecord?.fonts, {
+      apiBaseUrl,
+      internalToken,
+      siteKey,
+      locale: resolvedLocale?.locale ?? site.defaultLocale,
+    }),
+  ]);
   /*
    * `preload` rather than a `<link>` element: React hoists it into the head and keeps one per URL.
    * `crossOrigin` is not optional for a font -- `@font-face` fetches in CORS mode even on this origin,

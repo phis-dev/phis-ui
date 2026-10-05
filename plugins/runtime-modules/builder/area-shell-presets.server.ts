@@ -148,6 +148,48 @@ function readRuntimeModulesConfigFromStructureTree(
   };
 }
 
+/**
+ * What the Site stores about an Area's Shell: the open structure draft, else what is published, else
+ * nothing. Read once per request for everything that asks -- the Shell drafts, the Area config and the
+ * Module selection all come from this one revision.
+ *
+ * Keyed by the values the request turns on and never by an object: React's `cache` compares arguments
+ * by identity, and three readers each handing in their own `{ ... }` fetched the same draft three times
+ * and could read three revisions of it (the Module selection from one, the root route from the next).
+ * The cookie header is read inside, where it is one value per request anyway.
+ */
+const loadPhiBuilderAreaStructure = cache(async function loadPhiBuilderAreaStructure(
+  siteKey: string,
+  locale: string,
+  apiBaseUrl: string,
+  internalToken: string,
+  area: PhiDeveloperBuilderArea,
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
+): Promise<{ draft: PhiResolvedCmsAreaPresetTree | null; published: PhiResolvedCmsAreaPresetTree | null }> {
+  const path = resolveStructureAreaPath(area);
+  const sourcePreset = resolveAreaPresetSource(area, runtimeModuleCatalog);
+  const cookieHeader = (await cookies()).toString();
+  const request = { apiBaseUrl, internalToken, siteKey, path, locale, cookieHeader, sourcePreset };
+  // A failed read is not "never asked": answering with the preset default would let the Builder show and
+  // save it over what the Area actually stores.
+  const draftPreset = await getCurrentSiteAreaDraft({ ...request, area }).catch((error) => {
+    throw new Error(
+      `Failed to resolve builder structure draft for area "${area}" at "${path}".`,
+      { cause: error },
+    );
+  });
+  if (draftPreset?.preset) {
+    return { draft: draftPreset.preset, published: null };
+  }
+  const resolvedPreset = await getExactSiteArea(request).catch((error) => {
+    throw new Error(
+      `Failed to resolve builder structure shell for area "${area}" at "${path}".`,
+      { cause: error },
+    );
+  });
+  return { draft: null, published: resolvedPreset?.preset ?? null };
+});
+
 const buildShellDraftsForArea = cache(async function buildShellDraftsForArea(
   runtime: PhiBlockRuntime,
   siteKey: string,
@@ -157,54 +199,19 @@ const buildShellDraftsForArea = cache(async function buildShellDraftsForArea(
   area: PhiDeveloperBuilderArea,
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
 ): Promise<Record<string, PhiDeveloperBuilderRegionDraft>> {
-  const path = resolveStructureAreaPath(area);
-  const sourcePreset = resolveAreaPresetSource(area, runtimeModuleCatalog);
-  const cookieHeader = (await cookies()).toString();
-  const draftPreset = await getCurrentSiteAreaDraft({
+  const { draft, published } = await loadPhiBuilderAreaStructure(
+    siteKey,
+    locale,
     apiBaseUrl,
     internalToken,
-    siteKey,
     area,
-    path,
-    locale,
-    cookieHeader,
-    sourcePreset,
-  }).catch((error) => {
-    throw new Error(
-      `Failed to resolve builder structure draft for area "${area}" at "${path}".`,
-      { cause: error },
-    );
-  });
-
-  if (draftPreset?.preset) {
+    runtimeModuleCatalog,
+  );
+  const stored = draft ?? published;
+  if (stored) {
     return buildPhiProjectedBuilderRegionDrafts(
       runtime,
-      draftPreset.preset,
-      area,
-      null,
-      PHI_BUILDER_SHELL_REGION_KEYS,
-    );
-  }
-
-  const resolvedPreset = await getExactSiteArea({
-    apiBaseUrl,
-    internalToken,
-    siteKey,
-    path,
-    locale,
-    cookieHeader,
-    sourcePreset,
-  }).catch((error) => {
-    throw new Error(
-      `Failed to resolve builder structure shell for area "${area}" at "${path}".`,
-      { cause: error },
-    );
-  });
-
-  if (resolvedPreset?.preset) {
-    return buildPhiProjectedBuilderRegionDrafts(
-      runtime,
-      resolvedPreset.preset,
+      stored,
       area,
       null,
       PHI_BUILDER_SHELL_REGION_KEYS,
@@ -236,40 +243,21 @@ const buildShellDraftsForArea = cache(async function buildShellDraftsForArea(
  * Read once and read whole, because everything the Shell says about itself arrives in the same
  * revision: the root route and the two SEO answers are one fetch, not one each.
  */
-const buildPhiBuilderAreaPresetConfig = cache(async function buildPhiBuilderAreaPresetConfig(
+async function buildPhiBuilderAreaPresetConfig(
   runtime: PhiBlockRuntime,
   area: PhiDeveloperBuilderArea,
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
 ): Promise<Record<string, unknown> | null> {
-  const path = resolveStructureAreaPath(area);
-  const sourcePreset = resolveAreaPresetSource(area, runtimeModuleCatalog);
-  const cookieHeader = (await cookies()).toString();
-  const request = {
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    siteKey: runtime.site.key,
-    path,
-    locale: runtime.locale.current,
-    cookieHeader,
-    sourcePreset,
-  };
-  // A failed read is not "never asked": answering with the preset default would let the Builder show and
-  // save it over what the Area actually stores.
-  const draftPreset = await getCurrentSiteAreaDraft({ ...request, area }).catch((error) => {
-    throw new Error(`Failed to resolve builder structure draft config for area "${area}" at "${path}".`, {
-      cause: error,
-    });
-  });
-  if (draftPreset?.preset) {
-    return draftPreset.preset.preset.config ?? null;
-  }
-  const resolvedPreset = await getExactSiteArea(request).catch((error) => {
-    throw new Error(`Failed to resolve builder structure config for area "${area}" at "${path}".`, {
-      cause: error,
-    });
-  });
-  return resolvedPreset?.preset ? resolvedPreset.preset.preset.config ?? null : null;
-});
+  const { draft, published } = await loadPhiBuilderAreaStructure(
+    runtime.site.key,
+    runtime.locale.current,
+    readPhiServerApiCredentials().apiBaseUrl,
+    readPhiServerApiCredentials().internalToken,
+    area,
+    runtimeModuleCatalog,
+  );
+  return (draft ?? published)?.preset.config ?? null;
+}
 
 /** What an Area says its `/` resolves to. */
 export async function buildPhiBuilderAreaRootRoute(
@@ -368,46 +356,17 @@ const buildRuntimeModulesConfigForArea = cache(async function buildRuntimeModule
   area: PhiDeveloperBuilderArea,
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
 ): Promise<PhiBuilderAreaModulesConfig> {
-  const path = resolveStructureAreaPath(area);
-  const sourcePreset = resolveAreaPresetSource(area, runtimeModuleCatalog);
-  const cookieHeader = (await cookies()).toString();
-  const draftPreset = await getCurrentSiteAreaDraft({
+  const { draft, published } = await loadPhiBuilderAreaStructure(
+    siteKey,
+    locale,
     apiBaseUrl,
     internalToken,
-    siteKey,
     area,
-    path,
-    locale,
-    cookieHeader,
-    sourcePreset,
-  }).catch((error) => {
-    throw new Error(
-      `Failed to resolve builder structure draft for area "${area}" at "${path}".`,
-      { cause: error },
-    );
-  });
-
-  if (draftPreset?.preset) {
-    return readRuntimeModulesConfigFromStructureTree(draftPreset.preset, area, runtimeModuleCatalog);
-  }
-
-  const resolvedPreset = await getExactSiteArea({
-    apiBaseUrl,
-    internalToken,
-    siteKey,
-    path,
-    locale,
-    cookieHeader,
-    sourcePreset,
-  }).catch((error) => {
-    throw new Error(
-      `Failed to resolve builder structure shell for area "${area}" at "${path}".`,
-      { cause: error },
-    );
-  });
-
-  if (resolvedPreset?.preset) {
-    return readRuntimeModulesConfigFromStructureTree(resolvedPreset.preset, area, runtimeModuleCatalog);
+    runtimeModuleCatalog,
+  );
+  const stored = draft ?? published;
+  if (stored) {
+    return readRuntimeModulesConfigFromStructureTree(stored, area, runtimeModuleCatalog);
   }
 
   return readRuntimeModulesConfigFromStructureTree(

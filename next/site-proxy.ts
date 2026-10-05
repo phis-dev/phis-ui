@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isPhiAssetOrBackendPath } from "./static-asset-path";
+import { PHI_SITE_SESSION_COOKIE } from "../constants/site-cookies";
 
 import { PHI_CMS_SPECIAL_ROOTS } from "../helpers/cms-routing";
 import { localizePath } from "../helpers/locale";
@@ -27,7 +28,6 @@ import {
 /** Where the static route tree lives. Only the proxy may send a request there; see below. */
 export const PHI_STATIC_RENDER_PREFIX = "/static-render";
 
-const PHI_SITE_SESSION_COOKIE = "phis_session";
 
 /*
  * Query parameters a static render may ignore: campaign tags nobody's page reads, and `_rsc`, which Next

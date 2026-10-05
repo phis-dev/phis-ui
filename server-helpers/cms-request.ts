@@ -312,16 +312,17 @@ export async function resolvePhiCmsRequest({
     ownerModuleId: areaShellBinding.descriptor.ownerModuleId,
     presetKey: areaShellBinding.descriptor.presetKey,
   };
-  const [exactAreaPreset, localAreaPreset] = await Promise.all([
-    loadExactCmsArea(path, areaSourcePreset),
-    buildPhiLocalCmsAreaPayload({
+  const exactAreaPreset = await loadExactCmsArea(path, areaSourcePreset);
+  // Only where nothing is stored; see the same step in `cms-root.ts`.
+  const localAreaPreset = exactAreaPreset
+    ? null
+    : await buildPhiLocalCmsAreaPayload({
       areaMask,
       siteId: resolvedRequestContext.site.id,
       path,
       runtime,
       runtimeModuleCatalog,
-    }),
-  ]);
+    });
   const effectiveAreaPreset = exactAreaPreset ?? localAreaPreset;
   const siteId = localAreaPreset?.preset.preset.siteId ?? resolvedRequestContext.site.id;
   const areaOwnedStoragePath = resolveAreaOwnedStoragePath(path, areaMask);

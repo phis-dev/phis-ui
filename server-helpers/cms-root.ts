@@ -204,29 +204,34 @@ const loadPhiCmsRootScopeCached = cache(async function loadPhiCmsRootScopeCached
   if (!areaShellBinding) {
     throw new Error(`Area "${resolvedRoute.area}" has no shell preset binding.`);
   }
-  const [exactAreaPreset, localAreaPreset] = await Promise.all([
-    getPhiExactSiteArea({
-      path: resolvedRoute.cmsPath,
-      apiBaseUrl: bridgeRuntime?.apiBaseUrl,
-      internalToken: bridgeRuntime?.internalToken,
-      siteKey,
-      locale: resolvedRoute.locale,
-      revision: resolvePhiCmsRevisionFromSearchParams(request.searchParams),
-      review,
-      cookieHeader,
-      sourcePreset: {
-        ownerModuleId: areaShellBinding.descriptor.ownerModuleId,
-        presetKey: areaShellBinding.descriptor.presetKey,
-      },
-    }),
-    buildPhiLocalCmsAreaPayload({
+  const exactAreaPreset = await getPhiExactSiteArea({
+    path: resolvedRoute.cmsPath,
+    apiBaseUrl: bridgeRuntime?.apiBaseUrl,
+    internalToken: bridgeRuntime?.internalToken,
+    siteKey,
+    locale: resolvedRoute.locale,
+    revision: resolvePhiCmsRevisionFromSearchParams(request.searchParams),
+    review,
+    cookieHeader,
+    sourcePreset: {
+      ownerModuleId: areaShellBinding.descriptor.ownerModuleId,
+      presetKey: areaShellBinding.descriptor.presetKey,
+    },
+  });
+  /*
+   * The code-owned Shell only where the Site has none stored. Building it beside the read, to save the
+   * round trip on a Site that never saved its Area, cost every other Site a full Shell instantiation --
+   * tree loaders, translations, the preset contract check -- on every request, thrown away unread.
+   */
+  const localAreaPreset = exactAreaPreset
+    ? null
+    : await buildPhiLocalCmsAreaPayload({
       areaMask: resolvedAreaMask,
       siteId: requestContext.site.id,
       path: resolvedRoute.cmsPath,
       runtime,
       runtimeModuleCatalog: cmsBridge.runtimeModuleCatalog,
-    }),
-  ]);
+    });
   const baseResolvedAreaPreset: PhiResolvedCmsAreaPresetTree | null =
     exactAreaPreset?.preset ?? localAreaPreset?.preset ?? null;
   const activeModuleIds = resolveActivePresetModuleKeys(

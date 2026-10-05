@@ -1,4 +1,5 @@
 import "server-only";
+import { hasPhiSiteSessionCookie } from "../constants/site-cookies";
 
 import { cache } from "react";
 import { resolvePhiCmsAreaKey } from "../constants/cms-areas";
@@ -154,6 +155,28 @@ export async function getPhiCmsRuntimeInfo({
     readPhiColorSchemeHintFromCookieHeader(cookieHeader),
   );
 
+  const anonymous = (): PhiCmsRuntimeInfo => ({
+    site: resolvedSite,
+    viewer: {
+      access: "public",
+      resolvedArea: "public",
+      roleClaims: [],
+      groupClaims: [],
+      authorizationRevision: 0,
+      userName: null,
+      userEmail: null,
+      themeMode: viewerThemeMode,
+    },
+  });
+  /*
+   * Core resolves the viewer from the Site session cookie and nothing else (`getSiteRequestActorFromRequest`),
+   * and answers 401 where there is none. Asking anyway made every anonymous view -- and every scanner
+   * hitting a 404 -- pay one Core round trip to be told what the request already said.
+   */
+  if (!hasPhiSiteSessionCookie(cookieHeader)) {
+    return anonymous();
+  }
+
   const response = await fetch(buildApiUrl(resolvedRuntime.apiBaseUrl, "/api/v1/auth/me"), {
     headers: buildApiHeaders({
       token: resolvedRuntime.internalToken,
@@ -167,19 +190,7 @@ export async function getPhiCmsRuntimeInfo({
   });
 
   if (response.status === 401) {
-    return {
-      site: resolvedSite,
-      viewer: {
-        access: "public",
-        resolvedArea: "public",
-        roleClaims: [],
-        groupClaims: [],
-        authorizationRevision: 0,
-        userName: null,
-        userEmail: null,
-        themeMode: viewerThemeMode,
-      },
-    };
+    return anonymous();
   }
 
   if (!response.ok) {
@@ -307,19 +318,24 @@ export const loadPhiSiteRequestContext = cache(async function loadPhiSiteRequest
   apiBaseUrl?: string,
   internalToken?: string,
 ): Promise<PhiSiteRequestContext> {
-  const runtimeInfo = await getPhiCmsRuntimeInfo({
-    apiBaseUrl,
-    internalToken,
-    siteKey,
-    cookieHeader,
-  });
-  // Without it no Module can tell what the server provides; rendering on would show Modules as active
-  // that the server refuses, so a failed read fails the request.
-  const serverCapabilities = await getPhiCapabilitySnapshot({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    siteKey: runtimeInfo.site.key,
-  });
+  /*
+   * Both at once: the snapshot needs only the Site key, which the caller handed in, so it never had to
+   * wait for the viewer. Without it no Module can tell what the server provides; rendering on would show
+   * Modules as active that the server refuses, so a failed read fails the request.
+   */
+  const [runtimeInfo, serverCapabilities] = await Promise.all([
+    getPhiCmsRuntimeInfo({
+      apiBaseUrl,
+      internalToken,
+      siteKey,
+      cookieHeader,
+    }),
+    getPhiCapabilitySnapshot({
+      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+      internalToken: readPhiServerApiCredentials().internalToken,
+      siteKey,
+    }),
+  ]);
 
   return {
     serverCapabilities,

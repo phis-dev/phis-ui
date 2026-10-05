@@ -9,6 +9,7 @@ const OPTIONS = {
   internalToken: "token",
   siteKey: "site",
   locale: "de",
+  limit: 10,
 };
 
 function entry(overrides: Record<string, unknown> = {}) {
@@ -45,11 +46,20 @@ describe("fetchPhiSiteNews", () => {
 
     expect(entries).toHaveLength(1);
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
-    expect(url).toBe("https://core.test/api/v1/news");
+    // The cut travels to Core, which translates only what the page will show.
+    expect(url).toBe("https://core.test/api/v1/news?limit=10");
     const headers = init.headers as Record<string, string>;
     expect(headers["accept-language"]).toBe("de");
     expect(headers["x-phis-site-key"]).toBe("site");
     expect(headers.Authorization).toBe("Bearer token");
+  });
+
+  it("refuses to ask without a count, rather than asking for everything", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(fetchPhiSiteNews({ ...OPTIONS, limit: 0 })).rejects.toThrow(/positive integer limit/);
+    await expect(fetchPhiSiteNews({ ...OPTIONS, limit: 2.5 })).rejects.toThrow(/positive integer limit/);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   /*
