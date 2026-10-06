@@ -114,7 +114,7 @@ export function PhiInspectorLinkTargetFieldControl({
           allowClear
           style={{ width: "100%" }}
           onChange={(nextValue) => onChange?.(nextValue
-            ? withNewTab({ kind: "page", reference: nextValue as PhiPageReference })
+            ? { kind: "page", reference: nextValue as PhiPageReference }
             : undefined)}
         />
       ) : null}
@@ -136,7 +136,11 @@ export function PhiInspectorLinkTargetFieldControl({
         />
       ) : null}
 
-      {target ? (
+      {/*
+        * Only for an address elsewhere. A Page of the Site opens where the reader is, by the client
+        * router -- a new tab would leave the Site's own navigation for a second copy of it.
+        */}
+      {target?.kind === "external" ? (
         <PhiSwitchControl
           checked={newTab}
           label={labels.newTab}

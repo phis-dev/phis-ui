@@ -32,7 +32,15 @@ export async function PhiCardWidget({
   runtime,
   links,
   translate,
-}: PhiCardWidgetProps & { translate: boolean }) {
+  preview = false,
+}: PhiCardWidgetProps & {
+  translate: boolean;
+  /**
+   * The Builder's preview: the card answers the pointer as it will live -- its hover effect is what the
+   * author is looking at -- but leads nowhere and says nothing, so a click cannot leave the Builder.
+   */
+  preview?: boolean;
+}) {
   /*
    * The button's words: the author's, or none where they emptied them for an icon-only button, or the
    * label set's when they never wrote any -- which is translated there, not here.
@@ -79,7 +87,7 @@ export async function PhiCardWidget({
     sourceHeight: resolvedAsset?.height,
   });
   // The target is resolved here and the address travels: a Page reference means nothing in a browser.
-  const link = resolvePhiLinkHref(config?.linkTarget, links);
+  const link = preview ? null : resolvePhiLinkHref(config?.linkTarget, links);
 
 
   const clientConfig: PhiCardWidgetClientConfig = {
@@ -122,7 +130,7 @@ export async function PhiCardWidget({
     body: config?.body,
     highlight: config?.highlight,
     hoverEffect: config?.hoverEffect,
-    signalRoutes: config?.signalRoutes ?? null,
+    signalRoutes: preview ? null : config?.signalRoutes ?? null,
   };
 
   return (

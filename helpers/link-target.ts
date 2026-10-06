@@ -86,7 +86,8 @@ export function resolvePhiLinkHref(
   const fragment = target.fragment?.replace(/^#/u, "").trim();
   return {
     href: fragment ? `${path}#${encodeURIComponent(fragment)}` : path,
-    newTab: target.newTab === true,
+    // A Page of the Site never opens a new tab; only an address elsewhere may (see the link field).
+    newTab: false,
     external: false,
   };
 }
