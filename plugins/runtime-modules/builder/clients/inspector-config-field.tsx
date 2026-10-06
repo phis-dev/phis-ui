@@ -181,8 +181,11 @@ function renderPhiInspectorConfigFieldControl(field: PhiCmsConfigField, control:
 }
 
 function renderPhiInspectorConfigFieldBlock(field: PhiCmsConfigField, control: ReactNode) {
-  /* A block under a divider that already names it says so once: the divider is its label. */
-  if (field.heading != null && field.heading === field.label) {
+  /*
+   * A block under a divider that already names it says so once: the divider is its label. A block with
+   * no label at all is one whose divider above it says what it is about.
+   */
+  if (field.label === "" || (field.heading != null && field.heading === field.label)) {
     return <PhiFlexControl key={field.key} vertical style={{ width: "100%", minWidth: 0 }}>{control}</PhiFlexControl>;
   }
   return renderPhiInspectorSettingsBlock(renderPhiInspectorConfigFieldLabel(field), control, field.key);
@@ -1356,7 +1359,10 @@ function renderPhiInspectorConfigFieldBody({
         value={value ?? defaultValue}
         disabled={disabled || !onChange}
         {...(linkTargetLabels ? { labels: linkTargetLabels } : {})}
-        onChange={(next) => onChange?.({ [field.key]: next })}
+        onChange={(next, none) => onChange?.({
+          [field.key]: next,
+          ...(none ? Object.fromEntries((field.clearsWhenEmpty ?? []).map((key) => [key, undefined])) : {}),
+        })}
       />,
     );
   }

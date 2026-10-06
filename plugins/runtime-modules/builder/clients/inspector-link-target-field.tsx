@@ -64,7 +64,11 @@ export function PhiInspectorLinkTargetFieldControl({
   value: unknown;
   disabled?: boolean;
   labels?: PhiInspectorLinkTargetLabels;
-  onChange?: (next: PhiLinkTarget | undefined) => void;
+  /**
+   * The target as it now stands. `none` is set when the author answered "None" -- the link is gone, not
+   * only incomplete -- so what depends on a link can go with it.
+   */
+  onChange?: (next: PhiLinkTarget | undefined, none?: boolean) => void;
 }) {
   const target = readPhiLinkTarget(value);
   const [mode, setMode] = useState<PhiInspectorLinkTargetMode>(target?.kind ?? "none");
@@ -95,7 +99,7 @@ export function PhiInspectorLinkTargetFieldControl({
     setMode(nextMode);
     setDraftHref("");
     setPendingNewTab(false);
-    onChange?.(undefined);
+    onChange?.(undefined, nextMode === "none");
   };
 
   return (

@@ -552,7 +552,8 @@
   transition: translate 200ms ease, box-shadow 200ms ease;
 }
 
-:where(.phi-card--hover-zoom) :where(.phi-card__ground, .phi-card__media img, .phi-card__icon) {
+/* Zoom enlarges the picture and the ground; the icon stands still over them, as a mark does. */
+:where(.phi-card--hover-zoom) :where(.phi-card__ground, .phi-card__media img) {
   transition: scale 300ms ease;
 }
 
@@ -561,7 +562,7 @@
     translate: 0 -2px;
   }
 
-  :where(.phi-card--hover-zoom):hover :where(.phi-card__ground, .phi-card__media img, .phi-card__icon) {
+  :where(.phi-card--hover-zoom):hover :where(.phi-card__ground, .phi-card__media img) {
     scale: 1.04;
   }
 }
@@ -570,7 +571,7 @@
   translate: 0 -2px;
 }
 
-:where(.phi-card--hover-zoom):focus-within :where(.phi-card__ground, .phi-card__media img, .phi-card__icon) {
+:where(.phi-card--hover-zoom):focus-within :where(.phi-card__ground, .phi-card__media img) {
   scale: 1.04;
 }
 
@@ -609,7 +610,7 @@
     translate: none;
   }
 
-  .phi-card--hover-zoom:is(:hover, :focus-within) :is(.phi-card__ground, .phi-card__media img, .phi-card__icon) {
+  .phi-card--hover-zoom:is(:hover, :focus-within) :is(.phi-card__ground, .phi-card__media img) {
     scale: none;
   }
 }

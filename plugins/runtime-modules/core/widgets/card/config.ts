@@ -62,10 +62,7 @@ export type PhiCmsCardWidgetConfig = PhiCmsWidgetConfigBase & PhiCardImageSource
   imageOpacity?: number;
   /** Where the whole card leads. */
   linkTarget?: PhiLinkTarget;
-  /**
-   * Whether the card draws its action button. It leads where the card leads; a button that should do
-   * something else is wired from the Signals panel.
-   */
+  /** Whether the card draws its action button. */
   actionEnabled?: boolean;
   /**
    * The button's words. A new card is created with "Learn more" written in; absent is the label set's
@@ -73,6 +70,8 @@ export type PhiCmsCardWidgetConfig = PhiCmsWidgetConfigBase & PhiCardImageSource
    */
   actionLabel?: string;
   actionIcon?: string;
+  /** Where the action button leads; absent, nowhere -- it then only emits `activate`. */
+  actionLinkTarget?: PhiLinkTarget;
   /** How the card is set; the look is the card's Surface. */
   variant?: PhiCardVariant;
   highlight?: boolean;
@@ -111,6 +110,7 @@ export function parsePhiCmsCardWidgetConfig(config: Record<string, unknown>): Ph
     actionEnabled: readBoolean(config.actionEnabled),
     actionLabel: readPhiControlLabel(config.actionLabel),
     actionIcon: readString(config.actionIcon),
+    actionLinkTarget: readPhiLinkTarget(config.actionLinkTarget) ?? undefined,
     variant: readChoice(readString(config.variant), PHI_CARD_VARIANTS),
     highlight: readBoolean(config.highlight),
     hoverEffect: readChoice(readString(config.hoverEffect), PHI_CARD_HOVER_EFFECTS),
@@ -245,14 +245,24 @@ export const PHI_CARD_WIDGET_DEFINITION = {
       defaultToken: "colorFillQuaternary",
       visibleWhen: { field: "icon", notEquals: null },
     },
-    { key: "linkTarget", type: "link-target", heading: "Link target", label: "Link target" },
-    /* The divider names the field; `Icon` turns the icon's colour and ground round. */
+    /*
+     * Where the whole card leads, and how it answers the pointer: only a card that leads somewhere has
+     * a hover effect, so it is shown with a link and goes when the link does. `Icon` turns the icon's
+     * colour and ground round.
+     */
+    {
+      key: "linkTarget",
+      type: "link-target",
+      heading: "Link card",
+      label: "Link card",
+      clearsWhenEmpty: ["hoverEffect"],
+    },
     {
       key: "hoverEffect",
       type: "choice",
-      heading: "Hover effect",
-      label: "Effect",
+      label: "Hover effect",
       presentation: "segmented",
+      visibleWhen: { field: "linkTarget", notEquals: null },
       options: [
         { value: "none", label: "None" },
         { value: "zoom", label: "Zoom" },
@@ -269,6 +279,13 @@ export const PHI_CARD_WIDGET_DEFINITION = {
       visibleWhen: { field: "actionEnabled", equals: true },
     },
     { key: "actionIcon", type: "icon", label: "Icon", visibleWhen: { field: "actionEnabled", equals: true } },
+    /* Its own target, unlabelled under the divider; None is a button that only says it was pressed. */
+    {
+      key: "actionLinkTarget",
+      type: "link-target",
+      label: "",
+      visibleWhen: { field: "actionEnabled", equals: true },
+    },
     {
       key: "variant",
       type: "choice",

@@ -171,6 +171,11 @@ export type PhiCmsConfigField =
        * why the name is what the server has to go on.
        */
       type: "link-target";
+      /**
+       * Keys that mean nothing without a target and go with it: the Card's hover effect, which a card
+       * that leads nowhere does not have. Cleared when the target is.
+       */
+      clearsWhenEmpty?: readonly string[];
     })
   | (PhiCmsConfigFieldBase & {
       type: "readonly";

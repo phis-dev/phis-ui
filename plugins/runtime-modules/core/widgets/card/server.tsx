@@ -88,6 +88,7 @@ export async function PhiCardWidget({
   });
   // The target is resolved here and the address travels: a Page reference means nothing in a browser.
   const link = preview ? null : resolvePhiLinkHref(config?.linkTarget, links);
+  const actionLink = preview || !actionEnabled ? null : resolvePhiLinkHref(config?.actionLinkTarget, links);
 
 
   const clientConfig: PhiCardWidgetClientConfig = {
@@ -117,12 +118,12 @@ export async function PhiCardWidget({
     newTab: link?.newTab,
     external: link?.external,
     /*
-     * The button leads where the card leads. A card that leads nowhere still draws it when it is on:
-     * what it does then is wired from the Signals panel.
+     * The button leads where its own target says; without one it still draws when it is on, and what
+     * it does is wired from the Signals panel.
      */
     action: actionEnabled
       ? {
-          ...(link ? { href: link.href, newTab: link.newTab, external: link.external } : {}),
+          ...(actionLink ? { href: actionLink.href, newTab: actionLink.newTab, external: actionLink.external } : {}),
           ...(config?.actionIcon ? { icon: config.actionIcon } : {}),
           ...(defaultLabels ? { ariaLabel: defaultLabels.actionLabel } : {}),
         }
@@ -130,7 +131,8 @@ export async function PhiCardWidget({
     variant: config?.variant,
     body: config?.body,
     highlight: config?.highlight,
-    hoverEffect: config?.hoverEffect,
+    // Only a card that leads somewhere answers the pointer; the preview has no link but shows it.
+    hoverEffect: config?.linkTarget ? config.hoverEffect : undefined,
     signalRoutes: preview ? null : config?.signalRoutes ?? null,
   };
 

@@ -190,7 +190,7 @@ export function PhiCardWidgetEditor({ config, onChange }: PhiCardWidgetEditorPro
           variant: config.variant,
           body: config.body,
           highlight: config.highlight,
-          hoverEffect: config.hoverEffect,
+          hoverEffect: config.linkTarget ? config.hoverEffect : undefined,
         }}
       />
       {pictureTooNarrow ? (
