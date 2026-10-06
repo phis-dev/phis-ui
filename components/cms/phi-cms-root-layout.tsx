@@ -301,7 +301,8 @@ export async function PhiCmsAreaBoundary({
  * still render, because a landing page is a page like any other.
  *
  * It refuses nothing: a gated Area throws inside the boundary above, which answers 401 or 403 while
- * this returns the Page bare rather than racing it to a different error.
+ * this returns the Page bare rather than racing it to a different error. A missing page is returned
+ * bare the same way, while the boundary answers 404.
  */
 export async function PhiCmsAreaShell({
   root,
@@ -332,6 +333,17 @@ export async function PhiCmsAreaShell({
     throw error;
   }
   const { runtime, filteredLayoutTree, runtimeRegistry } = scope;
+
+  /*
+   * A page that does not exist gets no chrome either. Next renders this Layout beside the boundary
+   * above rather than after it, so by the time the boundary answers 404 the Header and Footer would
+   * already have asked for their Navigation and the account Widget for its manifest -- three calls to
+   * Core for a response that never shows them. The resolution is the boundary's own, from the request
+   * cache, so the two cannot disagree about it.
+   */
+  if (!path && !scope.rootScope.resolvedRequest) {
+    return <PhiCmsShell content={children} {...slots} />;
+  }
 
   const headerTopRegion = filteredLayoutTree ? findRegion(filteredLayoutTree, PhiCmsRegionType.HeaderTop) : null;
   const headerMainRegion = filteredLayoutTree ? findRegion(filteredLayoutTree, PhiCmsRegionType.HeaderMain) : null;
