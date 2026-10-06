@@ -753,10 +753,23 @@ async function requestGuard(formId: string, area: string | null = "public") {
 }
 
 activeModuleIds = [];
-upstreamPayload = { form: FORM_IDS.contact, siteKey: "site", issuedAt: "1700000000000", formToken: "a".repeat(64) };
+upstreamPayload = {
+  form: FORM_IDS.contact,
+  siteKey: "site",
+  issuedAt: "1700000000000",
+  formToken: "a".repeat(64),
+  minSubmitMs: 2000,
+  maxSubmitMs: 7_200_000,
+};
 const issuedGuard = await requestGuard(`  ${FORM_IDS.contact.toUpperCase()} `);
 assert.equal(issuedGuard.response.status, 200);
-assert.deepEqual(issuedGuard.payload, { issuedAt: "1700000000000", formToken: "a".repeat(64) });
+// The window travels with the token, or the browser could learn of expiry only from a refused submit.
+assert.deepEqual(issuedGuard.payload, {
+  issuedAt: "1700000000000",
+  formToken: "a".repeat(64),
+  minSubmitMs: 2000,
+  maxSubmitMs: 7_200_000,
+});
 assert.equal(calls.length, 1);
 assert.equal(dispatchCall()?.url, `${UPSTREAM}/api/v1/forms/guard?form=${encodeURIComponent(FORM_IDS.contact)}`);
 assert.equal(dispatchCall()?.method, "GET");

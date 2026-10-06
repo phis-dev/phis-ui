@@ -28,9 +28,17 @@ import { usePhiRuntimeFormBinding } from "./runtime-form-binding";
 import { usePhiRuntimePageConditionState } from "../runtime/runtime-page-condition-state";
 import { usePhiApplicationFeedback } from "../runtime/use-phi-application-feedback";
 import type { PhiFormGuardProps } from "./contracts";
-import { PHI_FORM_GUARD_EXPIRED_CODE, requestPhiFormGuard } from "./form-guard-client";
+import {
+  PHI_FORM_GUARD_EXPIRED_CODE,
+  requestPhiFormGuard,
+  type PhiFormGuardLease,
+} from "./form-guard-client";
+
 import { usePhiFormRelayArea } from "./form-relay-area";
 import { PhiSkeletonControl } from "../controls/phi-skeleton-control";
+
+/** How long before its window closes a token is renewed rather than sent: the request takes time too. */
+const PHI_FORM_GUARD_EXPIRY_MARGIN_MS = 60_000;
 
 const EMPTY_FORM_VALUES: Record<string, unknown> = {};
 
@@ -317,13 +325,12 @@ export function PhiFormDescriptorRuntimeClient({
    * submitted rather than kept in hidden fields, so resetting the form after a success cannot empty it.
    * A request that failed is forgotten, and the next submit asks again.
    *
-   * A token the server refused as expired (`form_expired`, a form left open past `maxSubmitMs`) is
-   * forgotten too, and a fresh one asked for at once: every later submit would carry the same dead token
-   * otherwise, and only a reload would have helped. The refused submit is not sent again by itself -- a
-   * token that new is one the server reads as too fast -- so the person submits again, as the message
-   * asks.
+   * The answer names the window the token is good for. A submit after it has closed -- a form left open
+   * past `maxSubmitMs` -- asks for a fresh token first, and a submit before a token is ready waits for
+   * it, so neither is refused. A token the server still refused as expired (`form_expired`) is forgotten
+   * and a fresh one asked for at once; that refused submit is not sent again by itself.
    */
-  const guardRef = useRef<Promise<PhiFormGuardProps> | null>(null);
+  const guardRef = useRef<Promise<PhiFormGuardLease> | null>(null);
   const relayArea = usePhiFormRelayArea();
   const readGuard = useCallback(() => {
     const pending = guardRef.current ?? requestPhiFormGuard(formId, relayArea);
@@ -339,6 +346,16 @@ export function PhiFormDescriptorRuntimeClient({
   const renewGuard = useCallback(() => {
     guardRef.current = null;
     void readGuard().catch(() => undefined);
+  }, [readGuard]);
+  const readSubmittableGuard = useCallback(async (): Promise<PhiFormGuardProps> => {
+    let lease = await readGuard();
+    if (Date.now() >= lease.expiresAt - PHI_FORM_GUARD_EXPIRY_MARGIN_MS) {
+      guardRef.current = null;
+      lease = await readGuard();
+    }
+    const waitMs = lease.readyAt - Date.now();
+    if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs));
+    return lease.props;
   }, [readGuard]);
 
   /*
@@ -521,7 +538,7 @@ export function PhiFormDescriptorRuntimeClient({
             return;
           }
           try {
-            const guard = descriptor.guard ? await readGuard() : null;
+            const guard = descriptor.guard ? await readSubmittableGuard() : null;
             const result = await formClient.submit({
               formId,
               values: guard ? { ...values, ...guard } : values,

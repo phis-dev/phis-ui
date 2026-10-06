@@ -584,7 +584,11 @@ Other Form-shaped surfaces are separate Controllers:
   stood open past phis-server's `forms.timeouts.maxSubmitMs`) is dropped and a fresh one is asked for at
   once, so the next submit carries it. The refused submit is not repeated by itself: a token that new is
   one the handler reads as too fast. A handler that answers expiry with a silent success instead of
-  `form_expired` gives the browser nothing to renew on.
+  `form_expired` gives the browser nothing to renew on, and loses the person's submission.
+- The guard answer carries the window as durations, `minSubmitMs` and `maxSubmitMs`, which the browser
+  measures on its own clock (`PhiFormGuardLease`: ready from when the answer arrived, expiring from when
+  it was asked for). A submit within a minute of expiry asks for a fresh token first, and a submit before
+  a token is ready waits for it, so a Form left open or sent at once is not refused for either.
 - The relay issues a token only for a Form whose submit handler is active in the Area the page names
   (`&area=<area>`, see [Relay](#relay)), and forwards no cookie to phis-server's `/api/v1/forms/guard`.
   A refusal is a wiring fault.

@@ -250,13 +250,24 @@ export function buildPhiSiteFormRouteHandlers({
       },
     );
     const payload = (await response.json().catch(() => null)) as Record<string, unknown> | null;
-    if (!response.ok || typeof payload?.issuedAt !== "string" || typeof payload.formToken !== "string") {
+    if (
+      !response.ok ||
+      typeof payload?.issuedAt !== "string" ||
+      typeof payload.formToken !== "string" ||
+      typeof payload.minSubmitMs !== "number" ||
+      typeof payload.maxSubmitMs !== "number"
+    ) {
       return toJsonResponse(
         { ok: false, error: "Could not issue a form guard." },
         response.status >= 400 ? response.status : 502,
       );
     }
-    return toJsonResponse({ issuedAt: payload.issuedAt, formToken: payload.formToken }, 200);
+    return toJsonResponse({
+      issuedAt: payload.issuedAt,
+      formToken: payload.formToken,
+      minSubmitMs: payload.minSubmitMs,
+      maxSubmitMs: payload.maxSubmitMs,
+    }, 200);
   }
 
   async function GET(request: NextRequest) {

@@ -135,6 +135,7 @@ const loadLabels = createPhiFormLabelSetLoader(
      * the placed Form has an upload field or not.
      */
     [PHI_FORM_UPLOAD_LABEL_KEYS.tooMany]: labels.replyAttachTooMany,
+    [PHI_FORM_UPLOAD_LABEL_KEYS.pending]: labels.replyAttachPending,
     [PHI_FORM_UPLOAD_LABEL_KEYS.errorGeneric]: labels.replyErrorGeneric,
     [PHI_FORM_UPLOAD_LABEL_KEYS.errorNetwork]: labels.replyErrorNetwork,
     [PHI_FORM_UPLOAD_LABEL_KEYS.errorTooLarge]: labels.replyErrorTooLarge,
