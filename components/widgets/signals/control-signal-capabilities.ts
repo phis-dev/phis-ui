@@ -58,6 +58,11 @@ export const PHI_COMMAND_CONTROL_SIGNALS = {
     { id: "badgeCount", channel: "badge", action: "change", valueType: "number", target: "subcontrol" },
     { id: "icon", channel: "icon", action: "change", valueType: "icon", target: "subcontrol" },
     { id: "label", channel: "label", action: "change", valueType: "string", target: "subcontrol" },
+    /*
+     * What the button's tooltip says, for a command whose meaning moves with state -- Undo naming the
+     * step it would take back. The tooltip a button was placed with stands until a value arrives.
+     */
+    { id: "tooltip", channel: "tooltip", action: "change", valueType: "string", target: "subcontrol" },
   ],
 } satisfies PhiSignalPluginMeta;
 

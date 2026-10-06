@@ -17,6 +17,7 @@ import {
   createPhiSignalSubcontrolAddress,
   type PhiBlockRuntime,
 } from "../../../../types";
+import type { PhiSignalRoute } from "../../../../types/signals";
 import { PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import {
   buildPhiSiteThemeSelectOptions,
@@ -64,26 +65,26 @@ function buildThemeCommandToolbarConfig(toolbarId: PhiCmsInstanceId): PhiCommand
           receiver: createPhiThemeControllerAddress(),
         },
       ],
-      listens: [
+      listens: (["undo", "redo"] as const).flatMap((controlKey) => [
         {
-          routeKey: "theme-toolbar-undo-enabled",
+          routeKey: `theme-toolbar-${controlKey}-enabled`,
           capabilityId: "enabled",
           scope: "area",
           channel: "enabled",
           action: "change",
           valueType: "boolean",
-          receiver: createPhiSignalSubcontrolAddress("cms", toolbarId, "undo"),
+          receiver: createPhiSignalSubcontrolAddress("cms", toolbarId, controlKey),
         },
         {
-          routeKey: "theme-toolbar-redo-enabled",
-          capabilityId: "enabled",
+          routeKey: `theme-toolbar-${controlKey}-tooltip`,
+          capabilityId: "tooltip",
           scope: "area",
-          channel: "enabled",
+          channel: "tooltip",
           action: "change",
-          valueType: "boolean",
-          receiver: createPhiSignalSubcontrolAddress("cms", toolbarId, "redo"),
+          valueType: "string",
+          receiver: createPhiSignalSubcontrolAddress("cms", toolbarId, controlKey),
         },
-      ],
+      ] satisfies PhiSignalRoute[]),
     },
     compact: true,
     showLabels: false,
@@ -121,15 +122,26 @@ function buildThemeControllerSettings(toolbarId: PhiCmsInstanceId): PhiCmsTreeCo
     mountScope: "page",
     config: {
       signalRoutes: {
-        emits: (["undo", "redo"] as const).map((controlKey) => ({
-          routeKey: `theme-controller-${controlKey}-enabled`,
-          capabilityId: `${controlKey}Enabled`,
-          scope: "area",
-          channel: "enabled",
-          action: "change",
-          valueType: "boolean",
-          receiver: createPhiSignalSubcontrolAddress("cms", toolbarId, controlKey),
-        })),
+        emits: (["undo", "redo"] as const).flatMap((controlKey) => [
+          {
+            routeKey: `theme-controller-${controlKey}-enabled`,
+            capabilityId: `${controlKey}Enabled`,
+            scope: "area",
+            channel: "enabled",
+            action: "change",
+            valueType: "boolean",
+            receiver: createPhiSignalSubcontrolAddress("cms", toolbarId, controlKey),
+          },
+          {
+            routeKey: `theme-controller-${controlKey}-tooltip`,
+            capabilityId: `${controlKey}Tooltip`,
+            scope: "area",
+            channel: "tooltip",
+            action: "change",
+            valueType: "string",
+            receiver: createPhiSignalSubcontrolAddress("cms", toolbarId, controlKey),
+          },
+        ] satisfies PhiSignalRoute[]),
       },
     },
   }];

@@ -2,8 +2,16 @@
 
 import { createPhiPluginStateStore } from "./plugin-state-store";
 
-export type PhiHistoryEntry<TSnapshot> = {
-  label: string;
+/**
+ * One step a history can take back.
+ *
+ * `action` says what the step was, in the terms of whoever recorded it -- a Builder edit names its kind
+ * and the node it touched, a Theme edit the part of the Theme it changed. It is data rather than a
+ * sentence because the sentence belongs to the reader: the undo message and the button's tooltip are
+ * written in the visitor's language at the moment they are shown, from the Label Set that reader holds.
+ */
+export type PhiHistoryEntry<TSnapshot, TAction> = {
+  action: TAction;
   before: TSnapshot;
   after: TSnapshot;
   /**
@@ -18,23 +26,33 @@ export type PhiHistoryEntry<TSnapshot> = {
   coalesceKey?: string;
 };
 
-type PhiHistoryState<TSnapshot> = {
-  past: PhiHistoryEntry<TSnapshot>[];
-  future: PhiHistoryEntry<TSnapshot>[];
+type PhiHistoryState<TSnapshot, TAction> = {
+  past: PhiHistoryEntry<TSnapshot, TAction>[];
+  future: PhiHistoryEntry<TSnapshot, TAction>[];
 };
 
-export function createPhiHistoryStore<TSnapshot>(
+/** What can be taken back and brought back next, as the toolbar shows it. */
+export type PhiHistoryAvailability<TAction> = {
+  canUndo: boolean;
+  canRedo: boolean;
+  /** The step an undo would take back, or null. */
+  undoAction: TAction | null;
+  /** The step a redo would bring back, or null. */
+  redoAction: TAction | null;
+};
+
+export function createPhiHistoryStore<TSnapshot, TAction>(
   storeId: string,
   options?: { limit?: number },
 ) {
   const limit = Math.max(1, options?.limit ?? 50);
   const openGestures = new Map<string, string>();
-  const store = createPhiPluginStateStore<PhiHistoryState<TSnapshot>>(
+  const store = createPhiPluginStateStore<PhiHistoryState<TSnapshot, TAction>>(
     storeId,
     () => ({ past: [], future: [] }),
   );
 
-  function record(scopeKey: string, entry: PhiHistoryEntry<TSnapshot>) {
+  function record(scopeKey: string, entry: PhiHistoryEntry<TSnapshot, TAction>) {
     const continues =
       entry.coalesceKey != null &&
       entry.coalesceKey !== "" &&
@@ -58,12 +76,13 @@ export function createPhiHistoryStore<TSnapshot>(
     });
   }
 
-  function undo(scopeKey: string, apply: (snapshot: TSnapshot) => void) {
+  /** Takes the newest step back and answers with it, so the caller can say what it took back. */
+  function undo(scopeKey: string, apply: (snapshot: TSnapshot) => void): PhiHistoryEntry<TSnapshot, TAction> | null {
     openGestures.delete(scopeKey);
     const current = store.getSnapshot(scopeKey);
     const entry = current.past.at(-1);
     if (!entry) {
-      return false;
+      return null;
     }
 
     apply(entry.before);
@@ -71,15 +90,16 @@ export function createPhiHistoryStore<TSnapshot>(
       past: current.past.slice(0, -1),
       future: [...current.future, entry],
     });
-    return true;
+    return entry;
   }
 
-  function redo(scopeKey: string, apply: (snapshot: TSnapshot) => void) {
+  /** Brings the last step taken back again and answers with it. */
+  function redo(scopeKey: string, apply: (snapshot: TSnapshot) => void): PhiHistoryEntry<TSnapshot, TAction> | null {
     openGestures.delete(scopeKey);
     const current = store.getSnapshot(scopeKey);
     const entry = current.future.at(-1);
     if (!entry) {
-      return false;
+      return null;
     }
 
     apply(entry.after);
@@ -87,7 +107,7 @@ export function createPhiHistoryStore<TSnapshot>(
       past: [...current.past, entry],
       future: current.future.slice(0, -1),
     });
-    return true;
+    return entry;
   }
 
   /**
@@ -105,11 +125,13 @@ export function createPhiHistoryStore<TSnapshot>(
     store.replace(scopeKey, { past: [], future: [] });
   }
 
-  function getAvailability(scopeKey: string) {
+  function getAvailability(scopeKey: string): PhiHistoryAvailability<TAction> {
     const state = store.getSnapshot(scopeKey);
     return {
       canUndo: state.past.length > 0,
       canRedo: state.future.length > 0,
+      undoAction: state.past.at(-1)?.action ?? null,
+      redoAction: state.future.at(-1)?.action ?? null,
     };
   }
 
@@ -118,19 +140,21 @@ export function createPhiHistoryStore<TSnapshot>(
    * history has moved since: a new record, a gesture continuing, an undo or a redo all change it, and
    * undoing back to where it stood brings the same entry back.
    */
-  function getHead(scopeKey: string): PhiHistoryEntry<TSnapshot> | null {
+  function getHead(scopeKey: string): PhiHistoryEntry<TSnapshot, TAction> | null {
     return store.getSnapshot(scopeKey).past.at(-1) ?? null;
   }
 
-  function useHead(scopeKey: string): PhiHistoryEntry<TSnapshot> | null {
+  function useHead(scopeKey: string): PhiHistoryEntry<TSnapshot, TAction> | null {
     return store.useStoreSelector(scopeKey, (state) => state.past.at(-1) ?? null);
   }
 
-  function useAvailability(scopeKey: string) {
+  function useAvailability(scopeKey: string): PhiHistoryAvailability<TAction> {
     const state = store.useStore(scopeKey);
     return {
       canUndo: state.past.length > 0,
       canRedo: state.future.length > 0,
+      undoAction: state.past.at(-1)?.action ?? null,
+      redoAction: state.future.at(-1)?.action ?? null,
     };
   }
 

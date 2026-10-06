@@ -15,12 +15,60 @@ import {
 } from "../../../theme/phi-theme-presets";
 import type { PhiBuilderBrandWidgetConfig } from "./widgets/brand-controls/config";
 import { createPhiHistoryStore } from "../../../components/state/history-store";
+import type {
+  PhiHistoryAction,
+  PhiHistoryLabels,
+  PhiHistoryThemePartKey,
+} from "../../../components/widgets/label-types/history";
 
 export type ThemePayload = NonNullable<PhiBlockRuntime["site"]["theme"]>;
 
-export const phiThemeHistory = createPhiHistoryStore<ThemePayload>(
+export const phiThemeHistory = createPhiHistoryStore<ThemePayload, PhiHistoryAction>(
   "@phis/ui/theme-history",
 );
+
+/*
+ * Which part of a Theme each of its fields belongs to, as an undo names it. Stated for every field, so
+ * a field added to the Theme has to say where it belongs before it can be edited at all.
+ */
+const PHI_THEME_HISTORY_PART_BY_FIELD = {
+  mode: "mode",
+  blocks: "palette",
+  derivedFrom: "palette",
+  preset: "palette",
+  presetVersion: "palette",
+  palette: "palette",
+  shape: "style",
+  style: "style",
+  buttons: "style",
+  fonts: "fonts",
+  typography: "fonts",
+  contact: "contact",
+  brand: "brand",
+  widgets: "widgets",
+  shell: "shell",
+  root: "root",
+  components: "components",
+} satisfies Record<keyof ThemePayload, PhiHistoryThemePartKey>;
+
+/**
+ * One Theme edit as a history step: the parts of the Theme it changed, named in the author's language.
+ * A field that was only reordered is not a change; fields are compared by value.
+ */
+export function resolvePhiThemeHistoryAction(
+  before: ThemePayload,
+  after: ThemePayload,
+  labels: PhiHistoryLabels,
+): PhiHistoryAction {
+  const parts = new Set<PhiHistoryThemePartKey>();
+  for (const [field, part] of Object.entries(PHI_THEME_HISTORY_PART_BY_FIELD) as [keyof ThemePayload, PhiHistoryThemePartKey][]) {
+    if (JSON.stringify(before[field] ?? null) !== JSON.stringify(after[field] ?? null)) parts.add(part);
+  }
+  return {
+    key: "changeTheme",
+    subject: [...parts].map((part) => labels.themeParts[part]).join(labels.listSeparator),
+  };
+}
 
 export type ThemeReadResponse = {
   key?: string;

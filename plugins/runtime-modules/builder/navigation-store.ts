@@ -2,7 +2,7 @@
 
 import { createPhiPluginStateStore } from "../../../components/state/plugin-state-store";
 import type { PhiBuilderNavigationTree } from "../../../helpers/cms-navigation-catalog";
-import { phiBuilderHistory } from "./history";
+import { phiBuilderHistory, type PhiBuilderHistoryRecording } from "./history";
 
 const navigationDraftStore = createPhiPluginStateStore<Record<string, PhiBuilderNavigationTree>>(
   "@phis/ui/builder-navigation-drafts",
@@ -20,10 +20,7 @@ export function getPhiBuilderNavigationDraftSnapshot(navKey: string) {
 export function setPhiBuilderNavigationDraft(
   navKey: string,
   draft: PhiBuilderNavigationTree,
-  options?: {
-    historyContext?: string | null;
-    historyLabel?: string;
-  },
+  options?: { history?: PhiBuilderHistoryRecording | null },
 ) {
   const previousDraft = navigationDraftStore.getSnapshot("default")[navKey] ?? null;
   const previousAllocation = previousDraft?.draftAllocation ?? null;
@@ -41,9 +38,9 @@ export function setPhiBuilderNavigationDraft(
     [navKey]: resolvedDraft,
   }));
 
-  if (options?.historyContext) {
-    phiBuilderHistory.record(options.historyContext, {
-      label: options.historyLabel ?? "Update navigation",
+  if (options?.history) {
+    phiBuilderHistory.record(options.history.context, {
+      action: options.history.action,
       before: {
         kind: "navigation",
         navKey,

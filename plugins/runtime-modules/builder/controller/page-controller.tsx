@@ -302,7 +302,7 @@ export function usePhiBuilderPageController({
           pageKey: effectivePageKey,
         }),
         {
-          label: "Update page metadata",
+          action: { key: "changePageMeta", subject: title?.trim() || effectivePageKey },
           before: {
             kind: "workspace",
             state: historyBefore,

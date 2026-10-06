@@ -28,7 +28,8 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_PLUGIN = {
       !preloadData.areaRootRoutesByArea ||
       !preloadData.areaMetaByArea ||
       !preloadData.areaControllerSettingsByArea ||
-      !preloadData.pageMetaLabels
+      !preloadData.pageMetaLabels ||
+      !preloadData.historyLabels
     ) {
       throw new Error("Builder runtime controller requires server preload data.");
     }
@@ -49,6 +50,7 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_PLUGIN = {
       areaMetaByArea: preloadData.areaMetaByArea,
       areaControllerSettingsByArea: preloadData.areaControllerSettingsByArea,
       pageMetaLabels: preloadData.pageMetaLabels,
+      historyLabels: preloadData.historyLabels,
     });
   },
 } satisfies PhiRuntimeControllerPlugin<

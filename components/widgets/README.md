@@ -208,7 +208,10 @@ Generic control Widgets reuse the capability sets in `signals/control-signal-cap
   `capabilityId`s; scope, channel, action, and receiver live only in the routes. Buttons may set `label`,
   `tooltip`, `icon`, `display` (`icon | label | icon-label`), `danger`, `disabled`, and `variant`
   (`normal | primary | dashed | subtle | link`). The
-  toolbar knows no workspace, page, or publish semantics; Controllers attach context.
+  toolbar knows no workspace, page, or publish semantics; Controllers attach context. A button listens
+  as its subcontrol for `enabled`, `loading`, `visibility`, `badge`, `icon`, `label`, and `tooltip`
+  (`change`, `string` for the last two); a received tooltip replaces the one the button was placed with
+  until another arrives -- the Builder's Undo names the step it would take back that way.
 
 ### Options Providers
 

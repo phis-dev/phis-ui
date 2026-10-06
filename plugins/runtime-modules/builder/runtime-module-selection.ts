@@ -75,6 +75,28 @@ export function normalizeRuntimeModuleSelection(
 }
 
 /**
+ * The Modules a selection change switched, by title, for the history step that records it. A Module
+ * switched on in one Area and off in another is named once; the step's sentence says that the
+ * selection of these changed, not which way.
+ */
+function describeModuleSelectionChange(
+  effective: ReadonlyArray<{ area: PhiDeveloperBuilderArea; moduleIds: readonly PhiRuntimeModuleId[] }>,
+  before: ReturnType<typeof capturePhiBuilderModulesHistoryState>,
+  defaultArea: PhiDeveloperBuilderArea,
+) {
+  const definitions = getPhiDeveloperBuilderStateSnapshot(defaultArea).runtimeModuleDefinitions;
+  const titleById = new Map(definitions.map((definition) => [definition.moduleId, definition.title] as const));
+  const changed = new Set<PhiRuntimeModuleId>();
+  for (const { area, moduleIds } of effective) {
+    const previous = new Set(before.moduleIdsByArea[area] ?? []);
+    const next = new Set(moduleIds);
+    for (const moduleId of next) if (!previous.has(moduleId)) changed.add(moduleId);
+    for (const moduleId of previous) if (!next.has(moduleId)) changed.add(moduleId);
+  }
+  return [...changed].map((moduleId) => titleById.get(moduleId) ?? moduleId).join(", ");
+}
+
+/**
  * Applies a new Module selection to one or more Areas: validates each Area's list, patches the
  * catalog, and records the whole gesture as ONE history entry -- the one place all of this happens,
  * so a Switch cell in the Modules table and the legacy `runtimeModules` signal channel stay in
@@ -122,7 +144,7 @@ export function applyPhiBuilderRuntimeModuleSelectionChanges(
   phiBuilderHistory.record(
     createPhiBuilderHistoryContext({ workspace: "modules", area: defaultArea }),
     {
-      label: "Change runtime modules",
+      action: { key: "changeModules", subject: describeModuleSelectionChange(effective, historyBefore, defaultArea) },
       before: historyBefore,
       after: capturePhiBuilderModulesHistoryState(
         getPhiDeveloperBuilderStateSnapshot(defaultArea),

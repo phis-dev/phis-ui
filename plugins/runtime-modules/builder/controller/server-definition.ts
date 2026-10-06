@@ -30,6 +30,7 @@ import {
 import { resolvePhiRuntimeModuleIdsForArea } from "../../../../plugins/runtime-modules/settings";
 import { localizePhiRuntimeModuleDefinitions } from "../../module-labels.server";
 import { getPhiBuilderChromeWidgetLabels } from "../../../../components/widgets/label-sets/builder-chrome";
+import { getPhiHistoryLabels } from "../../../../components/widgets/label-sets/history";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 import { resolvePhiRuntimeModuleServerBinding } from "../../server-capabilities";
 import type { PhiWorkspaceCatalogState } from "../../../../components/workspace/catalog-state";
@@ -46,6 +47,7 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_SERVER_DEFINITION = {
       areaMetaByArea,
       areaControllerSettingsByArea,
       builderLabels,
+      historyLabels,
     ] = await Promise.all([
       buildPhiBuilderStructureShellPresetDraftsByArea(
         runtime,
@@ -61,6 +63,11 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_SERVER_DEFINITION = {
       buildPhiBuilderAreaMetaByArea(runtime, runtimeModuleCatalog),
       buildPhiBuilderAreaControllerSettingsByArea(runtime, runtimeModuleCatalog),
       getPhiBuilderChromeWidgetLabels({
+        apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+        internalToken: readPhiServerApiCredentials().internalToken,
+        locale: runtime.locale.current,
+      }),
+      getPhiHistoryLabels({
         apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
         internalToken: readPhiServerApiCredentials().internalToken,
         locale: runtime.locale.current,
@@ -128,6 +135,7 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_SERVER_DEFINITION = {
         createAction: builderLabels.pages.create,
         updateAction: builderLabels.toolbar.save,
       },
+      historyLabels,
     };
   },
 } satisfies PhiRuntimeControllerDefinition<

@@ -1,17 +1,14 @@
 import { isPhiRecord } from "../../../../helpers/is-record";
 import { PhiCmsFlags } from "../../../../constants/phi-cms";
 import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode } from "../../../../types/cms";
-import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
 import type { PhiCmsPaddingWidgetConfig } from "../../../../types/cms-config";
 import type { PhiRenderableBlockBase } from "../../../../types";
 import type { PhiCmsGeometryWidgetConfig } from "../../../../components/widgets/config/geometry";
 import { normalizePhiViewportFlags } from "../../../../types/access";
 import type { PhiAnchorWidgetPlacement } from "../../../../components/controls/phi-anchor-control-contract";
 import type { PhiBuilderInspectorAction } from "../inspector-actions";
-import {
-  findPhiBuilderLayoutNodeById,
-  findPhiBuilderWidgetNodeByIdInLayouts,
-} from "../node-finders";
+import { findPhiBuilderTreeNode, writePhiBuilderNode } from "../node-config-write";
+import type { PhiHistoryActionKey } from "../../../../components/widgets/label-types/history";
 import {
   getDefaultRegionDraft,
   resolveRegionDraftKey,
@@ -21,8 +18,6 @@ import {
   isPhiBuilderPageScopedRegion,
 } from "../region-keys";
 import { createPhiBuilderRegionHistoryContext } from "../history";
-import { assertPhiCmsConfigFields } from "../../../../helpers/cms-config-field-validation";
-import { getPhiBuilderModuleMetasSnapshot } from "../plugin-meta-store";
 import {
   builderWorkspaceStore,
   getPhiDeveloperRegionDraftsSnapshot,
@@ -33,81 +28,6 @@ import type {
   PhiDeveloperBuilderArea,
   PhiDeveloperBuilderWorkspaceState,
 } from "../developer-workspace-types";
-
-function patchLayoutNodeById(
-  nodes: PhiCmsLayoutRenderNode[],
-  nodeId: PhiCmsInstanceId,
-  patchConfig: (config: Record<string, unknown>) => Record<string, unknown>,
-): PhiCmsLayoutRenderNode[] {
-  return nodes.map((node) => {
-    if (node.id === nodeId) {
-      return {
-        ...node,
-        config: patchConfig(node.config ?? {}),
-      };
-    }
-
-    return {
-      ...node,
-      childLayouts: patchLayoutNodeById(node.childLayouts ?? [], nodeId, patchConfig),
-    };
-  });
-}
-
-function patchWidgetNodeById(
-  widgets: PhiCmsContentWidgetNode[],
-  nodeId: PhiCmsInstanceId,
-  patchNode: (node: PhiCmsContentWidgetNode) => PhiCmsContentWidgetNode,
-): PhiCmsContentWidgetNode[] {
-  return widgets.map((node) => (node.id === nodeId ? patchNode(node) : node));
-}
-
-function patchWidgetNodeByIdInLayouts(
-  nodes: PhiCmsLayoutRenderNode[],
-  nodeId: PhiCmsInstanceId,
-  patchNode: (node: PhiCmsContentWidgetNode) => PhiCmsContentWidgetNode,
-): PhiCmsLayoutRenderNode[] {
-  return nodes.map((node) => ({
-    ...node,
-    childLayouts: patchWidgetNodeByIdInLayouts(node.childLayouts ?? [], nodeId, patchNode),
-    childWidgets: patchWidgetNodeById(node.childWidgets ?? [], nodeId, patchNode),
-  }));
-}
-
-/**
- * The write path's one gate.
- *
- * A control is drawn from the same field declaration this checks against, so nobody clicking through
- * the Builder can produce a value that fails here -- what can is a patch written in code, and that is
- * exactly what should not reach a stored page quietly. Reading stays forgiving; writing does not.
- *
- * A type with no metadata in the active Canvas is left alone rather than refused: the catalogue is
- * per Area, and a node from elsewhere is a question about scope, not about this value.
- */
-function assertPhiBuilderPatchedConfig(
-  area: PhiDeveloperBuilderArea,
-  widgetType: string,
-  config: Record<string, unknown>,
-) {
-  const meta = getPhiBuilderModuleMetasSnapshot(area).plugins
-    .find((candidate) => `${candidate.pluginKey}/${candidate.typeKey}` === widgetType);
-  if (!meta?.fields) {
-    return;
-  }
-  assertPhiCmsConfigFields(meta.fields, config, meta.title ?? widgetType);
-}
-
-function guardPhiBuilderConfigPatch(
-  area: PhiDeveloperBuilderArea,
-  widgetType: string,
-  patchConfig: (config: Record<string, unknown>) => Record<string, unknown>,
-) {
-  return (config: Record<string, unknown>) => {
-    const next = patchConfig(config);
-    assertPhiBuilderPatchedConfig(area, widgetType, next);
-    return next;
-  };
-}
 
 function resolveWidgetSizeFromGeometry(
   geometry: PhiCmsGeometryWidgetConfig,
@@ -143,17 +63,6 @@ function resolvePaddingPatch(padding: PhiCmsPaddingWidgetConfig | null) {
       };
 }
 
-function resolveInspectorHistoryContext(
-  state: PhiDeveloperBuilderWorkspaceState,
-  regionKey: string,
-) {
-  return createPhiBuilderRegionHistoryContext({
-    area: state.area,
-    pageKey: state.pageKey,
-    pageScoped: isPhiBuilderPageScopedRegion(regionKey),
-  });
-}
-
 /**
  * One authoring gesture, one history entry. The field being edited and the node it belongs to are what
  * separate a slider still being dragged from a second, considered edit; the store adds the timing.
@@ -166,62 +75,20 @@ function resolveInspectorCoalesceKey(
   return `${draftKey}:${state.nodeId ?? "root"}:${field}`;
 }
 
-function patchSelectedWidgetDraftNode(
+/**
+ * The selected node, written through the one path every in-place node edit takes
+ * (`writePhiBuilderNode`): checked against its fields, its removed subcontrols' routes pruned, and
+ * recorded as one step of the gesture `field` belongs to.
+ */
+function patchSelectedNode(
   state: PhiDeveloperBuilderWorkspaceState,
+  expectedKind: "layout" | "widget",
   field: string,
-  patchNode: (node: PhiCmsContentWidgetNode) => PhiCmsContentWidgetNode,
-) {
-  if (!state.selectedRootRegionKey || state.nodeId == null) {
-    return false;
-  }
-
-  const draftKey = getPhiBuilderRegionDraftKey(state.area, state.selectedRootRegionKey, state.pageKey);
-  const selectedRootDraft = resolveRegionDraftKey(
-    getPhiDeveloperRegionDraftsSnapshot(),
-    state.area,
-    state.selectedRootRegionKey,
-    state.pageKey,
-  );
-  if (!selectedRootDraft) {
-    return false;
-  }
-
-  const rootNode = selectedRootDraft.rootNode;
-  if (!rootNode || !findPhiBuilderWidgetNodeByIdInLayouts([rootNode], state.nodeId)) {
-    return false;
-  }
-
-  setPhiDeveloperRegionDraft(
-    draftKey,
-    {
-      ...selectedRootDraft,
-      rootNode: patchWidgetNodeByIdInLayouts([rootNode], state.nodeId, patchNode)[0],
-    },
-    {
-      historyContext: resolveInspectorHistoryContext(state, state.selectedRootRegionKey),
-      historyLabel: "Update widget",
-      historyCoalesceKey: resolveInspectorCoalesceKey(state, draftKey, field),
-    },
-  );
-
-  return true;
-}
-
-function patchSelectedWidgetDraftConfig(
-  state: PhiDeveloperBuilderWorkspaceState,
-  field: string,
-  patchConfig: (config: Record<string, unknown>) => Record<string, unknown>,
-) {
-  return patchSelectedWidgetDraftNode(state, field, (node) => ({
-    ...node,
-    config: guardPhiBuilderConfigPatch(state.area, node.widgetType, patchConfig)(node.config ?? {}),
-  }));
-}
-
-function patchSelectedStructureDraftConfig(
-  state: PhiDeveloperBuilderWorkspaceState,
-  field: string,
-  patchConfig: (config: Record<string, unknown>) => Record<string, unknown>,
+  edit: {
+    patchConfig?: (config: Record<string, unknown>) => Record<string, unknown>;
+    patchNode?: <TNode extends PhiCmsLayoutRenderNode | PhiCmsContentWidgetNode>(node: TNode) => TNode;
+    actionKey?: PhiHistoryActionKey;
+  },
 ) {
   if (!state.selectedRootRegionKey || state.nodeId == null) {
     return false;
@@ -235,37 +102,42 @@ function patchSelectedStructureDraftConfig(
     state.pageKey,
   );
   /*
-   * The selected Layout, wherever it stands: the Region's root Layout is found and patched the same
-   * way as every Layout below it, so both behave alike in the Inspector.
+   * The selected node, wherever it stands: the Region's root Layout is found and patched the same way
+   * as every node below it, so both behave alike in the Inspector.
    */
   const rootNode = selectedRootDraft?.rootNode ?? null;
-  const selectedLayoutNode = rootNode ? findPhiBuilderLayoutNodeById([rootNode], state.nodeId) : null;
-  if (!selectedRootDraft || !rootNode || !selectedLayoutNode) {
+  const node = rootNode ? findPhiBuilderTreeNode(rootNode, state.nodeId) : null;
+  if (!selectedRootDraft || !node || ("contentId" in node ? "widget" : "layout") !== expectedKind) {
     return false;
   }
 
-  setPhiDeveloperRegionDraft(
+  return writePhiBuilderNode({
+    area: state.area,
+    pageKey: state.pageKey,
+    regionKey: state.selectedRootRegionKey,
     draftKey,
-    {
-      ...selectedRootDraft,
-      rootNode: patchLayoutNodeById(
-        [rootNode],
-        state.nodeId,
-        guardPhiBuilderConfigPatch(
-          state.area,
-          selectedLayoutNode.widgetType,
-          patchConfig,
-        ),
-      )[0],
-    },
-    {
-      historyContext: resolveInspectorHistoryContext(state, state.selectedRootRegionKey),
-      historyLabel: "Update layout",
-      historyCoalesceKey: resolveInspectorCoalesceKey(state, draftKey, field),
-    },
-  );
+    baseDraft: selectedRootDraft,
+    nodeId: state.nodeId,
+    ...edit,
+    coalesceKey: resolveInspectorCoalesceKey(state, draftKey, field),
+  });
+}
 
-  return true;
+function patchSelectedWidgetDraftConfig(
+  state: PhiDeveloperBuilderWorkspaceState,
+  field: string,
+  patchConfig: (config: Record<string, unknown>) => Record<string, unknown>,
+  actionKey?: PhiHistoryActionKey,
+) {
+  return patchSelectedNode(state, "widget", field, { patchConfig, actionKey });
+}
+
+function patchSelectedStructureDraftConfig(
+  state: PhiDeveloperBuilderWorkspaceState,
+  field: string,
+  patchConfig: (config: Record<string, unknown>) => Record<string, unknown>,
+) {
+  return patchSelectedNode(state, "layout", field, { patchConfig });
 }
 
 function readRecordPatch(value: unknown): Record<string, unknown> | null {
@@ -302,13 +174,19 @@ export function runPhiDeveloperBuilderInspectorAction(
         ...patch,
       },
       {
-        historyContext: resolveInspectorHistoryContext(state, selectedRegionKey),
-        historyLabel: "Update region",
-        historyCoalesceKey: resolveInspectorCoalesceKey(
-          state,
-          getPhiBuilderRegionDraftKey(state.area, selectedRegionKey, state.pageKey),
-          Object.keys(patch).sort().join(","),
-        ),
+        history: {
+          context: createPhiBuilderRegionHistoryContext({
+            area: state.area,
+            pageKey: state.pageKey,
+            pageScoped: isPhiBuilderPageScopedRegion(selectedRegionKey),
+          }),
+          action: { key: "changeRegion", regionKey: selectedRegionKey },
+          coalesceKey: resolveInspectorCoalesceKey(
+            state,
+            getPhiBuilderRegionDraftKey(state.area, selectedRegionKey, state.pageKey),
+            Object.keys(patch).sort().join(","),
+          ),
+        },
       },
     );
     return;
@@ -328,7 +206,7 @@ export function runPhiDeveloperBuilderInspectorAction(
       patchSelectedWidgetDraftConfig(state, "geometry", (config) => ({
         ...config,
         ...resolveWidgetSizeFromGeometry(geometry as PhiCmsGeometryWidgetConfig),
-      }));
+      }), "resizeNode");
     }
     return;
   }
@@ -348,12 +226,15 @@ export function runPhiDeveloperBuilderInspectorAction(
   }
 
   if (action.kind === "setSelectedWidgetTranslate") {
-    patchSelectedWidgetDraftNode(state, "translate", (node) => ({
-      ...node,
-      flags: action.translate
-        ? (node.flags ?? 0) & ~PhiCmsFlags.NoTranslate
-        : (node.flags ?? 0) | PhiCmsFlags.NoTranslate,
-    }));
+    patchSelectedNode(state, "widget", "translate", {
+      patchNode: (node) => ({
+        ...node,
+        flags: action.translate
+          ? (node.flags ?? 0) & ~PhiCmsFlags.NoTranslate
+          : (node.flags ?? 0) | PhiCmsFlags.NoTranslate,
+      }),
+      actionKey: "changeNodeTranslation",
+    });
     return;
   }
 
@@ -394,11 +275,19 @@ export function runPhiDeveloperBuilderInspectorAction(
     return;
   }
 
-  if (action.kind === "patchSelectedLayoutConfig" && typeof action.key === "string") {
-    const nextValue = action.value ?? undefined;
-    patchSelectedStructureDraftConfig(state, action.key, (config) => ({
+  /*
+   * Every key the Layout Inspector changed in one gesture, written as one step: a padding control that
+   * answers four sides, or a grid placement that moves columns and placements together, used to send a
+   * key at a time and leave as many undo entries behind. A `null` takes the key away.
+   */
+  if (action.kind === "patchSelectedLayoutConfig") {
+    const entries = Object.entries(action.patch);
+    if (entries.length === 0) {
+      return;
+    }
+    patchSelectedStructureDraftConfig(state, entries.map(([key]) => key).sort().join(","), (config) => ({
       ...config,
-      [action.key as string]: nextValue,
+      ...Object.fromEntries(entries.map(([key, value]) => [key, value ?? undefined])),
     }));
   }
 }

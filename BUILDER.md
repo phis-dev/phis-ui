@@ -895,6 +895,19 @@ The builder must support a clear change lifecycle.
   shows the toolbar routes them to its `undo` and `redo` subcontrols on `enabled/change`
   (`controllerSettings`). A toolbar button is disabled when its active history scope has no matching
   entry.
+- Every history entry names the step it is: an action (`PhiHistoryAction`,
+  `components/widgets/label-types/history.ts`) with a kind -- `insertNode`, `moveNode`,
+  `changeNodePadding`, `changeAreaSettings`, `changeTheme`, ... -- and what it touched: a node by its
+  label or its type's title, a Region by its key, a Theme edit by the parts it changed. It is data, not
+  a sentence: the sentence is written from the `widget:history` Label Set when it is shown, in the
+  author's language, because the code that records a step -- a draft store, a Canvas Widget -- holds no
+  labels. A generic step ("Update draft") is not recorded; the kind is required.
+- The Controllers also state `undoTooltip` and `redoTooltip`: the step the next undo or redo would
+  move ("Undo: Move Hero"), or that there is none. The Page routes them to the same subcontrols on
+  `tooltip/change`, which the command toolbar shows as the button's tooltip.
+- An undo or redo that moved a step says so through the Core Controller's `message` input
+  ("Undone: Delete Gallery"). Nothing is said when there was nothing to move. Selecting or scrolling to
+  the node is deliberately not part of it.
 - History is local draft history and is scoped as follows:
   - shell structure: area;
   - page structure and metadata: area plus page key;
@@ -904,7 +917,18 @@ The builder must support a clear change lifecycle.
   server draft clears the corresponding local history.
 - One user gesture is one history transaction. Inspector changes, insertion, deletion, and one
   drag/drop move each create one reversible entry. A move between Regions records the source and
-  target Region drafts atomically so Undo cannot restore only half of the move.
+  target Region drafts atomically so Undo cannot restore only half of the move. A Layout Inspector
+  control that answers several config keys at once (`patchSelectedLayoutConfig` carries the whole
+  patch) is one entry, and the Area settings dialog records its root route and SEO answers as one
+  `composite` entry -- or none, when OK confirmed what stood.
+- A node is changed in place in one way only, `writePhiBuilderNode` (`node-config-write.ts`), from the
+  Canvas and the Inspector alike: the config is checked against the fields its type declares, and an
+  edit that removes a Widget's subcontrol prunes the routes to it in the same entry.
+- An insertion is computed against the draft as it stands after the new node's id arrived, not the
+  tree read when the picker opened, so an edit made while the id was allocated is kept. A picked node
+  goes behind what its slot already holds, under the root and inside a Layout alike, and takes its
+  sort order from the Layout it goes into. A deletion compacts every sequential Layout it touches, at
+  any depth (`widgets/structure-region/tree-operations.ts`).
 - Creating or deleting a persisted page and destructive reset commands are lifecycle boundaries,
   not local reversible edits. They require their existing confirmation/persistence flow and are not
   added to local Undo history.

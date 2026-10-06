@@ -23,6 +23,7 @@ import { PHI_DRAG_SOURCE_CONTROL_SIGNALS } from "../../../../components/widgets/
 import { PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS } from "../../../../components/widgets/label-types/builder-chrome";
 import type { PhiCmsTreeControllerSettings } from "../../../../types/cms";
 import type { PhiWorkspaceCatalogState } from "../../../../components/workspace/catalog-state";
+import type { PhiHistoryLabels } from "../../../../components/widgets/label-types/history";
 
 /**
  * Whom the Builder Controller answers into, from the trees that hold the receivers.
@@ -95,6 +96,7 @@ export type PhiBuilderRuntimeControllerPreload = {
     Record<PhiBuilderAreaKey, readonly PhiCmsResolvedNavigationSurface[]>
   >;
   pageMetaLabels: PhiBuilderPageMetaPresentationLabels;
+  historyLabels: PhiHistoryLabels;
 };
 
 export function parsePhiBuilderRuntimeControllerConfig(raw: Record<string, unknown>): PhiBuilderRuntimeControllerConfig {
@@ -162,6 +164,9 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_DEFINITION = {
       // Whether the toolbar's undo and redo can act, from the history the Controller keeps.
       { id: "undoEnabled", action: "change", valueType: "boolean" },
       { id: "redoEnabled", action: "change", valueType: "boolean" },
+      // What the next undo and redo would move, as the buttons' tooltips name it.
+      { id: "undoTooltip", action: "change", valueType: "string" },
+      { id: "redoTooltip", action: "change", valueType: "string" },
       { id: "overlayTitle", action: "change", valueType: "string" },
       { id: "commandLabel", action: "change", valueType: "string" },
       { id: "pageMetaSubmitting", action: "change", valueType: "boolean" },

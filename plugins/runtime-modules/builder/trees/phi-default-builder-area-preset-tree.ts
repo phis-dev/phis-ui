@@ -177,34 +177,26 @@ function buildBuilderCommandToolbarConfig(
           receiver: createPhiBuilderControllerAddress(),
         },
       ],
-      listens: [
+      listens: (["undo", "redo"] as const).flatMap((controlKey) => [
         {
-          routeKey: "builder-toolbar-undo-enabled",
+          routeKey: `builder-toolbar-${controlKey}-enabled`,
           capabilityId: "enabled",
           scope: "area",
           channel: "enabled",
           action: "change",
           valueType: "boolean",
-          receiver: createPhiSignalSubcontrolAddress(
-            "cms",
-            SYNTHETIC_DEV_WIDGET_IDS.widgetToolbar,
-            "undo",
-          ),
+          receiver: createPhiSignalSubcontrolAddress("cms", SYNTHETIC_DEV_WIDGET_IDS.widgetToolbar, controlKey),
         },
         {
-          routeKey: "builder-toolbar-redo-enabled",
-          capabilityId: "enabled",
+          routeKey: `builder-toolbar-${controlKey}-tooltip`,
+          capabilityId: "tooltip",
           scope: "area",
-          channel: "enabled",
+          channel: "tooltip",
           action: "change",
-          valueType: "boolean",
-          receiver: createPhiSignalSubcontrolAddress(
-            "cms",
-            SYNTHETIC_DEV_WIDGET_IDS.widgetToolbar,
-            "redo",
-          ),
+          valueType: "string",
+          receiver: createPhiSignalSubcontrolAddress("cms", SYNTHETIC_DEV_WIDGET_IDS.widgetToolbar, controlKey),
         },
-      ],
+      ] satisfies PhiSignalRoute[]),
     },
     compact: true,
     showLabels: false,
@@ -259,15 +251,26 @@ function buildBuilderPageControllerRoutes(page: {
   isPagesPage: boolean;
   isModulesPage: boolean;
 }): PhiSignalRoute[] {
-  const toolbarRoutes: PhiSignalRoute[] = (["undo", "redo"] as const).map((controlKey) => ({
-    routeKey: `builder-controller-${controlKey}-enabled`,
-    capabilityId: `${controlKey}Enabled`,
-    scope: "area",
-    channel: "enabled",
-    action: "change",
-    valueType: "boolean",
-    receiver: createPhiSignalSubcontrolAddress("cms", SYNTHETIC_DEV_WIDGET_IDS.widgetToolbar, controlKey),
-  }));
+  const toolbarRoutes: PhiSignalRoute[] = (["undo", "redo"] as const).flatMap((controlKey) => [
+    {
+      routeKey: `builder-controller-${controlKey}-enabled`,
+      capabilityId: `${controlKey}Enabled`,
+      scope: "area",
+      channel: "enabled",
+      action: "change",
+      valueType: "boolean",
+      receiver: createPhiSignalSubcontrolAddress("cms", SYNTHETIC_DEV_WIDGET_IDS.widgetToolbar, controlKey),
+    },
+    {
+      routeKey: `builder-controller-${controlKey}-tooltip`,
+      capabilityId: `${controlKey}Tooltip`,
+      scope: "area",
+      channel: "tooltip",
+      action: "change",
+      valueType: "string",
+      receiver: createPhiSignalSubcontrolAddress("cms", SYNTHETIC_DEV_WIDGET_IDS.widgetToolbar, controlKey),
+    },
+  ] satisfies PhiSignalRoute[]);
   const areaSettingsForm = createPhiSignalAddress("cms", PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS.areaSettingsForm);
   const areaSettingsRoutes: PhiSignalRoute[] = page.isStructurePage ? [
     ...builderDialogRoutes(

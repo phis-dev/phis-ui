@@ -82,8 +82,18 @@ import type { PhiStructureRegionPickItem } from "./config";
 import type { PhiAuthoringToolsLabels } from "../../../../../components/widgets/label-types/authoring-tools";
 import type { PhiEffectsWidgetLabels } from "../../../../../components/widgets/label-types/effects";
 import type { PhiBuilderChromeWidgetLabels } from "../../../../../components/widgets/label-types/builder-chrome";
-import { resolvePhiWidgetSignalSubcontrolAddresses } from "../../../../../components/widgets/signals/signal-endpoints";
 import { createPhiBuilderRegionHistoryContext } from "../../../../../plugins/runtime-modules/builder/history";
+import type { PhiHistoryAction } from "../../../../../components/widgets/label-types/history";
+import {
+  findPhiBuilderTreeNode,
+  resolvePhiBuilderNodeHistorySubject,
+  writePhiBuilderNode,
+} from "../../node-config-write";
+import {
+  compactPhiStructureSequentialLayouts,
+  insertPhiStructureNode,
+  removePhiStructureNode,
+} from "./tree-operations";
 import {
   usePhiStructureDroppable,
   type PhiStructureDragData,
@@ -218,34 +228,6 @@ function buildPhiBuilderContainerMetaMap(
         meta,
       ]),
   );
-}
-
-function compactStructureSequentialLayouts(
-  nodes: readonly PhiCmsLayoutRenderNode[],
-  layoutMetasByType: ReadonlyMap<string, PhiBuilderContainerMeta>,
-): PhiCmsLayoutRenderNode[] {
-  return nodes.map((node) => {
-    const nestedLayouts = compactStructureSequentialLayouts(
-      node.childLayouts ?? [],
-      layoutMetasByType,
-    );
-    const definition = layoutMetasByType.get(node.widgetType);
-    if (!compactsPhiCmsSequentialSlots(definition)) {
-      return {
-        ...node,
-        childLayouts: nestedLayouts,
-      };
-    }
-    const compacted = compactPhiCmsSequentialChildren({
-      childLayouts: nestedLayouts,
-      childWidgets: node.childWidgets ?? [],
-    });
-    return {
-      ...node,
-      childLayouts: compacted.childLayouts,
-      childWidgets: compacted.childWidgets,
-    };
-  });
 }
 
 function resolveSlotBodyMinHeight(
@@ -478,27 +460,6 @@ function insertPhiCmsSequentialChild(
       };
 }
 
-function removeLayoutChildById(nodes: PhiCmsLayoutRenderNode[], targetNodeId: PhiCmsInstanceId): PhiCmsLayoutRenderNode[] {
-  return nodes
-    .filter((node) => node.id !== targetNodeId)
-    .map((node) => ({
-      ...node,
-      childLayouts: (node.childLayouts ?? []).length > 0 ? removeLayoutChildById(node.childLayouts, targetNodeId) : [],
-    }));
-}
-
-function removeWidgetChildById(nodes: PhiCmsLayoutRenderNode[], targetNodeId: PhiCmsInstanceId): PhiCmsLayoutRenderNode[] {
-  return nodes.map((node) => ({
-    ...node,
-    childLayouts: (node.childLayouts ?? []).length > 0 ? removeWidgetChildById(node.childLayouts, targetNodeId) : [],
-    childWidgets: (node.childWidgets ?? []).filter((child) => child.id !== targetNodeId),
-  }));
-}
-
-function removeContentWidgetById(nodes: PhiCmsContentWidgetNode[], targetNodeId: PhiCmsInstanceId): PhiCmsContentWidgetNode[] {
-  return nodes.filter((child) => child.id !== targetNodeId);
-}
-
 function resolveLayoutNodeSignalAddress(node: PhiCmsLayoutRenderNode) {
   return createPhiSignalAddress("cms", node.id);
 }
@@ -558,54 +519,6 @@ function collectDeletedNodeSignalAddresses({
   }
 
   return addresses;
-}
-
-function updateLayoutChildConfigById(
-  nodes: PhiCmsLayoutRenderNode[],
-  targetNodeId: PhiCmsInstanceId,
-  configPatch: Record<string, unknown>,
-): PhiCmsLayoutRenderNode[] {
-  return nodes.map((node) => {
-    if (node.id === targetNodeId) {
-      return {
-        ...node,
-        config: {
-          ...(node.config ?? {}),
-          ...configPatch,
-        },
-      };
-    }
-
-    if ((node.childLayouts?.length ?? 0) === 0) {
-      return node;
-    }
-
-    return {
-      ...node,
-      childLayouts: updateLayoutChildConfigById(node.childLayouts, targetNodeId, configPatch),
-    };
-  });
-}
-
-function updateWidgetChildConfigById(
-  nodes: PhiCmsLayoutRenderNode[],
-  targetNodeId: PhiCmsInstanceId,
-  nextConfig: Record<string, unknown>,
-): PhiCmsLayoutRenderNode[] {
-  return nodes.map((node) => {
-    const childWidgets = (node.childWidgets ?? []).map((widget) =>
-      widget.id === targetNodeId
-        ? { ...widget, config: nextConfig }
-        : widget
-    );
-    const childLayouts = (node.childLayouts?.length ?? 0) > 0
-      ? updateWidgetChildConfigById(node.childLayouts, targetNodeId, nextConfig)
-      : node.childLayouts ?? [];
-    const changed = childWidgets.some((widget, index) => widget !== node.childWidgets?.[index]) ||
-      childLayouts.some((layout, index) => layout !== node.childLayouts?.[index]);
-
-    return changed ? { ...node, childWidgets, childLayouts } : node;
-  });
 }
 
 export function PhiStructureRegionScaffold({
@@ -788,14 +701,6 @@ export function PhiStructureRegionScaffold({
     childWidgets?: PhiCmsContentWidgetNode[];
   }): Partial<PhiDeveloperBuilderRegionDraft> =>
     rootNode ? { rootNode: withPhiBuilderRegionRootChildren({ rootNode }, children).rootNode } : {};
-  const resolveNextSlotSortOrder = (slotIndex: number) => {
-    const slotChildren = [
-      ...rootNodeChildLayouts.filter((layout) => layout.slotIndex === slotIndex),
-      ...rootNodeChildWidgets.filter((widget) => widget.slotIndex === slotIndex),
-    ];
-
-    return slotChildren.reduce((maxSortOrder, child) => Math.max(maxSortOrder, child.sortOrder), -1) + 1;
-  };
   const openRootInspector = (options?: {
     nodeId?: PhiCmsInstanceId | null;
     nodeKey?: string | null;
@@ -839,85 +744,48 @@ export function PhiStructureRegionScaffold({
       childWidgets: rootNodeChildWidgets,
     });
 
-    if (targetNodeId === rootNodeId) {
-      updateDraftAndPruneSignalRoutes({ rootNode: null }, deletedAddresses);
-      return;
-    }
-
-    const nextChildLayouts =
-      targetNodeKind === "widget"
-        ? removeWidgetChildById(rootNodeChildLayouts, targetNodeId)
-        : removeLayoutChildById(rootNodeChildLayouts, targetNodeId);
-    const nextChildWidgets =
-      targetNodeKind === "widget"
-        ? removeContentWidgetById(rootNodeChildWidgets, targetNodeId)
-        : rootNodeChildWidgets;
-    const compactedChildren =
-      compactsPhiCmsSequentialSlots(rootNodeDefinition)
-      ? compactPhiCmsSequentialChildren({
-          childLayouts: nextChildLayouts,
-          childWidgets: nextChildWidgets,
-        })
-      : {
-          childLayouts: nextChildLayouts,
-          childWidgets: nextChildWidgets,
-        };
-
-    updateDraftAndPruneSignalRoutes(rootChildren({ childLayouts: compactedChildren.childLayouts, childWidgets: compactedChildren.childWidgets }), deletedAddresses);
-  };
-  const updateWidgetNodeConfig = (node: PhiCmsContentWidgetNode, configPatch: Record<string, unknown>) => {
-    if (isPreviewMode || !hasRootNode) {
-      return;
-    }
-
-    const currentConfig = node.config ?? {};
-    const nextConfig = {
-      ...currentConfig,
-      ...configPatch,
+    const deletedNode = rootNode ? findPhiBuilderTreeNode(rootNode, targetNodeId) : null;
+    const action: PhiHistoryAction = {
+      key: "deleteNode",
+      subject: deletedNode ? resolvePhiBuilderNodeHistorySubject(builderState.area, deletedNode) : null,
     };
-    const signalSubcontrols = activeModules.widgetDefinitionsByType.get(node.widgetType)?.signalSubcontrols;
-    const nextSubcontrolAddresses = new Set(resolvePhiWidgetSignalSubcontrolAddresses({
-      blockId: node.id,
-      config: nextConfig,
-      signalSubcontrols,
-    }));
-    const removedSubcontrolAddresses = resolvePhiWidgetSignalSubcontrolAddresses({
-      blockId: node.id,
-      config: currentConfig,
-      signalSubcontrols,
-    }).filter((address) => !nextSubcontrolAddresses.has(address));
-    const nextChildWidgets = rootNodeChildWidgets.map((widget) =>
-        widget.id === node.id
-          ? {
-              ...widget,
-              config: nextConfig,
-            }
-          : widget,
-      );
-    const nextChildLayouts = updateWidgetChildConfigById(
-      rootNodeChildLayouts,
-      node.id,
-      nextConfig,
-    );
-
-    if (removedSubcontrolAddresses.length > 0) {
-      updateDraftAndPruneSignalRoutes(
-        rootChildren({ childLayouts: nextChildLayouts, childWidgets: nextChildWidgets }),
-        removedSubcontrolAddresses,
-      );
+    if (targetNodeId === rootNodeId) {
+      updateDraftAndPruneSignalRoutes({ rootNode: null }, deletedAddresses, action);
       return;
     }
 
-    updateDraft(rootChildren({ childLayouts: nextChildLayouts, childWidgets: nextChildWidgets }));
+    const remaining = removePhiStructureNode({
+      children: { childLayouts: rootNodeChildLayouts, childWidgets: rootNodeChildWidgets },
+      nodeId: targetNodeId,
+      nodeKind: targetNodeKind === "widget" ? "widget" : "layout",
+      rootDefinition: rootNodeDefinition,
+      layoutMetasByType,
+    });
+
+    updateDraftAndPruneSignalRoutes(rootChildren(remaining), deletedAddresses, action);
   };
-  const updateLayoutNodeConfig = (node: PhiCmsLayoutRenderNode, configPatch: Record<string, unknown>) => {
+  /*
+   * A config edit made on the Canvas itself -- an inline text, the effects button, a slot title -- goes
+   * the one way every in-place node edit goes (`writePhiBuilderNode`), the same as the Inspector's.
+   */
+  const writeNodeConfig = (nodeId: PhiCmsInstanceId, configPatch: Record<string, unknown>) => {
     if (isPreviewMode || !hasRootNode) {
       return;
     }
-
-    // The root Layout's config is patched like every Layout's below it.
-    updateDraft(rootNode ? { rootNode: updateLayoutChildConfigById([rootNode], node.id, configPatch)[0] } : {});
+    writePhiBuilderNode({
+      area: builderState.area,
+      pageKey: builderState.pageKey,
+      regionKey: config.regionKey,
+      draftKey,
+      baseDraft: readCurrentDraft(),
+      nodeId,
+      patchConfig: (current) => ({ ...current, ...configPatch }),
+    });
   };
+  const updateWidgetNodeConfig = (node: PhiCmsContentWidgetNode, configPatch: Record<string, unknown>) =>
+    writeNodeConfig(node.id, configPatch);
+  const updateLayoutNodeConfig = (node: PhiCmsLayoutRenderNode, configPatch: Record<string, unknown>) =>
+    writeNodeConfig(node.id, configPatch);
   const resolveStructureDragData = (
     node: {
       nodeId: PhiCmsInstanceId;
@@ -1135,8 +1003,7 @@ export function PhiStructureRegionScaffold({
         draftKey,
         withPhiBuilderRegionRootChildren(effectiveDraft, { childLayouts: swapped.childLayouts, childWidgets: swapped.childWidgets }),
         {
-          historyContext,
-          historyLabel: "Swap widgets",
+          history: { context: historyContext, action: { key: "swapWidgets", subject: payload.title } },
         },
       );
       return;
@@ -1165,8 +1032,7 @@ export function PhiStructureRegionScaffold({
         [draftKey]: withPhiBuilderRegionRootChildren(effectiveDraft, { childLayouts: swapped.target.childLayouts, childWidgets: swapped.target.childWidgets }),
       },
       {
-        historyContext,
-        historyLabel: "Swap widgets",
+        history: { context: historyContext, action: { key: "swapWidgets", subject: payload.title } },
       },
     );
   };
@@ -1314,7 +1180,7 @@ export function PhiStructureRegionScaffold({
       });
 
       const sourceRootDefinition = layoutMetasByType.get(sourceDraft.rootNode!.widgetType) ?? null;
-      let nextSourceLayouts = compactStructureSequentialLayouts(
+      let nextSourceLayouts = compactPhiStructureSequentialLayouts(
         extractedSource.childLayouts,
         layoutMetasByType,
       );
@@ -1333,11 +1199,10 @@ export function PhiStructureRegionScaffold({
           [sourceDraftKey]: movingSourceRoot
             ? clearStructureRootNode(sourceDraft)
             : withPhiBuilderRegionRootChildren(sourceDraft, { childLayouts: nextSourceLayouts, childWidgets: nextSourceWidgets }),
-          [draftKey]: withPhiBuilderRegionRootChildren((effectiveDraft ?? getDefaultRegionDraft(config.regionKey)), { childLayouts: compactStructureSequentialLayouts(nextTargetLayouts, layoutMetasByType), childWidgets: nextTargetWidgets }),
+          [draftKey]: withPhiBuilderRegionRootChildren((effectiveDraft ?? getDefaultRegionDraft(config.regionKey)), { childLayouts: compactPhiStructureSequentialLayouts(nextTargetLayouts, layoutMetasByType), childWidgets: nextTargetWidgets }),
         },
         {
-          historyContext,
-          historyLabel: "Move structure node",
+          history: { context: historyContext, action: { key: "moveNode", subject: payload.title } },
         },
       );
       return;
@@ -1414,10 +1279,9 @@ export function PhiStructureRegionScaffold({
 
     setPhiDeveloperRegionDraft(
       draftKey,
-      withPhiBuilderRegionRootChildren((effectiveDraft ?? getDefaultRegionDraft(config.regionKey)), { childLayouts: compactStructureSequentialLayouts(nextChildLayouts, layoutMetasByType), childWidgets: nextChildWidgets }),
+      withPhiBuilderRegionRootChildren((effectiveDraft ?? getDefaultRegionDraft(config.regionKey)), { childLayouts: compactPhiStructureSequentialLayouts(nextChildLayouts, layoutMetasByType), childWidgets: nextChildWidgets }),
       {
-        historyContext,
-        historyLabel: "Move structure node",
+        history: { context: historyContext, action: { key: "moveNode", subject: payload.title } },
       },
     );
   };
@@ -1501,7 +1365,7 @@ export function PhiStructureRegionScaffold({
       nextTargetDraft = copyStructureRootNode(targetBase, sourceDraft);
     } else {
       const sourceRootDefinition = layoutMetasByType.get(sourceDraft.rootNode!.widgetType) ?? null;
-      let nextSourceLayouts = compactStructureSequentialLayouts(
+      let nextSourceLayouts = compactPhiStructureSequentialLayouts(
         extractedSource!.childLayouts,
         layoutMetasByType,
       );
@@ -1527,8 +1391,7 @@ export function PhiStructureRegionScaffold({
         [draftKey]: nextTargetDraft,
       },
       {
-        historyContext,
-        historyLabel: "Move layout to region root",
+        history: { context: historyContext, action: { key: "moveLayoutToRoot", subject: payload.title } },
       },
     );
   };
@@ -1611,136 +1474,59 @@ export function PhiStructureRegionScaffold({
       regionKey: config.regionKey,
       builderPlugins: builderModuleMetas.plugins,
     });
-    const targetLayoutNodeId = currentSlotPickerContext?.targetNodeId ?? rootNodeId;
-    const targetsRootLayout = targetLayoutNodeId === rootNodeId;
-    const parentLayoutNodeId = targetLayoutNodeId;
-    const insertionSlotIndex = currentSlotPickerContext?.slotIndex ?? null;
-    const parentLayoutNode = targetsRootLayout || targetLayoutNodeId == null
-      ? null
-      : findPhiBuilderLayoutNodeById(rootNodeChildLayouts, targetLayoutNodeId);
-    const parentLayoutDefinition = parentLayoutNode == null
-      ? rootNodeDefinition
-      : layoutMetasByType.get(parentLayoutNode.widgetType) ?? null;
-    const compactSequential = compactsPhiCmsSequentialSlots(parentLayoutDefinition);
-    const isSlotInsertion =
-      hasRootNode &&
-      insertionSlotIndex != null &&
-      parentLayoutNodeId != null;
-
-    if (
-      isSlotInsertion
-      && item.kind === "widget"
-      && currentSlotPickerContext?.allowWidgetSection
-      && insertionSlotIndex != null
-      && parentLayoutNodeId != null
-    ) {
-      const nextWidget = buildInsertedWidgetNode(
-        item,
-        instanceId,
-        parentLayoutNodeId,
-        insertionSlotIndex,
-        resolveNextSlotSortOrder(insertionSlotIndex),
-      );
-      updateDraft(
-        !targetsRootLayout
-          ? rootChildren({ childLayouts: appendWidgetChildById(
-                rootNodeChildLayouts,
-                parentLayoutNodeId,
-                nextWidget,
-                compactSequential,
-              ) })
-          : compactSequential
-            ? (() => {
-                const nextChildren = compactPhiCmsSequentialChildren({
-                  childLayouts: rootNodeChildLayouts,
-                  childWidgets: [...rootNodeChildWidgets, nextWidget],
-                });
-                return rootChildren({ childLayouts: nextChildren.childLayouts, childWidgets: nextChildren.childWidgets });
-              })()
-            : rootChildren({ childWidgets: [...rootNodeChildWidgets, nextWidget] }),
-      );
-    } else if (
-      isSlotInsertion
-      && item.kind !== "widget"
-      && currentSlotPickerContext?.allowLayoutSection
-      && insertionSlotIndex != null
-      && parentLayoutNodeId != null
-    ) {
-      const nextLayout = buildInsertedLayoutNode(
-        item,
-        instanceId,
-        parentLayoutNodeId,
-        insertionSlotIndex,
-        resolveNextSlotSortOrder(insertionSlotIndex),
-      );
-      /*
-       * An append that cannot find its parent returns the tree it was given, unchanged and without
-       * complaint -- the picker closes, the draft is written, and the slot is as empty as before. That
-       * is indistinguishable from a refusal, so say which of the two happened.
-       */
-      if (!targetsRootLayout) {
-        const countNodes = (nodes: readonly PhiCmsLayoutRenderNode[]): number =>
-          nodes.reduce((total, node) => total + 1 + countNodes(node.childLayouts ?? []), 0);
-        const appended = appendLayoutChildById(
-          rootNodeChildLayouts,
-          parentLayoutNodeId,
-          nextLayout,
-          compactSequential,
-        );
-        if (countNodes(appended) === countNodes(rootNodeChildLayouts)) {
-          console.error(
-            "Phi Builder: the Layout was built but its parent slot was not found, so nothing was added.",
-            {
-              parentLayoutNodeId,
-              insertionSlotIndex,
-              compactSequential,
-              parentSlotPositions: parentLayoutDefinition?.slotPositions ?? null,
-              knownRootChildIds: rootNodeChildLayouts.map((node) => node.id),
-            },
-          );
-        }
-      }
-      updateDraft(
-        !targetsRootLayout
-          ? rootChildren({ childLayouts: appendLayoutChildById(
-                rootNodeChildLayouts,
-                parentLayoutNodeId,
-                nextLayout,
-                compactSequential,
-              ) })
-          : compactSequential
-            ? (() => {
-                const nextChildren = compactPhiCmsSequentialChildren({
-                  childLayouts: [...rootNodeChildLayouts, nextLayout],
-                  childWidgets: rootNodeChildWidgets,
-                });
-                return rootChildren({ childLayouts: nextChildren.childLayouts, childWidgets: nextChildren.childWidgets });
-              })()
-            : rootChildren({ childLayouts: [...rootNodeChildLayouts, nextLayout] }),
-      );
-    } else if (!hasRootNode) {
+    /*
+     * The tree as it stands now, not as it stood when the picker opened: allocating the id waits for
+     * the server, and an edit made meanwhile -- in this Region or by the Inspector -- would otherwise
+     * be written over by the tree read at render.
+     */
+    const currentDraft = readCurrentDraft();
+    const currentRootNode = currentDraft.rootNode ?? null;
+    const action: PhiHistoryAction = { key: "insertNode", subject: item.title };
+    if (!currentRootNode) {
       // The root Layout is created like every Layout below it.
-      updateDraft({ rootNode: buildInsertedLayoutNode(item, instanceId, null, 0, 0) });
-    } else {
+      updateDraft({ rootNode: buildInsertedLayoutNode(item, instanceId, null, 0, 0) }, action);
+      return;
+    }
+
+    const targetLayoutNodeId = currentSlotPickerContext?.targetNodeId ?? currentRootNode.id;
+    const insertionSlotIndex = currentSlotPickerContext?.slotIndex ?? null;
+    const sectionAllowed = item.kind === "widget"
+      ? currentSlotPickerContext?.allowWidgetSection === true
+      : currentSlotPickerContext?.allowLayoutSection === true;
+    const inserted = insertionSlotIndex != null && sectionAllowed
+      ? insertPhiStructureNode({
+          children: {
+            childLayouts: readPhiBuilderRegionRootChildLayouts(currentDraft),
+            childWidgets: readPhiBuilderRegionRootChildWidgets(currentDraft),
+          },
+          rootNodeId: currentRootNode.id,
+          rootDefinition: layoutMetasByType.get(currentRootNode.widgetType) ?? null,
+          layoutMetasByType,
+          parentLayoutNodeId: targetLayoutNodeId,
+          slotIndex: insertionSlotIndex,
+          buildNode: (sortOrder) => item.kind === "widget"
+            ? buildInsertedWidgetNode(item, instanceId, targetLayoutNodeId, insertionSlotIndex, sortOrder)
+            : buildInsertedLayoutNode(item, instanceId, targetLayoutNodeId, insertionSlotIndex, sortOrder),
+        })
+      : null;
+
+    if (!inserted) {
       /*
-       * Nothing matched, and a pick that does nothing must at least say so.
+       * Nothing was inserted, and a pick that does nothing must at least say so.
        *
        * The picker closes on every pick, so a refused insertion and a successful one look the same:
-       * the panel goes away and the slot is unchanged. Four conditions can refuse it -- no root node,
-       * no slot index, a section the context does not allow, or a target that could not be read -- and
-       * from outside they are one symptom. The Builder is authoring, so this goes to the console with
-       * the state that decided it rather than to the author as a message they cannot act on.
+       * the panel goes away and the slot is unchanged. No slot index, a section the context does not
+       * allow, or a target Layout that is gone by the time the id arrived are one symptom from
+       * outside. The Builder is authoring, so this goes to the console with the state that decided
+       * it rather than to the author as a message they cannot act on.
        */
       console.error(
         "Phi Builder: the picked item was not inserted.",
         {
           item: { key: item.key, kind: item.kind, title: item.title },
-          isSlotInsertion,
-          hasRootNode,
           insertionSlotIndex,
           targetLayoutNodeId,
-          targetsRootLayout,
-          parentSlotPositions: parentLayoutDefinition?.slotPositions ?? null,
+          sectionAllowed,
           slotPickerContext: currentSlotPickerContext
             ? {
               allowWidgetSection: currentSlotPickerContext.allowWidgetSection,
@@ -1751,15 +1537,13 @@ export function PhiStructureRegionScaffold({
               targetNodeId: currentSlotPickerContext.targetNodeId,
             }
             : null,
-          // The condition each branch wanted, so the failing one names itself.
-          wantedByWidgetBranch: isSlotInsertion && item.kind === "widget"
-            && currentSlotPickerContext?.allowWidgetSection === true,
-          wantedByLayoutBranch: isSlotInsertion && item.kind !== "widget"
-            && currentSlotPickerContext?.allowLayoutSection === true,
+          knownRootChildIds: readPhiBuilderRegionRootChildLayouts(currentDraft).map((node) => node.id),
         },
       );
       return;
     }
+
+    updateDraft({ rootNode: withPhiBuilderRegionRootChildren({ rootNode: currentRootNode }, inserted).rootNode }, action);
   }
   const pickerActionIconFrameSize = token.controlHeight;
   const pickerActionIconSize = token.fontSizeHeading4;
@@ -1956,40 +1740,43 @@ export function PhiStructureRegionScaffold({
     );
   }
 
-  function updateDraft(nextDraft: Partial<PhiDeveloperBuilderRegionDraft>) {
-    const baseDraft = effectiveDraft ?? getDefaultRegionDraft(config.regionKey);
+  /*
+   * The draft the Region's edits are made against: the one in the store when there is one. An edit
+   * that waits -- an insertion waits for its node's id -- reads it after waiting, so what another edit
+   * wrote meanwhile is kept rather than overwritten by the tree read at render.
+   */
+  function readCurrentDraft(): PhiDeveloperBuilderRegionDraft {
+    return getPhiDeveloperRegionDraftsSnapshot()[draftKey] ?? effectiveDraft ?? getDefaultRegionDraft(config.regionKey);
+  }
 
+  function updateDraft(nextDraft: Partial<PhiDeveloperBuilderRegionDraft>, action: PhiHistoryAction) {
     setPhiDeveloperRegionDraft(
       draftKey,
       {
-        ...baseDraft,
+        ...readCurrentDraft(),
         ...nextDraft,
       },
-      {
-        historyContext,
-        historyLabel: "Update structure",
-      },
+      { history: { context: historyContext, action } },
     );
   }
 
   function updateDraftAndPruneSignalRoutes(
     nextDraft: Partial<PhiDeveloperBuilderRegionDraft>,
     addresses: readonly PhiSignalAddress[],
+    action: PhiHistoryAction,
   ) {
-    const baseDraft = effectiveDraft ?? getDefaultRegionDraft(config.regionKey);
     const routeScope: PhiSignalScope = isPhiBuilderPageScopedRegion(config.regionKey) ? "page" : "area";
 
     setPhiDeveloperRegionDraftAndPruneSignalRoutes({
       draftKey,
       draft: {
-        ...baseDraft,
+        ...readCurrentDraft(),
         ...nextDraft,
       },
       area: builderState.area,
       pageKey: builderState.pageKey,
       targets: addresses.map((address) => ({ address, scope: routeScope })),
-      historyContext,
-      historyLabel: "Update structure",
+      history: { context: historyContext, action },
     });
   }
 

@@ -34,7 +34,7 @@ import type {
 import type { PhiRenderableBlockEffects } from "../../../types/renderable-block";
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import type { PhiAnchorWidgetPlacement } from "../../../components/controls/phi-anchor-control-contract";
-import { phiBuilderHistory } from "./history";
+import { phiBuilderHistory, type PhiBuilderHistoryRecording } from "./history";
 import type { PhiAreaRootRoute, PhiAreaMeta } from "../../../helpers/cms-area-config";
 
 export function normalizePhiDeveloperBuilderArea(scopeKey: string): PhiDeveloperBuilderArea {
@@ -390,10 +390,7 @@ export function emitPhiBuilderChromeControlsSignal(
 }
 
 type PhiBuilderRegionDraftMutationOptions = {
-  historyContext?: string | null;
-  historyLabel?: string;
-  // What counts as one authoring gesture; see `PhiHistoryEntry.coalesceKey`.
-  historyCoalesceKey?: string;
+  history?: PhiBuilderHistoryRecording | null;
 };
 
 export function setPhiDeveloperRegionDraft(
@@ -413,10 +410,10 @@ export function setPhiDeveloperRegionDraft(
     };
   });
 
-  if (options?.historyContext) {
-    phiBuilderHistory.record(options.historyContext, {
-      label: options.historyLabel ?? "Update draft",
-      ...(options.historyCoalesceKey ? { coalesceKey: options.historyCoalesceKey } : {}),
+  if (options?.history) {
+    phiBuilderHistory.record(options.history.context, {
+      action: options.history.action,
+      ...(options.history.coalesceKey ? { coalesceKey: options.history.coalesceKey } : {}),
       before: {
         kind: "regionDrafts",
         drafts: { [draftKey]: previousDraft },
@@ -499,16 +496,14 @@ export function setPhiDeveloperRegionDraftAndPruneSignalRoutes({
   area,
   pageKey,
   targets,
-  historyContext,
-  historyLabel,
+  history,
 }: {
   draftKey: string;
   draft: PhiDeveloperBuilderRegionDraft;
   area: PhiDeveloperBuilderArea;
   pageKey: string;
   targets: readonly PhiSignalRouteReceiverTarget[];
-  historyContext?: string | null;
-  historyLabel?: string;
+  history?: PhiBuilderHistoryRecording | null;
 }) {
   const previousDrafts = builderRegionDraftStore.getSnapshot("default");
   let nextDraftsSnapshot = previousDrafts;
@@ -535,7 +530,7 @@ export function setPhiDeveloperRegionDraftAndPruneSignalRoutes({
     return nextDraftsSnapshot;
   });
 
-  if (historyContext && nextDraftsSnapshot !== previousDrafts) {
+  if (history && nextDraftsSnapshot !== previousDrafts) {
     const changedKeys = new Set([
       ...Object.keys(previousDrafts),
       ...Object.keys(nextDraftsSnapshot),
@@ -549,8 +544,9 @@ export function setPhiDeveloperRegionDraftAndPruneSignalRoutes({
       before[key] = previousDrafts[key] ?? null;
       after[key] = nextDraftsSnapshot[key] ?? null;
     }
-    phiBuilderHistory.record(historyContext, {
-      label: historyLabel ?? "Update draft",
+    phiBuilderHistory.record(history.context, {
+      action: history.action,
+      ...(history.coalesceKey ? { coalesceKey: history.coalesceKey } : {}),
       before: { kind: "regionDrafts", drafts: before },
       after: { kind: "regionDrafts", drafts: after },
     });
@@ -575,10 +571,7 @@ export function restorePhiDeveloperRegionDrafts(
 
 export function setPhiDeveloperRegionDraftsWithHistory(
   drafts: Record<string, PhiDeveloperBuilderRegionDraft>,
-  options: {
-    historyContext: string;
-    historyLabel: string;
-  },
+  options: { history: PhiBuilderHistoryRecording },
 ) {
   const current = builderRegionDraftStore.getSnapshot("default");
   const before: Record<string, PhiDeveloperBuilderRegionDraft | null> = {};
@@ -601,8 +594,8 @@ export function setPhiDeveloperRegionDraftsWithHistory(
     ...existing,
     ...drafts,
   }));
-  phiBuilderHistory.record(options.historyContext, {
-    label: options.historyLabel,
+  phiBuilderHistory.record(options.history.context, {
+    action: options.history.action,
     before: { kind: "regionDrafts", drafts: before },
     after: { kind: "regionDrafts", drafts: after },
   });
@@ -664,18 +657,6 @@ export function commitPhiDeveloperBuilderAreaConfig(
 }
 
 /**
- * What an edit to the Shell's own config records, so it can be taken back.
- *
- * Optional, because the recording belongs to the workspace that made the edit rather than to the
- * store: the same setter is how the Area's answers are restored during an undo, and an undo that
- * recorded itself would never reach the state before it.
- */
-export type PhiBuilderAreaConfigMutationOptions = {
-  historyContext?: string | null;
-  historyLabel?: string;
-};
-
-/**
  * The answer the Area has written down, which is not always the one being edited.
  *
  * `/pages` reads this rather than the effective one above. The two workspaces do not share a moment:
@@ -704,9 +685,7 @@ export function readPhiBuilderStoredAreaRootRoute(
 export function setPhiDeveloperBuilderAreaRootRoute(
   area: PhiDeveloperBuilderArea,
   rootRoute: PhiAreaRootRoute | null | undefined,
-  options?: PhiBuilderAreaConfigMutationOptions,
 ) {
-  const previous = builderWorkspaceStore.getSnapshot("public").areaRootRouteDrafts?.[area];
   builderWorkspaceStore.patch("public", (current) => {
     const next = { ...current.areaRootRouteDrafts };
     if (rootRoute === undefined) {
@@ -716,14 +695,6 @@ export function setPhiDeveloperBuilderAreaRootRoute(
     }
     return { ...current, areaRootRouteDrafts: next };
   });
-
-  if (options?.historyContext) {
-    phiBuilderHistory.record(options.historyContext, {
-      label: options.historyLabel ?? "Change root route",
-      before: { kind: "areaRootRoute", area, rootRoute: previous },
-      after: { kind: "areaRootRoute", area, rootRoute },
-    });
-  }
 }
 
 /** What the Areas answered about being found, as the server sent it with the workspace. */
@@ -772,26 +743,7 @@ export function readPhiBuilderEffectiveAreaMeta(
  * Written key by key rather than whole, because the two switches are answered one at a time and the
  * one nobody touched must keep saying what it said.
  */
-export function setPhiDeveloperBuilderAreaMeta(
-  area: PhiDeveloperBuilderArea,
-  patch: PhiAreaMeta,
-  options?: PhiBuilderAreaConfigMutationOptions,
-) {
-  const previous = builderWorkspaceStore.getSnapshot("public").areaMetaDrafts?.[area];
-  builderWorkspaceStore.patch("public", (current) => {
-    const effective = readPhiBuilderEffectiveAreaMeta(current, area) ?? {};
-    const next = { ...effective, ...patch };
-    return { ...current, areaMetaDrafts: { ...current.areaMetaDrafts, [area]: next } };
-  });
 
-  if (options?.historyContext) {
-    phiBuilderHistory.record(options.historyContext, {
-      label: options.historyLabel ?? "Change area SEO",
-      before: { kind: "areaMeta", area, meta: previous },
-      after: { kind: "areaMeta", area, meta: builderWorkspaceStore.getSnapshot("public").areaMetaDrafts?.[area] },
-    });
-  }
-}
 
 /**
  * The Area's SEO answers put back as they were, which the merging setter above cannot do.

@@ -339,8 +339,10 @@ export function PhiBuilderNavigationTableProviderClient({ children }: { children
       const navigation = { ...scope.navigation, key: requirePhiBuilderNavigationScopeKey(scope.navKey), items: refreshed };
       loaded.current.delete(scope.navKey);
       setPhiBuilderNavigationDraft(scope.navKey, navigation, {
-        historyContext: createPhiBuilderHistoryContext({ workspace: "navigation", area: scope.state.area, navKey: scope.navKey }),
-        historyLabel: "Update navigation",
+        history: {
+          context: createPhiBuilderHistoryContext({ workspace: "navigation", area: scope.state.area, navKey: scope.navKey }),
+          action: { key: "changeNavigation", subject: navigation.label?.trim() || navigation.key },
+        },
       });
       return navigation;
     };

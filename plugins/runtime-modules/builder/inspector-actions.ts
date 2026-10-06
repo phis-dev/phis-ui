@@ -12,7 +12,8 @@ export type PhiBuilderInspectorAction =
   | { kind: "patchSelectedLayoutPadding"; padding: Record<string, unknown> | null }
   /** The selected Layout's whole Surface; `null` takes it away. */
   | { kind: "patchSelectedLayoutSurface"; surface: PhiSurface | null }
-  | { kind: "patchSelectedLayoutConfig"; key: string; value?: unknown };
+  /** Every key one gesture changed on the selected Layout, written as one step; `null` takes a key away. */
+  | { kind: "patchSelectedLayoutConfig"; patch: Record<string, unknown> };
 
 function readRecord(value: unknown): Record<string, unknown> | null {
   return isPhiRecord(value) ? value : null;
@@ -64,9 +65,8 @@ export function readPhiBuilderInspectorAction(
   }
 
   if (value.kind === "patchSelectedLayoutConfig") {
-    return typeof value.key === "string"
-      ? { kind: value.kind, key: value.key, value: value.value }
-      : null;
+    const patch = readRecord(value.patch);
+    return patch ? { kind: value.kind, patch } : null;
   }
 
   return null;

@@ -14,13 +14,14 @@ import {
 export const PHI_THEME_RUNTIME_CONTROLLER_PLUGIN = {
   ...PHI_THEME_RUNTIME_CONTROLLER_DEFINITION,
   renderController: ({ runtime, config, preloadData }) => {
-    if (!preloadData?.setOptions) {
-      throw new Error("Theme controller preload is missing its Set options.");
+    if (!preloadData?.setOptions || !preloadData.historyLabels) {
+      throw new Error("Theme controller preload is missing its Set options or its history labels.");
     }
     return createElement(PhiThemeControllerRuntime, {
       runtime,
       config,
       setOptions: preloadData.setOptions,
+      historyLabels: preloadData.historyLabels,
     });
   },
 } satisfies PhiRuntimeControllerPlugin<PhiThemeRuntimeControllerConfig, PhiThemeRuntimeControllerPreload>;

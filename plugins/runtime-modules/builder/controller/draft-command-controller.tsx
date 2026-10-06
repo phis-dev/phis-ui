@@ -3,6 +3,10 @@
 import { useState } from "react";
 
 import { usePhiConfirmDialog } from "../../../../components/controls/phi-confirm-dialog";
+import {
+  formatPhiHistoryMoveMessage,
+  type PhiHistoryLabels,
+} from "../../../../components/widgets/label-types/history";
 import { usePhiApplicationFeedback } from "../../../../components/runtime/use-phi-application-feedback";
 import type { PhiBuilderSavedHistoryHead } from "./draft-status-controller";
 import { createPhiDefaultAreaRuntimeModuleIds } from "../../area-module-defaults";
@@ -95,6 +99,7 @@ export function usePhiBuilderDraftCommandController({
   reportSaved,
   shellPresetDraftsByArea,
   state,
+  historyLabels,
 }: {
   defaultArea: PhiDeveloperBuilderArea;
   effectiveArea: PhiDeveloperBuilderArea;
@@ -111,6 +116,8 @@ export function usePhiBuilderDraftCommandController({
   ) => void;
   shellPresetDraftsByArea: Record<string, Record<string, PhiDeveloperBuilderRegionDraft>>;
   state: PhiDeveloperBuilderWorkspaceState;
+  /** What an undo or redo says it moved, in the author's language. */
+  historyLabels: PhiHistoryLabels;
 }) {
   /*
    * Every one of these is a command from a toolbar somewhere else, so there is nothing on screen to
@@ -474,11 +481,13 @@ export function usePhiBuilderDraftCommandController({
       cancelLabel: "Cancel",
       onConfirm: () => {
         setPhiDeveloperRegionDraftsWithHistory(presetDrafts, {
-          historyContext: createPhiBuilderHistoryContext({
-            workspace: "structure",
-            area: effectiveArea,
-          }),
-          historyLabel: "Start from the Module's shell",
+          history: {
+            context: createPhiBuilderHistoryContext({
+              workspace: "structure",
+              area: effectiveArea,
+            }),
+            action: { key: "startFromShell" },
+          },
         });
         showMessage({ level: "success", content: "The Module's shell is in the draft." });
       },
@@ -752,6 +761,10 @@ export function usePhiBuilderDraftCommandController({
       navKey: effectiveNavKey,
     });
     const applyHistorySnapshot = (snapshot: PhiBuilderHistorySnapshot) => {
+      if (snapshot.kind === "composite") {
+        for (const part of snapshot.parts) applyHistorySnapshot(part);
+        return;
+      }
       if (snapshot.kind === "regionDrafts") {
         restorePhiDeveloperRegionDrafts(snapshot.drafts);
         return;
@@ -796,13 +809,17 @@ export function usePhiBuilderDraftCommandController({
       }
     };
 
-    if (command === "undo") {
-      phiBuilderHistory.undo(historyContext, applyHistorySnapshot);
-      return;
-    }
-
-    if (command === "redo") {
-      phiBuilderHistory.redo(historyContext, applyHistorySnapshot);
+    /*
+     * An undo says what it took back. The canvas changes in place, and a step that moved a node out of
+     * view -- or changed a Region nobody is looking at -- would otherwise look like nothing happened.
+     */
+    if (command === "undo" || command === "redo") {
+      const entry = command === "undo"
+        ? phiBuilderHistory.undo(historyContext, applyHistorySnapshot)
+        : phiBuilderHistory.redo(historyContext, applyHistorySnapshot);
+      if (entry) {
+        showMessage({ level: "info", content: formatPhiHistoryMoveMessage(historyLabels, command, entry.action) });
+      }
       return;
     }
 

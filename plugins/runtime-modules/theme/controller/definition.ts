@@ -8,6 +8,7 @@ import type { PhiControlOption } from "../../../../components/controls/phi-contr
 import { PHI_THEME_CONTROLLER_KEY,
   PHI_THEME_CONTROLLER_PLUGIN_KEY } from "./address";
 import { PHI_THEME_SIGNAL_CHANNELS } from "./signals";
+import type { PhiHistoryLabels } from "../../../../components/widgets/label-types/history";
 
 /**
  * Whom the Controller states its history into: the undo and redo commands of the Page that shows them.
@@ -27,6 +28,8 @@ export type PhiThemeRuntimeControllerConfig = {
  */
 export type PhiThemeRuntimeControllerPreload = {
   setOptions: PhiControlOption[];
+  /** What the Theme history says about its steps, in the author's language. */
+  historyLabels: PhiHistoryLabels;
 };
 
 export function parsePhiThemeRuntimeControllerConfig(raw: Record<string, unknown>): PhiThemeRuntimeControllerConfig {
@@ -68,6 +71,9 @@ export const PHI_THEME_RUNTIME_CONTROLLER_DEFINITION = {
       },
       { id: "undoEnabled", action: "change", valueType: "boolean" },
       { id: "redoEnabled", action: "change", valueType: "boolean" },
+      // What the next undo and redo would move, as the buttons' tooltips name it.
+      { id: "undoTooltip", action: "change", valueType: "string" },
+      { id: "redoTooltip", action: "change", valueType: "string" },
     ],
     listens: [
       {

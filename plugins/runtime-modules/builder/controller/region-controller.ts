@@ -86,11 +86,13 @@ export function applyPhiDeveloperBuilderSiderLeftMode(
       regionConfig: nextRegionConfig,
     },
     {
-      historyContext: createPhiBuilderHistoryContext({
-        workspace: "structure",
-        area,
-      }),
-      historyLabel: "Change shell layout",
+      history: {
+        context: createPhiBuilderHistoryContext({
+          workspace: "structure",
+          area,
+        }),
+        action: { key: "changeSiderLayout", regionKey: "sider_left" },
+      },
     },
   );
 }

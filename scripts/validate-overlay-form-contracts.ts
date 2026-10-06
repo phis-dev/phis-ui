@@ -539,7 +539,7 @@ assert.match(
   const inspectorControllerSource = await readFile(new URL("../plugins/runtime-modules/builder/controller/inspector-controller.ts", import.meta.url), "utf8");
   assert.match(
     inspectorControllerSource,
-    /historyCoalesceKey: resolveInspectorCoalesceKey\(/u,
+    /coalesceKey: resolveInspectorCoalesceKey\(/u,
     "Inspector edits must say which gesture they belong to, or every emit is its own entry again.",
   );
   assert.match(

@@ -23,6 +23,7 @@ type PhiCommandToolbarButtonRuntimeState = {
   badge?: string | number | null;
   icon?: string | null;
   label?: string | null;
+  tooltip?: string | null;
 };
 
 function resolveButtonSubcontrolAddress(blockId: PhiCmsInstanceId | null | undefined, key: string): PhiSignalAddress | null {
@@ -239,6 +240,15 @@ export function PhiCommandToolbarWidget({
             },
           };
         }
+        if (signal.channel === "tooltip" && signal.action === "change") {
+          return {
+            ...current,
+            [buttonKey]: {
+              ...previous,
+              tooltip: typeof value === "string" && value ? value : null,
+            },
+          };
+        }
         return current;
       });
     },
@@ -283,7 +293,8 @@ export function PhiCommandToolbarWidget({
     const buttonState = buttonStateByKey[button.key] ?? {};
     /*
      * An action answers for the words and the look; the icon stays the button's to swap, and the
-     * tooltip is only ever its own. What a signal says at runtime -- "Create" for "Save" -- still wins.
+     * tooltip is only ever its own. What a signal says at runtime -- "Create" for "Save", or the step
+     * Undo would take back -- still wins.
      */
     const action = resolvePhiCommonControlAction(labels, button.action);
     const resolvedIcon = resolvePhiButtonIcon(buttonState.icon ?? button.icon ?? action?.icon);
@@ -292,7 +303,7 @@ export function PhiCommandToolbarWidget({
       key: button.key,
       ariaLabel: label || button.tooltip || button.key,
       label,
-      tooltip: button.tooltip,
+      tooltip: buttonState.tooltip ?? button.tooltip,
       showLabel: button.display == null ? undefined : button.display !== "icon",
       type: resolvePhiButtonVariantType(action ? action.variant : button.variant) ?? "default",
       danger: action ? action.danger === true : button.danger === true,

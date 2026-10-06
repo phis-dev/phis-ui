@@ -81,10 +81,8 @@ import {
   selectPhiDeveloperBuilderNode,
   usePhiDeveloperRegionDraft,
   getPhiDeveloperBuilderStateSnapshot,
-  setPhiDeveloperBuilderAreaRootRoute,
   readPhiBuilderEffectiveAreaRootRoute,
   setPhiDeveloperBuilderAreaRootRoutes,
-  setPhiDeveloperBuilderAreaMeta,
   setPhiDeveloperBuilderAreaMetaBaseline,
   setPhiDeveloperBuilderAreaControllerSettings,
   readPhiBuilderEffectiveAreaMeta,
@@ -97,6 +95,7 @@ import type { PhiPageReference } from "../../../../types/references";
 import { PHI_AREA_META_PUBLIC_DEFAULTS } from "../../../../helpers/cms-area-config";
 import type { PhiAreaRootRoute, PhiAreaMeta } from "../../../../helpers/cms-area-config";
 import { getPhiBuilderRegionDraftKey } from "../region-keys";
+import { applyPhiBuilderAreaSettingsAnswer } from "../area-settings-answer";
 import { getDefaultRegionDraft } from "../developer-region-drafts";
 import {
   isPhiAreaScopedBuilderPage,
@@ -159,6 +158,10 @@ import {
   type PhiBuilderPageMetaPresentationLabels,
 } from "../controller/definition";
 import type { PhiCmsTreeControllerSettings } from "../../../../types/cms";
+import {
+  formatPhiHistoryTooltip,
+  type PhiHistoryLabels,
+} from "../../../../components/widgets/label-types/history";
 
 type PhiDeveloperBuilderWorkspaceControllerOptions = {
   shellPresetDraftsByArea?: Record<string, Record<string, PhiDeveloperBuilderRegionDraft>>;
@@ -175,6 +178,8 @@ type PhiDeveloperBuilderWorkspaceControllerOptions = {
   areaMetaByArea?: Record<string, PhiAreaMeta | null>;
   areaControllerSettingsByArea?: Record<string, PhiCmsTreeControllerSettings>;
   pageMetaLabels?: PhiBuilderPageMetaPresentationLabels;
+  /** What an undo or redo, and the toolbar's tooltips, say about a step. */
+  historyLabels: PhiHistoryLabels;
   signalRoutes?: PhiSignalRouteSet | null;
 };
 const EMPTY_RUNTIME_MODULE_IDS_BY_AREA: Partial<Record<PhiDeveloperBuilderArea, PhiRuntimeModuleId[]>> = {};
@@ -301,7 +306,7 @@ function filterBuilderModuleCatalogs(
 
 function usePhiDeveloperBuilderWorkspaceController(
   defaultArea: PhiDeveloperBuilderArea,
-  options: PhiDeveloperBuilderWorkspaceControllerOptions = {},
+  options: PhiDeveloperBuilderWorkspaceControllerOptions,
 ) {
   const { showMessage } = usePhiApplicationFeedback();
   const dispatchSignal = usePhiSignalDispatcher();
@@ -326,6 +331,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     areaMetaByArea = EMPTY_AREA_META,
     areaControllerSettingsByArea = EMPTY_AREA_CONTROLLER_SETTINGS,
     pageMetaLabels = PHI_BUILDER_PAGE_META_DEFAULT_PRESENTATION_LABELS,
+    historyLabels,
     signalRoutes = null,
   } = options;
   /*
@@ -418,6 +424,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     reportSaved,
     shellPresetDraftsByArea,
     state,
+    historyLabels,
   });
   const currentRuntimeModuleIdsByArea =
     state.runtimeModuleIdsByArea ?? EMPTY_RUNTIME_MODULE_IDS_BY_AREA;
@@ -965,14 +972,16 @@ function usePhiDeveloperBuilderWorkspaceController(
       pageKey: effectivePageKey,
       navKey: effectiveNavKey,
     });
+    /*
+     * Whether each button can move, and what it would move: the tooltip names the step an undo takes
+     * back, so the author knows which of their edits is next before pressing.
+     */
     const emitAvailability = () => {
       const availability = phiBuilderHistory.getAvailability(historyContext);
-      for (const [controlKey, enabled] of [
-        ["undo", availability.canUndo],
-        ["redo", availability.canRedo],
-      ] as const) {
-        emitCapability(`${controlKey}Enabled`, enabled);
-      }
+      emitCapability("undoEnabled", availability.canUndo);
+      emitCapability("redoEnabled", availability.canRedo);
+      emitCapability("undoTooltip", formatPhiHistoryTooltip(historyLabels, "undo", availability.undoAction));
+      emitCapability("redoTooltip", formatPhiHistoryTooltip(historyLabels, "redo", availability.redoAction));
     };
 
     emitAvailability();
@@ -980,6 +989,7 @@ function usePhiDeveloperBuilderWorkspaceController(
   }, [
     commandWorkspace,
     emitCapability,
+    historyLabels,
     effectiveArea,
     effectiveNavKey,
     effectivePageKey,
@@ -1632,40 +1642,29 @@ function usePhiDeveloperBuilderWorkspaceController(
           values.areaLandingPage !== PHI_BUILDER_AREA_LANDING_PAGE_EMPTY
           ? values.areaLandingPage as PhiPageReference
           : null;
-        if (rootRouteAnswer != null) {
-          setPhiDeveloperBuilderAreaRootRoute(
-            state.area,
-            rootRouteAnswer === PHI_BUILDER_AREA_ROOT_ROUTE_AUTOMATIC
-              ? null
-              : rootRouteAnswer === PHI_BUILDER_AREA_ROOT_ROUTE_LANDING
-                ? { mode: "landing", ...(landingAnswer ? { target: landingAnswer } : {}) }
-                : { mode: "redirect", target: rootRouteAnswer as PhiPageReference },
-            { historyContext, historyLabel: "Change root route" },
-          );
-        }
         /*
          * The indexing answers are taken only where they were asked. Outside Public the switches are
          * disabled and show the fact rather than the record, so reading them back would write that
          * fact into an Area that never said it.
          */
-        setPhiDeveloperBuilderAreaMeta(
-          state.area,
-          {
-            titleTemplate: typeof values.areaTitleTemplate === "string"
-              ? values.areaTitleTemplate.trim()
-              : "",
-            defaultTitle: typeof values.areaDefaultTitle === "string"
-              ? values.areaDefaultTitle.trim()
-              : "",
+        applyPhiBuilderAreaSettingsAnswer({
+          area: state.area,
+          historyContext,
+          rootRoute: rootRouteAnswer == null
+            ? undefined
+            : rootRouteAnswer === PHI_BUILDER_AREA_ROOT_ROUTE_AUTOMATIC
+              ? null
+              : rootRouteAnswer === PHI_BUILDER_AREA_ROOT_ROUTE_LANDING
+                ? { mode: "landing", ...(landingAnswer ? { target: landingAnswer } : {}) }
+                : { mode: "redirect", target: rootRouteAnswer as PhiPageReference },
+          meta: {
+            titleTemplate: values.areaTitleTemplate,
+            defaultTitle: values.areaDefaultTitle,
             ...(state.area === "public"
-              ? {
-                  index: values.areaMetaIndex !== false,
-                  sitemap: values.areaMetaSitemap !== false,
-                }
+              ? { index: values.areaMetaIndex !== false, sitemap: values.areaMetaSitemap !== false }
               : {}),
           },
-          { historyContext, historyLabel: "Change area settings" },
-        );
+        });
         dispatchAreaSettingsDialog(false, signal.correlationId);
         return;
       }
@@ -1835,7 +1834,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         if (!routes) return;
         const routeState = getPhiDeveloperBuilderStateSnapshot(defaultArea);
         runPhiDeveloperBuilderInspectorAction(defaultArea, routeState.nodeKind === "layout"
-          ? { kind: "patchSelectedLayoutConfig", key: "signalRoutes", value: routes }
+          ? { kind: "patchSelectedLayoutConfig", patch: { signalRoutes: routes } }
           : { kind: "patchSelectedWidgetConfig", patch: { signalRoutes: routes } });
         emitCapability("signalWiringRoutesReload", null, signal.correlationId);
         return;
@@ -1883,7 +1882,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         if (result.kind !== "applied") return;
         const wiringState = getPhiDeveloperBuilderStateSnapshot(defaultArea);
         runPhiDeveloperBuilderInspectorAction(defaultArea, wiringState.nodeKind === "layout"
-          ? { kind: "patchSelectedLayoutConfig", key: "signalRoutes", value: result.routes }
+          ? { kind: "patchSelectedLayoutConfig", patch: { signalRoutes: result.routes } }
           : { kind: "patchSelectedWidgetConfig", patch: { signalRoutes: result.routes } });
         resetPhiBuilderSignalWiringSession(defaultArea);
         emitCapability("signalWiringClose", null, signal.correlationId);
@@ -2049,6 +2048,8 @@ export type PhiDeveloperBuilderWorkspaceControllerProps = {
   areaMetaByArea?: Record<string, PhiAreaMeta | null>;
   areaControllerSettingsByArea?: Record<string, PhiCmsTreeControllerSettings>;
   pageMetaLabels?: PhiBuilderPageMetaPresentationLabels;
+  /** What an undo or redo, and the toolbar's tooltips, say about a step. */
+  historyLabels: PhiHistoryLabels;
   signalRoutes?: PhiSignalRouteSet | null;
 };
 
@@ -2061,12 +2062,14 @@ export function PhiDeveloperBuilderWorkspaceController({
   areaPresetSourcesByArea = {},
   navigationSurfacesByArea = {},
   unresolvedModuleIdsByArea = EMPTY_RUNTIME_MODULE_IDS_BY_AREA,
+  serverUnavailableModules = EMPTY_SERVER_UNAVAILABLE_MODULES,
   publicRouteClaims = EMPTY_PUBLIC_ROUTE_CLAIMS,
   publicRoutePaths = EMPTY_PUBLIC_ROUTE_PATHS,
   areaRootRoutesByArea = EMPTY_AREA_ROOT_ROUTES,
   areaMetaByArea = EMPTY_AREA_META,
   areaControllerSettingsByArea = EMPTY_AREA_CONTROLLER_SETTINGS,
   pageMetaLabels = PHI_BUILDER_PAGE_META_DEFAULT_PRESENTATION_LABELS,
+  historyLabels,
   signalRoutes = null,
 }: PhiDeveloperBuilderWorkspaceControllerProps) {
   const controller = usePhiDeveloperBuilderWorkspaceController(defaultArea, {
@@ -2077,12 +2080,14 @@ export function PhiDeveloperBuilderWorkspaceController({
     areaPresetSourcesByArea,
     navigationSurfacesByArea,
     unresolvedModuleIdsByArea,
+    serverUnavailableModules,
     publicRouteClaims,
     publicRoutePaths,
     areaRootRoutesByArea,
     areaMetaByArea,
     areaControllerSettingsByArea,
     pageMetaLabels,
+    historyLabels,
     signalRoutes,
   });
 

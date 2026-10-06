@@ -32,9 +32,15 @@ import {
 import type { PhiControlOption } from "../../../../components/controls/phi-control-options";
 import type { PhiThemeRuntimeControllerConfig } from "./definition";
 import { dispatchPhiSignalCapability } from "../../../../components/runtime/runtime-signal-identity";
+import {
+  formatPhiHistoryMoveMessage,
+  formatPhiHistoryTooltip,
+  type PhiHistoryLabels,
+} from "../../../../components/widgets/label-types/history";
 
 import {
   phiThemeHistory,
+  resolvePhiThemeHistoryAction,
   DEFAULT_THEME_KEY,
   resolveThemeKey,
   normalizeTheme,
@@ -237,10 +243,13 @@ export function PhiThemeControllerRuntime({
   runtime,
   config,
   setOptions,
+  historyLabels,
 }: {
   runtime: PhiBlockRuntime;
   config: PhiThemeRuntimeControllerConfig;
   setOptions: readonly PhiControlOption[];
+  /** What an undo or redo, and the toolbar's tooltips, say about a Theme edit. */
+  historyLabels: PhiHistoryLabels;
 }) {
   const dispatchSignal = usePhiSignalDispatcher();
   const { showMessage } = usePhiApplicationFeedback();
@@ -251,7 +260,7 @@ export function PhiThemeControllerRuntime({
    * (`controllerSettings`), and it is stated again when a Page arrives with other routes.
    */
   const emitRoutes = useMemo(() => config.signalRoutes?.emits ?? [], [config.signalRoutes?.emits]);
-  const emitCapability = useCallback((capabilityId: string, value: boolean) => {
+  const emitCapability = useCallback((capabilityId: string, value: boolean | string) => {
     dispatchPhiSignalCapability(
       dispatchSignal,
       createPhiThemeControllerAddress(),
@@ -356,7 +365,7 @@ export function PhiThemeControllerRuntime({
     const current = stateRef.current;
     if (options?.history !== false && !isSameThemePayload(current.draft, nextTheme)) {
       phiThemeHistory.record(historyScope, {
-        label: "Update theme",
+        action: resolvePhiThemeHistoryAction(current.draft, nextTheme, historyLabels),
         before: current.draft,
         after: nextTheme,
       });
@@ -381,18 +390,20 @@ export function PhiThemeControllerRuntime({
     );
     announceDraftStatus(options?.correlationId);
     emitSelectOptions(options?.correlationId);
-  }, [announceDraftStatus, dispatchSignal, emitSelectOptions, historyScope, resolveSelectionValue]);
+  }, [announceDraftStatus, dispatchSignal, emitSelectOptions, historyLabels, historyScope, resolveSelectionValue]);
 
   useEffect(() => {
     const emitAvailability = () => {
       const availability = phiThemeHistory.getAvailability(historyScope);
       emitCapability("undoEnabled", availability.canUndo);
       emitCapability("redoEnabled", availability.canRedo);
+      emitCapability("undoTooltip", formatPhiHistoryTooltip(historyLabels, "undo", availability.undoAction));
+      emitCapability("redoTooltip", formatPhiHistoryTooltip(historyLabels, "redo", availability.redoAction));
     };
 
     emitAvailability();
     return phiThemeHistory.subscribe(historyScope, emitAvailability);
-  }, [emitCapability, historyScope]);
+  }, [emitCapability, historyLabels, historyScope]);
 
   useEffect(() => {
     let cancelled = false;
@@ -637,7 +648,11 @@ export function PhiThemeControllerRuntime({
         }
         publishDraft(nextTheme, { history: false, correlationId: signal.correlationId });
         if (before && !isSameThemePayload(before, nextTheme)) {
-          phiThemeHistory.record(historyScope, { label: "Update theme", before, after: nextTheme });
+          phiThemeHistory.record(historyScope, {
+            action: resolvePhiThemeHistoryAction(before, nextTheme, historyLabels),
+            before,
+            after: nextTheme,
+          });
         }
         return;
       }
@@ -831,19 +846,20 @@ export function PhiThemeControllerRuntime({
       return;
     }
 
-    if (commandValue === "undo") {
+    if (commandValue === "undo" || commandValue === "redo") {
       pickerEditBeforeRef.current = null;
-      phiThemeHistory.undo(historyScope, (previous) => {
-        publishDraft(previous, { history: false, correlationId: signal.correlationId });
-      });
-      return;
-    }
-
-    if (commandValue === "redo") {
-      pickerEditBeforeRef.current = null;
-      phiThemeHistory.redo(historyScope, (next) => {
-        publishDraft(next, { history: false, correlationId: signal.correlationId });
-      });
+      const apply = (snapshot: ThemePayload) => {
+        publishDraft(snapshot, { history: false, correlationId: signal.correlationId });
+      };
+      const entry = commandValue === "undo"
+        ? phiThemeHistory.undo(historyScope, apply)
+        : phiThemeHistory.redo(historyScope, apply);
+      if (entry) {
+        showMessage(
+          { level: "info", content: formatPhiHistoryMoveMessage(historyLabels, commandValue, entry.action) },
+          { correlationId: signal.correlationId },
+        );
+      }
     }
   }, undefined, createPhiThemeControllerAddress());
 

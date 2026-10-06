@@ -98,7 +98,11 @@ type PhiDeveloperBuilderLayoutInspectorWidgetClientProps = {
   onPaddingChange?: (next: PhiCmsPaddingWidgetConfig | null) => void;
   /** The whole next Surface, or `null` once nothing is left in it. */
   onSurfaceChange?: (next: PhiSurface | null) => void;
-  onConfigChange?: (key: string, value: unknown) => void;
+  /**
+   * Every key one change of a field set answers, together: a padding control answers four sides and a
+   * grid placement columns and placements at once, and each is one step to take back, not several.
+   */
+  onConfigPatch?: (patch: Record<string, unknown>) => void;
   paddingLabels?: PhiPaddingWidgetLabels;
   surfaceLabels?: PhiInspectorSurfaceLabels;
   gridLabels?: PhiInspectorWidgetLabels["grid"];
@@ -125,7 +129,7 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
   onLayoutAnchorChange,
   onPaddingChange,
   onSurfaceChange,
-  onConfigChange,
+  onConfigPatch,
   paddingLabels,
   surfaceLabels,
   gridLabels,
@@ -216,7 +220,7 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                           {field.type === "padding" ? (
                             renderPhiInspectorPaddingConfigControl({
                               field,
-                              disabled: isPreviewMode || (!onPaddingChange && !onConfigChange),
+                              disabled: isPreviewMode || (!onPaddingChange && !onConfigPatch),
                               config: isCanonicalPaddingField(field)
                                 ? { ...(currentDraftRecord ?? {}), ...(resolvedLayoutPadding ?? {}) }
                                 : currentDraftRecord ?? {},
@@ -230,22 +234,18 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                                   return;
                                 }
 
-                                if (!onConfigChange) {
-                                  return;
-                                }
-
-                                for (const [key, value] of Object.entries(patch)) {
-                                  onConfigChange(key, value ?? null);
-                                }
+                                onConfigPatch?.(Object.fromEntries(
+                                  Object.entries(patch).map(([key, value]) => [key, value ?? null]),
+                                ));
                               },
                             })
                           ) : field.type === "background" ? (
                             <PhiBackgroundControl
                               mode="control"
-                              disabled={isPreviewMode || !onConfigChange}
+                              disabled={isPreviewMode || !onConfigPatch}
                               value={(currentDraftRecord?.[field.key] as PhiCmsBackgroundWidgetConfig | null) ?? null}
                               config={(layoutDefaultConfigRecord?.[field.key] as PhiCmsBackgroundWidgetConfig | null) ?? null}
-                              onChange={(background) => onConfigChange?.(field.key, background)}
+                              onChange={(background) => onConfigPatch?.({ [field.key]: background })}
                               labels={backgroundLabels}
                               colorPickerLabels={colorPickerLabels}
                               colorPickerPlacement="left"
@@ -254,10 +254,10 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                           ) : field.type === "border" ? (
                             <PhiBorderControl
                               mode="control"
-                              disabled={isPreviewMode || !onConfigChange}
+                              disabled={isPreviewMode || !onConfigPatch}
                               value={(currentDraftRecord?.[field.key] as PhiCmsBorderWidgetConfig | null) ?? null}
                               config={(layoutDefaultConfigRecord?.[field.key] as PhiCmsBorderWidgetConfig | null) ?? null}
-                              onChange={(border) => onConfigChange?.(field.key, border)}
+                              onChange={(border) => onConfigPatch?.({ [field.key]: border })}
                               labels={borderLabels}
                               colorPickerLabels={colorPickerLabels}
                               colorPickerPlacement="left"
@@ -265,13 +265,13 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                           ) : (
                             <PhiShadowControl
                               mode="control"
-                              disabled={isPreviewMode || !onConfigChange}
+                              disabled={isPreviewMode || !onConfigPatch}
                               value={
                                 readPhiShadow(currentDraftRecord?.[field.key]) ??
                                 readPhiShadow(layoutDefaultConfigRecord?.[field.key]) ??
                                 null
                               }
-                              onChange={(shadow) => onConfigChange?.(field.key, shadow)}
+                              onChange={(shadow) => onConfigPatch?.({ [field.key]: shadow })}
                             />
                           )}
                         </div>
@@ -308,13 +308,7 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                               dataProviderDescriptors,
                               calendarAdapterDescriptors,
                               videoProviderDescriptors,
-                              onChange: onConfigChange
-                                ? (next) => {
-                                    for (const [key, value] of Object.entries(next)) {
-                                      onConfigChange(key, value);
-                                    }
-                                  }
-                                : undefined,
+                              onChange: onConfigPatch,
                             }),
                           )}
                           {gridPlacementField ? (
@@ -325,7 +319,7 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                               labels={gridLabels}
                               withDistribution={gridPlacementField.type === "grid-placement"}
                               disabled={isPreviewMode}
-                              onConfigChange={onConfigChange}
+                              onConfigChange={onConfigPatch ? (key, value) => onConfigPatch({ [key]: value }) : undefined}
                             />
                           ) : null}
                           {declaredCardSections.map((entry) => (
@@ -358,13 +352,13 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                 title: "Viewport",
                 children: (
                   <PhiViewportVisibilityControl
-                    disabled={isPreviewMode || !onConfigChange}
+                    disabled={isPreviewMode || !onConfigPatch}
                     value={
                       typeof currentDraftRecord?.viewportFlags === "number"
                         ? currentDraftRecord.viewportFlags
                         : 0
                     }
-                    onChange={(viewportFlags) => onConfigChange?.("viewportFlags", viewportFlags)}
+                    onChange={(viewportFlags) => onConfigPatch?.({ viewportFlags })}
                   />
                 ),
               },

@@ -9,6 +9,7 @@ import type {
   PhiDeveloperBuilderWorkspaceState,
 } from "./developer-workspace-types";
 import { createPhiHistoryStore } from "../../../components/state/history-store";
+import type { PhiHistoryAction } from "../../../components/widgets/label-types/history";
 
 export type PhiBuilderHistoryWorkspace = "structure" | "pages" | "navigation" | "modules";
 
@@ -66,9 +67,33 @@ export type PhiBuilderHistorySnapshot =
       kind: "areaMeta";
       area: PhiDeveloperBuilderArea;
       meta: PhiAreaMeta | null | undefined;
+    }
+  | {
+      /**
+       * Several of the kinds above, taken back as one step.
+       *
+       * For a gesture that writes into more than one place at once -- the Area settings dialog answers
+       * the root route and the SEO answers in one press of OK. Two entries made that one press two
+       * undos, and the first of them left a state the author never saw. The parts touch disjoint state,
+       * so the order they are put back in does not matter.
+       */
+      kind: "composite";
+      parts: readonly Exclude<PhiBuilderHistorySnapshot, { kind: "composite" }>[];
     };
 
-export const phiBuilderHistory = createPhiHistoryStore<PhiBuilderHistorySnapshot>(
+/**
+ * What one draft write records, so it can be taken back: the history it belongs to, the step it was,
+ * and -- for a control that writes while it is being used -- the gesture it continues
+ * (`PhiHistoryEntry.coalesceKey`). A write without it is not recorded, which is how undo itself and the
+ * first load of a draft put state back without making a step of it.
+ */
+export type PhiBuilderHistoryRecording = {
+  context: string;
+  action: PhiHistoryAction;
+  coalesceKey?: string;
+};
+
+export const phiBuilderHistory = createPhiHistoryStore<PhiBuilderHistorySnapshot, PhiHistoryAction>(
   "@phis/ui/builder-history",
 );
 
