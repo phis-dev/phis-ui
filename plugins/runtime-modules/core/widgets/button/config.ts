@@ -6,9 +6,11 @@ import {
 } from "../../../../../components/widgets/config/button-variant";
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../../types/signals";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
-import type { PhiCmsConfigFieldOptionPresets } from "../../../../../types/cms-plugins";
 import {
-  PHI_COMMON_CONTROL_DEFAULT_LABELS,
+  createPhiCommonActionField,
+  readPhiControlLabel,
+} from "../../../../../components/widgets/config/common-action-field";
+import {
   readPhiCommonControlActionKey,
   type PhiCommonControlActionKey,
 } from "../../../../../components/widgets/label-types/common-controls";
@@ -68,7 +70,7 @@ export function parsePhiButtonWidgetConfig(config: Record<string, unknown>): Phi
     ...controlState,
     ...parsePhiControlBadgeConfig(config),
     action: readPhiCommonControlActionKey(readString(config.action)) ?? undefined,
-    label: readPhiButtonLabel(config.label),
+    label: readPhiControlLabel(config.label),
     tooltip: readString(config.tooltip),
     icon: readString(config.icon),
     value: readString(config.value),
@@ -77,52 +79,6 @@ export function parsePhiButtonWidgetConfig(config: Record<string, unknown>): Phi
     danger: readBoolean(config.danger),
   };
 }
-
-/**
- * The label as written, an emptied one included.
- *
- * Empty is an answer here, not a gap: it is the Button that is only its icon. Read as absent, it would
- * fall back to the action's label or the key, and an icon-only Button could not be made at all.
- */
-function readPhiButtonLabel(value: unknown) {
-  if (typeof value !== "string") return undefined;
-  return value.trim() ? value : "";
-}
-
-const PHI_BUTTON_ACTION_KEYS = Object.keys(PHI_COMMON_CONTROL_DEFAULT_LABELS.actions) as PhiCommonControlActionKey[];
-
-/*
- * The actions as a list to pick from, read off the label set that defines them rather than typed a
- * second time here. It was a free-text field over a closed enum, so a typo silently became "no action".
- */
-const PHI_BUTTON_ACTION_OPTIONS = PHI_BUTTON_ACTION_KEYS
-  .map((value) => ({ value, label: PHI_COMMON_CONTROL_DEFAULT_LABELS.actions[value].label }));
-
-/*
- * What each action shows in the fields it answers for, and what it writes as the signal value. The
- * Inspector shows the default labels; a placement stores only the action, so the reader still gets the
- * label set's translation. The signal value is only a start -- what a Button triggers is wired, and a
- * Save Button that sends `saveMembership` is still a Save Button.
- */
-const PHI_BUTTON_ACTION_PRESETS = {
-  /*
-   * The tooltip stays the author's: it says what this Button does here, which an action's "Save" does
-   * not. Left empty, there is none. The icon is a start the author may swap on the canvas -- a Save
-   * that shows a cloud is still a Save.
-   */
-  locks: ["label", "variant", "danger"],
-  prefills: ["value", "icon"],
-  values: Object.fromEntries(PHI_BUTTON_ACTION_KEYS.map((key) => {
-    const action = PHI_COMMON_CONTROL_DEFAULT_LABELS.actions[key];
-    return [key, {
-      label: action.label,
-      icon: action.icon,
-      variant: action.variant ?? "normal",
-      danger: action.danger === true,
-      value: key,
-    }];
-  })),
-} satisfies PhiCmsConfigFieldOptionPresets;
 
 const PHI_BUTTON_DEFAULT_CONFIG = {
   key: "button",
@@ -164,16 +120,7 @@ export const PHI_BUTTON_WIDGET_DEFINITION = {
     ],
   },
   fields: [
-    {
-      key: "action",
-      type: "choice",
-      heading: "Appearance",
-      label: "Action",
-      emptyOption: { value: "", label: "Custom", separator: "after" },
-      emptyValue: undefined,
-      options: PHI_BUTTON_ACTION_OPTIONS,
-      optionPresets: PHI_BUTTON_ACTION_PRESETS,
-    },
+    createPhiCommonActionField({ signalValuePath: "value", heading: "Appearance" }),
     {
       key: "variant",
       type: "choice",

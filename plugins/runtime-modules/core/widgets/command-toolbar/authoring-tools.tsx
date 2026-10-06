@@ -5,6 +5,7 @@ import { PhiButtonControl } from "../../../../../components/controls/phi-button-
 import { PhiPopoverControl } from "../../../../../components/controls/phi-popover-control";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import type { PhiCommandToolbarButtonConfig } from "../../../../../types/core-widget-placements";
+import { PHI_COMMON_CONTROL_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/common-controls";
 import { usePhiWidgetScaffoldPopup } from "../../../../../components/widgets/client/shared/phi-widget-scaffold-popup";
 import { usePhiAuthoringToolsLabels } from "../../../../../components/widgets/client/shared/phi-authoring-tools-labels";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
@@ -20,6 +21,11 @@ import {
 
 function stopToolEvent(event: { stopPropagation: () => void }) {
   event.stopPropagation();
+}
+
+/* What a button is called here: its own label, else its action's, else its key. */
+function readButtonName(button: PhiCommandToolbarButtonConfig) {
+  return button.label || (button.action ? PHI_COMMON_CONTROL_DEFAULT_LABELS.actions[button.action].label : "") || button.key;
 }
 
 function moveButton(
@@ -76,12 +82,12 @@ export function PhiCommandToolbarAuthoringTools({
             ) : buttons.map((button, index) => (
               <PhiFlexControl key={button.key} align="center" gap={token.paddingXXS}>
                 <PhiTypographyControl ellipsis style={{ flex: "1 1 auto", minWidth: 0 }}>
-                  {button.label ?? button.actionKey ?? button.key}
+                  {readButtonName(button)}
                 </PhiTypographyControl>
                 <PhiButtonControl
                   type="text"
                   size="small"
-                  ariaLabel={`Move ${button.label ?? button.key} earlier`}
+                  ariaLabel={`Move ${readButtonName(button)} earlier`}
                   disabled={index === 0}
                   icon={<PhiIcon name="arrow-up" size="inherit" />}
                   onClick={() => onChange([...moveButton(buttons, index, -1)])}
@@ -89,7 +95,7 @@ export function PhiCommandToolbarAuthoringTools({
                 <PhiButtonControl
                   type="text"
                   size="small"
-                  ariaLabel={`Move ${button.label ?? button.key} later`}
+                  ariaLabel={`Move ${readButtonName(button)} later`}
                   disabled={index === buttons.length - 1}
                   icon={<PhiIcon name="arrow-down" size="inherit" />}
                   onClick={() => onChange([...moveButton(buttons, index, 1)])}
@@ -98,7 +104,7 @@ export function PhiCommandToolbarAuthoringTools({
                   type="text"
                   size="small"
                   danger
-                  ariaLabel={`Remove ${button.label ?? button.key}`}
+                  ariaLabel={`Remove ${readButtonName(button)}`}
                   disabled={buttons.length <= PHI_COMMAND_TOOLBAR_MIN_BUTTONS}
                   icon={<PhiIcon name="delete" size="inherit" />}
                   onClick={() => onChange(buttons.filter((_, candidateIndex) => candidateIndex !== index))}

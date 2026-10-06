@@ -219,8 +219,8 @@ function buildPhiNewsDialogNodes(
           showLabels: true,
           controlSize: "medium",
           buttons: [
-            { key: "cancel", emits: [{ capabilityId: "close", value: null }], actionKey: "cancel", label: input.cancelLabel },
-            { key: "save", emits: [{ capabilityId: "submit", value: null }], actionKey: "save", label: input.saveLabel, variant: "primary" },
+            { key: "cancel", emits: [{ capabilityId: "close", value: null }], label: input.cancelLabel, icon: "cancel" },
+            { key: "save", emits: [{ capabilityId: "submit", value: null }], label: input.saveLabel, variant: "primary", icon: "save" },
           ],
           signalRoutes: {
             emits: [

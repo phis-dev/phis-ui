@@ -407,7 +407,7 @@ export type PhiCommandToolbarButtonConfig = {
   key: string;
   emits: PhiCommandToolbarButtonEmitConfig[];
   accessPolicy?: PhiViewerAccessPolicy;
-  actionKey?: PhiCommonControlActionKey;
+  action?: PhiCommonControlActionKey;
   label?: string;
   tooltip?: string;
   icon?: string;

@@ -281,17 +281,21 @@ export function PhiCommandToolbarWidget({
 
   const controlItems = buttons.map((button) => {
     const buttonState = buttonStateByKey[button.key] ?? {};
-    const action = resolvePhiCommonControlAction(labels, button.actionKey ?? button.key);
-    const resolvedIcon = resolvePhiButtonIcon(buttonState.icon ?? button.icon ?? action?.icon ?? button.key);
-    const label = buttonState.label ?? button.label ?? action?.label ?? button.key;
+    /*
+     * An action answers for the words and the look; the icon stays the button's to swap, and the
+     * tooltip is only ever its own. What a signal says at runtime -- "Create" for "Save" -- still wins.
+     */
+    const action = resolvePhiCommonControlAction(labels, button.action);
+    const resolvedIcon = resolvePhiButtonIcon(buttonState.icon ?? button.icon ?? action?.icon);
+    const label = buttonState.label ?? (action ? action.label : button.label) ?? button.key;
     return {
       key: button.key,
-      ariaLabel: label,
+      ariaLabel: label || button.tooltip || button.key,
       label,
-      tooltip: button.tooltip ?? action?.tooltip,
+      tooltip: button.tooltip,
       showLabel: button.display == null ? undefined : button.display !== "icon",
-      type: resolvePhiButtonVariantType(button.variant ?? action?.variant) ?? "default",
-      danger: button.danger === true || action?.danger === true,
+      type: resolvePhiButtonVariantType(action ? action.variant : button.variant) ?? "default",
+      danger: action ? action.danger === true : button.danger === true,
       disabled: button.disabled === true || buttonState.enabled === false,
       readOnly: button.readOnly === true,
       loading: buttonState.loading,

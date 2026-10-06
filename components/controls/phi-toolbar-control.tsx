@@ -50,23 +50,30 @@ export function PhiToolbarControl({
 }: PhiToolbarControlProps) {
   const controls = items
     .filter((item) => item.visible !== false)
-    .map((item) => (
-      <PhiButtonControl
-        key={item.key}
-        ariaLabel={item.ariaLabel}
-        label={(item.showLabel ?? (showLabels || !item.icon)) ? item.label : null}
-        tooltip={item.tooltip}
-        icon={item.icon}
-        type={item.type}
-        danger={item.danger}
-        disabled={disabled || item.disabled}
-        readOnly={item.readOnly}
-        loading={item.loading}
-        size={size}
-        badge={item.badge}
-        onClick={onActivate ? () => onActivate(item.key) : undefined}
-      />
-    ));
+    .map((item) => {
+      const labelShown = item.showLabel ?? (showLabels || !item.icon);
+      return (
+        <PhiButtonControl
+          key={item.key}
+          ariaLabel={item.ariaLabel}
+          label={labelShown ? item.label : null}
+          /*
+           * A button showing only its icon shows its label on hover: not a tooltip it lacks, but the
+           * words the toolbar is keeping out of sight. A tooltip of its own comes first.
+           */
+          tooltip={item.tooltip ?? (labelShown ? undefined : item.label)}
+          icon={item.icon}
+          type={item.type}
+          danger={item.danger}
+          disabled={disabled || item.disabled}
+          readOnly={item.readOnly}
+          loading={item.loading}
+          size={size}
+          badge={item.badge}
+          onClick={onActivate ? () => onActivate(item.key) : undefined}
+        />
+      );
+    });
 
   /*
    * Compact decides, and `wrap` is the spaced row's question alone.

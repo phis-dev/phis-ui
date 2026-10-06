@@ -223,17 +223,29 @@ function writePhiInspectorConfigPathValue(
   if (segments.length === 0) {
     return config;
   }
+  /*
+   * A numeric segment into a list stays a list -- `emits.0.value` writes the first emit's value and
+   * keeps the rest, rather than turning `emits` into an object keyed "0".
+   */
   const next = { ...config };
-  let target = next;
+  let target: Record<string, unknown> | unknown[] = next;
+  const write = (container: Record<string, unknown> | unknown[], segment: string, child: unknown) => {
+    if (Array.isArray(container)) container[Number(segment)] = child;
+    else container[segment] = child;
+  };
+  const read = (container: Record<string, unknown> | unknown[], segment: string) =>
+    Array.isArray(container) ? container[Number(segment)] : container[segment];
   for (const segment of segments.slice(0, -1)) {
-    const current = target[segment];
-    const child = isPhiRecord(current)
-      ? { ...(current as Record<string, unknown>) }
-      : {};
-    target[segment] = child;
+    const current = read(target, segment);
+    const child: Record<string, unknown> | unknown[] = Array.isArray(current)
+      ? [...current]
+      : isPhiRecord(current)
+        ? { ...(current as Record<string, unknown>) }
+        : {};
+    write(target, segment, child);
     target = child;
   }
-  target[segments[segments.length - 1]!] = value;
+  write(target, segments[segments.length - 1]!, value);
   return next;
 }
 
@@ -577,8 +589,12 @@ function PhiInspectorCollectionFieldControl({
     onChange?.({ [field.key]: nextItems });
   };
 
+  /* What the entry is called, read as its fields show it: a locked label is the chosen action's. */
   const readItemLabel = (item: Record<string, unknown>, index: number) => {
-    const itemLabelValue = item[field.itemLabelField ?? field.itemKeyField];
+    const labelKey = field.itemLabelField ?? field.itemKeyField;
+    const labelField = field.itemFields.find((itemField) => itemField.key === labelKey);
+    const lock = labelField ? resolvePhiInspectorFieldLock(labelField, field.itemFields, item) : null;
+    const itemLabelValue = lock ? lock.value : item[labelKey];
     return typeof itemLabelValue === "string" && itemLabelValue.trim()
       ? itemLabelValue
       : `${field.label} ${index + 1}`;
@@ -591,31 +607,34 @@ function PhiInspectorCollectionFieldControl({
       <PhiFlexControl vertical gap={8} style={{ width: "100%", minWidth: 0 }}>
         {field.itemFields
           .filter((itemField) => isPhiInspectorConfigFieldVisible(itemField, item))
-          .map((itemField) => renderPhiInspectorConfigField({
-            field: itemField,
-            value: readPhiInspectorConfigPathValue(item, itemField.key),
-            defaultValue: readPhiInspectorConfigPathValue(defaultItem, itemField.key),
-            config: item,
-            defaultConfig: defaultItem,
-            disabled,
-            widgetReferenceOptions,
-            paddingLabels,
-            backgroundLabels,
-            borderLabels,
-            colorPickerLabels,
-            iconPickerLabels,
-            dataProviderDescriptors,
-            calendarAdapterDescriptors,
-            videoProviderDescriptors,
-            onChange: (patch) => {
-              const nextItems = [...items];
-              nextItems[index] = {
-                ...item,
-                ...buildPhiInspectorConfigPathPatch(item, patch),
-              };
-              publish(nextItems);
-            },
-          }))}
+          .map((itemField) => {
+            const lock = resolvePhiInspectorFieldLock(itemField, field.itemFields, item);
+            return renderPhiInspectorConfigField({
+              field: itemField,
+              value: lock ? lock.value : readPhiInspectorConfigPathValue(item, itemField.key),
+              defaultValue: readPhiInspectorConfigPathValue(defaultItem, itemField.key),
+              config: item,
+              defaultConfig: defaultItem,
+              disabled: disabled || lock != null,
+              widgetReferenceOptions,
+              paddingLabels,
+              backgroundLabels,
+              borderLabels,
+              colorPickerLabels,
+              iconPickerLabels,
+              dataProviderDescriptors,
+              calendarAdapterDescriptors,
+              videoProviderDescriptors,
+              onChange: (patch) => {
+                const nextItems = [...items];
+                nextItems[index] = {
+                  ...item,
+                  ...buildPhiInspectorConfigPathPatch(item, patch),
+                };
+                publish(nextItems);
+              },
+            });
+          })}
       </PhiFlexControl>
     );
   };

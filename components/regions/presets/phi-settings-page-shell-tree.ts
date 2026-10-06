@@ -459,7 +459,7 @@ export function buildPhiSettingsPageShellTree({
             compact: true,
             showLabels: true,
             buttons: [
-              { key: "cancel", emits: [{ capabilityId: "close", value: null }], label: overlay.cancelLabel },
+              { key: "cancel", emits: [{ capabilityId: "close", value: null }], label: overlay.cancelLabel, icon: "cancel" },
               { key: "submit", emits: [{ capabilityId: "submit", value: null }], label: overlay.submitLabel, variant: "primary" },
             ],
             signalRoutes: {

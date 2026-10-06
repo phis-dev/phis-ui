@@ -407,6 +407,11 @@ export type PhiCmsWidgetSignalSubcontrolCollection = {
   configKey: string;
   keyField: string;
   labelFields?: readonly string[];
+  /**
+   * What a label field's stored value reads as, where it is a key rather than words -- a toolbar
+   * button's `action` is `livePreview`, and the Signals panel should say "Live preview".
+   */
+  labelFieldValues?: Readonly<Record<string, Readonly<Record<string, string>>>>;
 };
 
 export type PhiRuntimeControllerRequirement = {

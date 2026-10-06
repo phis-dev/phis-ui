@@ -4,10 +4,20 @@ import type {
   PhiCommandToolbarButtonConfig,
   PhiCommandToolbarButtonEmitConfig,
 } from "../../../../../types/core-widget-placements";
-import { readPhiButtonVariant } from "../../../../../components/widgets/config/button-variant";
+import {
+  PHI_BUTTON_VARIANT_FIELD_OPTIONS,
+  readPhiButtonVariant,
+} from "../../../../../components/widgets/config/button-variant";
+import {
+  createPhiCommonActionField,
+  readPhiControlLabel,
+} from "../../../../../components/widgets/config/common-action-field";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import type { PhiSignalValue } from "../../../../../types/signals";
-import { readPhiCommonControlActionKey } from "../../../../../components/widgets/label-types/common-controls";
+import {
+  PHI_COMMON_CONTROL_DEFAULT_LABELS,
+  readPhiCommonControlActionKey,
+} from "../../../../../components/widgets/label-types/common-controls";
 import { PHI_COMMAND_CONTROL_SIGNALS } from "../../../../../components/widgets/signals/control-signal-capabilities";
 import {
   readBoolean,
@@ -118,8 +128,8 @@ function readCommandButtonConfig(value: unknown): PhiCommandToolbarButtonConfig 
     key,
     emits,
     ...(accessPolicy ? { accessPolicy } : {}),
-    actionKey: readPhiCommonControlActionKey(readString(record.actionKey) ?? key) ?? undefined,
-    label: readString(record.label),
+    action: readPhiCommonControlActionKey(readString(record.action)) ?? undefined,
+    label: readPhiControlLabel(record.label),
     tooltip: readString(record.tooltip),
     icon: readString(record.icon),
     display: record.display === "icon" || record.display === "label" || record.display === "icon-label"
@@ -242,7 +252,11 @@ export const PHI_COMMAND_TOOLBAR_WIDGET_DEFINITION = {
     {
       configKey: "buttons",
       keyField: "key",
-      labelFields: ["label", "actionKey"],
+      labelFields: ["label", "action"],
+      labelFieldValues: {
+        action: Object.fromEntries(Object.entries(PHI_COMMON_CONTROL_DEFAULT_LABELS.actions)
+          .map(([key, action]) => [key, action.label])),
+      },
     },
   ],
   fields: [
@@ -260,8 +274,30 @@ export const PHI_COMMAND_TOOLBAR_WIDGET_DEFINITION = {
       itemLabelField: "label",
       reorderable: false,
       itemFields: [
-        { key: "label", type: "string", label: "Label" },
+        /* What it sends is its first emit; the Signals panel wires it and may change it after. */
+        createPhiCommonActionField({ signalValuePath: "emits.0.value" }),
+        {
+          key: "variant",
+          type: "choice",
+          label: "Variant",
+          options: [...PHI_BUTTON_VARIANT_FIELD_OPTIONS],
+        },
+        { key: "label", type: "string", label: "Label", emptyValue: "" },
+        { key: "tooltip", type: "string", label: "Tooltip" },
         { key: "icon", type: "icon", label: "Icon" },
+        /* Left at the toolbar's own answer, Show Labels decides; set, it decides for this button. */
+        {
+          key: "display",
+          type: "choice",
+          label: "Display",
+          emptyOption: { value: "", label: "Toolbar", separator: "after" },
+          emptyValue: undefined,
+          options: [
+            { value: "icon", label: "Icon" },
+            { value: "label", label: "Label" },
+            { value: "icon-label", label: "Icon and label" },
+          ],
+        },
         { key: "danger", type: "boolean", label: "Danger" },
         { key: "readOnly", type: "boolean", label: "Read only" },
         { key: "disabled", type: "boolean", label: "Disabled" },

@@ -209,15 +209,15 @@ function buildBuilderCommandToolbarConfig(
     compact: true,
     showLabels: false,
     buttons: [
-      { key: "save", emits: [{ capabilityId: "command", value: "save" }], actionKey: "save", variant: "normal" },
-      { key: "preview", emits: [{ capabilityId: "command", value: "preview" }], actionKey: "livePreview" },
-      { key: "publish", emits: [{ capabilityId: "command", value: "publish" }], actionKey: "publish", variant: "normal" },
-      { key: "undo", emits: [{ capabilityId: "command", value: "undo" }], actionKey: "undo" },
-      { key: "redo", emits: [{ capabilityId: "command", value: "redo" }], actionKey: "redo" },
+      { key: "save", emits: [{ capabilityId: "command", value: "save" }], action: "save" },
+      { key: "preview", emits: [{ capabilityId: "command", value: "preview" }], action: "livePreview" },
+      { key: "publish", emits: [{ capabilityId: "command", value: "publish" }], action: "publish" },
+      { key: "undo", emits: [{ capabilityId: "command", value: "undo" }], action: "undo" },
+      { key: "redo", emits: [{ capabilityId: "command", value: "redo" }], action: "redo" },
       {
         key: "reset",
         emits: [{ capabilityId: "command", value: "reset" }],
-        actionKey: "reset",
+        action: "reset",
         ...(options?.disableReset ? { disabled: true } : {}),
       },
     ],
@@ -1286,8 +1286,8 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             showLabels: true,
             controlSize: "medium",
             buttons: [
-              { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], actionKey: "cancel" },
-              { key: "save", emits: [{ capabilityId: "command", value: "save" }], actionKey: "save", variant: "primary" },
+              { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], action: "cancel" },
+              { key: "save", emits: [{ capabilityId: "command", value: "save" }], action: "save" },
             ],
             signalRoutes: {
               emits: [{
@@ -1499,13 +1499,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 buttons: [{
                   key: "cancel",
                   emits: [{ capabilityId: "command", value: "cancel" }],
-                  actionKey: "cancel",
+                  action: "cancel",
                 }, {
                   key: "close",
                   emits: [{ capabilityId: "command", value: "close" }],
-                  actionKey: "save",
                   variant: "primary" as const,
                   label: labels.areaSettings.close,
+                  icon: "save",
                 }],
                 signalRoutes: {
                   emits: [{
@@ -1853,8 +1853,8 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   showLabels: true,
                   controlSize: "medium",
                   buttons: [
-                    { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], actionKey: "cancel", label: modulesLabels?.usage.cancel ?? "Keep it on" },
-                    { key: "confirm", emits: [{ capabilityId: "command", value: "confirm" }], actionKey: "save", variant: "primary" as const, label: modulesLabels?.usage.confirm ?? "Switch off anyway" },
+                    { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: modulesLabels?.usage.cancel ?? "Keep it on", icon: "cancel" },
+                    { key: "confirm", emits: [{ capabilityId: "command", value: "confirm" }], variant: "primary" as const, label: modulesLabels?.usage.confirm ?? "Switch off anyway", icon: "save" },
                   ],
                   signalRoutes: {
                     emits: [{
@@ -1938,8 +1938,8 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   showLabels: true,
                   controlSize: "medium",
                   buttons: [
-                    { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], actionKey: "cancel", label: modulesLabels?.publicRoutes.cancel ?? "Cancel" },
-                    { key: "assign", emits: [{ capabilityId: "command", value: "assign" }], actionKey: "save", variant: "primary" as const, label: modulesLabels?.publicRoutes.assign ?? "Enable" },
+                    { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: modulesLabels?.publicRoutes.cancel ?? "Cancel", icon: "cancel" },
+                    { key: "assign", emits: [{ capabilityId: "command", value: "assign" }], variant: "primary" as const, label: modulesLabels?.publicRoutes.assign ?? "Enable", icon: "save" },
                   ],
                   signalRoutes: {
                     emits: [{

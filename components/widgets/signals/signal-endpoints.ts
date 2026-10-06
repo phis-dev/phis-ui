@@ -95,7 +95,10 @@ function readWidgetSignalSubcontrols(
       }
       keys.add(key);
       const label = collection.labelFields
-        ?.map((field) => readString(rawItem[field]))
+        ?.map((field) => {
+          const value = readString(rawItem[field]);
+          return value == null ? undefined : collection.labelFieldValues?.[field]?.[value] ?? value;
+        })
         .find((value): value is string => value != null) ?? key;
       subcontrols.push({ key, label });
     }

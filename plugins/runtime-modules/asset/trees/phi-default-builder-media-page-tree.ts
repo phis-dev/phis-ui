@@ -618,7 +618,7 @@ export async function buildPhiDefaultBuilderMediaPageTree({
           showLabels: true,
           controlSize: "medium",
           buttons: [
-            { key: "save", emits: [{ capabilityId: "command", value: "save" }], actionKey: "save", variant: "primary" },
+            { key: "save", emits: [{ capabilityId: "command", value: "save" }], action: "save" },
           ],
           signalRoutes: {
             emits: [{
@@ -759,8 +759,8 @@ export async function buildPhiDefaultBuilderMediaPageTree({
           showLabels: true,
           controlSize: "medium",
           buttons: [
-            { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], actionKey: "cancel" },
-            { key: "save", emits: [{ capabilityId: "command", value: "save" }], actionKey: "save", variant: "primary" },
+            { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], action: "cancel" },
+            { key: "save", emits: [{ capabilityId: "command", value: "save" }], action: "save" },
           ],
           signalRoutes: {
             emits: [{
@@ -798,10 +798,10 @@ export async function buildPhiDefaultBuilderMediaPageTree({
           showLabels: true,
           controlSize: "medium",
           buttons: [
-            { key: "reset", emits: [{ capabilityId: "command", value: "reset" }], actionKey: "reset" },
-            { key: "clear", emits: [{ capabilityId: "command", value: "clear" }], actionKey: "clear" },
-            { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], actionKey: "cancel" },
-            { key: "apply", emits: [{ capabilityId: "command", value: "apply" }], actionKey: "apply", variant: "primary" },
+            { key: "reset", emits: [{ capabilityId: "command", value: "reset" }], action: "reset" },
+            { key: "clear", emits: [{ capabilityId: "command", value: "clear" }], action: "clear" },
+            { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], action: "cancel" },
+            { key: "apply", emits: [{ capabilityId: "command", value: "apply" }], action: "apply" },
           ],
           signalRoutes: {
             emits: [{

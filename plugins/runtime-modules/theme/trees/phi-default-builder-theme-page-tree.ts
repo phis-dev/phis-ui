@@ -91,23 +91,21 @@ function buildThemeCommandToolbarConfig(toolbarId: PhiCmsInstanceId): PhiCommand
       {
         key: "save",
         emits: [{ capabilityId: "command", value: "save" }],
-        actionKey: "save",
-        variant: "normal",
+        action: "save",
       },
       {
         key: "preview",
         emits: [{ capabilityId: "command", value: "preview" }],
-        actionKey: "livePreview",
+        action: "livePreview",
       },
       {
         key: "publish",
         emits: [{ capabilityId: "command", value: "publish" }],
-        actionKey: "publish",
-        variant: "normal",
+        action: "publish",
       },
-      { key: "undo", emits: [{ capabilityId: "command", value: "undo" }], actionKey: "undo" },
-      { key: "redo", emits: [{ capabilityId: "command", value: "redo" }], actionKey: "redo" },
-      { key: "reset", emits: [{ capabilityId: "command", value: "reset" }], actionKey: "reset" },
+      { key: "undo", emits: [{ capabilityId: "command", value: "undo" }], action: "undo" },
+      { key: "redo", emits: [{ capabilityId: "command", value: "redo" }], action: "redo" },
+      { key: "reset", emits: [{ capabilityId: "command", value: "reset" }], action: "reset" },
     ],
   };
 }

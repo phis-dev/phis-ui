@@ -379,7 +379,7 @@ export async function buildPhiDefaultAppGroupsPageTree({
           showLabels: true,
           controlSize: "medium",
           buttons: [
-            { key: "save", emits: [{ capabilityId: "command", value: "saveMembership" }], actionKey: "save", label: labels.membership.submit, variant: "primary" },
+            { key: "save", emits: [{ capabilityId: "command", value: "saveMembership" }], label: labels.membership.submit, variant: "primary", icon: "save" },
           ],
           signalRoutes: {
             emits: [{
