@@ -503,6 +503,13 @@ save. The Inspectors are the tool doing the authoring rather than content being 
 composed onto whatever Area tree resolves, code preset or saved snapshot alike. Inspector content consumes
 current Builder Controller/workspace state and does not retain a Page-render snapshot.
 
+What a tree tells its Controllers (`controllerSettings`, [SIGNALS.md](./SIGNALS.md#capabilities-and-routes))
+is carried, not authored: the Builder has no surface for it, and every Page and Shell save states the tree
+whole, so it sends the settings the tree arrived with -- the stored Page or Area, else the Module's preset
+(`areaControllerSettings`, `pageControllerSettings` in the workspace state). A scope whose settings have
+not arrived is refused rather than saved without them, because that save would leave the Controllers it
+configures told nothing. An Area Overlay's own settings compose with it and are never saved into the Area.
+
 Each Inspector Drawer has exactly one direct Body root, an explicitly declared n-slot
 `PhiCollapsibleLayout`, and a Flex Header Layout. There is no Stack above the root, no runtime topology
 switch, no nested Collapsible, and no hidden Drawer Region. The Builder Controller opens exactly the Drawer

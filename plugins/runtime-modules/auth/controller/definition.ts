@@ -1,11 +1,22 @@
-import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
+import {
+  PHI_SIGNAL_VALUE_SCHEMAS,
+  readPhiSignalRouteSet,
+  type PhiSignalRouteSet,
+} from "../../../../types/signals";
 import type { PhiRuntimeControllerDefinition } from "../../../../types/cms-plugins";
 import {
   PHI_AUTH_CONTROLLER_KEY,
   PHI_AUTH_CONTROLLER_PLUGIN_KEY,
 } from "./address";
 
-type PhiEmptyControllerConfig = Record<string, never>;
+/**
+ * Whom the Controller opens, closes and fills: the login Overlay and its Form. The tree that holds them
+ * says so (`controllerSettings`) -- the Area Overlay preset for the sign-in Overlay. Mounted where nothing
+ * names them, as on the sign-in Page, it opens nothing and sends a visitor to the Public `/login`.
+ */
+export type PhiAuthControllerConfig = {
+  signalRoutes: PhiSignalRouteSet | null;
+};
 
 /**
  * What the Auth Controller is handed about the viewer before it renders.
@@ -115,6 +126,6 @@ export const PHI_AUTH_CONTROLLER_DEFINITION = {
       },
     ],
   },
-  defaultConfig: {},
-  parseConfig: (): PhiEmptyControllerConfig => ({}),
-} satisfies PhiRuntimeControllerDefinition<PhiEmptyControllerConfig>;
+  defaultConfig: { signalRoutes: null },
+  parseConfig: (raw): PhiAuthControllerConfig => ({ signalRoutes: readPhiSignalRouteSet(raw.signalRoutes) }),
+} satisfies PhiRuntimeControllerDefinition<PhiAuthControllerConfig>;

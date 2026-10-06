@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   PHI_AUTH_CONTROLLER_DEFINITION,
+  type PhiAuthControllerConfig,
   type PhiAuthControllerPreload,
 } from "./controller/definition";
 import { usePhiStateMachineBinding } from "../../../components/runtime/phi-state-machine-binding";
@@ -26,16 +27,12 @@ import {
 } from "../../../components/widgets/login-redirect";
 import { createPhiRuntimeControllerClient } from "../../../components/runtime/runtime-controller-client-factory";
 import { localizeAreaPath } from "../../../helpers/locale";
-import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS, type PhiSignal } from "../../../types/signals";
-import { createPhiRuntimeFormControllerAddress } from "../../../components/forms/runtime-form-controller-address";
+import { findPhiSignalRoutesByCapabilityId, PHI_SIGNAL_VALUE_SCHEMAS, type PhiSignal } from "../../../types/signals";
 import { createPhiCoreRuntimeControllerAddress } from "../../../components/runtime/core-runtime-controller-address";
-import {
-  isPhiAuthLoginOverlayArea,
-  PHI_AUTH_LOGIN_OVERLAY_IDS,
-} from "./overlay-ids";
+import { dispatchPhiSignalCapability } from "../../../components/runtime/runtime-signal-identity";
 
 type PhiAuthControllerRenderArgs = Parameters<NonNullable<
-  PhiRuntimeControllerPlugin<Record<string, never>>["renderController"]
+  PhiRuntimeControllerPlugin<PhiAuthControllerConfig>["renderController"]
 >>[0];
 
 /**
@@ -58,8 +55,9 @@ function PhiAuthControllerView({
   address,
   mountScope,
   runtime,
+  config,
   preloadData,
-}: Pick<PhiAuthControllerRenderArgs, "address" | "mountScope" | "runtime"> & {
+}: Pick<PhiAuthControllerRenderArgs, "address" | "mountScope" | "runtime" | "config"> & {
   preloadData?: PhiAuthControllerPreload | null;
 }) {
   const dispatchSignal = usePhiSignalDispatcher();
@@ -130,18 +128,29 @@ function PhiAuthControllerView({
   const pendingOpenRef = useRef<{ correlationId: string; nextPath: string } | null>(null);
   const [openSequence, setOpenSequence] = useState(0);
   const locale = runtime.locale.current;
-  const overlayIds = isPhiAuthLoginOverlayArea(runtime.area)
-    ? PHI_AUTH_LOGIN_OVERLAY_IDS[runtime.area]
-    : null;
-  const overlayAddress = useMemo(
-    () => overlayIds ? createPhiSignalAddress("cms", overlayIds.overlayLogin) : null,
-    [overlayIds],
+  /*
+   * The login Overlay and its Form, as the tree that holds them named them.
+   *
+   * They used to be read off the Area's preset id map, which named them in this file whether or not
+   * that Overlay was the one on the page. Whether there is an Overlay to open is now whether a route
+   * was written for opening one: without it the visitor goes to the Public `/login` instead.
+   */
+  const emitRoutes = useMemo(() => config.signalRoutes?.emits ?? [], [config.signalRoutes?.emits]);
+  const canOpenOverlay = useMemo(
+    () => findPhiSignalRoutesByCapabilityId(emitRoutes, "loginOverlayOpen").some((route) => route.receiver != null),
+    [emitRoutes],
   );
-  const formControllerAddress = useMemo(
-    () => overlayIds
-      ? createPhiRuntimeFormControllerAddress(`widget-${overlayIds.widgetLogin}`)
-      : null,
-    [overlayIds],
+  const emitCapability = useCallback(
+    (capabilityId: string, value: PhiSignal["value"], correlationId?: string) =>
+      dispatchPhiSignalCapability(
+        dispatchSignal,
+        address,
+        emitRoutes,
+        capabilityId,
+        value,
+        correlationId ?? createPhiSignalCorrelationId(),
+      ),
+    [address, dispatchSignal, emitRoutes],
   );
 
   const dispatch = useCallback((input: Pick<PhiSignal, "channel" | "action" | "value" | "valueType" | "valueSchema" | "receiver"> & {
@@ -158,18 +167,8 @@ function PhiAuthControllerView({
 
   const closeOverlay = useCallback((correlationId?: string) => {
     pendingOpenRef.current = null;
-    if (overlayAddress) {
-      dispatch({
-        channel: "dialog",
-        action: "close",
-        value: null,
-        valueType: "none",
-        valueSchema: null,
-        receiver: overlayAddress,
-        correlationId,
-      });
-    }
-  }, [dispatch, overlayAddress]);
+    emitCapability("loginOverlayClose", null, correlationId);
+  }, [emitCapability]);
 
   /*
    * Every forward this Controller decides is performed by the runtime, never by this component.
@@ -342,8 +341,7 @@ function PhiAuthControllerView({
      * other than the beginning.
      */
     if (
-      !overlayAddress ||
-      !formControllerAddress ||
+      !canOpenOverlay ||
       !canPresentPhiAuthState(PHI_AUTH_MACHINE_DEFINITION.initial, runtime.authUiProvider?.capabilities)
     ) {
       redirectToPublicLogin(next);
@@ -361,42 +359,27 @@ function PhiAuthControllerView({
 
   useEffect(() => {
     const pendingOpen = pendingOpenRef.current;
-    if (!pendingOpen || !overlayAddress || !formControllerAddress) return;
-    dispatch({
-      channel: "values",
-      action: "change",
-      value: { values: { next: pendingOpen.nextPath } },
-      valueType: "json",
-      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
-      receiver: formControllerAddress,
-      correlationId: pendingOpen.correlationId,
-    });
-    dispatch({
-      channel: "dialog",
-      action: "activate",
-      value: null,
-      valueType: "none",
-      valueSchema: null,
-      receiver: overlayAddress,
-      correlationId: pendingOpen.correlationId,
-    });
+    if (!pendingOpen || !canOpenOverlay) return;
+    emitCapability("loginValues", { values: { next: pendingOpen.nextPath } }, pendingOpen.correlationId);
+    emitCapability("loginOverlayOpen", null, pendingOpen.correlationId);
     pendingOpenRef.current = null;
-  }, [dispatch, formControllerAddress, openSequence, overlayAddress]);
+  }, [canOpenOverlay, emitCapability, openSequence]);
 
   return null;
 }
 
 const PHI_AUTH_CONTROLLER_CLIENT_PLUGIN = {
   ...PHI_AUTH_CONTROLLER_DEFINITION,
-  renderController: ({ address, mountScope, runtime, preloadData }) => (
+  renderController: ({ address, mountScope, runtime, config, preloadData }) => (
     <PhiAuthControllerView
       address={address}
       mountScope={mountScope}
       runtime={runtime}
+      config={config}
       preloadData={preloadData}
     />
   ),
-} satisfies PhiRuntimeControllerPlugin<Record<string, never>, PhiAuthControllerPreload>;
+} satisfies PhiRuntimeControllerPlugin<PhiAuthControllerConfig, PhiAuthControllerPreload>;
 
 export const PhiAuthControllerClient = createPhiRuntimeControllerClient(
   PHI_AUTH_CONTROLLER_CLIENT_PLUGIN,

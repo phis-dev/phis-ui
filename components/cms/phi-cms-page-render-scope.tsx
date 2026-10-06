@@ -4,7 +4,12 @@ import type { PhiBlockRuntime } from "../../types";
 import type { PhiCmsSiteBridge } from "../../types/cms-plugins";
 import type { loadPhiCmsRootRequest } from "../../server-helpers/cms-root";
 import { PhiRuntimeControllerServerHost } from "../runtime/runtime-controller-server-host";
-import { materializePhiRuntimeControllerSettings } from "../runtime/runtime-controller-materialization";
+import {
+  collectPhiRuntimeControllerConfigOverlays,
+  materializePhiRuntimeControllerSettings,
+} from "../runtime/runtime-controller-materialization";
+import { PhiRuntimeControllerConfigOverlays } from "../runtime/runtime-controller-config-overlays";
+import { createPhiControllerSignalAddress } from "../../types/signals";
 import { PhiRuntimeModuleDataProviderHost } from "../runtime/runtime-module-data-provider-host";
 import { resolvePhiRuntimeControllerDefinitions } from "../../plugins/runtime-modules/resolver";
 import {
@@ -52,11 +57,13 @@ export async function resolvePhiCmsPageRenderScope({
     moduleScope: runtimeModuleScope,
     trees: [filteredPageTree],
   });
+  // What the Area runs for every Page: a Page setting for one of these configures it, it is not a second.
+  const enclosingSettings = runtimeModuleScope.moduleSet.areaControllerSettings;
   const pageControllerSettings = materializePhiRuntimeControllerSettings({
     tree: filteredPageTree,
     ownerMountScope: "page",
     widgetPluginsByType: runtimeModuleScope.widgetDefinitionsByType,
-    baseSettings: resolvedRequest.page.controllerSettings ?? null,
+    enclosingSettings,
     activeControllerTypes: [...runtimeModuleScope.moduleSet.controllerDescriptorsByType.keys()],
     regionTypes,
     ...(includeOverlays ? { includeOverlays: true } : {}),
@@ -66,11 +73,28 @@ export async function resolvePhiCmsPageRenderScope({
     moduleSet: runtimeModuleScope.moduleSet,
     settings: pageControllerSettings,
   });
+  const controllerConfigOverlays = collectPhiRuntimeControllerConfigOverlays({
+    tree: filteredPageTree,
+    ownerMountScope: "page",
+    enclosingSettings,
+  }).map((overlay) => {
+    // A Controller type is `<pluginKey>/<key>` (buildPhiRuntimeControllerDefinitionType).
+    const separator = overlay.type.lastIndexOf("/");
+    return {
+      address: createPhiControllerSignalAddress(
+        overlay.type.slice(0, separator),
+        overlay.type.slice(separator + 1),
+        overlay.instanceKey,
+      ),
+      config: overlay.config,
+    };
+  });
   return {
     runtimeModuleScope,
     filteredPageTree,
     runtimeRegistry,
     pageControllerSettings,
+    controllerConfigOverlays,
     controllerDefinitionsByType,
   };
 }
@@ -91,6 +115,9 @@ export function PhiCmsPageRuntimeHosts({
     <PhiRuntimeModuleDataProviderHost
       providerKeys={[...scope.runtimeRegistry.dataProviderDescriptorsByKey.keys()]}
     >
+      {scope.controllerConfigOverlays.length > 0 ? (
+        <PhiRuntimeControllerConfigOverlays overlays={scope.controllerConfigOverlays} />
+      ) : null}
       {scope.pageControllerSettings.length > 0 ? (
         <PhiRuntimeControllerServerHost
           controllers={scope.pageControllerSettings}

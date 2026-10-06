@@ -1,6 +1,6 @@
 "use client";
 
-import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode } from "../../../types/cms";
+import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode, PhiCmsTreeControllerSettings } from "../../../types/cms";
 import type { PhiSignalSender } from "../../../types";
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
 import { isPhiBuilderAreaKey } from "../../../constants/cms-areas";
@@ -88,6 +88,8 @@ function createDefaultBuilderState(): PhiDeveloperBuilderState {
     areaRootRoutes: {},
     areaMetaDrafts: {},
     areaMeta: {},
+    areaControllerSettings: {},
+    pageControllerSettings: {},
     deletedPageDrafts: {},
     draftAllocations: {},
     modulesDirtyAreas: [],
@@ -731,6 +733,27 @@ export function setPhiDeveloperBuilderAreaMetaBaseline(
     JSON.stringify(current.areaMeta) === JSON.stringify(areaMeta)
       ? current
       : { ...current, areaMeta });
+}
+
+/** What each Area's Shell tells its Controllers, as the server sent it with the workspace. */
+export function setPhiDeveloperBuilderAreaControllerSettings(
+  settingsByArea: Record<string, PhiCmsTreeControllerSettings>,
+) {
+  builderWorkspaceStore.patch("public", (current) =>
+    JSON.stringify(current.areaControllerSettings) === JSON.stringify(settingsByArea)
+      ? current
+      : { ...current, areaControllerSettings: settingsByArea });
+}
+
+/** What a Page tells its Controllers, by its Page meta draft key, as the server sent it with the Page. */
+export function setPhiDeveloperBuilderPageControllerSettings(
+  draftKey: string,
+  settings: PhiCmsTreeControllerSettings,
+) {
+  builderWorkspaceStore.patch("public", (current) =>
+    JSON.stringify(current.pageControllerSettings[draftKey]) === JSON.stringify(settings)
+      ? current
+      : { ...current, pageControllerSettings: { ...current.pageControllerSettings, [draftKey]: settings } });
 }
 
 /** What an Area says about being found right now: this session's answer, or the one it arrived with. */

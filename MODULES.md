@@ -418,6 +418,13 @@ and everything those import into the browser bundle. What both halves of the sea
 kinds a file dialog accepts being the case that keeps coming up -- goes in a module of its own that the
 definition reads too. `validate-render-client-boundaries` walks the Client graph and refuses the import.
 
+A Controller is told whom it answers into by the tree that holds the receivers -- `controllerSettings`
+with `config.signalRoutes`, the same contract on a Page and on an Area -- and sends declared emit
+capabilities down those routes with `dispatchPhiSignalCapability`. It names no Widget, Overlay or Form by
+a preset id map or a `cms:` address of its own, whatever its mount policy: an `area` Controller is told by
+the Page that holds its receivers while that Page is shown ([SIGNALS.md](./SIGNALS.md#capabilities-and-routes)).
+`scripts/validate-controller-receiver-contracts.ts` reads every Module Controller file.
+
 ## State in a Controller
 
 A Module keeps state that outlives one render in its Controller, and it has two public tools for it.

@@ -120,12 +120,14 @@ answers `stackMeta` on the same broadcast, so a stack-mode Choice follows only t
 `stackMeta` request is addressed to; one that took any answer showed the other Stack's options when a
 page had two.
 
-A Controller names no Widget instance. Whom it speaks to is a route the Page writes into its
-`controllerSettings` (`config.signalRoutes`), delivered with `dispatchPhiSignalCapability`; a Controller
-that wrote the ids of the Widgets it expected could only serve the one arrangement of them it was written
-for. Groups, Threads and Localization work this way. The Asset Controller (mounted for the Area, which
-gives it no config) and the Auth Controller (mounted by its step Widget's requirement, beside an Area
-Overlay) still name theirs.
+A Controller names no Widget instance. Whom it speaks to is a route the tree that holds the receivers
+writes into its `controllerSettings` (`config.signalRoutes`), delivered with `dispatchPhiSignalCapability`;
+a Controller that wrote the ids of the Widgets it expected could only serve the one arrangement of them it
+was written for. Groups, Threads, Localization, Asset and Auth work this way: the Media Page tells the
+Asset Controller the Area runs, and the sign-in Overlay preset tells the Auth Controller that arrives with
+it. `scripts/validate-controller-receiver-contracts.ts` refuses a Module Controller file that names a
+receiver by a preset id map or a `cms:` address of its own; Revisions and User Management are the open
+exceptions.
 
 `sender` is a concrete address or `null` and is never `broadcast`; it is derived from the mounted
 instance. `receiver` is:
@@ -278,20 +280,32 @@ type PhiSignalRoute = {
   renamed field means changing a package.
 - Deleting or replacing a receiver removes the routes that target it or its subcontrols in the same
   Builder mutation.
-- A Controller carries the same `signalRoutes` in its own config, and its Page writes them:
-  `controllerSettings` on a resolved Page tree, beside the routes that Page already writes for every
-  Widget on it. An Area does the same through `areaControllerSettings`. Before that a Page-scope
-  Controller could be told nothing, so the two that needed receivers held Widget ids from a preset id
-  map -- which is the coupling routes exist to remove, and which held only while one piece of code
-  owned both ends.
-- `controllerSettings` is also what brings a `demand` Controller into being. Three mount policies, three
-  answers to who mounts: `site` and `area` are mounted for the scope they name whether anything asks or
-  not, and `demand` is mounted by whoever needs it -- a Page through this field, or a Widget through its
+- A Controller carries the same `signalRoutes` in its own config, and the tree that holds its receivers
+  writes them: `controllerSettings`, beside the routes the tree already writes for every node on it. It
+  is one contract on a Page and on an Area (`PhiCmsTreeControllerSettings` in types/cms.ts): each setting
+  is `{ type, instanceKey, mountScope, config }`, keyed by type and instance, `mountScope` being the
+  tree's own scope. phis-server stores it on every Page and Area revision and checks its routes like a
+  node's, against the tree's own nodes (phis-server DB.md). Before it, a Controller could be told
+  nothing, so the ones that needed receivers held Widget ids from a preset id map -- which is the
+  coupling routes exist to remove, and which held only while one piece of code owned both ends.
+- Who runs a Controller is still its mount policy's answer, and a setting reaches whichever one runs
+  (`components/runtime/runtime-controller-materialization.ts`). Three mount policies, three answers to
+  who mounts: `site` and `area` are mounted for the scope they name whether anything asks or not, and
+  `demand` is mounted by whoever needs it -- a tree through `controllerSettings`, or a Widget through its
   `requiredRuntimeControllers` (a `conditionStateRequest` route, the Auth step's `authWorkflowRequest`).
   A Widget in a deferred Area Overlay demands at `area` scope, and its Controller arrives with the
   Overlay's zones when it first opens (OVERLAYS.md); a Widget on a Page demands at `page` scope. Nobody
   asking means no Controller, and a Module whose policy is `demand` must allow every scope it is asked
-  at (`allowedMountScopes`).
+  at (`allowedMountScopes`). Where the setting goes:
+  - a `demand` Controller nothing else mounts is mounted in the tree's scope;
+  - one the Area already runs (`area` policy) is not mounted a second time by a Page: the Page's config
+    is laid over the running one for as long as the Page is shown (`PhiRuntimeControllerConfigOverlays`),
+    which is how the Media Page tells the Asset Controller about its inspector;
+  - one whose only asker is a deferred Area Overlay arrives with that Overlay, config included;
+  - one no active Module owns is not run. The tree's config to it is inert until the Module is back.
+  In every case the tree's config keys win over what a Widget asked with. A composed tree -- a Shell
+  from its sources, an Area with its Module Overlays -- concatenates the settings and refuses one
+  Controller configured twice.
 
   Wiring to a Controller that nobody mounts fails in silence, which is the same silence as a forgotten
   `openActionKey` and worse to find. The bus holds a signal addressed to an absent listener (see

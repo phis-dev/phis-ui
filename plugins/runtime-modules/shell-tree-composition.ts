@@ -7,6 +7,7 @@ import {
 import type { PhiCmsPresetIdentity } from "../../types/cms-module-descriptors";
 import type { PhiResolvedCmsPageTree } from "../../types/cms";
 import { PHI_SIGNAL_SCOPES, createPhiSignalAddress } from "../../types/signals";
+import { concatPhiCmsTreeControllerSettings } from "../../helpers/cms-tree-controller-settings";
 
 export function omitPhiCmsShellCompositionNodes(
   tree: PhiResolvedCmsPageTree,
@@ -123,5 +124,10 @@ export function mergePhiCmsShellTrees(
     overlays: [...base.overlays, ...overlay.overlays],
     layoutNodes: [...base.layoutNodes, ...overlay.layoutNodes],
     contentWidgets: [...base.contentWidgets, ...overlay.contentWidgets],
+    controllerSettings: concatPhiCmsTreeControllerSettings(
+      base.controllerSettings,
+      overlay.controllerSettings,
+      "Area shell composition",
+    ),
   } satisfies PhiResolvedCmsPageTree;
 }

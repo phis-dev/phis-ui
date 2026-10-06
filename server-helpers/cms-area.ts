@@ -56,6 +56,7 @@ function buildAreaPresetPayloadFromTree({
       overlays: tree.overlays,
       layoutNodes: tree.layoutNodes,
       contentWidgets: tree.contentWidgets,
+      controllerSettings: tree.controllerSettings ?? [],
       runtimeModuleIds: tree.runtimeModuleIds ?? null,
     },
   };

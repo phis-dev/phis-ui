@@ -17,7 +17,11 @@ import {
 import { PHI_COLOR, PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import { getPhiBuilderChromeWidgetLabels } from "../../../../components/widgets/label-sets/builder-chrome";
 import { getPhiMediaWidgetLabels } from "../../../../components/media/label-sets/media";
-import { createPhiAssetControllerAddress } from "../../../../components/media/asset-controller-address";
+import {
+  createPhiAssetControllerAddress,
+  PHI_ASSET_CONTROLLER_INSTANCE_KEY,
+  PHI_ASSET_CONTROLLER_TYPE,
+} from "../../../../components/media/asset-controller-address";
 import { createPhiRuntimeFormControllerAddress } from "../../../../components/forms/runtime-form-controller-address";
 import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
 import { PHI_ASSET_FOLDER_FORM_ID, PHI_ASSET_METADATA_FORM_ID } from "../metadata-form";
@@ -61,12 +65,90 @@ export async function buildPhiDefaultBuilderMediaPageTree({
     getPhiMediaWidgetLabels(credentials),
   ]);
 
+  const inspectorOverlay = createPhiSignalAddress("cms", PHI_ASSET_INSPECTOR_OVERLAY_IDS.overlayMediaInspector);
+  const folderOverlay = createPhiSignalAddress("cms", PHI_ASSET_INSPECTOR_OVERLAY_IDS.overlayMediaFolderCreate);
+  const metadataForm = createPhiSignalAddress("cms", PHI_ASSET_INSPECTOR_WIDGET_IDS.widgetMediaMetadataForm);
+  const folderForm = createPhiSignalAddress("cms", PHI_ASSET_INSPECTOR_WIDGET_IDS.widgetMediaFolderCreateForm);
+
   return {
     page: nodes.page(),
     pageMeta: {
       title: { msgId: 0, source: "Media", value: chromeLabels.pageTitles.media },
       description: null,
     },
+    /*
+     * Whom the Asset Controller answers into on this Page.
+     *
+     * The Area runs that Controller for every Page -- its pickers need it everywhere -- and this Page is
+     * the one with an inspector, a folder dialog and a gallery to reload. So the Page says so here, and
+     * while it is shown the running Controller is told (`collectPhiRuntimeControllerConfigOverlays`).
+     */
+    controllerSettings: [{
+      type: PHI_ASSET_CONTROLLER_TYPE,
+      instanceKey: PHI_ASSET_CONTROLLER_INSTANCE_KEY,
+      mountScope: "page",
+      config: {
+        signalRoutes: {
+          emits: [
+            { routeKey: "builder-media-controller-inspector-open", capabilityId: "inspectorOpen", scope: "page", channel: "dialog", action: "open", valueType: "none", receiver: inspectorOverlay },
+            { routeKey: "builder-media-controller-inspector-close", capabilityId: "inspectorClose", scope: "page", channel: "dialog", action: "close", valueType: "none", receiver: inspectorOverlay },
+            {
+              routeKey: "builder-media-controller-metadata-values",
+              capabilityId: "metadataValues",
+              scope: "page",
+              channel: "values",
+              action: "change",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
+              receiver: createPhiRuntimeFormControllerAddress(`widget-${PHI_ASSET_INSPECTOR_WIDGET_IDS.widgetMediaMetadataForm}`),
+            },
+            { routeKey: "builder-media-controller-metadata-submit", capabilityId: "metadataSubmit", scope: "page", channel: "submit", action: "activate", valueType: "none", receiver: metadataForm },
+            { routeKey: "builder-media-controller-metadata-reset", capabilityId: "metadataReset", scope: "page", channel: "reset", action: "activate", valueType: "none", receiver: metadataForm },
+            {
+              routeKey: "builder-media-controller-inspector-submitting",
+              capabilityId: "inspectorSubmitting",
+              scope: "page",
+              channel: "submitting",
+              action: "change",
+              valueType: "boolean",
+              receiver: createPhiSignalSubcontrolAddress("cms", PHI_ASSET_INSPECTOR_WIDGET_IDS.widgetMediaInspectorCommands, "save"),
+            },
+            { routeKey: "builder-media-controller-folder-open", capabilityId: "folderDialogOpen", scope: "page", channel: "dialog", action: "open", valueType: "none", receiver: folderOverlay },
+            { routeKey: "builder-media-controller-folder-close", capabilityId: "folderDialogClose", scope: "page", channel: "dialog", action: "close", valueType: "none", receiver: folderOverlay },
+            {
+              routeKey: "builder-media-controller-folder-values",
+              capabilityId: "folderValues",
+              scope: "page",
+              channel: "values",
+              action: "change",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
+              receiver: createPhiRuntimeFormControllerAddress(`widget-${PHI_ASSET_INSPECTOR_WIDGET_IDS.widgetMediaFolderCreateForm}`),
+            },
+            { routeKey: "builder-media-controller-folder-submit", capabilityId: "folderSubmit", scope: "page", channel: "submit", action: "activate", valueType: "none", receiver: folderForm },
+            { routeKey: "builder-media-controller-folder-reset", capabilityId: "folderReset", scope: "page", channel: "reset", action: "activate", valueType: "none", receiver: folderForm },
+            {
+              routeKey: "builder-media-controller-folder-submitting",
+              capabilityId: "folderSubmitting",
+              scope: "page",
+              channel: "submitting",
+              action: "change",
+              valueType: "boolean",
+              receiver: createPhiSignalSubcontrolAddress("cms", PHI_ASSET_INSPECTOR_WIDGET_IDS.widgetMediaFolderCreateCommands, "save"),
+            },
+            {
+              routeKey: "builder-media-controller-collection-reload",
+              capabilityId: "collectionReload",
+              scope: "page",
+              channel: "reload",
+              action: "activate",
+              valueType: "none",
+              receiver: createPhiSignalAddress("cms", PHI_ASSET_MEDIA_PAGE_WIDGET_IDS.widgetMediaPreview),
+            },
+          ],
+        },
+      },
+    }],
     overlays: [
       nodes.overlay({
         id: PHI_ASSET_INSPECTOR_OVERLAY_IDS.overlayMediaInspector,

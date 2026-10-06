@@ -76,6 +76,7 @@ import {
   buildPhiBasePageLayoutNode,
   PHI_BASE_PAGE_LAYOUT_NODE_ID,
 } from "../../components/regions/presets/phi-base-page-layout";
+import { concatPhiCmsTreeControllerSettings } from "../../helpers/cms-tree-controller-settings";
 
 const PHI_CMS_REGION_TYPE_VALUES = new Set<number>(Object.values(PhiCmsRegionType));
 const PHI_ROUTE_PARAMETER_PATTERN = /^:[A-Za-z][A-Za-z0-9_]*$/;
@@ -2021,6 +2022,7 @@ export async function composePhiCmsActiveAreaOverlayPresets({
   const overlays = [...tree.overlays];
   const layoutNodes = [...tree.layoutNodes];
   const contentWidgets = [...tree.contentWidgets];
+  let controllerSettings = tree.controllerSettings ?? [];
 
   for (const descriptor of descriptors) {
     const contribution = await descriptor.loadTree({
@@ -2042,9 +2044,22 @@ export async function composePhiCmsActiveAreaOverlayPresets({
     overlays.push(...contribution.overlays);
     layoutNodes.push(...contribution.layoutNodes);
     contentWidgets.push(...contribution.contentWidgets);
+    // What the Overlay's Controllers are told comes with it, as its nodes do: a saved Area holds neither.
+    controllerSettings = concatPhiCmsTreeControllerSettings(
+      controllerSettings,
+      (contribution.controllerSettings ?? []).map((setting) => {
+        if (setting.mountScope !== "area") {
+          throw new Error(
+            `${descriptor.ownerModuleId}/${descriptor.presetKey}: Area Overlay Controller settings are Area-scoped.`,
+          );
+        }
+        return setting;
+      }),
+      "Area Overlay composition",
+    );
   }
 
-  return { ...tree, overlays, layoutNodes, contentWidgets };
+  return { ...tree, overlays, layoutNodes, contentWidgets, controllerSettings };
 }
 
 function resolveTargetRuntime(runtime: PhiBlockRuntime, area: PhiCmsAreaKey): PhiBlockRuntime {

@@ -19,6 +19,7 @@ import type {
 } from "../../../../types/cms-module-descriptors";
 import { PHI_DRAG_SOURCE_CONTROL_SIGNALS } from "../../../../components/widgets/signals/control-signal-capabilities";
 import { PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS } from "../../../../components/widgets/label-types/builder-chrome";
+import type { PhiCmsTreeControllerSettings } from "../../../../types/cms";
 
 export type PhiBuilderRuntimeControllerConfig = Record<string, never>;
 
@@ -45,6 +46,7 @@ export type PhiBuilderRuntimeControllerPreload = {
   publicRoutePaths: readonly PhiPublicRoutePathAssignment[];
   areaRootRoutesByArea: Record<string, PhiAreaRootRoute | null>;
   areaMetaByArea: Record<string, PhiAreaMeta | null>;
+  areaControllerSettingsByArea: Record<string, PhiCmsTreeControllerSettings>;
   modulePresetPagesByArea: PhiBuilderModulePresetPagesByArea;
   areaPresetSourcesByArea: Partial<Record<PhiBuilderAreaKey, PhiCmsPresetSource>>;
   navigationSurfacesByArea: Partial<

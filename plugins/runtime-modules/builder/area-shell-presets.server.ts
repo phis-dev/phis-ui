@@ -4,7 +4,11 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 
 import { PHI_BUILDER_AREA_KEYS } from "../../../constants/cms-areas";
-import type { PhiResolvedCmsAreaPresetTree, PhiResolvedCmsPageTree } from "../../../types/cms";
+import type {
+  PhiCmsTreeControllerSettings,
+  PhiResolvedCmsAreaPresetTree,
+  PhiResolvedCmsPageTree,
+} from "../../../types/cms";
 import type { PhiRuntimeModuleCatalog, PhiRuntimeModuleId } from "../../../types";
 import type { PhiBlockRuntime } from "../../../types/widget-runtime";
 import { getCurrentSiteAreaDraft, getExactSiteArea } from "../../../gateway/site-area";
@@ -483,6 +487,36 @@ export async function buildPhiBuilderAreaMetaByArea(
       area,
       await buildPhiBuilderAreaMeta(runtime, area, runtimeModuleCatalog),
     ] as const),
+  );
+  return Object.fromEntries(entries);
+}
+
+/**
+ * What every Area's Shell tells its Controllers, from the same chain the drafts come from: the open
+ * structure draft, else what is published, else the code-owned Shell. Carried into every structure save
+ * and every Module save baseline, which state the tree whole.
+ */
+export async function buildPhiBuilderAreaControllerSettingsByArea(
+  runtime: PhiBlockRuntime,
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
+): Promise<Record<string, PhiCmsTreeControllerSettings>> {
+  const areas: readonly PhiDeveloperBuilderArea[] = PHI_BUILDER_AREA_KEYS;
+  const entries = await Promise.all(
+    areas.map(async (area) => {
+      const { draft, published } = await loadPhiBuilderAreaStructure(
+        runtime.site.key,
+        runtime.locale.current,
+        readPhiServerApiCredentials().apiBaseUrl,
+        readPhiServerApiCredentials().internalToken,
+        area,
+        runtimeModuleCatalog,
+      );
+      const stored = draft ?? published;
+      const settings = stored
+        ? stored.controllerSettings ?? []
+        : (await instantiateAreaShellPresetTree(runtime, area, runtimeModuleCatalog))?.controllerSettings ?? [];
+      return [area, settings] as const;
+    }),
   );
   return Object.fromEntries(entries);
 }

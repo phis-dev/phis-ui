@@ -12,7 +12,8 @@ import { PhiAssetRuntimeControllerMount } from "./mount";
 
 export const PHI_ASSET_RUNTIME_CONTROLLER_PLUGIN = {
   ...PHI_ASSET_RUNTIME_CONTROLLER_DEFINITION,
-  renderController: ({ mountScope }) => createElement(PhiAssetRuntimeControllerMount, { mountScope }),
+  renderController: ({ address, mountScope, config }) =>
+    createElement(PhiAssetRuntimeControllerMount, { address, mountScope, config }),
 } satisfies PhiRuntimeControllerPlugin<PhiAssetRuntimeControllerConfig>;
 
 export const PhiAssetRuntimeControllerClient = createPhiRuntimeControllerClient(

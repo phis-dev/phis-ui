@@ -138,24 +138,29 @@ export type PhiResolvedCmsPageTree = {
   overlays: PhiCmsOverlayNode[];
   layoutNodes: PhiCmsLayoutNode[];
   contentWidgets: PhiCmsContentWidgetNode[];
-  /**
-   * The Controllers this Page configures, and what it tells them.
-   *
-   * An Area has had this for as long as it has had Controllers -- `areaControllerSettings` on the
-   * module set -- and a Page had nothing. So a Page-scope Controller could be brought into being by a
-   * Widget asking for it and then be told nothing, which is why the Controllers on the conversations
-   * and groups Pages addressed their Widgets out of a preset id map: there was no other way to learn
-   * who to send to, and it holds only while the same code owns both ends.
-   *
-   * A Page says it here, beside the routes it already writes for every Widget on it. Demand mounting
-   * is untouched: a setting says what a Controller is configured with, not that it is running.
-   */
-  controllerSettings?: readonly PhiRuntimeControllerSetting[] | null;
+  controllerSettings?: PhiCmsTreeControllerSettings | null;
 };
+
+/**
+ * The Controllers a tree configures, and what it tells them -- the same field on a Page and on an Area.
+ *
+ * A Controller's receivers are the tree's to name, as every Widget's are, so the tree says them here
+ * beside the routes it writes for its nodes; a Controller that held Widget ids instead (a preset id
+ * map) only worked while one piece of code owned both ends. Each setting carries the tree's own scope
+ * as `mountScope` and is keyed by type and instance.
+ *
+ * Who runs the Controller is still its mount policy's answer
+ * (`components/runtime/runtime-controller-materialization.ts`): a setting for a `demand` Controller
+ * mounts it in the tree's scope; one for a Controller the Area already runs configures that one while
+ * the Page is shown; and one whose only asker is a deferred Area Overlay arrives with that Overlay.
+ * phis-server stores the field on every Page and Area revision (DB.md) and refuses `enabled`: a
+ * setting a tree stores is one it means.
+ */
+export type PhiCmsTreeControllerSettings = readonly PhiRuntimeControllerSetting[];
 
 export type PhiResolvedCmsRenderableTree = Pick<
   PhiResolvedCmsPageTree,
-  "regions" | "overlays" | "layoutNodes" | "contentWidgets"
+  "regions" | "overlays" | "layoutNodes" | "contentWidgets" | "controllerSettings"
 > & {
   page?: PhiCmsPageNode | null;
 };
@@ -184,6 +189,7 @@ export type PhiResolvedCmsAreaPresetTree = {
   overlays: PhiCmsOverlayNode[];
   layoutNodes: PhiCmsLayoutNode[];
   contentWidgets: PhiCmsContentWidgetNode[];
+  controllerSettings?: PhiCmsTreeControllerSettings | null;
 };
 
 export type PhiResolvedCmsAreaPresetPayload = {

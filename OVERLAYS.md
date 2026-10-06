@@ -368,8 +368,11 @@ and is no longer a delivery decision.
 
 What is not a delivery decision either, and looks exactly like one when it goes wrong: whether the
 Controller a dialog is wired to exists at all. A Module Controller whose mount policy is `demand` is
-mounted by the Page that needs it, through `controllerSettings` on its tree
-([SIGNALS.md](./SIGNALS.md#capabilities-and-routes)). Unmounted, it is an address with no listener, so the
+mounted by the tree that needs it, through `controllerSettings`
+([SIGNALS.md](./SIGNALS.md#capabilities-and-routes)). An Area Overlay preset writes the settings of the
+Controllers it is wired to into its own tree, and they compose into the Area with it; a Controller only
+the deferred Overlay asks for -- the Auth Controller of the sign-in Overlay -- arrives with its zones and
+its config together. Unmounted, it is an address with no listener, so the
 bus holds every signal the Overlay and its Table send it -- no exception, nothing traced, and a dialog
 that never opens. This is the same silence as a forgotten `openActionKey`, reached from the other end,
 and `scripts/validate-controller-mount-contracts.ts` refuses a preset that wires to a Controller it does

@@ -1,4 +1,4 @@
-import type { PhiCmsLayoutRenderNode } from "../../../types/cms";
+import type { PhiCmsLayoutRenderNode, PhiCmsTreeControllerSettings } from "../../../types/cms";
 import type { PhiCmsPaddingWidgetConfig } from "../../../types/cms-config";
 import type {
   PhiRenderableBlockEffects,
@@ -214,6 +214,16 @@ export type PhiDeveloperBuilderState = {
    */
   areaMetaDrafts: Record<string, PhiAreaMeta | null>;
   areaMeta: Record<string, PhiAreaMeta | null>;
+  /**
+   * What each tree tells its Controllers (`controllerSettings`), as the server handed it over: by
+   * target Area for the Shell, by Page meta draft key for a Page.
+   *
+   * Carried, not edited -- the Builder has no surface for it -- and carried because a save states the
+   * tree whole: one that left it out would store a Page whose Controllers are told nothing, and the
+   * dialog a Module wired to them would stop opening the moment somebody saved the Page.
+   */
+  areaControllerSettings: Record<string, PhiCmsTreeControllerSettings>;
+  pageControllerSettings: Record<string, PhiCmsTreeControllerSettings>;
   /**
    * Areas whose Module selection has unsaved edits. The Modules workspace is site-wide, so its save
    * and publish commands walk this list instead of the header Area scope.

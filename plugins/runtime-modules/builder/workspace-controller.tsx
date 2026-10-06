@@ -81,6 +81,7 @@ import {
   setPhiDeveloperBuilderAreaRootRoutes,
   setPhiDeveloperBuilderAreaMeta,
   setPhiDeveloperBuilderAreaMetaBaseline,
+  setPhiDeveloperBuilderAreaControllerSettings,
   readPhiBuilderEffectiveAreaMeta,
   closePhiBuilderModuleDeactivationRequest,
   closePhiBuilderPublicRouteCollisionRequest,
@@ -172,6 +173,7 @@ import {
   PHI_BUILDER_PAGE_META_DEFAULT_PRESENTATION_LABELS,
   type PhiBuilderPageMetaPresentationLabels,
 } from "./controller/definition";
+import type { PhiCmsTreeControllerSettings } from "../../../types/cms";
 
 type PhiDeveloperBuilderWorkspaceControllerOptions = {
   shellPresetDraftsByArea?: Record<string, Record<string, PhiDeveloperBuilderRegionDraft>>;
@@ -185,6 +187,7 @@ type PhiDeveloperBuilderWorkspaceControllerOptions = {
   publicRoutePaths?: PhiWorkspaceCatalogState["publicRoutePaths"];
   areaRootRoutesByArea?: Record<string, PhiAreaRootRoute | null>;
   areaMetaByArea?: Record<string, PhiAreaMeta | null>;
+  areaControllerSettingsByArea?: Record<string, PhiCmsTreeControllerSettings>;
   pageMetaLabels?: PhiBuilderPageMetaPresentationLabels;
 };
 const EMPTY_RUNTIME_MODULE_IDS_BY_AREA: Partial<Record<PhiDeveloperBuilderArea, PhiRuntimeModuleId[]>> = {};
@@ -193,6 +196,7 @@ const EMPTY_PUBLIC_ROUTE_CLAIMS: PhiWorkspaceCatalogState["publicRouteClaims"] =
 const EMPTY_PUBLIC_ROUTE_PATHS: PhiWorkspaceCatalogState["publicRoutePaths"] = [];
 const EMPTY_AREA_ROOT_ROUTES: Record<string, PhiAreaRootRoute | null> = {};
 const EMPTY_AREA_META: Record<string, PhiAreaMeta | null> = {};
+const EMPTY_AREA_CONTROLLER_SETTINGS: Record<string, PhiCmsTreeControllerSettings> = {};
 export type {
   PhiBuilderPageRegionKey,
   PhiBuilderRegionKey,
@@ -331,6 +335,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     publicRoutePaths = EMPTY_PUBLIC_ROUTE_PATHS,
     areaRootRoutesByArea = EMPTY_AREA_ROOT_ROUTES,
     areaMetaByArea = EMPTY_AREA_META,
+    areaControllerSettingsByArea = EMPTY_AREA_CONTROLLER_SETTINGS,
     pageMetaLabels = PHI_BUILDER_PAGE_META_DEFAULT_PRESENTATION_LABELS,
   } = options;
   const state = usePhiDeveloperBuilderWorkspaceState(defaultArea);
@@ -469,6 +474,16 @@ function usePhiDeveloperBuilderWorkspaceController(
     setPhiDeveloperBuilderAreaMetaBaseline(areaMetaByArea);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [areaMetaPreloadKey]);
+
+  // What each Shell tells its Controllers, carried into every save that states the Shell whole.
+  const areaControllerSettingsPreloadKey = useMemo(
+    () => JSON.stringify(areaControllerSettingsByArea),
+    [areaControllerSettingsByArea],
+  );
+  useEffect(() => {
+    setPhiDeveloperBuilderAreaControllerSettings(areaControllerSettingsByArea);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [areaControllerSettingsPreloadKey]);
 
   const signalWiringOverlayAddress = createPhiSignalAddress("cms", PHI_BUILDER_INSPECTOR_OVERLAY_IDS.signalWiring);
   const signalWiringFormAddress = createPhiSignalAddress("cms", PHI_BUILDER_INSPECTOR_WIDGET_IDS.signalWiringForm);
@@ -2504,6 +2519,7 @@ export type PhiDeveloperBuilderWorkspaceControllerProps = {
   publicRoutePaths?: PhiWorkspaceCatalogState["publicRoutePaths"];
   areaRootRoutesByArea?: Record<string, PhiAreaRootRoute | null>;
   areaMetaByArea?: Record<string, PhiAreaMeta | null>;
+  areaControllerSettingsByArea?: Record<string, PhiCmsTreeControllerSettings>;
   pageMetaLabels?: PhiBuilderPageMetaPresentationLabels;
 };
 
@@ -2520,6 +2536,7 @@ export function PhiDeveloperBuilderWorkspaceController({
   publicRoutePaths = EMPTY_PUBLIC_ROUTE_PATHS,
   areaRootRoutesByArea = EMPTY_AREA_ROOT_ROUTES,
   areaMetaByArea = EMPTY_AREA_META,
+  areaControllerSettingsByArea = EMPTY_AREA_CONTROLLER_SETTINGS,
   pageMetaLabels = PHI_BUILDER_PAGE_META_DEFAULT_PRESENTATION_LABELS,
 }: PhiDeveloperBuilderWorkspaceControllerProps) {
   const controller = usePhiDeveloperBuilderWorkspaceController(defaultArea, {
@@ -2534,6 +2551,7 @@ export function PhiDeveloperBuilderWorkspaceController({
     publicRoutePaths,
     areaRootRoutesByArea,
     areaMetaByArea,
+    areaControllerSettingsByArea,
     pageMetaLabels,
   });
 

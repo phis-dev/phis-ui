@@ -9,7 +9,8 @@ import {
   PHI_LOGIN_FORM_LAYOUT_CONFIG,
 } from "./phi-login-form-nodes";
 import { getPhiLoginFormLabels } from "../../../../components/widgets/label-sets/account";
-import { createPhiAuthControllerAddress } from "../controller/address";
+import { createPhiAuthControllerAddress, PHI_AUTH_CONTROLLER_TYPE } from "../controller/address";
+import { createPhiRuntimeFormControllerAddress } from "../../../../components/forms/runtime-form-controller-address";
 import {
   PHI_AUTH_LOGIN_OVERLAY_IDS,
   type PhiAuthLoginOverlayArea,
@@ -41,8 +42,39 @@ export async function buildPhiAuthAreaLoginOverlayTree({
   });
 
   const nodes = createPhiCmsPresetNodes(page);
+  const overlayAddress = createPhiSignalAddress("cms", ids.overlayLogin);
   return {
     page,
+    /*
+     * Whom the Auth Controller opens, closes and fills: this Overlay and its Form.
+     *
+     * The Controller used to look both up in the Area's preset id map. They are this tree's nodes, so
+     * this tree names them, and the setting arrives with the Overlay's zones as the Controller does
+     * (`materializePhiOverlayRuntimeControllerSettings`).
+     */
+    controllerSettings: [{
+      type: PHI_AUTH_CONTROLLER_TYPE,
+      instanceKey: "default",
+      mountScope: "area",
+      config: {
+        signalRoutes: {
+          emits: [
+            { routeKey: `auth-${area}-login-controller-open`, capabilityId: "loginOverlayOpen", scope: "area", channel: "dialog", action: "activate", valueType: "none", receiver: overlayAddress },
+            { routeKey: `auth-${area}-login-controller-close`, capabilityId: "loginOverlayClose", scope: "area", channel: "dialog", action: "close", valueType: "none", receiver: overlayAddress },
+            {
+              routeKey: `auth-${area}-login-controller-values`,
+              capabilityId: "loginValues",
+              scope: "area",
+              channel: "values",
+              action: "change",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
+              receiver: createPhiRuntimeFormControllerAddress(`widget-${ids.widgetLogin}`),
+            },
+          ],
+        },
+      },
+    }],
     regions: [],
     overlays: [nodes.overlay({
       id: ids.overlayLogin,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 import type {
   PhiRuntimeModuleControllerClientProps,
@@ -13,6 +13,7 @@ import {
 } from "../../plugins/registries/runtime-controller-core";
 import { registerPhiSignalInstance } from "./runtime-signal-registry";
 import { usePhiSignalRuntimePartition } from "./runtime-signal-partition";
+import { usePhiRuntimeControllerConfigOverlay } from "./runtime-controller-config-overlays";
 
 export type PhiMountedRuntimeControllerProps = PhiRuntimeModuleControllerClientProps & {
   plugin: PhiAnyRuntimeControllerPlugin;
@@ -27,7 +28,12 @@ export function PhiMountedRuntimeController({
 }: PhiMountedRuntimeControllerProps) {
   const signalPartition = usePhiSignalRuntimePartition();
   const { instanceKey, address } = resolvePhiRuntimeControllerMount(plugin, setting);
-  const parsedConfig = parsePhiRuntimeControllerConfig(plugin, setting.config);
+  // What the shown Page tells this Controller, when the Area runs it (runtime-controller-config-overlays).
+  const pageConfig = usePhiRuntimeControllerConfigOverlay(address);
+  const parsedConfig = useMemo(
+    () => parsePhiRuntimeControllerConfig(plugin, pageConfig ? { ...setting.config, ...pageConfig } : setting.config),
+    [pageConfig, plugin, setting.config],
+  );
   const preloadData = preloadDataByAddress?.[address] ?? null;
 
   useEffect(() => {

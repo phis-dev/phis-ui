@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 
 import {
   PHI_AUTH_CONTROLLER_DEFINITION,
+  type PhiAuthControllerConfig,
   type PhiAuthControllerPreload,
 } from "./definition";
 import { fetchPhiAuthWorkflow } from "../../../../gateway/auth-public-manifest";
@@ -60,4 +61,4 @@ export const PHI_AUTH_CONTROLLER_SERVER_DEFINITION = {
       return { workflow: null, unavailable: true };
     }
   },
-} satisfies PhiRuntimeControllerDefinition<Record<string, never>, PhiAuthControllerPreload>;
+} satisfies PhiRuntimeControllerDefinition<PhiAuthControllerConfig, PhiAuthControllerPreload>;

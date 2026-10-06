@@ -8,6 +8,7 @@ import type {
   PhiCmsLayoutNode,
   PhiCmsLayoutRenderNode,
   PhiCmsOverlayNode,
+  PhiCmsTreeControllerSettings,
 } from "../../../types/cms";
 import { readPhiCmsInstanceId, type PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import type { PhiDeveloperBuilderArea, PhiDeveloperBuilderRegionDraft, PhiDeveloperBuilderWorkspaceState } from "./developer-workspace-types";
@@ -85,6 +86,7 @@ type CmsPageWritePayload = {
   contentWidgets: Array<Omit<PhiCmsContentWidgetNode, "resolvedContent"> & {
     contentBinding?: PhiCmsWidgetContentBinding | null;
   }>;
+  controllerSettings: PhiCmsTreeControllerSettings;
 };
 
 type CmsAreaPresetWritePayload = {
@@ -111,6 +113,7 @@ type CmsAreaPresetWritePayload = {
   contentWidgets: Array<Omit<PhiCmsContentWidgetNode, "resolvedContent"> & {
     contentBinding?: PhiCmsWidgetContentBinding | null;
   }>;
+  controllerSettings: PhiCmsTreeControllerSettings;
 };
 
 type CmsAreaModulesWritePayload = {
@@ -662,6 +665,23 @@ export function clearPhiDeveloperBuilderModulesDraftAllocation(area: PhiDevelope
 }
 
 /**
+ * What a tree tells its Controllers, as it arrived with the workspace. The Builder edits none of it but
+ * every save states the tree whole, so a scope whose settings never arrived is not saved at all: sending
+ * none would erase what the stored tree or the Module's preset said.
+ */
+function requirePhiBuilderControllerSettings(
+  settingsByKey: Record<string, PhiCmsTreeControllerSettings>,
+  key: string,
+  label: string,
+): PhiCmsTreeControllerSettings {
+  const settings = settingsByKey[key];
+  if (!settings) {
+    throw new Error(`${label} cannot be saved before its Controller settings have loaded.`);
+  }
+  return settings;
+}
+
+/**
  * Saves an Area's Module selection, apart from its structure.
  *
  * It patches rather than writes: the server clones the source revision -- the open Module draft, or
@@ -682,7 +702,7 @@ export async function savePhiDeveloperBuilderModulesDraft(
   state: Pick<
     PhiDeveloperBuilderWorkspaceState,
     "draftAllocations" | "runtimeModuleDefinitions" | "runtimeModuleIdsByArea" | "areaPresetSourcesByArea"
-    | "publicRoutePaths" | "publicRouteClaims"
+    | "publicRoutePaths" | "publicRouteClaims" | "areaControllerSettings"
   >,
   regionDrafts: Record<string, PhiDeveloperBuilderRegionDraft>,
   options: {
@@ -803,6 +823,11 @@ export async function savePhiDeveloperBuilderModulesDraft(
         overlays: structurePayload.overlays,
         layoutNodes: structurePayload.layoutNodes,
         contentWidgets: structurePayload.contentWidgets,
+        controllerSettings: requirePhiBuilderControllerSettings(
+          state.areaControllerSettings,
+          area,
+          `Area "${area}"`,
+        ),
       },
     });
   }
@@ -816,7 +841,7 @@ export async function publishPhiDeveloperBuilderModulesDraft(
   state: Pick<
     PhiDeveloperBuilderWorkspaceState,
     "draftAllocations" | "runtimeModuleDefinitions" | "runtimeModuleIdsByArea" | "areaPresetSourcesByArea"
-    | "publicRoutePaths" | "publicRouteClaims"
+    | "publicRoutePaths" | "publicRouteClaims" | "areaControllerSettings"
   >,
   regionDrafts: Record<string, PhiDeveloperBuilderRegionDraft>,
   options: {
@@ -931,6 +956,7 @@ export async function savePhiDeveloperBuilderDraft(
   state: Pick<
     PhiDeveloperBuilderWorkspaceState,
     "area" | "pageKey" | "sidebarKey" | "pageMetaDrafts" | "deletedPageDrafts" | "draftAllocations" | "modulePresetPagesByArea" | "customPages" | "persistedPageCatalogByArea" | "areaPresetSourcesByArea" | "areaRootRouteDrafts" | "areaRootRoutes" | "areaMetaDrafts" | "areaMeta"
+    | "areaControllerSettings" | "pageControllerSettings"
   >,
   regionDrafts: Record<string, PhiDeveloperBuilderRegionDraft>,
   workspaceKind: PhiDeveloperBuilderWorkspaceKind,
@@ -1028,6 +1054,8 @@ export async function savePhiDeveloperBuilderDraft(
       overlays: [],
       layoutNodes: [],
       contentWidgets: [],
+      // A deleted Page runs nothing, so it tells nothing anything.
+      controllerSettings: [],
     });
     storePhiDeveloperBuilderDraftAllocation(allocationKey, result);
     savedDraftState = result;
@@ -1076,6 +1104,11 @@ export async function savePhiDeveloperBuilderDraft(
       overlays: [],
       layoutNodes,
       contentWidgets,
+      controllerSettings: requirePhiBuilderControllerSettings(
+        state.pageControllerSettings,
+        getPhiBuilderRegionDraftKey(area, "page_meta", pageKey),
+        `Page "${pageKey}"`,
+      ),
     });
     storePhiDeveloperBuilderDraftAllocation(allocationKey, result);
     savedDraftState = result;
@@ -1121,6 +1154,11 @@ export async function savePhiDeveloperBuilderDraft(
         overlays: structurePayload.overlays,
         layoutNodes: structurePayload.layoutNodes,
         contentWidgets: structurePayload.contentWidgets,
+        controllerSettings: requirePhiBuilderControllerSettings(
+          state.areaControllerSettings,
+          area,
+          `Area "${area}"`,
+        ),
       });
       storePhiDeveloperBuilderDraftAllocation(allocationKey, result);
       /*
@@ -1226,6 +1264,8 @@ export async function createPhiDeveloperBuilderPageDraft(input: {
     overlays: [],
     layoutNodes: [],
     contentWidgets: [],
+    // A Page somebody just made has no Controllers to tell anything yet.
+    controllerSettings: [],
   });
   storePhiDeveloperBuilderDraftAllocation(
     createPhiBuilderDraftAllocationKey(input.area, input.pageKey, "page"),
@@ -1312,6 +1352,7 @@ export async function publishPhiDeveloperBuilderDraft(
   state: Pick<
     PhiDeveloperBuilderWorkspaceState,
     "area" | "pageKey" | "sidebarKey" | "pageMetaDrafts" | "deletedPageDrafts" | "draftAllocations" | "runtimeModuleDefinitions" | "runtimeModuleIdsByArea" | "modulePresetPagesByArea" | "customPages" | "persistedPageCatalogByArea" | "areaPresetSourcesByArea" | "areaRootRouteDrafts" | "areaRootRoutes" | "areaMetaDrafts" | "areaMeta"
+    | "areaControllerSettings" | "pageControllerSettings"
   >,
   regionDrafts: Record<string, PhiDeveloperBuilderRegionDraft>,
   workspaceKind: PhiDeveloperBuilderWorkspaceKind,

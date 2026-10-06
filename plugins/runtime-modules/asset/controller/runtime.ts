@@ -1,7 +1,7 @@
 "use client";
 
 import { isPhiRecord } from "../../../../helpers/is-record";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   bumpPhiImagePreviewRefreshToken,
@@ -15,65 +15,27 @@ import {
   usePhiImagePreviewStore,
 } from "../../../../components/media/phi-image-preview-store";
 import { PhiMediaAssetFlags, PhiMediaKind } from "../../../../constants/media";
-import { PHI_SIGNAL_VALUE_SCHEMAS, createPhiSignalAddress, createPhiSignalSubcontrolAddress } from "../../../../types/signals";
+import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
 import type { PhiMediaKindValue } from "../../../../types/media";
-import type { PhiSignal, PhiSignalAddress } from "../../../../types/signals";
+import type { PhiSignalAddress, PhiSignalValue } from "../../../../types/signals";
 import type { PhiMediaAssetFolder } from "../../../../types/media";
-import { usePhiSignalListener } from "../../../../components/runtime/runtime-signal-bus";
-import { usePhiSignalEmitter } from "../../../../components/runtime/runtime-signal-identity";
-import { createPhiRuntimeFormControllerAddress } from "../../../../components/forms/runtime-form-controller-address";
-import { createPhiAssetControllerAddress } from "../../../../components/media/asset-controller-address";
+import type { PhiRuntimeControllerMountScope } from "../../../../types";
+import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../components/runtime/runtime-signal-bus";
+import {
+  dispatchPhiSignalCapability,
+  usePhiSignalEmitter,
+} from "../../../../components/runtime/runtime-signal-identity";
 import {
   PHI_ASSET_CONTROLLER_STORE_KEY,
   PHI_ASSET_SIGNAL_CHANNELS,
 } from "../../../../components/media/asset-controller-signals";
-import {
-  PHI_ASSET_INSPECTOR_OVERLAY_IDS,
-  PHI_ASSET_INSPECTOR_WIDGET_IDS,
-  PHI_ASSET_MEDIA_PAGE_WIDGET_IDS,
-} from "../media-page-ids";
+import type { PhiAssetRuntimeControllerConfig } from "./definition";
 import { normalizeMediaFocalRect } from "../../../../components/media/focal-rect";
 import {
   resolvePhiMediaFolderIdFromValue,
   combinePhiMediaFlagValues,
 } from "../../../../components/media/media-folder-options";
 
-const ASSET_METADATA_FORM_WIDGET_ADDRESS = createPhiSignalAddress(
-  "cms",
-  PHI_ASSET_INSPECTOR_WIDGET_IDS.widgetMediaMetadataForm,
-);
-const ASSET_METADATA_FORM_CONTROLLER_ADDRESS = createPhiRuntimeFormControllerAddress(
-  `widget-${PHI_ASSET_INSPECTOR_WIDGET_IDS.widgetMediaMetadataForm}`,
-);
-const ASSET_INSPECTOR_OVERLAY_ADDRESS = createPhiSignalAddress(
-  "cms",
-  PHI_ASSET_INSPECTOR_OVERLAY_IDS.overlayMediaInspector,
-);
-const ASSET_COLLECTION_WIDGET_ADDRESS = createPhiSignalAddress(
-  "cms",
-  PHI_ASSET_MEDIA_PAGE_WIDGET_IDS.widgetMediaPreview,
-);
-const ASSET_FOLDER_FORM_WIDGET_ADDRESS = createPhiSignalAddress(
-  "cms",
-  PHI_ASSET_INSPECTOR_WIDGET_IDS.widgetMediaFolderCreateForm,
-);
-const ASSET_FOLDER_FORM_CONTROLLER_ADDRESS = createPhiRuntimeFormControllerAddress(
-  `widget-${PHI_ASSET_INSPECTOR_WIDGET_IDS.widgetMediaFolderCreateForm}`,
-);
-const ASSET_FOLDER_OVERLAY_ADDRESS = createPhiSignalAddress(
-  "cms",
-  PHI_ASSET_INSPECTOR_OVERLAY_IDS.overlayMediaFolderCreate,
-);
-const ASSET_INSPECTOR_SAVE_ADDRESS = createPhiSignalSubcontrolAddress(
-  "cms",
-  PHI_ASSET_INSPECTOR_WIDGET_IDS.widgetMediaInspectorCommands,
-  "save",
-);
-const ASSET_FOLDER_SAVE_ADDRESS = createPhiSignalSubcontrolAddress(
-  "cms",
-  PHI_ASSET_INSPECTOR_WIDGET_IDS.widgetMediaFolderCreateCommands,
-  "save",
-);
 const ASSET_FORM_FLAG_VALUES = Object.values(PhiMediaAssetFlags);
 
 type PhiAssetInspectorRequest = {
@@ -109,9 +71,6 @@ function buildPhiMediaFolderNamePath(folders: PhiMediaAssetFolder[], folderId: n
   return path.length > 0 ? `/${path.join("/")}` : "";
 }
 
-function matchesAssetControllerSignal(signal: PhiSignal) {
-  return signal.receiver === createPhiAssetControllerAddress();
-}
 
 function isPhiMediaKindValue(value: unknown): value is PhiMediaKindValue {
   return (
@@ -136,39 +95,41 @@ function combinePhiMediaSignalFlagValues(value: unknown) {
   return presentationFlags.length > 0 ? combinePhiMediaFlagValues(presentationFlags) : null;
 }
 
-export function usePhiAssetRuntimeController(mountScope: "site" | "area" | "page") {
+export function usePhiAssetRuntimeController({
+  address,
+  mountScope,
+  config,
+}: {
+  address: PhiSignalAddress;
+  mountScope: PhiRuntimeControllerMountScope;
+  config: PhiAssetRuntimeControllerConfig;
+}) {
   const state = usePhiImagePreviewStore(PHI_ASSET_CONTROLLER_STORE_KEY);
-  const emitAssetSignal = usePhiSignalEmitter(createPhiAssetControllerAddress());
+  const emitAssetSignal = usePhiSignalEmitter(address);
+  const dispatchSignal = usePhiSignalDispatcher();
   const [inspectorRequest, setInspectorRequest] = useState<PhiAssetInspectorRequest | null>(null);
   const [inspectorSubmitting, setInspectorSubmitting] = useState(false);
   const [folderRequest, setFolderRequest] = useState<PhiAssetFolderRequest | null>(null);
   const [folderSubmitting, setFolderSubmitting] = useState(false);
 
-  const sendPageSignal = useCallback((input: {
-    receiver: PhiSignalAddress;
-    channel: string;
-    action: PhiSignal["action"];
-    value: PhiSignal["value"];
-    valueType: PhiSignal["valueType"];
-    valueSchema?: PhiSignal["valueSchema"];
-    correlationId: string;
-  }) => {
-    emitAssetSignal({
-      scope: "page",
-      receiver: input.receiver,
-      channel: input.channel,
-      action: input.action,
-      value: input.value,
-      valueType: input.valueType,
-      valueSchema: input.valueSchema ?? null,
-      correlationId: input.correlationId,
-      timestamp: Date.now(),
-    });
-  }, [emitAssetSignal]);
+  /*
+   * One declared output, delivered through every route the Page wrote for it.
+   *
+   * The receivers -- the inspector and folder dialogs, their Forms, the collection -- used to be Widget
+   * ids of the Media Page written into this file, so the Controller worked on that one Page and on no
+   * copy of it. The Page names them now (`controllerSettings`); a Page that names none, or an Area that
+   * runs this Controller only for its pickers, gets a Controller that opens nothing.
+   */
+  const emitRoutes = useMemo(() => config.signalRoutes?.emits ?? [], [config.signalRoutes?.emits]);
+  const emitCapability = useCallback((
+    capabilityId: string,
+    value: PhiSignalValue,
+    correlationId: string,
+  ) => dispatchPhiSignalCapability(dispatchSignal, address, emitRoutes, capabilityId, value, correlationId), [address, dispatchSignal, emitRoutes]);
 
   usePhiSignalListener(
     (signal) => {
-      if (!matchesAssetControllerSignal(signal)) {
+      if (signal.receiver !== address) {
         return;
       }
       if (
@@ -208,14 +169,7 @@ export function usePhiAssetRuntimeController(mountScope: "site" | "area" | "page
            * the drawer still opened, on an empty form, over a Save that did nothing. A selection is
            * reported to the Controller, and what the Controller does about it is the Controller's.
            */
-          sendPageSignal({
-            receiver: ASSET_INSPECTOR_OVERLAY_ADDRESS,
-            channel: "dialog",
-            action: "open",
-            value: null,
-            valueType: "none",
-            correlationId: signal.correlationId,
-          });
+          emitCapability("inspectorOpen", null, signal.correlationId);
         }
         return;
       }
@@ -242,62 +196,55 @@ export function usePhiAssetRuntimeController(mountScope: "site" | "area" | "page
             typeof folderId === "number" && Number.isInteger(folderId) ? folderId : null,
           ) || "/",
         });
-        sendPageSignal({
-          receiver: ASSET_FOLDER_OVERLAY_ADDRESS,
-          channel: "dialog",
-          action: "open",
-          value: null,
-          valueType: "none",
-          correlationId: signal.correlationId,
-        });
+        emitCapability("folderDialogOpen", null, signal.correlationId);
         return;
       }
 
       if (signal.channel === PHI_ASSET_SIGNAL_CHANNELS.folderCommand && signal.action === "activate") {
         if (signal.value === "cancel") {
-          sendPageSignal({ receiver: ASSET_FOLDER_FORM_WIDGET_ADDRESS, channel: "reset", action: "activate", value: null, valueType: "none", correlationId: signal.correlationId });
-          sendPageSignal({ receiver: ASSET_FOLDER_OVERLAY_ADDRESS, channel: "dialog", action: "close", value: null, valueType: "none", correlationId: signal.correlationId });
+          emitCapability("folderReset", null, signal.correlationId);
+          emitCapability("folderDialogClose", null, signal.correlationId);
         } else if (signal.value === "save" && !folderSubmitting) {
-          sendPageSignal({ receiver: ASSET_FOLDER_FORM_WIDGET_ADDRESS, channel: "submit", action: "activate", value: null, valueType: "none", correlationId: signal.correlationId });
+          emitCapability("folderSubmit", null, signal.correlationId);
         }
         return;
       }
 
       if (signal.channel === PHI_ASSET_SIGNAL_CHANNELS.folderSubmitting && signal.action === "change" && typeof signal.value === "boolean") {
         setFolderSubmitting(signal.value);
-        sendPageSignal({ receiver: ASSET_FOLDER_SAVE_ADDRESS, channel: "submitting", action: "change", value: signal.value, valueType: "boolean", correlationId: signal.correlationId });
+        emitCapability("folderSubmitting", signal.value, signal.correlationId);
         return;
       }
 
       if (signal.channel === PHI_ASSET_SIGNAL_CHANNELS.folderSubmit && signal.action === "activate") {
         setFolderSubmitting(false);
-        sendPageSignal({ receiver: ASSET_FOLDER_OVERLAY_ADDRESS, channel: "dialog", action: "close", value: null, valueType: "none", correlationId: signal.correlationId });
-        sendPageSignal({ receiver: ASSET_COLLECTION_WIDGET_ADDRESS, channel: "reload", action: "activate", value: null, valueType: "none", correlationId: signal.correlationId });
+        emitCapability("folderDialogClose", null, signal.correlationId);
+        emitCapability("collectionReload", null, signal.correlationId);
         return;
       }
 
       if (signal.channel === PHI_ASSET_SIGNAL_CHANNELS.command && signal.action === "activate") {
         if (signal.value === "cancel") {
           setInspectorRequest(null);
-          sendPageSignal({ receiver: ASSET_METADATA_FORM_WIDGET_ADDRESS, channel: "reset", action: "activate", value: null, valueType: "none", correlationId: signal.correlationId });
-          sendPageSignal({ receiver: ASSET_INSPECTOR_OVERLAY_ADDRESS, channel: "dialog", action: "close", value: null, valueType: "none", correlationId: signal.correlationId });
+          emitCapability("metadataReset", null, signal.correlationId);
+          emitCapability("inspectorClose", null, signal.correlationId);
         } else if (signal.value === "save" && !inspectorSubmitting) {
-          sendPageSignal({ receiver: ASSET_METADATA_FORM_WIDGET_ADDRESS, channel: "submit", action: "activate", value: null, valueType: "none", correlationId: signal.correlationId });
+          emitCapability("metadataSubmit", null, signal.correlationId);
         }
         return;
       }
 
       if (signal.channel === PHI_ASSET_SIGNAL_CHANNELS.submitting && signal.action === "change" && typeof signal.value === "boolean") {
         setInspectorSubmitting(signal.value);
-        sendPageSignal({ receiver: ASSET_INSPECTOR_SAVE_ADDRESS, channel: "submitting", action: "change", value: signal.value, valueType: "boolean", correlationId: signal.correlationId });
+        emitCapability("inspectorSubmitting", signal.value, signal.correlationId);
         return;
       }
 
       if (signal.channel === PHI_ASSET_SIGNAL_CHANNELS.submit && signal.action === "activate") {
         setInspectorSubmitting(false);
         setInspectorRequest(null);
-        sendPageSignal({ receiver: ASSET_INSPECTOR_OVERLAY_ADDRESS, channel: "dialog", action: "close", value: null, valueType: "none", correlationId: signal.correlationId });
-        sendPageSignal({ receiver: ASSET_COLLECTION_WIDGET_ADDRESS, channel: "reload", action: "activate", value: null, valueType: "none", correlationId: signal.correlationId });
+        emitCapability("inspectorClose", null, signal.correlationId);
+        emitCapability("collectionReload", null, signal.correlationId);
         return;
       }
 
@@ -368,7 +315,7 @@ export function usePhiAssetRuntimeController(mountScope: "site" | "area" | "page
      * the media inspector opened with an empty form and its Save did nothing at all. The instance the
      * controller mount registers says the address exists; this says somebody is behind it.
      */
-    createPhiAssetControllerAddress(),
+    address,
   );
 
   useEffect(() => {
@@ -377,11 +324,7 @@ export function usePhiAssetRuntimeController(mountScope: "site" | "area" | "page
       ? state.selectedAsset
       : state.assets.find((entry) => entry.id === inspectorRequest.assetId) ?? null;
     if (!asset) return;
-    sendPageSignal({
-      receiver: ASSET_METADATA_FORM_CONTROLLER_ADDRESS,
-      channel: "values",
-      action: "change",
-      value: {
+    emitCapability("metadataValues", {
         values: {
           assetId: asset.id,
           imageUrl: asset.previewUrl ?? asset.deliveryUrl,
@@ -398,25 +341,17 @@ export function usePhiAssetRuntimeController(mountScope: "site" | "area" | "page
           presentationFlags: ASSET_FORM_FLAG_VALUES.filter((flag) => (asset.presentationFlags & flag) === flag).map(String),
           focalRect: normalizeMediaFocalRect(asset.meta?.focalRect) ?? null,
         },
-      },
-      valueType: "json",
-      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
-      correlationId: inspectorRequest.correlationId,
-    });
-  }, [inspectorRequest, sendPageSignal, state.assets, state.folders, state.selectedAsset]);
+      }, inspectorRequest.correlationId);
+  }, [emitCapability, inspectorRequest, state.assets, state.folders, state.selectedAsset]);
 
   useEffect(() => {
     if (!folderRequest) return;
-    sendPageSignal({
-      receiver: ASSET_FOLDER_FORM_CONTROLLER_ADDRESS,
-      channel: "values",
-      action: "change",
-      value: { values: { name: "", parentPath: folderRequest.parentPath } },
-      valueType: "json",
-      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
-      correlationId: folderRequest.correlationId,
-    });
-  }, [folderRequest, sendPageSignal]);
+    emitCapability(
+      "folderValues",
+      { values: { name: "", parentPath: folderRequest.parentPath } },
+      folderRequest.correlationId,
+    );
+  }, [emitCapability, folderRequest]);
 
   useEffect(() => {
     emitAssetSignal({

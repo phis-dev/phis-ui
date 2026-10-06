@@ -11,6 +11,7 @@ import {
   mergePhiDeveloperDeletedPageDrafts,
   mergePhiDeveloperPageMetaDrafts,
   mergePhiDeveloperPagePresetDrafts,
+  setPhiDeveloperBuilderPageControllerSettings,
   usePhiDeveloperBuilderStateValue,
 } from "../developer-workspace-store";
 import { isPhiBuilderConstructedRootPage } from "../offered-page-catalog";
@@ -90,6 +91,18 @@ export function PhiDeveloperBuilderPagesWorkspaceWidgetClient({
     pageMetaArea,
     pageMetaPageKey,
   ]);
+
+  /*
+   * What the Page tells its Controllers, carried into its next save. A constructed root starts empty in
+   * this as in its regions: the settings the seed carries are the other Page's.
+   */
+  useEffect(() => {
+    if (!pageMeta) return;
+    setPhiDeveloperBuilderPageControllerSettings(
+      getPhiBuilderRegionDraftKey(pageMetaArea, "page_meta", pageMetaPageKey),
+      constructedRoot ? [] : pageMeta.controllerSettings,
+    );
+  }, [constructedRoot, pageMeta, pageMetaArea, pageMetaPageKey]);
 
   return (
     <div style={{ minWidth: 0, width: "100%", minHeight: 0, flex: "1 1 auto" }}>

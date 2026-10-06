@@ -1,5 +1,7 @@
 import {
   PHI_SIGNAL_VALUE_SCHEMAS,
+  readPhiSignalRouteSet,
+  type PhiSignalRouteSet,
 } from "../../../../types/signals";
 import type { PhiRuntimeControllerDefinition } from "../../../../types/cms-plugins";
 import {
@@ -8,10 +10,17 @@ import {
 } from "../../../../components/media/asset-controller-address";
 import { PHI_ASSET_SIGNAL_CHANNELS } from "../../../../components/media/asset-controller-signals";
 
-export type PhiAssetRuntimeControllerConfig = Record<string, never>;
+/**
+ * Whom the Controller answers into: the inspector and folder dialogs, their Forms and the collection
+ * they reload. The Page that holds them says so (`controllerSettings`); an Area runs this Controller
+ * for its pickers too, and there it is told nothing and opens nothing.
+ */
+export type PhiAssetRuntimeControllerConfig = {
+  signalRoutes: PhiSignalRouteSet | null;
+};
 
-export function parsePhiAssetRuntimeControllerConfig(): PhiAssetRuntimeControllerConfig {
-  return {};
+export function parsePhiAssetRuntimeControllerConfig(raw: Record<string, unknown>): PhiAssetRuntimeControllerConfig {
+  return { signalRoutes: readPhiSignalRouteSet(raw.signalRoutes) };
 }
 
 export const PHI_ASSET_RUNTIME_CONTROLLER_DEFINITION = {
@@ -30,17 +39,29 @@ export const PHI_ASSET_RUNTIME_CONTROLLER_DEFINITION = {
         valueType: "json",
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.pagination,
       },
-      { id: "dialogClose", action: "close", valueType: "none" },
-      { id: "dialogOpen", action: "open", valueType: "none" },
-      { id: "formSubmit", action: "activate", valueType: "none" },
-      { id: "formReset", action: "activate", valueType: "none" },
-      { id: "reload", action: "activate", valueType: "none" },
+      { id: "inspectorOpen", action: "open", valueType: "none" },
+      { id: "inspectorClose", action: "close", valueType: "none" },
       {
-        id: "formValues",
+        id: "metadataValues",
         action: "change",
         valueType: "json",
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
       },
+      { id: "metadataSubmit", action: "activate", valueType: "none" },
+      { id: "metadataReset", action: "activate", valueType: "none" },
+      { id: "inspectorSubmitting", action: "change", valueType: "boolean" },
+      { id: "folderDialogOpen", action: "open", valueType: "none" },
+      { id: "folderDialogClose", action: "close", valueType: "none" },
+      {
+        id: "folderValues",
+        action: "change",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
+      },
+      { id: "folderSubmit", action: "activate", valueType: "none" },
+      { id: "folderReset", action: "activate", valueType: "none" },
+      { id: "folderSubmitting", action: "change", valueType: "boolean" },
+      { id: "collectionReload", action: "activate", valueType: "none" },
     ],
     listens: [
       {
@@ -133,6 +154,6 @@ export const PHI_ASSET_RUNTIME_CONTROLLER_DEFINITION = {
       },
     ],
   },
-  defaultConfig: {},
+  defaultConfig: { signalRoutes: null },
   parseConfig: parsePhiAssetRuntimeControllerConfig,
 } satisfies PhiRuntimeControllerDefinition<PhiAssetRuntimeControllerConfig>;

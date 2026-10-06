@@ -39,6 +39,7 @@ import {
   buildPhiBuilderRuntimeModulesConfigForArea,
 } from "./area-shell-presets.server";
 import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
+import type { PhiCmsTreeControllerSettings } from "../../../types/cms";
 
 export type PhiBuilderPageDraftsByScope = Partial<
   Record<PhiDeveloperBuilderArea, Partial<Record<string, PhiDeveloperBuilderRegionDraft | null>>>
@@ -67,6 +68,11 @@ export type PhiBuilderPageMeta = {
    * every place that reads it.
    */
   index: boolean;
+  /**
+   * What the Page tells its Controllers, from the same chain: the stored Page, else the route's tree.
+   * Carried into the Page's next save, which states the tree whole.
+   */
+  controllerSettings: PhiCmsTreeControllerSettings;
 };
 
 /**
@@ -512,6 +518,7 @@ async function buildPageMetaForScope(
       description: draftPage.page.pageMeta.description?.value ?? null,
       isDeleted: draftPage.page.page.status === PhiCmsStatus.Deleted,
       index: readPageIndexFlag(draftPage.page.page.flags),
+      controllerSettings: draftPage.page.controllerSettings ?? [],
     };
   }
 
@@ -521,6 +528,7 @@ async function buildPageMetaForScope(
       description: null,
       isDeleted: draftPage.page.page.status === PhiCmsStatus.Deleted,
       index: readPageIndexFlag(draftPage.page.page.flags),
+      controllerSettings: draftPage.page.controllerSettings ?? [],
     };
   }
 
@@ -531,6 +539,7 @@ async function buildPageMetaForScope(
       description: resolvedPage.page.pageMeta.description?.value ?? null,
       isDeleted: resolvedPage.page.page.status === PhiCmsStatus.Deleted,
       index: readPageIndexFlag(resolvedPage.page.page.flags),
+      controllerSettings: resolvedPage.page.controllerSettings ?? [],
     };
   }
 
@@ -553,14 +562,20 @@ async function buildPageMetaForScope(
     ? readPageIndexFlag(presetTree.page.flags)
     : readPageIndexFlag(0);
 
+  /*
+   * A stored Page without titles answers for its Controllers all the same: the chain above returns at
+   * the first source that holds titles, and a resolved Page without them still holds the tree.
+   */
+  const controllerSettings = resolvedPage?.page?.controllerSettings ?? presetTree?.controllerSettings ?? [];
   if (!presetTree?.pageMeta) {
-    return { title: null, description: null, index: presetIndex };
+    return { title: null, description: null, index: presetIndex, controllerSettings };
   }
 
   return {
     title: presetTree.pageMeta.title?.value ?? null,
     description: presetTree.pageMeta.description?.value ?? null,
     index: presetIndex,
+    controllerSettings,
   };
 }
 
