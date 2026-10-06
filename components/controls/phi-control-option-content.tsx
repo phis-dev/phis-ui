@@ -11,8 +11,12 @@ import { PhiDescriptionHint } from "./phi-description-tooltip-icon";
  * One option, drawn the same way wherever options are drawn.
  *
  * `presentation` says where the option sits, not how it should look: `dropdown` is a row in an open list,
- * `option` is an option standing on its own next to its siblings -- a checkbox, a radio -- and `selection`
- * is the chosen one shown inside a closed Control.
+ * `tree` is a row in an open tree, `option` is an option standing on its own next to its siblings -- a
+ * checkbox, a radio -- and `selection` is the chosen one shown inside a closed Control.
+ *
+ * A tree row is a list row in everything but its box: the tree draws the row's height and its hover
+ * ground around the title by line height, so a title that sets its own line height -- as a list row does
+ * to fill the option's box -- stands above the ground the tree paints for it.
  *
  * **Where the description hangs follows from that, and only from that.** In a list a person scans,
  * pointing at a row is already the cursor, and a hint that fires on every row passed over is noise, so
@@ -27,14 +31,15 @@ export function PhiControlOptionContent<TValue extends string | number>({
   presentation,
 }: {
   option: PhiControlOption<TValue>;
-  presentation: "dropdown" | "selection" | "option";
+  presentation: "dropdown" | "tree" | "selection" | "option";
 }) {
   const { token } = usePhiConfig();
   const standing = presentation === "option";
+  const row = presentation === "dropdown" || presentation === "tree";
   const content = (
     <span
       style={{
-        display: standing ? "inline-flex" : "flex",
+        display: standing || presentation === "tree" ? "inline-flex" : "flex",
         alignItems: "center",
         gap: standing ? token.paddingXXS : token.paddingXS,
         ...(presentation === "dropdown" ? { height: "100%", lineHeight: 1 } : {}),
@@ -43,7 +48,7 @@ export function PhiControlOptionContent<TValue extends string | number>({
         ...(standing ? {} : { overflow: "hidden", whiteSpace: "nowrap" }),
       }}
     >
-      {presentation === "dropdown" && option.description ? (
+      {row && option.description ? (
         <PhiDescriptionHint description={option.description} />
       ) : null}
       {option.preview?.kind === "background" ? (

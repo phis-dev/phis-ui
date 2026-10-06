@@ -51,6 +51,8 @@ export type PhiTreeSelectControlProps<TMeta = unknown> = {
 type PhiTreeSelectNode = {
   value: string;
   title: ReactNode;
+  /** What the closed Control shows once the node is chosen: the label, without the row's hint. */
+  label: ReactNode;
   searchLabel: string;
   disabled?: boolean;
   children?: PhiTreeSelectNode[];
@@ -68,9 +70,10 @@ function buildPhiTreeSelectNodes<TMeta>(
           label: option.label,
           ...(option.description ? { description: option.description } : {}),
         }}
-        presentation="dropdown"
+        presentation="tree"
       />
     ),
+    label: <PhiControlOptionContent option={{ value: option.value, label: option.label }} presentation="selection" />,
     searchLabel: `${option.label} ${option.description ?? ""}`.trim(),
     ...(option.disabled ? { disabled: true } : {}),
     ...(option.children?.length ? { children: buildPhiTreeSelectNodes(option.children) } : {}),
@@ -167,6 +170,11 @@ export function PhiTreeSelectControl<TMeta = unknown>({
       classNames={popupRootClassName ? { popup: { root: popupRootClassName } } : undefined}
       styles={popupZIndex == null ? undefined : { popup: { root: { zIndex: popupZIndex } } }}
       showSearch
+      /*
+       * The closed Control shows `label`, not the row's `title`: a row is built for the open tree, and
+       * standing in the selector it shrank the Control to the row's height the moment a node was chosen.
+       */
+      treeNodeLabelProp="label"
       /*
        * Stated rather than left to `treeNodeFilterProp`, because the title is a rendered option and not a
        * string: the primitive would search the React element and match nothing.
