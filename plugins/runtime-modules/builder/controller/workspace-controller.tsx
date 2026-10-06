@@ -1,10 +1,15 @@
 "use client";
 
 import { isPhiRecord } from "../../../../helpers/is-record";
-import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import { createPhiSignalAddress, createPhiSignalSubcontrolAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
+import {
+  PHI_SIGNAL_VALUE_SCHEMAS,
+  type PhiSignalRouteSet,
+  type PhiSignalValue,
+} from "../../../../types/signals";
+import { dispatchPhiSignalCapability } from "../../../../components/runtime/runtime-signal-identity";
 import { hasPhiConfigFlag } from "../../../../helpers/flags";
 import { PhiCmsFlags } from "../../../../constants/phi-cms";
 import { readPhiTableBindingParamsSignalValue } from "../../../../types/table-signal-values";
@@ -12,7 +17,7 @@ import type {
   PhiRuntimeModuleDefinition,
   PhiRuntimeModuleId,
 } from "../../../../types/cms-plugins";
-import { createPhiPresetCmsInstanceId, readPhiCmsInstanceId } from "../../../../types/cms-instance-id";
+import { readPhiCmsInstanceId } from "../../../../types/cms-instance-id";
 import {
   usePhiSignalDispatcher,
   usePhiSignalListener,
@@ -105,7 +110,6 @@ import {
 } from "./preview-controller";
 import { runPhiDeveloperBuilderInspectorAction } from "./inspector-controller";
 import {
-  PHI_BUILDER_SIGNAL_WIRING_FORM_CONTROLLER_ADDRESS,
   patchPhiBuilderSignalWiringSession,
   resetPhiBuilderSignalWiringSession,
   resolvePhiBuilderSignalWiringRoutes,
@@ -118,23 +122,6 @@ import {
   PHI_BUILDER_AREA_ROOT_ROUTE_AUTOMATIC,
   PHI_BUILDER_AREA_ROOT_ROUTE_LANDING,
 } from "../area-settings-values";
-import {
-  PHI_BUILDER_EFFECTS_FORM_WIDGET_IDS,
-  PHI_BUILDER_INSPECTOR_DRAWER_OVERLAY_IDS,
-  PHI_BUILDER_INSPECTOR_OVERLAY_IDS,
-  PHI_BUILDER_INSPECTOR_WIDGET_IDS,
-} from "../inspector-overlay-addresses";
-import {
-  PHI_BUILDER_MODULES_TABLE_WIDGET_ID,
-  PHI_BUILDER_MODULE_DETAIL_OVERLAY_IDS,
-  PHI_BUILDER_MODULE_DETAIL_WIDGET_IDS,
-  PHI_BUILDER_PUBLIC_ROUTES_OVERLAY_IDS,
-  PHI_BUILDER_PUBLIC_ROUTES_WIDGET_IDS,
-  PHI_BUILDER_AREA_SETTINGS_OVERLAY_IDS,
-  PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS,
-  PHI_BUILDER_MODULE_USAGE_OVERLAY_IDS,
-  PHI_BUILDER_MODULE_USAGE_WIDGET_IDS,
-} from "../addresses";
 import { readPhiRuntimeFormValuesSignalValue } from "../../../../components/forms/runtime-form-state";
 import {
   PHI_BUILDER_EFFECTS_SECTIONS,
@@ -164,13 +151,11 @@ import {
   applyPhiBuilderPublicRouteAssignments,
   findPhiBuilderPublicRouteAnswerProblem,
 } from "../public-route-collisions";
-import { createPhiCommandToolbarControlAddress } from "../../../../components/widgets/signals/command-toolbar-address";
-import { PHI_BUILDER_RUNTIME_MODULE_ID } from "../../../../plugins/runtime-modules/builder/ids";
-import { createPhiRuntimeFormControllerAddress } from "../../../../components/forms/runtime-form-controller-address";
 import type { PhiWorkspaceCatalogState } from "../../../../components/workspace/catalog-state";
 import { phiWorkspaceCatalogStore } from "../../../../components/workspace/catalog-store";
 import {
   PHI_BUILDER_PAGE_META_DEFAULT_PRESENTATION_LABELS,
+  resolvePhiBuilderEffectsCapabilityId,
   type PhiBuilderPageMetaPresentationLabels,
 } from "../controller/definition";
 import type { PhiCmsTreeControllerSettings } from "../../../../types/cms";
@@ -189,6 +174,7 @@ type PhiDeveloperBuilderWorkspaceControllerOptions = {
   areaMetaByArea?: Record<string, PhiAreaMeta | null>;
   areaControllerSettingsByArea?: Record<string, PhiCmsTreeControllerSettings>;
   pageMetaLabels?: PhiBuilderPageMetaPresentationLabels;
+  signalRoutes?: PhiSignalRouteSet | null;
 };
 const EMPTY_RUNTIME_MODULE_IDS_BY_AREA: Partial<Record<PhiDeveloperBuilderArea, PhiRuntimeModuleId[]>> = {};
 const EMPTY_MODULE_PRESET_PAGES_BY_AREA = createEmptyPhiBuilderModulePresetPagesByArea();
@@ -337,9 +323,30 @@ function usePhiDeveloperBuilderWorkspaceController(
     areaMetaByArea = EMPTY_AREA_META,
     areaControllerSettingsByArea = EMPTY_AREA_CONTROLLER_SETTINGS,
     pageMetaLabels = PHI_BUILDER_PAGE_META_DEFAULT_PRESENTATION_LABELS,
+    signalRoutes = null,
   } = options;
+  /*
+   * One declared output, delivered through every route written for it.
+   *
+   * The Inspector drawers, the Effects and wiring dialogs, the Area settings, Page metadata and Modules
+   * dialogs, the header switches -- every one of them was a preset id written into this file, so the
+   * Controller kept addressing them on Pages that did not carry them and could not follow a copy that
+   * did. The trees that hold them route them now (`PhiBuilderRuntimeControllerConfig`).
+   */
+  const emitRoutes = useMemo(() => signalRoutes?.emits ?? [], [signalRoutes?.emits]);
+  const emitCapability = useCallback((
+    capabilityId: string,
+    value: PhiSignalValue,
+    correlationId?: string | null,
+  ) => dispatchPhiSignalCapability(
+    dispatchSignal,
+    createPhiBuilderControllerAddress(),
+    emitRoutes,
+    capabilityId,
+    value,
+    correlationId,
+  ), [dispatchSignal, emitRoutes]);
   const state = usePhiDeveloperBuilderWorkspaceState(defaultArea);
-  const effectsOverlayAddress = createPhiSignalAddress("cms", PHI_BUILDER_INSPECTOR_OVERLAY_IDS.effectsEditor);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -384,6 +391,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     openPageMetaDialog,
     pageMetaDialog,
   } = usePhiBuilderPageController({
+    emitCapability,
     defaultArea,
     effectiveArea,
     effectivePageKey,
@@ -485,8 +493,6 @@ function usePhiDeveloperBuilderWorkspaceController(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [areaControllerSettingsPreloadKey]);
 
-  const signalWiringOverlayAddress = createPhiSignalAddress("cms", PHI_BUILDER_INSPECTOR_OVERLAY_IDS.signalWiring);
-  const signalWiringFormAddress = createPhiSignalAddress("cms", PHI_BUILDER_INSPECTOR_WIDGET_IDS.signalWiringForm);
   const openedSignalWiringCorrelationRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -497,42 +503,12 @@ function usePhiDeveloperBuilderWorkspaceController(
     openedSignalWiringCorrelationRef.current = request.correlationId;
     // A wiring session belongs to the block it was opened on, so it starts empty every time.
     resetPhiBuilderSignalWiringSession(defaultArea);
-    dispatchSignal({
-      scope: "area",
-      channel: "reset",
-      action: "activate",
-      value: null,
-      valueType: "none",
-      correlationId: request.correlationId,
-      sender: createPhiBuilderControllerAddress(),
-      receiver: signalWiringFormAddress,
-      timestamp: Date.now(),
-    });
+    emitCapability("signalWiringReset", null, request.correlationId);
     // The Table is mounted eagerly with the overlay, so its rows may still belong to the block wired
     // last time; opening on a new one has to ask for them again.
-    dispatchSignal({
-      scope: "area",
-      channel: "reload",
-      action: "activate",
-      value: null,
-      valueType: "none",
-      correlationId: request.correlationId,
-      sender: createPhiBuilderControllerAddress(),
-      receiver: createPhiSignalAddress("cms", PHI_BUILDER_INSPECTOR_WIDGET_IDS.signalWiringRoutes),
-      timestamp: Date.now(),
-    });
-    queueMicrotask(() => dispatchSignal({
-      scope: "area",
-      channel: "dialog",
-      action: "activate",
-      value: null,
-      valueType: "none",
-      correlationId: request.correlationId,
-      sender: createPhiBuilderControllerAddress(),
-      receiver: signalWiringOverlayAddress,
-      timestamp: Date.now(),
-    }));
-  }, [defaultArea, dispatchSignal, signalWiringFormAddress, signalWiringOverlayAddress, state.signalWiringRequest]);
+    emitCapability("signalWiringRoutesReload", null, request.correlationId);
+    queueMicrotask(() => emitCapability("signalWiringOpen", null, request.correlationId));
+  }, [defaultArea, emitCapability, state.signalWiringRequest]);
 
   useEffect(() => {
     const request = state.effectsEditorRequest;
@@ -541,32 +517,10 @@ function usePhiDeveloperBuilderWorkspaceController(
     initializedEffectsCorrelationRef.current = request.correlationId;
     const valuesBySection = splitPhiBuilderEffectsFormValues(request.effects);
     for (const section of PHI_BUILDER_EFFECTS_SECTIONS) {
-      const widgetId = PHI_BUILDER_EFFECTS_FORM_WIDGET_IDS[section];
-      dispatchSignal({
-        scope: "area",
-        channel: "values",
-        action: "change",
-        value: { values: valuesBySection[section] },
-        valueType: "json",
-        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
-        correlationId: request.correlationId,
-        sender: createPhiBuilderControllerAddress(),
-        receiver: createPhiRuntimeFormControllerAddress(`widget-${widgetId}`),
-        timestamp: Date.now(),
-      });
+      emitCapability(resolvePhiBuilderEffectsCapabilityId(section, "Values"), { values: valuesBySection[section] }, request.correlationId);
     }
-    queueMicrotask(() => dispatchSignal({
-      scope: "area",
-      channel: "dialog",
-      action: "activate",
-      value: null,
-      valueType: "none",
-      correlationId: request.correlationId,
-      sender: createPhiBuilderControllerAddress(),
-      receiver: effectsOverlayAddress,
-      timestamp: Date.now(),
-    }));
-  }, [dispatchSignal, effectsOverlayAddress, state.effectsEditorRequest]);
+    queueMicrotask(() => emitCapability("effectsDialogOpen", null, request.correlationId));
+  }, [emitCapability, state.effectsEditorRequest]);
 
   /*
    * The collision dialog follows the request rather than a click.
@@ -576,14 +530,6 @@ function usePhiDeveloperBuilderWorkspaceController(
    * cancelled, or replaced by the next one. Keeping the open state derived is what makes cancelling
    * leave the Site exactly as it was: there is only ever the request to undo.
    */
-  const publicRoutesOverlayAddress = useMemo(
-    () => createPhiSignalAddress("cms", PHI_BUILDER_PUBLIC_ROUTES_OVERLAY_IDS.overlayPublicRoutes),
-    [],
-  );
-  const publicRoutesTableAddress = useMemo(
-    () => createPhiSignalAddress("cms", PHI_BUILDER_PUBLIC_ROUTES_WIDGET_IDS.publicRoutesTable),
-    [],
-  );
   /*
    * The other half of the same switch: what turning a Module off stops drawing.
    *
@@ -591,14 +537,6 @@ function usePhiDeveloperBuilderWorkspaceController(
    * directions of one gesture behave alike: a question that must be answered, a consequence that must
    * be acknowledged.
    */
-  const moduleUsageOverlayAddress = useMemo(
-    () => createPhiSignalAddress("cms", PHI_BUILDER_MODULE_USAGE_OVERLAY_IDS.overlayModuleUsage),
-    [],
-  );
-  const moduleUsageTableAddress = useMemo(
-    () => createPhiSignalAddress("cms", PHI_BUILDER_MODULE_USAGE_WIDGET_IDS.moduleUsageTable),
-    [],
-  );
   const openedModuleUsageCorrelationRef = useRef<string | null>(null);
   const moduleDeactivationRequest = state.moduleDeactivationRequest;
   useEffect(() => {
@@ -607,34 +545,11 @@ function usePhiDeveloperBuilderWorkspaceController(
       return;
     }
     openedModuleUsageCorrelationRef.current = correlationId;
-    dispatchSignal({
-      scope: "page",
-      channel: "moduleUsageDialog",
-      action: correlationId ? "activate" : "close",
-      value: null,
-      valueType: "none",
-      sender: createPhiBuilderControllerAddress(),
-      receiver: moduleUsageOverlayAddress,
-      timestamp: Date.now(),
-    });
+    emitCapability(correlationId ? "moduleUsageOpen" : "moduleUsageClose", null);
     if (correlationId) {
-      dispatchSignal({
-        scope: "page",
-        channel: "reload",
-        action: "activate",
-        value: null,
-        valueType: "none",
-        sender: createPhiBuilderControllerAddress(),
-        receiver: moduleUsageTableAddress,
-        timestamp: Date.now(),
-      });
+      emitCapability("moduleUsageReload", null);
     }
-  }, [
-    dispatchSignal,
-    moduleDeactivationRequest,
-    moduleUsageOverlayAddress,
-    moduleUsageTableAddress,
-  ]);
+  }, [emitCapability, moduleDeactivationRequest]);
 
   /*
    * What the Area settings dialog stands at, as the record its Form holds.
@@ -656,12 +571,6 @@ function usePhiDeveloperBuilderWorkspaceController(
    * is on the screen -- the arrangement the Page metadata dialog fills itself with.
    */
   const [areaSettingsOpenCount, setAreaSettingsOpenCount] = useState(0);
-  const areaSettingsFormControllerAddress = useMemo(
-    () => createPhiRuntimeFormControllerAddress(
-      `widget-${PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS.areaSettingsForm}`,
-    ),
-    [],
-  );
   const areaMeta = readPhiBuilderEffectiveAreaMeta(state, state.area);
   const areaRootRoute = readPhiBuilderEffectiveAreaRootRoute(state, state.area);
   const seoAnswerable = state.area === "public";
@@ -707,11 +616,7 @@ function usePhiDeveloperBuilderWorkspaceController(
    * values as though they were the Area's answer.
    */
   const publishAreaSettingsState = (correlationId?: string) => {
-    dispatchSignal({
-      scope: "page",
-      channel: "values",
-      action: "change",
-      value: {
+    emitCapability("areaSettingsValues", {
         values: {
           areaRootRoute: areaRootRouteValue,
           areaLandingPage: areaLandingPageValue,
@@ -721,14 +626,7 @@ function usePhiDeveloperBuilderWorkspaceController(
           areaMetaSitemap: seoSitemap,
           seoLocked: seoAnswerable ? "false" : "true",
         },
-      },
-      valueType: "json",
-      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
-      sender: createPhiBuilderControllerAddress(),
-      receiver: areaSettingsFormControllerAddress,
-      ...(correlationId ? { correlationId } : {}),
-      timestamp: Date.now(),
-    });
+      }, correlationId);
   };
   const publishAreaSettingsStateEvent = useEffectEvent(publishAreaSettingsState);
   useEffect(() => {
@@ -752,22 +650,8 @@ function usePhiDeveloperBuilderWorkspaceController(
    * while it stood in the header -- so the dialog is only a place, and the commands are the whole of
    * its lifecycle.
    */
-  const areaSettingsOverlayAddress = useMemo(
-    () => createPhiSignalAddress("cms", PHI_BUILDER_AREA_SETTINGS_OVERLAY_IDS.overlayAreaSettings),
-    [],
-  );
   const dispatchAreaSettingsDialog = (open: boolean, correlationId: string) => {
-    dispatchSignal({
-      scope: "page",
-      channel: "areaSettingsDialog",
-      action: open ? "activate" : "close",
-      value: null,
-      valueType: "none",
-      sender: createPhiBuilderControllerAddress(),
-      receiver: areaSettingsOverlayAddress,
-      correlationId,
-      timestamp: Date.now(),
-    });
+    emitCapability(open ? "areaSettingsOpen" : "areaSettingsClose", null, correlationId);
   };
 
   const openedPublicRoutesCorrelationRef = useRef<string | null>(null);
@@ -778,61 +662,28 @@ function usePhiDeveloperBuilderWorkspaceController(
       return;
     }
     openedPublicRoutesCorrelationRef.current = correlationId;
-    dispatchSignal({
-      scope: "page",
-      channel: "publicRoutesDialog",
-      action: correlationId ? "activate" : "close",
-      value: null,
-      valueType: "none",
-      sender: createPhiBuilderControllerAddress(),
-      receiver: publicRoutesOverlayAddress,
-      timestamp: Date.now(),
-    });
+    emitCapability(correlationId ? "publicRoutesOpen" : "publicRoutesClose", null);
     if (correlationId) {
       /*
        * And a re-read afterwards, not before: the rows live inside the overlay body, which mounts when
        * the modal opens and is kept mounted after -- so a second question would otherwise show the
        * first one's rows.
        */
-      dispatchSignal({
-        scope: "page",
-        channel: "reload",
-        action: "activate",
-        value: null,
-        valueType: "none",
-        sender: createPhiBuilderControllerAddress(),
-        receiver: publicRoutesTableAddress,
-        timestamp: Date.now(),
-      });
+      emitCapability("publicRoutesReload", null);
     }
-  }, [
-    dispatchSignal,
-    publicRouteCollisionRequest,
-    publicRoutesOverlayAddress,
-    publicRoutesTableAddress,
-  ]);
+  }, [emitCapability, publicRouteCollisionRequest]);
 
   useEffect(() => {
-    const selectedOverlayId = state.nodeKind === "region"
-      ? PHI_BUILDER_INSPECTOR_OVERLAY_IDS.regionInspector
-      : state.nodeKind === "layout"
-        ? PHI_BUILDER_INSPECTOR_OVERLAY_IDS.layoutInspector
-        : state.nodeKind === "widget"
-          ? PHI_BUILDER_INSPECTOR_OVERLAY_IDS.widgetInspector
-          : null;
-    for (const overlayId of PHI_BUILDER_INSPECTOR_DRAWER_OVERLAY_IDS) {
-      dispatchSignal({
-        scope: "area",
-        channel: "dialog",
-        action: state.inspectorOpen && overlayId === selectedOverlayId ? "activate" : "close",
-        value: null,
-        valueType: "none",
-        sender: createPhiBuilderControllerAddress(),
-        receiver: createPhiSignalAddress("cms", overlayId),
-        timestamp: Date.now(),
-      });
+    const selectedInspector = state.nodeKind === "region" || state.nodeKind === "layout" || state.nodeKind === "widget"
+      ? state.nodeKind
+      : null;
+    for (const inspector of ["region", "layout", "widget"] as const) {
+      emitCapability(
+        state.inspectorOpen && inspector === selectedInspector ? `${inspector}InspectorOpen` : `${inspector}InspectorClose`,
+        null,
+      );
     }
-  }, [dispatchSignal, state.inspectorOpen, state.nodeKind]);
+  }, [emitCapability, state.inspectorOpen, state.nodeKind]);
 
   useEffect(() => {
     /*
@@ -1094,34 +945,13 @@ function usePhiDeveloperBuilderWorkspaceController(
       pageKey: effectivePageKey,
       navKey: effectiveNavKey,
     });
-    const presetKey =
-      commandWorkspace === "structure"
-        ? "builder-shells-page"
-        : commandWorkspace === "pages"
-          ? "builder-pages-page"
-          : commandWorkspace === "modules"
-            ? "builder-modules-page"
-            : "builder-navigation-page";
     const emitAvailability = () => {
       const availability = phiBuilderHistory.getAvailability(historyContext);
       for (const [controlKey, enabled] of [
         ["undo", availability.canUndo],
         ["redo", availability.canRedo],
       ] as const) {
-        dispatchSignal({
-          scope: "area",
-          channel: "enabled",
-          action: "change",
-          value: enabled,
-          valueType: "boolean",
-          sender: createPhiBuilderControllerAddress(),
-          receiver: createPhiCommandToolbarControlAddress(
-            PHI_BUILDER_RUNTIME_MODULE_ID,
-            presetKey,
-            controlKey,
-          ),
-          timestamp: Date.now(),
-        });
+        emitCapability(`${controlKey}Enabled`, enabled);
       }
     };
 
@@ -1129,7 +959,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     return phiBuilderHistory.subscribe(historyContext, emitAvailability);
   }, [
     commandWorkspace,
-    dispatchSignal,
+    emitCapability,
     effectiveArea,
     effectiveNavKey,
     effectivePageKey,
@@ -1420,17 +1250,7 @@ function usePhiDeveloperBuilderWorkspaceController(
             })),
             defaultArea,
           );
-          dispatchSignal({
-            scope: "area",
-            channel: "reload",
-            action: "activate",
-            value: null,
-            valueType: "none",
-            sender: createPhiBuilderControllerAddress(),
-            receiver: createPhiSignalAddress("cms", PHI_BUILDER_MODULES_TABLE_WIDGET_ID),
-            correlationId: signal.correlationId,
-            timestamp: Date.now(),
-          });
+          emitCapability("modulesTableReload", null, signal.correlationId);
         }
         closePhiBuilderModuleDeactivationRequest(defaultArea);
         return;
@@ -1475,17 +1295,7 @@ function usePhiDeveloperBuilderWorkspaceController(
           defaultArea,
         );
         closePhiBuilderPublicRouteCollisionRequest(defaultArea);
-        dispatchSignal({
-          scope: "area",
-          channel: "reload",
-          action: "activate",
-          value: null,
-          valueType: "none",
-          sender: createPhiBuilderControllerAddress(),
-          receiver: createPhiSignalAddress("cms", PHI_BUILDER_MODULES_TABLE_WIDGET_ID),
-          correlationId: signal.correlationId,
-          timestamp: Date.now(),
-        });
+        emitCapability("modulesTableReload", null, signal.correlationId);
         return;
       }
 
@@ -1625,40 +1435,18 @@ function usePhiDeveloperBuilderWorkspaceController(
        */
       if (
         signal.scope === "area" &&
-        signal.channel === "action" &&
+        signal.channel === "moduleTableAction" &&
         signal.action === "activate" &&
         signal.valueType === "json" &&
-        signal.receiver === builderControllerReceiver &&
-        signal.sender === createPhiSignalAddress("cms", PHI_BUILDER_MODULES_TABLE_WIDGET_ID)
+        signal.receiver === builderControllerReceiver
       ) {
         const tableAction = readPhiTableActionSignalValue(signal.value);
         if (tableAction?.actionKey !== "details" || typeof tableAction.rowIdentity !== "string") {
           return;
         }
 
-        dispatchSignal({
-          scope: "page",
-          channel: "bindingParams",
-          action: "change",
-          value: { params: { moduleId: tableAction.rowIdentity } },
-          valueType: "json",
-          valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableBindingParams,
-          correlationId: signal.correlationId,
-          sender: builderControllerReceiver,
-          receiver: createPhiSignalAddress("cms", PHI_BUILDER_MODULE_DETAIL_WIDGET_IDS.fields),
-          timestamp: Date.now(),
-        });
-        dispatchSignal({
-          scope: "page",
-          channel: "dialog",
-          action: "activate",
-          value: null,
-          valueType: "none",
-          correlationId: signal.correlationId,
-          sender: builderControllerReceiver,
-          receiver: createPhiSignalAddress("cms", PHI_BUILDER_MODULE_DETAIL_OVERLAY_IDS.overlayModuleDetail),
-          timestamp: Date.now(),
-        });
+        emitCapability("moduleDetailParams", { params: { moduleId: tableAction.rowIdentity } }, signal.correlationId);
+        emitCapability("moduleDetailOpen", null, signal.correlationId);
         return;
       }
 
@@ -1937,20 +1725,7 @@ function usePhiDeveloperBuilderWorkspaceController(
          * states on opening, half of one record and half of another.
          */
         const leaving = signal.value === "cancel";
-        dispatchSignal({
-          scope: "page",
-          channel: leaving ? "reset" : "submit",
-          action: "activate",
-          value: null,
-          valueType: "none",
-          sender: createPhiBuilderControllerAddress(),
-          receiver: createPhiSignalAddress(
-            "cms",
-            PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS.areaSettingsForm,
-          ),
-          correlationId: signal.correlationId,
-          timestamp: Date.now(),
-        });
+        emitCapability(leaving ? "areaSettingsReset" : "areaSettingsSubmit", null, signal.correlationId);
         if (leaving) {
           dispatchAreaSettingsDialog(false, signal.correlationId);
         }
@@ -2035,30 +1810,9 @@ function usePhiDeveloperBuilderWorkspaceController(
         } else if (signal.action === "activate" && signal.valueType === "string" && signal.value === "save") {
           const correlationId = effectsWorkflowCorrelationRef.current ?? signal.correlationId;
           effectsFormSubmissionRef.current = { correlationId, values: {} };
-          dispatchSignal({
-            scope: "area",
-            channel: "effectsSubmitting",
-            action: "change",
-            value: true,
-            valueType: "boolean",
-            correlationId,
-            sender: createPhiBuilderControllerAddress(),
-            receiver: createPhiSignalSubcontrolAddress("cms", PHI_BUILDER_INSPECTOR_WIDGET_IDS.effectsCommands, "save"),
-            timestamp: Date.now(),
-          });
+          emitCapability("effectsSubmitting", true, correlationId);
           for (const section of PHI_BUILDER_EFFECTS_SECTIONS) {
-            const widgetId = PHI_BUILDER_EFFECTS_FORM_WIDGET_IDS[section];
-            dispatchSignal({
-              scope: "area",
-              channel: "submit",
-              action: "activate",
-              value: null,
-              valueType: "none",
-              correlationId,
-              sender: createPhiBuilderControllerAddress(),
-              receiver: createPhiSignalAddress("cms", widgetId),
-              timestamp: Date.now(),
-            });
+                  emitCapability(resolvePhiBuilderEffectsCapabilityId(section, "Submit"), null, correlationId);
           }
         } else if (
           (signal.action === "activate" && signal.valueType === "string" && signal.value === "cancel") ||
@@ -2069,30 +1823,9 @@ function usePhiDeveloperBuilderWorkspaceController(
         ) {
           const correlationId = effectsWorkflowCorrelationRef.current ?? signal.correlationId;
           for (const section of PHI_BUILDER_EFFECTS_SECTIONS) {
-            const widgetId = PHI_BUILDER_EFFECTS_FORM_WIDGET_IDS[section];
-            dispatchSignal({
-              scope: "area",
-              channel: "reset",
-              action: "activate",
-              value: null,
-              valueType: "none",
-              correlationId,
-              sender: createPhiBuilderControllerAddress(),
-              receiver: createPhiSignalAddress("cms", widgetId),
-              timestamp: Date.now(),
-            });
+                  emitCapability(resolvePhiBuilderEffectsCapabilityId(section, "Reset"), null, correlationId);
           }
-          dispatchSignal({
-            scope: "area",
-            channel: "dialog",
-            action: "close",
-            value: null,
-            valueType: "none",
-            correlationId,
-            sender: createPhiBuilderControllerAddress(),
-            receiver: createPhiSignalAddress("cms", PHI_BUILDER_INSPECTOR_OVERLAY_IDS.effectsEditor),
-            timestamp: Date.now(),
-          });
+          emitCapability("effectsDialogClose", null, correlationId);
           dispatchSignal({
             scope: "area",
             channel: "effectsCancel",
@@ -2106,17 +1839,7 @@ function usePhiDeveloperBuilderWorkspaceController(
           });
           effectsWorkflowCorrelationRef.current = null;
           effectsFormSubmissionRef.current = null;
-          dispatchSignal({
-            scope: "area",
-            channel: "effectsSubmitting",
-            action: "change",
-            value: false,
-            valueType: "boolean",
-            correlationId,
-            sender: createPhiBuilderControllerAddress(),
-            receiver: createPhiSignalSubcontrolAddress("cms", PHI_BUILDER_INSPECTOR_WIDGET_IDS.effectsCommands, "save"),
-            timestamp: Date.now(),
-          });
+          emitCapability("effectsSubmitting", false, correlationId);
         }
         return;
       }
@@ -2127,7 +1850,8 @@ function usePhiDeveloperBuilderWorkspaceController(
        * Form's own submit so its validation runs before a route is written.
        */
       if (
-        signal.receiver === PHI_BUILDER_SIGNAL_WIRING_FORM_CONTROLLER_ADDRESS &&
+        signal.receiver === createPhiBuilderControllerAddress() &&
+        signal.channel === "signalWiringValues" &&
         signal.action === "change" &&
         signal.valueSchema === PHI_SIGNAL_VALUE_SCHEMAS.formValues
       ) {
@@ -2152,17 +1876,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         runPhiDeveloperBuilderInspectorAction(defaultArea, routeState.nodeKind === "layout"
           ? { kind: "patchSelectedLayoutConfig", key: "signalRoutes", value: routes }
           : { kind: "patchSelectedWidgetConfig", patch: { signalRoutes: routes } });
-        dispatchSignal({
-          scope: "area",
-          channel: "reload",
-          action: "activate",
-          value: null,
-          valueType: "none",
-          correlationId: signal.correlationId,
-          sender: createPhiBuilderControllerAddress(),
-          receiver: createPhiSignalAddress("cms", PHI_BUILDER_INSPECTOR_WIDGET_IDS.signalWiringRoutes),
-          timestamp: Date.now(),
-        });
+        emitCapability("signalWiringRoutesReload", null, signal.correlationId);
         return;
       }
 
@@ -2171,17 +1885,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         signal.channel === "signalWiring"
       ) {
         if (signal.action === "activate" && signal.valueType === "string" && signal.value === "apply") {
-          dispatchSignal({
-            scope: "area",
-            channel: "submit",
-            action: "activate",
-            value: null,
-            valueType: "none",
-            correlationId: signal.correlationId,
-            sender: createPhiBuilderControllerAddress(),
-            receiver: createPhiSignalAddress("cms", PHI_BUILDER_INSPECTOR_WIDGET_IDS.signalWiringForm),
-            timestamp: Date.now(),
-          });
+          emitCapability("signalWiringSubmit", null, signal.correlationId);
           return;
         }
         /*
@@ -2200,28 +1904,8 @@ function usePhiDeveloperBuilderWorkspaceController(
           return;
         }
         resetPhiBuilderSignalWiringSession(defaultArea);
-        dispatchSignal({
-          scope: "area",
-          channel: "reset",
-          action: "activate",
-          value: null,
-          valueType: "none",
-          correlationId: signal.correlationId,
-          sender: createPhiBuilderControllerAddress(),
-          receiver: createPhiSignalAddress("cms", PHI_BUILDER_INSPECTOR_WIDGET_IDS.signalWiringForm),
-          timestamp: Date.now(),
-        });
-        dispatchSignal({
-          scope: "area",
-          channel: "dialog",
-          action: "close",
-          value: null,
-          valueType: "none",
-          correlationId: signal.correlationId,
-          sender: createPhiBuilderControllerAddress(),
-          receiver: createPhiSignalAddress("cms", PHI_BUILDER_INSPECTOR_OVERLAY_IDS.signalWiring),
-          timestamp: Date.now(),
-        });
+        emitCapability("signalWiringReset", null, signal.correlationId);
+        emitCapability("signalWiringClose", null, signal.correlationId);
         return;
       }
 
@@ -2241,17 +1925,7 @@ function usePhiDeveloperBuilderWorkspaceController(
           ? { kind: "patchSelectedLayoutConfig", key: "signalRoutes", value: result.routes }
           : { kind: "patchSelectedWidgetConfig", patch: { signalRoutes: result.routes } });
         resetPhiBuilderSignalWiringSession(defaultArea);
-        dispatchSignal({
-          scope: "area",
-          channel: "dialog",
-          action: "close",
-          value: null,
-          valueType: "none",
-          correlationId: signal.correlationId,
-          sender: createPhiBuilderControllerAddress(),
-          receiver: createPhiSignalAddress("cms", PHI_BUILDER_INSPECTOR_OVERLAY_IDS.signalWiring),
-          timestamp: Date.now(),
-        });
+        emitCapability("signalWiringClose", null, signal.correlationId);
         return;
       }
 
@@ -2264,17 +1938,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         const pending = effectsFormSubmissionRef.current;
         if (!pending || signal.correlationId !== pending.correlationId) return;
         effectsFormSubmissionRef.current = null;
-        dispatchSignal({
-          scope: "area",
-          channel: "effectsSubmitting",
-          action: "change",
-          value: false,
-          valueType: "boolean",
-          correlationId: pending.correlationId,
-          sender: createPhiBuilderControllerAddress(),
-          receiver: createPhiSignalSubcontrolAddress("cms", PHI_BUILDER_INSPECTOR_WIDGET_IDS.effectsCommands, "save"),
-          timestamp: Date.now(),
-        });
+        emitCapability("effectsSubmitting", false, pending.correlationId);
         return;
       }
 
@@ -2287,18 +1951,7 @@ function usePhiDeveloperBuilderWorkspaceController(
       ) {
         const correlationId = effectsWorkflowCorrelationRef.current;
         for (const section of PHI_BUILDER_EFFECTS_SECTIONS) {
-          const widgetId = PHI_BUILDER_EFFECTS_FORM_WIDGET_IDS[section];
-          dispatchSignal({
-            scope: "area",
-            channel: "reset",
-            action: "activate",
-            value: null,
-            valueType: "none",
-            correlationId,
-            sender: createPhiBuilderControllerAddress(),
-            receiver: createPhiSignalAddress("cms", widgetId),
-            timestamp: Date.now(),
-          });
+              emitCapability(resolvePhiBuilderEffectsCapabilityId(section, "Reset"), null, correlationId);
         }
         dispatchSignal({
           scope: "area",
@@ -2313,17 +1966,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         });
         effectsWorkflowCorrelationRef.current = null;
         effectsFormSubmissionRef.current = null;
-        dispatchSignal({
-          scope: "area",
-          channel: "effectsSubmitting",
-          action: "change",
-          value: false,
-          valueType: "boolean",
-          correlationId,
-          sender: createPhiBuilderControllerAddress(),
-          receiver: createPhiSignalSubcontrolAddress("cms", PHI_BUILDER_INSPECTOR_WIDGET_IDS.effectsCommands, "save"),
-          timestamp: Date.now(),
-        });
+        emitCapability("effectsSubmitting", false, correlationId);
         return;
       }
 
@@ -2358,30 +2001,10 @@ function usePhiDeveloperBuilderWorkspaceController(
           receiver: "broadcast",
           timestamp: Date.now(),
         });
-        dispatchSignal({
-          scope: "area",
-          channel: "dialog",
-          action: "close",
-          value: null,
-          valueType: "none",
-          correlationId: effectsCorrelationId,
-          sender: createPhiBuilderControllerAddress(),
-          receiver: createPhiSignalAddress("cms", PHI_BUILDER_INSPECTOR_OVERLAY_IDS.effectsEditor),
-          timestamp: Date.now(),
-        });
+        emitCapability("effectsDialogClose", null, effectsCorrelationId);
         effectsWorkflowCorrelationRef.current = null;
         effectsFormSubmissionRef.current = null;
-        dispatchSignal({
-          scope: "area",
-          channel: "effectsSubmitting",
-          action: "change",
-          value: false,
-          valueType: "boolean",
-          correlationId: effectsCorrelationId,
-          sender: createPhiBuilderControllerAddress(),
-          receiver: createPhiSignalSubcontrolAddress("cms", PHI_BUILDER_INSPECTOR_WIDGET_IDS.effectsCommands, "save"),
-          timestamp: Date.now(),
-        });
+        emitCapability("effectsSubmitting", false, effectsCorrelationId);
         return;
       }
 
@@ -2448,56 +2071,20 @@ function usePhiDeveloperBuilderWorkspaceController(
    * stored tree says, the live page decides. It is stated once and held by the bus until the
    * selector exists, so a late-mounting Shell hears it without anybody waiting for it here.
    */
-  const areaSelectorAddress = useMemo(
-    () => createPhiSignalAddress("cms", createPhiPresetCmsInstanceId({
-      domain: "area",
-      ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
-      presetKey: "builder-area-preset",
-      nodeKey: "widgetBuilderAreaSelector",
-    })),
-    [],
-  );
   const areaSelectorArmed = isPhiAreaScopedBuilderPage(
     resolvePhiDeveloperBuilderRouteScope(pathname)?.pageKey ?? "root",
   );
   useEffect(() => {
-    dispatchSignal({
-      scope: "area",
-      channel: "enabled",
-      action: "change",
-      value: areaSelectorArmed,
-      valueType: "boolean",
-      sender: createPhiBuilderControllerAddress(),
-      receiver: areaSelectorAddress,
-      timestamp: Date.now(),
-    });
-  }, [areaSelectorArmed, areaSelectorAddress, dispatchSignal]);
+    emitCapability("areaSelectorEnabled", areaSelectorArmed);
+  }, [areaSelectorArmed, emitCapability]);
 
   // The debug switch rests disabled the same way, armed only where a canvas is drawn.
-  const debugSwitchAddress = useMemo(
-    () => createPhiSignalAddress("cms", createPhiPresetCmsInstanceId({
-      domain: "area",
-      ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
-      presetKey: "builder-area-preset",
-      nodeKey: "widgetHeaderMainDebugSwitch",
-    })),
-    [],
-  );
   const debugSwitchArmed = isPhiDebugScaffoldBuilderPage(
     resolvePhiDeveloperBuilderRouteScope(pathname)?.pageKey ?? "root",
   );
   useEffect(() => {
-    dispatchSignal({
-      scope: "area",
-      channel: "enabled",
-      action: "change",
-      value: debugSwitchArmed,
-      valueType: "boolean",
-      sender: createPhiBuilderControllerAddress(),
-      receiver: debugSwitchAddress,
-      timestamp: Date.now(),
-    });
-  }, [debugSwitchArmed, debugSwitchAddress, dispatchSignal]);
+    emitCapability("debugSwitchEnabled", debugSwitchArmed);
+  }, [debugSwitchArmed, emitCapability]);
 
   /*
    * Two Dialogs, one return. The workspace Controller renders nothing of its own except the dialogs its
@@ -2521,6 +2108,7 @@ export type PhiDeveloperBuilderWorkspaceControllerProps = {
   areaMetaByArea?: Record<string, PhiAreaMeta | null>;
   areaControllerSettingsByArea?: Record<string, PhiCmsTreeControllerSettings>;
   pageMetaLabels?: PhiBuilderPageMetaPresentationLabels;
+  signalRoutes?: PhiSignalRouteSet | null;
 };
 
 export function PhiDeveloperBuilderWorkspaceController({
@@ -2538,6 +2126,7 @@ export function PhiDeveloperBuilderWorkspaceController({
   areaMetaByArea = EMPTY_AREA_META,
   areaControllerSettingsByArea = EMPTY_AREA_CONTROLLER_SETTINGS,
   pageMetaLabels = PHI_BUILDER_PAGE_META_DEFAULT_PRESENTATION_LABELS,
+  signalRoutes = null,
 }: PhiDeveloperBuilderWorkspaceControllerProps) {
   const controller = usePhiDeveloperBuilderWorkspaceController(defaultArea, {
     shellPresetDraftsByArea,
@@ -2553,6 +2142,7 @@ export function PhiDeveloperBuilderWorkspaceController({
     areaMetaByArea,
     areaControllerSettingsByArea,
     pageMetaLabels,
+    signalRoutes,
   });
 
   return controller;

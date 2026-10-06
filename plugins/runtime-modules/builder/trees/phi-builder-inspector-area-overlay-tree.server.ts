@@ -9,7 +9,16 @@ import {
   type PhiSignalRoute,
 } from "../../../../types/signals";
 import type { PhiBlockRuntime } from "../../../../types/widget-runtime";
-import { createPhiBuilderControllerAddress } from "../controller/address";
+import {
+  createPhiBuilderControllerAddress,
+  PHI_BUILDER_CONTROLLER_INSTANCE_KEY,
+  PHI_BUILDER_CONTROLLER_TYPE,
+} from "../controller/address";
+import {
+  PHI_BUILDER_EFFECTS_CAPABILITY_SECTIONS,
+  resolvePhiBuilderEffectsCapabilityId,
+} from "../controller/definition";
+import { createPhiRuntimeFormControllerAddress } from "../../../../components/forms/runtime-form-controller-address";
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
 import {
   PHI_BUILDER_EFFECTS_FORM_WIDGET_IDS,
@@ -91,8 +100,64 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
   ]);
 
   const nodes = createPhiCmsPresetNodes(page);
+  const dialogRoutes = (name: string, routeKey: string, overlayId: (typeof PHI_BUILDER_INSPECTOR_OVERLAY_IDS)[keyof typeof PHI_BUILDER_INSPECTOR_OVERLAY_IDS]) => [
+    { routeKey: `${routeKey}-open`, capabilityId: `${name}Open`, scope: "area", channel: "dialog", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", overlayId) },
+    { routeKey: `${routeKey}-close`, capabilityId: `${name}Close`, scope: "area", channel: "dialog", action: "close", valueType: "none", receiver: createPhiSignalAddress("cms", overlayId) },
+  ] satisfies PhiSignalRoute[];
+  const effectsFormRoutes = PHI_BUILDER_EFFECTS_CAPABILITY_SECTIONS.flatMap((section) => {
+    const formId = PHI_BUILDER_EFFECTS_FORM_WIDGET_IDS[section];
+    return [
+      {
+        routeKey: `builder-controller-effects-${section}-values`,
+        capabilityId: resolvePhiBuilderEffectsCapabilityId(section, "Values"),
+        scope: "area",
+        channel: "values",
+        action: "change",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
+        receiver: createPhiRuntimeFormControllerAddress(`widget-${formId}`),
+      },
+      { routeKey: `builder-controller-effects-${section}-submit`, capabilityId: resolvePhiBuilderEffectsCapabilityId(section, "Submit"), scope: "area", channel: "submit", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", formId) },
+      { routeKey: `builder-controller-effects-${section}-reset`, capabilityId: resolvePhiBuilderEffectsCapabilityId(section, "Reset"), scope: "area", channel: "reset", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", formId) },
+    ] satisfies PhiSignalRoute[];
+  });
+  const signalWiringForm = createPhiSignalAddress("cms", PHI_BUILDER_INSPECTOR_WIDGET_IDS.signalWiringForm);
   return {
     page,
+    /*
+     * Whom the Builder Controller answers into among what this contribution holds: the three Inspector
+     * drawers, the Effects editor and its Forms, the wiring dialog with its Form and route Table. The
+     * Area runs the Controller; this setting joins the Shell's when the two are composed.
+     */
+    controllerSettings: [{
+      type: PHI_BUILDER_CONTROLLER_TYPE,
+      instanceKey: PHI_BUILDER_CONTROLLER_INSTANCE_KEY,
+      mountScope: "area",
+      config: {
+        signalRoutes: {
+          emits: [
+            ...dialogRoutes("regionInspector", "builder-controller-region-inspector", PHI_BUILDER_INSPECTOR_OVERLAY_IDS.regionInspector),
+            ...dialogRoutes("layoutInspector", "builder-controller-layout-inspector", PHI_BUILDER_INSPECTOR_OVERLAY_IDS.layoutInspector),
+            ...dialogRoutes("widgetInspector", "builder-controller-widget-inspector", PHI_BUILDER_INSPECTOR_OVERLAY_IDS.widgetInspector),
+            ...dialogRoutes("effectsDialog", "builder-controller-effects", PHI_BUILDER_INSPECTOR_OVERLAY_IDS.effectsEditor),
+            ...effectsFormRoutes,
+            {
+              routeKey: "builder-controller-effects-submitting",
+              capabilityId: "effectsSubmitting",
+              scope: "area",
+              channel: "effectsSubmitting",
+              action: "change",
+              valueType: "boolean",
+              receiver: createPhiSignalSubcontrolAddress("cms", PHI_BUILDER_INSPECTOR_WIDGET_IDS.effectsCommands, "save"),
+            },
+            ...dialogRoutes("signalWiring", "builder-controller-signal-wiring", PHI_BUILDER_INSPECTOR_OVERLAY_IDS.signalWiring),
+            { routeKey: "builder-controller-signal-wiring-submit", capabilityId: "signalWiringSubmit", scope: "area", channel: "submit", action: "activate", valueType: "none", receiver: signalWiringForm },
+            { routeKey: "builder-controller-signal-wiring-reset", capabilityId: "signalWiringReset", scope: "area", channel: "reset", action: "activate", valueType: "none", receiver: signalWiringForm },
+            { routeKey: "builder-controller-signal-wiring-routes-reload", capabilityId: "signalWiringRoutesReload", scope: "area", channel: "reload", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_INSPECTOR_WIDGET_IDS.signalWiringRoutes) },
+          ],
+        },
+      },
+    }],
     regions: [],
     overlays: [
       ...([
@@ -477,6 +542,8 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
           signalRoutes: {
             emits: [
               { routeKey: "builder-signal-wiring-values", capabilityId: "submitValues", scope: "area", channel: "signalWiringForm", action: "change", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues, receiver: createPhiBuilderControllerAddress() },
+              // The values while they are edited: the four selects cascade, and their options read the session these keep current.
+              { routeKey: "builder-signal-wiring-live", capabilityId: "valuesChange", scope: "area", channel: "signalWiringValues", action: "change", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues, receiver: createPhiBuilderControllerAddress() },
               { routeKey: "builder-signal-wiring-validation", capabilityId: "validationFailed", scope: "area", channel: "signalWiringFormValidation", action: "change", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValidity, receiver: createPhiBuilderControllerAddress() },
             ],
             listens: [

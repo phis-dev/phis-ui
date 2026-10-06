@@ -13,7 +13,10 @@ import {
 } from "../../plugins/registries/runtime-controller-core";
 import { registerPhiSignalInstance } from "./runtime-signal-registry";
 import { usePhiSignalRuntimePartition } from "./runtime-signal-partition";
-import { usePhiRuntimeControllerConfigOverlay } from "./runtime-controller-config-overlays";
+import {
+  mergePhiRuntimeControllerConfigOverlay,
+  usePhiRuntimeControllerConfigOverlay,
+} from "./runtime-controller-config-overlays";
 
 export type PhiMountedRuntimeControllerProps = PhiRuntimeModuleControllerClientProps & {
   plugin: PhiAnyRuntimeControllerPlugin;
@@ -31,7 +34,7 @@ export function PhiMountedRuntimeController({
   // What the shown Page tells this Controller, when the Area runs it (runtime-controller-config-overlays).
   const pageConfig = usePhiRuntimeControllerConfigOverlay(address);
   const parsedConfig = useMemo(
-    () => parsePhiRuntimeControllerConfig(plugin, pageConfig ? { ...setting.config, ...pageConfig } : setting.config),
+    () => parsePhiRuntimeControllerConfig(plugin, mergePhiRuntimeControllerConfigOverlay(setting.config, pageConfig)),
     [pageConfig, plugin, setting.config],
   );
   const preloadData = preloadDataByAddress?.[address] ?? null;

@@ -14,7 +14,7 @@ import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import { buildPhiHeaderTopActionsLayoutNode } from "../../../../components/regions/presets/phi-header-top-actions-layout";
 import { remapPhiSignalRoutesInConfig } from "../../../../helpers/signal-route-lifecycle";
 import { resolvePhiShellHeaderHeight, resolvePhiShellMetric } from "../../../../helpers/shell-region-style";
-import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
+import type { PhiCmsPageNode, PhiCmsTreeControllerSettings, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import type { PhiCommandToolbarWidgetPlacement } from "../../../../types/core-widget-placements";
 import type { PhiRuntimeModuleId } from "../../../../types/cms-module-descriptors";
 import {
@@ -22,10 +22,17 @@ import {
   createPhiSignalAddress,
   createPhiSignalSubcontrolAddress,
   type PhiBlockRuntime,
+  type PhiSignalAddress,
+  type PhiSignalRoute,
 } from "../../../../types";
 import { PHI_LAYOUT } from "../../../../theme/phi-tokens";
 import { PHI_COLOR, PHI_SPACE } from "../../../../theme/antd-css-var-contract";
-import { createPhiBuilderControllerAddress } from "../controller/address";
+import {
+  createPhiBuilderControllerAddress,
+  PHI_BUILDER_CONTROLLER_INSTANCE_KEY,
+  PHI_BUILDER_CONTROLLER_TYPE,
+} from "../controller/address";
+import { createPhiRuntimeFormControllerAddress } from "../../../../components/forms/runtime-form-controller-address";
 import {
   isPhiAreaScopedBuilderPage,
   isPhiDebugScaffoldBuilderPage,
@@ -217,6 +224,123 @@ function buildBuilderCommandToolbarConfig(
   };
 }
 
+/** The Builder Controller's setting in one of its trees: what it sends into the receivers that tree holds. */
+function buildBuilderControllerSetting(
+  mountScope: "area" | "page",
+  emits: readonly PhiSignalRoute[],
+): PhiCmsTreeControllerSettings {
+  return [{
+    type: PHI_BUILDER_CONTROLLER_TYPE,
+    instanceKey: PHI_BUILDER_CONTROLLER_INSTANCE_KEY,
+    mountScope,
+    config: { signalRoutes: { emits: [...emits] } },
+  }];
+}
+
+function builderDialogRoutes(
+  name: string,
+  routeKey: string,
+  channel: string,
+  overlay: PhiSignalAddress,
+): PhiSignalRoute[] {
+  return [
+    { routeKey: `${routeKey}-open`, capabilityId: `${name}Open`, scope: "page", channel, action: "activate", valueType: "none", receiver: overlay },
+    { routeKey: `${routeKey}-close`, capabilityId: `${name}Close`, scope: "page", channel, action: "close", valueType: "none", receiver: overlay },
+  ];
+}
+
+/*
+ * Whom the Builder Controller answers into on one Builder Page: the toolbar's undo and redo, and the
+ * dialogs this Page carries. The Area runs the Controller; while the Page is shown these join what the
+ * Area told it (`mergePhiRuntimeControllerConfigOverlay`), and a Page without a dialog names none.
+ */
+function buildBuilderPageControllerRoutes(page: {
+  isStructurePage: boolean;
+  isPagesPage: boolean;
+  isModulesPage: boolean;
+}): PhiSignalRoute[] {
+  const toolbarRoutes: PhiSignalRoute[] = (["undo", "redo"] as const).map((controlKey) => ({
+    routeKey: `builder-controller-${controlKey}-enabled`,
+    capabilityId: `${controlKey}Enabled`,
+    scope: "area",
+    channel: "enabled",
+    action: "change",
+    valueType: "boolean",
+    receiver: createPhiSignalSubcontrolAddress("cms", SYNTHETIC_DEV_WIDGET_IDS.widgetToolbar, controlKey),
+  }));
+  const areaSettingsForm = createPhiSignalAddress("cms", PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS.areaSettingsForm);
+  const areaSettingsRoutes: PhiSignalRoute[] = page.isStructurePage ? [
+    ...builderDialogRoutes(
+      "areaSettings",
+      "builder-controller-area-settings",
+      "areaSettingsDialog",
+      createPhiSignalAddress("cms", PHI_BUILDER_AREA_SETTINGS_OVERLAY_IDS.overlayAreaSettings),
+    ),
+    {
+      routeKey: "builder-controller-area-settings-values",
+      capabilityId: "areaSettingsValues",
+      scope: "page",
+      channel: "values",
+      action: "change",
+      valueType: "json",
+      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
+      receiver: createPhiRuntimeFormControllerAddress(`widget-${PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS.areaSettingsForm}`),
+    },
+    { routeKey: "builder-controller-area-settings-submit", capabilityId: "areaSettingsSubmit", scope: "page", channel: "submit", action: "activate", valueType: "none", receiver: areaSettingsForm },
+    { routeKey: "builder-controller-area-settings-reset", capabilityId: "areaSettingsReset", scope: "page", channel: "reset", action: "activate", valueType: "none", receiver: areaSettingsForm },
+  ] : [];
+  const pageMetaOverlay = createPhiSignalAddress("cms", PHI_BUILDER_PAGE_META_OVERLAY_IDS.editor);
+  const pageMetaForm = createPhiSignalAddress("cms", PHI_BUILDER_PAGE_META_WIDGET_IDS.form);
+  const pageMetaSave = createPhiSignalSubcontrolAddress("cms", PHI_BUILDER_PAGE_META_WIDGET_IDS.commands, "save");
+  const pageMetaRoutes: PhiSignalRoute[] = page.isPagesPage ? [
+    ...builderDialogRoutes("pageMeta", "builder-controller-page-meta", "dialog", pageMetaOverlay),
+    { routeKey: "builder-controller-page-meta-title", capabilityId: "overlayTitle", scope: "page", channel: "title", action: "change", valueType: "string", receiver: pageMetaOverlay },
+    { routeKey: "builder-controller-page-meta-save-label", capabilityId: "commandLabel", scope: "page", channel: "label", action: "change", valueType: "string", receiver: pageMetaSave },
+    { routeKey: "builder-controller-page-meta-submitting", capabilityId: "pageMetaSubmitting", scope: "page", channel: "pageMetaSubmitting", action: "change", valueType: "boolean", receiver: pageMetaSave },
+    {
+      routeKey: "builder-controller-page-meta-values",
+      capabilityId: "pageMetaFormValues",
+      scope: "page",
+      channel: "values",
+      action: "change",
+      valueType: "json",
+      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
+      receiver: createPhiRuntimeFormControllerAddress(`widget-${PHI_BUILDER_PAGE_META_WIDGET_IDS.form}`),
+    },
+    { routeKey: "builder-controller-page-meta-submit", capabilityId: "pageMetaSubmit", scope: "page", channel: "submit", action: "activate", valueType: "none", receiver: pageMetaForm },
+    { routeKey: "builder-controller-page-meta-reset", capabilityId: "pageMetaReset", scope: "page", channel: "reset", action: "activate", valueType: "none", receiver: pageMetaForm },
+  ] : [];
+  const modulesRoutes: PhiSignalRoute[] = page.isModulesPage ? [
+    { routeKey: "builder-controller-modules-table-reload", capabilityId: "modulesTableReload", scope: "area", channel: "reload", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_MODULES_TABLE_WIDGET_ID) },
+    {
+      routeKey: "builder-controller-module-detail-params",
+      capabilityId: "moduleDetailParams",
+      scope: "page",
+      channel: "bindingParams",
+      action: "change",
+      valueType: "json",
+      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableBindingParams,
+      receiver: createPhiSignalAddress("cms", PHI_BUILDER_MODULE_DETAIL_WIDGET_IDS.fields),
+    },
+    { routeKey: "builder-controller-module-detail-open", capabilityId: "moduleDetailOpen", scope: "page", channel: "dialog", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_MODULE_DETAIL_OVERLAY_IDS.overlayModuleDetail) },
+    ...builderDialogRoutes(
+      "moduleUsage",
+      "builder-controller-module-usage",
+      "moduleUsageDialog",
+      createPhiSignalAddress("cms", PHI_BUILDER_MODULE_USAGE_OVERLAY_IDS.overlayModuleUsage),
+    ),
+    { routeKey: "builder-controller-module-usage-reload", capabilityId: "moduleUsageReload", scope: "page", channel: "reload", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_MODULE_USAGE_WIDGET_IDS.moduleUsageTable) },
+    ...builderDialogRoutes(
+      "publicRoutes",
+      "builder-controller-public-routes",
+      "publicRoutesDialog",
+      createPhiSignalAddress("cms", PHI_BUILDER_PUBLIC_ROUTES_OVERLAY_IDS.overlayPublicRoutes),
+    ),
+    { routeKey: "builder-controller-public-routes-reload", capabilityId: "publicRoutesReload", scope: "page", channel: "reload", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_PUBLIC_ROUTES_WIDGET_IDS.publicRoutesTable) },
+  ] : [];
+  return [...toolbarRoutes, ...areaSettingsRoutes, ...pageMetaRoutes, ...modulesRoutes];
+}
+
 function remapBuilderPresetTreeInstanceIds(
   tree: PhiResolvedCmsPageTree,
   ownerModuleId: PhiRuntimeModuleId,
@@ -282,6 +406,11 @@ function remapBuilderPresetTreeInstanceIds(
       parentLayoutNodeId: remapInstanceId(node.parentLayoutNodeId),
       config: remapPhiSignalRoutesInConfig(node.config, signalRemaps),
     })),
+    // The Controller's routes name the same receivers the nodes' routes do, so they move with them.
+    controllerSettings: (tree.controllerSettings ?? []).map((setting) => ({
+      ...setting,
+      config: setting.config ? remapPhiSignalRoutesInConfig(setting.config, signalRemaps) : setting.config,
+    })),
     contentWidgets: tree.contentWidgets.map((node) => ({
       ...node,
       id: remapInstanceId(node.id)!,
@@ -329,6 +458,15 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
       description: null,
     },
     runtimeModuleIds: createPhiDefaultAreaRuntimeModuleIds("builder"),
+    /*
+     * The Shell's own receivers: the header's Area selector and debug switch, which the Controller arms
+     * on the Pages that use them. The Inspector Overlay contribution adds its receivers to this setting
+     * when the two are composed (`concatPhiCmsTreeControllerSettings`).
+     */
+    controllerSettings: buildBuilderControllerSetting("area", [
+      { routeKey: "builder-controller-area-selector-enabled", capabilityId: "areaSelectorEnabled", scope: "area", channel: "enabled", action: "change", valueType: "boolean", receiver: createPhiSignalAddress("cms", SYNTHETIC_DEV_WIDGET_IDS.widgetBuilderAreaSelector) },
+      { routeKey: "builder-controller-debug-switch-enabled", capabilityId: "debugSwitchEnabled", scope: "area", channel: "enabled", action: "change", valueType: "boolean", receiver: createPhiSignalAddress("cms", SYNTHETIC_DEV_WIDGET_IDS.widgetHeaderMainDebugSwitch) },
+    ]),
     overlays: [],
     regions: [
       nodes.region({
@@ -688,6 +826,10 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
       },
       description: null,
     },
+    controllerSettings: buildBuilderControllerSetting(
+      "page",
+      buildBuilderPageControllerRoutes({ isStructurePage, isPagesPage, isModulesPage }),
+    ),
     overlays: [
       /*
        * Everything the Area says about itself, in one place.
@@ -1639,7 +1781,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   },
                   signalRoutes: {
                     emits: [
-                      { routeKey: "builder-modules-table-action", capabilityId: "actionActivate", scope: "area", channel: "action", action: "activate", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction, receiver: createPhiBuilderControllerAddress() },
+                      { routeKey: "builder-modules-table-action", capabilityId: "actionActivate", scope: "area", channel: "moduleTableAction", action: "activate", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction, receiver: createPhiBuilderControllerAddress() },
                     ],
                   },
                 },

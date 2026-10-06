@@ -52,12 +52,7 @@ import {
   phiBuilderHistory,
 } from "../history";
 import { createPhiBuilderControllerAddress } from "../controller/address";
-import {
-  PHI_BUILDER_PAGE_META_OVERLAY_IDS,
-  PHI_BUILDER_PAGE_META_WIDGET_IDS,
-} from "../addresses";
-import { createPhiRuntimeFormControllerAddress } from "../../../../components/forms/runtime-form-controller-address";
-import { createPhiSignalAddress, createPhiSignalSubcontrolAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
+import { PHI_SIGNAL_VALUE_SCHEMAS, type PhiSignalValue } from "../../../../types/signals";
 import { readPhiRuntimeFormValuesSignalValue } from "../../../../components/forms/runtime-form-state";
 import type { PhiBuilderPageMetaPresentationLabels } from "../controller/definition";
 import { emitPhiPageTitleInputSignal } from "../page-title-signal";
@@ -71,12 +66,15 @@ type PhiBuilderPageControllerState = Pick<
 type PhiPageMetaDialogMode = "create" | "update";
 
 export function usePhiBuilderPageController({
+  emitCapability,
   defaultArea,
   effectiveArea,
   effectivePageKey,
   pageMetaLabels,
   state,
 }: {
+  /** The Builder Controller's own output: the Page metadata dialog is routed by the Pages Page. */
+  emitCapability: (capabilityId: string, value: PhiSignalValue, correlationId?: string | null) => void;
   defaultArea: PhiDeveloperBuilderArea;
   effectiveArea: PhiDeveloperBuilderArea;
   effectivePageKey: string;
@@ -91,39 +89,14 @@ export function usePhiBuilderPageController({
   const [pageMetaDialogMode, setPageMetaDialogMode] = useState<PhiPageMetaDialogMode>("create");
   const [pageMetaDialogSaving, setPageMetaDialogSaving] = useState(false);
   const [pendingPageMetaInitialValues, setPendingPageMetaInitialValues] = useState<Record<string, unknown> | null>(null);
-  const pageMetaFormControllerAddress = createPhiRuntimeFormControllerAddress(`widget-${PHI_BUILDER_PAGE_META_WIDGET_IDS.form}`);
-  const pageMetaOverlayAddress = createPhiSignalAddress("cms", PHI_BUILDER_PAGE_META_OVERLAY_IDS.editor);
-  const pageMetaSaveControlAddress = createPhiSignalSubcontrolAddress(
-    "cms",
-    PHI_BUILDER_PAGE_META_WIDGET_IDS.commands,
-    "save",
-  );
 
   const emitPageMetaTitle = useCallback((title: string) => {
-    emitSignal({
-      scope: "page",
-      channel: "title",
-      action: "change",
-      value: title,
-      valueType: "string",
-      sender: createPhiBuilderControllerAddress(),
-      receiver: pageMetaOverlayAddress,
-      timestamp: Date.now(),
-    });
-  }, [emitSignal, pageMetaOverlayAddress]);
+    emitCapability("overlayTitle", title);
+  }, [emitCapability]);
 
   const emitPageMetaActionLabel = useCallback((label: string) => {
-    emitSignal({
-      scope: "page",
-      channel: "label",
-      action: "change",
-      value: label,
-      valueType: "string",
-      sender: createPhiBuilderControllerAddress(),
-      receiver: pageMetaSaveControlAddress,
-      timestamp: Date.now(),
-    });
-  }, [emitSignal, pageMetaSaveControlAddress]);
+    emitCapability("commandLabel", label);
+  }, [emitCapability]);
 
   /*
    * `correlationId` is the exchange this opening or closing belongs to. Opening from a toolbar click
@@ -134,18 +107,8 @@ export function usePhiBuilderPageController({
     action: "activate" | "close",
     correlationId?: string,
   ) => {
-    emitSignal({
-      scope: "page",
-      channel: "dialog",
-      action,
-      value: null,
-      valueType: "none",
-      sender: createPhiBuilderControllerAddress(),
-      receiver: pageMetaOverlayAddress,
-      correlationId,
-      timestamp: Date.now(),
-    });
-  }, [emitSignal, pageMetaOverlayAddress]);
+    emitCapability(action === "activate" ? "pageMetaOpen" : "pageMetaClose", null, correlationId);
+  }, [emitCapability]);
 
   const currentPageTree = resolvePhiBuilderActivePageCatalog(
     effectiveArea,
@@ -257,32 +220,13 @@ export function usePhiBuilderPageController({
   }
 
   useEffect(() => {
-    emitSignal({
-      scope: "page",
-      channel: "pageMetaSubmitting",
-      action: "change",
-      value: pageMetaDialogSaving,
-      valueType: "boolean",
-      sender: createPhiBuilderControllerAddress(),
-      receiver: pageMetaSaveControlAddress,
-      timestamp: Date.now(),
-    });
-  }, [emitSignal, pageMetaDialogSaving, pageMetaSaveControlAddress]);
+    emitCapability("pageMetaSubmitting", pageMetaDialogSaving);
+  }, [emitCapability, pageMetaDialogSaving]);
 
   useEffect(() => {
     if (!pendingPageMetaInitialValues) return;
-    emitSignal({
-      scope: "page",
-      channel: "values",
-      action: "change",
-      value: { values: pendingPageMetaInitialValues },
-      valueType: "json",
-      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
-      sender: createPhiBuilderControllerAddress(),
-      receiver: pageMetaFormControllerAddress,
-      timestamp: Date.now(),
-    });
-  }, [emitSignal, pageMetaFormControllerAddress, pendingPageMetaInitialValues]);
+    emitCapability("pageMetaFormValues", { values: pendingPageMetaInitialValues });
+  }, [emitCapability, pendingPageMetaInitialValues]);
 
   async function submitPageMetaDialog(values: Record<string, unknown>, correlationId: string) {
     const title = typeof values.title === "string" ? values.title.trim() || "New Page" : "New Page";
@@ -523,17 +467,7 @@ export function usePhiBuilderPageController({
       signal.value === "save"
     ) {
       if (pageMetaDialogSaving) return;
-      emitSignal({
-        scope: "page",
-        channel: "submit",
-        action: "activate",
-        value: null,
-        valueType: "none",
-        sender: createPhiBuilderControllerAddress(),
-        receiver: createPhiSignalAddress("cms", PHI_BUILDER_PAGE_META_WIDGET_IDS.form),
-        correlationId: signal.correlationId,
-        timestamp: Date.now(),
-      });
+      emitCapability("pageMetaSubmit", null, signal.correlationId);
       return;
     }
 
@@ -545,17 +479,7 @@ export function usePhiBuilderPageController({
     ) {
       if (pageMetaDialogSaving) return;
       setPendingPageMetaInitialValues(null);
-      emitSignal({
-        scope: "page",
-        channel: "reset",
-        action: "activate",
-        value: null,
-        valueType: "none",
-        sender: createPhiBuilderControllerAddress(),
-        receiver: createPhiSignalAddress("cms", PHI_BUILDER_PAGE_META_WIDGET_IDS.form),
-        correlationId: signal.correlationId,
-        timestamp: Date.now(),
-      });
+      emitCapability("pageMetaReset", null, signal.correlationId);
       dispatchPageMetaOverlay("close", signal.correlationId);
       return;
     }
@@ -567,17 +491,7 @@ export function usePhiBuilderPageController({
       !pageMetaDialogSaving
     ) {
       setPendingPageMetaInitialValues(null);
-      emitSignal({
-        scope: "page",
-        channel: "reset",
-        action: "activate",
-        value: null,
-        valueType: "none",
-        sender: createPhiBuilderControllerAddress(),
-        receiver: createPhiSignalAddress("cms", PHI_BUILDER_PAGE_META_WIDGET_IDS.form),
-        correlationId: signal.correlationId,
-        timestamp: Date.now(),
-      });
+      emitCapability("pageMetaReset", null, signal.correlationId);
       return;
     }
 

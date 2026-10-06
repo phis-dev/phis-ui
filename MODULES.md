@@ -252,7 +252,11 @@ Their internal filenames are not ABI, but the same physical Server/live/Controls
    `controller/client.tsx`. Controller fields and the `Controller` Client are complete as one group or absent
    as one group; a no-op Controller is worse than none. App, Accounting, Public, Admin, Editor and
    Dashboard carry none since theirs answered nothing and rendered nothing on every page of their Areas;
-   the Form Builder's is the one still standing, kept for the Form Builder it waits on.
+   the Form Builder's is the one still standing, kept for the Form Builder it waits on. Everything the
+   Controller runs lives in `controller/`, however large: `validate-controller-receiver-contracts.ts`
+   reads that directory, and the Builder's Controller kept outside it addressed its Inspector by preset
+   id long after the rule held everywhere else. Whom it sends to comes from `config.signalRoutes`, which
+   the trees holding the receivers write ([SIGNALS.md](./SIGNALS.md#addresses)).
 
 4. **Write `module.ts`** — the definition plus the Controller definition, nothing else.
 

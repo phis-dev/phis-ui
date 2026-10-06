@@ -1,13 +1,14 @@
 "use client";
 
-import { createElement, useCallback, useEffect } from "react";
+import { createElement, useCallback, useEffect, useMemo } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import type { PhiRuntimeControllerPlugin, PhiSignalAddress } from "../../../../types";
-import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
+import { PHI_SIGNAL_VALUE_SCHEMAS, type PhiSignalValue } from "../../../../types/signals";
 import { readPhiTableBindingParamsSignalValue } from "../../../../types/table-signal-values";
 import { isPhiBuilderAreaKey, type PhiBuilderAreaKey } from "../../../../constants/cms-areas";
 import { createPhiRuntimeControllerClient } from "../../../../components/runtime/runtime-controller-client-factory";
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../components/runtime/runtime-signal-bus";
+import { dispatchPhiSignalCapability } from "../../../../components/runtime/runtime-signal-identity";
 import { usePhiApplicationFeedback } from "../../../../components/runtime/use-phi-application-feedback";
 import {
   getPhiWorkspaceCatalogSnapshot,
@@ -38,20 +39,29 @@ import {
 } from "../controller/definition";
 import { resolvePhiBuilderRevisionNavScopeKey } from "../../../../helpers/cms-navigation-scope-key";
 import { deleteCmsDraft } from "../../../../helpers/cms-draft-delete";
-import {
-  PHI_REVISIONS_DELETE_AREA_OVERLAY_IDS,
-  PHI_REVISIONS_DELETE_AREA_WIDGET_IDS,
-  PHI_REVISIONS_TABLE_WIDGET_ID,
-} from "../page-ids";
 import { isPhiRecord } from "../../../../helpers/is-record";
 
-const PHI_REVISIONS_TABLE_ADDRESS = createPhiSignalAddress(
-  "cms",
-  PHI_REVISIONS_TABLE_WIDGET_ID,
-);
-
-function PhiRevisionsControllerMount({ address }: { address: PhiSignalAddress }) {
+function PhiRevisionsControllerMount({
+  address,
+  config,
+}: {
+  address: PhiSignalAddress;
+  config: PhiRevisionsControllerConfig;
+}) {
   const dispatchSignal = usePhiSignalDispatcher();
+  /*
+   * One declared output, delivered through every route the Revisions Page wrote for it.
+   *
+   * The history Table and the delete-Area dialog were preset ids written into this file, and the Area
+   * runs this Controller on every Builder Page: away from Revisions it kept sending binding params to a
+   * Table that was not there, and the bus held each one for a listener that never came.
+   */
+  const emitRoutes = useMemo(() => config.signalRoutes?.emits ?? [], [config.signalRoutes?.emits]);
+  const emitCapability = useCallback((
+    capabilityId: string,
+    value: PhiSignalValue,
+    correlationId?: string | null,
+  ) => dispatchPhiSignalCapability(dispatchSignal, address, emitRoutes, capabilityId, value, correlationId), [address, dispatchSignal, emitRoutes]);
   const { showMessage } = usePhiApplicationFeedback();
   const pathname = usePathname();
   const router = useRouter();
@@ -99,23 +109,12 @@ function PhiRevisionsControllerMount({ address }: { address: PhiSignalAddress })
         : kind === "theme"
           ? requestedScope || search.get(PHI_BUILDER_THEME_KEY_SEARCH_PARAM) || "default"
           : normalizePhiBuilderAreaSearchParam(requestedScope) ?? state.area;
-    dispatchSignal({
-      scope: "area",
-      channel: "bindingParams",
-      action: "change",
-      value: { params: { area: state.area, kind, scopeKey } },
-      valueType: "json",
-      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableBindingParams,
-      sender: address,
-      receiver: PHI_REVISIONS_TABLE_ADDRESS,
-      timestamp: Date.now(),
-    });
+    emitCapability("bindingParamsChange", { params: { area: state.area, kind, scopeKey } });
   }, [
-    address,
     builderArea,
     builderPageKey,
     customPages,
-    dispatchSignal,
+    emitCapability,
     modulePresetPagesByArea,
     persistedPageCatalogByArea,
   ]);
@@ -135,17 +134,7 @@ function PhiRevisionsControllerMount({ address }: { address: PhiSignalAddress })
         ownerModuleId: source?.ownerModuleId,
         presetKey: source?.presetKey,
       });
-      dispatchSignal({
-        scope: "area",
-        channel: "dialog",
-        action: "close",
-        value: null,
-        valueType: "none",
-        sender: address,
-        receiver: createPhiSignalAddress("cms", PHI_REVISIONS_DELETE_AREA_OVERLAY_IDS.overlayDeleteArea),
-        ...(correlationId ? { correlationId } : {}),
-        timestamp: Date.now(),
-      });
+      emitCapability("deleteAreaClose", null, correlationId);
       showMessage({ level: "success", content: `Deleted the ${area} shell.` });
       router.refresh();
     } catch (error) {
@@ -154,7 +143,7 @@ function PhiRevisionsControllerMount({ address }: { address: PhiSignalAddress })
         content: error instanceof Error ? error.message : "Deleting the shell failed.",
       });
     }
-  }, [address, dispatchSignal, router, showMessage]);
+  }, [emitCapability, router, showMessage]);
 
   usePhiSignalListener(useCallback((signal) => {
     if (
@@ -167,18 +156,7 @@ function PhiRevisionsControllerMount({ address }: { address: PhiSignalAddress })
         search.get(PHI_BUILDER_REVISIONS_KIND_SEARCH_PARAM),
       ) ?? "area";
       if (kind !== "area") return;
-      dispatchSignal({
-        scope: "area",
-        channel: "bindingParams",
-        action: "change",
-        value: { params: { kind: "area", scopeKey: signal.value } },
-        valueType: "json",
-        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableBindingParams,
-        sender: address,
-        receiver: PHI_REVISIONS_TABLE_ADDRESS,
-        correlationId: signal.correlationId,
-        timestamp: Date.now(),
-      });
+      emitCapability("bindingParamsChange", { params: { kind: "area", scopeKey: signal.value } }, signal.correlationId);
       return;
     }
 
@@ -196,28 +174,12 @@ function PhiRevisionsControllerMount({ address }: { address: PhiSignalAddress })
        * pointed at when it is pressed.
        */
       const area = getPhiWorkspaceCatalogSnapshot(PHI_WORKSPACE_CATALOG_SCOPE).area;
-      dispatchSignal({
-        scope: "area",
-        channel: "text",
-        action: "change",
-        value: `Everything this Site stored for ${area} is deleted, drafts and published alike. What is live changes at once, the Module preset takes the Area back, and no revision is left to restore it from. It cannot be undone.`,
-        valueType: "string",
-        sender: address,
-        receiver: createPhiSignalAddress("cms", PHI_REVISIONS_DELETE_AREA_WIDGET_IDS.deleteAreaWarning),
-        correlationId: signal.correlationId,
-        timestamp: Date.now(),
-      });
-      dispatchSignal({
-        scope: "area",
-        channel: "dialog",
-        action: "activate",
-        value: null,
-        valueType: "none",
-        sender: address,
-        receiver: createPhiSignalAddress("cms", PHI_REVISIONS_DELETE_AREA_OVERLAY_IDS.overlayDeleteArea),
-        correlationId: signal.correlationId,
-        timestamp: Date.now(),
-      });
+      emitCapability(
+        "deleteAreaWarning",
+        `Everything this Site stored for ${area} is deleted, drafts and published alike. What is live changes at once, the Module preset takes the Area back, and no revision is left to restore it from. It cannot be undone.`,
+        signal.correlationId,
+      );
+      emitCapability("deleteAreaOpen", null, signal.correlationId);
       return;
     }
 
@@ -336,7 +298,7 @@ function PhiRevisionsControllerMount({ address }: { address: PhiSignalAddress })
         { correlationId: signal.correlationId },
       );
     }
-  }, [address, deleteAreaShell, dispatchSignal, pathname, router, showMessage]), {
+  }, [address, deleteAreaShell, dispatchSignal, emitCapability, pathname, router, showMessage]), {
     scopes: ["area", "page"],
     channels: ["areaSelection", "bindingParams", "command", "formValues", "mutation"],
   },
@@ -354,7 +316,7 @@ function PhiRevisionsControllerMount({ address }: { address: PhiSignalAddress })
 
 export const PHI_REVISIONS_RUNTIME_CONTROLLER_PLUGIN = {
   ...PHI_REVISIONS_RUNTIME_CONTROLLER_DEFINITION,
-  renderController: ({ key, address }) => createElement(PhiRevisionsControllerMount, { key, address }),
+  renderController: ({ key, address, config }) => createElement(PhiRevisionsControllerMount, { key, address, config }),
 } satisfies PhiRuntimeControllerPlugin<PhiRevisionsControllerConfig>;
 
 export const PhiRevisionsRuntimeControllerClient = createPhiRuntimeControllerClient(

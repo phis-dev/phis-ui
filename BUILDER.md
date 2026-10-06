@@ -510,6 +510,15 @@ whole, so it sends the settings the tree arrived with -- the stored Page or Area
 not arrived is refused rather than saved without them, because that save would leave the Controllers it
 configures told nothing. An Area Overlay's own settings compose with it and are never saved into the Area.
 
+The Builder Controller is configured that way itself. Its Shell routes the header's Area selector and
+debug switch, the Inspector Overlay contribution routes the three drawers, the Effects editor with its
+Forms and the wiring dialog, and each Builder Page routes the toolbar's undo and redo and the dialogs it
+carries (Area settings on Shells, Page metadata on Pages, detail, usage and public routes on Modules).
+The Shell's and the Overlay's settings join when the Area is composed, and a Page's join them while it is
+shown (SIGNALS.md). Its implementation lives in `plugins/runtime-modules/builder/controller/` with its
+definition: `workspace-controller.tsx` and the parts it is made of (page, preview, draft status and
+commands, region, Inspector, signal wiring).
+
 Each Inspector Drawer has exactly one direct Body root, an explicitly declared n-slot
 `PhiCollapsibleLayout`, and a Flex Header Layout. There is no Stack above the root, no runtime topology
 switch, no nested Collapsible, and no hidden Drawer Region. The Builder Controller opens exactly the Drawer

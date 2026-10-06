@@ -11,7 +11,11 @@ import { getPhiAdminUsersTableWidgetLabels } from "../../../../components/widget
 import { PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
 import { createPhiSignalAddress, createPhiSignalSubcontrolAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
 import { PHI_COLOR, PHI_SPACE } from "../../../../theme/antd-css-var-contract";
-import { createPhiUserManagementControllerAddress } from "../controller/address";
+import {
+  createPhiUserManagementControllerAddress,
+  PHI_USER_MANAGEMENT_CONTROLLER_INSTANCE_KEY,
+  PHI_USER_MANAGEMENT_CONTROLLER_TYPE,
+} from "../controller/address";
 import { PHI_USER_MANAGEMENT_FORM_IDS } from "../forms";
 import {
   PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS,
@@ -114,7 +118,8 @@ export async function buildPhiDefaultAdminUsersPageTree({
               routeKey: `${key}-close-request`,
               capabilityId: "closeRequest",
               scope: "page" as const,
-              channel: "dialog",
+              // The workflow's own channel, which is how the Controller knows whose close this is.
+              channel: `${formMode}Dialog`,
               action: "close" as const,
               valueType: "json" as const,
               valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.overlayCloseRequest,
@@ -150,12 +155,84 @@ export async function buildPhiDefaultAdminUsersPageTree({
     regionId: SYNTHETIC_ADMIN_USERS_REGION_IDS.regionContent,
   });
 
+  const overlayAddress = (id: typeof PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS[keyof typeof PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS]) =>
+    createPhiSignalAddress("cms", id);
+  const formWorkflowRoutes = ([
+    ["create", createFormAddress, PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS.overlayCreate, PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS.widgetCreateCommands],
+    ["edit", editFormAddress, PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS.overlayEdit, PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS.widgetEditCommands],
+  ] as const).flatMap(([workflow, formAddress, overlayId, commandsId]) => [
+    { routeKey: `admin-users-controller-${workflow}-dialog-open`, capabilityId: `${workflow}DialogOpen`, scope: "page" as const, channel: "dialog", action: "activate" as const, valueType: "none" as const, receiver: overlayAddress(overlayId) },
+    { routeKey: `admin-users-controller-${workflow}-dialog-close`, capabilityId: `${workflow}DialogClose`, scope: "page" as const, channel: "dialog", action: "close" as const, valueType: "none" as const, receiver: overlayAddress(overlayId) },
+    { routeKey: `admin-users-controller-${workflow}-form-submit`, capabilityId: `${workflow}FormSubmit`, scope: "page" as const, channel: "submit", action: "activate" as const, valueType: "none" as const, receiver: formAddress },
+    { routeKey: `admin-users-controller-${workflow}-form-reset`, capabilityId: `${workflow}FormReset`, scope: "page" as const, channel: "reset", action: "activate" as const, valueType: "none" as const, receiver: formAddress },
+    { routeKey: `admin-users-controller-${workflow}-save-submitting`, capabilityId: `${workflow}SaveSubmitting`, scope: "page" as const, channel: "submitting", action: "change" as const, valueType: "boolean" as const, receiver: createPhiSignalSubcontrolAddress("cms", commandsId, "save") },
+    {
+      routeKey: `admin-users-controller-${workflow}-dialog-condition`,
+      capabilityId: `${workflow}DialogCondition`,
+      scope: "page" as const,
+      channel: "condition",
+      action: "change" as const,
+      valueType: "json" as const,
+      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeConditionState,
+      receiver: overlayAddress(overlayId),
+    },
+  ]);
+
   return {
     page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     pageMeta: {
       title: { msgId: 0, source: "Users", value: labels.pageTitle },
       description: { msgId: 0, source: "Manage local site users, roles, access, and login history.", value: labels.pageDescription },
     },
+    /*
+     * Whom the User Management Controller answers into: the three dialogs, the two Forms and their save
+     * buttons, the users Table it reloads, and the login history it filters. The Page mounts the
+     * Controller through this setting as well as configuring it.
+     */
+    controllerSettings: [{
+      type: PHI_USER_MANAGEMENT_CONTROLLER_TYPE,
+      instanceKey: PHI_USER_MANAGEMENT_CONTROLLER_INSTANCE_KEY,
+      mountScope: "page",
+      config: {
+        signalRoutes: {
+          emits: [
+            ...formWorkflowRoutes,
+            { routeKey: "admin-users-controller-history-dialog-open", capabilityId: "historyDialogOpen", scope: "page", channel: "dialog", action: "activate", valueType: "none", receiver: overlayAddress(PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS.overlayHistory) },
+            {
+              routeKey: "admin-users-controller-edit-record",
+              capabilityId: "editRecordOpen",
+              scope: "page",
+              channel: "action",
+              action: "activate",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
+              receiver: editFormAddress,
+            },
+            {
+              routeKey: "admin-users-controller-edit-form-condition",
+              capabilityId: "editFormCondition",
+              scope: "page",
+              channel: "condition",
+              action: "change",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeConditionState,
+              receiver: editFormAddress,
+            },
+            {
+              routeKey: "admin-users-controller-history-filters",
+              capabilityId: "historyFilters",
+              scope: "page",
+              channel: "filters",
+              action: "change",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableFilters,
+              receiver: historyTableAddress,
+            },
+            { routeKey: "admin-users-controller-users-reload", capabilityId: "usersReload", scope: "page", channel: "reload", action: "activate", valueType: "none", receiver: tableAddress },
+          ],
+        },
+      },
+    }],
     overlays: [
       overlay(
         PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS.overlayCreate,
@@ -434,7 +511,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
                 routeKey: `admin-users-${mode}-success`,
                 capabilityId: "submitSuccess",
                 scope: "page",
-                channel: "submit",
+                channel: `${mode}Submit`,
                 action: "activate",
                 valueType: "json",
                 valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
@@ -444,7 +521,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
                 routeKey: `admin-users-${mode}-submitting`,
                 capabilityId: "submitting",
                 scope: "page",
-                channel: "submitting",
+                channel: `${mode}Submitting`,
                 action: "change",
                 valueType: "boolean",
                 receiver: controllerAddress,
@@ -453,7 +530,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
                 routeKey: `admin-users-${mode}-command`,
                 capabilityId: "command",
                 scope: "page",
-                channel: "command",
+                channel: `${mode}Command`,
                 action: "activate",
                 valueType: "string",
                 receiver: controllerAddress,
@@ -536,7 +613,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
               routeKey: `admin-users-${mode}-command`,
               capabilityId: "command",
               scope: "page",
-              channel: "command",
+              channel: `${mode}Command`,
               action: "activate",
               valueType: "string",
               receiver: controllerAddress,

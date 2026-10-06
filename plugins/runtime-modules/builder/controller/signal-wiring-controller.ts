@@ -7,8 +7,6 @@ import {
   type PhiSignalRoute,
   type PhiSignalRouteSet,
 } from "../../../../types/signals";
-import { createPhiRuntimeFormControllerAddress } from "../../../../components/forms/runtime-form-controller-address";
-import { PHI_BUILDER_INSPECTOR_WIDGET_IDS } from "../inspector-overlay-addresses";
 import { builderWorkspaceStore , getPhiDeveloperBuilderStateSnapshot } from "../developer-workspace-store";
 import type { PhiDeveloperBuilderArea, PhiDeveloperBuilderWorkspaceState } from "../developer-workspace-types";
 import { getPhiDeveloperSelectedSignalRoutes } from "../signal-route-selection";
@@ -17,15 +15,6 @@ import {
   resolvePhiBuilderReceiverSignalEndpoints,
   resolvePhiBuilderSelectedSignalEndpoints,
 } from "../signal-wiring-options";
-
-/**
- * The wiring Form publishes its values to its own Form controller address, which is derived from the
- * Widget instance. Listening there is how the Builder controller follows the Form while it is edited --
- * the four selects cascade, and their options providers read the session this keeps up to date.
- */
-export const PHI_BUILDER_SIGNAL_WIRING_FORM_CONTROLLER_ADDRESS = createPhiRuntimeFormControllerAddress(
-  `widget-${PHI_BUILDER_INSPECTOR_WIDGET_IDS.signalWiringForm}`,
-);
 
 const EMPTY_SESSION: PhiDeveloperBuilderWorkspaceState["signalWiring"] = {
   senderAddress: null,

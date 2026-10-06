@@ -479,7 +479,7 @@ assert.match(
     "utf8",
   );
   const tableBlock = builderPresetSource.slice(
-    builderPresetSource.indexOf("PHI_BUILDER_INSPECTOR_WIDGET_IDS.signalWiringRoutes"),
+    builderPresetSource.indexOf("id: PHI_BUILDER_INSPECTOR_WIDGET_IDS.signalWiringRoutes"),
   ).slice(0, 3000);
   assert.match(tableBlock, /resourceKey: "signalRoutes"/u, "The wiring Table binds the Signal routes resource.");
   assert.doesNotMatch(tableBlock, /sessionKey/u, "The wiring Table reads the block's own routes, not a staged session.");
@@ -495,7 +495,7 @@ assert.match(
    * displaced the Form entirely -- and with it the Form instance the overlay waits for before it opens,
    * so the wiring button did nothing at all.
    */
-  const formSlot = builderPresetSource.slice(builderPresetSource.indexOf("PHI_BUILDER_INSPECTOR_WIDGET_IDS.signalWiringForm"), 1_000_000)
+  const formSlot = builderPresetSource.slice(builderPresetSource.indexOf("id: PHI_BUILDER_INSPECTOR_WIDGET_IDS.signalWiringForm"), 1_000_000)
     .slice(0, 800).match(/slotIndex:\s*([A-Za-z0-9_.]+)/u)?.[1];
   const tableSlot = tableBlock.match(/slotIndex:\s*([A-Za-z0-9_.]+)/u)?.[1];
   assert.ok(formSlot && tableSlot, "Both wiring body Widgets declare a slot.");

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useSyncExternalStore } from "react";
 
 import type { PhiSignalAddress } from "../../types/signals";
+import { joinPhiSignalRouteSets } from "../../helpers/signal-route-set-join";
 import {
   usePhiSignalRuntimePartition,
   type PhiSignalRuntimePartition,
@@ -100,4 +101,26 @@ export function usePhiRuntimeControllerConfigOverlay(address: PhiSignalAddress) 
     () => store.entries.get(address)?.at(-1)?.config ?? null,
     () => null,
   );
+}
+
+/**
+ * The Area's config of a Controller with what the shown Page adds to it.
+ *
+ * A key the Page sets replaces the Area's, except `signalRoutes`: the Area's receivers -- its own
+ * Overlays, standing on every Page -- do not stop existing while a Page is shown, so the Page's routes
+ * join them rather than replace them. A Page route with the routeKey of an Area route is the Page's
+ * answer to the same question and takes its place.
+ */
+export function mergePhiRuntimeControllerConfigOverlay<TAreaConfig extends Record<string, unknown> | null | undefined>(
+  areaConfig: TAreaConfig,
+  pageConfig: Record<string, unknown> | null,
+): TAreaConfig | Record<string, unknown> {
+  if (!pageConfig) return areaConfig;
+  const merged: Record<string, unknown> = { ...areaConfig, ...pageConfig };
+  const signalRoutes = joinPhiSignalRouteSets(areaConfig?.signalRoutes, pageConfig.signalRoutes, {
+    duplicate: "replace",
+    label: "A Page's Controller config",
+  });
+  if (signalRoutes) merged.signalRoutes = signalRoutes;
+  return merged;
 }

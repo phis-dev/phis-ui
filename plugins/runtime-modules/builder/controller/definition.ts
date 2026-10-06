@@ -1,5 +1,7 @@
 import {
   PHI_SIGNAL_VALUE_SCHEMAS,
+  readPhiSignalRouteSet,
+  type PhiSignalRouteSet,
 } from "../../../../types/signals";
 import type {
   PhiRuntimeControllerDefinition,
@@ -21,7 +23,45 @@ import { PHI_DRAG_SOURCE_CONTROL_SIGNALS } from "../../../../components/widgets/
 import { PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS } from "../../../../components/widgets/label-types/builder-chrome";
 import type { PhiCmsTreeControllerSettings } from "../../../../types/cms";
 
-export type PhiBuilderRuntimeControllerConfig = Record<string, never>;
+/**
+ * Whom the Builder Controller answers into, from the trees that hold the receivers.
+ *
+ * The Inspector Overlay contribution routes its drawers, the Effects editor and the wiring dialog; the
+ * Builder Shell its Area selector and debug switch; each Builder Page the dialogs it carries -- Area
+ * settings, Page metadata, the Modules page's three. The composed Area tree joins the first two, and
+ * the shown Page's routes join them while it is shown (`mergePhiRuntimeControllerConfigOverlay`).
+ */
+export type PhiBuilderRuntimeControllerConfig = {
+  signalRoutes: PhiSignalRouteSet | null;
+};
+
+/** The three Effects Forms, each with its own values, submit and reset. */
+export const PHI_BUILDER_EFFECTS_CAPABILITY_SECTIONS = ["appearance", "transitions", "viewport"] as const;
+export type PhiBuilderEffectsCapabilitySection = (typeof PHI_BUILDER_EFFECTS_CAPABILITY_SECTIONS)[number];
+
+export function resolvePhiBuilderEffectsCapabilityId(
+  section: PhiBuilderEffectsCapabilitySection,
+  kind: "Values" | "Submit" | "Reset",
+) {
+  return `effects${section.charAt(0).toUpperCase()}${section.slice(1)}${kind}`;
+}
+
+const PHI_BUILDER_EFFECTS_FORM_EMITS = PHI_BUILDER_EFFECTS_CAPABILITY_SECTIONS.flatMap((section) => [
+  {
+    id: resolvePhiBuilderEffectsCapabilityId(section, "Values"),
+    action: "change" as const,
+    valueType: "json" as const,
+    valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
+  },
+  { id: resolvePhiBuilderEffectsCapabilityId(section, "Submit"), action: "activate" as const, valueType: "none" as const },
+  { id: resolvePhiBuilderEffectsCapabilityId(section, "Reset"), action: "activate" as const, valueType: "none" as const },
+]);
+
+/** A dialog the Controller opens and closes, by the capability pair it sends. */
+const dialogEmits = (name: string) => [
+  { id: `${name}Open`, action: "activate" as const, valueType: "none" as const },
+  { id: `${name}Close`, action: "close" as const, valueType: "none" as const },
+];
 
 export type PhiBuilderPageMetaPresentationLabels = {
   createTitle: string;
@@ -55,8 +95,8 @@ export type PhiBuilderRuntimeControllerPreload = {
   pageMetaLabels: PhiBuilderPageMetaPresentationLabels;
 };
 
-export function parsePhiBuilderRuntimeControllerConfig(): PhiBuilderRuntimeControllerConfig {
-  return {};
+export function parsePhiBuilderRuntimeControllerConfig(raw: Record<string, unknown>): PhiBuilderRuntimeControllerConfig {
+  return { signalRoutes: readPhiSignalRouteSet(raw.signalRoutes) };
 }
 
 export const PHI_BUILDER_RUNTIME_CONTROLLER_DEFINITION = {
@@ -137,6 +177,50 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_DEFINITION = {
       { id: "overlayTitle", action: "change", valueType: "string" },
       { id: "commandLabel", action: "change", valueType: "string" },
       { id: "pageMetaSubmitting", action: "change", valueType: "boolean" },
+      // The Inspector Overlay contribution's receivers.
+      ...dialogEmits("regionInspector"),
+      ...dialogEmits("layoutInspector"),
+      ...dialogEmits("widgetInspector"),
+      ...dialogEmits("effectsDialog"),
+      ...PHI_BUILDER_EFFECTS_FORM_EMITS,
+      ...dialogEmits("signalWiring"),
+      { id: "signalWiringSubmit", action: "activate", valueType: "none" },
+      { id: "signalWiringReset", action: "activate", valueType: "none" },
+      { id: "signalWiringRoutesReload", action: "activate", valueType: "none" },
+      // The Builder Shell's.
+      { id: "areaSelectorEnabled", action: "change", valueType: "boolean" },
+      { id: "debugSwitchEnabled", action: "change", valueType: "boolean" },
+      // The Builder Pages'.
+      ...dialogEmits("areaSettings"),
+      {
+        id: "areaSettingsValues",
+        action: "change",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
+      },
+      { id: "areaSettingsSubmit", action: "activate", valueType: "none" },
+      { id: "areaSettingsReset", action: "activate", valueType: "none" },
+      ...dialogEmits("pageMeta"),
+      {
+        id: "pageMetaFormValues",
+        action: "change",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
+      },
+      { id: "pageMetaSubmit", action: "activate", valueType: "none" },
+      { id: "pageMetaReset", action: "activate", valueType: "none" },
+      { id: "moduleDetailOpen", action: "activate", valueType: "none" },
+      {
+        id: "moduleDetailParams",
+        action: "change",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableBindingParams,
+      },
+      ...dialogEmits("moduleUsage"),
+      { id: "moduleUsageReload", action: "activate", valueType: "none" },
+      ...dialogEmits("publicRoutes"),
+      { id: "publicRoutesReload", action: "activate", valueType: "none" },
+      { id: "modulesTableReload", action: "activate", valueType: "none" },
       ...PHI_DRAG_SOURCE_CONTROL_SIGNALS.emits,
       {
         id: "drop",
@@ -248,6 +332,22 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_DEFINITION = {
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValidity,
       })),
       { id: "pageMetaCommand", channel: "pageMeta", action: "activate", valueType: "string" },
+      // The wiring Form's values while they are edited, so the cascading selects can be answered.
+      {
+        id: "signalWiringValues",
+        channel: "signalWiringValues",
+        action: "change",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
+      },
+      // A row action of the Modules Table, on a channel of its own so no other Table's action is read as one.
+      {
+        id: "moduleTableAction",
+        channel: "moduleTableAction",
+        action: "activate",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
+      },
       { id: "pageMetaVisibility", channel: "pageMetaVisibility", action: "change", valueType: "boolean" },
       {
         id: "pageMetaValues",
@@ -258,6 +358,6 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_DEFINITION = {
       },
     ],
   },
-  defaultConfig: {},
+  defaultConfig: { signalRoutes: null },
   parseConfig: parsePhiBuilderRuntimeControllerConfig,
 } satisfies PhiRuntimeControllerDefinition<PhiBuilderRuntimeControllerConfig, PhiBuilderRuntimeControllerPreload>;

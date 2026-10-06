@@ -4,22 +4,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
 import { PHI_VIEWER_ACCESS_SITE_ADMIN, canPhiViewerAccess } from "../../../../types/access";
-import type { PhiRuntimeControllerPlugin, PhiSignal, PhiSignalAddress } from "../../../../types";
-import { PHI_SIGNAL_VALUE_SCHEMAS, createPhiSignalAddress, createPhiSignalSubcontrolAddress } from "../../../../types/signals";
+import type { PhiRuntimeControllerPlugin } from "../../../../types";
+import type { PhiSignalValue } from "../../../../types/signals";
 import { readPhiTableActionSignalValue } from "../../../../types/table-signal-values";
 import { readPhiOverlayCloseRequest } from "../../../../types/cms-overlay";
 import { createPhiRuntimeControllerClient } from "../../../../components/runtime/runtime-controller-client-factory";
 import { usePhiRuntimeConditionStateResponder } from "../../../../components/runtime/runtime-condition-state-responder";
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../components/runtime/runtime-signal-bus";
+import { dispatchPhiSignalCapability } from "../../../../components/runtime/runtime-signal-identity";
 import { usePhiTableProvider } from "../../../../components/widgets/client/shared/phi-table-provider";
 import {
   PHI_USER_MANAGEMENT_RUNTIME_CONTROLLER_DEFINITION,
   type PhiUserManagementControllerConfig,
 } from "../controller/definition";
-import {
-  PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS,
-  PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS,
-} from "../addresses";
 
 type ControllerRenderArgs = Parameters<NonNullable<
   PhiRuntimeControllerPlugin<PhiUserManagementControllerConfig>["renderController"]
@@ -34,24 +31,24 @@ type UserManagementWorkflowState = {
   correlationId: string;
 };
 
-function cmsAddress(id: Parameters<typeof createPhiSignalAddress>[1]) {
-  return createPhiSignalAddress("cms", id);
-}
+type UserManagementFormWorkflow = "create" | "edit";
 
-const EDIT_FORM_ADDRESS = cmsAddress(PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS.widgetEditForm);
-const CREATE_FORM_ADDRESS = cmsAddress(PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS.widgetCreateForm);
-const HISTORY_TABLE_ADDRESS = cmsAddress(PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS.widgetHistoryTable);
-const CREATE_OVERLAY_ADDRESS = cmsAddress(PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS.overlayCreate);
-const EDIT_OVERLAY_ADDRESS = cmsAddress(PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS.overlayEdit);
-const CREATE_CANCEL_ADDRESS = createPhiSignalSubcontrolAddress("cms", PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS.widgetCreateCommands, "cancel");
-const CREATE_SAVE_ADDRESS = createPhiSignalSubcontrolAddress("cms", PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS.widgetCreateCommands, "save");
-const EDIT_CANCEL_ADDRESS = createPhiSignalSubcontrolAddress("cms", PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS.widgetEditCommands, "cancel");
-const EDIT_SAVE_ADDRESS = createPhiSignalSubcontrolAddress("cms", PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS.widgetEditCommands, "save");
+/*
+ * The workflow a signal belongs to, read off its channel: the Page routes the create and the edit half
+ * of the dialogs on channels of their own (`createSubmit`, `editCommand`, ...), so nothing here has to
+ * know which Widget sent it.
+ */
+function readFormWorkflow(channel: string, suffix: string): UserManagementFormWorkflow | null {
+  if (channel === `create${suffix}`) return "create";
+  if (channel === `edit${suffix}`) return "edit";
+  return null;
+}
 
 function PhiUserManagementControllerView({
   address,
   runtime,
-}: Pick<ControllerRenderArgs, "address" | "runtime">) {
+  config,
+}: Pick<ControllerRenderArgs, "address" | "runtime" | "config">) {
   const dispatchSignal = usePhiSignalDispatcher();
   const source = useMemo(() => ({
     providerKey: PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS.table,
@@ -76,26 +73,16 @@ function PhiUserManagementControllerView({
     correlationId: string | null;
   }>({ workflow: null, action: null, selectedSelf: true, correlationId: null });
 
-  const send = useCallback((input: {
-    receiver: PhiSignalAddress;
-    channel: string;
-    action: PhiSignal["action"];
-    value: PhiSignal["value"];
-    valueType: PhiSignal["valueType"];
-    valueSchema?: PhiSignal["valueSchema"];
-    correlationId: string;
-  }) => dispatchSignal({
-    scope: "page",
-    sender: address,
-    receiver: input.receiver,
-    channel: input.channel,
-    action: input.action,
-    value: input.value,
-    valueType: input.valueType,
-    valueSchema: input.valueSchema ?? null,
-    correlationId: input.correlationId,
-    timestamp: Date.now(),
-  }), [address, dispatchSignal]);
+  /*
+   * One declared output, delivered through every route the Page wrote for it. The dialogs, Forms and
+   * Tables were Widget ids of the users Page held in this file; the Page names them now.
+   */
+  const emitRoutes = useMemo(() => config.signalRoutes?.emits ?? [], [config.signalRoutes?.emits]);
+  const emitCapability = useCallback((
+    capabilityId: string,
+    value: PhiSignalValue,
+    correlationId: string,
+  ) => dispatchPhiSignalCapability(dispatchSignal, address, emitRoutes, capabilityId, value, correlationId), [address, dispatchSignal, emitRoutes]);
 
   const conditionState = useCallback((pending = submitting) => ({
     ready: true,
@@ -104,70 +91,13 @@ function PhiUserManagementControllerView({
     submission: { pending },
   }), [readOnly, submitting]);
 
-  const sendConditionState = useCallback((receiver: PhiSignalAddress, correlationId: string) => {
-    send({
-      receiver,
-      channel: "condition",
-      action: "change",
-      value: { state: conditionState() },
-      valueType: "json",
-      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeConditionState,
-      correlationId,
-    });
-  }, [conditionState, send]);
-
   const openOverlay = useCallback((workflow: Exclude<UserManagementWorkflow, null>, correlationId: string) => {
-    const overlayId = workflow === "create"
-      ? PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS.overlayCreate
-      : workflow === "edit"
-        ? PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS.overlayEdit
-        : PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS.overlayHistory;
-    send({
-      receiver: cmsAddress(overlayId),
-      channel: "dialog",
-      action: "activate",
-      value: null,
-      valueType: "none",
-      correlationId,
-    });
-  }, [send]);
+    emitCapability(`${workflow}DialogOpen`, null, correlationId);
+  }, [emitCapability]);
 
-  const closeOverlay = useCallback((workflow: Exclude<UserManagementWorkflow, null>, correlationId: string) => {
-    const overlayId = workflow === "create"
-      ? PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS.overlayCreate
-      : PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS.overlayEdit;
-    send({
-      receiver: cmsAddress(overlayId),
-      channel: "dialog",
-      action: "close",
-      value: null,
-      valueType: "none",
-      correlationId,
-    });
-  }, [send]);
-
-  const formAddressForWorkflow = useCallback((workflow: "create" | "edit") =>
-    workflow === "create" ? CREATE_FORM_ADDRESS : EDIT_FORM_ADDRESS, []);
-
-  const overlayWorkflowFromSender = useCallback((sender: PhiSignal["sender"]) =>
-    sender === CREATE_OVERLAY_ADDRESS
-      ? "create"
-      : sender === EDIT_OVERLAY_ADDRESS
-        ? "edit"
-        : null, []);
-
-  const commandWorkflowFromSender = useCallback((sender: PhiSignal["sender"]) =>
-    sender === CREATE_OVERLAY_ADDRESS ||
-    sender === CREATE_FORM_ADDRESS ||
-    sender === CREATE_CANCEL_ADDRESS ||
-    sender === CREATE_SAVE_ADDRESS
-      ? "create"
-      : sender === EDIT_OVERLAY_ADDRESS ||
-          sender === EDIT_FORM_ADDRESS ||
-          sender === EDIT_CANCEL_ADDRESS ||
-          sender === EDIT_SAVE_ADDRESS
-        ? "edit"
-        : null, []);
+  const closeOverlay = useCallback((workflow: UserManagementFormWorkflow, correlationId: string) => {
+    emitCapability(`${workflow}DialogClose`, null, correlationId);
+  }, [emitCapability]);
 
   const loadSelectionState = useCallback(async (rowIdentity: string | number, correlationId: string) => {
     if (!provider?.readRecord) return;
@@ -180,14 +110,11 @@ function PhiUserManagementControllerView({
       });
       if (workflowRef.current.correlationId !== correlationId) return;
       workflowRef.current.selectedSelf = record.self === true;
-      sendConditionState(
-        cmsAddress(PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS.widgetEditForm),
-        correlationId,
-      );
+      emitCapability("editFormCondition", { state: conditionState() }, correlationId);
     } catch {
       workflowRef.current.selectedSelf = true;
     }
-  }, [provider, sendConditionState]);
+  }, [conditionState, emitCapability, provider]);
 
   usePhiRuntimeConditionStateResponder({ address, scope: "page", state: conditionState });
 
@@ -229,99 +156,43 @@ function PhiUserManagementControllerView({
       return;
     }
 
-    if (signal.channel === "command" && signal.action === "activate" && signal.value === "cancel") {
-      const workflow = commandWorkflowFromSender(signal.sender);
-      if (workflow) {
-        send({
-          receiver: formAddressForWorkflow(workflow),
-          channel: "reset",
-          action: "activate",
-          value: null,
-          valueType: "none",
-          correlationId: signal.correlationId,
-        });
-        closeOverlay(workflow, signal.correlationId);
-      }
+    const commandWorkflow = signal.action === "activate" ? readFormWorkflow(signal.channel, "Command") : null;
+    if (commandWorkflow && signal.value === "cancel") {
+      emitCapability(`${commandWorkflow}FormReset`, null, signal.correlationId);
+      closeOverlay(commandWorkflow, signal.correlationId);
       return;
     }
 
-    if (signal.channel === "command" && signal.action === "activate" && signal.value === "save") {
-      const workflow = commandWorkflowFromSender(signal.sender);
-      if (!workflow || readOnly || submitting) return;
-      send({
-        receiver: formAddressForWorkflow(workflow),
-        channel: "submit",
-        action: "activate",
-        value: null,
-        valueType: "none",
-        correlationId: signal.correlationId,
-      });
+    if (commandWorkflow && signal.value === "save") {
+      if (readOnly || submitting) return;
+      emitCapability(`${commandWorkflow}FormSubmit`, null, signal.correlationId);
       return;
     }
 
-    if (signal.channel === "dialog" && signal.action === "close") {
-      const workflow = overlayWorkflowFromSender(signal.sender);
+    const closeWorkflow = signal.action === "close" ? readFormWorkflow(signal.channel, "Dialog") : null;
+    if (closeWorkflow) {
       const request = readPhiOverlayCloseRequest(signal.value);
-      if (workflow && request && !submitting) {
-        send({
-          receiver: formAddressForWorkflow(workflow),
-          channel: "reset",
-          action: "activate",
-          value: null,
-          valueType: "none",
-          correlationId: signal.correlationId,
-        });
-        closeOverlay(workflow, signal.correlationId);
+      if (request && !submitting) {
+        emitCapability(`${closeWorkflow}FormReset`, null, signal.correlationId);
+        closeOverlay(closeWorkflow, signal.correlationId);
       }
       return;
     }
 
-    if (signal.channel === "submitting" && signal.action === "change" && typeof signal.value === "boolean") {
-      const workflow = signal.sender === CREATE_FORM_ADDRESS
-        ? "create"
-        : signal.sender === EDIT_FORM_ADDRESS
-          ? "edit"
-          : null;
-      if (!workflow) return;
+    const submittingWorkflow = signal.action === "change" ? readFormWorkflow(signal.channel, "Submitting") : null;
+    if (submittingWorkflow && typeof signal.value === "boolean") {
       setSubmitting(signal.value);
-      send({
-        receiver: workflow === "create" ? CREATE_SAVE_ADDRESS : EDIT_SAVE_ADDRESS,
-        channel: "submitting",
-        action: "change",
-        value: signal.value,
-        valueType: "boolean",
-        correlationId: signal.correlationId,
-      });
-      send({
-        receiver: workflow === "create" ? CREATE_OVERLAY_ADDRESS : EDIT_OVERLAY_ADDRESS,
-        channel: "condition",
-        action: "change",
-        value: { state: conditionState(signal.value) },
-        valueType: "json",
-        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeConditionState,
-        correlationId: signal.correlationId,
-      });
+      emitCapability(`${submittingWorkflow}SaveSubmitting`, signal.value, signal.correlationId);
+      emitCapability(`${submittingWorkflow}DialogCondition`, { state: conditionState(signal.value) }, signal.correlationId);
       return;
     }
 
-    if (signal.channel === "submit" && signal.action === "activate") {
-      const workflow = signal.sender === cmsAddress(PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS.widgetCreateForm)
-        ? "create"
-        : signal.sender === cmsAddress(PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS.widgetEditForm)
-          ? "edit"
-          : null;
-      if (!workflow) return;
-      closeOverlay(workflow, signal.correlationId);
-      send({
-        receiver: cmsAddress(PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS.widgetTable),
-        channel: "reload",
-        action: "activate",
-        value: null,
-        valueType: "none",
-        correlationId: signal.correlationId,
-      });
+    const successWorkflow = signal.action === "activate" ? readFormWorkflow(signal.channel, "Submit") : null;
+    if (successWorkflow) {
+      closeOverlay(successWorkflow, signal.correlationId);
+      emitCapability("usersReload", null, signal.correlationId);
     }
-  }, [address, closeOverlay, commandWorkflowFromSender, conditionState, formAddressForWorkflow, loadSelectionState, openOverlay, overlayWorkflowFromSender, readOnly, send, submitting]), {
+  }, [address, closeOverlay, conditionState, emitCapability, loadSelectionState, openOverlay, readOnly, submitting]), {
     scopes: ["page"],
     receiver: address,
   });
@@ -337,38 +208,22 @@ function PhiUserManagementControllerView({
 
     if (workflowState.workflow === "edit") {
       deliveredWorkflowRef.current = deliveryKey;
-      send({
-        receiver: EDIT_FORM_ADDRESS,
-        channel: "action",
-        action: "activate",
-        value: workflowState.action,
-        valueType: "json",
-        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
-        correlationId: workflowState.correlationId,
-      });
+      emitCapability("editRecordOpen", workflowState.action, workflowState.correlationId);
       return;
     }
 
     if (workflowState.action.rowIdentity == null) return;
     deliveredWorkflowRef.current = deliveryKey;
-    send({
-      receiver: HISTORY_TABLE_ADDRESS,
-      channel: "filters",
-      action: "change",
-      value: { userId: workflowState.action.rowIdentity },
-      valueType: "json",
-      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableFilters,
-      correlationId: workflowState.correlationId,
-    });
-  }, [send, workflowState]);
+    emitCapability("historyFilters", { userId: workflowState.action.rowIdentity }, workflowState.correlationId);
+  }, [emitCapability, workflowState]);
 
   return null;
 }
 
 export const PHI_USER_MANAGEMENT_RUNTIME_CONTROLLER_PLUGIN = {
   ...PHI_USER_MANAGEMENT_RUNTIME_CONTROLLER_DEFINITION,
-  renderController: ({ key, address, runtime }) => (
-    <PhiUserManagementControllerView key={key} address={address} runtime={runtime} />
+  renderController: ({ key, address, runtime, config }) => (
+    <PhiUserManagementControllerView key={key} address={address} runtime={runtime} config={config} />
   ),
 } satisfies PhiRuntimeControllerPlugin<PhiUserManagementControllerConfig>;
 

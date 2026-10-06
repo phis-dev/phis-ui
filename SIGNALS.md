@@ -123,11 +123,22 @@ page had two.
 A Controller names no Widget instance. Whom it speaks to is a route the tree that holds the receivers
 writes into its `controllerSettings` (`config.signalRoutes`), delivered with `dispatchPhiSignalCapability`;
 a Controller that wrote the ids of the Widgets it expected could only serve the one arrangement of them it
-was written for. Groups, Threads, Localization, Asset and Auth work this way: the Media Page tells the
-Asset Controller the Area runs, and the sign-in Overlay preset tells the Auth Controller that arrives with
-it. `scripts/validate-controller-receiver-contracts.ts` refuses a Module Controller file that names a
-receiver by a preset id map or a `cms:` address of its own; Revisions and User Management are the open
-exceptions.
+was written for. Every Module Controller works this way: the Media Page tells the Asset Controller the
+Area runs, the sign-in Overlay preset tells the Auth Controller that arrives with it, the Revisions and
+Users Pages tell theirs, and the Builder Controller hears from three trees at once -- its Shell names the
+header switches, its Inspector Overlay contribution the drawers and the Effects and wiring dialogs, and
+each Builder Page the dialogs it carries. `scripts/validate-controller-receiver-contracts.ts` reads every
+file of a Module's `controller/` directory and refuses one that names a receiver by a preset id map or a
+`cms:` address of its own; there are no open exceptions. A Controller's implementation therefore lives
+in that directory, not beside it: the Builder kept its 2,500-line Controller one level up, out of the
+validator's sight, which is how it went on addressing its Inspector by preset id after every other
+Controller had moved.
+
+The same goes for what a Controller listens to. A Controller that told two halves of one Page apart by
+who sent a signal held both halves' Widget ids again; the User Management Page routes its create and its
+edit dialog on channels of their own (`createSubmit`, `editCommand`, ...), the Builder's Modules Table
+sends its row actions on `moduleTableAction`, and the wiring Form reports its values on
+`signalWiringValues` instead of being overheard at its own Form Controller address.
 
 `sender` is a concrete address or `null` and is never `broadcast`; it is derived from the mounted
 instance. `receiver` is:
@@ -300,12 +311,20 @@ type PhiSignalRoute = {
   - a `demand` Controller nothing else mounts is mounted in the tree's scope;
   - one the Area already runs (`area` policy) is not mounted a second time by a Page: the Page's config
     is laid over the running one for as long as the Page is shown (`PhiRuntimeControllerConfigOverlays`),
-    which is how the Media Page tells the Asset Controller about its inspector;
+    which is how the Media Page tells the Asset Controller about its inspector. A key the Page sets
+    replaces the Area's, except `signalRoutes`, which join: the Area's own receivers stand on every
+    Page, and a Page that replaced their routes silenced them while it was shown. A Page route with the
+    `routeKey` of an Area route takes its place (`mergePhiRuntimeControllerConfigOverlay`);
   - one whose only asker is a deferred Area Overlay arrives with that Overlay, config included;
   - one no active Module owns is not run. The tree's config to it is inert until the Module is back.
   In every case the tree's config keys win over what a Widget asked with. A composed tree -- a Shell
-  from its sources, an Area with its Module Overlays -- concatenates the settings and refuses one
-  Controller configured twice.
+  from its sources, an Area with its Module Overlays -- joins the settings: a Controller both configure
+  gets the routes of both, since each names the receivers it holds, and any other key both set, or a
+  route both name, is refused like a duplicate node id (`concatPhiCmsTreeControllerSettings`).
+
+  A route only delivers while it is there, so a Controller states what it holds again when its routes
+  change: its sends depend on `emitCapability`, whose identity follows the routes, and a Page's routes
+  arriving a render after the Controller mounted re-send the state rather than lose it.
 
   Wiring to a Controller that nobody mounts fails in silence, which is the same silence as a forgotten
   `openActionKey` and worse to find. The bus holds a signal addressed to an absent listener (see

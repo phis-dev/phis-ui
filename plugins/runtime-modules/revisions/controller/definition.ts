@@ -1,11 +1,20 @@
 import {
   PHI_SIGNAL_VALUE_SCHEMAS,
+  readPhiSignalRouteSet,
+  type PhiSignalRouteSet,
 } from "../../../../types/signals";
 import type { PhiRuntimeControllerDefinition } from "../../../../types/cms-plugins";
 import { PHI_REVISIONS_CONTROLLER_KEY,
   PHI_REVISIONS_CONTROLLER_PLUGIN_KEY } from "../controller/address";
 
-export type PhiRevisionsControllerConfig = Record<string, never>;
+/**
+ * Whom the Controller answers into: the history Table and the delete-Area dialog. The Revisions Page
+ * holds them and says so (`controllerSettings`); the Area runs this Controller on every Builder Page,
+ * and on one that names nothing it feeds nothing.
+ */
+export type PhiRevisionsControllerConfig = {
+  signalRoutes: PhiSignalRouteSet | null;
+};
 
 export const PHI_REVISIONS_RUNTIME_CONTROLLER_DEFINITION = {
   kind: "controller",
@@ -29,6 +38,9 @@ export const PHI_REVISIONS_RUNTIME_CONTROLLER_DEFINITION = {
         valueType: "json",
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.revisionsDraftStatus,
       },
+      { id: "deleteAreaWarning", action: "change", valueType: "string" },
+      { id: "deleteAreaOpen", action: "activate", valueType: "none" },
+      { id: "deleteAreaClose", action: "close", valueType: "none" },
     ],
     listens: [{
       id: "tableMutation",
@@ -66,6 +78,8 @@ export const PHI_REVISIONS_RUNTIME_CONTROLLER_DEFINITION = {
       valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
     }],
   },
-  defaultConfig: {},
-  parseConfig: (): PhiRevisionsControllerConfig => ({}),
+  defaultConfig: { signalRoutes: null },
+  parseConfig: (raw: Record<string, unknown>): PhiRevisionsControllerConfig => ({
+    signalRoutes: readPhiSignalRouteSet(raw.signalRoutes),
+  }),
 } satisfies PhiRuntimeControllerDefinition<PhiRevisionsControllerConfig>;

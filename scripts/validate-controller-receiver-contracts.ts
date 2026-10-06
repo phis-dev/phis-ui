@@ -34,28 +34,7 @@ const RECEIVER_ID_PATTERNS = [
  * Controllers that still name their receivers, each with why it has not moved yet. An entry whose file
  * names none any more fails, so the list cannot outlive what it excuses.
  */
-const OPEN_RECEIVER_ID_EXCEPTIONS = new Map<string, string>([
-  [
-    "plugins/runtime-modules/builder/controller/workspace-controller.tsx",
-    "The Builder Controller opens its Inspector, Area-settings, Module and Public-route Overlays and fills their Forms by preset ids; it moves to routes from the Builder tree's controllerSettings.",
-  ],
-  [
-    "plugins/runtime-modules/builder/controller/page-controller.tsx",
-    "The Builder's Page part opens the Page-meta dialog and fills its Form by preset ids; it moves to routes with the rest of the Builder Controller.",
-  ],
-  [
-    "plugins/runtime-modules/builder/controller/signal-wiring-controller.ts",
-    "The Builder's signal-wiring part answers the Inspector's wiring Widgets by preset ids; it moves to routes with the rest of the Builder Controller.",
-  ],
-  [
-    "plugins/runtime-modules/revisions/controller/client.ts",
-    "The Revisions Controller opens the delete-Area dialog by its preset ids; it moves to routes from its Page's controllerSettings like Localization did.",
-  ],
-  [
-    "plugins/runtime-modules/user-management/controller/client.tsx",
-    "The User Management Controller drives its Page's dialogs and Forms by preset ids; it moves to routes from its Page's controllerSettings like Groups did.",
-  ],
-]);
+const OPEN_RECEIVER_ID_EXCEPTIONS = new Map<string, string>([]);
 
 const moduleRoot = path.join(repositoryRoot, "plugins/runtime-modules");
 

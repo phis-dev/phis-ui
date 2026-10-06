@@ -180,12 +180,7 @@ function readComparedAddresses(
  *
  * Each entry names why, so that an address whose owner disappears is not left looking deliberate.
  */
-const READS_FOR_ANOTHERS_ADDRESS = new Map<string, string>([
-  [
-    "plugins/runtime-modules/builder/controller/workspace-controller.tsx:PHI_BUILDER_SIGNAL_WIRING_FORM_CONTROLLER_ADDRESS",
-    "The runtime Form Controller mount owns this address and names it (components/forms/runtime-form-controller-mount.tsx); the Builder follows the wiring form's traffic.",
-  ],
-]);
+const READS_FOR_ANOTHERS_ADDRESS = new Map<string, string>([]);
 
 /*
  * A Controller mount must restrict what it answers to its own address.

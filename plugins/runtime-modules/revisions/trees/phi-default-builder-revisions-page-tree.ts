@@ -16,7 +16,11 @@ import {
 import { PHI_COLOR, PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import { getPhiBuilderChromeWidgetLabels } from "../../../../components/widgets/label-sets/builder-chrome";
 import { getPhiBuilderRevisionsWidgetLabels } from "../../../../components/widgets/label-sets/revisions";
-import { createPhiRevisionsControllerAddress } from "../controller/address";
+import {
+  createPhiRevisionsControllerAddress,
+  PHI_REVISIONS_CONTROLLER_INSTANCE_KEY,
+  PHI_REVISIONS_CONTROLLER_TYPE,
+} from "../controller/address";
 import { PHI_REVISIONS_FORM_IDS } from "../forms";
 import { PHI_REVISIONS_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
 import {
@@ -58,6 +62,7 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
     getPhiBuilderChromeWidgetLabels(credentials),
     getPhiBuilderRevisionsWidgetLabels(credentials),
   ]);
+  const deleteAreaOverlay = createPhiSignalAddress("cms", PHI_REVISIONS_DELETE_AREA_OVERLAY_IDS.overlayDeleteArea);
 
   return {
     page: nodes.page(),
@@ -65,6 +70,43 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
       title: { msgId: 0, source: "Revisions", value: chromeLabels.pageTitles.revisions },
       description: null,
     },
+    /*
+     * Whom the Revisions Controller answers into on this Page: the history Table it hands the scope,
+     * and the delete-Area dialog with the warning in its Body. The Area runs the Controller for every
+     * Builder Page; while this one is shown it is told (`collectPhiRuntimeControllerConfigOverlays`).
+     */
+    controllerSettings: [{
+      type: PHI_REVISIONS_CONTROLLER_TYPE,
+      instanceKey: PHI_REVISIONS_CONTROLLER_INSTANCE_KEY,
+      mountScope: "page",
+      config: {
+        signalRoutes: {
+          emits: [
+            {
+              routeKey: "builder-revisions-controller-binding",
+              capabilityId: "bindingParamsChange",
+              scope: "area",
+              channel: "bindingParams",
+              action: "change",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableBindingParams,
+              receiver: createPhiSignalAddress("cms", PHI_REVISIONS_TABLE_WIDGET_ID),
+            },
+            {
+              routeKey: "builder-revisions-controller-delete-area-warning",
+              capabilityId: "deleteAreaWarning",
+              scope: "area",
+              channel: "text",
+              action: "change",
+              valueType: "string",
+              receiver: createPhiSignalAddress("cms", PHI_REVISIONS_DELETE_AREA_WIDGET_IDS.deleteAreaWarning),
+            },
+            { routeKey: "builder-revisions-controller-delete-area-open", capabilityId: "deleteAreaOpen", scope: "area", channel: "dialog", action: "activate", valueType: "none", receiver: deleteAreaOverlay },
+            { routeKey: "builder-revisions-controller-delete-area-close", capabilityId: "deleteAreaClose", scope: "area", channel: "dialog", action: "close", valueType: "none", receiver: deleteAreaOverlay },
+          ],
+        },
+      },
+    }],
     overlays: [
       nodes.overlay({
         id: PHI_REVISIONS_DELETE_AREA_OVERLAY_IDS.overlayDeleteArea,

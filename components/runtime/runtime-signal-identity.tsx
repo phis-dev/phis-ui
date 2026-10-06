@@ -132,7 +132,9 @@ export function emitPhiSignalCapability(
  * declared output, delivered through every route the Page wrote for it. A route with no receiver, or a
  * JSON route with no schema, is skipped rather than sent -- SIGNALS.md makes the schema part of matching,
  * and a payload nobody can check is worse than none. The value is shaped by the route
- * (`resolvePhiSignalRouteValue`): `none` carries nothing, a `fieldKey` wraps it.
+ * (`resolvePhiSignalRouteValue`): `none` carries nothing, a `fieldKey` wraps it. A send that answers
+ * nothing in particular -- a dialog opened because state changed -- passes no correlation, as a direct
+ * dispatch would.
  */
 export function dispatchPhiSignalCapability(
   dispatchSignal: ReturnType<typeof usePhiSignalDispatcher>,
@@ -140,7 +142,7 @@ export function dispatchPhiSignalCapability(
   routes: readonly PhiSignalRoute[] | null | undefined,
   capabilityId: string,
   value: PhiSignalValue,
-  correlationId: string,
+  correlationId?: string | null,
 ) {
   for (const route of findPhiSignalRoutesByCapabilityId(routes, capabilityId)) {
     if (route.receiver == null || (route.valueType === "json" && !route.valueSchema)) continue;
@@ -153,7 +155,7 @@ export function dispatchPhiSignalCapability(
       value: resolvePhiSignalRouteValue(route, value),
       valueType: route.valueType,
       valueSchema: route.valueSchema ?? null,
-      correlationId,
+      ...(correlationId ? { correlationId } : {}),
       timestamp: Date.now(),
     });
   }
