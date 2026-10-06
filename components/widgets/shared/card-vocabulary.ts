@@ -38,11 +38,12 @@ export const PHI_CARD_ICON_PLACEMENTS = ["inline", "top", "top-center", "top-end
 export type PhiCardIconPlacement = (typeof PHI_CARD_ICON_PLACEMENTS)[number];
 
 /**
- * How a card that is a link answers the pointer. A list, so a further effect is an entry and a rule in
- * `styles/layout.css`, not another flag. Only a card that leads somewhere has one, and only under a
- * pointer that hovers and a reader who has not asked for less motion.
+ * How a card answers the pointer. A list, so a further effect is an entry and a rule in
+ * `styles/layout.css`, not another flag. `lift` raises the card, `zoom` enlarges its picture, `icon`
+ * turns its icon's colours round. Only under a pointer that hovers, or keyboard focus within the card;
+ * the movement only for a reader who has not asked for less motion.
  */
-export const PHI_CARD_HOVER_EFFECTS = ["none", "lift", "zoom"] as const;
+export const PHI_CARD_HOVER_EFFECTS = ["none", "lift", "zoom", "icon"] as const;
 export type PhiCardHoverEffect = (typeof PHI_CARD_HOVER_EFFECTS)[number];
 
 /**

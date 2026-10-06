@@ -140,6 +140,8 @@ type PhiCardVariantMetrics = {
    * cropped into it around its focal point.
    */
   mediaAspectRatio?: string;
+  /** The eyebrow on the picture's top-start corner rather than above the heading, where there is one. */
+  eyebrowOnMedia?: true;
   /** Where a variant that is an arrangement puts things, over what the card states. */
   arrangement?: { textAlign: PhiCardTextAlign; iconPlacement: PhiCardIconPlacement };
 };
@@ -168,6 +170,7 @@ const PHI_CARD_VARIANT_METRICS: Record<PhiCardVariant, (token: PhiThemeTokens) =
     buttonSize: "small",
     // A strip rather than a poster, so the words stay the larger part of a compact card.
     mediaAspectRatio: "2 / 1",
+    eyebrowOnMedia: true,
   }),
   center: (token) => ({
     ...PHI_CARD_VARIANT_METRICS.default(token),
@@ -230,7 +233,7 @@ export function PhiCardWidgetClient({
   const iconPlacement = metrics.arrangement?.iconPlacement ?? config?.iconPlacement ?? "inline";
   const highlight = overrides.highlight ?? config?.highlight === true;
   const href = config?.href;
-  const hoverEffect = href ? config?.hoverEffect ?? "none" : "none";
+  const hoverEffect = config?.hoverEffect ?? "none";
   /* A button with neither words nor a mark would be an empty box, so it is not drawn. */
   const action = config?.action && (labels.actionLabel || config.action.icon) ? config.action : null;
   const image = config?.image?.presentation.url ? config.image : null;
@@ -285,6 +288,9 @@ export function PhiCardWidgetClient({
   const title = textOf("title");
   const description = textOf("description");
   const meta = textOf("meta");
+  const eyebrowType: CSSProperties = { fontSize: token.fontSizeSM, letterSpacing: "0.04em", textTransform: "uppercase" };
+  /* On the picture's corner where the variant puts it there and there is a picture to put it on. */
+  const eyebrowOnMedia = metrics.eyebrowOnMedia === true && image != null;
   const heading = title != null ? (
     <PhiTypographyControl
       presentation="title"
@@ -294,6 +300,13 @@ export function PhiCardWidgetClient({
       {linked(title)}
     </PhiTypographyControl>
   ) : null;
+
+  /*
+   * The icon's colours as custom properties, which `.phi-card__icon` paints (`styles/layout.css`): the
+   * `icon` hover effect turns them round, and a colour stated inline could not be turned by a rule.
+   */
+  const iconColours = (color: string, background: string) =>
+    ({ "--phi-card-icon-color": color, "--phi-card-icon-background": background }) as CSSProperties;
 
   const iconMark = (size: number, framed: number) => iconName ? (
     <span
@@ -307,8 +320,10 @@ export function PhiCardWidgetClient({
         width: framed,
         height: framed,
         borderRadius: token.borderRadius,
-        background: config?.iconBackground ?? token.colorFillQuaternary,
-        color: config?.iconColor ?? (highlight ? token.colorPrimary : token.colorTextSecondary),
+        ...iconColours(
+          config?.iconColor ?? (highlight ? token.colorPrimary : token.colorTextSecondary),
+          config?.iconBackground ?? token.colorFillQuaternary,
+        ),
       }}
     >
       <PhiIcon name={iconName} size={size} />
@@ -378,13 +393,35 @@ export function PhiCardWidgetClient({
             height: topIconSize + 24,
             borderRadius: "50%",
             // A ground of its own, so the mark reads on a bright picture and on a dark one alike.
-            background: config?.iconBackground ?? `color-mix(in srgb, ${token.colorBgContainer} 88%, transparent)`,
-            color: config?.iconColor ?? (highlight ? token.colorPrimary : token.colorText),
+            ...iconColours(
+              config?.iconColor ?? (highlight ? token.colorPrimary : token.colorText),
+              config?.iconBackground ?? `color-mix(in srgb, ${token.colorBgContainer} 88%, transparent)`,
+            ),
             boxShadow: token.boxShadowTertiary,
           }}
         >
           <PhiIcon name={iconName} size={topIconSize} />
         </span>
+      ) : null}
+      {eyebrowOnMedia && eyebrow != null ? (
+        <PhiTypographyControl
+          type="secondary"
+          style={{
+            ...eyebrowType,
+            position: "absolute",
+            insetInlineStart: inset,
+            top: inset,
+            zIndex: 2,
+            maxWidth: `calc(100% - 2 * ${typeof inset === "number" ? `${inset}px` : inset})`,
+            paddingInline: token.paddingXS,
+            borderRadius: token.borderRadiusSM,
+            // A ground of its own, as the icon has, so the words read on any picture.
+            background: `color-mix(in srgb, ${token.colorBgContainer} 88%, transparent)`,
+            color: highlight ? token.colorPrimary : token.colorText,
+          }}
+        >
+          {eyebrow}
+        </PhiTypographyControl>
       ) : null}
     </div>
   ) : null;
@@ -413,16 +450,10 @@ export function PhiCardWidgetClient({
             {iconMark(topIconSize, topIconSize + 24)}
           </div>
         ) : null}
-        {eyebrow != null ? (
+        {eyebrow != null && !eyebrowOnMedia ? (
           <PhiTypographyControl
             type="secondary"
-            style={{
-              fontSize: token.fontSizeSM,
-              letterSpacing: "0.04em",
-              textTransform: "uppercase",
-              color: highlight ? token.colorPrimary : token.colorTextTertiary,
-              ...slotWidth,
-            }}
+            style={{ ...eyebrowType, color: highlight ? token.colorPrimary : token.colorTextTertiary, ...slotWidth }}
           >
             {eyebrow}
           </PhiTypographyControl>

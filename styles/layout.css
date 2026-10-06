@@ -545,7 +545,7 @@
 }
 
 /*
- * Hover effects: a card that leads somewhere answers the pointer, and only a pointer that hovers.
+ * Hover effects: a card answers the pointer, and only a pointer that hovers.
  * Keyboard focus gets the same answer, so the effect never says something a keyboard reader misses.
  */
 :where(.phi-card--hover-lift, .phi-card--hover-zoom) {
@@ -574,7 +574,37 @@
   scale: 1.04;
 }
 
+/*
+ * The icon paints the colours the card hands it as custom properties, so that the `icon` effect can turn
+ * them round: the colour becomes the ground and the ground the colour. A change of colour, not a
+ * movement, so it is not taken back for a reader who asked for less motion -- only its easing is.
+ */
+:where(.phi-card__icon) {
+  color: var(--phi-card-icon-color);
+  background: var(--phi-card-icon-background);
+}
+
+:where(.phi-card--hover-icon) :where(.phi-card__icon) {
+  transition: color 200ms ease, background-color 200ms ease;
+}
+
+@media (hover: hover) {
+  :where(.phi-card--hover-icon):hover :where(.phi-card__icon) {
+    color: var(--phi-card-icon-background);
+    background: var(--phi-card-icon-color);
+  }
+}
+
+:where(.phi-card--hover-icon):focus-within :where(.phi-card__icon) {
+  color: var(--phi-card-icon-background);
+  background: var(--phi-card-icon-color);
+}
+
 @media (prefers-reduced-motion: reduce) {
+  :where(.phi-card--hover-icon) :where(.phi-card__icon) {
+    transition: none;
+  }
+
   .phi-card--hover-lift:is(:hover, :focus-within) {
     translate: none;
   }

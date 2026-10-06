@@ -228,16 +228,19 @@ export const PHI_CARD_WIDGET_DEFINITION = {
       visibleWhen: { field: "icon", notEquals: null },
     },
     { key: "linkTarget", type: "link-target", heading: "Link target", label: "Link target" },
+    /* The divider names the field; `Icon` turns the icon's colour and ground round. */
     {
       key: "hoverEffect",
       type: "choice",
-      label: "Hover effect",
+      heading: "Hover effect",
+      label: "Effect",
+      presentation: "segmented",
       options: [
         { value: "none", label: "None" },
-        { value: "lift", label: "Lift" },
         { value: "zoom", label: "Zoom" },
+        { value: "lift", label: "Lift" },
+        { value: "icon", label: "Icon" },
       ],
-      visibleWhen: { field: "linkTarget", notEquals: null },
     },
     { key: "actionEnabled", type: "boolean", heading: "Action button", label: "Enabled" },
     {
