@@ -121,7 +121,7 @@ export type PhiDescriptionWidgetPlacement = PhiWidgetPlacementBase & {
 export type PhiButtonWidgetPlacement = PhiWidgetPlacementBase &
   PhiControlPlacement &
   PhiControlBadgeConfig & {
-  actionKey?: PhiCommonControlActionKey;
+  action?: PhiCommonControlActionKey;
   label?: string;
   tooltip?: string;
   icon?: string;

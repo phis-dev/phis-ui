@@ -51,7 +51,7 @@ export function buildPhiStructureRegionPickItems(
       icon: resolvePickItemIcon(meta),
       requiredRegionOwnership: meta.requiredRegionOwnership ?? null,
       defaultAnchor: null,
-      defaultConfig: meta.defaultConfig ?? null,
+      defaultConfig: meta.creationConfig ?? meta.defaultConfig ?? null,
     });
   }
 

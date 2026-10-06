@@ -58,6 +58,8 @@ export type PhiBuilderWidgetMeta = PhiBuilderPluginMetaBase & {
   signalSubcontrols?: readonly PhiCmsWidgetSignalSubcontrolCollection[];
   /** Who draws the Widget's Surface; the Inspector offers no Surface section under `none`. */
   surface?: PhiSurfacePolicy | null;
+  /** What a new placement is written with, where the Widget says more than its `defaultConfig`. */
+  creationConfig?: Record<string, unknown> | null;
   fields: readonly PhiCmsConfigField[];
 };
 

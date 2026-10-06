@@ -45,11 +45,12 @@ import {
   isPhiInspectorConfigFieldVisible,
   readPhiInspectorConfigPathValue,
   renderPhiInspectorConfigField,
+  renderPhiInspectorSwitchRow,
   resolvePhiInspectorDimensionValue,
+  resolvePhiInspectorFieldLock,
   type PhiInspectorWidgetReferenceOption,
 } from "./inspector-config-field";
 import { PhiTypographyControl } from "../../../../components/controls/phi-typography-control";
-import { PhiSwitchControl } from "../../../../components/controls/phi-switch-control";
 import { PhiCmsFlags } from "../../../../constants/phi-cms";
 import { hasPhiFlag } from "../../../../helpers/flags";
 
@@ -159,6 +160,34 @@ export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
     }
     if (ownSlot.state === "hidden") ownSlot.show();
   }, [ownSlot, section, surfaceSectionHidden]);
+  /* A heading over the very first field names the Widget's own group rather than starting another. */
+  const headedFieldIndex = settingsFields.findIndex((field, index) => index > 0 && field.heading != null);
+  const firstHeadedFieldIndex = headedFieldIndex === -1 ? settingsFields.length : headedFieldIndex;
+  const renderSettingsField = (field: (typeof settingsFields)[number]) => {
+    const lock = resolvePhiInspectorFieldLock(
+      field,
+      selectedStructureWidgetMeta?.fields ?? [],
+      currentWidgetSettingsConfigRecord,
+    );
+    return renderPhiInspectorConfigField({
+      field,
+      value: lock ? lock.value : readPhiInspectorConfigPathValue(currentWidgetSettingsConfigRecord, field.key),
+      defaultValue: readPhiInspectorConfigPathValue(widgetDefaultConfigRecord, field.key),
+      config: currentWidgetSettingsConfigRecord,
+      defaultConfig: widgetDefaultConfigRecord,
+      disabled: isPreviewMode || lock != null,
+      widgetReferenceOptions,
+      colorPickerLabels,
+      iconPickerLabels,
+      dataProviderDescriptors,
+      calendarAdapterDescriptors,
+      videoProviderDescriptors,
+      onChange: (next) => {
+        const patch = buildPhiInspectorConfigPathPatch(currentWidgetSettingsConfigRecord, next);
+        onConfigChange?.(patch);
+      },
+    });
+  };
   const geometryValue: PhiCmsGeometryWidgetConfig = {
     sticky: false,
     offsetTop: 0,
@@ -190,34 +219,22 @@ export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
                   </PhiTypographyControl>
                 ) : (
                   <div style={{ display: "grid", gap: PHI_GAP_SM, width: "100%" }}>
-                    {settingsFields.map((field) =>
-                      renderPhiInspectorConfigField({
-                        field,
-                        value: readPhiInspectorConfigPathValue(currentWidgetSettingsConfigRecord, field.key),
-                        defaultValue: readPhiInspectorConfigPathValue(widgetDefaultConfigRecord, field.key),
-                        config: currentWidgetSettingsConfigRecord,
-                        defaultConfig: widgetDefaultConfigRecord,
+                    {/*
+                      * "Translate text" closes the Widget's own fields, before the next headed group:
+                      * it is about the words above it, and a group under a heading -- the Badge -- is
+                      * a part of its own.
+                      */}
+                    {settingsFields.slice(0, firstHeadedFieldIndex).map(renderSettingsField)}
+                    {selectedStructureWidgetMeta.translatesOwnText
+                      ? renderPhiInspectorSwitchRow({
+                        key: "translate-text",
+                        label: "Translate text",
+                        checked: !hasPhiFlag(currentDraft?.flags ?? 0, PhiCmsFlags.NoTranslate),
                         disabled: isPreviewMode,
-                        widgetReferenceOptions,
-                        colorPickerLabels,
-                        iconPickerLabels,
-                        dataProviderDescriptors,
-                        calendarAdapterDescriptors,
-                        videoProviderDescriptors,
-                        onChange: (next) => {
-                          const patch = buildPhiInspectorConfigPathPatch(currentWidgetSettingsConfigRecord, next);
-                          onConfigChange?.(patch);
-                        },
-                      }),
-                    )}
-                    {selectedStructureWidgetMeta.translatesOwnText ? (
-                      <PhiSwitchControl
-                        label="Translate text"
-                        checked={!hasPhiFlag(currentDraft?.flags ?? 0, PhiCmsFlags.NoTranslate)}
-                        disabled={isPreviewMode}
-                        onChange={onTranslateChange}
-                      />
-                    ) : null}
+                        ...(onTranslateChange ? { onChange: onTranslateChange } : {}),
+                      })
+                      : null}
+                    {settingsFields.slice(firstHeadedFieldIndex).map(renderSettingsField)}
                   </div>
                 ),
               },

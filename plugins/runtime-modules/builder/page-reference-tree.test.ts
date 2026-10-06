@@ -90,6 +90,22 @@ describe("the Pages a link picker offers", () => {
     expect(node?.meta).toBeUndefined();
   });
 
+  it("marks the root as the landing, so it is not a second Home beside /home", () => {
+    const [root, home] = tree([
+      page({ key: "welcome", title: "Home", storagePath: "/", reference: reference(1) }),
+      page({ key: "home", title: "Home", reference: reference(2) }),
+    ]);
+
+    expect(root).toMatchObject({ label: "Home (Landing page)", meta: { title: "Home" } });
+    expect(home).toMatchObject({ label: "Home" });
+  });
+
+  it("names an untitled root by its slot alone", () => {
+    const [root] = tree([page({ key: "welcome", title: " ", storagePath: "/", reference: reference(1) })]);
+
+    expect(root?.label).toBe("(Landing page)");
+  });
+
   it("carries the Area into the address it shows", () => {
     const nodes = [page({ key: "users", title: "Users", reference: reference(3) })];
     const [node] = buildPhiBuilderPageReferenceTree("admin", nodes, nodes);

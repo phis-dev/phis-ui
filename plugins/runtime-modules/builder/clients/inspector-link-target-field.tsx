@@ -23,6 +23,7 @@ export type PhiInspectorLinkTargetLabels = {
   page: string;
   external: string;
   pagePlaceholder: string;
+  landingPage: string;
   externalPlaceholder: string;
   newTab: string;
 };
@@ -32,6 +33,7 @@ export const PHI_INSPECTOR_LINK_TARGET_DEFAULT_LABELS: PhiInspectorLinkTargetLab
   page: "Page",
   external: "Address",
   pagePlaceholder: "Select Page",
+  landingPage: "(Landing page)",
   externalPlaceholder: "https://",
   newTab: "Open in a new tab",
 };
@@ -75,8 +77,8 @@ export function PhiInspectorLinkTargetFieldControl({
   const state = usePhiDeveloperBuilderStateValue("public", (current) => current);
   const pages = usePhiBuilderOfferedPageCatalog(state, state.area);
   const options = useMemo(
-    () => buildPhiBuilderPageReferenceTree(state.area, pages, pages),
-    [pages, state.area],
+    () => buildPhiBuilderPageReferenceTree(state.area, pages, pages, { landing: labels.landingPage }),
+    [labels.landingPage, pages, state.area],
   );
 
   const newTab = target?.newTab === true;

@@ -52,6 +52,7 @@ export function buildPhiBuilderPluginMeta(plugin: PhiAnyCmsBuilderPlugin): PhiBu
       requiredRegionOwnership: plugin.requiredRegionOwnership ?? null,
       defaultConfig,
       resolvedDefaultConfig,
+      creationConfig: cloneDefaultConfig(plugin.creationConfig),
       leaf: true,
       fields: plugin.fields,
     };

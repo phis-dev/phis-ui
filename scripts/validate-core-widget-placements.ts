@@ -61,8 +61,12 @@ const PLACEMENT_ONLY_KEYS: Readonly<Record<string, Readonly<Record<string, strin
 };
 
 function writtenPaths(field: PhiCmsConfigField): string[] {
-  const patched =
-    "patchOnChange" in field && field.patchOnChange ? Object.keys(field.patchOnChange) : [];
+  const patched = [
+    ...("patchOnChange" in field && field.patchOnChange ? Object.keys(field.patchOnChange) : []),
+    ...("optionPresets" in field && field.optionPresets
+      ? [...field.optionPresets.locks, ...(field.optionPresets.prefills ?? [])]
+      : []),
+  ];
   if (field.type === "radius") {
     return [field.topLeftKey, field.topRightKey, field.bottomLeftKey, field.bottomRightKey, ...patched];
   }

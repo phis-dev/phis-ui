@@ -10,6 +10,7 @@ import {
 } from "../widgets/label-types/color-picker";
 import { PhiColorControl, type PhiColorPickerMode } from "./phi-color-control";
 import type { PhiPickerPlacement } from "./phi-picker-control-contract";
+import type { PhiThemeTokenKey } from "../../theme/phi-theme-tokens";
 import {
   type PhiColorControlCustomColor,
   usePhiColorControlPresets,
@@ -21,6 +22,8 @@ export type PhiColorFieldControlProps = {
   label?: string;
   value?: string | null;
   defaultValue?: string;
+  /** A Theme token to fall back to instead of `defaultValue`, read live so it follows the Theme. */
+  defaultToken?: PhiThemeTokenKey;
   /** Handed back with every change, so one handler can serve several fields. */
   tokenKey?: string;
   disabled?: boolean;
@@ -54,7 +57,8 @@ export type PhiColorFieldControlProps = {
 export function PhiColorFieldControl({
   label,
   value,
-  defaultValue = "#1677ff",
+  defaultValue: fixedDefaultValue = "#1677ff",
+  defaultToken,
   tokenKey,
   disabled = false,
   mode = "single",
@@ -76,6 +80,8 @@ export function PhiColorFieldControl({
   onValueChange,
 }: PhiColorFieldControlProps) {
   const { token } = usePhiConfig();
+  const tokenValue = defaultToken ? token[defaultToken] : undefined;
+  const defaultValue = typeof tokenValue === "string" ? tokenValue : fixedDefaultValue;
   const resolvedValue = value?.trim() || defaultValue;
   const pickerPresets = usePhiColorControlPresets({ labels, customColors, presets });
 

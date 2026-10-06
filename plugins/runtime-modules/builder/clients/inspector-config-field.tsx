@@ -7,6 +7,7 @@ import { usePhiConfig } from "../../../../components/root/phi-config-provider";
 
 import type {
   PhiCmsConfigField,
+  PhiCmsConfigFieldOptionPresets,
   PhiRuntimeModuleDataProviderDescriptor,
 } from "../../../../types/cms-plugins";
 import type { PhiCalendarAdapterDescriptor } from "../../../../types/calendar";
@@ -77,6 +78,39 @@ export function renderPhiInspectorSettingsRow(label: ReactNode, control: ReactNo
   );
 }
 
+/**
+ * A switch in the Inspector's two columns: its label on the left, the switch in the control column.
+ *
+ * Shared by the boolean field and by the switches that are not config fields -- a node flag such as
+ * "Translate text". A switch drawn with its own inline label instead lands in the label column and
+ * stands out of line with every switch above it.
+ *
+ * The row's label is one control height tall and the switch is shorter, so left to the row's top
+ * alignment it sat above the text's centre line. Centred in the same height it sits where the Corner
+ * radius header puts its switch, and the switches of a Widget line up.
+ */
+export function renderPhiInspectorSwitchRow({
+  key,
+  label,
+  checked,
+  disabled,
+  onChange,
+}: {
+  key: string;
+  label: ReactNode;
+  checked: boolean;
+  disabled?: boolean;
+  onChange?: (checked: boolean) => void;
+}) {
+  return renderPhiInspectorSettingsRow(
+    label,
+    <PhiFlexControl align="center" style={{ minHeight: "var(--ant-control-height)" }}>
+      <PhiSwitchControl checked={checked} disabled={disabled || !onChange} {...(onChange ? { onChange } : {})} />
+    </PhiFlexControl>,
+    key,
+  );
+}
+
 function renderPhiInspectorSettingsBlock(label: ReactNode, control: ReactNode, key?: string) {
   return (
     <PhiFlexControl key={key} vertical gap={8} style={{ width: "100%", minWidth: 0 }}>
@@ -101,6 +135,10 @@ function renderPhiInspectorConfigFieldControl(field: PhiCmsConfigField, control:
 }
 
 function renderPhiInspectorConfigFieldBlock(field: PhiCmsConfigField, control: ReactNode) {
+  /* A block under a divider that already names it says so once: the divider is its label. */
+  if (field.heading != null && field.heading === field.label) {
+    return <PhiFlexControl key={field.key} vertical style={{ width: "100%", minWidth: 0 }}>{control}</PhiFlexControl>;
+  }
   return renderPhiInspectorSettingsBlock(renderPhiInspectorConfigFieldLabel(field), control, field.key);
 }
 
@@ -114,7 +152,9 @@ export function isPhiInspectorConfigFieldVisible(field: PhiCmsConfigField, confi
     return true;
   }
 
-  const value = readPhiInspectorConfigPathValue(config, rule.field) ?? null;
+  /* An empty list is no answer, the way an absent key is not: a Button with no routes left emits none. */
+  const raw = readPhiInspectorConfigPathValue(config, rule.field);
+  const value = Array.isArray(raw) && raw.length === 0 ? null : raw ?? null;
   if ("equals" in rule && value !== rule.equals) {
     return false;
   }
@@ -123,6 +163,48 @@ export function isPhiInspectorConfigFieldVisible(field: PhiCmsConfigField, confi
   }
 
   return true;
+}
+
+/**
+ * The value a field shows while a choice beside it answers for it, or `null` when the field is the
+ * author's. See `PhiCmsConfigFieldOptionPresets`.
+ */
+export function resolvePhiInspectorFieldLock(
+  field: PhiCmsConfigField,
+  fields: readonly PhiCmsConfigField[],
+  config: Record<string, unknown>,
+): { value: unknown } | null {
+  for (const candidate of fields) {
+    if (candidate.type !== "choice" || !candidate.optionPresets?.locks.includes(field.key)) continue;
+    const chosen = readPhiInspectorConfigPathValue(config, candidate.key);
+    if (typeof chosen !== "string" || !chosen) continue;
+    return { value: candidate.optionPresets.values[chosen]?.[field.key] };
+  }
+  return null;
+}
+
+/*
+ * What choosing an option writes besides itself. The locked fields are dropped while an option answers
+ * for them and handed back filled when none does; the prefilled ones are written once and left alone.
+ */
+function buildPhiInspectorOptionPresetPatch(
+  presets: PhiCmsConfigFieldOptionPresets | undefined,
+  previous: unknown,
+  next: unknown,
+): Record<string, unknown> {
+  if (!presets) return {};
+  if (typeof next === "string" && next) {
+    const values = presets.values[next] ?? {};
+    return {
+      ...Object.fromEntries(presets.locks.map((key) => [key, undefined])),
+      ...Object.fromEntries((presets.prefills ?? []).map((key) => [key, values[key]])),
+    };
+  }
+  if (typeof previous === "string" && previous) {
+    const values = presets.values[previous] ?? {};
+    return Object.fromEntries(presets.locks.map((key) => [key, values[key]]));
+  }
+  return {};
 }
 
 export function readPhiInspectorConfigPathValue(
@@ -433,16 +515,18 @@ function PhiInspectorChoiceFieldControl({
       value={selectedValue ?? ""}
       disabled={disabled || !onChange}
       style={{ width: "100%" }}
-      onChange={(nextValue) =>
+      onChange={(nextValue) => {
+        const next = field.presentation === "autocomplete" || field.allowCustom
+          ? nextValue.trim().length > 0 ? nextValue : field.emptyValue
+          : emptyOptionValue != null && nextValue === emptyOptionValue
+            ? field.emptyValue
+            : nextValue;
         onChange?.({
-          [field.key]: field.presentation === "autocomplete" || field.allowCustom
-            ? nextValue.trim().length > 0 ? nextValue : field.emptyValue
-            : emptyOptionValue != null && nextValue === emptyOptionValue
-              ? field.emptyValue
-              : nextValue,
+          [field.key]: next,
+          ...buildPhiInspectorOptionPresetPatch(field.optionPresets, value, next),
           ...(field.patchOnChange ?? {}),
-        })
-      }
+        });
+      }}
     />,
   );
 }
@@ -1010,27 +1094,17 @@ function renderPhiInspectorConfigFieldBody({
   }
 
   if (field.type === "boolean") {
-    /*
-     * The row's label is one control height tall and the switch is shorter, so left to the row's
-     * top alignment it sat above the text's centre line. Centred in the same height it sits where
-     * the Corner radius header puts its switch, and the switches of a Widget line up.
-     */
-    return renderPhiInspectorConfigFieldControl(
-      field,
-      <PhiFlexControl align="center" style={{ minHeight: "var(--ant-control-height)" }}>
-        <PhiSwitchControl
-          checked={
-            typeof value === "boolean"
-              ? value
-              : typeof defaultValue === "boolean"
-                ? defaultValue
-                : false
-          }
-          disabled={disabled || !onChange}
-          onChange={(checked) => onChange?.({ [field.key]: checked })}
-        />
-      </PhiFlexControl>,
-    );
+    return renderPhiInspectorSwitchRow({
+      key: field.key,
+      label: renderPhiInspectorConfigFieldLabel(field),
+      checked: typeof value === "boolean"
+        ? value
+        : typeof defaultValue === "boolean"
+          ? defaultValue
+          : false,
+      disabled,
+      ...(onChange ? { onChange: (checked: boolean) => onChange({ [field.key]: checked }) } : {}),
+    });
   }
 
   if (field.type === "choice") {
@@ -1076,6 +1150,7 @@ function renderPhiInspectorConfigFieldBody({
       <PhiColorFieldControl
         value={value as string | null | undefined}
         defaultValue={defaultValue as string | undefined}
+        {...(field.defaultToken ? { defaultToken: field.defaultToken } : {})}
         disabled={disabled || !onChange}
         mode={resolveInspectorColorMode(field.mode)}
         placement="left"
@@ -1186,7 +1261,9 @@ function renderPhiInspectorConfigFieldBody({
         disabled={disabled || !onChange}
         inputType={field.type === "url" ? "url" : "text"}
         style={{ width: "100%" }}
-        onChange={(nextValue) => onChange?.({ [field.key]: nextValue || undefined })}
+        onChange={(nextValue) => onChange?.({
+          [field.key]: nextValue || ("emptyValue" in field ? field.emptyValue : undefined),
+        })}
       />,
     );
   }

@@ -57,6 +57,7 @@ import type { PhiBuilderAreaKey } from "../constants/cms-areas";
 import type { PhiBuilderNavigationTree } from "../helpers/cms-navigation-catalog";
 import type { PhiBuilderActivePageCatalog } from "../helpers/cms-page-catalog";
 import type { PhiThemeBlockCatalog } from "../theme/phi-theme-composition";
+import type { PhiThemeTokenKey } from "../theme/phi-theme-tokens";
 
 type PhiBivariantCallback<TArgs extends unknown[], TResult> = {
   bivarianceHack(...args: TArgs): TResult;
@@ -66,6 +67,27 @@ export type PhiCmsConfigFieldVisibilityRule = {
   field: string;
   equals?: string | number | boolean | null;
   notEquals?: string | number | boolean | null;
+};
+
+/**
+ * What each option of a choice stands for in the Widget's other fields.
+ *
+ * A choice that is a whole answer rather than one setting among others -- the Button's Action, which is
+ * a label, a tooltip, an icon, a variant and a colour at once. While an option is chosen the fields in
+ * `locks` are its to answer: the Inspector shows the option's values in them and lets nobody change
+ * them, and nothing of theirs is stored, because the option is read again wherever it is drawn. Choosing
+ * none hands them back, filled with what the option showed, so the author edits from there instead of
+ * from blank.
+ *
+ * `prefills` are written once when an option is chosen and stay the author's: a starting point, not a
+ * lock -- the Button's signal value, which says what it triggers rather than how it looks.
+ *
+ * Data, not a callback, because a Widget's fields travel from the server to the Inspector.
+ */
+export type PhiCmsConfigFieldOptionPresets = {
+  locks: readonly string[];
+  prefills?: readonly string[];
+  values: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
 };
 
 type PhiCmsConfigFieldBase = {
@@ -126,6 +148,12 @@ export type PhiCmsConfigFieldChoiceFilter = {
 export type PhiCmsConfigField =
   | (PhiCmsConfigFieldBase & {
       type: "string" | "url" | "icon";
+      /**
+       * What a cleared box is written as. Left out, clearing removes the key and the Widget's own
+       * fallback answers again; `""` keeps the emptiness, for a text the author may want gone -- a
+       * Button that is only its icon.
+       */
+      emptyValue?: "";
     })
   | (PhiCmsConfigFieldBase & {
       /**
@@ -198,6 +226,12 @@ export type PhiCmsConfigField =
   | (PhiCmsConfigFieldBase & {
       type: "color";
       mode?: PhiCmsConfigFieldColorMode;
+      /**
+       * The Theme token the thing coloured falls back to, shown while the field is empty -- a Badge is
+       * `colorError` until somebody picks otherwise, and an empty field showing the picker's own blue
+       * would say the Badge is blue.
+       */
+      defaultToken?: PhiThemeTokenKey;
       section?: string;
     })
   | (PhiCmsConfigFieldBase & {
@@ -236,6 +270,7 @@ export type PhiCmsConfigField =
       emptyOption?: PhiControlOption;
       emptyValue?: null | undefined;
       patchOnChange?: Record<string, unknown>;
+      optionPresets?: PhiCmsConfigFieldOptionPresets;
     })
   | (PhiCmsConfigFieldBase & {
       type: "collection";
@@ -455,6 +490,14 @@ export type PhiCmsWidgetPlugin<TConfig> = {
    */
   requiredRegionOwnership?: PhiCmsRegionOwnership;
   defaultConfig?: Partial<TConfig>;
+  /**
+   * What a placement of this Widget is created with, where that is more than its `defaultConfig`.
+   *
+   * The same split the Layouts make: a default is put back under every placement that leaves the key
+   * out, so it can only hold what an author may not take away. A starting text the author may clear
+   * belongs here -- written into the new placement once, and gone for good when they clear it.
+   */
+  creationConfig?: Partial<TConfig>;
   fields: PhiCmsConfigField[];
   parseConfig: (raw: Record<string, unknown>) => TConfig;
   render: PhiBivariantCallback<[PhiCmsWidgetPluginRenderArgs<TConfig>], ReactNode>;
@@ -494,6 +537,7 @@ export type PhiCmsWidgetPluginDefinition<TConfig> = Pick<
   | "surface"
   | "requiredRegionOwnership"
   | "defaultConfig"
+  | "creationConfig"
   | "fields"
   | "parseConfig"
 >;

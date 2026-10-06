@@ -55,21 +55,72 @@ type PhiResolvedSelectOption<TValue extends string | number> = {
 };
 
 /*
+ * A line in the menu, which antd's Select has no entry for: an option nobody can choose, drawn as the
+ * line and nothing else. Its value cannot meet a real one, and its empty search label drops it from
+ * every search, where a line between whatever is left would separate nothing.
+ */
+type PhiSelectSeparatorEntry = {
+  value: string;
+  label: ReactNode;
+  searchLabel: "";
+  disabled: true;
+  style: CSSProperties;
+  separator: true;
+};
+
+const PHI_SELECT_SEPARATOR_STYLE: CSSProperties = { minHeight: 0, padding: 0, cursor: "default" };
+
+function isPhiSelectSeparatorEntry(entry: unknown): entry is PhiSelectSeparatorEntry {
+  return typeof entry === "object" && entry != null && "separator" in entry;
+}
+
+function renderPhiSelectSeparator() {
+  return <div role="separator" style={{ borderTop: "1px solid var(--ant-color-split)", marginBlock: 4 }} />;
+}
+
+/* The options with a line where one asks for it -- once, where an option after and one before agree. */
+function separatePhiSelectOptions<TValue extends string | number>(
+  resolved: PhiResolvedSelectOption<TValue>[],
+): Array<PhiResolvedSelectOption<TValue> | PhiSelectSeparatorEntry> {
+  const entries: Array<PhiResolvedSelectOption<TValue> | PhiSelectSeparatorEntry> = [];
+  resolved.forEach((entry, index) => {
+    const lineBefore = index > 0 &&
+      (entry.option.separator === "before" || resolved[index - 1]?.option.separator === "after");
+    if (lineBefore) {
+      entries.push({
+        value: `\u0000separator-${index}`,
+        label: null,
+        searchLabel: "",
+        disabled: true,
+        style: PHI_SELECT_SEPARATOR_STYLE,
+        separator: true,
+      });
+    }
+    entries.push(entry);
+  });
+  return entries;
+}
+
+/*
  * Consecutive options that name the same group, under one heading. Options without a group stay at the
  * top level, and a list that names no group at all comes back unchanged.
  */
 function groupPhiSelectOptions<TValue extends string | number>(
-  resolved: PhiResolvedSelectOption<TValue>[],
+  resolved: Array<PhiResolvedSelectOption<TValue> | PhiSelectSeparatorEntry>,
 ) {
-  if (!resolved.some((entry) => entry.option.group)) {
+  if (!resolved.some((entry) => !isPhiSelectSeparatorEntry(entry) && entry.option.group)) {
     return resolved;
   }
-  const grouped: Array<PhiResolvedSelectOption<TValue> | {
+  const grouped: Array<PhiResolvedSelectOption<TValue> | PhiSelectSeparatorEntry | {
     label: ReactNode;
     title: string;
     options: PhiResolvedSelectOption<TValue>[];
   }> = [];
   for (const entry of resolved) {
+    if (isPhiSelectSeparatorEntry(entry)) {
+      grouped.push(entry);
+      continue;
+    }
     const group = entry.option.group;
     const last = grouped.at(-1);
     if (!group) {
@@ -111,7 +162,7 @@ export function PhiSelectControl<TValue extends string | number = string>({
   onChange,
 }: PhiSelectControlProps<TValue>) {
   const { labelId, labelledBy } = usePhiControlLabel(label, ariaLabel);
-  const resolvedOptions = groupPhiSelectOptions(options.map((option) => ({
+  const resolvedOptions = groupPhiSelectOptions(separatePhiSelectOptions(options.map((option) => ({
     value: option.value,
     // rc-select synthesizes native HTML title attributes from primitive labels.
     // Phi owns option descriptions through PhiControlOptionContent instead.
@@ -119,7 +170,7 @@ export function PhiSelectControl<TValue extends string | number = string>({
     searchLabel: option.label,
     disabled: option.disabled,
     option,
-  })));
+  }))));
   const controlDisabled = disabled || readOnly;
 
   const canUseTextEntry = (presentation === "autocomplete" || allowCustom) &&
@@ -136,7 +187,7 @@ export function PhiSelectControl<TValue extends string | number = string>({
         disabled={controlDisabled}
         allowClear={allowClear}
         options={resolvedOptions}
-        optionRender={(resolvedOption) => (
+        optionRender={(resolvedOption) => isPhiSelectSeparatorEntry(resolvedOption.data) ? renderPhiSelectSeparator() : (
           <PhiControlOptionContent
             option={(resolvedOption.data as PhiResolvedSelectOption<TValue>).option}
             presentation="dropdown"
@@ -179,7 +230,7 @@ export function PhiSelectControl<TValue extends string | number = string>({
       disabled={controlDisabled}
       allowClear={allowClear}
       options={resolvedOptions}
-      optionRender={(resolvedOption) => (
+      optionRender={(resolvedOption) => isPhiSelectSeparatorEntry(resolvedOption.data) ? renderPhiSelectSeparator() : (
         <PhiControlOptionContent
           option={(resolvedOption.data as PhiResolvedSelectOption<TValue>).option}
           presentation="dropdown"
