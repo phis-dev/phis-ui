@@ -196,6 +196,19 @@ const PHI_CARD_VARIANT_METRICS: Record<PhiCardVariant, (token: PhiThemeTokens) =
  * A card's corners where its Surface states none -- "None" in the Surface section, the contents without a
  * box. The picture is still clipped to the Theme's corner, so a card without a box keeps the shape of one.
  */
+/* Text a screen reader reads and nobody sees, the usual way: out of the flow and clipped to nothing. */
+const PHI_CARD_HIDDEN_TEXT: CSSProperties = {
+  position: "absolute",
+  width: 1,
+  height: 1,
+  margin: -1,
+  padding: 0,
+  overflow: "hidden",
+  clip: "rect(0 0 0 0)",
+  whiteSpace: "nowrap",
+  border: 0,
+};
+
 const PHI_CARD_THEME_CORNER = "var(--phi-surface-radius, var(--ant-border-radius-lg))";
 
 /** The box a picture is shown in takes the picture's own proportion; 3:2 where nothing is known. */
@@ -280,13 +293,15 @@ export function PhiCardWidgetClient({
   const iconAtTop = iconPlacement !== "inline";
   const markSide = iconPlacement === "top-center" ? "center" : iconPlacement === "top-end" ? "end" : "start";
 
+  /* What the card's link is called: its heading, or where it has none, its other words in turn. */
+  const cardLinkName = labels.title || labels.description || labels.eyebrow || labels.value || labels.meta || href;
   /*
-   * The whole card is the link, and the link is still one element: the heading's anchor reaches over the
-   * box (`.phi-card__link::after`), so a reader can click anywhere while a screen reader hears one link
-   * named by the heading. The action button stands above that reach, so it stays a button of its own and
-   * is never a link inside a link.
+   * The card is the link: one anchor of its own, its name read by a screen reader and its reach
+   * (`.phi-card__link::after`) over the whole box, so a reader can click anywhere. Not the heading's
+   * anchor -- a card without a heading leads where it leads all the same. The action button stands above
+   * that reach, a button of its own and never a link inside a link.
    */
-  const linked = (content: ReactNode) => href ? (
+  const cardLink = href ? (
     <PhiLink
       href={href}
       newTab={config?.newTab}
@@ -294,9 +309,9 @@ export function PhiCardWidgetClient({
       className="phi-card__link"
       style={{ color: "inherit" }}
     >
-      {content}
+      <span style={PHI_CARD_HIDDEN_TEXT}>{cardLinkName}</span>
     </PhiLink>
-  ) : content;
+  ) : null;
 
   const eyebrow = textOf("eyebrow");
   const title = textOf("title");
@@ -311,7 +326,7 @@ export function PhiCardWidgetClient({
       level={Number(headingLevel.slice(1)) as 2 | 3 | 4}
       style={{ margin: 0, ...headingType[headingLevel], color: token.colorTextHeading, ...slotWidth }}
     >
-      {linked(title)}
+      {title}
     </PhiTypographyControl>
   ) : null;
 
@@ -477,7 +492,7 @@ export function PhiCardWidgetClient({
           </PhiTypographyControl>
         ) : null}
         {headingRow}
-        {body === "stat" ? (title != null ? figure : linked(figure)) : null}
+        {body === "stat" ? figure : null}
         {description != null ? (
           <PhiTypographyControl
             presentation="paragraph"
@@ -511,6 +526,8 @@ export function PhiCardWidgetClient({
           </div>
         ) : null}
       </div>
+      {/* Outside the words' grid, which would give it a row and a gap of its own; it takes no room. */}
+      {cardLink}
     </>
   );
 
