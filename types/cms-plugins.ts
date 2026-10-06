@@ -96,7 +96,8 @@ type PhiCmsConfigFieldBase = {
   description?: string;
   required?: boolean;
   editorPlacement?: "inspector" | "geometry" | "toolbar";
-  visibleWhen?: PhiCmsConfigFieldVisibilityRule;
+  /** When the field is shown; a list holds when every rule in it does. */
+  visibleWhen?: PhiCmsConfigFieldVisibilityRule | readonly PhiCmsConfigFieldVisibilityRule[];
   /**
    * A divider with this title drawn above the field: where a group of the fields that follow begins,
    * as the Command Toolbar's "Toolbar" stands over what holds for every button.
@@ -236,6 +237,14 @@ export type PhiCmsConfigField =
     })
   | (PhiCmsConfigFieldBase & {
       type: "boolean";
+    })
+  | (PhiCmsConfigFieldBase & {
+      /**
+       * A picture: an Asset from the media library in a chosen rendition, or an address, with its alt
+       * text. Writes the image source keys (`sourceKind`, `assetId`, `variantKey`, `variantVersion`,
+       * `sourceUrl`) and `alt`, not a key of its own; `key` only names the field.
+       */
+      type: "image";
     })
   | (PhiCmsConfigFieldBase & {
       /** A list of whole numbers, such as the page sizes a table offers; each at least `min`. */

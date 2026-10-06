@@ -1,4 +1,5 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../../types/cms-instance-id";
+import { PHI_SURFACE_CARD } from "../../../../helpers/surface-presets";
 import { PHI_ACCOUNTING_RUNTIME_MODULE_ID } from "../ids";
 import { PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS } from "../../../../constants/cms-layout-types";
 import { PhiCmsPageType } from "../../../../constants/phi-cms";
@@ -49,6 +50,7 @@ export async function buildPhiDefaultAccountingPageTree({
           title: "Accounting",
           description: "Invoices and billing workflows for this site.",
           variant: "compact",
+          surface: PHI_SURFACE_CARD,
         },
       }),
     ],

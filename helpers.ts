@@ -18,3 +18,4 @@ export {
 } from "./helpers/cms-node-factories";
 export * from "./helpers/cms-preset-nodes";
 export * from "./helpers/format-date-time";
+export { PHI_SURFACE_CARD, PHI_SURFACE_WASH } from "./helpers/surface-presets";

@@ -506,6 +506,22 @@
   z-index: 1;
 }
 
+/*
+ * A highlighted card keeps its ring, which is a line rather than depth. On a layer of its own above
+ * everything in the card: the card's ground is a layer above the box's background, and its picture is
+ * another, so a shadow or an outline of the box itself is painted under one of them. It takes no clicks,
+ * and it leaves the outline free for keyboard focus.
+ */
+:where(.phi-card--highlight)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--phi-card-highlight-color);
+  pointer-events: none;
+}
+
 :where(.phi-card__link):focus-visible {
   outline: none;
 }
@@ -513,6 +529,14 @@
 :where(.phi-card--link):focus-within {
   outline: calc(var(--ant-line-width) * 2) solid var(--ant-color-primary-border);
   outline-offset: 2px;
+}
+
+/*
+ * An empty eyebrow or meta on the canvas stands only while the card is under the pointer or being written
+ * in: a place to start writing, without an empty card reading as four empty lines.
+ */
+.phi-card-editor:not(:hover):not(:focus-within) :where(:has(> .phi-card-editor__optional)) {
+  display: none;
 }
 
 :where(.phi-card__action) {

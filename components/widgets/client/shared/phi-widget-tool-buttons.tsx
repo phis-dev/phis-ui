@@ -82,6 +82,7 @@ export function PhiWidgetIconToolButton({
       value={value ?? null}
       buttonAriaLabel={ariaLabel ?? labels.iconPicker.buttonAriaLabel}
       labels={labels.iconPicker}
+      placement="left"
       onChange={onChange}
     />
   );

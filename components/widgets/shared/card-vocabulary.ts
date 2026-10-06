@@ -25,14 +25,16 @@ export type PhiCardWidgetBody = "text" | "stat";
 export const PHI_CARD_HEADING_LEVELS = ["h2", "h3", "h4"] as const;
 export type PhiCardHeadingLevel = (typeof PHI_CARD_HEADING_LEVELS)[number];
 
-export const PHI_CARD_TEXT_ALIGNS = ["start", "center", "end"] as const;
+/** Logical, so `start` is the left in a left-to-right page and the right in a right-to-left one. */
+export const PHI_CARD_TEXT_ALIGNS = ["start", "center", "end", "justify"] as const;
 export type PhiCardTextAlign = (typeof PHI_CARD_TEXT_ALIGNS)[number];
 
 /**
- * Where the icon stands: before the heading, small, or at the top, large -- over the picture, when the
- * card has one, on a ground of its own so it reads on any picture.
+ * Where the icon stands: before the heading, small, or at the top, large -- at the start, the middle or
+ * the end of the line, over the picture when the card has one, on a ground of its own so it reads on any
+ * picture. Logical like the text alignment: `top` is the left in a left-to-right page.
  */
-export const PHI_CARD_ICON_PLACEMENTS = ["inline", "top"] as const;
+export const PHI_CARD_ICON_PLACEMENTS = ["inline", "top", "top-center", "top-end"] as const;
 export type PhiCardIconPlacement = (typeof PHI_CARD_ICON_PLACEMENTS)[number];
 
 /**
@@ -43,4 +45,16 @@ export type PhiCardIconPlacement = (typeof PHI_CARD_ICON_PLACEMENTS)[number];
 export const PHI_CARD_HOVER_EFFECTS = ["none", "lift", "zoom"] as const;
 export type PhiCardHoverEffect = (typeof PHI_CARD_HOVER_EFFECTS)[number];
 
+/**
+ * The card's variants: how it is set rather than what it says -- insets, type sizes, the size of its
+ * marks and its button, and where a variant is an arrangement as well, where its parts stand: `center`
+ * puts the icon over the picture and the words and the button on the middle line. A list, so a further
+ * variant is an entry here and a row in the client's table,
+ * not another branch in every size the card draws. `default` is what a card without one is.
+ */
+export const PHI_CARD_VARIANTS = ["default", "compact", "center"] as const;
+export type PhiCardVariant = (typeof PHI_CARD_VARIANTS)[number];
 
+/** The words a card shows, each in its own place; what an editor can put a field in. */
+export const PHI_CARD_TEXT_SLOTS = ["eyebrow", "title", "description", "meta", "value"] as const;
+export type PhiCardTextSlot = (typeof PHI_CARD_TEXT_SLOTS)[number];

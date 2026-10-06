@@ -102,7 +102,10 @@ function buildCard(item: Record<string, unknown>, card: PhiCmsCollectionCardPres
       : null,
     iconName: readIconName(readPath(item, card?.icon) ?? readPath(item, "icon")),
     href: readPath(item, card?.href),
-    actionHref: readPath(item, card?.actionHref),
+    action: (() => {
+      const actionHref = readPath(item, card?.actionHref);
+      return actionHref ? { href: actionHref } : null;
+    })(),
     ...(card?.variant ? { variant: card.variant } : {}),
     ...(card?.body ? { body: card.body } : {}),
     highlight: readTruth(item, card?.highlight),

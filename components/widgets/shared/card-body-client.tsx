@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 
 import { PhiButtonControl } from "../../controls/phi-button-control";
 import { PhiImageControl, type PhiImageControlSource } from "../../controls/phi-image-control";
@@ -12,15 +12,19 @@ import { usePhiConfig } from "../../root/phi-config-provider";
 import { PhiIcon } from "../../shell/phi-icon";
 import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
 import { PhiSurfaceTone } from "../../surface/phi-surface-tone";
-import { combinePhiBoxShadows } from "../../../helpers/layout-style";
 import { resolvePhiSurfaceStyle } from "../../../helpers/surface-style";
 import type { PhiClientBlockBaseProps } from "../../../types";
 import type { PhiSurface } from "../../../types/surface";
+import type { PhiSignalRouteSet } from "../../../types/signals";
+import { usePhiControlSignalController } from "../client/shared/phi-control-signals";
+import type { PhiThemeTokens } from "../../../theme/phi-theme-tokens";
 import type {
   PhiCardHeadingLevel,
   PhiCardHoverEffect,
   PhiCardIconPlacement,
   PhiCardTextAlign,
+  PhiCardTextSlot,
+  PhiCardVariant,
   PhiCardWidgetBody,
 } from "./card-vocabulary";
 
@@ -29,6 +33,8 @@ export type {
   PhiCardHoverEffect,
   PhiCardIconPlacement,
   PhiCardTextAlign,
+  PhiCardTextSlot,
+  PhiCardVariant,
   PhiCardWidgetBody,
 } from "./card-vocabulary";
 
@@ -67,19 +73,44 @@ export type PhiCardWidgetClientConfig = {
   image?: PhiCardWidgetImage | null;
   iconName?: string;
   iconPlacement?: PhiCardIconPlacement;
+  /** The icon's colour and its ground; absent, the Theme's. */
+  iconColor?: string;
+  iconBackground?: string;
   textAlign?: PhiCardTextAlign;
   headingLevel?: PhiCardHeadingLevel;
   /** Where the whole card leads, already resolved to an address. */
   href?: string;
   newTab?: boolean;
   external?: boolean;
-  actionHref?: string;
-  actionNewTab?: boolean;
-  /** Size and weight: insets, type sizes, the button's size. */
-  variant?: "default" | "compact" | "featured";
+  /**
+   * The action button, when the card draws one. Present is drawn; its address is absent where none is
+   * known yet -- on the canvas, which cannot resolve a Page and must not navigate anyway.
+   */
+  action?: PhiCardWidgetAction | null;
+  /** How the card is set: insets, type sizes, the button's size. */
+  variant?: PhiCardVariant;
   body?: PhiCardWidgetBody;
   highlight?: boolean;
   hoverEffect?: PhiCardHoverEffect;
+  /** The card's wired signals (`PHI_CARD_SIGNALS`); absent where nothing is wired, as on the canvas. */
+  signalRoutes?: PhiSignalRouteSet | null;
+};
+
+/* What arrived by signal, standing over what the card was placed with until the page is left. */
+type PhiCardSignalOverrides = Partial<Record<PhiCardTextSlot, string>> & {
+  loading?: boolean;
+  highlight?: boolean;
+};
+
+const PHI_CARD_SIGNAL_TEXT_SLOTS: ReadonlySet<string> = new Set(["eyebrow", "title", "description", "meta", "value"]);
+
+export type PhiCardWidgetAction = {
+  href?: string;
+  newTab?: boolean;
+  external?: boolean;
+  icon?: string;
+  /** The button's name where it shows only its icon. */
+  ariaLabel?: string;
 };
 
 export type PhiCardWidgetClientProps = PhiClientBlockBaseProps<
@@ -87,7 +118,68 @@ export type PhiCardWidgetClientProps = PhiClientBlockBaseProps<
   PhiCardWidgetClientConfig
 > & {
   binding?: PhiCardWidgetClientBinding;
+  /**
+   * What stands in a text's place instead of the text, for an editor that edits it there. Asked for
+   * every slot, the empty ones included: what it returns is drawn in the slot's type, and `null` leaves
+   * the slot out as an empty text would be left out.
+   */
+  renderText?: (slot: PhiCardTextSlot, text: string | undefined) => ReactNode;
 };
+
+/* Lengths as the Theme states them, which is a number or a CSS length. */
+type PhiCardVariantMetrics = {
+  inset: number;
+  gap: number;
+  headingSize: number | string;
+  descriptionSize: number | string;
+  iconSize: number;
+  topIconSize: number;
+  buttonSize: "small" | "medium";
+  /**
+   * The picture's box, where a variant sets it rather than the picture's own proportion. The picture is
+   * cropped into it around its focal point.
+   */
+  mediaAspectRatio?: string;
+  /** Where a variant that is an arrangement puts things, over what the card states. */
+  arrangement?: { textAlign: PhiCardTextAlign; iconPlacement: PhiCardIconPlacement };
+};
+
+/*
+ * What each variant sets, in one row per variant. A further variant -- a featured card -- is a row here
+ * and an entry in `PHI_CARD_VARIANTS`.
+ */
+const PHI_CARD_VARIANT_METRICS: Record<PhiCardVariant, (token: PhiThemeTokens) => PhiCardVariantMetrics> = {
+  default: (token) => ({
+    inset: token.padding,
+    gap: token.paddingSM,
+    headingSize: token.fontSizeHeading4,
+    descriptionSize: token.fontSizeLG,
+    iconSize: 24,
+    topIconSize: 40,
+    buttonSize: "medium",
+  }),
+  compact: (token) => ({
+    inset: token.paddingSM,
+    gap: token.paddingXS,
+    headingSize: token.fontSizeHeading5,
+    descriptionSize: token.fontSize,
+    iconSize: 20,
+    topIconSize: 32,
+    buttonSize: "small",
+    // A strip rather than a poster, so the words stay the larger part of a compact card.
+    mediaAspectRatio: "2 / 1",
+  }),
+  center: (token) => ({
+    ...PHI_CARD_VARIANT_METRICS.default(token),
+    arrangement: { textAlign: "center", iconPlacement: "top-center" },
+  }),
+};
+
+/*
+ * A card's corners where its Surface states none -- "None" in the Surface section, the contents without a
+ * box. The picture is still clipped to the Theme's corner, so a card without a box keeps the shape of one.
+ */
+const PHI_CARD_THEME_CORNER = "var(--phi-surface-radius, var(--ant-border-radius-lg))";
 
 /** The box a picture is shown in takes the picture's own proportion; 3:2 where nothing is known. */
 function resolveMediaAspectRatio(presentation: PhiImagePresentation) {
@@ -97,20 +189,50 @@ function resolveMediaAspectRatio(presentation: PhiImagePresentation) {
 }
 
 export function PhiCardWidgetClient({
-  labels,
+  labels: placedLabels,
   config,
   binding,
+  renderText,
 }: PhiCardWidgetClientProps) {
   const { token } = usePhiConfig();
+  const [overrides, setOverrides] = useState<PhiCardSignalOverrides>({});
+  const signalRoutes = config?.signalRoutes ?? null;
+  const controlSignals = usePhiControlSignalController<string>({
+    key: "card",
+    signalRoutes,
+    signalsEnabled: signalRoutes != null,
+    onReceiveCapability: (capabilityId, signal) => {
+      if (PHI_CARD_SIGNAL_TEXT_SLOTS.has(capabilityId)) {
+        const text = typeof signal.value === "string" ? signal.value : signal.value == null ? "" : String(signal.value);
+        setOverrides((current) => ({ ...current, [capabilityId]: text }));
+      } else if (capabilityId === "loading" || capabilityId === "highlight") {
+        setOverrides((current) => ({ ...current, [capabilityId]: signal.value === true }));
+      }
+      return true;
+    },
+  });
+  const labels: PhiCardWidgetClientLabels = {
+    ...placedLabels,
+    ...Object.fromEntries(
+      [...PHI_CARD_SIGNAL_TEXT_SLOTS].flatMap((slot) => {
+        const text = overrides[slot as PhiCardTextSlot];
+        return text === undefined ? [] : [[slot, text]];
+      }),
+    ),
+  };
+  const activates = (signalRoutes?.emits?.length ?? 0) > 0;
   const variant = config?.variant ?? "default";
   const body = config?.body ?? "text";
-  const textAlign = config?.textAlign ?? "start";
+  const metrics = (PHI_CARD_VARIANT_METRICS[variant] ?? PHI_CARD_VARIANT_METRICS.default)(token);
+  const { inset, gap, headingSize, descriptionSize, iconSize, topIconSize, buttonSize } = metrics;
+  const textAlign = metrics.arrangement?.textAlign ?? config?.textAlign ?? "start";
   const headingLevel = config?.headingLevel ?? "h3";
-  const iconPlacement = config?.iconPlacement ?? "inline";
-  const highlight = config?.highlight === true;
+  const iconPlacement = metrics.arrangement?.iconPlacement ?? config?.iconPlacement ?? "inline";
+  const highlight = overrides.highlight ?? config?.highlight === true;
   const href = config?.href;
   const hoverEffect = href ? config?.hoverEffect ?? "none" : "none";
-  const hasAction = Boolean(config?.actionHref && labels.actionLabel);
+  /* A button with neither words nor a mark would be an empty box, so it is not drawn. */
+  const action = config?.action && (labels.actionLabel || config.action.icon) ? config.action : null;
   const image = config?.image?.presentation.url ? config.image : null;
   const iconName = config?.iconName;
 
@@ -122,16 +244,24 @@ export function PhiCardWidgetClient({
     cornerFallback: "var(--phi-surface-radius, 0)",
     forceGroundLayer: hoverEffect === "zoom",
   });
-  const inset = variant === "compact" ? token.paddingSM : variant === "featured" ? token.paddingMD : token.padding;
-  const gap = variant === "compact" ? token.paddingXS : token.paddingSM;
-  const headingSize = variant === "featured"
-    ? token.fontSizeHeading3
-    : variant === "compact"
-      ? token.fontSizeHeading5
-      : token.fontSizeHeading4;
-  const iconSize = variant === "compact" ? 20 : 24;
-  const topIconSize = variant === "compact" ? 32 : variant === "featured" ? 48 : 40;
+  /*
+   * A text as the card draws it, or what an editor puts in its place. `null` is a slot left out: an
+   * empty text, or an editor that keeps an empty one out of sight.
+   */
+  const textOf = (slot: PhiCardTextSlot): ReactNode =>
+    renderText ? renderText(slot, labels[slot]) : labels[slot] || null;
+  /*
+   * A field in a slot needs the card's width to measure against. Left to shrink to its contents, the
+   * slot is as wide as a field that is itself as wide as the slot, and the text wraps after a few letters.
+   * Stretched, the field still fits its text, and `textAlign` still places it.
+   */
+  const slotWidth: CSSProperties = renderText ? { justifySelf: "stretch", flex: "1 1 auto", minWidth: 0 } : {};
   const justify = textAlign === "center" ? "center" : textAlign === "end" ? "flex-end" : "flex-start";
+  /* Justified text fills the line, so its blocks take the whole width; everything else sits at its side. */
+  const justifyItems = textAlign === "justify" ? "stretch" : justify;
+  /* Where a mark at the top stands, as its placement says: at the start, the middle or the end. */
+  const iconAtTop = iconPlacement !== "inline";
+  const markSide = iconPlacement === "top-center" ? "center" : iconPlacement === "top-end" ? "end" : "start";
 
   /*
    * The whole card is the link, and the link is still one element: the heading's anchor reaches over the
@@ -151,13 +281,17 @@ export function PhiCardWidgetClient({
     </PhiLink>
   ) : content;
 
-  const heading = labels.title ? (
+  const eyebrow = textOf("eyebrow");
+  const title = textOf("title");
+  const description = textOf("description");
+  const meta = textOf("meta");
+  const heading = title != null ? (
     <PhiTypographyControl
       presentation="title"
       level={Number(headingLevel.slice(1)) as 2 | 3 | 4}
-      style={{ margin: 0, fontSize: headingSize, color: token.colorTextHeading }}
+      style={{ margin: 0, fontSize: headingSize, color: token.colorTextHeading, ...slotWidth }}
     >
-      {linked(labels.title)}
+      {linked(title)}
     </PhiTypographyControl>
   ) : null;
 
@@ -173,8 +307,8 @@ export function PhiCardWidgetClient({
         width: framed,
         height: framed,
         borderRadius: token.borderRadius,
-        background: token.colorFillQuaternary,
-        color: highlight ? token.colorPrimary : token.colorTextSecondary,
+        background: config?.iconBackground ?? token.colorFillQuaternary,
+        color: config?.iconColor ?? (highlight ? token.colorPrimary : token.colorTextSecondary),
       }}
     >
       <PhiIcon name={iconName} size={size} />
@@ -185,10 +319,15 @@ export function PhiCardWidgetClient({
    * A failure stands where the figure would, at body size, because a sentence in figure type is
    * unreadable. A card whose figure is the only thing it has makes the figure the link.
    */
-  const figure = (
+  const valueText = renderText ? renderText("value", labels.value) : null;
+  const figure = valueText != null ? (
+    <div style={{ fontSize: token.fontSizeHeading3, color: highlight ? token.colorPrimary : token.colorTextHeading, ...slotWidth }}>
+      {valueText}
+    </div>
+  ) : (
     <PhiStatisticControl
       value={binding?.error ?? labels.value ?? ""}
-      loading={binding?.loading ?? false}
+      loading={binding?.loading === true || overrides.loading === true}
       styles={{
         content: binding?.error
           ? { color: token.colorError, fontSize: token.fontSize }
@@ -198,7 +337,7 @@ export function PhiCardWidgetClient({
   );
 
   const headingRow = iconPlacement === "inline" && iconName ? (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: justify, gap }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: justify, gap, ...slotWidth }}>
       {iconMark(iconSize, iconSize + 16)}
       {heading}
     </div>
@@ -207,7 +346,11 @@ export function PhiCardWidgetClient({
   const media = image ? (
     <div
       className="phi-card__media"
-      style={{ position: "relative", aspectRatio: resolveMediaAspectRatio(image.presentation), overflow: "hidden" }}
+      style={{
+        position: "relative",
+        aspectRatio: metrics.mediaAspectRatio ?? resolveMediaAspectRatio(image.presentation),
+        overflow: "hidden",
+      }}
     >
       <PhiImageControl
         presentation={image.presentation}
@@ -218,16 +361,16 @@ export function PhiCardWidgetClient({
         style={{ width: "100%", height: "100%" }}
         imageStyle={{ width: "100%", height: "100%" }}
       />
-      {iconPlacement === "top" && iconName ? (
+      {iconAtTop && iconName ? (
         <span
           aria-hidden="true"
           className="phi-card__icon"
           style={{
             position: "absolute",
-            insetInlineStart: textAlign === "start" ? inset : textAlign === "end" ? undefined : "50%",
-            insetInlineEnd: textAlign === "end" ? inset : undefined,
+            insetInlineStart: markSide === "start" ? inset : markSide === "end" ? undefined : "50%",
+            insetInlineEnd: markSide === "end" ? inset : undefined,
             top: "50%",
-            translate: textAlign === "center" ? "-50% -50%" : "0 -50%",
+            translate: markSide === "center" ? "-50% -50%" : "0 -50%",
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
@@ -235,8 +378,8 @@ export function PhiCardWidgetClient({
             height: topIconSize + 24,
             borderRadius: "50%",
             // A ground of its own, so the mark reads on a bright picture and on a dark one alike.
-            background: `color-mix(in srgb, ${token.colorBgContainer} 88%, transparent)`,
-            color: highlight ? token.colorPrimary : token.colorText,
+            background: config?.iconBackground ?? `color-mix(in srgb, ${token.colorBgContainer} 88%, transparent)`,
+            color: config?.iconColor ?? (highlight ? token.colorPrimary : token.colorText),
             boxShadow: token.boxShadowTertiary,
           }}
         >
@@ -247,6 +390,7 @@ export function PhiCardWidgetClient({
   ) : null;
 
   const boxStyle: CSSProperties = {
+    ...(config?.surface ? {} : { borderRadius: PHI_CARD_THEME_CORNER }),
     ...surface.style,
     position: "relative",
     display: "flex",
@@ -256,18 +400,20 @@ export function PhiCardWidgetClient({
     overflow: "hidden",
     textAlign,
     color: token.colorText,
-    // A highlighted card keeps its ring, which is a line rather than depth.
-    ...(highlight
-      ? { boxShadow: combinePhiBoxShadows(surface.style.boxShadow, `inset 0 0 0 1px ${token.colorPrimary}`) }
-      : {}),
+    /* The ring's colour; `.phi-card--highlight` draws it (`styles/layout.css`). */
+    ...(highlight ? { "--phi-card-highlight-color": token.colorPrimary } as CSSProperties : {}),
   };
 
   const content = (
     <>
       {media}
-      <div style={{ display: "grid", gap, padding: inset, justifyItems: justify }}>
-        {iconPlacement === "top" && iconName && !image ? iconMark(topIconSize, topIconSize + 24) : null}
-        {labels.eyebrow ? (
+      <div style={{ display: "grid", gap, padding: inset, justifyItems }}>
+        {iconAtTop && iconName && !image ? (
+          <div style={{ justifySelf: markSide === "center" ? "center" : markSide === "end" ? "end" : "start" }}>
+            {iconMark(topIconSize, topIconSize + 24)}
+          </div>
+        ) : null}
+        {eyebrow != null ? (
           <PhiTypographyControl
             type="secondary"
             style={{
@@ -275,38 +421,43 @@ export function PhiCardWidgetClient({
               letterSpacing: "0.04em",
               textTransform: "uppercase",
               color: highlight ? token.colorPrimary : token.colorTextTertiary,
+              ...slotWidth,
             }}
           >
-            {labels.eyebrow}
+            {eyebrow}
           </PhiTypographyControl>
         ) : null}
         {headingRow}
-        {body === "stat" ? (labels.title ? figure : linked(figure)) : null}
-        {labels.description ? (
+        {body === "stat" ? (title != null ? figure : linked(figure)) : null}
+        {description != null ? (
           <PhiTypographyControl
             presentation="paragraph"
             style={{
               marginBottom: 0,
               color: token.colorTextSecondary,
-              fontSize: variant === "compact" ? token.fontSize : token.fontSizeLG,
+              fontSize: descriptionSize,
+              ...slotWidth,
             }}
           >
-            {labels.description}
+            {description}
           </PhiTypographyControl>
         ) : null}
-        {labels.meta ? (
-          <PhiTypographyControl type="secondary" style={{ fontSize: token.fontSizeSM, color: token.colorTextTertiary }}>
-            {labels.meta}
+        {meta != null ? (
+          <PhiTypographyControl type="secondary" style={{ fontSize: token.fontSizeSM, color: token.colorTextTertiary, ...slotWidth }}>
+            {meta}
           </PhiTypographyControl>
         ) : null}
-        {hasAction ? (
+        {action ? (
           <div className="phi-card__action">
             <PhiButtonControl
               type={highlight ? "primary" : "default"}
-              size={variant === "compact" ? "small" : "medium"}
-              href={config!.actionHref}
-              newTab={config?.actionNewTab}
-              label={labels.actionLabel}
+              size={buttonSize}
+              {...(action.href ? { href: action.href, newTab: action.newTab, external: action.external } : {})}
+              label={labels.actionLabel || undefined}
+              {...(labels.actionLabel ? {} : { ariaLabel: action.ariaLabel })}
+              {...(action.icon ? { icon: <PhiIcon name={action.icon} size="1em" /> } : {})}
+              /* Pressed, it says so to whatever is wired; with an address it leads there as well. */
+              {...(activates ? { onClick: () => controlSignals.emitCapability("activate", null) } : {})}
             />
           </div>
         ) : null}
@@ -319,6 +470,7 @@ export function PhiCardWidgetClient({
       className={[
         "phi-card",
         href ? "phi-card--link" : null,
+        highlight ? "phi-card--highlight" : null,
         hoverEffect !== "none" ? `phi-card--hover-${hoverEffect}` : null,
         surface.className,
       ].filter(Boolean).join(" ")}

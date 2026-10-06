@@ -1,4 +1,5 @@
 import { isPhiRecord } from "../../../../../helpers/is-record";
+import { PHI_IMAGE_VARIANT_OPTIONS } from "../../../../../components/widgets/config/image-variant-options";
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type {
   PhiImageWidgetFit,
@@ -116,18 +117,6 @@ export function parsePhiCmsImageWidgetConfig(config: Record<string, unknown>): P
   return normalizePhiImageWidgetConfig(config);
 }
 
-const IMAGE_VARIANT_OPTIONS = [
-  { value: String(PhiImageAssetVariantKey.Thumbnail), label: "Thumbnail" },
-  { value: String(PhiImageAssetVariantKey.Preview), label: "Preview" },
-  { value: String(PhiImageAssetVariantKey.Banner), label: "Banner" },
-  { value: String(PhiImageAssetVariantKey.Header), label: "Header" },
-  { value: String(PhiImageAssetVariantKey.Card), label: "Card" },
-  { value: String(PhiImageAssetVariantKey.Hero), label: "Hero" },
-  { value: String(PhiImageAssetVariantKey.Avatar), label: "Avatar" },
-  { value: String(PhiImageAssetVariantKey.Logo), label: "Logo" },
-  { value: String(PhiImageAssetVariantKey.Landscape), label: "Landscape" },
-  { value: String(PhiImageAssetVariantKey.Portrait), label: "Portrait" },
-];
 
 const IMAGE_OBJECT_POSITION_OPTIONS = [
   { value: "center", label: "Center" },
@@ -166,7 +155,7 @@ export const PHI_IMAGE_WIDGET_DEFINITION = {
       key: "variantKey",
       type: "choice",
       label: "Variant",
-      options: IMAGE_VARIANT_OPTIONS,
+      options: PHI_IMAGE_VARIANT_OPTIONS,
       emptyOption: { value: "__original__", label: "Original" },
       emptyValue: null,
       visibleWhen: { field: "sourceKind", equals: "asset" },

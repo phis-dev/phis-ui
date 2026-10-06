@@ -13,7 +13,7 @@ export const PHI_CARD_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsCardWidgetCo
       key={`widget-${widget.id}`}
       labels={{
         eyebrow: config.eyebrow,
-        title: config.title ?? widget.label ?? undefined,
+        title: config.title,
         description: config.description,
         meta: config.meta,
         actionLabel: config.actionLabel,

@@ -1,4 +1,5 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import { PHI_CARD_VARIANTS } from "../../../../../components/widgets/shared/card-vocabulary";
 import type {
   PhiCmsCollectionCardPresentation,
   PhiCmsCollectionFilterPresentation,
@@ -41,9 +42,7 @@ function readCardPresentation(value: unknown): PhiCmsCollectionCardPresentation 
     href: readString(value.href),
     actionLabel: readString(value.actionLabel),
     actionHref: readString(value.actionHref),
-    variant: variant === "compact" || variant === "featured" || variant === "default"
-      ? variant
-      : undefined,
+    variant: PHI_CARD_VARIANTS.find((candidate) => candidate === variant),
     body: value.body === "text" || value.body === "stat" ? value.body : undefined,
     highlight: readString(value.highlight),
   };

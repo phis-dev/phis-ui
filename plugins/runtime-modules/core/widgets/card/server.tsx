@@ -9,6 +9,7 @@ import { resolvePhiLinkHref } from "../../../../../helpers/link-target";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import type { PhiCardWidgetClientConfig } from "../../../../../components/widgets/shared/card-body-client";
+import { getPhiCardWidgetLabelsForRuntime } from "../../../../../components/widgets/label-sets/card";
 
 export type PhiCardWidgetLabels = {
   eyebrow?: string;
@@ -32,12 +33,19 @@ export async function PhiCardWidget({
   links,
   translate,
 }: PhiCardWidgetProps & { translate: boolean }) {
+  /*
+   * The button's words: the author's, or none where they emptied them for an icon-only button, or the
+   * label set's when they never wrote any -- which is translated there, not here.
+   */
+  const actionEnabled = config?.actionEnabled === true;
+  const defaultLabels = actionEnabled ? await getPhiCardWidgetLabelsForRuntime(runtime) : null;
+  const ownActionLabel = labels.actionLabel ?? config?.actionLabel;
   const textEntries = [
     ["eyebrow", labels.eyebrow ?? config?.eyebrow],
     ["title", labels.title ?? config?.title],
     ["description", labels.description ?? config?.description],
     ["meta", labels.meta ?? config?.meta],
-    ["actionLabel", labels.actionLabel ?? config?.actionLabel],
+    ["actionLabel", actionEnabled ? ownActionLabel : undefined],
   ] as const;
 
   const translatedTexts = translate
@@ -72,7 +80,7 @@ export async function PhiCardWidget({
   });
   // The target is resolved here and the address travels: a Page reference means nothing in a browser.
   const link = resolvePhiLinkHref(config?.linkTarget, links);
-  const action = resolvePhiLinkHref(config?.actionLinkTarget, links);
+
 
   const clientConfig: PhiCardWidgetClientConfig = {
     surface: config?.surface ?? null,
@@ -92,17 +100,29 @@ export async function PhiCardWidget({
       : null,
     iconName: config?.icon,
     iconPlacement: config?.iconPlacement,
+    iconColor: config?.iconColor,
+    iconBackground: config?.iconBackground,
     textAlign: config?.textAlign,
     headingLevel: config?.headingLevel,
     href: link?.href,
     newTab: link?.newTab,
     external: link?.external,
-    actionHref: action?.href,
-    actionNewTab: action?.newTab,
+    /*
+     * The button leads where the card leads. A card that leads nowhere still draws it when it is on:
+     * what it does then is wired from the Signals panel.
+     */
+    action: actionEnabled
+      ? {
+          ...(link ? { href: link.href, newTab: link.newTab, external: link.external } : {}),
+          ...(config?.actionIcon ? { icon: config.actionIcon } : {}),
+          ...(defaultLabels ? { ariaLabel: defaultLabels.actionLabel } : {}),
+        }
+      : null,
     variant: config?.variant,
     body: config?.body,
     highlight: config?.highlight,
     hoverEffect: config?.hoverEffect,
+    signalRoutes: config?.signalRoutes ?? null,
   };
 
   return (
@@ -114,7 +134,9 @@ export async function PhiCardWidget({
           title: translatedByKey.get("title"),
           description: translatedByKey.get("description"),
           meta: translatedByKey.get("meta"),
-          actionLabel: translatedByKey.get("actionLabel"),
+          actionLabel: ownActionLabel === undefined
+            ? defaultLabels?.actionLabel
+            : translatedByKey.get("actionLabel") ?? "",
           value,
         },
         config: clientConfig,

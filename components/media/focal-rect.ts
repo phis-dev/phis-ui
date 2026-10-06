@@ -176,3 +176,26 @@ export function resolveFocalRectObjectPosition(
   const centerY = (focalRect.y + focalRect.height / 2) * 100;
   return `${Math.round(centerX * 10) / 10}% ${Math.round(centerY * 10) / 10}%`;
 }
+
+/**
+ * The focal rectangle as it stands inside a cover crop of the original -- a generated variant.
+ *
+ * A variant is the original cropped around its focal rectangle to the variant's proportion. Shown in a
+ * box of yet another proportion, it is cropped once more, and that second crop has to keep the same
+ * focus: centred, it would cut away what the first crop was made to keep. This is the rectangle to
+ * position it by, in the variant's own coordinates.
+ */
+export function resolveFocalRectInCoverCrop(
+  sourceWidth: number,
+  sourceHeight: number,
+  targetWidth: number,
+  targetHeight: number,
+  focalRect: MediaFocalRect,
+): MediaFocalRect {
+  const crop = resolveFocalRectCoverCropBox(sourceWidth, sourceHeight, targetWidth, targetHeight, focalRect);
+  const left = clampRectValue((focalRect.x * sourceWidth - crop.left) / crop.width);
+  const top = clampRectValue((focalRect.y * sourceHeight - crop.top) / crop.height);
+  const right = clampRectValue(((focalRect.x + focalRect.width) * sourceWidth - crop.left) / crop.width);
+  const bottom = clampRectValue(((focalRect.y + focalRect.height) * sourceHeight - crop.top) / crop.height);
+  return { x: left, y: top, width: right - left, height: bottom - top };
+}

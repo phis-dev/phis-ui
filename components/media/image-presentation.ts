@@ -7,6 +7,7 @@ import {
 import {
   normalizeMediaFocalRect,
   resolveFocalRectCoverImageStyle,
+  resolveFocalRectInCoverCrop,
   resolveFocalRectObjectPosition,
   type MediaFocalRect,
 } from "./focal-rect";
@@ -21,8 +22,10 @@ import {
  *   supplies one.
  * - A GENERATED VARIANT is a finished server crop. The server already consumed the focal rectangle,
  *   so applying it a second time would shift an image that is already framed. The variant spec
- *   decides `fit`, the position is always centered, and a box with a different aspect ratio gets
- *   centered cover overflow rather than a stretch.
+ *   decides `fit`. A box of the variant's proportion shows it whole; a box of another proportion crops
+ *   it again, around where the focal rectangle stands inside the variant -- the original's focal
+ *   rectangle carried into the variant's coordinates, not applied to them a second time. Without the
+ *   original's size or a focal rectangle, around the centre.
  *
  * The single exception is an unsaved focal edit: Authoring may set `simulateVariantCrop` to draw the
  * original and reproduce the server crop locally, because the stored variant still shows the old
@@ -150,11 +153,24 @@ export function resolvePhiImagePresentation(
   // A simulated crop places the image absolutely, so a position would have nothing left to steer, and a
   // simulated `contain` shows the whole image, where a focal position would only misalign the letterbox.
   const objectPosition =
-    kind === "generated-variant" || (simulate && variantSpec!.fit !== "cover")
-      ? "center"
-      : simulate
-        ? resolveFocalRectObjectPosition(undefined, focalRect)
-        : resolveFocalRectObjectPosition(input.objectPosition, focalRect);
+    kind === "generated-variant"
+      ? variantSpec!.fit === "cover" && focalRect && input.sourceWidth && input.sourceHeight
+        ? resolveFocalRectObjectPosition(
+            undefined,
+            resolveFocalRectInCoverCrop(
+              input.sourceWidth,
+              input.sourceHeight,
+              variantSpec!.width,
+              variantSpec!.height,
+              focalRect,
+            ),
+          )
+        : "center"
+      : simulate && variantSpec!.fit !== "cover"
+        ? "center"
+        : simulate
+          ? resolveFocalRectObjectPosition(undefined, focalRect)
+          : resolveFocalRectObjectPosition(input.objectPosition, focalRect);
 
   return {
     kind,

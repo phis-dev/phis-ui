@@ -27,6 +27,8 @@ import {
   PhiInspectorLinkTargetFieldControl,
   type PhiInspectorLinkTargetLabels,
 } from "./inspector-link-target-field";
+import { PhiInspectorImageFieldControl } from "./inspector-image-field";
+import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
 import { PHI_RADIUS_CONTROL_DEFAULT_LABELS, PhiBoundRadiusControl } from "../../../../components/controls/phi-bound-radius-control";
 import { PhiDimensionControl } from "../../../../components/controls/phi-dimension-control";
 import { PhiLengthControl } from "../../../../components/controls/phi-length-control";
@@ -147,22 +149,17 @@ export function isPhiInspectorConfigFieldVisible(field: PhiCmsConfigField, confi
     return false;
   }
 
-  const rule = field.visibleWhen;
-  if (!rule) {
+  const rules = field.visibleWhen == null
+    ? []
+    : Array.isArray(field.visibleWhen) ? field.visibleWhen : [field.visibleWhen];
+  return rules.every((rule) => {
+    /* An empty list is no answer, the way an absent key is not: a Button with no routes left emits none. */
+    const raw = readPhiInspectorConfigPathValue(config, rule.field);
+    const value = Array.isArray(raw) && raw.length === 0 ? null : raw ?? null;
+    if ("equals" in rule && value !== rule.equals) return false;
+    if ("notEquals" in rule && value === rule.notEquals) return false;
     return true;
-  }
-
-  /* An empty list is no answer, the way an absent key is not: a Button with no routes left emits none. */
-  const raw = readPhiInspectorConfigPathValue(config, rule.field);
-  const value = Array.isArray(raw) && raw.length === 0 ? null : raw ?? null;
-  if ("equals" in rule && value !== rule.equals) {
-    return false;
-  }
-  if ("notEquals" in rule && value === rule.notEquals) {
-    return false;
-  }
-
-  return true;
+  });
 }
 
 /**
@@ -858,6 +855,7 @@ function renderPhiInspectorConfigFieldBody({
   dataProviderDescriptors = [],
   calendarAdapterDescriptors = [],
   videoProviderDescriptors = [],
+  blockId,
 }: {
   field: PhiCmsConfigField;
   value: unknown;
@@ -865,6 +863,8 @@ function renderPhiInspectorConfigFieldBody({
   config: Record<string, unknown>;
   defaultConfig?: Record<string, unknown> | null;
   disabled: boolean;
+  /** The edited node, for a field that opens something addressed by it -- the image field's picker. */
+  blockId?: PhiCmsInstanceId | null;
   widgetReferenceOptions?: PhiInspectorWidgetReferenceOption[];
   paddingLabels?: PhiPaddingWidgetLabels;
   backgroundLabels?: PhiBackgroundWidgetLabels;
@@ -1261,6 +1261,8 @@ function renderPhiInspectorConfigFieldBody({
         buttonIcon={iconValue ? <PhiIcon name={iconValue} /> : undefined}
         buttonLabel={iconValue ?? field.label}
         buttonAriaLabel={field.label}
+        /* Beside the field, toward the canvas, as the colour picker opens: below, it covers the fields under it. */
+        placement="left"
         onChange={(nextValue) => onChange?.({ [field.key]: nextValue ?? undefined })}
       />,
     );
@@ -1291,6 +1293,18 @@ function renderPhiInspectorConfigFieldBody({
    * A block rather than a row: the control is a choice plus whichever answer that choice asks for, and
    * squeezing three stacked parts into the label column's other half leaves none of them usable.
    */
+  if (field.type === "image") {
+    return renderPhiInspectorConfigFieldBlock(
+      field,
+      <PhiInspectorImageFieldControl
+        config={config}
+        blockId={blockId}
+        disabled={disabled}
+        {...(onChange ? { onChange } : {})}
+      />,
+    );
+  }
+
   if (field.type === "link-target") {
     return renderPhiInspectorConfigFieldBlock(
       field,

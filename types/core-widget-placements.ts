@@ -20,6 +20,7 @@ import type { PhiButtonVariant } from "../components/widgets/config/button-varia
 import type { PhiTextTone } from "../components/widgets/config/text-tone";
 import type { PhiCommonControlActionKey } from "../components/widgets/label-types/common-controls";
 import type { PhiMaskConfig } from "../components/widgets/config/mask";
+import type { PhiCardVariant } from "../components/widgets/shared/card-vocabulary";
 import type {
   PhiControlBadgeConfig,
   PhiControlConfig,
@@ -349,7 +350,7 @@ export type PhiCmsCollectionCardPresentation = {
   href?: string;
   actionLabel?: string;
   actionHref?: string;
-  variant?: "default" | "compact" | "featured";
+  variant?: PhiCardVariant;
   /** Every card in the View draws this body; `stat` needs `value`. */
   body?: "text" | "stat";
   /** A field whose truth marks the card as highlighted. */

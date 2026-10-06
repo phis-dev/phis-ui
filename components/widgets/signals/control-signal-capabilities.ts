@@ -84,6 +84,26 @@ export const PHI_BUTTON_CONTROL_SIGNALS = {
   ],
 } satisfies PhiSignalPluginMeta;
 
+/**
+ * What a Card answers and what it says. Its box -- size, visibility, enabled -- is the frame's, as for
+ * every block; these are the card's own: its words and its figure from a Controller, the figure's wait,
+ * the highlight that marks the card that is current, and the action button pressed.
+ */
+export const PHI_CARD_SIGNALS = {
+  emits: [
+    { id: "activate", action: "activate", valueType: "none" },
+  ],
+  listens: [
+    { id: "value", channel: "value", action: "change", valueType: "string" },
+    { id: "loading", channel: "loading", action: "change", valueType: "boolean" },
+    { id: "eyebrow", channel: "eyebrow", action: "change", valueType: "string" },
+    { id: "title", channel: "title", action: "change", valueType: "string" },
+    { id: "description", channel: "description", action: "change", valueType: "string" },
+    { id: "meta", channel: "meta", action: "change", valueType: "string" },
+    { id: "highlight", channel: "highlight", action: "change", valueType: "boolean" },
+  ],
+} satisfies PhiSignalPluginMeta;
+
 export const PHI_TEXT_CONTROL_SIGNALS = {
   emits: [
     { id: "change", action: "change", valueType: "string" },

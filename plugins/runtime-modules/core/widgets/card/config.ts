@@ -10,12 +10,18 @@ import {
   PHI_CARD_HOVER_EFFECTS,
   PHI_CARD_ICON_PLACEMENTS,
   PHI_CARD_TEXT_ALIGNS,
+  PHI_CARD_VARIANTS,
   type PhiCardHeadingLevel,
   type PhiCardHoverEffect,
   type PhiCardIconPlacement,
   type PhiCardTextAlign,
+  type PhiCardVariant,
   type PhiCardWidgetBody,
 } from "../../../../../components/widgets/shared/card-vocabulary";
+import { readPhiControlLabel } from "../../../../../components/widgets/config/common-action-field";
+import { PHI_CARD_SIGNALS } from "../../../../../components/widgets/signals/control-signal-capabilities";
+import { readPhiSignalRouteSet, type PhiSignalRouteSet } from "../../../../../types/signals";
+import { PHI_CARD_WIDGET_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/card";
 import {
   readBoolean,
   readRenderableBlockConfig,
@@ -47,18 +53,30 @@ export type PhiCmsCardWidgetConfig = PhiCmsWidgetConfigBase & PhiCardImageSource
   /** An icon name, as the icon picker writes it (`antd:*`, `iconify:*`, `asset:*`). */
   icon?: string;
   iconPlacement?: PhiCardIconPlacement;
+  /** The icon's colour and the ground it stands on; absent, the Theme's. */
+  iconColor?: string;
+  iconBackground?: string;
   /** The picture's words for a reader who cannot see it; an Asset brings its own. */
   alt?: string;
   /** Where the whole card leads. */
   linkTarget?: PhiLinkTarget;
+  /**
+   * Whether the card draws its action button. It leads where the card leads; a button that should do
+   * something else is wired from the Signals panel.
+   */
+  actionEnabled?: boolean;
+  /**
+   * The button's words. A new card is created with "Learn more" written in; absent is the label set's
+   * "Learn more", and empty is no words, for a button that is only its icon.
+   */
   actionLabel?: string;
-  /** Where the action button leads, beside the card's own target. */
-  actionLinkTarget?: PhiLinkTarget;
-  /** Size and weight only; the look is the card's Surface. */
-  variant?: "default" | "compact" | "featured";
+  actionIcon?: string;
+  /** How the card is set; the look is the card's Surface. */
+  variant?: PhiCardVariant;
   highlight?: boolean;
   /** How a card that is a link answers the pointer. */
   hoverEffect?: PhiCardHoverEffect;
+  signalRoutes?: PhiSignalRouteSet;
 };
 
 function readChoice<T extends string>(value: unknown, choices: readonly T[]): T | undefined {
@@ -79,13 +97,17 @@ export function parsePhiCmsCardWidgetConfig(config: Record<string, unknown>): Ph
     textAlign: readChoice(readString(config.textAlign), PHI_CARD_TEXT_ALIGNS),
     icon: readString(config.icon),
     iconPlacement: readChoice(readString(config.iconPlacement), PHI_CARD_ICON_PLACEMENTS),
+    iconColor: readString(config.iconColor),
+    iconBackground: readString(config.iconBackground),
     alt: readString(config.alt),
     linkTarget: readPhiLinkTarget(config.linkTarget) ?? undefined,
-    actionLabel: readString(config.actionLabel),
-    actionLinkTarget: readPhiLinkTarget(config.actionLinkTarget) ?? undefined,
-    variant: readChoice(readString(config.variant), ["default", "compact", "featured"] as const),
+    actionEnabled: readBoolean(config.actionEnabled),
+    actionLabel: readPhiControlLabel(config.actionLabel),
+    actionIcon: readString(config.actionIcon),
+    variant: readChoice(readString(config.variant), PHI_CARD_VARIANTS),
     highlight: readBoolean(config.highlight),
     hoverEffect: readChoice(readString(config.hoverEffect), PHI_CARD_HOVER_EFFECTS),
+    signalRoutes: readPhiSignalRouteSet(config.signalRoutes) ?? undefined,
   };
   return source.sourceKind === "asset"
     ? {
@@ -97,6 +119,12 @@ export function parsePhiCmsCardWidgetConfig(config: Record<string, unknown>): Ph
       }
     : { ...normalized, sourceKind: "url", sourceUrl: source.sourceUrl };
 }
+
+const PHI_CARD_DEFAULT_CONFIG = {
+  body: "text",
+  headingLevel: "h3",
+  textAlign: "start",
+} satisfies Partial<PhiCmsCardWidgetConfig>;
 
 export const PHI_CARD_WIDGET_DEFINITION = {
   kind: "widget",
@@ -114,65 +142,92 @@ export const PHI_CARD_WIDGET_DEFINITION = {
    * clips it to its corners, so the ground has to be the card's own and not the slot frame's.
    */
   surface: "own",
-  // A block default, so a card a Preset places reads the same as one dropped in the Builder.
-  defaultConfig: { surface: PHI_SURFACE_CARD },
+  runtimeSignals: PHI_CARD_SIGNALS,
+  defaultConfig: PHI_CARD_DEFAULT_CONFIG,
+  /*
+   * What a new card is written with: the card's Surface, and the button's words, so the author edits
+   * "Learn more" rather than a blank. The Surface is not a default, because a default is put back under
+   * every card that states none -- and "None" in the Surface section is exactly a card that states none:
+   * it is the card's contents without a box, and a default would draw the box again. A Preset that wants
+   * the box states it, as a Preset states every other look.
+   */
+  creationConfig: {
+    ...PHI_CARD_DEFAULT_CONFIG,
+    surface: PHI_SURFACE_CARD,
+    actionLabel: PHI_CARD_WIDGET_DEFAULT_LABELS.actionLabel,
+  },
+  /*
+   * The words are written on the card itself, in place, so only how the card is set is asked here. The
+   * dividers group what belongs together; a field that would do nothing is not shown.
+   */
   fields: [
-    { key: "eyebrow", type: "string", label: "Eyebrow" },
-    { key: "title", type: "string", label: "Title" },
-    {
-      key: "headingLevel",
-      type: "choice",
-      label: "Heading level",
-      presentation: "segmented",
-      options: PHI_CARD_HEADING_LEVELS.map((level) => ({ value: level, label: level.toUpperCase() })),
-    },
-    { key: "description", type: "string", label: "Description" },
-    { key: "meta", type: "string", label: "Meta" },
     {
       key: "body",
       type: "choice",
+      heading: "Content",
       label: "Body",
       options: [
         { value: "text", label: "Text" },
         { value: "stat", label: "Statistic" },
       ],
     },
-    { key: "value", type: "string", label: "Value", visibleWhen: { field: "body", equals: "stat" } },
+    {
+      key: "headingLevel",
+      type: "choice",
+      label: "Heading level",
+      presentation: "segmented",
+      options: PHI_CARD_HEADING_LEVELS.map((level) => ({ value: level, label: level.toUpperCase() })),
+      visibleWhen: { field: "title", notEquals: null },
+    },
     {
       key: "textAlign",
       type: "choice",
       label: "Text align",
+      // The Center variant places the words itself.
+      visibleWhen: { field: "variant", notEquals: "center" },
       presentation: "segmented",
       options: [
-        { value: "start", label: "Start" },
+        { value: "start", label: "Left" },
         { value: "center", label: "Center" },
-        { value: "end", label: "End" },
+        { value: "end", label: "Right" },
+        { value: "justify", label: "Justify" },
       ],
     },
-    { key: "icon", type: "icon", label: "Icon" },
+    { key: "image", type: "image", heading: "Image", label: "Image" },
+    /* The icon and where it stands, under one divider: what else an icon will need goes here as well. */
+    { key: "icon", type: "icon", heading: "Icon", label: "Icon" },
     {
       key: "iconPlacement",
       type: "choice",
+      // A select: four placements with their words do not fit side by side in the Inspector's column.
       label: "Icon placement",
-      presentation: "segmented",
       options: [
         { value: "inline", label: "Before title" },
-        { value: "top", label: "Top" },
+        { value: "top", label: "Top left" },
+        { value: "top-center", label: "Top center" },
+        { value: "top-end", label: "Top right" },
       ],
+      // Shown with an icon, and not under the Center variant, which puts it over the picture itself.
+      visibleWhen: [{ field: "icon", notEquals: null }, { field: "variant", notEquals: "center" }],
+    },
+    /* Left empty, the Theme's: the secondary text colour on its quietest fill. */
+    {
+      key: "iconColor",
+      type: "color",
+      label: "Color",
+      mode: "single",
+      defaultToken: "colorTextSecondary",
+      visibleWhen: { field: "icon", notEquals: null },
     },
     {
-      key: "sourceKind",
-      type: "choice",
-      label: "Image Source Kind",
-      options: [
-        { value: "url", label: "URL" },
-        { value: "asset", label: "Asset" },
-      ],
+      key: "iconBackground",
+      type: "color",
+      label: "Background",
+      mode: "single",
+      defaultToken: "colorFillQuaternary",
+      visibleWhen: { field: "icon", notEquals: null },
     },
-    { key: "sourceUrl", type: "url", label: "Image Source URL", visibleWhen: { field: "sourceKind", equals: "url" } },
-    { key: "assetId", type: "number", label: "Asset ID", editorPlacement: "toolbar" },
-    { key: "alt", type: "string", label: "Image Alt" },
-    { key: "linkTarget", type: "link-target", label: "Link" },
+    { key: "linkTarget", type: "link-target", heading: "Link target", label: "Link target" },
     {
       key: "hoverEffect",
       type: "choice",
@@ -182,17 +237,26 @@ export const PHI_CARD_WIDGET_DEFINITION = {
         { value: "lift", label: "Lift" },
         { value: "zoom", label: "Zoom" },
       ],
+      visibleWhen: { field: "linkTarget", notEquals: null },
     },
-    { key: "actionLabel", type: "string", label: "Action Label" },
-    { key: "actionLinkTarget", type: "link-target", label: "Action Link" },
+    { key: "actionEnabled", type: "boolean", heading: "Action button", label: "Enabled" },
+    {
+      key: "actionLabel",
+      type: "string",
+      label: "Label",
+      emptyValue: "",
+      visibleWhen: { field: "actionEnabled", equals: true },
+    },
+    { key: "actionIcon", type: "icon", label: "Icon", visibleWhen: { field: "actionEnabled", equals: true } },
     {
       key: "variant",
       type: "choice",
-      label: "Size",
+      heading: "Appearance",
+      label: "Variant",
       options: [
         { value: "default", label: "Default" },
         { value: "compact", label: "Compact" },
-        { value: "featured", label: "Featured" },
+        { value: "center", label: "Center" },
       ],
     },
     { key: "highlight", type: "boolean", label: "Highlight" },
@@ -211,7 +275,9 @@ export const PHI_CARD_WIDGET_DEFINITION = {
   | "iconFamily"
   | "slotSizePolicy"
   | "surface"
+  | "runtimeSignals"
   | "defaultConfig"
+  | "creationConfig"
   | "fields"
   | "parseConfig"
 >;
