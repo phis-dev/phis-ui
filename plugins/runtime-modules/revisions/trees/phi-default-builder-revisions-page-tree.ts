@@ -369,7 +369,7 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
           source: {
             providerKey: PHI_REVISIONS_RUNTIME_DATA_PROVIDER_KEYS.table,
             resourceKey: "history",
-            params: { labels: revisionsLabels },
+            params: { labels: revisionsLabels, locale: runtime.locale.current },
           },
           presentation: {
             borders: true,

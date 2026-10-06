@@ -24,6 +24,9 @@ export type PhiBuilderRevisionHistoryRow = {
   createdAt: string;
   createdByUserId: number | null;
   createdByLabel: string | null;
+  /** When and by whom a Working Draft was last rewritten in place; null if it never was. */
+  savedAt: string | null;
+  savedByLabel: string | null;
   message: string | null;
   meta?: Record<string, unknown>;
   sourceRevisionId: number | null;

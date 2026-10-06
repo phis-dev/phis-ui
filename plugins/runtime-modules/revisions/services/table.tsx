@@ -43,6 +43,7 @@ import {
 } from "../types";
 import { resolvePhiBuilderRevisionNavScopeKey } from "../../../../helpers/cms-navigation-scope-key";
 import { isPhiRecord } from "../../../../helpers/is-record";
+import { formatPhiDateTime } from "../../../../helpers/format-date-time";
 
 type ErrorPayload = {
   error?: string;
@@ -54,6 +55,8 @@ type RevisionsTableParams = {
   reviewPagePath: string;
   navScopeKey: string;
   labels: PhiBuilderRevisionsWidgetLabels;
+  /** The locale the Page was rendered in, for the dates written into a message. */
+  locale: string;
 };
 
 function readPresetSource(value: unknown): PhiCmsPresetSource | null {
@@ -86,9 +89,10 @@ function readRevisionScope(value: unknown): PhiBuilderRevisionScope | null {
 }
 
 function readParams(value: unknown): RevisionsTableParams {
-  if (!isPhiRecord(value) || !isPhiRecord(value.labels)) {
+  if (!isPhiRecord(value) || !isPhiRecord(value.labels) || typeof value.locale !== "string") {
     throw new Error("Revisions table parameters are missing.");
   }
+  const locale = value.locale;
   if (!isPhiRecord(value.scope) && typeof window !== "undefined") {
     const state = getPhiWorkspaceCatalogSnapshot(PHI_WORKSPACE_CATALOG_SCOPE);
     const search = new URLSearchParams(window.location.search);
@@ -152,6 +156,7 @@ function readParams(value: unknown): RevisionsTableParams {
           : "",
       navScopeKey,
       labels: value.labels as unknown as PhiBuilderRevisionsWidgetLabels,
+      locale,
     };
   }
   const scope = readRevisionScope(value.scope);
@@ -170,6 +175,7 @@ function readParams(value: unknown): RevisionsTableParams {
     reviewPagePath: value.reviewPagePath,
     navScopeKey: value.navScopeKey,
     labels: value.labels as unknown as PhiBuilderRevisionsWidgetLabels,
+    locale,
   };
 }
 
@@ -331,6 +337,47 @@ function formatPageMetaChangeLabel(
   return changed.join(labels.messages.fieldConjunction);
 }
 
+function readModuleIds(value: unknown) {
+  return Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string") : [];
+}
+
+/**
+ * Names the Modules a Module save added and removed. A Module this build no longer installs has no
+ * title to show, so it is written by its id -- it is still what the revision changed.
+ */
+function formatModuleChangeList(
+  labels: PhiBuilderRevisionsWidgetLabels,
+  modules: Record<string, unknown> | null,
+) {
+  const titles = new Map<string, string>(
+    getPhiWorkspaceCatalogSnapshot(PHI_WORKSPACE_CATALOG_SCOPE).runtimeModuleDefinitions
+      .map((definition) => [definition.moduleId, definition.title]),
+  );
+  const name = (moduleId: string) => titles.get(moduleId) ?? moduleId;
+  return [
+    ...readModuleIds(modules?.added).map((moduleId) => formatTemplate(labels.messages.moduleAdded, name(moduleId))),
+    ...readModuleIds(modules?.removed).map((moduleId) => formatTemplate(labels.messages.moduleRemoved, name(moduleId))),
+  ].join(", ");
+}
+
+/**
+ * A Working Draft is one row its saves rewrite, so the message says when and by whom it was saved
+ * last; the Created column keeps the first save.
+ */
+function formatRevisionMessageWithLastSave(
+  params: RevisionsTableParams,
+  row: PhiBuilderRevisionHistoryRow,
+) {
+  const message = formatRevisionMessage(params.labels, row);
+  if (!row.savedAt) return message;
+  return formatTemplate(
+    params.labels.messages.lastSaved,
+    message,
+    formatPhiDateTime(row.savedAt, params.locale),
+    row.savedByLabel ?? params.labels.systemLabel,
+  );
+}
+
 function formatRevisionMessage(
   labels: PhiBuilderRevisionsWidgetLabels,
   row: PhiBuilderRevisionHistoryRow,
@@ -369,6 +416,16 @@ function formatRevisionMessage(
   }
   if (messageKey === "area_saved") {
     return formatTemplate(labels.messages.areaSaved, sourceRevisionId);
+  }
+  if (messageKey === "area_modules_changed") {
+    return formatTemplate(
+      labels.messages.areaModulesChanged,
+      formatModuleChangeList(labels, isPhiRecord(meta?.modules) ? meta.modules : null),
+      sourceRevisionId,
+    );
+  }
+  if (messageKey === "area_modules_saved") {
+    return formatTemplate(labels.messages.areaModulesSaved, sourceRevisionId);
   }
   if (messageKey === "navigation_overlay_changed") {
     const navigationMeta = isPhiRecord(meta?.navigation) ? meta.navigation : null;
@@ -459,7 +516,7 @@ function buildTableData(
       ...row,
       revisionTags,
       createdByDisplay: row.createdByLabel ?? params.labels.systemLabel,
-      formattedMessage: formatRevisionMessage(params.labels, row),
+      formattedMessage: formatRevisionMessageWithLastSave(params, row),
       reviewHref: buildRevisionReviewHref(params, row),
       isPublished,
       isWorkingDraft,

@@ -25,6 +25,13 @@ export type PhiBuilderRevisionsWidgetLabels = {
     pageSaved: string;
     areaNodesChanged: string;
     areaSaved: string;
+    /** %1 is the list of changed Modules, each written with `moduleAdded` or `moduleRemoved`. */
+    areaModulesChanged: string;
+    areaModulesSaved: string;
+    moduleAdded: string;
+    moduleRemoved: string;
+    /** Appended to a Working Draft rewritten in place: %1 the message, %2 when, %3 by whom. */
+    lastSaved: string;
     navigationOverlayChanged: string;
     navigationSaved: string;
     themeChanged: string;
@@ -97,6 +104,11 @@ export const PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS: PhiBuilderRevisionsWid
     pageSaved: "Saved page draft from revision %1",
     areaNodesChanged: "Changed %1 nodes from revision %2",
     areaSaved: "Saved area draft from revision %1",
+    areaModulesChanged: "Modules changed: %1 from revision %2",
+    areaModulesSaved: "Saved module selection from revision %1",
+    moduleAdded: "+ %1",
+    moduleRemoved: "− %1",
+    lastSaved: "%1 · last saved %2 by %3",
     navigationOverlayChanged: "Changed navigation overlay (%1 overrides, %2 hidden) from revision %3",
     navigationSaved: "Saved navigation draft from revision %1",
     themeChanged: "Based on %1 v%2, %3 custom overrides from revision %4",
