@@ -2,25 +2,25 @@
 
 import { useState } from "react";
 
-import { usePhiConfirmDialog } from "../../../components/controls/phi-confirm-dialog";
-import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
-import { usePhiSignalDispatcher } from "../../../components/runtime/runtime-signal-bus";
-import { usePhiApplicationFeedback } from "../../../components/runtime/use-phi-application-feedback";
-import { createPhiBuilderControllerAddress } from "./controller/address";
+import { usePhiConfirmDialog } from "../../../../components/controls/phi-confirm-dialog";
+import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
+import { usePhiSignalDispatcher } from "../../../../components/runtime/runtime-signal-bus";
+import { usePhiApplicationFeedback } from "../../../../components/runtime/use-phi-application-feedback";
+import { createPhiBuilderControllerAddress } from "../controller/address";
 import type { PhiBuilderSavedHistoryHead } from "./draft-status-controller";
-import { createPhiDefaultAreaRuntimeModuleIds } from "../area-module-defaults";
-import { getPhiBuilderDefaultRegionDraft } from "./region-defaults";
+import { createPhiDefaultAreaRuntimeModuleIds } from "../../area-module-defaults";
+import { getPhiBuilderDefaultRegionDraft } from "../region-defaults";
 import {
   getPhiBuilderRegionDraftKey,
   PHI_BUILDER_PAGE_REGION_KEYS,
-} from "./region-keys";
-import { resolvePhiBuilderCmsStoragePath } from "../../../helpers/cms-paths";
+} from "../region-keys";
+import { resolvePhiBuilderCmsStoragePath } from "../../../../helpers/cms-paths";
 import {
   resolvePhiBuilderActivePageCatalog,
   resolvePhiBuilderActivePageKey,
   resolvePhiBuilderPagePresetSource,
-} from "../../../helpers/cms-page-catalog";
-import { deleteCmsDraft } from "../../../helpers/cms-draft-delete";
+} from "../../../../helpers/cms-page-catalog";
+import { deleteCmsDraft } from "../../../../helpers/cms-draft-delete";
 import { buildPhiBuilderLiveHref,
   clearPhiDeveloperBuilderDraftAllocation,
   createPhiDeveloperBuilderInitialPageDrafts,
@@ -31,14 +31,14 @@ import { buildPhiBuilderLiveHref,
   previewPhiDeveloperBuilderDraft,
   publishPhiDeveloperBuilderDraft,
   savePhiDeveloperBuilderDraft,
-} from "./persistence";
+} from "../persistence";
 import {
   clearPhiBuilderNavigationDraft,
   getPhiBuilderNavigationDraftSnapshot,
   updatePhiBuilderNavigationDraft,
   restorePhiBuilderNavigationDraft,
   setPhiBuilderNavigationDraft,
-} from "./navigation-store";
+} from "../navigation-store";
 import {
   deletePhiBuilderNavigationDraft,
   loadPhiBuilderNavigationDraft,
@@ -46,7 +46,7 @@ import {
   publishPhiBuilderNavigationDraft,
   savePhiBuilderNavigationDraft,
   type PhiBuilderNavigationFolderCarry,
-} from "./navigation-persistence";
+} from "../navigation-persistence";
 import {
   builderWorkspaceStore,
   splitWorkspacePatch,
@@ -57,28 +57,28 @@ import {
   restorePhiDeveloperRegionDrafts,
   setPhiDeveloperBuilderAreaRootRoute,
   setPhiDeveloperRegionDraftsWithHistory,
-} from "./developer-workspace-store";
+} from "../developer-workspace-store";
 import type {
   PhiDeveloperBuilderArea,
   PhiDeveloperBuilderCommandWorkspace,
   PhiDeveloperBuilderRegionDraft,
   PhiDeveloperBuilderWorkspaceState,
-} from "./developer-workspace-types";
-import { findPhiBuilderNavigationSurface } from "../../../helpers/cms-navigation-catalog";
+} from "../developer-workspace-types";
+import { findPhiBuilderNavigationSurface } from "../../../../helpers/cms-navigation-catalog";
 import {
   createPhiBuilderHistoryContext,
   phiBuilderHistory,
   type PhiBuilderHistorySnapshot,
-} from "./history";
-import { usePhiBuilderModuleMetas } from "./plugin-meta-store";
-import { clearPhiBuilderModuleAreasDirty } from "./runtime-module-selection";
-import { phiWorkspaceCatalogStore } from "../../../components/workspace/catalog-store";
-import type { PhiBuilderNavigationItem } from "../../../helpers/cms-navigation-catalog";
+} from "../history";
+import { usePhiBuilderModuleMetas } from "../plugin-meta-store";
+import { clearPhiBuilderModuleAreasDirty } from "../runtime-module-selection";
+import { phiWorkspaceCatalogStore } from "../../../../components/workspace/catalog-store";
+import type { PhiBuilderNavigationItem } from "../../../../helpers/cms-navigation-catalog";
 import {
   applyPhiBuilderNavigationFolderTargets,
   refreshPhiBuilderNavigationFolderAddresses,
-} from "./navigation-folder-address";
-import { createPhiBuilderNavigationPathContext } from "./navigation-path-context";
+} from "../navigation-folder-address";
+import { createPhiBuilderNavigationPathContext } from "../navigation-path-context";
 
 export type PhiDeveloperBuilderToolbarCommand =
   | "save"

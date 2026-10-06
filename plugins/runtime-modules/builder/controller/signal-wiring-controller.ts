@@ -6,17 +6,17 @@ import {
   PHI_SIGNAL_VALUE_SCHEMAS,
   type PhiSignalRoute,
   type PhiSignalRouteSet,
-} from "../../../types/signals";
-import { createPhiRuntimeFormControllerAddress } from "../../../components/forms/runtime-form-controller-address";
-import { PHI_BUILDER_INSPECTOR_WIDGET_IDS } from "./inspector-overlay-addresses";
-import { builderWorkspaceStore , getPhiDeveloperBuilderStateSnapshot } from "./developer-workspace-store";
-import type { PhiDeveloperBuilderArea, PhiDeveloperBuilderWorkspaceState } from "./developer-workspace-types";
-import { getPhiDeveloperSelectedSignalRoutes } from "./signal-route-selection";
+} from "../../../../types/signals";
+import { createPhiRuntimeFormControllerAddress } from "../../../../components/forms/runtime-form-controller-address";
+import { PHI_BUILDER_INSPECTOR_WIDGET_IDS } from "../inspector-overlay-addresses";
+import { builderWorkspaceStore , getPhiDeveloperBuilderStateSnapshot } from "../developer-workspace-store";
+import type { PhiDeveloperBuilderArea, PhiDeveloperBuilderWorkspaceState } from "../developer-workspace-types";
+import { getPhiDeveloperSelectedSignalRoutes } from "../signal-route-selection";
 import {
   phiSignalCapabilitiesMatch,
   resolvePhiBuilderReceiverSignalEndpoints,
   resolvePhiBuilderSelectedSignalEndpoints,
-} from "./signal-wiring-options";
+} from "../signal-wiring-options";
 
 /**
  * The wiring Form publishes its values to its own Form controller address, which is derived from the

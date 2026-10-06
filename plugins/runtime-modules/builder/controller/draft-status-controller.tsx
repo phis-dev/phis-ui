@@ -2,18 +2,18 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { PHI_SIGNAL_VALUE_SCHEMAS, type PhiSignalAddress } from "../../../types/signals";
-import type { PhiDraftStatusSignalValue } from "../../../types/draft-status";
-import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../components/runtime/runtime-signal-bus";
-import { resolvePhiBuilderCmsStoragePath } from "../../../helpers/cms-paths";
-import { resolvePhiBuilderActivePageCatalog } from "../../../helpers/cms-page-catalog";
-import { createPhiBuilderControllerAddress } from "./controller/address";
-import { createPhiBuilderHistoryContext, phiBuilderHistory } from "./history";
+import { PHI_SIGNAL_VALUE_SCHEMAS, type PhiSignalAddress } from "../../../../types/signals";
+import type { PhiDraftStatusSignalValue } from "../../../../types/draft-status";
+import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../components/runtime/runtime-signal-bus";
+import { resolvePhiBuilderCmsStoragePath } from "../../../../helpers/cms-paths";
+import { resolvePhiBuilderActivePageCatalog } from "../../../../helpers/cms-page-catalog";
+import { createPhiBuilderControllerAddress } from "../controller/address";
+import { createPhiBuilderHistoryContext, phiBuilderHistory } from "../history";
 import type {
   PhiDeveloperBuilderArea,
   PhiDeveloperBuilderCommandWorkspace,
   PhiDeveloperBuilderWorkspaceState,
-} from "./developer-workspace-types";
+} from "../developer-workspace-types";
 
 type PhiBuilderStoredDraftStatus = {
   requestKey: string;

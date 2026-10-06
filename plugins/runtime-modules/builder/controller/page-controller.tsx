@@ -1,21 +1,21 @@
 "use client";
 
-import { readPhiDeveloperBuilderWorkspaceKey } from "./route-scope";
+import { readPhiDeveloperBuilderWorkspaceKey } from "../route-scope";
 import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import {
-} from "../../../components/widgets/signals/page-title-signals";
-import { normalizePhiCascaderValue } from "../../../components/controls/phi-cascader-control";
-import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../components/runtime/runtime-signal-bus";
-import { usePhiApplicationFeedback } from "../../../components/runtime/use-phi-application-feedback";
+} from "../../../../components/widgets/signals/page-title-signals";
+import { normalizePhiCascaderValue } from "../../../../components/controls/phi-cascader-control";
+import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../components/runtime/runtime-signal-bus";
+import { usePhiApplicationFeedback } from "../../../../components/runtime/use-phi-application-feedback";
 import {
   normalizePhiBuilderCmsCatalogPath,
   resolvePhiBuilderActivePageCatalog,
   resolvePhiBuilderPageKeyFromCatalogPath,
-} from "../../../helpers/cms-page-catalog";
-import { changePhiBuilderPagePath, loadPhiBuilderPersistedPageCatalog } from "./page-catalog-client";
-import { resolvePhiBuilderCmsStoragePath } from "../../../helpers/cms-paths";
+} from "../../../../helpers/cms-page-catalog";
+import { changePhiBuilderPagePath, loadPhiBuilderPersistedPageCatalog } from "../page-catalog-client";
+import { resolvePhiBuilderCmsStoragePath } from "../../../../helpers/cms-paths";
 import {
   collectPhiDeveloperBuilderPageKeys,
   collectPhiDeveloperBuilderPageStoragePaths,
@@ -26,42 +26,42 @@ import {
   createPhiDeveloperBuilderInitialPageDrafts,
   createPhiDeveloperBuilderPageDraft,
   PhiBuilderPageExistsError,
-} from "./persistence";
+} from "../persistence";
 import {
   describePhiBuilderPageAddressConflict,
   findPhiBuilderSitePageAddressConflict,
-} from "./page-address-rule";
+} from "../page-address-rule";
 import {
   PHI_BUILDER_AREA_SEARCH_PARAM,
   PHI_BUILDER_PAGE_SEARCH_PARAM,
-} from "../../../helpers/cms-scope-search-params";
+} from "../../../../helpers/cms-scope-search-params";
 import {
   builderWorkspaceStore,
   createDefaultBuilderChromeControls,
   mergePhiDeveloperRegionDrafts,
   getPhiDeveloperBuilderStateSnapshot,
-} from "./developer-workspace-store";
+} from "../developer-workspace-store";
 import type {
   PhiDeveloperBuilderArea,
   PhiDeveloperBuilderWorkspaceState,
-} from "./developer-workspace-types";
-import { getPhiBuilderRegionDraftKey } from "./region-keys";
+} from "../developer-workspace-types";
+import { getPhiBuilderRegionDraftKey } from "../region-keys";
 import {
   capturePhiBuilderWorkspaceHistoryState,
   createPhiBuilderHistoryContext,
   phiBuilderHistory,
-} from "./history";
-import { createPhiBuilderControllerAddress } from "./controller/address";
+} from "../history";
+import { createPhiBuilderControllerAddress } from "../controller/address";
 import {
   PHI_BUILDER_PAGE_META_OVERLAY_IDS,
   PHI_BUILDER_PAGE_META_WIDGET_IDS,
-} from "./addresses";
-import { createPhiRuntimeFormControllerAddress } from "../../../components/forms/runtime-form-controller-address";
-import { createPhiSignalAddress, createPhiSignalSubcontrolAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
-import { readPhiRuntimeFormValuesSignalValue } from "../../../components/forms/runtime-form-state";
-import type { PhiBuilderPageMetaPresentationLabels } from "./controller/definition";
-import { emitPhiPageTitleInputSignal } from "./page-title-signal";
-import { phiWorkspaceCatalogStore } from "../../../components/workspace/catalog-store";
+} from "../addresses";
+import { createPhiRuntimeFormControllerAddress } from "../../../../components/forms/runtime-form-controller-address";
+import { createPhiSignalAddress, createPhiSignalSubcontrolAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
+import { readPhiRuntimeFormValuesSignalValue } from "../../../../components/forms/runtime-form-state";
+import type { PhiBuilderPageMetaPresentationLabels } from "../controller/definition";
+import { emitPhiPageTitleInputSignal } from "../page-title-signal";
+import { phiWorkspaceCatalogStore } from "../../../../components/workspace/catalog-store";
 
 type PhiBuilderPageControllerState = Pick<
   PhiDeveloperBuilderWorkspaceState,

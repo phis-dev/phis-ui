@@ -450,7 +450,7 @@ assert.match(
  */
 {
   const controllerSource = await readFile(
-    new URL("../plugins/runtime-modules/builder/workspace-controller.tsx", import.meta.url),
+    new URL("../plugins/runtime-modules/builder/controller/workspace-controller.tsx", import.meta.url),
     "utf8",
   );
   const requestChannels = [...builderPresetSource.matchAll(
@@ -475,7 +475,7 @@ assert.match(
  */
 {
   const controllerSource = await readFile(
-    new URL("../plugins/runtime-modules/builder/workspace-controller.tsx", import.meta.url),
+    new URL("../plugins/runtime-modules/builder/controller/workspace-controller.tsx", import.meta.url),
     "utf8",
   );
   const tableBlock = builderPresetSource.slice(
@@ -530,13 +530,13 @@ assert.match(
    * what the Inspector Overlay's `openChange` reaches. The rule stood in a store helper whose one caller
    * never closed the Inspector, so it was proven and never ran.
    */
-  const workspaceControllerSource = await readFile(new URL("../plugins/runtime-modules/builder/workspace-controller.tsx", import.meta.url), "utf8");
+  const workspaceControllerSource = await readFile(new URL("../plugins/runtime-modules/builder/controller/workspace-controller.tsx", import.meta.url), "utf8");
   assert.match(
     workspaceControllerSource,
     /signal\.channel === "inspectorVisibility"[\s\S]{0,200}?signal\.value === false\)\s*\{[\s\S]{0,600}?phiBuilderHistory\.endGesture\(\)/u,
     "Putting the Inspector away must end the gesture it was being used for.",
   );
-  const inspectorControllerSource = await readFile(new URL("../plugins/runtime-modules/builder/inspector-controller.ts", import.meta.url), "utf8");
+  const inspectorControllerSource = await readFile(new URL("../plugins/runtime-modules/builder/controller/inspector-controller.ts", import.meta.url), "utf8");
   assert.match(
     inspectorControllerSource,
     /historyCoalesceKey: resolveInspectorCoalesceKey\(/u,

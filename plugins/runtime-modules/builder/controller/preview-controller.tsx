@@ -3,23 +3,23 @@
 import { startTransition, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import { getPhiBuilderDefaultRegionDraft } from "./region-defaults";
+import { getPhiBuilderDefaultRegionDraft } from "../region-defaults";
 import {
   getPhiBuilderRegionDraftKey,
   PHI_BUILDER_PAGE_REGION_KEYS,
   PHI_BUILDER_SHELL_REGION_KEYS,
-} from "./region-keys";
+} from "../region-keys";
 import {
   PHI_BUILDER_PREVIEW_SEARCH_PARAM,
   savePhiBuilderPreviewSnapshotRequest,
-} from "./preview-transport";
-import { getPhiDeveloperRegionDraftsSnapshot } from "./developer-workspace-store";
+} from "../preview-transport";
+import { getPhiDeveloperRegionDraftsSnapshot } from "../developer-workspace-store";
 import type {
   PhiDeveloperBuilderArea,
   PhiDeveloperBuilderMode,
   PhiDeveloperBuilderRegionDraft,
   PhiDeveloperBuilderWorkspaceState,
-} from "./developer-workspace-types";
+} from "../developer-workspace-types";
 
 function materializePhiBuilderPreviewRegionDrafts(
   area: PhiDeveloperBuilderArea,

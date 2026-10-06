@@ -1,38 +1,38 @@
-import { isPhiRecord } from "../../../helpers/is-record";
-import { PhiCmsFlags } from "../../../constants/phi-cms";
-import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode } from "../../../types/cms";
-import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
-import type { PhiCmsPaddingWidgetConfig } from "../../../types/cms-config";
-import type { PhiRenderableBlockBase } from "../../../types";
-import type { PhiCmsGeometryWidgetConfig } from "../../../components/widgets/config/geometry";
-import { normalizePhiViewportFlags } from "../../../types/access";
-import type { PhiAnchorWidgetPlacement } from "../../../components/controls/phi-anchor-control-contract";
-import type { PhiBuilderInspectorAction } from "./inspector-actions";
+import { isPhiRecord } from "../../../../helpers/is-record";
+import { PhiCmsFlags } from "../../../../constants/phi-cms";
+import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode } from "../../../../types/cms";
+import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
+import type { PhiCmsPaddingWidgetConfig } from "../../../../types/cms-config";
+import type { PhiRenderableBlockBase } from "../../../../types";
+import type { PhiCmsGeometryWidgetConfig } from "../../../../components/widgets/config/geometry";
+import { normalizePhiViewportFlags } from "../../../../types/access";
+import type { PhiAnchorWidgetPlacement } from "../../../../components/controls/phi-anchor-control-contract";
+import type { PhiBuilderInspectorAction } from "../inspector-actions";
 import {
   findPhiBuilderLayoutNodeById,
   findPhiBuilderWidgetNodeByIdInLayouts,
-} from "./node-finders";
+} from "../node-finders";
 import {
   getDefaultRegionDraft,
   resolveRegionDraftKey,
-} from "./developer-region-drafts";
+} from "../developer-region-drafts";
 import {
   getPhiBuilderRegionDraftKey,
   isPhiBuilderPageScopedRegion,
-} from "./region-keys";
-import { createPhiBuilderRegionHistoryContext } from "./history";
-import { assertPhiCmsConfigFields } from "../../../helpers/cms-config-field-validation";
-import { getPhiBuilderModuleMetasSnapshot } from "./plugin-meta-store";
+} from "../region-keys";
+import { createPhiBuilderRegionHistoryContext } from "../history";
+import { assertPhiCmsConfigFields } from "../../../../helpers/cms-config-field-validation";
+import { getPhiBuilderModuleMetasSnapshot } from "../plugin-meta-store";
 import {
   builderWorkspaceStore,
   getPhiDeveloperRegionDraftsSnapshot,
   setPhiDeveloperRegionDraft,
   getPhiDeveloperBuilderStateSnapshot,
-} from "./developer-workspace-store";
+} from "../developer-workspace-store";
 import type {
   PhiDeveloperBuilderArea,
   PhiDeveloperBuilderWorkspaceState,
-} from "./developer-workspace-types";
+} from "../developer-workspace-types";
 
 function patchLayoutNodeById(
   nodes: PhiCmsLayoutRenderNode[],

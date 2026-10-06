@@ -5,7 +5,7 @@ import type { PhiCmsContentWidgetNode, PhiCmsLayoutNode } from "../../../types/c
 import { phiWorkspaceCatalogStore } from "../../../components/workspace/catalog-store";
 import { buildPhiDeveloperBuilderRegionDraftsFromTree } from "./region-hydration";
 import { serializePhiBuilderRootDraft } from "./persistence";
-import { runPhiDeveloperBuilderInspectorAction } from "./inspector-controller";
+import { runPhiDeveloperBuilderInspectorAction } from "./controller/inspector-controller";
 import {
   builderWorkspaceStore,
   getPhiDeveloperRegionDraftsSnapshot,

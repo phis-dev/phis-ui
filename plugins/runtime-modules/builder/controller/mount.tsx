@@ -2,10 +2,10 @@
 
 import { lazy } from "react";
 
-import type { PhiDeveloperBuilderWorkspaceControllerProps } from "../workspace-controller";
+import type { PhiDeveloperBuilderWorkspaceControllerProps } from "./workspace-controller";
 
 const PhiDeveloperBuilderWorkspaceController = lazy(
-  () => import("../workspace-controller")
+  () => import("./workspace-controller")
     .then((module) => ({ default: module.PhiDeveloperBuilderWorkspaceController })),
 );
 

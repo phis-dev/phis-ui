@@ -1,13 +1,13 @@
-import { PhiCmsFlags, PhiCmsRegionType } from "../../../constants/phi-cms";
-import { readPhiFlags } from "../../../helpers/flags";
-import { getDefaultRegionDraft, resolveRegionDraftKey } from "./developer-region-drafts";
-import { getPhiBuilderRegionDraftKey } from "./region-keys";
+import { PhiCmsFlags, PhiCmsRegionType } from "../../../../constants/phi-cms";
+import { readPhiFlags } from "../../../../helpers/flags";
+import { getDefaultRegionDraft, resolveRegionDraftKey } from "../developer-region-drafts";
+import { getPhiBuilderRegionDraftKey } from "../region-keys";
 import {
   getPhiDeveloperRegionDraftsSnapshot,
   setPhiDeveloperRegionDraft,
-} from "./developer-workspace-store";
-import type { PhiDeveloperBuilderArea, PhiDeveloperBuilderRegionDraft } from "./developer-workspace-types";
-import { createPhiBuilderHistoryContext } from "./history";
+} from "../developer-workspace-store";
+import type { PhiDeveloperBuilderArea, PhiDeveloperBuilderRegionDraft } from "../developer-workspace-types";
+import { createPhiBuilderHistoryContext } from "../history";
 
 export function getBuilderRegionKey(regionType: number) {
   switch (regionType) {
