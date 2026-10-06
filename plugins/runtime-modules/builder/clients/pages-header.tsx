@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 import {
   type PhiBuilderPageCatalogArea,
@@ -10,28 +10,16 @@ import {
   resolvePhiBuilderActivePageKey,
   resolvePhiBuilderCatalogPathForCatalog,
 } from "../../../../helpers/cms-page-catalog";
-import {
-  resolvePhiBuilderOfferedPageCatalog,
-  resolvePhiBuilderOfferedPageKeyFromCatalogPath,
-} from "../offered-page-catalog";
+import { resolvePhiBuilderOfferedPageCatalog } from "../offered-page-catalog";
 import {
   PHI_BUILDER_AREA_SEARCH_PARAM,
   PHI_BUILDER_PAGE_SEARCH_PARAM,
   normalizePhiBuilderAreaSearchParam,
   normalizePhiBuilderPageSearchParam,
 } from "../../../../helpers/cms-scope-search-params";
-import {
-  dispatchPhiDeveloperBuilderState,
-  usePhiDeveloperBuilderStateValue,
-} from "../developer-workspace-store";
+import { usePhiDeveloperBuilderStateValue } from "../developer-workspace-store";
 import { PhiTextControl } from "../../../../components/controls/phi-text-control";
-import {
-  usePhiSignalDispatcher,
-  usePhiSignalListener,
-} from "../../../../components/runtime/runtime-signal-bus";
-import {
-  emitPhiPageTitleMetaSignal,
-} from "../../../../components/widgets/signals/page-title-signals";
+import { usePhiSignalDispatcher } from "../../../../components/runtime/runtime-signal-bus";
 import {
   PHI_PAGE_TITLE_WIDGET_DEFAULT_LABELS,
   type PhiPageTitleWidgetLabels,
@@ -101,9 +89,6 @@ export function PhiDeveloperBuilderPagesHeaderSection({
   disabled?: boolean;
   labels?: PhiPageTitleWidgetLabels;
 }) {
-  const emitSignal = usePhiSignalDispatcher();
-  const pathname = usePathname();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const currentArea = usePhiDeveloperBuilderStateValue("public", (state) => state.area);
   const currentPageKey = usePhiDeveloperBuilderStateValue("public", (state) => state.pageKey);
@@ -176,31 +161,6 @@ export function PhiDeveloperBuilderPagesHeaderSection({
   const resolvedInitialPageTitle = (pageTitle?.trim() ?? "") || selectedPageTitle;
   const isPreviewMode = builderMode === "preview";
 
-  function navigateToPage(nextPageKey: string, nextTitle?: string | null) {
-    const nextPagePath = findPhiPageNodePath(pageTree, nextPageKey);
-    const nextPageTitle = nextTitle?.trim() || nextPagePath?.at(-1)?.title || nextPageKey;
-    dispatchPhiDeveloperBuilderState(emitSignal, "public", {
-      area,
-      pageKey: nextPageKey,
-      nodeKey: `page:${nextPageKey}`,
-      nodeKind: "page",
-      sidebarKey: "pages",
-    });
-    emitPhiPageTitleMetaSignal({
-      emitSignal,
-      area,
-      pageKey: nextPageKey,
-      title: nextPageTitle,
-    });
-
-    if (typeof pathname === "string") {
-      const nextSearchParams = new URLSearchParams(searchParams.toString());
-      nextSearchParams.set(PHI_BUILDER_AREA_SEARCH_PARAM, area);
-      nextSearchParams.set(PHI_BUILDER_PAGE_SEARCH_PARAM, nextPageKey);
-      router.replace(`${pathname}?${nextSearchParams.toString()}`, { scroll: false });
-    }
-  }
-
   const titleInput = (
     titleModeEnabled && catalogPath !== null ? (
       <PhiDeveloperBuilderPagesHeaderTitleField
@@ -214,24 +174,11 @@ export function PhiDeveloperBuilderPagesHeaderSection({
     ) : null
   );
 
-  usePhiSignalListener((signal) => {
-    if (disabled || !pageSelectionReady) {
-      return;
-    }
-
-	    if (titleModeEnabled && signal.channel === "page" && signal.action === "change") {
-      const signalValue = signal.value;
-      const nextPageKey =
-        typeof signalValue === "string"
-          ? resolvePhiBuilderOfferedPageKeyFromCatalogPath(offeredCatalogState, area, signalValue)
-          : null;
-      if (nextPageKey && nextPageKey !== pageKey) {
-        navigateToPage(nextPageKey);
-      }
-      return;
-    }
-
-  });
+  /*
+   * Choosing a Page is the Builder Controller's: it hears the selector's `path` and `page` signals,
+   * moves the workspace and writes the address, once. This header used to do the same from its own
+   * listener, so one choice was navigated to by both of them.
+   */
 
   if (!pageSelectionReady) {
     return null;

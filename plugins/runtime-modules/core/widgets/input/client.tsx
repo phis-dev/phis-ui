@@ -19,6 +19,11 @@ export type PhiInputWidgetProps = {
 export function PhiInputWidget({ blockId, runtime, config, signalsEnabled = true }: PhiInputWidgetProps) {
   const inputRef = useRef<PhiTextControlInputRef | null>(null);
   const changeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /*
+   * The change a debounce is still holding back. A submit sends it first: the receiver reads the value
+   * from the last change it heard, so typing and pressing Enter at once would submit the value before.
+   */
+  const pendingChangeRef = useRef<(() => void) | null>(null);
   const blockRuntime = usePhiRenderableWidgetRuntime({
     blockId,
     runtime,
@@ -34,6 +39,7 @@ export function PhiInputWidget({ blockId, runtime, config, signalsEnabled = true
 
   useEffect(() => () => {
     if (changeTimerRef.current) clearTimeout(changeTimerRef.current);
+    pendingChangeRef.current = null;
   }, []);
 
   const inputSignals = usePhiInputSignalController({
@@ -52,14 +58,24 @@ export function PhiInputWidget({ blockId, runtime, config, signalsEnabled = true
     const emitted = config?.trimEmittedValue ? value.trim() : value;
     const minLength = config?.minValueLength ?? 0;
     if (emitted.length > 0 && emitted.length < minLength) return;
-    if (changeTimerRef.current) clearTimeout(changeTimerRef.current);
+    cancelPendingChange();
     const debounceMs = config?.debounceMs ?? 0;
     if (debounceMs > 0) {
-      changeTimerRef.current = setTimeout(() => inputSignals.emitChange(emitted), debounceMs);
+      const send = () => {
+        cancelPendingChange();
+        inputSignals.emitChange(emitted);
+      };
+      pendingChangeRef.current = send;
+      changeTimerRef.current = setTimeout(send, debounceMs);
     } else {
       inputSignals.emitChange(emitted);
     }
   };
+  function cancelPendingChange() {
+    if (changeTimerRef.current) clearTimeout(changeTimerRef.current);
+    changeTimerRef.current = null;
+    pendingChangeRef.current = null;
+  }
 
   return (
     <PhiTextControl
@@ -83,11 +99,13 @@ export function PhiInputWidget({ blockId, runtime, config, signalsEnabled = true
         emitConfiguredChange(resolvedText);
       }}
       onClear={() => {
-        if (changeTimerRef.current) clearTimeout(changeTimerRef.current);
+        cancelPendingChange();
         inputSignals.emitClear();
       }}
       onPressEnter={() => {
-        if (config?.submitOnEnter !== false) inputSignals.emitSubmit();
+        if (config?.submitOnEnter === false) return;
+        pendingChangeRef.current?.();
+        inputSignals.emitSubmit();
       }}
       onFocus={() => inputSignals.emitFocus()}
       onBlur={() => inputSignals.emitBlur()}

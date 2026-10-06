@@ -10,6 +10,7 @@ import type { PhiChoiceControlConfig, PhiStackChoiceControlConfig } from "../../
 import {
   isPhiStackSignalMessage,
   PHI_STACK_META_SIGNAL_CHANNEL,
+  readPhiStackSignalAddressKey,
   resolvePhiStackSignalMessage,
 } from "../../../layouts/stack-signals";
 import { usePhiSignalListener } from "../../../runtime/runtime-signal-bus";
@@ -157,6 +158,14 @@ export function usePhiStackChoiceController<TConfig extends PhiStackChoiceContro
   const [stackOptions, setStackOptions] = useState<PhiControlOption[]>([]);
   const value = state.source === fallbackValue ? state.value : fallbackValue;
   const stackMetaListenRoute = findPhiSignalRoutesByCapabilityId(config?.signalRoutes?.listens, "stackMeta")[0] ?? null;
+  /*
+   * The Stack this Choice follows: the one its `stackMeta` request is addressed to. Every Stack answers
+   * on the same broadcast, so without it two Stacks on one page would each overwrite the other's options
+   * and index here. A Choice whose request names no Stack follows none.
+   */
+  const followedStackKey = readPhiStackSignalAddressKey(
+    findPhiSignalRoutesByCapabilityId(config?.signalRoutes?.emits, "stackMeta")[0]?.receiver,
+  );
   const controlSignals = usePhiControlSignalController<string>({
     key: config?.key ?? defaultKey,
     sender,
@@ -182,7 +191,7 @@ export function usePhiStackChoiceController<TConfig extends PhiStackChoiceContro
 
   usePhiSignalListener(
     (signal) => {
-      if (!signalsEnabled || !stackMode || !stackMetaListenRoute) {
+      if (!signalsEnabled || !stackMode || !stackMetaListenRoute || !followedStackKey) {
         return;
       }
       if (
@@ -195,7 +204,7 @@ export function usePhiStackChoiceController<TConfig extends PhiStackChoiceContro
       }
 
       const message = resolvePhiStackSignalMessage(signal);
-      if (!isPhiStackSignalMessage(message) || signal.receiver !== "broadcast") {
+      if (!isPhiStackSignalMessage(message) || signal.receiver !== "broadcast" || message.key !== followedStackKey) {
         return;
       }
 

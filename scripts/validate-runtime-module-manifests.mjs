@@ -683,7 +683,14 @@ for (const [area, file] of Object.entries(areaContributionFilesByArea)) {
     area === "builder"
       ? [...commonClientModuleIds, ...readDirectClientAreaModuleIds(file)]
       : [...commonServerModuleIds, ...readDirectServerAreaModuleIds(file)],
-    areaAuthoringModuleIds[area],
+    /*
+     * The Builder's side is read from its Controller contributions, so it lists only the Modules that
+     * have a Controller: a Module without one (Dashboard, since its did nothing) is authored here and
+     * contributes no Controller to compare it with.
+     */
+    area === "builder"
+      ? areaAuthoringModuleIds[area].filter((moduleId) => expectedControllerClientModuleIdSet.has(moduleId))
+      : areaAuthoringModuleIds[area],
   );
 }
 assertSameMembers(

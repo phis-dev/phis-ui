@@ -525,10 +525,15 @@ assert.match(
     /coalesceWindowMs|Date\.now\(\)/u,
     "A gesture must end on an event, not on a timer that a slow hand outlives.",
   );
-  const workspaceStoreSource = await readFile(new URL("../plugins/runtime-modules/builder/developer-workspace-store.ts", import.meta.url), "utf8");
+  /*
+   * Where the Inspector is put away: the Builder Controller's `inspectorVisibility` branch, which is
+   * what the Inspector Overlay's `openChange` reaches. The rule stood in a store helper whose one caller
+   * never closed the Inspector, so it was proven and never ran.
+   */
+  const workspaceControllerSource = await readFile(new URL("../plugins/runtime-modules/builder/workspace-controller.tsx", import.meta.url), "utf8");
   assert.match(
-    workspaceStoreSource,
-    /next\.inspectorOpen === false\)\s*\{[\s\S]{0,600}?phiBuilderHistory\.endGesture\(\)/u,
+    workspaceControllerSource,
+    /signal\.channel === "inspectorVisibility"[\s\S]{0,200}?signal\.value === false\)\s*\{[\s\S]{0,600}?phiBuilderHistory\.endGesture\(\)/u,
     "Putting the Inspector away must end the gesture it was being used for.",
   );
   const inspectorControllerSource = await readFile(new URL("../plugins/runtime-modules/builder/inspector-controller.ts", import.meta.url), "utf8");

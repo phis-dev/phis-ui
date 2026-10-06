@@ -1,6 +1,7 @@
 "use client";
 
 import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode } from "../../../types/cms";
+import type { PhiSignalSender } from "../../../types";
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
 import { isPhiBuilderAreaKey } from "../../../constants/cms-areas";
 import {
@@ -18,7 +19,6 @@ import {
   phiWorkspaceCatalogStore,
   type PhiWorkspaceCatalogState,
 } from "../../../components/workspace/catalog-store";
-import { createPhiBuilderControllerAddress } from "./controller/address";
 import type {
   PhiBuilderChromeControls,
   PhiBuilderModuleDeactivationRequest,
@@ -358,167 +358,13 @@ export function splitWorkspacePatch(next: Partial<PhiDeveloperBuilderWorkspaceSt
   return { catalog, tool };
 }
 
-export function dispatchPhiDeveloperBuilderState(
-  emitSignal: PhiSignalDispatch,
-  defaultArea: PhiDeveloperBuilderArea,
-  next: Partial<PhiDeveloperBuilderWorkspaceState>,
-) {
-  const { catalog, tool } = splitWorkspacePatch(next);
-  /*
-   * The catalog goes first so that the merged view the Builder reacts on below -- and every signal it
-   * emits from it -- already carries the new Area or page.
-   */
-  if (Object.keys(catalog).length > 0) {
-    phiWorkspaceCatalogStore.patch(defaultArea, (current) => ({ ...current, ...catalog }));
-  }
-  builderWorkspaceStore.patch(defaultArea, (current) => {
-    const merged: PhiDeveloperBuilderWorkspaceState = {
-      ...current,
-      ...phiWorkspaceCatalogStore.getSnapshot(defaultArea),
-      ...tool,
-    };
-
-    if (typeof next.area === "string" || typeof next.pageKey === "string") {
-      merged.builderChromeControls = createDefaultBuilderChromeControls();
-    }
-
-    if (typeof next.inspectorOpen === "boolean" && next.inspectorOpen === false) {
-      /*
-       * Putting the Inspector away ends whatever was being adjusted in it. Everything a control emitted
-       * while it was open is one edit, and the value standing when it closes is the one history keeps --
-       * so undo takes back the adjustment rather than one step of a slider still being dragged.
-       */
-      phiBuilderHistory.endGesture();
-      merged.nodeKey = `page:${merged.pageKey}`;
-      merged.nodeId = null;
-      merged.nodeKind = "page";
-      merged.selectedRegionType = null;
-      merged.selectedRegionKey = null;
-      merged.selectedRootRegionKey = null;
-    }
-
-    if (typeof next.area === "string") {
-      emitSignal({
-        scope: "area",
-        channel: "selection",
-        action: "change",
-        value: merged.area,
-        valueType: "string",
-        sender: createPhiBuilderControllerAddress(),
-        receiver: "broadcast",
-        timestamp: Date.now(),
-      });
-    }
-
-    if (typeof next.pageKey === "string") {
-      emitSignal({
-        scope: "page",
-        channel: "page",
-        action: "change",
-        value: {
-          area: merged.area,
-          pageKey: merged.pageKey,
-        },
-        valueType: "json",
-        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.builderLayout,
-        sender: createPhiBuilderControllerAddress(),
-        receiver: "broadcast",
-        timestamp: Date.now(),
-      });
-    }
-
-    if (typeof next.nodeKey === "string" || typeof next.nodeKind === "string") {
-      emitSignal({
-        scope: merged.nodeKind === "slot" || merged.nodeKind === "region" ? "region" : "page",
-        channel: "selection",
-        action: "change",
-        value: {
-          area: merged.area,
-          pageKey: merged.pageKey,
-          nodeKey: merged.nodeKey,
-          nodeId: merged.nodeId,
-          nodeKind: merged.nodeKind,
-          regionKey:
-            merged.nodeKind === "region" || merged.nodeKind === "slot"
-              ? merged.nodeKey.replace(/^(region|slot):/, "")
-              : merged.nodeKind === "layout" || merged.nodeKind === "widget"
-                ? merged.selectedRootRegionKey ?? null
-                : null,
-        },
-        valueType: "json",
-        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.builderNodeSelection,
-        sender: createPhiBuilderControllerAddress(),
-        receiver: "broadcast",
-        timestamp: Date.now(),
-      });
-    }
-
-    if (typeof next.inspectorOpen === "boolean" && next.inspectorOpen === false) {
-      emitSignal({
-        scope: "page",
-        channel: "selection",
-        action: "change",
-        value: {
-          area: merged.area,
-          pageKey: merged.pageKey,
-          nodeKey: merged.nodeKey,
-          nodeId: merged.nodeId,
-          nodeKind: merged.nodeKind,
-          regionKey: null,
-        },
-        valueType: "json",
-        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.builderNodeSelection,
-        sender: createPhiBuilderControllerAddress(),
-        receiver: "broadcast",
-        timestamp: Date.now(),
-      });
-    }
-
-    if (typeof next.builderMode === "string") {
-      emitSignal({
-        scope: "area",
-        channel: "builderMode",
-        action: "change",
-        value: merged.builderMode,
-        valueType: "enum",
-        sender: createPhiBuilderControllerAddress(),
-        receiver: "broadcast",
-        timestamp: Date.now(),
-      });
-    }
-
-    if (typeof next.inspectorOpen === "boolean") {
-      emitSignal({
-        scope: "area",
-        channel: "inspectorVisibility",
-        action: "change",
-        value: next.inspectorOpen,
-        valueType: "boolean",
-        sender: createPhiBuilderControllerAddress(),
-        receiver: "broadcast",
-        timestamp: Date.now(),
-      });
-    }
-
-    if (typeof next.pagesOpen === "boolean") {
-      emitSignal({
-        scope: "area",
-        channel: "pagesVisibility",
-        action: "change",
-        value: next.pagesOpen ? "visible" : "hidden",
-        valueType: "enum",
-        sender: createPhiBuilderControllerAddress(),
-        receiver: "broadcast",
-        timestamp: Date.now(),
-      });
-    }
-
-    return merged;
-  });
-}
-
+/**
+ * A Widget asking the Builder Controller to restrict the chrome for its page. It is sent under the
+ * Widget's own address: the Controller does not answer what was sent under its own.
+ */
 export function emitPhiBuilderChromeControlsSignal(
   emitSignal: PhiSignalDispatch,
+  sender: PhiSignalSender,
   scope: Pick<PhiDeveloperBuilderWorkspaceState, "area" | "pageKey">,
   controls: Partial<PhiBuilderChromeControls>,
 ) {
@@ -533,7 +379,7 @@ export function emitPhiBuilderChromeControlsSignal(
     },
     valueType: "json",
     valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.builderChrome,
-    sender: createPhiBuilderControllerAddress(),
+    sender,
     receiver: "broadcast",
     meta: { sourceLabel: `${scope.area}:${scope.pageKey}` },
     timestamp: Date.now(),

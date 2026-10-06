@@ -1262,6 +1262,22 @@ function usePhiDeveloperBuilderWorkspaceController(
 
   usePhiSignalListener(
     (signal) => {
+      /*
+       * Never what this Controller sent itself. The workspace store announces every state change it
+       * applied -- `page`, `selection`, `builderMode`, `inspectorVisibility` -- under this address, and
+       * a branch below that took the announcement for a request did the change a second time: a Page
+       * chosen in `/pages` was navigated to twice, and a failed Preview's restoring `builderMode`
+       * entered the Editor again. Whoever asks this Controller for something sends under its own
+       * address (SIGNALS.md, "Self-receive").
+       */
+      if (signal.sender === createPhiBuilderControllerAddress()) {
+        return;
+      }
+      /*
+       * What the branches below that name no receiver of their own may answer: a broadcast, or a signal
+       * addressed here. A `selection` or `page` change sent to some other Widget is that Widget's.
+       */
+      const addressedHere = signal.receiver === "broadcast" || signal.receiver === createPhiBuilderControllerAddress();
       const effectsRequest = state.effectsEditorRequest;
       if (
         effectsRequest &&
@@ -1486,7 +1502,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         return;
       }
 
-	      if (signal.channel === "builderChrome" && signal.action === "change") {
+	      if (addressedHere && signal.channel === "builderChrome" && signal.action === "change") {
 	          const nextControls = signal.value && typeof signal.value === "object"
 	            ? signal.value as Partial<PhiBuilderChromeControls> & { area?: unknown; pageKey?: unknown }
 	            : null;
@@ -1516,7 +1532,7 @@ function usePhiDeveloperBuilderWorkspaceController(
 	          return;
 	      }
 
-	      if (signal.scope === "page" && signal.channel === "path" && signal.action === "change") {
+	      if (addressedHere && signal.scope === "page" && signal.channel === "path" && signal.action === "change") {
         if (builderWorkspaceKey !== "pages" || typeof signal.value !== "string" || signal.value.length === 0) {
           return;
         }
@@ -1534,7 +1550,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         return;
       }
 
-	      if (signal.channel === "page" && signal.action === "change") {
+	      if (addressedHere && signal.channel === "page" && signal.action === "change") {
         const rawValue = signal.value;
         const next: { area?: unknown; pageKey?: unknown; value?: unknown } | null = rawValue && typeof rawValue === "object"
           ? rawValue as { area?: unknown; pageKey?: unknown; value?: unknown }
@@ -1636,8 +1652,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         signal.channel === "runtimeModules" &&
         signal.action === "change" &&
         signal.valueType === "string[]" &&
-        signal.receiver === builderControllerReceiver &&
-        signal.sender !== builderControllerReceiver
+        signal.receiver === builderControllerReceiver
       ) {
         const selectedIds = Array.isArray(signal.value)
           ? signal.value.filter((value): value is string => typeof value === "string")
@@ -1693,7 +1708,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         return;
       }
 
-	      if (signal.channel === "debugScaffold" && signal.action === "change") {
+	      if (addressedHere && signal.channel === "debugScaffold" && signal.action === "change") {
         const nextDebugScaffold = typeof signal.value === "boolean" ? signal.value : null;
         if (nextDebugScaffold == null) {
           return;
@@ -1706,7 +1721,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         return;
       }
 
-      if (signal.channel === "content") {
+      if (addressedHere && signal.channel === "content") {
         const rawValue = signal.value;
         const next = rawValue && typeof rawValue === "object" ? rawValue as {
           nodeKind?: unknown;
@@ -1737,7 +1752,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         return;
       }
 
-	      if (signal.channel === "selection" && signal.action === "change") {
+	      if (addressedHere && signal.channel === "selection" && signal.action === "change") {
         const rawValue = signal.value;
         const next = rawValue && typeof rawValue === "object" ? rawValue as {
           nodeKey?: unknown;
@@ -1773,7 +1788,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         return;
       }
 
-	      if (signal.channel === "builderMode" && signal.action === "change") {
+	      if (addressedHere && signal.channel === "builderMode" && signal.action === "change") {
         const rawValue = signal.value;
 
         if (rawValue === "editor") {
@@ -1958,6 +1973,7 @@ function usePhiDeveloperBuilderWorkspaceController(
       }
 
 	      if (
+        addressedHere &&
         (signal.channel === "region" || signal.channel === "selection") &&
         signal.action === "change"
       ) {
@@ -1992,7 +2008,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         return;
       }
 
-      if (signal.channel === "command" && signal.action === "activate" && signal.value === "pagesOpen") {
+      if (addressedHere && signal.channel === "command" && signal.action === "activate" && signal.value === "pagesOpen") {
         builderWorkspaceStore.patch(defaultArea, (current) => ({ ...current, pagesOpen: true }));
         return;
       }
@@ -2354,7 +2370,16 @@ function usePhiDeveloperBuilderWorkspaceController(
         return;
       }
 
-      if (signal.channel === "inspectorVisibility" && signal.action === "change" && typeof signal.value === "boolean") {
+      if (addressedHere && signal.channel === "inspectorVisibility" && signal.action === "change" && typeof signal.value === "boolean") {
+        if (signal.value === false) {
+          /*
+           * Putting the Inspector away ends whatever was being adjusted in it. Everything a control
+           * emitted while it was open is one edit, and the value standing when it closes is the one
+           * history keeps -- so undo takes back the adjustment rather than one step of a slider still
+           * being dragged.
+           */
+          phiBuilderHistory.endGesture();
+        }
         builderWorkspaceStore.patch(defaultArea, (current) => ({ ...current, inspectorOpen: signal.value as boolean }));
         return;
       }

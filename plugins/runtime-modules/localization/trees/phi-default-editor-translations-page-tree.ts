@@ -23,7 +23,11 @@ import { getPhiEditorTranslationsWidgetLabels } from "./editor-translations-widg
 import { PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
 import { PHI_LOCALIZATION_FORM_IDS } from "../forms";
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
-import { createPhiLocalizationControllerAddress } from "../controller/address";
+import {
+  PHI_LOCALIZATION_CONTROLLER_INSTANCE_KEY,
+  PHI_LOCALIZATION_CONTROLLER_TYPE,
+  createPhiLocalizationControllerAddress,
+} from "../controller/address";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 
 const SYNTHETIC_EDITOR_TRANSLATIONS_REGION_IDS = { regionContent: -561 } as const;
@@ -51,8 +55,36 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
   });
 
   const nodes = createPhiCmsPresetNodes(page);
+  const overlayAddress = createPhiSignalAddress("cms", PHI_EDITOR_TRANSLATION_OVERLAY_ID);
+  const formAddress = createPhiSignalAddress("cms", PHI_EDITOR_TRANSLATION_FORM_WIDGET_ID);
+  const tableAddress = createPhiSignalAddress("cms", PHI_EDITOR_TRANSLATIONS_WIDGET_ID);
+  const saveAddress = createPhiSignalSubcontrolAddress("cms", PHI_EDITOR_TRANSLATION_COMMANDS_WIDGET_ID, "save");
+  const sourceLocaleAddress = createPhiSignalAddress("cms", PHI_EDITOR_TRANSLATIONS_SOURCE_LOCALE_WIDGET_ID);
   return {
     page: nodes.page({ pageType: PhiCmsPageType.Standard }),
+    /*
+     * The Localization Controller is mounted by this Page and told here whom it speaks to: it used to
+     * name these Widgets itself, which tied it to this one arrangement of them.
+     */
+    controllerSettings: [{
+      type: PHI_LOCALIZATION_CONTROLLER_TYPE,
+      instanceKey: PHI_LOCALIZATION_CONTROLLER_INSTANCE_KEY,
+      mountScope: "page",
+      config: {
+        signalRoutes: {
+          emits: [
+            { routeKey: "editor-translations-controller-dialog-open", capabilityId: "dialogOpen", scope: "page", channel: "dialog", action: "activate", valueType: "none", receiver: overlayAddress },
+            { routeKey: "editor-translations-controller-dialog-close", capabilityId: "dialogClose", scope: "page", channel: "dialog", action: "close", valueType: "none", receiver: overlayAddress },
+            { routeKey: "editor-translations-controller-form-open", capabilityId: "recordOpen", scope: "page", channel: "action", action: "activate", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction, receiver: formAddress },
+            { routeKey: "editor-translations-controller-form-submit", capabilityId: "formSubmit", scope: "page", channel: "submit", action: "activate", valueType: "none", receiver: formAddress },
+            { routeKey: "editor-translations-controller-form-reset", capabilityId: "formReset", scope: "page", channel: "reset", action: "activate", valueType: "none", receiver: formAddress },
+            { routeKey: "editor-translations-controller-save-submitting", capabilityId: "saveSubmitting", scope: "page", channel: "submitting", action: "change", valueType: "boolean", receiver: saveAddress },
+            { routeKey: "editor-translations-controller-table-reload", capabilityId: "reload", scope: "page", channel: "reload", action: "activate", valueType: "none", receiver: tableAddress },
+            { routeKey: "editor-translations-controller-source-locale", capabilityId: "sourceLocale", scope: "area", channel: "text", action: "change", valueType: "string", receiver: sourceLocaleAddress },
+          ],
+        },
+      },
+    }],
     overlays: [nodes.overlay({
       id: PHI_EDITOR_TRANSLATION_OVERLAY_ID,
       overlayType: "modal",

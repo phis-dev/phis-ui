@@ -1,22 +1,15 @@
 "use client";
 
 import { isPhiRecord } from "../../../../helpers/is-record";
-import { createElement, useCallback, useEffect, useRef, useState } from "react";
-import type { PhiRuntimeControllerPlugin, PhiSignal, PhiSignalAddress } from "../../../../types";
+import { createElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { PhiRuntimeControllerPlugin, PhiSignalAddress, PhiSignalValue } from "../../../../types";
 import { createPhiRuntimeControllerClient } from "../../../../components/runtime/runtime-controller-client-factory";
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../components/runtime/runtime-signal-bus";
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
-import { createPhiSignalAddress, createPhiSignalSubcontrolAddress } from "../../../../types/signals";
 import { readPhiTableQuery } from "../../../../types/table-widget";
 import { readPhiTableActionSignalValue } from "../../../../types/table-signal-values";
 import { readPhiOverlayCloseRequest } from "../../../../types/cms-overlay";
-import {
-  PHI_EDITOR_TRANSLATION_FORM_WIDGET_ID,
-  PHI_EDITOR_TRANSLATION_COMMANDS_WIDGET_ID,
-  PHI_EDITOR_TRANSLATION_OVERLAY_ID,
-  PHI_EDITOR_TRANSLATIONS_SOURCE_LOCALE_WIDGET_ID,
-  PHI_EDITOR_TRANSLATIONS_WIDGET_ID,
-} from "../trees/editor-translations-shell";
+import { dispatchPhiSignalCapability } from "../../../../components/runtime/runtime-signal-identity";
 import {
   PHI_LOCALIZATION_RUNTIME_CONTROLLER_DEFINITION,
   type PhiLocalizationControllerConfig,
@@ -28,7 +21,13 @@ type LocalizationFilters = {
   status: string;
 };
 
-function PhiLocalizationControllerMount({ address }: { address: PhiSignalAddress }) {
+function PhiLocalizationControllerMount({
+  address,
+  config,
+}: {
+  address: PhiSignalAddress;
+  config: PhiLocalizationControllerConfig;
+}) {
   const dispatchSignal = usePhiSignalDispatcher();
   const filtersRef = useRef<LocalizationFilters>({ locale: "", context: "", status: "all" });
   const [pendingEdit, setPendingEdit] = useState<{
@@ -37,36 +36,17 @@ function PhiLocalizationControllerMount({ address }: { address: PhiSignalAddress
   } | null>(null);
   const submittingRef = useRef(false);
   const deliveredEditRef = useRef<string | null>(null);
-  const formAddress = createPhiSignalAddress("cms", PHI_EDITOR_TRANSLATION_FORM_WIDGET_ID);
-  const overlayAddress = createPhiSignalAddress("cms", PHI_EDITOR_TRANSLATION_OVERLAY_ID);
-  const tableAddress = createPhiSignalAddress("cms", PHI_EDITOR_TRANSLATIONS_WIDGET_ID);
-  const sourceLocaleAddress = createPhiSignalAddress("cms", PHI_EDITOR_TRANSLATIONS_SOURCE_LOCALE_WIDGET_ID);
-  const saveActionAddress = createPhiSignalSubcontrolAddress("cms", PHI_EDITOR_TRANSLATION_COMMANDS_WIDGET_ID, "save");
-
-  const send = useCallback((input: {
-    receiver: PhiSignalAddress;
-    channel: string;
-    action: "activate" | "change" | "close";
-    value: null | string | boolean | Record<string, unknown>;
-    valueType: "none" | "string" | "boolean" | "json";
-    valueSchema?: PhiSignal["valueSchema"];
-    correlationId: string;
-  }) => dispatchSignal({
-    scope: "page",
-    sender: address,
-    receiver: input.receiver,
-    channel: input.channel,
-    action: input.action,
-    value: input.value,
-    valueType: input.valueType,
-    valueSchema: input.valueSchema ?? null,
-    correlationId: input.correlationId,
-    timestamp: Date.now(),
-  }), [address, dispatchSignal]);
+  const emitRoutes = useMemo(() => config.signalRoutes?.emits ?? [], [config.signalRoutes?.emits]);
+  /* One declared output, delivered through every route the Page wrote for it. */
+  const emitCapability = useCallback((
+    capabilityId: string,
+    value: PhiSignalValue,
+    correlationId: string,
+  ) => dispatchPhiSignalCapability(dispatchSignal, address, emitRoutes, capabilityId, value, correlationId), [address, dispatchSignal, emitRoutes]);
 
   const closeEditor = useCallback((correlationId: string) => {
-    send({ receiver: overlayAddress, channel: "dialog", action: "close", value: null, valueType: "none", correlationId });
-  }, [overlayAddress, send]);
+    emitCapability("dialogClose", null, correlationId);
+  }, [emitCapability]);
 
   usePhiSignalListener(useCallback((signal) => {
     if (signal.channel === "localizationWorkspace" &&
@@ -83,17 +63,7 @@ function PhiLocalizationControllerMount({ address }: { address: PhiSignalAddress
         status: typeof query.status === "string" ? query.status : filtersRef.current.status,
       };
       if (typeof value.sourceLocale === "string" && value.sourceLocale) {
-        dispatchSignal({
-          scope: "area",
-          channel: "text",
-          action: "change",
-          value: value.sourceLocale,
-          valueType: "string",
-          sender: address,
-          receiver: sourceLocaleAddress,
-          correlationId: signal.correlationId,
-          timestamp: Date.now(),
-        });
+        emitCapability("sourceLocale", value.sourceLocale, signal.correlationId);
       }
       if (filtersRef.current.locale) {
         dispatchSignal({
@@ -137,15 +107,15 @@ function PhiLocalizationControllerMount({ address }: { address: PhiSignalAddress
       if (!action || action.actionKey !== "edit" || action.rowIdentity == null) return;
       deliveredEditRef.current = null;
       setPendingEdit({ value: action, correlationId: signal.correlationId });
-      send({ receiver: overlayAddress, channel: "dialog", action: "activate", value: null, valueType: "none", correlationId: signal.correlationId });
+      emitCapability("dialogOpen", null, signal.correlationId);
       return;
     }
 
     if (signal.channel === "command" && signal.action === "activate" && (signal.value === "save" || signal.value === "cancel")) {
       if (signal.value === "save") {
-        if (!submittingRef.current) send({ receiver: formAddress, channel: "submit", action: "activate", value: null, valueType: "none", correlationId: signal.correlationId });
+        if (!submittingRef.current) emitCapability("formSubmit", null, signal.correlationId);
       } else if (!submittingRef.current) {
-        send({ receiver: formAddress, channel: "reset", action: "activate", value: null, valueType: "none", correlationId: signal.correlationId });
+        emitCapability("formReset", null, signal.correlationId);
         closeEditor(signal.correlationId);
       }
       return;
@@ -154,7 +124,7 @@ function PhiLocalizationControllerMount({ address }: { address: PhiSignalAddress
     if (signal.channel === "dialog" && signal.action === "close") {
       const request = readPhiOverlayCloseRequest(signal.value);
       if (request && !submittingRef.current) {
-        send({ receiver: formAddress, channel: "reset", action: "activate", value: null, valueType: "none", correlationId: signal.correlationId });
+        emitCapability("formReset", null, signal.correlationId);
         closeEditor(signal.correlationId);
       }
       return;
@@ -162,13 +132,13 @@ function PhiLocalizationControllerMount({ address }: { address: PhiSignalAddress
 
     if (signal.channel === "submitting" && signal.action === "change" && typeof signal.value === "boolean") {
       submittingRef.current = signal.value;
-      send({ receiver: saveActionAddress, channel: "submitting", action: "change", value: signal.value, valueType: "boolean", correlationId: signal.correlationId });
+      emitCapability("saveSubmitting", signal.value, signal.correlationId);
       return;
     }
 
-    if (signal.channel === "submit" && signal.action === "activate" && signal.sender === formAddress) {
+    if (signal.channel === "submit" && signal.action === "activate") {
       closeEditor(signal.correlationId);
-      send({ receiver: tableAddress, channel: "reload", action: "activate", value: null, valueType: "none", correlationId: signal.correlationId });
+      emitCapability("reload", null, signal.correlationId);
       return;
     }
 
@@ -253,7 +223,7 @@ function PhiLocalizationControllerMount({ address }: { address: PhiSignalAddress
       correlationId: signal.correlationId,
       timestamp: Date.now(),
     });
-  }, [address, closeEditor, dispatchSignal, formAddress, overlayAddress, saveActionAddress, send, sourceLocaleAddress, tableAddress]), {
+  }, [address, closeEditor, dispatchSignal, emitCapability]), {
     scopes: ["page", "area"],
     channels: ["locale", "context", "status", "query", "command", "localizationWorkspace", "action", "dialog", "submitting", "submit", "state"],
   },
@@ -265,23 +235,15 @@ function PhiLocalizationControllerMount({ address }: { address: PhiSignalAddress
     const deliveryKey = `${pendingEdit.correlationId}:${String(pendingEdit.value.rowIdentity)}`;
     if (deliveredEditRef.current === deliveryKey) return;
     deliveredEditRef.current = deliveryKey;
-    send({
-      receiver: formAddress,
-      channel: "action",
-      action: "activate",
-      value: pendingEdit.value,
-      valueType: "json",
-      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
-      correlationId: pendingEdit.correlationId,
-    });
-  }, [formAddress, pendingEdit, send]);
+    emitCapability("recordOpen", pendingEdit.value, pendingEdit.correlationId);
+  }, [emitCapability, pendingEdit]);
 
   return null;
 }
 
 export const PHI_LOCALIZATION_RUNTIME_CONTROLLER_PLUGIN = {
   ...PHI_LOCALIZATION_RUNTIME_CONTROLLER_DEFINITION,
-  renderController: ({ address }) => createElement(PhiLocalizationControllerMount, { address }),
+  renderController: ({ address, config }) => createElement(PhiLocalizationControllerMount, { address, config }),
 } satisfies PhiRuntimeControllerPlugin<PhiLocalizationControllerConfig>;
 
 export const PhiLocalizationRuntimeControllerClient = createPhiRuntimeControllerClient(

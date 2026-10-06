@@ -39,6 +39,16 @@ export function isPhiStackSignalMessage(value: unknown): value is PhiStackSignal
   );
 }
 
+/**
+ * The Stack instance id an address names: what a `stackMeta` message is keyed by, and what a stack-mode
+ * Choice compares it with to know the message is about its own Stack.
+ */
+export function readPhiStackSignalAddressKey(address: string | null | undefined): string | null {
+  return address?.startsWith("cms:")
+    ? readPhiCmsInstanceId(address.slice("cms:".length).split(":", 1)[0]) ?? null
+    : null;
+}
+
 export function resolvePhiStackSignalMessage(signal: PhiSignal): PhiStackSignalMessage | null {
   const value = signal.value;
   if (!isPhiRecord(value)) {
@@ -50,9 +60,7 @@ export function resolvePhiStackSignalMessage(signal: PhiSignal): PhiStackSignalM
   }
 
   const address = signal.receiver === "broadcast" ? signal.sender ?? null : signal.receiver ?? signal.sender ?? null;
-  const key = address?.startsWith("cms:")
-    ? readPhiCmsInstanceId(address.slice("cms:".length).split(":", 1)[0])
-    : null;
+  const key = readPhiStackSignalAddressKey(address);
   if (!key) {
     return null;
   }

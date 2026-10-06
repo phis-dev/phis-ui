@@ -1,9 +1,20 @@
-import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
+import {
+  PHI_SIGNAL_VALUE_SCHEMAS,
+  readPhiSignalRouteSet,
+  type PhiSignalRouteSet,
+} from "../../../../types/signals";
 import type { PhiRuntimeControllerDefinition } from "../../../../types/cms-plugins";
 import { PHI_LOCALIZATION_CONTROLLER_KEY,
   PHI_LOCALIZATION_CONTROLLER_PLUGIN_KEY } from "../controller/address";
 
-export type PhiLocalizationControllerConfig = Record<string, never>;
+export type PhiLocalizationControllerConfig = {
+  /**
+   * Who this Controller speaks to, written by the Page that mounts it: the edit Overlay, its Form, the
+   * save button, the source-locale field and the Table. It used to name those Widgets itself, so the
+   * Page could not be rearranged without the Controller going quiet (SIGNALS.md, "Button address").
+   */
+  signalRoutes: PhiSignalRouteSet | null;
+};
 
 export const PHI_LOCALIZATION_RUNTIME_CONTROLLER_DEFINITION = {
   kind: "controller",
@@ -12,7 +23,7 @@ export const PHI_LOCALIZATION_RUNTIME_CONTROLLER_DEFINITION = {
   title: "Localization Controller",
   description: "Module owner for locale and translation administration.",
   iconFamily: "localization",
-  allowedMountScopes: ["area"],
+  allowedMountScopes: ["page"],
   runtimeSignals: {
     emits: [
       {
@@ -37,6 +48,8 @@ export const PHI_LOCALIZATION_RUNTIME_CONTROLLER_DEFINITION = {
       { id: "targetSelection", action: "change", valueType: "string" },
       { id: "contextSelection", action: "change", valueType: "string" },
       { id: "statusSelection", action: "change", valueType: "string" },
+      { id: "sourceLocale", action: "change", valueType: "string" },
+      { id: "saveSubmitting", action: "change", valueType: "boolean" },
     ],
     listens: [
       { id: "locale", channel: "locale", action: "change", valueType: "string" },
@@ -80,6 +93,8 @@ export const PHI_LOCALIZATION_RUNTIME_CONTROLLER_DEFINITION = {
       },
     ],
   },
-  defaultConfig: {},
-  parseConfig: (): PhiLocalizationControllerConfig => ({}),
+  defaultConfig: { signalRoutes: null },
+  parseConfig: (raw): PhiLocalizationControllerConfig => ({
+    signalRoutes: readPhiSignalRouteSet(raw.signalRoutes),
+  }),
 } satisfies PhiRuntimeControllerDefinition<PhiLocalizationControllerConfig>;

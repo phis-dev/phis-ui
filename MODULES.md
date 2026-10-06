@@ -250,7 +250,9 @@ Their internal filenames are not ABI, but the same physical Server/live/Controls
 3. **Add a Controller only if the Module needs runtime coordination.** Then `controller/address.ts`
    (plugin key and address factory), `controller/definition.ts` (its signals — server-safe), and
    `controller/client.tsx`. Controller fields and the `Controller` Client are complete as one group or absent
-   as one group; a no-op Controller is worse than none.
+   as one group; a no-op Controller is worse than none. App, Accounting, Public, Admin, Editor and
+   Dashboard carry none since theirs answered nothing and rendered nothing on every page of their Areas;
+   the Form Builder's is the one still standing, kept for the Form Builder it waits on.
 
 4. **Write `module.ts`** — the definition plus the Controller definition, nothing else.
 

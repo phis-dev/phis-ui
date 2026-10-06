@@ -526,9 +526,16 @@ export function PhiTableWidgetClient({
     identities: readonly PhiTableRowIdentity[] = [],
     actionValue?: string | number | boolean | readonly string[] | readonly number[] | null,
     correlationId?: string,
+    /*
+     * The row a signal named, which need not be on the loaded page: the identity is what the action
+     * acts on, so it is carried as sent rather than looked up among the rows that happen to be shown.
+     */
+    requestedRowIdentity?: PhiTableRowIdentity | null,
   ) => {
     if (onAction?.({ action: action as PhiTableActionDefinition, row, actionValue, selectedRowIdentities: identities }) === true) return;
-    const rowIdentity = row && resource ? readRowIdentity(row, resource.rowIdentityPath) : null;
+    const rowIdentity = requestedRowIdentity !== undefined
+      ? requestedRowIdentity
+      : row && resource ? readRowIdentity(row, resource.rowIdentityPath) : null;
     const signalValue = {
       actionKey: action.key,
       rowIdentity,
@@ -597,6 +604,7 @@ export function PhiTableWidgetClient({
         request.selectedRowIdentities ?? [],
         request.actionValue,
         signal.correlationId,
+        request.rowIdentity ?? null,
       );
       if (action.confirm) {
         const templateValue = request.rowIdentity ?? request.selectedRowIdentities.length;

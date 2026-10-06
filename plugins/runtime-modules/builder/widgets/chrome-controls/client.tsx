@@ -11,6 +11,7 @@ import {
   usePhiDeveloperBuilderStateValue,
 } from "../../../../../plugins/runtime-modules/builder/developer-workspace-store";
 import { usePhiSignalDispatcher } from "../../../../../components/runtime/runtime-signal-bus";
+import { usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
 
 type PhiBuilderChromeControlsWidgetConfig = {
   editorPreviewDisabled?: boolean;
@@ -26,6 +27,7 @@ export function PhiBuilderChromeControlsWidgetClient({
   const area = usePhiDeveloperBuilderStateValue("public", (state) => state.area);
   const pageKey = usePhiDeveloperBuilderStateValue("public", (state) => state.pageKey);
   const emitSignal = usePhiSignalDispatcher();
+  const { sender } = usePhiSignalIdentity();
   const pathname = usePathname();
   const routeScope = useMemo(
     () =>
@@ -43,6 +45,7 @@ export function PhiBuilderChromeControlsWidgetClient({
   useEffect(() => {
     emitPhiBuilderChromeControlsSignal(
       emitSignal,
+      sender,
       routeScope,
       {
         editorPreviewDisabled,
@@ -54,6 +57,7 @@ export function PhiBuilderChromeControlsWidgetClient({
     return () => {
       emitPhiBuilderChromeControlsSignal(
         emitSignal,
+        sender,
         routeScope,
         {
           editorPreviewDisabled: false,
@@ -62,7 +66,7 @@ export function PhiBuilderChromeControlsWidgetClient({
         },
       );
     };
-  }, [actionsDisabled, debugDisabled, editorPreviewDisabled, emitSignal, routeScope]);
+  }, [actionsDisabled, debugDisabled, editorPreviewDisabled, emitSignal, routeScope, sender]);
 
   return null;
 }

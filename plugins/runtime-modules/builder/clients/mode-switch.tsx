@@ -12,7 +12,6 @@ import {
 } from "../../../../components/widgets/label-types/builder-chrome";
 import { usePhiControlSignalController } from "../../../../components/widgets/client/shared/phi-control-signals";
 import { usePhiConfig } from "../../../../components/root/phi-config-provider";
-import { createPhiBuilderControllerAddress } from "../controller/address";
 import { PhiFlexControl } from "../../../../components/controls/phi-flex-control";
 
 export function PhiBuilderModeSwitchWidgetClient({
@@ -31,7 +30,7 @@ export function PhiBuilderModeSwitchWidgetClient({
   const isDisabled = disabled || builderChromeControls.editorPreviewDisabled;
   const controlSignals = usePhiControlSignalController<string>({
     key: "builderMode",
-    sender: createPhiBuilderControllerAddress(),
+    // The Widget's own address: the Builder Controller does not answer what was sent under its own.
     signalRoutes: {
       emits: [
         {

@@ -264,4 +264,36 @@ assert.deepEqual(
   `A listener must name the addresses it reads for, or the bus holds their signals forever (AGENTS.md):\n  ${violations.join("\n  ")}`,
 );
 
+/**
+ * A Widget sends under its own address, never under a Controller's.
+ *
+ * A Controller answers nothing sent under its own address, because that is how it tells its own
+ * announcements from requests. The Builder's mode switch and chrome Widget sent as the Builder
+ * Controller, so the Controller could not do that: it took the workspace store's announcement of a
+ * chosen Page for a request and navigated a second time, and entered the Editor again on a failed
+ * Preview's restoring `builderMode`. The Widget's own address comes from its signal identity.
+ */
+const SENDS_AS_A_CONTROLLER = /sender:\s*create\w*ControllerAddress\(/u;
+/*
+ * Open: the Brand Controls Widget talks to the Theme Controller as the Theme Controller, and the Theme
+ * Controller has not been checked for what it would do with requests under their real sender.
+ */
+const SENDS_AS_A_CONTROLLER_OPEN = new Set([
+  "plugins/runtime-modules/theme/widgets/brand-controls/client.tsx",
+]);
+const impersonations = sourcePaths
+  .filter((path) => /\/(widgets|clients)\//u.test(path) && !SENDS_AS_A_CONTROLLER_OPEN.has(path))
+  .filter((path) => SENDS_AS_A_CONTROLLER.test(readFileSync(resolve(path), "utf8")));
+assert.deepEqual(
+  impersonations,
+  [],
+  `A Widget sends under its own address, not a Controller's (SIGNALS.md, "Addresses"):\n  ${impersonations.join("\n  ")}`,
+);
+for (const path of SENDS_AS_A_CONTROLLER_OPEN) {
+  assert.ok(
+    SENDS_AS_A_CONTROLLER.test(readFileSync(resolve(path), "utf8")),
+    `${path} no longer sends as a Controller; take it off the open list.`,
+  );
+}
+
 console.log(`Signal address contracts validated across ${sourcePaths.length} source files.`);

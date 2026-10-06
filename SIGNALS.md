@@ -106,6 +106,27 @@ two hundred deliveries a second, a dialog frozen mid-open, and a record that loo
 had been. `scripts/validate-signal-address-contracts.ts` refuses a Module Controller mount that restricts
 to neither.
 
+A Controller answers nothing sent under its own address. That is how it tells what it announced --
+the Builder's workspace store reports every state change it applied under the Builder Controller's
+address -- from what it is asked, and a Builder branch that took the announcement of a chosen Page for a
+request navigated a second time. The other side of the same rule: a Widget sends under its own address
+(its signal identity), never under a Controller's. The Builder's mode switch and chrome Widget did, and
+were indistinguishable from the Controller's own echo. `scripts/validate-signal-address-contracts.ts`
+refuses a `widgets/` or `clients/` file that sends as a Controller; the Theme Brand Controls are the one
+open exception.
+
+A listener that takes a broadcast which many senders put out reads which sender it is about. Every Stack
+answers `stackMeta` on the same broadcast, so a stack-mode Choice follows only the Stack its own
+`stackMeta` request is addressed to; one that took any answer showed the other Stack's options when a
+page had two.
+
+A Controller names no Widget instance. Whom it speaks to is a route the Page writes into its
+`controllerSettings` (`config.signalRoutes`), delivered with `dispatchPhiSignalCapability`; a Controller
+that wrote the ids of the Widgets it expected could only serve the one arrangement of them it was written
+for. Groups, Threads and Localization work this way. The Asset Controller (mounted for the Area, which
+gives it no config) and the Auth Controller (mounted by its step Widget's requirement, beside an Area
+Overlay) still name theirs.
+
 `sender` is a concrete address or `null` and is never `broadcast`; it is derived from the mounted
 instance. `receiver` is:
 
