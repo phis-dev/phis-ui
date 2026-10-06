@@ -58,6 +58,7 @@ function PhiCardInlineText({
       ariaLabel={PHI_CARD_TEXT_PLACEHOLDERS[slot]}
       placeholder={PHI_CARD_TEXT_PLACEHOLDERS[slot]}
       readOnly={!onCommit}
+      allowClear={onCommit != null}
       fitContent
       onFocus={() => setEditedText(text)}
       onChange={(nextText) => setEditedText(nextText)}
@@ -66,7 +67,12 @@ function PhiCardInlineText({
         if (committedText !== text) onCommit?.(committedText);
       }}
       onCancel={() => setEditedText(null)}
-      style={{ maxWidth: "100%" }}
+      /*
+       * The card's whole width, not the text's: a field as wide as its words leaves nothing to click
+       * into beside them, and its wrapping is the card's own anyway. The text still wraps and aligns as
+       * the card sets it.
+       */
+      style={{ width: "100%" }}
       /* The text's own type, and the page showing through: an edit in place reads like what it edits. */
       inputStyle={{
         paddingInline: 0,

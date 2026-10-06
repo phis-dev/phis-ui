@@ -35,6 +35,11 @@ export type PhiInlineTextEditorProps = {
    * less on an `i`, so a counted width cuts the tail off the very text it was counted from.
    */
   fitContent?: boolean;
+  /**
+   * An × at the end that empties the text. Emptied is written at once: the × can be pressed without the
+   * field having the focus, and then no blur would ever come to write it.
+   */
+  allowClear?: boolean;
 };
 
 function stopAtEditor(event: SyntheticEvent) {
@@ -67,6 +72,7 @@ export function PhiInlineTextEditor({
   inputStyle,
   collapsibleTitleControl,
   fitContent,
+  allowClear = false,
 }: PhiInlineTextEditorProps) {
   const cancelPendingRef = useRef(false);
 
@@ -114,7 +120,8 @@ export function PhiInlineTextEditor({
         readOnly={readOnly}
         variant={variant}
         size={size}
-        allowClear={false}
+        allowClear={allowClear}
+        {...(allowClear ? { onClear: () => onCommit("") } : {})}
         presentation={fitContent ? "textarea" : "input"}
         autoSize={fitContent ? true : undefined}
         /*
