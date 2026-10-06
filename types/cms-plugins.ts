@@ -264,6 +264,12 @@ export type PhiCmsConfigField =
        * field is narrow; the unit belongs to the value, so it stands where the value is.
        */
       prefix?: string;
+      /**
+       * A slider instead of a box, for a value that is felt rather than typed -- an opacity. It needs
+       * `min` and `max`; `suffix` stands after the value in the slider's tooltip.
+       */
+      presentation?: "slider";
+      suffix?: string;
     })
   | (PhiCmsConfigFieldBase & {
       type: "choice";

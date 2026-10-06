@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { PhiFlexControl } from "../../../../components/controls/phi-flex-control";
 import { PhiSegmentedControl } from "../../../../components/controls/phi-segmented-control";
 import { PhiSwitchControl } from "../../../../components/controls/phi-switch-control";
+import { PhiInspectorFieldRow } from "../../../../components/widgets/inspector-field-row";
 import { PhiTextControl } from "../../../../components/controls/phi-text-control";
 import { PhiTreeSelectControl } from "../../../../components/controls/phi-tree-select-control";
 import {
@@ -81,13 +82,19 @@ export function PhiInspectorLinkTargetFieldControl({
     [labels.landingPage, pages, state.area],
   );
 
-  const newTab = target?.newTab === true;
+  /*
+   * The switch stands from the moment the author answers "Address", not only once an address is
+   * complete: it is part of the question. Until there is a target to carry it, its answer waits here.
+   */
+  const [pendingNewTab, setPendingNewTab] = useState(false);
+  const newTab = target ? target.newTab === true : pendingNewTab;
   const withNewTab = <TTarget extends PhiLinkTarget>(next: TTarget) =>
     (newTab ? { ...next, newTab: true } : next);
 
   const changeMode = (nextMode: PhiInspectorLinkTargetMode) => {
     setMode(nextMode);
     setDraftHref("");
+    setPendingNewTab(false);
     onChange?.(undefined);
   };
 
@@ -140,15 +147,23 @@ export function PhiInspectorLinkTargetFieldControl({
         * Only for an address elsewhere. A Page of the Site opens where the reader is, by the client
         * router -- a new tab would leave the Site's own navigation for a second copy of it.
         */}
-      {target?.kind === "external" ? (
-        <PhiSwitchControl
-          checked={newTab}
-          label={labels.newTab}
-          disabled={disabled || !onChange}
-          onChange={(checked) => onChange?.(checked
-            ? { ...target, newTab: true }
-            : { ...target, newTab: undefined })}
-        />
+      {/* A row like every switch in the Inspector: its words on the left, the switch in the control column. */}
+      {mode === "external" ? (
+        <PhiInspectorFieldRow label={labels.newTab}>
+          <PhiFlexControl align="center" style={{ minHeight: "var(--ant-control-height)" }}>
+            <PhiSwitchControl
+              checked={newTab}
+              disabled={disabled || !onChange}
+              onChange={(checked) => {
+                if (target?.kind !== "external") {
+                  setPendingNewTab(checked);
+                  return;
+                }
+                onChange?.(checked ? { ...target, newTab: true } : { ...target, newTab: undefined });
+              }}
+            />
+          </PhiFlexControl>
+        </PhiInspectorFieldRow>
       ) : null}
     </PhiFlexControl>
   );

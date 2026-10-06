@@ -95,6 +95,7 @@ export async function PhiCardWidget({
     image: presentation.url
       ? {
           presentation,
+          ...(config?.imageOpacity == null ? {} : { opacity: config.imageOpacity / 100 }),
           source: config?.sourceKind === "asset" ? "asset" : "url",
           alt: (config?.alt ?? resolvedAsset?.altText ?? "").trim(),
           blurDataUrl: resolvedAsset?.blurDataUrl ?? null,

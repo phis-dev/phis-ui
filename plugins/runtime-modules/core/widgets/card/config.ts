@@ -58,6 +58,8 @@ export type PhiCmsCardWidgetConfig = PhiCmsWidgetConfigBase & PhiCardImageSource
   iconBackground?: string;
   /** The picture's words for a reader who cannot see it; an Asset brings its own. */
   alt?: string;
+  /** How much of the picture shows, in percent; the card's ground shows through the rest. */
+  imageOpacity?: number;
   /** Where the whole card leads. */
   linkTarget?: PhiLinkTarget;
   /**
@@ -78,6 +80,10 @@ export type PhiCmsCardWidgetConfig = PhiCmsWidgetConfigBase & PhiCardImageSource
   hoverEffect?: PhiCardHoverEffect;
   signalRoutes?: PhiSignalRouteSet;
 };
+
+function readPhiCardImageOpacity(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : undefined;
+}
 
 function readChoice<T extends string>(value: unknown, choices: readonly T[]): T | undefined {
   return choices.includes(value as T) ? value as T : undefined;
@@ -100,6 +106,7 @@ export function parsePhiCmsCardWidgetConfig(config: Record<string, unknown>): Ph
     iconColor: readString(config.iconColor),
     iconBackground: readString(config.iconBackground),
     alt: readString(config.alt),
+    imageOpacity: readPhiCardImageOpacity(config.imageOpacity),
     linkTarget: readPhiLinkTarget(config.linkTarget) ?? undefined,
     actionEnabled: readBoolean(config.actionEnabled),
     actionLabel: readPhiControlLabel(config.actionLabel),
@@ -122,6 +129,7 @@ export function parsePhiCmsCardWidgetConfig(config: Record<string, unknown>): Ph
 
 const PHI_CARD_DEFAULT_CONFIG = {
   body: "text",
+  imageOpacity: 100,
   headingLevel: "h3",
   textAlign: "start",
 } satisfies Partial<PhiCmsCardWidgetConfig>;
@@ -194,6 +202,16 @@ export const PHI_CARD_WIDGET_DEFINITION = {
       ],
     },
     { key: "image", type: "image", heading: "Image", label: "Image" },
+    {
+      key: "imageOpacity",
+      type: "number",
+      label: "Opacity",
+      presentation: "slider",
+      min: 0,
+      max: 100,
+      step: 5,
+      suffix: "%",
+    },
     /* The icon and where it stands, under one divider: what else an icon will need goes here as well. */
     { key: "icon", type: "icon", heading: "Icon", label: "Icon" },
     {

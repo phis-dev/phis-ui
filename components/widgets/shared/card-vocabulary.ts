@@ -16,11 +16,13 @@
 export type PhiCardWidgetBody = "text" | "stat";
 
 /**
- * The tag of the card's heading, apart from how large it is drawn.
+ * The tag of the card's heading, and the step it is drawn at.
  *
  * A card's heading is a heading in the page's outline, and which rung it stands on depends on the page
- * around it, not on how large the card is. `h3` is the default: a card usually stands under a section's
- * `h2`. A Theme that gives headings their own font reaches `h1` to `h3`; an `h4` card keeps the body font.
+ * around it. `h3` is the default: a card usually stands under a section's `h2`. The level also sets the
+ * size, a step up or down within the variant's scale -- a heading that changed rung and not size was a
+ * setting nobody could see. A Theme that gives headings their own font reaches `h1` to `h3`; an `h4`
+ * card keeps the body font.
  */
 export const PHI_CARD_HEADING_LEVELS = ["h2", "h3", "h4"] as const;
 export type PhiCardHeadingLevel = (typeof PHI_CARD_HEADING_LEVELS)[number];

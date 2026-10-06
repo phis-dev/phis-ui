@@ -43,6 +43,7 @@ import { PhiNumberControl } from "../../../../components/controls/phi-number-con
 import { PhiMultiSelectControl } from "../../../../components/controls/phi-multi-select-control";
 import { PhiSelectControl } from "../../../../components/controls/phi-select-control";
 import { PhiSwitchControl } from "../../../../components/controls/phi-switch-control";
+import { PhiSliderControl } from "../../../../components/controls/phi-slider-control";
 import { PhiButtonControl } from "../../../../components/controls/phi-button-control";
 import { PhiWidgetIconPickerButton } from "../../../../components/widgets/client/shared/phi-widget-icon-picker";
 import { usePhiWidgetScaffoldPopup } from "../../../../components/widgets/client/shared/phi-widget-scaffold-popup";
@@ -91,6 +92,49 @@ export function renderPhiInspectorSettingsRow(label: ReactNode, control: ReactNo
  * alignment it sat above the text's centre line. Centred in the same height it sits where the Corner
  * radius header puts its switch, and the switches of a Widget line up.
  */
+/*
+ * A slider moved by hand writes once, where it is let go: the Builder's history records the change and
+ * not every step of the drag. While it moves it shows its own position, which the stored value does not
+ * have yet.
+ */
+function PhiInspectorSliderField({
+  value,
+  min,
+  max,
+  step,
+  suffix,
+  disabled,
+  onCommit,
+}: {
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  suffix?: string;
+  disabled?: boolean;
+  onCommit: (value: number) => void;
+}) {
+  const [dragged, setDragged] = useState<number | null>(null);
+  return (
+    <PhiFlexControl align="center" style={{ minHeight: "var(--ant-control-height)", width: "100%" }}>
+      <PhiSliderControl
+        value={dragged ?? value}
+        min={min}
+        max={max}
+        step={step}
+        {...(suffix ? { tooltipSuffix: suffix } : {})}
+        disabled={disabled}
+        style={{ width: "100%", marginInline: 6 }}
+        onChange={setDragged}
+        onChangeComplete={(next) => {
+          setDragged(null);
+          if (next !== value) onCommit(next);
+        }}
+      />
+    </PhiFlexControl>
+  );
+}
+
 export function renderPhiInspectorSwitchRow({
   key,
   label,
@@ -1325,6 +1369,21 @@ function renderPhiInspectorConfigFieldBody({
         min={field.min}
         disabled={disabled || !onChange}
         onChange={(next) => onChange?.({ [field.key]: next.length > 0 ? next : undefined })}
+      />,
+    );
+  }
+
+  if (field.type === "number" && field.presentation === "slider") {
+    return renderPhiInspectorConfigFieldControl(
+      field,
+      <PhiInspectorSliderField
+        value={typeof value === "number" ? value : typeof defaultValue === "number" ? defaultValue : (field.max ?? 100)}
+        min={field.min ?? 0}
+        max={field.max ?? 100}
+        step={field.step ?? 1}
+        {...(field.suffix ? { suffix: field.suffix } : {})}
+        disabled={disabled || !onChange}
+        onCommit={(nextValue) => onChange?.({ [field.key]: nextValue })}
       />,
     );
   }

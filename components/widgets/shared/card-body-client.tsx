@@ -62,6 +62,8 @@ export type PhiCardWidgetClientBinding = {
 /** The card's picture, already resolved: which bytes, how they are framed, how they may arrive. */
 export type PhiCardWidgetImage = {
   presentation: PhiImagePresentation;
+  /** 0 to 1; absent is the whole picture. */
+  opacity?: number;
   source: PhiImageControlSource;
   alt: string;
   blurDataUrl?: string | null;
@@ -130,7 +132,11 @@ export type PhiCardWidgetClientProps = PhiClientBlockBaseProps<
 type PhiCardVariantMetrics = {
   inset: number;
   gap: number;
-  headingSize: number | string;
+  /**
+   * The heading's size and line height per level: the Theme's own size for that level, and in a
+   * compact card the next smaller one.
+   */
+  headingType: Record<PhiCardHeadingLevel, { fontSize: number | string; lineHeight: number | string }>;
   descriptionSize: number | string;
   iconSize: number;
   topIconSize: number;
@@ -154,7 +160,11 @@ const PHI_CARD_VARIANT_METRICS: Record<PhiCardVariant, (token: PhiThemeTokens) =
   default: (token) => ({
     inset: token.padding,
     gap: token.paddingSM,
-    headingSize: token.fontSizeHeading4,
+    headingType: {
+      h2: { fontSize: token.fontSizeHeading2, lineHeight: token.lineHeightHeading2 },
+      h3: { fontSize: token.fontSizeHeading3, lineHeight: token.lineHeightHeading3 },
+      h4: { fontSize: token.fontSizeHeading4, lineHeight: token.lineHeightHeading4 },
+    },
     descriptionSize: token.fontSizeLG,
     iconSize: 24,
     topIconSize: 40,
@@ -163,7 +173,11 @@ const PHI_CARD_VARIANT_METRICS: Record<PhiCardVariant, (token: PhiThemeTokens) =
   compact: (token) => ({
     inset: token.paddingSM,
     gap: token.paddingXS,
-    headingSize: token.fontSizeHeading5,
+    headingType: {
+      h2: { fontSize: token.fontSizeHeading3, lineHeight: token.lineHeightHeading3 },
+      h3: { fontSize: token.fontSizeHeading4, lineHeight: token.lineHeightHeading4 },
+      h4: { fontSize: token.fontSizeHeading5, lineHeight: token.lineHeightHeading5 },
+    },
     descriptionSize: token.fontSize,
     iconSize: 20,
     topIconSize: 32,
@@ -227,7 +241,7 @@ export function PhiCardWidgetClient({
   const variant = config?.variant ?? "default";
   const body = config?.body ?? "text";
   const metrics = (PHI_CARD_VARIANT_METRICS[variant] ?? PHI_CARD_VARIANT_METRICS.default)(token);
-  const { inset, gap, headingSize, descriptionSize, iconSize, topIconSize, buttonSize } = metrics;
+  const { inset, gap, headingType, descriptionSize, iconSize, topIconSize, buttonSize } = metrics;
   const textAlign = metrics.arrangement?.textAlign ?? config?.textAlign ?? "start";
   const headingLevel = config?.headingLevel ?? "h3";
   const iconPlacement = metrics.arrangement?.iconPlacement ?? config?.iconPlacement ?? "inline";
@@ -295,7 +309,7 @@ export function PhiCardWidgetClient({
     <PhiTypographyControl
       presentation="title"
       level={Number(headingLevel.slice(1)) as 2 | 3 | 4}
-      style={{ margin: 0, fontSize: headingSize, color: token.colorTextHeading, ...slotWidth }}
+      style={{ margin: 0, ...headingType[headingLevel], color: token.colorTextHeading, ...slotWidth }}
     >
       {linked(title)}
     </PhiTypographyControl>
@@ -374,7 +388,11 @@ export function PhiCardWidgetClient({
         blurDataUrl={image.blurDataUrl}
         optimizable={image.optimizable}
         style={{ width: "100%", height: "100%" }}
-        imageStyle={{ width: "100%", height: "100%" }}
+        imageStyle={{
+          width: "100%",
+          height: "100%",
+          ...(image.opacity == null || image.opacity >= 1 ? {} : { opacity: image.opacity }),
+        }}
       />
       {iconAtTop && iconName ? (
         <span

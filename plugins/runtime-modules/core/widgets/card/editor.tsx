@@ -168,6 +168,7 @@ export function PhiCardWidgetEditor({ config, onChange }: PhiCardWidgetEditorPro
           image: presentation.url
             ? {
                 presentation,
+                ...(config.imageOpacity == null ? {} : { opacity: config.imageOpacity / 100 }),
                 source: config.sourceKind === "asset" ? "asset" : "url",
                 alt: config.alt ?? asset?.altText ?? "",
                 blurDataUrl: asset?.blurDataUrl ?? null,
