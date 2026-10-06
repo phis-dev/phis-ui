@@ -1,6 +1,7 @@
 import { forbidden, notFound, redirect, unauthorized } from "next/navigation";
 
 import { PhiCmsFlags, PhiCmsRegionType } from "../../constants/phi-cms";
+import { hasPhiFlag } from "../../helpers/flags";
 import { hasPhiConfigFlag } from "../../helpers/flags";
 import type { PhiResolvedCmsAreaPresetTree } from "../../types/cms";
 import type { PhiCmsSiteBridge } from "../../types/cms-plugins";
@@ -91,15 +92,16 @@ function readPhiShellChromePaneBand(config: unknown): PhiShellChromePaneBand {
     return null;
   }
 
-  const { sticky, offsetTop, size } = config as {
-    sticky?: unknown;
+  const { flags, offsetTop, size } = config as {
+    flags?: unknown;
     offsetTop?: unknown;
     size?: { height?: unknown } | null;
   };
   const height = size?.height;
 
   return {
-    sticky: sticky === true,
+    // A bit in the Region's `flags` since S6, as every other reader of it has it.
+    sticky: hasPhiFlag(typeof flags === "number" ? flags : 0, PhiCmsFlags.Sticky),
     offsetTop: typeof offsetTop === "string" || typeof offsetTop === "number" ? offsetTop : null,
     height: typeof height === "string" || typeof height === "number" ? height : null,
   };
