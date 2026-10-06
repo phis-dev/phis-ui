@@ -16,7 +16,10 @@ The translation helpers are server-only and exported from `@phis/ui/server-helpe
 - `tr(msg, params?, ctx?, format?)` and `trForLocale(locale, msg, params?, ctx?, format?)` translate one
   Site-scoped message.
 - `trBulk(msgs, ctx?, format?, sourceLocale?)` and `trBulkForLocale(locale, msgs, ctx?, format?, sourceLocale?)`
-  translate several Site-scoped messages in one request and keep their order.
+  translate several Site-scoped messages in one request and keep their order: one answer per message,
+  at its position. An empty message is answered with an empty text and not sent, so a caller may match
+  answers by index (`gateway/tr.ts`). Dropping it, as the batch once did, moved every later answer onto
+  the wrong message.
 - `trGlobal(msg, params?, ctx?, format?)`, `trGlobalForLocale(...)`, `trGlobalBulk(msgs, ctx?, format?)`,
   and `trGlobalBulkForLocale(...)` translate global Phi copy, whose source locale is always `en`
   (`PHI_CANONICAL_SOURCE_LOCALE`). A request for `en` returns the source text without a request.

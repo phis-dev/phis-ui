@@ -46,8 +46,7 @@ export async function localizePhiBuilderModuleAuthoringCatalog(
   }
 
   if (pending.size > 0) {
-    // Only what has words: `trBulk` leaves empty messages out of its answer, which would shift the rest.
-    const sources = [...pending].filter((text) => text.trim().length > 0);
+    const sources = [...pending];
     const translator = createGlobalTranslator({
       apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
       internalToken: readPhiServerApiCredentials().internalToken,

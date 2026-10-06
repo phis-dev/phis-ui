@@ -18,15 +18,14 @@ import { readPhiServerApiCredentials } from "../../helpers/phis-server-credentia
  * whatever the first request got -- a provisional answer, or the source text after a failed batch --
  * until the process restarted.
  *
- * Answers are matched to their text, not to a position: `trBulk` leaves empty messages out of what it
- * answers, so a Module without a description would have shifted every description after it.
+ * Each text is asked for once, however many Modules share it, and the answers are looked up by text.
  */
 async function translateTexts(
   translator: ReturnType<typeof createGlobalTranslator>,
   texts: readonly string[],
   ctx: string,
 ) {
-  const sources = [...new Set(texts.map((text) => text.trim()).filter(Boolean))];
+  const sources = [...new Set(texts.map((text) => text.trim()))];
   const translated = await translator.trBulk(sources, ctx);
   return new Map(sources.map((source, index) => [source, translated[index] ?? source]));
 }

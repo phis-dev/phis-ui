@@ -3,10 +3,7 @@
 import { useState } from "react";
 
 import { usePhiConfirmDialog } from "../../../../components/controls/phi-confirm-dialog";
-import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
-import { usePhiSignalDispatcher } from "../../../../components/runtime/runtime-signal-bus";
 import { usePhiApplicationFeedback } from "../../../../components/runtime/use-phi-application-feedback";
-import { createPhiBuilderControllerAddress } from "../controller/address";
 import type { PhiBuilderSavedHistoryHead } from "./draft-status-controller";
 import { createPhiDefaultAreaRuntimeModuleIds } from "../../area-module-defaults";
 import { getPhiBuilderDefaultRegionDraft } from "../region-defaults";
@@ -123,7 +120,6 @@ export function usePhiBuilderDraftCommandController({
    */
   const { confirm, confirmDialog } = usePhiConfirmDialog();
   const { showMessage } = usePhiApplicationFeedback();
-  const dispatchSignal = usePhiSignalDispatcher();
   const builderModuleMetas = usePhiBuilderModuleMetas(effectiveArea);
   const [activeDraftAction, setActiveDraftAction] = useState<PhiDeveloperBuilderToolbarCommand | null>(null);
   const currentPageTree = resolvePhiBuilderActivePageCatalog(
@@ -692,18 +688,12 @@ export function usePhiBuilderDraftCommandController({
             navKey: effectiveNavKey,
           }));
           reportSaved("published", null, captureHistoryHead());
-          dispatchSignal({
-            scope: "area",
-            channel: "navigation",
-            action: "reload",
-            value: {
-              navKey: effectiveNavKey,
-            },
-            valueType: "json",
-            valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.builderNavigation,
-            sender: createPhiBuilderControllerAddress(),
-            receiver: createPhiBuilderControllerAddress(),
-          });
+          /*
+           * Clearing the Draft is the reload: the Navigation table re-reads a scope with no Draft from
+           * Core, which is the published tree now, and the canvas falls back to the surface. This sent a
+           * `navigation/reload` to the Controller's own address once, which nothing ever answered -- and
+           * a Controller does not hear its own echo (SIGNALS.md, "Addresses").
+           */
           showMessage({ level: "success", content: "Reset navigation draft." });
         } catch (error) {
           showMessage({ level: "error", content: error instanceof Error ? error.message : "Navigation reset failed." });

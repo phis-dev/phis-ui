@@ -46,6 +46,18 @@ describe("tr and trBulk", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
+  // An empty message is answered in its place, so the answers after it stay on their own messages.
+  it("answers an empty message in its place without asking for it", async () => {
+    const fetchMock = answer({ translations: ["Titel", "Weg"] });
+    vi.stubGlobal("fetch", fetchMock);
+
+    expect(await trBulk(options, ["Title", "", "  ", "Away"])).toEqual(["Titel", "", "", "Weg"]);
+    const body = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body)) as { msgs: string[] };
+    expect(body.msgs).toEqual(["Title", "Away"]);
+    expect(await trBulk(options, ["", " "])).toEqual(["", ""]);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it("does not keep an answer read before the cache was cleared", async () => {
     let release: () => void = () => {};
     const fetchMock = vi.fn(async (_url: string | URL, _init?: RequestInit) => {

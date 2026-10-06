@@ -198,6 +198,14 @@ export async function tr(
   return formatPhiTranslation(payload.translation, params);
 }
 
+/**
+ * Translates a batch, answering one text per message asked, in the same order.
+ *
+ * An empty message (or one of blanks only) is answered with an empty text and never sent: there is
+ * nothing to translate, and phis-server has no answer for it. Leaving it out of the answer instead, as
+ * this once did, shifted every later answer onto the wrong message -- a Card without a title showed its
+ * description as its title, and a Label Set with one empty entry refused to load.
+ */
 export async function trBulk(
   options: PhiGlobalTranslatorOptions | PhiSiteTranslatorOptions,
   msgs: string[],
@@ -210,11 +218,23 @@ export async function trBulk(
     assertGlobalTranslatorOptions(options);
   }
 
-  const normalizedMessages = msgs.map((msg) => msg.trim()).filter(Boolean);
-  if (normalizedMessages.length === 0) {
-    return [] as string[];
+  const trimmedMessages = msgs.map((msg) => msg.trim());
+  const presentMessages = trimmedMessages.filter(Boolean);
+  if (presentMessages.length === 0) {
+    return trimmedMessages;
   }
+  const translatedMessages = await translatePresentMessages(options, presentMessages, ctx, format);
+  let next = 0;
+  return trimmedMessages.map((msg) => (msg ? translatedMessages[next++]! : ""));
+}
 
+/** `trBulk` for messages that all have words: one answer per message, in order. */
+async function translatePresentMessages(
+  options: PhiGlobalTranslatorOptions | PhiSiteTranslatorOptions,
+  normalizedMessages: string[],
+  ctx: string | undefined,
+  format: PhiTranslationFormat,
+) {
   const locale = options.locale.trim().toLowerCase();
   const sourceLocale = options.sourceLocale?.trim();
   const context = ctx?.trim() ? ctx.trim() : undefined;

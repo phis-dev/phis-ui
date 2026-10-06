@@ -78,8 +78,12 @@ export async function trGlobal(
   return trGlobalForLocale(locale, msg, params, ctx, format);
 }
 
+/**
+ * Trimmed, one per message and in order: an empty message stays in its place, and `trBulk` answers it
+ * with an empty text, so every answer lines up with the message it belongs to.
+ */
 function normalizeMessages(msgs: string[]) {
-  return msgs.map((msg) => msg.trim()).filter(Boolean);
+  return msgs.map((msg) => msg.trim());
 }
 
 export async function trForLocale(
@@ -155,8 +159,8 @@ export async function trBulkForLocale(
   sourceLocale?: string,
 ) {
   const normalizedMessages = normalizeMessages(msgs);
-  if (normalizedMessages.length === 0) {
-    return [] as string[];
+  if (!normalizedMessages.some(Boolean)) {
+    return normalizedMessages;
   }
 
   const locale = resolvePhiTranslationLocale(localeInput);
@@ -185,8 +189,8 @@ export async function trGlobalBulkForLocale(
   format: PhiTranslationFormat = "text",
 ) {
   const normalizedMessages = normalizeMessages(msgs);
-  if (normalizedMessages.length === 0) {
-    return [] as string[];
+  if (!normalizedMessages.some(Boolean)) {
+    return normalizedMessages;
   }
 
   const locale = resolvePhiTranslationLocale(localeInput);

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 import ts from "typescript";
@@ -151,4 +151,39 @@ assert.deepEqual(
   `The Builder Controller's listens and its listeners disagree (SIGNALS.md, "Capabilities and routes"):\n  ${[...undeclared, ...unanswered].join("\n  ")}`,
 );
 
-console.log(`validate-controller-listen-declarations: ${branches.length} branches, ${declared.length} declared listens agree.`);
+/*
+ * A signal the Controller addresses to itself is never answered: its listeners drop what comes under
+ * its own address (SIGNALS.md, "Addresses"). The Effects editor's commit and the Navigation reset each
+ * sent one, and both did nothing; the Controller acts on its own state directly instead.
+ */
+const CONTROLLER_DIRECTORY = "plugins/runtime-modules/builder/controller";
+const selfAddressed: string[] = [];
+for (const entry of readdirSync(path.join(repositoryRoot, CONTROLLER_DIRECTORY))) {
+  if (!/\.tsx?$/.test(entry) || /\.test\.tsx?$/.test(entry)) continue;
+  const relativePath = `${CONTROLLER_DIRECTORY}/${entry}`;
+  const source = readFileSync(path.join(repositoryRoot, relativePath), "utf8");
+  const sourceFile = ts.createSourceFile(relativePath, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  forEachDescendant(sourceFile, (node) => {
+    if (!ts.isObjectLiteralExpression(node)) return;
+    const property = (name: string) => node.properties.find((candidate): candidate is ts.PropertyAssignment =>
+      ts.isPropertyAssignment(candidate) && ts.isIdentifier(candidate.name) && candidate.name.text === name);
+    const receiver = property("receiver");
+    if (!receiver || !property("channel")) return;
+    const initializer = receiver.initializer;
+    if (
+      ts.isCallExpression(initializer) &&
+      ts.isIdentifier(initializer.expression) &&
+      initializer.expression.text === "createPhiBuilderControllerAddress"
+    ) {
+      const line = sourceFile.getLineAndCharacterOfPosition(node.getStart()).line + 1;
+      selfAddressed.push(`${relativePath}:${line} sends a signal to the Builder Controller's own address.`);
+    }
+  });
+}
+assert.deepEqual(
+  selfAddressed,
+  [],
+  `The Builder Controller signals itself, which it never hears (SIGNALS.md, "Addresses"):\n  ${selfAddressed.join("\n  ")}`,
+);
+
+console.log(`validate-controller-listen-declarations: ${branches.length} branches, ${declared.length} declared listens agree; no self-addressed signal.`);
