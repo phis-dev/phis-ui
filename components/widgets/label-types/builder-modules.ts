@@ -43,6 +43,11 @@ export type PhiBuilderModulesPageLabels = {
     category: string;
     hint: string;
   };
+  /** An installed Module whose server half this Site does not provide; %1 names what is missing. */
+  serverUnavailable: {
+    category: string;
+    hint: string;
+  };
   /** What switching a Module off stops drawing. */
   usage: {
     title: string;
@@ -123,6 +128,10 @@ export const PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS: PhiBuilderModulesPageLabel
   missing: {
     category: "Not in this build",
     hint: "This Site activates the Module, this build does not have it. The next save drops it.",
+  },
+  serverUnavailable: {
+    category: "Server part missing",
+    hint: "The server does not provide what this Module needs (%1), so it runs in no Area. It switches on once the server does.",
   },
   usage: {
     title: "This Module draws on pages",

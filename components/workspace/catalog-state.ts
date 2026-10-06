@@ -22,6 +22,13 @@ export type PhiWorkspaceCatalogArea = PhiBuilderAreaKey;
  * the Editor will feed the same thing once it hosts a workspace of its own. Keeping it here is what
  * lets a Module like revisions read it without importing the Builder.
  */
+/** Why an installed Module does not run here: its provider, and the capabilities it lacks. */
+export type PhiWorkspaceServerUnavailableModule = {
+  providerId: string;
+  diagnosticCode: string;
+  missingCapabilities: readonly string[];
+};
+
 export type PhiWorkspaceCatalogState = {
   /** The Area being worked on. */
   area: PhiWorkspaceCatalogArea;
@@ -49,6 +56,13 @@ export type PhiWorkspaceCatalogState = {
    * them so that both facts are visible before that happens.
    */
   unresolvedModuleIdsByArea: Partial<Record<PhiWorkspaceCatalogArea, PhiRuntimeModuleId[]>>;
+  /**
+   * Installed Modules whose server half is not there on this Site, and what is missing.
+   *
+   * Such a Module is off in every Area whatever the selection says (MODULES.md, "Server binding"), and a
+   * workspace that drew it like any other would show a switch that does nothing -- so it shows why.
+   */
+  serverUnavailableModules: Partial<Record<PhiRuntimeModuleId, PhiWorkspaceServerUnavailableModule>>;
   /**
    * Every Public address an installed Module would answer on, switched on or not.
    *

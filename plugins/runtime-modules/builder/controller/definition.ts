@@ -22,6 +22,7 @@ import type {
 import { PHI_DRAG_SOURCE_CONTROL_SIGNALS } from "../../../../components/widgets/signals/control-signal-capabilities";
 import { PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS } from "../../../../components/widgets/label-types/builder-chrome";
 import type { PhiCmsTreeControllerSettings } from "../../../../types/cms";
+import type { PhiWorkspaceCatalogState } from "../../../../components/workspace/catalog-state";
 
 /**
  * Whom the Builder Controller answers into, from the trees that hold the receivers.
@@ -82,6 +83,7 @@ export type PhiBuilderRuntimeControllerPreload = {
   runtimeModuleDefinitions: PhiRuntimeModuleDefinition[];
   runtimeModuleIdsByArea: Record<string, PhiRuntimeModuleId[]>;
   unresolvedModuleIdsByArea: Record<string, PhiRuntimeModuleId[]>;
+  serverUnavailableModules: PhiWorkspaceCatalogState["serverUnavailableModules"];
   publicRouteClaims: readonly PhiPublicRouteClaim[];
   publicRoutePaths: readonly PhiPublicRoutePathAssignment[];
   areaRootRoutesByArea: Record<string, PhiAreaRootRoute | null>;
@@ -151,29 +153,15 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_DEFINITION = {
         action: "change",
         valueType: "boolean",
       },
-      {
-        id: "effectsCommit",
-        action: "change",
-        valueType: "json",
-        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
-      },
-      { id: "effectsCancel", action: "close", valueType: "none" },
       { id: "effectsSubmitting", action: "change", valueType: "boolean" },
-      {
-        id: "pagesVisibility",
-        action: "change",
-        valueType: "boolean",
-      },
       {
         id: "siderLayout",
         action: "change",
         valueType: "boolean",
       },
-      {
-        id: "commandEnabled",
-        action: "change",
-        valueType: "boolean",
-      },
+      // Whether the toolbar's undo and redo can act, from the history the Controller keeps.
+      { id: "undoEnabled", action: "change", valueType: "boolean" },
+      { id: "redoEnabled", action: "change", valueType: "boolean" },
       { id: "overlayTitle", action: "change", valueType: "string" },
       { id: "commandLabel", action: "change", valueType: "string" },
       { id: "pageMetaSubmitting", action: "change", valueType: "boolean" },
@@ -289,12 +277,6 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_DEFINITION = {
         valueType: "boolean",
       },
       {
-        id: "pagesVisibility",
-        channel: "pagesVisibility",
-        action: "change",
-        valueType: "boolean",
-      },
-      {
         id: "runtimeModules",
         channel: "runtimeModules",
         action: "change",
@@ -316,6 +298,21 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_DEFINITION = {
       { id: "effectsCommand", channel: "effects", action: "activate", valueType: "string" },
       { id: "effectsOpen", channel: "effects", action: "change", valueType: "none" },
       { id: "effectsCancel", channel: "effects", action: "close", valueType: "none" },
+      {
+        id: "effectsCloseRequest",
+        channel: "effects",
+        action: "close",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.overlayCloseRequest,
+      },
+      // The Transparency while it is dragged, drawn on the node and written nowhere.
+      {
+        id: "effectsPreview:appearance",
+        channel: "effectsPreview:appearance",
+        action: "change",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
+      },
       { id: "effectsVisibility", channel: "effectsVisibility", action: "change", valueType: "boolean" },
       ...(["appearance", "transitions", "viewport"] as const).map((section) => ({
         id: `effectsValues:${section}`,
@@ -344,6 +341,51 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_DEFINITION = {
       {
         id: "moduleTableAction",
         channel: "moduleTableAction",
+        action: "activate",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
+      },
+      // The answers of the dialogs the Controller opens before it changes the Module selection.
+      { id: "moduleUsage", channel: "moduleUsage", action: "activate", valueType: "string" },
+      { id: "publicRoutes", channel: "publicRoutes", action: "activate", valueType: "string" },
+      // The Navigation Table's binding, which names the Navigation being edited.
+      {
+        id: "bindingParams",
+        channel: "bindingParams",
+        action: "change",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableBindingParams,
+      },
+      { id: "debugScaffold", channel: "debugScaffold", action: "change", valueType: "boolean" },
+      // The Area settings dialog: its commands and its Form's submitted values.
+      { id: "areaSettings", channel: "areaSettings", action: "activate", valueType: "string" },
+      {
+        id: "areaSettingsValues",
+        channel: "areaSettingsForm",
+        action: "change",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
+      },
+      // The wiring dialog: apply and cancel, its close requests, its submitted Form, and a route deleted.
+      { id: "signalWiringCommand", channel: "signalWiring", action: "activate", valueType: "string" },
+      { id: "signalWiringClose", channel: "signalWiring", action: "close", valueType: "none" },
+      {
+        id: "signalWiringCloseRequest",
+        channel: "signalWiring",
+        action: "close",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.overlayCloseRequest,
+      },
+      {
+        id: "signalWiringSubmitted",
+        channel: "signalWiringForm",
+        action: "change",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
+      },
+      {
+        id: "signalWiringRouteAction",
+        channel: "signalWiringRoutes",
         action: "activate",
         valueType: "json",
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,

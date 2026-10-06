@@ -114,10 +114,11 @@ function resolveModuleBaseAreaKey(moduleId: string): PhiCmsAreaKey | null {
   return null;
 }
 
-function buildRuntimeModuleRows(
+export function buildRuntimeModuleRows(
   state: PhiDeveloperBuilderWorkspaceState,
   categoryLabels: Record<string, string> | null,
   view: PhiRuntimeModulesTableView,
+  serverUnavailableLabels: { category: string; hint: string } | null,
 ) {
   return state.runtimeModuleDefinitions
     .filter((definition) =>
@@ -125,6 +126,28 @@ function buildRuntimeModuleRows(
       (view.areaFilter == null || definition.eligibleAreas.includes(view.areaFilter)) &&
       (readPhiRuntimeModuleCategory(definition.category) === "foundation") === view.showFoundation)
     .map((definition) => {
+      /*
+       * Installed, and its server half is not there: it runs in no Area whatever is selected, so the row
+       * says why and offers nothing to switch -- the selection stays as it is and takes effect the day
+       * the server provides what is missing.
+       */
+      const unavailable = state.serverUnavailableModules?.[definition.moduleId];
+      if (unavailable) {
+        return {
+          moduleId: definition.moduleId,
+          active: false,
+          locked: true,
+          icon: definition.icon ?? (definition.iconFamily ? `@phis/ui/widgets:${definition.iconFamily}` : ""),
+          title: definition.title,
+          description: (serverUnavailableLabels?.hint ??
+            "The server does not provide what this Module needs (%1), so it runs in no Area.")
+            .replaceAll("%1", unavailable.missingCapabilities.join(", ") || unavailable.diagnosticCode),
+          category: serverUnavailableLabels?.category ?? "Server part missing",
+          isBaseModule: false,
+          baseAreaKey: null,
+          ...Object.fromEntries(PHI_CMS_AREA_KEYS.map((areaKey) => [`area_${areaKey}`, null])),
+        };
+      }
       const baseAreaKey = resolveModuleBaseAreaKey(definition.moduleId);
       const activeAreas = PHI_CMS_AREA_KEYS.filter((areaKey) =>
         definition.eligibleAreas.includes(areaKey) &&
@@ -270,6 +293,11 @@ function rejectUsageUnknown(error: unknown): PhiTableProviderMutationResult {
   };
 }
 
+function readServerUnavailableLabels(params: Record<string, unknown> | undefined) {
+  const labels = readLabelMap(params, "serverUnavailableLabels");
+  return labels?.category && labels.hint ? { category: labels.category, hint: labels.hint } : null;
+}
+
 function readMissingLabels(params: Record<string, unknown> | undefined) {
   const labels = readLabelMap(params, "missingLabels");
   return labels?.missing && labels.missingHint
@@ -366,6 +394,7 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
   const runtimeModuleDefinitions = usePhiDeveloperBuilderStateValue("public", (state) => state.runtimeModuleDefinitions);
   const runtimeModuleIdsByArea = usePhiDeveloperBuilderStateValue("public", (state) => state.runtimeModuleIdsByArea);
   const unresolvedModuleIdsByArea = usePhiDeveloperBuilderStateValue("public", (state) => state.unresolvedModuleIdsByArea);
+  const serverUnavailableModules = usePhiDeveloperBuilderStateValue("public", (state) => state.serverUnavailableModules);
 
   const registration = useMemo<PhiTableProviderRegistration>(() => {
     const descriptor = PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS.find((candidate) =>
@@ -449,7 +478,12 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
           descriptor: resourceDescriptor,
           rows: [
             ...buildUnresolvedRuntimeModuleRows(builderState, view, readMissingLabels(request.params)),
-            ...buildRuntimeModuleRows(builderState, readLabelMap(request.params, "categoryLabels"), view),
+            ...buildRuntimeModuleRows(
+              builderState,
+              readLabelMap(request.params, "categoryLabels"),
+              view,
+              readServerUnavailableLabels(request.params),
+            ),
           ],
         },
         { ...request, query: filteredQuery },
@@ -482,6 +516,14 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
       const definition = builderState.runtimeModuleDefinitions.find((candidate) => candidate.moduleId === moduleId);
       if (!definition) {
         return { status: "rejected", invalidation: "none", errorCode: "not-found", message: "Module not found." };
+      }
+      if (builderState.serverUnavailableModules?.[definition.moduleId]) {
+        return {
+          status: "rejected",
+          invalidation: "none",
+          errorCode: "server-unavailable",
+          message: `"${definition.title}" needs a server part this Site does not provide.`,
+        };
       }
       const baseAreaKey = resolveModuleBaseAreaKey(moduleId);
       const proposedActive = request.proposedValue === true;
@@ -668,7 +710,7 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
     };
     // The rows' identity; the functions read the snapshot, so the rule cannot see that these matter.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [runtimeModuleDefinitions, runtimeModuleIdsByArea, unresolvedModuleIdsByArea]);
+  }, [runtimeModuleDefinitions, runtimeModuleIdsByArea, serverUnavailableModules, unresolvedModuleIdsByArea]);
 
   return <PhiTableProviderClient registration={registration}>{children}</PhiTableProviderClient>;
 }

@@ -49,6 +49,7 @@ function PhiLocalizationControllerMount({
   }, [emitCapability]);
 
   usePhiSignalListener(useCallback((signal) => {
+    if (signal.receiver !== address) return;
     if (signal.channel === "localizationWorkspace" &&
       signal.action === "change" &&
       signal.valueSchema === PHI_SIGNAL_VALUE_SCHEMAS.localizationWorkspace &&
@@ -66,21 +67,10 @@ function PhiLocalizationControllerMount({
         emitCapability("sourceLocale", value.sourceLocale, signal.correlationId);
       }
       if (filtersRef.current.locale) {
-        dispatchSignal({
-          scope: "area",
-          channel: "targetLocaleSelection",
-          action: "change",
-          value: filtersRef.current.locale,
-          valueType: "string",
-          sender: address,
-          receiver: "broadcast",
-          correlationId: signal.correlationId,
-          timestamp: Date.now(),
-        });
+        emitCapability("targetSelection", filtersRef.current.locale, signal.correlationId);
       }
       return;
     }
-    if (signal.receiver !== address) return;
 
     if (signal.channel === "query" && signal.action === "change") {
       const query = readPhiTableQuery(signal.value);
@@ -93,11 +83,7 @@ function PhiLocalizationControllerMount({
         status: typeof filters.status === "string" ? filters.status : filtersRef.current.status,
       };
       if (previousContext !== filtersRef.current.context) {
-        dispatchSignal({
-          scope: "area", channel: "contextSelection", action: "change",
-          value: filtersRef.current.context || "all", valueType: "string", sender: address,
-          receiver: "broadcast", correlationId: signal.correlationId, timestamp: Date.now(),
-        });
+        emitCapability("contextSelection", filtersRef.current.context || "all", signal.correlationId);
       }
       return;
     }
@@ -161,69 +147,18 @@ function PhiLocalizationControllerMount({
       (signal.channel === "command" && signal.action === "activate" && signal.value === "reset")) {
       next.context = "";
       next.status = "all";
-      dispatchSignal({
-        scope: "page",
-        channel: "search",
-        action: "clear",
-        value: null,
-        valueType: "none",
-        sender: address,
-        receiver: "broadcast",
-        correlationId: signal.correlationId,
-        timestamp: Date.now(),
-      });
-      dispatchSignal({
-        scope: "area",
-        channel: "contextSelection",
-        action: "change",
-        value: "all",
-        valueType: "string",
-        sender: address,
-        receiver: "broadcast",
-        correlationId: signal.correlationId,
-        timestamp: Date.now(),
-      });
-      dispatchSignal({
-        scope: "area",
-        channel: "statusSelection",
-        action: "change",
-        value: "all",
-        valueType: "string",
-        sender: address,
-        receiver: "broadcast",
-        correlationId: signal.correlationId,
-        timestamp: Date.now(),
-      });
+      emitCapability("searchClear", null, signal.correlationId);
+      emitCapability("contextSelection", "all", signal.correlationId);
+      emitCapability("statusSelection", "all", signal.correlationId);
     } else if (signal.channel === "command" && signal.action === "activate" && signal.value === "reload") {
-      dispatchSignal({
-        scope: "page",
-        channel: "reload",
-        action: "activate",
-        value: null,
-        valueType: "none",
-        sender: address,
-        receiver: "broadcast",
-        correlationId: signal.correlationId,
-        timestamp: Date.now(),
-      });
+      emitCapability("reload", null, signal.correlationId);
       return;
     } else {
       return;
     }
     filtersRef.current = next;
-    dispatchSignal({
-      scope: "page",
-      channel: "filters",
-      action: "change",
-      value: next,
-      valueType: "json",
-      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableFilters,
-      sender: address,
-      receiver: "broadcast",
-      correlationId: signal.correlationId,
-      timestamp: Date.now(),
-    });
-  }, [address, closeEditor, dispatchSignal, emitCapability]), {
+    emitCapability("filters", next, signal.correlationId);
+  }, [address, closeEditor, emitCapability]), {
     scopes: ["page", "area"],
     channels: ["locale", "context", "status", "query", "command", "localizationWorkspace", "action", "dialog", "submitting", "submit", "state"],
   },

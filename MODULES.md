@@ -370,6 +370,10 @@ not eligible for, one that is locked. Two readers answer that, deliberately:
 The same shape holds for a selected Module whose server capability requirement is unavailable
 (`resolveActivePresetModuleKeys`): it stays off for the whole Area, and the log names it
 (`runtime_modules.server_capability.unavailable`). Neither path is quiet; both were, before 05.10.2026.
+The Builder's Modules table shows such a Module as a locked row ("Server part missing") naming the
+capabilities it lacks, and refuses to switch it (`server-unavailable`). The Builder Controller reads
+it the way the render does, from the snapshot handed to every Controller preload (`serverCapabilities`);
+the selection is left as stored and takes effect the day the server provides what is missing.
 
 A Widget that asks for a Controller no active Module owns (`requiredRuntimeControllers`) is a contract
 error and throws at materialization: rendered without it, the Widget's signals would go to an address

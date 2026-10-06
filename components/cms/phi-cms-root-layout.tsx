@@ -272,6 +272,7 @@ export async function PhiCmsAreaBoundary({
               registry={scope.controllerDefinitionsByType}
               controllerModuleIdsByType={runtimeModuleScope.moduleSet.ownerModuleIdByControllerType}
               runtimeModuleCatalog={scope.runtimeRegistry.runtimeModuleCatalog}
+              serverCapabilities={scope.runtimeRegistry.serverCapabilities}
             />
           ) : null}
           {children}

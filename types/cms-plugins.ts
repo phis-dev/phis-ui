@@ -750,6 +750,8 @@ export type PhiRuntimeControllerServerPreloadArgs<TConfig> = {
   mountScope: PhiRuntimeControllerMountScope;
   runtime: PhiBlockRuntime;
   runtimeModuleCatalog: PhiRuntimeModuleCatalog;
+  /** What phis-server provides on this Site, as the render that mounts the Controller read it. */
+  serverCapabilities: import("./server-capabilities").PhiCapabilitySnapshot | null;
   setting: PhiRuntimeControllerSetting;
   config: TConfig;
 };

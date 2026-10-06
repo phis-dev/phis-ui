@@ -270,12 +270,11 @@ assert.deepEqual(
  */
 const SENDS_AS_A_CONTROLLER = /sender:\s*create\w*ControllerAddress\(/u;
 /*
- * Open: the Brand Controls Widget talks to the Theme Controller as the Theme Controller, and the Theme
- * Controller has not been checked for what it would do with requests under their real sender.
+ * Files under `widgets/` or `clients/` that still send as a Controller, each one a debt with its reason.
+ * The Theme Controller was the last: it lived in the Brand Controls Widget file, so its own sends looked
+ * like a Widget's. It is in `theme/controller/runtime.tsx` now, and the list is empty.
  */
-const SENDS_AS_A_CONTROLLER_OPEN = new Set([
-  "plugins/runtime-modules/theme/widgets/brand-controls/client.tsx",
-]);
+const SENDS_AS_A_CONTROLLER_OPEN = new Set<string>();
 const impersonations = sourcePaths
   .filter((path) => /\/(widgets|clients)\//u.test(path) && !SENDS_AS_A_CONTROLLER_OPEN.has(path))
   .filter((path) => SENDS_AS_A_CONTROLLER.test(readFileSync(resolve(path), "utf8")));

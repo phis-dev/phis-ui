@@ -46,6 +46,7 @@ If their fetch layer uses `cache: "no-store"`, the underlying request is still d
   - Per-process cache per message, no expiry, at most 5,000 entries (least recently read evicted). Filled by `tr` and `trBulk` in `gateway/tr.ts`, whose requests to `/api/v1/tr` are `no-store`. A failed request and a `provisional` answer are not kept; neither is an answer whose request began before a clear.
   - Emptied by `getResolvedSiteConfig(...)` whenever Core's `translationMarkers` differ from the ones the process saw last: the global entries for the global marker, the Site's entries for its own. Core moves them on every translation write (phis-server TRANSLATIONS.md, "Change markers").
   - Label sets (`gateway/label-set.ts`) are not cached as sets; they read their texts through this cache.
+  - Module titles and descriptions (`plugins/runtime-modules/module-labels.server.ts`) and the Builder's plugin texts (`plugins/runtime-modules/builder/plugin-meta-labels.server.ts`) are not kept apart from it either. Each once had a per-process map of its own on top of `trBulk`, and those maps knew no marker: a provisional answer or the source text of a failed batch stood until the process restarted. A translation that is worth keeping is kept here, where every process empties it.
 
 ## Theme Resolution
 

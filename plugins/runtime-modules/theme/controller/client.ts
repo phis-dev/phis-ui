@@ -4,7 +4,7 @@ import { createElement } from "react";
 
 import type { PhiRuntimeControllerPlugin } from "../../../../types";
 import { createPhiRuntimeControllerClient } from "../../../../components/runtime/runtime-controller-client-factory";
-import { PhiBuilderBrandThemeControllerWidgetClient } from "../widgets/brand-controls/client";
+import { PhiThemeControllerRuntime } from "./runtime";
 import {
   PHI_THEME_RUNTIME_CONTROLLER_DEFINITION,
   type PhiThemeRuntimeControllerConfig,
@@ -13,12 +13,13 @@ import {
 
 export const PHI_THEME_RUNTIME_CONTROLLER_PLUGIN = {
   ...PHI_THEME_RUNTIME_CONTROLLER_DEFINITION,
-  renderController: ({ runtime, preloadData }) => {
+  renderController: ({ runtime, config, preloadData }) => {
     if (!preloadData?.setOptions) {
       throw new Error("Theme controller preload is missing its Set options.");
     }
-    return createElement(PhiBuilderBrandThemeControllerWidgetClient, {
+    return createElement(PhiThemeControllerRuntime, {
       runtime,
+      config,
       setOptions: preloadData.setOptions,
     });
   },

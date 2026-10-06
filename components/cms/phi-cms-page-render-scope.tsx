@@ -125,6 +125,7 @@ export function PhiCmsPageRuntimeHosts({
           registry={scope.controllerDefinitionsByType}
           controllerModuleIdsByType={scope.runtimeModuleScope.moduleSet.ownerModuleIdByControllerType}
           runtimeModuleCatalog={scope.runtimeRegistry.runtimeModuleCatalog}
+          serverCapabilities={scope.runtimeRegistry.serverCapabilities}
         />
       ) : null}
       {children}

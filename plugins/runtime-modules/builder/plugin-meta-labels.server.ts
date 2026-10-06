@@ -17,26 +17,17 @@ import { mapPhiBuilderPluginMetaText } from "./plugin-meta-labels";
  * It is a bulk translation rather than a label set on purpose. A label set needs every string written
  * down in advance under a key, which works for a Control we ship and cannot work for a field an
  * outside Module declares. The same reasoning already governs Module titles next door.
+ *
+ * Nothing is kept here between requests. `trBulk` keeps every answer in the translation cache, which a
+ * translation write empties in every process (gateway/CACHES.md); a map of its own beside it kept the
+ * old words until the process restarted.
  */
-const PLUGIN_TEXT_CACHE = new Map<string, Map<string, string>>();
-
-function resolveLocaleCache(locale: string) {
-  const key = locale.trim().toLowerCase();
-  const cached = PLUGIN_TEXT_CACHE.get(key);
-  if (cached) {
-    return cached;
-  }
-  const created = new Map<string, string>();
-  PLUGIN_TEXT_CACHE.set(key, created);
-  return created;
-}
-
 export async function localizePhiBuilderModuleAuthoringCatalog(
   runtime: Pick<PhiBlockRuntime, "locale">,
   entries: readonly PhiBuilderModuleAuthoringCatalogEntry[],
 ): Promise<PhiBuilderModuleAuthoringCatalogEntry[]> {
   const locale = runtime.locale.current;
-  const translations = resolveLocaleCache(locale);
+  const translations = new Map<string, string>();
 
   /*
    * The same walk twice: once to learn what is there, once to put the answers back. Collected into a
@@ -48,25 +39,23 @@ export async function localizePhiBuilderModuleAuthoringCatalog(
   for (const entry of entries) {
     for (const plugin of entry.plugins) {
       mapPhiBuilderPluginMetaText(plugin, (text) => {
-        if (!translations.has(text)) {
-          pending.add(text);
-        }
+        pending.add(text);
         return text;
       });
     }
   }
 
   if (pending.size > 0) {
-    const sources = [...pending];
+    // Only what has words: `trBulk` leaves empty messages out of its answer, which would shift the rest.
+    const sources = [...pending].filter((text) => text.trim().length > 0);
     const translator = createGlobalTranslator({
       apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
       internalToken: readPhiServerApiCredentials().internalToken,
       locale,
     });
     /*
-     * A failed batch is not written into the per-process cache: cached, the source texts would stand as
-     * this locale's translations until the process restarts. They are shown for this request, the
-     * failure is logged, and the next request asks again.
+     * A failed batch leaves the source texts for this request, and the failure is logged; the next
+     * request asks again, because nothing failed is kept (`trBulk` keeps only answers).
      */
     let translated: string[] | null = null;
     try {

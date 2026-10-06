@@ -49,6 +49,8 @@ const PHI_BUILDER_MODULES_PAGE_LABEL_SET = definePhiLabelSet({
     filter_show_foundation: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.filter.showFoundation,
     missing_category: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.missing.category,
     missing_hint: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.missing.hint,
+    server_unavailable_category: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.serverUnavailable.category,
+    server_unavailable_hint: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.serverUnavailable.hint,
     usage_title: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.usage.title,
     usage_intro: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.usage.intro,
     usage_area: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.usage.area,
@@ -127,6 +129,10 @@ export async function getPhiBuilderModulesPageLabels(
     missing: {
       category: labels.missing_category,
       hint: labels.missing_hint,
+    },
+    serverUnavailable: {
+      category: labels.server_unavailable_category,
+      hint: labels.server_unavailable_hint,
     },
     usage: {
       title: labels.usage_title,

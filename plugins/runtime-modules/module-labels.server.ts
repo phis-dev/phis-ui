@@ -10,38 +10,31 @@ import {
 } from "../../gateway/tr";
 import { readPhiServerApiCredentials } from "../../helpers/phis-server-credentials";
 
-type PhiLocalizedRuntimeModuleLabels = ReadonlyMap<string, Readonly<{ title: string; description: string }>>;
-
-const MODULE_LABEL_CACHE = new Map<string, PhiLocalizedRuntimeModuleLabels>();
-
-function buildModuleLabelCacheKey(
-  locale: string,
-  definitions: readonly PhiRuntimeModuleDefinition[],
+/**
+ * Module titles and descriptions in the language of the request.
+ *
+ * Nothing is kept here between requests: `trBulk` keeps every answer in the translation cache, which
+ * a translation write empties in every process (gateway/CACHES.md). A map of its own beside it kept
+ * whatever the first request got -- a provisional answer, or the source text after a failed batch --
+ * until the process restarted.
+ *
+ * Answers are matched to their text, not to a position: `trBulk` leaves empty messages out of what it
+ * answers, so a Module without a description would have shifted every description after it.
+ */
+async function translateTexts(
+  translator: ReturnType<typeof createGlobalTranslator>,
+  texts: readonly string[],
+  ctx: string,
 ) {
-  return JSON.stringify([
-    locale.trim().toLowerCase(),
-    definitions.map((definition) => [
-      definition.moduleId,
-      resolvePhiRuntimeModuleSourceLocale(definition),
-      definition.title,
-      definition.description,
-    ]),
-  ]);
+  const sources = [...new Set(texts.map((text) => text.trim()).filter(Boolean))];
+  const translated = await translator.trBulk(sources, ctx);
+  return new Map(sources.map((source, index) => [source, translated[index] ?? source]));
 }
 
 export async function localizePhiRuntimeModuleDefinitions(
   runtime: Pick<PhiBlockRuntime, "locale">,
   definitions: readonly PhiRuntimeModuleDefinition[],
 ) {
-  const cacheKey = buildModuleLabelCacheKey(runtime.locale.current, definitions);
-  const cached = MODULE_LABEL_CACHE.get(cacheKey);
-  if (cached) {
-    return definitions.map((definition) => {
-      const labels = cached.get(definition.moduleId);
-      return labels ? { ...definition, ...labels } : definition;
-    });
-  }
-
   const definitionsBySourceLocale = new Map<string, PhiRuntimeModuleDefinition[]>();
   for (const definition of definitions) {
     const sourceLocale = resolvePhiRuntimeModuleSourceLocale(definition);
@@ -58,19 +51,18 @@ export async function localizePhiRuntimeModuleDefinitions(
       locale: runtime.locale.current,
       sourceLocale,
     });
-    const [translatedTitles, translatedDescriptions] = await Promise.all([
-      translator.trBulk(sourceDefinitions.map((definition) => definition.title), PHI_TR_CTX_WEB_UI_LABEL),
-      translator.trBulk(sourceDefinitions.map((definition) => definition.description), PHI_TR_CTX_MODULE_DESCRIPTION),
+    const [titles, descriptions] = await Promise.all([
+      translateTexts(translator, sourceDefinitions.map((definition) => definition.title), PHI_TR_CTX_WEB_UI_LABEL),
+      translateTexts(translator, sourceDefinitions.map((definition) => definition.description), PHI_TR_CTX_MODULE_DESCRIPTION),
     ]);
-    sourceDefinitions.forEach((definition, index) => {
+    for (const definition of sourceDefinitions) {
       localizedLabelsByModuleId.set(definition.moduleId, {
-        title: translatedTitles[index] ?? definition.title,
-        description: translatedDescriptions[index] ?? definition.description,
+        title: titles.get(definition.title.trim()) ?? definition.title,
+        description: descriptions.get(definition.description.trim()) ?? definition.description,
       });
-    });
+    }
   }));
 
-  MODULE_LABEL_CACHE.set(cacheKey, localizedLabelsByModuleId);
   return definitions.map((definition) => {
     const labels = localizedLabelsByModuleId.get(definition.moduleId);
     return labels ? { ...definition, ...labels } : definition;

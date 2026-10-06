@@ -112,8 +112,16 @@ address -- from what it is asked, and a Builder branch that took the announcemen
 request navigated a second time. The other side of the same rule: a Widget sends under its own address
 (its signal identity), never under a Controller's. The Builder's mode switch and chrome Widget did, and
 were indistinguishable from the Controller's own echo. `scripts/validate-signal-address-contracts.ts`
-refuses a `widgets/` or `clients/` file that sends as a Controller; the Theme Brand Controls are the one
-open exception.
+refuses a `widgets/` or `clients/` file that sends as a Controller, with no open exception. The last one
+was not a Widget at all: the Theme Controller lived in the Brand Controls Widget file, so its own sends
+looked like a Widget's; it is in `theme/controller/runtime.tsx` now. A data provider is held to the same
+rule: the Localization Table provider tells the Controller what a load learned by addressing it, under
+whatever sends from there, not by broadcasting under the Controller's address.
+
+Nor does a Controller reach itself through the bus. It answers nothing sent under its own address, so a
+signal it sends to itself goes nowhere: the Builder ended its Effects editor with an `effectsCommit` or
+`effectsCancel` broadcast to itself, and from the day it stopped hearing its own echo the dialog closed
+with nothing taken. What a Controller decides for itself it does in place.
 
 A listener that takes a broadcast which many senders put out reads which sender it is about. Every Stack
 answers `stackMeta` on the same broadcast, so a stack-mode Choice follows only the Stack its own
@@ -125,14 +133,16 @@ writes into its `controllerSettings` (`config.signalRoutes`), delivered with `di
 a Controller that wrote the ids of the Widgets it expected could only serve the one arrangement of them it
 was written for. Every Module Controller works this way: the Media Page tells the Asset Controller the
 Area runs, the sign-in Overlay preset tells the Auth Controller that arrives with it, the Revisions and
-Users Pages tell theirs, and the Builder Controller hears from three trees at once -- its Shell names the
+Users Pages tell theirs, the Theme Page tells the Theme Controller where its undo and redo stand, and
+the Builder Controller hears from three trees at once -- its Shell names the
 header switches, its Inspector Overlay contribution the drawers and the Effects and wiring dialogs, and
 each Builder Page the dialogs it carries. `scripts/validate-controller-receiver-contracts.ts` reads every
 file of a Module's `controller/` directory and refuses one that names a receiver by a preset id map or a
 `cms:` address of its own; there are no open exceptions. A Controller's implementation therefore lives
 in that directory, not beside it: the Builder kept its 2,500-line Controller one level up, out of the
 validator's sight, which is how it went on addressing its Inspector by preset id after every other
-Controller had moved.
+Controller had moved. A preset id built in place counts as well (`createPhiCommandToolbarControlAddress`):
+the Theme Controller reached the Theme Page's toolbar that way.
 
 The same goes for what a Controller listens to. A Controller that told two halves of one Page apart by
 who sent a signal held both halves' Widget ids again; the User Management Page routes its create and its
@@ -246,6 +256,10 @@ A plugin declares what it can do; a concrete instance stores how it is wired. Th
 - `runtimeSignals.listens` lists receiver inputs: the same fields plus `channel`. Inputs are unique per
   receiver by `channel + action + valueType + valueSchema` (`assertPhiSignalPluginMetaContract`).
   Receiver channels are fixed capabilities; free-text listener channels are not accepted.
+- A Controller's `listens` is what its listeners answer, no more and no less: it is what the wiring UI
+  offers as the Controller's inputs. The Builder's had drifted -- a dozen answered channels missing, one
+  declared channel nobody read -- and `scripts/validate-controller-listen-declarations.ts` now reads its
+  listeners' `channel`/`action` comparisons and holds the two to each other.
 - `target` is `self`, `subcontrol`, or `both` and filters capabilities for the wiring UI only.
 - `runtimeSignals.dragDrop` declares drag sources and drop targets (see [Drag and drop](#drag-and-drop)).
 - Dynamic subcontrol collections are declared by `signalSubcontrols` on the Widget definition, so

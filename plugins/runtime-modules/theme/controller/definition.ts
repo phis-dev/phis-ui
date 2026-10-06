@@ -1,5 +1,7 @@
 import {
   PHI_SIGNAL_VALUE_SCHEMAS,
+  readPhiSignalRouteSet,
+  type PhiSignalRouteSet,
 } from "../../../../types/signals";
 import type { PhiRuntimeControllerDefinition } from "../../../../types/cms-plugins";
 import type { PhiControlOption } from "../../../../components/controls/phi-control-options";
@@ -7,7 +9,14 @@ import { PHI_THEME_CONTROLLER_KEY,
   PHI_THEME_CONTROLLER_PLUGIN_KEY } from "./address";
 import { PHI_THEME_SIGNAL_CHANNELS } from "./signals";
 
-export type PhiThemeRuntimeControllerConfig = Record<string, never>;
+/**
+ * Whom the Controller states its history into: the undo and redo commands of the Page that shows them.
+ * The Area runs this Controller; the Theme Page names its toolbar while it is shown (`controllerSettings`),
+ * and anywhere else the history is kept and told to nobody.
+ */
+export type PhiThemeRuntimeControllerConfig = {
+  signalRoutes: PhiSignalRouteSet | null;
+};
 
 /**
  * The Sets this Site offers, worked out on the server where the installed Modules are known.
@@ -20,8 +29,8 @@ export type PhiThemeRuntimeControllerPreload = {
   setOptions: PhiControlOption[];
 };
 
-export function parsePhiThemeRuntimeControllerConfig(): PhiThemeRuntimeControllerConfig {
-  return {};
+export function parsePhiThemeRuntimeControllerConfig(raw: Record<string, unknown>): PhiThemeRuntimeControllerConfig {
+  return { signalRoutes: readPhiSignalRouteSet(raw.signalRoutes) };
 }
 
 export const PHI_THEME_RUNTIME_CONTROLLER_DEFINITION = {
@@ -57,11 +66,8 @@ export const PHI_THEME_RUNTIME_CONTROLLER_DEFINITION = {
         valueType: "json",
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.controlOptions,
       },
-      {
-        id: "commandEnabled",
-        action: "change",
-        valueType: "boolean",
-      },
+      { id: "undoEnabled", action: "change", valueType: "boolean" },
+      { id: "redoEnabled", action: "change", valueType: "boolean" },
     ],
     listens: [
       {

@@ -888,10 +888,12 @@ The builder must support a clear change lifecycle.
 - The command toolbar emits semantic command signals. Shell, page, and navigation commands target
   the Builder Controller. Theme commands target the Theme Controller directly; Theme must remain
   usable as an independent module and must not depend on or proxy through the Builder Controller.
-  Its review area comes from the Theme widget config or the hosting runtime; the Builder-hosted
-  default remains `public`.
-- Controllers emit boolean `enabled/change` feedback signals to the concrete `undo` and `redo`
-  toolbar subcontrols. A toolbar button is disabled when its active history scope has no matching
+  Its review area comes from the hosting runtime; the Builder-hosted default remains `public`. The
+  Theme Controller's implementation is `plugins/runtime-modules/theme/controller/runtime.tsx`, and
+  what it shares with the Brand Widgets is `theme/brand-theme-model.ts`.
+- Controllers state their history as the outputs `undoEnabled` and `redoEnabled`, and the Page that
+  shows the toolbar routes them to its `undo` and `redo` subcontrols on `enabled/change`
+  (`controllerSettings`). A toolbar button is disabled when its active history scope has no matching
   entry.
 - History is local draft history and is scoped as follows:
   - shell structure: area;

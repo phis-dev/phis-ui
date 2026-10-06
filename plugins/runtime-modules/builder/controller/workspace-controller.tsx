@@ -1,6 +1,6 @@
 "use client";
 
-import { isPhiRecord } from "../../../../helpers/is-record";
+import type { PhiRenderableBlockEffects } from "../../../../types/renderable-block";
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
@@ -168,6 +168,7 @@ type PhiDeveloperBuilderWorkspaceControllerOptions = {
   areaPresetSourcesByArea?: PhiWorkspaceCatalogState["areaPresetSourcesByArea"];
   navigationSurfacesByArea?: PhiWorkspaceCatalogState["navigationSurfacesByArea"];
   unresolvedModuleIdsByArea?: PhiWorkspaceCatalogState["unresolvedModuleIdsByArea"];
+  serverUnavailableModules?: PhiWorkspaceCatalogState["serverUnavailableModules"];
   publicRouteClaims?: PhiWorkspaceCatalogState["publicRouteClaims"];
   publicRoutePaths?: PhiWorkspaceCatalogState["publicRoutePaths"];
   areaRootRoutesByArea?: Record<string, PhiAreaRootRoute | null>;
@@ -177,6 +178,7 @@ type PhiDeveloperBuilderWorkspaceControllerOptions = {
   signalRoutes?: PhiSignalRouteSet | null;
 };
 const EMPTY_RUNTIME_MODULE_IDS_BY_AREA: Partial<Record<PhiDeveloperBuilderArea, PhiRuntimeModuleId[]>> = {};
+const EMPTY_SERVER_UNAVAILABLE_MODULES: PhiWorkspaceCatalogState["serverUnavailableModules"] = {};
 const EMPTY_MODULE_PRESET_PAGES_BY_AREA = createEmptyPhiBuilderModulePresetPagesByArea();
 const EMPTY_PUBLIC_ROUTE_CLAIMS: PhiWorkspaceCatalogState["publicRouteClaims"] = [];
 const EMPTY_PUBLIC_ROUTE_PATHS: PhiWorkspaceCatalogState["publicRoutePaths"] = [];
@@ -317,6 +319,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     areaPresetSourcesByArea = {},
     navigationSurfacesByArea = {},
     unresolvedModuleIdsByArea = EMPTY_RUNTIME_MODULE_IDS_BY_AREA,
+    serverUnavailableModules = EMPTY_SERVER_UNAVAILABLE_MODULES,
     publicRouteClaims = EMPTY_PUBLIC_ROUTE_CLAIMS,
     publicRoutePaths = EMPTY_PUBLIC_ROUTE_PATHS,
     areaRootRoutesByArea = EMPTY_AREA_ROOT_ROUTES,
@@ -462,6 +465,10 @@ function usePhiDeveloperBuilderWorkspaceController(
     [unresolvedModuleIdsByArea],
   );
   const publicRouteClaimsPreloadKey = useMemo(() => JSON.stringify(publicRouteClaims), [publicRouteClaims]);
+  const serverUnavailableModulesPreloadKey = useMemo(
+    () => JSON.stringify(serverUnavailableModules),
+    [serverUnavailableModules],
+  );
   const publicRoutePathsPreloadKey = useMemo(() => JSON.stringify(publicRoutePaths), [publicRoutePaths]);
   const areaRootRoutesPreloadKey = useMemo(() => JSON.stringify(areaRootRoutesByArea), [areaRootRoutesByArea]);
   /*
@@ -537,19 +544,25 @@ function usePhiDeveloperBuilderWorkspaceController(
    * directions of one gesture behave alike: a question that must be answered, a consequence that must
    * be acknowledged.
    */
-  const openedModuleUsageCorrelationRef = useRef<string | null>(null);
+  /*
+   * What was last said to the dialog, and through which routes. A question that stands when the Page
+   * holding the dialog arrives -- its routes come with it (`controllerSettings`) -- was said to nobody,
+   * so new routes say it again; the same question through the same routes is not repeated.
+   */
+  const openedModuleUsageRef = useRef<{ correlationId: string | null; routes: typeof emitRoutes } | null>(null);
   const moduleDeactivationRequest = state.moduleDeactivationRequest;
   useEffect(() => {
     const correlationId = moduleDeactivationRequest?.correlationId ?? null;
-    if (openedModuleUsageCorrelationRef.current === correlationId) {
+    const opened = openedModuleUsageRef.current;
+    if (opened && opened.correlationId === correlationId && (correlationId == null || opened.routes === emitRoutes)) {
       return;
     }
-    openedModuleUsageCorrelationRef.current = correlationId;
+    openedModuleUsageRef.current = { correlationId, routes: emitRoutes };
     emitCapability(correlationId ? "moduleUsageOpen" : "moduleUsageClose", null);
     if (correlationId) {
       emitCapability("moduleUsageReload", null);
     }
-  }, [emitCapability, moduleDeactivationRequest]);
+  }, [emitCapability, emitRoutes, moduleDeactivationRequest]);
 
   /*
    * What the Area settings dialog stands at, as the record its Form holds.
@@ -654,14 +667,16 @@ function usePhiDeveloperBuilderWorkspaceController(
     emitCapability(open ? "areaSettingsOpen" : "areaSettingsClose", null, correlationId);
   };
 
-  const openedPublicRoutesCorrelationRef = useRef<string | null>(null);
+  // Said again through new routes, like the Module usage dialog above.
+  const openedPublicRoutesRef = useRef<{ correlationId: string | null; routes: typeof emitRoutes } | null>(null);
   const publicRouteCollisionRequest = state.publicRouteCollisionRequest;
   useEffect(() => {
     const correlationId = publicRouteCollisionRequest?.correlationId ?? null;
-    if (openedPublicRoutesCorrelationRef.current === correlationId) {
+    const opened = openedPublicRoutesRef.current;
+    if (opened && opened.correlationId === correlationId && (correlationId == null || opened.routes === emitRoutes)) {
       return;
     }
-    openedPublicRoutesCorrelationRef.current = correlationId;
+    openedPublicRoutesRef.current = { correlationId, routes: emitRoutes };
     emitCapability(correlationId ? "publicRoutesOpen" : "publicRoutesClose", null);
     if (correlationId) {
       /*
@@ -671,7 +686,7 @@ function usePhiDeveloperBuilderWorkspaceController(
        */
       emitCapability("publicRoutesReload", null);
     }
-  }, [emitCapability, publicRouteCollisionRequest]);
+  }, [emitCapability, emitRoutes, publicRouteCollisionRequest]);
 
   useEffect(() => {
     const selectedInspector = state.nodeKind === "region" || state.nodeKind === "layout" || state.nodeKind === "widget"
@@ -705,6 +720,8 @@ function usePhiDeveloperBuilderWorkspaceController(
         JSON.stringify(current.unresolvedModuleIdsByArea) !== unresolvedModuleIdsPreloadKey;
       const publicRouteClaimsChanged =
         JSON.stringify(current.publicRouteClaims) !== publicRouteClaimsPreloadKey;
+      const serverUnavailableModulesChanged =
+        JSON.stringify(current.serverUnavailableModules) !== serverUnavailableModulesPreloadKey;
       /*
        * The assignments arrive with the Modules draft and are edited by the collision dialog, so this
        * follows the same rule as the Module selection beside it: what the server sent replaces what is
@@ -736,7 +753,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         }));
       }
 
-      return changed || definitionsChanged || modulePresetPagesChanged || areaPresetSourcesChanged || navigationSurfacesChanged || unresolvedModuleIdsChanged || publicRouteClaimsChanged || publicRoutePathsChanged || catalogHydrationChanged || initialPageChanged
+      return changed || definitionsChanged || modulePresetPagesChanged || areaPresetSourcesChanged || navigationSurfacesChanged || unresolvedModuleIdsChanged || serverUnavailableModulesChanged || publicRouteClaimsChanged || publicRoutePathsChanged || catalogHydrationChanged || initialPageChanged
         ? {
             ...current,
             ...(initialPageChanged ? { pageKey: initialPageKey } : {}),
@@ -747,6 +764,7 @@ function usePhiDeveloperBuilderWorkspaceController(
             areaPresetSourcesByArea,
             navigationSurfacesByArea: activePreloadCatalogs.navigationSurfacesByArea,
             unresolvedModuleIdsByArea,
+            serverUnavailableModules,
             publicRouteClaims,
             ...(publicRoutePathsChanged ? { publicRoutePaths } : {}),
           }
@@ -762,6 +780,8 @@ function usePhiDeveloperBuilderWorkspaceController(
     modulePresetPagesPreloadKey,
     unresolvedModuleIdsByArea,
     unresolvedModuleIdsPreloadKey,
+    serverUnavailableModules,
+    serverUnavailableModulesPreloadKey,
     publicRouteClaims,
     publicRouteClaimsPreloadKey,
     publicRoutePaths,
@@ -1124,35 +1144,17 @@ function usePhiDeveloperBuilderWorkspaceController(
        */
       const addressedHere = signal.receiver === "broadcast" || signal.receiver === createPhiBuilderControllerAddress();
       const effectsRequest = state.effectsEditorRequest;
-      if (
-        effectsRequest &&
-        signal.correlationId === effectsRequest.correlationId &&
-        signal.channel === "effectsCommit" &&
-        signal.action === "change" &&
-        signal.valueSchema === PHI_SIGNAL_VALUE_SCHEMAS.formValues
-      ) {
-        const submitted = readPhiRuntimeFormValuesSignalValue(signal.value);
-        const nextEffects = submitted?.values.effects;
-        completePhiDeveloperBuilderEffectsEditor(
-          defaultArea,
-          effectsRequest,
-          isPhiRecord(nextEffects)
-            ? nextEffects
-            : undefined,
-        );
+      /*
+       * Ends the Effects editor of one workflow: with the merged effects when they were taken, without
+       * when the editor was cancelled. Called in place, not sent: the Controller once told itself with
+       * an `effectsCommit` or `effectsCancel` broadcast, which stopped arriving the moment it stopped
+       * answering what it sends itself -- and the dialog closed with nothing taken.
+       */
+      const finishEffectsEditor = (correlationId: string, effects?: PhiRenderableBlockEffects) => {
+        if (!effectsRequest || effectsRequest.correlationId !== correlationId) return;
+        completePhiDeveloperBuilderEffectsEditor(defaultArea, effectsRequest, effects);
         initializedEffectsCorrelationRef.current = null;
-        return;
-      }
-      if (
-        effectsRequest &&
-        signal.correlationId === effectsRequest.correlationId &&
-        signal.channel === "effectsCancel" &&
-        signal.action === "close"
-      ) {
-        completePhiDeveloperBuilderEffectsEditor(defaultArea, effectsRequest);
-        initializedEffectsCorrelationRef.current = null;
-        return;
-      }
+      };
       /*
        * The Transparency as it is being dragged, drawn on the node and written nowhere.
        *
@@ -1524,37 +1526,6 @@ function usePhiDeveloperBuilderWorkspaceController(
         return;
       }
 
-      if (addressedHere && signal.channel === "content") {
-        const rawValue = signal.value;
-        const next = rawValue && typeof rawValue === "object" ? rawValue as {
-          nodeKind?: unknown;
-          regionKey?: unknown;
-          area?: unknown;
-          pageKey?: unknown;
-          draft?: unknown;
-        } : null;
-        if (!next || next.nodeKind !== "region" || typeof next.regionKey !== "string" || !next.draft || typeof next.draft !== "object") {
-          return;
-        }
-        const regionKey = next.regionKey;
-        const nextDraft = next.draft as PhiDeveloperBuilderRegionDraft;
-
-        const catalog = phiWorkspaceCatalogStore.getSnapshot(defaultArea);
-        const nextArea = typeof next.area === "string" ? next.area : catalog.area;
-        const nextPageKey = typeof next.pageKey === "string" && next.pageKey.length > 0 ? next.pageKey : catalog.pageKey;
-        builderWorkspaceStore.patch(defaultArea, (current) => {
-
-          return {
-            ...current,
-            regionDrafts: {
-              ...current.regionDrafts,
-              [getPhiBuilderRegionDraftKey(nextArea, regionKey, nextPageKey)]: nextDraft,
-            },
-          };
-        });
-        return;
-      }
-
 	      if (addressedHere && signal.channel === "selection" && signal.action === "change") {
         const rawValue = signal.value;
         const next = rawValue && typeof rawValue === "object" ? rawValue as {
@@ -1764,7 +1735,7 @@ function usePhiDeveloperBuilderWorkspaceController(
 
 	      if (
         addressedHere &&
-        (signal.channel === "region" || signal.channel === "selection") &&
+        signal.channel === "selection" &&
         signal.action === "change"
       ) {
         const rawValue = signal.value;
@@ -1826,17 +1797,7 @@ function usePhiDeveloperBuilderWorkspaceController(
                   emitCapability(resolvePhiBuilderEffectsCapabilityId(section, "Reset"), null, correlationId);
           }
           emitCapability("effectsDialogClose", null, correlationId);
-          dispatchSignal({
-            scope: "area",
-            channel: "effectsCancel",
-            action: "close",
-            value: null,
-            valueType: "none",
-            correlationId,
-            sender: createPhiBuilderControllerAddress(),
-            receiver: "broadcast",
-            timestamp: Date.now(),
-          });
+          finishEffectsEditor(correlationId);
           effectsWorkflowCorrelationRef.current = null;
           effectsFormSubmissionRef.current = null;
           emitCapability("effectsSubmitting", false, correlationId);
@@ -1953,17 +1914,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         for (const section of PHI_BUILDER_EFFECTS_SECTIONS) {
               emitCapability(resolvePhiBuilderEffectsCapabilityId(section, "Reset"), null, correlationId);
         }
-        dispatchSignal({
-          scope: "area",
-          channel: "effectsCancel",
-          action: "close",
-          value: null,
-          valueType: "none",
-          correlationId,
-          sender: createPhiBuilderControllerAddress(),
-          receiver: "broadcast",
-          timestamp: Date.now(),
-        });
+        finishEffectsEditor(correlationId);
         effectsWorkflowCorrelationRef.current = null;
         effectsFormSubmissionRef.current = null;
         emitCapability("effectsSubmitting", false, correlationId);
@@ -1989,18 +1940,7 @@ function usePhiDeveloperBuilderWorkspaceController(
           transitions: pending.values.transitions,
           viewport: pending.values.viewport,
         });
-        dispatchSignal({
-          scope: "area",
-          channel: "effectsCommit",
-          action: "change",
-          value: { values: { effects } },
-          valueType: "json",
-          valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
-          correlationId: effectsCorrelationId,
-          sender: createPhiBuilderControllerAddress(),
-          receiver: "broadcast",
-          timestamp: Date.now(),
-        });
+        finishEffectsEditor(effectsCorrelationId, effects);
         emitCapability("effectsDialogClose", null, effectsCorrelationId);
         effectsWorkflowCorrelationRef.current = null;
         effectsFormSubmissionRef.current = null;
@@ -2102,6 +2042,7 @@ export type PhiDeveloperBuilderWorkspaceControllerProps = {
   areaPresetSourcesByArea?: PhiWorkspaceCatalogState["areaPresetSourcesByArea"];
   navigationSurfacesByArea?: PhiWorkspaceCatalogState["navigationSurfacesByArea"];
   unresolvedModuleIdsByArea?: PhiWorkspaceCatalogState["unresolvedModuleIdsByArea"];
+  serverUnavailableModules?: PhiWorkspaceCatalogState["serverUnavailableModules"];
   publicRouteClaims?: PhiWorkspaceCatalogState["publicRouteClaims"];
   publicRoutePaths?: PhiWorkspaceCatalogState["publicRoutePaths"];
   areaRootRoutesByArea?: Record<string, PhiAreaRootRoute | null>;

@@ -28,6 +28,8 @@ import { repositoryRoot } from "./lib/repo-root.mjs";
 const RECEIVER_ID_PATTERNS = [
   /\b[A-Z0-9_]+_(?:WIDGET|OVERLAY|LAYOUT)_IDS\b/gu,
   /\bcreatePhiSignal(?:Subcontrol)?Address\(\s*"cms"/gu,
+  // A preset id built in place: the Theme Controller reached the Theme Page's toolbar this way.
+  /\bcreatePhiCommandToolbar(?:Control)?(?:Address|Id)\(/gu,
 ];
 
 /**

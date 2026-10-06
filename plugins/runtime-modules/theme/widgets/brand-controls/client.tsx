@@ -1,28 +1,28 @@
 "use client";
 
-import { isPhiRecord } from "../../../../../helpers/is-record";
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 
 import type { PhiColorPickerLabels } from "../../../../../components/widgets/label-types/color-picker";
 
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
 import { usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
-import { usePhiApplicationFeedback } from "../../../../../components/runtime/use-phi-application-feedback";
 import { PHI_SIGNAL_VALUE_SCHEMAS, type PhiSignalAddress } from "../../../../../types/signals";
-import type { PhiDraftStatusSignalValue } from "../../../../../types/draft-status";
 import type { PhiBlockRuntime } from "../../../../../types/widget-runtime";
 import { createPhiThemeControllerAddress } from "../../../../../plugins/runtime-modules/theme/controller/address";
 import { PHI_THEME_SIGNAL_CHANNELS } from "../../../../../plugins/runtime-modules/theme/controller/signals";
-import { createPhiCoreRuntimeControllerAddress } from "../../../../../components/runtime/core-runtime-controller-address";
-import type { PhiCmsAreaKey } from "../../../../../constants/cms-areas";
 import {
-  PHI_DEFAULT_THEME_PRESET_KEY,
-  PHI_DEFAULT_THEME_PRESET_VERSION,
   PHI_THEME_CUSTOM_COLOR_KEYS,
   isPhiThemePaletteModeSeedKey,
   mergePhiThemePalettes,
   resolvePhiThemeColorTokens,
-  resolvePhiThemePresetPlugin,
   type PhiThemeMode,
   type PhiThemePalette,
   type PhiThemePaletteMode,
@@ -30,10 +30,7 @@ import {
   type PhiThemeCustomColorKey,
   type PhiThemeCustomColorPalette,
 } from "../../../../../theme/phi-theme-presets";
-import {
-  buildPhiThemeCustomColorPalette,
-  resolvePhiThemePaletteCustomColors,
-} from "../../../../../theme/phi-theme-palette";
+import { buildPhiThemeCustomColorPalette, resolvePhiThemePaletteCustomColors } from "../../../../../theme/phi-theme-palette";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { usePhiThemeBlockCatalog } from "../../../../../components/root/phi-theme-block-catalog-provider";
 import {
@@ -53,25 +50,15 @@ import {
   type PhiThemeHeadingFont,
 } from "../../../../../theme/phi-theme-typography";
 import { resolvePhiThemeRuntimePayload } from "../../../../../theme/phi-theme-runtime";
-import { materializePhiThemeBrandLogo, materializePhiThemeModuleBlocks } from "../../materialize-images";
 import { resolvePhiAntdAliasTokens } from "../../../../../theme/phi-antd-token-resolver";
-import {
-  buildPhiThemeStructuralTokens,
-} from "../../../../../theme/phi-theme";
-import {
-  buildPhiSiteThemeSelectOptions,
-  createPhiSiteThemeSelectionValue,
-  createPhiThemeDerivation,
-  ensurePhiThemeDerivation,
-  readPhiSiteThemeSelectionState,
-  resolvePhiThemeSelectionValue,
-} from "../../../../../theme/phi-theme-selection";
+import { buildPhiThemeStructuralTokens } from "../../../../../theme/phi-theme";
 import type { PhiControlOption } from "../../../../../components/controls/phi-control-options";
-import { PHI_CONTROL_HEIGHTS, PHI_PADDING, PHI_RADII } from "../../../../../theme/phi-tokens";
 import {
-  PHI_COLOR_PICKER_NEUTRAL_PRESETS,
-  PHI_COLOR_PICKER_PRESETS,
-} from "../../../../../components/widgets/config/color-picker-presets";
+  PHI_CONTROL_HEIGHTS,
+  PHI_PADDING,
+  PHI_RADII,
+} from "../../../../../theme/phi-tokens";
+import { PHI_COLOR_PICKER_NEUTRAL_PRESETS, PHI_COLOR_PICKER_PRESETS } from "../../../../../components/widgets/config/color-picker-presets";
 import { PHI_SPACING_TOKEN_KEYS } from "../../../../../components/widgets/config/spacing-options";
 import { PhiColorFieldControl } from "../../../../../components/controls/phi-color-field-control";
 import { PhiBrandControl, resolvePhiBrandLogoUrl } from "../../../../../components/controls/phi-brand-control";
@@ -96,7 +83,11 @@ import { normalizePhiBackgroundWidgetConfig, type PhiCmsBackgroundWidgetConfig }
 import { PhiMediaPickerBinding } from "../../../../../components/media/phi-media-picker-binding";
 import { PHI_MEDIA_WIDGET_DEFAULT_LABELS } from "../../../../../components/media/media-widget-labels";
 import { PHI_SEARCH_WIDGET_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/search";
-import { buildPhiMediaAssetContentDeliveryUrl, PhiMediaAssetFlags, PhiMediaKind } from "../../../../../constants/media";
+import {
+  buildPhiMediaAssetContentDeliveryUrl,
+  PhiMediaAssetFlags,
+  PhiMediaKind,
+} from "../../../../../constants/media";
 import { createPhiMediaPickerAssetControllerRoutes } from "../../../../../components/media/asset-controller-routes";
 import { PhiPresetSizeControl, type PhiPresetSizeOption } from "../../../../../components/controls/phi-preset-size-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
@@ -117,9 +108,6 @@ import type {
 import { PhiIcon } from "../../../../../components/shell/phi-icon";
 import { PhiIconPickerControl } from "../../../../../components/controls/phi-icon-picker-control";
 import type { PhiBuilderBrandWidgetConfig } from "./config";
-import { createPhiHistoryStore } from "../../../../../components/state/history-store";
-import { createPhiCommandToolbarControlAddress } from "../../../../../components/widgets/signals/command-toolbar-address";
-import { PHI_THEME_RUNTIME_MODULE_ID } from "../../../../../plugins/runtime-modules/theme/ids";
 import { PhiTableControl, type PhiTableControlColumn } from "../../../../../components/controls/phi-table-control";
 import { PhiSegmentedControl } from "../../../../../components/controls/phi-segmented-control";
 import {
@@ -155,44 +143,24 @@ import { PhiTypographyControl } from "../../../../../components/controls/phi-typ
 import { PhiDividerControl } from "../../../../../components/controls/phi-divider-control";
 import { PhiStatisticControl } from "../../../../../components/controls/phi-statistic-control";
 
-type ThemePayload = NonNullable<PhiBlockRuntime["site"]["theme"]>;
-const phiThemeHistory = createPhiHistoryStore<ThemePayload>(
-  "@phis/ui/theme-history",
-);
-type ThemeReadResponse = {
-  key?: string;
-  published?: ThemePayload;
-  publishedRevisionId?: number | null;
-  workingDraftRevisionId?: number | null;
-  draft?: {
-    revisionId?: number | null;
-    theme?: {
-      theme?: ThemePayload;
-      key?: string;
-    } | null;
-  } | null;
-};
+import {
+  DEFAULT_THEME_KEY,
+  omitThemeFields,
+  resolveThemeKey,
+  normalizeTheme,
+  resolveInitialTheme,
+  clearThemeControlShape,
+  resolveThemePayloadPreset,
+  applyThemePreset,
+  createInitialBrandThemeState,
+  clearThemeAuthoredGround,
+} from "../../brand-theme-model";
+import type {
+  ThemePayload,
+  BrandThemeState,
+  PhiThemeDraftEdit,
+} from "../../brand-theme-model";
 
-type ThemeWriteResponse = {
-  key?: string;
-  revisionId?: number | null;
-  theme?: {
-    theme?: ThemePayload;
-    key?: string;
-  } | null;
-  error?: string;
-};
-
-type BrandThemeState = {
-  key: string;
-  published: ThemePayload;
-  draft: ThemePayload;
-  revisionId: number | null;
-  hasPublishedThemeRevision: boolean;
-  publishedRevisionId: number | null;
-};
-
-const DEFAULT_THEME_KEY = "default";
 const PHI_THEME_CHROME_SHADOW_EDGES = [
   { family: "header" as const, label: "Header, downwards onto the Page" },
   { family: "sider" as const, label: "Sider, outwards at its outer edge" },
@@ -419,13 +387,6 @@ const BRAND_THEME_COLOR_SECTION_KEYS: readonly string[] = [
 
 type ThemeColorSeedSection = (typeof THEME_COLOR_SEED_SECTIONS)[number];
 
-/** The record without the named fields, for the places where a part of the Theme is handed back to its block. */
-function omitThemeFields(theme: ThemePayload, ...fields: ReadonlyArray<keyof ThemePayload>): ThemePayload {
-  return Object.fromEntries(
-    Object.entries(theme).filter(([key]) => !fields.includes(key as keyof ThemePayload)),
-  ) as ThemePayload;
-}
-
 /**
  * The Site's palette written back with empty containers dropped, so a Theme whose author cleared their
  * last colour owns nothing again and follows its palette block outright. An absent `palette` and an
@@ -517,31 +478,6 @@ function omitThemeColorOverride(theme: ThemePayload, tokenKey: string, mode: Phi
       Object.entries(current.overrides ?? {}).filter(([key]) => key !== tokenKey),
     ),
   }));
-}
-
-function resolveThemeKey(config?: PhiBuilderBrandWidgetConfig | null) {
-  return config?.themeKey?.trim() || DEFAULT_THEME_KEY;
-}
-
-function normalizeTheme(input: unknown, fallback: ThemePayload): ThemePayload {
-  if (!isPhiRecord(input)) {
-    return fallback;
-  }
-
-  return input as ThemePayload;
-}
-
-/**
- * A fresh draft names its blocks and owns nothing: the proportions come from the style block at
- * resolve time, the colour from the palette block, and nothing is copied in that a reset would later
- * have to know how to take away.
- */
-function resolveInitialTheme(runtime: PhiBlockRuntime): ThemePayload {
-  return normalizeTheme(runtime.site.theme, {
-    mode: "light",
-    preset: PHI_DEFAULT_THEME_PRESET_KEY,
-    presetVersion: PHI_DEFAULT_THEME_PRESET_VERSION,
-  } as ThemePayload);
 }
 
 function readThemeButtonShadowChoice(
@@ -675,20 +611,6 @@ function clearThemeShapeScale(theme: ThemePayload): ThemePayload {
   };
 }
 
-function clearThemeControlShape(theme: ThemePayload): ThemePayload {
-  const shape = Object.fromEntries(
-    Object.entries(theme.shape ?? {}).filter(([key]) => key !== "controls"),
-  ) as NonNullable<ThemePayload["shape"]>;
-  return Object.keys(shape).length > 0 ? { ...theme, shape } : omitThemeFields(theme, "shape");
-}
-
-function resolveThemePayloadPreset(
-  theme: ThemePayload,
-  presets: readonly PhiThemePresetPlugin[],
-) {
-  return resolvePhiThemePresetPlugin(presets, theme.preset);
-}
-
 function resolveThemePayloadMode(theme: ThemePayload) {
   return theme.mode === "dark" ? "dark" : "light";
 }
@@ -714,32 +636,6 @@ function mergeThemeCustomColors(
     ...current,
     customColors: { ...(current.customColors ?? {}), ...colorPatch },
   }));
-}
-
-/**
- * Picking a palette block drops the author's own palette, exactly as picking a ground or a style drops
- * theirs: somebody choosing another palette means to see it, and their seeds laid over it would hide
- * the very thing they asked for.
- */
-function applyThemePreset(theme: ThemePayload, preset: PhiThemePresetPlugin): ThemePayload {
-  return {
-    ...omitThemeFields(theme, "palette"),
-    preset: preset.key,
-    presetVersion: preset.version,
-  };
-}
-
-/** Back to the blocks alone: the palette, the proportions, the Button shadows and the component overrides all go. */
-function resetThemeToPreset(
-  theme: ThemePayload,
-  presets: readonly PhiThemePresetPlugin[],
-  preset = resolveThemePayloadPreset(theme, presets),
-): ThemePayload {
-  return {
-    ...omitThemeFields(theme, "palette", "style", "buttons", "components"),
-    preset: preset.key,
-    presetVersion: preset.version,
-  };
 }
 
 function stripEmptyTokenValues(token: Record<string, unknown>) {
@@ -796,29 +692,6 @@ function readEffectiveTokenNumber(token: Record<string, unknown>, key: string, f
 function readEffectiveTokenBoolean(token: Record<string, unknown>, key: string, fallback: boolean) {
   const value = token[key];
   return typeof value === "boolean" ? value : fallback;
-}
-
-function buildThemeReviewRoutePath(area: PhiCmsAreaKey) {
-  return area === "public" ? "/public" : `/${area}`;
-}
-
-function buildThemeReviewHref({
-  area,
-  revisionId,
-  themeKey,
-}: {
-  area: PhiCmsAreaKey;
-  revisionId: number;
-  themeKey: string;
-}) {
-  const url = new URL(buildThemeReviewRoutePath(area), window.location.origin);
-  url.searchParams.set("reviewKind", "theme");
-  url.searchParams.set("reviewRevision", String(revisionId));
-  url.searchParams.set("reviewArea", area);
-  url.searchParams.set("reviewPage", "/");
-  url.searchParams.set("reviewThemeKey", themeKey);
-
-  return `${url.pathname}${url.search}`;
 }
 
 /*
@@ -1056,138 +929,6 @@ function mergeThemeWordmarkShows(theme: ThemePayload, shows: boolean): ThemePayl
 }
 
 /**
- * What a Widget knows before the Controller has told it anything: the theme the Site was rendered with.
- *
- * It used to consult a module variable the Widgets kept between them, because a Widget mounting late
- * had no other way to learn about an unsaved draft. That variable answered for the browser tab, while
- * the draft belongs to the Area the Controller is mounted in -- so it was right by coincidence and
- * silently wrong wherever the two differed. A Widget asks now, and this is only the starting point.
- */
-function createInitialBrandThemeState(themeKey: string, fallbackTheme: ThemePayload): BrandThemeState {
-  return {
-    key: themeKey,
-    published: fallbackTheme,
-    draft: fallbackTheme,
-    revisionId: null,
-    hasPublishedThemeRevision: false,
-    publishedRevisionId: null,
-  };
-}
-
-function isSameThemePayload(left: ThemePayload, right: ThemePayload) {
-  return JSON.stringify(left) === JSON.stringify(right);
-}
-
-/*
- * `correlationId` is the exchange this state belongs to: the command that saved, published or reset,
- * or the draft another Widget asked the Controller to take. It is absent only where the Controller
- * announces the state it loaded on arrival, which begins one.
- */
-function emitThemeState(
-  dispatchSignal: ReturnType<typeof usePhiSignalDispatcher>,
-  theme: ThemePayload,
-  revisionId: number | null,
-  selectionValue: string,
-  draftStatus: "draft" | "published" = "draft",
-  correlationId?: string,
-) {
-  const receiver = "broadcast" as const;
-  dispatchBrandThemeSignal(dispatchSignal, { receiver, theme, revisionId, draftStatus, correlationId });
-  dispatchSignal({
-    scope: "area",
-    channel: PHI_THEME_SIGNAL_CHANNELS.presetSelect,
-    action: "change",
-    value: selectionValue,
-    valueType: "string",
-    sender: createPhiThemeControllerAddress(),
-    receiver,
-    correlationId,
-    timestamp: Date.now(),
-  });
-}
-
-/** The Theme as one Signal, to everybody or to the one Widget that asked; both emitters send this. */
-function dispatchBrandThemeSignal(
-  dispatchSignal: ReturnType<typeof usePhiSignalDispatcher>,
-  {
-    receiver,
-    theme,
-    revisionId,
-    draftStatus,
-    correlationId,
-  }: {
-    receiver: PhiSignalAddress | "broadcast";
-    theme: ThemePayload;
-    revisionId: number | null;
-    draftStatus: "draft" | "published";
-    correlationId: string | undefined;
-  },
-) {
-  dispatchSignal({
-    scope: "area",
-    channel: PHI_THEME_SIGNAL_CHANNELS.brandTheme,
-    action: "change",
-    value: { theme, revisionId, draftStatus, themeKey: DEFAULT_THEME_KEY },
-    valueType: "json",
-    valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.brandTheme,
-    sender: createPhiThemeControllerAddress(),
-    receiver,
-    correlationId,
-    timestamp: Date.now(),
-  });
-}
-
-/**
- * The draft's state in the words every draft keeper uses (`PhiDraftStatusSignalValue`), for the Core
- * Draft Status Widget: broadcast when it changes, or addressed to the one Widget that asked on mount.
- */
-function emitThemeDraftStatus(
-  dispatchSignal: ReturnType<typeof usePhiSignalDispatcher>,
-  receiver: PhiSignalAddress | "broadcast",
-  value: PhiDraftStatusSignalValue,
-  correlationId?: string,
-) {
-  dispatchSignal({
-    scope: "area",
-    channel: PHI_THEME_SIGNAL_CHANNELS.draftStatus,
-    action: "change",
-    value: { ...value, themeKey: DEFAULT_THEME_KEY },
-    valueType: "json",
-    valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.revisionsDraftStatus,
-    sender: createPhiThemeControllerAddress(),
-    receiver,
-    correlationId,
-    timestamp: Date.now(),
-  });
-}
-
-/**
- * The Set select's options, stated again for a stored Theme that changed.
- *
- * The Site Theme entry names the Set the stored Theme was derived from, and a save or a publish is a
- * new stored Theme. The whole list goes out, because that is what the select takes; the Sets come from
- * the server, where the active Modules are known.
- */
-function emitThemeSelectOptions(
-  dispatchSignal: ReturnType<typeof usePhiSignalDispatcher>,
-  options: readonly PhiControlOption[],
-  correlationId?: string,
-) {
-  dispatchSignal({
-    scope: "area",
-    channel: PHI_THEME_SIGNAL_CHANNELS.presetOptions,
-    action: "change",
-    value: { options: options.map((option) => ({ ...option })) },
-    valueType: "json",
-    valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.controlOptions,
-    sender: createPhiThemeControllerAddress(),
-    receiver: "broadcast",
-    correlationId,
-    timestamp: Date.now(),
-  });
-}
-
-/**
  * "Publish what you are holding" -- the question a Widget asks the Controller when it mounts.
  *
  * A Widget renders the draft but does not own it; the Controller does. Mounting late (a Stack slot
@@ -1216,36 +957,6 @@ function emitThemeHydrateRequest(
   });
 }
 
-/**
- * The reply, addressed to the one Widget that asked.
- *
- * Deliberately not `emitThemeState`. That one announces a change everybody is affected by, and says
- * three things -- the theme, the draft status, the selected preset -- because all three moved. Nothing
- * moved here: one Widget arrived late and needs catching up, so a broadcast would set the state of
- * Widgets that already had it, under the correlation of a mount they had no part in.
- */
-function emitThemeStateTo(
-  dispatchSignal: ReturnType<typeof usePhiSignalDispatcher>,
-  receiver: PhiSignalAddress,
-  theme: ThemePayload,
-  revisionId: number | null,
-  draftStatus: "draft" | "published",
-  correlationId: string,
-) {
-  dispatchBrandThemeSignal(dispatchSignal, { receiver, theme, revisionId, draftStatus, correlationId });
-}
-
-/**
- * Where a draft stands in a continuous edit.
- *
- * A colour picker or a slider sends a draft for every value it passes over, and none of those is a
- * decision: the decision is taking the value -- closing the picker, letting go of the slider -- or
- * putting it back with Escape.
- * `live` is a step shown in the preview and kept out of the history; `commit` ends the edit with one
- * entry from where it started; `discard` ends it with none and the Theme as it was before it opened.
- */
-type PhiThemeDraftEdit = "live" | "commit" | "discard";
-
 function emitThemeDraftRequest(
   dispatchSignal: ReturnType<typeof usePhiSignalDispatcher>,
   theme: ThemePayload,
@@ -1267,57 +978,6 @@ function emitThemeDraftRequest(
     valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.brandTheme,
     sender: null,
     receiver: createPhiThemeControllerAddress(),
-    timestamp: Date.now(),
-  });
-}
-
-function emitRootThemeState(
-  dispatchSignal: ReturnType<typeof usePhiSignalDispatcher>,
-  theme: ThemePayload,
-  correlationId: string,
-) {
-  dispatchSignal({
-    scope: "site",
-    channel: "theme",
-    action: "change",
-    value: theme,
-    valueType: "json",
-    valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeTheme,
-    sender: createPhiThemeControllerAddress(),
-    receiver: createPhiCoreRuntimeControllerAddress(),
-    correlationId,
-    timestamp: Date.now(),
-  });
-}
-
-/**
- * The Page, asked again for the Theme it now has.
- *
- * Publishing moves what the server renders from, and almost none of that is in this Widget's hands.
- * The Root layout reads the Site's Theme once per server render and hands the whole of it down --
- * fonts, the root background, the Brand's pictures -- and the Builder page around this Widget was
- * measured with the shell heights of the Theme that stood before. The broadcast beside this one
- * reaches the Theme Widgets on this page and nothing above them, and the preview signal only paints
- * the draft; so without this, what was published is visible on the next navigation and not before.
- *
- * `reload` at the Core Runtime's address is the Site's one way of saying it: the always-mounted
- * adapter answers with `router.refresh()`, which re-renders the route's Server components and leaves
- * the operator on the panel they had open (components/runtime/core-runtime-application-adapter.tsx).
- * A document reload would close it.
- */
-function emitRootReload(
-  dispatchSignal: ReturnType<typeof usePhiSignalDispatcher>,
-  correlationId: string | undefined,
-) {
-  dispatchSignal({
-    scope: "site",
-    channel: "reload",
-    action: "activate",
-    value: null,
-    valueType: "none",
-    sender: createPhiThemeControllerAddress(),
-    receiver: createPhiCoreRuntimeControllerAddress(),
-    correlationId,
     timestamp: Date.now(),
   });
 }
@@ -1433,628 +1093,6 @@ function usePhiBrandPreviewMode(initialMode: "light" | "dark") {
   });
 
   return mode;
-}
-
-export function PhiBuilderBrandThemeControllerWidgetClient({
-  runtime,
-  config,
-  setOptions,
-}: {
-  runtime: PhiBlockRuntime;
-  config?: PhiBuilderBrandWidgetConfig | null;
-  setOptions: readonly PhiControlOption[];
-}) {
-  const dispatchSignal = usePhiSignalDispatcher();
-  const { showMessage } = usePhiApplicationFeedback();
-  const { presets: themePresets } = usePhiConfig();
-  const themeBlocks = usePhiThemeBlockCatalog();
-  const themeKey = resolveThemeKey(config);
-  const siteKey = runtime.site.key;
-  const historyScope = `theme:${siteKey}:${themeKey}`;
-  const reviewArea =
-    config?.reviewArea ?? (runtime.area === "builder" ? "public" : runtime.area);
-  const fallbackTheme = useMemo(() => resolveInitialTheme(runtime), [runtime]);
-  const initialState = useMemo(() => createInitialBrandThemeState(themeKey, fallbackTheme), [fallbackTheme, themeKey]);
-  const [state, setState] = useState<BrandThemeState>(initialState);
-  const stateRef = useRef<BrandThemeState>(initialState);
-  /*
-   * The Theme being worked on -- the Draft entry of the Set select. Trying on a Set or the Published
-   * Theme leaves it alone, so picking Draft again takes the try-on back; any edit moves it.
-   */
-  const siteThemeRef = useRef<ThemePayload>(initialState.draft);
-  /* The options last sent, so a draft that changes nothing in the select does not send them again. */
-  const sentSelectOptionsRef = useRef<string | null>(null);
-  /* The draft a picker edit started from, while one is open; see `PhiThemeDraftEdit`. */
-  const pickerEditBeforeRef = useRef<ThemePayload | null>(null);
-  const [saving, setSaving] = useState(false);
-  /*
-   * The Theme as it is stored -- the saved draft, or the published Theme where no draft stands -- and
-   * why it could not be read, if it could not. What is on screen differing from it is `unsaved`.
-   */
-  const savedThemeRef = useRef<ThemePayload>(initialState.draft);
-  const readErrorRef = useRef<string | null>(null);
-
-  const resolveDraftStatus = useCallback((): PhiDraftStatusSignalValue => {
-    const current = stateRef.current;
-    const subject = `theme/${themeKey}`;
-    if (readErrorRef.current !== null) {
-      return { status: "error", revisionId: null, subject, error: readErrorRef.current };
-    }
-    if (!isSameThemePayload(current.draft, savedThemeRef.current)) {
-      return { status: "unsaved", revisionId: current.revisionId, subject };
-    }
-    return current.revisionId != null
-      ? { status: "draft", revisionId: current.revisionId, subject }
-      : { status: "published", revisionId: null, subject };
-  }, [themeKey]);
-
-  const announceDraftStatus = useCallback((correlationId?: string) => {
-    emitThemeDraftStatus(dispatchSignal, "broadcast", resolveDraftStatus(), correlationId);
-  }, [dispatchSignal, resolveDraftStatus]);
-
-  /*
-   * A draft exists once one was saved, or once the Theme being worked on is no longer the published one.
-   * Undoing back to the published Theme takes an unsaved draft away again.
-   */
-  const hasDraft = useCallback(() => {
-    const current = stateRef.current;
-    return current.revisionId != null || !isSameThemePayload(siteThemeRef.current, current.published);
-  }, []);
-
-  const resolveSelectionValue = useCallback(() => resolvePhiThemeSelectionValue(siteKey, {
-    published: stateRef.current.hasPublishedThemeRevision,
-    draft: hasDraft(),
-  }), [hasDraft, siteKey]);
-
-  const emitSelectOptions = useCallback((correlationId?: string) => {
-    const current = stateRef.current;
-    const options = [
-      ...buildPhiSiteThemeSelectOptions({
-        siteKey,
-        published: current.hasPublishedThemeRevision
-          ? { theme: current.published, revisionId: current.publishedRevisionId }
-          : null,
-        draft: hasDraft() ? { theme: siteThemeRef.current, revisionId: current.revisionId } : null,
-      }),
-      ...setOptions,
-    ];
-    const serialized = JSON.stringify(options);
-    if (serialized === sentSelectOptionsRef.current) {
-      return;
-    }
-    sentSelectOptionsRef.current = serialized;
-    emitThemeSelectOptions(dispatchSignal, options, correlationId);
-  }, [dispatchSignal, hasDraft, setOptions, siteKey]);
-
-  /*
-   * Every draft states the Set it was derived from. A Theme that never named one gets the core Set on
-   * its first draft, so the Draft entry is never without a name.
-   */
-  const publishDraft = useCallback((
-    draftTheme: ThemePayload,
-    options?: {
-      history?: boolean;
-      updateSiteSnapshot?: boolean;
-      correlationId?: string;
-      /** What the Set select shows for this draft; a Site entry unless a Set is being tried. */
-      selectionValue?: string;
-    },
-  ) => {
-    const nextTheme = ensurePhiThemeDerivation(draftTheme);
-    const current = stateRef.current;
-    if (options?.history !== false && !isSameThemePayload(current.draft, nextTheme)) {
-      phiThemeHistory.record(historyScope, {
-        label: "Update theme",
-        before: current.draft,
-        after: nextTheme,
-      });
-    }
-
-    const nextState = {
-      ...current,
-      draft: nextTheme,
-    };
-    stateRef.current = nextState;
-    if (options?.updateSiteSnapshot !== false) {
-      siteThemeRef.current = nextTheme;
-    }
-    setState(nextState);
-    emitThemeState(
-      dispatchSignal,
-      nextTheme,
-      nextState.revisionId,
-      options?.selectionValue ?? resolveSelectionValue(),
-      "draft",
-      options?.correlationId,
-    );
-    announceDraftStatus(options?.correlationId);
-    emitSelectOptions(options?.correlationId);
-  }, [announceDraftStatus, dispatchSignal, emitSelectOptions, historyScope, resolveSelectionValue]);
-
-  useEffect(() => {
-    const emitAvailability = () => {
-      const availability = phiThemeHistory.getAvailability(historyScope);
-      for (const [controlKey, enabled] of [
-        ["undo", availability.canUndo],
-        ["redo", availability.canRedo],
-      ] as const) {
-        dispatchSignal({
-          scope: "area",
-          channel: "enabled",
-          action: "change",
-          value: enabled,
-          valueType: "boolean",
-          sender: createPhiThemeControllerAddress(),
-          receiver: createPhiCommandToolbarControlAddress(
-            PHI_THEME_RUNTIME_MODULE_ID,
-            "builder-theme-page",
-            controlKey,
-          ),
-          timestamp: Date.now(),
-        });
-      }
-    };
-
-    emitAvailability();
-    return phiThemeHistory.subscribe(historyScope, emitAvailability);
-  }, [dispatchSignal, historyScope]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    void fetch(`/api/site/cms/theme?key=${encodeURIComponent(themeKey)}`, {
-      method: "GET",
-      cache: "no-store",
-    })
-      .then(async (response) => {
-        const body = (await response.json().catch(() => null)) as ThemeReadResponse | null;
-        if (!response.ok) {
-          throw new Error((body as { error?: string } | null)?.error ?? "Failed to read theme.");
-        }
-        if (cancelled) {
-          return;
-        }
-
-        const published = normalizeTheme(body?.published, fallbackTheme);
-        const draft = normalizeTheme(body?.draft?.theme?.theme, published);
-        const revisionId =
-          typeof body?.draft?.revisionId === "number" && Number.isInteger(body.draft.revisionId)
-            ? body.draft.revisionId
-            : null;
-        const publishedRevisionId =
-          typeof body?.publishedRevisionId === "number" && Number.isInteger(body.publishedRevisionId)
-            ? body.publishedRevisionId
-            : null;
-        const nextState = {
-          key: body?.key?.trim() || themeKey,
-          published,
-          draft,
-          revisionId,
-          hasPublishedThemeRevision: publishedRevisionId != null,
-          publishedRevisionId,
-        };
-        stateRef.current = nextState;
-        siteThemeRef.current = draft;
-        savedThemeRef.current = draft;
-        readErrorRef.current = null;
-        setState(nextState);
-        phiThemeHistory.clear(historyScope);
-        emitThemeState(
-          dispatchSignal,
-          draft,
-          revisionId,
-          resolveSelectionValue(),
-          revisionId == null ? "published" : "draft",
-        );
-        announceDraftStatus();
-        emitSelectOptions();
-      })
-      .catch((error) => {
-        if (!cancelled) {
-          const message = error instanceof Error ? error.message : "Failed to read theme.";
-          readErrorRef.current = message;
-          announceDraftStatus();
-          showMessage({ level: "error", content: message });
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    announceDraftStatus,
-    dispatchSignal,
-    emitSelectOptions,
-    fallbackTheme,
-    historyScope,
-    resolveSelectionValue,
-    showMessage,
-    siteKey,
-    themeKey,
-  ]);
-
-  async function saveTheme(
-    draftTheme = stateRef.current.draft,
-    options?: { notify?: boolean; correlationId?: string },
-  ) {
-    let nextTheme = ensurePhiThemeDerivation(draftTheme);
-    setSaving(true);
-    try {
-      const current = stateRef.current;
-      /*
-       * The blocks a Module brought become the Site's here, on the way to the server and nowhere else:
-       * its palette, its style tokens, and its ground -- background, Chrome and Shadow of both modes as
-       * values, every picture as a Site Asset. Following a block costs nothing; saving is what says
-       * somebody means to keep it, and a look somebody decided on must not depend on a package staying
-       * installed.
-       */
-      const materialized = await materializePhiThemeModuleBlocks(
-        nextTheme,
-        resolvePhiThemeComposition(nextTheme, themeBlocks),
-      );
-      /*
-       * The Logo is taken the same way, from every Set, core included: a Set offers it, and a Site that
-       * saved has decided to keep it -- as a picture in its own library, not as a data URL in its record.
-       */
-      nextTheme = await materializePhiThemeBrandLogo(
-        materialized.theme,
-        resolvePhiThemeComposition(materialized.theme, themeBlocks).markSet,
-      );
-      const response = await fetch("/api/site/cms/theme", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          key: current.key,
-          theme: nextTheme,
-          message: "Brand theme draft",
-        }),
-      });
-      const body = (await response.json().catch(() => null)) as ThemeWriteResponse | null;
-      if (!response.ok) {
-        throw new Error(body?.error ?? "Failed to save theme draft.");
-      }
-      const revisionId = typeof body?.revisionId === "number" && Number.isInteger(body.revisionId) ? body.revisionId : null;
-      const savedTheme = normalizeTheme(body?.theme?.theme, nextTheme);
-      const nextState = {
-        ...stateRef.current,
-        draft: savedTheme,
-        revisionId,
-      };
-      stateRef.current = nextState;
-      siteThemeRef.current = savedTheme;
-      savedThemeRef.current = savedTheme;
-      setState(nextState);
-      emitThemeState(
-        dispatchSignal,
-        savedTheme,
-        revisionId,
-        resolveSelectionValue(),
-        "draft",
-        options?.correlationId,
-      );
-      announceDraftStatus(options?.correlationId);
-      emitSelectOptions(options?.correlationId);
-      if (options?.notify !== false) {
-        showMessage(
-          { level: "success", content: "Saved theme draft." },
-          { correlationId: options?.correlationId ?? null },
-        );
-      }
-      return revisionId;
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function publishTheme(correlationId?: string) {
-    /*
-     * Publish takes what is on screen. The server publishes a saved revision, so an unsaved draft is
-     * saved first and that revision goes live; publishing `revisionId` as it stood would have put the
-     * last save live and then replaced every panel with it, dropping the unsaved edits without a word.
-     */
-    if (!isSameThemePayload(stateRef.current.draft, savedThemeRef.current)) {
-      await saveTheme(undefined, { notify: false, correlationId });
-    }
-    const current = stateRef.current;
-    if (current.revisionId == null) {
-      throw new Error("No saved theme draft found to publish.");
-    }
-
-    const response = await fetch("/api/site/cms/theme/publish", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        key: current.key,
-        revisionId: current.revisionId,
-      }),
-    });
-    const body = (await response.json().catch(() => null)) as ThemeWriteResponse | null;
-    if (!response.ok) {
-      throw new Error(body?.error ?? "Failed to publish theme.");
-    }
-    const published = normalizeTheme(body?.theme?.theme, current.draft);
-    const nextState = {
-      ...current,
-      published,
-      draft: published,
-      revisionId: null,
-      hasPublishedThemeRevision: true,
-      publishedRevisionId: current.revisionId,
-    };
-    stateRef.current = nextState;
-    siteThemeRef.current = published;
-    savedThemeRef.current = published;
-    setState(nextState);
-    emitThemeState(
-      dispatchSignal,
-      published,
-      null,
-      resolveSelectionValue(),
-      "published",
-      correlationId,
-    );
-    announceDraftStatus(correlationId);
-    emitSelectOptions(correlationId);
-    showMessage({ level: "success", content: "Published theme." }, { correlationId: correlationId ?? null });
-    emitRootReload(dispatchSignal, correlationId);
-  }
-
-  /*
-   * The Controller names the address it is addressed at, or the bus has nobody to deliver to.
-   *
-   * A signal is held until a listener answers for its receiver, and a listener answers only for an
-   * address it names. Every draft a Widget sent -- and every hydrate request -- was held here and
-   * never arrived, silently: the Widget rendered its own copy, so the controls looked right while the
-   * Controller knew nothing and the preview was never told.
-   */
-  usePhiSignalListener((signal) => {
-    if (
-      signal.channel === PHI_THEME_SIGNAL_CHANNELS.brandTheme &&
-      signal.action === "change" &&
-      signal.receiver === createPhiThemeControllerAddress() &&
-      signal.sender !== createPhiThemeControllerAddress()
-    ) {
-      const value = signal.value && typeof signal.value === "object"
-        ? signal.value as { theme?: unknown; revisionId?: unknown; edit?: unknown }
-        : null;
-      const current = stateRef.current;
-      const nextTheme = normalizeTheme(value?.theme, current.draft);
-      const revisionId = typeof value?.revisionId === "number" && Number.isInteger(value.revisionId) ? value.revisionId : current.revisionId;
-      if (revisionId !== current.revisionId) {
-        stateRef.current = { ...current, revisionId };
-      }
-      const edit = value?.edit;
-      if (edit === "live") {
-        pickerEditBeforeRef.current ??= current.draft;
-        publishDraft(nextTheme, { history: false, correlationId: signal.correlationId });
-        return;
-      }
-      if (edit === "commit" || edit === "discard") {
-        const before = pickerEditBeforeRef.current;
-        pickerEditBeforeRef.current = null;
-        if (edit === "discard") {
-          publishDraft(before ?? nextTheme, { history: false, correlationId: signal.correlationId });
-          return;
-        }
-        publishDraft(nextTheme, { history: false, correlationId: signal.correlationId });
-        if (before && !isSameThemePayload(before, nextTheme)) {
-          phiThemeHistory.record(historyScope, { label: "Update theme", before, after: nextTheme });
-        }
-        return;
-      }
-      pickerEditBeforeRef.current = null;
-      publishDraft(nextTheme, { correlationId: signal.correlationId });
-      return;
-    }
-
-	    if (
-      signal.scope === "area" &&
-      signal.receiver === createPhiThemeControllerAddress() &&
-      signal.channel === PHI_THEME_SIGNAL_CHANNELS.previewThemeMode &&
-      signal.action === "change" &&
-      signal.valueType === "boolean"
-    ) {
-	      const value = signal.value;
-      const nextMode = typeof value === "boolean" ? value ? "dark" : "light" : null;
-
-      if (!nextMode) {
-        return;
-      }
-      const current = stateRef.current;
-      const baseTheme = current.hasPublishedThemeRevision ? current.published : fallbackTheme;
-      const nextTheme = {
-        ...baseTheme,
-        mode: nextMode,
-      } satisfies ThemePayload;
-      // Resolved here, where the catalogue is: the root applies what it receives and holds no blocks.
-      emitRootThemeState(dispatchSignal, resolvePhiThemeRuntimePayload(nextTheme, themeBlocks).theme, signal.correlationId);
-      return;
-    }
-
-    if (signal.channel === PHI_THEME_SIGNAL_CHANNELS.presetSelect) {
-      if (
-        signal.scope === "area" &&
-        signal.action === "change" &&
-        signal.receiver === createPhiThemeControllerAddress() &&
-        typeof signal.value === "string" &&
-        signal.value.trim().length > 0
-      ) {
-        /*
-         * Draft goes back to the Theme being worked on; Published is tried on the way a Set is -- it
-         * replaces what is shown, the Draft entry keeps what was there, and only a save or an edit on
-         * top makes it the draft. Both are one history entry.
-         */
-        const siteState = readPhiSiteThemeSelectionState(signal.value, siteKey);
-        if (siteState) {
-          const current = stateRef.current;
-          if (siteState === "published" && !current.hasPublishedThemeRevision) {
-            return;
-          }
-          const nextTheme = siteState === "draft" ? siteThemeRef.current : current.published;
-          if (!isSameThemePayload(current.draft, nextTheme)) {
-            publishDraft(nextTheme, {
-              updateSiteSnapshot: false,
-              correlationId: signal.correlationId,
-              selectionValue: createPhiSiteThemeSelectionValue(siteKey, siteState),
-            });
-          }
-          return;
-        }
-        /*
-         * A Set is tried on, not taken: it decides all three parts and names itself as the derivation,
-         * but the Site Theme entry keeps what was there before, so choosing it again takes the Set back.
-         */
-        const set = themeBlocks.sets.find((candidate) => candidate.key === signal.value);
-        if (!set) {
-          return;
-        }
-        const palette = themeBlocks.palettes.find((candidate) => candidate.key === set.palette);
-        const withSet = mergeThemeSetChoice(stateRef.current.draft, set);
-        const nextTheme: ThemePayload = {
-          ...(palette ? applyThemePreset(withSet, palette) : withSet),
-          derivedFrom: createPhiThemeDerivation(set),
-        };
-        if (!isSameThemePayload(stateRef.current.draft, nextTheme)) {
-          publishDraft(nextTheme, {
-            updateSiteSnapshot: false,
-            correlationId: signal.correlationId,
-            selectionValue: set.key,
-          });
-        }
-        return;
-      }
-
-      return;
-    }
-
-    /*
-     * A Draft Status Widget that mounted asks what stands; the answer goes to it alone, for the reason
-     * `emitThemeStateTo` gives. Answered whatever is in progress, because it is a question about state.
-     */
-    if (
-      signal.scope === "area" &&
-      signal.channel === PHI_THEME_SIGNAL_CHANNELS.draftStatus &&
-      signal.action === "activate" &&
-      signal.receiver === createPhiThemeControllerAddress()
-    ) {
-      if (signal.sender != null) {
-        emitThemeDraftStatus(dispatchSignal, signal.sender, resolveDraftStatus(), signal.correlationId);
-      }
-      return;
-    }
-
-    if (
-      signal.scope !== "area" ||
-      signal.channel !== PHI_THEME_SIGNAL_CHANNELS.command ||
-      signal.action !== "activate" ||
-      signal.valueType !== "string" ||
-      signal.receiver !== createPhiThemeControllerAddress()
-    ) {
-      return;
-    }
-
-    const commandValue = signal.value;
-
-    /*
-     * Answered before the saving guard: a Widget that mounts mid-save is asking what is there, which
-     * is a question about state and not a command that would compete with the save.
-     */
-    if (commandValue === "hydrate") {
-      const asker = signal.sender;
-      if (asker == null) {
-        return;
-      }
-      const current = stateRef.current;
-      emitThemeStateTo(
-        dispatchSignal,
-        asker,
-        current.draft,
-        current.revisionId,
-        current.revisionId == null ? "published" : "draft",
-        signal.correlationId,
-      );
-      return;
-    }
-
-    if (saving) {
-      return;
-    }
-
-    if (commandValue === "save") {
-      void saveTheme(undefined, { correlationId: signal.correlationId }).catch((error) => {
-        showMessage(
-          { level: "error", content: error instanceof Error ? error.message : "Failed to save theme draft." },
-          { correlationId: signal.correlationId },
-        );
-      });
-      return;
-    }
-
-    if (commandValue === "publish") {
-      void publishTheme(signal.correlationId).catch((error) => {
-        showMessage(
-          { level: "error", content: error instanceof Error ? error.message : "Failed to publish theme." },
-          { correlationId: signal.correlationId },
-        );
-      });
-      return;
-    }
-
-    if (commandValue === "preview") {
-      const revisionId = stateRef.current.revisionId;
-      if (!Number.isInteger(revisionId) || (revisionId as number) <= 0) {
-        showMessage(
-          { level: "error", content: "No saved theme draft found. Save first before opening live preview." },
-          { correlationId: signal.correlationId },
-        );
-        return;
-      }
-
-      const href = buildThemeReviewHref({
-        area: reviewArea,
-        revisionId: revisionId as number,
-        themeKey: stateRef.current.key,
-      });
-      window.open(href, "_blank", "noopener,noreferrer");
-      return;
-    }
-
-    if (commandValue === "reset") {
-      const preset = resolveThemePayloadPreset(stateRef.current.draft, themePresets);
-      publishDraft(
-        resetThemeToPreset(stateRef.current.draft, themePresets, preset),
-        { correlationId: signal.correlationId },
-      );
-      showMessage(
-        { level: "success", content: `Reset theme to ${preset.title}.` },
-        { correlationId: signal.correlationId },
-      );
-      return;
-    }
-
-    if (commandValue === "undo") {
-      pickerEditBeforeRef.current = null;
-      phiThemeHistory.undo(historyScope, (previous) => {
-        publishDraft(previous, { history: false, correlationId: signal.correlationId });
-      });
-      return;
-    }
-
-    if (commandValue === "redo") {
-      pickerEditBeforeRef.current = null;
-      phiThemeHistory.redo(historyScope, (next) => {
-        publishDraft(next, { history: false, correlationId: signal.correlationId });
-      });
-    }
-  }, undefined, createPhiThemeControllerAddress());
-
-  void state;
-
-  return null;
 }
 
 /**
@@ -2833,37 +1871,8 @@ function mergeThemeBlockChoice(
   return withChoice;
 }
 
-/**
- * A Set decides all three parts, so it clears all three: the parts picked one by one, because a Set is
- * what somebody falls back on when they stop deciding each part, and the values authored on top of
- * them, for the same reason picking a single block clears its own. The Control shape belongs to the
- * style, so it goes with the style tokens.
- */
-function mergeThemeSetChoice(
-  theme: ThemePayload,
-  set: { key: string; version: number },
-): ThemePayload {
-  return clearThemeAuthoredFonts(clearThemeAuthoredGround(clearThemeControlShape(clearThemeStyleTokens({
-    ...theme,
-    blocks: { set: { key: set.key, version: set.version } },
-  }))));
-}
-
-/** Every font slot an author set, so the Set's fonts block is what shows. */
-function clearThemeAuthoredFonts(theme: ThemePayload): ThemePayload {
-  return omitThemeFields(theme, "fonts");
-}
-
 function formatShapeLabel(shape: PhiControlShape) {
   return shape.charAt(0).toUpperCase() + shape.slice(1);
-}
-
-/** Every ground value an author set, in both modes, so the chosen block is what shows. */
-function clearThemeAuthoredGround(theme: ThemePayload): ThemePayload {
-  const root = Object.fromEntries(
-    Object.entries(theme.root ?? {}).filter(([key]) => key !== "background" && key !== "chrome"),
-  ) as NonNullable<ThemePayload["root"]>;
-  return { ...theme, root };
 }
 
 /**
@@ -2920,17 +1929,6 @@ function PhiBrandBlockResetButton({
       label={`Follow ${blockTitle}`}
     />
   );
-}
-
-/**
- * Dropping every structural override, so the style block shows through again.
- *
- * Colour stays: the two tabs are two decisions, and somebody resetting the proportions did not ask to
- * lose the brand colour they picked. The record keeps them apart -- `palette` and `style` -- so taking
- * the one away never touches the other.
- */
-function clearThemeStyleTokens(theme: ThemePayload): ThemePayload {
-  return omitThemeFields(theme, "style");
 }
 
 /**

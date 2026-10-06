@@ -80,6 +80,7 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
             { routeKey: "editor-translations-controller-form-reset", capabilityId: "formReset", scope: "page", channel: "reset", action: "activate", valueType: "none", receiver: formAddress },
             { routeKey: "editor-translations-controller-save-submitting", capabilityId: "saveSubmitting", scope: "page", channel: "submitting", action: "change", valueType: "boolean", receiver: saveAddress },
             { routeKey: "editor-translations-controller-table-reload", capabilityId: "reload", scope: "page", channel: "reload", action: "activate", valueType: "none", receiver: tableAddress },
+            { routeKey: "editor-translations-controller-table-filters", capabilityId: "filters", scope: "page", channel: "filters", action: "change", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableFilters, receiver: tableAddress },
             { routeKey: "editor-translations-controller-source-locale", capabilityId: "sourceLocale", scope: "area", channel: "text", action: "change", valueType: "string", receiver: sourceLocaleAddress },
           ],
         },

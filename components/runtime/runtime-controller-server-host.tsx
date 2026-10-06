@@ -12,6 +12,7 @@ import {
   type PhiAnyRuntimeControllerDefinition,
 } from "../../plugins/registries/runtime-controller-core";
 import type { PhiSignalRuntimeContext } from "../../types/signals";
+import type { PhiCapabilitySnapshot } from "../../types/server-capabilities";
 import { PhiRuntimeModuleControllerClientHost } from "./runtime-module-controller-client-host";
 import { PhiPlatformRuntimeControllerClientHost } from "./platform-runtime-controller-client-host";
 import { PHI_FORM_CONTROLLER_TYPE } from "../forms/runtime-form-controller-address";
@@ -26,6 +27,7 @@ export type PhiRuntimeControllerServerHostProps = {
   registry: RuntimeControllerDefinitionRegistryLike;
   controllerModuleIdsByType: ReadonlyMap<string, PhiRuntimeModuleId>;
   runtimeModuleCatalog: PhiRuntimeModuleCatalog;
+  serverCapabilities: PhiCapabilitySnapshot | null;
   context?: PhiSignalRuntimeContext | null;
 };
 
@@ -34,7 +36,11 @@ export async function resolvePhiRuntimeControllerPreloads({
   runtime,
   registry,
   runtimeModuleCatalog,
-}: Pick<PhiRuntimeControllerServerHostProps, "controllers" | "runtime" | "registry" | "runtimeModuleCatalog">): Promise<{
+  serverCapabilities,
+}: Pick<
+  PhiRuntimeControllerServerHostProps,
+  "controllers" | "runtime" | "registry" | "runtimeModuleCatalog" | "serverCapabilities"
+>): Promise<{
   controllers: PhiRuntimeControllerSetting[];
   preloadDataByAddress: PhiRuntimeControllerPreloadMap;
 }> {
@@ -76,6 +82,7 @@ export async function resolvePhiRuntimeControllerPreloads({
       mountScope: setting.mountScope,
       runtime,
       runtimeModuleCatalog,
+      serverCapabilities,
       setting: resolvedSetting,
       config: parsedConfig,
     });
@@ -93,6 +100,7 @@ export async function PhiRuntimeControllerServerHost({
   registry,
   controllerModuleIdsByType,
   runtimeModuleCatalog,
+  serverCapabilities,
   context,
 }: PhiRuntimeControllerServerHostProps) {
   const {
@@ -103,6 +111,7 @@ export async function PhiRuntimeControllerServerHost({
     runtime,
     registry,
     runtimeModuleCatalog,
+    serverCapabilities,
   });
 
   if (activeControllers.length === 0) {

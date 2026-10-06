@@ -7,7 +7,7 @@ import { PhiCmsFlags, PhiCmsRegionType, PhiCmsStatus } from "../../../../constan
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import { resolvePhiShellHeaderHeight } from "../../../../helpers/shell-region-style";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
-import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
+import type { PhiCmsPageNode, PhiCmsTreeControllerSettings, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
 import type { PhiCmsCompiledDescriptorCatalog } from "../../../../types/cms-module-descriptors";
 import type { PhiCommandToolbarWidgetPlacement } from "../../../../types/core-widget-placements";
@@ -24,7 +24,11 @@ import {
 } from "../../../../theme/phi-theme-selection";
 import { getPhiBuilderChromeWidgetLabels } from "../../../../components/widgets/label-sets/builder-chrome";
 import { createPhiCommandToolbarId } from "../../../../components/widgets/signals/command-toolbar-address";
-import { createPhiThemeControllerAddress } from "../controller/address";
+import {
+  PHI_THEME_CONTROLLER_INSTANCE_KEY,
+  PHI_THEME_CONTROLLER_TYPE,
+  createPhiThemeControllerAddress,
+} from "../controller/address";
 import { PHI_THEME_SIGNAL_CHANNELS } from "../controller/signals";
 import { PHI_THEME_RUNTIME_MODULE_ID } from "../ids";
 import { buildPhiThemeSetSelectOptions } from "../set-options";
@@ -109,6 +113,31 @@ function buildThemeCommandToolbarConfig(toolbarId: PhiCmsInstanceId): PhiCommand
 }
 
 /**
+ * Whom the Theme Controller states its history into while this Page is shown: the toolbar's undo and
+ * redo. The Area runs the Controller; the Page names the receivers, which it alone holds.
+ */
+function buildThemeControllerSettings(toolbarId: PhiCmsInstanceId): PhiCmsTreeControllerSettings {
+  return [{
+    type: PHI_THEME_CONTROLLER_TYPE,
+    instanceKey: PHI_THEME_CONTROLLER_INSTANCE_KEY,
+    mountScope: "page",
+    config: {
+      signalRoutes: {
+        emits: (["undo", "redo"] as const).map((controlKey) => ({
+          routeKey: `theme-controller-${controlKey}-enabled`,
+          capabilityId: `${controlKey}Enabled`,
+          scope: "area",
+          channel: "enabled",
+          action: "change",
+          valueType: "boolean",
+          receiver: createPhiSignalSubcontrolAddress("cms", toolbarId, controlKey),
+        })),
+      },
+    },
+  }];
+}
+
+/**
  * The Theme page in the Builder: the Site's Theme Set picked in the header bottom, and four panels --
  * colour, style, background, brand -- each beside its own preview, one at a time in a Stack.
  *
@@ -143,6 +172,7 @@ export async function buildPhiDefaultBuilderThemePageTree({
       title: { msgId: 0, source: "Theme", value: labels.pageTitles.theme },
       description: null,
     },
+    controllerSettings: buildThemeControllerSettings(themeToolbarId),
     overlays: [],
     regions: [
       nodes.region({

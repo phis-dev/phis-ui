@@ -343,6 +343,7 @@ const PHI_WORKSPACE_CATALOG_KEYS = [
   "runtimeModuleDefinitions",
   "runtimeModuleIdsByArea",
   "unresolvedModuleIdsByArea",
+  "serverUnavailableModules",
   "publicRouteClaims",
   "publicRoutePaths",
 ] as const satisfies readonly (keyof PhiWorkspaceCatalogState)[];

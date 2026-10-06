@@ -146,7 +146,12 @@ async function loadSiteLocaleSettings(signal: AbortSignal) {
 }
 
 export function PhiLocalizationTableProviderClient({ children }: { children: ReactNode }) {
-  const emitSignal = usePhiSignalEmitter(createPhiLocalizationControllerAddress());
+  /*
+   * What a load learned about the workspace -- the locales, the selected one, the query -- told to the
+   * Localization Controller that keeps the filters. Under whatever sends from here, not under the
+   * Controller's address: a Controller does not take what arrives under its own name for a request.
+   */
+  const emitSignal = usePhiSignalEmitter();
   const recordsRef = useRef(new Map<string, Record<string, unknown>>());
 
   const query = useCallback(async (request: PhiTableProviderQueryRequest) => {
@@ -174,7 +179,7 @@ export function PhiLocalizationTableProviderClient({ children }: { children: Rea
               search: request.query.search?.trim() ?? "",
             },
           },
-          receiver: "broadcast",
+          receiver: createPhiLocalizationControllerAddress(),
         });
       return data;
     }

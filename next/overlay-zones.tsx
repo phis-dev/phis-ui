@@ -103,6 +103,7 @@ async function renderOverlayZones(
       })}
       controllerModuleIdsByType={runtimeModuleScope.moduleSet.ownerModuleIdByControllerType}
       runtimeModuleCatalog={scope.runtimeRegistry.runtimeModuleCatalog}
+      serverCapabilities={scope.runtimeRegistry.serverCapabilities}
     />
   );
   // Next renders the returned nodes after this function has returned, outside the request scope above.

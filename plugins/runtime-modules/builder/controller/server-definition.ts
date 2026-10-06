@@ -31,10 +31,12 @@ import { resolvePhiRuntimeModuleIdsForArea } from "../../../../plugins/runtime-m
 import { localizePhiRuntimeModuleDefinitions } from "../../module-labels.server";
 import { getPhiBuilderChromeWidgetLabels } from "../../../../components/widgets/label-sets/builder-chrome";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
+import { resolvePhiRuntimeModuleServerBinding } from "../../server-capabilities";
+import type { PhiWorkspaceCatalogState } from "../../../../components/workspace/catalog-state";
 
 export const PHI_BUILDER_RUNTIME_CONTROLLER_SERVER_DEFINITION = {
   ...PHI_BUILDER_RUNTIME_CONTROLLER_DEFINITION,
-  serverPreload: async ({ runtime, runtimeModuleCatalog }) => {
+  serverPreload: async ({ runtime, runtimeModuleCatalog, serverCapabilities }) => {
     const [
       shellPresetDraftsByArea,
       runtimeModuleIdsByArea,
@@ -84,9 +86,26 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_SERVER_DEFINITION = {
         }
       : runtimeModuleIdsByArea;
 
+    /*
+     * The Modules the Site could not run if it selected them, read the way the render reads them
+     * (`resolvePhiRuntimeModuleServerBinding`), so the Modules page says what the render does.
+     */
+    const serverUnavailableModules: PhiWorkspaceCatalogState["serverUnavailableModules"] = {};
+    for (const definition of canonicalModuleDefinitions) {
+      const binding = resolvePhiRuntimeModuleServerBinding(definition.serverBinding, serverCapabilities);
+      if (!binding.available) {
+        serverUnavailableModules[definition.moduleId] = {
+          providerId: definition.serverBinding.providerId,
+          diagnosticCode: binding.diagnosticCode,
+          missingCapabilities: [...binding.missingCapabilities],
+        };
+      }
+    }
+
     return {
       shellPresetDraftsByArea,
       runtimeModuleDefinitions: moduleDefinitions,
+      serverUnavailableModules,
       runtimeModuleIdsByArea: effectiveRuntimeModuleIdsByArea,
       unresolvedModuleIdsByArea,
       publicRouteClaims: buildPhiBuilderPublicRouteClaims(runtimeModuleCatalog),
