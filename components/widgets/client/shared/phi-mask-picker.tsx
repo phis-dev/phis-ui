@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 import { PhiMediaAssetFlags, PhiMediaAssetSource, PhiMediaKind } from "../../../../constants/media";
 import { normalizePhiImagePreviewTile } from "../../../media/phi-image-preview-data";
 import { bumpPhiImagePreviewRefreshToken } from "../../../media/phi-image-preview-store";
 import { usePhiMediaPickerBinding } from "../../../media/phi-media-picker-binding";
-import { runPhiMediaUploadSession } from "../../../media/media-upload-flow";
+import { isPhiMediaUploadCancelled, runPhiMediaUploadSession } from "../../../media/media-upload-flow";
 import {
   PHI_MEDIA_UPLOAD_DEFAULT_LABELS,
   readPhiMediaUploadErrorMessage,
@@ -83,6 +83,35 @@ export function PhiMaskPickerButton({
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
+  /*
+   * The value as it stands when an upload lands, not as it stood when the upload began: scale, offset
+   * and rotation can be changed while the file travels, and the Asset is merged into what is there.
+   */
+  const valueRef = useRef(value);
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
+  /*
+   * One upload at a time. A second file or icon while one travels is not taken -- the controls are
+   * disabled, and this holds for a drop that arrives before they re-render -- so two Assets can never
+   * race for the mask. Leaving the picker stops the upload; the Server clears up what arrived.
+   */
+  const uploadRef = useRef<AbortController | null>(null);
+  useEffect(() => () => uploadRef.current?.abort(), []);
+  const beginUpload = useCallback(() => {
+    if (uploadRef.current) return null;
+    const controller = new AbortController();
+    uploadRef.current = controller;
+    setUploading(true);
+    setUploadProgress(0);
+    return controller;
+  }, []);
+  const endUpload = useCallback((controller: AbortController) => {
+    if (uploadRef.current !== controller) return;
+    uploadRef.current = null;
+    setUploading(false);
+    setUploadProgress(0);
+  }, []);
 
   const updateOpen = useCallback((nextOpen: boolean) => {
     setOpen(nextOpen);
@@ -91,13 +120,13 @@ export function PhiMaskPickerButton({
   }, [popup]);
 
   const applyAsset = useCallback((asset: { id: number; deliveryUrl: string }) => {
-    onChange(mergePhiMaskConfigPatch(value, {
+    onChange(mergePhiMaskConfigPatch(valueRef.current, {
       source: "asset",
       assetId: asset.id,
       assetUrl: asset.deliveryUrl,
     }));
     updateOpen(false);
-  }, [onChange, updateOpen, value]);
+  }, [onChange, updateOpen]);
 
   const clearAsset = useCallback(() => {
     onChange(mergePhiMaskConfigPatch(value, {
@@ -133,26 +162,26 @@ export function PhiMaskPickerButton({
   }, [applyAsset]);
 
   const uploadFile = useCallback((file: File) => {
-    setUploading(true);
-    setUploadProgress(0);
+    const controller = beginUpload();
+    if (!controller) return;
     void runPhiMediaUploadSession(
       file,
       setUploadProgress,
       { presentationFlags: PhiMediaAssetFlags.Mask },
+      controller.signal,
     ).then((result) => {
+      if (controller.signal.aborted) return;
       applyUploadedAsset(result.asset);
       showMessage({ level: "success", content: `Uploaded ${file.name}.` });
     }).catch((error: unknown) => {
+      if (controller.signal.aborted || isPhiMediaUploadCancelled(error)) return;
       // One reading of every refusal, rather than whatever string the control plane happened to send.
       showMessage({
         level: "error",
         content: readPhiMediaUploadErrorMessage(error, PHI_MEDIA_UPLOAD_DEFAULT_LABELS),
       });
-    }).finally(() => {
-      setUploading(false);
-      setUploadProgress(0);
-    });
-  }, [applyUploadedAsset, showMessage]);
+    }).finally(() => endUpload(controller));
+  }, [applyUploadedAsset, beginUpload, endUpload, showMessage]);
 
   const uploadIconifyMask = useCallback((nextIconValue: string | null) => {
     setSelectedIcon(nextIconValue);
@@ -162,9 +191,9 @@ export function PhiMaskPickerButton({
       return;
     }
 
-    setUploading(true);
-    setUploadProgress(0);
-    void fetch(buildIconifySvgUrl(icon), { cache: "force-cache" })
+    const controller = beginUpload();
+    if (!controller) return;
+    void fetch(buildIconifySvgUrl(icon), { cache: "force-cache", signal: controller.signal })
       .then(async (response) => {
         if (!response.ok) throw new Error(`Iconify SVG request failed with ${response.status}.`);
         const svg = await response.text();
@@ -180,23 +209,22 @@ export function PhiMaskPickerButton({
             },
             usage: { mask: true },
           },
-        });
+        }, controller.signal);
       })
       .then((result) => {
+        if (controller.signal.aborted) return;
         applyUploadedAsset(result.asset);
         showMessage({ level: "success", content: `Selected ${icon.iconKey}.` });
       })
       .catch((error: unknown) => {
+        if (controller.signal.aborted || isPhiMediaUploadCancelled(error)) return;
         showMessage({
           level: "error",
           content: readPhiMediaUploadErrorMessage(error, PHI_MEDIA_UPLOAD_DEFAULT_LABELS),
         });
       })
-      .finally(() => {
-        setUploading(false);
-        setUploadProgress(0);
-      });
-  }, [applyUploadedAsset, showMessage]);
+      .finally(() => endUpload(controller));
+  }, [applyUploadedAsset, beginUpload, endUpload, showMessage]);
 
   return (
     <PhiMaskPickerControl

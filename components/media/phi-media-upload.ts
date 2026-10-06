@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { PhiMediaKind, resolvePhiMediaKindFromContentType } from "../../constants/media";
 import type { PhiMediaKindValue } from "../../types/media";
 import {
   PhiMediaUploadError,
+  isPhiMediaUploadCancelled,
   runPhiMediaUploadSession,
   type PhiMediaUploadSessionRunner,
   type PhiMediaUploadInitOptions,
@@ -166,6 +167,15 @@ export type PhiMediaUploadItem = {
  * What it deliberately does not own is what happens afterwards -- appending a tile, binding an avatar,
  * replacing a preview. That is the only part that differs between the surfaces, so it stays with them
  * and arrives through `onUploaded`.
+ *
+ * An upload belongs to the surface that started it. When that surface goes away -- an Overlay closed, a
+ * form unmounted -- every upload still running is stopped and reported `cancelled`, so no Asset is
+ * finalized that nobody will enter anywhere. `cancel()` does the same while the surface stays. A stopped
+ * upload leaves the list and calls neither `onUploaded` nor `onRejected`: nobody is waiting for it.
+ *
+ * `uploading` is true while any file is still on its way. A surface whose value is only complete once the
+ * upload settled -- a form field that receives the Asset id in `onUploaded` -- reads it to hold back
+ * whatever would act on the incomplete value.
  */
 export function usePhiMediaUpload(input: {
   labels: PhiMediaUploadLabels;
@@ -186,6 +196,15 @@ export function usePhiMediaUpload(input: {
   const runSession = input.runSession ?? runPhiMediaUploadSession;
   const [items, setItems] = useState<readonly PhiMediaUploadItem[]>([]);
   const sequence = useRef(0);
+  const running = useRef(new Set<AbortController>());
+
+  useEffect(() => {
+    const controllers = running.current;
+    return () => {
+      for (const controller of controllers) controller.abort();
+      controllers.clear();
+    };
+  }, []);
 
   const accept = useMemo(() => resolvePhiMediaUploadAccept(acceptance), [acceptance]);
 
@@ -205,24 +224,47 @@ export function usePhiMediaUpload(input: {
       { localId, file, progress: 0, status: "uploading", error: null, assetId: null },
       ...current,
     ]);
+    const controller = new AbortController();
+    running.current.add(controller);
+    let asset: { id: number };
     try {
-      const { asset } = await runSession(
+      ({ asset } = await runSession(
         file,
         (progress) => patch(localId, { progress }),
         initOptions,
-      );
-      patch(localId, { progress: 100, status: "done", assetId: asset.id });
-      await onUploaded?.(asset, file);
-      return asset;
+        controller.signal,
+      ));
     } catch (error) {
+      if (controller.signal.aborted || isPhiMediaUploadCancelled(error)) {
+        setItems((current) => current.filter((item) => item.localId !== localId));
+        return null;
+      }
       const message = readPhiMediaUploadErrorMessage(error, labels);
       patch(localId, { progress: 100, status: "error", error: message });
       onRejected?.(message, file);
       return null;
+    } finally {
+      running.current.delete(controller);
     }
+    // Stopped while finalize was answering: the Asset exists, but nobody is waiting to enter it.
+    if (controller.signal.aborted) return null;
+    patch(localId, { progress: 100, status: "done", assetId: asset.id });
+    try {
+      await onUploaded?.(asset, file);
+    } catch (error) {
+      const message = readPhiMediaUploadErrorMessage(error, labels);
+      patch(localId, { status: "error", error: message });
+      onRejected?.(message, file);
+      return null;
+    }
+    return asset;
   }, [acceptance, initOptions, labels, onRejected, onUploaded, patch, runSession]);
 
+  const cancel = useCallback(() => {
+    for (const controller of running.current) controller.abort();
+  }, []);
   const reset = useCallback(() => setItems([]), []);
+  const uploading = items.some((item) => item.status === "uploading");
 
-  return { accept, items, upload, reset };
+  return { accept, items, uploading, upload, cancel, reset };
 }

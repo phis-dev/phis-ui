@@ -312,6 +312,15 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   Form. An id that arrived as an
   initial value is shown as an id: resolving a stored Asset to its name needs a reader this field does
   not have, and inventing one inside a field Provider is the thing this section forbids.
+  While a file is still on its way the Form's submit is held: the Asset id only enters the value once
+  the upload settled, so a submit in between would send the Form without the attachment and leave the
+  id for the next draft. A submit during the hold fails on the field the way a rule fails, with the
+  Label Set key `uploadPending`, and reaches `onValidationFailed`; the hold is released when the upload
+  settles. A field whose Form goes away stops its uploads, and the Server is told `cancelled`, so no
+  Asset is finalized that the Form never names.
+- A field Provider whose value is only complete later holds the submit itself through
+  `formContext.holdSubmit(fieldKey, reason)` and releases it with `null`. `PhiFormControl` refuses a
+  submit while any hold stands; the handler is not called.
 - Core validation providers: `required`, `email`, `min-length`, `max-length`, `exact-length`,
   `min-letters`, `matches-field`, `url`, `tel`, `pattern`, `number`. They build Ant Design rules inside
   `PhiFormControl`. `pattern` takes `source` (at most 512 characters) and `flags` from `i`, `m`, `s`, `u`.
@@ -571,6 +580,11 @@ Other Form-shaped surfaces are separate Controllers:
   (`components/forms/form-guard-client.ts`) calls `GET /api/site/forms?phase=guard&formId=<id>`. If the
   token has not arrived by submit, the submit waits for it. The values are added to the submitted record,
   not kept in fields, so a reset cannot clear them.
+- A token the handler refused as expired (code `form_expired`, `PHI_FORM_GUARD_EXPIRED_CODE`: the Form
+  stood open past phis-server's `forms.timeouts.maxSubmitMs`) is dropped and a fresh one is asked for at
+  once, so the next submit carries it. The refused submit is not repeated by itself: a token that new is
+  one the handler reads as too fast. A handler that answers expiry with a silent success instead of
+  `form_expired` gives the browser nothing to renew on.
 - The relay issues a token only for a Form whose submit handler is active in the Area the page names
   (`&area=<area>`, see [Relay](#relay)), and forwards no cookie to phis-server's `/api/v1/forms/guard`.
   A refusal is a wiring fault.

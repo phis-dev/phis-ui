@@ -4,7 +4,7 @@ import { resolvePhiMediaAssetTypeLabel } from "./asset-type-label";
 import { PhiTagControl } from "../controls/phi-tag-control";
 import { PhiButtonControl } from "../controls/phi-button-control";
 import NextImage from "next/image";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { PhiCmsAreaUploadWidgetConfig } from "../../types/media";
 import { PhiCollectionLayoutControl } from "../controls/phi-collection-layout-control";
@@ -21,6 +21,7 @@ import type { PhiAreaUploadWidgetLabels } from "./media-widget-labels";
 import { PhiMediaKindIcon } from "./phi-media-kind-icon";
 import {
   PhiMediaUploadError,
+  isPhiMediaUploadCancelled,
   resolvePhiMediaUploadInitOptions,
   runPhiMediaUploadSession,
 } from "./media-upload-flow";
@@ -151,6 +152,19 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
   const previewState = usePhiImagePreviewStore(PHI_ASSET_CONTROLLER_STORE_KEY);
   const activateCollectionAction = usePhiCollectionProviderAction(PHI_ASSET_COLLECTION_DATA_SOURCE);
   const dragDepth = useRef(0);
+  /*
+   * Uploads still on their way. The wall belongs to whatever shows it -- a Media picker in an Overlay
+   * more often than not -- and closing that stops them, so no Asset is finalized that nobody sees
+   * arrive. The Server is told `cancelled` and clears up what had arrived.
+   */
+  const runningUploads = useRef(new Set<AbortController>());
+  useEffect(() => {
+    const controllers = runningUploads.current;
+    return () => {
+      for (const controller of controllers) controller.abort();
+      controllers.clear();
+    };
+  }, []);
   const [uploadWall, setUploadWall] = useState<UploadWallItem[]>([]);
   const [isDragActive, setIsDragActive] = useState(false);
   const allowDelete = config?.allowDelete ?? true;
@@ -255,6 +269,8 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
    */
   async function uploadFileToWallItem(file: File, localId?: string) {
     const nextLocalId = startUploadWallItem(file, localId);
+    const controller = new AbortController();
+    runningUploads.current.add(controller);
 
     try {
       const payload = await runPhiMediaUploadSession(file, (progress) => {
@@ -263,7 +279,8 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
             item.localId === nextLocalId ? { ...item, progress, status: "uploading" } : item,
           ),
         );
-      }, uploadInitOptions);
+      }, uploadInitOptions, controller.signal);
+      if (controller.signal.aborted) return;
       const uploadedTile = normalizePhiImagePreviewTile(payload.asset, []);
       setUploadWall((current) =>
         current.map((item) =>
@@ -273,6 +290,7 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
       onUploadComplete?.();
       showUploadMessage("success", labels.uploadSuccessTemplate.replace("%1", file.name));
     } catch (error) {
+      if (controller.signal.aborted || isPhiMediaUploadCancelled(error)) return;
       const errorMessage = resolveUploadErrorMessage(error, labels);
       setUploadWall((current) =>
         current.map((item) =>
@@ -287,6 +305,8 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
         ),
       );
       showUploadMessage("error", errorMessage);
+    } finally {
+      runningUploads.current.delete(controller);
     }
   }
 

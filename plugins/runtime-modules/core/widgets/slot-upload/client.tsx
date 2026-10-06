@@ -75,7 +75,10 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
    * Holding both together makes "not for this row" a thing the render can see.
    */
   const [loaded, setLoaded] = useState<{ ownerId: string; files: readonly SlotFile[] } | null>(null);
+  /** What went wrong with this row: reading its files, an upload, a removal. Cleared with the row. */
   const [failure, setFailure] = useState<string | null>(null);
+  /** What is wrong with the slot itself, which no row changes. */
+  const [slotFailure, setSlotFailure] = useState<string | null>(null);
 
   /** `/api/addons/<scope>/<name>/_assets`, which is Core's and the same for every Add-on. */
   const base = useMemo(() => {
@@ -105,8 +108,11 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
     }
     const params = readPhiTableBindingParamsSignalValue(signal.value)?.params;
     const next = params?.[ownerParam];
-    setOwnerId(next == null ? null : String(next));
-  }, [listenRoutes, ownerParam, signalIdentity.receiver]),
+    const nextOwnerId = next == null ? null : String(next);
+    // What went wrong on the previous row is not this row's to show.
+    if (nextOwnerId !== ownerId) setFailure(null);
+    setOwnerId(nextOwnerId);
+  }, [listenRoutes, ownerId, ownerParam, signalIdentity.receiver]),
   undefined,
   /*
    * The address this Widget answers for. Read without being named, a signal sent to it is held by the
@@ -126,10 +132,10 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
         const declared = (body.slots as SlotDescriptor[] | undefined ?? [])
           .find((entry) => entry.name === slotName);
         setSlot(declared ?? null);
-        if (!declared) setFailure(`This table declares no slot named "${slotName}".`);
+        setSlotFailure(declared ? null : `This table declares no slot named "${slotName}".`);
       })
       .catch((error: unknown) => {
-        if (live) setFailure(error instanceof Error ? error.message : "Unreachable.");
+        if (live) setSlotFailure(error instanceof Error ? error.message : "Unreachable.");
       });
     return () => { live = false; };
   }, [base, read, slotName]);
@@ -142,9 +148,18 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
     return ((body.files as SlotFile[] | undefined) ?? []).filter((file) => file.slot === slotName);
   }, [base, read, slotName]);
 
+  /*
+   * Reads the row's files again and says so where it cannot. Never rejects: it runs after an upload and
+   * after a removal, which both already happened -- a read that failed afterwards is a failure to show,
+   * not one to hand back to them.
+   */
   const reload = useCallback(async () => {
     if (!ownerId) return;
-    setLoaded({ ownerId, files: await readFiles(ownerId) });
+    try {
+      setLoaded({ ownerId, files: await readFiles(ownerId) });
+    } catch (error) {
+      setFailure(error instanceof Error ? error.message : "Unreachable.");
+    }
   }, [ownerId, readFiles]);
 
   useEffect(() => {
@@ -164,13 +179,19 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
    * The session, begun and settled at the Add-on's root; the transfer between them is Core's own and
    * the same one every Media surface runs, progress and refusals included.
    */
-  const runSession = useCallback(async (file: File, onProgress?: (progress: number) => void) => {
+  const runSession = useCallback(async (
+    file: File,
+    onProgress?: (progress: number) => void,
+    _options?: unknown,
+    signal?: AbortSignal,
+  ) => {
     if (!base || !ownerId) {
       throw new Error("There is no row to put this on.");
     }
     const slotBase = `${base}/${encodeURIComponent(ownerId)}/${encodeURIComponent(slotName)}`;
     const begun = await read(slotBase, {
       method: "POST",
+      ...(signal ? { signal } : {}),
       body: JSON.stringify({
         contentType: file.type || "application/octet-stream",
         sizeBytes: file.size,
@@ -182,6 +203,7 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
       file,
       reservation,
       ...(onProgress ? { onProgress } : {}),
+      ...(signal ? { signal } : {}),
       finalize: async (completion) => {
         const settled = await read(`${slotBase}/finalize`, {
           method: "POST",
@@ -206,15 +228,28 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
       }
       : {}),
     runSession,
-    onUploaded: () => { void reload(); },
+    onUploaded: async () => {
+      setFailure(null);
+      await reload();
+    },
     onRejected: (message) => setFailure(message),
   });
 
   const files = loaded?.ownerId === ownerId ? loaded.files : [];
 
+  /*
+   * The removal and the read after it fail apart: a DELETE that went through and a list that could not
+   * be read again are two answers, and saying "That file stayed" for the second was untrue.
+   */
   const remove = useCallback(async (id: string) => {
     if (!base || !ownerId) return;
-    await read(`${base}/${encodeURIComponent(ownerId)}/${encodeURIComponent(id)}`, { method: "DELETE" });
+    setFailure(null);
+    try {
+      await read(`${base}/${encodeURIComponent(ownerId)}/${encodeURIComponent(id)}`, { method: "DELETE" });
+    } catch {
+      setFailure("That file stayed.");
+      return;
+    }
     await reload();
   }, [base, ownerId, read, reload]);
 
@@ -256,7 +291,9 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
       {upload.items.filter((item) => item.status === "uploading").map((item) => (
         <PhiProgressControl key={item.localId} percent={item.progress} size="small" />
       ))}
-      {failure ? <PhiTypographyControl type="danger" role="alert">{failure}</PhiTypographyControl> : null}
+      {slotFailure ?? failure ? (
+        <PhiTypographyControl type="danger" role="alert">{slotFailure ?? failure}</PhiTypographyControl>
+      ) : null}
       <PhiEntryListControl
         emptyDescription="Nothing here yet."
         entries={[...files].map((file) => ({
@@ -268,7 +305,7 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
               icon={<PhiIcon name="delete" size="inherit" />}
               ariaLabel="Remove this file"
               tooltip="Remove this file"
-              onClick={() => { void remove(file.id).catch(() => setFailure("That file stayed.")); }}
+              onClick={() => { void remove(file.id); }}
             />
           ),
         }))}

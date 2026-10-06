@@ -94,6 +94,8 @@ export const PHI_FORM_HANDLER_PROVIDER_KEYS = {
 export const PHI_FORM_UPLOAD_LABEL_KEYS = {
   trigger: "uploadTrigger",
   tooMany: "uploadErrorTooMany",
+  /** Shown on the field when the Form is submitted while a file is still on its way. */
+  pending: "uploadPending",
   errorGeneric: "uploadErrorGeneric",
   errorNetwork: "uploadErrorNetwork",
   errorTooLarge: "uploadErrorTooLarge",

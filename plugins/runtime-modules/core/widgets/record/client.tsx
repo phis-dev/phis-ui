@@ -90,7 +90,13 @@ export function PhiRecordWidgetClient({
         setError(readError instanceof Error ? readError.message : labels.loadFailed);
       }
     } finally {
-      if (!abortController.signal.aborted) {
+      /*
+       * Whoever still owns the request ends the loading, aborted or not. Only a newer read replaces it --
+       * and then that one owns the skeleton. A read aborted by `close` used to leave it standing, so
+       * the next open showed the skeleton until a read finished.
+       */
+      if (requestRef.current === abortController) {
+        requestRef.current = null;
         setLoading(false);
       }
     }

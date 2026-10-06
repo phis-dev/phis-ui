@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { PhiMediaKind } from "../../constants/media";
 import type { PhiMediaKindValue } from "../../types/media";
@@ -20,6 +20,7 @@ import type { PhiFormFieldProviderProps } from "./form-provider-registry";
 
 const DEFAULT_TRIGGER_LABEL = "Choose a file";
 const DEFAULT_TOO_MANY_LABEL = "No more files fit here.";
+const DEFAULT_PENDING_LABEL = "Wait until the file has arrived.";
 
 const MEDIA_KINDS = new Set<string>(Object.values(PhiMediaKind));
 
@@ -104,6 +105,11 @@ function resolveUploadLabels(labels: Readonly<Record<string, string>> | undefine
  * Emptiness is `undefined` rather than `[]`. Ant Design's required rule accepts an empty array, so a
  * Form asking for a mandatory attachment would submit without one.
  *
+ * While a file is on its way the Form's submit is held (`formContext.holdSubmit`): the Asset id only
+ * enters the value once the upload settled, so a submit in between would send the Form without the
+ * attachment somebody can see arriving -- and the id would land in the next draft after the reset.
+ * Leaving the Form stops the upload, so no Asset is finalized that the Form never names.
+ *
  * The file name comes from the upload that is still in this Control's hands. An id that arrived as an
  * initial value has no name here, and inventing one would mean reading the Media Asset -- a second
  * contract inside a field provider, which is not this Control's to open.
@@ -145,7 +151,7 @@ export function PhiUploadFormControl({
   );
   const initOptions = useMemo(() => ({ spaceAddress: settings.space }), [settings]);
 
-  const { accept, items, upload } = usePhiMediaUpload({
+  const { accept, items, uploading, upload } = usePhiMediaUpload({
     labels: uploadLabels,
     acceptance,
     initOptions,
@@ -155,6 +161,13 @@ export function PhiUploadFormControl({
     },
     onRejected: (message) => setRefusal(message),
   });
+
+  const pendingLabel = labels?.[PHI_FORM_UPLOAD_LABEL_KEYS.pending]?.trim() || DEFAULT_PENDING_LABEL;
+  useEffect(() => {
+    if (!formContext || !uploading) return;
+    formContext.holdSubmit(field.key, pendingLabel);
+    return () => formContext.holdSubmit(field.key, null);
+  }, [field.key, formContext, pendingLabel, uploading]);
 
   const nameByAssetId = new Map(
     items

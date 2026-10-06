@@ -66,6 +66,34 @@ function moveNodeOptimistically(
   return [...remaining.slice(0, insertIndex), moved, ...remaining.slice(insertIndex)];
 }
 
+/**
+ * Puts one moved node back where the snapshot from before its move had it: its old parent and its old
+ * place among the nodes, and nothing else. Whatever other changes landed since stay.
+ */
+function restoreMovedNode(
+  nodes: readonly TreeNode[],
+  previous: readonly TreeNode[],
+  identityPath: string,
+  parentPath: string,
+  movedNodeIdentity: PhiTreeNodeIdentity,
+) {
+  const matches = (node: TreeNode) => String(readPath(node, identityPath)) === String(movedNodeIdentity);
+  const previousIndex = previous.findIndex(matches);
+  const current = nodes.find(matches);
+  if (previousIndex < 0 || !current) return nodes;
+  const remaining = nodes.filter((node) => !matches(node));
+  const restored = { ...current, [parentPath]: readPath(previous[previousIndex]!, parentPath) ?? null };
+  const insertIndex = Math.min(previousIndex, remaining.length);
+  return [...remaining.slice(0, insertIndex), restored, ...remaining.slice(insertIndex)];
+}
+
+/** What a mutation changes, so a later one on the same thing supersedes it and nothing else. */
+function readTreeMutationTarget(request: MutationInput) {
+  if (request.kind === "field") return `field:${String(request.nodeIdentity)}:${request.fieldKey}`;
+  if (request.kind === "node-move") return `move:${String(request.movedNodeIdentity)}`;
+  return null;
+}
+
 function validateTree(nodes: readonly TreeNode[], identityPath: string, parentPath: string) {
   const identities = new Set<string>();
   for (const node of nodes) {
@@ -119,9 +147,19 @@ export function usePhiTreeBinding({
   const [expandedNodeIdentities, setExpandedNodeIdentities] = useState<readonly PhiTreeNodeIdentity[]>(defaultExpandedNodeIdentities);
   const [refreshRevision, setRefreshRevision] = useState(0);
   const expandedInitialSnapshot = useRef(false);
+  const mutationSequence = useRef(0);
+  const latestMutationByTarget = useRef(new Map<string, number>());
+  const mutationControllers = useRef(new Set<AbortController>());
   const sourceKey = useMemo(() => JSON.stringify(source), [source]);
 
   useEffect(() => { nodesRef.current = nodes; }, [nodes]);
+  useEffect(() => {
+    const controllers = mutationControllers.current;
+    return () => {
+      for (const controller of controllers) controller.abort();
+      controllers.clear();
+    };
+  }, []);
   useEffect(() => {
     expandedInitialSnapshot.current = false;
     let cancelled = false;
@@ -173,23 +211,49 @@ export function usePhiTreeBinding({
     return () => controller.abort();
   }, [defaultExpandAll, provider, query, refreshRevision, resource, source]);
 
+  /*
+   * One change, shown before it is confirmed where the caller passes what it will look like.
+   *
+   * A failure takes back that change and nothing else -- the way the Table binding does: a field gets
+   * its original value back, a moved node its old parent and place. Restoring the whole snapshot from
+   * before the request used to throw away every change that landed in the meantime, so two quick edits
+   * whose first one failed lost the second as well. A later mutation of the same target supersedes an
+   * earlier one, whose answer is then not applied; leaving the tree aborts what is still in flight.
+   */
   const mutate = useCallback(async (request: MutationInput, optimisticNodes?: readonly TreeNode[]) => {
     if (bindingError || !provider || !resource || !source) {
       throw new PhiTreeProviderError("provider-unavailable", bindingError ?? "Tree Provider is unavailable.");
     }
     if (!provider.mutate) throw new PhiTreeProviderError("provider-read-only", `Tree Provider "${source.providerKey}" is read-only.`);
     const previous = nodesRef.current;
+    const targetKey = readTreeMutationTarget(request);
+    const requestId = ++mutationSequence.current;
+    if (targetKey) latestMutationByTarget.current.set(targetKey, requestId);
+    const superseded = () => targetKey != null && latestMutationByTarget.current.get(targetKey) !== requestId;
     if (optimisticNodes) {
       nodesRef.current = optimisticNodes;
       setNodes(optimisticNodes);
     }
+    const restore = () => {
+      if (!optimisticNodes) return;
+      const restored = request.kind === "field"
+        ? patchNode(nodesRef.current, resource.nodeIdentityPath, request.nodeIdentity, { [request.fieldKey]: request.originalValue })
+        : request.kind === "node-move"
+          ? restoreMovedNode(nodesRef.current, previous, resource.nodeIdentityPath, resource.parentNodeIdentityPath, request.movedNodeIdentity)
+          : nodesRef.current;
+      nodesRef.current = restored;
+      setNodes(restored);
+    };
+    const controller = new AbortController();
+    mutationControllers.current.add(controller);
     try {
-      const rawResult = await provider.mutate({ ...request, resourceKey: source.resourceKey, params: source.params, signal: new AbortController().signal } as PhiTreeProviderMutationRequest);
+      const rawResult = await provider.mutate({ ...request, resourceKey: source.resourceKey, params: source.params, signal: controller.signal } as PhiTreeProviderMutationRequest);
       const result = readPhiTreeProviderMutationResult(rawResult);
       if (!result) throw new PhiTreeProviderError("invalid-mutation-result", "Tree Provider returned an invalid mutation result.");
+      if (controller.signal.aborted || superseded()) return result as PhiTreeProviderMutationResult;
+      if (targetKey) latestMutationByTarget.current.delete(targetKey);
       if (result.status === "rejected") {
-        nodesRef.current = previous;
-        setNodes(previous);
+        restore();
         setError(new PhiTreeProviderError(result.errorCode ?? "mutation-rejected", result.message ?? "Tree change was rejected."));
       } else if (request.kind === "field") {
         const canonicalValue = result.canonicalValue === undefined ? request.proposedValue : result.canonicalValue;
@@ -203,11 +267,16 @@ export function usePhiTreeBinding({
       if (result.invalidation !== "none") setRefreshRevision((current) => current + 1);
       return result as PhiTreeProviderMutationResult;
     } catch (mutationError) {
-      nodesRef.current = previous;
-      setNodes(previous);
       const nextError = readPhiTreeProviderError(mutationError);
+      if (controller.signal.aborted) throw nextError;
+      if (!superseded()) {
+        if (targetKey) latestMutationByTarget.current.delete(targetKey);
+        restore();
+      }
       setError(nextError);
       throw nextError;
+    } finally {
+      mutationControllers.current.delete(controller);
     }
   }, [bindingError, provider, resource, source]);
 

@@ -183,6 +183,7 @@ export function PhiMaskPickerControl({
             <PhiFileDropControl
               accept=".svg,.png,image/svg+xml,image/png"
               onFile={(file) => onUploadFile?.(file)}
+              disabled={uploading}
               style={{ width: "100%" }}
             >
               <span style={{ display: "block", width: "100%" }}>
@@ -198,6 +199,7 @@ export function PhiMaskPickerControl({
             <PhiIconPickerControl
               value={selectedIcon}
               onChange={onIconSelect}
+              disabled={uploading}
               buttonAriaLabel="Select Iconify mask"
               buttonIcon={selectedIcon ? <PhiIcon name={selectedIcon} size={16} /> : <PhiIcon name="star" size="inherit" />}
               buttonLabel={uploading ? `Uploading ${uploadProgress}%` : "Select Iconify icon"}

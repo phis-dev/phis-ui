@@ -28,7 +28,7 @@ import { usePhiRuntimeFormBinding } from "./runtime-form-binding";
 import { usePhiRuntimePageConditionState } from "../runtime/runtime-page-condition-state";
 import { usePhiApplicationFeedback } from "../runtime/use-phi-application-feedback";
 import type { PhiFormGuardProps } from "./contracts";
-import { requestPhiFormGuard } from "./form-guard-client";
+import { PHI_FORM_GUARD_EXPIRED_CODE, requestPhiFormGuard } from "./form-guard-client";
 import { usePhiFormRelayArea } from "./form-relay-area";
 import { PhiSkeletonControl } from "../controls/phi-skeleton-control";
 
@@ -316,6 +316,12 @@ export function PhiFormDescriptorRuntimeClient({
    * submit against: too fast is a bot, too late is expired. It is added to the values when they are
    * submitted rather than kept in hidden fields, so resetting the form after a success cannot empty it.
    * A request that failed is forgotten, and the next submit asks again.
+   *
+   * A token the server refused as expired (`form_expired`, a form left open past `maxSubmitMs`) is
+   * forgotten too, and a fresh one asked for at once: every later submit would carry the same dead token
+   * otherwise, and only a reload would have helped. The refused submit is not sent again by itself -- a
+   * token that new is one the server reads as too fast -- so the person submits again, as the message
+   * asks.
    */
   const guardRef = useRef<Promise<PhiFormGuardProps> | null>(null);
   const relayArea = usePhiFormRelayArea();
@@ -330,6 +336,10 @@ export function PhiFormDescriptorRuntimeClient({
   useEffect(() => {
     if (descriptor.guard && formId) void readGuard().catch(() => undefined);
   }, [descriptor.guard, formId, readGuard]);
+  const renewGuard = useCallback(() => {
+    guardRef.current = null;
+    void readGuard().catch(() => undefined);
+  }, [readGuard]);
 
   /*
    * What the Widget presses when it draws a submit: `requestSubmit`, the same call the `submit`
@@ -525,6 +535,7 @@ export function PhiFormDescriptorRuntimeClient({
                * for a log, and it stands in only where the code is absent or nothing maps it.
                */
               const code = typeof result.payload?.code === "string" ? result.payload.code : null;
+              if (code === PHI_FORM_GUARD_EXPIRED_CODE && descriptor.guard) renewGuard();
               const declared = code ? descriptor.errors?.[code] : undefined;
               const message = declared
                 ? resolvePhiFormText(declared, labels)

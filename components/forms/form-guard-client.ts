@@ -1,5 +1,8 @@
 import type { PhiFormGuardProps } from "./contracts";
 
+/** The code a submit handler answers with when the guard token is older than the Site allows. */
+export const PHI_FORM_GUARD_EXPIRED_CODE = "form_expired";
+
 /**
  * Asks the Site's form relay for a guard token, for a form whose descriptor declares `guard`.
  *

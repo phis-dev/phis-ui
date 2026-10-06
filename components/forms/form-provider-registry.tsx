@@ -43,6 +43,13 @@ export type PhiFormFieldProviderProps = {
   formContext?: {
     getValues(): Record<string, unknown>;
     setValues(values: Record<string, unknown>): void;
+    /**
+     * Holds the Form's submit while this field's value is not complete yet, with the sentence the field
+     * shows if somebody submits anyway; `null` releases it. For a value that only arrives later -- an
+     * upload whose Asset id comes once the body is there. A submit while a hold stands does not reach
+     * the handler: it fails the way a rule fails, on this field and through `onValidationFailed`.
+     */
+    holdSubmit(fieldKey: string, reason: string | null): void;
   };
   /** What the Widget was placed with, for text a field takes from its placement rather than its form. */
   formConfig?: Readonly<Record<string, unknown>>;

@@ -120,6 +120,11 @@ DnD modes are `none`, `source`, `reorder`, or `source-reorder`.
 - the Provider validates cycles, allowed parents, authorization, and canonical ordering;
 - the Binding applies an optimistic move and restores it on rejection.
 
+A failed mutation takes back that mutation and nothing else, as the Table Binding does: a field gets its
+original value back, a moved node its old parent and place, and changes that landed meanwhile stay. A
+later mutation of the same field or node supersedes an earlier one, whose answer is then not applied.
+Mutations still in flight are aborted when the Binding unmounts.
+
 Ant Design event objects, positional strings, and node snapshots are private Control implementation
 details and are never persisted or sent as Provider business data.
 

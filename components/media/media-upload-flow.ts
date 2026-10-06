@@ -170,7 +170,40 @@ export type PhiMediaUploadSessionRunner = (
   file: File,
   onProgress?: PhiMediaUploadProgressHandler,
   options?: PhiMediaUploadInitOptions,
+  signal?: AbortSignal,
 ) => Promise<{ asset: { id: number } }>;
+
+/**
+ * What an upload that was stopped throws.
+ *
+ * A `PhiMediaUploadError` with the `cancelled` code, so the report to the Server and the reading a
+ * surface gives it come from one place: a person who stopped an upload decided against it, and the
+ * Server clears up what arrived. A surface that stopped it itself reads it with
+ * `isPhiMediaUploadCancelled` and shows nothing, since nobody is waiting for an answer.
+ */
+function createPhiMediaUploadCancelledError() {
+  return new PhiMediaUploadError("The upload was stopped.", "cancelled", 0);
+}
+
+export function isPhiMediaUploadCancelled(error: unknown) {
+  return error instanceof PhiMediaUploadError && error.code === "cancelled";
+}
+
+function throwIfPhiMediaUploadAborted(signal: AbortSignal | undefined) {
+  if (signal?.aborted) throw createPhiMediaUploadCancelledError();
+}
+
+/**
+ * Ends a request when the signal does.
+ *
+ * Returns the way to stop listening, which the request calls once it settled: a signal outlives the
+ * request it was handed to, and a listener left on it would abort a request that is long finished.
+ */
+function bindPhiMediaUploadAbort(signal: AbortSignal | undefined, abort: () => void) {
+  if (!signal) return () => {};
+  signal.addEventListener("abort", abort, { once: true });
+  return () => signal.removeEventListener("abort", abort);
+}
 
 export type PhiMediaUploadSessionResult = {
   asset: PhiImagePreviewApiRecord;
@@ -434,6 +467,7 @@ async function readJsonResponse<T extends { error?: string }>(response: Response
 export async function initPhiMediaUploadSession(
   file: File,
   options?: PhiMediaUploadInitOptions,
+  signal?: AbortSignal,
 ): Promise<PhiMediaUploadInitSession> {
   const folderId = Number.isInteger(options?.folderId) && (options?.folderId ?? 0) > 0
     ? options?.folderId
@@ -455,6 +489,7 @@ export async function initPhiMediaUploadSession(
   const initUrl = spaceAddress
     ? `/api/site/media/uploads/init?spaceId=${encodeURIComponent(spaceAddress)}`
     : "/api/site/media/uploads/init";
+  throwIfPhiMediaUploadAborted(signal);
   const response = await fetch(initUrl, {
     method: "POST",
     headers: buildPhiMediaRequestHeaders({
@@ -462,6 +497,7 @@ export async function initPhiMediaUploadSession(
       "Content-Type": "application/json",
     }),
     cache: "no-store",
+    ...(signal ? { signal } : {}),
     body: JSON.stringify({
       filename: file.name,
       contentType: file.type || "application/octet-stream",
@@ -514,13 +550,19 @@ async function uploadPhiMediaUploadPart(
   part: { partNumber: number; url: string; headers?: Record<string, string> },
   body: Blob,
   onPartProgress: (loadedBytes: number) => void,
+  signal: AbortSignal,
 ): Promise<{ partNumber: number; eTag: string }> {
   let lastError: unknown = null;
 
   for (let attempt = 1; attempt <= PHI_MEDIA_UPLOAD_PART_ATTEMPTS; attempt += 1) {
+    throwIfPhiMediaUploadAborted(signal);
+    let abort = () => {};
+    const unbind = bindPhiMediaUploadAbort(signal, () => abort());
     try {
       return await new Promise<{ partNumber: number; eTag: string }>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
+        abort = () => xhr.abort();
+        xhr.onabort = () => reject(createPhiMediaUploadCancelledError());
         xhr.open("PUT", part.url);
         for (const [header, value] of Object.entries(part.headers ?? {})) {
           xhr.setRequestHeader(header, value);
@@ -559,11 +601,17 @@ async function uploadPhiMediaUploadPart(
     } catch (error) {
       lastError = error;
       const status = error instanceof PhiMediaUploadError ? error.status : 0;
-      if (!isPhiMediaUploadPartWorthRepeating(status) || attempt === PHI_MEDIA_UPLOAD_PART_ATTEMPTS) {
+      if (
+        isPhiMediaUploadCancelled(error) ||
+        !isPhiMediaUploadPartWorthRepeating(status) ||
+        attempt === PHI_MEDIA_UPLOAD_PART_ATTEMPTS
+      ) {
         throw error;
       }
       // Whatever a part already reported is undone before it is sent again, or the total would grow.
       onPartProgress(0);
+    } finally {
+      unbind();
     }
   }
 
@@ -585,6 +633,13 @@ async function uploadPhiMediaUploadPart(
  * Progress is the sum of what every part reports, which is why a retry resets its own contribution
  * first: a part that reported ten megabytes and then started again would otherwise count them twice and
  * the total would run past the file.
+ *
+ * The first part to give up ends the upload, and ends it for every worker: an assembly missing one part
+ * cannot be completed, and the Server aborts the parts already sent once the failure is reported. So
+ * the failure stops the others -- no worker takes another part, and the ones in flight are aborted --
+ * and only once all of them have stopped is it thrown. Thrown earlier, the failure would be reported
+ * while the remaining workers were still sending bytes nobody will assemble, and their progress would
+ * land on an upload that already reads as failed.
  */
 async function uploadPhiMediaUploadParts(
   plan: Extract<PhiMediaUploadPlan, { kind: "multipart-put" }>,
@@ -592,9 +647,13 @@ async function uploadPhiMediaUploadParts(
   onProgress?: PhiMediaUploadProgressHandler,
   /** What an earlier attempt already delivered, which this one neither sends nor waits for. */
   stored: readonly PhiMediaUploadStoredPart[] = [],
+  signal?: AbortSignal,
 ): Promise<PhiMediaUploadUploadResponse> {
   const loadedByPart = new Map<number, number>();
   const report = () => onProgress?.(resolvePhiMediaUploadPartProgress(loadedByPart, file.size));
+  const stop = new AbortController();
+  const unbind = bindPhiMediaUploadAbort(signal, () => stop.abort());
+  const failures: unknown[] = [];
 
   for (const [partNumber, bytes] of resolvePhiMediaUploadStoredProgress(stored, plan.partSizeBytes, file.size)) {
     loadedByPart.set(partNumber, bytes);
@@ -611,28 +670,38 @@ async function uploadPhiMediaUploadParts(
   let next = 0;
 
   const worker = async () => {
-    for (;;) {
+    while (!stop.signal.aborted) {
       const index = next;
       next += 1;
       const part = queue[index];
       if (!part) return;
       const range = resolvePhiMediaUploadPartRange(part.partNumber, plan.partSizeBytes, file.size);
       const body = file.slice(range.start, range.end);
-      done.push(await uploadPhiMediaUploadPart(part, body, (loadedBytes) => {
-        loadedByPart.set(part.partNumber, loadedBytes);
-        report();
-      }));
+      try {
+        done.push(await uploadPhiMediaUploadPart(part, body, (loadedBytes) => {
+          if (stop.signal.aborted) return;
+          loadedByPart.set(part.partNumber, loadedBytes);
+          report();
+        }, stop.signal));
+      } catch (error) {
+        // The first failure is the one reported; the others are this one stopping them.
+        failures.push(error);
+        stop.abort();
+        return;
+      }
     }
   };
 
-  /*
-   * `Promise.all` and not `allSettled`: the first part to give up ends the upload, because an assembly
-   * missing one part cannot be completed and the parts already sent are aborted by the Server once the
-   * failure is reported. Waiting for the rest would only send bytes nobody will assemble.
-   */
-  await Promise.all(
-    Array.from({ length: Math.min(PHI_MEDIA_UPLOAD_PART_CONCURRENCY, queue.length) }, worker),
-  );
+  try {
+    await Promise.all(
+      Array.from({ length: Math.min(PHI_MEDIA_UPLOAD_PART_CONCURRENCY, queue.length) }, worker),
+    );
+  } finally {
+    unbind();
+  }
+  // A person who stopped it is the reason, whichever part noticed first.
+  throwIfPhiMediaUploadAborted(signal);
+  if (failures.length > 0) throw failures[0];
 
   return {
     status: "uploaded",
@@ -649,9 +718,12 @@ export async function uploadPhiMediaUploadBody(
   onProgress?: PhiMediaUploadProgressHandler,
   /** Parts an earlier attempt delivered, where this session was taken over rather than opened. */
   stored: readonly PhiMediaUploadStoredPart[] = [],
+  /** Stops the body where it is; what is in flight is aborted and the call throws `cancelled`. */
+  signal?: AbortSignal,
 ) {
+  throwIfPhiMediaUploadAborted(signal);
   if (plan.kind === "multipart-put") {
-    return await uploadPhiMediaUploadParts(plan, file, onProgress, stored);
+    return await uploadPhiMediaUploadParts(plan, file, onProgress, stored, signal);
   }
   if (plan.kind !== "proxy-stream" && plan.kind !== "presigned-put") {
     // A newer control plane issued a plan this Client cannot carry out. Saying so is the only safe
@@ -666,8 +738,29 @@ export async function uploadPhiMediaUploadBody(
   // body, and its content type is whatever the signature was issued over.
   const external = plan.kind === "presigned-put";
 
-  return await new Promise<PhiMediaUploadUploadResponse>((resolve, reject) => {
+  let abort = () => {};
+  const unbind = bindPhiMediaUploadAbort(signal, () => abort());
+  try {
+    return await sendPhiMediaUploadSingleBody(plan, file, external, onProgress, (abortRequest) => {
+      abort = abortRequest;
+    });
+  } finally {
+    unbind();
+  }
+}
+
+/** The single-request plans: one PUT to the Site or to a presigned address. */
+function sendPhiMediaUploadSingleBody(
+  plan: Extract<PhiMediaUploadPlan, { kind: "proxy-stream" | "presigned-put" }>,
+  file: File,
+  external: boolean,
+  onProgress: PhiMediaUploadProgressHandler | undefined,
+  onRequest: (abort: () => void) => void,
+) {
+  return new Promise<PhiMediaUploadUploadResponse>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
+    onRequest(() => xhr.abort());
+    xhr.onabort = () => reject(createPhiMediaUploadCancelledError());
     xhr.open(plan.method, plan.url);
     xhr.withCredentials = !external;
     if (!external) {
@@ -785,16 +878,40 @@ export async function finalizePhiMediaUploadSession(
   };
 }
 
+/**
+ * An init aborted by the signal reads as `cancelled`, not as the `AbortError` fetch throws: the
+ * caller asks one question, whether it was stopped.
+ */
+async function readPhiMediaUploadCancellation<T>(run: () => Promise<T>, signal: AbortSignal | undefined) {
+  try {
+    return await run();
+  } catch (error) {
+    throwIfPhiMediaUploadAborted(signal);
+    throw error;
+  }
+}
+
+/**
+ * One file through Core's own upload routes.
+ *
+ * `signal` stops it up to the moment finalize is sent: an init in flight is aborted, a body in flight is
+ * aborted and reported `cancelled`, so the Server clears up the reservation and whatever arrived. Once
+ * finalize is sent it is not stopped -- the Server is already turning the body into an Asset, and aborting
+ * the request would only hide the answer. A caller that stopped it ignores what comes back.
+ */
 export async function runPhiMediaUploadSession(
   file: File,
   onProgress?: PhiMediaUploadProgressHandler,
   options?: PhiMediaUploadInitOptions,
+  signal?: AbortSignal,
 ): Promise<PhiMediaUploadSessionResult> {
-  const init = await initPhiMediaUploadSession(file, options);
+  const init = await readPhiMediaUploadCancellation(() => initPhiMediaUploadSession(file, options, signal), signal);
   const standDown = reportPhiMediaUploadAbandonmentOnLeaving(init.reportUrl, init.plan);
   let upload;
   try {
-    upload = await uploadPhiMediaUploadBody(init.plan, file, onProgress, init.uploaded);
+    upload = await uploadPhiMediaUploadBody(init.plan, file, onProgress, init.uploaded, signal);
+    // Stopped after the last byte and before finalize: the body is there, and nobody wants the Asset.
+    throwIfPhiMediaUploadAborted(signal);
   } catch (uploadError) {
     standDown();
     // The Server cannot see this leg, so it is told rather than left to infer it from an expiry.
@@ -859,15 +976,18 @@ export async function runPhiAddonAssetUpload<TAsset>(input: {
   onProgress?: PhiMediaUploadProgressHandler;
   /** Where the Add-on's Client says a body will not arrive. Core's own route when absent. */
   reportUrl?: string;
+  /** Stops the body up to finalize, as in `runPhiMediaUploadSession`. */
+  signal?: AbortSignal;
 }): Promise<TAsset> {
-  const { file, reservation, finalize, onProgress } = input;
+  const { file, reservation, finalize, onProgress, signal } = input;
   const reportUrl = input.reportUrl
     ?? `/api/site/media/uploads/${encodeURIComponent(reservation.token)}/report`;
 
   const standDown = reportPhiMediaUploadAbandonmentOnLeaving(reportUrl, reservation.plan);
   let upload;
   try {
-    upload = await uploadPhiMediaUploadBody(reservation.plan, file, onProgress);
+    upload = await uploadPhiMediaUploadBody(reservation.plan, file, onProgress, [], signal);
+    throwIfPhiMediaUploadAborted(signal);
   } catch (uploadError) {
     standDown();
     await reportPhiMediaUploadFailure(
