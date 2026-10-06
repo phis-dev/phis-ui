@@ -120,7 +120,7 @@ export const PHI_GROUPS_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
           { key: "spaceUsedBytes", title: "Space used", type: "number" },
           { key: "spaceQuotaBytes", title: "Space quota", type: "number" },
         ],
-        query: { search: false, sorting: "none", pagination: "none" },
+        query: { search: false, sorting: "none", pagination: "offset" },
         actions: [
           { key: "refresh", title: "Refresh", scope: "resource" },
           { key: "create", title: "Create", scope: "resource", valueType: "json" },
@@ -199,7 +199,7 @@ export const PHI_GROUPS_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
           { key: "spaceUsedBytes", title: "Space used", type: "number" },
           { key: "spaceQuotaBytes", title: "Space quota", type: "number" },
         ],
-        query: { search: false, sorting: "none", pagination: "none" },
+        query: { search: false, sorting: "none", pagination: "offset" },
         actions: [
           { key: "refresh", title: "Refresh", scope: "resource" },
           // A Manager runs the team and may end it. Putting one back is not offered here, because a
@@ -249,7 +249,7 @@ export const PHI_GROUPS_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
           { key: "sourceProviderId", title: "Source", type: "string" },
           { key: "createdAt", title: "Since", type: "datetime" },
         ],
-        query: { filterFields: ["groupId"], sorting: "none", pagination: "none" },
+        query: { filterFields: ["groupId"], sorting: "none", pagination: "offset" },
         actions: [
           {
             key: "delete", title: "Remove", scope: "row",

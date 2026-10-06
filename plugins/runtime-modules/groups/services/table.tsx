@@ -3,6 +3,7 @@
 import { isPhiRecord } from "../../../../helpers/is-record";
 import { PHI_GROUPS_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
 import {
+  buildPhiTablePageParams,
   createPhiTableProviderRequestInit,
   readPhiPositiveInteger,
   readPhiTableRows,
@@ -33,7 +34,9 @@ import {
 const API_PATH = "/api/site/groups";
 // Administration is the one surface that asks for retired groups: the key stays taken, so the place
 // that reports a name collision has to be able to show what is holding the name.
-const SITE_SCOPE_PATH = `${API_PATH}?scope=site&includeRetired=1`;
+const SITE_SCOPE_PARAMS = { scope: "site", includeRetired: "1" };
+// What a list shows before the reader picks another size; the Pages name the same number.
+const DEFAULT_PAGE_SIZE = 25;
 const CORE_PROVIDER_ID = "@phis/server/core";
 
 type ApiResponse = {
@@ -49,17 +52,25 @@ const RESPONSE_OPTIONS: ReadPhiTableProviderResponseOptions = {
   errorKeys: ["message", "error"],
 };
 
-async function loadRowsFrom(
-  path: string,
-  signal: AbortSignal | undefined,
-  mapRow: (row: Record<string, unknown>) => Record<string, unknown> = (row) => row,
+/** The route's count of the whole list; a page that came without one is malformed. */
+function readTotal(result: ApiResponse | null) {
+  if (typeof result?.total !== "number" || !Number.isFinite(result.total) || result.total < 0) {
+    throw new PhiTableProviderError("invalid-response", "Groups total is invalid.");
+  }
+  return result.total;
+}
+
+async function loadGroupRows(
+  { query, signal }: PhiTableProviderQueryRequest,
+  scopeParams: Record<string, string>,
 ) {
+  const params = buildPhiTablePageParams(query, DEFAULT_PAGE_SIZE);
+  for (const [key, value] of Object.entries(scopeParams)) params.set(key, value);
   const result = await readPhiTableProviderResponse<ApiResponse>(
-    await fetch(path, createPhiTableProviderRequestInit(signal)),
+    await fetch(`${API_PATH}?${params.toString()}`, createPhiTableProviderRequestInit(signal)),
     RESPONSE_OPTIONS,
   );
-  const rows = readPhiTableRows(result?.rows).map(mapRow);
-  return { rows, total: typeof result?.total === "number" ? result.total : rows.length };
+  return { rows: readPhiTableRows(result?.rows).map(withStringLevel), total: readTotal(result) };
 }
 
 /**
@@ -79,8 +90,10 @@ async function loadGroupMembers({
   const groupId = readPhiPositiveInteger(query.filters?.groupId);
   // No group selected is an empty list, not an error: the table simply has nothing to show yet.
   if (!groupId) return { rows: [], total: 0 };
+  const params = buildPhiTablePageParams(query, DEFAULT_PAGE_SIZE);
+  params.set("groupId", String(groupId));
   const result = await readPhiTableProviderResponse<ApiResponse>(
-    await fetch(`${API_PATH}?groupId=${groupId}`, createPhiTableProviderRequestInit(signal)),
+    await fetch(`${API_PATH}?${params.toString()}`, createPhiTableProviderRequestInit(signal)),
     RESPONSE_OPTIONS,
   );
   // What this actor may do in this group, as the control plane sees it -- the interface never works it
@@ -98,12 +111,12 @@ async function loadGroupMembers({
     local: row.sourceProviderId === CORE_PROVIDER_ID,
     manageable: manages && row.sourceProviderId === CORE_PROVIDER_ID,
   }));
-  return { rows, total: rows.length };
+  return { rows, total: readTotal(result) };
 }
 
 async function queryGroupsTable(request: PhiTableProviderQueryRequest) {
-  if (request.resourceKey === "groups") return loadRowsFrom(SITE_SCOPE_PATH, request.signal, withStringLevel);
-  if (request.resourceKey === "myGroups") return loadRowsFrom(API_PATH, request.signal, withStringLevel);
+  if (request.resourceKey === "groups") return loadGroupRows(request, SITE_SCOPE_PARAMS);
+  if (request.resourceKey === "myGroups") return loadGroupRows(request, {});
   if (request.resourceKey === "groupMembers") return loadGroupMembers(request);
   throw new PhiTableProviderError(
     "resource-not-found",

@@ -139,7 +139,7 @@ assert.equal(
   const service = await readSource("plugins/runtime-modules/groups/services/table.tsx");
   assert.doesNotMatch(service, /api\/site\/admin\/groups/u,
     "Groups are read from one address; the scope says which question.");
-  assert.match(service, /const SITE_SCOPE_PATH = `\$\{API_PATH\}\?scope=site&includeRetired=1`/u,
+  assert.match(service, /const SITE_SCOPE_PARAMS = \{ scope: "site", includeRetired: "1" \}/u,
     "Administration asks for retired groups; every other caller gets the ones in service.");
 
   const options = await readSource("plugins/runtime-modules/groups/services/options.ts");

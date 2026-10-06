@@ -201,7 +201,7 @@ export async function buildPhiDefaultAdminGroupsPageTree({
           features: {
             // One group at a time: the membership table below shows exactly what is selected here.
             rowSelection: { mode: "single", preserveSelectedRowIdentities: true },
-            pagination: { enabled: false },
+            pagination: { enabled: true, pageSize: 25, pageSizes: [25, 50, 100] },
             sorting: { mode: "none" },
             search: { enabled: false },
             editing: { mode: "cell" },
@@ -318,7 +318,7 @@ export async function buildPhiDefaultAdminGroupsPageTree({
             emptyState: { title: labels.members.empty, description: "" },
           },
           features: {
-            pagination: { enabled: false },
+            pagination: { enabled: true, pageSize: 25, pageSizes: [25, 50, 100] },
             sorting: { mode: "none" },
             search: { enabled: false },
             // The level is edited in the cell it is read in; nothing else about a member is editable.

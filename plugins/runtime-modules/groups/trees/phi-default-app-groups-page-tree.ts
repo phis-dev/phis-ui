@@ -188,7 +188,7 @@ export async function buildPhiDefaultAppGroupsPageTree({
           },
           features: {
             rowSelection: { mode: "single", preserveSelectedRowIdentities: true },
-            pagination: { enabled: false },
+            pagination: { enabled: true, pageSize: 25, pageSizes: [25, 50, 100] },
             sorting: { mode: "none" },
             search: { enabled: false },
             ...(managesSomeGroup ? { editing: { mode: "cell" as const } } : {}),
@@ -292,7 +292,7 @@ export async function buildPhiDefaultAppGroupsPageTree({
             emptyState: { title: labels.members.empty, description: "" },
           },
           features: {
-            pagination: { enabled: false },
+            pagination: { enabled: true, pageSize: 25, pageSizes: [25, 50, 100] },
             sorting: { mode: "none" },
             search: { enabled: false },
             editing: { mode: "cell" },
