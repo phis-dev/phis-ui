@@ -5,6 +5,7 @@ import type { PhiAuthWorkflow, PhiPublicAuthManifest } from "../types/auth-manif
 import { isPhiRecord } from "../helpers/is-record";
 import { throwPhiCmsGatewayError } from "./errors";
 import { fetchPhiSiteApi } from "./site-api-request";
+import { readPhiSiteReadCache } from "./site-read-cache";
 
 export type FetchPhiPublicAuthOptions = {
   apiBaseUrl: string;
@@ -41,6 +42,23 @@ function readManifest(value: unknown): PhiPublicAuthManifest | null {
  * first paint.
  */
 export async function fetchPhiPublicAuthManifest(
+  options: FetchPhiPublicAuthOptions,
+): Promise<PhiPublicAuthManifest> {
+  /*
+   * Kept in the read cache outside development, like the Site config it sits beside: it is the same for
+   * every visitor, and a change to it moves the Site's read marker in Core (the auth config is one of
+   * the tables that does), which empties this cache in every process at the next config refresh.
+   */
+  if (process.env.NODE_ENV === "development") {
+    return loadPhiPublicAuthManifest(options);
+  }
+  return readPhiSiteReadCache(
+    `auth-manifest:${options.siteKey.trim().toLowerCase()}`,
+    () => loadPhiPublicAuthManifest(options),
+  );
+}
+
+async function loadPhiPublicAuthManifest(
   options: FetchPhiPublicAuthOptions,
 ): Promise<PhiPublicAuthManifest> {
   const manifest = readManifest(

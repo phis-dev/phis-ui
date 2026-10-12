@@ -12,6 +12,7 @@ function configResponse(readMarker: string) {
     site: {
       key: "site",
       name: "Site",
+      localeCapabilities: [],
       translationMarkers: { global: "g1", site: "s1" },
       readMarker,
     },

@@ -31,6 +31,7 @@ import { sanitizePhiHtmlWidgetMarkup } from "../components/widgets/helpers/html-
 import { normalizePhiImageWidgetConfig } from "../plugins/runtime-modules/core/widgets/image/config";
 import { resolvePhiWidgetInternalReferences } from "../components/widgets/helpers/internal-reference-resolver.server";
 import { resolvePhiHtmlReferences } from "../components/widgets/helpers/html-internal-references.server";
+import { clearPhiSiteReadCache } from "../gateway/site-read-cache";
 
 // ---------------------------------------------------------------------------
 // Codec: Site and Module Page ownership
@@ -285,6 +286,8 @@ function installReferenceProjection(projection: {
   assets?: readonly unknown[];
 }) {
   referenceRequests.length = 0;
+  // A Site process keeps answered references between renders; each case here is a server of its own.
+  clearPhiSiteReadCache();
   globalThis.fetch = (async (input: unknown, init?: { body?: unknown }) => {
     assert.match(String(input), /\/api\/v1\/site\/references$/u);
     referenceRequests.push(JSON.parse(String(init?.body)) as ReferenceRequestBody);

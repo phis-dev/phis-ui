@@ -5,6 +5,7 @@ import type {
   PhiSiteThemeContact,
   PhiSiteThemeRoot,
 } from "./site-theme";
+import type { PhiLocaleCapability } from "../helpers/site-locale-config";
 import type { PhiThemePalette } from "../theme/phi-theme-presets";
 import type { PhiThemeBlockSelection } from "../theme/phi-theme-composition";
 import type { PhiThemeDerivation } from "../theme/phi-theme-selection";
@@ -83,6 +84,8 @@ export type PhiSiteConfig = {
   hostname: string;
   defaultLocale: string;
   availableLocales: PhiSiteLocaleOption[];
+  /** What each served locale means, so a request naming one is resolved without asking Core. */
+  localeCapabilities: PhiLocaleCapability[];
   /** Whether the Site runs a store; the server computes it for every Site, so it is never absent. */
   store: {
     enabled: boolean;

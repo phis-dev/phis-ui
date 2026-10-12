@@ -5,6 +5,7 @@ import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
 import type { PhiPublicMediaAssetReference } from "../types/media";
 import { readPhiPageReference, type PhiPageReference } from "../types/references";
 import { throwPhiCmsGatewayError } from "./errors";
+import { peekPhiSiteReadCache, writePhiSiteReadCache } from "./site-read-cache";
 
 export type PhiResolvedPageReference = {
   reference: PhiPageReference;
@@ -163,6 +164,88 @@ export async function resolveSiteInternalReferences(input: {
     siteKey: input.siteKey,
     ...(input.area ? { area: input.area } : {}),
   };
+  if (!keepsReferences()) {
+    return requestThroughBatch(request, references, assetIds);
+  }
+
+  /*
+   * Kept per reference rather than per answer: which references share a request depends on what else
+   * happened to resolve in the same turn, so an answer as a whole would almost never be asked for again.
+   * An Asset that did not come back is kept as absent too -- it is not renderable, and asking again on
+   * every view would cost exactly what this saves.
+   */
+  const pages = new Map<PhiPageReference, PhiResolvedPageReference>();
+  const assets = new Map<number, PhiPublicMediaAssetReference>();
+  const missingReferences: PhiPageReference[] = [];
+  const missingAssetIds: number[] = [];
+  await Promise.all([
+    ...references.map(async (reference) => {
+      const cached = peekPhiSiteReadCache<PhiResolvedPageReference>(pageCacheKey(request, reference));
+      if (cached) pages.set(reference, await cached);
+      else missingReferences.push(reference);
+    }),
+    ...assetIds.map(async (id) => {
+      const cached = peekPhiSiteReadCache<PhiPublicMediaAssetReference | null>(assetCacheKey(request, id));
+      if (!cached) {
+        missingAssetIds.push(id);
+        return;
+      }
+      const asset = await cached;
+      if (asset) assets.set(id, asset);
+    }),
+  ]);
+
+  if (missingReferences.length > 0 || missingAssetIds.length > 0) {
+    const fetched = await requestThroughBatch(request, missingReferences, missingAssetIds);
+    for (const entry of fetched.pages) {
+      pages.set(entry.reference, entry);
+      writePhiSiteReadCache(pageCacheKey(request, entry.reference), entry);
+    }
+    for (const id of missingAssetIds) {
+      const asset = fetched.assets.get(id) ?? null;
+      if (asset) assets.set(id, asset);
+      writePhiSiteReadCache(assetCacheKey(request, id), asset);
+    }
+  }
+
+  return {
+    pages: references.flatMap((reference) => {
+      const entry = pages.get(reference);
+      return entry ? [entry] : [];
+    }),
+    assets: new Map(assetIds.flatMap((id) => {
+      const asset = assets.get(id);
+      return asset ? [[id, asset] as const] : [];
+    })),
+  };
+}
+
+/*
+ * Outside development only, as every read this cache holds (gateway/CACHES.md): `next dev` is where a
+ * change has to show on the next reload, and nothing there is under load.
+ */
+function keepsReferences() {
+  return process.env.NODE_ENV !== "development";
+}
+
+// A Page reference resolves within its Area; an Asset is Site scoped and carries none.
+function pageCacheKey(request: PhiReferenceBatchRequest, reference: PhiPageReference) {
+  return `references:${request.siteKey.trim().toLowerCase()}:page:${request.area ?? ""}:${reference}`;
+}
+
+function assetCacheKey(request: PhiReferenceBatchRequest, id: number) {
+  return `references:${request.siteKey.trim().toLowerCase()}:asset:${id}`;
+}
+
+/** Joins the batch of the current turn and returns what this caller asked for. */
+async function requestThroughBatch(
+  request: PhiReferenceBatchRequest,
+  references: readonly PhiPageReference[],
+  assetIds: readonly number[],
+): Promise<PhiResolvedInternalReferences> {
+  if (references.length === 0 && assetIds.length === 0) {
+    return { pages: [], assets: new Map() };
+  }
   const key = batchKey(request);
   let batch = pendingBatches.get(key) ?? openBatch(key, request);
   const fits = (candidate: PhiPendingReferenceBatch) =>

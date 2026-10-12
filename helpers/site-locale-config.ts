@@ -10,8 +10,8 @@ export type SiteLocaleConfig = {
   availableLocales: SiteLocaleOption[];
 };
 
-export type PhiResolvedLocale = {
-  requestedLocale: string | null;
+/** What one locale a Site serves means, as Core lists it in the Site config (`localeCapabilities`). */
+export type PhiLocaleCapability = {
   locale: string;
   language: string;
   script?: string;
@@ -20,8 +20,29 @@ export type PhiResolvedLocale = {
   intlLocale: string;
   deeplTargetLang?: string;
   labelFallbacks: string[];
+};
+
+export type PhiResolvedLocale = PhiLocaleCapability & {
+  requestedLocale: string | null;
   source?: "requested" | "user" | "cookie" | "browser" | "default";
 };
+
+/**
+ * A request's locale where the request names one the Site serves, or null where Core has to decide.
+ *
+ * Core matches the requested locale before the person's choice, the cookie and the browser, so a locale
+ * the Site serves under exactly that code answers the same whoever asks. Anything else -- no locale, or
+ * one Core would only match by language -- is Core's to resolve.
+ */
+export function resolvePhiRequestedSiteLocale(
+  requestedLocale: string | null,
+  capabilities: readonly PhiLocaleCapability[],
+): PhiResolvedLocale | null {
+  const requested = requestedLocale?.trim().toLowerCase();
+  if (!requested) return null;
+  const capability = capabilities.find((entry) => entry.locale.toLowerCase() === requested);
+  return capability ? { ...capability, requestedLocale: requestedLocale!.trim(), source: "requested" } : null;
+}
 
 export function normalizeSiteLocale(input: string | null | undefined, config: SiteLocaleConfig): SiteLocale {
   return normalizeLocale(input, {

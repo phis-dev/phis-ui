@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 
 import { resolveSiteInternalReferences } from "./internal-references";
+import { clearPhiSiteReadCache } from "./site-read-cache";
 
 const SERVER = { apiBaseUrl: "https://core.test", internalToken: "token", siteKey: "site" };
 
@@ -19,6 +20,8 @@ function answerAssets() {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+  clearPhiSiteReadCache();
 });
 
 /**
@@ -73,5 +76,54 @@ describe("resolving internal references", () => {
     vi.stubGlobal("fetch", fetchMock);
     expect((await resolveSiteInternalReferences({ ...SERVER })).assets.size).toBe(0);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+/*
+ * What a Site process keeps between renders: the answer per reference, in the read cache that a publish
+ * empties. Development keeps nothing, so a change shows on the next reload there.
+ */
+describe("kept internal references", () => {
+  it("asks only for what is not kept yet, and keeps an Asset that did not come back as absent", async () => {
+    const fetchMock = vi.fn(async (_url: string, init: { body: string }) => {
+      const { assets } = JSON.parse(init.body) as { assets: number[] };
+      return new Response(JSON.stringify({
+        resolved: [],
+        assets: assets.filter((id) => id !== 9).map(asset),
+      }), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const first = await resolveSiteInternalReferences({ ...SERVER, assetIds: [1, 9] });
+    const second = await resolveSiteInternalReferences({ ...SERVER, assetIds: [1, 2, 9] });
+    const third = await resolveSiteInternalReferences({ ...SERVER, assetIds: [2, 9] });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(JSON.parse(fetchMock.mock.calls[1]![1].body).assets).toEqual([2]);
+    expect([...first.assets.keys()]).toEqual([1]);
+    expect([...second.assets.keys()]).toEqual([1, 2]);
+    expect([...third.assets.keys()]).toEqual([2]);
+  });
+
+  it("asks again once the read cache was emptied", async () => {
+    const fetchMock = answerAssets();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await resolveSiteInternalReferences({ ...SERVER, assetIds: [1] });
+    clearPhiSiteReadCache();
+    await resolveSiteInternalReferences({ ...SERVER, assetIds: [1] });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps nothing in development", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    const fetchMock = answerAssets();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await resolveSiteInternalReferences({ ...SERVER, assetIds: [1] });
+    await resolveSiteInternalReferences({ ...SERVER, assetIds: [1] });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });
