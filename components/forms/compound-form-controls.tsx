@@ -18,6 +18,7 @@ import { PhiCollectionHeaderControl } from "../controls/phi-collection-header-co
 import { PhiToolbarControl } from "../controls/phi-toolbar-control";
 import type { PhiControlOption } from "../controls/phi-control-options";
 import { readPhiDotPath as readPath } from "../../helpers/dot-path";
+import { movePhiTableBindingRows } from "../../helpers/table-binding";
 import { PhiIcon } from "../shell/phi-icon";
 
 type RecordValue = Record<string, unknown>;
@@ -110,18 +111,17 @@ function readTableCellEditor(value: unknown): PhiTableControlCellEditor | undefi
 
 function applyMove(rows: RecordValue[], identityPath: string, parentPath: string | null, move: PhiTableControlRowMove | PhiTreeControlDropRequest) {
   const movedIdentity = "movedRowIdentity" in move ? move.movedRowIdentity : move.movedNodeIdentity;
-  const movedIndex = rows.findIndex((row) => String(readPath(row, identityPath)) === String(movedIdentity));
-  if (movedIndex < 0) return rows;
-  const [moved] = rows.splice(movedIndex, 1);
   const parentIdentity = "targetParentRowIdentity" in move ? move.targetParentRowIdentity : move.targetParentNodeIdentity;
-  const beforeIdentity = "beforeRowIdentity" in move ? move.beforeRowIdentity : move.beforeNodeIdentity;
-  const afterIdentity = "afterRowIdentity" in move ? move.afterRowIdentity : move.afterNodeIdentity;
-  const nextMoved = parentPath ? setPath(moved, parentPath, parentIdentity) : moved;
-  const anchorIdentity = beforeIdentity ?? afterIdentity;
-  const anchorIndex = anchorIdentity == null ? -1 : rows.findIndex((row) => String(readPath(row, identityPath)) === String(anchorIdentity));
-  const insertionIndex = anchorIndex < 0 ? rows.length : anchorIndex + (afterIdentity == null ? 0 : 1);
-  rows.splice(insertionIndex, 0, nextMoved);
-  return rows;
+  // One placement rule for Tables and Trees: the row before which it lands wins, else just after the other.
+  const moved = movePhiTableBindingRows(rows, identityPath, {
+    movedRowIdentity: movedIdentity,
+    beforeRowIdentity: "beforeRowIdentity" in move ? move.beforeRowIdentity : move.beforeNodeIdentity,
+    afterRowIdentity: "afterRowIdentity" in move ? move.afterRowIdentity : move.afterNodeIdentity,
+  });
+  if (!parentPath) return moved;
+  return moved.map((row) => String(readPath(row, identityPath)) === String(movedIdentity)
+    ? setPath(row, parentPath, parentIdentity)
+    : row);
 }
 
 export function PhiCompoundTableFormControl({
@@ -257,7 +257,7 @@ export function PhiCompoundTableFormControl({
         layout={layout}
         rowReordering={config.reorder === true && !locked ? {
           enabled: true,
-          onMove: (move) => onChange?.(applyMove([...rows], identityPath, typeof config.parentRowIdentityPath === "string" ? config.parentRowIdentityPath : null, move)),
+          onMove: (move) => onChange?.(applyMove(rows, identityPath, typeof config.parentRowIdentityPath === "string" ? config.parentRowIdentityPath : null, move)),
         } : undefined}
       />
     </div>
@@ -296,7 +296,7 @@ export function PhiCompoundTreeFormControl({ field, label, description, value, o
         onCheckingChange={setChecked}
         onExpansionChange={setExpanded}
         onCommitField={(identity, fieldKey, proposed) => onChange?.(nodes.map((node) => String(readPath(node, identityPath)) === String(identity) ? setPath(node, fieldKey, proposed) : node))}
-        onDrop={(move) => onChange?.(applyMove([...nodes], identityPath, parentPath, move))}
+        onDrop={(move) => onChange?.(applyMove(nodes, identityPath, parentPath, move))}
       />
     </div>
   );

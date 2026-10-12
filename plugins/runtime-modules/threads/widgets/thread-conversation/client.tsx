@@ -158,7 +158,8 @@ export function PhiThreadConversationWidgetClient({
   const [loadedThread, setLoadedThread] =
     useState<{ id: number; detail: PhisThreadDetail } | null>(null);
   const [failedThread, setFailedThread] = useState<{ id: number; message: string } | null>(null);
-  const [loadingOlder, setLoadingOlder] = useState(false);
+  const [loadingOlderThreadId, setLoadingOlderThreadId] = useState<number | null>(null);
+  const olderRequest = useRef<AbortController | null>(null);
   /*
    * The one language the control offers, or null for no control.
    *
@@ -181,6 +182,7 @@ export function PhiThreadConversationWidgetClient({
 
   const detail = loadedThread?.id === threadId ? loadedThread.detail : null;
   const error = failedThread?.id === threadId ? failedThread.message : null;
+  const loadingOlder = loadingOlderThreadId != null && loadingOlderThreadId === threadId;
 
   /*
    * The last conversation everybody on this page already knows about.
@@ -199,6 +201,50 @@ export function PhiThreadConversationWidgetClient({
     }
     setFailedThread({ id, message: readFailureText(result.failure, labels) });
   }, [labels]);
+
+  /*
+   * The newest window again, for a conversation already on screen: after a reply, or when the same one is
+   * chosen once more (which is also the way back from a failure). Older messages somebody already loaded
+   * stay where they are as long as the new window reaches back to them; with a gap in between, the new
+   * window alone is what is true.
+   */
+  const refresh = useCallback(async (id: number) => {
+    const result = await fetchPhiThreadDetail(id);
+    if (!result.ok) {
+      receive(id, result);
+      return;
+    }
+    setFailedThread(null);
+    setLoadedThread((current) => {
+      if (current?.id !== id) {
+        return { id, detail: result.detail };
+      }
+      const firstFresh = result.detail.messages[0]?.id;
+      const lastKept = current.detail.messages.at(-1)?.id;
+      const reaches = !result.detail.hasMoreMessages
+        || (firstFresh != null && lastKept != null && firstFresh <= lastKept);
+      const older = reaches && firstFresh != null
+        ? current.detail.messages.filter((message) => message.id < firstFresh)
+        : [];
+      if (older.length === 0) {
+        return { id, detail: result.detail };
+      }
+      return {
+        id,
+        detail: {
+          ...result.detail,
+          hasMoreMessages: current.detail.hasMoreMessages,
+          messages: [...older, ...result.detail.messages],
+        },
+      };
+    });
+  }, [receive]);
+
+  useEffect(() => () => {
+    // Older messages asked for one conversation have no place in the next one.
+    olderRequest.current?.abort();
+    olderRequest.current = null;
+  }, [threadId]);
 
   useEffect(() => {
     if (threadId == null) {
@@ -257,6 +303,11 @@ export function PhiThreadConversationWidgetClient({
       if (route?.capabilityId === "select") {
         const next = readPhiThreadSignalValue(signal.value)?.threadId ?? null;
         announcedThreadId.current = next;
+        if (next != null && next === threadId) {
+          // The same conversation again changes no state, so it is asked for here.
+          void refresh(next);
+          return;
+        }
         setThreadId(next);
         return;
       }
@@ -268,8 +319,8 @@ export function PhiThreadConversationWidgetClient({
       if (written == null || written !== threadId) {
         return;
       }
-      void fetchPhiThreadDetail(written).then((result) => receive(written, result));
-    }, [identity.receiver, listenRoutes, receive, threadId]),
+      void refresh(written);
+    }, [identity.receiver, listenRoutes, refresh, threadId]),
     useMemo(() => buildPhiThreadListenFilter(listenRoutes, identity.receiver), [identity.receiver, listenRoutes]),
     // Named here and not only inside the filter: this is what tells the bus somebody answers for the
     // address, and a signal sent to an address nobody answers for is held rather than refused.
@@ -325,27 +376,39 @@ export function PhiThreadConversationWidgetClient({
 
   const loadOlder = useCallback(async () => {
     const oldest = detail?.messages[0]?.id;
-    if (openedThreadId == null || oldest == null) {
+    const id = openedThreadId;
+    if (id == null || oldest == null) {
       return;
     }
-    setLoadingOlder(true);
+    olderRequest.current?.abort();
+    const controller = new AbortController();
+    olderRequest.current = controller;
+    setLoadingOlderThreadId(id);
     try {
-      const result = await fetchPhiThreadDetail(openedThreadId, { beforeMessageId: oldest });
-      if (!result.ok) {
-        setFailedThread({ id: openedThreadId, message: readFailureText(result.failure, labels) });
+      const result = await fetchPhiThreadDetail(id, { beforeMessageId: oldest, signal: controller.signal });
+      if (controller.signal.aborted) {
         return;
       }
-      setLoadedThread((current) => current && ({
-        id: current.id,
+      if (!result.ok) {
+        setFailedThread({ id, message: readFailureText(result.failure, labels) });
+        return;
+      }
+      setFailedThread(null);
+      setLoadedThread((current) => current?.id === id ? {
+        id,
         detail: {
-          ...result.detail,
+          ...current.detail,
           // The older window's own `hasMoreMessages` is the one that still means something; what is
           // already on screen is kept rather than refetched, so nothing a person is reading moves.
+          hasMoreMessages: result.detail.hasMoreMessages,
           messages: [...result.detail.messages, ...current.detail.messages],
         },
-      }));
+      } : current);
     } finally {
-      setLoadingOlder(false);
+      if (olderRequest.current === controller) {
+        olderRequest.current = null;
+        setLoadingOlderThreadId(null);
+      }
     }
   }, [detail, labels, openedThreadId]);
 
@@ -475,7 +538,7 @@ export function PhiThreadConversationWidgetClient({
     );
   }
 
-  if (error) {
+  if (error && !detail) {
     return (
       <PhiCardControl padding={config?.padding}>
         <PhiAlertControl level="error" title={labels.feedback.errorTitle} description={error} />
@@ -512,6 +575,10 @@ export function PhiThreadConversationWidgetClient({
         }
       >
         <PhiFlexControl vertical gap="middle">
+          {/* A failure on a conversation already on screen stands above it; what was read stays. */}
+          {error ? (
+            <PhiAlertControl level="error" title={labels.feedback.errorTitle} description={error} />
+          ) : null}
           {detail.hasMoreMessages ? (
             <PhiButtonControl
               label={labels.olderLabel}

@@ -374,8 +374,10 @@ export function PhiTreeControl({
         if (!onDrop) return;
         const moved = readEventNode(info.dragNode);
         const target = readEventNode(info.node);
+        // The moved node leaves its place first, so it is neither its own neighbour nor counted between them.
         const siblings = nodes.filter((node) =>
-          String(readIdentity(readPath(node, parentNodeIdentityPath))) === String(target.parentIdentity));
+          String(readIdentity(readPath(node, parentNodeIdentityPath))) === String(target.parentIdentity)
+          && String(readIdentity(readPath(node, nodeIdentityPath))) !== String(moved.identity));
         const targetIndex = siblings.findIndex((node) =>
           String(readIdentity(readPath(node, nodeIdentityPath))) === String(target.identity));
         const dropAsChild = !info.dropToGap;

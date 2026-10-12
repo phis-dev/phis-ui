@@ -405,7 +405,18 @@ export function PhiThemeControllerRuntime({
     return phiThemeHistory.subscribe(historyScope, emitAvailability);
   }, [emitCapability, historyLabels, historyScope]);
 
+  /*
+   * The Theme is read once per Site and key. A publish refreshes the route, which hands this Controller a
+   * new runtime and with it new callbacks; reading again then would replace whatever is on screen --
+   * an edit made while the publish was on its way among it -- and clear the history behind it.
+   */
+  const loadedThemeKeyRef = useRef<string | null>(null);
+
   useEffect(() => {
+    const loadKey = `${siteKey}:${themeKey}`;
+    if (loadedThemeKeyRef.current === loadKey) {
+      return;
+    }
     let cancelled = false;
 
     void fetch(`/api/site/cms/theme?key=${encodeURIComponent(themeKey)}`, {
@@ -439,6 +450,7 @@ export function PhiThemeControllerRuntime({
           hasPublishedThemeRevision: publishedRevisionId != null,
           publishedRevisionId,
         };
+        loadedThemeKeyRef.current = loadKey;
         stateRef.current = nextState;
         siteThemeRef.current = draft;
         savedThemeRef.current = draft;
@@ -523,18 +535,27 @@ export function PhiThemeControllerRuntime({
       }
       const revisionId = typeof body?.revisionId === "number" && Number.isInteger(body.revisionId) ? body.revisionId : null;
       const savedTheme = normalizeTheme(body?.theme?.theme, nextTheme);
+      /*
+       * A save with a Module picture to take over runs for seconds, and the panels stay open meanwhile.
+       * What somebody changed in that time stays on screen: the saved revision becomes what is stored,
+       * and the draft beside it reads as unsaved instead of being replaced by the answer.
+       */
+      const editedMeanwhile = !isSameThemePayload(stateRef.current.draft, draftTheme);
+      const shownTheme = editedMeanwhile ? stateRef.current.draft : savedTheme;
       const nextState = {
         ...stateRef.current,
-        draft: savedTheme,
+        draft: shownTheme,
         revisionId,
       };
       stateRef.current = nextState;
-      siteThemeRef.current = savedTheme;
+      if (!editedMeanwhile) {
+        siteThemeRef.current = savedTheme;
+      }
       savedThemeRef.current = savedTheme;
       setState(nextState);
       emitThemeState(
         dispatchSignal,
-        savedTheme,
+        shownTheme,
         revisionId,
         resolveSelectionValue(),
         "draft",
@@ -564,6 +585,7 @@ export function PhiThemeControllerRuntime({
       await saveTheme(undefined, { notify: false, correlationId });
     }
     const current = stateRef.current;
+    const publishedDraft = current.draft;
     if (current.revisionId == null) {
       throw new Error("No saved theme draft found to publish.");
     }
@@ -583,24 +605,29 @@ export function PhiThemeControllerRuntime({
       throw new Error(body?.error ?? "Failed to publish theme.");
     }
     const published = normalizeTheme(body?.theme?.theme, current.draft);
+    // As with a save: an edit made while the publish was on its way stays, as an unsaved draft on top.
+    const editedMeanwhile = !isSameThemePayload(stateRef.current.draft, publishedDraft);
+    const shownTheme = editedMeanwhile ? stateRef.current.draft : published;
     const nextState = {
-      ...current,
+      ...stateRef.current,
       published,
-      draft: published,
+      draft: shownTheme,
       revisionId: null,
       hasPublishedThemeRevision: true,
       publishedRevisionId: current.revisionId,
     };
     stateRef.current = nextState;
-    siteThemeRef.current = published;
+    if (!editedMeanwhile) {
+      siteThemeRef.current = published;
+    }
     savedThemeRef.current = published;
     setState(nextState);
     emitThemeState(
       dispatchSignal,
-      published,
+      shownTheme,
       null,
       resolveSelectionValue(),
-      "published",
+      editedMeanwhile ? "draft" : "published",
       correlationId,
     );
     announceDraftStatus(correlationId);

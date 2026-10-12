@@ -240,13 +240,19 @@ function PhiCollapsibleLayoutBody({
     if (!isEditMode || !appendSlotKey) {
       return resolvedOpenSlotKeysBase;
     }
+    /*
+     * An accordion holds one panel open. In the editor that is the empty insertion panel until the
+     * author opens another one; from then on the author's choice is what shows.
+     */
     if (accordion) {
-      return [appendSlotKey];
+      return controlledOpenSlotKeys?.signature === baseOpenSlotKeysSignature
+        ? controlledOpenSlotKeys.keys
+        : [appendSlotKey];
     }
     return resolvedOpenSlotKeysBase.includes(appendSlotKey)
       ? resolvedOpenSlotKeysBase
       : [...resolvedOpenSlotKeysBase, appendSlotKey];
-  }, [accordion, appendSlotKey, isEditMode, resolvedOpenSlotKeysBase]);
+  }, [accordion, appendSlotKey, baseOpenSlotKeysSignature, controlledOpenSlotKeys, isEditMode, resolvedOpenSlotKeysBase]);
   const effectiveCollapsible = isEditMode && collapsible !== "disabled" ? "icon" : collapsible;
   const receiverAddress = useMemo(
     () => blockId == null ? null : createPhiSignalAddress("cms", blockId),
