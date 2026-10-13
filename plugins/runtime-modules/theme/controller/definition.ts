@@ -84,12 +84,6 @@ export const PHI_THEME_RUNTIME_CONTROLLER_DEFINITION = {
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.brandTheme,
       },
       {
-        id: "previewThemeMode",
-        channel: PHI_THEME_SIGNAL_CHANNELS.previewThemeMode,
-        action: "change",
-        valueType: "boolean",
-      },
-      {
         id: "presetSelect",
         channel: PHI_THEME_SIGNAL_CHANNELS.presetSelect,
         action: "change",

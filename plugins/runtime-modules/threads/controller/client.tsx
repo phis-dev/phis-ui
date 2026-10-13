@@ -13,6 +13,7 @@ import {
   readPhiTableSelectionSignalValue,
 } from "../../../../types/table-signal-values";
 import { readPhiOverlayCloseRequest } from "../../../../types/cms-overlay";
+import { readPhiThreadSignalValue } from "../../../../types/thread-widget";
 import { createPhiRuntimeControllerClient } from "../../../../components/runtime/runtime-controller-client-factory";
 import { usePhiRuntimeConditionStateResponder } from "../../../../components/runtime/runtime-condition-state-responder";
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../components/runtime/runtime-signal-bus";
@@ -105,9 +106,16 @@ function PhiThreadsControllerView({
     [emitRoutes],
   );
 
-  const sendThread = useCallback((threadId: number | null, correlationId: string) => {
+  const sendThread = useCallback((
+    threadId: number | null,
+    correlationId: string,
+    options: { tellReader?: boolean } = {},
+  ) => {
     setOpenThreadId(threadId);
-    emitCapability("threadChange", { threadId }, correlationId);
+    // The reader that announced the conversation itself already shows it; telling it again is an echo.
+    if (options.tellReader !== false) {
+      emitCapability("threadChange", { threadId }, correlationId);
+    }
     // The same fact as a Form value. Which field it lands in is the route's to say.
     emitCapability("threadField", threadId, correlationId);
     /*
@@ -242,6 +250,12 @@ function PhiThreadsControllerView({
 
     if (signal.channel === "selection") {
       sendThread(readSelectedThreadId(signal.value), signal.correlationId);
+      return;
+    }
+
+    if (signal.channel === "opened" && signal.action === "change") {
+      const opened = readPhiThreadSignalValue(signal.value)?.threadId ?? null;
+      if (opened != null) sendThread(opened, signal.correlationId, { tellReader: false });
     }
   }, [
     address,

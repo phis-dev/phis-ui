@@ -19,7 +19,6 @@ import { createPhiCoreRuntimeControllerAddress } from "../../../../components/ru
 import { usePhiConfig } from "../../../../components/root/phi-config-provider";
 import { usePhiThemeBlockCatalog } from "../../../../components/root/phi-theme-block-catalog-provider";
 import { resolvePhiThemeComposition } from "../../../../theme/phi-theme-composition";
-import { resolvePhiThemeRuntimePayload } from "../../../../theme/phi-theme-runtime";
 import { materializePhiThemeBrandLogo, materializePhiThemeModuleBlocks } from "../materialize-images";
 import {
   buildPhiSiteThemeSelectOptions,
@@ -186,25 +185,6 @@ function emitThemeStateTo(
   correlationId: string,
 ) {
   dispatchBrandThemeSignal(dispatchSignal, { receiver, theme, revisionId, draftStatus, correlationId });
-}
-
-function emitRootThemeState(
-  dispatchSignal: ReturnType<typeof usePhiSignalDispatcher>,
-  theme: ThemePayload,
-  correlationId: string,
-) {
-  dispatchSignal({
-    scope: "site",
-    channel: "theme",
-    action: "change",
-    value: theme,
-    valueType: "json",
-    valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeTheme,
-    sender: createPhiThemeControllerAddress(),
-    receiver: createPhiCoreRuntimeControllerAddress(),
-    correlationId,
-    timestamp: Date.now(),
-  });
 }
 
 /**
@@ -685,30 +665,6 @@ export function PhiThemeControllerRuntime({
       }
       pickerEditBeforeRef.current = null;
       publishDraft(nextTheme, { correlationId: signal.correlationId });
-      return;
-    }
-
-	    if (
-      signal.scope === "area" &&
-      signal.receiver === createPhiThemeControllerAddress() &&
-      signal.channel === PHI_THEME_SIGNAL_CHANNELS.previewThemeMode &&
-      signal.action === "change" &&
-      signal.valueType === "boolean"
-    ) {
-	      const value = signal.value;
-      const nextMode = typeof value === "boolean" ? value ? "dark" : "light" : null;
-
-      if (!nextMode) {
-        return;
-      }
-      const current = stateRef.current;
-      const baseTheme = current.hasPublishedThemeRevision ? current.published : fallbackTheme;
-      const nextTheme = {
-        ...baseTheme,
-        mode: nextMode,
-      } satisfies ThemePayload;
-      // Resolved here, where the catalogue is: the root applies what it receives and holds no blocks.
-      emitRootThemeState(dispatchSignal, resolvePhiThemeRuntimePayload(nextTheme, themeBlocks).theme, signal.correlationId);
       return;
     }
 

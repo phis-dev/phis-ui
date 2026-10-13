@@ -1,6 +1,9 @@
 "use client";
 
-import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
+
+import type { PhiBlockRuntime } from "../../../../../types";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiCardControl } from "../../../../../components/controls/phi-card-control";
@@ -54,10 +57,13 @@ type SecurityPayload = {
 
 export function PhiAuthSecurityWidgetClient({
   apiPath = "/api/auth/account/security",
+  runtime,
   labels,
   workflowLabels,
 }: {
   apiPath?: string;
+  /** The page's locale, which dates are written in; the browser's own language is not the Site's. */
+  runtime: Pick<PhiBlockRuntime, "locale">;
   labels: PhiAuthSecurityWidgetLabels;
   /** The shared second-factor body's own words; adding a device is drawn by that component. */
   workflowLabels: PhiAuthWorkflowBodyLabels;
@@ -66,6 +72,13 @@ export function PhiAuthSecurityWidgetClient({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [enrolling, setEnrolling] = useState(false);
+  // Back to where the enrolment began, whatever address this panel stands at.
+  const pathname = usePathname();
+  const pageLocale = runtime.locale.current;
+  const dateFormat = useMemo(
+    () => new Intl.DateTimeFormat(pageLocale, { dateStyle: "medium", timeStyle: "short" }),
+    [pageLocale],
+  );
 
   const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
@@ -124,7 +137,7 @@ export function PhiAuthSecurityWidgetClient({
       <Suspense fallback={<PhiSkeletonControl lines={4} />}>
         <PhiAuthWorkflowBody
           mode="enroll"
-          next="/app/security"
+          next={pathname}
           labels={workflowLabels}
           onComplete={async () => {
             setEnrolling(false);
@@ -158,7 +171,7 @@ export function PhiAuthSecurityWidgetClient({
               description: factor.lastUsedAt
                 ? formatPhiAuthSecurityWidgetLabel(
                     labels.authenticators.lastUsed,
-                    new Date(factor.lastUsedAt).toLocaleString(),
+                    dateFormat.format(new Date(factor.lastUsedAt)),
                   )
                 : labels.authenticators.neverUsed,
               status: payload.policy.factor?.requiredMethod === "totp"
@@ -179,7 +192,8 @@ export function PhiAuthSecurityWidgetClient({
         <PhiEntryListControl
           emptyDescription={labels.providers.empty}
           entries={payload.identities.map((identity) => ({
-            key: identity.providerKey,
+            // Two accounts at one provider are two identities; the provider key alone named both the same.
+            key: String(identity.id),
             title: identity.providerKey,
             description: identity.issuer,
           }))}

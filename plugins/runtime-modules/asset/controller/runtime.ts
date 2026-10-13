@@ -1,7 +1,7 @@
 "use client";
 
 import { isPhiRecord } from "../../../../helpers/is-record";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   bumpPhiImagePreviewRefreshToken,
@@ -32,6 +32,7 @@ import {
 import type { PhiAssetRuntimeControllerConfig } from "./definition";
 import { normalizeMediaFocalRect } from "../../../../components/media/focal-rect";
 import {
+  buildPhiMediaFolderNamesById,
   resolvePhiMediaFolderIdFromValue,
   combinePhiMediaFlagValues,
 } from "../../../../components/media/media-folder-options";
@@ -56,19 +57,8 @@ function splitPhiMediaFolderNamePath(value: string | null | undefined) {
 }
 
 function buildPhiMediaFolderNamePath(folders: PhiMediaAssetFolder[], folderId: number | null) {
-  if (folderId == null) return "";
-  const byId = new Map(folders.map((folder) => [folder.id, folder] as const));
-  const path: string[] = [];
-  const visited = new Set<number>();
-  let currentId: number | null = folderId;
-  while (currentId != null && !visited.has(currentId)) {
-    visited.add(currentId);
-    const folder = byId.get(currentId);
-    if (!folder) break;
-    path.unshift(folder.name);
-    currentId = folder.parentId;
-  }
-  return path.length > 0 ? `/${path.join("/")}` : "";
+  const names = buildPhiMediaFolderNamesById(folders, folderId);
+  return names.length > 0 ? `/${names.join("/")}` : "";
 }
 
 
@@ -318,12 +308,19 @@ export function usePhiAssetRuntimeController({
     address,
   );
 
+  /*
+   * The form is filled once per opening. Sent again on every change of the collection -- a reload, a
+   * folder count -- it overwrote what somebody was typing, and an Overlay closed by its X never ended
+   * the request, so a background reload could still write into the next opening.
+   */
+  const filledInspectorRequestRef = useRef<PhiAssetInspectorRequest | null>(null);
   useEffect(() => {
-    if (!inspectorRequest) return;
+    if (!inspectorRequest || filledInspectorRequestRef.current === inspectorRequest) return;
     const asset = state.selectedAsset?.id === inspectorRequest.assetId
       ? state.selectedAsset
       : state.assets.find((entry) => entry.id === inspectorRequest.assetId) ?? null;
     if (!asset) return;
+    filledInspectorRequestRef.current = inspectorRequest;
     emitCapability("metadataValues", {
         values: {
           assetId: asset.id,

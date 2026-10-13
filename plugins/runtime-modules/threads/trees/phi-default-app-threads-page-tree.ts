@@ -663,6 +663,17 @@ export async function buildPhiDefaultAppThreadsPageTree({
         label: labels.title,
         config: {
           signalRoutes: {
+            // A conversation opened from `?thread=` reaches the Controller, which makes the reply live.
+            emits: [{
+              routeKey: "app-threads-conversation-opened",
+              capabilityId: "opened",
+              scope: "page",
+              channel: "opened",
+              action: "change",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.threadSelection,
+              receiver: controllerAddress,
+            }],
             listens: [{
               routeKey: "app-threads-conversation-select",
               capabilityId: "select",

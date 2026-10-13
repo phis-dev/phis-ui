@@ -6,6 +6,7 @@ import {
   type PhiSignalRoute,
   type PhiSignalRouteSet,
 } from "../../../../types/signals";
+import { findPhiControlListenRoute } from "../../../../components/widgets/client/shared/phi-control-signal-routing";
 
 /**
  * What a conversation Widget is configured with: a padding, and where its signals go.
@@ -48,11 +49,8 @@ export function findPhiThreadListenRoute(
   routes: readonly PhiSignalRoute[] | null | undefined,
   signal: PhiSignal,
 ): PhiSignalRoute | null {
-  return routes?.find((route) =>
-    route.channel === signal.channel &&
-    route.action === signal.action &&
-    route.valueType === signal.valueType &&
-    (route.valueType !== "json" || route.valueSchema === signal.valueSchema)) ?? null;
+  // The one route match every Control uses, the scope included -- this copy compared everything but it.
+  return findPhiControlListenRoute(routes ?? [], signal);
 }
 
 /**

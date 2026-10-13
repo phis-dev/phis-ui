@@ -5,6 +5,7 @@ import {
   type PhiControlOptionsProviderContext,
 } from "../../../../components/controls/phi-options-provider";
 import { PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
+import { requestPhiJson } from "../../../../helpers/client-json-request";
 
 /**
  * The people this viewer may open a conversation with.
@@ -22,14 +23,9 @@ const CANDIDATES_PATH = "/api/site/threads/candidates";
 export const PhiThreadCandidatesOptionsProviderClient = createPhiControlOptionsProviderClient({
   key: PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS.candidates,
   load: async () => {
-    const response = await fetch(CANDIDATES_PATH, {
-      cache: "no-store",
-      credentials: "include",
-      headers: { accept: "application/json" },
-    });
-    const payload = await response.json().catch(() => null);
-    if (!response.ok) throw new Error("Failed to load who you can write to.");
-    return payload;
+    const reply = await requestPhiJson(CANDIDATES_PATH);
+    if (!reply.ok) throw new Error("Failed to load who you can write to.");
+    return reply.payload;
   },
   resolveLoadKey: () => "thread-candidates",
   resolve: (context: PhiControlOptionsProviderContext) => {

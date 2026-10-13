@@ -9,6 +9,7 @@ import { PHI_ASSET_CONTROLLER_STORE_KEY } from "../../../../components/media/ass
 import { phiImagePreviewStore, type PhiImagePreviewStoreState } from "../../../../components/media/phi-image-preview-store";
 import {
   buildPhiMediaFolderCascaderOptions,
+  buildPhiMediaFolderNamesById,
   buildPhiMediaFolderValueById,
 } from "../../../../components/media/media-folder-options";
 
@@ -21,20 +22,7 @@ export const PhiMediaFoldersOptionsProviderClient = createPhiControlOptionsProvi
     const configuredOptions = context.options ?? [];
     const valueMode = context.optionsProvider?.params?.valueMode;
     if (valueMode === "id") {
-      const byId = new Map(state.folders.map((folder) => [folder.id, folder] as const));
-      const namePath = (folderId: number) => {
-        const names: string[] = [];
-        const visited = new Set<number>();
-        let currentId: number | null = folderId;
-        while (currentId != null && !visited.has(currentId)) {
-          visited.add(currentId);
-          const folder = byId.get(currentId);
-          if (!folder) break;
-          names.unshift(folder.name);
-          currentId = folder.parentId;
-        }
-        return names.join(" / ");
-      };
+      const namePath = (folderId: number) => buildPhiMediaFolderNamesById(state.folders, folderId).join(" / ");
       return {
         options: [
           ...configuredOptions,
@@ -44,18 +32,8 @@ export const PhiMediaFoldersOptionsProviderClient = createPhiControlOptionsProvi
       };
     }
     if (valueMode === "name-path") {
-      const byId = new Map(state.folders.map((folder) => [folder.id, folder] as const));
       const namePath = (folderId: number | null) => {
-        const names: string[] = [];
-        const visited = new Set<number>();
-        let currentId = folderId;
-        while (currentId != null && !visited.has(currentId)) {
-          visited.add(currentId);
-          const folder = byId.get(currentId);
-          if (!folder) break;
-          names.unshift(folder.name);
-          currentId = folder.parentId;
-        }
+        const names = buildPhiMediaFolderNamesById(state.folders, folderId);
         return names.length > 0 ? `/${names.join("/")}` : "/";
       };
       return {

@@ -5,6 +5,7 @@ import {
   type PhiControlOptionsProviderContext,
 } from "../../../../components/controls/phi-options-provider";
 import { PHI_NEWS_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
+import { requestPhiJson } from "../../../../helpers/client-json-request";
 
 /**
  * The tags this Site's entries already carry, which is the offer a tag field picks from.
@@ -21,14 +22,9 @@ const NEWS_API_PATH = "/api/site/editor/news?page=1&pageSize=1";
 export const PhiNewsTagsOptionsProviderClient = createPhiControlOptionsProviderClient({
   key: PHI_NEWS_RUNTIME_DATA_PROVIDER_KEYS.tags,
   load: async () => {
-    const response = await fetch(NEWS_API_PATH, {
-      cache: "no-store",
-      credentials: "include",
-      headers: { accept: "application/json" },
-    });
-    const payload = await response.json().catch(() => null);
-    if (!response.ok) throw new Error("Failed to load the tags in use.");
-    return payload;
+    const reply = await requestPhiJson(NEWS_API_PATH);
+    if (!reply.ok) throw new Error("Failed to load the tags in use.");
+    return reply.payload;
   },
   resolveLoadKey: () => "news-tags",
   resolve: (context: PhiControlOptionsProviderContext) => {

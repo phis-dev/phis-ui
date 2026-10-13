@@ -59,7 +59,12 @@ function readLabels(context: PhiDashboardCardContext) {
  * read -- not a second fetch with its own answer.
  */
 function readAvailableLocales() {
-  return maybeGetPhiRequestRuntime()?.site.availableLocales ?? [];
+  const runtime = maybeGetPhiRequestRuntime();
+  // Outside a request runtime there is no list to show; reading that as "none configured" was a lie.
+  if (!runtime) {
+    throw new Error("The available locales card resolves only inside a request runtime.");
+  }
+  return runtime.site.availableLocales;
 }
 
 const LOCALIZATION_CARD_TARGET = {
@@ -118,7 +123,8 @@ export const PHI_LOCALIZATION_RUNTIME_MODULE_DASHBOARD_CARDS: PhiDashboardCardPr
         .join(", ");
       return {
         cardId,
-        value: codes || context.locale,
+        // The codes the Site serves, never the request's own locale standing in for them.
+        value: codes,
         description: labels.locales_description,
         meta: formatPhiTranslation(labels.locales_meta, available.length),
         error: null,

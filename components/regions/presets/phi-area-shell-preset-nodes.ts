@@ -9,7 +9,6 @@ import { resolvePhiShellHeaderHeight, resolvePhiShellMetric } from "../../../hel
 import type { PhiBlockRuntime } from "../../../types";
 import type { PhiCmsContentWidgetNode, PhiCmsLayoutNode, PhiCmsRegionNode } from "../../../types/cms";
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
-import type { PhiNavItem } from "../../shell/shell-types";
 import { PHI_LAYOUT } from "../../../theme/phi-tokens";
 import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import { buildPhiHeaderTopActionsLayoutNode } from "./phi-header-top-actions-layout";
@@ -135,20 +134,18 @@ export function buildPhiAreaShellHeaderNodes({
   };
 }
 
-/** The left Sider with the Area's navigation; `navItems` are the Module's own entries, where it states them. */
+/** The left Sider with the Area's navigation, whose entries come from the navigation behind `navKey`. */
 export function buildPhiAreaShellSiderLeftNodes({
   nodes,
   runtime,
   labelPrefix,
   navKey,
-  navItems,
   ids,
 }: {
   nodes: PhiCmsPresetPageNodes;
   runtime: PhiBlockRuntime;
   labelPrefix: string;
   navKey: string;
-  navItems?: PhiNavItem[];
   ids: {
     regionSiderLeft: number;
     layoutSiderLeft: PhiCmsInstanceId;
@@ -206,7 +203,6 @@ export function buildPhiAreaShellSiderLeftNodes({
           side: "left",
           width: resolvedShellLeftWidth,
           navKey,
-          ...(navItems ? { items: navItems } : {}),
         },
       }),
     ],

@@ -8,9 +8,7 @@ import {
 } from "../../../../components/regions/presets/phi-area-shell-preset-nodes";
 import type { PhiResolvedCmsPageTree, PhiCmsPageNode } from "../../../../types/cms";
 import type { PhiBlockRuntime } from "../../../../types";
-import { getPhiEditorAreaLabels } from "./editor-label-set";
 import { createPhiDefaultAreaRuntimeModuleIds } from "../../area-module-defaults";
-import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 
 const SYNTHETIC_EDITOR_REGION_IDS = {
   regionHeaderTop: -140,
@@ -46,11 +44,6 @@ export async function buildPhiDefaultEditorAreaPresetTree({
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
-  const labels = await getPhiEditorAreaLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  });
   const nodes = createPhiCmsPresetNodes(page);
   const ids = { ...SYNTHETIC_EDITOR_REGION_IDS, ...SYNTHETIC_EDITOR_LAYOUT_IDS, ...SYNTHETIC_EDITOR_WIDGET_IDS };
   return {
@@ -63,13 +56,8 @@ export async function buildPhiDefaultEditorAreaPresetTree({
         nodes,
         runtime,
         labelPrefix: "editor",
+        // The entries come from the navigation behind `navKey`, as in every other Area.
         navKey: "editor:sidebar",
-        navItems: [
-          { key: "editor-dashboard", label: labels.dashboard, href: "/", icon: "antd:dashboard" },
-          { key: "editor-text", label: labels.text, href: "/text", icon: "antd:file-text" },
-          { key: "editor-translations", label: labels.translations, href: "/translations", icon: "antd:translation" },
-          { key: "editor-profile", label: labels.profile, href: "/profile", icon: "antd:user" },
-        ],
         ids,
       }),
     ),

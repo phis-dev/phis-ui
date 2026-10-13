@@ -103,6 +103,17 @@ export const PHI_THREADS_RUNTIME_CONTROLLER_DEFINITION = {
       },
     ],
     listens: [
+      /*
+       * A conversation the reader opened by itself -- `?thread=` on the address. The composer needs the
+       * id as much as after a selection, but the reader already shows it, so it is not told again.
+       */
+      {
+        id: "threadOpened",
+        channel: "opened",
+        action: "change",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.threadSelection,
+      },
       {
         id: "selectionChange",
         channel: "selection",

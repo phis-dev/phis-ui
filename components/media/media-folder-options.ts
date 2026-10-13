@@ -60,6 +60,12 @@ export function buildPhiMediaFolderPathById(folders: PhiMediaAssetFolder[], fold
   return path;
 }
 
+/** The names of the folders from the root down to `folderId`, read like `buildPhiMediaFolderPathById`. */
+export function buildPhiMediaFolderNamesById(folders: PhiMediaAssetFolder[], folderId: number | null) {
+  const byId = new Map(folders.map((folder) => [folder.id, folder] as const));
+  return buildPhiMediaFolderPathById(folders, folderId).map((id) => byId.get(id)!.name);
+}
+
 export function buildPhiMediaFolderValueById(folders: PhiMediaAssetFolder[], folderId: number | null) {
   const path = buildPhiMediaFolderPathById(folders, folderId);
   return path.length > 0 ? `/${path.join("/")}` : "/";

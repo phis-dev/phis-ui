@@ -118,7 +118,11 @@ export const PHI_LOCALIZATION_RUNTIME_MODULE_FORMS = [
           key: "defaultLocale",
           fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
           label: label("defaultLocaleLabel", "Default language"),
-          optionsProvider: { providerKey: PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_KEYS.platformLocales },
+          // The default is one of the languages chosen above, not any the platform knows.
+          optionsProvider: {
+            providerKey: PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_KEYS.platformLocales,
+            dependencies: [{ param: "availableLocales", source: "form", valuePath: "availableLocales" }],
+          },
           validation: required("saveError", "Select a default language."),
         },
       ],

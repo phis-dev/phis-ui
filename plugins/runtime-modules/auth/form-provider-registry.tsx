@@ -27,13 +27,17 @@ export const PHI_AUTH_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
       const text = readText(field.config?.text);
       const linkLabel = readText(field.config?.linkLabel);
       const href = readText(field.config?.href);
+      /*
+       * The link and its words are the placement's to state; the descriptor declares `href` required.
+       * A fallback here linked an English sentence to a path with no locale, which looked like a working
+       * consent while pointing at a page that may not exist.
+       */
+      if (!href || !linkLabel) {
+        throw new Error(`Terms consent field "${field.key}" needs both \`href\` and \`linkLabel\` in its config.`);
+      }
       const sentence = text ? resolvePhiFormText(text, labels, formConfig) : "%1";
-      const resolvedLinkLabel = linkLabel
-        ? resolvePhiFormText(linkLabel, labels, formConfig)
-        : "Terms & Conditions";
-      const resolvedHref = href
-        ? resolvePhiFormText(href, labels, formConfig)
-        : "/terms-and-conditions";
+      const resolvedLinkLabel = resolvePhiFormText(linkLabel, labels, formConfig);
+      const resolvedHref = resolvePhiFormText(href, labels, formConfig);
       const [before, after] = sentence.split("%1");
 
       return (

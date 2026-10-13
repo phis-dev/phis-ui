@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type CSSProperties,
   type ReactNode,
 } from "react";
@@ -889,25 +890,32 @@ function mergeThemeBrandLogo(
  * like it did nothing but reopen the first part. Only a list that is blank all through clears the
  * Wordmark, which is what hands the Site's own name back to the fallback.
  */
+/**
+ * One change to the Wordmark, and the record kept clean: a field set to nothing leaves it, and a
+ * Wordmark with nothing left in it goes. Weight, slant and tracking used to stay behind as `null`
+ * inside the record, which `mergeThemeBrand` only cleans one level up.
+ */
+function mergeThemeWordmark(theme: ThemePayload, patch: Record<string, unknown>): ThemePayload {
+  const wordmark: Record<string, unknown> = { ...(theme.brand?.wordmark ?? {}), ...patch };
+  for (const [key, value] of Object.entries(wordmark)) {
+    if (value == null || value === "") delete wordmark[key];
+  }
+  return mergeThemeBrand(theme, {
+    wordmark: Object.keys(wordmark).length > 0 ? wordmark as PhiSiteThemeBrand["wordmark"] : null,
+  });
+}
+
 function mergeThemeWordmarkParts(
   theme: ThemePayload,
   parts: readonly PhiSiteThemeWordmarkPart[],
 ): ThemePayload {
   const hasText = parts.some((part) => part.text.trim());
-  const wordmark = theme.brand?.wordmark ?? {};
-  if (hasText) {
-    return mergeThemeBrand(theme, {
-      wordmark: { ...wordmark, parts: parts.map((part) => ({ ...part })) },
-    });
-  }
   /*
-   * Clearing the text hands the Site's name back to the fallback -- unless the Brand has said it draws
-   * no name, which is a decision about the Wordmark and not about its parts. Dropping the whole record
-   * here would switch the name back on the moment somebody emptied the last part.
+   * Clearing the text hands the Site's name back to the fallback, and takes only the text: the weight,
+   * slant, tracking and font somebody chose -- and a decision to draw no name at all -- are about the
+   * Wordmark, not about its parts, and used to go with the last character.
    */
-  return mergeThemeBrand(theme, {
-    wordmark: wordmark.shows === "none" ? { shows: "none" } : null,
-  });
+  return mergeThemeWordmark(theme, { parts: hasText ? parts.map((part) => ({ ...part })) : null });
 }
 
 /** Whether the Brand draws a name at all. Off is stated; on is simply the Wordmark without the word. */
@@ -1077,8 +1085,27 @@ function usePhiBrandThemeDraft(runtime: PhiBlockRuntime, themeKey: string) {
   return { state, draftRef, publishDraft, pickerTransaction, editTransaction };
 }
 
+/*
+ * The mode the preview switch last said, kept beside the panels rather than in them. The switch speaks
+ * only when it changes, and the panels sit in a Stack that remounts them on every tab change, so a
+ * panel opened after the switch went dark started light again while the switch still read "Dark".
+ */
+let phiBrandPreviewModeHeard: "light" | "dark" | null = null;
+const phiBrandPreviewModeListeners = new Set<() => void>();
+
+function subscribePhiBrandPreviewMode(listener: () => void) {
+  phiBrandPreviewModeListeners.add(listener);
+  return () => {
+    phiBrandPreviewModeListeners.delete(listener);
+  };
+}
+
 function usePhiBrandPreviewMode(initialMode: "light" | "dark") {
-  const [mode, setMode] = useState<"light" | "dark">(initialMode);
+  const heard = useSyncExternalStore(
+    subscribePhiBrandPreviewMode,
+    () => phiBrandPreviewModeHeard,
+    () => null,
+  );
 
   usePhiSignalListener((signal) => {
     if (
@@ -1088,11 +1115,12 @@ function usePhiBrandPreviewMode(initialMode: "light" | "dark") {
       signal.action === "change" &&
       signal.valueType === "boolean"
     ) {
-      setMode(signal.value === true ? "dark" : "light");
+      phiBrandPreviewModeHeard = signal.value === true ? "dark" : "light";
+      for (const listener of phiBrandPreviewModeListeners) listener();
     }
   });
 
-  return mode;
+  return heard ?? initialMode;
 }
 
 /**
@@ -2384,11 +2412,8 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                         style={{ flex: "1 1 auto", minWidth: 0 }}
                         value={String(brand.wordmark?.fontWeight ?? "")}
                         options={[...PHI_THEME_WORDMARK_WEIGHT_OPTIONS]}
-                        onChange={(next) => publishDraft(mergeThemeBrand(state.draft, {
-                          wordmark: {
-                            ...(brand.wordmark ?? {}),
-                            fontWeight: next === "" ? null : Number(next),
-                          },
+                        onChange={(next) => publishDraft(mergeThemeWordmark(state.draft, {
+                          fontWeight: next === "" ? null : Number(next),
                         }))}
                       />
                       {/*
@@ -2399,11 +2424,8 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                       <PhiCheckboxControl
                         checked={brand.wordmark?.fontStyle === "italic"}
                         label="Italic"
-                        onChange={(checked) => publishDraft(mergeThemeBrand(state.draft, {
-                          wordmark: {
-                            ...(brand.wordmark ?? {}),
-                            fontStyle: checked ? "italic" : null,
-                          },
+                        onChange={(checked) => publishDraft(mergeThemeWordmark(state.draft, {
+                          fontStyle: checked ? "italic" : null,
                         }))}
                       />
                     </PhiFlexControl>
@@ -2426,11 +2448,8 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                     precision={3}
                     min={-0.2}
                     max={1}
-                    onChange={(next) => publishDraft(mergeThemeBrand(state.draft, {
-                      wordmark: {
-                        ...(brand.wordmark ?? {}),
-                        letterSpacing: next == null ? null : `${next}em`,
-                      },
+                    onChange={(next) => publishDraft(mergeThemeWordmark(state.draft, {
+                      letterSpacing: next == null ? null : `${next}em`,
                     }))}
                   />
                   <PhiLabeledControl label="Eyebrow" fill>
@@ -3281,8 +3300,9 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
                   <div
                     key={item.key}
                     style={{
-                      width: `calc(${clientToken.controlHeightLG} * 2)`,
-                      minHeight: `calc(${clientToken.controlHeight} * 1.25)`,
+                      // The tokens are numbers; `calc(40 * 2)` is no length, and the sample lost its size.
+                      width: clientToken.controlHeightLG * 2,
+                      minHeight: clientToken.controlHeight * 1.25,
                       border: `1px solid ${readEffectiveTokenString(previewEffectiveToken, "colorBorder", "rgba(0,0,0,0.15)")}`,
                       borderRadius: item.value,
                       background: previewCardBackground,

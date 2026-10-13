@@ -72,7 +72,14 @@ function resolveAdminSiteLocales(context: PhiControlOptionsProviderContext) {
 }
 
 function resolvePlatformLocales(context: PhiControlOptionsProviderContext) {
-  return { options: readOptions(context.asyncData) };
+  const options = readOptions(context.asyncData);
+  // A field that depends on the chosen languages is offered only those; the chooser itself, all of them.
+  const chosen = context.dependencies.availableLocales;
+  return {
+    options: Array.isArray(chosen)
+      ? options.filter((option) => chosen.includes(option.value))
+      : options,
+  };
 }
 
 export const PhiLocalizationPlatformLocalesOptionsProviderClient = createPhiControlOptionsProviderClient({

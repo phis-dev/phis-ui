@@ -75,7 +75,11 @@ function PhiGroupsControllerView({
       emitCapability("reload", null, signal.correlationId);
       return;
     }
-    sendGroupFilter(readSelectedGroupId(signal.value), signal.correlationId);
+    // Only a selection chooses the group. A condition question or reload reaching this listener fell
+    // through to here and sent `{ groupId: null }`, which emptied the membership table under a choice.
+    if (signal.channel === "selection") {
+      sendGroupFilter(readSelectedGroupId(signal.value), signal.correlationId);
+    }
   }, {
     scopes: ["page"],
     channels: ["selection", "condition", "submit", "command"],
