@@ -31,6 +31,7 @@ const PHI_EDITOR_TRANSLATIONS_WIDGET_LABEL_SET = definePhiRuntimeModuleLabelSet(
     column_actions: "Actions",
     action_edit: "Edit",
     action_save: "Save",
+    action_saving: "Saving...",
     action_cancel: "Cancel",
     action_delete: "Delete",
     translation_placeholder: "Enter translation",
@@ -40,6 +41,7 @@ const PHI_EDITOR_TRANSLATIONS_WIDGET_LABEL_SET = definePhiRuntimeModuleLabelSet(
     empty_text: definePhiMessageLabel("No source messages match the current filters."),
     load_error: definePhiMessageLabel("Failed to load translations."),
     save_error: definePhiMessageLabel("Failed to save translation."),
+    required_translation: definePhiMessageLabel("A translation is required."),
     delete_error: definePhiMessageLabel("Failed to delete translation."),
     save_success: definePhiMessageLabel("Translation saved."),
     delete_success: definePhiMessageLabel("Translation deleted."),
@@ -81,6 +83,7 @@ export async function getPhiEditorTranslationsWidgetLabels(
     actions: {
       edit: labels.action_edit,
       save: labels.action_save,
+      saving: labels.action_saving,
       cancel: labels.action_cancel,
       delete: labels.action_delete,
     },
@@ -101,6 +104,7 @@ export async function getPhiEditorTranslationsWidgetLabels(
       load: labels.load_error,
       save: labels.save_error,
       delete: labels.delete_error,
+      requiredTranslation: labels.required_translation,
     },
   };
 }
@@ -136,6 +140,7 @@ export type PhiEditorTranslationsWidgetLabels = {
   actions: {
     edit: string;
     save: string;
+    saving: string;
     cancel: string;
     delete: string;
   };
@@ -156,5 +161,6 @@ export type PhiEditorTranslationsWidgetLabels = {
     load: string;
     save: string;
     delete: string;
+    requiredTranslation: string;
   };
 };

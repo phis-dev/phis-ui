@@ -47,7 +47,7 @@ const translationFields = [
     fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.textarea,
     label: label("translationLabel", "Translation"),
     placeholder: label("translationPlaceholder", "Enter translation"),
-    validation: required("saveError", "A translation is required."),
+    validation: required("translationRequired", "A translation is required."),
     config: { rows: 6 },
   },
 ] as const;
@@ -70,12 +70,15 @@ const loadAdminLabels = createPhiFormLabelSetLoader(
     searchLabel: labels.searchPlaceholder,
     searchPlaceholder: labels.searchPlaceholder,
     languageLabel: labels.languageLabel,
-    applyLabel: "Apply",
+    applyLabel: labels.applyLabel,
     resetLabel: labels.resetLabel,
     reloadLabel: labels.refreshLabel,
     translationLabel: labels.edit.translationLabel,
     translationPlaceholder: labels.edit.translationLabel,
     saveError: labels.errors.save,
+    translationRequired: labels.errors.requiredTranslation,
+    availableLocalesRequired: labels.errors.requiredAvailableLocales,
+    defaultLocaleRequired: labels.errors.requiredDefaultLocale,
   }),
 );
 
@@ -83,10 +86,11 @@ const loadEditorLabels = createPhiFormLabelSetLoader(
   () => import("./trees/editor-translations-widget-label-set").then((module) => module.getPhiEditorTranslationsWidgetLabels),
   (labels) => ({
     saveLabel: labels.actions.save,
-    savingLabel: labels.actions.save,
+    savingLabel: labels.actions.saving,
     translationLabel: labels.columns.translation,
     translationPlaceholder: labels.translationPlaceholder,
     saveError: labels.errors.save,
+    translationRequired: labels.errors.requiredTranslation,
   }),
 );
 
@@ -112,7 +116,7 @@ export const PHI_LOCALIZATION_RUNTIME_MODULE_FORMS = [
           fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.multiSelect,
           label: label("availableLocalesLabel", "Available languages"),
           optionsProvider: { providerKey: PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_KEYS.platformLocales },
-          validation: required("saveError", "Select at least one language."),
+          validation: required("availableLocalesRequired", "Select at least one language."),
         },
         {
           key: "defaultLocale",
@@ -123,7 +127,7 @@ export const PHI_LOCALIZATION_RUNTIME_MODULE_FORMS = [
             providerKey: PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_KEYS.platformLocales,
             dependencies: [{ param: "availableLocales", source: "form", valuePath: "availableLocales" }],
           },
-          validation: required("saveError", "Select a default language."),
+          validation: required("defaultLocaleRequired", "Select a default language."),
         },
       ],
     },

@@ -21,6 +21,7 @@ import { PhiMaskPickerControl } from "../../../controls/phi-mask-picker-control"
 import type { PhiPickerPlacement } from "../../../controls/phi-picker-control-contract";
 import { usePhiApplicationFeedback } from "../../../runtime/use-phi-application-feedback";
 import { usePhiWidgetScaffoldPopup } from "./phi-widget-scaffold-popup";
+import { usePhiAuthoringToolsLabels } from "./phi-authoring-tools-labels";
 import { createPhiMediaPickerAssetControllerRoutes } from "../../../media/asset-controller-routes";
 import { PhiIcon } from "../../../shell/phi-icon";
 
@@ -72,12 +73,14 @@ export function PhiMaskPickerButton({
   onChange,
   onCommit,
   onDiscard,
-  buttonAriaLabel = "Select mask",
+  buttonAriaLabel,
   buttonIcon = <PhiIcon name="star" size="inherit" />,
   placement = "bottomRight",
 }: PhiMaskPickerButtonProps) {
   const { showMessage } = usePhiApplicationFeedback();
   const popup = usePhiWidgetScaffoldPopup();
+  const toolLabels = usePhiAuthoringToolsLabels();
+  const iconifyRequiredMessage = toolLabels.mask.iconifyRequired;
   const [open, setOpen] = useState(false);
   const [mediaOpen, setMediaOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -187,7 +190,7 @@ export function PhiMaskPickerButton({
     setSelectedIcon(nextIconValue);
     const icon = parseIconifyIcon(nextIconValue);
     if (!icon) {
-      if (nextIconValue) showMessage({ level: "error", content: "Select an Iconify icon for mask uploads." });
+      if (nextIconValue) showMessage({ level: "error", content: iconifyRequiredMessage });
       return;
     }
 
@@ -224,14 +227,14 @@ export function PhiMaskPickerButton({
         });
       })
       .finally(() => endUpload(controller));
-  }, [applyUploadedAsset, beginUpload, endUpload, showMessage]);
+  }, [applyUploadedAsset, beginUpload, endUpload, iconifyRequiredMessage, showMessage]);
 
   return (
     <PhiMaskPickerControl
       value={value}
       open={open}
       placement={placement}
-      buttonAriaLabel={buttonAriaLabel}
+      buttonAriaLabel={buttonAriaLabel ?? toolLabels.mask.select}
       buttonIcon={buttonIcon}
       mediaPickerProps={mediaPickerProps}
       selectedIcon={selectedIcon}

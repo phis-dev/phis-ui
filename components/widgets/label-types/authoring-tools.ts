@@ -21,15 +21,30 @@ export type PhiAuthoringToolsLabels = {
     icon: string;
     typography: string;
     placeholder: string;
+    font: string;
+    size: string;
   };
   richText: {
     alignment: string;
+    alignLeft: string;
+    alignCenter: string;
+    alignRight: string;
+    justify: string;
     styles: string;
+    bold: string;
+    italic: string;
+    underline: string;
+    strike: string;
+    code: string;
     color: string;
     link: string;
     linkRemove: string;
     linkApply: string;
     insertAsset: string;
+  };
+  mask: {
+    select: string;
+    iconifyRequired: string;
   };
   descriptions: {
     items: string;
@@ -86,15 +101,30 @@ export const PHI_AUTHORING_TOOLS_DEFAULT_LABELS: PhiAuthoringToolsLabels = {
     icon: "Text icon",
     typography: "Text typography",
     placeholder: "Text",
+    font: "Font",
+    size: "Size",
   },
   richText: {
     alignment: "Text alignment",
+    alignLeft: "Align left",
+    alignCenter: "Align center",
+    alignRight: "Align right",
+    justify: "Justify",
     styles: "Rich text styles",
+    bold: "Bold",
+    italic: "Italic",
+    underline: "Underline",
+    strike: "Strike",
+    code: "Code",
     color: "Rich text color",
     link: "Rich text link",
     linkRemove: "Remove",
     linkApply: "Apply",
     insertAsset: "Insert Site Asset",
+  },
+  mask: {
+    select: "Select mask",
+    iconifyRequired: "Select an Iconify icon for mask uploads.",
   },
   descriptions: {
     items: "Description items",

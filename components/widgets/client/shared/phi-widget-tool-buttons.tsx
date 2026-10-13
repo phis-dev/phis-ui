@@ -189,7 +189,7 @@ export function PhiWidgetTypographyToolButton({
         >
           <label>
             <PhiTypographyControl style={{ display: "block", marginBottom: 4 }}>
-              Font
+              {labels.text.font}
             </PhiTypographyControl>
             <PhiSelectControl<PhiWidgetFontFamilyKey>
               value={currentFontFamily}
@@ -207,7 +207,7 @@ export function PhiWidgetTypographyToolButton({
           </label>
           <label>
             <PhiTypographyControl style={{ display: "block", marginBottom: 4 }}>
-              Size
+              {labels.text.size}
             </PhiTypographyControl>
             <PhiSelectControl<PhiWidgetFontSizeKey>
               value={currentFontSize}
@@ -253,31 +253,32 @@ const PHI_HTML_WIDGET_BLOCK_OPTIONS: Array<{ value: PhiHtmlWidgetBlockType; labe
   { value: "number", label: "OL" },
 ];
 
+// Captions come from the authoring tools' label set by `labelKey`, in the author's language.
 const PHI_HTML_WIDGET_ALIGNMENT_OPTIONS: Array<{
   value: PhiHtmlWidgetAlignment;
-  label: string;
+  labelKey: "alignLeft" | "alignCenter" | "alignRight" | "justify";
   icon: ReactNode;
 }> = [
-  { value: "left", label: "Align left", icon: <PhiIcon name="align-left" size="inherit" /> },
-  { value: "center", label: "Align center", icon: <PhiIcon name="align-center" size="inherit" /> },
-  { value: "right", label: "Align right", icon: <PhiIcon name="align-right" size="inherit" /> },
-  { value: "justify", label: "Justify", icon: <PhiIcon name="menu" size="inherit" /> },
+  { value: "left", labelKey: "alignLeft", icon: <PhiIcon name="align-left" size="inherit" /> },
+  { value: "center", labelKey: "alignCenter", icon: <PhiIcon name="align-center" size="inherit" /> },
+  { value: "right", labelKey: "alignRight", icon: <PhiIcon name="align-right" size="inherit" /> },
+  { value: "justify", labelKey: "justify", icon: <PhiIcon name="menu" size="inherit" /> },
 ];
 
 function resolvePhiHtmlWidgetAlignmentIcon(alignment: PhiHtmlWidgetAlignment | null | undefined) {
   return PHI_HTML_WIDGET_ALIGNMENT_OPTIONS.find((option) => option.value === alignment)?.icon ?? <PhiIcon name="align-left" size="inherit" />;
 }
 
+// The key is also the caption's key in the label set.
 const PHI_HTML_WIDGET_STYLE_TOGGLES: Array<{
   key: "bold" | "italic" | "underline" | "strike" | "code";
   format: PhiHtmlWidgetTextFormat;
-  label: string;
 }> = [
-  { key: "bold", format: "bold", label: "Bold" },
-  { key: "italic", format: "italic", label: "Italic" },
-  { key: "underline", format: "underline", label: "Underline" },
-  { key: "strike", format: "strikethrough", label: "Strike" },
-  { key: "code", format: "code", label: "Code" },
+  { key: "bold", format: "bold" },
+  { key: "italic", format: "italic" },
+  { key: "underline", format: "underline" },
+  { key: "strike", format: "strikethrough" },
+  { key: "code", format: "code" },
 ];
 
 function usePhiHtmlWidgetEditorState(blockId: PhiCmsInstanceId) {
@@ -364,8 +365,8 @@ export function PhiHtmlWidgetToolbarTools({
                 key={option.value}
                 type={(state?.alignment ?? PHI_HTML_WIDGET_EDITOR_EMPTY_STATE.alignment) === option.value ? "primary" : "text"}
                 size="small"
-                ariaLabel={option.label}
-                tooltip={option.label}
+                ariaLabel={labels.richText[option.labelKey]}
+                tooltip={labels.richText[option.labelKey]}
                 icon={option.icon}
                 disabled={!bridge}
                 onClick={() => {
@@ -422,7 +423,7 @@ export function PhiHtmlWidgetToolbarTools({
                           ? state?.strike
                           : state?.code}
                   disabled={!bridge}
-                  label={toggle.label}
+                  label={labels.richText[toggle.key]}
                   onChange={() => {
                     bridge?.toggleFormat(toggle.format);
                     bridge?.focus();

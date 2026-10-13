@@ -1,9 +1,8 @@
 import { matchPhiLocalePrefixSegment, normalizeLocale, type SiteLocale } from "./locale";
+import type { PhiSiteLocaleOption } from "../types/site-config";
 
-export type SiteLocaleOption = {
-  code: string;
-  label: string;
-};
+/** The Site config's own locale option; one shape, named twice for the readers that already use this name. */
+export type SiteLocaleOption = PhiSiteLocaleOption;
 
 export type SiteLocaleConfig = {
   defaultLocale: SiteLocale;

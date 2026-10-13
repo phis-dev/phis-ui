@@ -37,8 +37,14 @@ export function normalizePhiBuilderRuntimeModuleIdsSearchParam(
   }
 }
 
-export function normalizePhiBuilderRevisionsKindSearchParam(
-  value: unknown,
-): "area" | "page" | "navigation" | "theme" | null {
-  return value === "area" || value === "page" || value === "navigation" || value === "theme" ? value : null;
+/** What a revision can be the revision of -- the one list the review route and the Revisions page read. */
+export const PHI_CMS_REVIEW_KINDS = ["area", "page", "navigation", "theme"] as const;
+export type PhiCmsReviewKind = (typeof PHI_CMS_REVIEW_KINDS)[number];
+
+export function isPhiCmsReviewKind(value: unknown): value is PhiCmsReviewKind {
+  return (PHI_CMS_REVIEW_KINDS as readonly unknown[]).includes(value);
+}
+
+export function normalizePhiBuilderRevisionsKindSearchParam(value: unknown): PhiCmsReviewKind | null {
+  return isPhiCmsReviewKind(value) ? value : null;
 }

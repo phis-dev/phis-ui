@@ -15,8 +15,12 @@ export {
   type PhiRuntimeControllerProvider,
 } from "./runtime-controller-core";
 
+const PHI_RUNTIME_CONTROLLER_MOUNT_SCOPES: readonly PhiRuntimeControllerSetting["mountScope"][] = ["site", "area", "page"];
+
 function readMountScope(value: unknown): PhiRuntimeControllerSetting["mountScope"] | null {
-  return value === "site" || value === "area" || value === "page" ? value : null;
+  return (PHI_RUNTIME_CONTROLLER_MOUNT_SCOPES as readonly unknown[]).includes(value)
+    ? value as PhiRuntimeControllerSetting["mountScope"]
+    : null;
 }
 
 export function readPhiRuntimeControllerSettings(value: unknown): PhiRuntimeControllerSetting[] | null {

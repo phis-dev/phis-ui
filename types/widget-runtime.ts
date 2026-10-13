@@ -2,7 +2,7 @@ import type { PhiThemeMode } from "../theme/phi-theme-presets";
 import type { PhiThemeModePreference } from "../theme/phi-theme-mode";
 import type { PhiCmsAreaKey } from "@phis/contracts/cms";
 import type { PhiViewerAddonRoleClaim, PhiViewerGroupClaim, PhiViewerRoleClaim } from "./access";
-import type { PhiSiteTheme } from "./site-config";
+import type { PhiSiteLocaleOption, PhiSiteTheme } from "./site-config";
 import type { PhiControllerSignalAddress, PhiSignalAddress } from "./signals";
 
 export type PhiWidgetViewerAccess = "public" | "authenticated";
@@ -22,10 +22,7 @@ export type PhiBlockRuntimeSite = {
    * alternative was every caller carrying its own guess -- a hardcoded ["en","de","fr","es"] and a
    * hardcoded "en", neither of which an installation could depart from.
    */
-  availableLocales: Array<{
-    code: string;
-    label: string;
-  }>;
+  availableLocales: PhiSiteLocaleOption[];
   defaultLocale: string;
   store: {
     enabled: boolean;

@@ -4,7 +4,9 @@ import { getSiteThemeRevision } from "../gateway/site-theme";
 import type { PhiSiteRequestContext } from "../types/site-request-context";
 import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
 
-export type PhiCmsReviewKind = "area" | "page" | "navigation" | "theme";
+import { isPhiCmsReviewKind, type PhiCmsReviewKind } from "../helpers/cms-scope-search-params";
+
+export type { PhiCmsReviewKind };
 
 export type PhiCmsReviewParams = {
   kind: PhiCmsReviewKind;
@@ -17,12 +19,7 @@ export type PhiCmsReviewParams = {
 
 function normalizeReviewKind(value: string | null | undefined): PhiCmsReviewKind | null {
   const normalized = value?.trim().toLowerCase();
-  return normalized === "area" ||
-    normalized === "page" ||
-    normalized === "navigation" ||
-    normalized === "theme"
-    ? normalized
-    : null;
+  return isPhiCmsReviewKind(normalized) ? normalized : null;
 }
 
 function normalizeOptionalString(value: string | null | undefined) {
