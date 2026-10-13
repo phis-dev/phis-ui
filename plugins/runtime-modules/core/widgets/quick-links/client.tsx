@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { usePathname } from "next/navigation";
 
@@ -40,7 +40,11 @@ export type PhiQuickLinksWidgetClientProps = PhiClientBlockBaseProps<
 >;
 
 function useQuickLinksContainerWidth() {
-  const ref = useRef<HTMLDivElement | null>(null);
+  /*
+   * A callback ref, so the observer follows the box: a Widget that starts without items renders no box
+   * yet, and an effect run once on mount never saw the one that came later.
+   */
+  const [node, ref] = useState<HTMLDivElement | null>(null);
   const [width, setWidth] = useState(0);
   const breakpoints = {
     col2: PHI_CONTAINER_BREAKPOINT_COL2,
@@ -48,7 +52,6 @@ function useQuickLinksContainerWidth() {
   };
 
   useEffect(() => {
-    const node = ref.current;
     if (!node) {
       return;
     }
@@ -72,7 +75,7 @@ function useQuickLinksContainerWidth() {
     return () => {
       observer.disconnect();
     };
-  }, []);
+  }, [node]);
 
   return { ref, width, breakpoints };
 }

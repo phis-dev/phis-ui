@@ -108,18 +108,28 @@ export function cutPhiRuntimeModuleServerAreaContributions(
   return contributions.map((contribution) => cutPhiRuntimeModuleServerAreaContribution(contribution, area));
 }
 
+/**
+ * One list from a Module's per-Area pieces. The same descriptor reaches several Areas and is kept once;
+ * two different descriptors under one key are a mistake in the package, and keeping whichever Area came
+ * first would decide silently which one a Site gets.
+ */
 function mergeUnique<T>(
   current: readonly T[] | undefined,
   additions: readonly T[] | undefined,
   readKey: (value: T) => string,
 ) {
   const values = [...(current ?? [])];
-  const keys = new Set(values.map(readKey));
+  const byKey = new Map(values.map((value) => [readKey(value), value] as const));
   for (const value of additions ?? []) {
     const key = readKey(value);
-    if (!keys.has(key)) {
-      keys.add(key);
+    const existing = byKey.get(key);
+    if (existing === undefined) {
+      byKey.set(key, value);
       values.push(value);
+      continue;
+    }
+    if (existing !== value && JSON.stringify(existing) !== JSON.stringify(value)) {
+      throw new Error(`Two different contributions share the key "${key}" across Areas.`);
     }
   }
   return values;

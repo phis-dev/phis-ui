@@ -890,8 +890,11 @@ export function createPhiRuntimeModuleCatalog(
     const contributionCount = entry.widgets.length + entry.layouts.length +
       (entry.forms?.length ?? 0) + (entry.areaShells?.length ?? 0) +
       (entry.areaOverlays?.length ?? 0) +
-      (entry.routes?.length ?? 0) + (entry.themes?.length ?? 0) +
+      (entry.routes?.length ?? 0) + (entry.navigation?.length ?? 0) +
+      (entry.themes?.length ?? 0) + (entry.themeBlocks?.length ?? 0) +
+      (entry.dashboardCards ? 1 : 0) +
       (definition.dataProviders?.length ?? 0) + (definition.calendarAdapters?.length ?? 0) +
+      (definition.videoProviders?.length ?? 0) + (definition.collectionItemRenderers?.length ?? 0) +
       Object.values(definition.formProviders ?? {}).reduce((count, providers) => count + (providers?.length ?? 0), 0);
     if (definition.kind === "module" && contributionCount === 0 && !hasController) {
       throw new Error(`Controllerless runtime module "${definition.moduleId}" must contribute at least one owned artifact.`);

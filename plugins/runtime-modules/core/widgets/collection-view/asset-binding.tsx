@@ -61,6 +61,24 @@ function readAssetKinds(value: unknown): PhiMediaKindValue[] {
     typeof entry === "string" && Object.values(PhiMediaKind).includes(entry as PhiMediaKindValue));
 }
 
+/*
+ * Labels laid over the defaults key by key, through every nested group. A configured set that names only
+ * some labels -- `grid.deleteSuccessTemplate` and nothing else -- used to replace the whole set, and the
+ * first label it did not name was read as undefined and thrown on.
+ */
+function overlayPhiAssetLabels<T>(base: T, override: unknown): T {
+  if (!isPhiRecord(base) || !isPhiRecord(override)) {
+    return (typeof override === typeof base ? override : base) as T;
+  }
+  const result: Record<string, unknown> = { ...base };
+  for (const [key, value] of Object.entries(override)) {
+    if (value !== undefined && key in base) {
+      result[key] = overlayPhiAssetLabels((base as Record<string, unknown>)[key], value);
+    }
+  }
+  return result as T;
+}
+
 export function PhiAssetCollectionViewBinding({
   config,
   binding,
@@ -72,7 +90,10 @@ export function PhiAssetCollectionViewBinding({
   labels?: unknown;
   widgetId?: PhiCmsInstanceId | null;
 }) {
-  const labels = (config.presentation.labels ?? rawLabels ?? PHI_MEDIA_WIDGET_DEFAULT_LABELS) as PhiAssetWidgetLabels;
+  const labels = useMemo(
+    () => overlayPhiAssetLabels<PhiAssetWidgetLabels>(PHI_MEDIA_WIDGET_DEFAULT_LABELS, config.presentation.labels ?? rawLabels),
+    [config.presentation.labels, rawLabels],
+  );
   const { token } = usePhiConfig();
   const { showMessage } = usePhiApplicationFeedback();
   const selectionState = usePhiImagePreviewStore(PHI_ASSET_CONTROLLER_STORE_KEY);

@@ -179,7 +179,17 @@ export async function proxyPhiNextSiteRequest(request: NextRequest) {
       : new NextResponse(null, { status: 404 });
   }
   if (isPhiAssetOrBackendPath(pathname)) {
-    return NextResponse.next();
+    /*
+     * `x-locale` is this proxy's word, set below from the path. A backend route resolves its locale
+     * through the same request reader as a page, so a value the browser sent under that name must not
+     * reach it either.
+     */
+    if (!request.headers.has("x-locale")) {
+      return NextResponse.next();
+    }
+    const backendHeaders = new Headers(request.headers);
+    backendHeaders.delete("x-locale");
+    return NextResponse.next({ request: { headers: backendHeaders } });
   }
 
   const runtimeConfig = readSiteRuntime();
@@ -197,8 +207,9 @@ export async function proxyPhiNextSiteRequest(request: NextRequest) {
   const prefixedLocale = extractLocalePrefix(pathname, localeConfig);
 
   if (prefixedLocale) {
-    // The static tree names the locale by its own segment, so only an exact one goes there.
-    const localeSegment = pathname.split("/").filter(Boolean)[0]?.toLowerCase();
+    // The static tree names the locale by its own segment, so only an exact one goes there -- in the
+    // Site's own spelling, which is how `prefixedLocale` comes back; lowercasing kept `pt-BR` out.
+    const localeSegment = pathname.split("/").filter(Boolean)[0];
     if (localeSegment === prefixedLocale && isPhiStaticRenderRequest(request)) {
       const passHeaders = new Headers(request.headers);
       passHeaders.set(PHI_STATIC_RENDER_PASS_HEADER, readPhiStaticRenderPass());

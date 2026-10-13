@@ -99,8 +99,8 @@ function describeModuleSelectionChange(
 /**
  * Applies a new Module selection to one or more Areas: validates each Area's list, patches the
  * catalog, and records the whole gesture as ONE history entry -- the one place all of this happens,
- * so a Switch cell in the Modules table and the legacy `runtimeModules` signal channel stay in
- * perfect step rather than each growing its own copy of "what does changing this actually mean."
+ * so a Switch cell in the Modules table and the Controller's `moduleUsage` answers stay in perfect
+ * step rather than each growing its own copy of "what does changing this actually mean."
  *
  * One entry per gesture is the point of taking a list: the module-wide switch changes several Areas
  * at once, and recording those as separate entries would make undo restore exactly the partial state

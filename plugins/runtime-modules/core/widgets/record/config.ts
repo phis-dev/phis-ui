@@ -86,7 +86,8 @@ export function parsePhiRecordWidgetConfig(
           params: isPhiRecord(source.params) ? { ...source.params } : {},
         }
       : null,
-    openActionKey: readString(rawConfig.openActionKey)?.trim() ?? "view",
+    // Absent and empty are the same answer: no action named, so the record's own `view`.
+    openActionKey: readString(rawConfig.openActionKey)?.trim() || "view",
     presentation: {
       appearance: presentation.appearance === "list" ? "list" : "grid",
       columns: columns && columns > 0 ? columns : 1,

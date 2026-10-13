@@ -296,12 +296,18 @@ export function usePhiTreeBinding({
     mutate({ kind: "action", actionKey, nodeIdentity, selectedNodeIdentities, actionValue, query }),
   [mutate, query, selectedNodeIdentities]);
 
-  const moveNode = useCallback((request: Omit<Extract<MutationInput, { kind: "node-move" }>, "kind">) => {
+  /*
+   * Async, so a move it refuses arrives as a rejection like any failed mutation -- a synchronous throw
+   * passed every `.catch` on the way -- and stands as the Tree's error, where the reader sees it.
+   */
+  const moveNode = useCallback(async (request: Omit<Extract<MutationInput, { kind: "node-move" }>, "kind">) => {
     if (!resource) throw new PhiTreeProviderError("resource-unavailable", "Tree resource is unavailable.");
     let ancestor = request.targetParentNodeIdentity;
     while (ancestor != null) {
       if (String(ancestor) === String(request.movedNodeIdentity)) {
-        throw new PhiTreeProviderError("invalid-node-move", "A Tree node cannot be moved into itself or one of its descendants.");
+        const refused = new PhiTreeProviderError("invalid-node-move", "A Tree node cannot be moved into itself or one of its descendants.");
+        setError(refused);
+        throw refused;
       }
       const ancestorNode = nodesRef.current.find((node) =>
         String(readPath(node, resource.nodeIdentityPath)) === String(ancestor));

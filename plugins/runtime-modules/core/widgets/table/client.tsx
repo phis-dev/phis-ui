@@ -330,9 +330,22 @@ export function PhiTableWidgetClient({
   const configKey = JSON.stringify(inputConfig);
   const config = useMemo(() => JSON.parse(configKey) as PhiTableWidgetConfig, [configKey]);
   const { presentation, features, source } = config;
-  const [bindingParams, setBindingParams] = useState<Record<string, unknown>>(
+  /*
+   * What the reader set, tagged with the configuration it was set against. A Builder edit of the
+   * configured params or columns is a new starting point; the reader's earlier choice belonged to the old
+   * one and would otherwise outlive it -- an order missing the new column, which every reorder then
+   * refused.
+   */
+  const configuredBindingParams = useMemo<Record<string, unknown>>(
     () => isPhiRecord(source?.params) ? source.params : {},
+    [source],
   );
+  const bindingParamsSeed = JSON.stringify(configuredBindingParams);
+  const [chosenBindingParams, setChosenBindingParams] =
+    useState<{ seed: string; params: Record<string, unknown> } | null>(null);
+  const bindingParams = chosenBindingParams?.seed === bindingParamsSeed
+    ? chosenBindingParams.params
+    : configuredBindingParams;
   const resolvedSource = useMemo(() => source ? { ...source, params: bindingParams } : null, [bindingParams, source]);
   const resolvedControlSize = presentation.controlSize ??
     (features.tools?.mode !== "external" ? "small" : undefined);
@@ -346,8 +359,16 @@ export function PhiTableWidgetClient({
   const [conditionControllerStates, setConditionControllerStates] = useState<
     Record<string, Record<string, unknown>>
   >({});
-  const [columnOrder, setColumnOrder] = useState<readonly string[]>(() =>
-    presentation.columns.filter((column) => !column.hidden).map((column) => column.key));
+  const configuredColumnOrder = useMemo(
+    () => presentation.columns.filter((column) => !column.hidden).map((column) => column.key),
+    [presentation.columns],
+  );
+  const columnOrderSeed = configuredColumnOrder.join("\u0000");
+  const [chosenColumnOrder, setChosenColumnOrder] =
+    useState<{ seed: string; order: readonly string[] } | null>(null);
+  const columnOrder = chosenColumnOrder?.seed === columnOrderSeed
+    ? chosenColumnOrder.order
+    : configuredColumnOrder;
   const signalIdentity = usePhiSignalIdentity();
   const emitSignal = usePhiSignalEmitter(signalIdentity.sender);
   const emitRoutes = useMemo(() => config.signalRoutes?.emits ?? [], [config.signalRoutes?.emits]);
@@ -469,11 +490,11 @@ export function PhiTableWidgetClient({
   }, [features.search?.debounceMs, features.search?.enabled, query.search, searchDraft, setQuery]);
 
   const updateColumnOrder = useCallback((next: readonly string[], correlationId?: string) => {
-    const known = new Set(presentation.columns.filter((column) => !column.hidden).map((column) => column.key));
+    const known = new Set(configuredColumnOrder);
     if (next.length !== known.size || next.some((key) => !known.has(key)) || new Set(next).size !== next.length) return;
-    setColumnOrder(next);
+    setChosenColumnOrder({ seed: columnOrderSeed, order: next });
     emitCapability("columnsChange", { columnOrder: [...next] }, correlationId);
-  }, [emitCapability, presentation.columns]);
+  }, [columnOrderSeed, configuredColumnOrder, emitCapability]);
 
   const updateExpandedRows = useCallback((next: readonly PhiTableRowIdentity[], correlationId?: string) => {
     setExpandedRowIdentities(next);
@@ -486,7 +507,7 @@ export function PhiTableWidgetClient({
   }, [emitCapability, setSelectedRowIdentities]);
 
   const updateBindingParams = useCallback((next: Record<string, unknown>, correlationId?: string) => {
-    setBindingParams(next);
+    setChosenBindingParams({ seed: bindingParamsSeed, params: next });
     setQuery((current) => ({ ...current, page: 1, cursor: null }));
     setSelectedRowIdentities([]);
     setExpandedRowIdentities([]);
@@ -500,7 +521,7 @@ export function PhiTableWidgetClient({
           : [];
       })),
     }, correlationId);
-  }, [configuredBindingFields, emitCapability, setExpandedRowIdentities, setQuery, setSelectedRowIdentities]);
+  }, [bindingParamsSeed, configuredBindingFields, emitCapability, setExpandedRowIdentities, setQuery, setSelectedRowIdentities]);
 
   useEffect(() => {
     if (!resource?.bindingFields?.length) return;

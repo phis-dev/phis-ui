@@ -40,10 +40,10 @@ export function resolvePhiLayoutSlotChildSizing(
   child: ReactNode,
 ): PhiLayoutSlotChildSizing {
   const childNodes = Children.toArray(child);
+  // One child per slot is the contract; sizing a slot by its first of several would hide the break.
   if (childNodes.length > 1) {
-    console.error(
-      `Invalid Phi layout slot: expected exactly one child per slot, received ${childNodes.length}. ` +
-        "Only the first child will be used for sizing.",
+    throw new Error(
+      `Invalid Phi layout slot: expected exactly one child per slot, received ${childNodes.length}.`,
     );
   }
 

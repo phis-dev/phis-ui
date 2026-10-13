@@ -71,6 +71,12 @@ export function createPhiRuntimeModuleAuthoringClient({
   WidgetModule: ComponentType<PhiAuthoringWidgetModuleProps>;
   layouts?: readonly PhiAuthoringLayoutModuleLoader[];
 }): ComponentType<PhiRuntimeModuleAuthoringClientProps> {
+  // A second loader for one type is a package mistake, refused like a duplicate Module below.
+  const layoutTypes = layouts.map((entry) => entry.type);
+  const duplicateLayoutType = layoutTypes.find((type, index) => layoutTypes.indexOf(type) !== index);
+  if (duplicateLayoutType !== undefined) {
+    throw new Error(`Duplicate authoring layout "${duplicateLayoutType}" in runtime module "${moduleId}".`);
+  }
   const layoutsByType = new Map<string, PhiAuthoringLayoutDefinition>(
     layouts.map((entry) => [
       entry.type,

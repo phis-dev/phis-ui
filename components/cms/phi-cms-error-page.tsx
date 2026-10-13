@@ -19,6 +19,7 @@ import {
 import { PhiRuntimeModuleDataProviderHost } from "../runtime/runtime-module-data-provider-host";
 import { isPhiStaticCmsSiteBridge } from "../../server-helpers/static-render";
 import { PhiCmsErrorFallback } from "./phi-cms-error-fallback";
+import { logRuntimeEvent } from "../../net/log";
 
 export type PhiCmsErrorPageProps = {
   code: PhiCmsErrorCode;
@@ -81,7 +82,13 @@ export async function PhiCmsErrorPage({ code, cmsBridge, area, locale: staticLoc
        */
       "refusal",
     );
-  } catch {
+  } catch (error) {
+    // The fallback page still answers the visitor; what failed on the way to the real one is said here.
+    logRuntimeEvent("error", "cms.error_page.resolve_failed", {
+      message: `The ${code} page could not be resolved; the fallback answers instead.`,
+      status: code,
+      error,
+    });
     return <PhiCmsErrorFallback code={code} />;
   }
 

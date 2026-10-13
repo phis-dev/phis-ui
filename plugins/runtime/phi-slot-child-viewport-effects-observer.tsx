@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import type { PhiRenderableBlockViewportEffect } from "../../types";
 import { PHI_RENDERABLE_BLOCK_DEFAULT_VIEWPORT_EFFECT } from "../../helpers/renderable-block-defaults";
@@ -166,10 +166,21 @@ export function PhiSlotChildViewportEffectsObserver({
 }) {
   const markerRef = useRef<HTMLSpanElement | null>(null);
 
+  /*
+   * The frame resolves the effects anew on every render, so the list is a new array each time. Keyed by
+   * what it says, the observer and its listeners are built once per set of effects instead of per
+   * render -- which also reset the scale to 1 every time.
+   */
+  const effectsKey = JSON.stringify(effects);
+  const stableEffects = useMemo(
+    () => JSON.parse(effectsKey) as readonly PhiRenderableBlockViewportEffect[],
+    [effectsKey],
+  );
+
   useEffect(() => {
     const marker = markerRef.current;
     const target = marker?.parentElement;
-    if (!target || effects.length === 0 || typeof IntersectionObserver === "undefined") {
+    if (!target || stableEffects.length === 0 || typeof IntersectionObserver === "undefined") {
       return undefined;
     }
 
@@ -182,7 +193,7 @@ export function PhiSlotChildViewportEffectsObserver({
         return;
       }
 
-      applyViewportEffectValues(target, resolveViewportEffectValues(effects, target));
+      applyViewportEffectValues(target, resolveViewportEffectValues(stableEffects, target));
     };
     const scheduleUpdate = () => {
       if (frameId != null) {
@@ -208,7 +219,7 @@ export function PhiSlotChildViewportEffectsObserver({
     );
     const handleScrollOrResize = () => scheduleUpdate();
 
-    target.style.setProperty("--phi-effects-viewport-scale", "1");
+    target.style.setProperty("--phi-stableEffects-viewport-scale", "1");
     observer.observe(target);
     window.addEventListener("scroll", handleScrollOrResize, { passive: true });
     window.addEventListener("resize", handleScrollOrResize);
@@ -222,7 +233,7 @@ export function PhiSlotChildViewportEffectsObserver({
         window.cancelAnimationFrame(frameId);
       }
     };
-  }, [effects]);
+  }, [stableEffects]);
 
   return <span ref={markerRef} hidden data-phi-effects-viewport-observer="true" />;
 }

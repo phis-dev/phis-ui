@@ -11,7 +11,7 @@ import type {
   PhiTreeProviderBindingFieldDefinition,
   PhiTreeWidgetConfig,
 } from "../../../../../types/tree-widget";
-import { validatePhiTreeWidgetBinding } from "../../../../../types/tree-widget";
+import { readPhiTreeProviderError, validatePhiTreeWidgetBinding } from "../../../../../types/tree-widget";
 import type { PhiControlSize } from "../../../../../types/control";
 import { usePhiTreeBinding } from "../../../../../components/trees/client/phi-tree-binding";
 import { PhiTreeActionButton, PhiTreeControl } from "../../../../../components/controls/phi-tree-control";
@@ -83,7 +83,29 @@ function TreeBindingTool({
 
 export function PhiTreeWidgetClient({ config, labels }: { config: PhiTreeWidgetConfig; labels: PhiTreeWidgetLabels }) {
   const { token } = usePhiConfig();
-  const [bindingParams, setBindingParams] = useState<Record<string, unknown>>(() => ({ ...(config.source?.params ?? {}) }));
+  /*
+   * What the reader set, tagged with the configured params it was set against: a Builder edit of those
+   * is a new starting point, as in the Table.
+   */
+  const configuredBindingParams = useMemo<Record<string, unknown>>(
+    () => ({ ...(config.source?.params ?? {}) }),
+    [config.source?.params],
+  );
+  const bindingParamsSeed = JSON.stringify(configuredBindingParams);
+  const [chosenBindingParams, setChosenBindingParams] =
+    useState<{ seed: string; params: Record<string, unknown> } | null>(null);
+  const bindingParams = chosenBindingParams?.seed === bindingParamsSeed
+    ? chosenBindingParams.params
+    : configuredBindingParams;
+  const setBindingParams = useCallback(
+    (next: Record<string, unknown> | ((current: Record<string, unknown>) => Record<string, unknown>)) => {
+      setChosenBindingParams((current) => {
+        const base = current?.seed === bindingParamsSeed ? current.params : configuredBindingParams;
+        return { seed: bindingParamsSeed, params: typeof next === "function" ? next(base) : next };
+      });
+    },
+    [bindingParamsSeed, configuredBindingParams],
+  );
   const [searchDraft, setSearchDraft] = useState(config.initialQuery?.search ?? "");
   const signalIdentity = usePhiSignalIdentity();
   const emitSignal = usePhiSignalEmitter(signalIdentity.sender);
@@ -120,7 +142,7 @@ export function PhiTreeWidgetClient({ config, labels }: { config: PhiTreeWidgetC
     setSearchDraft(config.initialQuery?.search ?? "");
     binding.setQuery({ ...(config.initialQuery ?? {}) });
     emitCapability("bindingParamsChange", { params: nextParams });
-  }, [binding, config.initialQuery, config.source?.params, emitCapability]);
+  }, [binding, config.initialQuery, config.source?.params, emitCapability, setBindingParams]);
   const contractError = binding.resource ? validatePhiTreeWidgetBinding(config, binding.resource)[0] ?? null : null;
   const treeQuery = binding.query;
   const setTreeQuery = binding.setQuery;
@@ -138,7 +160,16 @@ export function PhiTreeWidgetClient({ config, labels }: { config: PhiTreeWidgetC
     } else if (action.execution === "provider") {
       void binding.executeAction(action.key, identity).then((result) => {
         emitCapability("mutationChange", result as unknown as Record<string, unknown>, correlationId);
-      }).catch(() => undefined);
+      }).catch((error: unknown) => {
+        // Whoever asked with a correlation id waits for an answer; a failure is one, in the result's shape.
+        const failure = readPhiTreeProviderError(error);
+        emitCapability("mutationChange", {
+          status: "rejected",
+          invalidation: "none",
+          errorCode: failure.code,
+          message: failure.message,
+        }, correlationId);
+      });
     }
   }, [binding, emitCapability]);
 
@@ -181,7 +212,7 @@ export function PhiTreeWidgetClient({ config, labels }: { config: PhiTreeWidgetC
         );
       }
     }
-  }, [activate, binding, config.features.actions, listenRoutes, signalIdentity.receiver]), useMemo(() => {
+  }, [activate, binding, config.features.actions, listenRoutes, setBindingParams, signalIdentity.receiver]), useMemo(() => {
     if (!listenRoutes.length) return null;
     return {
       scopes: Array.from(new Set(listenRoutes.map((route) => route.scope))),

@@ -76,11 +76,25 @@ function readTruth(item: Record<string, unknown>, path: string | undefined) {
   return value === true || value === "true" || value === 1;
 }
 
+/*
+ * The field a card reads: the configured path, or -- only where none is configured -- the conventional
+ * fields. A configured path that finds nothing shows nothing; falling back to `name` would hide that the
+ * path is wrong behind a card that looks right.
+ */
+function readConfiguredOr(item: Record<string, unknown>, path: string | undefined, ...conventional: string[]) {
+  if (path) return readPath(item, path);
+  for (const candidate of conventional) {
+    const value = readPath(item, candidate);
+    if (value !== undefined) return value;
+  }
+  return undefined;
+}
+
 function buildCard(item: Record<string, unknown>, card: PhiCmsCollectionCardPresentation | undefined) {
   const labels = {
     eyebrow: readPath(item, card?.eyebrow),
-    title: readPath(item, card?.title) ?? readPath(item, "name") ?? readPath(item, "title"),
-    description: readPath(item, card?.description) ?? readPath(item, "description"),
+    title: readConfiguredOr(item, card?.title, "name", "title"),
+    description: readConfiguredOr(item, card?.description, "description"),
     meta: readPath(item, card?.meta),
     actionLabel: readPath(item, card?.actionLabel),
     value: readPath(item, card?.value),
@@ -90,7 +104,7 @@ function buildCard(item: Record<string, unknown>, card: PhiCmsCollectionCardPres
    * the width it is given; a mark sits beside the title and is read at one size. Falling the cover back
    * to the icon turned every icon into a poster.
    */
-  const imageUrl = readPath(item, card?.imageUrl) ?? readPath(item, "coverUrl") ?? readPath(item, "imageUrl");
+  const imageUrl = readConfiguredOr(item, card?.imageUrl, "coverUrl", "imageUrl");
   const config: PhiCardWidgetClientConfig = {
     surface: PHI_SURFACE_CARD,
     image: imageUrl
@@ -100,7 +114,7 @@ function buildCard(item: Record<string, unknown>, card: PhiCmsCollectionCardPres
           alt: labels.title ?? "",
         }
       : null,
-    iconName: readIconName(readPath(item, card?.icon) ?? readPath(item, "icon")),
+    iconName: readIconName(readConfiguredOr(item, card?.icon, "icon")),
     href: readPath(item, card?.href),
     action: (() => {
       const actionHref = readPath(item, card?.actionHref);

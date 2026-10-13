@@ -45,6 +45,12 @@ function createPhiLazyAuthoringWidget(
 export function createPhiAuthoringWidgetModule(
   loaders: readonly PhiAuthoringWidgetModuleLoader[],
 ): ComponentType<PhiAuthoringWidgetModuleProps> {
+  // A second loader for one type is a package mistake; the Map would keep the last one silently.
+  const types = loaders.map((entry) => entry.type);
+  const duplicateType = types.find((type, index) => types.indexOf(type) !== index);
+  if (duplicateType !== undefined) {
+    throw new Error(`Duplicate authoring widget "${duplicateType}".`);
+  }
   const componentsByType = new Map(
     loaders.map((entry) => [entry.type, createPhiLazyAuthoringWidget(entry.load)]),
   );

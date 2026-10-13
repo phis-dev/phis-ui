@@ -255,7 +255,14 @@ export function resolvePhiSlotChildSizing(
     return sizingProps;
   }
 
-  const configConstraints = resolvePhiSlotChildSizeConstraints(resolvePhiRenderableBlockGeometry(props.config));
+  const configGeometry = resolvePhiRenderableBlockGeometry(props.config);
+  const configConstraints = resolvePhiSlotChildSizeConstraints(configGeometry);
+  /*
+   * A size stated in the child's config is as explicit as one stated in its flags. A bare frame handed
+   * only `config` used to read as unsized here while the frame itself drew it fixed, so the Layout
+   * stretched what the frame had sized.
+   */
+  const configExplicit = resolvePhiSlotChildExplicitAxes(configGeometry);
 
   if (props.slotSizePolicy != null || props.kind != null) {
     const resolvedKind =
@@ -265,9 +272,13 @@ export function resolvePhiSlotChildSizing(
 
     const explicit = {
       explicitInlineSize:
-        props.explicitInlineSize === true || props["data-phi-layout-explicit-width"] === "true",
+        props.explicitInlineSize === true
+        || props["data-phi-layout-explicit-width"] === "true"
+        || configExplicit.explicitInlineSize,
       explicitBlockSize:
-        props.explicitBlockSize === true || props["data-phi-layout-explicit-height"] === "true",
+        props.explicitBlockSize === true
+        || props["data-phi-layout-explicit-height"] === "true"
+        || configExplicit.explicitBlockSize,
     };
 
     return {
@@ -299,8 +310,8 @@ export function resolvePhiSlotChildSizing(
   );
 
   const explicit = {
-    explicitInlineSize: props["data-phi-layout-explicit-width"] === "true",
-    explicitBlockSize: props["data-phi-layout-explicit-height"] === "true",
+    explicitInlineSize: props["data-phi-layout-explicit-width"] === "true" || configExplicit.explicitInlineSize,
+    explicitBlockSize: props["data-phi-layout-explicit-height"] === "true" || configExplicit.explicitBlockSize,
   };
 
   return {

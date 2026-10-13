@@ -205,7 +205,8 @@ export function createPhiNextStaticRootLayout(
         requestedLocale: root,
       }),
     ]);
-    if (resolvedLocale.locale !== root.toLowerCase()) {
+    // Exactly the Site's spelling, as the proxy rewrites only that: `pt-BR` is the segment, not `pt-br`.
+    if (resolvedLocale.locale !== root) {
       notFound();
     }
     return document({

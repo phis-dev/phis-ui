@@ -82,6 +82,16 @@ describe("the policy a slot child actually runs on", () => {
       expect(sizing.policy).toEqual({ inline: "fixed", block: "fill" });
     });
 
+    it("reads a size stated only in the child's config as explicit", () => {
+      const child = createElement("div", {
+        kind: "widget",
+        config: { size: { width: 240 } },
+      } as never);
+      const sizing = resolvePhiSlotChildSizing(child);
+      expect(sizing.policy.inline).toBe("fixed");
+      expect(sizing.explicitInlineSize).toBe(true);
+    });
+
     it("is idempotent over the attributes a frame wrote", () => {
       const child = createElement("div", {
         "data-phi-slot-size-inline": "fixed",
