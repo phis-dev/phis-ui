@@ -6,7 +6,7 @@ export type MediaFocalRect = {
   height: number;
 };
 
-export function clampRectValue(value: number) {
+function clampRectValue(value: number) {
   return Math.min(Math.max(value, 0), 1);
 }
 

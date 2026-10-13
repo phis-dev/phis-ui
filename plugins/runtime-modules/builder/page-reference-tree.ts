@@ -7,7 +7,7 @@ export type PhiBuilderPageReferenceTreeLabels = {
   landing: string;
 };
 
-export const PHI_BUILDER_PAGE_REFERENCE_TREE_DEFAULT_LABELS: PhiBuilderPageReferenceTreeLabels = {
+const PHI_BUILDER_PAGE_REFERENCE_TREE_DEFAULT_LABELS: PhiBuilderPageReferenceTreeLabels = {
   landing: "(Landing page)",
 };
 

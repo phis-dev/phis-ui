@@ -21,7 +21,7 @@ export const PHI_GROUPS_FORM_IDS = {
   myMembership: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "groups/my-membership"),
 } as const;
 
-export const PHI_GROUPS_FORM_HANDLER_KEYS = {
+const PHI_GROUPS_FORM_HANDLER_KEYS = {
   create: "site.groups.create",
   membership: "site.groups.membership",
   myMembership: "site.groups.my-membership",

@@ -22,7 +22,7 @@ const PHI_TEXT_PLACEHOLDER_TOKEN_PATTERN = /%(\d+)/g;
  * wordmark means the first one when it writes its own name into a sentence. Where none is set the
  * wordmark resolver falls back to the name, so asking for it is never the emptier question.
  */
-export function buildPhiTextPlaceholders(runtime: PhiBlockRuntime): Record<string, string | number> {
+function buildPhiTextPlaceholders(runtime: PhiBlockRuntime): Record<string, string | number> {
   const placeholders: Record<string, string | number> = {
     "site.name": runtime.site.name?.trim() || runtime.site.key,
     "site.wordmark": resolvePhiBrandWordmarkText(runtime),

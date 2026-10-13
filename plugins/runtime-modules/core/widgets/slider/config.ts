@@ -32,7 +32,7 @@ function readPhiSliderTooltipMode(value: unknown): PhiSliderTooltipMode | undefi
     : undefined;
 }
 
-export function parsePhiSliderWidgetConfig(config: Record<string, unknown>): PhiSliderWidgetConfig {
+function parsePhiSliderWidgetConfig(config: Record<string, unknown>): PhiSliderWidgetConfig {
   const min = readNumber(config.min) ?? 0;
   const configuredMax = readNumber(config.max);
   const max = configuredMax != null && configuredMax > min ? configuredMax : min + 100;

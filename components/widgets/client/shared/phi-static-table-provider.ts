@@ -115,7 +115,7 @@ function orderHierarchyRows(
  * asked for it no static resource had a reason to notice -- which is why the contract says a Site can
  * read a record without a server and, for the static path, it could not.
  */
-export function readPhiStaticTableRecord(
+function readPhiStaticTableRecord(
   resource: PhiStaticTableResource,
   request: PhiTableProviderRecordRequest,
 ) {

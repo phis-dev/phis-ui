@@ -110,14 +110,14 @@ function accountNavigationSurface(
   };
 }
 
-export const PHI_ACCOUNTING_ACCOUNT_NAV_ITEM_KEY = "@phis/ui/modules/accounting/nav/account";
-export const PHI_ADMIN_ACCOUNT_NAV_ITEM_KEY = "@phis/ui/modules/admin/nav/account";
-export const PHI_BUILDER_ACCOUNT_NAV_ITEM_KEY = "@phis/ui/builder/nav/account";
-export const PHI_EDITOR_ACCOUNT_NAV_ITEM_KEY = "@phis/ui/modules/editor/nav/account";
-export const PHI_PUBLIC_ACCOUNT_NAV_ITEM_KEY = "@phis/ui/modules/public/nav/account";
+const PHI_ACCOUNTING_ACCOUNT_NAV_ITEM_KEY = "@phis/ui/modules/accounting/nav/account";
+const PHI_ADMIN_ACCOUNT_NAV_ITEM_KEY = "@phis/ui/modules/admin/nav/account";
+const PHI_BUILDER_ACCOUNT_NAV_ITEM_KEY = "@phis/ui/builder/nav/account";
+const PHI_EDITOR_ACCOUNT_NAV_ITEM_KEY = "@phis/ui/modules/editor/nav/account";
+const PHI_PUBLIC_ACCOUNT_NAV_ITEM_KEY = "@phis/ui/modules/public/nav/account";
 
-export const PHI_ADMIN_SETTINGS_NAV_ITEM_KEY = "@phis/ui/modules/admin/nav/settings";
-export const PHI_BUILDER_SETTINGS_NAV_ITEM_KEY = "@phis/ui/builder/nav/settings";
+const PHI_ADMIN_SETTINGS_NAV_ITEM_KEY = "@phis/ui/modules/admin/nav/settings";
+const PHI_BUILDER_SETTINGS_NAV_ITEM_KEY = "@phis/ui/builder/nav/settings";
 
 /**
  * What the four sidebar anchors mean, which is the same in every Area that has a sidebar.
@@ -189,7 +189,7 @@ export const PHI_PUBLIC_RUNTIME_AREA_DEFINITIONS = [
 ] satisfies readonly PhiCmsAreaDefinition[];
 
 export const PHI_APP_ACCOUNT_NAV_ITEM_KEY = "@phis/ui/modules/app/nav/account";
-export const PHI_APP_SETTINGS_NAV_ITEM_KEY = "@phis/ui/modules/app/nav/settings";
+const PHI_APP_SETTINGS_NAV_ITEM_KEY = "@phis/ui/modules/app/nav/settings";
 
 export const PHI_APP_RUNTIME_AREA_DEFINITIONS = [
   {
@@ -341,7 +341,7 @@ export const PHI_EDITOR_RUNTIME_AREA_DEFINITIONS = [
   },
 ] satisfies readonly PhiCmsAreaDefinition[];
 
-export const PHI_BUILDER_RUNTIME_AREA_DEFINITIONS = [
+const PHI_BUILDER_RUNTIME_AREA_DEFINITIONS = [
   {
     area: "builder",
     baseModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,

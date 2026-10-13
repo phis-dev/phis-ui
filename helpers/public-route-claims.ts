@@ -32,7 +32,7 @@ export type PhiPublicRoutePathCollision = {
   heldBy: PhiPublicRouteAddressHolder;
 };
 
-export function buildPhiPublicRouteIdentity(ownerModuleId: string, presetKey: string) {
+function buildPhiPublicRouteIdentity(ownerModuleId: string, presetKey: string) {
   return `${ownerModuleId}/${presetKey}`;
 }
 

@@ -92,7 +92,7 @@ function readPhiThemeDerivation(value: unknown): PhiThemeDerivation | null {
  * A Theme from before the Sets has no record until its first draft writes one, and that draft writes
  * the core Set; naming the core Set here says the same thing ahead of time.
  */
-export function resolvePhiThemeDerivation(theme: { derivedFrom?: unknown } | null | undefined): PhiThemeDerivation {
+function resolvePhiThemeDerivation(theme: { derivedFrom?: unknown } | null | undefined): PhiThemeDerivation {
   const stated = readPhiThemeDerivation(theme?.derivedFrom);
   if (stated) {
     return stated;

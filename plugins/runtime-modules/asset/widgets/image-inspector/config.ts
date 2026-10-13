@@ -5,7 +5,7 @@ import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../../ids";
 import { readPhiSignalRouteSet } from "../../../../../types/signals";
 
-export function normalizePhiCmsAssetInspectorWidgetConfig(config: unknown): PhiCmsAssetInspectorWidgetConfig {
+function normalizePhiCmsAssetInspectorWidgetConfig(config: unknown): PhiCmsAssetInspectorWidgetConfig {
   const record = isPhiRecord(config)
     ? config as Record<string, unknown>
     : {};
@@ -15,7 +15,7 @@ export function normalizePhiCmsAssetInspectorWidgetConfig(config: unknown): PhiC
   };
 }
 
-export function parsePhiCmsAssetInspectorWidgetConfig(
+function parsePhiCmsAssetInspectorWidgetConfig(
   config: Record<string, unknown>,
 ): PhiCmsAssetInspectorWidgetConfig {
   return normalizePhiCmsAssetInspectorWidgetConfig(config);

@@ -402,7 +402,7 @@ export function resolvePhiSlotChildBaseStyle(policy: PhiNormalizedSlotSizePolicy
  */
 const PHI_SLOT_CHILD_CAPPED_MAX_UNITS: readonly PhiCssLengthUnit[] = ["px", "em", "rem", "vw", "vh"];
 
-export function resolvePhiSlotChildInlineMaximum(
+function resolvePhiSlotChildInlineMaximum(
   max: PhiResolvedBlockLength | null,
   inlinePolicy: PhiSlotAxisSizePolicy,
 ): string | undefined {

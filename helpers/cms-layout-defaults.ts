@@ -26,7 +26,7 @@ export type PhiLayoutCreationPreset = "panel" | "overlay-actions" | "page-base";
  * setting each to none.
  */
 
-export const PHI_CONTENT_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
+const PHI_CONTENT_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     margin: 0,
 };
 const PHI_CONTENT_LAYOUT_PANEL_PRESET = {
@@ -34,7 +34,7 @@ const PHI_CONTENT_LAYOUT_PANEL_PRESET = {
     padding: PHI_SPACE.base,
 } as const;
 
-export const PHI_FLEX_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
+const PHI_FLEX_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     distribution: "anchor",
     // A fresh row starts left-aligned and vertically centred, its children one small step apart.
     anchor: { horizontal: "left", vertical: "middle" },
@@ -71,7 +71,7 @@ const PHI_FLEX_LAYOUT_OVERLAY_ACTIONS_PRESET = {
     width: "100%",
 } as const;
 
-export const PHI_FLEX_VERTICAL_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
+const PHI_FLEX_VERTICAL_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     gap: PHI_SPACE.sm,
 };
 const PHI_FLEX_VERTICAL_LAYOUT_PANEL_PRESET = {
@@ -94,7 +94,7 @@ const PHI_FLEX_VERTICAL_LAYOUT_PAGE_BASE_PRESET = {
     width: "100%",
 } as const;
 
-export const PHI_GRID_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
+const PHI_GRID_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     gap: PHI_SPACE.sm,
     padding: PHI_SPACE.base,
     columns: { ...PHI_GRID_LAYOUT_DEFAULT_COLUMNS },
@@ -104,7 +104,7 @@ const PHI_GRID_LAYOUT_PANEL_PRESET = {
     padding: PHI_SPACE.base,
 } as const;
 
-export const PHI_MASONRY_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
+const PHI_MASONRY_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     columns: { ...PHI_MASONRY_LAYOUT_DEFAULT_COLUMNS },
     gap: PHI_SPACE.sm,
     padding: PHI_SPACE.base,
@@ -115,7 +115,7 @@ const PHI_MASONRY_LAYOUT_PANEL_PRESET = {
     padding: PHI_SPACE.base,
 } as const;
 
-export const PHI_STACK_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
+const PHI_STACK_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     // One slot at a time is what a Stack is until somebody says otherwise; the pile is the deliberate
     // choice, not the standing one.
     slotDisplay: "single",
@@ -131,7 +131,7 @@ const PHI_STACK_LAYOUT_PANEL_PRESET = {
     padding: PHI_SPACE.base,
 } as const;
 
-export const PHI_CAROUSEL_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
+const PHI_CAROUSEL_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     // A slide is what tells somebody the slots are a run rather than a set, so it is the opening
     // impression rather than a preference to be discovered. Everything else is left absent: the
     // duration then follows the theme, and the window shows one slot until somebody widens it.
@@ -153,7 +153,7 @@ const PHI_CAROUSEL_LAYOUT_PANEL_PRESET = {
     padding: PHI_SPACE.base,
 } as const;
 
-export const PHI_COLLAPSIBLE_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
+const PHI_COLLAPSIBLE_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     anchor: PHI_RENDERABLE_BLOCK_DEFAULT_ANCHOR,
     accordion: false,
     slotTitles: [],
@@ -207,7 +207,7 @@ export const PHI_SPLIT_CARD_LAYOUT_CREATION_CONFIG = {
 
 const PHI_SPLIT_CARD_LAYOUT_PANEL_PRESET = PHI_SPLIT_CARD_LAYOUT_CREATION_CONFIG;
 
-export const PHI_THREE_COLUMN_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
+const PHI_THREE_COLUMN_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     balancedSides: true,
     gap: PHI_SPACE.sm,
     wrap: false,

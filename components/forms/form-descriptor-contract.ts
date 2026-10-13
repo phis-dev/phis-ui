@@ -288,7 +288,7 @@ export function phiFormCellOpensColumn(range: PhiFormGridRange, sibling: PhiForm
  * child, so nothing React carries can reach from one to the other. The descriptor's own line stands as
  * the fallback, which is what a form outside any Form Layout uses.
  */
-export const PHI_FORM_LABEL_END_PROPERTY = "--phi-form-label-end";
+const PHI_FORM_LABEL_END_PROPERTY = "--phi-form-label-end";
 
 export function phiFormLabelGridColumn(range: PhiFormGridRange, followsLayout: boolean) {
   return followsLayout

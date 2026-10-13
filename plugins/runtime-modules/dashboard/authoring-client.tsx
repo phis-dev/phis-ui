@@ -7,7 +7,7 @@ import { PHI_DASHBOARD_RUNTIME_MODULE_ID } from "./ids";
 
 const DashboardWidgetModule = createPhiAuthoringWidgetModule([]);
 
-export const PhiDashboardRuntimeModuleAuthoringClient = createPhiRuntimeModuleAuthoringClient({
+const PhiDashboardRuntimeModuleAuthoringClient = createPhiRuntimeModuleAuthoringClient({
   moduleId: PHI_DASHBOARD_RUNTIME_MODULE_ID,
   WidgetModule: DashboardWidgetModule,
 });

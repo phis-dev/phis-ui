@@ -21,7 +21,7 @@ export function resolvePhiMotionDurationMs(value: string | number) {
 export const PHI_MOTION_EASINGS = ["linear", "ease", "ease-in", "ease-out", "ease-in-out"] as const;
 export type PhiMotionEasing = (typeof PHI_MOTION_EASINGS)[number];
 
-export function isPhiMotionEasing(value: unknown): value is PhiMotionEasing {
+function isPhiMotionEasing(value: unknown): value is PhiMotionEasing {
   return typeof value === "string" && (PHI_MOTION_EASINGS as readonly string[]).includes(value);
 }
 

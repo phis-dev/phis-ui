@@ -18,7 +18,7 @@ export type PhiSwitchWidgetConfig = PhiControlConfig<PhiSwitchControlSize> & {
   uncheckedLabel?: string;
 };
 
-export function parsePhiSwitchWidgetConfig(config: Record<string, unknown>): PhiSwitchWidgetConfig {
+function parsePhiSwitchWidgetConfig(config: Record<string, unknown>): PhiSwitchWidgetConfig {
   const controlState = parsePhiControlConfig(
     config,
     { key: "switch" },

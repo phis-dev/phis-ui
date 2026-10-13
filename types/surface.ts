@@ -19,7 +19,7 @@ export const PHI_SURFACE_TONES = ["inherit", "light", "dark", "inverse"] as cons
 
 export type PhiSurfaceTone = (typeof PHI_SURFACE_TONES)[number];
 
-export function isPhiSurfaceTone(value: unknown): value is PhiSurfaceTone {
+function isPhiSurfaceTone(value: unknown): value is PhiSurfaceTone {
   return typeof value === "string" && PHI_SURFACE_TONES.includes(value as PhiSurfaceTone);
 }
 

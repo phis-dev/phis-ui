@@ -32,7 +32,7 @@ export const PHI_APP_FORM_IDS = {
   profileTheme: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "app/profile-theme"),
 } as const;
 
-export const PHI_APP_FORM_HANDLER_KEYS = {
+const PHI_APP_FORM_HANDLER_KEYS = {
   profileName: "site.app.profile-name",
   profileNewsletter: "site.app.profile-newsletter",
   profileLocale: "site.app.profile-locale",

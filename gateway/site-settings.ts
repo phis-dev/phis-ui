@@ -3,7 +3,7 @@ import "server-only";
 
 import { fetchPhiSiteApi } from "./site-api-request";
 
-export type PhiSiteAdminSettings = {
+type PhiSiteAdminSettings = {
   key: string;
   name: string;
   hostname: string;
@@ -14,7 +14,7 @@ export type PhiSiteAdminSettings = {
   contactRecipient: string;
 };
 
-export type GetResolvedSiteAdminSettingsOptions = {
+type GetResolvedSiteAdminSettingsOptions = {
   apiBaseUrl: string;
   internalToken: string;
   siteKey: string;

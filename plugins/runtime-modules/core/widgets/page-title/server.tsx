@@ -6,7 +6,7 @@ import { getPhiPageTitleWidgetLabels } from "../../../../../components/widgets/l
 import type { PhiPageTitleWidgetLabels } from "../../../../../components/widgets/label-types/page-title";
 import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
 
-export function PhiPageTitleWidget({
+function PhiPageTitleWidget({
   labels,
   runtime,
 }: PhiServerBlockBaseProps<PhiPageTitleWidgetLabels, PhiPageTitleWidgetConfig>) {

@@ -18,7 +18,7 @@ export type PhiCmsTestBlockWidgetConfig = PhiCmsWidgetConfigBase & {
   color?: string;
 };
 
-export function parsePhiCmsTestBlockWidgetConfig(
+function parsePhiCmsTestBlockWidgetConfig(
   config: Record<string, unknown>,
 ): PhiCmsTestBlockWidgetConfig {
   const size = normalizePhiRenderableBlockResponsiveSize(config.size) ?? {

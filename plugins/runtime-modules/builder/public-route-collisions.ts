@@ -26,7 +26,7 @@ import type {
  * opening -- the read resolves first claim wins, and which claim is first is not something an operator
  * should have to reason about.
  */
-export function resolvePhiBuilderPersistedPublicPages(
+function resolvePhiBuilderPersistedPublicPages(
   state: Pick<PhiDeveloperBuilderWorkspaceState, "persistedPageCatalogByArea">,
 ) {
   return (state.persistedPageCatalogByArea?.public ?? [])
@@ -43,7 +43,7 @@ export function resolvePhiBuilderPersistedPublicPages(
  * with another has to work in one editing session, and it does because both halves are read from the
  * same unsaved selection.
  */
-export function buildPhiBuilderPublicAddressMap(
+function buildPhiBuilderPublicAddressMap(
   state: Pick<
     PhiDeveloperBuilderWorkspaceState,
     "publicRouteClaims" | "publicRoutePaths" | "runtimeModuleIdsByArea" | "persistedPageCatalogByArea"
@@ -69,7 +69,7 @@ export function buildPhiBuilderPublicAddressMap(
  * suggestion -- Public is the Site's address space, and a Builder types over it whenever a better name
  * exists.
  */
-export function suggestPhiPublicRoutePath(
+function suggestPhiPublicRoutePath(
   moduleId: PhiRuntimeModuleId,
   declaredPath: string,
   taken: ReadonlyMap<string, PhiPublicRouteAddressHolder>,
@@ -87,7 +87,7 @@ export function suggestPhiPublicRoutePath(
   return namespaced;
 }
 
-export function describePhiPublicRouteAddressHolder(
+function describePhiPublicRouteAddressHolder(
   holder: PhiPublicRouteAddressHolder,
   moduleTitles: ReadonlyMap<string, string>,
 ) {

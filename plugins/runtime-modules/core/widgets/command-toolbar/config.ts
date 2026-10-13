@@ -166,7 +166,7 @@ function readCommandButtons(value: unknown): PhiCommandToolbarButtonConfig[] {
     .filter((item): item is PhiCommandToolbarButtonConfig => item != null);
 }
 
-export function parsePhiCommandToolbarWidgetConfig(
+function parsePhiCommandToolbarWidgetConfig(
   config: Record<string, unknown>,
 ): PhiCommandToolbarWidgetConfig {
   const controlState = parsePhiControlConfig(config, {

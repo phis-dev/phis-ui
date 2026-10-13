@@ -56,7 +56,7 @@ function readTimeZone(value: unknown) {
   }
 }
 
-export function parsePhiDateInputWidgetConfig(config: Record<string, unknown>): PhiDateInputWidgetConfig {
+function parsePhiDateInputWidgetConfig(config: Record<string, unknown>): PhiDateInputWidgetConfig {
   const selectionMode = config.selectionMode === "range" || config.selectionMode === "multiple"
     ? config.selectionMode
     : "single";

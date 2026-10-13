@@ -85,7 +85,7 @@ export type PhiShellChromeOverlayVariables = Record<`--phi-shell-chrome-${string
  * frame. Content and Hero stay out because the overlay would paint over their content, and a Drawer is
  * an Overlay surface rather than Shell chrome.
  */
-export const PHI_SHELL_CHROME_OVERLAY_REGION_KEYS: readonly string[] = [
+const PHI_SHELL_CHROME_OVERLAY_REGION_KEYS: readonly string[] = [
   "header_top",
   "header_main",
   "header_bottom",

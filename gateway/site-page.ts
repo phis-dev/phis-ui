@@ -8,7 +8,7 @@ import { fetchPhiSiteApi } from "./site-api-request";
 import type { PhiCmsPresetIdentity } from "../types/cms-module-descriptors";
 import type { PhiPageReference } from "../types/references";
 
-export type PhiSiteCmsPageCatalogEntry = {
+type PhiSiteCmsPageCatalogEntry = {
   id: number;
   reference: PhiPageReference;
   path: string | null;
@@ -19,7 +19,7 @@ export type PhiSiteCmsPageCatalogEntry = {
   workingDraftRevisionId?: number | null;
 };
 
-export type GetResolvedCmsPageOptions = {
+type GetResolvedCmsPageOptions = {
   apiBaseUrl: string;
   internalToken: string;
   siteKey: string;

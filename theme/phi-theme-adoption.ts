@@ -23,15 +23,15 @@ export function isPhiCoreThemeGround(ground: Pick<PhiThemeGroundBlock, "key">) {
   return PHI_CORE_THEME_GROUND_BLOCKS.some((block) => block.key === ground.key);
 }
 
-export function isPhiCoreThemePalette(palette: Pick<PhiThemePresetPlugin, "key">) {
+function isPhiCoreThemePalette(palette: Pick<PhiThemePresetPlugin, "key">) {
   return PHI_CORE_THEME_PRESET_PLUGINS.some((block) => block.key === palette.key);
 }
 
-export function isPhiCoreThemeStyle(style: Pick<PhiThemeStyleBlock, "key">) {
+function isPhiCoreThemeStyle(style: Pick<PhiThemeStyleBlock, "key">) {
   return PHI_CORE_THEME_STYLE_BLOCKS.some((block) => block.key === style.key);
 }
 
-export function isPhiCoreThemeFonts(fonts: Pick<PhiThemeFontsBlock, "key">) {
+function isPhiCoreThemeFonts(fonts: Pick<PhiThemeFontsBlock, "key">) {
   return PHI_CORE_THEME_FONTS_BLOCKS.some((block) => block.key === fonts.key);
 }
 

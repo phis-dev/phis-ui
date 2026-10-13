@@ -114,7 +114,7 @@ function collectPageKeys(
   return keys;
 }
 
-export function mergePhiBuilderPageCatalogNodes(
+function mergePhiBuilderPageCatalogNodes(
   presetPages: PhiPresetPageNode[],
   customPages: PhiPresetPageNode[] | null | undefined,
 ) {
@@ -128,7 +128,7 @@ export function mergePhiBuilderPageCatalogNodes(
   return nextCustomPages.length > 0 ? [...presetPages, ...nextCustomPages] : presetPages;
 }
 
-export function resolvePagePath(
+function resolvePagePath(
   area: PhiBuilderPageCatalogArea,
   pageKey: string,
   pages: readonly PhiPresetPageNode[],
@@ -412,7 +412,7 @@ function clonePageCatalogNodes(nodes: PhiPresetPageNode[]): PhiPresetPageNode[] 
   }));
 }
 
-export function mergePhiBuilderPageCatalogWithPersistedPages(
+function mergePhiBuilderPageCatalogWithPersistedPages(
   area: PhiBuilderPageCatalogArea,
   presetPages: PhiPresetPageNode[],
   persistedPages: readonly PhiBuilderPersistedPageCatalogEntry[] | null | undefined,

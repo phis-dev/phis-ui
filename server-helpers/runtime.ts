@@ -29,16 +29,16 @@ function requirePhiViewerArea(area: PhiCmsAreaKey | null | undefined): PhiCmsAre
   return area;
 }
 
-export type PhiViewerState = PhiBlockRuntime["viewer"];
+type PhiViewerState = PhiBlockRuntime["viewer"];
 
-export type GetPhiCmsRuntimeInfoOptions = {
+type GetPhiCmsRuntimeInfoOptions = {
   apiBaseUrl?: string;
   internalToken?: string;
   siteKey?: string;
   cookieHeader?: string;
 };
 
-export type PhiCmsRuntimeInfo = {
+type PhiCmsRuntimeInfo = {
   site: PhiResolvedWidgetRuntimeSite;
   viewer: PhiViewerState;
 };
@@ -64,7 +64,7 @@ export function buildPhiBlockRuntime({
   };
 }
 
-export async function getPhiCmsRuntimeInfo({
+async function getPhiCmsRuntimeInfo({
   apiBaseUrl,
   internalToken,
   siteKey,

@@ -33,7 +33,7 @@ export function phiLayoutDebugLayerMarker(authoring: boolean) {
 }
 
 /** The slot band's class, joinable with a layout's own slot class. */
-export function phiLayoutScaffoldSlotMarker(authoring: boolean) {
+function phiLayoutScaffoldSlotMarker(authoring: boolean) {
   return authoring ? "phi-layout-scaffold-slot" : undefined;
 }
 

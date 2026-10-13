@@ -6,7 +6,7 @@ import {
   readPhiSignalRouteSet,
 } from "../../../../../types/signals";
 
-export function parsePhiCmsAssetFocalRectWidgetConfig(
+function parsePhiCmsAssetFocalRectWidgetConfig(
   config: Record<string, unknown>,
 ): PhiCmsAssetFocalRectWidgetConfig {
   return {

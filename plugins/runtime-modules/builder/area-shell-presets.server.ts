@@ -115,7 +115,7 @@ function resolveStructureAreaPath(area: PhiDeveloperBuilderArea) {
   }
 }
 
-export type PhiBuilderAreaModulesConfig = {
+type PhiBuilderAreaModulesConfig = {
   moduleIds: PhiRuntimeModuleId[];
   /**
    * Stored ids this build cannot serve, kept so the Builder can show them.
@@ -264,7 +264,7 @@ async function buildPhiBuilderAreaPresetConfig(
 }
 
 /** What an Area says its `/` resolves to. */
-export async function buildPhiBuilderAreaRootRoute(
+async function buildPhiBuilderAreaRootRoute(
   runtime: PhiBlockRuntime,
   area: PhiDeveloperBuilderArea,
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
@@ -293,7 +293,7 @@ export async function buildPhiBuilderAreaLandingSelection(
 }
 
 /** What an Area says about being found. */
-export async function buildPhiBuilderAreaMeta(
+async function buildPhiBuilderAreaMeta(
   runtime: PhiBlockRuntime,
   area: PhiDeveloperBuilderArea,
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,

@@ -48,7 +48,7 @@ export type PhiSiteModuleClientManifests = {
   uiProvider: PhiRuntimeModuleUiProviderClientManifest;
 };
 
-export function readPhiSiteModuleClientAreaContributions(
+function readPhiSiteModuleClientAreaContributions(
   contributions: PhiSiteModuleClientContributions,
   area: PhiCmsAreaKey,
 ): PhiSiteModuleClientAreaContributions {

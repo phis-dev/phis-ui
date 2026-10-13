@@ -22,7 +22,7 @@ export type PhiCmsAuthWorkflowWidgetConfig = {
   signalRoutes: ReturnType<typeof readPhiSignalRouteSet>;
 };
 
-export function parsePhiAuthWorkflowWidgetConfig(
+function parsePhiAuthWorkflowWidgetConfig(
   rawConfig: Record<string, unknown>,
 ): PhiCmsAuthWorkflowWidgetConfig {
   return { signalRoutes: readPhiSignalRouteSet(rawConfig.signalRoutes) };

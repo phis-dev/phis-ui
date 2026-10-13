@@ -78,13 +78,13 @@ export type PhiRenderableBlockGeometryInput = {
 };
 
 /** The three rooms a block may answer differently, smaller to larger. */
-export const PHI_BLOCK_PROFILES = ["compact", "medium", "wide"] as const;
+const PHI_BLOCK_PROFILES = ["compact", "medium", "wide"] as const;
 
-export type PhiBlockProfile = (typeof PHI_BLOCK_PROFILES)[number];
+type PhiBlockProfile = (typeof PHI_BLOCK_PROFILES)[number];
 
 const EMPTY_AXIS: PhiResolvedBlockAxisGeometry = { size: null, min: null, max: null };
 
-export const PHI_EMPTY_BLOCK_GEOMETRY: PhiResolvedBlockGeometry = {
+const PHI_EMPTY_BLOCK_GEOMETRY: PhiResolvedBlockGeometry = {
   inline: EMPTY_AXIS,
   block: EMPTY_AXIS,
   explicitInline: false,

@@ -16,7 +16,7 @@ export const PHI_LOCALIZATION_FORM_IDS = {
   editorTranslation: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "localization/editor-translation"),
 } as const;
 
-export const PHI_LOCALIZATION_FORM_HANDLER_KEYS = {
+const PHI_LOCALIZATION_FORM_HANDLER_KEYS = {
   siteLocales: "localization.site-locales",
   editorTranslation: "localization.editor-translation",
 } as const;

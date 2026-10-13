@@ -19,7 +19,7 @@ export function findPhiBuilderLayoutNodeById(
   return null;
 }
 
-export function findPhiBuilderWidgetNodeByIdInWidgets(
+function findPhiBuilderWidgetNodeByIdInWidgets(
   nodes: readonly PhiCmsContentWidgetNode[],
   nodeId: PhiCmsInstanceId,
 ): PhiCmsContentWidgetNode | null {

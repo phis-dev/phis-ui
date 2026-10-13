@@ -47,7 +47,7 @@ function readResultStatus(value: unknown): PhiResultWidgetVisualStatus | undefin
     : undefined;
 }
 
-export function parsePhiCmsResultWidgetConfig(config: Record<string, unknown>): PhiCmsResultWidgetConfig {
+function parsePhiCmsResultWidgetConfig(config: Record<string, unknown>): PhiCmsResultWidgetConfig {
   return {
     ...readRenderableBlockConfig(config),
     status: readResultStatus(config.status),

@@ -19,7 +19,7 @@ export type PhiCmsDescriptionWidgetConfig = PhiCmsWidgetConfigBase & {
   tone?: PhiTextTone;
 };
 
-export function parsePhiCmsDescriptionWidgetConfig(
+function parsePhiCmsDescriptionWidgetConfig(
   config: Record<string, unknown>,
 ): PhiCmsDescriptionWidgetConfig {
   const asideItemsRaw = Array.isArray(config.asideItems) ? config.asideItems : [];

@@ -120,7 +120,7 @@ function createLoggerFromContext(context: PhiLoggerContext): PhiLogger {
   };
 }
 
-export function createLogger(context: Partial<PhiLoggerContext>): PhiLogger {
+function createLogger(context: Partial<PhiLoggerContext>): PhiLogger {
   return createLoggerFromContext(normalizeContext(context));
 }
 

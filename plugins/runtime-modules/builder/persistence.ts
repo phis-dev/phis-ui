@@ -652,7 +652,7 @@ export async function getPhiDeveloperBuilderModulesDraftAllocation(input: {
   return draft;
 }
 
-export function clearPhiDeveloperBuilderModulesDraftAllocation(area: PhiDeveloperBuilderArea) {
+function clearPhiDeveloperBuilderModulesDraftAllocation(area: PhiDeveloperBuilderArea) {
   const allocationKey = createPhiBuilderDraftAllocationKey(area, area, "modules");
   builderWorkspaceStore.patch("public", (current) => {
     if (!current.draftAllocations[allocationKey]) {

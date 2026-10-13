@@ -17,7 +17,7 @@ import type { PhiDeveloperBuilderWorkspaceState } from "./developer-workspace-ty
  * it is bound to, and therefore what it may emit and what may draw it -- changes while the author is
  * still editing, and a question answered from the published copy would answer for the wrong Widget.
  */
-export function findPhiBuilderSelectedWidgetNode(state: PhiDeveloperBuilderWorkspaceState) {
+function findPhiBuilderSelectedWidgetNode(state: PhiDeveloperBuilderWorkspaceState) {
   if (state.nodeKind !== "widget" || state.nodeId == null || !state.selectedRootRegionKey) {
     return null;
   }

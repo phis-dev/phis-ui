@@ -34,7 +34,7 @@ function readBrandWidgetMode(value: unknown): PhiBrandWidgetMode | undefined {
     : undefined;
 }
 
-export function parsePhiCmsBrandWidgetConfig(config: Record<string, unknown>): PhiCmsBrandWidgetConfig {
+function parsePhiCmsBrandWidgetConfig(config: Record<string, unknown>): PhiCmsBrandWidgetConfig {
   return {
     ...readRenderableBlockConfig(config),
     mode: readBrandWidgetMode(config.mode),

@@ -21,7 +21,7 @@ export const PHI_THREADS_FORM_IDS = {
   message: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "threads/message"),
 } as const;
 
-export const PHI_THREADS_FORM_HANDLER_KEYS = {
+const PHI_THREADS_FORM_HANDLER_KEYS = {
   newConversation: "site.threads.create",
   message: "site.threads.message",
 } as const;

@@ -33,7 +33,7 @@ export function areRuntimeModuleIdsEqual(
  * Module and this Area's own Base Module are never taken from the input at all: they are implicit, and
  * `resolvePhiRuntimeModuleIdsForArea` adds them back regardless of what was asked for.
  */
-export function normalizeRuntimeModuleSelection(
+function normalizeRuntimeModuleSelection(
   selectedIds: readonly string[],
   area: PhiDeveloperBuilderArea,
   definitions: readonly PhiRuntimeModuleDefinition[],

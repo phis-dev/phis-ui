@@ -47,7 +47,7 @@ export type SerializedPhiHtmlImageNode = Spread<{
  * endpoint the other authoring surfaces already read. Nothing here resolves a reference for a rendered
  * page.
  */
-export function resolvePhiHtmlImageAuthoringSrc(src: string) {
+function resolvePhiHtmlImageAuthoringSrc(src: string) {
   const reference = readPhiInternalReference(src);
   return reference?.kind === "asset" ? buildPhiMediaAssetContentDeliveryUrl(reference.assetId) ?? src : src;
 }
@@ -469,6 +469,6 @@ export function $createPhiHtmlImageNode(
   return $applyNodeReplacement(new PhiHtmlImageNode(src, alt, attributes));
 }
 
-export function $isPhiHtmlImageNode(node: unknown): node is PhiHtmlImageNode {
+function $isPhiHtmlImageNode(node: unknown): node is PhiHtmlImageNode {
   return node instanceof PhiHtmlImageNode;
 }

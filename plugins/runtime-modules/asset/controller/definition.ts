@@ -19,7 +19,7 @@ export type PhiAssetRuntimeControllerConfig = {
   signalRoutes: PhiSignalRouteSet | null;
 };
 
-export function parsePhiAssetRuntimeControllerConfig(raw: Record<string, unknown>): PhiAssetRuntimeControllerConfig {
+function parsePhiAssetRuntimeControllerConfig(raw: Record<string, unknown>): PhiAssetRuntimeControllerConfig {
   return { signalRoutes: readPhiSignalRouteSet(raw.signalRoutes) };
 }
 

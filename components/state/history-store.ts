@@ -10,7 +10,7 @@ import { createPhiPluginStateStore } from "./plugin-state-store";
  * sentence because the sentence belongs to the reader: the undo message and the button's tooltip are
  * written in the visitor's language at the moment they are shown, from the Label Set that reader holds.
  */
-export type PhiHistoryEntry<TSnapshot, TAction> = {
+type PhiHistoryEntry<TSnapshot, TAction> = {
   action: TAction;
   before: TSnapshot;
   after: TSnapshot;
@@ -32,7 +32,7 @@ type PhiHistoryState<TSnapshot, TAction> = {
 };
 
 /** What can be taken back and brought back next, as the toolbar shows it. */
-export type PhiHistoryAvailability<TAction> = {
+type PhiHistoryAvailability<TAction> = {
   canUndo: boolean;
   canRedo: boolean;
   /** The step an undo would take back, or null. */

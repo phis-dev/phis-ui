@@ -3,7 +3,7 @@ import "server-only";
 
 import { fetchPhiSiteApi } from "./site-api-request";
 
-export type PhiSiteAuthAdminSettings = {
+type PhiSiteAuthAdminSettings = {
   policy: {
     registrationMode: string;
     existingAccountLinking: string;
@@ -21,7 +21,7 @@ export type PhiSiteAuthAdminSettings = {
   };
 };
 
-export type GetResolvedSiteAuthAdminSettingsOptions = {
+type GetResolvedSiteAuthAdminSettingsOptions = {
   apiBaseUrl: string;
   internalToken: string;
   siteKey: string;

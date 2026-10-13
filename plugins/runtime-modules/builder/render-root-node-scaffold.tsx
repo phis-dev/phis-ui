@@ -1815,7 +1815,7 @@ export function renderPhiRootNodeScaffold(
   );
 }
 
-export function renderPhiRootNodePreview(
+function renderPhiRootNodePreview(
   rootNode: PhiBuilderRootNodeDraft & {
     editSlotAnchor?: PhiAnchorWidgetPlacement | null;
   },

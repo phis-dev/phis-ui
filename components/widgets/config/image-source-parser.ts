@@ -2,7 +2,7 @@ import { normalizePhiImageAssetVariantKey } from "../../../constants/media";
 import type { PhiMediaImageSourceConfig } from "../../../types/media";
 import { readNumber, readString } from "./parser-primitives";
 
-export function readPhiImageSourceKind(value: unknown): "url" | "asset" {
+function readPhiImageSourceKind(value: unknown): "url" | "asset" {
   return readString(value) === "asset" ? "asset" : "url";
 }
 

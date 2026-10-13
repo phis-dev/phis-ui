@@ -13,7 +13,7 @@ import {
 
 export type PhiSelectBoxWidgetConfig = PhiChoiceControlConfig;
 
-export function parsePhiSelectBoxWidgetConfig(config: Record<string, unknown>): PhiSelectBoxWidgetConfig {
+function parsePhiSelectBoxWidgetConfig(config: Record<string, unknown>): PhiSelectBoxWidgetConfig {
   return parsePhiChoiceControlConfig(config);
 }
 

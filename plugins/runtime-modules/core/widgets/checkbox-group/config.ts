@@ -19,7 +19,7 @@ export type PhiCheckboxGroupWidgetConfig = PhiChoiceOptionsConfig & {
   readOnly?: boolean;
 };
 
-export function parsePhiCheckboxGroupWidgetConfig(config: Record<string, unknown>): PhiCheckboxGroupWidgetConfig {
+function parsePhiCheckboxGroupWidgetConfig(config: Record<string, unknown>): PhiCheckboxGroupWidgetConfig {
   return {
     ...parsePhiControlStateConfig(config, { key: "checkbox-group" }),
     label: readString(config.label),

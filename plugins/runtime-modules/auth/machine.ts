@@ -17,7 +17,7 @@ import type {
  * available here. An event is a request; `project()` brings back whatever Core said.
  */
 
-export const PHI_AUTH_MACHINE_KEY = "workflow";
+const PHI_AUTH_MACHINE_KEY = "workflow";
 
 export const PHI_AUTH_MACHINE_REFERENCE: PhiStateMachineReference = {
   ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,

@@ -113,7 +113,7 @@ export function normalizePhiImageWidgetConfig(config: unknown): PhiCmsImageWidge
     : { ...normalized, ...source };
 }
 
-export function parsePhiCmsImageWidgetConfig(config: Record<string, unknown>): PhiCmsImageWidgetConfig {
+function parsePhiCmsImageWidgetConfig(config: Record<string, unknown>): PhiCmsImageWidgetConfig {
   return normalizePhiImageWidgetConfig(config);
 }
 

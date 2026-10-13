@@ -19,7 +19,7 @@ import {
   type PhiSpacingScaleKey,
 } from "../widgets/config/spacing-options";
 
-export type PhiPaddingScaleKey = PhiSpacingScaleKey;
+type PhiPaddingScaleKey = PhiSpacingScaleKey;
 
 export type PhiPaddingControlProps = {
   value?: PhiCmsPaddingWidgetConfig | null;

@@ -36,7 +36,7 @@ export function readPhiTableRowIdentity(row: TableRow, path: string): PhiTableRo
     : null;
 }
 
-export function patchPhiTableRowValue(row: TableRow, path: string, value: unknown): TableRow {
+function patchPhiTableRowValue(row: TableRow, path: string, value: unknown): TableRow {
   const segments = path.split(".").filter(Boolean);
   if (segments.length === 0) return row;
   const patchAt = (current: unknown, index: number): Record<string, unknown> => {

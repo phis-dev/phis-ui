@@ -22,7 +22,7 @@ const PHI_MEDIA_PICKER_DATA_SOURCE = {
   resourceKey: "assets",
 } as const satisfies PhiProviderResourceSource;
 
-export function normalizePhiCmsMediaPickerWidgetConfig(config: unknown): PhiCmsMediaPickerWidgetConfig {
+function normalizePhiCmsMediaPickerWidgetConfig(config: unknown): PhiCmsMediaPickerWidgetConfig {
   if (!isPhiRecord(config)) {
     return {
       mediaType: PhiMediaKind.Image,
@@ -52,7 +52,7 @@ export function normalizePhiCmsMediaPickerWidgetConfig(config: unknown): PhiCmsM
   };
 }
 
-export function parsePhiCmsMediaPickerWidgetConfig(
+function parsePhiCmsMediaPickerWidgetConfig(
   config: Record<string, unknown>,
 ): PhiCmsMediaPickerWidgetConfig {
   return normalizePhiCmsMediaPickerWidgetConfig(config);

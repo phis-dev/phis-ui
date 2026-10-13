@@ -11,7 +11,7 @@ import { PHI_SELECT_CONTROL_SIGNALS } from "../../../../../components/widgets/si
 
 export type PhiSegmentedWidgetConfig = PhiStackChoiceControlConfig;
 
-export function parsePhiSegmentedWidgetConfig(config: Record<string, unknown>): PhiSegmentedWidgetConfig {
+function parsePhiSegmentedWidgetConfig(config: Record<string, unknown>): PhiSegmentedWidgetConfig {
   return parsePhiStackChoiceControlConfig(config);
 }
 

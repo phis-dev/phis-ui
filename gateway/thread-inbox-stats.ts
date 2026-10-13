@@ -17,11 +17,11 @@ import { fetchPhiSiteApi } from "./site-api-request";
  * the whole filtered set, so the page size costs rows and not correctness.
  */
 
-export type PhiThreadInboxStats = {
+type PhiThreadInboxStats = {
   unreadThreadCount: number;
 };
 
-export type GetPhiThreadInboxStatsOptions = {
+type GetPhiThreadInboxStatsOptions = {
   apiBaseUrl: string;
   internalToken: string;
   siteKey: string;

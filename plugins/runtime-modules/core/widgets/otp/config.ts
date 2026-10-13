@@ -37,7 +37,7 @@ function readOtpLength(value: unknown) {
     : PHI_OTP_WIDGET_DEFAULT_LENGTH;
 }
 
-export function parsePhiCmsOtpWidgetConfig(config: Record<string, unknown>): PhiCmsOtpWidgetConfig {
+function parsePhiCmsOtpWidgetConfig(config: Record<string, unknown>): PhiCmsOtpWidgetConfig {
   const controlState = parsePhiControlConfig(config, { key: "otp" });
 
   return {

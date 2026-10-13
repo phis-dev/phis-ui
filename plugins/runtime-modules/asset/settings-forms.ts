@@ -19,7 +19,7 @@ export const PHI_MEDIA_SETTINGS_FORM_IDS = {
   general: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "asset/media-settings"),
 } as const;
 
-export const PHI_MEDIA_SETTINGS_FORM_HANDLER_KEYS = {
+const PHI_MEDIA_SETTINGS_FORM_HANDLER_KEYS = {
   general: "site.admin.media-settings",
 } as const;
 

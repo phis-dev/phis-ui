@@ -46,7 +46,7 @@ export function findPhiBuilderTreeNode(
 }
 
 /** The tree with the node `nodeId` replaced by what `patch` makes of it; untouched branches are kept. */
-export function patchPhiBuilderTreeNode(
+function patchPhiBuilderTreeNode(
   rootNode: PhiCmsLayoutRenderNode,
   nodeId: PhiCmsInstanceId,
   patch: (node: PhiBuilderTreeNode) => PhiBuilderTreeNode,

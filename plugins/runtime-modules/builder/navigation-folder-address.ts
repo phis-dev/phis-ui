@@ -49,7 +49,7 @@ export type PhiBuilderNavigationFolderChoice = {
   target: PhiCmsNavigationFolderTarget;
 };
 
-export function encodePhiBuilderNavigationFolderTarget(target: PhiCmsNavigationFolderTarget) {
+function encodePhiBuilderNavigationFolderTarget(target: PhiCmsNavigationFolderTarget) {
   return target.kind === "page" ? `page:${target.reference}` : `folder:${target.address}`;
 }
 

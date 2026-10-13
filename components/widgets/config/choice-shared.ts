@@ -87,7 +87,7 @@ export const PHI_CHOICE_CONTROL_VALUE_MODE_FIELD = {
   ],
 } satisfies PhiCmsConfigField;
 
-export function readPhiChoiceValueMode(value: unknown): PhiChoiceValueMode {
+function readPhiChoiceValueMode(value: unknown): PhiChoiceValueMode {
   return readString(value) === "stack-slot-index" ? "stack-slot-index" : "raw";
 }
 

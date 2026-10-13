@@ -38,7 +38,7 @@ export const PHI_BASE_PAGE_LAYOUT_NODE_ID = createPhiPresetCmsInstanceId({
   nodeKey: "layoutContent",
 });
 
-export const PHI_BASE_PAGE_LAYOUT_LABEL = "Page content";
+const PHI_BASE_PAGE_LAYOUT_LABEL = "Page content";
 
 /** The canonical scaffold node; `visibilityMask` and `siteId` are the page's, everything else is fixed. */
 export function buildPhiBasePageLayoutNode(page: PhiCmsPageNode): PhiCmsLayoutNode {

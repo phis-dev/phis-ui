@@ -41,7 +41,7 @@ export function collectPhiDeveloperBuilderPageKeys(
   return keys;
 }
 
-export function collectPhiDeveloperBuilderPagePathOptions(
+function collectPhiDeveloperBuilderPagePathOptions(
   area: PhiDeveloperBuilderArea,
   nodes: PhiPresetPageNode[],
   paths = new Map<string, PhiCascaderOption>(),

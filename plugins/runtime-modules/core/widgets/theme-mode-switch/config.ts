@@ -28,7 +28,7 @@ function readSize(value: unknown): PhiThemeModeSwitchSize | undefined {
   return value === "small" || value === "medium" ? value : undefined;
 }
 
-export function parsePhiThemeModeSwitchWidgetConfig(
+function parsePhiThemeModeSwitchWidgetConfig(
   config: Record<string, unknown>,
 ): PhiThemeModeSwitchWidgetConfig {
   return {

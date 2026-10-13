@@ -42,7 +42,7 @@ function pruneRouteList(
   return next.length > 0 ? next : null;
 }
 
-export function prunePhiSignalRoutesByReceiver(
+function prunePhiSignalRoutesByReceiver(
   routeSet: unknown,
   targets: readonly PhiSignalRouteReceiverTarget[],
 ): PhiSignalRouteSet | null {
@@ -91,7 +91,7 @@ function remapRouteList(
   }));
 }
 
-export function remapPhiSignalRoutesByReceiver(
+function remapPhiSignalRoutesByReceiver(
   routeSet: unknown,
   remaps: readonly PhiSignalRouteReceiverRemap[],
 ): PhiSignalRouteSet | null {

@@ -88,7 +88,7 @@ function readChoice<T extends string>(value: unknown, choices: readonly T[]): T 
   return choices.includes(value as T) ? value as T : undefined;
 }
 
-export function parsePhiCmsCardWidgetConfig(config: Record<string, unknown>): PhiCmsCardWidgetConfig {
+function parsePhiCmsCardWidgetConfig(config: Record<string, unknown>): PhiCmsCardWidgetConfig {
   const source = readPhiMediaImageSourceConfig(config);
   const normalized = {
     ...readRenderableBlockConfig(config),

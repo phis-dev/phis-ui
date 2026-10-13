@@ -10,7 +10,7 @@ import {
   readString,
 } from "../../../../../components/widgets/config/parser-primitives";
 
-export function normalizePhiCmsAreaUploadWidgetConfig(config: unknown): PhiCmsAreaUploadWidgetConfig {
+function normalizePhiCmsAreaUploadWidgetConfig(config: unknown): PhiCmsAreaUploadWidgetConfig {
   if (!isPhiRecord(config)) {
     return {
       allowDelete: true,
@@ -32,7 +32,7 @@ export function normalizePhiCmsAreaUploadWidgetConfig(config: unknown): PhiCmsAr
   };
 }
 
-export function parsePhiCmsAreaUploadWidgetConfig(
+function parsePhiCmsAreaUploadWidgetConfig(
   config: Record<string, unknown>,
 ): PhiCmsAreaUploadWidgetConfig {
   return normalizePhiCmsAreaUploadWidgetConfig(config);

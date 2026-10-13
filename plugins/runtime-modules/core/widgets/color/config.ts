@@ -39,7 +39,7 @@ function readColorDisplay(value: unknown): PhiColorWidgetDisplay | undefined {
   return display === "value" || display === "swatch" ? display : undefined;
 }
 
-export function parsePhiColorWidgetConfig(config: Record<string, unknown>): PhiColorWidgetConfig {
+function parsePhiColorWidgetConfig(config: Record<string, unknown>): PhiColorWidgetConfig {
   const controlState = parsePhiControlStateConfig(config, {
     key: "color",
   });

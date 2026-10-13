@@ -58,7 +58,7 @@ export type PhiRenderedValuePresentation = "cell" | "block";
  * Control the author asked for.
  */
 
-export function normalizePhiRenderedText(value: unknown): string {
+function normalizePhiRenderedText(value: unknown): string {
   if (value == null) return "";
   if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return String(value);
   if (Array.isArray(value)) return value.map(normalizePhiRenderedText).filter(Boolean).join(", ");

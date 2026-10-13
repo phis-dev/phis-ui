@@ -8,7 +8,7 @@ export type PhiCmsIconWidgetConfig = PhiCmsWidgetConfigBase & {
   color?: string;
 };
 
-export function parsePhiCmsIconWidgetConfig(config: Record<string, unknown>): PhiCmsIconWidgetConfig {
+function parsePhiCmsIconWidgetConfig(config: Record<string, unknown>): PhiCmsIconWidgetConfig {
   return {
     ...readRenderableBlockConfig(config),
     icon: readString(config.icon),

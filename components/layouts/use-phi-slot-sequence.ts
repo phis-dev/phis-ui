@@ -57,7 +57,7 @@ export type PhiSlotSequence = {
   setActiveIndex: (index: number) => void;
 };
 
-export function clampPhiSlotIndex(index: number, slotCount: number) {
+function clampPhiSlotIndex(index: number, slotCount: number) {
   return Math.min(Math.max(index, 0), Math.max(slotCount - 1, 0));
 }
 
@@ -86,7 +86,7 @@ export function resolvePhiSequenceEditableSlotCount(
  * stands somewhere. The Inspector offers the declared slots as a list, so the case is a stored value
  * from a layout that has since been reshaped, not a typo.
  */
-export function resolvePhiSlotIndexByKey(
+function resolvePhiSlotIndexByKey(
   slotKeys: string[],
   defaultActiveSlotKey?: string,
 ) {

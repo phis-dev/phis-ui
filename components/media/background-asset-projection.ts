@@ -20,7 +20,7 @@ import { isPhiRecord } from "../../helpers/is-record";
  * own pictures are already projected by `resolvedContent`.
  */
 
-export const PHI_BACKGROUND_RESOLVED_ASSET_KEY = "resolvedAsset";
+const PHI_BACKGROUND_RESOLVED_ASSET_KEY = "resolvedAsset";
 
 type JsonRecord = Record<string, unknown>;
 

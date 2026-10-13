@@ -39,7 +39,7 @@ const PHI_RENDERABLE_BLOCK_INTERACTION_KEYS = [
 ] as const satisfies readonly (keyof PhiRenderableBlockInteractionState)[];
 
 /** One stored length: a finite number or a non-blank string. */
-export function readPhiRenderableBlockLength(value: unknown): number | string | undefined {
+function readPhiRenderableBlockLength(value: unknown): number | string | undefined {
   if (typeof value === "number") {
     return Number.isFinite(value) ? value : undefined;
   }
@@ -141,7 +141,7 @@ export function normalizePhiRenderableBlockCapabilities(value: unknown): PhiRend
   return hasValue ? next : undefined;
 }
 
-export function normalizePhiRenderableBlockInteractionState(value: unknown): PhiRenderableBlockInteractionState | undefined {
+function normalizePhiRenderableBlockInteractionState(value: unknown): PhiRenderableBlockInteractionState | undefined {
   if (!isPhiRecord(value)) {
     return undefined;
   }
@@ -158,7 +158,7 @@ export function normalizePhiRenderableBlockInteractionState(value: unknown): Phi
 }
 
 /** The block's place in the Site; `blockId` is an instance id or stated absent, never a bare number. */
-export function normalizePhiRenderableBlockRuntimeContext(value: unknown): PhiRenderableBlockRuntimeContext | undefined {
+function normalizePhiRenderableBlockRuntimeContext(value: unknown): PhiRenderableBlockRuntimeContext | undefined {
   if (!isPhiRecord(value)) {
     return undefined;
   }

@@ -2,7 +2,7 @@ import type { PhiRuntimeModuleId } from "../types/cms-module-descriptors";
 
 const PHI_RUNTIME_MODULE_ID_PART_PATTERN = /^[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?$/;
 
-export const PHI_RUNTIME_MODULE_ID_MARKER = "modules";
+const PHI_RUNTIME_MODULE_ID_MARKER = "modules";
 
 /**
  * The path segments a Module's package occupies, from its id.

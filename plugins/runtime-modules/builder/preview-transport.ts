@@ -5,7 +5,7 @@ import { isPhiRecord } from "../../../helpers/is-record";
 import type { PhiSurface } from "../../../types/surface";
 
 export const PHI_BUILDER_PREVIEW_SEARCH_PARAM = "phiBuilderPreview";
-export const PHI_BUILDER_PREVIEW_ROUTE = "/builder/api/preview";
+const PHI_BUILDER_PREVIEW_ROUTE = "/builder/api/preview";
 export const PHI_BUILDER_PREVIEW_TTL_MS = 1000 * 60 * 30;
 
 export type PhiBuilderRootNodeKind = "layout" | "widget" | null;
@@ -31,7 +31,7 @@ export type PhiBuilderPreviewSnapshot = {
 
 export type PhiBuilderPreviewSnapshotId = string;
 
-export function serializePhiBuilderPreviewSnapshot(snapshot: PhiBuilderPreviewSnapshot) {
+function serializePhiBuilderPreviewSnapshot(snapshot: PhiBuilderPreviewSnapshot) {
   return JSON.stringify(snapshot);
 }
 

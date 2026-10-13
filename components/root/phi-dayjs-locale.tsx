@@ -169,7 +169,7 @@ registerDayjsLocale({ key: "vi", localeName: "vi" });
 registerDayjsLocale({ key: "zh-cn", localeName: "zh-cn" }, ["zh", "zh-hans", "zh-cn"]);
 registerDayjsLocale({ key: "zh-tw", localeName: "zh-tw" }, ["zh-hant", "zh-hk"]);
 
-export function resolvePhiDayjsLocale(locale: string | null | undefined): PhiDayjsLocaleResolution {
+function resolvePhiDayjsLocale(locale: string | null | undefined): PhiDayjsLocaleResolution {
   const normalized = normalizePhiLocaleKey(locale);
   if (!normalized) {
     return { key: "en", localeName: "en" };

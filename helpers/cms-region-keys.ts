@@ -80,7 +80,7 @@ export function phiCmsRegionAcceptsWidget(
   return ownership === undefined || ownership === required;
 }
 
-export const PHI_CMS_REGION_KEY_BY_TYPE = Object.fromEntries(
+const PHI_CMS_REGION_KEY_BY_TYPE = Object.fromEntries(
   Object.entries(PHI_CMS_REGION_TYPE_BY_KEY).map(([key, type]) => [type, key]),
 ) as Record<number, PhiCmsRegionKey>;
 

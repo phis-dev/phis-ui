@@ -40,7 +40,7 @@ export type PhiMaskConfig = {
 
 const PHI_MASK_PRESETS = new Set<PhiMaskPreset>(PHI_MASK_PRESET_ENTRIES.map(([preset]) => preset));
 
-export const PHI_MASK_DEFAULT_CONFIG: PhiMaskConfig = {
+const PHI_MASK_DEFAULT_CONFIG: PhiMaskConfig = {
   enabled: false,
   source: "preset",
   preset: "circle",

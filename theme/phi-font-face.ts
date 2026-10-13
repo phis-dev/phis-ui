@@ -75,7 +75,7 @@ function fontFormat(contentType: string) {
 }
 
 /** The name of the re-proportioned substitute; `Lora Fallback` beside `Lora`, as next/font names it. */
-export function buildPhiFontFallbackFamily(family: string) {
+function buildPhiFontFallbackFamily(family: string) {
   return `${cssSafeFamily(family)} Fallback`;
 }
 
@@ -109,7 +109,7 @@ function buildFallbackFace(source: PhiFontFaceSource, category: PhiFontFaceCateg
   ].join("");
 }
 
-export function resolvePhiFontFaceCategory(source: PhiFontFaceSource): PhiFontFaceCategory {
+function resolvePhiFontFaceCategory(source: PhiFontFaceSource): PhiFontFaceCategory {
   return source.metrics?.category ?? source.fallbackCategory ?? "sans-serif";
 }
 

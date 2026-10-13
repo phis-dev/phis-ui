@@ -65,9 +65,9 @@ export type PhiThemeTokens = {
 };
 export type PhiComponentTokens = Record<string, Record<string, unknown>>;
 
-export const PHI_DEFAULT_ANTD_FONT_SIZE = 12;
+const PHI_DEFAULT_ANTD_FONT_SIZE = 12;
 
-export function buildPhiThemeTokens(options: PhiThemeTokenOptions = {}): PhiThemeTokens {
+function buildPhiThemeTokens(options: PhiThemeTokenOptions = {}): PhiThemeTokens {
   return {
     paddingXXS: PHI_PADDING_VALUES.xxs,
     paddingXS: PHI_PADDING_VALUES.xs,

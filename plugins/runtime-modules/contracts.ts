@@ -945,7 +945,7 @@ export function createPhiRuntimeModuleCatalog(
   return Object.assign(catalog, { areaDefinitions, platformModuleId });
 }
 
-export function assertPhiRuntimeModuleArtifacts(
+function assertPhiRuntimeModuleArtifacts(
   widgets: readonly PhiRuntimeModuleWidgetDefinition[],
   layouts: readonly PhiRuntimeModuleLayoutDefinition[],
   moduleId: PhiRuntimeModuleId,

@@ -10,7 +10,7 @@ import type { PhiRuntimeDataProviderKey } from "../../types/runtime-data-provide
 import type { PhiCalendarAdapterDescriptor, PhiCalendarAdapterKey } from "../../types/calendar";
 import type { PhiVideoProviderDescriptor, PhiVideoProviderKey } from "../../types/video";
 
-export type PhiRuntimeModuleClientState = {
+type PhiRuntimeModuleClientState = {
   moduleIds: ReadonlySet<string>;
   widgetTypes: ReadonlySet<string>;
   layoutTypes: ReadonlySet<string>;

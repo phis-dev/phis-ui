@@ -59,7 +59,7 @@ function compactChildrenOf(
  * them. Read from the children of the Layout it goes into -- reading the root's children for a slot
  * inside a nested Layout put it in front of whatever that slot held.
  */
-export function resolvePhiStructureNextSortOrder(children: PhiStructureChildren, slotIndex: number) {
+function resolvePhiStructureNextSortOrder(children: PhiStructureChildren, slotIndex: number) {
   return [...children.childLayouts, ...children.childWidgets]
     .filter((child) => child.slotIndex === slotIndex)
     .reduce((maxSortOrder, child) => Math.max(maxSortOrder, child.sortOrder), -1) + 1;

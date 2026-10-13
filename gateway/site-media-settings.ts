@@ -3,7 +3,7 @@ import "server-only";
 
 import { fetchPhiSiteApi } from "./site-api-request";
 
-export type PhiSiteMediaSettings = {
+type PhiSiteMediaSettings = {
   userSpacesEnabled: boolean;
   groupSpacesEnabled: boolean;
   defaultUserQuotaBytes: number | null;
@@ -17,7 +17,7 @@ export type PhiSiteMediaSettings = {
 };
 
 /** One Add-on's own store: what it holds, and the figure it is measured against. */
-export type PhiSiteAddonMediaSpace = {
+type PhiSiteAddonMediaSpace = {
   addonId: string;
   spaceId: number;
   usedBytes: number;
@@ -25,11 +25,11 @@ export type PhiSiteAddonMediaSpace = {
   quotaBytes: number | null;
 };
 
-export type PhiSiteMediaSettingsResult = PhiSiteMediaSettings & {
+type PhiSiteMediaSettingsResult = PhiSiteMediaSettings & {
   addonSpaces: readonly PhiSiteAddonMediaSpace[];
 };
 
-export type GetResolvedSiteMediaSettingsOptions = {
+type GetResolvedSiteMediaSettingsOptions = {
   apiBaseUrl: string;
   internalToken: string;
   siteKey: string;

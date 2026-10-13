@@ -196,7 +196,7 @@ export type PhiThemeTokens = Pick<GlobalToken, PhiThemeTokenKey>;
  * override, which is held to the vocabulary above -- the difference matters, because a seed is an
  * input to the derivation and an override is a result of it stated by hand.
  */
-export const PHI_THEME_PALETTE_SEED_KEYS = [
+const PHI_THEME_PALETTE_SEED_KEYS = [
   "colorPrimary",
   "colorInfo",
   "colorSuccess",
@@ -211,7 +211,7 @@ export const PHI_THEME_PALETTE_SEED_KEYS = [
  * `wireframe` is not a token with a value on the page, it is the switch that decides how Ant Design
  * derives the rest. The Theme workspace writes it, so a Site has it stored, so it is said here.
  */
-export const PHI_THEME_STYLE_SEED_KEYS = [
+const PHI_THEME_STYLE_SEED_KEYS = [
   "wireframe",
 ] as const;
 

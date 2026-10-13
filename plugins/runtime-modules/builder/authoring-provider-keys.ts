@@ -20,7 +20,7 @@ import type {
  * only ever name first-party providers: an installed package cannot write itself into this file. The
  * owning Module declares `availableToAuthoringChrome` on its provider descriptor instead.
  */
-export function resolvePhiBuilderAuthoringPickerDataProviderKeys(
+function resolvePhiBuilderAuthoringPickerDataProviderKeys(
   entries: readonly { dataProviderDescriptors: readonly PhiRuntimeModuleDataProviderDescriptor[] }[],
 ): readonly PhiRuntimeDataProviderKey[] {
   const keys = new Set<PhiRuntimeDataProviderKey>();

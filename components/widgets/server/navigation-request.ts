@@ -13,7 +13,7 @@ import {
   resolvePhiDescriptorNavigationItems,
 } from "../navigation-descriptor-resolver.server";
 
-export function resolvePhiNavigationRevisionFromRuntime(
+function resolvePhiNavigationRevisionFromRuntime(
   runtime: Pick<PhiBlockRuntime, "request">,
 ): number | null {
   const rawNavRevision = runtime.request?.searchParams?.navRevision?.trim();

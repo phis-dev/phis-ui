@@ -13,7 +13,7 @@ export type PhiCmsBreadcrumbWidgetConfig = PhiCmsWidgetConfigBase & {
   justify?: "flex-start" | "center" | "space-between" | "flex-end";
 };
 
-export function parsePhiCmsBreadcrumbWidgetConfig(
+function parsePhiCmsBreadcrumbWidgetConfig(
   rawConfig: Record<string, unknown> | null | undefined,
 ): PhiCmsBreadcrumbWidgetConfig {
   return (rawConfig ?? {}) as PhiCmsBreadcrumbWidgetConfig;

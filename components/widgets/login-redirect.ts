@@ -7,7 +7,7 @@ export function normalizeLoginRedirectTarget(value: string | null | undefined) {
   return readPhiInternalPath(value);
 }
 
-export function resolvePostLoginTarget(pathname: string, locale: string, area: string) {
+function resolvePostLoginTarget(pathname: string, locale: string, area: string) {
   const publicPath = stripLocaleAndAreaFromPathname(pathname) || "/";
   const isBootstrapAuthPath = publicPath === "/login" || publicPath === "/confirm" || publicPath === "/reset-password";
 

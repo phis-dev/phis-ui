@@ -13,7 +13,7 @@ export type PhiCmsHelloWorldWidgetConfig = PhiCmsWidgetConfigBase & {
   size?: PhiRenderableBlockResponsiveSize;
 };
 
-export function parsePhiCmsHelloWorldWidgetConfig(
+function parsePhiCmsHelloWorldWidgetConfig(
   config: Record<string, unknown>,
 ): PhiCmsHelloWorldWidgetConfig {
   const size = normalizePhiRenderableBlockResponsiveSize(config.size) ?? {

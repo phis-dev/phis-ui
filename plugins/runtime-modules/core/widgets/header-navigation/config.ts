@@ -15,7 +15,7 @@ export type PhiCmsHeaderNavigationWidgetConfig = PhiCmsWidgetConfigBase & {
   align?: "left" | "center";
 };
 
-export function parsePhiCmsHeaderNavigationWidgetConfig(
+function parsePhiCmsHeaderNavigationWidgetConfig(
   config: Record<string, unknown>,
 ): PhiCmsHeaderNavigationWidgetConfig {
   return {

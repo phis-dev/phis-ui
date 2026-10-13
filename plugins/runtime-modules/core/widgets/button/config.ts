@@ -60,7 +60,7 @@ export type PhiButtonWidgetConfig = PhiCmsWidgetConfigBase & PhiControlBadgeConf
   danger?: boolean;
 };
 
-export function parsePhiButtonWidgetConfig(config: Record<string, unknown>): PhiButtonWidgetConfig {
+function parsePhiButtonWidgetConfig(config: Record<string, unknown>): PhiButtonWidgetConfig {
   const controlState = parsePhiControlConfig(config, {
     key: "button",
   });

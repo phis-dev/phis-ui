@@ -32,7 +32,7 @@ export type PhiLayoutSlotChildSizing = {
   maxBlockSize: CSSProperties["maxHeight"];
 };
 
-export function isPhiLayoutNodeChild(child: ReactNode) {
+function isPhiLayoutNodeChild(child: ReactNode) {
   return isValidElement(child) && (child.props as { "data-layout-kind"?: unknown })["data-layout-kind"] != null;
 }
 

@@ -16,7 +16,7 @@ export type PhiSearchWidgetServerProps = {
   onQuerySubmit?: (query: string) => void;
 };
 
-export async function loadPhiSearchWidgetLabels(
+async function loadPhiSearchWidgetLabels(
   runtime: Pick<PhiBlockRuntime, "locale">,
 ): Promise<PhiSearchWidgetLabels> {
   return getPhiSearchWidgetLabels({

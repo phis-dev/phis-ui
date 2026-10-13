@@ -133,7 +133,7 @@ const PHI_ANTD_LOCALE_LOADERS: Record<PhiAntdLocaleKey, () => Promise<AntdLocale
   zh_TW: () => import("antd/locale/zh_TW"),
 };
 
-export function resolvePhiAntdLocaleKey(locale: string | null | undefined): PhiAntdLocaleKey {
+function resolvePhiAntdLocaleKey(locale: string | null | undefined): PhiAntdLocaleKey {
   const normalized = normalizePhiLocaleKey(locale);
   return PHI_ANTD_LOCALE_KEY_BY_LOCALE.get(normalized) ?? "en_GB";
 }

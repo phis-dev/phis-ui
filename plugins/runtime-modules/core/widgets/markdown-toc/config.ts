@@ -24,7 +24,7 @@ function clampHeadingLevel(value: number | undefined, fallback: number) {
   return Math.min(Math.max(value, 1), 5);
 }
 
-export function parsePhiCmsMarkdownTocWidgetConfig(config: Record<string, unknown>): PhiCmsMarkdownTocWidgetConfig {
+function parsePhiCmsMarkdownTocWidgetConfig(config: Record<string, unknown>): PhiCmsMarkdownTocWidgetConfig {
   const minLevel = clampHeadingLevel(readNumber(config.minLevel), 1);
   const maxLevel = clampHeadingLevel(readNumber(config.maxLevel), 5);
   const bindingMode = readString(config.bindingMode);

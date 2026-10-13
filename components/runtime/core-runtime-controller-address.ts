@@ -9,7 +9,7 @@ export const PHI_CORE_RUNTIME_CONTROLLER_PLUGIN_KEY = `${PHI_SHARED_PACKAGE_NAME
 export const PHI_CORE_RUNTIME_CONTROLLER_KEY = "default";
 export const PHI_CORE_RUNTIME_CONTROLLER_TYPE =
   `${PHI_CORE_RUNTIME_CONTROLLER_PLUGIN_KEY}/${PHI_CORE_RUNTIME_CONTROLLER_KEY}` as const;
-export const PHI_CORE_RUNTIME_CONTROLLER_INSTANCE_KEY = "default";
+const PHI_CORE_RUNTIME_CONTROLLER_INSTANCE_KEY = "default";
 
 /**
  * The address built from this package's own constants, which has to be the string the contract names.

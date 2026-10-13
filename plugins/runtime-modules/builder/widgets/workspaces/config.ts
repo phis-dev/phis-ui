@@ -1,7 +1,7 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 
-export type PhiBuilderWorkspaceWidgetConfig = Record<string, never>;
+type PhiBuilderWorkspaceWidgetConfig = Record<string, never>;
 
 function parseBuilderWorkspaceWidgetConfig(): PhiBuilderWorkspaceWidgetConfig {
   return {};

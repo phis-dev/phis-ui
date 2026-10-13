@@ -3,11 +3,11 @@ import "server-only";
 
 import { fetchPhiSiteApi } from "./site-api-request";
 
-export type PhiSiteStats = {
+type PhiSiteStats = {
   userCount: number;
 };
 
-export type GetResolvedSiteStatsOptions = {
+type GetResolvedSiteStatsOptions = {
   apiBaseUrl: string;
   internalToken: string;
   siteKey: string;

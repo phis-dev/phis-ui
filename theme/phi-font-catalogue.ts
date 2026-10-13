@@ -45,7 +45,7 @@ const lora = Lora({
 export type { PhiFontCatalogueEntry } from "./phi-font-catalogue-contract";
 
 /** The families phis-ui itself declares: the floor, and what the core fonts block names. */
-export const PHI_FONT_CATALOGUE: readonly PhiFontCatalogueEntry[] = [
+const PHI_FONT_CATALOGUE: readonly PhiFontCatalogueEntry[] = [
   { family: "Fira Sans", cssVariable: "var(--phi-font-source-body)", className: firaSans.variable },
   { family: "Fira Mono", cssVariable: "var(--phi-font-source-mono)", className: firaMono.variable },
   { family: "Lora", cssVariable: "var(--phi-font-source-serif)", className: lora.variable },

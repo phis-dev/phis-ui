@@ -5,7 +5,7 @@ type PhiCmsSequentialChildNode =
   | (PhiCmsLayoutRenderNode & { kind: "layout" })
   | (PhiCmsContentWidgetNode & { kind: "widget" });
 
-export function isPhiCmsSequentialLayoutSlots(
+function isPhiCmsSequentialLayoutSlots(
   slots: readonly { sequential?: boolean }[] | null | undefined,
 ) {
   return Array.isArray(slots) && slots.length > 0 && slots.every((slot) => slot.sequential === true);

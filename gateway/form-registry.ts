@@ -15,7 +15,7 @@ import { isPhiFormId, normalizePhiFormId } from "../types/form-id";
 import { isPhiRecord } from "../helpers/is-record";
 import { fetchPhiSiteApi } from "./site-api-request";
 
-export const PHI_FORM_DEFINITION_STATUS = {
+const PHI_FORM_DEFINITION_STATUS = {
   workingDraft: 0,
   published: 1,
   archived: 2,

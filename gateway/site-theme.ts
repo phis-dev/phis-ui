@@ -4,7 +4,7 @@ import "server-only";
 import type { PhiBlockRuntimeSite } from "../types/widget-runtime";
 import { fetchPhiSiteApi } from "./site-api-request";
 
-export type GetSiteThemeRevisionOptions = {
+type GetSiteThemeRevisionOptions = {
   apiBaseUrl: string;
   internalToken: string;
   siteKey: string;

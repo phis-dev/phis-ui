@@ -4,7 +4,7 @@ import { useCallback, useRef, useState, type ReactNode } from "react";
 
 import { PhiDialogControl } from "./phi-dialog-control";
 
-export type PhiConfirmDialogRequest = {
+type PhiConfirmDialogRequest = {
   title: ReactNode;
   content?: ReactNode;
   confirmLabel?: string;

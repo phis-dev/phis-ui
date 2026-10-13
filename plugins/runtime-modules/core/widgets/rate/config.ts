@@ -23,7 +23,7 @@ export type PhiRateWidgetConfig = PhiControlConfig & {
   icon?: string;
 };
 
-export function parsePhiRateWidgetConfig(config: Record<string, unknown>): PhiRateWidgetConfig {
+function parsePhiRateWidgetConfig(config: Record<string, unknown>): PhiRateWidgetConfig {
   const count = normalizePhiRateCount(readNumber(config.count));
   const allowHalf = readBoolean(config.allowHalf) ?? false;
 

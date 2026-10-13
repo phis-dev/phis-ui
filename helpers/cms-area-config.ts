@@ -27,11 +27,11 @@ import {
 export const PHI_AREA_CONFIG_SHELL_NAMESPACE = "shell" as const;
 export const PHI_AREA_CONFIG_MODULES_NAMESPACE = "modules" as const;
 
-export type PhiAreaConfigNamespace =
+type PhiAreaConfigNamespace =
   | typeof PHI_AREA_CONFIG_SHELL_NAMESPACE
   | typeof PHI_AREA_CONFIG_MODULES_NAMESPACE;
 
-export function readPhiAreaConfigNamespace(
+function readPhiAreaConfigNamespace(
   config: Record<string, unknown> | null | undefined,
   namespace: PhiAreaConfigNamespace,
 ): Record<string, unknown> | undefined {
@@ -48,7 +48,7 @@ export function readPhiAreaConfigNamespace(
  * config is what a Site that persisted its Area falls back to. Both readings sit here so the namespace
  * appears once rather than at every call site that needs the selection.
  */
-export function readPhiAreaPresetRuntimeModules(
+function readPhiAreaPresetRuntimeModules(
   tree: Pick<PhiResolvedCmsAreaPresetTree, "runtimeModuleIds" | "preset"> | null | undefined,
 ) {
   return tree?.runtimeModuleIds

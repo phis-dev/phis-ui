@@ -47,7 +47,7 @@ export type PhiBuilderOfferedCatalogState = Pick<
  * with from the list of the landings it may choose, and would leave the root slot with no applicant
  * to fall back to.
  */
-export function resolvePhiBuilderAreaModuleActivation(
+function resolvePhiBuilderAreaModuleActivation(
   state: Pick<PhiBuilderOfferedCatalogState, "runtimeModuleIdsByArea">,
   area: PhiBuilderPageCatalogArea,
 ) {

@@ -28,7 +28,7 @@ import { buildPhiBuilderRootNodeRenderableTree } from "./root-node-renderable-tr
 import { normalizePhiPaddingWidgetConfig } from "../../../types/cms-config";
 import { resolvePhiPaddingStyle } from "../../../components/layouts/phi-layout-contract";
 
-export type PhiBuilderRootNodePreviewInput = PhiBuilderRootNodeDraft;
+type PhiBuilderRootNodePreviewInput = PhiBuilderRootNodeDraft;
 
 export type PhiBuilderServerPreviewRegionKey =
   | "header_top"
@@ -42,7 +42,7 @@ export type PhiBuilderServerPreviewRegionKey =
   | "footer_main"
   | "footer_bottom";
 
-export type PhiBuilderRootNodeServerPreviewProps = {
+type PhiBuilderRootNodeServerPreviewProps = {
   rootNode: PhiBuilderRootNodePreviewInput;
   runtime: PhiBlockRuntime;
   regionType?: number;
@@ -237,7 +237,7 @@ export function buildPhiBuilderServerPreviewRegions({
   );
 }
 
-export async function PhiBuilderRootNodeServerPreview({
+async function PhiBuilderRootNodeServerPreview({
   rootNode,
   runtime,
   regionType = PhiCmsRegionType.Content,

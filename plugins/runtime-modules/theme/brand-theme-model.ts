@@ -177,7 +177,7 @@ export function resetThemeToPreset(
   };
 }
 
-export function buildThemeReviewRoutePath(area: PhiCmsAreaKey) {
+function buildThemeReviewRoutePath(area: PhiCmsAreaKey) {
   return area === "public" ? "/public" : `/${area}`;
 }
 
@@ -251,7 +251,7 @@ export function mergeThemeSetChoice(
 }
 
 /** Every font slot an author set, so the Set's fonts block is what shows. */
-export function clearThemeAuthoredFonts(theme: ThemePayload): ThemePayload {
+function clearThemeAuthoredFonts(theme: ThemePayload): ThemePayload {
   return omitThemeFields(theme, "fonts");
 }
 
@@ -270,6 +270,6 @@ export function clearThemeAuthoredGround(theme: ThemePayload): ThemePayload {
  * lose the brand colour they picked. The record keeps them apart -- `palette` and `style` -- so taking
  * the one away never touches the other.
  */
-export function clearThemeStyleTokens(theme: ThemePayload): ThemePayload {
+function clearThemeStyleTokens(theme: ThemePayload): ThemePayload {
   return omitThemeFields(theme, "style");
 }

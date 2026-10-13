@@ -29,7 +29,7 @@ function readPositiveInteger(value: unknown, fallback: number) {
   return parsed != null && parsed > 0 ? parsed : fallback;
 }
 
-export function parsePhiPaginationWidgetConfig(config: Record<string, unknown>): PhiPaginationWidgetConfig {
+function parsePhiPaginationWidgetConfig(config: Record<string, unknown>): PhiPaginationWidgetConfig {
   const controlState = parsePhiControlConfig(config, {
     key: "pagination",
   });

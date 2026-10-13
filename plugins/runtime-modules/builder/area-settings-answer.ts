@@ -59,7 +59,7 @@ function canonicalize(value: unknown): unknown {
  * its answer afresh, so comparing it by `JSON.stringify` against the stored one would call a reordered
  * copy a change.
  */
-export function isSamePhiBuilderAreaAnswer(left: unknown, right: unknown) {
+function isSamePhiBuilderAreaAnswer(left: unknown, right: unknown) {
   return JSON.stringify(canonicalize(left)) === JSON.stringify(canonicalize(right));
 }
 

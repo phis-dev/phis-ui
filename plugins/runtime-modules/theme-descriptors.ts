@@ -14,7 +14,7 @@ import { PHI_THEME_RUNTIME_MODULE_ID } from "./theme/ids";
  * themselves import nothing a browser would load. `validate-module-descriptors` holds this list equal to
  * what the Builder's catalog compiles, so a Module that starts shipping Themes cannot be missed here.
  */
-export const PHI_FIRST_PARTY_THEME_DESCRIPTOR_CONTRIBUTIONS = [
+const PHI_FIRST_PARTY_THEME_DESCRIPTOR_CONTRIBUTIONS = [
   { moduleId: PHI_CORE_RUNTIME_MODULE_ID, themes: PHI_CORE_RUNTIME_MODULE_THEMES },
   { moduleId: PHI_THEME_RUNTIME_MODULE_ID, themeBlocks: PHI_THEME_RUNTIME_MODULE_BLOCKS },
 ] as const satisfies readonly PhiCmsThemeDescriptorContribution[];

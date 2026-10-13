@@ -111,7 +111,7 @@ function readInitialQuery(value: unknown): PhiCollectionProviderQuery | undefine
   };
 }
 
-export function normalizePhiCmsCollectionViewWidgetConfig(config: unknown): PhiCmsCollectionViewWidgetConfig {
+function normalizePhiCmsCollectionViewWidgetConfig(config: unknown): PhiCmsCollectionViewWidgetConfig {
   const raw = isPhiRecord(config) ? config : {};
   const presentation = isPhiRecord(raw.presentation) ? raw.presentation : {};
   const features = isPhiRecord(raw.features) ? raw.features : {};
@@ -158,7 +158,7 @@ export function normalizePhiCmsCollectionViewWidgetConfig(config: unknown): PhiC
   };
 }
 
-export function parsePhiCmsCollectionViewWidgetConfig(
+function parsePhiCmsCollectionViewWidgetConfig(
   config: Record<string, unknown>,
 ): PhiCmsCollectionViewWidgetConfig {
   return normalizePhiCmsCollectionViewWidgetConfig(config);

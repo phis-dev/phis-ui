@@ -45,7 +45,7 @@ export type PhiCmsSimpleTextWidgetConfig = PhiCmsWidgetConfigBase & {
   disabled?: boolean;
 };
 
-export function parsePhiCmsSimpleTextWidgetConfig(
+function parsePhiCmsSimpleTextWidgetConfig(
   config: Record<string, unknown>,
 ): PhiCmsSimpleTextWidgetConfig {
   const renderableBlockConfig = readRenderableBlockConfig(config);

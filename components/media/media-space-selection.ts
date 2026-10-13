@@ -19,7 +19,7 @@ import type { PhiMediaSpaceOption } from "../../types/media";
  * This is an interface rule, not the authorization boundary. The control plane resolves every requested
  * Space against the actor's own authority and answers `space_forbidden` regardless of what asked.
  */
-export const PHI_MEDIA_SPACE_SELECTING_AREAS = ["app"] as const;
+const PHI_MEDIA_SPACE_SELECTING_AREAS = ["app"] as const;
 
 export function canPhiSurfaceSelectMediaSpace(input: {
   partitionKind: PhiSignalRuntimePartitionKind | null;
@@ -45,7 +45,7 @@ export function usePhiMediaSpaceSelectionAllowed() {
  * A group Space is named after its group, because that is what a member recognizes. The Site Space and
  * a personal Space have no name of their own and fall back to what they are.
  */
-export function readPhiMediaSpaceOptionLabel(
+function readPhiMediaSpaceOptionLabel(
   space: PhiMediaSpaceOption,
   labels: { site: string; user: string; group: string },
 ) {

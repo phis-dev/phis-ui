@@ -14,7 +14,7 @@ export type PhiCmsTabBarWidgetConfig = PhiCmsWidgetConfigBase & PhiStackChoiceCo
   placement?: "top" | "bottom" | "left" | "right";
 };
 
-export function parsePhiCmsTabBarWidgetConfig(config: Record<string, unknown>): PhiCmsTabBarWidgetConfig {
+function parsePhiCmsTabBarWidgetConfig(config: Record<string, unknown>): PhiCmsTabBarWidgetConfig {
   const placement = readString(config.placement);
 
   return {

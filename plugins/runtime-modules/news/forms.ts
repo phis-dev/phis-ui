@@ -24,7 +24,7 @@ export const PHI_NEWS_FORM_IDS = {
   publication: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "news/publication"),
 } as const;
 
-export const PHI_NEWS_FORM_HANDLER_KEYS = {
+const PHI_NEWS_FORM_HANDLER_KEYS = {
   entry: "news.entry",
   publication: "news.publication",
 } as const;

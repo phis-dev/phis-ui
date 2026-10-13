@@ -29,7 +29,7 @@ export type PhiHtmlWidgetContentConfig = PhiHtmlWidgetClientConfig & {
   resolvedContent?: PhiCmsResolvedContent | null;
 };
 
-export function parsePhiCmsHtmlWidgetConfig(config: Record<string, unknown>): PhiCmsHtmlWidgetConfig {
+function parsePhiCmsHtmlWidgetConfig(config: Record<string, unknown>): PhiCmsHtmlWidgetConfig {
   const renderableBlockConfig = readRenderableBlockConfig(config);
 
   return {

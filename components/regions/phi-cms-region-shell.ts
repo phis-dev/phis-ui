@@ -157,7 +157,7 @@ function normalizeCssLength(value: unknown) {
   return typeof value === "string" || typeof value === "number" ? value : undefined;
 }
 
-export function resolvePhiCmsRegionShellFamily(regionKey: PhiCmsRegionKey): PhiCmsRegionShellFamily {
+function resolvePhiCmsRegionShellFamily(regionKey: PhiCmsRegionKey): PhiCmsRegionShellFamily {
   if (regionKey === "header_top" || regionKey === "header_main" || regionKey === "header_bottom") {
     return "header";
   }

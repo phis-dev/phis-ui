@@ -328,7 +328,7 @@ export function applyPhiRenderableBlockSignal(
   return current;
 }
 
-export function emitPhiRenderableBlockSignal(
+function emitPhiRenderableBlockSignal(
   dispatchSignal: ReturnType<typeof usePhiSignalDispatcher>,
   channel: PhiRenderableBlockSignalChannel,
   receiver: PhiRenderableBlockReceiver | null | undefined,

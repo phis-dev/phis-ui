@@ -20,7 +20,7 @@ export type PhiDraftStatusWidgetConfig = PhiCmsWidgetConfigBase & {
   signalRoutes?: PhiSignalRouteSet | null;
 };
 
-export function parsePhiDraftStatusWidgetConfig(config: Record<string, unknown>): PhiDraftStatusWidgetConfig {
+function parsePhiDraftStatusWidgetConfig(config: Record<string, unknown>): PhiDraftStatusWidgetConfig {
   return {
     ...readRenderableBlockConfig(config),
     signalRoutes: readPhiSignalRouteSet(config.signalRoutes),

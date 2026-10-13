@@ -12,7 +12,7 @@ export type PhiImagePreviewApiRecord = Omit<PhiMediaAsset, "kind"> & {
   previewUrl?: string | null;
 };
 
-export type PhiImagePreviewApiResponse = {
+type PhiImagePreviewApiResponse = {
   activeSpace?: PhiMediaSpaceOption;
   spaces?: PhiMediaSpaceOption[];
   assets?: PhiImagePreviewApiRecord[];
@@ -24,7 +24,7 @@ export type PhiImagePreviewApiResponse = {
 
 const PHI_SVG_MEDIA_MIN_DISPLAY_DIMENSION = 48;
 
-export function normalizePhiImagePreviewAsset(asset: PhiImagePreviewApiRecord): PhiMediaAsset {
+function normalizePhiImagePreviewAsset(asset: PhiImagePreviewApiRecord): PhiMediaAsset {
   return {
     ...asset,
     kind: resolvePhiMediaKindFromContentType(asset.contentType),

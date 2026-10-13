@@ -54,7 +54,7 @@ export type PhiBuilderNavigationTree = {
 
 export type PhiBuilderNavigationPresetFamily = "header" | "sidebar" | "footer" | "quicklinks";
 
-export function normalizePhiBuilderNavigationKey(value: string | null | undefined) {
+function normalizePhiBuilderNavigationKey(value: string | null | undefined) {
   return (value ?? "").trim().toLowerCase();
 }
 

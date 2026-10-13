@@ -51,7 +51,7 @@ export function isPhiButtonShadowStep(value: unknown): value is PhiButtonShadowS
 }
 
 /** The Button component tokens a Theme's shadow steps stand for in one mode; empty when it sets none. */
-export function buildPhiButtonShadowComponentTokens(
+function buildPhiButtonShadowComponentTokens(
   buttons: PhiThemeButtons | null | undefined,
   mode: PhiThemeMode,
 ): Record<string, string> {

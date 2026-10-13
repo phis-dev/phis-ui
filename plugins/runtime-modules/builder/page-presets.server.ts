@@ -49,7 +49,7 @@ export type PhiBuilderPageDraftsMapByScope = Partial<
   Record<PhiDeveloperBuilderArea, Partial<Record<string, Record<string, PhiDeveloperBuilderRegionDraft> | null>>>
 >;
 
-export type PhiBuilderCurrentPageDrafts = {
+type PhiBuilderCurrentPageDrafts = {
   area: PhiDeveloperBuilderArea;
   pageKey: string;
   drafts: Record<string, PhiDeveloperBuilderRegionDraft>;

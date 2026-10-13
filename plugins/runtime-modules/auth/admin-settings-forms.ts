@@ -19,7 +19,7 @@ export const PHI_AUTH_ADMIN_SETTINGS_FORM_IDS = {
   installationEdit: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "auth/admin-installation-edit"),
 } as const;
 
-export const PHI_AUTH_ADMIN_SETTINGS_FORM_HANDLER_KEYS = {
+const PHI_AUTH_ADMIN_SETTINGS_FORM_HANDLER_KEYS = {
   policy: "auth.admin.policy",
   passwordMethod: "auth.admin.password-method",
   totpPolicy: "auth.admin.totp-policy",

@@ -101,7 +101,7 @@ export function cutPhiRuntimeModuleServerAreaContribution(
   });
 }
 
-export function cutPhiRuntimeModuleServerAreaContributions(
+function cutPhiRuntimeModuleServerAreaContributions(
   contributions: readonly PhiRuntimeModuleServerAreaContribution[],
   area: PhiCmsAreaKey,
 ) {

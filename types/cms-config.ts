@@ -455,7 +455,7 @@ function readGridSlotPlacement(value: unknown, slotIndexFromArray?: number): Phi
  * A shared Layout field, read the same way wherever it appears: a line on the 24-track form grid, so
  * anything outside 2..24 is not a narrower column but a mistake, and is dropped rather than clamped.
  */
-export function readPhiLayoutLabelEnd(value: unknown): number | undefined {
+function readPhiLayoutLabelEnd(value: unknown): number | undefined {
   const labelEnd = readNumber(value);
   return labelEnd !== undefined && Number.isInteger(labelEnd) && labelEnd >= 2 && labelEnd <= 24
     ? labelEnd

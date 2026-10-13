@@ -5,7 +5,7 @@ import { createPhiRuntimeModuleAuthoringClient } from "../client-authoring-modul
 import { definePhiRuntimeModuleAuthoringClientContribution } from "../authoring-contributions-client";
 import { PHI_REVISIONS_RUNTIME_MODULE_ID } from "./ids";
 
-export const PhiRevisionsRuntimeModuleAuthoringClient = createPhiRuntimeModuleAuthoringClient({
+const PhiRevisionsRuntimeModuleAuthoringClient = createPhiRuntimeModuleAuthoringClient({
   moduleId: PHI_REVISIONS_RUNTIME_MODULE_ID,
   WidgetModule,
 });

@@ -17,7 +17,7 @@ export type PhiCmsSidebarNavigationWidgetConfig = PhiCmsWidgetConfigBase & {
   fontSize?: PhiWidgetFontSizeKey;
 };
 
-export function parsePhiCmsSidebarNavigationWidgetConfig(
+function parsePhiCmsSidebarNavigationWidgetConfig(
   config: Record<string, unknown>,
 ): PhiCmsSidebarNavigationWidgetConfig {
   return {

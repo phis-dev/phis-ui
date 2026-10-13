@@ -17,7 +17,7 @@ import { PHI_VIDEO_EMBED_ASPECT_RATIOS, type PhiVideoEmbedAspectRatio } from "./
  * when a Site swaps a YouTube video for a Vimeo one. The rest are for a Site that knows better than the
  * provider does, which happens with a vertical cut.
  */
-export function readPhiVideoEmbedAspectRatio(value: unknown): PhiVideoEmbedAspectRatio {
+function readPhiVideoEmbedAspectRatio(value: unknown): PhiVideoEmbedAspectRatio {
   const ratio = readString(value);
   return PHI_VIDEO_EMBED_ASPECT_RATIOS.includes(ratio as PhiVideoEmbedAspectRatio)
     ? (ratio as PhiVideoEmbedAspectRatio)
@@ -70,7 +70,7 @@ export type PhiVideoEmbedWidgetConfig = PhiCmsWidgetConfigBase & {
   aspectRatio?: PhiVideoEmbedAspectRatio;
 };
 
-export function normalizePhiVideoEmbedWidgetConfig(config: unknown): PhiVideoEmbedWidgetConfig {
+function normalizePhiVideoEmbedWidgetConfig(config: unknown): PhiVideoEmbedWidgetConfig {
   if (!isPhiRecord(config)) {
     return {
       ...readRenderableBlockConfig({}),
@@ -95,7 +95,7 @@ export function normalizePhiVideoEmbedWidgetConfig(config: unknown): PhiVideoEmb
   };
 }
 
-export function parsePhiVideoEmbedWidgetConfig(config: Record<string, unknown>): PhiVideoEmbedWidgetConfig {
+function parsePhiVideoEmbedWidgetConfig(config: Record<string, unknown>): PhiVideoEmbedWidgetConfig {
   return normalizePhiVideoEmbedWidgetConfig(config);
 }
 

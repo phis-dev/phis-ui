@@ -21,7 +21,7 @@ export const PHI_USER_MANAGEMENT_FORM_IDS = {
   edit: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "user-management/edit"),
 } as const;
 
-export const PHI_USER_MANAGEMENT_FORM_HANDLER_KEYS = {
+const PHI_USER_MANAGEMENT_FORM_HANDLER_KEYS = {
   create: "site.user-management.create",
   edit: "site.user-management.edit",
 } as const;

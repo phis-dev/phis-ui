@@ -29,7 +29,7 @@ export type PhiInspectorLinkTargetLabels = {
   newTab: string;
 };
 
-export const PHI_INSPECTOR_LINK_TARGET_DEFAULT_LABELS: PhiInspectorLinkTargetLabels = {
+const PHI_INSPECTOR_LINK_TARGET_DEFAULT_LABELS: PhiInspectorLinkTargetLabels = {
   none: "None",
   page: "Page",
   external: "Address",

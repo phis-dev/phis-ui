@@ -24,7 +24,7 @@ import { PHI_ASSET_COLLECTION_DATA_SOURCE } from "./asset-collection-runtime";
 /** Enough for any Site's own lettering; a ceiling rather than a page size. */
 const PHI_SITE_FONT_ASSET_LIMIT = 100;
 
-export type PhiSiteFontAssetOption = {
+type PhiSiteFontAssetOption = {
   assetId: number;
   /** What a Theme writes into the slot. */
   value: string;

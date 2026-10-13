@@ -25,8 +25,8 @@ import {
  * The row comes from a Signal, because a field is placed once and used for whichever row a surface is
  * about. What it needs to be told is only where to put the file: the Add-on, its table, and the slot.
  */
-export const PHI_SLOT_UPLOAD_WIDGET_TYPE_KEY = "slot-upload";
-export const PHI_SLOT_UPLOAD_WIDGET_PLUGIN_KEY =
+const PHI_SLOT_UPLOAD_WIDGET_TYPE_KEY = "slot-upload";
+const PHI_SLOT_UPLOAD_WIDGET_PLUGIN_KEY =
   resolvePhiCmsWidgetPluginKey(PHI_SLOT_UPLOAD_WIDGET_TYPE_KEY);
 export const PHI_SLOT_UPLOAD_WIDGET_TYPE = buildPhiCmsWidgetNamespacedTypeKey(
   PHI_SLOT_UPLOAD_WIDGET_PLUGIN_KEY,
@@ -44,7 +44,7 @@ export type PhiSlotUploadWidgetConfig = PhiCmsWidgetConfigBase & {
   signalRoutes?: PhiSignalRouteSet | null;
 };
 
-export function parsePhiSlotUploadWidgetConfig(
+function parsePhiSlotUploadWidgetConfig(
   config: Record<string, unknown>,
 ): PhiSlotUploadWidgetConfig {
   return {

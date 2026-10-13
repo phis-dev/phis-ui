@@ -69,7 +69,7 @@ function readRecordField(value: unknown): PhiRecordFieldDefinition | null {
   };
 }
 
-export function parsePhiRecordWidgetConfig(
+function parsePhiRecordWidgetConfig(
   rawConfig: Record<string, unknown>,
 ): PhiRecordWidgetConfig {
   const source = isPhiRecord(rawConfig.source) ? rawConfig.source : {};

@@ -16,8 +16,8 @@ import { readPhiServerApiCredentials } from "../../../helpers/phis-server-creden
 
 export const PHI_ASSET_METADATA_FORM_ID = createPhiFormId(PHI_SHARED_PACKAGE_NAME, "asset/metadata");
 export const PHI_ASSET_FOLDER_FORM_ID = createPhiFormId(PHI_SHARED_PACKAGE_NAME, "asset/folder-create");
-export const PHI_ASSET_METADATA_FORM_HANDLER_KEY = "site.asset.metadata.update";
-export const PHI_ASSET_FOLDER_FORM_HANDLER_KEY = "site.asset.folder.create";
+const PHI_ASSET_METADATA_FORM_HANDLER_KEY = "site.asset.metadata.update";
+const PHI_ASSET_FOLDER_FORM_HANDLER_KEY = "site.asset.folder.create";
 const PHI_ASSET_FORM_LABEL_SET_KEY = "@phis/ui/modules/asset/labels/metadata" as const;
 
 const label = (key: string, fallback: string) => ({ kind: "label", key, fallback } as const);

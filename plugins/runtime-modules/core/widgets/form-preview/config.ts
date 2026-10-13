@@ -20,7 +20,7 @@ export type PhiCmsFormPreviewWidgetConfig = {
   signalRoutes: ReturnType<typeof readPhiSignalRouteSet>;
 };
 
-export function parsePhiFormPreviewWidgetConfig(
+function parsePhiFormPreviewWidgetConfig(
   rawConfig: Record<string, unknown>,
 ): PhiCmsFormPreviewWidgetConfig {
   const normalizedFormId = typeof rawConfig.formId === "string"

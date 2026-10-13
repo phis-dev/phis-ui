@@ -13,7 +13,7 @@ const PHI_CMS_WIDGET_PLUGIN_KEY_BASE = "@phis/ui/modules";
  * nothing else names them. The owner comes from the runtime module catalog, which refuses two modules
  * claiming one type.
  */
-export const PHI_CMS_WIDGET_PLUGIN_KEYS = {
+const PHI_CMS_WIDGET_PLUGIN_KEYS = {
   "asset": `${PHI_CMS_WIDGET_PLUGIN_KEY_BASE}/asset/widgets`,
   "auth": `${PHI_CMS_WIDGET_PLUGIN_KEY_BASE}/auth/widgets`,
   "avatar": `${PHI_CMS_WIDGET_PLUGIN_KEY_BASE}/avatar/widgets`,

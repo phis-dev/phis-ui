@@ -50,7 +50,7 @@ export function normalizePhiNewsListWidgetConfig(config: unknown): PhiNewsListWi
   };
 }
 
-export function parsePhiNewsListWidgetConfig(config: Record<string, unknown>): PhiNewsListWidgetConfig {
+function parsePhiNewsListWidgetConfig(config: Record<string, unknown>): PhiNewsListWidgetConfig {
   return normalizePhiNewsListWidgetConfig(config);
 }
 

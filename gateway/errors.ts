@@ -10,7 +10,7 @@ export class PhiCmsGatewayError extends Error {
   }
 }
 
-export function isPhiCmsGatewayError(error: unknown): error is PhiCmsGatewayError {
+function isPhiCmsGatewayError(error: unknown): error is PhiCmsGatewayError {
   return error instanceof PhiCmsGatewayError;
 }
 

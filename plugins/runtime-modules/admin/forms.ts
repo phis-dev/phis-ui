@@ -17,7 +17,7 @@ export const PHI_ADMIN_SETTINGS_FORM_IDS = {
   general: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "admin/settings-general"),
 } as const;
 
-export const PHI_ADMIN_SETTINGS_FORM_HANDLER_KEYS = {
+const PHI_ADMIN_SETTINGS_FORM_HANDLER_KEYS = {
   general: "site.admin.settings",
 } as const;
 

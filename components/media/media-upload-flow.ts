@@ -268,7 +268,7 @@ export type PhiMediaUploadFailureReason =
  * Deliberately quiet: it is a courtesy to the operator's log, not a step the upload depends on, so a
  * failure to report must not replace the failure being reported.
  */
-export async function reportPhiMediaUploadFailure(
+async function reportPhiMediaUploadFailure(
   reportUrl: string,
   reason: PhiMediaUploadFailureReason,
   detail?: string | null,
@@ -840,7 +840,7 @@ function sendPhiMediaUploadSingleBody(
   });
 }
 
-export async function finalizePhiMediaUploadSession(
+async function finalizePhiMediaUploadSession(
   finalizeUrl: string,
   completion?: unknown,
 ): Promise<{ asset: PhiImagePreviewApiRecord }> {

@@ -26,7 +26,7 @@ const PHI_COMMON_CONTROL_LABEL_SET = definePhiLabelSet({
   ),
 });
 
-export async function getPhiCommonControlLabels(options: PhiGlobalTranslatorOptions): Promise<PhiCommonControlLabels> {
+async function getPhiCommonControlLabels(options: PhiGlobalTranslatorOptions): Promise<PhiCommonControlLabels> {
   const labels = await getPhiLabelSet(options, PHI_COMMON_CONTROL_LABEL_SET);
   return {
     actions: Object.fromEntries(

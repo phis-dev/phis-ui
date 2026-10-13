@@ -45,7 +45,7 @@ export type PhiBaseLayoutProps = PhiLayoutProps & {
   style?: CSSProperties;
 };
 
-export function resolvePhiBaseLayoutSlotState(
+function resolvePhiBaseLayoutSlotState(
   initialSlotStates: PhiBaseLayoutSlotStates | undefined,
   slotIndex: number,
 ) {

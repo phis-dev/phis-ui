@@ -10,7 +10,7 @@ import type { PhiCmsWidgetPlugin } from "../../../../../types";
  */
 export type PhiCmsAuthMethodsWidgetConfig = Record<string, never>;
 
-export function parsePhiAuthMethodsWidgetConfig(): PhiCmsAuthMethodsWidgetConfig {
+function parsePhiAuthMethodsWidgetConfig(): PhiCmsAuthMethodsWidgetConfig {
   return {};
 }
 

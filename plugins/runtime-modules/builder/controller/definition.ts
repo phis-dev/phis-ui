@@ -99,7 +99,7 @@ export type PhiBuilderRuntimeControllerPreload = {
   historyLabels: PhiHistoryLabels;
 };
 
-export function parsePhiBuilderRuntimeControllerConfig(raw: Record<string, unknown>): PhiBuilderRuntimeControllerConfig {
+function parsePhiBuilderRuntimeControllerConfig(raw: Record<string, unknown>): PhiBuilderRuntimeControllerConfig {
   return { signalRoutes: readPhiSignalRouteSet(raw.signalRoutes) };
 }
 

@@ -43,7 +43,7 @@ export type PhiRuntimeFormSubmitOptions = {
  * all of them -- so a submit held by a wiring fault, which ended at the 30s timeout, was reported to
  * the person typing their password as a connection problem.
  */
-export type PhiRuntimeFormSubmitFailure =
+type PhiRuntimeFormSubmitFailure =
   /** The Controller's own request did not complete. */
   | "transport"
   /** No result and no error arrived before the submit gave up waiting. */
@@ -53,7 +53,7 @@ export type PhiRuntimeFormSubmitFailure =
   /** The caller has no Controller address to submit to. */
   | "unaddressed";
 
-export class PhiRuntimeFormSubmitError extends Error {
+class PhiRuntimeFormSubmitError extends Error {
   readonly failure: PhiRuntimeFormSubmitFailure;
 
   constructor(failure: PhiRuntimeFormSubmitFailure, message: string) {

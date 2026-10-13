@@ -17,7 +17,7 @@ export type PhiCmsQuickLinksWidgetConfig = PhiCmsWidgetConfigBase & {
   separator?: boolean;
 };
 
-export function parsePhiCmsQuickLinksWidgetConfig(config: Record<string, unknown>): PhiCmsQuickLinksWidgetConfig {
+function parsePhiCmsQuickLinksWidgetConfig(config: Record<string, unknown>): PhiCmsQuickLinksWidgetConfig {
   const columns = readNumber(config.columns) ??
     (readString(config.columns) ? Number(config.columns) : undefined);
 

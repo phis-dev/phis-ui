@@ -25,7 +25,7 @@ export type ApiHeaderOptions = {
   extra?: HeadersInit;
 };
 
-export function normalizePath(path: string) {
+function normalizePath(path: string) {
   if (/^https?:\/\//.test(path)) {
     return path;
   }

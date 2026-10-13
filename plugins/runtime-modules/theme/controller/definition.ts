@@ -32,7 +32,7 @@ export type PhiThemeRuntimeControllerPreload = {
   historyLabels: PhiHistoryLabels;
 };
 
-export function parsePhiThemeRuntimeControllerConfig(raw: Record<string, unknown>): PhiThemeRuntimeControllerConfig {
+function parsePhiThemeRuntimeControllerConfig(raw: Record<string, unknown>): PhiThemeRuntimeControllerConfig {
   return { signalRoutes: readPhiSignalRouteSet(raw.signalRoutes) };
 }
 

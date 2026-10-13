@@ -73,7 +73,7 @@ function readMaxTagCount(value: unknown): number | "responsive" | undefined {
   return Math.max(0, Math.trunc(value));
 }
 
-export function parsePhiMultiSelectWidgetConfig(config: Record<string, unknown>): PhiMultiSelectWidgetConfig {
+function parsePhiMultiSelectWidgetConfig(config: Record<string, unknown>): PhiMultiSelectWidgetConfig {
   const valueType = readMultiSelectValueType(config.valueType);
   const controlState = parsePhiControlConfig(config, {
     key: "multi-select",

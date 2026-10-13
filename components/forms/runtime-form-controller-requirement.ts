@@ -13,9 +13,9 @@ import type { PhiCmsFormWidgetConfig } from "./form-widget-config";
  * convention four call sites spelled out for themselves; naming it lets the Controller find its way
  * back to the Widget it belongs to, which is what the state it answers with has to be addressed at.
  */
-export const PHI_FORM_CONTROLLER_WIDGET_INSTANCE_PREFIX = "widget-";
+const PHI_FORM_CONTROLLER_WIDGET_INSTANCE_PREFIX = "widget-";
 
-export function createPhiRuntimeFormWidgetInstanceKey(widgetId: string | number) {
+function createPhiRuntimeFormWidgetInstanceKey(widgetId: string | number) {
   return `${PHI_FORM_CONTROLLER_WIDGET_INSTANCE_PREFIX}${widgetId}`;
 }
 
@@ -27,7 +27,7 @@ export function readPhiRuntimeFormControllerWidgetId(instanceKey: string | numbe
     : null;
 }
 
-export function createPhiRuntimeFormControllerRequirement(
+function createPhiRuntimeFormControllerRequirement(
   instanceKey: string | number,
 ): PhiRuntimeControllerRequirement {
   return {

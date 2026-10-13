@@ -30,7 +30,7 @@ function readNormalizeMode(value: unknown): PhiCascaderNormalizeMode {
   return readString(value) === "path" ? "path" : "raw";
 }
 
-export function parsePhiCascaderWidgetConfig(
+function parsePhiCascaderWidgetConfig(
   config: Record<string, unknown>,
 ): PhiCascaderWidgetConfig {
   const controlState = parsePhiControlConfig(config, {

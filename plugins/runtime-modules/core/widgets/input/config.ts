@@ -31,7 +31,7 @@ export type PhiCmsInputWidgetConfig = PhiCmsWidgetConfigBase & PhiControlConfig 
   submitOnEnter?: boolean;
 };
 
-export function parsePhiCmsInputWidgetConfig(config: Record<string, unknown>): PhiCmsInputWidgetConfig {
+function parsePhiCmsInputWidgetConfig(config: Record<string, unknown>): PhiCmsInputWidgetConfig {
   const controlState = parsePhiControlConfig(config, {
     key: "input",
   });

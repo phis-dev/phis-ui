@@ -22,7 +22,7 @@ export type PhiPublicPageAlternates = {
   languages: Readonly<Record<string, string>>;
 };
 
-export const PHI_HREFLANG_DEFAULT_KEY = "x-default";
+const PHI_HREFLANG_DEFAULT_KEY = "x-default";
 
 /**
  * The first of the given values that is an absolute http(s) URL, without a trailing slash.
@@ -52,7 +52,7 @@ export function resolvePhiSitePublicBase(...candidates: ReadonlyArray<string | n
 }
 
 /** The absolute URL of one Public path in one locale. */
-export function buildPhiPublicPageUrl(publicBase: string, locale: string, path: string) {
+function buildPhiPublicPageUrl(publicBase: string, locale: string, path: string) {
   return `${publicBase}${localizePath(locale, path)}`;
 }
 

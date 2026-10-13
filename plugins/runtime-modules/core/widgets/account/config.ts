@@ -2,7 +2,7 @@ import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widge
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import type { PhiAccountWidgetConfig } from "./client";
 
-export function parsePhiAccountWidgetConfig(rawConfig: Record<string, unknown> | null | undefined): PhiAccountWidgetConfig {
+function parsePhiAccountWidgetConfig(rawConfig: Record<string, unknown> | null | undefined): PhiAccountWidgetConfig {
   const config = (rawConfig ?? {}) as Record<string, unknown>;
   return {
     variant:

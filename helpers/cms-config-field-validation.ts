@@ -26,7 +26,7 @@ function describe(value: unknown) {
   return typeof value === "string" ? JSON.stringify(value) : String(value);
 }
 
-export function readPhiCmsConfigFieldViolation(
+function readPhiCmsConfigFieldViolation(
   field: PhiCmsConfigField,
   value: unknown,
 ): string | null {

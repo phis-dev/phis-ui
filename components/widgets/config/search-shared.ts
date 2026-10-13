@@ -18,7 +18,7 @@ export type PhiCmsSearchWidgetConfig = PhiCmsWidgetConfigBase & PhiControlConfig
   submitOnEnter?: boolean;
 };
 
-export function parsePhiCmsSearchWidgetConfig(
+function parsePhiCmsSearchWidgetConfig(
   rawConfig: Record<string, unknown> | null | undefined,
 ): PhiCmsSearchWidgetConfig {
   const raw = rawConfig ?? {};
@@ -34,7 +34,7 @@ export function parsePhiCmsSearchWidgetConfig(
   };
 }
 
-export const PHI_SEARCH_WIDGET_FIELDS: PhiCmsWidgetPlugin<PhiCmsSearchWidgetConfig>["fields"] = [
+const PHI_SEARCH_WIDGET_FIELDS: PhiCmsWidgetPlugin<PhiCmsSearchWidgetConfig>["fields"] = [
   { key: "value", type: "string", label: "Value" },
   { key: "placeholder", type: "string", label: "Placeholder" },
   { key: "allowClear", type: "boolean", label: "Allow Clear" },
@@ -45,7 +45,7 @@ export const PHI_SEARCH_WIDGET_FIELDS: PhiCmsWidgetPlugin<PhiCmsSearchWidgetConf
   { key: "submitOnEnter", type: "boolean", label: "Submit On Enter" },
 ];
 
-export const PHI_SEARCH_WIDGET_DEFAULT_CONFIG: Partial<PhiCmsSearchWidgetConfig> = {
+const PHI_SEARCH_WIDGET_DEFAULT_CONFIG: Partial<PhiCmsSearchWidgetConfig> = {
   key: "search",
   allowClear: true,
   debounceMs: 250,

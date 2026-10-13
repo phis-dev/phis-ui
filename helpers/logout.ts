@@ -15,7 +15,7 @@ import { fetchPhiCsrfToken } from "./csrf-token";
  * every `x-phis-` header on the way through and sets the Site's own, so that a request from the open
  * internet cannot claim to come from inside. None sets it now, so none can look as if it forgot to.
  */
-export const PHI_LOGOUT_PATH = "/api/auth/logout";
+const PHI_LOGOUT_PATH = "/api/auth/logout";
 
 export type RequestPhiLogoutOptions = {
   signal?: AbortSignal;

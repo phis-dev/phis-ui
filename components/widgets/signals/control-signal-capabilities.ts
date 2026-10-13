@@ -66,7 +66,7 @@ export const PHI_COMMAND_CONTROL_SIGNALS = {
   ],
 } satisfies PhiSignalPluginMeta;
 
-export const PHI_CONTROL_BADGE_SIGNALS = {
+const PHI_CONTROL_BADGE_SIGNALS = {
   listens: [
     { id: "badgeText", channel: "badge", action: "change", valueType: "string" },
     { id: "badgeCount", channel: "badge", action: "change", valueType: "number" },

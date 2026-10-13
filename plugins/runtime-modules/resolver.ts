@@ -572,7 +572,7 @@ export function collectPhiRuntimeDataProviderKeys({
   return collected;
 }
 
-export function collectPhiRuntimeFormOwnerModuleIds({
+function collectPhiRuntimeFormOwnerModuleIds({
   moduleSet,
   trees,
 }: {

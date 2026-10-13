@@ -33,7 +33,7 @@ export const PHI_STORAGE_SIZE_UNIT_LABEL = "MB";
  * round count of megabytes therefore displays rounded -- but it is only ever written back when
  * somebody edits the field, so reading the page cannot change what it says.
  */
-export const PHI_STORAGE_SIZE_PRECISION = 2;
+const PHI_STORAGE_SIZE_PRECISION = 2;
 
 export function phiBytesToStorageSize(bytes: unknown): number | null {
   if (typeof bytes !== "number" || !Number.isFinite(bytes)) return null;

@@ -152,7 +152,7 @@ export function readPhiMediaUploadErrorMessage(error: unknown, labels: PhiMediaU
   return error instanceof TypeError ? labels.errorNetwork : labels.errorGeneric;
 }
 
-export type PhiMediaUploadItem = {
+type PhiMediaUploadItem = {
   localId: string;
   file: File;
   progress: number;

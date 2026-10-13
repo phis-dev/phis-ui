@@ -19,7 +19,7 @@
 export const PHI_CMS_MOUNT_POLICIES = ["remount", "lazy-keep", "eager"] as const;
 export type PhiCmsMountPolicy = (typeof PHI_CMS_MOUNT_POLICIES)[number];
 
-export function isPhiCmsMountPolicy(value: unknown): value is PhiCmsMountPolicy {
+function isPhiCmsMountPolicy(value: unknown): value is PhiCmsMountPolicy {
   return typeof value === "string" && (PHI_CMS_MOUNT_POLICIES as readonly string[]).includes(value);
 }
 
