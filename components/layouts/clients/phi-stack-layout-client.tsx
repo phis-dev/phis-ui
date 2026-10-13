@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties } from "react";
 import { useLayoutEffect, useRef, useState } from "react";
 
 import {
@@ -12,46 +12,22 @@ import {
   shouldPhiCmsContentStayMounted,
   type PhiCmsMountPolicy,
 } from "../../../types/cms-mount-policy";
-import {
-  resolvePhiLayoutInset,
-} from "../phi-layout-contract";
-import {
-  resolvePhiBaseLayoutChrome,
-  type PhiBaseLayoutProps,
-} from "../phi-layout-view-model";
+import { resolvePhiLayoutInset } from "../phi-layout-contract";
+import { resolvePhiBaseLayoutChrome } from "../phi-layout-view-model";
 import { isRenderablePhiNode } from "../phi-layout-scaffold-utils";
+import { PhiLayoutSurfaceBox } from "../phi-layout-surface-box";
 import { PhiLayoutAnchoredOverlay } from "./phi-layout-anchored-overlay";
 import { PhiSequenceSlotEditor } from "./phi-sequence-slot-editor";
-import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control-contract";
-import { resolvePhiSequenceEditableSlotCount, usePhiSlotSequence } from "../use-phi-slot-sequence";
+import { usePhiSequenceLayout, type PhiSequenceLayoutProps } from "./use-phi-sequence-layout";
 import { usePhiConfig } from "../../root/phi-config-provider";
-import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
-import { usePhiLayoutSignalSurface } from "../phi-layout-signal-surface";
-import { PhiSurfaceTone } from "../../surface/phi-surface-tone";
-import { resolvePhiSurfaceToneClassName } from "../../../types/surface";
 
-export type PhiStackLayoutSlotMeta = {
-  key: string;
-  label: string;
-  slotIndex: number;
-  hasContent?: boolean;
-};
-
-export type PhiStackLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
-  slots: ReactNode[];
-  slotKeys: string[];
-  slotMeta?: PhiStackLayoutSlotMeta[];
-  defaultActiveSlotKey?: string;
+export type PhiStackLayoutProps = PhiSequenceLayoutProps & {
   slotDisplay?: "single" | "stacked";
   mountPolicy?: PhiCmsMountPolicy;
   slotTransition?: "none" | "fade-over";
   slotTransitionDurationMs?: number;
   slotTransitionEasing?: PhiMotionEasing;
-  slotAnchor?: PhiAnchorWidgetPlacement | null;
-  editSlotAnchor?: PhiAnchorWidgetPlacement | null;
-  style?: CSSProperties;
 };
-
 
 export function PhiStackLayout({
   slots,
@@ -66,31 +42,22 @@ export function PhiStackLayout({
   slotAnchor = "center",
   ...layoutProps
 }: PhiStackLayoutProps) {
-  // Named fields rather than the rest object: handing the compiler a whole rest object makes every
-  // value later destructured out of it look like it may change, which costs the component its memoization.
-  const authoring = {
-    editSlotAction: layoutProps.editSlotAction,
-    editSlotLabels: layoutProps.editSlotLabels,
-    capabilities: layoutProps.capabilities,
-  };
   const { token } = usePhiConfig();
   const {
     blockId,
-    renderMode,
     style,
-    layoutKind = "stack",
-    padding,
-    paddingTop,
-    paddingRight,
-    paddingBottom,
-    paddingLeft,
-    surface: storedSurface,
-    editSlotAction,
-    editRenderInsertControl,
-    editSlotAnchor = "center",
-  } = layoutProps;
-  const surface = usePhiLayoutSignalSurface(blockId, storedSurface);
-  const isEditMode = renderMode === "editor";
+    isEditMode,
+    storedChrome,
+    activeIndex: resolvedActiveIndex,
+    editor,
+  } = usePhiSequenceLayout({
+    slots,
+    slotKeys,
+    slotMeta,
+    defaultActiveSlotKey,
+    defaultLayoutKind: "stack",
+    layoutProps,
+  });
   /*
    * A pile, not a sequence.
    *
@@ -99,31 +66,8 @@ export function PhiStackLayout({
    * way to say which layer a dropped Widget belongs to.
    */
   const isStacked = slotDisplay === "stacked" && !isEditMode;
-  const editableSlotCount = resolvePhiSequenceEditableSlotCount(slots, slotKeys);
-  const chrome = {
-    padding,
-    paddingTop,
-    paddingRight,
-    paddingBottom,
-    paddingLeft,
-    surface,
-  };
   const outgoingSlotRef = useRef<HTMLDivElement | null>(null);
   const fadeAnimationRef = useRef<Animation | null>(null);
-  const {
-    activeIndex: resolvedActiveIndex,
-    slotMeta: resolvedSlotMeta,
-    setActiveIndex,
-  } = usePhiSlotSequence({
-    blockId,
-    slots,
-    slotKeys,
-    // While authoring, the sequence reaches one slot past the last filled one -- the empty slot the
-    // next child goes into. A page has no such slot and steps through what it holds.
-    ...(isEditMode ? { slotCount: editableSlotCount } : {}),
-    ...(slotMeta ? { slotLabels: slotMeta } : {}),
-    ...(defaultActiveSlotKey === undefined ? {} : { defaultActiveSlotKey }),
-  });
 
   /*
    * Which slots have ever been wanted, which is what `lazy-keep` keeps.
@@ -224,29 +168,11 @@ export function PhiStackLayout({
   ]);
 
   if (isEditMode) {
-    return (
-      <PhiSequenceSlotEditor
-        slots={slots}
-        slotKeys={slotKeys}
-        slotLabels={resolvedSlotMeta}
-        slotCount={editableSlotCount}
-        activeIndex={resolvedActiveIndex}
-        onActiveIndexChange={setActiveIndex}
-        slotNoun="stack slot"
-        layoutKind={layoutKind}
-        renderMode={renderMode}
-        authoring={authoring}
-        chrome={chrome}
-        editSlotAction={editSlotAction}
-        editRenderInsertControl={editRenderInsertControl}
-        editSlotAnchor={editSlotAnchor}
-        style={style}
-      />
-    );
+    return <PhiSequenceSlotEditor {...editor} slotNoun="stack slot" />;
   }
 
-  const resolvedLayoutInset = resolvePhiLayoutInset(chrome);
-  const resolvedChrome = resolvePhiBaseLayoutChrome(chrome);
+  const resolvedLayoutInset = resolvePhiLayoutInset(storedChrome);
+  const resolvedChrome = resolvePhiBaseLayoutChrome(storedChrome);
   /*
    * The layer that keeps the box a box.
    *
@@ -256,104 +182,104 @@ export function PhiStackLayout({
   const baseStackedSlotIndex = slots.findIndex((slot) => isRenderablePhiNode(slot));
 
   return (
-    <PhiSurfaceTone tone={surface?.tone}>
+    <PhiLayoutSurfaceBox
+      blockId={blockId}
+      surface={storedChrome.surface}
+      ground={resolvedChrome.ground}
+      data-phi-stack-slot-display={isStacked ? "stacked" : "single"}
+      data-phi-stack-slot-transition={slotTransition}
+      /*
+       * The Layout's own box, named as one: the fill rules address `.phi-layout`
+       * (`.phi-slot-child--block-fill > .phi-layout`, styles/layout.css), and this box carried a
+       * `height: 100%` of its own instead, so the class was never missed. Without it the box would
+       * take the width its frame gives and no height at all.
+       */
+      className="phi-layout"
+      style={{
+        position: "relative",
+        minWidth: 0,
+        minHeight: 0,
+        boxSizing: "border-box",
+        ...resolvedChrome.style,
+        ...style,
+      }}
+    >
       <div
-        data-phi-stack-slot-display={isStacked ? "stacked" : "single"}
-        data-phi-stack-slot-transition={slotTransition}
+        data-phi-stack-stage="true"
         /*
-         * The Layout's own box, named as one: the fill rules address `.phi-layout`
-         * (`.phi-slot-child--block-fill > .phi-layout`, styles/layout.css), and this box carried a
-         * `height: 100%` of its own instead, so the class was never missed. Without it the box would
-         * take the width its frame gives and no height at all.
+         * The stage is as tall as the Stack, not as tall as the slot standing in it. A slot that is
+         * only as tall as its content has no room to place that content, so an anchor of bottom or
+         * middle drew at the top. Where the Stack itself has no height, a percentage against an auto
+         * parent stays auto and the stage is content height as before.
          */
-        className={["phi-layout", resolvePhiSurfaceToneClassName(surface?.tone)].filter(Boolean).join(" ")}
-        style={{
-          position: "relative",
-          minWidth: 0,
-          minHeight: 0,
-          boxSizing: "border-box",
-          ...resolvedChrome.style,
-          ...style,
-        }}
+        style={{ position: "relative", width: "100%", height: "100%", minWidth: 0, minHeight: 0 }}
       >
-        <PhiSurfaceGroundLayer ground={resolvedChrome.ground} />
-        <div
-          data-phi-stack-stage="true"
+        {slots.map((slot, index) => {
+          const isActive = index === resolvedActiveIndex;
+          const isOutgoing = index === outgoingSlotIndex;
           /*
-           * The stage is as tall as the Stack, not as tall as the slot standing in it. A slot that is
-           * only as tall as its content has no room to place that content, so an anchor of bottom or
-           * middle drew at the top. Where the Stack itself has no height, a percentage against an auto
-           * parent stays auto and the stage is content height as before.
+           * The outgoing slot counts as inside the window, which is how a fade survives `remount`:
+           * the window lags by the length of the transition rather than cutting at the moment the
+           * index changes.
            */
-          style={{ position: "relative", width: "100%", height: "100%", minWidth: 0, minHeight: 0 }}
-        >
-          {slots.map((slot, index) => {
-            const isActive = index === resolvedActiveIndex;
-            const isOutgoing = index === outgoingSlotIndex;
-            /*
-             * The outgoing slot counts as inside the window, which is how a fade survives `remount`:
-             * the window lags by the length of the transition rather than cutting at the moment the
-             * index changes.
-             */
-            const shouldMount = isStacked || shouldPhiCmsContentStayMounted({
-              policy: mountPolicy,
-              insideWindow: isActive || isOutgoing,
-              hasEnteredWindow: visitedSlotIndices.has(index),
-            });
-            if (!shouldMount || !isRenderablePhiNode(slot)) return null;
+          const shouldMount = isStacked || shouldPhiCmsContentStayMounted({
+            policy: mountPolicy,
+            insideWindow: isActive || isOutgoing,
+            hasEnteredWindow: visitedSlotIndices.has(index),
+          });
+          if (!shouldMount || !isRenderablePhiNode(slot)) return null;
 
-            /*
-             * Every layer stays reachable, and the one on top takes the pointer where they overlap. That
-             * is what lying over something means; a layer that should let the click through says so with
-             * its own content rather than by the Stack deciding for all of them.
-             */
-            const stackedLayerStyle: CSSProperties = index === baseStackedSlotIndex
-              ? { position: "relative", zIndex: index }
-              : { position: "absolute", insetBlock: 0, insetInline: 0, zIndex: index };
+          /*
+           * Every layer stays reachable, and the one on top takes the pointer where they overlap. That
+           * is what lying over something means; a layer that should let the click through says so with
+           * its own content rather than by the Stack deciding for all of them.
+           */
+          const stackedLayerStyle: CSSProperties = index === baseStackedSlotIndex
+            ? { position: "relative", zIndex: index }
+            : { position: "absolute", insetBlock: 0, insetInline: 0, zIndex: index };
 
-            return (
-              <div
-                key={slotKeys[index] ?? `slot-${index}`}
-                ref={isOutgoing ? outgoingSlotRef : undefined}
-                hidden={!isStacked && !isActive && !isOutgoing}
-                inert={!isStacked && !isActive}
-                aria-hidden={(!isStacked && !isActive) || undefined}
-                data-phi-stack-slot-state={isStacked ? "stacked" : isActive ? "active" : isOutgoing ? "outgoing" : "inactive"}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  minWidth: 0,
-                  minHeight: 0,
-                  ...(isStacked
-                    ? stackedLayerStyle
-                    : isOutgoing
-                    ? {
-                        position: "absolute",
-                        insetBlock: 0,
-                        insetInline: 0,
-                        zIndex: 1,
-                        pointerEvents: "none",
-                      }
-                    : {
-                        position: "relative",
-                        zIndex: 0,
-                      }),
-                }}
+          return (
+            <div
+              key={slotKeys[index] ?? `slot-${index}`}
+              ref={isOutgoing ? outgoingSlotRef : undefined}
+              hidden={!isStacked && !isActive && !isOutgoing}
+              inert={!isStacked && !isActive}
+              aria-hidden={(!isStacked && !isActive) || undefined}
+              data-phi-stack-slot-state={isStacked ? "stacked" : isActive ? "active" : isOutgoing ? "outgoing" : "inactive"}
+              style={{
+                width: "100%",
+                height: "100%",
+                minWidth: 0,
+                minHeight: 0,
+                ...(isStacked
+                  ? stackedLayerStyle
+                  : isOutgoing
+                  ? {
+                      position: "absolute",
+                      insetBlock: 0,
+                      insetInline: 0,
+                      zIndex: 1,
+                      pointerEvents: "none",
+                    }
+                  : {
+                      position: "relative",
+                      zIndex: 0,
+                    }),
+              }}
+            >
+              <PhiLayoutAnchoredOverlay
+                anchor={slotAnchor}
+                positionMode="flow"
+                fillAvailableInline
+                fillAvailableBlock
+                inset={resolvedLayoutInset}
               >
-                <PhiLayoutAnchoredOverlay
-                  anchor={slotAnchor}
-                  positionMode="flow"
-                  fillAvailableInline
-                  fillAvailableBlock
-                  inset={resolvedLayoutInset}
-                >
-                  {slot}
-                </PhiLayoutAnchoredOverlay>
-              </div>
-            );
-          })}
-        </div>
+                {slot}
+              </PhiLayoutAnchoredOverlay>
+            </div>
+          );
+        })}
       </div>
-    </PhiSurfaceTone>
+    </PhiLayoutSurfaceBox>
   );
 }

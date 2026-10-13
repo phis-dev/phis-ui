@@ -38,17 +38,7 @@ export type PhiSplitCardLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
   gap?: CSSProperties["gap"];
   /** The larger card on the left instead of the right. */
   swapRatio?: boolean;
-  editSlotAction?: (
-    slotIndex: number,
-    options?: {
-      defaultPickSection?: "layout" | "widget";
-      allowWidgetSection?: boolean;
-      slotIndex?: number;
-    },
-  ) => void;
-  editRenderInsertControl?: PhiLayoutEditRenderInsertControl;
   editSlotAnchor?: PhiAnchorWidgetPlacement | null;
-  style?: CSSProperties;
 };
 
 function renderSplitCardSlot(

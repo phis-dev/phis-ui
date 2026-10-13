@@ -7,18 +7,15 @@ import {
   resolvePhiPlacement,
   resolvePhiSlotPlacementMargins,
   type PhiLayoutEditRenderInsertControl,
-  type PhiLayoutKind,
-  } from "../phi-layout-contract";
-import { resolvePhiBaseLayoutChrome } from "../phi-layout-view-model";
+} from "../phi-layout-contract";
+import { resolvePhiBaseLayoutChrome, type PhiBaseLayoutProps } from "../phi-layout-view-model";
 import { resolvePhiLayoutDefaults } from "../../../helpers/cms-layout-defaults";
 import { PHI_CMS_THREE_COLUMN_LAYOUT_SLOTS } from "../../../constants/cms-layout-types";
 import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control-contract";
 import type {
-  PhiRenderableBlockRenderMode,
   PhiRenderableBlockResponsiveSize,
   PhiRenderableBlockSize,
 } from "../../../types";
-import type { PhiSurface } from "../../../types/surface";
 import {
   isPhiLayoutAuthoringRender,
   phiLayoutDebugLayerMarker,
@@ -29,15 +26,29 @@ import { PhiLayoutSurfaceBox } from "../phi-layout-surface-box";
 
 const PHI_THREE_COLUMN_LAYOUT_DEFAULTS = resolvePhiLayoutDefaults("threecol");
 
-export type PhiThreeColumnLayoutProps = {
-  blockId?: string | number | null;
+export type PhiThreeColumnLayoutProps = Pick<
+  PhiBaseLayoutProps,
+  | "blockId"
+  | "gap"
+  | "surface"
+  | "renderMode"
+  | "zIndex"
+  | "layoutKind"
+  | "labelEnd"
+  | "padding"
+  | "paddingTop"
+  | "paddingRight"
+  | "paddingBottom"
+  | "paddingLeft"
+  | "editSlotAction"
+  | "editRenderInsertControl"
+  | "style"
+> & {
   slots: ReactNode[];
   balancedSides?: boolean;
-  gap?: CSSProperties["gap"];
   wrap?: boolean | CSSProperties["flexWrap"];
   align?: CSSProperties["alignItems"];
   justify?: CSSProperties["justifyContent"];
-  surface?: PhiSurface | null;
   leftWidth?: CSSProperties["width"];
   middleWidth?: CSSProperties["width"];
   rightWidth?: CSSProperties["width"];
@@ -45,26 +56,7 @@ export type PhiThreeColumnLayoutProps = {
   minSize?: PhiRenderableBlockResponsiveSize | null;
   maxSize?: PhiRenderableBlockResponsiveSize | null;
   collapsedSizeHint?: PhiRenderableBlockSize | null;
-  renderMode?: PhiRenderableBlockRenderMode;
-  zIndex?: number;
-  layoutKind?: PhiLayoutKind;
-  labelEnd?: number;
-  padding?: CSSProperties["padding"];
-  paddingTop?: CSSProperties["paddingTop"];
-  paddingRight?: CSSProperties["paddingRight"];
-  paddingBottom?: CSSProperties["paddingBottom"];
-  paddingLeft?: CSSProperties["paddingLeft"];
-  editSlotAction?: (
-    slotIndex: number,
-    options?: {
-      defaultPickSection?: "layout" | "widget";
-      allowWidgetSection?: boolean;
-      slotIndex?: number;
-    },
-  ) => void;
-  editRenderInsertControl?: PhiLayoutEditRenderInsertControl;
   editSlotAnchor?: PhiAnchorWidgetPlacement | null;
-  style?: CSSProperties;
 };
 
 function renderColumn(

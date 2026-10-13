@@ -1,7 +1,6 @@
 "use client";
 
 import { usePhiConfig } from "../../root/phi-config-provider";
-import type { CSSProperties, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { PhiButtonControl } from "../../controls/phi-button-control";
@@ -13,25 +12,18 @@ import type {
 } from "../../../helpers/motion";
 import { PhiSequenceViewport } from "../../motion/phi-sequence-viewport";
 import { resolvePhiLayoutInset } from "../phi-layout-contract";
-import {
-  resolvePhiBaseLayoutChrome,
-  type PhiBaseLayoutProps,
-} from "../phi-layout-view-model";
+import { resolvePhiBaseLayoutChrome } from "../phi-layout-view-model";
 import { isRenderablePhiNode } from "../phi-layout-scaffold-utils";
+import { PhiLayoutSurfaceBox } from "../phi-layout-surface-box";
 import { PhiLayoutAnchoredOverlay } from "./phi-layout-anchored-overlay";
 import { PhiSequenceSlotEditor } from "./phi-sequence-slot-editor";
-import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control-contract";
-import { resolvePhiSequenceEditableSlotCount, usePhiSlotSequence } from "../use-phi-slot-sequence";
+import { usePhiSequenceLayout, type PhiSequenceLayoutProps } from "./use-phi-sequence-layout";
 import {
   resolvePhiCarouselCurrentPage,
   resolvePhiCarouselPageStarts,
   resolvePhiCarouselStep,
 } from "../phi-carousel-pages";
 import { PhiIcon } from "../../shell/phi-icon";
-import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
-import { usePhiLayoutSignalSurface } from "../phi-layout-signal-surface";
-import { PhiSurfaceTone } from "../../surface/phi-surface-tone";
-import { resolvePhiSurfaceToneClassName } from "../../../types/surface";
 
 /**
  * A Stack with a wider window.
@@ -55,18 +47,7 @@ import { resolvePhiSurfaceToneClassName } from "../../../types/surface";
  * the page goes.
  */
 
-export type PhiCarouselLayoutSlotMeta = {
-  key: string;
-  label: string;
-  slotIndex: number;
-  hasContent?: boolean;
-};
-
-export type PhiCarouselLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
-  slots: ReactNode[];
-  slotKeys: string[];
-  slotMeta?: PhiCarouselLayoutSlotMeta[];
-  defaultActiveSlotKey?: string;
+export type PhiCarouselLayoutProps = PhiSequenceLayoutProps & {
   visibleSlots?: number;
   windowAnchor?: PhiSequenceAnchor;
   transition?: PhiSequenceTransition;
@@ -86,9 +67,6 @@ export type PhiCarouselLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
   /** Absent or zero means it does not move on its own. */
   autoplayMs?: number;
   lookahead?: number;
-  slotAnchor?: PhiAnchorWidgetPlacement | null;
-  editSlotAnchor?: PhiAnchorWidgetPlacement | null;
-  style?: CSSProperties;
 };
 
 export function PhiCarouselLayout({
@@ -110,45 +88,24 @@ export function PhiCarouselLayout({
   slotAnchor = "center",
   ...layoutProps
 }: PhiCarouselLayoutProps) {
-  // Named fields rather than the rest object: handing the compiler a whole rest object makes every
-  // value later destructured out of it look like it may change, which costs the component its memoization.
-  const authoring = {
-    editSlotAction: layoutProps.editSlotAction,
-    editSlotLabels: layoutProps.editSlotLabels,
-    capabilities: layoutProps.capabilities,
-  };
-  const {
-    blockId,
-    renderMode,
-    style,
-    layoutKind = "carousel",
-    padding,
-    paddingTop,
-    paddingRight,
-    paddingBottom,
-    paddingLeft,
-    surface: storedSurface,
-    editSlotAction,
-    editRenderInsertControl,
-    editSlotAnchor = "center",
-  } = layoutProps;
-  const surface = usePhiLayoutSignalSurface(blockId, storedSurface);
-  const isEditMode = renderMode === "editor";
-  const editableSlotCount = resolvePhiSequenceEditableSlotCount(slots, slotKeys);
   const { token } = usePhiConfig();
   const {
-    activeIndex,
-    slotMeta: resolvedSlotMeta,
-    setActiveIndex,
-  } = usePhiSlotSequence({
     blockId,
+    layoutKind,
+    style,
+    isEditMode,
+    storedChrome,
+    activeIndex,
+    setActiveIndex,
+    slotMeta: resolvedSlotMeta,
+    editor,
+  } = usePhiSequenceLayout({
     slots,
     slotKeys,
-    // While authoring, the sequence reaches one slot past the last filled one -- the empty slot the
-    // next child goes into. A page has no such slot and steps through what it holds.
-    ...(isEditMode ? { slotCount: editableSlotCount } : {}),
-    ...(slotMeta ? { slotLabels: slotMeta } : {}),
-    ...(defaultActiveSlotKey === undefined ? {} : { defaultActiveSlotKey }),
+    slotMeta,
+    defaultActiveSlotKey,
+    defaultLayoutKind: "carousel",
+    layoutProps,
   });
 
   /*
@@ -211,39 +168,12 @@ export function PhiCarouselLayout({
     return () => window.clearInterval(timer);
   }, [advance, autoplayMs, isEditMode, paused, span, track.length]);
 
-  const chrome = {
-    padding,
-    paddingTop,
-    paddingRight,
-    paddingBottom,
-    paddingLeft,
-    surface,
-  };
-
   if (isEditMode) {
-    return (
-      <PhiSequenceSlotEditor
-        slots={slots}
-        slotKeys={slotKeys}
-        slotLabels={resolvedSlotMeta}
-        slotCount={editableSlotCount}
-        activeIndex={activeIndex}
-        onActiveIndexChange={setActiveIndex}
-        slotNoun="carousel slot"
-        layoutKind={layoutKind}
-        renderMode={renderMode}
-        authoring={authoring}
-        chrome={chrome}
-        editSlotAction={editSlotAction}
-        editRenderInsertControl={editRenderInsertControl}
-        editSlotAnchor={editSlotAnchor}
-        style={style}
-      />
-    );
+    return <PhiSequenceSlotEditor {...editor} slotNoun="carousel slot" />;
   }
 
-  const resolvedLayoutInset = resolvePhiLayoutInset(chrome);
-  const resolvedChrome = resolvePhiBaseLayoutChrome(chrome);
+  const resolvedLayoutInset = resolvePhiLayoutInset(storedChrome);
+  const resolvedChrome = resolvePhiBaseLayoutChrome(storedChrome);
   /*
    * One dot per window, not per slot: with a wide window the slots move a window at a time, so a dot
    * per slot would offer positions the Carousel never stops at. Each is named after the first slot it
@@ -263,105 +193,105 @@ export function PhiCarouselLayout({
   const atEnd = trackIndex >= lastTrackStart;
 
   return (
-    <PhiSurfaceTone tone={surface?.tone}>
-      <div
-        data-layout-kind={layoutKind}
-        data-phi-carousel-transition={transition}
-        data-phi-carousel-controls={controls}
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-        onFocusCapture={() => setPaused(true)}
-        onBlurCapture={() => setPaused(false)}
-        /*
-         * The Layout's own box, named as one: the fill rules address `.phi-layout`
-         * (`.phi-slot-child--block-fill > .phi-layout`, styles/layout.css), and this box carried a
-         * `height: 100%` of its own instead, so the class was never missed. Without it the box would
-         * take the width its frame gives and no height at all.
-         */
-        className={["phi-layout", resolvePhiSurfaceToneClassName(surface?.tone)].filter(Boolean).join(" ")}
-        style={{
-          position: "relative",
-          display: "flex",
-          flexDirection: "column",
-          minWidth: 0,
-          minHeight: 0,
-          boxSizing: "border-box",
-          ...resolvedChrome.style,
-          ...style,
-        }}
-      >
-        <PhiSurfaceGroundLayer ground={resolvedChrome.ground} />
-        <div style={{ position: "relative", flex: "1 1 auto", minWidth: 0, minHeight: 0 }}>
-          <PhiSequenceViewport
-            items={track.map((entry) => entry.slot)}
-            activeIndex={trackIndex}
-            visibleCount={span}
-            anchor={windowAnchor}
-            transition={transition}
-            {...(transitionDurationMs === undefined ? {} : { durationMs: transitionDurationMs })}
-            {...(transitionEasing === undefined ? {} : { easing: transitionEasing })}
-            lookahead={lookahead}
-            gap={slotGap}
-            style={{ width: "100%", height: "100%", minHeight: 0 }}
-            renderItem={(slot) => (
-              <PhiLayoutAnchoredOverlay
-                anchor={slotAnchor}
-                positionMode="flow"
-                fillAvailableInline
-                fillAvailableBlock
-                inset={resolvedLayoutInset}
-              >
-                {slot}
-              </PhiLayoutAnchoredOverlay>
-            )}
-          />
-          {showArrows ? (
-            <>
-              <div style={{ position: "absolute", insetBlockStart: "50%", insetInlineStart: token.marginXS, transform: "translateY(-50%)", zIndex: 1 }}>
-                <PhiButtonControl
-                  icon={<PhiIcon name="left" size="inherit" />}
-                  ariaLabel={controlLabels?.previous ?? "Previous"}
-                  shape="circle"
-                  disabled={atStart && !loop}
-                  onClick={() => step(-1)}
-                />
-              </div>
-              <div style={{ position: "absolute", insetBlockStart: "50%", insetInlineEnd: token.marginXS, transform: "translateY(-50%)", zIndex: 1 }}>
-                <PhiButtonControl
-                  icon={<PhiIcon name="right" size="inherit" />}
-                  ariaLabel={controlLabels?.next ?? "Next"}
-                  shape="circle"
-                  disabled={atEnd && !loop}
-                  onClick={() => step(1)}
-                />
-              </div>
-            </>
-          ) : null}
-        </div>
-        {showDots ? (
-          <div style={{ display: "flex", flex: "0 0 auto", justifyContent: "center", gap: token.marginXXS, paddingBlockStart: token.marginXS }}>
-            {Array.from({ length: pageCount }, (_, page) => (
-              <button
-                key={page}
-                type="button"
-                aria-label={slotLabelAt(pageStarts[page] ?? 0)}
-                aria-current={page === currentPage || undefined}
-                onClick={() => stepTo(pageStarts[page] ?? 0)}
-                style={{
-                  width: page === currentPage ? token.controlHeightXS : token.marginXS,
-                  height: token.marginXS,
-                  padding: 0,
-                  border: "none",
-                  cursor: "pointer",
-                  borderRadius: token.borderRadiusSM,
-                  background: page === currentPage ? token.colorPrimary : token.colorFill,
-                  transition: `width ${token.motionDurationMid}, background ${token.motionDurationMid}`,
-                }}
+    <PhiLayoutSurfaceBox
+      blockId={blockId}
+      surface={storedChrome.surface}
+      ground={resolvedChrome.ground}
+      data-layout-kind={layoutKind}
+      data-phi-carousel-transition={transition}
+      data-phi-carousel-controls={controls}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocusCapture={() => setPaused(true)}
+      onBlurCapture={() => setPaused(false)}
+      /*
+       * The Layout's own box, named as one: the fill rules address `.phi-layout`
+       * (`.phi-slot-child--block-fill > .phi-layout`, styles/layout.css), and this box carried a
+       * `height: 100%` of its own instead, so the class was never missed. Without it the box would
+       * take the width its frame gives and no height at all.
+       */
+      className="phi-layout"
+      style={{
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        minWidth: 0,
+        minHeight: 0,
+        boxSizing: "border-box",
+        ...resolvedChrome.style,
+        ...style,
+      }}
+    >
+      <div style={{ position: "relative", flex: "1 1 auto", minWidth: 0, minHeight: 0 }}>
+        <PhiSequenceViewport
+          items={track.map((entry) => entry.slot)}
+          activeIndex={trackIndex}
+          visibleCount={span}
+          anchor={windowAnchor}
+          transition={transition}
+          {...(transitionDurationMs === undefined ? {} : { durationMs: transitionDurationMs })}
+          {...(transitionEasing === undefined ? {} : { easing: transitionEasing })}
+          lookahead={lookahead}
+          gap={slotGap}
+          style={{ width: "100%", height: "100%", minHeight: 0 }}
+          renderItem={(slot) => (
+            <PhiLayoutAnchoredOverlay
+              anchor={slotAnchor}
+              positionMode="flow"
+              fillAvailableInline
+              fillAvailableBlock
+              inset={resolvedLayoutInset}
+            >
+              {slot}
+            </PhiLayoutAnchoredOverlay>
+          )}
+        />
+        {showArrows ? (
+          <>
+            <div style={{ position: "absolute", insetBlockStart: "50%", insetInlineStart: token.marginXS, transform: "translateY(-50%)", zIndex: 1 }}>
+              <PhiButtonControl
+                icon={<PhiIcon name="left" size="inherit" />}
+                ariaLabel={controlLabels?.previous ?? "Previous"}
+                shape="circle"
+                disabled={atStart && !loop}
+                onClick={() => step(-1)}
               />
-            ))}
-          </div>
+            </div>
+            <div style={{ position: "absolute", insetBlockStart: "50%", insetInlineEnd: token.marginXS, transform: "translateY(-50%)", zIndex: 1 }}>
+              <PhiButtonControl
+                icon={<PhiIcon name="right" size="inherit" />}
+                ariaLabel={controlLabels?.next ?? "Next"}
+                shape="circle"
+                disabled={atEnd && !loop}
+                onClick={() => step(1)}
+              />
+            </div>
+          </>
         ) : null}
       </div>
-    </PhiSurfaceTone>
+      {showDots ? (
+        <div style={{ display: "flex", flex: "0 0 auto", justifyContent: "center", gap: token.marginXXS, paddingBlockStart: token.marginXS }}>
+          {Array.from({ length: pageCount }, (_, page) => (
+            <button
+              key={page}
+              type="button"
+              aria-label={slotLabelAt(pageStarts[page] ?? 0)}
+              aria-current={page === currentPage || undefined}
+              onClick={() => stepTo(pageStarts[page] ?? 0)}
+              style={{
+                width: page === currentPage ? token.controlHeightXS : token.marginXS,
+                height: token.marginXS,
+                padding: 0,
+                border: "none",
+                cursor: "pointer",
+                borderRadius: token.borderRadiusSM,
+                background: page === currentPage ? token.colorPrimary : token.colorFill,
+                transition: `width ${token.motionDurationMid}, background ${token.motionDurationMid}`,
+              }}
+            />
+          ))}
+        </div>
+      ) : null}
+    </PhiLayoutSurfaceBox>
   );
 }

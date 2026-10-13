@@ -1,16 +1,9 @@
-import type { CSSProperties, ReactNode } from "react";
-
 import { isRenderablePhiNode } from "../phi-layout-scaffold-utils";
-import {
-  resolvePhiLayoutInset,
-  type PhiLayoutEditRenderInsertControl,
-  type PhiLayoutKind,
-  } from "../phi-layout-contract";
-import { resolvePhiBaseLayoutChrome } from "../phi-layout-view-model";
+import { resolvePhiLayoutInset } from "../phi-layout-contract";
+import { resolvePhiBaseLayoutChrome, type PhiBaseLayoutProps } from "../phi-layout-view-model";
 import { PhiLayoutAnchoredOverlay } from "./phi-layout-anchored-overlay";
 import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control-contract";
-import type { PhiRenderableBlockRenderMode, PhiRenderableBlockResponsiveSize } from "../../../types";
-import type { PhiSurface } from "../../../types/surface";
+import type { PhiRenderableBlockResponsiveSize } from "../../../types";
 import {
   isPhiLayoutAuthoringRender,
   phiLayoutDebugLayerMarker,
@@ -19,34 +12,29 @@ import {
 } from "../../../helpers/layout-authoring-markers";
 import { PhiLayoutSurfaceBox } from "../phi-layout-surface-box";
 
-export type PhiContentLayoutProps = {
-  blockId?: string | number | null;
-  slots?: ReactNode[];
-  renderMode?: PhiRenderableBlockRenderMode;
+export type PhiContentLayoutProps = Pick<
+  PhiBaseLayoutProps,
+  | "blockId"
+  | "slots"
+  | "renderMode"
+  | "margin"
+  | "zIndex"
+  | "layoutKind"
+  | "labelEnd"
+  | "padding"
+  | "paddingTop"
+  | "paddingRight"
+  | "paddingBottom"
+  | "paddingLeft"
+  | "surface"
+  | "editSlotAction"
+  | "editRenderInsertControl"
+  | "style"
+> & {
   size?: PhiRenderableBlockResponsiveSize | null;
   minSize?: PhiRenderableBlockResponsiveSize | null;
   maxSize?: PhiRenderableBlockResponsiveSize | null;
-  margin?: CSSProperties["margin"];
-  zIndex?: number;
-  layoutKind?: PhiLayoutKind;
-  labelEnd?: number;
-  padding?: CSSProperties["padding"];
-  paddingTop?: CSSProperties["paddingTop"];
-  paddingRight?: CSSProperties["paddingRight"];
-  paddingBottom?: CSSProperties["paddingBottom"];
-  paddingLeft?: CSSProperties["paddingLeft"];
-  surface?: PhiSurface | null;
-  editSlotAction?: (
-    slotIndex: number,
-    options?: {
-      defaultPickSection?: "layout" | "widget";
-      allowWidgetSection?: boolean;
-      slotIndex?: number;
-    },
-  ) => void;
-  editRenderInsertControl?: PhiLayoutEditRenderInsertControl;
   editSlotAnchor?: PhiAnchorWidgetPlacement | null;
-  style?: CSSProperties;
 };
 
 export function PhiContentLayout({
