@@ -524,6 +524,17 @@ function buildLoadingSkeletonStyle(
   return { display: "block", width: contentWidth, minWidth: 24, maxWidth: "100%" };
 }
 
+/*
+ * A cell keyed by its value starts over when the value changes from outside, which is what keeps a
+ * typed draft from outliving it. A multiple choice commits on every click, so the same key remounted
+ * it per click -- the dropdown closed and the focus went; it reads its value directly instead.
+ */
+function resolveEditableCellKey(identity: unknown, columnKey: string, editor: PhiTableControlCellEditor, value: unknown) {
+  return editor.type === "enum[]"
+    ? `${String(identity)}:${columnKey}`
+    : `${String(identity)}:${columnKey}:${JSON.stringify(value)}`;
+}
+
 function EditableTableCell({ value, editor, onCommit }: {
   value: unknown;
   editor: PhiTableControlCellEditor;
@@ -653,8 +664,9 @@ function EditableTableCell({ value, editor, onCommit }: {
       onChange={(next) => { draftRef.current = next; setDraft(next); onCommit(next); }} />;
   }
   if (editor.type === "enum[]") {
-    const values = Array.isArray(draft)
-      ? draft.filter((entry): entry is string | number => typeof entry === "string" || typeof entry === "number")
+    // Committed per choice, so the value is the state: no draft of its own to fall behind it.
+    const values = Array.isArray(value)
+      ? value.filter((entry): entry is string | number => typeof entry === "string" || typeof entry === "number")
       : [];
     if (editor.control === "checkbox-group") {
       return <PhiCheckboxGroupControl value={values} disabled={disabled} options={editor.options ?? []}
@@ -732,8 +744,17 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
   onExternalDrop,
 }: PhiTableControlProps<TRow>) {
   const { token } = usePhiConfig();
-  const [editingRowIdentity, setEditingRowIdentity] = useState<PhiTableRowIdentity | null>(null);
+  const [editingRowIdentityState, setEditingRowIdentity] = useState<PhiTableRowIdentity | null>(null);
   const [rowEditPatch, setRowEditPatch] = useState<Readonly<Record<string, unknown>>>({});
+  /*
+   * The row being edited, while it is on screen. A page change or a reload can take it away, and a
+   * stored identity that names nothing visible locked every other row's edit button with no Cancel
+   * left to press; once the row is gone, so is the edit.
+   */
+  const editingRowIdentity = editingRowIdentityState != null && rows.some((row) =>
+    String(readIdentity(row, rowIdentityPath)) === String(editingRowIdentityState))
+    ? editingRowIdentityState
+    : null;
   const [treeExpandAnimation, setTreeExpandAnimation] = useState<{
     identity: string;
     fromExpanded: boolean;
@@ -1022,13 +1043,16 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
         let content: ReactNode;
         if (editor && editing?.mode === "row" && identity != null &&
           String(identity) === String(editingRowIdentity)) {
-          const editValue = rowEditPatch[column.fieldPath] ?? value;
-          content = <EditableTableCell key={`${String(identity)}:${column.key}:${JSON.stringify(editValue)}`}
+          // Present in the patch is the answer, `null` included: an emptied date or number is not its old value.
+          const editValue = Object.prototype.hasOwnProperty.call(rowEditPatch, column.fieldPath)
+            ? rowEditPatch[column.fieldPath]
+            : value;
+          content = <EditableTableCell key={resolveEditableCellKey(identity, column.key, editor, editValue)}
             value={editValue} editor={editor}
             onCommit={(next) => setRowEditPatch((current) => ({ ...current, [column.fieldPath]: next }))} />;
         } else {
           content = editor && column.onCommit
-            ? <EditableTableCell key={`${String(identity)}:${column.key}:${JSON.stringify(value)}`}
+            ? <EditableTableCell key={resolveEditableCellKey(identity, column.key, editor, value)}
                 value={value} editor={editor}
                 onCommit={(next) => column.onCommit?.(row, value, next)} />
             : column.render
@@ -1361,8 +1385,10 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
   }, [resolveDndDropTarget, updateDropTarget]);
   const handleRowDragStart = useCallback((event: DragStartEvent) => {
     const activatorEvent = event.activatorEvent;
-    const activeRow = [...document.querySelectorAll<HTMLTableRowElement>("tr[data-row-key]")]
-      .find((row) => row.getAttribute("data-row-key") === String(event.active.id)) ?? null;
+    // The row the drag began in, found from the handle that began it: a search of the whole document
+    // found the first row with that identity, which in a second Table on the page is someone else's.
+    const handle = activatorEvent.target instanceof Element ? activatorEvent.target : null;
+    const activeRow = handle?.closest<HTMLTableRowElement>("tr[data-row-key]") ?? null;
     dragTableElement.current = activeRow?.closest("table") ?? null;
     setActiveDragRowHeight(activeRow?.getBoundingClientRect().height ?? 0);
     dragRowRects.current = new Map(

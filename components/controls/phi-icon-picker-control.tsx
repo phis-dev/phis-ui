@@ -1,7 +1,7 @@
 "use client";
 
 import { stopPhiOverlayEvent } from "../../helpers/overlay-events";
-import { useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 import { Flex, Typography } from "antd";
 import type { PhiControlSize } from "../../types/control";
@@ -207,6 +207,18 @@ export function PhiIconPickerControl({
   const [iconifySearchStart, setIconifySearchStart] = useState(0);
   const iconifySearchRequestKeyRef = useRef<string | null>(null);
   const iconifySearchTimeoutRef = useRef<number | null>(null);
+
+  /*
+   * Leaving takes the search along: a pending debounce would otherwise still fire, and an answer still
+   * on its way would set state on a picker that is gone.
+   */
+  useEffect(() => () => {
+    iconifySearchRequestKeyRef.current = null;
+    if (iconifySearchTimeoutRef.current != null) {
+      window.clearTimeout(iconifySearchTimeoutRef.current);
+      iconifySearchTimeoutRef.current = null;
+    }
+  }, []);
 
   const resetIconifySearchState = () => {
     iconifySearchRequestKeyRef.current = null;

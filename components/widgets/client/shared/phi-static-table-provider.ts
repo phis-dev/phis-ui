@@ -145,8 +145,11 @@ export function queryPhiStaticTableResource(
   const search = request.query.search?.trim().toLocaleLowerCase();
   const matchingIdentities = new Set<string>();
   for (const row of rows) {
+    // Only what a cell shows as text is searched: an object field read as "[object Object]" and
+    // matched every search for "object".
     const matchesSearch = !search || Object.values(row).some((value) =>
-      String(value ?? "").toLocaleLowerCase().includes(search));
+      (typeof value === "string" || typeof value === "number" || typeof value === "boolean")
+      && String(value).toLocaleLowerCase().includes(search));
     const matchesFilters = Object.entries(request.query.filters ?? {}).every(([key, filter]) =>
       matchesFilter(readPhiDotPath(row, key), filter));
     if (matchesSearch && matchesFilters) {

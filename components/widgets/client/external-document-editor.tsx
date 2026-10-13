@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent } from "react";
 
+import { logRuntimeEvent } from "../../../net/log";
 import { PhiAlertControl } from "../../controls/phi-alert-control";
 import { PhiFlexControl } from "../../controls/phi-flex-control";
 import { PhiTypographyControl } from "../../controls/phi-typography-control";
@@ -19,12 +20,17 @@ export function PhiExternalDocumentEditor({
   sourceLocale,
   onSourceLocaleChange,
 }: PhiExternalDocumentEditorProps) {
-  const detectionUrlRef = useRef("");
+  /*
+   * The answer goes to whatever callback stands when it arrives. The callback is a new function on every
+   * render of the caller, and as an effect dependency it aborted the request each time -- with a ref
+   * that then refused to ask again, the locale was never set, under StrictMode not once.
+   */
+  const reportSourceLocale = useEffectEvent((detected: string) => onSourceLocaleChange?.(detected));
+  const canReport = onSourceLocaleChange != null;
   useEffect(() => {
-    if (!sourceUrl || sourceLocale?.trim() || !onSourceLocaleChange || detectionUrlRef.current === sourceUrl) {
+    if (!sourceUrl || sourceLocale?.trim() || !canReport) {
       return;
     }
-    detectionUrlRef.current = sourceUrl;
     const controller = new AbortController();
     void fetch("/api/site/translation/detect", {
       method: "POST",
@@ -33,16 +39,25 @@ export function PhiExternalDocumentEditor({
       body: JSON.stringify({ sourceUrl, format }),
       signal: controller.signal,
     }).then(async (response) => {
-      if (!response.ok) return;
+      if (!response.ok) {
+        throw new Error(`Source locale detection answered ${response.status}.`);
+      }
       const payload = await response.json() as { sourceLocale?: unknown };
-      onSourceLocaleChange(
+      reportSourceLocale(
         typeof payload.sourceLocale === "string" && payload.sourceLocale.trim()
           ? payload.sourceLocale.trim()
           : "und",
       );
-    }).catch(() => undefined);
+    }).catch((error: unknown) => {
+      if (controller.signal.aborted) return;
+      // Nothing is set, and the field stays open for the author; the reason is in the log.
+      logRuntimeEvent("warn", "translation.detect.failed", {
+        message: "The source locale of an external document could not be detected.",
+        error,
+      });
+    });
     return () => controller.abort();
-  }, [format, onSourceLocaleChange, sourceLocale, sourceUrl]);
+  }, [canReport, format, sourceLocale, sourceUrl]);
 
   return (
     <div style={{ width: 520, height: 260, maxWidth: "100%", minWidth: 0, minHeight: 0, display: "flex" }}>

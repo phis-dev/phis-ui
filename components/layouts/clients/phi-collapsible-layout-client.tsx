@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties, MouseEvent, ReactNode } from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 
 import { usePhiConfig } from "../../root/phi-config-provider";
 import { createPhiSignalAddress } from "../../../types/signals";
@@ -55,6 +55,7 @@ export type PhiCollapsibleLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
   accordion?: boolean;
   slotTitles?: string[];
   translateSlotTitles?: boolean;
+  /** Every change of the open panels after the first render, whoever made it: a click or a signal. */
   onOpenSlotKeysChange?: (next: string[]) => void;
   defaultOpenSlotKeys?: string[];
   collapsible?: "header" | "icon" | "disabled";
@@ -216,15 +217,26 @@ function PhiCollapsibleLayoutBody({
    * The keys of the slots that are off the screen. A hidden panel must not be the open one: with an
    * accordion that would leave the Collapse showing nothing at all.
    */
-  const hiddenSlotKeys = new Set(
-    renderedSlotIndices
-      .filter((slotIndex) => (resolvedSlotStates[slotIndex] ?? "expanded") === "hidden")
-      .map((slotIndex) => validSlotKeys[slotIndex])
-      .filter((key): key is string => Boolean(key)),
+  const hiddenSlotKeysSignature = renderedSlotIndices
+    .filter((slotIndex) => (resolvedSlotStates[slotIndex] ?? "expanded") === "hidden")
+    .map((slotIndex) => validSlotKeys[slotIndex])
+    .filter((key): key is string => Boolean(key))
+    .join("\u0000");
+  const hiddenSlotKeys = useMemo(
+    () => new Set(hiddenSlotKeysSignature ? hiddenSlotKeysSignature.split("\u0000") : []),
+    [hiddenSlotKeysSignature],
   );
+  /*
+   * The default open panel is chosen among the visible ones. Filtering a hidden open panel out only at
+   * the end left an accordion whose one open panel was hidden showing nothing but headers.
+   */
   const baseOpenSlotKeys = useMemo(
-    () => resolveDefaultOpenSlotKeys(defaultOpenSlotKeys, validSlotKeys, accordion),
-    [accordion, defaultOpenSlotKeys, validSlotKeys],
+    () => resolveDefaultOpenSlotKeys(
+      defaultOpenSlotKeys,
+      validSlotKeys.filter((key) => !hiddenSlotKeys.has(key)),
+      accordion,
+    ),
+    [accordion, defaultOpenSlotKeys, hiddenSlotKeys, validSlotKeys],
   );
   const baseOpenSlotKeysSignature = useMemo(() => JSON.stringify(baseOpenSlotKeys), [baseOpenSlotKeys]);
   const [controlledOpenSlotKeys, setControlledOpenSlotKeys] = useState<{
@@ -285,6 +297,21 @@ function PhiCollapsibleLayoutBody({
     [openSlotKeysSignature],
   );
 
+  /*
+   * The callback hears what the signals hear: every change of the open panels, the ones a signal or
+   * `openSlot`/`closeSlot`/`toggleSlot` made included -- it used to hear only header clicks. Not the
+   * first render, which is no change.
+   */
+  const reportedOpenSlotKeysRef = useRef<string | null>(null);
+  const reportOpenSlotKeys = useEffectEvent((keys: string[]) => onOpenSlotKeysChange?.(keys));
+  useEffect(() => {
+    const previous = reportedOpenSlotKeysRef.current;
+    reportedOpenSlotKeysRef.current = openSlotKeysSignature;
+    if (previous !== null && previous !== openSlotKeysSignature) {
+      reportOpenSlotKeys(JSON.parse(openSlotKeysSignature) as string[]);
+    }
+  }, [openSlotKeysSignature]);
+
   useEffect(() => {
     if (!receiverAddress) {
       return;
@@ -336,9 +363,8 @@ function PhiCollapsibleLayoutBody({
         signature: baseOpenSlotKeysSignature,
         keys: normalizedKeys,
       });
-      onOpenSlotKeysChange?.(normalizedKeys);
     },
-    [accordion, baseOpenSlotKeysSignature, onOpenSlotKeysChange, validSlotKeys],
+    [accordion, baseOpenSlotKeysSignature, validSlotKeys],
   );
 
   const openSlot = useCallback(
@@ -437,12 +463,17 @@ function PhiCollapsibleLayoutBody({
       },
       [closeSlot, openSlot, receiverAddress, setOpenKeys, toggleSlot, validSlotKeys],
     ),
-    receiverAddress
-      ? {
-          receiver: receiverAddress,
-          channels: ["openSlotKeys", "activeSlotKey", "activeSlotIndex", "slot"],
-        }
-      : null,
+    // Memoized: the bus re-subscribes whenever the filter object changes, and a literal here changed on
+    // every render.
+    useMemo(
+      () => receiverAddress
+        ? {
+            receiver: receiverAddress,
+            channels: ["openSlotKeys", "activeSlotKey", "activeSlotIndex", "slot"],
+          }
+        : null,
+      [receiverAddress],
+    ),
   );
 
   const {

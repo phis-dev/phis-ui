@@ -36,12 +36,28 @@ export const PHI_SURFACE_PRESETS = {
 export type PhiSurfacePresetId = keyof typeof PHI_SURFACE_PRESETS;
 export const PHI_SURFACE_PRESET_IDS = Object.keys(PHI_SURFACE_PRESETS) as PhiSurfacePresetId[];
 
+/*
+ * JSON with its keys in one order at every depth. A Surface that arrived with its keys in another
+ * order -- from storage, or rebuilt by a Control -- is the same look, and compared as written it read
+ * as `custom`.
+ */
+function stringifyCanonically(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stringifyCanonically).join(",")}]`;
+  if (value !== null && typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([, entry]) => entry !== undefined)
+      .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0));
+    return `{${entries.map(([key, entry]) => `${JSON.stringify(key)}:${stringifyCanonically(entry)}`).join(",")}}`;
+  }
+  return JSON.stringify(value) ?? "null";
+}
+
 function readLook(surface: PhiSurface | null | undefined) {
   const read = readPhiSurface(surface ?? null);
   if (!read) return null;
   const { tone: _tone, ...look } = read;
   void _tone;
-  return Object.keys(look).length > 0 ? JSON.stringify(look) : null;
+  return Object.keys(look).length > 0 ? stringifyCanonically(look) : null;
 }
 
 /**

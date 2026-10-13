@@ -38,6 +38,7 @@ import { usePhiWidgetScaffoldPopup } from "./phi-widget-scaffold-popup";
 import { PhiInternalAssetReferencePickerButton } from "./phi-widget-image-tool-button";
 import { PHI_Z_INDEX } from "../../../../theme/phi-tokens";
 import { PhiFlexControl } from "../../../controls/phi-flex-control";
+import { PHI_HTML_LINK_SCHEMES } from "../../../../constants/html-link-schemes";
 import { PhiTypographyControl } from "../../../controls/phi-typography-control";
 import { PhiIcon } from "../../../shell/phi-icon";
 
@@ -57,7 +58,7 @@ function resolveExternalOrFragmentLink(value: string) {
   const formatted = formatUrl(normalized);
   try {
     const url = new URL(formatted);
-    return ["http:", "https:", "mailto:", "sms:", "tel:"].includes(url.protocol)
+    return (PHI_HTML_LINK_SCHEMES as readonly string[]).includes(url.protocol.slice(0, -1))
       ? formatted
       : null;
   } catch {

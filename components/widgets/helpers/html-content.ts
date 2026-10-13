@@ -1,4 +1,5 @@
 import sanitizeHtml from "sanitize-html";
+import { PHI_HTML_LINK_SCHEMES } from "../../../constants/html-link-schemes";
 
 const PHI_HTML_WIDGET_ALLOWED_TAGS = [
   "a",
@@ -29,7 +30,7 @@ const PHI_HTML_WIDGET_ALLOWED_ATTRIBUTES = {
   img: ["src", "alt", "title", "width", "height", "style"],
 };
 
-const PHI_HTML_WIDGET_ALLOWED_SCHEMES = ["http", "https", "mailto", "tel"];
+const PHI_HTML_WIDGET_ALLOWED_SCHEMES: readonly string[] = PHI_HTML_LINK_SCHEMES;
 const PHI_HTML_WIDGET_ALLOWED_COLOR_STYLES = [
   /^#[0-9a-fA-F]{3,8}$/,
   /^rgb(a)?\((?:[^()]|\([^()]*\))*\)$/,

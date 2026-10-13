@@ -14,6 +14,7 @@ import type {
 import { PhiLabeledControl } from "./phi-labeled-control";
 import { PhiSelectControl } from "./phi-select-control";
 import { usePhiImmediatePicker } from "./use-phi-immediate-picker";
+import { readPhiCssLinearGradient } from "../../helpers/css-linear-gradient";
 
 export type PhiColorPickerMode = "single" | "gradient" | "both";
 
@@ -48,72 +49,15 @@ export type PhiColorControlProps = PhiPickerTransactionCallbacks<string | null> 
 
 const PHI_COLOR_PICKER_CONTENT_WIDTH = 234;
 
-function splitLinearGradientStops(input: string) {
-  const stops: string[] = [];
-  let current = "";
-  let depth = 0;
-
-  for (const char of input) {
-    if (char === "(") depth += 1;
-    if (char === ")") depth = Math.max(0, depth - 1);
-    if (char === "," && depth === 0) {
-      const next = current.trim();
-      if (next) stops.push(next);
-      current = "";
-      continue;
-    }
-    current += char;
-  }
-
-  const trailing = current.trim();
-  if (trailing) stops.push(trailing);
-  return stops;
-}
-
+/*
+ * A gradient the picker may edit is one a Background can hold: read by the Background's own reader, so
+ * the picker no longer offers corners or two-position stops that the save then refuses.
+ */
 function parseLinearGradientValue(value: string): LineGradientType | null {
-  const trimmed = value.trim();
-  if (!trimmed.startsWith("linear-gradient(") || !trimmed.endsWith(")")) {
-    return null;
-  }
-
-  const parts = splitLinearGradientStops(trimmed.slice("linear-gradient(".length, -1));
-  const hasDirection = /^(?:to\s+(?:left|right|top|bottom)(?:\s+(?:left|right|top|bottom))?|[-+]?(?:\d+(?:\.\d+)?|\.\d+)(?:deg|grad|rad|turn))$/i.test(parts[0] ?? "");
-  const stopParts = hasDirection ? parts.slice(1) : parts;
-  if (stopParts.length < 2) return null;
-
-  const parsedStops = stopParts.map((part) => {
-    const match = part.match(/^(.+?)(?:\s+(-?(?:\d+(?:\.\d+)?|\.\d+))%)?$/);
-    if (!match) return null;
-    const color = match[1]?.trim();
-    const percent = match[2] == null ? null : Number.parseFloat(match[2]);
-    if (!color || (percent != null && !Number.isFinite(percent))) return null;
-    return { color, percent };
-  });
-  if (parsedStops.some((entry) => entry == null)) return null;
-
-  const colorStops = parsedStops as Array<{ color: string; percent: number | null }>;
-  if (colorStops[0]?.percent == null) colorStops[0]!.percent = 0;
-  if (colorStops[colorStops.length - 1]?.percent == null) {
-    colorStops[colorStops.length - 1]!.percent = 100;
-  }
-
-  let previousPosition = 0;
-  while (previousPosition < colorStops.length - 1) {
-    let nextPosition = previousPosition + 1;
-    while (nextPosition < colorStops.length && colorStops[nextPosition]?.percent == null) {
-      nextPosition += 1;
-    }
-    const startPercent = colorStops[previousPosition]?.percent;
-    const endPercent = colorStops[nextPosition]?.percent;
-    if (startPercent == null || endPercent == null) return null;
-    const intervalCount = nextPosition - previousPosition;
-    for (let index = previousPosition + 1; index < nextPosition; index += 1) {
-      colorStops[index]!.percent = startPercent + ((endPercent - startPercent) * (index - previousPosition)) / intervalCount;
-    }
-    previousPosition = nextPosition;
-  }
-
-  return colorStops as LineGradientType;
+  const reading = readPhiCssLinearGradient(value);
+  return reading?.gradient
+    ? reading.gradient.stops.map((stop) => ({ color: stop.color, percent: stop.percent }))
+    : null;
 }
 
 function resolveAntdColorValue(value: string | null, fallback: string): ColorValueType {

@@ -140,6 +140,10 @@ export function PhiShadowControl({
                 setEditingCustomValue(false);
                 const normalized = customValue.trim();
                 setCustomValue(normalized);
+                // Leaving the field unchanged is no edit; an emptied field is a shadow taken away.
+                if (normalized === displayedCustomValue.trim()) {
+                  return;
+                }
                 onChange?.(normalized.length > 0 ? { kind: "custom", value: normalized } : "none");
               }}
             />

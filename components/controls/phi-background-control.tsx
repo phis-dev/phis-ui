@@ -338,18 +338,20 @@ export function PhiBackgroundControl({
     { value: "pattern", label: labels.overlay.pattern },
     { value: "noise", label: labels.overlay.noise },
   ];
-  const patternOptions = PHI_CORE_BACKGROUND_PATTERN_PROVIDERS.map((provider) => {
+  // Built once per label set: a live layer per pattern on every render was a cost of every drag frame.
+  const patternLabels = labels.overlay.patterns;
+  const patternOptions = useMemo(() => PHI_CORE_BACKGROUND_PATTERN_PROVIDERS.map((provider) => {
     const layer = resolvePhiBackgroundPatternLiveLayer(
       provider.patternKey,
       resolvePhiBackgroundPatternDefaultValues(provider),
       0.55,
     );
     if (!layer) {
-      return { value: provider.patternKey, label: labels.overlay.patterns[provider.labelKey] };
+      return { value: provider.patternKey, label: patternLabels[provider.labelKey] };
     }
     return {
       value: provider.patternKey,
-      label: labels.overlay.patterns[provider.labelKey],
+      label: patternLabels[provider.labelKey],
       preview: {
         kind: "background" as const,
         backgroundColor: "#5f6368",
@@ -359,7 +361,7 @@ export function PhiBackgroundControl({
         backgroundRepeat: layer.images.map((_, index) => layer.repeats?.[index] ?? "repeat").join(", "),
       },
     };
-  });
+  }), [patternLabels]);
   const selectedPatternProvider = currentValue.overlay?.kind === "pattern"
     ? resolvePhiBackgroundPatternProvider(currentValue.overlay.patternKey)
     : null;
@@ -970,6 +972,7 @@ export function PhiBackgroundControl({
         <Typography.Text>{labels.sections.base}</Typography.Text>
         <PhiSegmentedControl
           block
+          disabled={isDisabled}
           value={currentValue.base.kind}
           options={baseKindOptions}
           onChange={(next) => updateBaseKind(next as "none" | "color" | "gradient" | "image")}
@@ -1161,6 +1164,7 @@ export function PhiBackgroundControl({
         <Typography.Text>{labels.sections.overlay}</Typography.Text>
         <PhiSegmentedControl
           block
+          disabled={isDisabled}
           value={currentValue.overlay?.kind ?? "none"}
           options={overlayKindOptions}
           onChange={(next) => updateOverlayKind(next as PhiBackgroundOverlay["kind"] | "none")}
@@ -1342,6 +1346,7 @@ export function PhiBackgroundControl({
             <Typography.Text>{labels.sections.filter}</Typography.Text>
             <PhiSegmentedControl
               block
+              disabled={isDisabled}
               value={activeFilterKind}
               options={filterKindOptions}
               onChange={(next) => updateFilterKind(next as PhiBackgroundFilter | "none")}
