@@ -29,6 +29,7 @@ import { PhiLink } from "../../../../../components/navigation/phi-link";
 import { PhiIcon } from "../../../../../components/shell/phi-icon";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
+import { findPhiSignalListenRoute, resolvePhiSignalListenFilter } from "../../../../../helpers/signal-listen-routes";
 import { emitPhiSignalCapability, usePhiSignalEmitter, usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
 import { usePhiApplicationFeedback } from "../../../../../components/runtime/use-phi-application-feedback";
 import { usePhiTableBinding } from "../../../../../components/tables/client/phi-table-binding";
@@ -72,8 +73,6 @@ import {
 } from "../../../../../types/runtime-condition";
 import {
   isPhiControllerSignalAddress,
-  type PhiSignal,
-  type PhiSignalRoute,
   type PhiSignalValue,
 } from "../../../../../types/signals";
 import { resolvePhiButtonIcon } from "../../../../../components/widgets/client/shared/phi-button-icons";
@@ -280,12 +279,6 @@ function matchesAllConditions(
   controllers: Readonly<Record<string, Record<string, unknown>>>,
 ) {
   return !expression || evaluatePhiRuntimeConditionExpression(expression, { row, controllers }) === "matched";
-}
-
-function matchesListenRoute(route: PhiSignalRoute, signal: PhiSignal) {
-  return route.receiver !== null && route.channel === signal.channel && route.action === signal.action &&
-    route.valueType === signal.valueType &&
-    (route.valueType !== "json" || route.valueSchema === signal.valueSchema);
 }
 
 function resolveTableActions(
@@ -580,8 +573,8 @@ export function PhiTableWidgetClient({
   }, [emitCapability, executeAction, onAction, resolvedQuery, resource]);
 
   usePhiSignalListener(useCallback((signal) => {
-    const route = listenRoutes.find((candidate) => matchesListenRoute(candidate, signal));
-    if (!route || (signal.receiver !== "broadcast" && signal.receiver !== signalIdentity.receiver)) return;
+    const route = findPhiSignalListenRoute(listenRoutes, signal, signalIdentity.receiver);
+    if (!route) return;
     if (route.capabilityId === "searchChange" && typeof signal.value === "string") {
       setSearchDraft(signal.value);
       setQuery((current) => ({ ...current, page: 1, cursor: null, search: signal.value as string }));
@@ -650,18 +643,7 @@ export function PhiTableWidgetClient({
         setConditionControllerStates((current) => ({ ...current, [signal.sender!]: next.state }));
       }
     }
-  }, [activateAction, bindingParams, bulkActions, conditionControllerAddresses, confirm, listenRoutes, reload, resource, rowActions, rows, setQuery, signalIdentity.receiver, toolbarActions, updateBindingParams, updateColumnOrder, updateExpandedRows, updateSelection]), useMemo(() => {
-    if (listenRoutes.length === 0) return null;
-    return {
-      scopes: Array.from(new Set(listenRoutes.map((route) => route.scope))),
-      channels: Array.from(new Set(listenRoutes.map((route) => route.channel))),
-      // Only a route set where every route names a schema can filter by schema: a route that names
-      // none accepts a signal that carries none, and listing the others would drop exactly those.
-      ...(listenRoutes.every((route) => route.valueSchema)
-        ? { valueSchemas: Array.from(new Set(listenRoutes.map((route) => route.valueSchema!))) }
-        : {}),
-    };
-  }, [listenRoutes]), signalIdentity.receiver);
+  }, [activateAction, bindingParams, bulkActions, conditionControllerAddresses, confirm, listenRoutes, reload, resource, rowActions, rows, setQuery, signalIdentity.receiver, toolbarActions, updateBindingParams, updateColumnOrder, updateExpandedRows, updateSelection]), useMemo(() => resolvePhiSignalListenFilter(listenRoutes), [listenRoutes]), signalIdentity.receiver);
 
   useEffect(() => {
     if (conditionControllerAddresses.size > 0) {

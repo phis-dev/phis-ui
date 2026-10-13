@@ -30,6 +30,7 @@ import {
   writePhiDataDragPayload,
 } from "../../../../../components/runtime/client/phi-data-dnd";
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
+import { findPhiSignalListenRoute, resolvePhiSignalListenFilter } from "../../../../../helpers/signal-listen-routes";
 import { emitPhiSignalCapability, usePhiSignalEmitter, usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
 import { type PhiSignalValue } from "../../../../../types/signals";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
@@ -174,11 +175,8 @@ export function PhiTreeWidgetClient({ config, labels }: { config: PhiTreeWidgetC
   }, [binding, emitCapability]);
 
   usePhiSignalListener(useCallback((signal) => {
-    const route = listenRoutes.find((candidate) => candidate.receiver !== null &&
-      candidate.channel === signal.channel && candidate.action === signal.action &&
-      candidate.valueType === signal.valueType &&
-      (candidate.valueType !== "json" || candidate.valueSchema === signal.valueSchema));
-    if (!route || signal.receiver !== "broadcast" && signal.receiver !== signalIdentity.receiver) return;
+    const route = findPhiSignalListenRoute(listenRoutes, signal, signalIdentity.receiver);
+    if (!route) return;
     if (route.capabilityId === "searchChange" && typeof signal.value === "string") {
       setSearchDraft(signal.value);
       binding.setQuery({ ...binding.query, search: signal.value });
@@ -212,18 +210,7 @@ export function PhiTreeWidgetClient({ config, labels }: { config: PhiTreeWidgetC
         );
       }
     }
-  }, [activate, binding, config.features.actions, listenRoutes, setBindingParams, signalIdentity.receiver]), useMemo(() => {
-    if (!listenRoutes.length) return null;
-    return {
-      scopes: Array.from(new Set(listenRoutes.map((route) => route.scope))),
-      channels: Array.from(new Set(listenRoutes.map((route) => route.channel))),
-      // Only a route set where every route names a schema can filter by schema: a route that names
-      // none accepts a signal that carries none, and listing the others would drop exactly those.
-      ...(listenRoutes.every((route) => route.valueSchema)
-        ? { valueSchemas: Array.from(new Set(listenRoutes.map((route) => route.valueSchema!))) }
-        : {}),
-    };
-  }, [listenRoutes]), signalIdentity.receiver);
+  }, [activate, binding, config.features.actions, listenRoutes, setBindingParams, signalIdentity.receiver]), useMemo(() => resolvePhiSignalListenFilter(listenRoutes), [listenRoutes]), signalIdentity.receiver);
 
   useEffect(() => {
     emitCapability("stateChange", {

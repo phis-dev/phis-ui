@@ -14,7 +14,8 @@ import { PHI_MEDIA_UPLOAD_DEFAULT_LABELS } from "../../../../../components/media
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
 import { usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
 import { readPhiTableBindingParamsSignalValue } from "../../../../../types/table-signal-values";
-import type { PhiSignal, PhiSignalRoute } from "../../../../../types/signals";
+import type { PhiSignal } from "../../../../../types/signals";
+import { findPhiSignalListenRoute } from "../../../../../helpers/signal-listen-routes";
 import type { PhiSlotUploadWidgetConfig } from "./config";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
@@ -46,12 +47,6 @@ type SlotFile = {
   byteSize: number;
   contentType: string;
 };
-
-function matchesListenRoute(route: PhiSignalRoute, signal: PhiSignal) {
-  return route.receiver !== null && route.channel === signal.channel && route.action === signal.action &&
-    route.valueType === signal.valueType &&
-    (route.valueType !== "json" || route.valueSchema === signal.valueSchema);
-}
 
 export type PhiSlotUploadWidgetClientProps = {
   config?: PhiSlotUploadWidgetConfig;
@@ -102,10 +97,7 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
   }, []);
 
   usePhiSignalListener(useCallback((signal: PhiSignal) => {
-    const route = listenRoutes.find((candidate: PhiSignalRoute) => matchesListenRoute(candidate, signal));
-    if (!route || (signal.receiver !== "broadcast" && signal.receiver !== signalIdentity.receiver)) {
-      return;
-    }
+    if (!findPhiSignalListenRoute(listenRoutes, signal, signalIdentity.receiver)) return;
     const params = readPhiTableBindingParamsSignalValue(signal.value)?.params;
     const next = params?.[ownerParam];
     const nextOwnerId = next == null ? null : String(next);
