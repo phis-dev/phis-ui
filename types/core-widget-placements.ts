@@ -436,7 +436,6 @@ export type PhiCommandToolbarWidgetPlacement = PhiWidgetPlacementBase & Omit<Phi
 export type PhiThemeModeSwitchSize = "small" | "medium";
 
 export type PhiThemeModeSwitchWidgetPlacement = PhiWidgetPlacementBase & {
-  label?: string;
   controlSize?: PhiThemeModeSwitchSize;
 };
 

@@ -3,7 +3,6 @@ import type { PhiThemeModeSwitchSize } from "../../../../../types/core-widget-pl
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import {
   readRenderableBlockConfig,
-  readString,
   type PhiCmsWidgetConfigBase,
 } from "../../../../../components/widgets/config/parser-primitives";
 import { PHI_COMPACT_CONTROL_PRESENTATION_FIELDS } from "../../../../../components/widgets/config/control-signal-config";
@@ -16,11 +15,10 @@ import { PHI_COMPACT_CONTROL_PRESENTATION_FIELDS } from "../../../../../componen
  * every Widget its tokens -- so there is no `defaultChecked` to fall out of step with what is on
  * screen, and nothing to wire up for the switch to follow a change made elsewhere.
  *
- * What is left to configure is its label and its size. The two positions wear a sun and a moon, not
- * words: they read in every locale, and a translated word the width of the track would only crowd it.
+ * What is left to configure is its size. It is a round button wearing a sun or a moon, not words: they
+ * read in every locale, and its accessible name comes from a Label Set rather than from the placement.
  */
 export type PhiThemeModeSwitchWidgetConfig = PhiCmsWidgetConfigBase & {
-  label?: string;
   controlSize?: PhiThemeModeSwitchSize;
 };
 
@@ -33,7 +31,6 @@ function parsePhiThemeModeSwitchWidgetConfig(
 ): PhiThemeModeSwitchWidgetConfig {
   return {
     ...readRenderableBlockConfig(config),
-    label: readString(config.label),
     controlSize: readSize(config.controlSize) ?? "medium",
   };
 }
@@ -58,7 +55,6 @@ export const PHI_THEME_MODE_SWITCH_WIDGET_DEFINITION = {
    * placement to point the switch somewhere that cannot change anything.
    */
   fields: [
-    { key: "label", type: "string", label: "Label" },
     ...PHI_COMPACT_CONTROL_PRESENTATION_FIELDS,
   ],
   defaultConfig: {},
