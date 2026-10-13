@@ -60,7 +60,6 @@ function createDefaultBuilderState(): PhiDeveloperBuilderState {
     selectedRegionKey: null,
     selectedRootRegionKey: null,
     selectedLayoutAnchor: "center",
-    regionDrafts: {},
     pagePresetDrafts: {},
     pageMetaDrafts: {},
     sidebarKey: "pages",
@@ -263,6 +262,32 @@ export type PhiDeveloperBuilderNodeSelection = {
   selectedLayoutAnchor?: PhiAnchorWidgetPlacement | null;
   openWiring?: boolean;
 };
+
+/**
+ * The selection a Page opens with: the Page itself, nothing inside it chosen, the Inspector closed and
+ * the Pages sidebar showing. One answer for every way a Page is opened -- a click in the tree, a route
+ * change, a new Page -- which used to be four copies that had drifted apart. `chrome` resets the
+ * chrome controls as well, `closePages` folds the Pages panel.
+ */
+export function resetPhiBuilderSelectionToPage(
+  current: PhiDeveloperBuilderState,
+  pageKey: string,
+  options: { chrome?: boolean; closePages?: boolean } = {},
+): PhiDeveloperBuilderState {
+  return {
+    ...current,
+    nodeKey: `page:${pageKey}`,
+    nodeId: null,
+    nodeKind: "page",
+    selectedRegionType: null,
+    selectedRegionKey: null,
+    selectedRootRegionKey: null,
+    inspectorOpen: false,
+    sidebarKey: "pages",
+    ...(options.closePages ? { pagesOpen: false } : {}),
+    ...(options.chrome ? { builderChromeControls: createDefaultBuilderChromeControls() } : {}),
+  };
+}
 
 export function selectPhiDeveloperBuilderNode(
   scopeKey: PhiDeveloperBuilderArea,

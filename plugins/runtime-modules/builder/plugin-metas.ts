@@ -106,12 +106,29 @@ export function resolvePhiBuilderPluginDefaultConfig(
   return cloneDefaultConfig(meta?.resolvedDefaultConfig ?? meta?.defaultConfig);
 }
 
+/**
+ * A Widget's defaults under its draft, group by group. The Widget parses its config deeply, so a draft
+ * that states one field of `features.pagination` keeps the defaults of the others; merged flat, the
+ * stated group replaced the whole default group and a `visibleWhen` on a sibling read nothing. A value
+ * the draft states wins as it is, `null` included; lists are values, not groups.
+ */
+export function mergePhiBuilderConfigDefaults(
+  defaults: Record<string, unknown> | null | undefined,
+  config: Record<string, unknown> | null | undefined,
+): Record<string, unknown> {
+  const merged: Record<string, unknown> = { ...(defaults ?? {}) };
+  for (const [key, value] of Object.entries(config ?? {})) {
+    const fallback = merged[key];
+    merged[key] = isPhiRecord(fallback) && isPhiRecord(value)
+      ? mergePhiBuilderConfigDefaults(fallback as Record<string, unknown>, value as Record<string, unknown>)
+      : value;
+  }
+  return merged;
+}
+
 export function resolvePhiBuilderWidgetDraftConfig<TConfig extends Record<string, unknown>>(
   meta: PhiBuilderWidgetMeta | null | undefined,
   draftConfig: Record<string, unknown> | null | undefined,
 ): Partial<TConfig> {
-  return {
-    ...(resolvePhiBuilderPluginDefaultConfig(meta) ?? {}),
-    ...(draftConfig ?? {}),
-  } as Partial<TConfig>;
+  return mergePhiBuilderConfigDefaults(resolvePhiBuilderPluginDefaultConfig(meta), draftConfig) as Partial<TConfig>;
 }

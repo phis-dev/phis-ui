@@ -633,6 +633,28 @@ function PhiInspectorCollectionFieldControl({
     onChange?.({ [field.key]: nextItems });
   };
 
+  /*
+   * A row's React key, kept apart from its fields. The key field is editable, so keying rows by it
+   * remounted the row on every keystroke and took the focus away. These keys follow the rows through
+   * the moves, removals and additions made here; a list changed from outside to another length starts
+   * over by position.
+   */
+  const [rowKeyState, setRowKeyState] = useState<{ keys: readonly string[]; next: number }>({ keys: [], next: 0 });
+  const rowKeys = rowKeyState.keys.length === items.length
+    ? rowKeyState.keys
+    : items.map((_, index) => `${field.key}:${index}`);
+  const publishRows = (nextItems: readonly Record<string, unknown>[], nextKeys: readonly string[], next = rowKeyState.next) => {
+    setRowKeyState({ keys: nextKeys, next });
+    publish(nextItems);
+  };
+  const swapRows = (left: number, right: number) => {
+    const nextItems = [...items];
+    const nextKeys = [...rowKeys];
+    [nextItems[left], nextItems[right]] = [nextItems[right]!, nextItems[left]!];
+    [nextKeys[left], nextKeys[right]] = [nextKeys[right]!, nextKeys[left]!];
+    publishRows(nextItems, nextKeys);
+  };
+
   /* What the entry is called, read as its fields show it: a locked label is the chosen action's. */
   const readItemLabel = (item: Record<string, unknown>, index: number) => {
     const labelKey = field.itemLabelField ?? field.itemKeyField;
@@ -689,12 +711,11 @@ function PhiInspectorCollectionFieldControl({
         <PhiTypographyControl type="secondary">{field.emptyLabel ?? "No items"}</PhiTypographyControl>
       ) : null}
       {items.map((item, index) => {
-        const itemIdentity = item[field.itemKeyField];
         const itemLabel = readItemLabel(item, index);
 
         return (
           <PhiFlexControl
-            key={typeof itemIdentity === "string" && itemIdentity ? itemIdentity : `${field.key}-${index}`}
+            key={rowKeys[index]}
             vertical
             gap={8}
             style={{
@@ -717,21 +738,13 @@ function PhiInspectorCollectionFieldControl({
                       label="↑"
                       type="text"
                       disabled={disabled || index === 0}
-                      onClick={() => {
-                        const nextItems = [...items];
-                        [nextItems[index - 1], nextItems[index]] = [nextItems[index]!, nextItems[index - 1]!];
-                        publish(nextItems);
-                      }}
+                      onClick={() => swapRows(index - 1, index)}
                     />
                     <PhiButtonControl
                       label="↓"
                       type="text"
                       disabled={disabled || index === items.length - 1}
-                      onClick={() => {
-                        const nextItems = [...items];
-                        [nextItems[index], nextItems[index + 1]] = [nextItems[index + 1]!, nextItems[index]!];
-                        publish(nextItems);
-                      }}
+                      onClick={() => swapRows(index, index + 1)}
                     />
                   </>
                 ) : null}
@@ -742,7 +755,10 @@ function PhiInspectorCollectionFieldControl({
                   type="text"
                   danger
                   disabled={disabled || items.length <= minItems}
-                  onClick={() => publish(items.filter((_, itemIndex) => itemIndex !== index))}
+                  onClick={() => publishRows(
+                    items.filter((_, itemIndex) => itemIndex !== index),
+                    rowKeys.filter((_, keyIndex) => keyIndex !== index),
+                  )}
                 />
               </PhiFlexControl>
             </PhiFlexControl>
@@ -754,7 +770,11 @@ function PhiInspectorCollectionFieldControl({
         label={field.addLabel ?? "Add item"}
         icon={<PhiIcon name="plus" />}
         disabled={disabled || items.length >= maxItems}
-        onClick={() => publish([...items, createPhiInspectorCollectionItem(field, items)])}
+        onClick={() => publishRows(
+          [...items, createPhiInspectorCollectionItem(field, items)],
+          [...rowKeys, `${field.key}:new:${rowKeyState.next}`],
+          rowKeyState.next + 1,
+        )}
       />
     </PhiFlexControl>
   );

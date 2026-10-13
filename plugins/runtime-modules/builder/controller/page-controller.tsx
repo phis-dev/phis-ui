@@ -37,8 +37,8 @@ import {
 } from "../../../../helpers/cms-scope-search-params";
 import {
   builderWorkspaceStore,
-  createDefaultBuilderChromeControls,
   mergePhiDeveloperRegionDrafts,
+  resetPhiBuilderSelectionToPage,
   getPhiDeveloperBuilderStateSnapshot,
 } from "../developer-workspace-store";
 import type {
@@ -151,19 +151,8 @@ export function usePhiBuilderPageController({
       area: effectiveArea,
       pageKey,
     }));
-    builderWorkspaceStore.patch(defaultArea, (current) => ({
-      ...current,
-      nodeKey: `page:${pageKey}`,
-      nodeId: null,
-      nodeKind: "page",
-      selectedRegionType: null,
-      selectedRegionKey: null,
-      selectedRootRegionKey: null,
-      inspectorOpen: false,
-      sidebarKey: "pages",
-      pagesOpen: false,
-      builderChromeControls: createDefaultBuilderChromeControls(),
-    }));
+    builderWorkspaceStore.patch(defaultArea, (current) =>
+      resetPhiBuilderSelectionToPage(current, pageKey, { chrome: true, closePages: true }));
 
     if (typeof pathname === "string") {
       const nextSearchParams = new URLSearchParams(searchParams.toString());
@@ -229,7 +218,11 @@ export function usePhiBuilderPageController({
   }, [emitCapability, pendingPageMetaInitialValues]);
 
   async function submitPageMetaDialog(values: Record<string, unknown>, correlationId: string) {
-    const title = typeof values.title === "string" ? values.title.trim() || "New Page" : "New Page";
+    const enteredTitle = typeof values.title === "string" ? values.title.trim() : "";
+    // Only a new Page needs a name to start from; an emptied title on an existing one is no title of its
+    // own, not a Page renamed to "New Page".
+    const title = enteredTitle || "New Page";
+    const editedTitle = enteredTitle || null;
     const description = typeof values.description === "string" ? values.description.trim() : "";
     const requestedPath = normalizePhiBuilderCmsCatalogPath(
       normalizePhiCascaderValue(typeof values.path === "string" ? values.path : title, { normalize: "path" }),
@@ -288,7 +281,7 @@ export function usePhiBuilderPageController({
           ...current.pageMetaDrafts,
           [pageMetaDraftKey]: {
             ...(current.pageMetaDrafts[pageMetaDraftKey] ?? {}),
-            title,
+            title: editedTitle,
             description,
             ...indexPatch,
           },
@@ -302,7 +295,7 @@ export function usePhiBuilderPageController({
           pageKey: effectivePageKey,
         }),
         {
-          action: { key: "changePageMeta", subject: title?.trim() || effectivePageKey },
+          action: { key: "changePageMeta", subject: editedTitle ?? effectivePageKey },
           before: {
             kind: "workspace",
             state: historyBefore,
@@ -315,7 +308,7 @@ export function usePhiBuilderPageController({
           },
         },
       );
-      emitPageTitleInputValue(effectivePageKey, title);
+      emitPageTitleInputValue(effectivePageKey, editedTitle);
       if (pathResult) {
         await reloadPersistedPageCatalog(effectiveArea);
         const refreshed = getPhiDeveloperBuilderStateSnapshot(defaultArea);

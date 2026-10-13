@@ -193,15 +193,20 @@ function insertNavigationItem(
   item: PhiBuilderNavigationItem,
 ): PhiBuilderNavigationItem[] {
   if (parentId) {
+    // A parent that is gone would leave the tree as it was, and a moved item -- already taken out -- lost.
+    if (!findNavigationItem(items, parentId)) {
+      throw new Error(`Navigation parent "${parentId}" does not exist.`);
+    }
     return updateNavigationItem(items, parentId, (parent) => {
       if (parent.kind !== "container") throw new Error("Navigation target cannot contain children.");
       return { ...parent, children: insertNavigationItem(parent.children, null, beforeId, afterId, item) };
     });
   }
+  // The Table rule (`movePhiTableBindingRows`): before the one it lands before, else just after the other.
   const next = [...items];
-  const anchorId = beforeId ?? afterId;
-  const anchorIndex = anchorId ? next.findIndex((candidate) => candidate.id === anchorId) : -1;
-  const index = anchorIndex < 0 ? next.length : anchorIndex + (afterId ? 1 : 0);
+  const beforeIndex = beforeId ? next.findIndex((candidate) => candidate.id === beforeId) : -1;
+  const afterIndex = afterId ? next.findIndex((candidate) => candidate.id === afterId) : -1;
+  const index = beforeIndex >= 0 ? beforeIndex : afterIndex >= 0 ? afterIndex + 1 : next.length;
   next.splice(index, 0, item);
   return next;
 }

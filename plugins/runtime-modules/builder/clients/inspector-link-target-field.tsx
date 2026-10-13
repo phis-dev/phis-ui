@@ -91,6 +91,32 @@ export function PhiInspectorLinkTargetFieldControl({
    * complete: it is part of the question. Until there is a target to carry it, its answer waits here.
    */
   const [pendingNewTab, setPendingNewTab] = useState(false);
+
+  /*
+   * The value can change under this field -- an undo, or the Inspector moving to another Widget of the
+   * same kind without remounting it. What this field wrote itself is already on screen; anything else
+   * replaces the mode and the address being typed, or they would go on showing, and writing into, the
+   * value before.
+   */
+  const valueKey = JSON.stringify(target ?? null);
+  const [syncedValueKey, setSyncedValueKey] = useState(valueKey);
+  const [emittedValueKey, setEmittedValueKey] = useState<string | null>(null);
+  if (valueKey !== syncedValueKey) {
+    setSyncedValueKey(valueKey);
+    if (valueKey === emittedValueKey) {
+      // This field's own write came back; it is consumed, so a later return to the same value is news.
+      setEmittedValueKey(null);
+    } else {
+      setMode(target?.kind ?? "none");
+      setDraftHref(target?.kind === "external" ? target.href : "");
+      setPendingNewTab(false);
+    }
+  }
+  const emit = (next: PhiLinkTarget | undefined, none?: boolean) => {
+    setEmittedValueKey(JSON.stringify(next ?? null));
+    onChange?.(next, none);
+  };
+
   const newTab = target ? target.newTab === true : pendingNewTab;
   const withNewTab = <TTarget extends PhiLinkTarget>(next: TTarget) =>
     (newTab ? { ...next, newTab: true } : next);
@@ -99,7 +125,7 @@ export function PhiInspectorLinkTargetFieldControl({
     setMode(nextMode);
     setDraftHref("");
     setPendingNewTab(false);
-    onChange?.(undefined, nextMode === "none");
+    emit(undefined, nextMode === "none");
   };
 
   return (
@@ -124,7 +150,7 @@ export function PhiInspectorLinkTargetFieldControl({
           disabled={disabled || !onChange}
           allowClear
           style={{ width: "100%" }}
-          onChange={(nextValue) => onChange?.(nextValue
+          onChange={(nextValue) => emit(nextValue
             ? { kind: "page", reference: nextValue as PhiPageReference }
             : undefined)}
         />
@@ -140,7 +166,7 @@ export function PhiInspectorLinkTargetFieldControl({
           onChange={(nextValue) => {
             const href = nextValue ?? "";
             setDraftHref(href);
-            onChange?.(isPhiStorableExternalHref(href)
+            emit(isPhiStorableExternalHref(href)
               ? withNewTab({ kind: "external", href: href.trim() })
               : undefined);
           }}
@@ -163,7 +189,7 @@ export function PhiInspectorLinkTargetFieldControl({
                   setPendingNewTab(checked);
                   return;
                 }
-                onChange?.(checked ? { ...target, newTab: true } : { ...target, newTab: undefined });
+                emit(checked ? { ...target, newTab: true } : { ...target, newTab: undefined });
               }}
             />
           </PhiFlexControl>

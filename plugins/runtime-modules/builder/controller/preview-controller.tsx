@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useState } from "react";
+import { startTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { getPhiBuilderDefaultRegionDraft } from "../region-defaults";
@@ -16,7 +16,6 @@ import {
 import { getPhiDeveloperRegionDraftsSnapshot } from "../developer-workspace-store";
 import type {
   PhiDeveloperBuilderArea,
-  PhiDeveloperBuilderMode,
   PhiDeveloperBuilderRegionDraft,
   PhiDeveloperBuilderWorkspaceState,
 } from "../developer-workspace-types";
@@ -47,26 +46,18 @@ function materializePhiBuilderPreviewRegionDrafts(
 }
 
 export function usePhiDeveloperBuilderPreviewModeController(
-  state: Pick<PhiDeveloperBuilderWorkspaceState, "area" | "pageKey" | "builderMode" | "runtimeModuleIdsByArea">,
+  state: Pick<PhiDeveloperBuilderWorkspaceState, "area" | "pageKey" | "runtimeModuleIdsByArea">,
 ) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [pendingMode, setPendingMode] = useState<PhiDeveloperBuilderMode | null>(null);
-  const effectiveBuilderMode = pendingMode ?? state.builderMode;
-  const isPendingPreviewTransition = pendingMode === "preview" && state.builderMode !== "preview";
-
   const enterEditor = () => {
-    setPendingMode("editor");
-
     if (typeof pathname !== "string") {
-      setPendingMode(null);
       return;
     }
 
     const nextSearchParams = new URLSearchParams(searchParams.toString());
     if (!nextSearchParams.has(PHI_BUILDER_PREVIEW_SEARCH_PARAM)) {
-      setPendingMode(null);
       return;
     }
 
@@ -82,38 +73,29 @@ export function usePhiDeveloperBuilderPreviewModeController(
       return;
     }
 
-    setPendingMode("preview");
+    const materializedRegionDrafts = materializePhiBuilderPreviewRegionDrafts(
+      state.area,
+      state.pageKey,
+      getPhiDeveloperRegionDraftsSnapshot(),
+    );
+    const snapshot = {
+      version: 2,
+      area: state.area,
+      pageKey: state.pageKey,
+      runtimeModuleIds: state.runtimeModuleIdsByArea[state.area] ?? [],
+      regionDrafts: materializedRegionDrafts,
+    } as const;
+    const previewId = await savePhiBuilderPreviewSnapshotRequest(snapshot);
+    const nextSearchParams = new URLSearchParams(searchParams.toString());
+    nextSearchParams.set(PHI_BUILDER_PREVIEW_SEARCH_PARAM, previewId);
+    const nextHref = `${pathname}?${nextSearchParams.toString()}`;
 
-    try {
-      const materializedRegionDrafts = materializePhiBuilderPreviewRegionDrafts(
-        state.area,
-        state.pageKey,
-        getPhiDeveloperRegionDraftsSnapshot(),
-      );
-      const snapshot = {
-        version: 2,
-        area: state.area,
-        pageKey: state.pageKey,
-        runtimeModuleIds: state.runtimeModuleIdsByArea[state.area] ?? [],
-        regionDrafts: materializedRegionDrafts,
-      } as const;
-      const previewId = await savePhiBuilderPreviewSnapshotRequest(snapshot);
-      const nextSearchParams = new URLSearchParams(searchParams.toString());
-      nextSearchParams.set(PHI_BUILDER_PREVIEW_SEARCH_PARAM, previewId);
-      const nextHref = `${pathname}?${nextSearchParams.toString()}`;
-
-      startTransition(() => {
-        router.replace(nextHref, { scroll: false });
-      });
-    } catch (error) {
-      setPendingMode(null);
-      throw error;
-    }
+    startTransition(() => {
+      router.replace(nextHref, { scroll: false });
+    });
   };
 
   return {
-    effectiveBuilderMode,
-    isPendingPreviewTransition,
     enterEditor,
     enterPreview,
   };

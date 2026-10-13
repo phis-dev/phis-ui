@@ -78,6 +78,7 @@ import {
   createDefaultBuilderChromeControls,
   normalizePhiDeveloperBuilderArea as normalizeBuilderArea,
   previewPhiDeveloperBuilderEffects,
+  resetPhiBuilderSelectionToPage,
   selectPhiDeveloperBuilderNode,
   usePhiDeveloperRegionDraft,
   getPhiDeveloperBuilderStateSnapshot,
@@ -407,7 +408,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     pageMetaLabels,
     state,
   });
-  const { captureHistoryHead, reportSaved } = usePhiBuilderDraftStatusController({
+  const { captureHistoryHead, reportSaved, hasUnsavedChanges } = usePhiBuilderDraftStatusController({
     commandWorkspace,
     effectiveArea,
     effectiveNavKey,
@@ -421,6 +422,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     effectivePageKey,
     pathname,
     captureHistoryHead,
+    hasUnsavedChanges,
     reportSaved,
     shellPresetDraftsByArea,
     state,
@@ -591,9 +593,10 @@ function usePhiDeveloperBuilderWorkspaceController(
    * is on the screen -- the arrangement the Page metadata dialog fills itself with.
    */
   const [areaSettingsOpenCount, setAreaSettingsOpenCount] = useState(0);
-  const areaMeta = readPhiBuilderEffectiveAreaMeta(state, state.area);
-  const areaRootRoute = readPhiBuilderEffectiveAreaRootRoute(state, state.area);
-  const seoAnswerable = state.area === "public";
+  // The Area on screen, as every other path here reads it; `state.area` lags a scope change by a render.
+  const areaMeta = readPhiBuilderEffectiveAreaMeta(state, effectiveArea);
+  const areaRootRoute = readPhiBuilderEffectiveAreaRootRoute(state, effectiveArea);
+  const seoAnswerable = effectiveArea === "public";
   /*
    * Only Public is ever asked: every other Area is authenticated and is not indexed whatever is
    * stored, so its switches stand at what is actually the case and are shown as unanswerable rather
@@ -1108,18 +1111,8 @@ function usePhiDeveloperBuilderWorkspaceController(
       area: nextArea,
       pageKey: nextPageKey,
     }));
-    builderWorkspaceStore.patch(defaultArea, (current) => ({
-      ...current,
-      nodeKey: `page:${nextPageKey}`,
-      nodeId: null,
-      nodeKind: "page",
-      selectedRegionType: null,
-      selectedRegionKey: null,
-      selectedRootRegionKey: null,
-      inspectorOpen: false,
-      sidebarKey: "pages",
-      builderChromeControls: createDefaultBuilderChromeControls(),
-    }));
+    builderWorkspaceStore.patch(defaultArea, (current) =>
+      resetPhiBuilderSelectionToPage(current, nextPageKey, { chrome: true }));
   }, [
     defaultArea,
     isBuilderWorkspace,
@@ -1227,17 +1220,8 @@ function usePhiDeveloperBuilderWorkspaceController(
             area: nextArea,
             pageKey: nextPageKey,
           }));
-          builderWorkspaceStore.patch(defaultArea, (current) => ({
-            ...current,
-            nodeKey: `page:${nextPageKey}`,
-            nodeId: null,
-            nodeKind: "page",
-            selectedRegionType: null,
-            selectedRegionKey: null,
-            selectedRootRegionKey: null,
-            inspectorOpen: false,
-            sidebarKey: "pages",
-          }));
+          builderWorkspaceStore.patch(defaultArea, (current) =>
+            resetPhiBuilderSelectionToPage(current, nextPageKey));
         }
         return;
       }
@@ -1421,19 +1405,8 @@ function usePhiDeveloperBuilderWorkspaceController(
           ...current,
           pageKey: nextPageKey,
         }));
-        builderWorkspaceStore.patch(defaultArea, (current) => ({
-          ...current,
-          nodeKey: `page:${nextPageKey}`,
-          nodeId: null,
-          nodeKind: "page",
-          selectedRegionType: null,
-          selectedRegionKey: null,
-          selectedRootRegionKey: null,
-          inspectorOpen: false,
-          sidebarKey: "pages",
-          pagesOpen: false,
-          builderChromeControls: createDefaultBuilderChromeControls(),
-        }));
+        builderWorkspaceStore.patch(defaultArea, (current) =>
+          resetPhiBuilderSelectionToPage(current, nextPageKey, { chrome: true, closePages: true }));
         return;
       }
 
@@ -1627,7 +1600,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         const values = submitted.values;
         const historyContext = createPhiBuilderHistoryContext({
           workspace: "structure",
-          area: state.area,
+          area: effectiveArea,
         });
         const rootRouteAnswer = typeof values.areaRootRoute === "string"
           ? values.areaRootRoute
@@ -1648,7 +1621,7 @@ function usePhiDeveloperBuilderWorkspaceController(
          * fact into an Area that never said it.
          */
         applyPhiBuilderAreaSettingsAnswer({
-          area: state.area,
+          area: effectiveArea,
           historyContext,
           rootRoute: rootRouteAnswer == null
             ? undefined
@@ -1660,7 +1633,7 @@ function usePhiDeveloperBuilderWorkspaceController(
           meta: {
             titleTemplate: values.areaTitleTemplate,
             defaultTitle: values.areaDefaultTitle,
-            ...(state.area === "public"
+            ...(effectiveArea === "public"
               ? { index: values.areaMetaIndex !== false, sitemap: values.areaMetaSitemap !== false }
               : {}),
           },

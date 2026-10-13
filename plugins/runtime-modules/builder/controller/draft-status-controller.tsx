@@ -6,7 +6,10 @@ import { PHI_SIGNAL_VALUE_SCHEMAS, type PhiSignalAddress } from "../../../../typ
 import type { PhiDraftStatusSignalValue } from "../../../../types/draft-status";
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../components/runtime/runtime-signal-bus";
 import { resolvePhiBuilderCmsStoragePath } from "../../../../helpers/cms-paths";
-import { resolvePhiBuilderActivePageCatalog } from "../../../../helpers/cms-page-catalog";
+import {
+  resolvePhiBuilderActivePageCatalog,
+  resolvePhiBuilderPagePresetSource,
+} from "../../../../helpers/cms-page-catalog";
 import { createPhiBuilderControllerAddress } from "../controller/address";
 import { createPhiBuilderHistoryContext, phiBuilderHistory } from "../history";
 import type {
@@ -63,8 +66,16 @@ function resolveTarget(
       state.persistedPageCatalogByArea,
     );
     const storagePath = resolvePhiBuilderCmsStoragePath(area, pageKey, pages);
+    /*
+     * Addressed the way a save addresses it: a Module Page by its preset identity, which survives a
+     * changed path. Asking by path found nothing after a move and reported the Page as published.
+     */
+    const presetSource = resolvePhiBuilderPagePresetSource(pageKey, pages);
+    const address: Record<string, string> = presetSource
+      ? { area, ownerModuleId: presetSource.ownerModuleId, presetKey: presetSource.presetKey }
+      : { area, path: storagePath };
     return {
-      url: `/api/site/cms/page/draft?${new URLSearchParams({ area, path: storagePath }).toString()}`,
+      url: `/api/site/cms/page/draft?${new URLSearchParams(address).toString()}`,
       subject: area === "public" ? storagePath : `${area}${storagePath}`,
       historyContext: createPhiBuilderHistoryContext({ workspace, area, pageKey }),
     };
@@ -267,5 +278,8 @@ export function usePhiBuilderDraftStatusController({
     });
   }
 
-  return { captureHistoryHead, reportSaved };
+  /** Whether what is on screen is in no stored revision -- what a preview of the saved draft leaves out. */
+  const hasUnsavedChanges = current?.status === "unsaved";
+
+  return { captureHistoryHead, reportSaved, hasUnsavedChanges };
 }

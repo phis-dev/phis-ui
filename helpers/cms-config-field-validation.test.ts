@@ -92,3 +92,18 @@ describe("what it declines to judge", () => {
     expect(findPhiCmsConfigViolations([padding], { padding: { top: "nonsense" } })).toEqual([]);
   });
 });
+
+describe("where a field stands and what a write changes", () => {
+  it("judges a field whose key is a dot path", () => {
+    const nested: PhiCmsConfigField = { ...CHOICE, key: "presentation.transition" };
+    expect(findPhiCmsConfigViolations([nested], { presentation: { transition: "flip" } })).toHaveLength(1);
+    expect(findPhiCmsConfigViolations([nested], { presentation: {} })).toEqual([]);
+  });
+
+  it("does not let a stale stored value refuse an edit of another field", () => {
+    const previous = { transition: "flip", durationMs: 200 };
+    expect(findPhiCmsConfigViolations([CHOICE, NUMBER], { ...previous, durationMs: 300 }, previous)).toEqual([]);
+    expect(findPhiCmsConfigViolations([CHOICE, NUMBER], { ...previous, transition: "spin" }, previous))
+      .toHaveLength(1);
+  });
+});

@@ -140,7 +140,6 @@ export type PhiDeveloperBuilderState = {
   selectedRegionKey: string | null;
   selectedRootRegionKey: string | null;
   selectedLayoutAnchor: PhiAnchorWidgetPlacement;
-  regionDrafts: Record<string, PhiDeveloperBuilderRegionDraft>;
   pagePresetDrafts: Record<string, PhiDeveloperBuilderRegionDraft>;
   pageMetaDrafts: Record<string, PhiDeveloperBuilderPageMetaDraft>;
   deletedPageDrafts: Record<string, boolean>;

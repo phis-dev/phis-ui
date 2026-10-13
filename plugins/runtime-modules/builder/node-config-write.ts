@@ -152,7 +152,7 @@ export function writePhiBuilderNode({
    * per Area, and a node from elsewhere is a question about scope, not about this value.
    */
   if (meta?.fields) {
-    assertPhiCmsConfigFields(meta.fields, nextConfig, meta.title ?? node.widgetType);
+    assertPhiCmsConfigFields(meta.fields, nextConfig, meta.title ?? node.widgetType, currentConfig);
   }
   const patchedNode = patchNode ? patchNode({ ...node, config: nextConfig }) : { ...node, config: nextConfig };
   const nextDraft = { ...draft, rootNode: patchPhiBuilderTreeNode(rootNode, nodeId, () => patchedNode) };

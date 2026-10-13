@@ -240,8 +240,12 @@ function usePhiBuilderInspectorSectionState(signalRoutes?: PhiSignalRouteSet) {
     [area, pageKey, regionDrafts],
   );
   const emitInspectorControllerAction = (value: Record<string, unknown>) => {
-    const routes = signalRoutes?.emits?.filter((route) => route.capabilityId === "change") ?? [];
-    if (routes.length === 0) return;
+    const routes = (signalRoutes?.emits ?? [])
+      .filter((route) => route.capabilityId === "change" && route.receiver != null);
+    // An Inspector wired to nobody would take every edit and drop it; that is a broken preset, said here.
+    if (routes.length === 0) {
+      throw new Error("Builder Inspector has no `change` route with a receiver; its edits would reach nobody.");
+    }
     for (const route of routes) {
       if (route.receiver == null) continue;
       dispatchSignal({ scope: route.scope, channel: route.channel, action: route.action, value, valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.builderInspector, receiver: route.receiver, timestamp: Date.now() });

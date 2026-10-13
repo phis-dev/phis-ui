@@ -86,13 +86,39 @@ export function readPhiCmsConfigFieldViolation(
   }
 }
 
+/*
+ * A field's value where its key is a dot path (`presentation.controlSize`), and whether the config states
+ * it at all. Reading only top-level keys left every nested field unchecked.
+ */
+function readStatedConfigValue(config: Record<string, unknown>, key: string): { stated: boolean; value: unknown } {
+  let current: unknown = config;
+  for (const segment of key.split(".")) {
+    if (current === null || typeof current !== "object" || !Object.prototype.hasOwnProperty.call(current, segment)) {
+      return { stated: false, value: undefined };
+    }
+    current = (current as Record<string, unknown>)[segment];
+  }
+  return { stated: true, value: current };
+}
+
+/**
+ * The fields `config` gets wrong. With `previous`, only the fields this write changes are judged: a
+ * value stored before an option was withdrawn would otherwise refuse every later edit of the node,
+ * including the one that corrects it.
+ */
 export function findPhiCmsConfigViolations(
   fields: readonly PhiCmsConfigField[],
   config: Record<string, unknown>,
+  previous?: Record<string, unknown>,
 ): string[] {
   return fields.flatMap((field) => {
-    if (!Object.prototype.hasOwnProperty.call(config, field.key)) return [];
-    const violation = readPhiCmsConfigFieldViolation(field, config[field.key]);
+    const next = readStatedConfigValue(config, field.key);
+    if (!next.stated) return [];
+    if (previous) {
+      const before = readStatedConfigValue(previous, field.key);
+      if (before.stated && JSON.stringify(before.value) === JSON.stringify(next.value)) return [];
+    }
+    const violation = readPhiCmsConfigFieldViolation(field, next.value);
     return violation ? [violation] : [];
   });
 }
@@ -108,8 +134,9 @@ export function assertPhiCmsConfigFields(
   fields: readonly PhiCmsConfigField[],
   config: Record<string, unknown>,
   label: string,
+  previous?: Record<string, unknown>,
 ): void {
-  const violations = findPhiCmsConfigViolations(fields, config);
+  const violations = findPhiCmsConfigViolations(fields, config, previous);
   if (violations.length > 0) {
     throw new Error(`Invalid ${label} configuration. ${violations.join(" ")}`);
   }

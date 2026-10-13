@@ -552,7 +552,6 @@ export function PhiStructureRegionScaffold({
       "public",
       (state) => state.nodeKind === "region" && state.selectedRegionKey === config.regionKey,
     ),
-    regionDrafts: usePhiDeveloperBuilderStateValue("public", (state) => state.regionDrafts),
   };
   const builderModuleMetas = usePhiBuilderModuleMetas(builderState.area);
   const layoutMetasByType = useMemo(
@@ -1882,7 +1881,8 @@ export function PhiStructureRegionScaffold({
       } satisfies CSSProperties}
       onClick={isPreviewMode ? undefined : selectRegion}
       onKeyDown={(event) => {
-        if (!config.allowSelect || isPreviewMode) {
+        // Only the region's own focus: Enter on a button inside it is that button's.
+        if (!config.allowSelect || isPreviewMode || event.target !== event.currentTarget) {
           return;
         }
 
@@ -1977,7 +1977,7 @@ export function PhiStructureRegionScaffold({
               openSlot();
             }}
             onKeyDown={(event) => {
-              if (!config.allowInsert || hasRootNode) {
+              if (!config.allowInsert || hasRootNode || event.target !== event.currentTarget) {
                 return;
               }
 

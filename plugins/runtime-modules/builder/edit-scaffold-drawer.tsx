@@ -79,7 +79,8 @@ export function PhiEditScaffoldDrawer({
         onClick?.();
       }}
       onKeyDown={(event) => {
-        if (event.key !== "Enter" && event.key !== " ") {
+        // The key belongs to the control that has focus; a button inside the scaffold answers it itself.
+        if ((event.key !== "Enter" && event.key !== " ") || event.target !== event.currentTarget) {
           return;
         }
 

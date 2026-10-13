@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef } from "react";
 
 import { usePhiConfirmDialog } from "../../../../components/controls/phi-confirm-dialog";
 import {
@@ -97,6 +97,7 @@ export function usePhiBuilderDraftCommandController({
   pathname,
   captureHistoryHead,
   reportSaved,
+  hasUnsavedChanges,
   shellPresetDraftsByArea,
   state,
   historyLabels,
@@ -114,6 +115,8 @@ export function usePhiBuilderDraftCommandController({
     revisionId: number | null,
     savedAt: PhiBuilderSavedHistoryHead,
   ) => void;
+  /** Whether the workspace on screen holds edits no stored revision has. */
+  hasUnsavedChanges: boolean;
   shellPresetDraftsByArea: Record<string, Record<string, PhiDeveloperBuilderRegionDraft>>;
   state: PhiDeveloperBuilderWorkspaceState;
   /** What an undo or redo says it moved, in the author's language. */
@@ -128,7 +131,14 @@ export function usePhiBuilderDraftCommandController({
   const { confirm, confirmDialog } = usePhiConfirmDialog();
   const { showMessage } = usePhiApplicationFeedback();
   const builderModuleMetas = usePhiBuilderModuleMetas(effectiveArea);
-  const [activeDraftAction, setActiveDraftAction] = useState<PhiDeveloperBuilderToolbarCommand | null>(null);
+  /*
+   * The draft action in progress. A ref, not state: two commands arriving in one tick both read the
+   * state from before either set it, and both ran -- the second one into a 409.
+   */
+  const activeDraftActionRef = useRef<PhiDeveloperBuilderToolbarCommand | null>(null);
+  const setActiveDraftAction = (next: PhiDeveloperBuilderToolbarCommand | null) => {
+    activeDraftActionRef.current = next;
+  };
   const currentPageTree = resolvePhiBuilderActivePageCatalog(
     effectiveArea,
     state.modulePresetPagesByArea,
@@ -231,20 +241,19 @@ export function usePhiBuilderDraftCommandController({
     if (local.length > 0) {
       return local;
     }
-    const areas: PhiDeveloperBuilderArea[] = [];
-    for (const [area, source] of Object.entries(state.areaPresetSourcesByArea)) {
-      if (!source) {
-        continue;
-      }
-      const allocation = await getPhiDeveloperBuilderModulesDraftAllocation({
-        area: area as PhiDeveloperBuilderArea,
-        areaPresetSource: source,
-      }).catch(() => null);
-      if (allocation) {
-        areas.push(area as PhiDeveloperBuilderArea);
-      }
-    }
-    return areas;
+    /*
+     * Asked side by side, and a failed read is the command's failure: taking it for "no draft" told the
+     * author there was nothing to publish while a draft stood.
+     */
+    const asked = await Promise.all(
+      Object.entries(state.areaPresetSourcesByArea).flatMap(([area, source]) => source
+        ? [getPhiDeveloperBuilderModulesDraftAllocation({
+            area: area as PhiDeveloperBuilderArea,
+            areaPresetSource: source,
+          }).then((allocation) => allocation ? area as PhiDeveloperBuilderArea : null)]
+        : []),
+    );
+    return asked.filter((area): area is PhiDeveloperBuilderArea => area !== null);
   }
 
   async function runSaveCommand(
@@ -433,18 +442,22 @@ export function usePhiBuilderDraftCommandController({
       area: effectiveArea,
       pageKey: effectivePageKey,
     };
+    /*
+     * A preview is of the saved draft or of nothing. Opening the live page when there was none -- or when
+     * the read failed -- let the author take what is published for their draft; the failure is the
+     * command's error now. What the saved draft leaves out is said before it opens.
+     */
     const result = await previewPhiDeveloperBuilderDraft(state, workspaceKind, {
       pathname,
       scope: previewScope,
-    }).catch(() => null);
-    const href = result?.previewHref ??
-      buildPhiBuilderLiveHref(
-        previewScope.area,
-        previewScope.pageKey,
-        currentPageTree,
-        workspaceKind,
-      );
-    window.open(href, "_blank", "noopener,noreferrer");
+    });
+    if (hasUnsavedChanges) {
+      showMessage({
+        level: "warning",
+        content: "The preview shows the last saved draft. Save to include your latest changes.",
+      });
+    }
+    window.open(result.previewHref, "_blank", "noopener,noreferrer");
   }
 
   /**
@@ -504,7 +517,9 @@ export function usePhiBuilderDraftCommandController({
    * once there is no draft left to describe something in between.
    */
   function confirmResetModules() {
-    void confirmResetModulesForAreas();
+    void confirmResetModulesForAreas().catch((error: unknown) => {
+      showMessage({ level: "error", content: error instanceof Error ? error.message : "Module drafts could not be read." });
+    });
   }
 
   async function confirmResetModulesForAreas() {
@@ -520,6 +535,9 @@ export function usePhiBuilderDraftCommandController({
       danger: true,
       cancelLabel: "Cancel",
       onConfirm: async () => {
+        if (activeDraftActionRef.current != null) {
+          return;
+        }
         setActiveDraftAction("reset");
         try {
           for (const area of areas) {
@@ -571,6 +589,9 @@ export function usePhiBuilderDraftCommandController({
       danger: true,
       cancelLabel: "Cancel",
       onConfirm: async () => {
+        if (activeDraftActionRef.current != null) {
+          return;
+        }
         setActiveDraftAction("reset");
         try {
           if (!hasPreset) {
@@ -687,6 +708,9 @@ export function usePhiBuilderDraftCommandController({
       danger: true,
       cancelLabel: "Cancel",
       onConfirm: async () => {
+        if (activeDraftActionRef.current != null) {
+          return;
+        }
         setActiveDraftAction("reset");
         try {
           await deletePhiBuilderNavigationDraft(effectiveNavKey);
@@ -745,7 +769,7 @@ export function usePhiBuilderDraftCommandController({
       return;
     }
 
-    if (activeDraftAction != null) {
+    if (activeDraftActionRef.current != null) {
       return;
     }
 

@@ -25,6 +25,7 @@ import type { PhiVideoProviderDescriptor } from "../../../../types/video";
 import { mergeRenderableBlockDefaults } from "../../../../helpers/renderable-block-serialization";
 import type { PhiBuilderWidgetMeta } from "../../../../types/builder";
 import {
+  mergePhiBuilderConfigDefaults,
   resolvePhiBuilderPluginDefaultConfig,
   resolvePhiBuilderWidgetDraftConfig,
 } from "../plugin-metas";
@@ -121,10 +122,10 @@ export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
     currentWidgetConfig as Partial<PhiRenderableBlockBase> | null | undefined,
   );
   const widgetDefaultConfigRecord = resolvePhiBuilderPluginDefaultConfig(selectedStructureWidgetMeta);
-  const currentWidgetSettingsConfigRecord = {
-    ...(widgetDefaultConfigRecord ?? {}),
-    ...((currentDraft?.config as Record<string, unknown> | null | undefined) ?? {}),
-  };
+  const currentWidgetSettingsConfigRecord = mergePhiBuilderConfigDefaults(
+    widgetDefaultConfigRecord,
+    currentDraft?.config as Record<string, unknown> | null | undefined,
+  );
   const runtimeSignals: PhiSignalPluginMeta | null | undefined =
     selectedStructureWidgetMeta?.runtimeSignals ?? null;
   const currentWidgetConfigRecord = currentWidgetConfig as Record<string, unknown>;
