@@ -7,6 +7,8 @@ import {
 } from "../constants/media";
 import {
   resolveFocalRectCoverCropBox,
+  resolveFocalRectInCoverCrop,
+  resolveFocalRectObjectPosition,
   type MediaFocalRect,
 } from "../components/media/focal-rect";
 import {
@@ -131,10 +133,34 @@ for (const variantKey of [
     }),
   );
   assert.equal(presentation.kind, "generated-variant");
+  /*
+   * The server already consumed the focal rectangle, so the original's rectangle applied again would
+   * shift a framed image. A box of the variant's proportion shows the variant whole whatever the
+   * position; a box of another proportion crops it again, around where the focal rectangle stands
+   * inside the variant -- the original's rectangle carried into the crop's coordinates.
+   */
   assert.equal(
     presentation.objectPosition,
+    resolveFocalRectObjectPosition(
+      undefined,
+      resolveFocalRectInCoverCrop(2000, 1000, spec.width, spec.height, FOCAL_TOP_LEFT),
+    ),
+    "A generated variant is positioned by the focal rectangle as it stands inside the variant.",
+  );
+  const crop = resolveFocalRectCoverCropBox(2000, 1000, spec.width, spec.height, FOCAL_TOP_LEFT);
+  if (crop.width < 2000 || crop.height < 1000) {
+    assert.notEqual(
+      presentation.objectPosition,
+      resolveFocalRectObjectPosition(undefined, FOCAL_TOP_LEFT),
+      "The original's focal rectangle applied to a variant again would shift a framed image.",
+    );
+  }
+  assert.equal(
+    resolvePhiImagePresentation(
+      assetSource({ variantKey, focalRect: FOCAL_TOP_LEFT, sourceWidth: undefined, sourceHeight: undefined }),
+    ).objectPosition,
     "center",
-    "The server already consumed the focal rectangle; applying it again would shift a framed image.",
+    "Without the original's size the focal rectangle cannot be carried into the variant; the crop is centred.",
   );
   assert.equal(
     presentation.fit,
@@ -252,7 +278,14 @@ assert.equal(
   );
   assert.equal(saved.kind, "generated-variant");
   assert.equal(saved.simulatedCropStyle, null);
-  assert.equal(saved.objectPosition, "center");
+  assert.equal(
+    saved.objectPosition,
+    resolveFocalRectObjectPosition(
+      undefined,
+      resolveFocalRectInCoverCrop(2000, 1000, spec.width, spec.height, FOCAL_TOP_LEFT),
+    ),
+    "The saved variant is positioned by the focal rectangle inside it, as every generated variant is.",
+  );
   assert.equal(saved.url, `/api/site/media/${ASSET_ID}/variants/${PhiImageAssetVariantKey.Card}?v=3&r=8`);
 }
 
@@ -341,10 +374,15 @@ const projection = (overrides: Record<string, unknown> = {}) => ({
   const style = resolvePhiBackgroundWidgetStyle(
     backgroundBase({ variantKey: PhiImageAssetVariantKey.Hero, resolvedAsset: projection() }),
   );
+  const heroSpec = resolvePhiImageAssetVariantSpec(PhiImageAssetVariantKey.Hero)!;
   assert.equal(
     style.backgroundPosition,
-    "center",
-    "A Background drawing a generated variant must not re-apply the focal rectangle.",
+    resolveFocalRectObjectPosition(
+      undefined,
+      resolveFocalRectInCoverCrop(2000, 1000, heroSpec.width, heroSpec.height, FOCAL_TOP_LEFT),
+    ),
+    "A Background drawing a generated variant positions it by the focal rectangle inside the variant, "
+      + "not by the original's applied again.",
   );
   assert.equal(
     style.backgroundImage,
@@ -524,7 +562,9 @@ for (const path of [
    * A picture is drawn by `PhiImageControl` from the resolver's answer, and by nothing else: the Card
    * cover once hard-coded `objectFit: "cover"` with no position, which framed a `contain` variant wrongly
    * and discarded the original's focal rectangle, and it cropped a 3:2 variant to 4:3 because its box
-   * had a proportion of its own. The box now takes the presentation's proportion.
+   * had a proportion of its own. The box takes the presentation's proportion, unless the card variant
+   * states one (the compact strip): then the variant is cropped again around its focal rectangle, which
+   * the resolver places.
    */
   for (const path of [
     "components/widgets/shared/card-body-client.tsx",
@@ -536,7 +576,10 @@ for (const path of [
     assert.doesNotMatch(source, /objectFit:/u, `${path} must not frame a picture beside the resolver.`);
   }
   const cardBody = await readSource("components/widgets/shared/card-body-client.tsx");
-  assert.match(cardBody, /aspectRatio: resolveMediaAspectRatio\(image\.presentation\)/u);
+  assert.match(
+    cardBody,
+    /aspectRatio: metrics\.mediaAspectRatio \?\? resolveMediaAspectRatio\(image\.presentation\)/u,
+  );
 }
 
 {
