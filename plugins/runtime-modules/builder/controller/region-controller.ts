@@ -1,4 +1,4 @@
-import { PhiCmsFlags, PhiCmsRegionType } from "../../../../constants/phi-cms";
+import { PhiCmsFlags } from "../../../../constants/phi-cms";
 import { readPhiFlags } from "../../../../helpers/flags";
 import { getDefaultRegionDraft, resolveRegionDraftKey } from "../developer-region-drafts";
 import { getPhiBuilderRegionDraftKey } from "../region-keys";
@@ -8,33 +8,6 @@ import {
 } from "../developer-workspace-store";
 import type { PhiDeveloperBuilderArea, PhiDeveloperBuilderRegionDraft } from "../developer-workspace-types";
 import { createPhiBuilderHistoryContext } from "../history";
-
-export function getBuilderRegionKey(regionType: number) {
-  switch (regionType) {
-    case PhiCmsRegionType.HeaderTop:
-      return "header_top";
-    case PhiCmsRegionType.HeaderMain:
-      return "header_main";
-    case PhiCmsRegionType.HeaderBottom:
-      return "header_bottom";
-    case PhiCmsRegionType.Hero:
-      return "hero";
-    case PhiCmsRegionType.SiderLeft:
-      return "sider_left";
-    case PhiCmsRegionType.SiderRight:
-      return "sider_right";
-    case PhiCmsRegionType.FooterTop:
-      return "footer_top";
-    case PhiCmsRegionType.Footer:
-      return "footer_main";
-    case PhiCmsRegionType.FooterBottom:
-      return "footer_bottom";
-    case PhiCmsRegionType.Content:
-      return "content";
-    default:
-      return `region_${regionType}`;
-  }
-}
 
 export function applyPhiDeveloperBuilderSiderLeftMode(
   area: PhiDeveloperBuilderArea,

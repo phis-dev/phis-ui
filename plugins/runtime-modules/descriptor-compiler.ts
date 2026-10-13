@@ -1697,24 +1697,6 @@ export function resolvePhiCmsRoutePresetByIdentity(
   return catalog.routeByIdentity.get(buildPhiCmsPresetIdentityKey(ownerModuleId, presetKey)) ?? null;
 }
 
-/**
- * The route a Module Page reference names, read off the whole catalogue.
- *
- * A reference carries the derived Page id and not the pair it was derived from, so this is the only way
- * in from a stored link: the hash cannot be undone, and the catalogue is the other side of it.
- *
- * The Area's active route table answers the same question for what that Area actually serves, and where
- * a caller has one it is the better question -- it has already dropped the Modules that are switched off
- * and the root applicants that lost. This one is for a caller holding only the catalogue, and it leaves
- * those checks to them.
- */
-export function resolvePhiCmsRouteDescriptorByPageId(
-  catalog: PhiCmsCompiledDescriptorCatalog,
-  pageId: PhiCmsInstanceId,
-) {
-  return catalog.routeByPageId.get(pageId) ?? null;
-}
-
 export function resolvePhiCmsThemePresetBinding(
   catalog: PhiCmsCompiledDescriptorCatalog,
   themeKey: string,

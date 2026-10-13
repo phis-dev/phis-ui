@@ -15,11 +15,7 @@ const PHI_BUILDER_INSPECTOR_PRESET_IDENTITY = {
 } as const;
 
 export const PHI_BUILDER_INSPECTOR_OVERLAY_IDS = createPhiPresetCmsInstanceIdMap(PHI_BUILDER_INSPECTOR_PRESET_IDENTITY, ["regionInspector", "layoutInspector", "widgetInspector", "effectsEditor", "signalWiring"]);
-export const PHI_BUILDER_INSPECTOR_DRAWER_OVERLAY_IDS = [
-  PHI_BUILDER_INSPECTOR_OVERLAY_IDS.regionInspector,
-  PHI_BUILDER_INSPECTOR_OVERLAY_IDS.layoutInspector,
-  PHI_BUILDER_INSPECTOR_OVERLAY_IDS.widgetInspector,
-] as const;
+
 export const PHI_BUILDER_INSPECTOR_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap(PHI_BUILDER_INSPECTOR_PRESET_IDENTITY, ["regionInspectorHeader", "layoutInspectorHeader", "widgetInspectorHeader", "regionInspectorBody", "layoutInspectorBody", "widgetInspectorBody", "effectsHeader", "effectsBody", "effectsFooter", "signalWiringBody", "signalWiringFooter"]);
 export const PHI_BUILDER_INSPECTOR_WIDGET_IDS = createPhiPresetCmsInstanceIdMap(PHI_BUILDER_INSPECTOR_PRESET_IDENTITY, ["regionInspectorHeaderWidget", "layoutInspectorHeaderWidget", "widgetInspectorHeaderWidget", "effectsTabs", "effectsAppearanceForm", "effectsTransitionsForm", "effectsViewportForm", "effectsCommands", "signalWiringForm", "signalWiringRoutes", "signalWiringCommands"]);
 

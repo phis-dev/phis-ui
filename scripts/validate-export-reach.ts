@@ -30,18 +30,12 @@ import { repositoryRoot } from "./lib/repo-root.mjs";
 const OUT_OF_SCOPE = (relative: string) => relative.startsWith("scripts/") || /^[^/]+\.config\.[cm]?ts$/u.test(relative);
 
 /**
- * Exported, read by nobody, and kept on purpose until somebody decides whether they go.
- * Each is unused even inside its own file: dropping the `export` would make it dead code.
+ * Exported and read by nobody, kept on purpose: `validate-media-space-contracts.ts` reads this hook's
+ * source for the guarantee that a Collection request without a bound provider surfaces as an error.
+ * Where that guarantee belongs now is open (TODOS.md, "Code hygiene"); it goes with that decision.
  */
 const UNDECIDED = new Set([
-  "components/controls/phi-button-types.ts#readPhiButtonType",
   "components/media/asset-collection-runtime.ts#usePhiAssetCollectionRuntime",
-  "components/widgets/config/search-shared.ts#buildPhiSearchWidgetDefinition",
-  "components/widgets/signals/command-toolbar-address.ts#createPhiCommandToolbarControlAddress",
-  "plugins/runtime-modules/auth/overlay-ids.ts#isPhiAuthLoginOverlayArea",
-  "plugins/runtime-modules/builder/controller/region-controller.ts#getBuilderRegionKey",
-  "plugins/runtime-modules/builder/inspector-overlay-addresses.ts#PHI_BUILDER_INSPECTOR_DRAWER_OVERLAY_IDS",
-  "plugins/runtime-modules/descriptor-compiler.ts#resolvePhiCmsRouteDescriptorByPageId",
 ]);
 
 /**

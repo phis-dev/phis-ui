@@ -141,8 +141,8 @@ file of a Module's `controller/` directory and refuses one that names a receiver
 `cms:` address of its own; there are no open exceptions. A Controller's implementation therefore lives
 in that directory, not beside it: the Builder kept its 2,500-line Controller one level up, out of the
 validator's sight, which is how it went on addressing its Inspector by preset id after every other
-Controller had moved. A preset id built in place counts as well (`createPhiCommandToolbarControlAddress`):
-the Theme Controller reached the Theme Page's toolbar that way.
+Controller had moved. A preset id built in place counts as well: the Theme Controller reached the Theme
+Page's toolbar through an address helper built from the preset.
 
 The same goes for what a Controller listens to. A Controller that told two halves of one Page apart by
 who sent a signal held both halves' Widget ids again; the User Management Page routes its create and its

@@ -27,7 +27,3 @@ export const PHI_AUTH_LOGIN_OVERLAY_IDS = {
   public: createAuthLoginOverlayIds("public"),
   app: createAuthLoginOverlayIds("app"),
 } as const;
-
-export function isPhiAuthLoginOverlayArea(area: PhiCmsAreaKey): area is PhiAuthLoginOverlayArea {
-  return area === "public" || area === "app";
-}
