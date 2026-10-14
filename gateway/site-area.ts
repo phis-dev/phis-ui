@@ -146,38 +146,74 @@ export async function getPublicSiteAreaWithPublishedPages({
   };
 }
 
-export const getCurrentSiteAreaDraft = definePhiRequestMemo(async function getCurrentSiteAreaDraft({
+type PhiSiteAreaStructureRequest = {
+  area: string;
+  ownerModuleId: string;
+  presetKey: string;
+};
+
+type PhiSiteAreaStructure = {
+  area: string;
+  /** The open draft; when there is one, `published` is not read. */
+  draft: PhiResolvedCmsAreaPresetPayload | null;
+  published: PhiResolvedCmsAreaPresetPayload | null;
+};
+
+function readAreaStructurePayload(value: unknown, area: string, kind: string) {
+  if (value === null) {
+    return null;
+  }
+  if (!isPhiRecord(value) || !isPhiRecord(value.preset) || !value.preset.preset) {
+    throw new Error(`Missing CMS area ${kind} payload for "${area}".`);
+  }
+  return value as PhiResolvedCmsAreaPresetPayload;
+}
+
+/**
+ * What several Areas store about their structure, in one request: per Area its open draft, else what is
+ * published, else nothing -- for each the answer of the draft read (`GET /api/site/cms/area/draft`) or of
+ * `getExactSiteArea`, without a request per Area and read (phis-server `POST /api/site/cms/area/structures`).
+ */
+export const getSiteAreaStructures = definePhiRequestMemo(async function getSiteAreaStructures({
   apiBaseUrl,
   internalToken,
   siteKey,
-  area,
-  path,
   locale,
   cookieHeader,
-  sourcePreset,
-}: Omit<GetExactSiteAreaOptions, "revision">): Promise<PhiResolvedCmsAreaPresetPayload | null> {
-  const payload = await fetchPhiSiteApi<PhiResolvedCmsAreaPresetPayload | null>({
-    context: "getCurrentSiteAreaDraft",
+  areas,
+}: {
+  apiBaseUrl: string;
+  internalToken: string;
+  siteKey: string;
+  locale?: string;
+  cookieHeader?: string | null;
+  areas: readonly PhiSiteAreaStructureRequest[];
+}): Promise<PhiSiteAreaStructure[]> {
+  const payload = await fetchPhiSiteApi<{ areas?: unknown }>({
+    context: "getSiteAreaStructures",
     apiBaseUrl,
     internalToken,
     siteKey,
-    path: "/api/site/cms/area/draft",
-    searchParams: {
-      area: area?.trim() ? area.trim() : path === "/" ? "public" : path.replace(/^\//, ""),
-      ownerModuleId: sourcePreset.ownerModuleId,
-      presetKey: sourcePreset.presetKey,
-    },
+    path: "/api/site/cms/area/structures",
+    method: "POST",
+    body: { areas },
     locale,
     cookieHeader,
-    failure: "Failed to fetch current CMS area draft",
-    notFoundIsNull: true,
+    failure: "Failed to fetch CMS area structures",
   });
-  if (payload === null) {
-    return null;
+  const answers = payload?.areas;
+  if (!Array.isArray(answers) || answers.length !== areas.length) {
+    throw new Error("Invalid CMS area structures payload.");
   }
-  if (!payload?.preset?.preset) {
-    throw new Error("Missing CMS area draft payload.");
-  }
-
-  return payload;
+  return areas.map((request, index) => {
+    const answer = answers[index] as Record<string, unknown> | undefined;
+    if (!isPhiRecord(answer) || answer.area !== request.area) {
+      throw new Error(`CMS area structures answered out of order at "${request.area}".`);
+    }
+    return {
+      area: request.area,
+      draft: readAreaStructurePayload(answer.draft ?? null, request.area, "draft"),
+      published: readAreaStructurePayload(answer.published ?? null, request.area, "published"),
+    };
+  });
 });
