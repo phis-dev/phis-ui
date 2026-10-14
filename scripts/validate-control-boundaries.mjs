@@ -807,15 +807,31 @@ const iconRegistryPath = "components/shell/phi-antd-icon.tsx";
 let iconRegistrySeen = false;
 for (const relativePath of await listRepositorySources()) {
   const source = await readSource(relativePath);
-  if (!/["']@ant-design\/icons(?:\/[^"']*)?["']/u.test(source)) continue;
+  if (!/["']@ant-design\/icons(?:-svg)?(?:\/[^"']*)?["']/u.test(source)) continue;
   if (relativePath === iconRegistryPath) {
     iconRegistrySeen = true;
     continue;
   }
   failures.push(
-    `${relativePath} imports @ant-design/icons; draw the icon with PhiIcon, and add it to `
+    `${relativePath} imports @ant-design/icons or its SVG definitions; draw the icon with PhiIcon, and add it to `
       + `${iconRegistryPath} if the name is missing.`,
   );
+}
+/*
+ * An outlined or filled icon loads its SVG definition and is drawn by the registry's one renderer; the
+ * package's ready component would bring that renderer into the icon's chunk again, ~2 kB for an icon of
+ * ~0.3 kB. Only a two-tone icon loads the component, whose renderer carries the colour palette.
+ */
+{
+  const registrySource = await readSource(iconRegistryPath);
+  for (const [, key, specifier] of registrySource.matchAll(/^\s+(\w+): \(\) => import\("([^"]+)"\),$/gmu)) {
+    const expected = key.endsWith("TwoTone")
+      ? `@ant-design/icons/es/icons/${key}`
+      : `@ant-design/icons-svg/es/asn/${key}`;
+    if (specifier !== expected) {
+      failures.push(`${iconRegistryPath}: ${key} loads ${specifier}; load ${expected}.`);
+    }
+  }
 }
 if (!iconRegistrySeen) {
   failures.push(`${iconRegistryPath} no longer loads @ant-design/icons; move the icon rule to wherever it went.`);

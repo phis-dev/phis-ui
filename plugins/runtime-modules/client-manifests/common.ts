@@ -1,4 +1,8 @@
 import dynamic from "next/dynamic";
+// Bound here, not only where an icon is drawn: every Client below is its own chunk, and a module they
+// share without this file holding it is copied into each of them. The icon registry and its renderer
+// were in five chunks of a contact page and six of a dashboard. Held by the manifest, they load once.
+import "../../../components/shell/phi-icon";
 import type { PhiRuntimeModuleControllerClient } from "../../../components/runtime/runtime-module-controller-client-manifest";
 import {
   createPhiRuntimeModuleRenderClientManifest,

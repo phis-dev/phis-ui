@@ -1,6 +1,8 @@
 "use client";
 
 import { createElement, lazy, Suspense, type ComponentType, type CSSProperties, type LazyExoticComponent } from "react";
+import AntdIconLight from "@ant-design/icons/es/components/AntdIconLight";
+import type { IconDefinition } from "@ant-design/icons-svg/lib/types";
 
 /*
  * Every Ant Design icon a Phi icon name can stand for, one chunk each.
@@ -11,110 +13,116 @@ import { createElement, lazy, Suspense, type ComponentType, type CSSProperties, 
  * loaders, an icon is fetched where it is drawn; rendered on the Server it is in the HTML already, and
  * hydration waits for its chunk rather than drawing it twice.
  *
+ * An outlined or filled icon loads its SVG definition alone and is drawn by `AntdIconLight`, imported
+ * once above. Loading the package's ready icon component instead brought that component, its SVG
+ * renderer and style insertion into every icon's chunk: a contact page carried eleven copies, ~20 kB
+ * gzip, for icons of ~0.3 kB each. A two-tone icon still loads the package's component: its renderer
+ * brings the colour palette along, which belongs only where a two-tone icon is drawn.
+ *
  * Literal imports, not a template: a computed specifier would make the bundler emit every icon the
  * package has.
  */
 const PHI_ANTD_ICON_LOADERS = {
-  AlignCenterOutlined: () => import("@ant-design/icons/es/icons/AlignCenterOutlined"),
-  AlignLeftOutlined: () => import("@ant-design/icons/es/icons/AlignLeftOutlined"),
-  AlignRightOutlined: () => import("@ant-design/icons/es/icons/AlignRightOutlined"),
-  ApartmentOutlined: () => import("@ant-design/icons/es/icons/ApartmentOutlined"),
-  ApiOutlined: () => import("@ant-design/icons/es/icons/ApiOutlined"),
-  AppleOutlined: () => import("@ant-design/icons/es/icons/AppleOutlined"),
-  AppstoreOutlined: () => import("@ant-design/icons/es/icons/AppstoreOutlined"),
-  ArrowDownOutlined: () => import("@ant-design/icons/es/icons/ArrowDownOutlined"),
-  ArrowUpOutlined: () => import("@ant-design/icons/es/icons/ArrowUpOutlined"),
+  AlignCenterOutlined: () => import("@ant-design/icons-svg/es/asn/AlignCenterOutlined"),
+  AlignLeftOutlined: () => import("@ant-design/icons-svg/es/asn/AlignLeftOutlined"),
+  AlignRightOutlined: () => import("@ant-design/icons-svg/es/asn/AlignRightOutlined"),
+  ApartmentOutlined: () => import("@ant-design/icons-svg/es/asn/ApartmentOutlined"),
+  ApiOutlined: () => import("@ant-design/icons-svg/es/asn/ApiOutlined"),
+  AppleOutlined: () => import("@ant-design/icons-svg/es/asn/AppleOutlined"),
+  AppstoreOutlined: () => import("@ant-design/icons-svg/es/asn/AppstoreOutlined"),
+  ArrowDownOutlined: () => import("@ant-design/icons-svg/es/asn/ArrowDownOutlined"),
+  ArrowUpOutlined: () => import("@ant-design/icons-svg/es/asn/ArrowUpOutlined"),
   AudioTwoTone: () => import("@ant-design/icons/es/icons/AudioTwoTone"),
-  BgColorsOutlined: () => import("@ant-design/icons/es/icons/BgColorsOutlined"),
-  BuildOutlined: () => import("@ant-design/icons/es/icons/BuildOutlined"),
-  BranchesOutlined: () => import("@ant-design/icons/es/icons/BranchesOutlined"),
-  CalendarOutlined: () => import("@ant-design/icons/es/icons/CalendarOutlined"),
-  CheckOutlined: () => import("@ant-design/icons/es/icons/CheckOutlined"),
-  CloseOutlined: () => import("@ant-design/icons/es/icons/CloseOutlined"),
-  CloudUploadOutlined: () => import("@ant-design/icons/es/icons/CloudUploadOutlined"),
-  ClusterOutlined: () => import("@ant-design/icons/es/icons/ClusterOutlined"),
-  CodeOutlined: () => import("@ant-design/icons/es/icons/CodeOutlined"),
-  ColumnWidthOutlined: () => import("@ant-design/icons/es/icons/ColumnWidthOutlined"),
-  CopyOutlined: () => import("@ant-design/icons/es/icons/CopyOutlined"),
-  CustomerServiceOutlined: () => import("@ant-design/icons/es/icons/CustomerServiceOutlined"),
-  DashOutlined: () => import("@ant-design/icons/es/icons/DashOutlined"),
-  DashboardOutlined: () => import("@ant-design/icons/es/icons/DashboardOutlined"),
-  DeleteOutlined: () => import("@ant-design/icons/es/icons/DeleteOutlined"),
-  DownOutlined: () => import("@ant-design/icons/es/icons/DownOutlined"),
-  DownloadOutlined: () => import("@ant-design/icons/es/icons/DownloadOutlined"),
-  EditOutlined: () => import("@ant-design/icons/es/icons/EditOutlined"),
-  EnvironmentOutlined: () => import("@ant-design/icons/es/icons/EnvironmentOutlined"),
-  ExperimentOutlined: () => import("@ant-design/icons/es/icons/ExperimentOutlined"),
-  EyeInvisibleOutlined: () => import("@ant-design/icons/es/icons/EyeInvisibleOutlined"),
-  EyeOutlined: () => import("@ant-design/icons/es/icons/EyeOutlined"),
+  BgColorsOutlined: () => import("@ant-design/icons-svg/es/asn/BgColorsOutlined"),
+  BuildOutlined: () => import("@ant-design/icons-svg/es/asn/BuildOutlined"),
+  BranchesOutlined: () => import("@ant-design/icons-svg/es/asn/BranchesOutlined"),
+  CalendarOutlined: () => import("@ant-design/icons-svg/es/asn/CalendarOutlined"),
+  CheckOutlined: () => import("@ant-design/icons-svg/es/asn/CheckOutlined"),
+  CloseOutlined: () => import("@ant-design/icons-svg/es/asn/CloseOutlined"),
+  CloudUploadOutlined: () => import("@ant-design/icons-svg/es/asn/CloudUploadOutlined"),
+  ClusterOutlined: () => import("@ant-design/icons-svg/es/asn/ClusterOutlined"),
+  CodeOutlined: () => import("@ant-design/icons-svg/es/asn/CodeOutlined"),
+  ColumnWidthOutlined: () => import("@ant-design/icons-svg/es/asn/ColumnWidthOutlined"),
+  CopyOutlined: () => import("@ant-design/icons-svg/es/asn/CopyOutlined"),
+  CustomerServiceOutlined: () => import("@ant-design/icons-svg/es/asn/CustomerServiceOutlined"),
+  DashOutlined: () => import("@ant-design/icons-svg/es/asn/DashOutlined"),
+  DashboardOutlined: () => import("@ant-design/icons-svg/es/asn/DashboardOutlined"),
+  DeleteOutlined: () => import("@ant-design/icons-svg/es/asn/DeleteOutlined"),
+  DownOutlined: () => import("@ant-design/icons-svg/es/asn/DownOutlined"),
+  DownloadOutlined: () => import("@ant-design/icons-svg/es/asn/DownloadOutlined"),
+  EditOutlined: () => import("@ant-design/icons-svg/es/asn/EditOutlined"),
+  EnvironmentOutlined: () => import("@ant-design/icons-svg/es/asn/EnvironmentOutlined"),
+  ExperimentOutlined: () => import("@ant-design/icons-svg/es/asn/ExperimentOutlined"),
+  EyeInvisibleOutlined: () => import("@ant-design/icons-svg/es/asn/EyeInvisibleOutlined"),
+  EyeOutlined: () => import("@ant-design/icons-svg/es/asn/EyeOutlined"),
   FileImageTwoTone: () => import("@ant-design/icons/es/icons/FileImageTwoTone"),
   FilePdfTwoTone: () => import("@ant-design/icons/es/icons/FilePdfTwoTone"),
-  FileTextOutlined: () => import("@ant-design/icons/es/icons/FileTextOutlined"),
+  FileTextOutlined: () => import("@ant-design/icons-svg/es/asn/FileTextOutlined"),
   FileTextTwoTone: () => import("@ant-design/icons/es/icons/FileTextTwoTone"),
   FileUnknownTwoTone: () => import("@ant-design/icons/es/icons/FileUnknownTwoTone"),
   FileZipTwoTone: () => import("@ant-design/icons/es/icons/FileZipTwoTone"),
-  FolderAddOutlined: () => import("@ant-design/icons/es/icons/FolderAddOutlined"),
-  FontColorsOutlined: () => import("@ant-design/icons/es/icons/FontColorsOutlined"),
-  FontSizeOutlined: () => import("@ant-design/icons/es/icons/FontSizeOutlined"),
-  FormOutlined: () => import("@ant-design/icons/es/icons/FormOutlined"),
-  FormatPainterOutlined: () => import("@ant-design/icons/es/icons/FormatPainterOutlined"),
-  GithubOutlined: () => import("@ant-design/icons/es/icons/GithubOutlined"),
-  GlobalOutlined: () => import("@ant-design/icons/es/icons/GlobalOutlined"),
-  GoogleOutlined: () => import("@ant-design/icons/es/icons/GoogleOutlined"),
+  FolderAddOutlined: () => import("@ant-design/icons-svg/es/asn/FolderAddOutlined"),
+  FontColorsOutlined: () => import("@ant-design/icons-svg/es/asn/FontColorsOutlined"),
+  FontSizeOutlined: () => import("@ant-design/icons-svg/es/asn/FontSizeOutlined"),
+  FormOutlined: () => import("@ant-design/icons-svg/es/asn/FormOutlined"),
+  FormatPainterOutlined: () => import("@ant-design/icons-svg/es/asn/FormatPainterOutlined"),
+  GithubOutlined: () => import("@ant-design/icons-svg/es/asn/GithubOutlined"),
+  GlobalOutlined: () => import("@ant-design/icons-svg/es/asn/GlobalOutlined"),
+  GoogleOutlined: () => import("@ant-design/icons-svg/es/asn/GoogleOutlined"),
   HddTwoTone: () => import("@ant-design/icons/es/icons/HddTwoTone"),
   HighlightTwoTone: () => import("@ant-design/icons/es/icons/HighlightTwoTone"),
-  HistoryOutlined: () => import("@ant-design/icons/es/icons/HistoryOutlined"),
-  HolderOutlined: () => import("@ant-design/icons/es/icons/HolderOutlined"),
-  HomeOutlined: () => import("@ant-design/icons/es/icons/HomeOutlined"),
-  IdcardOutlined: () => import("@ant-design/icons/es/icons/IdcardOutlined"),
-  InfoCircleOutlined: () => import("@ant-design/icons/es/icons/InfoCircleOutlined"),
-  LayoutOutlined: () => import("@ant-design/icons/es/icons/LayoutOutlined"),
-  LeftOutlined: () => import("@ant-design/icons/es/icons/LeftOutlined"),
-  LinkOutlined: () => import("@ant-design/icons/es/icons/LinkOutlined"),
-  LogoutOutlined: () => import("@ant-design/icons/es/icons/LogoutOutlined"),
-  MailOutlined: () => import("@ant-design/icons/es/icons/MailOutlined"),
-  MenuFoldOutlined: () => import("@ant-design/icons/es/icons/MenuFoldOutlined"),
-  MenuOutlined: () => import("@ant-design/icons/es/icons/MenuOutlined"),
-  MenuUnfoldOutlined: () => import("@ant-design/icons/es/icons/MenuUnfoldOutlined"),
-  MessageOutlined: () => import("@ant-design/icons/es/icons/MessageOutlined"),
-  MinusOutlined: () => import("@ant-design/icons/es/icons/MinusOutlined"),
-  MonitorOutlined: () => import("@ant-design/icons/es/icons/MonitorOutlined"),
-  MoonOutlined: () => import("@ant-design/icons/es/icons/MoonOutlined"),
-  NodeIndexOutlined: () => import("@ant-design/icons/es/icons/NodeIndexOutlined"),
-  NotificationOutlined: () => import("@ant-design/icons/es/icons/NotificationOutlined"),
-  PictureOutlined: () => import("@ant-design/icons/es/icons/PictureOutlined"),
-  PlayCircleFilled: () => import("@ant-design/icons/es/icons/PlayCircleFilled"),
-  PlusOutlined: () => import("@ant-design/icons/es/icons/PlusOutlined"),
-  ProfileOutlined: () => import("@ant-design/icons/es/icons/ProfileOutlined"),
-  QuestionCircleOutlined: () => import("@ant-design/icons/es/icons/QuestionCircleOutlined"),
-  ReadOutlined: () => import("@ant-design/icons/es/icons/ReadOutlined"),
-  RedoOutlined: () => import("@ant-design/icons/es/icons/RedoOutlined"),
-  ReloadOutlined: () => import("@ant-design/icons/es/icons/ReloadOutlined"),
-  RightOutlined: () => import("@ant-design/icons/es/icons/RightOutlined"),
-  SafetyCertificateOutlined: () => import("@ant-design/icons/es/icons/SafetyCertificateOutlined"),
-  SaveOutlined: () => import("@ant-design/icons/es/icons/SaveOutlined"),
-  SearchOutlined: () => import("@ant-design/icons/es/icons/SearchOutlined"),
-  SendOutlined: () => import("@ant-design/icons/es/icons/SendOutlined"),
-  SettingOutlined: () => import("@ant-design/icons/es/icons/SettingOutlined"),
-  ShareAltOutlined: () => import("@ant-design/icons/es/icons/ShareAltOutlined"),
-  ShoppingCartOutlined: () => import("@ant-design/icons/es/icons/ShoppingCartOutlined"),
-  ShoppingOutlined: () => import("@ant-design/icons/es/icons/ShoppingOutlined"),
-  SkinOutlined: () => import("@ant-design/icons/es/icons/SkinOutlined"),
-  StarOutlined: () => import("@ant-design/icons/es/icons/StarOutlined"),
-  StopOutlined: () => import("@ant-design/icons/es/icons/StopOutlined"),
-  SunOutlined: () => import("@ant-design/icons/es/icons/SunOutlined"),
-  TableOutlined: () => import("@ant-design/icons/es/icons/TableOutlined"),
-  TeamOutlined: () => import("@ant-design/icons/es/icons/TeamOutlined"),
-  TranslationOutlined: () => import("@ant-design/icons/es/icons/TranslationOutlined"),
-  UndoOutlined: () => import("@ant-design/icons/es/icons/UndoOutlined"),
-  UnorderedListOutlined: () => import("@ant-design/icons/es/icons/UnorderedListOutlined"),
-  UpOutlined: () => import("@ant-design/icons/es/icons/UpOutlined"),
-  UploadOutlined: () => import("@ant-design/icons/es/icons/UploadOutlined"),
-  UserAddOutlined: () => import("@ant-design/icons/es/icons/UserAddOutlined"),
-  UserOutlined: () => import("@ant-design/icons/es/icons/UserOutlined"),
+  HistoryOutlined: () => import("@ant-design/icons-svg/es/asn/HistoryOutlined"),
+  HolderOutlined: () => import("@ant-design/icons-svg/es/asn/HolderOutlined"),
+  HomeOutlined: () => import("@ant-design/icons-svg/es/asn/HomeOutlined"),
+  IdcardOutlined: () => import("@ant-design/icons-svg/es/asn/IdcardOutlined"),
+  InfoCircleOutlined: () => import("@ant-design/icons-svg/es/asn/InfoCircleOutlined"),
+  LayoutOutlined: () => import("@ant-design/icons-svg/es/asn/LayoutOutlined"),
+  LeftOutlined: () => import("@ant-design/icons-svg/es/asn/LeftOutlined"),
+  LinkOutlined: () => import("@ant-design/icons-svg/es/asn/LinkOutlined"),
+  LogoutOutlined: () => import("@ant-design/icons-svg/es/asn/LogoutOutlined"),
+  MailOutlined: () => import("@ant-design/icons-svg/es/asn/MailOutlined"),
+  MenuFoldOutlined: () => import("@ant-design/icons-svg/es/asn/MenuFoldOutlined"),
+  MenuOutlined: () => import("@ant-design/icons-svg/es/asn/MenuOutlined"),
+  MenuUnfoldOutlined: () => import("@ant-design/icons-svg/es/asn/MenuUnfoldOutlined"),
+  MessageOutlined: () => import("@ant-design/icons-svg/es/asn/MessageOutlined"),
+  MinusOutlined: () => import("@ant-design/icons-svg/es/asn/MinusOutlined"),
+  MonitorOutlined: () => import("@ant-design/icons-svg/es/asn/MonitorOutlined"),
+  MoonOutlined: () => import("@ant-design/icons-svg/es/asn/MoonOutlined"),
+  NodeIndexOutlined: () => import("@ant-design/icons-svg/es/asn/NodeIndexOutlined"),
+  NotificationOutlined: () => import("@ant-design/icons-svg/es/asn/NotificationOutlined"),
+  PictureOutlined: () => import("@ant-design/icons-svg/es/asn/PictureOutlined"),
+  PlayCircleFilled: () => import("@ant-design/icons-svg/es/asn/PlayCircleFilled"),
+  PlusOutlined: () => import("@ant-design/icons-svg/es/asn/PlusOutlined"),
+  ProfileOutlined: () => import("@ant-design/icons-svg/es/asn/ProfileOutlined"),
+  QuestionCircleOutlined: () => import("@ant-design/icons-svg/es/asn/QuestionCircleOutlined"),
+  ReadOutlined: () => import("@ant-design/icons-svg/es/asn/ReadOutlined"),
+  RedoOutlined: () => import("@ant-design/icons-svg/es/asn/RedoOutlined"),
+  ReloadOutlined: () => import("@ant-design/icons-svg/es/asn/ReloadOutlined"),
+  RightOutlined: () => import("@ant-design/icons-svg/es/asn/RightOutlined"),
+  SafetyCertificateOutlined: () => import("@ant-design/icons-svg/es/asn/SafetyCertificateOutlined"),
+  SaveOutlined: () => import("@ant-design/icons-svg/es/asn/SaveOutlined"),
+  SearchOutlined: () => import("@ant-design/icons-svg/es/asn/SearchOutlined"),
+  SendOutlined: () => import("@ant-design/icons-svg/es/asn/SendOutlined"),
+  SettingOutlined: () => import("@ant-design/icons-svg/es/asn/SettingOutlined"),
+  ShareAltOutlined: () => import("@ant-design/icons-svg/es/asn/ShareAltOutlined"),
+  ShoppingCartOutlined: () => import("@ant-design/icons-svg/es/asn/ShoppingCartOutlined"),
+  ShoppingOutlined: () => import("@ant-design/icons-svg/es/asn/ShoppingOutlined"),
+  SkinOutlined: () => import("@ant-design/icons-svg/es/asn/SkinOutlined"),
+  StarOutlined: () => import("@ant-design/icons-svg/es/asn/StarOutlined"),
+  StopOutlined: () => import("@ant-design/icons-svg/es/asn/StopOutlined"),
+  SunOutlined: () => import("@ant-design/icons-svg/es/asn/SunOutlined"),
+  TableOutlined: () => import("@ant-design/icons-svg/es/asn/TableOutlined"),
+  TeamOutlined: () => import("@ant-design/icons-svg/es/asn/TeamOutlined"),
+  TranslationOutlined: () => import("@ant-design/icons-svg/es/asn/TranslationOutlined"),
+  UndoOutlined: () => import("@ant-design/icons-svg/es/asn/UndoOutlined"),
+  UnorderedListOutlined: () => import("@ant-design/icons-svg/es/asn/UnorderedListOutlined"),
+  UpOutlined: () => import("@ant-design/icons-svg/es/asn/UpOutlined"),
+  UploadOutlined: () => import("@ant-design/icons-svg/es/asn/UploadOutlined"),
+  UserAddOutlined: () => import("@ant-design/icons-svg/es/asn/UserAddOutlined"),
+  UserOutlined: () => import("@ant-design/icons-svg/es/asn/UserOutlined"),
   VideoCameraTwoTone: () => import("@ant-design/icons/es/icons/VideoCameraTwoTone"),
-  WarningOutlined: () => import("@ant-design/icons/es/icons/WarningOutlined"),
-  WindowsOutlined: () => import("@ant-design/icons/es/icons/WindowsOutlined"),
+  WarningOutlined: () => import("@ant-design/icons-svg/es/asn/WarningOutlined"),
+  WindowsOutlined: () => import("@ant-design/icons-svg/es/asn/WindowsOutlined"),
 } as const;
 
 export type PhiAntdIconKey = keyof typeof PHI_ANTD_ICON_LOADERS;
@@ -139,12 +147,21 @@ type PhiAntdIconComponent = ComponentType<{
   twoToneColor?: string;
 }>;
 
+// A two-tone loader hands over the package's component; every other loader hands over the bare SVG.
+function isIconDefinition(loaded: PhiAntdIconComponent | IconDefinition): loaded is IconDefinition {
+  return typeof loaded === "object" && "icon" in loaded && "theme" in loaded;
+}
+
 const lazyIcons = new Map<PhiAntdIconKey, LazyExoticComponent<PhiAntdIconComponent>>();
 
 function readLazyIcon(icon: PhiAntdIconKey) {
   let Icon = lazyIcons.get(icon);
   if (!Icon) {
-    Icon = lazy(PHI_ANTD_ICON_LOADERS[icon]);
+    Icon = lazy(async (): Promise<{ default: PhiAntdIconComponent }> => {
+      const loaded = (await PHI_ANTD_ICON_LOADERS[icon]()).default;
+      if (!isIconDefinition(loaded)) return { default: loaded };
+      return { default: (props) => createElement(AntdIconLight, { ...props, icon: loaded }) };
+    });
     lazyIcons.set(icon, Icon);
   }
   return Icon;
