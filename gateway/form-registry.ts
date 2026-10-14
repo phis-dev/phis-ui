@@ -1,4 +1,4 @@
-import { cache } from "react";
+import { definePhiRequestMemo } from "../server-helpers/request-memo";
 import "server-only";
 
 import type { PhiRuntimeModuleFormDefinition } from "../components/forms/form-registry";
@@ -170,7 +170,7 @@ function buildResolvedDefinition(
   });
 }
 
-export const fetchFormRegistry = cache(async function fetchFormRegistry({
+export const fetchFormRegistry = definePhiRequestMemo(async function fetchFormRegistry({
   apiBaseUrl,
   internalToken,
   siteKey,

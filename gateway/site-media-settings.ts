@@ -1,4 +1,4 @@
-import { cache } from "react";
+import { definePhiRequestMemo } from "../server-helpers/request-memo";
 import "server-only";
 
 import { fetchPhiSiteApi } from "./site-api-request";
@@ -35,7 +35,7 @@ type GetResolvedSiteMediaSettingsOptions = {
   siteKey: string;
 };
 
-export const getResolvedSiteMediaSettings = cache(async function getResolvedSiteMediaSettings({
+export const getResolvedSiteMediaSettings = definePhiRequestMemo(async function getResolvedSiteMediaSettings({
   apiBaseUrl,
   internalToken,
   siteKey,

@@ -11,6 +11,7 @@ This document collects the cache and invalidation touchpoints in `gateway/*`.
     - `fetchSiteNavigationOverlay(...)` in `gateway/site-nav.ts` (not for `revision` or review requests), with the 60 s TTL
     - `resolveSiteInternalReferences(...)` in `gateway/internal-references.ts`, one entry per Page reference (by Area) and per Asset id, an Asset that did not come back kept as absent; only what is not kept goes into the turn's batch. 60 s TTL
     - `fetchPhiPublicAuthManifest(...)` in `gateway/auth-public-manifest.ts`, one entry per Site, 60 s TTL
+    - `getPhiCapabilitySnapshot(...)` in `gateway/server-capabilities.ts`, one entry per Site, 60 s TTL. The marker does not see it: the snapshot comes from the installed Add-on manifest and the Add-ons' stored capability states, which no marker trigger watches, so a changed capability reaches a process through the TTL
   - Cleared by `buildPhiSiteProxyHandlers(...)` (`gateway/site-proxy.ts`) after every POST/PUT/PATCH/DELETE through `/api/site` that Core accepted *through this door*, so the author sees the change at once in the process the write passed through. A write the Site answers locally (`/api/site/forms`, which relays a Form to Core through its own resolution) does not clear it; what such a write changes reaches this process the way it reaches every other one, through the marker on the next config refresh.
   - Cleared in every other process when a config refresh finds that `readMarker` moved: everything but the fresh config goes. Core moves the marker on any change to the Site row, on every publish of a Page, Area, Navigation or Theme, and on a change to the Site's auth config; drafts do not move it (phis-server DB.md, `phis.site_read_marker`). A publish through any process thus reaches all of them within about the refresh interval.
   - The TTL ends what the marker does not see, such as a Logo Asset whose content was replaced under the same id.
@@ -28,18 +29,14 @@ This document collects the cache and invalidation touchpoints in `gateway/*`.
   - The browser keeps a page it navigated to for `staleTimes.static` (30 s), so an open tab sees a publish after at most that long; a reload sees it at once.
   - Only in production. `next dev` keeps no rendered pages, so the proxy sends nothing to the static tree there.
 
-## React `cache(...)` Wrappers
+## Request Memo
 
-These helpers are wrapped in React server `cache(...)` for request-level memoization and have no clear
-function:
-
-- `getResolvedCmsPage(...)` and `getCurrentCmsPageDraft(...)`
-  - File: `gateway/site-page.ts`
-
-- `getExactSiteArea(...)` and `getCurrentSiteAreaDraft(...)`
-  - File: `gateway/site-area.ts`
-
-If their fetch layer uses `cache: "no-store"`, the underlying request is still dynamic, but the function itself remains wrapped in `cache(...)` for request-level memoization.
+- `definePhiRequestMemo(load)`
+  - File: `server-helpers/request-memo.ts`
+  - One answer per request for options that say the same thing: the key is the options' plain values (nested plain objects included, key order ignored); anything that is not plain data is refused. Scope and lifetime are `React.cache`'s, one server render; outside a render every call loads. Nothing outlives the request, so nothing is invalidated.
+  - Used by the Gateway reads that take an options object: `getExactSiteArea` and `getCurrentSiteAreaDraft` (`site-area.ts`), `getResolvedCmsPage`, `getCurrentCmsPageDraft` and `getSiteCmsPageCatalog` (`site-page.ts`), `getSiteThemeRevision`, `fetchFormRegistry`, `getPhiUserState`, `getPhiThreadInboxStats`, and the admin reads of Site settings, auth settings, media settings and stats.
+  - Why not `React.cache` directly: it compares arguments by identity, and every caller builds the options object fresh, so these reads were wrapped in `cache(...)` and never once answered from it. Duplicate GETs were absorbed only where Next's fetch memo happened to see the same request (AUDIT-2026-10-13, PU10). `scripts/validate-request-memo.ts` refuses `cache(...)` around a function with a destructured parameter.
+  - `React.cache` stays where the parameters are positional: strings compare by value, and an object passed positionally (`cmsBridge`, `runtime`, a catalog) is the caller's own instance for the request.
 
 ## Translation Caching
 

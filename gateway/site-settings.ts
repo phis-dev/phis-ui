@@ -1,4 +1,4 @@
-import { cache } from "react";
+import { definePhiRequestMemo } from "../server-helpers/request-memo";
 import "server-only";
 
 import { fetchPhiSiteApi } from "./site-api-request";
@@ -20,7 +20,7 @@ type GetResolvedSiteAdminSettingsOptions = {
   siteKey: string;
 };
 
-export const getResolvedSiteAdminSettings = cache(async function getResolvedSiteAdminSettings({
+export const getResolvedSiteAdminSettings = definePhiRequestMemo(async function getResolvedSiteAdminSettings({
   apiBaseUrl,
   internalToken,
   siteKey,

@@ -9,6 +9,7 @@ import {
   resolvePhiFormSubmitTarget,
 } from "../gateway/form-submit";
 import { buildPhiSiteFormRouteHandlers } from "../gateway/site-form-route";
+import { clearPhiSiteReadCache } from "../gateway/site-read-cache";
 import { PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/catalog";
 import { createPhiRuntimeModuleCatalog } from "../plugins/runtime-modules/contracts";
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "../plugins/runtime-modules/auth/ids";
@@ -503,6 +504,8 @@ assert.equal(calls.length, 0);
 
 activeModuleIds = [PHI_AUTH_RUNTIME_MODULE_ID];
 providerCapabilities = [];
+// Core answers differently from here on; the read cache would keep the old snapshot for its TTL.
+clearPhiSiteReadCache();
 const authCapabilityMissing = await submit({ body: { formId: FORM_IDS.login, phase: "submit" } });
 assert.equal(
   authCapabilityMissing.response.status,
@@ -512,6 +515,8 @@ assert.equal(
 assert.equal(calls.length, 0);
 
 providerCapabilities = [AUTH_CAPABILITY];
+// Core answers differently from here on; the read cache would keep the old snapshot for its TTL.
+clearPhiSiteReadCache();
 const authActive = await submit({
   body: { formId: FORM_IDS.login, phase: "submit", values: { email: "a@b.test" } },
   csrfHeader: BROWSER_CSRF,
@@ -712,6 +717,8 @@ assert.equal(calls.length, 0);
  */
 activeModuleIds = [PHI_AUTH_RUNTIME_MODULE_ID];
 providerCapabilities = [AUTH_CAPABILITY];
+// Core answers differently from here on; the read cache would keep the old snapshot for its TTL.
+clearPhiSiteReadCache();
 {
   calls.length = 0;
   const search = new URLSearchParams({

@@ -7,6 +7,7 @@ import type {
   PhiCapabilityState,
 } from "../types/server-capabilities";
 import { fetchPhiSiteApi } from "./site-api-request";
+import { readPhiSiteReadCache } from "./site-read-cache";
 
 const PROVIDER_ID_PATTERN = /^@[^/]+\/[^/]+(?:\/[^/]+)*$/;
 const CAPABILITY_ID_PATTERN = /^@[^/]+\/[^:]+:v[1-9]\d*$/;
@@ -82,7 +83,29 @@ function parseSnapshot(value: unknown): PhiCapabilitySnapshot {
   };
 }
 
-export async function getPhiCapabilitySnapshot({
+export async function getPhiCapabilitySnapshot(options: {
+  apiBaseUrl: string;
+  internalToken: string;
+  siteKey: string;
+}): Promise<PhiCapabilitySnapshot> {
+  /*
+   * Kept in the read cache outside development: the snapshot is the same for every viewer of the Site and
+   * was asked for on every dynamic request. Unlike the auth manifest beside it, nothing that changes it
+   * moves the Site's read marker -- it comes from the installed Add-on manifest and the Add-ons' stored
+   * capability states, which the marker's triggers do not watch -- so the TTL is what bounds it: a changed
+   * capability reaches every process within a minute. Any write through a process's `/api/site` proxy and
+   * any marker move empty it earlier, which costs one read.
+   */
+  if (process.env.NODE_ENV === "development") {
+    return loadPhiCapabilitySnapshot(options);
+  }
+  return readPhiSiteReadCache(
+    `capabilities:${options.siteKey.trim().toLowerCase()}`,
+    () => loadPhiCapabilitySnapshot(options),
+  );
+}
+
+async function loadPhiCapabilitySnapshot({
   apiBaseUrl,
   internalToken,
   siteKey,

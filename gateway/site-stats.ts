@@ -1,4 +1,4 @@
-import { cache } from "react";
+import { definePhiRequestMemo } from "../server-helpers/request-memo";
 import "server-only";
 
 import { fetchPhiSiteApi } from "./site-api-request";
@@ -13,7 +13,7 @@ type GetResolvedSiteStatsOptions = {
   siteKey: string;
 };
 
-export const getResolvedSiteStats = cache(async function getResolvedSiteStats({
+export const getResolvedSiteStats = definePhiRequestMemo(async function getResolvedSiteStats({
   apiBaseUrl,
   internalToken,
   siteKey,

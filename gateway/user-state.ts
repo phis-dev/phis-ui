@@ -1,5 +1,5 @@
 import { isPhiRecord } from "../helpers/is-record";
-import { cache } from "react";
+import { definePhiRequestMemo } from "../server-helpers/request-memo";
 import "server-only";
 
 import { isPhisUserStateKey } from "../constants/user-state";
@@ -12,7 +12,7 @@ import { fetchPhiSiteApi } from "./site-api-request";
  * Read here rather than in the browser because that is the difference between a dismissed card never
  * appearing and one that appears and then vanishes -- the worse result for the more complicated path.
  * It is deliberately not part of the render scope: a page whose Modules keep nothing should not pay for
- * a request, and `cache()` makes a second caller in the same render free, so the Widget that wants it
+ * a request, and the request memo makes a second caller in the same render free, so the Widget that wants it
  * asks for it.
  *
  * Only for a signed-in viewer. Core answers from the session and refuses without one, and a Public page
@@ -33,7 +33,7 @@ export type GetPhiUserStateOptions = {
   cookieHeader: string;
 };
 
-export const getPhiUserState = cache(async function getPhiUserState({
+export const getPhiUserState = definePhiRequestMemo(async function getPhiUserState({
   apiBaseUrl,
   internalToken,
   siteKey,

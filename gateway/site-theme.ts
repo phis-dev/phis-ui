@@ -1,4 +1,4 @@
-import { cache } from "react";
+import { definePhiRequestMemo } from "../server-helpers/request-memo";
 import "server-only";
 
 import type { PhiBlockRuntimeSite } from "../types/widget-runtime";
@@ -13,7 +13,7 @@ type GetSiteThemeRevisionOptions = {
   cookieHeader?: string | null;
 };
 
-export const getSiteThemeRevision = cache(async function getSiteThemeRevision({
+export const getSiteThemeRevision = definePhiRequestMemo(async function getSiteThemeRevision({
   apiBaseUrl,
   internalToken,
   siteKey,

@@ -1,5 +1,5 @@
 import { isPhiRecord } from "../helpers/is-record";
-import { cache } from "react";
+import { definePhiRequestMemo } from "../server-helpers/request-memo";
 import "server-only";
 
 import type { PhiCmsReviewParams } from "../server-helpers/cms-review";
@@ -20,7 +20,7 @@ export type GetExactSiteAreaOptions = {
   sourcePreset: PhiCmsPresetIdentity;
 };
 
-export const getExactSiteArea = cache(async function getExactSiteArea({
+export const getExactSiteArea = definePhiRequestMemo(async function getExactSiteArea({
   apiBaseUrl,
   internalToken,
   siteKey,
@@ -146,7 +146,7 @@ export async function getPublicSiteAreaWithPublishedPages({
   };
 }
 
-export const getCurrentSiteAreaDraft = cache(async function getCurrentSiteAreaDraft({
+export const getCurrentSiteAreaDraft = definePhiRequestMemo(async function getCurrentSiteAreaDraft({
   apiBaseUrl,
   internalToken,
   siteKey,

@@ -1,5 +1,5 @@
 import { isPhiRecord } from "../helpers/is-record";
-import { cache } from "react";
+import { definePhiRequestMemo } from "../server-helpers/request-memo";
 import "server-only";
 
 import type { PhiCmsReviewParams } from "../server-helpers/cms-review";
@@ -31,7 +31,7 @@ type GetResolvedCmsPageOptions = {
   sourcePreset?: PhiCmsPresetIdentity | null;
 };
 
-export const getResolvedCmsPage = cache(async function getResolvedCmsPage({
+export const getResolvedCmsPage = definePhiRequestMemo(async function getResolvedCmsPage({
   apiBaseUrl,
   internalToken,
   siteKey,
@@ -76,7 +76,7 @@ export const getResolvedCmsPage = cache(async function getResolvedCmsPage({
   return payload;
 });
 
-export const getCurrentCmsPageDraft = cache(async function getCurrentCmsPageDraft({
+export const getCurrentCmsPageDraft = definePhiRequestMemo(async function getCurrentCmsPageDraft({
   apiBaseUrl,
   internalToken,
   siteKey,
@@ -118,7 +118,7 @@ export const getCurrentCmsPageDraft = cache(async function getCurrentCmsPageDraf
   return payload;
 });
 
-export const getSiteCmsPageCatalog = cache(async function getSiteCmsPageCatalog({
+export const getSiteCmsPageCatalog = definePhiRequestMemo(async function getSiteCmsPageCatalog({
   apiBaseUrl,
   internalToken,
   siteKey,

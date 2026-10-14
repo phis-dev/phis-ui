@@ -1,4 +1,4 @@
-import { cache } from "react";
+import { definePhiRequestMemo } from "../server-helpers/request-memo";
 import "server-only";
 
 import { fetchPhiSiteApi } from "./site-api-request";
@@ -29,7 +29,7 @@ type GetPhiThreadInboxStatsOptions = {
   cookieHeader: string;
 };
 
-export const getPhiThreadInboxStats = cache(async function getPhiThreadInboxStats({
+export const getPhiThreadInboxStats = definePhiRequestMemo(async function getPhiThreadInboxStats({
   apiBaseUrl,
   internalToken,
   siteKey,
