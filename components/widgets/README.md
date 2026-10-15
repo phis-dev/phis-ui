@@ -220,12 +220,15 @@ Generic control Widgets reuse the capability sets in `signals/control-signal-cap
   runtime, shared through `config/command-buttons.ts` and `client/shared/phi-command-buttons.ts` -- and
   stands them in a corner of the viewport instead of a row: `placement`, `offsetBlock`, `offsetInline`,
   `shape`, and for more than one button `groupTrigger`, `groupIcon`, `groupDirection`. It belongs to the
-  Page it is placed on and takes no room in its slot; the Builder and previews draw it in place.
+  Page it is placed on and takes no room in its slot; live it is drawn on `document.body`, out of the
+  slot's stacking context, and the Builder and previews draw it in place.
 - The Timeline (`timeline`) draws `PhiTimelineEntry` items (`@phis/contracts/timeline`): its own
   `entries`, edited in the scaffold's static entries dialog, or a `timeline` Data Provider's answer chosen
   in "Entries Source". An entry's `at` is formatted for the page locale in `timeFormat`
   (`date | datetime | relative`); `time` is shown as written. It listens for `reload` to ask its
-  Provider again. Static options and static entries share one editor,
+  Provider again, and for `bindingParams/change` (`json<timeline-binding-params>`, `{ params }` merged
+  over the stored params) to ask it about something else -- the ticket a Supporter opened. Static
+  options and static entries share one editor,
   `components/widgets/builder/phi-static-rows-editor.tsx`, configured per kind of row.
 - Steps (`steps`) are a choice drawn as a sequence: options are the steps, the value is the step in
   progress. With `valueMode: "stack-slot-index"` they follow a Stack's active slot, and with `navigable`

@@ -12,7 +12,7 @@ import { PhiIcon } from "../../shell/phi-icon";
 import { PhiWidgetIconPickerButton } from "../client/shared/phi-widget-icon-picker";
 import { usePhiWidgetScaffoldPopup } from "../client/shared/phi-widget-scaffold-popup";
 import { formatPhiAuthoringToolsLabel } from "../label-types/authoring-tools";
-import { createPhiSharedRuntimeDataProviderKey } from "../../../constants/runtime-data-provider-key";
+import type { PhiRuntimeDataProviderKey } from "../../../types/runtime-data-provider";
 import type {
   PhiTableProviderFieldDefinition,
   PhiTableProviderMutationRequest,
@@ -68,7 +68,13 @@ export type PhiStaticRowsLabels = {
 };
 
 export type PhiStaticRowsEditorSpec<TRow extends PhiStaticRowsRecord> = {
-  /** Names the in-memory provider and its resource, one per kind of row. */
+  /**
+   * The in-memory Table Provider the dialog's table reads, one per kind of row. Created at module scope
+   * by the caller, so an identifier nobody owns fails when the module loads rather than when the dialog
+   * opens.
+   */
+  providerKey: PhiRuntimeDataProviderKey;
+  /** The provider's one resource. */
   resourceKey: string;
   columns: readonly PhiStaticRowsColumn[];
   /** The field that identifies a row; it is required and unique among the rows. */
@@ -106,7 +112,7 @@ function PhiStaticRowsTableProvider<TRow extends PhiStaticRowsRecord>({
   children,
 }: {
   spec: PhiStaticRowsEditorSpec<TRow>;
-  providerKey: ReturnType<typeof createPhiSharedRuntimeDataProviderKey>;
+  providerKey: PhiRuntimeDataProviderKey;
   resource: PhiTableProviderResourceDescriptor;
   rows: readonly PhiStaticRowsRecord[];
   setRows: Dispatch<SetStateAction<PhiStaticRowsRecord[]>>;
@@ -179,7 +185,7 @@ function PhiStaticRowsTable<TRow extends PhiStaticRowsRecord>({
   disabled,
 }: {
   spec: PhiStaticRowsEditorSpec<TRow>;
-  providerKey: ReturnType<typeof createPhiSharedRuntimeDataProviderKey>;
+  providerKey: PhiRuntimeDataProviderKey;
   resource: PhiTableProviderResourceDescriptor;
   disabled: boolean;
 }) {
@@ -285,10 +291,7 @@ export function PhiStaticRowsToolButton<TRow extends PhiStaticRowsRecord>({
 }) {
   const { labels } = spec;
   const popup = usePhiWidgetScaffoldPopup();
-  const providerKey = useMemo(
-    () => createPhiSharedRuntimeDataProviderKey("tables", `static-${spec.resourceKey}-editor`),
-    [spec.resourceKey],
-  );
+  const { providerKey } = spec;
   const resource = useMemo<PhiTableProviderResourceDescriptor>(() => ({
     resourceKey: spec.resourceKey,
     title: labels.title,

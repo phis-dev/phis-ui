@@ -1,16 +1,22 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import type { PhiStepsWidgetConfig } from "./config";
 import { usePhiStackChoiceController } from "../../../../../components/widgets/client/shared/phi-choice-controller";
 import { PhiStepsControl } from "../../../../../components/controls/phi-steps-control";
+import { PhiEmptyControl } from "../../../../../components/controls/phi-empty-control";
 
 export function PhiStepsWidget({
   config,
   signalsEnabled = true,
+  emptyHint,
 }: {
   config?: PhiStepsWidgetConfig | null;
   blockId?: string | number | null;
   signalsEnabled?: boolean;
+  /** Drawn while there are no steps -- in the Builder, a Stack mode with no Stack followed yet. */
+  emptyHint?: ReactNode;
 }) {
   const choice = usePhiStackChoiceController({
     config,
@@ -21,6 +27,10 @@ export function PhiStepsWidget({
   /* A value that names no step is the first step: a sequence always stands somewhere. */
   const current = Math.max(0, choice.options.findIndex((option) => option.value === choice.value));
   const navigable = config?.navigable === true && !choice.disabled && !choice.readOnly;
+
+  if (choice.options.length === 0 && emptyHint) {
+    return <PhiEmptyControl description={emptyHint} />;
+  }
 
   return (
     <PhiStepsControl

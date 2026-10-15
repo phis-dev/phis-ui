@@ -4,12 +4,15 @@ import { useMemo } from "react";
 
 import { isPhiTimelineTone, readPhiTimelineEntry, type PhiTimelineEntry } from "@phis/contracts/timeline";
 import { usePhiAuthoringToolsLabels } from "../client/shared/phi-authoring-tools-labels";
+import { createPhiSharedRuntimeDataProviderKey } from "../../../constants/runtime-data-provider-key";
 import type { PhiAuthoringToolsLabels } from "../label-types/authoring-tools";
 import {
   PhiStaticRowsToolButton,
   type PhiStaticRowsEditorSpec,
   type PhiStaticRowsRecord,
 } from "./phi-static-rows-editor";
+
+const PHI_STATIC_TIMELINE_TABLE_PROVIDER_KEY = createPhiSharedRuntimeDataProviderKey("tables", "static-timeline-editor");
 
 function readText(row: PhiStaticRowsRecord, key: string) {
   return typeof row[key] === "string" ? (row[key] as string).trim() : "";
@@ -19,6 +22,7 @@ function createStaticTimelineSpec(
   labels: PhiAuthoringToolsLabels["staticTimeline"],
 ): PhiStaticRowsEditorSpec<PhiTimelineEntry> {
   return {
+    providerKey: PHI_STATIC_TIMELINE_TABLE_PROVIDER_KEY,
     resourceKey: "timeline",
     keyField: "key",
     nameField: "title",

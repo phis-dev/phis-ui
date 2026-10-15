@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 
 import type { PhiControlOption } from "../../controls/phi-control-options";
+import { createPhiSharedRuntimeDataProviderKey } from "../../../constants/runtime-data-provider-key";
 import { usePhiAuthoringToolsLabels } from "../client/shared/phi-authoring-tools-labels";
 import type { PhiAuthoringToolsLabels } from "../label-types/authoring-tools";
 import {
@@ -10,6 +11,8 @@ import {
   type PhiStaticRowsEditorSpec,
   type PhiStaticRowsRecord,
 } from "./phi-static-rows-editor";
+
+const PHI_STATIC_OPTIONS_TABLE_PROVIDER_KEY = createPhiSharedRuntimeDataProviderKey("tables", "static-options-editor");
 
 function readText(row: PhiStaticRowsRecord, key: string) {
   return typeof row[key] === "string" ? (row[key] as string).trim() : "";
@@ -19,6 +22,7 @@ function createStaticOptionsSpec(
   labels: PhiAuthoringToolsLabels["staticOptions"],
 ): PhiStaticRowsEditorSpec<PhiControlOption> {
   return {
+    providerKey: PHI_STATIC_OPTIONS_TABLE_PROVIDER_KEY,
     resourceKey: "options",
     keyField: "value",
     nameField: "label",

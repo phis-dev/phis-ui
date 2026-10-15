@@ -91,6 +91,10 @@ export type PhiAuthoringToolsLabels = {
     labelRequired: string;
     valuesUnique: string;
   };
+  /** A choice that follows a Stack, drawn in the Builder before it has one to follow. */
+  stackChoice: {
+    noStack: string;
+  };
   staticTimeline: {
     edit: string;
     title: string;
@@ -187,6 +191,9 @@ export const PHI_AUTHORING_TOOLS_DEFAULT_LABELS: PhiAuthoringToolsLabels = {
     valueRequired: "Every option requires a value.",
     labelRequired: "Every option requires a label.",
     valuesUnique: "Option values must be unique.",
+  },
+  stackChoice: {
+    noStack: "No Stack connected yet. Its slots become the options here.",
   },
   staticTimeline: {
     edit: "Edit static entries",

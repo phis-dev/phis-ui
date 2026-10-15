@@ -1,6 +1,7 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { FloatButton } from "antd";
 
 import { PhiIcon } from "../shell/phi-icon";
@@ -33,6 +34,23 @@ export type PhiFloatButtonControlProps = {
   disabled?: boolean;
   onActivate?: (key: string) => void;
 };
+
+const subscribeNever = () => () => {};
+
+/**
+ * Where a fixed button is drawn: on `document.body`, outside every box of the page.
+ *
+ * Fixed positioning places the button against the viewport, but the order it paints in is still its
+ * ancestors'. A slot child and a Region shell each open a stacking context of their own, so a button
+ * left inside its slot was painted under the Footer while the page scrolled and under the Header in the
+ * top corners -- its z-index counted only among its slot's siblings. On the body it stacks with the
+ * page's other overlays, as an Ant Design Modal does. The server draws nothing for it: there is no body
+ * to portal into, and a fixed button needs none of the page's flow.
+ */
+function PhiFloatButtonPortal({ children }: { children: ReactNode }) {
+  const mounted = useSyncExternalStore(subscribeNever, () => true, () => false);
+  return mounted ? createPortal(children, document.body) : null;
+}
 
 /* Ant Design's own corner distance (`floatButtonInsetInlineEnd`, `floatButtonInsetBlockEnd`). */
 const PHI_FLOAT_BUTTON_DEFAULT_INLINE = "24px";
@@ -112,11 +130,7 @@ export function PhiFloatButtonControl({
     );
   });
 
-  if (buttons.length === 1) {
-    return buttons[0];
-  }
-
-  return (
+  const placed = buttons.length === 1 ? buttons[0] : (
     <FloatButton.Group
       trigger={group?.trigger}
       icon={group?.icon ? <PhiIcon name={group.icon} size="inherit" /> : undefined}
@@ -127,4 +141,7 @@ export function PhiFloatButtonControl({
       {buttons}
     </FloatButton.Group>
   );
+
+  /* In place it stays in its slot, where the Builder's canvas can show and select it. */
+  return inPlace ? placed : <PhiFloatButtonPortal>{placed}</PhiFloatButtonPortal>;
 }

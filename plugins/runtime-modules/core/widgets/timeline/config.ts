@@ -1,4 +1,5 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../../types/signals";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { readPhiTimelineEntries, type PhiTimelineEntry } from "@phis/contracts/timeline";
 import {
@@ -61,8 +62,21 @@ export const PHI_TIMELINE_WIDGET_DEFINITION = {
   slotSizePolicy: "intrinsic",
   runtimeSignals: {
     emits: [],
-    /* A Module whose data changed asks the Timeline to ask its Provider again. */
-    listens: [{ id: "reload", channel: "reload", action: "activate", valueType: "none" }],
+    listens: [
+      /* A Module whose data changed asks the Timeline to ask its Provider again. */
+      { id: "reload", channel: "reload", action: "activate", valueType: "none" },
+      /*
+       * What the Provider is asked about, chosen at runtime -- the ticket a Supporter opened. `{ params }`
+       * merged over the stored params, as a Table and a Tree take theirs.
+       */
+      {
+        id: "bindingParamsChange",
+        channel: "bindingParams",
+        action: "change",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.timelineBindingParams,
+      },
+    ],
   },
   fields: [
     /* Edited in the scaffold's dialog, as a choice Widget's static options are. */

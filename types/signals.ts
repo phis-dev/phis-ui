@@ -153,6 +153,7 @@ export const PHI_SIGNAL_VALUE_SCHEMAS = {
   threadSelection: createPhiSharedSignalValueSchema("thread-selection"),
   treeAction: createPhiSharedSignalValueSchema("tree-action"),
   treeBindingParams: createPhiSharedSignalValueSchema("tree-binding-params"),
+  timelineBindingParams: createPhiSharedSignalValueSchema("timeline-binding-params"),
   treeState: createPhiSharedSignalValueSchema("tree-state"),
   treeMutation: createPhiSharedSignalValueSchema("tree-mutation"),
   temporalSelection: createPhiSharedSignalValueSchema("temporal-selection"),

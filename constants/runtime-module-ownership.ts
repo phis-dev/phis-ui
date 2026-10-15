@@ -223,6 +223,7 @@ const PHI_RUNTIME_MODULE_OWNERSHIP: Readonly<Record<string, readonly [module: st
   "signals/thread-selection": ["threads", "selection"],
   "signals/tree-action": ["core", "tree-action"],
   "signals/tree-binding-params": ["core", "tree-binding-params"],
+  "signals/timeline-binding-params": ["core", "timeline-binding-params"],
   "signals/tree-mutation": ["core", "tree-mutation"],
   "signals/tree-state": ["core", "tree-state"],
   "tables/builder-navigation": ["builder", "navigation"],
@@ -231,6 +232,7 @@ const PHI_RUNTIME_MODULE_OWNERSHIP: Readonly<Record<string, readonly [module: st
   "tables/content": ["core", "content"],
   // The authoring-time options picker, owned by the Builder like the other authoring tables.
   "tables/static-options-editor": ["builder", "static-options-editor"],
+  "tables/static-timeline-editor": ["builder", "static-timeline-editor"],
   "tables/groups": ["groups", "groups"],
   "tables/news": ["news", "news"],
   "tables/localization": ["localization", "localization"],

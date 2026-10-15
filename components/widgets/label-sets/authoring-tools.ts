@@ -72,6 +72,7 @@ const PHI_AUTHORING_TOOLS_LABEL_SET = definePhiLabelSet({
     static_options_value_required: definePhiMessageLabel(PHI_AUTHORING_TOOLS_DEFAULT_LABELS.staticOptions.valueRequired),
     static_options_label_required: definePhiMessageLabel(PHI_AUTHORING_TOOLS_DEFAULT_LABELS.staticOptions.labelRequired),
     static_options_values_unique: definePhiMessageLabel(PHI_AUTHORING_TOOLS_DEFAULT_LABELS.staticOptions.valuesUnique),
+    stack_choice_no_stack: definePhiMessageLabel(PHI_AUTHORING_TOOLS_DEFAULT_LABELS.stackChoice.noStack),
     static_timeline_edit: PHI_AUTHORING_TOOLS_DEFAULT_LABELS.staticTimeline.edit,
     static_timeline_title: PHI_AUTHORING_TOOLS_DEFAULT_LABELS.staticTimeline.title,
     static_timeline_add: PHI_AUTHORING_TOOLS_DEFAULT_LABELS.staticTimeline.addEntry,
@@ -172,6 +173,9 @@ export async function getPhiAuthoringToolsLabels(
       valueRequired: labels.static_options_value_required,
       labelRequired: labels.static_options_label_required,
       valuesUnique: labels.static_options_values_unique,
+    },
+    stackChoice: {
+      noStack: labels.stack_choice_no_stack,
     },
     staticTimeline: {
       edit: labels.static_timeline_edit,
