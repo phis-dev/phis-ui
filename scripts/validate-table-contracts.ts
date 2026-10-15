@@ -564,6 +564,31 @@ const parsedFooter = parsePhiTableWidgetConfig({
 });
 assert.equal(parsedFooter.presentation.footer?.values[0]?.value.source, "provider");
 assert.equal(parsedFooter.presentation.footer?.template, "%1 entries, %2 selected");
+// A footer variant replaces the line while its value holds, may name no values, and one that cannot be
+// read -- no template, an unknown operator -- is dropped rather than shown as the declared line's twin.
+const parsedVariants = parsePhiTableWidgetConfig({
+  presentation: {
+    footer: {
+      template: "%1 left",
+      values: [{ key: "left", value: { source: "provider", fieldKey: "left" } }],
+      variants: [
+        { when: { value: { source: "provider", fieldKey: "exhausted" }, operator: "truthy" }, template: "Used up" },
+        { when: { value: { source: "provider", fieldKey: "exhausted" }, operator: "sometimes" }, template: "x" },
+        { when: { value: { source: "core", fieldKey: "totalRows" }, operator: "falsy" } },
+        { when: { value: { source: "provider", fieldKey: "limited" }, operator: "falsy" }, template: "" },
+      ],
+    },
+  },
+});
+assert.deepEqual(parsedVariants.presentation.footer?.variants, [{
+  when: { value: { source: "provider", fieldKey: "exhausted" }, operator: "truthy" },
+  template: "Used up",
+  values: [],
+}, {
+  when: { value: { source: "provider", fieldKey: "limited" }, operator: "falsy" },
+  template: "",
+  values: [],
+}]);
 assert.equal(parsedFooter.presentation.summary?.placement, "sticky-bottom");
 assert.equal(parsedSticky.presentation.columns[0]?.sticky, "left");
 assert.deepEqual(validatePhiTableWidgetBinding(parsedSticky, resource), []);

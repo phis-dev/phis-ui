@@ -247,7 +247,13 @@ Table footer and column summary are separate native Table presentation contracts
 
 - `presentation.footer` renders the full-width Ant Design Table footer below the Table body. It owns one
   translatable plain-text `template`, an ordered list of value bindings for `%1`, `%2`, and subsequent
-  placeholders, and optional alignment. It is the Table's visual bottom edge when present.
+  placeholders, and optional alignment. It is the Table's visual bottom edge when present. Optional
+  `variants` say the line differently while one value holds: each names a `when` -- a footer value
+  binding's source and `truthy` or `falsy` -- and its own template and values, and the first that holds
+  replaces the declared line; an empty variant template hides the footer while it holds. A sentence that
+  changes with the state ("3 of 5 left" against "Used up") is
+  two templates rather than one with a condition inside, because the template fills placeholders and
+  nothing else.
 - `presentation.summary` renders column-bound Ant Design Summary rows. Every cell addresses stable
   `columnKey` endpoints; persisted numeric column indexes are forbidden. The Control resolves indexes and
   spans after selection, drag, action, hidden-column, and visitor column-order projections. Summary rows

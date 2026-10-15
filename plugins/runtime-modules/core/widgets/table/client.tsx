@@ -779,16 +779,28 @@ export function PhiTableWidgetClient({
     const pageSize = resolvedQuery.pageSize ?? rows.length;
     return pageSize > 0 ? Math.ceil(total / pageSize) : 0;
   }, [resolvedQuery.page, resolvedQuery.pageSize, rows.length, selectedRowIdentities.length, summary, total]);
-  const footer = useMemo(() => presentation.footer ? {
-    align: presentation.footer.align,
-    content: formatPhiTranslation(
-      presentation.footer.template,
-      presentation.footer.values.map((binding) => {
-        const value = resolveSummaryValue({ key: binding.key, value: binding.value });
-        return typeof value === "number" ? value : value == null ? "—" : String(value);
-      }),
-    ),
-  } : undefined, [presentation.footer, resolveSummaryValue]);
+  const footer = useMemo(() => {
+    if (!presentation.footer) return undefined;
+    // The first variant whose value holds says the line instead; see `PhiTableFooterVariant`.
+    const variant = presentation.footer.variants?.find(({ when }) => {
+      const held = Boolean(resolveSummaryValue({ key: "when", value: when.value }));
+      return when.operator === "truthy" ? held : !held;
+    });
+    const template = variant?.template ?? presentation.footer.template;
+    // A variant with an empty template takes the footer away rather than drawing an empty bar.
+    if (!template.trim()) return undefined;
+    const values = variant ? variant.values ?? [] : presentation.footer.values;
+    return {
+      align: presentation.footer.align,
+      content: formatPhiTranslation(
+        template,
+        values.map((binding) => {
+          const value = resolveSummaryValue({ key: binding.key, value: binding.value });
+          return typeof value === "number" ? value : value == null ? "—" : String(value);
+        }),
+      ),
+    };
+  }, [presentation.footer, resolveSummaryValue]);
   const tableSummary = useMemo(() => presentation.summary ? {
     ...presentation.summary,
     rows: presentation.summary.rows.map((row) => ({

@@ -130,8 +130,14 @@ export type PhiSettingsPageShellOverlay = {
   /** What the Form Widget's config says beyond the shell's defaults, its routes included. */
   configOverrides?: PhiSettingsPageShellFormSectionBase["configOverrides"];
   savedMessage?: string;
-  submitLabel: string;
-  cancelLabel: string;
+  /**
+   * What the Footer's two buttons say, where the dialog's verb is not the shared one.
+   *
+   * Absent, they are the shared `save` and `cancel` actions, whose words every Site already has in every
+   * language. A dialog states its own only where "Save" would say the wrong thing.
+   */
+  submitLabel?: string;
+  cancelLabel?: string;
   /** Responsive Modal width, for a Form that needs more or less than the Modal's own default. */
   width?: Record<string, unknown> | number | string;
 };
@@ -459,8 +465,18 @@ export function buildPhiSettingsPageShellTree({
             compact: true,
             showLabels: true,
             buttons: [
-              { key: "cancel", emits: [{ capabilityId: "close", value: null }], label: overlay.cancelLabel, icon: "cancel" },
-              { key: "submit", emits: [{ capabilityId: "submit", value: null }], label: overlay.submitLabel, variant: "primary" },
+              {
+                key: "cancel",
+                emits: [{ capabilityId: "close", value: null }],
+                ...(overlay.cancelLabel ? { label: overlay.cancelLabel } : { action: "cancel" }),
+                icon: "cancel",
+              },
+              {
+                key: "submit",
+                emits: [{ capabilityId: "submit", value: null }],
+                ...(overlay.submitLabel ? { label: overlay.submitLabel } : { action: "save" }),
+                variant: "primary",
+              },
             ],
             signalRoutes: {
               emits: [

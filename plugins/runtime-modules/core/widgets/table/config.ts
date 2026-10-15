@@ -14,6 +14,7 @@ import {
   type PhiTableWidgetConfig,
   type PhiTableFilterDefinition,
   type PhiTableFooterConfig,
+  type PhiTableFooterVariant,
   type PhiTableSummaryConfig,
   type PhiTableSummaryItemDefinition,
   type PhiTableSummaryValueSource,
@@ -216,20 +217,43 @@ function readTableSummaryItem(value: unknown): PhiTableSummaryItemDefinition | n
   };
 }
 
+function readTableFooterValues(value: unknown) {
+  return Array.isArray(value)
+    ? value.flatMap((item) => {
+      const parsed = readTableSummaryItem(item);
+      return parsed ? [{ key: parsed.key, value: parsed.value }] : [];
+    })
+    : [];
+}
+
+function readTableFooterVariant(value: unknown): PhiTableFooterVariant | null {
+  if (!isPhiRecord(value) || !isPhiRecord(value.when)) return null;
+  // An empty template is a statement here, not a missing one: the footer has nothing to say.
+  const template = typeof value.template === "string" ? value.template : null;
+  const when = readTableSummaryItem({ key: "when", value: value.when.value });
+  const operator = value.when.operator;
+  if (template == null || !when || (operator !== "truthy" && operator !== "falsy")) return null;
+  return { when: { value: when.value, operator }, template, values: readTableFooterValues(value.values) };
+}
+
 function readTableFooter(value: unknown): PhiTableFooterConfig | undefined {
   if (!isPhiRecord(value) || !Array.isArray(value.values)) return undefined;
   const template = readString(value.template);
-  const values = value.values.flatMap((item) => {
-    const parsed = readTableSummaryItem(item);
-    return parsed ? [{ key: parsed.key, value: parsed.value }] : [];
-  });
+  const values = readTableFooterValues(value.values);
   if (!template || values.length === 0) return undefined;
+  const variants = Array.isArray(value.variants)
+    ? value.variants.flatMap((item) => {
+      const variant = readTableFooterVariant(item);
+      return variant ? [variant] : [];
+    })
+    : [];
   return {
     template,
     values,
     align: value.align === "center" || value.align === "end"
       ? value.align
       : "start",
+    ...(variants.length > 0 ? { variants } : {}),
   };
 }
 

@@ -91,7 +91,8 @@ Every mounted Settings page composes its tree through the one shared Settings pa
 by this package. Modules pass their content panels; they do not build Settings layout themselves. The
 shell guarantees that all Settings pages of all Modules look and behave identically.
 
-The shell (`buildPhiSettingsPageShellTree`, `components/regions/presets/phi-settings-page-shell-tree.ts`)
+The shell (`buildPhiSettingsPageShellTree`, `components/regions/presets/phi-settings-page-shell-tree.ts`,
+public through `@phis/ui/helpers` so an installed package builds its Settings page the same way)
 renders content only (navigation is the sidebar's job, section 3): the page content region roots on the
 shared base page scaffold, which owns padding and background, and one Collapsible Layout fills its slot.
 There is no page-level heading block above it — the page title is already in the header, and the panel
@@ -120,6 +121,11 @@ in the Form Widget's placement config, where the options resolution reads it und
 ([FORMS.md](./FORMS.md)), so the list is in the HTML the Server sends. A panel whose save changes
 something only the Server applies asks the runtime for the Page again on `reload/activate`
 ([SIGNALS.md](./SIGNALS.md)); the Form itself never navigates or reloads.
+
+A record that is created or edited from a Table is a dialog rather than a panel: the shell's `overlays`,
+opened by the Table action they name (`openActionKey`). Their Footer buttons are the shared `save` and
+`cancel` actions, whose words every Site already has; a dialog states its own only where "Save" would say
+the wrong thing.
 
 Cross-Module aggregation must never be built as in-page tabs or slot contributions; Modules always
 switch via routes through the sidebar container.

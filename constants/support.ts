@@ -5,6 +5,7 @@
  */
 export {
   PHIS_SUPPORT_REQUESTER_WINDOW_DEFAULT_DAYS,
+  PhisSupportAllowancePeriod,
   PhisSupportClosePolicy,
   PhisSupportQueueFlag,
   PhisSupportTicketChannel,
