@@ -15,11 +15,8 @@ import {
   PHI_THREADS_CONTROLLER_INSTANCE_KEY,
   PHI_THREADS_CONTROLLER_TYPE,
 } from "../controller/address";
-import {
-  PHI_APP_THREADS_PAGE_LAYOUT_IDS,
-  PHI_APP_THREADS_PAGE_OVERLAY_IDS,
-  PHI_APP_THREADS_PAGE_WIDGET_IDS,
-} from "../addresses";
+import { createPhiThreadsPageIds } from "../addresses";
+import type { PhiSidebarAreaKey } from "../../sidebar-route";
 import { createPhiRuntimeFormControllerAddress } from "../../../../components/forms/runtime-form-controller-address";
 import { PHI_THREADS_FORM_IDS } from "../forms";
 import { PHI_COLOR, PHI_SPACE } from "../../../../theme/antd-css-var-contract";
@@ -27,9 +24,14 @@ import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from ".
 import { getPhiThreadPageLabels } from "../labels";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 
-const SYNTHETIC_APP_THREADS_REGION_IDS = {
-  regionContent: -453,
-} as const;
+/** The content region of each Area's conversations Page. */
+const SYNTHETIC_THREADS_REGION_ID_BY_AREA = {
+  app: -453,
+  accounting: -454,
+  admin: -455,
+  editor: -456,
+  builder: -457,
+} as const satisfies Record<PhiSidebarAreaKey, number>;
 
 /**
  * The three surfaces of a conversation, placed and wired.
@@ -48,13 +50,16 @@ const SYNTHETIC_APP_THREADS_REGION_IDS = {
  * route below could equally have been drawn in the Builder -- the Controller excepted, which still
  * names the Page's Widgets by id rather than by route (TODOS.md).
  */
-export async function buildPhiDefaultAppThreadsPageTree({
+export async function buildPhiDefaultThreadsPageTree({
   page,
   runtime,
+  area,
 }: {
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
+  area: PhiSidebarAreaKey;
 }): Promise<PhiResolvedCmsPageTree> {
+  const { widgets: widgetIds, overlays: overlayIds, layouts: layoutIds } = createPhiThreadsPageIds(area);
   const credentials = readPhiServerApiCredentials();
   const labels = await getPhiThreadPageLabels({
     apiBaseUrl: credentials.apiBaseUrl,
@@ -63,12 +68,12 @@ export async function buildPhiDefaultAppThreadsPageTree({
   });
 
   const controllerAddress = createPhiThreadsControllerAddress();
-  const inboxAddress = createPhiSignalAddress("cms", PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetInbox);
-  const conversationAddress = createPhiSignalAddress("cms", PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetConversation);
-  const composerAddress = createPhiSignalAddress("cms", PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetComposer);
+  const inboxAddress = createPhiSignalAddress("cms", widgetIds.widgetInbox);
+  const conversationAddress = createPhiSignalAddress("cms", widgetIds.widgetConversation);
+  const composerAddress = createPhiSignalAddress("cms", widgetIds.widgetComposer);
   const composerEmptyAddress = createPhiSignalAddress(
     "cms",
-    PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetComposerEmpty,
+    widgetIds.widgetComposerEmpty,
   );
   /*
    * The reply Form is told its conversation through its own Form controller, not at its Widget address.
@@ -78,19 +83,19 @@ export async function buildPhiDefaultAppThreadsPageTree({
    * ([FORMS.md](../../../FORMS.md#form-controller)).
    */
   const composerFormControllerAddress = createPhiRuntimeFormControllerAddress(
-    `widget-${PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetComposer}`,
+    `widget-${widgetIds.widgetComposer}`,
   );
-  const formAddress = createPhiSignalAddress("cms", PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetNewForm);
-  const overlayAddress = createPhiSignalAddress("cms", PHI_APP_THREADS_PAGE_OVERLAY_IDS.overlayNew);
+  const formAddress = createPhiSignalAddress("cms", widgetIds.widgetNewForm);
+  const overlayAddress = createPhiSignalAddress("cms", overlayIds.overlayNew);
   const saveButtonAddress = createPhiSignalSubcontrolAddress(
     "cms",
-    PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetNewCommands,
+    widgetIds.widgetNewCommands,
     "save",
   );
 
   const scaffold = buildPhiBasePageContentScaffold({
     page,
-    regionId: SYNTHETIC_APP_THREADS_REGION_IDS.regionContent,
+    regionId: SYNTHETIC_THREADS_REGION_ID_BY_AREA[area],
   });
 
   const nodes = createPhiCmsPresetNodes(page);
@@ -269,11 +274,11 @@ export async function buildPhiDefaultAppThreadsPageTree({
      * opened with nobody watching -- the Controller decides, which is what "request" means.
      */
     overlays: [nodes.overlay({
-      id: PHI_APP_THREADS_PAGE_OVERLAY_IDS.overlayNew,
+      id: overlayIds.overlayNew,
       overlayType: "modal",
-      bodyLayoutNodeId: PHI_APP_THREADS_PAGE_LAYOUT_IDS.layoutNew,
+      bodyLayoutNodeId: layoutIds.layoutNew,
       footerPresentation: "actions",
-      footerLayoutNodeId: PHI_APP_THREADS_PAGE_LAYOUT_IDS.layoutNewFooter,
+      footerLayoutNodeId: layoutIds.layoutNewFooter,
       sortOrder: 0,
       label: "app-threads-new-modal",
       config: {
@@ -324,7 +329,7 @@ export async function buildPhiDefaultAppThreadsPageTree({
     layoutNodes: [
       scaffold.layoutNode,
       nodes.layout({
-        id: PHI_APP_THREADS_PAGE_LAYOUT_IDS.layoutNew,
+        id: layoutIds.layoutNew,
         parentLayoutNodeId: null,
         creationPreset: { layoutKind: "verticalflex", preset: "panel" },
         typeKey: "flex-vertical",
@@ -340,7 +345,7 @@ export async function buildPhiDefaultAppThreadsPageTree({
         },
       }),
       nodes.layout({
-        id: PHI_APP_THREADS_PAGE_LAYOUT_IDS.layoutNewFooter,
+        id: layoutIds.layoutNewFooter,
         parentLayoutNodeId: null,
         creationPreset: { layoutKind: "flex", preset: "overlay-actions" },
         typeKey: "flex",
@@ -352,7 +357,7 @@ export async function buildPhiDefaultAppThreadsPageTree({
     ],
     contentWidgets: [
       nodes.widget({
-        id: PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetInbox,
+        id: widgetIds.widgetInbox,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "table",
         /*
@@ -565,8 +570,8 @@ export async function buildPhiDefaultAppThreadsPageTree({
        * has one footer, and it is the dialog's.
        */
       nodes.widget({
-        id: PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetNewForm,
-        parentLayoutNodeId: PHI_APP_THREADS_PAGE_LAYOUT_IDS.layoutNew,
+        id: widgetIds.widgetNewForm,
+        parentLayoutNodeId: layoutIds.layoutNew,
         typeKey: "form",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
@@ -616,8 +621,8 @@ export async function buildPhiDefaultAppThreadsPageTree({
         },
       }),
       nodes.widget({
-        id: PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetNewCommands,
-        parentLayoutNodeId: PHI_APP_THREADS_PAGE_LAYOUT_IDS.layoutNewFooter,
+        id: widgetIds.widgetNewCommands,
+        parentLayoutNodeId: layoutIds.layoutNewFooter,
         typeKey: "command-toolbar",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
@@ -655,7 +660,7 @@ export async function buildPhiDefaultAppThreadsPageTree({
         },
       }),
       nodes.widget({
-        id: PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetConversation,
+        id: widgetIds.widgetConversation,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "thread-conversation",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 1,
@@ -714,7 +719,7 @@ export async function buildPhiDefaultAppThreadsPageTree({
        * never among them.
        */
       nodes.widget({
-        id: PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetComposer,
+        id: widgetIds.widgetComposer,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "form",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 2,
@@ -794,7 +799,7 @@ export async function buildPhiDefaultAppThreadsPageTree({
        * chosen a row yet, and waiting for the Controller to say so would leave the spot empty until then.
        */
       nodes.widget({
-        id: PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetComposerEmpty,
+        id: widgetIds.widgetComposerEmpty,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "simple-text",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 3,

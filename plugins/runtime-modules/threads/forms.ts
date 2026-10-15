@@ -12,6 +12,7 @@ import {
   createPhiSharedFormProviderKey,
 } from "../../../components/forms/form-provider-contract";
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
+import { PHI_CMS_AREA_KEYS } from "../../../constants/cms-areas";
 import { PhisThreadKind } from "../../../constants/threads";
 import { PHI_THREADS_USER_SPACE_MEDIA_KINDS } from "./media-spaces";
 import { PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS, PHI_THREADS_RUNTIME_MODULE_ID } from "./ids";
@@ -203,10 +204,11 @@ const PHI_THREADS_MESSAGE_FORM_DESCRIPTOR: PhiFormDescriptor = {
   submit: { label: label("replySend", "Send"), align: "end" },
 };
 
+// Wherever the Module runs, which is every Area: the conversations Page there needs both.
 export const PHI_THREADS_RUNTIME_MODULE_FORMS = [
   definePhiRuntimeModuleForm({
     ownerModuleId: PHI_THREADS_RUNTIME_MODULE_ID,
-    areas: ["app"],
+    areas: PHI_CMS_AREA_KEYS,
     formId: PHI_THREADS_FORM_IDS.newConversation,
     version: 1,
     flags: 0,
@@ -220,7 +222,7 @@ export const PHI_THREADS_RUNTIME_MODULE_FORMS = [
   }),
   definePhiRuntimeModuleForm({
     ownerModuleId: PHI_THREADS_RUNTIME_MODULE_ID,
-    areas: ["app"],
+    areas: PHI_CMS_AREA_KEYS,
     formId: PHI_THREADS_FORM_IDS.message,
     version: 1,
     flags: 0,

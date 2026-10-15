@@ -1,4 +1,4 @@
-import type { PhiCmsAreaKey } from "../../../constants/cms-areas";
+import { PHI_CMS_AREA_KEYS } from "../../../constants/cms-areas";
 import { buildPhiRuntimeModuleControllerDescriptor, type PhiRuntimeModuleDefinition } from "../contracts";
 import { PHI_CORE_SERVER_BINDING } from "../../../types/server-capabilities";
 import { PHI_THREADS_RUNTIME_MODULE_IDENTITY } from "./ids";
@@ -23,7 +23,8 @@ import { PHI_THREADS_USER_SPACE_MEDIA_KINDS } from "./media-spaces";
 export const PHI_THREADS_RUNTIME_MODULE_DEFINITION = {
   ...PHI_THREADS_RUNTIME_MODULE_IDENTITY,
   kind: "module",
-  eligibleAreas: ["app"] as const satisfies readonly PhiCmsAreaKey[],
+  // The communication system of a Site, so every Area may run it -- not a feature of the App.
+  eligibleAreas: PHI_CMS_AREA_KEYS,
   serverBinding: PHI_CORE_SERVER_BINDING,
   title: "Conversations",
   description: "Threads a person is in, and the composer that writes into one.",

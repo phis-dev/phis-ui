@@ -19,6 +19,12 @@ const PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID = firstPartyModuleId("user-managemen
 const PHI_DASHBOARD_RUNTIME_MODULE_ID = firstPartyModuleId("dashboard");
 const PHI_NEWS_RUNTIME_MODULE_ID = firstPartyModuleId("news");
 const PHI_REVISIONS_RUNTIME_MODULE_ID = firstPartyModuleId("revisions");
+/*
+ * Conversations are a Site's communication system, so every Area with a sidebar starts with them: the
+ * Area ships the Page and its sidebar offers the entry, and a default without the Module would offer an
+ * entry leading nowhere. Public has neither.
+ */
+const PHI_THREADS_RUNTIME_MODULE_ID = firstPartyModuleId("threads");
 
 export function createPhiDefaultAreaRuntimeModuleIds(
   area: PhiBuilderAreaKey,
@@ -28,7 +34,7 @@ export function createPhiDefaultAreaRuntimeModuleIds(
   }
 
   if (area === "app") {
-    return [PHI_AUTH_RUNTIME_MODULE_ID, PHI_DASHBOARD_RUNTIME_MODULE_ID];
+    return [PHI_AUTH_RUNTIME_MODULE_ID, PHI_DASHBOARD_RUNTIME_MODULE_ID, PHI_THREADS_RUNTIME_MODULE_ID];
   }
 
   if (area === "builder") {
@@ -37,6 +43,7 @@ export function createPhiDefaultAreaRuntimeModuleIds(
       PHI_REVISIONS_RUNTIME_MODULE_ID,
       PHI_THEME_RUNTIME_MODULE_ID,
       PHI_ASSET_RUNTIME_MODULE_ID,
+      PHI_THREADS_RUNTIME_MODULE_ID,
     ];
   }
 
@@ -48,6 +55,7 @@ export function createPhiDefaultAreaRuntimeModuleIds(
       PHI_LOCALIZATION_RUNTIME_MODULE_ID,
       PHI_OBSERVABILITY_RUNTIME_MODULE_ID,
       PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
+      PHI_THREADS_RUNTIME_MODULE_ID,
     ];
   }
 
@@ -61,11 +69,12 @@ export function createPhiDefaultAreaRuntimeModuleIds(
       PHI_LOCALIZATION_RUNTIME_MODULE_ID,
       PHI_NEWS_RUNTIME_MODULE_ID,
       PHI_DASHBOARD_RUNTIME_MODULE_ID,
+      PHI_THREADS_RUNTIME_MODULE_ID,
     ];
   }
 
   if (area === "accounting") {
-    return [PHI_DASHBOARD_RUNTIME_MODULE_ID];
+    return [PHI_DASHBOARD_RUNTIME_MODULE_ID, PHI_THREADS_RUNTIME_MODULE_ID];
   }
 
   return [];

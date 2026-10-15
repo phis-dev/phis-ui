@@ -65,6 +65,7 @@ describe("the first-party sidebars", () => {
       "Groups",
       "Locales",
       "Logs",
+      "Conversations",
       "Users",
       "Settings",
       "  General",
@@ -89,16 +90,17 @@ describe("the first-party sidebars", () => {
       "Media",
       "Revisions",
       "Theme",
+      "Conversations",
       "Settings",
       "  General",
     ]);
-    expect(sidebarOf("accounting")).toEqual(["Dashboard", "Overview"]);
+    expect(sidebarOf("accounting")).toEqual(["Dashboard", "Overview", "Conversations"]);
     /*
-     * Three Modules' entries and nothing of the Area's own: Dashboard anchors itself to `start`, the other
-     * two to `main`, and entries sharing an anchor are ordered by the Module that injected them. A Site
+     * Four Modules' entries and nothing of the Area's own: Dashboard anchors itself to `start`, the other
+     * three to `main`, and entries sharing an anchor are ordered by the Module that injected them. A Site
      * that wants a different order says so in the navigation overlay.
      */
-    expect(sidebarOf("editor")).toEqual(["Dashboard", "Translations", "News"]);
+    expect(sidebarOf("editor")).toEqual(["Dashboard", "Translations", "News", "Conversations"]);
   });
 
   it("are reached by anchor alone", () => {

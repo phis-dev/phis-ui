@@ -20,8 +20,12 @@ What `@phis/ui/modules/threads` owns is the **surfaces** -- how a person sees a 
 one, and writes into it. It is thin on purpose, like the groups Module: the Module is what a Site
 switches on to *show* conversations, not what makes conversations exist.
 
-`eligibleAreas` is `["app"]` and nothing else. The page is `/conversations`, the preset key is
-`app-threads-page`, and everything below is about that Area.
+`eligibleAreas` is every Area: conversations are a Site's communication system, not a feature of the
+App. Every Area with a sidebar -- App, Accounting, Admin, Editor, Builder -- gets the same Page at
+`/conversations`, preset key `<area>-threads-page`, with its sidebar entry at the Area's `main` anchor.
+Public has no sidebar and no Page; the Module is still eligible there for a Site that places its Widgets
+itself. The Module is contributed with the common modules, so its Controller, Data Provider and
+authoring travel to every Area.
 
 ## 2. Three surfaces, and why they are three
 
@@ -127,7 +131,7 @@ than a Widget type, which is the same promise in a smaller surface.
 | Data Provider | the thread library Table Provider, resource `inbox` |
 | Options Provider | conversation candidates -- who this viewer may write to |
 | Forms | the new-conversation Form and the reply Form, with a handler Provider each |
-| Route preset | `app-threads-page` at `/conversations`, plus its sidebar entry |
+| Route presets | `<area>-threads-page` at `/conversations` in every sidebar Area, each with its sidebar entry |
 | Controller | the translation above, mounted on demand |
 | Media Space | the User Space kinds in section 5 |
 | Dashboard card | unread conversations, on the App Dashboard |

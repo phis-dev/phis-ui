@@ -1,36 +1,42 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id";
+import type { PhiSidebarAreaKey } from "../sidebar-route";
 import { PHI_THREADS_RUNTIME_MODULE_ID } from "./ids";
 
-const identity = {
-  domain: "page",
-  ownerModuleId: PHI_THREADS_RUNTIME_MODULE_ID,
-  presetKey: "app-threads-page",
-} as const;
+/** The conversations Page of one Area, by its preset key: `<area>-threads-page`. */
+export function getPhiThreadsPagePresetKey(area: PhiSidebarAreaKey) {
+  return `${area}-threads-page` as const;
+}
 
 /**
- * Stable Widget ids for the conversations Page.
+ * Stable instance ids for one Area's conversations Page.
  *
- * Every one of them names at least one of the others in a route, so none may be positional: the
- * listing tells the Controller what was chosen, the Controller tells the conversation and the composer,
- * and the composer asks the conversation to read itself again.
+ * Every Widget names at least one of the others in a route, so none may be positional: the listing tells
+ * the Controller what was chosen, the Controller tells the conversation and the composer, and the
+ * composer asks the conversation to read itself again. Each Area's Page has its own, because an id
+ * belongs to one preset.
  *
  * Only the preset reads these. The Controller used to as well, which made it a second owner of this
  * Page's arrangement; it takes its receivers from its own settings now, and the Page writes both
  * directions of the wiring in one place.
  */
-export const PHI_APP_THREADS_PAGE_WIDGET_IDS = createPhiPresetCmsInstanceIdMap(identity, [
-  "widgetInbox",
-  "widgetConversation",
-  "widgetComposer",
-  "widgetComposerEmpty",
-  "widgetNewForm",
-  "widgetNewCommands",
-]);
-
-/** The dialog that holds the form, and the two Layouts it fills. */
-export const PHI_APP_THREADS_PAGE_OVERLAY_IDS = createPhiPresetCmsInstanceIdMap(identity, ["overlayNew"]);
-
-export const PHI_APP_THREADS_PAGE_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap(identity, [
-  "layoutNew",
-  "layoutNewFooter",
-]);
+export function createPhiThreadsPageIds(area: PhiSidebarAreaKey) {
+  const identity = {
+    domain: "page",
+    ownerModuleId: PHI_THREADS_RUNTIME_MODULE_ID,
+    presetKey: getPhiThreadsPagePresetKey(area),
+  } as const;
+  return {
+    widgets: createPhiPresetCmsInstanceIdMap(identity, [
+      "widgetInbox",
+      "widgetConversation",
+      "widgetComposer",
+      "widgetComposerEmpty",
+      "widgetNewForm",
+      "widgetNewCommands",
+    ]),
+    /** The dialog that holds the form. */
+    overlays: createPhiPresetCmsInstanceIdMap(identity, ["overlayNew"]),
+    /** And the two Layouts it fills. */
+    layouts: createPhiPresetCmsInstanceIdMap(identity, ["layoutNew", "layoutNewFooter"]),
+  };
+}
