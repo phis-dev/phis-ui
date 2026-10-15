@@ -342,7 +342,11 @@ function readColumns(value: unknown): PhiTableColumnDefinition[] {
       description: readString(item.description),
       renderer,
       editor: rawEditor && readBoolean(rawEditor.enabled) !== false
-        ? { control: editorControl, disabledWhen: readConditionExpression(rawEditor.disabledWhen) }
+        ? {
+          control: editorControl,
+          disabledWhen: readConditionExpression(rawEditor.disabledWhen),
+          ...(readString(rawEditor.prefix) ? { prefix: readString(rawEditor.prefix) } : {}),
+        }
         : undefined,
       sizing,
       align,
@@ -892,6 +896,13 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
             { value: "checkbox-group", label: "Checkbox group" },
             { value: "icon-picker", label: "Icon picker" },
           ],
+        },
+        // The unit beside a number editor; the column title names the value, not its unit.
+        {
+          key: "editor.prefix",
+          type: "string",
+          label: "Editor Unit",
+          visibleWhen: { field: "editor.enabled", equals: true },
         },
         ...buildPhiTableConditionExpressionConfigFields("editor.disabledWhen", "Editor Disabled Conditions", "any", "No disabled conditions").map((field) => ({ ...field, visibleWhen: { field: "editor.enabled", equals: true } })),
         { key: "hidden", type: "boolean", label: "Hidden" },

@@ -287,6 +287,9 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
 - Core field providers: `text`, `email`, `password`, `textarea`, `hidden`, `honeypot`, `checkbox`,
   `select`, `url`, `tel`, `number`, `slider`, `multi-select`, `checkbox-group`, `datetime`, `switch`,
   `segmented`, `cascader`, `table`, `tree`, `storage-size`, `upload`.
+- A `number` field states its unit in `config.prefix`, beside the input rather than in the label: a
+  symbol nobody translates as a string (`"ms"`), a word as a label reference (`{ kind: "label", key,
+  fallback }`) read from the Form's labels like the field's own label.
 - That list is closed, and it is the only place a new field kind is added -- here for a kind every Form
   may want, or in the owning Module's `formProviders` for one only that Module wants. A bespoke input
   inside a Widget, a panel written beside the Form, or a client component that collects values and posts

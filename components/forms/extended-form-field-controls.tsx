@@ -6,11 +6,28 @@ import { PhiCascaderControl } from "../controls/phi-cascader-control";
 import { PhiNumberControl } from "../controls/phi-number-control";
 import { PhiSliderControl } from "../controls/phi-slider-control";
 import type { PhiFormFieldProviderProps } from "./form-provider-registry";
+import { resolvePhiFormText } from "./form-descriptor-contract";
 import {
   PHI_STORAGE_SIZE_UNIT_LABEL,
   phiBytesToStorageSize,
   phiStorageSizeToBytes,
 } from "./storage-size";
+
+/**
+ * The unit beside a number, which is the value's and not the field's name ("days", not "Window (days)").
+ *
+ * A symbol nobody translates -- `ms`, `px` -- is written as a string. A word is a label reference
+ * (`{ kind: "label", key, fallback }`) and is read from the Form's labels like the field's own label,
+ * so "days" is "Tage" where the Form is German.
+ */
+function readPhiNumberFieldPrefix(prefix: unknown, labels: PhiFormFieldProviderProps["labels"]) {
+  if (typeof prefix === "string") return prefix;
+  const text = prefix as { kind?: unknown; key?: unknown; fallback?: unknown } | null | undefined;
+  if (text?.kind === "label" && typeof text.key === "string" && typeof text.fallback === "string") {
+    return resolvePhiFormText({ kind: "label", key: text.key, fallback: text.fallback }, labels);
+  }
+  return undefined;
+}
 
 /*
  * Field kinds most forms never have, loaded only where one is rendered: the slider, the cascader and
@@ -82,7 +99,7 @@ export const PhiCascaderFormControl: ComponentType<PhiFormFieldProviderProps> = 
 );
 
 export const PhiNumberFormControl: ComponentType<PhiFormFieldProviderProps> = ({
-  id, field, value, onChange, placeholder, disabled, readOnly,
+  id, field, value, onChange, placeholder, disabled, readOnly, labels,
 }) => (
   <PhiNumberControl
     id={id}
@@ -94,7 +111,7 @@ export const PhiNumberFormControl: ComponentType<PhiFormFieldProviderProps> = ({
     max={typeof field.config?.max === "number" ? field.config.max : undefined}
     step={typeof field.config?.step === "number" ? field.config.step : undefined}
     precision={typeof field.config?.precision === "number" ? field.config.precision : undefined}
-    prefix={typeof field.config?.prefix === "string" ? field.config.prefix : undefined}
+    prefix={readPhiNumberFieldPrefix(field.config?.prefix, labels)}
     style={{ width: "100%" }}
     onChange={(nextValue) => onChange?.(nextValue)}
   />

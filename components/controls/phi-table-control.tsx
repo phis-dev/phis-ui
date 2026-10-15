@@ -92,6 +92,8 @@ export type PhiTableControlCellEditor = {
     step?: number;
     precision?: number;
   };
+  /** The unit beside a number editor, already in the reader's language. */
+  prefix?: string;
 };
 
 export type PhiTableControlColumn<TRow extends Record<string, unknown>> = {
@@ -578,6 +580,7 @@ function EditableTableCell({ value, editor, onCommit }: {
       min={typeof editor.constraints?.min === "number" ? editor.constraints.min : undefined}
       max={typeof editor.constraints?.max === "number" ? editor.constraints.max : undefined}
       step={editor.constraints?.step} precision={editor.constraints?.precision}
+      prefix={editor.prefix}
       disabled={disabled} size="small" variant={variant} style={{ width: "100%" }}
       onChange={(next) => { draftRef.current = next; setDraft(next); }} onBlur={commitOnBlur}
       onKeyDown={(event) => {

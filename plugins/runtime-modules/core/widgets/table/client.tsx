@@ -694,6 +694,7 @@ export function PhiTableWidgetClient({
                   disabled: loading,
                   constraints: field.constraints,
                   options: field.options,
+                  prefix: column.editor?.prefix,
                 }
               : undefined;
           })()

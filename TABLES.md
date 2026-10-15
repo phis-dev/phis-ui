@@ -342,6 +342,10 @@ The presence of the column `editor` object enables editing. Its Builder projecti
 `editor.enabled` only to create or remove that object; `editor.enabled` is not a second runtime editing
 mode. An omitted `editor.control` selects the semantic field type's default Core Control.
 
+A number editor takes its unit from `editor.prefix` -- "days", "ms" -- already in the reader's language,
+because the preset resolves it from its Label Set like the column title. The unit belongs to the value
+and not to the title: a header saying "Window (days)" leaves the number unitless once it scrolls away.
+
 | Provider field type | Allowed `editor.control` | Omitted default |
 | --- | --- | --- |
 | `boolean` | `switch`, `checkbox` | `switch` |

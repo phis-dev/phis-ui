@@ -564,6 +564,17 @@ const parsedFooter = parsePhiTableWidgetConfig({
 });
 assert.equal(parsedFooter.presentation.footer?.values[0]?.value.source, "provider");
 assert.equal(parsedFooter.presentation.footer?.template, "%1 entries, %2 selected");
+// A number editor's unit is the column's to state and arrives as written; an empty one is no unit.
+const parsedPrefix = parsePhiTableWidgetConfig({
+  presentation: {
+    columns: [
+      { key: "days", fieldKey: "days", title: "Window", editor: { prefix: "days" } },
+      { key: "count", fieldKey: "count", title: "Count", editor: { prefix: "" } },
+    ],
+  },
+});
+assert.equal(parsedPrefix.presentation.columns[0]?.editor?.prefix, "days");
+assert.equal(parsedPrefix.presentation.columns[1]?.editor?.prefix, undefined);
 // A footer variant replaces the line while its value holds, may name no values, and one that cannot be
 // read -- no template, an unknown operator -- is dropped rather than shown as the declared line's twin.
 const parsedVariants = parsePhiTableWidgetConfig({

@@ -135,6 +135,13 @@ export type PhiTableColumnDefinition = {
   editor?: {
     control?: PhiTableColumnEditorControl;
     disabledWhen?: PhiRuntimeConditionExpression;
+    /**
+     * The unit beside a number editor -- "days", "ms" -- already in the reader's language.
+     *
+     * The value's and not the column's: a title saying "Window (days)" leaves the number unitless the
+     * moment the header scrolls away, and invites somebody to type the unit in as well.
+     */
+    prefix?: string;
   };
   sizing?: PhiTableColumnSizing;
   align?: "left" | "center" | "right";
