@@ -18,26 +18,11 @@ import { buildPhiBuilderPageReferenceTree } from "../page-reference-tree";
 import type { PhiPageReferenceSelection } from "../../../../components/widgets/client/shared/phi-page-reference-picker";
 import { usePhiBuilderOfferedPageCatalog } from "../use-offered-page-catalog";
 import { usePhiDeveloperBuilderStateValue } from "../developer-workspace-store";
+import {
+  PHI_INSPECTOR_WIDGET_DEFAULT_LABELS,
+  type PhiInspectorLinkTargetLabels,
+} from "../../../../components/widgets/label-types/inspector";
 
-export type PhiInspectorLinkTargetLabels = {
-  none: string;
-  page: string;
-  external: string;
-  pagePlaceholder: string;
-  landingPage: string;
-  externalPlaceholder: string;
-  newTab: string;
-};
-
-const PHI_INSPECTOR_LINK_TARGET_DEFAULT_LABELS: PhiInspectorLinkTargetLabels = {
-  none: "None",
-  page: "Page",
-  external: "Address",
-  pagePlaceholder: "Select Page",
-  landingPage: "(Landing page)",
-  externalPlaceholder: "https://",
-  newTab: "Open in a new tab",
-};
 
 type PhiInspectorLinkTargetMode = "none" | "page" | "external";
 
@@ -58,7 +43,7 @@ type PhiInspectorLinkTargetMode = "none" | "page" | "external";
 export function PhiInspectorLinkTargetFieldControl({
   value,
   disabled,
-  labels = PHI_INSPECTOR_LINK_TARGET_DEFAULT_LABELS,
+  labels = PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.fields.linkTarget,
   onChange,
 }: {
   value: unknown;

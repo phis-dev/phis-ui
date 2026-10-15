@@ -16,6 +16,7 @@ import {
   buildPhiBuilderPluginMeta,
 } from "./plugin-metas";
 import type { PhiBuilderModuleAuthoringCatalogEntry } from "./module-authoring-catalog";
+import { resolvePhiRuntimeModuleSourceLocale } from "../../../types/runtime-module-locale";
 
 export function buildPhiBuilderModuleAuthoringCatalog({
   catalog,
@@ -56,6 +57,7 @@ export function buildPhiBuilderModuleAuthoringCatalog({
 
     return [{
       moduleId,
+      sourceLocale: resolvePhiRuntimeModuleSourceLocale(entry.definition),
       locked,
       plugins: [
         ...layouts.flatMap((layout) => buildPhiBuilderLayoutPluginMetas(layout.definition)),

@@ -111,6 +111,8 @@ type PhiDeveloperBuilderLayoutInspectorWidgetClientProps = {
   signalsLabels?: PhiSignalsWidgetLabels;
   colorPickerLabels?: PhiColorPickerLabels;
   iconPickerLabels?: PhiIconPickerControlLabels;
+  /** The Inspector's own words in its field controls, from the `widget:inspector` label set. */
+  fieldLabels?: PhiInspectorWidgetLabels["fields"];
   dataProviderDescriptors?: readonly PhiRuntimeModuleDataProviderDescriptor[];
   calendarAdapterDescriptors?: readonly PhiCalendarAdapterDescriptor[];
   videoProviderDescriptors?: readonly PhiVideoProviderDescriptor[];
@@ -138,6 +140,7 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
   signalsLabels,
   colorPickerLabels,
   iconPickerLabels,
+  fieldLabels,
   dataProviderDescriptors = [],
   calendarAdapterDescriptors = [],
   videoProviderDescriptors = [],
@@ -305,6 +308,7 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                               disabled: isPreviewMode,
                               colorPickerLabels,
                               iconPickerLabels,
+                              fieldLabels,
                               dataProviderDescriptors,
                               calendarAdapterDescriptors,
                               videoProviderDescriptors,

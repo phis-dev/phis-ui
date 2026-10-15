@@ -65,6 +65,9 @@ function parsePhiFloatButtonWidgetConfig(config: Record<string, unknown>): PhiFl
   };
 }
 
+/** The entry fields offered only while the Float Button is square, read from the Widget around them. */
+const PHI_FLOAT_BUTTON_SQUARE = { field: "shape", scope: "parent", equals: "square" } as const;
+
 /** A corner holds fewer buttons than a toolbar: past six, a group covers the Page it floats over. */
 export const PHI_FLOAT_BUTTON_BOUNDS = { min: 1, max: 6 } satisfies PhiCommandButtonBounds;
 
@@ -83,25 +86,35 @@ export const PHI_FLOAT_BUTTON_WIDGET_DEFINITION = {
   },
   signalSubcontrols: PHI_COMMAND_BUTTONS_SIGNAL_SUBCONTROLS,
   fields: [
-    buildPhiCommandButtonsField([
-      /* Only a square button has room for its label; a round one shows it as the tooltip. */
-      {
-        key: "display",
-        type: "choice",
-        label: "Display",
-        emptyOption: { value: "", label: "Icon", separator: "after" },
-        emptyValue: undefined,
-        options: [
-          { value: "icon-label", label: "Icon and label" },
-          { value: "label", label: "Label" },
-        ],
-      },
-    ]),
+    /*
+     * The buttons first, as on the Command Toolbar, and what holds for all of them below. A label only
+     * where there is room for one: a round button is its icon, and the label it keeps names it in the
+     * select and the Signals panel and becomes its tooltip. No danger, which Ant Design's Float Button
+     * does not draw.
+     */
+    buildPhiCommandButtonsField({
+      omit: ["danger"],
+      labelVisibleWhen: PHI_FLOAT_BUTTON_SQUARE,
+      extraItemFields: [
+        {
+          key: "display",
+          type: "choice",
+          label: "Display",
+          visibleWhen: PHI_FLOAT_BUTTON_SQUARE,
+          emptyOption: { value: "", label: "Icon", separator: "after" },
+          emptyValue: undefined,
+          options: [
+            { value: "icon-label", label: "Icon and label" },
+            { value: "label", label: "Label" },
+          ],
+        },
+      ],
+    }),
     {
       key: "placement",
       type: "choice",
       label: "Corner",
-      heading: "Float Button",
+      heading: "Floating",
       options: [
         { value: "bottom-end", label: "Bottom end" },
         { value: "bottom-start", label: "Bottom start" },

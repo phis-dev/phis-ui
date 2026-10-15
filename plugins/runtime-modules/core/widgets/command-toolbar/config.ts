@@ -62,7 +62,7 @@ export const PHI_COMMAND_TOOLBAR_WIDGET_DEFINITION = {
   },
   signalSubcontrols: PHI_COMMAND_BUTTONS_SIGNAL_SUBCONTROLS,
   fields: [
-    buildPhiCommandButtonsField([
+    buildPhiCommandButtonsField({ extraItemFields: [
       /* Left at the toolbar's own answer, Show Labels decides; set, it decides for this button. */
       {
         key: "display",
@@ -76,7 +76,7 @@ export const PHI_COMMAND_TOOLBAR_WIDGET_DEFINITION = {
           { value: "icon-label", label: "Icon and label" },
         ],
       },
-    ]),
+    ] }),
     /*
      * What holds for every button. No Read only or Disabled of the whole toolbar here: each button
      * has its own, and switching all of them at once is what a signal is for -- every renderable block

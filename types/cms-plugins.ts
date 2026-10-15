@@ -65,6 +65,12 @@ type PhiBivariantCallback<TArgs extends unknown[], TResult> = {
 
 export type PhiCmsConfigFieldVisibilityRule = {
   field: string;
+  /**
+   * Where `field` is read. Left out, beside the field itself; `parent` reads the config that holds the
+   * collection a field belongs to -- a Float Button's entries show a label only while the Float Button
+   * is square.
+   */
+  scope?: "parent";
   equals?: string | number | boolean | null;
   notEquals?: string | number | boolean | null;
 };

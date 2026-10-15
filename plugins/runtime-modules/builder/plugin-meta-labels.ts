@@ -52,6 +52,7 @@ function mapPhiConfigFieldText(
     ...field,
     label: mapOptionalText(field.label, mapText) ?? field.label,
     ...(field.description == null ? {} : { description: mapOptionalText(field.description, mapText) }),
+    ...(field.heading == null ? {} : { heading: mapOptionalText(field.heading, mapText) }),
   } as PhiCmsConfigField;
 
   if (mapped.type === "choice") {
@@ -69,6 +70,7 @@ function mapPhiConfigFieldText(
       itemFields: mapped.itemFields.map((itemField) => mapPhiConfigFieldText(itemField, mapText)),
       ...(mapped.addLabel == null ? {} : { addLabel: mapOptionalText(mapped.addLabel, mapText) }),
       ...(mapped.emptyLabel == null ? {} : { emptyLabel: mapOptionalText(mapped.emptyLabel, mapText) }),
+      ...(mapped.editLabel == null ? {} : { editLabel: mapOptionalText(mapped.editLabel, mapText) }),
     };
   }
 

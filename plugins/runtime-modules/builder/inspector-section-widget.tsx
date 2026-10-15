@@ -154,6 +154,7 @@ export async function PhiBuilderInspectorSectionWidget({
             gridLabels={inspectorLabels.grid}
             colorPickerLabels={colorPickerLabels}
             iconPickerLabels={iconPickerLabels}
+            fieldLabels={inspectorLabels.fields}
           />
         ) : (
           <PhiBuilderWidgetInspectorSectionWidgetClient
@@ -166,6 +167,7 @@ export async function PhiBuilderInspectorSectionWidget({
             signalsLabels={signalsLabels}
             colorPickerLabels={colorPickerLabels}
             iconPickerLabels={iconPickerLabels}
+            fieldLabels={inspectorLabels.fields}
           />
         )}
       </PhiRuntimeModuleDataProviderClientHost>

@@ -54,6 +54,7 @@ import {
 import { PhiTypographyControl } from "../../../../components/controls/phi-typography-control";
 import { PhiCmsFlags } from "../../../../constants/phi-cms";
 import { hasPhiFlag } from "../../../../helpers/flags";
+import type { PhiInspectorWidgetLabels } from "../../../../components/widgets/label-types/inspector";
 
 const PHI_GAP_SM = "var(--ant-padding-sm)";
 
@@ -81,6 +82,8 @@ type PhiDeveloperBuilderWidgetInspectorWidgetClientProps = {
   signalsLabels?: PhiSignalsWidgetLabels;
   colorPickerLabels?: PhiColorPickerLabels;
   iconPickerLabels?: PhiIconPickerControlLabels;
+  /** The Inspector's own words in its field controls, from the `widget:inspector` label set. */
+  fieldLabels?: PhiInspectorWidgetLabels["fields"];
   dataProviderDescriptors?: readonly PhiRuntimeModuleDataProviderDescriptor[];
   calendarAdapterDescriptors?: readonly PhiCalendarAdapterDescriptor[];
   videoProviderDescriptors?: readonly PhiVideoProviderDescriptor[];
@@ -108,6 +111,7 @@ export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
   signalsLabels,
   colorPickerLabels,
   iconPickerLabels,
+  fieldLabels,
   dataProviderDescriptors = [],
   calendarAdapterDescriptors = [],
   videoProviderDescriptors = [],
@@ -181,6 +185,7 @@ export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
       widgetReferenceOptions,
       colorPickerLabels,
       iconPickerLabels,
+      fieldLabels,
       dataProviderDescriptors,
       calendarAdapterDescriptors,
       videoProviderDescriptors,

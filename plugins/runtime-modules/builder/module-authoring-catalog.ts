@@ -12,6 +12,8 @@ import type { PhiBuilderPluginMeta } from "../../../types/builder";
 
 export type PhiBuilderModuleAuthoringCatalogEntry = {
   moduleId: PhiRuntimeModuleId;
+  /** The language the Module's own texts are written in; `en` for every Module of ours. */
+  sourceLocale: string;
   locked: boolean;
   plugins: readonly PhiBuilderPluginMeta[];
   widgetDefinitions: readonly PhiRuntimeModuleClientWidgetDefinition[];

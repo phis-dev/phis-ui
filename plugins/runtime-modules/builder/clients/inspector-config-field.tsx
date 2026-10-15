@@ -25,7 +25,6 @@ import type { PhiColorPickerLabels } from "../../../../components/widgets/label-
 import type { PhiIconPickerControlLabels } from "../../../../components/widgets/label-types/icon-picker";
 import {
   PhiInspectorLinkTargetFieldControl,
-  type PhiInspectorLinkTargetLabels,
 } from "./inspector-link-target-field";
 import { PhiInspectorImageFieldControl } from "./inspector-image-field";
 import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
@@ -64,6 +63,10 @@ import { PhiFlexControl } from "../../../../components/controls/phi-flex-control
 import { PhiTypographyControl } from "../../../../components/controls/phi-typography-control";
 import { PhiDescriptionHint } from "../../../../components/controls/phi-description-tooltip-icon";
 import { isPhiRecord } from "../../../../helpers/is-record";
+import {
+  PHI_INSPECTOR_WIDGET_DEFAULT_LABELS,
+  type PhiInspectorFieldLabels,
+} from "../../../../components/widgets/label-types/inspector";
 
 export type PhiInspectorWidgetReferenceOption = {
   value: string;
@@ -191,7 +194,12 @@ function renderPhiInspectorConfigFieldBlock(field: PhiCmsConfigField, control: R
   return renderPhiInspectorSettingsBlock(renderPhiInspectorConfigFieldLabel(field), control, field.key);
 }
 
-export function isPhiInspectorConfigFieldVisible(field: PhiCmsConfigField, config: Record<string, unknown>) {
+export function isPhiInspectorConfigFieldVisible(
+  field: PhiCmsConfigField,
+  config: Record<string, unknown>,
+  /** The config holding the collection `config` is an entry of; a `parent` rule outside one reads nothing. */
+  parentConfig: Record<string, unknown> | null = null,
+) {
   if (field.editorPlacement === "toolbar" || field.editorPlacement === "geometry") {
     return false;
   }
@@ -201,7 +209,8 @@ export function isPhiInspectorConfigFieldVisible(field: PhiCmsConfigField, confi
     : Array.isArray(field.visibleWhen) ? field.visibleWhen : [field.visibleWhen];
   return rules.every((rule) => {
     /* An empty list is no answer, the way an absent key is not: a Button with no routes left emits none. */
-    const raw = readPhiInspectorConfigPathValue(config, rule.field);
+    const source = rule.scope === "parent" ? parentConfig : config;
+    const raw = source ? readPhiInspectorConfigPathValue(source, rule.field) : undefined;
     const value = Array.isArray(raw) && raw.length === 0 ? null : raw ?? null;
     if ("equals" in rule && value !== rule.equals) return false;
     if ("notEquals" in rule && value === rule.notEquals) return false;
@@ -476,6 +485,7 @@ function PhiInspectorChoiceFieldControl({
   defaultValue,
   disabled,
   widgetReferenceOptions,
+  labels,
   onChange,
 }: {
   field: PhiInspectorChoiceField;
@@ -484,6 +494,7 @@ function PhiInspectorChoiceFieldControl({
   defaultValue: unknown;
   disabled: boolean;
   widgetReferenceOptions: PhiInspectorWidgetReferenceOption[];
+  labels: PhiInspectorFieldLabels;
   onChange?: (next: Record<string, unknown>) => void;
 }) {
   const staticOptions = useMemo(
@@ -561,9 +572,9 @@ function PhiInspectorChoiceFieldControl({
       placeholder={
           field.placeholder
           ?? (field.presentation === "autocomplete" || field.allowCustom
-            ? "Type or select value"
+            ? labels.typeOrSelect
             : options.length === 0
-              ? "No matching options"
+              ? labels.noMatchingOptions
               : undefined)
       }
       presentation={field.presentation === "autocomplete" ? "autocomplete" : "select"}
@@ -589,6 +600,8 @@ function PhiInspectorChoiceFieldControl({
 
 function PhiInspectorCollectionFieldControl({
   field,
+  config,
+  labels,
   value,
   defaultValue,
   disabled,
@@ -604,6 +617,9 @@ function PhiInspectorCollectionFieldControl({
   onChange,
 }: {
   field: PhiInspectorCollectionField;
+  /** The config holding the collection, for an entry field whose visibility depends on it. */
+  config: Record<string, unknown>;
+  labels: PhiInspectorFieldLabels;
   value: unknown;
   defaultValue: unknown;
   disabled: boolean;
@@ -672,7 +688,7 @@ function PhiInspectorCollectionFieldControl({
     return (
       <PhiFlexControl vertical gap={8} style={{ width: "100%", minWidth: 0 }}>
         {field.itemFields
-          .filter((itemField) => isPhiInspectorConfigFieldVisible(itemField, item))
+          .filter((itemField) => isPhiInspectorConfigFieldVisible(itemField, item, config))
           .map((itemField) => {
             const lock = resolvePhiInspectorFieldLock(itemField, field.itemFields, item);
             return renderPhiInspectorConfigField({
@@ -688,6 +704,7 @@ function PhiInspectorCollectionFieldControl({
               borderLabels,
               colorPickerLabels,
               iconPickerLabels,
+              fieldLabels: labels,
               dataProviderDescriptors,
               calendarAdapterDescriptors,
               videoProviderDescriptors,
@@ -708,7 +725,7 @@ function PhiInspectorCollectionFieldControl({
   const editor = (
     <PhiFlexControl vertical gap={8} style={{ width: "100%", minWidth: 0 }}>
       {items.length === 0 ? (
-        <PhiTypographyControl type="secondary">{field.emptyLabel ?? "No items"}</PhiTypographyControl>
+        <PhiTypographyControl type="secondary">{field.emptyLabel ?? labels.noItems}</PhiTypographyControl>
       ) : null}
       {items.map((item, index) => {
         const itemLabel = readItemLabel(item, index);
@@ -749,8 +766,8 @@ function PhiInspectorCollectionFieldControl({
                   </>
                 ) : null}
                 <PhiButtonControl
-                  ariaLabel="Remove"
-                  tooltip="Remove"
+                  ariaLabel={labels.remove}
+                  tooltip={labels.remove}
                   icon={<PhiIcon name="delete" />}
                   type="text"
                   danger
@@ -767,7 +784,7 @@ function PhiInspectorCollectionFieldControl({
         );
       })}
       <PhiButtonControl
-        label={field.addLabel ?? "Add item"}
+        label={field.addLabel ?? labels.addItem}
         icon={<PhiIcon name="plus" />}
         disabled={disabled || items.length >= maxItems}
         onClick={() => publishRows(
@@ -789,7 +806,7 @@ function PhiInspectorCollectionFieldControl({
     if (!selectedItem) {
       return renderPhiInspectorConfigFieldControl(
         field,
-        <PhiTypographyControl type="secondary">{field.emptyLabel ?? "No items"}</PhiTypographyControl>,
+        <PhiTypographyControl type="secondary">{field.emptyLabel ?? labels.noItems}</PhiTypographyControl>,
       );
     }
     return (
@@ -826,11 +843,11 @@ function PhiInspectorCollectionFieldControl({
       <PhiFlexControl align="center" justify="space-between" gap={8} style={{ width: "100%", minWidth: 0 }}>
         <PhiTypographyControl type="secondary" ellipsis style={{ minWidth: 0 }}>
           {items.length === 0
-            ? field.emptyLabel ?? "No items"
+            ? field.emptyLabel ?? labels.noItems
             : items.map(readItemLabel).join(", ")}
         </PhiTypographyControl>
         <PhiButtonControl
-          label={field.editLabel ?? "Edit"}
+          label={field.editLabel ?? labels.edit}
           icon={<PhiIcon name="edit" />}
           size="small"
           disabled={disabled}
@@ -918,7 +935,7 @@ function renderPhiInspectorConfigFieldBody({
   borderLabels,
   colorPickerLabels,
   iconPickerLabels,
-  linkTargetLabels,
+  fieldLabels = PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.fields,
   dataProviderDescriptors = [],
   calendarAdapterDescriptors = [],
   videoProviderDescriptors = [],
@@ -938,7 +955,8 @@ function renderPhiInspectorConfigFieldBody({
   borderLabels?: PhiBorderWidgetLabels;
   colorPickerLabels?: PhiColorPickerLabels;
   iconPickerLabels?: PhiIconPickerControlLabels;
-  linkTargetLabels?: PhiInspectorLinkTargetLabels;
+  /** The Inspector's own words in its field controls, from the `widget:inspector` label set. */
+  fieldLabels?: PhiInspectorFieldLabels;
   dataProviderDescriptors?: readonly PhiRuntimeModuleDataProviderDescriptor[];
   calendarAdapterDescriptors?: readonly PhiCalendarAdapterDescriptor[];
   videoProviderDescriptors?: readonly PhiVideoProviderDescriptor[];
@@ -971,7 +989,7 @@ function renderPhiInspectorConfigFieldBody({
       descriptor.key === providerConfig?.providerKey) ?? null;
     const options = [
       ...(supportsStaticOptions
-        ? [{ value: PHI_STATIC_OPTIONS_PROVIDER_VALUE, label: "Static options" }]
+        ? [{ value: PHI_STATIC_OPTIONS_PROVIDER_VALUE, label: fieldLabels.staticOptions }]
         : []),
       ...dataProviderDescriptors
         .filter((descriptor) => !field.providerKind || descriptor.kind === field.providerKind)
@@ -987,7 +1005,7 @@ function renderPhiInspectorConfigFieldBody({
       <PhiFlexControl vertical gap={8} style={{ width: "100%" }}>
         <PhiSelectControl
           options={options}
-          placeholder="Select a data provider"
+          placeholder={fieldLabels.selectDataProvider}
           value={providerConfig?.providerKey ?? (supportsStaticOptions ? PHI_STATIC_OPTIONS_PROVIDER_VALUE : undefined)}
           disabled={disabled || !onChange}
           style={{ width: "100%" }}
@@ -1017,7 +1035,11 @@ function renderPhiInspectorConfigFieldBody({
               label: resource.title,
               description: resource.description,
             }))}
-            placeholder={`Select a ${field.providerKind === "tree" ? "Tree" : field.providerKind === "collection" ? "Collection" : "Table"} resource`}
+            placeholder={field.providerKind === "tree"
+              ? fieldLabels.selectTreeResource
+              : field.providerKind === "collection"
+                ? fieldLabels.selectCollectionResource
+                : fieldLabels.selectTableResource}
             value={typeof rawProviderConfig.resourceKey === "string" ? rawProviderConfig.resourceKey : undefined}
             disabled={disabled || !onChange}
             style={{ width: "100%" }}
@@ -1043,7 +1065,7 @@ function renderPhiInspectorConfigFieldBody({
           label: descriptor.title,
           description: descriptor.description,
         }))}
-        placeholder="Select a calendar"
+        placeholder={fieldLabels.selectCalendar}
         value={typeof value === "string" ? value : typeof defaultValue === "string" ? defaultValue : undefined}
         disabled={disabled || !onChange}
         style={{ width: "100%" }}
@@ -1065,7 +1087,7 @@ function renderPhiInspectorConfigFieldBody({
           label: descriptor.title,
           description: descriptor.recipient,
         }))}
-        placeholder="Select a video provider"
+        placeholder={fieldLabels.selectVideoProvider}
         value={typeof value === "string" ? value : typeof defaultValue === "string" ? defaultValue : undefined}
         disabled={disabled || !onChange}
         style={{ width: "100%" }}
@@ -1095,8 +1117,8 @@ function renderPhiInspectorConfigFieldBody({
       <PhiDimensionControl
         value={sizeValue}
         disabled={disabled || !onChange}
-        widthPlaceholder={field.widthPlaceholder ?? "Width"}
-        heightPlaceholder={field.heightPlaceholder ?? "Height"}
+        widthPlaceholder={field.widthPlaceholder ?? fieldLabels.width}
+        heightPlaceholder={field.heightPlaceholder ?? fieldLabels.height}
         onChange={(nextSize) => {
           if (typeof field.widthKey === "string" && typeof field.heightKey === "string") {
             onChange?.({
@@ -1203,6 +1225,7 @@ function renderPhiInspectorConfigFieldBody({
         defaultValue={defaultValue}
         disabled={disabled || !onChange}
         widgetReferenceOptions={widgetReferenceOptions ?? []}
+        labels={fieldLabels}
         onChange={onChange}
       />
     );
@@ -1213,6 +1236,8 @@ function renderPhiInspectorConfigFieldBody({
       <PhiInspectorCollectionFieldControl
         key={field.key}
         field={field}
+        config={config}
+        labels={fieldLabels}
         value={value}
         defaultValue={defaultValue}
         disabled={disabled || !onChange}
@@ -1378,7 +1403,7 @@ function renderPhiInspectorConfigFieldBody({
       <PhiInspectorLinkTargetFieldControl
         value={value ?? defaultValue}
         disabled={disabled || !onChange}
-        {...(linkTargetLabels ? { labels: linkTargetLabels } : {})}
+        labels={fieldLabels.linkTarget}
         onChange={(next, none) => onChange?.({
           [field.key]: next,
           ...(none ? Object.fromEntries((field.clearsWhenEmpty ?? []).map((key) => [key, undefined])) : {}),

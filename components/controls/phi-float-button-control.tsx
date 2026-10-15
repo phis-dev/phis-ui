@@ -62,11 +62,11 @@ function resolveCornerStyle(
 /**
  * A button that stays in a corner of the viewport while the Page scrolls under it -- one, or a group.
  *
- * It takes the Toolbar's items so that the Widgets around both share one button: what a button says,
- * its badge, whether it is read-only or hidden. Two things a Toolbar button has do not exist on a Float
- * Button and are not imitated: `danger`, and `loading`, which disables the button instead of spinning.
- * A label shows on a square button only; a round one has room for its icon, and the label becomes the
- * tooltip.
+ * It takes the Toolbar's items so that the Widgets around both share one button: its icon, its badge,
+ * whether it is read-only or hidden. A label shows on a square button only; a round one is its icon,
+ * and the label becomes its tooltip and accessible name. Two things a Toolbar button has do not exist
+ * on a Float Button and are not imitated: `danger`, and `loading`, which disables the button instead of
+ * spinning.
  */
 export function PhiFloatButtonControl({
   items,

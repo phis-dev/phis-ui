@@ -4,6 +4,7 @@ import type {
   PhiCommandButtonEmitConfig,
 } from "../../../types/core-widget-placements";
 import type { PhiCmsConfigField, PhiCmsWidgetSignalSubcontrolCollection } from "../../../types";
+import type { PhiCmsConfigFieldVisibilityRule } from "../../../types/cms-plugins";
 import type { PhiSignalValue } from "../../../types/signals";
 import {
   canPhiViewerAccessOwnedPolicy,
@@ -202,15 +203,27 @@ export function resizePhiCommandButtons(
   return next;
 }
 
+export type PhiCommandButtonsFieldOptions = {
+  /** Fields a Widget's buttons have no use for: a Float Button knows no danger. */
+  omit?: readonly "danger"[];
+  /** When a button's label is offered: a round Float Button has no room for one. */
+  labelVisibleWhen?: PhiCmsConfigFieldVisibilityRule;
+  /** Fields of the Widget's own, after the icon. */
+  extraItemFields?: readonly PhiCmsConfigField[];
+};
+
 /**
  * The buttons, one at a time, picked by a select.
  *
  * How many there are is set on the scaffold. The key and what a button sends stay as they were made: the
  * key is its signal address, and the value is wired from the Signals panel.
  */
-export function buildPhiCommandButtonsField(
-  extraItemFields: readonly PhiCmsConfigField[] = [],
-): PhiCmsConfigField {
+export function buildPhiCommandButtonsField({
+  omit = [],
+  labelVisibleWhen,
+  extraItemFields = [],
+}: PhiCommandButtonsFieldOptions = {}): PhiCmsConfigField {
+  const omitted = new Set(omit);
   return {
     key: "buttons",
     type: "collection",
@@ -220,19 +233,28 @@ export function buildPhiCommandButtonsField(
     itemLabelField: "label",
     reorderable: false,
     itemFields: [
-      /* What it sends is its first emit; the Signals panel wires it and may change it after. */
-      createPhiCommonActionField({ signalValuePath: "emits.0.value" }),
+      /*
+       * What it sends is its first emit; the Signals panel wires it and may change it after. The divider
+       * sets the picked button's own fields apart from the select that picks it.
+       */
+      createPhiCommonActionField({ signalValuePath: "emits.0.value", heading: "Appearance" }),
       {
         key: "variant",
         type: "choice",
         label: "Variant",
         options: [...PHI_BUTTON_VARIANT_FIELD_OPTIONS],
       },
-      { key: "label", type: "string", label: "Label", emptyValue: "" },
+      {
+        key: "label",
+        type: "string",
+        label: "Label",
+        emptyValue: "",
+        ...(labelVisibleWhen ? { visibleWhen: labelVisibleWhen } : {}),
+      },
       { key: "tooltip", type: "string", label: "Tooltip" },
       { key: "icon", type: "icon", label: "Icon" },
       ...extraItemFields,
-      { key: "danger", type: "boolean", label: "Danger" },
+      ...(omitted.has("danger") ? [] : [{ key: "danger", type: "boolean", label: "Danger" } satisfies PhiCmsConfigField]),
       { key: "readOnly", type: "boolean", label: "Read only" },
       { key: "disabled", type: "boolean", label: "Disabled" },
       ...PHI_CONTROL_BADGE_FIELDS,

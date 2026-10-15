@@ -42,6 +42,41 @@ export type PhiInspectorWidgetLabels = {
     slot: string;
     profiles: { compact: string; medium: string; wide: string };
   };
+  /**
+   * What the Inspector's field controls say of their own, beside the words a plugin gives its fields:
+   * an empty list, an add button, a placeholder nobody declared. A plugin's own texts are translated
+   * with its catalog (`plugin-meta-labels.server.ts`); these belong to the Inspector and sit here.
+   */
+  fields: PhiInspectorFieldLabels;
+};
+
+export type PhiInspectorLinkTargetLabels = {
+  none: string;
+  page: string;
+  external: string;
+  pagePlaceholder: string;
+  landingPage: string;
+  externalPlaceholder: string;
+  newTab: string;
+};
+
+export type PhiInspectorFieldLabels = {
+  typeOrSelect: string;
+  noMatchingOptions: string;
+  noItems: string;
+  addItem: string;
+  remove: string;
+  edit: string;
+  width: string;
+  height: string;
+  staticOptions: string;
+  selectDataProvider: string;
+  selectTreeResource: string;
+  selectCollectionResource: string;
+  selectTableResource: string;
+  selectCalendar: string;
+  selectVideoProvider: string;
+  linkTarget: PhiInspectorLinkTargetLabels;
 };
 
 export const PHI_INSPECTOR_WIDGET_DEFAULT_LABELS: PhiInspectorWidgetLabels = {
@@ -81,5 +116,32 @@ export const PHI_INSPECTOR_WIDGET_DEFAULT_LABELS: PhiInspectorWidgetLabels = {
     distribution: "Distribution",
     slot: "Slot",
     profiles: { compact: "Narrow", medium: "Medium", wide: "Wide" },
+  },
+  fields: {
+    typeOrSelect: "Type or select value",
+    noMatchingOptions: "No matching options",
+    noItems: "No items",
+    addItem: "Add item",
+    remove: "Remove",
+    edit: "Edit",
+    width: "Width",
+    height: "Height",
+    staticOptions: "Static options",
+    selectDataProvider: "Select a data provider",
+    selectTreeResource: "Select a Tree resource",
+    selectCollectionResource: "Select a Collection resource",
+    selectTableResource: "Select a Table resource",
+    selectCalendar: "Select a calendar",
+    selectVideoProvider: "Select a video provider",
+    linkTarget: {
+      none: "None",
+      page: "Page",
+      external: "Address",
+      pagePlaceholder: "Select Page",
+      landingPage: "(Landing page)",
+      /* Not a word: the start of an address, the same in every language. */
+      externalPlaceholder: "https://",
+      newTab: "Open in a new tab",
+    },
   },
 };
