@@ -3,9 +3,9 @@ import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import {
   PHI_COMMAND_TOOLBAR_WIDGET_DEFINITION,
-  filterPhiCommandToolbarButtonsForViewer,
   type PhiCommandToolbarWidgetConfig,
 } from "./config";
+import { filterPhiCommandButtonsForViewer } from "../../../../../components/widgets/config/command-buttons";
 import { getPhiCommonControlLabelsForRuntime } from "../../../../../components/widgets/label-sets/common-controls";
 
 export const PHI_COMMAND_TOOLBAR_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiCommandToolbarWidgetConfig> = {
@@ -17,7 +17,7 @@ export const PHI_COMMAND_TOOLBAR_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiCommandToo
         blockId: widget.id,
         config: {
           ...config,
-          buttons: filterPhiCommandToolbarButtonsForViewer(
+          buttons: filterPhiCommandButtonsForViewer(
             config.buttons,
             runtime.viewer,
             registry?.roleProviderIdByWidgetType.get(widget.widgetType),
@@ -34,7 +34,7 @@ export const PHI_COMMAND_TOOLBAR_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiCommandToo
         blockId: widget.id,
         config: {
           ...config,
-          buttons: filterPhiCommandToolbarButtonsForViewer(
+          buttons: filterPhiCommandButtonsForViewer(
             config.buttons,
             runtime.viewer,
             registry?.roleProviderIdByWidgetType.get(widget.widgetType),

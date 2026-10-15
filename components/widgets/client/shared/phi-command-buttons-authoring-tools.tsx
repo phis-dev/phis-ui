@@ -1,35 +1,31 @@
 "use client";
 
 
-import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
-import { PhiPopoverControl } from "../../../../../components/controls/phi-popover-control";
-import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
-import type { PhiCommandToolbarButtonConfig } from "../../../../../types/core-widget-placements";
-import { PHI_COMMON_CONTROL_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/common-controls";
-import { usePhiWidgetScaffoldPopup } from "../../../../../components/widgets/client/shared/phi-widget-scaffold-popup";
-import { usePhiAuthoringToolsLabels } from "../../../../../components/widgets/client/shared/phi-authoring-tools-labels";
-import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
-import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
-import { PhiCompactGroupControl } from "../../../../../components/controls/phi-compact-group-control";
-import { PhiIcon } from "../../../../../components/shell/phi-icon";
-import { PhiWidgetCountToolButton } from "../../../../../components/widgets/client/shared/phi-widget-tool-buttons";
-import {
-  PHI_COMMAND_TOOLBAR_MAX_BUTTONS,
-  PHI_COMMAND_TOOLBAR_MIN_BUTTONS,
-  resizePhiCommandToolbarButtons,
-} from "./config";
+import { PhiButtonControl } from "../../../controls/phi-button-control";
+import { PhiPopoverControl } from "../../../controls/phi-popover-control";
+import { usePhiConfig } from "../../../root/phi-config-provider";
+import type { PhiCommandButtonConfig } from "../../../../types/core-widget-placements";
+import { PHI_COMMON_CONTROL_DEFAULT_LABELS } from "../../label-types/common-controls";
+import { usePhiWidgetScaffoldPopup } from "./phi-widget-scaffold-popup";
+import { usePhiAuthoringToolsLabels } from "./phi-authoring-tools-labels";
+import { PhiFlexControl } from "../../../controls/phi-flex-control";
+import { PhiTypographyControl } from "../../../controls/phi-typography-control";
+import { PhiCompactGroupControl } from "../../../controls/phi-compact-group-control";
+import { PhiIcon } from "../../../shell/phi-icon";
+import { PhiWidgetCountToolButton } from "./phi-widget-tool-buttons";
+import { resizePhiCommandButtons, type PhiCommandButtonBounds } from "../../config/command-buttons";
 
 function stopToolEvent(event: { stopPropagation: () => void }) {
   event.stopPropagation();
 }
 
 /* What a button is called here: its own label, else its action's, else its key. */
-function readButtonName(button: PhiCommandToolbarButtonConfig) {
+function readButtonName(button: PhiCommandButtonConfig) {
   return button.label || (button.action ? PHI_COMMON_CONTROL_DEFAULT_LABELS.actions[button.action].label : "") || button.key;
 }
 
 function moveButton(
-  buttons: readonly PhiCommandToolbarButtonConfig[],
+  buttons: readonly PhiCommandButtonConfig[],
   index: number,
   direction: -1 | 1,
 ) {
@@ -43,12 +39,18 @@ function moveButton(
   return nextButtons;
 }
 
-export function PhiCommandToolbarAuthoringTools({
+/**
+ * The scaffold's tools for a Widget's command buttons: how many there are, and their order. The Command
+ * Toolbar and the Float Button count them alike and differ only in how many they allow.
+ */
+export function PhiCommandButtonsAuthoringTools({
   buttons,
+  bounds,
   onChange,
 }: {
-  buttons: readonly PhiCommandToolbarButtonConfig[];
-  onChange: (buttons: PhiCommandToolbarButtonConfig[]) => void;
+  buttons: readonly PhiCommandButtonConfig[];
+  bounds: PhiCommandButtonBounds;
+  onChange: (buttons: PhiCommandButtonConfig[]) => void;
 }) {
   const labels = usePhiAuthoringToolsLabels();
   const { token } = usePhiConfig();
@@ -58,10 +60,10 @@ export function PhiCommandToolbarAuthoringTools({
     <PhiCompactGroupControl>
       <PhiWidgetCountToolButton
         count={buttons.length}
-        min={PHI_COMMAND_TOOLBAR_MIN_BUTTONS}
-        max={PHI_COMMAND_TOOLBAR_MAX_BUTTONS}
+        min={bounds.min}
+        max={bounds.max}
         label={labels.commands.buttons}
-        onChange={(count) => onChange(resizePhiCommandToolbarButtons(buttons, count))}
+        onChange={(count) => onChange(resizePhiCommandButtons(buttons, count, bounds))}
       />
       <PhiPopoverControl
         trigger="click"
@@ -105,7 +107,7 @@ export function PhiCommandToolbarAuthoringTools({
                   size="small"
                   danger
                   ariaLabel={`Remove ${readButtonName(button)}`}
-                  disabled={buttons.length <= PHI_COMMAND_TOOLBAR_MIN_BUTTONS}
+                  disabled={buttons.length <= bounds.min}
                   icon={<PhiIcon name="delete" size="inherit" />}
                   onClick={() => onChange(buttons.filter((_, candidateIndex) => candidateIndex !== index))}
                 />

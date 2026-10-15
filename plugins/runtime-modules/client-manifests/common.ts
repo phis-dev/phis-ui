@@ -205,6 +205,24 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
       ),
     ],
     [
+      PhiCmsWidgetType.Steps,
+      definePhiRuntimeModuleRenderClient(
+        dynamic(() => import("../core/widgets/steps/client").then((module) => module.PhiStepsWidget)),
+      ),
+    ],
+    [
+      PhiCmsWidgetType.Timeline,
+      definePhiRuntimeModuleRenderClient(
+        dynamic(() => import("../core/widgets/timeline/client").then((module) => module.PhiTimelineWidget)),
+      ),
+    ],
+    [
+      PhiCmsWidgetType.FloatButton,
+      definePhiRuntimeModuleRenderClient(
+        dynamic(() => import("../core/widgets/float-button/client").then((module) => module.PhiFloatButtonWidget)),
+      ),
+    ],
+    [
       PhiCmsWidgetType.Spacer,
       definePhiRuntimeModuleRenderClient(
         dynamic(() => import("../core/widgets/spacer/client").then((module) => module.PhiSpacerWidget)),

@@ -123,6 +123,9 @@ import {
   PHI_SPACER_WIDGET_DEFINITION,
 } from "./widgets/spacer/config";
 import { PHI_GALLERY_WIDGET_DEFINITION } from "./widgets/gallery/config";
+import { PHI_STEPS_WIDGET_DEFINITION } from "./widgets/steps/config";
+import { PHI_TIMELINE_WIDGET_DEFINITION } from "./widgets/timeline/config";
+import { PHI_FLOAT_BUTTON_WIDGET_DEFINITION } from "./widgets/float-button/config";
 import {
   PHI_TAB_BAR_WIDGET_DEFINITION,
 } from "../../../components/widgets/config/stack-tabs";
@@ -313,6 +316,18 @@ export default createPhiAuthoringWidgetModule([
   definePhiAuthoringWidgetModuleLoader(
     PHI_GALLERY_WIDGET_DEFINITION,
     () => import("./widgets/gallery/authoring").then((module) => module.PHI_GALLERY_WIDGET_BUILDER_PLUGIN),
+  ),
+  definePhiAuthoringWidgetModuleLoader(
+    PHI_STEPS_WIDGET_DEFINITION,
+    () => import("./widgets/steps/authoring").then((module) => module.PHI_STEPS_WIDGET_BUILDER_PLUGIN),
+  ),
+  definePhiAuthoringWidgetModuleLoader(
+    PHI_TIMELINE_WIDGET_DEFINITION,
+    () => import("./widgets/timeline/authoring").then((module) => module.PHI_TIMELINE_WIDGET_BUILDER_PLUGIN),
+  ),
+  definePhiAuthoringWidgetModuleLoader(
+    PHI_FLOAT_BUTTON_WIDGET_DEFINITION,
+    () => import("./widgets/float-button/authoring").then((module) => module.PHI_FLOAT_BUTTON_WIDGET_BUILDER_PLUGIN),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_SPACER_WIDGET_DEFINITION,

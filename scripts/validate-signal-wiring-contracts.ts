@@ -79,7 +79,7 @@ assert.equal(phiSignalCapabilitiesMatch(backgroundOut, null), false);
    * routes that address it.
    */
   const toolbarSource = await readFile(
-    new URL("../plugins/runtime-modules/core/widgets/command-toolbar/client.tsx", import.meta.url),
+    new URL("../components/widgets/client/shared/phi-command-buttons.ts", import.meta.url),
     "utf8",
   );
   assert.match(

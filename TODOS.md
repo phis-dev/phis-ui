@@ -158,8 +158,6 @@ built. Remove an entry when it is done.
 
   This moves pixels wherever a definite height is in play, so it is its own change, after the resolver.
 
-- **Generic float-button Widget.** A Widget over antd `FloatButton` behind a Phi Control, with
-  config-driven placement, icon, and badge, emitting activation like the button Widget.
 - **Control badge adoption from real use cases.** The badge contract exists for button and toolbar.
   Evaluate basket, support inbox, and similar domain buttons one by one; migrate only where the generic
   receiver contract fits without losing domain semantics.

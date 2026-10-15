@@ -172,6 +172,9 @@ exports complete Widgets only.
   resolved options.
 - `PhiCollectionLayoutControl` and `PhiMediaAssetTileControl` are the one grid/masonry/stack
   presentation and the one media tile; asset surfaces compose them instead of new tile renderers.
+- `PhiStepsControl` (where a sequence stands) and `PhiTimelineControl` (what happened, in order) take
+  items as data -- strings, Phi icon names, a tone instead of a colour -- never Ant Design's item nodes.
+  `PhiFloatButtonControl` takes the Toolbar's items: one is a Float Button, more are its group.
 
 ### What the primitive sweep taught
 
@@ -212,6 +215,15 @@ Generic control Widgets reuse the capability sets in `signals/control-signal-cap
   as its subcontrol for `enabled`, `loading`, `visibility`, `badge`, `icon`, `label`, and `tooltip`
   (`change`, `string` for the last two); a received tooltip replaces the one the button was placed with
   until another arrives -- the Builder's Undo names the step it would take back that way.
+  Each button may state a badge with the badge fields above; a `badge/change` addressed to it wins.
+- The Float Button (`float-button`) has the Command Toolbar's buttons -- the same fields, addresses and
+  runtime, shared through `config/command-buttons.ts` and `client/shared/phi-command-buttons.ts` -- and
+  stands them in a corner of the viewport instead of a row: `placement`, `offsetBlock`, `offsetInline`,
+  `shape`, and for more than one button `groupTrigger`, `groupIcon`, `groupDirection`. It belongs to the
+  Page it is placed on and takes no room in its slot; the Builder and previews draw it in place.
+- Steps (`steps`) are a choice drawn as a sequence: options are the steps, the value is the step in
+  progress. With `valueMode: "stack-slot-index"` they follow a Stack's active slot, and with `navigable`
+  a pressed step activates its slot -- a wizard is a Stack with Steps beside it.
 
 ### Options Providers
 
@@ -229,7 +241,7 @@ Generic control Widgets reuse the capability sets in `signals/control-signal-cap
 ## Content Widgets
 
 A Widget that translates the text written into its own config says `translatesOwnText: true` in its
-definition: `simple-text`, `description`, `markdown`, `html`, `button`, `card`, `result`. Turning that off is
+definition: `simple-text`, `description`, `markdown`, `html`, `button`, `card`, `result`, `steps`, `timeline`. Turning that off is
 the node's `PhiCmsFlags.NoTranslate` flag and nothing else -- there is no `translate` config field. The
 Builder's Inspector offers the switch for exactly these Widgets, and a Preset whose text arrives translated
 from a label set sets the flag on the node. For a Widget bound to a Content record the flag also shows the

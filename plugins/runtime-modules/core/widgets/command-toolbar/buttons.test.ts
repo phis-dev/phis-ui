@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 
+import { PHI_COMMAND_TOOLBAR_BUTTON_BOUNDS, PHI_COMMAND_TOOLBAR_WIDGET_DEFINITION } from "./config";
 import {
-  PHI_COMMAND_TOOLBAR_WIDGET_DEFINITION,
-  createPhiCommandToolbarButton,
-  resizePhiCommandToolbarButtons,
-} from "./config";
+  createPhiCommandButton,
+  resizePhiCommandButtons,
+} from "../../../../../components/widgets/config/command-buttons";
+
+const resize = (buttons: Parameters<typeof resizePhiCommandButtons>[0], count: number) =>
+  resizePhiCommandButtons(buttons, count, PHI_COMMAND_TOOLBAR_BUTTON_BOUNDS);
 
 /*
  * A Command Toolbar is counted from its scaffold, as a Description's items are, and never drops below one
@@ -19,19 +22,19 @@ describe("a Command Toolbar's buttons", () => {
 
   it("keeps the buttons it has and creates the rest after them", () => {
     const first = { key: "save", label: "Save", emits: [{ capabilityId: "command", value: "save" }] };
-    const next = resizePhiCommandToolbarButtons([first], 3);
+    const next = resize([first], 3);
     expect(next[0]).toBe(first);
     expect(next.map((button) => button.key)).toEqual(["save", "button2", "button3"]);
   });
 
   it("drops the last when the count goes down, and never below one", () => {
-    const buttons = resizePhiCommandToolbarButtons([], 3);
-    expect(resizePhiCommandToolbarButtons(buttons, 2).map((button) => button.key)).toEqual(["button1", "button2"]);
-    expect(resizePhiCommandToolbarButtons(buttons, 0).map((button) => button.key)).toEqual(["button1"]);
+    const buttons = resize([], 3);
+    expect(resize(buttons, 2).map((button) => button.key)).toEqual(["button1", "button2"]);
+    expect(resize(buttons, 0).map((button) => button.key)).toEqual(["button1"]);
   });
 
   it("names a new button after the first free key", () => {
-    expect(createPhiCommandToolbarButton([
+    expect(createPhiCommandButton([
       { key: "button2", label: "B", emits: [] },
     ]).key).toBe("button3");
   });

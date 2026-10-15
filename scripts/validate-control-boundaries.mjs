@@ -45,6 +45,9 @@ const widgetControlRequirements = new Map([
   ["plugins/runtime-modules/core/widgets/cascader/client.tsx", "PhiCascaderControl"],
   ["plugins/runtime-modules/core/widgets/button/client.tsx", "PhiButtonControl"],
   ["plugins/runtime-modules/core/widgets/command-toolbar/client.tsx", "PhiToolbarControl"],
+  ["plugins/runtime-modules/core/widgets/float-button/client.tsx", "PhiFloatButtonControl"],
+  ["plugins/runtime-modules/core/widgets/steps/client.tsx", "PhiStepsControl"],
+  ["plugins/runtime-modules/core/widgets/timeline/client.tsx", "PhiTimelineControl"],
   ["plugins/runtime-modules/core/widgets/dimension/client.tsx", "PhiDimensionControl"],
   ["plugins/runtime-modules/core/widgets/length/client.tsx", "PhiLengthControl"],
 ]);
@@ -100,6 +103,7 @@ const navigationPrimitiveOwners = new Map([
   ["Menu", "components/controls/phi-menu-control.tsx"],
   ["Tabs", "components/controls/phi-tabs-control.tsx"],
   ["Dropdown", "components/controls/phi-dropdown-control.tsx"],
+  ["Steps", "components/controls/phi-steps-control.tsx"],
 ]);
 
 /** The Menu item interface is part of the Menu primitive: only its Control may describe items in it. */
@@ -152,6 +156,7 @@ const controlledPrimitives = new Map([
   ["Drawer", "PhiDrawerControl"],
   ["Dropdown", "PhiDropdownControl"],
   ["Empty", "PhiEmptyControl"],
+  ["FloatButton", "PhiFloatButtonControl"],
   ["Flex", "PhiFlexControl"],
   ["Form", "PhiFormControl"],
   ["Image", "PhiLightboxImageControl"],
@@ -188,10 +193,12 @@ const controlledPrimitives = new Map([
   ["Skeleton", "PhiSkeletonControl"],
   ["Spin", "PhiSpinControl"],
   ["Statistic", "PhiStatisticControl"],
+  ["Steps", "PhiStepsControl"],
   ["Switch", "PhiSwitchControl"],
   ["Table", "PhiTableControl"],
   ["Tabs", "PhiTabsControl"],
   ["Tag", "PhiTagControl"],
+  ["Timeline", "PhiTimelineControl"],
   ["Tooltip", "PhiNameControl"],
   ["Tree", "PhiTreeControl"],
   ["Typography", "PhiTypographyControl"],

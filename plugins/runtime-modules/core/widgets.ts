@@ -125,6 +125,9 @@ import {
   PHI_SPACER_WIDGET_DEFINITION,
 } from "./widgets/spacer/config";
 import { PHI_GALLERY_WIDGET_DEFINITION } from "./widgets/gallery/config";
+import { PHI_STEPS_WIDGET_DEFINITION } from "./widgets/steps/config";
+import { PHI_TIMELINE_WIDGET_DEFINITION } from "./widgets/timeline/config";
+import { PHI_FLOAT_BUTTON_WIDGET_DEFINITION } from "./widgets/float-button/config";
 import {
   PHI_TAB_BAR_WIDGET_DEFINITION,
 } from "../../../components/widgets/config/stack-tabs";
@@ -449,6 +452,27 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/gallery/plugin").then((module) => module.PHI_GALLERY_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/gallery/plugin").then((module) => module.PHI_GALLERY_WIDGET_PLUGIN),
+  }),
+  defineFirstPartyWidget({
+    definition: PHI_STEPS_WIDGET_DEFINITION,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
+    loadRuntime: () => import("./widgets/steps/plugin").then((module) => module.PHI_STEPS_WIDGET_PLUGIN),
+    loadPreview: () => import("./widgets/steps/plugin").then((module) => module.PHI_STEPS_WIDGET_PLUGIN),
+  }),
+  defineFirstPartyWidget({
+    definition: PHI_TIMELINE_WIDGET_DEFINITION,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
+    loadRuntime: () => import("./widgets/timeline/plugin").then((module) => module.PHI_TIMELINE_WIDGET_PLUGIN),
+    loadPreview: () => import("./widgets/timeline/plugin").then((module) => module.PHI_TIMELINE_WIDGET_PLUGIN),
+  }),
+  defineFirstPartyWidget({
+    definition: PHI_FLOAT_BUTTON_WIDGET_DEFINITION,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
+    loadRuntime: () => import("./widgets/float-button/plugin").then((module) => module.PHI_FLOAT_BUTTON_WIDGET_PLUGIN),
+    loadPreview: () => import("./widgets/float-button/plugin").then((module) => module.PHI_FLOAT_BUTTON_WIDGET_PLUGIN),
   }),
   defineFirstPartyWidget({
     definition: PHI_SPACER_WIDGET_DEFINITION,

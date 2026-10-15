@@ -15,7 +15,7 @@ import type {
   PhiRuntimeModuleCatalogEntry,
   PhiRuntimeModuleDefinition,
 } from "../types/cms-plugins";
-import { filterPhiCommandToolbarButtonsForViewer } from "../plugins/runtime-modules/core/widgets/command-toolbar/config";
+import { filterPhiCommandButtonsForViewer } from "../components/widgets/config/command-buttons";
 import { listPhiAccessibleAreas } from "../components/widgets/accessible-areas";
 
 const CORE_PROVIDER = "@phis/server/core" as const;
@@ -85,7 +85,7 @@ assert.equal(intersectPhiInheritedViewportFlags(null, 1), 1);
 assert.equal(intersectPhiInheritedViewportFlags(1, 2), 0);
 assert.equal(intersectPhiInheritedViewportFlags(3, 0), 3);
 assert.deepEqual(
-  filterPhiCommandToolbarButtonsForViewer(
+  filterPhiCommandButtonsForViewer(
     [
       { key: "public", emits: [{ capabilityId: "command" }] },
       {

@@ -17,7 +17,7 @@ import { usePhiSignalListener } from "../../../runtime/runtime-signal-bus";
 import { usePhiControlSignalController } from "./phi-control-signals";
 import { usePhiControlOptionsProvider } from "../../../controls/phi-options-provider";
 
-export type PhiChoiceControlTypeKey = "select-box" | "segmented" | "tab-bar";
+export type PhiChoiceControlTypeKey = "select-box" | "segmented" | "steps" | "tab-bar";
 
 export type PhiChoiceControllerOptions<TConfig extends PhiChoiceControlConfig> = {
   config?: TConfig | null;

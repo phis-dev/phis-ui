@@ -397,16 +397,22 @@ export type PhiCollectionViewWidgetPlacement = PhiWidgetPlacementBase & {
   itemRendererKey?: string | null;
 };
 
-// Command Toolbar
+// Command buttons: the Command Toolbar's, and the Float Button's
 
-export type PhiCommandToolbarButtonEmitConfig = {
+export type PhiCommandButtonEmitConfig = {
   capabilityId: string;
   value?: PhiSignalValue;
 };
 
-export type PhiCommandToolbarButtonConfig = {
+/**
+ * One button of a Widget that holds several, each its own signal subcontrol.
+ *
+ * The badge is the Button Widget's badge, per button: what a Preset states here is drawn until a
+ * `badge/change` addressed to the button says otherwise.
+ */
+export type PhiCommandButtonConfig = PhiControlBadgeConfig & {
   key: string;
-  emits: PhiCommandToolbarButtonEmitConfig[];
+  emits: PhiCommandButtonEmitConfig[];
   accessPolicy?: PhiViewerAccessPolicy;
   action?: PhiCommonControlActionKey;
   label?: string;
@@ -428,7 +434,7 @@ export type PhiCommandToolbarWidgetPlacement = PhiWidgetPlacementBase & Omit<Phi
   compact?: boolean;
   wrap?: boolean;
   showLabels?: boolean;
-  buttons?: PhiCommandToolbarButtonConfig[];
+  buttons?: PhiCommandButtonConfig[];
 };
 
 // Theme Mode Switch

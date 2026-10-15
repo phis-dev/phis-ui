@@ -194,6 +194,20 @@ export type {
   PhiToolbarControlItem,
   PhiToolbarControlProps,
 } from "./components/controls/phi-toolbar-control";
+export { PhiFloatButtonControl } from "./components/controls/phi-float-button-control";
+export type {
+  PhiFloatButtonControlGroup,
+  PhiFloatButtonControlPlacement,
+  PhiFloatButtonControlProps,
+} from "./components/controls/phi-float-button-control";
+export { PhiStepsControl } from "./components/controls/phi-steps-control";
+export type { PhiStepsControlItem, PhiStepsControlProps } from "./components/controls/phi-steps-control";
+export { PhiTimelineControl } from "./components/controls/phi-timeline-control";
+export type {
+  PhiTimelineControlItem,
+  PhiTimelineControlProps,
+  PhiTimelineControlTone,
+} from "./components/controls/phi-timeline-control";
 export { PhiTableControl, readPhiTableControlValue } from "./components/controls/phi-table-control";
 export type {
   PhiTableControlColumn,

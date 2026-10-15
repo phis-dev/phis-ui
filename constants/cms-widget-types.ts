@@ -77,6 +77,7 @@ const PHI_CMS_WIDGET_MODULE_BY_TYPE_KEY: Readonly<Record<string, keyof typeof PH
   "draft-status": "core",
   "developer-builder-pages-header": "builder",
   "dimension": "core",
+  "float-button": "core",
   "form": "core",
   "gallery": "core",
   "header-navigation": "core",
@@ -109,6 +110,7 @@ const PHI_CMS_WIDGET_MODULE_BY_TYPE_KEY: Readonly<Record<string, keyof typeof PH
   "simple-text": "core",
   "slider": "core",
   "spacer": "core",
+  "steps": "core",
   "structure-region": "builder",
   "switch": "core",
   "theme-mode-switch": "core",
@@ -116,6 +118,7 @@ const PHI_CMS_WIDGET_MODULE_BY_TYPE_KEY: Readonly<Record<string, keyof typeof PH
   "table": "core",
   "test-block": "builder",
   "thread-conversation": "threads",
+  "timeline": "core",
   "tree": "core",
 };
 
@@ -176,6 +179,9 @@ export const PhiCmsWidgetType = {
   Segmented: defineWidgetType(resolvePhiCmsWidgetPluginKey("segmented"), "segmented"),
   SelectBox: defineWidgetType(resolvePhiCmsWidgetPluginKey("select-box"), "select-box"),
   Spacer: defineWidgetType(resolvePhiCmsWidgetPluginKey("spacer"), "spacer"),
+  Steps: defineWidgetType(resolvePhiCmsWidgetPluginKey("steps"), "steps"),
+  Timeline: defineWidgetType(resolvePhiCmsWidgetPluginKey("timeline"), "timeline"),
+  FloatButton: defineWidgetType(resolvePhiCmsWidgetPluginKey("float-button"), "float-button"),
   Switch: defineWidgetType(resolvePhiCmsWidgetPluginKey("switch"), "switch"),
   ThemeModeSwitch: defineWidgetType(
     resolvePhiCmsWidgetPluginKey("theme-mode-switch"),

@@ -3,12 +3,13 @@
 import type { PhiCmsBuilderWidgetPlugin } from "../../../../../types";
 import { PhiCommandToolbarWidget } from "./client";
 import {
+  PHI_COMMAND_TOOLBAR_BUTTON_BOUNDS,
   PHI_COMMAND_TOOLBAR_WIDGET_DEFINITION,
-  filterPhiCommandToolbarButtonsForViewer,
   type PhiCommandToolbarWidgetConfig,
 } from "./config";
+import { filterPhiCommandButtonsForViewer } from "../../../../../components/widgets/config/command-buttons";
 import { PHI_COMMON_CONTROL_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/common-controls";
-import { PhiCommandToolbarAuthoringTools } from "./authoring-tools";
+import { PhiCommandButtonsAuthoringTools } from "../../../../../components/widgets/client/shared/phi-command-buttons-authoring-tools";
 
 export const PHI_COMMAND_TOOLBAR_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugin<PhiCommandToolbarWidgetConfig> = {
   ...PHI_COMMAND_TOOLBAR_WIDGET_DEFINITION,
@@ -17,7 +18,7 @@ export const PHI_COMMAND_TOOLBAR_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugi
       blockId={widget.id}
       config={{
         ...config,
-        buttons: filterPhiCommandToolbarButtonsForViewer(
+        buttons: filterPhiCommandButtonsForViewer(
           config.buttons,
           runtime.viewer,
           registry?.roleProviderIdByWidgetType.get(widget.widgetType),
@@ -27,8 +28,9 @@ export const PHI_COMMAND_TOOLBAR_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugi
     />
   ),
   renderEditorTools: ({ config, authoring }) => authoring?.updateConfig ? (
-    <PhiCommandToolbarAuthoringTools
+    <PhiCommandButtonsAuthoringTools
       buttons={config.buttons}
+      bounds={PHI_COMMAND_TOOLBAR_BUTTON_BOUNDS}
       onChange={(buttons) => authoring.updateConfig?.({ buttons })}
     />
   ) : null,
