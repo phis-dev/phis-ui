@@ -970,8 +970,13 @@ graph leakage are hard validation errors.
   Live-only providers stay unavailable in authoring.
 - Client lazy declarations (`next/dynamic`, `React.lazy`) are created at module scope, never during
   render. A Server Component does not dynamically import a Client Component to get a split.
-- Data Provider descriptors declare `kind` (`options`, `table`, `tree`, or `collection`),
+- Data Provider descriptors declare `kind` (`options`, `table`, `tree`, `collection`, or `timeline`),
   `executionMode` (`static | live`), and `authoringMode` (`none | read | edit`).
+- A `timeline` Provider answers the Timeline Widget's `entriesProvider` with `{ entries }` in the
+  `PhiTimelineEntry` shape of `@phis/contracts/timeline` -- key, content, optional title, `at` (ISO date
+  the Widget formats for the page locale) or `time` (words shown as written), icon, tone, pending. It
+  declares no resources. Its Client is `createPhiTimelineProviderClient({ key, load, resolveLoadKey? })`
+  from `@phis/ui/runtime-data-provider-client`; it translates its own texts, as an options Provider does.
 
 ### Module UI provider
 

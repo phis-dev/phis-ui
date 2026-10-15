@@ -26,6 +26,14 @@ export type {
   PhiTreeProviderRegistration,
 } from "./components/widgets/client/shared/phi-tree-provider";
 export {
+  createPhiTimelineProviderClient,
+  PhiTimelineProviderClient,
+} from "./components/widgets/client/shared/phi-timeline-provider";
+export type {
+  PhiTimelineProviderRegistration,
+  PhiTimelineProviderRequest,
+} from "./components/widgets/client/shared/phi-timeline-provider";
+export {
   usePhiTableBinding,
 } from "./components/tables/client/phi-table-binding";
 export type { PhiTableBindingInput } from "./components/tables/client/phi-table-binding";

@@ -5,6 +5,7 @@ import { PhiControlOptionsProviderIsolationBoundary } from "../controls/phi-opti
 import { PhiTableProviderIsolationBoundary } from "../widgets/client/shared/phi-table-provider";
 import { PhiTreeProviderIsolationBoundary } from "../widgets/client/shared/phi-tree-provider";
 import { PhiCollectionProviderIsolationBoundary } from "../widgets/client/shared/phi-collection-provider";
+import { PhiTimelineProviderIsolationBoundary } from "../widgets/client/shared/phi-timeline-provider";
 import { PhiRuntimeModuleDataProviderClientHost } from "./runtime-module-data-provider-client-manifest";
 
 export function PhiRuntimeModuleAuthoringDataProviderHost({
@@ -19,12 +20,14 @@ export function PhiRuntimeModuleAuthoringDataProviderHost({
       <PhiTableProviderIsolationBoundary>
         <PhiTreeProviderIsolationBoundary>
           <PhiCollectionProviderIsolationBoundary>
-            <PhiRuntimeModuleDataProviderClientHost
-              providerKeys={providerKeys}
-              mode="authoring"
-            >
-              {children}
-            </PhiRuntimeModuleDataProviderClientHost>
+            <PhiTimelineProviderIsolationBoundary>
+              <PhiRuntimeModuleDataProviderClientHost
+                providerKeys={providerKeys}
+                mode="authoring"
+              >
+                {children}
+              </PhiRuntimeModuleDataProviderClientHost>
+            </PhiTimelineProviderIsolationBoundary>
           </PhiCollectionProviderIsolationBoundary>
         </PhiTreeProviderIsolationBoundary>
       </PhiTableProviderIsolationBoundary>

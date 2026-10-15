@@ -1,7 +1,7 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import {
-  PHI_CHOICE_CONTROL_OPTION_FIELDS,
+  buildPhiChoiceControlOptionFields,
   PHI_CHOICE_CONTROL_CONFIG_FIELDS,
   PHI_CHOICE_CONTROL_VALUE_MODE_FIELD,
   parsePhiStackChoiceControlConfig,
@@ -31,7 +31,7 @@ export const PHI_SEGMENTED_WIDGET_DEFINITION = {
     { key: "label", type: "string", label: "Label" },
     { key: "value", type: "string", label: "Value" },
     PHI_CHOICE_CONTROL_VALUE_MODE_FIELD,
-    ...PHI_CHOICE_CONTROL_OPTION_FIELDS,
+    ...buildPhiChoiceControlOptionFields("toolbar"),
     ...PHI_CHOICE_CONTROL_CONFIG_FIELDS,
   ],
   defaultConfig: {

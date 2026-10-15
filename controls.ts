@@ -206,7 +206,6 @@ export { PhiTimelineControl } from "./components/controls/phi-timeline-control";
 export type {
   PhiTimelineControlItem,
   PhiTimelineControlProps,
-  PhiTimelineControlTone,
 } from "./components/controls/phi-timeline-control";
 export { PhiTableControl, readPhiTableControlValue } from "./components/controls/phi-table-control";
 export type {

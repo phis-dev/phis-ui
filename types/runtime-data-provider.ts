@@ -10,7 +10,7 @@ export {
 import { isPhiRecord } from "../helpers/is-record";
 import { isPhiRuntimeDataProviderKey as isProviderKey, type PhiRuntimeDataProviderKey } from "@phis/contracts/controls";
 
-export type PhiRuntimeDataProviderKind = "options" | "table" | "tree" | "collection";
+export type PhiRuntimeDataProviderKind = "options" | "table" | "tree" | "collection" | "timeline";
 
 export type PhiRuntimeDataProviderExecutionMode = "static" | "live";
 
@@ -31,6 +31,29 @@ export type PhiRuntimeDataProviderBinding = {
 export type PhiProviderResourceSource = PhiRuntimeDataProviderBinding & {
   resourceKey: string;
 };
+
+/**
+ * Reads a stored binding of a Provider that serves one thing and needs no resource -- a Timeline
+ * Provider. Anything without a namespaced Provider key is no binding.
+ */
+export function readPhiRuntimeDataProviderBinding(value: unknown): PhiRuntimeDataProviderBinding | null {
+  if (!isPhiRecord(value)) {
+    return null;
+  }
+  const record = value as Record<string, unknown>;
+  if (!isProviderKey(record.providerKey)) {
+    return null;
+  }
+  const scopeKey = typeof record.scopeKey === "string" && record.scopeKey.trim() ? record.scopeKey.trim() : undefined;
+  const params = isPhiRecord(record.params)
+    ? record.params as Record<string, unknown>
+    : undefined;
+  return {
+    providerKey: record.providerKey,
+    ...(scopeKey ? { scopeKey } : {}),
+    ...(params ? { params } : {}),
+  };
+}
 
 /** Reads a stored source; anything without a namespaced Provider key and a resource is no source. */
 export function readPhiProviderResourceSource(value: unknown): PhiProviderResourceSource | null {

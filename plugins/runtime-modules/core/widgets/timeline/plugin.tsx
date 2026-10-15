@@ -17,7 +17,8 @@ async function translatePhiTimelineConfig(
   runtime: PhiBlockRuntime,
   translate: boolean,
 ): Promise<PhiTimelineWidgetConfig> {
-  if (!translate || config.entries.length === 0) return config;
+  /* A Provider's entries are its own to translate, as an options Provider's are. */
+  if (!translate || config.entriesProvider || config.entries.length === 0) return config;
   const texts = config.entries.flatMap((entry) => PHI_TIMELINE_TRANSLATED_FIELDS.map((field) => entry[field] ?? ""));
   const translated = await trBulkForLocale(runtime.locale.current, texts);
   const width = PHI_TIMELINE_TRANSLATED_FIELDS.length;
@@ -42,6 +43,7 @@ export const PHI_TIMELINE_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiTimelineWidgetCon
       componentProps={{
         blockId: widget.id,
         config: await translatePhiTimelineConfig(config, runtime, !hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate)),
+        locale: runtime.locale.current,
       }}
     />
   ),
@@ -51,6 +53,7 @@ export const PHI_TIMELINE_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiTimelineWidgetCon
       componentProps={{
         blockId: widget.id,
         config: await translatePhiTimelineConfig(config, runtime, !hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate)),
+        locale: runtime.locale.current,
       }}
     />
   ),

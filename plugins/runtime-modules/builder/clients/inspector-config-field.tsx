@@ -984,12 +984,19 @@ function renderPhiInspectorConfigFieldBody({
       : isPhiRecord(defaultValue)
         ? defaultValue
         : {};
-    const supportsStaticOptions = !field.providerKind || field.providerKind === "options";
+    /*
+     * Options and Timeline entries can also be the Widget's own, written in its scaffold's dialog; the
+     * other kinds are a Provider or nothing.
+     */
+    const supportsStaticOptions = !field.providerKind || field.providerKind === "options" || field.providerKind === "timeline";
     const selectedProvider = dataProviderDescriptors.find((descriptor) =>
       descriptor.key === providerConfig?.providerKey) ?? null;
     const options = [
       ...(supportsStaticOptions
-        ? [{ value: PHI_STATIC_OPTIONS_PROVIDER_VALUE, label: fieldLabels.staticOptions }]
+        ? [{
+            value: PHI_STATIC_OPTIONS_PROVIDER_VALUE,
+            label: field.providerKind === "timeline" ? fieldLabels.staticEntries : fieldLabels.staticOptions,
+          }]
         : []),
       ...dataProviderDescriptors
         .filter((descriptor) => !field.providerKind || descriptor.kind === field.providerKind)
@@ -1025,7 +1032,9 @@ function renderPhiInspectorConfigFieldBody({
                     })(),
                     params: isPhiRecord(rawProviderConfig.params) ? rawProviderConfig.params : undefined,
                   }
-                : { ...providerConfig, providerKey },
+                : field.providerKind === "timeline"
+                  ? { providerKey, params: isPhiRecord(rawProviderConfig.params) ? rawProviderConfig.params : undefined }
+                  : { ...providerConfig, providerKey },
           })}
         />
         {(field.providerKind === "table" || field.providerKind === "tree" || field.providerKind === "collection") && selectedProvider ? (

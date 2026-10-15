@@ -70,6 +70,7 @@ export type PhiInspectorFieldLabels = {
   width: string;
   height: string;
   staticOptions: string;
+  staticEntries: string;
   selectDataProvider: string;
   selectTreeResource: string;
   selectCollectionResource: string;
@@ -127,6 +128,7 @@ export const PHI_INSPECTOR_WIDGET_DEFAULT_LABELS: PhiInspectorWidgetLabels = {
     width: "Width",
     height: "Height",
     staticOptions: "Static options",
+    staticEntries: "Static entries",
     selectDataProvider: "Select a data provider",
     selectTreeResource: "Select a Tree resource",
     selectCollectionResource: "Select a Collection resource",

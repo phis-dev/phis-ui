@@ -1,7 +1,7 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import {
-  PHI_CHOICE_CONTROL_OPTION_FIELDS,
+  buildPhiChoiceControlOptionFields,
   PHI_CHOICE_CONTROL_CONFIG_FIELDS,
   PHI_CHOICE_CONTROL_VALUE_MODE_FIELD,
   parsePhiStackChoiceControlConfig,
@@ -52,7 +52,7 @@ export const PHI_STEPS_WIDGET_DEFINITION = {
   fields: [
     { key: "value", type: "string", label: "Current Step" },
     PHI_CHOICE_CONTROL_VALUE_MODE_FIELD,
-    ...PHI_CHOICE_CONTROL_OPTION_FIELDS,
+    ...buildPhiChoiceControlOptionFields("toolbar"),
     {
       key: "orientation",
       type: "choice",

@@ -91,6 +91,30 @@ export type PhiAuthoringToolsLabels = {
     labelRequired: string;
     valuesUnique: string;
   };
+  staticTimeline: {
+    edit: string;
+    title: string;
+    addEntry: string;
+    deleteEntry: string;
+    empty: string;
+    columnKey: string;
+    columnAt: string;
+    columnTime: string;
+    columnTitle: string;
+    columnContent: string;
+    columnIcon: string;
+    columnTone: string;
+    columnPending: string;
+    toneDefault: string;
+    toneSecondary: string;
+    toneSuccess: string;
+    toneWarning: string;
+    toneDanger: string;
+    /** `%1` is the entry as it reads in the row. */
+    deleteRow: string;
+    keyRequired: string;
+    keysUnique: string;
+  };
   iconPicker: PhiIconPickerControlLabels;
 };
 
@@ -163,6 +187,29 @@ export const PHI_AUTHORING_TOOLS_DEFAULT_LABELS: PhiAuthoringToolsLabels = {
     valueRequired: "Every option requires a value.",
     labelRequired: "Every option requires a label.",
     valuesUnique: "Option values must be unique.",
+  },
+  staticTimeline: {
+    edit: "Edit static entries",
+    title: "Static entries",
+    addEntry: "Add entry",
+    deleteEntry: "Delete entry",
+    empty: "No static entries",
+    columnKey: "Key",
+    columnAt: "Date",
+    columnTime: "Time text",
+    columnTitle: "Title",
+    columnContent: "Text",
+    columnIcon: "Icon",
+    columnTone: "Tone",
+    columnPending: "Under way",
+    toneDefault: "Default",
+    toneSecondary: "Secondary",
+    toneSuccess: "Success",
+    toneWarning: "Warning",
+    toneDanger: "Danger",
+    deleteRow: "Delete %1",
+    keyRequired: "Every entry requires a key.",
+    keysUnique: "Entry keys must be unique.",
   },
   iconPicker: PHI_ICON_PICKER_CONTROL_DEFAULT_LABELS,
 };

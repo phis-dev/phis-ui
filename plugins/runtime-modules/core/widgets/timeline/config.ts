@@ -1,66 +1,50 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
-import { isPhiRecord } from "../../../../../helpers/is-record";
+import { readPhiTimelineEntries, type PhiTimelineEntry } from "@phis/contracts/timeline";
 import {
-  readBoolean,
+  readPhiRuntimeDataProviderBinding,
+  type PhiRuntimeDataProviderBinding,
+} from "../../../../../types/runtime-data-provider";
+import {
   readRenderableBlockConfig,
   readString,
   type PhiCmsWidgetConfigBase,
 } from "../../../../../components/widgets/config/parser-primitives";
 import {
-  PHI_TEXT_TONE_FIELD_OPTIONS,
-  readPhiTextTone,
-  type PhiTextTone,
-} from "../../../../../components/widgets/config/text-tone";
+  parsePhiControlSignalConfig,
+  type PhiControlSignalConfig,
+} from "../../../../../components/widgets/config/control-signal-config";
 
-export type PhiTimelineWidgetEntry = {
-  key: string;
-  title?: string;
-  content: string;
-  /** When it happened, as the author writes it: "March 2026", "Yesterday", "v1.2". */
-  time?: string;
-  icon?: string;
-  tone?: PhiTextTone;
-  pending?: boolean;
-};
+/** How an entry's `at` reads: a date, a date with its time, or how long ago. */
+export type PhiTimelineTimeFormat = "date" | "datetime" | "relative";
 
-export type PhiTimelineWidgetConfig = PhiCmsWidgetConfigBase & {
-  entries: PhiTimelineWidgetEntry[];
+export type PhiTimelineWidgetConfig = PhiCmsWidgetConfigBase & Pick<PhiControlSignalConfig, "key" | "signalRoutes"> & {
+  /** The Widget's own entries, edited in its scaffold's dialog; read only while no Provider answers. */
+  entries: PhiTimelineEntry[];
+  /** The Timeline Provider that answers instead of the Widget's own entries. */
+  entriesProvider: PhiRuntimeDataProviderBinding | null;
   placement?: "start" | "end" | "alternate";
+  timeFormat: PhiTimelineTimeFormat;
 };
-
-function readTimelineEntry(value: unknown): PhiTimelineWidgetEntry | null {
-  if (!isPhiRecord(value)) {
-    return null;
-  }
-  const record = value as Record<string, unknown>;
-  const key = readString(record.key);
-  if (!key) {
-    return null;
-  }
-  return {
-    key,
-    title: readString(record.title),
-    content: readString(record.content) ?? "",
-    time: readString(record.time),
-    icon: readString(record.icon),
-    tone: readPhiTextTone(record.tone),
-    pending: readBoolean(record.pending),
-  };
-}
 
 function readTimelinePlacement(value: unknown): PhiTimelineWidgetConfig["placement"] {
   const placement = readString(value);
   return placement === "end" || placement === "alternate" ? placement : "start";
 }
 
+function readTimelineTimeFormat(value: unknown): PhiTimelineTimeFormat {
+  const format = readString(value);
+  return format === "datetime" || format === "relative" ? format : "date";
+}
+
 function parsePhiTimelineWidgetConfig(config: Record<string, unknown>): PhiTimelineWidgetConfig {
   return {
     ...readRenderableBlockConfig(config),
-    entries: Array.isArray(config.entries)
-      ? config.entries.map(readTimelineEntry).filter((entry): entry is PhiTimelineWidgetEntry => entry != null)
-      : [],
+    ...parsePhiControlSignalConfig(config, { key: "timeline" }),
+    entries: readPhiTimelineEntries(config.entries),
+    entriesProvider: readPhiRuntimeDataProviderBinding(config.entriesProvider),
     placement: readTimelinePlacement(config.placement),
+    timeFormat: readTimelineTimeFormat(config.timeFormat),
   };
 }
 
@@ -75,34 +59,27 @@ export const PHI_TIMELINE_WIDGET_DEFINITION = {
   icon: "antd:history-outlined",
   iconFamily: "basic",
   slotSizePolicy: "intrinsic",
+  runtimeSignals: {
+    emits: [],
+    /* A Module whose data changed asks the Timeline to ask its Provider again. */
+    listens: [{ id: "reload", channel: "reload", action: "activate", valueType: "none" }],
+  },
   fields: [
+    /* Edited in the scaffold's dialog, as a choice Widget's static options are. */
     {
       key: "entries",
       type: "collection",
       label: "Entries",
+      editorPlacement: "toolbar",
       itemKeyField: "key",
       itemLabelField: "title",
-      defaultItem: { key: "entry", title: "Entry", content: "" },
-      addLabel: "Add entry",
-      emptyLabel: "No entries",
-      reorderable: true,
       itemFields: [
         { key: "key", type: "string", label: "Key", required: true },
-        { key: "time", type: "string", label: "Time" },
         { key: "title", type: "string", label: "Title" },
         { key: "content", type: "string", label: "Text" },
-        { key: "icon", type: "icon", label: "Icon" },
-        {
-          key: "tone",
-          type: "choice",
-          label: "Tone",
-          emptyOption: { value: "", label: "Default", separator: "after" },
-          emptyValue: undefined,
-          options: [...PHI_TEXT_TONE_FIELD_OPTIONS],
-        },
-        { key: "pending", type: "boolean", label: "Still under way" },
       ],
     },
+    { key: "entriesProvider", type: "data-provider", providerKind: "timeline", label: "Entries Source" },
     {
       key: "placement",
       type: "choice",
@@ -114,9 +91,21 @@ export const PHI_TIMELINE_WIDGET_DEFINITION = {
         { value: "alternate", label: "Alternate" },
       ],
     },
+    {
+      key: "timeFormat",
+      type: "choice",
+      label: "Time format",
+      options: [
+        { value: "date", label: "Date" },
+        { value: "datetime", label: "Date and time" },
+        { value: "relative", label: "Relative" },
+      ],
+    },
   ],
   defaultConfig: {
     placement: "start",
+    timeFormat: "date",
+    entriesProvider: null,
     entries: [
       { key: "entry1", title: "First", content: "What happened first." },
       { key: "entry2", title: "Then", content: "What came after." },
@@ -135,6 +124,7 @@ export const PHI_TIMELINE_WIDGET_DEFINITION = {
   | "icon"
   | "iconFamily"
   | "slotSizePolicy"
+  | "runtimeSignals"
   | "fields"
   | "defaultConfig"
   | "parseConfig"

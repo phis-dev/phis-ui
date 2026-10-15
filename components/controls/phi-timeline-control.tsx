@@ -2,14 +2,10 @@
 
 import { Timeline } from "antd";
 
+import type { PhiTimelineTone } from "@phis/contracts/timeline";
+
 import { PHI_COLOR } from "../../theme/antd-css-var-contract";
 import { PhiIcon } from "../shell/phi-icon";
-
-/**
- * What a Timeline entry's mark says about it, in the words a text tone uses: a word about meaning, so
- * the Theme decides the colour. Absent is the primary mark.
- */
-export type PhiTimelineControlTone = "secondary" | "success" | "warning" | "danger";
 
 export type PhiTimelineControlItem = {
   key: string;
@@ -22,7 +18,8 @@ export type PhiTimelineControlItem = {
   time?: string;
   /** A Phi icon name, drawn in place of the dot. */
   icon?: string;
-  tone?: PhiTimelineControlTone;
+  /** What the entry's mark says about it; the Theme decides the colour. Absent is the primary mark. */
+  tone?: PhiTimelineTone;
   /** Still under way: the mark spins. Ant Design's `pending` is this, on an entry of its own. */
   pending?: boolean;
 };
@@ -43,7 +40,7 @@ const PHI_TIMELINE_TONE_COLOR = {
   success: PHI_COLOR.success,
   warning: PHI_COLOR.warning,
   danger: PHI_COLOR.error,
-} satisfies Record<PhiTimelineControlTone, string>;
+} satisfies Record<PhiTimelineTone, string>;
 
 /**
  * What happened, in order: a ticket's history, the revisions of a Page, the stages of an order.
