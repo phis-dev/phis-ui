@@ -8,6 +8,8 @@ import type { CascaderProps, DefaultOptionType } from "antd/es/cascader";
 import type { PhiControlSize } from "../../types/control";
 import type { PhiControlOption } from "./phi-control-options";
 import { PhiLabeledControl, usePhiControlLabel } from "./phi-labeled-control";
+import { PhiDescriptionHint } from "./phi-description-tooltip-icon";
+import { usePhiConfig } from "../root/phi-config-provider";
 
 export type PhiCascaderNormalizeMode = "raw" | "path";
 
@@ -153,6 +155,13 @@ function insertCascaderOption(
       currentOptions.push(current);
       currentOptions.sort((left, right) => String(left.label ?? "").localeCompare(String(right.label ?? "")));
     }
+    /*
+     * The option's own description lands on its own entry, also where that entry was made earlier as
+     * the parent of a deeper one -- `/shop` stands in the tree before `/shop` itself is inserted.
+     */
+    if (index === segments.length - 1 && option.description && current.description == null) {
+      current.description = option.description;
+    }
 
     if (index < segments.length - 1) {
       current.children = (current.children as DefaultOptionType[] | undefined) ?? [];
@@ -240,6 +249,7 @@ export function PhiCascaderControl({
   style?: CSSProperties;
 }) {
   const { labelId, labelledBy } = usePhiControlLabel(label);
+  const { token } = usePhiConfig();
   const resolvedSeparator = separator.trim() || "/";
   const resolvedRootValue = rootValue.trim() || "/";
   const normalizedValue = normalizePhiCascaderValue(value, {
@@ -284,6 +294,17 @@ export function PhiCascaderControl({
         return <>{selectedLabels.length > 0 ? selectedLabels.join(" / ") : resolvedRootValue}</>;
       }}
       options={cascaderOptions}
+      /*
+       * A row carries its description as the hint every option list draws (`PhiControlOptionContent`):
+       * its own target before the label, so passing over the rows does not fire it. The label stays a
+       * string on the option, because the search matches and highlights it.
+       */
+      optionRender={(option) => option.description ? (
+        <span style={{ display: "inline-flex", alignItems: "center", gap: token.paddingXS, minWidth: 0 }}>
+          <PhiDescriptionHint description={option.description as string} />
+          {option.label}
+        </span>
+      ) : option.label}
       placeholder={placeholder}
       size={size}
       searchValue={searchValue}

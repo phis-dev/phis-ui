@@ -55,18 +55,25 @@ function resolveProviderArea(context: PhiControlOptionsProviderContext) {
 function collectPageOptions(area: PhiBuilderPageCatalogArea, nodes: PhiPresetPageNode[]): PhiControlOption[] {
   return nodes.flatMap((node) => {
     const path = resolvePhiBuilderCatalogPathForCatalog(area, node.key, nodes);
+    /*
+     * The root reads as the address, not as the title of whatever Page is standing in it.
+     *
+     * Which Page answers `/` is a decision taken elsewhere and it changes -- the Area's own Page,
+     * a Module's landing, or one the Builder constructs. Showing that Page's title here would put
+     * a name in the Page list that means "the front door" today and something else tomorrow, and
+     * would read as a second entry for a Page that is already listed under its own address.
+     */
+    const label = node.storagePath === "/" ? path : node.title;
+    /*
+     * The address beside the title, as the option's hint. A title is derived from the path or written
+     * by an author, and either way it hides where the Page answers: "Zz Nw Test" is `/zz-nw-test`.
+     */
+    const address = node.storagePath ?? path;
     return [
       {
         value: path,
-        /*
-         * The root reads as the address, not as the title of whatever Page is standing in it.
-         *
-         * Which Page answers `/` is a decision taken elsewhere and it changes -- the Area's own Page,
-         * a Module's landing, or one the Builder constructs. Showing that Page's title here would put
-         * a name in the Page list that means "the front door" today and something else tomorrow, and
-         * would read as a second entry for a Page that is already listed under its own address.
-         */
-        label: node.storagePath === "/" ? path : node.title,
+        label,
+        ...(address !== label ? { description: address } : {}),
       },
       ...collectPageOptions(area, node.children ?? []),
     ];
