@@ -13,6 +13,8 @@ import { PHI_SURFACE_WASH } from "./surface-presets";
  * - The body is the zone's ground: the Theme's wash, the base step in from the edge and the small step
  *   between what stands in it. It has no corner of its own -- the Modal has the one there is
  *   (`styles/layout.css`).
+ *   A body its content fills to the edge -- an image to crop, a canvas to draw on -- takes the bleed body
+ *   instead: the same ground, no inset, and its content draws no corner of its own either.
  * - The actions are one compact group, labelled, at the medium size: a dialog asks one question and its
  *   answers belong together.
  * - The width is the reading measure of a form, full width less the gutter on a phone.
@@ -23,6 +25,13 @@ export const PHI_DIALOG_BODY_CONFIG = {
   gap: PHI_SPACE.sm,
   margin: 0,
   padding: PHI_SPACE.base,
+  surface: PHI_SURFACE_WASH,
+} as const;
+
+/** The body of a dialog whose content runs to its edges: the dialog's ground, without the inset. */
+export const PHI_DIALOG_BLEED_BODY_CONFIG = {
+  margin: 0,
+  padding: 0,
   surface: PHI_SURFACE_WASH,
 } as const;
 

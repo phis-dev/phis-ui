@@ -315,7 +315,6 @@ function PhiAssetFocalRectEditor({
         maxHeight: "calc(100dvh - 240px)",
         minHeight: 240,
         overflow: "hidden",
-        borderRadius: "var(--ant-border-radius-lg)",
         background: "var(--ant-color-fill-tertiary)",
       }}
     >

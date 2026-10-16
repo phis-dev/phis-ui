@@ -731,7 +731,8 @@ its own; the actions are one compact, labelled group. Build one with `dialog` on
 which returns the Overlay, its Layouts and its Command Toolbar for your tree's `overlays`, `layoutNodes` and
 `contentWidgets`. Building one node by node, spread `PHI_DIALOG_BODY_CONFIG` into the body Layout and
 `PHI_DIALOG_COMMANDS_CONFIG` into the toolbar (`@phis/ui/helpers`); the descriptor compiler refuses a modal
-whose body or actions say otherwise.
+whose body or actions say otherwise. A dialog whose content runs to its edges -- an image to crop, a canvas
+-- takes `PHI_DIALOG_BLEED_BODY_CONFIG` instead: the same ground, no inset, and its content draws no corner.
 
 ## 4c. Messaging
 

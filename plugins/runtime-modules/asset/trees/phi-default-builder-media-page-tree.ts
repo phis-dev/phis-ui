@@ -32,7 +32,7 @@ import {
   PHI_ASSET_MEDIA_PAGE_LAYOUT_IDS,
   PHI_ASSET_MEDIA_PAGE_WIDGET_IDS,
 } from "../media-page-ids";
-import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../../helpers/cms-dialog";
+import { PHI_DIALOG_BLEED_BODY_CONFIG, PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../../helpers/cms-dialog";
 
 const PHI_ASSET_MEDIA_PAGE_REGION_IDS = {
   regionHeaderBottom: -511,
@@ -385,11 +385,8 @@ export async function buildPhiDefaultBuilderMediaPageTree({
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
         label: "Asset focal rectangle body",
-        config: {
-          surface: PHI_DIALOG_BODY_CONFIG.surface,
-          padding: PHI_DIALOG_BODY_CONFIG.padding,
-          margin: 0,
-        },
+        // The image is what is worked on, so it runs to the dialog's edges.
+        config: { ...PHI_DIALOG_BLEED_BODY_CONFIG },
       }),
       nodes.layout({
         creationPreset: { layoutKind: "flex", preset: "overlay-actions" },

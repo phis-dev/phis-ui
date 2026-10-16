@@ -72,7 +72,11 @@ import {
   type PhiPublicRoutePathAssignment,
 } from "../../helpers/cms-area-config";
 import { resolvePhiLayoutCreationPreset } from "../../helpers/cms-layout-defaults";
-import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../helpers/cms-dialog";
+import {
+  PHI_DIALOG_BLEED_BODY_CONFIG,
+  PHI_DIALOG_BODY_CONFIG,
+  PHI_DIALOG_COMMANDS_CONFIG,
+} from "../../helpers/cms-dialog";
 import { PhiCmsWidgetType } from "../../constants/cms-widget-types";
 import {
   buildPhiBasePageLayoutNode,
@@ -2168,14 +2172,18 @@ export async function instantiatePhiCmsRoutePreset({
  * of tabs -- carries the ground and the inset, which are what make it the dialog's body.
  */
 function assertPhiCmsDialogBody(overlayId: string, body: { id: string; widgetType: string; config: Record<string, unknown> }) {
-  const required: Record<string, unknown> = body.widgetType === PhiCmsLayoutType.FlexVertical
-    ? PHI_DIALOG_BODY_CONFIG
-    : { surface: PHI_DIALOG_BODY_CONFIG.surface, padding: PHI_DIALOG_BODY_CONFIG.padding };
+  // The bleed body is the other answer, for content that runs to the edge; it is matched whole.
+  const bleed = PHI_DIALOG_BLEED_BODY_CONFIG.padding === body.config.padding;
+  const required: Record<string, unknown> = bleed
+    ? PHI_DIALOG_BLEED_BODY_CONFIG
+    : body.widgetType === PhiCmsLayoutType.FlexVertical
+      ? PHI_DIALOG_BODY_CONFIG
+      : { surface: PHI_DIALOG_BODY_CONFIG.surface, padding: PHI_DIALOG_BODY_CONFIG.padding };
   const mismatch = Object.entries(required).find(([key, value]) =>
     JSON.stringify(body.config[key]) !== JSON.stringify(value));
   if (mismatch) {
     throw new Error(
-      `Preset Overlay "${overlayId}" Body "${body.id}" does not match the dialog body (PHI_DIALOG_BODY_CONFIG) at "${mismatch[0]}".`,
+      `Preset Overlay "${overlayId}" Body "${body.id}" does not match the dialog body (${bleed ? "PHI_DIALOG_BLEED_BODY_CONFIG" : "PHI_DIALOG_BODY_CONFIG"}) at "${mismatch[0]}".`,
     );
   }
 }

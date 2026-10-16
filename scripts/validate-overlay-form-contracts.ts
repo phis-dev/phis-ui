@@ -350,7 +350,7 @@ assert.match(
 assert.match(
   assetMediaPagePresetSource,
   // The dialog's ground and inset, as every dialog body has them (`helpers/cms-dialog.ts`).
-  /typeKey: "content",[\s\S]*?id: PHI_ASSET_INSPECTOR_LAYOUT_IDS\.layoutMediaFocalRectBody,[\s\S]*?surface: PHI_DIALOG_BODY_CONFIG\.surface,[\s\S]*?padding: PHI_DIALOG_BODY_CONFIG\.padding/u,
+  /typeKey: "content",[\s\S]*?id: PHI_ASSET_INSPECTOR_LAYOUT_IDS\.layoutMediaFocalRectBody,[\s\S]*?config: \{ \.\.\.PHI_DIALOG_BLEED_BODY_CONFIG \}/u,
 );
 assert.match(
   assetMediaPagePresetSource,

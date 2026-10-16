@@ -30,10 +30,11 @@ const presetDirectories = ["components/regions/presets"];
 /*
  * A card contribution is read here too, and it is the case this rule was written for: a Module's cards
  * ship with it to every Site that activates it, and the mark beside a card's title is named by nobody
- * along the way. The same objection, the same two prefixes.
+ * along the way. The same objection, the same two prefixes. A Module's definition is read as well: its
+ * icon stands beside its name wherever Modules are listed, and a name no registry knows leaves it blank.
  */
 const presetFilePattern =
-  /(^|\/)presets\.tsx?$|(^|\/)presets\/|(^|\/)trees\/|^\/[a-z-]+-preset(-tree)?\.tsx?$|(^|\/)cards\.tsx?$|(^|\/)cards\//u;
+  /(^|\/)definition\.tsx?$|(^|\/)presets\.tsx?$|(^|\/)presets\/|(^|\/)trees\/|^\/[a-z-]+-preset(-tree)?\.tsx?$|(^|\/)cards\.tsx?$|(^|\/)cards\//u;
 const moduleRoot = "plugins/runtime-modules";
 
 /** The prefixes a preset may not name, and why each one is not a default anybody agreed to. */
