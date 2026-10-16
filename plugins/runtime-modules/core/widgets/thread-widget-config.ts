@@ -21,6 +21,13 @@ import { findPhiControlListenRoute } from "../../../../components/widgets/client
  */
 export type PhiThreadWidgetConfig = {
   padding?: number | string;
+  /**
+   * Offer a Reply in the conversation's heading. It writes nothing itself: it says `reply` with the
+   * thread as its row (`signals/table-action`, `actionKey: "reply"`), and the placement routes that to a
+   * dialog holding Core's Reply Form, which reads the thread from that row. Not offered on an archived
+   * conversation, which takes no new messages.
+   */
+  reply?: boolean;
   signalRoutes?: PhiSignalRouteSet | null;
 };
 
@@ -32,6 +39,7 @@ export function parsePhiThreadWidgetConfig(
 
   return {
     padding: typeof padding === "number" || typeof padding === "string" ? padding : undefined,
+    reply: raw.reply === true,
     signalRoutes: readPhiSignalRouteSet(raw.signalRoutes),
   };
 }

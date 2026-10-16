@@ -127,6 +127,7 @@ import {
 import { PHI_GALLERY_WIDGET_DEFINITION } from "./widgets/gallery/config";
 import { PHI_STEPS_WIDGET_DEFINITION } from "./widgets/steps/config";
 import { PHI_TIMELINE_WIDGET_DEFINITION } from "./widgets/timeline/config";
+import { PHI_THREAD_CONVERSATION_WIDGET_DEFINITION } from "./widgets/thread-conversation/config";
 import { PHI_FLOAT_BUTTON_WIDGET_DEFINITION } from "./widgets/float-button/config";
 import {
   PHI_TAB_BAR_WIDGET_DEFINITION,
@@ -466,6 +467,14 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/timeline/plugin").then((module) => module.PHI_TIMELINE_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/timeline/plugin").then((module) => module.PHI_TIMELINE_WIDGET_PLUGIN),
+  }),
+  // A conversation, for every Module that runs conversations of its own kind (`messaging/`).
+  defineFirstPartyWidget({
+    definition: PHI_THREAD_CONVERSATION_WIDGET_DEFINITION,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    renderPolicies: { runtime: "custom", preview: "custom", authoring: "custom" },
+    loadRuntime: () => import("./widgets/thread-conversation/plugin").then((module) => module.PHI_THREAD_CONVERSATION_WIDGET_PLUGIN),
+    loadPreview: () => import("./widgets/thread-conversation/plugin").then((module) => module.PHI_THREAD_CONVERSATION_WIDGET_PLUGIN),
   }),
   defineFirstPartyWidget({
     definition: PHI_FLOAT_BUTTON_WIDGET_DEFINITION,

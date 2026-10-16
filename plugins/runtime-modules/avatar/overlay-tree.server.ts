@@ -1,12 +1,12 @@
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
-import { PHI_COLOR, PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import { createPhiSignalAddress } from "../../../types/signals";
 import type { PhiBlockRuntime } from "../../../types/widget-runtime";
 import { getPhiAvatarWidgetLabels } from "./labels";
 import { PHI_AVATAR_OVERLAY_IDS } from "./addresses";
 import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
+import { PHI_DIALOG_BODY_CONFIG } from "../../../helpers/cms-dialog";
 
 /**
  * The Avatar Module's Overlay: one modal holding the picker.
@@ -85,10 +85,7 @@ export async function buildPhiAvatarAreaPickerOverlayTree({
       sortOrder: 0,
       label: "app avatar picker body",
       config: {
-        gap: PHI_SPACE.sm,
-        padding: PHI_SPACE.base,
-        margin: 0,
-        surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
+        ...PHI_DIALOG_BODY_CONFIG,
       },
     })],
     contentWidgets: [nodes.widget({

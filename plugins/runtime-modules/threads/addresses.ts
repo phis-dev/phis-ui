@@ -29,14 +29,14 @@ export function createPhiThreadsPageIds(area: PhiSidebarAreaKey) {
     widgets: createPhiPresetCmsInstanceIdMap(identity, [
       "widgetInbox",
       "widgetConversation",
-      "widgetComposer",
-      "widgetComposerEmpty",
+      "widgetReplyForm",
+      "widgetReplyCommands",
       "widgetNewForm",
       "widgetNewCommands",
     ]),
-    /** The dialog that holds the form. */
-    overlays: createPhiPresetCmsInstanceIdMap(identity, ["overlayNew"]),
-    /** And the two Layouts it fills. */
-    layouts: createPhiPresetCmsInstanceIdMap(identity, ["layoutNew", "layoutNewFooter"]),
+    /** The two dialogs: opening a conversation, and answering one. */
+    overlays: createPhiPresetCmsInstanceIdMap(identity, ["overlayNew", "overlayReply"]),
+    /** And the Layouts they fill. */
+    layouts: createPhiPresetCmsInstanceIdMap(identity, ["layoutNew", "layoutNewFooter", "layoutReply", "layoutReplyFooter"]),
   };
 }

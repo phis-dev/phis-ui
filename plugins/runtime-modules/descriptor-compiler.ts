@@ -72,6 +72,8 @@ import {
   type PhiPublicRoutePathAssignment,
 } from "../../helpers/cms-area-config";
 import { resolvePhiLayoutCreationPreset } from "../../helpers/cms-layout-defaults";
+import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../helpers/cms-dialog";
+import { PhiCmsWidgetType } from "../../constants/cms-widget-types";
 import {
   buildPhiBasePageLayoutNode,
   PHI_BASE_PAGE_LAYOUT_NODE_ID,
@@ -1933,6 +1935,14 @@ export function assertPhiCmsPresetTreeContract(
           `Preset Overlay "${overlay.id}" actions Footer does not match the canonical Layout preset at "${mismatch[0]}".`,
         );
       }
+      if (overlay.overlayType === "modal") {
+        assertPhiCmsDialogCommands(overlay.id, footerLayout.id, tree.contentWidgets);
+      }
+    }
+  }
+  for (const overlay of tree.overlays) {
+    if (overlay.overlayType === "modal") {
+      assertPhiCmsDialogBody(overlay.id, layoutsById.get(overlay.bodyLayoutNodeId)!);
     }
   }
   for (const rootLayoutNodeId of [
@@ -2149,4 +2159,39 @@ export async function instantiatePhiCmsRoutePreset({
       };
   assertPhiCmsPresetTreeContract(tree, page);
   return tree;
+}
+
+/*
+ * A dialog's body and actions are one answer for every dialog (`helpers/cms-dialog.ts`), checked here as
+ * the footer Layout is: a Preset that builds its dialog node by node must arrive at the same look as one
+ * that calls `dialog`. A vertical Flex carries the whole body config; a Layout of another kind -- a Stack
+ * of tabs -- carries the ground and the inset, which are what make it the dialog's body.
+ */
+function assertPhiCmsDialogBody(overlayId: string, body: { id: string; widgetType: string; config: Record<string, unknown> }) {
+  const required: Record<string, unknown> = body.widgetType === PhiCmsLayoutType.FlexVertical
+    ? PHI_DIALOG_BODY_CONFIG
+    : { surface: PHI_DIALOG_BODY_CONFIG.surface, padding: PHI_DIALOG_BODY_CONFIG.padding };
+  const mismatch = Object.entries(required).find(([key, value]) =>
+    JSON.stringify(body.config[key]) !== JSON.stringify(value));
+  if (mismatch) {
+    throw new Error(
+      `Preset Overlay "${overlayId}" Body "${body.id}" does not match the dialog body (PHI_DIALOG_BODY_CONFIG) at "${mismatch[0]}".`,
+    );
+  }
+}
+
+function assertPhiCmsDialogCommands(
+  overlayId: string,
+  footerLayoutId: string,
+  widgets: readonly { id: string; widgetType: string; parentLayoutNodeId: string; config: Record<string, unknown> }[],
+) {
+  for (const widget of widgets) {
+    if (widget.parentLayoutNodeId !== footerLayoutId || widget.widgetType !== PhiCmsWidgetType.CommandToolbar) continue;
+    const mismatch = Object.entries(PHI_DIALOG_COMMANDS_CONFIG).find(([key, value]) => widget.config[key] !== value);
+    if (mismatch) {
+      throw new Error(
+        `Preset Overlay "${overlayId}" actions "${widget.id}" do not match the dialog actions (PHI_DIALOG_COMMANDS_CONFIG) at "${mismatch[0]}".`,
+      );
+    }
+  }
 }

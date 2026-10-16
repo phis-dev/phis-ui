@@ -17,6 +17,7 @@ export {
   buildPhiCmsWidgetNode,
 } from "./helpers/cms-node-factories";
 export * from "./helpers/cms-preset-nodes";
+export * from "./helpers/cms-dialog";
 /*
  * The one Settings page shell (SETTINGS.md section 4). Public because the contract holds for every
  * Module alike: an installed package's Settings page composes through the same builder a first-party one

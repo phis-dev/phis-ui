@@ -5,12 +5,6 @@ import { PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS, PHI_THREADS_RUNTIME_MODULE_ID }
 
 export const PHI_THREADS_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS = [
   {
-    key: PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS.inbox,
-    ownerModuleId: PHI_THREADS_RUNTIME_MODULE_ID,
-    loadLive: async () =>
-      (await import("./services/table")).PhiThreadTableProviderClient,
-  },
-  {
     key: PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS.candidates,
     ownerModuleId: PHI_THREADS_RUNTIME_MODULE_ID,
     loadLive: async () =>

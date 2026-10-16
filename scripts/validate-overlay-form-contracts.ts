@@ -349,7 +349,8 @@ assert.match(
 );
 assert.match(
   assetMediaPagePresetSource,
-  /typeKey: "content",[\s\S]*?id: PHI_ASSET_INSPECTOR_LAYOUT_IDS\.layoutMediaFocalRectBody,[\s\S]*?padding: 0,[\s\S]*?surface: \{ background: \{ base: \{ kind: "color", color: PHI_COLOR\.bgLayout \} \} \}/u,
+  // The dialog's ground and inset, as every dialog body has them (`helpers/cms-dialog.ts`).
+  /typeKey: "content",[\s\S]*?id: PHI_ASSET_INSPECTOR_LAYOUT_IDS\.layoutMediaFocalRectBody,[\s\S]*?surface: PHI_DIALOG_BODY_CONFIG\.surface,[\s\S]*?padding: PHI_DIALOG_BODY_CONFIG\.padding/u,
 );
 assert.match(
   assetMediaPagePresetSource,

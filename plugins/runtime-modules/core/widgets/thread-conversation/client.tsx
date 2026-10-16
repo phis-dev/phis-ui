@@ -11,6 +11,7 @@ import { PhiButtonControl } from "../../../../../components/controls/phi-button-
 import { PhiCardControl } from "../../../../../components/controls/phi-card-control";
 import { PhiDividerControl } from "../../../../../components/controls/phi-divider-control";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
+import { PhiIcon } from "../../../../../components/shell/phi-icon";
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
 import {
   usePhiSignalEmitter,
@@ -24,7 +25,7 @@ import {
   readPhiThreadAddressId,
   type PhiThreadWidgetConfig,
 } from "../thread-widget-config";
-import type { PhiThreadConversationLabels } from "../../labels";
+import type { PhiThreadConversationLabels } from "../../messaging/labels";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
@@ -356,6 +357,28 @@ export function PhiThreadConversationWidgetClient({
     }
   }, [config?.signalRoutes?.emits, emitSignal, openedThreadId]);
 
+  /*
+   * Reply, said as a row action: the open thread is the row. Whoever listens -- a dialog with Core's Reply
+   * Form, usually -- opens on it and reads the thread from there.
+   */
+  const reply = useCallback(() => {
+    if (threadId == null) return;
+    for (const route of findPhiSignalRoutesByCapabilityId(config?.signalRoutes?.emits, "reply")) {
+      if (route.receiver == null) continue;
+      emitSignal({
+        scope: route.scope,
+        channel: route.channel,
+        action: route.action,
+        value: route.valueType === "none"
+          ? null
+          : { actionKey: "reply", rowIdentity: threadId, selectedRowIdentities: [threadId] },
+        valueType: route.valueType,
+        valueSchema: route.valueSchema ?? null,
+        receiver: route.receiver,
+      });
+    }
+  }, [config?.signalRoutes?.emits, emitSignal, threadId]);
+
   const newestMessageId = detail?.messages.at(-1)?.id ?? null;
 
   useEffect(() => {
@@ -565,6 +588,9 @@ export function PhiThreadConversationWidgetClient({
         */}
       <PhiCardControl
         padding={config?.padding}
+        toolbar={config?.reply && detail.thread.status !== PhisThreadStatus.Archived ? (
+          <PhiButtonControl label={labels.replyLabel} icon={<PhiIcon name="antd:message-outlined" size="inherit" />} onClick={reply} />
+        ) : undefined}
         title={
           <PhiFlexControl align="center" gap="small" wrap>
             {readThreadTitle(detail, labels)}
@@ -575,6 +601,15 @@ export function PhiThreadConversationWidgetClient({
         }
       >
         <PhiFlexControl vertical gap="middle">
+          {/*
+            * Who is in it, where the heading is the subject. Without one the heading already names them
+            * (`readThreadTitle`), and saying it twice would be noise.
+            */}
+          {detail.thread.subject?.trim() && detail.participants.length > 0 ? (
+            <PhiTypographyControl type="secondary">
+              {`${labels.participantsLabel}: ${readParticipantNames(detail, labels).join(", ")}`}
+            </PhiTypographyControl>
+          ) : null}
           {/* A failure on a conversation already on screen stands above it; what was read stays. */}
           {error ? (
             <PhiAlertControl level="error" title={labels.feedback.errorTitle} description={error} />
@@ -635,12 +670,16 @@ function readThreadTitle(detail: PhisThreadDetail, labels: PhiThreadConversation
   if (subject) {
     return subject;
   }
-  const names = detail.participants
+  const names = readParticipantNames(detail, labels);
+  return names.length > 0 ? names.join(", ") : labels.subjectFallback;
+}
+
+function readParticipantNames(detail: PhisThreadDetail, labels: PhiThreadConversationLabels) {
+  return detail.participants
     .map((participant) => participant.kind === "group"
       ? participant.name
       : participant.user.displayName ?? labels.unnamedAuthorLabel)
     .filter((name) => name.length > 0);
-  return names.length > 0 ? names.join(", ") : labels.subjectFallback;
 }
 
 function readAuthorName(

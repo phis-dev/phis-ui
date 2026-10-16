@@ -437,6 +437,19 @@ export type PhiCommandToolbarWidgetPlacement = PhiWidgetPlacementBase & Omit<Phi
   buttons?: PhiCommandButtonConfig[];
 };
 
+// Conversation
+
+/**
+ * One conversation, read: Core's, for every Module that runs conversations of its own kind. Which one it
+ * shows arrives on the `thread` channel (`signals/thread-selection`) or as `?thread=`. With `reply` it
+ * offers a Reply in its heading, said as a row action with the thread as the row -- route it to a dialog
+ * holding Core's Reply Form (`PHI_SHARED_FORM_IDS.threadReply`) with the thread inbox as its `source`.
+ */
+export type PhiThreadConversationWidgetPlacement = PhiWidgetPlacementBase & {
+  reply?: boolean;
+  padding?: number | string;
+};
+
 // Theme Mode Switch
 
 export type PhiThemeModeSwitchSize = "small" | "medium";
@@ -473,6 +486,7 @@ export type PhiCoreWidgetPlacements = {
   form: PhiFormWidgetPlacement;
   "collection-view": PhiCollectionViewWidgetPlacement;
   "command-toolbar": PhiCommandToolbarWidgetPlacement;
+  "thread-conversation": PhiThreadConversationWidgetPlacement;
   "theme-mode-switch": PhiThemeModeSwitchWidgetPlacement;
   "draft-status": PhiDraftStatusWidgetPlacement;
 };

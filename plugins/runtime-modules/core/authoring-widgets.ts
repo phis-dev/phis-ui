@@ -125,6 +125,7 @@ import {
 import { PHI_GALLERY_WIDGET_DEFINITION } from "./widgets/gallery/config";
 import { PHI_STEPS_WIDGET_DEFINITION } from "./widgets/steps/config";
 import { PHI_TIMELINE_WIDGET_DEFINITION } from "./widgets/timeline/config";
+import { PHI_THREAD_CONVERSATION_WIDGET_DEFINITION } from "./widgets/thread-conversation/config";
 import { PHI_FLOAT_BUTTON_WIDGET_DEFINITION } from "./widgets/float-button/config";
 import {
   PHI_TAB_BAR_WIDGET_DEFINITION,
@@ -324,6 +325,10 @@ export default createPhiAuthoringWidgetModule([
   definePhiAuthoringWidgetModuleLoader(
     PHI_TIMELINE_WIDGET_DEFINITION,
     () => import("./widgets/timeline/authoring").then((module) => module.PHI_TIMELINE_WIDGET_BUILDER_PLUGIN),
+  ),
+  definePhiAuthoringWidgetModuleLoader(
+    PHI_THREAD_CONVERSATION_WIDGET_DEFINITION,
+    () => import("./widgets/thread-conversation/authoring").then((module) => module.PHI_THREAD_CONVERSATION_WIDGET_BUILDER_PLUGIN),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_FLOAT_BUTTON_WIDGET_DEFINITION,

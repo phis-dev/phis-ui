@@ -29,6 +29,8 @@ export {
 } from "./constants/cms-widget-types";
 export * from "./constants/cms-plugin-categories";
 export * from "./constants/runtime-module-categories";
+// The conversations a viewer is in, for every Module that lists its own kind of them (`fixedFilters`).
+export { PHI_THREAD_LIBRARY_DATA_PROVIDER_KEYS } from "./constants/thread-library-provider-keys";
 export {
   PHIS_AREA_HEADER,
   PHIS_FORM_RELAY_HEADER,

@@ -723,6 +723,41 @@ Give such a `config` a type of your own with `satisfies`.
 `validate-core-widget-placements` checks each placement type against the Widget's Inspector fields in
 both directions. The contract cannot drift from what the Inspector writes.
 
+### Dialogs
+
+A dialog is an Overlay with a body and a row of actions, and every dialog looks the same: the body is the
+Theme's wash, the base step in from the edge and the small step between what stands in it, with no corner of
+its own; the actions are one compact, labelled group. Build one with `dialog` on `createPhiCmsPresetNodes`,
+which returns the Overlay, its Layouts and its Command Toolbar for your tree's `overlays`, `layoutNodes` and
+`contentWidgets`. Building one node by node, spread `PHI_DIALOG_BODY_CONFIG` into the body Layout and
+`PHI_DIALOG_COMMANDS_CONFIG` into the toolbar (`@phis/ui/helpers`); the descriptor compiler refuses a modal
+whose body or actions say otherwise.
+
+## 4c. Messaging
+
+A conversation is Core's, whichever Module runs it: threads, messages, who may read them and the Add-on
+capability `threads:v1` live on the server, and the surfaces for them live in Core. A Module brings a kind
+of conversation and places Core's surfaces for it -- it does not grow a conversation Widget or a reply of
+its own.
+
+1. **Declare the kind** in your definition (`threadKinds`), and open threads of it through your own
+   route or Core's.
+2. **List them** with a Table over `PHI_THREAD_LIBRARY_DATA_PROVIDER_KEYS.table` (`@phis/ui/constants`),
+   resource `inbox`, with `fixedFilters: { kind }`. Its summary carries `unread`; `core.totalRows` the
+   total.
+3. **Read one** with the `thread-conversation` Core Widget (`PhiThreadConversationWidgetPlacement`). It
+   listens for `select` and `reload` on the `thread` channel (`signals/thread-selection`), so your
+   Controller -- or the Table's selection, where the row is the thread -- tells it which.
+4. **Answer it** with `reply: true` on the conversation and Core's Reply Form,
+   `PHI_SHARED_FORM_IDS.threadReply` (`@phis/ui/forms`), in a `dialog` with `openActionKey: "reply"`.
+   Route the conversation's `reply` emit to the dialog and to the Form; the Form's `source` is the thread
+   inbox, so it reads the thread from the row the Reply names. Offer an internal note with
+   `formConfig: { initialValues: { internalAllowed: "1" } }` where your readers are Staff; Core writes
+   `Internal` for Staff alone whatever arrives.
+
+Everything your Module adds beside a conversation -- a ticket's state, an order it is about -- is a Widget
+of its own placed next to it, told by the same Controller. Nothing is put inside Core's Widget.
+
 ## 5. Add a Theme preset
 
 A Theme preset is module-owned data, not a global registration and not arbitrary `ConfigProvider`

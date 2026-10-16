@@ -11,11 +11,11 @@ import {
   type PhiTableProviderMutationRequest,
   type PhiTableProviderQueryRequest,
   type PhiTableProviderQueryResult,
+  type PhiTableProviderRecordRequest,
 } from "../../../../types/table-widget";
 import { createPhiTableProviderClient } from "../../../../components/widgets/client/shared/phi-table-provider";
 import { PHI_THREAD_LIBRARY_DATA_PROVIDER_KEYS } from "../../../../constants/thread-library-provider-keys";
-import { PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../data-providers";
-import { PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
+import { PHI_CORE_MESSAGING_DATA_PROVIDER_DESCRIPTORS } from "./data-providers";
 import {
   readPhiTableProviderResponse,
   type ReadPhiTableProviderResponseOptions,
@@ -26,6 +26,7 @@ const API_PATH = "/api/site/threads";
 type ApiResponse = {
   rows?: unknown;
   total?: unknown;
+  unread?: unknown;
   page?: unknown;
   pageSize?: unknown;
   error?: unknown;
@@ -97,6 +98,8 @@ async function queryThreadTable({
     total: typeof payload?.total === "number" ? payload.total : rows.length,
     page: typeof payload?.page === "number" ? payload.page : undefined,
     pageSize: typeof payload?.pageSize === "number" ? payload.pageSize : undefined,
+    // Unread among everything the listing matches, for a footer beside the total.
+    summary: { unread: typeof payload?.unread === "number" ? payload.unread : 0 },
   };
 }
 
@@ -149,14 +152,27 @@ async function mutateThreadTable(request: PhiTableProviderMutationRequest) {
   return { status: "accepted" as const, invalidation: "view" as const };
 }
 
+/**
+ * One conversation as the Reply Form starts from it: which thread, and nothing else. The row is all a
+ * Reply needs, so it is answered without a request -- whether the thread is there and the reader may
+ * write into it is the write's to answer, as it always is.
+ */
+async function readThreadRecord({ resourceKey, rowIdentity }: PhiTableProviderRecordRequest) {
+  if (resourceKey !== "inbox") {
+    throw new PhiTableProviderError("invalid-resource", `Unknown conversation resource "${resourceKey}".`);
+  }
+  return { threadId: readThreadId(rowIdentity) };
+}
+
 // Found by key rather than by position, the way the groups Module does it: a Module declares more than
 // one Provider and the descriptor list is not an ordering anybody promised to keep.
-const resources = PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS
-  .find((descriptor) => descriptor.key === PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS.inbox)?.resources ?? [];
+const resources = PHI_CORE_MESSAGING_DATA_PROVIDER_DESCRIPTORS
+  .find((descriptor) => descriptor.key === PHI_THREAD_LIBRARY_DATA_PROVIDER_KEYS.table)?.resources ?? [];
 
 export const PhiThreadTableProviderClient = createPhiTableProviderClient({
   key: PHI_THREAD_LIBRARY_DATA_PROVIDER_KEYS.table,
   resources,
   query: queryThreadTable,
+  readRecord: readThreadRecord,
   mutate: mutateThreadTable,
 });

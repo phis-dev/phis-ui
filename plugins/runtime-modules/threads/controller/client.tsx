@@ -116,28 +116,18 @@ function PhiThreadsControllerView({
     if (options.tellReader !== false) {
       emitCapability("threadChange", { threadId }, correlationId);
     }
-    // The same fact as a Form value. Which field it lands in is the route's to say.
-    emitCapability("threadField", threadId, correlationId);
     /*
      * And as condition state, pushed rather than answered.
      *
-     * A node's visibility gate listens; it never asks. So the two nodes that stand or fall by this --
-     * the reply and the sentence in its place -- are told, on the correlation id of the choice that
-     * caused it. The responder below still answers a Widget that does ask.
+     * A node's visibility gate listens; it never asks. So a node a Site gates on an open conversation is
+     * told, on the correlation id of the choice that caused it. The responder below still answers a Widget
+     * that does ask.
      */
     emitCapability(
       "conditionStateChange",
       { state: { ready: true, threadOpen: threadId != null } },
       correlationId,
     );
-    /*
-     * And the reply starts empty, because a different conversation is a different message.
-     *
-     * Carrying half a sentence across would put it under a heading nobody chose. The emptying answers
-     * with `resetComplete`, which is where the conversation above is said once more -- so a Form that
-     * was mounted ends up holding the new id and nothing else.
-     */
-    emitCapability("replyReset", null, correlationId);
   }, [emitCapability]);
 
   const reloadInbox = useCallback((correlationId: string) =>
@@ -219,13 +209,11 @@ function PhiThreadsControllerView({
     if (signal.channel === "submit" && signal.action === "activate") {
       if (signal.sender != null && !dialogFormAddresses.has(signal.sender)) {
         /*
-         * A message landed in the open conversation. The reader is asked to catch up rather than to
-         * switch, the listing is stale because its order is by last activity, and the reply is emptied
-         * -- which loses the conversation it was written into, so it is said again.
+         * A message landed in the open conversation, from the Reply dialog. The reader is asked to catch
+         * up rather than to switch, and the listing is stale because its order is by last activity.
          */
         reloadInbox(signal.correlationId);
         emitCapability("threadReload", { threadId: openThreadId }, signal.correlationId);
-        emitCapability("replyReset", null, signal.correlationId);
         return;
       }
       setSubmitting(false);
@@ -237,16 +225,6 @@ function PhiThreadsControllerView({
       return;
     }
 
-    /*
-     * The reply is empty again, so it no longer knows which conversation it is about: emptying a Form
-     * returns its fields to the descriptor's initial values, and this one arrived as a signal. Said here
-     * rather than beside the reset that caused it, because a value written before the reset lands is a
-     * value the reset then throws away.
-     */
-    if (signal.channel === "reset" && signal.action === "activate") {
-      emitCapability("threadField", openThreadId, signal.correlationId);
-      return;
-    }
 
     if (signal.channel === "selection") {
       sendThread(readSelectedThreadId(signal.value), signal.correlationId);

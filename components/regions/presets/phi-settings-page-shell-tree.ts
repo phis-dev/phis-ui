@@ -16,6 +16,7 @@ import type {
 import type { PhiFormId } from "../../../types/form-id";
 import { PHI_SIGNAL_VALUE_SCHEMAS, createPhiSignalAddress } from "../../../types/signals";
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "./phi-base-page-layout";
+import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../helpers/cms-dialog";
 
 export type PhiSettingsPageShellWidgetSection = {
   kind?: "widget";
@@ -272,8 +273,7 @@ export function buildPhiSettingsPageShellTree({
         sortOrder: 0,
         label: overlay.title,
         config: {
-          gap: PHI_SPACE.sm,
-          padding: PHI_SPACE.base,
+          ...PHI_DIALOG_BODY_CONFIG,
         },
       }),
       nodes.layout({
@@ -462,8 +462,7 @@ export function buildPhiSettingsPageShellTree({
           flags: PhiCmsFlags.NoTranslate,
           config: {
             key: `${overlay.nodeKey}-commands`,
-            compact: true,
-            showLabels: true,
+            ...PHI_DIALOG_COMMANDS_CONFIG,
             buttons: [
               {
                 key: "cancel",

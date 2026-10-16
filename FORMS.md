@@ -467,7 +467,9 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
   on the Admin Users Page -- Cancel froze the Overlay and the edit Form never left its skeleton.
 - Initial values layer from weakest to strongest: field `initialValue`, `formConfig.initialValues`,
   `formConfig.initialValuesFromQuery` (maps a field key to a query parameter), and the definition's
-  `loadInitialValues`. A record read through `source` replaces the configured values. With `source` and an `openActionKey`, a Table action with a row identity
+  `loadInitialValues`. A record read through `source` lays its values over the configured ones: it answers
+  for the fields it carries, and a field it knows nothing about keeps the placement's value -- Core's Reply
+  Form reads its thread from a record and keeps the placement's `internalAllowed`. With `source` and an `openActionKey`, a Table action with a row identity
   arriving on `recordOpen` loads that record; without `openActionKey` the record is read once on mount.
   After a successful handler submit the last opened record is read again.
 - A flow is composed, not branched: a stage that asks different questions is another Form. A node's

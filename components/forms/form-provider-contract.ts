@@ -93,6 +93,8 @@ export const PHI_FORM_HANDLER_PROVIDER_KEYS = {
  */
 export const PHI_FORM_UPLOAD_LABEL_KEYS = {
   trigger: "uploadTrigger",
+  /** Beneath the trigger in an upload area (`config.presentation: "area"`): that a drop works too. */
+  dropHint: "uploadDropHint",
   tooMany: "uploadErrorTooMany",
   /** Shown on the field when the Form is submitted while a file is still on its way. */
   pending: "uploadPending",
@@ -254,6 +256,18 @@ export const PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS = [
       { key: "maxFiles", type: "number", label: "Most files", min: 1, precision: 0 },
       { key: "maxBytes", type: "number", label: "Largest file", min: 1, precision: 0, prefix: "bytes" },
       { key: "space", type: "string", label: "Space", description: "`user` for the viewer's own Space." },
+      {
+        key: "presentation",
+        type: "choice",
+        mode: "single",
+        valueType: "string",
+        label: "Presentation",
+        description: "A button, or an area that also takes a drop.",
+        options: [
+          { value: "button", label: "Button" },
+          { value: "area", label: "Area" },
+        ] as { value: string; label: string }[],
+      },
     ],
   },
 ] as const satisfies readonly PhiSharedFormFieldTypeDescriptor[];

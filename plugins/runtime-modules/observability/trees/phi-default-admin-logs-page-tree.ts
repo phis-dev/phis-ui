@@ -10,8 +10,8 @@ import { getPhiAdminLogsPageLabels } from "./admin-logs-label-set";
 import { getPhiObservabilityLogsWidgetLabels } from "../../../../components/widgets/label-sets/observability-logs";
 import { PHI_OBSERVABILITY_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
 import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
-import { PHI_COLOR, PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
+import { PHI_DIALOG_BODY_CONFIG } from "../../../../helpers/cms-dialog";
 
 const SYNTHETIC_ADMIN_LOGS_REGION_IDS = {
   regionContent: -441,
@@ -126,11 +126,8 @@ export async function buildPhiDefaultAdminLogsPageTree({
         sortOrder: 0,
         label: "observability log detail modal content",
         config: {
+          ...PHI_DIALOG_BODY_CONFIG,
           anchor: { horizontal: "left", vertical: "top" },
-          gap: PHI_SPACE.sm,
-          margin: 0,
-          padding: PHI_SPACE.base,
-          surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
         },
       }),
     ],

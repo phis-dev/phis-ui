@@ -122,6 +122,15 @@ export function PhiFormDescriptorRuntimeClient({
    * payload, wrote the mount-time one into the form, and looked as though the save had been undone.
    */
   const [record, setRecord] = useState<Record<string, unknown> | null>(null);
+  /*
+   * What the Form starts from: the record over the placement's own values, never instead of them. A record
+   * answers for the fields it carries, and a field it knows nothing about -- a choice the placement makes,
+   * such as whether a reply may be an internal note -- keeps what the placement said.
+   */
+  const startValues = useMemo(
+    () => (record ? { ...configuredInitialValues, ...record } : configuredInitialValues),
+    [configuredInitialValues, record],
+  );
   const [loading, setLoading] = useState(source !== null);
   const [recordKey, setRecordKey] = useState("inline");
   const [conditionControllerStates, setConditionControllerStates] = useState<
@@ -173,10 +182,10 @@ export function PhiFormDescriptorRuntimeClient({
   const requestReset = useCallback((correlationId = createPhiSignalCorrelationId()) => {
     formRef.current?.resetFields();
     formClient.reset({ correlationId });
-    emitCapability("resetValues", { values: record ?? configuredInitialValues }, correlationId);
+    emitCapability("resetValues", { values: startValues }, correlationId);
     emitCapability("stateChange", { dirty: false, valid: true }, correlationId);
     emitCapability("resetComplete", null, correlationId);
-  }, [configuredInitialValues, emitCapability, formClient, record]);
+  }, [emitCapability, formClient, startValues]);
 
   const readRecord = useCallback(async (
     rowIdentity: PhiTableRowIdentity | null,
@@ -484,7 +493,7 @@ export function PhiFormDescriptorRuntimeClient({
         descriptor={descriptor}
         labels={labels}
         formConfig={widgetConfig?.formConfig}
-        initialValues={record ?? configuredInitialValues}
+        initialValues={startValues}
         submitOnEnter={widgetConfig?.submitOnEnter ?? false}
         onFormReady={(activeForm) => {
           formRef.current = activeForm;

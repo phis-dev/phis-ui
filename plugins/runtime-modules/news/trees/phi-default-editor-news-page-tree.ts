@@ -13,7 +13,6 @@ import {
   buildPhiBasePageContentScaffold,
   PHI_BASE_PAGE_LAYOUT_NODE_ID,
 } from "../../../../components/regions/presets/phi-base-page-layout";
-import { PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import {
   PHI_SIGNAL_VALUE_SCHEMAS,
   createPhiSignalAddress,
@@ -41,6 +40,7 @@ import {
 } from "../ids";
 import { getPhiEditorNewsPageLabels } from "./editor-news-label-set";
 import { PHI_EDITOR_NEWS_WIDGET_ID } from "../ids";
+import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../../helpers/cms-dialog";
 
 const SYNTHETIC_EDITOR_NEWS_REGION_IDS = { regionContent: -562 } as const;
 
@@ -144,10 +144,8 @@ function buildPhiNewsDialogNodes(
         label: `editor news ${input.key} modal content`,
         // The Body's root Layout is its one padding owner (OVERLAYS.md): the Modal adds none.
         config: {
+          ...PHI_DIALOG_BODY_CONFIG,
           anchor: { horizontal: "left", vertical: "top" },
-          gap: PHI_SPACE.sm,
-          margin: 0,
-          padding: PHI_SPACE.base,
           borders: false,
         },
       }),
@@ -210,14 +208,12 @@ function buildPhiNewsDialogNodes(
         label: `editor news ${input.key} commands`,
         config: {
           key: `${prefix}-commands`,
+          ...PHI_DIALOG_COMMANDS_CONFIG,
           /*
            * The two buttons as one group, the way every other overlay footer states it: they are the two
            * ends of a single decision, and a gap between them reads as two unrelated offers. Wrapping
            * follows from that and is not stated -- a compact group does not wrap.
            */
-          compact: true,
-          showLabels: true,
-          controlSize: "medium",
           buttons: [
             { key: "cancel", emits: [{ capabilityId: "close", value: null }], label: input.cancelLabel, icon: "cancel" },
             { key: "save", emits: [{ capabilityId: "submit", value: null }], label: input.saveLabel, variant: "primary", icon: "save" },

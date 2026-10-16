@@ -26,7 +26,7 @@ import {
   type PhiSignalRoute,
 } from "../../../../types";
 import { PHI_LAYOUT } from "../../../../theme/phi-tokens";
-import { PHI_COLOR, PHI_SPACE } from "../../../../theme/antd-css-var-contract";
+import { PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import {
   createPhiBuilderControllerAddress,
   PHI_BUILDER_CONTROLLER_INSTANCE_KEY,
@@ -74,6 +74,7 @@ import { PHI_BUILDER_PAGE_META_FORM_ID } from "../page-meta-form";
 import { PHI_BUILDER_AREA_SETTINGS_FORM_ID } from "../area-settings-form";
 import { getPhiBuilderNavigationPageLabels } from "./builder-navigation-label-set";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
+import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../../helpers/cms-dialog";
 
 const SYNTHETIC_DEV_REGION_IDS = {
   regionHeaderTop: -509,
@@ -1133,9 +1134,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           sortOrder: 0,
           label: "Builder module usage body",
           config: {
-            gap: PHI_SPACE.sm,
-            padding: PHI_SPACE.base,
-            surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
+            ...PHI_DIALOG_BODY_CONFIG,
           },
         }),
         nodes.layout({
@@ -1157,9 +1156,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           sortOrder: 0,
           label: "Builder public route collision body",
           config: {
-            gap: PHI_SPACE.sm,
-            padding: PHI_SPACE.base,
-            surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
+            ...PHI_DIALOG_BODY_CONFIG,
           },
         }),
         nodes.layout({
@@ -1181,9 +1178,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           sortOrder: 0,
           label: "Builder module detail body",
           config: {
-            gap: PHI_SPACE.sm,
-            padding: PHI_SPACE.base,
-            surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
+            ...PHI_DIALOG_BODY_CONFIG,
           },
         }),
       ] : []),
@@ -1203,8 +1198,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           sortOrder: 0,
           label: "Builder area settings body",
           config: {
-            padding: PHI_SPACE.base,
-            surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
+            ...PHI_DIALOG_BODY_CONFIG,
           },
         }),
         nodes.layout({
@@ -1240,9 +1234,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           sortOrder: 0,
           label: "Builder page metadata body",
           config: {
-            gap: PHI_SPACE.sm,
-            padding: PHI_SPACE.base,
-            surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
+            ...PHI_DIALOG_BODY_CONFIG,
           },
         }),
         nodes.layout({
@@ -1284,10 +1276,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           label: "Page metadata commands",
           config: {
             key: "page-meta-commands",
-            compact: false,
-            wrap: true,
-            showLabels: true,
-            controlSize: "medium",
+            ...PHI_DIALOG_COMMANDS_CONFIG,
             buttons: [
               { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], action: "cancel" },
               { key: "save", emits: [{ capabilityId: "command", value: "save" }], action: "save" },
@@ -1482,14 +1471,12 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               label: "Area settings commands",
               config: {
                 key: "area-settings-commands",
+                ...PHI_DIALOG_COMMANDS_CONFIG,
                 /*
                  * The two buttons as one group rather than as two things that happen to stand near
                  * each other: they are the two ends of a single decision, and a gap between them
                  * reads as two unrelated offers.
                  */
-                compact: true,
-                showLabels: true,
-                controlSize: "medium",
                 /*
                  * Two buttons, because the Form holds the answers until one of them is pressed.
                  *
@@ -1851,10 +1838,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 label: "Builder module usage commands",
                 config: {
                   key: "module-usage-commands",
-                  compact: false,
-                  wrap: true,
-                  showLabels: true,
-                  controlSize: "medium",
+                  ...PHI_DIALOG_COMMANDS_CONFIG,
                   buttons: [
                     { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: modulesLabels?.usage.cancel ?? "Keep it on", icon: "cancel" },
                     { key: "confirm", emits: [{ capabilityId: "command", value: "confirm" }], variant: "primary" as const, label: modulesLabels?.usage.confirm ?? "Switch off anyway", icon: "save" },
@@ -1936,10 +1920,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 label: "Builder public route collision commands",
                 config: {
                   key: "public-routes-commands",
-                  compact: false,
-                  wrap: true,
-                  showLabels: true,
-                  controlSize: "medium",
+                  ...PHI_DIALOG_COMMANDS_CONFIG,
                   buttons: [
                     { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: modulesLabels?.publicRoutes.cancel ?? "Cancel", icon: "cancel" },
                     { key: "assign", emits: [{ capabilityId: "command", value: "assign" }], variant: "primary" as const, label: modulesLabels?.publicRoutes.assign ?? "Enable", icon: "save" },

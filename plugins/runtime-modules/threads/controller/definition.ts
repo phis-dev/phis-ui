@@ -61,14 +61,11 @@ export const PHI_THREADS_RUNTIME_CONTROLLER_DEFINITION = {
        */
       { id: "reload", action: "activate", valueType: "none" },
       /*
-       * The open conversation, in three different things this Controller has to say about it.
+       * The open conversation, in the two things this Controller has to say about it.
        *
        * `threadChange` is "a different one is open" -- whoever hears it starts over. `threadReload` is
-       * "the same one moved on", which is what a reply produces: a reader that treated the two alike
-       * would throw away a message somebody had half typed. `threadField` is the same fact as a Form
-       * value, for the reply Form that acts on it: the route names which field it lands in
-       * ([SIGNALS.md](../../../../SIGNALS.md), "Capabilities and routes"), so this Controller says what
-       * is open and a Site says where that belongs.
+       * "the same one moved on", which is what a reply produces. The Reply Form needs neither: it reads
+       * its thread from the row the conversation's Reply names.
        */
       {
         id: "threadReload",
@@ -76,20 +73,6 @@ export const PHI_THREADS_RUNTIME_CONTROLLER_DEFINITION = {
         valueType: "json",
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.threadSelection,
       },
-      {
-        id: "threadField",
-        action: "change",
-        valueType: "json",
-        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formField,
-      },
-      /*
-       * Emptying the reply after it was sent, which is not `formReset`.
-       *
-       * `formReset` discards the dialog, and Cancel means it. A reply that landed is the opposite case
-       * and a different receiver, so routing one to both would clear a half-written reply every time
-       * somebody cancelled the dialog.
-       */
-      { id: "replyReset", action: "activate", valueType: "none" },
       { id: "dialogOpen", action: "activate", valueType: "none" },
       { id: "dialogClose", action: "close", valueType: "none" },
       { id: "formSubmit", action: "activate", valueType: "none" },
@@ -143,15 +126,6 @@ export const PHI_THREADS_RUNTIME_CONTROLLER_DEFINITION = {
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
       },
       { id: "formSubmitting", channel: "submitting", action: "change", valueType: "boolean" },
-      /*
-       * The reply reporting that it is empty again, which is when its conversation is said once more.
-       *
-       * Not straight after asking for the reset: signals are delivered one microtask at a time, and the
-       * reset travels one hop further than a field write -- through the Form to its own Controller and
-       * back -- so a value sent alongside it would be written first and wiped a moment later. The Form
-       * says when it is done, and that is what this waits for.
-       */
-      { id: "replyEmptied", channel: "reset", action: "activate", valueType: "none" },
       { id: "overlayState", channel: "state", action: "change", valueType: "boolean" },
       {
         id: "closeRequest",

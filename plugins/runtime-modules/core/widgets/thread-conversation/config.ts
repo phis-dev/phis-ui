@@ -20,7 +20,8 @@ export const PHI_THREAD_CONVERSATION_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("thread-conversation"),
   typeKey: "thread-conversation",
-  slotSizePolicy: "intrinsic",
+  // Across its slot and as tall as what it says: a conversation reads at the width it is given.
+  slotSizePolicy: "fill-inline",
   title: "Conversation",
   description: "Reads the selected conversation: its messages, who wrote them, and what hangs on them.",
   category: "content",
@@ -54,9 +55,14 @@ export const PHI_THREAD_CONVERSATION_WIDGET_DEFINITION = {
     ],
     emits: [
       { id: "opened", action: "change", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.threadSelection },
+      /*
+       * The Reply action, as a row action says one: the thread is the row. Whatever opens the reply --
+       * a dialog, a Form beside it -- reads the thread from there, the way a Form opens on a Table row.
+       */
+      { id: "reply", action: "activate", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction },
     ],
   },
-  fields: [],
+  fields: [{ key: "reply", type: "boolean", label: "Offer a reply" }],
   parseConfig: parsePhiThreadWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiThreadWidgetConfig>,

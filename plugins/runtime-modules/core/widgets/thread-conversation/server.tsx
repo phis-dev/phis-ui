@@ -1,5 +1,5 @@
 import type { PhiBlockRuntime } from "../../../../../types";
-import { getPhiThreadConversationLabels } from "../../labels";
+import { getPhiThreadConversationLabels } from "../../messaging/labels";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiThreadWidgetConfig } from "../thread-widget-config";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";

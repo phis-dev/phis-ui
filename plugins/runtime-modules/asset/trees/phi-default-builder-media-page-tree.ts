@@ -14,7 +14,7 @@ import {
   createPhiSignalSubcontrolAddress,
   type PhiBlockRuntime,
 } from "../../../../types";
-import { PHI_COLOR, PHI_SPACE } from "../../../../theme/antd-css-var-contract";
+import { PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import { getPhiBuilderChromeWidgetLabels } from "../../../../components/widgets/label-sets/builder-chrome";
 import { getPhiMediaWidgetLabels } from "../../../../components/media/label-sets/media";
 import {
@@ -32,6 +32,7 @@ import {
   PHI_ASSET_MEDIA_PAGE_LAYOUT_IDS,
   PHI_ASSET_MEDIA_PAGE_WIDGET_IDS,
 } from "../media-page-ids";
+import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../../helpers/cms-dialog";
 
 const PHI_ASSET_MEDIA_PAGE_REGION_IDS = {
   regionHeaderBottom: -511,
@@ -385,9 +386,9 @@ export async function buildPhiDefaultBuilderMediaPageTree({
         sortOrder: 0,
         label: "Asset focal rectangle body",
         config: {
+          surface: PHI_DIALOG_BODY_CONFIG.surface,
+          padding: PHI_DIALOG_BODY_CONFIG.padding,
           margin: 0,
-          padding: 0,
-          surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
         },
       }),
       nodes.layout({
@@ -408,9 +409,9 @@ export async function buildPhiDefaultBuilderMediaPageTree({
         sortOrder: 0,
         label: "Create asset folder body",
         config: {
+          surface: PHI_DIALOG_BODY_CONFIG.surface,
+          padding: PHI_DIALOG_BODY_CONFIG.padding,
           margin: 0,
-          padding: PHI_SPACE.base,
-          surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
         },
       }),
       nodes.layout({
@@ -754,10 +755,7 @@ export async function buildPhiDefaultBuilderMediaPageTree({
         label: "Create asset folder commands",
         config: {
           key: "media-folder-create-commands",
-          compact: false,
-          wrap: true,
-          showLabels: true,
-          controlSize: "medium",
+          ...PHI_DIALOG_COMMANDS_CONFIG,
           buttons: [
             { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], action: "cancel" },
             { key: "save", emits: [{ capabilityId: "command", value: "save" }], action: "save" },
@@ -793,10 +791,7 @@ export async function buildPhiDefaultBuilderMediaPageTree({
         label: "Asset focal rectangle commands",
         config: {
           key: "media-focal-rect-commands",
-          compact: false,
-          wrap: true,
-          showLabels: true,
-          controlSize: "medium",
+          ...PHI_DIALOG_COMMANDS_CONFIG,
           buttons: [
             { key: "reset", emits: [{ capabilityId: "command", value: "reset" }], action: "reset" },
             { key: "clear", emits: [{ capabilityId: "command", value: "clear" }], action: "clear" },

@@ -1,6 +1,7 @@
 import type { PhiRuntimeModuleDataProviderDescriptor } from "../contracts";
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../constants/core-data-provider-keys";
 import { PHI_CORE_RUNTIME_MODULE_ID } from "./ids";
+import { PHI_CORE_MESSAGING_DATA_PROVIDER_DESCRIPTORS } from "./messaging/data-providers";
 
 export const PHI_CORE_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
   {
@@ -38,4 +39,5 @@ export const PHI_CORE_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
       query: { search: true, sorting: "multiple", pagination: "offset" },
     }],
   },
+  ...PHI_CORE_MESSAGING_DATA_PROVIDER_DESCRIPTORS,
 ] satisfies readonly PhiRuntimeModuleDataProviderDescriptor[];

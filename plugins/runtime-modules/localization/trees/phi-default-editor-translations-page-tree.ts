@@ -6,7 +6,6 @@ import { PhiCmsPageType } from "../../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import type { PhiBlockRuntime } from "../../../../types";
-import { PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import { createPhiSignalAddress, createPhiSignalSubcontrolAddress } from "../../../../types/signals";
 import {
   PHI_EDITOR_TRANSLATION_FORM_WIDGET_ID,
@@ -29,6 +28,7 @@ import {
   createPhiLocalizationControllerAddress,
 } from "../controller/address";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
+import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../../helpers/cms-dialog";
 
 const SYNTHETIC_EDITOR_TRANSLATIONS_REGION_IDS = { regionContent: -561 } as const;
 export async function buildPhiDefaultEditorTranslationsPageTree({
@@ -127,10 +127,8 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
          * Modal adds none, so the Form stands one `base` in from every edge, as in every other dialog.
          */
         config: {
+          ...PHI_DIALOG_BODY_CONFIG,
           anchor: { horizontal: "left", vertical: "top" },
-          gap: PHI_SPACE.sm,
-          margin: 0,
-          padding: PHI_SPACE.base,
         },
       }),
       nodes.layout({
@@ -344,10 +342,7 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
         label: "editor translation commands",
         config: {
           key: "editor-translation-commands",
-          compact: false,
-          wrap: true,
-          showLabels: true,
-          controlSize: "medium",
+          ...PHI_DIALOG_COMMANDS_CONFIG,
           buttons: [
             { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: widgetLabels.actions.cancel, icon: "cancel" },
             { key: "save", emits: [{ capabilityId: "command", value: "save" }], label: widgetLabels.actions.save, variant: "primary", icon: "save" },

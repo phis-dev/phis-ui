@@ -1,6 +1,6 @@
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../../constants/cms-layout-types";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
-import { PHI_COLOR, PHI_SPACE } from "../../../../theme/antd-css-var-contract";
+import { PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import {
   PHI_SIGNAL_VALUE_SCHEMAS,
@@ -35,6 +35,7 @@ import { getPhiInspectorWidgetLabels } from "../../../../components/widgets/labe
 import { getPhiSignalsWidgetLabels } from "../../../../components/widgets/label-sets/signals";
 import type { PhiInspectorWidgetLabels } from "../../../../components/widgets/label-types/inspector";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
+import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../../helpers/cms-dialog";
 
 const PHI_BUILDER_INSPECTOR_SECTIONS = {
   region: [
@@ -314,11 +315,11 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
         sortOrder: 0,
         label: "Builder effects body",
         config: {
+          surface: PHI_DIALOG_BODY_CONFIG.surface,
+          padding: PHI_DIALOG_BODY_CONFIG.padding,
           mountPolicy: "eager",
           slotTransition: "fade-over",
           defaultActiveSlotKey: "slot_0",
-          padding: PHI_SPACE.base,
-          surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
         },
       }),
       nodes.layout({
@@ -345,7 +346,9 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
         label: "Builder signal wiring body",
-        config: { gap: PHI_SPACE.sm, padding: PHI_SPACE.base },
+        config: {
+          ...PHI_DIALOG_BODY_CONFIG,
+        },
       }),
       nodes.layout({
         creationPreset: { layoutKind: "flex", preset: "overlay-actions" },
@@ -497,14 +500,12 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
         label: "Builder effects commands",
         config: {
           key: "builder-effects-commands",
+          ...PHI_DIALOG_COMMANDS_CONFIG,
           /*
            * The two buttons as one group, the way the Area settings footer states it: they are the two
            * ends of a single decision, and a gap between them reads as two unrelated offers. Wrapping
            * follows from that and is not stated -- a compact group does not wrap.
            */
-          compact: true,
-          showLabels: true,
-          controlSize: "medium",
           buttons: [
             { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: effectsLabels.cancel, variant: "normal", icon: "cancel" },
             { key: "save", emits: [{ capabilityId: "command", value: "save" }], label: effectsLabels.save, variant: "primary", icon: "save" },
@@ -629,14 +630,12 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
         label: "Builder signal wiring commands",
         config: {
           key: "builder-signal-wiring-commands",
+          ...PHI_DIALOG_COMMANDS_CONFIG,
           /*
            * The two buttons as one group, the way the Area settings footer states it: they are the two
            * ends of a single decision, and a gap between them reads as two unrelated offers. Wrapping
            * follows from that and is not stated -- a compact group does not wrap.
            */
-          compact: true,
-          showLabels: true,
-          controlSize: "medium",
           buttons: [
             { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: signalsLabels.routes.cancel, variant: "normal", icon: "cancel" },
             /*

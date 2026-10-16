@@ -12,9 +12,10 @@ import { createPhiSharedRuntimeDataProviderKey } from "./runtime-data-provider-k
  * the installation; a Preset whose Provider is absent shows a bound Widget saying so, rather than
  * failing to compile.
  *
- * Ownership is unchanged: `constants/runtime-module-ownership.ts` records the conversations Module, and
- * the key reads `@phis/ui/modules/threads/...`. The Foundation states the contract and holds no
- * reference to whoever meets it.
+ * Core answers it (`constants/runtime-module-ownership.ts`, `@phis/ui/modules/core/...`), because messaging
+ * is Core's: the conversations Module, Support, the groups and any add-on list their own kind of thread
+ * through this one Provider with a fixed `kind` filter, and the conversation's Reply Form reads its thread
+ * from it. The Foundation states the contract and holds no reference to whoever meets it.
  */
 export const PHI_THREAD_LIBRARY_DATA_PROVIDER_KEYS = {
   table: createPhiSharedRuntimeDataProviderKey("tables", "thread-inbox"),

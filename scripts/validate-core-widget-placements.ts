@@ -56,6 +56,7 @@ const PLACEMENT_ONLY_KEYS: Readonly<Record<string, Readonly<Record<string, strin
   },
   "collection-view": { initialQuery: "the query a Preset opens the Collection with" },
   "command-toolbar": { key: "the Control's signal identity, as for the Button" },
+  "thread-conversation": { padding: "the card's inset, where a Preset needs another than the Theme's" },
   "theme-mode-switch": {},
   "draft-status": {},
 };

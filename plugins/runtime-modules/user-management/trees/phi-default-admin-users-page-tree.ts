@@ -10,7 +10,6 @@ import { getPhiAdminUsersPageLabels } from "./admin-users-label-set";
 import { getPhiAdminUsersTableWidgetLabels } from "../../../../components/widgets/label-sets/admin-users";
 import { PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
 import { createPhiSignalAddress, createPhiSignalSubcontrolAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
-import { PHI_COLOR, PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import {
   createPhiUserManagementControllerAddress,
   PHI_USER_MANAGEMENT_CONTROLLER_INSTANCE_KEY,
@@ -23,6 +22,7 @@ import {
   PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS,
 } from "../addresses";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
+import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../../helpers/cms-dialog";
 
 const SYNTHETIC_ADMIN_USERS_REGION_IDS = {
   regionContent: -431,
@@ -274,11 +274,8 @@ export async function buildPhiDefaultAdminUsersPageTree({
         sortOrder: 0,
         label,
         config: {
+          ...PHI_DIALOG_BODY_CONFIG,
           anchor: { horizontal: "left", vertical: "top" },
-          gap: PHI_SPACE.sm,
-          margin: 0,
-          padding: PHI_SPACE.base,
-          surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
         },
       })),
       ...([
@@ -600,10 +597,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
         label: `admin users ${mode} commands`,
         config: {
           key: `admin-users-${mode}-commands`,
-          compact: false,
-          wrap: true,
-          showLabels: true,
-          controlSize: "medium",
+          ...PHI_DIALOG_COMMANDS_CONFIG,
           buttons: [
             { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: widgetLabels.confirm.cancel, icon: "cancel" },
             { key: "save", emits: [{ capabilityId: "command", value: "save" }], label: saveLabel, variant: "primary", icon: "save" },

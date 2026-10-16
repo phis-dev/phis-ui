@@ -3,6 +3,7 @@ import { definePhiRuntimeModuleServerAreaContribution } from "../area-contributi
 import { PHI_CORE_RUNTIME_MODULE_DEFINITION } from "./definition";
 import { PHI_RUNTIME_MODULE_LAYOUTS as PHI_CORE_LAYOUTS } from "./layouts";
 import { PHI_RUNTIME_MODULE_WIDGETS as PHI_CORE_WIDGETS } from "./widgets";
+import { PHI_CORE_MESSAGING_FORMS } from "./messaging/forms";
 
 /** The one module every Area carries. It owns no Page of its own, so it contributes no route. */
 export function createPhiCoreRuntimeModuleServerAreaContribution() {
@@ -11,6 +12,7 @@ export function createPhiCoreRuntimeModuleServerAreaContribution() {
     catalogEntry: {
       definition: PHI_CORE_RUNTIME_MODULE_DEFINITION,
       widgets: PHI_CORE_WIDGETS,
+      forms: PHI_CORE_MESSAGING_FORMS,
       layouts: PHI_CORE_LAYOUTS,
       themes: PHI_CORE_RUNTIME_MODULE_THEMES,
       dashboardCards: {

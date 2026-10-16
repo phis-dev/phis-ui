@@ -13,7 +13,7 @@ import {
   createPhiSignalAddress,
   type PhiBlockRuntime,
 } from "../../../../types";
-import { PHI_COLOR, PHI_SPACE } from "../../../../theme/antd-css-var-contract";
+import { PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import { getPhiBuilderChromeWidgetLabels } from "../../../../components/widgets/label-sets/builder-chrome";
 import { getPhiBuilderRevisionsWidgetLabels } from "../../../../components/widgets/label-sets/revisions";
 import {
@@ -31,6 +31,7 @@ import {
   PHI_REVISIONS_PAGE_WIDGET_IDS,
   PHI_REVISIONS_TABLE_WIDGET_ID,
 } from "../page-ids";
+import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../../helpers/cms-dialog";
 
 const PHI_REVISIONS_PAGE_REGION_IDS = {
   regionHeaderBottom: -511,
@@ -227,9 +228,7 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
         sortOrder: 0,
         label: "Builder delete area body",
         config: {
-          gap: PHI_SPACE.sm,
-          padding: PHI_SPACE.base,
-          surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
+          ...PHI_DIALOG_BODY_CONFIG,
         },
       }),
       nodes.layout({
@@ -356,8 +355,7 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
         label: "Builder delete area commands",
         config: {
           key: "delete-area-commands",
-          compact: true,
-          showLabels: true,
+          ...PHI_DIALOG_COMMANDS_CONFIG,
           buttons: [
             {
               key: "cancel",

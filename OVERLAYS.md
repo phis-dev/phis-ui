@@ -205,7 +205,9 @@ must not be persisted.
 Core applies the resolved chrome to the complete visible Overlay container (`container` for Modal and
 `section` for Drawer), while its header, body, and footer semantic layers remain transparent so they do
 not cover the container background. Every zone Layout may still declare an independent Surface and padding
-through ordinary Layout config.
+through ordinary Layout config. The body's root Layout fills its zone to the edge and takes no corner of its
+own -- a dialog's wash is the zone's ground, not a panel inside it -- while Layouts and cards further in keep
+theirs.
 
 An omitted Surface Background keeps the active theme default. A Surface Background whose `base.kind` is
 `none`, or a colour Base of `transparent`, makes the Overlay container transparent; this is distinct from

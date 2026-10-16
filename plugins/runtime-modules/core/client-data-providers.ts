@@ -1,8 +1,14 @@
 import type { PhiRuntimeModuleDataProviderClientDefinition } from "../contracts";
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../constants/core-data-provider-keys";
 import { PHI_CORE_RUNTIME_MODULE_ID } from "./ids";
+import { PHI_THREAD_LIBRARY_DATA_PROVIDER_KEYS } from "../../../constants/thread-library-provider-keys";
 
 export const PHI_CORE_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS = [
+  {
+    key: PHI_THREAD_LIBRARY_DATA_PROVIDER_KEYS.table,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    loadLive: async () => (await import("./messaging/thread-inbox-table")).PhiThreadTableProviderClient,
+  },
   {
     key: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.spacingScale,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,

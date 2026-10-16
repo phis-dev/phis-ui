@@ -226,6 +226,20 @@
   height: 100%;
 }
 
+/*
+ * An Overlay body's root Layout fills its zone to the edge and has no corner of its own.
+ *
+ * A Layout's Surface takes the Site's surface step for a corner nobody stated (LAYOUTING.md, "Surface"),
+ * which is right for a box standing on a page. The root of a dialog's body is not that box: it is the
+ * zone, edge to edge between header and footer, the way a Region spans its part of the frame -- so a wash
+ * on it drew a rounded panel floating inside the dialog. The Modal or Drawer has the corner; only the
+ * root is meant, so a card or a Layout further in keeps its own. `!important` because the corner is an
+ * inline style the Surface resolver writes, and this is a position, not a style an author chose.
+ */
+:is([data-phi-modal-body-content], [data-phi-drawer-body-content]) > .phi-slot-child > .phi-layout {
+  border-radius: 0 !important;
+}
+
 :where(.phi-layout-scaffold-anchor__content[data-phi-layout-fill-slot="true"]) {
   min-width: 0;
   min-height: 0;

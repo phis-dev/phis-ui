@@ -1,6 +1,5 @@
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../../constants/cms-layout-types";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
-import { PHI_COLOR, PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
 import type { PhiBlockRuntime } from "../../../../types/widget-runtime";
@@ -16,6 +15,7 @@ import {
   type PhiAuthLoginOverlayArea,
 } from "../overlay-ids";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
+import { PHI_DIALOG_BODY_CONFIG } from "../../../../helpers/cms-dialog";
 
 export async function buildPhiAuthAreaLoginOverlayTree({
   page,
@@ -142,11 +142,8 @@ export async function buildPhiAuthAreaLoginOverlayTree({
       sortOrder: 0,
       label: `${area} auth login body`,
       config: {
+        ...PHI_DIALOG_BODY_CONFIG,
         ...PHI_LOGIN_FORM_LAYOUT_CONFIG,
-        gap: PHI_SPACE.sm,
-        padding: PHI_SPACE.base,
-        margin: 0,
-        surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
       },
     }), ...login.layoutNodes],
     contentWidgets: login.contentWidgets,

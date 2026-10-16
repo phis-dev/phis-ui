@@ -10,6 +10,7 @@ import { PhiFlexControl } from "../controls/phi-flex-control";
 import { PhiProgressControl } from "../controls/phi-progress-control";
 import { PhiTagControl } from "../controls/phi-tag-control";
 import { PhiTypographyControl } from "../controls/phi-typography-control";
+import { PhiIcon } from "../shell/phi-icon";
 import {
   PHI_MEDIA_UPLOAD_DEFAULT_LABELS,
   usePhiMediaUpload,
@@ -19,6 +20,7 @@ import { PHI_FORM_UPLOAD_LABEL_KEYS } from "./form-provider-contract";
 import type { PhiFormFieldProviderProps } from "./form-provider-registry";
 
 const DEFAULT_TRIGGER_LABEL = "Choose a file";
+const DEFAULT_DROP_HINT_LABEL = "or drop it here";
 const DEFAULT_TOO_MANY_LABEL = "No more files fit here.";
 const DEFAULT_PENDING_LABEL = "Wait until the file has arrived.";
 
@@ -44,6 +46,13 @@ type PhiUploadFieldSettings = {
   maxFiles: number | null;
   maxBytes: number | undefined;
   space: string | null;
+  /**
+   * A framed area that takes a drop, rather than a button (`config.presentation: "area"`).
+   *
+   * Where an attachment is part of what is written -- a reply, a request -- the area says a file belongs
+   * here; a button beneath a text says it may. Which one is the placement's, not the field type's.
+   */
+  area: boolean;
 };
 
 /**
@@ -65,7 +74,13 @@ function readUploadSettings(config: Readonly<Record<string, unknown>> | undefine
     ? Math.trunc(config.maxBytes)
     : undefined;
   const space = typeof config?.space === "string" && config.space.trim() ? config.space.trim() : null;
-  return { kinds: declaredKinds.length === 0 ? undefined : declaredKinds, maxFiles, maxBytes, space };
+  return {
+    kinds: declaredKinds.length === 0 ? undefined : declaredKinds,
+    maxFiles,
+    maxBytes,
+    space,
+    area: config?.presentation === "area",
+  };
 }
 
 function resolveUploadLabels(labels: Readonly<Record<string, string>> | undefined): PhiMediaUploadLabels {
@@ -163,6 +178,7 @@ export function PhiUploadFormControl({
   });
 
   const pendingLabel = labels?.[PHI_FORM_UPLOAD_LABEL_KEYS.pending]?.trim() || DEFAULT_PENDING_LABEL;
+  const triggerLabel = placeholder?.trim() || labels?.[PHI_FORM_UPLOAD_LABEL_KEYS.trigger]?.trim() || DEFAULT_TRIGGER_LABEL;
   useEffect(() => {
     if (!formContext || !uploading) return;
     formContext.holdSubmit(field.key, pendingLabel);
@@ -197,6 +213,7 @@ export function PhiUploadFormControl({
       ))}
       {readOnly ? null : (
         <PhiFileDropControl
+          dropZone={settings.area}
           accept={accept}
           multiple={settings.maxFiles !== 1}
           disabled={disabled || full}
@@ -215,13 +232,17 @@ export function PhiUploadFormControl({
             });
           }}
         >
-          <PhiButtonControl
-            label={placeholder?.trim()
-              || labels?.[PHI_FORM_UPLOAD_LABEL_KEYS.trigger]?.trim()
-              || DEFAULT_TRIGGER_LABEL}
-            disabled={disabled || full}
-            onClick={() => {}}
-          />
+          {settings.area ? (
+            <PhiFlexControl vertical align="center" gap={4} style={{ width: "100%", paddingBlock: 8 }}>
+              <PhiIcon name="upload" size={20} />
+              <PhiTypographyControl>{triggerLabel}</PhiTypographyControl>
+              <PhiTypographyControl type="secondary">
+                {labels?.[PHI_FORM_UPLOAD_LABEL_KEYS.dropHint]?.trim() || DEFAULT_DROP_HINT_LABEL}
+              </PhiTypographyControl>
+            </PhiFlexControl>
+          ) : (
+            <PhiButtonControl label={triggerLabel} disabled={disabled || full} onClick={() => {}} />
+          )}
         </PhiFileDropControl>
       )}
       {refusal ? <PhiTypographyControl type="danger">{refusal}</PhiTypographyControl> : null}

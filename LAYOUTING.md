@@ -176,7 +176,11 @@ everything else means `none`. A radius alone is not a line. The rule is stated o
 drawing and the Inspector, which is what keeps them from disagreeing.
 
 A corner nobody stated is the Site's surface step for a Layout (`PHI_LAYOUT_SURFACE_RADIUS`), applied as
-four longhands; a Layout without a Surface states no corner. This is the only thing that decides a
+four longhands; a Layout without a Surface states no corner. The root Layout of an Overlay's body is the
+exception: it is the zone itself, edge to edge between header and footer as a Region spans its part of the
+frame, so it takes no corner at all and the Modal or Drawer around it has the one there is
+(`styles/layout.css`, OVERLAYS.md "Shared container chrome"). Only the root -- a card or a Layout further in
+keeps its own. This is the only thing that decides a
 Layout's outer edge. A Layout family never draws a frame of its own -- the Collapsible's `ghost` governs
 the INSIDE, whether its panels are separate objects or a flat list, and says nothing about the edge around
 them. Its grounds state no corner at all: the Layout box has one and clips them to it, because a clip only

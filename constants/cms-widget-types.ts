@@ -117,7 +117,7 @@ const PHI_CMS_WIDGET_MODULE_BY_TYPE_KEY: Readonly<Record<string, keyof typeof PH
   "tab-bar": "core",
   "table": "core",
   "test-block": "builder",
-  "thread-conversation": "threads",
+  "thread-conversation": "core",
   "timeline": "core",
   "tree": "core",
 };

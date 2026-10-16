@@ -139,7 +139,10 @@ export function PhiDrawerControlAdapter({
         </div>
       )}
     >
-      {body}
+      {/* Marks the zone, for the one rule a zone root reads (`styles/layout.css`); lays out nothing itself. */}
+      <div data-phi-drawer-body-content="true" style={{ display: "contents" }}>
+        {body}
+      </div>
     </Drawer>
   );
 }

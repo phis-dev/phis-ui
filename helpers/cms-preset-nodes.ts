@@ -5,6 +5,8 @@ import {
   type PhiCmsWidgetPlacementFields,
 } from "./cms-node-factories";
 import { PhiCmsStatus } from "../constants/phi-cms";
+import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG, PHI_DIALOG_WIDTH } from "./cms-dialog";
+import type { PhiCommandToolbarWidgetPlacement } from "../types/core-widget-placements";
 import type {
   PhiCmsContentWidgetNode,
   PhiCmsLayoutNode,
@@ -89,6 +91,33 @@ export type PhiCmsPresetOverlayInput = {
       footerLayoutNodeId: PhiCmsInstanceId;
     }
 );
+
+/**
+ * A dialog: the Overlay, its body, and -- where it has actions -- its footer and their Command Toolbar.
+ *
+ * What it decides is what differs between dialogs: its ids, its title and wiring, what extra the body
+ * Layout carries (a form's label column, say), and its buttons. How the body and the actions look is the
+ * one answer every dialog shares (`helpers/cms-dialog.ts`), so it is not an input.
+ */
+export type PhiCmsPresetDialogInput = {
+  id: PhiCmsInstanceId;
+  bodyLayoutNodeId: PhiCmsInstanceId;
+  sortOrder: number;
+  label: string | null;
+  /** The Overlay's config: title, mount and close policy, open action, routes. `width` defaults. */
+  config: Record<string, unknown>;
+  headerLayoutNodeId?: PhiCmsInstanceId | null;
+  /** Config the body Layout carries besides the dialog's own: anything but its gap, padding and ground. */
+  body?: { label?: string; config?: Record<string, unknown> };
+  /** The actions, where the dialog has any. */
+  commands?: {
+    footerLayoutNodeId: PhiCmsInstanceId;
+    widgetId: PhiCmsInstanceId;
+    label: string;
+    flags?: number;
+    config: Omit<PhiCommandToolbarWidgetPlacement, "compact" | "showLabels" | "controlSize">;
+  };
+};
 
 /** The two things a Preset changes about the Page row it was built for; everything else is kept. */
 export type PhiCmsPresetPageInput = Partial<Pick<PhiCmsPageNode, "pageType" | "layoutConfig">>;
@@ -192,6 +221,73 @@ function createPhiCmsPresetNodeSet(defaults: PhiCmsPresetNodeDefaults) {
             footerLayoutNodeId: input.footerLayoutNodeId,
           }
         : node;
+    },
+    /**
+     * A dialog in one call (`PhiCmsPresetDialogInput`): the nodes it is made of, for the tree's
+     * `overlays`, `layoutNodes` and `contentWidgets`. The widgets of the body are the Preset's own, placed
+     * in `bodyLayoutNodeId` from slot 0.
+     */
+    dialog(input: PhiCmsPresetDialogInput) {
+      const body = this.layout({
+        typeKey: "flex-vertical",
+        id: input.bodyLayoutNodeId,
+        parentLayoutNodeId: null,
+        slotIndex: 0,
+        label: input.body?.label ?? `${input.label ?? "dialog"} body`,
+        creationPreset: { layoutKind: "verticalflex", preset: "panel" },
+        config: { ...input.body?.config, ...PHI_DIALOG_BODY_CONFIG },
+      });
+      const config = { width: PHI_DIALOG_WIDTH, ...input.config };
+      const commands = input.commands;
+      if (!commands) {
+        return {
+          overlay: this.overlay({
+            id: input.id,
+            overlayType: "modal",
+            headerLayoutNodeId: input.headerLayoutNodeId ?? null,
+            bodyLayoutNodeId: input.bodyLayoutNodeId,
+            sortOrder: input.sortOrder,
+            label: input.label,
+            config,
+          }),
+          layouts: [body],
+          widgets: [] as PhiCmsContentWidgetNode[],
+        };
+      }
+      return {
+        overlay: this.overlay({
+          id: input.id,
+          overlayType: "modal",
+          headerLayoutNodeId: input.headerLayoutNodeId ?? null,
+          bodyLayoutNodeId: input.bodyLayoutNodeId,
+          footerPresentation: "actions",
+          footerLayoutNodeId: commands.footerLayoutNodeId,
+          sortOrder: input.sortOrder,
+          label: input.label,
+          config,
+        }),
+        layouts: [
+          body,
+          this.layout({
+            typeKey: "flex",
+            id: commands.footerLayoutNodeId,
+            parentLayoutNodeId: null,
+            slotIndex: 0,
+            label: `${input.label ?? "dialog"} footer`,
+            creationPreset: { layoutKind: "flex", preset: "overlay-actions" },
+            config: {},
+          }),
+        ],
+        widgets: [this.widget({
+          typeKey: "command-toolbar",
+          id: commands.widgetId,
+          parentLayoutNodeId: commands.footerLayoutNodeId,
+          slotIndex: 0,
+          label: commands.label,
+          ...(commands.flags == null ? {} : { flags: commands.flags }),
+          config: { ...commands.config, ...PHI_DIALOG_COMMANDS_CONFIG },
+        })],
+      };
     },
   };
 }

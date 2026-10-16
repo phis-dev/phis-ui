@@ -35,4 +35,9 @@ export const PHI_SHARED_FORM_IDS = {
    */
   profilePassword: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "profile-password"),
   profileEmail: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "profile-email"),
+  /**
+   * Answering a conversation, for every Module that runs conversations of its own kind. Core's, because
+   * messaging is: a Module places it, it does not grow a reply of its own (`core/messaging/forms.ts`).
+   */
+  threadReply: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "thread-reply"),
 } as const;
