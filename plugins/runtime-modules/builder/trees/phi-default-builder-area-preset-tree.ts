@@ -548,7 +548,6 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
         config: {
           balancedSides: true,
           contentAlign: "center",
-          style: { height: "100%" },
         },
       }),
       nodes.layout({
@@ -562,7 +561,6 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
         config: {
           balancedSides: true,
           contentAlign: "center",
-          style: { height: "100%" },
         },
       }),
       buildPhiHeaderTopActionsLayoutNode(nodes, {
@@ -1002,7 +1000,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               config: {
                 balancedSides: true,
                 contentAlign: "center",
-                style: { height: "100%" },
               },
             }),
           ]

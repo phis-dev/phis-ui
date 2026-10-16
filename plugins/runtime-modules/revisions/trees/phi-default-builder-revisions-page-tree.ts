@@ -195,7 +195,6 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
         config: {
           balancedSides: true,
           contentAlign: "center",
-          style: { height: "100%" },
         },
       }),
       // No ground of its own: the Theme's Root Background is what the table stands on.

@@ -86,7 +86,6 @@ export function buildPhiAreaShellHeaderNodes({
         config: {
           balancedSides: true,
           contentAlign: "center",
-          style: { height: "100%" },
         },
       }),
       nodes.layout({
@@ -102,7 +101,6 @@ export function buildPhiAreaShellHeaderNodes({
           contentAlign: "center",
           paddingLeft: PHI_SPACE.base,
           paddingRight: PHI_SPACE.base,
-          style: { height: "100%" },
         },
       }),
       buildPhiHeaderTopActionsLayoutNode(nodes, {

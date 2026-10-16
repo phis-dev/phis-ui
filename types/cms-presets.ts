@@ -67,8 +67,6 @@ export type PhiCmsRegionConfig = Record<string, unknown> & PhiCmsContainerChrome
 export type PhiCmsLayoutConfig = PhiCmsLayerConfig & {
   gap?: number | string;
   padding?: number | string;
-  paddingInline?: number | string;
-  paddingBlock?: number | string;
   align?: CSSProperties["alignItems"];
   justify?: CSSProperties["justifyContent"];
   wrap?: boolean | CSSProperties["flexWrap"];

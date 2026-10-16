@@ -311,7 +311,6 @@ export async function buildPhiDefaultBuilderMediaPageTree({
           gap: PHI_SPACE.sm,
           leftWidth: 130,
           rightWidth: 130,
-          style: { height: "100%" },
         },
       }),
       // No ground of its own: the Theme's Root Background is what the gallery stands on.

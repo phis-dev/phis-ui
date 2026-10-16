@@ -35,11 +35,43 @@ const flatGeometryKeys = [
   "maxHeight",
 ];
 
+/*
+ * And `style`: no Layout reads a config's `style`, so a `minHeight` or a `height: "100%"` written there
+ * does nothing, the same silent miss as the flat spelling. A footer that was meant to keep 48px kept
+ * nothing. Geometry goes in `minSize`, a gap or an inset in their own keys. The logical insets are the
+ * same miss: a Layout reads `padding` and its four edges, never `paddingBlock` or `paddingInline`.
+ */
+const unreadInset = "No Layout reads it; state the inset as `padding` or `paddingTop`/`Right`/`Bottom`/`Left`.";
+const unreadKeys = new Map([
+  ["style", "No Layout reads a config's `style`; state geometry as `size`, `minSize` or `maxSize`."],
+  ["paddingBlock", unreadInset],
+  ["paddingInline", unreadInset],
+]);
+
 /** Where a Layout node begins. Both spellings build one; neither may carry flat geometry. */
 const layoutNodeMarkers = [
   /\bnodes\.layout\(\{/g,
   /\bcreationPreset:\s*\{\s*layoutKind:/g,
 ];
+
+/*
+ * A node written as a plain object names its Layout through its `widgetType`, after the brace that
+ * opens it -- so the node starts at the enclosing brace, found by walking back.
+ */
+const plainLayoutNodeMarker = /\bwidgetType:\s*buildPhiCmsLayoutNamespacedTypeKey\(/g;
+
+function findEnclosingObjectStart(source, index) {
+  let depth = 0;
+  for (let i = index - 1; i >= 0; i -= 1) {
+    const char = source[i];
+    if (char === "}") depth += 1;
+    if (char === "{") {
+      if (depth === 0) return i;
+      depth -= 1;
+    }
+  }
+  return -1;
+}
 
 /**
  * The index just past the object literal opening at `openIndex`, or -1 where it never closes.
@@ -156,12 +188,22 @@ for (const directory of scannedDirectories) {
         match = marker.exec(source);
       }
     }
+    plainLayoutNodeMarker.lastIndex = 0;
+    for (let match = plainLayoutNodeMarker.exec(source); match; match = plainLayoutNodeMarker.exec(source)) {
+      const start = findEnclosingObjectStart(source, match.index);
+      if (start !== -1) starts.add(start);
+    }
 
     for (const start of starts) {
       const range = findNodeConfigRange(source, start);
       if (!range) continue;
       layoutNodesChecked += 1;
       for (const key of readTopLevelKeys(source, range.start, range.end)) {
+        const unread = unreadKeys.get(key.name);
+        if (unread) {
+          failures.push(`${file}:${lineOf(source, key.index)} states \`${key.name}\` on a Layout config. ${unread}`);
+          continue;
+        }
         if (!flatGeometryKeys.includes(key.name)) continue;
         failures.push(
           `${file}:${lineOf(source, key.index)} states \`${key.name}\` on a Layout config. `

@@ -94,7 +94,6 @@ export async function buildPhiDefaultBuilderDashboardPageTree({
         config: {
           balancedSides: true,
           contentAlign: "center",
-          style: { height: "100%" },
         },
       }),
       scaffold.layoutNode,

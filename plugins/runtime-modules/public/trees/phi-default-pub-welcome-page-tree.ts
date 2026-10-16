@@ -103,7 +103,6 @@ export async function buildPhiDefaultPubWelcomePageTree({
         config: {
           balancedSides: true,
           contentAlign: "center",
-          style: { height: "100%" },
         },
       }),
       nodes.layout({
