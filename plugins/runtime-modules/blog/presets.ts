@@ -4,6 +4,7 @@ import type {
   PhiCmsRoutePresetDescriptor,
 } from "../../../types/cms-module-descriptors";
 import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
+import { PhiContentEntryPart } from "../../../constants/content-entry-parts";
 import { PHI_BLOG_FORM_IDS, PHI_BLOG_PRESET_KEYS, PHI_BLOG_RUNTIME_MODULE_ID } from "./ids";
 
 /**
@@ -45,6 +46,7 @@ export const PHI_BLOG_RUNTIME_MODULE_ROUTES = [
           presetKey: PHI_BLOG_PRESET_KEYS.list,
           detailPresetKey: PHI_BLOG_PRESET_KEYS.detail,
           heading: "Blog",
+          presentation: "cards",
         })),
   },
   /*
@@ -67,6 +69,10 @@ export const PHI_BLOG_RUNTIME_MODULE_ROUTES = [
           kind: "blog",
           ownerModuleId: PHI_BLOG_RUNTIME_MODULE_ID,
           presetKey: PHI_BLOG_PRESET_KEYS.detail,
+          // An article's opening: category, title, teaser, byline with picture, and the date.
+          headerParts: PhiContentEntryPart.Title | PhiContentEntryPart.Subtitle | PhiContentEntryPart.Date
+            | PhiContentEntryPart.Author | PhiContentEntryPart.Avatar | PhiContentEntryPart.Category,
+          related: { presentation: "cards", title: "More posts" },
         })),
   },
   /*

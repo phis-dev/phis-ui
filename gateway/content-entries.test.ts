@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-import { fetchPhiSiteContentEntries, fetchPhiSiteContentEntry } from "./content-entries";
+import { fetchPhiSiteContentEntries, fetchPhiSiteContentEntryPage } from "./content-entries";
 
 const OPTIONS = {
   kind: "news" as const,
@@ -25,7 +25,9 @@ function entry(overrides: Record<string, unknown> = {}) {
     subtitle: "Its subtitle",
     content: "Its text.",
     link: { kind: "external", href: "https://example.com/somewhere" },
-    tags: ["one", "two"],
+    category: null,
+    tags: [{ slug: "one", label: "one" }, { slug: "two", label: "two" }],
+    author: null,
     ...overrides,
   };
 }
@@ -99,14 +101,14 @@ describe("fetchPhiSiteContentEntries", () => {
     ]);
   });
 
-  it("keeps only the tags that are strings, and reads an absent or malformed link as none", async () => {
+  it("keeps only the tags that are terms, and reads an absent or malformed link as none", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => newsResponse([
-      entry({ tags: ["one", 2, null, "", "two"], link: "/a-typed-path" }),
+      entry({ tags: [{ slug: "one", label: "one" }, 2, null, "", { slug: "two", label: "two" }], link: "/a-typed-path" }),
     ])));
 
     const [first] = await fetchPhiSiteContentEntries(OPTIONS);
 
-    expect(first?.tags).toEqual(["one", "two"]);
+    expect(first?.tags).toEqual([{ slug: "one", label: "one" }, { slug: "two", label: "two" }]);
     expect(first?.link).toBeNull();
   });
 
@@ -130,17 +132,49 @@ describe("fetchPhiSiteContentEntries", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("asks for one entry by its slug, and answers none where Core has none", async () => {
-    const fetchMock = vi.fn(async () => newsResponse([entry({ slug: "launch" })]));
+  it("reads a byline and terms, and drops what is not one", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => newsResponse([entry({
+      category: { slug: "press", label: "Presse" },
+      tags: [{ slug: "one", label: "eins" }, "two", { slug: "", label: "nothing" }],
+      author: { name: "Ada", avatar: { url: "/api/site/media/4/variants/1" } },
+    }), entry({ slug: "nameless", author: { name: "  ", avatar: null } })])));
+
+    const [first, second] = await fetchPhiSiteContentEntries(OPTIONS);
+    expect(first).toMatchObject({
+      category: { slug: "press", label: "Presse" },
+      tags: [{ slug: "one", label: "eins" }],
+      author: { name: "Ada", avatar: { url: "/api/site/media/4/variants/1" } },
+    });
+    // No name is no byline: nothing is made up from what is left.
+    expect(second?.author).toBeNull();
+  });
+});
+
+describe("fetchPhiSiteContentEntryPage", () => {
+  const { limit: _limit, ...BASE } = { ...OPTIONS, kind: "blog" as const };
+  void _limit;
+
+  it("asks for one entry at its address with its relatives, and answers none on 404", async () => {
+    const fetchMock = vi.fn(async () => Response.json({
+      entry: entry({ slug: "launch" }),
+      related: [entry({ slug: "earlier" })],
+    }));
     vi.stubGlobal("fetch", fetchMock);
-    const { limit: _limit, ...base } = { ...OPTIONS, kind: "blog" as const };
-    void _limit;
 
-    expect((await fetchPhiSiteContentEntry({ ...base, slug: "launch" }))?.slug).toBe("launch");
+    const page = await fetchPhiSiteContentEntryPage({ ...BASE, slug: "launch", relatedLimit: 3 });
+    expect(page?.entry.slug).toBe("launch");
+    expect(page?.related?.map((item) => item.slug)).toEqual(["earlier"]);
     const [url] = fetchMock.mock.calls[0] as unknown as [string];
-    expect(url).toBe("https://core.test/api/v1/entries/blog?slug=launch&limit=1");
+    expect(url).toBe("https://core.test/api/v1/entries/blog/launch?include=related&relatedLimit=3");
 
-    vi.stubGlobal("fetch", vi.fn(async () => newsResponse([])));
-    expect(await fetchPhiSiteContentEntry({ ...base, slug: "gone" })).toBeNull();
+    vi.stubGlobal("fetch", vi.fn(async () => Response.json({ error: "none" }, { status: 404 })));
+    expect(await fetchPhiSiteContentEntryPage({ ...BASE, slug: "gone" })).toBeNull();
+  });
+
+  it("asks nothing for an empty address", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    expect(await fetchPhiSiteContentEntryPage({ ...BASE, slug: "  " })).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

@@ -62,6 +62,16 @@ function readPhiCmsConfigFieldViolation(
         : `${field.key} must list whole numbers${field.min !== undefined ? ` of at least ${field.min}` : ""}, not ${describe(stray)}.`;
     }
 
+    case "flags": {
+      if (typeof value !== "number" || !Number.isInteger(value) || value < 0) {
+        return `${field.key} must be a whole number of flags, not ${describe(value)}.`;
+      }
+      const known = field.options.reduce((mask, option) => mask | option.value, 0);
+      return (value & ~known) === 0
+        ? null
+        : `${field.key} sets flags no option names: ${value & ~known}.`;
+    }
+
     case "choice": {
       /*
        * Only a closed list can be checked. A field whose options are fetched, or which accepts what

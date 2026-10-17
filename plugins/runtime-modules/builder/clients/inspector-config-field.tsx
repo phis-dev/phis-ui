@@ -2,6 +2,7 @@
 
 import { Fragment, useMemo, useState, type ReactNode } from "react";
 import { readPhiDotPath } from "../../../../helpers/dot-path";
+import { PhiCheckboxGroupControl } from "../../../../components/controls/phi-checkbox-group-control";
 import { PhiDividerControl } from "../../../../components/controls/phi-divider-control";
 import { usePhiConfig } from "../../../../components/root/phi-config-provider";
 
@@ -1417,6 +1418,20 @@ function renderPhiInspectorConfigFieldBody({
           [field.key]: next,
           ...(none ? Object.fromEntries((field.clearsWhenEmpty ?? []).map((key) => [key, undefined])) : {}),
         })}
+      />,
+    );
+  }
+
+  if (field.type === "flags") {
+    const mask = typeof value === "number" ? value : typeof defaultValue === "number" ? defaultValue : 0;
+    return renderPhiInspectorConfigFieldBlock(
+      field,
+      <PhiCheckboxGroupControl<number>
+        vertical
+        value={field.options.filter((option) => (mask & option.value) !== 0).map((option) => option.value)}
+        options={field.options.map((option) => ({ value: option.value, label: option.label }))}
+        disabled={disabled || !onChange}
+        onChange={(ticked) => onChange?.({ [field.key]: ticked.reduce((next, flag) => next | flag, 0) })}
       />,
     );
   }

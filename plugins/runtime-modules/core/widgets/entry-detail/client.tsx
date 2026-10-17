@@ -1,14 +1,19 @@
 "use client";
 
 import type { PhiContentEntryReaderLabels } from "../../../../../components/widgets/label-sets/content-entries";
-import { PhiEntryArticle, type PhiEntryListEntryView } from "../entry-list/client";
+import { PhiEntryBody, type PhiEntryListEntryView } from "../entry-list/client";
 
 export type PhiEntryDetailWidgetClientProps = {
   entry: PhiEntryListEntryView;
   labels: PhiContentEntryReaderLabels;
+  parts: number;
 };
 
-/** One entry without its title, which the Page draws as its own (`entry-list`'s article). */
-export function PhiEntryDetailWidgetClient({ entry, labels }: PhiEntryDetailWidgetClientProps) {
-  return <PhiEntryArticle entry={entry} labels={labels} showTitle={false} />;
+/** One entry's text; its title, byline and category are the header's (`entry-header`). */
+export function PhiEntryDetailWidgetClient({ entry, labels, parts }: PhiEntryDetailWidgetClientProps) {
+  return (
+    <article>
+      <PhiEntryBody entry={entry} parts={parts} labels={labels} />
+    </article>
+  );
 }

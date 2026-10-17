@@ -377,6 +377,12 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
       ),
     ],
     [
+      PhiCmsWidgetType.EntryHeader,
+      definePhiRuntimeModuleRenderClient(
+        dynamic(() => import("../core/widgets/entry-header/client").then((module) => module.PhiEntryHeaderWidgetClient)),
+      ),
+    ],
+    [
       PhiCmsWidgetType.ThreadConversation,
       definePhiRuntimeModuleRenderClient(
         dynamic(() => import("../core/widgets/thread-conversation/client").then((module) => module.PhiThreadConversationWidgetClient)),

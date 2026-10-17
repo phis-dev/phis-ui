@@ -7,10 +7,20 @@ import {
   type PhiContentEntryKind,
 } from "../../../../../constants/content-entry-kinds";
 import {
-  readBoolean,
+  phiContentEntryPartOptions,
+  PhiContentEntryPart,
+  readPhiContentEntryParts,
+} from "../../../../../constants/content-entry-parts";
+import {
   readRenderableBlockConfig,
   type PhiCmsWidgetConfigBase,
 } from "../../../../../components/widgets/config/parser-primitives";
+
+/**
+ * What the body shows after the text. The meta -- title, byline, category -- is the header's
+ * (`entry-header`), so a detail Page states each part once.
+ */
+const PHI_ENTRY_DETAIL_PARTS = PhiContentEntryPart.Tags | PhiContentEntryPart.Link;
 
 export type PhiEntryDetailWidgetConfig = PhiCmsWidgetConfigBase & {
   /** Which content kind the entry is of (`CONTENT_ENTRIES.md`). */
@@ -20,10 +30,8 @@ export type PhiEntryDetailWidgetConfig = PhiCmsWidgetConfigBase & {
    * Widget on a Page of its own names one entry by it.
    */
   slug: string;
-  /** Whether the entry shows the tags it was published with. */
-  showTags: boolean;
-  /** Whether an entry that carries a link shows it as an action. */
-  showLinks: boolean;
+  /** Which parts show after the text (`constants/content-entry-parts.ts`). */
+  show: number;
 };
 
 export function normalizePhiEntryDetailWidgetConfig(config: unknown): PhiEntryDetailWidgetConfig {
@@ -33,8 +41,7 @@ export function normalizePhiEntryDetailWidgetConfig(config: unknown): PhiEntryDe
     // A new detail shows News until somebody picks its kind in the Inspector.
     kind: isPhiContentEntryKind(raw.kind) ? raw.kind : "news",
     slug: typeof raw.slug === "string" ? raw.slug.trim() : "",
-    showTags: readBoolean(raw.showTags) ?? true,
-    showLinks: readBoolean(raw.showLinks) ?? true,
+    show: readPhiContentEntryParts(raw.show, PHI_ENTRY_DETAIL_PARTS, PHI_ENTRY_DETAIL_PARTS),
   };
 }
 
@@ -42,8 +49,8 @@ export const PHI_ENTRY_DETAIL_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("entry-detail"),
   typeKey: "entry-detail",
-  title: "Entry",
-  description: "One published entry of a content kind, read while the page is drawn.",
+  title: "Entry text",
+  description: "The text of one published entry of a content kind, read while the page is drawn.",
   category: "content",
   tags: ["news", "blog", "content", "detail"],
   icon: "antd:read",
@@ -56,8 +63,7 @@ export const PHI_ENTRY_DETAIL_WIDGET_DEFINITION = {
       options: PHI_CONTENT_ENTRY_KINDS.map((kind) => ({ value: kind, label: kind })),
     },
     { key: "slug", type: "string", label: "Address" },
-    { key: "showTags", type: "boolean", label: "Show tags" },
-    { key: "showLinks", type: "boolean", label: "Show link" },
+    { key: "show", type: "flags", label: "Show", options: phiContentEntryPartOptions(PHI_ENTRY_DETAIL_PARTS) },
   ],
   defaultConfig: normalizePhiEntryDetailWidgetConfig(null),
   parseConfig: (config: Record<string, unknown>) => normalizePhiEntryDetailWidgetConfig(config),

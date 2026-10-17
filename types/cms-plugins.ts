@@ -263,6 +263,14 @@ export type PhiCmsConfigField =
       min?: number;
     })
   | (PhiCmsConfigFieldBase & {
+      /**
+       * A set of yes-or-no choices stored as one whole number, one bit per option -- which parts of an
+       * entry a Widget shows. Ticked options are set bits; bits no option names are never written.
+       */
+      type: "flags";
+      options: readonly { value: number; label: string }[];
+    })
+  | (PhiCmsConfigFieldBase & {
       type: "number";
       min?: number;
       max?: number;

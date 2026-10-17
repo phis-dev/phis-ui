@@ -9,7 +9,7 @@ it.
 
 A kind is a name in `PHI_CONTENT_ENTRY_KINDS` (`constants/content-entry-kinds.ts`), the same list Core
 serves under `/api/site/editor/entries/<kind>` and `/api/v1/entries/<kind>`. Every kind has the same
-words -- title, subtitle, Markdown body, link, tags, language -- and the same acts, so everything that
+words -- title, subtitle, Markdown body, link, tags, a category, an author, language -- and the same acts, so everything that
 shows or writes them exists once and takes the kind as data:
 
 | Piece | Where | Takes the kind as |
@@ -18,7 +18,9 @@ shows or writes them exists once and takes the kind as data:
 | The entries Table Provider | Core Module, `PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntries` | the resource key |
 | The tags Options Provider | Core Module, `PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntryTags` | the field's `config.kind` |
 | The list Widget `entry-list` | Core Module | `config.kind` |
-| The detail Widget `entry-detail` | Core Module | `config.kind`, with `config.slug` |
+| The header Widget `entry-header` | Core Module | `config.kind`, with `config.slug` |
+| The text Widget `entry-detail` | Core Module | `config.kind`, with `config.slug` |
+| One entry with its relatives | `server-helpers/content-entry-page.ts` | an argument |
 | The editor Page, its dialogs and Table | `components/regions/presets/content-entry-editor-page-tree.ts` | the builder's input |
 | The Public list and detail Pages | `components/regions/presets/content-entry-public-page-trees.ts` | the builder's input |
 | The entry and publication Forms | `components/forms/content-entry-forms.ts` | the factory's input |
@@ -54,6 +56,22 @@ The list links each entry to the detail route through a Page target with a param
 `entry-list` carries `detailTarget` -- the detail route's Module Page reference -- and fills `slug` per
 entry. A list placed on any Page links the same way; a list whose `detailTarget` does not resolve -- the
 Module is off, or the Site moved the route -- shows its entries without links.
+
+A detail Page is three Widgets in one vertical Flex: `entry-header` (category, title, subtitle, byline),
+`entry-detail` (the text, then tags and link) and `entry-list` with `source: "related"` (the entries
+closest to this one, under a heading drawn only where there are any). All three and the tree loader read
+through `loadPhiContentEntryPage`, which asks Core's `/api/v1/entries/<kind>/<slug>?include=related` once
+per request: the options are built in that one place, because the request memo only shares an answer
+between callers that ask the same question.
+
+## Showing an entry
+
+What an entry Widget shows is a mask of parts (`constants/content-entry-parts.ts`): title, subtitle, date,
+author, author picture, category, tags, link. One vocabulary for every entry Widget, edited in the Inspector
+as a `flags` field. Each Widget offers the parts that belong to it -- the header everything but the text,
+the text Widget only tags and link -- and the rest of a mask means nothing to it. `PhiEntryMeta` and
+`PhiEntryBody` are the two halves every Widget composes from, so an entry looks the same in a list, a
+header and a card.
 
 ## The editor Page
 

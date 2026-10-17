@@ -3,7 +3,13 @@ import "server-only";
 import { isPhiRecord } from "../helpers/is-record";
 import { readPhiLinkTarget } from "../types/references";
 import type { PhiContentEntryKind } from "../constants/content-entry-kinds";
-import type { PhiSiteContentEntry } from "../types/content-entries";
+import type {
+  PhiSiteContentEntry,
+  PhiSiteContentEntryAuthor,
+  PhiSiteContentEntryPage,
+  PhiSiteContentEntryTerm,
+} from "../types/content-entries";
+import { definePhiRequestMemo } from "../server-helpers/request-memo";
 import { fetchPhiSiteApi } from "./site-api-request";
 
 type FetchPhiSiteContentEntryBase = {
@@ -25,6 +31,21 @@ export type FetchPhiSiteContentEntriesOptions = FetchPhiSiteContentEntryBase & {
 
 function readString(value: unknown) {
   return typeof value === "string" ? value : "";
+}
+
+function readTerm(value: unknown): PhiSiteContentEntryTerm | null {
+  if (!isPhiRecord(value)) return null;
+  const slug = readString(value.slug).trim();
+  const label = readString(value.label).trim();
+  return slug && label ? { slug, label } : null;
+}
+
+function readAuthor(value: unknown): PhiSiteContentEntryAuthor | null {
+  if (!isPhiRecord(value)) return null;
+  const name = readString(value.name).trim();
+  if (!name) return null;
+  const url = isPhiRecord(value.avatar) ? readString(value.avatar.url).trim() : "";
+  return { name, avatar: url ? { url } : null };
 }
 
 function readContentEntry(value: unknown): PhiSiteContentEntry | null {
@@ -49,9 +70,11 @@ function readContentEntry(value: unknown): PhiSiteContentEntry | null {
     subtitle: readString(value.subtitle),
     content: readString(value.content),
     link: readPhiLinkTarget(value.link),
+    category: readTerm(value.category),
     tags: Array.isArray(value.tags)
-      ? value.tags.filter((tag): tag is string => typeof tag === "string" && tag.trim() !== "")
+      ? value.tags.map(readTerm).filter((tag): tag is PhiSiteContentEntryTerm => tag !== null)
       : [],
+    author: readAuthor(value.author),
     sourceLocale: readString(value.sourceLocale).trim() || null,
     // Absent means yes, which is the default everywhere this switch appears.
     translate: value.translate !== false,
@@ -99,15 +122,56 @@ export async function fetchPhiSiteContentEntries(
   return fetchEntries(options, { limit: String(options.limit) });
 }
 
+type FetchPhiSiteContentEntryPageOptions = FetchPhiSiteContentEntryBase & {
+  slug: string;
+  /** How many related entries to answer beside it; absent asks for none. Core allows 1 to 12. */
+  relatedLimit?: number;
+};
+
 /**
- * One published entry by its address, for a detail Page; `null` where the kind has none answering there
- * -- never published, expired, or a slug nobody wrote. The detail route answers 404 on `null`.
+ * One published entry by its address and, where asked, the entries closest to it -- everything a detail
+ * Page shows, in one question; `null` where the kind has none answering there: never published, expired,
+ * or a slug nobody wrote. The detail route answers 404 on `null`.
+ *
+ * Once per request for the same question (`definePhiRequestMemo`): the detail route's tree reads it for
+ * the Page's title and status, and the header, the body and the related list read it again while the page
+ * is drawn. All of them ask with the same options, so Core is asked once.
  */
-export async function fetchPhiSiteContentEntry(
-  options: FetchPhiSiteContentEntryBase & { slug: string },
-): Promise<PhiSiteContentEntry | null> {
+export const fetchPhiSiteContentEntryPage = definePhiRequestMemo(async (
+  options: FetchPhiSiteContentEntryPageOptions,
+): Promise<PhiSiteContentEntryPage | null> => {
   const slug = options.slug.trim();
   if (!slug) return null;
-  const [entry] = await fetchEntries(options, { slug, limit: "1" });
-  return entry ?? null;
-}
+  const payload = await fetchPhiSiteApi<unknown>({
+    context: "fetchPhiSiteContentEntryPage",
+    apiBaseUrl: options.apiBaseUrl,
+    internalToken: options.internalToken,
+    siteKey: options.siteKey,
+    path: `/api/v1/entries/${options.kind}/${encodeURIComponent(slug)}`,
+    searchParams: options.relatedLimit
+      ? { include: "related", relatedLimit: String(options.relatedLimit) }
+      : {},
+    locale: options.locale,
+    failure: `Entry fetch failed (${options.kind})`,
+    userAgent: "phis-ui-entries/1.0",
+    notFoundIsNull: true,
+  });
+  if (payload === null) return null;
+  if (!isPhiRecord(payload)) {
+    throw new Error("The entry answered without a body.");
+  }
+  const entry = readContentEntry(payload.entry);
+  if (!entry) return null;
+  return {
+    entry,
+    related: Array.isArray(payload.related)
+      ? payload.related.map(readContentEntry).filter((item): item is PhiSiteContentEntry => item !== null)
+      : null,
+  };
+});
+
+/**
+ * How many relatives a detail Page asks for. One number for the whole Page, because every part asks the
+ * same question and a part asking for four while another asks for three would be two questions to Core.
+ */
+export const PHI_CONTENT_ENTRY_RELATED_LIMIT = 3;

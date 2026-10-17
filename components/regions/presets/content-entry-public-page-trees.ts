@@ -7,9 +7,9 @@ import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types"
 import type { PhiContentEntryKind } from "../../../constants/content-entry-kinds";
 import { PhiCmsPageType, PhiCmsRegionType } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
-import { fetchPhiSiteContentEntry } from "../../../gateway/content-entries";
-import { phiRuntime } from "../../../server-helpers/phi-runtime";
+import { loadPhiContentEntryPage } from "../../../server-helpers/content-entry-page";
 import { createPhiPageReference } from "../../../types/references";
+import { PHI_CONTENT_ENTRY_RELATED_LIMIT } from "../../../gateway/content-entries";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiBlockRuntime, PhiRuntimeModuleId } from "../../../types";
 
@@ -35,6 +35,7 @@ export async function buildPhiContentEntryListPageTree({
   presetKey,
   detailPresetKey,
   heading,
+  presentation,
 }: {
   page: PhiCmsPageNode;
   kind: PhiContentEntryKind;
@@ -44,6 +45,8 @@ export async function buildPhiContentEntryListPageTree({
   detailPresetKey: string;
   /** The heading's source text, "News". */
   heading: string;
+  /** How the list stands: whole entries for News, cards for a Blog (the `entry-list` Widget's setting). */
+  presentation: "stack" | "cards" | "compact";
 }): Promise<PhiResolvedCmsPageTree> {
   const identity = { domain: "page" as const, ownerModuleId, presetKey };
   const layouts = createPhiPresetCmsInstanceIdMap(identity, ["layoutContent"]);
@@ -94,6 +97,7 @@ export async function buildPhiContentEntryListPageTree({
         label: `pub ${kind} list widget`,
         config: {
           kind,
+          presentation,
           detailLinkTarget: {
             kind: "page",
             reference: createPhiPageReference({ kind: "module", ownerModuleId, presetKey: detailPresetKey }),
@@ -105,12 +109,16 @@ export async function buildPhiContentEntryListPageTree({
 }
 
 /**
- * A kind's Public detail Page, `/<kind>/:slug`: the entry's title as the Page's own, and the entry.
+ * A kind's Public detail Page, `/<kind>/:slug`: the entry's header, its text, and the entries related to it.
  *
  * The entry is read here, before anything is drawn, because two answers depend on it that the body cannot
  * give: the Page's title and description, and its status. A slug that names no published entry answers
  * 404 -- `notFound()` raised during the request resolution, which the Area Layout runs before the shell
- * flushes, so the status line says so rather than a 200 carrying "not found".
+ * flushes, so the status line says so rather than a 200 carrying "not found". The read is the one the three
+ * Widgets make again while the page is drawn (`loadPhiContentEntryPage`), so it is answered once.
+ *
+ * Three Widgets rather than one article, because each is the Site's to rearrange: a header that shows the
+ * author or not, a body, and a "more like this" list that draws nothing where nothing is related.
  */
 export async function buildPhiContentEntryDetailPageTree({
   page,
@@ -119,6 +127,8 @@ export async function buildPhiContentEntryDetailPageTree({
   kind,
   ownerModuleId,
   presetKey,
+  headerParts,
+  related,
 }: {
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
@@ -126,26 +136,20 @@ export async function buildPhiContentEntryDetailPageTree({
   kind: PhiContentEntryKind;
   ownerModuleId: PhiRuntimeModuleId;
   presetKey: string;
+  /** What the header shows (`constants/content-entry-parts.ts`): a byline for a Blog, the date for News. */
+  headerParts: number;
+  /** The list under the entry: its presentation, its heading's source text, and its detail route. */
+  related: { presentation: "stack" | "cards" | "compact"; title: string };
 }): Promise<PhiResolvedCmsPageTree> {
   const slug = params.slug?.trim() ?? "";
-  const rt = phiRuntime(runtime);
-  const entry = slug
-    ? await fetchPhiSiteContentEntry({
-      kind,
-      slug,
-      apiBaseUrl: rt.apiBaseUrl,
-      internalToken: rt.internalToken,
-      siteKey: rt.siteKey,
-      locale: runtime.locale.current,
-    })
-    : null;
+  const entry = slug ? (await loadPhiContentEntryPage(runtime, { kind, slug }))?.entry ?? null : null;
   if (!entry) {
     notFound();
   }
 
   const identity = { domain: "page" as const, ownerModuleId, presetKey };
   const layouts = createPhiPresetCmsInstanceIdMap(identity, ["layoutContent"]);
-  const widgets = createPhiPresetCmsInstanceIdMap(identity, ["widgetTitle", "widgetEntry"]);
+  const widgets = createPhiPresetCmsInstanceIdMap(identity, ["widgetHeader", "widgetEntry", "widgetRelated"]);
   const nodes = createPhiCmsPresetNodes(page);
   return {
     page: nodes.page({ pageType: PhiCmsPageType.Standard }),
@@ -179,12 +183,35 @@ export async function buildPhiContentEntryDetailPageTree({
       }),
     ],
     contentWidgets: nodes.stack(layouts.layoutContent, [
-      { typeKey: "page-title", id: widgets.widgetTitle, label: `pub ${kind} detail title widget`, config: {} },
+      {
+        typeKey: "entry-header",
+        id: widgets.widgetHeader,
+        label: `pub ${kind} detail header widget`,
+        config: { kind, slug, show: headerParts },
+      },
       {
         typeKey: "entry-detail",
         id: widgets.widgetEntry,
         label: `pub ${kind} detail widget`,
         config: { kind, slug },
+      },
+      {
+        typeKey: "entry-list",
+        id: widgets.widgetRelated,
+        label: `pub ${kind} related widget`,
+        config: {
+          kind,
+          source: "related",
+          relatedTo: slug,
+          presentation: related.presentation,
+          title: related.title,
+          limit: PHI_CONTENT_ENTRY_RELATED_LIMIT,
+          // Each entry links to its own detail Page -- this one's route, filled with the related entry's slug.
+          detailLinkTarget: {
+            kind: "page",
+            reference: createPhiPageReference({ kind: "module", ownerModuleId, presetKey }),
+          },
+        },
       },
     ]),
   };

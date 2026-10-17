@@ -129,6 +129,7 @@ import { PHI_STEPS_WIDGET_DEFINITION } from "./widgets/steps/config";
 import { PHI_TIMELINE_WIDGET_DEFINITION } from "./widgets/timeline/config";
 import { PHI_ENTRY_LIST_WIDGET_DEFINITION } from "./widgets/entry-list/config";
 import { PHI_ENTRY_DETAIL_WIDGET_DEFINITION } from "./widgets/entry-detail/config";
+import { PHI_ENTRY_HEADER_WIDGET_DEFINITION } from "./widgets/entry-header/config";
 import { PHI_THREAD_CONVERSATION_WIDGET_DEFINITION } from "./widgets/thread-conversation/config";
 import { PHI_FLOAT_BUTTON_WIDGET_DEFINITION } from "./widgets/float-button/config";
 import {
@@ -484,6 +485,13 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/entry-detail/plugin").then((module) => module.PHI_ENTRY_DETAIL_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/entry-detail/plugin").then((module) => module.PHI_ENTRY_DETAIL_WIDGET_PLUGIN),
+  }),
+  defineFirstPartyWidget({
+    definition: PHI_ENTRY_HEADER_WIDGET_DEFINITION,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
+    loadRuntime: () => import("./widgets/entry-header/plugin").then((module) => module.PHI_ENTRY_HEADER_WIDGET_PLUGIN),
+    loadPreview: () => import("./widgets/entry-header/plugin").then((module) => module.PHI_ENTRY_HEADER_WIDGET_PLUGIN),
   }),
   // A conversation, for every Module that runs conversations of its own kind (`messaging/`).
   defineFirstPartyWidget({

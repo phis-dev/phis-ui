@@ -34,6 +34,20 @@ vi.mock("../../components/widgets/label-sets/content-entries", () => ({
   }),
 }));
 const KIND_LABELS = { widgetLabel: "entries", entryTitle: "Entry", createTitle: "New entry", emptyTitle: "None" };
+/*
+ * The entry a detail tree reads before it draws anything. `launch` is published; any other address is
+ * not, and the tree answers 404 for it -- `notFound()` throws, as Next's does.
+ */
+vi.mock("../../server-helpers/content-entry-page", () => ({
+  loadPhiContentEntryPage: async (_runtime: unknown, { slug }: { slug: string }) => slug === "launch"
+    ? { entry: { title: "Launch", subtitle: "", slug }, related: [] }
+    : null,
+}));
+vi.mock("next/navigation", () => ({
+  notFound: () => {
+    throw new Error("NEXT_NOT_FOUND");
+  },
+}));
 vi.mock("./news/labels", () => ({ getPhiNewsKindLabels: async () => KIND_LABELS }));
 vi.mock("./blog/labels", () => ({ getPhiBlogKindLabels: async () => KIND_LABELS }));
 
@@ -52,6 +66,7 @@ import { PHI_CORE_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "./core/client
 import {
   normalizePhiEntryListWidgetConfig,
   PHI_ENTRY_LIST_DEFAULT_LIMIT,
+  PHI_ENTRY_LIST_DEFAULT_PARTS,
 } from "./core/widgets/entry-list/config";
 import { PHI_NEWS_FORM_IDS, PHI_NEWS_PRESET_KEYS, PHI_NEWS_RUNTIME_MODULE_ID } from "./news/ids";
 import { PHI_NEWS_RUNTIME_MODULE_ROUTES } from "./news/presets";
@@ -63,6 +78,7 @@ import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../constants/core-data-p
 import { PhiCmsWidgetType } from "../../constants/cms-widget-types";
 import { PhiCmsFlags, PhiCmsPageType, PhiCmsStatus } from "../../constants/phi-cms";
 import { hasPhiFlag } from "../../helpers/flags";
+import { PhiContentEntryPart } from "../../constants/content-entry-parts";
 import { readPhiLinkTarget, readPhiPageReference } from "../../types/references";
 import { PHI_VIEWER_ACCESS_ANYONE } from "../../types/access";
 import type { PhiCmsPageNode } from "../../types/cms";
@@ -142,7 +158,7 @@ describe("the entries surface Core carries for every kind", () => {
       area: "public",
       serverCapabilities: null,
     });
-    for (const type of [PhiCmsWidgetType.EntryList, PhiCmsWidgetType.EntryDetail]) {
+    for (const type of [PhiCmsWidgetType.EntryList, PhiCmsWidgetType.EntryDetail, PhiCmsWidgetType.EntryHeader]) {
       expect(moduleSet.installedOwnerModuleIdByWidgetType.get(type)).toBe(PHI_CORE_RUNTIME_MODULE_ID);
       expect(moduleSet.widgetDefinitionsByType.has(type)).toBe(true);
     }
@@ -189,15 +205,20 @@ describe("the entries surface Core carries for every kind", () => {
     expect(normalizePhiEntryListWidgetConfig(null)).toMatchObject({
       kind: "news",
       limit: PHI_ENTRY_LIST_DEFAULT_LIMIT,
-      showTags: true,
-      showLinks: true,
+      show: PHI_ENTRY_LIST_DEFAULT_PARTS,
+      source: "latest",
     });
+    // Tags and link are among what an unconfigured list shows.
+    expect(PHI_ENTRY_LIST_DEFAULT_PARTS & PhiContentEntryPart.Tags).not.toBe(0);
+    expect(PHI_ENTRY_LIST_DEFAULT_PARTS & PhiContentEntryPart.Link).not.toBe(0);
     expect(normalizePhiEntryListWidgetConfig({ kind: "blog", limit: 500 })).toMatchObject({ kind: "blog", limit: 50 });
     for (const limit of [0, -5, "many", null, 2.5]) {
       expect(normalizePhiEntryListWidgetConfig({ limit }).limit).toBe(PHI_ENTRY_LIST_DEFAULT_LIMIT);
     }
-    expect(normalizePhiEntryListWidgetConfig({ showTags: false, showLinks: false }))
-      .toMatchObject({ showTags: false, showLinks: false });
+    expect(normalizePhiEntryListWidgetConfig({ show: PhiContentEntryPart.Title }).show).toBe(PhiContentEntryPart.Title);
+    // A stored mask keeps to the parts the list offers; one that is no number leaves the default.
+    expect(normalizePhiEntryListWidgetConfig({ show: 1 << 20 }).show).toBe(0);
+    expect(normalizePhiEntryListWidgetConfig({ show: "all" }).show).toBe(PHI_ENTRY_LIST_DEFAULT_PARTS);
   });
 });
 
@@ -227,14 +248,52 @@ describe.each(KINDS)("what the $kind Module brings", ({ kind, moduleId, routes, 
     expect(heading!.widgetType.endsWith("/markdown")).toBe(true);
     expect(list!.widgetType).toBe(PhiCmsWidgetType.EntryList);
 
-    const config = list!.config as { kind?: string; detailLinkTarget?: unknown };
+    const config = list!.config as { kind?: string; presentation?: string; detailLinkTarget?: unknown };
     expect(config.kind).toBe(kind);
+    // A Blog reads as cards that lead to the post; News as whole entries.
+    expect(config.presentation).toBe(kind === "blog" ? "cards" : "stack");
     const target = readPhiLinkTarget(config.detailLinkTarget);
     expect(target?.kind).toBe("page");
     const reference = target?.kind === "page" ? readPhiPageReference(target.reference) : null;
     expect(reference?.target).toMatchObject({ kind: "module" });
     // The reference names exactly the route that answers `/<kind>/:slug`.
     expect(resolvePhiCmsRoutePreset(routeTable("public"), `/${kind}/x`)?.descriptor.presetKey).toBe(presetKeys.detail);
+  });
+
+  it("draws a detail Page as header, text and related entries, all about the address asked for", async () => {
+    const tree = await routes[1]!.loadTree({
+      page: pageAt(`/${kind}/launch`, 2),
+      runtime: PUBLISHER_RUNTIME,
+      params: { slug: "launch" },
+    } as never);
+    const widgets = [...tree.contentWidgets].sort((left, right) => left.sortOrder - right.sortOrder);
+    expect(widgets.map((widget) => widget.widgetType)).toEqual([
+      PhiCmsWidgetType.EntryHeader,
+      PhiCmsWidgetType.EntryDetail,
+      PhiCmsWidgetType.EntryList,
+    ]);
+    expect(widgets.map((widget) => widget.slotIndex)).toEqual([0, 1, 2]);
+    expect(tree.pageMeta?.title?.value).toBe("Launch");
+
+    const [header, body, related] = widgets.map((widget) => widget.config as Record<string, unknown>);
+    expect(header).toMatchObject({ kind, slug: "launch" });
+    // A Blog names its author; News is dated and nothing more.
+    expect(((header!.show as number) & PhiContentEntryPart.Author) !== 0).toBe(kind === "blog");
+    expect(body).toMatchObject({ kind, slug: "launch" });
+    expect(related).toMatchObject({ kind, source: "related", relatedTo: "launch" });
+    // The relatives lead to this same route, each at its own address -- the target the list's titles name.
+    const listTree = await routes[0]!.loadTree({ page: pageAt(`/${kind}`, 2) } as never);
+    const listConfig = listTree.contentWidgets.find((widget) => widget.widgetType === PhiCmsWidgetType.EntryList)!
+      .config as { detailLinkTarget?: unknown };
+    expect(related!.detailLinkTarget).toEqual(listConfig.detailLinkTarget);
+  });
+
+  it("answers 404 for an address nothing published answers at", async () => {
+    await expect(routes[1]!.loadTree({
+      page: pageAt(`/${kind}/gone`, 2),
+      runtime: PUBLISHER_RUNTIME,
+      params: { slug: "gone" },
+    } as never)).rejects.toThrow("NEXT_NOT_FOUND");
   });
 
   it("answers its editor Page under its package, from its own route, in the sidebar's main group", () => {

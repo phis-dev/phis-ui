@@ -4,6 +4,7 @@ import type {
   PhiCmsRoutePresetDescriptor,
 } from "../../../types/cms-module-descriptors";
 import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
+import { PhiContentEntryPart } from "../../../constants/content-entry-parts";
 import { PHI_NEWS_FORM_IDS, PHI_NEWS_PRESET_KEYS, PHI_NEWS_RUNTIME_MODULE_ID } from "./ids";
 
 /**
@@ -45,6 +46,7 @@ export const PHI_NEWS_RUNTIME_MODULE_ROUTES = [
           presetKey: PHI_NEWS_PRESET_KEYS.list,
           detailPresetKey: PHI_NEWS_PRESET_KEYS.detail,
           heading: "News",
+          presentation: "stack",
         })),
   },
   /*
@@ -67,6 +69,8 @@ export const PHI_NEWS_RUNTIME_MODULE_ROUTES = [
           kind: "news",
           ownerModuleId: PHI_NEWS_RUNTIME_MODULE_ID,
           presetKey: PHI_NEWS_PRESET_KEYS.detail,
+          headerParts: PhiContentEntryPart.Title | PhiContentEntryPart.Subtitle | PhiContentEntryPart.Date,
+          related: { presentation: "compact", title: "More news" },
         })),
   },
   /*
