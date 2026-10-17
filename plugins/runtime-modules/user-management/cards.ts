@@ -48,9 +48,6 @@ function readLabels(context: PhiDashboardCardContext) {
 
 export const PHI_USER_MANAGEMENT_RUNTIME_MODULE_DASHBOARD_CARDS: PhiDashboardCardProvider = {
   async listCards(context): Promise<readonly PhiDashboardCardDescriptor[]> {
-    if (context.area !== "admin") {
-      return [];
-    }
     const labels = await readLabels(context);
     return [{
       cardId: PHI_USER_MANAGEMENT_ACCOUNTS_CARD_ID,

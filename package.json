@@ -331,6 +331,12 @@
       "types": "./module-labels.ts",
       "default": "./module-labels.ts"
     },
+    "./module/dashboard-cards": {
+      "import": "./module-dashboard-cards.ts",
+      "require": "./module-dashboard-cards.ts",
+      "types": "./module-dashboard-cards.ts",
+      "default": "./module-dashboard-cards.ts"
+    },
     "./module/projection": {
       "import": "./module-projection.ts",
       "require": "./module-projection.ts",
@@ -629,6 +635,7 @@
       "./cms/root-slot-page",
       "./forms",
       "./helpers/site-runtime",
+      "./module/dashboard-cards",
       "./module/labels",
       "./net",
       "./next/area-route",

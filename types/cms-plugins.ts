@@ -1132,6 +1132,14 @@ export type PhiRuntimeModuleCatalogEntry = {
    * There is no namespace to declare. A card carries its own id, and that id says whose it is.
    */
   dashboardCards?: {
+    /**
+     * The Areas whose Dashboard these cards belong on, a subset of the Module's `eligibleAreas`.
+     *
+     * Stated here rather than answered by the provider, so an Area that is not named never loads it.
+     * `context.area` still reaches the provider for a card that reads differently from Area to Area; it
+     * is no longer how a provider leaves one out.
+     */
+    areas: readonly PhiCmsAreaKey[];
     load: () => Promise<import("./dashboard-cards").PhiDashboardCardProvider>;
   };
   load: PhiRuntimeModuleLoader;

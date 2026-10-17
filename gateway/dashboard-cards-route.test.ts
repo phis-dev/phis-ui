@@ -87,7 +87,10 @@ function offers(...cards: readonly PhiDashboardCardDescriptor[]): PhiDashboardCa
  * An `Error` in place of a provider is a Module whose contribution does not load at all -- a separate
  * failure from a provider that loads and then throws, and the door has to survive both.
  */
-function siteWith(modules: Readonly<Record<string, PhiDashboardCardProvider | Error>>) {
+function siteWith(
+  modules: Readonly<Record<string, PhiDashboardCardProvider | Error>>,
+  areas: Readonly<Record<string, readonly string[]>> = {},
+) {
   scope.activeModuleIds = new Set(Object.keys(modules));
   return {
     runtime: { siteKey: "site", apiBaseUrl: "http://core.test", internalToken: "token" },
@@ -96,6 +99,7 @@ function siteWith(modules: Readonly<Record<string, PhiDashboardCardProvider | Er
         moduleId,
         {
           dashboardCards: {
+            areas: areas[moduleId] ?? ["admin"],
             load: async () => {
               if (contribution instanceof Error) {
                 throw contribution;
@@ -221,6 +225,23 @@ describe("buildPhiDashboardCardsRouteHandler", () => {
 
     scope.viewer = { access: "authenticated" };
     expect(await listedCardIds(bridge)).toContain(CORE_CARD);
+  });
+
+  it("never loads a contribution that does not name this Area", async () => {
+    const load = vi.fn();
+    const bridge = siteWith(
+      { [CORE]: offers(card(CORE_CARD)), [LOCALIZATION]: offers(card(LOCALIZATION_CARD)) },
+      { [LOCALIZATION]: ["app"] },
+    );
+    const entry = bridge.runtimeModuleCatalog.get(LOCALIZATION)!.dashboardCards!;
+    const original = entry.load;
+    entry.load = () => {
+      load();
+      return original();
+    };
+    expect(await listedCardIds(bridge)).toEqual([CORE_CARD]);
+    expect((await ask(bridge, { card: LOCALIZATION_CARD })).status).toBe(404);
+    expect(load).not.toHaveBeenCalled();
   });
 
   it("refuses a payload for a card no active Module owns", async () => {

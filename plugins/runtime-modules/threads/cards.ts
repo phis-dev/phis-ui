@@ -26,7 +26,7 @@ import { PHI_THREADS_RUNTIME_MODULE_ID } from "./ids";
  *
  * It is offered in `app` and nowhere else, because that is where this Module is eligible and where its
  * page is. A card whose target cannot be resolved in the Area showing it would be a card that leads
- * nowhere, and the Area guard is what keeps that from being possible rather than merely unlikely.
+ * nowhere, and `dashboardCards.areas` is what keeps that from being possible rather than merely unlikely.
  */
 
 const PHI_THREADS_DASHBOARD_CARD_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_THREADS_RUNTIME_MODULE_IDENTITY, {
@@ -55,9 +55,6 @@ function readLabels(context: PhiDashboardCardContext) {
 
 export const PHI_THREADS_RUNTIME_MODULE_DASHBOARD_CARDS: PhiDashboardCardProvider = {
   async listCards(context): Promise<readonly PhiDashboardCardDescriptor[]> {
-    if (context.area !== "app") {
-      return [];
-    }
     const labels = await readLabels(context);
     return [{
       cardId: PHI_THREADS_INBOX_CARD_ID,

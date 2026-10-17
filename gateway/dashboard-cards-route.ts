@@ -181,6 +181,7 @@ async function resolveDashboardCardScope({
  */
 async function loadActiveCardProviders(
   bridge: PhiCmsSiteBridge,
+  area: PhiCmsAreaKey,
   activeModuleIds: ReadonlySet<PhiRuntimeModuleId>,
 ) {
   const providers: Array<readonly [PhiRuntimeModuleId, PhiDashboardCardProvider]> = [];
@@ -188,7 +189,8 @@ async function loadActiveCardProviders(
   await Promise.all(
     [...activeModuleIds].map(async (moduleId) => {
       const contribution = bridge.runtimeModuleCatalog.get(moduleId)?.dashboardCards;
-      if (!contribution) {
+      // An Area the contribution does not name never loads its provider (`dashboardCards.areas`).
+      if (!contribution || !contribution.areas.includes(area)) {
         return;
       }
       try {
@@ -318,7 +320,7 @@ export function buildPhiDashboardCardsRouteHandler({
         return jsonResponse({ cards: [] } satisfies PhiDashboardCardsListResponse);
       }
       const { activeModuleIds, routeTable, cardContext, scopeRuntime } = scope;
-      const { providers, failures } = await loadActiveCardProviders(bridge, activeModuleIds);
+      const { providers, failures } = await loadActiveCardProviders(bridge, area, activeModuleIds);
 
       if (card) {
         const owner = providers.find(([moduleId]) => ownsCardId(moduleId, card));

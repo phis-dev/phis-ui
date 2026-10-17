@@ -15,7 +15,12 @@ export function createPhiCoreRuntimeModuleServerAreaContribution() {
       forms: PHI_CORE_MESSAGING_FORMS,
       layouts: PHI_CORE_LAYOUTS,
       themes: PHI_CORE_RUNTIME_MODULE_THEMES,
+      /*
+       * One Area only. Core reaches every Area there is, and a runtime figure is an operator's fact: on
+       * an App Dashboard it would be something a visitor can read and nobody can act on.
+       */
       dashboardCards: {
+        areas: ["admin"],
         load: () => import("./cards").then((module) => module.PHI_CORE_RUNTIME_MODULE_DASHBOARD_CARDS),
       },
       load: () => import("./module").then((module) => module.PHI_CORE_RUNTIME_MODULE),

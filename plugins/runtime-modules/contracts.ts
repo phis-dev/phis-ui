@@ -679,6 +679,18 @@ export function createPhiRuntimeModuleCatalog(
     ) {
       throw new Error(`${definition.moduleId}: eligibleAreas must contain unique canonical Area keys.`);
     }
+    if (entry.dashboardCards) {
+      const cardAreas = entry.dashboardCards.areas;
+      if (
+        cardAreas.length === 0 ||
+        new Set(cardAreas).size !== cardAreas.length ||
+        cardAreas.some((area) => !eligibleAreas.has(area))
+      ) {
+        throw new Error(
+          `${definition.moduleId}: dashboardCards.areas must name unique Areas the Module is eligible for.`,
+        );
+      }
+    }
     assertPhiRuntimeModuleArtifacts(
       entry.widgets,
       entry.layouts,

@@ -13,6 +13,7 @@ export function createPhiLocalizationRuntimeModuleServerAreaContribution() {
       layouts: [],
       routes: PHI_LOCALIZATION_RUNTIME_MODULE_ROUTES,
       dashboardCards: {
+        areas: ["admin"],
         load: () => import("./cards")
           .then((module) => module.PHI_LOCALIZATION_RUNTIME_MODULE_DASHBOARD_CARDS),
       },

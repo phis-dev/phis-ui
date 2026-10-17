@@ -67,14 +67,7 @@ function formatUptime(totalSeconds: number) {
 }
 
 export const PHI_CORE_RUNTIME_MODULE_DASHBOARD_CARDS: PhiDashboardCardProvider = {
-  /*
-   * One Area only. Core reaches every Area there is, and a runtime figure is an operator's fact: on an
-   * App Dashboard it would be something a visitor can read and nobody can act on.
-   */
   async listCards(context): Promise<readonly PhiDashboardCardDescriptor[]> {
-    if (context.area !== "admin") {
-      return [];
-    }
     const labels = await readLabels(context);
     return [{
       cardId: PHI_CORE_UPTIME_CARD_ID,

@@ -950,6 +950,28 @@ namespace, and `/` is an application for the Area root slot. A Settings page is 
 entry's `anchor: "settings"` (section 8a, Navigation); there is no route mount. A Module references its own Pages
 through `(ownerModuleId, presetKey)`, never through a literal path.
 
+### Cards on a Dashboard
+
+A Module puts cards on an Area's Dashboard with `dashboardCards` on the same catalog entry
+([DASHBOARD.md](./DASHBOARD.md)):
+
+```ts
+dashboardCards: {
+  areas: ["app"],
+  load: () => import("./cards").then((module) => module.STATUS_DASHBOARD_CARDS),
+},
+```
+
+- `areas` is the Dashboards the cards belong on, a non-empty subset of the Module's `eligibleAreas`; the
+  catalog refuses anything else, and an Area not named never loads the provider. Do not answer the same
+  question again in `listCards` with `context.area`.
+- The provider and everything it needs come from `@phis/ui/module/dashboard-cards`, a Server-only door:
+  the card types, `createPhiDashboardCardId` (`<moduleId>/cards/<leaf>`; a card outside the Module's own
+  namespace is refused) and `fetchPhiSiteApi` for the question to Core. A card about the viewer asks with
+  `context.cookieHeader`.
+- `target` names the Module's own route preset, and `accessPolicy` keeps the card from a viewer who may
+  not see it. `@phis/support` is the worked example (`src/cards.ts`).
+
 ## 8. Export the Client and Authoring contributions
 
 `./client` exports the live Client contributions, one entry per Module:

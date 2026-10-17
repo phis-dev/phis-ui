@@ -74,9 +74,6 @@ const LOCALIZATION_CARD_TARGET = {
 
 export const PHI_LOCALIZATION_RUNTIME_MODULE_DASHBOARD_CARDS: PhiDashboardCardProvider = {
   async listCards(context): Promise<readonly PhiDashboardCardDescriptor[]> {
-    if (context.area !== "admin") {
-      return [];
-    }
     const labels = await readLabels(context);
     return [
       {

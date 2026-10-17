@@ -88,6 +88,13 @@ visibility      whether this viewer may see it at all
 The descriptor is cheap by construction: a Site with twelve Modules can assemble the list without
 asking any of them to do work.
 
+**Relevance is stated, not answered.** Which Dashboards a Module's cards belong on is
+`dashboardCards.areas` on its catalog entry, a subset of the Module's `eligibleAreas` that the catalog
+holds it to. An Area it does not name never loads the provider. Each provider used to open with its
+own `context.area !== "admin"`, which was the same decision written four times and checked by nobody;
+`context.area` stays in the context for a card that reads differently from Area to Area, and is not
+how a provider leaves one out.
+
 **A card is data in one of Core's forms, not a component.** The form names a renderer; the payload
 fills it. `itemRendererKey` on a collection resource is that field already, and the Media library is
 the precedent for a domain that outgrew the generic card and shipped its own view. So the two tiers
@@ -247,8 +254,9 @@ one.
 2. The card forms -- `stat` and `list` -- against the existing card presentation.
 3. The Controller as a clock: staleness, floor, stagger, visibility, backoff.
 4. The Site's decisions: candidates minus decisions, dismissing through the item action.
-5. The first two real contributions, from `@phis/ui/threads` and `@phis/support`. **Threads is done**;
-   Support is not.
+5. The first two real contributions, from `@phis/ui/threads` and `@phis/support`. **Both are done**:
+   Support's open-tickets card is the first from outside this package, through
+   `@phis/ui/module/dashboard-cards`.
 
 Step 5 is last on purpose. Until two Modules that know nothing of each other have both put a card on
 the same Dashboard, every decision above is a guess about how it will be used -- and the two questions

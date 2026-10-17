@@ -13,6 +13,7 @@ export const PHI_USER_MANAGEMENT_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION =
       layouts: [],
       routes: PHI_USER_MANAGEMENT_RUNTIME_MODULE_ROUTES,
       dashboardCards: {
+        areas: ["admin"],
         load: () => import("./cards")
           .then((module) => module.PHI_USER_MANAGEMENT_RUNTIME_MODULE_DASHBOARD_CARDS),
       },
