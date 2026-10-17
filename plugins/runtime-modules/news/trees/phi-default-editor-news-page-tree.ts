@@ -324,10 +324,11 @@ export async function buildPhiDefaultEditorNewsPageTree({
    * "Written in" offers the Site's languages and names its own one when left empty -- the Page knows
    * both, the registered Form does not (`site-locales-config.ts`).
    */
-  const siteLocale = runtime.site.availableLocales.find((option) => option.code === runtime.site.defaultLocale);
+  const sourceLocale = runtime.site.availableLocales.find((option) => option.code === runtime.site.sourceLocale);
   const entryFormConfig = {
     [PHI_SITE_LOCALES_CONFIG_KEY]: runtime.site.availableLocales.map((option) => ({ code: option.code, label: option.label })),
-    [NEWS_SOURCE_LOCALE_PLACEHOLDER_CONFIG_KEY]: siteLocale?.label ?? runtime.site.defaultLocale,
+    // What Core stores when the field is left empty: the Site's source language, not its default one.
+    [NEWS_SOURCE_LOCALE_PLACEHOLDER_CONFIG_KEY]: sourceLocale?.label ?? runtime.site.sourceLocale,
   };
   const createDialog = buildPhiNewsDialogNodes(nodes, {
     key: "create",

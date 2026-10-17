@@ -63,9 +63,6 @@ function PhiLocalizationControllerMount({
         context: typeof query.context === "string" ? query.context : filtersRef.current.context,
         status: typeof query.status === "string" ? query.status : filtersRef.current.status,
       };
-      if (typeof value.sourceLocale === "string" && value.sourceLocale) {
-        emitCapability("sourceLocale", value.sourceLocale, signal.correlationId);
-      }
       if (filtersRef.current.locale) {
         emitCapability("targetSelection", filtersRef.current.locale, signal.correlationId);
       }

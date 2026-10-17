@@ -59,7 +59,12 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
   const formAddress = createPhiSignalAddress("cms", PHI_EDITOR_TRANSLATION_FORM_WIDGET_ID);
   const tableAddress = createPhiSignalAddress("cms", PHI_EDITOR_TRANSLATIONS_WIDGET_ID);
   const saveAddress = createPhiSignalSubcontrolAddress("cms", PHI_EDITOR_TRANSLATION_COMMANDS_WIDGET_ID, "save");
-  const sourceLocaleAddress = createPhiSignalAddress("cms", PHI_EDITOR_TRANSLATIONS_SOURCE_LOCALE_WIDGET_ID);
+  /*
+   * What every translation here starts from, written into the field by the Page: the Site config carries
+   * it, so the field needs neither the translations endpoint nor the Controller to learn it.
+   */
+  const sourceLocale = runtime.site.availableLocales.find((option) => option.code === runtime.site.sourceLocale);
+  const sourceLocaleText = sourceLocale ? `${sourceLocale.label} (${sourceLocale.code})` : runtime.site.sourceLocale;
   return {
     page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     /*
@@ -81,7 +86,6 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
             { routeKey: "editor-translations-controller-save-submitting", capabilityId: "saveSubmitting", scope: "page", channel: "submitting", action: "change", valueType: "boolean", receiver: saveAddress },
             { routeKey: "editor-translations-controller-table-reload", capabilityId: "reload", scope: "page", channel: "reload", action: "activate", valueType: "none", receiver: tableAddress },
             { routeKey: "editor-translations-controller-table-filters", capabilityId: "filters", scope: "page", channel: "filters", action: "change", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableFilters, receiver: tableAddress },
-            { routeKey: "editor-translations-controller-source-locale", capabilityId: "sourceLocale", scope: "area", channel: "text", action: "change", valueType: "string", receiver: sourceLocaleAddress },
           ],
         },
       },
@@ -151,22 +155,11 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
         sortOrder: 0,
         label: "editor source locale",
         config: {
-          text: "",
+          text: sourceLocaleText,
           placeholder: widgetLabels.sourceLocaleLabel,
           readOnly: true,
           allowClear: false,
           controlSize: "small",
-          signalRoutes: {
-            listens: [{
-              routeKey: "editor-translations-source-locale",
-              capabilityId: "change",
-              scope: "area",
-              channel: "text",
-              action: "change",
-              valueType: "string",
-              receiver: createPhiSignalAddress("cms", PHI_EDITOR_TRANSLATIONS_SOURCE_LOCALE_WIDGET_ID),
-            }],
-          },
         },
       }),
       nodes.widget({

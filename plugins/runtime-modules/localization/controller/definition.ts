@@ -48,7 +48,6 @@ export const PHI_LOCALIZATION_RUNTIME_CONTROLLER_DEFINITION = {
       { id: "targetSelection", action: "change", valueType: "string" },
       { id: "contextSelection", action: "change", valueType: "string" },
       { id: "statusSelection", action: "change", valueType: "string" },
-      { id: "sourceLocale", action: "change", valueType: "string" },
       { id: "saveSubmitting", action: "change", valueType: "boolean" },
     ],
     listens: [

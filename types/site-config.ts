@@ -83,6 +83,12 @@ export type PhiSiteConfig = {
   name: string;
   hostname: string;
   defaultLocale: string;
+  /**
+   * The language the Site's own words are written in: what a Builder types, what an entry is written in
+   * where nobody says otherwise, and what every translation starts from. The operator's setting, not the
+   * language a visitor is shown first, which is `defaultLocale` and may differ.
+   */
+  sourceLocale: string;
   availableLocales: PhiSiteLocaleOption[];
   /** What each served locale means, so a request naming one is resolved without asking Core. */
   localeCapabilities: PhiLocaleCapability[];

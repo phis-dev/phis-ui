@@ -148,7 +148,7 @@ export const PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
           filterFields: ["locale", "context", "status"],
           sorting: "none",
           pagination: "offset",
-          facets: ["sourceLocale", "selectedLocale", "availableLocales", "contexts"],
+          facets: ["selectedLocale", "availableLocales", "contexts"],
         },
         recordRead: true,
         actions: [

@@ -70,6 +70,10 @@ async function fetchSiteConfig(
     throw new Error("Missing site config payload.");
   }
 
+  if (typeof payload.site.sourceLocale !== "string" || !payload.site.sourceLocale.trim()) {
+    throw new Error("Missing source locale in site config payload.");
+  }
+
   if (!Array.isArray(payload.site.localeCapabilities)) {
     throw new Error("Missing locale capabilities in site config payload.");
   }

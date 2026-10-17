@@ -76,7 +76,7 @@ const viewerWith = (flags: number) => ({
   roleClaims: [{ providerId: PHI_CORE_ROLE_PROVIDER_ID, flags }],
   groupClaims: [],
 });
-const SITE = { defaultLocale: "de", availableLocales: [{ code: "de", label: "Deutsch" }, { code: "en", label: "English" }] };
+const SITE = { defaultLocale: "de", sourceLocale: "en", availableLocales: [{ code: "de", label: "Deutsch" }, { code: "en", label: "English" }] };
 const PUBLISHER_RUNTIME = { locale: { current: "en" }, site: SITE, viewer: viewerWith(PhiBaseRole.Publisher) };
 const AUTHOR_RUNTIME = { locale: { current: "en" }, site: SITE, viewer: viewerWith(PhiBaseRole.Author) };
 

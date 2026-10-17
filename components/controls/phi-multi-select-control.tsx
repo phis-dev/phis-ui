@@ -75,8 +75,14 @@ export function PhiMultiSelectControl<TValue extends string | number = string>({
       options={selectOptions}
       optionFilterProp={["searchLabel", "value"]}
       optionRender={(option) => {
-        const item = option.data.option as PhiControlOption<TValue>;
-        return <PhiControlOptionContent option={item} presentation="dropdown" />;
+        /*
+         * With `allowCustom` the Select offers what is being typed as an option of its own, and that one
+         * carries no Phi option: it is a value nobody declared yet, drawn as the text it is.
+         */
+        const item = option.data.option as PhiControlOption<TValue> | undefined;
+        return item
+          ? <PhiControlOptionContent option={item} presentation="dropdown" />
+          : <>{String(option.value ?? "")}</>;
       }}
       labelRender={(selectedOption) => {
         const selected = options.find((option) => option.value === selectedOption.value);

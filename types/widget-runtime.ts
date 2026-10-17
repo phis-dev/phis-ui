@@ -24,6 +24,8 @@ export type PhiBlockRuntimeSite = {
    */
   availableLocales: PhiSiteLocaleOption[];
   defaultLocale: string;
+  /** The language the Site's own words are written in (`PhiSiteConfig.sourceLocale`). */
+  sourceLocale: string;
   store: {
     enabled: boolean;
   };

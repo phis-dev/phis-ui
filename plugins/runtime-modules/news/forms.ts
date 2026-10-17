@@ -123,7 +123,7 @@ const entryFields = [
     key: "sourceLocale",
     fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
     label: label("sourceLocaleLabel", "Written in"),
-    placeholder: { kind: "config", key: NEWS_SOURCE_LOCALE_PLACEHOLDER_CONFIG_KEY, fallback: "The Site's own language" },
+    placeholder: { kind: "config", key: NEWS_SOURCE_LOCALE_PLACEHOLDER_CONFIG_KEY, fallback: "The Site's source language" },
     optionsProvider: { providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteLocales },
     config: { allowClear: true },
   },

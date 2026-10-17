@@ -122,7 +122,6 @@ async function loadEditorTranslations({
       ? { filters: { locale: selectedLocale } }
       : undefined,
     facets: {
-      sourceLocale: typeof result?.sourceLocale === "string" ? result.sourceLocale : "",
       selectedLocale,
       availableLocales: readPhiTableRows(site.availableLocales),
       contexts: readPhiTableRows(result?.contexts),
