@@ -4,7 +4,7 @@ import { useMemo, type ReactNode } from "react";
 
 import { PhiAuthoringPageReferencesProvider } from "../../../components/widgets/client/shared/phi-page-reference-picker";
 import { usePhiBuilderOfferedPageCatalog } from "./use-offered-page-catalog";
-import { buildPhiBuilderPageReferenceTree } from "./page-reference-tree";
+import { buildPhiBuilderPageReferenceTree } from "../../../helpers/page-reference-tree";
 import { usePhiDeveloperBuilderStateValue } from "./developer-workspace-store";
 
 /** Offers the edited Area's Pages to the authoring tools' page picker. */

@@ -63,7 +63,13 @@ const PHI_EDITOR_NEWS_WIDGET_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_NEWS
     form_content_placeholder: definePhiMessageLabel("Markdown. Headings, lists and links are kept."),
     form_content_error: "A body is required.",
     form_link_label: "Link",
-    form_link_placeholder: "/somewhere or https://example.test",
+    form_link_none: "None",
+    form_link_page: "Page",
+    form_link_external: "Address",
+    form_link_page_placeholder: "Select a Page",
+    form_link_external_placeholder: "https://example.com",
+    form_link_new_tab: "Open in a new tab",
+    form_link_pages_unavailable: definePhiMessageLabel("The Pages could not be loaded."),
     form_translate_label: "May be translated",
   },
 });
@@ -96,7 +102,15 @@ export type PhiEditorNewsWidgetLabels = {
     contentPlaceholder: string;
     contentError: string;
     linkLabel: string;
-    linkPlaceholder: string;
+    link: {
+      none: string;
+      page: string;
+      external: string;
+      pagePlaceholder: string;
+      externalPlaceholder: string;
+      newTab: string;
+      pagesUnavailable: string;
+    };
     translateLabel: string;
   };
   withdraw: { title: string; description: string };
@@ -148,7 +162,15 @@ export async function getPhiEditorNewsWidgetLabels(
       contentPlaceholder: labels.form_content_placeholder,
       contentError: labels.form_content_error,
       linkLabel: labels.form_link_label,
-      linkPlaceholder: labels.form_link_placeholder,
+      link: {
+        none: labels.form_link_none,
+        page: labels.form_link_page,
+        external: labels.form_link_external,
+        pagePlaceholder: labels.form_link_page_placeholder,
+        externalPlaceholder: labels.form_link_external_placeholder,
+        newTab: labels.form_link_new_tab,
+        pagesUnavailable: labels.form_link_pages_unavailable,
+      },
       translateLabel: labels.form_translate_label,
     },
     withdraw: { title: labels.withdraw_title, description: labels.withdraw_description },

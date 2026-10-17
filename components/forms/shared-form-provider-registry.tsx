@@ -71,6 +71,8 @@ function lazyPhiFormFieldControl(
   };
 }
 
+const PhiLazyLinkTargetFormControl = lazyPhiFormFieldControl(() =>
+  import("./link-target-form-control").then((module) => module.PhiLinkTargetFormControl));
 const PhiLazySelectFormControl = lazyPhiFormFieldControl(() =>
   import("./choice-form-field-controls").then((module) => module.PhiSelectFormControl));
 const PhiLazyMultiSelectFormControl = lazyPhiFormFieldControl(() =>
@@ -318,6 +320,9 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
     }),
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.storageSize, {
       Control: PhiLazyStorageSizeFormControl,
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.linkTarget, {
+      Control: PhiLazyLinkTargetFormControl,
     }),
   ],
   validationRules: [

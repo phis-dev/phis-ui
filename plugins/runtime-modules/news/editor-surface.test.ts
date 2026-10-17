@@ -34,7 +34,7 @@ vi.mock("./trees/editor-news-widget-label-set", () => ({
     overlays: { create: "", entry: "", publication: "" },
     form: {
       save: "", cancel: "", slugPlaceholder: "", slugError: "", titleError: "", subtitleLabel: "",
-      contentLabel: "", contentPlaceholder: "", contentError: "", linkLabel: "", linkPlaceholder: "",
+      contentLabel: "", contentPlaceholder: "", contentError: "", linkLabel: "", link: { none: "", page: "", external: "", pagePlaceholder: "", externalPlaceholder: "", newTab: "", pagesUnavailable: "" },
       translateLabel: "",
     },
   }),

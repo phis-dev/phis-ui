@@ -1,6 +1,7 @@
 import "server-only";
 
 import { isPhiRecord } from "../helpers/is-record";
+import { readPhiLinkTarget } from "../types/references";
 import type { PhiSiteNewsEntry } from "../types/news";
 import { fetchPhiSiteApi } from "./site-api-request";
 
@@ -42,7 +43,7 @@ function readNewsEntry(value: unknown): PhiSiteNewsEntry | null {
     title,
     subtitle: readString(value.subtitle),
     content: readString(value.content),
-    link: readString(value.link) || null,
+    link: readPhiLinkTarget(value.link),
     tags: Array.isArray(value.tags)
       ? value.tags.filter((tag): tag is string => typeof tag === "string" && tag.trim() !== "")
       : [],

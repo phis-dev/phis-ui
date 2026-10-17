@@ -1,7 +1,7 @@
-import type { PhiTreeOption } from "../../../types/tree";
-import { resolvePhiBuilderCmsFetchPath } from "../../../helpers/cms-paths";
-import type { PhiPresetPageNode } from "../../../helpers/cms-page-catalog";
-import type { PhiPageReferenceSelection } from "../../../components/widgets/client/shared/phi-page-reference-picker";
+import type { PhiTreeOption } from "../types/tree";
+import { resolvePhiBuilderCmsFetchPath } from "./cms-paths";
+import type { PhiPresetPageNode } from "./cms-page-catalog";
+import type { PhiPageReferenceSelection } from "../components/widgets/client/shared/phi-page-reference-picker";
 
 export type PhiBuilderPageReferenceTreeLabels = {
   landing: string;

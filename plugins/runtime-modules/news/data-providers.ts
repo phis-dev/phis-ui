@@ -68,7 +68,7 @@ export const PHI_NEWS_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
             mutable: true,
             optionsProvider: { providerKey: PHI_NEWS_RUNTIME_DATA_PROVIDER_KEYS.tags },
           },
-          { key: "link", title: "Link", type: "string" },
+          { key: "link", title: "Link", type: "json" },
           { key: "publishedAt", title: "Published", type: "datetime" },
           { key: "expiresAt", title: "Expires", type: "datetime" },
           { key: "updatedAt", title: "Changed", type: "datetime" },

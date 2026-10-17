@@ -23,7 +23,7 @@ function entry(overrides: Record<string, unknown> = {}) {
     title: "An entry",
     subtitle: "Its subtitle",
     content: "Its text.",
-    link: "/somewhere",
+    link: { kind: "external", href: "https://example.com/somewhere" },
     tags: ["one", "two"],
     ...overrides,
   };
@@ -98,9 +98,9 @@ describe("fetchPhiSiteNews", () => {
     ]);
   });
 
-  it("keeps only the tags that are strings, and reads an absent link as none", async () => {
+  it("keeps only the tags that are strings, and reads an absent or malformed link as none", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => newsResponse([
-      entry({ tags: ["one", 2, null, "", "two"], link: null }),
+      entry({ tags: ["one", 2, null, "", "two"], link: "/a-typed-path" }),
     ])));
 
     const [first] = await fetchPhiSiteNews(OPTIONS);

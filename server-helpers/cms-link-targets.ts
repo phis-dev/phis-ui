@@ -29,6 +29,18 @@ export async function resolvePhiCmsTreeLinkTargets(
   for (const node of [...tree.overlays, ...tree.layoutNodes, ...tree.contentWidgets]) {
     collectPhiLinkTargetReferences(node.config, references);
   }
+  return resolvePhiLinkTargetReferences(references, runtime);
+}
+
+/**
+ * The same resolution for targets that are not in a tree -- a News entry's link, read while the list is
+ * drawn. Collect them with `collectPhiLinkTargetReferences` under a `linkTarget` key and resolve them
+ * here, once for all of them.
+ */
+export async function resolvePhiLinkTargetReferences(
+  references: ReadonlyMap<string, PhiLinkTargetReference>,
+  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer">,
+): Promise<PhiResolvedLinkTargets | null> {
   if (references.size === 0) {
     return null;
   }

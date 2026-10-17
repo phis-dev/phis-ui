@@ -4,6 +4,8 @@ import { getPhiNewsListLabels } from "../../labels";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { fetchPhiSiteNews } from "../../../../../gateway/news";
 import { formatPhiDate } from "../../../../../helpers/format-date-time";
+import { collectPhiLinkTargetReferences, resolvePhiLinkHref } from "../../../../../helpers/link-target";
+import { resolvePhiLinkTargetReferences } from "../../../../../server-helpers/cms-link-targets";
 import { phiRuntime } from "../../../../../server-helpers/phi-runtime";
 import type { PhiNoLabels, PhiServerBlockBaseProps } from "../../../../../types";
 import type { PhiNewsListEntryView } from "./client";
@@ -61,6 +63,17 @@ export async function PhiNewsListWidget({ config, runtime }: PhiNewsListWidgetPr
    */
   const { resolveMarkdownRenderData } = await import("../../../../../components/widgets/shared/markdown-render");
 
+  /*
+   * Every entry's Page in one question, the way a render resolves its Widgets' links: a Page that is gone
+   * or unpublished resolves to nothing, and the entry then shows no link rather than one to nowhere.
+   */
+  const resolvedLinks = settings.showLinks
+    ? await resolvePhiLinkTargetReferences(
+      collectPhiLinkTargetReferences(entries.map((entry) => ({ linkTarget: entry.link }))),
+      runtime,
+    )
+    : null;
+
   const views: PhiNewsListEntryView[] = await Promise.all(
     entries.map(async (entry, index) => {
       // Core answers the slug where an entry has one; the index is the fallback for an entry that has
@@ -83,7 +96,7 @@ export async function PhiNewsListWidget({ config, runtime }: PhiNewsListWidgetPr
         blocks: "error" in body ? [] : body.blocks,
         date: formatPhiDate(entry.created, locale),
         machineDate: entry.created,
-        link: settings.showLinks ? entry.link : null,
+        link: settings.showLinks ? resolvePhiLinkHref(entry.link, resolvedLinks) : null,
         tags: settings.showTags ? entry.tags : [],
       };
     }),

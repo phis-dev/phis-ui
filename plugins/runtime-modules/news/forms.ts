@@ -2,6 +2,7 @@ import { definePhiRuntimeModuleForm } from "../../../components/forms/form-regis
 import { flattenPhiFormLabels } from "../../../components/forms/form-labels";
 import {
   PHI_FORM_FIELD_PROVIDER_KEYS,
+  PHI_FORM_LINK_TARGET_LABEL_KEYS,
   PHI_FORM_VALIDATION_PROVIDER_KEYS,
   createPhiSharedFormProviderKey,
 } from "../../../components/forms/form-provider-contract";
@@ -83,11 +84,12 @@ const entryFields = [
     validation: required("contentError", "A body is required."),
     config: { rows: 8 },
   },
+  // A Page of the Public Area, where the list is read, or an address elsewhere -- never a typed path.
   {
     key: "link",
-    fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text,
+    fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.linkTarget,
     label: label("linkLabel", "Link"),
-    placeholder: label("linkPlaceholder", "/somewhere or https://example.test"),
+    config: { area: "public" },
   },
   /*
    * Picked from what the Site already uses, never typed: the string is a tag's identity, so two spellings
@@ -167,7 +169,13 @@ async function loadNewsFormLabels(
     contentPlaceholder: labels.form.contentPlaceholder,
     contentError: labels.form.contentError,
     linkLabel: labels.form.linkLabel,
-    linkPlaceholder: labels.form.linkPlaceholder,
+    [PHI_FORM_LINK_TARGET_LABEL_KEYS.none]: labels.form.link.none,
+    [PHI_FORM_LINK_TARGET_LABEL_KEYS.page]: labels.form.link.page,
+    [PHI_FORM_LINK_TARGET_LABEL_KEYS.external]: labels.form.link.external,
+    [PHI_FORM_LINK_TARGET_LABEL_KEYS.pagePlaceholder]: labels.form.link.pagePlaceholder,
+    [PHI_FORM_LINK_TARGET_LABEL_KEYS.externalPlaceholder]: labels.form.link.externalPlaceholder,
+    [PHI_FORM_LINK_TARGET_LABEL_KEYS.newTab]: labels.form.link.newTab,
+    [PHI_FORM_LINK_TARGET_LABEL_KEYS.pagesUnavailable]: labels.form.link.pagesUnavailable,
     tagsLabel: labels.columns.tags,
     sourceLocaleLabel: labels.columns.language,
     translateLabel: labels.form.translateLabel,

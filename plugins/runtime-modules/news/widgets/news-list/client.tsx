@@ -30,7 +30,8 @@ export type PhiNewsListEntryView = {
   blocks: PhiMarkdownBlock[];
   date: string;
   machineDate: string;
-  link: string | null;
+  /** Where "Read more" leads, resolved on the server; `null` where the entry has no link that resolves. */
+  link: { href: string; newTab: boolean; external: boolean } | null;
   tags: readonly string[];
 };
 
@@ -70,7 +71,11 @@ function PhiNewsListEntry({ entry, labels }: { entry: PhiNewsListEntryView; labe
             ))}
           </PhiFlexControl>
         ) : null}
-        {entry.link ? <PhiLink href={entry.link}>{labels.readMore}</PhiLink> : null}
+        {entry.link ? (
+          <PhiLink href={entry.link.href} external={entry.link.external} newTab={entry.link.newTab}>
+            {labels.readMore}
+          </PhiLink>
+        ) : null}
       </PhiFlexControl>
     </article>
   );

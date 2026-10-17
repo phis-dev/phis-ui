@@ -1,3 +1,5 @@
+import type { PhiLinkTarget } from "./references";
+
 /**
  * One published News entry, as `GET /api/v1/entries/news` answers it.
  *
@@ -17,8 +19,8 @@ export type PhiSiteNewsEntry = {
   title: string;
   subtitle: string;
   content: string;
-  /** Where the entry points, as the Site wrote it: its own path or an absolute address. */
-  link: string | null;
+  /** Where the entry points: a Page of the Public Area or an address elsewhere (`REFERENCES.md`). */
+  link: PhiLinkTarget | null;
   tags: readonly string[];
   /**
    * The language the body is written in, or `null` for the Site's own.

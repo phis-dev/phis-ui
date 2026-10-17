@@ -286,7 +286,7 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   given; it never keeps a second value state and never renders a Widget or Layout.
 - Core field providers: `text`, `email`, `password`, `textarea`, `hidden`, `honeypot`, `checkbox`,
   `select`, `url`, `tel`, `number`, `slider`, `multi-select`, `checkbox-group`, `datetime`, `switch`,
-  `segmented`, `cascader`, `table`, `tree`, `storage-size`, `upload`.
+  `segmented`, `cascader`, `table`, `tree`, `storage-size`, `upload`, `link-target`.
 - A `number` field states its unit in `config.prefix`, beside the input rather than in the label: a
   symbol nobody translates as a string (`"ms"`), a word as a label reference (`{ kind: "label", key,
   fallback }`) read from the Form's labels like the field's own label.
@@ -321,6 +321,17 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   Label Set key `uploadPending`, and reaches `onValidationFailed`; the hold is released when the upload
   settles. A field whose Form goes away stops its uploads, and the Server is told `cancelled`, so no
   Asset is finalized that the Form never names.
+- `link-target` is one link: none, a Page of an Area, or an address elsewhere
+  ([REFERENCES.md](./REFERENCES.md), stable internal targets). Its value is the `PhiLinkTarget` itself
+  and `null` for none, so a save that removes a link says so. `config.area` names the Area whose Pages
+  are offered -- Public where it names none -- and is written into every Page target, because a Form
+  usually stands somewhere else than the link leads. The Pages are the Area's full list, Site Pages and
+  the Module Pages the Area answers on today, read from `GET /api/site/page-references?area=<area>`: a
+  route the Site answers itself (`gateway/page-references-route.ts`), because only the Area's own Module
+  catalog knows its active routes and an Editor render does not carry Public's. It merges them the way the
+  Builder's picker does and answers the same tree, to everybody who writes for the Site. The Control is
+  the shared link control the Inspector uses (`phi-link-target-control.tsx`), and its wording is the
+  Label Set keys in `PHI_FORM_LINK_TARGET_LABEL_KEYS`, falling back to English.
 - A field Provider whose value is only complete later holds the submit itself through
   `formContext.holdSubmit(fieldKey, reason)` and releases it with `null`. `PhiFormControl` refuses a
   submit while any hold stands; the handler is not called.

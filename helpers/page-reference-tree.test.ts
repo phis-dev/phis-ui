@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { PhiPresetPageNode } from "../../../helpers/cms-page-catalog";
-import { createPhiPageReference } from "../../../types/references";
+import type { PhiPresetPageNode } from "./cms-page-catalog";
+import { createPhiPageReference } from "../types/references";
 import { buildPhiBuilderPageReferenceTree } from "./page-reference-tree";
 
 const reference = (pageScopeId: number) => createPhiPageReference({ kind: "site", pageScopeId });

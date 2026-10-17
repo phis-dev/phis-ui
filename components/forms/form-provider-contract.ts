@@ -40,6 +40,7 @@ export const PHI_FORM_FIELD_PROVIDER_KEYS = {
   table: createPhiSharedFormProviderKey("field", "table"),
   tree: createPhiSharedFormProviderKey("field", "tree"),
   upload: createPhiSharedFormProviderKey("field", "upload"),
+  linkTarget: createPhiSharedFormProviderKey("field", "link-target"),
 } as const;
 
 export const PHI_AUTH_FORM_FIELD_PROVIDER_KEYS = {
@@ -91,6 +92,18 @@ export const PHI_FORM_HANDLER_PROVIDER_KEYS = {
  * They live with the descriptors rather than with the Control, because a Server label loader writes them
  * and a Server module must not reach into a client component to learn their names.
  */
+/** The `link-target` field's wording, read from the Form's Label Set and falling back to English. */
+export const PHI_FORM_LINK_TARGET_LABEL_KEYS = {
+  none: "linkTargetNone",
+  page: "linkTargetPage",
+  external: "linkTargetExternal",
+  pagePlaceholder: "linkTargetPagePlaceholder",
+  externalPlaceholder: "linkTargetExternalPlaceholder",
+  newTab: "linkTargetNewTab",
+  /** Where the Pages would be, when the Site could not list them. */
+  pagesUnavailable: "linkTargetPagesUnavailable",
+} as const;
+
 export const PHI_FORM_UPLOAD_LABEL_KEYS = {
   trigger: "uploadTrigger",
   /** Beneath the trigger in an upload area (`config.presentation: "area"`): that a drop works too. */
@@ -268,6 +281,19 @@ export const PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS = [
           { value: "area", label: "Area" },
         ] as { value: string; label: string }[],
       },
+    ],
+  },
+  /*
+   * One link: a Page of an Area, or an address elsewhere (`REFERENCES.md`, stable internal targets). The
+   * value is the `PhiLinkTarget` itself, `null` for none. `area` names the Area whose Pages are offered.
+   */
+  {
+    key: PHI_FORM_FIELD_PROVIDER_KEYS.linkTarget,
+    title: "Link",
+    valueType: "json",
+    presentation: "control",
+    settingsFields: [
+      { key: "area", type: "string", label: "Area", description: "Whose Pages are offered; Public when empty." },
     ],
   },
 ] as const satisfies readonly PhiSharedFormFieldTypeDescriptor[];
