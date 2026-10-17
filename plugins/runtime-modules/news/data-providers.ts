@@ -72,6 +72,8 @@ export const PHI_NEWS_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
           { key: "publishedAt", title: "Published", type: "datetime" },
           { key: "expiresAt", title: "Expires", type: "datetime" },
           { key: "updatedAt", title: "Changed", type: "datetime" },
+          // Who wrote the entry: the writer of its first version, as Core names them.
+          { key: "author", title: "Author", type: "string" },
           { key: "hasUnpublishedChanges", title: "Unpublished changes", type: "boolean" },
         ],
         query: {

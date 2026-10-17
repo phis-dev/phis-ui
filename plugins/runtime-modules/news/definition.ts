@@ -29,7 +29,7 @@ export const PHI_NEWS_RUNTIME_MODULE_DEFINITION = {
   title: "News",
   description: "The Site's news: read on a Public address, written in the Editor.",
   category: "content",
-  icon: "antd:notification",
+  icon: "antd:read",
   dataProviders: PHI_NEWS_RUNTIME_DATA_PROVIDER_DESCRIPTORS,
   formProviders: { handlers: PHI_NEWS_FORM_HANDLER_PROVIDER_DESCRIPTORS },
 } satisfies PhiRuntimeModuleDefinition;

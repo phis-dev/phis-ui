@@ -34,12 +34,13 @@ export const PhiSelectFormControl: ComponentType<PhiFormFieldProviderProps> = ({
 );
 
 export const PhiMultiSelectFormControl: ComponentType<PhiFormFieldProviderProps> = ({
-  id, value, onChange, options, placeholder, disabled, readOnly,
+  id, field, value, onChange, options, placeholder, disabled, readOnly,
 }) => (
   <PhiMultiSelectControl
     id={id}
     value={Array.isArray(value) ? value.map(String) : []}
     placeholder={placeholder}
+    allowCustom={field.config?.allowCustom === true}
     disabled={disabled}
     readOnly={readOnly}
     options={options ?? []}

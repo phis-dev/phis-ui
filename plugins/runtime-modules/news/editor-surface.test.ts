@@ -20,11 +20,12 @@ vi.mock("./trees/editor-news-label-set", () => ({
 vi.mock("./trees/editor-news-widget-label-set", () => ({
   getPhiEditorNewsWidgetLabels: async () => ({
     searchPlaceholder: "",
+    footer: "%1",
     statusLabel: "",
     statuses: { all: "", draft: "", published: "" },
     rowStatus: { draft: "", published: "", submitted: "" },
     columns: {
-      title: "", slug: "", status: "", language: "", tags: "", published: "", expires: "", changed: "",
+      title: "", slug: "", status: "", language: "", tags: "", published: "", expires: "", changed: "", author: "",
     },
     actions: { withdraw: "", delete: "", new: "", edit: "", publish: "", submit: "" },
     withdraw: { title: "", description: "" },
@@ -35,7 +36,7 @@ vi.mock("./trees/editor-news-widget-label-set", () => ({
     form: {
       save: "", cancel: "", slugPlaceholder: "", slugError: "", titleError: "", subtitleLabel: "",
       contentLabel: "", contentPlaceholder: "", contentError: "", linkLabel: "", link: { none: "", page: "", external: "", pagePlaceholder: "", externalPlaceholder: "", newTab: "", pagesUnavailable: "" },
-      translateLabel: "",
+      translateLabel: "", publishedAtPlaceholder: "", expiresAtPlaceholder: "",
     },
   }),
 }));

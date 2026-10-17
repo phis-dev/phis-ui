@@ -37,7 +37,7 @@ export const PHI_NEWS_RUNTIME_MODULE_ROUTES = [
       item: {
         itemKey: "@phis/ui/modules/news/nav/public/news",
         label: { defaultMessage: "News" },
-        icon: "antd:notification",
+        icon: "antd:read",
         routePresetKey: PHI_NEWS_PAGE_PRESET_KEY,
       },
     }],
@@ -64,7 +64,7 @@ export const PHI_NEWS_RUNTIME_MODULE_ROUTES = [
     title: "News",
     path: "/news",
     itemKey: "@phis/ui/modules/news/nav/editor/news",
-    icon: "antd:notification",
+    icon: "antd:read",
     loadTree: ({ page, runtime }) =>
       import("./trees/phi-default-editor-news-page-tree")
         .then((module) => module.buildPhiDefaultEditorNewsPageTree({ page, runtime })),

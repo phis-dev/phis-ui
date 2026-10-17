@@ -287,6 +287,9 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
 - Core field providers: `text`, `email`, `password`, `textarea`, `hidden`, `honeypot`, `checkbox`,
   `select`, `url`, `tel`, `number`, `slider`, `multi-select`, `checkbox-group`, `datetime`, `switch`,
   `segmented`, `cascader`, `table`, `tree`, `storage-size`, `upload`, `link-target`.
+- A `select` field may be emptied when its `config.allowClear` is `true`, for a choice whose empty answer
+  means something ("the Site's own language"); a `multi-select` takes typed values beside its options when
+  `config.allowCustom` is `true`, for a vocabulary that grows by use, such as tags.
 - A `number` field states its unit in `config.prefix`, beside the input rather than in the label: a
   symbol nobody translates as a string (`"ms"`), a word as a label reference (`{ kind: "label", key,
   fallback }`) read from the Form's labels like the field's own label.

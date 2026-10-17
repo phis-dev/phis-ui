@@ -410,14 +410,20 @@ export async function buildPhiDefaultEditorNewsPageTree({
                 key: "title",
                 fieldKey: "title",
                 title: widgetLabels.columns.title,
-                sizing: { mode: "fill", minWidth: 280 },
+                sizing: { mode: "fill" },
+              },
+              {
+                key: "author",
+                fieldKey: "author",
+                title: widgetLabels.columns.author,
+                sizing: { mode: "content" },
               },
               {
                 key: "slug",
                 fieldKey: "slug",
                 title: widgetLabels.columns.slug,
                 renderer: "code",
-                sizing: { mode: "content", minWidth: 160 },
+                sizing: { mode: "content" },
               },
               {
                 key: "status",
@@ -430,45 +436,50 @@ export async function buildPhiDefaultEditorNewsPageTree({
                   published: widgetLabels.rowStatus.published,
                   submitted: widgetLabels.rowStatus.submitted,
                 },
-                sizing: { mode: "content", minWidth: 112 },
+                sizing: { mode: "content" },
               },
               {
                 key: "sourceLocale",
                 fieldKey: "sourceLocale",
                 title: widgetLabels.columns.language,
-                sizing: { mode: "content", minWidth: 96 },
+                sizing: { mode: "content" },
               },
               {
                 key: "tags",
                 fieldKey: "tags",
                 title: widgetLabels.columns.tags,
                 renderer: "tags",
-                sizing: { mode: "content", minWidth: 160 },
+                sizing: { mode: "content" },
               },
               {
                 key: "publishedAt",
                 fieldKey: "publishedAt",
                 title: widgetLabels.columns.published,
                 renderer: "datetime",
-                sizing: { mode: "content", minWidth: 168 },
+                sizing: { mode: "content" },
               },
               {
                 key: "expiresAt",
                 fieldKey: "expiresAt",
                 title: widgetLabels.columns.expires,
                 renderer: "datetime",
-                sizing: { mode: "content", minWidth: 168 },
+                sizing: { mode: "content" },
               },
               {
                 key: "updatedAt",
                 fieldKey: "updatedAt",
                 title: widgetLabels.columns.changed,
                 renderer: "datetime",
-                sizing: { mode: "content", minWidth: 168 },
+                sizing: { mode: "content" },
               },
             ],
             emptyState: { title: widgetLabels.empty.title, description: widgetLabels.empty.text },
             controlSize: "small",
+            footer: {
+              template: widgetLabels.footer,
+              values: [{ key: "entries", value: { source: "core", fieldKey: "totalRows" } }],
+              align: "start",
+            },
           },
           features: {
             search: { enabled: true, placeholder: widgetLabels.searchPlaceholder },
@@ -477,6 +488,8 @@ export async function buildPhiDefaultEditorNewsPageTree({
                 key: "status",
                 type: "select",
                 label: widgetLabels.statusLabel,
+                // "All", "Draft", "Published" say what they filter; the label stays the Control's name.
+                labelPlacement: "none",
                 options: [
                   { value: "all", label: widgetLabels.statuses.all },
                   { value: "draft", label: widgetLabels.statuses.draft },
@@ -487,7 +500,7 @@ export async function buildPhiDefaultEditorNewsPageTree({
             ],
             pagination: { enabled: true, pageSize: 25, pageSizes: [25, 50, 100] },
             sorting: { mode: "none" },
-            tools: { mode: "self-contained", reset: true, reload: true },
+            tools: { mode: "self-contained", reset: false, reload: true },
             actions: {
               /*
                * A new entry is a toolbar action: there is no row to press. It is announced like any other
@@ -500,6 +513,7 @@ export async function buildPhiDefaultEditorNewsPageTree({
                   icon: "antd:plus",
                   // A plus, like every other Table's add: the label stays as its tooltip and its aria name.
                   display: "icon",
+                  mode: "primary",
                   execution: "signal",
                 },
               ],

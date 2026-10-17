@@ -63,7 +63,18 @@ const entryFields = [
     fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text,
     label: label("slugLabel", "Address"),
     placeholder: label("slugPlaceholder", "news-entry-address"),
-    validation: required("slugError", "An address is required."),
+    /*
+     * Core's own rule (`ENTRY_SLUG_PATTERN` in the entries route), stated here so a space or a capital is
+     * answered at the field rather than by a refused save.
+     */
+    validation: [
+      ...required("slugError", "An address is required."),
+      {
+        providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.pattern,
+        message: label("slugError", "Lower-case letters, digits and hyphens only."),
+        config: { source: "^[a-z0-9][a-z0-9-]{0,119}$" },
+      },
+    ],
   },
   {
     key: "title",
@@ -92,14 +103,16 @@ const entryFields = [
     config: { area: "public" },
   },
   /*
-   * Picked from what the Site already uses, never typed: the string is a tag's identity, so two spellings
-   * would be two tags with two translations to pay for.
+   * Offered from what the Site already uses, and typed where a tag is new: a Site with no tagged entry
+   * yet has nothing to pick. The string is a tag's identity, so Core lower-cases and deduplicates what it
+   * is given, and the offer keeps the spellings to the ones already in use.
    */
   {
     key: "tags",
     fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.multiSelect,
     label: label("tagsLabel", "Tags"),
     optionsProvider: { providerKey: PHI_NEWS_RUNTIME_DATA_PROVIDER_KEYS.tags },
+    config: { allowCustom: true },
   },
   /*
    * The Site's languages, handed over by the page that places the Form (`site-locales-config.ts`). Empty
@@ -135,11 +148,14 @@ const publicationFields = [
     key: "publishedAt",
     fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.datetime,
     label: label("publishedAtLabel", "Published from"),
+    // Empty is the moment of publishing, or the date an entry already has: Core takes now where none is.
+    placeholder: label("publishedAtPlaceholder", "Now"),
   },
   {
     key: "expiresAt",
     fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.datetime,
     label: label("expiresAtLabel", "Until"),
+    placeholder: label("expiresAtPlaceholder", "No end"),
   },
 ] as const;
 
@@ -180,7 +196,9 @@ async function loadNewsFormLabels(
     sourceLocaleLabel: labels.columns.language,
     translateLabel: labels.form.translateLabel,
     publishedAtLabel: labels.columns.published,
+    publishedAtPlaceholder: labels.form.publishedAtPlaceholder,
     expiresAtLabel: labels.columns.expires,
+    expiresAtPlaceholder: labels.form.expiresAtPlaceholder,
   });
 }
 
