@@ -68,6 +68,14 @@ about the reference: the same Page, asked about somewhere else. Whether the read
 the target Area's own answer, and a resolver that cannot establish what answers in that Area resolves
 nothing rather than guessing an address.
 
+A Page whose route has a parameter (`/news/:slug`, MODULES.md) is a family of addresses, and a target
+names one of them with `params`: `{ kind: "page", reference, params: { slug: "launch" } }`. The resolver
+answers the route's pattern, and `resolvePhiLinkHref` fills it -- from the target's `params` and from what
+its caller adds, so a list that links each of its entries states the route once and the value per entry.
+Each value fills one segment and is encoded as one. A parameter nobody fills leaves no link, the same
+answer as a reference that does not resolve. Parameter values are not part of Page identity and are not
+indexed.
+
 Changing a Site Page path therefore does not rewrite structured internal links. Navigation, Markdown,
 HTML, and other typed reference consumers resolve the same identity to the new canonical path. The path
 command must still consult the reference index and return affected-reference counts for audit and

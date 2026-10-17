@@ -1,14 +1,13 @@
 import type { PhiLinkTarget } from "./references";
 
 /**
- * One published News entry, as `GET /api/v1/entries/news` answers it.
+ * One published entry of a content type, as `GET /api/v1/entries/<kind>` answers it.
  *
- * The shape is Core's: an entry lives in `site_content` as content type `news`, and what arrives here is
- * already resolved for one locale and already filtered by publication date and expiry. Nothing in this
- * package stores it -- the Module that renders it owns no data
- * ([phis-server design/NEWS.md](../../phis-server/design/NEWS.md)).
+ * The shape is Core's and the same for every kind: an entry lives in `site_content` under its kind's
+ * type, and what arrives here is already resolved for one locale and already filtered by publication date
+ * and expiry. Nothing in this package stores it ([phis-server CONTENT.md](../../phis-server/CONTENT.md)).
  */
-export type PhiSiteNewsEntry = {
+export type PhiSiteContentEntry = {
   /** The entry's public identity: its slug where it has one, its numeric id otherwise. */
   id: string;
   slug: string;

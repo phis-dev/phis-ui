@@ -11,4 +11,8 @@ export const PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS = {
   spacingScale: createPhiSharedRuntimeDataProviderKey("options", "spacing-scale"),
   siteLocales: createPhiSharedRuntimeDataProviderKey("options", "core-site-locales"),
   contentTable: createPhiSharedRuntimeDataProviderKey("tables", "content"),
+  /** Every content kind's entries, one resource per kind (`CONTENT_ENTRIES.md`). */
+  contentEntries: createPhiSharedRuntimeDataProviderKey("tables", "content-entries"),
+  /** The tags one kind's entries already carry; the field names the kind in `config.kind`. */
+  contentEntryTags: createPhiSharedRuntimeDataProviderKey("options", "content-entry-tags"),
 } as const;

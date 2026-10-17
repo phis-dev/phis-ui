@@ -2,9 +2,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-import { fetchPhiSiteNews } from "./news";
+import { fetchPhiSiteContentEntries, fetchPhiSiteContentEntry } from "./content-entries";
 
 const OPTIONS = {
+  kind: "news" as const,
   apiBaseUrl: "https://core.test",
   internalToken: "token",
   siteKey: "site",
@@ -37,12 +38,12 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("fetchPhiSiteNews", () => {
+describe("fetchPhiSiteContentEntries", () => {
   it("asks Core in the page's language, with the Site key and the internal token", async () => {
     const fetchMock = vi.fn(async () => newsResponse([entry()]));
     vi.stubGlobal("fetch", fetchMock);
 
-    const entries = await fetchPhiSiteNews(OPTIONS);
+    const entries = await fetchPhiSiteContentEntries(OPTIONS);
 
     expect(entries).toHaveLength(1);
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
@@ -58,8 +59,8 @@ describe("fetchPhiSiteNews", () => {
   it("refuses to ask without a count, rather than asking for everything", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
-    await expect(fetchPhiSiteNews({ ...OPTIONS, limit: 0 })).rejects.toThrow(/positive integer limit/);
-    await expect(fetchPhiSiteNews({ ...OPTIONS, limit: 2.5 })).rejects.toThrow(/positive integer limit/);
+    await expect(fetchPhiSiteContentEntries({ ...OPTIONS, limit: 0 })).rejects.toThrow(/positive integer limit/);
+    await expect(fetchPhiSiteContentEntries({ ...OPTIONS, limit: 2.5 })).rejects.toThrow(/positive integer limit/);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -76,7 +77,7 @@ describe("fetchPhiSiteNews", () => {
       "not an entry at all",
     ])));
 
-    const entries = await fetchPhiSiteNews(OPTIONS);
+    const entries = await fetchPhiSiteContentEntries(OPTIONS);
 
     expect(entries.map((item) => item.slug)).toEqual(["intact"]);
   });
@@ -88,7 +89,7 @@ describe("fetchPhiSiteNews", () => {
       entry({ slug: "plain" }),
     ])));
 
-    const entries = await fetchPhiSiteNews(OPTIONS);
+    const entries = await fetchPhiSiteContentEntries(OPTIONS);
 
     expect(entries.map((item) => [item.slug, item.sourceLocale, item.translate])).toEqual([
       ["german", "de", true],
@@ -103,7 +104,7 @@ describe("fetchPhiSiteNews", () => {
       entry({ tags: ["one", 2, null, "", "two"], link: "/a-typed-path" }),
     ])));
 
-    const [first] = await fetchPhiSiteNews(OPTIONS);
+    const [first] = await fetchPhiSiteContentEntries(OPTIONS);
 
     expect(first?.tags).toEqual(["one", "two"]);
     expect(first?.link).toBeNull();
@@ -112,20 +113,34 @@ describe("fetchPhiSiteNews", () => {
   it("throws when the answer carries no list, rather than reading it as empty", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => Response.json({ version: "1" })));
 
-    await expect(fetchPhiSiteNews(OPTIONS)).rejects.toThrow(/without a list/);
+    await expect(fetchPhiSiteContentEntries(OPTIONS)).rejects.toThrow(/without a list/);
   });
 
   it("throws when Core refuses, so the Widget can say so instead of drawing nothing", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response("no", { status: 503 })));
 
-    await expect(fetchPhiSiteNews(OPTIONS)).rejects.toThrow(/503/);
+    await expect(fetchPhiSiteContentEntries(OPTIONS)).rejects.toThrow(/503/);
   });
 
   it("refuses to ask without a Site key, which would read another Site's answer", async () => {
     const fetchMock = vi.fn(async () => newsResponse([]));
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(fetchPhiSiteNews({ ...OPTIONS, siteKey: "  " })).rejects.toThrow(/siteKey/);
+    await expect(fetchPhiSiteContentEntries({ ...OPTIONS, siteKey: "  " })).rejects.toThrow(/siteKey/);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("asks for one entry by its slug, and answers none where Core has none", async () => {
+    const fetchMock = vi.fn(async () => newsResponse([entry({ slug: "launch" })]));
+    vi.stubGlobal("fetch", fetchMock);
+    const { limit: _limit, ...base } = { ...OPTIONS, kind: "blog" as const };
+    void _limit;
+
+    expect((await fetchPhiSiteContentEntry({ ...base, slug: "launch" }))?.slug).toBe("launch");
+    const [url] = fetchMock.mock.calls[0] as unknown as [string];
+    expect(url).toBe("https://core.test/api/v1/entries/blog?slug=launch&limit=1");
+
+    vi.stubGlobal("fetch", vi.fn(async () => newsResponse([])));
+    expect(await fetchPhiSiteContentEntry({ ...base, slug: "gone" })).toBeNull();
   });
 });

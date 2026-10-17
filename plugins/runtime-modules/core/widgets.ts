@@ -127,6 +127,8 @@ import {
 import { PHI_GALLERY_WIDGET_DEFINITION } from "./widgets/gallery/config";
 import { PHI_STEPS_WIDGET_DEFINITION } from "./widgets/steps/config";
 import { PHI_TIMELINE_WIDGET_DEFINITION } from "./widgets/timeline/config";
+import { PHI_ENTRY_LIST_WIDGET_DEFINITION } from "./widgets/entry-list/config";
+import { PHI_ENTRY_DETAIL_WIDGET_DEFINITION } from "./widgets/entry-detail/config";
 import { PHI_THREAD_CONVERSATION_WIDGET_DEFINITION } from "./widgets/thread-conversation/config";
 import { PHI_FLOAT_BUTTON_WIDGET_DEFINITION } from "./widgets/float-button/config";
 import {
@@ -467,6 +469,21 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/timeline/plugin").then((module) => module.PHI_TIMELINE_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/timeline/plugin").then((module) => module.PHI_TIMELINE_WIDGET_PLUGIN),
+  }),
+  // A content kind's entries and one entry of it, for every kind's Module (`CONTENT_ENTRIES.md`).
+  defineFirstPartyWidget({
+    definition: PHI_ENTRY_LIST_WIDGET_DEFINITION,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
+    loadRuntime: () => import("./widgets/entry-list/plugin").then((module) => module.PHI_ENTRY_LIST_WIDGET_PLUGIN),
+    loadPreview: () => import("./widgets/entry-list/plugin").then((module) => module.PHI_ENTRY_LIST_WIDGET_PLUGIN),
+  }),
+  defineFirstPartyWidget({
+    definition: PHI_ENTRY_DETAIL_WIDGET_DEFINITION,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
+    loadRuntime: () => import("./widgets/entry-detail/plugin").then((module) => module.PHI_ENTRY_DETAIL_WIDGET_PLUGIN),
+    loadPreview: () => import("./widgets/entry-detail/plugin").then((module) => module.PHI_ENTRY_DETAIL_WIDGET_PLUGIN),
   }),
   // A conversation, for every Module that runs conversations of its own kind (`messaging/`).
   defineFirstPartyWidget({

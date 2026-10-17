@@ -1,17 +1,17 @@
 import "server-only";
 
-import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../../gateway/tr";
-import { definePhiRuntimeModuleLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../../gateway/label-set";
-import { PHI_NEWS_RUNTIME_MODULE_IDENTITY } from "../ids";
+import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
+import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 
 /**
- * What the News table says, wherever a Site places it.
+ * What the entries Table, its dialogs and its Forms say, for every content kind (`CONTENT_ENTRIES.md`).
  *
  * The words of the surface, not of the entries: an entry's own title arrives from Core in the Site's
- * source language, because this is where it is written rather than read.
+ * source language, because this is where it is written rather than read. What differs by kind -- "New news
+ * entry", "New blog post" -- is the kind's Module's own Label Set.
  */
-const PHI_EDITOR_NEWS_WIDGET_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_NEWS_RUNTIME_MODULE_IDENTITY, {
-  key: "widget:editor-news",
+const PHI_CONTENT_ENTRY_EDITOR_LABEL_SET = definePhiLabelSet({
+  key: "widget:content-entries-editor",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
     search_placeholder: "Search address or title",
@@ -41,7 +41,6 @@ const PHI_EDITOR_NEWS_WIDGET_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_NEWS
     delete_description: definePhiMessageLabel(
       "Its words and every version of them are removed. A published entry has to be withdrawn first.",
     ),
-    empty_title: definePhiMessageLabel("No news entries yet."),
     empty_text: definePhiMessageLabel("Nothing has been written here, or nothing matches the filter."),
     action_new: "New entry",
     action_edit: "Edit",
@@ -54,10 +53,8 @@ const PHI_EDITOR_NEWS_WIDGET_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_NEWS
     form_save: "Save",
     form_cancel: "Cancel",
     footer_count: "%1 entries",
-    form_title: "News entry",
-    create_title: "New news entry",
     publication_title: "Publication",
-    form_slug_placeholder: "news-entry-address",
+    form_slug_placeholder: "entry-address",
     form_slug_error: definePhiMessageLabel("An address is required: lower case, digits and hyphens."),
     form_title_error: "A title is required.",
     form_subtitle_label: "Subtitle",
@@ -78,7 +75,7 @@ const PHI_EDITOR_NEWS_WIDGET_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_NEWS
   },
 });
 
-export type PhiEditorNewsWidgetLabels = {
+export type PhiContentEntryEditorLabels = {
   searchPlaceholder: string;
   footer: string;
   statusLabel: string;
@@ -96,7 +93,7 @@ export type PhiEditorNewsWidgetLabels = {
     author: string;
   };
   actions: { withdraw: string; delete: string; new: string; edit: string; publish: string; submit: string };
-  overlays: { create: string; entry: string; publication: string };
+  overlays: { publication: string };
   form: {
     save: string;
     cancel: string;
@@ -124,13 +121,13 @@ export type PhiEditorNewsWidgetLabels = {
   withdraw: { title: string; description: string };
   submit: { title: string; description: string };
   delete: { title: string; description: string };
-  empty: { title: string; text: string };
+  empty: { text: string };
 };
 
-export async function getPhiEditorNewsWidgetLabels(
+export async function getPhiContentEntryEditorLabels(
   options: PhiGlobalTranslatorOptions,
-): Promise<PhiEditorNewsWidgetLabels> {
-  const labels = await getPhiLabelSet(options, PHI_EDITOR_NEWS_WIDGET_LABEL_SET);
+): Promise<PhiContentEntryEditorLabels> {
+  const labels = await getPhiLabelSet(options, PHI_CONTENT_ENTRY_EDITOR_LABEL_SET);
   return {
     searchPlaceholder: labels.search_placeholder,
     footer: labels.footer_count,
@@ -156,11 +153,7 @@ export async function getPhiEditorNewsWidgetLabels(
       publish: labels.action_publish,
       submit: labels.action_submit,
     },
-    overlays: {
-      create: labels.create_title,
-      entry: labels.form_title,
-      publication: labels.publication_title,
-    },
+    overlays: { publication: labels.publication_title },
     form: {
       save: labels.form_save,
       cancel: labels.form_cancel,
@@ -188,6 +181,35 @@ export async function getPhiEditorNewsWidgetLabels(
     withdraw: { title: labels.withdraw_title, description: labels.withdraw_description },
     submit: { title: labels.submit_title, description: labels.submit_description },
     delete: { title: labels.delete_title, description: labels.delete_description },
-    empty: { title: labels.empty_title, text: labels.empty_text },
+    empty: { text: labels.empty_text },
   };
 }
+
+/**
+ * What the list and the detail Widget say around the entries, which is everything the Site did not write
+ * itself. The entries' own words come from Core already translated for the page's language.
+ */
+const PHI_CONTENT_ENTRY_READER_LABEL_SET = definePhiLabelSet({
+  key: "widget:content-entries",
+  ctx: PHI_TR_CTX_WEB_UI_LABEL,
+  labels: {
+    empty_title: "Nothing published yet",
+    empty_text: definePhiMessageLabel("There is nothing published here at the moment."),
+    unavailable: definePhiMessageLabel("The entries could not be loaded just now."),
+    read_more: "Read more",
+    read_entry: "Read",
+  },
+});
+
+export async function getPhiContentEntryReaderLabels(options: PhiGlobalTranslatorOptions) {
+  const labels = await getPhiLabelSet(options, PHI_CONTENT_ENTRY_READER_LABEL_SET);
+  return {
+    emptyTitle: labels.empty_title,
+    emptyText: labels.empty_text,
+    unavailable: labels.unavailable,
+    readMore: labels.read_more,
+    readEntry: labels.read_entry,
+  };
+}
+
+export type PhiContentEntryReaderLabels = Awaited<ReturnType<typeof getPhiContentEntryReaderLabels>>;

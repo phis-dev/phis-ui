@@ -1,5 +1,6 @@
 import type { PhiCmsAreaKey } from "../constants/cms-areas";
 import {
+  fillPhiRouteParams,
   isPhiLinkTargetConfigKey,
   readPhiLinkTarget,
   type PhiLinkTarget,
@@ -72,6 +73,11 @@ export function collectPhiLinkTargetReferences(
 export function resolvePhiLinkHref(
   target: PhiLinkTarget | null | undefined,
   resolved?: PhiResolvedLinkTargets | null,
+  /**
+   * Route parameters the caller fills in beside the target's own -- a list that links each of its entries
+   * to one detail route states the route once and the slug per entry. The caller's win.
+   */
+  params?: Readonly<Record<string, string>>,
 ): { href: string; newTab: boolean; external: boolean } | null {
   if (!target) {
     return null;
@@ -79,7 +85,9 @@ export function resolvePhiLinkHref(
   if (target.kind === "external") {
     return { href: target.href, newTab: target.newTab === true, external: true };
   }
-  const path = resolved?.get(target.reference);
+  const pattern = resolved?.get(target.reference);
+  // A route with a parameter resolves to its pattern; a parameter nobody filled is no address at all.
+  const path = pattern ? fillPhiRouteParams(pattern, { ...target.params, ...params }) : null;
   if (!path) {
     return null;
   }

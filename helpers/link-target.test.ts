@@ -116,4 +116,17 @@ describe("where a link target leads", () => {
     expect(resolvePhiLinkHref(null)).toBeNull();
     expect(resolvePhiLinkHref(undefined, resolved([[PAGE, "/en/pricing"]]))).toBeNull();
   });
+
+  /*
+   * A route with a parameter resolves to its pattern. The target may carry the value, a list may add one
+   * per entry, and a parameter nobody filled is no address -- not a link to `/news/:slug`.
+   */
+  it("fills a route's parameters from the target and from the caller", () => {
+    const routes = resolved([[PAGE, "/en/news/:slug"]]);
+    expect(resolvePhiLinkHref({ kind: "page", reference: PAGE, params: { slug: "launch" } }, routes)?.href)
+      .toBe("/en/news/launch");
+    expect(resolvePhiLinkHref({ kind: "page", reference: PAGE }, routes, { slug: "a b/c" })?.href)
+      .toBe("/en/news/a%20b%2Fc");
+    expect(resolvePhiLinkHref({ kind: "page", reference: PAGE }, routes)).toBeNull();
+  });
 });

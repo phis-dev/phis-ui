@@ -24,17 +24,17 @@ import {
   readPhiTableProviderResponse,
   type ReadPhiTableProviderResponseOptions,
 } from "../../../../components/widgets/client/shared/phi-table-provider-response";
-import { PHI_NEWS_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../data-providers";
-import { PHI_NEWS_RUNTIME_DATA_PROVIDER_KEYS, PHI_NEWS_TABLE_RESOURCE_KEY } from "../ids";
+import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../../constants/core-data-provider-keys";
+import {
+  isPhiContentEntryKind,
+  resolvePhiContentEntryEditorApiPaths,
+  type PhiContentEntryKind,
+} from "../../../../constants/content-entry-kinds";
+import { PHI_CORE_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../data-providers";
 
-/** The editor's own endpoints, behind the content-editing guard and the publishing one. */
-const NEWS_API_PATH = "/api/site/editor/entries/news";
-const NEWS_PUBLISH_API_PATH = "/api/site/editor/entries/news/publish";
-const NEWS_SUBMIT_API_PATH = "/api/site/editor/entries/news/submit";
+const RESPONSE_OPTIONS: ReadPhiTableProviderResponseOptions = { subject: "Entries" };
 
-const RESPONSE_OPTIONS: ReadPhiTableProviderResponseOptions = { subject: "News" };
-
-type NewsApiResponse = {
+type EntriesApiResponse = {
   entries?: unknown;
   total?: unknown;
   page?: unknown;
@@ -67,12 +67,13 @@ function buildQueryParams(query: PhiTableQuery) {
   return params;
 }
 
-async function loadEntries({
-  query,
-  signal,
-}: PhiTableProviderQueryRequest): Promise<PhiTableProviderQueryResult> {
-  const result = await readPhiTableProviderResponse<NewsApiResponse>(
-    await fetch(`${NEWS_API_PATH}?${buildQueryParams(query).toString()}`, createPhiTableProviderRequestInit(signal)),
+async function loadEntries(
+  kind: PhiContentEntryKind,
+  { query, signal }: PhiTableProviderQueryRequest,
+): Promise<PhiTableProviderQueryResult> {
+  const path = resolvePhiContentEntryEditorApiPaths(kind).entries;
+  const result = await readPhiTableProviderResponse<EntriesApiResponse>(
+    await fetch(`${path}?${buildQueryParams(query).toString()}`, createPhiTableProviderRequestInit(signal)),
     RESPONSE_OPTIONS,
   );
 
@@ -96,8 +97,17 @@ async function loadEntries({
   };
 }
 
+/** The kind a request names, which is its resource key; one this release does not know is refused. */
+function readResourceKind(resourceKey: string) {
+  if (!isPhiContentEntryKind(resourceKey)) {
+    throw new PhiTableProviderError("resource-not-found", `Unknown content entry kind "${resourceKey}".`);
+  }
+  return resourceKey;
+}
+
 /**
- * The Site's News entries for a Table, and the two things an entry can have done to it without a Form.
+ * Every content kind's entries for a Table, one resource per kind, and the things an entry can have done to
+ * it without a Form (`CONTENT_ENTRIES.md`).
  *
  * Withdrawing and deleting state nothing -- no words, no dates -- so they are actions here rather than
  * Forms. Saving and publishing do state something, and they are Forms elsewhere on the page.
@@ -106,21 +116,20 @@ async function loadEntries({
  * and that sentence is what the Table shows. Disabling the action in the row as well would be a second
  * answer to the same question, drawn from a row that may be a minute old.
  */
-export function PhiNewsTableProviderClient({ children }: { children: ReactNode }) {
+export function PhiContentEntriesTableProviderClient({ children }: { children: ReactNode }) {
   const recordsRef = useRef(new Map<string, Record<string, unknown>>());
 
   const query = useCallback(async (request: PhiTableProviderQueryRequest) => {
-    if (request.resourceKey !== PHI_NEWS_TABLE_RESOURCE_KEY) {
-      throw new PhiTableProviderError("resource-not-found", `Unknown News resource "${request.resourceKey}".`);
-    }
-    const data = await loadEntries(request);
+    const kind = readResourceKind(request.resourceKey);
+    const data = await loadEntries(kind, request);
     for (const row of data.rows) {
-      recordsRef.current.set(String(row.contentId), row);
+      recordsRef.current.set(`${kind}:${String(row.contentId)}`, row);
     }
     return data;
   }, []);
 
   const readRecord = useCallback(async ({
+    resourceKey,
     rowIdentity,
   }: {
     resourceKey: string;
@@ -128,13 +137,13 @@ export function PhiNewsTableProviderClient({ children }: { children: ReactNode }
     signal: AbortSignal;
   }) => {
     if (rowIdentity == null) {
-      throw new PhiTableProviderError("record-identity-required", "A news entry identity is required.");
+      throw new PhiTableProviderError("record-identity-required", "An entry identity is required.");
     }
-    const record = recordsRef.current.get(String(rowIdentity));
+    const record = recordsRef.current.get(`${readResourceKind(resourceKey)}:${String(rowIdentity)}`);
     if (!record) {
       throw new PhiTableProviderError(
         "record-not-loaded",
-        "That news entry is no longer in the current Table view. Reload the Table and try again.",
+        "That entry is no longer in the current Table view. Reload the Table and try again.",
       );
     }
     return record;
@@ -142,24 +151,26 @@ export function PhiNewsTableProviderClient({ children }: { children: ReactNode }
 
   const mutate = useCallback(async (request: PhiTableProviderMutationRequest) => {
     if (request.kind !== "action") {
-      throw new PhiTableProviderError("mutation-not-supported", "News rows are edited through the Form.");
+      throw new PhiTableProviderError("mutation-not-supported", "Entries are edited through the Form.");
     }
+    const kind = readResourceKind(request.resourceKey);
+    const paths = resolvePhiContentEntryEditorApiPaths(kind);
     if (request.actionKey === "refresh") {
       return { status: "accepted" as const, invalidation: "view" as const };
     }
 
     const contentId = Number(request.rowIdentity);
     if (!Number.isInteger(contentId) || contentId <= 0) {
-      throw new PhiTableProviderError("invalid-row-identity", "That action needs a news entry.");
+      throw new PhiTableProviderError("invalid-row-identity", "That action needs an entry.");
     }
     if (request.actionKey === "submit") {
       /*
        * The version the row showed, named rather than implied: a submission covers what its Author saw,
        * and Core refuses one for a version somebody has written past since.
        */
-      const versionId = Number(recordsRef.current.get(String(contentId))?.versionId);
-      await readPhiTableProviderResponse<NewsApiResponse>(
-        await fetch(NEWS_SUBMIT_API_PATH, {
+      const versionId = Number(recordsRef.current.get(`${kind}:${String(contentId)}`)?.versionId);
+      await readPhiTableProviderResponse<EntriesApiResponse>(
+        await fetch(paths.submit, {
           method: "POST",
           cache: "no-store",
           credentials: "include",
@@ -173,15 +184,15 @@ export function PhiNewsTableProviderClient({ children }: { children: ReactNode }
     }
     const params = new URLSearchParams({ contentId: String(contentId) });
     const path = request.actionKey === "withdraw"
-      ? NEWS_PUBLISH_API_PATH
+      ? paths.publish
       : request.actionKey === "delete"
-        ? NEWS_API_PATH
+        ? paths.entries
         : null;
     if (!path) {
-      throw new PhiTableProviderError("action-not-supported", `Unsupported News action "${request.actionKey}".`);
+      throw new PhiTableProviderError("action-not-supported", `Unsupported entry action "${request.actionKey}".`);
     }
 
-    await readPhiTableProviderResponse<NewsApiResponse>(
+    await readPhiTableProviderResponse<EntriesApiResponse>(
       await fetch(`${path}?${params.toString()}`, {
         method: "DELETE",
         cache: "no-store",
@@ -201,9 +212,9 @@ export function PhiNewsTableProviderClient({ children }: { children: ReactNode }
   }, []);
 
   const registration = useMemo<PhiTableProviderRegistration>(() => ({
-    key: PHI_NEWS_RUNTIME_DATA_PROVIDER_KEYS.table,
-    resources: PHI_NEWS_RUNTIME_DATA_PROVIDER_DESCRIPTORS.find(
-      (descriptor) => descriptor.key === PHI_NEWS_RUNTIME_DATA_PROVIDER_KEYS.table,
+    key: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntries,
+    resources: PHI_CORE_RUNTIME_DATA_PROVIDER_DESCRIPTORS.find(
+      (descriptor) => descriptor.key === PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntries,
     )?.resources ?? [],
     query,
     readRecord,

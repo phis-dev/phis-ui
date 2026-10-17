@@ -96,11 +96,12 @@ describe("the first-party sidebars", () => {
     ]);
     expect(sidebarOf("accounting")).toEqual(["Dashboard", "Overview", "Conversations"]);
     /*
-     * Four Modules' entries and nothing of the Area's own: Dashboard anchors itself to `start`, the other
-     * three to `main`, and entries sharing an anchor are ordered by the Module that injected them. A Site
-     * that wants a different order says so in the navigation overlay.
+     * Modules' entries and nothing of the Area's own: Dashboard anchors itself to `start`, the others to
+     * `main`, and entries sharing an anchor are ordered by the Module that injected them -- which is why
+     * Blog stands first. A Site that wants a different order says so in the navigation overlay.
      */
-    expect(sidebarOf("editor")).toEqual(["Dashboard", "Releases", "Translations", "News", "Conversations"]);
+    expect(sidebarOf("editor"))
+      .toEqual(["Dashboard", "Blog", "Releases", "Translations", "News", "Conversations"]);
   });
 
   it("are reached by anchor alone", () => {

@@ -6,6 +6,7 @@ import {
 import { PHI_LOCALIZATION_RUNTIME_MODULE_ID } from "../localization/ids";
 import { PHI_EDITOR_RUNTIME_MODULE_ID } from "../editor/ids";
 import { PHI_NEWS_RUNTIME_MODULE_ID } from "../news/ids";
+import { PHI_BLOG_RUNTIME_MODULE_ID } from "../blog/ids";
 import { PHI_COMMON_RUNTIME_MODULE_AUTHORING_CLIENT_CONTRIBUTIONS } from "./common";
 import { PHI_DASHBOARD_RUNTIME_MODULE_AUTHORING_CLIENT_CONTRIBUTION } from "../dashboard/authoring-client";
 
@@ -18,13 +19,18 @@ export const PHI_EDITOR_RUNTIME_MODULE_AUTHORING_CLIENT_CONTRIBUTIONS = [
         .then((module) => module.PhiLocalizationRuntimeModuleAuthoringClient),
     }),
     definePhiRuntimeModuleAuthoringClientContribution({
+      moduleId: PHI_EDITOR_RUNTIME_MODULE_ID,
+      loadAuthoring: () => import("../editor/authoring")
+        .then((module) => module.PhiEditorRuntimeModuleAuthoringClient),
+    }),
+    definePhiRuntimeModuleAuthoringClientContribution({
       moduleId: PHI_NEWS_RUNTIME_MODULE_ID,
       loadAuthoring: () => import("../news/authoring")
         .then((module) => module.PhiNewsRuntimeModuleAuthoringClient),
     }),
     definePhiRuntimeModuleAuthoringClientContribution({
-      moduleId: PHI_EDITOR_RUNTIME_MODULE_ID,
-      loadAuthoring: () => import("../editor/authoring")
-        .then((module) => module.PhiEditorRuntimeModuleAuthoringClient),
+      moduleId: PHI_BLOG_RUNTIME_MODULE_ID,
+      loadAuthoring: () => import("../blog/authoring")
+        .then((module) => module.PhiBlogRuntimeModuleAuthoringClient),
     }),
   ] as const;

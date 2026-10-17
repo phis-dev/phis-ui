@@ -1,54 +1,77 @@
 import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
   PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS,
-} from "../../../../constants/cms-layout-types";
-import { canPhiViewerAccess, PHI_VIEWER_ACCESS_PUBLISHING } from "../../../../types/access";
-import type { PhiTableActionDefinition } from "../../../../types/table-widget";
-import { PhiCmsPageType } from "../../../../constants/phi-cms";
-import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
-import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
-import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
-import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
-import type { PhiBlockRuntime } from "../../../../types";
-import { getPhiEditorNewsWidgetLabels } from "./editor-news-widget-label-set";
+} from "../../../constants/cms-layout-types";
+import type { PhiContentEntryKind } from "../../../constants/content-entry-kinds";
+import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../constants/core-data-provider-keys";
+import { canPhiViewerAccess, PHI_VIEWER_ACCESS_PUBLISHING } from "../../../types/access";
+import type { PhiTableActionDefinition } from "../../../types/table-widget";
+import { PhiCmsPageType } from "../../../constants/phi-cms";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
+import { createPhiPresetCmsInstanceIdMap, type PhiCmsInstanceId } from "../../../types/cms-instance-id";
+import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
+import type { PhiBlockRuntime, PhiRuntimeModuleId } from "../../../types";
+import { getPhiContentEntryEditorLabels } from "../../widgets/label-sets/content-entries";
 import {
   buildPhiBasePageContentScaffold,
   PHI_BASE_PAGE_LAYOUT_NODE_ID,
-} from "../../../../components/regions/presets/phi-base-page-layout";
+} from "./phi-base-page-layout";
 import {
   PHI_SIGNAL_VALUE_SCHEMAS,
   createPhiSignalAddress,
-} from "../../../../types/signals";
-import type { PhiFormId } from "../../../../types/form-id";
-import { NEWS_SOURCE_LOCALE_PLACEHOLDER_CONFIG_KEY, PHI_NEWS_FORM_IDS } from "../forms";
-import { PHI_SITE_LOCALES_CONFIG_KEY } from "../../../../components/forms/site-locales-config";
-import {
-  PHI_EDITOR_NEWS_CREATE_COMMANDS_WIDGET_ID,
-  PHI_EDITOR_NEWS_CREATE_FORM_WIDGET_ID,
-  PHI_EDITOR_NEWS_CREATE_OVERLAY_FOOTER_LAYOUT_ID,
-  PHI_EDITOR_NEWS_CREATE_OVERLAY_ID,
-  PHI_EDITOR_NEWS_CREATE_OVERLAY_LAYOUT_ID,
-  PHI_EDITOR_NEWS_ENTRY_COMMANDS_WIDGET_ID,
-  PHI_EDITOR_NEWS_ENTRY_FORM_WIDGET_ID,
-  PHI_EDITOR_NEWS_ENTRY_OVERLAY_FOOTER_LAYOUT_ID,
-  PHI_EDITOR_NEWS_ENTRY_OVERLAY_ID,
-  PHI_EDITOR_NEWS_ENTRY_OVERLAY_LAYOUT_ID,
-  PHI_EDITOR_NEWS_PUBLICATION_COMMANDS_WIDGET_ID,
-  PHI_EDITOR_NEWS_PUBLICATION_FORM_WIDGET_ID,
-  PHI_EDITOR_NEWS_PUBLICATION_OVERLAY_FOOTER_LAYOUT_ID,
-  PHI_EDITOR_NEWS_PUBLICATION_OVERLAY_ID,
-  PHI_EDITOR_NEWS_PUBLICATION_OVERLAY_LAYOUT_ID,
-  PHI_NEWS_RUNTIME_DATA_PROVIDER_KEYS,
-  PHI_NEWS_TABLE_RESOURCE_KEY,
-} from "../ids";
-import { getPhiEditorNewsPageLabels } from "./editor-news-label-set";
-import { PHI_EDITOR_NEWS_WIDGET_ID } from "../ids";
-import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../../helpers/cms-dialog";
+  type PhiSignalAddress,
+} from "../../../types/signals";
+import type { PhiFormId } from "../../../types/form-id";
+import type { PhiProviderResourceSource } from "../../../types/runtime-data-provider";
+import { PHI_CONTENT_ENTRY_SOURCE_LOCALE_PLACEHOLDER_CONFIG_KEY } from "../../forms/content-entry-forms";
+import { PHI_SITE_LOCALES_CONFIG_KEY } from "../../forms/site-locales-config";
+import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../helpers/cms-dialog";
 
-const SYNTHETIC_EDITOR_NEWS_REGION_IDS = { regionContent: -562 } as const;
+/**
+ * The words of an editor Page that differ by kind; everything else is the shared Label Set's.
+ *
+ * Handed in by the kind's Module from its own Label Set, already translated: "New news entry" and "New
+ * blog post" are not one sentence with a noun swapped, and a translator sees them as the two they are.
+ */
+export type PhiContentEntryKindEditorLabels = {
+  /** The Table's name in the Builder's layer tree: "news entries". */
+  widgetLabel: string;
+  /** The edit dialog's title: "News entry". */
+  entryTitle: string;
+  /** The create dialog's title: "New news entry". */
+  createTitle: string;
+  /** What the empty Table says: "No news entries yet." */
+  emptyTitle: string;
+};
+
+/**
+ * The node keys of an editor Page. They make its instance ids together with the Module and the preset
+ * key, so they are part of every stored placement and do not change.
+ */
+const EDITOR_NODE_KEYS = [
+  "widgetNews",
+  "overlayCreate",
+  "layoutCreate",
+  "layoutCreateFooter",
+  "widgetCreateForm",
+  "widgetCreateCommands",
+  "overlayEntry",
+  "layoutEntry",
+  "layoutEntryFooter",
+  "widgetEntryForm",
+  "widgetEntryCommands",
+  "overlayPublication",
+  "layoutPublication",
+  "layoutPublicationFooter",
+  "widgetPublicationForm",
+  "widgetPublicationCommands",
+] as const;
+
+const SYNTHETIC_EDITOR_REGION_IDS = { regionContent: -562 } as const;
 
 /** One dialog's five nodes, and the words on its two buttons. */
-type NewsDialogInput = {
+type EntryDialogInput = {
   key: "create" | "entry" | "publication";
   title: string;
   formId: PhiFormId;
@@ -80,14 +103,12 @@ type NewsDialogInput = {
     form: PhiCmsInstanceId;
     commands: PhiCmsInstanceId;
   };
+  /** The kind's rows, which a record-bound Form reads the pressed one from. */
+  source: PhiProviderResourceSource;
+  tableAddress: PhiSignalAddress;
+  /** The prefix of every route key on the Page: `editor-<kind>`. */
+  routePrefix: string;
 };
-
-const NEWS_DIALOG_SOURCE = {
-  providerKey: PHI_NEWS_RUNTIME_DATA_PROVIDER_KEYS.table,
-  resourceKey: PHI_NEWS_TABLE_RESOURCE_KEY,
-} as const;
-
-const TABLE_ADDRESS = createPhiSignalAddress("cms", PHI_EDITOR_NEWS_WIDGET_ID);
 
 /**
  * A dialog, stated once and built three times.
@@ -102,13 +123,13 @@ const TABLE_ADDRESS = createPhiSignalAddress("cms", PHI_EDITOR_NEWS_WIDGET_ID);
  * and a listener that had to be told not to hear itself -- three silent failures in one afternoon, each of
  * which left every visible part of the page looking right.
  */
-function buildPhiNewsDialogNodes(
+function buildEntryDialogNodes(
   nodes: ReturnType<typeof createPhiCmsPresetNodes>,
-  input: NewsDialogInput,
+  input: EntryDialogInput,
 ) {
   const overlayAddress = createPhiSignalAddress("cms", input.ids.overlay);
   const formAddress = createPhiSignalAddress("cms", input.ids.form);
-  const prefix = `editor-news-${input.key}`;
+  const prefix = `${input.routePrefix}-${input.key}`;
 
   return {
     overlay: nodes.overlay({
@@ -118,7 +139,7 @@ function buildPhiNewsDialogNodes(
       footerPresentation: "actions",
       footerLayoutNodeId: input.ids.footer,
       sortOrder: input.key === "create" ? 0 : input.key === "entry" ? 10 : 20,
-      label: `editor news ${input.key} modal`,
+      label: `${input.routePrefix} ${input.key} modal`,
       config: {
         title: input.title,
         mountPolicy: "remount",
@@ -145,7 +166,7 @@ function buildPhiNewsDialogNodes(
         typeKey: "flex-vertical",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        label: `editor news ${input.key} modal content`,
+        label: `${input.routePrefix} ${input.key} modal content`,
         // The Body's root Layout is its one padding owner (OVERLAYS.md): the Modal adds none.
         config: {
           ...PHI_DIALOG_BODY_CONFIG,
@@ -160,7 +181,7 @@ function buildPhiNewsDialogNodes(
         typeKey: "flex",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        label: `editor news ${input.key} modal footer`,
+        label: `${input.routePrefix} ${input.key} modal footer`,
         config: {},
       }),
     ],
@@ -171,7 +192,7 @@ function buildPhiNewsDialogNodes(
         typeKey: "form",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 10,
-        label: `editor news ${input.key} form`,
+        label: `${input.routePrefix} ${input.key} form`,
         config: {
           formId: input.formId,
           /*
@@ -180,7 +201,7 @@ function buildPhiNewsDialogNodes(
            * nothing to wait for and opens blank; its hidden `contentId` stays empty, which is what tells
            * Core that this is a new entry rather than a correction.
            */
-          source: input.bindsRecord ? NEWS_DIALOG_SOURCE : null,
+          source: input.bindsRecord ? input.source : null,
           ...(input.formConfig ? { formConfig: input.formConfig } : {}),
           ...(input.bindsRecord ? { openActionKey: input.openActionKey } : {}),
           // What Core said, said to the reader: the dialog is gone by then and would say nothing itself.
@@ -193,7 +214,7 @@ function buildPhiNewsDialogNodes(
                * Table once never reloaded although the save had gone through.
                */
               { routeKey: `${prefix}-form-success-close`, capabilityId: "submitSuccess", scope: "page", channel: "dialog", action: "close", valueType: "none", receiver: overlayAddress },
-              { routeKey: `${prefix}-form-success-reload`, capabilityId: "submitSuccess", scope: "page", channel: "reload", action: "activate", valueType: "none", receiver: TABLE_ADDRESS },
+              { routeKey: `${prefix}-form-success-reload`, capabilityId: "submitSuccess", scope: "page", channel: "reload", action: "activate", valueType: "none", receiver: input.tableAddress },
             ],
             listens: [
               ...(input.bindsRecord
@@ -210,7 +231,7 @@ function buildPhiNewsDialogNodes(
         typeKey: "command-toolbar",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        label: `editor news ${input.key} commands`,
+        label: `${input.routePrefix} ${input.key} commands`,
         config: {
           key: `${prefix}-commands`,
           ...PHI_DIALOG_COMMANDS_CONFIG,
@@ -236,36 +257,50 @@ function buildPhiNewsDialogNodes(
 }
 
 /**
- * The News page of the Editor Area: the Site's entries in a Table.
+ * The editor Page of one content kind: the Site's entries in a Table, and the three dialogs one writes in
+ * (`CONTENT_ENTRIES.md`).
  *
- * The Table is the core Widget bound to the News Module's Provider, which is what makes the same rows
- * placeable on any Page a Site composes -- the Page here is one placement, not the surface itself. Who may
- * see them is decided by the endpoint behind the Provider, so a Table on a Page nobody may edit answers
- * nothing rather than being kept out.
+ * The Table is the core Widget bound to Core's entries Provider under the kind's resource, which is what
+ * makes the same rows placeable on any Page a Site composes -- the Page here is one placement, not the
+ * surface itself. Who may see them is decided by the endpoint behind the Provider, so a Table on a Page
+ * nobody may edit answers nothing rather than being kept out.
  *
- * Withdrawing and deleting are row actions: they state nothing, so they need no Form. Writing an entry and
- * publishing one do state something and are Forms, which arrive with the overlay this page will grow.
+ * Withdrawing, submitting and deleting are row actions: they state nothing, so they need no Form. Writing
+ * an entry and publishing one do state something and are Forms, in the dialogs below.
  */
-export async function buildPhiDefaultEditorNewsPageTree({
+export async function buildPhiContentEntryEditorPageTree({
   page,
   runtime,
+  kind,
+  ownerModuleId,
+  presetKey,
+  formIds,
+  kindLabels,
 }: {
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
+  kind: PhiContentEntryKind;
+  /** The kind's Module, whose preset this Page is: with `presetKey`, the identity of every node on it. */
+  ownerModuleId: PhiRuntimeModuleId;
+  presetKey: string;
+  /** The Module's two Forms (`definePhiContentEntryForms`). */
+  formIds: { entry: PhiFormId; publication: PhiFormId };
+  kindLabels: PhiContentEntryKindEditorLabels;
 }): Promise<PhiResolvedCmsPageTree> {
   const credentials = readPhiServerApiCredentials();
-  const translatorOptions = {
+  const widgetLabels = await getPhiContentEntryEditorLabels({
     apiBaseUrl: credentials.apiBaseUrl,
     internalToken: credentials.internalToken,
     locale: runtime.locale.current,
+  });
+  const ids = createPhiPresetCmsInstanceIdMap({ domain: "page", ownerModuleId, presetKey }, EDITOR_NODE_KEYS);
+  const routePrefix = `editor-${kind}`;
+  const tableAddress = createPhiSignalAddress("cms", ids.widgetNews);
+  const source: PhiProviderResourceSource = {
+    providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntries,
+    resourceKey: kind,
   };
-  const labels = await getPhiEditorNewsPageLabels(translatorOptions);
-  const widgetLabels = await getPhiEditorNewsWidgetLabels(translatorOptions);
-  /*
-   * Who may put an entry live (phis-server CONTENT.md, Rights). An Author writes and submits; publishing
-   * and withdrawing are the Publisher's, and Core refuses them anyway -- the page offers each viewer the
-   * acts that are theirs rather than buttons that answer 403.
-   */
+  const shared = { source, tableAddress, routePrefix };
   const reviewRowActions: PhiTableActionDefinition[] = canPhiViewerAccess(runtime.viewer, PHI_VIEWER_ACCESS_PUBLISHING)
     ? [
       {
@@ -309,7 +344,7 @@ export async function buildPhiDefaultEditorNewsPageTree({
 
   const scaffold = buildPhiBasePageContentScaffold({
     page,
-    regionId: SYNTHETIC_EDITOR_NEWS_REGION_IDS.regionContent,
+    regionId: SYNTHETIC_EDITOR_REGION_IDS.regionContent,
   });
 
   const nodes = createPhiCmsPresetNodes(page);
@@ -328,56 +363,59 @@ export async function buildPhiDefaultEditorNewsPageTree({
   const entryFormConfig = {
     [PHI_SITE_LOCALES_CONFIG_KEY]: runtime.site.availableLocales.map((option) => ({ code: option.code, label: option.label })),
     // What Core stores when the field is left empty: the Site's source language, not its default one.
-    [NEWS_SOURCE_LOCALE_PLACEHOLDER_CONFIG_KEY]: sourceLocale?.label ?? runtime.site.sourceLocale,
+    [PHI_CONTENT_ENTRY_SOURCE_LOCALE_PLACEHOLDER_CONFIG_KEY]: sourceLocale?.label ?? runtime.site.sourceLocale,
   };
-  const createDialog = buildPhiNewsDialogNodes(nodes, {
+  const createDialog = buildEntryDialogNodes(nodes, {
+    ...shared,
     key: "create",
-    title: widgetLabels.overlays.create,
-    formId: PHI_NEWS_FORM_IDS.entry,
+    title: kindLabels.createTitle,
+    formId: formIds.entry,
     openActionKey: "new",
     bindsRecord: false,
     formConfig: entryFormConfig,
     saveLabel: widgetLabels.form.save,
     cancelLabel: widgetLabels.form.cancel,
     ids: {
-      overlay: PHI_EDITOR_NEWS_CREATE_OVERLAY_ID,
-      body: PHI_EDITOR_NEWS_CREATE_OVERLAY_LAYOUT_ID,
-      footer: PHI_EDITOR_NEWS_CREATE_OVERLAY_FOOTER_LAYOUT_ID,
-      form: PHI_EDITOR_NEWS_CREATE_FORM_WIDGET_ID,
-      commands: PHI_EDITOR_NEWS_CREATE_COMMANDS_WIDGET_ID,
+      overlay: ids.overlayCreate,
+      body: ids.layoutCreate,
+      footer: ids.layoutCreateFooter,
+      form: ids.widgetCreateForm,
+      commands: ids.widgetCreateCommands,
     },
   });
-  const entryDialog = buildPhiNewsDialogNodes(nodes, {
+  const entryDialog = buildEntryDialogNodes(nodes, {
+    ...shared,
     key: "entry",
-    title: widgetLabels.overlays.entry,
-    formId: PHI_NEWS_FORM_IDS.entry,
+    title: kindLabels.entryTitle,
+    formId: formIds.entry,
     openActionKey: "edit",
     bindsRecord: true,
     formConfig: entryFormConfig,
     saveLabel: widgetLabels.form.save,
     cancelLabel: widgetLabels.form.cancel,
     ids: {
-      overlay: PHI_EDITOR_NEWS_ENTRY_OVERLAY_ID,
-      body: PHI_EDITOR_NEWS_ENTRY_OVERLAY_LAYOUT_ID,
-      footer: PHI_EDITOR_NEWS_ENTRY_OVERLAY_FOOTER_LAYOUT_ID,
-      form: PHI_EDITOR_NEWS_ENTRY_FORM_WIDGET_ID,
-      commands: PHI_EDITOR_NEWS_ENTRY_COMMANDS_WIDGET_ID,
+      overlay: ids.overlayEntry,
+      body: ids.layoutEntry,
+      footer: ids.layoutEntryFooter,
+      form: ids.widgetEntryForm,
+      commands: ids.widgetEntryCommands,
     },
   });
-  const publicationDialog = buildPhiNewsDialogNodes(nodes, {
+  const publicationDialog = buildEntryDialogNodes(nodes, {
+    ...shared,
     key: "publication",
     title: widgetLabels.overlays.publication,
-    formId: PHI_NEWS_FORM_IDS.publication,
+    formId: formIds.publication,
     openActionKey: "publish",
     bindsRecord: true,
     saveLabel: widgetLabels.form.save,
     cancelLabel: widgetLabels.form.cancel,
     ids: {
-      overlay: PHI_EDITOR_NEWS_PUBLICATION_OVERLAY_ID,
-      body: PHI_EDITOR_NEWS_PUBLICATION_OVERLAY_LAYOUT_ID,
-      footer: PHI_EDITOR_NEWS_PUBLICATION_OVERLAY_FOOTER_LAYOUT_ID,
-      form: PHI_EDITOR_NEWS_PUBLICATION_FORM_WIDGET_ID,
-      commands: PHI_EDITOR_NEWS_PUBLICATION_COMMANDS_WIDGET_ID,
+      overlay: ids.overlayPublication,
+      body: ids.layoutPublication,
+      footer: ids.layoutPublicationFooter,
+      form: ids.widgetPublicationForm,
+      commands: ids.widgetPublicationCommands,
     },
   });
 
@@ -393,17 +431,14 @@ export async function buildPhiDefaultEditorNewsPageTree({
     ],
     contentWidgets: [
       nodes.widget({
-        id: PHI_EDITOR_NEWS_WIDGET_ID,
+        id: ids.widgetNews,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "table",
         slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
         sortOrder: 10,
-        label: labels.widgetLabel,
+        label: kindLabels.widgetLabel,
         config: {
-          source: {
-            providerKey: PHI_NEWS_RUNTIME_DATA_PROVIDER_KEYS.table,
-            resourceKey: PHI_NEWS_TABLE_RESOURCE_KEY,
-          },
+          source,
           presentation: {
             layout: { mode: "auto", overflowX: "auto" },
             columns: [
@@ -474,7 +509,7 @@ export async function buildPhiDefaultEditorNewsPageTree({
                 sizing: { mode: "content" },
               },
             ],
-            emptyState: { title: widgetLabels.empty.title, description: widgetLabels.empty.text },
+            emptyState: { title: kindLabels.emptyTitle, description: widgetLabels.empty.text },
             controlSize: "small",
             footer: {
               template: widgetLabels.footer,
@@ -563,13 +598,13 @@ export async function buildPhiDefaultEditorNewsPageTree({
              */
             emits: [
               ...[
-                PHI_EDITOR_NEWS_CREATE_OVERLAY_ID,
-                PHI_EDITOR_NEWS_ENTRY_OVERLAY_ID,
-                PHI_EDITOR_NEWS_ENTRY_FORM_WIDGET_ID,
-                PHI_EDITOR_NEWS_PUBLICATION_OVERLAY_ID,
-                PHI_EDITOR_NEWS_PUBLICATION_FORM_WIDGET_ID,
+                ids.overlayCreate,
+                ids.overlayEntry,
+                ids.widgetEntryForm,
+                ids.overlayPublication,
+                ids.widgetPublicationForm,
               ].map((receiverId, index) => ({
-                routeKey: `editor-news-table-action-${index}`,
+                routeKey: `${routePrefix}-table-action-${index}`,
                 capabilityId: "actionActivate",
                 scope: "page" as const,
                 channel: "action",
@@ -581,13 +616,13 @@ export async function buildPhiDefaultEditorNewsPageTree({
             ],
             listens: [{
               // What a saved Form leads to: the list read again, decided by the Table and not by the Form.
-              routeKey: "editor-news-table-reload",
+              routeKey: `${routePrefix}-table-reload`,
               capabilityId: "reload",
               scope: "page",
               channel: "reload",
               action: "activate",
               valueType: "none",
-              receiver: TABLE_ADDRESS,
+              receiver: tableAddress,
             }],
           },
         },

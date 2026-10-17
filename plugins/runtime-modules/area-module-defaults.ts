@@ -61,9 +61,8 @@ export function createPhiDefaultAreaRuntimeModuleIds(
 
   if (area === "editor") {
     /*
-     * News belongs here for the same reason localization does: the Area ships a Page for it, and its
-     * sidebar offers the entry. A default that left the Module out would give every Site that has not
-     * configured its Editor a menu item leading to a Table that reports its Provider missing.
+     * News belongs here for the same reason localization does: it is what an Editor is for on most
+     * Sites. Blog is not here -- a Site that writes one switches it on in the Public Area and here.
      */
     return [
       PHI_LOCALIZATION_RUNTIME_MODULE_ID,

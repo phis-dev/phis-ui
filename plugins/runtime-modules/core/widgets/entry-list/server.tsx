@@ -1,33 +1,33 @@
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
-import { getPhiNewsListLabels } from "../../labels";
+import { getPhiContentEntryReaderLabels } from "../../../../../components/widgets/label-sets/content-entries";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
-import { fetchPhiSiteNews } from "../../../../../gateway/news";
-import { formatPhiDate } from "../../../../../helpers/format-date-time";
-import { collectPhiLinkTargetReferences, resolvePhiLinkHref } from "../../../../../helpers/link-target";
-import { resolvePhiLinkTargetReferences } from "../../../../../server-helpers/cms-link-targets";
+import { fetchPhiSiteContentEntries } from "../../../../../gateway/content-entries";
 import { phiRuntime } from "../../../../../server-helpers/phi-runtime";
 import type { PhiNoLabels, PhiServerBlockBaseProps } from "../../../../../types";
-import type { PhiNewsListEntryView } from "./client";
-import { normalizePhiNewsListWidgetConfig, type PhiNewsListWidgetConfig } from "./config";
+import type { PhiResolvedLinkTargets } from "../../../../../types/references";
+import { buildPhiEntryViews } from "./view.server";
+import { normalizePhiEntryListWidgetConfig, type PhiEntryListWidgetConfig } from "./config";
 
-export type PhiNewsListWidgetProps = PhiServerBlockBaseProps<PhiNoLabels, PhiNewsListWidgetConfig>;
+export type PhiEntryListWidgetProps = PhiServerBlockBaseProps<PhiNoLabels, PhiEntryListWidgetConfig> & {
+  links?: PhiResolvedLinkTargets | null;
+};
 
 /**
- * The Site's news, read while the page is drawn.
+ * One kind's published entries, read while the page is drawn (`CONTENT_ENTRIES.md`).
  *
- * Nothing here depends on the visitor -- published news is the same for everybody -- so it belongs in the
- * render rather than in a request the browser makes afterwards. On a Public page that is also the only
+ * Nothing here depends on the visitor -- published entries are the same for everybody -- so it belongs in
+ * the render rather than in a request the browser makes afterwards. On a Public page that is also the only
  * way an expired entry can be absent instead of appearing and then disappearing.
  *
  * A failed read says so. The alternative is a page with a heading and nothing under it, which a visitor
- * reads as "this Site has no news" and an operator cannot tell from the real thing.
+ * reads as "this Site has published nothing" and an operator cannot tell from the real thing.
  */
-export async function PhiNewsListWidget({ config, runtime }: PhiNewsListWidgetProps) {
-  const settings = normalizePhiNewsListWidgetConfig(config);
+export async function PhiEntryListWidget({ config, runtime, links }: PhiEntryListWidgetProps) {
+  const settings = normalizePhiEntryListWidgetConfig(config);
   const rt = phiRuntime(runtime);
   const locale = runtime.locale.current;
-  const labels = await getPhiNewsListLabels({
+  const labels = await getPhiContentEntryReaderLabels({
     apiBaseUrl: rt.apiBaseUrl,
     internalToken: rt.internalToken,
     locale,
@@ -35,7 +35,8 @@ export async function PhiNewsListWidget({ config, runtime }: PhiNewsListWidgetPr
 
   let entries;
   try {
-    entries = await fetchPhiSiteNews({
+    entries = await fetchPhiSiteContentEntries({
+      kind: settings.kind,
       apiBaseUrl: rt.apiBaseUrl,
       internalToken: rt.internalToken,
       siteKey: rt.siteKey,
@@ -46,65 +47,19 @@ export async function PhiNewsListWidget({ config, runtime }: PhiNewsListWidgetPr
     return <PhiAlertControl level="warning" showIcon title={labels.unavailable} />;
   }
 
-  /*
-   * The body is Markdown, and it is parsed and translated here rather than answered translated by Core.
-   *
-   * Only the inline content of headings, paragraphs and table cells is handed to a provider, as HTML --
-   * the structure, code fences and raw HTML never are (`collectMarkdownTranslationUnits`). That is what
-   * makes Markdown the right standard for an entry: the control characters are not spared, they are never
-   * sent. It also means each paragraph is its own cache entry, so correcting one costs one.
-   *
-   * The entry's own language and switch decide, not the Widget's: they belong to the words.
-   */
-  /*
-   * Imported here rather than at the top: the Widget catalogue loads every Module's server file at
-   * start-up, and reaching into the core Module's graph from there closes a cycle through its data
-   * provider keys -- eleven unrelated suites failed on an undefined constant before this moved inside.
-   */
-  const { resolveMarkdownRenderData } = await import("../../../../../components/widgets/shared/markdown-render");
-
-  /*
-   * Every entry's Page in one question, the way a render resolves its Widgets' links: a Page that is gone
-   * or unpublished resolves to nothing, and the entry then shows no link rather than one to nowhere.
-   */
-  const resolvedLinks = settings.showLinks
-    ? await resolvePhiLinkTargetReferences(
-      collectPhiLinkTargetReferences(entries.map((entry) => ({ linkTarget: entry.link }))),
-      runtime,
-    )
-    : null;
-
-  const views: PhiNewsListEntryView[] = await Promise.all(
-    entries.map(async (entry, index) => {
-      // Core answers the slug where an entry has one; the index is the fallback for an entry that has
-      // none, so two entries can never share a React key -- or a heading anchor.
-      const id = entry.id || entry.slug || `news-${index}`;
-      const body = entry.content.trim()
-        ? await resolveMarkdownRenderData({
-          sourceMode: "inline",
-          markdown: entry.content,
-          translate: entry.translate,
-          sourceLocale: entry.sourceLocale ?? undefined,
-          widgetId: `news-${id}`,
-        }, runtime)
-        : { blocks: [] };
-
-      return {
-        id,
-        title: entry.title,
-        subtitle: entry.subtitle,
-        blocks: "error" in body ? [] : body.blocks,
-        date: formatPhiDate(entry.created, locale),
-        machineDate: entry.created,
-        link: settings.showLinks ? resolvePhiLinkHref(entry.link, resolvedLinks) : null,
-        tags: settings.showTags ? entry.tags : [],
-      };
-    }),
-  );
+  const views = await buildPhiEntryViews({
+    kind: settings.kind,
+    entries,
+    runtime,
+    showLinks: settings.showLinks,
+    showTags: settings.showTags,
+    detailLinkTarget: settings.detailLinkTarget,
+    links,
+  });
 
   return (
     <PhiRuntimeModuleRenderClientHost
-      type={PhiCmsWidgetType.NewsList}
+      type={PhiCmsWidgetType.EntryList}
       componentProps={{ entries: views, labels }}
     />
   );

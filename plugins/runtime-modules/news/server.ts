@@ -2,14 +2,13 @@ import { definePhiRuntimeModuleServerAreaContribution } from "../area-contributi
 import { PHI_NEWS_RUNTIME_MODULE_DEFINITION } from "./definition";
 import { PHI_NEWS_RUNTIME_MODULE_FORMS } from "./forms";
 import { PHI_NEWS_RUNTIME_MODULE_ROUTES } from "./presets";
-import { PHI_NEWS_RUNTIME_MODULE_WIDGETS } from "./widgets";
 
 export function createPhiNewsRuntimeModuleServerAreaContribution() {
   return definePhiRuntimeModuleServerAreaContribution({
     moduleId: PHI_NEWS_RUNTIME_MODULE_DEFINITION.moduleId,
     catalogEntry: {
       definition: PHI_NEWS_RUNTIME_MODULE_DEFINITION,
-      widgets: PHI_NEWS_RUNTIME_MODULE_WIDGETS,
+      widgets: [],
       layouts: [],
       forms: PHI_NEWS_RUNTIME_MODULE_FORMS,
       routes: PHI_NEWS_RUNTIME_MODULE_ROUTES,

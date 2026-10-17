@@ -30,6 +30,16 @@ export const PHI_CORE_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS = [
         .PhiSiteLocalesOptionsProviderClient,
   },
   {
+    key: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntries,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    loadLive: async () => (await import("./content-entries/table")).PhiContentEntriesTableProviderClient,
+  },
+  {
+    key: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntryTags,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    loadLive: async () => (await import("./content-entries/tags")).PhiContentEntryTagsOptionsProviderClient,
+  },
+  {
     key: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentTable,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     loadLive: async () =>

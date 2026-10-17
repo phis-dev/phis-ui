@@ -779,7 +779,10 @@ Builder addresses a Module Page by `createPhiPresetCmsPageId({ ownerModuleId, pr
 that pair: recomputable, unique across Modules, and unchanged when the path is reassigned. A Site Page is
 addressed by its path.
 
-- Route paths are exact or contain at most one whole-segment parameter (`/news/:id`). Catch-alls,
+- Route paths are exact or contain at most one whole-segment parameter (`/news/:slug`). The parameter
+  reaches the tree loader as `params`; a loader whose parameter names nothing calls `notFound()`, which
+  the request resolution raises before the shell flushes, so the route answers 404
+  ([CONTENT_ENTRIES.md](./CONTENT_ENTRIES.md), "The detail route"). Catch-alls,
   optional segments, regexes, match callbacks, and several dynamic segments are rejected.
 - `compilePhiCmsDescriptorCatalog` validates the installed descriptor set -- ownership, versions, route
   syntax, navigation anchors, Theme identity, shell composition -- without running a tree loader.

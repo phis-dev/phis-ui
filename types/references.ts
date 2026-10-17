@@ -15,6 +15,7 @@ export {
   createPhiPageReference,
   createPhiPageUri,
   createPhiPresetCmsPageId,
+  fillPhiRouteParams,
   isPhiLinkTargetConfigKey,
   isPhiStorableExternalHref,
   readPhiInternalReference,

@@ -2,18 +2,23 @@ import "server-only";
 
 import { isPhiRecord } from "../helpers/is-record";
 import { readPhiLinkTarget } from "../types/references";
-import type { PhiSiteNewsEntry } from "../types/news";
+import type { PhiContentEntryKind } from "../constants/content-entry-kinds";
+import type { PhiSiteContentEntry } from "../types/content-entries";
 import { fetchPhiSiteApi } from "./site-api-request";
 
-export type FetchPhiSiteNewsOptions = {
+type FetchPhiSiteContentEntryBase = {
+  kind: PhiContentEntryKind;
   apiBaseUrl: string;
   internalToken: string;
   siteKey: string;
   /** The language the page is being drawn in; Core resolves each entry's text for it. */
   locale: string;
+};
+
+export type FetchPhiSiteContentEntriesOptions = FetchPhiSiteContentEntryBase & {
   /**
    * How many entries the caller will show, newest first. Core cuts the list there before it translates,
-   * so a Site with years of News does not pay for translating all of them to draw ten.
+   * so a Site with years of entries does not pay for translating all of them to draw ten.
    */
   limit: number;
 };
@@ -22,7 +27,7 @@ function readString(value: unknown) {
   return typeof value === "string" ? value : "";
 }
 
-function readNewsEntry(value: unknown): PhiSiteNewsEntry | null {
+function readContentEntry(value: unknown): PhiSiteContentEntry | null {
   if (!isPhiRecord(value)) {
     return null;
   }
@@ -53,39 +58,56 @@ function readNewsEntry(value: unknown): PhiSiteNewsEntry | null {
   };
 }
 
+async function fetchEntries(options: FetchPhiSiteContentEntryBase, searchParams: Record<string, string>) {
+  const payload = await fetchPhiSiteApi<unknown>({
+    context: "fetchPhiSiteContentEntries",
+    apiBaseUrl: options.apiBaseUrl,
+    internalToken: options.internalToken,
+    siteKey: options.siteKey,
+    path: `/api/v1/entries/${options.kind}`,
+    searchParams,
+    locale: options.locale,
+    failure: `Entries fetch failed (${options.kind})`,
+    userAgent: "phis-ui-entries/1.0",
+  });
+  if (!isPhiRecord(payload) || !Array.isArray(payload.entries)) {
+    throw new Error("Entries answered without a list.");
+  }
+  return payload.entries
+    .map((entry) => readContentEntry(entry))
+    .filter((entry): entry is PhiSiteContentEntry => entry !== null);
+}
+
 /**
- * The Site's published News, read while the page is being rendered.
+ * One kind's published entries, read while the page is being rendered.
  *
- * A gateway read rather than a browser one, which `design/NEWS.md` §4 asks for and the endpoint enforces
- * anyway: it wants the internal token, which a browser must never hold. It also means an entry that has
- * expired is absent from the HTML instead of appearing and then vanishing.
+ * A gateway read rather than a browser one, which the endpoint enforces anyway: it wants the internal
+ * token, which a browser must never hold. It also means an entry that has expired is absent from the HTML
+ * instead of appearing and then vanishing.
  *
  * `no-store` is right here despite the page being cached: on a Public page this fetch runs inside the
  * static render, which is itself kept and renewed at most once a minute
  * ([STATIC_RENDERING.md](../STATIC_RENDERING.md)). A second cache underneath it would only add a second
  * age to reason about.
  */
-export async function fetchPhiSiteNews(options: FetchPhiSiteNewsOptions): Promise<PhiSiteNewsEntry[]> {
+export async function fetchPhiSiteContentEntries(
+  options: FetchPhiSiteContentEntriesOptions,
+): Promise<PhiSiteContentEntry[]> {
   if (!Number.isInteger(options.limit) || options.limit <= 0) {
-    throw new Error("fetchPhiSiteNews needs a positive integer limit.");
+    throw new Error("fetchPhiSiteContentEntries needs a positive integer limit.");
   }
-  const payload = await fetchPhiSiteApi<unknown>({
-    context: "fetchPhiSiteNews",
-    apiBaseUrl: options.apiBaseUrl,
-    internalToken: options.internalToken,
-    siteKey: options.siteKey,
-    // News is the `news` kind of the content types (phis-server CONTENT.md).
-    path: "/api/v1/entries/news",
-    searchParams: { limit: String(options.limit) },
-    locale: options.locale,
-    failure: "News fetch failed",
-    userAgent: "phis-ui-news/1.0",
-  });
-  if (!isPhiRecord(payload) || !Array.isArray(payload.entries)) {
-    throw new Error("News answered without a list.");
-  }
+  return fetchEntries(options, { limit: String(options.limit) });
+}
 
-  return payload.entries
-    .map((entry) => readNewsEntry(entry))
-    .filter((entry): entry is PhiSiteNewsEntry => entry !== null);
+/**
+ * One published entry by its address, for a detail Page; `null` where the kind has none answering there
+ * -- never published, expired, or a slug nobody wrote. The detail route answers 404 on `null`.
+ */
+export async function fetchPhiSiteContentEntry(
+  options: FetchPhiSiteContentEntryBase & { slug: string },
+): Promise<PhiSiteContentEntry | null> {
+  const slug = options.slug.trim();
+  if (!slug) return null;
+  const [entry] = await fetchEntries(options, { slug, limit: "1" });
+  return entry ?? null;
 }

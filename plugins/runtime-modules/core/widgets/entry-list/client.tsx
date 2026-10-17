@@ -11,7 +11,7 @@ import {
   type PhiMarkdownBlock,
 } from "../../../../../components/widgets/shared/markdown-body-client";
 import { PHI_SPACE } from "../../../../../theme/antd-css-var-contract";
-import type { PhiNewsListLabels } from "../../labels";
+import type { PhiContentEntryReaderLabels } from "../../../../../components/widgets/label-sets/content-entries";
 
 /**
  * One entry as the server prepared it.
@@ -22,7 +22,7 @@ import type { PhiNewsListLabels } from "../../labels";
  * ([helpers/format-date-time.ts](../../../../../helpers/format-date-time.ts)). `machineDate` is the same
  * moment for the `<time>` attribute, which is not language at all.
  */
-export type PhiNewsListEntryView = {
+export type PhiEntryListEntryView = {
   id: string;
   title: string;
   subtitle: string;
@@ -32,24 +32,44 @@ export type PhiNewsListEntryView = {
   machineDate: string;
   /** Where "Read more" leads, resolved on the server; `null` where the entry has no link that resolves. */
   link: { href: string; newTab: boolean; external: boolean } | null;
+  /** Where the title leads: the entry's detail Page, resolved on the server, or `null` for none. */
+  detail: { href: string; newTab: boolean; external: boolean } | null;
   tags: readonly string[];
 };
 
-export type PhiNewsListWidgetClientProps = {
-  entries: readonly PhiNewsListEntryView[];
-  labels: PhiNewsListLabels;
+export type PhiEntryListWidgetClientProps = {
+  entries: readonly PhiEntryListEntryView[];
+  labels: PhiContentEntryReaderLabels;
 };
 
-function PhiNewsListEntry({ entry, labels }: { entry: PhiNewsListEntryView; labels: PhiNewsListLabels }) {
+/**
+ * One entry: date, title, subtitle, body, tags and link.
+ *
+ * Shared with the detail Widget, which leaves the title out: on a detail Page the entry's title is the
+ * Page's title, and the Page draws it.
+ */
+export function PhiEntryArticle({
+  entry,
+  labels,
+  showTitle = true,
+}: {
+  entry: PhiEntryListEntryView;
+  labels: PhiContentEntryReaderLabels;
+  showTitle?: boolean;
+}) {
   return (
     <article>
       <PhiFlexControl vertical gap={PHI_SPACE.xs}>
         <PhiTypographyControl presentation="text" type="secondary">
           <time dateTime={entry.machineDate}>{entry.date}</time>
         </PhiTypographyControl>
-        <PhiTypographyControl presentation="title" level={3} style={{ margin: 0 }}>
-          {entry.title}
-        </PhiTypographyControl>
+        {showTitle ? (
+          <PhiTypographyControl presentation="title" level={3} style={{ margin: 0 }}>
+            {entry.detail
+              ? <PhiLink href={entry.detail.href} external={entry.detail.external}>{entry.title}</PhiLink>
+              : entry.title}
+          </PhiTypographyControl>
+        ) : null}
         {entry.subtitle ? (
           <PhiTypographyControl presentation="text" strong>
             {entry.subtitle}
@@ -88,7 +108,7 @@ function PhiNewsListEntry({ entry, labels }: { entry: PhiNewsListEntryView; labe
  * through one: the Controls are where antd lives, and a server component cannot use them. Nothing here
  * depends on the visitor, so the first paint already carries every entry.
  */
-export function PhiNewsListWidgetClient({ entries, labels }: PhiNewsListWidgetClientProps) {
+export function PhiEntryListWidgetClient({ entries, labels }: PhiEntryListWidgetClientProps) {
   if (entries.length === 0) {
     return (
       <PhiEmptyControl
@@ -107,7 +127,7 @@ export function PhiNewsListWidgetClient({ entries, labels }: PhiNewsListWidgetCl
       {entries.map((entry, index) => (
         <PhiFlexControl key={entry.id} vertical gap={PHI_SPACE.lg}>
           {index > 0 ? <PhiDividerControl style={{ margin: 0 }} /> : null}
-          <PhiNewsListEntry entry={entry} labels={labels} />
+          <PhiEntryArticle entry={entry} labels={labels} />
         </PhiFlexControl>
       ))}
     </PhiFlexControl>

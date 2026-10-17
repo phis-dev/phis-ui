@@ -589,7 +589,13 @@ export function PhiThreadConversationWidgetClient({
       <PhiCardControl
         padding={config?.padding}
         toolbar={config?.reply && detail.thread.status !== PhisThreadStatus.Archived ? (
-          <PhiButtonControl label={labels.replyLabel} icon={<PhiIcon name="antd:message-outlined" size="inherit" />} onClick={reply} />
+          // Small, like every control in a heading bar: it sits beside the title, not under the conversation.
+          <PhiButtonControl
+            label={labels.replyLabel}
+            icon={<PhiIcon name="antd:message-outlined" size="inherit" />}
+            size="small"
+            onClick={reply}
+          />
         ) : undefined}
         title={
           <PhiFlexControl align="center" gap="small" wrap>

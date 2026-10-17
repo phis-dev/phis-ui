@@ -4,11 +4,21 @@ import {
   createPhiControlOptionsProviderClient,
   type PhiControlOptionsProviderContext,
 } from "../../../../components/controls/phi-options-provider";
-import { PHI_NEWS_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
+import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../../constants/core-data-provider-keys";
+import {
+  isPhiContentEntryKind,
+  resolvePhiContentEntryEditorApiPaths,
+} from "../../../../constants/content-entry-kinds";
 import { requestPhiJson } from "../../../../helpers/client-json-request";
 
+/** The kind a tag field offers the tags of, as its `config.kind` names it; none is no offer. */
+function readKind(context: Pick<PhiControlOptionsProviderContext, "sourceConfig">) {
+  const kind = context.sourceConfig?.kind;
+  return isPhiContentEntryKind(kind) ? kind : null;
+}
+
 /**
- * The tags this Site's entries already carry, which is the offer a tag field picks from.
+ * The tags one kind's entries already carry, which is the offer a tag field picks from.
  *
  * There is no vocabulary behind it: a tag is a string on an entry, so the offer is the set of them and a
  * tag nobody carries any more leaves it by itself. Answered by the same endpoint that lists the entries --
@@ -18,16 +28,16 @@ import { requestPhiJson } from "../../../../helpers/client-json-request";
  * two translations to pay for, and the store lower-cases what it is given precisely so that this list stays
  * short. A new tag is typed into the same field.
  */
-const NEWS_API_PATH = "/api/site/editor/entries/news?page=1&pageSize=1";
-
-export const PhiNewsTagsOptionsProviderClient = createPhiControlOptionsProviderClient({
-  key: PHI_NEWS_RUNTIME_DATA_PROVIDER_KEYS.tags,
-  load: async () => {
-    const reply = await requestPhiJson(NEWS_API_PATH);
+export const PhiContentEntryTagsOptionsProviderClient = createPhiControlOptionsProviderClient({
+  key: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntryTags,
+  load: async (context) => {
+    const kind = readKind(context);
+    if (!kind) return { tags: [] };
+    const reply = await requestPhiJson(`${resolvePhiContentEntryEditorApiPaths(kind).entries}?page=1&pageSize=1`);
     if (!reply.ok) throw new Error("Failed to load the tags in use.");
     return reply.payload;
   },
-  resolveLoadKey: () => "news-tags",
+  resolveLoadKey: (context) => `content-entry-tags:${readKind(context) ?? ""}`,
   resolve: (context: PhiControlOptionsProviderContext) => {
     const tags = (context.asyncData as { tags?: unknown } | null)?.tags;
     return {
