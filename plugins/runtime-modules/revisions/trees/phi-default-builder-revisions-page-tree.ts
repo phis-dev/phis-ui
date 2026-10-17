@@ -485,7 +485,28 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
               reset: false,
               reload: true,
             },
-            actions: { row: [
+            actions: {
+              /*
+               * Back to the Module's preset, for a Module's Page: the Site's override goes with every
+               * revision listed here, so the act sits beside them (phis-server CONTENT.md, Reset). The
+               * Provider refuses it for anything else, with a sentence rather than a hidden button.
+               */
+              toolbar: [
+                {
+                  key: "resetPage",
+                  label: revisionsLabels.actions.resetPage,
+                  icon: "antd:undo",
+                  display: "icon-label",
+                  mode: "danger",
+                  execution: "provider",
+                  confirm: {
+                    title: revisionsLabels.confirm.resetPageTitle,
+                    description: revisionsLabels.confirm.resetPageDescription,
+                    okText: revisionsLabels.actions.resetPage,
+                  },
+                },
+              ],
+              row: [
               {
                 key: "review",
                 label: revisionsLabels.actions.review,

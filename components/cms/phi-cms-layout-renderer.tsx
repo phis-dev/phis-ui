@@ -1,5 +1,6 @@
 import { cloneElement, isValidElement, type ReactElement, type ReactNode } from "react";
 
+import { isPhiCmsWidgetContentUnpublished } from "../../helpers/cms-content-binding";
 import type {
   PhiCmsContentWidgetNode,
   PhiCmsLayoutRenderNode,
@@ -558,6 +559,10 @@ function renderContentWidget(
     ? context.runtimeRegistry.previewWidgetPluginsByType.get(widget.widgetType) ?? null
     : null;
   const widgetPlugin = runtimePlugin ?? previewPlugin;
+  // Bound content that was never published is not on the live Site, and neither is its Widget.
+  if (renderMode === "live" && widgetPlugin && isPhiCmsWidgetContentUnpublished(widgetPlugin.contentBinding, widget)) {
+    return null;
+  }
 
   if (widgetPlugin) {
     try {

@@ -73,17 +73,18 @@ export async function fetchPhiSiteNews(options: FetchPhiSiteNewsOptions): Promis
     apiBaseUrl: options.apiBaseUrl,
     internalToken: options.internalToken,
     siteKey: options.siteKey,
-    path: "/api/v1/news",
+    // News is the `news` kind of the content types (phis-server CONTENT.md).
+    path: "/api/v1/entries/news",
     searchParams: { limit: String(options.limit) },
     locale: options.locale,
     failure: "News fetch failed",
     userAgent: "phis-ui-news/1.0",
   });
-  if (!isPhiRecord(payload) || !Array.isArray(payload.news)) {
+  if (!isPhiRecord(payload) || !Array.isArray(payload.entries)) {
     throw new Error("News answered without a list.");
   }
 
-  return payload.news
+  return payload.entries
     .map((entry) => readNewsEntry(entry))
     .filter((entry): entry is PhiSiteNewsEntry => entry !== null);
 }

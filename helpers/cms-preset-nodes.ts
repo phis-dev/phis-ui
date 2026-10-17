@@ -126,7 +126,7 @@ export type PhiCmsPresetPageInput = Partial<Pick<PhiCmsPageNode, "pageType" | "l
  * The parts of a node that a Preset repeats rather than decides.
  *
  * A placement is four things -- what it is, where it sits, what it is called, how it is configured --
- * and it was written as eleven, because `siteId`, `visibilityMask`, `status`, `flags`, `contentId` and
+ * and it was written as eleven, because `siteId`, `visibilityMask`, `status`, `flags`, `contentVersionId` and
  * `sortOrder` are the same for every node of a page and were spelled out on each of them. That is not
  * detail a reader of a Preset needs; it is noise they have to look past to find the four that matter,
  * and it is six chances to write the wrong page's `visibilityMask` on one node out of twenty.
@@ -174,7 +174,6 @@ function createPhiCmsPresetNodeSet(defaults: PhiCmsPresetNodeDefaults) {
       return buildPhiCmsWidgetNode<TTypeKey, TPluginKey>({
         ...common,
         sortOrder: input.slotIndex,
-        contentId: null,
         ...input,
       });
     },
@@ -192,7 +191,6 @@ function createPhiCmsPresetNodeSet(defaults: PhiCmsPresetNodeDefaults) {
       const stacked = entries as readonly PhiCmsPresetStackEntry<string>[];
       return stacked.map((entry, index) => buildPhiCmsWidgetNode({
         ...common,
-        contentId: null,
         parentLayoutNodeId,
         slotIndex: startAt + index,
         sortOrder: startAt + index,

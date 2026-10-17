@@ -29,6 +29,11 @@ type GetResolvedCmsPageOptions = {
   review?: PhiCmsReviewParams | null;
   cookieHeader?: string | null;
   sourcePreset?: PhiCmsPresetIdentity | null;
+  /**
+   * `current` reads what is published as an editor does: with each bound Widget's current content and
+   * the version it builds on (phis-server CONTENT.md). It needs a reviewer's cookies.
+   */
+  stage?: "published" | "current";
 };
 
 export const getResolvedCmsPage = definePhiRequestMemo(async function getResolvedCmsPage({
@@ -41,8 +46,12 @@ export const getResolvedCmsPage = definePhiRequestMemo(async function getResolve
   review,
   cookieHeader,
   sourcePreset,
+  stage,
 }: GetResolvedCmsPageOptions): Promise<PhiResolvedCmsPagePayload | null> {
   const searchParams = new URLSearchParams({ path });
+  if (stage === "current") {
+    searchParams.set("stage", "current");
+  }
   if (sourcePreset) {
     searchParams.set("ownerModuleId", sourcePreset.ownerModuleId);
     searchParams.set("presetKey", sourcePreset.presetKey);
@@ -85,7 +94,7 @@ export const getCurrentCmsPageDraft = definePhiRequestMemo(async function getCur
   locale,
   cookieHeader,
   sourcePreset,
-}: Omit<GetResolvedCmsPageOptions, "revision"> & { area?: string }): Promise<PhiResolvedCmsPagePayload | null> {
+}: Omit<GetResolvedCmsPageOptions, "revision" | "stage"> & { area?: string }): Promise<PhiResolvedCmsPagePayload | null> {
   const searchParams = new URLSearchParams();
   if (sourcePreset) {
     searchParams.set("ownerModuleId", sourcePreset.ownerModuleId);

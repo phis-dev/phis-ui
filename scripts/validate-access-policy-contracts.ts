@@ -153,7 +153,7 @@ const tree = {
     visibilityMask: 0,
     label: null,
     config: {},
-    contentId: null,
+    contentVersionId: null,
   }, {
     id: "DDDDDDDDDDDDDDDD",
     siteId: 1,
@@ -166,7 +166,7 @@ const tree = {
     visibilityMask: 0,
     label: null,
     config: {},
-    contentId: null,
+    contentVersionId: null,
   }],
 } as unknown as PhiResolvedCmsRenderableTree;
 

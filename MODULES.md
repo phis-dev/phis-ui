@@ -682,7 +682,7 @@ selection; an optional Module never replaces the locked `areaShells` descriptor 
 
 A placement says four things: what it is, where it sits, what it is called, how it is configured.
 `createPhiCmsPresetNodes` supplies the rest -- `siteId`, `visibilityMask`, `status`, `flags`,
-`contentId`, and a `sortOrder` that follows the slot unless it is given -- because those repeat for
+`contentVersionId`, and a `sortOrder` that follows the slot unless it is given -- because those repeat for
 every node of a page and are not decisions a Preset makes. Writing them out on each node buried the
 four that matter and gave every node its own chance to carry the wrong page's mask.
 

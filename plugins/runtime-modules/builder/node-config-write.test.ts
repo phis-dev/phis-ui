@@ -42,7 +42,7 @@ function widget(nodeId: PhiCmsInstanceId, widgetType: string, label: string | nu
     visibilityMask: 0,
     label,
     config,
-    contentId: null,
+    contentVersionId: null,
   } as PhiCmsContentWidgetNode;
 }
 

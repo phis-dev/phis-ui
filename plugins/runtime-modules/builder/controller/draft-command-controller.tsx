@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { useRouter } from "next/navigation";
 
 import { usePhiConfirmDialog } from "../../../../components/controls/phi-confirm-dialog";
 import {
@@ -10,11 +11,7 @@ import {
 import { usePhiApplicationFeedback } from "../../../../components/runtime/use-phi-application-feedback";
 import type { PhiBuilderSavedHistoryHead } from "./draft-status-controller";
 import { createPhiDefaultAreaRuntimeModuleIds } from "../../area-module-defaults";
-import { getPhiBuilderDefaultRegionDraft } from "../region-defaults";
-import {
-  getPhiBuilderRegionDraftKey,
-  PHI_BUILDER_PAGE_REGION_KEYS,
-} from "../region-keys";
+import { getPhiBuilderRegionDraftKey } from "../region-keys";
 import { resolvePhiBuilderCmsStoragePath } from "../../../../helpers/cms-paths";
 import {
   resolvePhiBuilderActivePageCatalog,
@@ -25,7 +22,6 @@ import { deleteCmsDraft } from "../../../../helpers/cms-draft-delete";
 import { buildPhiBuilderLiveHref,
   clearPhiDeveloperBuilderDraftAllocation,
   createPhiDeveloperBuilderInitialPageDrafts,
-  discardPhiDeveloperBuilderModulesDraft,
   getPhiDeveloperBuilderModulesDraftAllocation,
   savePhiDeveloperBuilderModulesDraft,
   publishPhiDeveloperBuilderModulesDraft,
@@ -52,12 +48,10 @@ import {
   builderWorkspaceStore,
   splitWorkspacePatch,
   getPhiDeveloperRegionDraftsSnapshot,
-  mergePhiDeveloperDeletedPageDrafts,
   mergePhiDeveloperRegionDrafts,
   restorePhiDeveloperBuilderAreaMeta,
   restorePhiDeveloperRegionDrafts,
   setPhiDeveloperBuilderAreaRootRoute,
-  setPhiDeveloperRegionDraftsWithHistory,
 } from "../developer-workspace-store";
 import type {
   PhiDeveloperBuilderArea,
@@ -129,6 +123,7 @@ export function usePhiBuilderDraftCommandController({
    * only the Builder asks.
    */
   const { confirm, confirmDialog } = usePhiConfirmDialog();
+  const router = useRouter();
   const { showMessage } = usePhiApplicationFeedback();
   const builderModuleMetas = usePhiBuilderModuleMetas(effectiveArea);
   /*
@@ -461,77 +456,23 @@ export function usePhiBuilderDraftCommandController({
   }
 
   /**
-   * Puts the Module's shell back into the draft, as an edit rather than as an erasure.
+   * Throws away the open draft of the Area's shell or of a Page, and shows what is published again.
    *
-   * It used to delete the draft on the server and clear the history behind it, which made "start over"
-   * the one gesture in this workspace that could not be taken back -- and it promised the wrong thing
-   * twice over: the dialog said what is published stays live while the editor came back showing the
-   * preset, two different answers that only agreed while nobody had published.
+   * A draft is the only thing this deletes: nothing live changes, and the revision history keeps what was
+   * published. Going back to a Module's preset is a different act -- it deletes the Site's override and
+   * changes what is live at once -- and it lives in Revisions, with the history it discards in view
+   * (phis-server CONTENT.md, Reset). Putting the preset into the draft instead, as this command once did,
+   * published a frozen copy of the preset that no later Module update would reach.
    *
-   * Nothing is deleted now. The preset's Regions are written into the draft as one recorded step, so
-   * undo returns what was there, the previous draft stays in the revision history, and what is live
-   * stays live until somebody publishes. That also makes this the only way back to where a Module
-   * started: revisions know the states this Site has been in, and if it was customised before it was
-   * first published, the Module's own starting point was never one of them.
-   *
-   * The Area's root route and its SEO answers are deliberately untouched. They say where the Area lives
-   * and how it describes itself, which is not what its shell looks like; the old command dropped them
-   * only because it had deleted the draft that held them.
+   * The workspace is read again afterwards rather than patched: what stands now is the published state,
+   * which only the server holds.
    */
-  function confirmResetShell() {
-    const presetDrafts = shellPresetDraftsByArea[effectiveArea] ?? null;
-    if (!presetDrafts) {
-      showMessage({ level: "warning", content: "No shell preset found for the current area." });
-      return;
-    }
-
+  function confirmDiscardDraft(workspaceKind: "structure" | "pages") {
     confirm({
-      title: "Start from the Module's shell?",
+      title: "Discard the draft?",
       content:
-        "This puts the Module's shell into the draft, replacing what the editor is showing. " +
-        "Nothing is deleted -- undo takes it back, and what is published stays live until you publish.",
-      confirmLabel: "Start from the preset",
-      cancelLabel: "Cancel",
-      onConfirm: () => {
-        setPhiDeveloperRegionDraftsWithHistory(presetDrafts, {
-          history: {
-            context: createPhiBuilderHistoryContext({
-              workspace: "structure",
-              area: effectiveArea,
-            }),
-            action: { key: "startFromShell" },
-          },
-        });
-        showMessage({ level: "success", content: "The Module's shell is in the draft." });
-      },
-    });
-  }
-
-  /**
-   * Discards the Area's Module draft and puts the selection back to what a fresh Area would run with.
-   *
-   * Deliberately the code-owned default rather than a re-fetch of the published selection. The Shell
-   * reset above does ask the server again, because what it discards -- the Area's root route -- decides
-   * which Pages another workspace may open, and a stale answer there is a Page list describing a Site
-   * that is not served. A Module selection has no such reader: "back to the start" is a complete answer
-   * once there is no draft left to describe something in between.
-   */
-  function confirmResetModules() {
-    void confirmResetModulesForAreas().catch((error: unknown) => {
-      showMessage({ level: "error", content: error instanceof Error ? error.message : "Module drafts could not be read." });
-    });
-  }
-
-  async function confirmResetModulesForAreas() {
-    const areas = await resolveModulesCommandAreasWithServer();
-    if (areas.length === 0) {
-      showMessage({ level: "info", content: "No module selection changes to reset." });
-      return;
-    }
-    confirm({
-      title: "Delete Module drafts?",
-      content: "This removes the open DB Module drafts and restores the shared default selection for every touched area.",
-      confirmLabel: "Delete and reset",
+        "This deletes the open draft. The editor shows what is published again, and nothing live changes.",
+      confirmLabel: "Discard draft",
       danger: true,
       cancelLabel: "Cancel",
       onConfirm: async () => {
@@ -540,28 +481,43 @@ export function usePhiBuilderDraftCommandController({
         }
         setActiveDraftAction("reset");
         try {
-          for (const area of areas) {
-            await discardPhiDeveloperBuilderModulesDraft({
-              area,
-              areaPresetSource: state.areaPresetSourcesByArea[area] ?? null,
+          if (workspaceKind === "structure") {
+            const source = state.areaPresetSourcesByArea[effectiveArea] ?? null;
+            await deleteCmsDraft("/api/site/cms/area", {
+              area: effectiveArea,
+              ownerModuleId: source?.ownerModuleId,
+              presetKey: source?.presetKey,
+            });
+          } else {
+            const pages = resolvePhiBuilderActivePageCatalog(
+              effectiveArea,
+              state.modulePresetPagesByArea,
+              state.customPages,
+              state.persistedPageCatalogByArea,
+            );
+            const sourcePreset = resolvePhiBuilderPagePresetSource(effectivePageKey, pages);
+            await deleteCmsDraft("/api/site/cms/page", {
+              area: effectiveArea,
+              ...(sourcePreset
+                ? { ownerModuleId: sourcePreset.ownerModuleId, presetKey: sourcePreset.presetKey }
+                : { path: resolvePhiBuilderCmsStoragePath(effectiveArea, effectivePageKey, pages) }),
             });
           }
-          phiWorkspaceCatalogStore.patch(defaultArea, (current) => ({
-            ...current,
-            runtimeModuleIdsByArea: {
-              ...(current.runtimeModuleIdsByArea ?? {}),
-              ...Object.fromEntries(areas.map((area) => [area, createPhiDefaultAreaRuntimeModuleIds(area)])),
-            },
-          }));
-          clearPhiBuilderModuleAreasDirty(defaultArea);
+          clearPhiDeveloperBuilderDraftAllocation({
+            area: effectiveArea,
+            pageKey: effectivePageKey,
+            workspaceKind,
+          });
           phiBuilderHistory.clear(createPhiBuilderHistoryContext({
-            workspace: "modules",
-            area: defaultArea,
+            workspace: workspaceKind,
+            area: effectiveArea,
+            pageKey: effectivePageKey,
           }));
           reportSaved("published", null, captureHistoryHead());
-          showMessage({ level: "success", content: "Reset Module drafts." });
+          showMessage({ level: "success", content: "Discarded the draft." });
+          router.refresh();
         } catch (error) {
-          showMessage({ level: "error", content: error instanceof Error ? error.message : "Module reset failed." });
+          showMessage({ level: "error", content: error instanceof Error ? error.message : "Discarding the draft failed." });
           throw error;
         } finally {
           setActiveDraftAction(null);
@@ -570,22 +526,31 @@ export function usePhiBuilderDraftCommandController({
     });
   }
 
+  /**
+   * Deletes a Page the Site made, as a draft the next publish carries out.
+   *
+   * A Module's Page cannot be deleted -- its address is the Module's -- and taking it back to its preset is
+   * Revisions' act, not this one.
+   */
   function confirmResetPage() {
-    const presetDrafts = Object.fromEntries(
-      PHI_BUILDER_PAGE_REGION_KEYS.flatMap((regionKey) => {
-        const draftKey = getPhiBuilderRegionDraftKey(effectiveArea, regionKey, effectivePageKey);
-        const draft = state.pagePresetDrafts[draftKey];
-        return draft ? [[draftKey, draft] as const] : [];
-      }),
+    const pages = resolvePhiBuilderActivePageCatalog(
+      effectiveArea,
+      state.modulePresetPagesByArea,
+      state.customPages,
+      state.persistedPageCatalogByArea,
     );
-    const hasPreset = Object.keys(presetDrafts).length > 0;
+    if (resolvePhiBuilderPagePresetSource(effectivePageKey, pages)) {
+      showMessage({
+        level: "info",
+        content: "A Module's page cannot be deleted. Its revisions can take it back to the Module's preset.",
+      });
+      return;
+    }
 
     confirm({
-      title: hasPreset ? "Delete page override?" : "Delete page?",
-      content: hasPreset
-        ? "This removes the current DB page override and restores the shared preset."
-        : "This prepares a delete draft. The live page returns 404 after the draft is published.",
-      confirmLabel: hasPreset ? "Delete and reset" : "Create delete draft",
+      title: "Delete page?",
+      content: "This prepares a delete draft. The live page returns 404 after the draft is published.",
+      confirmLabel: "Create delete draft",
       danger: true,
       cancelLabel: "Cancel",
       onConfirm: async () => {
@@ -594,104 +559,51 @@ export function usePhiBuilderDraftCommandController({
         }
         setActiveDraftAction("reset");
         try {
-          if (!hasPreset) {
-            const nextDrafts = createPhiDeveloperBuilderInitialPageDrafts({
-              area: effectiveArea,
-              pageKey: effectivePageKey,
-              title: "",
-            });
-            const pageDeleteDraftKey = getPhiBuilderRegionDraftKey(effectiveArea, "page_delete", effectivePageKey);
-            mergePhiDeveloperRegionDrafts(nextDrafts);
-            builderWorkspaceStore.patch(defaultArea, (current) => ({
-              ...current,
-              deletedPageDrafts: {
-                ...current.deletedPageDrafts,
-                [pageDeleteDraftKey]: true,
-              },
-            }));
-            const result = await savePhiDeveloperBuilderDraft(
-              {
-                ...state,
-                deletedPageDrafts: {
-                  ...state.deletedPageDrafts,
-                  [pageDeleteDraftKey]: true,
-                },
-              },
-              {
-                ...getPhiDeveloperRegionDraftsSnapshot(),
-                ...nextDrafts,
-              },
-              "pages",
-              {
-                builderPlugins: builderModuleMetas.plugins,
-                pathname,
-                scope: {
-                  area: effectiveArea,
-                  pageKey: effectivePageKey,
-                },
-              },
-            );
-            phiBuilderHistory.clear(createPhiBuilderHistoryContext({
-              workspace: "pages",
-              area: effectiveArea,
-              pageKey: effectivePageKey,
-            }));
-            reportSaved("draft", result.revisionId, captureHistoryHead());
-            showMessage({ level: "success", content: "Saved page delete draft." });
-            return;
-          }
-
-          const pages = resolvePhiBuilderActivePageCatalog(
-            effectiveArea,
-            state.modulePresetPagesByArea,
-            state.customPages,
-            state.persistedPageCatalogByArea,
-          );
-          const sourcePreset = resolvePhiBuilderPagePresetSource(effectivePageKey, pages);
-          await deleteCmsDraft("/api/site/cms/page", {
-            area: effectiveArea,
-            ...(sourcePreset
-              ? {
-                  ownerModuleId: sourcePreset.ownerModuleId,
-                  presetKey: sourcePreset.presetKey,
-                }
-              : {
-                  path: resolvePhiBuilderCmsStoragePath(
-                    effectiveArea,
-                    effectivePageKey,
-                    pages,
-                  ),
-                }),
-          });
-          clearPhiDeveloperBuilderDraftAllocation({
+          const nextDrafts = createPhiDeveloperBuilderInitialPageDrafts({
             area: effectiveArea,
             pageKey: effectivePageKey,
-            workspaceKind: "pages",
+            title: "",
           });
-
-          const nextDrafts: Record<string, PhiDeveloperBuilderRegionDraft> = {};
-
-          for (const regionKey of PHI_BUILDER_PAGE_REGION_KEYS) {
-            const draftKey = getPhiBuilderRegionDraftKey(effectiveArea, regionKey, effectivePageKey);
-            nextDrafts[draftKey] = {
-              ...getPhiBuilderDefaultRegionDraft(regionKey),
-              ...(presetDrafts[draftKey] ?? {}),
-            };
-          }
-
+          const pageDeleteDraftKey = getPhiBuilderRegionDraftKey(effectiveArea, "page_delete", effectivePageKey);
           mergePhiDeveloperRegionDrafts(nextDrafts);
-          mergePhiDeveloperDeletedPageDrafts(effectiveArea, {
-            [getPhiBuilderRegionDraftKey(effectiveArea, "page_delete", effectivePageKey)]: false,
-          });
+          builderWorkspaceStore.patch(defaultArea, (current) => ({
+            ...current,
+            deletedPageDrafts: {
+              ...current.deletedPageDrafts,
+              [pageDeleteDraftKey]: true,
+            },
+          }));
+          const result = await savePhiDeveloperBuilderDraft(
+            {
+              ...state,
+              deletedPageDrafts: {
+                ...state.deletedPageDrafts,
+                [pageDeleteDraftKey]: true,
+              },
+            },
+            {
+              ...getPhiDeveloperRegionDraftsSnapshot(),
+              ...nextDrafts,
+            },
+            "pages",
+            {
+              builderPlugins: builderModuleMetas.plugins,
+              pathname,
+              scope: {
+                area: effectiveArea,
+                pageKey: effectivePageKey,
+              },
+            },
+          );
           phiBuilderHistory.clear(createPhiBuilderHistoryContext({
             workspace: "pages",
             area: effectiveArea,
             pageKey: effectivePageKey,
           }));
-          reportSaved("published", null, captureHistoryHead());
-          showMessage({ level: "success", content: "Reset page draft." });
+          reportSaved("draft", result.revisionId, captureHistoryHead());
+          showMessage({ level: "success", content: "Saved page delete draft." });
         } catch (error) {
-          showMessage({ level: "error", content: error instanceof Error ? error.message : "Page reset failed." });
+          showMessage({ level: "error", content: error instanceof Error ? error.message : "Page delete failed." });
           throw error;
         } finally {
           setActiveDraftAction(null);
@@ -741,18 +653,13 @@ export function usePhiBuilderDraftCommandController({
   function runResetCommand(
     workspaceKind: Exclude<PhiDeveloperBuilderCommandWorkspace, "theme" | null>,
   ) {
-    if (workspaceKind === "structure") {
-      confirmResetShell();
+    if (workspaceKind === "structure" || workspaceKind === "pages") {
+      confirmDiscardDraft(workspaceKind);
       return;
     }
 
-    if (workspaceKind === "pages") {
-      confirmResetPage();
-      return;
-    }
-
+    // A Module selection has no reset: its draft is published or changed, never set back (B4).
     if (workspaceKind === "modules") {
-      confirmResetModules();
       return;
     }
 
@@ -870,5 +777,5 @@ export function usePhiBuilderDraftCommandController({
       });
   }
 
-  return { confirmResetPage, confirmResetModules, runBuilderCommand, confirmDialog };
+  return { confirmResetPage, runBuilderCommand, confirmDialog };
 }

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { applyPhiPresetTreeCurrentContent } from "../../../server-helpers/cms-bound-content";
 import { cache } from "react";
 import { cookies } from "next/headers";
 
@@ -51,12 +52,17 @@ async function instantiateAreaShellPresetTree(
     return null;
   }
   const path = resolveStructureAreaPath(area);
-  return instantiatePhiCmsAreaShellPreset({
+  // As the Builder edits it: with the current content of every node somebody wrote content for.
+  return applyPhiPresetTreeCurrentContent(await instantiatePhiCmsAreaShellPreset({
     binding,
     catalog,
     siteId: runtime.site.id,
     path,
     runtime,
+  }), {
+    runtimeModuleCatalog,
+    siteKey: runtime.site.key,
+    cookieHeader: (await cookies()).toString(),
   });
 }
 

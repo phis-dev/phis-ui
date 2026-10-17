@@ -490,7 +490,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               config: {
                 mode: "slogan",
               },
-              contentId: null,
+              contentVersionId: null,
             },
             {
               id: PHI_DEFAULT_PUB_AREA_WIDGET_IDS.widgetHeaderTopMiddle,
@@ -506,7 +506,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               config: {
                 mode: "location",
               },
-              contentId: null,
+              contentVersionId: null,
             },
             {
               id: PHI_DEFAULT_PUB_AREA_WIDGET_IDS.widgetHeaderTopRight,
@@ -524,7 +524,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
                 href: contactHref,
                 icon: contactIcon,
               },
-              contentId: null,
+              contentVersionId: null,
             },
           ]
         : []),
@@ -541,7 +541,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
         label: "pub header main brand",
         /* What it says is the Widget's to resolve: the Theme's Wordmark, else this Site's name. */
         config: {},
-        contentId: null,
+        contentVersionId: null,
       },
       {
         id: PHI_DEFAULT_PUB_AREA_WIDGET_IDS.widgetNav,
@@ -557,7 +557,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
         config: {
           navKey: `${navigationArea}:header`,
         },
-        contentId: null,
+        contentVersionId: null,
       },
       {
         id: PHI_DEFAULT_PUB_AREA_WIDGET_IDS.widgetLocale,
@@ -571,7 +571,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
         visibilityMask: page.visibilityMask,
         label: "pub header main locale",
         config: {},
-        contentId: null,
+        contentVersionId: null,
       },
       /*
        * The account trigger, in every Area that shares this preset.
@@ -593,7 +593,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
         visibilityMask: page.visibilityMask,
         label: "pub header main account",
         config: {},
-        contentId: null,
+        contentVersionId: null,
       },
       ...(footerMainRegion
         ? [
@@ -611,7 +611,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               config: {
                 mode: "wordmark",
               },
-              contentId: null,
+              contentVersionId: null,
             },
             {
               id: PHI_DEFAULT_PUB_AREA_WIDGET_IDS.widgetFooterMiddle,
@@ -630,7 +630,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
                 columns: 2,
                 separator: true,
               },
-              contentId: null,
+              contentVersionId: null,
             },
             {
               id: PHI_DEFAULT_PUB_AREA_WIDGET_IDS.widgetFooterRight,
@@ -648,7 +648,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
                 href: contactHref,
                 icon: contactIcon,
               },
-              contentId: null,
+              contentVersionId: null,
             },
           ]
         : []),
@@ -669,7 +669,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
                 text: footerBottomText,
                 tone: "secondary",
               },
-              contentId: null,
+              contentVersionId: null,
             },
           ]
         : []),

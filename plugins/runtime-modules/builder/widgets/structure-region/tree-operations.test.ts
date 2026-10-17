@@ -35,7 +35,7 @@ function widget(nodeId: PhiCmsInstanceId, parent: PhiCmsInstanceId, slotIndex: n
     visibilityMask: 0,
     label: null,
     config: {},
-    contentId: null,
+    contentVersionId: null,
   } as PhiCmsContentWidgetNode;
 }
 

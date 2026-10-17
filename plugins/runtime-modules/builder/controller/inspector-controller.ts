@@ -107,7 +107,7 @@ function patchSelectedNode(
    */
   const rootNode = selectedRootDraft?.rootNode ?? null;
   const node = rootNode ? findPhiBuilderTreeNode(rootNode, state.nodeId) : null;
-  if (!selectedRootDraft || !node || ("contentId" in node ? "widget" : "layout") !== expectedKind) {
+  if (!selectedRootDraft || !node || ("contentVersionId" in node ? "widget" : "layout") !== expectedKind) {
     return false;
   }
 

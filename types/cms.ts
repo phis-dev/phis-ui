@@ -111,7 +111,7 @@ export type PhiCmsResolvedContent = {
   id: number;
   type: number;
   slug: string;
-  /** The version the revision pins; `assetId`, `meta` and `textFields` are that version's. */
+  /** The version read -- published or current, as the tree was read; `assetId`, `meta` and `textFields` are its. */
   versionId: number;
   assetId: number | null;
   status: number;
@@ -121,12 +121,22 @@ export type PhiCmsResolvedContent = {
 
 export type PhiCmsContentWidgetNode = PhiCmsNodeBase & {
   parentLayoutNodeId: PhiCmsInstanceId;
-  contentId: number | null;
   /**
-   * The content version this revision shows. The server sets it on every save that writes the content;
-   * a Widget that has written none yet has none.
+   * The current version of the Widget's bound content, as the tree was read: the base a structure save
+   * hands back, so that phi-server can tell an edit from a stale copy (phis-server CONTENT.md). `null`
+   * for a Widget without content. Its presence is also what tells a Widget node from a Layout node.
    */
-  contentVersionId?: number | null;
+  contentVersionId: number | null;
+  /**
+   * The field of the Widget's config that is its content, as the tree was stored or read. A save in a
+   * Canvas derives it afresh from the Widget's definition; a save outside one carries this.
+   */
+  contentBinding?: import("./cms-plugins").PhiCmsWidgetContentBinding | null;
+  /**
+   * The bound content in the stage the tree was read for: published on the live Site, current in the
+   * Builder, the Editor and previews. A Widget the Site created whose content was never published has
+   * none, and shows nothing there.
+   */
   resolvedContent?: PhiCmsResolvedContent | null;
 };
 

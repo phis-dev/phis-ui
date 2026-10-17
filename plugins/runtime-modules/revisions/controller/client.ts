@@ -289,6 +289,14 @@ function PhiRevisionsControllerMount({
           timestamp: Date.now(),
         });
       }
+      else if (key === "resetPage") {
+        showMessage(
+          { level: "success", content: "The Page is back to its Module's preset." },
+          { correlationId: signal.correlationId },
+        );
+        // What stands now is the preset, which only the server knows how to build.
+        router.refresh();
+      }
       else if (key === "delete") showMessage(
         { level: "success", content: `Deleted revision #${String(action?.revisionId ?? "")}.` },
         { correlationId: signal.correlationId },

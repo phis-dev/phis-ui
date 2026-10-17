@@ -97,7 +97,7 @@ describe("base page layout scaffold", () => {
       visibilityMask: page.visibilityMask,
       label: "stray",
       config: {},
-      contentId: null,
+      contentVersionId: null,
     });
     expect(() => assertPhiCmsPresetTreeContract(tree)).toThrow();
   });

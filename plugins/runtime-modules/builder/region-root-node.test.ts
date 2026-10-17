@@ -58,7 +58,7 @@ function tree() {
     visibilityMask: 0,
     label: "text",
     config: { text: "Hello" },
-    contentId: null,
+    contentVersionId: null,
   } as PhiCmsContentWidgetNode;
   return {
     regions: [{

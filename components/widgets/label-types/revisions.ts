@@ -57,6 +57,8 @@ export type PhiBuilderRevisionsWidgetLabels = {
     deleteSelected: string;
     /** The Builder's one irreversible command, offered on the Revisions page. */
     deleteArea: string;
+    /** Takes a Module's Page back to its preset by deleting the Site's override. */
+    resetPage: string;
   };
   /** The dialog that deletes an Area's own shell, and the field that has to be written out. */
   deleteArea: {
@@ -74,6 +76,8 @@ export type PhiBuilderRevisionsWidgetLabels = {
     deleteDescription: string;
     deleteSelectedTitle: string;
     deleteSelectedDescription: string;
+    resetPageTitle: string;
+    resetPageDescription: string;
   };
 };
 
@@ -132,6 +136,7 @@ export const PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS: PhiBuilderRevisionsWid
     delete: "Delete",
     deleteSelected: "Delete selected",
     deleteArea: "Delete Area",
+    resetPage: "Reset to preset",
   },
   deleteArea: {
     title: "Delete this Area's shell?",
@@ -148,5 +153,8 @@ export const PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS: PhiBuilderRevisionsWid
     deleteDescription: "Revisions are deleted permanently.",
     deleteSelectedTitle: "Delete %1 selected revisions?",
     deleteSelectedDescription: "Selected revisions are deleted permanently.",
+    resetPageTitle: "Take this Page back to its Module's preset?",
+    resetPageDescription:
+      "The Site's own version of this Page is deleted with all its revisions, and the Module's preset is live at once. Texts written for the preset's own blocks stay.",
   },
 };

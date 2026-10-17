@@ -1,5 +1,6 @@
 import "server-only";
 
+import { applyPhiPresetTreeCurrentContent } from "../../../server-helpers/cms-bound-content";
 import { cache } from "react";
 import { cookies } from "next/headers";
 
@@ -159,7 +160,11 @@ async function resolvePhiRegistryPresetPageBinding({
   return binding ? { binding, activeModuleKeys } : null;
 }
 
-function buildPhiRegistryPresetPageTree({
+/**
+ * A preset Page the Site has stored nothing for, as the Builder edits it: the preset's tree with the
+ * current content of every node somebody wrote content for (phis-server CONTENT.md).
+ */
+async function buildPhiRegistryPresetPageTree({
   runtime,
   runtimeModuleCatalog,
   binding,
@@ -172,13 +177,17 @@ function buildPhiRegistryPresetPageTree({
   activeModuleKeys: ReadonlySet<PhiRuntimeModuleId>;
   path: string;
 }) {
-  return instantiatePhiCmsRoutePreset({
+  return applyPhiPresetTreeCurrentContent(await instantiatePhiCmsRoutePreset({
     binding,
     catalog: resolvePhiCmsDescriptorCatalog(runtimeModuleCatalog),
     activeModuleIds: activeModuleKeys,
     siteId: runtime.site.id,
     path,
     runtime,
+  }), {
+    runtimeModuleCatalog,
+    siteKey: runtime.site.key,
+    cookieHeader: (await cookies()).toString(),
   });
 }
 
@@ -283,6 +292,8 @@ const loadPhiBuilderPageSource = cache(async function loadPhiBuilderPageSource(
     locale,
     cookieHeader,
     sourcePreset,
+    // What is published, as the base of the next draft: with the current content in each bound field.
+    stage: "current",
   }).catch((error) => {
     throw new Error(
       `Failed to resolve builder page for area "${area}" page "${pageKey}" at "${fetchPath}".`,

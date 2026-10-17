@@ -28,8 +28,9 @@ import { PHI_NEWS_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../data-providers";
 import { PHI_NEWS_RUNTIME_DATA_PROVIDER_KEYS, PHI_NEWS_TABLE_RESOURCE_KEY } from "../ids";
 
 /** The editor's own endpoints, behind the content-editing guard and the publishing one. */
-const NEWS_API_PATH = "/api/site/editor/news";
-const NEWS_PUBLISH_API_PATH = "/api/site/editor/news/publish";
+const NEWS_API_PATH = "/api/site/editor/entries/news";
+const NEWS_PUBLISH_API_PATH = "/api/site/editor/entries/news/publish";
+const NEWS_SUBMIT_API_PATH = "/api/site/editor/entries/news/submit";
 
 const RESPONSE_OPTIONS: ReadPhiTableProviderResponseOptions = { subject: "News" };
 
@@ -48,7 +49,9 @@ type NewsApiResponse = {
  * and the status filter already sends one. Anything the release does not know keeps its number rather than
  * being read as a draft -- a status nobody recognises must not look like the least published one.
  */
-function readStatusWord(status: unknown) {
+function readStatusWord(status: unknown, submittedVersionId: unknown) {
+  // Waiting for a Publisher says more than "draft" or "published": it is what somebody has to act on.
+  if (submittedVersionId != null) return "submitted";
   if (status === 0) return "draft";
   if (status === 1) return "published";
   return String(status ?? "");
@@ -74,7 +77,12 @@ async function loadEntries({
   );
 
   const rows = readPhiTableRows(result?.entries)
-    .map((row) => ({ ...row, status: readStatusWord(row.status) }));
+    .map((row) => ({
+      ...row,
+      status: readStatusWord(row.status, row.submittedVersionId),
+      // Whether the version the row shows is the one already put forward, which a second submit would repeat.
+      submittedCurrent: row.submittedVersionId != null && row.submittedVersionId === row.versionId,
+    }));
   return {
     rows,
     total: readNumber(result?.total) ?? rows.length,
@@ -143,6 +151,25 @@ export function PhiNewsTableProviderClient({ children }: { children: ReactNode }
     const contentId = Number(request.rowIdentity);
     if (!Number.isInteger(contentId) || contentId <= 0) {
       throw new PhiTableProviderError("invalid-row-identity", "That action needs a news entry.");
+    }
+    if (request.actionKey === "submit") {
+      /*
+       * The version the row showed, named rather than implied: a submission covers what its Author saw,
+       * and Core refuses one for a version somebody has written past since.
+       */
+      const versionId = Number(recordsRef.current.get(String(contentId))?.versionId);
+      await readPhiTableProviderResponse<NewsApiResponse>(
+        await fetch(NEWS_SUBMIT_API_PATH, {
+          method: "POST",
+          cache: "no-store",
+          credentials: "include",
+          headers: { accept: "application/json", "content-type": "application/json" },
+          body: JSON.stringify({ contentId, versionId }),
+          signal: request.signal,
+        }),
+        RESPONSE_OPTIONS,
+      );
+      return { status: "accepted" as const, invalidation: "view" as const };
     }
     const params = new URLSearchParams({ contentId: String(contentId) });
     const path = request.actionKey === "withdraw"

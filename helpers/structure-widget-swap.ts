@@ -120,9 +120,9 @@ export function swapPhiStructureWidgetsInTree({
   );
   if (
     !sourceExtracted.node ||
-    !("contentId" in sourceExtracted.node) ||
+    !("contentVersionId" in sourceExtracted.node) ||
     !targetExtracted.node ||
-    !("contentId" in targetExtracted.node)
+    !("contentVersionId" in targetExtracted.node)
   ) {
     return null;
   }
@@ -174,9 +174,9 @@ export function swapPhiStructureWidgetsAcrossTrees({
   );
   if (
     !sourceExtracted.node ||
-    !("contentId" in sourceExtracted.node) ||
+    !("contentVersionId" in sourceExtracted.node) ||
     !targetExtracted.node ||
-    !("contentId" in targetExtracted.node)
+    !("contentVersionId" in targetExtracted.node)
   ) {
     return null;
   }

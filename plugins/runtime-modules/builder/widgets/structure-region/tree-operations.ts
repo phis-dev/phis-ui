@@ -126,7 +126,7 @@ export function insertPhiStructureNode({
   const addTo = (parentChildren: PhiStructureChildren, definition: PhiBuilderContainerMeta | null | undefined) => {
     const node = buildNode(resolvePhiStructureNextSortOrder(parentChildren, slotIndex));
     return compactChildrenOf(
-      "contentId" in node
+      "contentVersionId" in node
         ? { childLayouts: parentChildren.childLayouts, childWidgets: [...parentChildren.childWidgets, node] }
         : { childLayouts: [...parentChildren.childLayouts, node], childWidgets: parentChildren.childWidgets },
       definition,

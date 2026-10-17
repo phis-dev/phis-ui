@@ -21,6 +21,7 @@ const PHI_EDITOR_NEWS_WIDGET_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_NEWS
     status_published: "Published",
     row_draft: "Draft",
     row_published: "Published",
+    row_submitted: "Submitted",
     column_title: "Title",
     column_slug: "Address",
     column_status: "Status",
@@ -44,6 +45,11 @@ const PHI_EDITOR_NEWS_WIDGET_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_NEWS
     action_new: "New entry",
     action_edit: "Edit",
     action_publish: "Publish",
+    action_submit: "Submit for publication",
+    submit_title: "Submit this entry for publication",
+    submit_description: definePhiMessageLabel(
+      "A Publisher is asked to publish the version you see now. You can keep writing; what you write next waits for the next submission.",
+    ),
     form_save: "Save",
     form_cancel: "Cancel",
     form_title: "News entry",
@@ -58,7 +64,6 @@ const PHI_EDITOR_NEWS_WIDGET_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_NEWS
     form_content_error: "A body is required.",
     form_link_label: "Link",
     form_link_placeholder: "/somewhere or https://example.test",
-    form_source_locale_placeholder: definePhiMessageLabel("Empty: written in the Site's own language."),
     form_translate_label: "May be translated",
   },
 });
@@ -67,7 +72,7 @@ export type PhiEditorNewsWidgetLabels = {
   searchPlaceholder: string;
   statusLabel: string;
   statuses: { all: string; draft: string; published: string };
-  rowStatus: { draft: string; published: string };
+  rowStatus: { draft: string; published: string; submitted: string };
   columns: {
     title: string;
     slug: string;
@@ -78,7 +83,7 @@ export type PhiEditorNewsWidgetLabels = {
     expires: string;
     changed: string;
   };
-  actions: { withdraw: string; delete: string; new: string; edit: string; publish: string };
+  actions: { withdraw: string; delete: string; new: string; edit: string; publish: string; submit: string };
   overlays: { create: string; entry: string; publication: string };
   form: {
     save: string;
@@ -92,10 +97,10 @@ export type PhiEditorNewsWidgetLabels = {
     contentError: string;
     linkLabel: string;
     linkPlaceholder: string;
-    sourceLocalePlaceholder: string;
     translateLabel: string;
   };
   withdraw: { title: string; description: string };
+  submit: { title: string; description: string };
   delete: { title: string; description: string };
   empty: { title: string; text: string };
 };
@@ -108,7 +113,7 @@ export async function getPhiEditorNewsWidgetLabels(
     searchPlaceholder: labels.search_placeholder,
     statusLabel: labels.status_label,
     statuses: { all: labels.status_all, draft: labels.status_draft, published: labels.status_published },
-    rowStatus: { draft: labels.row_draft, published: labels.row_published },
+    rowStatus: { draft: labels.row_draft, published: labels.row_published, submitted: labels.row_submitted },
     columns: {
       title: labels.column_title,
       slug: labels.column_slug,
@@ -125,6 +130,7 @@ export async function getPhiEditorNewsWidgetLabels(
       new: labels.action_new,
       edit: labels.action_edit,
       publish: labels.action_publish,
+      submit: labels.action_submit,
     },
     overlays: {
       create: labels.create_title,
@@ -143,10 +149,10 @@ export async function getPhiEditorNewsWidgetLabels(
       contentError: labels.form_content_error,
       linkLabel: labels.form_link_label,
       linkPlaceholder: labels.form_link_placeholder,
-      sourceLocalePlaceholder: labels.form_source_locale_placeholder,
       translateLabel: labels.form_translate_label,
     },
     withdraw: { title: labels.withdraw_title, description: labels.withdraw_description },
+    submit: { title: labels.submit_title, description: labels.submit_description },
     delete: { title: labels.delete_title, description: labels.delete_description },
     empty: { title: labels.empty_title, text: labels.empty_text },
   };

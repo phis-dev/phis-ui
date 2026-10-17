@@ -58,6 +58,7 @@ const PHI_BUILDER_REVISIONS_WIDGET_LABEL_SET = definePhiLabelSet({
     action_delete: PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS.actions.delete,
     action_delete_selected: PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS.actions.deleteSelected,
     action_delete_area: PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS.actions.deleteArea,
+    action_reset_page: PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS.actions.resetPage,
     delete_area_title: PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS.deleteArea.title,
     delete_area_survives: definePhiMessageLabel(PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS.deleteArea.survives),
     delete_area_field: PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS.deleteArea.field,
@@ -71,6 +72,10 @@ const PHI_BUILDER_REVISIONS_WIDGET_LABEL_SET = definePhiLabelSet({
     confirm_delete_selected_title: definePhiMessageLabel(PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS.confirm.deleteSelectedTitle),
     confirm_delete_selected_description: definePhiMessageLabel(
       PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS.confirm.deleteSelectedDescription,
+    ),
+    confirm_reset_page_title: definePhiMessageLabel(PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS.confirm.resetPageTitle),
+    confirm_reset_page_description: definePhiMessageLabel(
+      PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS.confirm.resetPageDescription,
     ),
   },
 });
@@ -132,6 +137,7 @@ export async function getPhiBuilderRevisionsWidgetLabels(options: PhiGlobalTrans
       delete: labels.action_delete,
       deleteSelected: labels.action_delete_selected,
       deleteArea: labels.action_delete_area,
+      resetPage: labels.action_reset_page,
     },
     deleteArea: {
       title: labels.delete_area_title,
@@ -148,6 +154,8 @@ export async function getPhiBuilderRevisionsWidgetLabels(options: PhiGlobalTrans
       deleteDescription: labels.confirm_delete_description,
       deleteSelectedTitle: labels.confirm_delete_selected_title,
       deleteSelectedDescription: labels.confirm_delete_selected_description,
+      resetPageTitle: labels.confirm_reset_page_title,
+      resetPageDescription: labels.confirm_reset_page_description,
     },
   };
 }

@@ -9,6 +9,7 @@ import { readPhiServerApiCredentials } from "../../../helpers/phis-server-creden
 import type { PhiFormDescriptor, PhiFormHandlerProviderDescriptor } from "../../../types/form-descriptor";
 import { createPhiFormId } from "../../../types/form-id";
 import { PHI_SHARED_PACKAGE_NAME } from "../../../types/signals";
+import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../constants/core-data-provider-keys";
 import { PHI_NEWS_RUNTIME_DATA_PROVIDER_KEYS, PHI_NEWS_RUNTIME_MODULE_ID } from "./ids";
 
 /**
@@ -35,6 +36,9 @@ const PHI_NEWS_FORM_HANDLER_LEAVES = {
   publication: "publication",
 } as const satisfies Record<keyof typeof PHI_NEWS_FORM_HANDLER_KEYS, string>;
 
+/** Where the page that places the entry Form names the Site's own language, for the empty "Written in". */
+export const NEWS_SOURCE_LOCALE_PLACEHOLDER_CONFIG_KEY = "sourceLocalePlaceholder";
+
 const LABEL_SET_KEY = "@phis/ui/modules/news/labels/forms" as const;
 const label = (key: string, fallback: string) => ({ kind: "label", key, fallback } as const);
 const required = (key: string, fallback: string) => ([{
@@ -48,6 +52,11 @@ const entryFields = [
    * is a new entry at the slug below.
    */
   { key: "contentId", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.hidden },
+  /*
+   * The version the row showed, sent back as the base of the save: a save that does not build on the
+   * current version is refused rather than overwriting somebody else's (phis-server CONTENT.md).
+   */
+  { key: "versionId", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.hidden },
   {
     key: "slug",
     fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text,
@@ -72,7 +81,7 @@ const entryFields = [
     label: label("contentLabel", "Body"),
     placeholder: label("contentPlaceholder", "Markdown"),
     validation: required("contentError", "A body is required."),
-    config: { rows: 14 },
+    config: { rows: 8 },
   },
   {
     key: "link",
@@ -91,16 +100,17 @@ const entryFields = [
     optionsProvider: { providerKey: PHI_NEWS_RUNTIME_DATA_PROVIDER_KEYS.tags },
   },
   /*
-   * A plain field rather than a Select, deliberately: the choices are the languages this installation can
-   * translate, and the only provider that answers them today belongs to another Module. Core refuses a
-   * language it cannot translate with a `400`, so a typo is answered rather than stored -- and a Select
-   * arrives when News can ask for the list without borrowing somebody else's Provider.
+   * The Site's languages, handed over by the page that places the Form (`site-locales-config.ts`). Empty
+   * means the Site's own language, which is why the field clears and its placeholder names that language:
+   * the page writes its label into the placement as `sourceLocalePlaceholder`.
    */
   {
     key: "sourceLocale",
-    fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text,
+    fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
     label: label("sourceLocaleLabel", "Written in"),
-    placeholder: label("sourceLocalePlaceholder", "Empty: the Site's own language"),
+    placeholder: { kind: "config", key: NEWS_SOURCE_LOCALE_PLACEHOLDER_CONFIG_KEY, fallback: "The Site's own language" },
+    optionsProvider: { providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteLocales },
+    config: { allowClear: true },
   },
   {
     key: "translate",
@@ -112,6 +122,8 @@ const entryFields = [
 
 const publicationFields = [
   { key: "contentId", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.hidden },
+  // The version the Publisher saw in the row is the one that goes live, not whatever was saved since.
+  { key: "versionId", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.hidden },
   /*
    * Both optional, and both meaning something when empty: no publication date keeps the one the entry has
    * or takes now, no expiry means none. A publish states the whole term, which is why neither carries over
@@ -158,7 +170,6 @@ async function loadNewsFormLabels(
     linkPlaceholder: labels.form.linkPlaceholder,
     tagsLabel: labels.columns.tags,
     sourceLocaleLabel: labels.columns.language,
-    sourceLocalePlaceholder: labels.form.sourceLocalePlaceholder,
     translateLabel: labels.form.translateLabel,
     publishedAtLabel: labels.columns.published,
     expiresAtLabel: labels.columns.expires,
@@ -216,7 +227,7 @@ export const PHI_NEWS_FORM_HANDLER_PROVIDER_DESCRIPTORS = (
   // A save states the whole entry, so it is a PUT; a publication is an act, so it is a POST.
   method: key === "entry" ? "PUT" : "POST",
   endpointKey: null,
-  upstreamPath: key === "entry" ? "/api/site/editor/news" : "/api/site/editor/news/publish",
+  upstreamPath: key === "entry" ? "/api/site/editor/entries/news" : "/api/site/editor/entries/news/publish",
   csrfPath: null,
   requiresCsrf: false,
   credentialPolicy: "site-session",

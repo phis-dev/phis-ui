@@ -81,10 +81,13 @@ and loading are [MODULES.md](../../MODULES.md); signal capabilities, routes, and
 - `runtimeSignals` declares signal capabilities and `signalSubcontrols` declares dynamic subcontrol
   collections ([SIGNALS.md](../../SIGNALS.md#capabilities-and-routes)). Renderable-block `capabilities`
   declare binary interaction participation only. None of the three is inferred from another.
-- `contentBinding` declares that a Widget persists canonical content through `content_id`: `storage` is
-  `text`, `html`, `markdown`, or `asset`, with `sourceField` and optional `skipWhenConfigField` or
-  `skipWhenConfigFieldValue`. The Builder forwards it in the write payload; `phis` persists against it
-  and never branches on a Widget type.
+- `contentBinding` declares the config field that is the Widget's content: `storage` is `text`, `html`,
+  `markdown`, or `asset`, with `sourceField` and optional `skipWhenConfigField` or
+  `skipWhenConfigFieldValue`. `phis` keeps that field apart from the tree, bound by the Widget's instance
+  id, and drafts and publishes it apart from structure (phis-server `CONTENT.md`). The Builder forwards
+  the binding in the write payload with the version it read (`contentVersionId`); `phis` persists
+  against it and never branches on a Widget type. On the live Site a bound Widget whose content was
+  never published renders nothing.
 - `requiredRuntimeControllers` and `requiredDataProviders` declare dependencies; they never change
   ownership or enable a Module.
 
@@ -257,7 +260,8 @@ from a label set sets the flag on the node. For a Widget bound to a Content reco
 record's source text instead of its localized version.
 
 - `simple-text` keeps `text` as its live property. A CMS instance persists source text in
-  `site_content(type=text)` through `content_id`; code-owned presets may use inline `config.text`.
+  `site_content(type=text)`, bound to its instance; a preset node keeps its shipped `config.text` until
+  somebody writes content for it.
   `flags & PhiCmsFlags.NoTranslate` renders source text without translation.
 - `html` persists canonical markup in `site_content(type=html)` and uses Lexical for authoring. The
   `phis` CMS write endpoint sanitizes HTML before it is stored; client sanitizing is feedback only. Runtime

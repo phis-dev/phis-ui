@@ -22,8 +22,8 @@ import { serializePhiDeveloperBuilderRegionConfig } from "./region-hydration";
 import { stripPhiResolvedAssetProjections } from "../../../components/media/image-presentation";
 import { resolvePhiBuilderCmsStoragePath } from "../../../helpers/cms-paths";
 import type { PhiCmsWidgetContentBinding } from "../../../types/cms-plugins";
+import { resolvePhiCmsWidgetContentBindingForConfig } from "../../../helpers/cms-content-binding";
 import { resolvePhiCmsRegionType } from "../../../helpers/cms-region-keys";
-import { deleteCmsDraft } from "../../../helpers/cms-draft-delete";
 import type { PhiRuntimeModuleDefinition, PhiRuntimeModuleId } from "../../../types";
 import {
   resolvePhiAuthUiProviderModuleId,
@@ -234,11 +234,6 @@ function assertUniqueDraftNodeIds(drafts: PhiDeveloperBuilderRegionDraft[]) {
   }
 }
 
-function hasPersistedConfigValue(config: Record<string, unknown> | null | undefined, fieldKey: string) {
-  const value = config?.[fieldKey];
-  return typeof value === "string" ? value.trim().length > 0 : value != null;
-}
-
 function buildPhiBuilderWidgetMetaMap(
   pluginMetas: readonly PhiBuilderPluginMeta[],
 ): ReadonlyMap<string, PhiBuilderWidgetMeta> {
@@ -258,23 +253,7 @@ function resolvePhiCmsWidgetContentBinding(
   if (!meta) {
     throw new Error(`Active Canvas module metadata does not provide widget type "${widgetType}".`);
   }
-  const binding = meta.contentBinding ?? null;
-  if (!binding) {
-    return null;
-  }
-
-  if (binding.skipWhenConfigField && hasPersistedConfigValue(config, binding.skipWhenConfigField)) {
-    return null;
-  }
-
-  if (
-    binding.skipWhenConfigFieldValue &&
-    config?.[binding.skipWhenConfigFieldValue.field] === binding.skipWhenConfigFieldValue.value
-  ) {
-    return null;
-  }
-
-  return binding;
+  return resolvePhiCmsWidgetContentBindingForConfig(meta.contentBinding, config);
 }
 
 /**
@@ -866,19 +845,6 @@ export async function publishPhiDeveloperBuilderModulesDraft(
   clearPhiDeveloperBuilderModulesDraftAllocation(area);
 
   return saved;
-}
-
-/** Discards the Area's Module draft, leaving its structure draft, if any, untouched. */
-export async function discardPhiDeveloperBuilderModulesDraft(input: {
-  area: PhiDeveloperBuilderArea;
-  areaPresetSource: PhiCmsPresetSource | null;
-}) {
-  await deleteCmsDraft("/api/site/cms/area/modules", {
-    area: resolvePhiBuilderAreaAsCmsArea(input.area),
-    ownerModuleId: input.areaPresetSource?.ownerModuleId ?? "",
-    presetKey: input.areaPresetSource?.presetKey ?? "",
-  });
-  clearPhiDeveloperBuilderModulesDraftAllocation(input.area);
 }
 
 /**

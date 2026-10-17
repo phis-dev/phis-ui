@@ -1372,7 +1372,7 @@ function resolvePhiRootNodeRenderedBody(
       .map((entry) => ({
         slotIndex: entry.slotIndex,
         rendered:
-          "contentId" in entry
+          "contentVersionId" in entry
             ? renderWidgetNode(entry)
             : renderChildLayoutNode
               ? renderChildLayoutNode(entry)

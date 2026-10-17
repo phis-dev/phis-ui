@@ -24,7 +24,6 @@ type PhiCmsLayoutNodeFactoryCommon = {
 
 export type PhiCmsWidgetNodeFactoryCommon = Omit<PhiCmsLayoutNodeFactoryCommon, "parentLayoutNodeId"> & {
   parentLayoutNodeId: PhiCmsInstanceId;
-  contentId?: number | null;
 };
 
 /**
@@ -104,7 +103,6 @@ export function buildPhiCmsWidgetNode<
   pluginKey,
   typeKey,
   config,
-  contentId = null,
   ...common
 }: PhiCmsWidgetNodeFactoryCommon &
   PhiCmsWidgetPlacementFields<TTypeKey, TPluginKey>): PhiCmsContentWidgetNode {
@@ -120,6 +118,6 @@ export function buildPhiCmsWidgetNode<
     visibilityMask: common.visibilityMask,
     label: common.label,
     config: (config ?? {}) as Record<string, unknown>,
-    contentId,
+    contentVersionId: null,
   };
 }

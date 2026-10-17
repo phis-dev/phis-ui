@@ -201,7 +201,7 @@ function canMoveStructureLayoutToTarget(
   targetRootNodeId: PhiCmsInstanceId,
   targetChildLayouts: readonly PhiCmsLayoutRenderNode[],
 ) {
-  if ("contentId" in node) {
+  if ("contentVersionId" in node) {
     return true;
   }
 
@@ -299,7 +299,6 @@ function buildInsertedWidgetNode(
     visibilityMask: 0,
     label: item.title,
     config: resolvedDefaultConfig,
-    contentId: null,
   });
 }
 
@@ -402,12 +401,12 @@ function insertStructureNodeIntoTarget({
       const inserted = insertPhiCmsSequentialChild(nextLayouts, nextWidgets, movedNode);
       nextLayouts = inserted.childLayouts;
       nextWidgets = inserted.childWidgets;
-    } else if ("contentId" in movedNode) {
+    } else if ("contentVersionId" in movedNode) {
       nextWidgets = [...nextWidgets, movedNode];
     } else {
       nextLayouts = [...nextLayouts, movedNode];
     }
-  } else if ("contentId" in movedNode) {
+  } else if ("contentVersionId" in movedNode) {
     nextLayouts = appendWidgetChildById(nextLayouts, parentLayoutNodeId, movedNode, compact);
   } else {
     nextLayouts = appendLayoutChildById(nextLayouts, parentLayoutNodeId, movedNode, compact);
@@ -449,7 +448,7 @@ function insertPhiCmsSequentialChild(
     sortOrder: Math.max(0, child.sortOrder),
   };
 
-  return "contentId" in insertedChild
+  return "contentVersionId" in insertedChild
     ? {
         childLayouts: shiftedLayouts,
         childWidgets: [...shiftedWidgets, insertedChild],
@@ -1325,7 +1324,7 @@ export function PhiStructureRegionScaffold({
         );
     if (
       !movingSourceRoot &&
-      (!extractedSource?.node || "contentId" in extractedSource.node)
+      (!extractedSource?.node || "contentVersionId" in extractedSource.node)
     ) {
       return false;
     }

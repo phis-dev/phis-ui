@@ -100,7 +100,7 @@ describe("the first-party sidebars", () => {
      * three to `main`, and entries sharing an anchor are ordered by the Module that injected them. A Site
      * that wants a different order says so in the navigation overlay.
      */
-    expect(sidebarOf("editor")).toEqual(["Dashboard", "Translations", "News", "Conversations"]);
+    expect(sidebarOf("editor")).toEqual(["Dashboard", "Releases", "Translations", "News", "Conversations"]);
   });
 
   it("are reached by anchor alone", () => {

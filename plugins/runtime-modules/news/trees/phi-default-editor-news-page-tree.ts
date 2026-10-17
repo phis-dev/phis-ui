@@ -2,6 +2,8 @@ import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
   PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS,
 } from "../../../../constants/cms-layout-types";
+import { canPhiViewerAccess, PHI_VIEWER_ACCESS_PUBLISHING } from "../../../../types/access";
+import type { PhiTableActionDefinition } from "../../../../types/table-widget";
 import { PhiCmsPageType } from "../../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
@@ -18,7 +20,8 @@ import {
   createPhiSignalAddress,
 } from "../../../../types/signals";
 import type { PhiFormId } from "../../../../types/form-id";
-import { PHI_NEWS_FORM_IDS } from "../forms";
+import { NEWS_SOURCE_LOCALE_PLACEHOLDER_CONFIG_KEY, PHI_NEWS_FORM_IDS } from "../forms";
+import { PHI_SITE_LOCALES_CONFIG_KEY } from "../../../../components/forms/site-locales-config";
 import {
   PHI_EDITOR_NEWS_CREATE_COMMANDS_WIDGET_ID,
   PHI_EDITOR_NEWS_CREATE_FORM_WIDGET_ID,
@@ -66,6 +69,8 @@ type NewsDialogInput = {
    * row -- so the create dialog carries the same Form with no source, and it opens ready to type.
    */
   bindsRecord: boolean;
+  /** What the Form's fields read from their placement: the Site's languages, for one. */
+  formConfig?: Record<string, unknown>;
   saveLabel: string;
   cancelLabel: string;
   ids: {
@@ -116,7 +121,6 @@ function buildPhiNewsDialogNodes(
       label: `editor news ${input.key} modal`,
       config: {
         title: input.title,
-        width: { compact: "calc(100vw - 32px)", medium: 720, wide: 880 },
         mountPolicy: "remount",
         /*
          * `immediate`: there is nobody to ask. `request` exists so a Controller can refuse while a save
@@ -145,7 +149,7 @@ function buildPhiNewsDialogNodes(
         // The Body's root Layout is its one padding owner (OVERLAYS.md): the Modal adds none.
         config: {
           ...PHI_DIALOG_BODY_CONFIG,
-          anchor: { horizontal: "left", vertical: "top" },
+          anchor: { horizontal: "center", vertical: "top" },
           borders: false,
         },
       }),
@@ -177,6 +181,7 @@ function buildPhiNewsDialogNodes(
            * Core that this is a new entry rather than a correction.
            */
           source: input.bindsRecord ? NEWS_DIALOG_SOURCE : null,
+          ...(input.formConfig ? { formConfig: input.formConfig } : {}),
           ...(input.bindsRecord ? { openActionKey: input.openActionKey } : {}),
           // What Core said, said to the reader: the dialog is gone by then and would say nothing itself.
           feedback: { mode: "message" },
@@ -256,6 +261,51 @@ export async function buildPhiDefaultEditorNewsPageTree({
   };
   const labels = await getPhiEditorNewsPageLabels(translatorOptions);
   const widgetLabels = await getPhiEditorNewsWidgetLabels(translatorOptions);
+  /*
+   * Who may put an entry live (phis-server CONTENT.md, Rights). An Author writes and submits; publishing
+   * and withdrawing are the Publisher's, and Core refuses them anyway -- the page offers each viewer the
+   * acts that are theirs rather than buttons that answer 403.
+   */
+  const reviewRowActions: PhiTableActionDefinition[] = canPhiViewerAccess(runtime.viewer, PHI_VIEWER_ACCESS_PUBLISHING)
+    ? [
+      {
+        key: "publish",
+        label: widgetLabels.actions.publish,
+        icon: "antd:cloud-upload",
+        display: "icon",
+        execution: "signal",
+      },
+      {
+        key: "withdraw",
+        label: widgetLabels.actions.withdraw,
+        icon: "antd:eye-invisible",
+        display: "icon",
+        execution: "provider",
+        // Nothing to withdraw from an entry that was never published.
+        disabledWhen: { source: "row", valuePath: "publishedAt", operator: "falsy" },
+        confirm: {
+          title: widgetLabels.withdraw.title,
+          description: widgetLabels.withdraw.description,
+          okText: widgetLabels.actions.withdraw,
+        },
+      },
+    ]
+    : [
+      {
+        key: "submit",
+        label: widgetLabels.actions.submit,
+        icon: "antd:check",
+        display: "icon",
+        execution: "provider",
+        // The version the row shows is already the one waiting for a Publisher.
+        disabledWhen: { source: "row", valuePath: "submittedCurrent", operator: "truthy" },
+        confirm: {
+          title: widgetLabels.submit.title,
+          description: widgetLabels.submit.description,
+          okText: widgetLabels.actions.submit,
+        },
+      },
+    ];
 
   const scaffold = buildPhiBasePageContentScaffold({
     page,
@@ -270,12 +320,22 @@ export async function buildPhiDefaultEditorNewsPageTree({
    * for a row, and a new entry has none. One dialog for both was the first attempt: it opened on the plus
    * and stayed a skeleton, because nothing was ever going to arrive.
    */
+  /*
+   * "Written in" offers the Site's languages and names its own one when left empty -- the Page knows
+   * both, the registered Form does not (`site-locales-config.ts`).
+   */
+  const siteLocale = runtime.site.availableLocales.find((option) => option.code === runtime.site.defaultLocale);
+  const entryFormConfig = {
+    [PHI_SITE_LOCALES_CONFIG_KEY]: runtime.site.availableLocales.map((option) => ({ code: option.code, label: option.label })),
+    [NEWS_SOURCE_LOCALE_PLACEHOLDER_CONFIG_KEY]: siteLocale?.label ?? runtime.site.defaultLocale,
+  };
   const createDialog = buildPhiNewsDialogNodes(nodes, {
     key: "create",
     title: widgetLabels.overlays.create,
     formId: PHI_NEWS_FORM_IDS.entry,
     openActionKey: "new",
     bindsRecord: false,
+    formConfig: entryFormConfig,
     saveLabel: widgetLabels.form.save,
     cancelLabel: widgetLabels.form.cancel,
     ids: {
@@ -292,6 +352,7 @@ export async function buildPhiDefaultEditorNewsPageTree({
     formId: PHI_NEWS_FORM_IDS.entry,
     openActionKey: "edit",
     bindsRecord: true,
+    formConfig: entryFormConfig,
     saveLabel: widgetLabels.form.save,
     cancelLabel: widgetLabels.form.cancel,
     ids: {
@@ -364,7 +425,11 @@ export async function buildPhiDefaultEditorNewsPageTree({
                 title: widgetLabels.columns.status,
                 renderer: "badge",
                 // The Provider answers a word; these are the words a reader sees.
-                valueMap: { draft: widgetLabels.rowStatus.draft, published: widgetLabels.rowStatus.published },
+                valueMap: {
+                  draft: widgetLabels.rowStatus.draft,
+                  published: widgetLabels.rowStatus.published,
+                  submitted: widgetLabels.rowStatus.submitted,
+                },
                 sizing: { mode: "content", minWidth: 112 },
               },
               {
@@ -450,27 +515,7 @@ export async function buildPhiDefaultEditorNewsPageTree({
                   display: "icon",
                   execution: "signal",
                 },
-                {
-                  key: "publish",
-                  label: widgetLabels.actions.publish,
-                  icon: "antd:send",
-                  display: "icon",
-                  execution: "signal",
-                },
-                {
-                  key: "withdraw",
-                  label: widgetLabels.actions.withdraw,
-                  icon: "antd:eye-invisible",
-                  display: "icon",
-                  execution: "provider",
-                  // Nothing to withdraw from an entry that was never published.
-                  disabledWhen: { source: "row", valuePath: "publishedAt", operator: "falsy" },
-                  confirm: {
-                    title: widgetLabels.withdraw.title,
-                    description: widgetLabels.withdraw.description,
-                    okText: widgetLabels.actions.withdraw,
-                  },
-                },
+                ...reviewRowActions,
                 {
                   key: "delete",
                   label: widgetLabels.actions.delete,

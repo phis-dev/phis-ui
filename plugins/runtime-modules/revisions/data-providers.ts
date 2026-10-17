@@ -65,6 +65,8 @@ export const PHI_REVISIONS_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
           confirmation: "required",
         },
         { key: "deleteSelected", title: "Delete selected", scope: "selection", intent: "destructive", confirmation: "required" },
+        // A Module's Page back to its preset: the override goes, with every revision listed (CONTENT.md, Reset).
+        { key: "resetPage", title: "Reset to preset", scope: "resource", intent: "destructive", confirmation: "required" },
       ],
     }],
   },

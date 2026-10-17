@@ -9,6 +9,7 @@ import type {
 } from "../types/cms";
 import type { PhiBlockRuntime } from "../types";
 import type { PhiRuntimeModuleCatalog } from "../types/cms-plugins";
+import { applyPhiPresetTreePublishedContent } from "./cms-bound-content";
 import {
   instantiatePhiCmsAreaShellPreset,
   resolvePhiCmsAreaShellPresetBinding,
@@ -87,7 +88,10 @@ export async function buildPhiLocalCmsAreaPayload({
   if (!binding) {
     return null;
   }
-  const tree = await instantiatePhiCmsAreaShellPreset({ binding, catalog, siteId, path, runtime });
+  const tree = await applyPhiPresetTreePublishedContent(
+    await instantiatePhiCmsAreaShellPreset({ binding, catalog, siteId, path, runtime }),
+    { runtimeModuleCatalog, siteKey: runtime.site.key, locale: runtime.locale.current },
+  );
 
   return buildAreaPresetPayloadFromTree({
     areaMask: resolvedAreaMask,

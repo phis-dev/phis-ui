@@ -1,5 +1,5 @@
 /**
- * One published News entry, as `GET /api/v1/news` answers it.
+ * One published News entry, as `GET /api/v1/entries/news` answers it.
  *
  * The shape is Core's: an entry lives in `site_content` as content type `news`, and what arrives here is
  * already resolved for one locale and already filtered by publication date and expiry. Nothing in this

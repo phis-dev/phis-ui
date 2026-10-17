@@ -12,7 +12,7 @@ import {
  * Both are `authoringMode: "none"`, because the Builder has no business pulling editorial data while
  * somebody is composing a Page -- what a Table looks like there is a question for the preview.
  *
- * The rows come from `GET /api/site/editor/news`, which is behind the content-editing guard. That is the
+ * The rows come from `GET /api/site/editor/entries/news`, which is behind the content-editing guard. That is the
  * whole access story: a Table bound to this resource on a Page nobody may edit answers nothing, because
  * Core refuses the read rather than because the Widget was kept out.
  */

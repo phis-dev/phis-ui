@@ -1,6 +1,7 @@
 "use client";
 
 import { PHI_REVISIONS_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
+import { deleteCmsDraft } from "../../../../helpers/cms-draft-delete";
 import { readNumber } from "../../../../components/widgets/config/parser-primitives";
 import { isPhiBuilderAreaKey, isPhiCmsAreaKey } from "../../../../constants/cms-areas";
 import { hasPhiCmsPresetUpdate } from "../../../../plugins/runtime-modules/preset-version";
@@ -558,6 +559,26 @@ async function mutateRevision(request: PhiTableProviderMutationRequest) {
     throw new PhiTableProviderError("resource-not-found", `Unknown Revisions resource "${request.resourceKey}".`);
   }
   const params = readParams(request.params);
+  if (request.actionKey === "resetPage") {
+    /*
+     * Not a revision act: the override these revisions belong to goes as a whole, and the Module's preset
+     * answers for the Page at once (phis-server CONTENT.md, Reset). Only a Module's Page has a preset.
+     */
+    const preset = params.scope.kind === "page" ? params.scope.sourcePreset ?? null : null;
+    if (!preset) {
+      throw new Error("Only a Module's Page can go back to its preset. Choose one under Page.");
+    }
+    await deleteCmsDraft("/api/site/cms/page/override", {
+      area: params.scope.area,
+      ownerModuleId: preset.ownerModuleId,
+      presetKey: preset.presetKey,
+    });
+    return {
+      status: "accepted" as const,
+      invalidation: "view" as const,
+      value: { key: request.actionKey },
+    };
+  }
   const current = await loadRevisionHistory(params.scope, request.signal);
   const protectedRevisionIds = new Set(
     buildTableData(params, current).rows

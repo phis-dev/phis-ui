@@ -27,7 +27,7 @@ import type { PhiDeveloperBuilderArea, PhiDeveloperBuilderRegionDraft } from "./
 type PhiBuilderTreeNode = PhiCmsLayoutRenderNode | PhiCmsContentWidgetNode;
 
 function isWidgetNode(node: PhiBuilderTreeNode): node is PhiCmsContentWidgetNode {
-  return "contentId" in node;
+  return "contentVersionId" in node;
 }
 
 /** The node with `nodeId` in a Region's tree, root included, whichever kind it is. */

@@ -17,7 +17,7 @@ import { requestPhiJson } from "../../../../helpers/client-json-request";
  * Picked rather than typed is the whole point. Two spellings would be two tags with two translations to
  * pay for, and the store lower-cases what it is given precisely so that this list stays short.
  */
-const NEWS_API_PATH = "/api/site/editor/news?page=1&pageSize=1";
+const NEWS_API_PATH = "/api/site/editor/entries/news?page=1&pageSize=1";
 
 export const PhiNewsTagsOptionsProviderClient = createPhiControlOptionsProviderClient({
   key: PHI_NEWS_RUNTIME_DATA_PROVIDER_KEYS.tags,

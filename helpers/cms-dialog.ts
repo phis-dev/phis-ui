@@ -1,5 +1,6 @@
 import { PHI_SPACE } from "../theme/antd-css-var-contract";
 import { PHI_SURFACE_WASH } from "./surface-presets";
+import { PHI_LAYOUT } from "../theme/phi-tokens";
 
 /*
  * What every dialog looks like, said once.
@@ -42,5 +43,13 @@ export const PHI_DIALOG_COMMANDS_CONFIG = {
   controlSize: "medium",
 } as const;
 
-/** A dialog's width where it names none. A wider one -- a table, a preview -- says so. */
-export const PHI_DIALOG_WIDTH = { compact: "calc(100vw - 32px)", medium: 560, wide: 600 } as const;
+/**
+ * A dialog's width where it names none: the reading measure, which is also where a Form's own cap lies,
+ * so a Form fills the dialog it opens in. A wider one -- a table, a preview -- says so, and takes its
+ * width from the same sequence (`PHI_LAYOUT`).
+ */
+export const PHI_DIALOG_WIDTH = {
+  compact: "calc(100vw - 32px)",
+  medium: PHI_LAYOUT.contentMax,
+  wide: PHI_LAYOUT.contentMax,
+} as const;

@@ -16,12 +16,13 @@ import type { PhiFormFieldProviderProps } from "./form-provider-registry";
  */
 
 export const PhiSelectFormControl: ComponentType<PhiFormFieldProviderProps> = ({
-  id, value, onChange, options, placeholder, disabled, readOnly, onSearch, filterOptionsLocally,
+  id, field, value, onChange, options, placeholder, disabled, readOnly, onSearch, filterOptionsLocally,
 }) => (
   <PhiSelectControl
     id={id}
     value={typeof value === "string" ? value : undefined}
     placeholder={placeholder}
+    allowClear={field.config?.allowClear === true}
     disabled={disabled}
     readOnly={readOnly}
     options={options ?? []}

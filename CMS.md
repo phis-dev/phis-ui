@@ -46,7 +46,11 @@ navigation surfaces, and an access policy ([ACCESS.md](./ACCESS.md#3-core-access
   ([LAYOUTING.md](./LAYOUTING.md)).
 - Widget instance config lives on the node in the revision tree, never in `site.theme`. A Widget that
   persists canonical content declares `contentBinding`
-  ([components/widgets/README.md](./components/widgets/README.md#definition-metadata)).
+  ([components/widgets/README.md](./components/widgets/README.md#definition-metadata)); that field is
+  content, drafted and published apart from structure (phis-server `CONTENT.md`). A tree read for the
+  live Site carries the published content (`resolvedContent`), a tree read for editing the current one,
+  in the field itself and with the version it builds on (`contentVersionId`). Preset trees never reach
+  phi-server; their bound content is asked for by instance (`server-helpers/cms-bound-content.ts`).
 - Region and region-type values are `PhiCmsRegionType` in `@phis/contracts/cms`.
 - A Page of type `Redirect` (`PhiCmsPageType.Redirect`) carries `{ target: { area, path }, status? }` with
   a status of `301`, `302`, `307`, or `308`. Deleting a Page publishes a revision with status `Deleted`;

@@ -29,8 +29,8 @@ function entry(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function newsResponse(news: unknown) {
-  return Response.json({ version: "2026-09-01", site: "site", locale: "de", news });
+function newsResponse(entries: unknown) {
+  return Response.json({ version: "2026-09-01", site: "site", locale: "de", kind: "news", entries });
 }
 
 afterEach(() => {
@@ -47,7 +47,7 @@ describe("fetchPhiSiteNews", () => {
     expect(entries).toHaveLength(1);
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     // The cut travels to Core, which translates only what the page will show.
-    expect(url).toBe("https://core.test/api/v1/news?limit=10");
+    expect(url).toBe("https://core.test/api/v1/entries/news?limit=10");
     // The Gateway's own headers, as every reader of Core sends them (gateway/site-api-request.ts).
     const headers = new Headers(init.headers);
     expect(headers.get("x-locale")).toBe("de");

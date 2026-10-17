@@ -22,23 +22,25 @@ vi.mock("./trees/editor-news-widget-label-set", () => ({
     searchPlaceholder: "",
     statusLabel: "",
     statuses: { all: "", draft: "", published: "" },
-    rowStatus: { draft: "", published: "" },
+    rowStatus: { draft: "", published: "", submitted: "" },
     columns: {
       title: "", slug: "", status: "", language: "", tags: "", published: "", expires: "", changed: "",
     },
-    actions: { withdraw: "", delete: "", new: "", edit: "", publish: "" },
+    actions: { withdraw: "", delete: "", new: "", edit: "", publish: "", submit: "" },
     withdraw: { title: "", description: "" },
+    submit: { title: "", description: "" },
     delete: { title: "", description: "" },
     empty: { title: "", text: "" },
     overlays: { create: "", entry: "", publication: "" },
     form: {
       save: "", cancel: "", slugPlaceholder: "", slugError: "", titleError: "", subtitleLabel: "",
       contentLabel: "", contentPlaceholder: "", contentError: "", linkLabel: "", linkPlaceholder: "",
-      sourceLocalePlaceholder: "", translateLabel: "",
+      translateLabel: "",
     },
   }),
 }));
 
+import { PHI_CORE_ROLE_PROVIDER_ID, PhiBaseRole } from "@phis/contracts/access";
 import { createPhiEditorRuntimeModuleCatalog } from "../area-catalogs/editor";
 import {
   compilePhiCmsActiveRouteTable,
@@ -67,6 +69,16 @@ import { PHI_NEWS_FORM_HANDLER_PROVIDER_DESCRIPTORS, PHI_NEWS_FORM_IDS, PHI_NEWS
  * that Area does not, and this is that: the address, the Provider behind the Table, and the resource the
  * Table names. Those three drifting apart is the failure that renders an empty page with no diagnosis.
  */
+
+const viewerWith = (flags: number) => ({
+  access: "authenticated" as const,
+  roleClaims: [{ providerId: PHI_CORE_ROLE_PROVIDER_ID, flags }],
+  groupClaims: [],
+});
+const SITE = { defaultLocale: "de", availableLocales: [{ code: "de", label: "Deutsch" }, { code: "en", label: "English" }] };
+const PUBLISHER_RUNTIME = { locale: { current: "en" }, site: SITE, viewer: viewerWith(PhiBaseRole.Publisher) };
+const AUTHOR_RUNTIME = { locale: { current: "en" }, site: SITE, viewer: viewerWith(PhiBaseRole.Author) };
+
 describe("what News brings to the editor Area", () => {
   it("answers /news in the editor Area, from the editor Module's own route", () => {
     const entries = createPhiEditorRuntimeModuleCatalog();
@@ -183,14 +195,14 @@ describe("what News writes with", () => {
 
     expect(byHandler.get("news.entry")).toMatchObject({
       method: "PUT",
-      upstreamPath: "/api/site/editor/news",
+      upstreamPath: "/api/site/editor/entries/news",
       transport: "relay",
       credentialPolicy: "site-session",
       requiresCsrf: false,
     });
     expect(byHandler.get("news.publication")).toMatchObject({
       method: "POST",
-      upstreamPath: "/api/site/editor/news/publish",
+      upstreamPath: "/api/site/editor/entries/news/publish",
       transport: "relay",
       credentialPolicy: "site-session",
     });
@@ -212,7 +224,7 @@ describe("what News writes with", () => {
     const [, editorRoute] = PHI_NEWS_RUNTIME_MODULE_ROUTES;
     const tree = await editorRoute!.loadTree({
       page: NEWS_PAGE,
-      runtime: { locale: { current: "en" } },
+      runtime: PUBLISHER_RUNTIME,
     } as never);
 
     const forms = tree.contentWidgets.filter((widget) => widget.widgetType.endsWith("/form"));
@@ -262,7 +274,7 @@ describe("what News writes with", () => {
     const [, editorRoute] = PHI_NEWS_RUNTIME_MODULE_ROUTES;
     const tree = await editorRoute!.loadTree({
       page: NEWS_PAGE,
-      runtime: { locale: { current: "en" } },
+      runtime: PUBLISHER_RUNTIME,
     } as never);
 
     expect(tree.controllerSettings).toBeUndefined();
@@ -280,7 +292,7 @@ describe("what News writes with", () => {
     const [, editorRoute] = PHI_NEWS_RUNTIME_MODULE_ROUTES;
     const tree = await editorRoute!.loadTree({
       page: NEWS_PAGE,
-      runtime: { locale: { current: "en" } },
+      runtime: PUBLISHER_RUNTIME,
     } as never);
 
     const table = tree.contentWidgets.find((widget) => widget.widgetType.endsWith("/table"));
@@ -289,5 +301,18 @@ describe("what News writes with", () => {
     }).features.actions.toolbar;
 
     expect(toolbarAction).toMatchObject({ key: "new", icon: "antd:plus", display: "icon" });
+  });
+
+  it("offers an Author the submission, and a Publisher the publication and the withdrawal", async () => {
+    const [, editorRoute] = PHI_NEWS_RUNTIME_MODULE_ROUTES;
+    const rowActionKeys = async (runtime: unknown) => {
+      const tree = await editorRoute!.loadTree({ page: NEWS_PAGE, runtime } as never);
+      const table = tree.contentWidgets.find((widget) => widget.widgetType.endsWith("/table"));
+      const actions = (table?.config as { features?: { actions?: { row?: { key: string }[] } } })
+        ?.features?.actions?.row ?? [];
+      return actions.map((action) => action.key);
+    };
+    expect(await rowActionKeys(AUTHOR_RUNTIME)).toEqual(["edit", "submit", "delete"]);
+    expect(await rowActionKeys(PUBLISHER_RUNTIME)).toEqual(["edit", "publish", "withdraw", "delete"]);
   });
 });

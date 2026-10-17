@@ -68,6 +68,14 @@ export async function buildPhiDefaultPubErrorPageTree({
   const nodes = createPhiCmsPresetNodes(page);
   return {
     page: nodes.page({ pageType: PhiCmsPageType.Standard }),
+    /*
+     * The code is the title, and a code is not words: stated here, it never reaches the translator the
+     * route title would otherwise go through. Only the result's title and text are the Site's to word.
+     */
+    pageMeta: {
+      title: { msgId: 0, source: String(code), value: String(code) },
+      description: null,
+    },
     overlays: [],
     regions: [
       nodes.region({

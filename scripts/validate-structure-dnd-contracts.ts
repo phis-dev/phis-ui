@@ -27,7 +27,7 @@ function widget(
     visibilityMask: 0,
     label: widgetId,
     config: { identity: widgetId },
-    contentId: null,
+    contentVersionId: null,
   };
 }
 

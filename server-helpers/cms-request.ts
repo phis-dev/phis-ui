@@ -41,6 +41,7 @@ import type { PhiCapabilitySnapshot } from "../types/server-capabilities";
 import { logRuntimeEvent } from "../net/log";
 import { getPhiCmsPage, getPhiExactSiteArea } from "./cms";
 import { buildPhiLocalCmsAreaPayload } from "./cms-area";
+import { applyPhiPresetTreePublishedContent } from "./cms-bound-content";
 import { resolvePhiAreaPageReferencePath, resolvePhiAreaRootRouteDecision } from "./area-root-route";
 import { fetchSiteNavigationFolderTarget } from "../gateway/site-nav";
 import type { PhiPageReference } from "../types/references";
@@ -136,7 +137,7 @@ async function instantiatePhiRoutePresetPage({
       presetKey: binding.descriptor.presetKey,
       sourcePresetVersion: binding.descriptor.presetVersion,
     },
-    page: await instantiatePhiCmsRoutePreset({
+    page: await applyPhiPresetTreePublishedContent(await instantiatePhiCmsRoutePreset({
       binding,
       catalog,
       activeModuleIds: activeModuleKeys,
@@ -152,7 +153,7 @@ async function instantiatePhiRoutePresetPage({
         "text",
         catalog.sourceLocaleByModuleId.get(binding.descriptor.ownerModuleId),
       ),
-    }),
+    }), { runtimeModuleCatalog, siteKey: runtime.site.key, locale: runtime.locale.current }),
   };
 }
 

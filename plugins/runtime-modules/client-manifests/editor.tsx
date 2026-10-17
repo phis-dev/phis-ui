@@ -8,6 +8,7 @@ export { PHI_COMMON_RUNTIME_MODULE_UI_PROVIDER_CLIENT_MANIFEST as PHI_EDITOR_RUN
 import { extendPhiRuntimeModuleDataProviderClientManifest } from "../../../components/runtime/runtime-module-data-provider-client-manifest";
 import { PHI_COMMON_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST } from "./common-data-providers";
 import { PHI_DASHBOARD_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "../dashboard/client-data-providers";
+import { PHI_EDITOR_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "../editor/client-data-providers";
 import { PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "../localization/client-data-providers";
 import { PHI_NEWS_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "../news/client-data-providers";
 
@@ -24,6 +25,7 @@ export const PHI_EDITOR_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST =
     PHI_COMMON_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST,
     [
       ...PHI_DASHBOARD_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS,
+      ...PHI_EDITOR_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS,
       ...PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS,
       ...PHI_NEWS_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS,
     ],
