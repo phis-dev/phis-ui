@@ -19,6 +19,7 @@ import { usePhiSiteBrand } from "../../../../../components/root/phi-root-live-th
 import { resolvePhiWidgetFontFamily } from "../../../../../components/widgets/helpers/font-family";
 import { resolvePhiWidgetFontSize } from "../../../../../components/widgets/helpers/font-size";
 import type { PhiWidgetFontFamilyKey, PhiWidgetFontSizeKey } from "../../../../../types/site-theme";
+import { localizePath } from "../../../../../helpers/locale";
 
 export type PhiBrandWidgetConfig = {
   mode?: PhiBrandWidgetMode;
@@ -37,6 +38,8 @@ export type PhiBrandWidgetClientProps = PhiClientBlockBaseProps<
   PhiBrandWidgetConfig
 > & {
   fallbackTitle?: ReactNode;
+  /** The language being read, which the way home keeps. */
+  locale?: string;
   interactive?: boolean;
 };
 
@@ -49,6 +52,7 @@ export type PhiBrandWidgetClientProps = PhiClientBlockBaseProps<
  */
 export function PhiBrandWidgetClient({
   config,
+  locale,
   fallbackTitle,
   interactive = true,
 }: PhiBrandWidgetClientProps) {
@@ -95,7 +99,13 @@ export function PhiBrandWidgetClient({
     return null;
   }
 
-  const homeHref = brand?.homeHref?.trim() || "/";
+  /*
+   * The front page in the language being read. `/` alone is answered with a redirect to the visitor's
+   * preferred language, so a reader of `/de` could be led to `/en`; and Next's prefetch of it, which loses
+   * its `_rsc` on that redirect, came back with the static tree's own address and a 404
+   * (AUDIT-2026-10-13, PM15).
+   */
+  const homeHref = brand?.homeHref?.trim() || (locale ? localizePath(locale, "/") : "/");
   const linkStyle: CSSProperties = {
     color: "inherit",
     textDecoration: "none",

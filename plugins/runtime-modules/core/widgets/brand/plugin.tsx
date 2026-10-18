@@ -22,6 +22,7 @@ export const PHI_BRAND_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsBrandWidget
     <PhiBrandWidget
       key={`widget-${widget.id}`}
       fallbackTitle={resolvePhiBrandWordmarkText(runtime)}
+      locale={runtime.locale.current}
       mode={config.mode}
       fontFamily={config.fontFamily}
       fontSize={config.fontSize}
@@ -31,6 +32,7 @@ export const PHI_BRAND_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsBrandWidget
     <PhiBrandWidget
       key={`widget-${widget.id}`}
       fallbackTitle={resolvePhiBrandWordmarkText(runtime)}
+      locale={runtime.locale.current}
       mode={config.mode}
       fontFamily={config.fontFamily}
       fontSize={config.fontSize}
