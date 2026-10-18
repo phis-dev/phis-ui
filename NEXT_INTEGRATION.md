@@ -144,8 +144,8 @@ request and whose renders Next keeps ([STATIC_RENDERING.md](./STATIC_RENDERING.m
 root Layout, which is why both trees sit in route groups:
 
 ```text
-src/app/(static)/static-render/[marker]/[mode]/[root]/layout.tsx          document shell, Public Client boundary
-src/app/(static)/static-render/[marker]/[mode]/[root]/not-found.tsx       locale from next/root-params
+src/app/(static)/static-render/[marker]/[mode]/[root]/layout.tsx          document shell
+src/app/(static)/static-render/[marker]/[mode]/[root]/not-found.tsx       locale from next/root-params, Public Client boundary
 src/app/(static)/static-render/[marker]/[mode]/[root]/(root)/layout.tsx   boundary and chrome "none"
 src/app/(static)/static-render/[marker]/[mode]/[root]/(root)/page.tsx, @<slot>/page.tsx
 src/app/(static)/static-render/[marker]/[mode]/[root]/(pages)/[...path]/layout.tsx   boundary and chrome "shell"
@@ -155,7 +155,13 @@ src/app/(static)/static-render/[marker]/[mode]/[root]/(pages)/[...path]/page.tsx
 Its Layouts sit inside the catch-all, where they are given the page's segments; the dynamic tree's
 Layouts derive them from a request header the static tree may not read. Only the proxy reaches this tree.
 
-Two properties of that shape are load-bearing and must not be flattened back:
+Three properties of that shape are load-bearing and must not be flattened back:
+
+- **The Public Client boundary sits in the Area's Layouts, not in the root Layout**, in both trees. The
+  Widget clients it loads with `next/dynamic` are split against the segment that imports it; from the
+  root, every one carried its own copy of what the deeper Layouts already load -- 37 kB gzip on an
+  anonymous `/de`, 72 kB on `/de/contact` (AUDIT-2026-10-13, PM14). The static `not-found` is outside
+  both Layouts and mounts it itself.
 
 - **The branch decides the chrome, not a condition inside a Layout.** Next only mounts and unmounts a
   Layout when the branch it belongs to changes, so a Layout that decided per path would keep drawing

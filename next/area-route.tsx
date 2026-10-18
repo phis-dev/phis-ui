@@ -382,7 +382,14 @@ type PhiNextStaticPublicLayoutProps = PhiNextStaticAreaLayoutProps & {
 /** One branch of the static tree: the Area boundary and the Shell, for the page its segments name. */
 export function createPhiNextStaticPublicLayout(
   cmsBridge: PhiCmsSiteBridge,
-  chrome: PhiCmsAreaChrome = "shell",
+  chrome: PhiCmsAreaChrome,
+  /**
+   * The Client boundary of the Public Area, mounted here as the dynamic tree mounts it in its `[root]`
+   * Layout. Mounted in the root Layout instead, the Widget clients it loads were split against what the
+   * root segment alone holds, and every one carried its own copy of what the deeper segments already
+   * load: 37 kB gzip more on an anonymous `/de` than on a signed-in one (AUDIT-2026-10-13, PM14).
+   */
+  Provider: React.ComponentType<{ children: React.ReactNode }>,
 ) {
   const staticBridge = toPhiStaticCmsSiteBridge(cmsBridge);
 
@@ -397,21 +404,23 @@ export function createPhiNextStaticPublicLayout(
   }: PhiNextStaticPublicLayoutProps) {
     const { root, path } = await params;
     return (
-      <PhiCmsAreaBoundary root={root} cmsBridge={staticBridge} pagePath={path}>
-        <PhiCmsAreaShell
-          root={root}
-          cmsBridge={staticBridge}
-          chrome={chrome}
-          pagePath={path}
-          headerBottom={headerBottom}
-          hero={hero}
-          siderRight={siderRight}
-          footerTop={footerTop}
-          drawer={drawer}
-        >
-          {children}
-        </PhiCmsAreaShell>
-      </PhiCmsAreaBoundary>
+      <Provider>
+        <PhiCmsAreaBoundary root={root} cmsBridge={staticBridge} pagePath={path}>
+          <PhiCmsAreaShell
+            root={root}
+            cmsBridge={staticBridge}
+            chrome={chrome}
+            pagePath={path}
+            headerBottom={headerBottom}
+            hero={hero}
+            siderRight={siderRight}
+            footerTop={footerTop}
+            drawer={drawer}
+          >
+            {children}
+          </PhiCmsAreaShell>
+        </PhiCmsAreaBoundary>
+      </Provider>
     );
   };
 }
@@ -433,10 +442,18 @@ export function createPhiNextStaticPublicSlotPage(
  * Next gives a `not-found.tsx` no params, so the Site's file reads the locale from `next/root-params` --
  * a module whose getters Next generates from that Site's own segment names -- and hands it in.
  */
-export function createPhiNextStaticPublicNotFound(cmsBridge: PhiCmsSiteBridge) {
+export function createPhiNextStaticPublicNotFound(
+  cmsBridge: PhiCmsSiteBridge,
+  /** The Public Area's Client boundary, which the root Layout no longer holds; see the Layout above. */
+  Provider: React.ComponentType<{ children: React.ReactNode }>,
+) {
   const staticBridge = toPhiStaticCmsSiteBridge(cmsBridge);
 
   return function PhiNextStaticPublicNotFound({ locale }: { locale: string }) {
-    return <PhiCmsErrorPage code={404} cmsBridge={staticBridge} area="public" locale={locale} />;
+    return (
+      <Provider>
+        <PhiCmsErrorPage code={404} cmsBridge={staticBridge} area="public" locale={locale} />
+      </Provider>
+    );
   };
 }

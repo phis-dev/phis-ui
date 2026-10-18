@@ -177,8 +177,6 @@ export function createPhiNextStaticRootLayout(
   fonts: PhiModuleFontContributions,
   /** The provider of the Site's Server Action for Overlay zones; see `createPhiNextRootLayout`. */
   OverlayZonesProvider: React.ComponentType<{ children: React.ReactNode }>,
-  /** The Client boundary of the Public Area, which the dynamic tree mounts in its `[root]` Layout. */
-  Boundary: React.ComponentType<{ children: React.ReactNode }>,
 ) {
   const document = createPhiNextRootDocument(siteModules, fonts);
 
@@ -214,11 +212,7 @@ export function createPhiNextStaticRootLayout(
       site,
       resolvedLocale,
       browserColorScheme: normalizePhiColorSchemeHint(mode),
-      children: (
-        <OverlayZonesProvider>
-          <Boundary>{children}</Boundary>
-        </OverlayZonesProvider>
-      ),
+      children: <OverlayZonesProvider>{children}</OverlayZonesProvider>,
     });
   };
 }
