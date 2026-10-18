@@ -10,7 +10,12 @@ export {
 import { isPhiRecord } from "../helpers/is-record";
 import { isPhiRuntimeDataProviderKey as isProviderKey, type PhiRuntimeDataProviderKey } from "@phis/contracts/controls";
 
-export type PhiRuntimeDataProviderKind = "options" | "table" | "tree" | "collection" | "timeline";
+/**
+ * What a Provider serves. Every kind but `record` is read in the browser, through the Client half a
+ * Module registers (`loadLive`); a `record` is one thing read on the server while the page is drawn
+ * (`types/record-provider.ts`), so it reaches the HTML and the Page's own status.
+ */
+export type PhiRuntimeDataProviderKind = "options" | "table" | "tree" | "collection" | "timeline" | "record";
 
 export type PhiRuntimeDataProviderExecutionMode = "static" | "live";
 

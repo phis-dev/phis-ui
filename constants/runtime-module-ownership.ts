@@ -227,6 +227,8 @@ const PHI_RUNTIME_MODULE_OWNERSHIP: Readonly<Record<string, readonly [module: st
   "signals/table-state": ["core", "table-state"],
   "signals/temporal-selection": ["core", "temporal-selection"],
   "signals/thread-selection": ["threads", "selection"],
+  // One published entry with its relatives, read on the server (`types/record-provider.ts`).
+  "records/content-entry": ["core", "content-entry"],
   "signals/tour-availability": ["tour", "availability"],
   "signals/tour-progress": ["tour", "progress"],
   "signals/tree-action": ["core", "tree-action"],

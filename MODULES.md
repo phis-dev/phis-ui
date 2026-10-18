@@ -660,6 +660,29 @@ nothing to rename, and the Module's Controller translates instead. SIGNALS.md,
 [Naming a value, and translating one](./SIGNALS.md#naming-a-value-and-translating-one), is where the two
 are told apart.
 
+### Record Providers
+
+A `record` Provider serves one thing -- an entry, a product, an event -- and is the one kind read on the
+server rather than in the browser (`types/record-provider.ts`). The record a Page is about decides what
+the server answers before anything is drawn: the Page's title and description, and a 404 for an address
+that names nothing. A Client Provider answers after the page has loaded, which is too late for all three.
+
+- The descriptor sits in `dataProviders` like any other, `kind: "record"`, with the parameters it takes as
+  `settingsFields`. The Builder offers it where a field asks for `providerKind: "record"` and edits the
+  parameters inside the binding.
+- The function is the catalog entry's `recordProviders`, `{ key, load }`, because it reads with server
+  credentials and the descriptor travels to the browser. The catalog refuses a descriptor without its
+  server half and a server half without its descriptor.
+- A Server Widget is bound by a `{ providerKey, params }` in its config and reads it with
+  `resolvePhiRecordSource({ registry, runtime, binding })`. The answer is memoised per request by Provider
+  and parameters, so every Widget bound to one record costs it one read; `null` from the Provider is "no
+  such record", a throw is "unavailable", and a Widget draws the two differently.
+- A binding to a record mounts nothing in the browser: the tree scan that mounts Provider Clients skips the
+  kind.
+
+The first is Core's content entry Provider (`PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntry`), which
+the header, text and related list of a detail Page are bound to (CONTENT_ENTRIES.md).
+
 Provider Clients own data access and mutations. Forms own record-oriented validation and submit
 lifecycles. Controllers coordinate runtime state. Signals connect those surfaces. None may silently take
 over another layer's responsibility.

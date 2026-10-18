@@ -1,3 +1,4 @@
+import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../constants/core-data-provider-keys";
 import { PHI_CORE_RUNTIME_MODULE_THEMES } from "../area-base-presets";
 import { definePhiRuntimeModuleServerAreaContribution } from "../area-contributions";
 import { PHI_CORE_RUNTIME_MODULE_DEFINITION } from "./definition";
@@ -23,6 +24,10 @@ export function createPhiCoreRuntimeModuleServerAreaContribution() {
         areas: ["admin"],
         load: () => import("./cards").then((module) => module.PHI_CORE_RUNTIME_MODULE_DASHBOARD_CARDS),
       },
+      recordProviders: [{
+        key: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntry,
+        load: () => import("./content-entries/record.server").then((module) => module.resolvePhiContentEntryRecord),
+      }],
       load: () => import("./module").then((module) => module.PHI_CORE_RUNTIME_MODULE),
     },
   });

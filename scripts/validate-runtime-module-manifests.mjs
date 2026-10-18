@@ -591,6 +591,12 @@ const dataProviderKeys = dataProviderManifestFiles.flatMap((file) => [
   ...readSourceSync(file).matchAll(/key:\s+(PHI_[A-Z0-9_]+_RUNTIME_DATA_PROVIDER_KEYS)\.([A-Za-z0-9_]+),/g),
 ].map((match) => `${match[1]}.${match[2]}`));
 const dataProviderAuthoringModesByKey = new Map();
+/*
+ * `record` Providers are server functions (types/record-provider.ts): they have no Client loader to be
+ * in sync with. Their server half is paired with the descriptor where the catalog is built
+ * (`createPhiRuntimeModuleCatalog`), which fails the descriptor check below for a pair that is not.
+ */
+const recordDataProviderKeys = new Set();
 for (const file of dataProviderManifestFiles) {
   const definitions = [
     ...readSourceSync(file).matchAll(/\{\s*key:\s+PHI_[A-Z0-9_]+_RUNTIME_DATA_PROVIDER_KEYS\.([A-Za-z0-9_]+),([\s\S]*?)\n\s*\},/g),
@@ -604,6 +610,9 @@ for (const file of dataProviderManifestFiles) {
     const keySymbol = readSourceSync(file)
       .match(/PHI_[A-Z0-9_]+_RUNTIME_DATA_PROVIDER_KEYS/)?.[0];
     dataProviderAuthoringModesByKey.set(`${keySymbol}.${key}`, authoringMode);
+    if (/kind:\s*"record"/.test(body)) {
+      recordDataProviderKeys.add(`${keySymbol}.${key}`);
+    }
   }
 }
 const dataProviderDescriptorSymbols = dataProviderManifestFiles.flatMap((file) => [
@@ -706,7 +715,7 @@ assertSameMembers(
 assertUnique("Runtime data provider Client loaders", dataProviderClientKeys);
 assertSameMembers(
   "Runtime data provider descriptor/Client loader keys",
-  dataProviderKeys,
+  dataProviderKeys.filter((key) => !recordDataProviderKeys.has(key)),
   dataProviderClientKeys,
 );
 

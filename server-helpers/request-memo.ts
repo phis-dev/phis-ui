@@ -55,3 +55,26 @@ export function definePhiRequestMemo<TOptions extends object, TResult>(
     return result;
   };
 }
+
+/**
+ * `load`, answered once per request for a `key` that says the same thing, with `with` handed through.
+ *
+ * For a read that needs something besides its question to be answered -- the render's registry, its
+ * runtime -- and those are not plain data, so they cannot be part of the key. They must not change what
+ * the answer is within one request; the registry and runtime of one render do not.
+ */
+export function definePhiRequestMemoWith<TKey extends object, TWith, TResult>(
+  load: (key: TKey, using: TWith) => Promise<TResult>,
+): (key: TKey, using: TWith) => Promise<TResult> {
+  const readRequestStore = cache(() => new Map<string, Promise<TResult>>());
+  return (key, using) => {
+    const store = readRequestStore();
+    const memoKey = toPhiRequestMemoKey(key);
+    let result = store.get(memoKey);
+    if (!result) {
+      result = load(key, using);
+      store.set(memoKey, result);
+    }
+    return result;
+  };
+}

@@ -1,3 +1,7 @@
+import {
+  readPhiRuntimeDataProviderBinding,
+  type PhiRuntimeDataProviderBinding,
+} from "../../../../../types/runtime-data-provider";
 import { isPhiRecord } from "../../../../../helpers/is-record";
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
@@ -28,7 +32,7 @@ export type PhiEntryListPresentation = (typeof PHI_ENTRY_LIST_PRESENTATIONS)[num
 
 /**
  * Where the entries come from: the newest of the kind, or the ones closest to one entry -- a "more like
- * this" list under a detail Page, which names that entry in `relatedTo`.
+ * this" list under a detail Page, bound to that entry's record in `relatedTo`.
  */
 export const PHI_ENTRY_LIST_SOURCES = ["latest", "related"] as const;
 export type PhiEntryListSource = (typeof PHI_ENTRY_LIST_SOURCES)[number];
@@ -67,10 +71,11 @@ export type PhiEntryListWidgetConfig = PhiCmsWidgetConfigBase & {
   show: number;
   source: PhiEntryListSource;
   /**
-   * The entry a `related` list is about, by its address. A detail route's tree writes the route's
-   * parameter here; a list with no entry to be related to shows nothing.
+   * The entry a `related` list is about, as a record binding (`types/record-provider.ts`) -- the one the
+   * header and text above it are bound to, so the three share one read. A detail route's tree writes the
+   * route's slug into it; a list with no entry to be related to shows nothing.
    */
-  relatedTo: string;
+  relatedTo: PhiRuntimeDataProviderBinding | null;
   /** A heading drawn above the entries, and only where there are any; empty for none. */
   title: string;
 };
@@ -102,7 +107,7 @@ export function normalizePhiEntryListWidgetConfig(config: unknown): PhiEntryList
     source: (PHI_ENTRY_LIST_SOURCES as readonly unknown[]).includes(raw.source)
       ? raw.source as PhiEntryListSource
       : "latest",
-    relatedTo: typeof raw.relatedTo === "string" ? raw.relatedTo.trim() : "",
+    relatedTo: readPhiRuntimeDataProviderBinding(raw.relatedTo),
     title: typeof raw.title === "string" ? raw.title.trim() : "",
   };
 }
@@ -164,9 +169,10 @@ export const PHI_ENTRY_LIST_WIDGET_DEFINITION = {
     },
     {
       key: "relatedTo",
-      type: "string",
+      type: "data-provider",
+      providerKind: "record",
       label: "Related to",
-      description: "The address of the entry; a detail Page fills it in from its own address.",
+      description: "The entry; a detail Page binds it to its own.",
       visibleWhen: { field: "source", equals: "related" },
     },
     { key: "title", type: "string", label: "Heading" },

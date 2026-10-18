@@ -972,6 +972,33 @@ dashboardCards: {
 - `target` names the Module's own route preset, and `accessPolicy` keeps the card from a viewer who may
   not see it. `@phis/support` is the worked example (`src/cards.ts`).
 
+### Records a Page is about
+
+A Page about one thing of the Module's -- a product, an event -- reads it through a `record` Provider
+([MODULES.md](./MODULES.md#record-providers)), so the record is in the HTML and the Page can answer 404:
+
+```ts
+// definition.ts: the descriptor, with the parameters a binding carries
+dataProviders: [{
+  key: SHOP_PRODUCT_RECORD_KEY, ownerModuleId: SHOP_MODULE_ID, kind: "record",
+  executionMode: "live", authoringMode: "none", title: "Product",
+  settingsFields: [{ key: "slug", type: "string", label: "Address" }],
+}],
+
+// server.ts: the server half, on the same catalog entry as dashboardCards
+recordProviders: [{
+  key: SHOP_PRODUCT_RECORD_KEY,
+  load: () => import("./product-record").then((module) => module.resolveProduct),
+}],
+```
+
+- Everything comes from `@phis/ui/module/records`, a Server-only door: the resolver types,
+  `fetchPhiSiteApi` for the question to Core, and `resolvePhiRecordSource` for the Module's Server Widgets.
+- The resolver answers the record or `null` for "no such record", and throws where it cannot ask.
+- A Widget's config carries the binding, `{ providerKey, params: { slug } }`; the route's tree writes the
+  route's parameter into it. The Widget reads it with `resolvePhiRecordSource({ registry, runtime, binding })`
+  -- `registry` is in its render arguments -- and every Widget bound to the same record shares one read.
+
 ## 8. Export the Client and Authoring contributions
 
 `./client` exports the live Client contributions, one entry per Module:

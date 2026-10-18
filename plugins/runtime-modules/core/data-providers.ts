@@ -153,4 +153,28 @@ export const PHI_CORE_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
     title: "Content entry tags",
     description: "The tags one content kind's entries already carry; the field names the kind.",
   },
+  /**
+   * One published entry with its relatives, read on the server while the page is drawn
+   * (`types/record-provider.ts`). The header, text and related list of a detail Page are bound to it; a
+   * detail route's tree writes the route's slug into the binding, a Site's own Page names one entry.
+   */
+  {
+    key: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntry,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    kind: "record",
+    executionMode: "live",
+    // The Builder draws a placeholder for an entry Widget and reads nothing.
+    authoringMode: "none",
+    title: "Content entry",
+    description: "One published entry of a content kind, with the entries related to it.",
+    settingsFields: [
+      {
+        key: "kind",
+        type: "choice",
+        label: "Kind",
+        options: PHI_CONTENT_ENTRY_KINDS.map((kind) => ({ value: kind, label: kind })),
+      },
+      { key: "slug", type: "string", label: "Address" },
+    ],
+  },
 ] satisfies readonly PhiRuntimeModuleDataProviderDescriptor[];

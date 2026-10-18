@@ -279,11 +279,13 @@ describe.each(KINDS)("what the $kind Module brings", ({ kind, moduleId, routes, 
     expect(tree.pageMeta?.title?.value).toBe("Launch");
 
     const [header, body, related] = widgets.map((widget) => widget.config as Record<string, unknown>);
-    expect(header).toMatchObject({ kind, slug: "launch" });
+    // All three are bound to one record -- the entry at the route's address -- so they share one read.
+    const entry = { providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntry, params: { kind, slug: "launch" } };
+    expect(header).toMatchObject({ entry });
     // A Blog names its author; News is dated and nothing more.
     expect(((header!.show as number) & PhiContentEntryPart.Author) !== 0).toBe(kind === "blog");
-    expect(body).toMatchObject({ kind, slug: "launch" });
-    expect(related).toMatchObject({ kind, source: "related", relatedTo: "launch" });
+    expect(body).toMatchObject({ entry });
+    expect(related).toMatchObject({ kind, source: "related", relatedTo: entry });
     // The relatives lead to this same route, each at its own address -- the target the list's titles name.
     const listTree = await routes[0]!.loadTree({ page: pageAt(`/${kind}`, 2) } as never);
     const listConfig = listTree.contentWidgets.find((widget) => widget.widgetType === PhiCmsWidgetType.EntryList)!

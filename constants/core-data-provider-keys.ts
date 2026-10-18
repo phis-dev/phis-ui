@@ -15,4 +15,6 @@ export const PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS = {
   contentEntries: createPhiSharedRuntimeDataProviderKey("tables", "content-entries"),
   /** The tags one kind's entries already carry; the field names the kind in `config.kind`. */
   contentEntryTags: createPhiSharedRuntimeDataProviderKey("options", "content-entry-tags"),
+  /** One published entry and its relatives, read on the server; the binding names the kind and slug. */
+  contentEntry: createPhiSharedRuntimeDataProviderKey("records", "content-entry"),
 } as const;

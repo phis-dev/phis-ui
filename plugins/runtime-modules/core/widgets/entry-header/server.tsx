@@ -2,21 +2,26 @@ import { PhiAlertControl } from "../../../../../components/controls/phi-alert-co
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import { getPhiContentEntryReaderLabels } from "../../../../../components/widgets/label-sets/content-entries";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
-import { loadPhiContentEntryPage } from "../../../../../server-helpers/content-entry-page";
 import { phiRuntime } from "../../../../../server-helpers/phi-runtime";
 import type { PhiNoLabels, PhiServerBlockBaseProps } from "../../../../../types";
+import type { PhiCmsRuntimeRenderRegistry } from "../../../../../types/cms-plugins";
+import { readPhiBoundContentEntry } from "../../content-entries/record-source.server";
 import { buildPhiEntryViews } from "../entry-list/view.server";
 import { normalizePhiEntryHeaderWidgetConfig, type PhiEntryHeaderWidgetConfig } from "./config";
 
-export type PhiEntryHeaderWidgetProps = PhiServerBlockBaseProps<PhiNoLabels, PhiEntryHeaderWidgetConfig>;
+export type PhiEntryHeaderWidgetProps = PhiServerBlockBaseProps<PhiNoLabels, PhiEntryHeaderWidgetConfig> & {
+  /** Where the record binding is answered; absent outside a page render, where nothing is bound. */
+  registry?: Pick<PhiCmsRuntimeRenderRegistry, "recordProviderLoadersByKey">;
+};
 
 /**
  * The opening of one published entry, read while the page is drawn (`CONTENT_ENTRIES.md`).
  *
- * Through the detail Page's own question (`loadPhiContentEntryPage`), like the body beside it, so the two
- * cost Core one read between them. Only the meta is prepared: the body is not parsed for a header.
+ * Through its record binding (`types/record-provider.ts`), like the body beside it: one Provider and the
+ * same parameters are answered once per request, so the two cost Core one read between them. Only the
+ * meta is prepared: the body is not parsed for a header.
  */
-export async function PhiEntryHeaderWidget({ config, runtime }: PhiEntryHeaderWidgetProps) {
+export async function PhiEntryHeaderWidget({ config, runtime, registry }: PhiEntryHeaderWidgetProps) {
   const settings = normalizePhiEntryHeaderWidgetConfig(config);
   const rt = phiRuntime(runtime);
   const labels = await getPhiContentEntryReaderLabels({
@@ -25,19 +30,17 @@ export async function PhiEntryHeaderWidget({ config, runtime }: PhiEntryHeaderWi
     locale: runtime.locale.current,
   });
 
-  let page;
-  try {
-    page = await loadPhiContentEntryPage(runtime, { kind: settings.kind, slug: settings.slug });
-  } catch {
+  const bound = await readPhiBoundContentEntry({ registry, runtime, binding: settings.entry });
+  if (bound.status === "unavailable") {
     return <PhiAlertControl level="warning" showIcon title={labels.unavailable} />;
   }
-  if (!page) {
+  if (bound.status === "missing") {
     return <PhiAlertControl level="info" showIcon title={labels.emptyTitle} description={labels.emptyText} />;
   }
 
   const [view] = await buildPhiEntryViews({
-    kind: settings.kind,
-    entries: [page.entry],
+    kind: bound.record.kind,
+    entries: [bound.record.entry],
     runtime,
     parts: settings.show,
     body: "teaser",

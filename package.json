@@ -337,6 +337,12 @@
       "types": "./module-dashboard-cards.ts",
       "default": "./module-dashboard-cards.ts"
     },
+    "./module/records": {
+      "import": "./module-records.ts",
+      "require": "./module-records.ts",
+      "types": "./module-records.ts",
+      "default": "./module-records.ts"
+    },
     "./module/projection": {
       "import": "./module-projection.ts",
       "require": "./module-projection.ts",
@@ -637,6 +643,7 @@
       "./helpers/site-runtime",
       "./module/dashboard-cards",
       "./module/labels",
+      "./module/records",
       "./net",
       "./next/area-route",
       "./next/areas/accounting",

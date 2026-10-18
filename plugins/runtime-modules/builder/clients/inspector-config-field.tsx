@@ -1035,7 +1035,10 @@ function renderPhiInspectorConfigFieldBody({
                   }
                 : field.providerKind === "timeline"
                   ? { providerKey, params: isPhiRecord(rawProviderConfig.params) ? rawProviderConfig.params : undefined }
-                  : { ...providerConfig, providerKey },
+                  // Another record Provider's parameters mean nothing to this one; it starts on its own.
+                  : field.providerKind === "record"
+                    ? { providerKey, params: {} }
+                    : { ...providerConfig, providerKey },
           })}
         />
         {(field.providerKind === "table" || field.providerKind === "tree" || field.providerKind === "collection") && selectedProvider ? (
@@ -1062,6 +1065,26 @@ function renderPhiInspectorConfigFieldBody({
             })}
           />
         ) : null}
+        {/*
+          * A record is one thing, named by its parameters -- an entry by kind and address -- and the
+          * Provider says which it takes in its `settingsFields`. They are edited here, inside the binding.
+          */}
+        {field.providerKind === "record" && selectedProvider
+          ? (selectedProvider.settingsFields ?? []).map((paramField) => {
+            const params = isPhiRecord(rawProviderConfig.params) ? rawProviderConfig.params as Record<string, unknown> : {};
+            return <Fragment key={paramField.key}>{renderPhiInspectorConfigField({
+              field: paramField,
+              value: params[paramField.key],
+              defaultValue: undefined,
+              config: params,
+              disabled,
+              fieldLabels,
+              onChange: (patch) => onChange?.({
+                [field.key]: { providerKey: selectedProvider.key, params: { ...params, ...patch } },
+              }),
+            })}</Fragment>;
+          })
+          : null}
       </PhiFlexControl>,
     );
   }

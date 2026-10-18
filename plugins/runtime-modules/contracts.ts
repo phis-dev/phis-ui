@@ -691,6 +691,7 @@ export function createPhiRuntimeModuleCatalog(
         );
       }
     }
+    assertPhiRuntimeModuleRecordProviders(definition, entry);
     assertPhiRuntimeModuleArtifacts(
       entry.widgets,
       entry.layouts,
@@ -955,6 +956,39 @@ export function createPhiRuntimeModuleCatalog(
   }
 
   return Object.assign(catalog, { areaDefinitions, platformModuleId });
+}
+
+/**
+ * A `record` descriptor and its server half come as a pair (`types/record-provider.ts`).
+ *
+ * One without the other fails late and quietly: a descriptor without a function is offered in the Builder
+ * and answers nothing, a function without a descriptor is never offered. Both are caught here, where the
+ * catalog is built, rather than on the first page that binds them.
+ */
+function assertPhiRuntimeModuleRecordProviders(
+  definition: PhiRuntimeModuleDefinition,
+  entry: PhiRuntimeModuleCatalogEntry,
+) {
+  const declared = new Set(
+    (definition.dataProviders ?? []).filter((provider) => provider.kind === "record").map((provider) => provider.key),
+  );
+  const served = new Set<string>();
+  for (const provider of entry.recordProviders ?? []) {
+    if (!declared.has(provider.key)) {
+      throw new Error(
+        `${definition.moduleId}: record provider "${provider.key}" has no record descriptor in its dataProviders.`,
+      );
+    }
+    if (served.has(provider.key)) {
+      throw new Error(`${definition.moduleId}: record provider "${provider.key}" is served twice.`);
+    }
+    served.add(provider.key);
+  }
+  for (const key of declared) {
+    if (!served.has(key)) {
+      throw new Error(`${definition.moduleId}: record descriptor "${key}" has no server half in recordProviders.`);
+    }
+  }
 }
 
 function assertPhiRuntimeModuleArtifacts(

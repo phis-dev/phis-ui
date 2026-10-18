@@ -1,11 +1,8 @@
 import { isPhiRecord } from "../../../../../helpers/is-record";
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
-import {
-  isPhiContentEntryKind,
-  PHI_CONTENT_ENTRY_KINDS,
-  type PhiContentEntryKind,
-} from "../../../../../constants/content-entry-kinds";
+import { readPhiContentEntryRecordBinding } from "../../../../../helpers/content-entry-record-binding";
+import type { PhiRuntimeDataProviderBinding } from "../../../../../types/runtime-data-provider";
 import {
   phiContentEntryPartOptions,
   PhiContentEntryPart,
@@ -27,10 +24,11 @@ const PHI_ENTRY_HEADER_DEFAULT_PARTS = PhiContentEntryPart.Title | PhiContentEnt
   | PhiContentEntryPart.Category;
 
 export type PhiEntryHeaderWidgetConfig = PhiCmsWidgetConfigBase & {
-  /** Which content kind the entry is of (`CONTENT_ENTRIES.md`). */
-  kind: PhiContentEntryKind;
-  /** The entry's address; a detail route's tree writes the route's parameter here. */
-  slug: string;
+  /**
+   * The entry, as a record binding (`types/record-provider.ts`): the content entry Provider with the kind
+   * and address. A detail route's tree writes the route's slug into it; a Site's own Page names one entry.
+   */
+  entry: PhiRuntimeDataProviderBinding;
   /** Which parts show (`constants/content-entry-parts.ts`). */
   show: number;
   /**
@@ -45,8 +43,7 @@ export function normalizePhiEntryHeaderWidgetConfig(config: unknown): PhiEntryHe
   const raw = isPhiRecord(config) ? (config as Record<string, unknown>) : {};
   return {
     ...readRenderableBlockConfig(raw),
-    kind: isPhiContentEntryKind(raw.kind) ? raw.kind : "news",
-    slug: typeof raw.slug === "string" ? raw.slug.trim() : "",
+    entry: readPhiContentEntryRecordBinding(raw.entry),
     show: readPhiContentEntryParts(raw.show, PHI_ENTRY_HEADER_PARTS, PHI_ENTRY_HEADER_DEFAULT_PARTS),
     titleLevel: raw.titleLevel === "h2" ? "h2" : "h1",
     align: raw.align === "center" ? "center" : "start",
@@ -64,13 +61,7 @@ export const PHI_ENTRY_HEADER_WIDGET_DEFINITION = {
   icon: "antd:profile",
   slotSizePolicy: "fill-inline",
   fields: [
-    {
-      key: "kind",
-      type: "choice",
-      label: "Kind",
-      options: PHI_CONTENT_ENTRY_KINDS.map((kind) => ({ value: kind, label: kind })),
-    },
-    { key: "slug", type: "string", label: "Address" },
+    { key: "entry", type: "data-provider", providerKind: "record", label: "Entry" },
     { key: "show", type: "flags", label: "Show", options: phiContentEntryPartOptions(PHI_ENTRY_HEADER_PARTS) },
     {
       key: "titleLevel",

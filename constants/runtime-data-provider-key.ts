@@ -13,7 +13,7 @@ export function createPhiSharedRuntimeItemRendererKey(key: string) {
 }
 
 export function createPhiSharedRuntimeDataProviderKey(
-  kind: "options" | "tables" | "trees" | "collections" | "timelines",
+  kind: "options" | "tables" | "trees" | "collections" | "timelines" | "records",
   key: string,
 ) {
   return createPhiModuleScopedKey(kind, key) as PhiRuntimeDataProviderKey;

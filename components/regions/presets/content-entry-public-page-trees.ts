@@ -7,6 +7,7 @@ import type { PhiContentEntryKind } from "../../../constants/content-entry-kinds
 import { PhiCmsPageType } from "../../../constants/phi-cms";
 import { buildPhiBasePageColumnFrame } from "./phi-base-page-column";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
+import { createPhiContentEntryRecordBinding } from "../../../helpers/content-entry-record-binding";
 import { loadPhiContentEntryPage } from "../../../server-helpers/content-entry-page";
 import { createPhiPageReference } from "../../../types/references";
 import { PHI_CONTENT_ENTRY_RELATED_LIMIT } from "../../../gateway/content-entries";
@@ -100,8 +101,9 @@ export async function buildPhiContentEntryListPageTree({
  * The entry is read here, before anything is drawn, because two answers depend on it that the body cannot
  * give: the Page's title and description, and its status. A slug that names no published entry answers
  * 404 -- `notFound()` raised during the request resolution, which the Area Layout runs before the shell
- * flushes, so the status line says so rather than a 200 carrying "not found". The read is the one the three
- * Widgets make again while the page is drawn (`loadPhiContentEntryPage`), so it is answered once.
+ * flushes, so the status line says so rather than a 200 carrying "not found". The three Widgets are bound to
+ * the entry's record (`types/record-provider.ts`), whose Provider asks the same question
+ * (`loadPhiContentEntryPage`), so it is answered once.
  *
  * Three Widgets rather than one article, because each is the Site's to rearrange: a header that shows the
  * author or not, a body, and a "more like this" list that draws nothing where nothing is related.
@@ -128,10 +130,13 @@ export async function buildPhiContentEntryDetailPageTree({
   related: { presentation: "stack" | "cards" | "compact"; title: string };
 }): Promise<PhiResolvedCmsPageTree> {
   const slug = params.slug?.trim() ?? "";
-  const entry = slug ? (await loadPhiContentEntryPage(runtime, { kind, slug }))?.entry ?? null : null;
-  if (!entry) {
+  const found = slug ? (await loadPhiContentEntryPage(runtime, { kind, slug }))?.entry ?? null : null;
+  if (!found) {
     notFound();
   }
+  // What the three Widgets are bound to. The content entry Provider asks the question just asked, so
+  // drawing them costs Core nothing more.
+  const entry = createPhiContentEntryRecordBinding(kind, slug);
 
   const identity = { domain: "page" as const, ownerModuleId, presetKey };
   const layouts = createPhiPresetCmsInstanceIdMap(identity, ["layoutContent"]);
@@ -144,9 +149,9 @@ export async function buildPhiContentEntryDetailPageTree({
      * they are no Site message of their own -- the entry's versions hold them.
      */
     pageMeta: {
-      title: { msgId: 0, source: entry.title, value: entry.title },
-      description: entry.subtitle
-        ? { msgId: 0, source: entry.subtitle, value: entry.subtitle }
+      title: { msgId: 0, source: found.title, value: found.title },
+      description: found.subtitle
+        ? { msgId: 0, source: found.subtitle, value: found.subtitle }
         : null,
     },
     overlays: [],
@@ -163,13 +168,13 @@ export async function buildPhiContentEntryDetailPageTree({
         typeKey: "entry-header",
         id: widgets.widgetHeader,
         label: `pub ${kind} detail header widget`,
-        config: { kind, slug, show: headerParts },
+        config: { entry, show: headerParts },
       },
       {
         typeKey: "entry-detail",
         id: widgets.widgetEntry,
         label: `pub ${kind} detail widget`,
-        config: { kind, slug },
+        config: { entry },
       },
       {
         typeKey: "entry-list",
@@ -178,7 +183,7 @@ export async function buildPhiContentEntryDetailPageTree({
         config: {
           kind,
           source: "related",
-          relatedTo: slug,
+          relatedTo: entry,
           presentation: related.presentation,
           title: related.title,
           limit: PHI_CONTENT_ENTRY_RELATED_LIMIT,

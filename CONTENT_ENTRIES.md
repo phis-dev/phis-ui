@@ -18,8 +18,9 @@ shows or writes them exists once and takes the kind as data:
 | The entries Table Provider | Core Module, `PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntries` | the resource key |
 | The tags Options Provider | Core Module, `PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntryTags` | the field's `config.kind` |
 | The list Widget `entry-list` | Core Module | `config.kind` |
-| The header Widget `entry-header` | Core Module | `config.kind`, with `config.slug` |
-| The text Widget `entry-detail` | Core Module | `config.kind`, with `config.slug` |
+| The header Widget `entry-header` | Core Module | its record binding, `config.entry` |
+| The text Widget `entry-detail` | Core Module | its record binding, `config.entry` |
+| The entry record Provider | Core Module, `PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntry` | the binding's `params.kind` |
 | One entry with its relatives | `server-helpers/content-entry-page.ts` | an argument |
 | The editor Page, its dialogs and Table | `components/regions/presets/content-entry-editor-page-tree.ts` | the builder's input |
 | The Public list and detail Pages | `components/regions/presets/content-entry-public-page-trees.ts` | the builder's input |
@@ -64,10 +65,15 @@ Module is off, or the Site moved the route -- shows its entries without links.
 
 A detail Page is three Widgets in one vertical Flex: `entry-header` (category, title, subtitle, byline),
 `entry-detail` (the text, then tags and link) and `entry-list` with `source: "related"` (the entries
-closest to this one, under a heading drawn only where there are any). All three and the tree loader read
-through `loadPhiContentEntryPage`, which asks Core's `/api/v1/entries/<kind>/<slug>?include=related` once
-per request: the options are built in that one place, because the request memo only shares an answer
-between callers that ask the same question.
+closest to this one, under a heading drawn only where there are any). All three are bound to the entry's
+record (MODULES.md, Record Providers): `entry-header` and `entry-detail` in `config.entry`, the related
+list in `config.relatedTo`, each `{ providerKey: contentEntry, params: { kind, slug } }` with the route's
+slug written in by the tree. A Site placing them on a Page of its own picks the kind and address in the
+Inspector.
+
+The record Provider and the tree loader both read through `loadPhiContentEntryPage`, which asks Core's
+`/api/v1/entries/<kind>/<slug>?include=related` once per request: the options are built in that one place,
+because the request memo only shares an answer between callers that ask the same question.
 
 ## The frame
 

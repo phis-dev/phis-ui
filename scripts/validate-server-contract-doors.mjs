@@ -24,6 +24,7 @@ const SERVER_CONTRACT_DOORS = [
   "./module",
   "./module/dashboard-cards",
   "./module/labels",
+  "./module/records",
   "./references",
   "./types",
   "./widget-config",

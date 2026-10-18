@@ -646,6 +646,14 @@ export type PhiCmsRuntimeRenderRegistry = {
     string,
     () => Promise<PhiRuntimeModuleFeatureResolver>
   >;
+  /**
+   * How to ask each active Module's `record` Providers, by key. Loaders for the reason the features are:
+   * a page that binds none loads none.
+   */
+  recordProviderLoadersByKey: ReadonlyMap<
+    PhiRuntimeDataProviderKey,
+    () => Promise<import("./record-provider").PhiRuntimeRecordProviderResolver>
+  >;
   dataProviderDescriptorsByKey: ReadonlyMap<
     PhiRuntimeDataProviderKey,
     PhiRuntimeModuleDataProviderDescriptor
@@ -1161,6 +1169,14 @@ export type PhiRuntimeModuleCatalogEntry = {
     areas: readonly PhiCmsAreaKey[];
     load: () => Promise<import("./dashboard-cards").PhiDashboardCardProvider>;
   };
+  /**
+   * The server halves of this Module's `record` Providers, one for each such descriptor in
+   * `dataProviders` (`types/record-provider.ts`).
+   *
+   * Here and not on the descriptor for the reason `dashboardCards` is: the function reads the Site's
+   * store with server credentials, and the descriptor travels to the browser.
+   */
+  recordProviders?: readonly import("./record-provider").PhiRuntimeModuleRecordProviderServerDefinition[];
   load: PhiRuntimeModuleLoader;
 };
 

@@ -5,7 +5,7 @@ import { PhiEntryHeaderWidget } from "./server";
 
 export const PHI_ENTRY_HEADER_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiEntryHeaderWidgetConfig> = {
   ...PHI_ENTRY_HEADER_WIDGET_DEFINITION,
-  ...definePhiPassiveWidgetRenderers(({ widget, config, runtime }) => (
-    <PhiEntryHeaderWidget key={`widget-${widget.id}`} config={config} runtime={runtime} />
+  ...definePhiPassiveWidgetRenderers(({ widget, config, runtime, registry }) => (
+    <PhiEntryHeaderWidget key={`widget-${widget.id}`} config={config} runtime={runtime} registry={registry} />
   )),
 };

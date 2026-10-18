@@ -1,3 +1,5 @@
+import { isPhiContentEntryKind, type PhiContentEntryKind } from "../constants/content-entry-kinds";
+import { isPhiRecord } from "../helpers/is-record";
 import type { PhiLinkTarget } from "./references";
 
 /**
@@ -63,3 +65,23 @@ export type PhiSiteContentEntryPage = {
   entry: PhiSiteContentEntry;
   related: readonly PhiSiteContentEntry[] | null;
 };
+
+/**
+ * What the content entry record Provider answers (`PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntry`): one
+ * entry with its relatives, and the kind it is of, so a Widget bound to it needs to be told neither.
+ */
+export type PhiContentEntryRecord = PhiSiteContentEntryPage & {
+  kind: PhiContentEntryKind;
+};
+
+/**
+ * Reads a record a binding answered as an entry, or `null` where it is none -- a Widget bound to another
+ * Provider's record, which the Builder lets an author do.
+ */
+export function readPhiContentEntryRecord(value: unknown): PhiContentEntryRecord | null {
+  if (!isPhiRecord(value)) return null;
+  const record = value as Record<string, unknown>;
+  if (!isPhiContentEntryKind(record.kind) || !isPhiRecord(record.entry)) return null;
+  if (typeof (record.entry as Record<string, unknown>).slug !== "string") return null;
+  return value as PhiContentEntryRecord;
+}

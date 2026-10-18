@@ -508,7 +508,15 @@ export function collectPhiRuntimeDataProviderKeys({
   moduleSet: PhiResolvedRuntimeModuleSet;
   trees: readonly PhiResolvedCmsRenderableTree[];
 }) {
-  const knownProviderKeys = new Set(moduleSet.dataProviderDescriptorsByKey.keys());
+  /*
+   * What the browser mounts. A `record` Provider has no Client half -- it is asked on the server while the
+   * page is drawn (`server-helpers/record-source.ts`) -- so a binding to one is no reason to mount anything.
+   */
+  const knownProviderKeys = new Set(
+    [...moduleSet.dataProviderDescriptorsByKey.values()]
+      .filter((descriptor) => descriptor.kind !== "record")
+      .map((descriptor) => descriptor.key),
+  );
   const collected = new Set<PhiRuntimeDataProviderKey>();
 
   for (const tree of trees) {
@@ -869,6 +877,14 @@ export async function resolvePhiRuntimeRenderRegistry({
         const features = catalog.get(moduleId)?.features;
         return features ? [[features.namespace, features.load] as const] : [];
       }),
+    ),
+    /*
+     * Every active Module's record Providers, for the reason the features are keyed off the active set: a
+     * binding names a Provider, not the Module whose Widget it sits in.
+     */
+    recordProviderLoadersByKey: new Map(
+      [...moduleSet.moduleDefinitionsById.keys()].flatMap((moduleId) =>
+        (catalog.get(moduleId)?.recordProviders ?? []).map((provider) => [provider.key, provider.load] as const)),
     ),
     dataProviderDescriptorsByKey,
     formDefinitionsById: moduleSet.formDefinitionsById,
