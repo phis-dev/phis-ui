@@ -214,6 +214,25 @@ const loadPhiBuilderAreaStructures = cache(async function loadPhiBuilderAreaStru
   }]));
 });
 
+/**
+ * The Areas whose structure has an open draft, from the one read every Builder view makes.
+ *
+ * For the Builder's Dashboard card (`cards.ts`). Outside a render the read is not shared with anything,
+ * and it is still one request for every Area.
+ */
+export async function readPhiBuilderAreasWithOpenDraft(
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
+  { siteKey, locale, apiBaseUrl, internalToken }: {
+    siteKey: string;
+    locale: string;
+    apiBaseUrl: string;
+    internalToken: string;
+  },
+): Promise<PhiDeveloperBuilderArea[]> {
+  const structures = await loadPhiBuilderAreaStructures(siteKey, locale, apiBaseUrl, internalToken, runtimeModuleCatalog);
+  return PHI_BUILDER_AREA_KEYS.filter((area) => structures.get(area)?.draft != null);
+}
+
 async function loadPhiBuilderAreaStructure(
   siteKey: string,
   locale: string,

@@ -13,7 +13,7 @@ import { buildPhiDashboardCardsPageTree } from "./dashboard-cards-page-tree";
  * The Dashboard an Area gets when it has nothing more specific to show.
  *
  * Admin and Builder each carry one written for them -- the first reports on the installation, the
- * second opens the authoring controls -- and neither generalises. What the remaining Areas need is a
+ * second puts the same cards under the authoring controls -- and neither generalises. What the remaining Areas need is a
  * page that exists: the Area root forwards to the Dashboard, so an Area without one has no front door
  * at all.
  *

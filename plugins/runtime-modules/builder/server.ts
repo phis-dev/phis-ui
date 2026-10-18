@@ -32,6 +32,11 @@ export const PHI_BUILDER_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION =
       areaShells: PHI_BUILDER_RUNTIME_MODULE_AREA_SHELLS,
       areaOverlays: PHI_BUILDER_RUNTIME_MODULE_AREA_OVERLAYS,
       routes: PHI_BUILDER_RUNTIME_MODULE_ROUTES,
+      dashboardCards: {
+        areas: ["builder"],
+        load: () => import("./cards")
+          .then((module) => module.PHI_BUILDER_RUNTIME_MODULE_DASHBOARD_CARDS),
+      },
       load: () => import("./module").then((module) => module.PHI_BUILDER_RUNTIME_MODULE),
     },
   });

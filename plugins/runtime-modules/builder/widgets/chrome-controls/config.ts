@@ -29,7 +29,11 @@ export const PHI_BUILDER_CHROME_CONTROLS_WIDGET_DEFINITION = {
   description: "Page-scoped signal widget to disable builder chrome controls.",
   category: "workspace",
   iconFamily: "builder",
-  slotSizePolicy: "fill",
+  /*
+   * It draws nothing -- it only signals the Builder chrome -- so it takes no room. As `fill` it claimed
+   * the Dashboard's whole content region and pushed the cards placed after it to the bottom.
+   */
+  slotSizePolicy: "intrinsic",
   fields: [
     { key: "editorPreviewDisabled", type: "boolean", label: "Disable Editor/Preview" },
     { key: "actionsDisabled", type: "boolean", label: "Disable Actions" },

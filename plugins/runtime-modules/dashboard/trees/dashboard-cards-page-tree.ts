@@ -10,6 +10,52 @@ import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "../../../../components/regions/presets/phi-base-page-layout";
 
 /**
+ * The Collection over an Area's card contributions, as a node of the base page layout.
+ *
+ * Its own function because the Builder's Dashboard places it beside its authoring controls rather than
+ * standing on this page alone.
+ */
+export function buildPhiDashboardCardsWidget({
+  nodes,
+  widgetId,
+  area,
+  slotIndex,
+  emptyDescription,
+}: {
+  nodes: ReturnType<typeof createPhiCmsPresetNodes>;
+  widgetId: PhiCmsInstanceId;
+  area: string;
+  slotIndex: number;
+  emptyDescription: string;
+}) {
+  return nodes.widget({
+    id: widgetId,
+    parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
+    typeKey: "collection-view",
+    slotIndex,
+    sortOrder: 0,
+    label: `${area} dashboard cards`,
+    config: {
+      presentation: {
+        mode: "grid",
+        emptyDescription,
+      },
+      features: {
+        tools: { mode: "external" },
+        pagination: { enabled: false },
+      },
+      source: {
+        providerKey: PHI_DASHBOARD_CARD_DATA_PROVIDER_KEY,
+        resourceKey: PHI_DASHBOARD_CARD_RESOURCE_KEY,
+        // Which Dashboard this is. A page belongs to one Area, so the preset that places the Widget
+        // is what knows it; the path it stands on is read live, because that is what a Site changes.
+        params: { area },
+      },
+    },
+  });
+}
+
+/**
  * A Dashboard page: one Collection over the card contributions of an Area's Modules.
  *
  * Admin's and the generic Area's Dashboard are this page with their own ids, labels and Area; a Module
@@ -45,30 +91,12 @@ export function buildPhiDashboardCardsPageTree({
     regions: [scaffold.region],
     layoutNodes: [scaffold.layoutNode],
     contentWidgets: [
-      nodes.widget({
-        id: widgetId,
-        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
-        typeKey: "collection-view",
+      buildPhiDashboardCardsWidget({
+        nodes,
+        widgetId,
+        area,
         slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
-        sortOrder: 0,
-        label: `${area} dashboard cards`,
-        config: {
-          presentation: {
-            mode: "grid",
-            emptyDescription: labels.emptyDescription,
-          },
-          features: {
-            tools: { mode: "external" },
-            pagination: { enabled: false },
-          },
-          source: {
-            providerKey: PHI_DASHBOARD_CARD_DATA_PROVIDER_KEY,
-            resourceKey: PHI_DASHBOARD_CARD_RESOURCE_KEY,
-            // Which Dashboard this is. A page belongs to one Area, so the preset that places the Widget
-            // is what knows it; the path it stands on is read live, because that is what a Site changes.
-            params: { area },
-          },
-        },
+        emptyDescription: labels.emptyDescription,
       }),
     ],
   };

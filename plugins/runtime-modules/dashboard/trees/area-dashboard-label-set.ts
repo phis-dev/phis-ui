@@ -46,3 +46,8 @@ export async function getPhiAreaDashboardPageLabels(
     emptyDescription: labels.empty_description,
   };
 }
+
+/** What the Builder's Dashboard says where no Module offers it a card; the same sentence as everywhere. */
+export async function getPhiDashboardCardsEmptyDescription(options: PhiGlobalTranslatorOptions) {
+  return (await getPhiLabelSet(options, PHI_AREA_DASHBOARD_PAGE_LABEL_SET)).empty_description;
+}

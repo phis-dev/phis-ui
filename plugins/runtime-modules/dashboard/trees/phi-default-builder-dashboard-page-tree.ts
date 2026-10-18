@@ -10,6 +10,8 @@ import type { PhiBlockRuntime } from "../../../../types";
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "../../../../components/regions/presets/phi-base-page-layout";
 import { getPhiBuilderChromeWidgetLabels } from "../../../../components/widgets/label-sets/builder-chrome";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
+import { buildPhiDashboardCardsWidget } from "./dashboard-cards-page-tree";
+import { getPhiDashboardCardsEmptyDescription } from "./area-dashboard-label-set";
 
 const SYNTHETIC_BUILDER_DASHBOARD_REGION_IDS = {
   regionHeaderBottom: -580,
@@ -30,6 +32,7 @@ const SYNTHETIC_BUILDER_DASHBOARD_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
   presetKey: "builder-dashboard-page",
 }, [
   "widgetBuilderChromeControls",
+  "widgetCards",
 ]);
 
 export async function buildPhiDefaultBuilderDashboardPageTree({
@@ -39,11 +42,15 @@ export async function buildPhiDefaultBuilderDashboardPageTree({
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
-  const labels = await getPhiBuilderChromeWidgetLabels({
+  const translatorOptions = {
     apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
     internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
-  });
+  };
+  const [labels, emptyDescription] = await Promise.all([
+    getPhiBuilderChromeWidgetLabels(translatorOptions),
+    getPhiDashboardCardsEmptyDescription(translatorOptions),
+  ]);
   const pageTitleSource = "Dashboard";
   const pageTitle = labels.pageTitles.dashboard;
   const scaffold = buildPhiBasePageContentScaffold({
@@ -103,13 +110,26 @@ export async function buildPhiDefaultBuilderDashboardPageTree({
         typeKey: "builder-chrome-controls",
         id: SYNTHETIC_BUILDER_DASHBOARD_WIDGET_IDS.widgetBuilderChromeControls,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
-        slotIndex: 0,
+        // After the cards: it draws nothing, and first in the column its empty slot added the layout's gap
+        // above them.
+        slotIndex: 1,
         label: "builder dashboard header main controls",
         config: {
           editorPreviewDisabled: true,
           actionsDisabled: true,
           debugDisabled: true,
         },
+      }),
+      /*
+       * The cards the Builder's Modules contribute: the same Collection the other Dashboards are made
+       * of, so a Module puts a card here the way it does anywhere else.
+       */
+      buildPhiDashboardCardsWidget({
+        nodes,
+        widgetId: SYNTHETIC_BUILDER_DASHBOARD_WIDGET_IDS.widgetCards,
+        area: "builder",
+        slotIndex: 0,
+        emptyDescription,
       }),
     ],
   };

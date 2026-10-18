@@ -8,7 +8,9 @@ first payload with it, and each payload on its own at `/api/site/dashboard-cards
 provider, and its card View asks for a payload only where a row arrived without one
 (`plugins/runtime-modules/dashboard/`). The Admin Dashboard is the first page drawn this way, with cards
 from `core`, `user-management` and `localization`; the App, Accounting and Editor Dashboards draw the
-same Collection, and `threads` puts the first card on the App one.
+same Collection, and `threads` puts the first card on the App one. The Builder's Dashboard places the
+Collection beside its authoring controls (`buildPhiDashboardCardsWidget`), and `builder` puts the first
+`list` card there: the Areas with an open structure draft.
 
 That card is the first about the person rather than about the installation, and it cost the contract one
 field. Core answers "my conversations" from the session and refuses without one, so
