@@ -13,5 +13,5 @@ export const PHI_TOUR_WIDGET_DEFAULT_LABELS: PhiTourWidgetLabels = {
   previous: "Back",
   finish: "Done",
   button: "Tour",
-  start: "Show the tour of this page",
+  start: "Start the tour of the page",
 };
