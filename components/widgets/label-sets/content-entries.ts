@@ -31,6 +31,7 @@ const PHI_CONTENT_ENTRY_EDITOR_LABEL_SET = definePhiLabelSet({
     column_expires: "Expires",
     column_changed: "Changed",
     column_author: "Author",
+    column_category: "Category",
     action_withdraw: "Withdraw",
     action_delete: "Delete",
     withdraw_title: "Withdraw this entry",
@@ -72,6 +73,30 @@ const PHI_CONTENT_ENTRY_EDITOR_LABEL_SET = definePhiLabelSet({
     form_translate_label: "May be translated",
     form_published_at_placeholder: "Now",
     form_expires_at_placeholder: "No end",
+    action_curate: "Author and category",
+    curation_title: "Author and category",
+    curation_author_none: "Nobody",
+    curation_category_none: "None",
+    categories_widget: "categories",
+    categories_title: "Categories",
+    categories_column_label: "Name",
+    categories_column_slug: "Address",
+    categories_column_order: "Order",
+    categories_column_entries: "Entries",
+    categories_empty_title: "No categories yet",
+    categories_empty_text: definePhiMessageLabel("Entries are filed under none until the Site has a category."),
+    categories_footer: "%1 categories",
+    categories_action_new: "New category",
+    categories_action_edit: "Edit",
+    categories_action_delete: "Delete",
+    categories_create_title: "New category",
+    categories_edit_title: "Category",
+    categories_delete_title: "Delete this category",
+    categories_delete_description: definePhiMessageLabel(
+      "Its entries are filed under none. Their words stay as they are.",
+    ),
+    categories_label_error: "A name is required.",
+    categories_slug_placeholder: "Made from the name",
   },
 });
 
@@ -91,9 +116,32 @@ export type PhiContentEntryEditorLabels = {
     expires: string;
     changed: string;
     author: string;
+    category: string;
   };
-  actions: { withdraw: string; delete: string; new: string; edit: string; publish: string; submit: string };
-  overlays: { publication: string };
+  actions: {
+    withdraw: string;
+    delete: string;
+    new: string;
+    edit: string;
+    publish: string;
+    submit: string;
+    curate: string;
+  };
+  overlays: { publication: string; curation: string };
+  /** The two empty choices of the curation Form. */
+  curation: { authorNone: string; categoryNone: string };
+  /** The kind's categories: their Table, its dialogs and its Form. */
+  categories: {
+    widgetLabel: string;
+    title: string;
+    columns: { label: string; slug: string; order: string; entries: string };
+    empty: { title: string; text: string };
+    footer: string;
+    actions: { new: string; edit: string; delete: string };
+    overlays: { create: string; edit: string };
+    delete: { title: string; description: string };
+    form: { labelError: string; slugPlaceholder: string };
+  };
   form: {
     save: string;
     cancel: string;
@@ -144,6 +192,7 @@ export async function getPhiContentEntryEditorLabels(
       expires: labels.column_expires,
       changed: labels.column_changed,
       author: labels.column_author,
+      category: labels.column_category,
     },
     actions: {
       withdraw: labels.action_withdraw,
@@ -152,8 +201,30 @@ export async function getPhiContentEntryEditorLabels(
       edit: labels.action_edit,
       publish: labels.action_publish,
       submit: labels.action_submit,
+      curate: labels.action_curate,
     },
-    overlays: { publication: labels.publication_title },
+    overlays: { publication: labels.publication_title, curation: labels.curation_title },
+    curation: { authorNone: labels.curation_author_none, categoryNone: labels.curation_category_none },
+    categories: {
+      widgetLabel: labels.categories_widget,
+      title: labels.categories_title,
+      columns: {
+        label: labels.categories_column_label,
+        slug: labels.categories_column_slug,
+        order: labels.categories_column_order,
+        entries: labels.categories_column_entries,
+      },
+      empty: { title: labels.categories_empty_title, text: labels.categories_empty_text },
+      footer: labels.categories_footer,
+      actions: {
+        new: labels.categories_action_new,
+        edit: labels.categories_action_edit,
+        delete: labels.categories_action_delete,
+      },
+      overlays: { create: labels.categories_create_title, edit: labels.categories_edit_title },
+      delete: { title: labels.categories_delete_title, description: labels.categories_delete_description },
+      form: { labelError: labels.categories_label_error, slugPlaceholder: labels.categories_slug_placeholder },
+    },
     form: {
       save: labels.form_save,
       cancel: labels.form_cancel,

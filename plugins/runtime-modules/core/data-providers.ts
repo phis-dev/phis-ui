@@ -108,8 +108,15 @@ export const PHI_CORE_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
           { key: "publishedAt", title: "Published", type: "datetime" },
           { key: "expiresAt", title: "Expires", type: "datetime" },
           { key: "updatedAt", title: "Changed", type: "datetime" },
-          // Who wrote the entry: the writer of its first version, as Core names them.
+          // Who the entry is attributed to, as Core names them (phis-server CONTENT.md, Curation).
           { key: "author", title: "Author", type: "string" },
+          /*
+           * The same two choices by id, as the curation Form's selects hold them: a string, empty for none,
+           * because a select holds strings and "none" is a choice of its own there.
+           */
+          { key: "authorUserId", title: "Author", type: "string" },
+          { key: "categoryId", title: "Category", type: "string" },
+          { key: "category", title: "Category", type: "string" },
           { key: "hasUnpublishedChanges", title: "Unpublished changes", type: "boolean" },
         ],
         query: {
@@ -152,6 +159,61 @@ export const PHI_CORE_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
     authoringMode: "none",
     title: "Content entry tags",
     description: "The tags one content kind's entries already carry; the field names the kind.",
+  },
+  /*
+   * The offer the curation Form picks from: who may be named as an entry's author, and the categories it
+   * may be filed under. One endpoint answers both, so they read it under one load key.
+   */
+  {
+    key: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntryAuthors,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    kind: "options",
+    executionMode: "live",
+    authoringMode: "none",
+    title: "Content entry authors",
+    description: "Who one content kind's entries may be attributed to; the field names the kind.",
+  },
+  {
+    key: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntryCategoryOptions,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    kind: "options",
+    executionMode: "live",
+    authoringMode: "none",
+    title: "Content entry categories",
+    description: "The categories one content kind's entries may be filed under; the field names the kind.",
+  },
+  /**
+   * Every content kind's categories, one resource per kind, as the Publisher keeps them (phis-server
+   * CONTENT.md, Terms). A category is written in a Form; removing one is a row action, which files its
+   * entries under none.
+   */
+  {
+    key: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntryCategories,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    kind: "table",
+    executionMode: "live",
+    authoringMode: "none",
+    title: "Content entry categories",
+    description: "The categories of each content kind, in the order the Site gave them.",
+    resources: PHI_CONTENT_ENTRY_KINDS.map((kind) => ({
+      resourceKey: kind,
+      title: `Categories: ${kind}`,
+      rowIdentityPath: "id",
+      fields: [
+        { key: "id", title: "ID", type: "number", required: true },
+        { key: "label", title: "Name", type: "string", required: true },
+        { key: "slug", title: "Address", type: "string", required: true },
+        { key: "sortOrder", title: "Order", type: "number" },
+        { key: "entryCount", title: "Entries", type: "number" },
+      ],
+      // A Site keeps a handful; the whole list is one page.
+      query: { search: false, sorting: "none", pagination: "none" },
+      recordRead: true,
+      actions: [
+        { key: "delete", title: "Delete", scope: "row", intent: "destructive", confirmation: "required" },
+        { key: "refresh", title: "Refresh", scope: "resource" },
+      ],
+    })),
   },
   /**
    * One published entry with its relatives, read on the server while the page is drawn

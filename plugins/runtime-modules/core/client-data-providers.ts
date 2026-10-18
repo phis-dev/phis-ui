@@ -40,6 +40,24 @@ export const PHI_CORE_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS = [
     loadLive: async () => (await import("./content-entries/tags")).PhiContentEntryTagsOptionsProviderClient,
   },
   {
+    key: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntryAuthors,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    loadLive: async () =>
+      (await import("./content-entries/curation-options")).PhiContentEntryAuthorsOptionsProviderClient,
+  },
+  {
+    key: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntryCategoryOptions,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    loadLive: async () =>
+      (await import("./content-entries/curation-options")).PhiContentEntryCategoryOptionsProviderClient,
+  },
+  {
+    key: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntryCategories,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    loadLive: async () =>
+      (await import("./content-entries/categories-table")).PhiContentEntryCategoriesTableProviderClient,
+  },
+  {
     key: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentTable,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     loadLive: async () =>

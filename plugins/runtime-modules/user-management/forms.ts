@@ -89,6 +89,14 @@ const identityFields = [
     ],
     disabledWhen: readOnlyCondition,
   },
+  // The name a reader is shown where it is not the first and last name; empty is those two.
+  {
+    key: "displayName",
+    fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text,
+    label: label("displayName", "Display name"),
+    autoComplete: "nickname",
+    disabledWhen: readOnlyCondition,
+  },
   {
     key: "companyName",
     fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text,
@@ -161,6 +169,7 @@ const loadLabels = createPhiFormLabelSetLoader(
     email: labels.editor.email,
     emailRequired: labels.editor.emailRequired,
     emailInvalid: labels.editor.emailInvalid,
+    displayName: labels.editor.displayName,
     company: labels.editor.company,
     roles: labels.editor.roles,
     rolesPlaceholder: labels.editor.rolesPlaceholder,

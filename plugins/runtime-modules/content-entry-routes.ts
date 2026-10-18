@@ -22,7 +22,7 @@ export type PhiContentEntryRoutesSpec = {
   ownerModuleId: PhiRuntimeModuleId;
   /** The Module's three Pages, by the keys every node on them is identified under. */
   presetKeys: { list: string; detail: string; editor: string };
-  formIds: { entry: PhiFormId; publication: PhiFormId };
+  formIds: { entry: PhiFormId; publication: PhiFormId; curation: PhiFormId; category: PhiFormId };
   /** The list Page's title and heading, and the navigation entries' label: "Blog". */
   title: string;
   /** The detail Page's title in the route table: "Blog post". */

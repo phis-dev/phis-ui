@@ -188,6 +188,7 @@ async function getPhiCmsRuntimeInfo({
       profile?: {
         firstName?: string | null;
         lastName?: string | null;
+        displayName?: string | null;
         companyName?: string | null;
       } | null;
     };

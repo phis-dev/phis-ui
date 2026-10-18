@@ -140,6 +140,58 @@ const publicationFields = [
   },
 ] as const;
 
+/*
+ * Who an entry is attributed to and what it is filed under: the Publisher's, and not a word of the text,
+ * so its own Form (phis-server CONTENT.md, Curation).
+ *
+ * Both choices are stated on every save, and "none" is a choice of its own -- an empty value, which Core
+ * reads as nobody or no category. A cleared select would send nothing, and Core reads nothing as "leave it".
+ */
+function curationFields(kind: PhiContentEntryKind) {
+  return [
+    { key: "contentId", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.hidden },
+    {
+      key: "authorUserId",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
+      label: label("authorLabel", "Author"),
+      optionsProvider: { providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntryAuthors },
+      config: { kind },
+    },
+    {
+      key: "categoryId",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
+      label: label("categoryLabel", "Category"),
+      optionsProvider: { providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntryCategoryOptions },
+      config: { kind },
+    },
+  ] as const;
+}
+
+/*
+ * One category, stated whole: a new one without an id, a correction with one. The address may be left
+ * empty and is then made from the label, the way Core makes a tag's.
+ */
+const categoryFields = [
+  { key: "id", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.hidden },
+  {
+    key: "label",
+    fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text,
+    label: label("categoryNameLabel", "Name"),
+    validation: required("categoryNameError", "A name is required."),
+  },
+  {
+    key: "slug",
+    fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text,
+    label: label("slugLabel", "Address"),
+    placeholder: label("categorySlugPlaceholder", "Made from the name"),
+  },
+  {
+    key: "sortOrder",
+    fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.number,
+    label: label("categoryOrderLabel", "Order"),
+  },
+] as const;
+
 function entryDescriptor(
   formId: string,
   ownerModuleId: PhiRuntimeModuleId,
@@ -184,16 +236,23 @@ async function loadContentEntryFormLabels(
     publishedAtPlaceholder: labels.form.publishedAtPlaceholder,
     expiresAtLabel: labels.columns.expires,
     expiresAtPlaceholder: labels.form.expiresAtPlaceholder,
+    authorLabel: labels.columns.author,
+    categoryLabel: labels.columns.category,
+    categoryNameLabel: labels.categories.columns.label,
+    categoryNameError: labels.categories.form.labelError,
+    categorySlugPlaceholder: labels.categories.form.slugPlaceholder,
+    categoryOrderLabel: labels.categories.columns.order,
   });
 }
 
 /**
- * A kind's two Forms and their handlers, owned by the kind's Module (`CONTENT_ENTRIES.md`).
+ * A kind's Forms and their handlers, owned by the kind's Module (`CONTENT_ENTRIES.md`).
  *
- * Two Forms, because there are two acts and two authorities. The entry states words: what it says, where
- * it lives, which language it is written in. The publication states when it is seen. Core keeps them apart
- * -- one is content editing, the other publishing -- so one Form covering both would be reachable by
- * whoever may do the lesser of the two.
+ * One Form per act, because the acts have different authorities. The entry states words: what it says,
+ * where it lives, which language it is written in. The publication states when it is seen. Curation states
+ * who it is by and what it is filed under, and a category is one entry of the Site's order. Core keeps
+ * them apart -- content editing for the first, publishing for the rest -- so one Form covering two would be
+ * reachable by whoever may do the lesser of them.
  *
  * Both relay through the Form gateway with the viewer's Site session, because both endpoints are guarded by
  * a role. Neither takes a CSRF token of its own -- the gateway adds the internal one -- and neither has a
@@ -207,11 +266,16 @@ export function definePhiContentEntryForms({
 }: {
   kind: PhiContentEntryKind;
   ownerModuleId: PhiRuntimeModuleId;
-  formIds: { entry: PhiFormId; publication: PhiFormId };
-  /** How the Form catalogue names the two: "News entry", "News publication". */
-  titles: { entry: string; publication: string };
+  formIds: { entry: PhiFormId; publication: PhiFormId; curation: PhiFormId; category: PhiFormId };
+  /** How the Form catalogue names them: "News entry", "News publication", "News curation", "News category". */
+  titles: { entry: string; publication: string; curation: string; category: string };
 }) {
-  const handlerKeys = { entry: `${kind}.entry`, publication: `${kind}.publication` } as const;
+  const handlerKeys = {
+    entry: `${kind}.entry`,
+    publication: `${kind}.publication`,
+    curation: `${kind}.curation`,
+    category: `${kind}.category`,
+  } as const;
   const paths = resolvePhiContentEntryEditorApiPaths(kind);
   const forms = [
     definePhiRuntimeModuleForm({
@@ -242,8 +306,47 @@ export function definePhiContentEntryForms({
       submitHandlerKey: handlerKeys.publication,
       loadLabels: loadContentEntryFormLabels,
     }),
+    definePhiRuntimeModuleForm({
+      ownerModuleId,
+      areas: ["editor"],
+      formId: formIds.curation,
+      version: 1,
+      flags: 0,
+      title: titles.curation,
+      description: `Who one ${kind} entry is by, and what it is filed under.`,
+      category: "forms",
+      tags: [kind, "publishing"],
+      descriptor: entryDescriptor(formIds.curation, ownerModuleId, curationFields(kind)),
+      submitHandlerKey: handlerKeys.curation,
+      loadLabels: loadContentEntryFormLabels,
+    }),
+    definePhiRuntimeModuleForm({
+      ownerModuleId,
+      areas: ["editor"],
+      formId: formIds.category,
+      version: 1,
+      flags: 0,
+      title: titles.category,
+      description: `One category ${kind} entries are filed under, stated whole.`,
+      category: "forms",
+      tags: [kind, "publishing"],
+      descriptor: entryDescriptor(formIds.category, ownerModuleId, categoryFields),
+      submitHandlerKey: handlerKeys.category,
+      loadLabels: loadContentEntryFormLabels,
+    }),
   ];
-  const handlers = (["entry", "publication"] as const).map((key) => ({
+  /*
+   * A save states the whole entry, and a category whole, so both are a PUT; a publication is an act, so it
+   * is a POST; curation changes two things about an entry and leaves the rest, so it is a PATCH.
+   */
+  const methods = { entry: "PUT", publication: "POST", curation: "PATCH", category: "PUT" } as const;
+  const upstreamPaths = {
+    entry: paths.entries,
+    publication: paths.publish,
+    curation: paths.curation,
+    category: paths.categories,
+  } as const;
+  const handlers = (["entry", "publication", "curation", "category"] as const).map((key) => ({
     key: createPhiSharedFormProviderKey("handler", `${kind}-${key}`),
     ownerModuleId,
     title: `${titles[key]}`,
@@ -251,10 +354,9 @@ export function definePhiContentEntryForms({
     handlerKey: handlerKeys[key],
     category: "forms",
     transport: "relay",
-    // A save states the whole entry, so it is a PUT; a publication is an act, so it is a POST.
-    method: key === "entry" ? "PUT" : "POST",
+    method: methods[key],
     endpointKey: null,
-    upstreamPath: key === "entry" ? paths.entries : paths.publish,
+    upstreamPath: upstreamPaths[key],
     csrfPath: null,
     requiresCsrf: false,
     credentialPolicy: "site-session",

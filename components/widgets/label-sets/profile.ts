@@ -37,6 +37,7 @@ const PHI_PROFILE_NAME_WIDGET_LABEL_SET = definePhiLabelSet({
     description: definePhiMessageLabel("Update your first name, last name, and company."),
     first_name_label: "First name",
     last_name_label: "Last name",
+    display_name_label: "Display name",
     company_label: "Company",
     current_label: "Current name",
     submit_label: "Save",
@@ -96,6 +97,7 @@ export async function getPhiProfileNameWidgetLabels(options: PhiGlobalTranslator
     fields: {
       firstName: labels.first_name_label,
       lastName: labels.last_name_label,
+      displayName: labels.display_name_label,
       companyName: labels.company_label,
     },
     currentLabel: labels.current_label,

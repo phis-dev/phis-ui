@@ -13,8 +13,17 @@ export function isPhiContentEntryKind(value: unknown): value is PhiContentEntryK
   return typeof value === "string" && (PHI_CONTENT_ENTRY_KINDS as readonly string[]).includes(value);
 }
 
-/** Where the editor writes one kind's entries, behind the content-editing and the publishing guard. */
+/**
+ * Where the editor writes one kind's entries, behind the content-editing and the publishing guard; who an
+ * entry is attributed to and what it is filed under (`curation`), and the kind's categories.
+ */
 export function resolvePhiContentEntryEditorApiPaths(kind: PhiContentEntryKind) {
   const base = `/api/site/editor/entries/${kind}`;
-  return { entries: base, submit: `${base}/submit`, publish: `${base}/publish` } as const;
+  return {
+    entries: base,
+    submit: `${base}/submit`,
+    publish: `${base}/publish`,
+    curation: `${base}/curation`,
+    categories: `${base}/categories`,
+  } as const;
 }

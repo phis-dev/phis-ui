@@ -63,6 +63,16 @@ const nameDescriptor: PhiFormDescriptor = {
       label: label("lastName", "Last name"),
       autoComplete: "family-name",
     },
+    /*
+     * How a reader sees this person -- the byline over what they write -- where it should not be the first
+     * and last name. Empty is those two; the address is never shown in its place.
+     */
+    {
+      key: "displayName",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text,
+      label: label("displayName", "Display name"),
+      autoComplete: "nickname",
+    },
     {
       key: "companyName",
       fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text,
@@ -179,6 +189,7 @@ const loadNameLabels = createPhiFormLabelSetLoader(
   (labels) => ({
     firstName: labels.fields.firstName,
     lastName: labels.fields.lastName,
+    displayName: labels.fields.displayName,
     companyName: labels.fields.companyName,
     successTitle: labels.feedback.successTitle,
     successText: labels.feedback.successText,

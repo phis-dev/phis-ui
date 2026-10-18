@@ -29,4 +29,6 @@ export const PHI_NEWS_PRESET_KEYS = {
 export const PHI_NEWS_FORM_IDS = {
   entry: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "news/entry"),
   publication: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "news/publication"),
+  curation: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "news/curation"),
+  category: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "news/category"),
 } as const;

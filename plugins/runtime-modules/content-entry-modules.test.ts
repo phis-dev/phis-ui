@@ -18,13 +18,21 @@ vi.mock("../../components/widgets/label-sets/content-entries", () => ({
     rowStatus: { draft: "", published: "", submitted: "" },
     columns: {
       title: "", slug: "", status: "", language: "", tags: "", published: "", expires: "", changed: "", author: "",
+      category: "",
     },
-    actions: { withdraw: "", delete: "", new: "", edit: "", publish: "", submit: "" },
+    actions: { withdraw: "", delete: "", new: "", edit: "", publish: "", submit: "", curate: "" },
+    curation: { authorNone: "Nobody", categoryNone: "None" },
+    categories: {
+      widgetLabel: "", title: "", columns: { label: "", slug: "", order: "", entries: "" },
+      empty: { title: "", text: "" }, footer: "%1", actions: { new: "", edit: "", delete: "" },
+      overlays: { create: "", edit: "" }, delete: { title: "", description: "" },
+      form: { labelError: "", slugPlaceholder: "" },
+    },
     withdraw: { title: "", description: "" },
     submit: { title: "", description: "" },
     delete: { title: "", description: "" },
     empty: { text: "" },
-    overlays: { publication: "" },
+    overlays: { publication: "", curation: "" },
     form: {
       save: "", cancel: "", slugPlaceholder: "", slugError: "", titleError: "", subtitleLabel: "",
       contentLabel: "", contentPlaceholder: "", contentError: "", linkLabel: "",
@@ -344,9 +352,20 @@ describe.each(KINDS)("what the $kind Module brings", ({ kind, moduleId, routes, 
       method: "POST",
       upstreamPath: `/api/site/editor/entries/${kind}/publish`,
     });
+    // Curation changes two things about an entry and leaves the rest; a category is stated whole.
+    expect(byHandler.get(`${kind}.curation`)).toMatchObject({
+      method: "PATCH",
+      upstreamPath: `/api/site/editor/entries/${kind}/curation`,
+    });
+    expect(byHandler.get(`${kind}.category`)).toMatchObject({
+      method: "PUT",
+      upstreamPath: `/api/site/editor/entries/${kind}/categories`,
+    });
     expect(forms.map((form) => [form.formId, form.areas, form.submitHandlerKey])).toEqual([
       [formIds.entry, ["editor"], `${kind}.entry`],
       [formIds.publication, ["editor"], `${kind}.publication`],
+      [formIds.curation, ["editor"], `${kind}.curation`],
+      [formIds.category, ["editor"], `${kind}.category`],
     ]);
   });
 
@@ -372,8 +391,11 @@ describe.each(KINDS)("what the $kind Module brings", ({ kind, moduleId, routes, 
       [formIds.entry, null, "unbound"],
       [formIds.entry, "edit", "record"],
       [formIds.publication, "publish", "record"],
+      [formIds.curation, "curate", "record"],
+      [formIds.category, null, "unbound"],
+      [formIds.category, "edit", "record"],
     ]);
-    expect(tree.overlays).toHaveLength(3);
+    expect(tree.overlays).toHaveLength(6);
     expect(tree.controllerSettings).toBeUndefined();
 
     const receivers = [...tree.contentWidgets, ...tree.overlays].flatMap((node) => {
@@ -396,6 +418,35 @@ describe.each(KINDS)("what the $kind Module brings", ({ kind, moduleId, routes, 
         ?.features?.actions?.row ?? []).map((action) => action.key);
     };
     expect(await rowActionKeys(AUTHOR_RUNTIME)).toEqual(["edit", "submit", "delete"]);
-    expect(await rowActionKeys(PUBLISHER_RUNTIME)).toEqual(["edit", "publish", "withdraw", "delete"]);
+    expect(await rowActionKeys(PUBLISHER_RUNTIME)).toEqual(["edit", "curate", "publish", "withdraw", "delete"]);
+  });
+
+  /*
+   * Naming the author, filing under a category and keeping the categories are the Publisher's; Core refuses
+   * them to an Author, so an Author's Page carries none of it rather than buttons that can only fail.
+   */
+  it("gives a Publisher the curation dialog and the kind's categories, and an Author neither", async () => {
+    const treeFor = (runtime: unknown) =>
+      routes[2]!.loadTree({ page: pageAt(`/${kind}`, 16), runtime } as never);
+    const sources = (tree: Awaited<ReturnType<typeof treeFor>>) => tree.contentWidgets
+      .filter((widget) => widget.widgetType.endsWith("/table"))
+      .map((widget) => (widget.config as { source?: unknown }).source);
+
+    const author = await treeFor(AUTHOR_RUNTIME);
+    expect(sources(author)).toEqual([{ providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntries, resourceKey: kind }]);
+    expect(author.overlays).toHaveLength(3);
+
+    const publisher = await treeFor(PUBLISHER_RUNTIME);
+    expect(sources(publisher)).toEqual([
+      { providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntries, resourceKey: kind },
+      { providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntryCategories, resourceKey: kind },
+    ]);
+    // The curation Form's empty choices, in the page's language: the Options Provider has no Label Set.
+    const curation = publisher.contentWidgets.find((widget) =>
+      (widget.config as { formId?: string }).formId === formIds.curation)!;
+    expect((curation.config as { formConfig?: unknown }).formConfig).toEqual({
+      authorNoneLabel: "Nobody",
+      categoryNoneLabel: "None",
+    });
   });
 });

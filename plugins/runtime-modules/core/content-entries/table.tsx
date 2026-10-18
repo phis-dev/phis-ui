@@ -83,6 +83,9 @@ async function loadEntries(
       status: readStatusWord(row.status, row.submittedVersionId),
       // Whether the version the row shows is the one already put forward, which a second submit would repeat.
       submittedCurrent: row.submittedVersionId != null && row.submittedVersionId === row.versionId,
+      // As the curation Form's selects hold them: a string, and empty for none, which is a choice there.
+      authorUserId: row.authorUserId == null ? "" : String(row.authorUserId),
+      categoryId: row.categoryId == null ? "" : String(row.categoryId),
     }));
   return {
     rows,

@@ -103,6 +103,8 @@ export type PhiBlockRuntimeViewer = {
   profile?: {
     firstName?: string | null;
     lastName?: string | null;
+    /** The name a reader is shown -- a byline -- where it is not the first and last name. */
+    displayName?: string | null;
     companyName?: string | null;
   } | null;
 };

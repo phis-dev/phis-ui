@@ -79,6 +79,7 @@ export async function buildPhiDefaultAppProfilePageTree({
           initialValues: {
             firstName: runtime.viewer.profile?.firstName ?? "",
             lastName: runtime.viewer.profile?.lastName ?? "",
+            displayName: runtime.viewer.profile?.displayName ?? "",
             companyName: runtime.viewer.profile?.companyName ?? "",
           },
         }],

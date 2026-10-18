@@ -29,4 +29,6 @@ export const PHI_BLOG_PRESET_KEYS = {
 export const PHI_BLOG_FORM_IDS = {
   entry: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "blog/entry"),
   publication: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "blog/publication"),
+  curation: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "blog/curation"),
+  category: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "blog/category"),
 } as const;

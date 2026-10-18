@@ -25,6 +25,7 @@ import {
 import type { PhiFormId } from "../../../types/form-id";
 import type { PhiProviderResourceSource } from "../../../types/runtime-data-provider";
 import { PHI_CONTENT_ENTRY_SOURCE_LOCALE_PLACEHOLDER_CONFIG_KEY } from "../../forms/content-entry-forms";
+import { PHI_CONTENT_ENTRY_CURATION_NONE_CONFIG_KEYS } from "../../forms/content-entry-curation-config";
 import { PHI_SITE_LOCALES_CONFIG_KEY } from "../../forms/site-locales-config";
 import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../helpers/cms-dialog";
 
@@ -66,13 +67,41 @@ const EDITOR_NODE_KEYS = [
   "layoutPublicationFooter",
   "widgetPublicationForm",
   "widgetPublicationCommands",
+  "overlayCuration",
+  "layoutCuration",
+  "layoutCurationFooter",
+  "widgetCurationForm",
+  "widgetCurationCommands",
+  "widgetCategories",
+  "overlayCategoryCreate",
+  "layoutCategoryCreate",
+  "layoutCategoryCreateFooter",
+  "widgetCategoryCreateForm",
+  "widgetCategoryCreateCommands",
+  "overlayCategoryEdit",
+  "layoutCategoryEdit",
+  "layoutCategoryEditFooter",
+  "widgetCategoryEditForm",
+  "widgetCategoryEditCommands",
 ] as const;
 
 const SYNTHETIC_EDITOR_REGION_IDS = { regionContent: -562 } as const;
 
 /** One dialog's five nodes, and the words on its two buttons. */
+type EntryDialogKey = "create" | "entry" | "publication" | "curation" | "category-create" | "category-edit";
+
+/** Where each dialog stands among the Page's Overlays, in the order they are reached. */
+const DIALOG_SORT_ORDER: Record<EntryDialogKey, number> = {
+  create: 0,
+  entry: 10,
+  publication: 20,
+  curation: 30,
+  "category-create": 40,
+  "category-edit": 50,
+};
+
 type EntryDialogInput = {
-  key: "create" | "entry" | "publication";
+  key: EntryDialogKey;
   title: string;
   formId: PhiFormId;
   /*
@@ -103,7 +132,7 @@ type EntryDialogInput = {
     form: PhiCmsInstanceId;
     commands: PhiCmsInstanceId;
   };
-  /** The kind's rows, which a record-bound Form reads the pressed one from. */
+  /** The rows of the Table the dialog is opened from, which a record-bound Form reads the pressed one from. */
   source: PhiProviderResourceSource;
   tableAddress: PhiSignalAddress;
   /** The prefix of every route key on the Page: `editor-<kind>`. */
@@ -138,7 +167,7 @@ function buildEntryDialogNodes(
       bodyLayoutNodeId: input.ids.body,
       footerPresentation: "actions",
       footerLayoutNodeId: input.ids.footer,
-      sortOrder: input.key === "create" ? 0 : input.key === "entry" ? 10 : 20,
+      sortOrder: DIALOG_SORT_ORDER[input.key],
       label: `${input.routePrefix} ${input.key} modal`,
       config: {
         title: input.title,
@@ -283,8 +312,8 @@ export async function buildPhiContentEntryEditorPageTree({
   /** The kind's Module, whose preset this Page is: with `presetKey`, the identity of every node on it. */
   ownerModuleId: PhiRuntimeModuleId;
   presetKey: string;
-  /** The Module's two Forms (`definePhiContentEntryForms`). */
-  formIds: { entry: PhiFormId; publication: PhiFormId };
+  /** The Module's Forms (`definePhiContentEntryForms`). */
+  formIds: { entry: PhiFormId; publication: PhiFormId; curation: PhiFormId; category: PhiFormId };
   kindLabels: PhiContentEntryKindEditorLabels;
 }): Promise<PhiResolvedCmsPageTree> {
   const credentials = readPhiServerApiCredentials();
@@ -301,8 +330,21 @@ export async function buildPhiContentEntryEditorPageTree({
     resourceKey: kind,
   };
   const shared = { source, tableAddress, routePrefix };
-  const reviewRowActions: PhiTableActionDefinition[] = canPhiViewerAccess(runtime.viewer, PHI_VIEWER_ACCESS_PUBLISHING)
+  /*
+   * What only a Publisher does: publish and withdraw, name the author and the category, and keep the
+   * categories. Core refuses all of it to anybody else, so an Author's Page leaves it out rather than
+   * offering buttons that can only fail.
+   */
+  const publishes = canPhiViewerAccess(runtime.viewer, PHI_VIEWER_ACCESS_PUBLISHING);
+  const reviewRowActions: PhiTableActionDefinition[] = publishes
     ? [
+      {
+        key: "curate",
+        label: widgetLabels.actions.curate,
+        icon: "antd:user",
+        display: "icon",
+        execution: "signal",
+      },
       {
         key: "publish",
         label: widgetLabels.actions.publish,
@@ -419,15 +461,25 @@ export async function buildPhiContentEntryEditorPageTree({
     },
   });
 
+  const publisherParts = publishes
+    ? buildPublisherParts({ nodes, ids, kind, routePrefix, entryShared: shared, widgetLabels, formIds })
+    : null;
+
   return {
     page: nodes.page({ pageType: PhiCmsPageType.Standard }),
-    overlays: [createDialog.overlay, entryDialog.overlay, publicationDialog.overlay],
+    overlays: [
+      createDialog.overlay,
+      entryDialog.overlay,
+      publicationDialog.overlay,
+      ...(publisherParts?.overlays ?? []),
+    ],
     regions: [scaffold.region],
     layoutNodes: [
       scaffold.layoutNode,
       ...createDialog.layouts,
       ...entryDialog.layouts,
       ...publicationDialog.layouts,
+      ...(publisherParts?.layouts ?? []),
     ],
     contentWidgets: [
       nodes.widget({
@@ -452,6 +504,12 @@ export async function buildPhiContentEntryEditorPageTree({
                 key: "author",
                 fieldKey: "author",
                 title: widgetLabels.columns.author,
+                sizing: { mode: "content" },
+              },
+              {
+                key: "category",
+                fieldKey: "category",
+                title: widgetLabels.columns.category,
                 sizing: { mode: "content" },
               },
               {
@@ -589,7 +647,7 @@ export async function buildPhiContentEntryEditorPageTree({
           initialQuery: { filters: { status: "all" } },
           signalRoutes: {
             /*
-             * One announcement, five listeners.
+             * One announcement, five listeners -- seven for a Publisher, whose curation dialog listens too.
              *
              * The Table says which action happened on which row and nothing more; each receiver decides
              * whether it was meant, by the `openActionKey` on its own config. That is why there is no
@@ -603,6 +661,7 @@ export async function buildPhiContentEntryEditorPageTree({
                 ids.widgetEntryForm,
                 ids.overlayPublication,
                 ids.widgetPublicationForm,
+                ...(publishes ? [ids.overlayCuration, ids.widgetCurationForm] : []),
               ].map((receiverId, index) => ({
                 routeKey: `${routePrefix}-table-action-${index}`,
                 capabilityId: "actionActivate",
@@ -630,6 +689,187 @@ export async function buildPhiContentEntryEditorPageTree({
       ...createDialog.widgets,
       ...entryDialog.widgets,
       ...publicationDialog.widgets,
+      ...(publisherParts?.widgets ?? []),
     ],
+  };
+}
+
+/**
+ * What a Publisher's editor Page has beyond an Author's: the curation dialog the entries Table opens, and
+ * the kind's categories -- their own Table under the entries, with a dialog to write one in.
+ *
+ * The categories are a list of their own rather than something typed while writing (phis-server
+ * CONTENT.md, Terms), and they stand on the same Page because they are the same kind's: whoever files
+ * entries under them sees both at once.
+ */
+function buildPublisherParts({
+  nodes,
+  ids,
+  kind,
+  routePrefix,
+  entryShared,
+  widgetLabels,
+  formIds,
+}: {
+  nodes: ReturnType<typeof createPhiCmsPresetNodes>;
+  ids: Record<(typeof EDITOR_NODE_KEYS)[number], PhiCmsInstanceId>;
+  kind: PhiContentEntryKind;
+  routePrefix: string;
+  entryShared: { source: PhiProviderResourceSource; tableAddress: PhiSignalAddress; routePrefix: string };
+  widgetLabels: Awaited<ReturnType<typeof getPhiContentEntryEditorLabels>>;
+  formIds: { curation: PhiFormId; category: PhiFormId };
+}) {
+  const categoriesSource: PhiProviderResourceSource = {
+    providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntryCategories,
+    resourceKey: kind,
+  };
+  const categoriesAddress = createPhiSignalAddress("cms", ids.widgetCategories);
+  const categoriesPrefix = `${routePrefix}-categories`;
+  const categoriesShared = { source: categoriesSource, tableAddress: categoriesAddress, routePrefix: categoriesPrefix };
+  const labels = widgetLabels.categories;
+
+  const curationDialog = buildEntryDialogNodes(nodes, {
+    ...entryShared,
+    key: "curation",
+    title: widgetLabels.overlays.curation,
+    formId: formIds.curation,
+    openActionKey: "curate",
+    bindsRecord: true,
+    // The empty choices in the page's language; the Options Provider reads them from here.
+    formConfig: {
+      [PHI_CONTENT_ENTRY_CURATION_NONE_CONFIG_KEYS.author]: widgetLabels.curation.authorNone,
+      [PHI_CONTENT_ENTRY_CURATION_NONE_CONFIG_KEYS.category]: widgetLabels.curation.categoryNone,
+    },
+    saveLabel: widgetLabels.form.save,
+    cancelLabel: widgetLabels.form.cancel,
+    ids: {
+      overlay: ids.overlayCuration,
+      body: ids.layoutCuration,
+      footer: ids.layoutCurationFooter,
+      form: ids.widgetCurationForm,
+      commands: ids.widgetCurationCommands,
+    },
+  });
+  const categoryCreateDialog = buildEntryDialogNodes(nodes, {
+    ...categoriesShared,
+    key: "category-create",
+    title: labels.overlays.create,
+    formId: formIds.category,
+    openActionKey: "new",
+    bindsRecord: false,
+    saveLabel: widgetLabels.form.save,
+    cancelLabel: widgetLabels.form.cancel,
+    ids: {
+      overlay: ids.overlayCategoryCreate,
+      body: ids.layoutCategoryCreate,
+      footer: ids.layoutCategoryCreateFooter,
+      form: ids.widgetCategoryCreateForm,
+      commands: ids.widgetCategoryCreateCommands,
+    },
+  });
+  const categoryEditDialog = buildEntryDialogNodes(nodes, {
+    ...categoriesShared,
+    key: "category-edit",
+    title: labels.overlays.edit,
+    formId: formIds.category,
+    openActionKey: "edit",
+    bindsRecord: true,
+    saveLabel: widgetLabels.form.save,
+    cancelLabel: widgetLabels.form.cancel,
+    ids: {
+      overlay: ids.overlayCategoryEdit,
+      body: ids.layoutCategoryEdit,
+      footer: ids.layoutCategoryEditFooter,
+      form: ids.widgetCategoryEditForm,
+      commands: ids.widgetCategoryEditCommands,
+    },
+  });
+
+  const categoriesTable = nodes.widget({
+    id: ids.widgetCategories,
+    parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
+    typeKey: "table",
+    slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[2].slotIndex,
+    sortOrder: 20,
+    label: labels.widgetLabel,
+    config: {
+      source: categoriesSource,
+      presentation: {
+        title: labels.title,
+        layout: { mode: "auto", overflowX: "auto" },
+        columns: [
+          { key: "label", fieldKey: "label", title: labels.columns.label, sizing: { mode: "fill" } },
+          { key: "slug", fieldKey: "slug", title: labels.columns.slug, renderer: "code", sizing: { mode: "content" } },
+          { key: "sortOrder", fieldKey: "sortOrder", title: labels.columns.order, sizing: { mode: "content" } },
+          { key: "entryCount", fieldKey: "entryCount", title: labels.columns.entries, sizing: { mode: "content" } },
+        ],
+        emptyState: { title: labels.empty.title, description: labels.empty.text },
+        controlSize: "small",
+        footer: {
+          template: labels.footer,
+          values: [{ key: "categories", value: { source: "core", fieldKey: "totalRows" } }],
+          align: "start",
+        },
+      },
+      features: {
+        pagination: { enabled: false },
+        sorting: { mode: "none" },
+        tools: { mode: "self-contained", reset: false, reload: true },
+        actions: {
+          toolbar: [{
+            key: "new",
+            label: labels.actions.new,
+            icon: "antd:plus",
+            display: "icon",
+            mode: "primary",
+            execution: "signal",
+          }],
+          row: [
+            { key: "edit", label: labels.actions.edit, icon: "edit", display: "icon", execution: "signal" },
+            {
+              key: "delete",
+              label: labels.actions.delete,
+              icon: "antd:delete",
+              display: "icon",
+              mode: "danger",
+              execution: "provider",
+              confirm: { title: labels.delete.title, description: labels.delete.description, okText: labels.actions.delete },
+            },
+          ],
+        },
+      },
+      signalRoutes: {
+        // The same announcement as the entries Table's, to this Table's own two dialogs.
+        emits: [
+          ids.overlayCategoryCreate,
+          ids.overlayCategoryEdit,
+          ids.widgetCategoryEditForm,
+        ].map((receiverId, index) => ({
+          routeKey: `${categoriesPrefix}-table-action-${index}`,
+          capabilityId: "actionActivate",
+          scope: "page" as const,
+          channel: "action",
+          action: "activate" as const,
+          valueType: "json" as const,
+          valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
+          receiver: createPhiSignalAddress("cms", receiverId),
+        })),
+        listens: [{
+          routeKey: `${categoriesPrefix}-table-reload`,
+          capabilityId: "reload",
+          scope: "page",
+          channel: "reload",
+          action: "activate",
+          valueType: "none",
+          receiver: categoriesAddress,
+        }],
+      },
+    },
+  });
+
+  return {
+    overlays: [curationDialog.overlay, categoryCreateDialog.overlay, categoryEditDialog.overlay],
+    layouts: [...curationDialog.layouts, ...categoryCreateDialog.layouts, ...categoryEditDialog.layouts],
+    widgets: [categoriesTable, ...curationDialog.widgets, ...categoryCreateDialog.widgets, ...categoryEditDialog.widgets],
   };
 }
