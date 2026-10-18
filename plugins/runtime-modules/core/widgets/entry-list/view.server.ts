@@ -112,6 +112,8 @@ export async function buildPhiEntryViews({
           translate: entry.translate,
           sourceLocale: entry.sourceLocale ?? undefined,
           widgetId: `${settings.kind}-${id}`,
+          // A teaser is the first paragraph; the rest is neither drawn nor translated.
+          extent: bodyMode === "full" ? "document" : "first-paragraph",
         }, runtime)
         : { blocks: [] };
 

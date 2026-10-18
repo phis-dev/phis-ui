@@ -48,6 +48,12 @@ export type PhiMarkdownSourceConfig = {
   tocKey?: string;
   resolvedContent?: PhiCmsResolvedContent | null;
   renderMode?: PhiRenderableBlockRenderMode;
+  /**
+   * How much of the document is wanted. `first-paragraph` is a teaser's: the document is parsed whole and
+   * cut to its first paragraph before anything is translated, so a card under an entry does not pay a
+   * provider for paragraphs nobody is shown. `document`, the default, is all of it.
+   */
+  extent?: "document" | "first-paragraph";
 };
 
 const MARKDOWN_DEFAULT_REVALIDATE_SECONDS = 14400;
@@ -631,6 +637,7 @@ export async function resolveMarkdownRenderData(
       ? normalizeMarkdownSourceUrl(config.sourceUrl, runtime?.site.publicUrl)
       : null,
     runtime,
+    config?.extent ?? "document",
   );
 }
 
@@ -642,8 +649,14 @@ async function resolveMarkdownRenderDataFromSource(
   sourceMode: "inline" | "url" = "inline",
   sourceUrl: string | null = null,
   runtime?: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer">,
+  extent: "document" | "first-paragraph" = "document",
 ): Promise<MarkdownRenderData> {
   const tree = parseMarkdown(markdown);
+  if (extent === "first-paragraph") {
+    // Cut by the parser's own reading, never by blank lines: a fence or a list may hold those too.
+    const paragraph = tree.children?.find((node) => node.type === "paragraph");
+    tree.children = paragraph ? [paragraph] : [];
+  }
   if (sourceMode === "url" && sourceUrl) {
     tree.children = projectExternalMarkdownNodes(tree.children, sourceUrl);
   } else if (runtime) {
