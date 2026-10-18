@@ -29,6 +29,7 @@ import { PhiSlotChildEffectsVisibilityObserver } from "../../../plugins/runtime/
 import { PhiSlotChildViewportEffectsObserver } from "../../../plugins/runtime/phi-slot-child-viewport-effects-observer";
 import { PhiFlexControl } from "../../controls/phi-flex-control";
 import { resolvePhiCmsRegionShell, type PhiCmsRegionShellTheme } from "../phi-cms-region-shell";
+import { usePhiVisualAnchor } from "../../runtime/runtime-visual-anchors";
 
 type PhiCmsRegionContainerClientProps = {
   children: ReactNode;
@@ -66,6 +67,7 @@ export function PhiCmsRegionContainerClient({
 }: PhiCmsRegionContainerClientProps) {
   const { mode: liveThemeMode, token } = usePhiConfig();
   const receiver = createPhiRenderableBlockReceiver("region", regionKey);
+  const anchorRef = usePhiVisualAnchor<HTMLElement>(receiver);
   const blockRuntime = usePhiRenderableBlockRuntime({
     blockId: null,
     receiver,
@@ -164,7 +166,7 @@ export function PhiCmsRegionContainerClient({
   if (shell.family !== "sider") {
     const Element = shell.element as "header" | "footer" | "div";
     return withTone(
-      <Element {...attributes} style={shell.style}>
+      <Element {...attributes} ref={anchorRef} style={shell.style}>
         {backgroundMotionLayer}
         <div className="phi-cms-region-shell__content" style={shell.contentStyle}>
           {children}
@@ -187,6 +189,7 @@ export function PhiCmsRegionContainerClient({
   return withTone(
     <aside
       {...attributes}
+      ref={anchorRef}
       data-phi-sider-collapsed={isCollapsed ? "true" : undefined}
       style={{
         transition:

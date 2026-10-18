@@ -96,6 +96,12 @@ export type PhiCmsRoutePresetDescriptor = PhiCmsPresetIdentity & {
     },
   ) => PhiResolvedCmsPageTree | Promise<PhiResolvedCmsPageTree>;
   navigation?: readonly PhiCmsNavigationInjectionDescriptor[];
+  /**
+   * The Page's guided Tour, in the owning Module's language (design/TOURS.md). Read with the route, not
+   * from the tree, so a Page the Site has edited keeps it; offered only where a Controller in the Area
+   * takes Page Tours. Its steps point at this preset's own nodes.
+   */
+  tour?: import("./tours").PhiTourDefinition;
 };
 
 export type PhiCmsThemePresetDescriptor = PhiCmsPresetIdentity & {

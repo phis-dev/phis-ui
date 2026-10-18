@@ -116,6 +116,7 @@ const PHI_BUILDER_WIDGET_NODE_KEYS = [
   "widgetHeaderMainDebugSwitch",
   "widgetHeaderTopThemeModeSwitch",
   "widgetHeaderTopAccount",
+  "widgetHeaderTopTourButton",
   "widgetBuilderPageTitle",
   "widgetPagesHeaderTitle",
   "widgetPagesMetaToolbar",
@@ -714,6 +715,20 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
         slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Left,
         sortOrder: 1,
         label: "Theme mode switch",
+        config: {},
+      }),
+      /*
+       * The Tour button belongs to the Tour Module. With that Module off in this Area the live Shell
+       * draws nothing for it, as for any Widget whose Module is not active, and the Builder canvas marks
+       * it as missing its Module; on, it shows only on Pages that carry a Tour.
+       */
+      nodes.widget({
+        typeKey: "tour-button",
+        id: SYNTHETIC_DEV_WIDGET_IDS.widgetHeaderTopTourButton,
+        parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderTop,
+        slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
+        sortOrder: 0,
+        label: "Tour button",
         config: {},
       }),
       nodes.widget({

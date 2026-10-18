@@ -3,6 +3,7 @@ import type {
   MouseEventHandler,
   PointerEventHandler,
   ReactNode,
+  Ref,
 } from "react";
 
 import type {
@@ -58,6 +59,8 @@ export type PhiSlotChildFrameViewProps = {
   onClick?: MouseEventHandler<HTMLDivElement>;
   onClickCapture?: MouseEventHandler<HTMLDivElement>;
   onPointerLeave?: PointerEventHandler<HTMLDivElement>;
+  /** The live frame's element, for its visual anchor; the static frame has none to register. */
+  anchorRef?: Ref<HTMLDivElement>;
   children: ReactNode;
 };
 
@@ -96,6 +99,7 @@ export function PhiSlotChildFrameView({
   onClick,
   onClickCapture,
   onPointerLeave,
+  anchorRef,
   children,
 }: PhiSlotChildFrameViewProps) {
   const resolvedVisibility = config?.visibility ?? "visible";
@@ -126,6 +130,7 @@ export function PhiSlotChildFrameView({
 
   return (
     <div
+      ref={anchorRef}
       hidden={resolvedVisibility === "hidden"}
       className={[buildPhiSlotChildClassName(policy), className, resolvedConfig.className, surface?.className].filter(Boolean).join(" ")}
       data-phi-slot-child-frame="true"

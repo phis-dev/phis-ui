@@ -353,6 +353,12 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
       ),
     ],
     [
+      PhiCmsWidgetType.TourButton,
+      definePhiRuntimeModuleRenderClient(
+        dynamic(() => import("../tour/widgets/tour-button/client").then((module) => module.PhiTourButtonWidget)),
+      ),
+    ],
+    [
       PhiCmsWidgetType.AccountAvatar,
       definePhiRuntimeModuleRenderClient(
         dynamic(() => import("../avatar/widgets/account-avatar/client").then((module) => module.PhiAccountAvatarWidgetClient)),

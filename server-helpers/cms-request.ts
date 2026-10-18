@@ -474,11 +474,28 @@ export async function resolvePhiCmsRequest({
     trees: [resolvedContent.page, areaPresetTree],
   });
 
+  /*
+   * The route's Tour, read from the binding rather than the tree: a Page the Site edited is loaded from
+   * its record and never runs the preset's loader, and it is still the Page the Tour was written for.
+   * Not for a dynamic route -- an exact Site Page may answer its address -- nor for a root that forwards.
+   */
+  const routeTour = routeBinding?.descriptor.tour
+    && Object.keys(routeBinding.params).length === 0
+    && resolvedPage === loadedPage
+    ? routeBinding.descriptor.tour
+    : null;
+
   return {
     areaPreset: areaPresetTree && applyPhiBackgroundAssetProjection(areaPresetTree, backgroundAssets),
     page: applyPhiBackgroundAssetProjection(resolvedContent.page, backgroundAssets),
     runtime: resolvedRuntime,
     serverCapabilities: resolvedRequestContext.serverCapabilities,
+    pageTour: routeTour
+      ? {
+          definition: routeTour,
+          sourceLocale: catalog.sourceLocaleByModuleId.get(routeBinding!.descriptor.ownerModuleId),
+        }
+      : null,
   };
 }
 

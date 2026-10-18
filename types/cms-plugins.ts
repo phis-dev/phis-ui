@@ -764,13 +764,24 @@ export type PhiResolvedCmsRequest = {
   page: PhiResolvedCmsPageTree;
   runtime: PhiBlockRuntime;
   serverCapabilities: import("./server-capabilities").PhiCapabilitySnapshot | null;
+  /**
+   * The Tour the Page's route carries, untranslated, with the language its owning Module writes in.
+   * Translated only where the Area has a Controller to hand it to (types/tours.ts).
+   */
+  pageTour?: { definition: import("./tours").PhiTourDefinition; sourceLocale?: string } | null;
 };
 
 export type PhiRuntimeControllerMountScope = "site" | "area" | "page";
 
 export type PhiRuntimeControllerFlag =
   | "internal"
-  | "multiInstance";
+  | "multiInstance"
+  /**
+   * Receives the shown Page's Tour as `pageTour` in its config, through a Page overlay
+   * ([types/tours.ts](./tours.ts)). Without a Controller carrying it, a Page's Tour is not offered and its
+   * targets are not drawn with a live frame for it.
+   */
+  | "pageTour";
 
 export type PhiRuntimeControllerSetting = {
   // Namespaced controller type in the form `<npm-package>/<controller-key>`.

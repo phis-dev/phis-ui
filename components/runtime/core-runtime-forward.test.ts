@@ -30,6 +30,8 @@ function createPartition(
     instances: new Map(),
     instanceSubscribers: new Set(),
     pendingSignals: new Map(),
+    visualAnchors: new Map(),
+    visualAnchorSubscribers: new Set(),
   };
 }
 

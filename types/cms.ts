@@ -173,6 +173,11 @@ export type PhiResolvedCmsRenderableTree = Pick<
   "regions" | "overlays" | "layoutNodes" | "contentWidgets" | "controllerSettings"
 > & {
   page?: PhiCmsPageNode | null;
+  /**
+   * Addresses something outside the tree's routes points at -- the shown Page's Tour (types/tours.ts).
+   * A frame is drawn live only where something can reach it, and a Tour step has to find its target.
+   */
+  visualAnchorTargets?: readonly string[] | null;
 };
 
 export type PhiResolvedCmsPagePayload = {

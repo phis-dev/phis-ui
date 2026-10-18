@@ -244,7 +244,7 @@ type PhiRenderedChildEntry = {
 };
 
 function resolvePhiTreeSignalParticipants(tree: PhiResolvedCmsRenderableTree) {
-  const participants = new Set<string>();
+  const participants = new Set<string>(tree.visualAnchorTargets ?? []);
 
   for (const node of [...tree.overlays, ...tree.layoutNodes, ...tree.contentWidgets]) {
     const routes = readPhiSignalRouteSet(node.config.signalRoutes);

@@ -14,6 +14,7 @@ import type {
   PhiSignalRuntimeContext,
 } from "../../types";
 import type { PhiSignalRegistryEntry } from "./runtime-signal-registry";
+import type { PhiVisualAnchorEntry } from "./runtime-visual-anchors";
 
 /*
  * The build mode, as the Site's bundler states it: Next replaces `process.env.NODE_ENV` with a constant,
@@ -53,6 +54,14 @@ export type PhiSignalRuntimePartition = {
    * key's position, which is what makes the flush deliver in order of first appearance.
    */
   pendingSignals: Map<PhiSignalAddress, Map<string, PhiPendingSignal>>;
+  /**
+   * Where an address is drawn: the element a Tour step points at (design/TOURS.md). A facet of the same
+   * partition rather than a second registry, so a lookup can never leave the partition it was asked in --
+   * the Builder Canvas holds the same instance ids as the live page and must not answer for it. Every
+   * registration is kept, so two elements under one address can be refused rather than one chosen.
+   */
+  visualAnchors: Map<PhiSignalAddress, PhiVisualAnchorEntry[]>;
+  visualAnchorSubscribers: Set<() => void>;
 };
 
 const PhiSignalRuntimePartitionContext = createContext<PhiSignalRuntimePartition | null>(null);
@@ -97,6 +106,8 @@ export function PhiSignalRuntimePartitionProvider({
     instances: new Map(),
     instanceSubscribers: new Set(),
     pendingSignals: new Map(),
+    visualAnchors: new Map(),
+    visualAnchorSubscribers: new Set(),
   }), [area, id, kind, pageKey, parent, regionKey, siteKey, slotKey]);
 
   useEffect(() => () => {
@@ -124,6 +135,8 @@ export function PhiSignalRuntimePartitionProvider({
     partition.instances.clear();
     partition.instanceSubscribers.clear();
     partition.pendingSignals.clear();
+    partition.visualAnchors.clear();
+    partition.visualAnchorSubscribers.clear();
   }, [partition]);
 
   return (

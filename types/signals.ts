@@ -151,6 +151,8 @@ export const PHI_SIGNAL_VALUE_SCHEMAS = {
   tableState: createPhiSharedSignalValueSchema("table-state"),
   tableMutation: createPhiSharedSignalValueSchema("table-mutation"),
   threadSelection: createPhiSharedSignalValueSchema("thread-selection"),
+  tourAvailability: createPhiSharedSignalValueSchema("tour-availability"),
+  tourProgress: createPhiSharedSignalValueSchema("tour-progress"),
   treeAction: createPhiSharedSignalValueSchema("tree-action"),
   treeBindingParams: createPhiSharedSignalValueSchema("tree-binding-params"),
   timelineBindingParams: createPhiSharedSignalValueSchema("timeline-binding-params"),

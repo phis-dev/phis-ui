@@ -1,10 +1,40 @@
 # Tour and visual-anchor design
 
-This is a design, not a contract: none of it is built. There is no `PhiTourControl` and no Tour
-Controller yet.
+This is a design, and the first cut of it is built (2026-10-17): visual anchors in the signal partition
+(`components/runtime/runtime-visual-anchors.ts`), `PhiTourControl`, the definition type
+(`types/tours.ts`), the Page hand-over (`server-helpers/page-tour.ts`, `phi-cms-page-render-scope.tsx`),
+and the Tour Module with its button and Controller (`plugins/runtime-modules/tour`). The Theme workspace
+carries the first Tour.
+
+Not built yet: subcontrol anchors (only frames and Regions register), resuming at a stored step, Region
+targets of a Page Tour in the Area's own Shell, and preparation signals per step.
 
 A feature-local Tour renderer, DOM-selector convention, address family, or signal protocol is not an
 allowed substitute for this design.
+
+## Decided direction (2026-10-17)
+
+The split below was agreed with the operator and supersedes the "no discovery" sentence under
+[Core model](#core-model) as far as it goes:
+
+| Part | Owner |
+| --- | --- |
+| Visual anchors, `PhiTourControl`, the definition type, the Tour workflow as a client state machine with `profile` persistence | Core (foundation) |
+| One Tour | the Module that owns the Page, attached to that Page's route preset |
+| The Tour button (Shell `header_top`, middle) and the Tour Controller | a Tour Module, opt-in and switchable |
+
+- Discovery is per Page, not a registry: the render knows whether the current Page carries a Tour, the
+  way it knows the Page's meta, and the button is visible only then.
+- The button sends an ordinary signal to the Tour Controller of its Area; the Controller reads the Page's
+  definition and the user's progress and runs it. Offering a Tour once on first visit is the
+  Controller's too.
+- Switching the Tour Module off removes the button and the Controller; definitions in other Modules stay
+  inert. A single Tour is switched off per user by its progress (dismissed/completed).
+- Operator-authored Tours (a target picker in the Builder) remain out of scope.
+- Target ids: a preset node keeps its derived id through editing, saving and publishing (CMS.md), so a
+  Tour may target preset nodes of an edited Page; a node the Site removed is a missing target.
+- Open: how the Tour Module's button reaches a Shell it does not own. There is no contribution from a
+  Module into another preset's Shell Region today, and the Public Area shows `header_top` only on `/`.
 
 ## Core model
 

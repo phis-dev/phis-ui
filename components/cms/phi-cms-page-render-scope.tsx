@@ -20,6 +20,12 @@ import {
   resolvePhiCmsAreaRuntimeModuleScope,
   resolvePhiCmsTreeRuntimeRegistry,
 } from "./phi-cms-runtime-registry";
+import { resolvePhiPageTour } from "../../server-helpers/page-tour";
+import {
+  PHI_PAGE_TOUR_CONFIG_KEY,
+  PHI_PAGE_TOUR_CONTROLLER_FLAG,
+  readPhiTourTargets,
+} from "../../types/tours";
 
 type PhiCmsResolvedRootRequest = NonNullable<Awaited<ReturnType<typeof loadPhiCmsRootRequest>>["resolvedRequest"]>;
 
@@ -48,11 +54,23 @@ export async function resolvePhiCmsPageRenderScope({
     areaPreset: resolvedRequest.areaPreset,
     serverCapabilities: resolvedRequest.serverCapabilities,
   });
-  const filteredPageTree = filterPhiCmsRenderableTreeForViewer({
+  /*
+   * The Page's Tour goes to whichever Controller of the Area takes Page Tours, and only then is it
+   * translated and are its targets drawn live: with the Tour Module switched off a Tour costs nothing.
+   */
+  const pageTourControllers = [...runtimeModuleScope.moduleSet.controllerDescriptorsByType.values()]
+    .filter((descriptor) => descriptor.flags?.includes(PHI_PAGE_TOUR_CONTROLLER_FLAG));
+  const pageTour = resolvedRequest.pageTour && pageTourControllers.length > 0
+    ? await resolvePhiPageTour({ ...resolvedRequest.pageTour, locale: resolvedRequest.runtime.locale.current })
+    : null;
+  const viewerPageTree = filterPhiCmsRenderableTreeForViewer({
     tree: resolvedRequest.page,
     viewer: resolvedRequest.runtime.viewer,
     registry: buildPhiRuntimeModuleAccessRegistry(runtimeModuleScope.moduleSet),
   });
+  const filteredPageTree = pageTour
+    ? { ...viewerPageTree, visualAnchorTargets: readPhiTourTargets(pageTour) }
+    : viewerPageTree;
   const runtimeRegistry = await resolvePhiCmsTreeRuntimeRegistry({
     moduleScope: runtimeModuleScope,
     trees: [filteredPageTree],
@@ -89,6 +107,12 @@ export async function resolvePhiCmsPageRenderScope({
       config: overlay.config,
     };
   });
+  if (pageTour) {
+    controllerConfigOverlays.push(...pageTourControllers.map((descriptor) => ({
+      address: createPhiControllerSignalAddress(descriptor.pluginKey, descriptor.key, "default"),
+      config: { [PHI_PAGE_TOUR_CONFIG_KEY]: pageTour },
+    })));
+  }
   return {
     runtimeModuleScope,
     filteredPageTree,

@@ -24,6 +24,7 @@ import {
 } from "./phi-slot-child-frame-view";
 import type { PhiSlotChildFrameProps } from "./phi-slot-child-frame";
 import { PhiLayoutSignalSurfaceProvider } from "../../components/layouts/phi-layout-signal-surface";
+import { usePhiVisualAnchor } from "../../components/runtime/runtime-visual-anchors";
 
 export function PhiSlotChildFrameClient({
   kind,
@@ -41,6 +42,8 @@ export function PhiSlotChildFrameClient({
     blockId,
   );
   const resolvedSignalScope = signalScope ?? (kind === "widget" ? "widget" : "layout");
+  // The frame is where an instance is drawn, so it is what a Tour step pointing at `cms:<id>` finds.
+  const anchorRef = usePhiVisualAnchor<HTMLDivElement>(receiver);
   const blockRuntime = usePhiRenderableBlockRuntime({
     blockId,
     receiver,
@@ -135,6 +138,7 @@ export function PhiSlotChildFrameClient({
       receiver={receiver}
       config={resolvedConfig}
       effectsState={blockRuntime.state.effectsState}
+      anchorRef={anchorRef}
     >
       {enhancedChildren as ReactNode}
     </PhiSlotChildFrameView>

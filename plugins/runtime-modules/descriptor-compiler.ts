@@ -3,6 +3,7 @@ import {
   resolvePhiCmsAreaMask,
   type PhiCmsAreaKey,
 } from "../../constants/cms-areas";
+import { collectPhiTourDefinitionErrors } from "../../types/tours";
 import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../constants/phi-cms";
 import { PhiCmsLayoutType } from "../../constants/cms-layout-type-keys";
 import {
@@ -184,6 +185,22 @@ export function compilePhiCmsRoutePattern(
   }
   const segments = path.split("/").filter(Boolean);
   const dynamicSegments = segments.filter((segment) => segment.startsWith(":"));
+  /*
+   * A Tour is offered only on a route without parameters (server-helpers/cms-request.ts), so one on a
+   * dynamic route would be dead weight that looks configured.
+   */
+  if (descriptor.tour) {
+    const tourErrors = [
+      ...collectPhiTourDefinitionErrors(descriptor.tour),
+      ...(dynamicSegments.length > 0 ? ["a Tour is not offered on a route with a parameter."] : []),
+      ...(descriptor.tour.id.startsWith(`${descriptor.ownerModuleId}/`)
+        ? []
+        : [`Tour id "${descriptor.tour.id}" is not in the owning Module's namespace.`]),
+    ];
+    if (tourErrors.length > 0) {
+      throw new Error(`${descriptor.ownerModuleId}/${descriptor.presetKey}: ${tourErrors.join(" ")}`);
+    }
+  }
   if (dynamicSegments.length > 1) {
     throw new Error(
       `${descriptor.ownerModuleId}/${descriptor.presetKey}: a route may contain at most one dynamic segment.`,

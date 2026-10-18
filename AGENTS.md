@@ -53,8 +53,9 @@ covers every contract document below, closed enums, discriminated unions, and sh
 | Open work | [TODOS.md](./TODOS.md) |
 
 Server-side contracts (groups and storage, authorization, Add-ons, directory providers, locale capability)
-live in the `phis-server` repository and are consumed here, never redefined. Guided Tours are not built;
-their design is [design/TOURS.md](./design/TOURS.md).
+live in the `phis-server` repository and are consumed here, never redefined. Guided Tours: a route preset carries
+its Page's `tour`, the Tour Module offers it; the design and what is built of it are
+[design/TOURS.md](./design/TOURS.md).
 
 Read the relevant owner documents and the affected preset and component files before a structural
 change. If a contract is unclear, stop and ask instead of guessing.

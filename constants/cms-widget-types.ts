@@ -23,6 +23,7 @@ const PHI_CMS_WIDGET_PLUGIN_KEYS = {
   "observability": `${PHI_CMS_WIDGET_PLUGIN_KEY_BASE}/observability/widgets`,
   "theme": `${PHI_CMS_WIDGET_PLUGIN_KEY_BASE}/theme/widgets`,
   "threads": `${PHI_CMS_WIDGET_PLUGIN_KEY_BASE}/threads/widgets`,
+  "tour": `${PHI_CMS_WIDGET_PLUGIN_KEY_BASE}/tour/widgets`,
   "video": `${PHI_CMS_WIDGET_PLUGIN_KEY_BASE}/video/widgets`,
 } as const;
 
@@ -116,6 +117,7 @@ const PHI_CMS_WIDGET_MODULE_BY_TYPE_KEY: Readonly<Record<string, keyof typeof PH
   "structure-region": "builder",
   "switch": "core",
   "theme-mode-switch": "core",
+  "tour-button": "tour",
   "tab-bar": "core",
   "table": "core",
   "test-block": "builder",
@@ -178,6 +180,7 @@ export const PhiCmsWidgetType = {
   EntryDetail: defineWidgetType(resolvePhiCmsWidgetPluginKey("entry-detail"), "entry-detail"),
   EntryHeader: defineWidgetType(resolvePhiCmsWidgetPluginKey("entry-header"), "entry-header"),
   VideoEmbed: defineWidgetType(resolvePhiCmsWidgetPluginKey("video-embed"), "video-embed"),
+  TourButton: defineWidgetType(resolvePhiCmsWidgetPluginKey("tour-button"), "tour-button"),
   Result: defineWidgetType(resolvePhiCmsWidgetPluginKey("result"), "result"),
   Pagination: defineWidgetType(resolvePhiCmsWidgetPluginKey("pagination"), "pagination"),
   Segmented: defineWidgetType(resolvePhiCmsWidgetPluginKey("segmented"), "segmented"),

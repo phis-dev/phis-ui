@@ -1,6 +1,7 @@
 import { createPhiAssetRuntimeModuleServerAreaContribution } from "../asset/server";
 import { createPhiCoreRuntimeModuleServerAreaContribution } from "../core/server";
 import { createPhiThreadsRuntimeModuleServerAreaContribution } from "../threads/server";
+import { createPhiTourRuntimeModuleServerAreaContribution } from "../tour/server";
 
 /**
  * The modules every Area carries, contributed whole; the Area catalog cuts them to itself.
@@ -13,5 +14,6 @@ export function createPhiCommonRuntimeModuleServerAreaContributions() {
     createPhiCoreRuntimeModuleServerAreaContribution(),
     createPhiAssetRuntimeModuleServerAreaContribution(),
     createPhiThreadsRuntimeModuleServerAreaContribution(),
+    createPhiTourRuntimeModuleServerAreaContribution(),
   ] as const;
 }
