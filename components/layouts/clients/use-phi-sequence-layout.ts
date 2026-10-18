@@ -90,7 +90,9 @@ export function usePhiSequenceLayout({
   // The Builder draws with the signalled Surface; the page hands `PhiLayoutSurfaceBox` the stored one
   // and lets it swap in what Signals left.
   const chrome = { ...paddings, surface };
-  const storedChrome = { ...paddings, surface: storedSurface };
+  // Named rather than inferred: the inferred type spells csstype's padding types, which the package's
+  // declarations cannot name (TS2883).
+  const storedChrome: PhiSequenceSlotEditorProps["chrome"] = { ...paddings, surface: storedSurface };
   const editor: Omit<PhiSequenceSlotEditorProps, "slotNoun"> = {
     slots,
     slotKeys,
