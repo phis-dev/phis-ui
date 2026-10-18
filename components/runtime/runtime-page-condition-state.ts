@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import type { PhiRuntimePageConditionState } from "../../types/runtime-condition";
+import { usePhiPathname } from "./use-phi-pathname";
 
 /**
  * The address of the page as the visitor opened it, which is what a `page` condition reads.
@@ -11,7 +12,7 @@ import type { PhiRuntimePageConditionState } from "../../types/runtime-condition
  * second `?token=` is not a second subject.
  */
 export function usePhiRuntimePageConditionState(): PhiRuntimePageConditionState {
-  const pathname = usePathname();
+  const pathname = usePhiPathname();
   const searchParams = useSearchParams();
   const search = searchParams.toString();
 

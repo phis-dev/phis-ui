@@ -1,7 +1,7 @@
 "use client";
 
 import { startTransition } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { getPhiBuilderDefaultRegionDraft } from "../region-defaults";
 import {
@@ -19,6 +19,7 @@ import type {
   PhiDeveloperBuilderRegionDraft,
   PhiDeveloperBuilderWorkspaceState,
 } from "../developer-workspace-types";
+import { usePhiPathname } from "../../../../components/runtime/use-phi-pathname";
 
 function materializePhiBuilderPreviewRegionDrafts(
   area: PhiDeveloperBuilderArea,
@@ -48,7 +49,7 @@ function materializePhiBuilderPreviewRegionDrafts(
 export function usePhiDeveloperBuilderPreviewModeController(
   state: Pick<PhiDeveloperBuilderWorkspaceState, "area" | "pageKey" | "runtimeModuleIdsByArea">,
 ) {
-  const pathname = usePathname();
+  const pathname = usePhiPathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const enterEditor = () => {

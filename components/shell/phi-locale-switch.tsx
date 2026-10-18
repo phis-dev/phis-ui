@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 import { isKnownSpecialCmsRoot } from "../../helpers/cms-routing";
 import { localizeAreaPath, stripLocaleAndAreaFromPathname } from "../../helpers/locale";
 import { PhiPillDropdownControl } from "../controls/phi-dropdown-control";
 import type { PhiMenuControlItem } from "../controls/phi-menu-control";
+import { usePhiPathname } from "../runtime/use-phi-pathname";
 
 /**
  * Remembers the locale a viewer picked, for every page that carries no locale of its own.
@@ -43,7 +44,7 @@ export function PhiLocaleSwitch({
   showText = true,
   interactive = true,
 }: PhiLocaleSwitchProps) {
-  const pathname = usePathname() ?? "/";
+  const pathname = usePhiPathname();
   const searchParams = useSearchParams();
   const currentQuery = searchParams?.toString();
   const pathSegments = pathname.split("/").filter(Boolean);

@@ -1,7 +1,5 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-
 import { collectPhiSelectedNavKeys } from "../../../../../helpers/nav-selection";
 import { PhiMenuControl, type PhiMenuControlItem } from "../../../../../components/controls/phi-menu-control";
 import { mapPhiNavItems } from "../../../../../components/shell/menu-items";
@@ -16,6 +14,7 @@ import {
   createPhiCoreRuntimeControllerAddress,
 } from "../../../../../components/runtime/core-runtime-controller-address";
 import { usePhiSignalEmitter } from "../../../../../components/runtime/runtime-signal-identity";
+import { usePhiPathname } from "../../../../../components/runtime/use-phi-pathname";
 
 export type PhiSidebarNavigationWidgetClientProps = PhiClientBlockBaseProps<
   PhiNoLabels,
@@ -68,7 +67,7 @@ export function PhiSidebarNavigationWidgetClient({
   items,
   menuTheme,
 }: PhiSidebarNavigationWidgetClientProps) {
-  const pathname = usePathname() ?? "/";
+  const pathname = usePhiPathname();
   const availableLocales = runtime.site.availableLocales.map((option) => option.code);
   const presentation = usePhiSidebarMenuPresentation(config);
   const emitSignal = usePhiSignalEmitter();
@@ -122,7 +121,7 @@ export function PhiSidebarNavigationWidgetPreviewClient({
   menuTheme,
 }: PhiSidebarNavigationWidgetClientProps) {
   void _runtime;
-  const pathname = usePathname() ?? "/";
+  const pathname = usePhiPathname();
   const presentation = usePhiSidebarMenuPresentation(config);
 
   return (

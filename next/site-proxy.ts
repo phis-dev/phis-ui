@@ -24,9 +24,9 @@ import {
   normalizePhiThemeModePreference,
   resolvePhiThemeMode,
 } from "../theme/phi-theme-mode";
+import { PHI_STATIC_RENDER_PREFIX } from "../helpers/static-render-path";
 
-/** Where the static route tree lives. Only the proxy may send a request there; see below. */
-export const PHI_STATIC_RENDER_PREFIX = "/static-render";
+export { PHI_STATIC_RENDER_PREFIX };
 
 
 /*

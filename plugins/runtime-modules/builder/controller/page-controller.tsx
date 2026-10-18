@@ -2,7 +2,7 @@
 
 import { readPhiDeveloperBuilderWorkspaceKey } from "../route-scope";
 import { useCallback, useEffect, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import {
 } from "../../../../components/widgets/signals/page-title-signals";
@@ -57,6 +57,7 @@ import { readPhiRuntimeFormValuesSignalValue } from "../../../../components/form
 import type { PhiBuilderPageMetaPresentationLabels } from "../controller/definition";
 import { emitPhiPageTitleInputSignal } from "../page-title-signal";
 import { phiWorkspaceCatalogStore } from "../../../../components/workspace/catalog-store";
+import { usePhiPathname } from "../../../../components/runtime/use-phi-pathname";
 
 type PhiBuilderPageControllerState = Pick<
   PhiDeveloperBuilderWorkspaceState,
@@ -83,7 +84,7 @@ export function usePhiBuilderPageController({
 }) {
   const { showMessage } = usePhiApplicationFeedback();
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = usePhiPathname();
   const searchParams = useSearchParams();
   const emitSignal = usePhiSignalDispatcher();
   const [pageMetaDialogMode, setPageMetaDialogMode] = useState<PhiPageMetaDialogMode>("create");

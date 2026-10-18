@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { usePathname } from "next/navigation";
 
 import {
   resolvePhiDeveloperBuilderRouteScope,
@@ -12,6 +11,7 @@ import {
 } from "../../../../../plugins/runtime-modules/builder/developer-workspace-store";
 import { usePhiSignalDispatcher } from "../../../../../components/runtime/runtime-signal-bus";
 import { usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
+import { usePhiPathname } from "../../../../../components/runtime/use-phi-pathname";
 
 type PhiBuilderChromeControlsWidgetConfig = {
   editorPreviewDisabled?: boolean;
@@ -28,7 +28,7 @@ export function PhiBuilderChromeControlsWidgetClient({
   const pageKey = usePhiDeveloperBuilderStateValue("public", (state) => state.pageKey);
   const emitSignal = usePhiSignalDispatcher();
   const { sender } = usePhiSignalIdentity();
-  const pathname = usePathname();
+  const pathname = usePhiPathname();
   const routeScope = useMemo(
     () =>
       resolvePhiDeveloperBuilderRouteScope(pathname) ?? {

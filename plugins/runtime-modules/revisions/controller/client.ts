@@ -1,7 +1,7 @@
 "use client";
 
 import { createElement, useCallback, useEffect, useMemo } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import type { PhiRuntimeControllerPlugin, PhiSignalAddress } from "../../../../types";
 import { PHI_SIGNAL_VALUE_SCHEMAS, type PhiSignalValue } from "../../../../types/signals";
 import { readPhiTableBindingParamsSignalValue } from "../../../../types/table-signal-values";
@@ -40,6 +40,7 @@ import {
 import { resolvePhiBuilderRevisionNavScopeKey } from "../../../../helpers/cms-navigation-scope-key";
 import { deleteCmsDraft } from "../../../../helpers/cms-draft-delete";
 import { isPhiRecord } from "../../../../helpers/is-record";
+import { usePhiPathname } from "../../../../components/runtime/use-phi-pathname";
 
 function PhiRevisionsControllerMount({
   address,
@@ -63,7 +64,7 @@ function PhiRevisionsControllerMount({
     correlationId?: string | null,
   ) => dispatchPhiSignalCapability(dispatchSignal, address, emitRoutes, capabilityId, value, correlationId), [address, dispatchSignal, emitRoutes]);
   const { showMessage } = usePhiApplicationFeedback();
-  const pathname = usePathname();
+  const pathname = usePhiPathname();
   const router = useRouter();
   const builderArea = usePhiWorkspaceCatalogValue(PHI_WORKSPACE_CATALOG_SCOPE, (state) => state.area);
   const builderPageKey = usePhiWorkspaceCatalogValue(PHI_WORKSPACE_CATALOG_SCOPE, (state) => state.pageKey);

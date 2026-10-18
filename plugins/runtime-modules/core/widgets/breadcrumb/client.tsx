@@ -1,11 +1,10 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-
 import type { PhiClientBlockBaseProps, PhiBlockRuntime, PhiNoLabels } from "../../../../../types";
 import type { PhiCmsBreadcrumbWidgetConfig } from "./config";
 import { PhiBreadcrumbControl } from "../../../../../components/controls/phi-breadcrumb-control";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
+import { usePhiPathname } from "../../../../../components/runtime/use-phi-pathname";
 
 export type { PhiCmsBreadcrumbWidgetConfig as PhiBreadcrumbWidgetConfig } from "./config";
 
@@ -18,7 +17,7 @@ export type PhiBreadcrumbWidgetProps = PhiClientBlockBaseProps<
 >;
 
 export function PhiBreadcrumbWidget({ config, runtime }: PhiBreadcrumbWidgetProps) {
-  const pathname = usePathname();
+  const pathname = usePhiPathname();
   const breadcrumbItems = [
     { title: config?.rootLabel?.trim() || runtime?.site.name?.trim() || runtime?.site.key || "Site" },
     config?.showArea === false ? null : { title: runtime?.area ?? "area" },

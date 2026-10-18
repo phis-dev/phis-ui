@@ -1,7 +1,6 @@
 "use client";
 
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
 
 import type { PhiBlockRuntime } from "../../../../../types";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
@@ -19,6 +18,7 @@ import {
   formatPhiAuthSecurityWidgetLabel,
   type PhiAuthSecurityWidgetLabels,
 } from "../../../../../components/widgets/label-types/security";
+import { usePhiPathname } from "../../../../../components/runtime/use-phi-pathname";
 
 const PhiAuthWorkflowBody = lazy(
   () => import("../../../../../components/widgets/client/auth-workflow-body")
@@ -73,7 +73,7 @@ export function PhiAuthSecurityWidgetClient({
   const [error, setError] = useState<string | null>(null);
   const [enrolling, setEnrolling] = useState(false);
   // Back to where the enrolment began, whatever address this panel stands at.
-  const pathname = usePathname();
+  const pathname = usePhiPathname();
   const pageLocale = runtime.locale.current;
   const dateFormat = useMemo(
     () => new Intl.DateTimeFormat(pageLocale, { dateStyle: "medium", timeStyle: "short" }),

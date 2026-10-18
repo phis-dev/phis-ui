@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { usePathname } from "next/navigation";
 
 import type { PhiCmsInstanceId } from "../../types/cms-instance-id";
 import { shouldPhiCmsContentStayMounted } from "../../types/cms-mount-policy";
@@ -39,6 +38,7 @@ import type {
   PhiCmsOverlayZones,
   PhiCmsOverlayZonesRequest,
 } from "../../types/cms-overlay-zones";
+import { usePhiPathname } from "../runtime/use-phi-pathname";
 
 export type PhiOverlayContainerClientProps = {
   overlayId: PhiCmsInstanceId;
@@ -156,7 +156,7 @@ export function PhiOverlayContainerClient({
     : config.title;
   const emittedOpenRef = useRef(false);
   const openedAtPathname = useRef<string | null>(null);
-  const pathname = usePathname() ?? "/";
+  const pathname = usePhiPathname();
   const emitSignal = usePhiSignalEmitter(receiver);
   const loadZones = usePhiOverlayZonesLoaderIfAny();
   const [loadedZones, setLoadedZones] = useState<PhiLoadedOverlayZones | PhiFailedOverlayZones | null>(null);

@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-import { usePathname } from "next/navigation";
-
 import { PhiLink } from "../../../../../components/navigation/phi-link";
 import { PhiIcon } from "../../../../../components/shell/phi-icon";
 import type { PhiClientBlockBaseProps } from "../../../../../types";
@@ -14,6 +12,7 @@ import {
 } from "../../../../../theme/phi-container-breakpoints";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
+import { usePhiPathname } from "../../../../../components/runtime/use-phi-pathname";
 
 export type PhiQuickLinksWidgetItem = {
   label: string;
@@ -102,7 +101,7 @@ export function PhiQuickLinksWidgetClient({
 }: PhiQuickLinksWidgetClientProps) {
   const { token } = usePhiConfig();
   const { ref, width, breakpoints } = useQuickLinksContainerWidth();
-  const pathname = usePathname() ?? "/";
+  const pathname = usePhiPathname();
 
   const maxColumns = config?.columns === 1 || config?.columns === 3 ? config.columns : 2;
   const interactive = config?.interactive !== false;

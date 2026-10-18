@@ -1,6 +1,5 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { useMemo, type ReactNode } from "react";
 
 import {
@@ -15,6 +14,7 @@ import {
 } from "../../../../components/widgets/client/shared/phi-collection-provider";
 import type { PhiDashboardCardRow } from "../../../../types/dashboard-cards";
 import { isPhiRecord } from "../../../../helpers/is-record";
+import { usePhiPathname } from "../../../../components/runtime/use-phi-pathname";
 
 /**
  * The fan-in, from the browser's side: one request, and no idea what stands behind it.
@@ -97,7 +97,7 @@ export function PhiDashboardCardCollectionProviderClient({ children }: { childre
    * Where this Widget stands, live. A registration built once at module scope could not know it, and a
    * Dashboard placed on a second page would ask about the first one's.
    */
-  const pathname = usePathname() ?? "/";
+  const pathname = usePhiPathname();
   const registration = useMemo<PhiCollectionProviderRegistration>(() => ({
     key: PHI_DASHBOARD_CARD_DATA_PROVIDER_KEY,
     query: (request) => queryDashboardCards(request, pathname),

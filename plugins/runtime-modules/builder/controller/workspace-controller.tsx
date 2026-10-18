@@ -2,7 +2,7 @@
 
 import type { PhiRenderableBlockEffects } from "../../../../types/renderable-block";
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import {
   PHI_SIGNAL_VALUE_SCHEMAS,
@@ -196,6 +196,7 @@ export type {
   PhiBuilderRegionKey,
   PhiBuilderShellRegionKey,
 } from "../region-keys";
+import { usePhiPathname } from "../../../../components/runtime/use-phi-pathname";
 
 function readPhiDeveloperBuilderToolbarCommand(value: unknown): PhiDeveloperBuilderToolbarCommand | null {
   if (
@@ -358,7 +359,7 @@ function usePhiDeveloperBuilderWorkspaceController(
   ), [dispatchSignal, emitRoutes]);
   const state = usePhiDeveloperBuilderWorkspaceState(defaultArea);
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = usePhiPathname();
   const searchParams = useSearchParams();
   const commandWorkspace = resolvePhiDeveloperBuilderCommandWorkspace(pathname);
   const builderWorkspaceKey = readPhiDeveloperBuilderWorkspaceKey(pathname);

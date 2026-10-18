@@ -1,6 +1,5 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
@@ -18,6 +17,7 @@ import { PhiCollectionViewControl } from "../../../../components/controls/phi-co
 import { PhiAlertControl } from "../../../../components/controls/phi-alert-control";
 import { PhiEmptyControl } from "../../../../components/controls/phi-empty-control";
 import { isPhiRecord } from "../../../../helpers/is-record";
+import { usePhiPathname } from "../../../../components/runtime/use-phi-pathname";
 
 /**
  * A Dashboard, drawn.
@@ -175,7 +175,7 @@ export function PhiDashboardCardCollectionViewBinding({
   widgetId?: PhiCmsInstanceId | null;
 }) {
   void widgetId;
-  const pathname = usePathname() ?? "/";
+  const pathname = usePhiPathname();
   const { presentation } = config;
   const rows = useMemo(() => readRows(binding), [binding]);
   const area = typeof config.source?.params?.area === "string" ? config.source.params.area : "";

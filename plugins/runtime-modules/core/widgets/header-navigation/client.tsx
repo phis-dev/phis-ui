@@ -1,7 +1,6 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { usePathname } from "next/navigation";
 
 import { collectPhiSelectedNavKeys } from "../../../../../helpers/nav-selection";
 import { PhiMenuControl } from "../../../../../components/controls/phi-menu-control";
@@ -9,6 +8,7 @@ import type { PhiClientBlockBaseProps, PhiBlockRuntime, PhiNoLabels } from "../.
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { mapPhiNavItems } from "../../../../../components/shell/menu-items";
 import { type PhiMenuTheme, type PhiNavItem } from "../../../../../components/shell/shell-types";
+import { usePhiPathname } from "../../../../../components/runtime/use-phi-pathname";
 
 export type PhiHeaderNavigationWidgetClientProps = PhiClientBlockBaseProps<
   PhiNoLabels,
@@ -33,7 +33,7 @@ export function PhiHeaderNavigationWidgetClient({
   interactive = true,
 }: PhiHeaderNavigationWidgetClientProps) {
   const { token } = usePhiConfig();
-  const pathname = usePathname() ?? "/";
+  const pathname = usePhiPathname();
   const availableLocales = runtime.site.availableLocales.map((option) => option.code);
   const selectedKeys = collectPhiSelectedNavKeys(pathname, items, availableLocales);
   const menuItems = mapPhiNavItems(
