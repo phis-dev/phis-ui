@@ -1,6 +1,6 @@
 import "server-only";
 
-import { applyPhiPresetTreeCurrentContent } from "../../../server-helpers/cms-bound-content";
+import { applyPhiPresetTreesCurrentContent } from "../../../server-helpers/cms-bound-content";
 import { cache } from "react";
 import { cookies } from "next/headers";
 
@@ -40,30 +40,45 @@ import {
 } from "../../../helpers/cms-scope-search-params";
 import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
+/**
+ * Every Area's installed Shell as the Builder edits it: with the current content of every node somebody
+ * wrote content for. All Areas together and once per request, because the Builder holds the preset
+ * drafts of every Area on every view, and the content of their nodes is one read rather than one per
+ * Area (AUDIT-2026-10-13, PM12).
+ */
+const loadInstalledAreaShellPresetTrees = cache(async function loadInstalledAreaShellPresetTrees(
+  runtime: PhiBlockRuntime,
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
+): Promise<ReadonlyMap<PhiDeveloperBuilderArea, PhiResolvedCmsPageTree>> {
+  const catalog = resolvePhiCmsDescriptorCatalog(runtimeModuleCatalog);
+  const installed = (await Promise.all(PHI_BUILDER_AREA_KEYS.map(async (area) => {
+    const binding = resolvePhiCmsAreaShellPresetBinding(catalog, resolvePhiBuilderAreaAsCmsArea(area));
+    if (!binding) {
+      return null;
+    }
+    const tree = await instantiatePhiCmsAreaShellPreset({
+      binding,
+      catalog,
+      siteId: runtime.site.id,
+      path: resolveStructureAreaPath(area),
+      runtime,
+    });
+    return [area, tree] as const;
+  }))).filter((entry) => entry != null);
+  const trees = await applyPhiPresetTreesCurrentContent(installed.map(([, tree]) => tree), {
+    runtimeModuleCatalog,
+    siteKey: runtime.site.key,
+    cookieHeader: (await cookies()).toString(),
+  });
+  return new Map(installed.map(([area], index) => [area, trees[index]!]));
+});
+
 async function instantiateAreaShellPresetTree(
   runtime: PhiBlockRuntime,
   area: PhiDeveloperBuilderArea,
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
 ): Promise<PhiResolvedCmsPageTree | null> {
-  const cmsArea = resolvePhiBuilderAreaAsCmsArea(area);
-  const catalog = resolvePhiCmsDescriptorCatalog(runtimeModuleCatalog);
-  const binding = resolvePhiCmsAreaShellPresetBinding(catalog, cmsArea);
-  if (!binding) {
-    return null;
-  }
-  const path = resolveStructureAreaPath(area);
-  // As the Builder edits it: with the current content of every node somebody wrote content for.
-  return applyPhiPresetTreeCurrentContent(await instantiatePhiCmsAreaShellPreset({
-    binding,
-    catalog,
-    siteId: runtime.site.id,
-    path,
-    runtime,
-  }), {
-    runtimeModuleCatalog,
-    siteKey: runtime.site.key,
-    cookieHeader: (await cookies()).toString(),
-  });
+  return (await loadInstalledAreaShellPresetTrees(runtime, runtimeModuleCatalog)).get(area) ?? null;
 }
 
 function resolveAreaPresetSource(

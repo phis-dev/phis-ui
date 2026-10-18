@@ -35,11 +35,11 @@ type PhiPresetTreeContentOptions = {
 };
 
 async function readPresetTreeBoundContents<TTree extends { contentWidgets: PhiCmsContentWidgetNode[] }>(
-  tree: TTree,
+  trees: readonly TTree[],
   options: PhiPresetTreeContentOptions & { stage: "published" | "current"; cookieHeader?: string | null },
 ) {
   const bindings = readPhiCmsContentBindingsByWidgetType(options.runtimeModuleCatalog);
-  const bound = new Map(tree.contentWidgets.flatMap((widget) => {
+  const bound = new Map(trees.flatMap((tree) => tree.contentWidgets).flatMap((widget) => {
     const binding = resolvePhiCmsWidgetContentBindingForConfig(bindings.get(widget.widgetType), widget.config);
     return binding ? [[widget.id as string, binding] as const] : [];
   }));
@@ -68,7 +68,7 @@ export async function applyPhiPresetTreePublishedContent<TTree extends { content
   tree: TTree,
   options: PhiPresetTreeContentOptions,
 ): Promise<TTree> {
-  const { byInstance } = await readPresetTreeBoundContents(tree, { ...options, stage: "published" });
+  const { byInstance } = await readPresetTreeBoundContents([tree], { ...options, stage: "published" });
   if (![...byInstance.values()].some((entry) => entry.content)) return tree;
   return {
     ...tree,
@@ -90,9 +90,20 @@ export async function applyPhiPresetTreeCurrentContent<TTree extends { contentWi
   tree: TTree,
   options: PhiPresetTreeContentOptions & { cookieHeader: string },
 ): Promise<TTree> {
-  const { bound, byInstance } = await readPresetTreeBoundContents(tree, { ...options, stage: "current" });
-  if (byInstance.size === 0) return tree;
-  return {
+  return (await applyPhiPresetTreesCurrentContent([tree], options))[0]!;
+}
+
+/**
+ * The same for several trees with one content read. The Builder holds every Area's Shell on every view,
+ * and a read per Area was a Core call per Area (AUDIT-2026-10-13, PM12).
+ */
+export async function applyPhiPresetTreesCurrentContent<TTree extends { contentWidgets: PhiCmsContentWidgetNode[] }>(
+  trees: readonly TTree[],
+  options: PhiPresetTreeContentOptions & { cookieHeader: string },
+): Promise<TTree[]> {
+  const { bound, byInstance } = await readPresetTreeBoundContents(trees, { ...options, stage: "current" });
+  if (byInstance.size === 0) return [...trees];
+  return trees.map((tree) => ({
     ...tree,
     contentWidgets: tree.contentWidgets.map((widget) => {
       const entry = byInstance.get(widget.id);
@@ -107,5 +118,5 @@ export async function applyPhiPresetTreeCurrentContent<TTree extends { contentWi
         resolvedContent: entry.content,
       };
     }),
-  };
+  }));
 }
