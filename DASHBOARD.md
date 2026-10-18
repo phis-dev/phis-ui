@@ -27,11 +27,16 @@ whether it failed, and draws them; what asks, and when, is the Dashboard's card 
 what makes the clock a move rather than a rewrite, and it is `design/STATE_MACHINES.md`'s rule that a
 Widget presents a state it was given rather than holding one.
 
-Only the `stat` form is offered, and it now draws: Core's card takes a `body`, and the `stat` body is
+Two forms are offered. `stat` draws: Core's card takes a `body`, and the `stat` body is
 `PhiStatisticControl` -- the same Control the Theme inspector uses, so the house keeps one statistic
 rather than two. Before that the figure was written into the card's title slot, which left the eyebrow
-as the only word saying what had been counted. `list` and a series card wait for the case that needs
-them, on the terms section 9 states.
+as the only word saying what had been counted. `list` came with the Builder's Dashboard, where what a
+structure author looks for first is what is open and what changed rather than how many: its payload
+carries `entries` in the Timeline's shape (`@phis/contracts/timeline`), at most
+`PHI_DASHBOARD_CARD_LIST_LIMIT` (five) of them drawn, each time formatted relative in the page's locale.
+The card View draws them with `PhiTimelineControl` and hands them to the card as `listContent` -- the
+Card is on Public pages, and a list Control it imported itself would load on every one of them. A series
+card waits for the case that needs it, on the terms section 9 states.
 
 Decisions taken while writing this are stated where they apply, including the ones that rejected an
 earlier answer, because the rejected ones are the ones that come back.
@@ -245,13 +250,14 @@ one.
   turn the Dashboard into a contest.
 - **Where the Site's decisions are stored.** Controller state or the page tree; both are plausible and
   the choice has consequences for what survives a preset change.
-- **Whether a series card is needed.** `stat` and `list` carry the cases in sight. A chart is a Core
-  control when somebody actually has a series, and every form Core offers is a promise it then keeps.
+- **Whether a series card is needed.** `stat` and `list` carry the cases in sight, and both are built.
+  A chart is a Core control when somebody actually has a series, and every form Core offers is a promise
+  it then keeps.
 
 ## 10. Order
 
 1. The contribution descriptor, and the fan-in provider in the `dashboard` Module.
-2. The card forms -- `stat` and `list` -- against the existing card presentation.
+2. The card forms -- `stat` and `list` -- against the existing card presentation. **Done.**
 3. The Controller as a clock: staleness, floor, stagger, visibility, backoff.
 4. The Site's decisions: candidates minus decisions, dismissing through the item action.
 5. The first two real contributions, from `@phis/ui/threads` and `@phis/support`. **Both are done**:

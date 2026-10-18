@@ -5,10 +5,13 @@ import { useEffect, useMemo, useState } from "react";
 import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
 import type { PhiCollectionViewBindingModel } from "../../../../types/collection-provider";
 import type { PhiCmsCollectionViewWidgetConfig } from "../../../../types/collection-view-widget";
-import type {
-  PhiDashboardCardForm,
-  PhiDashboardCardPayload,
-  PhiDashboardCardRow,
+import { readPhiTimelineEntries, type PhiTimelineEntry } from "@phis/contracts/timeline";
+
+import {
+  PHI_DASHBOARD_CARD_LIST_LIMIT,
+  type PhiDashboardCardForm,
+  type PhiDashboardCardPayload,
+  type PhiDashboardCardRow,
 } from "../../../../types/dashboard-cards";
 import { PhiCardWidgetClient } from "../../../../components/widgets/shared/card-body-client";
 import { type PhiCardWidgetBody } from "../../../../components/widgets/shared/card-vocabulary";
@@ -18,6 +21,9 @@ import { PhiAlertControl } from "../../../../components/controls/phi-alert-contr
 import { PhiEmptyControl } from "../../../../components/controls/phi-empty-control";
 import { isPhiRecord } from "../../../../helpers/is-record";
 import { usePhiPathname } from "../../../../components/runtime/use-phi-pathname";
+import { PhiTimelineControl } from "../../../../components/controls/phi-timeline-control";
+import { usePhiIntlLocale } from "../../../../components/root/phi-intl-locale";
+import { formatPhiRelativeTime } from "../../../../helpers/format-date-time";
 
 /**
  * A Dashboard, drawn.
@@ -39,16 +45,41 @@ const CARD_MIN_COLUMN_WIDTH = 260;
 /**
  * A Module's form, and the Core body that draws it.
  *
- * Two vocabularies with one entry each today, and deliberately not one type. `form` is what a Module
+ * Two vocabularies that agree today, and deliberately not one type. `form` is what a Module
  * declares about its contribution; `body` is what Core draws. They agree now and are allowed to stop:
  * a `series` form would reasonably draw in whatever body Core has for a graphic, under another name.
  *
- * A total map rather than a condition, so the day `list` joins the form vocabulary this file stops
- * compiling instead of quietly falling back to a heading.
+ * A total map rather than a condition, so a form that joins the vocabulary stops this file compiling
+ * instead of quietly falling back to a heading.
  */
 const CARD_BODY_BY_FORM: Record<PhiDashboardCardForm, PhiCardWidgetBody> = {
   stat: "stat",
+  list: "list",
 };
+
+/**
+ * A `list` card's entries as the Timeline draws them: the first few, each time in the page's locale.
+ *
+ * Relative, because a Dashboard is read for what is recent -- "two hours ago" says that, a date makes
+ * the reader do the sum. An entry that states its time in words keeps the words. Drawn here and handed
+ * to the card, which does not import a list Control every page with a Card would load.
+ */
+function PhiDashboardCardList({ entries }: { entries: readonly PhiTimelineEntry[] }) {
+  const locale = usePhiIntlLocale();
+  return (
+    <PhiTimelineControl
+      items={entries.slice(0, PHI_DASHBOARD_CARD_LIST_LIMIT).map((entry) => ({
+        key: entry.key,
+        ...(entry.title ? { title: entry.title } : {}),
+        content: entry.content,
+        ...(entry.time ?? entry.at ? { time: entry.time ?? formatPhiRelativeTime(entry.at, locale) } : {}),
+        ...(entry.icon ? { icon: entry.icon } : {}),
+        ...(entry.tone ? { tone: entry.tone } : {}),
+        ...(entry.pending ? { pending: true } : {}),
+      }))}
+    />
+  );
+}
 
 function readRows(binding: PhiCollectionViewBindingModel) {
   return (binding.data?.items ?? [])
@@ -129,6 +160,7 @@ function PhiDashboardCard({
     : resolved?.key === requestKey ? resolved : null;
   const payload = current?.payload ?? null;
   const error = current?.failure ?? payload?.error ?? null;
+  const entries = row.form === "list" ? readPhiTimelineEntries(payload?.entries) : [];
   return (
     <PhiCardWidgetClient
       labels={{
@@ -160,6 +192,7 @@ function PhiDashboardCard({
        * clock (DASHBOARD.md section 4).
        */
       binding={{ loading: current === null, error }}
+      listContent={entries.length > 0 ? <PhiDashboardCardList entries={entries} /> : null}
     />
   );
 }

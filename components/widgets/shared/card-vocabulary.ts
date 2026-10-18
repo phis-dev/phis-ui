@@ -8,12 +8,13 @@
  *
  * `text` is a heading. `stat` is a labelled figure: the label is the heading, so a card that counts
  * something says what it counted in the same place and type a text card says what it is about, and the
- * figure is drawn by the house's one statistic Control.
+ * figure is drawn by the house's one statistic Control. `list` is a heading over a few lines the caller
+ * draws and hands in (`listContent`), which only a Dashboard does today.
  *
  * The body is chosen, never inferred from whether a value happens to have arrived. A card that decided
  * by presence would draw as text and reflow into a statistic the moment its figure landed.
  */
-export type PhiCardWidgetBody = "text" | "stat";
+export type PhiCardWidgetBody = "text" | "stat" | "list";
 
 /**
  * The tag of the card's heading, and the step it is drawn at.

@@ -4,6 +4,7 @@ import { useState, type CSSProperties, type ReactNode } from "react";
 
 import { PhiButtonControl } from "../../controls/phi-button-control";
 import { PhiImageControl, type PhiImageControlSource } from "../../controls/phi-image-control";
+import { PhiSkeletonControl } from "../../controls/phi-skeleton-control";
 import { PhiStatisticControl } from "../../controls/phi-statistic-control";
 import { PhiTypographyControl } from "../../controls/phi-typography-control";
 import type { PhiImagePresentation } from "../../media/image-presentation";
@@ -121,6 +122,13 @@ export type PhiCardWidgetClientProps = PhiClientBlockBaseProps<
 > & {
   binding?: PhiCardWidgetClientBinding;
   /**
+   * What a `list` body draws, already drawn.
+   *
+   * Handed in rather than drawn here: the Card is on Public pages, and a list Control imported by it
+   * would load on every page with a Card. A Dashboard draws its entries and passes them.
+   */
+  listContent?: ReactNode;
+  /**
    * What stands in a text's place instead of the text, for an editor that edits it there. Asked for
    * every slot, the empty ones included: what it returns is drawn in the slot's type, and `null` leaves
    * the slot out as an empty text would be left out.
@@ -222,6 +230,7 @@ export function PhiCardWidgetClient({
   labels: placedLabels,
   config,
   binding,
+  listContent,
   renderText,
 }: PhiCardWidgetClientProps) {
   const { token } = usePhiConfig();
@@ -380,6 +389,13 @@ export function PhiCardWidgetClient({
     />
   );
 
+  /* A failure stands where the lines would, as it does for a figure; a list still coming is three lines. */
+  const list = binding?.error ? (
+    <PhiTypographyControl style={{ color: token.colorError, ...slotWidth }}>{binding.error}</PhiTypographyControl>
+  ) : binding?.loading === true || overrides.loading === true ? (
+    <PhiSkeletonControl lines={3} />
+  ) : listContent ?? null;
+
   const headingRow = iconPlacement === "inline" && iconName ? (
     <div style={{ display: "flex", alignItems: "center", justifyContent: justify, gap, ...slotWidth }}>
       {iconMark(iconSize, iconSize + 16)}
@@ -493,6 +509,10 @@ export function PhiCardWidgetClient({
         ) : null}
         {headingRow}
         {body === "stat" ? figure : null}
+        {body === "list" && list != null ? (
+          /* The lines take the card's width whatever the text alignment centres. */
+          <div style={{ justifySelf: "stretch", minWidth: 0 }}>{list}</div>
+        ) : null}
         {description != null ? (
           <PhiTypographyControl
             presentation="paragraph"

@@ -1,5 +1,7 @@
 import type { PhiCmsAreaKey } from "../constants/cms-areas";
 import { createPhiModuleIdentifier, isPhiModuleScopedIdentifier } from "../constants/module-identity";
+import type { PhiTimelineEntry } from "@phis/contracts/timeline";
+
 import type { PhiAccessViewer, PhiViewerAccessPolicy } from "./access";
 
 /**
@@ -36,13 +38,19 @@ export function createPhiDashboardCardId(moduleId: string, leaf: string): PhiDas
 /**
  * The card forms Core draws.
  *
- * `stat` is the one every contributor in sight needs: a figure, what it is, and where to go for more.
- * The form names a renderer and the payload fills it, so adding one later is a card View and a case in
- * the reader -- but a form Core offers is a promise it then keeps, so it gets offered when somebody has
- * the case rather than in advance. DASHBOARD.md section 9 leaves `list` and a series card open on
- * exactly those terms.
+ * `stat` is a figure, what it is, and where to go for more. `list` is a handful of entries -- what
+ * changed, what is waiting -- each a line with an optional time and tone; the Builder's Dashboard is the
+ * case that asked for it, because what a structure author looks for first is what is open rather than
+ * how many. The form names a renderer and the payload fills it, and a form Core offers is a promise it
+ * then keeps: a series card stays open until somebody has a series (DASHBOARD.md section 9).
  */
-export type PhiDashboardCardForm = "stat";
+export type PhiDashboardCardForm = "stat" | "list";
+
+/**
+ * How many entries a `list` card draws. A card shows little and leads out (DASHBOARD.md section 2); a
+ * provider that has more says so in `meta` and lets the card's target show the rest.
+ */
+export const PHI_DASHBOARD_CARD_LIST_LIMIT = 5;
 
 export type PhiDashboardCardDescriptor = {
   cardId: PhiDashboardCardId;
@@ -101,8 +109,14 @@ export type PhiDashboardCardDescriptor = {
  */
 export type PhiDashboardCardPayload = {
   cardId: PhiDashboardCardId;
-  /** The figure, which takes the place the descriptor's title held while it was loading. */
+  /** A `stat` card's figure, drawn under the descriptor's title. */
   value?: string;
+  /**
+   * A `list` card's entries, newest or most pressing first, at most `PHI_DASHBOARD_CARD_LIST_LIMIT` of
+   * them drawn. The Timeline's entry (`@phis/contracts/timeline`), so a time is stated as an instant the
+   * card formats in the page's locale, or in words where words are what the provider has.
+   */
+  entries?: PhiTimelineEntry[];
   description?: string;
   meta?: string;
   error?: string | null;
