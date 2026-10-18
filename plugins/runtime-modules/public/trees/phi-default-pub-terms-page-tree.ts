@@ -1,7 +1,9 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../../types/cms-instance-id";
 import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "../ids";
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../../constants/cms-layout-types";
-import { PhiCmsPageType, PhiCmsRegionType } from "../../../../constants/phi-cms";
+import { PhiCmsPageType } from "../../../../constants/phi-cms";
+import { buildPhiBasePageColumnFrame } from "../../../../components/regions/presets/phi-base-page-column";
+import { PHI_LAYOUT } from "../../../../theme/phi-tokens";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 
@@ -55,25 +57,14 @@ export async function buildPhiDefaultPubTermsPageTree({
   return {
     page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     overlays: [],
-    regions: [
-      nodes.region({
-        id: SYNTHETIC_TERMS_REGION_IDS.regionContent,
-        regionType: PhiCmsRegionType.Content,
-        rootLayoutNodeId: SYNTHETIC_TERMS_LAYOUT_IDS.layoutContent,
-        sortOrder: 30,
-      }),
-    ],
-    layoutNodes: [
-      nodes.layout({
-        typeKey: "content",
-        id: SYNTHETIC_TERMS_LAYOUT_IDS.layoutContent,
-        parentLayoutNodeId: null,
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-        sortOrder: 0,
-        label: "pub terms and conditions page",
-        config: {},
-      }),
-    ],
+    // On the base scaffold, in a column on the wash that stops at the wide content measure.
+    ...buildPhiBasePageColumnFrame({
+      page,
+      regionId: SYNTHETIC_TERMS_REGION_IDS.regionContent,
+      columnId: SYNTHETIC_TERMS_LAYOUT_IDS.layoutContent,
+      label: "pub terms and conditions page",
+      maxWidth: PHI_LAYOUT.contentMaxWide,
+    }),
     contentWidgets: [
       nodes.widget({
         typeKey: "markdown",

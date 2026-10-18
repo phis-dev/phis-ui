@@ -41,6 +41,11 @@ Module is thin. It contributes:
 - its two Forms, made by `definePhiContentEntryForms` so their ids and handler keys are the Module's own;
 - the nouns that differ by kind -- "News entry", "Blog post" -- as its Label Set.
 
+All of it is one call, `definePhiContentEntryRoutes` (`plugins/runtime-modules/content-entry-routes.ts`):
+the Module states its nouns, keys and icon, and the few places where its Pages differ from another kind's --
+how the list presents, what a detail header shows, how the related list under an entry looks. Blog shows
+cards and a signed, categorised header; News whole entries and a dated one.
+
 It owns no Widget, no Provider and no data. Switching it off removes its Pages and its entries in the
 navigation; entries already written stay in Core.
 
@@ -63,6 +68,14 @@ closest to this one, under a heading drawn only where there are any). All three 
 through `loadPhiContentEntryPage`, which asks Core's `/api/v1/entries/<kind>/<slug>?include=related` once
 per request: the options are built in that one place, because the request memo only shares an answer
 between callers that ask the same question.
+
+## The frame
+
+Both Public Pages stand on the base scaffold every module Page stands on (`phi-base-page-layout.ts`): it
+spans the content Region, carries the page's padding and anchors what stands in it to the centre. In it is
+one column that stops at `PHI_LAYOUT.readingMax` and wears the wash (`PHI_SURFACE_WASH`) with the Theme's
+corners. The measure is a maximum, so a phone gets the whole width. The Widgets of the Page all stand in
+that column; a Site that wants something beside it adds it to the scaffold in the Builder.
 
 ## Showing an entry
 

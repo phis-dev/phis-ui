@@ -1,7 +1,11 @@
 import { createPhiPresetCmsInstanceId } from "../../../../types/cms-instance-id";
 import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "../ids";
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../../constants/cms-layout-types";
-import { PhiCmsPageType, PhiCmsRegionType } from "../../../../constants/phi-cms";
+import { PhiCmsPageType } from "../../../../constants/phi-cms";
+import {
+  buildPhiBasePageContentScaffold,
+  PHI_BASE_PAGE_LAYOUT_NODE_ID,
+} from "../../../../components/regions/presets/phi-base-page-layout";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import type { PhiCmsErrorCode } from "../../../../constants/cms-error-pages";
@@ -66,6 +70,7 @@ export async function buildPhiDefaultPubErrorPageTree({
   });
 
   const nodes = createPhiCmsPresetNodes(page);
+  const scaffold = buildPhiBasePageContentScaffold({ page, regionId: SYNTHETIC_ERROR_REGION_IDS.regionContent - code });
   return {
     page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     /*
@@ -77,19 +82,14 @@ export async function buildPhiDefaultPubErrorPageTree({
       description: null,
     },
     overlays: [],
-    regions: [
-      nodes.region({
-        id: SYNTHETIC_ERROR_REGION_IDS.regionContent - code,
-        regionType: PhiCmsRegionType.Content,
-        rootLayoutNodeId: layoutContentId,
-        sortOrder: 30,
-      }),
-    ],
+    regions: [scaffold.region],
     layoutNodes: [
+      // The base scaffold every module Page stands on; the result is centred in the Layout inside it.
+      scaffold.layoutNode,
       nodes.layout({
         typeKey: "content",
         id: layoutContentId,
-        parentLayoutNodeId: null,
+        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         creationPreset: { layoutKind: "content", preset: "panel" },
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,

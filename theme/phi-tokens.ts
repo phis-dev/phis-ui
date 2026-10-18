@@ -95,5 +95,13 @@ export const PHI_LAYOUT = {
   contentMaxNarrow: 377,
   contentMax: 610,
   contentMaxWide: 987,
+  /*
+   * How wide a column of prose is allowed to get: an article, an entry and what stands around it.
+   *
+   * Off the three steps above on purpose, because a text is measured in characters and not in Controls.
+   * Twice `contentMaxNarrow`: with a frame's padding taken off it leaves a line of roughly seventy
+   * characters at body size, which is where reading stops being comfortable. A maximum, like the others.
+   */
+  readingMax: 754,
   heroHeight: 377,
 } as const;

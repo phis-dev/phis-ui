@@ -79,6 +79,9 @@ import { PhiCmsWidgetType } from "../../constants/cms-widget-types";
 import { PhiCmsFlags, PhiCmsPageType, PhiCmsStatus } from "../../constants/phi-cms";
 import { hasPhiFlag } from "../../helpers/flags";
 import { PhiContentEntryPart } from "../../constants/content-entry-parts";
+import { PHI_SURFACE_WASH } from "../../helpers/surface-presets";
+import { PHI_LAYOUT } from "../../theme/phi-tokens";
+import { PHI_BASE_PAGE_LAYOUT_NODE_ID } from "../../components/regions/presets/phi-base-page-layout";
 import { readPhiLinkTarget, readPhiPageReference } from "../../types/references";
 import { PHI_VIEWER_ACCESS_ANYONE } from "../../types/access";
 import type { PhiCmsPageNode } from "../../types/cms";
@@ -286,6 +289,25 @@ describe.each(KINDS)("what the $kind Module brings", ({ kind, moduleId, routes, 
     const listConfig = listTree.contentWidgets.find((widget) => widget.widgetType === PhiCmsWidgetType.EntryList)!
       .config as { detailLinkTarget?: unknown };
     expect(related!.detailLinkTarget).toEqual(listConfig.detailLinkTarget);
+  });
+
+  it("sets both Public Pages in the base scaffold, in a column of prose on the wash", async () => {
+    for (const [route, params] of [[routes[0]!, {}], [routes[1]!, { slug: "launch" }]] as const) {
+      const tree = await route.loadTree({
+        page: pageAt(`/${kind}/launch`, 2),
+        runtime: PUBLISHER_RUNTIME,
+        params,
+      } as never);
+      // The base scaffold every module Page stands on, and the column in it.
+      expect(tree.layoutNodes).toHaveLength(2);
+      const scaffold = tree.layoutNodes.find((node) => node.parentLayoutNodeId === null)!;
+      expect(scaffold.id).toBe(PHI_BASE_PAGE_LAYOUT_NODE_ID);
+      expect(tree.regions[0]?.rootLayoutNodeId).toBe(PHI_BASE_PAGE_LAYOUT_NODE_ID);
+      const column = tree.layoutNodes.find((node) => node.parentLayoutNodeId === scaffold.id)!;
+      expect(column.config).toMatchObject({ maxSize: { width: PHI_LAYOUT.readingMax }, surface: PHI_SURFACE_WASH });
+      // Every Widget of the Page stands in the column, none beside it.
+      expect(new Set(tree.contentWidgets.map((widget) => widget.parentLayoutNodeId))).toEqual(new Set([column.id]));
+    }
   });
 
   it("answers 404 for an address nothing published answers at", async () => {

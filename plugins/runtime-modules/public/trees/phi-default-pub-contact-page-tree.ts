@@ -5,7 +5,11 @@ import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
   PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX,
 } from "../../../../constants/cms-layout-types";
-import { PhiCmsPageType, PhiCmsRegionType } from "../../../../constants/phi-cms";
+import { PhiCmsPageType } from "../../../../constants/phi-cms";
+import {
+  buildPhiBasePageContentScaffold,
+  PHI_BASE_PAGE_LAYOUT_NODE_ID,
+} from "../../../../components/regions/presets/phi-base-page-layout";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import { PHI_SHARED_FORM_IDS } from "../../../../components/forms/shared-form-ids";
@@ -39,25 +43,19 @@ export async function buildPhiDefaultPubContactPageTree({
   page: PhiCmsPageNode;
 }): Promise<PhiResolvedCmsPageTree> {
   const nodes = createPhiCmsPresetNodes(page);
+  const scaffold = buildPhiBasePageContentScaffold({ page, regionId: SYNTHETIC_CONTACT_REGION_IDS.regionContent });
   return {
     page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     overlays: [],
-    regions: [
-      nodes.region({
-        id: SYNTHETIC_CONTACT_REGION_IDS.regionContent,
-        regionType: PhiCmsRegionType.Content,
-        rootLayoutNodeId: SYNTHETIC_CONTACT_LAYOUT_IDS.layoutContent,
-        sortOrder: 30,
-        // The page keeps its cards off its edge; a Region has no padding unless it states one.
-        config: { padding: PHI_SPACE.base },
-      }),
-    ],
+    regions: [scaffold.region],
     layoutNodes: [
+      // The base scaffold every module Page stands on; it carries the page's padding, the card its own.
+      scaffold.layoutNode,
       nodes.layout({
         creationPreset: { layoutKind: "split", preset: "panel" },
         typeKey: "split-card",
         id: SYNTHETIC_CONTACT_LAYOUT_IDS.layoutContent,
-        parentLayoutNodeId: null,
+        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         label: "pub contact page",
         // The inset of the cards; a Split Card has none of its own.

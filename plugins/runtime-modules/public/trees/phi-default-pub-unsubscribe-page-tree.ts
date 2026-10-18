@@ -1,7 +1,8 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../../types/cms-instance-id";
 import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "../ids";
-import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../../constants/cms-layout-types";
-import { PhiCmsPageType, PhiCmsRegionType } from "../../../../constants/phi-cms";
+import { PhiCmsPageType } from "../../../../constants/phi-cms";
+import { buildPhiBasePageColumnFrame } from "../../../../components/regions/presets/phi-base-page-column";
+import { PHI_LAYOUT } from "../../../../theme/phi-tokens";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import { PHI_SHARED_FORM_IDS } from "../../../../components/forms/shared-form-ids";
@@ -51,24 +52,14 @@ export async function buildPhiDefaultPubUnsubscribePageTree({
   return {
     page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     overlays: [],
-    regions: [
-      nodes.region({
-        id: SYNTHETIC_UNSUBSCRIBE_REGION_IDS.regionContent,
-        regionType: PhiCmsRegionType.Content,
-        rootLayoutNodeId: layoutIds.layoutContent,
-        sortOrder: 30,
-      }),
-    ],
-    layoutNodes: [
-      nodes.layout({
-        creationPreset: { layoutKind: "verticalflex", preset: "panel" },
-        typeKey: "flex-vertical",
-        id: layoutIds.layoutContent,
-        parentLayoutNodeId: null,
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-        label: "pub unsubscribe page",
-      }),
-    ],
+    // On the base scaffold, in a column on the wash that stops at the wide content measure.
+    ...buildPhiBasePageColumnFrame({
+      page,
+      regionId: SYNTHETIC_UNSUBSCRIBE_REGION_IDS.regionContent,
+      columnId: layoutIds.layoutContent,
+      label: "pub unsubscribe page",
+      maxWidth: PHI_LAYOUT.contentMaxWide,
+    }),
     contentWidgets: [
       nodes.widget({
         typeKey: "description",

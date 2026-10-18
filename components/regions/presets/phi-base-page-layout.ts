@@ -19,8 +19,9 @@ import { createPhiPresetCmsInstanceId } from "../../../types/cms-instance-id";
  *
  * Bump {@link PHI_BASE_PAGE_LAYOUT_VERSION} when the canonical node changes: every preset built on
  * the scaffold folds it into its `presetVersion`, which is how overridden copies learn about the
- * update. The Settings pages (their own Collapsible shell) and the public/auth pages (landing
- * chrome, centered panels) do not use the scaffold yet.
+ * update. Every module Page stands on it -- the Settings pages with their Collapsible inside, the Public
+ * and auth pages with their column, card or result inside (`phi-base-page-column.ts` for a column on the
+ * wash). The Landing never does: it has its own chrome.
  *
  * Version 3: the content Region no longer carries a reading width (`maxSize`); it spans the page.
  */

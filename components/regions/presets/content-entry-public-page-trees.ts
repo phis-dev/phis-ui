@@ -3,15 +3,16 @@ import "server-only";
 import { notFound } from "next/navigation";
 
 import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id";
-import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
 import type { PhiContentEntryKind } from "../../../constants/content-entry-kinds";
-import { PhiCmsPageType, PhiCmsRegionType } from "../../../constants/phi-cms";
+import { PhiCmsPageType } from "../../../constants/phi-cms";
+import { buildPhiBasePageColumnFrame } from "./phi-base-page-column";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { loadPhiContentEntryPage } from "../../../server-helpers/content-entry-page";
 import { createPhiPageReference } from "../../../types/references";
 import { PHI_CONTENT_ENTRY_RELATED_LIMIT } from "../../../gateway/content-entries";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiBlockRuntime, PhiRuntimeModuleId } from "../../../types";
+import { PHI_LAYOUT } from "../../../theme/phi-tokens";
 
 const SYNTHETIC_LIST_REGION_IDS = { regionContent: -320 } as const;
 const SYNTHETIC_DETAIL_REGION_IDS = { regionContent: -321 } as const;
@@ -56,29 +57,14 @@ export async function buildPhiContentEntryListPageTree({
   return {
     page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     overlays: [],
-    regions: [
-      nodes.region({
-        id: SYNTHETIC_LIST_REGION_IDS.regionContent,
-        regionType: PhiCmsRegionType.Content,
-        rootLayoutNodeId: layouts.layoutContent,
-        sortOrder: 30,
-      }),
-    ],
-    layoutNodes: [
-      /*
-       * A vertical Flex, not the `content` Layout the one-Widget presets use: `content` has a single slot,
-       * so a second Widget placed in it is dropped without a word. `flex-vertical` carries a sequence,
-       * which is what a heading above a list is.
-       */
-      nodes.layout({
-        creationPreset: { layoutKind: "verticalflex", preset: "panel" },
-        typeKey: "flex-vertical",
-        id: layouts.layoutContent,
-        parentLayoutNodeId: null,
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-        label: `pub ${kind} page`,
-      }),
-    ],
+    // The column of prose every entry Page stands in (`CONTENT_ENTRIES.md`, The frame).
+    ...buildPhiBasePageColumnFrame({
+      page,
+      regionId: SYNTHETIC_LIST_REGION_IDS.regionContent,
+      columnId: layouts.layoutContent,
+      label: `pub ${kind} page`,
+      maxWidth: PHI_LAYOUT.readingMax,
+    }),
     // `stack` rather than two `widget` calls: it counts the slots, so the list sits under the heading
     // rather than in the same one.
     contentWidgets: nodes.stack(layouts.layoutContent, [
@@ -164,24 +150,14 @@ export async function buildPhiContentEntryDetailPageTree({
         : null,
     },
     overlays: [],
-    regions: [
-      nodes.region({
-        id: SYNTHETIC_DETAIL_REGION_IDS.regionContent,
-        regionType: PhiCmsRegionType.Content,
-        rootLayoutNodeId: layouts.layoutContent,
-        sortOrder: 30,
-      }),
-    ],
-    layoutNodes: [
-      nodes.layout({
-        creationPreset: { layoutKind: "verticalflex", preset: "panel" },
-        typeKey: "flex-vertical",
-        id: layouts.layoutContent,
-        parentLayoutNodeId: null,
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-        label: `pub ${kind} detail page`,
-      }),
-    ],
+    // The column of prose every entry Page stands in (`CONTENT_ENTRIES.md`, The frame).
+    ...buildPhiBasePageColumnFrame({
+      page,
+      regionId: SYNTHETIC_DETAIL_REGION_IDS.regionContent,
+      columnId: layouts.layoutContent,
+      label: `pub ${kind} detail page`,
+      maxWidth: PHI_LAYOUT.readingMax,
+    }),
     contentWidgets: nodes.stack(layouts.layoutContent, [
       {
         typeKey: "entry-header",
