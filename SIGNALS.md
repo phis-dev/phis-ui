@@ -479,6 +479,21 @@ Three things follow, and each of them is a dead end somebody has walked into:
   line what no definition, no type and no table can promise on the client's behalf -- including this one,
   which is a reading of those clients and goes stale the moment one of them changes.
 
+A Controller writing into a dialog's `simple-text` crosses four places where the text used to vanish
+without a word (Clear Area on Revisions, 2026-10-17). Each is fixed in the runtime; they are listed so the
+symptom is recognised:
+
+- **An empty text Widget is not drawn.** A content-bound Widget with no text of its own counts as
+  unpublished content and is left out of the live render (`isPhiCmsWidgetContentUnpublished`). A Body
+  text that only a Controller fills still needs a default text in the Preset.
+- **A receiver only `controllerSettings` names is still a participant.** Its frame is drawn live because
+  `resolvePhiTreeSignalParticipants` reads the tree's Controller routes too.
+- **A held content signal waits for the Widget, not the frame.** The frame mounts first and answers only
+  the shared channels; the Widget's listener is the one that tells the bus it answers for the address.
+- **A Widget listens in its frame's scope.** One address is registered in one scope; a Page Widget's is
+  `page`. A listen route a Preset writes for a Page Widget says `page` too -- an `area` route on the
+  receiving side filters the signal out after the bus has handed it over in `page`.
+
 ## Site Core Runtime Controller
 
 The Core module mounts exactly one Core Runtime Controller in the Root Layout, above every Area, at

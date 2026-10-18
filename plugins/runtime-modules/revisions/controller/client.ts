@@ -135,12 +135,13 @@ function PhiRevisionsControllerMount({
         presetKey: source?.presetKey,
       });
       emitCapability("deleteAreaClose", null, correlationId);
-      showMessage({ level: "success", content: `Deleted the ${area} shell.` });
+      emitCapability("historyReload", null, correlationId);
+      showMessage({ level: "success", content: `Cleared ${area} back to its preset.` });
       router.refresh();
     } catch (error) {
       showMessage({
         level: "error",
-        content: error instanceof Error ? error.message : "Deleting the shell failed.",
+        content: error instanceof Error ? error.message : "Clearing the Area failed.",
       });
     }
   }, [emitCapability, router, showMessage]);
@@ -176,7 +177,7 @@ function PhiRevisionsControllerMount({
       const area = getPhiWorkspaceCatalogSnapshot(PHI_WORKSPACE_CATALOG_SCOPE).area;
       emitCapability(
         "deleteAreaWarning",
-        `Everything this Site stored for ${area} is deleted, drafts and published alike. What is live changes at once, the Module preset takes the Area back, and no revision is left to restore it from. It cannot be undone.`,
+        `Everything this Site stored for ${area} is cleared -- its Shell and its Module selection, drafts and published alike. What is live changes at once, the Module preset takes the Area back, and no revision is left to restore it from. It cannot be undone.`,
         signal.correlationId,
       );
       emitCapability("deleteAreaOpen", null, signal.correlationId);

@@ -39,6 +39,7 @@ import {
 } from "./runtime-signal-bus";
 import { registerPhiSignalInstance } from "./runtime-signal-registry";
 import { usePhiSignalRuntimePartition } from "./runtime-signal-partition";
+import { usePhiSignalIdentity } from "./runtime-signal-identity";
 
 function resolvePhiRenderableBlockValueSchema(
   channel: PhiRenderableBlockSignalChannel,
@@ -356,9 +357,25 @@ export function usePhiRenderableBlockSignalListener(
   receiver: PhiRenderableBlockReceiver | null | undefined,
   handler: (signal: PhiRenderableBlockSignal) => void,
   context?: PhiSignalRuntimeContext,
-  signalScope?: PhiSignalScope | null,
+  explicitSignalScope?: PhiSignalScope | null,
+  /**
+   * Whether a signal held for this address may be released to this listener. A Widget answering its
+   * content channels says yes; the frame around it says no, because it answers only the shared ones and
+   * mounts before the Widget's client has loaded -- released to the frame, a dialog's text was gone by
+   * the time the text Widget subscribed.
+   */
+  answersHeldSignals = true,
 ) {
   const signalPartition = usePhiSignalRuntimePartition();
+  /*
+   * A Widget listening at its own block's address hears in the scope its frame registered that address
+   * under. One address is registered in one scope; the Widget registering it again as `widget` while
+   * the frame said `page` made delivery depend on which effect ran last, and a dialog's text sent by a
+   * Controller went to the frame's scope while the Widget filtered for its own.
+   */
+  const identity = usePhiSignalIdentity();
+  const signalScope = explicitSignalScope ??
+    (receiver != null && identity.receiver === receiver ? identity.scope ?? null : null);
   const signalFilter = useMemo<PhiSignalFilter | undefined>(
     () =>
       receiver == null
@@ -396,7 +413,12 @@ export function usePhiRenderableBlockSignalListener(
     });
   }, [context, receiver, signalPartition, signalScope]);
 
-  usePhiSignalListener(listener, signalFilter);
+  /*
+   * The address is named as the one this listener answers for. Without it the bus held a signal sent
+   * before the block mounted -- a Controller filling a dialog's text just before opening it -- for a
+   * listener it never saw arrive, and the text never came (`flushPendingPhiSignals`).
+   */
+  usePhiSignalListener(listener, signalFilter, answersHeldSignals ? receiver ?? null : null);
 }
 
 export type PhiRenderableBlockRuntimeState = PhiRenderableBlock & {
@@ -627,6 +649,7 @@ export function usePhiRenderableBlockRuntime(
     handleRenderableBlockSignal,
     signalRuntimeContext,
     signalScope,
+    false,
   );
 
   const emit = useCallback(

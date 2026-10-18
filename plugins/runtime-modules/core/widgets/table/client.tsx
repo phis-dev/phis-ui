@@ -29,6 +29,7 @@ import { PhiLink } from "../../../../../components/navigation/phi-link";
 import { PhiIcon } from "../../../../../components/shell/phi-icon";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
+import { usePhiRuntimePageConditionState } from "../../../../../components/runtime/runtime-page-condition-state";
 import { findPhiSignalListenRoute, resolvePhiSignalListenFilter } from "../../../../../helpers/signal-listen-routes";
 import { emitPhiSignalCapability, usePhiSignalEmitter, usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
 import { usePhiApplicationFeedback } from "../../../../../components/runtime/use-phi-application-feedback";
@@ -70,6 +71,7 @@ import {
   evaluatePhiRuntimeConditionExpression,
   readPhiRuntimeConditionStateSignalValue,
   type PhiRuntimeConditionExpression,
+  type PhiRuntimeConditionSourceValues,
 } from "../../../../../types/runtime-condition";
 import {
   isPhiControllerSignalAddress,
@@ -261,24 +263,26 @@ function readRowIdentity(row: TableRow, path: string): PhiTableRowIdentity | nul
   return typeof value === "string" || (typeof value === "number" && Number.isFinite(value)) ? value : null;
 }
 
+type PhiTableConditionSources = Omit<PhiRuntimeConditionSourceValues, "row">;
+
 function findMatchingCondition(
   row: TableRow | null,
   expression: PhiRuntimeConditionExpression | undefined,
-  controllers: Readonly<Record<string, Record<string, unknown>>>,
+  sources: PhiTableConditionSources,
 ) {
   if (!expression) return null;
-  const result = evaluatePhiRuntimeConditionExpression(expression, { row, controllers });
+  const result = evaluatePhiRuntimeConditionExpression(expression, { ...sources, row });
   if (result === "not-matched") return null;
   return collectPhiRuntimeValueConditions(expression).find((condition) =>
-    condition.reason && evaluatePhiRuntimeConditionExpression(condition, { row, controllers }) === "matched") ?? expression;
+    condition.reason && evaluatePhiRuntimeConditionExpression(condition, { ...sources, row }) === "matched") ?? expression;
 }
 
 function matchesAllConditions(
   row: TableRow | null,
   expression: PhiRuntimeConditionExpression | undefined,
-  controllers: Readonly<Record<string, Record<string, unknown>>>,
+  sources: PhiTableConditionSources,
 ) {
-  return !expression || evaluatePhiRuntimeConditionExpression(expression, { row, controllers }) === "matched";
+  return !expression || evaluatePhiRuntimeConditionExpression(expression, { ...sources, row }) === "matched";
 }
 
 function resolveTableActions(
@@ -352,6 +356,16 @@ export function PhiTableWidgetClient({
   const [conditionControllerStates, setConditionControllerStates] = useState<
     Record<string, Record<string, unknown>>
   >({});
+  /*
+   * What a condition on this Table can read besides its row: the Controllers that answered, and the
+   * address the Page was opened at -- the one a Page Widget can always read, where an Area Controller
+   * can only be asked by mounting it at Page scope.
+   */
+  const conditionPage = usePhiRuntimePageConditionState();
+  const conditionSources = useMemo<PhiTableConditionSources>(
+    () => ({ controllers: conditionControllerStates, page: conditionPage }),
+    [conditionControllerStates, conditionPage],
+  );
   const configuredColumnOrder = useMemo(
     () => presentation.columns.filter((column) => !column.hidden).map((column) => column.key),
     [presentation.columns],
@@ -708,8 +722,8 @@ export function PhiTableWidgetClient({
                 features.editing?.disabledWhen,
                 column.editor?.disabledWhen,
               ]),
-              conditionControllerStates,
-            )) || !matchesAllConditions(row, field?.mutableWhen, conditionControllerStates);
+              conditionSources,
+            )) || !matchesAllConditions(row, field?.mutableWhen, conditionSources);
           }
         : undefined,
       isEditorLoading: column.editor && features.editing?.mode === "cell" && resource
@@ -747,8 +761,8 @@ export function PhiTableWidgetClient({
         sizing: { mode: "content" },
         render: (_value, row) => {
           const renderedActions = rowActions.map((action) => {
-              if (!matchesAllConditions(row, action.visibleWhen, conditionControllerStates)) return null;
-              const disabled = findMatchingCondition(row, action.disabledWhen, conditionControllerStates);
+              if (!matchesAllConditions(row, action.visibleWhen, conditionSources)) return null;
+              const disabled = findMatchingCondition(row, action.disabledWhen, conditionSources);
               const rowHref = action.hrefPath ? readPhiTableControlValue(row, action.hrefPath) : action.href;
               return (
                 <TableAction
@@ -769,7 +783,7 @@ export function PhiTableWidgetClient({
       });
     }
     return result;
-  }, [activateAction, commitField, conditionControllerStates, features.actions?.rowLayout, features.editing?.disabledWhen, features.editing?.mode, features.rowReordering?.enabled, isFieldMutationPending, labels.actions, loading, presentation.columns, resolvedControlSize, resource, rowActions]);
+  }, [activateAction, commitField, conditionSources, features.actions?.rowLayout, features.editing?.disabledWhen, features.editing?.mode, features.rowReordering?.enabled, isFieldMutationPending, labels.actions, loading, presentation.columns, resolvedControlSize, resource, rowActions]);
 
   const resolveSummaryValue = useCallback((item: PhiTableSummaryItemDefinition): PhiTableSummaryValue | undefined => {
     if (item.value.source === "provider") return summary[item.value.fieldKey];
@@ -914,15 +928,15 @@ export function PhiTableWidgetClient({
   ) ? (
     <PhiToolbarControl size={resolvedControlSize} compact>
       {toolbarActions.map((action) => {
-        if (!matchesAllConditions(null, action.visibleWhen, conditionControllerStates)) return null;
-        const disabled = findMatchingCondition(null, action.disabledWhen, conditionControllerStates);
+        if (!matchesAllConditions(null, action.visibleWhen, conditionSources)) return null;
+        const disabled = findMatchingCondition(null, action.disabledWhen, conditionSources);
         return <TableAction key={action.key} action={action} size={resolvedControlSize}
           disabled={Boolean(disabled)} disabledReason={disabled && "reason" in disabled ? disabled.reason : undefined}
           onActivate={() => activateAction(action, undefined, selectedRowIdentities)} />;
       })}
       {bulkActions.map((action) => {
-        if (!matchesAllConditions(null, action.visibleWhen, conditionControllerStates)) return null;
-        const disabled = findMatchingCondition(null, action.disabledWhen, conditionControllerStates);
+        if (!matchesAllConditions(null, action.visibleWhen, conditionSources)) return null;
+        const disabled = findMatchingCondition(null, action.disabledWhen, conditionSources);
         return <TableAction key={action.key} action={action} size={resolvedControlSize}
           disabled={selectedRowIdentities.length === 0 || Boolean(disabled)}
           disabledReason={disabled && "reason" in disabled ? disabled.reason : undefined}
@@ -956,8 +970,8 @@ export function PhiTableWidgetClient({
           <PhiFlexControl align="center" justify="space-between" gap="small" wrap>
             <span>{formatPhiTableWidgetLabel(labels.selected, selectedRowIdentities.length)}</span>
             <PhiFlexControl align="center" gap="small">{bulkActions.map((action) => {
-              if (!matchesAllConditions(null, action.visibleWhen, conditionControllerStates)) return null;
-              const disabled = findMatchingCondition(null, action.disabledWhen, conditionControllerStates);
+              if (!matchesAllConditions(null, action.visibleWhen, conditionSources)) return null;
+              const disabled = findMatchingCondition(null, action.disabledWhen, conditionSources);
               return <TableAction key={action.key} action={action} size={resolvedControlSize}
                 disabled={Boolean(disabled)} disabledReason={disabled && "reason" in disabled ? disabled.reason : undefined}
                 onActivate={() => activateAction(action, undefined, selectedRowIdentities)} />;
@@ -990,7 +1004,7 @@ export function PhiTableWidgetClient({
           isRowDisabled: (row) => Boolean(findMatchingCondition(
             row,
             features.rowSelection?.disabledWhen,
-            conditionControllerStates,
+            conditionSources,
           )),
           onChange: updateSelection,
         } : undefined}
@@ -1018,7 +1032,7 @@ export function PhiTableWidgetClient({
           if (identity == null || findMatchingCondition(
             row,
             features.rowSelection?.disabledWhen,
-            conditionControllerStates,
+            conditionSources,
           )) {
             return;
           }
@@ -1062,7 +1076,7 @@ export function PhiTableWidgetClient({
             onMove: (move) => { void moveRow({ kind: "row-move", ...move }).catch(() => undefined); },
           } : undefined}
         rowStyle={presentation.row?.mutedWhen ? (row) => ({
-          opacity: findMatchingCondition(row, presentation.row?.mutedWhen, conditionControllerStates) ? 0.5 : 1,
+          opacity: findMatchingCondition(row, presentation.row?.mutedWhen, conditionSources) ? 0.5 : 1,
           transition: `opacity ${token.motionDurationMid}`,
         }) : undefined}
         editing={features.editing?.mode === "row" && resource ? {
@@ -1073,7 +1087,7 @@ export function PhiTableWidgetClient({
           isRowDisabled: (row) => Boolean(findMatchingCondition(
             row,
             features.editing?.disabledWhen,
-            conditionControllerStates,
+            conditionSources,
           )),
           onCommit: (row, originalValues, patch) => {
             const rowIdentity = readRowIdentity(row, resource.rowIdentityPath);

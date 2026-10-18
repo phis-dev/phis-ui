@@ -260,6 +260,20 @@ function resolvePhiTreeSignalParticipants(tree: PhiResolvedCmsRenderableTree) {
     }
   }
 
+  /*
+   * What the tree's Controllers are told to send, and to whom. A Widget only a Controller writes to --
+   * the warning in a dialog, filled in when the dialog is asked for -- has no route of its own, and
+   * without this it was drawn static and never heard what it was sent.
+   */
+  for (const setting of tree.controllerSettings ?? []) {
+    const routes = readPhiSignalRouteSet(setting.config?.signalRoutes);
+    for (const route of [...(routes?.emits ?? []), ...(routes?.listens ?? [])]) {
+      if (typeof route.receiver === "string") {
+        participants.add(route.receiver);
+      }
+    }
+  }
+
   return participants;
 }
 

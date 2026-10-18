@@ -41,6 +41,8 @@ export const PHI_REVISIONS_RUNTIME_CONTROLLER_DEFINITION = {
       { id: "deleteAreaWarning", action: "change", valueType: "string" },
       { id: "deleteAreaOpen", action: "activate", valueType: "none" },
       { id: "deleteAreaClose", action: "close", valueType: "none" },
+      /* The history is out of date once an Area is cleared: every revision it listed is gone. */
+      { id: "historyReload", action: "activate", valueType: "none" },
     ],
     listens: [{
       id: "tableMutation",

@@ -198,7 +198,7 @@ Save rules:
 - saving `/builder/phis/ui/shells` persists the full current shell snapshot for the selected area
 - this persisted snapshot may still contain widgets or layout structures that originally came from the fallback preset
 - after the first successful save, the DB snapshot becomes the only source of truth for that area shell
-- the fallback preset is ignored after that, until the Site's override is deleted: Revisions offers it for an Area ("Delete Area") and for a Module's Page ("Reset to preset"). Deleting the override changes what is live at once and is the Publisher's act; the preset answers again with the same `PhiCmsInstanceId` values, and content written for its nodes stays bound to them (phis-server `CONTENT.md`, Reset)
+- the fallback preset is ignored after that, until the Site's override is deleted: Revisions offers it for an Area ("Clear Area", which takes the Module selection back to the default list too) and for a Module's Page ("Reset to preset"). Deleting the override changes what is live at once and is the Publisher's act; the preset answers again with the same `PhiCmsInstanceId` values, and content written for its nodes stays bound to them (phis-server `CONTENT.md`, Reset)
 - the toolbar's reset command never resets: it discards the open Working Draft of the shell, a Page or a Navigation and shows what is published again. A Module selection has no reset; putting a preset into a draft and publishing it would freeze a copy no later Module update reaches
 - the first structural insertion into an in-memory preset creates the owning Area Draft before allocating the new node from that Draft revision's shared `nextNodeSequence`
 

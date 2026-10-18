@@ -32,6 +32,10 @@ import {
   PHI_REVISIONS_TABLE_WIDGET_ID,
 } from "../page-ids";
 import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../../helpers/cms-dialog";
+import { PHI_BUILDER_REVISIONS_KIND_SEARCH_PARAM } from "../../../../helpers/cms-scope-search-params";
+
+/** Where the history's kind stands in the address, for a `page` condition. */
+const KIND_QUERY_PATH = `query.${PHI_BUILDER_REVISIONS_KIND_SEARCH_PARAM}`;
 
 const PHI_REVISIONS_PAGE_REGION_IDS = {
   regionHeaderBottom: -511,
@@ -104,6 +108,7 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
             },
             { routeKey: "builder-revisions-controller-delete-area-open", capabilityId: "deleteAreaOpen", scope: "area", channel: "dialog", action: "activate", valueType: "none", receiver: deleteAreaOverlay },
             { routeKey: "builder-revisions-controller-delete-area-close", capabilityId: "deleteAreaClose", scope: "area", channel: "dialog", action: "close", valueType: "none", receiver: deleteAreaOverlay },
+            { routeKey: "builder-revisions-controller-history-reload", capabilityId: "historyReload", scope: "page", channel: "reload", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_REVISIONS_TABLE_WIDGET_ID) },
           ],
         },
       },
@@ -258,6 +263,7 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
         label: "dev revisions area shell delete",
         config: {
           key: "revisions-area-shell-delete",
+          controlSize: "small",
           compact: true,
           showLabels: true,
           buttons: [
@@ -300,7 +306,12 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
         label: "Builder delete area warning",
-        config: { text: "", tone: "danger" },
+        /*
+         * Never empty: a text Widget with no text of its own counts as content nobody published and is
+         * left out of the live render (`isPhiCmsWidgetContentUnpublished`), and then there is nothing
+         * for the Controller's sentence naming the Area to arrive at.
+         */
+        config: { text: revisionsLabels.deleteArea.warning, tone: "danger" },
       }),
       nodes.widget({
         typeKey: "simple-text",
@@ -340,6 +351,23 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
                 valueType: "json",
                 valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
                 receiver: createPhiRevisionsControllerAddress(),
+              },
+            ],
+            /*
+             * The footer's confirm button sends `submit` here. A route on the sender alone delivers
+             * nothing: the Form has to say it takes the signal, or the button presses into silence.
+             * In `page` scope, because that is where a Widget of this Page registers, and the bus
+             * hands a signal over in its receiver's scope -- a listen route in `area` filtered it out.
+             */
+            listens: [
+              {
+                routeKey: "builder-delete-area-submit-form",
+                capabilityId: "submit",
+                scope: "page",
+                channel: "submit",
+                action: "activate",
+                valueType: "none",
+                receiver: createPhiSignalAddress("cms", PHI_REVISIONS_DELETE_AREA_WIDGET_IDS.deleteAreaForm),
               },
             ],
           },
@@ -386,7 +414,7 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
               {
                 routeKey: "builder-delete-area-submit",
                 capabilityId: "submit",
-                scope: "area",
+                scope: "page",
                 channel: "submit",
                 action: "activate",
                 valueType: "none",
@@ -488,15 +516,32 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
             actions: {
               /*
                * Back to the Module's preset, for a Module's Page: the Site's override goes with every
-               * revision listed here, so the act sits beside them (phis-server CONTENT.md, Reset). The
-               * Provider refuses it for anything else, with a sentence rather than a hidden button.
+               * revision listed here, so the act sits beside them (phis-server CONTENT.md, Reset). Away
+               * from a Page it is greyed out with the reason beside it; a Page of the Site's own has no
+               * preset either, and that one the Provider refuses with the same sentence.
                */
               toolbar: [
                 {
                   key: "resetPage",
                   label: revisionsLabels.actions.resetPage,
+                  /*
+                   * Greyed out unless a Page's history is shown. The kind is read from the address,
+                   * which the Controller keeps in step with the Table's own selector; asking the
+                   * Controller instead would mount it at Page scope, which it refuses
+                   * (design/STATE_MACHINES.md). Every kind but `page` is listed, because a condition
+                   * has no "not equals"; an absent kind is the Area.
+                   */
+                  disabledWhen: {
+                    match: "any",
+                    conditions: [null, "area", "navigation", "theme"].map((kind) => ({
+                      source: "page" as const,
+                      valuePath: KIND_QUERY_PATH,
+                      ...(kind ? { operator: "equals" as const, value: kind } : { operator: "falsy" as const }),
+                      reason: revisionsLabels.actions.resetPageUnavailable,
+                    })),
+                  },
                   icon: "antd:undo",
-                  display: "icon-label",
+                  display: "icon",
                   mode: "danger",
                   execution: "provider",
                   confirm: {
@@ -546,7 +591,7 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
                 key: "deleteSelected",
                 label: revisionsLabels.actions.deleteSelected,
                 icon: "antd:delete",
-                display: "icon-label",
+                display: "icon",
                 mode: "danger",
                 execution: "provider",
                 confirm: {
@@ -582,9 +627,18 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
             ],
             listens: [
               {
+                routeKey: "builder-revisions-table-reload",
+                capabilityId: "reload",
+                scope: "page",
+                channel: "reload",
+                action: "activate",
+                valueType: "none",
+                receiver: createPhiSignalAddress("cms", PHI_REVISIONS_TABLE_WIDGET_ID),
+              },
+              {
                 routeKey: "builder-revisions-table-binding-input",
                 capabilityId: "bindingParamsChange",
-                scope: "area",
+                scope: "page",
                 channel: "bindingParams",
                 action: "change",
                 valueType: "json",

@@ -59,10 +59,14 @@ export type PhiBuilderRevisionsWidgetLabels = {
     deleteArea: string;
     /** Takes a Module's Page back to its preset by deleting the Site's override. */
     resetPage: string;
+    /** Why that button is greyed out: what is shown is not a Module's Page. */
+    resetPageUnavailable: string;
   };
   /** The dialog that deletes an Area's own shell, and the field that has to be written out. */
   deleteArea: {
     title: string;
+    /** What is lost, until the Controller names the Area in it when the dialog opens. */
+    warning: string;
     survives: string;
     field: string;
     fieldRequired: string;
@@ -135,15 +139,17 @@ export const PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS: PhiBuilderRevisionsWid
     restore: "Restore",
     delete: "Delete",
     deleteSelected: "Delete selected",
-    deleteArea: "Delete Area",
+    deleteArea: "Clear Area",
     resetPage: "Reset to preset",
+    resetPageUnavailable: "Only a Module's Page has a preset to go back to. Choose one under Page.",
   },
   deleteArea: {
-    title: "Delete this Area's shell?",
-    survives: "The Area keeps its Pages, its Navigation and its Theme. Only the shell goes.",
+    title: "Clear this Area back to its preset?",
+    warning: "Everything this Site stored for the Area is cleared -- its Shell and its Module selection, drafts and published alike. What is live changes at once, the Module preset takes the Area back, and no revision is left to restore it from. It cannot be undone.",
+    survives: "The Area keeps its Pages, its Navigation and its Theme. Its Shell and its Module selection go back to the preset.",
     field: "Type the Area key to confirm",
     fieldRequired: "Write the Area key out to confirm.",
-    confirm: "Delete Area",
+    confirm: "Clear Area",
     cancel: "Cancel",
   },
   confirm: {
