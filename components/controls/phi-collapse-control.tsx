@@ -63,7 +63,12 @@ function resolveSectionStyles(
   return {
     header: { ...(headerPadding == null ? {} : { padding: headerPadding }), borderRadius: 0 },
     title: titleStrong ? { fontWeight: 600 } : undefined,
-    body: { ...(bodyPadding == null ? {} : { padding: bodyPadding }), borderRadius: 0 },
+    /*
+     * No inset on top: header and body stand on one ground with no rule between them (`bordered` is
+     * always off), so the header's own bottom padding is already the space under the title. A body inset
+     * on top of it put the first line further from the title than from the panel's sides.
+     */
+    body: { ...(bodyPadding == null ? {} : { padding: bodyPadding }), paddingTop: 0, borderRadius: 0 },
   };
 }
 
