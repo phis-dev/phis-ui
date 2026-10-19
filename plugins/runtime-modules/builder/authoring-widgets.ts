@@ -7,9 +7,6 @@ import {
   PHI_BUILDER_MODE_SWITCH_WIDGET_DEFINITION,
 } from "./widgets/chrome/config";
 import {
-  PHI_BUILDER_CHROME_CONTROLS_WIDGET_DEFINITION,
-} from "./widgets/chrome-controls/config";
-import {
   PHI_DEVELOPER_BUILDER_PAGES_HEADER_WIDGET_DEFINITION,
 } from "./widgets/workspace-headers/config";
 import {
@@ -34,10 +31,6 @@ export default createPhiAuthoringWidgetModule([
   definePhiAuthoringWidgetModuleLoader(
     PHI_BUILDER_INSPECTOR_HEADER_WIDGET_DEFINITION,
     () => import("./widgets/inspector-header/authoring").then((module) => module.PHI_BUILDER_INSPECTOR_HEADER_WIDGET_BUILDER_PLUGIN),
-  ),
-  definePhiAuthoringWidgetModuleLoader(
-    PHI_BUILDER_CHROME_CONTROLS_WIDGET_DEFINITION,
-    () => import("./widgets/chrome-controls/authoring").then((module) => module.PHI_BUILDER_CHROME_CONTROLS_WIDGET_BUILDER_PLUGIN),
   ),
   ...PHI_BUILDER_INSPECTOR_SECTION_WIDGET_DEFINITIONS.map(({ definition }) =>
     definePhiAuthoringWidgetModuleLoader(

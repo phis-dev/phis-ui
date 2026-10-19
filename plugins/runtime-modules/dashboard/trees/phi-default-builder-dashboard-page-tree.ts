@@ -7,7 +7,7 @@ import { resolvePhiShellHeaderHeight } from "../../../../helpers/shell-region-st
 
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import type { PhiBlockRuntime } from "../../../../types";
-import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "../../../../components/regions/presets/phi-base-page-layout";
+import { buildPhiBasePageContentScaffold } from "../../../../components/regions/presets/phi-base-page-layout";
 import { getPhiBuilderChromeWidgetLabels } from "../../../../components/widgets/label-sets/builder-chrome";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 import { buildPhiDashboardCardsWidget } from "./dashboard-cards-page-tree";
@@ -31,7 +31,6 @@ const SYNTHETIC_BUILDER_DASHBOARD_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
   ownerModuleId: PHI_DASHBOARD_RUNTIME_MODULE_ID,
   presetKey: "builder-dashboard-page",
 }, [
-  "widgetBuilderChromeControls",
   "widgetCards",
 ]);
 
@@ -106,20 +105,6 @@ export async function buildPhiDefaultBuilderDashboardPageTree({
       scaffold.layoutNode,
     ],
     contentWidgets: [
-      nodes.widget({
-        typeKey: "builder-chrome-controls",
-        id: SYNTHETIC_BUILDER_DASHBOARD_WIDGET_IDS.widgetBuilderChromeControls,
-        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
-        // After the cards: it draws nothing, and first in the column its empty slot added the layout's gap
-        // above them.
-        slotIndex: 1,
-        label: "builder dashboard header main controls",
-        config: {
-          editorPreviewDisabled: true,
-          actionsDisabled: true,
-          debugDisabled: true,
-        },
-      }),
       /*
        * The cards the Builder's Modules contribute: the same Collection the other Dashboards are made
        * of, so a Module puts a card here the way it does anywhere else.

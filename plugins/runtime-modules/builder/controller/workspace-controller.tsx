@@ -65,7 +65,6 @@ import { resolvePhiRuntimeAreaDefinition } from "../../../../plugins/runtime-mod
 import { resolvePhiBuilderNavigationWidgetNavKey } from "../navigation-widget-runtime";
 import { parsePhiBuilderNavigationScopeKey } from "../../../../helpers/cms-navigation-catalog";
 import type {
-  PhiBuilderChromeControls,
   PhiDeveloperBuilderArea,
   PhiDeveloperBuilderMode,
   PhiDeveloperBuilderNodeKind,
@@ -75,7 +74,6 @@ import {
   builderWorkspaceStore,
   usePhiDeveloperBuilderWorkspaceState,
   completePhiDeveloperBuilderEffectsEditor,
-  createDefaultBuilderChromeControls,
   normalizePhiDeveloperBuilderArea as normalizeBuilderArea,
   previewPhiDeveloperBuilderEffects,
   resetPhiBuilderSelectionToPage,
@@ -956,7 +954,6 @@ function usePhiDeveloperBuilderWorkspaceController(
     builderWorkspaceStore.patch(defaultArea, (current) => ({
       ...current,
       commandWorkspace,
-      builderChromeControls: createDefaultBuilderChromeControls(),
     }));
   }, [commandWorkspace, defaultArea, state.commandWorkspace]);
 
@@ -1113,7 +1110,7 @@ function usePhiDeveloperBuilderWorkspaceController(
       pageKey: nextPageKey,
     }));
     builderWorkspaceStore.patch(defaultArea, (current) =>
-      resetPhiBuilderSelectionToPage(current, nextPageKey, { chrome: true }));
+      resetPhiBuilderSelectionToPage(current, nextPageKey));
   }, [
     defaultArea,
     isBuilderWorkspace,
@@ -1324,36 +1321,6 @@ function usePhiDeveloperBuilderWorkspaceController(
         return;
       }
 
-	      if (addressedHere && signal.channel === "builderChrome" && signal.action === "change") {
-	          const nextControls = signal.value && typeof signal.value === "object"
-	            ? signal.value as Partial<PhiBuilderChromeControls> & { area?: unknown; pageKey?: unknown }
-	            : null;
-	          const currentRouteScope = resolvePhiDeveloperBuilderRouteScope(pathname);
-	          if (!nextControls || !currentRouteScope || nextControls.area !== currentRouteScope.area || nextControls.pageKey !== currentRouteScope.pageKey) {
-	            return;
-	          }
-          const currentBuilderChromeControls = state.builderChromeControls ?? createDefaultBuilderChromeControls();
-
-          builderWorkspaceStore.patch(defaultArea, (current) => ({
-            ...current,
-            builderChromeControls: {
-              editorPreviewDisabled:
-                typeof nextControls.editorPreviewDisabled === "boolean"
-                  ? nextControls.editorPreviewDisabled
-                  : currentBuilderChromeControls.editorPreviewDisabled,
-              actionsDisabled:
-                typeof nextControls.actionsDisabled === "boolean"
-                  ? nextControls.actionsDisabled
-                  : currentBuilderChromeControls.actionsDisabled,
-              debugDisabled:
-                typeof nextControls.debugDisabled === "boolean"
-                  ? nextControls.debugDisabled
-                  : currentBuilderChromeControls.debugDisabled,
-            },
-	          }));
-	          return;
-	      }
-
 	      if (addressedHere && signal.scope === "page" && signal.channel === "path" && signal.action === "change") {
         if (builderWorkspaceKey !== "pages" || typeof signal.value !== "string" || signal.value.length === 0) {
           return;
@@ -1407,7 +1374,7 @@ function usePhiDeveloperBuilderWorkspaceController(
           pageKey: nextPageKey,
         }));
         builderWorkspaceStore.patch(defaultArea, (current) =>
-          resetPhiBuilderSelectionToPage(current, nextPageKey, { chrome: true, closePages: true }));
+          resetPhiBuilderSelectionToPage(current, nextPageKey, { closePages: true }));
         return;
       }
 
@@ -1488,8 +1455,7 @@ function usePhiDeveloperBuilderWorkspaceController(
 
         const command = readPhiDeveloperBuilderToolbarCommand(commandValue);
         const commandWorkspace = state.commandWorkspace;
-        const builderChromeControls = state.builderChromeControls ?? createDefaultBuilderChromeControls();
-        if (!command || commandWorkspace == null || builderChromeControls.actionsDisabled) {
+        if (!command || commandWorkspace == null) {
           return;
         }
 

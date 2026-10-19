@@ -39,12 +39,6 @@ export const PHI_BUILDER_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
       ),
       ],
       [
-        PhiRuntimeRenderClientType.BuilderChromeControls,
-        definePhiRuntimeModuleRenderClient(
-        dynamic(() => import("../builder/widgets/chrome-controls/client").then((module) => module.PhiBuilderChromeControlsWidgetClient)),
-      ),
-      ],
-      [
         PhiRuntimeRenderClientType.BuilderModeSwitch,
         definePhiRuntimeModuleRenderClient(
         dynamic(() => import("../../../plugins/runtime-modules/builder/clients/mode-switch").then((module) => module.PhiBuilderModeSwitchWidgetClient)),

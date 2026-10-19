@@ -1,17 +1,12 @@
 "use client";
 
 import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode, PhiCmsTreeControllerSettings } from "../../../types/cms";
-import type { PhiSignalSender } from "../../../types";
-import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
 import { isPhiBuilderAreaKey } from "../../../constants/cms-areas";
 import {
   prunePhiSignalRoutesFromConfig,
   type PhiSignalRouteReceiverTarget,
 } from "../../../helpers/signal-route-lifecycle";
-import {
-  createPhiSignalCorrelationId,
-  type PhiSignalDispatch,
-} from "../../../components/runtime/runtime-signal-bus";
+import { createPhiSignalCorrelationId } from "../../../components/runtime/runtime-signal-bus";
 import { useRef, useSyncExternalStore } from "react";
 
 import { createPhiPluginStateStore } from "../../../components/state/plugin-state-store";
@@ -20,7 +15,6 @@ import {
   type PhiWorkspaceCatalogState,
 } from "../../../components/workspace/catalog-store";
 import type {
-  PhiBuilderChromeControls,
   PhiBuilderModuleDeactivationRequest,
   PhiBuilderPublicRouteCollisionRequest,
   PhiDeveloperBuilderArea,
@@ -39,14 +33,6 @@ import type { PhiAreaRootRoute, PhiAreaMeta } from "../../../helpers/cms-area-co
 
 export function normalizePhiDeveloperBuilderArea(scopeKey: string): PhiDeveloperBuilderArea {
   return isPhiBuilderAreaKey(scopeKey) ? scopeKey : "public";
-}
-
-export function createDefaultBuilderChromeControls(): PhiBuilderChromeControls {
-  return {
-    editorPreviewDisabled: false,
-    actionsDisabled: false,
-    debugDisabled: false,
-  };
 }
 
 function createDefaultBuilderState(): PhiDeveloperBuilderState {
@@ -81,7 +67,6 @@ function createDefaultBuilderState(): PhiDeveloperBuilderState {
     darkMode: false,
     debugScaffold: false,
     commandWorkspace: null,
-    builderChromeControls: createDefaultBuilderChromeControls(),
     pickerWidgetCategoryFilters: [],
     areaRootRouteDrafts: {},
     areaRootRoutes: {},
@@ -272,7 +257,7 @@ export type PhiDeveloperBuilderNodeSelection = {
 export function resetPhiBuilderSelectionToPage(
   current: PhiDeveloperBuilderState,
   pageKey: string,
-  options: { chrome?: boolean; closePages?: boolean } = {},
+  options: { closePages?: boolean } = {},
 ): PhiDeveloperBuilderState {
   return {
     ...current,
@@ -285,7 +270,6 @@ export function resetPhiBuilderSelectionToPage(
     inspectorOpen: false,
     sidebarKey: "pages",
     ...(options.closePages ? { pagesOpen: false } : {}),
-    ...(options.chrome ? { builderChromeControls: createDefaultBuilderChromeControls() } : {}),
   };
 }
 
@@ -384,34 +368,6 @@ export function splitWorkspacePatch(next: Partial<PhiDeveloperBuilderWorkspaceSt
     }
   }
   return { catalog, tool };
-}
-
-/**
- * A Widget asking the Builder Controller to restrict the chrome for its page. It is sent under the
- * Widget's own address: the Controller does not answer what was sent under its own.
- */
-export function emitPhiBuilderChromeControlsSignal(
-  emitSignal: PhiSignalDispatch,
-  sender: PhiSignalSender,
-  scope: Pick<PhiDeveloperBuilderWorkspaceState, "area" | "pageKey">,
-  controls: Partial<PhiBuilderChromeControls>,
-) {
-  emitSignal({
-    scope: "page",
-    channel: "builderChrome",
-    action: "change",
-    value: {
-      ...controls,
-      area: scope.area,
-      pageKey: scope.pageKey,
-    },
-    valueType: "json",
-    valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.builderChrome,
-    sender,
-    receiver: "broadcast",
-    meta: { sourceLabel: `${scope.area}:${scope.pageKey}` },
-    timestamp: Date.now(),
-  });
 }
 
 type PhiBuilderRegionDraftMutationOptions = {

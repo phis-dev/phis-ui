@@ -2,10 +2,7 @@
 
 import { PhiSegmentedControl } from "../../../../components/controls/phi-segmented-control";
 
-import {
-  createDefaultBuilderChromeControls,
-  usePhiDeveloperBuilderStateValue,
-} from "../developer-workspace-store";
+import { usePhiDeveloperBuilderStateValue } from "../developer-workspace-store";
 import {
   PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS,
   type PhiBuilderChromeWidgetLabels,
@@ -23,11 +20,7 @@ export function PhiBuilderModeSwitchWidgetClient({
 }) {
   const { token } = usePhiConfig();
   const builderMode = usePhiDeveloperBuilderStateValue("public", (state) => state.builderMode);
-  const builderChromeControls = usePhiDeveloperBuilderStateValue(
-    "public",
-    (state) => state.builderChromeControls,
-  ) ?? createDefaultBuilderChromeControls();
-  const isDisabled = disabled || builderChromeControls.editorPreviewDisabled;
+  const isDisabled = disabled;
   const controlSignals = usePhiControlSignalController<string>({
     key: "builderMode",
     // The Widget's own address: the Builder Controller does not answer what was sent under its own.

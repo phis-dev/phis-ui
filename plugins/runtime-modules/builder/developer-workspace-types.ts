@@ -18,12 +18,6 @@ export type PhiDeveloperBuilderMode = "editor" | "preview";
 export type PhiDeveloperBuilderNodeKind = "page" | "region" | "layout" | "widget" | "slot";
 export type PhiDeveloperBuilderCommandWorkspace = "structure" | "pages" | "navigation" | "modules" | "theme" | null;
 
-export type PhiBuilderChromeControls = {
-  editorPreviewDisabled: boolean;
-  actionsDisabled: boolean;
-  debugDisabled: boolean;
-};
-
 export type PhiDeveloperBuilderRegionDraft = PhiCmsGeometryWidgetConfig & {
   /** The Region's own look; the root Layout's is its `config.surface`. */
   surface?: PhiSurface | null;
@@ -187,7 +181,6 @@ export type PhiDeveloperBuilderState = {
   darkMode: boolean;
   debugScaffold: boolean;
   commandWorkspace: PhiDeveloperBuilderCommandWorkspace;
-  builderChromeControls: PhiBuilderChromeControls;
   pickerWidgetCategoryFilters: string[];
   /**
    * The Area root route being edited, by target Area.

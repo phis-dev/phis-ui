@@ -116,12 +116,6 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_DEFINITION = {
     emits: [
       { id: "areaSelection", action: "change", valueType: "string" },
       {
-        id: "builderChrome",
-        action: "change",
-        valueType: "json",
-        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.builderChrome,
-      },
-      {
         id: "draftStatus",
         action: "change",
         valueType: "json",
@@ -223,13 +217,6 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_DEFINITION = {
       },
     ],
     listens: [
-      {
-        id: "builderChrome",
-        channel: "builderChrome",
-        action: "change",
-        valueType: "json",
-        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.builderChrome,
-      },
       {
         id: "command",
         channel: "command",

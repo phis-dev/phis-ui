@@ -153,7 +153,7 @@ export function usePhiBuilderPageController({
       pageKey,
     }));
     builderWorkspaceStore.patch(defaultArea, (current) =>
-      resetPhiBuilderSelectionToPage(current, pageKey, { chrome: true, closePages: true }));
+      resetPhiBuilderSelectionToPage(current, pageKey, { closePages: true }));
 
     if (typeof pathname === "string") {
       const nextSearchParams = new URLSearchParams(searchParams.toString());

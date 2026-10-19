@@ -111,7 +111,6 @@ export const PHI_SIGNAL_VALUE_SCHEMAS = {
   backgroundConfig: createPhiSharedSignalValueSchema("background-config"),
   borderConfig: createPhiSharedSignalValueSchema("border-config"),
   brandTheme: createPhiSharedSignalValueSchema("brand-theme"),
-  builderChrome: createPhiSharedSignalValueSchema("builder-chrome"),
   builderInspector: createPhiSharedSignalValueSchema("builder-inspector"),
   builderLayout: createPhiSharedSignalValueSchema("builder-layout"),
   builderNavigation: createPhiSharedSignalValueSchema("builder-navigation"),

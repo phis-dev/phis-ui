@@ -45,7 +45,6 @@ const PHI_CMS_WIDGET_MODULE_BY_TYPE_KEY: Readonly<Record<string, keyof typeof PH
   "builder-brand-style-controls": "theme",
   "builder-brand-theme-controls": "theme",
   "builder-brand-theme-preview": "theme",
-  "builder-chrome-controls": "builder",
   "builder-inspector-header": "builder",
   "builder-layout-anchor-inspector": "builder",
   "builder-layout-padding-inspector": "builder",
