@@ -1,5 +1,6 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
-import type { PhiMarkdownSpacingKey, PhiMarkdownTextAlign } from "../../../../../types/core-widget-placements";
+import type { PhiMarkdownTextAlign } from "../../../../../types/core-widget-placements";
+import { PHI_SPACING_SCALE_KEYS, type PhiSpacingScaleKey } from "../../../../../components/widgets/config/spacing-options";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsResolvedContent } from "../../../../../types/cms";
@@ -20,10 +21,10 @@ export type PhiCmsMarkdownWidgetConfig = PhiCmsWidgetConfigBase & {
   /** Set at render from the node's `NoTranslate` flag, or by a caller that knows; never authored. */
   translate?: boolean;
   textAlign?: PhiMarkdownTextAlign;
-  textBlockSpacingBefore?: PhiMarkdownSpacingKey;
-  textBlockSpacingAfter?: PhiMarkdownSpacingKey;
-  headingBlockSpacingBefore?: PhiMarkdownSpacingKey;
-  headingBlockSpacingAfter?: PhiMarkdownSpacingKey;
+  textBlockSpacingBefore?: PhiSpacingScaleKey;
+  textBlockSpacingAfter?: PhiSpacingScaleKey;
+  headingBlockSpacingBefore?: PhiSpacingScaleKey;
+  headingBlockSpacingAfter?: PhiSpacingScaleKey;
   tocKey?: string;
   resolvedContent?: PhiCmsResolvedContent | null;
   preferSource?: boolean;
@@ -36,17 +37,8 @@ const PHI_MARKDOWN_TEXT_ALIGN_OPTIONS: Array<{ value: PhiMarkdownTextAlign; labe
   { value: "justify", label: "Justify" },
 ];
 
-const PHI_MARKDOWN_SPACING_OPTIONS: Array<{ value: PhiMarkdownSpacingKey; label: string }> = [
-  { value: "none", label: "None" },
-  { value: "xxs", label: "XXS" },
-  { value: "xs", label: "XS" },
-  { value: "sm", label: "SM" },
-  { value: "base", label: "Base" },
-  { value: "md", label: "MD" },
-  { value: "lg", label: "LG" },
-  { value: "xl", label: "XL" },
-  { value: "xxl", label: "XXL" },
-];
+// The one spacing scale every padding and gap speaks (`theme/phi-tokens.ts`), stored by its key.
+const PHI_MARKDOWN_SPACING_OPTIONS = PHI_SPACING_SCALE_KEYS.map((key) => ({ value: key, label: key }));
 
 function readMarkdownSourceMode(value: unknown): PhiCmsMarkdownWidgetConfig["sourceMode"] | undefined {
   return value === "inline" || value === "url" ? value : undefined;
@@ -58,8 +50,8 @@ function readMarkdownTextAlign(value: unknown): PhiMarkdownTextAlign | undefined
     : undefined;
 }
 
-function readMarkdownSpacingKey(value: unknown): PhiMarkdownSpacingKey | undefined {
-  return PHI_MARKDOWN_SPACING_OPTIONS.some((option) => option.value === value) ? (value as PhiMarkdownSpacingKey) : undefined;
+function readMarkdownSpacingKey(value: unknown): PhiSpacingScaleKey | undefined {
+  return PHI_SPACING_SCALE_KEYS.includes(value as PhiSpacingScaleKey) ? (value as PhiSpacingScaleKey) : undefined;
 }
 
 export function parsePhiCmsMarkdownWidgetConfig(config: Record<string, unknown>): PhiCmsMarkdownWidgetConfig {

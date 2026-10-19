@@ -82,7 +82,7 @@ describe("what a stored Theme may say", () => {
 
   it("lets a style token say a token name, a seed flag, or one of this house's own names", () => {
     expect(() => assertPhiThemeVocabulary({
-      styleToken: { borderRadiusLG: 34, controlHeight: 44, wireframe: false, paddingXXL: 155 },
+      styleToken: { borderRadiusLG: 34, controlHeight: 44, wireframe: false, paddingXXL: 144 },
       modeSeedKeys,
       source: "test",
     })).not.toThrow();

@@ -8,7 +8,9 @@ import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
 import { usePhiSignalEmitter } from "../../runtime/runtime-signal-identity";
 import { usePhiConfig, type PhiConfig } from "../../root/phi-config-provider";
 import type { PhiCodeToken, PhiCodeTokenKind } from "./markdown-code-tokens";
-import type { PhiMarkdownSpacingKey, PhiMarkdownTextAlign } from "../../../types/core-widget-placements";
+import type { PhiMarkdownTextAlign } from "../../../types/core-widget-placements";
+import { resolvePhiSpacingScaleValue, type PhiSpacingScaleKey } from "../config/spacing-options";
+import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import type { PhiMarkdownTocHeading } from "../../../types/markdown";
 import { PhiPlainTable } from "../../tables/phi-plain-table";
 import { PhiTypographyControl } from "../../controls/phi-typography-control";
@@ -60,40 +62,12 @@ export type PhiMarkdownWidgetClientProps = PhiClientBlockBaseProps<
     tocKey?: string;
     headings?: PhiMarkdownTocHeading[];
     textAlign?: PhiMarkdownTextAlign;
-    textBlockSpacingBefore?: PhiMarkdownSpacingKey;
-    textBlockSpacingAfter?: PhiMarkdownSpacingKey;
-    headingBlockSpacingBefore?: PhiMarkdownSpacingKey;
-    headingBlockSpacingAfter?: PhiMarkdownSpacingKey;
+    textBlockSpacingBefore?: PhiSpacingScaleKey;
+    textBlockSpacingAfter?: PhiSpacingScaleKey;
+    headingBlockSpacingBefore?: PhiSpacingScaleKey;
+    headingBlockSpacingAfter?: PhiSpacingScaleKey;
   }
 >;
-
-function resolveMarkdownSpacing(
-  token: PhiConfig["token"],
-  value: PhiMarkdownSpacingKey | undefined,
-  fallback: PhiMarkdownSpacingKey | "none",
-) {
-  const nextValue = value ?? fallback;
-  switch (nextValue) {
-    case "none":
-      return 0;
-    case "xxs":
-      return token.paddingXXS;
-    case "xs":
-      return token.paddingXS;
-    case "sm":
-      return token.paddingSM;
-    case "base":
-      return token.padding;
-    case "md":
-      return token.paddingMD;
-    case "lg":
-      return token.paddingLG;
-    case "xl":
-      return token.paddingXL;
-    case "xxl":
-      return token.paddingXL;
-  }
-}
 
 /**
  * The colour a kind of code is drawn in, from the Theme and from nowhere else.
@@ -198,7 +172,7 @@ function renderBlocks(
             key={key}
             style={{
               margin: 0,
-              paddingInlineStart: token.paddingLG,
+              paddingInlineStart: PHI_SPACE.md,
               borderInlineStart: `3px solid ${token.colorBorderSecondary}`,
             }}
           >
@@ -213,11 +187,11 @@ function renderBlocks(
           <ListTag
             key={key}
             start={block.ordered ? block.start : undefined}
-            style={{ margin: 0, paddingInlineStart: token.paddingMD }}
+            style={{ margin: 0, paddingInlineStart: PHI_SPACE.md }}
           >
             {block.items.map((itemBlocks, itemIndex) => (
-              <li key={`${key}-item-${itemIndex}`} style={{ marginBlockEnd: token.paddingXS }}>
-                <div style={{ display: "grid", gap: token.paddingXS }}>
+              <li key={`${key}-item-${itemIndex}`} style={{ marginBlockEnd: PHI_SPACE.xs }}>
+                <div style={{ display: "grid", gap: PHI_SPACE.xs }}>
                   {renderBlocks(itemBlocks, token, paragraphBlockStyle, headingBlockStyle)}
                 </div>
               </li>
@@ -232,7 +206,7 @@ function renderBlocks(
             data-phi-code-language={block.language ?? undefined}
             style={{
               margin: 0,
-              padding: token.paddingLG,
+              padding: PHI_SPACE.md,
               overflowX: "auto",
               borderRadius: token.borderRadiusSM,
               background: token.colorFillQuaternary,
@@ -315,13 +289,13 @@ export function PhiMarkdownWidgetClient({ config }: PhiMarkdownWidgetClientProps
 
   const paragraphBlockStyle: CSSProperties = {
     margin: 0,
-    marginBlockStart: resolveMarkdownSpacing(token, config?.textBlockSpacingBefore, "none"),
-    marginBlockEnd: resolveMarkdownSpacing(token, config?.textBlockSpacingAfter, "sm"),
+    marginBlockStart: resolvePhiSpacingScaleValue(config?.textBlockSpacingBefore ?? "none"),
+    marginBlockEnd: resolvePhiSpacingScaleValue(config?.textBlockSpacingAfter ?? "sm"),
   };
   const headingBlockStyle: CSSProperties = {
     margin: 0,
-    marginBlockStart: resolveMarkdownSpacing(token, config?.headingBlockSpacingBefore, "none"),
-    marginBlockEnd: resolveMarkdownSpacing(token, config?.headingBlockSpacingAfter, "sm"),
+    marginBlockStart: resolvePhiSpacingScaleValue(config?.headingBlockSpacingBefore ?? "none"),
+    marginBlockEnd: resolvePhiSpacingScaleValue(config?.headingBlockSpacingAfter ?? "sm"),
   };
 
   return (

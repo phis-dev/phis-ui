@@ -57,13 +57,13 @@ export async function buildPhiDefaultPubTermsPageTree({
   return {
     page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     overlays: [],
-    // On the base scaffold, in a column on the wash that stops at the wide content measure.
+    // On the base scaffold, in a column on the wash that stops at the reading measure.
     ...buildPhiBasePageColumnFrame({
       page,
       regionId: SYNTHETIC_TERMS_REGION_IDS.regionContent,
       columnId: SYNTHETIC_TERMS_LAYOUT_IDS.layoutContent,
       label: "pub terms and conditions page",
-      maxWidth: PHI_LAYOUT.contentMaxWide,
+      maxWidth: PHI_LAYOUT.readingMax,
     }),
     contentWidgets: [
       nodes.widget({

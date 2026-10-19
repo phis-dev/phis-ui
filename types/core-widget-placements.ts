@@ -20,6 +20,7 @@ import type { PhiButtonVariant } from "../components/widgets/config/button-varia
 import type { PhiTextTone } from "../components/widgets/config/text-tone";
 import type { PhiCommonControlActionKey } from "../components/widgets/label-types/common-controls";
 import type { PhiMaskConfig } from "../components/widgets/config/mask";
+import type { PhiSpacingScaleKey } from "../components/widgets/config/spacing-options";
 import type { PhiCardVariant } from "../components/widgets/shared/card-vocabulary";
 import type {
   PhiControlBadgeConfig,
@@ -65,7 +66,6 @@ type PhiControlPlacement = Omit<PhiControlConfig, "signalRoutes">;
 
 // Markdown
 
-export type PhiMarkdownSpacingKey = "none" | "xxs" | "xs" | "sm" | "base" | "md" | "lg" | "xl" | "xxl";
 
 /** Logical, not left and right: a Site in an RTL locale reads "start" as the right-hand edge. */
 export type PhiMarkdownTextAlign = "start" | "center" | "end" | "justify";
@@ -77,10 +77,10 @@ export type PhiMarkdownWidgetPlacement = PhiWidgetPlacementBase & {
   sourceLocale?: string;
   revalidateSeconds?: number;
   textAlign?: PhiMarkdownTextAlign;
-  textBlockSpacingBefore?: PhiMarkdownSpacingKey;
-  textBlockSpacingAfter?: PhiMarkdownSpacingKey;
-  headingBlockSpacingBefore?: PhiMarkdownSpacingKey;
-  headingBlockSpacingAfter?: PhiMarkdownSpacingKey;
+  textBlockSpacingBefore?: PhiSpacingScaleKey;
+  textBlockSpacingAfter?: PhiSpacingScaleKey;
+  headingBlockSpacingBefore?: PhiSpacingScaleKey;
+  headingBlockSpacingAfter?: PhiSpacingScaleKey;
   tocKey?: string;
 };
 

@@ -51,7 +51,7 @@ export function buildPhiBasePageColumnFrame({
         config: {
           maxSize: { width: maxWidth },
           surface: PHI_SURFACE_WASH,
-          padding: PHI_SPACE.lg,
+          padding: PHI_SPACE.md,
           // The house step between a preset's children; the Widgets keep their own air inside.
           gap: PHI_SPACE.sm,
         },

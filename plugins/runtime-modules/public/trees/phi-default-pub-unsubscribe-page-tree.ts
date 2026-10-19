@@ -52,13 +52,13 @@ export async function buildPhiDefaultPubUnsubscribePageTree({
   return {
     page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     overlays: [],
-    // On the base scaffold, in a column on the wash that stops at the wide content measure.
+    // On the base scaffold, in a column on the wash that stops at the reading measure.
     ...buildPhiBasePageColumnFrame({
       page,
       regionId: SYNTHETIC_UNSUBSCRIBE_REGION_IDS.regionContent,
       columnId: layoutIds.layoutContent,
       label: "pub unsubscribe page",
-      maxWidth: PHI_LAYOUT.contentMaxWide,
+      maxWidth: PHI_LAYOUT.readingMax,
     }),
     contentWidgets: [
       nodes.widget({

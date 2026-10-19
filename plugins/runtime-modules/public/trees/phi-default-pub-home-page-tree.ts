@@ -54,13 +54,13 @@ export async function buildPhiDefaultPubHomePageTree({
   return {
     page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     overlays: [],
-    // On the base scaffold, in a column on the wash that stops at the wide content measure.
+    // On the base scaffold, in a column on the wash that stops at the reading measure.
     ...buildPhiBasePageColumnFrame({
       page,
       regionId: SYNTHETIC_HOME_REGION_IDS.regionContent,
       columnId: SYNTHETIC_HOME_LAYOUT_IDS.layoutContent,
       label: "pub home page",
-      maxWidth: PHI_LAYOUT.contentMaxWide,
+      maxWidth: PHI_LAYOUT.readingMax,
     }),
     contentWidgets: [
       nodes.widget({

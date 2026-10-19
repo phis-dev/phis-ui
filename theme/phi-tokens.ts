@@ -14,7 +14,7 @@ export const PHI_PADDING = {
   md: 34,
   lg: 55,
   xl: 89,
-  xxl: 155,
+  xxl: 144,
 } as const;
 
 export const PHI_RADII = {
