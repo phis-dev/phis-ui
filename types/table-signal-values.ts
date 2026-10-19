@@ -6,6 +6,7 @@ import type {
   PhiTableExpansionSignalValue,
   PhiTableQueryValue,
   PhiTableRowIdentity,
+  PhiTableSelectedRow,
   PhiTableSelectionSignalValue,
 } from "./table-widget";
 
@@ -41,11 +42,26 @@ export function readPhiTableBindingParamsSignalValue(value: unknown): PhiTableBi
   return { params: value.params as Record<string, PhiTableQueryValue> };
 }
 
+function readSelectedRows(value: unknown): PhiTableSelectedRow[] | null {
+  if (!Array.isArray(value)) return null;
+  const rows: PhiTableSelectedRow[] = [];
+  for (const entry of value) {
+    if (!isPhiRecord(entry) || !isPhiRecord(entry.values)) return null;
+    const { rowIdentity, values } = entry;
+    if (typeof rowIdentity !== "string" && (typeof rowIdentity !== "number" || !Number.isFinite(rowIdentity))) return null;
+    if (!Object.values(values).every(isPhiTableQueryValue)) return null;
+    rows.push({ rowIdentity, values: values as Record<string, PhiTableQueryValue> });
+  }
+  return rows;
+}
+
 export function readPhiTableSelectionSignalValue(value: unknown): PhiTableSelectionSignalValue | null {
-  const selectedRowIdentities = isPhiRecord(value)
-    ? readRowIdentities(value.selectedRowIdentities)
-    : undefined;
-  return selectedRowIdentities ? { selectedRowIdentities } : null;
+  if (!isPhiRecord(value)) return null;
+  const selectedRowIdentities = readRowIdentities(value.selectedRowIdentities);
+  if (!selectedRowIdentities) return null;
+  if (value.selectedRows === undefined) return { selectedRowIdentities };
+  const selectedRows = readSelectedRows(value.selectedRows);
+  return selectedRows ? { selectedRowIdentities, selectedRows } : null;
 }
 
 export function readPhiTableColumnOrderSignalValue(value: unknown): PhiTableColumnOrderSignalValue | null {

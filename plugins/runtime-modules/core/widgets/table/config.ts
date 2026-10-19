@@ -618,6 +618,12 @@ export function parsePhiTableWidgetConfig(config: Record<string, unknown>): PhiT
         mode: rowSelection.mode === "single" || rowSelection.mode === "multiple" ? rowSelection.mode : "none",
         preserveSelectedRowIdentities: readBoolean(rowSelection.preserveSelectedRowIdentities),
         disabledWhen: readConditionExpression(rowSelection.disabledWhen),
+        ...(Array.isArray(rowSelection.emitFields) ? {
+          emitFields: rowSelection.emitFields.flatMap((field) => {
+            const key = readString(field)?.trim();
+            return key ? [key] : [];
+          }),
+        } : {}),
       },
       rowReordering: {
         enabled: readBoolean(rowReordering.enabled),

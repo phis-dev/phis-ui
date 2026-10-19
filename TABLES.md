@@ -471,6 +471,14 @@ enabled. Absence from the current page does not invalidate a preserved identity;
 only after an explicit clear or Provider-confirmed invalidation. It must never infer identity from a
 visible row index.
 
+`rowSelection.emitFields` names row fields `selectionChange` carries alongside the identities, as
+`selectedRows: [{ rowIdentity, values }]`. It is for a receiver that has to know something about what was
+chosen and should not ask the server for what the Table already holds -- Admin Groups disables the
+membership `+` while a retired group is selected. Named fields only, primitive values only; a selected row
+the Table has not loaded keeps what was last read of it, or is absent. When a reload changes those values
+for the current selection, the Table emits `selectionChange` again with the same identities, so a
+receiver must treat an unchanged identity set as a refresh, not as a new choice.
+
 ### Disabled conditions
 
 Toolbar, bulk, row-selection, row-action, and inline-edit disablement use the shared `disabledWhen`

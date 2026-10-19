@@ -53,6 +53,7 @@ const PHI_GROUPS_FORM_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_GROUPS_RUNT
     membership_level_label: "Level",
     membership_level_required: definePhiMessageLabel("Choose a level."),
     membership_submit_label: "Add member",
+    membership_retired: definePhiMessageLabel("This group is retired and takes no new members."),
     mine_title: "My groups",
     mine_description: definePhiMessageLabel("What each group lets you do, and how much of its shared space is in use."),
     mine_empty: definePhiMessageLabel("You are in no group yet."),
@@ -162,6 +163,7 @@ export async function getPhiGroupFormLabels(options: PhiGlobalTranslatorOptions)
       level: labels.membership_level_label,
       levelRequired: labels.membership_level_required,
       submit: labels.membership_submit_label,
+      retired: labels.membership_retired,
     },
     actions: {
       remove: labels.remove_label,

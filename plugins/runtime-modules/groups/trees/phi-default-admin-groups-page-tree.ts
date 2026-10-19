@@ -294,6 +294,16 @@ export async function buildPhiDefaultAdminGroupsPageTree({
               receiver: membersTableAddress,
             },
             {
+              routeKey: "admin-groups-controller-members-condition",
+              capabilityId: "conditionStateChange",
+              scope: "page",
+              channel: "condition",
+              action: "change",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeConditionState,
+              receiver: membersTableAddress,
+            },
+            {
               routeKey: "admin-groups-controller-membership-values",
               capabilityId: "membershipValues",
               scope: "page",
@@ -392,7 +402,8 @@ export async function buildPhiDefaultAdminGroupsPageTree({
           },
           features: {
             // One group at a time: the membership table below shows exactly what is selected here.
-            rowSelection: { mode: "single", preserveSelectedRowIdentities: true },
+            // `retired` goes with the selection: the membership table's `+` is off for a retired group.
+            rowSelection: { mode: "single", preserveSelectedRowIdentities: true, emitFields: ["retired"] },
             pagination: { enabled: true, pageSize: 25, pageSizes: [25, 50, 100] },
             sorting: { mode: "none" },
             search: { enabled: false },
@@ -551,6 +562,13 @@ export async function buildPhiDefaultAdminGroupsPageTree({
                 display: "icon",
                 mode: "primary",
                 execution: "signal",
+                disabledWhen: { match: "any", conditions: [{
+                  source: "controller",
+                  controllerAddress,
+                  valuePath: "selectedGroupRetired",
+                  operator: "truthy",
+                  reason: labels.membership.retired,
+                }] },
               }],
               row: [{
                 key: "delete",
@@ -582,8 +600,25 @@ export async function buildPhiDefaultAdminGroupsPageTree({
               valueType: "json",
               valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
               receiver: membershipOverlayAddress,
+            }, {
+              routeKey: "admin-groups-members-condition-request",
+              capabilityId: "conditionStateRequest",
+              scope: "page",
+              channel: "condition",
+              action: "reload",
+              valueType: "none",
+              receiver: controllerAddress,
             }],
             listens: [{
+              routeKey: "admin-groups-members-condition-state",
+              capabilityId: "conditionStateChange",
+              scope: "page",
+              channel: "condition",
+              action: "change",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeConditionState,
+              receiver: membersTableAddress,
+            }, {
               routeKey: "admin-groups-member-filter",
               capabilityId: "filtersChange",
               scope: "page",

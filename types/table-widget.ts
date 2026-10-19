@@ -260,6 +260,12 @@ export type PhiTableRowSelectionConfig = {
   mode?: "none" | "single" | "multiple";
   preserveSelectedRowIdentities?: boolean;
   disabledWhen?: PhiRuntimeConditionExpression;
+  /**
+   * Row fields `selectionChange` carries alongside the identities, for a receiver that has to know
+   * something about what was chosen -- whether a group is retired -- and should not ask the server for
+   * what the Table already holds. Named fields only: a selection does not broadcast whole rows.
+   */
+  emitFields?: readonly string[];
 };
 
 export type PhiTableColumnReorderingConfig = {
@@ -452,6 +458,16 @@ export type PhiTableWidgetState = {
 
 export type PhiTableSelectionSignalValue = {
   selectedRowIdentities: readonly PhiTableRowIdentity[];
+  /**
+   * The `rowSelection.emitFields` of each selected row the Table has loaded; a row kept selected from
+   * another page is not in it. Absent where the placement names no fields.
+   */
+  selectedRows?: readonly PhiTableSelectedRow[];
+};
+
+export type PhiTableSelectedRow = {
+  rowIdentity: PhiTableRowIdentity;
+  values: Readonly<Record<string, PhiTableQueryValue>>;
 };
 
 export type PhiTableColumnOrderSignalValue = {

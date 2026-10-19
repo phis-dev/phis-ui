@@ -21,15 +21,15 @@ type ControllerRenderArgs = Parameters<NonNullable<
   PhiRuntimeControllerPlugin<PhiGroupsControllerConfig>["renderController"]
 >>[0];
 
-/* This Controller gates nothing, so the answer never varies -- but a Widget still has to hear it. */
-const GROUPS_CONDITION_STATE = { ready: true } as const;
-
-function readSelectedGroupId(value: unknown) {
+function readSelectedGroup(value: unknown) {
   const selection = readPhiTableSelectionSignalValue(value);
   const identity = selection?.selectedRowIdentities?.[0];
-  if (identity == null) return null;
+  if (identity == null) return { groupId: null, retired: false };
   const groupId = Number.parseInt(String(identity), 10);
-  return Number.isSafeInteger(groupId) && groupId > 0 ? groupId : null;
+  if (!Number.isSafeInteger(groupId) || groupId <= 0) return { groupId: null, retired: false };
+  // The group table names `retired` in its `emitFields`; a row it has not loaded says nothing.
+  const row = selection?.selectedRows?.find((candidate) => String(candidate.rowIdentity) === String(identity));
+  return { groupId, retired: row?.values.retired === true };
 }
 
 function PhiGroupsControllerView({
@@ -52,9 +52,10 @@ function PhiGroupsControllerView({
     emitCapability("filtersChange", { groupId }, correlationId), [emitCapability]);
   // Kept for the membership Form, which mounts only when its dialog opens and then asks for it.
   const selectedGroupIdRef = useRef<number | null>(null);
-
-  // Nothing about this Controller gates a Widget; answering keeps the asking Widget from waiting.
-  usePhiRuntimeConditionStateResponder({ address, scope: "page", state: GROUPS_CONDITION_STATE });
+  // A retired group takes no new members, so the membership table's `+` is off while one is selected.
+  const selectedGroupRetiredRef = useRef(false);
+  const conditionState = useCallback(() => ({ ready: true, selectedGroupRetired: selectedGroupRetiredRef.current }), []);
+  usePhiRuntimeConditionStateResponder({ address, scope: "page", state: conditionState });
 
   usePhiSignalListener((signal) => {
     if (signal.channel === "command") {
@@ -82,8 +83,19 @@ function PhiGroupsControllerView({
     // Only a selection chooses the group. A condition question or reload reaching this listener fell
     // through to here and sent `{ groupId: null }`, which emptied the membership table under a choice.
     if (signal.channel === "selection") {
-      selectedGroupIdRef.current = readSelectedGroupId(signal.value);
-      sendGroupFilter(selectedGroupIdRef.current, signal.correlationId);
+      const { groupId, retired } = readSelectedGroup(signal.value);
+      /*
+       * The table says the same selection again when a row's fields change. Only a different group is a
+       * new filter: sending it again would put the membership table back on its first page.
+       */
+      if (groupId !== selectedGroupIdRef.current) {
+        selectedGroupIdRef.current = groupId;
+        sendGroupFilter(groupId, signal.correlationId);
+      }
+      if (retired !== selectedGroupRetiredRef.current) {
+        selectedGroupRetiredRef.current = retired;
+        emitCapability("conditionStateChange", { state: conditionState() }, signal.correlationId);
+      }
       return;
     }
     // No group selected, nothing to say: the Form starts empty, as it would without asking.

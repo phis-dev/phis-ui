@@ -5,7 +5,7 @@ import { PHI_TABLE_WIDGET_DEFAULT_LABELS } from "../../../../../components/widge
 import { formatPhiTableWidgetLabel } from "../../../../../components/widgets/label-types/table";
 import { PhiNameControl } from "../../../../../components/controls/phi-name-control";
 import { PhiDescriptionHint } from "../../../../../components/controls/phi-description-tooltip-icon";
-import { Fragment, useCallback, useEffect, useEffectEvent, useMemo, useState, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useEffectEvent, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { PhiMultiSelectControl } from "../../../../../components/controls/phi-multi-select-control";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
@@ -54,6 +54,7 @@ import {
   type PhiTableProviderQueryResult,
   type PhiTableQuery,
   type PhiTableRowIdentity,
+  type PhiTableSelectedRow,
   type PhiTableSummaryItemDefinition,
   type PhiTableSummaryValue,
   type PhiTableWidgetConfig,
@@ -64,6 +65,7 @@ import {
   readPhiTableBindingParamsSignalValue,
   readPhiTableExpansionSignalValue,
   readPhiTableActionSignalValue,
+  isPhiTableQueryValue,
 } from "../../../../../types/table-signal-values";
 import {
   collectPhiRuntimeValueConditions,
@@ -508,10 +510,58 @@ export function PhiTableWidgetClient({
     emitCapability("expansionChange", { expandedRowIdentities: [...next] }, correlationId);
   }, [emitCapability, setExpandedRowIdentities]);
 
+  /*
+   * The named fields of the selected rows (`rowSelection.emitFields`). A row kept selected from another
+   * page keeps what was last read of it, so turning the page does not announce a different selection.
+   */
+  const emitFields = features.rowSelection?.emitFields;
+  const rowIdentityPath = resource?.rowIdentityPath ?? "id";
+  const knownSelectedRowsRef = useRef(new Map<string, PhiTableSelectedRow>());
+  const emittedSelectedRowsRef = useRef<string | null>(null);
+  const readSelectedRows = useCallback((identities: readonly PhiTableRowIdentity[]) => {
+    if (!emitFields || emitFields.length === 0) return undefined;
+    const known = knownSelectedRowsRef.current;
+    const selectedRows = identities.flatMap((rowIdentity) => {
+      const row = rows.find((candidate) => String(readRowIdentity(candidate, rowIdentityPath)) === String(rowIdentity));
+      if (!row) {
+        const last = known.get(String(rowIdentity));
+        return last ? [last] : [];
+      }
+      return [{
+        rowIdentity,
+        values: Object.fromEntries(emitFields.map((field) => {
+          const value = readPhiTableControlValue(row, field);
+          return [field, isPhiTableQueryValue(value) ? value : null];
+        })),
+      }];
+    });
+    knownSelectedRowsRef.current = new Map(selectedRows.map((row) => [String(row.rowIdentity), row]));
+    return selectedRows;
+  }, [emitFields, rowIdentityPath, rows]);
+  const emitSelection = useCallback((identities: readonly PhiTableRowIdentity[], correlationId?: string) => {
+    const selectedRows = readSelectedRows(identities);
+    emittedSelectedRowsRef.current = JSON.stringify(selectedRows ?? null);
+    emitCapability("selectionChange", {
+      selectedRowIdentities: [...identities],
+      ...(selectedRows ? { selectedRows } : {}),
+    }, correlationId);
+  }, [emitCapability, readSelectedRows]);
+
   const updateSelection = useCallback((next: readonly PhiTableRowIdentity[], correlationId?: string) => {
     setSelectedRowIdentities(next);
-    emitCapability("selectionChange", { selectedRowIdentities: [...next] }, correlationId);
-  }, [emitCapability, setSelectedRowIdentities]);
+    emitSelection(next, correlationId);
+  }, [emitSelection, setSelectedRowIdentities]);
+
+  /*
+   * The same selection, said again once what it carries has changed -- a row retired and read back. A
+   * receiver that disables something on a field of the selection would otherwise act on the old value.
+   */
+  useEffect(() => {
+    if (!emitFields || emitFields.length === 0 || selectedRowIdentities.length === 0) return;
+    const selectedRows = readSelectedRows(selectedRowIdentities);
+    if (JSON.stringify(selectedRows ?? null) === emittedSelectedRowsRef.current) return;
+    emitSelection(selectedRowIdentities);
+  }, [emitFields, emitSelection, readSelectedRows, selectedRowIdentities]);
 
   const updateBindingParams = useCallback((next: Record<string, unknown>, correlationId?: string) => {
     setChosenBindingParams({ seed: bindingParamsSeed, params: next });
