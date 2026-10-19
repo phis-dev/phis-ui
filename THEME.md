@@ -268,7 +268,7 @@ Per mode, `resolvePhiRootTheme(...)` (`components/root/phi-root-theme-resolver.t
 3. `theme.style.token`,
 4. `fontFamily` / `fontFamilyCode` from the resolved `body` / `mono` slots.
 
-Ant Design's algorithm derives the rest. The shared `fontSize` seed is `12`
+Ant Design's algorithm derives the rest. The shared `fontSize` seed is `13`
 (`PHI_DEFAULT_ANTD_FONT_SIZE`); `fontSizeSM`, `fontSizeLG`, headings, and line heights are derived and may be
 overridden in `style.token`. Size tokens are numeric values such as `padding = 21`. Components are the shared
 component defaults merged per component with `theme.components`, the Button shadow steps, and the Control
