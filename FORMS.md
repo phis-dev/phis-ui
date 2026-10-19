@@ -486,6 +486,11 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
   Form reads its thread from a record and keeps the placement's `internalAllowed`. With `source` and an `openActionKey`, a Table action with a row identity
   arriving on `recordOpen` loads that record; without `openActionKey` the record is read once on mount.
   After a successful handler submit the last opened record is read again.
+- What a placement only knows at run time -- the group selected in a Table next to the dialog -- is asked
+  for, not pushed: the Form sends `valuesRequest` once as it mounts, and whoever knows answers `valuesSet`.
+  A dialog with `mountPolicy: "remount"` holds no Form when the choice is made, so a value sent then
+  would reach nobody. The answered values are laid over the start values, not into them: a reset returns
+  to what the Form had before. Admin Groups starts its membership Form in the selected group this way.
 - A flow is composed, not branched: a stage that asks different questions is another Form. A node's
   `visibleWhen` in the page tree decides whether it is shown, and the Form Preview Widget
   (`@phis/ui/modules/core/widgets/form-preview`) reads what a link token is about through the relay and
@@ -512,6 +517,7 @@ Inputs (`runtimeSignals.listens`):
 | `recordOpen` | `action/activate` | `json`, `table-action` schema |
 | `close` | `dialog/close` | `none`; resets the Form and emits `cancel` |
 | `reload` | `reload/activate` | `none`; reloads the open record |
+| `valuesSet` | `values/change` | `json`, `form-values` schema; lays the values over the named fields without making the Form dirty |
 | `conditionStateChange` | `condition/change` | `json`, `runtime-condition-state` schema |
 
 - A `submit` signal is dropped while the form holds values validation has already refused and nothing has
@@ -536,6 +542,7 @@ Outputs (`runtimeSignals.emits`):
 | `command` | `activate` | `string` |
 | `cancel` | `close` | `none` |
 | `conditionStateRequest` | `reload` | `none` |
+| `valuesRequest` | `reload` | `none`; sent once on mount, answered with `valuesSet` |
 
 Submit runs client validation first. All feedback of one submit or reset keeps the correlation id of the
 signal that started it. A Controller closes an Overlay on the correlated `submitSuccess`, never on the

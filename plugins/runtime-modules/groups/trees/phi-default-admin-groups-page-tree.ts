@@ -174,8 +174,26 @@ export async function buildPhiDefaultAdminGroupsPageTree({
                 valueType: "json",
                 valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
                 receiver: controllerAddress,
-              }],
-              listens: [{
+              }, ...(workflow === "membership" ? [{
+                // Opened on a selected group, the Form starts in it.
+                routeKey: "admin-groups-membership-values-request",
+                capabilityId: "valuesRequest",
+                scope: "page" as const,
+                channel: "values",
+                action: "reload" as const,
+                valueType: "none" as const,
+                receiver: controllerAddress,
+              }] : [])],
+              listens: [...(workflow === "membership" ? [{
+                routeKey: "admin-groups-membership-values",
+                capabilityId: "valuesSet",
+                scope: "page" as const,
+                channel: "values",
+                action: "change" as const,
+                valueType: "json" as const,
+                valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
+                receiver: formAddress,
+              }] : []), {
                 routeKey: `admin-groups-${workflow}-submit`,
                 capabilityId: "submit",
                 scope: "page",
@@ -275,6 +293,16 @@ export async function buildPhiDefaultAdminGroupsPageTree({
               valueType: "none",
               receiver: membersTableAddress,
             },
+            {
+              routeKey: "admin-groups-controller-membership-values",
+              capabilityId: "membershipValues",
+              scope: "page",
+              channel: "values",
+              action: "change",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
+              receiver: membershipFormAddress,
+            },
             ...([
               ["create", createOverlayAddress],
               ["membership", membershipOverlayAddress],
@@ -368,6 +396,7 @@ export async function buildPhiDefaultAdminGroupsPageTree({
             pagination: { enabled: true, pageSize: 25, pageSizes: [25, 50, 100] },
             sorting: { mode: "none" },
             search: { enabled: false },
+            tools: { mode: "self-contained", reset: false, reload: true },
             editing: { mode: "cell" },
             actions: {
               rowLayout: "compact",
@@ -508,11 +537,13 @@ export async function buildPhiDefaultAdminGroupsPageTree({
             pagination: { enabled: true, pageSize: 25, pageSizes: [25, 50, 100] },
             sorting: { mode: "none" },
             search: { enabled: false },
+            tools: { mode: "self-contained", reset: false, reload: true },
             // The level is edited in the cell it is read in; nothing else about a member is editable.
             editing: { mode: "cell" },
             actions: {
               rowLayout: "compact",
-              // The Form names the group itself, so a member can be added before any group is selected.
+              // The Form names the group itself, so a member can be added before any group is selected;
+              // with one selected, it starts there (the Controller answers the Form's `valuesRequest`).
               toolbar: [{
                 key: "addMember",
                 label: labels.membership.title,

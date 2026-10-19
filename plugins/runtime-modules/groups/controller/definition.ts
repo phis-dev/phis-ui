@@ -58,6 +58,13 @@ export const PHI_GROUPS_RUNTIME_CONTROLLER_DEFINITION = {
       { id: "membershipSubmit", action: "activate", valueType: "none" },
       // A dialog a Form was written from closes once the write took; the Page names which dialogs.
       { id: "dialogClose", action: "close", valueType: "none" },
+      // What the membership Form starts with when it asks: the group selected in the table, if any.
+      {
+        id: "membershipValues",
+        action: "change",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
+      },
     ],
     listens: [
       {
@@ -78,6 +85,7 @@ export const PHI_GROUPS_RUNTIME_CONTROLLER_DEFINITION = {
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
       },
       { id: "formCommand", channel: "command", action: "activate", valueType: "string" },
+      { id: "membershipValuesRequest", channel: "values", action: "reload", valueType: "none" },
     ],
   },
   defaultConfig: {},

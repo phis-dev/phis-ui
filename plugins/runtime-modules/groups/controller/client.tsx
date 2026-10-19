@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 
 import type { PhiRuntimeControllerPlugin } from "../../../../types";
 import {
@@ -50,6 +50,8 @@ function PhiGroupsControllerView({
   // with every membership on the Site.
   const sendGroupFilter = useCallback((groupId: number | null, correlationId: string) =>
     emitCapability("filtersChange", { groupId }, correlationId), [emitCapability]);
+  // Kept for the membership Form, which mounts only when its dialog opens and then asks for it.
+  const selectedGroupIdRef = useRef<number | null>(null);
 
   // Nothing about this Controller gates a Widget; answering keeps the asking Widget from waiting.
   usePhiRuntimeConditionStateResponder({ address, scope: "page", state: GROUPS_CONDITION_STATE });
@@ -80,11 +82,18 @@ function PhiGroupsControllerView({
     // Only a selection chooses the group. A condition question or reload reaching this listener fell
     // through to here and sent `{ groupId: null }`, which emptied the membership table under a choice.
     if (signal.channel === "selection") {
-      sendGroupFilter(readSelectedGroupId(signal.value), signal.correlationId);
+      selectedGroupIdRef.current = readSelectedGroupId(signal.value);
+      sendGroupFilter(selectedGroupIdRef.current, signal.correlationId);
+      return;
+    }
+    // No group selected, nothing to say: the Form starts empty, as it would without asking.
+    if (signal.channel === "values" && selectedGroupIdRef.current != null) {
+      // The group field's options carry their ids as strings.
+      emitCapability("membershipValues", { values: { groupId: String(selectedGroupIdRef.current) } }, signal.correlationId);
     }
   }, {
     scopes: ["page"],
-    channels: ["selection", "condition", "submit", "command"],
+    channels: ["selection", "condition", "submit", "command", "values"],
     actions: ["change", "reload", "activate"],
     receiver: address,
   });

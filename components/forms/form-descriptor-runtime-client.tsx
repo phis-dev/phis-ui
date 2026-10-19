@@ -20,6 +20,7 @@ import { readPhiRuntimeConditionStateSignalValue } from "../../types/runtime-con
 import { collectPhiRuntimeValueConditions } from "../../types/runtime-condition";
 import { usePhiTableProvider } from "../widgets/client/shared/phi-table-provider";
 import { PhiFormControl, type PhiFormControlFormInstance } from "../controls/phi-form-control";
+import { readPhiRuntimeFormValuesSignalValue } from "./runtime-form-state";
 import { resolvePhiFormText } from "./form-descriptor-contract";
 import { PhiFormWidgetSubmitOutlet, usePhiFormWidgetSubmit } from "./phi-form-widget-frame";
 import { usePhiRuntimeFormClient } from "./runtime-form-client";
@@ -65,6 +66,9 @@ export function PhiFormDescriptorRuntimeClient({
   const formRef = useRef<PhiFormControlFormInstance | null>(null);
   const submitCorrelationRef = useRef<string | null>(null);
   const recordIdentityRef = useRef<string | number | null>(null);
+  // Values that arrived through `valuesSet` before the form was there to take them.
+  const pendingValuesRef = useRef<Record<string, unknown> | null>(null);
+  const valuesRequestedRef = useRef(false);
   const identity = usePhiSignalIdentity();
   // Where the placement says nothing about Enter, a dialog's body answers it (FORMS.md, `submitOnEnter`).
   const inDialogBody = usePhiInDialogBody();
@@ -304,6 +308,14 @@ export function PhiFormDescriptorRuntimeClient({
       if (!rejectedRef.current) requestSubmit(signal.correlationId);
     } else if (route.capabilityId === "reset") {
       requestReset(signal.correlationId);
+    } else if (route.capabilityId === "valuesSet") {
+      const payload = readPhiRuntimeFormValuesSignalValue(signal.value);
+      if (!payload) return;
+      if (formRef.current) {
+        formRef.current.setFieldsValue(payload.values);
+      } else {
+        pendingValuesRef.current = { ...pendingValuesRef.current, ...payload.values };
+      }
     } else if (
       route.capabilityId === "conditionStateChange" &&
       isPhiControllerSignalAddress(signal.sender) &&
@@ -328,6 +340,13 @@ export function PhiFormDescriptorRuntimeClient({
       emitCapability("conditionStateRequest");
     }
   }, [conditionControllerAddresses, emitCapability]);
+
+  // Once per mount: asked again later, the answer would overwrite what was chosen in the meantime.
+  useEffect(() => {
+    if (valuesRequestedRef.current) return;
+    valuesRequestedRef.current = true;
+    emitCapability("valuesRequest");
+  }, [emitCapability]);
 
   /*
    * The guard token of a form that declares one, asked for as soon as the form is in the browser.
@@ -500,6 +519,10 @@ export function PhiFormDescriptorRuntimeClient({
         submitOnEnter={widgetConfig?.submitOnEnter ?? inDialogBody}
         onFormReady={(activeForm) => {
           formRef.current = activeForm;
+          if (pendingValuesRef.current) {
+            activeForm.setFieldsValue(pendingValuesRef.current);
+            pendingValuesRef.current = null;
+          }
         }}
         conditionControllerStates={conditionControllerStates}
         onValuesChange={(changed, all) => {

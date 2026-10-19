@@ -82,6 +82,12 @@ export const PHI_FORM_WIDGET_DEFINITION = {
       { id: "command", action: "activate", valueType: "string" },
       { id: "cancel", action: "close", valueType: "none" },
       { id: "conditionStateRequest", action: "reload", valueType: "none" },
+      /*
+       * Asked once, as the Form mounts: whoever knows what it should start with answers `valuesSet`.
+       * A Form in a dialog that opens afresh is not there when the choice it depends on is made, so it
+       * has to ask rather than be told.
+       */
+      { id: "valuesRequest", action: "reload", valueType: "none" },
     ],
     listens: [
       { id: "submit", channel: "submit", action: "activate", valueType: "none" },
@@ -95,6 +101,17 @@ export const PHI_FORM_WIDGET_DEFINITION = {
       },
       { id: "close", channel: "dialog", action: "close", valueType: "none" },
       { id: "reload", channel: "reload", action: "activate", valueType: "none" },
+      /*
+       * Values laid over the ones the Form holds, for the fields they name. Not a change anybody made:
+       * the Form stays clean, and a reset returns to what it started with before them.
+       */
+      {
+        id: "valuesSet",
+        channel: "values",
+        action: "change",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
+      },
       { id: "conditionStateChange", channel: "condition", action: "change", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeConditionState },
     ],
   },
