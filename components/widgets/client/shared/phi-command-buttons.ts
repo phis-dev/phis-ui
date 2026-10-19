@@ -228,8 +228,14 @@ export function usePhiCommandButtons({
         return;
       }
 
+      /*
+       * What the signal sets is the capability its route names, not the channel it came in on: a route
+       * chooses its channel freely -- a Save button's `loading` arrives on `pageMetaSubmitting` or
+       * `submitting` -- and comparing the channel left every such button without its loading state.
+       */
+      const capability = route.capabilityId;
       if (targetsWidget) {
-        if (signal.channel === "enabled" && signal.action === "change") {
+        if (capability === "enabled") {
           setCommandDisabled(typeof signal.value === "boolean" ? !signal.value : false);
         }
         return;
@@ -242,7 +248,7 @@ export function usePhiCommandButtons({
       const value = readButtonSignalValue(signal);
       setButtonStateByKey((current) => {
         const previous = current[buttonKey] ?? {};
-        if (signal.channel === "enabled" && signal.action === "change") {
+        if (capability === "enabled") {
           return {
             ...current,
             [buttonKey]: {
@@ -251,7 +257,7 @@ export function usePhiCommandButtons({
             },
           };
         }
-        if (signal.channel === "visibility" && signal.action === "change") {
+        if (capability === "visibility") {
           return {
             ...current,
             [buttonKey]: {
@@ -260,7 +266,7 @@ export function usePhiCommandButtons({
             },
           };
         }
-        if (signal.channel === "loading" && signal.action === "change") {
+        if (capability === "loading") {
           return {
             ...current,
             [buttonKey]: {
@@ -269,7 +275,7 @@ export function usePhiCommandButtons({
             },
           };
         }
-        if (signal.channel === "badge" && signal.action === "change") {
+        if ((capability === "badgeText" || capability === "badgeCount")) {
           return {
             ...current,
             [buttonKey]: {
@@ -278,7 +284,7 @@ export function usePhiCommandButtons({
             },
           };
         }
-        if (signal.channel === "icon" && signal.action === "change") {
+        if (capability === "icon") {
           return {
             ...current,
             [buttonKey]: {
@@ -287,7 +293,7 @@ export function usePhiCommandButtons({
             },
           };
         }
-        if (signal.channel === "label" && signal.action === "change") {
+        if (capability === "label") {
           return {
             ...current,
             [buttonKey]: {
@@ -296,7 +302,7 @@ export function usePhiCommandButtons({
             },
           };
         }
-        if (signal.channel === "tooltip" && signal.action === "change") {
+        if (capability === "tooltip") {
           return {
             ...current,
             [buttonKey]: {
