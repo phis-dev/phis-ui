@@ -20,8 +20,11 @@ export type PhiAreaShellPresetNodes = {
 };
 
 /**
- * The shell an administrative Area carries: a top band with the account, a main band with the page title,
- * and a left Sider with the Area's navigation.
+ * The shell an administrative Area carries: one top band with the Tour button at the left, the page title in
+ * the middle and the account at the right, and a left Sider with the Area's navigation.
+ *
+ * The page title had a main band of its own under the top band, which held nothing else; it now stands in
+ * the top band's middle, and the band under it is gone.
  *
  * Admin and Editor built this from the same 150 lines with their own ids and labels, and App its Sider a
  * third time; a change to the Sider's collapsing or the header's padding had to be made three times and
@@ -40,16 +43,14 @@ export function buildPhiAreaShellHeaderNodes({
   labelPrefix: string;
   ids: {
     regionHeaderTop: number;
-    regionHeaderMain: number;
     layoutHeaderTop: PhiCmsInstanceId;
     layoutHeaderTopActions: PhiCmsInstanceId;
-    layoutHeaderMain: PhiCmsInstanceId;
-    widgetHeaderMainPageTitle: PhiCmsInstanceId;
+    widgetHeaderTopPageTitle: PhiCmsInstanceId;
+    widgetHeaderTopTourButton: PhiCmsInstanceId;
     widgetHeaderTopAccount: PhiCmsInstanceId;
   };
 }): PhiAreaShellPresetNodes {
   const shell = runtime.site.theme?.shell;
-  const shellHeaderMainOffsetTop = resolvePhiShellMetric(shell, "offsetTop", { family: "header", region: "main" });
   return {
     regions: [
       nodes.region({
@@ -58,36 +59,15 @@ export function buildPhiAreaShellHeaderNodes({
         rootLayoutNodeId: ids.layoutHeaderTop,
         sortOrder: 10,
         // Structure only: the frame's look is the Theme's (SHELL.md, Shell Chrome Overlay).
-        config: {
-          size: { height: `${resolvePhiShellHeaderHeight(shell, "top")}px` },
-        },
-      }),
-      nodes.region({
-        id: ids.regionHeaderMain,
-        regionType: PhiCmsRegionType.HeaderMain,
-        rootLayoutNodeId: ids.layoutHeaderMain,
-        sortOrder: 20,
+        // Sticky: it carries the page title, which stays in view while the content scrolls.
         config: {
           flags: PhiCmsFlags.Sticky,
-          size: { height: `${resolvePhiShellHeaderHeight(shell, "main")}px` },
-          offsetTop: typeof shellHeaderMainOffsetTop === "number" ? shellHeaderMainOffsetTop : 0,
+          size: { height: `${resolvePhiShellHeaderHeight(shell, "top")}px` },
+          offsetTop: 0,
         },
       }),
     ],
     layoutNodes: [
-      nodes.layout({
-        creationPreset: { layoutKind: "threecol", preset: "panel" },
-        typeKey: "three-column",
-        id: ids.layoutHeaderMain,
-        parentLayoutNodeId: null,
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-        sortOrder: 0,
-        label: `${labelPrefix} header main three column`,
-        config: {
-          balancedSides: true,
-          contentAlign: "center",
-        },
-      }),
       nodes.layout({
         creationPreset: { layoutKind: "threecol", preset: "panel" },
         typeKey: "three-column",
@@ -110,10 +90,24 @@ export function buildPhiAreaShellHeaderNodes({
       }),
     ],
     contentWidgets: [
+      /*
+       * The Tour button belongs to the Tour Module. With that Module off in this Area the live Shell
+       * draws nothing for it, as for any Widget whose Module is not active; on, it shows only on Pages
+       * that carry a Tour.
+       */
+      nodes.widget({
+        typeKey: "tour-button",
+        id: ids.widgetHeaderTopTourButton,
+        parentLayoutNodeId: ids.layoutHeaderTop,
+        slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Left,
+        sortOrder: 0,
+        label: `${labelPrefix} header top tour button`,
+        config: {},
+      }),
       nodes.widget({
         typeKey: "page-title",
-        id: ids.widgetHeaderMainPageTitle,
-        parentLayoutNodeId: ids.layoutHeaderMain,
+        id: ids.widgetHeaderTopPageTitle,
+        parentLayoutNodeId: ids.layoutHeaderTop,
         slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
         sortOrder: 0,
         label: "Page title",

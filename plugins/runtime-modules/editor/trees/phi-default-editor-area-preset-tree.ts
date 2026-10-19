@@ -12,7 +12,6 @@ import { createPhiDefaultAreaRuntimeModuleIds } from "../../area-module-defaults
 
 const SYNTHETIC_EDITOR_REGION_IDS = {
   regionHeaderTop: -140,
-  regionHeaderMain: -141,
   regionSiderLeft: -150,
 } as const;
 
@@ -23,7 +22,6 @@ const SYNTHETIC_EDITOR_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap({
 }, [
   "layoutHeaderTop",
   "layoutHeaderTopActions",
-  "layoutHeaderMain",
   "layoutSiderLeft",
 ]);
 
@@ -32,7 +30,8 @@ const SYNTHETIC_EDITOR_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
   ownerModuleId: PHI_EDITOR_RUNTIME_MODULE_ID,
   presetKey: "editor-area-preset",
 }, [
-  "widgetHeaderMainPageTitle",
+  "widgetHeaderTopPageTitle",
+  "widgetHeaderTopTourButton",
   "widgetHeaderTopAccount",
   "widgetSiderLeftNav",
 ]);

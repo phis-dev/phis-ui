@@ -12,7 +12,6 @@ import { createPhiDefaultAreaRuntimeModuleIds } from "../../area-module-defaults
 
 const SYNTHETIC_ADMIN_REGION_IDS = {
   regionHeaderTop: -126,
-  regionHeaderMain: -127,
   regionSiderLeft: -130,
 } as const;
 
@@ -23,7 +22,6 @@ const SYNTHETIC_ADMIN_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap({
 }, [
   "layoutHeaderTop",
   "layoutHeaderTopActions",
-  "layoutHeaderMain",
   "layoutSiderLeft",
 ]);
 
@@ -34,7 +32,8 @@ const SYNTHETIC_ADMIN_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
 }, [
   "widgetSiderLeftNav",
   "widgetHeaderTopAccount",
-  "widgetHeaderMainPageTitle",
+  "widgetHeaderTopPageTitle",
+  "widgetHeaderTopTourButton",
 ]);
 
 export async function buildPhiDefaultAdminAreaPresetTree({
