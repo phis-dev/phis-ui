@@ -55,6 +55,27 @@ const PHI_MODAL_WIDTH_BY_CONTROL_SIZE: Record<PhiControlSize, number> = {
   large: 960,
 };
 
+/** What a dialog opens on: the first thing to type into or choose from, never a button or a hint. */
+const PHI_MODAL_FIRST_FIELD_SELECTOR = [
+  "input:not([type=hidden]):not(:disabled)",
+  "textarea:not(:disabled)",
+  "select:not(:disabled)",
+  "[contenteditable=true]",
+].join(", ");
+
+const PHI_MODAL_TAB_STOP_SELECTOR = [
+  "a[href]",
+  "button:not(:disabled)",
+  "input:not([type=hidden]):not(:disabled)",
+  "textarea:not(:disabled)",
+  "select:not(:disabled)",
+  "[contenteditable=true]",
+  "[tabindex]:not([tabindex='-1'])",
+].join(", ");
+
+/** About a second: a Form that loads its descriptor late still gets the focus, a slower one does not. */
+const PHI_MODAL_FIRST_FIELD_MAX_FRAMES = 60;
+
 const PHI_MODAL_HEADER_MIN_BLOCK_SIZE =
   `calc(${PHI_CONTROL.md} + ${PHI_SPACE.xs} + ${PHI_SPACE.xs})`;
 
@@ -82,6 +103,7 @@ export function PhiModalControlAdapter({
   const mode = useSyncExternalStore(subscribeModalMode, readModalMode, readServerModalMode);
   const bodyMeasureRef = useRef<HTMLDivElement | null>(null);
   const bodyContentRef = useRef<HTMLDivElement | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
   const resizeAnimationRef = useRef<Animation | null>(null);
   useEffect(() => {
     const bodyMeasure = bodyMeasureRef.current;
@@ -125,6 +147,37 @@ export function PhiModalControlAdapter({
       resizeAnimationRef.current = null;
     };
   }, [open, size?.height, token.motionDurationMid, token.motionEaseInOut]);
+  /*
+   * Ant Design's lock moves the focus to the first focusable element, which is the close button, so a
+   * dialog with a Form could not be typed into until Tab was pressed. The field may mount a few frames
+   * late, and once the person has pressed a key or the pointer the focus is theirs.
+   */
+  useEffect(() => {
+    if (!open) return undefined;
+    let frame = 0;
+    let frames = 0;
+    let settled = false;
+    const settle = () => { settled = true; };
+    window.addEventListener("keydown", settle, true);
+    window.addEventListener("pointerdown", settle, true);
+    const tryFocus = () => {
+      if (settled) return;
+      const content = bodyContentRef.current;
+      const field = content?.querySelector<HTMLElement>(PHI_MODAL_FIRST_FIELD_SELECTOR);
+      if (field != null && !content?.contains(document.activeElement)) {
+        field.focus({ preventScroll: true });
+      }
+      if (field != null || content?.contains(document.activeElement)) return;
+      frames += 1;
+      if (frames < PHI_MODAL_FIRST_FIELD_MAX_FRAMES) frame = window.requestAnimationFrame(tryFocus);
+    };
+    frame = window.requestAnimationFrame(tryFocus);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("keydown", settle, true);
+      window.removeEventListener("pointerdown", settle, true);
+    };
+  }, [open]);
   const resolvedMask = resolvePhiOverlayMaskPresentation(mask);
   const renderedTitle = header == null ? title : (
     <div
@@ -226,8 +279,30 @@ export function PhiModalControlAdapter({
       onCancel={(event) => onDismiss?.(resolvePhiOverlayDismissSource(event))}
       afterOpenChange={afterOpenChange}
       modalRender={(node) => (
-        <div onMouseDown={(event) => event.stopPropagation()} onClick={(event) => event.stopPropagation()}>
+        <div
+          ref={dialogRef}
+          onMouseDown={(event) => event.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
+        >
           {node}
+          {/*
+            The dialog is the last thing in the document, so Tab on its last button left the page
+            altogether, and antd's lock only took the focus back on the way in. This stop wraps it
+            instead: arriving from inside means forward, arriving from outside means Shift+Tab.
+          */}
+          <span
+            tabIndex={0}
+            data-phi-modal-focus-wrap="true"
+            style={{ position: "fixed", inlineSize: 0, blockSize: 0, overflow: "hidden" }}
+            onFocus={(event) => {
+              const dialog = dialogRef.current;
+              if (dialog == null) return;
+              const stops = [...dialog.querySelectorAll<HTMLElement>(PHI_MODAL_TAB_STOP_SELECTOR)]
+                .filter((stop) => stop !== event.currentTarget && stop.checkVisibility());
+              const forward = event.relatedTarget instanceof Node && dialog.contains(event.relatedTarget);
+              (forward ? stops[0] : stops[stops.length - 1])?.focus({ preventScroll: true });
+            }}
+          />
         </div>
       )}
     >
