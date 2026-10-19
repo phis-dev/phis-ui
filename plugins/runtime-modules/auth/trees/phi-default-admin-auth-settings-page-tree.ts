@@ -174,6 +174,7 @@ export async function buildPhiDefaultAdminAuthSettingsPageTree({
                     label: labels.installations.createTitle,
                     icon: "plus",
                     display: "icon",
+                    mode: "primary",
                     execution: "signal",
                   },
                 ],

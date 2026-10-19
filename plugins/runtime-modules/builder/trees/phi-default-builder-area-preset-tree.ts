@@ -1622,6 +1622,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                       emits: [{ capabilityId: "command", value: "createPage" }],
                       label: labels.pages.newPage,
                       icon: "plus",
+                      variant: "primary",
                     },
                     {
                       key: "editPageMeta",
@@ -2162,9 +2163,9 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     structure: { mode: "tree", parentRowIdentityPath: "parentId", expandColumnKey: "icon", expandRowByClick: true },
                     actions: {
                       toolbar: [
-                        { key: "add-link", label: navigationLabels!.actions.addLink, icon: "antd:plus", display: "icon", execution: "provider" },
-                        { key: "add-container", label: navigationLabels!.actions.addContainer, icon: "antd:folder-add", display: "icon", execution: "provider" },
-                        { key: "add-separator", label: navigationLabels!.actions.addSeparator, icon: "antd:minus", display: "icon", execution: "provider" },
+                        { key: "add-link", label: navigationLabels!.actions.addLink, icon: "antd:plus", display: "icon", mode: "primary", execution: "provider" },
+                        { key: "add-container", label: navigationLabels!.actions.addContainer, icon: "antd:folder-add", display: "icon", mode: "primary", execution: "provider" },
+                        { key: "add-separator", label: navigationLabels!.actions.addSeparator, icon: "antd:minus", display: "icon", mode: "primary", execution: "provider" },
                       ],
                       row: [
                         { key: "hide", label: navigationLabels!.actions.hide, icon: "antd:eye", display: "icon", execution: "provider" },
