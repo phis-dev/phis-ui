@@ -189,6 +189,8 @@ export type * from "./types/site-theme";
 export * from "./types/server-capabilities";
 export * from "./types/core-runtime-controller";
 export * from "./types/signals";
+// The Tour Controller's address and the Tour definition shape, for a Module that brings its own Tour.
+export * from "./types/tours";
 export type { PhiCmsWidgetConfigBase } from "./components/widgets/config/parser-primitives";
 export * from "./components/widgets/config/control-signal-config";
 export type * from "./components/widgets/config/background";

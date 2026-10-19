@@ -1,15 +1,5 @@
-import { PHI_SHARED_PACKAGE_NAME, createPhiControllerSignalAddress } from "../../../../types/signals";
+import { PHI_TOUR_CONTROLLER_KEY, PHI_TOUR_CONTROLLER_PLUGIN_KEY } from "../../../../types/tours";
 
-export const PHI_TOUR_CONTROLLER_PLUGIN_KEY = `${PHI_SHARED_PACKAGE_NAME}/modules/tour/controller`;
-export const PHI_TOUR_CONTROLLER_KEY = "default";
+// The Controller's address is the foundation's (`types/tours.ts`): the Tour button, which is Core's, asks it.
 export const PHI_TOUR_CONTROLLER_TYPE =
   `${PHI_TOUR_CONTROLLER_PLUGIN_KEY}/${PHI_TOUR_CONTROLLER_KEY}` as const;
-const PHI_TOUR_CONTROLLER_INSTANCE_KEY = "default";
-
-export function createPhiTourControllerAddress() {
-  return createPhiControllerSignalAddress(
-    PHI_TOUR_CONTROLLER_PLUGIN_KEY,
-    PHI_TOUR_CONTROLLER_KEY,
-    PHI_TOUR_CONTROLLER_INSTANCE_KEY,
-  );
-}

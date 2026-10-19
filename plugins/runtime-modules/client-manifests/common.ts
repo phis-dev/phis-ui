@@ -355,7 +355,7 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
     [
       PhiCmsWidgetType.TourButton,
       definePhiRuntimeModuleRenderClient(
-        dynamic(() => import("../tour/widgets/tour-button/client").then((module) => module.PhiTourButtonWidget)),
+        dynamic(() => import("../core/widgets/tour-button/client").then((module) => module.PhiTourButtonWidget)),
       ),
     ],
     [

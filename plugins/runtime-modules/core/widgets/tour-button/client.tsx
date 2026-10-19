@@ -7,7 +7,7 @@ import type { PhiTourWidgetLabels } from "../../../../../components/widgets/labe
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiIcon } from "../../../../../components/shell/phi-icon";
-import { createPhiTourControllerAddress } from "../../controller/address";
+import { PHI_TOUR_CONTROLLER_ADDRESS } from "../../../../../types/tours";
 import type { PhiTourButtonWidgetConfig } from "./config";
 
 function readAvailable(value: unknown) {
@@ -30,7 +30,7 @@ export function PhiTourButtonWidget({
   signalsEnabled?: boolean;
 }) {
   const dispatchSignal = usePhiSignalDispatcher();
-  const controller = createPhiTourControllerAddress();
+  const controller = PHI_TOUR_CONTROLLER_ADDRESS;
   // Drawn in the Builder without a Controller to ask, so an author sees what they placed.
   const [available, setAvailable] = useState(!signalsEnabled);
 

@@ -11,9 +11,10 @@ import { PHI_TOUR_PROGRESS_USER_STATE_KEY, PHI_TOUR_RUNTIME_MODULE_ID } from "./
  * Offers the Tours the Site's Pages carry (design/TOURS.md, "Decided direction").
  *
  * It owns no Tour. A Tour belongs to the Module that owns the Page, which attaches it to its route
- * preset; the foundation -- visual anchors, `PhiTourControl`, the Page hand-over -- is Core's. What this
- * Module brings is the button a Site places in its Shell and the Controller behind it, so switching it
- * off takes both away and leaves every Tour where it is, unoffered.
+ * preset; the foundation -- visual anchors, `PhiTourControl`, the Page hand-over, the Tour button and the
+ * address it asks -- is Core's. What this Module brings is the Controller that runs a Tour, so switching
+ * it off switches Tours off for every Module alike: the buttons, unanswered, stay hidden, and every Tour
+ * stays where it is, unoffered. No Module depends on this one to carry a Tour or place its button.
  */
 export const PHI_TOUR_RUNTIME_MODULE_DEFINITION = {
   moduleId: PHI_TOUR_RUNTIME_MODULE_ID,
@@ -24,7 +25,7 @@ export const PHI_TOUR_RUNTIME_MODULE_DEFINITION = {
   controller: buildPhiRuntimeModuleControllerDescriptor(PHI_TOUR_RUNTIME_CONTROLLER_DEFINITION),
   controllerMountPolicy: "area",
   title: "Tours",
-  description: "Guided Tours of the Site's Pages, started from a button in the Shell.",
+  description: "Runs the guided Tours of the Site's Pages, for every Module that brings one.",
   category: "workspace",
   icon: "antd:question-circle",
   userState: [

@@ -140,6 +140,9 @@ import {
   PHI_THEME_MODE_SWITCH_WIDGET_DEFINITION,
 } from "./widgets/theme-mode-switch/config";
 import {
+  PHI_TOUR_BUTTON_WIDGET_DEFINITION,
+} from "./widgets/tour-button/config";
+import {
   PHI_TABLE_WIDGET_DEFINITION,
 } from "./widgets/table/config";
 import {
@@ -360,6 +363,10 @@ export default createPhiAuthoringWidgetModule([
   definePhiAuthoringWidgetModuleLoader(
     PHI_THEME_MODE_SWITCH_WIDGET_DEFINITION,
     () => import("./widgets/theme-mode-switch/authoring").then((module) => module.PHI_THEME_MODE_SWITCH_WIDGET_BUILDER_PLUGIN),
+  ),
+  definePhiAuthoringWidgetModuleLoader(
+    PHI_TOUR_BUTTON_WIDGET_DEFINITION,
+    () => import("./widgets/tour-button/authoring").then((module) => module.PHI_TOUR_BUTTON_WIDGET_BUILDER_PLUGIN),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_TAB_BAR_WIDGET_DEFINITION,

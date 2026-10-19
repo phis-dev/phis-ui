@@ -91,9 +91,9 @@ export function buildPhiAreaShellHeaderNodes({
     ],
     contentWidgets: [
       /*
-       * The Tour button belongs to the Tour Module. With that Module off in this Area the live Shell
-       * draws nothing for it, as for any Widget whose Module is not active; on, it shows only on Pages
-       * that carry a Tour.
+       * The Tour button is Core's, so this Shell does not depend on the Tour Module. It shows only on a
+       * Page that carries a Tour and only while the Tour Module answers for the Area; otherwise it draws
+       * nothing.
        */
       nodes.widget({
         typeKey: "tour-button",

@@ -23,7 +23,6 @@ const PHI_CMS_WIDGET_PLUGIN_KEYS = {
   "observability": `${PHI_CMS_WIDGET_PLUGIN_KEY_BASE}/observability/widgets`,
   "theme": `${PHI_CMS_WIDGET_PLUGIN_KEY_BASE}/theme/widgets`,
   "threads": `${PHI_CMS_WIDGET_PLUGIN_KEY_BASE}/threads/widgets`,
-  "tour": `${PHI_CMS_WIDGET_PLUGIN_KEY_BASE}/tour/widgets`,
   "video": `${PHI_CMS_WIDGET_PLUGIN_KEY_BASE}/video/widgets`,
 } as const;
 
@@ -117,7 +116,7 @@ const PHI_CMS_WIDGET_MODULE_BY_TYPE_KEY: Readonly<Record<string, keyof typeof PH
   "structure-region": "builder",
   "switch": "core",
   "theme-mode-switch": "core",
-  "tour-button": "tour",
+  "tour-button": "core",
   "tab-bar": "core",
   "table": "core",
   "test-block": "builder",

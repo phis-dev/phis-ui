@@ -3,10 +3,12 @@
 This is a design, and the first cut of it is built (2026-10-17): visual anchors in the signal partition
 (`components/runtime/runtime-visual-anchors.ts`), `PhiTourControl`, the definition type
 (`types/tours.ts`), the Page hand-over (`server-helpers/page-tour.ts`, `phi-cms-page-render-scope.tsx`),
-and the Tour Module with its button and Controller (`plugins/runtime-modules/tour`). The Theme workspace
+the Tour button (Core, `core/widgets/tour-button`), and the Tour Module with its Controller
+(`plugins/runtime-modules/tour`). The Theme workspace
 carries the first Tour.
 
-Not built yet: subcontrol anchors (only frames and Regions register), resuming at a stored step, Region
+Subcontrol anchors are built for the Table (2026-10-19, below). Not built yet: subcontrol anchors of
+other Widgets, resuming at a stored step, Region
 targets of a Page Tour in the Area's own Shell, and preparation signals per step.
 
 A feature-local Tour renderer, DOM-selector convention, address family, or signal protocol is not an
@@ -21,20 +23,25 @@ The split below was agreed with the operator and supersedes the "no discovery" s
 | --- | --- |
 | Visual anchors, `PhiTourControl`, the definition type, the Tour workflow as a client state machine with `profile` persistence | Core (foundation) |
 | One Tour | the Module that owns the Page, attached to that Page's route preset |
-| The Tour button (Shell `header_top`, middle) and the Tour Controller | a Tour Module, opt-in and switchable |
+| The Tour button, and the Tour Controller's address and channel (`PHI_TOUR_CONTROLLER_ADDRESS`, `tour`) | Core (foundation) |
+| The Tour Controller | the Tour Module, opt-in and switchable |
 
 - Discovery is per Page, not a registry: the render knows whether the current Page carries a Tour, the
   way it knows the Page's meta, and the button is visible only then.
 - The button sends an ordinary signal to the Tour Controller of its Area; the Controller reads the Page's
   definition and the user's progress and runs it. Offering a Tour once on first visit is the
   Controller's too.
-- Switching the Tour Module off removes the button and the Controller; definitions in other Modules stay
-  inert. A single Tour is switched off per user by its progress (dismissed/completed).
+- Switching the Tour Module off removes the Controller, for every Module's Tours alike: the buttons, never
+  told that a Tour is there, stay hidden, and definitions in other Modules stay inert. No Module depends on
+  the Tour Module to carry a Tour or to place the button -- a third-party Module puts `tour-button` on its
+  own Page the way a Shell puts it in `header_top` (2026-10-19). A single Tour is switched off per user
+  by its progress (dismissed/completed).
 - Operator-authored Tours (a target picker in the Builder) remain out of scope.
 - Target ids: a preset node keeps its derived id through editing, saving and publishing (CMS.md), so a
   Tour may target preset nodes of an edited Page; a node the Site removed is a missing target.
-- Open: how the Tour Module's button reaches a Shell it does not own. There is no contribution from a
-  Module into another preset's Shell Region today, and the Public Area shows `header_top` only on `/`.
+- Since the button is Core's, a Shell preset places it like any Core Widget: Admin, Editor and Builder
+  carry it at the left of `header_top`. Still open: the Public and App Shells carry none, and the Public
+  Area shows `header_top` only on `/`.
 
 ## Core model
 
@@ -125,6 +132,15 @@ family.
 - Registration and removal follow mount/unmount. Hidden, collapsed, disabled, or portal-mounted content
   reports its real current availability rather than retaining a stale element.
 - Duplicate active visual anchors for one address inside one Runtime partition are a contract error.
+
+A part is marked by the Control that draws it and offered by the Widget that owns the address. The
+Control sets `PHI_VISUAL_ANCHOR_PART_ATTRIBUTE` (`data-phi-anchor-part`, `types/tours.ts`) on the part's
+element -- an inert mark on its own -- and the Widget registers the parts it promises with
+`usePhiVisualAnchorParts`, which finds each one inside the Widget's own registered frame and nowhere else.
+The Table Widget offers `filters`, `toolbar`, `header` (the column heads as far as they are seen, never the full width of a Table that scrolls sideways), `row-actions` (the actions
+column's head), `footer` and `pagination`; a part the Table does not draw is simply not found, and the
+step does what its `ifMissing` says. A Page Tour naming a part makes the owning Widget's frame live, as
+naming the Widget itself does.
 
 Anchor lookup is always scoped to the active Runtime Registry partition. Live runtime, Builder Canvas,
 Preview, and other sandboxes may contain the same `PhiCmsInstanceId` concurrently without resolving to

@@ -3,10 +3,11 @@ import type { PhiRuntimeControllerDefinition } from "../../../../types/cms-plugi
 import {
   PHI_PAGE_TOUR_CONFIG_KEY,
   PHI_PAGE_TOUR_CONTROLLER_FLAG,
+  PHI_TOUR_CONTROLLER_KEY,
+  PHI_TOUR_CONTROLLER_PLUGIN_KEY,
   readPhiResolvedPageTour,
   type PhiResolvedPageTour,
 } from "../../../../types/tours";
-import { PHI_TOUR_CONTROLLER_KEY, PHI_TOUR_CONTROLLER_PLUGIN_KEY } from "./address";
 
 export type PhiTourControllerConfig = {
   /** The shown Page's Tour, handed on by the Page resolution while that Page is shown; `null` for none. */
