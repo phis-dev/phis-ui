@@ -144,14 +144,18 @@ export type PhiSettingsPageShellOverlay = {
 };
 
 /**
- * One Collapsible panel of a Settings page: the panel title becomes the Collapsible slot title,
- * the optional description renders as the panel's leading text, and the sections stack vertically
+ * One Collapsible panel of a Settings page: the panel title becomes the Collapsible slot title, the
+ * optional description the hint behind it (`slotDescriptions`), and the sections stack vertically
  * inside the panel.
  */
 export type PhiSettingsPageShellPanel = {
   /** Preset-locally unique node key for the panel's Layout node. */
   nodeKey: string;
   title: string;
+  /**
+   * What the panel is for, in a sentence: shown as the (i) behind its title, so it can be read before the
+   * panel is opened and does not stand between the title and the fields once it is.
+   */
   description?: string;
   sections: readonly PhiSettingsPageShellSection[];
 };
@@ -165,7 +169,7 @@ export type PhiSettingsPageShellPanel = {
  * themselves.
  *
  * Each panel wraps its sections in a vertical Layout because a sequential slot renders exactly one
- * child node, while a panel is a description and then what it is about, or several sections at once.
+ * child node, while a panel may hold several sections at once.
  */
 export function buildPhiSettingsPageShellTree({
   page,
@@ -199,10 +203,7 @@ export function buildPhiSettingsPageShellTree({
     ...overlays.flatMap((overlay) => [`${overlay.nodeKey}Body`, `${overlay.nodeKey}Footer`]),
   ]);
   const widgets = createPhiPresetCmsInstanceIdMap(identity, [
-    ...panels.flatMap((panel) => [
-      ...(panel.description !== undefined ? [`${panel.nodeKey}Description`] : []),
-      ...panel.sections.map((section) => section.nodeKey),
-    ]),
+    ...panels.flatMap((panel) => panel.sections.map((section) => section.nodeKey)),
     ...overlays.flatMap((overlay) => [`${overlay.nodeKey}Form`, `${overlay.nodeKey}Commands`]),
   ]);
   const overlayIds = createPhiPresetCmsInstanceIdMap(
@@ -229,6 +230,9 @@ export function buildPhiSettingsPageShellTree({
       label,
       config: {
         slotTitles: panels.map((panel) => panel.title),
+        ...(panels.some((panel) => panel.description)
+          ? { slotDescriptions: panels.map((panel) => panel.description ?? "") }
+          : {}),
         accordion: true,
         defaultOpenSlotKeys: ["slot_0"],
         titleStrong: true,
@@ -236,7 +240,7 @@ export function buildPhiSettingsPageShellTree({
          * Where the Settings column stops. Set here rather than on each Form: the panels are what a
          * reader's eye follows down the page, and a panel running the full width of a wide screen with
          * a narrow form inside it reads as two columns that do not line up. One maximum on the
-         * Collapsible holds titles, descriptions and forms in the same column.
+         * Collapsible holds titles and forms in the same column.
          *
          * A maximum, not a width -- the Collapsible still fills a narrow screen edge to edge. The reading
          * measure, like an entry or the Terms: a Settings page is read down, not filled across.
@@ -315,14 +319,6 @@ export function buildPhiSettingsPageShellTree({
         });
 
       return [
-        ...(panel.description !== undefined
-          ? [buildPanelWidget({
-              id: widgets[`${panel.nodeKey}Description`]!,
-              typeKey: "description",
-              label: panel.title,
-              config: { description: panel.description },
-            })]
-          : []),
         ...panel.sections.flatMap((section): PhiCmsContentWidgetNode[] => {
           if (section.kind !== "form") {
             return [buildPanelWidget({
@@ -358,7 +354,7 @@ export function buildPhiSettingsPageShellTree({
                 },
                 execution: { mode: "handler" },
                 source: null,
-                // As wide as the column it stands in, so title, description and fields share one edge.
+                // As wide as the column it stands in, so title and fields share one edge.
                 maxFormWidth: PHI_LAYOUT.readingMax,
                 ...configOverrides,
                 signalRoutes: {

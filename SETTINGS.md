@@ -99,15 +99,16 @@ There is no page-level heading block above it — the page title is already in t
 titles name the sections.
 
 Each Settings panel is one Collapsible slot: the panel title is the slot title, an optional
-description leads the panel, and the panel's sections (descriptor Forms, Tables, description blocks)
-stack inside it. The Collapsible runs in accordion mode with the first panel open, so exactly one
+description is the (i) hint behind that title (`slotDescriptions`) -- readable before the panel opens,
+and not standing between the title and the fields once it has -- and the panel's sections (descriptor
+Forms, Tables, description blocks) stack inside it. The Collapsible runs in accordion mode with the first panel open, so exactly one
 panel is open at a time. A panel is one coherent unit of configuration; a Module
 with more configuration takes further free slots rather than growing one panel. The Collapsible
 Layout supports at most 12 slots ([LAYOUTING.md](./LAYOUTING.md)), which is therefore the per-page
 budget; a Module exceeding it splits into multiple mounted pages.
 
 Panels wrap their sections in a vertical Layout because a sequential Layout slot renders exactly one
-child node, while a panel is a description and then what it is about, or several sections at once.
+child node, while a panel may hold several sections at once.
 
 Each Form panel carries its own primary Save button: the shell states it as the Form Widget's `submit`
 ([FORMS.md](./FORMS.md)), so it is drawn in the control column under the inputs rather than placed as a
