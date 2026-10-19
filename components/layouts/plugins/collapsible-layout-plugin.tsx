@@ -21,7 +21,7 @@ function resolvePhiCollapsibleSlotKeys() {
 
 function resolvePhiCollapsibleSlotMeta(
   node: PhiCmsLayoutRenderNode,
-  config: PhiCmsCollapsibleLayoutConfig,
+  slotTitles: string[] | undefined,
 ) {
   const occupiedSlotIndices = new Set<number>();
   const children = [
@@ -35,7 +35,7 @@ function resolvePhiCollapsibleSlotMeta(
 
   return PHI_CMS_COLLAPSIBLE_LAYOUT_SLOTS.map((slot) => ({
     key: slot.key,
-    label: node.resolvedSlotTitles?.[slot.slotIndex]?.trim() || config.slotTitles?.[slot.slotIndex]?.trim() || slot.label,
+    label: slotTitles?.[slot.slotIndex]?.trim() || slot.label,
     slotIndex: slot.slotIndex,
     hasContent: occupiedSlotIndices.has(slot.slotIndex),
   }));
@@ -44,45 +44,50 @@ function resolvePhiCollapsibleSlotMeta(
 export const PHI_COLLAPSIBLE_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsCollapsibleLayoutConfig> = {
   ...PHI_COLLAPSIBLE_LAYOUT_DEFINITION,
   parseConfig: parsePhiCmsCollapsibleLayoutConfig,
-  ...definePhiLayoutRenderers<PhiCmsCollapsibleLayoutConfig>((
-    { node, config, renderSequentialSlotChildren },
+  ...definePhiLayoutRenderers<PhiCmsCollapsibleLayoutConfig>(async (
+    { node, config, renderSequentialSlotChildren, translateOwnText },
     renderMode,
-  ) => (
-    <PhiCollapsibleLayout
-      key={`layout-${node.id}`}
-      blockId={node.id}
-      layoutKind="collapsible"
-      slots={renderSequentialSlotChildren(node)}
-      slotKeys={resolvePhiCollapsibleSlotKeys()}
-      slotMeta={resolvePhiCollapsibleSlotMeta(node, config)}
-      renderMode={renderMode}
-      anchor={config.anchor}
-      editSlotAnchor={resolvePhiLayoutAnchor(config.anchor, PHI_COLLAPSIBLE_LAYOUT_DEFINITION.defaultAnchor)}
-      panelMinHeight={config.panelMinHeight}
-      accordion={config.accordion}
-      slotTitles={node.resolvedSlotTitles ?? config.slotTitles}
-      translateSlotTitles={config.translateSlotTitles}
-      defaultOpenSlotKeys={config.defaultOpenSlotKeys}
-      collapsible={config.collapsible}
-      ghost={config.ghost}
-      expandIconPlacement={config.expandIconPlacement}
-      collapseSize={config.collapseSize}
-      titleStrong={config.titleStrong}
-      headerPadding={config.headerPadding}
-      innerPadding={config.innerPadding}
-      zIndex={config.zIndex}
-      surface={config.surface}
-      padding={config.padding}
-      paddingTop={config.paddingTop}
-      paddingRight={config.paddingRight}
-      paddingBottom={config.paddingBottom}
-      paddingLeft={config.paddingLeft}
-      labelEnd={config.labelEnd}
-      size={config.size}
-      minSize={config.minSize}
-      maxSize={config.maxSize}
-      collapsedSizeHint={config.collapsedSizeHint}
-      initialSlotStates={config.initialSlotStates}
-    />
-  )),
+  ) => {
+    // The panel titles are the Collapsible's own text, translated as a Widget's is (`translatesOwnText`).
+    const slotTitles = config.slotTitles && translateOwnText
+      ? await translateOwnText(config.slotTitles)
+      : config.slotTitles;
+    return (
+      <PhiCollapsibleLayout
+        key={`layout-${node.id}`}
+        blockId={node.id}
+        layoutKind="collapsible"
+        slots={renderSequentialSlotChildren(node)}
+        slotKeys={resolvePhiCollapsibleSlotKeys()}
+        slotMeta={resolvePhiCollapsibleSlotMeta(node, slotTitles)}
+        renderMode={renderMode}
+        anchor={config.anchor}
+        editSlotAnchor={resolvePhiLayoutAnchor(config.anchor, PHI_COLLAPSIBLE_LAYOUT_DEFINITION.defaultAnchor)}
+        panelMinHeight={config.panelMinHeight}
+        accordion={config.accordion}
+        slotTitles={slotTitles}
+        defaultOpenSlotKeys={config.defaultOpenSlotKeys}
+        collapsible={config.collapsible}
+        ghost={config.ghost}
+        expandIconPlacement={config.expandIconPlacement}
+        collapseSize={config.collapseSize}
+        titleStrong={config.titleStrong}
+        headerPadding={config.headerPadding}
+        innerPadding={config.innerPadding}
+        zIndex={config.zIndex}
+        surface={config.surface}
+        padding={config.padding}
+        paddingTop={config.paddingTop}
+        paddingRight={config.paddingRight}
+        paddingBottom={config.paddingBottom}
+        paddingLeft={config.paddingLeft}
+        labelEnd={config.labelEnd}
+        size={config.size}
+        minSize={config.minSize}
+        maxSize={config.maxSize}
+        collapsedSizeHint={config.collapsedSizeHint}
+        initialSlotStates={config.initialSlotStates}
+      />
+    );
+  }),
 };

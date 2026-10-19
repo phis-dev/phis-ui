@@ -354,6 +354,8 @@ export async function buildPhiDefaultBuilderMediaPageTree({
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
+        // Preview and Metadata are the Media label set's words, translated already.
+        flags: PhiCmsFlags.NoTranslate,
         label: "dev media inspector body",
         config: {
           ghost: true,

@@ -225,8 +225,8 @@ export function runPhiDeveloperBuilderInspectorAction(
     return;
   }
 
-  if (action.kind === "setSelectedWidgetTranslate") {
-    patchSelectedNode(state, "widget", "translate", {
+  if (action.kind === "setSelectedWidgetTranslate" || action.kind === "setSelectedLayoutTranslate") {
+    patchSelectedNode(state, action.kind === "setSelectedWidgetTranslate" ? "widget" : "layout", "translate", {
       patchNode: (node) => ({
         ...node,
         flags: action.translate

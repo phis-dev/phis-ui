@@ -345,7 +345,6 @@ export type PhiCmsCollapsibleLayoutConfig = PhiCmsLayerBase & {
   panelMinHeight?: PhiCssLength;
   accordion?: boolean;
   slotTitles?: string[];
-  translateSlotTitles?: boolean;
   defaultOpenSlotKeys?: string[];
   collapsible?: "header" | "icon" | "disabled";
   ghost?: boolean;
@@ -714,7 +713,6 @@ export function parsePhiCmsCollapsibleLayoutConfig(
       panelMinHeight: readPhiLengthValue(config.panelMinHeight) ?? undefined,
       accordion: readBoolean(config.accordion),
       slotTitles: readSlotTitles(config.slotTitles),
-      translateSlotTitles: readBoolean(config.translateSlotTitles),
       defaultOpenSlotKeys: readStringArray(config.defaultOpenSlotKeys),
       collapsible: readCollapsibleTrigger(config.collapsible),
       ghost: readBoolean(config.ghost),

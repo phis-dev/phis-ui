@@ -47,7 +47,10 @@ import {
   isPhiInspectorConfigFieldVisible,
   renderPhiInspectorPaddingConfigControl,
   renderPhiInspectorConfigField,
+  renderPhiInspectorSwitchRow,
 } from "./inspector-config-field";
+import { hasPhiFlag } from "../../../../helpers/flags";
+import { PhiCmsFlags } from "../../../../constants/phi-cms";
 import type {
   PhiSignalRoute,
 } from "../../../../types/signals";
@@ -103,6 +106,8 @@ type PhiDeveloperBuilderLayoutInspectorWidgetClientProps = {
    * grid placement columns and placements at once, and each is one step to take back, not several.
    */
   onConfigPatch?: (patch: Record<string, unknown>) => void;
+  /** Sets the node's `NoTranslate` flag; offered for a Layout that translates its own text. */
+  onTranslateChange?: (translate: boolean) => void;
   paddingLabels?: PhiPaddingWidgetLabels;
   surfaceLabels?: PhiInspectorSurfaceLabels;
   gridLabels?: PhiInspectorWidgetLabels["grid"];
@@ -132,6 +137,7 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
   onPaddingChange,
   onSurfaceChange,
   onConfigPatch,
+  onTranslateChange,
   paddingLabels,
   surfaceLabels,
   gridLabels,
@@ -184,6 +190,7 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
   const settingsAnswerIsKnown = selectedStructurePlugin != null;
   const settingsHasContent = !settingsAnswerIsKnown || !isTargetKind || section !== "settings"
     || settingsFields.length > 0 || gridPlacementField != null
+    || selectedStructurePlugin?.translatesOwnText === true
     || chromeFields.some((field) => field.type !== "padding");
   const ownSlot = usePhiBaseLayoutOwnSlotController();
   useEffect(() => {
@@ -291,7 +298,8 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
           <PhiInspectorSectionContent
             sectionKey={section ?? "settings"}
             sections={[
-              ...(settingsFields.length > 0 || gridPlacementField || declaredCardSections.length > 0
+              ...(settingsFields.length > 0 || gridPlacementField || declaredCardSections.length > 0 ||
+                selectedStructurePlugin?.translatesOwnText
                 ? [
                     {
                       key: "settings",
@@ -315,6 +323,16 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                               onChange: onConfigPatch,
                             }),
                           )}
+                          {/* The same switch a Widget that translates its own text offers, under the same words. */}
+                          {selectedStructurePlugin?.translatesOwnText
+                            ? renderPhiInspectorSwitchRow({
+                              key: "translate-text",
+                              label: "Translate text",
+                              checked: !hasPhiFlag(currentDraft?.node.flags ?? 0, PhiCmsFlags.NoTranslate),
+                              disabled: isPreviewMode,
+                              ...(onTranslateChange ? { onChange: onTranslateChange } : {}),
+                            })
+                            : null}
                           {gridPlacementField ? (
                             <PhiGridPlacementSettings
                               config={currentDraftRecord ?? {}}

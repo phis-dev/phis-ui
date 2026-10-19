@@ -477,6 +477,13 @@ export type PhiCmsLayoutPluginRenderArgs<TConfig> = {
   renderChildren: (node: PhiCmsLayoutRenderNode) => ReactNode[];
   renderSequentialSlotChildren: (node: PhiCmsLayoutRenderNode) => ReactNode[];
   renderResolvedSequentialSlotChildren?: (node: PhiCmsLayoutRenderNode) => Promise<ReactNode[]>;
+  /**
+   * The text in the node's own config in the reader's language, for a Layout that `translatesOwnText`:
+   * the renderer answers it, because translating is a server matter and a Layout plugin is loaded in the
+   * browser too. Under the node's `NoTranslate` flag, or where nobody translates, the texts come back
+   * as they were.
+   */
+  translateOwnText?: (texts: readonly string[]) => Promise<string[]>;
 };
 
 export type PhiCmsWidgetPlugin<TConfig> = {
@@ -716,6 +723,12 @@ export type PhiCmsLayoutPlugin<TConfig> = {
    * two holds anything.
    */
   slotPositions?: "compact" | "fixed";
+  /**
+   * The Layout translates the text written into its own config -- a Collapsible's panel titles -- the
+   * way a Widget that says so does. Turning that off is the node's `NoTranslate` flag, not a config
+   * field, and a Layout that says so here gets the Inspector's switch for it.
+   */
+  translatesOwnText?: true;
   parseConfig: (raw: Record<string, unknown>) => TConfig;
   render: PhiBivariantCallback<[PhiCmsLayoutPluginRenderArgs<TConfig>], ReactNode>;
   renderEditor: PhiBivariantCallback<[PhiCmsLayoutPluginRenderArgs<TConfig>], ReactNode>;
@@ -742,6 +755,7 @@ export type PhiCmsLayoutPluginDefinition<TConfig> = Pick<
   | "fields"
   | "slots"
   | "slotPositions"
+  | "translatesOwnText"
 >;
 
 export type PhiCmsResolvedRequestLoaderArgs = {

@@ -54,7 +54,6 @@ export type PhiCollapsibleLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
   panelMinHeight?: CSSProperties["minHeight"];
   accordion?: boolean;
   slotTitles?: string[];
-  translateSlotTitles?: boolean;
   /** Every change of the open panels after the first render, whoever made it: a click or a signal. */
   onOpenSlotKeysChange?: (next: string[]) => void;
   defaultOpenSlotKeys?: string[];

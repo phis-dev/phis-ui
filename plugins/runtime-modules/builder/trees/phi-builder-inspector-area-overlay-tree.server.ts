@@ -1,4 +1,5 @@
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../../constants/cms-layout-types";
+import { PhiCmsFlags } from "../../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import { PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
@@ -283,6 +284,8 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
+        // The section titles are the Inspector label set's, translated already.
+        flags: PhiCmsFlags.NoTranslate,
         label: "Builder inspector sections",
         config: {
           ghost: true,

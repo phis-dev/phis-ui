@@ -224,10 +224,11 @@ export function buildPhiSettingsPageShellTree({
       typeKey: "collapsible",
       slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
       sortOrder: 0,
+      // The panel titles arrive in the reader's language already, from each Module's own label set.
+      flags: PhiCmsFlags.NoTranslate,
       label,
       config: {
         slotTitles: panels.map((panel) => panel.title),
-        translateSlotTitles: false,
         accordion: true,
         defaultOpenSlotKeys: ["slot_0"],
         titleStrong: true,

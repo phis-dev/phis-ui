@@ -709,7 +709,9 @@ drop it without a word.
 - `PhiCoreWidgetPlacements` maps each listed type key to its placement type.
 - `PhiWidgetPlacementBase` is the envelope every placement shares: the block geometry, `visibleWhen`
   and `signalRoutes`. The slot frame applies the block to every Widget alike.
-- Translation is off through the node flag `PhiCmsFlags.NoTranslate` (`flags`), not through config.
+- Translation is off through the node flag `PhiCmsFlags.NoTranslate` (`flags`), not through config. The same
+  holds for a Layout that translates its own text (`translatesOwnText`), such as the Collapsible's panel
+  titles: set the flag where the titles you write are already in the reader's language.
 
 **What stays untyped:**
 - a Core Widget not in the map yet, such as Card, whose config is still changing;

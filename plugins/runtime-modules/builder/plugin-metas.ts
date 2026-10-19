@@ -78,6 +78,7 @@ export function buildPhiBuilderPluginMeta(plugin: PhiAnyCmsBuilderPlugin): PhiBu
     creationConfig: cloneDefaultConfig("creationConfig" in plugin ? plugin.creationConfig : null),
     slots,
     slotPositions: plugin.slotPositions ?? "compact",
+    ...("translatesOwnText" in plugin && plugin.translatesOwnText ? { translatesOwnText: true as const } : {}),
     fields: plugin.fields,
     allowReorder: true,
     defaultAnchor: plugin.defaultAnchor ?? slots.find((slot) => slot.defaultAnchor != null)?.defaultAnchor ?? null,

@@ -8,6 +8,7 @@ export type PhiBuilderInspectorAction =
   /** The selected Widget's whole Surface; `null` takes it away. */
   | { kind: "patchSelectedWidgetSurface"; surface: PhiSurface | null }
   | { kind: "setSelectedWidgetTranslate"; translate: boolean }
+  | { kind: "setSelectedLayoutTranslate"; translate: boolean }
   | { kind: "patchSelectedLayoutAnchor"; selectedLayoutAnchor: string }
   | { kind: "patchSelectedLayoutPadding"; padding: Record<string, unknown> | null }
   /** The selected Layout's whole Surface; `null` takes it away. */
@@ -45,7 +46,7 @@ export function readPhiBuilderInspectorAction(
     return { kind: value.kind, surface: readPhiSurface(value.surface) };
   }
 
-  if (value.kind === "setSelectedWidgetTranslate") {
+  if (value.kind === "setSelectedWidgetTranslate" || value.kind === "setSelectedLayoutTranslate") {
     return typeof value.translate === "boolean" ? { kind: value.kind, translate: value.translate } : null;
   }
 

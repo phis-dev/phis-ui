@@ -45,6 +45,7 @@ export type PhiBuilderContainerMeta = PhiBuilderPluginMetaBase & {
   defaultAnchor?: PhiRenderableBlockAnchor | null;
   /** What a new node is written with, where the Layout says more than its `defaultConfig`. */
   creationConfig?: Record<string, unknown> | null;
+  translatesOwnText?: true;
   fields: readonly PhiCmsConfigField[];
 };
 

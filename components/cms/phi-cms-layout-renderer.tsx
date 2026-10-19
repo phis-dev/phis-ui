@@ -10,6 +10,8 @@ import type {
 } from "../../types/cms";
 import { comparePhiCmsInstanceIds, type PhiCmsInstanceId } from "../../types/cms-instance-id";
 import type { PhiBlockRuntime, PhiSignalScope } from "../../types";
+import { hasPhiFlag } from "../../helpers/flags";
+import { PhiCmsFlags } from "../../constants/phi-cms";
 import type { PhiRenderableBlock, PhiRenderableBlockBase, PhiRenderableBlockRuntime } from "../../types/renderable-block";
 import type { PhiSurfacePolicy } from "../../types/surface";
 import type {
@@ -85,6 +87,30 @@ async function resolvePhiCmsTreeFeatures(
 ) {
   const { resolvePhiCmsTreeFeatures: resolve } = await import("../../server-helpers/cms-node-features");
   return resolve(...args);
+}
+
+/**
+ * What a Layout that `translatesOwnText` is handed to translate the text in its config with -- the
+ * Collapsible's panel titles. The node's `NoTranslate` flag is the switch, as for a Widget, and the
+ * renderer reads it so no Layout has to. Imported lazily like the passes below: translating is
+ * `server-only` and this module is not. A text the catalogue has no answer for stays as written.
+ */
+export function createPhiLayoutOwnTextTranslator(
+  plugin: { translatesOwnText?: true },
+  node: Pick<PhiCmsLayoutRenderNode, "flags">,
+  runtime: Pick<PhiBlockRuntime, "locale">,
+): (texts: readonly string[]) => Promise<string[]> {
+  if (!plugin.translatesOwnText || hasPhiFlag(node.flags, PhiCmsFlags.NoTranslate)) {
+    return async (texts) => [...texts];
+  }
+  return async (texts) => {
+    if (!texts.some((text) => text.trim())) {
+      return [...texts];
+    }
+    const { trBulkForLocale } = await import("../../server-helpers/translate");
+    const translated = await trBulkForLocale(runtime.locale.current, [...texts]);
+    return texts.map((text, index) => (text.trim() ? translated[index]?.trim() || text : text));
+  };
 }
 
 /** Lazily imported for the reason above: the pass is `server-only`, the helpers beside it are not. */
@@ -1021,6 +1047,7 @@ function renderLayoutNode(
         renderChildren: (targetNode) => renderChildren(targetNode, context),
         renderSequentialSlotChildren: (targetNode) => renderSequentialSlotChildren(targetNode, context),
         renderResolvedSequentialSlotChildren: (targetNode) => renderResolvedSequentialSlotChildren(targetNode, context),
+        translateOwnText: createPhiLayoutOwnTextTranslator(layoutPlugin, node, context.runtime),
       });
       const normalizedRendered = normalizeRenderedCmsNode(rendered, {
         kind: "layout",

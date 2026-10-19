@@ -216,5 +216,4 @@ export type PhiResolvedCmsAreaPresetPayload = {
 export type PhiCmsLayoutRenderNode = PhiCmsLayoutNode & {
   childLayouts: PhiCmsLayoutRenderNode[];
   childWidgets: PhiCmsContentWidgetNode[];
-  resolvedSlotTitles?: string[];
 };
