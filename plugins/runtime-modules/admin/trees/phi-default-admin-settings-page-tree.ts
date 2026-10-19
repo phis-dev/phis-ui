@@ -7,7 +7,6 @@ import { getPhiAdminSettingsWidgetLabels } from "../../../../components/widgets/
 import { getPhiAdminSettingsPageLabels } from "./admin-settings-label-set";
 import { buildPhiSettingsPageShellTree } from "../../../../components/regions/presets/phi-settings-page-shell-tree";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
-import { PHI_SURFACE_CARD } from "../../../../helpers/surface-presets";
 
 const SYNTHETIC_ADMIN_SETTINGS_REGION_IDS = {
   regionContent: -471,
@@ -75,7 +74,8 @@ export async function buildPhiDefaultAdminSettingsPageTree({
               { text: `${labels.fields.mailFromName}: %1`, values: [settings.mailFromName || "—"] },
               { text: `${labels.fields.contactRecipient}: %1`, values: [settings.contactRecipient || "—"] },
             ],
-            asideList: { itemSurface: PHI_SURFACE_CARD },
+            // Facts in a panel, not cards on a page: bare entries on the panel's own ground.
+            asideList: { itemSurface: null },
           },
         }],
       },

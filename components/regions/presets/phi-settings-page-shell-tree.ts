@@ -261,6 +261,11 @@ export function buildPhiSettingsPageShellTree({
         config: {
           gap: PHI_SPACE.sm,
           padding: 0,
+          /*
+           * A panel reads from its left edge, as its title does. A vertical flex centres by default, and
+           * a part narrower than the column -- a Description's entries -- stood in the middle of it.
+           */
+          anchor: { horizontal: "left", vertical: "top" },
         },
       }),
     ),

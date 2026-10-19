@@ -7,7 +7,6 @@ import type { PhiBlockRuntime } from "../../../../types";
 import { buildPhiSettingsPageShellTree } from "../../../../components/regions/presets/phi-settings-page-shell-tree";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 import { PHI_STORAGE_SIZE_UNIT_LABEL, phiBytesToStorageSize } from "../../../../components/forms/storage-size";
-import { PHI_SURFACE_CARD } from "../../../../helpers/surface-presets";
 
 function formatMegabytes(bytes: number | null | undefined) {
   const size = phiBytesToStorageSize(bytes);
@@ -105,7 +104,8 @@ export async function buildPhiDefaultAdminMediaSettingsPageTree({
                 values: [space.addonId, String(space.spaceId), formatMegabytes(space.usedBytes), formatMegabytes(space.quotaBytes)],
               })),
             ],
-            asideList: { itemSurface: PHI_SURFACE_CARD },
+            // Facts in a panel, not cards on a page: bare entries on the panel's own ground.
+            asideList: { itemSurface: null },
           },
         }],
       },
