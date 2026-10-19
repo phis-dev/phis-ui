@@ -195,6 +195,53 @@ function renderPhiInspectorConfigFieldBlock(field: PhiCmsConfigField, control: R
   return renderPhiInspectorSettingsBlock(renderPhiInspectorConfigFieldLabel(field), control, field.key);
 }
 
+/**
+ * A `slot-texts` field: a line for each slot the author can see, named as the slot is on the canvas.
+ *
+ * Only the Layout Inspector draws it, because only it knows which slots are occupied and what they are
+ * called; the generic field body has neither. A cleared line keeps its place in the list, so the slots
+ * after it keep theirs, and trailing empties are dropped the way the parser drops them.
+ */
+export function renderPhiInspectorSlotTextsField({
+  field,
+  value,
+  slots,
+  disabled,
+  onChange,
+}: {
+  field: Extract<PhiCmsConfigField, { type: "slot-texts" }>;
+  value: unknown;
+  slots: readonly { slotIndex: number; label: string }[];
+  disabled: boolean;
+  onChange?: (patch: Record<string, unknown>) => void;
+}) {
+  if (slots.length === 0) return null;
+  const current = Array.isArray(value) ? value.map((item) => (typeof item === "string" ? item : "")) : [];
+  const write = (slotIndex: number, text: string) => {
+    const next = current.slice();
+    while (next.length <= slotIndex) next.push("");
+    next[slotIndex] = text;
+    while (next.length > 0 && !next[next.length - 1]?.trim()) next.pop();
+    onChange?.({ [field.key]: next.length > 0 ? next : undefined });
+  };
+  return (
+    <Fragment key={field.key}>
+      <PhiDividerControl titlePlacement="start" style={{ marginBlock: 0 }}>{field.heading ?? field.label}</PhiDividerControl>
+      {slots.map((slot) =>
+        renderPhiInspectorSettingsRow(
+          slot.label,
+          <PhiTextControl
+            value={current[slot.slotIndex] ?? ""}
+            disabled={disabled || !onChange}
+            style={{ width: "100%" }}
+            onChange={(nextValue) => write(slot.slotIndex, nextValue ?? "")}
+          />,
+          `${field.key}:${slot.slotIndex}`,
+        ))}
+    </Fragment>
+  );
+}
+
 export function isPhiInspectorConfigFieldVisible(
   field: PhiCmsConfigField,
   config: Record<string, unknown>,

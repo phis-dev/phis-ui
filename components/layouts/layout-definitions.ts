@@ -174,6 +174,7 @@ export const PHI_COLLAPSIBLE_LAYOUT_DEFINITION = {
       options: PHI_COLLAPSIBLE_SLOT_OPTIONS,
     },
     { key: "panelMinHeight", type: "length", label: "Panel Min Height", min: 0 },
+    { key: "slotDescriptions", type: "slot-texts", label: "Panel Descriptions" },
     { key: "accordion", type: "boolean", label: "Accordion" },
     /*
      * The inside, and only the inside: whether the panels are separate objects -- their own ground, a

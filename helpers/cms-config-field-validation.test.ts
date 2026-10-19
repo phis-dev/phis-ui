@@ -85,6 +85,13 @@ describe("what it declines to judge", () => {
     expect(findPhiCmsConfigViolations([custom], { transition: "flip" })).toEqual([]);
   });
 
+  it("takes a list of texts for a slot-texts field, an empty one keeping its slot's place", () => {
+    const descriptions: PhiCmsConfigField = { key: "slotDescriptions", type: "slot-texts", label: "Panel Descriptions" };
+    expect(findPhiCmsConfigViolations([descriptions], { slotDescriptions: ["", "Who sees it"] })).toEqual([]);
+    expect(findPhiCmsConfigViolations([descriptions], { slotDescriptions: "Who sees it" })).toHaveLength(1);
+    expect(findPhiCmsConfigViolations([descriptions], { slotDescriptions: ["Who", 3] })).toHaveLength(1);
+  });
+
   it("leaves structured settings to their own parsers", () => {
     // A padding or a background is a shape with a parser of its own, and guessing at it from a field
     // type would be a second, worse validator.

@@ -316,7 +316,9 @@ composition, not alternate Layout kinds.
 - A title-bearing Layout family stores slot titles as Layout presentation config keyed by its declared
   slot order. A child Widget/Layout label is not a fallback source for that title.
 - Titles live on the owning Layout (for example `slotTitles` on `PhiCollapsibleLayout`) and do not move
-  with child drag and drop.
+  with child drag and drop. The same holds for a slot's description (`slotDescriptions`, the hint behind a
+  Collapsible panel's title): a `slot-texts` field, stored in slot order and edited in the Inspector with
+  one line per occupied slot.
 - Moving, replacing, or deleting a child does not move, rewrite, or delete either the source or target
   slot title. Authoring exposes title editing as an explicit Layout operation.
 - A title-bearing live renderer may omit an empty slot panel without deleting its configured title;

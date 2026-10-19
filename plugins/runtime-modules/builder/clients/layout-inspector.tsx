@@ -47,6 +47,7 @@ import {
   isPhiInspectorConfigFieldVisible,
   renderPhiInspectorPaddingConfigControl,
   renderPhiInspectorConfigField,
+  renderPhiInspectorSlotTextsField,
   renderPhiInspectorSwitchRow,
 } from "./inspector-config-field";
 import { hasPhiFlag } from "../../../../helpers/flags";
@@ -165,8 +166,27 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
   const resolvedLayoutPaddingDefaults = normalizePhiPaddingWidgetConfig(layoutDefaultConfigRecord);
   const declaredFields = selectedStructurePlugin?.fields ?? [];
   const settingsFields = declaredFields.filter(
-    (field) => !isPhiCmsChromeConfigField(field) && isPhiInspectorConfigFieldVisible(field, currentLayoutConfigRecord),
+    (field) => !isPhiCmsChromeConfigField(field) && field.type !== "slot-texts"
+      && isPhiInspectorConfigFieldVisible(field, currentLayoutConfigRecord),
   );
+  const slotTextsFields = declaredFields.filter(
+    (field): field is Extract<PhiCmsConfigField, { type: "slot-texts" }> =>
+      field.type === "slot-texts" && isPhiInspectorConfigFieldVisible(field, currentLayoutConfigRecord),
+  );
+  /*
+   * The slots a `slot-texts` field offers a line for: the occupied ones, named by their title where the
+   * Layout has one -- the panel the author is looking at, not an index.
+   */
+  const occupiedSlotIndices = currentDraft
+    ? new Set([...currentDraft.node.childLayouts, ...currentDraft.node.childWidgets].map((child) => child.slotIndex))
+    : new Set<number>();
+  const draftSlotTitles = Array.isArray(currentDraftRecord?.slotTitles) ? currentDraftRecord.slotTitles : [];
+  const textSlots = (selectedStructurePlugin?.slots ?? [])
+    .filter((slot) => occupiedSlotIndices.has(slot.slotIndex))
+    .map((slot) => {
+      const title = draftSlotTitles[slot.slotIndex];
+      return { slotIndex: slot.slotIndex, label: typeof title === "string" && title.trim() ? title.trim() : slot.label };
+    });
   const chromeFields = declaredFields
     .filter(isPhiCmsChromeConfigField)
     .filter((field) => isPhiInspectorConfigFieldVisible(field, currentLayoutConfigRecord))
@@ -190,6 +210,7 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
   const settingsAnswerIsKnown = selectedStructurePlugin != null;
   const settingsHasContent = !settingsAnswerIsKnown || !isTargetKind || section !== "settings"
     || settingsFields.length > 0 || gridPlacementField != null
+    || (slotTextsFields.length > 0 && textSlots.length > 0)
     || selectedStructurePlugin?.translatesOwnText === true
     || chromeFields.some((field) => field.type !== "padding");
   const ownSlot = usePhiBaseLayoutOwnSlotController();
@@ -299,7 +320,7 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
             sectionKey={section ?? "settings"}
             sections={[
               ...(settingsFields.length > 0 || gridPlacementField || declaredCardSections.length > 0 ||
-                selectedStructurePlugin?.translatesOwnText
+                selectedStructurePlugin?.translatesOwnText || (slotTextsFields.length > 0 && textSlots.length > 0)
                 ? [
                     {
                       key: "settings",
@@ -320,6 +341,15 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                               dataProviderDescriptors,
                               calendarAdapterDescriptors,
                               videoProviderDescriptors,
+                              onChange: onConfigPatch,
+                            }),
+                          )}
+                          {slotTextsFields.map((field) =>
+                            renderPhiInspectorSlotTextsField({
+                              field,
+                              value: currentDraftRecord?.[field.key],
+                              slots: textSlots,
+                              disabled: isPreviewMode,
                               onChange: onConfigPatch,
                             }),
                           )}

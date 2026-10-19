@@ -258,6 +258,16 @@ export type PhiCmsConfigField =
       type: "image";
     })
   | (PhiCmsConfigFieldBase & {
+      /**
+       * One short text per slot, stored as a list in slot order -- a Collapsible's panel descriptions.
+       *
+       * The Inspector offers a line for each occupied slot, named by what the slot is called on the
+       * canvas, so the author writes against the panel they see rather than against an index. Like
+       * `slotTitles` the list is the Layout's and does not move with a child (`LAYOUTING.md`).
+       */
+      type: "slot-texts";
+    })
+  | (PhiCmsConfigFieldBase & {
       /** A list of whole numbers, such as the page sizes a table offers; each at least `min`. */
       type: "number-list";
       min?: number;

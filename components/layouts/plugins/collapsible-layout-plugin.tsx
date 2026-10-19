@@ -48,10 +48,17 @@ export const PHI_COLLAPSIBLE_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsCollapsible
     { node, config, renderSequentialSlotChildren, translateOwnText },
     renderMode,
   ) => {
-    // The panel titles are the Collapsible's own text, translated as a Widget's is (`translatesOwnText`).
-    const slotTitles = config.slotTitles && translateOwnText
-      ? await translateOwnText(config.slotTitles)
-      : config.slotTitles;
+    /*
+     * The panel titles and their descriptions are the Collapsible's own text, translated as a Widget's
+     * is (`translatesOwnText`) -- in one question, so a page asks its catalogue once for both.
+     */
+    const ownTitles = config.slotTitles ?? [];
+    const ownDescriptions = config.slotDescriptions ?? [];
+    const translated = translateOwnText && (ownTitles.length > 0 || ownDescriptions.length > 0)
+      ? await translateOwnText([...ownTitles, ...ownDescriptions])
+      : [...ownTitles, ...ownDescriptions];
+    const slotTitles = config.slotTitles ? translated.slice(0, ownTitles.length) : undefined;
+    const slotDescriptions = config.slotDescriptions ? translated.slice(ownTitles.length) : undefined;
     return (
       <PhiCollapsibleLayout
         key={`layout-${node.id}`}
@@ -66,6 +73,7 @@ export const PHI_COLLAPSIBLE_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsCollapsible
         panelMinHeight={config.panelMinHeight}
         accordion={config.accordion}
         slotTitles={slotTitles}
+        slotDescriptions={slotDescriptions}
         defaultOpenSlotKeys={config.defaultOpenSlotKeys}
         collapsible={config.collapsible}
         ghost={config.ghost}

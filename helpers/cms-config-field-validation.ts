@@ -62,6 +62,14 @@ function readPhiCmsConfigFieldViolation(
         : `${field.key} must list whole numbers${field.min !== undefined ? ` of at least ${field.min}` : ""}, not ${describe(stray)}.`;
     }
 
+    case "slot-texts": {
+      if (!Array.isArray(value)) {
+        return `${field.key} must be a list of texts, not ${describe(value)}.`;
+      }
+      const stray = value.find((item) => typeof item !== "string");
+      return stray === undefined ? null : `${field.key} must list texts, not ${describe(stray)}.`;
+    }
+
     case "flags": {
       if (typeof value !== "number" || !Number.isInteger(value) || value < 0) {
         return `${field.key} must be a whole number of flags, not ${describe(value)}.`;

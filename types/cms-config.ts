@@ -345,6 +345,8 @@ export type PhiCmsCollapsibleLayoutConfig = PhiCmsLayerBase & {
   panelMinHeight?: PhiCssLength;
   accordion?: boolean;
   slotTitles?: string[];
+  /** The hint behind each panel's title, in slot order like `slotTitles`; an empty one draws none. */
+  slotDescriptions?: string[];
   defaultOpenSlotKeys?: string[];
   collapsible?: "header" | "icon" | "disabled";
   ghost?: boolean;
@@ -683,17 +685,17 @@ function readExpandIconPlacement(value: unknown): PhiCmsCollapsibleLayoutConfig[
   return value === "start" || value === "end" ? value : undefined;
 }
 
-function readSlotTitles(value: unknown): string[] | undefined {
+function readSlotTexts(value: unknown): string[] | undefined {
   if (!Array.isArray(value)) {
     return undefined;
   }
 
-  const titles = value.map((candidate) => (typeof candidate === "string" ? candidate.trim() : ""));
-  while (titles.length > 0 && !titles[titles.length - 1]) {
-    titles.pop();
+  const texts = value.map((candidate) => (typeof candidate === "string" ? candidate.trim() : ""));
+  while (texts.length > 0 && !texts[texts.length - 1]) {
+    texts.pop();
   }
 
-  return titles.length > 0 ? titles : undefined;
+  return texts.length > 0 ? texts : undefined;
 }
 
 export function parsePhiCmsCollapsibleLayoutConfig(
@@ -712,7 +714,8 @@ export function parsePhiCmsCollapsibleLayoutConfig(
       anchor: readRenderableBlockAnchorOrPlacement(config.anchor),
       panelMinHeight: readPhiLengthValue(config.panelMinHeight) ?? undefined,
       accordion: readBoolean(config.accordion),
-      slotTitles: readSlotTitles(config.slotTitles),
+      slotTitles: readSlotTexts(config.slotTitles),
+      slotDescriptions: readSlotTexts(config.slotDescriptions),
       defaultOpenSlotKeys: readStringArray(config.defaultOpenSlotKeys),
       collapsible: readCollapsibleTrigger(config.collapsible),
       ghost: readBoolean(config.ghost),
