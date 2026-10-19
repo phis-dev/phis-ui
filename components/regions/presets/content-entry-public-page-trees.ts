@@ -14,6 +14,7 @@ import { PHI_CONTENT_ENTRY_RELATED_LIMIT } from "../../../gateway/content-entrie
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiBlockRuntime, PhiRuntimeModuleId } from "../../../types";
 import { PHI_LAYOUT } from "../../../theme/phi-tokens";
+import { PhiContentEntryPart } from "../../../constants/content-entry-parts";
 
 const SYNTHETIC_LIST_REGION_IDS = { regionContent: -320 } as const;
 const SYNTHETIC_DETAIL_REGION_IDS = { regionContent: -321 } as const;
@@ -174,7 +175,8 @@ export async function buildPhiContentEntryDetailPageTree({
         typeKey: "entry-detail",
         id: widgets.widgetEntry,
         label: `pub ${kind} detail widget`,
-        config: { entry },
+        // The tags lead the header; after the text only the link is left.
+        config: { entry, show: PhiContentEntryPart.Link },
       },
       {
         typeKey: "entry-list",

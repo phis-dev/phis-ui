@@ -40,3 +40,18 @@ describe("resolveMarkdownRenderData extent", () => {
     expect(trBulk.mock.calls[0]![0]).toEqual(["A heading", "The first paragraph.", "The second paragraph."]);
   });
 });
+
+describe("resolveMarkdownRenderData headingOffset", () => {
+  // An entry's text stands under the entry's title, so `#` is a section of it rather than a second title.
+  it("moves every heading down by the offset and stops at h5", async () => {
+    const data = await resolveMarkdownRenderData({
+      sourceMode: "inline",
+      markdown: "# One\n\n## Two\n\n##### Five",
+      headingOffset: 1,
+    });
+    const levels = "blocks" in data
+      ? data.blocks.flatMap((block) => (block.kind === "heading" ? [block.level] : []))
+      : [];
+    expect(levels).toEqual([2, 3, 5]);
+  });
+});

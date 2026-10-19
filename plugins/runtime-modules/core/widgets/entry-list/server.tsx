@@ -80,6 +80,8 @@ export async function PhiEntryListWidget({ config, runtime, registry, links, tra
     detailLinkTarget: settings.detailLinkTarget,
     links,
     body: settings.presentation === "stack" ? "full" : "teaser",
+    // A stacked entry's title is an `h2`; its text's headings start under it.
+    headingOffset: 2,
   });
 
   const [title] = settings.title && translate ? await trBulk([settings.title]) : [settings.title];

@@ -168,7 +168,7 @@ export function PhiSequenceSlotEditor({
               onClick={() => onActiveIndexChange(currentIndex - 1)}
             />
           </span>
-          <PhiTypographyControl type="secondary" style={{ fontSize: 12, minWidth: 64, textAlign: "center" }}>
+          <PhiTypographyControl type="secondary" style={{ minWidth: 64, textAlign: "center" }}>
             {currentIndex + 1} / {editableSlotCount}
           </PhiTypographyControl>
           <span onClick={(event) => event.stopPropagation()}>

@@ -1,6 +1,7 @@
 import {
   PHI_CONTROL_HEIGHTS,
   PHI_LAYOUT,
+  PHI_FONT_SIZES,
   PHI_RADII,
   PHI_PADDING as PHI_PADDING_VALUES,
 } from "./phi-tokens";
@@ -65,7 +66,13 @@ export type PhiThemeTokens = {
 };
 export type PhiComponentTokens = Record<string, Record<string, unknown>>;
 
-const PHI_DEFAULT_ANTD_FONT_SIZE = 13;
+/*
+ * A line height for a size, by Ant Design's own rule: the size and 8 px. Set beside each size because
+ * Ant Design derives line heights from its sizes, not from ones it is handed -- 13 keeps its 21.
+ */
+function lineHeightFor(size: number) {
+  return (size + 8) / size;
+}
 
 function buildPhiThemeTokens(options: PhiThemeTokenOptions = {}): PhiThemeTokens {
   return {
@@ -92,7 +99,23 @@ function buildPhiThemeTokens(options: PhiThemeTokenOptions = {}): PhiThemeTokens
     controlHeightSM: PHI_CONTROL_HEIGHTS.sm,
     controlHeight: PHI_CONTROL_HEIGHTS.md,
     controlHeightLG: PHI_CONTROL_HEIGHTS.lg,
-    fontSize: PHI_DEFAULT_ANTD_FONT_SIZE,
+    fontSize: PHI_FONT_SIZES.base,
+    fontSizeSM: PHI_FONT_SIZES.sm,
+    fontSizeLG: PHI_FONT_SIZES.lg,
+    fontSizeXL: PHI_FONT_SIZES.xl,
+    fontSizeHeading1: PHI_FONT_SIZES.heading1,
+    fontSizeHeading2: PHI_FONT_SIZES.heading2,
+    fontSizeHeading3: PHI_FONT_SIZES.heading3,
+    fontSizeHeading4: PHI_FONT_SIZES.heading4,
+    fontSizeHeading5: PHI_FONT_SIZES.heading5,
+    lineHeight: lineHeightFor(PHI_FONT_SIZES.base),
+    lineHeightSM: lineHeightFor(PHI_FONT_SIZES.sm),
+    lineHeightLG: lineHeightFor(PHI_FONT_SIZES.lg),
+    lineHeightHeading1: lineHeightFor(PHI_FONT_SIZES.heading1),
+    lineHeightHeading2: lineHeightFor(PHI_FONT_SIZES.heading2),
+    lineHeightHeading3: lineHeightFor(PHI_FONT_SIZES.heading3),
+    lineHeightHeading4: lineHeightFor(PHI_FONT_SIZES.heading4),
+    lineHeightHeading5: lineHeightFor(PHI_FONT_SIZES.heading5),
     fontFamily: options.fontFamily,
     colorPrimary: options.colorPrimary ?? "#E05A2A",
     colorLink: "#7088BA",

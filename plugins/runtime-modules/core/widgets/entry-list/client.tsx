@@ -161,12 +161,14 @@ function PhiEntryByline({ entry, parts }: { entry: PhiEntryListEntryView; parts:
 }
 
 /**
- * The parts of an entry that are about it rather than the text itself: category, title, subtitle, byline
- * and tags -- each where the parts mask says so (`constants/content-entry-parts.ts`).
+ * The parts of an entry that are about it rather than the text itself: tags, category, title, subtitle and
+ * byline -- each where the parts mask says so (`constants/content-entry-parts.ts`).
  *
  * Shared by the list, which puts the byline above the title the way a stream of entries reads, and the
- * header of a detail Page, which puts it under the title the way an article opens. The title is a link
- * where the entry has a detail Page to lead to, which on that Page itself it does not.
+ * header of a detail Page, which sets it on the tags' line, flush right, so the title stands on its own;
+ * where the column is too narrow for both it wraps under the tags. The tags lead, as what the entry is filed
+ * under. The title is a link where the entry has a detail Page to lead to, which on that Page itself it
+ * does not.
  */
 export function PhiEntryMeta({
   entry,
@@ -178,37 +180,45 @@ export function PhiEntryMeta({
   entry: PhiEntryListEntryView;
   parts: number;
   titleLevel?: 1 | 2 | 3;
-  byline?: "above" | "below";
+  byline?: "above" | "below" | "beside";
   align?: "start" | "center";
 }) {
   const show = (part: number) => (parts & part) !== 0;
   const bylineNode = <PhiEntryByline entry={entry} parts={parts} />;
+  const titleNode = show(PhiContentEntryPart.Title) ? (
+    <PhiTypographyControl
+      presentation="title"
+      level={titleLevel}
+      style={{ margin: 0, ...(align === "center" ? { textAlign: "center" } : {}) }}
+    >
+      {entry.detail
+        ? <PhiLink href={entry.detail.href} external={entry.detail.external}>{entry.title}</PhiLink>
+        : entry.title}
+    </PhiTypographyControl>
+  ) : null;
+  const tagsNode = show(PhiContentEntryPart.Tags) && entry.tags.length > 0 ? <PhiEntryTags tags={entry.tags} /> : null;
   return (
     <PhiFlexControl vertical gap={PHI_SPACE.xs} align={align === "center" ? "center" : undefined}>
+      {byline === "beside" ? (
+        // The empty start keeps the byline at the right edge when there are no tags to stand beside.
+        <PhiFlexControl justify="space-between" align="center" wrap gap={PHI_SPACE.xs}>
+          {tagsNode ?? <span />}
+          {bylineNode}
+        </PhiFlexControl>
+      ) : tagsNode}
       {show(PhiContentEntryPart.Category) && entry.category ? (
         <PhiTypographyControl presentation="text" type="secondary" strong>
           {entry.category}
         </PhiTypographyControl>
       ) : null}
       {byline === "above" ? bylineNode : null}
-      {show(PhiContentEntryPart.Title) ? (
-        <PhiTypographyControl
-          presentation="title"
-          level={titleLevel}
-          style={{ margin: 0, ...(align === "center" ? { textAlign: "center" } : {}) }}
-        >
-          {entry.detail
-            ? <PhiLink href={entry.detail.href} external={entry.detail.external}>{entry.title}</PhiLink>
-            : entry.title}
-        </PhiTypographyControl>
-      ) : null}
+      {titleNode}
       {show(PhiContentEntryPart.Subtitle) && entry.subtitle ? (
         <PhiTypographyControl presentation="text" strong>
           {entry.subtitle}
         </PhiTypographyControl>
       ) : null}
       {byline === "below" ? bylineNode : null}
-      {show(PhiContentEntryPart.Tags) ? <PhiEntryTags tags={entry.tags} /> : null}
     </PhiFlexControl>
   );
 }
@@ -260,7 +270,7 @@ function PhiEntryArticle({
   return (
     <article>
       <PhiFlexControl vertical gap={PHI_SPACE.xs}>
-        <PhiEntryMeta entry={entry} parts={parts & ENTRY_META_PARTS} />
+        <PhiEntryMeta entry={entry} parts={parts & ENTRY_META_PARTS} titleLevel={2} />
         <PhiEntryBody entry={entry} parts={parts & ENTRY_BODY_PARTS} labels={labels} />
       </PhiFlexControl>
     </article>

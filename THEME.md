@@ -268,9 +268,11 @@ Per mode, `resolvePhiRootTheme(...)` (`components/root/phi-root-theme-resolver.t
 3. `theme.style.token`,
 4. `fontFamily` / `fontFamilyCode` from the resolved `body` / `mono` slots.
 
-Ant Design's algorithm derives the rest. The shared `fontSize` seed is `13`
-(`PHI_DEFAULT_ANTD_FONT_SIZE`); `fontSizeSM`, `fontSizeLG`, headings, and line heights are derived and may be
-overridden in `style.token`. Size tokens are numeric values such as `padding = 21`. Components are the shared
+Ant Design's algorithm derives the rest, except the type scale: every size is set from `PHI_FONT_SIZES`
+(`theme/phi-tokens.ts`) -- `xs = 9`, `sm = 11`, `base = 13`, `lg = 15`, then the spacing sequence with
+`xl = 21`, `xxl = 34`, `display = 55` -- each with a line height of its size plus 8 px. Headings `h1`-`h5` are
+34, 21, 15, 13, 13; `h4` and `h5` differ by weight and colour. `sm`-`xl` and the headings are Ant Design
+tokens and may be overridden in `style.token`; `xs`, `xxl` and `display` have no token and are fixed until v1. Size tokens are numeric values such as `padding = 21`. Components are the shared
 component defaults merged per component with `theme.components`, the Button shadow steps, and the Control
 shape tokens.
 
@@ -451,8 +453,8 @@ are not part of this field.
 - Widget typography keys (`types/site-theme.ts`, `components/widgets/helpers/`):
   - `fontFamily = inherit | system | body | mono | serif | accent | display`, resolved from
     `usePhiConfig().fonts` and the Ant Design token; `system` is the token `fontFamily`.
-  - `fontSize = inherit | xs | sm | base | lg | xl`, resolved to `fontSizeSM`, `fontSizeSM`, `fontSize`,
-    `fontSizeLG`, `fontSizeXL`.
+  - `fontSize = inherit | xs | sm | base | lg | xl | xxl`, resolved to `PHI_FONT_SIZES.xs`, `fontSizeSM`,
+    `fontSize`, `fontSizeLG`, `fontSizeXL`, `PHI_FONT_SIZES.xxl`. `display` is not offered there.
 - Sizes use Ant Design tokens and `--ant-font-size*` variables; there is no `--phi-font-size-*` or
   `--phi-font-family-*` contract.
 - Declaration, preloading, Module font contributions, and Site-owned font files:

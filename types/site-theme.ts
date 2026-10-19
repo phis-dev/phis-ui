@@ -161,7 +161,8 @@ export type PhiWidgetFontSizeKey =
   | "sm"
   | "base"
   | "lg"
-  | "xl";
+  | "xl"
+  | "xxl";
 
 // Theme font slots stay stable even if the underlying loading strategy changes later.
 // The current shared baseline is body=Fira Sans, mono=Fira Mono, serif=Lora.

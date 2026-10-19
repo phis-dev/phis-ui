@@ -115,7 +115,7 @@ export function PhiShadowControl({
 
         {selectedPreset === "custom" ? (
           <div style={{ display: "grid", gap: token.paddingXS }}>
-            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+            <Typography.Text type="secondary">
               CSS `box-shadow`
             </Typography.Text>
             <PhiTextControl

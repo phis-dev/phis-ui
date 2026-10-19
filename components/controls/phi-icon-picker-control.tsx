@@ -562,14 +562,14 @@ export function PhiIconPickerControl({
                   )}
                   {iconifySearchLoading && iconifySearchResults.length > 0 ? (
                     <Flex justify="center" style={{ paddingBlock: 12 }}>
-                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                      <Typography.Text type="secondary">
                         {labels.status.loadingMore}
                       </Typography.Text>
                     </Flex>
                   ) : null}
                   {!iconifySearchLoading && iconifySearchHasMore ? (
                     <Flex justify="center" style={{ paddingBlock: 12 }}>
-                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                      <Typography.Text type="secondary">
                         {labels.status.scrollMore}
                       </Typography.Text>
                     </Flex>
@@ -580,7 +580,7 @@ export function PhiIconPickerControl({
           )}
 
           <Flex align="center" justify="space-between" gap={8}>
-            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+            <Typography.Text type="secondary">
               {picker.value ?? labels.hints.noneSelected}
             </Typography.Text>
             <PhiButtonControl

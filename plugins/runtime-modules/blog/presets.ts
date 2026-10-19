@@ -16,9 +16,10 @@ export const PHI_BLOG_RUNTIME_MODULE_ROUTES = definePhiContentEntryRoutes({
   entryTitle: "Blog post",
   icon: "antd:file-text",
   listPresentation: "cards",
-  // An article's opening: category, title, teaser, byline with picture, and the date.
+  // An article's opening: tags, category, title, subtitle, byline with picture, and the date.
   headerParts: PhiContentEntryPart.Title | PhiContentEntryPart.Subtitle | PhiContentEntryPart.Date
-    | PhiContentEntryPart.Author | PhiContentEntryPart.Avatar | PhiContentEntryPart.Category,
+    | PhiContentEntryPart.Author | PhiContentEntryPart.Avatar | PhiContentEntryPart.Category
+    | PhiContentEntryPart.Tags,
   related: { presentation: "cards", title: "More posts" },
   loadKindLabels: () => import("./labels").then((module) => module.getPhiBlogKindLabels),
 });

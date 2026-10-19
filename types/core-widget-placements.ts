@@ -81,6 +81,7 @@ export type PhiMarkdownWidgetPlacement = PhiWidgetPlacementBase & {
   textBlockSpacingAfter?: PhiSpacingScaleKey;
   headingBlockSpacingBefore?: PhiSpacingScaleKey;
   headingBlockSpacingAfter?: PhiSpacingScaleKey;
+  headingOffset?: number;
   tocKey?: string;
 };
 

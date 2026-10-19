@@ -54,6 +54,11 @@ export type PhiMarkdownSourceConfig = {
    * provider for paragraphs nobody is shown. `document`, the default, is all of it.
    */
   extent?: "document" | "first-paragraph";
+  /**
+   * How many levels a heading moves down. A text that stands under a title of its own -- an entry under its
+   * header -- starts at `h2`, so `#` does not draw a second title of the same size. The level stops at 5.
+   */
+  headingOffset?: number;
 };
 
 const MARKDOWN_DEFAULT_REVALIDATE_SECONDS = 14400;
@@ -67,6 +72,7 @@ type MarkdownMapContext = {
   headings: PhiMarkdownTocHeading[];
   headingIdCounts: Map<string, number>;
   headingIdPrefix: string | null;
+  headingOffset: number;
 };
 
 function normalizeMarkdownSourceUrl(sourceUrl: string, publicUrl: string | null | undefined) {
@@ -473,7 +479,7 @@ function mapBlockNodes(
 
     switch (node.type) {
       case "heading": {
-        const level = Math.min(Math.max(node.depth ?? 1, 1), 5) as 1 | 2 | 3 | 4 | 5;
+        const level = Math.min(Math.max((node.depth ?? 1) + context.headingOffset, 1), 5) as 1 | 2 | 3 | 4 | 5;
         const inlines = inlineMap.get(node) ?? mapInlineNodes(node.children);
         const text = getInlineText(inlines).trim();
         const id = resolveMarkdownHeadingId(text, context);
@@ -638,6 +644,7 @@ export async function resolveMarkdownRenderData(
       : null,
     runtime,
     config?.extent ?? "document",
+    config?.headingOffset ?? 0,
   );
 }
 
@@ -650,6 +657,7 @@ async function resolveMarkdownRenderDataFromSource(
   sourceUrl: string | null = null,
   runtime?: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer">,
   extent: "document" | "first-paragraph" = "document",
+  headingOffset = 0,
 ): Promise<MarkdownRenderData> {
   const tree = parseMarkdown(markdown);
   if (extent === "first-paragraph") {
@@ -662,7 +670,12 @@ async function resolveMarkdownRenderDataFromSource(
   } else if (runtime) {
     await projectInternalMarkdownNodes(tree, runtime);
   }
-  const context: MarkdownMapContext = { headings: [], headingIdCounts: new Map(), headingIdPrefix };
+  const context: MarkdownMapContext = {
+    headings: [],
+    headingIdCounts: new Map(),
+    headingIdPrefix,
+    headingOffset,
+  };
   const inlineMap = await buildMarkdownInlineMap(tree, translate, sourceLocale);
   const blocks = mapBlockNodes(tree.children, context, inlineMap);
 

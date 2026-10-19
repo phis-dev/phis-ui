@@ -75,6 +75,18 @@ export function PhiInlineTextEditor({
   allowClear = false,
 }: PhiInlineTextEditorProps) {
   const cancelPendingRef = useRef(false);
+  /*
+   * The type the field is set in, as a key: a change of it builds the field anew.
+   *
+   * A sized text area measures its height when its value changes and on nothing else, and it measures
+   * against styles it read before. Set in a larger size it kept the box of the smaller one, and the text
+   * stood cut off at the line it had -- measured in the Builder, a Simple Text moved from `xs` to `sm`
+   * kept a 14px box around an 18px line, and looked the size it had been. The type changes from a
+   * toolbar, never while a key is pressed, so the field it builds anew is never one being typed in.
+   */
+  const typeKey = [inputStyle?.fontSize, inputStyle?.fontFamily, inputStyle?.lineHeight, inputStyle?.fontWeight]
+    .map((value) => String(value ?? ""))
+    .join("|");
 
   return (
     <span
@@ -113,6 +125,7 @@ export function PhiInlineTextEditor({
         </span>
       ) : null}
       <PhiTextControl
+        key={typeKey}
         value={value}
         ariaLabel={ariaLabel}
         placeholder={placeholder}

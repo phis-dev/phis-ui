@@ -25,6 +25,8 @@ export type PhiCmsMarkdownWidgetConfig = PhiCmsWidgetConfigBase & {
   textBlockSpacingAfter?: PhiSpacingScaleKey;
   headingBlockSpacingBefore?: PhiSpacingScaleKey;
   headingBlockSpacingAfter?: PhiSpacingScaleKey;
+  /** How many levels the text's headings move down, for a text standing under a heading of its own. */
+  headingOffset?: number;
   tocKey?: string;
   resolvedContent?: PhiCmsResolvedContent | null;
   preferSource?: boolean;
@@ -50,6 +52,16 @@ function readMarkdownTextAlign(value: unknown): PhiMarkdownTextAlign | undefined
     : undefined;
 }
 
+/** Up to three levels: `#` lands at `h4` at most, and `h5` is the deepest a heading goes. */
+const PHI_MARKDOWN_HEADING_OFFSET_MAX = 3;
+
+function readMarkdownHeadingOffset(value: unknown): number | undefined {
+  const offset = readNumber(value);
+  return offset !== undefined && Number.isInteger(offset) && offset >= 0 && offset <= PHI_MARKDOWN_HEADING_OFFSET_MAX
+    ? offset
+    : undefined;
+}
+
 function readMarkdownSpacingKey(value: unknown): PhiSpacingScaleKey | undefined {
   return PHI_SPACING_SCALE_KEYS.includes(value as PhiSpacingScaleKey) ? (value as PhiSpacingScaleKey) : undefined;
 }
@@ -70,6 +82,7 @@ export function parsePhiCmsMarkdownWidgetConfig(config: Record<string, unknown>)
     textBlockSpacingAfter: readMarkdownSpacingKey(config.textBlockSpacingAfter),
     headingBlockSpacingBefore: readMarkdownSpacingKey(config.headingBlockSpacingBefore),
     headingBlockSpacingAfter: readMarkdownSpacingKey(config.headingBlockSpacingAfter),
+    headingOffset: readMarkdownHeadingOffset(config.headingOffset),
     tocKey: readString(config.tocKey),
   };
 }
@@ -162,6 +175,14 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
       type: "choice",
       label: "After Header",
       options: PHI_MARKDOWN_SPACING_OPTIONS,
+    },
+    {
+      key: "headingOffset",
+      type: "number",
+      label: "Heading Offset",
+      min: 0,
+      max: PHI_MARKDOWN_HEADING_OFFSET_MAX,
+      precision: 0,
     },
     { key: "tocKey", type: "string", label: "TOC Key" },
   ],

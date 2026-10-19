@@ -54,6 +54,7 @@ export async function buildPhiEntryViews({
   detailLinkTarget,
   links,
   body: bodyMode = "full",
+  headingOffset = 1,
 }: {
   kind: PhiContentEntryKind;
   entries: readonly PhiSiteContentEntry[];
@@ -67,6 +68,11 @@ export async function buildPhiEntryViews({
    * where the entry has no subtitle to stand for it -- and then only for its first paragraph's sake.
    */
   body?: "full" | "teaser";
+  /**
+   * How far the text's headings move below the entry's title (`markdown-render.ts`): 1 under a detail
+   * Page's `h1`, 2 under a list's `h2`.
+   */
+  headingOffset?: number;
 }): Promise<PhiEntryListEntryView[]> {
   const showLinks = hasPhiContentEntryPart(parts, PhiContentEntryPart.Link);
   const settings = { kind, showLinks, detailLinkTarget };
@@ -114,6 +120,7 @@ export async function buildPhiEntryViews({
           widgetId: `${settings.kind}-${id}`,
           // A teaser is the first paragraph; the rest is neither drawn nor translated.
           extent: bodyMode === "full" ? "document" : "first-paragraph",
+          headingOffset,
         }, runtime)
         : { blocks: [] };
 

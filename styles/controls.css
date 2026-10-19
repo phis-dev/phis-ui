@@ -89,9 +89,11 @@ h4.phi-typography, .phi-typography h4 {
   line-height: var(--ant-line-height-heading-4);
 }
 
+/* The same size as `h4` (`theme/phi-tokens.ts`); the colour is what sets it below. */
 h5.phi-typography, .phi-typography h5 {
   font-size: var(--ant-font-size-heading-5);
   line-height: var(--ant-line-height-heading-5);
+  color: var(--ant-color-text-secondary);
 }
 
 .phi-typography + h1.phi-typography,

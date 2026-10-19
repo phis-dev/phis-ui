@@ -16,7 +16,8 @@ export const PHI_NEWS_RUNTIME_MODULE_ROUTES = definePhiContentEntryRoutes({
   entryTitle: "News entry",
   icon: "antd:read",
   listPresentation: "stack",
-  headerParts: PhiContentEntryPart.Title | PhiContentEntryPart.Subtitle | PhiContentEntryPart.Date,
+  headerParts: PhiContentEntryPart.Title | PhiContentEntryPart.Subtitle | PhiContentEntryPart.Date
+    | PhiContentEntryPart.Tags,
   related: { presentation: "compact", title: "More news" },
   loadKindLabels: () => import("./labels").then((module) => module.getPhiNewsKindLabels),
 });

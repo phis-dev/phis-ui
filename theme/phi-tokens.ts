@@ -17,6 +17,34 @@ export const PHI_PADDING = {
   xxl: 144,
 } as const;
 
+/**
+ * The type scale: one list for every size a Phi surface states.
+ *
+ * Two halves. Up to `lg` it climbs in steps of 2 px, because an interface needs its small sizes close
+ * together -- a caption, a tag, a label, the text beside them. From `xl` it is the spacing sequence, where
+ * the steps are meant to be far apart. Every size is set rather than left to Ant Design's curve, which
+ * lands between the steps.
+ *
+ * `sm` to `xl` are handed to Ant Design as its tokens; `xs`, `xxl` and `display` have none and are read
+ * from here, fixed until v1. The headings take their sizes from the same list: `h4` and `h5` are both the
+ * body size and differ by weight and colour alone. `display` is no heading level but a size, for a hero's
+ * or a landing's title, and is not offered beside the others.
+ */
+export const PHI_FONT_SIZES = {
+  xs: 9,
+  sm: 11,
+  base: 13,
+  lg: 15,
+  xl: 21,
+  xxl: 34,
+  display: 55,
+  heading1: 34,
+  heading2: 21,
+  heading3: 15,
+  heading4: 13,
+  heading5: 13,
+} as const;
+
 export const PHI_RADII = {
   xxs: 3,
   xs: 5,
