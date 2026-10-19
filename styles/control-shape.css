@@ -143,3 +143,17 @@ textarea.ant-input-lg.ant-input-lg:not(:where(.ant-input-underlined, .ant-input-
 .ant-mentions-lg.ant-mentions-lg:not(:where(.ant-mentions-underlined)) {
   border-radius: var(--phi-control-radius-grown-lg, var(--ant-border-radius-lg));
 }
+
+/*
+ * An underlined InputNumber at the small size.
+ *
+ * The exclusions above keep this file from rounding it, but antd rounds it itself: InputNumber has a
+ * second size block, emitted after its `-underlined` variant, whose `-sm` sets `borderRadiusSM` again at
+ * the same single-class weight -- so the size wins and the bare bottom rule gets curved ends, visible as a
+ * rounded hover and focus ground in a Table cell. Only `-sm`: the block leaves `-lg` alone, and the
+ * Picker emits its sizes before its variants, so `-underlined` wins there on order. antd corrects the
+ * same thing for its Input (`.ant-input-underlined { border-radius: 0 }`), not for this one.
+ */
+.ant-input-number-sm.ant-input-number-underlined {
+  border-radius: 0;
+}

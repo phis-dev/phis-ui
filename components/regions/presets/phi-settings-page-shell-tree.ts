@@ -238,9 +238,10 @@ export function buildPhiSettingsPageShellTree({
          * a narrow form inside it reads as two columns that do not line up. One maximum on the
          * Collapsible holds titles, descriptions and forms in the same column.
          *
-         * A maximum, not a width -- the Collapsible still fills a narrow screen edge to edge.
+         * A maximum, not a width -- the Collapsible still fills a narrow screen edge to edge. The reading
+         * measure, like an entry or the Terms: a Settings page is read down, not filled across.
          */
-        maxSize: { width: PHI_LAYOUT.contentMax },
+        maxSize: { width: PHI_LAYOUT.readingMax },
         margin: 0,
         padding: 0,
       },
@@ -357,6 +358,8 @@ export function buildPhiSettingsPageShellTree({
                 },
                 execution: { mode: "handler" },
                 source: null,
+                // As wide as the column it stands in, so title, description and fields share one edge.
+                maxFormWidth: PHI_LAYOUT.readingMax,
                 ...configOverrides,
                 signalRoutes: {
                   emits: [
