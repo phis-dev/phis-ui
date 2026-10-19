@@ -73,6 +73,8 @@ function PhiGroupsControllerView({
       PHI_GROUPS_OPTIONS_REVISION.bump();
       // Something was written: every list this Page named is stale, and none knows which it was.
       emitCapability("reload", null, signal.correlationId);
+      // And the dialog it was written in is done. Closing one that is not open does nothing.
+      emitCapability("dialogClose", null, signal.correlationId);
       return;
     }
     // Only a selection chooses the group. A condition question or reload reaching this listener fell

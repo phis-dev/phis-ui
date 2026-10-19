@@ -20,6 +20,19 @@ export const PHI_APP_GROUPS_PAGE_WIDGET_IDS = createPhiPresetCmsInstanceIdMap(ap
   "widgetMembershipCommands",
 ]);
 
+/** The two dialogs of the Groups administration Page: creating a group, adding a member. */
+export const PHI_GROUPS_PAGE_OVERLAY_IDS = createPhiPresetCmsInstanceIdMap(identity, [
+  "overlayCreate",
+  "overlayMembership",
+]);
+
+export const PHI_GROUPS_PAGE_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap(identity, [
+  "layoutCreate",
+  "layoutCreateFooter",
+  "layoutMembership",
+  "layoutMembershipFooter",
+]);
+
 /**
  * Stable Widget ids for the Groups administration Page.
  *

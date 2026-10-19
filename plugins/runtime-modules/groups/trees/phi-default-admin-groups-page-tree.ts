@@ -11,7 +11,7 @@ import {
   PHI_GROUPS_CONTROLLER_INSTANCE_KEY,
   PHI_GROUPS_CONTROLLER_TYPE,
 } from "../controller/address";
-import { PHI_GROUPS_PAGE_WIDGET_IDS } from "../addresses";
+import { PHI_GROUPS_PAGE_LAYOUT_IDS, PHI_GROUPS_PAGE_OVERLAY_IDS, PHI_GROUPS_PAGE_WIDGET_IDS } from "../addresses";
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "../../../../components/regions/presets/phi-base-page-layout";
 import { getPhiGroupFormLabels } from "../labels";
 import { PHI_GROUPS_FORM_IDS } from "../forms";
@@ -26,7 +26,11 @@ const SYNTHETIC_ADMIN_GROUPS_REGION_IDS = {
  *
  * Two tables, because the two rows carry different authority: a group is Site administration, a
  * membership is what a group's own Manager administers. Selecting a group is what fills the second
- * one -- the Controller translates the selection into a filter, which is the only reason it exists.
+ * one -- the Controller translates the selection into a filter.
+ *
+ * Each table adds through the `+` in its toolbar, like every other Table: it opens a dialog holding the
+ * Form, whose footer cancels or submits it directly. The Controller only hears the success, reloads the
+ * lists and closes the dialog.
  */
 export async function buildPhiDefaultAdminGroupsPageTree({
   page,
@@ -45,6 +49,8 @@ export async function buildPhiDefaultAdminGroupsPageTree({
   const createFormAddress = createPhiSignalAddress("cms", PHI_GROUPS_PAGE_WIDGET_IDS.widgetCreateForm);
   const groupsTableAddress = createPhiSignalAddress("cms", PHI_GROUPS_PAGE_WIDGET_IDS.widgetGroupsTable);
   const membershipFormAddress = createPhiSignalAddress("cms", PHI_GROUPS_PAGE_WIDGET_IDS.widgetMembershipForm);
+  const createOverlayAddress = createPhiSignalAddress("cms", PHI_GROUPS_PAGE_OVERLAY_IDS.overlayCreate);
+  const membershipOverlayAddress = createPhiSignalAddress("cms", PHI_GROUPS_PAGE_OVERLAY_IDS.overlayMembership);
   const stateOptions = { active: labels.states.active, retired: labels.states.retired };
   const levelOptions = {
     [String(PhiGroupMembershipFlags.Member)]: labels.levels.member,
@@ -59,6 +65,164 @@ export async function buildPhiDefaultAdminGroupsPageTree({
   });
 
   const nodes = createPhiCmsPresetNodes(page);
+  /*
+   * A dialog per table: its Form in the body, Cancel and the Form's own submit in the footer. Both buttons
+   * speak to their receiver directly -- the dialog closes, the Form submits -- so nothing has to relay
+   * them. The Form's success goes to the Controller, which reloads and closes the dialog.
+   */
+  const dialog = (
+    workflow: "create" | "membership",
+    ids: {
+      overlay: (typeof PHI_GROUPS_PAGE_OVERLAY_IDS)[keyof typeof PHI_GROUPS_PAGE_OVERLAY_IDS];
+      body: (typeof PHI_GROUPS_PAGE_LAYOUT_IDS)[keyof typeof PHI_GROUPS_PAGE_LAYOUT_IDS];
+      footer: (typeof PHI_GROUPS_PAGE_LAYOUT_IDS)[keyof typeof PHI_GROUPS_PAGE_LAYOUT_IDS];
+      form: (typeof PHI_GROUPS_PAGE_WIDGET_IDS)[keyof typeof PHI_GROUPS_PAGE_WIDGET_IDS];
+      commands: (typeof PHI_GROUPS_PAGE_WIDGET_IDS)[keyof typeof PHI_GROUPS_PAGE_WIDGET_IDS];
+    },
+    text: { title: string; submit: string },
+    formId: (typeof PHI_GROUPS_FORM_IDS)[keyof typeof PHI_GROUPS_FORM_IDS],
+    openActionKey: string,
+    overlayAddress: ReturnType<typeof createPhiSignalAddress>,
+    formAddress: ReturnType<typeof createPhiSignalAddress>,
+    sortOrder: number,
+  ) => {
+    const built = nodes.dialog({
+      id: ids.overlay,
+      bodyLayoutNodeId: ids.body,
+      sortOrder,
+      label: `admin-groups-${workflow}-modal`,
+      config: {
+        title: text.title,
+        // Opened afresh each time, so a dialog cancelled half filled starts empty again.
+        mountPolicy: "remount",
+        closeMode: "immediate",
+        openActionKey,
+        signalRoutes: {
+          listens: [{
+            routeKey: `admin-groups-${workflow}-open`,
+            capabilityId: "open",
+            scope: "page",
+            channel: "action",
+            action: "activate",
+            valueType: "json",
+            valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
+            receiver: overlayAddress,
+          }, {
+            routeKey: `admin-groups-${workflow}-close`,
+            capabilityId: "close",
+            scope: "page",
+            channel: "dialog",
+            action: "close",
+            valueType: "none",
+            receiver: overlayAddress,
+          }],
+        },
+      },
+      commands: {
+        footerLayoutNodeId: ids.footer,
+        widgetId: ids.commands,
+        label: text.submit,
+        config: {
+          key: `admin-groups-${workflow}-commands`,
+          buttons: [
+            { key: "cancel", emits: [{ capabilityId: "close", value: null }], label: labels.actions.cancel, icon: "cancel" },
+            { key: "save", emits: [{ capabilityId: "submit", value: null }], label: text.submit, variant: "primary", icon: "save" },
+          ],
+          signalRoutes: {
+            emits: [{
+              routeKey: `admin-groups-${workflow}-cancel`,
+              capabilityId: "close",
+              scope: "page",
+              channel: "dialog",
+              action: "close",
+              valueType: "none",
+              receiver: overlayAddress,
+            }, {
+              routeKey: `admin-groups-${workflow}-commands-submit`,
+              capabilityId: "submit",
+              scope: "page",
+              channel: "submit",
+              action: "activate",
+              valueType: "none",
+              receiver: formAddress,
+            }],
+          },
+        },
+      },
+    });
+    return {
+      ...built,
+      widgets: [
+        nodes.widget({
+          id: ids.form,
+          parentLayoutNodeId: ids.body,
+          typeKey: "form",
+          slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+          label: text.title,
+          config: {
+            formId,
+            formConfig: {},
+            execution: { mode: "handler" },
+            signalRoutes: {
+              emits: [{
+                // A write belongs in the lists right away, and the dialog it came from is done.
+                routeKey: `admin-groups-${workflow}-success`,
+                capabilityId: "submitSuccess",
+                scope: "page",
+                channel: "submit",
+                action: "activate",
+                valueType: "json",
+                valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
+                receiver: controllerAddress,
+              }],
+              listens: [{
+                routeKey: `admin-groups-${workflow}-submit`,
+                capabilityId: "submit",
+                scope: "page",
+                channel: "submit",
+                action: "activate",
+                valueType: "none",
+                receiver: formAddress,
+              }],
+            },
+          },
+        }),
+        ...built.widgets,
+      ],
+    };
+  };
+  const createDialog = dialog(
+    "create",
+    {
+      overlay: PHI_GROUPS_PAGE_OVERLAY_IDS.overlayCreate,
+      body: PHI_GROUPS_PAGE_LAYOUT_IDS.layoutCreate,
+      footer: PHI_GROUPS_PAGE_LAYOUT_IDS.layoutCreateFooter,
+      form: PHI_GROUPS_PAGE_WIDGET_IDS.widgetCreateForm,
+      commands: PHI_GROUPS_PAGE_WIDGET_IDS.widgetCreateCommands,
+    },
+    { title: labels.create.title, submit: labels.actions.create },
+    PHI_GROUPS_FORM_IDS.create,
+    "create",
+    createOverlayAddress,
+    createFormAddress,
+    0,
+  );
+  const membershipDialog = dialog(
+    "membership",
+    {
+      overlay: PHI_GROUPS_PAGE_OVERLAY_IDS.overlayMembership,
+      body: PHI_GROUPS_PAGE_LAYOUT_IDS.layoutMembership,
+      footer: PHI_GROUPS_PAGE_LAYOUT_IDS.layoutMembershipFooter,
+      form: PHI_GROUPS_PAGE_WIDGET_IDS.widgetMembershipForm,
+      commands: PHI_GROUPS_PAGE_WIDGET_IDS.widgetMembershipCommands,
+    },
+    { title: labels.membership.title, submit: labels.membership.submit },
+    PHI_GROUPS_FORM_IDS.membership,
+    "addMember",
+    membershipOverlayAddress,
+    membershipFormAddress,
+    1,
+  );
   return {
     page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     pageMeta: {
@@ -111,31 +275,25 @@ export async function buildPhiDefaultAdminGroupsPageTree({
               valueType: "none",
               receiver: membersTableAddress,
             },
-            {
-              routeKey: "admin-groups-controller-create-submit",
-              capabilityId: "createSubmit",
-              scope: "page",
-              channel: "submit",
-              action: "activate",
-              valueType: "none",
-              receiver: createFormAddress,
-            },
-            {
-              routeKey: "admin-groups-controller-membership-submit",
-              capabilityId: "membershipSubmit",
-              scope: "page",
-              channel: "submit",
-              action: "activate",
-              valueType: "none",
-              receiver: membershipFormAddress,
-            },
+            ...([
+              ["create", createOverlayAddress],
+              ["membership", membershipOverlayAddress],
+            ] as const).map(([workflow, receiver]) => ({
+              routeKey: `admin-groups-controller-${workflow}-dialog-close`,
+              capabilityId: "dialogClose",
+              scope: "page" as const,
+              channel: "dialog",
+              action: "close" as const,
+              valueType: "none" as const,
+              receiver,
+            })),
           ],
         },
       },
     }],
-    overlays: [],
+    overlays: [createDialog.overlay, membershipDialog.overlay],
     regions: [scaffold.region],
-    layoutNodes: [scaffold.layoutNode],
+    layoutNodes: [scaffold.layoutNode, ...createDialog.layouts, ...membershipDialog.layouts],
     contentWidgets: [
       nodes.widget({
         id: PHI_GROUPS_PAGE_WIDGET_IDS.widgetGroupsTable,
@@ -150,6 +308,7 @@ export async function buildPhiDefaultAdminGroupsPageTree({
             resourceKey: "groups",
           },
           presentation: {
+            title: labels.groups.title,
             layout: { mode: "auto", overflowX: "auto" },
             controlSize: "small",
             columns: [
@@ -197,6 +356,11 @@ export async function buildPhiDefaultAdminGroupsPageTree({
                 sizing: { mode: "content" },
               },
             ],
+            footer: {
+              template: labels.groups.footer,
+              values: [{ key: "groups", value: { source: "core", fieldKey: "totalRows" } }],
+              align: "start",
+            },
           },
           features: {
             // One group at a time: the membership table below shows exactly what is selected here.
@@ -207,6 +371,14 @@ export async function buildPhiDefaultAdminGroupsPageTree({
             editing: { mode: "cell" },
             actions: {
               rowLayout: "compact",
+              toolbar: [{
+                key: "create",
+                label: labels.actions.create,
+                icon: "plus",
+                display: "icon",
+                mode: "primary",
+                execution: "signal",
+              }],
               row: [
                 {
                   key: "retire",
@@ -248,6 +420,16 @@ export async function buildPhiDefaultAdminGroupsPageTree({
           },
           signalRoutes: {
             emits: [{
+              // The `+`: the create dialog opens on it (`openActionKey`).
+              routeKey: "admin-groups-create-action",
+              capabilityId: "actionActivate",
+              scope: "page",
+              channel: "action",
+              action: "activate",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
+              receiver: createOverlayAddress,
+            }, {
               routeKey: "admin-groups-selection",
               capabilityId: "selectionChange",
               scope: "page",
@@ -316,6 +498,11 @@ export async function buildPhiDefaultAdminGroupsPageTree({
               { key: "createdAt", fieldKey: "createdAt", title: labels.columns.since, renderer: "datetime", sizing: { mode: "content" } },
             ],
             emptyState: { title: labels.members.empty, description: "" },
+            footer: {
+              template: labels.members.footer,
+              values: [{ key: "members", value: { source: "core", fieldKey: "totalRows" } }],
+              align: "start",
+            },
           },
           features: {
             pagination: { enabled: true, pageSize: 25, pageSizes: [25, 50, 100] },
@@ -325,6 +512,15 @@ export async function buildPhiDefaultAdminGroupsPageTree({
             editing: { mode: "cell" },
             actions: {
               rowLayout: "compact",
+              // The Form names the group itself, so a member can be added before any group is selected.
+              toolbar: [{
+                key: "addMember",
+                label: labels.membership.title,
+                icon: "plus",
+                display: "icon",
+                mode: "primary",
+                execution: "signal",
+              }],
               row: [{
                 key: "delete",
                 label: labels.actions.remove,
@@ -346,6 +542,16 @@ export async function buildPhiDefaultAdminGroupsPageTree({
             },
           },
           signalRoutes: {
+            emits: [{
+              routeKey: "admin-groups-membership-action",
+              capabilityId: "actionActivate",
+              scope: "page",
+              channel: "action",
+              action: "activate",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
+              receiver: membershipOverlayAddress,
+            }],
             listens: [{
               routeKey: "admin-groups-member-filter",
               capabilityId: "filtersChange",
@@ -368,133 +574,8 @@ export async function buildPhiDefaultAdminGroupsPageTree({
           },
         },
       }),
-      nodes.widget({
-        id: PHI_GROUPS_PAGE_WIDGET_IDS.widgetCreateForm,
-        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
-        typeKey: "form",
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 2,
-        sortOrder: 2,
-        label: labels.create.title,
-        config: {
-          formId: PHI_GROUPS_FORM_IDS.create,
-          formConfig: {},
-          execution: { mode: "handler" },
-          signalRoutes: {
-            emits: [{
-              // A new group belongs in the list right away, so the Controller reloads it.
-              routeKey: "admin-groups-create-success",
-              capabilityId: "submitSuccess",
-              scope: "page",
-              channel: "submit",
-              action: "activate",
-              valueType: "json",
-              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
-              receiver: controllerAddress,
-            }],
-            listens: [{
-              routeKey: "admin-groups-create-submit",
-              capabilityId: "submit",
-              scope: "page",
-              channel: "submit",
-              action: "activate",
-              valueType: "none",
-              receiver: createFormAddress,
-            }],
-          },
-        },
-      }),
-      nodes.widget({
-        id: PHI_GROUPS_PAGE_WIDGET_IDS.widgetCreateCommands,
-        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
-        typeKey: "command-toolbar",
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 3,
-        sortOrder: 3,
-        label: labels.actions.create,
-        config: {
-          key: "admin-groups-create-commands",
-          compact: false,
-          wrap: true,
-          showLabels: true,
-          controlSize: "medium",
-          buttons: [
-            { key: "save", emits: [{ capabilityId: "command", value: "save" }], label: labels.actions.create, variant: "primary", icon: "save" },
-          ],
-          signalRoutes: {
-            emits: [{
-              routeKey: "admin-groups-create-command",
-              capabilityId: "command",
-              scope: "page",
-              channel: "command",
-              action: "activate",
-              valueType: "string",
-              receiver: controllerAddress,
-            }],
-          },
-        },
-      }),
-      nodes.widget({
-        id: PHI_GROUPS_PAGE_WIDGET_IDS.widgetMembershipForm,
-        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
-        typeKey: "form",
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 4,
-        sortOrder: 4,
-        label: labels.membership.title,
-        config: {
-          formId: PHI_GROUPS_FORM_IDS.membership,
-          formConfig: {},
-          execution: { mode: "handler" },
-          signalRoutes: {
-            emits: [{
-              routeKey: "admin-groups-membership-success",
-              capabilityId: "submitSuccess",
-              scope: "page",
-              channel: "submit",
-              action: "activate",
-              valueType: "json",
-              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
-              receiver: controllerAddress,
-            }],
-            listens: [{
-              routeKey: "admin-groups-membership-submit",
-              capabilityId: "submit",
-              scope: "page",
-              channel: "submit",
-              action: "activate",
-              valueType: "none",
-              receiver: membershipFormAddress,
-            }],
-          },
-        },
-      }),
-      nodes.widget({
-        id: PHI_GROUPS_PAGE_WIDGET_IDS.widgetMembershipCommands,
-        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
-        typeKey: "command-toolbar",
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 5,
-        sortOrder: 5,
-        label: labels.membership.submit,
-        config: {
-          key: "admin-groups-membership-commands",
-          compact: false,
-          wrap: true,
-          showLabels: true,
-          controlSize: "medium",
-          buttons: [
-            { key: "save", emits: [{ capabilityId: "command", value: "saveMembership" }], label: labels.membership.submit, variant: "primary", icon: "save" },
-          ],
-          signalRoutes: {
-            emits: [{
-              routeKey: "admin-groups-membership-command",
-              capabilityId: "command",
-              scope: "page",
-              channel: "command",
-              action: "activate",
-              valueType: "string",
-              receiver: controllerAddress,
-            }],
-          },
-        },
-      }),
+      ...createDialog.widgets,
+      ...membershipDialog.widgets,
     ],
   };
 }

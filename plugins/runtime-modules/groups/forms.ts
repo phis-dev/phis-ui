@@ -49,7 +49,18 @@ const PHI_GROUPS_CREATE_FORM_DESCRIPTOR: PhiFormDescriptor = {
       fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text,
       label: label("key", "Key"),
       description: label("keyHint", "The stable identifier a Module or a Page refers to."),
-      validation: required("keyRequired", "A key is required."),
+      validation: [
+        ...required("keyRequired", "A key is required."),
+        /*
+         * The server's own rule (`phis-server` site-groups), said here so the field answers before the
+         * write does: it accepted a key with a space in it as far as the server and failed only there.
+         */
+        {
+          providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.pattern,
+          message: label("keyPattern", "Lower-case letters, digits, dots, hyphens and underscores, starting with a letter or digit."),
+          config: { source: "^[a-z0-9][a-z0-9._-]{0,159}$" },
+        },
+      ],
     },
     {
       key: "name",
@@ -144,6 +155,7 @@ const loadLabels = createPhiFormLabelSetLoader(
     key: labels.fields.key,
     keyHint: labels.fields.keyHint,
     keyRequired: labels.fields.keyRequired,
+    keyPattern: labels.fields.keyPattern,
     name: labels.fields.name,
     nameHint: labels.fields.nameHint,
     nameRequired: labels.fields.nameRequired,

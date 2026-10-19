@@ -56,6 +56,8 @@ export const PHI_GROUPS_RUNTIME_CONTROLLER_DEFINITION = {
        */
       { id: "createSubmit", action: "activate", valueType: "none" },
       { id: "membershipSubmit", action: "activate", valueType: "none" },
+      // A dialog a Form was written from closes once the write took; the Page names which dialogs.
+      { id: "dialogClose", action: "close", valueType: "none" },
     ],
     listens: [
       {

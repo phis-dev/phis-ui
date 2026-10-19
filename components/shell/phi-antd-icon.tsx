@@ -34,6 +34,7 @@ const PHI_ANTD_ICON_LOADERS = {
   ArrowUpOutlined: () => import("@ant-design/icons-svg/es/asn/ArrowUpOutlined"),
   AudioTwoTone: () => import("@ant-design/icons/es/icons/AudioTwoTone"),
   BgColorsOutlined: () => import("@ant-design/icons-svg/es/asn/BgColorsOutlined"),
+  BlockOutlined: () => import("@ant-design/icons-svg/es/asn/BlockOutlined"),
   BuildOutlined: () => import("@ant-design/icons-svg/es/asn/BuildOutlined"),
   BranchesOutlined: () => import("@ant-design/icons-svg/es/asn/BranchesOutlined"),
   CalendarOutlined: () => import("@ant-design/icons-svg/es/asn/CalendarOutlined"),
@@ -175,6 +176,8 @@ function readLazyIcon(icon: PhiAntdIconKey) {
  * separately loaded registry; with every icon its own chunk there is nothing left to keep apart.
  */
 export const PHI_ANTD_ICON_NAMES: Readonly<Record<string, PhiAntdIconKey>> = {
+  block: "BlockOutlined",
+  "block-outlined": "BlockOutlined",
   cluster: "ClusterOutlined",
   "cluster-outlined": "ClusterOutlined",
   send: "SendOutlined",

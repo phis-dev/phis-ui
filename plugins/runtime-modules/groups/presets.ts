@@ -14,7 +14,7 @@ export const PHI_GROUPS_RUNTIME_MODULE_ROUTES = [
     // Manager administers their group where they work, not here.
     path: "/groups",
     itemKey: "@phis/ui/modules/groups/nav/admin/groups",
-    icon: "antd:cluster",
+    icon: "antd:block",
     loadTree: ({ page, runtime }) =>
       import("./trees/phi-default-admin-groups-page-tree")
         .then((module) => module.buildPhiDefaultAdminGroupsPageTree({ page, runtime })),
@@ -29,7 +29,7 @@ export const PHI_GROUPS_RUNTIME_MODULE_ROUTES = [
     // group is an answer rather than a reason to hide the page.
     path: "/groups",
     itemKey: "@phis/ui/modules/groups/nav/app/groups",
-    icon: "antd:cluster",
+    icon: "antd:block",
     loadTree: ({ page, runtime }) =>
       import("./trees/phi-default-app-groups-page-tree")
         .then((module) => module.buildPhiDefaultAppGroupsPageTree({ page, runtime })),
