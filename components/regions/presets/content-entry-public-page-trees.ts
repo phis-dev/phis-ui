@@ -14,19 +14,22 @@ import { PHI_CONTENT_ENTRY_RELATED_LIMIT } from "../../../gateway/content-entrie
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiBlockRuntime, PhiRuntimeModuleId } from "../../../types";
 import { PHI_LAYOUT } from "../../../theme/phi-tokens";
-import { PhiContentEntryPart } from "../../../constants/content-entry-parts";
+import { PHI_ENTRY_LIST_DEFAULT_PARTS, PhiContentEntryPart } from "../../../constants/content-entry-parts";
+
+/** What a list shows in its presentation: a card names who wrote it at the start of its top line. */
+function listPartsFor(presentation: "stack" | "cards" | "compact") {
+  return presentation === "cards" ? { show: PHI_ENTRY_LIST_DEFAULT_PARTS | PhiContentEntryPart.Author } : {};
+}
 
 const SYNTHETIC_LIST_REGION_IDS = { regionContent: -320 } as const;
 const SYNTHETIC_DETAIL_REGION_IDS = { regionContent: -321 } as const;
 
 /**
- * A kind's Public list Page: a heading and the list, inside the frame every Public page wears
- * (`CONTENT_ENTRIES.md`).
+ * A kind's Public list Page: the list, inside the frame every Public page wears (`CONTENT_ENTRIES.md`).
  *
- * Two Widgets rather than one, because the heading is the Site's to change and the list is not: what the
- * list shows is whatever Core answers. A Site that wants an introduction above its entries adds it here in
- * the Builder without touching the part that reads. The heading is carried inline for the same reason the
- * other Public presets carry theirs: a Module cannot put a file into the Site's `public/` directory.
+ * No heading above it: the navigation entry and the Page's title already say "News", and a word that
+ * size over the entries only pushed the first one down. A Site that wants an introduction above its
+ * entries adds one in the Builder without touching the part that reads.
  *
  * The list links each title to the kind's detail route, named by its Module Page reference; the slug is
  * filled per entry.
@@ -37,7 +40,6 @@ export async function buildPhiContentEntryListPageTree({
   ownerModuleId,
   presetKey,
   detailPresetKey,
-  heading,
   presentation,
 }: {
   page: PhiCmsPageNode;
@@ -46,15 +48,13 @@ export async function buildPhiContentEntryListPageTree({
   presetKey: string;
   /** The preset key of the kind's detail route, which the titles link to. */
   detailPresetKey: string;
-  /** The heading's source text, "News". */
-  heading: string;
   /** How the list stands: whole entries for News, cards for a Blog (the `entry-list` Widget's setting). */
   presentation: "stack" | "cards" | "compact";
 }): Promise<PhiResolvedCmsPageTree> {
   const identity = { domain: "page" as const, ownerModuleId, presetKey };
   const layouts = createPhiPresetCmsInstanceIdMap(identity, ["layoutContent"]);
   // The node keys are part of every stored placement; the list keeps the one it had before it was shared.
-  const widgets = createPhiPresetCmsInstanceIdMap(identity, ["widgetHeading", "widgetNewsList"]);
+  const widgets = createPhiPresetCmsInstanceIdMap(identity, ["widgetNewsList"]);
   const nodes = createPhiCmsPresetNodes(page);
   return {
     page: nodes.page({ pageType: PhiCmsPageType.Standard }),
@@ -67,18 +67,7 @@ export async function buildPhiContentEntryListPageTree({
       label: `pub ${kind} page`,
       maxWidth: PHI_LAYOUT.readingMax,
     }),
-    // `stack` rather than two `widget` calls: it counts the slots, so the list sits under the heading
-    // rather than in the same one.
     contentWidgets: nodes.stack(layouts.layoutContent, [
-      {
-        typeKey: "markdown",
-        id: widgets.widgetHeading,
-        label: `pub ${kind} heading widget`,
-        config: {
-          sourceMode: "inline",
-          markdown: `# ${heading}\n`,
-        },
-      },
       {
         typeKey: "entry-list",
         id: widgets.widgetNewsList,
@@ -86,6 +75,7 @@ export async function buildPhiContentEntryListPageTree({
         config: {
           kind,
           presentation,
+          ...listPartsFor(presentation),
           detailLinkTarget: {
             kind: "page",
             reference: createPhiPageReference({ kind: "module", ownerModuleId, presetKey: detailPresetKey }),
@@ -187,6 +177,7 @@ export async function buildPhiContentEntryDetailPageTree({
           source: "related",
           relatedTo: entry,
           presentation: related.presentation,
+          ...listPartsFor(related.presentation),
           title: related.title,
           limit: PHI_CONTENT_ENTRY_RELATED_LIMIT,
           // Each entry links to its own detail Page -- this one's route, filled with the related entry's slug.

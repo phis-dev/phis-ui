@@ -255,8 +255,9 @@ describe.each(KINDS)("what the $kind Module brings", ({ kind, moduleId, routes, 
 
   it("links the list's titles to its own detail route", async () => {
     const tree = await routes[0]!.loadTree({ page: pageAt(`/${kind}`, 2) } as never);
-    const [heading, list] = [...tree.contentWidgets].sort((left, right) => left.sortOrder - right.sortOrder);
-    expect(heading!.widgetType.endsWith("/markdown")).toBe(true);
+    // The list alone: the navigation entry and the Page's title already name the kind.
+    expect(tree.contentWidgets).toHaveLength(1);
+    const [list] = tree.contentWidgets;
     expect(list!.widgetType).toBe(PhiCmsWidgetType.EntryList);
 
     const config = list!.config as { kind?: string; presentation?: string; detailLinkTarget?: unknown };

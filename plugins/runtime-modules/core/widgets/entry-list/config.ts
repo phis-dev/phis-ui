@@ -12,6 +12,7 @@ import {
 } from "../../../../../constants/content-entry-kinds";
 import { readPhiLinkTarget, type PhiLinkTarget } from "../../../../../types/references";
 import {
+  PHI_ENTRY_LIST_DEFAULT_PARTS,
   phiContentEntryPartOptions,
   PhiContentEntryPart,
   readPhiContentEntryParts,
@@ -42,9 +43,7 @@ const PHI_ENTRY_LIST_PARTS = PhiContentEntryPart.Title | PhiContentEntryPart.Sub
   | PhiContentEntryPart.Date | PhiContentEntryPart.Author | PhiContentEntryPart.Avatar
   | PhiContentEntryPart.Category | PhiContentEntryPart.Tags | PhiContentEntryPart.Link;
 
-/** What a list nobody configured shows: what it showed before the parts were a choice. */
-export const PHI_ENTRY_LIST_DEFAULT_PARTS = PhiContentEntryPart.Title | PhiContentEntryPart.Subtitle
-  | PhiContentEntryPart.Date | PhiContentEntryPart.Tags | PhiContentEntryPart.Link;
+export { PHI_ENTRY_LIST_DEFAULT_PARTS };
 
 /** As many as a page can carry without becoming an archive, which is a later address. */
 export const PHI_ENTRY_LIST_DEFAULT_LIMIT = 10;

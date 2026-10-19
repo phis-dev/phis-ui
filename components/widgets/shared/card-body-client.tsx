@@ -3,6 +3,7 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
 
 import { PhiButtonControl } from "../../controls/phi-button-control";
+import { PhiFlexControl } from "../../controls/phi-flex-control";
 import { PhiImageControl, type PhiImageControlSource } from "../../controls/phi-image-control";
 import { PhiSkeletonControl } from "../../controls/phi-skeleton-control";
 import { PhiStatisticControl } from "../../controls/phi-statistic-control";
@@ -19,6 +20,7 @@ import type { PhiSurface } from "../../../types/surface";
 import type { PhiSignalRouteSet } from "../../../types/signals";
 import { usePhiControlSignalController } from "../client/shared/phi-control-signals";
 import type { PhiThemeTokens } from "../../../theme/phi-theme-tokens";
+import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import type {
   PhiCardHeadingLevel,
   PhiCardHoverEffect,
@@ -41,6 +43,11 @@ export type {
 
 export type PhiCardWidgetClientLabels = {
   eyebrow?: string;
+  /**
+   * A second eyebrow at the end of the eyebrow's line, such as a date beside who wrote it. Data a caller
+   * states, not a slot of the Card Widget: the Inspector offers no field for it and no signal writes it.
+   */
+  eyebrowEnd?: string;
   title?: string;
   description?: string;
   meta?: string;
@@ -499,13 +506,27 @@ export function PhiCardWidgetClient({
             {iconMark(topIconSize, topIconSize + 24)}
           </div>
         ) : null}
-        {eyebrow != null && !eyebrowOnMedia ? (
+        {eyebrow != null && !eyebrowOnMedia && !labels.eyebrowEnd ? (
           <PhiTypographyControl
             type="secondary"
             style={{ ...eyebrowType, color: highlight ? token.colorPrimary : token.colorTextTertiary, ...slotWidth }}
           >
             {eyebrow}
           </PhiTypographyControl>
+        ) : null}
+        {labels.eyebrowEnd && !eyebrowOnMedia ? (
+          // The two ends of one line; an empty start keeps the end at the end.
+          <PhiFlexControl justify="space-between" align="baseline" wrap gap={PHI_SPACE.xs} style={{ justifySelf: "stretch", minWidth: 0 }}>
+            <PhiTypographyControl
+              type="secondary"
+              style={{ ...eyebrowType, color: highlight ? token.colorPrimary : token.colorTextTertiary }}
+            >
+              {eyebrow ?? ""}
+            </PhiTypographyControl>
+            <PhiTypographyControl type="secondary" style={{ ...eyebrowType, color: token.colorTextTertiary }}>
+              {labels.eyebrowEnd}
+            </PhiTypographyControl>
+          </PhiFlexControl>
         ) : null}
         {headingRow}
         {body === "stat" ? figure : null}

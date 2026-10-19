@@ -14,7 +14,7 @@ import {
 import { PhiCollectionLayoutControl } from "../../../../../components/controls/phi-collection-layout-control";
 import { PhiCardWidgetClient } from "../../../../../components/widgets/shared/card-body-client";
 import { PHI_SURFACE_CARD } from "../../../../../helpers/surface-presets";
-import { PHI_SPACE } from "../../../../../theme/antd-css-var-contract";
+import { PHI_FONT_SIZE, PHI_SPACE } from "../../../../../theme/antd-css-var-contract";
 import { hasPhiContentEntryPart, PhiContentEntryPart } from "../../../../../constants/content-entry-parts";
 import type { PhiEntryListPresentation } from "./config";
 import type { PhiContentEntryReaderLabels } from "../../../../../components/widgets/label-sets/content-entries";
@@ -72,22 +72,24 @@ export type PhiEntryListWidgetClientProps = {
 const ENTRY_CARD_MIN_COLUMN_WIDTH = 260;
 
 /**
- * One entry as a card: date above, title, teaser, tags below, and the whole card leading to the entry's
- * detail Page. The Card Widget's own card, so an entry looks like every other card of the Site.
+ * One entry as a card: who and what above -- category and author at the start, the date at the end --
+ * then title, teaser, tags below, and the whole card leading to the entry's detail Page. The Card Widget's
+ * own card, so an entry looks like every other card of the Site.
  */
 function PhiEntryCard({ entry, parts }: { entry: PhiEntryListEntryView; parts: number }) {
   const eyebrow = [
     hasPhiContentEntryPart(parts, PhiContentEntryPart.Category) ? entry.category : null,
-    hasPhiContentEntryPart(parts, PhiContentEntryPart.Date) ? entry.date : null,
-  ].filter(Boolean).join(" · ");
-  const meta = [
     hasPhiContentEntryPart(parts, PhiContentEntryPart.Author) ? entry.author?.name : null,
-    hasPhiContentEntryPart(parts, PhiContentEntryPart.Tags) && entry.tags.length > 0 ? entry.tags.join(" · ") : null,
-  ].filter(Boolean).join(" — ");
+  ].filter(Boolean).join(" · ");
+  const date = hasPhiContentEntryPart(parts, PhiContentEntryPart.Date) ? entry.date : "";
+  const meta = hasPhiContentEntryPart(parts, PhiContentEntryPart.Tags) && entry.tags.length > 0
+    ? entry.tags.join(" · ")
+    : "";
   return (
     <PhiCardWidgetClient
       labels={{
         eyebrow: eyebrow || undefined,
+        eyebrowEnd: date || undefined,
         title: entry.title,
         description: entry.teaser || undefined,
         meta: meta || undefined,
@@ -252,12 +254,16 @@ export function PhiEntryBody({
   );
 }
 
-/** The parts a list entry's meta shows; tags and link come after the body, as they always did. */
+/**
+ * The parts a list entry's meta shows, and the one left for after its text. The tags lead with the byline
+ * on their line, the way a detail Page's header opens; only the link comes after the body.
+ */
 const ENTRY_META_PARTS = PhiContentEntryPart.Title | PhiContentEntryPart.Subtitle | PhiContentEntryPart.Date
-  | PhiContentEntryPart.Author | PhiContentEntryPart.Avatar | PhiContentEntryPart.Category;
-const ENTRY_BODY_PARTS = PhiContentEntryPart.Tags | PhiContentEntryPart.Link;
+  | PhiContentEntryPart.Author | PhiContentEntryPart.Avatar | PhiContentEntryPart.Category
+  | PhiContentEntryPart.Tags;
+const ENTRY_BODY_PARTS = PhiContentEntryPart.Link;
 
-/** One entry whole, as a stream of entries shows it: its meta, then its text. */
+/** One entry whole, as a stream of entries shows it: tags and byline, title, then its text. */
 function PhiEntryArticle({
   entry,
   labels,
@@ -270,7 +276,7 @@ function PhiEntryArticle({
   return (
     <article>
       <PhiFlexControl vertical gap={PHI_SPACE.xs}>
-        <PhiEntryMeta entry={entry} parts={parts & ENTRY_META_PARTS} titleLevel={2} />
+        <PhiEntryMeta entry={entry} parts={parts & ENTRY_META_PARTS} titleLevel={2} byline="beside" />
         <PhiEntryBody entry={entry} parts={parts & ENTRY_BODY_PARTS} labels={labels} />
       </PhiFlexControl>
     </article>
@@ -306,8 +312,17 @@ export function PhiEntryListWidgetClient({
     );
   }
 
+  /*
+   * The list's own heading as a rule with its name at the start: under an entry it marks where the entry
+   * ends and the others begin, which a heading alone did not -- it stood as large as the text above it.
+   * Still an `h2`, in the rule, so the Page's outline keeps it.
+   */
   const heading = title ? (
-    <PhiTypographyControl presentation="title" level={2} style={{ margin: 0 }}>{title}</PhiTypographyControl>
+    <PhiDividerControl titlePlacement="start" style={{ margin: 0 }}>
+      <PhiTypographyControl presentation="title" level={2} style={{ margin: 0, fontSize: PHI_FONT_SIZE.lg }}>
+        {title}
+      </PhiTypographyControl>
+    </PhiDividerControl>
   ) : null;
   const body = presentation === "cards" ? (
     <PhiCollectionLayoutControl

@@ -46,3 +46,10 @@ export function readPhiContentEntryParts(value: unknown, offered: number, fallba
 export function hasPhiContentEntryPart(parts: number, part: PhiContentEntryPartFlag) {
   return (parts & part) !== 0;
 }
+
+/**
+ * What an entry list nobody configured shows: what it showed before the parts were a choice. Here rather
+ * than beside the list Widget, because the Pages a kind's Module draws state it too.
+ */
+export const PHI_ENTRY_LIST_DEFAULT_PARTS = PhiContentEntryPart.Title | PhiContentEntryPart.Subtitle
+  | PhiContentEntryPart.Date | PhiContentEntryPart.Tags | PhiContentEntryPart.Link;
