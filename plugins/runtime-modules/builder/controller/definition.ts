@@ -306,6 +306,7 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_DEFINITION = {
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
       },
       { id: "effectsVisibility", channel: "effectsVisibility", action: "change", valueType: "boolean" },
+      { id: "publicRoutesVisibility", channel: "publicRoutesVisibility", action: "change", valueType: "boolean" },
       ...(["appearance", "transitions", "viewport"] as const).map((section) => ({
         id: `effectsValues:${section}`,
         channel: `effectsForm:${section}`,

@@ -1251,6 +1251,24 @@ function usePhiDeveloperBuilderWorkspaceController(
       }
 
       /*
+       * The question's dialog closed by its own close button or Escape. It runs with `closeMode:
+       * "immediate"`, so it closes without asking, and that is a Cancel: the request goes, or it would
+       * stand behind a dialog nobody can see any more. Answering closes it too; the request is gone by
+       * then, and this finds nothing to withdraw.
+       */
+      if (
+        signal.receiver === createPhiBuilderControllerAddress() &&
+        signal.channel === "publicRoutesVisibility" &&
+        signal.action === "change" &&
+        signal.value === false
+      ) {
+        if (state.publicRouteCollisionRequest) {
+          closePhiBuilderPublicRouteCollisionRequest(defaultArea);
+        }
+        return;
+      }
+
+      /*
        * The answer to the one question enabling a Module can ask.
        *
        * Assigning writes the addresses first and enables the Module in the same gesture, because a
@@ -1672,42 +1690,6 @@ function usePhiDeveloperBuilderWorkspaceController(
           correlationId: signal.correlationId,
           timestamp: Date.now(),
         });
-        return;
-      }
-
-	      if (
-        addressedHere &&
-        signal.channel === "selection" &&
-        signal.action === "change"
-      ) {
-        const rawValue = signal.value;
-        const next = rawValue && typeof rawValue === "object"
-          ? rawValue as { regionKey?: unknown; regionType?: unknown; nodeKey?: unknown; nodeKind?: unknown }
-          : null;
-        if (!next || typeof next.regionKey !== "string" || typeof next.nodeKind !== "string") {
-          return;
-        }
-        const nextRegionKey = next.regionKey;
-        const nextNodeKind = next.nodeKind === "slot" ? "slot" : "region";
-        const nextNodeKey = typeof next.nodeKey === "string"
-          ? next.nodeKey
-          : `${nextNodeKind}:${nextRegionKey}`;
-
-        builderWorkspaceStore.patch(defaultArea, (current) => ({
-          ...current,
-          nodeKey: nextNodeKey,
-          nodeId: null,
-          nodeKind: nextNodeKind,
-          selectedRegionType:
-            typeof next.regionType === "number"
-              ? next.regionType
-              : current.selectedRegionType,
-          selectedRegionKey: nextRegionKey,
-          selectedRootRegionKey: null,
-          inspectorOpen: nextNodeKind === "region",
-          sidebarKey: "structure",
-          pagesOpen: false,
-        }));
         return;
       }
 

@@ -236,7 +236,6 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
           closeMode: "request",
           signalRoutes: {
             emits: [
-              { routeKey: "builder-signal-wiring-visibility", capabilityId: "openChange", scope: "area", channel: "signalWiringVisibility", action: "change", valueType: "boolean", receiver: createPhiBuilderControllerAddress() },
               { routeKey: "builder-signal-wiring-close-request", capabilityId: "closeRequest", scope: "area", channel: "signalWiring", action: "close", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.overlayCloseRequest, receiver: createPhiBuilderControllerAddress() },
             ],
             listens: [
@@ -549,7 +548,6 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
               { routeKey: "builder-signal-wiring-values", capabilityId: "submitValues", scope: "area", channel: "signalWiringForm", action: "change", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues, receiver: createPhiBuilderControllerAddress() },
               // The values while they are edited: the four selects cascade, and their options read the session these keep current.
               { routeKey: "builder-signal-wiring-live", capabilityId: "valuesChange", scope: "area", channel: "signalWiringValues", action: "change", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues, receiver: createPhiBuilderControllerAddress() },
-              { routeKey: "builder-signal-wiring-validation", capabilityId: "validationFailed", scope: "area", channel: "signalWiringFormValidation", action: "change", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValidity, receiver: createPhiBuilderControllerAddress() },
             ],
             listens: [
               { routeKey: "builder-signal-wiring-submit-form", capabilityId: "submit", scope: "area", channel: "submit", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_INSPECTOR_WIDGET_IDS.signalWiringForm) },
