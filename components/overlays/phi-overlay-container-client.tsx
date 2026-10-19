@@ -33,6 +33,7 @@ import { PhiModalControl } from "../controls/phi-modal-control";
 import { PhiDrawerControl } from "../controls/phi-drawer-control";
 import { PhiAlertControl } from "../controls/phi-alert-control";
 import { usePhiOverlayZonesLoaderIfAny } from "./phi-overlay-zones-loader";
+import { PhiDialogBodyProvider } from "./phi-dialog-body-context";
 import type {
   PhiCmsLoadedOverlayZones,
   PhiCmsOverlayZones,
@@ -378,7 +379,7 @@ export function PhiOverlayContainerClient({
       open={open}
       title={runtimeTitle}
       header={renderZone(zones?.header)}
-      body={renderZone(zones?.body)}
+      body={renderZone(zones?.body == null ? null : <PhiDialogBodyProvider>{zones.body}</PhiDialogBodyProvider>)}
       footer={renderZone(zones?.footer)}
       closable={behaviour.closable}
       keyboard={behaviour.keyboard}

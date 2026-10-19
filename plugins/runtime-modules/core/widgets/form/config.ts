@@ -181,7 +181,6 @@ export const PHI_FORM_WIDGET_DEFINITION = {
     maxFormWidth: PHI_LAYOUT.contentMax,
     formId: null,
     submit: "external",
-    submitOnEnter: false,
     links: [],
     formConfig: {},
     execution: { mode: "handler", phase: "submit" },

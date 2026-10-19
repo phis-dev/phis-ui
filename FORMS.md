@@ -404,7 +404,7 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
 | --- | --- |
 | `formId` | The Form to render. |
 | `submit` | `inline` or `external` (default). `inline` draws the button the descriptor's `submit` describes; `external` draws none, and the Form is submitted through its `submit` input or by Enter. |
-| `submitOnEnter` | Default `false`. Whether Enter in a single-line field submits. Off unless the placement says so, because a second Form or a search on the same page gives Enter more than one meaning. |
+| `submitOnEnter` | Whether Enter in a single-line field submits. Unstated, it is on in a dialog's body (a Modal Overlay) and off anywhere else: a dialog asks one question, while a second Form or a search on a page or in a Drawer gives Enter more than one meaning. A placement that states it wins either way. |
 | `card` | `{ presentation, title, padding }` or absent. The box the Widget draws around the Form, its submit and its links: `card` on a Page of its own, `panel` for the smaller inset of chrome, `wash` for a ground without a frame. Absent is no box, no ground and no inset. |
 | `feedback` | `{ mode, successText? }` or absent. Absent answers in place. `mode` is `message` (a transient message) or `notification`; `successText` is what a success says where the descriptor's `success` says nothing. Set, it moves the answer out of the Form rather than adding one. |
 | `links` | `[{ key, href, requiresFeature? }]`, drawn below the submit. The text is `actions.<key>Label` of the Form's label set; a link whose `requiresFeature` is not published by an active Module is left out. |

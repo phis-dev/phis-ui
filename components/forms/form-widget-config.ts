@@ -30,11 +30,12 @@ export type PhiCmsFormWidgetConfig = PhiCmsWidgetConfigBase & {
   formId: PhiFormId | null;
   submit: PhiCmsFormWidgetSubmitPlacement;
   /**
-   * Whether Enter in a single-line field submits. Off unless the placement says so: with a second form
-   * or a search on the same page, Enter has more than one thing it could mean, and only whoever put
-   * them there knows which one it should.
+   * Whether Enter in a single-line field submits; `null` where the placement says nothing. Then it is on
+   * in a dialog's body, which asks one question, and off anywhere else: with a second form or a search
+   * on the same page, Enter has more than one thing it could mean, and only whoever put them there
+   * knows which one it should.
    */
-  submitOnEnter: boolean;
+  submitOnEnter: boolean | null;
   card: PhiCmsFormWidgetCardConfig | null;
   /**
    * How wide the form may get, measured where its fields stand rather than around the box.
@@ -148,7 +149,7 @@ export function parsePhiFormWidgetConfig(rawConfig: Record<string, unknown>): Ph
     ...renderableBlockConfig,
     formId: isPhiFormId(normalizedFormId) ? normalizedFormId : null,
     submit: rawConfig.submit === "inline" ? "inline" : "external",
-    submitOnEnter: rawConfig.submitOnEnter === true,
+    submitOnEnter: typeof rawConfig.submitOnEnter === "boolean" ? rawConfig.submitOnEnter : null,
     /*
      * The house measure where the placement names none, and answered HERE as well as declared.
      *

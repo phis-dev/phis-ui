@@ -95,3 +95,20 @@ describe("the Form Widget's box", () => {
     expect(parsePhiFormWidgetConfig({}).card).toBeNull();
   });
 });
+
+/*
+ * Enter, left to where the Form stands unless the placement says so: on in a dialog's body, off elsewhere
+ * (FORMS.md, `submitOnEnter`). A default of `false` in the declaration would be written into every node the
+ * Builder creates and switch Enter off in every dialog it is placed in.
+ */
+describe("the Form Widget's Enter", () => {
+  it("is unstated by default, so the dialog or the page answers it", () => {
+    expect(PHI_FORM_WIDGET_DEFINITION.defaultConfig).not.toHaveProperty("submitOnEnter");
+    expect(parsePhiFormWidgetConfig({}).submitOnEnter).toBeNull();
+  });
+
+  it("is the placement's where it states one", () => {
+    expect(parsePhiFormWidgetConfig({ submitOnEnter: true }).submitOnEnter).toBe(true);
+    expect(parsePhiFormWidgetConfig({ submitOnEnter: false }).submitOnEnter).toBe(false);
+  });
+});

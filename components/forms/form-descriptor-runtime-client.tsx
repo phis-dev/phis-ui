@@ -36,6 +36,7 @@ import {
 
 import { usePhiFormRelayArea } from "./form-relay-area";
 import { PhiSkeletonControl } from "../controls/phi-skeleton-control";
+import { usePhiInDialogBody } from "../overlays/phi-dialog-body-context";
 
 /** How long before its window closes a token is renewed rather than sent: the request takes time too. */
 const PHI_FORM_GUARD_EXPIRY_MARGIN_MS = 60_000;
@@ -65,6 +66,8 @@ export function PhiFormDescriptorRuntimeClient({
   const submitCorrelationRef = useRef<string | null>(null);
   const recordIdentityRef = useRef<string | number | null>(null);
   const identity = usePhiSignalIdentity();
+  // Where the placement says nothing about Enter, a dialog's body answers it (FORMS.md, `submitOnEnter`).
+  const inDialogBody = usePhiInDialogBody();
   const emitSignal = usePhiSignalEmitter(identity.sender);
   const source = widgetConfig?.source ?? null;
   const { provider, resource, bindingError } = usePhiTableProvider(source);
@@ -494,7 +497,7 @@ export function PhiFormDescriptorRuntimeClient({
         labels={labels}
         formConfig={widgetConfig?.formConfig}
         initialValues={startValues}
-        submitOnEnter={widgetConfig?.submitOnEnter ?? false}
+        submitOnEnter={widgetConfig?.submitOnEnter ?? inDialogBody}
         onFormReady={(activeForm) => {
           formRef.current = activeForm;
         }}
