@@ -27,6 +27,7 @@ import { readPhiSurface } from "../../../types/surface";
 import { normalizePhiRenderableBlockSize } from "../../../helpers/renderable-block-normalizers";
 import { hasPhiFlag, readPhiFlags } from "../../../helpers/flags";
 import { PhiCmsFlags } from "../../../constants/phi-cms";
+import { normalizePhiViewportFlags } from "../../../types/access";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -49,6 +50,8 @@ type BuilderPersistedRegionConfig = {
   minHeight?: number | string;
   maxHeight?: number | string;
   zIndex?: number;
+  /** The widths the Region shows on (`PhiViewport` bits); none stored is every width. */
+  viewportFlags?: number;
   surface?: unknown;
   padding?: number | string;
   paddingTop?: number | string;
@@ -145,6 +148,8 @@ function buildRegionDraft(
     zIndex: typeof regionConfig.zIndex === "number" && Number.isInteger(regionConfig.zIndex)
       ? regionConfig.zIndex
       : fallback.zIndex,
+    // On which widths the Region shows; the Inspector's Viewport section edits it, so it reads back here.
+    viewportFlags: normalizePhiViewportFlags(regionConfig.viewportFlags),
     surface: readPhiSurface(regionConfig.surface),
     // The root Layout as the node it is in the tree; its config is the one copy of what it says.
     rootNode: rootNode
@@ -240,6 +245,17 @@ export function serializePhiDeveloperBuilderRegionConfig(
     base.zIndex = draft.zIndex;
   } else {
     delete base.zIndex;
+  }
+
+  /*
+   * Every width is the default and is stored as nothing. The Inspector edited this on the draft and the
+   * save never wrote it, so a Region set to wide screens only came back on every width after a reload.
+   */
+  const viewportFlags = normalizePhiViewportFlags(draft.viewportFlags);
+  if (viewportFlags !== 0) {
+    base.viewportFlags = viewportFlags;
+  } else {
+    delete base.viewportFlags;
   }
 
   // The draft Background carries the Picker's delivery projection so the Editor can draw the current

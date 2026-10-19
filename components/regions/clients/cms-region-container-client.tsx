@@ -123,7 +123,11 @@ export function PhiCmsRegionContainerClient({
   const config: PhiCmsRegionConfig = {
     ...(initialConfig ?? {}),
     visibility: resolvedVisibility,
-    viewportFlags: blockRuntime.state.viewportFlags,
+    /*
+     * The stored widths unless a Signal has said otherwise. The block runtime does not carry them, so
+     * taking its answer alone dropped them for every Region that renders here.
+     */
+    viewportFlags: blockRuntime.state.viewportFlags ?? initialConfig?.viewportFlags,
     enabled: blockRuntime.state.enabled ?? true,
     size:
       resolvedVisibility === "collapsed"
