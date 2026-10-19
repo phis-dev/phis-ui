@@ -83,7 +83,7 @@ export async function resolvePhiAreaRootRouteDecision({
 
   const path = await resolvePhiAreaPageReferencePath({
     runtime,
-    reference: rootRoute.target,
+    reference: rootRoute.targetLinkTarget.reference,
     area,
     routeTable,
   });

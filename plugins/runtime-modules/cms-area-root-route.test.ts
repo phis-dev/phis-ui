@@ -66,8 +66,8 @@ function payloadWith(page: Partial<PhiResolvedCmsPageTree["page"]>) {
 describe("a configured root route", () => {
   it("reads a redirect a Builder stored", () => {
     expect(readPhiAreaRootRoute({
-      shell: { rootRoute: { mode: "redirect", target: dashboardReference } },
-    })).toEqual({ mode: "redirect", target: dashboardReference });
+      shell: { rootRoute: { mode: "redirect", targetLinkTarget: { kind: "page", reference: dashboardReference } } },
+    })).toEqual({ mode: "redirect", targetLinkTarget: { kind: "page", reference: dashboardReference } });
   });
 
   it("reads a landing page, which names no target", () => {
@@ -80,9 +80,20 @@ describe("a configured root route", () => {
     expect(readPhiAreaRootRoute({ modules: { rootRoute: { mode: "landing" } } })).toBeNull();
   });
 
+  /*
+   * A forward is a target the visitor is sent to, kept under a `*LinkTarget` key so the reference index
+   * sees it (REFERENCES.md). A bare reference under `target` is the landing's key, and on a redirect it
+   * names nothing.
+   */
+  it("reads nothing from a redirect that keeps its Page under the landing's key", () => {
+    expect(readPhiAreaRootRoute({
+      shell: { rootRoute: { mode: "redirect", target: dashboardReference } },
+    })).toBeNull();
+  });
+
   it("reads nothing from a target that is a path", () => {
     expect(readPhiAreaRootRoute({
-      shell: { rootRoute: { mode: "redirect", target: "/dashboard" } },
+      shell: { rootRoute: { mode: "redirect", targetLinkTarget: { kind: "page", reference: "/dashboard" } } },
     })).toBeNull();
   });
 });

@@ -399,7 +399,12 @@ through one Select in the Shells workspace header beside the Sider switch -- a p
 by an options provider, because it is the same kind of statement the switch is: about the Area being
 edited rather than about anything on the canvas. The list is the two answers that are not a Page,
 `landing` and the default, followed by every registered Page of the Area. The target is stored as an internal Page
-reference and never as a path, so it survives a Page being renamed or a Module moving its route; a
+reference and never as a path, so it survives a Page being renamed or a Module moving its route. A forward
+keeps it as a link target, `{ mode: "redirect", targetLinkTarget: { kind: "page", reference } }` and nothing
+more, because it is somewhere the visitor is sent and the reference index reads link targets by that key
+(REFERENCES.md). A landing's `target` is a different thing under a different key: which Module's applicant
+stands in the slot, a choice among Modules compared by identity and never followed, so only a Module Page
+reference is accepted there, and it is never indexed. A
 reference that no longer resolves -- a deleted Page, a Module switched off, a route this viewer may not
 reach -- falls back to the default above rather than to a 404. The structure draft states the whole
 `shell` namespace on every save, because the publish merge takes that namespace from the draft alone.

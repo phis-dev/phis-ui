@@ -622,7 +622,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     ? PHI_BUILDER_AREA_ROOT_ROUTE_AUTOMATIC
     : areaRootRoute.mode === "landing"
       ? PHI_BUILDER_AREA_ROOT_ROUTE_LANDING
-      : areaRootRoute.target;
+      : areaRootRoute.targetLinkTarget.reference;
   const areaLandingPageValue = areaRootRoute?.mode === "landing" && areaRootRoute.target
     ? areaRootRoute.target
     : PHI_BUILDER_AREA_LANDING_PAGE_EMPTY;
@@ -1596,7 +1596,10 @@ function usePhiDeveloperBuilderWorkspaceController(
               ? null
               : rootRouteAnswer === PHI_BUILDER_AREA_ROOT_ROUTE_LANDING
                 ? { mode: "landing", ...(landingAnswer ? { target: landingAnswer } : {}) }
-                : { mode: "redirect", target: rootRouteAnswer as PhiPageReference },
+                : {
+                  mode: "redirect",
+                  targetLinkTarget: { kind: "page", reference: rootRouteAnswer as PhiPageReference },
+                },
           meta: {
             titleTemplate: values.areaTitleTemplate,
             defaultTitle: values.areaDefaultTitle,

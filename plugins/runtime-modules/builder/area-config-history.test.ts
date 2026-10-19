@@ -91,7 +91,7 @@ describe("undoing the Area root route", () => {
     // The Area stored a landing, so asking for the default is a change of its own.
     builderWorkspaceStore.patch("public", (current) => ({ ...current, areaRootRoutes: { public: { mode: "landing" } } }));
     answerRootRoute(null);
-    answerRootRoute({ mode: "redirect", target: "module:contact" } as unknown as PhiAreaRootRoute);
+    answerRootRoute({ mode: "redirect", targetLinkTarget: { kind: "page", reference: "module:contact" } } as unknown as PhiAreaRootRoute);
 
     undoOnce();
     expect(currentDraft()).toBeNull();
@@ -109,7 +109,7 @@ describe("undoing the Area root route", () => {
    * the Builder chrome is one layout across both, so nothing re-renders on the way over.
    */
   it("agrees with the Page list once the save has written it", () => {
-    const saved = { mode: "redirect", target: "module:contact" } as unknown as PhiAreaRootRoute;
+    const saved = { mode: "redirect", targetLinkTarget: { kind: "page", reference: "module:contact" } } as unknown as PhiAreaRootRoute;
     answerRootRoute(saved);
     const before = builderWorkspaceStore.getSnapshot("public");
     expect(readPhiBuilderStoredAreaRootRoute(before, "public")).not.toEqual(saved);

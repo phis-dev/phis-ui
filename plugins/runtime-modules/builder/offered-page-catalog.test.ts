@@ -83,11 +83,14 @@ describe("the Pages an Area offers", () => {
   it("does not offer a root the Area still forwards, however the Select stands", () => {
     const forward = {
       mode: "redirect",
-      target: createPhiPageReference({
-        kind: "module",
-        ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
-        presetKey: "public-terms-page",
-      }),
+      targetLinkTarget: {
+        kind: "page",
+        reference: createPhiPageReference({
+          kind: "module",
+          ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
+          presetKey: "public-terms-page",
+        }),
+      },
     } as const;
 
     expect(offeredPaths(workspace({ stored: forward, unsaved: { mode: "landing" } })))

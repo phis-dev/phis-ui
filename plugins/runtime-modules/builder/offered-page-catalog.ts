@@ -304,7 +304,7 @@ export function resolvePhiBuilderOfferedPageKey(
 
   const rootRoute = readPhiBuilderStoredAreaRootRoute(state, area);
   const forwardTargetKey = rootRoute?.mode === "redirect"
-    ? findPageKeyByReference(pages, rootRoute.target)
+    ? findPageKeyByReference(pages, rootRoute.targetLinkTarget.reference)
     : null;
 
   return {

@@ -7,6 +7,7 @@ import type { PhiResolvedCmsAreaPresetTree } from "../types/cms";
 import type { PhiCmsInstanceId } from "../types/cms-instance-id";
 import {
   createPhiPresetCmsPageId,
+  readPhiLinkTarget,
   readPhiPageReference,
   type PhiPageReference,
 } from "../types/references";
@@ -92,7 +93,19 @@ export const PHI_AREA_ROOT_ROUTE_KEY = "rootRoute" as const;
  */
 export type PhiAreaRootRoute =
   | { mode: "landing"; target?: PhiPageReference }
-  | { mode: "redirect"; target: PhiPageReference };
+  | { mode: "redirect"; targetLinkTarget: PhiAreaRootRouteTarget };
+
+/**
+ * Where a forwarding root leads: a Page and nothing else.
+ *
+ * The two modes name a Page for different reasons, and that is why they keep it under different keys.
+ * A landing's `target` chooses which Module's applicant stands in the slot -- a choice among Modules,
+ * compared by identity and never followed, and a Module Page is never indexed anyway. A redirect's
+ * target is somewhere the visitor is sent, so it is stored the way every persisted target is, under a
+ * `*LinkTarget` key, and the reference index sees it (REFERENCES.md). It carries the Page alone: a
+ * forward has no fragment, no parameters, no new tab, and it never leaves its Area.
+ */
+export type PhiAreaRootRouteTarget = { kind: "page"; reference: PhiPageReference };
 
 export function readPhiAreaRootRoute(
   config: Record<string, unknown> | null | undefined,
@@ -118,10 +131,12 @@ export function readPhiAreaRootRoute(
   if (record.mode !== "redirect") {
     return null;
   }
-  // An unreadable reference is the same answer as none: the preset decides, and the Builder sees the
+  // An unreadable target is the same answer as none: the preset decides, and the Builder sees the
   // selector fall back to what actually happens rather than to what was stored.
-  const reference = readPhiPageReference(record.target);
-  return reference ? { mode: "redirect", target: reference.reference } : null;
+  const target = readPhiLinkTarget(record.targetLinkTarget);
+  return target?.kind === "page"
+    ? { mode: "redirect", targetLinkTarget: { kind: "page", reference: target.reference } }
+    : null;
 }
 
 /**
