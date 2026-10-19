@@ -41,6 +41,7 @@ const PHI_BUILDER_INSPECTOR_SECTIONS = {
   region: [
     [PHI_BUILDER_INSPECTOR_SECTION_WIDGET_IDS.regionGeometry, "builder-region-geometry-inspector", "geometry"],
     [PHI_BUILDER_INSPECTOR_SECTION_WIDGET_IDS.regionViewport, "builder-region-viewport-inspector", "viewport"],
+    [PHI_BUILDER_INSPECTOR_SECTION_WIDGET_IDS.regionVisibility, "builder-region-visibility-inspector", "visibility"],
     [PHI_BUILDER_INSPECTOR_SECTION_WIDGET_IDS.regionPadding, "builder-region-padding-inspector", "padding"],
     [PHI_BUILDER_INSPECTOR_SECTION_WIDGET_IDS.regionSurface, "builder-region-surface-inspector", "surface"],
   ],

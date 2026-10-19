@@ -14,7 +14,10 @@ export type PhiInspectorWidgetLabels = {
     shadow: string;
     surface: string;
     signals: string;
+    visibility: string;
   };
+  /** Which Pages a Shell Region stands on, and how `header_top` comes into view. */
+  regionVisibility: PhiInspectorRegionVisibilityLabels;
   /** The style switch of a Surface: no look, a named look, or values of the author's own. */
   surfaceStyle: {
     title: string;
@@ -48,6 +51,22 @@ export type PhiInspectorWidgetLabels = {
    * with its catalog (`plugin-meta-labels.server.ts`); these belong to the Inspector and sit here.
    */
   fields: PhiInspectorFieldLabels;
+};
+
+export type PhiInspectorRegionVisibilityLabels = {
+  pages: string;
+  all: string;
+  root: string;
+  include: string;
+  exclude: string;
+  entries: string;
+  entriesPlaceholder: string;
+  landing: string;
+  reveal: string;
+  always: string;
+  hover: string;
+  scrollUp: string;
+  pageOwned: string;
 };
 
 export type PhiInspectorLinkTargetLabels = {
@@ -96,6 +115,22 @@ export const PHI_INSPECTOR_WIDGET_DEFAULT_LABELS: PhiInspectorWidgetLabels = {
     shadow: "Shadow",
     surface: "Surface",
     signals: "Signals",
+    visibility: "Visibility",
+  },
+  regionVisibility: {
+    pages: "Stands on",
+    all: "Every page",
+    root: "The Area's start page",
+    include: "Only these pages",
+    exclude: "Every page but these",
+    entries: "Pages",
+    entriesPlaceholder: "Choose Pages or folders",
+    landing: "(Landing page)",
+    reveal: "Comes into view",
+    always: "Always",
+    hover: "At the top edge",
+    scrollUp: "When scrolling up",
+    pageOwned: "This Region belongs to its Page and stands on that Page alone.",
   },
   surfaceStyle: {
     title: "Style",

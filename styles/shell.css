@@ -429,3 +429,57 @@
   --phi-region-chrome-filter: none;
   --phi-region-chrome-attachment: scroll;
 }
+
+/* ---------------------------------------------------------------------------------------------
+   Revealing `header_top` (SHELL.md "Region visibility per Page")
+
+   A band that comes and goes sticks at its offset and moves out of sight upwards, by its own height
+   plus that offset. `translate` rather than `transform`, which a Region's Effects may set inline.
+
+   `hover` is out of sight until the pointer reaches the strip along the top edge, or until something in
+   it has the focus, so it can be reached from the keyboard. It takes no room (the resolver takes its
+   height off again below it) and lies over the Header when it comes, which is why it paints the
+   Shell's ground itself instead of leaving it to a pane that is not behind it any more.
+
+   `scroll-up` keeps its track, leaves while the page is read downwards and comes back when it scrolls
+   up; the client renderer says which with `data-phi-region-revealed`. A device without hover gets that
+   rule for a `hover` band too.
+   --------------------------------------------------------------------------------------------- */
+.phi-cms-region-shell[data-phi-region-reveal] {
+  transition: translate 180ms ease;
+}
+
+.phi-cms-region-shell[data-phi-region-reveal="hover"]:not(:hover, :focus-within, [data-phi-region-revealed="true"]),
+.phi-cms-region-shell[data-phi-region-reveal="scroll-up"][data-phi-region-revealed="false"] {
+  translate: 0 calc(-100% - var(--phi-region-reveal-offset, 0px));
+  /* Leaving waits a moment, so a pointer that slips off the edge does not slam the band shut. */
+  transition-delay: 320ms;
+}
+
+.phi-cms-region-reveal-zone {
+  position: absolute;
+  inset-inline: 0;
+  top: 100%;
+  height: 8px;
+}
+
+:where([data-phi-shell-chrome-panes="true"]) .phi-cms-region-shell[data-phi-region-reveal="hover"] {
+  --phi-region-chrome-image: var(--phi-shell-chrome-image, none);
+  --phi-region-chrome-color: var(--phi-shell-chrome-color, transparent);
+  --phi-region-chrome-filter: var(--phi-shell-chrome-filter, none);
+  --phi-region-chrome-attachment: fixed;
+}
+
+/* The bands below a `scroll-up` band and the Header pane follow it as it comes and goes. */
+[data-phi-shell-layout]:has(.phi-cms-region-shell[data-phi-region-reveal="scroll-up"])
+  :is(.phi-cms-region-shell[data-phi-region-key="header_main"], .phi-cms-region-shell[data-phi-region-key="header_bottom"], .phi-shell-chrome-pane--header) {
+  transition: top 180ms ease, inset-block-start 180ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phi-cms-region-shell[data-phi-region-reveal],
+  [data-phi-shell-layout]:has(.phi-cms-region-shell[data-phi-region-reveal="scroll-up"])
+    :is(.phi-cms-region-shell[data-phi-region-key="header_main"], .phi-cms-region-shell[data-phi-region-key="header_bottom"], .phi-shell-chrome-pane--header) {
+    transition: none;
+  }
+}

@@ -30,6 +30,8 @@ import type { PhiSurface } from "../../types/surface";
 import type { PhiSurfaceGround } from "../../helpers/surface-style";
 import { resolvePhiRenderableBlockGeometry } from "../../types/renderable-block-geometry";
 import { createPhiSignalAddress } from "../../types/signals";
+import type { PhiCmsRegionReveal } from "../../types/cms-presets";
+import { readPhiCmsRegionReveal } from "../../helpers/region-page-scope";
 import { resolvePhiPaddingStyle } from "../layouts/phi-layout-contract";
 import { phiRegionUsesShellChromeOverlay } from "../root/phi-shell-chrome-overlay";
 import {
@@ -85,6 +87,7 @@ export type PhiCmsRegionShellAttributes = PhiRenderableBlockEffectsAttributes & 
   "data-phi-block-visibility": string;
   "data-phi-viewport-flags": number | undefined;
   "data-phi-block-enabled": "true" | "false";
+  "data-phi-region-reveal": Exclude<PhiCmsRegionReveal, "always"> | undefined;
   className: string;
 };
 
@@ -116,6 +119,8 @@ export type PhiCmsRegionShell = {
   element: "header" | "footer" | "aside" | "div";
   visibility: NonNullable<PhiCmsRegionConfig["visibility"]>;
   enabled: boolean;
+  /** How the Region comes into view; anything but `always` is the client renderer's to run. */
+  reveal: PhiCmsRegionReveal;
   siderWidth: CSSProperties["width"];
   siderCollapsedWidth: CSSProperties["width"];
   /** The authored Background, or null where the stored one paints nothing. */
@@ -244,18 +249,36 @@ export function resolvePhiCmsRegionShell({
   const siderCollapsedWidth =
     normalizeCssLength(config.collapsedWidth) ?? resolvePhiShellSiderCollapsedWidth(shellTheme);
   const top = normalizeCssLength(config.offsetTop) ?? 0;
+  const topCss = typeof top === "number" ? `${top}px` : top;
   const sticky = hasPhiFlag(config.flags, PhiCmsFlags.Sticky);
+  // A preview shows the Region where it stands, so an author can see what they are editing.
+  const reveal = previewMode ? "always" : readPhiCmsRegionReveal(regionKey, config);
   /*
    * Full height is a Sider's behaviour and nobody else's (LAYOUTING.md: "where the Region family
    * supports it"). The static renderer used to give every Region kind the viewport-height `calc` when
    * the flag was set, the client one only a Sider.
    */
   const fullHeight = isSider && hasPhiFlag(config.flags, PhiCmsFlags.FullHeight);
-  const stuck = isHeader ? sticky : isSider && (sticky || fullHeight);
+  /*
+   * A revealing `header_top` sticks whatever its flag says: coming back into view at the top edge is what
+   * revealing means, and only a sticky band has a top edge to come back to.
+   */
+  const stuck = isHeader ? sticky || reveal !== "always" : isSider && (sticky || fullHeight);
+  /*
+   * The Header bands below `header_top` stick under it while it is in view and close up when it leaves.
+   * `--phi-shell-header-top-stack` is how much of the viewport's top it holds right now; only a
+   * `scroll-up` band ever publishes it (SHELL.md "Region visibility per Page"), so for every other Shell
+   * it is unset and the offset is the one configured.
+   */
+  const stuckTop = !stuck
+    ? undefined
+    : isHeader && regionKey !== "header_top"
+      ? `calc(${topCss} + var(--phi-shell-header-top-stack, 0px))`
+      : top;
   const blockSize = geometry.block.size?.css;
   const fullHeightSize =
     fullHeight && !blockSize
-      ? `calc(100dvh - ${typeof top === "number" ? `${top}px` : top})`
+      ? `calc(100dvh - ${topCss})`
       : blockSize;
   const zIndex = config.zIndex ?? resolvePhiShellRegionZIndex(regionKey, hasPhiFlag(config.flags, PhiCmsFlags.FullHeight));
 
@@ -410,8 +433,8 @@ export function resolvePhiCmsRegionShell({
     ...modeStyle,
     ...(backgroundStyle ?? {}),
     position: stuck ? "sticky" : "relative",
-    top: stuck ? top : undefined,
-    insetBlockStart: isHeader && stuck ? top : undefined,
+    top: stuckTop,
+    insetBlockStart: isHeader ? stuckTop : undefined,
     zIndex,
     ...geometryStyle,
     color: liveChrome ? liveChrome.color : "var(--phi-region-color)",
@@ -434,6 +457,14 @@ export function resolvePhiCmsRegionShell({
     ...style,
     margin: 0,
     ...(!isSider && geometry.inline.max != null ? { marginInline: "auto" } : {}),
+    /*
+     * A `hover` band takes no room: its own height comes off again below it, so its grid track collapses
+     * and the Page starts at the top. What the client measured stands in for a height nobody stated.
+     */
+    ...(reveal === "hover"
+      ? { marginBlockEnd: `calc(-1 * ${blockSize ?? "var(--phi-region-reveal-extent, 0px)"})` }
+      : {}),
+    ...(reveal === "always" ? {} : { "--phi-region-reveal-offset": topCss } as CSSProperties),
   };
 
   return {
@@ -441,6 +472,7 @@ export function resolvePhiCmsRegionShell({
     element: isHeader ? "header" : family === "footer" ? "footer" : isSider ? "aside" : "div",
     visibility,
     enabled,
+    reveal,
     siderWidth,
     siderCollapsedWidth,
     tone: surface?.tone ?? null,
@@ -458,6 +490,7 @@ export function resolvePhiCmsRegionShell({
       "data-phi-block-visibility": visibility,
       "data-phi-viewport-flags": viewportFlags,
       "data-phi-block-enabled": enabled ? "true" : "false",
+      "data-phi-region-reveal": reveal === "always" ? undefined : reveal,
       ...effectsAttributes,
       className: ["phi-cms-region-shell", resolvePhiSurfaceToneClassName(surface?.tone), className]
         .filter(Boolean)

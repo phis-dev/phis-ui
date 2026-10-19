@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { PhiPresetPageNode } from "./cms-page-catalog";
 import { createPhiPageReference } from "../types/references";
-import { buildPhiBuilderPageReferenceTree } from "./page-reference-tree";
+import { buildPhiBuilderPageReferenceTree, buildPhiBuilderPageScopeTree } from "./page-reference-tree";
 
 const reference = (pageScopeId: number) => createPhiPageReference({ kind: "site", pageScopeId });
 
@@ -111,5 +111,34 @@ describe("the Pages a link picker offers", () => {
     const [node] = buildPhiBuilderPageReferenceTree("admin", nodes, nodes);
 
     expect(node?.description).toBe("/admin/users");
+  });
+});
+
+/*
+ * The Region Page scope picker (SHELL.md "Region visibility per Page"): Pages by reference as above, and
+ * folders choosable as the start of their Pages' paths -- read off the Pages, because outside Public the
+ * catalog key leaves out the namespace the visitor's address carries.
+ */
+describe("the Pages and folders a Region Page scope offers", () => {
+  it("offers a folder as the path its Pages start with", () => {
+    const nodes = [{
+      key: "blog",
+      title: "Blog",
+      children: [
+        page({ key: "blog/first", title: "First", storagePath: "/acme/blog/first", reference: reference(7) }),
+      ],
+    }];
+    const [blog] = buildPhiBuilderPageScopeTree("app", nodes, nodes);
+
+    expect(blog).toMatchObject({ value: "folder:/acme/blog", description: "/acme/blog" });
+    expect(blog?.disabled).toBeUndefined();
+    expect(blog?.children?.[0]?.value).toBe(reference(7));
+  });
+
+  it("leaves a deleted Page with nothing below it unchoosable", () => {
+    const nodes = [page({ key: "old", title: "Old", reference: reference(9), tombstoned: true })];
+    const [old] = buildPhiBuilderPageScopeTree("public", nodes, nodes);
+
+    expect(old).toMatchObject({ value: "old", disabled: true });
   });
 });

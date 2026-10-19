@@ -11,6 +11,11 @@ const PUB_HEADER_TOP_REGION: PhiCmsResolvedRegion = {
   sortOrder: -10,
   config: {
     offsetTop: 0,
+    /*
+     * The strip of Brand lines stands on the Area's own `/` alone. A rule the Region carries, so it is
+     * still the rule after an author has saved the Area and the code no longer answers.
+     */
+    pageScope: { mode: "root" },
   },
   rootLayoutNodeId: null,
   rootLayoutNode: null,

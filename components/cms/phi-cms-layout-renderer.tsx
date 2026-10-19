@@ -1,5 +1,6 @@
 import { cloneElement, isValidElement, type ReactElement, type ReactNode } from "react";
 
+import { readPhiCmsRegionPageScope, resolvePhiCmsRegionPageScope } from "../../helpers/region-page-scope";
 import { isPhiCmsWidgetContentUnpublished } from "../../helpers/cms-content-binding";
 import type {
   PhiCmsContentWidgetNode,
@@ -1157,6 +1158,11 @@ export async function PhiCmsLayoutRenderer({
         regionKey={regionKey}
         regionType={region.regionType}
         config={region.config}
+        pageScope={resolvePhiCmsRegionPageScope(
+          readPhiCmsRegionPageScope(regionKey, region.config),
+          links,
+          runtime.site.availableLocales.map((option) => option.code),
+        )}
         shellTheme={runtime.site.theme?.shell}
         previewMode={root?.config.renderMode === "preview"}
         runtime={runtime}

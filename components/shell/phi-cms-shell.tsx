@@ -20,6 +20,12 @@ export type PhiCmsShellProps = {
    * configs already, and the Page-owned `header_bottom` never reaches here as anything but a subtree.
    */
   headerPaneStickyTop?: string | null;
+  /**
+   * The room a browser-decided `header_top` holds, as the server sees it for this Page (SHELL.md
+   * "Region visibility per Page"). Set on the Shell element, where the Region updates it later and the
+   * pane and the bands below read it.
+   */
+  headerTopRoom?: Record<`--phi-shell-header-top-${string}`, string>;
 };
 
 /**
@@ -104,7 +110,9 @@ export function PhiCmsShell({
   footerBottom,
   drawer,
   headerPaneStickyTop,
+  headerTopRoom,
 }: PhiCmsShellProps) {
+  const roomStyle = headerTopRoom as CSSProperties | undefined;
   const hasLeftFullHeightSidebar = siderLeftFullHeight && Boolean(siderLeft);
   const shellVariant = hasLeftFullHeightSidebar
     ? "full-height-sider"
@@ -126,6 +134,7 @@ export function PhiCmsShell({
         data-phi-shell-layout="cms"
         data-phi-shell-variant={shellVariant}
         data-phi-shell-chrome-panes="true"
+        style={roomStyle}
       >
         {hasHeader ? <PhiShellChromePane family="header" stickyTop={headerPaneStickyTop} /> : null}
         <PhiShellChromePane family="sider" />
@@ -152,6 +161,7 @@ export function PhiCmsShell({
       data-phi-shell-layout="cms"
       data-phi-shell-variant={shellVariant}
       data-phi-shell-chrome-panes="true"
+      style={roomStyle}
     >
       {/*
         Two Header panes here, not one: `header_bottom` sits beside the Sider in this topology, so the

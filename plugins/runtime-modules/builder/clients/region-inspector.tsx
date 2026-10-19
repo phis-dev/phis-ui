@@ -25,6 +25,9 @@ import {
   type PhiCmsPaddingWidgetConfig,
 } from "../../../../types/cms-config";
 import { PhiTypographyControl } from "../../../../components/controls/phi-typography-control";
+import type { PhiInspectorRegionVisibilityLabels } from "../../../../components/widgets/label-types/inspector";
+import { PHI_INSPECTOR_WIDGET_DEFAULT_LABELS } from "../../../../components/widgets/label-types/inspector";
+import { PhiRegionVisibilityFields } from "./region-visibility-fields";
 const PHI_GAP_SM = "var(--ant-padding-sm)";
 
 const REGION_PADDING_KEYS = [
@@ -65,6 +68,7 @@ type PhiDeveloperBuilderRegionInspectorWidgetClientProps = {
   colorPickerLabels?: PhiColorPickerLabels;
   paddingLabels?: PhiPaddingWidgetLabels;
   surfaceLabels?: PhiInspectorSurfaceLabels;
+  visibilityLabels?: PhiInspectorRegionVisibilityLabels;
   renderMediaPicker?: PhiBackgroundControlProps["renderMediaPicker"];
 };
 
@@ -81,6 +85,7 @@ export function PhiDeveloperBuilderRegionInspectorWidgetClient({
   colorPickerLabels,
   paddingLabels,
   surfaceLabels,
+  visibilityLabels = PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.regionVisibility,
   renderMediaPicker,
 }: PhiDeveloperBuilderRegionInspectorWidgetClientProps) {
   const isPreviewMode = builderMode === "preview";
@@ -128,6 +133,19 @@ export function PhiDeveloperBuilderRegionInspectorWidgetClient({
                     value={effectiveDraft.viewportFlags}
                     labels={geometryLabels?.viewport}
                     onChange={(viewportFlags) => updateDraft({ viewportFlags })}
+                  />
+                ),
+              },
+              {
+                key: "visibility",
+                title: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.sections.visibility,
+                children: (
+                  <PhiRegionVisibilityFields
+                    regionKey={selectedRegionKey}
+                    regionConfig={effectiveDraft.regionConfig}
+                    disabled={isPreviewMode || !onDraftChange}
+                    labels={visibilityLabels}
+                    onChange={(regionConfig) => updateDraft({ regionConfig })}
                   />
                 ),
               },

@@ -531,7 +531,7 @@ to keep Overlay receivers alive.
 
 Each Collapsible slot contains one Builder-Module section Widget. The sections are:
 
-- Region Inspector: geometry, viewport, padding, surface
+- Region Inspector: geometry, viewport, visibility, padding, surface
 - Layout Inspector: settings, anchor, padding, viewport, surface, signals
 - Widget Inspector: settings, geometry, viewport, surface, signals
 
@@ -601,6 +601,20 @@ Preview rendering boundary:
 - server preview receives a serialized draft tree as input and renders through the normal CMS layout/widget renderer
 - draft synchronization into the server preview is an explicit transport concern and must use a documented route, action, or persistence path
 - do not use a second widget preview registry as the long-term contract
+
+Field rows:
+
+- every Inspector field is a row of two columns: its words on the left in the shared label column
+  (`PHI_INSPECTOR_FIELD_LABEL_WIDTH`), the control in the column beside them. The row is
+  `PhiInspectorFieldRow` (`components/widgets/inspector-field-row.tsx`).
+- a field the Inspector can describe is a `PhiCmsConfigField` drawn by `renderPhiInspectorConfigField`, which
+  adds the required mark and the description hint; a field it cannot -- a Page tree, a link target -- is
+  handed to `renderPhiInspectorSettingsRow`. A switch takes `renderPhiInspectorSwitchRow`.
+- a field control never carries a `label` of its own: it would draw its words above itself and stand out of
+  line with every row around it. `scripts/validate-inspector-field-rows.mjs` refuses it in the Builder's
+  Inspector clients.
+- a field that chooses Pages stores their references and offers the Pages the Area answers
+  (`usePhiBuilderOfferedPageCatalog`), never paths a person typed (REFERENCES.md).
 
 Control rules:
 

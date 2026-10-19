@@ -58,6 +58,7 @@ const PHI_CMS_WIDGET_MODULE_BY_TYPE_KEY: Readonly<Record<string, keyof typeof PH
   "builder-region-padding-inspector": "builder",
   "builder-region-surface-inspector": "builder",
   "builder-region-viewport-inspector": "builder",
+  "builder-region-visibility-inspector": "builder",
   "builder-shells-workspace": "builder",
   "builder-widget-geometry-inspector": "builder",
   "builder-widget-settings-inspector": "builder",

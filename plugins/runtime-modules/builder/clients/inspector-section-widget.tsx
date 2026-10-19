@@ -149,6 +149,7 @@ type PhiBuilderInspectorSectionWidgetClientProps = {
   surfaceLabels?: PhiInspectorSurfaceLabels;
   gridLabels?: PhiInspectorWidgetLabels["grid"];
   fieldLabels?: PhiInspectorWidgetLabels["fields"];
+  visibilityLabels?: PhiInspectorWidgetLabels["regionVisibility"];
   colorPickerLabels?: PhiColorPickerLabels;
   iconPickerLabels?: PhiIconPickerControlLabels;
 };
@@ -300,6 +301,7 @@ function usePhiBuilderInspectorSectionState(signalRoutes?: PhiSignalRouteSet) {
 export function PhiBuilderRegionInspectorSectionWidgetClient({
   section,
   signalRoutes,
+  visibilityLabels,
   geometryLabels,
   paddingLabels,
   backgroundLabels,
@@ -308,7 +310,7 @@ export function PhiBuilderRegionInspectorSectionWidgetClient({
   colorPickerLabels,
 }: PhiBuilderInspectorSectionWidgetClientProps) {
   const state = usePhiBuilderInspectorSectionState(signalRoutes);
-  return <PhiDeveloperBuilderRegionInspectorWidgetClient surfaceLabels={surfaceLabels} section={section} builderMode={state.builderMode} selectedStructureNodeKey={state.nodeKey} selectedStructureNodeKind={state.nodeKind} selectedRegionKey={state.selectedRegionKey} selectedRootRegionKey={state.selectedRootRegionKey} currentDraft={state.currentRegionDraft} onDraftChange={(patch) => state.emitInspectorControllerAction({ kind: "patchSelectedRegionDraft", patch })} geometryLabels={geometryLabels} backgroundLabels={backgroundLabels} borderLabels={borderLabels} colorPickerLabels={colorPickerLabels} paddingLabels={paddingLabels} renderMediaPicker={state.renderBackgroundMediaPicker} />;
+  return <PhiDeveloperBuilderRegionInspectorWidgetClient surfaceLabels={surfaceLabels} visibilityLabels={visibilityLabels} section={section} builderMode={state.builderMode} selectedStructureNodeKey={state.nodeKey} selectedStructureNodeKind={state.nodeKind} selectedRegionKey={state.selectedRegionKey} selectedRootRegionKey={state.selectedRootRegionKey} currentDraft={state.currentRegionDraft} onDraftChange={(patch) => state.emitInspectorControllerAction({ kind: "patchSelectedRegionDraft", patch })} geometryLabels={geometryLabels} backgroundLabels={backgroundLabels} borderLabels={borderLabels} colorPickerLabels={colorPickerLabels} paddingLabels={paddingLabels} renderMediaPicker={state.renderBackgroundMediaPicker} />;
 }
 
 export function PhiBuilderLayoutInspectorSectionWidgetClient({

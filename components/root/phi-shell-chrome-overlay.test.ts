@@ -7,6 +7,7 @@ import {
   resolvePhiShellChromePaneShadow,
   resolvePhiShellChromePaneShadows,
   resolvePhiShellChromePaneStickyTop,
+  resolvePhiShellHeaderPaneStickyTop,
 } from "./phi-shell-chrome-overlay";
 
 /**
@@ -262,6 +263,47 @@ describe("resolvePhiShellChromePaneStickyTop", () => {
       { sticky: false, height: "auto" },
       { sticky: true, offsetTop: 0, height: "55px" },
     ])).toBeNull();
+  });
+});
+
+describe("resolvePhiShellHeaderPaneStickyTop", () => {
+  const headerMain = { sticky: true, offsetTop: 0, height: "55px" };
+  const room = { extent: 34, stack: 34 };
+
+  it("is the plain answer while `header_top` stands everywhere", () => {
+    expect(resolvePhiShellHeaderPaneStickyTop(
+      { sticky: false, offsetTop: 0, height: "34px" },
+      headerMain,
+      { scoped: false, reveal: "always" },
+      room,
+    )).toBe("-34px");
+  });
+
+  it("leaves a `hover` band out, because it holds no room", () => {
+    expect(resolvePhiShellHeaderPaneStickyTop(
+      { sticky: true, offsetTop: 0, height: "34px" },
+      headerMain,
+      { scoped: false, reveal: "hover" },
+      room,
+    )).toBe("0px");
+  });
+
+  it("rises by the part of a `scroll-up` band that has left", () => {
+    expect(resolvePhiShellHeaderPaneStickyTop(
+      { sticky: false, offsetTop: 0, height: "34px" },
+      headerMain,
+      { scoped: false, reveal: "scroll-up" },
+      room,
+    )).toBe("calc(0px - var(--phi-shell-header-top-extent, 34px) + var(--phi-shell-header-top-stack, 34px))");
+  });
+
+  it("travels the published extent of a scoped band that scrolls away", () => {
+    expect(resolvePhiShellHeaderPaneStickyTop(
+      { sticky: false, offsetTop: 0, height: "34px" },
+      headerMain,
+      { scoped: true, reveal: "always" },
+      { extent: 0, stack: 0 },
+    )).toBe("calc(0px - var(--phi-shell-header-top-extent, 0px))");
   });
 });
 

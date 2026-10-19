@@ -27,7 +27,7 @@ export const PHI_BUILDER_EFFECTS_FORM_WIDGET_IDS = {
 export const PHI_BUILDER_INSPECTOR_SECTION_WIDGET_IDS = createPhiPresetCmsInstanceIdMap(
   PHI_BUILDER_INSPECTOR_PRESET_IDENTITY,
   [
-    "regionGeometry", "regionViewport", "regionPadding", "regionSurface",
+    "regionGeometry", "regionViewport", "regionVisibility", "regionPadding", "regionSurface",
     "layoutSettings", "layoutAnchor", "layoutViewport", "layoutSurface", "layoutSignals",
     "widgetSettings", "widgetGeometry", "widgetViewport", "widgetSurface", "widgetSignals",
     "layoutPadding",

@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties, ReactElement, ReactNode } from "react";
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { PhiButtonControl } from "../../controls/phi-button-control";
 import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
@@ -30,6 +30,11 @@ import { PhiSlotChildViewportEffectsObserver } from "../../../plugins/runtime/ph
 import { PhiFlexControl } from "../../controls/phi-flex-control";
 import { resolvePhiCmsRegionShell, type PhiCmsRegionShellTheme } from "../phi-cms-region-shell";
 import { usePhiVisualAnchor } from "../../runtime/runtime-visual-anchors";
+import { usePhiPathname } from "../../runtime/use-phi-pathname";
+import { stripLocaleAndAreaFromPathname } from "../../../helpers/locale";
+import { phiCmsRegionPageScopeIncludes, readPhiCmsRegionReveal } from "../../../helpers/region-page-scope";
+import type { PhiCmsResolvedRegionPageScope } from "../../../types/cms-presets";
+import { usePhiRegionRevealed, usePhiShellHeaderTopRoom } from "./use-phi-region-reveal";
 
 type PhiCmsRegionContainerClientProps = {
   children: ReactNode;
@@ -45,6 +50,10 @@ type PhiCmsRegionContainerClientProps = {
     "siteKey" | "publicUrl" | "defaultLang" | "area" | "pageKey"
   >;
   routeScope: Extract<PhiSignalScope, "area" | "page">;
+  /** The Pages this Region stands on, as the server resolved them for this render. */
+  pageScope?: PhiCmsResolvedRegionPageScope | null;
+  /** The Site's locales, handed over only where the Region has a Page scope to ask. */
+  availableLocales?: string[];
 };
 
 /**
@@ -64,10 +73,30 @@ export function PhiCmsRegionContainerClient({
   previewMode = false,
   runtime,
   routeScope,
+  pageScope: resolvedPageScope = null,
+  availableLocales,
 }: PhiCmsRegionContainerClientProps) {
   const { mode: liveThemeMode, token } = usePhiConfig();
   const receiver = createPhiRenderableBlockReceiver("region", regionKey);
   const anchorRef = usePhiVisualAnchor<HTMLElement>(receiver);
+  const elementRef = useRef<HTMLElement | null>(null);
+  const placeholderRef = useRef<HTMLSpanElement | null>(null);
+  const setElementRef = useCallback((element: HTMLElement | null) => {
+    elementRef.current = element;
+    anchorRef(element);
+  }, [anchorRef]);
+  /*
+   * The Page scope and the reveal (SHELL.md "Region visibility per Page"), both asked here because the
+   * Shell Layout is not rendered again when the visitor follows a link inside a dynamic Area.
+   */
+  const pathname = usePhiPathname();
+  const pageScope = previewMode ? null : resolvedPageScope;
+  const inScope = phiCmsRegionPageScopeIncludes(
+    pageScope,
+    pageScope == null ? "/" : stripLocaleAndAreaFromPathname(pathname, { availableLocales }),
+  );
+  const reveal = previewMode ? "always" : readPhiCmsRegionReveal(regionKey, initialConfig);
+  const revealed = usePhiRegionRevealed(reveal);
   const blockRuntime = usePhiRenderableBlockRuntime({
     blockId: null,
     receiver,
@@ -110,6 +139,22 @@ export function PhiCmsRegionContainerClient({
     surface: blockRuntime.state.surface ?? null,
   };
   const [collapsed, setCollapsed] = useState(false);
+  usePhiShellHeaderTopRoom({
+    active: regionKey === "header_top" && (pageScope != null || reveal !== "always"),
+    present: inScope && resolvedVisibility !== "hidden",
+    reveal,
+    revealed,
+    elementRef,
+    placeholderRef,
+  });
+
+  /*
+   * Off this Page, the Region leaves a hidden marker rather than nothing: `header_top` still has to tell
+   * the Shell it holds no room, and it finds the Shell from here.
+   */
+  if (!inScope) {
+    return <span ref={placeholderRef} hidden data-phi-region-key={regionKey} data-phi-region-out-of-scope="true" />;
+  }
 
   const shell = resolvePhiCmsRegionShell({
     regionKey,
@@ -142,7 +187,15 @@ export function PhiCmsRegionContainerClient({
     ...shell.attributes,
     "data-phi-effects-state":
       blockRuntime.state.effectsState ?? shell.attributes["data-phi-effects-state"],
+    "data-phi-region-revealed": revealed == null || reveal === "always" ? undefined : String(revealed),
   };
+  /*
+   * The strip along the top edge a `hover` band is found by. It hangs below the band, so while the band
+   * is away it lies along the top of the viewport, and the pointer on it is the pointer on the band.
+   */
+  const revealZone = reveal === "hover"
+    ? <span aria-hidden className="phi-cms-region-reveal-zone" />
+    : null;
   const backgroundMotionLayer = shell.animatesBackground && shell.backgroundConfig != null
     ? <PhiBackgroundMotionLayer config={shell.backgroundConfig} />
     : <PhiSurfaceGroundLayer ground={shell.ground} />;
@@ -166,11 +219,12 @@ export function PhiCmsRegionContainerClient({
   if (shell.family !== "sider") {
     const Element = shell.element as "header" | "footer" | "div";
     return withTone(
-      <Element {...attributes} ref={anchorRef} style={shell.style}>
+      <Element {...attributes} ref={setElementRef} style={shell.style}>
         {backgroundMotionLayer}
         <div className="phi-cms-region-shell__content" style={shell.contentStyle}>
           {children}
         </div>
+        {revealZone}
         {effectObservers}
       </Element>,
     );
@@ -189,7 +243,7 @@ export function PhiCmsRegionContainerClient({
   return withTone(
     <aside
       {...attributes}
-      ref={anchorRef}
+      ref={setElementRef}
       data-phi-sider-collapsed={isCollapsed ? "true" : undefined}
       style={{
         transition:

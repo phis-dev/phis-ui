@@ -82,7 +82,6 @@ export async function buildPhiDefaultSiteAreaPresetTree({
   const footerBottomRegion = PHI_DEFAULT_PUB_AREA_PRESET.regions.find(
     (region) => region.key === "footer_bottom",
   );
-  const includeHeaderTop = page.path === "/";
   const {
     label: contactLabel,
     href: contactHref,
@@ -139,7 +138,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
     runtimeModuleIds: createPhiDefaultAreaRuntimeModuleIds(runtimeModuleArea),
     overlays: [],
     regions: [
-      ...(headerTopRegion && includeHeaderTop
+      ...(headerTopRegion
         ? [
             nodes.region({
               id: SYNTHETIC_REGION_IDS.regionHeaderTop,
@@ -272,7 +271,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
         : []),
     ],
     layoutNodes: [
-      ...(headerTopRegion && includeHeaderTop
+      ...(headerTopRegion
         ? [
             {
               id: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutHeaderTop,
@@ -466,7 +465,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
         : []),
     ],
     contentWidgets: [
-      ...(headerTopRegion && includeHeaderTop
+      ...(headerTopRegion
         ? [
             /*
              * The Brand's own two lines, drawn by the Brand Widget rather than copied into a Text one.

@@ -4,7 +4,7 @@ import {
   PHI_TR_CTX_WEB_UI_LABEL,
   type PhiGlobalTranslatorOptions,
 } from "../../../gateway/tr";
-import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
+import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 import {
   PHI_INSPECTOR_WIDGET_DEFAULT_LABELS,
   type PhiInspectorWidgetLabels,
@@ -28,6 +28,19 @@ const PHI_INSPECTOR_WIDGET_LABEL_SET = definePhiLabelSet({
     section_shadow: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.sections.shadow,
     section_surface: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.sections.surface,
     section_signals: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.sections.signals,
+    section_visibility: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.sections.visibility,
+    region_visibility_pages: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.regionVisibility.pages,
+    region_visibility_all: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.regionVisibility.all,
+    region_visibility_root: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.regionVisibility.root,
+    region_visibility_include: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.regionVisibility.include,
+    region_visibility_exclude: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.regionVisibility.exclude,
+    region_visibility_entries: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.regionVisibility.entries,
+    region_visibility_entries_placeholder: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.regionVisibility.entriesPlaceholder,
+    region_visibility_reveal: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.regionVisibility.reveal,
+    region_visibility_always: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.regionVisibility.always,
+    region_visibility_hover: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.regionVisibility.hover,
+    region_visibility_scroll_up: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.regionVisibility.scrollUp,
+    region_visibility_page_owned: definePhiMessageLabel(PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.regionVisibility.pageOwned),
     surface_style_title: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.surfaceStyle.title,
     surface_style_none: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.surfaceStyle.none,
     surface_style_card: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.surfaceStyle.card,
@@ -90,6 +103,23 @@ export async function getPhiInspectorWidgetLabels(
       shadow: labels.section_shadow,
       surface: labels.section_surface,
       signals: labels.section_signals,
+      visibility: labels.section_visibility,
+    },
+    regionVisibility: {
+      pages: labels.region_visibility_pages,
+      all: labels.region_visibility_all,
+      root: labels.region_visibility_root,
+      include: labels.region_visibility_include,
+      exclude: labels.region_visibility_exclude,
+      entries: labels.region_visibility_entries,
+      entriesPlaceholder: labels.region_visibility_entries_placeholder,
+      // The same mark the link field puts on the root Page, and the same words.
+      landing: labels.link_landing_page,
+      reveal: labels.region_visibility_reveal,
+      always: labels.region_visibility_always,
+      hover: labels.region_visibility_hover,
+      scrollUp: labels.region_visibility_scroll_up,
+      pageOwned: labels.region_visibility_page_owned,
     },
     surfaceStyle: {
       title: labels.surface_style_title,

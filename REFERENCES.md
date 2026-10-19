@@ -172,6 +172,13 @@ Widget catalogue which of a plugin's fields carry targets. A target kept under a
 a bare path, authors a link the index cannot see -- the Page delete guard reports no affected references
 for it, and a Page path change leaves it pointing at an address nobody answers on.
 
+A Shell Region's Page scope (SHELL.md "Region visibility per Page") follows the same rule: each Page it
+names is an entry `{ pageLinkTarget: { kind: "page", reference } }` in `config.pageScope.entries`, so the
+Area's reference rows count it and a Page path change follows it. A folder entry (`{ folder: "/blog" }`) is
+not a reference -- a folder is no Page and has no identity, only the start its Pages' paths share -- and
+contributes nothing to the index. The renderer resolves the Region's references in the same per-render
+batch as every link on the page (`server-helpers/cms-link-targets.ts` collects `tree.regions` too).
+
 Only the internal kind reaches the index. An external target names nothing the Site owns, so there is no
 identity to guard and no path that can move under it; it contributes no index row, and the index gains no
 target variant for it. The field name is what the collector goes by either way, so a target that flips

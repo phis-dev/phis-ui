@@ -22,11 +22,15 @@ import type { PhiResolvedCmsRenderableTree } from "../types/cms";
  * A page that links to nothing gets `null` and costs nothing, which is most pages.
  */
 export async function resolvePhiCmsTreeLinkTargets(
-  tree: Pick<PhiResolvedCmsRenderableTree, "layoutNodes" | "contentWidgets" | "overlays">,
+  tree: Pick<PhiResolvedCmsRenderableTree, "regions" | "layoutNodes" | "contentWidgets" | "overlays">,
   runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer">,
 ): Promise<PhiResolvedLinkTargets | null> {
   const references = new Map<string, PhiLinkTargetReference>();
-  for (const node of [...tree.overlays, ...tree.layoutNodes, ...tree.contentWidgets]) {
+  /*
+   * The Regions as well: a Shell Region names the Pages it stands on by reference (SHELL.md "Region
+   * visibility per Page"), and those resolve in the same batch as every link on the page.
+   */
+  for (const node of [...tree.regions, ...tree.overlays, ...tree.layoutNodes, ...tree.contentWidgets]) {
     collectPhiLinkTargetReferences(node.config, references);
   }
   return resolvePhiLinkTargetReferences(references, runtime);

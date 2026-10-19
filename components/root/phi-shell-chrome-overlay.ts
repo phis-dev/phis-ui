@@ -11,6 +11,7 @@ import {
 import type { PhiBackgroundFilter, PhiGlassLayoutEffectId, PhiShadow } from "../../types/layout-style";
 import type { PhiSiteThemeRoot } from "../../types/site-theme";
 import type { PhiThemeMode } from "../../theme/phi-theme-presets";
+import type { PhiCmsRegionReveal } from "../../types/cms-presets";
 
 /**
  * The Shell Chrome Overlay (SHELL.md "Root Background and Shell Backdrop Layers").
@@ -234,7 +235,7 @@ export type PhiShellChromePaneBand = {
   height?: string | number | null;
 } | null | undefined;
 
-function readPhiShellChromePanePixels(value: string | number | null | undefined): number | null {
+export function readPhiShellChromePanePixels(value: string | number | null | undefined): number | null {
   if (typeof value === "number") {
     return Number.isFinite(value) ? value : null;
   }
@@ -286,6 +287,62 @@ export function resolvePhiShellChromePaneStickyTop(
 
   const offsetTop = readPhiShellChromePanePixels(bands[firstSticky]?.offsetTop) ?? 0;
   return `${offsetTop - travel}px`;
+}
+
+/**
+ * The room `header_top` holds, published on the Shell element while the browser decides it (SHELL.md
+ * "Region visibility per Page"): `extent` is the height of its track, `stack` the part of the viewport's
+ * top a `scroll-up` band holds right now.
+ */
+export const PHI_SHELL_HEADER_TOP_EXTENT_PROPERTY = "--phi-shell-header-top-extent";
+export const PHI_SHELL_HEADER_TOP_STACK_PROPERTY = "--phi-shell-header-top-stack";
+
+/**
+ * How `header_top` behaves where the browser decides it, as far as the Header pane is concerned.
+ */
+export type PhiShellHeaderTopBehaviour = {
+  /** It stands on some Pages and not on others. */
+  scoped: boolean;
+  reveal: PhiCmsRegionReveal;
+};
+
+/**
+ * Where the Header pane sticks when `header_top` may come and go.
+ *
+ * The server knows the first Page and nothing after it, so the band's travel is written as the room
+ * the browser publishes, with the server's own answer as the fallback until it does:
+ *
+ * - `hover` takes no room at all, and the pane is the bands below it.
+ * - `scroll-up` sticks, and the pane rises by exactly the part of the band that has left.
+ * - A scoped band that scrolls away travels its published extent, which is nothing on a Page it is not
+ *   on. A scoped band that sticks needs nothing: absent, the next sticky band stands where it stood.
+ */
+export function resolvePhiShellHeaderPaneStickyTop(
+  headerTop: PhiShellChromePaneBand,
+  headerMain: PhiShellChromePaneBand,
+  behaviour: PhiShellHeaderTopBehaviour | null,
+  initial: { extent: number; stack: number },
+): string | null {
+  if (headerTop == null || behaviour == null || (!behaviour.scoped && behaviour.reveal === "always")) {
+    return resolvePhiShellChromePaneStickyTop([headerTop, headerMain]);
+  }
+  if (behaviour.reveal === "hover") {
+    return resolvePhiShellChromePaneStickyTop([null, headerMain]);
+  }
+  const extent = `var(${PHI_SHELL_HEADER_TOP_EXTENT_PROPERTY}, ${initial.extent}px)`;
+  if (behaviour.reveal === "scroll-up") {
+    const offsetTop = readPhiShellChromePanePixels(headerTop.offsetTop) ?? 0;
+    return `calc(${offsetTop}px - ${extent} + var(${PHI_SHELL_HEADER_TOP_STACK_PROPERTY}, ${initial.stack}px))`;
+  }
+  if (headerTop.sticky === true) {
+    return resolvePhiShellChromePaneStickyTop([headerTop, headerMain]);
+  }
+  // Unknown travel stays unknown: the same refusal as for a band without a pixel height.
+  if (readPhiShellChromePanePixels(headerTop.height) == null) {
+    return null;
+  }
+  const below = resolvePhiShellChromePaneStickyTop([null, headerMain]);
+  return below == null ? null : `calc(${below} - ${extent})`;
 }
 
 /**

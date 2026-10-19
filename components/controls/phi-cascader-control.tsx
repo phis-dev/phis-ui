@@ -7,6 +7,7 @@ import type { CascaderProps, DefaultOptionType } from "antd/es/cascader";
 
 import type { PhiControlSize } from "../../types/control";
 import type { PhiControlOption } from "./phi-control-options";
+import type { PhiTreeOption } from "../../types/tree";
 import { PhiLabeledControl, usePhiControlLabel } from "./phi-labeled-control";
 import { PhiDescriptionHint } from "./phi-description-tooltip-icon";
 import { usePhiConfig } from "../root/phi-config-provider";
@@ -341,5 +342,88 @@ export function PhiCascaderControl({
     <PhiLabeledControl label={label} labelId={labelId} fill={style?.width === undefined || style.width === "100%"}>
       {control}
     </PhiLabeledControl>
+  );
+}
+
+/**
+ * A Cascader over a tree that already is one, choosing several nodes at once.
+ *
+ * The Cascader above builds its tree from the paths in its values, so a value has to be a path. This one
+ * is handed the tree, and a value is whatever a node stands for -- a Page reference, which carries no
+ * path at all. Checking every child of a node stores the node instead (`SHOW_PARENT`): a parent stands
+ * for everything below it, including what is added there later, which is what checking it means.
+ *
+ * `disabled` on an option greys its own box only, so a node that cannot be chosen still opens onto the
+ * children that can.
+ */
+export function PhiTreeCascaderControl({
+  value,
+  options,
+  disabled = false,
+  placeholder,
+  size,
+  onChange,
+  getPopupContainer,
+  style,
+}: {
+  value?: readonly string[];
+  options: readonly PhiTreeOption[];
+  disabled?: boolean;
+  placeholder?: string;
+  size?: PhiControlSize;
+  onChange?: (nextValue: string[]) => void;
+  getPopupContainer?: CascaderProps["getPopupContainer"];
+  style?: CSSProperties;
+}) {
+  const { token } = usePhiConfig();
+  const { cascaderOptions, pathByValue } = useMemo(() => {
+    const paths = new Map<string, string[]>();
+    const toCascader = (nodes: readonly PhiTreeOption[], prefix: string[]): DefaultOptionType[] =>
+      nodes.map((node) => {
+        const path = [...prefix, node.value];
+        paths.set(node.value, path);
+        return {
+          value: node.value,
+          label: node.label,
+          description: node.description,
+          disableCheckbox: node.disabled,
+          ...(node.children?.length ? { children: toCascader(node.children, path) } : {}),
+        };
+      });
+    return { cascaderOptions: toCascader(options, []), pathByValue: paths };
+  }, [options]);
+  const cascaderValue = (value ?? []).flatMap((entry) => {
+    const path = pathByValue.get(entry);
+    return path ? [path] : [];
+  });
+
+  return (
+    <Cascader
+      multiple
+      showCheckedStrategy={Cascader.SHOW_PARENT}
+      rootClassName="phi-cascader-control"
+      disabled={disabled || !onChange}
+      options={cascaderOptions}
+      optionRender={(option) => option.description ? (
+        <span style={{ display: "inline-flex", alignItems: "center", gap: token.paddingXS, minWidth: 0 }}>
+          <PhiDescriptionHint description={option.description as string} />
+          {option.label}
+        </span>
+      ) : option.label}
+      placeholder={placeholder}
+      size={size}
+      showSearch
+      maxTagCount="responsive"
+      value={cascaderValue}
+      getPopupContainer={getPopupContainer}
+      onChange={(next) => {
+        const values = (next ?? []).flatMap((path) => {
+          const last = Array.isArray(path) ? path.at(-1) : null;
+          return last == null ? [] : [String(last)];
+        });
+        onChange?.(values);
+      }}
+      style={{ width: "100%", ...style }}
+    />
   );
 }

@@ -71,6 +71,7 @@ export type PhiBuilderInspectorSectionWidgetSpec = {
 export const PHI_BUILDER_INSPECTOR_SECTION_WIDGET_SPECS = [
   { typeKey: "builder-region-geometry-inspector", view: "region", section: "geometry", title: "Region Geometry" },
   { typeKey: "builder-region-viewport-inspector", view: "region", section: "viewport", title: "Region Viewport" },
+  { typeKey: "builder-region-visibility-inspector", view: "region", section: "visibility", title: "Region Visibility" },
   { typeKey: "builder-region-padding-inspector", view: "region", section: "padding", title: "Region Padding" },
   { typeKey: "builder-region-surface-inspector", view: "region", section: "surface", title: "Region Surface" },
   { typeKey: "builder-layout-settings-inspector", view: "layout", section: "settings", title: "Layout Settings" },

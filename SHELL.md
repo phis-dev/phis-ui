@@ -315,6 +315,46 @@ scaffolds. `/builder/theme` owns the Theme Root Background and the Shell Chrome 
 local Region chrome of `header_bottom`. A backdrop is not a normal CMS Region/Layout/Widget node merely because
 Builder exposes an authoring scaffold for it.
 
+## Region visibility per Page
+
+A Shell Region belongs to the Area, so by default it stands on every Page of it. Two settings in its
+config change that, both edited in the Region Inspector's Visibility section on `/builder/shells`:
+
+- `pageScope` -- which Pages the Region stands on: `all` (stored as nothing), `root` for the Area's own
+  `/`, or `include` / `exclude` with `entries`. An entry is a Page by its reference
+  (`{ pageLinkTarget: { kind: "page", reference } }`, REFERENCES.md) or a folder by its path inside the
+  Area (`{ folder: "/blog" }`), which takes every Page below it, including Pages added later. A folder is
+  no Page and has no identity, so the path is all that names it; renaming a folder renames each Page under
+  it, and the folder entry then matches nothing. A Module Page with Pages below it is chosen as a subtree
+  (`PhiCmsRegionPageScopeEntryFlag.Subtree`). The Inspector picks entries in a Cascader over the Pages the
+  Area answers; checking every child of a folder stores the folder. A reference that no longer resolves
+  drops out, and a list with nothing left in it is no rule: the Region stands on every Page. Only the five
+  Shell Regions have a scope; a Page-owned Region belongs to its Page already.
+- `reveal`, for `header_top` alone -- `always` (stored as nothing), `hover`, or `scroll-up`. `hover` is out
+  of sight until the pointer reaches an 8px strip along the top edge, or until something in the band has
+  the focus; it takes no room and comes over the Header. `scroll-up` keeps its track, leaves while the
+  page is read downwards and comes back as soon as it scrolls up, and the sticky bands below it close up
+  and open again with it. A device without hover gets the `scroll-up` rule for a `hover` band too.
+
+The server resolves the scope's references in the render's batch of link targets and hands the Region the
+addresses they lead to now; the browser compares the visitor's path against them, in the client Region
+renderer (`components/regions/clients/cms-region-container-client.tsx`), never in the Shell. The Shell is a Next
+Layout, and the Layout of a dynamic Area is not rendered again when the visitor follows a link inside
+it: a rule the server decided would keep the first Page's answer for every Page after it. A Region off
+its Page leaves a hidden marker behind instead of nothing.
+
+`header_top` is the one band whose room other elements depend on: the Header pane (above) sticks at an
+offset that includes it, and the bands below a `scroll-up` band stick under it. It publishes that room
+on the Shell element as `--phi-shell-header-top-extent` (the height of its track) and
+`--phi-shell-header-top-stack` (the part of the viewport's top it holds right now), and the server writes
+both for the Page it renders, so the first paint is already right. The pane's offset and the sticky
+`top` of `header_main` and `header_bottom` read them; where no band publishes them they resolve to the
+configured offsets unchanged. A preview ignores both settings and shows the Region where it stands.
+
+The code preset's `header_top` (the Brand lines) carries `pageScope: { mode: "root" }`. It used to be left
+out of the tree on every Page but `/`, a rule that lived in the preset code and was gone the moment an
+author saved the Area.
+
 ## Page Layout Boundary
 
 The shell ends where the page content begins.

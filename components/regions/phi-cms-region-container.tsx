@@ -17,6 +17,8 @@ import {
 import { PhiRuntimeModuleRenderClientHost } from "../runtime/runtime-module-render-client-manifest";
 import { PhiRuntimeRenderClientType } from "../../constants/runtime-render-client-types";
 import { resolvePhiBackgroundMotion } from "../widgets/config/background";
+import { readPhiCmsRegionReveal } from "../../helpers/region-page-scope";
+import type { PhiCmsResolvedRegionPageScope } from "../../types/cms-presets";
 
 type PhiRuntimeShellTheme = NonNullable<NonNullable<PhiBlockRuntime["site"]["theme"]>["shell"]>;
 
@@ -31,6 +33,8 @@ export type PhiCmsRegionContainerProps = {
   previewMode?: boolean;
   runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "page">;
   signalParticipant?: boolean;
+  /** The Pages this Region stands on, resolved for this render; null where it stands on every Page. */
+  pageScope?: PhiCmsResolvedRegionPageScope | null;
 };
 
 export function PhiCmsRegionContainer({
@@ -44,6 +48,7 @@ export function PhiCmsRegionContainer({
   previewMode = false,
   runtime,
   signalParticipant = false,
+  pageScope = null,
 }: PhiCmsRegionContainerProps) {
   const routeScope: Extract<PhiSignalScope, "area" | "page"> =
     isPhiCmsPageOwnedRegion(regionKey) ? "page" : "area";
@@ -54,8 +59,12 @@ export function PhiCmsRegionContainer({
     effectsTrigger === "on_visible" ||
     effectsTrigger === "on_ready" ||
     resolveRenderableBlockViewportEffects(effectsConfig).length > 0;
+  // Which Page the visitor is on is a question only the browser can answer after a link was followed.
+  const pageScoped = !previewMode && pageScope != null;
   const requiresClientEnhancement =
     signalParticipant ||
+    pageScoped ||
+    (!previewMode && readPhiCmsRegionReveal(regionKey, config) !== "always") ||
     hasPhiFlag(config?.flags, PhiCmsFlags.Collapsible) ||
     requiresEffectsObserver ||
     resolvePhiBackgroundMotion(config?.surface?.background) != null;
@@ -96,6 +105,9 @@ export function PhiCmsRegionContainer({
           pageKey: runtime.page?.path ?? null,
         },
         routeScope,
+        pageScope: pageScoped ? pageScope : null,
+        // The prefixes the browser strips before it asks the Page scope, which are the Site's locales.
+        availableLocales: pageScoped ? runtime.site.availableLocales.map((option) => option.code) : undefined,
       }}
     />
   );

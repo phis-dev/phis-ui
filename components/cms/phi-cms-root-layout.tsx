@@ -7,10 +7,20 @@ import type { PhiResolvedCmsAreaPresetTree } from "../../types/cms";
 import type { PhiCmsSiteBridge } from "../../types/cms-plugins";
 import { PhiCmsShell } from "../shell/phi-cms-shell";
 import {
-  resolvePhiShellChromePaneStickyTop,
+  PHI_SHELL_HEADER_TOP_EXTENT_PROPERTY,
+  PHI_SHELL_HEADER_TOP_STACK_PROPERTY,
+  readPhiShellChromePanePixels,
+  resolvePhiShellHeaderPaneStickyTop,
   type PhiShellChromePaneBand,
 } from "../root/phi-shell-chrome-overlay";
 import { PhiCmsLayoutRenderer, PhiCmsOverlayRenderer } from "./phi-cms-layout-renderer";
+import {
+  phiCmsRegionPageScopeIncludes,
+  readPhiCmsRegionPageScope,
+  readPhiCmsRegionReveal,
+  resolvePhiCmsRegionPageScope,
+} from "../../helpers/region-page-scope";
+
 import { hasRenderableRegionRoot } from "./phi-cms-region-helpers";
 import { loadPhiCmsAreaRenderScope } from "./phi-cms-area-render-scope";
 import { hasPhiCmsRevisionPreview } from "../../server-helpers/cms-root";
@@ -371,15 +381,50 @@ export async function PhiCmsAreaShell({
    * Area resolves those two; the Page-owned `header_bottom` never arrives here as a config, so a Header
    * whose only sticky band is that one resolves to no sticking rather than to a guess.
    */
-  const headerPaneStickyTop = resolvePhiShellChromePaneStickyTop([
-    hasRenderableHeaderTop ? readPhiShellChromePaneBand(headerTopRegion?.config) : null,
+  /*
+   * A `header_top` with a Page scope or a reveal is decided in the browser, and tells the Shell the room
+   * it holds (SHELL.md "Region visibility per Page"). The server answers for the Page it renders, so the
+   * first paint is already right; the browser keeps it right after every link and every scroll.
+   */
+  const storedHeaderTopScope = hasRenderableHeaderTop
+    ? readPhiCmsRegionPageScope("header_top", headerTopRegion?.config)
+    : null;
+  // Resolved in the render's own batch of link targets, which the Region renderer asks for too.
+  const headerTopScope = storedHeaderTopScope == null ? null : resolvePhiCmsRegionPageScope(
+    storedHeaderTopScope,
+    // Imported here, as the Layout renderer imports it: the pass is `server-only`, this module is not.
+    await (await import("../../server-helpers/cms-link-targets")).resolvePhiCmsTreeLinkTargets(filteredLayoutTree!, runtime),
+    runtime.site.availableLocales.map((option) => option.code),
+  );
+  const headerTopReveal = hasRenderableHeaderTop ? readPhiCmsRegionReveal("header_top", headerTopRegion?.config) : "always";
+  const headerTopBehaviour = headerTopScope != null || headerTopReveal !== "always"
+    ? { scoped: headerTopScope != null, reveal: headerTopReveal }
+    : null;
+  const headerTopBand = hasRenderableHeaderTop ? readPhiShellChromePaneBand(headerTopRegion?.config) : null;
+  const headerTopExtent = headerTopBehaviour != null &&
+    headerTopReveal !== "hover" &&
+    phiCmsRegionPageScopeIncludes(headerTopScope, runtime.page?.path ?? "/")
+    ? readPhiShellChromePanePixels(headerTopBand?.height) ?? 0
+    : 0;
+  const headerTopRoom = {
+    extent: headerTopExtent,
+    stack: headerTopReveal === "scroll-up" ? headerTopExtent : 0,
+  };
+  const headerPaneStickyTop = resolvePhiShellHeaderPaneStickyTop(
+    headerTopBand,
     hasRenderableHeaderMain ? readPhiShellChromePaneBand(headerMainRegion?.config) : null,
-  ]);
+    headerTopBehaviour,
+    headerTopRoom,
+  );
 
   return (
     <PhiCmsShell
       content={children}
       headerPaneStickyTop={headerPaneStickyTop}
+      headerTopRoom={headerTopBehaviour == null ? undefined : {
+        [PHI_SHELL_HEADER_TOP_EXTENT_PROPERTY]: `${headerTopRoom.extent}px`,
+        [PHI_SHELL_HEADER_TOP_STACK_PROPERTY]: `${headerTopRoom.stack}px`,
+      }}
       headerTop={hasRenderableHeaderTop ? (
         <PhiCmsLayoutRenderer
           tree={filteredLayoutTree!}
