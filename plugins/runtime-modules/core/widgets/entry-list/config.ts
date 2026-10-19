@@ -4,6 +4,8 @@ import {
 } from "../../../../../types/runtime-data-provider";
 import { isPhiRecord } from "../../../../../helpers/is-record";
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../../../constants/core-data-provider-keys";
+import { PHI_CONTENT_ENTRY_CURATION_NONE_CONFIG_KEYS } from "../../../../../components/forms/content-entry-curation-config";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import {
   isPhiContentEntryKind,
@@ -70,6 +72,15 @@ export type PhiEntryListWidgetConfig = PhiCmsWidgetConfigBase & {
   show: number;
   source: PhiEntryListSource;
   /**
+   * Which categories a `latest` list shows, by id, and `none` for the entries filed under no category;
+   * empty is every entry. An id whose category was deleted since filters nothing -- it is left standing
+   * rather than swept, and a list left with only such ids shows every entry again.
+   *
+   * By id, not by address: a category renamed or given another address is still the one the list was
+   * set to (REFERENCES.md says the same of Pages).
+   */
+  categories: string[];
+  /**
    * The entry a `related` list is about, as a record binding (`types/record-provider.ts`) -- the one the
    * header and text above it are bound to, so the three share one read. A detail route's tree writes the
    * route's slug into it; a list with no entry to be related to shows nothing.
@@ -78,6 +89,18 @@ export type PhiEntryListWidgetConfig = PhiCmsWidgetConfigBase & {
   /** A heading drawn above the entries, and only where there are any; empty for none. */
   title: string;
 };
+
+/** What the category filter says for the entries filed under no category, as Core's list reads it. */
+const PHI_ENTRY_LIST_UNCATEGORIZED = "none";
+
+function readCategories(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const categories = value
+    .map((entry) => (typeof entry === "number" ? String(entry) : entry))
+    .filter((entry): entry is string =>
+      typeof entry === "string" && (entry === PHI_ENTRY_LIST_UNCATEGORIZED || /^[1-9][0-9]{0,9}$/u.test(entry)));
+  return [...new Set(categories)];
+}
 
 function readLimit(value: unknown) {
   const limit = readInteger(value);
@@ -106,6 +129,7 @@ export function normalizePhiEntryListWidgetConfig(config: unknown): PhiEntryList
     source: (PHI_ENTRY_LIST_SOURCES as readonly unknown[]).includes(raw.source)
       ? raw.source as PhiEntryListSource
       : "latest",
+    categories: readCategories(raw.categories),
     relatedTo: readPhiRuntimeDataProviderBinding(raw.relatedTo),
     title: typeof raw.title === "string" ? raw.title.trim() : "",
   };
@@ -165,6 +189,23 @@ export const PHI_ENTRY_LIST_WIDGET_DEFINITION = {
         { value: "latest", label: "The newest" },
         { value: "related", label: "Related to one entry" },
       ],
+    },
+    {
+      key: "categories",
+      type: "choice",
+      mode: "multiple",
+      label: "Categories",
+      description: "Which categories the list shows. None chosen shows every entry.",
+      placeholder: "All categories",
+      // The kind's categories, read with the Widget's own `kind`: the Inspector hands the provider the config.
+      optionsProvider: {
+        providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntryCategoryOptions,
+        params: {
+          noneValue: PHI_ENTRY_LIST_UNCATEGORIZED,
+          [PHI_CONTENT_ENTRY_CURATION_NONE_CONFIG_KEYS.category]: "Filed under none",
+        },
+      },
+      visibleWhen: { field: "source", notEquals: "related" },
     },
     {
       key: "relatedTo",

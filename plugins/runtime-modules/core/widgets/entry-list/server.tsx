@@ -66,6 +66,7 @@ export async function PhiEntryListWidget({ config, runtime, registry, links, tra
         siteKey: rt.siteKey,
         locale,
         limit: settings.limit,
+        categories: settings.categories,
       });
     } catch {
       return <PhiAlertControl level="warning" showIcon title={labels.unavailable} />;

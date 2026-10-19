@@ -31,10 +31,19 @@ async function loadCurationOffer(context: Pick<PhiControlOptionsProviderContext,
  * "Nobody" or "None" first, as a value of its own: an empty string, which Core reads as none. A cleared
  * select would send nothing, and nothing is "leave it as it is". The words come from the placement
  * (`PHI_CONTENT_ENTRY_CURATION_NONE_CONFIG_KEYS`), which has the page's language.
+ *
+ * A field that is not a Form -- an Inspector field, whose config is the Widget's -- names the words in its
+ * provider's `params` instead, and may name another value: a multiple choice keeps no empty string, so an
+ * Entry list's category filter says `none`, the word Core's list reads for it.
  */
-function noneOption(context: Pick<PhiControlOptionsProviderContext, "sourceConfig">, key: string) {
-  const label = context.sourceConfig?.[key];
-  return { value: "", label: typeof label === "string" && label.trim() ? label : "—" };
+function noneOption(context: Pick<PhiControlOptionsProviderContext, "sourceConfig" | "optionsProvider">, key: string) {
+  const params = context.optionsProvider?.params;
+  const label = context.sourceConfig?.[key] ?? params?.[key];
+  const value = params?.noneValue;
+  return {
+    value: typeof value === "string" ? value : "",
+    label: typeof label === "string" && label.trim() ? label : "—",
+  };
 }
 
 function readList(asyncData: unknown, key: "authors" | "categories") {

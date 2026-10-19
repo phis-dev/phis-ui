@@ -63,6 +63,12 @@ The list links each entry to the detail route through a Page target with a param
 entry. A list placed on any Page links the same way; a list whose `detailTarget` does not resolve -- the
 Module is off, or the Site moved the route -- shows its entries without links.
 
+A `latest` list shows every entry of its kind, or only some categories: `config.categories` holds their
+ids, and `none` for the entries filed under no category, as the Inspector's Categories field writes them
+(the kind's categories come from the same options Provider the curation Form uses). By id, so a renamed
+category stays in the list; one deleted since filters nothing. Core filters before it cuts at `limit`.
+A `related` list has no filter: what is close to the one entry decides.
+
 A detail Page is three Widgets in one vertical Flex: `entry-header` (category, title, subtitle, byline),
 `entry-detail` (the text, then tags and link) and `entry-list` with `source: "related"` (the entries
 closest to this one, under a heading drawn only where there are any). All three are bound to the entry's

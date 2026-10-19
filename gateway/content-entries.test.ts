@@ -58,6 +58,20 @@ describe("fetchPhiSiteContentEntries", () => {
     expect(headers.get("x-phis-token")).toBe("token");
   });
 
+  it("hands the list's categories to Core, and asks for every entry where there are none", async () => {
+    const fetchMock = vi.fn(async () => newsResponse([entry()]));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchPhiSiteContentEntries({ ...OPTIONS, categories: ["3", "none"] });
+    await fetchPhiSiteContentEntries({ ...OPTIONS, categories: [] });
+
+    const urls = fetchMock.mock.calls.map((call) => (call as unknown as [string])[0]);
+    expect(urls).toEqual([
+      "https://core.test/api/v1/entries/news?limit=10&categories=3%2Cnone",
+      "https://core.test/api/v1/entries/news?limit=10",
+    ]);
+  });
+
   it("refuses to ask without a count, rather than asking for everything", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);

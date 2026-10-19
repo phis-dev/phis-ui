@@ -231,6 +231,12 @@ describe("the entries surface Core carries for every kind", () => {
     expect(normalizePhiEntryListWidgetConfig({ show: 1 << 20 }).show).toBe(0);
     expect(normalizePhiEntryListWidgetConfig({ show: "all" }).show).toBe(PHI_ENTRY_LIST_DEFAULT_PARTS);
   });
+
+  it("keeps the categories it is set to by id, none among them, and nothing that is neither", () => {
+    expect(normalizePhiEntryListWidgetConfig(null).categories).toEqual([]);
+    expect(normalizePhiEntryListWidgetConfig({ categories: ["3", 7, "none", "3", "", "travel", "0", 2.5] }).categories)
+      .toEqual(["3", "7", "none"]);
+  });
 });
 
 describe.each(KINDS)("what the $kind Module brings", ({ kind, moduleId, routes, presetKeys, formIds, forms, handlers }) => {

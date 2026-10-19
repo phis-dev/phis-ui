@@ -27,6 +27,11 @@ export type FetchPhiSiteContentEntriesOptions = FetchPhiSiteContentEntryBase & {
    * so a Site with years of entries does not pay for translating all of them to draw ten.
    */
   limit: number;
+  /**
+   * Which categories, by id, and `none` for the entries filed under no category; absent or empty is every
+   * entry. Core filters before it cuts at `limit`, so a list of ten still shows ten.
+   */
+  categories?: readonly string[];
 };
 
 function readString(value: unknown) {
@@ -119,7 +124,10 @@ export async function fetchPhiSiteContentEntries(
   if (!Number.isInteger(options.limit) || options.limit <= 0) {
     throw new Error("fetchPhiSiteContentEntries needs a positive integer limit.");
   }
-  return fetchEntries(options, { limit: String(options.limit) });
+  return fetchEntries(options, {
+    limit: String(options.limit),
+    ...(options.categories?.length ? { categories: options.categories.join(",") } : {}),
+  });
 }
 
 type FetchPhiSiteContentEntryPageOptions = FetchPhiSiteContentEntryBase & {
