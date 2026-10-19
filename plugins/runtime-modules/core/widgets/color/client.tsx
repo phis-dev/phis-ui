@@ -31,6 +31,7 @@ export function PhiColorWidget({ config, disabled = config.disabled ?? false }: 
       tokenKey={config.key}
       mode={config.mode}
       showText={config.display === "swatch" ? false : undefined}
+      allowClear={config.allowClear}
       disabled={controlSignals.disabled || controlSignals.readOnly}
       onChange={(nextValue) => controlSignals.emitChange(nextValue)}
       onClear={() => controlSignals.emitClear()}
