@@ -4,7 +4,7 @@ import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../
 import { definePhiRuntimeModuleLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../../gateway/label-set";
 import { PHI_EDITOR_RUNTIME_MODULE_IDENTITY } from "../ids";
 
-/** What the Releases page in the Editor says: its frame, the Table's columns, and its two acts. */
+/** What the Releases page in the Editor says: its frame, the Table's columns and footer, and its two acts. */
 const PHI_EDITOR_RELEASES_PAGE_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_EDITOR_RUNTIME_MODULE_IDENTITY, {
   key: "preset:editor-releases-page",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
@@ -15,6 +15,7 @@ const PHI_EDITOR_RELEASES_PAGE_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_ED
     column_where: "Where",
     column_by: "By",
     column_at: "When",
+    footer: "%1 waiting for publication",
     kind_content: "Content",
     kind_entry: "Entry",
     kind_page: "Page",
@@ -45,6 +46,7 @@ export async function getPhiEditorReleasesPageLabels(options: PhiGlobalTranslato
       by: labels.column_by,
       at: labels.column_at,
     },
+    footer: labels.footer,
     kinds: {
       content: labels.kind_content,
       entry: labels.kind_entry,

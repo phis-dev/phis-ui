@@ -133,6 +133,11 @@ export async function buildPhiDefaultEditorReleasesPageTree({
                 sizing: { mode: "content", minWidth: 168 },
               },
             ],
+            footer: {
+              template: labels.footer,
+              values: [{ key: "releases", value: { source: "core", fieldKey: "totalRows" } }],
+              align: "start",
+            },
             emptyState: { title: labels.empty.title, description: labels.empty.text },
             controlSize: "small",
           },
