@@ -85,6 +85,8 @@ import { PHI_BLOG_FORM_HANDLER_PROVIDER_DESCRIPTORS, PHI_BLOG_RUNTIME_MODULE_FOR
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../constants/core-data-provider-keys";
 import { PhiCmsWidgetType } from "../../constants/cms-widget-types";
 import { PhiCmsFlags, PhiCmsPageType, PhiCmsStatus } from "../../constants/phi-cms";
+import { readPhiTourTargets, readPhiVisualAnchorOwner } from "../../types/tours";
+import type { PhiCmsRoutePresetDescriptor } from "../../types/cms-module-descriptors";
 import { hasPhiFlag } from "../../helpers/flags";
 import { PhiContentEntryPart } from "../../constants/content-entry-parts";
 import { PHI_SURFACE_WASH } from "../../helpers/surface-presets";
@@ -415,6 +417,19 @@ describe.each(KINDS)("what the $kind Module brings", ({ kind, moduleId, routes, 
       features: { actions: { toolbar: { key: string; icon: string; display: string; mode?: string }[] } };
     }).features;
     expect(features.actions.toolbar[0]).toMatchObject({ key: "new", icon: "antd:plus", display: "icon", mode: "primary" });
+  });
+
+  it("carries a Tour on its editor Page whose steps point at what that Page draws", async () => {
+    const route: PhiCmsRoutePresetDescriptor = routes[2]!;
+    expect(route.tour?.id).toBe(`${moduleId}/editor`);
+    const tree = await route.loadTree({ page: pageAt(`/${kind}`, 16), runtime: PUBLISHER_RUNTIME } as never);
+    const drawn = new Map(tree.contentWidgets.map((widget) => [`cms:${widget.id}`, widget.widgetType]));
+    for (const target of readPhiTourTargets(route.tour)) {
+      // A part (`cms:<id>:toolbar`) is the Table's to offer, so its owner has to be a Table.
+      const owner = readPhiVisualAnchorOwner(target);
+      expect(drawn.has(owner ?? target), target).toBe(true);
+      if (owner) expect(drawn.get(owner), target).toMatch(/\/table$/u);
+    }
   });
 
   it("offers an Author the submission, and a Publisher the publication and the withdrawal", async () => {

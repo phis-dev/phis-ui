@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 
-import type { PhiVisualAnchorAddress } from "../../types/tours";
+import { PHI_VISUAL_ANCHOR_PART_ATTRIBUTE, type PhiVisualAnchorAddress } from "../../types/tours";
 import { usePhiSignalRuntimePartition, type PhiSignalRuntimePartition } from "./runtime-signal-partition";
 
 /*
@@ -128,4 +128,42 @@ export function usePhiVisualAnchor<T extends HTMLElement>(address: PhiVisualAnch
   return useCallback((element: T | null) => {
     elementRef.current = element;
   }, []);
+}
+
+/**
+ * Registers the parts a Widget offers as `<address>:<part>`, each found inside the Widget's own frame by
+ * the mark its Control draws it with (`PHI_VISUAL_ANCHOR_PART_ATTRIBUTE`).
+ *
+ * Looked up when asked rather than held: a Table's pagination comes and goes with its rows, and its header
+ * row is drawn by Ant Design, which hands out no ref. Only inside the frame of `address`, so a part of
+ * another Widget -- or of a dialog, which is drawn elsewhere -- is never found in its place.
+ */
+export function registerPhiVisualAnchorParts(
+  partition: PhiSignalRuntimePartition,
+  address: PhiVisualAnchorAddress,
+  parts: readonly string[],
+) {
+  const removals = parts.map((part) => registerPhiVisualAnchor(partition, {
+    address: `${address}:${part}` as PhiVisualAnchorAddress,
+    getElement: () => readPhiVisualAnchor(partition, address)
+      ?.querySelector<HTMLElement>(`[${PHI_VISUAL_ANCHOR_PART_ATTRIBUTE}="${part}"]`) ?? null,
+  }));
+  return () => {
+    for (const remove of removals) {
+      remove();
+    }
+  };
+}
+
+/** `registerPhiVisualAnchorParts` for as long as the Widget is mounted; `null` registers nothing. */
+export function usePhiVisualAnchorParts(address: PhiVisualAnchorAddress | null, parts: readonly string[]) {
+  const partition = usePhiSignalRuntimePartition();
+  const partsKey = parts.join(",");
+
+  useEffect(() => {
+    if (!address || !partsKey) {
+      return undefined;
+    }
+    return registerPhiVisualAnchorParts(partition, address, partsKey.split(","));
+  }, [address, partition, partsKey]);
 }

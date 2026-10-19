@@ -47,6 +47,7 @@ import {
 import type { PhiControlSize, PhiControlVariant } from "../../types/control";
 import type { PhiCalendarAdapterKey, PhiTemporalSelection } from "../../types/calendar";
 import { PHI_GREGORY_CALENDAR_ADAPTER_KEY } from "../../types/calendar-keys";
+import { PHI_VISUAL_ANCHOR_PART_ATTRIBUTE } from "../../types/tours";
 import type {
   PhiTableColumnEditorControl,
   PhiTableProviderFieldType,
@@ -1104,7 +1105,11 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
         }
         return content;
       },
-      onHeaderCell: () => ({ style: columnStyle }),
+      // The actions column's head is where a Tour points at what a row can do (`row-actions`).
+      onHeaderCell: () => ({
+        style: columnStyle,
+        ...(column.role === "actions" ? { [PHI_VISUAL_ANCHOR_PART_ATTRIBUTE]: "row-actions" } : {}),
+      }),
       onCell: () => ({ style: columnStyle }),
     };
   }), [
@@ -1496,6 +1501,26 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
   const hasClosingBlock = !loading &&
     (Boolean(footer) || (summary != null && summary.placement !== "sticky-top"));
 
+  const frameRef = useRef<HTMLDivElement>(null);
+  const [headerBox, setHeaderBox] = useState<{ top: number; height: number } | null>(null);
+  useEffect(() => {
+    const frame = frameRef.current;
+    const head = showHeader === false ? null : frame?.querySelector("thead");
+    if (!frame || !head || typeof ResizeObserver === "undefined") {
+      setHeaderBox(null);
+      return undefined;
+    }
+    const measure = () => {
+      const top = head.getBoundingClientRect().top - frame.getBoundingClientRect().top;
+      const height = head.getBoundingClientRect().height;
+      setHeaderBox((current) => current?.top === top && current.height === height ? current : { top, height });
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(head);
+    observer.observe(frame);
+    return () => observer.disconnect();
+  }, [showHeader, loading]);
   const table = (
     <Table<TRow>
       className={["phi-table-control", hasClosingBlock ? "phi-table-control--closing-block" : null]
@@ -1516,6 +1541,7 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
       components={rowReordering?.enabled && !loading ? { body: { row: PhiTableSortableRow } } : undefined}
       scroll={layout.overflowX === "auto" ? { x: true } : undefined}
       pagination={pagination === false ? false : {
+        ...{ [PHI_VISUAL_ANCHOR_PART_ATTRIBUTE]: "pagination" },
         current: pagination.page,
         pageSize: pagination.pageSize,
         total: pagination.total,
@@ -1525,6 +1551,7 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
       }}
       footer={footer && !loading ? () => (
         <Flex
+          {...{ [PHI_VISUAL_ANCHOR_PART_ATTRIBUTE]: "footer" }}
           align="center"
           justify={footer.align ?? "start"}
           gap="small"
@@ -1633,8 +1660,20 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
     </DndContext>
   ) : table;
   const constrainedTable = (
-    <div style={{ width: "100%", maxWidth: "100%", minWidth: 0, overflow: "hidden" }}>
+    <div ref={frameRef} style={{ position: "relative", width: "100%", maxWidth: "100%", minWidth: 0, overflow: "hidden" }}>
       {renderedTable}
+      {headerBox ? (
+        /*
+         * The column heads as they are seen, for a Tour to point at (`header`). Not the header row itself:
+         * a Table wider than its place scrolls sideways, and the row is as wide as the whole Table -- a
+         * Tour lit it over the sidebar and scrolled the Table to show all of it.
+         */
+        <div
+          aria-hidden
+          {...{ [PHI_VISUAL_ANCHOR_PART_ATTRIBUTE]: "header" }}
+          style={{ position: "absolute", left: 0, right: 0, top: headerBox.top, height: headerBox.height, pointerEvents: "none" }}
+        />
+      ) : null}
     </div>
   );
   return onExternalDragOver || onExternalDrop ? (

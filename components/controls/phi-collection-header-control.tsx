@@ -4,6 +4,7 @@ import { Typography } from "antd";
 import type { ReactNode } from "react";
 
 import { usePhiConfig } from "../root/phi-config-provider";
+import { PHI_VISUAL_ANCHOR_PART_ATTRIBUTE } from "../../types/tours";
 import { PhiDescriptionHint } from "./phi-description-tooltip-icon";
 
 export type PhiCollectionHeaderControlProps = {
@@ -55,6 +56,7 @@ export function PhiCollectionHeaderControl({
       ) : null}
       {hasFilters ? (
         <div
+          {...{ [PHI_VISUAL_ANCHOR_PART_ATTRIBUTE]: "filters" }}
           style={{
             display: "flex",
             alignItems: "flex-end",
@@ -69,6 +71,7 @@ export function PhiCollectionHeaderControl({
       ) : hasTitle && hasToolbar ? <span aria-hidden style={{ flex: "1 1 auto" }} /> : null}
       {hasToolbar ? (
         <div
+          {...{ [PHI_VISUAL_ANCHOR_PART_ATTRIBUTE]: "toolbar" }}
           style={{
             display: "flex",
             alignItems: "flex-end",

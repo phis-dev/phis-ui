@@ -9,6 +9,7 @@ import type { PhiFormId } from "../../types/form-id";
 import type { PhiGlobalTranslatorOptions } from "../../gateway/tr";
 import type { PhiContentEntryKindEditorLabels } from "../../components/regions/presets/content-entry-editor-page-tree";
 import { readPhiServerApiCredentials } from "../../helpers/phis-server-credentials";
+import { buildPhiContentEntryEditorTour } from "../../components/regions/presets/content-entry-editor-tour";
 
 type PhiEntryListPresentationName = "stack" | "cards" | "compact";
 
@@ -114,35 +115,38 @@ export function definePhiContentEntryRoutes(spec: PhiContentEntryRoutesSpec) {
      * `anchor: "main"` rather than a parent item key: the sidebar exports roles, not items, and naming
      * another Module's entry would make this one depend on it being there.
      */
-    buildPhiSidebarRoutePresetDescriptor({
-      area: "editor",
-      anchor: "main",
-      ownerModuleId: spec.ownerModuleId,
-      presetKey: spec.presetKeys.editor,
-      title: spec.title,
-      path,
-      itemKey: `${spec.ownerModuleId}/nav/editor/${spec.kind}`,
-      icon: spec.icon,
-      loadTree: async ({ page, runtime }) => {
-        const [{ buildPhiContentEntryEditorPageTree }, getKindLabels] = await Promise.all([
-          import("../../components/regions/presets/content-entry-editor-page-tree"),
-          spec.loadKindLabels(),
-        ]);
-        const credentials = readPhiServerApiCredentials();
-        return buildPhiContentEntryEditorPageTree({
-          page,
-          runtime,
-          kind: spec.kind,
-          ownerModuleId: spec.ownerModuleId,
-          presetKey: spec.presetKeys.editor,
-          formIds: spec.formIds,
-          kindLabels: await getKindLabels({
-            apiBaseUrl: credentials.apiBaseUrl,
-            internalToken: credentials.internalToken,
-            locale: runtime.locale.current,
-          }),
-        });
-      },
-    }),
+    {
+      ...buildPhiSidebarRoutePresetDescriptor({
+        area: "editor",
+        anchor: "main",
+        ownerModuleId: spec.ownerModuleId,
+        presetKey: spec.presetKeys.editor,
+        title: spec.title,
+        path,
+        itemKey: `${spec.ownerModuleId}/nav/editor/${spec.kind}`,
+        icon: spec.icon,
+        loadTree: async ({ page, runtime }) => {
+          const [{ buildPhiContentEntryEditorPageTree }, getKindLabels] = await Promise.all([
+            import("../../components/regions/presets/content-entry-editor-page-tree"),
+            spec.loadKindLabels(),
+          ]);
+          const credentials = readPhiServerApiCredentials();
+          return buildPhiContentEntryEditorPageTree({
+            page,
+            runtime,
+            kind: spec.kind,
+            ownerModuleId: spec.ownerModuleId,
+            presetKey: spec.presetKeys.editor,
+            formIds: spec.formIds,
+            kindLabels: await getKindLabels({
+              apiBaseUrl: credentials.apiBaseUrl,
+              internalToken: credentials.internalToken,
+              locale: runtime.locale.current,
+            }),
+          });
+        },
+      }),
+      tour: buildPhiContentEntryEditorTour({ ownerModuleId: spec.ownerModuleId, presetKey: spec.presetKeys.editor }),
+    },
   ] satisfies readonly PhiCmsRoutePresetDescriptor[];
 }

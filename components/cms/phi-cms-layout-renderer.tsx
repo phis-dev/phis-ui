@@ -9,6 +9,7 @@ import type {
   PhiResolvedCmsRenderableTree,
 } from "../../types/cms";
 import { comparePhiCmsInstanceIds, type PhiCmsInstanceId } from "../../types/cms-instance-id";
+import { readPhiVisualAnchorOwner } from "../../types/tours";
 import type { PhiBlockRuntime, PhiSignalScope } from "../../types";
 import { hasPhiFlag } from "../../helpers/flags";
 import { PhiCmsFlags } from "../../constants/phi-cms";
@@ -272,6 +273,11 @@ type PhiRenderedChildEntry = {
 
 function resolvePhiTreeSignalParticipants(tree: PhiResolvedCmsRenderableTree) {
   const participants = new Set<string>(tree.visualAnchorTargets ?? []);
+  // A part is found inside its Widget's frame, so the Widget is drawn live for it too.
+  for (const target of tree.visualAnchorTargets ?? []) {
+    const owner = readPhiVisualAnchorOwner(target);
+    if (owner) participants.add(owner);
+  }
 
   for (const node of [...tree.overlays, ...tree.layoutNodes, ...tree.contentWidgets]) {
     const routes = readPhiSignalRouteSet(node.config.signalRoutes);

@@ -32,6 +32,8 @@ import { usePhiSignalListener } from "../../../../../components/runtime/runtime-
 import { usePhiRuntimePageConditionState } from "../../../../../components/runtime/runtime-page-condition-state";
 import { findPhiSignalListenRoute, resolvePhiSignalListenFilter } from "../../../../../helpers/signal-listen-routes";
 import { emitPhiSignalCapability, usePhiSignalEmitter, usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
+import { usePhiVisualAnchorParts } from "../../../../../components/runtime/runtime-visual-anchors";
+import type { PhiVisualAnchorAddress } from "../../../../../types/tours";
 import { usePhiApplicationFeedback } from "../../../../../components/runtime/use-phi-application-feedback";
 import { usePhiTableBinding } from "../../../../../components/tables/client/phi-table-binding";
 import { PhiTableBindingControl } from "../../../../../components/tables/client/phi-table-binding-control";
@@ -84,6 +86,14 @@ import { PhiFlexControl } from "../../../../../components/controls/phi-flex-cont
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 import { PhiCompactGroupControl } from "../../../../../components/controls/phi-compact-group-control";
 import { isPhiRecord } from "../../../../../helpers/is-record";
+
+/**
+ * The parts of a Table a Tour can point at, as `cms:<instanceId>:<part>` (design/TOURS.md): the filters
+ * and search, the toolbar with its add button, the column heads, the actions column, the footer and the
+ * pagination. A part the Table does not draw -- no filters, one page -- is simply not found, and the step
+ * pointing at it does what its `ifMissing` says.
+ */
+const PHI_TABLE_VISUAL_ANCHOR_PARTS = ["filters", "toolbar", "header", "row-actions", "footer", "pagination"] as const;
 
 type TableRow = Record<string, unknown>;
 type DateRangeValue = { start?: string; end?: string };
@@ -379,6 +389,10 @@ export function PhiTableWidgetClient({
     ? chosenColumnOrder.order
     : configuredColumnOrder;
   const signalIdentity = usePhiSignalIdentity();
+  usePhiVisualAnchorParts(
+    signalIdentity.receiver?.startsWith("cms:") ? signalIdentity.receiver as PhiVisualAnchorAddress : null,
+    PHI_TABLE_VISUAL_ANCHOR_PARTS,
+  );
   const emitSignal = usePhiSignalEmitter(signalIdentity.sender);
   const emitRoutes = useMemo(() => config.signalRoutes?.emits ?? [], [config.signalRoutes?.emits]);
   const listenRoutes = useMemo(() => config.signalRoutes?.listens ?? [], [config.signalRoutes?.listens]);

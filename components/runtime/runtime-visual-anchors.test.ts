@@ -5,9 +5,10 @@ import type { PhiSignalRuntimePartition } from "./runtime-signal-partition";
 import {
   readPhiVisualAnchor,
   registerPhiVisualAnchor,
+  registerPhiVisualAnchorParts,
   waitForPhiVisualAnchor,
 } from "./runtime-visual-anchors";
-import type { PhiVisualAnchorAddress } from "../../types/tours";
+import { PHI_VISUAL_ANCHOR_PART_ATTRIBUTE, type PhiVisualAnchorAddress } from "../../types/tours";
 
 /*
  * What a Tour may rely on: an address answers with the one element drawn for it in this partition, or with
@@ -46,6 +47,25 @@ afterEach(() => {
 });
 
 describe("visual anchors", () => {
+  it("finds a Widget's part inside its own frame, and nowhere else", () => {
+    const partition = createPartition();
+    const frame = createLaidOutElement();
+    const toolbar = document.createElement("div");
+    toolbar.setAttribute(PHI_VISUAL_ANCHOR_PART_ATTRIBUTE, "toolbar");
+    toolbar.getClientRects = () => [{}] as unknown as DOMRectList;
+    frame.append(toolbar);
+    // The same mark outside the frame -- another Widget's, or a dialog's -- is not this Widget's part.
+    const stranger = createLaidOutElement();
+    stranger.setAttribute(PHI_VISUAL_ANCHOR_PART_ATTRIBUTE, "footer");
+    registerPhiVisualAnchor(partition, { address: ADDRESS, getElement: () => frame });
+    const unregister = registerPhiVisualAnchorParts(partition, ADDRESS, ["toolbar", "footer"]);
+
+    expect(readPhiVisualAnchor(partition, `${ADDRESS}:toolbar` as PhiVisualAnchorAddress)).toBe(toolbar);
+    expect(readPhiVisualAnchor(partition, `${ADDRESS}:footer` as PhiVisualAnchorAddress)).toBeNull();
+    unregister();
+    expect(readPhiVisualAnchor(partition, `${ADDRESS}:toolbar` as PhiVisualAnchorAddress)).toBeNull();
+  });
+
   it("answers the registered element and nothing after unregistering", () => {
     const partition = createPartition();
     const element = createLaidOutElement();

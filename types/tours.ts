@@ -1,4 +1,4 @@
-import type { PhiSignalAddress } from "./signals";
+import { PHI_SHARED_PACKAGE_NAME, createPhiControllerSignalAddress, type PhiSignalAddress } from "./signals";
 
 /**
  * Guided Tours ([design/TOURS.md](../design/TOURS.md)).
@@ -14,6 +14,20 @@ import type { PhiSignalAddress } from "./signals";
  * Controller is an address too, but it owns no element, so it is never a visual target.
  */
 export type PhiVisualAnchorAddress = Exclude<PhiSignalAddress, `controller:${string}`>;
+
+/**
+ * The attribute a Phi Control marks one of its parts with -- a Table's header row, its toolbar -- so the
+ * Widget drawing that Control can offer the part as `cms:<instanceId>:<part>` (design/TOURS.md,
+ * Visual-anchor registration). An inert mark until a Widget registers the part: the address is the
+ * Widget's contract, the attribute only says where the part is drawn.
+ */
+export const PHI_VISUAL_ANCHOR_PART_ATTRIBUTE = "data-phi-anchor-part";
+
+/** The instance a part address belongs to -- `cms:<id>` of `cms:<id>:<part>` -- or `null` for a whole one. */
+export function readPhiVisualAnchorOwner(address: string): PhiVisualAnchorAddress | null {
+  const [family, instanceId, part] = address.split(":");
+  return family === "cms" && instanceId && part ? `cms:${instanceId}` as PhiVisualAnchorAddress : null;
+}
 
 /**
  * Where a step's panel sits relative to its target. Four sides, not Ant Design's twelve: a Tour points
@@ -61,6 +75,21 @@ export type PhiTourLabels = {
 export type PhiResolvedPageTour = PhiTourDefinition & {
   labels: PhiTourLabels;
 };
+
+/**
+ * Where a Tour is asked for: the Tour Controller of the Area, which the Tour Module mounts.
+ *
+ * Here, in the foundation, rather than in that Module: the Tour button is Core's, so any Area -- and any
+ * Module's own Page -- can place it without depending on the Tour Module. With the Module off nobody
+ * answers at this address, and the button, never told that a Tour is there, stays hidden.
+ */
+export const PHI_TOUR_CONTROLLER_PLUGIN_KEY = `${PHI_SHARED_PACKAGE_NAME}/modules/tour/controller`;
+export const PHI_TOUR_CONTROLLER_KEY = "default";
+export const PHI_TOUR_CONTROLLER_ADDRESS = createPhiControllerSignalAddress(
+  PHI_TOUR_CONTROLLER_PLUGIN_KEY,
+  PHI_TOUR_CONTROLLER_KEY,
+  "default",
+);
 
 /** The flag a Controller definition carries to receive the shown Page's Tour as `pageTour` in its config. */
 export const PHI_PAGE_TOUR_CONTROLLER_FLAG = "pageTour";
