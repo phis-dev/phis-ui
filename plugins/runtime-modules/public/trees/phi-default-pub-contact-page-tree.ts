@@ -13,6 +13,7 @@ import {
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import { PHI_SHARED_FORM_IDS } from "../../../../components/forms/shared-form-ids";
+import { PHI_SURFACE_CARD } from "../../../../helpers/surface-presets";
 
 const SYNTHETIC_CONTACT_REGION_IDS = {
   regionContent: -250,
@@ -92,10 +93,11 @@ export async function buildPhiDefaultPubContactPageTree({
           description: "Send us your question, project request, or product inquiry and we will get back to you.",
           asideTitle: "How we can help",
           asideItems: [
-            "General questions about products and services.",
-            "Project requests and technical clarifications.",
-            "Follow-up on existing customer inquiries.",
+            { text: "General questions about products and services." },
+            { text: "Project requests and technical clarifications." },
+            { text: "Follow-up on existing customer inquiries." },
           ],
+          asideList: { itemSurface: PHI_SURFACE_CARD },
           footer: "Use the contact form to send your message directly to our team.",
         },
       }),

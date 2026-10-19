@@ -7,13 +7,24 @@ import {
   readPhiTextTone,
   type PhiTextTone,
 } from "../../../../../components/widgets/config/text-tone";
+import {
+  buildPhiBulletListFields,
+  readPhiBulletListEntries,
+  readPhiBulletListStyle,
+  type PhiBulletListEntry,
+  type PhiBulletListStyle,
+} from "../../../../../components/widgets/shared/bullet-list-vocabulary";
+import { PHI_SURFACE_CARD } from "../../../../../helpers/surface-presets";
 
 export type PhiCmsDescriptionWidgetConfig = PhiCmsWidgetConfigBase & {
   eyebrow?: string;
   title?: string;
   description?: string;
   asideTitle?: string;
-  asideItems?: string[];
+  /** The aside's entries, drawn as a list (`components/controls/phi-bullet-list-control.tsx`). */
+  asideItems?: PhiBulletListEntry[];
+  /** How the aside's list is set. */
+  asideList?: PhiBulletListStyle;
   footer?: string;
   /** The tone of the description text; absent is the default secondary text. */
   tone?: PhiTextTone;
@@ -22,17 +33,14 @@ export type PhiCmsDescriptionWidgetConfig = PhiCmsWidgetConfigBase & {
 function parsePhiCmsDescriptionWidgetConfig(
   config: Record<string, unknown>,
 ): PhiCmsDescriptionWidgetConfig {
-  const asideItemsRaw = Array.isArray(config.asideItems) ? config.asideItems : [];
-
   return {
     ...readRenderableBlockConfig(config),
     eyebrow: readString(config.eyebrow),
     title: readString(config.title),
     description: readString(config.description),
     asideTitle: readString(config.asideTitle),
-    asideItems: asideItemsRaw
-      .map((item) => (typeof item === "string" ? item : undefined))
-      .filter((item): item is string => item != null),
+    asideItems: readPhiBulletListEntries(config.asideItems),
+    asideList: readPhiBulletListStyle(config.asideList),
     footer: readString(config.footer),
     tone: readPhiTextTone(config.tone),
   };
@@ -46,7 +54,7 @@ export const PHI_DESCRIPTION_WIDGET_DEFINITION = {
   slotSizePolicy: "intrinsic",
   title: "Description",
   category: "content",
-  description: "Introductory text block with eyebrow, title, body, bullet list, and footer.",
+  description: "Introductory text block with eyebrow, title, body, a list, and footer.",
   iconFamily: "basic",
   fields: [
     { key: "eyebrow", type: "string", label: "Eyebrow" },
@@ -56,11 +64,17 @@ export const PHI_DESCRIPTION_WIDGET_DEFINITION = {
     { key: "asideItems", type: "string", label: "Aside Items", editorPlacement: "toolbar" },
     { key: "footer", type: "string", label: "Footer" },
     { key: "tone", type: "choice", label: "Tone", options: [...PHI_TEXT_TONE_FIELD_OPTIONS] },
+    ...buildPhiBulletListFields("asideList", "List"),
   ],
+  /*
+   * A new Description's entries stand in cards, as they always have. Written in rather than a default:
+   * "None" for the entries is stored, and a default would draw the cards again under it.
+   */
+  creationConfig: { asideList: { itemSurface: PHI_SURFACE_CARD } },
   parseConfig: parsePhiCmsDescriptionWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiCmsDescriptionWidgetConfig>,
-  "translatesOwnText" | "kind" | "pluginKey" | "typeKey" | "slotSizePolicy" | "title" | "description" | "category" | "iconFamily" | "fields" | "parseConfig"
+  "translatesOwnText" | "creationConfig" | "kind" | "pluginKey" | "typeKey" | "slotSizePolicy" | "title" | "description" | "category" | "iconFamily" | "fields" | "parseConfig"
 >;
 
 export const PHI_DESCRIPTION_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.Description;

@@ -14,6 +14,7 @@ import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import { PHI_SHARED_FORM_IDS } from "../../../../components/forms/shared-form-ids";
 import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
+import { PHI_SURFACE_CARD } from "../../../../helpers/surface-presets";
 
 const SYNTHETIC_CONFIRM_REGION_IDS = {
   regionContent: -210,
@@ -119,10 +120,11 @@ export async function buildPhiDefaultPubConfirmPageTree({
           description: "Review your registration details and confirm your email address to activate access.",
           asideTitle: "What happens next",
           asideItems: [
-            "Your email address is verified.",
-            "Your customer account is activated.",
-            "You can then sign in with your chosen password.",
+            { text: "Your email address is verified." },
+            { text: "Your customer account is activated." },
+            { text: "You can then sign in with your chosen password." },
           ],
+          asideList: { itemSurface: PHI_SURFACE_CARD },
           footer: "If the link is no longer valid, return to registration and request a new verification email.",
         },
       }),

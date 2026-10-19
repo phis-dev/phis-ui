@@ -80,4 +80,15 @@ describe("Text placeholders", () => {
     const masked = maskPhiTextPlaceholders("{site.host}");
     expect(resolvePhiTextPlaceholders(masked.text, masked.names, hostless)).toBe("{site.host}");
   });
+
+  it("gives a text's own values the first tokens and its names the ones after", () => {
+    const masked = maskPhiTextPlaceholders("%1 at {site.name}: %2", 2);
+    expect(masked.text).toBe("%1 at %3: %2");
+    const translated = "%3 -- %1, %2";
+    expect(resolvePhiTextPlaceholders(translated, masked.names, runtime, ["Key", "acme"])).toBe("Acme -- Key, acme");
+  });
+
+  it("fills a text's own values without a runtime", () => {
+    expect(resolvePhiTextPlaceholders("Used: %1 of %2", [], undefined, ["3 MB", "50 MB"])).toBe("Used: 3 MB of 50 MB");
+  });
 });

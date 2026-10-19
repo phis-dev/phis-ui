@@ -15,6 +15,12 @@ import type { PhiMarkdownTocHeading } from "../../../types/markdown";
 import { PhiPlainTable } from "../../tables/phi-plain-table";
 import { PhiTypographyControl } from "../../controls/phi-typography-control";
 import { PhiDividerControl } from "../../controls/phi-divider-control";
+import { PhiBulletListControl } from "../../controls/phi-bullet-list-control";
+import {
+  resolvePhiBulletListStyle,
+  type PhiBulletListStyle,
+  type PhiResolvedBulletListStyle,
+} from "./bullet-list-vocabulary";
 
 export type PhiMarkdownInline =
   | { kind: "text"; text: string }
@@ -66,8 +72,13 @@ export type PhiMarkdownWidgetClientProps = PhiClientBlockBaseProps<
     textBlockSpacingAfter?: PhiSpacingScaleKey;
     headingBlockSpacingBefore?: PhiSpacingScaleKey;
     headingBlockSpacingAfter?: PhiSpacingScaleKey;
+    /** How the text's lists are set (`bullet-list-vocabulary.ts`). */
+    list?: PhiBulletListStyle;
   }
 >;
+
+/** How the text's lists are set, and how deep the list being drawn stands. */
+type PhiMarkdownListContext = { style: PhiResolvedBulletListStyle; depth: number };
 
 /**
  * The colour a kind of code is drawn in, from the Theme and from nowhere else.
@@ -149,6 +160,7 @@ function renderBlocks(
   token: PhiConfig["token"],
   paragraphBlockStyle: CSSProperties,
   headingBlockStyle: CSSProperties,
+  lists: PhiMarkdownListContext,
 ): ReactNode[] {
   return blocks.map((block, index) => {
     const key = `${block.kind}-${index}`;
@@ -177,28 +189,31 @@ function renderBlocks(
             }}
           >
             <div style={{ display: "grid", gap: 0 }}>
-              {renderBlocks(block.children, token, paragraphBlockStyle, headingBlockStyle)}
+              {renderBlocks(block.children, token, paragraphBlockStyle, headingBlockStyle, lists)}
             </div>
           </blockquote>
         );
-      case "list": {
-        const ListTag = block.ordered ? "ol" : "ul";
+      case "list":
+        /*
+         * The house's list, set by the Widget's list settings. A `1.` list counts whatever its level's
+         * marker says: the numbers are the text's, not a look. A list inside an entry is one level down.
+         */
         return (
-          <ListTag
+          <PhiBulletListControl
             key={key}
-            start={block.ordered ? block.start : undefined}
-            style={{ margin: 0, paddingInlineStart: PHI_SPACE.md }}
-          >
-            {block.items.map((itemBlocks, itemIndex) => (
-              <li key={`${key}-item-${itemIndex}`} style={{ marginBlockEnd: PHI_SPACE.xs }}>
-                <div style={{ display: "grid", gap: PHI_SPACE.xs }}>
-                  {renderBlocks(itemBlocks, token, paragraphBlockStyle, headingBlockStyle)}
+            listStyle={lists.style}
+            depth={lists.depth}
+            ordered={block.ordered}
+            start={block.start}
+            items={block.items.map((itemBlocks) => ({
+              content: (
+                <div style={{ display: "grid", gap: PHI_SPACE.xs, minWidth: 0 }}>
+                  {renderBlocks(itemBlocks, token, paragraphBlockStyle, headingBlockStyle, { ...lists, depth: lists.depth + 1 })}
                 </div>
-              </li>
-            ))}
-          </ListTag>
+              ),
+            }))}
+          />
         );
-      }
       case "code":
         return (
           <pre
@@ -300,7 +315,10 @@ export function PhiMarkdownWidgetClient({ config }: PhiMarkdownWidgetClientProps
 
   return (
     <div style={{ display: "grid", gap: 0, width: "100%", textAlign: config?.textAlign }}>
-      {renderBlocks(blocks, token, paragraphBlockStyle, headingBlockStyle)}
+      {renderBlocks(blocks, token, paragraphBlockStyle, headingBlockStyle, {
+        style: resolvePhiBulletListStyle(config?.list),
+        depth: 1,
+      })}
     </div>
   );
 }

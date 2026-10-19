@@ -1,3 +1,4 @@
+import type { PhiBulletListEntry, PhiBulletListStyle } from "../components/widgets/shared/bullet-list-vocabulary";
 import type { PhiRenderableBlockBase } from "./renderable-block";
 import type { PhiRuntimeConditionExpression } from "./runtime-condition";
 import type { PhiSignalRoute, PhiSignalValue } from "./signals";
@@ -83,6 +84,7 @@ export type PhiMarkdownWidgetPlacement = PhiWidgetPlacementBase & {
   headingBlockSpacingAfter?: PhiSpacingScaleKey;
   headingOffset?: number;
   tocKey?: string;
+  list?: PhiBulletListStyle;
 };
 
 // Simple Text
@@ -113,7 +115,8 @@ export type PhiDescriptionWidgetPlacement = PhiWidgetPlacementBase & {
   title?: string;
   description?: string;
   asideTitle?: string;
-  asideItems?: string[];
+  asideItems?: PhiBulletListEntry[];
+  asideList?: PhiBulletListStyle;
   footer?: string;
   tone?: PhiTextTone;
 };

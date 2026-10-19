@@ -49,14 +49,21 @@ function buildPhiTextPlaceholders(runtime: PhiBlockRuntime): Record<string, stri
  * Every name is masked, not only the ones something answers. A typo has to survive the round trip to
  * still be a recognizable typo: masked, `{jahr}` comes back as `%2` and is put back as `{jahr}`.
  */
-export function maskPhiTextPlaceholders(text: string): { text: string; names: readonly string[] } {
+export function maskPhiTextPlaceholders(
+  text: string,
+  /**
+   * How many tokens the text already carries: a list entry's values stand as `%1` to `%k`, so its names
+   * count on from `%k+1` (see `resolvePhiTextPlaceholders`).
+   */
+  offset = 0,
+): { text: string; names: readonly string[] } {
   if (!text.includes("{")) {
     return { text, names: [] };
   }
   const names: string[] = [];
   const masked = text.replace(PHI_TEXT_PLACEHOLDER_PATTERN, (_match, name: string) => {
     names.push(name);
-    return `%${names.length}`;
+    return `%${offset + names.length}`;
   });
   return { text: masked, names };
 }
@@ -69,6 +76,10 @@ export function maskPhiTextPlaceholders(text: string): { text: string; names: re
  * that came back, not to the text that went in. It is the order the Table footer already keeps
  * (TABLES.md, "Footer"), and the reason a value is never itself translated.
  *
+ * `values` are the text's own: a list entry that reads "Site key: %1" carries the key beside it, so the
+ * sentence is translated once for every Site and the key is never sent along. They take the first
+ * tokens, and the masked names the ones after them.
+ *
  * Read in one pass rather than token by token, because `%1` is the start of `%10` and a sentence with
  * ten names would have had its tenth eaten by its first.
  */
@@ -76,17 +87,25 @@ export function resolvePhiTextPlaceholders(
   text: string,
   names: readonly string[],
   runtime: PhiBlockRuntime | undefined,
+  values: readonly string[] = [],
 ): string {
-  if (names.length === 0) {
+  if (names.length === 0 && values.length === 0) {
     return text;
   }
-  const values = runtime ? buildPhiTextPlaceholders(runtime) : {};
+  const placeholders = names.length > 0 && runtime ? buildPhiTextPlaceholders(runtime) : {};
   return text.replace(PHI_TEXT_PLACEHOLDER_TOKEN_PATTERN, (token, digits: string) => {
-    const name = names[Number(digits) - 1];
+    const index = Number(digits) - 1;
+    if (index < 0) {
+      return token;
+    }
+    if (index < values.length) {
+      return values[index]!;
+    }
+    const name = names[index - values.length];
     if (name === undefined) {
       return token;
     }
-    const value = values[name];
+    const value = placeholders[name];
     return value === undefined ? `{${name}}` : String(value);
   });
 }

@@ -15,7 +15,7 @@ export type PhiDescriptionEditorStoredText = {
   title: string;
   description: string;
   asideTitle: string;
-  asideItems: readonly string[];
+  asideItems: readonly unknown[];
 };
 
 export type PhiDescriptionEditorSections = {

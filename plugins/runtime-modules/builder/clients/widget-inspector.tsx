@@ -183,6 +183,8 @@ export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
       defaultConfig: widgetDefaultConfigRecord,
       disabled: isPreviewMode || lock != null,
       widgetReferenceOptions,
+      backgroundLabels,
+      borderLabels,
       colorPickerLabels,
       iconPickerLabels,
       fieldLabels,

@@ -342,6 +342,16 @@ export type PhiCmsConfigField =
       storage?: PhiCmsConfigFieldValueStorage;
     })
   | (PhiCmsConfigFieldBase & {
+      /**
+       * A Surface (`types/surface.ts`) of something the Widget draws inside itself -- each entry of a
+       * list -- edited with the same Control as a Widget's own Surface. `null` is stored for "None", so a
+       * look a Widget is created with is not drawn again under a box that was set to have none.
+       */
+      type: "surface";
+      /** Whether the mode is offered; left out, it is. */
+      tone?: false;
+    })
+  | (PhiCmsConfigFieldBase & {
       type: "shadow" | "grid-placement" | "column-count";
       section?: string;
     });

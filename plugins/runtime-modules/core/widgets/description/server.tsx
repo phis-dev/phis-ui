@@ -7,11 +7,16 @@ import type { PhiBlockRuntime, PhiServerBlockBaseProps } from "../../../../../ty
 import { maskPhiTextPlaceholders, resolvePhiTextPlaceholders } from "../../../../../helpers/text-placeholders";
 import type { PhiCmsDescriptionWidgetConfig } from "./config";
 import type { PhiTextTone } from "../../../../../components/widgets/config/text-tone";
+import { PhiBulletListControl } from "../../../../../components/controls/phi-bullet-list-control";
+import {
+  buildPhiBulletListTree,
+  resolvePhiBulletListStyle,
+  type PhiBulletListEntry,
+} from "../../../../../components/widgets/shared/bullet-list-vocabulary";
 import {
   PHI_COLOR,
   PHI_FONT_SIZE,
   PHI_LINE_HEIGHT,
-  PHI_RADIUS,
   PHI_SPACE,
 } from "../../../../../theme/antd-css-var-contract";
 
@@ -20,7 +25,7 @@ export type PhiDescriptionWidgetLabels = {
   title?: string;
   description?: string;
   asideTitle?: string;
-  asideItems?: string[];
+  asideItems?: PhiBulletListEntry[];
   footer?: string;
 };
 
@@ -41,18 +46,20 @@ async function translateLabel(
   value: string | undefined,
   runtime: PhiBlockRuntime | undefined,
   translate: boolean,
+  /** The text's own values, which stand in it as `%1` onwards and are never translated. */
+  values: readonly string[] = [],
 ) {
   if (!value) {
     return undefined;
   }
 
-  const masked = maskPhiTextPlaceholders(value);
+  const masked = maskPhiTextPlaceholders(value, values.length);
   const translated = !translate
     ? masked.text
     : locale
       ? await trGlobalForLocale(locale, masked.text)
       : await trGlobal(masked.text);
-  return resolvePhiTextPlaceholders(translated, masked.names, runtime);
+  return resolvePhiTextPlaceholders(translated, masked.names, runtime, values);
 }
 
 function resolveDescriptionToneColor(tone: PhiTextTone | undefined) {
@@ -79,11 +86,17 @@ export async function PhiDescriptionWidget({
   const title = await translateLabel(locale, labels.title ?? config?.title, runtime, translate);
   const description = await translateLabel(locale, labels.description ?? config?.description, runtime, translate);
   const asideTitle = await translateLabel(locale, labels.asideTitle ?? config?.asideTitle, runtime, translate);
-  const asideItems = await Promise.all(
-    (labels.asideItems ?? config?.asideItems ?? []).map((item) => translateLabel(locale, item, runtime, translate)),
+  const asideEntries = await Promise.all(
+    (labels.asideItems ?? config?.asideItems ?? []).map(async (entry) => ({
+      ...entry,
+      text: await translateLabel(locale, entry.text, runtime, translate, entry.values),
+    })),
   );
   const footer = await translateLabel(locale, labels.footer ?? config?.footer, runtime, translate);
-  const resolvedAsideItems = asideItems.filter((item): item is string => Boolean(item));
+  const resolvedAsideItems = buildPhiBulletListTree(
+    asideEntries.filter((entry) => Boolean(entry.text)),
+    (entry) => entry.text,
+  );
   const stackStyle: CSSProperties = {
     display: "grid",
     gap: PHI_SPACE.lg,
@@ -92,11 +105,6 @@ export async function PhiDescriptionWidget({
   const subStackStyle: CSSProperties = {
     display: "grid",
     gap: PHI_SPACE.sm,
-    width: "100%",
-  };
-  const itemStackStyle: CSSProperties = {
-    display: "grid",
-    gap: PHI_SPACE.xs,
     width: "100%",
   };
 
@@ -169,42 +177,9 @@ export async function PhiDescriptionWidget({
               {asideTitle}
             </span>
           ) : null}
-          <div style={itemStackStyle}>
-            {resolvedAsideItems.map((item, index) => (
-              <div
-                key={index}
-                style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: PHI_SPACE.sm,
-                  padding: `${PHI_SPACE.sm} ${PHI_SPACE.md}`,
-                  borderRadius: PHI_RADIUS.base,
-                  background: PHI_COLOR.bgContainer,
-                  border: `1px solid ${PHI_COLOR.borderSecondary}`,
-                }}
-              >
-                <div
-                  aria-hidden="true"
-                  style={{
-                    width: PHI_SPACE.xs,
-                    height: PHI_SPACE.xs,
-                    marginTop: `calc((${PHI_FONT_SIZE.base} * ${PHI_LINE_HEIGHT.base} - ${PHI_SPACE.xs}) / 2)`,
-                    borderRadius: "50%",
-                    background: PHI_COLOR.primary,
-                    flexShrink: 0,
-                  }}
-                />
-                <span
-                  style={{
-                    color: PHI_COLOR.text,
-                    fontSize: PHI_FONT_SIZE.base,
-                    lineHeight: PHI_LINE_HEIGHT.base,
-                  }}
-                >
-                  {item}
-                </span>
-              </div>
-            ))}
+          {/* The entries' type is set around the list, so a marker centres on the line the text has. */}
+          <div style={{ color: PHI_COLOR.text, fontSize: PHI_FONT_SIZE.base, lineHeight: PHI_LINE_HEIGHT.base }}>
+            <PhiBulletListControl items={resolvedAsideItems} listStyle={resolvePhiBulletListStyle(config?.asideList)} />
           </div>
         </div>
       ) : null}

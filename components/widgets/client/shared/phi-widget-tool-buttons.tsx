@@ -13,6 +13,7 @@ import { createPhiAssetUri, createPhiPageUri } from "../../../../types/reference
 import { PhiPageReferencePicker } from "./phi-page-reference-picker";
 import { usePhiAuthoringToolsLabels } from "./phi-authoring-tools-labels";
 import { resizePhiDescriptionItems } from "./description-items";
+import type { PhiBulletListEntry } from "../../shared/bullet-list-vocabulary";
 import { PhiButtonControl } from "../../../controls/phi-button-control";
 import { PhiCheckboxControl } from "../../../controls/phi-checkbox-control";
 import { PhiNumberControl } from "../../../controls/phi-number-control";
@@ -685,8 +686,8 @@ export function PhiWidgetCountToolButton({
 }
 
 export type PhiDescriptionWidgetItemsToolButtonProps = {
-  value?: string[] | null;
-  onChange: (value: string[]) => void;
+  value?: PhiBulletListEntry[] | null;
+  onChange: (value: PhiBulletListEntry[]) => void;
 };
 
 export function PhiDescriptionWidgetItemsToolButton({

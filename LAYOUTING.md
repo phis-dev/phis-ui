@@ -120,6 +120,11 @@ A Widget's Surface is the node's `config.surface` as well, and who draws it is t
 - `none` (the answer when a plugin says nothing) -- the Widget has no Surface, and the Inspector offers
   none. A Widget gets a Surface only by asking for one.
 
+Something a Widget draws inside itself can have a Surface too -- each entry of a list
+(`PhiBulletListControl`). The Widget stores it in its config, the Inspector edits it with a `surface` field
+(the same `PhiSurfaceControl`, here without the mode), and the Widget draws it with the same resolver, with
+no ground layer. `null` is stored for "None", so a look the Widget is created with is not drawn again.
+
 A Layout's slot frame never draws a Surface: the Layout draws its own, and a second ground under it would
 double every pane and every shadow. The renderer reads the policy from the runtime registry
 (`widgetSurfacePoliciesByType`), the Builder from the Widget's client definition; neither branches on a

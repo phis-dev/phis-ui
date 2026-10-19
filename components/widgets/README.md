@@ -292,6 +292,23 @@ record's source text instead of its localized version.
   asked for less motion; a further effect is an entry in `PHI_CARD_HOVER_EFFECTS` and a rule in
   `styles/layout.css`. Asset sources persist `assetId` and `variantKey`; only `url` sources persist
   `sourceUrl`, shown plainly with a placeholder.
+- A list is drawn by `PhiBulletListControl` (`components/controls/phi-bullet-list-control.tsx`) and set
+  with one vocabulary (`components/widgets/shared/bullet-list-vocabulary.ts`): the Description's aside
+  (`asideItems`, set by `asideList`) and a Markdown text's lists (set by `list`). The Control draws on the
+  server, in a preview and in an editor alike -- no hooks, no Ant Design -- as a real `ul`/`ol`. A style
+  states a marker per level (`level1` to `level3`: `dot`, `circle`, `dash`, `number`, `icon`, `none`;
+  absent, a browser's dot, circle, dash), one `icon` for every level that draws one, a `gap` from the
+  spacing scale, `flags` (`PhiBulletListFlag.Dividers`, a line between entries that have no box of their
+  own) and `itemSurface`, each entry's box from the Surface vocabulary without a mode. A box around the
+  whole list is the Widget's Surface, not the list's. A Widget offers the same fields with
+  `buildPhiBulletListFields(key, heading)`; the Inspector edits `itemSurface` with a `surface` field.
+  A Markdown `1.` list counts whatever its level says, because its numbers are the text's.
+- The Description's entries are written flat, each `{ text, level?, values? }`; the Control hangs them as
+  the tree they read as, and an entry that skips a level stays with the one it follows. In the editor Tab
+  and Shift+Tab move an entry a level down and up. `values` keep what differs from Site to Site out of
+  the sentence: "Site key: %1" is translated once and filled after, its values never pass a translator
+  ([TRANSLATIONS.md](../../TRANSLATIONS.md)). A new Description is created with its entries in cards
+  (`creationConfig`), a creation value rather than a default, so "None" stays none.
 - The Video Widget (`video-embed`, owned by the Video Module) stores `providerKey` and `videoId`, chosen
   from the video providers the Area carries -- the way the Image Widget stores an `assetId` rather than a
   URL. Never a pasted address: a share link carries a playlist, a timestamp, a `si=` and sometimes a

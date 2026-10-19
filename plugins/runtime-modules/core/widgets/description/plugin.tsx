@@ -41,7 +41,7 @@ export const PHI_DESCRIPTION_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsDescr
           asideItems: config.asideItems,
           footer: config.footer,
         },
-        config: { tone: config.tone },
+        config: { tone: config.tone, asideList: config.asideList },
       }}
     />
   ),

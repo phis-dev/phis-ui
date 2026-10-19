@@ -21,7 +21,7 @@ describe("the Description editor's sections", () => {
     });
     expect(resolvePhiDescriptionEditorSections({ ...EMPTY, description: "Text" }, false).heading)
       .toBe(true);
-    expect(resolvePhiDescriptionEditorSections({ ...EMPTY, asideItems: ["One"] }, false).aside)
+    expect(resolvePhiDescriptionEditorSections({ ...EMPTY, asideItems: [{ text: "One" }] }, false).aside)
       .toBe(true);
   });
 

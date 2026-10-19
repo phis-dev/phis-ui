@@ -5,6 +5,11 @@ import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsResolvedContent } from "../../../../../types/cms";
 import {
+  buildPhiBulletListFields,
+  readPhiBulletListStyle,
+  type PhiBulletListStyle,
+} from "../../../../../components/widgets/shared/bullet-list-vocabulary";
+import {
   readNumber,
   readRenderableBlockConfig,
   readString,
@@ -28,6 +33,8 @@ export type PhiCmsMarkdownWidgetConfig = PhiCmsWidgetConfigBase & {
   /** How many levels the text's headings move down, for a text standing under a heading of its own. */
   headingOffset?: number;
   tocKey?: string;
+  /** How the text's lists are set. */
+  list?: PhiBulletListStyle;
   resolvedContent?: PhiCmsResolvedContent | null;
   preferSource?: boolean;
 };
@@ -84,6 +91,7 @@ export function parsePhiCmsMarkdownWidgetConfig(config: Record<string, unknown>)
     headingBlockSpacingAfter: readMarkdownSpacingKey(config.headingBlockSpacingAfter),
     headingOffset: readMarkdownHeadingOffset(config.headingOffset),
     tocKey: readString(config.tocKey),
+    list: readPhiBulletListStyle(config.list),
   };
 }
 
@@ -185,6 +193,7 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
       precision: 0,
     },
     { key: "tocKey", type: "string", label: "TOC Key" },
+    ...buildPhiBulletListFields("list", "Lists"),
   ],
   parseConfig: parsePhiCmsMarkdownWidgetConfig,
 } satisfies Pick<

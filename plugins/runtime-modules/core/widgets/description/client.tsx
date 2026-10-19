@@ -7,6 +7,14 @@ import type { PhiClientBlockBaseProps } from "../../../../../types";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 import type { PhiTextTone } from "../../../../../components/widgets/config/text-tone";
+import { PhiBulletListControl } from "../../../../../components/controls/phi-bullet-list-control";
+import {
+  buildPhiBulletListTree,
+  resolvePhiBulletListStyle,
+  type PhiBulletListEntry,
+  type PhiBulletListStyle,
+} from "../../../../../components/widgets/shared/bullet-list-vocabulary";
+import { resolvePhiTextPlaceholders } from "../../../../../helpers/text-placeholders";
 const PHI_LINE_HEIGHT_BASE = 1.5;
 const PHI_LINE_HEIGHT_LG = 1.6;
 const PHI_FONT_WEIGHT_STRONG = 600;
@@ -16,13 +24,13 @@ export type PhiDescriptionWidgetClientLabels = {
   title?: string;
   description?: string;
   asideTitle?: string;
-  asideItems?: string[];
+  asideItems?: PhiBulletListEntry[];
   footer?: string;
 };
 
 export type PhiDescriptionWidgetClientProps = PhiClientBlockBaseProps<
   PhiDescriptionWidgetClientLabels,
-  { tone?: PhiTextTone }
+  { tone?: PhiTextTone; asideList?: PhiBulletListStyle }
 >;
 
 export function PhiDescriptionWidgetClient({
@@ -30,7 +38,10 @@ export function PhiDescriptionWidgetClient({
   config,
 }: PhiDescriptionWidgetClientProps) {
   const { token } = usePhiConfig();
-  const asideItems = (labels.asideItems ?? []).filter(Boolean);
+  const asideItems = buildPhiBulletListTree(
+    (labels.asideItems ?? []).filter((entry) => Boolean(entry.text)),
+    (entry) => resolvePhiTextPlaceholders(entry.text, [], undefined, entry.values),
+  );
 
   return (
     <PhiFlexControl vertical gap={token.paddingLG} style={{ width: "100%" }}>
@@ -88,43 +99,9 @@ export function PhiDescriptionWidgetClient({
               {labels.asideTitle}
             </PhiTypographyControl>
           ) : null}
-          <PhiFlexControl vertical gap={token.paddingSM} style={{ width: "100%" }}>
-            {asideItems.map((item, index) => (
-              <div
-                key={index}
-                style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: token.paddingXS,
-                  padding: `${token.paddingSM}px ${token.padding}px`,
-                  borderRadius: token.borderRadiusLG,
-                  background: token.colorBgContainer,
-                  border: `1px solid ${token.colorBorderSecondary}`,
-                }}
-              >
-                <div
-                  aria-hidden="true"
-                  style={{
-                    width: token.paddingXS,
-                    height: token.paddingXS,
-                    marginTop: (token.fontSize * token.lineHeight - token.paddingXS) / 2,
-                    borderRadius: "50%",
-                    background: token.colorPrimary,
-                    flexShrink: 0,
-                  }}
-                />
-                <PhiTypographyControl
-                  style={{
-                    color: token.colorText,
-                    fontSize: token.fontSize,
-                    lineHeight: token.lineHeight,
-                  }}
-                >
-                  {item}
-                </PhiTypographyControl>
-              </div>
-            ))}
-          </PhiFlexControl>
+          <div style={{ color: token.colorText, fontSize: token.fontSize, lineHeight: token.lineHeight }}>
+            <PhiBulletListControl items={asideItems} listStyle={resolvePhiBulletListStyle(config?.asideList)} />
+          </div>
         </PhiFlexControl>
       ) : null}
       {labels.footer ? (

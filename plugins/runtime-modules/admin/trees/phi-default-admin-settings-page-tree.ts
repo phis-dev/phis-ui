@@ -7,6 +7,7 @@ import { getPhiAdminSettingsWidgetLabels } from "../../../../components/widgets/
 import { getPhiAdminSettingsPageLabels } from "./admin-settings-label-set";
 import { buildPhiSettingsPageShellTree } from "../../../../components/regions/presets/phi-settings-page-shell-tree";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
+import { PHI_SURFACE_CARD } from "../../../../helpers/surface-presets";
 
 const SYNTHETIC_ADMIN_SETTINGS_REGION_IDS = {
   regionContent: -471,
@@ -67,12 +68,14 @@ export async function buildPhiDefaultAdminSettingsPageTree({
           typeKey: "description",
           label: labels.sections.technical.title,
           config: {
+            // The words and the Site's values apart: the words come from the label set, the values never pass a translator.
             asideItems: [
-              `${labels.fields.siteKey}: ${settings.key}`,
-              `${labels.fields.mailFrom}: ${settings.mailFrom || "—"}`,
-              `${labels.fields.mailFromName}: ${settings.mailFromName || "—"}`,
-              `${labels.fields.contactRecipient}: ${settings.contactRecipient || "—"}`,
+              { text: `${labels.fields.siteKey}: %1`, values: [settings.key] },
+              { text: `${labels.fields.mailFrom}: %1`, values: [settings.mailFrom || "—"] },
+              { text: `${labels.fields.mailFromName}: %1`, values: [settings.mailFromName || "—"] },
+              { text: `${labels.fields.contactRecipient}: %1`, values: [settings.contactRecipient || "—"] },
             ],
+            asideList: { itemSurface: PHI_SURFACE_CARD },
           },
         }],
       },

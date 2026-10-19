@@ -6,6 +6,13 @@ import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/c
 import type { PhiBlockRuntime } from "../../../../types";
 import { buildPhiSettingsPageShellTree } from "../../../../components/regions/presets/phi-settings-page-shell-tree";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
+import { PHI_STORAGE_SIZE_UNIT_LABEL, phiBytesToStorageSize } from "../../../../components/forms/storage-size";
+import { PHI_SURFACE_CARD } from "../../../../helpers/surface-presets";
+
+function formatMegabytes(bytes: number | null | undefined) {
+  const size = phiBytesToStorageSize(bytes);
+  return size == null ? "—" : `${size} ${PHI_STORAGE_SIZE_UNIT_LABEL}`;
+}
 
 const SYNTHETIC_MEDIA_SETTINGS_REGION_IDS = {
   regionContent: -473,
@@ -67,26 +74,38 @@ export async function buildPhiDefaultAdminMediaSettingsPageTree({
           typeKey: "description",
           label: labels.technical.title,
           config: {
+            /*
+             * The words and the values apart: the words come from the label set, the values never pass a
+             * translator. Sizes in megabytes, as the quota fields above state them.
+             */
             asideItems: [
               // Reported, not offered: availability follows from the Modules this Site activates.
-              `${labels.fields.userSpacesEnabled}: ${settings.userSpacesEnabled ? labels.availability.available : labels.availability.unavailable}`,
-              `${labels.fields.groupSpacesEnabled}: ${settings.groupSpacesEnabled ? labels.availability.available : labels.availability.unavailable}`,
+              {
+                text: `${labels.fields.userSpacesEnabled}: %1`,
+                values: [settings.userSpacesEnabled ? labels.availability.available : labels.availability.unavailable],
+              },
+              {
+                text: `${labels.fields.groupSpacesEnabled}: %1`,
+                values: [settings.groupSpacesEnabled ? labels.availability.available : labels.availability.unavailable],
+              },
               /*
-               * The Add-on stores, named so they can be sized.
+               * The Add-on stores, named so they can be sized, one entry each below their heading.
                *
                * An Add-on Space appears in no Space listing and belongs to nobody, so this is the only
                * place an administrator learns one exists and what it costs. The id is here because it is
                * the address the per-Space route takes: the Site default is set above, and departing from
                * it for one Add-on needs a Space to point at.
                */
-              `${labels.addonSpaces.title}: ${
-                settings.addonSpaces.length === 0
-                  ? labels.addonSpaces.empty
-                  : settings.addonSpaces
-                      .map((space) => `${space.addonId} (#${space.spaceId}) ${space.usedBytes} / ${space.quotaBytes ?? "-"}`)
-                      .join(", ")
-              }`,
+              settings.addonSpaces.length === 0
+                ? { text: `${labels.addonSpaces.title}: %1`, values: [labels.addonSpaces.empty] }
+                : { text: labels.addonSpaces.title },
+              ...settings.addonSpaces.map((space) => ({
+                text: "%1 (#%2): %3 / %4",
+                level: 2,
+                values: [space.addonId, String(space.spaceId), formatMegabytes(space.usedBytes), formatMegabytes(space.quotaBytes)],
+              })),
             ],
+            asideList: { itemSurface: PHI_SURFACE_CARD },
           },
         }],
       },

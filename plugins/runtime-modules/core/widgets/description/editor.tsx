@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 
@@ -8,13 +8,20 @@ import type { PhiCmsDescriptionWidgetConfig } from "./config";
 import { PhiTextControl } from "../../../../../components/controls/phi-text-control";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { resolvePhiDescriptionEditorSections } from "../../../../../components/widgets/client/description-editor-sections";
+import { PhiBulletListControl } from "../../../../../components/controls/phi-bullet-list-control";
+import {
+  buildPhiBulletListTree,
+  resolvePhiBulletListLevel,
+  resolvePhiBulletListStyle,
+  type PhiBulletListEntry,
+} from "../../../../../components/widgets/shared/bullet-list-vocabulary";
 
 type PhiDescriptionEditorConfig = {
   eyebrow: string;
   title: string;
   description: string;
   asideTitle: string;
-  asideItems: string[];
+  asideItems: PhiBulletListEntry[];
   footer: string;
 };
 
@@ -58,6 +65,7 @@ export function PhiDescriptionWidgetEditor({
    * would be gone before its blur could write the empty value.
    */
   const sections = resolvePhiDescriptionEditorSections(resolvedConfig, Boolean(onChange));
+  const asideListRef = useRef<HTMLDivElement>(null);
 
   /*
    * Typing changes the draft and nothing else.
@@ -87,7 +95,7 @@ export function PhiDescriptionWidgetEditor({
     setDraftState((current) => {
       const currentDraft = current.source === config ? current.value : resolvedConfig;
       const nextItems = [...currentDraft.asideItems];
-      nextItems[index] = value;
+      nextItems[index] = { ...nextItems[index], text: value };
       return {
         source: config,
         value: {
@@ -98,16 +106,35 @@ export function PhiDescriptionWidgetEditor({
     });
   }
 
-  function commitAsideItems() {
-    const items = draft.asideItems;
-    const storedItems = resolvedConfig.asideItems;
-    if (
-      items.length === storedItems.length &&
-      items.every((item, index) => item === storedItems[index])
-    ) {
+  function commitAsideItems(items = draft.asideItems) {
+    if (JSON.stringify(items) === JSON.stringify(resolvedConfig.asideItems)) {
       return;
     }
     onChange?.({ asideItems: items });
+  }
+
+  /*
+   * Tab moves an entry a level down and Shift+Tab a level up, as in every outline editor. The move is
+   * written at once, with whatever was typed into the entry so far: it is a change of structure, and
+   * waiting for the blur would let the entry jump back as the tree is drawn again.
+   */
+  function shiftAsideItemLevel(index: number, delta: number) {
+    const items = draft.asideItems;
+    const entry = items[index];
+    if (!entry) return;
+    const level = resolvePhiBulletListLevel((entry.level ?? 1) + delta);
+    if (level === (entry.level ?? 1)) return;
+    const { level: _level, ...rest } = entry;
+    void _level;
+    const next = items.map((item, itemIndex) => (itemIndex === index ? (level > 1 ? { ...rest, level } : rest) : item));
+    setDraftState({ source: config, value: { ...draft, asideItems: next } });
+    commitAsideItems(next);
+    // The entry now hangs elsewhere in the tree and its field is a new one; the caret goes back into it.
+    requestAnimationFrame(() => {
+      const field = asideListRef.current?.querySelectorAll("textarea")[index];
+      field?.focus();
+      field?.setSelectionRange(field.value.length, field.value.length);
+    });
   }
 
   return (
@@ -211,52 +238,35 @@ export function PhiDescriptionWidgetEditor({
                 fontWeight: 600,
               }}
             />
-            <PhiFlexControl vertical gap={8} style={{ width: "100%" }}>
-              {draft.asideItems.map((item, index) => (
-                <div
-                  key={index}
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: "var(--ant-padding-xs)",
-                    padding: "var(--ant-padding-sm) var(--ant-padding)",
-                    borderRadius: "var(--ant-border-radius-lg)",
-                    background: "var(--ant-color-bg-container)",
-                    border: "1px solid var(--ant-color-border-secondary)",
-                  }}
-                >
-                  <div
-                    aria-hidden="true"
-                    style={{
-                      width: "var(--ant-padding-xs)",
-                      height: "var(--ant-padding-xs)",
-                      // the item text is a borderless auto-sizing textarea, so the first
-                      // text line sits at the control's own height, not at the raw line box
-                      marginTop:
-                        "calc((var(--ant-control-height) - var(--ant-padding-xs)) / 2)",
-                      borderRadius: "50%",
-                      background: "var(--ant-color-primary)",
-                      flexShrink: 0,
-                    }}
-                  />
+            <div ref={asideListRef} style={{ width: "100%", minWidth: 0 }}>
+              <PhiBulletListControl
+                listStyle={resolvePhiBulletListStyle(config?.asideList)}
+                // Each entry is a borderless text field, whose first line stands at the field's height.
+                markerLineHeight="var(--ant-control-height)"
+                items={buildPhiBulletListTree(draft.asideItems, (item, index) => (
                   <PhiTextControl
                     presentation="textarea"
-                    value={item}
+                    value={item.text}
                     readOnly={!onChange}
                     variant="borderless"
                     placeholder={`Item ${index + 1}`}
                     autoSize={{ minRows: 1, maxRows: 6 }}
                     onChange={(value) => updateAsideItem(index, value ?? "")}
                     onBlur={() => commitAsideItems()}
+                    onKeyDown={(event) => {
+                      if (event.key !== "Tab" || !onChange) return;
+                      event.preventDefault();
+                      shiftAsideItemLevel(index, event.shiftKey ? -1 : 1);
+                    }}
                     style={{
                       ...EDITOR_TEXTAREA_STYLE,
                       borderBottom: "none",
                       paddingBlock: 0,
                     }}
                   />
-                </div>
-              ))}
-            </PhiFlexControl>
+                ))}
+              />
+            </div>
           </PhiFlexControl>
         ) : null}
         <PhiTextControl

@@ -5,6 +5,7 @@ import type { PhiBlockRuntime } from "../../../../types";
 import { getPhiBuilderSettingsPageLabels } from "./builder-settings-label-set";
 import { buildPhiSettingsPageShellTree } from "../../../../components/regions/presets/phi-settings-page-shell-tree";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
+import { PHI_SURFACE_CARD } from "../../../../helpers/surface-presets";
 
 const SYNTHETIC_BUILDER_SETTINGS_REGION_IDS = {
   regionContent: -583,
@@ -47,12 +48,14 @@ export async function buildPhiDefaultBuilderSettingsPageTree({
           typeKey: "description",
           label: labels.sections.technical.title,
           config: {
+            // The words and the values apart: the words come from the label set, the values never pass a translator.
             asideItems: [
-              `${labels.fields.siteKey}: ${runtime.site.key}`,
-              `${labels.fields.area}: ${PHI_BUILDER_SETTINGS_AREA}`,
-              `${labels.fields.baseModule}: ${PHI_BUILDER_RUNTIME_MODULE_ID}`,
-              `${labels.fields.settingsPath}: ${page.path}`,
+              { text: `${labels.fields.siteKey}: %1`, values: [runtime.site.key] },
+              { text: `${labels.fields.area}: %1`, values: [PHI_BUILDER_SETTINGS_AREA] },
+              { text: `${labels.fields.baseModule}: %1`, values: [PHI_BUILDER_RUNTIME_MODULE_ID] },
+              { text: `${labels.fields.settingsPath}: %1`, values: [page.path] },
             ],
+            asideList: { itemSurface: PHI_SURFACE_CARD },
           },
         }],
       },

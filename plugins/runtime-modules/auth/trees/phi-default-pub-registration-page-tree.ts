@@ -14,6 +14,7 @@ import {
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import { PHI_SHARED_FORM_IDS } from "../../../../components/forms/shared-form-ids";
+import { PHI_SURFACE_CARD } from "../../../../helpers/surface-presets";
 
 const SYNTHETIC_REGISTER_REGION_IDS = {
   regionContent: -200,
@@ -91,10 +92,11 @@ export async function buildPhiDefaultPubRegistrationPageTree({
           description: "Create your account to access your personalized workspace.",
           asideTitle: "Benefits",
           asideItems: [
-            "Manage orders and account details.",
-            "Confirm your email to activate access.",
-            "Receive optional updates and product news.",
+            { text: "Manage orders and account details." },
+            { text: "Confirm your email to activate access." },
+            { text: "Receive optional updates and product news." },
           ],
+          asideList: { itemSurface: PHI_SURFACE_CARD },
           footer: "Complete the form and confirm the link in your email to finish registration.",
         },
       }),

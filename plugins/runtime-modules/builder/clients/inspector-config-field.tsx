@@ -55,6 +55,8 @@ import type { PhiBackgroundWidgetLabels } from "../../../../components/widgets/l
 import type { PhiBorderWidgetLabels } from "../../../../components/widgets/label-types/border";
 import { PHI_INSPECTOR_FIELD_LABEL_WIDTH, PhiInspectorFieldRow } from "../../../../components/widgets/inspector-field-row";
 import { PhiShadowControl } from "../../../../components/controls/phi-shadow-control";
+import { PhiSurfaceControl } from "../../../../components/controls/phi-surface-control";
+import { readPhiSurface } from "../../../../types/surface";
 import { readPhiShadow } from "../../../../types/layout-style";
 import {
   readInspectorChoiceMultiValue,
@@ -1395,6 +1397,23 @@ function renderPhiInspectorConfigFieldBody({
             ? onChange?.(nextValue as Record<string, unknown>)
             : onChange?.({ [field.key]: nextValue })
         }
+      />,
+    );
+  }
+
+  if (field.type === "surface") {
+    return renderPhiInspectorConfigFieldBlock(
+      field,
+      <PhiSurfaceControl
+        disabled={disabled || !onChange}
+        value={value === null ? null : readPhiSurface(value) ?? readPhiSurface(defaultValue)}
+        tone={field.tone !== false}
+        // A box inside a Widget has no layer of its own to blur.
+        backgroundFilters={["glass", "haze"]}
+        backgroundLabels={backgroundLabels}
+        borderLabels={borderLabels}
+        colorPickerLabels={colorPickerLabels}
+        onChange={(nextValue) => onChange?.({ [field.key]: nextValue })}
       />,
     );
   }

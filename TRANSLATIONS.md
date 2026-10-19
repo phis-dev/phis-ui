@@ -88,6 +88,10 @@ about the Site instead of spelling them out (`helpers/text-placeholders.ts`):
   translator translates words: it comes back as `{Jahr}`, which nothing answers. `maskPhiTextPlaceholders`
   turns every name into a `%n` token first -- the same token this contract already uses for values -- and
   `resolvePhiTextPlaceholders` fills them in afterwards, where the translator left them.
+- A text may carry values of its own beside it -- a list entry `{ text: "Site key: %1", values: [key] }`.
+  They take `%1` to `%k`, and the masked names count on from `%k+1` (`maskPhiTextPlaceholders(text, k)`),
+  so one fill puts both back. A value is never translated, and a sentence with a value in it is one
+  catalogue row instead of one per Site.
 - Filling afterwards is also what makes a translation reusable. The stored translation is keyed on the
   source text, so `© %1 %2. All rights reserved.` is one row per locale for every Site that adopts the
   Preset, and the same row after New Year.

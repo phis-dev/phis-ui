@@ -73,6 +73,8 @@ export type PhiSurfaceControlProps = {
   /** The Filters the box can render; see `PhiBackgroundControlProps["filters"]`. */
   backgroundFilters?: readonly PhiBackgroundFilter[];
   renderMediaPicker?: PhiBackgroundControlProps["renderMediaPicker"];
+  /** Whether the mode is offered, for a box that can have one; a list entry's cannot. */
+  tone?: boolean;
 };
 
 function withPart(current: PhiSurface, patch: Partial<PhiSurface>): PhiSurface | null {
@@ -116,6 +118,7 @@ export function PhiSurfaceControl({
   colorPickerPlacement = "left",
   backgroundFilters,
   renderMediaPicker,
+  tone = true,
 }: PhiSurfaceControlProps) {
   const current: PhiSurface = value ?? {};
   const isDisabled = disabled || !onChange;
@@ -171,16 +174,18 @@ export function PhiSurfaceControl({
           onChange={chooseStyle}
         />
       </PhiFlexControl>
-      <PhiFlexControl vertical gap="small" style={{ width: "100%", minWidth: 0 }}>
-        <PhiDividerControl titlePlacement="start" style={{ marginBlock: 0 }}>{labels.tone}</PhiDividerControl>
-        <PhiSegmentedControl<PhiSurfaceTone>
-          value={current.tone ?? "inherit"}
-          options={PHI_SURFACE_TONES.map((tone) => ({ value: tone, label: labels.tones[tone] }))}
-          block
-          disabled={isDisabled}
-          onChange={(tone) => patch({ tone: tone === "inherit" ? undefined : tone })}
-        />
-      </PhiFlexControl>
+      {tone ? (
+        <PhiFlexControl vertical gap="small" style={{ width: "100%", minWidth: 0 }}>
+          <PhiDividerControl titlePlacement="start" style={{ marginBlock: 0 }}>{labels.tone}</PhiDividerControl>
+          <PhiSegmentedControl<PhiSurfaceTone>
+            value={current.tone ?? "inherit"}
+            options={PHI_SURFACE_TONES.map((entry) => ({ value: entry, label: labels.tones[entry] }))}
+            block
+            disabled={isDisabled}
+            onChange={(next) => patch({ tone: next === "inherit" ? undefined : next })}
+          />
+        </PhiFlexControl>
+      ) : null}
       {style === "custom" ? (
         <>
           <PhiFlexControl vertical gap="small" style={{ width: "100%", minWidth: 0 }}>

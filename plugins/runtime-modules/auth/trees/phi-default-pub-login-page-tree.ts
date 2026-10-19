@@ -18,6 +18,7 @@ import {
   PHI_LOGIN_FORM_LAYOUT_CONFIG,
 } from "./phi-login-form-nodes";
 import { createPhiAuthControllerAddress } from "../controller/address";
+import { PHI_SURFACE_CARD } from "../../../../helpers/surface-presets";
 
 const SYNTHETIC_LOGIN_REGION_IDS = {
   regionContent: -230,
@@ -124,10 +125,11 @@ export async function buildPhiDefaultPubLoginPageTree({
           description: "Access your customer workspace, orders, and account details.",
           asideTitle: "What you can do",
           asideItems: [
-            "Review orders and customer details.",
-            "Continue to the page you originally requested.",
-            "Reset your password if you no longer have access.",
+            { text: "Review orders and customer details." },
+            { text: "Continue to the page you originally requested." },
+            { text: "Reset your password if you no longer have access." },
           ],
+          asideList: { itemSurface: PHI_SURFACE_CARD },
           footer: "Use the secure sign-in form to continue to your account area.",
         },
       }),

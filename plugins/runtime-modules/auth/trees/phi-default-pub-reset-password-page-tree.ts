@@ -13,6 +13,7 @@ import {
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import { PHI_SHARED_FORM_IDS } from "../../../../components/forms/shared-form-ids";
+import { PHI_SURFACE_CARD } from "../../../../helpers/surface-presets";
 
 const SYNTHETIC_RESET_PASSWORD_REGION_IDS = {
   regionContent: -270,
@@ -108,10 +109,11 @@ export async function buildPhiDefaultPubResetPasswordPageTree({
           description: "Use the reset link from your email to choose a new secure password.",
           asideTitle: "What happens next",
           asideItems: [
-            "Open the reset link from your email.",
-            "Choose a new password and confirm it.",
-            "Sign in again with your updated password.",
+            { text: "Open the reset link from your email." },
+            { text: "Choose a new password and confirm it." },
+            { text: "Sign in again with your updated password." },
           ],
+          asideList: { itemSurface: PHI_SURFACE_CARD },
           footer: "If the link expired, request a new reset email from the login page.",
         },
       }),
