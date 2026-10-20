@@ -16,7 +16,7 @@ import {
 } from "../../../../../components/layouts/phi-carousel-pages";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiImageControl } from "../../../../../components/controls/phi-image-control";
-import { resolvePhiImagePresentation } from "../../../../../components/media/image-presentation";
+import { readPhiAspectRatio, resolvePhiImagePresentation } from "../../../../../components/media/image-presentation";
 import { PhiIcon } from "../../../../../components/shell/phi-icon";
 import {
   PHI_GALLERY_WIDGET_DEFAULT_LABELS,
@@ -62,12 +62,14 @@ function GalleryPicture({
   fit,
   preview,
   sizes,
+  aspectRatio,
 }: {
   image: PhiPublicMediaAssetReference;
   variantKey: string | undefined;
   fit: "cover" | "contain";
   preview: boolean;
   sizes: string;
+  aspectRatio: string;
 }) {
   const presentation = resolvePhiImagePresentation({
     sourceKind: "asset",
@@ -80,25 +82,37 @@ function GalleryPicture({
     fit,
     sourceWidth: image.width,
     sourceHeight: image.height,
+    // The frame's proportion is known, so the crop can keep the whole focal rectangle in view.
+    frameAspectRatio: readPhiAspectRatio(aspectRatio),
   });
   // The Folder route hands out public Assets only, so a raster original may go through the optimiser.
   const optimizable = presentation.kind === "generated-variant" || !isPhiMediaSvgContentType(image.contentType);
+  /*
+   * The frame is a block of its own inside the track item, not the item itself. A flex item that is
+   * stretched (`alignItems: stretch` on the track) has no height of its own for an aspect ratio to
+   * stand on in WebKit, which sized it by its content -- a picture at 100% of nothing -- and drew the
+   * Gallery as a strip a few pixels tall. A block in flow with a width and an aspect ratio is a
+   * definite box everywhere, and the picture fills it from the corners rather than through a chain
+   * of percentage heights.
+   */
   return (
-    <PhiImageControl
-      presentation={presentation}
-      source="asset"
-      alt={image.altText ?? ""}
-      title={image.title ?? undefined}
-      blurDataUrl={image.blurDataUrl}
-      optimizable={optimizable}
-      sizes={sizes}
-      // Unconditionally eager, and that is the whole mechanism: nothing outside the window and its
-      // lookahead is mounted, so reaching this line already means the picture is wanted.
-      loading="eager"
-      preview={preview}
-      style={{ width: "100%", height: "100%" }}
-      imageStyle={{ width: "100%", height: "100%" }}
-    />
+    <div style={{ position: "relative", width: "100%", aspectRatio }}>
+      <PhiImageControl
+        presentation={presentation}
+        source="asset"
+        alt={image.altText ?? ""}
+        title={image.title ?? undefined}
+        blurDataUrl={image.blurDataUrl}
+        optimizable={optimizable}
+        sizes={sizes}
+        // Unconditionally eager, and that is the whole mechanism: nothing outside the window and its
+        // lookahead is mounted, so reaching this line already means the picture is wanted.
+        loading="eager"
+        preview={preview}
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+        imageStyle={{ width: "100%", height: "100%" }}
+      />
+    </div>
   );
 }
 
@@ -146,8 +160,8 @@ export function PhiGalleryWidget({ config, images: imagesInput, labels: labelsIn
   // What a picture of this window is worth of the viewport, for the optimiser's choice of rendition.
   const sizes = span === 1 ? "100vw" : `(max-width: 768px) 100vw, ${Math.ceil(100 / span)}vw`;
 
+  const aspectRatio = config?.aspectRatio ?? DEFAULT_ASPECT_RATIO;
   const frameStyle: CSSProperties = {
-    aspectRatio: config?.aspectRatio ?? DEFAULT_ASPECT_RATIO,
     minWidth: 0,
     borderRadius: token.borderRadius,
     overflow: "hidden",
@@ -164,7 +178,7 @@ export function PhiGalleryWidget({ config, images: imagesInput, labels: labelsIn
       role="region"
       aria-roledescription="carousel"
       aria-label={labels.region}
-      style={{ display: "flex", flexDirection: "column", gap: token.marginXS, minWidth: 0, ...gestures.style }}
+      style={{ display: "flex", flexDirection: "column", gap: token.marginXS, width: "100%", minWidth: 0, ...gestures.style }}
       {...autoplay.holdHandlers}
       {...gestures.handlers}
     >
@@ -179,6 +193,7 @@ export function PhiGalleryWidget({ config, images: imagesInput, labels: labelsIn
               fit={config?.fit ?? "cover"}
               preview={config?.preview === true}
               sizes={sizes}
+              aspectRatio={aspectRatio}
             />
           ))}
           activeIndex={activeIndex}

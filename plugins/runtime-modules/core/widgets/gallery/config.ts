@@ -164,7 +164,8 @@ export const PHI_GALLERY_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("gallery"),
   typeKey: "gallery",
-  slotSizePolicy: "intrinsic",
+  // A slideshow is as wide as the place it is put; its height follows from the aspect ratio.
+  slotSizePolicy: "fill-inline",
   title: "Gallery",
   description: "A run of pictures shown a few at a time, with arrows, dots and optional autoplay.",
   category: "media",

@@ -178,6 +178,31 @@ export function resolveFocalRectObjectPosition(
 }
 
 /**
+ * Where to stand a picture in a box of a known proportion so that its focal rectangle is seen whole.
+ *
+ * `resolveFocalRectObjectPosition` aligns the rectangle's centre with the same point of the box, which
+ * is the best a box of unknown proportion allows and wrong for one that is known: a head in the top
+ * quarter of a portrait, shown in a wide box, had its crown cut off although the box had room for all
+ * of it. With the proportion the cover crop is known exactly (`resolveFocalRectCoverCropBox`, the same
+ * crop the server would cut), and `object-position` is the share of the overflow that puts that crop
+ * in view. The axis that does not overflow is centred, as it would be anyway.
+ */
+export function resolveFocalRectObjectPositionForFrame(
+  sourceWidth: number | null | undefined,
+  sourceHeight: number | null | undefined,
+  frameAspectRatio: number | null | undefined,
+  focalRect: MediaFocalRect | null,
+): string | null {
+  if (!sourceWidth || !sourceHeight || !frameAspectRatio || !Number.isFinite(frameAspectRatio) || frameAspectRatio <= 0) {
+    return null;
+  }
+  const crop = resolveFocalRectCoverCropBox(sourceWidth, sourceHeight, frameAspectRatio * 1000, 1000, focalRect);
+  const share = (offset: number, overflow: number) =>
+    overflow > 0.5 ? Math.round(clampRectValue(offset / overflow) * 1000) / 10 : 50;
+  return `${share(crop.left, sourceWidth - crop.width)}% ${share(crop.top, sourceHeight - crop.height)}%`;
+}
+
+/**
  * The focal rectangle as it stands inside a cover crop of the original -- a generated variant.
  *
  * A variant is the original cropped around its focal rectangle to the variant's proportion. Shown in a

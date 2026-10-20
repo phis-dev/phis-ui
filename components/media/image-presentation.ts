@@ -9,6 +9,7 @@ import {
   resolveFocalRectCoverImageStyle,
   resolveFocalRectInCoverCrop,
   resolveFocalRectObjectPosition,
+  resolveFocalRectObjectPositionForFrame,
   type MediaFocalRect,
 } from "./focal-rect";
 
@@ -80,7 +81,24 @@ export type PhiImagePresentationInput = {
   sourceHeight?: number | null;
   /** Unsaved focal edit: draw the original and simulate the server crop. */
   simulateVariantCrop?: boolean;
+  /**
+   * The proportion (width over height) of the box the picture is drawn in, where the caller knows it --
+   * a Gallery frame with an aspect ratio. With it a cover crop is positioned so the focal rectangle is
+   * seen whole; without it the rectangle's centre is the best that can be done.
+   */
+  frameAspectRatio?: number | null;
 };
+
+/** A CSS `aspect-ratio` value -- `16 / 9`, `4/3`, `1.5` -- as width over height, or `null` for none. */
+export function readPhiAspectRatio(value: string | null | undefined): number | null {
+  const text = value?.trim();
+  if (!text) return null;
+  const parts = text.split("/").map((part) => Number.parseFloat(part.trim()));
+  const width = parts[0] ?? Number.NaN;
+  const height = parts.length > 1 ? parts[1] ?? Number.NaN : 1;
+  if (parts.length > 2 || !Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return null;
+  return width / height;
+}
 
 export type PhiImagePresentation = {
   kind: PhiImagePresentationKind;
@@ -152,25 +170,33 @@ export function resolvePhiImagePresentation(
 
   // A simulated crop places the image absolutely, so a position would have nothing left to steer, and a
   // simulated `contain` shows the whole image, where a focal position would only misalign the letterbox.
+  const frameAspectRatio = input.frameAspectRatio ?? null;
   const objectPosition =
     kind === "generated-variant"
       ? variantSpec!.fit === "cover" && focalRect && input.sourceWidth && input.sourceHeight
-        ? resolveFocalRectObjectPosition(
-            undefined,
-            resolveFocalRectInCoverCrop(
+        ? (() => {
+            const rectInVariant = resolveFocalRectInCoverCrop(
               input.sourceWidth,
               input.sourceHeight,
               variantSpec!.width,
               variantSpec!.height,
               focalRect,
-            ),
-          )
+            );
+            return resolveFocalRectObjectPositionForFrame(variantSpec!.width, variantSpec!.height, frameAspectRatio, rectInVariant)
+              ?? resolveFocalRectObjectPosition(undefined, rectInVariant);
+          })()
         : "center"
       : simulate && variantSpec!.fit !== "cover"
         ? "center"
         : simulate
           ? resolveFocalRectObjectPosition(undefined, focalRect)
-          : resolveFocalRectObjectPosition(input.objectPosition, focalRect);
+          : input.objectPosition?.trim()
+            ? resolveFocalRectObjectPosition(input.objectPosition, focalRect)
+            // A box of known proportion shows the focal rectangle whole; one of unknown proportion its centre.
+            : ((input.fit ?? "cover") === "cover"
+                ? resolveFocalRectObjectPositionForFrame(input.sourceWidth, input.sourceHeight, frameAspectRatio, focalRect)
+                : null)
+              ?? resolveFocalRectObjectPosition(undefined, focalRect);
 
   return {
     kind,

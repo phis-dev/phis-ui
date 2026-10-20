@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 
 import {
   clampPhiSequenceTransitionMs,
@@ -142,9 +142,21 @@ export function PhiSequenceViewport({
     setFadeState({ start, outgoingStart: onTrack || transition === "none" ? null : fadeState.start });
   }
 
-  const reducedMotion = typeof window !== "undefined" &&
-    typeof window.matchMedia === "function" &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  /*
+   * Read in an effect, not during render: the server cannot know the preference, and a first client
+   * pass that already knew it drew different transition styles than the HTML it was hydrating --
+   * React then rebuilt the tree, which read as a jump on every page with a sequence under reduced
+   * motion. The first pass agrees with the server; the preference arrives one render later.
+   */
+  const [reducedMotion, setReducedMotion] = useState(false);
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return undefined;
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setReducedMotion(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
   /*
    * Reduced motion means none of it rather than less of it. Somebody who has asked for no movement
    * has not asked for shorter movement, so the duration is taken to zero instead of being shortened.
