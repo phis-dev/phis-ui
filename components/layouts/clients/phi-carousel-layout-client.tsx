@@ -1,7 +1,7 @@
 "use client";
 
 import { usePhiConfig } from "../../root/phi-config-provider";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo } from "react";
 
 import { PhiButtonControl } from "../../controls/phi-button-control";
 
@@ -11,6 +11,8 @@ import type {
   PhiSequenceTransition,
 } from "../../../helpers/motion";
 import { PhiSequenceViewport } from "../../motion/phi-sequence-viewport";
+import { usePhiSequenceAutoplay } from "../../motion/use-phi-sequence-autoplay";
+import { usePhiSequenceGestures } from "../../motion/use-phi-sequence-gestures";
 import { resolvePhiLayoutInset } from "../phi-layout-contract";
 import { resolvePhiBaseLayoutChrome } from "../phi-layout-view-model";
 import { isRenderablePhiNode } from "../phi-layout-scaffold-utils";
@@ -63,7 +65,7 @@ export type PhiCarouselLayoutProps = PhiSequenceLayoutProps & {
    * dots need none -- they are named after the slots, which carry whatever the person who authored
    * them wrote.
    */
-  controlLabels?: { previous?: string; next?: string };
+  controlLabels?: { previous?: string; next?: string; pause?: string; play?: string; region?: string };
   /** Absent or zero means it does not move on its own. */
   autoplayMs?: number;
   lookahead?: number;
@@ -146,27 +148,18 @@ export function PhiCarouselLayout({
 
   const advance = useCallback(() => step(1), [step]);
 
-  /*
-   * Movement nobody asked for, and the two ways to decline it.
-   *
-   * Reduced motion means it never starts -- read in an effect rather than during render, so the
-   * server's markup and the browser's first pass agree. Pointing at it or tabbing into it pauses it:
-   * a slide that moves out from under the cursor is the reason carousels have a bad name.
-   */
-  const [paused, setPaused] = useState(false);
-  const reducedMotion = useRef(false);
-  useEffect(() => {
-    reducedMotion.current = typeof window.matchMedia === "function" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  }, []);
-
-  useEffect(() => {
-    if (isEditMode || autoplayMs <= 0 || paused || track.length <= span || reducedMotion.current) {
-      return undefined;
-    }
-    const timer = window.setInterval(advance, autoplayMs);
-    return () => window.clearInterval(timer);
-  }, [advance, autoplayMs, isEditMode, paused, span, track.length]);
+  // Movement nobody asked for, and every way to decline it, shared with the Gallery (`components/motion`).
+  const autoplay = usePhiSequenceAutoplay({
+    intervalMs: autoplayMs,
+    active: !isEditMode && track.length > span,
+    advance,
+  });
+  // A step somebody took: the next automatic one is a whole interval away again.
+  const stepByHand = useCallback((direction: 1 | -1) => {
+    step(direction);
+    autoplay.restart();
+  }, [autoplay, step]);
+  const gestures = usePhiSequenceGestures({ step: stepByHand });
 
   if (isEditMode) {
     return <PhiSequenceSlotEditor {...editor} slotNoun="carousel slot" />;
@@ -200,10 +193,11 @@ export function PhiCarouselLayout({
       data-layout-kind={layoutKind}
       data-phi-carousel-transition={transition}
       data-phi-carousel-controls={controls}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocusCapture={() => setPaused(true)}
-      onBlurCapture={() => setPaused(false)}
+      role="region"
+      aria-roledescription="carousel"
+      aria-label={controlLabels?.region ?? "Carousel"}
+      {...autoplay.holdHandlers}
+      {...gestures.handlers}
       /*
        * The Layout's own box, named as one: the fill rules address `.phi-layout`
        * (`.phi-slot-child--block-fill > .phi-layout`, styles/layout.css), and this box carried a
@@ -218,11 +212,16 @@ export function PhiCarouselLayout({
         minWidth: 0,
         minHeight: 0,
         boxSizing: "border-box",
+        ...gestures.style,
         ...resolvedChrome.style,
         ...style,
       }}
     >
-      <div style={{ position: "relative", flex: "1 1 auto", minWidth: 0, minHeight: 0 }}>
+      {/* Announced only while it stands still: a moving sequence read aloud is noise. */}
+      <div
+        style={{ position: "relative", flex: "1 1 auto", minWidth: 0, minHeight: 0 }}
+        aria-live={autoplay.running ? "off" : "polite"}
+      >
         <PhiSequenceViewport
           items={track.map((entry) => entry.slot)}
           activeIndex={trackIndex}
@@ -254,7 +253,7 @@ export function PhiCarouselLayout({
                 ariaLabel={controlLabels?.previous ?? "Previous"}
                 shape="circle"
                 disabled={atStart && !loop}
-                onClick={() => step(-1)}
+                onClick={() => stepByHand(-1)}
               />
             </div>
             <div style={{ position: "absolute", insetBlockStart: "50%", insetInlineEnd: token.marginXS, transform: "translateY(-50%)", zIndex: 1 }}>
@@ -263,21 +262,36 @@ export function PhiCarouselLayout({
                 ariaLabel={controlLabels?.next ?? "Next"}
                 shape="circle"
                 disabled={atEnd && !loop}
-                onClick={() => step(1)}
+                onClick={() => stepByHand(1)}
               />
             </div>
           </>
         ) : null}
+        {autoplay.offered ? (
+          // The one stop a finger has: hovering and tabbing are not things a touch screen does.
+          <div style={{ position: "absolute", insetBlockEnd: token.marginXS, insetInlineEnd: token.marginXS, zIndex: 1 }}>
+            <PhiButtonControl
+              icon={<PhiIcon name={autoplay.stopped ? "play-circle" : "pause-circle"} size="inherit" />}
+              ariaLabel={autoplay.stopped ? (controlLabels?.play ?? "Play") : (controlLabels?.pause ?? "Pause")}
+              ariaPressed={autoplay.stopped}
+              shape="circle"
+              onClick={autoplay.toggleStopped}
+            />
+          </div>
+        ) : null}
       </div>
       {showDots ? (
-        <div style={{ display: "flex", flex: "0 0 auto", justifyContent: "center", gap: token.marginXXS, paddingBlockStart: token.marginXS }}>
+        <div role="group" style={{ display: "flex", flex: "0 0 auto", justifyContent: "center", gap: token.marginXXS, paddingBlockStart: token.marginXS }}>
           {Array.from({ length: pageCount }, (_, page) => (
             <button
               key={page}
               type="button"
               aria-label={slotLabelAt(pageStarts[page] ?? 0)}
               aria-current={page === currentPage || undefined}
-              onClick={() => stepTo(pageStarts[page] ?? 0)}
+              onClick={() => {
+                stepTo(pageStarts[page] ?? 0);
+                autoplay.restart();
+              }}
               style={{
                 width: page === currentPage ? token.controlHeightXS : token.marginXS,
                 height: token.marginXS,

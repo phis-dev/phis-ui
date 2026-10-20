@@ -27,6 +27,8 @@ export type PhiControlBadgePresentation = {
 export type PhiButtonControlProps = {
   label?: ReactNode;
   ariaLabel?: string;
+  /** For a button that is a toggle -- pause and play -- whether it is on. */
+  ariaPressed?: boolean;
   /**
    * Renders the button as a link rather than a command.
    *
@@ -97,6 +99,7 @@ export type PhiButtonControlProps = {
 export function PhiButtonControl({
   label,
   ariaLabel,
+  ariaPressed,
   href,
   newTab,
   external,
@@ -127,6 +130,7 @@ export function PhiButtonControl({
       ref={ref}
       className={className}
       aria-label={ariaLabel}
+      aria-pressed={ariaPressed}
       type={type}
       shape={shape}
       danger={danger}

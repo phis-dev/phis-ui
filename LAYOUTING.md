@@ -583,6 +583,24 @@ Builder edit rendering use an immediate switch.
 Stack signaling always uses the concrete runtime scope of the Layout instance. An Area-owned Overlay
 Stack therefore emits and listens in Area scope, while a Page-owned Stack uses Page scope.
 
+### Carousel movement
+
+A Carousel moves a window at a time and stops at `0, span, 2 span, ...` and at the last window
+(`components/layouts/phi-carousel-pages.ts`); the arrows, the dots and the timer read that one list of
+stops, and the Gallery Widget reads it too. What moves it besides the arrows and dots, and what holds it,
+is shared with the Gallery in `components/motion`:
+
+- `usePhiSequenceGestures`: a sideways swipe steps (a finger going left pulls the next window in), the
+  arrow keys step while the focus is inside the box, and `touch-action: pan-y` leaves vertical scrolling
+  to the page.
+- `usePhiSequenceAutoplay`: `autoplayMs` moves it on its own, but never under reduced motion, never in
+  the Builder, never in a hidden tab, and not while it is pointed at or tabbed into. A step somebody
+  took restarts the interval. Because a finger neither hovers nor tabs, an autoplaying sequence draws a
+  Pause button (`aria-pressed`), the one stop that outlives the pointer leaving.
+- The box is a `region` with `aria-roledescription="carousel"`; its items are announced only while it
+  stands still (`aria-live` off while the timer runs). Arrows are drawn only when there is more than one
+  window.
+
 ## Styling
 
 - Generic component values use Ant Design tokens or their server-safe resolved equivalents.
