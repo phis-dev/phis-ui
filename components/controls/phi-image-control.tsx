@@ -31,6 +31,12 @@ export type PhiImageControlProps = {
   optimizable?: boolean;
   sizes?: string;
   preload?: boolean;
+  /**
+   * Whether the browser may wait with the bytes. Absent, it decides by distance to the viewport, which
+   * is right for a picture in flow and wrong on a track, where the next picture is off to the side and
+   * would load as it arrives; a Gallery says `eager` for what its window is about to show.
+   */
+  loading?: "eager" | "lazy";
   /** Opens the picture larger over the page when clicked. */
   preview?: boolean;
   /** The box around the picture: size, corners, mask. */
@@ -68,6 +74,7 @@ export function PhiImageControl({
   optimizable = false,
   sizes,
   preload = false,
+  loading,
   preview = false,
   style,
   imageStyle,
@@ -138,6 +145,7 @@ export function PhiImageControl({
           placeholder={blur ? "blur" : undefined}
           blurDataURL={blur ?? undefined}
           preload={preload}
+          loading={loading}
           onLoad={markLoaded}
           style={pictureStyle}
         />
@@ -153,7 +161,7 @@ export function PhiImageControl({
         title={title}
         width={numericWidth}
         height={numericHeight}
-        loading={preload ? "eager" : "lazy"}
+        loading={loading ?? (preload ? "eager" : "lazy")}
         ref={noticeLoaded}
         onLoad={markLoaded}
         style={pictureStyle}

@@ -14,7 +14,9 @@ import { parsePhiCmsGalleryWidgetConfig } from "./config";
 describe("what a Gallery accepts", () => {
   it("takes a written-out configuration as written", () => {
     expect(parsePhiCmsGalleryWidgetConfig({
-      images: [{ url: "/a.png", alt: "A" }, { url: "/b.png", href: "/b" }],
+      source: { providerKey: "@phis/ui/records/media-folder-images", params: { folderId: "7", sort: "name_asc" } },
+      variantKey: "5",
+      preview: true,
       visibleCount: 3,
       windowAnchor: "center",
       transition: "diagonal",
@@ -27,7 +29,9 @@ describe("what a Gallery accepts", () => {
       loop: true,
       autoplayMs: 5000,
     })).toMatchObject({
-      images: [{ url: "/a.png", alt: "A" }, { url: "/b.png", href: "/b" }],
+      source: { providerKey: "@phis/ui/records/media-folder-images", params: { folderId: "7", sort: "name_asc" } },
+      variantKey: "5",
+      preview: true,
       visibleCount: 3,
       windowAnchor: "center",
       transition: "diagonal",
@@ -43,8 +47,9 @@ describe("what a Gallery accepts", () => {
   });
 
   it("leaves out what was never written, so the defaults still decide", () => {
-    const parsed = parsePhiCmsGalleryWidgetConfig({ images: [] });
-    expect(parsed.images).toEqual([]);
+    const parsed = parsePhiCmsGalleryWidgetConfig({});
+    expect(parsed.source).toBeNull();
+    expect(parsed.variantKey).toBeUndefined();
     expect(parsed.transition).toBeUndefined();
     expect(parsed.durationMs).toBeUndefined();
     // Except the one that has a real default rather than an absence.
@@ -86,13 +91,9 @@ describe("what a Gallery refuses", () => {
       .toThrow(/at least 0/);
   });
 
-  it("refuses a picture without a picture, and says which one", () => {
-    // Dropping it silently would leave a gallery one shorter than the document says, which is the
-    // kind of difference nobody notices until somebody counts.
-    expect(() => parsePhiCmsGalleryWidgetConfig({ images: [{ url: "/a.png" }, { alt: "B" }] }))
-      .toThrow(/images\[1\]\.url/);
-    expect(() => parsePhiCmsGalleryWidgetConfig({ images: "/a.png" }))
-      .toThrow(/Invalid Gallery images/);
+  it("refuses a rendition it does not offer", () => {
+    expect(() => parsePhiCmsGalleryWidgetConfig({ variantKey: "huge" }))
+      .toThrow(/Invalid Gallery variantKey/);
   });
 
   it("refuses a flag that is not one", () => {

@@ -1,5 +1,7 @@
 "use client";
 
+import { isPhiRecord } from "../../../../helpers/is-record";
+import type { PhiMediaAssetFolder } from "../../../../types/media";
 import {
   createPhiControlOptionsProviderClient,
   type PhiControlOptionsProviderContext,
@@ -48,6 +50,41 @@ export const PhiMediaFoldersOptionsProviderClient = createPhiControlOptionsProvi
     return {
       options: [...configuredOptions, ...buildPhiMediaFolderCascaderOptions(state.folders)],
       value: folderPathValue ?? buildPhiMediaFolderValueById(state.folders, state.folderId),
+    };
+  },
+});
+
+/**
+ * Every Folder of the Site Space, by its path, for a setting that names one on a page that is not the
+ * Media page. `PhiMediaFoldersOptionsProviderClient` reads the library's store, which only the Media
+ * page fills; this asks the folders route itself and keeps the whole list, because the list is small
+ * and a Gallery's author reads it once.
+ */
+const FOLDERS_PATH = "/api/site/media/folders";
+
+async function loadFolders() {
+  const response = await fetch(FOLDERS_PATH, {
+    cache: "no-store",
+    credentials: "include",
+    headers: { accept: "application/json" },
+  });
+  const payload: unknown = await response.json().catch(() => null);
+  if (!response.ok) throw new Error("Failed to load the Site's media folders.");
+  const folders = isPhiRecord(payload) && Array.isArray(payload.folders) ? payload.folders : [];
+  return folders.filter(isPhiRecord) as unknown as PhiMediaAssetFolder[];
+}
+
+export const PhiMediaFolderChoicesOptionsProviderClient = createPhiControlOptionsProviderClient({
+  key: PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaFolderChoices,
+  load: loadFolders,
+  resolveLoadKey: () => "site-media-folders",
+  resolve: (context: PhiControlOptionsProviderContext) => {
+    const folders = Array.isArray(context.asyncData) ? context.asyncData as PhiMediaAssetFolder[] : [];
+    const pathOf = (folderId: number) => buildPhiMediaFolderNamesById(folders, folderId).join(" / ");
+    return {
+      options: [...folders]
+        .sort((left, right) => pathOf(left.id).localeCompare(pathOf(right.id)))
+        .map((folder) => ({ value: String(folder.id), label: pathOf(folder.id) })),
     };
   },
 });

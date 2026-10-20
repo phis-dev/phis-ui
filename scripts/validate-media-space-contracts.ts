@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { PhiMediaAssetFlags, PhiMediaKind } from "../constants/media";
 import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../plugins/runtime-modules/asset/ids";
 import { PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../plugins/runtime-modules/asset/data-providers";
+import { PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS } from "../constants/media-library-provider-keys";
 import { PHI_ASSET_RUNTIME_MODULE_DEFINITION } from "../plugins/runtime-modules/asset/definition";
 import { PHI_AVATAR_RUNTIME_MODULE_DEFINITION } from "../plugins/runtime-modules/avatar/definition";
 import { PHI_GROUPS_RUNTIME_MODULE_DEFINITION } from "../plugins/runtime-modules/groups/definition";
@@ -677,11 +678,15 @@ assert.throws(
  * declarations -- and therefore restoring it -- survive any Area selection.
  */
 assert.ok(PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG.has(PHI_ASSET_RUNTIME_MODULE_ID));
-assert.equal(PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS.length, 2);
+// Folders, the collection, the folder choices and the folder pictures record Provider.
+assert.equal(PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS.length, 4);
 for (const descriptor of PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS) {
   assert.equal(descriptor.ownerModuleId, PHI_ASSET_RUNTIME_MODULE_ID);
   assert.equal(descriptor.executionMode, "live");
 }
+// The record Provider is the Gallery's start binding, so Core may cite its key without the Module.
+assert.ok(PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS.some((descriptor) =>
+  descriptor.kind === "record" && descriptor.key === PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.folderImages));
 
 // ---------------------------------------------------------------------------
 // Legacy Media Group and direct Storage paths
@@ -751,8 +756,8 @@ await assert.rejects(
   const assetProviders = await readSource("plugins/runtime-modules/asset/data-providers.ts");
   assert.equal(
     (assetProviders.match(/availableToAuthoringChrome: true/gu) ?? []).length,
-    2,
-    "The media collection and folder providers declare themselves available to the Builder's chrome.",
+    3,
+    "The media collection, folder and folder-choice providers declare themselves available to the Builder's chrome.",
   );
   const keys = await readSource("plugins/runtime-modules/builder/authoring-provider-keys.ts");
   assert.doesNotMatch(

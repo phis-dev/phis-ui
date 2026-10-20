@@ -682,6 +682,10 @@ that names nothing. A Client Provider answers after the page has loaded, which i
 
 The first is Core's content entry Provider (`PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntry`), which
 the header, text and related list of a detail Page are bound to (CONTENT_ENTRIES.md).
+The second is the Asset Module's media folder pictures Provider
+(`PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.folderImages`): the public pictures of one Folder, with its
+subfolders unless told otherwise, in the public reference projection. The Gallery Widget starts bound to
+it, so a slideshow is a Folder somebody keeps filling rather than a list of named Assets.
 
 Provider Clients own data access and mutations. Forms own record-oriented validation and submit
 lifecycles. Controllers coordinate runtime state. Signals connect those surfaces. None may silently take

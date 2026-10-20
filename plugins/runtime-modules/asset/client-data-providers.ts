@@ -13,6 +13,13 @@ export const PHI_ASSET_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS = [
         .PhiMediaFoldersOptionsProviderClient,
   },
   {
+    key: PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaFolderChoices,
+    ownerModuleId: PHI_ASSET_RUNTIME_MODULE_ID,
+    loadLive: async () =>
+      (await import("./services/options"))
+        .PhiMediaFolderChoicesOptionsProviderClient,
+  },
+  {
     key: PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaCollection,
     ownerModuleId: PHI_ASSET_RUNTIME_MODULE_ID,
     loadLive: async () =>

@@ -1,4 +1,5 @@
 import { PHI_SHARED_PACKAGE_NAME } from "../../../types/signals";
+import { createPhiSharedRuntimeDataProviderKey } from "../../../constants/runtime-data-provider-key";
 import type { PhiRuntimeModuleId } from "../contracts";
 import {
   PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS,
@@ -17,6 +18,12 @@ export const PHI_ASSET_RUNTIME_MODULE_ID =
 export const PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS = {
   mediaFolders: PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.folders,
   mediaCollection: PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection,
+  mediaFolderImages: PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.folderImages,
+  /**
+   * Every Folder of the Site Space as a choice, loaded by the choice itself. `mediaFolders` reads the
+   * Media page's store, which is not there when a Gallery is configured on some other page.
+   */
+  mediaFolderChoices: createPhiSharedRuntimeDataProviderKey("options", "media-folder-choices"),
 } as const;
 
 /** The card this Module ships for its own items; a Site may name another. */

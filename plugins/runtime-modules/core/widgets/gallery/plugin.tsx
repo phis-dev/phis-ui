@@ -1,18 +1,14 @@
 import { definePhiPassiveWidgetRenderers } from "../../../../../plugins/factories/widget-renderers";
-import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
-import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import {
   PHI_GALLERY_WIDGET_DEFINITION,
   type PhiCmsGalleryWidgetConfig,
 } from "./config";
+import { PhiGalleryWidgetServer } from "./server";
 
 export const PHI_GALLERY_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsGalleryWidgetConfig> = {
   ...PHI_GALLERY_WIDGET_DEFINITION,
-  ...definePhiPassiveWidgetRenderers(({ config }) => (
-    <PhiRuntimeModuleRenderClientHost
-      type={PhiCmsWidgetType.Gallery}
-      componentProps={{ config }}
-    />
+  ...definePhiPassiveWidgetRenderers(({ widget, runtime, registry, config }) => (
+    <PhiGalleryWidgetServer key={`widget-${widget.id}`} runtime={runtime} registry={registry} config={config} />
   )),
 };

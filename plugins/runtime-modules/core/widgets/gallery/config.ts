@@ -1,6 +1,11 @@
-import { isPhiRecord } from "../../../../../helpers/is-record";
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import { PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS } from "../../../../../constants/media-library-provider-keys";
+import { PHI_IMAGE_VARIANT_OPTIONS } from "../../../../../components/widgets/config/image-variant-options";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
+import {
+  readPhiRuntimeDataProviderBinding,
+  type PhiRuntimeDataProviderBinding,
+} from "../../../../../types/runtime-data-provider";
 import {
   PHI_MOTION_EASING_FIELD_OPTIONS,
   PHI_SEQUENCE_TRANSITION_MAX_MS,
@@ -28,19 +33,19 @@ import {
  * A run of pictures, shown a few at a time.
  *
  * Not a layout. A layout's slots are authored -- twelve of them, and somebody drops a Widget into
- * each -- while the pictures here are data: an unknown number per row, out of an assets slot whose
- * cardinality is `many`. A Carousel over authored slots could never show them, which is why the two
- * are separate things that share a viewport rather than one thing with a switch.
+ * each -- while the pictures here are data: however many a Media Folder holds, read on the server
+ * while the page is drawn through the record Provider the binding names. A Carousel over authored
+ * slots could never show them, which is why the two are separate things that share a viewport rather
+ * than one thing with a switch.
  */
 
-export type PhiGalleryImage = {
-  url: string;
-  alt?: string;
-  href?: string;
-};
-
 export type PhiCmsGalleryWidgetConfig = PhiCmsWidgetConfigBase & {
-  images: PhiGalleryImage[];
+  /** The record Provider the pictures come from; starts on the Media Folder Provider. */
+  source: PhiRuntimeDataProviderBinding | null;
+  /** The rendition each picture is drawn in; absent is the original. */
+  variantKey?: string;
+  /** Opens a picture larger over the page when clicked. */
+  preview?: boolean;
   visibleCount?: number;
   windowAnchor?: PhiSequenceAnchor;
   transition?: PhiSequenceTransition;
@@ -111,22 +116,6 @@ function readText(value: unknown, key: string): string | undefined {
   return value;
 }
 
-function readGalleryImages(value: unknown): PhiGalleryImage[] {
-  if (value === undefined || value === null) return [];
-  if (!Array.isArray(value)) fail("images", value, "an array of pictures");
-  return value.map((entry, index) => {
-    if (!isPhiRecord(entry)) {
-      fail(`images[${index}]`, entry, "an object with a url");
-    }
-    const record = entry as Record<string, unknown>;
-    const url = readText(record.url, `images[${index}].url`);
-    if (!url) fail(`images[${index}].url`, record.url, "a non-empty string");
-    const alt = readText(record.alt, `images[${index}].alt`);
-    const href = readText(record.href, `images[${index}].href`);
-    return { url, ...(alt ? { alt } : {}), ...(href ? { href } : {}) };
-  });
-}
-
 export function parsePhiCmsGalleryWidgetConfig(raw: Record<string, unknown>): PhiCmsGalleryWidgetConfig {
   const visibleCount = readCount(raw.visibleCount, "visibleCount", 1);
   const windowAnchor = readMember(raw.windowAnchor, PHI_SEQUENCE_ANCHORS, "windowAnchor");
@@ -139,10 +128,14 @@ export function parsePhiCmsGalleryWidgetConfig(raw: Record<string, unknown>): Ph
   const controls = readMember(raw.controls, ["none", "arrows", "dots", "both"] as const, "controls");
   const loop = readFlag(raw.loop, "loop");
   const autoplayMs = readCount(raw.autoplayMs, "autoplayMs", 0);
+  const variantKey = readMember(raw.variantKey, PHI_IMAGE_VARIANT_OPTIONS.map((option) => option.value), "variantKey");
+  const preview = readFlag(raw.preview, "preview");
 
   return {
     ...readRenderableBlockConfig(raw),
-    images: readGalleryImages(raw.images),
+    source: readPhiRuntimeDataProviderBinding(raw.source),
+    ...(variantKey === undefined ? {} : { variantKey }),
+    ...(preview === undefined ? {} : { preview }),
     ...(visibleCount === undefined ? {} : { visibleCount }),
     ...(windowAnchor === undefined ? {} : { windowAnchor }),
     ...(transition === undefined ? {} : { transition }),
@@ -178,6 +171,22 @@ export const PHI_GALLERY_WIDGET_DEFINITION = {
   icon: "antd:picture-outlined",
   iconFamily: "media",
   fields: [
+    {
+      key: "source",
+      type: "data-provider",
+      providerKind: "record",
+      label: "Pictures",
+      description: "Where the pictures come from. The folder and its order are set inside the binding.",
+    },
+    {
+      key: "variantKey",
+      type: "choice",
+      label: "Variant",
+      options: PHI_IMAGE_VARIANT_OPTIONS,
+      emptyOption: { value: "__original__", label: "Original" },
+      emptyValue: null,
+    },
+    { key: "preview", type: "boolean", label: "Lightbox", description: "Open a picture larger over the page when it is clicked." },
     { key: "visibleCount", type: "number", label: "Visible Pictures", min: 1 },
     {
       key: "windowAnchor",
@@ -255,6 +264,8 @@ export const PHI_GALLERY_WIDGET_DEFINITION = {
       prefix: "ms",
     },
   ],
+  // Bound to the Folder Provider from the start, so the inspector asks for a folder and nothing else.
+  defaultConfig: { source: { providerKey: PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.folderImages, params: {} } },
   parseConfig: parsePhiCmsGalleryWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiCmsGalleryWidgetConfig>,
@@ -268,5 +279,6 @@ export const PHI_GALLERY_WIDGET_DEFINITION = {
   | "icon"
   | "iconFamily"
   | "fields"
+  | "defaultConfig"
   | "parseConfig"
 >;

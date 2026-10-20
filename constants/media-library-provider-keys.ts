@@ -24,6 +24,11 @@ import {
 export const PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS = {
   collection: createPhiSharedRuntimeDataProviderKey("collections", "media"),
   folders: createPhiSharedRuntimeDataProviderKey("options", "media-folders"),
+  /**
+   * The public pictures of one Folder, read on the server while the page is drawn (a `record`
+   * Provider). The Gallery Widget starts bound to it, which is why Core cites the key.
+   */
+  folderImages: createPhiSharedRuntimeDataProviderKey("records", "media-folder-images"),
 } as const;
 
 /**

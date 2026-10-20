@@ -36,7 +36,8 @@ function readResolvedPage(entry: unknown): PhiResolvedPageReference {
   };
 }
 
-function readResolvedAsset(entry: unknown): PhiPublicMediaAssetReference {
+/** One Asset of the public reference projection, as the server writes it; a shape it does not match throws. */
+export function readPhiPublicMediaAssetReference(entry: unknown): PhiPublicMediaAssetReference {
   if (!isPhiRecord(entry)) {
     throw new Error("Invalid internal Asset reference projection.");
   }
@@ -111,7 +112,7 @@ async function requestSiteInternalReferences(
   if (!Array.isArray(payload?.resolved) || !Array.isArray(payload?.assets)) {
     throw new Error("Missing internal reference projection.");
   }
-  const assets = payload.assets.map(readResolvedAsset);
+  const assets = payload.assets.map(readPhiPublicMediaAssetReference);
   return {
     pages: payload.resolved.map(readResolvedPage),
     assets: new Map(assets.map((asset) => [asset.id, asset] as const)),
