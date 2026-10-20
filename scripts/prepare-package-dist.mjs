@@ -53,7 +53,8 @@ async function copyRuntimeFileAssets(sourceDirectory, targetDirectory) {
 /*
  * An export written as plain JavaScript (`.mjs`) is shipped as written: `tsc` neither emits nor declares
  * it. The render cache handler is one -- Next loads it by path at runtime, outside any bundler, so it
- * cannot be TypeScript.
+ * cannot be TypeScript. One a Site imports into its own TypeScript, as `next/config.mjs` into
+ * `next.config.ts`, names its declarations as `types` (a `.d.mts` written beside it), shipped as written too.
  */
 const plainJavaScriptExports = Object.entries(sourceManifest.exports)
   .filter(([, sourceTarget]) => (sourceTarget.import ?? sourceTarget.default).endsWith(".mjs"));
@@ -62,7 +63,11 @@ const packageExports = Object.fromEntries(
   Object.entries(sourceManifest.exports).map(([exportKey, sourceTarget]) => {
     const sourceRuntimeTarget = sourceTarget.import ?? sourceTarget.default;
     if (sourceRuntimeTarget.endsWith(".mjs")) {
-      return [exportKey, { import: sourceRuntimeTarget, default: sourceRuntimeTarget }];
+      return [exportKey, {
+        ...(sourceTarget.types ? { types: sourceTarget.types } : {}),
+        import: sourceRuntimeTarget,
+        default: sourceRuntimeTarget,
+      }];
     }
     const runtimeTarget = resolveRuntimeTarget(
       sourceTarget.import ?? sourceTarget.default,
@@ -160,9 +165,10 @@ await copyRuntimeFileAssets(
   path.join(distDirectory, "plugins"),
 );
 for (const [, sourceTarget] of plainJavaScriptExports) {
-  const target = sourceTarget.import ?? sourceTarget.default;
-  await mkdir(path.dirname(path.join(distDirectory, target)), { recursive: true });
-  await copyFile(path.join(packageRoot, target), path.join(distDirectory, target));
+  for (const target of [sourceTarget.import ?? sourceTarget.default, sourceTarget.types].filter(Boolean)) {
+    await mkdir(path.dirname(path.join(distDirectory, target)), { recursive: true });
+    await copyFile(path.join(packageRoot, target), path.join(distDirectory, target));
+  }
 }
 await writeFile(
   path.join(distDirectory, "package.json"),

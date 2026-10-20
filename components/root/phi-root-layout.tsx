@@ -3,11 +3,13 @@ import { preload } from "react-dom";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import "antd/dist/reset.css";
 /*
- * Ant Design's structure, generated once (`scripts/generate-antd-static-css.tsx`) because the root runs
- * it with `zeroRuntime`. Imported before this package's own sheets, where the runtime used to prepend
- * it: a rule of ours that ties with Ant Design's on specificity keeps winning by coming later.
+ * Ant Design's structure, generated in the Site from its Ant Design (`@phis/ui/next/config`) because the
+ * root runs it with `zeroRuntime`. The specifier names no file of this package: the Site's
+ * `withPhiNextConfig` points it at the one it generated. Imported before this package's own sheets,
+ * where the runtime used to prepend it: a rule of ours that ties with Ant Design's on specificity keeps
+ * winning by coming later.
  */
-import "../../styles/antd-static.css";
+import "@phis/ui/antd-static.css";
 import "../../styles/root.css";
 import "../../styles/layout.css";
 import "../../styles/control-shape.css";

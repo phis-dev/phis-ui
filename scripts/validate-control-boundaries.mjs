@@ -753,12 +753,7 @@ const statedTokenNames = new Set([
   ...readStatedTokenList(themeVocabularySource, "PHI_THEME_TOKEN_KEYS"),
   ...readStatedTokenList(themeVocabularySource, "PHI_THEME_OWN_TOKEN_KEYS"),
 ]);
-/*
- * `styles/antd-static.css` is Ant Design's own structure, generated from the installed package
- * (`scripts/generate-antd-static-css.tsx`). It names every variable Ant Design reads, which is not this
- * package reading them; the vocabulary governs what this package writes.
- */
-const styledSources = (await listStyledSources()).filter((file) => file !== path.join("styles", "antd-static.css"));
+const styledSources = await listStyledSources();
 const componentVariablesSeen = new Set();
 const mentionedNames = new Set();
 
@@ -811,10 +806,13 @@ for (const variable of antdComponentVariableAllowance.keys()) {
  * every chunk of the file that imports it. A missing icon is added to the registry, not imported beside it.
  */
 const iconRegistryPath = "components/shell/phi-antd-icon.tsx";
+// Draws no icon: it reads the icons' shared base rules out of the Site's package into the structure.
+const antdStructurePath = "next/config.mjs";
 let iconRegistrySeen = false;
 for (const relativePath of await listRepositorySources()) {
   const source = await readSource(relativePath);
   if (!/["']@ant-design\/icons(?:-svg)?(?:\/[^"']*)?["']/u.test(source)) continue;
+  if (relativePath === antdStructurePath) continue;
   if (relativePath === iconRegistryPath) {
     iconRegistrySeen = true;
     continue;

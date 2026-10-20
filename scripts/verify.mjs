@@ -37,7 +37,7 @@ const CHECKS = {
     args: ["exec", "antd", "doctor"],
   },
   antdCss: {
-    label: "Ant Design static structure (styles/antd-static.css)",
+    label: "Ant Design static structure (every style hook reached)",
     command: "pnpm",
     args: ["antd-css:check"],
   },
@@ -197,7 +197,7 @@ async function containsAntdRelevantChange(files) {
   if (
     files.some((file) =>
       file === "package.json" ||
-      file === "styles/antd-static.css" ||
+      file === "next/config.mjs" ||
       file.startsWith("theme/") ||
       file.startsWith("components/root/"))
   ) {

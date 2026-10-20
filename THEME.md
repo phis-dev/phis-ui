@@ -279,11 +279,14 @@ shape tokens.
 The published Theme has one server projection and one client projection:
 
 - Ant Design's structure is not rendered. The root theme sets `zeroRuntime` (and `hashed: false`), and the
-  structure of every component comes from `styles/antd-static.css`, which
-  `scripts/generate-antd-static-css.tsx` writes from the installed Ant Design (`pnpm antd-css:generate`;
-  `pnpm antd-css:check` and the package build fail on a stale file, so an Ant Design upgrade regenerates
-  it). The structure reads every Theme value through `var(--ant-...)`, so one file serves every Site,
-  Theme, mode and nested scope. It is imported before this package's sheets, so a rule of ours that ties
+  structure of every component comes from `@phis/ui/antd-static.css`. That specifier names no file of
+  this package: `withPhiNextConfig` from `@phis/ui/next/config`, which wraps the Site's `next.config`,
+  generates the structure from the Ant Design the Site installed -- once per version, into
+  `node_modules/.cache/phis-ui/` -- and points the specifier at it. A Site updates Ant Design within the
+  peer range without a release of this package. Generating fails, and with it the Site's build, when
+  a style hook Ant Design declares is not reached; `pnpm antd-css:check` and the package build run the
+  same generation against this package's own Ant Design. The structure reads every Theme value through
+  `var(--ant-...)`, so one file serves every Theme, mode and nested scope. It is imported before this package's sheets, so a rule of ours that ties
   on specificity wins.
 - `AntdRegistry` in `PhiRootLayout` extracts what is still rendered during SSR: the `--ant-*` variables
   Server Component markup and plain CSS use, per theme scope.

@@ -82,15 +82,17 @@ for (const [exportKey, target] of Object.entries(distManifest.exports)) {
     throw new Error(`ESM package export "${exportKey}" must not declare a require target.`);
   }
 
-  // A plain JavaScript export ships as written and declares no types (prepare-package-dist.mjs).
+  // A plain JavaScript export ships as written, its hand-written `.d.mts` with it if it has one
+  // (prepare-package-dist.mjs).
   const plainJavaScript = typeof target.import === "string" && target.import.endsWith(".mjs");
-  for (const condition of plainJavaScript ? ["import", "default"] : ["types", "import", "default"]) {
+  const conditions = plainJavaScript && !("types" in target) ? ["import", "default"] : ["types", "import", "default"];
+  for (const condition of conditions) {
     const relativeTarget = target[condition];
     if (
       typeof relativeTarget !== "string" ||
       !relativeTarget.startsWith("./") ||
       (condition === "types"
-        ? !relativeTarget.endsWith(".d.ts")
+        ? !relativeTarget.endsWith(plainJavaScript ? ".d.mts" : ".d.ts")
         : !relativeTarget.endsWith(plainJavaScript ? ".mjs" : ".js"))
     ) {
       throw new Error(

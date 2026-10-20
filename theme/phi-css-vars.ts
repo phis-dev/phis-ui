@@ -12,10 +12,11 @@ export type PhiCssVars = CSSProperties & Record<`--${string}`, string>;
 
 /**
  * How many pixels one `rem` is, everywhere: the document's font size, every length this package turns
- * into `rem`, and the px2rem pass over Ant Design's structure in `styles/antd-static.css`.
+ * into `rem`, and the px2rem pass over Ant Design's structure (`PHI_ANTD_STATIC_REM_ROOT_PX` in
+ * `next/config.mjs`, which is plain JavaScript and cannot import it; a test holds the two equal).
  *
  * It is the browser's default and Ant Design's, and it is fixed rather than a Theme setting because the
- * Ant Design structure is generated once for every Site -- a Site that moved it would have its own
+ * Ant Design structure is generated with it for every Site -- a Site that moved it would have its own
  * lengths converted one way and the Controls' another. A Theme that wants everything larger moves
  * `fontSize` and the size tokens, which scale the Controls and the Theme together.
  */

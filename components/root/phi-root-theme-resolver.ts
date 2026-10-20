@@ -155,7 +155,7 @@ export function resolvePhiRootTheme({
     mode,
     theme: {
       /*
-       * Ant Design's structure is not rendered: it comes from `styles/antd-static.css`, and only the
+       * Ant Design's structure is not rendered: it comes from `@phis/ui/antd-static.css`, and only the
        * custom properties a Theme decides are rendered here. Every nested provider inherits both flags --
        * the tone scopes and the Theme workspace's, which inherits nothing else.
        *
