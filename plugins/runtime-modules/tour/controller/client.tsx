@@ -7,6 +7,7 @@ import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
 import type { PhiResolvedPageTour, PhiTourStepDefinition, PhiTourStepSignal } from "../../../../types/tours";
 import type { PhisDeclarableUserStateKey } from "../../../../types/user-state";
 import { PhiTourControl, type PhiTourControlStep } from "../../../../components/controls/phi-tour-control";
+import { holdPhiTourViewport, releasePhiTourViewport } from "../../../../components/controls/phi-tour-viewport";
 import { createPhiRuntimeControllerClient } from "../../../../components/runtime/runtime-controller-client-factory";
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../components/runtime/runtime-signal-bus";
 import { usePhiSignalRuntimePartition } from "../../../../components/runtime/runtime-signal-partition";
@@ -188,6 +189,8 @@ function PhiTourControllerView({ address, config }: { address: PhiSignalAddress;
           // Pointed at once it stands still: a target a `prepare` just opened is often still moving in.
           await waitForPhiVisualAnchorToSettle(element, { timeoutMs: TARGET_SETTLE_MS, signal: abort.signal });
           if (abort.signal.aborted) return;
+          // Scrolled to below the sticky bands, once the step is presented (`phi-tour-viewport.ts`).
+          holdPhiTourViewport(element);
           setRun({ ...run, presented: run.index });
           return;
         }
@@ -198,6 +201,13 @@ function PhiTourControllerView({ address, config }: { address: PhiSignalAddress;
       });
     return () => abort.abort();
   }, [partition, run, step]);
+
+  // The window's scroll padding is the Tour's only while a Tour runs.
+  const running = run != null;
+  useEffect(() => {
+    if (!running) return undefined;
+    return releasePhiTourViewport;
+  }, [running]);
 
   const steps = useMemo<PhiTourControlStep[]>(() => (run?.tour.steps ?? []).map((definition) => ({
     key: definition.key,

@@ -207,8 +207,16 @@ Before presenting a targeted step, the Controller performs this sequence:
    a slot that hides itself lays out at zero height and is not a target;
 4. wait for the target to stand still, so an opening Drawer or slot is not measured mid-motion
    (`waitForPhiVisualAnchorToSettle`, bounded);
-5. pass its live element getter to `PhiTourControl`; and
-6. present the step and allow the Control to scroll the target into view according to normalized config.
+5. hold the window's scroll padding at the bands that stay stuck above the target -- the Shell's Header
+   bands, a Page's sticky band -- found from the target outwards (`holdPhiTourViewport`,
+   `components/controls/phi-tour-viewport.ts`);
+6. pass its live element getter to `PhiTourControl`; and
+7. present the step and let the Control scroll the target into view: centered below the stuck bands where
+   it fits there, top-aligned under them where it is taller. Ant Design alone scrolls only a target that is
+   not wholly inside the window -- a tall one on every scroll event, to the middle and under the Header, and
+   one under a sticky band never -- so the Control hands it the alignment that fits and brings in a target
+   it took for seen. The scroll begins only once the step is presented: Ant Design scrolls a shown target
+   back into view, so a scroll begun under the previous step is undone by it.
 
 Readiness waiting must be bounded and cancellable. A declared missing-target policy may skip the step or
 stop the Tour with normal feedback; it must never select a similarly named element, cross into another

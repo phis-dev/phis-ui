@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 
 import type { PhiControlSize } from "../../types/control";
+import { PHI_VISUAL_ANCHOR_PART_ATTRIBUTE } from "../../types/tours";
 import { usePhiConfig } from "../root/phi-config-provider";
 import { PhiCollectionHeaderControl } from "./phi-collection-header-control";
 import { PhiCollectionLayoutControl } from "./phi-collection-layout-control";
@@ -54,16 +55,21 @@ export function PhiCollectionViewControl({
       <PhiCollectionHeaderControl title={title} description={description} filters={filters} toolbar={toolbar} />
       {panel}
       {diagnostics}
-      {body ?? (
-        <PhiCollectionLayoutControl
-          mode={mode}
-          gap={resolvedGap}
-          minColumnWidth={minColumnWidth ?? 102}
-          items={[...(items ?? [])]}
-        />
-      )}
+      <div {...{ [PHI_VISUAL_ANCHOR_PART_ATTRIBUTE]: "items" }} style={{ width: "100%", minWidth: 0 }}>
+        {body ?? (
+          <PhiCollectionLayoutControl
+            mode={mode}
+            gap={resolvedGap}
+            minColumnWidth={minColumnWidth ?? 102}
+            items={[...(items ?? [])]}
+          />
+        )}
+      </div>
       {pagination ? (
-        <div style={{ display: "flex", justifyContent: "flex-end", width: "100%", minWidth: 0 }}>
+        <div
+          {...{ [PHI_VISUAL_ANCHOR_PART_ATTRIBUTE]: "pagination" }}
+          style={{ display: "flex", justifyContent: "flex-end", width: "100%", minWidth: 0 }}
+        >
           <PhiPaginationControl
             page={pagination.page}
             pageSize={pagination.pageSize}

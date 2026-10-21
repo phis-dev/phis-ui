@@ -6,7 +6,7 @@ import { createPhiBuilderControllerAddress } from "./controller/address";
 import { PHI_BUILDER_RUNTIME_CONTROLLER_DEFINITION } from "./controller/definition";
 import { PHI_BUILDER_INSPECTOR_LAYOUT_IDS } from "./inspector-overlay-addresses";
 import { PHI_BUILDER_RUNTIME_MODULE_ROUTES } from "./presets";
-import { PHI_BUILDER_PAGES_TOUR, PHI_BUILDER_SHELLS_TOUR } from "./tour";
+import { PHI_BUILDER_NAVIGATION_TOUR, PHI_BUILDER_PAGES_TOUR, PHI_BUILDER_SHELLS_TOUR } from "./tour";
 
 /*
  * A step signal is a route the Tour writes, so it is checked the way a route is: against what its receiver
@@ -53,5 +53,15 @@ describe.each([
     for (const step of tour.steps) {
       if ("prepare" in step) expect("release" in step, step.key).toBe(true);
     }
+  });
+});
+
+// No step of the Navigation Tour opens anything: everything it points at is on the workspace already.
+describe("the Navigation Tour", () => {
+  it("is a valid definition on its own route", () => {
+    expect(collectPhiTourDefinitionErrors(PHI_BUILDER_NAVIGATION_TOUR)).toEqual([]);
+    const route = PHI_BUILDER_RUNTIME_MODULE_ROUTES.find((candidate) => candidate.path === "/navigation");
+    expect(route && "tour" in route ? route.tour : undefined).toBe(PHI_BUILDER_NAVIGATION_TOUR);
+    expect(PHI_BUILDER_NAVIGATION_TOUR.steps.some((step) => "prepare" in step)).toBe(false);
   });
 });

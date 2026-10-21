@@ -1,21 +1,25 @@
 import type { PhiCmsRoutePresetDescriptor } from "../../../types/cms-module-descriptors";
 import { PHI_ASSET_RUNTIME_MODULE_ID } from "./ids";
 import { buildPhiSidebarRoutePresetDescriptor } from "../sidebar-route";
+import { PHI_ASSET_MEDIA_TOUR } from "./tour";
 
 export const PHI_ASSET_RUNTIME_MODULE_ROUTES = [
-  buildPhiSidebarRoutePresetDescriptor({
-    area: "builder",
-    anchor: "main",
-    ownerModuleId: PHI_ASSET_RUNTIME_MODULE_ID,
-    presetKey: "builder-media-page",
-    title: "Media",
-    path: "/media",
-    itemKey: "@phis/ui/modules/asset/nav/builder/media",
-    icon: "antd:picture",
-    loadTree: ({ page, runtime }) =>
-      import("./trees/phi-default-builder-media-page-tree")
-        .then((module) => module.buildPhiDefaultBuilderMediaPageTree({ page, runtime })),
-  }),
+  {
+    ...buildPhiSidebarRoutePresetDescriptor({
+      area: "builder",
+      anchor: "main",
+      ownerModuleId: PHI_ASSET_RUNTIME_MODULE_ID,
+      presetKey: "builder-media-page",
+      title: "Media",
+      path: "/media",
+      itemKey: "@phis/ui/modules/asset/nav/builder/media",
+      icon: "antd:picture",
+      loadTree: ({ page, runtime }) =>
+        import("./trees/phi-default-builder-media-page-tree")
+          .then((module) => module.buildPhiDefaultBuilderMediaPageTree({ page, runtime })),
+    }),
+    tour: PHI_ASSET_MEDIA_TOUR,
+  },
   buildPhiSidebarRoutePresetDescriptor({
     area: "admin",
     anchor: "settings",

@@ -8,10 +8,20 @@ import { PhiCollectionViewSkeletonControl } from "../../../../../components/cont
 import { normalizePhiCssSize } from "../../../../../components/layouts/phi-layout-contract";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { usePhiRuntimeModuleRenderClient } from "../../../../../components/runtime/runtime-module-render-client-manifest";
+import { usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
+import { usePhiVisualAnchorParts } from "../../../../../components/runtime/runtime-visual-anchors";
 import type { PhiCmsCollectionViewWidgetConfig } from "../../../../../types/collection-view-widget";
 import { createPhiSignalAddress } from "../../../../../types/signals";
+import type { PhiVisualAnchorAddress } from "../../../../../types/tours";
 import { usePhiControlSignalController } from "../../../../../components/widgets/client/shared/phi-control-signals";
 import { usePhiCollectionViewBinding } from "../../../../../components/widgets/client/shared/phi-collection-view-binding";
+
+/**
+ * The parts of a Collection View a Tour can point at, as `cms:<instanceId>:<part>` (design/TOURS.md): the
+ * filters and search, the toolbar, the items and the pagination. A part the view does not draw is simply
+ * not found, and the step pointing at it does what its `ifMissing` says.
+ */
+const PHI_COLLECTION_VIEW_VISUAL_ANCHOR_PARTS = ["filters", "toolbar", "items", "pagination"] as const;
 
 export type PhiCollectionViewWidgetProps = {
   config?: PhiCmsCollectionViewWidgetConfig | null;
@@ -42,6 +52,11 @@ function PhiCollectionViewWidgetLive({
   labels,
   widgetId,
 }: PhiCollectionViewWidgetProps) {
+  const signalIdentity = usePhiSignalIdentity();
+  usePhiVisualAnchorParts(
+    signalIdentity.receiver?.startsWith("cms:") ? signalIdentity.receiver as PhiVisualAnchorAddress : null,
+    PHI_COLLECTION_VIEW_VISUAL_ANCHOR_PARTS,
+  );
   const source = config?.source ?? null;
   const { resource, bindingError, binding } = usePhiCollectionViewBinding({
     source,

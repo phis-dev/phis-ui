@@ -20,7 +20,7 @@ import {
  * (`remapBuilderPresetTreeInstanceIds`): the same Module, domain and node keys, under the Page's preset
  * key.
  */
-function builderWorkspaceWidgetIds(presetKey: "builder-shells-page" | "builder-pages-page") {
+function builderWorkspaceWidgetIds(presetKey: "builder-shells-page" | "builder-pages-page" | "builder-navigation-page") {
   return createPhiPresetCmsInstanceIdMap({
     domain: "area",
     ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
@@ -33,6 +33,8 @@ function builderWorkspaceWidgetIds(presetKey: "builder-shells-page" | "builder-p
     "widgetStructureSiderFullHeightSwitch",
     "widgetPagesHeaderSelector",
     "widgetPagesMetaToolbar",
+    "widgetNavigationSource",
+    "widgetNavigationItems",
   ]);
 }
 
@@ -318,6 +320,72 @@ export const PHI_BUILDER_PAGES_TOUR = {
       target: `cms:${PAGES_IDS.widgetDraftStatus}`,
       title: "Where your changes stand",
       description: "What you change here is a draft. Visitors see the published Page until the draft is published.",
+      placement: "bottom",
+    },
+  ],
+} as const satisfies PhiTourDefinition;
+
+const NAVIGATION_IDS = builderWorkspaceWidgetIds("builder-navigation-page");
+
+/**
+ * The Navigation workspace's Tour. What the workspace does not say is that a Site has several
+ * navigations, that a Page is linked by dragging it across rather than by typing its path, and that the
+ * items a Module brings stand in the same list as the Site's own.
+ */
+export const PHI_BUILDER_NAVIGATION_TOUR = {
+  id: `${PHI_BUILDER_RUNTIME_MODULE_ID}/navigation`,
+  version: 1,
+  steps: [
+    {
+      key: "choice",
+      target: `cms:${NAVIGATION_IDS.widgetNavigationItems}:filters`,
+      title: "Which navigation",
+      description: "A Site has more than one navigation -- the main menu, the one in the footer, a sider's. Everything below belongs to the one chosen here, and the plus beside it adds a new one under a key of its own.",
+      placement: "bottom",
+      ifMissing: "skip",
+    },
+    {
+      key: "source",
+      target: `cms:${NAVIGATION_IDS.widgetNavigationSource}`,
+      title: "The Pages to link",
+      description: "Every Page of the Area chosen above the list. Drag one into the navigation to link it, onto a container to put it inside; the link follows the Page wherever its path goes.",
+      placement: "right",
+    },
+    {
+      key: "items",
+      target: `cms:${NAVIGATION_IDS.widgetNavigationItems}:header`,
+      title: "What the navigation holds",
+      description: "A row per item, in the order it is shown. Drag a row to move it, into a container to nest it. A click on a label or an icon changes it in place. Origin says whether the item is the Site's own or came with a Module.",
+      placement: "bottom",
+    },
+    {
+      key: "add",
+      target: `cms:${NAVIGATION_IDS.widgetNavigationItems}:toolbar`,
+      title: "Links, containers, separators",
+      description: "Add link adds a link to an address outside the Site, written in its Path; a Page of the Site is linked by dragging it in. A container holds further items and opens as a group; a separator draws a line between them.",
+      placement: "bottom",
+      ifMissing: "skip",
+    },
+    {
+      key: "row-actions",
+      target: `cms:${NAVIGATION_IDS.widgetNavigationItems}:row-actions`,
+      title: "Hiding and deleting",
+      description: "A hidden item stays in the list and keeps its place, but visitors do not see it. Delete takes it out; Undo brings it back.",
+      placement: "left",
+      ifMissing: "skip",
+    },
+    {
+      key: "commands",
+      target: `cms:${NAVIGATION_IDS.widgetToolbar}`,
+      title: "Saving and publishing",
+      description: "Save keeps your changes as a draft, and Live preview shows the Site with it. Publish puts the navigation live; publishing takes the Publisher role. Undo and Redo step through your changes, and Reset discards the draft without touching what is live.",
+      placement: "bottom",
+    },
+    {
+      key: "draft-status",
+      target: `cms:${NAVIGATION_IDS.widgetDraftStatus}`,
+      title: "Where your changes stand",
+      description: "What you change here is a draft. Visitors see the published navigation until the draft is published.",
       placement: "bottom",
     },
   ],
