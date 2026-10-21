@@ -37,6 +37,7 @@ function createPartition(id = "test"): PhiSignalRuntimePartition {
 function createLaidOutElement() {
   const element = document.createElement("div");
   element.getClientRects = () => [{}] as unknown as DOMRectList;
+  element.getBoundingClientRect = () => ({ x: 0, y: 0, width: 120, height: 40 }) as DOMRect;
   document.body.append(element);
   return element;
 }
@@ -53,6 +54,7 @@ describe("visual anchors", () => {
     const toolbar = document.createElement("div");
     toolbar.setAttribute(PHI_VISUAL_ANCHOR_PART_ATTRIBUTE, "toolbar");
     toolbar.getClientRects = () => [{}] as unknown as DOMRectList;
+    toolbar.getBoundingClientRect = () => ({ x: 0, y: 0, width: 120, height: 32 }) as DOMRect;
     frame.append(toolbar);
     // The same mark outside the frame -- another Widget's, or a dialog's -- is not this Widget's part.
     const stranger = createLaidOutElement();
@@ -111,6 +113,14 @@ describe("visual anchors", () => {
     const other = "region:header_top" as PhiVisualAnchorAddress;
     registerPhiVisualAnchor(partition, { address: other, getElement: () => detached });
     expect(readPhiVisualAnchor(partition, other)).toBeNull();
+  });
+
+  it("answers nothing for a box without area, the way a slot that hides itself is drawn", () => {
+    const partition = createPartition();
+    const collapsed = createLaidOutElement();
+    collapsed.getBoundingClientRect = () => ({ x: 0, y: 120, width: 360, height: 0 }) as DOMRect;
+    registerPhiVisualAnchor(partition, { address: ADDRESS, getElement: () => collapsed });
+    expect(readPhiVisualAnchor(partition, ADDRESS)).toBeNull();
   });
 
   it("waits for a late registration and gives up at the timeout", async () => {

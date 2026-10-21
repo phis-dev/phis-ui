@@ -43,6 +43,7 @@ import {
 import { resolvePhiShellRegionTypography, resolvePhiShellRegionZIndex } from "../../../../../helpers/shell-region-style";
 import { phiCmsRegionAcceptsWidget, resolvePhiCmsRegionType } from "../../../../../helpers/cms-region-keys";
 import { usePhiRuntimeModuleState } from "../../../../../components/runtime/runtime-module-context";
+import { PHI_VISUAL_ANCHOR_PART_ATTRIBUTE } from "../../../../../types/tours";
 import {
   renderPhiRootNodeScaffold,
   resolveLayoutNodeRootProps,
@@ -1796,6 +1797,7 @@ export function PhiStructureRegionScaffold({
     return (
       <div
         data-phi-region-slot={config.regionKey}
+        {...{ [PHI_VISUAL_ANCHOR_PART_ATTRIBUTE]: config.regionKey }}
         className={["phi-builder-structure-region__slot", regionToneClassName].filter(Boolean).join(" ")}
         data-phi-builder-region-mode="preview"
         data-phi-builder-region-has-root-node={hasRootNode ? "true" : "false"}
@@ -1849,6 +1851,8 @@ export function PhiStructureRegionScaffold({
         !shouldFillAvailableHeight ? "phi-builder-structure-region--compact" : null,
         containerClassName,
       ].filter(Boolean).join(" ")}
+      // The Region as a part of the workspace Widget drawing it, which offers it to a Tour by its key.
+      {...{ [PHI_VISUAL_ANCHOR_PART_ATTRIBUTE]: config.regionKey }}
       data-phi-builder-region-mode={isPreviewMode ? "preview" : "editor"}
       data-phi-builder-region-has-root-node={hasRootNode ? "true" : "false"}
       data-phi-builder-region-selected={isSelected ? "true" : "false"}

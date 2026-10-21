@@ -838,10 +838,14 @@ export type PhiResolvedCmsRequest = {
   runtime: PhiBlockRuntime;
   serverCapabilities: import("./server-capabilities").PhiCapabilitySnapshot | null;
   /**
-   * The Tour the Page's route carries, untranslated, with the language its owning Module writes in.
-   * Translated only where the Area has a Controller to hand it to (types/tours.ts).
+   * The Tour the Page's route carries, untranslated, with the Module that owns it and the language that
+   * Module writes in. Translated only where the Area has a Controller to hand it to (types/tours.ts).
    */
-  pageTour?: { definition: import("./tours").PhiTourDefinition; sourceLocale?: string } | null;
+  pageTour?: {
+    definition: import("./tours").PhiTourDefinition;
+    ownerModuleId: PhiRuntimeModuleId;
+    sourceLocale?: string;
+  } | null;
 };
 
 export type PhiRuntimeControllerMountScope = "site" | "area" | "page";

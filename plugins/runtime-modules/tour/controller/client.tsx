@@ -4,13 +4,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { PhiRuntimeControllerPlugin, PhiSignal, PhiSignalAddress } from "../../../../types";
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
-import type { PhiResolvedPageTour, PhiTourStepDefinition } from "../../../../types/tours";
+import type { PhiResolvedPageTour, PhiTourStepDefinition, PhiTourStepSignal } from "../../../../types/tours";
 import type { PhisDeclarableUserStateKey } from "../../../../types/user-state";
 import { PhiTourControl, type PhiTourControlStep } from "../../../../components/controls/phi-tour-control";
 import { createPhiRuntimeControllerClient } from "../../../../components/runtime/runtime-controller-client-factory";
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../components/runtime/runtime-signal-bus";
 import { usePhiSignalRuntimePartition } from "../../../../components/runtime/runtime-signal-partition";
-import { readPhiVisualAnchor, waitForPhiVisualAnchor } from "../../../../components/runtime/runtime-visual-anchors";
+import {
+  readPhiVisualAnchor,
+  waitForPhiVisualAnchor,
+  waitForPhiVisualAnchorToSettle,
+} from "../../../../components/runtime/runtime-visual-anchors";
 import { fetchPhiUserState, writePhiUserState } from "../../../../components/runtime/user-state-client";
 import { PHI_TOUR_PROGRESS_USER_STATE_KEY } from "../ids";
 import { PHI_TOUR_RUNTIME_CONTROLLER_DEFINITION, type PhiTourControllerConfig } from "./definition";
@@ -24,6 +28,8 @@ import {
 
 /** How long a step waits for its target before its `ifMissing` decides. */
 const TARGET_WAIT_MS = 4000;
+/** How long a found target may keep moving before it is pointed at where it stands. */
+const TARGET_SETTLE_MS = 1000;
 
 const PROGRESS_DESCRIPTOR = {
   key: PHI_TOUR_PROGRESS_USER_STATE_KEY,
@@ -145,15 +151,43 @@ function PhiTourControllerView({ address, config }: { address: PhiSignalAddress;
    * never pointed at anything but its own address in this partition.
    */
   const step: PhiTourStepDefinition | null = run ? run.tour.steps[run.index] ?? null : null;
+
+  const send = useCallback((signals: readonly PhiTourStepSignal[] | undefined) => {
+    for (const signal of signals ?? []) {
+      dispatchSignal({
+        scope: "area",
+        channel: signal.channel,
+        action: signal.action,
+        value: signal.value ?? null,
+        valueType: signal.valueType,
+        ...(signal.valueSchema ? { valueSchema: signal.valueSchema } : {}),
+        sender: address,
+        receiver: signal.receiver,
+      });
+    }
+  }, [address, dispatchSignal]);
+  /*
+   * The step asked for gets its `prepare` before its target is waited for, and its `release` the moment it
+   * is no longer the one asked for -- the next step, a step passed over, the Tour closed or finished, the
+   * Page left. One effect per step, so every prepare is answered by exactly one release.
+   */
+  useEffect(() => {
+    if (!step) return undefined;
+    send(step.prepare);
+    return () => send(step.release);
+  }, [send, step]);
   // A step centered on purpose has nothing to wait for.
   const presented = run && step?.target == null ? run.index : run?.presented ?? null;
   useEffect(() => {
     if (!run || run.presented === run.index || !step?.target) return undefined;
     const abort = new AbortController();
     void waitForPhiVisualAnchor(partition, step.target, { timeoutMs: TARGET_WAIT_MS, signal: abort.signal })
-      .then((element) => {
+      .then(async (element) => {
         if (abort.signal.aborted) return;
         if (element) {
+          // Pointed at once it stands still: a target a `prepare` just opened is often still moving in.
+          await waitForPhiVisualAnchorToSettle(element, { timeoutMs: TARGET_SETTLE_MS, signal: abort.signal });
+          if (abort.signal.aborted) return;
           setRun({ ...run, presented: run.index });
           return;
         }

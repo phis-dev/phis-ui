@@ -493,6 +493,7 @@ export async function resolvePhiCmsRequest({
     pageTour: routeTour
       ? {
           definition: routeTour,
+          ownerModuleId: routeBinding!.descriptor.ownerModuleId,
           sourceLocale: catalog.sourceLocaleByModuleId.get(routeBinding!.descriptor.ownerModuleId),
         }
       : null,

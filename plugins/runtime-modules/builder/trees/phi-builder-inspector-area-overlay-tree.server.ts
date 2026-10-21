@@ -277,7 +277,7 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
       ], [
         PHI_BUILDER_INSPECTOR_LAYOUT_IDS.widgetInspectorBody,
         PHI_BUILDER_INSPECTOR_SECTIONS.widget,
-      ]] as const).map(([id, sections]) => nodes.layout({
+      ]] as const).map(([id, sections], index) => nodes.layout({
         typeKey: "collapsible",
         id,
         parentLayoutNodeId: null,
@@ -298,6 +298,13 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
             resolveBuilderInspectorSectionTitle(inspectorLabels, sectionKey)
           ),
           defaultOpenSlotKeys: ["slot_0"],
+          /*
+           * A section opened by name: the Builder Tour opens one after another while it describes them
+           * (`builder/tour.ts`). `slot_<index>` in the order of `PHI_BUILDER_INSPECTOR_SECTIONS`.
+           */
+          signalRoutes: {
+            listens: [{ routeKey: `builder-inspector-section-open-${index}`, capabilityId: "slotOpen", scope: "area", channel: "slot", action: "open", valueType: "string", receiver: createPhiSignalAddress("cms", id) }],
+          },
         },
       })),
       nodes.layout({

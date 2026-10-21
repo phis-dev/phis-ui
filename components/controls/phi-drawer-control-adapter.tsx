@@ -40,6 +40,7 @@ export function PhiDrawerControlAdapter({
   containerStyle,
   onDismiss,
   afterOpenChange,
+  panelRef,
 }: PhiDrawerControlProps) {
   const hydrated = useSyncExternalStore(subscribeHydration, () => true, () => false);
   const resolvedMask = resolvePhiOverlayMaskPresentation(mask);
@@ -131,6 +132,7 @@ export function PhiDrawerControlAdapter({
       afterOpenChange={afterOpenChange}
       drawerRender={(node) => (
         <div
+          ref={panelRef}
           style={{ display: "flex", flexDirection: "column", blockSize: "100%", minBlockSize: 0 }}
           onMouseDown={(event) => event.stopPropagation()}
           onClick={(event) => event.stopPropagation()}

@@ -7,9 +7,10 @@ the Tour button (Core, `core/widgets/tour-button`), and the Tour Module with its
 (`plugins/runtime-modules/tour`). The Theme workspace
 carries the first Tour.
 
-Subcontrol anchors are built for the Table (2026-10-19, below). Not built yet: subcontrol anchors of
-other Widgets, resuming at a stored step, Region
-targets of a Page Tour in the Area's own Shell, and preparation signals per step.
+Subcontrol anchors are built for the Table (2026-10-19, below), and for the Regions on the Builder's
+Shells and Pages canvas. A step's `prepare` and `release` signals and the Overlay anchor are built
+(2026-10-21, below). Not built yet: subcontrol anchors of other Widgets, resuming at a stored step, and
+Region targets of a Page Tour in the Area's own Shell.
 
 A feature-local Tour renderer, DOM-selector convention, address family, or signal protocol is not an
 allowed substitute for this design.
@@ -87,7 +88,12 @@ Controller through the normal module/controller configuration path.
 - Every Tour has a stable namespaced id and a positive integer definition version.
 - Every step has a stable step key within that Tour. Array position is presentation order, not identity.
 - Step title, description, button labels, and optional cover metadata use the normal Phi label-set and
-  translation paths. Raw Ant Design locale strings are not a second localization source.
+  translation paths. Raw Ant Design locale strings are not a second localization source. The buttons are
+  Core's `tour` label set. The steps' words are translated with the Page, in one batch per Tour and under
+  the Tour's id as context (`server-helpers/page-tour.ts`): a built-in Tour -- one whose owning Module is
+  in `@phis/ui` -- in the global set, since its words are the same on every Site; a third-party Module's
+  Tour per Site with `trForLocale`, from the language that Module writes in, where the Site's own
+  corrections apply.
 - A definition may configure normalized placement, mask, interaction blocking, scrolling, keyboard,
   and previous/next presentation supported by `PhiTourControl`; arbitrary Ant Design props, style
   callbacks, React nodes, DOM elements, and refs are never persisted or exposed as public ABI.
@@ -124,6 +130,9 @@ The active Runtime Registry gains one optional visual-anchor facet keyed by the 
 family.
 
 - A mounted CMS renderable-block frame registers its base `cms:<instanceId>` visual anchor.
+- A mounted Overlay registers its panel under `cms:<overlayId>`: the Overlay container hands its Drawer or
+  Modal Control a `panelRef`, and the Control attaches it to the element it draws the panel as. A closed
+  Overlay has no box and is not found.
 - A Region container registers its existing `region:<regionKey>` visual anchor.
 - A canonical Phi Control or Widget may register a stable
   `cms:<instanceId>:<subcontrolKey>` anchor when its public contract exposes that subcontrol.
@@ -139,7 +148,8 @@ element -- an inert mark on its own -- and the Widget registers the parts it pro
 `usePhiVisualAnchorParts`, which finds each one inside the Widget's own registered frame and nowhere else.
 The Table Widget offers `filters`, `toolbar`, `header` (the column heads as far as they are seen, never the full width of a Table that scrolls sideways), `row-actions` (the actions
 column's head), `footer` and `pagination`; a part the Table does not draw is simply not found, and the
-step does what its `ifMissing` says. A Page Tour naming a part makes the owning Widget's frame live, as
+step does what its `ifMissing` says. The Builder's Shells and Pages workspaces offer each Region on their canvas by its key
+(`cms:<canvas>:header_main`, `cms:<canvas>:content`), marked by the Region scaffold. A Page Tour naming a part makes the owning Widget's frame live, as
 naming the Widget itself does.
 
 Anchor lookup is always scoped to the active Runtime Registry partition. Live runtime, Builder Canvas,
@@ -153,13 +163,27 @@ API.
 Tour workflow uses the existing Phi signal bus, scopes, addresses, capability metadata, correlation ids,
 actions, and value types. It does not define a parallel event bus or widen `PhiSignalAction`.
 
-- The Tour Controller declares every input and output through its normal `runtimeSignals` metadata.
+- The Tour Controller declares every input and output of its own protocol through its normal
+  `runtimeSignals` metadata. A step's signals are not part of it: they are written in the definition like
+  a route, by the Module that owns the Page, and checked there against their receiver.
 - Opening, closing, changing the current step, restarting, completing, or dismissing a Tour uses ordinary
   Tour-specific channels combined only with approved actions such as `open`, `close`, `change`, and
   `activate`.
 - A step may ask the Controller to prepare its target by dispatching ordinary typed Phi signals. Examples
   include opening a Collapsible slot, activating a Stack/Tab slot, opening a Drawer, or changing a
   controlled selection. Those receivers must already declare matching listen capabilities.
+- The step states them as `prepare` and `release` (`PhiTourStepSignal`: receiver, channel, action, value
+  type, schema, value), sent in the Area scope under the Tour Controller's address and always to a named
+  receiver, never broadcast. `prepare` goes out when the step is asked for, before its target is waited
+  for; `release` goes out when the step is left, however it is left -- the next or previous step, a step
+  passed over, the Tour closed or finished, the Page left. Every `prepare` is answered by exactly one
+  `release`, so whatever a step opened does not stand in front of the steps after it. The owning Module's
+  tests check each step signal against a listen capability of its receiver
+  (`plugins/runtime-modules/builder/tour.test.ts`).
+- A step that opens a Builder Inspector selects through the Builder Controller's `selection` channel, the
+  way a click does. A sender that cannot know a Site's node ids names a Layout by its Region alone
+  (`{ nodeKind: "layout", regionKey }`), and the Controller selects that Region's root Layout; a Region
+  without one selects nothing. Inspector sections open through the section Collapsible's `slot/open`.
 - A user interaction may advance a Tour only through an explicitly routed signal from the originating
   CMS instance/subcontrol to the Tour Controller. The Controller must not attach feature-specific DOM
   listeners or infer completion from Ant Design internals.
@@ -179,9 +203,12 @@ Before presenting a targeted step, the Controller performs this sequence:
 1. establish the required Area/Page route through the existing navigation boundary when the Tour
    definition explicitly owns such a transition;
 2. dispatch the step's declared preparation signals;
-3. wait for the target address to register in the current Runtime partition;
-4. pass its live element getter to `PhiTourControl`; and
-5. present the step and allow the Control to scroll the target into view according to normalized config.
+3. wait for the target address to register in the current Runtime partition with a box of some area --
+   a slot that hides itself lays out at zero height and is not a target;
+4. wait for the target to stand still, so an opening Drawer or slot is not measured mid-motion
+   (`waitForPhiVisualAnchorToSettle`, bounded);
+5. pass its live element getter to `PhiTourControl`; and
+6. present the step and allow the Control to scroll the target into view according to normalized config.
 
 Readiness waiting must be bounded and cancellable. A declared missing-target policy may skip the step or
 stop the Tour with normal feedback; it must never select a similarly named element, cross into another

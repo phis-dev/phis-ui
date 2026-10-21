@@ -80,6 +80,7 @@ import {
   selectPhiDeveloperBuilderNode,
   usePhiDeveloperRegionDraft,
   getPhiDeveloperBuilderStateSnapshot,
+  getPhiDeveloperRegionDraftsSnapshot,
   readPhiBuilderEffectiveAreaRootRoute,
   setPhiDeveloperBuilderAreaRootRoutes,
   setPhiDeveloperBuilderAreaMetaBaseline,
@@ -1510,14 +1511,33 @@ function usePhiDeveloperBuilderWorkspaceController(
         if (!next || typeof next.nodeKey !== "string" || typeof next.nodeKind !== "string") {
           return;
         }
-        const nextNodeKey = next.nodeKey;
+        let nextNodeKey = next.nodeKey;
+        let nextNodeId = readPhiCmsInstanceId(next.nodeId);
         const nextPageKey = typeof next.pageKey === "string" ? next.pageKey : undefined;
+        /*
+         * A Layout named only by its Region is that Region's root Layout, read from its draft. A sender that
+         * cannot know a Site's node ids -- a Tour step showing the Layout Inspector -- names it this way. A
+         * Region without a root Layout selects nothing.
+         */
+        if (next.nodeKind === "layout" && nextNodeId == null && typeof next.regionKey === "string") {
+          const current = getPhiDeveloperBuilderStateSnapshot(defaultArea);
+          const rootNode = getPhiDeveloperRegionDraftsSnapshot()[getPhiBuilderRegionDraftKey(
+            typeof next.area === "string" ? next.area : current.area,
+            next.regionKey,
+            nextPageKey ?? current.pageKey,
+          )]?.rootNode;
+          if (!rootNode) {
+            return;
+          }
+          nextNodeId = rootNode.id;
+          nextNodeKey = rootNode.widgetType;
+        }
 
         selectPhiDeveloperBuilderNode(defaultArea, {
           ...(typeof next.area === "string" ? { area: next.area as PhiDeveloperBuilderArea } : {}),
           ...(nextPageKey ? { pageKey: nextPageKey } : {}),
           nodeKey: nextNodeKey,
-          nodeId: readPhiCmsInstanceId(next.nodeId),
+          nodeId: nextNodeId,
           nodeKind: next.nodeKind as PhiDeveloperBuilderNodeKind,
           regionType: typeof next.regionType === "number" ? next.regionType : null,
           regionKey: typeof next.regionKey === "string" ? next.regionKey : null,

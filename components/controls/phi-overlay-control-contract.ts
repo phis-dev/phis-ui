@@ -34,6 +34,11 @@ export type PhiOverlayControlCommonProps = {
   containerStyle?: CSSProperties;
   onDismiss?: (source: PhiOverlayCloseSource) => void;
   afterOpenChange?: (open: boolean) => void;
+  /**
+   * The element the Overlay is drawn as, handed out while it is mounted -- what a Tour points at when it
+   * names the Overlay (design/TOURS.md, Visual-anchor registration). Never an Ant Design ref.
+   */
+  panelRef?: (element: HTMLElement | null) => void;
 };
 
 export const PHI_OVERLAY_DEFAULT_MASK = {

@@ -1,4 +1,15 @@
-import { PHI_SHARED_PACKAGE_NAME, createPhiControllerSignalAddress, type PhiSignalAddress } from "./signals";
+import {
+  PHI_SHARED_PACKAGE_NAME,
+  createPhiControllerSignalAddress,
+  isPhiSignalAction,
+  isPhiSignalValueType,
+  type PhiSignalAction,
+  type PhiSignalAddress,
+  type PhiSignalChannel,
+  type PhiSignalValue,
+  type PhiSignalValueSchema,
+  type PhiSignalValueType,
+} from "./signals";
 
 /**
  * Guided Tours ([design/TOURS.md](../design/TOURS.md)).
@@ -38,6 +49,21 @@ export type PhiTourPlacement = "top" | "bottom" | "left" | "right";
 /** What a step does when its target is not there to point at: pass over it, or end the Tour. */
 export type PhiTourMissingTargetPolicy = "skip" | "stop";
 
+/**
+ * One signal a step sends: to prepare what it points at, or to put it away again (design/TOURS.md,
+ * Signaling and orchestration). An ordinary Area signal under the Tour Controller's address, to one named
+ * receiver that already listens for it -- the Tour adds no channel and no receiver of its own. The value
+ * travels with the Page, so it is plain data.
+ */
+export type PhiTourStepSignal = {
+  receiver: PhiSignalAddress;
+  channel: PhiSignalChannel;
+  action: PhiSignalAction;
+  valueType: PhiSignalValueType;
+  valueSchema?: PhiSignalValueSchema;
+  value?: PhiSignalValue;
+};
+
 export type PhiTourStepDefinition = {
   /** The step's identity within its Tour; progress is stored under it, never under a position. */
   key: string;
@@ -51,6 +77,17 @@ export type PhiTourStepDefinition = {
   description?: string;
   placement?: PhiTourPlacement;
   ifMissing?: PhiTourMissingTargetPolicy;
+  /**
+   * Sent when the step is asked for, before its target is waited for: what makes the target appear --
+   * selecting something so its Inspector opens, opening a slot.
+   */
+  prepare?: readonly PhiTourStepSignal[];
+  /**
+   * Sent when the step is left, however it is left: the next step, the previous one, a step passed over,
+   * the Tour closed or finished, the Page left. What `prepare` opened, this puts away, so nothing a step
+   * brought up stands in front of the steps after it.
+   */
+  release?: readonly PhiTourStepSignal[];
 };
 
 export type PhiTourDefinition = {
@@ -125,6 +162,14 @@ export function collectPhiTourDefinitionErrors(definition: PhiTourDefinition): s
     }
     if (step.target?.startsWith("controller:")) {
       errors.push(`Tour "${definition.id}" step "${step.key}" points at a Controller, which draws nothing.`);
+    }
+    for (const signal of [...step.prepare ?? [], ...step.release ?? []]) {
+      if ((signal.receiver as string) === "broadcast") {
+        errors.push(`Tour "${definition.id}" step "${step.key}" broadcasts; a step signal names its receiver.`);
+      }
+      if (!isPhiSignalAction(signal.action) || !isPhiSignalValueType(signal.valueType)) {
+        errors.push(`Tour "${definition.id}" step "${step.key}" sends "${signal.channel}" with an unknown action or value type.`);
+      }
     }
   }
   return errors;

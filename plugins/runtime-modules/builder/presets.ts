@@ -6,6 +6,7 @@ import type {
 import { buildPhiAreaRootRoutePresetDescriptor } from "../area-root-route";
 import { PHI_BUILDER_RUNTIME_MODULE_ID } from "./ids";
 import { PHI_BUILDER_PAGE_PRESET_VERSION } from "../../../components/regions/presets/phi-builder-page-preset-version";
+import { PHI_BUILDER_PAGES_TOUR, PHI_BUILDER_SHELLS_TOUR } from "./tour";
 
 export const PHI_BUILDER_RUNTIME_MODULE_AREA_SHELLS = [{
   ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
@@ -18,8 +19,8 @@ export const PHI_BUILDER_RUNTIME_MODULE_AREA_SHELLS = [{
 }] satisfies readonly PhiCmsAreaShellPresetDescriptor[];
 
 const BUILDER_ROUTE_PRESETS = [
-  { presetKey: "builder-shells-page", title: "Shells", path: "/shells" },
-  { presetKey: "builder-pages-page", title: "Pages", path: "/pages" },
+  { presetKey: "builder-shells-page", title: "Shells", path: "/shells", tour: PHI_BUILDER_SHELLS_TOUR },
+  { presetKey: "builder-pages-page", title: "Pages", path: "/pages", tour: PHI_BUILDER_PAGES_TOUR },
   { presetKey: "builder-navigation-page", title: "Navigation", path: "/navigation" },
   { presetKey: "builder-modules-page", title: "Modules", path: "/modules" },
 ] as const;
@@ -31,6 +32,7 @@ const BUILDER_WORKSPACE_ROUTES = BUILDER_ROUTE_PRESETS.map((route) => ({
   area: "builder" as const,
   title: route.title,
   path: route.path,
+  ...("tour" in route ? { tour: route.tour } : {}),
   loadTree: ({ page, runtime }) =>
     import("./trees/phi-default-builder-area-preset-tree")
       .then((module) => module.buildPhiDefaultBuilderPagePresetTree({

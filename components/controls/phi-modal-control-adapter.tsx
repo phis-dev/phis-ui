@@ -97,6 +97,7 @@ export function PhiModalControlAdapter({
   containerStyle,
   onDismiss,
   afterOpenChange,
+  panelRef,
 }: PhiModalControlProps) {
   const { token } = usePhiConfig();
   const hydrated = useSyncExternalStore(subscribeHydration, () => true, () => false);
@@ -280,7 +281,10 @@ export function PhiModalControlAdapter({
       afterOpenChange={afterOpenChange}
       modalRender={(node) => (
         <div
-          ref={dialogRef}
+          ref={(element) => {
+            dialogRef.current = element;
+            panelRef?.(element);
+          }}
           onMouseDown={(event) => event.stopPropagation()}
           onClick={(event) => event.stopPropagation()}
         >

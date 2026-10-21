@@ -57,7 +57,9 @@ export function registerPhiVisualAnchor(partition: PhiSignalRuntimePartition, en
 
 /**
  * The element an address is drawn as, in this partition and nowhere else, or `null` when it is not there
- * to point at: not mounted, mounted twice, detached, or rendered without a box (hidden, `display: none`).
+ * to point at: not mounted, mounted twice, detached, rendered without a box (hidden, `display: none`), or
+ * with a box of no area -- a slot that hides itself because it has nothing to show still lays out at zero
+ * height, and a Tour pointing at it pointed at nothing.
  */
 export function readPhiVisualAnchor(partition: PhiSignalRuntimePartition, address: PhiVisualAnchorAddress) {
   const entries = partition.visualAnchors.get(address);
@@ -65,7 +67,8 @@ export function readPhiVisualAnchor(partition: PhiSignalRuntimePartition, addres
   if (!element || !element.isConnected || element.getClientRects().length === 0) {
     return null;
   }
-  return element;
+  const box = element.getBoundingClientRect();
+  return box.width > 0 && box.height > 0 ? element : null;
 }
 
 /** How often a wait looks again for a target that is registered but not yet laid out. */
@@ -105,6 +108,54 @@ export function waitForPhiVisualAnchor(
     const interval = window.setInterval(check, WAIT_POLL_INTERVAL_MS);
     const timeout = window.setTimeout(abort, timeoutMs);
     signal?.addEventListener("abort", abort, { once: true });
+  });
+}
+
+/**
+ * How many frames in a row a target has to stand still before it counts as placed. More than two: an
+ * opening slot or Drawer often holds still for a frame or two before its motion starts, and measured
+ * then, the pointer is fixed to where it started.
+ */
+const SETTLE_STILL_FRAMES = 8;
+
+/**
+ * Waits until a found target stops moving -- a Drawer sliding in, a slot opening -- and answers whether it
+ * did before `timeoutMs`. Whoever points at a target measures it once: measured mid-motion, the pointer
+ * stays where the target was on its way, off screen for a Drawer that is still coming in.
+ */
+export function waitForPhiVisualAnchorToSettle(
+  element: HTMLElement,
+  { timeoutMs, signal }: { timeoutMs: number; signal?: AbortSignal },
+): Promise<boolean> {
+  return new Promise((resolve) => {
+    let last = "";
+    let still = 0;
+    let frame = 0;
+    const finish = (settled: boolean) => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timeout);
+      signal?.removeEventListener("abort", abort);
+      resolve(settled);
+    };
+    const abort = () => finish(false);
+    const look = () => {
+      const box = element.getBoundingClientRect();
+      const next = `${box.x},${box.y},${box.width},${box.height}`;
+      still = next === last ? still + 1 : 0;
+      last = next;
+      if (still >= SETTLE_STILL_FRAMES) {
+        finish(true);
+        return;
+      }
+      frame = window.requestAnimationFrame(look);
+    };
+    const timeout = window.setTimeout(() => finish(false), timeoutMs);
+    signal?.addEventListener("abort", abort, { once: true });
+    if (signal?.aborted) {
+      finish(false);
+      return;
+    }
+    frame = window.requestAnimationFrame(look);
   });
 }
 

@@ -29,6 +29,8 @@ import {
 import { usePhiSignalListener } from "../runtime/runtime-signal-bus";
 import { registerPhiSignalInstance } from "../runtime/runtime-signal-registry";
 import { usePhiSignalRuntimePartition } from "../runtime/runtime-signal-partition";
+import { usePhiVisualAnchor } from "../runtime/runtime-visual-anchors";
+import type { PhiVisualAnchorAddress } from "../../types/tours";
 import { PhiModalControl } from "../controls/phi-modal-control";
 import { PhiDrawerControl } from "../controls/phi-drawer-control";
 import { PhiAlertControl } from "../controls/phi-alert-control";
@@ -159,6 +161,8 @@ export function PhiOverlayContainerClient({
   const openedAtPathname = useRef<string | null>(null);
   const pathname = usePhiPathname();
   const emitSignal = usePhiSignalEmitter(receiver);
+  // The Overlay's panel, found by a Tour under the Overlay's own address while it is drawn.
+  const panelRef = usePhiVisualAnchor<HTMLElement>(receiver as PhiVisualAnchorAddress);
   const loadZones = usePhiOverlayZonesLoaderIfAny();
   const [loadedZones, setLoadedZones] = useState<PhiLoadedOverlayZones | PhiFailedOverlayZones | null>(null);
   const listenRoutes = useMemo(() => config.signalRoutes?.listens ?? [], [config.signalRoutes?.listens]);
@@ -367,6 +371,7 @@ export function PhiOverlayContainerClient({
         push={behaviour.push}
         containerStyle={surfaceStyle}
         onDismiss={requestClose}
+        panelRef={panelRef}
       />
       </>
     );
@@ -391,6 +396,7 @@ export function PhiOverlayContainerClient({
       width={config.width}
       containerStyle={surfaceStyle}
       onDismiss={requestClose}
+      panelRef={panelRef}
     />
     </>
   );
