@@ -2,7 +2,8 @@
 
 This is a design, and the first cut of it is built (2026-10-17): visual anchors in the signal partition
 (`components/runtime/runtime-visual-anchors.ts`), `PhiTourControl`, the definition type
-(`types/tours.ts`), the Page hand-over (`server-helpers/page-tour.ts`, `phi-cms-page-render-scope.tsx`),
+(`types/tours.ts`; the anchor address and part attribute in `types/visual-anchors.ts`, the Controller's
+address in `types/tour-controller.ts`), the Page hand-over (`server-helpers/page-tour.ts`, `phi-cms-page-render-scope.tsx`),
 the Tour button (Core, `core/widgets/tour-button`), and the Tour Module with its Controller
 (`plugins/runtime-modules/tour`). The Theme workspace
 carries the first Tour.
@@ -143,7 +144,7 @@ family.
 - Duplicate active visual anchors for one address inside one Runtime partition are a contract error.
 
 A part is marked by the Control that draws it and offered by the Widget that owns the address. The
-Control sets `PHI_VISUAL_ANCHOR_PART_ATTRIBUTE` (`data-phi-anchor-part`, `types/tours.ts`) on the part's
+Control sets `PHI_VISUAL_ANCHOR_PART_ATTRIBUTE` (`data-phi-anchor-part`, `types/visual-anchors.ts`) on the part's
 element -- an inert mark on its own -- and the Widget registers the parts it promises with
 `usePhiVisualAnchorParts`, which finds each one inside the Widget's own registered frame and nowhere else.
 The Table Widget offers `filters`, `toolbar`, `header` (the column heads as far as they are seen, never the full width of a Table that scrolls sideways), `row-actions` (the actions

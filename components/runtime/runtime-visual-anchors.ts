@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 
-import { PHI_VISUAL_ANCHOR_PART_ATTRIBUTE, type PhiVisualAnchorAddress } from "../../types/tours";
+import { PHI_VISUAL_ANCHOR_PART_ATTRIBUTE, type PhiVisualAnchorAddress } from "../../types/visual-anchors";
 import { usePhiSignalRuntimePartition, type PhiSignalRuntimePartition } from "./runtime-signal-partition";
 
 /*

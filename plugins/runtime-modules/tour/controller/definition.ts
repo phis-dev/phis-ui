@@ -1,10 +1,9 @@
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
 import type { PhiRuntimeControllerDefinition } from "../../../../types/cms-plugins";
+import { PHI_TOUR_CONTROLLER_KEY, PHI_TOUR_CONTROLLER_PLUGIN_KEY } from "../../../../types/tour-controller";
 import {
   PHI_PAGE_TOUR_CONFIG_KEY,
   PHI_PAGE_TOUR_CONTROLLER_FLAG,
-  PHI_TOUR_CONTROLLER_KEY,
-  PHI_TOUR_CONTROLLER_PLUGIN_KEY,
   readPhiResolvedPageTour,
   type PhiResolvedPageTour,
 } from "../../../../types/tours";

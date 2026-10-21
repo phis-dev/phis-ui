@@ -85,7 +85,8 @@ import { PHI_BLOG_FORM_HANDLER_PROVIDER_DESCRIPTORS, PHI_BLOG_RUNTIME_MODULE_FOR
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../constants/core-data-provider-keys";
 import { PhiCmsWidgetType } from "../../constants/cms-widget-types";
 import { PhiCmsFlags, PhiCmsPageType, PhiCmsStatus } from "../../constants/phi-cms";
-import { readPhiTourTargets, readPhiVisualAnchorOwner } from "../../types/tours";
+import { readPhiTourTargets } from "../../types/tours";
+import { readPhiVisualAnchorOwner } from "../../types/visual-anchors";
 import type { PhiCmsRoutePresetDescriptor } from "../../types/cms-module-descriptors";
 import { hasPhiFlag } from "../../helpers/flags";
 import { PhiContentEntryPart } from "../../constants/content-entry-parts";

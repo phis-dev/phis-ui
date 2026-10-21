@@ -9,7 +9,7 @@ import type {
   PhiResolvedCmsRenderableTree,
 } from "../../types/cms";
 import { comparePhiCmsInstanceIds, type PhiCmsInstanceId } from "../../types/cms-instance-id";
-import { readPhiVisualAnchorOwner } from "../../types/tours";
+import { readPhiVisualAnchorOwner } from "../../types/visual-anchors";
 import type { PhiBlockRuntime, PhiSignalScope } from "../../types";
 import { hasPhiFlag } from "../../helpers/flags";
 import { PhiCmsFlags } from "../../constants/phi-cms";

@@ -8,7 +8,7 @@ import {
   registerPhiVisualAnchorParts,
   waitForPhiVisualAnchor,
 } from "./runtime-visual-anchors";
-import { PHI_VISUAL_ANCHOR_PART_ATTRIBUTE, type PhiVisualAnchorAddress } from "../../types/tours";
+import { PHI_VISUAL_ANCHOR_PART_ATTRIBUTE, type PhiVisualAnchorAddress } from "../../types/visual-anchors";
 
 /*
  * What a Tour may rely on: an address answers with the one element drawn for it in this partition, or with

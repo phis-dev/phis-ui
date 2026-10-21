@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 
 import type { PhiControlSize } from "../../types/control";
-import { PHI_VISUAL_ANCHOR_PART_ATTRIBUTE } from "../../types/tours";
+import { PHI_VISUAL_ANCHOR_PART_ATTRIBUTE } from "../../types/visual-anchors";
 import { usePhiConfig } from "../root/phi-config-provider";
 import { PhiCollectionHeaderControl } from "./phi-collection-header-control";
 import { PhiCollectionLayoutControl } from "./phi-collection-layout-control";

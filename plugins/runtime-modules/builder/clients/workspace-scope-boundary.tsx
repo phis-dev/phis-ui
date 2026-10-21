@@ -11,7 +11,7 @@ import { PhiSignalRuntimePartitionProvider } from "../../../../components/runtim
 import { PhiBuilderCanvasRegionOverrides } from "./builder-region-overrides";
 import { usePhiSignalIdentity } from "../../../../components/runtime/runtime-signal-identity";
 import { usePhiVisualAnchorParts } from "../../../../components/runtime/runtime-visual-anchors";
-import type { PhiVisualAnchorAddress } from "../../../../types/tours";
+import type { PhiVisualAnchorAddress } from "../../../../types/visual-anchors";
 import { PHI_BUILDER_PAGE_REGION_KEYS, PHI_BUILDER_SHELL_REGION_KEYS } from "../region-keys";
 
 export function PhiBuilderWorkspaceScopeBoundary({

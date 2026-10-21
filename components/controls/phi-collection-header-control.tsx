@@ -4,7 +4,7 @@ import { Typography } from "antd";
 import type { ReactNode } from "react";
 
 import { usePhiConfig } from "../root/phi-config-provider";
-import { PHI_VISUAL_ANCHOR_PART_ATTRIBUTE } from "../../types/tours";
+import { PHI_VISUAL_ANCHOR_PART_ATTRIBUTE } from "../../types/visual-anchors";
 import { PhiDescriptionHint } from "./phi-description-tooltip-icon";
 
 export type PhiCollectionHeaderControlProps = {

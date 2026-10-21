@@ -47,7 +47,7 @@ import {
 import type { PhiControlSize, PhiControlVariant } from "../../types/control";
 import type { PhiCalendarAdapterKey, PhiTemporalSelection } from "../../types/calendar";
 import { PHI_GREGORY_CALENDAR_ADAPTER_KEY } from "../../types/calendar-keys";
-import { PHI_VISUAL_ANCHOR_PART_ATTRIBUTE } from "../../types/tours";
+import { PHI_VISUAL_ANCHOR_PART_ATTRIBUTE } from "../../types/visual-anchors";
 import type {
   PhiTableColumnEditorControl,
   PhiTableProviderFieldType,

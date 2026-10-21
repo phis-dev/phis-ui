@@ -43,7 +43,7 @@ import {
 import { resolvePhiShellRegionTypography, resolvePhiShellRegionZIndex } from "../../../../../helpers/shell-region-style";
 import { phiCmsRegionAcceptsWidget, resolvePhiCmsRegionType } from "../../../../../helpers/cms-region-keys";
 import { usePhiRuntimeModuleState } from "../../../../../components/runtime/runtime-module-context";
-import { PHI_VISUAL_ANCHOR_PART_ATTRIBUTE } from "../../../../../types/tours";
+import { PHI_VISUAL_ANCHOR_PART_ATTRIBUTE } from "../../../../../types/visual-anchors";
 import {
   renderPhiRootNodeScaffold,
   resolveLayoutNodeRootProps,

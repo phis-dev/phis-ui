@@ -33,7 +33,7 @@ import { usePhiRuntimePageConditionState } from "../../../../../components/runti
 import { findPhiSignalListenRoute, resolvePhiSignalListenFilter } from "../../../../../helpers/signal-listen-routes";
 import { emitPhiSignalCapability, usePhiSignalEmitter, usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
 import { usePhiVisualAnchorParts } from "../../../../../components/runtime/runtime-visual-anchors";
-import type { PhiVisualAnchorAddress } from "../../../../../types/tours";
+import type { PhiVisualAnchorAddress } from "../../../../../types/visual-anchors";
 import { usePhiApplicationFeedback } from "../../../../../components/runtime/use-phi-application-feedback";
 import { usePhiTableBinding } from "../../../../../components/tables/client/phi-table-binding";
 import { PhiTableBindingControl } from "../../../../../components/tables/client/phi-table-binding-control";

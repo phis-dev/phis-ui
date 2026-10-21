@@ -30,7 +30,7 @@ import { usePhiSignalListener } from "../runtime/runtime-signal-bus";
 import { registerPhiSignalInstance } from "../runtime/runtime-signal-registry";
 import { usePhiSignalRuntimePartition } from "../runtime/runtime-signal-partition";
 import { usePhiVisualAnchor } from "../runtime/runtime-visual-anchors";
-import type { PhiVisualAnchorAddress } from "../../types/tours";
+import type { PhiVisualAnchorAddress } from "../../types/visual-anchors";
 import { PhiModalControl } from "../controls/phi-modal-control";
 import { PhiDrawerControl } from "../controls/phi-drawer-control";
 import { PhiAlertControl } from "../controls/phi-alert-control";

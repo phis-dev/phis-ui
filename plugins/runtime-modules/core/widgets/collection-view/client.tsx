@@ -12,7 +12,7 @@ import { usePhiSignalIdentity } from "../../../../../components/runtime/runtime-
 import { usePhiVisualAnchorParts } from "../../../../../components/runtime/runtime-visual-anchors";
 import type { PhiCmsCollectionViewWidgetConfig } from "../../../../../types/collection-view-widget";
 import { createPhiSignalAddress } from "../../../../../types/signals";
-import type { PhiVisualAnchorAddress } from "../../../../../types/tours";
+import type { PhiVisualAnchorAddress } from "../../../../../types/visual-anchors";
 import { usePhiControlSignalController } from "../../../../../components/widgets/client/shared/phi-control-signals";
 import { usePhiCollectionViewBinding } from "../../../../../components/widgets/client/shared/phi-collection-view-binding";
 
