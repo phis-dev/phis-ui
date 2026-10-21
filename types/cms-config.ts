@@ -35,6 +35,7 @@ import { applyPhiLayoutDefaults } from "../helpers/cms-layout-defaults";
 import { resolvePhiLayoutDefaults } from "../helpers/cms-layout-defaults";
 import { normalizeRenderableBlockAnchor } from "../helpers/renderable-block-anchor";
 import { isPhiRecord } from "../helpers/is-record";
+import { PHI_SPACING_SCALE_KEYS, type PhiSpacingScaleKey } from "../components/widgets/config/spacing-options";
 import { PHI_GRID_COLUMN_COUNTS, isPhiGridColumnCount } from "../constants/grid-columns";
 
 export type PhiCmsPluginConfigBase = Record<string, unknown>;
@@ -330,7 +331,8 @@ export type PhiCmsCarouselLayoutConfig = PhiCmsLayerBase & {
   transition?: PhiSequenceTransition;
   transitionDurationMs?: number;
   transitionEasing?: PhiMotionEasing;
-  slotGap?: string;
+  /** A step of the spacing scale between the slots of a window. */
+  slotGap?: PhiSpacingScaleKey;
   /** Which of its own controls the Carousel draws. Pager Widgets work regardless of this. */
   controls?: "none" | "arrows" | "dots" | "both";
   loop?: boolean;
@@ -641,6 +643,7 @@ export function parsePhiCmsCarouselLayoutConfig(
   const loop = readCarouselFlag(config.loop, "loop");
   const autoplayMs = readCarouselCount(config.autoplayMs, "autoplayMs", 0);
   const lookahead = readCarouselCount(config.lookahead, "lookahead", 0);
+  const slotGap = readCarouselMember(config.slotGap, PHI_SPACING_SCALE_KEYS, "slotGap");
 
   return applyPhiLayoutDefaults(
     {
@@ -651,15 +654,13 @@ export function parsePhiCmsCarouselLayoutConfig(
       ...(visibleSlots === undefined ? {} : { visibleSlots }),
       ...(windowAnchor === undefined ? {} : { windowAnchor }),
       ...(transition === undefined ? {} : { transition }),
-      // Absent means "whatever the theme does", which is why nothing is written here rather than a
-      // number this parser invented.
       ...(config.transitionDurationMs === undefined || config.transitionDurationMs === null ? {} : {
         transitionDurationMs: clampPhiSequenceTransitionMs(config.transitionDurationMs),
       }),
       ...(config.transitionEasing === undefined ? {} : {
         transitionEasing: readPhiMotionEasing(config.transitionEasing, undefined),
       }),
-      slotGap: readString(config.slotGap),
+      ...(slotGap === undefined ? {} : { slotGap }),
       ...(controls === undefined ? {} : { controls }),
       ...(loop === undefined ? {} : { loop }),
       // Zero is how "does not move on its own" is written, so it is the one number below the floor

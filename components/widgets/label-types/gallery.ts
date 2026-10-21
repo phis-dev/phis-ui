@@ -1,13 +1,6 @@
-export type PhiGalleryWidgetLabels = {
-  previous: string;
-  next: string;
-  /** `%1` and `%2` are the first and last picture the page shows. */
-  page: string;
-  pause: string;
-  play: string;
-  /** The box's name for a screen reader, which calls it a carousel. */
-  region: string;
-  pages: string;
+import type { PhiSequenceControlLabels } from "./sequence";
+
+export type PhiGalleryWidgetLabels = PhiSequenceControlLabels & {
   unavailable: string;
 };
 

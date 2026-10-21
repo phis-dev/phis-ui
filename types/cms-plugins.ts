@@ -140,7 +140,12 @@ export type PhiCmsConfigFieldCollectionPresentation = "inline" | "overlay" | "se
 
 export type PhiCmsConfigFieldChoiceMode = "single" | "multiple";
 
-export type PhiCmsConfigFieldChoiceValueType = "string" | "string[]";
+/**
+ * What a `choice` stores. A text or a list of texts is the rule; `number` is a closed list of numbers --
+ * a key that is a number everywhere else, in the parser, the URL and the contracts, as the Image's
+ * Variant is -- and is stored as that number rather than spelled as a text the reader has to convert.
+ */
+export type PhiCmsConfigFieldChoiceValueType = "string" | "string[]" | "number";
 
 export type PhiCmsConfigFieldChoiceCreateBehavior = "none" | "accept-custom" | "create-record";
 export type PhiCmsConfigFieldColorMode = "single" | "gradient" | "both";
@@ -189,6 +194,12 @@ export type PhiCmsConfigField =
   | (PhiCmsConfigFieldBase & {
       type: "data-provider";
       providerKind?: PhiRuntimeDataProviderKind;
+      /**
+       * The one record Provider this binding names, for a Widget that can only read one: a Gallery
+       * reads a Folder, an entry header an entry. The Inspector then offers no choice of Provider -- a list
+       * that holds a single right answer and several wrong ones -- and asks only for its parameters.
+       */
+      providerKey?: PhiRuntimeDataProviderKey;
     })
   | (PhiCmsConfigFieldBase & {
       type: "calendar-adapter";
@@ -301,9 +312,29 @@ export type PhiCmsConfigField =
       suffix?: string;
     })
   | (PhiCmsConfigFieldBase & {
+      /*
+       * A closed list of numbers: one value, the options' own, nothing typed and nothing fetched.
+       * `emptyOption` is the picker's line for "none" and is never stored; `emptyValue` is.
+       */
+      type: "choice";
+      valueType: "number";
+      options: PhiControlOption<number>[];
+      emptyOption?: PhiControlOption;
+      emptyValue?: null | undefined;
+      placeholder?: string;
+      mode?: never;
+      presentation?: never;
+      optionsProvider?: never;
+      allowCustom?: never;
+      createBehavior?: never;
+      filter?: never;
+      patchOnChange?: never;
+      optionPresets?: never;
+    })
+  | (PhiCmsConfigFieldBase & {
       type: "choice";
       mode?: PhiCmsConfigFieldChoiceMode;
-      valueType?: PhiCmsConfigFieldChoiceValueType;
+      valueType?: Exclude<PhiCmsConfigFieldChoiceValueType, "number">;
       presentation?: PhiCmsConfigFieldChoicePresentation;
       options?: PhiControlOption[];
       optionsProvider?: PhiControlOptionsProviderConfig;

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS } from "../../../../../constants/media-library-provider-keys";
 import { parsePhiCmsGalleryWidgetConfig } from "./config";
 
 /**
@@ -14,11 +15,10 @@ import { parsePhiCmsGalleryWidgetConfig } from "./config";
 describe("what a Gallery accepts", () => {
   it("takes a written-out configuration as written", () => {
     expect(parsePhiCmsGalleryWidgetConfig({
-      source: { providerKey: "@phis/ui/records/media-folder-images", params: { folderId: "7", sort: "name_asc" } },
-      variantKey: "5",
+      source: { providerKey: PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.folderImages, params: { folderId: "7", sort: "name_asc" } },
+      variantKey: 5,
       preview: true,
       visibleCount: 3,
-      windowAnchor: "center",
       transition: "diagonal",
       durationMs: 480,
       easing: "ease-out",
@@ -29,11 +29,10 @@ describe("what a Gallery accepts", () => {
       loop: true,
       autoplayMs: 5000,
     })).toMatchObject({
-      source: { providerKey: "@phis/ui/records/media-folder-images", params: { folderId: "7", sort: "name_asc" } },
-      variantKey: "5",
+      source: { providerKey: PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.folderImages, params: { folderId: "7", sort: "name_asc" } },
+      variantKey: 5,
       preview: true,
       visibleCount: 3,
-      windowAnchor: "center",
       transition: "diagonal",
       durationMs: 480,
       easing: "ease-out",
@@ -89,6 +88,11 @@ describe("what a Gallery refuses", () => {
       .toThrow(/whole number/);
     expect(() => parsePhiCmsGalleryWidgetConfig({ lookahead: -1 }))
       .toThrow(/at least 0/);
+  });
+
+  it("reads pictures from a Folder and nothing else", () => {
+    expect(() => parsePhiCmsGalleryWidgetConfig({ source: { providerKey: "@phis/ui/records/content-entry", params: {} } }))
+      .toThrow(/Invalid Gallery source/);
   });
 
   it("refuses a rendition it does not offer", () => {

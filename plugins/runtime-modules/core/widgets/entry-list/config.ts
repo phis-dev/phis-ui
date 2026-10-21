@@ -3,6 +3,12 @@ import {
   type PhiRuntimeDataProviderBinding,
 } from "../../../../../types/runtime-data-provider";
 import { isPhiRecord } from "../../../../../helpers/is-record";
+import {
+  buildPhiSequenceSettingsFields,
+  PHI_SEQUENCE_SETTINGS_DEFAULTS,
+  readPhiSequenceSettings,
+  type PhiSequenceSettings,
+} from "../../../../../components/widgets/config/sequence-settings";
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../../../constants/core-data-provider-keys";
 import { PHI_CONTENT_ENTRY_CURATION_NONE_CONFIG_KEYS } from "../../../../../components/forms/content-entry-curation-config";
@@ -28,9 +34,10 @@ import {
 /**
  * How the entries stand on the page (`CONTENT_ENTRIES.md`): `stack` is each entry whole, one under the
  * next; `cards` a grid of cards, each leading to its entry's detail Page; `compact` one line of date and
- * title with a teaser under it, for a sidebar or a home page.
+ * title with a teaser under it, for a sidebar or a home page; `slideshow` the same cards a few at a
+ * time, moving the way a Gallery moves (`sequence-settings.ts`).
  */
-export const PHI_ENTRY_LIST_PRESENTATIONS = ["stack", "cards", "compact"] as const;
+export const PHI_ENTRY_LIST_PRESENTATIONS = ["stack", "cards", "compact", "slideshow"] as const;
 export type PhiEntryListPresentation = (typeof PHI_ENTRY_LIST_PRESENTATIONS)[number];
 
 /**
@@ -51,7 +58,7 @@ export { PHI_ENTRY_LIST_DEFAULT_PARTS };
 export const PHI_ENTRY_LIST_DEFAULT_LIMIT = 10;
 const PHI_ENTRY_LIST_MAX_LIMIT = 50;
 
-export type PhiEntryListWidgetConfig = PhiCmsWidgetConfigBase & {
+export type PhiEntryListWidgetConfig = PhiCmsWidgetConfigBase & PhiSequenceSettings & {
   /** Which content kind's entries (`CONTENT_ENTRIES.md`). */
   kind: PhiContentEntryKind;
   /**
@@ -110,12 +117,25 @@ function readLimit(value: unknown) {
   return Math.min(limit, PHI_ENTRY_LIST_MAX_LIMIT);
 }
 
+function failSequence(key: string, value: unknown, expected: string): never {
+  throw new Error(`Invalid Entries ${key} ${JSON.stringify(value)}. Expected ${expected}.`);
+}
+
+/** A slideshow's settings, shown only while the list is one. */
+const PHI_ENTRY_LIST_SEQUENCE_FIELDS = buildPhiSequenceSettingsFields({
+  countLabel: "Visible Entries",
+  heading: "Slideshow",
+  visibleWhen: { field: "presentation", equals: "slideshow" },
+});
+
 export function normalizePhiEntryListWidgetConfig(config: unknown): PhiEntryListWidgetConfig {
   const raw = isPhiRecord(config)
     ? (config as Record<string, unknown>)
     : {};
   return {
     ...readRenderableBlockConfig(raw),
+    // Read strictly, as the Gallery reads them: a run that moves other than written is a quiet mistake.
+    ...readPhiSequenceSettings(raw, failSequence),
     // A new list shows News until somebody picks its kind in the Inspector.
     kind: isPhiContentEntryKind(raw.kind) ? raw.kind : "news",
     detailLinkTarget: readPhiLinkTarget(raw.detailLinkTarget) ?? undefined,
@@ -166,6 +186,7 @@ export const PHI_ENTRY_LIST_WIDGET_DEFINITION = {
         { value: "stack", label: "Whole entries" },
         { value: "cards", label: "Cards" },
         { value: "compact", label: "Compact" },
+        { value: "slideshow", label: "Slideshow" },
       ],
     },
     {
@@ -211,13 +232,17 @@ export const PHI_ENTRY_LIST_WIDGET_DEFINITION = {
       key: "relatedTo",
       type: "data-provider",
       providerKind: "record",
+      providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntry,
       label: "Related to",
       description: "The entry; a detail Page binds it to its own.",
       visibleWhen: { field: "source", equals: "related" },
     },
     { key: "title", type: "string", label: "Heading" },
+    ...PHI_ENTRY_LIST_SEQUENCE_FIELDS.window,
+    ...PHI_ENTRY_LIST_SEQUENCE_FIELDS.movement,
+    ...PHI_ENTRY_LIST_SEQUENCE_FIELDS.controls,
   ],
-  defaultConfig: normalizePhiEntryListWidgetConfig(null),
+  defaultConfig: { ...normalizePhiEntryListWidgetConfig(null), ...PHI_SEQUENCE_SETTINGS_DEFAULTS },
   parseConfig: parsePhiEntryListWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiEntryListWidgetConfig>,

@@ -39,7 +39,7 @@ export function PhiInspectorImageFieldControl({
   const assetId = config.sourceKind === "asset" && typeof config.assetId === "number" ? config.assetId : null;
   const asset = usePhiAuthoringAssetDetails(assetId);
   const sourceUrl = typeof config.sourceUrl === "string" ? config.sourceUrl : "";
-  const variantKey = typeof config.variantKey === "number" ? String(config.variantKey) : PHI_IMAGE_FIELD_ORIGINAL_VARIANT;
+  const variantKey: number | string = typeof config.variantKey === "number" ? config.variantKey : PHI_IMAGE_FIELD_ORIGINAL_VARIANT;
   const editable = !disabled && onChange != null;
 
   return (
@@ -77,13 +77,13 @@ export function PhiInspectorImageFieldControl({
       />
       {assetId != null ? (
         <PhiInspectorFieldRow label="Variant">
-          <PhiSelectControl
+          <PhiSelectControl<number | string>
             value={variantKey}
             options={[{ value: PHI_IMAGE_FIELD_ORIGINAL_VARIANT, label: "Original", separator: "after" }, ...PHI_IMAGE_VARIANT_OPTIONS]}
             disabled={!editable}
             style={{ width: "100%" }}
             onChange={(next) => onChange?.({
-              variantKey: next === PHI_IMAGE_FIELD_ORIGINAL_VARIANT ? null : Number(next),
+              variantKey: next === PHI_IMAGE_FIELD_ORIGINAL_VARIANT ? null : next,
             })}
           />
         </PhiInspectorFieldRow>

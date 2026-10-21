@@ -154,6 +154,7 @@ export const PHI_IMAGE_WIDGET_DEFINITION = {
     {
       key: "variantKey",
       type: "choice",
+      valueType: "number",
       label: "Variant",
       options: PHI_IMAGE_VARIANT_OPTIONS,
       emptyOption: { value: "__original__", label: "Original" },

@@ -77,7 +77,8 @@ export type PhiInspectorWidgetReferenceOption = {
   widgetType: string;
 };
 
-type PhiInspectorChoiceField = Extract<PhiCmsConfigField, { type: "choice" }>;
+type PhiInspectorChoiceField = Exclude<Extract<PhiCmsConfigField, { type: "choice" }>, { valueType: "number" }>;
+type PhiInspectorNumberChoiceField = Extract<PhiCmsConfigField, { type: "choice"; valueType: "number" }>;
 type PhiInspectorCollectionField = Extract<PhiCmsConfigField, { type: "collection" }>;
 const PHI_STATIC_OPTIONS_PROVIDER_VALUE = "__phi_static_options__";
 
@@ -526,6 +527,45 @@ function resolveInspectorChoiceOptions(
   }
 
   return resolvedOptions;
+}
+
+/**
+ * A closed list of numbers. The select holds the numbers themselves, so what is picked is what is
+ * stored; only the empty line is a word, and it stands for `emptyValue`.
+ */
+function renderPhiInspectorNumberChoiceField({
+  field,
+  value,
+  defaultValue,
+  disabled,
+  onChange,
+}: {
+  field: PhiInspectorNumberChoiceField;
+  value: unknown;
+  defaultValue: unknown;
+  disabled: boolean;
+  onChange?: (next: Record<string, unknown>) => void;
+}) {
+  const stored = value ?? defaultValue;
+  const emptyOptionValue = field.emptyOption?.value;
+  const selectedValue = typeof stored === "number" ? stored : emptyOptionValue;
+  const options: PhiControlOption<number | string>[] = field.emptyOption
+    ? [field.emptyOption, ...field.options]
+    : field.options;
+
+  return renderPhiInspectorConfigFieldControl(
+    field,
+    <PhiSelectControl<number | string>
+      options={options}
+      placeholder={field.placeholder}
+      value={selectedValue}
+      disabled={disabled}
+      style={{ width: "100%" }}
+      onChange={(next) => onChange?.({
+        [field.key]: emptyOptionValue != null && next === emptyOptionValue ? field.emptyValue : next,
+      })}
+    />,
+  );
 }
 
 function PhiInspectorChoiceFieldControl({
@@ -1040,7 +1080,7 @@ function renderPhiInspectorConfigFieldBody({
      */
     const supportsStaticOptions = !field.providerKind || field.providerKind === "options" || field.providerKind === "timeline";
     const selectedProvider = dataProviderDescriptors.find((descriptor) =>
-      descriptor.key === providerConfig?.providerKey) ?? null;
+      descriptor.key === (field.providerKey ?? providerConfig?.providerKey)) ?? null;
     const options = [
       ...(supportsStaticOptions
         ? [{
@@ -1057,7 +1097,7 @@ function renderPhiInspectorConfigFieldBody({
         })),
     ];
 
-    return renderPhiInspectorConfigFieldControl(
+    const bindingRow = renderPhiInspectorConfigFieldControl(
       field,
       <PhiFlexControl vertical gap={8} style={{ width: "100%" }}>
         <PhiSelectControl
@@ -1114,27 +1154,34 @@ function renderPhiInspectorConfigFieldBody({
             })}
           />
         ) : null}
-        {/*
-          * A record is one thing, named by its parameters -- an entry by kind and address -- and the
-          * Provider says which it takes in its `settingsFields`. They are edited here, inside the binding.
-          */}
-        {field.providerKind === "record" && selectedProvider
-          ? (selectedProvider.settingsFields ?? []).map((paramField) => {
-            const params = isPhiRecord(rawProviderConfig.params) ? rawProviderConfig.params as Record<string, unknown> : {};
-            return <Fragment key={paramField.key}>{renderPhiInspectorConfigField({
-              field: paramField,
-              value: params[paramField.key],
-              defaultValue: undefined,
-              config: params,
-              disabled,
-              fieldLabels,
-              onChange: (patch) => onChange?.({
-                [field.key]: { providerKey: selectedProvider.key, params: { ...params, ...patch } },
-              }),
-            })}</Fragment>;
-          })
-          : null}
       </PhiFlexControl>,
+    );
+    if (field.providerKind !== "record" || !selectedProvider) return bindingRow;
+    /*
+     * A record is one thing, named by its parameters -- an entry by kind and address -- and the
+     * Provider says which it takes in its `settingsFields`. They are rows of their own under the
+     * binding, words on the left like every other field; inside the binding's control column they
+     * would draw a second pair of columns squeezed into the first one's right half. A binding fixed
+     * to one Provider shows only them.
+     */
+    const params = isPhiRecord(rawProviderConfig.params) ? rawProviderConfig.params as Record<string, unknown> : {};
+    return (
+      <Fragment key={field.key}>
+        {field.providerKey ? null : bindingRow}
+        {(selectedProvider.settingsFields ?? []).map((paramField) => (
+          <Fragment key={paramField.key}>{renderPhiInspectorConfigField({
+            field: paramField,
+            value: params[paramField.key],
+            defaultValue: undefined,
+            config: params,
+            disabled,
+            fieldLabels,
+            onChange: (patch) => onChange?.({
+              [field.key]: { providerKey: selectedProvider.key, params: { ...params, ...patch } },
+            }),
+          })}</Fragment>
+        ))}
+      </Fragment>
     );
   }
 
@@ -1295,6 +1342,10 @@ function renderPhiInspectorConfigFieldBody({
       disabled,
       ...(onChange ? { onChange: (checked: boolean) => onChange({ [field.key]: checked }) } : {}),
     });
+  }
+
+  if (field.type === "choice" && field.valueType === "number") {
+    return renderPhiInspectorNumberChoiceField({ field, value, defaultValue, disabled: disabled || !onChange, onChange });
   }
 
   if (field.type === "choice") {

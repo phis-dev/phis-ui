@@ -1,29 +1,24 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import { PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS } from "../../../../../constants/media-library-provider-keys";
+import {
+  PHI_MEDIA_ASPECT_RATIOS,
+  PHI_MEDIA_ASPECT_RATIO_OPTIONS,
+  type PhiMediaAspectRatio,
+} from "../../../../../components/media/aspect-ratios";
 import { PHI_IMAGE_VARIANT_OPTIONS } from "../../../../../components/widgets/config/image-variant-options";
+import {
+  buildPhiSequenceSettingsFields,
+  PHI_SEQUENCE_SETTINGS_DEFAULTS,
+  readPhiSequenceSettings,
+  type PhiSequenceSettings,
+} from "../../../../../components/widgets/config/sequence-settings";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
+import type { PhiImageAssetVariantKeyValue } from "../../../../../types/media";
+import { PHI_GALLERY_DEFAULT_ASPECT_RATIO } from "./defaults";
 import {
   readPhiRuntimeDataProviderBinding,
   type PhiRuntimeDataProviderBinding,
 } from "../../../../../types/runtime-data-provider";
-import {
-  PHI_MOTION_EASING_FIELD_OPTIONS,
-  PHI_SEQUENCE_TRANSITION_MAX_MS,
-  PHI_SEQUENCE_TRANSITION_MIN_MS,
-  PHI_SEQUENCE_TRANSITION_STEP_MS,
-  clampPhiSequenceTransitionMs,
-  PHI_SEQUENCE_ANCHORS,
-  PHI_SEQUENCE_TRANSITIONS,
-  readPhiMotionEasing,
-  type PhiMotionEasing,
-  type PhiSequenceAnchor,
-  type PhiSequenceTransition,
-} from "../../../../../helpers/motion";
-import {
-  PHI_CMS_MOUNT_POLICY_FIELD_OPTIONS,
-  readPhiCmsMountPolicy,
-  type PhiCmsMountPolicy,
-} from "../../../../../types/cms-mount-policy";
 import {
   readRenderableBlockConfig,
   type PhiCmsWidgetConfigBase,
@@ -34,41 +29,21 @@ import {
  *
  * Not a layout. A layout's slots are authored -- twelve of them, and somebody drops a Widget into
  * each -- while the pictures here are data: however many a Media Folder holds, read on the server
- * while the page is drawn through the record Provider the binding names. A Carousel over authored
- * slots could never show them, which is why the two are separate things that share a viewport rather
- * than one thing with a switch.
+ * while the page is drawn through the Folder Provider. A Carousel over authored slots could never show
+ * them, which is why the two are separate things that share a viewport rather than one thing with a
+ * switch. How the run moves is the shared vocabulary of `sequence-settings.ts`.
  */
 
-export type PhiCmsGalleryWidgetConfig = PhiCmsWidgetConfigBase & {
-  /** The record Provider the pictures come from; starts on the Media Folder Provider. */
+export type PhiCmsGalleryWidgetConfig = PhiCmsWidgetConfigBase & PhiSequenceSettings & {
+  /** The Folder the pictures come from: always the Media Folder Provider, with its parameters. */
   source: PhiRuntimeDataProviderBinding | null;
   /** The rendition each picture is drawn in; absent is the original. */
-  variantKey?: string;
+  variantKey?: PhiImageAssetVariantKeyValue;
   /** Opens a picture larger over the page when clicked. */
   preview?: boolean;
-  visibleCount?: number;
-  windowAnchor?: PhiSequenceAnchor;
-  transition?: PhiSequenceTransition;
-  durationMs?: number;
-  easing?: PhiMotionEasing;
-  gap?: string;
-  /**
-   * How many pictures beyond the window are kept mounted, and therefore told to load early.
-   *
-   * The browser will not do this for us. `loading="lazy"` decides from an element's distance to the
-   * viewport and knows nothing about a track: on a fade every picture sits in the same place and all
-   * of them load at once, while on a slide the next one is off to the side and loads as it arrives --
-   * during the transition, which is the worst moment. Next's escape hatch for that, `lazyRoot`, is a
-   * deprecated no-op. So the window decides, and the window is ours.
-   */
-  lookahead?: number;
-  mountPolicy?: PhiCmsMountPolicy;
-  aspectRatio?: string;
+  /** The frame's proportion for originals; a variant brings its own. */
+  aspectRatio?: PhiMediaAspectRatio;
   fit?: "cover" | "contain";
-  controls?: "none" | "arrows" | "dots" | "both";
-  loop?: boolean;
-  /** Absent or zero means it does not move on its own. */
-  autoplayMs?: number;
 };
 
 /*
@@ -96,69 +71,47 @@ function readMember<TMember extends string>(
   return value as TMember;
 }
 
-function readCount(value: unknown, key: string, min: number): number | undefined {
-  if (value === undefined || value === null) return undefined;
-  if (typeof value !== "number" || !Number.isInteger(value) || value < min) {
-    fail(key, value, `a whole number of at least ${min}`);
-  }
-  return value;
-}
-
 function readFlag(value: unknown, key: string): boolean | undefined {
   if (value === undefined || value === null) return undefined;
   if (typeof value !== "boolean") fail(key, value, "true or false");
   return value;
 }
 
-function readText(value: unknown, key: string): string | undefined {
+/** The Folder the pictures come from; a binding to any other Provider is a mistake in the document. */
+function readFolderSource(value: unknown): PhiRuntimeDataProviderBinding | null {
+  const binding = readPhiRuntimeDataProviderBinding(value);
+  if (binding && binding.providerKey !== PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.folderImages) {
+    fail("source", binding.providerKey, PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.folderImages);
+  }
+  return binding;
+}
+
+function readVariantKey(value: unknown): PhiImageAssetVariantKeyValue | undefined {
   if (value === undefined || value === null) return undefined;
-  if (typeof value !== "string" || value.trim() === "") fail(key, value, "a non-empty string");
-  return value;
+  if (!PHI_IMAGE_VARIANT_OPTIONS.some((option) => option.value === value)) {
+    fail("variantKey", value, `one of ${PHI_IMAGE_VARIANT_OPTIONS.map((option) => option.value).join(", ")}`);
+  }
+  return value as PhiImageAssetVariantKeyValue;
 }
 
 export function parsePhiCmsGalleryWidgetConfig(raw: Record<string, unknown>): PhiCmsGalleryWidgetConfig {
-  const visibleCount = readCount(raw.visibleCount, "visibleCount", 1);
-  const windowAnchor = readMember(raw.windowAnchor, PHI_SEQUENCE_ANCHORS, "windowAnchor");
-  const transition = readMember(raw.transition, PHI_SEQUENCE_TRANSITIONS, "transition");
-  const easing = readPhiMotionEasing(raw.easing, undefined);
-  const gap = readText(raw.gap, "gap");
-  const lookahead = readCount(raw.lookahead, "lookahead", 0);
-  const aspectRatio = readText(raw.aspectRatio, "aspectRatio");
+  const aspectRatio = readMember(raw.aspectRatio, PHI_MEDIA_ASPECT_RATIOS, "aspectRatio");
   const fit = readMember(raw.fit, ["cover", "contain"] as const, "fit");
-  const controls = readMember(raw.controls, ["none", "arrows", "dots", "both"] as const, "controls");
-  const loop = readFlag(raw.loop, "loop");
-  const autoplayMs = readCount(raw.autoplayMs, "autoplayMs", 0);
-  const variantKey = readMember(raw.variantKey, PHI_IMAGE_VARIANT_OPTIONS.map((option) => option.value), "variantKey");
+  const variantKey = readVariantKey(raw.variantKey);
   const preview = readFlag(raw.preview, "preview");
 
   return {
     ...readRenderableBlockConfig(raw),
-    source: readPhiRuntimeDataProviderBinding(raw.source),
+    ...readPhiSequenceSettings(raw, fail),
+    source: readFolderSource(raw.source),
     ...(variantKey === undefined ? {} : { variantKey }),
     ...(preview === undefined ? {} : { preview }),
-    ...(visibleCount === undefined ? {} : { visibleCount }),
-    ...(windowAnchor === undefined ? {} : { windowAnchor }),
-    ...(transition === undefined ? {} : { transition }),
-    // Absent stays absent: the viewport then moves at the pace the theme sets rather than one this
-    // Widget invented.
-    ...(raw.durationMs === undefined || raw.durationMs === null
-      ? {}
-      : { durationMs: clampPhiSequenceTransitionMs(raw.durationMs) }),
-    ...(easing === undefined ? {} : { easing }),
-    ...(gap === undefined ? {} : { gap }),
-    ...(lookahead === undefined ? {} : { lookahead }),
-    mountPolicy: readPhiCmsMountPolicy(raw.mountPolicy, "lazy-keep"),
     ...(aspectRatio === undefined ? {} : { aspectRatio }),
     ...(fit === undefined ? {} : { fit }),
-    ...(controls === undefined ? {} : { controls }),
-    ...(loop === undefined ? {} : { loop }),
-    // Zero is how "does not move on its own" is written, so it is the one number below the floor
-    // that means something.
-    ...(autoplayMs === undefined || autoplayMs === 0
-      ? {}
-      : { autoplayMs: clampPhiSequenceTransitionMs(autoplayMs) }),
   };
 }
+
+const PHI_GALLERY_SEQUENCE_FIELDS = buildPhiSequenceSettingsFields({ countLabel: "Visible Pictures" });
 
 export const PHI_GALLERY_WIDGET_DEFINITION = {
   kind: "widget",
@@ -176,63 +129,33 @@ export const PHI_GALLERY_WIDGET_DEFINITION = {
       key: "source",
       type: "data-provider",
       providerKind: "record",
-      label: "Pictures",
-      description: "Where the pictures come from. The folder and its order are set inside the binding.",
+      // Always a Folder: the Inspector asks for the folder and its order, never for a Provider.
+      providerKey: PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.folderImages,
+      label: "Source",
     },
     {
       key: "variantKey",
       type: "choice",
+      valueType: "number",
+      heading: "Picture",
       label: "Variant",
       options: PHI_IMAGE_VARIANT_OPTIONS,
       emptyOption: { value: "__original__", label: "Original" },
       emptyValue: null,
     },
-    { key: "preview", type: "boolean", label: "Lightbox", description: "Open a picture larger over the page when it is clicked." },
-    { key: "visibleCount", type: "number", label: "Visible Pictures", min: 1 },
+    /*
+     * Proportion and fit are questions only the original asks. A variant is cut to its own width and
+     * height, so the frame takes that proportion and the picture fills it exactly; a second ratio on
+     * top would crop a crop. Originals come in every shape, and a run of them needs one frame to
+     * stand in, or the Gallery changes height with every step.
+     */
     {
-      key: "windowAnchor",
+      key: "aspectRatio",
       type: "choice",
-      label: "Window Anchor",
-      options: [
-        { value: "start", label: "Leading edge" },
-        { value: "center", label: "Centre" },
-      ],
+      label: "Aspect Ratio",
+      options: PHI_MEDIA_ASPECT_RATIO_OPTIONS,
+      visibleWhen: { field: "variantKey", equals: null },
     },
-    {
-      key: "transition",
-      type: "choice",
-      label: "Transition",
-      options: [
-        { value: "none", label: "None" },
-        { value: "fade", label: "Fade" },
-        { value: "slide", label: "Slide" },
-        { value: "diagonal", label: "Diagonal" },
-      ],
-    },
-    {
-      key: "durationMs",
-      type: "number",
-      label: "Duration",
-      min: PHI_SEQUENCE_TRANSITION_MIN_MS,
-      max: PHI_SEQUENCE_TRANSITION_MAX_MS,
-      step: PHI_SEQUENCE_TRANSITION_STEP_MS,
-      prefix: "ms",
-    },
-    {
-      key: "easing",
-      type: "choice",
-      label: "Easing",
-      options: [...PHI_MOTION_EASING_FIELD_OPTIONS],
-    },
-    { key: "gap", type: "string", label: "Gap" },
-    { key: "lookahead", type: "number", label: "Preload Ahead", min: 0 },
-    {
-      key: "mountPolicy",
-      type: "choice",
-      label: "Mounting",
-      options: [...PHI_CMS_MOUNT_POLICY_FIELD_OPTIONS],
-    },
-    { key: "aspectRatio", type: "string", label: "Aspect Ratio" },
     {
       key: "fit",
       type: "choice",
@@ -241,32 +164,25 @@ export const PHI_GALLERY_WIDGET_DEFINITION = {
         { value: "cover", label: "Cover" },
         { value: "contain", label: "Contain" },
       ],
+      visibleWhen: { field: "variantKey", equals: null },
     },
-    {
-      key: "controls",
-      type: "choice",
-      label: "Controls",
-      options: [
-        { value: "both", label: "Arrows and dots" },
-        { value: "arrows", label: "Arrows" },
-        { value: "dots", label: "Dots" },
-        { value: "none", label: "None" },
-      ],
-    },
-    { key: "loop", type: "boolean", label: "Wrap Around" },
-    {
-      // Zero is the one value below the floor that means something: it does not move on its own.
-      key: "autoplayMs",
-      type: "number",
-      label: "Autoplay",
-      min: 0,
-      max: PHI_SEQUENCE_TRANSITION_MAX_MS,
-      step: PHI_SEQUENCE_TRANSITION_STEP_MS,
-      prefix: "ms",
-    },
+    { key: "preview", type: "boolean", label: "Lightbox", description: "Open a picture larger over the page when it is clicked." },
+    ...PHI_GALLERY_SEQUENCE_FIELDS.window,
+    ...PHI_GALLERY_SEQUENCE_FIELDS.movement,
+    ...PHI_GALLERY_SEQUENCE_FIELDS.controls,
   ],
-  // Bound to the Folder Provider from the start, so the inspector asks for a folder and nothing else.
-  defaultConfig: { source: { providerKey: PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.folderImages, params: {} } },
+  /*
+   * Bound to the Folder Provider from the start, so the inspector asks for a folder and nothing else.
+   * The rest is what the Gallery does when nobody said otherwise, stated here so the Inspector shows
+   * it as the standing answer rather than an empty box over a setting that was never in doubt.
+   */
+  defaultConfig: {
+    source: { providerKey: PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.folderImages, params: {} },
+    preview: false,
+    aspectRatio: PHI_GALLERY_DEFAULT_ASPECT_RATIO,
+    fit: "cover",
+    ...PHI_SEQUENCE_SETTINGS_DEFAULTS,
+  },
   parseConfig: parsePhiCmsGalleryWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiCmsGalleryWidgetConfig>,

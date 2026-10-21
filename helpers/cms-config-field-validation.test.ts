@@ -64,6 +64,22 @@ describe("what is refused", () => {
       .toHaveLength(1);
   });
 
+  it("holds a choice of numbers to the numbers, not their spelling", () => {
+    // The Image's Variant: a key that is a number everywhere else is stored as one.
+    const field: PhiCmsConfigField = {
+      key: "variantKey",
+      type: "choice",
+      valueType: "number",
+      label: "Variant",
+      options: [{ value: 4, label: "Card" }, { value: 5, label: "Hero" }],
+      emptyOption: { value: "__original__", label: "Original" },
+      emptyValue: null,
+    };
+    expect(findPhiCmsConfigViolations([field], { variantKey: 4 })).toEqual([]);
+    expect(findPhiCmsConfigViolations([field], { variantKey: null })).toEqual([]);
+    expect(findPhiCmsConfigViolations([field], { variantKey: "4" })).toHaveLength(1);
+  });
+
   it("reports each bad field rather than only the first", () => {
     expect(findPhiCmsConfigViolations([CHOICE, NUMBER], { transition: "flip", durationMs: 5 }))
       .toHaveLength(2);

@@ -13,6 +13,8 @@ import {
 } from "../../../../../components/widgets/shared/markdown-body-client";
 import { PhiCollectionLayoutControl } from "../../../../../components/controls/phi-collection-layout-control";
 import { PhiCardWidgetClient } from "../../../../../components/widgets/shared/card-body-client";
+import { PhiSequenceRun } from "../../../../../components/motion/phi-sequence-run";
+import type { PhiSequenceSettings } from "../../../../../components/widgets/config/sequence-settings";
 import { PHI_SURFACE_CARD } from "../../../../../helpers/surface-presets";
 import { PHI_FONT_SIZE, PHI_SPACE } from "../../../../../theme/antd-css-var-contract";
 import { hasPhiContentEntryPart, PhiContentEntryPart } from "../../../../../constants/content-entry-parts";
@@ -61,6 +63,8 @@ export type PhiEntryListWidgetClientProps = {
   parts: number;
   /** The list's own heading, drawn only above entries -- an empty related list leaves no heading behind. */
   title?: string;
+  /** How a slideshow moves; only a slideshow is handed one. */
+  sequence?: PhiSequenceSettings;
   /** Whether no entries is said or simply nothing: a related list under an entry says nothing. */
   emptyBehavior?: "say" | "hide";
 };
@@ -296,6 +300,7 @@ export function PhiEntryListWidgetClient({
   presentation,
   parts,
   title,
+  sequence,
   emptyBehavior = "say",
 }: PhiEntryListWidgetClientProps) {
   if (entries.length === 0) {
@@ -324,7 +329,13 @@ export function PhiEntryListWidgetClient({
       </PhiTypographyControl>
     </PhiDividerControl>
   ) : null;
-  const body = presentation === "cards" ? (
+  const body = presentation === "slideshow" ? (
+    <PhiSequenceRun
+      items={entries.map((entry) => <PhiEntryCard key={entry.id} entry={entry} parts={parts} />)}
+      settings={sequence}
+      labels={labels.sequence}
+    />
+  ) : presentation === "cards" ? (
     <PhiCollectionLayoutControl
       mode="grid"
       gap={PHI_SPACE.base}

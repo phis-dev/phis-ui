@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { PhiSequenceControlLabels } from "../label-types/sequence";
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
 import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 
@@ -269,6 +270,14 @@ const PHI_CONTENT_ENTRY_READER_LABEL_SET = definePhiLabelSet({
     unavailable: definePhiMessageLabel("The entries could not be loaded just now."),
     read_more: "Read more",
     read_entry: "Read",
+    // A slideshow's buttons and dots, and its name for a screen reader.
+    previous: "Previous",
+    next: "Next",
+    page: definePhiMessageLabel("Show entries %1 to %2"),
+    pause: "Pause",
+    play: "Play",
+    region: "Entries",
+    pages: definePhiMessageLabel("Choose entries"),
   },
 });
 
@@ -280,6 +289,15 @@ export async function getPhiContentEntryReaderLabels(options: PhiGlobalTranslato
     unavailable: labels.unavailable,
     readMore: labels.read_more,
     readEntry: labels.read_entry,
+    sequence: {
+      previous: labels.previous,
+      next: labels.next,
+      page: labels.page,
+      pause: labels.pause,
+      play: labels.play,
+      region: labels.region,
+      pages: labels.pages,
+    } satisfies PhiSequenceControlLabels,
   };
 }
 

@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 import {
   clampPhiSequenceTransitionMs,
   type PhiMotionEasing,
   type PhiSequenceAnchor,
   type PhiSequenceTransition,
+  PHI_SEQUENCE_DEFAULT_DURATION_MS,
+  PHI_SEQUENCE_DEFAULT_EASING,
 } from "../../helpers/motion";
 import {
   shouldPhiCmsContentStayMounted,
@@ -22,17 +24,13 @@ import {
  * index -- a signal channel, a pair of arrows, a timer -- owns it outside.
  *
  * Two geometries, chosen by the transition, because the two ways of showing a sequence are genuinely
- * different acts. `slide` and `diagonal` lay the items out side by side on a track and move the track:
- * the neighbours exist next to the window and arrive from the direction they were in. `fade` and
- * `none` put the window's items in flow and cross-fade the ones that are leaving over the top, which
- * is what the Stack has always done -- the items do not travel, they exchange places.
+ * different acts. `slide` lays the items out side by side on a track and moves the track: the
+ * neighbours exist next to the window and arrive from the direction they were in. `fade`, `diagonal`
+ * and `none` keep the window where it is and exchange what stands in its places -- the Stack's way.
+ * A fade crosses the leaving items over into the coming ones; a diagonal leaves the old ones standing
+ * and slides each new one over its place from the corner it comes from, below and after it going
+ * forward, above and before it going back. Nothing travels sideways.
  */
-
-/** How far a diagonal leaves the horizontal, as a share of the travel it is already making. */
-const DIAGONAL_RISE = 0.35;
-
-/** What a caller who says nothing gets: long enough to read as movement, short enough to ignore. */
-const DEFAULT_SEQUENCE_DURATION_MS = 320;
 
 export type PhiSequenceViewportProps = {
   items: readonly ReactNode[];
@@ -111,7 +109,7 @@ export function PhiSequenceViewport({
   // whole number is a caller's mistake, and the type says so rather than this line rescuing it.
   const span = Math.min(visibleCount, Math.max(itemCount, 1));
   const start = resolvePhiSequenceWindowStart({ activeIndex, visibleCount: span, itemCount, anchor });
-  const onTrack = transition === "slide" || transition === "diagonal";
+  const onTrack = transition === "slide";
 
   /*
    * Which items have ever been inside the window, which is what `lazy-keep` keeps.
@@ -164,9 +162,9 @@ export function PhiSequenceViewport({
   const resolvedDurationMs = reducedMotion || transition === "none"
     ? 0
     : durationMs === undefined
-      ? DEFAULT_SEQUENCE_DURATION_MS
+      ? PHI_SEQUENCE_DEFAULT_DURATION_MS
       : clampPhiSequenceTransitionMs(durationMs);
-  const resolvedEasing = easing ?? "ease-in-out";
+  const resolvedEasing = easing ?? PHI_SEQUENCE_DEFAULT_EASING;
 
   const gapLength = toCssLength(gap);
   const slice = span === 1
@@ -188,11 +186,78 @@ export function PhiSequenceViewport({
     }
   }
 
-  const trackTransform = onTrack
-    ? `translate3d(calc(-1 * ${start} * ${step}), ${
-      transition === "diagonal" ? `calc(-1 * ${start} * ${step} * ${DIAGONAL_RISE})` : "0px"
-    }, 0)`
-    : undefined;
+  const trackTransform = onTrack ? `translate3d(calc(-1 * ${start} * ${step}), 0px, 0)` : undefined;
+
+  /*
+   * The exchange between two windows off the track, played after the new window is laid out and before
+   * it is painted, so the first frame already starts where the movement does.
+   *
+   * At the tail the last window overlaps the one before it -- five pictures three at a time go one to
+   * three, then three to five -- so an item can be in both windows at another place. It cannot leave
+   * where it was and arrive where it goes as one element, and moving it at once read as the one picture
+   * that changed without a transition. So it arrives at its new place like any other, and a copy of it
+   * stands in its old place until the leaving window is let go.
+   */
+  const leavingStart = onTrack ? null : fadeState.outgoingStart;
+  const movedIndices = leavingStart === null
+    ? []
+    : Array.from({ length: span }, (_, offset) => leavingStart + offset)
+      // In the window it left and in the one it enters: a new start puts it at another place.
+      .filter((index) => index >= start && index < start + span);
+  const itemElements = useRef<(HTMLDivElement | null)[]>([]);
+  const trackElement = useRef<HTMLDivElement | null>(null);
+  const previousStart = useRef(start);
+  const runningAnimations = useRef<Animation[]>([]);
+  useLayoutEffect(() => {
+    const from = previousStart.current;
+    previousStart.current = start;
+    if (from === start || onTrack || resolvedDurationMs === 0) return;
+    /*
+     * A step taken while the last one is still moving -- a click on top of autoplay, an interval as
+     * short as the movement -- starts from a window that has arrived. Left running, the half-arrived
+     * items became the leaving ones over nothing, because what stood under them was let go.
+     */
+    for (const animation of runningAnimations.current) animation.finish();
+    runningAnimations.current = [];
+    const timing = { duration: resolvedDurationMs, easing: resolvedEasing };
+    const windowIndices = Array.from({ length: span }, (_, offset) => start + offset);
+    const moved = windowIndices.filter((index) => index >= from && index < from + span);
+    const copyOf = (index: number) =>
+      trackElement.current?.querySelector<HTMLDivElement>(`[data-phi-sequence-leaving="${index}"]`);
+
+    if (transition === "fade") {
+      for (const index of moved) {
+        // Not held at the end: the item's own opacity is 1 already, and a held animation would outlast
+        // the next fade that wants to take it away.
+        const arriving = itemElements.current[index]?.animate?.([{ opacity: 0 }, { opacity: 1 }], timing);
+        // The copy is held at nothing until it goes, which is when the leaving window is let go.
+        const leaving = copyOf(index)?.animate?.([{ opacity: 1 }, { opacity: 0 }], { ...timing, fill: "forwards" });
+        runningAnimations.current.push(...[arriving, leaving].filter((animation) => animation !== undefined));
+      }
+      return;
+    }
+
+    if (transition === "diagonal") {
+      /*
+       * A whole place's width and height, as a percentage of the item itself: every new item starts one
+       * box off its place, so each comes in from outside the window's corner, whatever its proportion.
+       */
+      const offset = start > from ? "100%" : "-100%";
+      const animations = windowIndices.flatMap((index) => {
+        const animation = itemElements.current[index]?.animate?.(
+          [{ translate: `${offset} ${offset}` }, { translate: "0 0" }],
+          timing,
+        );
+        return animation ? [animation] : [];
+      });
+      runningAnimations.current = animations;
+      // Nothing fades here, so no transition ends to say so: the window is let go when the last item is in.
+      void Promise.all(animations.map((animation) => animation.finished)).then(
+        () => setFadeState((current) => (current.start === start ? { ...current, outgoingStart: null } : current)),
+        () => undefined,
+      );
+    }
+  }, [start, span, onTrack, transition, resolvedDurationMs, resolvedEasing]);
 
   const renderedItems = items.map((item, index) => {
     const visible = index >= start && index < start + span;
@@ -209,7 +274,8 @@ export function PhiSequenceViewport({
       ? { flex: `0 0 ${slice}`, minWidth: 0 }
       : {
         ...(visible
-          ? { flex: `0 0 ${slice}`, minWidth: 0 }
+          // Above what leaves, so a diagonal's new items cover the old ones they slide over.
+          ? { flex: `0 0 ${slice}`, minWidth: 0, position: "relative", zIndex: 1 }
           : {
             position: "absolute",
             insetBlockStart: 0,
@@ -219,19 +285,25 @@ export function PhiSequenceViewport({
               : 0,
             width: slice,
           }),
-        opacity: visible ? 1 : 0,
-        transition: resolvedDurationMs > 0
+        // A diagonal's leaving items stand until the new ones cover them; a fade's go out.
+        opacity: visible || (outgoing && transition === "diagonal" && resolvedDurationMs > 0) ? 1 : 0,
+        transition: resolvedDurationMs > 0 && transition === "fade"
           ? `opacity ${resolvedDurationMs}ms ${resolvedEasing}`
           : undefined,
       };
 
+    const ref = (element: HTMLDivElement | null) => {
+      itemElements.current[index] = element;
+    };
+
     if (!mounted && !visible && !outgoing) {
-      return <div key={index} aria-hidden style={{ ...box, pointerEvents: "none" }} />;
+      return <div key={index} ref={ref} aria-hidden style={{ ...box, pointerEvents: "none" }} />;
     }
 
     return (
       <div
         key={index}
+        ref={ref}
         data-phi-sequence-item-state={visible ? "visible" : outgoing ? "outgoing" : "waiting"}
         inert={!visible}
         aria-hidden={!visible || undefined}
@@ -246,9 +318,14 @@ export function PhiSequenceViewport({
     <div
       className={className}
       data-phi-sequence-transition={transition}
-      style={{ position: "relative", overflow: "hidden", minWidth: 0, ...style }}
+      /*
+       * Its own stacking context: the items it raises over the leaving ones are raised inside it, never
+       * over the arrows and buttons a caller lays over the viewport.
+       */
+      style={{ position: "relative", overflow: "hidden", isolation: "isolate", minWidth: 0, ...style }}
     >
       <div
+        ref={trackElement}
         style={{
           position: "relative",
           display: "flex",
@@ -281,6 +358,27 @@ export function PhiSequenceViewport({
           : () => setFadeState((current) => ({ ...current, outgoingStart: null }))}
       >
         {renderedItems}
+        {leavingStart === null ? null : movedIndices.map((index) => (
+          <div
+            key={`leaving-${index}`}
+            data-phi-sequence-leaving={index}
+            aria-hidden
+            inert
+            style={{
+              position: "absolute",
+              insetBlockStart: 0,
+              insetBlockEnd: 0,
+              insetInlineStart: `calc(${index - leavingStart} * ${step})`,
+              width: slice,
+              // Under the window's own items, which arrive over it.
+              zIndex: 0,
+              pointerEvents: "none",
+              ...itemStyle,
+            }}
+          >
+            {items[index]}
+          </div>
+        ))}
       </div>
     </div>
   );

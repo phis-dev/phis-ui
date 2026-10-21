@@ -39,6 +39,7 @@ export const PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
       {
         key: "folderId",
         type: "choice",
+        heading: "Folder",
         label: "Folder",
         optionsProvider: { providerKey: PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaFolderChoices },
       },

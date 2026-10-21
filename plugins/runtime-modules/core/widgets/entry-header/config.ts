@@ -1,3 +1,4 @@
+import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../../../constants/core-data-provider-keys";
 import { isPhiRecord } from "../../../../../helpers/is-record";
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
@@ -61,7 +62,13 @@ export const PHI_ENTRY_HEADER_WIDGET_DEFINITION = {
   icon: "antd:profile",
   slotSizePolicy: "fill-inline",
   fields: [
-    { key: "entry", type: "data-provider", providerKind: "record", label: "Entry" },
+    {
+      key: "entry",
+      type: "data-provider",
+      providerKind: "record",
+      providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntry,
+      label: "Entry",
+    },
     { key: "show", type: "flags", label: "Show", options: phiContentEntryPartOptions(PHI_ENTRY_HEADER_PARTS) },
     {
       key: "titleLevel",

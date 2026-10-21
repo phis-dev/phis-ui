@@ -31,6 +31,7 @@ import type { PhiCmsLayoutPluginDefinition } from "../../types/cms-plugins";
 import type { PhiLayoutKind } from "./phi-layout-contract";
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../types/signals";
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../constants/core-data-provider-keys";
+import { PHI_SPACING_SCALE_KEYS } from "../widgets/config/spacing-options";
 import type {
   PhiCmsCarouselLayoutConfig,
   PhiCmsCollapsibleLayoutConfig,
@@ -410,7 +411,12 @@ export const PHI_CAROUSEL_LAYOUT_DEFINITION = {
       label: "Easing",
       options: [...PHI_MOTION_EASING_FIELD_OPTIONS],
     },
-    { key: "slotGap", type: "string", label: "Slot Gap" },
+    {
+      key: "slotGap",
+      type: "choice",
+      label: "Slot Gap",
+      options: PHI_SPACING_SCALE_KEYS.map((key) => ({ value: key, label: key })),
+    },
     {
       key: "controls",
       type: "choice",

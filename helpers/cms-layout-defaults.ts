@@ -2,6 +2,7 @@ import { PHI_SPACE } from "../theme/antd-css-var-contract";
 import type { PhiLayoutKind } from "../components/layouts/phi-layout-contract";
 import { PHI_RENDERABLE_BLOCK_DEFAULT_ANCHOR } from "./renderable-block-defaults";
 import { isPhiRecord } from "./is-record";
+import { PHI_SEQUENCE_DEFAULT_DURATION_MS, PHI_SEQUENCE_DEFAULT_EASING } from "./motion";
 import { PHI_SURFACE_CARD } from "./surface-presets";
 import { PHI_GRID_LAYOUT_DEFAULT_COLUMNS } from "../components/layouts/phi-grid-contract";
 import { PHI_MASONRY_LAYOUT_DEFAULT_COLUMNS } from "../components/layouts/phi-masonry-contract";
@@ -133,9 +134,13 @@ const PHI_STACK_LAYOUT_PANEL_PRESET = {
 
 const PHI_CAROUSEL_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     // A slide is what tells somebody the slots are a run rather than a set, so it is the opening
-    // impression rather than a preference to be discovered. Everything else is left absent: the
-    // duration then follows the theme, and the window shows one slot until somebody widens it.
+    // impression rather than a preference to be discovered. The window shows one slot until
+    // somebody widens it. The pace is the sequence's own, stated so the Inspector shows the number
+    // in effect rather than an empty box.
     transition: "slide",
+    transitionDurationMs: PHI_SEQUENCE_DEFAULT_DURATION_MS,
+    transitionEasing: PHI_SEQUENCE_DEFAULT_EASING,
+    slotGap: "none",
     visibleSlots: 1,
     windowAnchor: "start",
     /*
@@ -148,6 +153,8 @@ const PHI_CAROUSEL_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
      */
     controls: "arrows",
     loop: false,
+    autoplayMs: 0,
+    lookahead: 1,
 };
 const PHI_CAROUSEL_LAYOUT_PANEL_PRESET = {
     padding: PHI_SPACE.base,

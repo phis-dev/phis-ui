@@ -11,6 +11,7 @@ import type { PhiResolvedLinkTargets } from "../../../../../types/references";
 import { readPhiBoundContentEntry } from "../../content-entries/record-source.server";
 import { buildPhiEntryViews } from "./view.server";
 import { normalizePhiEntryListWidgetConfig, type PhiEntryListWidgetConfig } from "./config";
+import { pickPhiSequenceSettings } from "../../../../../components/widgets/config/sequence-settings";
 
 export type PhiEntryListWidgetProps = PhiServerBlockBaseProps<PhiNoLabels, PhiEntryListWidgetConfig> & {
   /** Where the record binding is answered; absent outside a page render, where nothing is bound. */
@@ -94,6 +95,7 @@ export async function PhiEntryListWidget({ config, runtime, registry, links, tra
         entries: views,
         labels,
         presentation: settings.presentation,
+        ...(settings.presentation === "slideshow" ? { sequence: pickPhiSequenceSettings(settings) } : {}),
         parts: settings.show,
         ...(title ? { title } : {}),
         emptyBehavior: related ? "hide" : "say",

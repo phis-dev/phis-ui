@@ -73,6 +73,14 @@ export const PHI_SEQUENCE_TRANSITION_MAX_MS = 600_000;
 export const PHI_SEQUENCE_TRANSITION_STEP_MS = 100;
 
 /**
+ * What a sequence that says nothing moves at: long enough to read as movement, short enough to
+ * ignore. Exported so that a Widget can state it as its default and the Inspector shows the number
+ * that is actually in effect instead of an empty box.
+ */
+export const PHI_SEQUENCE_DEFAULT_DURATION_MS = 320;
+export const PHI_SEQUENCE_DEFAULT_EASING: PhiMotionEasing = "ease-in-out";
+
+/**
  * The two ways of showing a sequence, and which end of a wider window an index means.
  *
  * They live here rather than beside the viewport that draws them because a stored configuration is

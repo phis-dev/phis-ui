@@ -19,7 +19,7 @@ describe("what a Carousel accepts", () => {
       transition: "diagonal",
       transitionDurationMs: 480,
       transitionEasing: "ease-out",
-      slotGap: "16px",
+      slotGap: "md",
       controls: "both",
       loop: true,
       autoplayMs: 5000,
@@ -30,7 +30,7 @@ describe("what a Carousel accepts", () => {
       transition: "diagonal",
       transitionDurationMs: 480,
       transitionEasing: "ease-out",
-      slotGap: "16px",
+      slotGap: "md",
       controls: "both",
       loop: true,
       autoplayMs: 5000,
@@ -46,9 +46,10 @@ describe("what a Carousel accepts", () => {
     expect(parsed.windowAnchor).toBe("start");
     // Arrows rather than dots: a handful of authored blocks, and no strip of space under them.
     expect(parsed.controls).toBe("arrows");
-    // No duration means the theme's pace, not a number this parser invented.
-    expect(parsed.transitionDurationMs).toBeUndefined();
-    expect(parsed.transitionEasing).toBeUndefined();
+    // The sequence's own pace, stated so the Inspector shows the number in effect.
+    expect(parsed.transitionDurationMs).toBe(320);
+    expect(parsed.transitionEasing).toBe("ease-in-out");
+    expect(parsed.slotGap).toBe("none");
   });
 
   it("brings a duration into range, because the bounds are what the setting means", () => {
@@ -59,7 +60,7 @@ describe("what a Carousel accepts", () => {
 
   it("reads zero autoplay as not moving on its own", () => {
     // The one number below the floor that means something, so it is not lifted to it.
-    expect(parsePhiCmsCarouselLayoutConfig({ autoplayMs: 0 }).autoplayMs).toBeUndefined();
+    expect(parsePhiCmsCarouselLayoutConfig({ autoplayMs: 0 }).autoplayMs).toBe(0);
   });
 });
 
@@ -73,6 +74,8 @@ describe("what a Carousel refuses", () => {
       .toThrow(/Invalid Phi motion easing/);
     expect(() => parsePhiCmsCarouselLayoutConfig({ controls: "buttons" }))
       .toThrow(/Invalid Carousel controls/);
+    expect(() => parsePhiCmsCarouselLayoutConfig({ slotGap: "16px" }))
+      .toThrow(/Invalid Carousel slotGap/);
   });
 
   it("refuses a count that is not one", () => {

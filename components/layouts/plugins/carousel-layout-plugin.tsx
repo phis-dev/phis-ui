@@ -9,6 +9,7 @@ import { PhiCarouselLayout } from "../phi-carousel-layout";
 import { definePhiLayoutRenderers } from "../layout-plugin-renderers";
 import { resolvePhiLayoutSlotMeta } from "../layout-slot-meta";
 import { PHI_CAROUSEL_LAYOUT_DEFINITION } from "../layout-definitions";
+import { resolvePhiSpacingScaleValue } from "../../widgets/config/spacing-options";
 
 function resolvePhiCarouselSlotKeys() {
   return PHI_CMS_CAROUSEL_LAYOUT_SLOTS.map((slot) => slot.key);
@@ -35,7 +36,7 @@ export const PHI_CAROUSEL_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsCarouselLayout
       transition={config.transition}
       transitionDurationMs={config.transitionDurationMs}
       transitionEasing={config.transitionEasing}
-      slotGap={config.slotGap}
+      slotGap={resolvePhiSpacingScaleValue(config.slotGap ?? "none")}
       controls={config.controls}
       loop={config.loop}
       autoplayMs={config.autoplayMs}

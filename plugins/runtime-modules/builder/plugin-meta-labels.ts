@@ -32,10 +32,10 @@ function mapOptionalText(value: string | null | undefined, mapText: (text: strin
   return value == null || value.trim().length === 0 ? value ?? undefined : mapText(value);
 }
 
-function mapPhiControlOptionText(
-  option: PhiControlOption,
+function mapPhiControlOptionText<TValue extends string | number>(
+  option: PhiControlOption<TValue>,
   mapText: (text: string) => string,
-): PhiControlOption {
+): PhiControlOption<TValue> {
   return {
     ...option,
     label: mapOptionalText(option.label, mapText) ?? option.label,
@@ -54,6 +54,15 @@ function mapPhiConfigFieldText(
     ...(field.description == null ? {} : { description: mapOptionalText(field.description, mapText) }),
     ...(field.heading == null ? {} : { heading: mapOptionalText(field.heading, mapText) }),
   } as PhiCmsConfigField;
+
+  if (mapped.type === "choice" && mapped.valueType === "number") {
+    return {
+      ...mapped,
+      options: mapped.options.map((option) => mapPhiControlOptionText(option, mapText)),
+      ...(mapped.emptyOption == null ? {} : { emptyOption: mapPhiControlOptionText(mapped.emptyOption, mapText) }),
+      ...(mapped.placeholder == null ? {} : { placeholder: mapOptionalText(mapped.placeholder, mapText) }),
+    };
+  }
 
   if (mapped.type === "choice") {
     return {
