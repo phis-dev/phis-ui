@@ -1,11 +1,8 @@
 "use client";
 
-import { Timeline } from "antd";
+import { lazy, Suspense } from "react";
 
 import type { PhiTimelineTone } from "@phis/contracts/timeline";
-
-import { PHI_COLOR } from "../../theme/antd-css-var-contract";
-import { PhiIcon } from "../shell/phi-icon";
 
 export type PhiTimelineControlItem = {
   key: string;
@@ -31,16 +28,9 @@ export type PhiTimelineControlProps = {
   ariaLabel?: string;
 };
 
-/*
- * Ant Design colours four marks by name and takes anything else as a CSS colour. The Theme's own tokens
- * go in as that colour, so a tone follows the Theme the way a text tone does.
- */
-const PHI_TIMELINE_TONE_COLOR = {
-  secondary: PHI_COLOR.textTertiary,
-  success: PHI_COLOR.success,
-  warning: PHI_COLOR.warning,
-  danger: PHI_COLOR.error,
-} satisfies Record<PhiTimelineTone, string>;
+const PhiTimelineControlAdapter = lazy(() =>
+  import("./phi-timeline-control-adapter")
+    .then((module) => ({ default: module.PhiTimelineControlAdapter })));
 
 /**
  * What happened, in order: a ticket's history, the revisions of a Page, the stages of an order.
@@ -49,24 +39,22 @@ const PHI_TIMELINE_TONE_COLOR = {
  * a Timeline here is a record a Widget stores or a Module reads, so its entries are words and tones.
  * The time stands in Ant Design's title column when the entry has no title of its own, and in front of
  * the title otherwise -- one column, so that `alternate` still has a side to put it on.
+ *
+ * Until the primitive has loaded, the entries stand there as a plain list, in the same words.
  */
-export function PhiTimelineControl({
-  items,
-  placement = "start",
-  ariaLabel,
-}: PhiTimelineControlProps) {
+export function PhiTimelineControl(props: PhiTimelineControlProps) {
+  const fallback = (
+    <ol aria-label={props.ariaLabel} style={{ listStyle: "none", margin: 0, padding: 0 }}>
+      {props.items.map((item) => (
+        <li key={item.key}>
+          {[item.time, item.title, item.content].filter(Boolean).join(" · ")}
+        </li>
+      ))}
+    </ol>
+  );
   return (
-    <Timeline
-      aria-label={ariaLabel}
-      mode={placement}
-      items={items.map((item) => ({
-        key: item.key,
-        title: item.title && item.time ? `${item.time} · ${item.title}` : item.title ?? item.time,
-        content: item.content,
-        icon: item.icon ? <PhiIcon name={item.icon} size="inherit" /> : undefined,
-        color: item.tone ? PHI_TIMELINE_TONE_COLOR[item.tone] : undefined,
-        loading: item.pending,
-      }))}
-    />
+    <Suspense fallback={fallback}>
+      <PhiTimelineControlAdapter {...props} />
+    </Suspense>
   );
 }
