@@ -108,8 +108,12 @@ export function normalizePhiImageWidgetConfig(config: unknown): PhiCmsImageWidge
     borderBottomRightRadius: readCssSize(raw.borderBottomRightRadius),
     mask: normalizePhiMaskConfig(raw.mask),
   };
+  /*
+   * An Asset without a word about its variant gets the Card variant; `null` is a word -- the Inspector's
+   * Original -- and stays. Read from the raw config, because the source parser answers `null` for both.
+   */
   return source.sourceKind === "asset"
-    ? { ...normalized, ...source, variantKey: source.variantKey ?? PhiImageAssetVariantKey.Card }
+    ? { ...normalized, ...source, variantKey: raw.variantKey === null ? null : source.variantKey ?? PhiImageAssetVariantKey.Card }
     : { ...normalized, ...source };
 }
 
@@ -163,17 +167,29 @@ export const PHI_IMAGE_WIDGET_DEFINITION = {
     },
     { key: "alt", type: "string", label: "Alt Text", visibleWhen: { field: "sourceKind", equals: "url" } },
     { key: "title", type: "string", label: "Title", visibleWhen: { field: "sourceKind", equals: "url" } },
+    /*
+     * Fit and position steer only the original picture, an Asset's or a URL's. A variant is cut to its
+     * own fit, and its position comes from the Asset's focal rectangle, so with a variant chosen both
+     * would be settings that change nothing. A URL clears the variant, so one rule covers both cases.
+     */
     {
       key: "fit",
       type: "choice",
       label: "Fit",
+      visibleWhen: { field: "variantKey", equals: null },
       options: [
         { value: "cover", label: "Cover" },
         { value: "contain", label: "Contain" },
         { value: "fill", label: "Fill" },
       ],
     },
-    { key: "objectPosition", type: "choice", label: "Object Position", options: IMAGE_OBJECT_POSITION_OPTIONS },
+    {
+      key: "objectPosition",
+      type: "choice",
+      label: "Object Position",
+      options: IMAGE_OBJECT_POSITION_OPTIONS,
+      visibleWhen: { field: "variantKey", equals: null },
+    },
     {
       key: "previewMode",
       type: "choice",

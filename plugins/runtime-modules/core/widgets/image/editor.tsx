@@ -139,7 +139,12 @@ export function PhiImageWidgetEditorTools({
       style={{ display: "inline-flex" }}
     >
       <PhiWidgetImageToolButton blockId={blockId} onChange={(patch) => onChange?.(patch)} />
+      {/*
+        * Above the image rather than below its tools: the tools sit on the image's top edge, and a picker
+        * hanging down from them covered exactly the picture the mask is being set on.
+        */}
       <PhiMaskPickerButton
+        placement="topRight"
         value={config?.mask}
         onChange={(mask) => {
           onChange?.({ mask });
