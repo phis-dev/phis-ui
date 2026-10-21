@@ -1,10 +1,11 @@
 "use client";
 
 import NextImage from "next/image";
-import { useState, type CSSProperties } from "react";
+import { useState, type CSSProperties, type KeyboardEvent } from "react";
 
 import type { PhiImagePresentation } from "../media/image-presentation";
 import { PhiLightboxImageControl } from "./phi-lightbox-image-control";
+import { PhiZoomImageOverlay } from "./phi-zoom-image-overlay";
 
 /**
  * Where a picture comes from, which decides what may be done with it.
@@ -39,6 +40,11 @@ export type PhiImageControlProps = {
   loading?: "eager" | "lazy";
   /** Opens the picture larger over the page when clicked. */
   preview?: boolean;
+  /**
+   * Scales the picture to the viewport over the page when clicked, with nothing around it; another click
+   * closes it. The plain counterpart of `preview`, which brings the lightbox's tools.
+   */
+  zoom?: boolean;
   /** The box around the picture: size, corners, mask. */
   style?: CSSProperties;
   /** Added to the picture's own style after the framing. */
@@ -76,10 +82,12 @@ export function PhiImageControl({
   preload = false,
   loading,
   preview = false,
+  zoom = false,
   style,
   imageStyle,
 }: PhiImageControlProps) {
   const [loadedUrl, setLoadedUrl] = useState<string | null>(null);
+  const [zoomed, setZoomed] = useState(false);
   const url = presentation.url;
   if (!url) {
     return null;
@@ -97,8 +105,26 @@ export function PhiImageControl({
     lineHeight: 0,
     overflow: presentation.simulatedCropStyle ? "hidden" : undefined,
     ...(loaded || blur ? {} : { backgroundColor: "var(--ant-color-fill-quaternary)" }),
+    ...(zoom ? { cursor: "zoom-in" } : {}),
     ...style,
   };
+  // The box is what is clicked: the picture itself may be `next/image`, which hands out no handler of ours.
+  const zoomTrigger = zoom
+    ? {
+        role: "button",
+        tabIndex: 0,
+        "aria-label": alt || title,
+        onClick: () => setZoomed(true),
+        onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          setZoomed(true);
+        },
+      } as const
+    : {};
+  const zoomOverlay = zoom ? (
+    <PhiZoomImageOverlay open={zoomed} src={url} alt={alt} title={title} onClose={() => setZoomed(false)} />
+  ) : null;
   const pictureStyle: CSSProperties = {
     objectFit: presentation.fit,
     objectPosition: presentation.objectPosition,
@@ -133,7 +159,7 @@ export function PhiImageControl({
 
   if (source !== "url" && numericWidth != null && numericHeight != null) {
     return (
-      <div style={boxStyle}>
+      <div style={boxStyle} {...zoomTrigger}>
         <NextImage
           alt={alt}
           src={url}
@@ -149,12 +175,13 @@ export function PhiImageControl({
           onLoad={markLoaded}
           style={pictureStyle}
         />
+        {zoomOverlay}
       </div>
     );
   }
 
   return (
-    <div style={boxStyle}>
+    <div style={boxStyle} {...zoomTrigger}>
       <img
         alt={alt}
         src={url}
@@ -166,6 +193,7 @@ export function PhiImageControl({
         onLoad={markLoaded}
         style={pictureStyle}
       />
+      {zoomOverlay}
     </div>
   );
 }

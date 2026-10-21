@@ -149,6 +149,7 @@ export function PhiImageWidget({
       sizes={config?.sizes}
       preload={config?.preload === true && isPublicAsset}
       preview={(config?.previewMode ?? "none") === "lightbox"}
+      zoom={config?.previewMode === "native"}
       style={{
         ...radiusStyle,
         ...maskStyle,
