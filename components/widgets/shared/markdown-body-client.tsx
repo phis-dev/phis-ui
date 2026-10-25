@@ -8,7 +8,7 @@ import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
 import { usePhiSignalEmitter } from "../../runtime/runtime-signal-identity";
 import { usePhiConfig, type PhiConfig } from "../../root/phi-config-provider";
 import type { PhiCodeToken, PhiCodeTokenKind } from "./markdown-code-tokens";
-import type { PhiMarkdownTextAlign } from "../../../types/core-widget-placements";
+import type { PhiMarkdownImageFloat, PhiMarkdownTextAlign } from "../../../types/core-widget-placements";
 import { resolvePhiSpacingScaleValue, type PhiSpacingScaleKey } from "../config/spacing-options";
 import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import type { PhiMarkdownTocHeading } from "../../../types/markdown";
@@ -68,6 +68,7 @@ export type PhiMarkdownWidgetClientProps = PhiClientBlockBaseProps<
     tocKey?: string;
     headings?: PhiMarkdownTocHeading[];
     textAlign?: PhiMarkdownTextAlign;
+    imageFloat?: PhiMarkdownImageFloat;
     textBlockSpacingBefore?: PhiSpacingScaleKey;
     textBlockSpacingAfter?: PhiSpacingScaleKey;
     headingBlockSpacingBefore?: PhiSpacingScaleKey;
@@ -314,7 +315,17 @@ export function PhiMarkdownWidgetClient({ config }: PhiMarkdownWidgetClientProps
   };
 
   return (
-    <div style={{ display: "grid", gap: 0, width: "100%", textAlign: config?.textAlign }}>
+    /*
+     * Pictures that the text flows past need ordinary flow: in a grid every paragraph is a box of its
+     * own and none of them would reach around a picture standing in another. Without the float the
+     * grid stays, so nothing changes for a text that never asked.
+     */
+    <div
+      className={config?.imageFloat ? `phi-markdown-body phi-markdown-body--float-${config.imageFloat}` : undefined}
+      style={config?.imageFloat
+        ? { display: "flow-root", width: "100%", textAlign: config.textAlign, containerType: "inline-size" }
+        : { display: "grid", gap: 0, width: "100%", textAlign: config?.textAlign }}
+    >
       {renderBlocks(blocks, token, paragraphBlockStyle, headingBlockStyle, {
         style: resolvePhiBulletListStyle(config?.list),
         depth: 1,

@@ -598,3 +598,29 @@ h5.phi-typography, .phi-typography h5 {
 .phi-plain-table tbody tr:last-child td {
   border-block-end: none;
 }
+
+/*
+ * Markdown pictures the text flows past (`imageFloat` on the Markdown Widget).
+ *
+ * Only where there is room for both: below 560px a picture beside the words leaves each of them a column
+ * nobody reads, so there the picture stands on its own line at full width, as an unfloated one does. The
+ * width is a share of the text with a ceiling, so a wide column does not grow the picture past a glance.
+ */
+.phi-markdown-body :is(img) {
+  display: block;
+  margin-block-end: var(--ant-margin, 16px);
+}
+
+@container (min-width: 560px) {
+  .phi-markdown-body--float-start :is(img) {
+    float: inline-start;
+    width: min(45%, 440px);
+    margin-inline-end: var(--ant-margin-lg, 24px);
+  }
+
+  .phi-markdown-body--float-end :is(img) {
+    float: inline-end;
+    width: min(45%, 440px);
+    margin-inline-start: var(--ant-margin-lg, 24px);
+  }
+}

@@ -1,5 +1,5 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
-import type { PhiMarkdownTextAlign } from "../../../../../types/core-widget-placements";
+import type { PhiMarkdownImageFloat, PhiMarkdownTextAlign } from "../../../../../types/core-widget-placements";
 import { PHI_SPACING_SCALE_KEYS, type PhiSpacingScaleKey } from "../../../../../components/widgets/config/spacing-options";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
@@ -26,6 +26,8 @@ export type PhiCmsMarkdownWidgetConfig = PhiCmsWidgetConfigBase & {
   /** Set at render from the node's `NoTranslate` flag, or by a caller that knows; never authored. */
   translate?: boolean;
   textAlign?: PhiMarkdownTextAlign;
+  /** Pictures stand at this edge and the text flows past them; absent, a picture is a line of its own. */
+  imageFloat?: PhiMarkdownImageFloat;
   textBlockSpacingBefore?: PhiSpacingScaleKey;
   textBlockSpacingAfter?: PhiSpacingScaleKey;
   headingBlockSpacingBefore?: PhiSpacingScaleKey;
@@ -45,6 +47,15 @@ const PHI_MARKDOWN_TEXT_ALIGN_OPTIONS: Array<{ value: PhiMarkdownTextAlign; labe
   { value: "end", label: "End" },
   { value: "justify", label: "Justify" },
 ];
+
+const PHI_MARKDOWN_IMAGE_FLOAT_OPTIONS: Array<{ value: PhiMarkdownImageFloat; label: string }> = [
+  { value: "start", label: "Start" },
+  { value: "end", label: "End" },
+];
+
+function readMarkdownImageFloat(value: unknown): PhiMarkdownImageFloat | undefined {
+  return value === "start" || value === "end" ? value : undefined;
+}
 
 // The one spacing scale every padding and gap speaks (`theme/phi-tokens.ts`), stored by its key.
 const PHI_MARKDOWN_SPACING_OPTIONS = PHI_SPACING_SCALE_KEYS.map((key) => ({ value: key, label: key }));
@@ -85,6 +96,7 @@ export function parsePhiCmsMarkdownWidgetConfig(config: Record<string, unknown>)
     sourceLocale: readString(config.sourceLocale),
     revalidateSeconds: readNumber(config.revalidateSeconds),
     textAlign: readMarkdownTextAlign(config.textAlign),
+    imageFloat: readMarkdownImageFloat(config.imageFloat),
     textBlockSpacingBefore: readMarkdownSpacingKey(config.textBlockSpacingBefore),
     textBlockSpacingAfter: readMarkdownSpacingKey(config.textBlockSpacingAfter),
     headingBlockSpacingBefore: readMarkdownSpacingKey(config.headingBlockSpacingBefore),
@@ -159,6 +171,12 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
       type: "choice",
       label: "Align",
       options: PHI_MARKDOWN_TEXT_ALIGN_OPTIONS,
+    },
+    {
+      key: "imageFloat",
+      type: "choice",
+      label: "Image Float",
+      options: PHI_MARKDOWN_IMAGE_FLOAT_OPTIONS,
     },
     {
       key: "textBlockSpacingBefore",

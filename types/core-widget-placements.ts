@@ -72,6 +72,9 @@ type PhiControlPlacement = Omit<PhiControlConfig, "signalRoutes">;
 /** Logical, not left and right: a Site in an RTL locale reads "start" as the right-hand edge. */
 export type PhiMarkdownTextAlign = "start" | "center" | "end" | "justify";
 
+/** Which edge the text's pictures stand at, with the words flowing past them; logical like the align. */
+export type PhiMarkdownImageFloat = "start" | "end";
+
 export type PhiMarkdownWidgetPlacement = PhiWidgetPlacementBase & {
   sourceMode?: "inline" | "url";
   markdown?: string;
@@ -79,6 +82,7 @@ export type PhiMarkdownWidgetPlacement = PhiWidgetPlacementBase & {
   sourceLocale?: string;
   revalidateSeconds?: number;
   textAlign?: PhiMarkdownTextAlign;
+  imageFloat?: PhiMarkdownImageFloat;
   textBlockSpacingBefore?: PhiSpacingScaleKey;
   textBlockSpacingAfter?: PhiSpacingScaleKey;
   headingBlockSpacingBefore?: PhiSpacingScaleKey;
