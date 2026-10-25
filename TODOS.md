@@ -35,39 +35,16 @@ built. Remove an entry when it is done.
 
 Collected for the next published `@phis/ui`, so they ship together rather than one package each.
 
-- **`on_visible` hides a Block until scripting releases it.** The rule in styles/root.css holds the
-  entrance at its first frame (`animation-play-state: paused`) until the client frame's
-  IntersectionObserver sets `data-phi-effects-state="running"`. A fade in therefore stands at opacity 0
-  until the page has hydrated -- even for a Block that is in the first viewport, whose text the server
-  already sent -- and for good where there is no scripting. `on_ready` already sits inside
-  `@media (scripting: enabled)` for exactly that reason; `on_visible` wants the same guard, and a Block
-  that is visible when the observer first reports should start at once rather than read as late.
-  Until then a Site package keeps first-viewport Blocks on `on_ready`.
-- **A Module's navigation label is the platform's text, and goes to the global store.**
-  `components/widgets/navigation-descriptor-resolver.server.ts` picks the translator by Area: the
-  global one in the Builder, the Site's everywhere else. So "Terms & Conditions" from
-  `area-definitions.ts` gets its own copy in every Site's store -- for a Site whose source language is
-  not English even as an `[extern]` unit -- and changing the global entry changes nothing a visitor
-  sees. Decided (approved by the operator): pick the translator by the label's origin, not by the
-  Area. A label carrying `sourceLocale` is a Module's and goes through `createGlobalTranslator`; one
-  without it is the Site's own (the overlay replaced it, see `PhiCmsNavigationLabel`) and goes through
-  `createSiteTranslator`. The labels are already batched by `sourceLocale`, so the split is the batch.
-  A Site that wants other words renames the entry, which overrides for that Site alone; only the
-  operator writes the global store. Module label sets already translate globally (`getPhiLabelSet`);
-  text written into a Widget's config stays the Site's.
-- **A Button with a reference and no text shows its signal key.** The Button client falls back
-  `action.label` → `config.label` → `controlSignals.key` (button/client.tsx), so a link Button left
-  without a label reads `read-on`. A Button whose target is a reference should take the target's own
-  label instead, translated where that label belongs: a Module Page's title through the global
-  translator, as for navigation above; a Site's own Page through the Site's. Buttons with an `action`
-  already read the global common control label set.
-- **The QR code preview names a private address.** `next/config.mjs:60` renders the Ant Design
-  `QRCode` placeholder with a domain that is not this project's. Use `https://phis.dev`, the one
-  domain these repositories may name.
 - **After the release, in each installation:** the Site-store copies of Module navigation labels (ctx
   `Web UI label`, including the `[extern]` units) are no longer read and can be deleted. Before that,
   check in `@phis/server` that a Site admin's translation editor writes `tr_site_*` only and that
   `tr_lang` is the operator's alone.
+- **A Flex in a vertical stack still takes a share of its height.** The Grid is as tall as its rows
+  now (`slotSizePolicy: "fill-inline"`); the Flex was left on `fill`, because nearly every Flex is an
+  Overlay header or footer, or a Header action row, sitting straight in its zone and centred in its
+  full height. In a Flex Vertical with a definite height it still grows into the room left over. Decide
+  whether a Flex nested in a Flex Vertical should size to its content while one at a zone's root keeps
+  filling, rather than changing the definition for all of them.
 
 ## Layouts and Widgets
 
