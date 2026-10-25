@@ -44,6 +44,11 @@ Collected for the next published `@phis/ui`, so they ship together rather than o
   found", "This page could not be found." and "Back to homepage" -- Preset text from the Public error page
   tree and the Widget's own default -- get a copy per Site. Same rule as Simple Text and Description: the
   Preset's words through the global store (`helpers/text-source.ts`), an author's through the Site's.
+- **Cards in a stretching Grid row do not share its height.** A Grid with `align: "stretch"` lays its
+  slots out at the row's height, but a Card stands at its own content's height inside the slot, so three
+  cards whose texts differ end at three different lines (seen with a 24px step on a three-card row).
+  The Card is `fill-inline`; in a stretching row it should take the slot's block size too, or the slot
+  should hand it down, so the surfaces end together.
 - **A Flex in a vertical stack still takes a share of its height.** The Grid is as tall as its rows
   now (`slotSizePolicy: "fill-inline"`); the Flex was left on `fill`, because nearly every Flex is an
   Overlay header or footer, or a Header action row, sitting straight in its zone and centred in its
