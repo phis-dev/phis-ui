@@ -169,6 +169,11 @@ export async function resolvePhiDescriptorNavigationItems(
   /*
    * One batch per source language. A Module's label names its language and is translated from it; an
    * operator's names none and is read in the Site's source language, which the server supplies.
+   *
+   * The batch also decides the store. A Module's label is the platform's text, the same on every Site,
+   * so it is translated once in the global store, which only the operator edits. A Site that wants
+   * other words renames the entry, the label loses its `sourceLocale`, and from then on it is the
+   * Site's own text in the Site's store. The Builder's surfaces carry Module labels only.
    */
   await Promise.all([...collectNavigationLabels(surface.items)].map(async ([sourceLocale, group]) => {
     const labels = [...group];
@@ -178,7 +183,7 @@ export async function resolvePhiDescriptorNavigationItems(
       locale: runtime.locale.current,
       ...(sourceLocale ? { sourceLocale } : {}),
     };
-    const translator = runtime.area === "builder"
+    const translator = sourceLocale || runtime.area === "builder"
       ? createGlobalTranslator(options)
       : createSiteTranslator({ ...options, siteKey: rt.siteKey });
     /*
