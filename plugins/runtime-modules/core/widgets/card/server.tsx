@@ -1,4 +1,4 @@
-import { trBulk } from "../../../../../server-helpers/translate";
+import { trBulk, trBulkForLocale } from "../../../../../server-helpers/translate";
 import type { PhiServerBlockBaseProps } from "../../../../../types";
 import type { PhiResolvedLinkTargets } from "../../../../../types/references";
 import type { PhiCmsCardWidgetConfig } from "./config";
@@ -57,7 +57,9 @@ export async function PhiCardWidget({
   ] as const;
 
   const translatedTexts = translate
-    ? await trBulk(textEntries.map(([, value]) => value ?? ""))
+    ? await (runtime?.locale.current
+      ? trBulkForLocale(runtime.locale.current, textEntries.map(([, value]) => value ?? ""))
+      : trBulk(textEntries.map(([, value]) => value ?? "")))
     : textEntries.map(([, value]) => value ?? "");
 
   const translatedByKey = new Map<string, string | undefined>(

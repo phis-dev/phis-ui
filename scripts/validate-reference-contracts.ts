@@ -823,7 +823,7 @@ for (const attribute of ["title", "width", "height"]) {
   );
   assert.match(
     markdownSource,
-    /trBulk\(titleSlots\.map\(\(slot\) => slot\.title\), 0, "text", sourceLocale\)/u,
+    /translateUnits\(locale, titleSlots\.map\(\(slot\) => slot\.title\), "text", sourceLocale\)/u,
     "A title must be translated as a unit of its own, never merged into the alt text's string.",
   );
   assert.match(

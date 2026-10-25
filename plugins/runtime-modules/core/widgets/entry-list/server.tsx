@@ -4,7 +4,7 @@ import { getPhiContentEntryReaderLabels } from "../../../../../components/widget
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { fetchPhiSiteContentEntries } from "../../../../../gateway/content-entries";
 import { phiRuntime } from "../../../../../server-helpers/phi-runtime";
-import { trBulk } from "../../../../../server-helpers/translate";
+import { trBulkForLocale } from "../../../../../server-helpers/translate";
 import type { PhiNoLabels, PhiServerBlockBaseProps } from "../../../../../types";
 import type { PhiCmsRuntimeRenderRegistry } from "../../../../../types/cms-plugins";
 import type { PhiResolvedLinkTargets } from "../../../../../types/references";
@@ -86,7 +86,7 @@ export async function PhiEntryListWidget({ config, runtime, registry, links, tra
     headingOffset: 2,
   });
 
-  const [title] = settings.title && translate ? await trBulk([settings.title]) : [settings.title];
+  const [title] = settings.title && translate ? await trBulkForLocale(locale, [settings.title]) : [settings.title];
 
   return (
     <PhiRuntimeModuleRenderClientHost

@@ -88,6 +88,7 @@ export async function PhiHtmlWidget({
       : await translateSemanticHtml(
           sourceHtml,
           sourceMode === "url" ? config?.sourceLocale?.trim() : undefined,
+          runtime.locale.current,
         );
 
   if (!translatedHtml) {

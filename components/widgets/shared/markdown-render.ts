@@ -3,7 +3,7 @@ import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
 
-import { trBulk } from "../../../server-helpers/translate";
+import { trBulk, trBulkForLocale } from "../../../server-helpers/translate";
 import type { PhiBlockRuntime, PhiRenderableBlockRenderMode } from "../../../types";
 import type { PhiCmsResolvedContent } from "../../../types/cms";
 import type { PhiMarkdownTocHeading } from "../../../types/markdown";
@@ -394,15 +394,32 @@ function parseTranslatedMarkdownInlines(
   return stack.length === 1 ? stack[0]?.children ?? [] : null;
 }
 
+/*
+ * The render's own locale where there is one. A static render has no request to ask: `trBulk` reads the
+ * locale from the request headers, finds none, and answers in the Site's default -- which left every
+ * static Public page's body in its source language under a translated header.
+ */
+function translateUnits(
+  locale: string | undefined,
+  msgs: string[],
+  format: "html" | "text",
+  sourceLocale?: string,
+) {
+  return locale
+    ? trBulkForLocale(locale, msgs, 0, format, sourceLocale)
+    : trBulk(msgs, 0, format, sourceLocale);
+}
+
 async function buildMarkdownInlineMap(
   tree: MarkdownNode,
   translate: boolean,
   sourceLocale?: string,
+  locale?: string,
 ) {
   const units: MarkdownTranslationUnit[] = [];
   collectMarkdownTranslationUnits(tree, units);
   const translated = translate && units.length > 0
-    ? await trBulk(units.map((unit) => unit.html), 0, "html", sourceLocale)
+    ? await translateUnits(locale, units.map((unit) => unit.html), "html", sourceLocale)
     : units.map((unit) => unit.html);
 
   /*
@@ -414,7 +431,7 @@ async function buildMarkdownInlineMap(
     unit.metadata.titles.flatMap((title, index) => title ? [{ metadata: unit.metadata, index, title }] : []),
   );
   if (translate && titleSlots.length > 0) {
-    const translatedTitles = await trBulk(titleSlots.map((slot) => slot.title), 0, "text", sourceLocale);
+    const translatedTitles = await translateUnits(locale, titleSlots.map((slot) => slot.title), "text", sourceLocale);
     titleSlots.forEach((slot, index) => {
       slot.metadata.titles[slot.index] = translatedTitles[index] || slot.title;
     });
@@ -676,7 +693,7 @@ async function resolveMarkdownRenderDataFromSource(
     headingIdPrefix,
     headingOffset,
   };
-  const inlineMap = await buildMarkdownInlineMap(tree, translate, sourceLocale);
+  const inlineMap = await buildMarkdownInlineMap(tree, translate, sourceLocale, runtime?.locale.current);
   const blocks = mapBlockNodes(tree.children, context, inlineMap);
 
   return { blocks, headings: context.headings };
