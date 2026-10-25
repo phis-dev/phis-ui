@@ -1,5 +1,6 @@
 import type { PhiBulletListEntry, PhiBulletListStyle } from "../components/widgets/shared/bullet-list-vocabulary";
 import type { PhiRenderableBlockBase } from "./renderable-block";
+import type { PhiTextSource } from "../helpers/text-source";
 import type { PhiRuntimeConditionExpression } from "./runtime-condition";
 import type { PhiSignalRoute, PhiSignalValue } from "./signals";
 import type { PhiCssLength } from "./length";
@@ -106,6 +107,8 @@ export type PhiSimpleTextWidgetPlacement = PhiWidgetPlacementBase & {
   tone?: PhiTextTone;
   marks?: PhiSimpleTextMark[];
   disabled?: boolean;
+  /** `"preset"` while the words are a Preset's (`helpers/text-source.ts`). */
+  textSource?: PhiTextSource;
 };
 
 // Description
@@ -119,6 +122,8 @@ export type PhiDescriptionWidgetPlacement = PhiWidgetPlacementBase & {
   asideList?: PhiBulletListStyle;
   footer?: string;
   tone?: PhiTextTone;
+  /** `"preset"` while the words are a Preset's (`helpers/text-source.ts`). */
+  textSource?: PhiTextSource;
 };
 
 // Button

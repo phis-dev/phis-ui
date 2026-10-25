@@ -301,6 +301,8 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
        */
       nodes.widget({
         typeKey: "simple-text",
+        /* Label set text, translated already; a second pass would hand the translator a non-source text. */
+        flags: PhiCmsFlags.NoTranslate,
         id: PHI_REVISIONS_DELETE_AREA_WIDGET_IDS.deleteAreaWarning,
         parentLayoutNodeId: PHI_REVISIONS_DELETE_AREA_LAYOUT_IDS.deleteAreaBody,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
@@ -315,6 +317,8 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
       }),
       nodes.widget({
         typeKey: "simple-text",
+        /* Label set text, translated already; a second pass would hand the translator a non-source text. */
+        flags: PhiCmsFlags.NoTranslate,
         id: PHI_REVISIONS_DELETE_AREA_WIDGET_IDS.deleteAreaSurvives,
         parentLayoutNodeId: PHI_REVISIONS_DELETE_AREA_LAYOUT_IDS.deleteAreaBody,
         slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,

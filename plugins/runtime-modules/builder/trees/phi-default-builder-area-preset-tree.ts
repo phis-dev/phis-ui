@@ -1797,6 +1797,8 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               }),
               nodes.widget({
                 typeKey: "simple-text",
+                /* Label set text, translated already; a second pass would hand the translator a non-source text. */
+                flags: PhiCmsFlags.NoTranslate,
                 id: PHI_BUILDER_MODULE_USAGE_WIDGET_IDS.moduleUsageIntro,
                 parentLayoutNodeId: PHI_BUILDER_MODULE_USAGE_LAYOUT_IDS.moduleUsageBody,
                 slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
@@ -1871,6 +1873,8 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               }),
               nodes.widget({
                 typeKey: "simple-text",
+                /* Label set text, translated already; a second pass would hand the translator a non-source text. */
+                flags: PhiCmsFlags.NoTranslate,
                 id: PHI_BUILDER_PUBLIC_ROUTES_WIDGET_IDS.publicRoutesIntro,
                 parentLayoutNodeId: PHI_BUILDER_PUBLIC_ROUTES_LAYOUT_IDS.publicRoutesBody,
                 slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,

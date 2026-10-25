@@ -1,3 +1,4 @@
+import { PHI_TEXT_SOURCE_PRESET } from "../../../../helpers/text-source";
 import { createPhiPresetCmsInstanceIdMap } from "../../../../types/cms-instance-id";
 import { PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "../ids";
@@ -115,6 +116,7 @@ export async function buildPhiDefaultPubConfirmPageTree({
         sortOrder: 0,
         label: "pub confirmation description widget",
         config: {
+          textSource: PHI_TEXT_SOURCE_PRESET,
           eyebrow: "Confirm Email",
           title: "Activate your account",
           description: "Review your registration details and confirm your email address to activate access.",
@@ -178,6 +180,7 @@ export async function buildPhiDefaultPubConfirmPageTree({
         slotIndex: 2,
         label: "pub confirmation missing token",
         config: {
+          textSource: PHI_TEXT_SOURCE_PRESET,
           text: "No confirmation token was provided. Open the confirmation link from your email.",
           tone: "secondary",
           visibleWhen: withoutToken,

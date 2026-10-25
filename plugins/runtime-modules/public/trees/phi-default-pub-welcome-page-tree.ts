@@ -1,3 +1,4 @@
+import { PHI_TEXT_SOURCE_PRESET } from "../../../../helpers/text-source";
 import { createPhiPresetCmsInstanceIdMap } from "../../../../types/cms-instance-id";
 import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "../ids";
 import { PHI_PUBLIC_BASE_PAGE_REFERENCES } from "../../public-base-page-references";
@@ -143,7 +144,7 @@ export async function buildPhiDefaultPubWelcomePageTree({
         sortOrder: 0,
         label: "pub welcome greeting",
         // English source, like every Preset sentence: the Site translator makes it "Herzlich willkommen".
-        config: { text: "A warm welcome" },
+        config: { textSource: PHI_TEXT_SOURCE_PRESET, text: "A warm welcome" },
       }),
       nodes.widget({
         typeKey: "markdown",

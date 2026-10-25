@@ -1,4 +1,5 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import { readPhiTextSource, type PhiTextSource } from "../../../../../helpers/text-source";
 import { PHI_SIMPLE_TEXT_MARKS, type PhiSimpleTextMark } from "../../../../../types/core-widget-placements";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PHI_RENDERABLE_BLOCK_GEOMETRY_FIELDS } from "../../../../../helpers/renderable-block-plugin-fields";
@@ -43,6 +44,8 @@ export type PhiCmsSimpleTextWidgetConfig = PhiCmsWidgetConfigBase & {
   tone?: PhiTextTone;
   marks?: PhiSimpleTextMark[];
   disabled?: boolean;
+  /** `"preset"` while the words are a Preset's and translated globally (`helpers/text-source.ts`). */
+  textSource?: PhiTextSource;
 };
 
 function parsePhiCmsSimpleTextWidgetConfig(
@@ -63,6 +66,7 @@ function parsePhiCmsSimpleTextWidgetConfig(
     tone: readPhiTextTone(config.tone),
     marks: readSimpleTextMarks(config.marks),
     disabled: readBoolean(config.disabled),
+    textSource: readPhiTextSource(config.textSource),
   };
 }
 

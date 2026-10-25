@@ -1,4 +1,6 @@
 import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
+import { PhiCmsFlags } from "../../../../../constants/phi-cms";
+import { hasPhiFlag } from "../../../../../helpers/flags";
 import { PhiQuickLinksWidget } from "./server";
 import {
   PHI_QUICK_LINKS_WIDGET_DEFINITION,
@@ -14,6 +16,8 @@ export const PHI_QUICK_LINKS_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsQuick
       runtime={runtime}
       navKey={config.navKey}
       title={config.title}
+      textSource={config.textSource}
+      translate={!hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate)}
       columns={config.columns}
       separator={config.separator}
     />
@@ -24,6 +28,8 @@ export const PHI_QUICK_LINKS_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsQuick
       runtime={runtime}
       navKey={config.navKey}
       title={config.title}
+      textSource={config.textSource}
+      translate={!hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate)}
       columns={config.columns}
       separator={config.separator}
       interactive={false}

@@ -1,7 +1,5 @@
-import {
-  trGlobal,
-  trGlobalForLocale,
-} from "../../../../../server-helpers/translate";
+import { trWidgetText } from "../../../../../server-helpers/translate";
+import type { PhiTextSource } from "../../../../../helpers/text-source";
 import { maskPhiTextPlaceholders, resolvePhiTextPlaceholders } from "../../../../../helpers/text-placeholders";
 import type { PhiCmsInstanceId, PhiRenderableBlockBase, PhiServerBlockBaseProps } from "../../../../../types";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
@@ -20,6 +18,8 @@ export type PhiSimpleTextWidgetProps = PhiServerBlockBaseProps<
   PhiSimpleTextWidgetConfig
 > & {
   blockId: PhiCmsInstanceId;
+  /** Whose words the text is, which decides the store that translates it (`helpers/text-source.ts`). */
+  textSource?: PhiTextSource;
   /**
    * Whether the text still has to be translated, which is true only where it is the Widget's own.
    *
@@ -36,6 +36,7 @@ export async function PhiSimpleTextWidget({
   labels,
   config,
   translate,
+  textSource,
   runtime,
 }: PhiSimpleTextWidgetProps) {
   const locale = runtime?.locale.current;
@@ -48,7 +49,7 @@ export async function PhiSimpleTextWidget({
    */
   const masked = maskPhiTextPlaceholders(labels.text);
   const translated = translate && masked.text
-    ? locale ? await trGlobalForLocale(locale, masked.text) : await trGlobal(masked.text)
+    ? await trWidgetText(locale, masked.text, textSource)
     : masked.text;
   const text = resolvePhiTextPlaceholders(translated, masked.names, runtime);
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { isPhiAuthoredTextField, readPhiTextSource } from "../../../../helpers/text-source";
 import { useEffect } from "react";
 
 import { PhiGeometryControl } from "../../../../components/controls/phi-geometry-control";
@@ -193,6 +194,16 @@ export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
       videoProviderDescriptors,
       onChange: (next) => {
         const patch = buildPhiInspectorConfigPathPatch(currentWidgetSettingsConfigRecord, next);
+        /*
+         * An author writing into a Preset's text makes the Widget's words the Site's: from here on the
+         * Site's store translates them, not the global one (`helpers/text-source.ts`).
+         */
+        if (
+          readPhiTextSource(currentWidgetSettingsConfigRecord.textSource) != null
+          && isPhiAuthoredTextField(field)
+        ) {
+          patch.textSource = undefined;
+        }
         onConfigChange?.(patch);
       },
     });

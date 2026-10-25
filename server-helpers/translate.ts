@@ -19,6 +19,7 @@ import {
 import { getPhiRequestRuntime } from "./request-runtime";
 import { resolvePhiRequestLocale } from "./request-locale";
 import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
+import { PHI_TEXT_SOURCE_PRESET, type PhiTextSource } from "../helpers/text-source";
 
 export { PHI_TR_CTX_WEB_UI_LABEL };
 export type { PhiTranslationParams } from "../helpers/translation-format";
@@ -76,6 +77,24 @@ export async function trGlobal(
 ) {
   const locale = await resolvePhiRequestLocale();
   return trGlobalForLocale(locale, msg, params, ctx, format);
+}
+
+/**
+ * A text Widget's own words in the render's locale, from the store their source names.
+ *
+ * `textSource: "preset"` is a Preset's sentence and the platform's, so the global store answers it;
+ * anything else an author wrote and the Site's store does (`helpers/text-source.ts`). The locale is the
+ * render's where there is one: a static render has no request to read it from.
+ */
+export async function trWidgetText(
+  locale: string | undefined,
+  msg: string,
+  textSource: PhiTextSource | undefined,
+) {
+  if (textSource === PHI_TEXT_SOURCE_PRESET) {
+    return locale ? trGlobalForLocale(locale, msg) : trGlobal(msg);
+  }
+  return locale ? trForLocale(locale, msg) : tr(msg);
 }
 
 /**

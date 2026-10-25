@@ -1,4 +1,5 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import { readPhiTextSource, type PhiTextSource } from "../../../../../helpers/text-source";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { readRenderableBlockConfig, readString, type PhiCmsWidgetConfigBase } from "../../../../../components/widgets/config/parser-primitives";
@@ -28,6 +29,8 @@ export type PhiCmsDescriptionWidgetConfig = PhiCmsWidgetConfigBase & {
   footer?: string;
   /** The tone of the description text; absent is the default secondary text. */
   tone?: PhiTextTone;
+  /** `"preset"` while the words are a Preset's and translated globally (`helpers/text-source.ts`). */
+  textSource?: PhiTextSource;
 };
 
 function parsePhiCmsDescriptionWidgetConfig(
@@ -43,6 +46,7 @@ function parsePhiCmsDescriptionWidgetConfig(
     asideList: readPhiBulletListStyle(config.asideList),
     footer: readString(config.footer),
     tone: readPhiTextTone(config.tone),
+    textSource: readPhiTextSource(config.textSource),
   };
 }
 

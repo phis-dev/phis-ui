@@ -1,8 +1,6 @@
 import type { CSSProperties } from "react";
-import {
-  trGlobal,
-  trGlobalForLocale,
-} from "../../../../../server-helpers/translate";
+import { trWidgetText } from "../../../../../server-helpers/translate";
+import type { PhiTextSource } from "../../../../../helpers/text-source";
 import type { PhiBlockRuntime, PhiServerBlockBaseProps } from "../../../../../types";
 import { maskPhiTextPlaceholders, resolvePhiTextPlaceholders } from "../../../../../helpers/text-placeholders";
 import type { PhiCmsDescriptionWidgetConfig } from "./config";
@@ -46,6 +44,8 @@ async function translateLabel(
   value: string | undefined,
   runtime: PhiBlockRuntime | undefined,
   translate: boolean,
+  /** Whose words these are, which decides the store (`helpers/text-source.ts`). */
+  textSource: PhiTextSource | undefined,
   /** The text's own values, which stand in it as `%1` onwards and are never translated. */
   values: readonly string[] = [],
 ) {
@@ -54,11 +54,7 @@ async function translateLabel(
   }
 
   const masked = maskPhiTextPlaceholders(value, values.length);
-  const translated = !translate
-    ? masked.text
-    : locale
-      ? await trGlobalForLocale(locale, masked.text)
-      : await trGlobal(masked.text);
+  const translated = translate ? await trWidgetText(locale, masked.text, textSource) : masked.text;
   return resolvePhiTextPlaceholders(translated, masked.names, runtime, values);
 }
 
@@ -82,17 +78,17 @@ export async function PhiDescriptionWidget({
   translate,
 }: PhiDescriptionWidgetProps & { translate: boolean }) {
   const locale = runtime?.locale.current;
-  const eyebrow = await translateLabel(locale, labels.eyebrow ?? config?.eyebrow, runtime, translate);
-  const title = await translateLabel(locale, labels.title ?? config?.title, runtime, translate);
-  const description = await translateLabel(locale, labels.description ?? config?.description, runtime, translate);
-  const asideTitle = await translateLabel(locale, labels.asideTitle ?? config?.asideTitle, runtime, translate);
+  const eyebrow = await translateLabel(locale, labels.eyebrow ?? config?.eyebrow, runtime, translate, config?.textSource);
+  const title = await translateLabel(locale, labels.title ?? config?.title, runtime, translate, config?.textSource);
+  const description = await translateLabel(locale, labels.description ?? config?.description, runtime, translate, config?.textSource);
+  const asideTitle = await translateLabel(locale, labels.asideTitle ?? config?.asideTitle, runtime, translate, config?.textSource);
   const asideEntries = await Promise.all(
     (labels.asideItems ?? config?.asideItems ?? []).map(async (entry) => ({
       ...entry,
-      text: await translateLabel(locale, entry.text, runtime, translate, entry.values),
+      text: await translateLabel(locale, entry.text, runtime, translate, config?.textSource, entry.values),
     })),
   );
-  const footer = await translateLabel(locale, labels.footer ?? config?.footer, runtime, translate);
+  const footer = await translateLabel(locale, labels.footer ?? config?.footer, runtime, translate, config?.textSource);
   const resolvedAsideItems = buildPhiBulletListTree(
     asideEntries.filter((entry) => Boolean(entry.text)),
     (entry) => entry.text,

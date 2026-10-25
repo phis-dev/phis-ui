@@ -1,4 +1,5 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import { readPhiTextSource, type PhiTextSource } from "../../../../../helpers/text-source";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PHI_AUTHORING_OPTION_PROVIDER_KEYS } from "../../../../../constants/authoring-option-provider-keys";
@@ -15,6 +16,8 @@ export type PhiCmsQuickLinksWidgetConfig = PhiCmsWidgetConfigBase & {
   title?: string;
   columns?: 1 | 2 | 3;
   separator?: boolean;
+  /** `"preset"` while the words are a Preset's and translated globally (`helpers/text-source.ts`). */
+  textSource?: PhiTextSource;
 };
 
 function parsePhiCmsQuickLinksWidgetConfig(config: Record<string, unknown>): PhiCmsQuickLinksWidgetConfig {
@@ -27,6 +30,7 @@ function parsePhiCmsQuickLinksWidgetConfig(config: Record<string, unknown>): Phi
     title: readString(config.title),
     columns: columns === 1 || columns === 3 ? columns : 2,
     separator: readBoolean(config.separator) ?? true,
+    textSource: readPhiTextSource(config.textSource),
   };
 }
 

@@ -1,3 +1,4 @@
+import { PHI_TEXT_SOURCE_PRESET } from "../../../../helpers/text-source";
 import { createPhiPresetCmsInstanceIdMap } from "../../../../types/cms-instance-id";
 import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "../ids";
 import { PhiCmsPageType } from "../../../../constants/phi-cms";
@@ -69,6 +70,7 @@ export async function buildPhiDefaultPubUnsubscribePageTree({
         sortOrder: 0,
         label: "pub unsubscribe intro widget",
         config: {
+          textSource: PHI_TEXT_SOURCE_PRESET,
           title: "Stop receiving updates",
           description: "Press the button below and this site will send you no further updates.",
           visibleWhen: withToken,
@@ -86,6 +88,7 @@ export async function buildPhiDefaultPubUnsubscribePageTree({
         sortOrder: 0,
         label: "pub unsubscribe incomplete widget",
         config: {
+          textSource: PHI_TEXT_SOURCE_PRESET,
           title: "This link is incomplete",
           description: "Open the unsubscribe link from the message itself, or use the most recent one you received.",
           tone: "secondary",

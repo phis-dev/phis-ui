@@ -21,6 +21,7 @@ export const PHI_SIMPLE_TEXT_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsSimpl
         blockId={widget.id}
         key={`widget-${widget.id}`}
         translate={!noTranslate && !hasResolvedText}
+        textSource={config.textSource}
         labels={{
           text: resolvePhiSimpleTextWidgetText(
             {

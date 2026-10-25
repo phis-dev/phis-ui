@@ -1,3 +1,4 @@
+import { PHI_TEXT_SOURCE_PRESET } from "../../../../helpers/text-source";
 import { createPhiPresetCmsInstanceIdMap } from "../../../../types/cms-instance-id";
 import { PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "../ids";
@@ -87,6 +88,7 @@ export async function buildPhiDefaultPubRegistrationPageTree({
         sortOrder: 0,
         label: "pub registration description widget",
         config: {
+          textSource: PHI_TEXT_SOURCE_PRESET,
           eyebrow: "Register",
           title: "Create account",
           description: "Create your account to access your personalized workspace.",
@@ -132,6 +134,7 @@ export async function buildPhiDefaultPubRegistrationPageTree({
         slotIndex: 1,
         label: "pub registration notice",
         config: {
+          textSource: PHI_TEXT_SOURCE_PRESET,
           text: "We only use your details to create and support your account.",
           tone: "secondary",
         },

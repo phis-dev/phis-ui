@@ -1,3 +1,4 @@
+import { PHI_TEXT_SOURCE_PRESET } from "../../../../helpers/text-source";
 import { createPhiPresetCmsInstanceIdMap } from "../../../../types/cms-instance-id";
 import { PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import { PHI_LAYOUT } from "../../../../theme/phi-tokens";
@@ -120,6 +121,7 @@ export async function buildPhiDefaultPubLoginPageTree({
         sortOrder: 0,
         label: "pub login description widget",
         config: {
+          textSource: PHI_TEXT_SOURCE_PRESET,
           eyebrow: "Login",
           title: "Sign in to your account",
           description: "Access your customer workspace, orders, and account details.",

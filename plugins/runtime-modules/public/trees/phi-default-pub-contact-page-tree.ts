@@ -1,3 +1,4 @@
+import { PHI_TEXT_SOURCE_PRESET } from "../../../../helpers/text-source";
 import { createPhiPresetCmsInstanceIdMap } from "../../../../types/cms-instance-id";
 import { PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "../ids";
@@ -88,6 +89,7 @@ export async function buildPhiDefaultPubContactPageTree({
         sortOrder: 0,
         label: "pub contact description widget",
         config: {
+          textSource: PHI_TEXT_SOURCE_PRESET,
           eyebrow: "Contact",
           title: "Get in touch",
           description: "Send us your question, project request, or product inquiry and we will get back to you.",

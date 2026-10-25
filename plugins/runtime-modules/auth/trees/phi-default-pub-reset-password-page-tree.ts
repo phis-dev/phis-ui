@@ -1,3 +1,4 @@
+import { PHI_TEXT_SOURCE_PRESET } from "../../../../helpers/text-source";
 import { createPhiPresetCmsInstanceIdMap } from "../../../../types/cms-instance-id";
 import { PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "../ids";
@@ -104,6 +105,7 @@ export async function buildPhiDefaultPubResetPasswordPageTree({
         sortOrder: 0,
         label: "pub reset password description widget",
         config: {
+          textSource: PHI_TEXT_SOURCE_PRESET,
           eyebrow: "Reset password",
           title: "Choose a new password",
           description: "Use the reset link from your email to choose a new secure password.",
@@ -128,6 +130,7 @@ export async function buildPhiDefaultPubResetPasswordPageTree({
         slotIndex: 0,
         label: "pub reset password intro",
         config: {
+          textSource: PHI_TEXT_SOURCE_PRESET,
           text: "If the account exists, a reset email is on its way. Open the link in that email to choose a new password.",
           tone: "secondary",
           visibleWhen: withoutToken,

@@ -7,11 +7,16 @@ import type {
 } from "./client";
 import { resolvePhiNavigationItems } from "../../../../../components/widgets/server/navigation-request";
 import { mapPhiNavItemsToQuickLinksItems } from "./items";
+import { trWidgetText } from "../../../../../server-helpers/translate";
+import type { PhiTextSource } from "../../../../../helpers/text-source";
 
 export type PhiQuickLinksWidgetProps = {
   runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer" | "request">;
   navKey?: string;
   title?: string;
+  /** Whose words the title is, which decides the store that translates it. */
+  textSource?: PhiTextSource;
+  translate?: boolean;
   columns?: 1 | 2 | 3;
   separator?: boolean;
   interactive?: boolean;
@@ -21,6 +26,8 @@ export async function PhiQuickLinksWidget({
   runtime,
   navKey,
   title,
+  textSource,
+  translate = true,
   columns = 2,
   separator = true,
   interactive = true,
@@ -35,8 +42,9 @@ export async function PhiQuickLinksWidget({
     return null;
   }
 
+  const ownTitle = title?.trim();
   const labels: PhiQuickLinksWidgetClientLabels = {
-    title,
+    title: ownTitle && translate ? await trWidgetText(runtime.locale.current, ownTitle, textSource) : title,
   };
   const config: PhiQuickLinksWidgetClientConfig = {
     columns,

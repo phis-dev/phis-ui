@@ -12,8 +12,7 @@ import { buildPhiCmsLayoutNamespacedTypeKey } from "../../constants/cms-layout-t
 import { resolvePhiCmsLayoutPluginKey } from "../../constants/cms-layout-type-keys";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../types/cms";
 import type { PhiBlockRuntime } from "../../types";
-import { trGlobal } from "../../server-helpers/translate";
-import { PHI_TR_CTX_WEB_UI_LABEL } from "../../gateway/tr";
+import { PHI_TEXT_SOURCE_PRESET } from "../../helpers/text-source";
 import { PHI_SPACE } from "../../theme/antd-css-var-contract";
 import { buildPhiCmsWidgetNamespacedTypeKey } from "../../constants/cms-widget-types";
 import { createPhiCmsPresetNodes } from "../../helpers/cms-preset-nodes";
@@ -87,7 +86,12 @@ export async function buildPhiDefaultSiteAreaPresetTree({
     href: contactHref,
     icon: contactIcon,
   } = resolvePhiBrandContact(runtime);
-  const defaultQuickLinksTitle = await trGlobal("Quick Links", 0, PHI_TR_CTX_WEB_UI_LABEL);
+  /*
+   * The Preset's words stay in the source language and say they are the Preset's; the Widgets translate
+   * them through the global store (`helpers/text-source.ts`). The contact label is the Preset's only
+   * while the Site's theme names none.
+   */
+  const contactLabelIsPreset = !runtime.site.theme?.contact?.label?.trim();
   /*
    * A template rather than a finished sentence, and left untranslated here.
    *
@@ -520,6 +524,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               label: "pub header top right",
               config: {
                 text: contactLabel,
+                ...(contactLabelIsPreset ? { textSource: PHI_TEXT_SOURCE_PRESET } : {}),
                 href: contactHref,
                 icon: contactIcon,
               },
@@ -624,7 +629,8 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               visibilityMask: page.visibilityMask,
               label: "pub footer main quick links",
               config: {
-                title: defaultQuickLinksTitle,
+                title: "Quick Links",
+                textSource: PHI_TEXT_SOURCE_PRESET,
                 navKey: `${navigationArea}:footer`,
                 columns: 2,
                 separator: true,
@@ -644,6 +650,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               label: "pub footer main right",
               config: {
                 text: contactLabel,
+                ...(contactLabelIsPreset ? { textSource: PHI_TEXT_SOURCE_PRESET } : {}),
                 href: contactHref,
                 icon: contactIcon,
               },
@@ -666,6 +673,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               label: "pub footer bottom text",
               config: {
                 text: footerBottomText,
+                textSource: PHI_TEXT_SOURCE_PRESET,
                 tone: "secondary",
               },
               contentVersionId: null,
