@@ -57,7 +57,7 @@ function customRenders(antd, h, Fragment) {
     Form: (Form) => h(Form, null, h(Form.Item, { label: "Label" }, h(antd.Input))),
     Dropdown: (Dropdown) => h(Dropdown, { menu: { items: [] } }, h("div")),
     Menu: (Menu) => h(Menu, { items: [] }),
-    QRCode: (QRCode) => h(QRCode, { value: "https://phisys.com" }),
+    QRCode: (QRCode) => h(QRCode, { value: "https://phis.dev" }),
     Tree: (Tree) => h(Tree, { treeData: [] }),
     Tag: (Tag) => h(Fragment, null, h(Tag, { color: "blue" }, "Tag"), h(Tag, { color: "success" }, "Tag")),
     Badge: (Badge) => h(Fragment, null, h(Badge), h(Badge.Ribbon)),
