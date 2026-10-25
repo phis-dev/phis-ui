@@ -135,6 +135,14 @@ function normalizePotentialPhiScheme(value: string) {
  */
 const PHI_EXTERNAL_DOCUMENT_URL_SCHEMES = /^(?:https?:|mailto:|tel:)$/iu;
 
+/*
+ * A picture written into the text itself may also be a data URL of an image type -- the one way a Module
+ * brings a drawing with its copy, since it cannot put a file into the Site's `public/`. An `<img>` runs
+ * nothing it loads, an SVG's scripts included, so the type list is what keeps this a picture. Links
+ * stay on the scheme list above, and a fetched document gets no data URLs at all.
+ */
+const PHI_INLINE_IMAGE_DATA_URL = /^data:image\/(?:png|jpeg|gif|webp|svg\+xml)[;,]/iu;
+
 function resolveExternalDocumentUrl(value: string, sourceUrl: string) {
   const normalized = value.trim();
   if (!normalized || normalizePotentialPhiScheme(normalized).startsWith("phis:")) return null;
@@ -197,7 +205,7 @@ async function projectInternalMarkdownNodes(
         const src = resolved.assetUrls.get(reference.assetId);
         return src ? [{ ...node, url: src, children }] : [];
       }
-      if (!/^https?:/iu.test(node.url ?? "")) return [];
+      if (!/^https?:/iu.test(node.url ?? "") && !PHI_INLINE_IMAGE_DATA_URL.test(node.url ?? "")) return [];
       return [{ ...node, children }];
     }
     return [{ ...node, ...(node.children ? { children } : {}) }];
