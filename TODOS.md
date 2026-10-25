@@ -39,6 +39,11 @@ Collected for the next published `@phis/ui`, so they ship together rather than o
   `Web UI label`, including the `[extern]` units) are no longer read and can be deleted. Before that,
   check in `@phis/server` that a Site admin's translation editor writes `tr_site_*` only and that
   `tr_lang` is the operator's alone.
+- **The Result Widget translates the error page's words in the Site's store.** `result/server.tsx`
+  uses `createSiteTranslator` with `Web UI label` for its title, subtitle and the home link, so "Not
+  found", "This page could not be found." and "Back to homepage" -- Preset text from the Public error page
+  tree and the Widget's own default -- get a copy per Site. Same rule as Simple Text and Description: the
+  Preset's words through the global store (`helpers/text-source.ts`), an author's through the Site's.
 - **A Flex in a vertical stack still takes a share of its height.** The Grid is as tall as its rows
   now (`slotSizePolicy: "fill-inline"`); the Flex was left on `fill`, because nearly every Flex is an
   Overlay header or footer, or a Header action row, sitting straight in its zone and centred in its
