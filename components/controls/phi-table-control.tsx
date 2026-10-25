@@ -1,5 +1,6 @@
 "use client";
 
+import { usePhiShellStickyTop } from "../shell/use-phi-shell-sticky-top";
 import { Button, Flex, Table } from "antd";
 import type { TableColumnsType } from "antd";
 import type { TableRowSelection } from "antd/es/table/interface";
@@ -356,6 +357,11 @@ export type PhiTableControlProps<TRow extends Record<string, unknown>> = {
   bordered?: boolean;
   striped?: boolean;
   showHeader?: boolean;
+  /**
+   * The header row stays at the top while the rows scroll under it: under the Shell's Header on a page,
+   * at the top edge of a Modal's or Drawer's body. `styles/controls.css` places it.
+   */
+  stickyHeader?: boolean;
   footer?: PhiTableControlFooter;
   summary?: PhiTableControlSummary;
   size?: PhiControlSize;
@@ -734,6 +740,7 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
   loading = false,
   bordered,
   striped = false,
+  stickyHeader = false,
   showHeader,
   footer,
   summary,
@@ -1502,6 +1509,8 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
     (Boolean(footer) || (summary != null && summary.placement !== "sticky-top"));
 
   const frameRef = useRef<HTMLDivElement>(null);
+  // Where the Shell's Header ends, which is where a sticky header row stops (`styles/controls.css`).
+  usePhiShellStickyTop({ active: stickyHeader && showHeader !== false, elementRef: frameRef });
   const [headerBox, setHeaderBox] = useState<{ top: number; height: number } | null>(null);
   useEffect(() => {
     const frame = frameRef.current;
@@ -1523,7 +1532,11 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
   }, [showHeader, loading]);
   const table = (
     <Table<TRow>
-      className={["phi-table-control", hasClosingBlock ? "phi-table-control--closing-block" : null]
+      className={[
+        "phi-table-control",
+        hasClosingBlock ? "phi-table-control--closing-block" : null,
+        stickyHeader && showHeader !== false ? "phi-table-control--sticky-header" : null,
+      ]
         .filter(Boolean)
         .join(" ")}
       style={{ "--phi-table-striped-row-background": token.colorFillAlter } as CSSProperties}
@@ -1540,6 +1553,7 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
       rowSelection={loading ? undefined : antdRowSelection}
       components={rowReordering?.enabled && !loading ? { body: { row: PhiTableSortableRow } } : undefined}
       scroll={layout.overflowX === "auto" ? { x: true } : undefined}
+      sticky={stickyHeader && showHeader !== false ? true : undefined}
       pagination={pagination === false ? false : {
         ...{ [PHI_VISUAL_ANCHOR_PART_ATTRIBUTE]: "pagination" },
         current: pagination.page,
@@ -1659,8 +1673,13 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
       </SortableContext>
     </DndContext>
   ) : table;
+  /*
+   * Clipped, not hidden: `hidden` makes the frame a scroll container, and a sticky header row then sticks
+   * to the frame's own top -- pushed down inside the Table by the Shell's Header height -- instead of to
+   * the page. `clip` cuts off the same overflow and leaves the page the one that scrolls.
+   */
   const constrainedTable = (
-    <div ref={frameRef} style={{ position: "relative", width: "100%", maxWidth: "100%", minWidth: 0, overflow: "hidden" }}>
+    <div ref={frameRef} style={{ position: "relative", width: "100%", maxWidth: "100%", minWidth: 0, overflow: "clip" }}>
       {renderedTable}
       {headerBox ? (
         /*

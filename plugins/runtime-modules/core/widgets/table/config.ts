@@ -591,6 +591,7 @@ export function parsePhiTableWidgetConfig(config: Record<string, unknown>): PhiT
       },
       borders: readBoolean(presentation.borders),
       header: readBoolean(presentation.header),
+      stickyHeader: readBoolean(presentation.stickyHeader),
       footer: readTableFooter(presentation.footer),
       summary: readTableSummary(presentation.summary),
       row: {
@@ -1207,6 +1208,7 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
     { ...PHI_CONTROL_SIZE_FIELD, key: "presentation.controlSize" },
     { key: "presentation.borders", type: "boolean", label: "Borders" },
     { key: "presentation.header", type: "boolean", label: "Header" },
+    { key: "presentation.stickyHeader", type: "boolean", label: "Sticky Header" },
     { key: "presentation.row.striped", type: "boolean", label: "Striped Rows" },
     ...buildPhiTableConditionExpressionConfigFields("presentation.row.mutedWhen", "Muted Row Conditions", "any", "No muted rows"),
   ],
@@ -1216,6 +1218,7 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
       layout: { mode: "auto", overflowX: "auto" },
       borders: false,
       header: true,
+      stickyHeader: true,
       row: { striped: false },
     },
     features: {

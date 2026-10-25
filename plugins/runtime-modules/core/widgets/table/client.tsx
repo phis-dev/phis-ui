@@ -1214,6 +1214,7 @@ export function PhiTableWidgetClient({
         bordered={presentation.borders}
         striped={presentation.row?.striped}
         showHeader={presentation.header}
+        stickyHeader={presentation.stickyHeader !== false}
         size={resolvedControlSize}
         emptyText={(
           <PhiFlexControl vertical gap="small">

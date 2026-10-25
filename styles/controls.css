@@ -492,10 +492,24 @@ h5.phi-typography, .phi-typography h5 {
  * as a Table closed with one instead of with a footer. Clipping the Table is what both cases want, which
  * is why the rule names neither.
  */
+/*
+ * A sticky header row sticks under the Shell's Header, which publishes where it ends right now
+ * (`components/shell/use-phi-shell-sticky-top.ts`), and at the top edge of an Overlay's body,
+ * which scrolls on its own. Ant Design writes the offset inline, so the position is stated over it.
+ */
+.phi-table-control.phi-table-control--sticky-header [class~="ant-table-sticky-holder"] {
+  top: var(--phi-table-sticky-top, var(--phi-shell-sticky-top, 0px)) !important;
+}
+
+:is([data-phi-modal-body-content], [data-phi-drawer-body-content]) {
+  --phi-table-sticky-top: 0px;
+}
+
 .phi-table-control.phi-table-control--closing-block [class~="ant-table"] {
   border-end-start-radius: var(--phi-surface-radius, var(--ant-border-radius-lg));
   border-end-end-radius: var(--phi-surface-radius, var(--ant-border-radius-lg));
-  overflow: hidden;
+  /* `clip`, not `hidden`, so the corners are cut without making this the sticky header's scroller. */
+  overflow: clip;
 }
 
 /*

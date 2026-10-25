@@ -398,6 +398,8 @@ export type PhiTableWidgetPresentation = PhiControlPresentationConfig & {
   borders?: boolean;
   /** The header row; shown unless this says `false`. */
   header?: boolean;
+  /** Whether the header row stays at the top while the rows scroll under it; on unless this says `false`. */
+  stickyHeader?: boolean;
   footer?: PhiTableFooterConfig;
   summary?: PhiTableSummaryConfig;
   row?: {
