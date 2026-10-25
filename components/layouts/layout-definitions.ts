@@ -468,7 +468,12 @@ export const PHI_GRID_LAYOUT_DEFINITION = {
   kind: "layout",
   pluginKey: resolvePhiCmsLayoutPluginKey("grid"),
   typeKey: "grid",
-  slotSizePolicy: "fill",
+  /*
+   * As wide as its slot, as tall as its rows. A Grid is content in flow: filling the block axis as well
+   * let a vertical stack share its height out among the Grids in it, and each one, held to its share,
+   * spilled its rows over the next section.
+   */
+  slotSizePolicy: "fill-inline",
   title: "Grid",
   description: "Slots in rows, as many to a row as the Grid's own width allows.",
   category: "structure",
