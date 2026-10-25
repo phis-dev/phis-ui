@@ -49,6 +49,15 @@ Collected for the next published `@phis/ui`, so they ship together rather than o
   cards whose texts differ end at three different lines (seen with a 24px step on a three-card row).
   The Card is `fill-inline`; in a stretching row it should take the slot's block size too, or the slot
   should hand it down, so the surfaces end together.
+- **A Site package cannot shape the navigation it ships with.** A Module only adds entries
+  (`navigation` on a route, by anchor or `parentItemKey`); hiding, renaming or reordering somebody
+  else's entry is the Site's navigation overlay alone (`PhiCmsNavigationOverlay`: `itemOverrides`,
+  `customItems`, `tombstones`), read from `site_nav_scopes` and written by the Builder. So a Site package
+  that wants a header without Terms, Contact and Register has to ask every Site to hide them by hand.
+  Proposal, not approved: a Site package may ship a default overlay per surface -- tombstones and
+  overrides keyed by item -- that applies until the Site saves its own, which then wins. Needs a decision
+  on whether this is a Site package's right only (one per Site) or any Module's, and how it meets
+  MODULES.md's rule that an optional Module never patches a base preset.
 - **A Flex in a vertical stack still takes a share of its height.** The Grid is as tall as its rows
   now (`slotSizePolicy: "fill-inline"`); the Flex was left on `fill`, because nearly every Flex is an
   Overlay header or footer, or a Header action row, sitting straight in its zone and centred in its
