@@ -38,7 +38,7 @@ export const PHI_BUILDER_BRAND_THEME_CONTROLS_WIDGET_PLUGIN: PhiCmsWidgetPlugin<
 
 export const PHI_BUILDER_BRAND_THEME_PREVIEW_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiBuilderBrandWidgetConfig> = {
   ...PHI_BUILDER_BRAND_THEME_PREVIEW_WIDGET_DEFINITION,
-  render: ({ runtime }) => <PhiBuilderBrandThemePreviewWidgetClient runtime={runtime} />,
+  render: ({ runtime, config }) => <PhiBuilderBrandThemePreviewWidgetClient runtime={runtime} config={config} />,
   renderPreview: ({ runtime }) => <PhiBuilderBrandThemePreviewWidgetClient runtime={runtime} />,
 };
 

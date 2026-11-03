@@ -8,8 +8,12 @@ import { PHI_AUTHORING_OPTION_PROVIDER_KEYS } from "../../../../../constants/aut
 import { PHI_THEME_SIGNAL_CHANNELS } from "../../../../../plugins/runtime-modules/theme/controller/signals";
 import { createPhiCmsWidgetDefinition } from "../../../../../components/widgets/config/helpers";
 import { readString } from "../../../../../components/widgets/config/parser-primitives";
+import {
+  parsePhiControlSignalConfig,
+  type PhiControlSignalConfig,
+} from "../../../../../components/widgets/config/control-signal-config";
 
-export type PhiBuilderBrandWidgetConfig = {
+export type PhiBuilderBrandWidgetConfig = Pick<PhiControlSignalConfig, "key" | "signalRoutes"> & {
   themeKey?: string;
   reviewArea?: PhiCmsAreaKey;
 };
@@ -17,10 +21,29 @@ export type PhiBuilderBrandWidgetConfig = {
 function parseBuilderBrandWidgetConfig(config: Record<string, unknown>): PhiBuilderBrandWidgetConfig {
   const reviewArea = readString(config.reviewArea);
   return {
+    /*
+     * The routes are read like any Widget's: the preview mode reaches a panel through the route its tree
+     * wrote, so a route an author adds in the Builder works as well. The parser dropped them once and
+     * the panels listened to a hard-coded broadcast, which left the declared input decoration.
+     */
+    ...parsePhiControlSignalConfig(config, { key: "brandPreviewThemeMode" }),
     themeKey: readString(config.themeKey),
     reviewArea: isPhiCmsAreaKey(reviewArea) ? reviewArea : undefined,
   };
 }
+
+/** Every panel that draws in the preview's mode follows the mode switch. */
+const PHI_BUILDER_BRAND_PREVIEW_MODE_SIGNALS = {
+  emits: [],
+  listens: [
+    {
+      id: "previewThemeMode",
+      channel: PHI_THEME_SIGNAL_CHANNELS.previewThemeMode,
+      action: "change" as const,
+      valueType: "boolean" as const,
+    },
+  ],
+};
 
 type PhiBuilderBrandWidgetDefinition = Pick<
   PhiCmsWidgetPlugin<PhiBuilderBrandWidgetConfig>,
@@ -45,6 +68,7 @@ export const PHI_BUILDER_BRAND_THEME_CONTROLS_WIDGET_DEFINITION: PhiBuilderBrand
   category: "configuration",
   iconFamily: "theme",
   slotSizePolicy: "fill-inline",
+  runtimeSignals: PHI_BUILDER_BRAND_PREVIEW_MODE_SIGNALS,
   fields: [
     { key: "themeKey", type: "string", label: "Theme Key" },
     { key: "reviewArea", type: "string", label: "Review Area" },
@@ -69,6 +93,7 @@ export const PHI_BUILDER_BRAND_IDENTITY_CONTROLS_WIDGET_DEFINITION: PhiBuilderBr
     PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection,
     PHI_AUTHORING_OPTION_PROVIDER_KEYS.pages,
   ],
+  runtimeSignals: PHI_BUILDER_BRAND_PREVIEW_MODE_SIGNALS,
   fields: [
     { key: "themeKey", type: "string", label: "Theme Key" },
     { key: "reviewArea", type: "string", label: "Review Area" },
@@ -106,17 +131,7 @@ export const PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_DEFINITION: PhiBuilder
    * library, on a Page where the Assets Module was active the whole time.
    */
   requiredDataProviders: [PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection],
-  runtimeSignals: {
-    emits: [],
-    listens: [
-      {
-        id: "previewThemeMode",
-        channel: PHI_THEME_SIGNAL_CHANNELS.previewThemeMode,
-        action: "change",
-        valueType: "boolean",
-      },
-    ],
-  },
+  runtimeSignals: PHI_BUILDER_BRAND_PREVIEW_MODE_SIGNALS,
   fields: [
     { key: "themeKey", type: "string", label: "Theme Key" },
     { key: "reviewArea", type: "string", label: "Review Area" },
@@ -131,17 +146,7 @@ export const PHI_BUILDER_BRAND_THEME_PREVIEW_WIDGET_DEFINITION: PhiBuilderBrandW
   category: "configuration",
   iconFamily: "theme",
   slotSizePolicy: "fill-inline",
-  runtimeSignals: {
-    emits: [],
-    listens: [
-      {
-        id: "previewThemeMode",
-        channel: PHI_THEME_SIGNAL_CHANNELS.previewThemeMode,
-        action: "change",
-        valueType: "boolean",
-      },
-    ],
-  },
+  runtimeSignals: PHI_BUILDER_BRAND_PREVIEW_MODE_SIGNALS,
   fields: [
     { key: "themeKey", type: "string", label: "Theme Key" },
     { key: "reviewArea", type: "string", label: "Review Area" },

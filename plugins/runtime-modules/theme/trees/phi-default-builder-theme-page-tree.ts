@@ -35,6 +35,22 @@ import { PHI_THEME_RUNTIME_MODULE_ID } from "../ids";
 import { buildPhiThemeSetSelectOptions } from "../set-options";
 import { PHI_THEME_PAGE_LAYOUT_IDS, PHI_THEME_PAGE_WIDGET_IDS } from "../page-ids";
 
+/**
+ * A Theme panel's way to hear the preview mode switch: the switch broadcasts on the Page, and every panel
+ * that draws in that mode takes it through this route, as any Widget takes an input.
+ */
+function brandPreviewModeListenRoute(widgetId: PhiCmsInstanceId): PhiSignalRoute {
+  return {
+    routeKey: "brand-preview-mode",
+    capabilityId: "previewThemeMode",
+    scope: "page",
+    channel: PHI_THEME_SIGNAL_CHANNELS.previewThemeMode,
+    action: "change",
+    valueType: "boolean",
+    receiver: createPhiSignalAddress("cms", widgetId),
+  };
+}
+
 const PHI_THEME_PAGE_PRESET_KEY = "builder-theme-page";
 
 const PHI_THEME_PAGE_REGION_IDS = {
@@ -566,6 +582,7 @@ export async function buildPhiDefaultBuilderThemePageTree({
         label: "dev brand theme controls",
         config: {
           themeKey: "default",
+          signalRoutes: { listens: [brandPreviewModeListenRoute(PHI_THEME_PAGE_WIDGET_IDS.widgetBrandThemeControls)] },
           minSize: { width: 300 },
           maxSize: { width: 400 },
         },
@@ -579,6 +596,7 @@ export async function buildPhiDefaultBuilderThemePageTree({
         label: "dev brand theme preview",
         config: {
           themeKey: "default",
+          signalRoutes: { listens: [brandPreviewModeListenRoute(PHI_THEME_PAGE_WIDGET_IDS.widgetBrandThemePreview)] },
           minSize: { width: 360 },
         },
       }),
@@ -604,6 +622,7 @@ export async function buildPhiDefaultBuilderThemePageTree({
         label: "dev brand background controls",
         config: {
           themeKey: "default",
+          signalRoutes: { listens: [brandPreviewModeListenRoute(PHI_THEME_PAGE_WIDGET_IDS.widgetBrandBackgroundControls)] },
           // The three Theme panels share one slot, so they share one width. A wider Background
           // panel widened the slot itself and the column jumped whenever it was selected.
           minSize: { width: 300 },
@@ -619,6 +638,7 @@ export async function buildPhiDefaultBuilderThemePageTree({
         label: "dev brand background preview",
         config: {
           themeKey: "default",
+          signalRoutes: { listens: [brandPreviewModeListenRoute(PHI_THEME_PAGE_WIDGET_IDS.widgetBrandBackgroundPreview)] },
           minSize: { width: 360 },
         },
       }),
@@ -631,6 +651,7 @@ export async function buildPhiDefaultBuilderThemePageTree({
         label: "dev brand style preview",
         config: {
           themeKey: "default",
+          signalRoutes: { listens: [brandPreviewModeListenRoute(PHI_THEME_PAGE_WIDGET_IDS.widgetBrandStylePreview)] },
           minSize: { width: 360 },
         },
       }),
@@ -643,6 +664,7 @@ export async function buildPhiDefaultBuilderThemePageTree({
         label: "dev brand identity controls",
         config: {
           themeKey: "default",
+          signalRoutes: { listens: [brandPreviewModeListenRoute(PHI_THEME_PAGE_WIDGET_IDS.widgetBrandIdentityControls)] },
           minSize: { width: 300 },
           maxSize: { width: 400 },
         },
@@ -663,6 +685,7 @@ export async function buildPhiDefaultBuilderThemePageTree({
         label: "dev brand identity preview",
         config: {
           themeKey: "default",
+          signalRoutes: { listens: [brandPreviewModeListenRoute(PHI_THEME_PAGE_WIDGET_IDS.widgetBrandIdentityPreview)] },
           minSize: { width: 360 },
         },
       }),

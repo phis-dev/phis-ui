@@ -15,6 +15,7 @@ import type { PhiColorPickerLabels } from "../../../../../components/widgets/lab
 
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
 import { usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
+import { usePhiControlSignalController } from "../../../../../components/widgets/client/shared/phi-control-signals";
 import { PHI_SIGNAL_VALUE_SCHEMAS, type PhiSignalAddress } from "../../../../../types/signals";
 import type { PhiBlockRuntime } from "../../../../../types/widget-runtime";
 import { createPhiThemeControllerAddress } from "../../../../../plugins/runtime-modules/theme/controller/address";
@@ -1100,24 +1101,30 @@ function subscribePhiBrandPreviewMode(listener: () => void) {
   };
 }
 
-function usePhiBrandPreviewMode(initialMode: "light" | "dark") {
+function usePhiBrandPreviewMode(
+  initialMode: "light" | "dark",
+  signalRoutes: PhiBuilderBrandWidgetConfig["signalRoutes"],
+) {
   const heard = useSyncExternalStore(
     subscribePhiBrandPreviewMode,
     () => phiBrandPreviewModeHeard,
     () => null,
   );
 
-  usePhiSignalListener((signal) => {
-    if (
-      signal.scope === "page" &&
-      signal.receiver === "broadcast" &&
-      signal.channel === PHI_THEME_SIGNAL_CHANNELS.previewThemeMode &&
-      signal.action === "change" &&
-      signal.valueType === "boolean"
-    ) {
+  /* Through the routes the panel's tree wrote for `previewThemeMode`, as every Widget input arrives. */
+  usePhiControlSignalController<boolean>({
+    key: "brandPreviewThemeMode",
+    valueType: "boolean",
+    sender: usePhiSignalIdentity().receiver ?? null,
+    signalRoutes,
+    onReceiveCapability: (capabilityId, signal) => {
+      if (capabilityId !== "previewThemeMode" || signal.valueType !== "boolean") {
+        return false;
+      }
       phiBrandPreviewModeHeard = signal.value === true ? "dark" : "light";
       for (const listener of phiBrandPreviewModeListeners) listener();
-    }
+      return true;
+    },
   });
 
   return heard ?? initialMode;
@@ -1306,7 +1313,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
   const colorControlWidth = clientToken.controlHeight * 5.5;
   const themeKey = resolveThemeKey(config);
   const { state, draftRef, publishDraft, pickerTransaction } = usePhiBrandThemeDraft(runtime, themeKey);
-  const previewMode = usePhiBrandPreviewMode(resolveThemePayloadMode(state.draft));
+  const previewMode = usePhiBrandPreviewMode(resolveThemePayloadMode(state.draft), config?.signalRoutes);
   const loading = false;
   const saving = false;
   const [activeColorSection, changeActiveColorSection] = usePhiBrandAccordionSection(
@@ -2094,7 +2101,7 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
   const themeBlocks = usePhiThemeBlockCatalog();
   const themeKey = resolveThemeKey(config);
   const { state, publishDraft } = usePhiBrandThemeDraft(runtime, themeKey);
-  const mode = usePhiBrandPreviewMode(resolveThemePayloadMode(state.draft));
+  const mode = usePhiBrandPreviewMode(resolveThemePayloadMode(state.draft), config?.signalRoutes);
   const [activeIdentitySection, changeActiveIdentitySection] = usePhiBrandAccordionSection(
     BRAND_THEME_IDENTITY_COLLAPSE_STORAGE_KEY,
     BRAND_THEME_IDENTITY_SECTION_KEYS,
@@ -2533,7 +2540,7 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
   const themeBlocks = usePhiThemeBlockCatalog();
   const themeKey = resolveThemeKey(config);
   const { state, publishDraft, editTransaction } = usePhiBrandThemeDraft(runtime, themeKey);
-  const mode = usePhiBrandPreviewMode(resolveThemePayloadMode(state.draft));
+  const mode = usePhiBrandPreviewMode(resolveThemePayloadMode(state.draft), config?.signalRoutes);
   const composition = resolvePhiThemeComposition(state.draft, themeBlocks);
   const [activeBackgroundSection, changeActiveBackgroundSection] = usePhiBrandAccordionSection(
     BRAND_THEME_BACKGROUND_COLLAPSE_STORAGE_KEY,
@@ -2842,8 +2849,10 @@ function PhiBrandChromePreviewShell({
 
 export function PhiBuilderBrandThemePreviewWidgetClient({
   runtime,
+  config,
 }: {
   runtime: PhiBlockRuntime;
+  config?: PhiBuilderBrandWidgetConfig | null;
 }) {
   // The sample field is typed into like a real one, so what the Theme does to a filled field shows too.
   const [previewInput, setPreviewInput] = useState("");
@@ -2875,7 +2884,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
       emitThemeHydrateRequest(dispatchSignal, selfAddress);
     }
   }, [dispatchSignal, selfAddress]);
-  const mode = usePhiBrandPreviewMode(resolveThemePayloadMode(fallbackTheme));
+  const mode = usePhiBrandPreviewMode(resolveThemePayloadMode(fallbackTheme), config?.signalRoutes);
   const previewPreset = resolveThemePayloadPreset(previewThemeResolved, themePresets);
   const previewFontStacks = usePhiThemeFontStacks(previewThemeResolved.fonts);
   const previewHeadingFontFamily = resolvePhiThemeHeadingFontFamily(previewThemeResolved.typography, {
