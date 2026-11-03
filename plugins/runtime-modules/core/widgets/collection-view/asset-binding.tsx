@@ -116,7 +116,8 @@ export function PhiAssetCollectionViewBinding({
     pageSize: query.pageSize ?? 20,
     assets,
     folders,
-    pagination: { total: binding.data?.total ?? assets.length },
+    // Nothing read yet is nothing counted yet; the assets of a page are never the count.
+    pagination: { total: binding.data?.total ?? 0 },
     loading: binding.loading,
     error: binding.error,
     uploadPanelOpen: binding.openPanelKey === "upload",
@@ -454,7 +455,7 @@ export function PhiAssetCollectionViewBinding({
       pagination={features.pagination?.enabled === false ? null : {
         page: state.page,
         pageSize: state.pageSize,
-        total: state.pagination?.total ?? state.assets.length,
+        total: state.pagination?.total ?? 0,
         simple: features.pagination?.compact,
         showSizeChanger: (features.pagination?.pageSizes?.length ?? 0) > 0,
         pageSizeOptions: features.pagination?.pageSizes,

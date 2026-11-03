@@ -63,10 +63,18 @@ async function queryMediaCollection(request: PhiCollectionProviderQueryRequest) 
       signal: request.signal,
     });
     const payload = await readPhiImagePreviewResponse(response);
+    /*
+     * The server counts the listing on every read (`pagination.total`), and the paging below is drawn
+     * from it. Without it the count is unknown, which the assets of one page would only pretend to answer.
+     */
+    const total = payload.pagination?.total;
+    if (typeof total !== "number" || !Number.isFinite(total) || total < 0) {
+      throw new Error("The media listing answered no total.");
+    }
     return {
       resourceKey: request.resourceKey,
       items: payload.assets.map((asset) => ({ ...asset })),
-      total: payload.pagination?.total ?? payload.assets.length,
+      total,
       loading: false,
       error: null,
       meta: {

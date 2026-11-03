@@ -157,7 +157,7 @@ export function usePhiMediaPickerBinding({
           ? data.meta.activeSpace.address
           : null;
         if (activeAddress) setSpaceAddress(activeAddress);
-        setTotal(typeof data.total === "number" ? data.total : data.items.length);
+        setTotal(data.total);
       } catch (error) {
         if (!abortController.signal.aborted) {
           // A refused or failed read is not an empty library; saying "No assets found" would hide it.

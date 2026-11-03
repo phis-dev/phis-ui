@@ -360,12 +360,12 @@ export function usePhiAssetRuntimeController({
       value: {
         page: state.page,
         pageSize: state.pageSize,
-        total: state.pagination?.total ?? state.assets.length,
+        total: state.pagination?.total ?? 0,
       },
       receiver: "broadcast",
       timestamp: Date.now(),
     });
-  }, [emitAssetSignal, mountScope, state.assets.length, state.page, state.pageSize, state.pagination?.total]);
+  }, [emitAssetSignal, mountScope, state.page, state.pageSize, state.pagination?.total]);
 
   return state;
 }

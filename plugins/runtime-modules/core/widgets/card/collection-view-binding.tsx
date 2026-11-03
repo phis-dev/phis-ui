@@ -196,7 +196,7 @@ export function PhiCardCollectionViewBinding({
       pagination={features.pagination?.enabled === false ? null : {
         page: binding.query.page ?? 1,
         pageSize: binding.query.pageSize ?? features.pagination?.pageSize ?? 20,
-        total: binding.data?.total ?? items.length,
+        total: binding.data?.total ?? 0,
         ...(features.pagination?.compact === undefined
           ? {}
           : { simple: features.pagination.compact }),
