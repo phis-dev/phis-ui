@@ -36,19 +36,10 @@ built. Remove an entry when it is done.
 Collected for the next published `@phis/ui`, so they ship together rather than one package each.
 
 - **After the release, in each installation:** the Site-store copies of Module navigation labels (ctx
-  `Web UI label`, including the `[extern]` units) are no longer read and can be deleted. Before that,
+  `Web UI label`, including the `[extern]` units) are no longer read and can be deleted, and so are the Public error pages' Result words in the same
+  context ("Not found" and the like, and "Back to homepage"), which the global store answers now. Before that,
   check in `@phis/server` that a Site admin's translation editor writes `tr_site_*` only and that
   `tr_lang` is the operator's alone.
-- **The Result Widget translates the error page's words in the Site's store.** `result/server.tsx`
-  uses `createSiteTranslator` with `Web UI label` for its title, subtitle and the home link, so "Not
-  found", "This page could not be found." and "Back to homepage" -- Preset text from the Public error page
-  tree and the Widget's own default -- get a copy per Site. Same rule as Simple Text and Description: the
-  Preset's words through the global store (`helpers/text-source.ts`), an author's through the Site's.
-- **Cards in a stretching Grid row do not share its height.** A Grid with `align: "stretch"` lays its
-  slots out at the row's height, but a Card stands at its own content's height inside the slot, so three
-  cards whose texts differ end at three different lines (seen with a 24px step on a three-card row).
-  The Card is `fill-inline`; in a stretching row it should take the slot's block size too, or the slot
-  should hand it down, so the surfaces end together.
 - **A Site package cannot shape the navigation it ships with.** A Module only adds entries
   (`navigation` on a route, by anchor or `parentItemKey`); hiding, renaming or reordering somebody
   else's entry is the Site's navigation overlay alone (`PhiCmsNavigationOverlay`: `itemOverrides`,
