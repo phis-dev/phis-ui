@@ -4,7 +4,7 @@ import { resolvePhiMediaAssetTypeLabel } from "./asset-type-label";
 import { PhiTagControl } from "../controls/phi-tag-control";
 import { PhiButtonControl } from "../controls/phi-button-control";
 import NextImage from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import type { PhiCmsAreaUploadWidgetConfig } from "../../types/media";
 import { PhiCollectionLayoutControl } from "../controls/phi-collection-layout-control";
@@ -20,14 +20,13 @@ import type { PhiCollectionProviderQuery } from "../../types/collection-provider
 import type { PhiAreaUploadWidgetLabels } from "./media-widget-labels";
 import { PhiMediaKindIcon } from "./phi-media-kind-icon";
 import {
-  PhiMediaUploadError,
-  isPhiMediaUploadCancelled,
   resolvePhiMediaUploadInitOptions,
-  runPhiMediaUploadSession,
+  type PhiMediaUploadSessionResult,
 } from "./media-upload-flow";
 import {
   PHI_MEDIA_UPLOAD_DEFAULT_LABELS,
-  readPhiMediaUploadErrorMessage,
+  usePhiMediaUpload,
+  type PhiMediaUploadLabels,
 } from "./phi-media-upload";
 import { usePhiImagePreviewStore, type PhiImagePreviewStoreState } from "./phi-image-preview-store";
 import { PHI_ASSET_CONTROLLER_STORE_KEY } from "./asset-controller-signals";
@@ -114,28 +113,41 @@ function resolveUploadStatusLabel(item: UploadWallItem, labels: PhiAreaUploadWid
 }
 
 /**
- * The Widget's own wording over the shared reading of every refusal.
- *
- * It used to know about duplicates and nothing else, and fell through to `error.message` -- which put a
- * control plane string in front of a person for every other refusal, including the two the Site itself
- * now states. Only the duplicate has a label of its own here; the rest come from one place.
+ * The Widget's own wording over the shared reading of every refusal: its duplicate, failure and storage
+ * texts, and the shared ones for the rest -- so no control plane string reaches a person.
  */
-function resolveUploadErrorMessage(error: unknown, labels: PhiAreaUploadWidgetLabels) {
-  const typedError = error as { code?: unknown; message?: unknown } | null;
-  if (
-    (error instanceof PhiMediaUploadError && error.code === "media_asset_exists") ||
-    typedError?.code === "media_asset_exists" ||
-    typedError?.message === "media_asset_exists"
-  ) {
-    return labels.assetExistsLabel;
-  }
-
-  return readPhiMediaUploadErrorMessage(error, {
+function resolveAreaUploadLabels(labels: PhiAreaUploadWidgetLabels): PhiMediaUploadLabels {
+  return {
     ...PHI_MEDIA_UPLOAD_DEFAULT_LABELS,
     errorGeneric: labels.uploadFailedText,
     errorDuplicate: labels.assetExistsLabel,
     errorStorageUnreachable: labels.uploadStorageUnreachableText,
-  });
+  };
+}
+
+/** A file still on its way, or one that failed, drawn as a tile like the Assets that arrived. */
+function buildPendingWallItem(
+  item: { localId: string; file: File; progress: number; status: "uploading" | "done" | "error"; error: string | null },
+  presentationFlags: number,
+): UploadWallItem {
+  return {
+    localId: item.localId,
+    assetId: -1,
+    file: item.file,
+    title: item.file.name.replace(/\.[^.]+$/, "").trim() || item.file.name,
+    originalName: item.file.name,
+    thumbnailUrl: null,
+    previewUrl: null,
+    contentType: item.file.type,
+    kind: resolvePhiMediaKindFromContentType(item.file.type),
+    width: null,
+    height: null,
+    presentationFlags,
+    progress: item.progress,
+    status: item.status,
+    deleting: false,
+    error: item.error,
+  };
 }
 
 function resolveUploadWallDisplayDimensions(item: Pick<UploadWallItem, "contentType" | "width" | "height">) {
@@ -152,19 +164,6 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
   const previewState = usePhiImagePreviewStore(PHI_ASSET_CONTROLLER_STORE_KEY);
   const activateCollectionAction = usePhiCollectionProviderAction(PHI_ASSET_COLLECTION_DATA_SOURCE);
   const dragDepth = useRef(0);
-  /*
-   * Uploads still on their way. The wall belongs to whatever shows it -- a Media picker in an Overlay
-   * more often than not -- and closing that stops them, so no Asset is finalized that nobody sees
-   * arrive. The Server is told `cancelled` and clears up what had arrived.
-   */
-  const runningUploads = useRef(new Set<AbortController>());
-  useEffect(() => {
-    const controllers = runningUploads.current;
-    return () => {
-      for (const controller of controllers) controller.abort();
-      controllers.clear();
-    };
-  }, []);
   const [uploadWall, setUploadWall] = useState<UploadWallItem[]>([]);
   const [isDragActive, setIsDragActive] = useState(false);
   const allowDelete = config?.allowDelete ?? true;
@@ -232,83 +231,31 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
     }
   }
 
-  function startUploadWallItem(file: File, localId?: string) {
-    const normalizedTitle = file.name.replace(/\.[^.]+$/, "").trim() || file.name;
-    const nextLocalId = localId ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    setUploadWall((current) => [
-      {
-        localId: nextLocalId,
-        assetId: -1,
-        file,
-        title: normalizedTitle,
-        originalName: file.name,
-        thumbnailUrl: null,
-        previewUrl: null,
-        contentType: file.type,
-        kind: resolvePhiMediaKindFromContentType(file.type),
-        width: null,
-        height: null,
-        presentationFlags: uploadInitOptions.presentationFlags ?? 0,
-        progress: 0,
-        status: "uploading",
-        deleting: false,
-        error: null,
-      },
-      ...current.filter((item) => item.localId !== nextLocalId),
-    ]);
-    return nextLocalId;
-  }
-
   /*
-   * One file, transported by us.
-   *
-   * This was `customRequest`, whose `onProgress`, `onSuccess` and `onError` fed an Ant Design file
-   * list that `showUploadList={false}` never rendered -- every visible part of the progress already
-   * came from `uploadWall` below. Dropping the primitive dropped that second, invisible copy with it.
-   * A retry from the wall comes through here as well, into the tile it already has (`localId`).
+   * The transport is the shared one (`usePhiMediaUpload`): progress, refusals and their wording, retry,
+   * and stopping what is still on its way when the wall goes away -- a Media picker in an Overlay more
+   * often than not -- so no Asset is finalized that nobody sees arrive. What is this Widget's own is the
+   * wall: an Asset that arrived becomes a tile, and the listing behind it hears of it.
    */
-  async function uploadFileToWallItem(file: File, localId?: string) {
-    const nextLocalId = startUploadWallItem(file, localId);
-    const controller = new AbortController();
-    runningUploads.current.add(controller);
-
-    try {
-      const payload = await runPhiMediaUploadSession(file, (progress) => {
-        setUploadWall((current) =>
-          current.map((item) =>
-            item.localId === nextLocalId ? { ...item, progress, status: "uploading" } : item,
-          ),
-        );
-      }, uploadInitOptions, controller.signal);
-      if (controller.signal.aborted) return;
-      const uploadedTile = normalizePhiImagePreviewTile(payload.asset, []);
-      setUploadWall((current) =>
-        current.map((item) =>
-          item.localId === nextLocalId ? buildUploadWallItem(uploadedTile, nextLocalId) : item,
-        ),
-      );
+  const areaUploadLabels = useMemo(() => resolveAreaUploadLabels(labels), [labels]);
+  const upload = usePhiMediaUpload<PhiMediaUploadSessionResult["asset"]>({
+    labels: areaUploadLabels,
+    initOptions: uploadInitOptions,
+    onUploaded: (asset, file) => {
+      const uploadedTile = normalizePhiImagePreviewTile(asset, []);
+      setUploadWall((current) => [buildUploadWallItem(uploadedTile, `asset-${uploadedTile.id}`), ...current]);
       onUploadComplete?.();
       showUploadMessage("success", labels.uploadSuccessTemplate.replace("%1", file.name));
-    } catch (error) {
-      if (controller.signal.aborted || isPhiMediaUploadCancelled(error)) return;
-      const errorMessage = resolveUploadErrorMessage(error, labels);
-      setUploadWall((current) =>
-        current.map((item) =>
-          item.localId === nextLocalId
-            ? {
-                ...item,
-                progress: 100,
-                status: "error",
-                error: errorMessage,
-              }
-            : item,
-        ),
-      );
-      showUploadMessage("error", errorMessage);
-    } finally {
-      runningUploads.current.delete(controller);
-    }
-  }
+    },
+    onRejected: (message) => showUploadMessage("error", message),
+  });
+  // The shared items are on their way or failed; an arrived one is a tile in the wall instead.
+  const wallItems = [
+    ...upload.items
+      .filter((item) => item.status !== "done")
+      .map((item) => buildPendingWallItem(item, uploadInitOptions.presentationFlags ?? 0)),
+    ...uploadWall,
+  ];
 
   return (
     <PhiFlexControl vertical gap={12} style={{ width: "100%" }}>
@@ -340,7 +287,7 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
           dropZone
           multiple={multiple}
           accept={accept}
-          onFile={(file) => void uploadFileToWallItem(file)}
+          onFile={(file) => void upload.upload(file)}
           style={{
             padding: 0,
             width: "100%",
@@ -370,7 +317,7 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
         mode="grid"
         gap={token.paddingSM}
         minColumnWidth={uploadTileFrameSize}
-        items={uploadWall.map((item) => {
+        items={wallItems.map((item) => {
           const displayDimensions = resolveUploadWallDisplayDimensions(item);
 
           return (
@@ -511,7 +458,7 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
                       type="primary"
                       size="small"
                       onClick={() => {
-                        void uploadFileToWallItem(item.file as File, item.localId);
+                        void upload.retry(item.localId);
                       }}
                       label={labels.retryLabel}
                     />

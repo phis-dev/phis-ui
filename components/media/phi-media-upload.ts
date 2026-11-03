@@ -177,7 +177,7 @@ type PhiMediaUploadItem = {
  * upload settled -- a form field that receives the Asset id in `onUploaded` -- reads it to hold back
  * whatever would act on the incomplete value.
  */
-export function usePhiMediaUpload(input: {
+export function usePhiMediaUpload<TAsset extends { id: number } = { id: number }>(input: {
   labels: PhiMediaUploadLabels;
   acceptance?: PhiMediaUploadAcceptance;
   initOptions?: PhiMediaUploadInitOptions;
@@ -188,12 +188,17 @@ export function usePhiMediaUpload(input: {
    * between, so it is this one thing that differs -- and everything a person sees while it happens is
    * shared rather than reimplemented alongside.
    */
-  runSession?: PhiMediaUploadSessionRunner;
-  onUploaded?: (asset: { id: number }, file: File) => void | Promise<void>;
+  runSession?: (...args: Parameters<PhiMediaUploadSessionRunner>) => Promise<{ asset: TAsset }>;
+  /**
+   * The Asset as the session answered it. A surface that shows the new Asset at once -- a tile in the
+   * upload wall -- reads more of it than the id, and the default runner answers with the whole record.
+   */
+  onUploaded?: (asset: TAsset, file: File) => void | Promise<void>;
   onRejected?: (message: string, file: File) => void;
 }) {
   const { labels, acceptance, initOptions, onUploaded, onRejected } = input;
-  const runSession = input.runSession ?? runPhiMediaUploadSession;
+  const runSession = input.runSession
+    ?? (runPhiMediaUploadSession as unknown as (...args: Parameters<PhiMediaUploadSessionRunner>) => Promise<{ asset: TAsset }>);
   const [items, setItems] = useState<readonly PhiMediaUploadItem[]>([]);
   const sequence = useRef(0);
   const running = useRef(new Set<AbortController>());
@@ -212,21 +217,23 @@ export function usePhiMediaUpload(input: {
     setItems((current) => current.map((item) => item.localId === localId ? { ...item, ...next } : item));
   }, []);
 
-  const upload = useCallback(async (file: File) => {
+  /** One file into one item: a new item, or -- for a retry -- the failed one it had. */
+  const run = useCallback(async (file: File, retryLocalId?: string) => {
     const rejection = readPhiMediaUploadRejection(file, acceptance, labels);
     if (rejection) {
       onRejected?.(rejection, file);
       return null;
     }
-    sequence.current += 1;
-    const localId = `upload-${sequence.current}`;
-    setItems((current) => [
-      { localId, file, progress: 0, status: "uploading", error: null, assetId: null },
-      ...current,
-    ]);
+    let localId = retryLocalId;
+    if (localId == null) {
+      sequence.current += 1;
+      localId = `upload-${sequence.current}`;
+    }
+    const startedItem: PhiMediaUploadItem = { localId, file, progress: 0, status: "uploading", error: null, assetId: null };
+    setItems((current) => [startedItem, ...current.filter((item) => item.localId !== localId)]);
     const controller = new AbortController();
     running.current.add(controller);
-    let asset: { id: number };
+    let asset: TAsset;
     try {
       ({ asset } = await runSession(
         file,
@@ -260,11 +267,18 @@ export function usePhiMediaUpload(input: {
     return asset;
   }, [acceptance, initOptions, labels, onRejected, onUploaded, patch, runSession]);
 
+  const upload = useCallback((file: File) => run(file), [run]);
+  /** Starts a failed item's file again, in the place it had. */
+  const retry = useCallback((localId: string) => {
+    const failed = items.find((item) => item.localId === localId && item.status === "error");
+    return failed ? run(failed.file, localId) : Promise.resolve(null);
+  }, [items, run]);
+
   const cancel = useCallback(() => {
     for (const controller of running.current) controller.abort();
   }, []);
   const reset = useCallback(() => setItems([]), []);
   const uploading = items.some((item) => item.status === "uploading");
 
-  return { accept, items, uploading, upload, cancel, reset };
+  return { accept, items, uploading, upload, retry, cancel, reset };
 }
