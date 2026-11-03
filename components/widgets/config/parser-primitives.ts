@@ -5,7 +5,10 @@ import type {
 } from "../../../types/renderable-block";
 import { mergePhiCmsRenderableBlockConfigDefaults } from "../../../helpers/cms-config-serialization";
 import { readPhiViewerAccessPolicy } from "../../../types/access";
-import { createPhiConfigReader } from "./strict-config-reader";
+import { createPhiConfigReader, type PhiConfigReader } from "./strict-config-reader";
+import { PHI_BACKGROUND_FILTERS, readPhiShadow } from "../../../types/layout-style";
+import { PHI_CMS_BORDER_SOURCES } from "../../../types/cms-border-source";
+import { PHI_SURFACE_TONES } from "../../../types/surface";
 
 export type PhiCmsWidgetConfigBase = Record<string, unknown> & PhiRenderableBlockBase;
 
@@ -46,6 +49,37 @@ export function readCssSize(value: unknown) {
  * The normalization itself stays lenient, because the Builder runs it on drafts while an author edits.
  * This reader is what a stored config is read with: every Widget's `parseConfig` and the Layouts'.
  */
+/*
+ * A Surface, one level into each of its parts: a background's base, overlay, filter and motion are what
+ * they claim to be, a border is an object of the border's fields, a shadow is one the Theme knows. What is
+ * inside a gradient's stops or an overlay's pattern is still normalized as before.
+ */
+function assertPhiSurfaceConfig(surface: PhiConfigReader) {
+  const cssSize = (value: unknown) =>
+    (typeof value === "number" && Number.isFinite(value)) || typeof value === "string" ? value : undefined;
+  surface.object("background", (background) => {
+    background.value("base", "a background base: a CSS value or an object with a kind", (value) =>
+      typeof value === "string" ||
+        (isPhiRecord(value) && ["color", "gradient", "image", "none"].includes(String(value.kind)))
+        ? value
+        : undefined);
+    background.value("overlay", "a background overlay", (value) => (isPhiRecord(value) ? value : undefined));
+    background.oneOf("filter", PHI_BACKGROUND_FILTERS);
+    background.value("motion", "a background motion", (value) => (isPhiRecord(value) ? value : undefined));
+  });
+  surface.oneOf("borderSource", PHI_CMS_BORDER_SOURCES);
+  surface.object("border", (border) => {
+    border.number("borderWidth");
+    border.string("borderStyle");
+    border.string("borderColor");
+    for (const corner of ["borderTopLeftRadius", "borderTopRightRadius", "borderBottomLeftRadius", "borderBottomRightRadius"]) {
+      border.value(corner, "a CSS size", cssSize);
+    }
+  });
+  surface.value("shadow", "a shadow", readPhiShadow);
+  surface.oneOf("tone", PHI_SURFACE_TONES);
+}
+
 function assertPhiRenderableBlockBaseConfig(config: Record<string, unknown>) {
   const reader = createPhiConfigReader(config);
   const sizeLike = (value: unknown) =>
@@ -62,7 +96,7 @@ function assertPhiRenderableBlockBaseConfig(config: Record<string, unknown>) {
   reader.value("anchor", "an anchor", (value) => (isPhiRecord(value) || typeof value === "string" ? value : undefined));
   reader.integer("zIndex");
   reader.number("opacity");
-  reader.value("surface", "a surface", (value) => (isPhiRecord(value) ? value : undefined));
+  reader.object("surface", assertPhiSurfaceConfig);
   reader.string("className");
   reader.value("size", "a size", sizeLike);
   reader.value("minSize", "a size", sizeLike);
