@@ -29,8 +29,6 @@ import {
 const SYNTHETIC_REGION_IDS = {
   regionHeaderTop: -1,
   regionHeaderMain: -2,
-  regionHeaderBottom: -3,
-  regionSiderRight: -24,
   regionFooterTop: -27,
   regionFooterMain: -28,
   regionFooterBottom: -33,
@@ -59,18 +57,11 @@ export async function buildPhiDefaultSiteAreaPresetTree({
     ownerModuleId,
     presetKey,
   }, PHI_DEFAULT_PUB_AREA_WIDGET_NODE_KEYS);
-  const navigationArea = runtimeModuleArea === "public" ? "public" : runtimeModuleArea;
   const headerMainRegion = PHI_DEFAULT_PUB_AREA_PRESET.regions.find(
     (region) => region.key === "header_main",
   );
   const headerTopRegion = PHI_DEFAULT_PUB_AREA_PRESET.regions.find(
     (region) => region.key === "header_top",
-  );
-  const headerBottomRegion = PHI_DEFAULT_PUB_AREA_PRESET.regions.find(
-    (region) => region.key === "header_bottom",
-  );
-  const siderRightRegion = PHI_DEFAULT_PUB_AREA_PRESET.regions.find(
-    (region) => region.key === "sider_right",
   );
   const footerMainRegion = PHI_DEFAULT_PUB_AREA_PRESET.regions.find(
     (region) => region.key === "footer_main",
@@ -110,19 +101,6 @@ export async function buildPhiDefaultSiteAreaPresetTree({
   const shellHeaderMainOffsetTop = resolvePhiShellMetric(runtime.site.theme?.shell, "offsetTop", {
     family: "header",
     region: "main",
-  });
-  const shellHeaderBottomHeight = resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "bottom");
-  const shellHeaderBottomOffsetTop = resolvePhiShellMetric(runtime.site.theme?.shell, "offsetTop", {
-    family: "header",
-    region: "bottom",
-  });
-  const shellSiderRightWidth = resolvePhiShellMetric(runtime.site.theme?.shell, "width", {
-    family: "sider",
-    region: "right",
-  });
-  const shellSiderRightOffsetTop = resolvePhiShellMetric(runtime.site.theme?.shell, "offsetTop", {
-    family: "sider",
-    region: "right",
   });
   const shellFooterMainHeight = resolvePhiShellMetric(runtime.site.theme?.shell, "height", {
     family: "footer",
@@ -174,44 +152,6 @@ export async function buildPhiDefaultSiteAreaPresetTree({
                 ...headerMainRegion.config,
                 size: { ...(headerMainRegion.config.size ?? {}), height: `${shellHeaderMainHeight}px` },
                 ...(typeof shellHeaderMainOffsetTop === "number" ? { offsetTop: shellHeaderMainOffsetTop } : {}),
-              },
-            }),
-          ]
-        : []),
-      ...(headerBottomRegion
-        ? [
-            nodes.region({
-              id: SYNTHETIC_REGION_IDS.regionHeaderBottom,
-              regionType: PhiCmsRegionType.HeaderBottom,
-              rootLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutHeaderBottom,
-              status: headerBottomRegion.status,
-              flags: headerBottomRegion.flags,
-              visibilityMask: headerBottomRegion.visibilityMask,
-              sortOrder: headerBottomRegion.sortOrder,
-              config: {
-                ...headerBottomRegion.config,
-                size: { ...(headerBottomRegion.config.size ?? {}), height: `${shellHeaderBottomHeight}px` },
-                ...(typeof shellHeaderBottomOffsetTop === "number" ? { offsetTop: shellHeaderBottomOffsetTop } : {}),
-              },
-            }),
-          ]
-        : []),
-      ...(siderRightRegion
-        ? [
-            nodes.region({
-              id: SYNTHETIC_REGION_IDS.regionSiderRight,
-              regionType: PhiCmsRegionType.SiderRight,
-              rootLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutSiderRight,
-              status: siderRightRegion.status,
-              flags: siderRightRegion.flags,
-              visibilityMask: siderRightRegion.visibilityMask,
-              sortOrder: siderRightRegion.sortOrder,
-              config: {
-                ...siderRightRegion.config,
-                ...(typeof shellSiderRightWidth === "number"
-                  ? { size: { ...(siderRightRegion.config.size ?? {}), width: `${shellSiderRightWidth}px` } }
-                  : {}),
-                ...(typeof shellSiderRightOffsetTop === "number" ? { offsetTop: shellSiderRightOffsetTop } : {}),
               },
             }),
           ]
@@ -338,53 +278,6 @@ export async function buildPhiDefaultSiteAreaPresetTree({
           paddingRight: 0,
         },
       },
-      ...(headerBottomRegion
-        ? [
-            {
-              id: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutHeaderBottom,
-              siteId: page.siteId,
-              parentLayoutNodeId: null,
-              widgetType: buildPhiCmsLayoutNamespacedTypeKey(resolvePhiCmsLayoutPluginKey("flex"), "flex"),
-              slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-              sortOrder: 10,
-              status: 1,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
-              label: "pub header bottom flex",
-              config: {
-                anchor: {
-                  horizontal: "left",
-                  vertical: "middle",
-                },
-                gap: 0,
-                wrap: false,
-              },
-            },
-          ]
-        : []),
-      ...(siderRightRegion
-        ? [
-            {
-              id: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutSiderRight,
-              siteId: page.siteId,
-              parentLayoutNodeId: null,
-              widgetType: buildPhiCmsLayoutNamespacedTypeKey(resolvePhiCmsLayoutPluginKey("flex-vertical"), "flex-vertical"),
-              slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-              sortOrder: 16,
-              status: 1,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
-              label: "pub sider right vertical",
-              config: {
-                anchor: {
-                  horizontal: "center",
-                  vertical: "top",
-                },
-                gap: 0,
-              },
-            },
-          ]
-        : []),
       ...(footerTopRegion
         ? [
             {
@@ -559,7 +452,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
         visibilityMask: page.visibilityMask,
         label: "pub header main navigation",
         config: {
-          navKey: `${navigationArea}:header`,
+          navKey: `${runtimeModuleArea}:header`,
         },
         contentVersionId: null,
       },
@@ -631,7 +524,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               config: {
                 title: "Quick Links",
                 textSource: PHI_TEXT_SOURCE_PRESET,
-                navKey: `${navigationArea}:footer`,
+                navKey: `${runtimeModuleArea}:footer`,
                 columns: 2,
                 separator: true,
               },
