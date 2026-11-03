@@ -103,6 +103,25 @@ function clearingReadCacheOnWrite(handler: PhiNextProxyHandler): PhiNextProxyHan
   };
 }
 
+/**
+ * A CMS structure write is checked against the Widgets' own parsers before it goes upstream
+ * (`site-cms-write-validation.ts`), so a config no Widget can read is refused with the field it is in
+ * rather than stored and left out of the live page. Loaded with the first such write.
+ */
+function validatingCmsStructureWrite(
+  handler: PhiNextProxyHandler,
+  loadAreaBridge: PhiSiteAreaBridgeLoader,
+): PhiNextProxyHandler {
+  return async (request, context) => {
+    if ((await context.params).path?.[0] === "cms") {
+      const { validatePhiCmsStructureWrite } = await import("./site-cms-write-validation");
+      const refusal = await validatePhiCmsStructureWrite(request, loadAreaBridge);
+      if (refusal) return refusal;
+    }
+    return handler(request, context);
+  };
+}
+
 export function buildPhiSiteProxyHandlers(
   options: BuildPhiSiteProxyHandlersOptions,
 ): PhiNextProxyHandlers {
@@ -163,9 +182,9 @@ export function buildPhiSiteProxyHandlers(
     GET: answeringLocally("GET", handlers.GET),
     HEAD: answeringLocally("HEAD", handlers.HEAD),
     OPTIONS: answeringLocally("OPTIONS", handlers.OPTIONS),
-    POST: answeringLocally("POST", clearingReadCacheOnWrite(handlers.POST)),
-    PUT: answeringLocally("PUT", clearingReadCacheOnWrite(handlers.PUT)),
-    PATCH: answeringLocally("PATCH", clearingReadCacheOnWrite(handlers.PATCH)),
+    POST: answeringLocally("POST", validatingCmsStructureWrite(clearingReadCacheOnWrite(handlers.POST), options.loadAreaBridge)),
+    PUT: answeringLocally("PUT", validatingCmsStructureWrite(clearingReadCacheOnWrite(handlers.PUT), options.loadAreaBridge)),
+    PATCH: answeringLocally("PATCH", validatingCmsStructureWrite(clearingReadCacheOnWrite(handlers.PATCH), options.loadAreaBridge)),
     DELETE: answeringLocally("DELETE", clearingReadCacheOnWrite(handlers.DELETE)),
   };
 }

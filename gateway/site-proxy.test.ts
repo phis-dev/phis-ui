@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { NextRequest } from "next/server";
 
 const upstream = vi.hoisted(() => ({ status: 200 }));
+// What the CMS write check answers; `null` lets the write through.
+const writeCheck = vi.hoisted(() => ({ refusal: null as Response | null }));
 
 // Core is not reachable in a unit test; every proxied request answers with `upstream.status`.
 vi.mock("../net/phi-next-proxy", () => {
@@ -45,6 +47,15 @@ vi.mock("./dashboard-cards-route", () => ({
     async () => new Response("dashboard-cards", { status: 200 }),
 }));
 
+/*
+ * The CMS write check reads the Widgets' parsers from the Area's catalog; its own rules are the strict
+ * reader's and the Table validator's to pin. Here only the door matters: a refusal stops the write before
+ * Core, and a write let through goes on as it did.
+ */
+vi.mock("./site-cms-write-validation", () => ({
+  validatePhiCmsStructureWrite: async () => writeCheck.refusal,
+}));
+
 import { buildPhiSiteProxyHandlers } from "./site-proxy";
 import { clearPhiSiteReadCache, readPhiSiteReadCache } from "./site-read-cache";
 
@@ -70,6 +81,7 @@ describe("buildPhiSiteProxyHandlers", () => {
   afterEach(() => {
     clearPhiSiteReadCache();
     upstream.status = 200;
+    writeCheck.refusal = null;
   });
 
   it.each(["POST", "PUT", "PATCH", "DELETE"] as const)("clears the read cache after an accepted %s", async (method) => {
@@ -78,6 +90,19 @@ describe("buildPhiSiteProxyHandlers", () => {
 
   it("keeps the read cache for a read", async () => {
     expect(await loadsAround(() => handlers.GET(request, context))).toBe(1);
+  });
+
+  it("refuses a CMS write the Widgets cannot read before it reaches Core", async () => {
+    writeCheck.refusal = new Response("invalid-config", { status: 422 });
+    const response = await handlers.POST(request, context);
+    expect(response.status).toBe(422);
+    expect(await response.text()).toBe("invalid-config");
+  });
+
+  it("does not check a write outside the CMS", async () => {
+    writeCheck.refusal = new Response("invalid-config", { status: 422 });
+    const response = await handlers.POST(request, at("media", "upload"));
+    expect(await response.text()).toBe("upstream");
   });
 
   it("keeps the read cache when Core refused the write", async () => {
