@@ -315,8 +315,10 @@ channels. The Builder-specific rules are:
 
 - `dnd-kit` is the Builder's interaction engine; it stays an implementation detail
 - the Builder never sends pointer coordinates or continuous movement through the signal bus
-- the Builder Controller emits `dragStart`, `dragChange`, `dragEnd` (actions `start`, `change`, `stop`)
-  and `drop` (action `drop`), all with the `drag-drop` value schema
+- a structure drag sends no signals: the drop target moves the node itself, and nothing outside the
+  canvas has a use for the drag's progress. The Controller declared `dragStart`, `dragChange`, `dragEnd`
+  and `drop` once and sent them to its own address, where nothing answers; a Builder output comes back
+  when something needs it, routed like every other one
 - structure moves are described in "Structure drag and drop" below
 
 ## 7. Canvas contract
@@ -950,9 +952,8 @@ The builder must support a clear change lifecycle.
 
 - Structure authoring uses one `dnd-kit` context around the complete Shell or Page canvas. Pointer
   sensing, collision detection, and the visual drag overlay stay local to that context.
-- The Builder Controller declares and emits only semantic `drag/start`, `drag/change`,
-  `drop/drop`, and `drag/stop` signals with the shared `dragDrop` value schema. Pointer coordinates
-  and continuous movement events are not sent through the runtime signal bus.
+- A structure drag sends nothing through the runtime signal bus -- no pointer coordinates, no
+  movement, and no `drag`/`drop` lifecycle either (see "Builder drag and drop contract").
 - In editor mode, non-root Layout and Widget scaffolds expose a move handle.
 - Slot insertion affordances are move targets. Widget scaffolds are swap targets for Widget payloads.
   Dropping keeps CMS instance IDs and moves the complete node data.

@@ -19,7 +19,6 @@ import type {
   PhiCmsPresetSource,
   PhiCmsResolvedNavigationSurface,
 } from "../../../../types/cms-module-descriptors";
-import { PHI_DRAG_SOURCE_CONTROL_SIGNALS } from "../../../../components/widgets/signals/control-signal-capabilities";
 import { PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS } from "../../../../components/widgets/label-types/builder-chrome";
 import type { PhiCmsTreeControllerSettings } from "../../../../types/cms";
 import type { PhiWorkspaceCatalogState } from "../../../../components/workspace/catalog-state";
@@ -208,13 +207,6 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_DEFINITION = {
       ...dialogEmits("publicRoutes"),
       { id: "publicRoutesReload", action: "activate", valueType: "none" },
       { id: "modulesTableReload", action: "activate", valueType: "none" },
-      ...PHI_DRAG_SOURCE_CONTROL_SIGNALS.emits,
-      {
-        id: "drop",
-        action: "drop",
-        valueType: "json",
-        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.dragDrop,
-      },
     ],
     listens: [
       {

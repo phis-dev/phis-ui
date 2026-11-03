@@ -24,9 +24,6 @@ import {
 } from "react";
 
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
-import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
-import { usePhiSignalDispatcher } from "../../../components/runtime/runtime-signal-bus";
-import { createPhiBuilderControllerAddress } from "./controller/address";
 import type { PhiDeveloperBuilderArea } from "./developer-workspace-types";
 import type { PhiSignalDropMode } from "../../../types/signals";
 
@@ -134,7 +131,6 @@ export function PhiStructureDndProvider({
 }: {
   children: ReactNode;
 }) {
-  const emitSignal = usePhiSignalDispatcher();
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 4 },
@@ -142,51 +138,14 @@ export function PhiStructureDndProvider({
   );
   const [active, setActive] = useState<PhiStructureDragData | null>(null);
   const [acceptedTargetId, setAcceptedTargetId] = useState<string | null>(null);
-  const lastOverTargetIdRef = useRef<string | null>(null);
   const previewElement = active?.getPreviewElement() ?? null;
 
-  const emitDragSignal = (
-    source: PhiStructureDragData,
-    input: {
-      channel: "drag" | "drop";
-      action: "start" | "change" | "stop" | "drop";
-      target?: PhiStructureDropTargetData | null;
-      accepted?: boolean | null;
-    },
-  ) => {
-    const controller = createPhiBuilderControllerAddress();
-    emitSignal({
-      scope: source.pageScoped ? "page" : "area",
-      channel: input.channel,
-      action: input.action,
-      value: {
-        area: source.area,
-        pageKey: source.pageKey,
-        sourceRegionKey: source.regionKey,
-        sourceNodeId: source.nodeId,
-        sourceNodeKind: source.nodeKind,
-        targetRegionKey: input.target?.regionKey ?? null,
-        targetKey: input.target?.id ?? null,
-        targetNodeId: input.target?.targetNodeId ?? null,
-        dropMode: input.target?.dropMode ?? null,
-        accepted: input.accepted ?? null,
-      },
-      valueType: "json",
-      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.dragDrop,
-      sender: controller,
-      receiver: controller,
-      timestamp: Date.now(),
-    });
-  };
-
-  const finish = (source: PhiStructureDragData | null) => {
-    if (source) {
-      emitDragSignal(source, {
-        channel: "drag",
-        action: "stop",
-      });
-    }
-    lastOverTargetIdRef.current = null;
+  /*
+   * The drag stays inside this context: the drop moves the node through its target, and nothing is
+   * signalled. The Builder Controller used to send `drag/*` and `drop/drop` here, addressed to itself,
+   * which answers nothing under its own address -- four declared outputs that never reached anybody.
+   */
+  const finish = () => {
     setAcceptedTargetId(null);
     setActive(null);
   };
@@ -197,10 +156,6 @@ export function PhiStructureDndProvider({
       return;
     }
     setActive(source);
-    emitDragSignal(source, {
-      channel: "drag",
-      action: "start",
-    });
   };
 
   const handleDragOver = (event: DragOverEvent) => {
@@ -211,19 +166,6 @@ export function PhiStructureDndProvider({
     setAcceptedTargetId((current) =>
       current === nextTargetId ? current : nextTargetId,
     );
-    if (
-      source &&
-      target &&
-      lastOverTargetIdRef.current !== `${target.id}:${accepted}`
-    ) {
-      lastOverTargetIdRef.current = `${target.id}:${accepted}`;
-      emitDragSignal(source, {
-        channel: "drag",
-        action: "change",
-        target,
-        accepted,
-      });
-    }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -232,14 +174,8 @@ export function PhiStructureDndProvider({
     const accepted = !!source && !!target && target.accepts(source);
     if (source && target && accepted) {
       target.drop(source);
-      emitDragSignal(source, {
-        channel: "drop",
-        action: "drop",
-        target,
-        accepted: true,
-      });
     }
-    finish(source);
+    finish();
   };
 
   const contextValue = useMemo(
@@ -266,7 +202,7 @@ export function PhiStructureDndProvider({
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
-      onDragCancel={() => finish(active)}
+      onDragCancel={finish}
     >
       <PhiStructureDndContext.Provider value={contextValue}>
         {children}

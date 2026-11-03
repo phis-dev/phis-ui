@@ -250,26 +250,3 @@ export const PHI_MULTI_SELECT_CONTROL_SIGNALS = {
     { ...PHI_CONTROL_CLEAR_SIGNAL, channel: "selection" },
   ],
 } satisfies PhiSignalPluginMeta;
-
-export const PHI_DRAG_SOURCE_CONTROL_SIGNALS = {
-  emits: [
-    {
-      id: "dragStart",
-      action: "start",
-      valueType: "json",
-      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.dragDrop,
-    },
-    {
-      id: "dragChange",
-      action: "change",
-      valueType: "json",
-      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.dragDrop,
-    },
-    {
-      id: "dragEnd",
-      action: "stop",
-      valueType: "json",
-      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.dragDrop,
-    },
-  ],
-} satisfies PhiSignalPluginMeta;
