@@ -1,5 +1,6 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import { PHI_RENDERABLE_BLOCK_GEOMETRY_FIELDS } from "../../../../../helpers/renderable-block-plugin-fields";
+import { readPhiTextSource, type PhiTextSource } from "../../../../../helpers/text-source";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import {
   readBoolean,
@@ -16,6 +17,8 @@ export type PhiCmsResultWidgetConfig = PhiCmsWidgetConfigBase & {
   subTitle?: string;
   homeLink?: boolean;
   homeLinkLabel?: string;
+  /** Whose words `title`, `subTitle` and `homeLinkLabel` are (`helpers/text-source.ts`). */
+  textSource?: PhiTextSource;
 };
 
 /**
@@ -56,6 +59,7 @@ function parsePhiCmsResultWidgetConfig(config: Record<string, unknown>): PhiCmsR
     subTitle: readString(config.subTitle),
     homeLink: readBoolean(config.homeLink) ?? true,
     homeLinkLabel: readString(config.homeLinkLabel),
+    textSource: readPhiTextSource(config.textSource),
   };
 }
 

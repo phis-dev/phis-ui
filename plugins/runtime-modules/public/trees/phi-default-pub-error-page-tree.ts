@@ -1,4 +1,5 @@
 import { createPhiPresetCmsInstanceId } from "../../../../types/cms-instance-id";
+import { PHI_TEXT_SOURCE_PRESET } from "../../../../helpers/text-source";
 import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "../ids";
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../../constants/cms-layout-types";
 import { PhiCmsPageType } from "../../../../constants/phi-cms";
@@ -19,14 +20,11 @@ const ERROR_STATUS: Record<PhiCmsErrorCode, "403" | "404"> = {
 /**
  * The source text, and the source text only.
  *
- * It goes into the widget config untranslated, because the `result` widget translates through the Site
- * translator -- which is the point: a Site defines its own error strings, and it can only do that if
- * what reaches the translator is the source rather than an already translated string. Pre-translating
- * here would register the German text as a Site source, ask for a de->de translation, and show the
- * translation in the builder inspector where every other widget shows the original.
- *
- * The admin presets are the deliberate other case: their labels are system copy shared across Sites, so
- * they are translated globally in the preset and set the node's `NoTranslate` flag.
+ * It goes into the widget config untranslated and marked `textSource: "preset"`: these are the
+ * platform's words, the same on every Site, so the `result` widget translates them through the global
+ * store (`helpers/text-source.ts`). Pre-translating here would freeze one locale into every Site that
+ * adopts the page. An author who rewrites a text in the Builder drops the marker, and from then on the
+ * words are the Site's and its own store translates them.
  */
 const ERROR_SOURCE_COPY: Record<PhiCmsErrorCode, { title: string; subTitle: string }> = {
   401: {
@@ -108,6 +106,7 @@ export async function buildPhiDefaultPubErrorPageTree({
         sortOrder: 0,
         label: `pub error ${code} result widget`,
         config: {
+          textSource: PHI_TEXT_SOURCE_PRESET,
           status: ERROR_STATUS[code],
           code: String(code),
           title: copy.title,

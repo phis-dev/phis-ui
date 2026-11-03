@@ -1,9 +1,9 @@
-import { PHI_TR_CTX_WEB_UI_LABEL, createSiteTranslator } from "../../../../../gateway/tr";
+import { trWidgetText } from "../../../../../server-helpers/translate";
+import { PHI_TEXT_SOURCE_PRESET } from "../../../../../helpers/text-source";
 import type { PhiBlockRuntime } from "../../../../../types";
 import { PHI_RESULT_HOME_LINK_SOURCE_LABEL, type PhiCmsResultWidgetConfig } from "./config";
 import { localizeAreaPath } from "../../../../../helpers/locale";
 import { PhiResultWidgetBody } from "../../../../../components/widgets/shared/result-body";
-import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
 
 export type PhiResultWidgetProps = {
   config?: PhiCmsResultWidgetConfig;
@@ -12,38 +12,45 @@ export type PhiResultWidgetProps = {
   translate: boolean;
 };
 
+/**
+ * The Result's words, each from the store of whoever wrote it (`helpers/text-source.ts`).
+ *
+ * A Preset's title and subtitle -- the error pages' "Not found" -- are the platform's and come from the
+ * global store; an author's are the Site's. The home link's default label is the Widget's own sentence,
+ * so it is the platform's whoever placed the Widget.
+ */
 async function resolveResultText({ config, runtime, translate }: PhiResultWidgetProps) {
   const code = config?.code?.trim();
   const title = config?.title?.trim();
   const subTitle = config?.subTitle?.trim();
-  const homeLinkLabel = config?.homeLinkLabel?.trim() || PHI_RESULT_HOME_LINK_SOURCE_LABEL;
+  const authoredHomeLinkLabel = config?.homeLinkLabel?.trim();
+  const homeLinkLabel = authoredHomeLinkLabel || PHI_RESULT_HOME_LINK_SOURCE_LABEL;
   const shouldTranslate =
     translate &&
     config?.renderMode !== "preview" &&
-    config?.renderMode !== "editor" &&
-    Boolean(readPhiServerApiCredentials().apiBaseUrl.trim()) &&
-    Boolean(readPhiServerApiCredentials().internalToken.trim()) &&
-    Boolean(runtime.site.key.trim()) &&
-    Boolean(runtime.locale.current.trim());
+    config?.renderMode !== "editor";
 
   if (!shouldTranslate) {
     return { code, title, subTitle, homeLinkLabel };
   }
 
-  const translator = createSiteTranslator({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    siteKey: runtime.site.key,
-    locale: runtime.locale.current,
-  });
-  const sourceTexts = [title ?? "", subTitle ?? "", homeLinkLabel];
-  const translated = await translator.trBulk(sourceTexts, PHI_TR_CTX_WEB_UI_LABEL);
+  const locale = runtime.locale.current;
+  const textSource = config?.textSource;
+  const translateText = async (value: string | undefined) =>
+    value ? (await trWidgetText(locale, value, textSource)).trim() || value : value;
+  const [translatedTitle, translatedSubTitle, translatedHomeLinkLabel] = await Promise.all([
+    translateText(title),
+    translateText(subTitle),
+    authoredHomeLinkLabel
+      ? translateText(authoredHomeLinkLabel)
+      : trWidgetText(locale, PHI_RESULT_HOME_LINK_SOURCE_LABEL, PHI_TEXT_SOURCE_PRESET),
+  ]);
 
   return {
     code,
-    title: translated[0]?.trim() || title,
-    subTitle: translated[1]?.trim() || subTitle,
-    homeLinkLabel: translated[2]?.trim() || homeLinkLabel,
+    title: translatedTitle,
+    subTitle: translatedSubTitle,
+    homeLinkLabel: translatedHomeLinkLabel?.trim() || homeLinkLabel,
   };
 }
 
