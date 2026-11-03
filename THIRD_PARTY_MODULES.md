@@ -470,11 +470,12 @@ import { STATUS_CARD_WIDGET_KEY, STATUS_WIDGETS_PLUGIN_KEY } from "../../ids";
 
 export type StatusCardConfig = { title: string };
 
-export function parseStatusCardConfig(value: unknown): StatusCardConfig {
-  const title = value && typeof value === "object"
-    ? (value as { title?: unknown }).title
-    : null;
-  return { title: typeof title === "string" && title.trim() ? title.trim() : "Status" };
+import { createPhiConfigReader } from "@phis/ui/widget-config";
+
+export function parseStatusCardConfig(config: Record<string, unknown>): StatusCardConfig {
+  const reader = createPhiConfigReader(config);
+  // Absent is "Status"; a title that is there and not a text is an error naming the field.
+  return { title: reader.string("title")?.trim() || "Status" };
 }
 
 export const STATUS_CARD_WIDGET_DEFINITION = {
@@ -508,6 +509,29 @@ Widget and Layout `category` values come from `PHI_CMS_PLUGIN_CATEGORIES` (`cont
 `other`) -- a different list from the Module categories. Package identity is a separate Picker filter.
 Config parsing uses the primitives from `@phis/ui/widget-config`, so a package does not reproduce the
 renderable base parser.
+
+### Reading a config
+
+`parseConfig` reads what an author stored, and what it cannot read it says. A value that is absent is
+the Widget's to default; a value that is present and wrong -- a number where a text belongs, a mode the
+Widget does not know, a list entry without its key -- throws. `createPhiConfigReader` from
+`@phis/ui/widget-config` does both: `string`, `number`, `integer`, `boolean`, `oneOf`, `object`, `list`
+and `stringList` answer `undefined` for an absent value and throw a `PhiConfigError` naming the path
+(`columns[2].sizing.width`), what was expected and what was found. `fail` throws the same for a rule
+the field types cannot state. Do not put a default in place of a wrong value or drop an entry you
+cannot read: that is a setting an author made which the page then silently ignores.
+
+What a throw does is the same for every Widget, Core's or yours, and whatever it throws:
+
+- The Site refuses to store it. A write under `/api/site/cms` runs each Widget's `parseConfig` first and
+  answers 422 with the Widget type, the node and -- for a `PhiConfigError` -- the field.
+- A live page leaves that one Widget out and logs `cms.render.block_not_renderable`; everything else on
+  the page renders.
+- The Builder and the preview show the error in the Widget's place (`invalid-config` for a
+  `PhiConfigError`), with the Inspector still open to correct it.
+
+The older lenient readers (`readString`, `readNumber`, ...) are still exported for parsers that have not
+moved; they turn a wrong value into `undefined` and should not be used in a new Widget.
 
 ### Runtime and Preview plugin
 

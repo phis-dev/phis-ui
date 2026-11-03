@@ -19,7 +19,8 @@ import type { PhiSiteAreaBridgeLoader } from "./site-area-bridges";
  * nothing about Widgets, and the Site holds every Widget's own parser. The answer names the field, so
  * the author is told what to correct instead of saving something that disappears.
  *
- * The check is the Widget's `parseConfig` and nothing else, run against the catalog of the Area the
+ * Whatever `parseConfig` throws refuses the write: a Widget that cannot read its config is not rendered,
+ * however it says so. The check is the Widget's `parseConfig` and nothing else, run against the catalog of the Area the
  * write is for. A Widget type that catalog does not know is left alone: whether a type may be stored at
  * all is Core's and the Module system's question, not this one's.
  */
@@ -27,7 +28,7 @@ import type { PhiSiteAreaBridgeLoader } from "./site-area-bridges";
 type PhiCmsWriteConfigIssue = {
   widgetType: string;
   nodeId: unknown;
-  path: string;
+  path: string | null;
   message: string;
 };
 
@@ -61,8 +62,17 @@ function findConfigIssue(
         try {
           definition.parseConfig(config);
         } catch (error) {
-          if (!isPhiConfigError(error)) throw error;
-          return { widgetType, nodeId: value.id ?? null, path: error.path, message: error.message };
+          /*
+           * Any error, not only the strict reader's: a Widget from another package may refuse its config
+           * in its own words, and the live page leaves that Widget out just the same. Only the strict
+           * reader can say which field it was.
+           */
+          return {
+            widgetType,
+            nodeId: value.id ?? null,
+            path: isPhiConfigError(error) ? error.path : null,
+            message: error instanceof Error ? error.message : String(error),
+          };
         }
       }
     }
