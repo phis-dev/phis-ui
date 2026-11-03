@@ -12,7 +12,11 @@ import {
 } from "../../../../../components/media/media-upload-flow";
 import { PHI_MEDIA_UPLOAD_DEFAULT_LABELS } from "../../../../../components/media/phi-media-upload";
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
-import { usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
+import {
+  emitPhiSignalCapability,
+  usePhiSignalEmitter,
+  usePhiSignalIdentity,
+} from "../../../../../components/runtime/runtime-signal-identity";
 import { readPhiTableBindingParamsSignalValue } from "../../../../../types/table-signal-values";
 import type { PhiSignal } from "../../../../../types/signals";
 import { findPhiSignalListenRoute } from "../../../../../helpers/signal-listen-routes";
@@ -59,6 +63,16 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
   const ownerParam = config?.ownerParam?.trim() || "id";
   const signalIdentity = usePhiSignalIdentity();
   const listenRoutes = useMemo(() => config?.signalRoutes?.listens ?? [], [config?.signalRoutes?.listens]);
+  const emitRoutes = useMemo(() => config?.signalRoutes?.emits ?? [], [config?.signalRoutes?.emits]);
+  const emitSignal = usePhiSignalEmitter();
+  /*
+   * The row's files changed -- a file arrived or went -- so whatever shows the row can read it again.
+   * Sent only once the change is through, never for an upload that was refused or a removal that failed.
+   */
+  const announceChanged = useCallback(
+    () => emitPhiSignalCapability(emitSignal, emitRoutes, "changed", null),
+    [emitRoutes, emitSignal],
+  );
 
   const [ownerId, setOwnerId] = useState<string | null>(null);
   const [slot, setSlot] = useState<SlotDescriptor | null>(null);
@@ -222,6 +236,7 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
     runSession,
     onUploaded: async () => {
       setFailure(null);
+      announceChanged();
       await reload();
     },
     onRejected: (message) => setFailure(message),
@@ -242,8 +257,9 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
       setFailure("That file stayed.");
       return;
     }
+    announceChanged();
     await reload();
-  }, [base, ownerId, read, reload]);
+  }, [announceChanged, base, ownerId, read, reload]);
 
   if (!base || !slotName) {
     return <PhiTypographyControl type="secondary">This field names no Add-on, table or slot.</PhiTypographyControl>;
