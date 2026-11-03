@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { isPhiConfigError } from "../components/widgets/config/strict-config-reader";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createElement } from "react";
@@ -115,23 +116,36 @@ assert.deepEqual(
 );
 
 const responsiveGridConfig = parsePhiCmsGridLayoutConfig({
-  columns: { compact: 1, medium: 2, wide: 5 },
+  columns: { compact: 1, medium: 2 },
   slotPlacements: [{
     slotIndex: 1,
-    span: { compact: 1, medium: 2, wide: 9 },
+    span: { compact: 1, medium: 2 },
     offset: { wide: 1 },
   }],
 });
 assert.deepEqual(
   responsiveGridConfig.columns,
   { compact: 1, medium: 2, wide: undefined },
-  "A Grid's columns must be one of the counts that divide its 24 tracks.",
+  "A Grid's columns are read per width; a width it does not state stays open.",
 );
 assert.deepEqual(
   responsiveGridConfig.slotPlacements,
   [{ slotIndex: 1, span: { compact: 1, medium: 2, wide: undefined }, offset: { compact: undefined, medium: undefined, wide: 1 } }],
   "A Grid slot's placement is counted in columns, at most the widest row.",
 );
+// A count that does not divide the 24 tracks, or a span wider than the widest row, is an error naming
+// it -- not a width quietly left open (components/widgets/config/strict-config-reader.ts).
+for (const [config, path] of [
+  [{ columns: { wide: 5 } }, "columns.wide"],
+  [{ slotPlacements: [{ slotIndex: 1, span: { wide: 9 } }] }, "slotPlacements[0].span.wide"],
+  [{ slotPlacements: [{ slotIndex: 1 }] }, "slotPlacements[0].span"],
+] as const) {
+  assert.throws(
+    () => parsePhiCmsGridLayoutConfig(config as Record<string, unknown>),
+    (error: unknown) => isPhiConfigError(error) && error.path === path,
+    `expected a config error at ${path}`,
+  );
+}
 assert.deepEqual(
   resolvePhiGridSlotPlacement(responsiveGridConfig.slotPlacements, 1, "wide", 4),
   { span: 6, offset: 6 },

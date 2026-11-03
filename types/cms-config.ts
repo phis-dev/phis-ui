@@ -19,11 +19,8 @@ import {
   resolvePhiRenderableBlockAnchor,
 } from "../components/controls/phi-anchor-control-contract";
 import {
-  readBoolean,
   readCssSize,
-  readNumber,
   readRenderableBlockConfig,
-  readString,
 } from "../components/widgets/config/parser-primitives";
 import type {
   PhiRenderableBlockBase,
@@ -35,6 +32,7 @@ import { applyPhiLayoutDefaults } from "../helpers/cms-layout-defaults";
 import { resolvePhiLayoutDefaults } from "../helpers/cms-layout-defaults";
 import { normalizeRenderableBlockAnchor } from "../helpers/renderable-block-anchor";
 import { isPhiRecord } from "../helpers/is-record";
+import { createPhiConfigReader, type PhiConfigReader } from "../components/widgets/config/strict-config-reader";
 import { PHI_SPACING_SCALE_KEYS, type PhiSpacingScaleKey } from "../components/widgets/config/spacing-options";
 import { PHI_GRID_COLUMN_COUNTS, isPhiGridColumnCount } from "../constants/grid-columns";
 
@@ -88,44 +86,22 @@ export type PhiCmsPaddingWidgetConfig = {
 
 type JsonRecord = Record<string, unknown>;
 
-function readInitialSlotStates(value: unknown): PhiBaseLayoutSlotStates | undefined {
-  if (Array.isArray(value)) {
-    const normalized = value.map((candidate) =>
-      candidate === "expanded" || candidate === "collapsed" || candidate === "hidden" ? candidate : undefined,
-    );
-    return normalized.some((candidate) => candidate !== undefined) ? normalized : undefined;
-  }
+const PHI_LAYOUT_SLOT_STATES = ["expanded", "collapsed", "hidden"] as const;
 
-  if (!value || typeof value !== "object") {
-    return undefined;
-  }
-
-  const raw = value as Record<string, unknown>;
-  const next: Record<number, "expanded" | "collapsed" | "hidden"> = {};
-
-  for (const [key, candidate] of Object.entries(raw)) {
-    const slotIndex = Number(key);
-    if (!Number.isInteger(slotIndex) || slotIndex < 0) {
-      continue;
+/** A Layout's starting slot states: a list by slot, gaps allowed, or a record keyed by slot index. */
+function readInitialSlotStates(reader: PhiConfigReader): PhiBaseLayoutSlotStates | undefined {
+  return reader.value("initialSlotStates", "slot states by slot index", (value) => {
+    const isState = (candidate: unknown) =>
+      candidate == null || (PHI_LAYOUT_SLOT_STATES as readonly unknown[]).includes(candidate);
+    if (Array.isArray(value)) {
+      return value.every(isState) ? value as PhiBaseLayoutSlotStates : undefined;
     }
-    if (candidate === "expanded" || candidate === "collapsed" || candidate === "hidden") {
-      next[slotIndex] = candidate;
-    }
-  }
-
-  return Object.keys(next).length > 0 ? next : undefined;
-}
-
-function readStringArray(value: unknown): string[] | undefined {
-  if (!Array.isArray(value)) {
-    return undefined;
-  }
-
-  const next = value
-    .map((candidate) => (typeof candidate === "string" ? candidate.trim() : ""))
-    .filter((candidate) => candidate.length > 0);
-
-  return [...new Set(next)];
+    if (!isPhiRecord(value)) return undefined;
+    return Object.entries(value).every(([key, candidate]) =>
+      Number.isInteger(Number(key)) && Number(key) >= 0 && isState(candidate))
+      ? value as PhiBaseLayoutSlotStates
+      : undefined;
+  });
 }
 
 export function normalizePhiPaddingWidgetConfig(config: unknown): PhiCmsPaddingWidgetConfig | null {
@@ -414,20 +390,21 @@ function readRenderableBlockAnchorOrPlacement(value: unknown): PhiRenderableBloc
     : undefined;
 }
 
+function readLayoutAnchor(reader: PhiConfigReader) {
+  return reader.value("anchor", "an anchor or a placement", readRenderableBlockAnchorOrPlacement);
+}
+
 function readGridResponsiveCount(
-  value: unknown,
+  reader: PhiConfigReader,
+  key: string,
+  expected: string,
   accepts: (candidate: number) => boolean,
 ): PhiResponsiveValue<number> | undefined {
-  if (!isPhiRecord(value)) return undefined;
-  const record = value as Record<string, unknown>;
-  const read = (key: "compact" | "medium" | "wide") => {
-    const candidate = readNumber(record[key]);
-    return candidate != null && Number.isInteger(candidate) && accepts(candidate) ? candidate : undefined;
-  };
-  const responsive = { compact: read("compact"), medium: read("medium"), wide: read("wide") };
-  return responsive.compact != null || responsive.medium != null || responsive.wide != null
-    ? responsive
-    : undefined;
+  return reader.object(key, (countReader) => {
+    const read = (width: "compact" | "medium" | "wide") => countReader.value(width, expected, (candidate) =>
+      typeof candidate === "number" && Number.isInteger(candidate) && accepts(candidate) ? candidate : undefined);
+    return { compact: read("compact"), medium: read("medium"), wide: read("wide") };
+  });
 }
 
 const PHI_GRID_MAX_COLUMNS = Math.max(...PHI_GRID_COLUMN_COUNTS);
@@ -437,37 +414,61 @@ const PHI_GRID_MAX_COLUMNS = Math.max(...PHI_GRID_COLUMN_COUNTS);
  * they fit the row at a given width is answered where the row is known, by clamping
  * (`resolvePhiGridSlotPlacement`): a Grid whose columns were reduced keeps its stated placements.
  */
-function readGridSlotPlacement(value: unknown, slotIndexFromArray?: number): PhiCmsGridLayoutSlotPlacementConfig | null {
-  if (!isPhiRecord(value)) {
-    return null;
-  }
-
-  const slot = value as Record<string, unknown>;
-  const slotIndex = readNumber(slot.slotIndex) ?? slotIndexFromArray;
-  if (!Number.isInteger(slotIndex) || slotIndex == null || slotIndex < 0) {
-    return null;
-  }
-
-  const span = readGridResponsiveCount(slot.span, (candidate) => candidate >= 1 && candidate <= PHI_GRID_MAX_COLUMNS);
-  const offset = readGridResponsiveCount(slot.offset, (candidate) => candidate >= 0 && candidate < PHI_GRID_MAX_COLUMNS);
-  if (!span && !offset) return null;
+function readGridSlotPlacement(reader: PhiConfigReader, slotIndexFromArray: number): PhiCmsGridLayoutSlotPlacementConfig {
+  const slotIndex = reader.value("slotIndex", "a slot index", (candidate) =>
+    typeof candidate === "number" && Number.isInteger(candidate) && candidate >= 0 ? candidate : undefined,
+  ) ?? slotIndexFromArray;
+  const span = readGridResponsiveCount(
+    reader, "span", `a whole number from 1 to ${PHI_GRID_MAX_COLUMNS}`,
+    (candidate) => candidate >= 1 && candidate <= PHI_GRID_MAX_COLUMNS,
+  );
+  const offset = readGridResponsiveCount(
+    reader, "offset", `a whole number from 0 to ${PHI_GRID_MAX_COLUMNS - 1}`,
+    (candidate) => candidate >= 0 && candidate < PHI_GRID_MAX_COLUMNS,
+  );
+  if (!span && !offset) reader.fail("span", "a span or an offset", undefined);
   return { slotIndex, span, offset };
 }
 
 /**
- * A shared Layout field, read the same way wherever it appears: a line on the 24-track form grid, so
- * anything outside 2..24 is not a narrower column but a mistake, and is dropped rather than clamped.
+ * The fields many Layouts share, read the same way wherever they appear. A label end is a line on the
+ * 24-track form grid, so anything outside 2..24 is not a narrower column but a mistake.
  */
-function readPhiLayoutLabelEnd(value: unknown): number | undefined {
-  const labelEnd = readNumber(value);
-  return labelEnd !== undefined && Number.isInteger(labelEnd) && labelEnd >= 2 && labelEnd <= 24
-    ? labelEnd
-    : undefined;
+function readCssSizeField(reader: PhiConfigReader, key: string) {
+  return reader.value(key, "a CSS size", (value) =>
+    (typeof value === "number" && Number.isFinite(value)) || typeof value === "string" ? value : undefined);
+}
+
+function readLengthField(reader: PhiConfigReader, key: string) {
+  return reader.value(key, "a CSS length", (value) => readPhiLengthValue(value) ?? undefined);
+}
+
+function readLayoutLabelEnd(reader: PhiConfigReader) {
+  return reader.value("labelEnd", "a whole number from 2 to 24", (value) =>
+    typeof value === "number" && Number.isInteger(value) && value >= 2 && value <= 24 ? value : undefined);
+}
+
+function readLayoutPadding(reader: PhiConfigReader) {
+  return {
+    padding: readCssSizeField(reader, "padding"),
+    paddingLeft: readCssSizeField(reader, "paddingLeft"),
+    paddingRight: readCssSizeField(reader, "paddingRight"),
+    paddingTop: readCssSizeField(reader, "paddingTop"),
+    paddingBottom: readCssSizeField(reader, "paddingBottom"),
+  };
+}
+
+function readFlexWrap(reader: PhiConfigReader) {
+  return reader.value("wrap", "true, false or a flex wrap", (value) =>
+    typeof value === "boolean" || value === "nowrap" || value === "wrap" || value === "wrap-reverse"
+      ? value as boolean | CSSProperties["flexWrap"]
+      : undefined) ?? false;
 }
 
 export function parsePhiCmsContentLayoutConfig(
   config: Record<string, unknown>,
 ): PhiCmsContentLayoutConfig {
+  const reader = createPhiConfigReader(config);
   return applyPhiLayoutDefaults(
     {
       ...readRenderableBlockConfig(config),
@@ -478,20 +479,16 @@ export function parsePhiCmsContentLayoutConfig(
        * constraints never had the second way at all -- nothing has ever read a flat `maxWidth`.
        */
       size: normalizePhiRenderableBlockResponsiveSize(config.size),
-      margin: readCssSize(config.margin),
-      labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
-      padding: readCssSize(config.padding),
-      paddingLeft: readCssSize(config.paddingLeft),
-      paddingRight: readCssSize(config.paddingRight),
-      paddingTop: readCssSize(config.paddingTop),
-      paddingBottom: readCssSize(config.paddingBottom),
+      margin: readCssSizeField(reader, "margin"),
+      labelEnd: readLayoutLabelEnd(reader),
+      ...readLayoutPadding(reader),
       /*
        * Handed on as the block anchor, like every other Layout's. This one used to be folded into a
        * placement name here, and the renderer then asked the name for its `horizontal` -- a string has
        * none, so a Content Layout anchored left drew centred wherever the parsed config reached it, in
        * preview and live, while the Builder, which hands the object straight through, drew it left.
        */
-      anchor: readRenderableBlockAnchorOrPlacement(config.anchor),
+      anchor: readLayoutAnchor(reader),
     },
     resolvePhiLayoutDefaults("content"),
   );
@@ -499,31 +496,20 @@ export function parsePhiCmsContentLayoutConfig(
 
 
 export function parsePhiCmsFlexLayoutConfig(config: Record<string, unknown>): PhiCmsFlexLayoutConfig {
-  const distribution = readString(config.distribution);
-
+  const reader = createPhiConfigReader(config);
   return applyPhiLayoutDefaults(
     {
       ...readRenderableBlockConfig(config),
-      labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
-      initialSlotStates: readInitialSlotStates(config.initialSlotStates),
-      padding: readCssSize(config.padding),
-      paddingLeft: readCssSize(config.paddingLeft),
-      paddingRight: readCssSize(config.paddingRight),
-      paddingTop: readCssSize(config.paddingTop),
-      paddingBottom: readCssSize(config.paddingBottom),
-      gap: readCssSize(config.gap),
-      verticalSeparators: readBoolean(config.verticalSeparators) ?? false,
-      separatorBeforeFirst: readBoolean(config.separatorBeforeFirst) ?? false,
-      separatorSpan: readPhiLengthValue(config.separatorSpan) ?? undefined,
-      anchor: readRenderableBlockAnchorOrPlacement(config.anchor),
-      distribution:
-        distribution === "between" || distribution === "around" || distribution === "evenly"
-          ? distribution
-          : "anchor",
-      wrap:
-        readBoolean(config.wrap) ??
-        (readString(config.wrap) as CSSProperties["flexWrap"] | undefined) ??
-        false,
+      labelEnd: readLayoutLabelEnd(reader),
+      initialSlotStates: readInitialSlotStates(reader),
+      ...readLayoutPadding(reader),
+      gap: readCssSizeField(reader, "gap"),
+      verticalSeparators: reader.boolean("verticalSeparators") ?? false,
+      separatorBeforeFirst: reader.boolean("separatorBeforeFirst") ?? false,
+      separatorSpan: readLengthField(reader, "separatorSpan"),
+      anchor: readLayoutAnchor(reader),
+      distribution: reader.oneOf("distribution", ["anchor", "between", "around", "evenly"] as const) ?? "anchor",
+      wrap: readFlexWrap(reader),
     },
     resolvePhiLayoutDefaults("flex"),
   );
@@ -533,18 +519,15 @@ export function parsePhiCmsFlexLayoutConfig(config: Record<string, unknown>): Ph
 export function parsePhiCmsFlexVerticalLayoutConfig(
   config: Record<string, unknown>,
 ): PhiCmsFlexVerticalLayoutConfig {
+  const reader = createPhiConfigReader(config);
   return applyPhiLayoutDefaults(
     {
       ...readRenderableBlockConfig(config),
-      labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
-      initialSlotStates: readInitialSlotStates(config.initialSlotStates),
-      padding: readCssSize(config.padding),
-      paddingLeft: readCssSize(config.paddingLeft),
-      paddingRight: readCssSize(config.paddingRight),
-      paddingTop: readCssSize(config.paddingTop),
-      paddingBottom: readCssSize(config.paddingBottom),
-      gap: readCssSize(config.gap),
-      anchor: readRenderableBlockAnchorOrPlacement(config.anchor),
+      labelEnd: readLayoutLabelEnd(reader),
+      initialSlotStates: readInitialSlotStates(reader),
+      ...readLayoutPadding(reader),
+      gap: readCssSizeField(reader, "gap"),
+      anchor: readLayoutAnchor(reader),
     },
     resolvePhiLayoutDefaults("verticalflex"),
   );
@@ -554,17 +537,14 @@ export function parsePhiCmsFlexVerticalLayoutConfig(
 export function parsePhiCmsMasonryLayoutConfig(
   config: Record<string, unknown>,
 ): PhiCmsMasonryLayoutConfig {
+  const reader = createPhiConfigReader(config);
   return applyPhiLayoutDefaults(
     {
       ...readRenderableBlockConfig(config),
-      labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
-      padding: readCssSize(config.padding),
-      paddingLeft: readCssSize(config.paddingLeft),
-      paddingRight: readCssSize(config.paddingRight),
-      paddingTop: readCssSize(config.paddingTop),
-      paddingBottom: readCssSize(config.paddingBottom),
-      columns: readGridResponsiveCount(config.columns, isPhiGridColumnCount),
-      gap: readCssSize(config.gap),
+      labelEnd: readLayoutLabelEnd(reader),
+      ...readLayoutPadding(reader),
+      columns: readGridResponsiveCount(reader, "columns", "a Grid column count", isPhiGridColumnCount),
+      gap: readCssSizeField(reader, "gap"),
     },
     resolvePhiLayoutDefaults("masonry"),
   );
@@ -573,15 +553,16 @@ export function parsePhiCmsMasonryLayoutConfig(
 export function parsePhiCmsStackLayoutConfig(
   config: Record<string, unknown>,
 ): PhiCmsStackLayoutConfig {
+  const reader = createPhiConfigReader(config);
   return applyPhiLayoutDefaults(
     {
       ...readRenderableBlockConfig(config),
-      labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
-      padding: readCssSize(config.padding),
-      defaultActiveSlotKey: readString(config.defaultActiveSlotKey),
-      slotDisplay: config.slotDisplay === "stacked" ? "stacked" : "single",
+      labelEnd: readLayoutLabelEnd(reader),
+      padding: readCssSizeField(reader, "padding"),
+      defaultActiveSlotKey: reader.string("defaultActiveSlotKey"),
+      slotDisplay: reader.oneOf("slotDisplay", ["single", "stacked"] as const) ?? "single",
       mountPolicy: readPhiCmsMountPolicy(config.mountPolicy, "remount"),
-      slotTransition: config.slotTransition === "fade-over" ? "fade-over" : "none",
+      slotTransition: reader.oneOf("slotTransition", ["none", "fade-over"] as const) ?? "none",
       // Absent means "whatever the theme does", which is why the fallback is read from the token
       // rather than written here as a number.
       ...(config.slotTransitionDurationMs === undefined ? {} : {
@@ -648,9 +629,9 @@ export function parsePhiCmsCarouselLayoutConfig(
   return applyPhiLayoutDefaults(
     {
       ...readRenderableBlockConfig(config),
-      labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
-      padding: readCssSize(config.padding),
-      defaultActiveSlotKey: readString(config.defaultActiveSlotKey),
+      labelEnd: readLayoutLabelEnd(createPhiConfigReader(config)),
+      padding: readCssSizeField(createPhiConfigReader(config), "padding"),
+      defaultActiveSlotKey: createPhiConfigReader(config).string("defaultActiveSlotKey"),
       ...(visibleSlots === undefined ? {} : { visibleSlots }),
       ...(windowAnchor === undefined ? {} : { windowAnchor }),
       ...(transition === undefined ? {} : { transition }),
@@ -674,57 +655,43 @@ export function parsePhiCmsCarouselLayoutConfig(
   );
 }
 
-function readCollapsibleTrigger(value: unknown): PhiCmsCollapsibleLayoutConfig["collapsible"] {
-  return value === "header" || value === "icon" || value === "disabled" ? value : undefined;
-}
-
-function readCollapsibleSize(value: unknown): PhiCmsCollapsibleLayoutConfig["collapseSize"] {
-  return readPhiControlSize(value);
-}
-
-function readExpandIconPlacement(value: unknown): PhiCmsCollapsibleLayoutConfig["expandIconPlacement"] {
-  return value === "start" || value === "end" ? value : undefined;
-}
-
-function readSlotTexts(value: unknown): string[] | undefined {
-  if (!Array.isArray(value)) {
-    return undefined;
-  }
-
-  const texts = value.map((candidate) => (typeof candidate === "string" ? candidate.trim() : ""));
-  while (texts.length > 0 && !texts[texts.length - 1]) {
-    texts.pop();
-  }
-
+/** Panel titles or descriptions by slot: texts, an empty one for a slot that has none; trailing empties trimmed. */
+function readSlotTexts(reader: PhiConfigReader, key: string): string[] | undefined {
+  const texts = reader.value(key, "a list of texts", (value) =>
+    Array.isArray(value) && value.every((candidate) => typeof candidate === "string")
+      ? (value as string[]).map((candidate) => candidate.trim())
+      : undefined);
+  if (!texts) return undefined;
+  while (texts.length > 0 && !texts[texts.length - 1]) texts.pop();
   return texts.length > 0 ? texts : undefined;
 }
 
 export function parsePhiCmsCollapsibleLayoutConfig(
   config: Record<string, unknown>,
 ): PhiCmsCollapsibleLayoutConfig {
+  const reader = createPhiConfigReader(config);
+  const defaultOpenSlotKeys = reader.stringList("defaultOpenSlotKeys");
   return applyPhiLayoutDefaults(
     {
       ...readRenderableBlockConfig(config),
-      labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
-      initialSlotStates: readInitialSlotStates(config.initialSlotStates),
-      padding: readCssSize(config.padding),
-      paddingLeft: readCssSize(config.paddingLeft),
-      paddingRight: readCssSize(config.paddingRight),
-      paddingTop: readCssSize(config.paddingTop),
-      paddingBottom: readCssSize(config.paddingBottom),
-      anchor: readRenderableBlockAnchorOrPlacement(config.anchor),
-      panelMinHeight: readPhiLengthValue(config.panelMinHeight) ?? undefined,
-      accordion: readBoolean(config.accordion),
-      slotTitles: readSlotTexts(config.slotTitles),
-      slotDescriptions: readSlotTexts(config.slotDescriptions),
-      defaultOpenSlotKeys: readStringArray(config.defaultOpenSlotKeys),
-      collapsible: readCollapsibleTrigger(config.collapsible),
-      ghost: readBoolean(config.ghost),
-      expandIconPlacement: readExpandIconPlacement(config.expandIconPlacement),
-      collapseSize: readCollapsibleSize(config.collapseSize),
-      titleStrong: readBoolean(config.titleStrong),
-      headerPadding: readCssSize(config.headerPadding),
-      innerPadding: readCssSize(config.innerPadding),
+      labelEnd: readLayoutLabelEnd(reader),
+      initialSlotStates: readInitialSlotStates(reader),
+      ...readLayoutPadding(reader),
+      anchor: readLayoutAnchor(reader),
+      panelMinHeight: readLengthField(reader, "panelMinHeight"),
+      accordion: reader.boolean("accordion"),
+      slotTitles: readSlotTexts(reader, "slotTitles"),
+      slotDescriptions: readSlotTexts(reader, "slotDescriptions"),
+      defaultOpenSlotKeys: defaultOpenSlotKeys
+        ? [...new Set(defaultOpenSlotKeys.map((key) => key.trim()).filter(Boolean))]
+        : undefined,
+      collapsible: reader.oneOf("collapsible", ["header", "icon", "disabled"] as const),
+      ghost: reader.boolean("ghost"),
+      expandIconPlacement: reader.oneOf("expandIconPlacement", ["start", "end"] as const),
+      collapseSize: reader.value("collapseSize", "a control size", readPhiControlSize),
+      titleStrong: reader.boolean("titleStrong"),
+      headerPadding: readCssSizeField(reader, "headerPadding"),
+      innerPadding: readCssSizeField(reader, "innerPadding"),
     },
     resolvePhiLayoutDefaults("collapsible"),
   );
@@ -734,23 +701,16 @@ export function parsePhiCmsCollapsibleLayoutConfig(
 export function parsePhiCmsGridLayoutConfig(
   config: Record<string, unknown>,
 ): PhiCmsGridLayoutConfig {
+  const reader = createPhiConfigReader(config);
   return applyPhiLayoutDefaults(
     {
       ...readRenderableBlockConfig(config),
-      labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
-      padding: readCssSize(config.padding),
-      paddingLeft: readCssSize(config.paddingLeft),
-      paddingRight: readCssSize(config.paddingRight),
-      paddingTop: readCssSize(config.paddingTop),
-      paddingBottom: readCssSize(config.paddingBottom),
-      gap: readCssSize(config.gap),
-      anchor: readRenderableBlockAnchorOrPlacement(config.anchor),
-      columns: readGridResponsiveCount(config.columns, isPhiGridColumnCount),
-      slotPlacements: Array.isArray(config.slotPlacements)
-        ? config.slotPlacements
-            .map((slot, slotIndex) => readGridSlotPlacement(slot, slotIndex))
-            .filter((slot): slot is PhiCmsGridLayoutSlotPlacementConfig => slot !== null)
-        : undefined,
+      labelEnd: readLayoutLabelEnd(reader),
+      ...readLayoutPadding(reader),
+      gap: readCssSizeField(reader, "gap"),
+      anchor: readLayoutAnchor(reader),
+      columns: readGridResponsiveCount(reader, "columns", "a Grid column count", isPhiGridColumnCount),
+      slotPlacements: reader.list("slotPlacements", readGridSlotPlacement),
     },
     resolvePhiLayoutDefaults("grid"),
   );
@@ -761,28 +721,22 @@ export function parsePhiCmsGridLayoutConfig(
 export function parsePhiCmsThreeColumnLayoutConfig(
   config: Record<string, unknown>,
 ): PhiCmsThreeColumnLayoutConfig {
+  const reader = createPhiConfigReader(config);
   return applyPhiLayoutDefaults(
     {
       ...readRenderableBlockConfig(config),
-      labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
-      padding: readCssSize(config.padding),
-      paddingLeft: readCssSize(config.paddingLeft),
-      paddingRight: readCssSize(config.paddingRight),
-      paddingTop: readCssSize(config.paddingTop),
-      paddingBottom: readCssSize(config.paddingBottom),
-      balancedSides: readBoolean(config.balancedSides) ?? true,
-      gap: readCssSize(config.gap),
-      anchor: readRenderableBlockAnchorOrPlacement(config.anchor),
-      align: readString(config.align) as CSSProperties["alignItems"] | undefined,
-      justify: readString(config.justify) as CSSProperties["justifyContent"] | undefined,
-      wrap:
-        readBoolean(config.wrap) ??
-        (readString(config.wrap) as CSSProperties["flexWrap"] | undefined) ??
-        false,
-      leftWidth: readPhiLengthValue(config.leftWidth) ?? undefined,
-      middleWidth: readPhiLengthValue(config.middleWidth) ?? undefined,
-      rightWidth: readPhiLengthValue(config.rightWidth) ?? undefined,
-      contentAlign: readString(config.contentAlign) as CSSProperties["alignItems"] | undefined,
+      labelEnd: readLayoutLabelEnd(reader),
+      ...readLayoutPadding(reader),
+      balancedSides: reader.boolean("balancedSides") ?? true,
+      gap: readCssSizeField(reader, "gap"),
+      anchor: readLayoutAnchor(reader),
+      align: reader.string("align") as CSSProperties["alignItems"] | undefined,
+      justify: reader.string("justify") as CSSProperties["justifyContent"] | undefined,
+      wrap: readFlexWrap(reader),
+      leftWidth: readLengthField(reader, "leftWidth"),
+      middleWidth: readLengthField(reader, "middleWidth"),
+      rightWidth: readLengthField(reader, "rightWidth"),
+      contentAlign: reader.string("contentAlign") as CSSProperties["alignItems"] | undefined,
     },
     resolvePhiLayoutDefaults("threecol"),
   );
@@ -792,15 +746,16 @@ export function parsePhiCmsThreeColumnLayoutConfig(
 export function parsePhiCmsSplitCardLayoutConfig(
   config: Record<string, unknown>,
 ): PhiCmsSplitCardLayoutConfig {
+  const reader = createPhiConfigReader(config);
   return applyPhiLayoutDefaults(
     {
       ...readRenderableBlockConfig(config),
-      labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
-      gap: readCssSize(config.gap),
-      swapRatio: readBoolean(config.swapRatio),
-      padding: readCssSize(config.padding),
-      paddingTop: readCssSize(config.paddingTop),
-      paddingBottom: readCssSize(config.paddingBottom),
+      labelEnd: readLayoutLabelEnd(reader),
+      gap: readCssSizeField(reader, "gap"),
+      swapRatio: reader.boolean("swapRatio"),
+      padding: readCssSizeField(reader, "padding"),
+      paddingTop: readCssSizeField(reader, "paddingTop"),
+      paddingBottom: readCssSizeField(reader, "paddingBottom"),
     },
     resolvePhiLayoutDefaults("split"),
   );
