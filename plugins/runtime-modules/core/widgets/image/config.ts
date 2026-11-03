@@ -19,7 +19,7 @@ import {
   type PhiCmsWidgetConfigBase,
 } from "../../../../../components/widgets/config/parser-primitives";
 import {
-  normalizePhiMaskConfig,
+  readPhiMaskConfig,
   type PhiMaskConfig,
 } from "../../../../../components/widgets/config/mask";
 
@@ -106,7 +106,7 @@ export function normalizePhiImageWidgetConfig(config: unknown): PhiCmsImageWidge
     borderTopRightRadius: readCssSize(raw.borderTopRightRadius),
     borderBottomLeftRadius: readCssSize(raw.borderBottomLeftRadius),
     borderBottomRightRadius: readCssSize(raw.borderBottomRightRadius),
-    mask: normalizePhiMaskConfig(raw.mask),
+    mask: readPhiMaskConfig(raw.mask),
   };
   /*
    * An Asset without a word about its variant gets the Card variant; `null` is a word -- the Inspector's

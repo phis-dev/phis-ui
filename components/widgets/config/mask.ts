@@ -2,6 +2,7 @@ import { isPhiRecord } from "../../../helpers/is-record";
 import type { CSSProperties } from "react";
 
 import { readBoolean, readCssSize, readNumber, readString } from "./parser-primitives";
+import { createPhiConfigReader } from "./strict-config-reader";
 
 export type PhiMaskSource = "preset" | "asset";
 
@@ -181,7 +182,31 @@ function readMaskRotation(value: unknown) {
   return Math.min(180, Math.max(-180, rotation));
 }
 
-export function normalizePhiMaskConfig(value: unknown): PhiMaskConfig | undefined {
+/**
+ * A stored mask, read strictly (`strict-config-reader.ts`) before it is normalized: a field that is
+ * there and of the wrong kind is an error naming it. The normalization below stays lenient for the
+ * editor, which normalizes drafts while an author is still choosing.
+ */
+export function readPhiMaskConfig(value: unknown, path = "mask"): PhiMaskConfig | undefined {
+  createPhiConfigReader({ [path]: value }).object(path, (reader) => {
+    reader.boolean("enabled");
+    reader.oneOf("source", ["asset", "preset"] as const);
+    reader.oneOf("preset", [...PHI_MASK_PRESETS]);
+    reader.number("assetId");
+    reader.string("assetUrl");
+    reader.number("scale");
+    reader.number("offsetX");
+    reader.number("offsetY");
+    reader.number("rotationDeg");
+    reader.value("position", "a CSS position", (position) =>
+      typeof position === "string" || (typeof position === "number" && Number.isFinite(position)) ? position : undefined);
+    reader.oneOf("repeat", ["repeat", "no-repeat"] as const);
+    reader.oneOf("mode", ["luminance", "alpha"] as const);
+  });
+  return normalizePhiMaskConfig(value);
+}
+
+function normalizePhiMaskConfig(value: unknown): PhiMaskConfig | undefined {
   if (!isPhiRecord(value)) {
     return undefined;
   }

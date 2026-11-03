@@ -1,25 +1,23 @@
 import { normalizePhiImageAssetVariantKey } from "../../../constants/media";
 import type { PhiMediaImageSourceConfig } from "../../../types/media";
-import { readNumber, readString } from "./parser-primitives";
+import { createPhiConfigReader } from "./strict-config-reader";
 
-function readPhiImageSourceKind(value: unknown): "url" | "asset" {
-  return readString(value) === "asset" ? "asset" : "url";
-}
-
+/** Where an image comes from: an Asset of the Media library, or a URL. Strict: an unknown kind is an error. */
 export function readPhiMediaImageSourceConfig(
   value: Record<string, unknown>,
 ): PhiMediaImageSourceConfig {
-  if (readPhiImageSourceKind(value.sourceKind) === "asset") {
+  const reader = createPhiConfigReader(value);
+  if ((reader.oneOf("sourceKind", ["url", "asset"] as const) ?? "url") === "asset") {
     return {
       sourceKind: "asset",
-      assetId: readNumber(value.assetId),
+      assetId: reader.number("assetId"),
       variantKey: normalizePhiImageAssetVariantKey(value.variantKey),
-      variantVersion: readNumber(value.variantVersion),
+      variantVersion: reader.number("variantVersion"),
     };
   }
 
   return {
     sourceKind: "url",
-    sourceUrl: readString(value.sourceUrl),
+    sourceUrl: reader.string("sourceUrl"),
   };
 }

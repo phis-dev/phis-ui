@@ -5,7 +5,7 @@ import {
   type PhiControlOption,
   type PhiControlOptionsProviderConfig,
 } from "../../controls/phi-control-options";
-import { readBoolean, readString } from "./parser-primitives";
+import { createPhiConfigReader } from "./strict-config-reader";
 import {
   PHI_CONTROL_PRESENTATION_FIELDS,
   PHI_CONTROL_STATE_FIELDS,
@@ -66,9 +66,18 @@ export const PHI_CHOICE_CONTROL_OPTION_FIELDS = buildPhiChoiceControlOptionField
 export function parsePhiChoiceOptionsConfig(
   config: Record<string, unknown>,
 ): PhiChoiceOptionsConfig {
+  const reader = createPhiConfigReader(config);
   return {
-    optionsProvider: parsePhiControlOptionsProviderConfig(config.optionsProvider),
-    options: readPhiControlOptions(config.options),
+    optionsProvider: reader.value(
+      "optionsProvider",
+      "an options provider",
+      (value) => parsePhiControlOptionsProviderConfig(value) ?? undefined,
+    ) ?? null,
+    options: reader.value(
+      "options",
+      "a list of options",
+      (value) => (Array.isArray(value) ? readPhiControlOptions(value) : undefined),
+    ) ?? readPhiControlOptions(undefined),
   };
 }
 
@@ -87,10 +96,6 @@ export const PHI_CHOICE_CONTROL_VALUE_MODE_FIELD = {
   ],
 } satisfies PhiCmsConfigField;
 
-function readPhiChoiceValueMode(value: unknown): PhiChoiceValueMode {
-  return readString(value) === "stack-slot-index" ? "stack-slot-index" : "raw";
-}
-
 export function parsePhiChoiceControlConfig(
   config: Record<string, unknown>,
 ): PhiChoiceControlConfig {
@@ -98,14 +103,15 @@ export function parsePhiChoiceControlConfig(
     key: "choice",
   });
 
+  const reader = createPhiConfigReader(config);
   return {
     ...controlState,
-    label: readString(config.label),
-    description: readString(config.description),
-    value: readString(config.value),
-    placeholder: readString(config.placeholder),
-    presentation: readString(config.presentation) === "autocomplete" ? "autocomplete" : "select",
-    allowCustom: readBoolean(config.allowCustom),
+    label: reader.string("label"),
+    description: reader.string("description"),
+    value: reader.string("value"),
+    placeholder: reader.string("placeholder"),
+    presentation: reader.oneOf("presentation", ["select", "autocomplete"] as const) ?? "select",
+    allowCustom: reader.boolean("allowCustom"),
     ...parsePhiChoiceOptionsConfig(config),
   };
 }
@@ -115,6 +121,6 @@ export function parsePhiStackChoiceControlConfig(
 ): PhiStackChoiceControlConfig {
   return {
     ...parsePhiChoiceControlConfig(config),
-    valueMode: readPhiChoiceValueMode(config.valueMode),
+    valueMode: createPhiConfigReader(config).oneOf("valueMode", ["raw", "stack-slot-index"] as const satisfies readonly PhiChoiceValueMode[]) ?? "raw",
   };
 }

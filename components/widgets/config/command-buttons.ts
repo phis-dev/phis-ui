@@ -19,7 +19,7 @@ import {
 import { PHI_BUTTON_VARIANT_FIELD_OPTIONS, readPhiButtonVariant } from "./button-variant";
 import { createPhiCommonActionField, readPhiControlLabel } from "./common-action-field";
 import { PHI_CONTROL_BADGE_FIELDS, parsePhiControlBadgeConfig } from "./control-signal-config";
-import { readBoolean, readNumber, readString } from "./parser-primitives";
+import { createPhiConfigReader, type PhiConfigReader } from "./strict-config-reader";
 
 /*
  * The buttons of a Widget that holds several: the Command Toolbar's row, and the Float Button's corner.
@@ -29,112 +29,58 @@ import { readBoolean, readNumber, readString } from "./parser-primitives";
  * a button is, so the parser, the Inspector fields, the viewer filter and the scaffold's count are one.
  */
 
+/** What a button sends: a text, a number, true/false, a list of texts or of numbers, or an object. */
 function readButtonEmitValue(value: unknown): PhiSignalValue | undefined {
-  const stringValue = readString(value);
-  if (stringValue !== undefined) {
-    return stringValue;
-  }
-  const numberValue = readNumber(value);
-  if (numberValue !== undefined) {
-    return numberValue;
-  }
-  const booleanValue = readBoolean(value);
-  if (booleanValue !== undefined) {
-    return booleanValue;
-  }
-  if (value == null) {
-    return undefined;
-  }
+  if (typeof value === "string" || typeof value === "boolean") return value;
+  if (typeof value === "number") return Number.isFinite(value) ? value : undefined;
   if (Array.isArray(value)) {
-    const stringItems = value.filter((item): item is string => typeof item === "string");
-    if (stringItems.length === value.length) {
-      return stringItems;
-    }
-    const numberItems = value.filter((item): item is number => typeof item === "number" && Number.isFinite(item));
-    if (numberItems.length === value.length) {
-      return numberItems;
-    }
+    if (value.every((item) => typeof item === "string")) return value as string[];
+    if (value.every((item) => typeof item === "number" && Number.isFinite(item))) return value as number[];
     return undefined;
   }
-  if (typeof value === "object") {
-    return value as Record<string, unknown>;
-  }
-  return undefined;
+  return isPhiRecord(value) ? value as Record<string, unknown> : undefined;
 }
 
-function readCommandButtonEmitConfig(value: unknown): PhiCommandButtonEmitConfig | null {
-  if (!isPhiRecord(value)) {
-    return null;
-  }
-
-  const record = value as Record<string, unknown>;
-  const capabilityId = readString(record.capabilityId);
-  if (!capabilityId) {
-    return null;
-  }
-
+function readCommandButtonEmitConfig(reader: PhiConfigReader): PhiCommandButtonEmitConfig {
   return {
-    capabilityId,
-    value: readButtonEmitValue(record.value),
+    capabilityId: reader.string("capabilityId") ?? reader.fail("capabilityId", "a capability id"),
+    value: reader.value("value", "a text, number, true/false, list or object", readButtonEmitValue),
   };
 }
 
-function readCommandButtonEmits(value: unknown): PhiCommandButtonEmitConfig[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value
-    .map(readCommandButtonEmitConfig)
-    .filter((item): item is PhiCommandButtonEmitConfig => item != null);
-}
-
-function readCommandButtonConfig(value: unknown): PhiCommandButtonConfig | null {
-  if (!isPhiRecord(value)) {
-    return null;
-  }
-
-  const record = value as Record<string, unknown>;
-  const key = readString(record.key);
-  const emits = readCommandButtonEmits(record.emits);
-  if (!key || emits.length === 0) {
-    return null;
-  }
-  const hasAccessPolicy = Object.prototype.hasOwnProperty.call(record, "accessPolicy");
-  const accessPolicy = hasAccessPolicy
-    ? readPhiViewerAccessPolicy(record.accessPolicy)
+function readCommandButtonConfig(reader: PhiConfigReader): PhiCommandButtonConfig {
+  const key = reader.string("key") ?? reader.fail("key", "a text");
+  const emits = reader.list("emits", readCommandButtonEmitConfig) ?? [];
+  if (emits.length === 0) reader.fail("emits", "at least one emit");
+  const accessPolicy = Object.prototype.hasOwnProperty.call(reader.record, "accessPolicy")
+    ? readPhiViewerAccessPolicy(reader.record.accessPolicy) ?? reader.fail("accessPolicy", "an access policy")
     : null;
-  if (hasAccessPolicy && !accessPolicy) {
-    return null;
-  }
 
   return {
     key,
     emits,
     ...(accessPolicy ? { accessPolicy } : {}),
-    ...parsePhiControlBadgeConfig(record),
-    action: readPhiCommonControlActionKey(readString(record.action)) ?? undefined,
-    label: readPhiControlLabel(record.label),
-    tooltip: readString(record.tooltip),
-    icon: readString(record.icon),
-    display: record.display === "icon" || record.display === "label" || record.display === "icon-label"
-      ? record.display
-      : undefined,
-    danger: readBoolean(record.danger),
-    disabled: readBoolean(record.disabled),
-    readOnly: readBoolean(record.readOnly),
-    variant: readPhiButtonVariant(record.variant),
+    ...parsePhiControlBadgeConfig(reader.record, reader.path),
+    action: reader.value("action", "a common action", (value) =>
+      typeof value === "string" ? readPhiCommonControlActionKey(value) ?? undefined : undefined),
+    label: readPhiControlLabel(reader.record.label),
+    tooltip: reader.string("tooltip"),
+    icon: reader.string("icon"),
+    display: reader.oneOf("display", ["icon", "label", "icon-label"] as const),
+    danger: reader.boolean("danger"),
+    disabled: reader.boolean("disabled"),
+    readOnly: reader.boolean("readOnly"),
+    variant: reader.value("variant", "a button variant", readPhiButtonVariant),
   };
 }
 
-export function readPhiCommandButtons(value: unknown): PhiCommandButtonConfig[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value
-    .map(readCommandButtonConfig)
-    .filter((item): item is PhiCommandButtonConfig => item != null);
+/**
+ * A Widget's buttons. Strict (`strict-config-reader.ts`): a button without a key or without an emit is
+ * an error naming it, not a button left out.
+ */
+export function readPhiCommandButtons(value: unknown, path = "buttons"): PhiCommandButtonConfig[] {
+  if (value === undefined || value === null) return [];
+  return createPhiConfigReader({ [path]: value }).list(path, readCommandButtonConfig) ?? [];
 }
 
 export function filterPhiCommandButtonsForViewer(

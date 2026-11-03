@@ -1,4 +1,5 @@
-import { readString, type PhiCmsWidgetConfigBase } from "./parser-primitives";
+import type { PhiCmsWidgetConfigBase } from "./parser-primitives";
+import { createPhiConfigReader } from "./strict-config-reader";
 import {
   PHI_CHOICE_CONTROL_OPTION_FIELDS,
   PHI_CHOICE_CONTROL_CONFIG_FIELDS,
@@ -15,11 +16,9 @@ export type PhiCmsTabBarWidgetConfig = PhiCmsWidgetConfigBase & PhiStackChoiceCo
 };
 
 function parsePhiCmsTabBarWidgetConfig(config: Record<string, unknown>): PhiCmsTabBarWidgetConfig {
-  const placement = readString(config.placement);
-
   return {
     ...parsePhiStackChoiceControlConfig(config),
-    placement: placement === "bottom" || placement === "left" || placement === "right" ? placement : "top",
+    placement: createPhiConfigReader(config).oneOf("placement", ["top", "bottom", "left", "right"] as const) ?? "top",
   };
 }
 

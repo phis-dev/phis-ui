@@ -9,11 +9,10 @@ import {
 } from "../../../types/signals";
 import {
   PHI_CONTROL_SIZES,
-  readPhiControlSize,
   type PhiControlSize,
   type PhiControlPresentationConfig,
 } from "../../../types/control";
-import { readBoolean, readNumber, readString } from "./parser-primitives";
+import { createPhiConfigReader } from "./strict-config-reader";
 
 export type PhiControlSignalConfig = {
   signalRoutes?: PhiSignalRouteSet | null;
@@ -135,7 +134,7 @@ export function parsePhiControlSignalConfig(
 ): Required<Pick<PhiControlSignalConfig, "key">> & Pick<PhiControlSignalConfig, "signalRoutes"> {
   return {
     signalRoutes: readPhiSignalRouteSet(config.signalRoutes),
-    key: readString(config.key) ?? defaults.key,
+    key: createPhiConfigReader(config).string("key") ?? defaults.key,
   };
 }
 
@@ -144,10 +143,11 @@ export function parsePhiControlStateConfig(
   defaults: PhiControlSignalConfigDefaults,
 ): Required<Pick<PhiControlStateConfig, "key">> &
   Pick<PhiControlStateConfig, "signalRoutes" | "readOnly" | "disabled"> {
+  const reader = createPhiConfigReader(config);
   return {
     ...parsePhiControlSignalConfig(config, defaults),
-    readOnly: readBoolean(config.readOnly),
-    disabled: readBoolean(config.disabled),
+    readOnly: reader.boolean("readOnly"),
+    disabled: reader.boolean("disabled"),
   };
 }
 
@@ -157,12 +157,10 @@ export function parsePhiControlPresentationConfig<
   config: Record<string, unknown>,
   allowedSizes?: readonly TSize[],
 ): PhiControlPresentationConfig<TSize> {
-  const controlSize = readPhiControlSize(config.controlSize);
-  const resolvedAllowedSizes: readonly PhiControlSize[] = allowedSizes ?? PHI_CONTROL_SIZES;
+  // A size this Control does not offer is an error, not the default in its place.
+  const resolvedAllowedSizes = (allowedSizes ?? PHI_CONTROL_SIZES) as readonly TSize[];
   return {
-    controlSize: controlSize != null && resolvedAllowedSizes.includes(controlSize)
-      ? controlSize as TSize
-      : undefined,
+    controlSize: createPhiConfigReader(config).oneOf("controlSize", resolvedAllowedSizes),
   };
 }
 
@@ -185,13 +183,18 @@ export function parsePhiControlConfig<
   };
 }
 
-export function parsePhiControlBadgeConfig(config: Record<string, unknown>): PhiControlBadgeConfig {
+export function parsePhiControlBadgeConfig(
+  config: Record<string, unknown>,
+  /** Where the config stands, when it is an entry of a list -- a button of a toolbar. */
+  path = "",
+): PhiControlBadgeConfig {
+  const reader = createPhiConfigReader(config, path);
   return {
-    badgeEnabled: readBoolean(config.badgeEnabled),
-    badgeText: readString(config.badgeText),
-    badgeCount: readNumber(config.badgeCount),
-    badgeShowZero: readBoolean(config.badgeShowZero),
-    badgeOverflowCount: readNumber(config.badgeOverflowCount),
-    badgeColor: readString(config.badgeColor),
+    badgeEnabled: reader.boolean("badgeEnabled"),
+    badgeText: reader.string("badgeText"),
+    badgeCount: reader.number("badgeCount"),
+    badgeShowZero: reader.boolean("badgeShowZero"),
+    badgeOverflowCount: reader.number("badgeOverflowCount"),
+    badgeColor: reader.string("badgeColor"),
   };
 }
