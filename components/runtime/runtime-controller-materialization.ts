@@ -121,7 +121,17 @@ export function materializePhiWidgetRuntimeControllerSettings({
     return [];
   }
 
-  const config = plugin.parseConfig(widget.config);
+  /*
+   * A Widget whose config cannot be read asks for no Controller. It is not rendered either: the renderer
+   * meets the same error in the Widget's own place, leaves it out of a live page and shows it in the
+   * Builder. Thrown here, outside any block, it took the whole page with it.
+   */
+  let config: unknown;
+  try {
+    config = plugin.parseConfig(widget.config);
+  } catch {
+    return [];
+  }
   const settingsByKey = new Map<string, PhiRuntimeControllerSetting>();
   for (const requirement of plugin.requiredRuntimeControllers({ widget, tree, config })) {
     const setting: PhiRuntimeControllerSetting = {

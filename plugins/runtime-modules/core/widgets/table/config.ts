@@ -243,9 +243,13 @@ function readTableFooterVariant(reader: PhiConfigReader): PhiTableFooterVariant 
   return { when, template, values: readTableFooterValues(reader) };
 }
 
+/*
+ * A footer may name no values: a sentence of its own is a footer too. The old reader dropped such a
+ * footer in silence, so one that only ever said a sentence -- with variants that change it -- never
+ * showed at all.
+ */
 function readTableFooter(reader: PhiConfigReader): PhiTableFooterConfig {
   const values = readTableFooterValues(reader);
-  if (values.length === 0) reader.fail("values", "at least one value");
   const variants = reader.list("variants", readTableFooterVariant) ?? [];
   return {
     template: requireString(reader, "template"),
