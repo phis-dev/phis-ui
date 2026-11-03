@@ -31,16 +31,6 @@ built. Remove an entry when it is done.
   `plugins/runtime-modules/phi-default-site-area-preset-tree.ts`), so the central instantiator is not
   yet the only node-construction authority.
 
-## Next release
-
-Collected for the next published `@phis/ui`, so they ship together rather than one package each.
-
-- **After the release, in each installation:** the Site-store copies of Module navigation labels (ctx
-  `Web UI label`, including the `[extern]` units) are no longer read and can be deleted, and so are the
-  Public error pages' Result words in the same context ("Not found" and the like, and "Back to
-  homepage"), which the global store answers now. Before that, check in `@phis/server` that a Site
-  admin's translation editor writes `tr_site_*` only and that `tr_lang` is the operator's alone.
-
 ## Layouts and Widgets
 
 - **Block geometry: the rules each reader kept, now settled one at a time.** The move is done: one
