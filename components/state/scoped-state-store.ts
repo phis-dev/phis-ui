@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useSyncExternalStore } from "react";
+import { useCallback, useRef, useSyncExternalStore } from "react";
 
 type ScopedStateListener = () => void;
 
@@ -132,8 +132,16 @@ export function createScopedStateStore<TState>(
 
   function useStore(scopeKey: string) {
     const normalizedScopeKey = normalizeScopedStateKey(scopeKey);
+    /*
+     * Held per scope. An inline `subscribe` is a new function every render, and `useSyncExternalStore`
+     * unsubscribes and subscribes again for each new one.
+     */
+    const subscribeToScope = useCallback(
+      (listener: ScopedStateListener) => subscribe(normalizedScopeKey, listener),
+      [normalizedScopeKey],
+    );
     return useSyncExternalStore(
-      (listener) => subscribe(normalizedScopeKey, listener),
+      subscribeToScope,
       () => getSnapshot(normalizedScopeKey),
       () => getHydrationSnapshot(normalizedScopeKey),
     );
@@ -183,8 +191,12 @@ export function createScopedStateStore<TState>(
       return selected;
     };
 
+    const subscribeToScope = useCallback(
+      (listener: ScopedStateListener) => subscribe(normalizedScopeKey, listener),
+      [normalizedScopeKey],
+    );
     return useSyncExternalStore(
-      (listener) => subscribe(normalizedScopeKey, listener),
+      subscribeToScope,
       getSelectedSnapshot,
       getSelectedHydrationSnapshot,
     );
@@ -194,9 +206,20 @@ export function createScopedStateStore<TState>(
     patch(scopeKey, () => createDefaultState(normalizeScopedStateKey(scopeKey)));
   }
 
+  /*
+   * Forgets a scope's state. A component still mounted on it keeps its subscription on the entry it
+   * subscribed to, so dropping that entry left it listening to nothing: the next write went into a new
+   * entry nobody was told about. With listeners, the entry stays and starts over from the default
+   * instead, and they hear it.
+   */
   function deleteScope(scopeKey: string) {
     const normalizedScopeKey = normalizeScopedStateKey(scopeKey);
     const bucket = getScopedBucket();
+    const entry = bucket.get(normalizedScopeKey) as ScopedStateEntry<TState> | undefined;
+    if (entry && entry.listeners.size > 0) {
+      replace(normalizedScopeKey, createDefaultState(normalizedScopeKey));
+      return;
+    }
     bucket.delete(normalizedScopeKey);
   }
 

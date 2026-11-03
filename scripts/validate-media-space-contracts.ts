@@ -871,14 +871,14 @@ await assert.rejects(
 }
 
 /**
- * The Picker only ever names a Space when the surface may, and it follows the answer rather than its
- * own state: the control plane says which Space it served.
+ * The Picker only ever names a Space when the surface may, and only the one the reader chose; what it
+ * shows follows the answer rather than its own state: the control plane says which Space it served.
  */
 {
   const binding = await readSource("components/media/phi-media-picker-binding.tsx");
   assert.match(
     binding,
-    /spaceSelectionAllowed && spaceAddress \? \{ spaceId: spaceAddress \} : \{\}/u,
+    /spaceSelectionAllowed && requestedSpaceAddress \? \{ spaceId: requestedSpaceAddress \} : \{\}/u,
     "A surface that may not select must send no Space at all.",
   );
   assert.match(

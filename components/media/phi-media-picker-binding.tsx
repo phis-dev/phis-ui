@@ -78,6 +78,13 @@ export function usePhiMediaPickerBinding({
   // Null asks for no particular Space, which the control plane answers with the Site Space. An
   // authoring surface never leaves this state, because it never renders the selector.
   const [spaceAddress, setSpaceAddress] = useState<string | null>(null);
+  /*
+   * The Space the reader chose, which is what the query asks for -- kept apart from the Space the last
+   * answer served, which is what the selector shows. Writing the served Space back into the query made
+   * the first open ask twice: once for nothing in particular, and once more for the Space it had just
+   * been given.
+   */
+  const [requestedSpaceAddress, setRequestedSpaceAddress] = useState<string | null>(null);
   const spaceSelectionAllowed = usePhiMediaSpaceSelectionAllowed();
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -107,9 +114,9 @@ export function usePhiMediaPickerBinding({
       folderId,
       kind: mediaType,
       presentationFlags,
-      ...(spaceSelectionAllowed && spaceAddress ? { spaceId: spaceAddress } : {}),
+      ...(spaceSelectionAllowed && requestedSpaceAddress ? { spaceId: requestedSpaceAddress } : {}),
     },
-  }), [presentationFlags, folderId, mediaType, page, pageSize, searchQuery, spaceAddress, spaceSelectionAllowed]);
+  }), [presentationFlags, folderId, mediaType, page, pageSize, requestedSpaceAddress, searchQuery, spaceSelectionAllowed]);
 
   const querySignals = usePhiControlSignalController<string>({ key: PHI_ASSET_SIGNAL_CHANNELS.query, signalRoutes: config?.signalRoutes, valueType: "string", typeKey: "media-picker-query", clearValue: "", onSetValue: (next) => { setSearchQuery(next); setPage(1); }, coerceValue: (next) => typeof next === "string" ? next : null });
   const pathSignals = usePhiControlSignalController<string>({ key: PHI_ASSET_SIGNAL_CHANNELS.path, signalRoutes: config?.signalRoutes, valueType: "path", typeKey: "media-picker-path", clearValue: "/", onSetValue: (next) => { setFolderId(resolvePhiMediaFolderIdFromValue(folders, next)); setPage(1); }, coerceValue: (next) => typeof next === "string" ? next : null });
@@ -231,6 +238,7 @@ export function usePhiMediaPickerBinding({
       if (!spaceSelectionAllowed) return;
       // Folders belong to the Space they were listed from, so switching Space starts at its root.
       setSpaceAddress(nextSpace);
+      setRequestedSpaceAddress(nextSpace);
       setFolderId(null);
       setPage(1);
     },
