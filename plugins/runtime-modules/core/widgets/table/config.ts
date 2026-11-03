@@ -25,11 +25,9 @@ import type {
   PhiCmsConfigField,
   PhiCmsWidgetPlugin,
 } from "../../../../../types/cms-plugins";
-import { readBoolean, readNumber, readNumberList, readString } from "../../../../../components/widgets/config/parser-primitives";
-import {
-  PHI_CONTROL_SIZE_FIELD,
-  parsePhiControlPresentationConfig,
-} from "../../../../../components/widgets/config/control-signal-config";
+import { createPhiConfigReader, type PhiConfigReader } from "../../../../../components/widgets/config/strict-config-reader";
+import { readPhiControlSize } from "../../../../../types/control";
+import { PHI_CONTROL_SIZE_FIELD } from "../../../../../components/widgets/config/control-signal-config";
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../../../constants/core-data-provider-keys";
 import { readPhiLengthValue } from "../../../../../types/length";
 import { parsePhiControlOptionsProviderConfig } from "../../../../../components/controls/phi-control-options";
@@ -38,10 +36,6 @@ import {
   resolvePhiRuntimeConditionControllerRequirements,
 } from "../../../../../types/runtime-condition";
 import { isPhiRecord } from "../../../../../helpers/is-record";
-
-function readConditionExpression(value: unknown) {
-  return readPhiRuntimeConditionExpression(value) ?? undefined;
-}
 
 const PHI_TABLE_DISABLED_CONDITION_CONFIG_FIELDS: PhiCmsConfigField[] = [
   { key: "source", type: "choice", label: "Source", options: [
@@ -164,19 +158,35 @@ const PHI_TABLE_ACTION_CONFIG_FIELDS: PhiCmsConfigField[] = [
   { key: "confirm.cancelText", type: "string", label: "Confirm Cancel Text" },
 ];
 
+const PHI_TABLE_COLUMN_RENDERERS = [
+  "text", "email", "date", "datetime", "badge", "tags", "link", "code", "json", "switch", "checkbox", "icon",
+] as const;
+const PHI_TABLE_COLUMN_EDITOR_CONTROLS = [
+  "switch", "checkbox", "select", "radio", "segmented", "multi-select", "checkbox-group", "icon-picker",
+] as const;
+const PHI_TABLE_ALIGNS = ["left", "center", "right"] as const;
+
+function readCondition(reader: PhiConfigReader, key: string) {
+  return reader.value(key, "a condition", (value) => readPhiRuntimeConditionExpression(value) ?? undefined);
+}
+
+function readLength(reader: PhiConfigReader, key: string) {
+  return reader.value(key, "a CSS length", (value) => readPhiLengthValue(value) ?? undefined);
+}
+
+/** A required text: absent is as wrong as the wrong type, because the entry means nothing without it. */
+function requireString(reader: PhiConfigReader, key: string) {
+  return reader.string(key) ?? reader.fail(key, "a text", reader.record[key]);
+}
+
 function readTableTagColor(value: unknown): PhiTableTagColor | undefined {
   if (typeof value === "string" && (PHI_TABLE_TAG_COLORS as readonly string[]).includes(value)) {
     return value as PhiTableTagColor;
   }
   if (!isPhiRecord(value) || value.kind !== "custom") return undefined;
-  const customValue = readString(value.value);
-  return customValue ? { kind: "custom", value: customValue } : undefined;
-}
-
-function readTableTagVariant(value: unknown): PhiTableTagVariant {
-  return typeof value === "string" && (PHI_TABLE_TAG_VARIANTS as readonly string[]).includes(value)
-    ? value as PhiTableTagVariant
-    : "outlined";
+  return typeof value.value === "string" && value.value.trim()
+    ? { kind: "custom", value: value.value }
+    : undefined;
 }
 
 type PhiTableCoreSummaryFieldKey = Extract<
@@ -192,514 +202,388 @@ const PHI_TABLE_CORE_SUMMARY_FIELD_KEYS = [
   "pageCount",
 ] as const satisfies readonly PhiTableCoreSummaryFieldKey[];
 
-function isPhiTableCoreSummaryFieldKey(value: string): value is PhiTableCoreSummaryFieldKey {
-  return (PHI_TABLE_CORE_SUMMARY_FIELD_KEYS as readonly string[]).includes(value);
+function readTableSummaryValueSource(reader: PhiConfigReader): PhiTableSummaryValueSource {
+  const source = reader.oneOf("source", ["core", "provider"] as const) ?? reader.fail("source", "\"core\" or \"provider\"");
+  if (source === "core") {
+    return {
+      source,
+      fieldKey: reader.oneOf("fieldKey", PHI_TABLE_CORE_SUMMARY_FIELD_KEYS)
+        ?? reader.fail("fieldKey", `one of ${PHI_TABLE_CORE_SUMMARY_FIELD_KEYS.join(", ")}`),
+    };
+  }
+  return { source, fieldKey: requireString(reader, "fieldKey") };
 }
 
-function readTableSummaryItem(value: unknown): PhiTableSummaryItemDefinition | null {
-  if (!isPhiRecord(value)) return null;
-  const key = readString(value.key);
-  const rawValue = isPhiRecord(value.value) ? value.value : {};
-  const fieldKey = readString(rawValue.fieldKey);
-  if (!key || !fieldKey) return null;
-  const source: PhiTableSummaryValueSource | null = rawValue.source === "core" &&
-    isPhiTableCoreSummaryFieldKey(fieldKey)
-    ? { source: "core", fieldKey }
-    : rawValue.source === "provider"
-      ? { source: "provider", fieldKey }
-      : null;
-  if (!source) return null;
+function readTableSummaryItem(reader: PhiConfigReader): PhiTableSummaryItemDefinition {
   return {
-    key,
-    value: source,
-    label: readString(value.label),
-    labelPlacement: value.labelPlacement === "after" ? "after" : "before",
+    key: requireString(reader, "key"),
+    value: reader.object("value", readTableSummaryValueSource) ?? reader.fail("value", "a value source"),
+    label: reader.string("label"),
+    labelPlacement: reader.oneOf("labelPlacement", ["before", "after"] as const) ?? "before",
   };
 }
 
-function readTableFooterValues(value: unknown) {
-  return Array.isArray(value)
-    ? value.flatMap((item) => {
-      const parsed = readTableSummaryItem(item);
-      return parsed ? [{ key: parsed.key, value: parsed.value }] : [];
-    })
-    : [];
+function readTableFooterValues(reader: PhiConfigReader) {
+  return (reader.list("values", (entry) => {
+    const item = readTableSummaryItem(entry);
+    return { key: item.key, value: item.value };
+  }) ?? []);
 }
 
-function readTableFooterVariant(value: unknown): PhiTableFooterVariant | null {
-  if (!isPhiRecord(value) || !isPhiRecord(value.when)) return null;
+function readTableFooterVariant(reader: PhiConfigReader): PhiTableFooterVariant {
   // An empty template is a statement here, not a missing one: the footer has nothing to say.
-  const template = typeof value.template === "string" ? value.template : null;
-  const when = readTableSummaryItem({ key: "when", value: value.when.value });
-  const operator = value.when.operator;
-  if (template == null || !when || (operator !== "truthy" && operator !== "falsy")) return null;
-  return { when: { value: when.value, operator }, template, values: readTableFooterValues(value.values) };
+  const template = typeof reader.record.template === "string"
+    ? reader.record.template
+    : reader.fail("template", "a text");
+  const when = reader.object("when", (whenReader) => ({
+    value: whenReader.object("value", readTableSummaryValueSource) ?? whenReader.fail("value", "a value source"),
+    operator: whenReader.oneOf("operator", ["truthy", "falsy"] as const)
+      ?? whenReader.fail("operator", "\"truthy\" or \"falsy\""),
+  })) ?? reader.fail("when", "a condition");
+  return { when, template, values: readTableFooterValues(reader) };
 }
 
-function readTableFooter(value: unknown): PhiTableFooterConfig | undefined {
-  if (!isPhiRecord(value) || !Array.isArray(value.values)) return undefined;
-  const template = readString(value.template);
-  const values = readTableFooterValues(value.values);
-  if (!template || values.length === 0) return undefined;
-  const variants = Array.isArray(value.variants)
-    ? value.variants.flatMap((item) => {
-      const variant = readTableFooterVariant(item);
-      return variant ? [variant] : [];
-    })
-    : [];
+function readTableFooter(reader: PhiConfigReader): PhiTableFooterConfig {
+  const values = readTableFooterValues(reader);
+  if (values.length === 0) reader.fail("values", "at least one value");
+  const variants = reader.list("variants", readTableFooterVariant) ?? [];
   return {
-    template,
+    template: requireString(reader, "template"),
     values,
-    align: value.align === "center" || value.align === "end"
-      ? value.align
-      : "start",
+    align: reader.oneOf("align", ["start", "center", "end"] as const) ?? "start",
     ...(variants.length > 0 ? { variants } : {}),
   };
 }
 
-function readTableSummary(value: unknown): PhiTableSummaryConfig | undefined {
-  if (!isPhiRecord(value) || !Array.isArray(value.rows)) return undefined;
-  const rows = value.rows.flatMap<PhiTableSummaryConfig["rows"][number]>((rowValue) => {
-    if (!isPhiRecord(rowValue) || !Array.isArray(rowValue.cells)) return [];
-    const key = readString(rowValue.key);
-    if (!key) return [];
-    const cells = rowValue.cells.flatMap<PhiTableSummaryConfig["rows"][number]["cells"][number]>((cellValue) => {
-      if (!isPhiRecord(cellValue)) return [];
-      const cellKey = readString(cellValue.key);
-      const columnKey = readString(cellValue.columnKey);
-      const item = readTableSummaryItem(cellValue.item);
-      if (!cellKey || !columnKey || !item) return [];
-      return [{
-        key: cellKey,
-        columnKey,
-        throughColumnKey: readString(cellValue.throughColumnKey),
-        align: cellValue.align === "center" || cellValue.align === "right" ? cellValue.align : "left" as const,
-        item,
-      }];
-    });
-    return cells.length > 0 ? [{ key, cells }] : [];
-  });
-  if (rows.length === 0) return undefined;
+function readTableSummary(reader: PhiConfigReader): PhiTableSummaryConfig {
+  const rows = reader.list("rows", (rowReader) => ({
+    key: requireString(rowReader, "key"),
+    cells: rowReader.list("cells", (cellReader) => ({
+      key: requireString(cellReader, "key"),
+      columnKey: requireString(cellReader, "columnKey"),
+      throughColumnKey: cellReader.string("throughColumnKey"),
+      align: cellReader.oneOf("align", PHI_TABLE_ALIGNS) ?? "left",
+      item: cellReader.object("item", readTableSummaryItem) ?? cellReader.fail("item", "a summary item"),
+    })) ?? rowReader.fail("cells", "a list of cells"),
+  })) ?? reader.fail("rows", "a list of rows");
   return {
-    placement: value.placement === "sticky-top" || value.placement === "sticky-bottom"
-      ? value.placement
-      : "body-end",
+    placement: reader.oneOf("placement", ["body-end", "sticky-top", "sticky-bottom"] as const) ?? "body-end",
     rows,
   };
 }
 
-function readColumns(value: unknown): PhiTableColumnDefinition[] {
-  if (!Array.isArray(value)) {
-    return [];
+function readTableColumnSizing(reader: PhiConfigReader): PhiTableColumnSizing {
+  const mode = reader.oneOf("mode", ["content", "fixed", "fill"] as const) ?? "content";
+  if (mode === "fixed") {
+    return { mode, width: readLength(reader, "width") ?? reader.fail("width", "a CSS length for a fixed column") };
   }
-  return value.flatMap((item) => {
-    if (!isPhiRecord(item)) {
-      return [];
-    }
-    const key = readString(item.key);
-    const title = readString(item.title);
-    if (!key || !title) {
-      return [];
-    }
-    const fieldKey = readString(item.fieldKey);
-    if (!fieldKey) {
-      return [];
-    }
-    const renderer = item.renderer === "email" || item.renderer === "date" || item.renderer === "datetime" ||
-      item.renderer === "badge" || item.renderer === "tags" || item.renderer === "link" ||
-      item.renderer === "code" || item.renderer === "json" || item.renderer === "switch" ||
-      item.renderer === "checkbox" || item.renderer === "icon"
-      ? item.renderer
-      : "text";
-    const align = item.align === "center" || item.align === "right" ? item.align : "left";
-    const rawSizing = isPhiRecord(item.sizing) ? item.sizing : {};
-    const sizing = readTableColumnSizing(rawSizing);
-    const valueMap = isPhiRecord(item.valueMap)
-      ? Object.fromEntries(
-          Object.entries(item.valueMap).filter(
-            (entry): entry is [string, string] => typeof entry[1] === "string",
-          ),
-        )
-      : undefined;
-    const tagColorMap = isPhiRecord(item.tagColorMap)
-      ? Object.fromEntries(
-          Object.entries(item.tagColorMap).flatMap(([key, value]) => {
-            const color = readTableTagColor(value);
-            return color == null ? [] : [[key, color]];
-          }),
-        )
-      : undefined;
-    const rawEditor = isPhiRecord(item.editor) ? item.editor : undefined;
-    const editorControl = readTableColumnEditorControl(rawEditor?.control);
-    return [{
+  return { mode, minWidth: readLength(reader, "minWidth"), maxWidth: readLength(reader, "maxWidth") };
+}
+
+function readColumn(reader: PhiConfigReader): PhiTableColumnDefinition {
+  const valueMap = reader.object("valueMap", (mapReader) => Object.fromEntries(
+    Object.keys(mapReader.record).map((key) => [key, mapReader.string(key) ?? ""]),
+  ));
+  const tagColorMap = reader.object("tagColorMap", (mapReader) => Object.fromEntries(
+    Object.keys(mapReader.record).map((key) => [
       key,
-      title,
-      fieldKey,
-      sortField: readString(item.sortField),
-      iconFieldKey: readString(item.iconFieldKey),
-      titleIcon: readString(item.titleIcon),
-      titleDisplay: item.titleDisplay === "icon" ? "icon" : undefined,
-      description: readString(item.description),
-      renderer,
-      editor: rawEditor && readBoolean(rawEditor.enabled) !== false
-        ? {
-          control: editorControl,
-          disabledWhen: readConditionExpression(rawEditor.disabledWhen),
-          ...(readString(rawEditor.prefix) ? { prefix: readString(rawEditor.prefix) } : {}),
-        }
-        : undefined,
-      sizing,
-      align,
-      sticky: item.sticky === "left" || item.sticky === "right" ? item.sticky : undefined,
-      sortable: readBoolean(item.sortable),
-      hidden: readBoolean(item.hidden),
-      ellipsis: readBoolean(item.ellipsis),
-      valueMap,
-      tagColorMap,
-      tagVariant: readTableTagVariant(item.tagVariant),
-    }];
-  });
-}
-
-function readTableColumnEditorControl(value: unknown): PhiTableColumnEditorControl | undefined {
-  return value === "switch" || value === "checkbox" || value === "select" || value === "radio" ||
-    value === "segmented" || value === "multi-select" || value === "checkbox-group" || value === "icon-picker"
-    ? value
-    : undefined;
-}
-
-function readTableColumnSizing(value: Record<string, unknown>): PhiTableColumnSizing {
-  const minWidth = readPhiLengthValue(value.minWidth) ?? undefined;
-  const maxWidth = readPhiLengthValue(value.maxWidth) ?? undefined;
-  if (value.mode === "content") return { mode: "content", minWidth, maxWidth };
-  if (value.mode === "fixed") {
-    const width = readPhiLengthValue(value.width);
-    return width == null ? { mode: "content" } : { mode: "fixed", width };
-  }
-  if (value.mode === "fill") return { mode: "fill", minWidth, maxWidth };
-  return { mode: "content", minWidth, maxWidth };
-}
-
-function readFilterOptions(value: unknown) {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-  return value.flatMap((item) => {
-    if (!isPhiRecord(item)) {
-      return [];
-    }
-    const label = readString(item.label);
-    const optionValue = readString(item.value);
-    return label && optionValue ? [{ label, value: optionValue }] : [];
-  });
-}
-
-function readFilters(value: unknown): PhiTableFilterDefinition[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-  const result: PhiTableFilterDefinition[] = [];
-  for (const item of value) {
-    if (!isPhiRecord(item)) {
-      continue;
-    }
-    const key = readString(item.key);
-    const label = readString(item.label);
-    if (!key || !label) {
-      continue;
-    }
-    const labelPlacement = item.labelPlacement === "inline" || item.labelPlacement === "none"
-      ? item.labelPlacement
-      : undefined;
-    if (item.type === "select") {
-      result.push({
-        key,
-        type: "select" as const,
-        label,
-        labelPlacement,
-        multiple: readBoolean(item.multiple),
-        options: readFilterOptions(item.options),
-        optionsProvider: parsePhiControlOptionsProviderConfig(item.optionsProvider),
-        defaultValue: typeof item.defaultValue === "string" ||
-          (Array.isArray(item.defaultValue) && item.defaultValue.every((entry) => typeof entry === "string"))
-          ? item.defaultValue
-          : undefined,
+      mapReader.value(key, "a tag colour", readTableTagColor) ?? mapReader.fail(key, "a tag colour"),
+    ]),
+  ));
+  const editor = reader.object("editor", (editorReader) => editorReader.boolean("enabled") === false
+    ? undefined
+    : {
+        control: editorReader.oneOf("control", PHI_TABLE_COLUMN_EDITOR_CONTROLS) as PhiTableColumnEditorControl | undefined,
+        disabledWhen: readCondition(editorReader, "disabledWhen"),
+        ...(editorReader.string("prefix") ? { prefix: editorReader.string("prefix") } : {}),
       });
-      continue;
-    }
-    if (item.type === "boolean") {
-      result.push({
-        key,
-        type: "boolean",
-        control: item.control === "switch" ? "switch" : undefined,
-        label,
-        labelPlacement,
-        defaultValue: readBoolean(item.defaultValue),
-      });
-      continue;
-    }
-    if (item.type === "dateRange") {
-      const startKey = readString(item.startKey);
-      const endKey = readString(item.endKey);
-      if (!startKey || !endKey) {
-        continue;
-      }
-      const defaultValue = isPhiRecord(item.defaultValue)
-        ? { start: readString(item.defaultValue.start), end: readString(item.defaultValue.end) }
-        : undefined;
-      result.push({
-        key,
-        type: "dateRange" as const,
-        label,
-        labelPlacement,
-        startKey,
-        endKey,
-        startPlaceholder: readString(item.startPlaceholder),
-        endPlaceholder: readString(item.endPlaceholder),
-        defaultValue,
-      });
-      continue;
-    }
-    result.push({
+  return {
+    key: requireString(reader, "key"),
+    title: requireString(reader, "title"),
+    fieldKey: requireString(reader, "fieldKey"),
+    sortField: reader.string("sortField"),
+    iconFieldKey: reader.string("iconFieldKey"),
+    titleIcon: reader.string("titleIcon"),
+    titleDisplay: reader.oneOf("titleDisplay", ["icon"] as const),
+    description: reader.string("description"),
+    renderer: reader.oneOf("renderer", PHI_TABLE_COLUMN_RENDERERS) ?? "text",
+    editor,
+    sizing: reader.object("sizing", readTableColumnSizing) ?? readTableColumnSizing(createPhiConfigReader({})),
+    align: reader.oneOf("align", PHI_TABLE_ALIGNS) ?? "left",
+    sticky: reader.oneOf("sticky", ["left", "right"] as const),
+    sortable: reader.boolean("sortable"),
+    hidden: reader.boolean("hidden"),
+    ellipsis: reader.boolean("ellipsis"),
+    valueMap,
+    tagColorMap,
+    tagVariant: reader.oneOf("tagVariant", PHI_TABLE_TAG_VARIANTS) as PhiTableTagVariant | undefined ?? "outlined",
+  };
+}
+
+function readFilter(reader: PhiConfigReader): PhiTableFilterDefinition {
+  const key = requireString(reader, "key");
+  const label = requireString(reader, "label");
+  const labelPlacement = reader.oneOf("labelPlacement", ["inline", "none"] as const);
+  const type = reader.oneOf("type", ["text", "select", "boolean", "dateRange"] as const) ?? "text";
+  if (type === "select") {
+    return {
       key,
-      type: "text" as const,
+      type,
       label,
       labelPlacement,
-      placeholder: readString(item.placeholder),
-      defaultValue: readString(item.defaultValue),
-    });
+      multiple: reader.boolean("multiple"),
+      options: reader.list("options", (optionReader) => ({
+        label: requireString(optionReader, "label"),
+        value: requireString(optionReader, "value"),
+      })) ?? [],
+      optionsProvider: reader.value(
+        "optionsProvider",
+        "an options provider",
+        (value) => parsePhiControlOptionsProviderConfig(value) ?? undefined,
+      ),
+      defaultValue: reader.value(
+        "defaultValue",
+        "a text or a list of texts",
+        (value) => typeof value === "string" ||
+          (Array.isArray(value) && value.every((entry) => typeof entry === "string"))
+          ? value as string | string[]
+          : undefined,
+      ),
+    };
   }
-  return result;
+  if (type === "boolean") {
+    return {
+      key,
+      type,
+      control: reader.oneOf("control", ["switch"] as const),
+      label,
+      labelPlacement,
+      defaultValue: reader.boolean("defaultValue"),
+    };
+  }
+  if (type === "dateRange") {
+    return {
+      key,
+      type,
+      label,
+      labelPlacement,
+      startKey: requireString(reader, "startKey"),
+      endKey: requireString(reader, "endKey"),
+      startPlaceholder: reader.string("startPlaceholder"),
+      endPlaceholder: reader.string("endPlaceholder"),
+      defaultValue: reader.object("defaultValue", (rangeReader) => ({
+        start: rangeReader.string("start"),
+        end: rangeReader.string("end"),
+      })),
+    };
+  }
+  return {
+    key,
+    type,
+    label,
+    labelPlacement,
+    placeholder: reader.string("placeholder"),
+    defaultValue: reader.string("defaultValue"),
+  };
 }
 
-function readActions(value: unknown): PhiTableActionDefinition[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-  const result: PhiTableActionDefinition[] = [];
-  for (const item of value) {
-    if (!isPhiRecord(item)) {
-      continue;
-    }
-    const key = readString(item.key);
-    const label = readString(item.label);
-    const execution = item.execution === "provider" || item.execution === "signal" || item.execution === "link"
-      ? item.execution
-      : null;
-    if (!key || !label || !execution) {
-      continue;
-    }
-    result.push({
-      key,
-      label,
-      execution,
-      icon: readString(item.icon),
-      display: item.display === "icon" || item.display === "label" || item.display === "icon-label"
-        ? item.display
+function readAction(reader: PhiConfigReader): PhiTableActionDefinition {
+  return {
+    key: requireString(reader, "key"),
+    label: requireString(reader, "label"),
+    execution: reader.oneOf("execution", ["provider", "signal", "link"] as const)
+      ?? reader.fail("execution", "\"provider\", \"signal\" or \"link\""),
+    icon: reader.string("icon"),
+    display: reader.oneOf("display", ["icon", "label", "icon-label"] as const),
+    mode: reader.oneOf("mode", ["normal", "primary", "danger"] as const) ?? "normal",
+    href: reader.string("href"),
+    hrefPath: reader.string("hrefPath"),
+    newTab: reader.boolean("newTab"),
+    visibleWhen: readCondition(reader, "visibleWhen"),
+    disabledWhen: readCondition(reader, "disabledWhen"),
+    confirm: reader.object("confirm", (confirmReader) => ({
+      title: requireString(confirmReader, "title"),
+      description: confirmReader.string("description"),
+      okText: confirmReader.string("okText"),
+      cancelText: confirmReader.string("cancelText"),
+      alert: confirmReader.object("alert", (alertReader) => ({
+        level: alertReader.oneOf("level", ["success", "info", "warning", "error"] as const satisfies readonly PhiFeedbackLevel[])
+          ?? alertReader.fail("level", "\"success\", \"info\", \"warning\" or \"error\""),
+        title: requireString(alertReader, "title"),
+        description: alertReader.string("description"),
+      })),
+    })),
+  };
+}
+
+function readBindingField(reader: PhiConfigReader) {
+  const disabledWhen = reader.object("disabledWhen", (conditionReader) => ({
+    fieldKey: requireString(conditionReader, "fieldKey"),
+    equals: conditionReader.value(
+      "equals",
+      "a text, a number or true/false",
+      (value) => typeof value === "string" || typeof value === "boolean" ||
+        (typeof value === "number" && Number.isFinite(value))
+        ? value
         : undefined,
-      mode: item.mode === "primary" || item.mode === "danger" ? item.mode : "normal",
-      href: readString(item.href),
-      hrefPath: readString(item.hrefPath),
-      newTab: readBoolean(item.newTab),
-      visibleWhen: readConditionExpression(item.visibleWhen),
-      disabledWhen: readConditionExpression(item.disabledWhen),
-      confirm: isPhiRecord(item.confirm) && readString(item.confirm.title)
-        ? (() => {
-            const alertLevel: PhiFeedbackLevel | undefined = isPhiRecord(item.confirm.alert) &&
-              (item.confirm.alert.level === "success" || item.confirm.alert.level === "info" ||
-                item.confirm.alert.level === "warning" || item.confirm.alert.level === "error")
-              ? item.confirm.alert.level
-              : undefined;
-            const alert = isPhiRecord(item.confirm.alert) && readString(item.confirm.alert.title) && alertLevel
-              ? {
-                  level: alertLevel,
-                  title: readString(item.confirm.alert.title) as string,
-                  description: readString(item.confirm.alert.description),
-                }
-              : undefined;
-            return {
-              title: readString(item.confirm.title) as string,
-              description: readString(item.confirm.description),
-              okText: readString(item.confirm.okText),
-              cancelText: readString(item.confirm.cancelText),
-              alert,
-            };
-          })()
-        : undefined,
-    });
-  }
-  return result;
+    ) ?? conditionReader.fail("equals", "a text, a number or true/false"),
+  }));
+  const optionLabels = reader.list("optionLabels", (optionReader) => ({
+    value: optionReader.value(
+      "value",
+      "a text or a number",
+      (value) => typeof value === "string" || (typeof value === "number" && Number.isFinite(value)) ? value : undefined,
+    ) ?? optionReader.fail("value", "a text or a number"),
+    label: requireString(optionReader, "label"),
+  })) ?? [];
+  const cascader = reader.object("cascader", (cascaderReader) => ({
+    allowRoot: cascaderReader.boolean("allowRoot"),
+    separator: cascaderReader.string("separator"),
+    rootValue: cascaderReader.string("rootValue"),
+    normalize: cascaderReader.oneOf("normalize", ["raw", "path"] as const) ?? "raw" as const,
+  }));
+  const create = reader.object("create", (createReader) => ({
+    label: requireString(createReader, "label"),
+    description: createReader.string("description"),
+    icon: createReader.string("icon"),
+    display: createReader.oneOf("display", ["icon", "label", "icon-label"] as const) ?? "icon" as const,
+    placeholder: createReader.string("placeholder"),
+    submitLabel: createReader.string("submitLabel"),
+  }));
+  return {
+    key: requireString(reader, "key"),
+    label: reader.string("label"),
+    placeholder: reader.string("placeholder"),
+    control: reader.oneOf("control", ["select", "autocomplete", "cascader"] as const) ?? "select" as const,
+    ...(disabledWhen ? { disabledWhen } : {}),
+    ...(optionLabels.length > 0 ? { optionLabels } : {}),
+    ...(cascader ? { cascader } : {}),
+    create,
+  };
 }
 
 export function parsePhiTableWidgetConfig(config: Record<string, unknown>): PhiTableWidgetConfig {
-  const presentation = isPhiRecord(config.presentation) ? config.presentation : {};
-  const features = isPhiRecord(config.features) ? config.features : {};
-  const search = isPhiRecord(features.search) ? features.search : {};
-  const pagination = isPhiRecord(features.pagination) ? features.pagination : {};
-  const sorting = isPhiRecord(features.sorting) ? features.sorting : {};
-  const rowSelection = isPhiRecord(features.rowSelection) ? features.rowSelection : {};
-  const rowReordering = isPhiRecord(features.rowReordering) ? features.rowReordering : {};
-  const columnReordering = isPhiRecord(features.columnReordering) ? features.columnReordering : {};
-  const editing = isPhiRecord(features.editing) ? features.editing : {};
-  const tools = isPhiRecord(features.tools) ? features.tools : {};
-  const structure = isPhiRecord(features.structure) ? features.structure : {};
-  const actions = isPhiRecord(features.actions) ? features.actions : {};
-  const emptyState = isPhiRecord(presentation.emptyState) ? presentation.emptyState : {};
-  const layout = isPhiRecord(presentation.layout) ? presentation.layout : {};
-  const row = isPhiRecord(presentation.row) ? presentation.row : {};
-  const initialQuery = readPhiTableQuery(
-    isPhiRecord(config.initialQuery) ? config.initialQuery : {},
-  ) ?? {};
-  const defaultSorts = readPhiTableQuery({ sorts: sorting.defaultSorts })?.sorts ?? [];
+  const root = createPhiConfigReader(config);
+  const section = (reader: PhiConfigReader, key: string) =>
+    reader.object(key, (nested) => nested) ?? createPhiConfigReader({}, reader.path ? `${reader.path}.${key}` : key);
+  const presentation = section(root, "presentation");
+  const features = section(root, "features");
+  const search = section(features, "search");
+  const pagination = section(features, "pagination");
+  const sorting = section(features, "sorting");
+  const rowSelection = section(features, "rowSelection");
+  const rowReordering = section(features, "rowReordering");
+  const columnReordering = section(features, "columnReordering");
+  const editing = section(features, "editing");
+  const tools = section(features, "tools");
+  const structure = section(features, "structure");
+  const actions = section(features, "actions");
+  const emptyState = section(presentation, "emptyState");
+  const layout = section(presentation, "layout");
+  const row = section(presentation, "row");
+  const readQuery = (reader: PhiConfigReader, key: string, wrap: (value: unknown) => unknown, expected: string) =>
+    reader.value(key, expected, (value) => readPhiTableQuery(wrap(value)) ?? undefined);
+  const initialQuery = readQuery(root, "initialQuery", (value) => value, "a table query") ?? {};
+  const defaultSorts = readQuery(sorting, "defaultSorts", (value) => ({ sorts: value }), "a list of sorts")?.sorts ?? [];
   // Read with the same rules as any query's filters; a value no filter can carry is refused, not kept.
-  const fixedFilters = config.fixedFilters === undefined
-    ? undefined
-    : readPhiTableQuery({ filters: config.fixedFilters })?.filters;
-  if (config.fixedFilters !== undefined && fixedFilters === undefined) {
-    throw new Error("Table fixedFilters must map filter keys to query values.");
-  }
-  const presentationControls = parsePhiControlPresentationConfig(presentation);
-  const toolsMode = tools.mode === "external" ? "external" : "self-contained";
-  const toolsReset = readBoolean(tools.reset);
-  const treeStructure = structure.mode === "tree" && readString(structure.parentRowIdentityPath)
+  const fixedFilters = readQuery(root, "fixedFilters", (value) => ({ filters: value }), "filter keys mapped to query values")?.filters;
+  const controlSize = presentation.value("controlSize", "a control size", readPhiControlSize);
+  const toolsMode = tools.oneOf("mode", ["self-contained", "external"] as const) ?? "self-contained";
+  const toolsReset = tools.boolean("reset");
+  const structureMode = structure.oneOf("mode", ["flat", "tree"] as const) ?? "flat";
+  const treeStructure = structureMode === "tree"
     ? {
         mode: "tree" as const,
-        parentRowIdentityPath: readString(structure.parentRowIdentityPath) as string,
-        defaultExpandedRowIdentities: readPhiTableQuery({
-          expandedRowIdentities: structure.defaultExpandedRowIdentities,
-        })?.expandedRowIdentities,
-        expandRowByClick: readBoolean(structure.expandRowByClick),
-        indentSize: readNumber(structure.indentSize),
-        expandColumnKey: readString(structure.expandColumnKey) as string,
+        parentRowIdentityPath: requireString(structure, "parentRowIdentityPath"),
+        defaultExpandedRowIdentities: readQuery(
+          structure,
+          "defaultExpandedRowIdentities",
+          (value) => ({ expandedRowIdentities: value }),
+          "a list of row identities",
+        )?.expandedRowIdentities,
+        expandRowByClick: structure.boolean("expandRowByClick"),
+        indentSize: structure.number("indentSize"),
+        expandColumnKey: requireString(structure, "expandColumnKey"),
       }
     : { mode: "flat" as const };
 
   return {
     presentation: {
-      ...presentationControls,
-      controlSize: presentationControls.controlSize ?? (toolsMode === "self-contained" ? "small" : "medium"),
-      title: readString(presentation.title),
-      description: readString(presentation.description),
-      columns: readColumns(presentation.columns),
+      controlSize: controlSize ?? (toolsMode === "self-contained" ? "small" : "medium"),
+      title: presentation.string("title"),
+      description: presentation.string("description"),
+      columns: presentation.list("columns", readColumn) ?? [],
       layout: {
-        mode: layout.mode === "fixed" ? "fixed" : "auto",
-        overflowX: layout.overflowX === "visible" ? "visible" : "auto",
+        mode: layout.oneOf("mode", ["auto", "fixed"] as const) ?? "auto",
+        overflowX: layout.oneOf("overflowX", ["auto", "visible"] as const) ?? "auto",
       },
       emptyState: {
-        title: readString(emptyState.title),
-        description: readString(emptyState.description),
+        title: emptyState.string("title"),
+        description: emptyState.string("description"),
       },
-      borders: readBoolean(presentation.borders),
-      header: readBoolean(presentation.header),
-      stickyHeader: readBoolean(presentation.stickyHeader),
-      footer: readTableFooter(presentation.footer),
-      summary: readTableSummary(presentation.summary),
+      borders: presentation.boolean("borders"),
+      header: presentation.boolean("header"),
+      stickyHeader: presentation.boolean("stickyHeader"),
+      footer: presentation.object("footer", readTableFooter),
+      summary: presentation.object("summary", readTableSummary),
       row: {
-        striped: readBoolean(row.striped),
-        mutedWhen: readConditionExpression(row.mutedWhen),
+        striped: row.boolean("striped"),
+        mutedWhen: readCondition(row, "mutedWhen"),
       },
     },
     features: {
       search: {
-        enabled: readBoolean(search.enabled),
-        placeholder: readString(search.placeholder),
-        debounceMs: readNumber(search.debounceMs),
+        enabled: search.boolean("enabled"),
+        placeholder: search.string("placeholder"),
+        debounceMs: search.number("debounceMs"),
       },
-      filters: readFilters(features.filters),
+      filters: features.list("filters", readFilter) ?? [],
       pagination: {
-        enabled: readBoolean(pagination.enabled),
-        pageSize: readNumber(pagination.pageSize),
-        pageSizes: readNumberList(pagination.pageSizes),
+        enabled: pagination.boolean("enabled"),
+        pageSize: pagination.number("pageSize"),
+        pageSizes: pagination.value(
+          "pageSizes",
+          "a list of numbers",
+          (value) => Array.isArray(value) && value.length > 0 &&
+            value.every((entry) => typeof entry === "number" && Number.isFinite(entry))
+            ? value as number[]
+            : undefined,
+        ),
       },
       sorting: {
-        mode: sorting.mode === "single" || sorting.mode === "multiple" ? sorting.mode : "none",
+        mode: sorting.oneOf("mode", ["none", "single", "multiple"] as const) ?? "none",
         defaultSorts,
       },
       rowSelection: {
-        mode: rowSelection.mode === "single" || rowSelection.mode === "multiple" ? rowSelection.mode : "none",
-        preserveSelectedRowIdentities: readBoolean(rowSelection.preserveSelectedRowIdentities),
-        disabledWhen: readConditionExpression(rowSelection.disabledWhen),
-        ...(Array.isArray(rowSelection.emitFields) ? {
-          emitFields: rowSelection.emitFields.flatMap((field) => {
-            const key = readString(field)?.trim();
-            return key ? [key] : [];
-          }),
-        } : {}),
+        mode: rowSelection.oneOf("mode", ["none", "single", "multiple"] as const) ?? "none",
+        preserveSelectedRowIdentities: rowSelection.boolean("preserveSelectedRowIdentities"),
+        disabledWhen: readCondition(rowSelection, "disabledWhen"),
+        ...(rowSelection.has("emitFields")
+          ? { emitFields: (rowSelection.stringList("emitFields") ?? []).map((field) => field.trim()).filter(Boolean) }
+          : {}),
       },
       rowReordering: {
-        enabled: readBoolean(rowReordering.enabled),
+        enabled: rowReordering.boolean("enabled"),
       },
       columnReordering: {
-        enabled: readBoolean(columnReordering.enabled),
+        enabled: columnReordering.boolean("enabled"),
       },
       editing: {
-        mode: editing.mode === "cell" || editing.mode === "row" ? editing.mode : "none",
-        disabledWhen: readConditionExpression(editing.disabledWhen),
+        mode: editing.oneOf("mode", ["none", "cell", "row"] as const) ?? "none",
+        disabledWhen: readCondition(editing, "disabledWhen"),
       },
       tools: {
         mode: toolsMode,
-        bindingFields: Array.isArray(tools.bindingFields)
-          ? tools.bindingFields.flatMap((entry) => {
-              if (!isPhiRecord(entry) || !readString(entry.key)) return [];
-              const rawCreate = isPhiRecord(entry.create) ? entry.create : null;
-              const createLabel = readString(rawCreate?.label);
-              const disabledWhen = isPhiRecord(entry.disabledWhen) && readString(entry.disabledWhen.fieldKey) &&
-                (typeof entry.disabledWhen.equals === "string" ||
-                  typeof entry.disabledWhen.equals === "boolean" ||
-                  typeof entry.disabledWhen.equals === "number" && Number.isFinite(entry.disabledWhen.equals))
-                ? {
-                    fieldKey: readString(entry.disabledWhen.fieldKey)!,
-                    equals: entry.disabledWhen.equals,
-                  }
-                : undefined;
-              const optionLabels = Array.isArray(entry.optionLabels)
-                ? entry.optionLabels.flatMap((option) => {
-                    if (!isPhiRecord(option)) return [];
-                    const value = typeof option.value === "number" && Number.isFinite(option.value)
-                      ? option.value
-                      : readString(option.value);
-                    const label = readString(option.label);
-                    return value !== undefined && label ? [{ value, label }] : [];
-                  })
-                : [];
-              const cascader = isPhiRecord(entry.cascader) ? {
-                allowRoot: readBoolean(entry.cascader.allowRoot),
-                separator: readString(entry.cascader.separator),
-                rootValue: readString(entry.cascader.rootValue),
-                normalize: entry.cascader.normalize === "path" ? "path" as const : "raw" as const,
-              } : undefined;
-              return [{
-                key: readString(entry.key)!,
-                label: readString(entry.label),
-                placeholder: readString(entry.placeholder),
-                control: entry.control === "autocomplete" || entry.control === "cascader"
-                  ? entry.control
-                  : "select" as const,
-                ...(disabledWhen ? { disabledWhen } : {}),
-                ...(optionLabels.length > 0 ? { optionLabels } : {}),
-                ...(cascader ? { cascader } : {}),
-                create: rawCreate && createLabel ? {
-                  label: createLabel,
-                  description: readString(rawCreate.description),
-                  icon: readString(rawCreate.icon),
-                  display: rawCreate.display === "label" || rawCreate.display === "icon-label"
-                    ? rawCreate.display
-                    : "icon" as const,
-                  placeholder: readString(rawCreate.placeholder),
-                  submitLabel: readString(rawCreate.submitLabel),
-                } : undefined,
-              }];
-            })
-          : undefined,
+        bindingFields: tools.list("bindingFields", readBindingField),
         ...(toolsReset === undefined ? {} : { reset: toolsReset }),
-        reload: readBoolean(tools.reload),
+        reload: tools.boolean("reload"),
       },
       structure: treeStructure,
       actions: {
-        rowLayout: actions.rowLayout === "spaced" ? "spaced" : "compact",
-        toolbar: readActions(actions.toolbar),
-        row: readActions(actions.row),
-        bulk: readActions(actions.bulk),
+        rowLayout: actions.oneOf("rowLayout", ["compact", "spaced"] as const) ?? "compact",
+        toolbar: actions.list("toolbar", readAction) ?? [],
+        row: actions.list("row", readAction) ?? [],
+        bulk: actions.list("bulk", readAction) ?? [],
       },
     },
     initialQuery: {
@@ -707,7 +591,7 @@ export function parsePhiTableWidgetConfig(config: Record<string, unknown>): PhiT
       sorts: initialQuery.sorts as readonly PhiTableSort[] | undefined,
     },
     ...(fixedFilters ? { fixedFilters } : {}),
-    source: readPhiProviderResourceSource(config.source),
+    source: root.value("source", "a provider source", (value) => readPhiProviderResourceSource(value) ?? undefined) ?? null,
     signalRoutes: readPhiSignalRouteSet(config.signalRoutes),
   };
 }

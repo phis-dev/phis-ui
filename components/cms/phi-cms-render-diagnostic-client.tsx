@@ -16,6 +16,7 @@ function formatKind(kind: PhiCmsRenderIssue["kind"]) {
 function buildIssueTitle(issue: PhiCmsRenderIssue) {
   if (issue.code === "feature-unavailable") return `${formatKind(issue.kind)} visibility unresolved`;
   if (issue.code === "missing-node") return `${formatKind(issue.kind)} root missing`;
+  if (issue.code === "invalid-config") return `${formatKind(issue.kind)} settings invalid`;
   return `${formatKind(issue.kind)} not renderable`;
 }
 
@@ -28,6 +29,8 @@ function buildIssueDescription(issue: PhiCmsRenderIssue) {
       ? "A Module its condition reads could not be asked this render."
       : issue.code === "missing-node"
         ? "The stored tree names a node it does not contain."
+        : issue.code === "invalid-config"
+          ? "Correct the field in the Inspector; on the live page this block is left out until then."
         : issue.moduleId
           ? `Module: ${issue.moduleId}.`
           : "The required renderer is unavailable.";

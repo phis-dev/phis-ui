@@ -713,6 +713,8 @@ export type PhiCmsRenderIssueCode =
   | "missing-renderer"
   | "renderer-load-failed"
   | "render-failed"
+  /** The stored config holds a value the block cannot read (`PhiConfigError`); the detail names the field. */
+  | "invalid-config"
   | "invalid-render-output"
   /** A node whose `visibleWhen` reads a feature namespace whose Module could not be asked this render. */
   | "feature-unavailable"

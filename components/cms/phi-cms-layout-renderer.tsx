@@ -1,4 +1,5 @@
 import { cloneElement, isValidElement, type ReactElement, type ReactNode } from "react";
+import { resolvePhiRenderFailureCode } from "../widgets/config/strict-config-reader";
 
 import { readPhiCmsRegionPageScope, resolvePhiCmsRegionPageScope } from "../../helpers/region-page-scope";
 import { isPhiCmsWidgetContentUnpublished } from "../../helpers/cms-content-binding";
@@ -653,7 +654,7 @@ function renderContentWidget(
       );
     } catch (error) {
       return renderCmsDiagnostic({
-        code: "render-failed",
+        code: resolvePhiRenderFailureCode(error),
         kind: "widget",
         type: widget.widgetType,
         blockId: widget.id,
@@ -761,7 +762,7 @@ export function buildPhiRenderFailureIssue(
   },
 ): PhiCmsRenderIssue {
   return {
-    code: "render-failed",
+    code: resolvePhiRenderFailureCode(error),
     kind: options.kind,
     type: options.typeKey ?? "unknown",
     blockId: options.blockId,
@@ -1070,7 +1071,7 @@ function renderLayoutNode(
       );
     } catch (error) {
       return renderCmsDiagnostic({
-        code: "render-failed",
+        code: resolvePhiRenderFailureCode(error),
         kind: "layout",
         type: node.widgetType,
         blockId: node.id,

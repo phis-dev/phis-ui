@@ -5,6 +5,7 @@ import { Component, type ErrorInfo, type ReactNode } from "react";
 import type { PhiCmsRenderIssue } from "../../types/cms-plugins";
 import type { PhiCmsInstanceId } from "../../types/cms-instance-id";
 import { PhiCmsRenderDiagnostic } from "./phi-cms-render-diagnostic";
+import { resolvePhiRenderFailureCode } from "../widgets/config/strict-config-reader";
 
 export type PhiCmsRenderErrorBoundaryProps = {
   kind: PhiCmsRenderIssue["kind"];
@@ -42,7 +43,7 @@ export class PhiCmsRenderErrorBoundary extends Component<
   render() {
     if (this.state.error) {
       return <PhiCmsRenderDiagnostic issue={{
-        code: "render-failed",
+        code: resolvePhiRenderFailureCode(this.state.error),
         kind: this.props.kind,
         type: this.props.typeKey ?? "unknown",
         blockId: this.props.blockId,

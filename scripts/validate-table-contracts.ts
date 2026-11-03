@@ -18,6 +18,7 @@ import {
   restorePhiTableBindingRowOrder,
 } from "../helpers/table-binding";
 import { parsePhiTableWidgetConfig } from "../plugins/runtime-modules/core/widgets/table/config";
+import { isPhiConfigError } from "../components/widgets/config/strict-config-reader";
 import {
   readPhiTableProviderMutationResult,
   readPhiTableProviderQueryResult,
@@ -575,22 +576,22 @@ const parsedPrefix = parsePhiTableWidgetConfig({
 });
 assert.equal(parsedPrefix.presentation.columns[0]?.editor?.prefix, "days");
 assert.equal(parsedPrefix.presentation.columns[1]?.editor?.prefix, undefined);
-// A footer variant replaces the line while its value holds, may name no values, and one that cannot be
-// read -- no template, an unknown operator -- is dropped rather than shown as the declared line's twin.
-const parsedVariants = parsePhiTableWidgetConfig({
+// A footer variant replaces the line while its value holds and may name no values; an empty template is
+// a statement. One that cannot be read -- no template, an unknown operator -- is an error that names it,
+// not a variant dropped in silence (components/widgets/config/strict-config-reader.ts).
+const footerWithVariants = (variants: unknown[]) => parsePhiTableWidgetConfig({
   presentation: {
     footer: {
       template: "%1 left",
       values: [{ key: "left", value: { source: "provider", fieldKey: "left" } }],
-      variants: [
-        { when: { value: { source: "provider", fieldKey: "exhausted" }, operator: "truthy" }, template: "Used up" },
-        { when: { value: { source: "provider", fieldKey: "exhausted" }, operator: "sometimes" }, template: "x" },
-        { when: { value: { source: "core", fieldKey: "totalRows" }, operator: "falsy" } },
-        { when: { value: { source: "provider", fieldKey: "limited" }, operator: "falsy" }, template: "" },
-      ],
+      variants,
     },
   },
 });
+const parsedVariants = footerWithVariants([
+  { when: { value: { source: "provider", fieldKey: "exhausted" }, operator: "truthy" }, template: "Used up" },
+  { when: { value: { source: "provider", fieldKey: "limited" }, operator: "falsy" }, template: "" },
+]);
 assert.deepEqual(parsedVariants.presentation.footer?.variants, [{
   when: { value: { source: "provider", fieldKey: "exhausted" }, operator: "truthy" },
   template: "Used up",
@@ -600,6 +601,31 @@ assert.deepEqual(parsedVariants.presentation.footer?.variants, [{
   template: "",
   values: [],
 }]);
+assert.throws(
+  () => footerWithVariants([
+    { when: { value: { source: "provider", fieldKey: "exhausted" }, operator: "sometimes" }, template: "x" },
+  ]),
+  (error: unknown) => isPhiConfigError(error) && error.path === "presentation.footer.variants[0].when.operator",
+);
+assert.throws(
+  () => footerWithVariants([{ when: { value: { source: "core", fieldKey: "totalRows" }, operator: "falsy" } }]),
+  (error: unknown) => isPhiConfigError(error) && error.path === "presentation.footer.variants[0].template",
+);
+// What used to be put right in silence is said: a fixed column without a width, an unknown renderer, an
+// unknown filter type, a column without a key.
+for (const [config, path] of [
+  [{ presentation: { columns: [{ key: "a", fieldKey: "a", title: "A", sizing: { mode: "fixed" } }] } }, "presentation.columns[0].sizing.width"],
+  [{ presentation: { columns: [{ key: "a", fieldKey: "a", title: "A", renderer: "sparkline" }] } }, "presentation.columns[0].renderer"],
+  [{ presentation: { columns: [{ fieldKey: "a", title: "A" }] } }, "presentation.columns[0].key"],
+  [{ features: { filters: [{ key: "f", label: "F", type: "slider" }] } }, "features.filters[0].type"],
+  [{ presentation: { layout: { mode: "grid" } } }, "presentation.layout.mode"],
+] as const) {
+  assert.throws(
+    () => parsePhiTableWidgetConfig(config as Record<string, unknown>),
+    (error: unknown) => isPhiConfigError(error) && error.path === path,
+    `expected a config error at ${path}`,
+  );
+}
 assert.equal(parsedFooter.presentation.summary?.placement, "sticky-bottom");
 assert.equal(parsedSticky.presentation.columns[0]?.sticky, "left");
 assert.deepEqual(validatePhiTableWidgetBinding(parsedSticky, resource), []);
@@ -623,7 +649,7 @@ assert.deepEqual(parsePhiTableWidgetConfig({ fixedFilters: { kind: 3 } }).fixedF
 assert.equal(parsePhiTableWidgetConfig({}).fixedFilters, undefined);
 assert.throws(
   () => parsePhiTableWidgetConfig({ fixedFilters: { kind: { nested: true } } }),
-  /fixedFilters must map filter keys to query values/,
+  (error: unknown) => isPhiConfigError(error) && error.path === "fixedFilters",
 );
 const parsedProviderAction = parsePhiTableWidgetConfig({
   features: {
