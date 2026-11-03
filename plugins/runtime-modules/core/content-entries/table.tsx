@@ -89,7 +89,7 @@ async function loadEntries(
     }));
   return {
     rows,
-    total: readNumber(result?.total) ?? rows.length,
+    total: readNumber(result?.total),
     page: readNumber(result?.page) ?? 1,
     pageSize: readNumber(result?.pageSize) ?? (rows.length || 25),
     /*

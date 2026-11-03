@@ -110,7 +110,7 @@ const resource: PhiTableProviderResourceDescriptor = {
   summaryFields: [
     { key: "entries", title: "Entries", type: "number" },
   ],
-  query: { search: true, sorting: "multiple", pagination: "offset", filterFields: ["name"] },
+  query: { search: true, sorting: "multiple", pagination: "offset", total: true, filterFields: ["name"] },
   hierarchy: { parentRowIdentityPath: "parentId", canAcceptChildrenField: "acceptsChildren" },
   rowOrdering: "tree",
 };
@@ -627,6 +627,28 @@ for (const [config, path] of [
   );
 }
 assert.equal(parsedFooter.presentation.summary?.placement, "sticky-bottom");
+// A count shown needs a resource that counts: a paging resource without `query.total` refuses a footer
+// that says how many there are, and one that counts or does not page accepts it.
+{
+  const countingFooter = parsePhiTableWidgetConfig({
+    presentation: {
+      footer: { template: "%1 entries", values: [{ key: "entries", value: { source: "core", fieldKey: "totalRows" } }] },
+    },
+  });
+  const pagingResource = { ...resource, query: { ...resource.query, pagination: "offset" as const, total: false } };
+  assert.match(
+    validatePhiTableWidgetBinding(countingFooter, pagingResource).join("\n"),
+    /shows "totalRows".*pages without a count/,
+  );
+  assert.doesNotMatch(
+    validatePhiTableWidgetBinding(countingFooter, { ...pagingResource, query: { ...pagingResource.query, total: true } }).join("\n"),
+    /pages without a count/,
+  );
+  assert.doesNotMatch(
+    validatePhiTableWidgetBinding(countingFooter, { ...pagingResource, query: { ...pagingResource.query, pagination: "none" as const } }).join("\n"),
+    /pages without a count/,
+  );
+}
 assert.equal(parsedSticky.presentation.columns[0]?.sticky, "left");
 assert.deepEqual(validatePhiTableWidgetBinding(parsedSticky, resource), []);
 assert.match(validatePhiTableWidgetBinding({

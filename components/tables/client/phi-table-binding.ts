@@ -165,7 +165,14 @@ export function usePhiTableBinding({
     expandedRowIdentities: initialQuery.expandedRowIdentities,
   }));
   const [rows, setRows] = useState<readonly TableRow[]>([]);
-  const [total, setTotal] = useState(0);
+  /*
+   * The number of rows the whole query has, where the Provider counts them (`query.total` on its
+   * resource), and `null` where it does not. Counting is a query of its own on a large table, so a
+   * Provider answers it only where a Table shows it; the rows on this page are never put in its place.
+   */
+  const [total, setTotal] = useState<number | null>(null);
+  /** Whether a page follows this one, for a Table that pages without a count. */
+  const [hasMore, setHasMore] = useState(false);
   const [summary, setSummary] = useState<Readonly<Record<string, PhiTableSummaryValue>>>({});
   const [queryLoading, setQueryLoading] = useState(Boolean(source));
   const [pendingMutationTargets, setPendingMutationTargets] = useState<ReadonlySet<string>>(
@@ -219,7 +226,8 @@ export function usePhiTableBinding({
     setRenderedSourceKey(sourceKey);
     setPendingMutationTargets(new Set());
     setRows([]);
-    setTotal(0);
+    setTotal(null);
+    setHasMore(false);
     setSummary({});
     setSelectedRowIdentities([]);
     setExpandedRowIdentities([]);
@@ -279,7 +287,8 @@ export function usePhiTableBinding({
     if (data.rows.some((row) => readPhiTableRowIdentity(row, resource.rowIdentityPath) == null)) {
       setRows([]);
       rowsRef.current = [];
-      setTotal(0);
+      setTotal(null);
+      setHasMore(false);
       setSummary({});
       setQueryLoading(false);
       setError(new PhiTableProviderError(
@@ -292,7 +301,8 @@ export function usePhiTableBinding({
     if (summaryError) {
       setRows([]);
       rowsRef.current = [];
-      setTotal(0);
+      setTotal(null);
+      setHasMore(false);
       setSummary({});
       setQueryLoading(false);
       setError(new PhiTableProviderError("invalid-summary", summaryError));
@@ -300,7 +310,11 @@ export function usePhiTableBinding({
     }
     rowsRef.current = data.rows;
     setRows(data.rows);
-    setTotal(data.total ?? data.rows.length);
+    // A resource that does not page answers every row at once, so its rows are its count.
+    const pages = resource.query.pagination === "offset" || resource.query.pagination === "cursor";
+    setTotal(data.total ?? (pages ? null : data.rows.length));
+    const pageSize = data.pageSize ?? resolvedQuery.pageSize;
+    setHasMore(data.nextCursor != null || (data.total == null && pageSize != null && data.rows.length >= pageSize));
     setSummary(data.summary ?? {});
     setQueryLoading(false);
     setError(null);
@@ -312,7 +326,7 @@ export function usePhiTableBinding({
       setSelectedRowIdentities((current) => current.filter((identity) => available.has(String(identity))));
     }
     onDataRef.current?.(data);
-  }, [preserveSelectedRowIdentities, resource]);
+  }, [preserveSelectedRowIdentities, resolvedQuery.pageSize, resource]);
 
   useEffect(() => {
     if (!source || !provider || !resource || resourceError) return;
@@ -385,7 +399,8 @@ export function usePhiTableBinding({
         if (!background) {
           setRows([]);
           rowsRef.current = [];
-          setTotal(0);
+          setTotal(null);
+      setHasMore(false);
           setSummary({});
         }
         setQueryLoading(false);
@@ -710,6 +725,7 @@ export function usePhiTableBinding({
     bindingError,
     rows,
     total,
+    hasMore,
     summary,
     contractError: resourceError,
     loading: queryLoading && !bindingError && !resourceError,

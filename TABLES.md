@@ -266,6 +266,14 @@ scalar types; the query result supplies their scalar values in `summary`. A Prov
 interprets the footer template, alignment, columns, spans, or placement. The preset never counts
 rows or renders either surface.
 
+`totalRows` and `pageCount` are the count of the whole query, which only a Provider that counts can give.
+Counting is a query of its own on a large table, so a paging resource answers `total` only where its
+descriptor says `query.total: true`; a resource that does not page answers every row at once, and its
+rows are its count. A Table bound to a paging resource without a count may not show `totalRows` or
+`pageCount` -- the binding check refuses it -- and pages without one: back, the current page, next, with
+next offered while a `nextCursor` comes back or the page is full. The rows of one page are never put in
+place of the count.
+
 The Table receives an already locale-resolved template and only formats its values. A code-owned Preset
 must resolve the complete template through its owner's global Label Set while building the Preset; a
 site-authored template follows the normal CMS Site-translation ownership path before it reaches the generic

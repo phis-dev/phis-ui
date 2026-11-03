@@ -76,12 +76,8 @@ async function loadSiteTranslations({
   }));
   return {
     rows,
-    total: typeof translations.total === "number" ? translations.total : rows.length,
-    summary: {
-      localeTotal: typeof translations.localeTotal === "number"
-        ? translations.localeTotal
-        : rows.length,
-    },
+    total: typeof translations.total === "number" ? translations.total : undefined,
+    summary: typeof translations.localeTotal === "number" ? { localeTotal: translations.localeTotal } : {},
     resolvedQuery: selectedLocale
       ? { filters: { locale: selectedLocale } }
       : undefined,
@@ -117,7 +113,7 @@ async function loadEditorTranslations({
   const site = isPhiRecord(result?.site) ? result.site : {};
   return {
     rows,
-    total: typeof translations.total === "number" ? translations.total : rows.length,
+    total: typeof translations.total === "number" ? translations.total : undefined,
     resolvedQuery: selectedLocale
       ? { filters: { locale: selectedLocale } }
       : undefined,

@@ -49,6 +49,7 @@ export const PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
           filterFields: ["accountType", "enabled"],
           sorting: "single",
           pagination: "offset",
+          total: true,
         },
         actions: [
           {

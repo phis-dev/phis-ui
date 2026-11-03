@@ -65,7 +65,7 @@ async function loadRows({
   const rows = readPhiTableRows(payload.rows);
   return {
     rows,
-    total: typeof payload.total === "number" && Number.isFinite(payload.total) ? payload.total : rows.length,
+    total: typeof payload.total === "number" && Number.isFinite(payload.total) ? payload.total : undefined,
   };
 }
 

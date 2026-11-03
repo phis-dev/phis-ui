@@ -267,7 +267,10 @@ function PhiTableRowPositionControls({
 export type PhiTableControlPagination = {
   page: number;
   pageSize: number;
+  /** The rows the whole query has. Absent, the Table pages without a count: back, this page, next. */
   total?: number;
+  /** Without a count: whether a page follows this one. */
+  hasMore?: boolean;
   pageSizeOptions?: readonly number[];
   showSizeChanger?: boolean;
   onChange: (page: number, pageSize: number) => void;
@@ -1558,7 +1561,20 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
         ...{ [PHI_VISUAL_ANCHOR_PART_ATTRIBUTE]: "pagination" },
         current: pagination.page,
         pageSize: pagination.pageSize,
-        total: pagination.total,
+        ...(pagination.total === undefined
+          ? {
+              /*
+               * No count: a total that reaches exactly one row past this page when another follows, and
+               * only the current page's number drawn -- page numbers beyond it would be a guess.
+               */
+              total: pagination.page * pagination.pageSize + (pagination.hasMore ? 1 : 0),
+              showLessItems: true,
+              itemRender: (page: number, type: string, element: ReactNode) =>
+                type === "page" ? (page === pagination.page ? element : null)
+                  : type === "jump-prev" || type === "jump-next" ? null
+                    : element,
+            }
+          : { total: pagination.total }),
         pageSizeOptions: pagination.pageSizeOptions?.map(String),
         showSizeChanger: pagination.showSizeChanger,
         onChange: pagination.onChange,

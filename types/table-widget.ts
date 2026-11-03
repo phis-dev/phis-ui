@@ -541,6 +541,15 @@ export type PhiTableProviderQueryCapabilities = {
   filterFields?: readonly string[];
   sorting?: "none" | "single" | "multiple";
   pagination?: "none" | "offset" | "cursor";
+  /**
+   * Whether a query of this resource answers `total`, the rows the whole query has.
+   *
+   * Counting is a query of its own on a large table, so a paging resource answers it only where it
+   * says so here. A Table that shows a count -- `totalRows` or `pageCount` in its footer or summary --
+   * needs a resource that counts or does not page; one that pages without a count is paged back and
+   * forward. A resource that does not page answers every row at once, and its rows are its count.
+   */
+  total?: boolean;
   facets?: readonly string[];
   expansion?: boolean;
 };
@@ -958,6 +967,29 @@ export function validatePhiTableWidgetBinding(
   resource: PhiTableProviderResourceDescriptor,
 ) {
   const errors: string[] = [];
+  /*
+   * A count shown needs a count given. The rows of one page are not the query's, so a Table that says
+   * how many there are, or how many pages, is bound to a resource that counts -- or one that does not
+   * page and so answers every row at once (`query.total`).
+   */
+  const resourceCounts = resource.query.total === true ||
+    (resource.query.pagination !== "offset" && resource.query.pagination !== "cursor");
+  if (!resourceCounts) {
+    const footer = config.presentation.footer;
+    const shownSources = [
+      ...(footer?.values ?? []).map((item) => item.value),
+      ...(footer?.variants ?? []).flatMap((variant) => [variant.when.value, ...(variant.values ?? []).map((item) => item.value)]),
+      ...(config.presentation.summary?.rows ?? []).flatMap((row) => row.cells.map((cell) => cell.item.value)),
+    ];
+    const counted = shownSources.find((source) =>
+      source.source === "core" && (source.fieldKey === "totalRows" || source.fieldKey === "pageCount"));
+    if (counted) {
+      errors.push(
+        `Table shows "${counted.fieldKey}", but resource "${resource.resourceKey}" pages without a count ` +
+        "(declare query.total on a resource that answers total).",
+      );
+    }
+  }
   const fields = new Set(resource.fields.map((field) => field.key));
   const fieldsByKey = new Map(resource.fields.map((field) => [field.key, field]));
   const columns = config.presentation.columns;

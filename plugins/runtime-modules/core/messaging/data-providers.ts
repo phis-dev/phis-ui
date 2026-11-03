@@ -83,6 +83,7 @@ export const PHI_CORE_MESSAGING_DATA_PROVIDER_DESCRIPTORS = [
           search: false,
           sorting: "none",
           pagination: "offset",
+          total: true,
           /*
            * The three the Core route takes, and no fourth.
            *

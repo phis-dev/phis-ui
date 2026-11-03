@@ -459,6 +459,7 @@ export function PhiTableWidgetClient({
     contractError,
     rows,
     total,
+    hasMore,
     summary,
     loading,
     error,
@@ -735,7 +736,7 @@ export function PhiTableWidgetClient({
 
   useEffect(() => {
     const state: PhiTableWidgetState = {
-      total,
+      total: total ?? undefined,
       page: resolvedQuery.page,
       pageSize: resolvedQuery.pageSize,
       loading: effectiveLoading,
@@ -851,10 +852,12 @@ export function PhiTableWidgetClient({
 
   const resolveSummaryValue = useCallback((item: PhiTableSummaryItemDefinition): PhiTableSummaryValue | undefined => {
     if (item.value.source === "provider") return summary[item.value.fieldKey];
-    if (item.value.fieldKey === "totalRows") return total;
+    // Without a count the Provider gives, there is none to show: the rows of this page are not it.
+    if (item.value.fieldKey === "totalRows") return total ?? undefined;
     if (item.value.fieldKey === "pageRows") return rows.length;
     if (item.value.fieldKey === "selectedRows") return selectedRowIdentities.length;
     if (item.value.fieldKey === "page") return resolvedQuery.page ?? 1;
+    if (total == null) return undefined;
     const pageSize = resolvedQuery.pageSize ?? rows.length;
     return pageSize > 0 ? Math.ceil(total / pageSize) : 0;
   }, [resolvedQuery.page, resolvedQuery.pageSize, rows.length, selectedRowIdentities.length, summary, total]);
@@ -1112,7 +1115,8 @@ export function PhiTableWidgetClient({
         pagination={features.pagination?.enabled === false ? false : {
           page: resolvedQuery.page ?? 1,
           pageSize: resolvedQuery.pageSize ?? 20,
-          total,
+          total: total ?? undefined,
+          hasMore,
           pageSizeOptions: features.pagination?.pageSizes,
           showSizeChanger: (features.pagination?.pageSizes?.length ?? 0) > 0,
           onChange: (page, pageSize) => setQuery((current) => ({ ...current, page, pageSize, cursor: null })),

@@ -95,7 +95,7 @@ async function queryThreadTable({
   const rows = readPhiTableRows(payload?.rows).map(readThreadRow);
   return {
     rows,
-    total: typeof payload?.total === "number" ? payload.total : rows.length,
+    total: typeof payload?.total === "number" ? payload.total : undefined,
     page: typeof payload?.page === "number" ? payload.page : undefined,
     pageSize: typeof payload?.pageSize === "number" ? payload.pageSize : undefined,
     // Unread among everything the listing matches, for a footer beside the total.

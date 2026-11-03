@@ -415,6 +415,7 @@ export const PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
         filterFields: ["sessionKey", "direction"],
         sorting: "none",
         pagination: "offset",
+        total: true,
       },
       actions: [
         { key: "save", title: "Save", scope: "row", valueType: "json" },

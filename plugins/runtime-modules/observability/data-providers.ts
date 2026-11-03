@@ -41,6 +41,7 @@ export const PHI_OBSERVABILITY_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
         filterFields: ["service", "level", "event", "area", "since"],
         sorting: "none",
         pagination: "offset",
+        total: true,
       },
       recordRead: true,
     }],
