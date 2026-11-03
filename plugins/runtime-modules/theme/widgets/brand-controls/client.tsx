@@ -679,6 +679,43 @@ function readEffectiveTokenString(token: Record<string, unknown>, key: string, f
   return typeof value === "string" && value.trim() ? value : fallback;
 }
 
+/*
+ * A value the alias resolver always sets (`resolvePhiAntdAliasTokens`), read without a stand-in. The
+ * previews used to carry a hex fallback beside each of these, which could only ever show if the resolver
+ * broke -- and then showed a colour that was nobody's Theme instead of saying so.
+ */
+function readAliasTokenString(token: Record<string, unknown>, key: string) {
+  const value = token[key];
+  if (typeof value !== "string" || !value.trim()) {
+    throw new Error(`The resolved Theme has no "${key}".`);
+  }
+  return value;
+}
+
+function readAliasTokenNumber(token: Record<string, unknown>, key: string) {
+  const value = token[key];
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new Error(`The resolved Theme has no "${key}".`);
+  }
+  return value;
+}
+
+/** A draft's alias tokens for one mode, its blocks folded in, as the live render resolves a Theme. */
+function resolveBrandDraftAliasTokens(
+  resolvedTheme: ThemePayload,
+  preset: ReturnType<typeof resolveThemePayloadPreset>,
+  mode: "light" | "dark",
+  fonts: { body?: string | null; mono?: string | null } = {},
+) {
+  return resolvePhiAntdAliasTokens(mode, {
+    ...buildPhiEffectiveNonColorThemeTokens(resolvedTheme),
+    ...resolvePhiThemeColorTokens(preset, resolvedTheme.palette, mode),
+    ...(resolvedTheme.style?.token ?? {}),
+    ...(fonts.body ? { fontFamily: fonts.body } : {}),
+    ...(fonts.mono ? { fontFamilyCode: fonts.mono } : {}),
+  });
+}
+
 function readEffectiveTokenNumber(token: Record<string, unknown>, key: string, fallback: number) {
   const value = token[key];
   if (typeof value === "number" && Number.isFinite(value)) {
@@ -2097,11 +2134,19 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
   runtime: PhiBlockRuntime;
   config?: PhiBuilderBrandWidgetConfig | null;
 }) {
-  const { token: clientToken } = usePhiConfig();
+  const { presets: themePresets, token: clientToken } = usePhiConfig();
   const themeBlocks = usePhiThemeBlockCatalog();
   const themeKey = resolveThemeKey(config);
   const { state, publishDraft } = usePhiBrandThemeDraft(runtime, themeKey);
   const mode = usePhiBrandPreviewMode(resolveThemePayloadMode(state.draft), config?.signalRoutes);
+  /*
+   * The ground the Logo of the mode being authored stands on: the draft's own container colour in that
+   * mode, not a fixed black or white -- a Theme whose dark ground is navy shows its dark Logo on navy.
+   */
+  const logoGroundToken = useMemo(() => {
+    const resolvedDraft = resolvePhiThemeRuntimePayload(state.draft, themeBlocks).theme;
+    return resolveBrandDraftAliasTokens(resolvedDraft, resolveThemePayloadPreset(resolvedDraft, themePresets), mode);
+  }, [mode, state.draft, themeBlocks, themePresets]);
   const [activeIdentitySection, changeActiveIdentitySection] = usePhiBrandAccordionSection(
     BRAND_THEME_IDENTITY_COLLAPSE_STORAGE_KEY,
     BRAND_THEME_IDENTITY_SECTION_KEYS,
@@ -2202,8 +2247,8 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                         height: 48,
                         paddingInline: clientToken.paddingSM,
                         borderRadius: clientToken.borderRadius,
-                        border: `1px solid ${clientToken.colorBorderSecondary}`,
-                        background: mode === "dark" ? "#141414" : "#ffffff",
+                        border: `1px solid ${readAliasTokenString(logoGroundToken, "colorBorderSecondary")}`,
+                        background: readAliasTokenString(logoGroundToken, "colorBgContainer"),
                       }}
                     >
                       {logoPreviewUrl ? (
@@ -2219,7 +2264,7 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                           }}
                         />
                       ) : (
-                        <PhiTypographyControl type="secondary" style={{ color: mode === "dark" ? "rgba(255, 255, 255, 0.45)" : undefined }}>
+                        <PhiTypographyControl type="secondary" style={{ color: readAliasTokenString(logoGroundToken, "colorTextTertiary") }}>
                           No Logo
                         </PhiTypographyControl>
                       )}
@@ -2899,14 +2944,13 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
    */
   const previewBodyFontStack = previewFontStacks.body.stack;
   const previewMonoFontStack = previewFontStacks.mono.stack;
-  const previewEffectiveToken = useMemo(() => resolvePhiAntdAliasTokens(mode, {
-    ...buildPhiEffectiveNonColorThemeTokens(previewThemeResolved),
-    ...resolvePhiThemeColorTokens(previewPreset, previewThemeResolved.palette, mode),
-    ...(previewThemeResolved.style?.token ?? {}),
-    // The draft's lettering, applied as the root theme applies the Site's: body text and code.
-    ...(previewBodyFontStack ? { fontFamily: previewBodyFontStack } : {}),
-    ...(previewMonoFontStack ? { fontFamilyCode: previewMonoFontStack } : {}),
-  }), [mode, previewBodyFontStack, previewMonoFontStack, previewPreset, previewThemeResolved]);
+  // The draft's lettering, applied as the root theme applies the Site's: body text and code.
+  const previewEffectiveToken = useMemo(() => resolveBrandDraftAliasTokens(
+    previewThemeResolved,
+    previewPreset,
+    mode,
+    { body: previewBodyFontStack, mono: previewMonoFontStack },
+  ), [mode, previewBodyFontStack, previewMonoFontStack, previewPreset, previewThemeResolved]);
   type PreviewRow = { key: string; name: string; status: string } & Record<string, unknown>;
   const columns: readonly PhiTableControlColumn<PreviewRow>[] = [
     { title: "Name", key: "name", fieldPath: "name", sizing: { mode: "fill" } },
@@ -2957,8 +3001,8 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
       ),
     };
   }, [mode, previewEffectiveToken, previewThemeResolved]);
-  const previewCardBackground = readEffectiveTokenString(previewEffectiveToken, "colorBgContainer", mode === "dark" ? "#141414" : "#ffffff");
-  const previewSurfaceBackground = readEffectiveTokenString(previewEffectiveToken, "colorBgLayout", mode === "dark" ? "#000000" : "#f5f5f5");
+  const previewCardBackground = readAliasTokenString(previewEffectiveToken, "colorBgContainer");
+  const previewSurfaceBackground = readAliasTokenString(previewEffectiveToken, "colorBgLayout");
   /*
    * The Theme Root Background, on the surface the preview treats as the page ground -- the same layer
    * the Site paints behind everything, in the mode the preview switch is showing. A mode with no
@@ -2971,38 +3015,36 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
    * only one the preview draws.
    */
   const previewPaneShadows = resolvePhiShellChromePaneShadows(previewThemeResolved.root);
-  const previewTextColor = readEffectiveTokenString(previewEffectiveToken, "colorText", mode === "dark" ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.88)");
-  const previewTextSecondaryColor = readEffectiveTokenString(previewEffectiveToken, "colorTextSecondary", mode === "dark" ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.65)");
-  const previewTextTertiaryColor = readEffectiveTokenString(previewEffectiveToken, "colorTextTertiary", mode === "dark" ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)");
-  const previewLinkColor = readEffectiveTokenString(previewEffectiveToken, "colorLink", readEffectiveTokenString(previewEffectiveToken, "colorPrimary", "#1677ff"));
+  const previewTextColor = readAliasTokenString(previewEffectiveToken, "colorText");
+  const previewTextSecondaryColor = readAliasTokenString(previewEffectiveToken, "colorTextSecondary");
+  const previewTextTertiaryColor = readAliasTokenString(previewEffectiveToken, "colorTextTertiary");
+  const previewLinkColor = readAliasTokenString(previewEffectiveToken, "colorLink");
   /*
    * What the sample swatch shows: the brand colour, so the hex beside it moves the moment the seed does.
    */
-  const previewSwatchColor = readEffectiveTokenString(previewEffectiveToken, "colorPrimary", "#1677ff");
-  const previewLinkHoverColor = readEffectiveTokenString(previewEffectiveToken, "colorLinkHover", previewLinkColor);
-  const previewLinkActiveColor = readEffectiveTokenString(previewEffectiveToken, "colorLinkActive", previewLinkColor);
+  const previewSwatchColor = readAliasTokenString(previewEffectiveToken, "colorPrimary");
+  const previewLinkHoverColor = readAliasTokenString(previewEffectiveToken, "colorLinkHover");
+  const previewLinkActiveColor = readAliasTokenString(previewEffectiveToken, "colorLinkActive");
   /*
    * Four status colours, one shape: text, ground and border, each with its hover. Info's border falls
    * back to the link colour where the others fall back to their own base, which is how it always was.
    */
   const statusPreviewItems = ([
-    { key: "info", label: "Info", prefix: "colorInfo", base: "#1677ff", hover: "#4096ff", borderFallback: previewLinkColor },
-    { key: "success", label: "Success", prefix: "colorSuccess", base: "#52c41a", hover: "#73d13d" },
-    { key: "warning", label: "Warning", prefix: "colorWarning", base: "#faad14", hover: "#ffc53d" },
-    { key: "error", label: "Error", prefix: "colorError", base: "#ff4d4f", hover: "#ff7875" },
-  ] as const).map(({ key, label, prefix, base, hover, ...item }) => {
-    const read = (suffix: string, fallback: string) => readEffectiveTokenString(previewEffectiveToken, `${prefix}${suffix}`, fallback);
-    const baseColor = read("", base);
-    const hoverColor = read("Hover", hover);
+    { key: "info", label: "Info", prefix: "colorInfo" },
+    { key: "success", label: "Success", prefix: "colorSuccess" },
+    { key: "warning", label: "Warning", prefix: "colorWarning" },
+    { key: "error", label: "Error", prefix: "colorError" },
+  ] as const).map(({ key, label, prefix }) => {
+    const read = (suffix: string) => readAliasTokenString(previewEffectiveToken, `${prefix}${suffix}`);
     return {
       key,
       label,
-      color: read("Text", baseColor),
-      background: read("Bg", previewCardBackground),
-      border: read("Border", "borderFallback" in item ? item.borderFallback : baseColor),
-      hoverColor: read("TextHover", hoverColor),
-      hoverBackground: read("BgHover", previewCardBackground),
-      hoverBorder: read("BorderHover", hoverColor),
+      color: read("Text"),
+      background: read("Bg"),
+      border: read("Border"),
+      hoverColor: read("TextHover"),
+      hoverBackground: read("BgHover"),
+      hoverBorder: read("BorderHover"),
     };
   });
   const fontPreviewItems = [
@@ -3046,34 +3088,34 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
     {
       key: "sm",
       label: "Small",
-      value: readEffectiveTokenNumber(previewEffectiveToken, "borderRadiusSM", PHI_RADII.xs),
+      value: readAliasTokenNumber(previewEffectiveToken, "borderRadiusSM"),
     },
     {
       key: "base",
       label: "Base",
-      value: readEffectiveTokenNumber(previewEffectiveToken, "borderRadius", PHI_RADII.sm),
+      value: readAliasTokenNumber(previewEffectiveToken, "borderRadius"),
     },
     {
       key: "lg",
       label: "Large",
-      value: readEffectiveTokenNumber(previewEffectiveToken, "borderRadiusLG", PHI_RADII.base),
+      value: readAliasTokenNumber(previewEffectiveToken, "borderRadiusLG"),
     },
   ];
   const controlHeightPreviewItems = [
     {
       key: "sm",
       label: "Small",
-      value: readEffectiveTokenNumber(previewEffectiveToken, "controlHeightSM", PHI_CONTROL_HEIGHTS.sm),
+      value: readAliasTokenNumber(previewEffectiveToken, "controlHeightSM"),
     },
     {
       key: "base",
       label: "Base",
-      value: readEffectiveTokenNumber(previewEffectiveToken, "controlHeight", PHI_CONTROL_HEIGHTS.md),
+      value: readAliasTokenNumber(previewEffectiveToken, "controlHeight"),
     },
     {
       key: "lg",
       label: "Large",
-      value: readEffectiveTokenNumber(previewEffectiveToken, "controlHeightLG", PHI_CONTROL_HEIGHTS.lg),
+      value: readAliasTokenNumber(previewEffectiveToken, "controlHeightLG"),
     },
   ];
   const wireframeEnabled = readEffectiveTokenBoolean(previewEffectiveToken, "wireframe", true);
@@ -3100,7 +3142,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
            */
           ...({
             [PHI_THEME_HEADING_FONT_VARIABLE]:
-              previewHeadingFontFamily ?? readEffectiveTokenString(previewEffectiveToken, "fontFamily", clientToken.fontFamily),
+              previewHeadingFontFamily ?? readAliasTokenString(previewEffectiveToken, "fontFamily"),
           } as Record<`--${string}`, string>),
           /*
            * Small and large Control radii are inherited custom properties, so the preview declares its
@@ -3278,8 +3320,8 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
                   key={item.key}
                   style={{
                     minWidth: 0,
-                    border: `1px solid ${readEffectiveTokenString(previewEffectiveToken, "colorBorderSecondary", "rgba(0,0,0,0.06)")}`,
-                    borderRadius: `${readEffectiveTokenNumber(previewEffectiveToken, "borderRadius", PHI_RADII.sm)}px`,
+                    border: `1px solid ${readAliasTokenString(previewEffectiveToken, "colorBorderSecondary")}`,
+                    borderRadius: `${readAliasTokenNumber(previewEffectiveToken, "borderRadius")}px`,
                     background: previewCardBackground,
                     padding: clientToken.paddingXS,
                   }}
@@ -3312,7 +3354,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
                       // The tokens are numbers; `calc(40 * 2)` is no length, and the sample lost its size.
                       width: clientToken.controlHeightLG * 2,
                       minHeight: clientToken.controlHeight * 1.25,
-                      border: `1px solid ${readEffectiveTokenString(previewEffectiveToken, "colorBorder", "rgba(0,0,0,0.15)")}`,
+                      border: `1px solid ${readAliasTokenString(previewEffectiveToken, "colorBorder")}`,
                       borderRadius: item.value,
                       background: previewCardBackground,
                       padding: clientToken.paddingXS,
