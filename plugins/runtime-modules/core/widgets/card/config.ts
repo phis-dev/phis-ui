@@ -144,7 +144,17 @@ export const PHI_CARD_WIDGET_DEFINITION = {
   icon: "antd:idcard-outlined",
   iconFamily: "basic",
   translatesOwnText: true,
-  slotSizePolicy: "fill-inline",
+  /*
+   * A card fills its slot both ways, as a Layout does.
+   *
+   * It filled only across, and stood at its own content's height inside the slot: three cards whose
+   * texts differ, side by side in a Grid row, ended at three different lines although the row had laid
+   * their slots out at one height. Filling the block axis lets the row's height reach the card. Where
+   * the slot has no height of its own -- a Stack or a Masonry column of content height -- a percentage
+   * against it stays auto and the card is as tall as its content, as before. A card in a container of
+   * fixed height grows into it, as a Layout there does; a card that should not says so with a height.
+   */
+  slotSizePolicy: "fill",
   /*
    * The card draws its Surface itself: its picture zooms inside the box under the pointer, and the box
    * clips it to its corners, so the ground has to be the card's own and not the slot frame's.
