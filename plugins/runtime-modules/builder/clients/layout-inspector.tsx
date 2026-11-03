@@ -3,12 +3,10 @@
 import { useEffect } from "react";
 
 import { usePhiBaseLayoutOwnSlotController } from "../../../../components/layouts/phi-layout-slot-state";
-import { PhiBackgroundControl, type PhiBackgroundControlProps } from "../../../../components/controls/phi-background-control";
-import { PhiBorderControl } from "../../../../components/controls/phi-border-control";
+import type { PhiBackgroundControlProps } from "../../../../components/controls/phi-background-control";
 import { PhiSurfaceControl } from "../../../../components/controls/phi-surface-control";
 import type { PhiInspectorSurfaceLabels } from "./inspector-surface-labels";
 import type { PhiInspectorWidgetLabels } from "../../../../components/widgets/label-types/inspector";
-import { PhiShadowControl } from "../../../../components/controls/phi-shadow-control";
 import { PhiViewportVisibilityControl } from "../../../../components/controls/phi-viewport-visibility-control";
 import { PhiPlacementMatrixControl } from "../../../../components/controls/phi-placement-matrix-control";
 import type { PhiBackgroundWidgetLabels } from "../../../../components/widgets/label-types/background";
@@ -24,18 +22,13 @@ import type { PhiAnchorWidgetPlacement } from "../../../../components/controls/p
 import type { PhiSignalsWidgetLabels } from "../../../../components/widgets/label-types/signals";
 import type { PhiColorPickerLabels } from "../../../../components/widgets/label-types/color-picker";
 import type { PhiIconPickerControlLabels } from "../../../../components/widgets/label-types/icon-picker";
-import type {
-  PhiCmsBorderWidgetConfig,
-  PhiCmsPaddingWidgetConfig,
-} from "../../../../types/cms-config";
-import type { PhiCmsBackgroundWidgetConfig } from "../../../../components/widgets/config/background";
+import type { PhiCmsPaddingWidgetConfig } from "../../../../types/cms-config";
 import type {
   PhiCmsConfigField,
   PhiRuntimeModuleDataProviderDescriptor,
 } from "../../../../types/cms-plugins";
 import type { PhiCalendarAdapterDescriptor } from "../../../../types/calendar";
 import type { PhiVideoProviderDescriptor } from "../../../../types/video";
-import { readPhiShadow } from "../../../../types/layout-style";
 import type { PhiSurface } from "../../../../types/surface";
 import { normalizePhiPaddingWidgetConfig } from "../../../../types/cms-config";
 import {
@@ -59,19 +52,15 @@ import {
   PhiInspectorSignalSection,
 } from "./inspector-signal-section";
 import type { PhiBuilderContainerMeta } from "../../../../types/builder";
-import { PhiFlexControl } from "../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../components/controls/phi-typography-control";
 
 const PHI_GAP_SM = "var(--ant-padding-sm)";
 
-type PhiCmsChromeConfigField = Extract<PhiCmsConfigField, { type: "padding" | "background" | "border" | "shadow" | "grid-placement" | "column-count" }>;
+type PhiCmsChromeConfigField = Extract<PhiCmsConfigField, { type: "padding" | "grid-placement" | "column-count" }>;
 
 function isPhiCmsChromeConfigField(field: PhiCmsConfigField): field is PhiCmsChromeConfigField {
   return (
     field.type === "padding"
-    || field.type === "background"
-    || field.type === "border"
-    || field.type === "shadow"
     || field.type === "grid-placement"
     || field.type === "column-count"
   );
@@ -190,7 +179,7 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
   const chromeFields = declaredFields
     .filter(isPhiCmsChromeConfigField)
     .filter((field) => isPhiInspectorConfigFieldVisible(field, currentLayoutConfigRecord))
-    .filter((field) => field.type !== "grid-placement" && field.type !== "column-count");
+    .filter((field): field is Extract<PhiCmsConfigField, { type: "padding" }> => field.type === "padding");
   const gridPlacementField =
     declaredFields
       .filter(isPhiCmsChromeConfigField)
@@ -211,8 +200,7 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
   const settingsHasContent = !settingsAnswerIsKnown || !isTargetKind || section !== "settings"
     || settingsFields.length > 0 || gridPlacementField != null
     || (slotTextsFields.length > 0 && textSlots.length > 0)
-    || selectedStructurePlugin?.translatesOwnText === true
-    || chromeFields.some((field) => field.type !== "padding");
+    || selectedStructurePlugin?.translatesOwnText === true;
   const ownSlot = usePhiBaseLayoutOwnSlotController();
   useEffect(() => {
     if (!ownSlot) return;
@@ -237,79 +225,39 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
         routeScope: signalRouteScope,
       });
   const signalCapabilities = resolvePhiSignalEndpointCapabilities(signalEndpoints);
-  /*
-   * The chrome fields a layout declares itself: its own padding, which has the Drawer's Paddings panel,
-   * and anything else -- Split Card's two cards -- which lives in Settings with the layout's other fields.
-   */
+  // The padding fields a layout declares itself, each with its own panel in the Drawer.
   const declaredChromeSections = chromeFields.map((field) => ({
     field,
     section: {
-                      key: field.section ?? field.key,
-                      title: field.label,
-                      children: (
-                        <div style={{ display: "grid", gap: PHI_GAP_SM, width: "100%" }}>
-                          {field.type === "padding" ? (
-                            renderPhiInspectorPaddingConfigControl({
-                              field,
-                              disabled: isPreviewMode || (!onPaddingChange && !onConfigPatch),
-                              config: isCanonicalPaddingField(field)
-                                ? { ...(currentDraftRecord ?? {}), ...(resolvedLayoutPadding ?? {}) }
-                                : currentDraftRecord ?? {},
-                              defaultConfig: isCanonicalPaddingField(field)
-                                ? { ...(layoutDefaultConfigRecord ?? {}), ...(resolvedLayoutPaddingDefaults ?? {}) }
-                                : layoutDefaultConfigRecord,
-                              labels: paddingLabels,
-                              onChange: (padding, patch) => {
-                                if (isCanonicalPaddingField(field)) {
-                                  onPaddingChange?.(padding);
-                                  return;
-                                }
+      key: field.section ?? field.key,
+      title: field.label,
+      children: (
+        <div style={{ display: "grid", gap: PHI_GAP_SM, width: "100%" }}>
+          {renderPhiInspectorPaddingConfigControl({
+            field,
+            disabled: isPreviewMode || (!onPaddingChange && !onConfigPatch),
+            config: isCanonicalPaddingField(field)
+              ? { ...(currentDraftRecord ?? {}), ...(resolvedLayoutPadding ?? {}) }
+              : currentDraftRecord ?? {},
+            defaultConfig: isCanonicalPaddingField(field)
+              ? { ...(layoutDefaultConfigRecord ?? {}), ...(resolvedLayoutPaddingDefaults ?? {}) }
+              : layoutDefaultConfigRecord,
+            labels: paddingLabels,
+            onChange: (padding, patch) => {
+              if (isCanonicalPaddingField(field)) {
+                onPaddingChange?.(padding);
+                return;
+              }
 
-                                onConfigPatch?.(Object.fromEntries(
-                                  Object.entries(patch).map(([key, value]) => [key, value ?? null]),
-                                ));
-                              },
-                            })
-                          ) : field.type === "background" ? (
-                            <PhiBackgroundControl
-                              mode="control"
-                              disabled={isPreviewMode || !onConfigPatch}
-                              value={(currentDraftRecord?.[field.key] as PhiCmsBackgroundWidgetConfig | null) ?? null}
-                              config={(layoutDefaultConfigRecord?.[field.key] as PhiCmsBackgroundWidgetConfig | null) ?? null}
-                              onChange={(background) => onConfigPatch?.({ [field.key]: background })}
-                              labels={backgroundLabels}
-                              colorPickerLabels={colorPickerLabels}
-                              colorPickerPlacement="left"
-                              renderMediaPicker={renderMediaPicker}
-                            />
-                          ) : field.type === "border" ? (
-                            <PhiBorderControl
-                              mode="control"
-                              disabled={isPreviewMode || !onConfigPatch}
-                              value={(currentDraftRecord?.[field.key] as PhiCmsBorderWidgetConfig | null) ?? null}
-                              config={(layoutDefaultConfigRecord?.[field.key] as PhiCmsBorderWidgetConfig | null) ?? null}
-                              onChange={(border) => onConfigPatch?.({ [field.key]: border })}
-                              labels={borderLabels}
-                              colorPickerLabels={colorPickerLabels}
-                              colorPickerPlacement="left"
-                            />
-                          ) : (
-                            <PhiShadowControl
-                              mode="control"
-                              disabled={isPreviewMode || !onConfigPatch}
-                              value={
-                                readPhiShadow(currentDraftRecord?.[field.key]) ??
-                                readPhiShadow(layoutDefaultConfigRecord?.[field.key]) ??
-                                null
-                              }
-                              onChange={(shadow) => onConfigPatch?.({ [field.key]: shadow })}
-                            />
-                          )}
-                        </div>
-                      ),
+              onConfigPatch?.(Object.fromEntries(
+                Object.entries(patch).map(([key, value]) => [key, value ?? null]),
+              ));
+            },
+          })}
+        </div>
+      ),
     },
   }));
-  const declaredCardSections = declaredChromeSections.filter((entry) => entry.field.type !== "padding");
   return (
     <div style={{ display: "grid", gap: PHI_GAP_SM, width: "100%" }}>
       {!isTargetKind ? (
@@ -319,7 +267,7 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
           <PhiInspectorSectionContent
             sectionKey={section ?? "settings"}
             sections={[
-              ...(settingsFields.length > 0 || gridPlacementField || declaredCardSections.length > 0 ||
+              ...(settingsFields.length > 0 || gridPlacementField ||
                 selectedStructurePlugin?.translatesOwnText || (slotTextsFields.length > 0 && textSlots.length > 0)
                 ? [
                     {
@@ -335,6 +283,9 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                               config: currentDraftRecord ?? {},
                               defaultConfig: layoutDefaultConfigRecord,
                               disabled: isPreviewMode,
+                              backgroundLabels,
+                              borderLabels,
+                              renderMediaPicker,
                               colorPickerLabels,
                               iconPickerLabels,
                               fieldLabels,
@@ -374,12 +325,6 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                               onConfigChange={onConfigPatch ? (key, value) => onConfigPatch({ [key]: value }) : undefined}
                             />
                           ) : null}
-                          {declaredCardSections.map((entry) => (
-                            <PhiFlexControl key={entry.section.key} vertical gap={8} style={{ width: "100%", minWidth: 0 }}>
-                              <PhiTypographyControl>{entry.section.title}</PhiTypographyControl>
-                              {entry.section.children}
-                            </PhiFlexControl>
-                          ))}
                         </div>
                       ),
                     },
@@ -431,9 +376,7 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                         />
                       ),
                     },
-                    ...declaredChromeSections
-                      .filter((entry) => entry.field.type === "padding")
-                      .map((entry) => entry.section),
+                    ...declaredChromeSections.map((entry) => entry.section),
               ],
               {
                 key: "signals",

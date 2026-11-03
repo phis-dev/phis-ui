@@ -186,6 +186,7 @@ export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
       widgetReferenceOptions,
       backgroundLabels,
       borderLabels,
+      renderMediaPicker,
       colorPickerLabels,
       iconPickerLabels,
       fieldLabels,

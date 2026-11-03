@@ -98,7 +98,6 @@ export type {
   PhiCmsConfigFieldChoiceValueType,
   PhiCmsConfigFieldCollectionPresentation,
   PhiCmsConfigFieldColorMode,
-  PhiCmsConfigFieldValueStorage,
   PhiCmsConfigFieldVisibilityRule,
   PhiCmsLayoutPlugin,
   PhiCmsLayoutPluginDefinition,

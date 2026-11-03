@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useMemo, useState, type ReactNode } from "react";
+import type { PhiBackgroundControlProps } from "../../../../components/controls/phi-background-control";
 import { readPhiDotPath } from "../../../../helpers/dot-path";
 import { PhiCheckboxGroupControl } from "../../../../components/controls/phi-checkbox-group-control";
 import { PhiDividerControl } from "../../../../components/controls/phi-divider-control";
@@ -16,11 +17,8 @@ import type { PhiVideoProviderDescriptor } from "../../../../types/video";
 import { readPhiLengthValue, type PhiRenderableBlockSize } from "../../../../types";
 import {
   normalizePhiPaddingWidgetConfig,
-  type PhiCmsBorderWidgetConfig,
   type PhiCmsPaddingWidgetConfig,
 } from "../../../../types/cms-config";
-import { PhiBackgroundControl } from "../../../../components/controls/phi-background-control";
-import { PhiBorderControl } from "../../../../components/controls/phi-border-control";
 import { PhiColorFieldControl } from "../../../../components/controls/phi-color-field-control";
 import type { PhiColorPickerLabels } from "../../../../components/widgets/label-types/color-picker";
 import type { PhiIconPickerControlLabels } from "../../../../components/widgets/label-types/icon-picker";
@@ -32,7 +30,6 @@ import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
 import { PHI_RADIUS_CONTROL_DEFAULT_LABELS, PhiBoundRadiusControl } from "../../../../components/controls/phi-bound-radius-control";
 import { PhiDimensionControl } from "../../../../components/controls/phi-dimension-control";
 import { PhiLengthControl } from "../../../../components/controls/phi-length-control";
-import type { PhiCmsBackgroundWidgetConfig } from "../../../../components/widgets/config/background";
 import {
   parsePhiControlOptionsProviderConfig,
   type PhiControlOption,
@@ -54,10 +51,8 @@ import type { PhiPaddingWidgetLabels } from "../../../../components/widgets/labe
 import type { PhiBackgroundWidgetLabels } from "../../../../components/widgets/label-types/background";
 import type { PhiBorderWidgetLabels } from "../../../../components/widgets/label-types/border";
 import { PHI_INSPECTOR_FIELD_LABEL_WIDTH, PhiInspectorFieldRow } from "../../../../components/widgets/inspector-field-row";
-import { PhiShadowControl } from "../../../../components/controls/phi-shadow-control";
 import { PhiSurfaceControl } from "../../../../components/controls/phi-surface-control";
 import { readPhiSurface } from "../../../../types/surface";
-import { readPhiShadow } from "../../../../types/layout-style";
 import {
   readInspectorChoiceMultiValue,
   readInspectorChoiceSingleValue,
@@ -412,14 +407,6 @@ function resolveInspectorColorMode(
   return "single";
 }
 
-function normalizeInspectorBorderValue(value: unknown): PhiCmsBorderWidgetConfig | null {
-  if (!isPhiRecord(value)) {
-    return null;
-  }
-
-  return value as PhiCmsBorderWidgetConfig;
-}
-
 function readPhiInspectorCollectionItems(value: unknown): Record<string, unknown>[] {
   return Array.isArray(value)
     ? value.filter(isPhiRecord)
@@ -699,6 +686,7 @@ function PhiInspectorCollectionFieldControl({
   paddingLabels,
   backgroundLabels,
   borderLabels,
+  renderMediaPicker,
   colorPickerLabels,
   iconPickerLabels,
   dataProviderDescriptors,
@@ -717,6 +705,7 @@ function PhiInspectorCollectionFieldControl({
   paddingLabels?: PhiPaddingWidgetLabels;
   backgroundLabels?: PhiBackgroundWidgetLabels;
   borderLabels?: PhiBorderWidgetLabels;
+  renderMediaPicker?: PhiBackgroundControlProps["renderMediaPicker"];
   colorPickerLabels?: PhiColorPickerLabels;
   iconPickerLabels?: PhiIconPickerControlLabels;
   dataProviderDescriptors: readonly PhiRuntimeModuleDataProviderDescriptor[];
@@ -792,6 +781,7 @@ function PhiInspectorCollectionFieldControl({
               paddingLabels,
               backgroundLabels,
               borderLabels,
+              renderMediaPicker,
               colorPickerLabels,
               iconPickerLabels,
               fieldLabels: labels,
@@ -1023,6 +1013,7 @@ function renderPhiInspectorConfigFieldBody({
   paddingLabels,
   backgroundLabels,
   borderLabels,
+  renderMediaPicker,
   colorPickerLabels,
   iconPickerLabels,
   fieldLabels = PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.fields,
@@ -1043,6 +1034,8 @@ function renderPhiInspectorConfigFieldBody({
   paddingLabels?: PhiPaddingWidgetLabels;
   backgroundLabels?: PhiBackgroundWidgetLabels;
   borderLabels?: PhiBorderWidgetLabels;
+  /** The Media library's picker, so a Surface field can take a background image like a block's own. */
+  renderMediaPicker?: PhiBackgroundControlProps["renderMediaPicker"];
   colorPickerLabels?: PhiColorPickerLabels;
   iconPickerLabels?: PhiIconPickerControlLabels;
   /** The Inspector's own words in its field controls, from the `widget:inspector` label set. */
@@ -1378,6 +1371,7 @@ function renderPhiInspectorConfigFieldBody({
         paddingLabels={paddingLabels}
         backgroundLabels={backgroundLabels}
         borderLabels={borderLabels}
+        renderMediaPicker={renderMediaPicker}
         colorPickerLabels={colorPickerLabels}
         iconPickerLabels={iconPickerLabels}
         dataProviderDescriptors={dataProviderDescriptors}
@@ -1404,54 +1398,6 @@ function renderPhiInspectorConfigFieldBody({
     );
   }
 
-  if (field.type === "background") {
-    const usesSelfStorage = field.storage === "self";
-    const currentValue = (usesSelfStorage ? config : value) as PhiCmsBackgroundWidgetConfig | null | undefined;
-    const currentDefaultValue = (usesSelfStorage ? defaultConfig : defaultValue) as PhiCmsBackgroundWidgetConfig | null | undefined;
-
-    return renderPhiInspectorConfigFieldControl(
-      field,
-      <PhiBackgroundControl
-        mode="control"
-        disabled={disabled || !onChange}
-        value={currentValue ?? null}
-        config={currentDefaultValue ?? null}
-        labels={backgroundLabels}
-        colorPickerLabels={colorPickerLabels}
-        colorPickerPlacement="left"
-        onChange={(nextValue) =>
-          usesSelfStorage
-            ? onChange?.(nextValue as Record<string, unknown>)
-            : onChange?.({ [field.key]: nextValue })
-        }
-      />,
-    );
-  }
-
-  if (field.type === "border") {
-    const usesSelfStorage = field.storage === "self";
-    const currentValue = normalizeInspectorBorderValue(usesSelfStorage ? config : value);
-    const currentDefaultValue = normalizeInspectorBorderValue(usesSelfStorage ? defaultConfig : defaultValue);
-
-    return renderPhiInspectorConfigFieldControl(
-      field,
-      <PhiBorderControl
-        mode="control"
-        disabled={disabled || !onChange}
-        value={currentValue}
-        config={currentDefaultValue}
-        labels={borderLabels}
-        colorPickerLabels={colorPickerLabels}
-        colorPickerPlacement="left"
-        onChange={(nextValue) =>
-          usesSelfStorage
-            ? onChange?.(nextValue as Record<string, unknown>)
-            : onChange?.({ [field.key]: nextValue })
-        }
-      />,
-    );
-  }
-
   if (field.type === "surface") {
     return renderPhiInspectorConfigFieldBlock(
       field,
@@ -1464,20 +1410,7 @@ function renderPhiInspectorConfigFieldBody({
         backgroundLabels={backgroundLabels}
         borderLabels={borderLabels}
         colorPickerLabels={colorPickerLabels}
-        onChange={(nextValue) => onChange?.({ [field.key]: nextValue })}
-      />,
-    );
-  }
-
-  if (field.type === "shadow") {
-    const currentValue = readPhiShadow(value) ?? readPhiShadow(defaultValue) ?? null;
-
-    return renderPhiInspectorConfigFieldControl(
-      field,
-      <PhiShadowControl
-        mode="control"
-        disabled={disabled || !onChange}
-        value={currentValue}
+        renderMediaPicker={renderMediaPicker}
         onChange={(nextValue) => onChange?.({ [field.key]: nextValue })}
       />,
     );

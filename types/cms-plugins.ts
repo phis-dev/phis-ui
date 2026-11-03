@@ -149,7 +149,6 @@ export type PhiCmsConfigFieldChoiceValueType = "string" | "string[]" | "number";
 
 export type PhiCmsConfigFieldChoiceCreateBehavior = "none" | "accept-custom" | "create-record";
 export type PhiCmsConfigFieldColorMode = "single" | "gradient" | "both";
-export type PhiCmsConfigFieldValueStorage = "field" | "self";
 
 export type PhiCmsConfigFieldChoiceFilter = {
   widgetType?: string;
@@ -363,16 +362,6 @@ export type PhiCmsConfigField =
       editLabel?: string;
     })
   | (PhiCmsConfigFieldBase & {
-      type: "background";
-      section?: string;
-      storage?: PhiCmsConfigFieldValueStorage;
-    })
-  | (PhiCmsConfigFieldBase & {
-      type: "border";
-      section?: string;
-      storage?: PhiCmsConfigFieldValueStorage;
-    })
-  | (PhiCmsConfigFieldBase & {
       /**
        * A Surface (`types/surface.ts`) of something the Widget draws inside itself -- each entry of a
        * list -- edited with the same Control as a Widget's own Surface. `null` is stored for "None", so a
@@ -383,7 +372,7 @@ export type PhiCmsConfigField =
       tone?: false;
     })
   | (PhiCmsConfigFieldBase & {
-      type: "shadow" | "grid-placement" | "column-count";
+      type: "grid-placement" | "column-count";
       section?: string;
     });
 
