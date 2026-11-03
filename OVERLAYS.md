@@ -160,7 +160,11 @@ an authoritative Controller/signal sets all three. `MaskPassesPointer` still ind
 whether an outside pointer action is captured or reaches the background.
 
 `closeMode` is `immediate` by default and is suitable only when closing cannot abandon or commit pending
-transactional state. With `request`, user dismissal keeps the Overlay open and emits one typed,
+transactional state -- or when whatever holds that state says so through `busy`: a boolean input
+(`busy/change` on the route the Page writes) that, while `true`, makes the Overlay refuse a reader's
+dismissal from the close button, the mask, and Escape, in either close mode. An explicit `close` still
+closes, and closing clears `busy`. A Form in the Body routes its `submitting` output there, so a dialog
+that saves refuses to be dismissed mid-save without a Controller to decide it. With `request`, user dismissal keeps the Overlay open and emits one typed,
 business-neutral `closeRequest` value containing only its source:
 
 ```ts
@@ -384,9 +388,11 @@ A dialog needs no Controller unless it keeps state. The Table announces which ac
 row, each Overlay and each record-bound Form decides by its own `openActionKey` whether it was meant, the
 footer presses its Form through the Form's `submit` input, and a Form that went through closes its Overlay
 and tells the Table to read again -- five routes, no coordinator, and every one of them in the Page where
-a Site can rearrange them. What a Controller buys on top of that is worth naming, because it is little: a
-loading state on the Save button, and refusing to close while a save is in flight (`closeMode: "request"`).
-News paid for those two with three silent failures in one afternoon -- a Controller nobody mounted, one
+a Site can rearrange them. A loading state on the Save button and refusing to close while a save is in
+flight need none either: the Form's `submitting` output goes to the Save button's `loading` and to the
+Overlay's `busy` -- two more routes. A Controller earns its place only where a decision needs state
+beyond that.
+News paid for a Controller of that kind with three silent failures in one afternoon -- a Controller nobody mounted, one
 whose senders it did not recognise, and one that heard what it sent -- and now has none. The Settings Page
 shell and the Auth Installations Page are the shape to copy.
 

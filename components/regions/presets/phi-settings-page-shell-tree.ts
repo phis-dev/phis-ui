@@ -14,7 +14,11 @@ import type {
   PhiWidgetPlacementSignalRoutes,
 } from "../../../types/core-widget-placements";
 import type { PhiFormId } from "../../../types/form-id";
-import { PHI_SIGNAL_VALUE_SCHEMAS, createPhiSignalAddress } from "../../../types/signals";
+import {
+  PHI_SIGNAL_VALUE_SCHEMAS,
+  createPhiSignalAddress,
+  createPhiSignalSubcontrolAddress,
+} from "../../../types/signals";
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "./phi-base-page-layout";
 import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../helpers/cms-dialog";
 
@@ -440,6 +444,29 @@ export function buildPhiSettingsPageShellTree({
                   valueType: "none",
                   receiver: overlayAddress,
                 },
+                /*
+                 * While the save is under way the dialog refuses a reader's dismissal, and the Save
+                 * button shows that it is working -- the two things a Controller would otherwise be
+                 * mounted for (OVERLAYS.md, "Runtime and signaling").
+                 */
+                {
+                  routeKey: `${overlay.nodeKey}-busy`,
+                  capabilityId: "submitting",
+                  scope: "page",
+                  channel: "busy",
+                  action: "change",
+                  valueType: "boolean",
+                  receiver: overlayAddress,
+                },
+                {
+                  routeKey: `${overlay.nodeKey}-submit-loading`,
+                  capabilityId: "submitting",
+                  scope: "page",
+                  channel: "loading",
+                  action: "change",
+                  valueType: "boolean",
+                  receiver: createPhiSignalSubcontrolAddress("cms", widgets[`${overlay.nodeKey}Commands`]!, "submit"),
+                },
                 ...(extraSignalRoutes?.emits ?? []),
               ],
               listens: [
@@ -503,6 +530,17 @@ export function buildPhiSettingsPageShellTree({
                   receiver: formAddress,
                 },
               ],
+              listens: [
+                {
+                  routeKey: `${overlay.nodeKey}-commands-submit-loading`,
+                  capabilityId: "loading",
+                  scope: "page",
+                  channel: "loading",
+                  action: "change",
+                  valueType: "boolean",
+                  receiver: createPhiSignalSubcontrolAddress("cms", widgets[`${overlay.nodeKey}Commands`]!, "submit"),
+                },
+              ],
             },
           },
         }),
@@ -533,6 +571,10 @@ export function buildPhiSettingsPageShellTree({
          * the provider somebody looked at before.
          */
         mountPolicy: "remount",
+        /*
+         * `immediate`, because nothing is mounted to answer a close request; while the Form saves, its
+         * `submitting` route sets this Overlay `busy`, and a busy Overlay does not take a dismissal.
+         */
         closeMode: "immediate",
         openActionKey: overlay.openActionKey,
         signalRoutes: {
@@ -558,6 +600,15 @@ export function buildPhiSettingsPageShellTree({
               channel: "dialog",
               action: "close",
               valueType: "none",
+              receiver: createPhiSignalAddress("cms", overlayIds[overlay.nodeKey]!),
+            },
+            {
+              routeKey: `${overlay.nodeKey}-busy`,
+              capabilityId: "busy",
+              scope: "page",
+              channel: "busy",
+              action: "change",
+              valueType: "boolean",
               receiver: createPhiSignalAddress("cms", overlayIds[overlay.nodeKey]!),
             },
           ],

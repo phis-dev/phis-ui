@@ -148,6 +148,13 @@ export function PhiOverlayContainerClient({
     config: typeof config;
     value: string | null;
   } | null>(null);
+  /*
+   * Whether work the Overlay holds is under way -- a Form in the Body saving. While it is, a reader's
+   * dismissal (close button, mask, Escape) is not taken: closing would abandon the save's answer. A
+   * `close` sent on purpose still closes, which is how a Form that went through ends its dialog. Told
+   * through the `busy` input by whoever knows, so a dialog needs no Controller to refuse a close.
+   */
+  const [busy, setBusy] = useState(false);
   const runtimeControlSize = runtimeControlSizeOverride?.config === config
     ? runtimeControlSizeOverride.value
     : null;
@@ -195,6 +202,8 @@ export function PhiOverlayContainerClient({
     if (nextOpen) setHasOpened(true);
     // A failed load is forgotten on close, so the next open asks the server again.
     if (!nextOpen) setLoadedZones((current) => current && "failure" in current ? null : current);
+    // A closed Overlay holds no work; a busy state left behind would refuse the next dismissal.
+    if (!nextOpen) setBusy(false);
     setOpen(nextOpen);
   }, []);
 
@@ -284,6 +293,8 @@ export function PhiOverlayContainerClient({
       updateOpen(true);
     } else if (route.capabilityId === "close") {
       updateOpen(false);
+    } else if (route.capabilityId === "busy" && signal.valueType === "boolean") {
+      setBusy(signal.value === true);
     } else if (route.capabilityId === "toggle") {
       updateOpen(typeof signal.value === "boolean" ? signal.value : !open);
     } else if (route.capabilityId === "title" && signal.valueType === "string") {
@@ -310,12 +321,13 @@ export function PhiOverlayContainerClient({
   }), [receiver, signalScope]), receiver);
 
   const requestClose = useCallback((source: PhiOverlayCloseSource) => {
+    if (busy) return;
     if (config.closeMode === "request") {
       emitCapability("closeRequest", { source });
       return;
     }
     updateOpen(false);
-  }, [config.closeMode, emitCapability, updateOpen]);
+  }, [busy, config.closeMode, emitCapability, updateOpen]);
 
   // An Overlay's window is simply "open", which is why it can share the rule with a Carousel whose
   // window is several slots wide.
