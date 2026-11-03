@@ -36,19 +36,10 @@ built. Remove an entry when it is done.
 Collected for the next published `@phis/ui`, so they ship together rather than one package each.
 
 - **After the release, in each installation:** the Site-store copies of Module navigation labels (ctx
-  `Web UI label`, including the `[extern]` units) are no longer read and can be deleted, and so are the Public error pages' Result words in the same
-  context ("Not found" and the like, and "Back to homepage"), which the global store answers now. Before that,
-  check in `@phis/server` that a Site admin's translation editor writes `tr_site_*` only and that
-  `tr_lang` is the operator's alone.
-- **A Site package cannot shape the navigation it ships with.** A Module only adds entries
-  (`navigation` on a route, by anchor or `parentItemKey`); hiding, renaming or reordering somebody
-  else's entry is the Site's navigation overlay alone (`PhiCmsNavigationOverlay`: `itemOverrides`,
-  `customItems`, `tombstones`), read from `site_nav_scopes` and written by the Builder. So a Site package
-  that wants a header without Terms, Contact and Register has to ask every Site to hide them by hand.
-  Proposal, not approved: a Site package may ship a default overlay per surface -- tombstones and
-  overrides keyed by item -- that applies until the Site saves its own, which then wins. Needs a decision
-  on whether this is a Site package's right only (one per Site) or any Module's, and how it meets
-  MODULES.md's rule that an optional Module never patches a base preset.
+  `Web UI label`, including the `[extern]` units) are no longer read and can be deleted, and so are the
+  Public error pages' Result words in the same context ("Not found" and the like, and "Back to
+  homepage"), which the global store answers now. Before that, check in `@phis/server` that a Site
+  admin's translation editor writes `tr_site_*` only and that `tr_lang` is the operator's alone.
 
 ## Layouts and Widgets
 
