@@ -1,17 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 
 import {
   PhiDeveloperBuilderStructureCanvas,
   type PhiDeveloperBuilderStructureCanvasProps,
 } from "./structure-canvas";
-import {
-  getPhiDeveloperRegionDraftsSnapshot,
-  mergePhiDeveloperRegionDrafts,
-  usePhiDeveloperBuilderStateValue,
-  usePhiDeveloperRegionDraftsValue,
-} from "../developer-workspace-store";
+import { usePhiDeveloperBuilderStateValue } from "../developer-workspace-store";
+import { usePhiBuilderRegionDraftHydration } from "./use-region-draft-hydration";
 import type {
   PhiDeveloperBuilderArea,
   PhiDeveloperBuilderRegionDraft,
@@ -66,12 +62,6 @@ export function PhiDeveloperBuilderCanvasWidgetClient({
   const isStructureWorkspace = workspace === "structure";
   const isPagesWorkspace = workspace === "pages";
 
-  /*
-   * Which of this workspace's drafts are not in the store, as one string. The Canvas used to subscribe
-   * to the whole draft map for this question, so every write to any draft re-rendered it and, below it,
-   * every Region scaffold on the canvas with its whole tree. The Regions read their own draft now
-   * (`structure-canvas.tsx`); this widget renders when the set of missing drafts changes and not before.
-   */
   const hydrationDraftKeys = useMemo(() => (
     isStructureWorkspace
       ? PHI_BUILDER_SHELL_REGION_KEYS.map((regionKey) => getPhiBuilderRegionDraftKey(area, regionKey, pageKey))
@@ -79,66 +69,16 @@ export function PhiDeveloperBuilderCanvasWidgetClient({
         ? PHI_BUILDER_PAGE_REGION_KEYS.map((regionKey) => getPhiBuilderRegionDraftKey(area, regionKey, pageKey))
         : []
   ), [area, isPagesWorkspace, isStructureWorkspace, pageKey]);
-  const missingDraftKeys = usePhiDeveloperRegionDraftsValue(useCallback(
-    (drafts: Record<string, PhiDeveloperBuilderRegionDraft>) =>
-      hydrationDraftKeys.filter((draftKey) => drafts[draftKey] == null).join("\u0000"),
-    [hydrationDraftKeys],
-  ));
-
-  useEffect(() => {
-    if (!isStructureWorkspace && !isPagesWorkspace) {
-      return;
-    }
-
-    if (builderMode === "preview" && previewRegionDrafts && Object.keys(previewRegionDrafts).length > 0) {
-      mergePhiDeveloperRegionDrafts(previewRegionDrafts as Record<string, PhiDeveloperBuilderRegionDraft>);
-    }
-
-    const regionDrafts = getPhiDeveloperRegionDraftsSnapshot();
-    const shellDraftKeys = PHI_BUILDER_SHELL_REGION_KEYS
-      .map((regionKey) => getPhiBuilderRegionDraftKey(area, regionKey, pageKey));
-    const pageDraftKeys = PHI_BUILDER_PAGE_REGION_KEYS
-      .map((regionKey) => getPhiBuilderRegionDraftKey(area, regionKey, pageKey));
-    const needsShellHydration = isStructureWorkspace && shellDraftKeys.some((draftKey) => regionDrafts[draftKey] == null);
-    const needsPageHydration =
-      isPagesWorkspace &&
-      pageDraftKeys.some((draftKey) => regionDrafts[draftKey] == null);
-
-    if (needsShellHydration) {
-      const nextShellDrafts = structureShellDraftsByArea?.[area] ?? {};
-      const missingShellDrafts = Object.fromEntries(
-        Object.entries(nextShellDrafts).filter(([draftKey]) => regionDrafts[draftKey] == null),
-      );
-      if (Object.keys(missingShellDrafts).length > 0) {
-        mergePhiDeveloperRegionDrafts(missingShellDrafts);
-      }
-    }
-
-    if (!needsPageHydration) {
-      return;
-    }
-
-    const nextPageDrafts = pageDraftsByScope?.[area]?.[pageKey] ?? {};
-    const missingPageDrafts = Object.fromEntries(
-      Object.entries(nextPageDrafts).filter(([draftKey]) => regionDrafts[draftKey] == null),
-    );
-    if (Object.keys(missingPageDrafts).length > 0) {
-      mergePhiDeveloperRegionDrafts(missingPageDrafts);
-      return;
-    }
-
-    // `missingDraftKeys` is the reason to run again; the snapshot inside is what is read.
-  }, [
-    isPagesWorkspace,
-    isStructureWorkspace,
-    missingDraftKeys,
-    pageDraftsByScope,
-    previewRegionDrafts,
-    area,
+  usePhiBuilderRegionDraftHydration({
+    draftKeys: hydrationDraftKeys,
+    serverDrafts: isStructureWorkspace
+      ? structureShellDraftsByArea?.[area]
+      : isPagesWorkspace
+        ? pageDraftsByScope?.[area]?.[pageKey] ?? undefined
+        : undefined,
     builderMode,
-    pageKey,
-    structureShellDraftsByArea,
-  ]);
+    previewRegionDrafts: isStructureWorkspace || isPagesWorkspace ? previewRegionDrafts : null,
+  });
 
   if (isStructureWorkspace) {
     return (

@@ -1,16 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useMemo } from "react";
 
 import { PhiStructureRegionLayout } from "../../../../components/layouts/phi-structure-region-layout";
 import { hasPhiConfigFlag } from "../../../../helpers/flags";
 import { PhiCmsFlags } from "../../../../constants/phi-cms";
 import type { PhiDeveloperBuilderStructureCanvasProps } from "./structure-canvas";
 import {
-  mergePhiDeveloperRegionDrafts,
   usePhiDeveloperBuilderStateValue,
-  usePhiDeveloperRegionDrafts,
+  usePhiDeveloperRegionDraftsValue,
 } from "../developer-workspace-store";
+import { usePhiBuilderRegionDraftHydration } from "./use-region-draft-hydration";
 import type {
   PhiDeveloperBuilderArea,
   PhiDeveloperBuilderRegionDraft,
@@ -62,46 +62,21 @@ export function PhiDeveloperBuilderShellsWorkspaceWidgetClient({
   const area = usePhiDeveloperBuilderStateValue("public", (state) => state.area);
   const pageKey = usePhiDeveloperBuilderStateValue("public", (state) => state.pageKey);
   const builderMode = usePhiDeveloperBuilderStateValue("public", (state) => state.builderMode);
-  const regionDrafts = usePhiDeveloperRegionDrafts();
   const builderModuleMetas = usePhiBuilderModuleMetas(targetArea);
   const pickItems = useMemo(
     () => buildPhiStructureRegionPickItems(builderModuleMetas.plugins),
     [builderModuleMetas.plugins],
   );
-  const hydratedAreaRef = useRef<PhiDeveloperBuilderArea | null>(null);
-
-  useEffect(() => {
-    if (builderMode === "preview" && previewRegionDrafts && Object.keys(previewRegionDrafts).length > 0) {
-      mergePhiDeveloperRegionDrafts(previewRegionDrafts as Record<string, PhiDeveloperBuilderRegionDraft>);
-    }
-
-    if (hydratedAreaRef.current !== area) {
-      hydratedAreaRef.current = area;
-      const nextAreaShellDrafts = structureShellDrafts ?? {};
-      if (Object.keys(nextAreaShellDrafts).length > 0) {
-        mergePhiDeveloperRegionDrafts(nextAreaShellDrafts);
-        return;
-      }
-    }
-
-    const shellDraftKeys = PHI_BUILDER_SHELL_REGION_KEYS.map((regionKey) =>
-      getPhiBuilderRegionDraftKey(area, regionKey, pageKey),
-    );
-    const needsShellHydration = shellDraftKeys.some((draftKey) => regionDrafts[draftKey] == null);
-
-    if (!needsShellHydration) {
-      return;
-    }
-
-    const nextShellDrafts = structureShellDrafts ?? {};
-    const missingShellDrafts = Object.fromEntries(
-      Object.entries(nextShellDrafts).filter(([draftKey]) => regionDrafts[draftKey] == null),
-    );
-
-    if (Object.keys(missingShellDrafts).length > 0) {
-      mergePhiDeveloperRegionDrafts(missingShellDrafts);
-    }
-  }, [area, builderMode, pageKey, previewRegionDrafts, regionDrafts, structureShellDrafts]);
+  const shellDraftKeys = useMemo(
+    () => PHI_BUILDER_SHELL_REGION_KEYS.map((regionKey) => getPhiBuilderRegionDraftKey(area, regionKey, pageKey)),
+    [area, pageKey],
+  );
+  usePhiBuilderRegionDraftHydration({
+    draftKeys: shellDraftKeys,
+    serverDrafts: structureShellDrafts,
+    builderMode,
+    previewRegionDrafts,
+  });
 
   /*
    * What the left Sider is doing, read the same way the controller reads it.
@@ -112,8 +87,12 @@ export function PhiDeveloperBuilderShellsWorkspaceWidgetClient({
    * state.
    */
   const siderLeftDraftKey = getPhiBuilderRegionDraftKey(area, "sider_left", pageKey);
+  const siderLeftDraft = usePhiDeveloperRegionDraftsValue(useCallback(
+    (drafts: Record<string, PhiDeveloperBuilderRegionDraft>) => drafts[siderLeftDraftKey] ?? null,
+    [siderLeftDraftKey],
+  ));
   const siderLeftFullHeight = hasPhiConfigFlag(
-    (regionDrafts[siderLeftDraftKey] ?? structureShellDrafts?.[siderLeftDraftKey])?.regionConfig,
+    (siderLeftDraft ?? structureShellDrafts?.[siderLeftDraftKey])?.regionConfig,
     PhiCmsFlags.FullHeight,
   );
 

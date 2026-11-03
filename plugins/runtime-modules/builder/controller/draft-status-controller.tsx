@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { PHI_SIGNAL_VALUE_SCHEMAS, type PhiSignalAddress } from "../../../../types/signals";
 import type { PhiDraftStatusSignalValue } from "../../../../types/draft-status";
@@ -148,6 +148,13 @@ export function usePhiBuilderDraftStatusController({
   const subject = target?.subject ?? null;
   const historyContext = target?.historyContext ?? null;
   const [stored, setStored] = useState<PhiBuilderStoredDraftStatus | null>(null);
+  /*
+   * The history head each target was last saved or first read at. The status is read again whenever the
+   * target changes -- an Area switched away from and back -- and taking the head at that moment called
+   * every edit made before it saved: back on an Area with an unsaved edit, the badge said "Published".
+   * A target keeps the head it was read or saved at until it is saved again.
+   */
+  const savedHeadsRef = useRef(new Map<string, unknown>());
   const historyHead = phiBuilderHistory.useHead(historyContext ?? PHI_BUILDER_NO_DRAFT_HISTORY_CONTEXT);
 
   useEffect(() => {
@@ -162,7 +169,15 @@ export function usePhiBuilderDraftStatusController({
       setStored({
         requestKey: targetUrl,
         ...next,
-        savedHead: historyContext === null ? null : phiBuilderHistory.getHead(historyContext),
+        savedHead: (() => {
+          if (!savedHeadsRef.current.has(targetUrl)) {
+            savedHeadsRef.current.set(
+              targetUrl,
+              historyContext === null ? null : phiBuilderHistory.getHead(historyContext),
+            );
+          }
+          return savedHeadsRef.current.get(targetUrl);
+        })(),
       });
     };
 
@@ -269,6 +284,7 @@ export function usePhiBuilderDraftStatusController({
     if (targetUrl === null) {
       return;
     }
+    savedHeadsRef.current.set(targetUrl, savedAt.head);
     setStored({
       requestKey: targetUrl,
       status,

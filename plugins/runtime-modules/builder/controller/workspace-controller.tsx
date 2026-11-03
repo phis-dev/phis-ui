@@ -920,12 +920,17 @@ function usePhiDeveloperBuilderWorkspaceController(
       return;
     }
 
+    /*
+     * The switch's own change is not told back to it -- once. The note is consumed whatever this run
+     * finds: kept until it matched, it outlived a change of Area, and on the way back it matched again
+     * and swallowed the very report that would have set the switch to this Area's draft.
+     */
     const handledSiderLayout = handledSiderLayoutRef.current;
+    handledSiderLayoutRef.current = null;
     if (
       handledSiderLayout?.draftKey === siderLeftDraftKey &&
       handledSiderLayout.fullHeight === siderLeftFullHeight
     ) {
-      handledSiderLayoutRef.current = null;
       return;
     }
 
