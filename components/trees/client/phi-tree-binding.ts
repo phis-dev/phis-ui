@@ -160,18 +160,29 @@ export function usePhiTreeBinding({
       controllers.clear();
     };
   }, []);
+  /*
+   * A new source, or new defaults, start the tree over -- in the render that brought them, so the query
+   * effect below asks once, with the reset query, instead of first with the old one.
+   *
+   * The search a reader typed stays. Resetting it to the initial query showed the unfiltered tree for a
+   * moment and fetched it, and the Widget's debounce put the search back 250 ms later for a third request:
+   * a new binding parameter narrows what the tree is about, not what the reader is looking for.
+   */
+  const [renderedResetInputs, setRenderedResetInputs] = useState({ sourceKey, initialQuery, defaultExpandedNodeIdentities });
+  if (
+    renderedResetInputs.sourceKey !== sourceKey ||
+    renderedResetInputs.initialQuery !== initialQuery ||
+    renderedResetInputs.defaultExpandedNodeIdentities !== defaultExpandedNodeIdentities
+  ) {
+    setRenderedResetInputs({ sourceKey, initialQuery, defaultExpandedNodeIdentities });
+    setNodes([]);
+    setSelectedNodeIdentities([]);
+    setCheckedNodeIdentities([]);
+    setExpandedNodeIdentities(defaultExpandedNodeIdentities);
+    setQuery((current) => (current.search ? { ...initialQuery, search: current.search } : initialQuery));
+  }
   useEffect(() => {
     expandedInitialSnapshot.current = false;
-    let cancelled = false;
-    queueMicrotask(() => {
-      if (cancelled) return;
-      setNodes([]);
-      setSelectedNodeIdentities([]);
-      setCheckedNodeIdentities([]);
-      setExpandedNodeIdentities(defaultExpandedNodeIdentities);
-      setQuery(initialQuery);
-    });
-    return () => { cancelled = true; };
   }, [defaultExpandedNodeIdentities, initialQuery, sourceKey]);
 
   useEffect(() => {

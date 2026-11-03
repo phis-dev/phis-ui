@@ -205,26 +205,35 @@ export function usePhiTableBinding({
     for (const controller of mutationControllers.current) controller.abort();
     mutationControllers.current.clear();
   }, []);
+  /*
+   * A new source starts from nothing, and it does so in the render that brought it.
+   *
+   * The reset used to run in a microtask after the effects, so the query effect below had already
+   * fetched the new source with the old page and cursor -- one request thrown away on every source or
+   * `bindingParamsChange`. Adjusting state while rendering is React's way to follow a prop: the effects
+   * of this render see page 1 already. It also leaves the first render alone, so an `initialQuery` page
+   * and `initialExpandedRowIdentities` are no longer reset away on mount.
+   */
+  const [renderedSourceKey, setRenderedSourceKey] = useState(sourceKey);
+  if (renderedSourceKey !== sourceKey) {
+    setRenderedSourceKey(sourceKey);
+    setPendingMutationTargets(new Set());
+    setRows([]);
+    setTotal(0);
+    setSummary({});
+    setSelectedRowIdentities([]);
+    setExpandedRowIdentities([]);
+    setQuery((current) => ({ ...current, page: 1, cursor: null }));
+    setQueryLoading(sourceKey !== "null");
+    setError(null);
+  }
+  // What a render cannot reset: requests in flight and the bookkeeping kept beside state.
   useEffect(() => {
     for (const controller of mutationControllers.current) controller.abort();
     mutationControllers.current.clear();
     latestMutationByTarget.current.clear();
     pendingMutationCountsByTarget.current.clear();
     rowsRef.current = [];
-    let cancelled = false;
-    queueMicrotask(() => {
-      if (cancelled) return;
-      setPendingMutationTargets(new Set());
-      setRows([]);
-      setTotal(0);
-      setSummary({});
-      setSelectedRowIdentities([]);
-      setExpandedRowIdentities([]);
-      setQuery((current) => ({ ...current, page: 1, cursor: null }));
-      setQueryLoading(sourceKey !== "null");
-      setError(null);
-    });
-    return () => { cancelled = true; };
   }, [sourceKey]);
 
   /*
