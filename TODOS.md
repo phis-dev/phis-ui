@@ -49,12 +49,6 @@ Collected for the next published `@phis/ui`, so they ship together rather than o
   overrides keyed by item -- that applies until the Site saves its own, which then wins. Needs a decision
   on whether this is a Site package's right only (one per Site) or any Module's, and how it meets
   MODULES.md's rule that an optional Module never patches a base preset.
-- **A Flex in a vertical stack still takes a share of its height.** The Grid is as tall as its rows
-  now (`slotSizePolicy: "fill-inline"`); the Flex was left on `fill`, because nearly every Flex is an
-  Overlay header or footer, or a Header action row, sitting straight in its zone and centred in its
-  full height. In a Flex Vertical with a definite height it still grows into the room left over. Decide
-  whether a Flex nested in a Flex Vertical should size to its content while one at a zone's root keeps
-  filling, rather than changing the definition for all of them.
 
 ## Layouts and Widgets
 

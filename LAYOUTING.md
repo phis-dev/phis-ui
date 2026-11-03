@@ -360,6 +360,10 @@ The parent slot policy is authoritative; child defaults cannot override it.
   their content, and a Layout that sizes like a Widget says so -- Three Column states `fill-inline` and
   is placed in its slot rather than stretched by it. A child is treated by its policy alone: nothing
   below the definition asks again whether it is a Widget or a Layout.
+- A Flex fills its slot on both axes wherever it stands, nested in a Flex Vertical included: it is there
+  to fill a container, so in one of definite height it grows into the room left over. A Flex that should
+  be as tall as its content says so with a height of its own. A Card fills the same way, so cards in a
+  stretching row end together.
 - Layout depth counts actual Layout nodes only; visual config never adds depth.
 - The Canvas, preview, and published runtime must derive sizing from the same declared policies.
 - Responsive behavior belongs to the Layout that knows the actual slot geometry, not to a global
