@@ -38,6 +38,14 @@ This document collects the cache and invalidation touchpoints in `gateway/*`.
   - Why not `React.cache` directly: it compares arguments by identity, and every caller builds the options object fresh, so these reads were wrapped in `cache(...)` and never once answered from it. Duplicate GETs were absorbed only where Next's fetch memo happened to see the same request (AUDIT-2026-10-13, PU10). `scripts/validate-request-memo.ts` refuses `cache(...)` around a function with a destructured parameter.
   - `React.cache` stays where the parameters are positional: strings compare by value, and an object passed positionally (`cmsBridge`, `runtime`, a catalog) is the caller's own instance for the request.
 
+## Per-Request Rendering Work
+
+Work a render repeats for every Widget or slot, done once per request. Nothing here outlives the request, so nothing is invalidated (audit K15, R9, B37).
+
+- Active navigation surfaces: `resolveActiveNavigationSurfaces` in `components/widgets/navigation-descriptor-resolver.server.ts`, `React.cache` keyed by the request's navigation context, the Area and the viewer. Every navigation Widget of a page picks its surface from the one answer instead of resolving all of the Area's surfaces itself.
+- Page render base: `resolvePhiCmsPageRenderBase` in `components/cms/phi-cms-page-render-scope.tsx`, `React.cache` keyed by the bridge and the memoized root request. The Page and its six slots share the Module scope, the Tour, the viewer-filtered tree, the registry and the Controller config overlays; only the Controllers of the slot's Regions are resolved per slot.
+- Builder preview nodes: `buildPreviewSnapshotNodes` in `plugins/runtime-modules/builder/render-root-node-preview.server.tsx`, a `WeakMap` keyed by the preview snapshot. Every Region preview reads every Region's nodes from one build instead of building them again.
+
 ## Translation Caching
 
 - `readPhiTranslationCache(key)` / `writePhiTranslationCache(key, value, generation?)` / `clearPhiTranslationCache(options?)` / `syncPhiTranslationChangeMarkers(...)`

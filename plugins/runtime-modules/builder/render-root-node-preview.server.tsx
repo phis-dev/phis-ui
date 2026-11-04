@@ -42,6 +42,11 @@ export type PhiBuilderServerPreviewRegionKey =
   | "footer_main"
   | "footer_bottom";
 
+type PhiBuilderPreviewSnapshotNodes = {
+  layoutNodes: readonly PhiCmsLayoutNode[];
+  contentWidgets: readonly PhiCmsContentWidgetNode[];
+};
+
 type PhiBuilderRootNodeServerPreviewProps = {
   rootNode: PhiBuilderRootNodePreviewInput;
   runtime: PhiBlockRuntime;
@@ -49,10 +54,7 @@ type PhiBuilderRootNodeServerPreviewProps = {
   regionKey?: string;
   registry: PhiCmsRuntimeRenderRegistry;
   regionConfig?: Record<string, unknown> | null;
-  extraPreviewNodes?: {
-    layoutNodes: PhiCmsLayoutNode[];
-    contentWidgets: PhiCmsContentWidgetNode[];
-  };
+  extraPreviewNodes?: PhiBuilderPreviewSnapshotNodes;
 };
 
 function buildPreviewTree(
@@ -104,13 +106,31 @@ function resolveRootNodeFromPreviewDraft(draft: PhiBuilderPreviewRegionDraft | n
   return draft?.rootNode ? readPhiBuilderRootNodeDraft(draft.rootNode) : null;
 }
 
-function buildPreviewSnapshotNodes(snapshot: PhiBuilderPreviewSnapshot | null) {
+/*
+ * The nodes of every Region in one preview snapshot, built once per snapshot.
+ *
+ * Each of the ten Region previews needs all of them -- a signal route may name a node in another Region
+ * -- and each used to build every Region's tree again: about a hundred tree builds for one preview
+ * request. A snapshot is one parsed object per request and nothing here writes the result, so it is kept
+ * by that object and dropped with it.
+ */
+const previewSnapshotNodes = new WeakMap<PhiBuilderPreviewSnapshot, PhiBuilderPreviewSnapshotNodes>();
+
+function buildPreviewSnapshotNodes(snapshot: PhiBuilderPreviewSnapshot | null): PhiBuilderPreviewSnapshotNodes {
+  if (!snapshot) {
+    return { layoutNodes: [], contentWidgets: [] };
+  }
+  let nodes = previewSnapshotNodes.get(snapshot);
+  if (!nodes) {
+    nodes = collectPreviewSnapshotNodes(snapshot);
+    previewSnapshotNodes.set(snapshot, nodes);
+  }
+  return nodes;
+}
+
+function collectPreviewSnapshotNodes(snapshot: PhiBuilderPreviewSnapshot): PhiBuilderPreviewSnapshotNodes {
   const layoutNodes: PhiCmsLayoutNode[] = [];
   const contentWidgets: PhiCmsContentWidgetNode[] = [];
-
-  if (!snapshot) {
-    return { layoutNodes, contentWidgets };
-  }
 
   for (const [draftKey, draft] of Object.entries(snapshot.regionDrafts)) {
     const regionKey = draftKey.split(":").at(-1);

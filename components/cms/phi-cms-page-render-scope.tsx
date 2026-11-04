@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { cache, type ReactNode } from "react";
 
 import type { PhiBlockRuntime } from "../../types";
 import type { PhiCmsSiteBridge } from "../../types/cms-plugins";
@@ -29,25 +29,20 @@ import {
 
 type PhiCmsResolvedRootRequest = NonNullable<Awaited<ReturnType<typeof loadPhiCmsRootRequest>>["resolvedRequest"]>;
 
-/**
- * What a Page and each of its Region slots work out before they render: the Module scope of the Area,
- * the tree filtered to what this viewer may see, the registry of what the tree needs, and the Page's
- * Controllers for the Regions in question.
+/*
+ * What a Page and every one of its Region slots share: the Area's Module scope, the Page's Tour, the tree
+ * filtered for this viewer, the registry of what that tree needs, and the Controller config the tree
+ * carries. None of it depends on the Region.
  *
- * The Page and the slot used to carry this as two copies, four blocks apart, and the slot's trailed the
- * Page's. One resolution, parameterised by the Regions it is for.
+ * The Page and its six slots render in parallel and each worked all of it out again -- up to seven
+ * filters of the same tree and seven registries per request (audit R9). The root request is memoized per
+ * request (`loadPhiCmsRootRequest`), so every slot holds the same object, and React's `cache` keyed by it
+ * and the bridge keeps this for exactly that request.
  */
-export async function resolvePhiCmsPageRenderScope({
-  cmsBridge,
-  resolvedRequest,
-  regionTypes,
-  includeOverlays = false,
-}: {
-  cmsBridge: PhiCmsSiteBridge;
-  resolvedRequest: PhiCmsResolvedRootRequest;
-  regionTypes: number[];
-  includeOverlays?: boolean;
-}) {
+const resolvePhiCmsPageRenderBase = cache(async (
+  cmsBridge: PhiCmsSiteBridge,
+  resolvedRequest: PhiCmsResolvedRootRequest,
+) => {
   const runtimeModuleScope = await resolvePhiCmsAreaRuntimeModuleScope({
     cmsBridge,
     area: resolvedRequest.runtime.area,
@@ -77,20 +72,6 @@ export async function resolvePhiCmsPageRenderScope({
   });
   // What the Area runs for every Page: a Page setting for one of these configures it, it is not a second.
   const enclosingSettings = runtimeModuleScope.moduleSet.areaControllerSettings;
-  const pageControllerSettings = materializePhiRuntimeControllerSettings({
-    tree: filteredPageTree,
-    ownerMountScope: "page",
-    widgetPluginsByType: runtimeModuleScope.widgetDefinitionsByType,
-    enclosingSettings,
-    activeControllerTypes: [...runtimeModuleScope.moduleSet.controllerDescriptorsByType.keys()],
-    regionTypes,
-    ...(includeOverlays ? { includeOverlays: true } : {}),
-  });
-  const controllerDefinitionsByType = await resolvePhiRuntimeControllerDefinitions({
-    catalog: cmsBridge.runtimeModuleCatalog,
-    moduleSet: runtimeModuleScope.moduleSet,
-    settings: pageControllerSettings,
-  });
   const controllerConfigOverlays = collectPhiRuntimeControllerConfigOverlays({
     tree: filteredPageTree,
     ownerMountScope: "page",
@@ -117,8 +98,51 @@ export async function resolvePhiCmsPageRenderScope({
     runtimeModuleScope,
     filteredPageTree,
     runtimeRegistry,
+    enclosingSettings,
+    controllerConfigOverlays: controllerConfigOverlays as readonly (typeof controllerConfigOverlays)[number][],
+  };
+});
+
+/**
+ * What a Page and each of its Region slots work out before they render: the shared part above, and the
+ * Page's Controllers for the Regions in question.
+ *
+ * The Page and the slot used to carry this as two copies, four blocks apart, and the slot's trailed the
+ * Page's. One resolution, parameterised by the Regions it is for.
+ */
+export async function resolvePhiCmsPageRenderScope({
+  cmsBridge,
+  resolvedRequest,
+  regionTypes,
+  includeOverlays = false,
+}: {
+  cmsBridge: PhiCmsSiteBridge;
+  resolvedRequest: PhiCmsResolvedRootRequest;
+  regionTypes: number[];
+  includeOverlays?: boolean;
+}) {
+  const base = await resolvePhiCmsPageRenderBase(cmsBridge, resolvedRequest);
+  const { runtimeModuleScope, filteredPageTree } = base;
+  const pageControllerSettings = materializePhiRuntimeControllerSettings({
+    tree: filteredPageTree,
+    ownerMountScope: "page",
+    widgetPluginsByType: runtimeModuleScope.widgetDefinitionsByType,
+    enclosingSettings: base.enclosingSettings,
+    activeControllerTypes: [...runtimeModuleScope.moduleSet.controllerDescriptorsByType.keys()],
+    regionTypes,
+    ...(includeOverlays ? { includeOverlays: true } : {}),
+  });
+  const controllerDefinitionsByType = await resolvePhiRuntimeControllerDefinitions({
+    catalog: cmsBridge.runtimeModuleCatalog,
+    moduleSet: runtimeModuleScope.moduleSet,
+    settings: pageControllerSettings,
+  });
+  return {
+    runtimeModuleScope,
+    filteredPageTree,
+    runtimeRegistry: base.runtimeRegistry,
     pageControllerSettings,
-    controllerConfigOverlays,
+    controllerConfigOverlays: base.controllerConfigOverlays,
     controllerDefinitionsByType,
   };
 }

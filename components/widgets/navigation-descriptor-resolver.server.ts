@@ -15,6 +15,8 @@ import {
   resolvePhiCmsActiveNavigationSurfaces,
   resolvePhiCmsRoutePresetByPageId,
 } from "../../plugins/runtime-modules/descriptor-compiler";
+import { cache } from "react";
+
 import { logRuntimeEvent } from "../../net/log";
 import { phiRuntime } from "../../server-helpers/phi-runtime";
 import { getPhiRequestNavigationContext } from "../../server-helpers/request-runtime";
@@ -91,6 +93,26 @@ function mapResolvedNavigationItem(
   };
 }
 
+/*
+ * Every active navigation surface of an Area, resolved once per request (audit K15).
+ *
+ * A page carries a navigation Widget per surface -- header, footer, sider -- and each one resolved all of
+ * the Area's surfaces to pick its own, hashing an instance id per item each time. The request's navigation
+ * context and its viewer are one object each per request, so React's `cache` keyed by them keeps the
+ * answer for exactly that request and nothing longer.
+ */
+const resolveActiveNavigationSurfaces = cache((
+  context: ReturnType<typeof getPhiRequestNavigationContext>,
+  area: PhiBlockRuntime["area"],
+  viewer: PhiBlockRuntime["viewer"],
+) => resolvePhiCmsActiveNavigationSurfaces({
+  catalog: context.catalog,
+  area,
+  activeModuleIds: context.activeModuleIds,
+  routeTable: context.routeTable,
+  viewer,
+}));
+
 export async function resolvePhiDescriptorNavigationItems(
   runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer">,
   navKey: string,
@@ -101,14 +123,10 @@ export async function resolvePhiDescriptorNavigationItems(
     return null;
   }
 
-  const { catalog, activeModuleIds, routeTable } = getPhiRequestNavigationContext(runtime.area);
-  const descriptorSurface = resolvePhiCmsActiveNavigationSurfaces({
-    catalog,
-    area: runtime.area,
-    activeModuleIds,
-    routeTable,
-    viewer: runtime.viewer,
-  }).find((candidate) => candidate.navKey === normalizedNavKey);
+  const navigationContext = getPhiRequestNavigationContext(runtime.area);
+  const { routeTable } = navigationContext;
+  const descriptorSurface = resolveActiveNavigationSurfaces(navigationContext, runtime.area, runtime.viewer)
+    .find((candidate) => candidate.navKey === normalizedNavKey);
   if (!descriptorSurface && !overlay) {
     return null;
   }
