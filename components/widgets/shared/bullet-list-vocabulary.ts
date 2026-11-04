@@ -109,6 +109,20 @@ export function resolvePhiBulletListLevel(depth: number): PhiBulletListLevel {
 }
 
 /**
+ * What an entry says about the thing the list belongs to, where the list is a list of what is in it -- a
+ * plan's features. `included` draws a tick, `excluded` a dash and the entry's words quieter; `neutral`
+ * is the list's own marker, and is what an entry without a state is. Stored only where it is not neutral.
+ */
+export const PHI_BULLET_LIST_ENTRY_STATES = ["included", "excluded", "neutral"] as const;
+export type PhiBulletListEntryState = (typeof PHI_BULLET_LIST_ENTRY_STATES)[number];
+
+/** The state after `state`, in the order a click on a marker steps through them. */
+export function nextPhiBulletListEntryState(state: PhiBulletListEntryState | undefined): PhiBulletListEntryState {
+  const index = PHI_BULLET_LIST_ENTRY_STATES.indexOf(state ?? "neutral");
+  return PHI_BULLET_LIST_ENTRY_STATES[(index + 1) % PHI_BULLET_LIST_ENTRY_STATES.length]!;
+}
+
+/**
  * One entry of a list written as a list: its text, how deep it stands, and the values its text names.
  *
  * `values` keep what changes from Site to Site out of the sentence: "Site key: %1" with the key beside it
@@ -120,6 +134,8 @@ export type PhiBulletListEntry = {
   /** 1 for the outermost level, which is what an entry without one stands at. */
   level?: number;
   values?: string[];
+  /** Absent is `neutral`. */
+  state?: Exclude<PhiBulletListEntryState, "neutral">;
 };
 
 export function readPhiBulletListEntries(value: unknown): PhiBulletListEntry[] {
@@ -135,10 +151,12 @@ export function readPhiBulletListEntries(value: unknown): PhiBulletListEntry[] {
     const values = Array.isArray(record.values)
       ? record.values.map((item) => (typeof item === "string" || typeof item === "number" ? String(item) : ""))
       : [];
+    const state = record.state === "included" || record.state === "excluded" ? record.state : undefined;
     return [{
       text: record.text as string,
       ...(level > 1 ? { level } : {}),
       ...(values.length > 0 ? { values } : {}),
+      ...(state ? { state } : {}),
     }];
   });
 }
@@ -146,6 +164,10 @@ export function readPhiBulletListEntries(value: unknown): PhiBulletListEntry[] {
 /** An entry of the tree the Control draws: what it shows, and the entries one level below it. */
 export type PhiBulletListNode<Content> = {
   content: Content;
+  /** Absent is `neutral`: the marker of the entry's level. */
+  state?: PhiBulletListEntryState;
+  /** Set by an editor: the marker becomes a button that steps the entry's state on. */
+  onMarkerClick?: () => void;
   children?: PhiBulletListNode<Content>[];
 };
 
@@ -154,9 +176,10 @@ export type PhiBulletListNode<Content> = {
  * more than a level hangs one level below it all the same: a level cannot be skipped in a nested list,
  * and an entry that tried stays with the entry it follows rather than jumping.
  */
-export function buildPhiBulletListTree<Entry extends { level?: number }, Content>(
+export function buildPhiBulletListTree<Entry extends { level?: number; state?: PhiBulletListEntryState }, Content>(
   entries: readonly Entry[],
   content: (entry: Entry, index: number) => Content,
+  onMarkerClick?: (entry: Entry, index: number) => void,
 ): PhiBulletListNode<Content>[] {
   const root: PhiBulletListNode<Content>[] = [];
   const open: PhiBulletListNode<Content>[][] = [root];
@@ -164,7 +187,11 @@ export function buildPhiBulletListTree<Entry extends { level?: number }, Content
     const wanted = resolvePhiBulletListLevel(entry.level ?? 1);
     const level = Math.min(wanted, open.length);
     open.length = level;
-    const node: PhiBulletListNode<Content> = { content: content(entry, index) };
+    const node: PhiBulletListNode<Content> = {
+      content: content(entry, index),
+      ...(entry.state && entry.state !== "neutral" ? { state: entry.state } : {}),
+      ...(onMarkerClick ? { onMarkerClick: () => onMarkerClick(entry, index) } : {}),
+    };
     open[level - 1]!.push(node);
     node.children = [];
     open.push(node.children);

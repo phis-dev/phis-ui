@@ -1,5 +1,5 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
-import { PHI_CARD_VARIANTS } from "../../../../../components/widgets/shared/card-vocabulary";
+import { PHI_CARD_VARIANTS, readPhiCardBillingPeriod } from "../../../../../components/widgets/shared/card-vocabulary";
 import type {
   PhiCmsCollectionCardPresentation,
   PhiCmsCollectionFilterPresentation,
@@ -43,8 +43,15 @@ function readCardPresentation(value: unknown): PhiCmsCollectionCardPresentation 
     actionLabel: readString(value.actionLabel),
     actionHref: readString(value.actionHref),
     variant: PHI_CARD_VARIANTS.find((candidate) => candidate === variant),
-    body: value.body === "text" || value.body === "stat" ? value.body : undefined,
+    body: value.body === "text" || value.body === "stat" || value.body === "plan" ? value.body : undefined,
     highlight: readString(value.highlight),
+    badge: readString(value.badge),
+    price: readString(value.price),
+    pricePeriod: readString(value.pricePeriod),
+    priceYearly: readString(value.priceYearly),
+    pricePeriodYearly: readString(value.pricePeriodYearly),
+    features: readString(value.features),
+    billingPeriod: readPhiCardBillingPeriod(value.billingPeriod),
   };
 }
 

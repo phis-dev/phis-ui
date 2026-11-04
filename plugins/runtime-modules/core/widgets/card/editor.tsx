@@ -13,6 +13,14 @@ import {
   type PhiCardTextSlot,
 } from "../../../../../components/widgets/shared/card-body-client";
 import { PHI_CARD_WIDGET_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/card";
+import { PhiBulletListEntriesEditor } from "../../../../../components/widgets/client/bullet-list-entries-editor";
+import {
+  resolvePhiBulletListStyle,
+  type PhiBulletListEntry,
+} from "../../../../../components/widgets/shared/bullet-list-vocabulary";
+
+/* One empty list for every card without features, so the list editor's draft is not reset per render. */
+const PHI_CARD_NO_FEATURES: readonly PhiBulletListEntry[] = [];
 
 export type PhiCardWidgetEditorProps = {
   config: PhiCmsCardWidgetConfig;
@@ -26,13 +34,27 @@ const PHI_CARD_TEXT_PLACEHOLDERS: Record<PhiCardTextSlot, string> = {
   description: "Description",
   meta: "Meta",
   value: "Value",
+  badge: "Badge",
+  price: "Price",
+  pricePeriod: "/ month",
+  priceYearly: "Yearly price",
+  pricePeriodYearly: "/ year",
+};
+
+/* Slots only one body draws; under any other the editor offers no field for them. */
+const PHI_CARD_BODY_TEXT_SLOTS: Partial<Record<PhiCardTextSlot, PhiCmsCardWidgetConfig["body"]>> = {
+  value: "stat",
+  price: "plan",
+  pricePeriod: "plan",
+  priceYearly: "plan",
+  pricePeriodYearly: "plan",
 };
 
 /*
  * Slots a card often goes without. Empty, they stand on the canvas only while the card is under the
  * pointer or being written in (`styles/layout.css`), so an empty card does not read as four empty lines.
  */
-const PHI_CARD_OPTIONAL_TEXT_SLOTS: ReadonlySet<PhiCardTextSlot> = new Set(["eyebrow", "meta"]);
+const PHI_CARD_OPTIONAL_TEXT_SLOTS: ReadonlySet<PhiCardTextSlot> = new Set(["eyebrow", "meta", "badge"]);
 
 /**
  * One of the card's words, edited where it stands: underlined, in the type of the text it edits.
@@ -148,9 +170,15 @@ export function PhiCardWidgetEditor({ config, onChange }: PhiCardWidgetEditorPro
           meta: config.meta,
           actionLabel: config.actionLabel ?? PHI_CARD_WIDGET_DEFAULT_LABELS.actionLabel,
           value: config.value,
+          badge: config.badge,
+          price: config.price,
+          pricePeriod: config.pricePeriod,
+          priceYearly: config.priceYearly,
+          pricePeriodYearly: config.pricePeriodYearly,
         }}
         renderText={(slot, text) => {
-          if (slot === "value" && config.body !== "stat") return null;
+          const onlyUnder = PHI_CARD_BODY_TEXT_SLOTS[slot];
+          if (onlyUnder && (config.body ?? "text") !== onlyUnder) return null;
           const field = (
             <PhiCardInlineText
               slot={slot}
@@ -190,8 +218,20 @@ export function PhiCardWidgetEditor({ config, onChange }: PhiCardWidgetEditorPro
           variant: config.variant,
           body: config.body,
           highlight: config.highlight,
+          badgeColor: config.badgeColor,
+          billingPeriod: config.billingPeriod,
           hoverEffect: config.linkTarget ? config.hoverEffect : undefined,
         }}
+        {...(config.body === "plan" ? {
+          listContent: (
+            <PhiBulletListEntriesEditor
+              entries={config.features ?? PHI_CARD_NO_FEATURES}
+              listStyle={resolvePhiBulletListStyle(config.featureList)}
+              states
+              {...(onChange ? { onCommit: (features: PhiBulletListEntry[]) => onChange({ features }) } : {})}
+            />
+          ),
+        } : {})}
       />
       {pictureTooNarrow ? (
         <PhiTypographyControl

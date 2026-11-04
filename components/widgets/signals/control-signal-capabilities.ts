@@ -101,6 +101,16 @@ export const PHI_CARD_SIGNALS = {
     { id: "description", channel: "description", action: "change", valueType: "string" },
     { id: "meta", channel: "meta", action: "change", valueType: "string" },
     { id: "highlight", channel: "highlight", action: "change", valueType: "boolean" },
+    { id: "badge", channel: "badge", action: "change", valueType: "string" },
+    /*
+     * A plan's prices, for a Controller that knows them better than the page does -- by the reader's
+     * country, say -- and the period a switch on the page shows (`monthly` or `yearly`).
+     */
+    { id: "price", channel: "price", action: "change", valueType: "string" },
+    { id: "pricePeriod", channel: "pricePeriod", action: "change", valueType: "string" },
+    { id: "priceYearly", channel: "priceYearly", action: "change", valueType: "string" },
+    { id: "pricePeriodYearly", channel: "pricePeriodYearly", action: "change", valueType: "string" },
+    { id: "billingPeriod", channel: "billingPeriod", action: "change", valueType: "string" },
   ],
 } satisfies PhiSignalPluginMeta;
 

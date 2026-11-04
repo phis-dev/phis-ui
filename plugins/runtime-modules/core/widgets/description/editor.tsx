@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 
@@ -8,10 +8,8 @@ import type { PhiCmsDescriptionWidgetConfig } from "./config";
 import { PhiTextControl } from "../../../../../components/controls/phi-text-control";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { resolvePhiDescriptionEditorSections } from "../../../../../components/widgets/client/description-editor-sections";
-import { PhiBulletListControl } from "../../../../../components/controls/phi-bullet-list-control";
+import { PhiBulletListEntriesEditor } from "../../../../../components/widgets/client/bullet-list-entries-editor";
 import {
-  buildPhiBulletListTree,
-  resolvePhiBulletListLevel,
   resolvePhiBulletListStyle,
   type PhiBulletListEntry,
 } from "../../../../../components/widgets/shared/bullet-list-vocabulary";
@@ -65,7 +63,6 @@ export function PhiDescriptionWidgetEditor({
    * would be gone before its blur could write the empty value.
    */
   const sections = resolvePhiDescriptionEditorSections(resolvedConfig, Boolean(onChange));
-  const asideListRef = useRef<HTMLDivElement>(null);
 
   /*
    * Typing changes the draft and nothing else.
@@ -89,52 +86,6 @@ export function PhiDescriptionWidgetEditor({
       return;
     }
     onChange?.({ [key]: draft[key] } as Partial<PhiCmsDescriptionWidgetConfig>);
-  }
-
-  function updateAsideItem(index: number, value: string) {
-    setDraftState((current) => {
-      const currentDraft = current.source === config ? current.value : resolvedConfig;
-      const nextItems = [...currentDraft.asideItems];
-      nextItems[index] = { ...nextItems[index], text: value };
-      return {
-        source: config,
-        value: {
-          ...currentDraft,
-          asideItems: nextItems,
-        },
-      };
-    });
-  }
-
-  function commitAsideItems(items = draft.asideItems) {
-    if (JSON.stringify(items) === JSON.stringify(resolvedConfig.asideItems)) {
-      return;
-    }
-    onChange?.({ asideItems: items });
-  }
-
-  /*
-   * Tab moves an entry a level down and Shift+Tab a level up, as in every outline editor. The move is
-   * written at once, with whatever was typed into the entry so far: it is a change of structure, and
-   * waiting for the blur would let the entry jump back as the tree is drawn again.
-   */
-  function shiftAsideItemLevel(index: number, delta: number) {
-    const items = draft.asideItems;
-    const entry = items[index];
-    if (!entry) return;
-    const level = resolvePhiBulletListLevel((entry.level ?? 1) + delta);
-    if (level === (entry.level ?? 1)) return;
-    const { level: _level, ...rest } = entry;
-    void _level;
-    const next = items.map((item, itemIndex) => (itemIndex === index ? (level > 1 ? { ...rest, level } : rest) : item));
-    setDraftState({ source: config, value: { ...draft, asideItems: next } });
-    commitAsideItems(next);
-    // The entry now hangs elsewhere in the tree and its field is a new one; the caret goes back into it.
-    requestAnimationFrame(() => {
-      const field = asideListRef.current?.querySelectorAll("textarea")[index];
-      field?.focus();
-      field?.setSelectionRange(field.value.length, field.value.length);
-    });
   }
 
   return (
@@ -238,35 +189,11 @@ export function PhiDescriptionWidgetEditor({
                 fontWeight: 600,
               }}
             />
-            <div ref={asideListRef} style={{ width: "100%", minWidth: 0 }}>
-              <PhiBulletListControl
-                listStyle={resolvePhiBulletListStyle(config?.asideList)}
-                // Each entry is a borderless text field, whose first line stands at the field's height.
-                markerLineHeight="var(--ant-control-height)"
-                items={buildPhiBulletListTree(draft.asideItems, (item, index) => (
-                  <PhiTextControl
-                    presentation="textarea"
-                    value={item.text}
-                    readOnly={!onChange}
-                    variant="borderless"
-                    placeholder={`Item ${index + 1}`}
-                    autoSize={{ minRows: 1, maxRows: 6 }}
-                    onChange={(value) => updateAsideItem(index, value ?? "")}
-                    onBlur={() => commitAsideItems()}
-                    onKeyDown={(event) => {
-                      if (event.key !== "Tab" || !onChange) return;
-                      event.preventDefault();
-                      shiftAsideItemLevel(index, event.shiftKey ? -1 : 1);
-                    }}
-                    style={{
-                      ...EDITOR_TEXTAREA_STYLE,
-                      borderBottom: "none",
-                      paddingBlock: 0,
-                    }}
-                  />
-                ))}
-              />
-            </div>
+            <PhiBulletListEntriesEditor
+              entries={resolvedConfig.asideItems}
+              listStyle={resolvePhiBulletListStyle(config?.asideList)}
+              {...(onChange ? { onCommit: (asideItems: PhiBulletListEntry[]) => onChange({ asideItems }) } : {})}
+            />
           </PhiFlexControl>
         ) : null}
         <PhiTextControl

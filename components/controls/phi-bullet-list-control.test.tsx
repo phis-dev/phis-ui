@@ -2,7 +2,13 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { PHI_SURFACE_CARD } from "../../helpers/surface-presets";
-import { PhiBulletListFlag, resolvePhiBulletListStyle } from "../widgets/shared/bullet-list-vocabulary";
+import {
+  buildPhiBulletListTree,
+  nextPhiBulletListEntryState,
+  PhiBulletListFlag,
+  readPhiBulletListEntries,
+  resolvePhiBulletListStyle,
+} from "../widgets/shared/bullet-list-vocabulary";
 import { PhiBulletListControl } from "./phi-bullet-list-control";
 
 const count = (html: string, pattern: RegExp) => html.match(pattern)?.length ?? 0;
@@ -51,5 +57,35 @@ describe("PhiBulletListControl", () => {
       />,
     );
     expect(count(divided, /border-top:1px/g)).toBe(1);
+  });
+
+  it("draws an entry's state in place of its level's marker, and quiets what is excluded", () => {
+    const html = renderToStaticMarkup(
+      <PhiBulletListControl
+        listStyle={resolvePhiBulletListStyle({ level1: "none" })}
+        items={buildPhiBulletListTree(
+          readPhiBulletListEntries([
+            { text: "in", state: "included" },
+            { text: "out", state: "excluded" },
+            { text: "plain", state: "neutral" },
+          ]),
+          (entry) => entry.text,
+        )}
+      />,
+    );
+    // Two state markers, and nothing for the neutral entry of a list whose marker is none.
+    expect(count(html, /<span aria-hidden="true" style="display:inline-flex/g)).toBe(2);
+    expect(html).toMatch(/color:var\(--ant-color-text-tertiary\)[^>]*>out</);
+    expect(html).not.toContain("<button");
+  });
+
+  it("stores only a state that is not neutral, and steps through all three", () => {
+    expect(readPhiBulletListEntries([{ text: "a", state: "neutral" }, { text: "b", state: "maybe" }])).toEqual([
+      { text: "a" },
+      { text: "b" },
+    ]);
+    expect(nextPhiBulletListEntryState(undefined)).toBe("included");
+    expect(nextPhiBulletListEntryState("included")).toBe("excluded");
+    expect(nextPhiBulletListEntryState("excluded")).toBe("neutral");
   });
 });

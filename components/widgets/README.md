@@ -292,6 +292,17 @@ record's source text instead of its localized version.
   asked for less motion; a further effect is an entry in `PHI_CARD_HOVER_EFFECTS` and a rule in
   `styles/layout.css`. Asset sources persist `assetId` and `variantKey`; only `url` sources persist
   `sourceUrl`, shown plainly with a placeholder.
+- A `plan` body is an offer: a price and its period (`price`, `pricePeriod`) and a yearly pair
+  (`priceYearly`, `pricePeriodYearly`) over the plan's `features`, a list whose entries carry a state, set
+  by `featureList`. `billingPeriod` (`monthly` default, `yearly`) picks the price shown; a card without a
+  yearly price keeps the monthly one. The button stands at the card's foot, so plans side by side in a
+  row keep their buttons on one line; the recommended plan is the `highlight`ed card. Prices are never
+  translated, periods and features are. The card listens on `price`, `pricePeriod`, `priceYearly`,
+  `pricePeriodYearly` and `billingPeriod`, so a Controller can set a price by the reader's country and a
+  Segmented Widget with the values `monthly` and `yearly` switches every plan on the page. The features
+  are drawn on the server and handed in as `listContent`, so the list Control is not in the Card's client
+  code. Any card may carry a `badge`, a band at its end edge (`PhiRibbonControl`) in `badgeColor` or the
+  Theme's primary, set by signal on `badge` as well; it is independent of `highlight`.
 - A list is drawn by `PhiBulletListControl` (`components/controls/phi-bullet-list-control.tsx`) and set
   with one vocabulary (`components/widgets/shared/bullet-list-vocabulary.ts`): the Description's aside
   (`asideItems`, set by `asideList`) and a Markdown text's lists (set by `list`). The Control draws on the
@@ -304,8 +315,12 @@ record's source text instead of its localized version.
   `buildPhiBulletListFields(key, heading)`; the Inspector edits `itemSurface` with a `surface` field.
   A Markdown `1.` list counts whatever its level says, because its numbers are the text's.
 - The Description's entries are written flat, each `{ text, level?, values? }`; the Control hangs them as
-  the tree they read as, and an entry that skips a level stays with the one it follows. In the editor Tab
-  and Shift+Tab move an entry a level down and up. `values` keep what differs from Site to Site out of
+  the tree they read as, and an entry that skips a level stays with the one it follows. An entry may carry
+  a `state` (`PHI_BULLET_LIST_ENTRY_STATES`): `included` draws a tick in the success colour, `excluded` a
+  dash with the words quieter, `neutral` (stored as absent) the level's marker. Every Widget edits its
+  list with `PhiBulletListEntriesEditor`: Enter opens an entry after the current one, Backspace in an empty
+  entry removes it, Tab and Shift+Tab move an entry a level down and up, and where the list has states a
+  click on the marker steps them. `values` keep what differs from Site to Site out of
   the sentence: "Site key: %1" is translated once and filled after, its values never pass a translator
   ([TRANSLATIONS.md](../../TRANSLATIONS.md)). A new Description is created with its entries in cards
   (`creationConfig`), a creation value rather than a default, so "None" stays none.

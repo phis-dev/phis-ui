@@ -10,6 +10,12 @@ import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import type { PhiCardWidgetClientConfig } from "../../../../../components/widgets/shared/card-body-client";
 import { getPhiCardWidgetLabelsForRuntime } from "../../../../../components/widgets/label-sets/card";
+import { PhiBulletListControl } from "../../../../../components/controls/phi-bullet-list-control";
+import {
+  buildPhiBulletListTree,
+  resolvePhiBulletListStyle,
+} from "../../../../../components/widgets/shared/bullet-list-vocabulary";
+import { maskPhiTextPlaceholders, resolvePhiTextPlaceholders } from "../../../../../helpers/text-placeholders";
 
 export type PhiCardWidgetLabels = {
   eyebrow?: string;
@@ -17,6 +23,9 @@ export type PhiCardWidgetLabels = {
   description?: string;
   meta?: string;
   actionLabel?: string;
+  badge?: string;
+  pricePeriod?: string;
+  pricePeriodYearly?: string;
 };
 
 export type PhiCardWidgetProps = PhiServerBlockBaseProps<
@@ -48,23 +57,50 @@ export async function PhiCardWidget({
   const actionEnabled = config?.actionEnabled === true;
   const defaultLabels = actionEnabled ? await getPhiCardWidgetLabelsForRuntime(runtime) : null;
   const ownActionLabel = labels.actionLabel ?? config?.actionLabel;
+  const plan = config?.body === "plan";
   const textEntries = [
     ["eyebrow", labels.eyebrow ?? config?.eyebrow],
     ["title", labels.title ?? config?.title],
     ["description", labels.description ?? config?.description],
     ["meta", labels.meta ?? config?.meta],
     ["actionLabel", actionEnabled ? ownActionLabel : undefined],
+    ["badge", labels.badge ?? config?.badge],
+    ["pricePeriod", plan ? labels.pricePeriod ?? config?.pricePeriod : undefined],
+    ["pricePeriodYearly", plan ? labels.pricePeriodYearly ?? config?.pricePeriodYearly : undefined],
   ] as const;
+  /*
+   * A plan's features, masked as every list entry is: their values stand as `%1` onwards and never reach
+   * a translator, and `{site.name}` is filled after (`helpers/text-placeholders.ts`).
+   */
+  const features = plan ? (config?.features ?? []).filter((entry) => Boolean(entry.text)) : [];
+  const maskedFeatures = features.map((entry) => maskPhiTextPlaceholders(entry.text, entry.values?.length ?? 0));
 
+  const sourceTexts = [...textEntries.map(([, value]) => value ?? ""), ...maskedFeatures.map((masked) => masked.text)];
   const translatedTexts = translate
     ? await (runtime?.locale.current
-      ? trBulkForLocale(runtime.locale.current, textEntries.map(([, value]) => value ?? ""))
-      : trBulk(textEntries.map(([, value]) => value ?? "")))
-    : textEntries.map(([, value]) => value ?? "");
+      ? trBulkForLocale(runtime.locale.current, sourceTexts)
+      : trBulk(sourceTexts))
+    : sourceTexts;
 
   const translatedByKey = new Map<string, string | undefined>(
     textEntries.map(([key], index) => [key, translatedTexts[index] || undefined]),
   );
+  const translatedFeatures = features.map((entry, index) => ({
+    ...entry,
+    text: resolvePhiTextPlaceholders(
+      translatedTexts[textEntries.length + index] ?? entry.text,
+      maskedFeatures[index]!.names,
+      runtime,
+      entry.values,
+    ),
+  }));
+  /* Drawn here, so the list Control never reaches the browser with the Card (`listContent`). */
+  const featureList = translatedFeatures.length > 0 ? (
+    <PhiBulletListControl
+      listStyle={resolvePhiBulletListStyle(config?.featureList)}
+      items={buildPhiBulletListTree(translatedFeatures, (entry) => entry.text)}
+    />
+  ) : null;
 
   /*
    * The figure is left out of the translation on purpose: a Site's own number is not a word, and
@@ -133,6 +169,8 @@ export async function PhiCardWidget({
     variant: config?.variant,
     body: config?.body,
     highlight: config?.highlight,
+    badgeColor: config?.badgeColor,
+    billingPeriod: config?.billingPeriod,
     // Only a card that leads somewhere answers the pointer; the preview has no link but shows it.
     hoverEffect: config?.linkTarget ? config.hoverEffect : undefined,
     signalRoutes: preview ? null : config?.signalRoutes ?? null,
@@ -151,8 +189,14 @@ export async function PhiCardWidget({
             ? defaultLabels?.actionLabel
             : translatedByKey.get("actionLabel") ?? "",
           value,
+          badge: translatedByKey.get("badge"),
+          price: plan ? config?.price : undefined,
+          pricePeriod: translatedByKey.get("pricePeriod"),
+          priceYearly: plan ? config?.priceYearly : undefined,
+          pricePeriodYearly: translatedByKey.get("pricePeriodYearly"),
         },
         config: clientConfig,
+        ...(featureList ? { listContent: featureList } : {}),
       }}
     />
   );

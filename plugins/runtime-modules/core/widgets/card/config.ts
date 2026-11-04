@@ -1,16 +1,26 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
+import type { PhiCmsConfigField } from "../../../../../types/cms-plugins";
 import type { PhiImageAssetVariantKeyValue } from "../../../../../types/media";
 import { readPhiLinkTarget, type PhiLinkTarget } from "../../../../../types/references";
 import { readPhiMediaImageSourceConfig } from "../../../../../components/widgets/config/image-source-parser";
 import { PHI_SURFACE_CARD } from "../../../../../helpers/surface-presets";
+import {
+  buildPhiBulletListFields,
+  readPhiBulletListEntries,
+  readPhiBulletListStyle,
+  type PhiBulletListEntry,
+  type PhiBulletListStyle,
+} from "../../../../../components/widgets/shared/bullet-list-vocabulary";
 import {
   PHI_CARD_HEADING_LEVELS,
   PHI_CARD_HOVER_EFFECTS,
   PHI_CARD_ICON_PLACEMENTS,
   PHI_CARD_TEXT_ALIGNS,
   PHI_CARD_VARIANTS,
+  readPhiCardBillingPeriod,
+  type PhiCardBillingPeriod,
   type PhiCardHeadingLevel,
   type PhiCardHoverEffect,
   type PhiCardIconPlacement,
@@ -47,6 +57,21 @@ export type PhiCmsCardWidgetConfig = PhiCmsWidgetConfigBase & PhiCardImageSource
   body?: PhiCardWidgetBody;
   /** The figure a `stat` body draws. Never translated, whatever the node's `NoTranslate` flag says. */
   value?: string;
+  /** The words on the band at the card's end edge; any body may carry one. */
+  badge?: string;
+  /** The band's colour; absent, the Theme's primary. */
+  badgeColor?: string;
+  /** A `plan` body's prices, never translated, and what each is paid per (`/ month`), which is. */
+  price?: string;
+  pricePeriod?: string;
+  priceYearly?: string;
+  pricePeriodYearly?: string;
+  /** Which of the two prices a `plan` shows until the page sends another. Absent is `monthly`. */
+  billingPeriod?: PhiCardBillingPeriod;
+  /** What a `plan` includes and what it does not, each entry with its state. */
+  features?: PhiBulletListEntry[];
+  /** How the features list is set (`bullet-list-vocabulary.ts`). */
+  featureList?: PhiBulletListStyle;
   /** The tag of the heading; how large it is drawn is the variant's business. */
   headingLevel?: PhiCardHeadingLevel;
   textAlign?: PhiCardTextAlign;
@@ -97,7 +122,16 @@ function parsePhiCmsCardWidgetConfig(config: Record<string, unknown>): PhiCmsCar
     description: readString(config.description),
     meta: readString(config.meta),
     value: readString(config.value),
-    body: readChoice(readString(config.body), ["text", "stat"] as const),
+    badge: readString(config.badge),
+    badgeColor: readString(config.badgeColor),
+    price: readString(config.price),
+    pricePeriod: readString(config.pricePeriod),
+    priceYearly: readString(config.priceYearly),
+    pricePeriodYearly: readString(config.pricePeriodYearly),
+    billingPeriod: readPhiCardBillingPeriod(config.billingPeriod),
+    features: config.features === undefined ? undefined : readPhiBulletListEntries(config.features),
+    featureList: readPhiBulletListStyle(config.featureList),
+    body: readChoice(readString(config.body), ["text", "stat", "plan"] as const),
     headingLevel: readChoice(readString(config.headingLevel), PHI_CARD_HEADING_LEVELS),
     textAlign: readChoice(readString(config.textAlign), PHI_CARD_TEXT_ALIGNS),
     icon: readString(config.icon),
@@ -187,6 +221,22 @@ export const PHI_CARD_WIDGET_DEFINITION = {
       options: [
         { value: "text", label: "Text" },
         { value: "stat", label: "Statistic" },
+        { value: "plan", label: "Plan" },
+      ],
+    },
+    /*
+     * The prices and the features are written on the card; asked here is only which price it shows
+     * first. The canvas shows that one, so the yearly price is written by choosing Yearly here.
+     */
+    {
+      key: "billingPeriod",
+      type: "choice",
+      label: "Price shown",
+      presentation: "segmented",
+      visibleWhen: { field: "body", equals: "plan" },
+      options: [
+        { value: "monthly", label: "Monthly" },
+        { value: "yearly", label: "Yearly" },
       ],
     },
     {
@@ -308,6 +358,19 @@ export const PHI_CARD_WIDGET_DEFINITION = {
       ],
     },
     { key: "highlight", type: "boolean", label: "Highlight" },
+    /* The band's words are written on the card; its colour is the one thing asked here. */
+    {
+      key: "badgeColor",
+      type: "color",
+      heading: "Badge",
+      label: "Color",
+      mode: "single",
+      defaultToken: "colorPrimary",
+    },
+    ...buildPhiBulletListFields("featureList", "Features").map((field) => ({
+      ...field,
+      visibleWhen: { field: "body", equals: "plan" },
+    }) as PhiCmsConfigField),
   ],
   parseConfig: parsePhiCmsCardWidgetConfig,
 } satisfies Pick<

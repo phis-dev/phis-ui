@@ -5,6 +5,7 @@ import { useState, type CSSProperties, type ReactNode } from "react";
 import { PhiButtonControl } from "../../controls/phi-button-control";
 import { PhiFlexControl } from "../../controls/phi-flex-control";
 import { PhiImageControl, type PhiImageControlSource } from "../../controls/phi-image-control";
+import { PhiRibbonControl } from "../../controls/phi-ribbon-control";
 import { PhiSkeletonControl } from "../../controls/phi-skeleton-control";
 import { PhiStatisticControl } from "../../controls/phi-statistic-control";
 import { PhiTypographyControl } from "../../controls/phi-typography-control";
@@ -21,7 +22,9 @@ import type { PhiSignalRouteSet } from "../../../types/signals";
 import { usePhiControlSignalController } from "../client/shared/phi-control-signals";
 import type { PhiThemeTokens } from "../../../theme/phi-theme-tokens";
 import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
+import { PHI_CARD_TEXT_SLOTS, readPhiCardBillingPeriod } from "./card-vocabulary";
 import type {
+  PhiCardBillingPeriod,
   PhiCardHeadingLevel,
   PhiCardHoverEffect,
   PhiCardIconPlacement,
@@ -32,6 +35,7 @@ import type {
 } from "./card-vocabulary";
 
 export type {
+  PhiCardBillingPeriod,
   PhiCardHeadingLevel,
   PhiCardHoverEffect,
   PhiCardIconPlacement,
@@ -54,6 +58,13 @@ export type PhiCardWidgetClientLabels = {
   actionLabel?: string;
   /** The figure a `stat` body draws. Data rather than copy, and never translated. */
   value?: string;
+  /** The band at the card's end edge. */
+  badge?: string;
+  /** A `plan` body's prices, data and never translated, and their periods, which are words. */
+  price?: string;
+  pricePeriod?: string;
+  priceYearly?: string;
+  pricePeriodYearly?: string;
 };
 
 /**
@@ -101,6 +112,10 @@ export type PhiCardWidgetClientConfig = {
   variant?: PhiCardVariant;
   body?: PhiCardWidgetBody;
   highlight?: boolean;
+  /** The badge's ground; absent, the Theme's primary. */
+  badgeColor?: string;
+  /** Which price a `plan` shows until a `billingPeriod` signal says otherwise. Absent is `monthly`. */
+  billingPeriod?: PhiCardBillingPeriod;
   hoverEffect?: PhiCardHoverEffect;
   /** The card's wired signals (`PHI_CARD_SIGNALS`); absent where nothing is wired, as on the canvas. */
   signalRoutes?: PhiSignalRouteSet | null;
@@ -110,9 +125,10 @@ export type PhiCardWidgetClientConfig = {
 type PhiCardSignalOverrides = Partial<Record<PhiCardTextSlot, string>> & {
   loading?: boolean;
   highlight?: boolean;
+  billingPeriod?: PhiCardBillingPeriod;
 };
 
-const PHI_CARD_SIGNAL_TEXT_SLOTS: ReadonlySet<string> = new Set(["eyebrow", "title", "description", "meta", "value"]);
+const PHI_CARD_SIGNAL_TEXT_SLOTS: ReadonlySet<string> = new Set<PhiCardTextSlot>(PHI_CARD_TEXT_SLOTS);
 
 export type PhiCardWidgetAction = {
   href?: string;
@@ -129,10 +145,11 @@ export type PhiCardWidgetClientProps = PhiClientBlockBaseProps<
 > & {
   binding?: PhiCardWidgetClientBinding;
   /**
-   * What a `list` body draws, already drawn.
+   * What a `list` body draws, and a `plan` body's features, already drawn.
    *
    * Handed in rather than drawn here: the Card is on Public pages, and a list Control imported by it
-   * would load on every page with a Card. A Dashboard draws its entries and passes them.
+   * would load on every page with a Card. A Dashboard draws its entries and passes them; a plan card's
+   * server half draws its features on the server, and its editor draws them as fields.
    */
   listContent?: ReactNode;
   /**
@@ -253,6 +270,9 @@ export function PhiCardWidgetClient({
         setOverrides((current) => ({ ...current, [capabilityId]: text }));
       } else if (capabilityId === "loading" || capabilityId === "highlight") {
         setOverrides((current) => ({ ...current, [capabilityId]: signal.value === true }));
+      } else if (capabilityId === "billingPeriod") {
+        const billingPeriod = readPhiCardBillingPeriod(signal.value);
+        if (billingPeriod) setOverrides((current) => ({ ...current, billingPeriod }));
       }
       return true;
     },
@@ -333,6 +353,7 @@ export function PhiCardWidgetClient({
   const title = textOf("title");
   const description = textOf("description");
   const meta = textOf("meta");
+  const badge = textOf("badge");
   const eyebrowType: CSSProperties = { fontSize: token.fontSizeSM, letterSpacing: "0.04em", textTransform: "uppercase" };
   /* On the picture's corner where the variant puts it there and there is a picture to put it on. */
   const eyebrowOnMedia = metrics.eyebrowOnMedia === true && image != null;
@@ -402,6 +423,42 @@ export function PhiCardWidgetClient({
   ) : binding?.loading === true || overrides.loading === true ? (
     <PhiSkeletonControl lines={3} />
   ) : listContent ?? null;
+
+  /*
+   * A plan's price: the period's own where it states one, the monthly one where it does not, so a switch
+   * to yearly never leaves a card without a price. An editor is asked for the shown period's fields.
+   */
+  const yearly = (overrides.billingPeriod ?? config?.billingPeriod) === "yearly";
+  const showsYearly = yearly && (renderText != null || Boolean(labels.priceYearly));
+  const priceText = body === "plan" ? textOf(showsYearly ? "priceYearly" : "price") : null;
+  const periodText = body === "plan" ? textOf(showsYearly ? "pricePeriodYearly" : "pricePeriod") : null;
+  const plan = body === "plan" ? (
+    <div style={{ display: "grid", gap, justifySelf: "stretch", justifyItems, minWidth: 0 }}>
+      {priceText != null || periodText != null ? (
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", justifyContent: justify, columnGap: PHI_SPACE.xs, ...slotWidth }}>
+          {priceText != null ? (
+            <span
+              className="phi-card__price"
+              style={{
+                fontSize: token.fontSizeHeading2,
+                lineHeight: token.lineHeightHeading2,
+                fontWeight: 600,
+                fontVariantNumeric: "tabular-nums",
+                color: highlight ? token.colorPrimary : token.colorTextHeading,
+                ...slotWidth,
+              }}
+            >
+              {priceText}
+            </span>
+          ) : null}
+          {periodText != null ? (
+            <span style={{ color: token.colorTextSecondary, ...slotWidth }}>{periodText}</span>
+          ) : null}
+        </div>
+      ) : null}
+      {list != null ? <div style={{ justifySelf: "stretch", minWidth: 0, textAlign: "start" }}>{list}</div> : null}
+    </div>
+  ) : null;
 
   const headingRow = iconPlacement === "inline" && iconName ? (
     <div style={{ display: "flex", alignItems: "center", justifyContent: justify, gap, ...slotWidth }}>
@@ -497,76 +554,114 @@ export function PhiCardWidgetClient({
     ...(highlight ? { "--phi-card-highlight-color": token.colorPrimary } as CSSProperties : {}),
   };
 
+  /*
+   * A plan's button stands at the card's foot: plans side by side in a row have lists of different
+   * lengths, and their buttons belong on one line. The words keep their grid; the grid and the button
+   * stand in a column that fills the card, and the button takes what is left above it.
+   */
+  const footAction = body === "plan" && action != null;
+
+  const actionButton = action ? (
+    <div
+      className="phi-card__action"
+      /* At the foot, it stands where the words' alignment puts it, as it does among them. */
+      style={footAction ? { marginTop: "auto", alignSelf: textAlign === "center" ? "center" : textAlign === "end" ? "flex-end" : "flex-start" } : undefined}
+    >
+      <PhiButtonControl
+        type={highlight ? "primary" : "default"}
+        size={buttonSize}
+        {...(action.href ? { href: action.href, newTab: action.newTab, external: action.external } : {})}
+        label={labels.actionLabel || undefined}
+        {...(labels.actionLabel ? {} : { ariaLabel: action.ariaLabel })}
+        {...(action.icon ? { icon: <PhiIcon name={action.icon} size="1em" /> } : {})}
+        /* Pressed, it says so to whatever is wired; with an address it leads there as well. */
+        {...(activates ? { onClick: () => controlSignals.emitCapability("activate", null) } : {})}
+      />
+    </div>
+  ) : null;
+
+  /*
+   * The band in the card's top end corner, floating (`PhiRibbonControl`): the words below it start where
+   * they start in a card without one, so plans side by side keep their headings on one line.
+   */
+  const ribbon = badge != null ? (
+    <PhiRibbonControl
+      color={config?.badgeColor}
+      placement="corner"
+      /* An editor writes in the band, so it takes the pointer there and keeps room for a word. */
+      {...(renderText ? { style: { pointerEvents: "auto", minWidth: "6em" } } : {})}
+    >
+      {badge}
+    </PhiRibbonControl>
+  ) : null;
+
+  const words = (
+    <div style={{ display: "grid", gap, padding: footAction ? 0 : inset, justifyItems }}>
+      {iconAtTop && iconName && !image ? (
+        <div style={{ justifySelf: markSide === "center" ? "center" : markSide === "end" ? "end" : "start" }}>
+          {iconMark(topIconSize, topIconSize + 24)}
+        </div>
+      ) : null}
+      {eyebrow != null && !eyebrowOnMedia && !labels.eyebrowEnd ? (
+        <PhiTypographyControl
+          type="secondary"
+          style={{ ...eyebrowType, color: highlight ? token.colorPrimary : token.colorTextTertiary, ...slotWidth }}
+        >
+          {eyebrow}
+        </PhiTypographyControl>
+      ) : null}
+      {labels.eyebrowEnd && !eyebrowOnMedia ? (
+        // The two ends of one line; an empty start keeps the end at the end.
+        <PhiFlexControl justify="space-between" align="baseline" wrap gap={PHI_SPACE.xs} style={{ justifySelf: "stretch", minWidth: 0 }}>
+          <PhiTypographyControl
+            type="secondary"
+            style={{ ...eyebrowType, color: highlight ? token.colorPrimary : token.colorTextTertiary }}
+          >
+            {eyebrow ?? ""}
+          </PhiTypographyControl>
+          <PhiTypographyControl type="secondary" style={{ ...eyebrowType, color: token.colorTextTertiary }}>
+            {labels.eyebrowEnd}
+          </PhiTypographyControl>
+        </PhiFlexControl>
+      ) : null}
+      {headingRow}
+      {body === "stat" ? figure : null}
+      {body === "list" && list != null ? (
+        /* The lines take the card's width whatever the text alignment centres. */
+        <div style={{ justifySelf: "stretch", minWidth: 0 }}>{list}</div>
+      ) : null}
+      {description != null ? (
+        <PhiTypographyControl
+          presentation="paragraph"
+          style={{
+            marginBottom: 0,
+            color: token.colorTextSecondary,
+            fontSize: descriptionSize,
+            ...slotWidth,
+          }}
+        >
+          {description}
+        </PhiTypographyControl>
+      ) : null}
+      {plan}
+      {meta != null ? (
+        <PhiTypographyControl type="secondary" style={{ fontSize: token.fontSizeSM, color: token.colorTextTertiary, ...slotWidth }}>
+          {meta}
+        </PhiTypographyControl>
+      ) : null}
+      {footAction ? null : actionButton}
+    </div>
+  );
+
   const content = (
     <>
       {media}
-      <div style={{ display: "grid", gap, padding: inset, justifyItems }}>
-        {iconAtTop && iconName && !image ? (
-          <div style={{ justifySelf: markSide === "center" ? "center" : markSide === "end" ? "end" : "start" }}>
-            {iconMark(topIconSize, topIconSize + 24)}
-          </div>
-        ) : null}
-        {eyebrow != null && !eyebrowOnMedia && !labels.eyebrowEnd ? (
-          <PhiTypographyControl
-            type="secondary"
-            style={{ ...eyebrowType, color: highlight ? token.colorPrimary : token.colorTextTertiary, ...slotWidth }}
-          >
-            {eyebrow}
-          </PhiTypographyControl>
-        ) : null}
-        {labels.eyebrowEnd && !eyebrowOnMedia ? (
-          // The two ends of one line; an empty start keeps the end at the end.
-          <PhiFlexControl justify="space-between" align="baseline" wrap gap={PHI_SPACE.xs} style={{ justifySelf: "stretch", minWidth: 0 }}>
-            <PhiTypographyControl
-              type="secondary"
-              style={{ ...eyebrowType, color: highlight ? token.colorPrimary : token.colorTextTertiary }}
-            >
-              {eyebrow ?? ""}
-            </PhiTypographyControl>
-            <PhiTypographyControl type="secondary" style={{ ...eyebrowType, color: token.colorTextTertiary }}>
-              {labels.eyebrowEnd}
-            </PhiTypographyControl>
-          </PhiFlexControl>
-        ) : null}
-        {headingRow}
-        {body === "stat" ? figure : null}
-        {body === "list" && list != null ? (
-          /* The lines take the card's width whatever the text alignment centres. */
-          <div style={{ justifySelf: "stretch", minWidth: 0 }}>{list}</div>
-        ) : null}
-        {description != null ? (
-          <PhiTypographyControl
-            presentation="paragraph"
-            style={{
-              marginBottom: 0,
-              color: token.colorTextSecondary,
-              fontSize: descriptionSize,
-              ...slotWidth,
-            }}
-          >
-            {description}
-          </PhiTypographyControl>
-        ) : null}
-        {meta != null ? (
-          <PhiTypographyControl type="secondary" style={{ fontSize: token.fontSizeSM, color: token.colorTextTertiary, ...slotWidth }}>
-            {meta}
-          </PhiTypographyControl>
-        ) : null}
-        {action ? (
-          <div className="phi-card__action">
-            <PhiButtonControl
-              type={highlight ? "primary" : "default"}
-              size={buttonSize}
-              {...(action.href ? { href: action.href, newTab: action.newTab, external: action.external } : {})}
-              label={labels.actionLabel || undefined}
-              {...(labels.actionLabel ? {} : { ariaLabel: action.ariaLabel })}
-              {...(action.icon ? { icon: <PhiIcon name={action.icon} size="1em" /> } : {})}
-              /* Pressed, it says so to whatever is wired; with an address it leads there as well. */
-              {...(activates ? { onClick: () => controlSignals.emitCapability("activate", null) } : {})}
-            />
-          </div>
-        ) : null}
-      </div>
+      {footAction ? (
+        <div style={{ display: "flex", flexDirection: "column", gap, padding: inset, flex: "1 1 auto", minWidth: 0 }}>
+          {words}
+          {actionButton}
+        </div>
+      ) : words}
       {/* Outside the words' grid, which would give it a row and a gap of its own; it takes no room. */}
       {cardLink}
     </>
@@ -585,6 +680,7 @@ export function PhiCardWidgetClient({
       style={boxStyle}
     >
       <PhiSurfaceGroundLayer ground={surface.ground} className="phi-card__ground" />
+      {ribbon}
       {surface.className ? <PhiSurfaceTone tone={config?.surface?.tone}>{content}</PhiSurfaceTone> : content}
     </article>
   );

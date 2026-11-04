@@ -9,12 +9,28 @@
  * `text` is a heading. `stat` is a labelled figure: the label is the heading, so a card that counts
  * something says what it counted in the same place and type a text card says what it is about, and the
  * figure is drawn by the house's one statistic Control. `list` is a heading over a few lines the caller
- * draws and hands in (`listContent`), which only a Dashboard does today.
+ * draws and hands in (`listContent`), which only a Dashboard does today. `plan` is an offer: a price
+ * and what it is paid per, a monthly and a yearly one of each, over a list of what the plan includes and
+ * what it does not (`PhiBulletListEntry.state`). Several plan cards side by side are a Layout's row, and
+ * the recommended one is the card that is `highlight`ed.
  *
  * The body is chosen, never inferred from whether a value happens to have arrived. A card that decided
  * by presence would draw as text and reflow into a statistic the moment its figure landed.
  */
-export type PhiCardWidgetBody = "text" | "stat" | "list";
+export type PhiCardWidgetBody = "text" | "stat" | "list" | "plan";
+
+/**
+ * Which of a plan card's two prices it shows. A plan states one, the other, or both; one that states
+ * only the monthly price shows it under `yearly` as well, so a period switch on the page never leaves a
+ * card without a price. The page switches every plan at once by sending `billingPeriod`.
+ */
+export const PHI_CARD_BILLING_PERIODS = ["monthly", "yearly"] as const;
+export type PhiCardBillingPeriod = (typeof PHI_CARD_BILLING_PERIODS)[number];
+
+/** A sent period as one of the two; anything else is not a period and changes nothing. */
+export function readPhiCardBillingPeriod(value: unknown): PhiCardBillingPeriod | undefined {
+  return PHI_CARD_BILLING_PERIODS.includes(value as PhiCardBillingPeriod) ? value as PhiCardBillingPeriod : undefined;
+}
 
 /**
  * The tag of the card's heading, and the step it is drawn at.
@@ -59,6 +75,22 @@ export type PhiCardHoverEffect = (typeof PHI_CARD_HOVER_EFFECTS)[number];
 export const PHI_CARD_VARIANTS = ["default", "compact", "center"] as const;
 export type PhiCardVariant = (typeof PHI_CARD_VARIANTS)[number];
 
-/** The words a card shows, each in its own place; what an editor can put a field in. */
-export const PHI_CARD_TEXT_SLOTS = ["eyebrow", "title", "description", "meta", "value"] as const;
+/**
+ * The words a card shows, each in its own place; what an editor can put a field in, and what a signal can
+ * write. `badge` is the band at the card's end edge, any body may carry one. The prices are figures like
+ * `value` and are never translated: a price that differs by country is sent by a Controller or comes
+ * from a Provider's row, not from a translator. The periods (`/ month`) are words and are.
+ */
+export const PHI_CARD_TEXT_SLOTS = [
+  "eyebrow",
+  "title",
+  "description",
+  "meta",
+  "value",
+  "badge",
+  "price",
+  "pricePeriod",
+  "priceYearly",
+  "pricePeriodYearly",
+] as const;
 export type PhiCardTextSlot = (typeof PHI_CARD_TEXT_SLOTS)[number];

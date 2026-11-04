@@ -15,6 +15,11 @@ import { PHI_SURFACE_CARD } from "../../../../../helpers/surface-presets";
 import { resolvePhiImagePresentation } from "../../../../../components/media/image-presentation";
 import { normalizePhiCssSize } from "../../../../../components/layouts/phi-layout-contract";
 import { usePhiSearchDraft } from "../../../../../components/widgets/client/shared/phi-search-draft";
+import { PhiBulletListControl } from "../../../../../components/controls/phi-bullet-list-control";
+import {
+  buildPhiBulletListTree,
+  readPhiBulletListEntries,
+} from "../../../../../components/widgets/shared/bullet-list-vocabulary";
 
 /**
  * A Collection drawn as Cards.
@@ -42,18 +47,22 @@ import { usePhiSearchDraft } from "../../../../../components/widgets/client/shar
  */
 const CARD_MIN_COLUMN_WIDTH = 260;
 
-function readPath(item: Record<string, unknown>, path: string | undefined) {
-  if (!path) {
-    return undefined;
-  }
-  // A dot path, because a provider's rows are documents and the interesting field is often one level
-  // in. Anything that is not a string or a number is not a label and is left alone.
-  const value = path.split(".").reduce<unknown>(
+/* A dot path, because a provider's rows are documents and the interesting field is often one level in. */
+function readValue(item: Record<string, unknown>, path: string) {
+  return path.split(".").reduce<unknown>(
     (current, key) => (current && typeof current === "object"
       ? (current as Record<string, unknown>)[key]
       : undefined),
     item,
   );
+}
+
+function readPath(item: Record<string, unknown>, path: string | undefined) {
+  if (!path) {
+    return undefined;
+  }
+  // Anything that is not a string or a number is not a label and is left alone.
+  const value = readValue(item, path);
   return typeof value === "string" || typeof value === "number" ? String(value) : undefined;
 }
 
@@ -69,10 +78,7 @@ function readIconName(value: string | undefined) {
 
 function readTruth(item: Record<string, unknown>, path: string | undefined) {
   if (!path) return false;
-  const value = path.split(".").reduce<unknown>(
-    (current, key) => (current && typeof current === "object" ? (current as Record<string, unknown>)[key] : undefined),
-    item,
-  );
+  const value = readValue(item, path);
   return value === true || value === "true" || value === 1;
 }
 
@@ -98,6 +104,11 @@ function buildCard(item: Record<string, unknown>, card: PhiCmsCollectionCardPres
     meta: readPath(item, card?.meta),
     actionLabel: readPath(item, card?.actionLabel),
     value: readPath(item, card?.value),
+    badge: readPath(item, card?.badge),
+    price: readPath(item, card?.price),
+    pricePeriod: readPath(item, card?.pricePeriod),
+    priceYearly: readPath(item, card?.priceYearly),
+    pricePeriodYearly: readPath(item, card?.pricePeriodYearly),
   };
   /*
    * Two pictures with two jobs, and the fallbacks say which is which. A cover opens the card and takes
@@ -123,8 +134,16 @@ function buildCard(item: Record<string, unknown>, card: PhiCmsCollectionCardPres
     ...(card?.variant ? { variant: card.variant } : {}),
     ...(card?.body ? { body: card.body } : {}),
     highlight: readTruth(item, card?.highlight),
+    ...(card?.billingPeriod ? { billingPeriod: card.billingPeriod } : {}),
   };
-  return { labels, config };
+  /* A plan's features are a list in the row, drawn as a plan card's list is drawn on a page. */
+  const features = card?.body === "plan" && card.features
+    ? readPhiBulletListEntries(readValue(item, card.features)).filter((entry) => Boolean(entry.text))
+    : [];
+  const listContent = features.length > 0 ? (
+    <PhiBulletListControl items={buildPhiBulletListTree(features, (entry) => entry.text)} />
+  ) : null;
+  return { labels, config, listContent };
 }
 
 export function PhiCardCollectionViewBinding({
@@ -161,6 +180,7 @@ export function PhiCardCollectionViewBinding({
         key={readPath(item, "id") ?? readPath(item, "slug") ?? String(index)}
         labels={card.labels}
         config={card.config}
+        listContent={card.listContent}
       />
     );
   });

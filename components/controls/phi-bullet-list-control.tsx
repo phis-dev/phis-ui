@@ -8,6 +8,7 @@ import {
   PhiBulletListFlag,
   resolvePhiBulletListLevel,
   resolvePhiBulletListStyle,
+  type PhiBulletListEntryState,
   type PhiBulletListMarker,
   type PhiBulletListNode,
   type PhiResolvedBulletListStyle,
@@ -33,6 +34,22 @@ export type PhiBulletListControlProps = {
 
 const PHI_BULLET_LIST_MARKER_SIZE = PHI_SPACE.xs;
 const PHI_BULLET_LIST_ICON_SIZE = 14;
+
+/*
+ * An entry's state stands in place of the level's marker: a tick for what is included, a dash for what is
+ * not. Neither is the list's colour: included is the Theme's success, excluded the tertiary text, so a
+ * plan's list reads the same whatever marker its neutral entries take.
+ */
+function renderStateMarker(state: PhiBulletListEntryState | undefined): ReactNode {
+  switch (state) {
+    case "included":
+      return <PhiIcon name="antd:check-outlined" size={PHI_BULLET_LIST_ICON_SIZE} style={{ color: PHI_COLOR.success }} />;
+    case "excluded":
+      return <PhiIcon name="antd:minus-outlined" size={PHI_BULLET_LIST_ICON_SIZE} style={{ color: PHI_COLOR.textTertiary }} />;
+    default:
+      return null;
+  }
+}
 
 function renderMarker(marker: PhiBulletListMarker, icon: string | null, number: number): ReactNode {
   switch (marker) {
@@ -125,15 +142,33 @@ export function PhiBulletListControl({
             ...(divided && index > 0 ? { borderTop: `1px solid ${PHI_COLOR.borderSecondary}`, paddingTop: gap } : {}),
           }}
         >
-          {marker === "none" ? null : (
-            <span
-              aria-hidden="true"
-              style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, height: markerLineHeight }}
-            >
-              {renderMarker(marker, listStyle.icon, start + index)}
-            </span>
-          )}
-          <div style={{ display: "grid", gap, flex: 1, minWidth: 0 }}>
+          {(() => {
+            const stated = renderStateMarker(item.state);
+            /* An editor's marker is a button, so a list whose marker is `none` still offers one. */
+            const drawn = stated ?? renderMarker(marker === "none" && item.onMarkerClick ? "dot" : marker, listStyle.icon, start + index);
+            if (drawn == null) return null;
+            const markerStyle: CSSProperties = {
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              height: markerLineHeight,
+            };
+            return item.onMarkerClick ? (
+              <button
+                type="button"
+                className="phi-bullet-list__marker-button"
+                aria-label={`State: ${item.state ?? "neutral"}`}
+                onClick={item.onMarkerClick}
+                style={{ ...markerStyle, padding: 0, border: 0, background: "none", cursor: "pointer", color: "inherit" }}
+              >
+                {drawn}
+              </button>
+            ) : (
+              <span aria-hidden="true" style={markerStyle}>{drawn}</span>
+            );
+          })()}
+          <div style={{ display: "grid", gap, flex: 1, minWidth: 0, ...(item.state === "excluded" ? { color: PHI_COLOR.textTertiary } : {}) }}>
             {item.content}
             {item.children?.length ? (
               <PhiBulletListControl

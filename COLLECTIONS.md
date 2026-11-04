@@ -75,9 +75,17 @@ icon                                path to an icon name, or to a Site path draw
 value                               path to the figure of a `stat` card
 href, actionLabel, actionHref       paths for the card link and action
 highlight                           path to a field whose truth highlights the card
+badge                               path to the words on the card's band
+price, pricePeriod                  paths to a `plan` card's monthly price and its period
+priceYearly, pricePeriodYearly      paths to its yearly price and period
+features                            path to a list of `{ text, state? }` entries (`PhiBulletListEntry`)
+billingPeriod                       monthly | yearly, which price every plan card shows (not a path)
 variant                             default | compact | featured
-body                                text | stat, for every card of the View
+body                                text | stat | plan, for every card of the View
 ```
+
+A provider that knows the reader's country answers each row with that country's price; the card draws
+what the row says and decides nothing about currency.
 
 The cards are the Card Widget's own (`PhiCardWidgetClient`) with its default Surface. Without a mapping
 the View falls back to the item fields `name`/`title`, `description`, `coverUrl`/`imageUrl` and `icon`. A

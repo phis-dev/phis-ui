@@ -23,7 +23,7 @@ import type { PhiTextTone } from "../components/widgets/config/text-tone";
 import type { PhiCommonControlActionKey } from "../components/widgets/label-types/common-controls";
 import type { PhiMaskConfig } from "../components/widgets/config/mask";
 import type { PhiSpacingScaleKey } from "../components/widgets/config/spacing-options";
-import type { PhiCardVariant } from "../components/widgets/shared/card-vocabulary";
+import type { PhiCardBillingPeriod, PhiCardVariant } from "../components/widgets/shared/card-vocabulary";
 import type {
   PhiControlBadgeConfig,
   PhiControlConfig,
@@ -364,10 +364,21 @@ export type PhiCmsCollectionCardPresentation = {
   actionLabel?: string;
   actionHref?: string;
   variant?: PhiCardVariant;
-  /** Every card in the View draws this body; `stat` needs `value`. */
-  body?: "text" | "stat";
+  /** Every card in the View draws this body; `stat` needs `value`, `plan` a `price`. */
+  body?: "text" | "stat" | "plan";
   /** A field whose truth marks the card as highlighted. */
   highlight?: string;
+  /** The words on the card's band. */
+  badge?: string;
+  /** A `plan`'s prices and their periods, as a provider answers them -- per country, if it knows one. */
+  price?: string;
+  pricePeriod?: string;
+  priceYearly?: string;
+  pricePeriodYearly?: string;
+  /** A field holding the plan's features, each `{ text, state? }` (`PhiBulletListEntry`). */
+  features?: string;
+  /** Which price every plan card of the View shows. Not a path: the View's own choice. */
+  billingPeriod?: PhiCardBillingPeriod;
 };
 
 export type PhiCollectionViewWidgetPlacement = PhiWidgetPlacementBase & {
