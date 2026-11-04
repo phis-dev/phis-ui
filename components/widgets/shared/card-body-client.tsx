@@ -21,7 +21,7 @@ import type { PhiSurface } from "../../../types/surface";
 import type { PhiSignalRouteSet } from "../../../types/signals";
 import { usePhiControlSignalController } from "../client/shared/phi-control-signals";
 import type { PhiThemeTokens } from "../../../theme/phi-theme-tokens";
-import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
+import { PHI_COLOR, PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import { PHI_CARD_TEXT_SLOTS, readPhiCardBillingPeriod } from "./card-vocabulary";
 import type {
   PhiCardBillingPeriod,
@@ -250,6 +250,12 @@ function resolveMediaAspectRatio(presentation: PhiImagePresentation) {
     : "3 / 2";
 }
 
+/*
+ * Every colour the card paints is the Theme's variable (`PHI_COLOR`), never a token's resolved value: a
+ * Surface with a `tone` writes the other mode's variables on the card's box, and only a variable reaches
+ * the words inside it. Resolved values were the page's mode written in by hand, and dark words stayed
+ * dark on a photograph darkened for light ones.
+ */
 export function PhiCardWidgetClient({
   labels: placedLabels,
   config,
@@ -361,7 +367,7 @@ export function PhiCardWidgetClient({
     <PhiTypographyControl
       presentation="title"
       level={Number(headingLevel.slice(1)) as 2 | 3 | 4}
-      style={{ margin: 0, ...headingType[headingLevel], color: token.colorTextHeading, ...slotWidth }}
+      style={{ margin: 0, ...headingType[headingLevel], color: PHI_COLOR.textHeading, ...slotWidth }}
     >
       {title}
     </PhiTypographyControl>
@@ -372,7 +378,21 @@ export function PhiCardWidgetClient({
    * `icon` hover effect turns them round, and a colour stated inline could not be turned by a rule.
    */
   const iconColours = (color: string, background: string) =>
-    ({ "--phi-card-icon-color": color, "--phi-card-icon-background": background }) as CSSProperties;
+    ({
+      "--phi-card-icon-color": color,
+      "--phi-card-icon-background": background,
+      /* The mark's colour once the `icon` effect turns them round: a ground it can be read on. */
+      "--phi-card-icon-hover-color": config?.iconBackground ?? PHI_COLOR.bgContainer,
+    }) as CSSProperties;
+
+  /*
+   * The corner of the icon's ground: the Theme's Control shape at the large size, scaled from a large
+   * Control's height to the ground's side. So `square` draws a square, `pill` a circle -- half the large
+   * height scaled to the side is half the side -- and the steps between keep their proportion, as a
+   * Segmented's items follow their track. The Theme's plain corner did not: a pill Site drew square marks.
+   */
+  const iconCorner = (side: number) =>
+    `calc(var(--phi-control-radius-lg, ${token.borderRadiusLG}px) * ${side / token.controlHeightLG})`;
 
   const iconMark = (size: number, framed: number) => iconName ? (
     <span
@@ -385,10 +405,10 @@ export function PhiCardWidgetClient({
         justifyContent: "center",
         width: framed,
         height: framed,
-        borderRadius: token.borderRadius,
+        borderRadius: iconCorner(framed),
         ...iconColours(
-          config?.iconColor ?? (highlight ? token.colorPrimary : token.colorTextSecondary),
-          config?.iconBackground ?? token.colorFillQuaternary,
+          config?.iconColor ?? (highlight ? PHI_COLOR.primary : PHI_COLOR.textSecondary),
+          config?.iconBackground ?? PHI_COLOR.fillQuaternary,
         ),
       }}
     >
@@ -402,7 +422,7 @@ export function PhiCardWidgetClient({
    */
   const valueText = renderText ? renderText("value", labels.value) : null;
   const figure = valueText != null ? (
-    <div style={{ fontSize: token.fontSizeHeading3, color: highlight ? token.colorPrimary : token.colorTextHeading, ...slotWidth }}>
+    <div style={{ fontSize: token.fontSizeHeading3, color: highlight ? PHI_COLOR.primary : PHI_COLOR.textHeading, ...slotWidth }}>
       {valueText}
     </div>
   ) : (
@@ -411,15 +431,15 @@ export function PhiCardWidgetClient({
       loading={binding?.loading === true || overrides.loading === true}
       styles={{
         content: binding?.error
-          ? { color: token.colorError, fontSize: token.fontSize }
-          : { color: highlight ? token.colorPrimary : token.colorTextHeading },
+          ? { color: PHI_COLOR.error, fontSize: token.fontSize }
+          : { color: highlight ? PHI_COLOR.primary : PHI_COLOR.textHeading },
       }}
     />
   );
 
   /* A failure stands where the lines would, as it does for a figure; a list still coming is three lines. */
   const list = binding?.error ? (
-    <PhiTypographyControl style={{ color: token.colorError, ...slotWidth }}>{binding.error}</PhiTypographyControl>
+    <PhiTypographyControl style={{ color: PHI_COLOR.error, ...slotWidth }}>{binding.error}</PhiTypographyControl>
   ) : binding?.loading === true || overrides.loading === true ? (
     <PhiSkeletonControl lines={3} />
   ) : listContent ?? null;
@@ -444,7 +464,7 @@ export function PhiCardWidgetClient({
                 lineHeight: token.lineHeightHeading2,
                 fontWeight: 600,
                 fontVariantNumeric: "tabular-nums",
-                color: highlight ? token.colorPrimary : token.colorTextHeading,
+                color: highlight ? PHI_COLOR.primary : PHI_COLOR.textHeading,
                 ...slotWidth,
               }}
             >
@@ -452,7 +472,7 @@ export function PhiCardWidgetClient({
             </span>
           ) : null}
           {periodText != null ? (
-            <span style={{ color: token.colorTextSecondary, ...slotWidth }}>{periodText}</span>
+            <span style={{ color: PHI_COLOR.textSecondary, ...slotWidth }}>{periodText}</span>
           ) : null}
         </div>
       ) : null}
@@ -504,11 +524,11 @@ export function PhiCardWidgetClient({
             justifyContent: "center",
             width: topIconSize + 24,
             height: topIconSize + 24,
-            borderRadius: "50%",
+            borderRadius: iconCorner(topIconSize + 24),
             // A ground of its own, so the mark reads on a bright picture and on a dark one alike.
             ...iconColours(
-              config?.iconColor ?? (highlight ? token.colorPrimary : token.colorText),
-              config?.iconBackground ?? `color-mix(in srgb, ${token.colorBgContainer} 88%, transparent)`,
+              config?.iconColor ?? (highlight ? PHI_COLOR.primary : PHI_COLOR.text),
+              config?.iconBackground ?? `color-mix(in srgb, ${PHI_COLOR.bgContainer} 88%, transparent)`,
             ),
             boxShadow: token.boxShadowTertiary,
           }}
@@ -529,8 +549,8 @@ export function PhiCardWidgetClient({
             paddingInline: token.paddingXS,
             borderRadius: token.borderRadiusSM,
             // A ground of its own, as the icon has, so the words read on any picture.
-            background: `color-mix(in srgb, ${token.colorBgContainer} 88%, transparent)`,
-            color: highlight ? token.colorPrimary : token.colorText,
+            background: `color-mix(in srgb, ${PHI_COLOR.bgContainer} 88%, transparent)`,
+            color: highlight ? PHI_COLOR.primary : PHI_COLOR.text,
           }}
         >
           {eyebrow}
@@ -549,9 +569,9 @@ export function PhiCardWidgetClient({
     minWidth: 0,
     overflow: "hidden",
     textAlign,
-    color: token.colorText,
+    color: PHI_COLOR.text,
     /* The ring's colour; `.phi-card--highlight` draws it (`styles/layout.css`). */
-    ...(highlight ? { "--phi-card-highlight-color": token.colorPrimary } as CSSProperties : {}),
+    ...(highlight ? { "--phi-card-highlight-color": PHI_COLOR.primary } as CSSProperties : {}),
   };
 
   /*
@@ -605,7 +625,7 @@ export function PhiCardWidgetClient({
       {eyebrow != null && !eyebrowOnMedia && !labels.eyebrowEnd ? (
         <PhiTypographyControl
           type="secondary"
-          style={{ ...eyebrowType, color: highlight ? token.colorPrimary : token.colorTextTertiary, ...slotWidth }}
+          style={{ ...eyebrowType, color: highlight ? PHI_COLOR.primary : PHI_COLOR.textTertiary, ...slotWidth }}
         >
           {eyebrow}
         </PhiTypographyControl>
@@ -615,11 +635,11 @@ export function PhiCardWidgetClient({
         <PhiFlexControl justify="space-between" align="baseline" wrap gap={PHI_SPACE.xs} style={{ justifySelf: "stretch", minWidth: 0 }}>
           <PhiTypographyControl
             type="secondary"
-            style={{ ...eyebrowType, color: highlight ? token.colorPrimary : token.colorTextTertiary }}
+            style={{ ...eyebrowType, color: highlight ? PHI_COLOR.primary : PHI_COLOR.textTertiary }}
           >
             {eyebrow ?? ""}
           </PhiTypographyControl>
-          <PhiTypographyControl type="secondary" style={{ ...eyebrowType, color: token.colorTextTertiary }}>
+          <PhiTypographyControl type="secondary" style={{ ...eyebrowType, color: PHI_COLOR.textTertiary }}>
             {labels.eyebrowEnd}
           </PhiTypographyControl>
         </PhiFlexControl>
@@ -635,7 +655,7 @@ export function PhiCardWidgetClient({
           presentation="paragraph"
           style={{
             marginBottom: 0,
-            color: token.colorTextSecondary,
+            color: PHI_COLOR.textSecondary,
             fontSize: descriptionSize,
             ...slotWidth,
           }}
@@ -645,7 +665,7 @@ export function PhiCardWidgetClient({
       ) : null}
       {plan}
       {meta != null ? (
-        <PhiTypographyControl type="secondary" style={{ fontSize: token.fontSizeSM, color: token.colorTextTertiary, ...slotWidth }}>
+        <PhiTypographyControl type="secondary" style={{ fontSize: token.fontSizeSM, color: PHI_COLOR.textTertiary, ...slotWidth }}>
           {meta}
         </PhiTypographyControl>
       ) : null}
