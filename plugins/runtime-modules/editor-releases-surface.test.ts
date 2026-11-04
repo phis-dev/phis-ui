@@ -3,10 +3,10 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 
 /* The Page's words, stubbed: what this test reads is the wiring, which is the same whatever the words are. */
-vi.mock("../../../helpers/phis-server-credentials", () => ({
+vi.mock("../../helpers/phis-server-credentials", () => ({
   readPhiServerApiCredentials: () => ({ apiBaseUrl: "https://core.test", internalToken: "token" }),
 }));
-vi.mock("./trees/editor-releases-label-set", () => ({
+vi.mock("./editor/trees/editor-releases-label-set", () => ({
   getPhiEditorReleasesPageLabels: async () => ({
     widgetLabel: "releases",
     columns: { kind: "", what: "", where: "", by: "", at: "" },
@@ -19,25 +19,25 @@ vi.mock("./trees/editor-releases-label-set", () => ({
 }));
 
 import { PHI_CORE_ROLE_PROVIDER_ID, PhiBaseRole } from "@phis/contracts/access";
-import { createPhiEditorRuntimeModuleCatalog } from "../area-catalogs/editor";
+import { createPhiEditorRuntimeModuleCatalog } from "./area-catalogs/editor";
 import {
   compilePhiCmsActiveRouteTable,
   resolvePhiCmsDescriptorCatalog,
   resolvePhiCmsRoutePreset,
-} from "../descriptor-compiler";
-import type { PhiRuntimeModuleId } from "../../../types/cms-module-descriptors";
-import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
-import { PHI_VIEWER_ACCESS_ANYONE } from "../../../types/access";
-import type { PhiCmsPageNode } from "../../../types/cms";
-import { PHI_EDITOR_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "./client-data-providers";
-import { PHI_EDITOR_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "./data-providers";
+} from "./descriptor-compiler";
+import type { PhiRuntimeModuleId } from "../../types/cms-module-descriptors";
+import { PhiCmsPageType, PhiCmsStatus } from "../../constants/phi-cms";
+import { PHI_VIEWER_ACCESS_ANYONE } from "../../types/access";
+import type { PhiCmsPageNode } from "../../types/cms";
+import { PHI_EDITOR_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "./editor/client-data-providers";
+import { PHI_EDITOR_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "./editor/data-providers";
 import {
   PHI_EDITOR_RELEASES_DATA_PROVIDER_KEY,
   PHI_EDITOR_RELEASES_PAGE_PRESET_KEY,
   PHI_EDITOR_RELEASES_RESOURCE_KEY,
   PHI_EDITOR_RUNTIME_MODULE_ID,
-} from "./ids";
-import { PHI_EDITOR_RUNTIME_MODULE_ROUTES } from "./presets";
+} from "./editor/ids";
+import { PHI_EDITOR_RUNTIME_MODULE_ROUTES } from "./editor/presets";
 
 const viewerWith = (flags: number) => ({
   access: "authenticated" as const,

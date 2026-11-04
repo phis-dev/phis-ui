@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { createPhiAppRuntimeModuleCatalog } from "../area-catalogs/app";
+import { createPhiAppRuntimeModuleCatalog } from "./area-catalogs/app";
 import {
   compilePhiCmsActiveRouteTable,
   resolvePhiCmsActiveNavigationSurfaces,
   resolvePhiCmsDescriptorCatalog,
   resolvePhiCmsRoutePreset,
-} from "../descriptor-compiler";
-import type { PhiCmsResolvedNavigationItem, PhiRuntimeModuleId } from "../../../types/cms-module-descriptors";
+} from "./descriptor-compiler";
+import type { PhiCmsResolvedNavigationItem, PhiRuntimeModuleId } from "../../types/cms-module-descriptors";
 
 /**
  * The Pages the account menu offers, against the routes that answer them.

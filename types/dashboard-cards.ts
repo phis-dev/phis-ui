@@ -1,3 +1,4 @@
+import type { PhiRuntimeModuleCatalog } from "./cms-plugins";
 import type { PhiCmsAreaKey } from "../constants/cms-areas";
 import { createPhiModuleIdentifier, isPhiModuleScopedIdentifier } from "../constants/module-identity";
 import type { PhiTimelineEntry } from "@phis/contracts/timeline";
@@ -148,6 +149,14 @@ export type PhiDashboardCardContext = {
   locale: string;
   area: PhiCmsAreaKey;
   viewer: PhiAccessViewer;
+  /**
+   * The Module catalog of the Area the Dashboard stands in.
+   *
+   * A card about structure -- which Area has an open draft -- has to know the Area shells, and the
+   * only catalog it may know is the one it is running in. Importing the first-party catalog instead
+   * would compile every Module into the provider (MODULES.md, "The dependency rule").
+   */
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog;
 };
 
 /**

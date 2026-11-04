@@ -1,6 +1,6 @@
-import type { PhiCalendarAdapterDescriptor } from "../../types/calendar";
-import { PHI_GREGORY_CALENDAR_ADAPTER_KEY } from "../../types/calendar-keys";
-import { PHI_CORE_RUNTIME_MODULE_ID } from "./core/ids";
+import type { PhiCalendarAdapterDescriptor } from "../../../types/calendar";
+import { PHI_GREGORY_CALENDAR_ADAPTER_KEY } from "../../../types/calendar-keys";
+import { PHI_CORE_RUNTIME_MODULE_ID } from "./ids";
 
 export const PHI_CORE_CALENDAR_ADAPTER_DESCRIPTORS = [{
   key: PHI_GREGORY_CALENDAR_ADAPTER_KEY,

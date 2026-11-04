@@ -15,7 +15,7 @@ import { PHI_ASSET_RUNTIME_MODULE_ID } from "../asset/ids";
 import { PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY } from "../../../constants/media-library-provider-keys";
 import { PHI_DASHBOARD_CARD_ITEM_RENDERER_KEY } from "../../../constants/dashboard-card-provider-keys";
 import { createPhiRuntimeModuleCalendarAdapterClientManifest } from "../../../components/runtime/runtime-module-calendar-adapter-client-manifest";
-import { PHI_CORE_CALENDAR_ADAPTER_CLIENT_DEFINITIONS } from "../client-calendar-adapters/core";
+import { PHI_CORE_CALENDAR_ADAPTER_CLIENT_DEFINITIONS } from "../core/client-calendar-adapters";
 import { PhiLazyAssetRuntimeControllerClient } from "../asset/client";
 import {
   createPhiRuntimeModuleUiProviderClientManifest,

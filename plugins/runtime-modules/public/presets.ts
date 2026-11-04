@@ -2,27 +2,23 @@ import type {
   PhiCmsAreaShellPresetDescriptor,
   PhiCmsDescriptorBuildContext,
   PhiCmsRoutePresetDescriptor,
-  PhiCmsThemePresetDescriptor,
-} from "../../types/cms-module-descriptors";
+} from "../../../types/cms-module-descriptors";
+import { PhiCmsFlags } from "../../../constants/phi-cms";
+import { PHI_CMS_ERROR_CODES, resolvePhiCmsErrorPagePath } from "../../../constants/cms-error-pages";
 import {
   PHI_DEFAULT_PUB_AREA_COMPOSITION_NODE_KEYS,
   PHI_DEFAULT_PUB_AREA_PRESET_KEY,
-} from "./preset-contracts/pub-area";
-import { PhiCmsFlags } from "../../constants/phi-cms";
-import {
-  PHI_CMS_ERROR_CODES,
-  resolvePhiCmsErrorPagePath,
-} from "../../constants/cms-error-pages";
-import { PHI_CORE_RUNTIME_MODULE_ID } from "./core/ids";
-import { PHI_ACCOUNTING_RUNTIME_MODULE_ID } from "./accounting/ids";
-import { PHI_APP_RUNTIME_MODULE_ID } from "./app/ids";
-import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "./public/ids";
-import { PHI_CORE_THEME_PRESET_PLUGINS } from "../../theme/phi-theme-presets";
-import { buildPhiAreaRootRoutePresetDescriptor } from "./area-root-route";
-import { PHI_BASE_PAGE_LAYOUT_VERSION } from "../../components/regions/presets/phi-base-page-layout";
-import { PHI_PUBLIC_BASE_PAGE_PRESET_KEYS } from "./public-base-page-references";
+} from "../preset-contracts/pub-area";
+import { PHI_PUBLIC_BASE_PAGE_PRESET_KEYS } from "../public-base-page-references";
+import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "./ids";
 
-export const PHI_AREA_BASE_RUNTIME_MODULE_AREA_SHELLS = [
+/*
+ * What the Public base Module brings: the Site shell and the Pages no Site can do without. They live in
+ * the Module that owns them, so the Module reaches no other Module to state them (MODULES.md, "The
+ * dependency rule").
+ */
+
+export const PHI_PUBLIC_RUNTIME_MODULE_AREA_SHELLS = [
   {
     ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
     presetKey: PHI_DEFAULT_PUB_AREA_PRESET_KEY,
@@ -30,7 +26,7 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_AREA_SHELLS = [
     area: "public",
     exportedNodeKeys: PHI_DEFAULT_PUB_AREA_COMPOSITION_NODE_KEYS,
     loadTree: ({ page, runtime }: PhiCmsDescriptorBuildContext) =>
-      import("./phi-default-site-area-preset-tree")
+      import("../phi-default-site-area-preset-tree")
         .then((module) => module.buildPhiDefaultSiteAreaPresetTree({
           page,
           runtime,
@@ -39,62 +35,9 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_AREA_SHELLS = [
           runtimeModuleArea: "public",
         })),
   },
-  {
-    ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
-    presetKey: "app-area-preset",
-    shellPresetVersion: 1,
-    area: "app",
-    /*
-     * The Site shell with a left sider added, rather than a shell of its own.
-     *
-     * App's header and footer are Public's -- one Brand, one account trigger, one description of both.
-     * What App has that Public does not is somewhere for the Modules a signed-in person works with,
-     * and that is the whole of the overlay. Nothing is omitted from the base, so the two trees cannot
-     * disagree about a Region: composition refuses a Region type stated twice.
-     */
-    loadTree: async ({ page, runtime }: PhiCmsDescriptorBuildContext) => {
-      const [
-        { buildPhiDefaultSiteAreaPresetTree },
-        { buildPhiDefaultAppAreaPresetTree },
-        { mergePhiCmsShellTrees },
-      ] = await Promise.all([
-        import("./phi-default-site-area-preset-tree"),
-        import("./app/trees/phi-default-app-area-preset-tree"),
-        import("./shell-tree-composition"),
-      ]);
-      const [base, overlay] = await Promise.all([
-        buildPhiDefaultSiteAreaPresetTree({
-          page,
-          runtime,
-          presetKey: "app-area-preset",
-          ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
-          runtimeModuleArea: "app",
-        }),
-        buildPhiDefaultAppAreaPresetTree({ page, runtime }),
-      ]);
-      return mergePhiCmsShellTrees(base, overlay);
-    },
-  },
-  ...([
-    ["accounting", PHI_ACCOUNTING_RUNTIME_MODULE_ID],
-  ] as const).map(([area, ownerModuleId]) => ({
-    ownerModuleId,
-    presetKey: `${area}-area-preset`,
-    shellPresetVersion: 1,
-    area,
-    loadTree: ({ page, runtime }: PhiCmsDescriptorBuildContext) =>
-      import("./phi-default-site-area-preset-tree")
-        .then((module) => module.buildPhiDefaultSiteAreaPresetTree({
-          page,
-          runtime,
-          presetKey: `${area}-area-preset`,
-          ownerModuleId,
-          runtimeModuleArea: area,
-        })),
-  })),
 ] satisfies readonly PhiCmsAreaShellPresetDescriptor[];
 
-export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
+export const PHI_PUBLIC_RUNTIME_MODULE_ROUTES = [
   {
     ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
     presetKey: PHI_PUBLIC_BASE_PAGE_PRESET_KEYS.welcome,
@@ -111,7 +54,7 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
      * would no longer cover this one on activation.
      */
     loadTree: ({ page, runtime }: PhiCmsDescriptorBuildContext) =>
-      import("./public/trees/phi-default-pub-welcome-page-tree")
+      import("./trees/phi-default-pub-welcome-page-tree")
         .then((module) => module.buildPhiDefaultPubWelcomePageTree({ page, runtime })),
   },
   {
@@ -143,36 +86,8 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
       },
     ],
     loadTree: ({ page }: PhiCmsDescriptorBuildContext) =>
-      import("./public/trees/phi-default-pub-home-page-tree")
+      import("./trees/phi-default-pub-home-page-tree")
         .then((module) => module.buildPhiDefaultPubHomePageTree({ page })),
-  },
-  buildPhiAreaRootRoutePresetDescriptor({
-    ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
-    area: "app",
-    title: "App",
-  }),
-  /*
-   * What a person has settled about their own account: their name, the language they read in.
-   *
-   * It sat with the Auth Module, which owned the route while Core owned every Widget on it. Nothing
-   * about a name or a language depends on how somebody signs in -- a Site that switches to a
-   * directory, or switches Auth off while sessions keep working, would have lost the Page that says
-   * what they are called. AUTHENTICATION.md section 5 already said so: profile administration does
-   * not become Auth's merely by appearing in its menu.
-   *
-   * The Area's own Settings child, so it is declared here rather than injected -- SETTINGS.md section
-   * 5, the same standing Admin and Builder give their General page.
-   */
-  {
-    ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
-    presetKey: "app-profile-page",
-    presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
-    area: "app" as const,
-    title: "Profile",
-    path: "/settings/profile",
-    loadTree: ({ page, runtime }: PhiCmsDescriptorBuildContext) =>
-      import("./app/trees/phi-default-app-profile-page-tree")
-        .then((module) => module.buildPhiDefaultAppProfilePageTree({ page, runtime })),
   },
   ...PHI_CMS_ERROR_CODES.map((code) => ({
     ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
@@ -188,7 +103,7 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
      */
     defaultPageFlags: PhiCmsFlags.NoIndex,
     loadTree: ({ page }: PhiCmsDescriptorBuildContext) =>
-      import("./public/trees/phi-default-pub-error-page-tree")
+      import("./trees/phi-default-pub-error-page-tree")
         .then((module) => module.buildPhiDefaultPubErrorPageTree({ code, page })),
   })),
   {
@@ -199,36 +114,10 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
     title: "Terms and Conditions",
     path: "/terms-and-conditions",
     loadTree: ({ page }) =>
-      import("./public/trees/phi-default-pub-terms-page-tree")
+      import("./trees/phi-default-pub-terms-page-tree")
         .then((module) => module.buildPhiDefaultPubTermsPageTree({ page })),
   },
-  buildPhiAreaRootRoutePresetDescriptor({
-    ownerModuleId: PHI_ACCOUNTING_RUNTIME_MODULE_ID,
-    area: "accounting",
-    title: "Accounting",
-  }),
-  {
-    ownerModuleId: PHI_ACCOUNTING_RUNTIME_MODULE_ID,
-    presetKey: "accounting-overview-page",
-    presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
-    area: "accounting",
-    title: "Overview",
-    path: "/overview",
-    loadTree: ({ page, runtime }: PhiCmsDescriptorBuildContext) =>
-      import("./accounting/trees/phi-default-accounting-page-tree")
-        .then((module) => module.buildPhiDefaultAccountingPageTree({ page, runtime })),
-  },
 ] satisfies readonly PhiCmsRoutePresetDescriptor[];
-
-export const PHI_CORE_RUNTIME_MODULE_THEMES = PHI_CORE_THEME_PRESET_PLUGINS.map((preset) => ({
-  ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
-  presetKey: `${preset.key}-theme-preset`,
-  presetVersion: 1,
-  themeKey: preset.key,
-  title: preset.title,
-  ...(preset.description ? { description: preset.description } : {}),
-  loadPreset: () => preset,
-})) satisfies readonly PhiCmsThemePresetDescriptor[];
 
 /**
  * The Public form pages, in their own list because they appear only where Forms are allowed. The
@@ -267,7 +156,7 @@ export const PHI_PUBLIC_FORM_RUNTIME_MODULE_ROUTES = [
       },
     ],
     loadTree: ({ page }) =>
-      import("./public/trees/phi-default-pub-contact-page-tree")
+      import("./trees/phi-default-pub-contact-page-tree")
         .then((module) => module.buildPhiDefaultPubContactPageTree({ page })),
   },
   /*
@@ -287,7 +176,7 @@ export const PHI_PUBLIC_FORM_RUNTIME_MODULE_ROUTES = [
     path: "/unsubscribe",
     navigation: [],
     loadTree: ({ page }) =>
-      import("./public/trees/phi-default-pub-unsubscribe-page-tree")
+      import("./trees/phi-default-pub-unsubscribe-page-tree")
         .then((module) => module.buildPhiDefaultPubUnsubscribePageTree({
           page,
           presetKey: PHI_PUBLIC_BASE_PAGE_PRESET_KEYS.unsubscribe,

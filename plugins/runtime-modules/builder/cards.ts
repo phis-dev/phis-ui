@@ -3,7 +3,6 @@ import "server-only";
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
 import { definePhiRuntimeModuleLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
 import { getPhiBuilderModulesPageLabels } from "../../../components/widgets/label-sets/builder-modules";
-import { PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG } from "../catalog";
 import {
   createPhiDashboardCardId,
   type PhiDashboardCardContext,
@@ -21,9 +20,8 @@ import { PHI_BUILDER_RUNTIME_MODULE_ID, PHI_BUILDER_RUNTIME_MODULE_IDENTITY } fr
  * The first `list` card. A structure author opening the Builder wants to know where they left off,
  * which is a set of names rather than a count -- "Public and App" says where to go, "2" does not.
  *
- * The Area shells are read from the first-party catalog. A provider is handed no catalog, and every
- * Area's shell is contributed by its first-party base Module, so the Builder's catalog and this one name
- * the same shell sources; a Site's own Modules add Pages, not Areas.
+ * The Area shells are read from the catalog of the Area the Dashboard stands in -- the Builder's, which
+ * carries every Area's base Module, because the Builder edits them all.
  */
 
 const PHI_BUILDER_DASHBOARD_CARD_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_BUILDER_RUNTIME_MODULE_IDENTITY, {
@@ -73,7 +71,7 @@ export const PHI_BUILDER_RUNTIME_MODULE_DASHBOARD_CARDS: PhiDashboardCardProvide
     const [labels, areaLabels, drafted] = await Promise.all([
       getPhiLabelSet(options, PHI_BUILDER_DASHBOARD_CARD_LABEL_SET),
       getPhiBuilderModulesPageLabels(options).then((page) => page.areas),
-      readPhiBuilderAreasWithOpenDraft(PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG, {
+      readPhiBuilderAreasWithOpenDraft(context.runtimeModuleCatalog, {
         siteKey: context.siteKey,
         locale: context.locale,
         apiBaseUrl: context.apiBaseUrl,

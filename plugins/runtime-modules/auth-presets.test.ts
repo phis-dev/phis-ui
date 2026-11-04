@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { createPhiPublicRuntimeModuleCatalog } from "../area-catalogs/public";
+import { createPhiPublicRuntimeModuleCatalog } from "./area-catalogs/public";
 import {
   compilePhiCmsActiveRouteTable,
   resolvePhiCmsDescriptorCatalog,
   resolvePhiCmsRoutePreset,
-} from "../descriptor-compiler";
-import { PHI_AUTH_RUNTIME_MODULE_ROUTES } from "./presets";
-import { PhiCmsFlags } from "../../../constants/phi-cms";
-import { hasPhiFlag } from "../../../helpers/flags";
-import type { PhiRuntimeModuleId } from "../../../types/cms-module-descriptors";
+} from "./descriptor-compiler";
+import { PHI_AUTH_RUNTIME_MODULE_ROUTES } from "./auth/presets";
+import { PhiCmsFlags } from "../../constants/phi-cms";
+import { hasPhiFlag } from "../../helpers/flags";
+import type { PhiRuntimeModuleId } from "../../types/cms-module-descriptors";
 
 /**
  * What the sign-in Pages start out as, and how far that reaches.

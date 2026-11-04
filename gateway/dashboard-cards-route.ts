@@ -158,6 +158,7 @@ async function resolveDashboardCardScope({
     locale,
     area,
     viewer: requestContext.viewer,
+    runtimeModuleCatalog: bridge.runtimeModuleCatalog,
   };
   /*
    * A route handler has no request runtime bound, and the label sets a card reads for its own title

@@ -1,5 +1,5 @@
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../constants/core-data-provider-keys";
-import { PHI_CORE_RUNTIME_MODULE_THEMES } from "../area-base-presets";
+import { PHI_CORE_RUNTIME_MODULE_THEMES } from "./themes";
 import { definePhiRuntimeModuleServerAreaContribution } from "../area-contributions";
 import { PHI_CORE_RUNTIME_MODULE_DEFINITION } from "./definition";
 import { PHI_RUNTIME_MODULE_LAYOUTS as PHI_CORE_LAYOUTS } from "./layouts";

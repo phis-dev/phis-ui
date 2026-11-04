@@ -7,7 +7,7 @@ import { createPhiRuntimeModuleId } from "../../constants/module-identity";
  *
  * A Module that points at one of them has to say which, and a string typed at the call site is the same
  * fragility as a path: nothing checks it, and a preset key that is renamed leaves a reference resolving
- * to nothing. The base descriptors in `area-base-presets.ts` read their keys from here, so the two
+ * to nothing. The base descriptors in `public/presets.ts` read their keys from here, so the two
  * cannot drift.
  *
  * Kept apart from those descriptors on purpose. They import every base Page tree, and

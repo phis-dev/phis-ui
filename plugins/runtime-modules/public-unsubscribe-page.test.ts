@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { PHI_PUBLIC_FORM_RUNTIME_MODULE_ROUTES } from "./area-base-presets";
+import { PHI_PUBLIC_FORM_RUNTIME_MODULE_ROUTES } from "./public/presets";
 import { PHI_SHARED_FORM_IDS } from "../../components/forms/shared-form-ids";
 import { PhiCmsPageType, PhiCmsStatus } from "../../constants/phi-cms";
 import { PHI_VIEWER_ACCESS_ANYONE } from "../../types/access";

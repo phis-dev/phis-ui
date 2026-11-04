@@ -104,6 +104,16 @@ Foundation builds on, and they stay that only while nothing in them leads to a M
 (`createPhiRuntimeModuleId`) rather than importing their `ids.ts`. The validator measures which is
 which: a module-system file that leads to a Module is a catalog, and the Foundation may not import it.
 
+A Module may not import a catalog either, unless it leads back to that Module alone. An Area catalog,
+the first-party catalog, or one shared list holding several Modules' presets reaches every Module in it,
+which is `Module → other Module` taken one step round. Each base Module therefore states its own shell
+and Pages in its own `presets.ts`, and a Dashboard card that needs the Area shells reads the catalog it
+is handed (`PhiDashboardCardContext.runtimeModuleCatalog`) instead of importing one. A Module's tests
+are the Module's code and held to the same line; a test that needs an Area assembled is a Foundation
+test and stands beside the module system (`plugins/runtime-modules/*.test.ts`). The package never
+imports itself by name (`@phis/ui/...`) -- that edge would pass the rule unseen -- except for the
+stylesheet a Site generates and answers for under that name.
+
 The package's doors (`package.json#exports`) are held the same way, because they point at sources and a
 Module package compiles whatever a door reaches -- `import type` included. A door reaches a Module or a
 catalog only if it exists to assemble them (the Next app's routes and Areas, the Area catalogs and

@@ -6,7 +6,7 @@ import path from "node:path";
  *
  * The Foundation keeps the shared pieces in `components/regions/presets/`; each Module keeps its own
  * Pages, Area shells and overlays in `plugins/runtime-modules/<module>/trees/`; the shell presets of the
- * Area base Modules sit beside `area-base-presets.ts`. A validator reading presets reads all three.
+ * Area base Modules sit in `plugins/runtime-modules/`. A validator reading presets reads all three.
  */
 export function listPhiPresetTreeFiles(repositoryRoot: string): string[] {
   const isSource = (name: string) => /\.tsx?$/u.test(name) && !/\.test\.tsx?$/u.test(name);

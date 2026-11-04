@@ -1,4 +1,4 @@
-import { PHI_CORE_RUNTIME_MODULE_THEMES } from "./area-base-presets";
+import { PHI_CORE_RUNTIME_MODULE_THEMES } from "./core/themes";
 import { PHI_CORE_RUNTIME_MODULE_ID } from "./core/ids";
 import { readAllPhiSiteModuleServerAreaContributions } from "./site-module-contributions";
 import type { PhiSiteModuleServerAreaContributions } from "./site-modules";

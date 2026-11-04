@@ -29,9 +29,17 @@ import { collectSourceFiles } from "./lib/source-files.mjs";
  * Foundation builds on. Which is which is not listed but measured: a module-system file is a catalog
  * when it leads to a Module, and the Foundation may not import one.
  *
+ * A Module may use the module system's infrastructure, but not a module-system file that leads to
+ * another Module: an Area catalog, the first-party catalog, or a shared list of several Modules' presets
+ * reaches every Module in it, which is the forbidden edge taken one step round. A Module's own tests are
+ * the Module's code and are held to the same line; a test that needs an Area assembled stands beside the
+ * module system, as a Foundation test (`plugins/runtime-modules/*.test.ts`).
+ *
  * Every reference counts, the type-only and the lazy ones included: `import type` binds the Foundation
  * to a Module's shape as surely as a value does, and `import()` is still an edge. Tests count too.
- * Naming a Module by its id as data -- a string -- is not a reference and stays allowed.
+ * Naming a Module by its id as data -- a string -- is not a reference and stays allowed. The package
+ * does not import itself by name (`@phis/ui/...`): such an edge would pass every rule here unseen. The one
+ * exception is a stylesheet the Site generates and answers for under the package's name.
  */
 
 const runtimeModulesDir = "plugins/runtime-modules/";
@@ -110,11 +118,21 @@ const importPattern = new RegExp(
 const sourceFiles = collectSourceFiles(repositoryRoot, { extensions: sourceExtensions, skipDirectories: skippedDirectories });
 const problems: string[] = [];
 
+const packageName: string = packageManifest.name;
 const importsByFile = new Map<string, string[]>();
 for (const file of sourceFiles) {
   const targets: string[] = [];
   for (const match of stripComments(readFileSync(file, "utf8")).matchAll(importPattern)) {
-    const target = resolveImport(file, match[2] ?? match[4] ?? match[6]!);
+    const specifier = match[2] ?? match[4] ?? match[6]!;
+    // A stylesheet the Site generates is reached by name on purpose: it lives in the Site, not here.
+    if ((specifier === packageName || specifier.startsWith(`${packageName}/`)) && !specifier.endsWith(".css")) {
+      problems.push(
+        `${path.relative(repositoryRoot, file)} -> ${specifier}: the package imports itself by name; ` +
+          "import the file relatively, so the dependency rule can see the edge.",
+      );
+      continue;
+    }
+    const target = resolveImport(file, specifier);
     if (target !== null) targets.push(path.relative(repositoryRoot, target));
   }
   importsByFile.set(path.relative(repositoryRoot, file), targets);
@@ -220,14 +238,24 @@ for (const file of sourceFiles) {
  * dependency the rule forbids, taken one step round.
  */
 const reachingModules = new Set<string>();
+// Which Modules each such file leads to, so a Module may still use one that leads only back to itself.
+const reachedModuleNames = new Map<string, Set<string>>();
 for (let grew = true; grew;) {
   grew = false;
   for (const [file, targets] of importsByFile) {
-    if (classify(file).kind !== "module-system" || reachingModules.has(file)) continue;
-    if (targets.some((target) => classify(target).kind === "module" || reachingModules.has(target))) {
-      reachingModules.add(file);
-      grew = true;
+    if (classify(file).kind !== "module-system") continue;
+    const names = reachedModuleNames.get(file) ?? new Set<string>();
+    const before = names.size;
+    for (const target of targets) {
+      const to = classify(target);
+      if (to.kind === "module") names.add(to.name);
+      for (const name of reachedModuleNames.get(target) ?? []) names.add(name);
     }
+    if (names.size > 0) {
+      reachedModuleNames.set(file, names);
+      reachingModules.add(file);
+    }
+    if (names.size !== before) grew = true;
   }
 }
 
@@ -243,6 +271,17 @@ for (const [sourcePath, targets] of importsByFile) {
         `${sourcePath} -> ${targetPath}: the Foundation may not import a module-system file that ` +
           "reaches a Module.",
       );
+      continue;
+    }
+    if (from.kind === "module" && to.kind === "module-system") {
+      const others = [...(reachedModuleNames.get(targetPath) ?? [])].filter((name) => name !== from.name);
+      if (others.length > 0) {
+        problems.push(
+          `${sourcePath} -> ${targetPath}: the ${from.name} Module may not import a module-system file ` +
+            `that reaches other Modules (${others.sort().join(", ")}). A test that needs an Area ` +
+            "assembled belongs beside the module system.",
+        );
+      }
       continue;
     }
     if (to.kind !== "module") {
