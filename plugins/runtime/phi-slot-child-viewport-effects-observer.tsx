@@ -59,7 +59,8 @@ function resolveProgress(
   viewportWidth: number,
   viewportHeight: number,
 ) {
-  const axis = effect.axis ?? PHI_RENDERABLE_BLOCK_DEFAULT_VIEWPORT_EFFECT.axis ?? "y";
+  // `z` has no extent on the page, so a turn about it follows the page's own scroll direction.
+  const axis = (effect.axis ?? PHI_RENDERABLE_BLOCK_DEFAULT_VIEWPORT_EFFECT.axis) === "x" ? "x" : "y";
   const targetStart = axis === "x" ? rect.left : rect.top;
   const rangeStart = resolveRangePoint(
     effect.rangeStart ?? PHI_RENDERABLE_BLOCK_DEFAULT_VIEWPORT_EFFECT.rangeStart,
@@ -128,6 +129,8 @@ function resolveViewportEffectValues(
       const rotateValue = formatViewportEffectValue(nextValue, effect.unit ?? "deg");
       if (axis === "x") {
         values.rotateX = rotateValue;
+      } else if (axis === "z") {
+        values.rotateZ = rotateValue;
       } else {
         values.rotateY = rotateValue;
       }

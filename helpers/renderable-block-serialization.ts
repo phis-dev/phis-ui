@@ -113,7 +113,7 @@ function normalizeRenderableBlockTransitionTrigger(value: unknown): PhiRenderabl
 }
 
 function normalizeRenderableBlockViewportEffectAxis(value: unknown): PhiRenderableBlockViewportEffectAxis | undefined {
-  return value === "x" || value === "y" ? value : undefined;
+  return value === "x" || value === "y" || value === "z" ? value : undefined;
 }
 
 function normalizeRenderableBlockViewportEffectProperty(value: unknown): PhiRenderableBlockViewportEffectProperty | undefined {

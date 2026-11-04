@@ -92,6 +92,7 @@ export type PhiEffectsWidgetLabels = {
   viewport: {
     x: string;
     y: string;
+    z: string;
     translate: string;
     opacity: string;
     rotate: string;
@@ -203,6 +204,7 @@ export const PHI_EFFECTS_WIDGET_DEFAULT_LABELS: PhiEffectsWidgetLabels = {
   viewport: {
     x: "X",
     y: "Y",
+    z: "Z",
     translate: "Translate",
     opacity: "Opacity",
     rotate: "Rotate",

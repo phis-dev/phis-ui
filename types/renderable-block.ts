@@ -97,7 +97,12 @@ export type PhiRenderableBlockTransitionTrigger =
   | "on_focus"
   | "manual";
 
-export type PhiRenderableBlockViewportEffectAxis = "x" | "y";
+/**
+ * Along which axis a viewport effect moves, or about which one it turns. `z` turns flat in the page plane
+ * and only means something for `rotate`; a translate along `z` is refused when the config is read. Progress
+ * is measured along `x` for `x`, and along the page's own scroll direction for `y` and `z`.
+ */
+export type PhiRenderableBlockViewportEffectAxis = "x" | "y" | "z";
 
 export type PhiRenderableBlockViewportEffectProperty =
   | "translate"

@@ -592,4 +592,19 @@ assert.equal(
   "Neither does a per-corner radius survive a source that is not `custom`.",
 );
 
+// A viewport effect turns flat in the page plane about `z`; nothing moves or fades along it, so `z` on any
+// other property is an error naming the field (audit K21).
+assert.deepEqual(
+  parsePhiCmsContentLayoutConfig({
+    effects: { viewportEffects: [{ property: "rotate", axis: "z", from: 0, to: 90, unit: "deg" }] },
+  }).effects?.viewportEffects?.[0]?.axis,
+  "z",
+  "A rotate about z is kept.",
+);
+assert.throws(
+  () => parsePhiCmsContentLayoutConfig({ effects: { viewportEffects: [{ property: "translate", axis: "z" }] } }),
+  (error: unknown) => isPhiConfigError(error) && error.path === "effects.viewportEffects[0].axis",
+  "A translate along z is refused.",
+);
+
 console.log(`Layout contracts valid: ${PHI_CMS_LAYOUT_REGISTRY.length} plugins, ${layoutKinds.length} families.`);

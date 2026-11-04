@@ -101,6 +101,7 @@ const viewportPropertyOptions = [
 const viewportAxisOptions = [
   labelledOption("x", "viewport.x", "X"),
   labelledOption("y", "viewport.y", "Y"),
+  labelledOption("z", "viewport.z", "Z"),
 ];
 /* px, % and deg are the units themselves; only "no unit" is a word. */
 const viewportUnitOptions = [

@@ -102,7 +102,14 @@ function assertPhiRenderableBlockBaseConfig(config: Record<string, unknown>) {
   reader.value("minSize", "a size", sizeLike);
   reader.value("maxSize", "a size", sizeLike);
   reader.value("collapsedSizeHint", "a size", sizeLike);
-  reader.value("effects", "effects", (value) => (isPhiRecord(value) ? value : undefined));
+  reader.object("effects", (effects) => {
+    effects.list("viewportEffects", (effect) => {
+      // `z` turns flat in the page plane; nothing moves or fades along it.
+      if (effect.record.axis === "z" && effect.record.property !== "rotate") {
+        effect.fail("axis", '"x" or "y" ("z" only turns a "rotate")');
+      }
+    });
+  });
 }
 
 export function readRenderableBlockConfig(config: Record<string, unknown>): PhiRenderableBlockBase {

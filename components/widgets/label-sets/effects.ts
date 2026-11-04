@@ -86,6 +86,7 @@ const PHI_EFFECTS_WIDGET_LABEL_SET = definePhiLabelSet({
     origin_bottom_right: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.origins.bottomRight,
     viewport_x: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.viewport.x,
     viewport_y: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.viewport.y,
+    viewport_z: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.viewport.z,
     viewport_translate: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.viewport.translate,
     viewport_opacity: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.viewport.opacity,
     viewport_rotate: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.viewport.rotate,
@@ -197,6 +198,7 @@ export async function getPhiEffectsWidgetLabels(options: PhiGlobalTranslatorOpti
     viewport: {
       x: labels.viewport_x,
       y: labels.viewport_y,
+      z: labels.viewport_z,
       translate: labels.viewport_translate,
       opacity: labels.viewport_opacity,
       rotate: labels.viewport_rotate,
