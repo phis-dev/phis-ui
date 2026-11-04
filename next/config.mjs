@@ -258,14 +258,41 @@ export function ensurePhiAntdStaticCss(projectDir = process.cwd()) {
 }
 
 /**
+ * The host the Site is reached at, from `config/site-runtime.json` (`site.publicUrl`), or `null` where the
+ * file or the field is absent -- a build outside a Site checkout has neither.
+ *
+ * The dev server serves its own resources only to the hosts in `allowedDevOrigins`; a page opened through
+ * any other host arrives as HTML and never hydrates -- no menu opens, nothing measured in the browser lays
+ * out. The public host was a list a person had to keep, and the one Site that moved to `dev.phis.dev`
+ * was missing from it. The CLI writes the file when it scaffolds a Site, so the host is known here.
+ */
+export function readPhiSitePublicHost(dir = process.cwd()) {
+  const file = path.join(dir, "config", "site-runtime.json");
+  if (!existsSync(file)) return null;
+  const publicUrl = JSON.parse(readFileSync(file, "utf8"))?.site?.publicUrl;
+  if (publicUrl === undefined || publicUrl === null || publicUrl === "") return null;
+  if (typeof publicUrl !== "string" || !URL.canParse(publicUrl)) {
+    throw new Error(`config/site-runtime.json: site.publicUrl must be a URL, found ${JSON.stringify(publicUrl)}.`);
+  }
+  return new URL(publicUrl).hostname;
+}
+
+/**
  * A Site's `next.config`, with `@phis/ui/antd-static.css` resolved to the structure generated for its
- * Ant Design. `dir` is the Site's root, the directory its `package.json` is in.
+ * Ant Design, and the Site's own public host allowed to reach the dev server. `dir` is the Site's root,
+ * the directory its `package.json` is in.
  */
 export function withPhiNextConfig(nextConfig, { dir = process.cwd() } = {}) {
   // Turbopack takes no absolute path as an alias target; a relative one is read from the Site's root.
   const file = `./${path.relative(dir, ensurePhiAntdStaticCss(dir)).split(path.sep).join("/")}`;
+  const publicHost = readPhiSitePublicHost(dir);
+  const allowedDevOrigins = [...new Set([
+    ...(nextConfig.allowedDevOrigins ?? []),
+    ...(publicHost ? [publicHost] : []),
+  ])];
   return {
     ...nextConfig,
+    ...(allowedDevOrigins.length > 0 ? { allowedDevOrigins } : {}),
     turbopack: {
       ...nextConfig.turbopack,
       resolveAlias: {

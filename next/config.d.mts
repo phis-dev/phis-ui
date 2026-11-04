@@ -15,6 +15,9 @@ export declare function generatePhiAntdStaticCss(projectDir?: string): {
 /** The generated file for the Ant Design installed for `projectDir`, written once per input. */
 export declare function ensurePhiAntdStaticCss(projectDir?: string): string;
 
+/** The host in `config/site-runtime.json`'s `site.publicUrl` under `dir`, or `null` where there is none. */
+export declare function readPhiSitePublicHost(dir?: string): string | null;
+
 /**
  * A Site's `next.config`, with `@phis/ui/antd-static.css` resolved to the structure generated for its
  * Ant Design. `dir` is the Site's root, the directory its `package.json` is in.
