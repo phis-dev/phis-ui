@@ -1,4 +1,3 @@
-import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../components/workspace/catalog-store";
 import type { PhiRuntimeModuleDefinition, PhiRuntimeModuleId } from "../../../types";
 import { resolvePhiBuilderAreaAsCmsArea } from "../../../constants/cms-areas";
 import {
@@ -6,8 +5,8 @@ import {
   resolvePhiRuntimeAreaDefinition,
 } from "../area-definitions";
 import { assertPhiRuntimeModuleIdsAllowedForArea } from "../settings";
-import { phiWorkspaceCatalogStore } from "../../../components/workspace/catalog-store";
-import { builderWorkspaceStore, getPhiDeveloperBuilderStateSnapshot } from "./developer-workspace-store";
+import { getPhiDeveloperBuilderStateSnapshot, markPhiBuilderModuleAreasDirty } from "./developer-workspace-store";
+import { setPhiWorkspaceModuleSelection } from "./workspace-catalog-actions";
 import {
   capturePhiBuilderModulesHistoryState,
   createPhiBuilderHistoryContext,
@@ -19,7 +18,7 @@ function serializeRuntimeModuleIds(moduleIds: readonly PhiRuntimeModuleId[] | nu
   return JSON.stringify(moduleIds ?? []);
 }
 
-export function areRuntimeModuleIdsEqual(
+function areRuntimeModuleIdsEqual(
   left: readonly PhiRuntimeModuleId[] | null | undefined,
   right: readonly PhiRuntimeModuleId[] | null | undefined,
 ) {
@@ -132,13 +131,7 @@ export function applyPhiBuilderRuntimeModuleSelectionChanges(
     getPhiDeveloperBuilderStateSnapshot(),
     changedAreas,
   );
-  phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (catalog) => ({
-    ...catalog,
-    runtimeModuleIdsByArea: {
-      ...(catalog.runtimeModuleIdsByArea ?? {}),
-      ...Object.fromEntries(effective.map(({ area, moduleIds }) => [area, moduleIds])),
-    },
-  }));
+  setPhiWorkspaceModuleSelection(Object.fromEntries(effective.map(({ area, moduleIds }) => [area, moduleIds])));
   markPhiBuilderModuleAreasDirty(changedAreas);
   phiBuilderHistory.record(
     createPhiBuilderHistoryContext({ workspace: "modules" }),
@@ -159,29 +152,4 @@ export function applyPhiBuilderRuntimeModuleSelectionChange(
 ) {
   applyPhiBuilderRuntimeModuleSelectionChanges([{ area, selectedIds }]);
   return getPhiDeveloperBuilderStateSnapshot().runtimeModuleIdsByArea?.[area] ?? [];
-}
-
-/**
- * The Areas whose Module selection has unsaved edits, kept as Builder tool state so the Modules
- * workspace commands know which Areas a site-wide save or publish has to reach. Undo does not clear
- * an Area from here -- a save of an unchanged selection is a no-op draft, while a missed Area would
- * silently publish stale state.
- */
-export function markPhiBuilderModuleAreasDirty(
-  areas: readonly PhiDeveloperBuilderArea[],
-) {
-  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (tool) => {
-    const next = new Set(tool.modulesDirtyAreas ?? []);
-    for (const area of areas) {
-      next.add(area);
-    }
-    return next.size === (tool.modulesDirtyAreas ?? []).length
-      ? tool
-      : { ...tool, modulesDirtyAreas: [...next] };
-  });
-}
-
-export function clearPhiBuilderModuleAreasDirty() {
-  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (tool) =>
-    (tool.modulesDirtyAreas?.length ?? 0) === 0 ? tool : { ...tool, modulesDirtyAreas: [] });
 }

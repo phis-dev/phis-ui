@@ -19,7 +19,10 @@ import type {
   PhiBuilderModuleDeactivationRequest,
   PhiBuilderPublicRouteCollisionRequest,
   PhiDeveloperBuilderArea,
+  PhiDeveloperBuilderDraftAllocation,
   PhiDeveloperBuilderEffectsRequest,
+  PhiDeveloperBuilderMode,
+  PhiDeveloperBuilderCommandWorkspace,
   PhiDeveloperBuilderNodeKind,
   PhiDeveloperBuilderPageMetaDraft,
   PhiDeveloperBuilderRegionDraft,
@@ -31,6 +34,11 @@ import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import type { PhiAnchorWidgetPlacement } from "../../../components/controls/phi-anchor-control-contract";
 import { phiBuilderHistory, type PhiBuilderHistoryRecording } from "./history";
 import type { PhiAreaRootRoute, PhiAreaMeta } from "../../../helpers/cms-area-config";
+import {
+  openPhiWorkspacePage,
+  restorePhiWorkspaceCatalog,
+  setPhiWorkspacePageKey,
+} from "./workspace-catalog-actions";
 
 export function normalizePhiDeveloperBuilderArea(scopeKey: string): PhiDeveloperBuilderArea {
   return isPhiBuilderAreaKey(scopeKey) ? scopeKey : "public";
@@ -232,8 +240,6 @@ export function closePhiBuilderPublicRouteCollisionRequest() {
 }
 
 export type PhiDeveloperBuilderNodeSelection = {
-  area?: PhiDeveloperBuilderArea;
-  pageKey?: string;
   nodeKey: string;
   nodeId?: PhiCmsInstanceId | null;
   nodeKind: PhiDeveloperBuilderNodeKind;
@@ -249,7 +255,7 @@ export type PhiDeveloperBuilderNodeSelection = {
  * change, a new Page -- which used to be four copies that had drifted apart. `chrome` resets the
  * chrome controls as well, `closePages` folds the Pages panel.
  */
-export function resetPhiBuilderSelectionToPage(
+function resetPhiBuilderSelectionToPage(
   current: PhiDeveloperBuilderState,
   pageKey: string,
   options: { closePages?: boolean } = {},
@@ -273,8 +279,6 @@ export function selectPhiDeveloperBuilderNode(
 ) {
   builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
     ...current,
-    ...(selection.area ? { area: selection.area } : {}),
-    ...(selection.pageKey ? { pageKey: selection.pageKey } : {}),
     nodeKey: selection.nodeKey,
     nodeId: selection.nodeId ?? null,
     nodeKind: selection.nodeKind,
@@ -350,7 +354,7 @@ const PHI_WORKSPACE_CATALOG_KEYS = [
   "publicRoutePaths",
 ] as const satisfies readonly (keyof PhiWorkspaceCatalogState)[];
 
-export function splitWorkspacePatch(next: Partial<PhiDeveloperBuilderWorkspaceState>) {
+function splitWorkspacePatch(next: Partial<PhiDeveloperBuilderWorkspaceState>) {
   const catalog: Partial<PhiWorkspaceCatalogState> = {};
   const tool: Partial<PhiDeveloperBuilderState> = {};
   for (const [key, value] of Object.entries(next)) {
@@ -919,4 +923,231 @@ export function getPhiDeveloperRegionDraftsSnapshot() {
 
 export function getPhiDeveloperBuilderStateSnapshot(): PhiDeveloperBuilderWorkspaceState {
   return readMergedWorkspaceSnapshot();
+}
+
+/*
+ * The Builder's own actions on its tool state.
+ *
+ * Everything that writes the tool store (`builderWorkspaceStore`) is in this file, by name: what a
+ * caller wants -- open a Page, show the Inspector, take the next node id -- not a patch of whatever
+ * fields it holds. Forty-two writes in nine files did this before, and the selection wrote an Area and a
+ * Page into a store whose merged view always took both from the catalog.
+ * `scripts/validate-builder-store-ownership.mjs` keeps it in one place.
+ */
+
+/** Opens a Page of an Area: the catalog says what is open, the selection starts at the Page itself. */
+export function openPhiBuilderPage(
+  area: PhiDeveloperBuilderArea,
+  pageKey: string,
+  options: { closePages?: boolean } = {},
+) {
+  openPhiWorkspacePage(area, pageKey);
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) =>
+    resetPhiBuilderSelectionToPage(current, pageKey, options));
+}
+
+/** Opens a Page of the Area that is open. */
+export function openPhiBuilderPageInOpenArea(pageKey: string, options: { closePages?: boolean } = {}) {
+  setPhiWorkspacePageKey(pageKey);
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) =>
+    resetPhiBuilderSelectionToPage(current, pageKey, options));
+}
+
+/** Points the selection at a Page the catalog opened by itself, leaving the rest of the tool as it is. */
+export function selectPhiBuilderPageNode(pageKey: string) {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({ ...current, nodeKey: `page:${pageKey}` }));
+}
+
+function setToolField<K extends keyof PhiDeveloperBuilderState>(key: K, value: PhiDeveloperBuilderState[K]) {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) =>
+    (Object.is(current[key], value) ? current : { ...current, [key]: value }));
+}
+
+export function setPhiBuilderCommandWorkspace(commandWorkspace: PhiDeveloperBuilderCommandWorkspace) {
+  setToolField("commandWorkspace", commandWorkspace);
+}
+
+export function setPhiBuilderMode(builderMode: PhiDeveloperBuilderMode) {
+  setToolField("builderMode", builderMode);
+}
+
+export function setPhiBuilderDebugScaffold(debugScaffold: boolean) {
+  setToolField("debugScaffold", debugScaffold);
+}
+
+export function openPhiBuilderPagesPanel() {
+  setToolField("pagesOpen", true);
+}
+
+export function setPhiBuilderInspectorOpen(inspectorOpen: boolean) {
+  setToolField("inspectorOpen", inspectorOpen);
+}
+
+export function setPhiBuilderSelectedLayoutAnchor(anchor: PhiAnchorWidgetPlacement) {
+  setToolField("selectedLayoutAnchor", anchor);
+}
+
+/** A Page's meta as edited, laid over what its draft held. */
+export function setPhiBuilderPageMetaDraft(draftKey: string, meta: PhiDeveloperBuilderPageMetaDraft) {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
+    ...current,
+    pageMetaDrafts: {
+      ...current.pageMetaDrafts,
+      [draftKey]: { ...(current.pageMetaDrafts[draftKey] ?? {}), ...meta },
+    },
+  }));
+}
+
+/** A Page created in the Builder: its meta, and that it is not deleted. */
+export function startPhiBuilderNewPageDrafts(input: {
+  metaDraftKey: string;
+  meta: PhiDeveloperBuilderPageMetaDraft;
+  deleteDraftKey: string;
+}) {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
+    ...current,
+    pageMetaDrafts: { ...current.pageMetaDrafts, [input.metaDraftKey]: input.meta },
+    deletedPageDrafts: { ...current.deletedPageDrafts, [input.deleteDraftKey]: false },
+  }));
+}
+
+/** A Page marked for deletion with the next save. */
+export function markPhiBuilderPageDeleted(deleteDraftKey: string) {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
+    ...current,
+    deletedPageDrafts: { ...current.deletedPageDrafts, [deleteDraftKey]: true },
+  }));
+}
+
+/**
+ * The Areas whose Module selection has unsaved edits, kept as Builder tool state so the Modules
+ * workspace commands know which Areas a site-wide save or publish has to reach. Undo does not clear
+ * an Area from here -- a save of an unchanged selection is a no-op draft, while a missed Area would
+ * silently publish stale state.
+ */
+export function markPhiBuilderModuleAreasDirty(areas: readonly PhiDeveloperBuilderArea[]) {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (tool) => {
+    const next = new Set(tool.modulesDirtyAreas ?? []);
+    for (const area of areas) next.add(area);
+    return next.size === (tool.modulesDirtyAreas ?? []).length ? tool : { ...tool, modulesDirtyAreas: [...next] };
+  });
+}
+
+export function clearPhiBuilderModuleAreasDirty() {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (tool) =>
+    (tool.modulesDirtyAreas?.length ?? 0) === 0 ? tool : { ...tool, modulesDirtyAreas: [] });
+}
+
+const EMPTY_SIGNAL_WIRING_SESSION: PhiDeveloperBuilderState["signalWiring"] = {
+  senderAddress: null,
+  senderCapabilityId: null,
+  receiverAddress: null,
+  receiverCapabilityId: null,
+  fieldKey: null,
+};
+
+function readWiringValue(value: unknown) {
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
+}
+
+/** What the wiring dialog has chosen so far; a value that moved drops everything chosen below it. */
+export function patchPhiBuilderSignalWiringSession(values: Record<string, unknown>) {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => {
+    const senderAddress = readWiringValue(values.senderAddress) ?? current.signalWiring.senderAddress;
+    // A cascade only holds if the values below the one that moved are dropped: keeping a capability that
+    // belongs to the previous endpoint would build a route the runtime silently ignores.
+    const senderChanged = senderAddress !== current.signalWiring.senderAddress;
+    const senderCapabilityId = senderChanged
+      ? null
+      : readWiringValue(values.senderCapabilityId) ?? current.signalWiring.senderCapabilityId;
+    const capabilityChanged = senderCapabilityId !== current.signalWiring.senderCapabilityId;
+    const receiverAddress = senderChanged || capabilityChanged
+      ? null
+      : readWiringValue(values.receiverAddress) ?? current.signalWiring.receiverAddress;
+    const receiverChanged = receiverAddress !== current.signalWiring.receiverAddress;
+    return {
+      ...current,
+      signalWiring: {
+        senderAddress,
+        senderCapabilityId,
+        receiverAddress,
+        receiverCapabilityId: senderChanged || capabilityChanged || receiverChanged
+          ? null
+          : readWiringValue(values.receiverCapabilityId) ?? current.signalWiring.receiverCapabilityId,
+        // The field belongs to the receiver's input, so it falls with everything above it.
+        fieldKey: senderChanged || capabilityChanged || receiverChanged
+          ? null
+          : readWiringValue(values.fieldKey) ?? current.signalWiring.fieldKey,
+      },
+    };
+  });
+}
+
+export function resetPhiBuilderSignalWiringSession() {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
+    ...current,
+    signalWiring: { ...EMPTY_SIGNAL_WIRING_SESSION },
+  }));
+}
+
+/**
+ * What a save or read answered about the Draft a region stands on. A later answer for the same revision
+ * never moves the version or the node sequence back.
+ */
+export function storePhiBuilderDraftAllocation(allocationKey: string, saved: PhiDeveloperBuilderDraftAllocation) {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => {
+    const currentAllocation = current.draftAllocations[allocationKey];
+    const sameRevision = currentAllocation?.revisionId === saved.revisionId;
+    return {
+      ...current,
+      draftAllocations: {
+        ...current.draftAllocations,
+        [allocationKey]: {
+          revisionId: saved.revisionId,
+          version: sameRevision ? Math.max(currentAllocation.version, saved.version) : saved.version,
+          nextNodeSequence: sameRevision
+            ? Math.max(currentAllocation.nextNodeSequence, saved.nextNodeSequence)
+            : saved.nextNodeSequence,
+          sourcePreset: saved.sourcePreset,
+        },
+      },
+    };
+  });
+}
+
+export function clearPhiBuilderDraftAllocation(allocationKey: string) {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => {
+    if (!current.draftAllocations[allocationKey]) return current;
+    const draftAllocations = { ...current.draftAllocations };
+    delete draftAllocations[allocationKey];
+    return { ...current, draftAllocations };
+  });
+}
+
+/** Takes the next node sequence of a Draft, answering the allocation it was taken from. */
+export function takePhiBuilderDraftNodeSequence(allocationKey: string): PhiDeveloperBuilderDraftAllocation {
+  const allocation = builderWorkspaceStore.getSnapshot(PHI_WORKSPACE_CATALOG_SCOPE).draftAllocations[allocationKey];
+  if (!allocation) {
+    throw new Error(`Missing Draft allocation state for "${allocationKey}".`);
+  }
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
+    ...current,
+    draftAllocations: {
+      ...current.draftAllocations,
+      [allocationKey]: { ...allocation, nextNodeSequence: allocation.nextNodeSequence + 1 },
+    },
+  }));
+  return allocation;
+}
+
+/**
+ * Puts a workspace snapshot back, each field into the store it lives in: the catalog's into the
+ * catalog, the Builder's here. An undo used to patch both stores from the command controller.
+ */
+export function restorePhiBuilderWorkspaceState(state: Partial<PhiDeveloperBuilderWorkspaceState>) {
+  const { catalog, tool } = splitWorkspacePatch(state);
+  restorePhiWorkspaceCatalog(catalog);
+  if (Object.keys(tool).length > 0) {
+    builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({ ...current, ...tool }));
+  }
 }

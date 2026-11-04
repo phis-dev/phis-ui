@@ -1,6 +1,5 @@
 "use client";
 
-import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../../components/workspace/catalog-store";
 import {
   createPhiSignalRouteKey,
   readPhiSignalRouteSet,
@@ -8,8 +7,7 @@ import {
   type PhiSignalRoute,
   type PhiSignalRouteSet,
 } from "../../../../types/signals";
-import { builderWorkspaceStore, getPhiDeveloperBuilderStateSnapshot } from "../developer-workspace-store";
-import type { PhiDeveloperBuilderWorkspaceState } from "../developer-workspace-types";
+import { getPhiDeveloperBuilderStateSnapshot } from "../developer-workspace-store";
 import { getPhiDeveloperSelectedSignalRoutes } from "../signal-route-selection";
 import {
   phiSignalCapabilitiesMatch,
@@ -17,55 +15,7 @@ import {
   resolvePhiBuilderSelectedSignalEndpoints,
 } from "../signal-wiring-options";
 
-const EMPTY_SESSION: PhiDeveloperBuilderWorkspaceState["signalWiring"] = {
-  senderAddress: null,
-  senderCapabilityId: null,
-  receiverAddress: null,
-  receiverCapabilityId: null,
-  fieldKey: null,
-};
 
-function readOptionalString(value: unknown) {
-  return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
-}
-
-export function patchPhiBuilderSignalWiringSession(
-  values: Record<string, unknown>,
-) {
-  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => {
-    const senderAddress = readOptionalString(values.senderAddress) ?? current.signalWiring.senderAddress;
-    // A cascade only holds if the values below the one that moved are dropped: keeping a capability that
-    // belongs to the previous endpoint would build a route the runtime silently ignores.
-    const senderChanged = senderAddress !== current.signalWiring.senderAddress;
-    const senderCapabilityId = senderChanged
-      ? null
-      : readOptionalString(values.senderCapabilityId) ?? current.signalWiring.senderCapabilityId;
-    const capabilityChanged = senderCapabilityId !== current.signalWiring.senderCapabilityId;
-    const receiverAddress = senderChanged || capabilityChanged
-      ? null
-      : readOptionalString(values.receiverAddress) ?? current.signalWiring.receiverAddress;
-    const receiverChanged = receiverAddress !== current.signalWiring.receiverAddress;
-    return {
-      ...current,
-      signalWiring: {
-        senderAddress,
-        senderCapabilityId,
-        receiverAddress,
-        receiverCapabilityId: senderChanged || capabilityChanged || receiverChanged
-          ? null
-          : readOptionalString(values.receiverCapabilityId) ?? current.signalWiring.receiverCapabilityId,
-        // The field belongs to the receiver's input, so it falls with everything above it.
-        fieldKey: senderChanged || capabilityChanged || receiverChanged
-          ? null
-          : readOptionalString(values.fieldKey) ?? current.signalWiring.fieldKey,
-      },
-    };
-  });
-}
-
-export function resetPhiBuilderSignalWiringSession() {
-  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({ ...current, signalWiring: { ...EMPTY_SESSION } }));
-}
 
 function routesAreEquivalent(left: PhiSignalRoute, right: PhiSignalRoute) {
   return left.capabilityId === right.capabilityId && left.scope === right.scope &&

@@ -1,6 +1,5 @@
 "use client";
 
-import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../../components/workspace/catalog-store";
 import { flattenPhiPresetPages } from "../page-tree-walk";
 import { useMemo, useRef, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
@@ -62,7 +61,7 @@ import {
   buildPhiBuilderNavigationContainerFromCatalogFolder,
   findPhiBuilderCatalogNode,
 } from "../navigation-folder-drop";
-import { phiWorkspaceCatalogStore } from "../../../../components/workspace/catalog-store";
+import { addPhiWorkspaceNavigationSurface } from "../workspace-catalog-actions";
 
 type LoadedNavigation = { navKey: string; navigation: PhiBuilderNavigationTree };
 /**
@@ -443,13 +442,7 @@ export function PhiBuilderNavigationTableProviderClient({ children }: { children
           return { status: "rejected", invalidation: "none", errorCode: "navigation-exists", message: "Navigation already exists." };
         }
         const surface = createPhiBuilderCustomNavigationSurface(navKey, localKey);
-        phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
-          ...current,
-          navigationSurfacesByArea: {
-            ...current.navigationSurfacesByArea,
-            [state.area]: [...(current.navigationSurfacesByArea[state.area] ?? []), surface],
-          },
-        }));
+        addPhiWorkspaceNavigationSurface(state.area, surface);
         const navigation = (await loadPhiBuilderNavigationScope(navKey, surface)).navigation;
         const saved = await savePhiBuilderNavigationDraft(navigation);
         setPhiBuilderNavigationDraft(navKey, {

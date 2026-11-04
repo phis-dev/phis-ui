@@ -1,4 +1,3 @@
-import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../components/workspace/catalog-store";
 import { buildPhiRuntimeModulePackageRoutePrefix } from "../../../helpers/runtime-module-route-path";
 import {
   buildPhiPublicRouteAddressMap,
@@ -7,11 +6,10 @@ import {
 } from "../../../helpers/public-route-claims";
 import {
   isPhiAssignablePublicRoutePath,
-  normalizePhiAreaPublicRoutePaths,
 } from "../../../helpers/cms-area-config";
-import { phiWorkspaceCatalogStore } from "../../../components/workspace/catalog-store";
+import { assignPhiWorkspacePublicRoutePaths } from "./workspace-catalog-actions";
 import type { PhiRuntimeModuleId } from "../../../types";
-import { markPhiBuilderModuleAreasDirty } from "./runtime-module-selection";
+import { markPhiBuilderModuleAreasDirty } from "./developer-workspace-store";
 import type {
   PhiBuilderPublicRouteCollisionAnswer,
   PhiBuilderPublicRouteCollisionRequest,
@@ -184,20 +182,6 @@ export function applyPhiBuilderPublicRouteAssignments(
   request: Pick<PhiBuilderPublicRouteCollisionRequest, "moduleId" | "answers">,
 ) {
   const answered = new Map(request.answers.map((answer) => [answer.presetKey, answer.path.trim()] as const));
-  phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (catalog) => {
-    const kept = (catalog.publicRoutePaths ?? []).filter((assignment) =>
-      assignment.ownerModuleId !== request.moduleId || !answered.has(assignment.presetKey));
-    return {
-      ...catalog,
-      publicRoutePaths: normalizePhiAreaPublicRoutePaths([
-        ...kept,
-        ...[...answered.entries()].map(([presetKey, path]) => ({
-          ownerModuleId: request.moduleId,
-          presetKey,
-          path,
-        })),
-      ]),
-    };
-  });
+  assignPhiWorkspacePublicRoutePaths(request.moduleId, answered);
   markPhiBuilderModuleAreasDirty(["public"]);
 }

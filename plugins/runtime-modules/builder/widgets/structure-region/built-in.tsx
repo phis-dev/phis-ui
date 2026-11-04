@@ -705,8 +705,6 @@ export function PhiStructureRegionScaffold({
     }
 
     selectPhiDeveloperBuilderNode({
-      area: builderState.area,
-      pageKey: builderState.pageKey,
       regionKey: config.regionKey,
       nodeId: options?.nodeId ?? rootNodeId,
       nodeKey: options?.nodeKey ?? rootNodeTypeKey,
@@ -1614,8 +1612,6 @@ export function PhiStructureRegionScaffold({
     }
 
     selectPhiDeveloperBuilderNode({
-      area: builderState.area,
-      pageKey: builderState.pageKey,
       nodeKind: "region",
       nodeKey: `region:${config.regionKey}`,
       regionKey: config.regionKey,
@@ -1663,8 +1659,6 @@ export function PhiStructureRegionScaffold({
     setIsPicking(true);
 
     selectPhiDeveloperBuilderNode({
-      area: builderState.area,
-      pageKey: builderState.pageKey,
       regionKey: config.regionKey,
       nodeKey: `slot:${config.regionKey}`,
       nodeKind: "slot",

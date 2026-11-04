@@ -1,6 +1,5 @@
 "use client";
 
-import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../components/workspace/catalog-store";
 import { phiAreaPath } from "../../../helpers/locale";
 import { resolvePhiBuilderAreaAsCmsArea, resolvePhiBuilderAreaMask } from "../../../constants/cms-areas";
 import { PhiCmsFlags, PhiCmsStatus } from "../../../constants/phi-cms";
@@ -36,7 +35,8 @@ import {
 import { isPhiRuntimeAreaBaseModuleId } from "../../../plugins/runtime-modules/area-definitions";
 import { createPhiBuilderDraftAllocationKey } from "./draft-allocation-key";
 import {
-  builderWorkspaceStore,
+  clearPhiBuilderDraftAllocation,
+  storePhiBuilderDraftAllocation,
   commitPhiDeveloperBuilderAreaConfig,
   readPhiBuilderEffectiveAreaRootRoute,
   readPhiBuilderEffectiveAreaMeta,
@@ -523,28 +523,7 @@ function storePhiDeveloperBuilderDraftAllocation(
   allocationKey: string,
   saved: CmsDraftWriteState,
 ) {
-  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => {
-    const currentAllocation = current.draftAllocations[allocationKey];
-    const nextNodeSequence =
-      currentAllocation?.revisionId === saved.revisionId
-        ? Math.max(currentAllocation.nextNodeSequence, saved.nextNodeSequence)
-        : saved.nextNodeSequence;
-    return {
-      ...current,
-      draftAllocations: {
-        ...current.draftAllocations,
-        [allocationKey]: {
-          revisionId: saved.revisionId,
-          version:
-            currentAllocation?.revisionId === saved.revisionId
-              ? Math.max(currentAllocation.version, saved.version)
-              : saved.version,
-          nextNodeSequence,
-          sourcePreset: saved.sourcePreset,
-        },
-      },
-    };
-  });
+  storePhiBuilderDraftAllocation(allocationKey, saved);
 }
 
 export function clearPhiDeveloperBuilderDraftAllocation(input: {
@@ -557,14 +536,7 @@ export function clearPhiDeveloperBuilderDraftAllocation(input: {
     input.pageKey,
     input.workspaceKind === "pages" ? "page" : "area",
   );
-  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => {
-    if (!current.draftAllocations[allocationKey]) {
-      return current;
-    }
-    const draftAllocations = { ...current.draftAllocations };
-    delete draftAllocations[allocationKey];
-    return { ...current, draftAllocations };
-  });
+  clearPhiBuilderDraftAllocation(allocationKey);
 }
 
 export async function getPhiDeveloperBuilderDraftAllocation(input: {
@@ -627,14 +599,7 @@ export async function getPhiDeveloperBuilderModulesDraftAllocation(input: {
 
 function clearPhiDeveloperBuilderModulesDraftAllocation(area: PhiDeveloperBuilderArea) {
   const allocationKey = createPhiBuilderDraftAllocationKey(area, area, "modules");
-  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => {
-    if (!current.draftAllocations[allocationKey]) {
-      return current;
-    }
-    const draftAllocations = { ...current.draftAllocations };
-    delete draftAllocations[allocationKey];
-    return { ...current, draftAllocations };
-  });
+  clearPhiBuilderDraftAllocation(allocationKey);
 }
 
 /**

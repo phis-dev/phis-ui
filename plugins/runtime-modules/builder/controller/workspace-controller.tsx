@@ -1,6 +1,5 @@
 "use client";
 
-import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../../components/workspace/catalog-store";
 import type { PhiRenderableBlockEffects } from "../../../../types/renderable-block";
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -72,12 +71,20 @@ import type {
   PhiDeveloperBuilderRegionDraft,
 } from "../developer-workspace-types";
 import {
-  builderWorkspaceStore,
+  patchPhiBuilderSignalWiringSession,
+  resetPhiBuilderSignalWiringSession,
+  openPhiBuilderPage,
+  openPhiBuilderPageInOpenArea,
+  openPhiBuilderPagesPanel,
+  selectPhiBuilderPageNode,
+  setPhiBuilderCommandWorkspace,
+  setPhiBuilderDebugScaffold,
+  setPhiBuilderInspectorOpen,
+  setPhiBuilderMode,
   usePhiDeveloperBuilderWorkspaceState,
   completePhiDeveloperBuilderEffectsEditor,
   normalizePhiDeveloperBuilderArea as normalizeBuilderArea,
   previewPhiDeveloperBuilderEffects,
-  resetPhiBuilderSelectionToPage,
   selectPhiDeveloperBuilderNode,
   usePhiDeveloperRegionDraft,
   getPhiDeveloperBuilderStateSnapshot,
@@ -110,8 +117,6 @@ import {
 } from "./preview-controller";
 import { runPhiDeveloperBuilderInspectorAction } from "./inspector-controller";
 import {
-  patchPhiBuilderSignalWiringSession,
-  resetPhiBuilderSignalWiringSession,
   resolvePhiBuilderSignalWiringRoutes,
   resolvePhiBuilderSignalWiringRoutesWithout,
 } from "./signal-wiring-controller";
@@ -145,14 +150,17 @@ import {
 import {
   applyPhiBuilderRuntimeModuleSelectionChange,
   applyPhiBuilderRuntimeModuleSelectionChanges,
-  areRuntimeModuleIdsEqual,
 } from "../runtime-module-selection";
 import {
   applyPhiBuilderPublicRouteAssignments,
   findPhiBuilderPublicRouteAnswerProblem,
 } from "../public-route-collisions";
 import type { PhiWorkspaceCatalogState } from "../../../../components/workspace/catalog-state";
-import { phiWorkspaceCatalogStore } from "../../../../components/workspace/catalog-store";
+import {
+  applyPhiWorkspaceCatalogPreload,
+  setPhiWorkspaceActiveCatalogs,
+  storePhiWorkspacePersistedPages,
+} from "../workspace-catalog-actions";
 import {
   PHI_BUILDER_PAGE_META_DEFAULT_PRESENTATION_LABELS,
   resolvePhiBuilderEffectsCapabilityId,
@@ -714,70 +722,31 @@ function usePhiDeveloperBuilderWorkspaceController(
      * it lives in the Foundation so that revisions, and later the Editor, can read it without going
      * through here.
      */
-    phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => {
-      let changed = false;
-      const definitionsChanged =
-        serializeRuntimeModuleDefinitions(current.runtimeModuleDefinitions) !== runtimeModuleDefinitionsPreloadKey;
-      const modulePresetPagesChanged =
-        JSON.stringify(current.modulePresetPagesByArea) !== modulePresetPagesPreloadKey;
-      const areaPresetSourcesChanged =
-        JSON.stringify(current.areaPresetSourcesByArea) !== areaPresetSourcesPreloadKey;
-      const navigationSurfacesChanged =
-        JSON.stringify(current.navigationSurfacesByArea) !== navigationSurfacesPreloadKey;
-      const unresolvedModuleIdsChanged =
-        JSON.stringify(current.unresolvedModuleIdsByArea) !== unresolvedModuleIdsPreloadKey;
-      const publicRouteClaimsChanged =
-        JSON.stringify(current.publicRouteClaims) !== publicRouteClaimsPreloadKey;
-      const serverUnavailableModulesChanged =
-        JSON.stringify(current.serverUnavailableModules) !== serverUnavailableModulesPreloadKey;
-      /*
-       * The assignments arrive with the Modules draft and are edited by the collision dialog, so this
-       * follows the same rule as the Module selection beside it: what the server sent replaces what is
-       * here when the server's answer changed, and an unsaved answer survives a re-render.
-       */
-      const publicRoutePathsChanged =
-        JSON.stringify(current.publicRoutePaths) !== publicRoutePathsPreloadKey;
-      const catalogHydrationChanged = !current.catalogHydrated;
-      const initialPageKey = current.pageKey ||
-        resolvePhiBuilderActivePageKey(null, activePreloadCatalogs.modulePresetPagesByArea[current.area]) || "";
-      const initialPageChanged = initialPageKey !== current.pageKey;
-      const nextModuleIdsByArea = {
-        ...(current.runtimeModuleIdsByArea ?? {}),
-      };
-
-      for (const [area, moduleIds] of Object.entries(runtimeModuleIdsByArea)) {
-        const builderArea = normalizeBuilderArea(area);
-        if (!areRuntimeModuleIdsEqual(nextModuleIdsByArea[builderArea], moduleIds)) {
-          nextModuleIdsByArea[builderArea] = moduleIds;
-          changed = true;
-        }
-      }
-
-      if (initialPageChanged) {
-        // The selected node follows the page, and that selection is Builder tool state.
-        builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (tool) => ({
-          ...tool,
-          nodeKey: `page:${initialPageKey}`,
-        }));
-      }
-
-      return changed || definitionsChanged || modulePresetPagesChanged || areaPresetSourcesChanged || navigationSurfacesChanged || unresolvedModuleIdsChanged || serverUnavailableModulesChanged || publicRouteClaimsChanged || publicRoutePathsChanged || catalogHydrationChanged || initialPageChanged
-        ? {
-            ...current,
-            ...(initialPageChanged ? { pageKey: initialPageKey } : {}),
-            runtimeModuleDefinitions: [...runtimeModuleDefinitions],
-            runtimeModuleIdsByArea: nextModuleIdsByArea,
-            catalogHydrated: true,
-            modulePresetPagesByArea: activePreloadCatalogs.modulePresetPagesByArea,
-            areaPresetSourcesByArea,
-            navigationSurfacesByArea: activePreloadCatalogs.navigationSurfacesByArea,
-            unresolvedModuleIdsByArea,
-            serverUnavailableModules,
-            publicRouteClaims,
-            ...(publicRoutePathsChanged ? { publicRoutePaths } : {}),
-          }
-        : current;
+    const openedPageKey = applyPhiWorkspaceCatalogPreload({
+      runtimeModuleDefinitions,
+      runtimeModuleIdsByArea,
+      areaPresetSourcesByArea,
+      unresolvedModuleIdsByArea,
+      serverUnavailableModules,
+      publicRouteClaims,
+      publicRoutePaths,
+      activeCatalogs: activePreloadCatalogs,
+      keys: {
+        runtimeModuleDefinitions: runtimeModuleDefinitionsPreloadKey,
+        modulePresetPagesByArea: modulePresetPagesPreloadKey,
+        areaPresetSourcesByArea: areaPresetSourcesPreloadKey,
+        navigationSurfacesByArea: navigationSurfacesPreloadKey,
+        unresolvedModuleIdsByArea: unresolvedModuleIdsPreloadKey,
+        publicRouteClaims: publicRouteClaimsPreloadKey,
+        serverUnavailableModules: serverUnavailableModulesPreloadKey,
+        publicRoutePaths: publicRoutePathsPreloadKey,
+      },
+      normalizeArea: normalizeBuilderArea,
     });
+    if (openedPageKey != null) {
+      // The selected node follows the page, and that selection is Builder tool state.
+      selectPhiBuilderPageNode(openedPageKey);
+    }
   }, [
     runtimeModuleDefinitions,
     runtimeModuleDefinitionsPreloadKey,
@@ -813,17 +782,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     void loadPhiBuilderPersistedPageCatalog(effectiveArea)
       .then((pages) => {
         if (cancelled) return;
-        phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
-          ...current,
-          persistedPageCatalogByArea: {
-            ...current.persistedPageCatalogByArea,
-            [effectiveArea]: pages,
-          },
-          pageCatalogHydratedByArea: {
-            ...current.pageCatalogHydratedByArea,
-            [effectiveArea]: true,
-          },
-        }));
+        storePhiWorkspacePersistedPages(effectiveArea, pages);
       })
       .catch((error) => {
         if (!cancelled) {
@@ -853,20 +812,9 @@ function usePhiDeveloperBuilderWorkspaceController(
       currentRuntimeModuleIdsByArea,
       runtimeModuleDefinitions,
     );
-    phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => {
-      if (
-        JSON.stringify(current.modulePresetPagesByArea) ===
-          JSON.stringify(activeCatalogs.modulePresetPagesByArea) &&
-        JSON.stringify(current.navigationSurfacesByArea) ===
-          JSON.stringify(activeCatalogs.navigationSurfacesByArea)
-      ) {
-        return current;
-      }
-      return {
-        ...current,
-        modulePresetPagesByArea: activeCatalogs.modulePresetPagesByArea,
-        navigationSurfacesByArea: activeCatalogs.navigationSurfacesByArea,
-      };
+    setPhiWorkspaceActiveCatalogs({
+      modulePresetPagesByArea: activeCatalogs.modulePresetPagesByArea,
+      navigationSurfacesByArea: activeCatalogs.navigationSurfacesByArea,
     });
   }, [
     currentRuntimeModuleIdsByArea,
@@ -952,10 +900,7 @@ function usePhiDeveloperBuilderWorkspaceController(
       return;
     }
 
-    builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
-      ...current,
-      commandWorkspace,
-    }));
+    setPhiBuilderCommandWorkspace(commandWorkspace);
   }, [commandWorkspace, state.commandWorkspace]);
 
   useEffect(() => {
@@ -1008,10 +953,7 @@ function usePhiDeveloperBuilderWorkspaceController(
       return;
     }
 
-    builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
-      ...current,
-      builderMode: nextBuilderMode,
-    }));
+    setPhiBuilderMode(nextBuilderMode);
   }, [hasPreviewSnapshot, isBuilderWorkspace, isNavigationWorkspace, state.builderMode]);
 
   /*
@@ -1105,13 +1047,7 @@ function usePhiDeveloperBuilderWorkspaceController(
       return;
     }
 
-    phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
-      ...current,
-      area: nextArea,
-      pageKey: nextPageKey,
-    }));
-    builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) =>
-      resetPhiBuilderSelectionToPage(current, nextPageKey));
+    openPhiBuilderPage(nextArea, nextPageKey);
   }, [
     isBuilderWorkspace,
     offeredCatalogState,
@@ -1213,13 +1149,7 @@ function usePhiDeveloperBuilderWorkspaceController(
           );
           router.replace(`${pathname}?${nextSearchParams.toString()}`, { scroll: false });
         } else {
-          phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
-            ...current,
-            area: nextArea,
-            pageKey: nextPageKey,
-          }));
-          builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) =>
-            resetPhiBuilderSelectionToPage(current, nextPageKey));
+          openPhiBuilderPage(nextArea, nextPageKey);
         }
         return;
       }
@@ -1385,12 +1315,7 @@ function usePhiDeveloperBuilderWorkspaceController(
 
 	        emitPageTitleInputValue(nextPageKey);
 
-        phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
-          ...current,
-          pageKey: nextPageKey,
-        }));
-        builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) =>
-          resetPhiBuilderSelectionToPage(current, nextPageKey, { closePages: true }));
+        openPhiBuilderPageInOpenArea(nextPageKey, { closePages: true });
         return;
       }
 
@@ -1485,10 +1410,7 @@ function usePhiDeveloperBuilderWorkspaceController(
           return;
         }
 
-        builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
-          ...current,
-          debugScaffold: nextDebugScaffold,
-        }));
+        setPhiBuilderDebugScaffold(nextDebugScaffold);
         return;
       }
 
@@ -1510,18 +1432,29 @@ function usePhiDeveloperBuilderWorkspaceController(
         }
         let nextNodeKey = next.nodeKey;
         let nextNodeId = readPhiCmsInstanceId(next.nodeId);
-        const nextPageKey = typeof next.pageKey === "string" ? next.pageKey : undefined;
+        /*
+         * A selection names the Area and Page its node is on, or the open ones. A node on another Area or
+         * Page is not on the canvas and cannot be selected; opening that Page is the URL's business, not a
+         * selection's. The selection used to write both into the tool store, where the catalog's values
+         * always won, so the node was selected on a Page that was not open.
+         */
+        const openState = getPhiDeveloperBuilderStateSnapshot();
+        if (
+          (typeof next.area === "string" && next.area !== openState.area) ||
+          (typeof next.pageKey === "string" && next.pageKey !== openState.pageKey)
+        ) {
+          return;
+        }
         /*
          * A Layout named only by its Region is that Region's root Layout, read from its draft. A sender that
          * cannot know a Site's node ids -- a Tour step showing the Layout Inspector -- names it this way. A
          * Region without a root Layout selects nothing.
          */
         if (next.nodeKind === "layout" && nextNodeId == null && typeof next.regionKey === "string") {
-          const current = getPhiDeveloperBuilderStateSnapshot();
           const rootNode = getPhiDeveloperRegionDraftsSnapshot()[getPhiBuilderRegionDraftKey(
-            typeof next.area === "string" ? next.area : current.area,
+            openState.area,
             next.regionKey,
-            nextPageKey ?? current.pageKey,
+            openState.pageKey,
           )]?.rootNode;
           if (!rootNode) {
             return;
@@ -1531,8 +1464,6 @@ function usePhiDeveloperBuilderWorkspaceController(
         }
 
         selectPhiDeveloperBuilderNode({
-          ...(typeof next.area === "string" ? { area: next.area as PhiDeveloperBuilderArea } : {}),
-          ...(nextPageKey ? { pageKey: nextPageKey } : {}),
           nodeKey: nextNodeKey,
           nodeId: nextNodeId,
           nodeKind: next.nodeKind as PhiDeveloperBuilderNodeKind,
@@ -1711,7 +1642,7 @@ function usePhiDeveloperBuilderWorkspaceController(
       }
 
       if (addressedHere && signal.channel === "command" && signal.action === "activate" && signal.value === "pagesOpen") {
-        builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({ ...current, pagesOpen: true }));
+        openPhiBuilderPagesPanel();
         return;
       }
 
@@ -1899,7 +1830,7 @@ function usePhiDeveloperBuilderWorkspaceController(
            */
           phiBuilderHistory.endGesture();
         }
-        builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({ ...current, inspectorOpen: signal.value as boolean }));
+        setPhiBuilderInspectorOpen(signal.value as boolean);
         return;
       }
 

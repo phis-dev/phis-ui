@@ -1,6 +1,5 @@
 "use client";
 
-import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../../components/workspace/catalog-store";
 import { useRef } from "react";
 import { useRouter } from "next/navigation";
 
@@ -46,9 +45,10 @@ import {
   type PhiBuilderNavigationFolderCarry,
 } from "../navigation-persistence";
 import {
-  builderWorkspaceStore,
-  splitWorkspacePatch,
+  clearPhiBuilderModuleAreasDirty,
   getPhiDeveloperRegionDraftsSnapshot,
+  markPhiBuilderPageDeleted,
+  restorePhiBuilderWorkspaceState,
   mergePhiDeveloperRegionDrafts,
   restorePhiDeveloperBuilderAreaMeta,
   restorePhiDeveloperRegionDrafts,
@@ -67,8 +67,7 @@ import {
   type PhiBuilderHistorySnapshot,
 } from "../history";
 import { usePhiBuilderModuleMetas } from "../plugin-meta-store";
-import { clearPhiBuilderModuleAreasDirty } from "../runtime-module-selection";
-import { phiWorkspaceCatalogStore } from "../../../../components/workspace/catalog-store";
+import { setPhiWorkspaceModuleSelection } from "../workspace-catalog-actions";
 import type { PhiBuilderNavigationItem } from "../../../../helpers/cms-navigation-catalog";
 import {
   applyPhiBuilderNavigationFolderTargets,
@@ -565,13 +564,7 @@ export function usePhiBuilderDraftCommandController({
           });
           const pageDeleteDraftKey = getPhiBuilderRegionDraftKey(effectiveArea, "page_delete", effectivePageKey);
           mergePhiDeveloperRegionDrafts(nextDrafts);
-          builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
-            ...current,
-            deletedPageDrafts: {
-              ...current.deletedPageDrafts,
-              [pageDeleteDraftKey]: true,
-            },
-          }));
+          markPhiBuilderPageDeleted(pageDeleteDraftKey);
           const result = await savePhiDeveloperBuilderDraft(
             {
               ...state,
@@ -713,30 +706,18 @@ export function usePhiBuilderDraftCommandController({
         return;
       }
       if (snapshot.kind === "modules") {
-        phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
-          ...current,
-          runtimeModuleIdsByArea: {
-            ...(current.runtimeModuleIdsByArea ?? {}),
-            // `null` recorded "no selection stored", which resolves to the Area's default set.
-            ...Object.fromEntries(Object.entries(snapshot.moduleIdsByArea).map(([area, moduleIds]) => [
-              area,
-              moduleIds ? [...moduleIds] : createPhiDefaultAreaRuntimeModuleIds(area as PhiDeveloperBuilderArea),
-            ])),
-          },
-        }));
+        setPhiWorkspaceModuleSelection(Object.fromEntries(Object.entries(snapshot.moduleIdsByArea).map(([area, moduleIds]) => [
+          area,
+          // `null` recorded "no selection stored", which resolves to the Area's default set.
+          moduleIds ? [...moduleIds] : createPhiDefaultAreaRuntimeModuleIds(area as PhiDeveloperBuilderArea),
+        ])));
         return;
       }
       /*
        * A workspace snapshot spans both halves -- customPages belongs to the catalog, the page drafts
        * to the Builder -- so undo has to put each back where it lives.
        */
-      const { catalog, tool } = splitWorkspacePatch(snapshot.state);
-      if (Object.keys(catalog).length > 0) {
-        phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({ ...current, ...catalog }));
-      }
-      if (Object.keys(tool).length > 0) {
-        builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({ ...current, ...tool }));
-      }
+      restorePhiBuilderWorkspaceState(snapshot.state);
     };
 
     /*

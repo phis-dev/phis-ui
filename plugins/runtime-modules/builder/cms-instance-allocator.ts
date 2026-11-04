@@ -1,6 +1,5 @@
 "use client";
 
-import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../components/workspace/catalog-store";
 import { createPhiDraftCmsInstanceId, type PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import { isPhiBuilderPageScopedRegion } from "./region-keys";
 import {
@@ -8,7 +7,7 @@ import {
   savePhiDeveloperBuilderDraft,
 } from "./persistence";
 import {
-  builderWorkspaceStore,
+  takePhiBuilderDraftNodeSequence,
   getPhiDeveloperBuilderStateSnapshot,
   getPhiDeveloperRegionDraftsSnapshot,
 } from "./developer-workspace-store";
@@ -88,32 +87,10 @@ export async function allocatePhiBuilderCmsInstanceId(input: {
 }): Promise<PhiCmsInstanceId> {
   await ensurePhiBuilderDraftAllocation(input);
   const allocationKey = getPhiBuilderDraftAllocationKey(input.area, input.pageKey, input.regionKey);
-  let allocated: PhiCmsInstanceId | null = null;
-
-  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => {
-    const allocation = current.draftAllocations[allocationKey];
-    if (!allocation) {
-      throw new Error(`Missing Draft allocation state for "${allocationKey}".`);
-    }
-    allocated = createPhiDraftCmsInstanceId({
-      domain: isPhiBuilderPageScopedRegion(input.regionKey) ? "page" : "area",
-      draftRevisionId: allocation.revisionId,
-      sequence: allocation.nextNodeSequence,
-    });
-    return {
-      ...current,
-      draftAllocations: {
-        ...current.draftAllocations,
-        [allocationKey]: {
-          ...allocation,
-          nextNodeSequence: allocation.nextNodeSequence + 1,
-        },
-      },
-    };
+  const allocation = takePhiBuilderDraftNodeSequence(allocationKey);
+  return createPhiDraftCmsInstanceId({
+    domain: isPhiBuilderPageScopedRegion(input.regionKey) ? "page" : "area",
+    draftRevisionId: allocation.revisionId,
+    sequence: allocation.nextNodeSequence,
   });
-
-  if (!allocated) {
-    throw new Error(`Failed to allocate a CMS instance id for "${allocationKey}".`);
-  }
-  return allocated;
 }

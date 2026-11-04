@@ -1,6 +1,5 @@
 "use client";
 
-import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../../components/workspace/catalog-store";
 import { readPhiDeveloperBuilderWorkspaceKey } from "../route-scope";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -37,9 +36,10 @@ import {
   PHI_BUILDER_PAGE_SEARCH_PARAM,
 } from "../../../../helpers/cms-scope-search-params";
 import {
-  builderWorkspaceStore,
   mergePhiDeveloperRegionDrafts,
-  resetPhiBuilderSelectionToPage,
+  openPhiBuilderPage,
+  setPhiBuilderPageMetaDraft,
+  startPhiBuilderNewPageDrafts,
   getPhiDeveloperBuilderStateSnapshot,
 } from "../developer-workspace-store";
 import type {
@@ -57,7 +57,10 @@ import { PHI_SIGNAL_VALUE_SCHEMAS, type PhiSignalValue } from "../../../../types
 import { readPhiRuntimeFormValuesSignalValue } from "../../../../components/forms/runtime-form-state";
 import type { PhiBuilderPageMetaPresentationLabels } from "../controller/definition";
 import { emitPhiPageTitleInputSignal } from "../page-title-signal";
-import { phiWorkspaceCatalogStore } from "../../../../components/workspace/catalog-store";
+import {
+  addPhiWorkspaceCustomPage,
+  storePhiWorkspacePersistedPages,
+} from "../workspace-catalog-actions";
 import { usePhiPathname } from "../../../../components/runtime/use-phi-pathname";
 
 type PhiBuilderPageControllerState = Pick<
@@ -132,27 +135,11 @@ export function usePhiBuilderPageController({
 
   async function reloadPersistedPageCatalog(area: PhiDeveloperBuilderArea) {
     const pages = await loadPhiBuilderPersistedPageCatalog(area, { refresh: true });
-    phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
-      ...current,
-      persistedPageCatalogByArea: {
-        ...current.persistedPageCatalogByArea,
-        [area]: pages,
-      },
-      pageCatalogHydratedByArea: {
-        ...current.pageCatalogHydratedByArea,
-        [area]: true,
-      },
-    }));
+    storePhiWorkspacePersistedPages(area, pages);
   }
 
   function navigateToBuilderPage(pageKey: string) {
-    phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
-      ...current,
-      area: effectiveArea,
-      pageKey,
-    }));
-    builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) =>
-      resetPhiBuilderSelectionToPage(current, pageKey, { closePages: true }));
+    openPhiBuilderPage(effectiveArea, pageKey, { closePages: true });
 
     if (typeof pathname === "string") {
       const nextSearchParams = new URLSearchParams(searchParams.toString());
@@ -273,21 +260,7 @@ export function usePhiBuilderPageController({
       const historyBefore = capturePhiBuilderWorkspaceHistoryState(
         getPhiDeveloperBuilderStateSnapshot(),
       );
-      // replace writes the whole tool state, so it must read the tool state -- not the merged view.
-      const current = builderWorkspaceStore.getSnapshot(PHI_WORKSPACE_CATALOG_SCOPE);
-      const next = {
-        ...current,
-        pageMetaDrafts: {
-          ...current.pageMetaDrafts,
-          [pageMetaDraftKey]: {
-            ...(current.pageMetaDrafts[pageMetaDraftKey] ?? {}),
-            title: editedTitle,
-            description,
-            ...indexPatch,
-          },
-        },
-      };
-      builderWorkspaceStore.replace(PHI_WORKSPACE_CATALOG_SCOPE, next);
+      setPhiBuilderPageMetaDraft(pageMetaDraftKey, { title: editedTitle, description, ...indexPatch });
       phiBuilderHistory.record(
         createPhiBuilderHistoryContext({
           workspace: "pages",
@@ -385,36 +358,13 @@ export function usePhiBuilderPageController({
         pathname,
       });
       mergePhiDeveloperRegionDrafts(nextDrafts);
-      phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
-        ...current,
-        customPages: {
-          ...current.customPages,
-          [effectiveArea]: [
-            ...(current.customPages[effectiveArea] ?? []),
-            {
-              key: requestedKey,
-              title,
-              storagePath: requestedStoragePath,
-            },
-          ],
-        },
-      }));
+      addPhiWorkspaceCustomPage(effectiveArea, { key: requestedKey, title, storagePath: requestedStoragePath });
       // The page's meta and delete drafts are edits in progress, so they stay with the Builder.
-      builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
-        ...current,
-        pageMetaDrafts: {
-          ...current.pageMetaDrafts,
-          [getPhiBuilderRegionDraftKey(effectiveArea, "page_meta", requestedKey)]: {
-            title,
-            description,
-            ...indexPatch,
-          },
-        },
-        deletedPageDrafts: {
-          ...current.deletedPageDrafts,
-          [getPhiBuilderRegionDraftKey(effectiveArea, "page_delete", requestedKey)]: false,
-        },
-      }));
+      startPhiBuilderNewPageDrafts({
+        metaDraftKey: getPhiBuilderRegionDraftKey(effectiveArea, "page_meta", requestedKey),
+        meta: { title, description, ...indexPatch },
+        deleteDraftKey: getPhiBuilderRegionDraftKey(effectiveArea, "page_delete", requestedKey),
+      });
       await reloadPersistedPageCatalog(effectiveArea);
       navigateToBuilderPage(requestedKey);
       emitPageTitleInputValue(requestedKey, title);

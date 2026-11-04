@@ -1,4 +1,3 @@
-import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../../components/workspace/catalog-store";
 import { isPhiRecord } from "../../../../helpers/is-record";
 import { PhiCmsFlags } from "../../../../constants/phi-cms";
 import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode } from "../../../../types/cms";
@@ -20,7 +19,7 @@ import {
 } from "../region-keys";
 import { createPhiBuilderRegionHistoryContext } from "../history";
 import {
-  builderWorkspaceStore,
+  setPhiBuilderSelectedLayoutAnchor,
   getPhiDeveloperRegionDraftsSnapshot,
   setPhiDeveloperRegionDraft,
   getPhiDeveloperBuilderStateSnapshot,
@@ -244,10 +243,7 @@ export function runPhiDeveloperBuilderInspectorAction(
     }
 
     patchSelectedStructureDraftConfig(state, "anchor", (config) => ({ ...config, anchor: selectedLayoutAnchor }));
-    builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
-      ...current,
-      selectedLayoutAnchor: selectedLayoutAnchor as PhiAnchorWidgetPlacement,
-    }));
+    setPhiBuilderSelectedLayoutAnchor(selectedLayoutAnchor as PhiAnchorWidgetPlacement);
     return;
   }
 
