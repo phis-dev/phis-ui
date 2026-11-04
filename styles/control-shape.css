@@ -34,7 +34,7 @@
 .ant-picker-small.ant-picker-small:not(:where(.ant-picker-underlined)),
 .ant-segmented.ant-segmented-sm.ant-segmented-sm,
 .ant-color-picker-trigger.ant-color-picker-sm.ant-color-picker-sm {
-  border-radius: var(--phi-control-radius-sm, var(--ant-border-radius-sm));
+  border-radius: var(--phi-control-radius-sm);
 }
 
 .ant-btn-lg.ant-btn-lg,
@@ -45,7 +45,7 @@
 .ant-picker-large.ant-picker-large:not(:where(.ant-picker-underlined)),
 .ant-segmented.ant-segmented-lg.ant-segmented-lg,
 .ant-color-picker-trigger.ant-color-picker-lg.ant-color-picker-lg {
-  border-radius: var(--phi-control-radius-lg, var(--ant-border-radius-lg));
+  border-radius: var(--phi-control-radius-lg);
 }
 
 /*
@@ -56,17 +56,17 @@
  */
 .ant-segmented.ant-segmented .ant-segmented-item.ant-segmented-item,
 .ant-segmented.ant-segmented .ant-segmented-thumb.ant-segmented-thumb {
-  border-radius: var(--phi-control-radius-inner-md, var(--ant-border-radius-sm));
+  border-radius: var(--phi-control-radius-inner-md);
 }
 
 .ant-segmented.ant-segmented-sm .ant-segmented-item.ant-segmented-item,
 .ant-segmented.ant-segmented-sm .ant-segmented-thumb.ant-segmented-thumb {
-  border-radius: var(--phi-control-radius-inner-sm, var(--ant-border-radius-xs));
+  border-radius: var(--phi-control-radius-inner-sm);
 }
 
 .ant-segmented.ant-segmented-lg .ant-segmented-item.ant-segmented-item,
 .ant-segmented.ant-segmented-lg .ant-segmented-thumb.ant-segmented-thumb {
-  border-radius: var(--phi-control-radius-inner-lg, var(--ant-border-radius));
+  border-radius: var(--phi-control-radius-inner-lg);
 }
 
 /*
@@ -90,15 +90,15 @@
  */
 .ant-color-picker-trigger.ant-color-picker-trigger .ant-color-picker-color-block.ant-color-picker-color-block {
   margin-inline-start: 2px;
-  border-radius: var(--phi-control-radius-inner-md, var(--ant-border-radius-sm));
+  border-radius: var(--phi-control-radius-inner-md);
 }
 
 .ant-color-picker-trigger.ant-color-picker-sm .ant-color-picker-color-block.ant-color-picker-color-block {
-  border-radius: var(--phi-control-radius-inner-sm, var(--ant-border-radius-xs));
+  border-radius: var(--phi-control-radius-inner-sm);
 }
 
 .ant-color-picker-trigger.ant-color-picker-lg .ant-color-picker-color-block.ant-color-picker-color-block {
-  border-radius: var(--phi-control-radius-inner-lg, var(--ant-border-radius));
+  border-radius: var(--phi-control-radius-inner-lg);
 }
 
 /*
@@ -127,21 +127,21 @@ textarea.ant-input.ant-input:not(:where(.ant-input-sm, .ant-input-lg, .ant-input
 .ant-input-textarea-affix-wrapper.ant-input-textarea-affix-wrapper:not(:where(.ant-input-affix-wrapper-sm, .ant-input-affix-wrapper-lg, .ant-input-underlined)),
 .ant-select-multiple.ant-select-multiple:not(:where(.ant-select-sm, .ant-select-lg, .ant-select-underlined)),
 .ant-mentions.ant-mentions:not(:where(.ant-mentions-sm, .ant-mentions-lg, .ant-mentions-underlined)) {
-  border-radius: var(--phi-control-radius-grown-md, var(--ant-border-radius));
+  border-radius: var(--phi-control-radius-grown-md);
 }
 
 textarea.ant-input-sm.ant-input-sm:not(:where(.ant-input-underlined, .ant-input-affix-wrapper > textarea)),
 .ant-input-textarea-affix-wrapper.ant-input-affix-wrapper-sm.ant-input-affix-wrapper-sm:not(:where(.ant-input-underlined)),
 .ant-select-multiple.ant-select-sm.ant-select-sm:not(:where(.ant-select-underlined)),
 .ant-mentions-sm.ant-mentions-sm:not(:where(.ant-mentions-underlined)) {
-  border-radius: var(--phi-control-radius-grown-sm, var(--ant-border-radius-sm));
+  border-radius: var(--phi-control-radius-grown-sm);
 }
 
 textarea.ant-input-lg.ant-input-lg:not(:where(.ant-input-underlined, .ant-input-affix-wrapper > textarea)),
 .ant-input-textarea-affix-wrapper.ant-input-affix-wrapper-lg.ant-input-affix-wrapper-lg:not(:where(.ant-input-underlined)),
 .ant-select-multiple.ant-select-lg.ant-select-lg:not(:where(.ant-select-underlined)),
 .ant-mentions-lg.ant-mentions-lg:not(:where(.ant-mentions-underlined)) {
-  border-radius: var(--phi-control-radius-grown-lg, var(--ant-border-radius-lg));
+  border-radius: var(--phi-control-radius-grown-lg);
 }
 
 /*

@@ -313,7 +313,7 @@ h5.phi-typography, .phi-typography h5 {
  * is the Theme's surface step; everything else is the token variable the primitive read.
  */
 .phi-card-control {
-  --phi-card-control-radius: var(--phi-surface-radius, var(--ant-border-radius-lg));
+  --phi-card-control-radius: var(--phi-surface-radius);
   --phi-card-control-line: var(--ant-line-width) var(--ant-line-type) var(--ant-color-border-secondary);
   position: relative;
   box-sizing: border-box;
@@ -506,8 +506,8 @@ h5.phi-typography, .phi-typography h5 {
 }
 
 .phi-table-control.phi-table-control--closing-block [class~="ant-table"] {
-  border-end-start-radius: var(--phi-surface-radius, var(--ant-border-radius-lg));
-  border-end-end-radius: var(--phi-surface-radius, var(--ant-border-radius-lg));
+  border-end-start-radius: var(--phi-surface-radius);
+  border-end-end-radius: var(--phi-surface-radius);
   /* `clip`, not `hidden`, so the corners are cut without making this the sticky header's scroller. */
   overflow: clip;
 }

@@ -224,7 +224,7 @@ const PHI_CARD_HIDDEN_TEXT: CSSProperties = {
   border: 0,
 };
 
-const PHI_CARD_THEME_CORNER = "var(--phi-surface-radius, var(--ant-border-radius-lg))";
+const PHI_CARD_THEME_CORNER = "var(--phi-surface-radius)";
 
 /** The box a picture is shown in takes the picture's own proportion; 3:2 where nothing is known. */
 function resolveMediaAspectRatio(presentation: PhiImagePresentation) {

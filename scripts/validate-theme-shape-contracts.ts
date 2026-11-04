@@ -259,8 +259,8 @@ const tableStylesheet = await readFile(
   "utf8",
 );
 assert.ok(
-  tableStylesheet.includes(`var(${PHI_SURFACE_SHAPE_CSS_VAR},`),
-  "The Table's bottom corners must read the surface step, with the surface token as fallback.",
+  tableStylesheet.includes(`var(${PHI_SURFACE_SHAPE_CSS_VAR})`),
+  "The Table's bottom corners must read the surface step.",
 );
 
 /**
@@ -343,13 +343,14 @@ const shapeStylesheet = shapeStylesheetSource.replace(/\/\*[\s\S]*?\*\//gu, "");
 for (const cssVar of Object.values(PHI_CONTROL_SHAPE_CSS_VARS)) {
   assert.ok(shapeStylesheet.includes(cssVar), `${cssVar} is emitted but never applied.`);
 }
-// Every custom property falls back to the adapter token it replaces, so a subtree that declares none of
-// them -- a portal before the mirror runs, a consumer embedding a bare Control -- keeps antd's own scale.
+// No property falls back to the adapter token it replaces. The Provider declares them on its element in
+// the server render and mirrors them onto the document for portals; a Control outside the Provider
+// cannot render (`usePhiConfig` throws), so a fallback would only hide a missing Provider.
 for (const declaration of shapeStylesheet.matchAll(/var\(--phi-control-radius-[a-z-]+(?<fallback>[^)]*)/gu)) {
-  assert.match(
+  assert.equal(
     declaration.groups?.fallback ?? "",
-    /^, var\(--ant-border-radius/u,
-    "Each Control shape property falls back to the adapter radius it replaces.",
+    "",
+    "A Control shape property reads the Provider's value, with no adapter radius beside it.",
   );
 }
 // A single-class rule only ties with antd's own `:where(.<hash>).ant-x-sm`, and source order would
@@ -451,7 +452,7 @@ const markdownEditorSource = await readFile(
 );
 assert.match(
   markdownEditorSource,
-  /borderRadius: "var\(--phi-control-radius-grown-md, var\(--ant-border-radius-lg\)\)"/u,
+  /borderRadius: "var\(--phi-control-radius-grown-md\)"/u,
   "The Markdown editor's own box takes the grown Control radius, never `--ant-border-radius`.",
 );
 

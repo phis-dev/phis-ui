@@ -53,11 +53,8 @@ function lazyPhiFormFieldControl(
          * Control line, which on the one-row placeholder is exactly the capsule and on a taller one is the
          * capsule held -- the same answer the field itself will give when it arrives, so the shape does not
          * change under the reader at the moment the chunk lands.
-         *
-         * Here the fallback is the plain surface radius and not the large one: this is an ordinary `div`,
-         * not an Ant Design Control, so nothing has redefined `--ant-border-radius` on it.
          */
-        borderRadius: "var(--phi-control-radius-grown-md, var(--ant-border-radius))",
+        borderRadius: "var(--phi-control-radius-grown-md)",
         background: "var(--ant-color-fill-quaternary)",
       }}
     />

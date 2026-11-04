@@ -425,10 +425,9 @@ as `--phi-surface-radius` and, where a component has a token for it, as that tok
   overrides. The **Split Card** is one card split in two, so its corner is simply its Surface's.
 - **A Phi Control that draws its own surface** -- the frame of a bordered Tree, and a media tile together with
   the skeleton standing in for it. There is no component token to carry the step to a box phis draws itself, so
-  it reads the variable. Only where a Control can render outside the Provider does a fallback belong beside it:
-  a Tree reads Ant Design's tokens directly and keeps `--ant-border-radius-lg`, while a media tile reads the
-  Config Provider, which throws when it is absent and is what declares the property, so it states the variable
-  bare.
+  it reads the variable, bare. The Config Provider declares it on its element in the server render and mirrors
+  it onto the document for portals, and nothing of phis renders outside it (`usePhiConfig` throws there), so
+  an `--ant-*` fallback beside it would only hide a missing Provider.
 Intrinsic geometry stays authoritative: Switch stays a capsule, Checkbox and Radio keep their shapes, joined
 groups round only their outer boundary.
 
@@ -437,8 +436,8 @@ box around a Control must not read it. Ant Design ships a component token in CSS
 redefinition of the same variable on the Control element (`.ant-input-css-var`, `.ant-select-css-var`), which
 is how the shape reaches the default size at all: on a surface the variable carries the surface radius, on a
 Control it carries the Control shape -- under `pill` the full radius. A field rendered `borderless` whose
-wrapper supplies the border and the corner therefore takes `--phi-control-radius-grown-*`, and falls back to
-`--ant-border-radius-lg`, the one radius on that element no component token redefines.
+wrapper supplies the border and the corner therefore takes `--phi-control-radius-grown-*`, with no fallback
+beside it. The same holds for every `--phi-control-radius-*` in `styles/control-shape.css`.
 
 Persist the semantic value only. Pixel radii, percentages, Ant Design token names, and per-component overrides
 are not part of this field.

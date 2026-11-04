@@ -131,10 +131,9 @@ export function PhiMarkdownWidgetEditor({
          * as a capsule.
          *
          * `grown-md` is what that stylesheet would have given it -- the capsule of one Control line,
-         * held at every height (THEME.md, "Control shape"). The fallback is the LARGE surface radius,
-         * because it is the one radius on this element that a component token does not redefine.
+         * held at every height (THEME.md, "Control shape").
          */
-        borderRadius: "var(--phi-control-radius-grown-md, var(--ant-border-radius-lg))",
+        borderRadius: "var(--phi-control-radius-grown-md)",
         background: "var(--ant-color-bg-container)",
         resize: "none",
         fontFamily:
