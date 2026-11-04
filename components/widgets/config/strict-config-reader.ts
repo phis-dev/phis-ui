@@ -39,6 +39,8 @@ export function resolvePhiRenderFailureCode(error: unknown): "invalid-config" | 
 }
 
 function describePhiConfigValue(value: unknown) {
+  if (value === undefined) return "nothing";
+  if (value === null) return "null";
   if (Array.isArray(value)) return "a list";
   if (isPhiRecord(value)) return "an object";
   if (typeof value === "string") return `the text ${JSON.stringify(value.length > 40 ? `${value.slice(0, 40)}...` : value)}`;
@@ -72,13 +74,74 @@ export type PhiConfigReader = {
   fail(key: string, expected: string, received?: unknown): never;
 };
 
+/**
+ * A field a reader found wrong, in a record that did not come from a stored config: a server's answer.
+ *
+ * The same reading, said as what it is. A response the client cannot read is the server's or the
+ * contract's fault, not something an author can correct, so it is not a `PhiConfigError` and no
+ * Builder offers to fix it.
+ */
+class PhiResponseShapeError extends Error {
+  readonly source: string;
+  readonly path: string;
+  readonly expected: string;
+  readonly received: unknown;
+
+  constructor(source: string, path: string, expected: string, received: unknown) {
+    super(`${source} answered "${path}" with ${describePhiConfigValue(received)}, expected ${expected}.`);
+    this.name = "PhiResponseShapeError";
+    this.source = source;
+    this.path = path;
+    this.expected = expected;
+    this.received = received;
+  }
+}
+
+type PhiReaderErrorFactory = (path: string, expected: string, received: unknown) => Error;
+
 export function createPhiConfigReader(
   record: Readonly<Record<string, unknown>>,
   path = "",
 ): PhiConfigReader {
+  return createPhiStrictReader(record, path, (at, expected, received) => new PhiConfigError(at, expected, received));
+}
+
+/**
+ * The same strict reader over a server's answer. `source` names who answered (`"The media listing"`),
+ * so the error says whose shape it was. A value is read as in a config: absent is allowed and reads as
+ * absent, present and wrong throws. What the answer must carry, the caller asks for with `required`.
+ */
+export function createPhiResponseReader(
+  value: unknown,
+  source: string,
+  path = "",
+): PhiConfigReader {
+  if (!isPhiRecord(value)) {
+    throw new PhiResponseShapeError(source, path || "(answer)", "an object", value);
+  }
+  return createPhiStrictReader(value, path, (at, expected, received) =>
+    new PhiResponseShapeError(source, at, expected, received));
+}
+
+/** A field the record must carry: what `read` answers, or the reader's error for the field. */
+export function requirePhiField<T>(
+  reader: PhiConfigReader,
+  key: string,
+  expected: string,
+  read: (key: string) => T | undefined,
+): T {
+  const value = read(key);
+  return value === undefined ? reader.fail(key, expected) : value;
+}
+
+function createPhiStrictReader(
+  record: Readonly<Record<string, unknown>>,
+  path: string,
+  makeError: PhiReaderErrorFactory,
+): PhiConfigReader {
   const at = (key: string) => (path ? `${path}.${key}` : key);
   const fail = (key: string, expected: string, received: unknown = record[key]): never => {
-    throw new PhiConfigError(at(key), expected, received);
+    throw makeError(at(key), expected, received);
   };
   const reader: PhiConfigReader = {
     path,
@@ -120,7 +183,7 @@ export function createPhiConfigReader(
     object(key, read) {
       const value = record[key];
       if (isAbsent(value)) return undefined;
-      return isPhiRecord(value) ? read(createPhiConfigReader(value, at(key))) : fail(key, "an object");
+      return isPhiRecord(value) ? read(createPhiStrictReader(value, at(key), makeError)) : fail(key, "an object");
     },
     list(key, read) {
       const value = record[key];
@@ -128,8 +191,8 @@ export function createPhiConfigReader(
       if (!Array.isArray(value)) return fail(key, "a list");
       return value.map((entry, index) => {
         const entryPath = `${at(key)}[${index}]`;
-        if (!isPhiRecord(entry)) throw new PhiConfigError(entryPath, "an object", entry);
-        return read(createPhiConfigReader(entry, entryPath), index);
+        if (!isPhiRecord(entry)) throw makeError(entryPath, "an object", entry);
+        return read(createPhiStrictReader(entry, entryPath, makeError), index);
       });
     },
     stringList(key) {
@@ -137,7 +200,7 @@ export function createPhiConfigReader(
       if (isAbsent(value)) return undefined;
       if (!Array.isArray(value)) return fail(key, "a list of texts");
       return value.map((entry, index) => {
-        if (typeof entry !== "string") throw new PhiConfigError(`${at(key)}[${index}]`, "a text", entry);
+        if (typeof entry !== "string") throw makeError(`${at(key)}[${index}]`, "a text", entry);
         return entry;
       });
     },

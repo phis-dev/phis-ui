@@ -1,6 +1,5 @@
 "use client";
 
-import { isPhiRecord } from "../../helpers/is-record";
 import { useEffect, useMemo, useState } from "react";
 
 import { PhiMediaKind } from "../../constants/media";
@@ -8,6 +7,9 @@ import { createPhiAssetUri } from "../../types/references";
 import type { PhiFontMetrics, PhiMediaAssetTile } from "../../types/media";
 import { usePhiCollectionProvider } from "../widgets/client/shared/phi-collection-provider";
 import { PHI_ASSET_COLLECTION_DATA_SOURCE } from "./asset-collection-runtime";
+import { readPhiFontMetricsFields } from "./media-font-metrics";
+import { readPhiMediaAssetTiles } from "./phi-image-preview-data";
+import { createPhiResponseReader } from "../widgets/config/strict-config-reader";
 
 /**
  * The typefaces a Site owns, as something a font slot can be set to.
@@ -38,11 +40,9 @@ type PhiSiteFontAssetOption = {
 };
 
 function readFontAssetMetrics(asset: PhiMediaAssetTile): PhiFontMetrics | null {
-  const meta = asset.meta?.font;
-  if (!isPhiRecord(meta)) return null;
-  const record = meta as Record<string, unknown>;
-  // The management tile carries `meta` as stored; only a shape with its unit grid is worth drawing from.
-  return typeof record.unitsPerEm === "number" && record.unitsPerEm > 0 ? (record as unknown as PhiFontMetrics) : null;
+  // The management tile carries `meta` as stored, and the server stored every field of the metrics.
+  return createPhiResponseReader(asset.meta ?? {}, `The stored metrics of Asset ${asset.id}`, "meta")
+    .object("font", readPhiFontMetricsFields) ?? null;
 }
 
 function readFontAssetLabel(asset: PhiMediaAssetTile) {
@@ -86,7 +86,7 @@ export function usePhiSiteFontAssets(enabled = true) {
         setError(data.error);
         return;
       }
-      setAssets(data.items.filter((item): item is PhiMediaAssetTile => Boolean(item)));
+      setAssets(readPhiMediaAssetTiles(data.items));
     }).catch((cause: unknown) => {
       if (abortController.signal.aborted) return;
       setAssets([]);

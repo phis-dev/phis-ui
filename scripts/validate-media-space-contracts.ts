@@ -136,6 +136,16 @@ const folders: PhiMediaAssetFolder[] = [
   { id: 2, siteId: 1, spaceId: 5, parentId: 1, name: "Logos", sortOrder: 0, flags: 0 },
   { id: 3, siteId: 1, spaceId: 5, parentId: null, name: "Archive", sortOrder: 0, flags: 0 },
 ];
+const reportedSpace = (id: number, kind: "user" | "group") => ({
+  id,
+  address: kind === "group" ? `group:${id}` : String(id),
+  kind,
+  groupId: kind === "group" ? id : null,
+  name: null,
+  quotaBytes: null,
+  usedBytes: 0,
+  reservedBytes: 0,
+});
 const tile = (id: number, spaceId: number, folderId: number | null) => ({
   id,
   siteId: 1,
@@ -152,7 +162,6 @@ const tile = (id: number, spaceId: number, folderId: number | null) => ({
   width: 10,
   height: 10,
   bytes: 100,
-  checksumSha256: null,
   lifecycleStatus: 1,
   deliveryPolicy: 1,
   deliveryRevision: 1,
@@ -162,10 +171,10 @@ const tile = (id: number, spaceId: number, folderId: number | null) => ({
 resetPhiImagePreviewStore(PHI_ASSET_CONTROLLER_STORE_KEY);
 applyPhiAssetCollectionData({
   items: [tile(10, 9, 2)],
-  meta: { activeSpace: { id: 9, kind: "user" }, folders, pagination: { page: 1, pageSize: 20, hasMore: false } },
+  meta: { activeSpace: reportedSpace(9, "user"), folders, pagination: { page: 1, pageSize: 20, hasMore: false } },
 } as never, "request-1");
 const afterUserSpace = phiImagePreviewStore.getSnapshot(PHI_ASSET_CONTROLLER_STORE_KEY);
-assert.deepEqual(afterUserSpace.activeSpace, { id: 9, kind: "user" });
+assert.deepEqual(afterUserSpace.activeSpace, reportedSpace(9, "user"));
 assert.deepEqual(afterUserSpace.folders.map(({ id }) => id), [1, 2, 3]);
 assert.equal(afterUserSpace.resolvedCollectionRequestKey, "request-1");
 
@@ -727,13 +736,22 @@ assert.doesNotMatch(uploadFlowSource, /["'`]https?:\/\//u);
 // The response reader keeps the Space the server reported and nothing more.
 const previewResponse = await readPhiImagePreviewResponse(new Response(
   JSON.stringify({
-    activeSpace: { id: 3, kind: "group" },
+    activeSpace: reportedSpace(3, "group"),
     assets: [tile(20, 3, null)],
     folders: [],
   }),
   { status: 200, headers: { "Content-Type": "application/json" } },
 ));
-assert.deepEqual(previewResponse.activeSpace, { id: 3, kind: "group" });
+assert.deepEqual(previewResponse.activeSpace, reportedSpace(3, "group"));
+// An answer whose Asset lacks a field it must carry is refused at arrival, naming the field -- not cast
+// into a tile that says otherwise.
+await assert.rejects(
+  readPhiImagePreviewResponse(new Response(
+    JSON.stringify({ assets: [{ ...tile(21, 3, null), deliveryUrl: undefined }], folders: [] }),
+    { status: 200, headers: { "Content-Type": "application/json" } },
+  )),
+  /The media listing answered "assets\[0\]\.deliveryUrl"/u,
+);
 assert.equal(previewResponse.assets[0]?.spaceId, 3);
 await assert.rejects(
   readPhiImagePreviewResponse(new Response(

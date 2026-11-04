@@ -12,7 +12,7 @@ import {
   PhiCollectionProviderClient,
   type PhiCollectionProviderRegistration,
 } from "../../../../components/widgets/client/shared/phi-collection-provider";
-import type { PhiDashboardCardRow } from "../../../../types/dashboard-cards";
+import { readPhiDashboardCardRows } from "../card-rows";
 import { isPhiRecord } from "../../../../helpers/is-record";
 import { usePhiPathname } from "../../../../components/runtime/use-phi-pathname";
 
@@ -29,16 +29,6 @@ import { usePhiPathname } from "../../../../components/runtime/use-phi-pathname"
  * placed this Widget knows which; the path is read live, because that is what changes when a Site puts
  * a Dashboard somewhere else.
  */
-
-type PhiDashboardCardsResponse = {
-  cards?: unknown;
-};
-
-function readCardRows(payload: PhiDashboardCardsResponse) {
-  return Array.isArray(payload.cards)
-    ? payload.cards.filter(isPhiRecord).map((card) => ({ ...card }) as unknown as PhiDashboardCardRow)
-    : [];
-}
 
 async function queryDashboardCards(
   request: PhiCollectionProviderQueryRequest,
@@ -70,10 +60,11 @@ async function queryDashboardCards(
     if (!response.ok) {
       throw new Error(`Dashboard cards request failed (${response.status}).`);
     }
-    const rows = readCardRows((await response.json()) as PhiDashboardCardsResponse);
+    const payload: unknown = await response.json();
+    const rows = readPhiDashboardCardRows(isPhiRecord(payload) ? payload.cards : undefined);
     return {
       resourceKey: request.resourceKey,
-      items: rows as unknown as Record<string, unknown>[],
+      items: rows.map((row): Record<string, unknown> => ({ ...row })),
       total: rows.length,
       loading: false,
       error: null,

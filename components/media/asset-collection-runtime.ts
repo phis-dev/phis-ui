@@ -8,14 +8,15 @@ import type {
   PhiCollectionProviderQuery,
 } from "../../types/collection-provider";
 import type { PhiProviderResourceSource } from "../../types/runtime-data-provider";
-import type {
-  PhiMediaAssetFolder,
-  PhiMediaAssetTile,
-  PhiMediaPickerPagination,
-  PhiMediaSpaceOption,
-} from "../../types/media";
 import { usePhiCollectionProvider } from "../widgets/client/shared/phi-collection-provider";
 import { usePhiMediaSpaceSelectionAllowed } from "./media-space-selection";
+import {
+  readPhiMediaAssetTiles,
+  readPhiMediaFolders,
+  readPhiMediaPagination,
+  readPhiMediaSpace,
+  readPhiMediaSpaces,
+} from "./phi-image-preview-data";
 import {
   PHI_ASSET_CONTROLLER_STORE_KEY,
 } from "./asset-controller-signals";
@@ -26,7 +27,6 @@ import {
   type PhiImagePreviewStoreState,
   usePhiImagePreviewStore,
 } from "./phi-image-preview-store";
-import { isPhiRecord } from "../../helpers/is-record";
 
 export const PHI_ASSET_COLLECTION_DATA_SOURCE = {
   providerKey: PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection,
@@ -61,22 +61,12 @@ export function applyPhiAssetCollectionData(
   data: PhiCollectionProviderData,
   resolvedCollectionRequestKey?: string,
 ) {
-  const folders = Array.isArray(data.meta?.folders)
-    ? data.meta.folders.filter(isPhiRecord) as unknown as PhiMediaAssetFolder[]
-    : [];
-  const pagination = isPhiRecord(data.meta?.pagination)
-    ? data.meta.pagination as unknown as PhiMediaPickerPagination
-    : null;
   setPhiImagePreviewResults(PHI_ASSET_CONTROLLER_STORE_KEY, {
-    activeSpace: isPhiRecord(data.meta?.activeSpace)
-      ? data.meta.activeSpace as unknown as PhiMediaSpaceOption
-      : null,
-    spaces: Array.isArray(data.meta?.spaces)
-      ? data.meta.spaces.filter(isPhiRecord) as unknown as PhiMediaSpaceOption[]
-      : [],
-    assets: data.items.filter(isPhiRecord) as unknown as PhiMediaAssetTile[],
-    folders,
-    pagination,
+    activeSpace: readPhiMediaSpace(data.meta?.activeSpace),
+    spaces: readPhiMediaSpaces(data.meta?.spaces),
+    assets: readPhiMediaAssetTiles(data.items),
+    folders: readPhiMediaFolders(data.meta?.folders),
+    pagination: readPhiMediaPagination(data.meta?.pagination),
     resolvedCollectionRequestKey,
   });
 }

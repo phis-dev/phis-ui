@@ -59,10 +59,12 @@ function readBindingTools(value: unknown): PhiTreeBindingToolDefinition[] {
 }
 
 function readSource(value: unknown): PhiTreeWidgetConfig["source"] {
-  if (!isPhiRecord(value) || !isPhiRuntimeDataProviderKey(value.providerKey) || !readString(value.resourceKey)) return null;
+  if (!isPhiRecord(value) || !isPhiRuntimeDataProviderKey(value.providerKey)) return null;
+  const resourceKey = readString(value.resourceKey);
+  if (!resourceKey) return null;
   return {
     providerKey: value.providerKey,
-    resourceKey: readString(value.resourceKey)!,
+    resourceKey,
     params: isPhiRecord(value.params) ? value.params : undefined,
   };
 }

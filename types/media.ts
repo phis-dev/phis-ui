@@ -92,7 +92,6 @@ export type PhiMediaAssetVariant = {
   deliveryUrl: string;
   contentType: string;
   bytes: number | null;
-  checksumSha256: string | null;
   width: number;
   height: number;
   blurDataUrl: string | null;
@@ -114,7 +113,6 @@ export type PhiMediaAsset = {
   contentType: string;
   kind: PhiMediaKindValue;
   bytes: number | null;
-  checksumSha256: string | null;
   width: number | null;
   height: number | null;
   blurDataUrl: string | null;
@@ -152,7 +150,6 @@ export type PhiMediaAssetTile = {
   width: number | null;
   height: number | null;
   bytes: number | null;
-  checksumSha256: string | null;
   lifecycleStatus: number;
   deliveryPolicy: number;
   deliveryRevision: number;

@@ -19,8 +19,8 @@ import { PHI_SURFACE_CARD } from "../../../../helpers/surface-presets";
 import { PhiCollectionViewControl } from "../../../../components/controls/phi-collection-view-control";
 import { PhiAlertControl } from "../../../../components/controls/phi-alert-control";
 import { PhiEmptyControl } from "../../../../components/controls/phi-empty-control";
-import { isPhiRecord } from "../../../../helpers/is-record";
 import { usePhiPathname } from "../../../../components/runtime/use-phi-pathname";
+import { readPhiDashboardCardPayload, readPhiDashboardCardRows } from "../card-rows";
 import { PhiTimelineControl } from "../../../../components/controls/phi-timeline-control";
 import { usePhiIntlLocale } from "../../../../components/root/phi-intl-locale";
 import { formatPhiRelativeTime } from "../../../../helpers/format-date-time";
@@ -82,10 +82,8 @@ function PhiDashboardCardList({ entries }: { entries: readonly PhiTimelineEntry[
 }
 
 function readRows(binding: PhiCollectionViewBindingModel) {
-  return (binding.data?.items ?? [])
-    .filter(isPhiRecord)
-    .map((item) => item as unknown as PhiDashboardCardRow)
-    .filter((row) => typeof row.cardId === "string" && typeof row.title === "string");
+  // A Collection holds items of no particular type; the rows are read again, not cast.
+  return readPhiDashboardCardRows(binding.data?.items ?? [], "The Dashboard Collection");
 }
 
 /**
@@ -139,7 +137,7 @@ function PhiDashboardCard({
         if (!response.ok) {
           throw new Error(`Card payload request failed (${response.status}).`);
         }
-        return (await response.json()) as PhiDashboardCardPayload;
+        return readPhiDashboardCardPayload(await response.json());
       })
       .then((payload) => setResolved({ key: requestKey, payload, failure: null }))
       .catch((error: unknown) => {

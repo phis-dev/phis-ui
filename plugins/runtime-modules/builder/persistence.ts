@@ -48,6 +48,8 @@ import {
   type PhiPresetPageNode,
 } from "../../../helpers/cms-page-catalog";
 import type { PhiCmsPresetSource } from "../../../types/cms-module-descriptors";
+import { isPhiRuntimeModuleId } from "../../../constants/module-identity";
+import { createPhiResponseReader, requirePhiField } from "../../../components/widgets/config/strict-config-reader";
 import type { PhiBuilderPluginMeta, PhiBuilderWidgetMeta } from "../../../types/builder";
 import {
   PHI_AREA_CONFIG_MODULES_NAMESPACE,
@@ -386,25 +388,35 @@ async function postCmsDraft(
     throw response.status === 409 && !addressRefused ? new CmsDraftConflictError(message) : new Error(message);
   }
 
-  if (
-    !Number.isSafeInteger(body?.revisionId) ||
-    (body?.revisionId as number) < 1 ||
-    !Number.isSafeInteger(body?.version) ||
-    (body?.version as number) < 1 ||
-    !Number.isSafeInteger(body?.nextNodeSequence) ||
-    (body?.nextNodeSequence as number) < 1
-  ) {
-    throw new Error("CMS draft save returned invalid Draft allocation metadata.");
-  }
-  if (!Object.prototype.hasOwnProperty.call(body, "sourcePreset")) {
-    throw new Error("CMS draft save returned no preset source metadata.");
-  }
+  return readPhiDraftAllocation(body, "The CMS draft save");
+}
 
+/**
+ * What a Draft save or read answers about the Draft it now stands on: its revision, version and node
+ * sequence, all positive, and the preset it came from -- stated as `null` when it came from none, never
+ * left out. Read field by field; each was checked before and then cast, and the preset source was not
+ * checked at all.
+ */
+function readPhiDraftAllocation(body: unknown, source: string) {
+  const reader = createPhiResponseReader(body, source);
+  const positive = (key: string) => {
+    const value = requirePhiField(reader, key, "a positive whole number", reader.integer);
+    return value >= 1 ? value : reader.fail(key, "a positive whole number");
+  };
+  if (!Object.prototype.hasOwnProperty.call(reader.record, "sourcePreset")) {
+    reader.fail("sourcePreset", "a preset source or null");
+  }
+  const sourcePreset: PhiCmsPresetSource | null = reader.object("sourcePreset", (preset) => ({
+    ownerModuleId: requirePhiField(preset, "ownerModuleId", "a Module id", (key) =>
+      preset.value(key, "a Module id", (value) => (isPhiRuntimeModuleId(value) ? value : undefined))),
+    presetKey: requirePhiField(preset, "presetKey", "a text", preset.string),
+    sourcePresetVersion: requirePhiField(preset, "sourcePresetVersion", "a whole number", preset.integer),
+  })) ?? null;
   return {
-    revisionId: body!.revisionId as number,
-    version: body!.version as number,
-    nextNodeSequence: body!.nextNodeSequence as number,
-    sourcePreset: body!.sourcePreset ?? null,
+    revisionId: positive("revisionId"),
+    version: positive("version"),
+    nextNodeSequence: positive("nextNodeSequence"),
+    sourcePreset,
   };
 }
 
@@ -461,26 +473,7 @@ async function getCmsDraft(path: string, payload: Record<string, unknown>) {
     throw new Error(`${body?.error ?? "CMS draft read failed."}${detail}`);
   }
 
-  if (
-    !Number.isSafeInteger(body?.revisionId) ||
-    (body?.revisionId as number) < 1 ||
-    !Number.isSafeInteger(body?.version) ||
-    (body?.version as number) < 1 ||
-    !Number.isSafeInteger(body?.nextNodeSequence) ||
-    (body?.nextNodeSequence as number) < 1
-  ) {
-    throw new Error("CMS draft read returned invalid Draft allocation metadata.");
-  }
-  if (!Object.prototype.hasOwnProperty.call(body, "sourcePreset")) {
-    throw new Error("CMS draft read returned no preset source metadata.");
-  }
-
-  return {
-    revisionId: body!.revisionId as number,
-    version: body!.version as number,
-    nextNodeSequence: body!.nextNodeSequence as number,
-    sourcePreset: body!.sourcePreset ?? null,
-  };
+  return readPhiDraftAllocation(body, "The CMS draft read");
 }
 
 /**

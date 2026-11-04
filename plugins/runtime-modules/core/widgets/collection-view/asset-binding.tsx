@@ -39,6 +39,7 @@ import {
 } from "../../../../../components/media/media-folder-options";
 import { PHI_ASSET_CONTROLLER_STORE_KEY } from "../../../../../components/media/asset-controller-signals";
 import { applyPhiAssetCollectionData } from "../../../../../components/media/asset-collection-runtime";
+import { readPhiMediaAssetTiles, readPhiMediaFolders } from "../../../../../components/media/phi-image-preview-data";
 import { PhiAssetFolderControl } from "../../../../../components/media/phi-asset-folder-control";
 import { PhiAreaUploadBinding } from "../../../../../components/media/phi-area-upload-widget";
 import { PHI_MEDIA_WIDGET_DEFAULT_LABELS, type PhiAssetWidgetLabels } from "../../../../../components/media/media-widget-labels";
@@ -99,10 +100,9 @@ export function PhiAssetCollectionViewBinding({
   const selectionState = usePhiImagePreviewStore(PHI_ASSET_CONTROLLER_STORE_KEY);
   const query = binding.query;
   const setQuery = binding.setQuery;
-  const assets = (binding.data?.items ?? []) as unknown as PhiMediaAssetTile[];
-  const folders = Array.isArray(binding.data?.meta?.folders)
-    ? binding.data.meta.folders as unknown as typeof selectionState.folders
-    : [];
+  // A Collection carries items of no particular type; they are read as tiles, not cast to them.
+  const assets = useMemo(() => readPhiMediaAssetTiles(binding.data?.items ?? []), [binding.data?.items]);
+  const folders = useMemo(() => readPhiMediaFolders(binding.data?.meta?.folders), [binding.data?.meta?.folders]);
   const queryKind = query.filters?.kind;
   const queryFlags = query.filters?.presentationFlags;
   const queryFolderId = query.filters?.folderId;

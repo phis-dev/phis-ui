@@ -1,5 +1,8 @@
 "use client";
 
+import { isPhiRecord } from "../../../helpers/is-record";
+import { createPhiResponseReader, requirePhiField } from "../../../components/widgets/config/strict-config-reader";
+
 import {
   resolvePhiBuilderCatalogApiArea,
   type PhiBuilderPageCatalogArea,
@@ -65,25 +68,27 @@ export async function changePhiBuilderPagePath(input: {
     credentials: "same-origin",
     body: JSON.stringify({ area: resolvePhiBuilderCatalogApiArea(input.area), path: input.path }),
   });
-  const body = (await response.json().catch(() => null)) as {
-    error?: string;
-    message?: string;
-    pageScopeId?: number;
-    path?: string;
-    pendingPath?: string | null;
-    references?: {
-      total?: number;
-      bySource?: { page?: number; navigation?: number; content?: number; area?: number };
-    };
-  } | null;
-  if (!response.ok || typeof body?.path !== "string") {
-    throw new Error(body?.message ?? body?.error ?? `Page path change failed (${response.status}).`);
+  const body: unknown = await response.json().catch(() => null);
+  if (!response.ok) {
+    const failure = isPhiRecord(body) ? body : {};
+    const message = typeof failure.message === "string" ? failure.message : null;
+    const error = typeof failure.error === "string" ? failure.error : null;
+    throw new Error(message ?? error ?? `Page path change failed (${response.status}).`);
   }
+  /*
+   * Read, not cast. The server always counts the references that follow the Page (`references.total`);
+   * a missing count used to read as 0, which told the author nothing would follow a rename that moved
+   * links all over the Site.
+   */
+  const reader = createPhiResponseReader(body, "The Page path change");
+  const pendingPath = reader.record.pendingPath;
   return {
-    pageScopeId: body.pageScopeId ?? input.pageScopeId,
+    pageScopeId: requirePhiField(reader, "pageScopeId", "a whole number", reader.integer),
     /* Still the address the Page answers on: a rename is a pending change until somebody publishes. */
-    path: body.path,
-    pendingPath: typeof body.pendingPath === "string" ? body.pendingPath : null,
-    references: Number.isSafeInteger(body.references?.total) ? body.references!.total as number : 0,
+    path: requirePhiField(reader, "path", "a path", reader.string),
+    pendingPath: pendingPath === null ? null : requirePhiField(reader, "pendingPath", "a path or null", reader.string),
+    references: requirePhiField(reader, "references", "the references that follow the Page", (key) =>
+      reader.object(key, (references) =>
+        requirePhiField(references, "total", "a whole number", references.integer))),
   };
 }

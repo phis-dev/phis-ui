@@ -374,41 +374,44 @@ function remapBuilderPresetTreeInstanceIds(
     from: createPhiSignalAddress("cms", from),
     to: createPhiSignalAddress("cms", to),
   }));
-  const remapInstanceId = (value: PhiCmsInstanceId | null) =>
-    value == null ? null : (instanceIdRemaps.get(value) ?? value);
+  // One id stays one id: a node whose id is not remapped keeps its own, so nothing here can come back
+  // empty. The nullable form is for the links a tree may leave unset, and only for those.
+  const remapInstanceId = (value: PhiCmsInstanceId) => instanceIdRemaps.get(value) ?? value;
+  const remapOptionalInstanceId = (value: PhiCmsInstanceId | null) =>
+    value == null ? null : remapInstanceId(value);
 
   return {
     ...tree,
     page: {
       ...tree.page,
-      heroRootLayoutNodeId: remapInstanceId(tree.page.heroRootLayoutNodeId),
-      headerBottomRootLayoutNodeId: remapInstanceId(tree.page.headerBottomRootLayoutNodeId),
-      siderRightRootLayoutNodeId: remapInstanceId(tree.page.siderRightRootLayoutNodeId),
-      footerTopRootLayoutNodeId: remapInstanceId(tree.page.footerTopRootLayoutNodeId),
-      drawerRightRootLayoutNodeId: remapInstanceId(tree.page.drawerRightRootLayoutNodeId),
-      contentRootLayoutNodeId: remapInstanceId(tree.page.contentRootLayoutNodeId),
+      heroRootLayoutNodeId: remapOptionalInstanceId(tree.page.heroRootLayoutNodeId),
+      headerBottomRootLayoutNodeId: remapOptionalInstanceId(tree.page.headerBottomRootLayoutNodeId),
+      siderRightRootLayoutNodeId: remapOptionalInstanceId(tree.page.siderRightRootLayoutNodeId),
+      footerTopRootLayoutNodeId: remapOptionalInstanceId(tree.page.footerTopRootLayoutNodeId),
+      drawerRightRootLayoutNodeId: remapOptionalInstanceId(tree.page.drawerRightRootLayoutNodeId),
+      contentRootLayoutNodeId: remapOptionalInstanceId(tree.page.contentRootLayoutNodeId),
     },
     regions: tree.regions.map((region) => ({
       ...region,
-      rootLayoutNodeId: remapInstanceId(region.rootLayoutNodeId)!,
+      rootLayoutNodeId: remapInstanceId(region.rootLayoutNodeId),
     })),
     overlays: tree.overlays.map((overlay) => ({
       ...overlay,
-      id: remapInstanceId(overlay.id)!,
-      headerLayoutNodeId: remapInstanceId(overlay.headerLayoutNodeId),
-      bodyLayoutNodeId: remapInstanceId(overlay.bodyLayoutNodeId)!,
+      id: remapInstanceId(overlay.id),
+      headerLayoutNodeId: remapOptionalInstanceId(overlay.headerLayoutNodeId),
+      bodyLayoutNodeId: remapInstanceId(overlay.bodyLayoutNodeId),
       ...(overlay.footerPresentation === "none"
         ? { footerPresentation: "none" as const, footerLayoutNodeId: null }
         : {
             footerPresentation: overlay.footerPresentation,
-            footerLayoutNodeId: remapInstanceId(overlay.footerLayoutNodeId)!,
+            footerLayoutNodeId: remapInstanceId(overlay.footerLayoutNodeId),
           }),
       config: remapPhiSignalRoutesInConfig(overlay.config, signalRemaps),
     })),
     layoutNodes: tree.layoutNodes.map((node) => ({
       ...node,
-      id: remapInstanceId(node.id)!,
-      parentLayoutNodeId: remapInstanceId(node.parentLayoutNodeId),
+      id: remapInstanceId(node.id),
+      parentLayoutNodeId: remapOptionalInstanceId(node.parentLayoutNodeId),
       config: remapPhiSignalRoutesInConfig(node.config, signalRemaps),
     })),
     // The Controller's routes name the same receivers the nodes' routes do, so they move with them.
@@ -418,8 +421,8 @@ function remapBuilderPresetTreeInstanceIds(
     })),
     contentWidgets: tree.contentWidgets.map((node) => ({
       ...node,
-      id: remapInstanceId(node.id)!,
-      parentLayoutNodeId: remapInstanceId(node.parentLayoutNodeId)!,
+      id: remapInstanceId(node.id),
+      parentLayoutNodeId: remapInstanceId(node.parentLayoutNodeId),
       config: remapPhiSignalRoutesInConfig(node.config, signalRemaps),
     })),
   } satisfies PhiResolvedCmsPageTree;
@@ -2014,7 +2017,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 },
               }),
             ]
-        : isNavigationPage
+        : navigationLabels
           ? [
               nodes.widget({
                 typeKey: "command-toolbar",
@@ -2051,7 +2054,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     },
                   },
                   features: {
-                    search: { enabled: true, placeholder: navigationLabels!.sourceSearchPlaceholder },
+                    search: { enabled: true, placeholder: navigationLabels.sourceSearchPlaceholder },
                     selection: { mode: "single" },
                     checking: { enabled: false },
                     expansion: { defaultExpandAll: false },
@@ -2093,7 +2096,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     borders: true,
                     layout: { mode: "fixed", overflowX: "auto" },
                     footer: {
-                      template: navigationLabels!.footerTemplate,
+                      template: navigationLabels.footerTemplate,
                       values: [
                         { key: "entries", value: { source: "provider", fieldKey: "entries" } },
                         { key: "hidden", value: { source: "provider", fieldKey: "hidden" } },
@@ -2106,22 +2109,22 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                       ] },
                     },
                     columns: [
-                      { key: "icon", fieldKey: "icon", title: navigationLabels!.columns.icon, renderer: "icon", editor: { control: "icon-picker" }, sizing: { mode: "fixed", width: 88 } },
-                      { key: "label", fieldKey: "label", title: navigationLabels!.columns.label, editor: {}, sizing: { mode: "fixed", width: 180 }, ellipsis: true },
+                      { key: "icon", fieldKey: "icon", title: navigationLabels.columns.icon, renderer: "icon", editor: { control: "icon-picker" }, sizing: { mode: "fixed", width: 88 } },
+                      { key: "label", fieldKey: "label", title: navigationLabels.columns.label, editor: {}, sizing: { mode: "fixed", width: 180 }, ellipsis: true },
                       {
                         key: "navigationType",
                         fieldKey: "navigationType",
-                        title: navigationLabels!.columns.type,
+                        title: navigationLabels.columns.type,
                         renderer: "badge",
                         sizing: { mode: "fixed", width: 112 },
-                        valueMap: navigationLabels!.types,
+                        valueMap: navigationLabels.types,
                         tagColorMap: { link: "success", external: "warning", container: "processing", separator: "default" },
                       },
-                      { key: "origin", fieldKey: "origin", title: navigationLabels!.columns.origin, sizing: { mode: "fixed", width: 140 }, ellipsis: true },
+                      { key: "origin", fieldKey: "origin", title: navigationLabels.columns.origin, sizing: { mode: "fixed", width: 140 }, ellipsis: true },
                       {
                         key: "href",
                         fieldKey: "href",
-                        title: navigationLabels!.columns.path,
+                        title: navigationLabels.columns.path,
                         editor: {},
                         sizing: { mode: "fill", minWidth: 220 },
                         ellipsis: true,
@@ -2129,7 +2132,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                       {
                         key: "newTab",
                         fieldKey: "newTab",
-                        title: navigationLabels!.columns.newTab,
+                        title: navigationLabels.columns.newTab,
                         renderer: "checkbox",
                         editor: {
                           control: "checkbox",
@@ -2139,7 +2142,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                       },
                     ],
                     controlSize: "small",
-                    emptyState: { title: navigationLabels!.emptyTitle },
+                    emptyState: { title: navigationLabels.emptyTitle },
                   },
                   features: {
                     pagination: { enabled: false },
@@ -2150,15 +2153,15 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                       mode: "self-contained",
                       bindingFields: [{
                         key: "navKey",
-                        placeholder: navigationLabels!.navigation.placeholder,
+                        placeholder: navigationLabels.navigation.placeholder,
                         control: "select",
                         create: {
-                          label: navigationLabels!.navigation.create,
-                          description: navigationLabels!.navigation.create,
+                          label: navigationLabels.navigation.create,
+                          description: navigationLabels.navigation.create,
                           icon: "antd:plus",
                           display: "icon",
-                          placeholder: navigationLabels!.navigation.keyPlaceholder,
-                          submitLabel: navigationLabels!.navigation.createSubmit,
+                          placeholder: navigationLabels.navigation.keyPlaceholder,
+                          submitLabel: navigationLabels.navigation.createSubmit,
                         },
                       }],
                       reset: false,
@@ -2167,16 +2170,16 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     structure: { mode: "tree", parentRowIdentityPath: "parentId", expandColumnKey: "icon", expandRowByClick: true },
                     actions: {
                       toolbar: [
-                        { key: "add-link", label: navigationLabels!.actions.addLink, icon: "antd:plus", display: "icon", mode: "primary", execution: "provider" },
-                        { key: "add-container", label: navigationLabels!.actions.addContainer, icon: "antd:folder-add", display: "icon", mode: "primary", execution: "provider" },
-                        { key: "add-separator", label: navigationLabels!.actions.addSeparator, icon: "antd:minus", display: "icon", mode: "primary", execution: "provider" },
+                        { key: "add-link", label: navigationLabels.actions.addLink, icon: "antd:plus", display: "icon", mode: "primary", execution: "provider" },
+                        { key: "add-container", label: navigationLabels.actions.addContainer, icon: "antd:folder-add", display: "icon", mode: "primary", execution: "provider" },
+                        { key: "add-separator", label: navigationLabels.actions.addSeparator, icon: "antd:minus", display: "icon", mode: "primary", execution: "provider" },
                       ],
                       row: [
-                        { key: "hide", label: navigationLabels!.actions.hide, icon: "antd:eye", display: "icon", execution: "provider" },
-                        { key: "show", label: navigationLabels!.actions.show, icon: "antd:eye-invisible", display: "icon", execution: "provider" },
+                        { key: "hide", label: navigationLabels.actions.hide, icon: "antd:eye", display: "icon", execution: "provider" },
+                        { key: "show", label: navigationLabels.actions.show, icon: "antd:eye-invisible", display: "icon", execution: "provider" },
                         {
                           key: "delete",
-                          label: navigationLabels!.actions.delete,
+                          label: navigationLabels.actions.delete,
                           icon: "antd:delete",
                           display: "icon",
                           mode: "danger",

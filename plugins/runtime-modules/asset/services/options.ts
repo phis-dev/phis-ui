@@ -7,6 +7,7 @@ import {
   type PhiControlOptionsProviderContext,
 } from "../../../../components/controls/phi-options-provider";
 import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
+import { readPhiMediaFolders } from "../../../../components/media/phi-image-preview-data";
 import { PHI_ASSET_CONTROLLER_STORE_KEY } from "../../../../components/media/asset-controller-signals";
 import { phiImagePreviewStore, type PhiImagePreviewStoreState } from "../../../../components/media/phi-image-preview-store";
 import {
@@ -70,8 +71,7 @@ async function loadFolders() {
   });
   const payload: unknown = await response.json().catch(() => null);
   if (!response.ok) throw new Error("Failed to load the Site's media folders.");
-  const folders = isPhiRecord(payload) && Array.isArray(payload.folders) ? payload.folders : [];
-  return folders.filter(isPhiRecord) as unknown as PhiMediaAssetFolder[];
+  return readPhiMediaFolders(isPhiRecord(payload) ? payload.folders : undefined, "The media folders route");
 }
 
 export const PhiMediaFolderChoicesOptionsProviderClient = createPhiControlOptionsProviderClient({

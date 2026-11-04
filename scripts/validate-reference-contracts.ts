@@ -351,12 +351,24 @@ const resolveReferences = (input: {
     }));
 };
 
+// The whole projection, as the server writes it: every field is read, so a fixture missing one is refused.
 const asset = (id: number, deliveryUrl: string) => ({
   id,
   deliveryUrl,
   deliveryRevision: 3,
+  variantVersion: null,
   contentType: "image/png",
+  kind: "image",
   originalName: `${id}.png`,
+  width: null,
+  height: null,
+  blurDataUrl: null,
+  title: null,
+  altText: null,
+  thumbnailUrl: null,
+  previewUrl: null,
+  focalRect: null,
+  font: null,
 });
 
 // One round trip carries both kinds, deduplicated, with invalid Asset ids dropped before the request.
@@ -406,7 +418,7 @@ assert.deepEqual([...partialAssets.assetUrls.keys()], [71]);
 installReferenceProjection({ resolved: [{ reference: siteReference, path: 47, deleted: false }] });
 await assert.rejects(
   resolveReferences({ pageReferences: [siteReference] }),
-  /Invalid internal Page reference projection/u,
+  /The internal reference projection answered "path" with number 47/u,
 );
 
 // ---------------------------------------------------------------------------

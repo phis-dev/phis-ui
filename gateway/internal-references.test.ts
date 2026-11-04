@@ -8,7 +8,24 @@ import { clearPhiSiteReadCache } from "./site-read-cache";
 const SERVER = { apiBaseUrl: "https://core.test", internalToken: "token", siteKey: "site" };
 
 function asset(id: number) {
-  return { id, deliveryUrl: `/media/${id}`, deliveryRevision: 1, contentType: "image/png", originalName: `${id}.png` };
+  return {
+    id,
+    deliveryUrl: `/media/${id}`,
+    deliveryRevision: 1,
+    variantVersion: null,
+    contentType: "image/png",
+    kind: "image",
+    originalName: `${id}.png`,
+    width: null,
+    height: null,
+    blurDataUrl: null,
+    title: null,
+    altText: null,
+    thumbnailUrl: null,
+    previewUrl: null,
+    focalRect: null,
+    font: null,
+  };
 }
 
 function answerAssets() {

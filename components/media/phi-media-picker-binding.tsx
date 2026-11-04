@@ -24,6 +24,12 @@ import {
 } from "./asset-controller-signals";
 import { setPhiImagePreviewSelection } from "./phi-image-preview-store";
 import {
+  readPhiMediaAssetTiles,
+  readPhiMediaFolders,
+  readPhiMediaSpace,
+  readPhiMediaSpaces,
+} from "./phi-image-preview-data";
+import {
   buildPhiMediaSpaceOptions,
   usePhiMediaSpaceSelectionAllowed,
 } from "./media-space-selection";
@@ -141,21 +147,15 @@ export function usePhiMediaPickerBinding({
           signal: abortController.signal,
         });
         if (abortController.signal.aborted) return;
-        const nextFolders = Array.isArray(data.meta?.folders)
-          ? data.meta.folders.filter(isPhiRecord) as unknown as PhiMediaAssetFolder[]
-          : [];
-        const nextAssets = data.items.filter(isPhiRecord) as unknown as PhiMediaAssetTile[];
+        const nextFolders = readPhiMediaFolders(data.meta?.folders);
+        const nextAssets = readPhiMediaAssetTiles(data.items);
         setAssets(nextAssets);
         for (const asset of nextAssets) assetCacheRef.current.set(asset.id, asset);
         setFolders(nextFolders);
-        setSpaces(Array.isArray(data.meta?.spaces)
-          ? data.meta.spaces.filter(isPhiRecord) as unknown as PhiMediaSpaceOption[]
-          : []);
+        setSpaces(readPhiMediaSpaces(data.meta?.spaces));
         // The answer says which Space it actually served, so the selector follows the control plane
         // rather than the other way round -- including the first load, which asked for nothing.
-        const activeAddress = isPhiRecord(data.meta?.activeSpace) && typeof data.meta.activeSpace.address === "string"
-          ? data.meta.activeSpace.address
-          : null;
+        const activeAddress = readPhiMediaSpace(data.meta?.activeSpace)?.address ?? null;
         if (activeAddress) setSpaceAddress(activeAddress);
         setTotal(data.total);
       } catch (error) {

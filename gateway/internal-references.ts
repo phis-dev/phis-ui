@@ -1,8 +1,10 @@
-import { isPhiRecord } from "../helpers/is-record";
 import "server-only";
 
 import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
 import type { PhiPublicMediaAssetReference } from "../types/media";
+import { PhiMediaKind } from "../constants/media";
+import { readPhiFontMetricsFields } from "../components/media/media-font-metrics";
+import { createPhiResponseReader, requirePhiField } from "../components/widgets/config/strict-config-reader";
 import { readPhiPageReference, type PhiPageReference } from "../types/references";
 import { throwPhiCmsGatewayError } from "./errors";
 import { peekPhiSiteReadCache, writePhiSiteReadCache } from "./site-read-cache";
@@ -20,36 +22,58 @@ export type PhiResolvedInternalReferences = {
 };
 
 function readResolvedPage(entry: unknown): PhiResolvedPageReference {
-  if (!isPhiRecord(entry)) {
-    throw new Error("Invalid internal Page reference projection.");
-  }
-  const value = entry as Record<string, unknown>;
-  const parsed = readPhiPageReference(value.reference);
-  if (!parsed || (value.path !== null && typeof value.path !== "string") || typeof value.deleted !== "boolean") {
-    throw new Error("Invalid internal Page reference projection.");
-  }
+  const reader = createPhiResponseReader(entry, "The internal reference projection");
+  const parsed = readPhiPageReference(reader.record.reference) ?? reader.fail("reference", "a Page reference");
+  const path = reader.record.path;
   return {
     reference: parsed.reference,
-    path: value.path as string | null,
-    deleted: value.deleted,
-    targetKind: value.targetKind === "module" ? "module" : "site",
+    path: path === null ? null : requirePhiField(reader, "path", "a path or null", reader.string),
+    deleted: requirePhiField(reader, "deleted", "true or false", reader.boolean),
+    targetKind: requirePhiField(reader, "targetKind", '"site" or "module"', (key) =>
+      reader.oneOf(key, ["site", "module"] as const)),
   };
 }
 
-/** One Asset of the public reference projection, as the server writes it; a shape it does not match throws. */
+const PHI_MEDIA_KINDS = Object.values(PhiMediaKind);
+
+/**
+ * One Asset of the public reference projection, as the server writes it; a shape it does not match throws.
+ *
+ * Every field, not five of them: what passed here went straight into a rendered page under a type that
+ * promised a focal rectangle and font metrics nobody had looked at.
+ */
 export function readPhiPublicMediaAssetReference(entry: unknown): PhiPublicMediaAssetReference {
-  if (!isPhiRecord(entry)) {
-    throw new Error("Invalid internal Asset reference projection.");
-  }
-  const value = entry as Record<string, unknown>;
-  if (
-    !Number.isSafeInteger(value.id) || (value.id as number) <= 0 ||
-    typeof value.deliveryUrl !== "string" || !Number.isSafeInteger(value.deliveryRevision) ||
-    typeof value.contentType !== "string" || typeof value.originalName !== "string"
-  ) {
-    throw new Error("Invalid internal Asset reference projection.");
-  }
-  return value as unknown as PhiPublicMediaAssetReference;
+  const reader = createPhiResponseReader(entry, "The internal reference projection");
+  const integer = (key: string) => requirePhiField(reader, key, "a whole number", reader.integer);
+  const text = (key: string) => requirePhiField(reader, key, "a text", reader.string);
+  const nullableNumber = (key: string) => reader.number(key) ?? null;
+  const nullableText = (key: string) => reader.string(key) ?? null;
+  const id = integer("id");
+  if (id <= 0) reader.fail("id", "a positive whole number");
+  return {
+    id,
+    deliveryUrl: text("deliveryUrl"),
+    deliveryRevision: integer("deliveryRevision"),
+    variantVersion: reader.integer("variantVersion") ?? null,
+    contentType: text("contentType"),
+    kind: requirePhiField(reader, "kind", "a media kind", (key) => reader.oneOf(key, PHI_MEDIA_KINDS)),
+    originalName: text("originalName"),
+    width: nullableNumber("width"),
+    height: nullableNumber("height"),
+    blurDataUrl: nullableText("blurDataUrl"),
+    title: nullableText("title"),
+    altText: nullableText("altText"),
+    thumbnailUrl: nullableText("thumbnailUrl"),
+    previewUrl: nullableText("previewUrl"),
+    focalRect: reader.object("focalRect", (rect) => {
+      const fraction = (key: string) => {
+        const value = requirePhiField(rect, key, "a number from 0 to 1", rect.number);
+        return value >= 0 && value <= 1 ? value : rect.fail(key, "a number from 0 to 1");
+      };
+      return { x: fraction("x"), y: fraction("y"), width: fraction("width"), height: fraction("height") };
+    }) ?? null,
+    font: reader.object("font", readPhiFontMetricsFields) ?? null,
+  };
 }
 
 /** What the server takes per list in one request (`MAX_REFERENCES_PER_REQUEST`). */
