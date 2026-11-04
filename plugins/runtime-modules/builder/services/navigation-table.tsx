@@ -1,5 +1,6 @@
 "use client";
 
+import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../../components/workspace/catalog-store";
 import { flattenPhiPresetPages } from "../page-tree-walk";
 import { useMemo, useRef, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
@@ -276,11 +277,11 @@ export function PhiBuilderNavigationTableProviderClient({ children }: { children
    * Inspector and every slider step -- each one a reload of the navigation. The functions below read the
    * state snapshot when they run; these subscriptions only say when a change is worth a new registration.
    */
-  const area = usePhiDeveloperBuilderStateValue("public", (state) => state.area);
-  const customPages = usePhiDeveloperBuilderStateValue("public", (state) => state.customPages);
-  const modulePresetPagesByArea = usePhiDeveloperBuilderStateValue("public", (state) => state.modulePresetPagesByArea);
-  const persistedPageCatalogByArea = usePhiDeveloperBuilderStateValue("public", (state) => state.persistedPageCatalogByArea);
-  const navigationSurfacesByArea = usePhiDeveloperBuilderStateValue("public", (state) => state.navigationSurfacesByArea);
+  const area = usePhiDeveloperBuilderStateValue((state) => state.area);
+  const customPages = usePhiDeveloperBuilderStateValue((state) => state.customPages);
+  const modulePresetPagesByArea = usePhiDeveloperBuilderStateValue((state) => state.modulePresetPagesByArea);
+  const persistedPageCatalogByArea = usePhiDeveloperBuilderStateValue((state) => state.persistedPageCatalogByArea);
+  const navigationSurfacesByArea = usePhiDeveloperBuilderStateValue((state) => state.navigationSurfacesByArea);
   const activeNavigationKey = resolvePhiBuilderNavigationWidgetNavKey(
     undefined,
     navigationSearchValue,
@@ -294,7 +295,7 @@ export function PhiBuilderNavigationTableProviderClient({ children }: { children
 
   const registration = useMemo<PhiTableProviderRegistration>(() => {
     const resolveScope = (params?: Record<string, unknown>) => {
-      const state = getPhiDeveloperBuilderStateSnapshot("public");
+      const state = getPhiDeveloperBuilderStateSnapshot();
       const requestedNavKey = typeof params?.navKey === "string" ? params.navKey : navigationSearchValue;
       const navKey = resolvePhiBuilderNavigationWidgetNavKey(undefined, requestedNavKey ?? null, state.area);
       const surfaces = state.navigationSurfacesByArea[state.area];
@@ -434,7 +435,7 @@ export function PhiBuilderNavigationTableProviderClient({ children }: { children
         if (!localKey) {
           return { status: "rejected", invalidation: "none", errorCode: "invalid-navigation-key", message: "Navigation key is invalid." };
         }
-        const state = getPhiDeveloperBuilderStateSnapshot("public");
+        const state = getPhiDeveloperBuilderStateSnapshot();
         const cmsArea = resolvePhiBuilderAreaAsCmsArea(state.area);
         const navKey = formatPhiBuilderNavigationScopeKey(cmsArea, localKey);
         const surfaces = state.navigationSurfacesByArea[state.area] ?? [];
@@ -442,7 +443,7 @@ export function PhiBuilderNavigationTableProviderClient({ children }: { children
           return { status: "rejected", invalidation: "none", errorCode: "navigation-exists", message: "Navigation already exists." };
         }
         const surface = createPhiBuilderCustomNavigationSurface(navKey, localKey);
-        phiWorkspaceCatalogStore.patch("public", (current) => ({
+        phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
           ...current,
           navigationSurfacesByArea: {
             ...current.navigationSurfacesByArea,

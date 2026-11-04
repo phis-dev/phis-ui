@@ -9,7 +9,7 @@ import { usePhiDeveloperBuilderStateValue } from "./developer-workspace-store";
 
 /** Offers the edited Area's Pages to the authoring tools' page picker. */
 export function PhiBuilderPageReferencesProvider({ children }: { children: ReactNode }) {
-  const state = usePhiDeveloperBuilderStateValue("public", (value) => value);
+  const state = usePhiDeveloperBuilderStateValue((value) => value);
   const pages = usePhiBuilderOfferedPageCatalog(state, state.area);
   const options = useMemo(
     () => buildPhiBuilderPageReferenceTree(state.area, pages, pages),

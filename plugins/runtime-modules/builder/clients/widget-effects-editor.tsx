@@ -28,7 +28,7 @@ export function PhiWidgetEffectsToolButton({
 
   const open = () => {
     if (disabled || !onChange) return;
-    openPhiDeveloperBuilderEffectsEditor("public", effects ?? {}, target, onChange);
+    openPhiDeveloperBuilderEffectsEditor(effects ?? {}, target, onChange);
   };
 
   return (

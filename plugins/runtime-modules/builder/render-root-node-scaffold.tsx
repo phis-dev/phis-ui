@@ -572,9 +572,7 @@ function PhiWidgetEffectsPreviewFrame({
   children: ReactNode;
 }) {
   const { token } = usePhiConfig();
-  const selected = usePhiDeveloperBuilderStateValue(
-    "public",
-    (state) =>
+  const selected = usePhiDeveloperBuilderStateValue((state) =>
       blockId != null &&
       regionKey != null &&
       state.selectedRootRegionKey === regionKey &&
@@ -589,9 +587,7 @@ function PhiWidgetEffectsPreviewFrame({
    * still under the finger; the draft learns it when Save is pressed. Overlaying the whole `effects`
    * rather than one property keeps this the editor's picture and not a second opinion about it.
    */
-  const effectsPreview = usePhiDeveloperBuilderStateValue(
-    "public",
-    (state) => readPhiDeveloperBuilderEffectsPreview(state, "widget", blockId ?? null),
+  const effectsPreview = usePhiDeveloperBuilderStateValue((state) => readPhiDeveloperBuilderEffectsPreview(state, "widget", blockId ?? null),
   );
   const config = effectsPreview
     ? { ...committedConfig, effects: effectsPreview }
@@ -947,9 +943,7 @@ function PhiLayoutEffectsPreviewFrame({
   children: ReactNode;
 }) {
   // The same live picture the Widget frame draws, for the Layout whose own toolbar opened the editor.
-  const effectsPreview = usePhiDeveloperBuilderStateValue(
-    "public",
-    (state) => readPhiDeveloperBuilderEffectsPreview(state, "layout", blockId ?? null),
+  const effectsPreview = usePhiDeveloperBuilderStateValue((state) => readPhiDeveloperBuilderEffectsPreview(state, "layout", blockId ?? null),
   );
   const config = effectsPreview
     ? { ...committedConfig, effects: effectsPreview }

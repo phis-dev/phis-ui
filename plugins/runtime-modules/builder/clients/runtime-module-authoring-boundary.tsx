@@ -27,9 +27,7 @@ export function PhiBuilderRuntimeModuleAuthoringBoundary({
   pickerDataProviderKeys: readonly PhiRuntimeDataProviderKey[];
   children: ReactNode;
 }) {
-  const selectedModuleIds = usePhiDeveloperBuilderStateValue(
-    "public",
-    (state) => state.runtimeModuleIdsByArea[targetArea],
+  const selectedModuleIds = usePhiDeveloperBuilderStateValue((state) => state.runtimeModuleIdsByArea[targetArea],
   );
   const activeEntries = useMemo(() => {
     if (selectedModuleIds == null) {

@@ -1,5 +1,6 @@
 "use client";
 
+import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../../components/workspace/catalog-store";
 import type { PhiRenderableBlockEffects } from "../../../../types/renderable-block";
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -306,7 +307,6 @@ function filterBuilderModuleCatalogs(
 }
 
 function usePhiDeveloperBuilderWorkspaceController(
-  defaultArea: PhiDeveloperBuilderArea,
   options: PhiDeveloperBuilderWorkspaceControllerOptions,
 ) {
   const { showMessage } = usePhiApplicationFeedback();
@@ -356,7 +356,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     value,
     correlationId,
   ), [dispatchSignal, emitRoutes]);
-  const state = usePhiDeveloperBuilderWorkspaceState(defaultArea);
+  const state = usePhiDeveloperBuilderWorkspaceState();
   const router = useRouter();
   const pathname = usePhiPathname();
   const searchParams = useSearchParams();
@@ -402,7 +402,6 @@ function usePhiDeveloperBuilderWorkspaceController(
     pageMetaDialog,
   } = usePhiBuilderPageController({
     emitCapability,
-    defaultArea,
     effectiveArea,
     effectivePageKey,
     pageMetaLabels,
@@ -416,7 +415,6 @@ function usePhiDeveloperBuilderWorkspaceController(
     state,
   });
   const { confirmResetPage, runBuilderCommand, confirmDialog } = usePhiBuilderDraftCommandController({
-    defaultArea,
     effectiveArea,
     effectiveNavKey,
     effectivePageKey,
@@ -518,13 +516,13 @@ function usePhiDeveloperBuilderWorkspaceController(
     }
     openedSignalWiringCorrelationRef.current = request.correlationId;
     // A wiring session belongs to the block it was opened on, so it starts empty every time.
-    resetPhiBuilderSignalWiringSession(defaultArea);
+    resetPhiBuilderSignalWiringSession();
     emitCapability("signalWiringReset", null, request.correlationId);
     // The Table is mounted eagerly with the overlay, so its rows may still belong to the block wired
     // last time; opening on a new one has to ask for them again.
     emitCapability("signalWiringRoutesReload", null, request.correlationId);
     queueMicrotask(() => emitCapability("signalWiringOpen", null, request.correlationId));
-  }, [defaultArea, emitCapability, state.signalWiringRequest]);
+  }, [emitCapability, state.signalWiringRequest]);
 
   useEffect(() => {
     const request = state.effectsEditorRequest;
@@ -716,7 +714,7 @@ function usePhiDeveloperBuilderWorkspaceController(
      * it lives in the Foundation so that revisions, and later the Editor, can read it without going
      * through here.
      */
-    phiWorkspaceCatalogStore.patch(defaultArea, (current) => {
+    phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => {
       let changed = false;
       const definitionsChanged =
         serializeRuntimeModuleDefinitions(current.runtimeModuleDefinitions) !== runtimeModuleDefinitionsPreloadKey;
@@ -757,7 +755,7 @@ function usePhiDeveloperBuilderWorkspaceController(
 
       if (initialPageChanged) {
         // The selected node follows the page, and that selection is Builder tool state.
-        builderWorkspaceStore.patch(defaultArea, (tool) => ({
+        builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (tool) => ({
           ...tool,
           nodeKey: `page:${initialPageKey}`,
         }));
@@ -781,7 +779,6 @@ function usePhiDeveloperBuilderWorkspaceController(
         : current;
     });
   }, [
-    defaultArea,
     runtimeModuleDefinitions,
     runtimeModuleDefinitionsPreloadKey,
     runtimeModuleIdsByArea,
@@ -816,7 +813,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     void loadPhiBuilderPersistedPageCatalog(effectiveArea)
       .then((pages) => {
         if (cancelled) return;
-        phiWorkspaceCatalogStore.patch(defaultArea, (current) => ({
+        phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
           ...current,
           persistedPageCatalogByArea: {
             ...current.persistedPageCatalogByArea,
@@ -841,7 +838,6 @@ function usePhiDeveloperBuilderWorkspaceController(
       cancelled = true;
     };
   }, [
-    defaultArea,
     effectiveArea,
     isBuilderWorkspace,
     showMessage,
@@ -857,7 +853,7 @@ function usePhiDeveloperBuilderWorkspaceController(
       currentRuntimeModuleIdsByArea,
       runtimeModuleDefinitions,
     );
-    phiWorkspaceCatalogStore.patch(defaultArea, (current) => {
+    phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => {
       if (
         JSON.stringify(current.modulePresetPagesByArea) ===
           JSON.stringify(activeCatalogs.modulePresetPagesByArea) &&
@@ -875,7 +871,6 @@ function usePhiDeveloperBuilderWorkspaceController(
   }, [
     currentRuntimeModuleIdsByArea,
     currentRuntimeModuleIdsKey,
-    defaultArea,
     modulePresetPagesByArea,
     navigationSurfacesByArea,
     runtimeModuleDefinitions,
@@ -957,11 +952,11 @@ function usePhiDeveloperBuilderWorkspaceController(
       return;
     }
 
-    builderWorkspaceStore.patch(defaultArea, (current) => ({
+    builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
       ...current,
       commandWorkspace,
     }));
-  }, [commandWorkspace, defaultArea, state.commandWorkspace]);
+  }, [commandWorkspace, state.commandWorkspace]);
 
   useEffect(() => {
     if (
@@ -1013,11 +1008,11 @@ function usePhiDeveloperBuilderWorkspaceController(
       return;
     }
 
-    builderWorkspaceStore.patch(defaultArea, (current) => ({
+    builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
       ...current,
       builderMode: nextBuilderMode,
     }));
-  }, [defaultArea, hasPreviewSnapshot, isBuilderWorkspace, isNavigationWorkspace, state.builderMode]);
+  }, [hasPreviewSnapshot, isBuilderWorkspace, isNavigationWorkspace, state.builderMode]);
 
   /*
    * The workspace, narrowed to what deciding the offered Pages actually reads.
@@ -1110,15 +1105,14 @@ function usePhiDeveloperBuilderWorkspaceController(
       return;
     }
 
-    phiWorkspaceCatalogStore.patch(defaultArea, (current) => ({
+    phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
       ...current,
       area: nextArea,
       pageKey: nextPageKey,
     }));
-    builderWorkspaceStore.patch(defaultArea, (current) =>
+    builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) =>
       resetPhiBuilderSelectionToPage(current, nextPageKey));
   }, [
-    defaultArea,
     isBuilderWorkspace,
     offeredCatalogState,
     pathname,
@@ -1159,7 +1153,7 @@ function usePhiDeveloperBuilderWorkspaceController(
        */
       const finishEffectsEditor = (correlationId: string, effects?: PhiRenderableBlockEffects) => {
         if (!effectsRequest || effectsRequest.correlationId !== correlationId) return;
-        completePhiDeveloperBuilderEffectsEditor(defaultArea, effectsRequest, effects);
+        completePhiDeveloperBuilderEffectsEditor(effectsRequest, effects);
         initializedEffectsCorrelationRef.current = null;
       };
       /*
@@ -1179,7 +1173,7 @@ function usePhiDeveloperBuilderWorkspaceController(
       ) {
         const live = readPhiRuntimeFormValuesSignalValue(signal.value);
         if (!live) return;
-        previewPhiDeveloperBuilderEffects(defaultArea, effectsRequest.correlationId, {
+        previewPhiDeveloperBuilderEffects(effectsRequest.correlationId, {
           ...effectsRequest.effects,
           opacity: readPhiBuilderEffectsOpacity(live.values),
         });
@@ -1219,12 +1213,12 @@ function usePhiDeveloperBuilderWorkspaceController(
           );
           router.replace(`${pathname}?${nextSearchParams.toString()}`, { scroll: false });
         } else {
-          phiWorkspaceCatalogStore.patch(defaultArea, (current) => ({
+          phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
             ...current,
             area: nextArea,
             pageKey: nextPageKey,
           }));
-          builderWorkspaceStore.patch(defaultArea, (current) =>
+          builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) =>
             resetPhiBuilderSelectionToPage(current, nextPageKey));
         }
         return;
@@ -1248,11 +1242,10 @@ function usePhiDeveloperBuilderWorkspaceController(
               selectedIds: (state.runtimeModuleIdsByArea?.[area] ?? [])
                 .filter((moduleId) => moduleId !== request.moduleId),
             })),
-            defaultArea,
           );
           emitCapability("modulesTableReload", null, signal.correlationId);
         }
-        closePhiBuilderModuleDeactivationRequest(defaultArea);
+        closePhiBuilderModuleDeactivationRequest();
         return;
       }
 
@@ -1269,7 +1262,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         signal.value === false
       ) {
         if (state.publicRouteCollisionRequest) {
-          closePhiBuilderPublicRouteCollisionRequest(defaultArea);
+          closePhiBuilderPublicRouteCollisionRequest();
         }
         return;
       }
@@ -1293,7 +1286,7 @@ function usePhiDeveloperBuilderWorkspaceController(
           return;
         }
         if (signal.value === "cancel") {
-          closePhiBuilderPublicRouteCollisionRequest(defaultArea);
+          closePhiBuilderPublicRouteCollisionRequest();
           return;
         }
         if (signal.value !== "assign") {
@@ -1304,15 +1297,14 @@ function usePhiDeveloperBuilderWorkspaceController(
           showMessage({ level: "error", content: rejection }, { correlationId: signal.correlationId });
           return;
         }
-        applyPhiBuilderPublicRouteAssignments(defaultArea, request);
+        applyPhiBuilderPublicRouteAssignments(request);
         applyPhiBuilderRuntimeModuleSelectionChanges(
           request.areas.map((area) => ({
             area,
             selectedIds: [...(state.runtimeModuleIdsByArea?.[area] ?? []), request.moduleId],
           })),
-          defaultArea,
         );
-        closePhiBuilderPublicRouteCollisionRequest(defaultArea);
+        closePhiBuilderPublicRouteCollisionRequest();
         emitCapability("modulesTableReload", null, signal.correlationId);
         return;
       }
@@ -1328,7 +1320,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         const binding = readPhiTableBindingParamsSignalValue(signal.value);
         const navKey = typeof binding?.params.navKey === "string" ? binding.params.navKey : null;
         const parsed = parsePhiBuilderNavigationScopeKey(navKey);
-        const current = getPhiDeveloperBuilderStateSnapshot(defaultArea);
+        const current = getPhiDeveloperBuilderStateSnapshot();
         const cmsArea = resolvePhiBuilderAreaAsCmsArea(current.area);
         const normalizedNavKey = parsed ? `${parsed.area}:${parsed.key}` : null;
         if (!parsed || parsed.area !== cmsArea ||
@@ -1393,11 +1385,11 @@ function usePhiDeveloperBuilderWorkspaceController(
 
 	        emitPageTitleInputValue(nextPageKey);
 
-        phiWorkspaceCatalogStore.patch(defaultArea, (current) => ({
+        phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
           ...current,
           pageKey: nextPageKey,
         }));
-        builderWorkspaceStore.patch(defaultArea, (current) =>
+        builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) =>
           resetPhiBuilderSelectionToPage(current, nextPageKey, { closePages: true }));
         return;
       }
@@ -1442,7 +1434,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         }
 
         try {
-          applyPhiBuilderRuntimeModuleSelectionChange(effectiveArea, selectedIds, defaultArea);
+          applyPhiBuilderRuntimeModuleSelectionChange(effectiveArea, selectedIds);
         } catch (error) {
           showMessage(
             { level: "error", content: error instanceof Error ? error.message : "Invalid runtime module selection." },
@@ -1493,7 +1485,7 @@ function usePhiDeveloperBuilderWorkspaceController(
           return;
         }
 
-        builderWorkspaceStore.patch(defaultArea, (current) => ({
+        builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
           ...current,
           debugScaffold: nextDebugScaffold,
         }));
@@ -1525,7 +1517,7 @@ function usePhiDeveloperBuilderWorkspaceController(
          * Region without a root Layout selects nothing.
          */
         if (next.nodeKind === "layout" && nextNodeId == null && typeof next.regionKey === "string") {
-          const current = getPhiDeveloperBuilderStateSnapshot(defaultArea);
+          const current = getPhiDeveloperBuilderStateSnapshot();
           const rootNode = getPhiDeveloperRegionDraftsSnapshot()[getPhiBuilderRegionDraftKey(
             typeof next.area === "string" ? next.area : current.area,
             next.regionKey,
@@ -1538,7 +1530,7 @@ function usePhiDeveloperBuilderWorkspaceController(
           nextNodeKey = rootNode.widgetType;
         }
 
-        selectPhiDeveloperBuilderNode(defaultArea, {
+        selectPhiDeveloperBuilderNode({
           ...(typeof next.area === "string" ? { area: next.area as PhiDeveloperBuilderArea } : {}),
           ...(nextPageKey ? { pageKey: nextPageKey } : {}),
           nodeKey: nextNodeKey,
@@ -1719,7 +1711,7 @@ function usePhiDeveloperBuilderWorkspaceController(
       }
 
       if (addressedHere && signal.channel === "command" && signal.action === "activate" && signal.value === "pagesOpen") {
-        builderWorkspaceStore.patch(defaultArea, (current) => ({ ...current, pagesOpen: true }));
+        builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({ ...current, pagesOpen: true }));
         return;
       }
 
@@ -1766,7 +1758,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         signal.valueSchema === PHI_SIGNAL_VALUE_SCHEMAS.formValues
       ) {
         const submitted = readPhiRuntimeFormValuesSignalValue(signal.value);
-        if (submitted) patchPhiBuilderSignalWiringSession(defaultArea, submitted.values);
+        if (submitted) patchPhiBuilderSignalWiringSession(submitted.values);
         return;
       }
 
@@ -1780,10 +1772,10 @@ function usePhiDeveloperBuilderWorkspaceController(
         if (tableAction?.actionKey !== "delete" || typeof tableAction.rowIdentity !== "string") {
           return;
         }
-        const routes = resolvePhiBuilderSignalWiringRoutesWithout(defaultArea, tableAction.rowIdentity);
+        const routes = resolvePhiBuilderSignalWiringRoutesWithout(tableAction.rowIdentity);
         if (!routes) return;
-        const routeState = getPhiDeveloperBuilderStateSnapshot(defaultArea);
-        runPhiDeveloperBuilderInspectorAction(defaultArea, routeState.nodeKind === "layout"
+        const routeState = getPhiDeveloperBuilderStateSnapshot();
+        runPhiDeveloperBuilderInspectorAction(routeState.nodeKind === "layout"
           ? { kind: "patchSelectedLayoutConfig", patch: { signalRoutes: routes } }
           : { kind: "patchSelectedWidgetConfig", patch: { signalRoutes: routes } });
         emitCapability("signalWiringRoutesReload", null, signal.correlationId);
@@ -1813,7 +1805,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         if (!isCloseRequest) {
           return;
         }
-        resetPhiBuilderSignalWiringSession(defaultArea);
+        resetPhiBuilderSignalWiringSession();
         emitCapability("signalWiringReset", null, signal.correlationId);
         emitCapability("signalWiringClose", null, signal.correlationId);
         return;
@@ -1827,14 +1819,14 @@ function usePhiDeveloperBuilderWorkspaceController(
       ) {
         const submitted = readPhiRuntimeFormValuesSignalValue(signal.value);
         if (!submitted) return;
-        patchPhiBuilderSignalWiringSession(defaultArea, submitted.values);
-        const result = resolvePhiBuilderSignalWiringRoutes(defaultArea);
+        patchPhiBuilderSignalWiringSession(submitted.values);
+        const result = resolvePhiBuilderSignalWiringRoutes();
         if (result.kind !== "applied") return;
-        const wiringState = getPhiDeveloperBuilderStateSnapshot(defaultArea);
-        runPhiDeveloperBuilderInspectorAction(defaultArea, wiringState.nodeKind === "layout"
+        const wiringState = getPhiDeveloperBuilderStateSnapshot();
+        runPhiDeveloperBuilderInspectorAction(wiringState.nodeKind === "layout"
           ? { kind: "patchSelectedLayoutConfig", patch: { signalRoutes: result.routes } }
           : { kind: "patchSelectedWidgetConfig", patch: { signalRoutes: result.routes } });
-        resetPhiBuilderSignalWiringSession(defaultArea);
+        resetPhiBuilderSignalWiringSession();
         emitCapability("signalWiringClose", null, signal.correlationId);
         return;
       }
@@ -1907,7 +1899,7 @@ function usePhiDeveloperBuilderWorkspaceController(
            */
           phiBuilderHistory.endGesture();
         }
-        builderWorkspaceStore.patch(defaultArea, (current) => ({ ...current, inspectorOpen: signal.value as boolean }));
+        builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({ ...current, inspectorOpen: signal.value as boolean }));
         return;
       }
 
@@ -1922,7 +1914,7 @@ function usePhiDeveloperBuilderWorkspaceController(
 
         const action = readPhiBuilderInspectorAction(signal.value);
         if (action) {
-          runPhiDeveloperBuilderInspectorAction(defaultArea, action);
+          runPhiDeveloperBuilderInspectorAction(action);
         }
         return;
       }
@@ -1983,7 +1975,6 @@ function usePhiDeveloperBuilderWorkspaceController(
 }
 
 export type PhiDeveloperBuilderWorkspaceControllerProps = {
-  defaultArea?: PhiDeveloperBuilderArea;
   shellPresetDraftsByArea?: Record<string, Record<string, PhiDeveloperBuilderRegionDraft>>;
   runtimeModuleDefinitions?: readonly PhiRuntimeModuleDefinition[];
   runtimeModuleIdsByArea?: Record<string, PhiRuntimeModuleId[]>;
@@ -2004,7 +1995,6 @@ export type PhiDeveloperBuilderWorkspaceControllerProps = {
 };
 
 export function PhiDeveloperBuilderWorkspaceController({
-  defaultArea = "public",
   shellPresetDraftsByArea = {},
   runtimeModuleDefinitions = [],
   runtimeModuleIdsByArea = {},
@@ -2022,7 +2012,7 @@ export function PhiDeveloperBuilderWorkspaceController({
   historyLabels,
   signalRoutes = null,
 }: PhiDeveloperBuilderWorkspaceControllerProps) {
-  const controller = usePhiDeveloperBuilderWorkspaceController(defaultArea, {
+  const controller = usePhiDeveloperBuilderWorkspaceController({
     shellPresetDraftsByArea,
     runtimeModuleDefinitions,
     runtimeModuleIdsByArea,

@@ -1,5 +1,6 @@
 "use client";
 
+import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../components/workspace/catalog-store";
 import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode, PhiCmsTreeControllerSettings } from "../../../types/cms";
 import { isPhiBuilderAreaKey } from "../../../constants/cms-areas";
 import {
@@ -91,18 +92,17 @@ const builderEffectsCommitters = new Map<
 >();
 
 export function openPhiDeveloperBuilderEffectsEditor(
-  scopeKey: PhiDeveloperBuilderArea,
   effects: PhiRenderableBlockEffects,
   target: PhiDeveloperBuilderEffectsRequest["target"],
   onCommit: (effects: PhiRenderableBlockEffects) => void,
 ) {
   const correlationId = createPhiSignalCorrelationId();
-  const previousRequest = builderWorkspaceStore.getSnapshot(scopeKey).effectsEditorRequest;
+  const previousRequest = builderWorkspaceStore.getSnapshot(PHI_WORKSPACE_CATALOG_SCOPE).effectsEditorRequest;
   if (previousRequest) {
     builderEffectsCommitters.delete(previousRequest.correlationId);
   }
   builderEffectsCommitters.set(correlationId, onCommit);
-  builderWorkspaceStore.patch(scopeKey, (current) => ({
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
     ...current,
     effectsEditorRequest: { correlationId, effects, target, preview: null },
   }));
@@ -117,11 +117,10 @@ export function openPhiDeveloperBuilderEffectsEditor(
  * ended must not put a picture back on a node whose editor is gone.
  */
 export function previewPhiDeveloperBuilderEffects(
-  scopeKey: PhiDeveloperBuilderArea,
   correlationId: string,
   preview: PhiRenderableBlockEffects,
 ) {
-  builderWorkspaceStore.patch(scopeKey, (current) => (
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => (
     current.effectsEditorRequest?.correlationId === correlationId
       ? { ...current, effectsEditorRequest: { ...current.effectsEditorRequest, preview } }
       : current
@@ -145,13 +144,12 @@ export function readPhiDeveloperBuilderEffectsPreview(
 }
 
 export function completePhiDeveloperBuilderEffectsEditor(
-  scopeKey: PhiDeveloperBuilderArea,
   request: PhiDeveloperBuilderEffectsRequest,
   effects?: PhiRenderableBlockEffects,
 ) {
   const onCommit = builderEffectsCommitters.get(request.correlationId);
   builderEffectsCommitters.delete(request.correlationId);
-  builderWorkspaceStore.patch(scopeKey, (current) => ({
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
     ...current,
     effectsEditorRequest:
       current.effectsEditorRequest?.correlationId === request.correlationId
@@ -171,11 +169,10 @@ export function completePhiDeveloperBuilderEffectsEditor(
  * question replaces the first, because there is only one dialog and only one gesture behind it.
  */
 export function openPhiBuilderPublicRouteCollisionRequest(
-  scopeKey: PhiDeveloperBuilderArea,
   request: Omit<PhiBuilderPublicRouteCollisionRequest, "correlationId">,
 ) {
   const correlationId = createPhiSignalCorrelationId();
-  builderWorkspaceStore.patch(scopeKey, (current) => ({
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
     ...current,
     publicRouteCollisionRequest: { ...request, correlationId },
   }));
@@ -184,11 +181,10 @@ export function openPhiBuilderPublicRouteCollisionRequest(
 
 /** The address being typed for one contested route. */
 export function answerPhiBuilderPublicRouteCollision(
-  scopeKey: PhiDeveloperBuilderArea,
   presetKey: string,
   path: string,
 ) {
-  builderWorkspaceStore.patch(scopeKey, (current) => {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => {
     const request = current.publicRouteCollisionRequest;
     if (!request) {
       return current;
@@ -211,26 +207,25 @@ export function answerPhiBuilderPublicRouteCollision(
  * word, because a dialog that always says "nothing happens" is a dialog nobody reads.
  */
 export function openPhiBuilderModuleDeactivationRequest(
-  scopeKey: PhiDeveloperBuilderArea,
   request: Omit<PhiBuilderModuleDeactivationRequest, "correlationId">,
 ) {
   const correlationId = createPhiSignalCorrelationId();
-  builderWorkspaceStore.patch(scopeKey, (current) => ({
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
     ...current,
     moduleDeactivationRequest: { ...request, correlationId },
   }));
   return correlationId;
 }
 
-export function closePhiBuilderModuleDeactivationRequest(scopeKey: PhiDeveloperBuilderArea) {
-  builderWorkspaceStore.patch(scopeKey, (current) =>
+export function closePhiBuilderModuleDeactivationRequest() {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) =>
     current.moduleDeactivationRequest === null
       ? current
       : { ...current, moduleDeactivationRequest: null });
 }
 
-export function closePhiBuilderPublicRouteCollisionRequest(scopeKey: PhiDeveloperBuilderArea) {
-  builderWorkspaceStore.patch(scopeKey, (current) =>
+export function closePhiBuilderPublicRouteCollisionRequest() {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) =>
     current.publicRouteCollisionRequest === null
       ? current
       : { ...current, publicRouteCollisionRequest: null });
@@ -274,10 +269,9 @@ export function resetPhiBuilderSelectionToPage(
 }
 
 export function selectPhiDeveloperBuilderNode(
-  scopeKey: PhiDeveloperBuilderArea,
   selection: PhiDeveloperBuilderNodeSelection,
 ) {
-  builderWorkspaceStore.patch(scopeKey, (current) => ({
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
     ...current,
     ...(selection.area ? { area: selection.area } : {}),
     ...(selection.pageKey ? { pageKey: selection.pageKey } : {}),
@@ -330,10 +324,9 @@ const builderRegionDraftStore = createPhiPluginStateStore<Record<string, PhiDeve
 );
 
 export function patchPhiDeveloperBuilderState(
-  scopeKey: PhiDeveloperBuilderArea,
   next: Partial<Pick<PhiDeveloperBuilderState, "pickerWidgetCategoryFilters">>,
 ) {
-  builderWorkspaceStore.patch(scopeKey, (current) => ({
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
     ...current,
     ...next,
   }));
@@ -591,7 +584,7 @@ export function setPhiDeveloperRegionDraftsWithHistory(
 export function setPhiDeveloperBuilderAreaRootRoutes(
   areaRootRoutes: Record<string, PhiAreaRootRoute | null>,
 ) {
-  builderWorkspaceStore.patch("public", (current) =>
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) =>
     JSON.stringify(current.areaRootRoutes) === JSON.stringify(areaRootRoutes)
       ? current
       : { ...current, areaRootRoutes });
@@ -627,7 +620,7 @@ export function commitPhiDeveloperBuilderAreaConfig(
   area: PhiDeveloperBuilderArea,
   committed: { rootRoute: PhiAreaRootRoute | null; meta: PhiAreaMeta | null },
 ) {
-  builderWorkspaceStore.patch("public", (current) => {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => {
     const rootRoutes = { ...current.areaRootRoutes, [area]: committed.rootRoute };
     const areaMeta = { ...current.areaMeta, [area]: committed.meta };
     return JSON.stringify(current.areaRootRoutes) === JSON.stringify(rootRoutes) &&
@@ -667,7 +660,7 @@ export function setPhiDeveloperBuilderAreaRootRoute(
   area: PhiDeveloperBuilderArea,
   rootRoute: PhiAreaRootRoute | null | undefined,
 ) {
-  builderWorkspaceStore.patch("public", (current) => {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => {
     const next = { ...current.areaRootRouteDrafts };
     if (rootRoute === undefined) {
       delete next[area];
@@ -682,7 +675,7 @@ export function setPhiDeveloperBuilderAreaRootRoute(
 export function setPhiDeveloperBuilderAreaMetaBaseline(
   areaMeta: Record<string, PhiAreaMeta | null>,
 ) {
-  builderWorkspaceStore.patch("public", (current) =>
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) =>
     JSON.stringify(current.areaMeta) === JSON.stringify(areaMeta)
       ? current
       : { ...current, areaMeta });
@@ -692,7 +685,7 @@ export function setPhiDeveloperBuilderAreaMetaBaseline(
 export function setPhiDeveloperBuilderAreaControllerSettings(
   settingsByArea: Record<string, PhiCmsTreeControllerSettings>,
 ) {
-  builderWorkspaceStore.patch("public", (current) =>
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) =>
     JSON.stringify(current.areaControllerSettings) === JSON.stringify(settingsByArea)
       ? current
       : { ...current, areaControllerSettings: settingsByArea });
@@ -703,7 +696,7 @@ export function setPhiDeveloperBuilderPageControllerSettings(
   draftKey: string,
   settings: PhiCmsTreeControllerSettings,
 ) {
-  builderWorkspaceStore.patch("public", (current) =>
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) =>
     JSON.stringify(current.pageControllerSettings[draftKey]) === JSON.stringify(settings)
       ? current
       : { ...current, pageControllerSettings: { ...current.pageControllerSettings, [draftKey]: settings } });
@@ -737,7 +730,7 @@ export function restorePhiDeveloperBuilderAreaMeta(
   area: PhiDeveloperBuilderArea,
   meta: PhiAreaMeta | null | undefined,
 ) {
-  builderWorkspaceStore.patch("public", (current) => {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => {
     const next = { ...current.areaMetaDrafts };
     if (meta === undefined) {
       delete next[area];
@@ -766,7 +759,7 @@ export function mergePhiDeveloperRegionDrafts(drafts: Record<string, PhiDevelope
 export function mergePhiDeveloperPagePresetDrafts(
   drafts: Record<string, PhiDeveloperBuilderRegionDraft>,
 ) {
-  builderWorkspaceStore.patch("public", (current) => ({
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
     ...current,
     pagePresetDrafts: {
       ...current.pagePresetDrafts,
@@ -780,7 +773,7 @@ export function mergePhiDeveloperPageMetaDrafts(
   drafts: Record<string, PhiDeveloperBuilderPageMetaDraft>,
 ) {
   void area;
-  builderWorkspaceStore.patch("public", (current) => {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => {
     let hasChanges = false;
     const missingDrafts: Record<string, PhiDeveloperBuilderPageMetaDraft> = {};
 
@@ -810,7 +803,7 @@ export function mergePhiDeveloperDeletedPageDrafts(
   drafts: Record<string, boolean>,
 ) {
   void area;
-  builderWorkspaceStore.patch("public", (current) => {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => {
     let hasChanges = false;
     const nextDrafts = { ...current.deletedPageDrafts };
 
@@ -849,66 +842,65 @@ export function usePhiDeveloperRegionDraftsValue<TSelected>(
   return builderRegionDraftStore.useStoreSelector("default", selector);
 }
 
-const mergedWorkspaceSnapshots = new Map<
-  string,
-  { tool: PhiDeveloperBuilderState; catalog: PhiWorkspaceCatalogState; merged: PhiDeveloperBuilderWorkspaceState }
->();
+/*
+ * The Builder's state is one per workspace host, not one per Area (`PHI_WORKSPACE_CATALOG_SCOPE`). What
+ * belongs to an Area is keyed by Area inside it -- its Module selection, its Page catalog, its meta, its
+ * drafts -- and which Area is open is the catalog's `area`. A scope per Area was promised once and never
+ * used: every caller passed "public".
+ */
+let mergedWorkspaceSnapshot: {
+  tool: PhiDeveloperBuilderState;
+  catalog: PhiWorkspaceCatalogState;
+  merged: PhiDeveloperBuilderWorkspaceState;
+} | null = null;
 
 /**
  * Merging on every read would hand `useSyncExternalStore` a new object each time and never settle, so
  * the merged view is kept until one of the two sources actually changes.
  */
-function readMergedWorkspaceSnapshot(area: PhiDeveloperBuilderArea): PhiDeveloperBuilderWorkspaceState {
-  const tool = builderWorkspaceStore.getSnapshot(area);
-  const catalog = phiWorkspaceCatalogStore.getSnapshot(area);
-  const cached = mergedWorkspaceSnapshots.get(area);
+function readMergedWorkspaceSnapshot(): PhiDeveloperBuilderWorkspaceState {
+  const tool = builderWorkspaceStore.getSnapshot(PHI_WORKSPACE_CATALOG_SCOPE);
+  const catalog = phiWorkspaceCatalogStore.getSnapshot(PHI_WORKSPACE_CATALOG_SCOPE);
+  const cached = mergedWorkspaceSnapshot;
   if (cached && Object.is(cached.tool, tool) && Object.is(cached.catalog, catalog)) {
     return cached.merged;
   }
   const merged = { ...tool, ...catalog };
-  mergedWorkspaceSnapshots.set(area, { tool, catalog, merged });
+  mergedWorkspaceSnapshot = { tool, catalog, merged };
   return merged;
 }
 
 /** The whole merged view, for the few places that work with the state as one object. */
-export function usePhiDeveloperBuilderWorkspaceState(
-  area: PhiDeveloperBuilderArea,
-): PhiDeveloperBuilderWorkspaceState {
-  return usePhiDeveloperBuilderStateValue(area, (state) => state);
+export function usePhiDeveloperBuilderWorkspaceState(): PhiDeveloperBuilderWorkspaceState {
+  return usePhiDeveloperBuilderStateValue((state) => state);
 }
 
-const mergedHydrationSnapshots = new Map<string, PhiDeveloperBuilderWorkspaceState>();
+let mergedHydrationSnapshot: PhiDeveloperBuilderWorkspaceState | null = null;
 
 /** Hydration must render what the server rendered, so it merges the two hydration values, not the live ones. */
-function readMergedHydrationSnapshot(area: PhiDeveloperBuilderArea): PhiDeveloperBuilderWorkspaceState {
-  const cached = mergedHydrationSnapshots.get(area);
-  if (cached) {
-    return cached;
-  }
-  const merged = {
-    ...builderWorkspaceStore.getHydrationSnapshot(area),
-    ...phiWorkspaceCatalogStore.getHydrationSnapshot(area),
+function readMergedHydrationSnapshot(): PhiDeveloperBuilderWorkspaceState {
+  mergedHydrationSnapshot ??= {
+    ...builderWorkspaceStore.getHydrationSnapshot(PHI_WORKSPACE_CATALOG_SCOPE),
+    ...phiWorkspaceCatalogStore.getHydrationSnapshot(PHI_WORKSPACE_CATALOG_SCOPE),
   };
-  mergedHydrationSnapshots.set(area, merged);
-  return merged;
+  return mergedHydrationSnapshot;
 }
 
 export function usePhiDeveloperBuilderStateValue<TSelected>(
-  area: PhiDeveloperBuilderArea,
   selector: (state: PhiDeveloperBuilderWorkspaceState) => TSelected,
 ) {
   const selectedRef = useRef<{ source: PhiDeveloperBuilderWorkspaceState; selected: TSelected } | null>(null);
   return useSyncExternalStore(
     (listener) => {
-      const unsubscribeTool = builderWorkspaceStore.subscribe(area, listener);
-      const unsubscribeCatalog = phiWorkspaceCatalogStore.subscribe(area, listener);
+      const unsubscribeTool = builderWorkspaceStore.subscribe(PHI_WORKSPACE_CATALOG_SCOPE, listener);
+      const unsubscribeCatalog = phiWorkspaceCatalogStore.subscribe(PHI_WORKSPACE_CATALOG_SCOPE, listener);
       return () => {
         unsubscribeTool();
         unsubscribeCatalog();
       };
     },
     () => {
-      const source = readMergedWorkspaceSnapshot(area);
+      const source = readMergedWorkspaceSnapshot();
       const cached = selectedRef.current;
       if (cached && Object.is(cached.source, source)) {
         return cached.selected;
@@ -917,7 +909,7 @@ export function usePhiDeveloperBuilderStateValue<TSelected>(
       selectedRef.current = { source, selected };
       return selected;
     },
-    () => selector(readMergedHydrationSnapshot(area)),
+    () => selector(readMergedHydrationSnapshot()),
   );
 }
 
@@ -925,8 +917,6 @@ export function getPhiDeveloperRegionDraftsSnapshot() {
   return builderRegionDraftStore.getSnapshot("default");
 }
 
-export function getPhiDeveloperBuilderStateSnapshot(
-  area: PhiDeveloperBuilderArea = "public",
-): PhiDeveloperBuilderWorkspaceState {
-  return readMergedWorkspaceSnapshot(area);
+export function getPhiDeveloperBuilderStateSnapshot(): PhiDeveloperBuilderWorkspaceState {
+  return readMergedWorkspaceSnapshot();
 }

@@ -24,14 +24,12 @@ export function PhiBuilderInspectorTitleWidgetClient({
   inspectorLabels: PhiInspectorWidgetLabels;
   regionLabels: PhiRegionWidgetLabels;
 }) {
-  const area = usePhiDeveloperBuilderStateValue("public", (state) => state.area);
-  const pageKey = usePhiDeveloperBuilderStateValue("public", (state) => state.pageKey);
-  const nodeId = usePhiDeveloperBuilderStateValue("public", (state) => state.nodeId);
-  const nodeKey = usePhiDeveloperBuilderStateValue("public", (state) => state.nodeKey);
-  const nodeKind = usePhiDeveloperBuilderStateValue("public", (state) => state.nodeKind);
-  const selectedRootRegionKey = usePhiDeveloperBuilderStateValue(
-    "public",
-    (state) => state.selectedRootRegionKey,
+  const area = usePhiDeveloperBuilderStateValue((state) => state.area);
+  const pageKey = usePhiDeveloperBuilderStateValue((state) => state.pageKey);
+  const nodeId = usePhiDeveloperBuilderStateValue((state) => state.nodeId);
+  const nodeKey = usePhiDeveloperBuilderStateValue((state) => state.nodeKey);
+  const nodeKind = usePhiDeveloperBuilderStateValue((state) => state.nodeKind);
+  const selectedRootRegionKey = usePhiDeveloperBuilderStateValue((state) => state.selectedRootRegionKey,
   );
   const regionDrafts = usePhiDeveloperRegionDrafts();
   const plugins = usePhiBuilderModuleMetas(area).plugins;

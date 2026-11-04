@@ -134,15 +134,15 @@ describe("the Inspector edits the root Layout like a nested one", () => {
   it.each(["root", "inner"] as const)("%s: None takes the Surface away for good", (node) => {
     setPhiDeveloperRegionDraft(draftKey, hydrate());
     select(node);
-    runPhiDeveloperBuilderInspectorAction(AREA, { kind: "patchSelectedLayoutSurface", surface: null });
+    runPhiDeveloperBuilderInspectorAction({ kind: "patchSelectedLayoutSurface", surface: null });
     expect(config(node)).not.toHaveProperty("surface");
   });
 
   it.each(["root", "inner"] as const)("%s: padding and anchor go to the config", (node) => {
     setPhiDeveloperRegionDraft(draftKey, hydrate());
     select(node);
-    runPhiDeveloperBuilderInspectorAction(AREA, { kind: "patchSelectedLayoutPadding", padding: { padding: 24 } });
-    runPhiDeveloperBuilderInspectorAction(AREA, { kind: "patchSelectedLayoutAnchor", selectedLayoutAnchor: "topLeft" });
+    runPhiDeveloperBuilderInspectorAction({ kind: "patchSelectedLayoutPadding", padding: { padding: 24 } });
+    runPhiDeveloperBuilderInspectorAction({ kind: "patchSelectedLayoutAnchor", selectedLayoutAnchor: "topLeft" });
     expect(config(node)).toMatchObject({ padding: 24, anchor: "topLeft" });
     expect(Object.keys(config(node) ?? {}).filter((key) => key.startsWith("rootNode"))).toEqual([]);
   });

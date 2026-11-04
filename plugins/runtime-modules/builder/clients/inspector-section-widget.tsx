@@ -156,19 +156,15 @@ type PhiBuilderInspectorSectionWidgetClientProps = {
 
 function usePhiBuilderInspectorSectionState(signalRoutes?: PhiSignalRouteSet) {
   const dispatchSignal = usePhiSignalDispatcher();
-  const area = usePhiDeveloperBuilderStateValue("public", (state) => state.area);
-  const pageKey = usePhiDeveloperBuilderStateValue("public", (state) => state.pageKey);
-  const builderMode = usePhiDeveloperBuilderStateValue("public", (state) => state.builderMode);
-  const nodeId = usePhiDeveloperBuilderStateValue("public", (state) => state.nodeId);
-  const nodeKey = usePhiDeveloperBuilderStateValue("public", (state) => state.nodeKey);
-  const nodeKind = usePhiDeveloperBuilderStateValue("public", (state) => state.nodeKind);
-  const selectedLayoutAnchor = usePhiDeveloperBuilderStateValue(
-    "public",
-    (state) => state.selectedLayoutAnchor,
+  const area = usePhiDeveloperBuilderStateValue((state) => state.area);
+  const pageKey = usePhiDeveloperBuilderStateValue((state) => state.pageKey);
+  const builderMode = usePhiDeveloperBuilderStateValue((state) => state.builderMode);
+  const nodeId = usePhiDeveloperBuilderStateValue((state) => state.nodeId);
+  const nodeKey = usePhiDeveloperBuilderStateValue((state) => state.nodeKey);
+  const nodeKind = usePhiDeveloperBuilderStateValue((state) => state.nodeKind);
+  const selectedLayoutAnchor = usePhiDeveloperBuilderStateValue((state) => state.selectedLayoutAnchor,
   );
-  const selectedRootRegionKey = usePhiDeveloperBuilderStateValue(
-    "public",
-    (state) => state.selectedRootRegionKey,
+  const selectedRootRegionKey = usePhiDeveloperBuilderStateValue((state) => state.selectedRootRegionKey,
   );
   const activeModuleMetas = usePhiBuilderModuleMetas(area);
   const activeBuilderPlugins = activeModuleMetas.plugins;

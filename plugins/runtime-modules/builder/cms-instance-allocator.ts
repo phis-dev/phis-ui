@@ -1,5 +1,6 @@
 "use client";
 
+import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../components/workspace/catalog-store";
 import { createPhiDraftCmsInstanceId, type PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import { isPhiBuilderPageScopedRegion } from "./region-keys";
 import {
@@ -37,14 +38,14 @@ async function ensurePhiBuilderDraftAllocation(input: {
   builderPlugins: readonly PhiBuilderPluginMeta[];
 }) {
   const allocationKey = getPhiBuilderDraftAllocationKey(input.area, input.pageKey, input.regionKey);
-  if (getPhiDeveloperBuilderStateSnapshot("public").draftAllocations[allocationKey]) {
+  if (getPhiDeveloperBuilderStateSnapshot().draftAllocations[allocationKey]) {
     return;
   }
 
   let pending = pendingDraftCreations.get(allocationKey);
   if (!pending) {
     pending = (async () => {
-      const state = getPhiDeveloperBuilderStateSnapshot("public");
+      const state = getPhiDeveloperBuilderStateSnapshot();
       const workspaceKind = isPhiBuilderPageScopedRegion(input.regionKey) ? "pages" : "structure";
       const existing = await getPhiDeveloperBuilderDraftAllocation({
         area: input.area,
@@ -89,7 +90,7 @@ export async function allocatePhiBuilderCmsInstanceId(input: {
   const allocationKey = getPhiBuilderDraftAllocationKey(input.area, input.pageKey, input.regionKey);
   let allocated: PhiCmsInstanceId | null = null;
 
-  builderWorkspaceStore.patch("public", (current) => {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => {
     const allocation = current.draftAllocations[allocationKey];
     if (!allocation) {
       throw new Error(`Missing Draft allocation state for "${allocationKey}".`);

@@ -1,3 +1,4 @@
+import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../components/workspace/catalog-store";
 import { buildPhiRuntimeModulePackageRoutePrefix } from "../../../helpers/runtime-module-route-path";
 import {
   buildPhiPublicRouteAddressMap,
@@ -14,7 +15,6 @@ import { markPhiBuilderModuleAreasDirty } from "./runtime-module-selection";
 import type {
   PhiBuilderPublicRouteCollisionAnswer,
   PhiBuilderPublicRouteCollisionRequest,
-  PhiDeveloperBuilderArea,
   PhiDeveloperBuilderWorkspaceState,
 } from "./developer-workspace-types";
 
@@ -181,11 +181,10 @@ export function findPhiBuilderPublicRouteAnswerProblem(
  * disabled, which is why nobody is asked the same question twice.
  */
 export function applyPhiBuilderPublicRouteAssignments(
-  scopeKey: PhiDeveloperBuilderArea,
   request: Pick<PhiBuilderPublicRouteCollisionRequest, "moduleId" | "answers">,
 ) {
   const answered = new Map(request.answers.map((answer) => [answer.presetKey, answer.path.trim()] as const));
-  phiWorkspaceCatalogStore.patch(scopeKey, (catalog) => {
+  phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (catalog) => {
     const kept = (catalog.publicRoutePaths ?? []).filter((assignment) =>
       assignment.ownerModuleId !== request.moduleId || !answered.has(assignment.presetKey));
     return {
@@ -200,5 +199,5 @@ export function applyPhiBuilderPublicRouteAssignments(
       ]),
     };
   });
-  markPhiBuilderModuleAreasDirty(["public"], scopeKey);
+  markPhiBuilderModuleAreasDirty(["public"]);
 }

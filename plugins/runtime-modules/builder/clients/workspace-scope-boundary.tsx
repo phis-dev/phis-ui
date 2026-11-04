@@ -25,8 +25,8 @@ export function PhiBuilderWorkspaceScopeBoundary({
   targetPageKey?: string | null;
   children: ReactNode;
 }) {
-  const activeArea = usePhiDeveloperBuilderStateValue("public", (state) => state.area);
-  const activePageKey = usePhiDeveloperBuilderStateValue("public", (state) => state.pageKey);
+  const activeArea = usePhiDeveloperBuilderStateValue((state) => state.area);
+  const activePageKey = usePhiDeveloperBuilderStateValue((state) => state.pageKey);
   const scopeMatches =
     activeArea === targetArea &&
     (targetPageKey == null || activePageKey === targetPageKey);

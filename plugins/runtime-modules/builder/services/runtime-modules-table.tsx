@@ -391,10 +391,10 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
    * they run -- which is also what a mutation has to do, since the answer it writes back is to the
    * selection as it stands then, not as it stood when the provider registered.
    */
-  const runtimeModuleDefinitions = usePhiDeveloperBuilderStateValue("public", (state) => state.runtimeModuleDefinitions);
-  const runtimeModuleIdsByArea = usePhiDeveloperBuilderStateValue("public", (state) => state.runtimeModuleIdsByArea);
-  const unresolvedModuleIdsByArea = usePhiDeveloperBuilderStateValue("public", (state) => state.unresolvedModuleIdsByArea);
-  const serverUnavailableModules = usePhiDeveloperBuilderStateValue("public", (state) => state.serverUnavailableModules);
+  const runtimeModuleDefinitions = usePhiDeveloperBuilderStateValue((state) => state.runtimeModuleDefinitions);
+  const runtimeModuleIdsByArea = usePhiDeveloperBuilderStateValue((state) => state.runtimeModuleIdsByArea);
+  const unresolvedModuleIdsByArea = usePhiDeveloperBuilderStateValue((state) => state.unresolvedModuleIdsByArea);
+  const serverUnavailableModules = usePhiDeveloperBuilderStateValue((state) => state.serverUnavailableModules);
 
   const registration = useMemo<PhiTableProviderRegistration>(() => {
     const descriptor = PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS.find((candidate) =>
@@ -416,7 +416,7 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
     }
 
     const query = async (request: PhiTableProviderQueryRequest) => {
-      const builderState = getPhiDeveloperBuilderStateSnapshot("public");
+      const builderState = getPhiDeveloperBuilderStateSnapshot();
       if (request.resourceKey === DETAIL_RESOURCE_KEY) {
         const moduleId = typeof request.params?.moduleId === "string" ? request.params.moduleId : "";
         const areaLabels = readAreaLabels(request.params);
@@ -493,7 +493,7 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
     const mutate = async (
       request: PhiTableProviderMutationRequest,
     ): Promise<PhiTableProviderMutationResult> => {
-      const builderState = getPhiDeveloperBuilderStateSnapshot("public");
+      const builderState = getPhiDeveloperBuilderStateSnapshot();
       if (request.resourceKey === MODULE_USAGE_RESOURCE_KEY) {
         return { status: "rejected", invalidation: "none", errorCode: "unsupported-mutation" };
       }
@@ -502,7 +502,7 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
           return { status: "rejected", invalidation: "none", errorCode: "unsupported-mutation" };
         }
         const path = typeof request.proposedValue === "string" ? request.proposedValue.trim() : "";
-        answerPhiBuilderPublicRouteCollision("public", String(request.rowIdentity), path);
+        answerPhiBuilderPublicRouteCollision(String(request.rowIdentity), path);
         return { status: "accepted", invalidation: "none", rowPatch: { path } };
       }
       if (request.resourceKey !== RESOURCE_KEY) {
@@ -544,7 +544,7 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
         if (answers.length === 0) {
           return false;
         }
-        openPhiBuilderPublicRouteCollisionRequest("public", {
+        openPhiBuilderPublicRouteCollisionRequest({
           moduleId: definition.moduleId,
           moduleTitle: definition.title,
           areas: cmsAreas.filter((areaKey): areaKey is PhiCmsAreaKey & PhiDeveloperBuilderArea =>
@@ -596,7 +596,7 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
         if (usage.length === 0) {
           return false;
         }
-        openPhiBuilderModuleDeactivationRequest("public", {
+        openPhiBuilderModuleDeactivationRequest({
           moduleId: definition.moduleId,
           moduleTitle: definition.title,
           areas,
@@ -617,7 +617,7 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
                 : currentModuleIds.filter((candidateId) => candidateId !== definition.moduleId),
             };
           });
-        applyPhiBuilderRuntimeModuleSelectionChanges(changes, "public");
+        applyPhiBuilderRuntimeModuleSelectionChanges(changes);
       };
 
       // The row's switch: the Module as a whole, i.e. every eligible Area in one gesture.

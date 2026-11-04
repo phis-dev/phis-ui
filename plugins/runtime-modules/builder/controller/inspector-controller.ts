@@ -1,3 +1,4 @@
+import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../../components/workspace/catalog-store";
 import { isPhiRecord } from "../../../../helpers/is-record";
 import { PhiCmsFlags } from "../../../../constants/phi-cms";
 import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode } from "../../../../types/cms";
@@ -25,7 +26,6 @@ import {
   getPhiDeveloperBuilderStateSnapshot,
 } from "../developer-workspace-store";
 import type {
-  PhiDeveloperBuilderArea,
   PhiDeveloperBuilderWorkspaceState,
 } from "../developer-workspace-types";
 
@@ -147,10 +147,9 @@ function readRecordPatch(value: unknown): Record<string, unknown> | null {
 }
 
 export function runPhiDeveloperBuilderInspectorAction(
-  defaultArea: PhiDeveloperBuilderArea,
   action: PhiBuilderInspectorAction,
 ) {
-  const state = getPhiDeveloperBuilderStateSnapshot(defaultArea);
+  const state = getPhiDeveloperBuilderStateSnapshot();
 
   if (action.kind === "patchSelectedRegionDraft") {
     const patch = readRecordPatch(action.patch);
@@ -245,7 +244,7 @@ export function runPhiDeveloperBuilderInspectorAction(
     }
 
     patchSelectedStructureDraftConfig(state, "anchor", (config) => ({ ...config, anchor: selectedLayoutAnchor }));
-    builderWorkspaceStore.patch(defaultArea, (current) => ({
+    builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
       ...current,
       selectedLayoutAnchor: selectedLayoutAnchor as PhiAnchorWidgetPlacement,
     }));

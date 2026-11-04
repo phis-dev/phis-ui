@@ -1,5 +1,6 @@
 "use client";
 
+import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../../components/workspace/catalog-store";
 import {
   createPhiSignalRouteKey,
   readPhiSignalRouteSet,
@@ -7,8 +8,8 @@ import {
   type PhiSignalRoute,
   type PhiSignalRouteSet,
 } from "../../../../types/signals";
-import { builderWorkspaceStore , getPhiDeveloperBuilderStateSnapshot } from "../developer-workspace-store";
-import type { PhiDeveloperBuilderArea, PhiDeveloperBuilderWorkspaceState } from "../developer-workspace-types";
+import { builderWorkspaceStore, getPhiDeveloperBuilderStateSnapshot } from "../developer-workspace-store";
+import type { PhiDeveloperBuilderWorkspaceState } from "../developer-workspace-types";
 import { getPhiDeveloperSelectedSignalRoutes } from "../signal-route-selection";
 import {
   phiSignalCapabilitiesMatch,
@@ -29,10 +30,9 @@ function readOptionalString(value: unknown) {
 }
 
 export function patchPhiBuilderSignalWiringSession(
-  defaultArea: PhiDeveloperBuilderArea,
   values: Record<string, unknown>,
 ) {
-  builderWorkspaceStore.patch(defaultArea, (current) => {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => {
     const senderAddress = readOptionalString(values.senderAddress) ?? current.signalWiring.senderAddress;
     // A cascade only holds if the values below the one that moved are dropped: keeping a capability that
     // belongs to the previous endpoint would build a route the runtime silently ignores.
@@ -63,8 +63,8 @@ export function patchPhiBuilderSignalWiringSession(
   });
 }
 
-export function resetPhiBuilderSignalWiringSession(defaultArea: PhiDeveloperBuilderArea) {
-  builderWorkspaceStore.patch(defaultArea, (current) => ({ ...current, signalWiring: { ...EMPTY_SESSION } }));
+export function resetPhiBuilderSignalWiringSession() {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({ ...current, signalWiring: { ...EMPTY_SESSION } }));
 }
 
 function routesAreEquivalent(left: PhiSignalRoute, right: PhiSignalRoute) {
@@ -89,9 +89,8 @@ export type PhiBuilderSignalWiringResult =
  * nothing reports it at runtime.
  */
 export function resolvePhiBuilderSignalWiringRoutes(
-  defaultArea: PhiDeveloperBuilderArea,
 ): PhiBuilderSignalWiringResult {
-  const state = getPhiDeveloperBuilderStateSnapshot(defaultArea);
+  const state = getPhiDeveloperBuilderStateSnapshot();
   const session = state.signalWiring;
   if (!session.senderAddress || !session.senderCapabilityId || !session.receiverAddress || !session.receiverCapabilityId) {
     return { kind: "incomplete" };
@@ -128,7 +127,7 @@ export function resolvePhiBuilderSignalWiringRoutes(
     ...(wantsFieldKey && session.fieldKey ? { fieldKey: session.fieldKey } : {}),
   };
 
-  const current = getPhiDeveloperSelectedSignalRoutes(defaultArea) ?? {};
+  const current = getPhiDeveloperSelectedSignalRoutes() ?? {};
   if ([...(current.emits ?? []), ...(current.listens ?? [])].some((candidate) => routesAreEquivalent(candidate, route))) {
     return { kind: "duplicate" };
   }
@@ -148,10 +147,9 @@ export function resolvePhiBuilderSignalWiringRoutes(
  * writes to the same place Apply does, and the Table is reloaded afterwards.
  */
 export function resolvePhiBuilderSignalWiringRoutesWithout(
-  defaultArea: PhiDeveloperBuilderArea,
   routeKey: string,
 ): PhiSignalRouteSet | null {
-  const current = getPhiDeveloperSelectedSignalRoutes(defaultArea) ?? {};
+  const current = getPhiDeveloperSelectedSignalRoutes() ?? {};
   const emits = (current.emits ?? []).filter((route) => route.routeKey !== routeKey);
   const listens = (current.listens ?? []).filter((route) => route.routeKey !== routeKey);
   if (emits.length === (current.emits ?? []).length && listens.length === (current.listens ?? []).length) {

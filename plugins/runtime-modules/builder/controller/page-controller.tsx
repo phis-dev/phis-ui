@@ -1,5 +1,6 @@
 "use client";
 
+import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../../components/workspace/catalog-store";
 import { readPhiDeveloperBuilderWorkspaceKey } from "../route-scope";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -68,7 +69,6 @@ type PhiPageMetaDialogMode = "create" | "update";
 
 export function usePhiBuilderPageController({
   emitCapability,
-  defaultArea,
   effectiveArea,
   effectivePageKey,
   pageMetaLabels,
@@ -76,7 +76,6 @@ export function usePhiBuilderPageController({
 }: {
   /** The Builder Controller's own output: the Page metadata dialog is routed by the Pages Page. */
   emitCapability: (capabilityId: string, value: PhiSignalValue, correlationId?: string | null) => void;
-  defaultArea: PhiDeveloperBuilderArea;
   effectiveArea: PhiDeveloperBuilderArea;
   effectivePageKey: string;
   pageMetaLabels: PhiBuilderPageMetaPresentationLabels;
@@ -133,7 +132,7 @@ export function usePhiBuilderPageController({
 
   async function reloadPersistedPageCatalog(area: PhiDeveloperBuilderArea) {
     const pages = await loadPhiBuilderPersistedPageCatalog(area, { refresh: true });
-    phiWorkspaceCatalogStore.patch(defaultArea, (current) => ({
+    phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
       ...current,
       persistedPageCatalogByArea: {
         ...current.persistedPageCatalogByArea,
@@ -147,12 +146,12 @@ export function usePhiBuilderPageController({
   }
 
   function navigateToBuilderPage(pageKey: string) {
-    phiWorkspaceCatalogStore.patch(defaultArea, (current) => ({
+    phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
       ...current,
       area: effectiveArea,
       pageKey,
     }));
-    builderWorkspaceStore.patch(defaultArea, (current) =>
+    builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) =>
       resetPhiBuilderSelectionToPage(current, pageKey, { closePages: true }));
 
     if (typeof pathname === "string") {
@@ -272,10 +271,10 @@ export function usePhiBuilderPageController({
           : null;
       const pageMetaDraftKey = getPhiBuilderRegionDraftKey(effectiveArea, "page_meta", effectivePageKey);
       const historyBefore = capturePhiBuilderWorkspaceHistoryState(
-        getPhiDeveloperBuilderStateSnapshot(defaultArea),
+        getPhiDeveloperBuilderStateSnapshot(),
       );
       // replace writes the whole tool state, so it must read the tool state -- not the merged view.
-      const current = builderWorkspaceStore.getSnapshot(defaultArea);
+      const current = builderWorkspaceStore.getSnapshot(PHI_WORKSPACE_CATALOG_SCOPE);
       const next = {
         ...current,
         pageMetaDrafts: {
@@ -288,7 +287,7 @@ export function usePhiBuilderPageController({
           },
         },
       };
-      builderWorkspaceStore.replace(defaultArea, next);
+      builderWorkspaceStore.replace(PHI_WORKSPACE_CATALOG_SCOPE, next);
       phiBuilderHistory.record(
         createPhiBuilderHistoryContext({
           workspace: "pages",
@@ -304,7 +303,7 @@ export function usePhiBuilderPageController({
           after: {
             kind: "workspace",
             state: capturePhiBuilderWorkspaceHistoryState(
-              getPhiDeveloperBuilderStateSnapshot(defaultArea),
+              getPhiDeveloperBuilderStateSnapshot(),
             ),
           },
         },
@@ -312,7 +311,7 @@ export function usePhiBuilderPageController({
       emitPageTitleInputValue(effectivePageKey, editedTitle);
       if (pathResult) {
         await reloadPersistedPageCatalog(effectiveArea);
-        const refreshed = getPhiDeveloperBuilderStateSnapshot(defaultArea);
+        const refreshed = getPhiDeveloperBuilderStateSnapshot();
         const refreshedPages = resolvePhiBuilderActivePageCatalog(
           effectiveArea,
           refreshed.modulePresetPagesByArea,
@@ -386,7 +385,7 @@ export function usePhiBuilderPageController({
         pathname,
       });
       mergePhiDeveloperRegionDrafts(nextDrafts);
-      phiWorkspaceCatalogStore.patch(defaultArea, (current) => ({
+      phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
         ...current,
         customPages: {
           ...current.customPages,
@@ -401,7 +400,7 @@ export function usePhiBuilderPageController({
         },
       }));
       // The page's meta and delete drafts are edits in progress, so they stay with the Builder.
-      builderWorkspaceStore.patch(defaultArea, (current) => ({
+      builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
         ...current,
         pageMetaDrafts: {
           ...current.pageMetaDrafts,
@@ -425,7 +424,7 @@ export function usePhiBuilderPageController({
       if (error instanceof PhiBuilderPageExistsError && !error.tombstoned) {
         // Somebody created it meanwhile: open that Page rather than failing on the path it holds.
         await reloadPersistedPageCatalog(effectiveArea);
-        const refreshed = getPhiDeveloperBuilderStateSnapshot(defaultArea);
+        const refreshed = getPhiDeveloperBuilderStateSnapshot();
         const refreshedPages = resolvePhiBuilderActivePageCatalog(
           effectiveArea,
           refreshed.modulePresetPagesByArea,

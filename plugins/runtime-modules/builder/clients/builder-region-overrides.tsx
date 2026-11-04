@@ -10,9 +10,9 @@ import { getDefaultRegionDraft, resolveRegionDraftKey } from "../developer-regio
 import { usePhiDeveloperBuilderStateValue, usePhiDeveloperRegionDrafts } from "../developer-workspace-store";
 
 export function PhiBuilderCanvasRegionOverrides({ children }: { children: ReactNode }) {
-  const builderMode = usePhiDeveloperBuilderStateValue("public", (state) => state.builderMode);
-  const area = usePhiDeveloperBuilderStateValue("public", (state) => state.area);
-  const pageKey = usePhiDeveloperBuilderStateValue("public", (state) => state.pageKey);
+  const builderMode = usePhiDeveloperBuilderStateValue((state) => state.builderMode);
+  const area = usePhiDeveloperBuilderStateValue((state) => state.area);
+  const pageKey = usePhiDeveloperBuilderStateValue((state) => state.pageKey);
   const regionDrafts = usePhiDeveloperRegionDrafts();
   const value = useMemo(() => {
     const siderRight = resolveRegionDraftKey(regionDrafts, area, "sider_right", pageKey) ?? getDefaultRegionDraft("sider_right");

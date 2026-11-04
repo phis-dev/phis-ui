@@ -24,7 +24,6 @@ import type {
 import { PHI_REVISIONS_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../../../../plugins/runtime-modules/revisions/data-providers";
 import {
   getPhiWorkspaceCatalogSnapshot,
-  PHI_WORKSPACE_CATALOG_SCOPE,
 } from "../../../../components/workspace/catalog-store";
 import {
   resolvePhiBuilderActivePageCatalog,
@@ -95,7 +94,7 @@ function readParams(value: unknown): RevisionsTableParams {
   }
   const locale = value.locale;
   if (!isPhiRecord(value.scope) && typeof window !== "undefined") {
-    const state = getPhiWorkspaceCatalogSnapshot(PHI_WORKSPACE_CATALOG_SCOPE);
+    const state = getPhiWorkspaceCatalogSnapshot();
     const search = new URLSearchParams(window.location.search);
     const kind = normalizePhiBuilderRevisionsKindSearchParam(value.kind) ??
       normalizePhiBuilderRevisionsKindSearchParam(search.get(PHI_BUILDER_REVISIONS_KIND_SEARCH_PARAM)) ??
@@ -351,7 +350,7 @@ function formatModuleChangeList(
   modules: Record<string, unknown> | null,
 ) {
   const titles = new Map<string, string>(
-    getPhiWorkspaceCatalogSnapshot(PHI_WORKSPACE_CATALOG_SCOPE).runtimeModuleDefinitions
+    getPhiWorkspaceCatalogSnapshot().runtimeModuleDefinitions
       .map((definition) => [definition.moduleId, definition.title]),
   );
   const name = (moduleId: string) => titles.get(moduleId) ?? moduleId;

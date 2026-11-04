@@ -101,7 +101,7 @@ export function PhiRegionVisibilityFields({
   labels: PhiInspectorRegionVisibilityLabels;
   onChange: (regionConfig: Record<string, unknown>) => void;
 }) {
-  const state = usePhiDeveloperBuilderStateValue("public", (current) => current);
+  const state = usePhiDeveloperBuilderStateValue((current) => current);
   const pages = usePhiBuilderOfferedPageCatalog(state, state.area);
   const tree = useMemo(
     () => buildPhiBuilderPageScopeTree(state.area, pages, pages, { landing: labels.landing }),

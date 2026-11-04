@@ -39,9 +39,7 @@ export function PhiEditScaffoldDrawer({
   style,
 }: PhiEditScaffoldDrawerProps) {
   const { token } = usePhiConfig();
-  const selected = usePhiDeveloperBuilderStateValue(
-    "public",
-    (state) =>
+  const selected = usePhiDeveloperBuilderStateValue((state) =>
       state.selectedRootRegionKey === regionKey &&
       state.nodeId === nodeId &&
       (state.nodeKind === "layout"),

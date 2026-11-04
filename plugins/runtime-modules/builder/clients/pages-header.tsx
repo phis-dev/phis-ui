@@ -90,42 +90,28 @@ export function PhiDeveloperBuilderPagesHeaderSection({
   labels?: PhiPageTitleWidgetLabels;
 }) {
   const searchParams = useSearchParams();
-  const currentArea = usePhiDeveloperBuilderStateValue("public", (state) => state.area);
-  const currentPageKey = usePhiDeveloperBuilderStateValue("public", (state) => state.pageKey);
-  const builderMode = usePhiDeveloperBuilderStateValue("public", (state) => state.builderMode);
-  const customPages = usePhiDeveloperBuilderStateValue("public", (state) => state.customPages);
-  const modulePresetPagesByArea = usePhiDeveloperBuilderStateValue(
-    "public",
-    (state) => state.modulePresetPagesByArea,
+  const currentArea = usePhiDeveloperBuilderStateValue((state) => state.area);
+  const currentPageKey = usePhiDeveloperBuilderStateValue((state) => state.pageKey);
+  const builderMode = usePhiDeveloperBuilderStateValue((state) => state.builderMode);
+  const customPages = usePhiDeveloperBuilderStateValue((state) => state.customPages);
+  const modulePresetPagesByArea = usePhiDeveloperBuilderStateValue((state) => state.modulePresetPagesByArea,
   );
-  const catalogHydrated = usePhiDeveloperBuilderStateValue(
-    "public",
-    (state) => state.catalogHydrated,
+  const catalogHydrated = usePhiDeveloperBuilderStateValue((state) => state.catalogHydrated,
   );
-  const persistedPageCatalogByArea = usePhiDeveloperBuilderStateValue(
-    "public",
-    (state) => state.persistedPageCatalogByArea,
+  const persistedPageCatalogByArea = usePhiDeveloperBuilderStateValue((state) => state.persistedPageCatalogByArea,
   );
   /*
    * What the Select is allowed to name, which is narrower than what is installed: the Pages the Area
    * answers with. The three fields below are what that narrowing is read from -- which Modules are
    * switched on, and what the Area said about its root.
    */
-  const navigationSurfacesByArea = usePhiDeveloperBuilderStateValue(
-    "public",
-    (state) => state.navigationSurfacesByArea,
+  const navigationSurfacesByArea = usePhiDeveloperBuilderStateValue((state) => state.navigationSurfacesByArea,
   );
-  const runtimeModuleIdsByArea = usePhiDeveloperBuilderStateValue(
-    "public",
-    (state) => state.runtimeModuleIdsByArea,
+  const runtimeModuleIdsByArea = usePhiDeveloperBuilderStateValue((state) => state.runtimeModuleIdsByArea,
   );
-  const areaRootRoutes = usePhiDeveloperBuilderStateValue(
-    "public",
-    (state) => state.areaRootRoutes,
+  const areaRootRoutes = usePhiDeveloperBuilderStateValue((state) => state.areaRootRoutes,
   );
-  const pageCatalogHydratedByArea = usePhiDeveloperBuilderStateValue(
-    "public",
-    (state) => state.pageCatalogHydratedByArea,
+  const pageCatalogHydratedByArea = usePhiDeveloperBuilderStateValue((state) => state.pageCatalogHydratedByArea,
   );
   const resolvedCustomPages = customPages ?? {};
   const titleModeEnabled = mode === "full" || mode === "title";

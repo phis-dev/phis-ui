@@ -13,7 +13,6 @@ import { usePhiApplicationFeedback } from "../../../../components/runtime/use-ph
 import {
   getPhiWorkspaceCatalogSnapshot,
   usePhiWorkspaceCatalogValue,
-  PHI_WORKSPACE_CATALOG_SCOPE,
 } from "../../../../components/workspace/catalog-store";
 import {
   PHI_BUILDER_NAVIGATION_KEY_SEARCH_PARAM,
@@ -66,20 +65,16 @@ function PhiRevisionsControllerMount({
   const { showMessage } = usePhiApplicationFeedback();
   const pathname = usePhiPathname();
   const router = useRouter();
-  const builderArea = usePhiWorkspaceCatalogValue(PHI_WORKSPACE_CATALOG_SCOPE, (state) => state.area);
-  const builderPageKey = usePhiWorkspaceCatalogValue(PHI_WORKSPACE_CATALOG_SCOPE, (state) => state.pageKey);
-  const modulePresetPagesByArea = usePhiWorkspaceCatalogValue(
-    PHI_WORKSPACE_CATALOG_SCOPE,
-    (state) => state.modulePresetPagesByArea,
+  const builderArea = usePhiWorkspaceCatalogValue((state) => state.area);
+  const builderPageKey = usePhiWorkspaceCatalogValue((state) => state.pageKey);
+  const modulePresetPagesByArea = usePhiWorkspaceCatalogValue((state) => state.modulePresetPagesByArea,
   );
-  const customPages = usePhiWorkspaceCatalogValue(PHI_WORKSPACE_CATALOG_SCOPE, (state) => state.customPages);
-  const persistedPageCatalogByArea = usePhiWorkspaceCatalogValue(
-    PHI_WORKSPACE_CATALOG_SCOPE,
-    (state) => state.persistedPageCatalogByArea,
+  const customPages = usePhiWorkspaceCatalogValue((state) => state.customPages);
+  const persistedPageCatalogByArea = usePhiWorkspaceCatalogValue((state) => state.persistedPageCatalogByArea,
   );
 
   useEffect(() => {
-    const state = getPhiWorkspaceCatalogSnapshot(PHI_WORKSPACE_CATALOG_SCOPE);
+    const state = getPhiWorkspaceCatalogSnapshot();
     const pages = resolvePhiBuilderActivePageCatalog(
       state.area,
       state.modulePresetPagesByArea,
@@ -127,7 +122,7 @@ function PhiRevisionsControllerMount({
    * not the root route, not the SEO answers. Every one of them is now a value only the server knows.
    */
   const deleteAreaShell = useCallback(async (area: PhiBuilderAreaKey, correlationId?: string) => {
-    const source = getPhiWorkspaceCatalogSnapshot(PHI_WORKSPACE_CATALOG_SCOPE)
+    const source = getPhiWorkspaceCatalogSnapshot()
       .areaPresetSourcesByArea?.[area] ?? null;
     try {
       await deleteCmsDraft("/api/site/cms/area/override", {
@@ -175,7 +170,7 @@ function PhiRevisionsControllerMount({
        * from the signal -- the button names a command, and what it acts on is whatever the Builder is
        * pointed at when it is pressed.
        */
-      const area = getPhiWorkspaceCatalogSnapshot(PHI_WORKSPACE_CATALOG_SCOPE).area;
+      const area = getPhiWorkspaceCatalogSnapshot().area;
       emitCapability(
         "deleteAreaWarning",
         `Everything this Site stored for ${area} is cleared -- its Shell and its Module selection, drafts and published alike. What is live changes at once, the Module preset takes the Area back, and no revision is left to restore it from. It cannot be undone.`,
@@ -189,7 +184,7 @@ function PhiRevisionsControllerMount({
       const payload = isPhiRecord(signal.value) ? signal.value as Record<string, unknown> : null;
       const values = isPhiRecord(payload?.values) ? payload.values : null;
       const typed = typeof values?.areaKey === "string" ? values.areaKey.trim() : "";
-      const area = getPhiWorkspaceCatalogSnapshot(PHI_WORKSPACE_CATALOG_SCOPE).area;
+      const area = getPhiWorkspaceCatalogSnapshot().area;
       if (typed !== area) {
         // The Overlay stays open: what is wrong is the answer, not the question.
         showMessage(
@@ -242,7 +237,7 @@ function PhiRevisionsControllerMount({
           { level: "success", content: `Restored revision #${String(action?.revisionId ?? "")}.` },
           { correlationId: signal.correlationId },
         );
-        const state = getPhiWorkspaceCatalogSnapshot(PHI_WORKSPACE_CATALOG_SCOPE);
+        const state = getPhiWorkspaceCatalogSnapshot();
         const search = new URLSearchParams(window.location.search);
         const kind = normalizePhiBuilderRevisionsKindSearchParam(
           search.get(PHI_BUILDER_REVISIONS_KIND_SEARCH_PARAM),

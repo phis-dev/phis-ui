@@ -1,5 +1,6 @@
 "use client";
 
+import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../components/workspace/catalog-store";
 import { resolvePhiBuilderAreaAsCmsArea } from "../../../constants/cms-areas";
 import {
   isPhiRuntimeAreaBaseModuleId,
@@ -346,8 +347,8 @@ function resolveAreaRootRouteOptions(
 }
 
 const builderProviderStore = {
-  subscribe: (listener: () => void) => builderWorkspaceStore.subscribe("public", listener),
-  getSnapshot: () => getPhiDeveloperBuilderStateSnapshot("public"),
+  subscribe: (listener: () => void) => builderWorkspaceStore.subscribe(PHI_WORKSPACE_CATALOG_SCOPE, listener),
+  getSnapshot: () => getPhiDeveloperBuilderStateSnapshot(),
 };
 
 /**

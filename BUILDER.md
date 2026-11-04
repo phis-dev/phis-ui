@@ -23,7 +23,7 @@ The builder area is the workspace for composing site structure, page trees, bran
 ## 2.2 State contract
 
 - Builder transient state should use the shared scoped store basis from `components/state/scoped-state-store.ts` whenever possible.
-- The builder should keep one scoped state family per active area, using the area as the `scopeKey` for the top-level workspace state.
+- The builder keeps one state family per workspace host, not per Area: every Builder store reads and writes the scope `PHI_WORKSPACE_CATALOG_SCOPE` (`components/workspace/catalog-store.ts`), and no Builder function takes a scope. Which Area is open is the catalog's `area`; what belongs to an Area -- its Module selection, Page catalog, meta, controller settings, drafts -- is keyed by Area inside that one state. A scope per Area was the earlier promise and was never used: every caller passed `"public"`.
 - Builder orchestration, signal handling, and selection semantics stay in the builder wrapper layer.
 - The scoped store API is described in [components/state/README.md](./components/state/README.md).
 - Region draft state may use the same shared scoped store basis when a separate transient slice is needed.

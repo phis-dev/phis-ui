@@ -56,7 +56,7 @@ export function PhiDeveloperBuilderPagesWorkspaceWidgetClient({
    * Empty drafts rather than no drafts, because the merge below is a merge: leaving the keys out would
    * let the Preset's regions stand from before the Builder answered.
    */
-  const constructedRoot = usePhiDeveloperBuilderStateValue("public", (state) =>
+  const constructedRoot = usePhiDeveloperBuilderStateValue((state) =>
     isPhiBuilderConstructedRootPage(state, pageMetaArea, pageMetaPageKey));
   const emptyPresetDrafts = useMemo(
     () => buildPhiDeveloperBuilderRegionDraftsFromTree(

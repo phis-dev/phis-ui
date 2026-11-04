@@ -294,7 +294,7 @@ export function PhiDeveloperBuilderStructureCanvas({
   pickerLabels = PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.canvas.picker,
 }: PhiDeveloperBuilderStructureCanvasProps) {
   const { token } = usePhiConfig();
-  const debugScaffold = usePhiDeveloperBuilderStateValue("public", (state) => state.debugScaffold);
+  const debugScaffold = usePhiDeveloperBuilderStateValue((state) => state.debugScaffold);
   const isPreviewMode = builderMode === "preview";
   const isPagesWorkspace = workspace === "pages";
   const workspaceSpec = isPagesWorkspace ? PHI_PAGES_WORKSPACE_SPEC : PHI_STRUCTURE_WORKSPACE_SPEC;

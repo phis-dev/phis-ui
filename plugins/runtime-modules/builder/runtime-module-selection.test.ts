@@ -1,3 +1,4 @@
+import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../components/workspace/catalog-store";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import type { PhiRuntimeModuleDefinition } from "../../../types";
@@ -6,7 +7,6 @@ import { builderWorkspaceStore, getPhiDeveloperBuilderStateSnapshot } from "./de
 import { createPhiBuilderHistoryContext, phiBuilderHistory, type PhiBuilderHistorySnapshot } from "./history";
 import { applyPhiBuilderRuntimeModuleSelectionChanges } from "./runtime-module-selection";
 
-const SCOPE = "public";
 const MODULE_A = "@phis/test/module-a" as PhiRuntimeModuleDefinition["moduleId"];
 
 const TEST_DEFINITIONS: readonly PhiRuntimeModuleDefinition[] = [{
@@ -21,7 +21,7 @@ const TEST_DEFINITIONS: readonly PhiRuntimeModuleDefinition[] = [{
 }];
 
 function seedCatalog() {
-  phiWorkspaceCatalogStore.patch(SCOPE, (current) => ({
+  phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
     ...current,
     runtimeModuleDefinitions: [...TEST_DEFINITIONS],
     runtimeModuleIdsByArea: { public: [], admin: [] },
@@ -30,9 +30,9 @@ function seedCatalog() {
 
 describe("applyPhiBuilderRuntimeModuleSelectionChanges", () => {
   beforeEach(() => {
-    phiWorkspaceCatalogStore.reset(SCOPE);
-    builderWorkspaceStore.reset(SCOPE);
-    phiBuilderHistory.clear(createPhiBuilderHistoryContext({ workspace: "modules", area: SCOPE }));
+    phiWorkspaceCatalogStore.reset(PHI_WORKSPACE_CATALOG_SCOPE);
+    builderWorkspaceStore.reset(PHI_WORKSPACE_CATALOG_SCOPE);
+    phiBuilderHistory.clear(createPhiBuilderHistoryContext({ workspace: "modules" }));
     seedCatalog();
   });
 
@@ -42,16 +42,15 @@ describe("applyPhiBuilderRuntimeModuleSelectionChanges", () => {
         { area: "public", selectedIds: [MODULE_A] },
         { area: "admin", selectedIds: [MODULE_A] },
       ],
-      SCOPE,
     );
 
-    const state = getPhiDeveloperBuilderStateSnapshot(SCOPE);
+    const state = getPhiDeveloperBuilderStateSnapshot();
     expect(state.runtimeModuleIdsByArea.public).toEqual([MODULE_A]);
     expect(state.runtimeModuleIdsByArea.admin).toEqual([MODULE_A]);
     expect(state.modulesDirtyAreas).toEqual(expect.arrayContaining(["public", "admin"]));
 
     // One undo takes the whole gesture back -- both areas at once.
-    const context = createPhiBuilderHistoryContext({ workspace: "modules", area: SCOPE });
+    const context = createPhiBuilderHistoryContext({ workspace: "modules" });
     const undoneSnapshots: PhiBuilderHistorySnapshot[] = [];
     phiBuilderHistory.undo(context, (snapshot) => { undoneSnapshots.push(snapshot); });
     const undoneSnapshot = undoneSnapshots[0] ?? null;
@@ -68,13 +67,12 @@ describe("applyPhiBuilderRuntimeModuleSelectionChanges", () => {
   it("records nothing when the normalized selection already matches", () => {
     applyPhiBuilderRuntimeModuleSelectionChanges(
       [{ area: "public", selectedIds: [] }],
-      SCOPE,
     );
-    const context = createPhiBuilderHistoryContext({ workspace: "modules", area: SCOPE });
+    const context = createPhiBuilderHistoryContext({ workspace: "modules" });
     let undone = false;
     phiBuilderHistory.undo(context, () => { undone = true; });
     expect(undone).toBe(false);
-    expect(getPhiDeveloperBuilderStateSnapshot(SCOPE).modulesDirtyAreas).toEqual([]);
+    expect(getPhiDeveloperBuilderStateSnapshot().modulesDirtyAreas).toEqual([]);
   });
 
   it("drops the no-op area from a mixed gesture and records only the changed one", () => {
@@ -83,13 +81,12 @@ describe("applyPhiBuilderRuntimeModuleSelectionChanges", () => {
         { area: "public", selectedIds: [] },
         { area: "admin", selectedIds: [MODULE_A] },
       ],
-      SCOPE,
     );
-    const state = getPhiDeveloperBuilderStateSnapshot(SCOPE);
+    const state = getPhiDeveloperBuilderStateSnapshot();
     expect(state.runtimeModuleIdsByArea.admin).toEqual([MODULE_A]);
     expect(state.modulesDirtyAreas).toEqual(["admin"]);
 
-    const context = createPhiBuilderHistoryContext({ workspace: "modules", area: SCOPE });
+    const context = createPhiBuilderHistoryContext({ workspace: "modules" });
     const undoneSnapshots: PhiBuilderHistorySnapshot[] = [];
     phiBuilderHistory.undo(context, (snapshot) => { undoneSnapshots.push(snapshot); });
     const undoneSnapshot = undoneSnapshots[0] ?? null;
@@ -102,7 +99,6 @@ describe("applyPhiBuilderRuntimeModuleSelectionChanges", () => {
   it("refuses a selection that names an ineligible area", () => {
     expect(() => applyPhiBuilderRuntimeModuleSelectionChanges(
       [{ area: "editor", selectedIds: [MODULE_A] }],
-      SCOPE,
     )).toThrow(/not eligible/);
   });
 });

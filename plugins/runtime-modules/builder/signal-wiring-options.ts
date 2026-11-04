@@ -1,5 +1,6 @@
 "use client";
 
+import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../components/workspace/catalog-store";
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "./ids";
 import type { PhiControlOption } from "../../../components/controls/phi-control-options";
 import {
@@ -250,8 +251,8 @@ function resolveReceiverCapabilityOptions(context: PhiControlOptionsProviderCont
 }
 
 const wiringProviderStore = {
-  subscribe: (listener: () => void) => builderWorkspaceStore.subscribe("public", listener),
-  getSnapshot: () => getPhiDeveloperBuilderStateSnapshot("public"),
+  subscribe: (listener: () => void) => builderWorkspaceStore.subscribe(PHI_WORKSPACE_CATALOG_SCOPE, listener),
+  getSnapshot: () => getPhiDeveloperBuilderStateSnapshot(),
 };
 
 export const PhiBuilderSignalSendersOptionsProviderClient = createPhiControlOptionsProviderClient({

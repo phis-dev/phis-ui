@@ -536,21 +536,15 @@ export function PhiStructureRegionScaffold({
   const activeModules = usePhiRuntimeModuleState();
   const authoringCanvas = usePhiBuilderAuthoringCanvas();
   const builderState = {
-    area: usePhiDeveloperBuilderStateValue("public", (state) => state.area),
-    pageKey: usePhiDeveloperBuilderStateValue("public", (state) => state.pageKey),
-    builderMode: usePhiDeveloperBuilderStateValue("public", (state) => state.builderMode),
-    debugScaffold: usePhiDeveloperBuilderStateValue("public", (state) => state.debugScaffold),
-    pickerWidgetCategoryFilters: usePhiDeveloperBuilderStateValue(
-      "public",
-      (state) => state.pickerWidgetCategoryFilters,
+    area: usePhiDeveloperBuilderStateValue((state) => state.area),
+    pageKey: usePhiDeveloperBuilderStateValue((state) => state.pageKey),
+    builderMode: usePhiDeveloperBuilderStateValue((state) => state.builderMode),
+    debugScaffold: usePhiDeveloperBuilderStateValue((state) => state.debugScaffold),
+    pickerWidgetCategoryFilters: usePhiDeveloperBuilderStateValue((state) => state.pickerWidgetCategoryFilters,
     ),
-    selectedLayoutAnchor: usePhiDeveloperBuilderStateValue(
-      "public",
-      (state) => state.selectedRootRegionKey === config.regionKey ? state.selectedLayoutAnchor : null,
+    selectedLayoutAnchor: usePhiDeveloperBuilderStateValue((state) => state.selectedRootRegionKey === config.regionKey ? state.selectedLayoutAnchor : null,
     ),
-    regionSelected: usePhiDeveloperBuilderStateValue(
-      "public",
-      (state) => state.nodeKind === "region" && state.selectedRegionKey === config.regionKey,
+    regionSelected: usePhiDeveloperBuilderStateValue((state) => state.nodeKind === "region" && state.selectedRegionKey === config.regionKey,
     ),
   };
   const builderModuleMetas = usePhiBuilderModuleMetas(builderState.area);
@@ -710,7 +704,7 @@ export function PhiStructureRegionScaffold({
       return;
     }
 
-    selectPhiDeveloperBuilderNode("public", {
+    selectPhiDeveloperBuilderNode({
       area: builderState.area,
       pageKey: builderState.pageKey,
       regionKey: config.regionKey,
@@ -1561,7 +1555,7 @@ export function PhiStructureRegionScaffold({
 
   useEffect(() => {
     if (!Array.isArray(builderState.pickerWidgetCategoryFilters)) {
-      patchPhiDeveloperBuilderState("public", { pickerWidgetCategoryFilters: [] });
+      patchPhiDeveloperBuilderState({ pickerWidgetCategoryFilters: [] });
     }
   }, [builderState.pickerWidgetCategoryFilters]);
 
@@ -1619,7 +1613,7 @@ export function PhiStructureRegionScaffold({
       return;
     }
 
-    selectPhiDeveloperBuilderNode("public", {
+    selectPhiDeveloperBuilderNode({
       area: builderState.area,
       pageKey: builderState.pageKey,
       nodeKind: "region",
@@ -1668,7 +1662,7 @@ export function PhiStructureRegionScaffold({
     setPickSection(nextDefaultPickSection);
     setIsPicking(true);
 
-    selectPhiDeveloperBuilderNode("public", {
+    selectPhiDeveloperBuilderNode({
       area: builderState.area,
       pageKey: builderState.pageKey,
       regionKey: config.regionKey,
@@ -1732,7 +1726,7 @@ export function PhiStructureRegionScaffold({
         onSectionChange={setPickSection}
         onPackageFiltersChange={setPickPackageFilters}
         onWidgetCategoryFiltersChange={(filters) => {
-          patchPhiDeveloperBuilderState("public", { pickerWidgetCategoryFilters: filters });
+          patchPhiDeveloperBuilderState({ pickerWidgetCategoryFilters: filters });
         }}
         onChange={(item) => void insertPickedItem(item)}
       />

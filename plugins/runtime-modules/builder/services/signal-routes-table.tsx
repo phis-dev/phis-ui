@@ -75,8 +75,8 @@ export function PhiBuilderSignalRoutesTableProviderClient({ children }: { childr
       }
       const sessionKey = readSessionKey(request);
       const currentRoutes = sessionKey
-        ? routeTableSessions.current.get(sessionKey) ?? getPhiDeveloperSelectedSignalRoutes("public")
-        : getPhiDeveloperSelectedSignalRoutes("public");
+        ? routeTableSessions.current.get(sessionKey) ?? getPhiDeveloperSelectedSignalRoutes()
+        : getPhiDeveloperSelectedSignalRoutes();
       if (sessionKey && !routeTableSessions.current.has(sessionKey)) {
         routeTableSessions.current.set(sessionKey, currentRoutes ?? {});
       }
@@ -98,7 +98,7 @@ export function PhiBuilderSignalRoutesTableProviderClient({ children }: { childr
         throw new Error("Invalid Signal Routes Table mutation.");
       }
       const current = routeTableSessions.current.get(sessionKey) ??
-        getPhiDeveloperSelectedSignalRoutes("public") ?? {};
+        getPhiDeveloperSelectedSignalRoutes() ?? {};
       if (request.actionKey === "cancel") {
         routeTableSessions.current.delete(sessionKey);
       } else if (request.actionKey === "delete" && typeof request.rowIdentity === "string") {

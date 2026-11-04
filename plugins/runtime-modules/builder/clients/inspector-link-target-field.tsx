@@ -33,7 +33,7 @@ export function PhiInspectorLinkTargetFieldControl({
    */
   onChange?: (next: PhiLinkTarget | undefined, none?: boolean) => void;
 }) {
-  const state = usePhiDeveloperBuilderStateValue("public", (current) => current);
+  const state = usePhiDeveloperBuilderStateValue((current) => current);
   const pages = usePhiBuilderOfferedPageCatalog(state, state.area);
   const options = useMemo(
     () => buildPhiBuilderPageReferenceTree(state.area, pages, pages, { landing: labels.landingPage }),

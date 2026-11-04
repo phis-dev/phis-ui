@@ -22,23 +22,15 @@ import { getPhiBuilderNavigationDraftSnapshot } from "./navigation-store";
  * learn which Area they are being edited in.
  */
 export function usePhiBuilderAuthoringCanvas(): PhiCmsWidgetAuthoringCanvas {
-  const area = usePhiDeveloperBuilderStateValue("public", (state) => state.area);
-  const catalogHydrated = usePhiDeveloperBuilderStateValue(
-    "public",
-    (state) => state.catalogHydrated,
+  const area = usePhiDeveloperBuilderStateValue((state) => state.area);
+  const catalogHydrated = usePhiDeveloperBuilderStateValue((state) => state.catalogHydrated,
   );
-  const navigationSurfaces = usePhiDeveloperBuilderStateValue(
-    "public",
-    (state) => state.navigationSurfacesByArea[state.area] ?? null,
+  const navigationSurfaces = usePhiDeveloperBuilderStateValue((state) => state.navigationSurfacesByArea[state.area] ?? null,
   );
-  const modulePresetPagesByArea = usePhiDeveloperBuilderStateValue(
-    "public",
-    (state) => state.modulePresetPagesByArea,
+  const modulePresetPagesByArea = usePhiDeveloperBuilderStateValue((state) => state.modulePresetPagesByArea,
   );
-  const customPages = usePhiDeveloperBuilderStateValue("public", (state) => state.customPages);
-  const persistedPageCatalogByArea = usePhiDeveloperBuilderStateValue(
-    "public",
-    (state) => state.persistedPageCatalogByArea,
+  const customPages = usePhiDeveloperBuilderStateValue((state) => state.customPages);
+  const persistedPageCatalogByArea = usePhiDeveloperBuilderStateValue((state) => state.persistedPageCatalogByArea,
   );
 
   return useMemo(

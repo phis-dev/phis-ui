@@ -9,7 +9,6 @@ import {
   getPhiDeveloperBuilderStateSnapshot,
 } from "./developer-workspace-store";
 import type {
-  PhiDeveloperBuilderArea,
   PhiDeveloperBuilderWorkspaceState,
 } from "./developer-workspace-types";
 
@@ -47,8 +46,7 @@ function resolveSelectedSignalRouteConfig(
 }
 
 export function getPhiDeveloperSelectedSignalRoutes(
-  defaultArea: PhiDeveloperBuilderArea,
 ): PhiSignalRouteSet | null {
-  const state = getPhiDeveloperBuilderStateSnapshot(defaultArea);
+  const state = getPhiDeveloperBuilderStateSnapshot();
   return readPhiSignalRouteSet(resolveSelectedSignalRouteConfig(state)?.signalRoutes);
 }

@@ -19,7 +19,7 @@ export function PhiBuilderModeSwitchWidgetClient({
   labels?: PhiBuilderChromeWidgetLabels;
 }) {
   const { token } = usePhiConfig();
-  const builderMode = usePhiDeveloperBuilderStateValue("public", (state) => state.builderMode);
+  const builderMode = usePhiDeveloperBuilderStateValue((state) => state.builderMode);
   const isDisabled = disabled;
   const controlSignals = usePhiControlSignalController<string>({
     key: "builderMode",

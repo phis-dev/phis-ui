@@ -197,7 +197,7 @@ describe("a Layout Inspector gesture over several keys", () => {
       nodeKey: STACK,
       selectedRootRegionKey: "content",
     }));
-    runPhiDeveloperBuilderInspectorAction(AREA, {
+    runPhiDeveloperBuilderInspectorAction({
       kind: "patchSelectedLayoutConfig",
       patch: { columns: 2, slotPlacements: [{ slot: 0 }] },
     });
@@ -217,7 +217,7 @@ describe("a Layout Inspector gesture over several keys", () => {
       nodeKey: STACK,
       selectedRootRegionKey: "content",
     }));
-    runPhiDeveloperBuilderInspectorAction(AREA, { kind: "patchSelectedLayoutConfig", patch: { columns: null } });
+    runPhiDeveloperBuilderInspectorAction({ kind: "patchSelectedLayoutConfig", patch: { columns: null } });
     expect(current().config?.columns).toBeUndefined();
   });
 });

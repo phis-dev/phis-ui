@@ -97,12 +97,15 @@ export const phiBuilderHistory = createPhiHistoryStore<PhiBuilderHistorySnapshot
   "@phis/ui/builder-history",
 );
 
-export function createPhiBuilderHistoryContext(input: {
-  workspace: PhiBuilderHistoryWorkspace;
-  area: PhiDeveloperBuilderArea;
-  pageKey?: string | null;
-  navKey?: string | null;
-}) {
+export function createPhiBuilderHistoryContext(input:
+  // The Modules workspace edits every Area at once, so it names none.
+  | { workspace: "modules" }
+  | {
+    workspace: Exclude<PhiBuilderHistoryWorkspace, "modules">;
+    area: PhiDeveloperBuilderArea;
+    pageKey?: string | null;
+    navKey?: string | null;
+  }) {
   if (input.workspace === "structure") {
     return `structure:${input.area}`;
   }

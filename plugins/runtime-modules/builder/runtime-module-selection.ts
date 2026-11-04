@@ -1,3 +1,4 @@
+import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../components/workspace/catalog-store";
 import type { PhiRuntimeModuleDefinition, PhiRuntimeModuleId } from "../../../types";
 import { resolvePhiBuilderAreaAsCmsArea } from "../../../constants/cms-areas";
 import {
@@ -82,9 +83,8 @@ function normalizeRuntimeModuleSelection(
 function describeModuleSelectionChange(
   effective: ReadonlyArray<{ area: PhiDeveloperBuilderArea; moduleIds: readonly PhiRuntimeModuleId[] }>,
   before: ReturnType<typeof capturePhiBuilderModulesHistoryState>,
-  defaultArea: PhiDeveloperBuilderArea,
 ) {
-  const definitions = getPhiDeveloperBuilderStateSnapshot(defaultArea).runtimeModuleDefinitions;
+  const definitions = getPhiDeveloperBuilderStateSnapshot().runtimeModuleDefinitions;
   const titleById = new Map(definitions.map((definition) => [definition.moduleId, definition.title] as const));
   const changed = new Set<PhiRuntimeModuleId>();
   for (const { area, moduleIds } of effective) {
@@ -109,9 +109,8 @@ function describeModuleSelectionChange(
  */
 export function applyPhiBuilderRuntimeModuleSelectionChanges(
   changes: ReadonlyArray<{ area: PhiDeveloperBuilderArea; selectedIds: readonly string[] }>,
-  defaultArea: PhiDeveloperBuilderArea,
 ) {
-  const current = getPhiDeveloperBuilderStateSnapshot(defaultArea);
+  const current = getPhiDeveloperBuilderStateSnapshot();
   const effective: Array<{ area: PhiDeveloperBuilderArea; moduleIds: PhiRuntimeModuleId[] }> = [];
   for (const change of changes) {
     const currentModuleIds = current.runtimeModuleIdsByArea?.[change.area] ?? [];
@@ -130,24 +129,24 @@ export function applyPhiBuilderRuntimeModuleSelectionChanges(
 
   const changedAreas = effective.map(({ area }) => area);
   const historyBefore = capturePhiBuilderModulesHistoryState(
-    getPhiDeveloperBuilderStateSnapshot(defaultArea),
+    getPhiDeveloperBuilderStateSnapshot(),
     changedAreas,
   );
-  phiWorkspaceCatalogStore.patch(defaultArea, (catalog) => ({
+  phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (catalog) => ({
     ...catalog,
     runtimeModuleIdsByArea: {
       ...(catalog.runtimeModuleIdsByArea ?? {}),
       ...Object.fromEntries(effective.map(({ area, moduleIds }) => [area, moduleIds])),
     },
   }));
-  markPhiBuilderModuleAreasDirty(changedAreas, defaultArea);
+  markPhiBuilderModuleAreasDirty(changedAreas);
   phiBuilderHistory.record(
-    createPhiBuilderHistoryContext({ workspace: "modules", area: defaultArea }),
+    createPhiBuilderHistoryContext({ workspace: "modules" }),
     {
-      action: { key: "changeModules", subject: describeModuleSelectionChange(effective, historyBefore, defaultArea) },
+      action: { key: "changeModules", subject: describeModuleSelectionChange(effective, historyBefore) },
       before: historyBefore,
       after: capturePhiBuilderModulesHistoryState(
-        getPhiDeveloperBuilderStateSnapshot(defaultArea),
+        getPhiDeveloperBuilderStateSnapshot(),
         changedAreas,
       ),
     },
@@ -157,10 +156,9 @@ export function applyPhiBuilderRuntimeModuleSelectionChanges(
 export function applyPhiBuilderRuntimeModuleSelectionChange(
   area: PhiDeveloperBuilderArea,
   selectedIds: readonly string[],
-  defaultArea: PhiDeveloperBuilderArea,
 ) {
-  applyPhiBuilderRuntimeModuleSelectionChanges([{ area, selectedIds }], defaultArea);
-  return getPhiDeveloperBuilderStateSnapshot(defaultArea).runtimeModuleIdsByArea?.[area] ?? [];
+  applyPhiBuilderRuntimeModuleSelectionChanges([{ area, selectedIds }]);
+  return getPhiDeveloperBuilderStateSnapshot().runtimeModuleIdsByArea?.[area] ?? [];
 }
 
 /**
@@ -171,9 +169,8 @@ export function applyPhiBuilderRuntimeModuleSelectionChange(
  */
 export function markPhiBuilderModuleAreasDirty(
   areas: readonly PhiDeveloperBuilderArea[],
-  defaultArea: PhiDeveloperBuilderArea,
 ) {
-  builderWorkspaceStore.patch(defaultArea, (tool) => {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (tool) => {
     const next = new Set(tool.modulesDirtyAreas ?? []);
     for (const area of areas) {
       next.add(area);
@@ -184,7 +181,7 @@ export function markPhiBuilderModuleAreasDirty(
   });
 }
 
-export function clearPhiBuilderModuleAreasDirty(defaultArea: PhiDeveloperBuilderArea) {
-  builderWorkspaceStore.patch(defaultArea, (tool) =>
+export function clearPhiBuilderModuleAreasDirty() {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (tool) =>
     (tool.modulesDirtyAreas?.length ?? 0) === 0 ? tool : { ...tool, modulesDirtyAreas: [] });
 }

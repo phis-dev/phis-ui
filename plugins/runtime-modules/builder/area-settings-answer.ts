@@ -1,3 +1,4 @@
+import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../components/workspace/catalog-store";
 import {
   PHI_AREA_META_PUBLIC_DEFAULTS,
   type PhiAreaMeta,
@@ -85,7 +86,7 @@ export function applyPhiBuilderAreaSettingsAnswer({
   rootRoute: PhiAreaRootRoute | null | undefined;
   meta: Parameters<typeof resolvePhiBuilderAreaSettingsMeta>[1];
 }) {
-  const current = builderWorkspaceStore.getSnapshot("public");
+  const current = builderWorkspaceStore.getSnapshot(PHI_WORKSPACE_CATALOG_SCOPE);
   const before: PhiBuilderAreaSettingsPart[] = [];
   const after: PhiBuilderAreaSettingsPart[] = [];
 

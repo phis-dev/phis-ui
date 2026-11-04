@@ -1,3 +1,4 @@
+import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../components/workspace/catalog-store";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import {
@@ -40,7 +41,7 @@ function undoOnce() {
 
 /** What the Area settings dialog does on OK, with the SEO answers left as they stand. */
 function answerRootRoute(rootRoute: PhiAreaRootRoute | null) {
-  const meta = builderWorkspaceStore.getSnapshot("public").areaMetaDrafts?.public ?? null;
+  const meta = builderWorkspaceStore.getSnapshot(PHI_WORKSPACE_CATALOG_SCOPE).areaMetaDrafts?.public ?? null;
   applyPhiBuilderAreaSettingsAnswer({
     area: "public",
     historyContext: CONTEXT,
@@ -54,7 +55,7 @@ function answerRootRoute(rootRoute: PhiAreaRootRoute | null) {
   });
 }
 
-const currentDraft = () => builderWorkspaceStore.getSnapshot("public").areaRootRouteDrafts?.public;
+const currentDraft = () => builderWorkspaceStore.getSnapshot(PHI_WORKSPACE_CATALOG_SCOPE).areaRootRouteDrafts?.public;
 
 /**
  * Taking back what the Shell said about itself.
@@ -67,7 +68,7 @@ const currentDraft = () => builderWorkspaceStore.getSnapshot("public").areaRootR
 describe("undoing the Area root route", () => {
   beforeEach(() => {
     phiBuilderHistory.clear(CONTEXT);
-    builderWorkspaceStore.patch("public", (current) => ({
+    builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
       ...current,
       areaRootRouteDrafts: {},
       areaRootRoutes: {},
@@ -83,13 +84,13 @@ describe("undoing the Area root route", () => {
     expect(undoOnce()).toEqual({ kind: "areaRootRoute", area: "public", rootRoute: undefined });
     // Absent, not null: this session touched nothing, so whatever the Area stored still stands.
     expect(currentDraft()).toBeUndefined();
-    expect("public" in (builderWorkspaceStore.getSnapshot("public").areaRootRouteDrafts ?? {})).toBe(false);
+    expect("public" in (builderWorkspaceStore.getSnapshot(PHI_WORKSPACE_CATALOG_SCOPE).areaRootRouteDrafts ?? {})).toBe(false);
   });
 
   it("keeps the two answers apart", () => {
     // `null` is the Builder asking for the shipped default back, and undo has to land on it exactly.
     // The Area stored a landing, so asking for the default is a change of its own.
-    builderWorkspaceStore.patch("public", (current) => ({ ...current, areaRootRoutes: { public: { mode: "landing" } } }));
+    builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({ ...current, areaRootRoutes: { public: { mode: "landing" } } }));
     answerRootRoute(null);
     answerRootRoute({ mode: "redirect", targetLinkTarget: { kind: "page", reference: "module:contact" } } as unknown as PhiAreaRootRoute);
 
@@ -111,12 +112,12 @@ describe("undoing the Area root route", () => {
   it("agrees with the Page list once the save has written it", () => {
     const saved = { mode: "redirect", targetLinkTarget: { kind: "page", reference: "module:contact" } } as unknown as PhiAreaRootRoute;
     answerRootRoute(saved);
-    const before = builderWorkspaceStore.getSnapshot("public");
+    const before = builderWorkspaceStore.getSnapshot(PHI_WORKSPACE_CATALOG_SCOPE);
     expect(readPhiBuilderStoredAreaRootRoute(before, "public")).not.toEqual(saved);
 
     commitPhiDeveloperBuilderAreaConfig("public", { rootRoute: saved, meta: null });
 
-    const after = builderWorkspaceStore.getSnapshot("public");
+    const after = builderWorkspaceStore.getSnapshot(PHI_WORKSPACE_CATALOG_SCOPE);
     expect(readPhiBuilderStoredAreaRootRoute(after, "public")).toEqual(saved);
     expect(readPhiBuilderEffectiveAreaRootRoute(after, "public")).toEqual(saved);
   });
@@ -139,7 +140,7 @@ describe("undoing the Area root route", () => {
 describe("the Area settings dialog in the history", () => {
   beforeEach(() => {
     phiBuilderHistory.clear(CONTEXT);
-    builderWorkspaceStore.patch("public", (current) => ({
+    builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
       ...current,
       areaRootRouteDrafts: {},
       areaRootRoutes: {},
@@ -161,7 +162,7 @@ describe("the Area settings dialog in the history", () => {
     undoOnce();
     expect(phiBuilderHistory.getAvailability(CONTEXT).canUndo).toBe(false);
     expect(currentDraft()).toBeUndefined();
-    expect(builderWorkspaceStore.getSnapshot("public").areaMetaDrafts?.public).toBeUndefined();
+    expect(builderWorkspaceStore.getSnapshot(PHI_WORKSPACE_CATALOG_SCOPE).areaMetaDrafts?.public).toBeUndefined();
   });
 
   it("records nothing when OK confirms what stands", () => {
@@ -172,11 +173,11 @@ describe("the Area settings dialog in the history", () => {
       meta: { titleTemplate: "  ", defaultTitle: "", index: true, sitemap: true },
     });
     expect(phiBuilderHistory.getAvailability(CONTEXT).canUndo).toBe(false);
-    expect(builderWorkspaceStore.getSnapshot("public").areaMetaDrafts?.public).toBeUndefined();
+    expect(builderWorkspaceStore.getSnapshot(PHI_WORKSPACE_CATALOG_SCOPE).areaMetaDrafts?.public).toBeUndefined();
   });
 
   it("takes an emptied title away instead of storing it empty", () => {
-    builderWorkspaceStore.patch("public", (current) => ({
+    builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
       ...current,
       areaMeta: { public: { titleTemplate: "%s | Old", defaultTitle: "Old" } },
     }));
@@ -186,7 +187,7 @@ describe("the Area settings dialog in the history", () => {
       rootRoute: undefined,
       meta: { titleTemplate: "", defaultTitle: "Old", index: true, sitemap: true },
     });
-    expect(builderWorkspaceStore.getSnapshot("public").areaMetaDrafts?.public).toEqual({
+    expect(builderWorkspaceStore.getSnapshot(PHI_WORKSPACE_CATALOG_SCOPE).areaMetaDrafts?.public).toEqual({
       defaultTitle: "Old",
       index: true,
       sitemap: true,

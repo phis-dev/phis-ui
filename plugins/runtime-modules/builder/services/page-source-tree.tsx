@@ -61,13 +61,13 @@ export function PhiBuilderPageSourceTreeProviderClient({ children }: { children:
    * The slices the offered catalog is built from; the query reads the state when it runs. Subscribed
    * to the whole state, every selection renewed the registration and reloaded the tree.
    */
-  const area = usePhiDeveloperBuilderStateValue("public", (state) => state.area);
-  const customPages = usePhiDeveloperBuilderStateValue("public", (state) => state.customPages);
-  const modulePresetPagesByArea = usePhiDeveloperBuilderStateValue("public", (state) => state.modulePresetPagesByArea);
-  const navigationSurfacesByArea = usePhiDeveloperBuilderStateValue("public", (state) => state.navigationSurfacesByArea);
-  const persistedPageCatalogByArea = usePhiDeveloperBuilderStateValue("public", (state) => state.persistedPageCatalogByArea);
-  const runtimeModuleIdsByArea = usePhiDeveloperBuilderStateValue("public", (state) => state.runtimeModuleIdsByArea);
-  const areaRootRoutes = usePhiDeveloperBuilderStateValue("public", (state) => state.areaRootRoutes);
+  const area = usePhiDeveloperBuilderStateValue((state) => state.area);
+  const customPages = usePhiDeveloperBuilderStateValue((state) => state.customPages);
+  const modulePresetPagesByArea = usePhiDeveloperBuilderStateValue((state) => state.modulePresetPagesByArea);
+  const navigationSurfacesByArea = usePhiDeveloperBuilderStateValue((state) => state.navigationSurfacesByArea);
+  const persistedPageCatalogByArea = usePhiDeveloperBuilderStateValue((state) => state.persistedPageCatalogByArea);
+  const runtimeModuleIdsByArea = usePhiDeveloperBuilderStateValue((state) => state.runtimeModuleIdsByArea);
+  const areaRootRoutes = usePhiDeveloperBuilderStateValue((state) => state.areaRootRoutes);
   const registration = useMemo<PhiTreeProviderRegistration>(() => {
     const descriptor = PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS.find((candidate) =>
       candidate.key === PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.pageSourceTree);
@@ -80,7 +80,7 @@ export function PhiBuilderPageSourceTreeProviderClient({ children }: { children:
           : field),
       })) : [],
       query: async (request) => {
-        const state = getPhiDeveloperBuilderStateSnapshot("public");
+        const state = getPhiDeveloperBuilderStateSnapshot();
         const requestedArea = isBuilderArea(request.params?.area) ? request.params.area : state.area;
         /*
          * What the Area answers with, not what is installed in it. The active catalog mirrors the route

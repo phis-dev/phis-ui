@@ -7,7 +7,8 @@ import type { PhiWorkspaceCatalogArea, PhiWorkspaceCatalogState } from "./catalo
 export type { PhiWorkspaceCatalogArea, PhiWorkspaceCatalogState } from "./catalog-state";
 
 /**
- * One scope per workspace host. Both the Builder and, later, the Editor write into "public".
+ * One scope per workspace host, not one per Area. Both the Builder and, later, the Editor write into it;
+ * which Area is open is `area` inside it, and what belongs to an Area is keyed by Area there.
  */
 export const PHI_WORKSPACE_CATALOG_SCOPE = "public";
 
@@ -37,12 +38,11 @@ export const phiWorkspaceCatalogStore = createPhiPluginStateStore<PhiWorkspaceCa
 );
 
 export function usePhiWorkspaceCatalogValue<TSelected>(
-  scopeKey: string,
   selector: (state: PhiWorkspaceCatalogState) => TSelected,
 ): TSelected {
-  return phiWorkspaceCatalogStore.useStoreSelector(scopeKey, selector);
+  return phiWorkspaceCatalogStore.useStoreSelector(PHI_WORKSPACE_CATALOG_SCOPE, selector);
 }
 
-export function getPhiWorkspaceCatalogSnapshot(scopeKey: string): PhiWorkspaceCatalogState {
-  return phiWorkspaceCatalogStore.getSnapshot(scopeKey);
+export function getPhiWorkspaceCatalogSnapshot(): PhiWorkspaceCatalogState {
+  return phiWorkspaceCatalogStore.getSnapshot(PHI_WORKSPACE_CATALOG_SCOPE);
 }

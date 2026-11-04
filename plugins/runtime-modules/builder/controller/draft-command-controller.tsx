@@ -1,5 +1,6 @@
 "use client";
 
+import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../../components/workspace/catalog-store";
 import { useRef } from "react";
 import { useRouter } from "next/navigation";
 
@@ -84,7 +85,6 @@ export type PhiDeveloperBuilderToolbarCommand =
   | "reset";
 
 export function usePhiBuilderDraftCommandController({
-  defaultArea,
   effectiveArea,
   effectiveNavKey,
   effectivePageKey,
@@ -96,7 +96,6 @@ export function usePhiBuilderDraftCommandController({
   state,
   historyLabels,
 }: {
-  defaultArea: PhiDeveloperBuilderArea;
   effectiveArea: PhiDeveloperBuilderArea;
   effectiveNavKey: string;
   effectivePageKey: string;
@@ -349,7 +348,7 @@ export function usePhiBuilderDraftCommandController({
           },
         );
       }
-      clearPhiBuilderModuleAreasDirty(defaultArea);
+      clearPhiBuilderModuleAreasDirty();
       reportSaved("published", null, savedAt);
       showMessage({
         level: "success",
@@ -566,7 +565,7 @@ export function usePhiBuilderDraftCommandController({
           });
           const pageDeleteDraftKey = getPhiBuilderRegionDraftKey(effectiveArea, "page_delete", effectivePageKey);
           mergePhiDeveloperRegionDrafts(nextDrafts);
-          builderWorkspaceStore.patch(defaultArea, (current) => ({
+          builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
             ...current,
             deletedPageDrafts: {
               ...current.deletedPageDrafts,
@@ -714,7 +713,7 @@ export function usePhiBuilderDraftCommandController({
         return;
       }
       if (snapshot.kind === "modules") {
-        phiWorkspaceCatalogStore.patch(defaultArea, (current) => ({
+        phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
           ...current,
           runtimeModuleIdsByArea: {
             ...(current.runtimeModuleIdsByArea ?? {}),
@@ -733,10 +732,10 @@ export function usePhiBuilderDraftCommandController({
        */
       const { catalog, tool } = splitWorkspacePatch(snapshot.state);
       if (Object.keys(catalog).length > 0) {
-        phiWorkspaceCatalogStore.patch(defaultArea, (current) => ({ ...current, ...catalog }));
+        phiWorkspaceCatalogStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({ ...current, ...catalog }));
       }
       if (Object.keys(tool).length > 0) {
-        builderWorkspaceStore.patch(defaultArea, (current) => ({ ...current, ...tool }));
+        builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({ ...current, ...tool }));
       }
     };
 

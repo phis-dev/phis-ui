@@ -1,5 +1,6 @@
 "use client";
 
+import { PHI_WORKSPACE_CATALOG_SCOPE } from "../../../components/workspace/catalog-store";
 import { phiAreaPath } from "../../../helpers/locale";
 import { resolvePhiBuilderAreaAsCmsArea, resolvePhiBuilderAreaMask } from "../../../constants/cms-areas";
 import { PhiCmsFlags, PhiCmsStatus } from "../../../constants/phi-cms";
@@ -522,7 +523,7 @@ function storePhiDeveloperBuilderDraftAllocation(
   allocationKey: string,
   saved: CmsDraftWriteState,
 ) {
-  builderWorkspaceStore.patch("public", (current) => {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => {
     const currentAllocation = current.draftAllocations[allocationKey];
     const nextNodeSequence =
       currentAllocation?.revisionId === saved.revisionId
@@ -556,7 +557,7 @@ export function clearPhiDeveloperBuilderDraftAllocation(input: {
     input.pageKey,
     input.workspaceKind === "pages" ? "page" : "area",
   );
-  builderWorkspaceStore.patch("public", (current) => {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => {
     if (!current.draftAllocations[allocationKey]) {
       return current;
     }
@@ -626,7 +627,7 @@ export async function getPhiDeveloperBuilderModulesDraftAllocation(input: {
 
 function clearPhiDeveloperBuilderModulesDraftAllocation(area: PhiDeveloperBuilderArea) {
   const allocationKey = createPhiBuilderDraftAllocationKey(area, area, "modules");
-  builderWorkspaceStore.patch("public", (current) => {
+  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => {
     if (!current.draftAllocations[allocationKey]) {
       return current;
     }
