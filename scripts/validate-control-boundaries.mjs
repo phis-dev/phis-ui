@@ -290,6 +290,7 @@ const antdImportAllowance = new Map([
     paths: [
       "antd/es/theme/interface",
       "antd/es/theme/themes/dark",
+      "antd/es/theme/themes/dark/colors",
       "antd/es/theme/themes/default",
       "antd/es/theme/themes/seed",
       "antd/es/theme/util/alias",
@@ -297,7 +298,9 @@ const antdImportAllowance = new Map([
     reason:
       "Resolves the full token set without a React render, which needs the algorithms and the alias "
       + "formatter. `themes/seed` and `util/alias` are not public exports -- the deepest coupling in the "
-      + "tree, and the reason the deep-path reader now matches more than one segment.",
+      + "tree, and the reason the deep-path reader now matches more than one segment. `themes/dark/colors` "
+      + "is the dark algorithm's own palette, read to give a link's and an info colour's hover the dark "
+      + "palette's lighter step as the primary hover has it, rather than a second palette rule of ours.",
   }],
   ["helpers/antd-locale.ts", {
     paths: ["antd/es/locale"],
