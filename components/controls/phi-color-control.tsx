@@ -162,8 +162,10 @@ export function PhiColorControl({
            */
           ...(children == null ? { width: "fit-content" } : {}),
         },
-        popupOverlayInner: {
-          padding: 12,
+        popup: {
+          container: {
+            padding: 12,
+          },
         },
       }}
       panelRender={(_, extra) => {

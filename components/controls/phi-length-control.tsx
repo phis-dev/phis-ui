@@ -89,7 +89,7 @@ export function PhiLengthControl({
         popupMatchSelectWidth={false}
         getPopupContainer={getPopupContainer}
         showSearch={false}
-        suffixIcon={null}
+        suffix={null}
         variant="filled"
         value={unit}
         style={{ flex: "0 0 38px", width: 38 }}

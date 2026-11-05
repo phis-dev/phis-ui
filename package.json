@@ -588,7 +588,7 @@
     "@types/sanitize-html": "2.16.1",
     "@typescript-eslint/eslint-plugin": "^8.70.0",
     "@typescript-eslint/parser": "^8.70.0",
-    "antd": "^6.6.4",
+    "antd": "^6.7.0",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.3.5",
     "happy-dom": "^20.14.5",
