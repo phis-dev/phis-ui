@@ -187,18 +187,25 @@ export function PhiSeriesChartControl({
         <figcaption
           aria-hidden="true"
           style={{
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "space-between",
-            columnGap: PHI_SPACE.sm,
+            display: "grid",
+            gap: PHI_SPACE.xxs,
             fontSize: PHI_FONT_SIZE.sm,
             color: PHI_COLOR.textTertiary,
             minWidth: 0,
           }}
         >
-          {pointCount > 1 ? <span>{keys[0]}</span> : null}
+          {/*
+            * The first and the last day under the ends of the axis, on a line of their own: sharing it with
+            * the legend, a narrow card wrapped them onto separate lines and the days left their ends.
+            */}
+          {pointCount > 1 ? (
+            <span style={{ display: "flex", justifyContent: "space-between", columnGap: PHI_SPACE.sm, minWidth: 0 }}>
+              <span>{keys[0]}</span>
+              <span>{lastKey}</span>
+            </span>
+          ) : null}
           {series.length > 1 ? (
-            <span style={{ display: "inline-flex", flexWrap: "wrap", columnGap: PHI_SPACE.xs }}>
+            <span style={{ display: "flex", flexWrap: "wrap", columnGap: PHI_SPACE.sm, minWidth: 0 }}>
               {series.map((entry, index) => (
                 <span key={index} style={{ display: "inline-flex", alignItems: "center", gap: PHI_SPACE.xxs }}>
                   <span
@@ -213,7 +220,6 @@ export function PhiSeriesChartControl({
               ))}
             </span>
           ) : null}
-          {pointCount > 1 ? <span>{lastKey}</span> : null}
         </figcaption>
       ) : null}
     </figure>

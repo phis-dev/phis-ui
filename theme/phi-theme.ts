@@ -172,6 +172,8 @@ export function buildPhiComponentTokens(
     Tree: { fontSize: fontSizeSM },
     // A contents list beside a text is a list like a Tree's, and writes as small.
     Anchor: { fontSize: fontSizeSM },
+    // A Divider's words label a section; Ant Design sets them at `lg`, which the scale made a heading's size.
+    Divider: { fontSizeLG: fontSize },
     Input: { inputFontSizeSM: fontSizeSM },
     InputNumber: { inputFontSizeSM: fontSizeSM },
     DatePicker: { inputFontSizeSM: fontSizeSM },
