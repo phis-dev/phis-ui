@@ -130,7 +130,7 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
     textAlign: "start",
     textBlockSpacingBefore: "none",
     textBlockSpacingAfter: "sm",
-    headingBlockSpacingBefore: "none",
+    headingBlockSpacingBefore: "sm",
     headingBlockSpacingAfter: "sm",
   },
   contentBinding: {

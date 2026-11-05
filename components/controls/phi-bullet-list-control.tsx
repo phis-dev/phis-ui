@@ -30,6 +30,11 @@ export type PhiBulletListControlProps = {
    * an entry that is a text field has the field's height instead.
    */
   markerLineHeight?: string;
+  /**
+   * The space the list keeps around it as a block among blocks -- a Markdown text's list takes its
+   * paragraphs' spacing, so the block after the last entry stands as far off as after a paragraph.
+   */
+  blockSpacing?: Pick<CSSProperties, "marginBlockStart" | "marginBlockEnd">;
 };
 
 const PHI_BULLET_LIST_MARKER_SIZE = PHI_SPACE.xs;
@@ -115,6 +120,7 @@ export function PhiBulletListControl({
   ordered = false,
   start = 1,
   markerLineHeight = "1lh",
+  blockSpacing,
 }: PhiBulletListControlProps) {
   const level = resolvePhiBulletListLevel(depth);
   const marker = ordered ? "number" : listStyle.markers[level];
@@ -124,7 +130,7 @@ export function PhiBulletListControl({
   // A line between entries that have edges of their own would only double them.
   const divided = !boxed && hasPhiFlag(listStyle.flags, PhiBulletListFlag.Dividers);
   const ListTag = marker === "number" ? "ol" : "ul";
-  const listCss: CSSProperties = { display: "grid", gap, margin: 0, padding: 0, listStyle: "none", width: "100%", minWidth: 0 };
+  const listCss: CSSProperties = { display: "grid", gap, margin: 0, padding: 0, listStyle: "none", width: "100%", minWidth: 0, ...blockSpacing };
 
   return (
     <ListTag style={listCss} {...(ListTag === "ol" && start !== 1 ? { start } : {})}>

@@ -159,12 +159,20 @@ function renderInlineNodes(inlines: PhiMarkdownInline[]): ReactNode[] {
 function renderBlocks(
   blocks: PhiMarkdownBlock[],
   token: PhiConfig["token"],
-  paragraphBlockStyle: CSSProperties,
-  headingBlockStyle: CSSProperties,
+  paragraphStyle: CSSProperties,
+  headingStyle: CSSProperties,
   lists: PhiMarkdownListContext,
+  atStart = false,
 ): ReactNode[] {
   return blocks.map((block, index) => {
     const key = `${block.kind}-${index}`;
+    /*
+     * The first block of a text, or of a quote, keeps no space before it: the space before a block
+     * parts it from the block above, and there is none -- the Widget's own edge stands there.
+     */
+    const leading = atStart && index === 0;
+    const paragraphBlockStyle = leading ? { ...paragraphStyle, marginBlockStart: 0 } : paragraphStyle;
+    const headingBlockStyle = leading ? { ...headingStyle, paddingBlockStart: 0 } : headingStyle;
 
     switch (block.kind) {
       case "heading":
@@ -190,7 +198,7 @@ function renderBlocks(
             }}
           >
             <div style={{ display: "grid", gap: 0 }}>
-              {renderBlocks(block.children, token, paragraphBlockStyle, headingBlockStyle, lists)}
+              {renderBlocks(block.children, token, paragraphStyle, headingStyle, lists, true)}
             </div>
           </blockquote>
         );
@@ -206,6 +214,15 @@ function renderBlocks(
             depth={lists.depth}
             ordered={block.ordered}
             start={block.start}
+            /*
+             * The list stands among the text's blocks as a paragraph does: the entries draw close, but the
+             * block after the last one keeps the text's spacing. A list inside an entry gets the entry's
+             * zeroed spacing, so it sits in its entry's grid.
+             */
+            blockSpacing={{
+              marginBlockStart: paragraphBlockStyle.marginBlockStart,
+              marginBlockEnd: paragraphBlockStyle.marginBlockEnd,
+            }}
             items={block.items.map((itemBlocks) => ({
               content: (
                 <div style={{ display: "grid", gap: PHI_SPACE.xs, minWidth: 0 }}>
@@ -216,8 +233,8 @@ function renderBlocks(
                   {renderBlocks(
                     itemBlocks,
                     token,
-                    { ...paragraphBlockStyle, marginBlockStart: 0, marginBlockEnd: 0 },
-                    headingBlockStyle,
+                    { ...paragraphStyle, marginBlockStart: 0, marginBlockEnd: 0 },
+                    headingStyle,
                     { ...lists, depth: lists.depth + 1 },
                   )}
                 </div>
@@ -232,7 +249,10 @@ function renderBlocks(
             data-phi-code-language={block.language ?? undefined}
             style={{
               margin: 0,
-              padding: PHI_SPACE.md,
+              // A code block stands among the text's blocks as a paragraph does, with the text's spacing.
+              marginBlockStart: paragraphBlockStyle.marginBlockStart,
+              marginBlockEnd: paragraphBlockStyle.marginBlockEnd,
+              padding: PHI_SPACE.base,
               overflowX: "auto",
               borderRadius: token.borderRadiusSM,
               background: token.colorFillQuaternary,
@@ -318,9 +338,14 @@ export function PhiMarkdownWidgetClient({ config }: PhiMarkdownWidgetClientProps
     marginBlockStart: resolvePhiSpacingScaleValue(config?.textBlockSpacingBefore ?? "none"),
     marginBlockEnd: resolvePhiSpacingScaleValue(config?.textBlockSpacingAfter ?? "sm"),
   };
+  /*
+   * The space before a heading is padding, not margin, so it adds to the space after the block above
+   * however the text is laid out: in the grid margins never collapse, in the flow that pictures need
+   * they would, and the same setting would part a heading from its paragraph by less there.
+   */
   const headingBlockStyle: CSSProperties = {
     margin: 0,
-    marginBlockStart: resolvePhiSpacingScaleValue(config?.headingBlockSpacingBefore ?? "none"),
+    paddingBlockStart: resolvePhiSpacingScaleValue(config?.headingBlockSpacingBefore ?? "sm"),
     marginBlockEnd: resolvePhiSpacingScaleValue(config?.headingBlockSpacingAfter ?? "sm"),
   };
 
@@ -343,7 +368,7 @@ export function PhiMarkdownWidgetClient({ config }: PhiMarkdownWidgetClientProps
       {renderBlocks(blocks, token, paragraphBlockStyle, headingBlockStyle, {
         style: resolvePhiBulletListStyle(config?.list),
         depth: 1,
-      })}
+      }, true)}
     </div>
   );
 }
