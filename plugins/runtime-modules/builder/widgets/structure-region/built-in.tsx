@@ -109,6 +109,7 @@ import { PhiTypographyControl } from "../../../../../components/controls/phi-typ
 import { PhiIcon } from "../../../../../components/shell/phi-icon";
 import { PhiSurfaceTone } from "../../../../../components/surface/phi-surface-tone";
 import { resolvePhiSurfaceToneClassName } from "../../../../../types/surface";
+import { PHI_SURFACE_TONE_GROUND, phiSurfaceTakesToneGround } from "../../../../../helpers/surface-style";
 
 export type PhiStructureRegionWidgetConfig = {
   slotKind?: "structure" | "content";
@@ -609,16 +610,26 @@ export function PhiStructureRegionScaffold({
   const shouldStretchAvailableHeight = shouldFillAvailableHeight || shouldStretchContentRegion;
   const hasExplicitSidebarWidth = isFullHeightRegion && draftGeometry.explicitInline;
   const regionToneClassName = resolvePhiSurfaceToneClassName(effectiveDraft?.surface?.tone);
-  const slotBackgroundStyle = effectiveDraft?.surface?.background
-    ? resolvePhiBackgroundWidgetStyle(effectiveDraft.surface.background)
-    : {};
   /*
    * Whether the author gave this Region a ground. The Builder writes a Background config onto every
    * Region draft it persists, so only a config that paints something counts. An unauthored Region is
    * transparent in the live Shell, and the Canvas keeps that legible: its slot paints a half-transparent
    * container tint, so the Theme Root Background stays visible through it.
    */
-  const hasAuthoredGround = phiBackgroundWidgetConfigPaintsGround(effectiveDraft?.surface?.background ?? null);
+  const paintsAuthoredGround = phiBackgroundWidgetConfigPaintsGround(effectiveDraft?.surface?.background ?? null);
+  /*
+   * A toned Region takes its tone's ground where its Background paints none, by the rule the live Region
+   * shell follows (`phiSurfaceTakesToneGround`). The slot carries the tone's class, so the ground resolves
+   * in the tone's mode; it is a ground of the Region's own, so the Canvas tint does not cover it.
+   */
+  const toneGround = phiSurfaceTakesToneGround(effectiveDraft?.surface?.tone, paintsAuthoredGround);
+  const hasAuthoredGround = paintsAuthoredGround || toneGround;
+  const slotBackgroundStyle: CSSProperties = {
+    ...(effectiveDraft?.surface?.background
+      ? resolvePhiBackgroundWidgetStyle(effectiveDraft.surface.background)
+      : {}),
+    ...(toneGround ? { backgroundColor: PHI_SURFACE_TONE_GROUND } : {}),
+  };
   const slotBorderStyle = effectiveDraft?.surface?.border ? resolvePhiBorderWidgetStyle(effectiveDraft.surface.border) : {};
   const regionConfig = (effectiveDraft?.regionConfig ?? null) as PhiCmsRegionConfig | null;
   const regionPaddingStyle = resolvePhiPaddingStyle(

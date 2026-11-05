@@ -213,7 +213,8 @@ The site-owned Shell Chrome Overlay is its counterpart in front of the scrolling
 - is anchored to the viewport, so the participating Regions show one painting rather than each starting it
   again: a gradient runs from the Header into the Sider and a Pattern keeps its grid across the seam
 - is not painted by a Region that authored any chrome of its own. Every carrier counts: the Background of
-  the Region's Surface, the ground the Shell record sets, and a glass pane the Region's Surface asks for.
+  the Region's Surface, the ground the Shell record sets, a glass pane the Region's Surface asks for, and a
+  Surface `tone` other than `inherit`, whose ground the Region then paints (LAYOUTING.md "Surface tone").
   Such a Region paints over the Theme, which is how a Site gives one Region its own chrome
 - is never locked out by a shipped Area shell. Area shell presets -- Public, App, Accounting, Admin,
   Editor, and the Builder alike -- author no Surface or colour mode on their

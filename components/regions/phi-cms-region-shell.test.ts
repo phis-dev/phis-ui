@@ -1,6 +1,7 @@
 import { PhiCmsFlags } from "../../constants/phi-cms";
 import { describe, expect, it } from "vitest";
 
+import { PHI_SURFACE_TONE_GROUND } from "../../helpers/surface-style";
 import { phiCmsRegionSiderSticks, resolvePhiCmsRegionShell, type PhiCmsRegionShellInput } from "./phi-cms-region-shell";
 
 const shellTheme = {
@@ -124,6 +125,79 @@ describe("region shell chrome overlay", () => {
       config: { visibility: "hidden" },
       paint: { kind: "published" },
     })).toBeNull();
+  });
+});
+
+/**
+ * A tone turns the ground as well, by the rule every Surface follows (`phiSurfaceTakesToneGround`): a
+ * Region in a mode of its own whose Background paints nothing takes the tone's container ground on the
+ * element that carries the tone's class, and the Shell's ground no longer shows beneath it.
+ */
+describe("region shell tone ground", () => {
+  const footerTheme = {
+    footer: {
+      light: { background: "linear-gradient(#ffffff, #eeeeee)" },
+      dark: { background: "#101820" },
+    },
+  } as PhiCmsRegionShellInput["shellTheme"];
+
+  it("paints the tone's ground on the toned element, published and live alike", () => {
+    const published = resolve({ regionKey: "footer_main", config: { surface: { tone: "inverse" } }, shellTheme: footerTheme });
+    const live = resolve({
+      regionKey: "footer_main",
+      config: { surface: { tone: "inverse" } },
+      shellTheme: footerTheme,
+      paint: { kind: "live", mode: "light" },
+    });
+
+    for (const shell of [published, live]) {
+      expect(shell.style.backgroundColor).toBe(PHI_SURFACE_TONE_GROUND);
+      expect(shell.style.backgroundImage).toBeUndefined();
+      expect(shell.attributes.className.split(" ")).toContain("phi-tone-inverse");
+      expect(shell.tone).toBe("inverse");
+      expect(shell.attributes["data-phi-shell-chrome"]).toBeUndefined();
+    }
+    const style = published.style as Record<string, unknown>;
+    expect(style["--phi-region-background-light"]).toBeUndefined();
+    expect(style["--phi-region-background-dark"]).toBeUndefined();
+  });
+
+  it("counts an empty Background as no ground, and keeps the Shell from frosting beneath it", () => {
+    const shell = resolve({
+      regionKey: "header_main",
+      config: { surface: { tone: "dark", background: { base: { kind: "none" }, filter: "glass" } } },
+      shellTheme,
+    });
+    const style = shell.style as Record<string, unknown>;
+
+    expect(style.backgroundColor).toBe(PHI_SURFACE_TONE_GROUND);
+    expect(style["--phi-region-background-light"]).toBeUndefined();
+    expect(style["--phi-region-background-dark"]).toBeUndefined();
+  });
+
+  it("takes the Chrome Overlay out of a Chrome Region", () => {
+    expect(resolve({ regionKey: "sider_left", config: { surface: { tone: "light" } } }).attributes["data-phi-shell-chrome"])
+      .toBeUndefined();
+  });
+
+  it("lets a stated ground win", () => {
+    const shell = resolve({
+      regionKey: "footer_main",
+      config: { surface: { tone: "inverse", background: { base: { kind: "color", color: "#123456" } } } },
+    });
+    expect(shell.style.backgroundColor).not.toBe(PHI_SURFACE_TONE_GROUND);
+    expect(shell.backgroundConfig).not.toBeNull();
+  });
+
+  it("leaves a Region without a tone as it was", () => {
+    for (const tone of [undefined, "inherit"] as const) {
+      const toned = resolve({ regionKey: "footer_main", config: { surface: { tone } }, shellTheme: footerTheme });
+      const bare = resolve({ regionKey: "footer_main", shellTheme: footerTheme });
+      expect(toned.style).toEqual(bare.style);
+      expect(toned.style.backgroundColor).not.toBe(PHI_SURFACE_TONE_GROUND);
+    }
+    expect(resolve({ regionKey: "sider_left", config: { surface: { tone: "inherit" } } }).attributes["data-phi-shell-chrome"])
+      .toBe("true");
   });
 });
 

@@ -69,6 +69,18 @@ export type PhiSurfaceStyleOptions = {
 /** The ground a toned Surface paints where it states none: the container ground of the tone's mode. */
 export const PHI_SURFACE_TONE_GROUND = "var(--ant-color-bg-container)";
 
+/**
+ * Whether a Surface takes its tone's ground (`PHI_SURFACE_TONE_GROUND`): it asks for a mode of its own and
+ * its Background paints nothing. A stated ground wins. The one rule for every box with a Surface -- this
+ * resolver's and the Region shell's.
+ */
+export function phiSurfaceTakesToneGround(
+  tone: PhiSurface["tone"] | null | undefined,
+  paintsGround: boolean,
+): boolean {
+  return tone != null && tone !== "inherit" && !paintsGround;
+}
+
 const PHI_SURFACE_EMPTY: PhiResolvedSurface = { style: {}, ground: null, paintsGround: false };
 
 function resolvePhiSurfaceCorners(
@@ -126,7 +138,7 @@ export function resolvePhiSurfaceStyle(
    * ground would be light words on a light page. Where the Background paints nothing, the box takes the
    * mode's own container ground, which resolves under the tone's class it carries. A stated ground wins.
    */
-  const toneGround = surface.tone != null && surface.tone !== "inherit" && !paintsGround;
+  const toneGround = phiSurfaceTakesToneGround(surface.tone, paintsGround);
 
   const borderSource = resolvePhiCmsBorderSource(surface.borderSource, surface.border);
   const edge = resolvePhiSourcedBorderStyle(borderSource, surface.border);

@@ -164,9 +164,11 @@ on a page is the same mode. `inherit`, the default, is never stored.
   container ground (`PHI_SURFACE_TONE_GROUND`, `var(--ant-color-bg-container)`, from
   `resolvePhiSurfaceStyle`), which resolves under the box's tone class; a stated ground wins, so a photo
   under a dark tone stays a photo. An Overlay draws no tone and so paints no tone ground.
-- A Region's Shell ground and a Layout's own chrome that is painted from JavaScript tokens read the page's
-  mode; a Region resolves its ground in the Region shell, not through `resolvePhiSurfaceStyle`, and does
-  not take the tone ground.
+- Regions follow the same rule: the Region shell asks `phiSurfaceTakesToneGround`, the predicate
+  `resolvePhiSurfaceStyle` uses, and paints `PHI_SURFACE_TONE_GROUND` on the Region's root element, which
+  carries the tone class. That ground is the Region's own, so the Shell's ground beneath it -- the Shell
+  record's, the Chrome Overlay, a pane frosting either -- does not show. A Region's Shell ground and a
+  Layout's own chrome that is painted from JavaScript tokens otherwise read the page's mode.
 
 ### Where a Surface's outline comes from
 
@@ -298,7 +300,8 @@ A Region reads its Surface with two differences that belong to Regions. A `theme
 the Site's line on the side that faces the Page: below a Header, above a Footer, on the inner side of a
 Sider, all round any other Region; `custom` draws the configured border as it says. A Region states no corner
 of its own otherwise, because it spans its part of the frame. And a glass pane on a Region without a ground of
-its own frosts the Region's Shell ground (SHELL.md). A Region without a Surface renders no border: separators
+its own frosts the Region's Shell ground (SHELL.md); a toned Region has one, its tone's ground
+([Surface tone](#surface-tone)), and its pane stays on the box under it as on a toned Layout. A Region without a Surface renders no border: separators
 are never implicit, and Canvas outlines belong to Builder scaffold chrome only. Static and client-enhanced
 Region renderers resolve chrome through the same Region-shell resolver, and both mount the ground layer a
 softened paint needs.

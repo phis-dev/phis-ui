@@ -27,7 +27,11 @@ import type {
 } from "../../types";
 import { resolvePhiCmsBorderSource } from "../../types/cms-border-source";
 import type { PhiSurface } from "../../types/surface";
-import type { PhiSurfaceGround } from "../../helpers/surface-style";
+import {
+  PHI_SURFACE_TONE_GROUND,
+  phiSurfaceTakesToneGround,
+  type PhiSurfaceGround,
+} from "../../helpers/surface-style";
 import { resolvePhiRenderableBlockGeometry } from "../../types/renderable-block-geometry";
 import { createPhiSignalAddress } from "../../types/signals";
 import type { PhiCmsRegionReveal } from "../../types/cms-presets";
@@ -320,11 +324,19 @@ export function resolvePhiCmsRegionShell({
     : null;
   const backgroundConfig = phiBackgroundWidgetConfigPaintsGround(surfaceBackground) ? surfaceBackground : null;
   /*
+   * A tone turns the ground as well, by the rule every Surface follows (LAYOUTING.md "Surface tone"):
+   * where the Background paints nothing, the Region takes its tone's container ground, which resolves
+   * under the tone class the root element carries. That is a ground of the Region's own, so the Shell's
+   * -- the Theme's record, the Chrome Overlay, a pane frosting either -- does not show beneath it.
+   */
+  const toneGround = phiSurfaceTakesToneGround(surface?.tone, backgroundConfig != null);
+  /*
    * A pane on a Region without a ground of its own frosts the Shell's ground for this Region -- the
    * Theme's record, or the family's fallback -- which is what glass on a bare Header has always meant.
-   * A Region that paints its own ground carries its pane inside that Background, as every Surface does.
+   * A Region that paints its own ground carries its pane inside that Background, as every Surface does;
+   * the tone's ground is one, so its pane stays on the box under that ground, as on a toned Layout.
    */
-  const shellPane = backgroundConfig == null ? resolvePhiBackgroundPane(surfaceBackground) : null;
+  const shellPane = backgroundConfig == null && !toneGround ? resolvePhiBackgroundPane(surfaceBackground) : null;
   const backgroundMoves =
     animatesBackground &&
     backgroundConfig != null &&
@@ -337,11 +349,16 @@ export function resolvePhiCmsRegionShell({
       motion: null,
     }
     : null;
-  const backgroundStyle = backgroundConfig == null || ground != null
-    ? null
-    : backgroundMoves
-      ? resolvePhiBackgroundMotionHostStyle(backgroundConfig)
-      : resolvePhiBackgroundWidgetStyle(backgroundConfig);
+  const backgroundStyle: CSSProperties | null = toneGround
+    ? {
+      ...(surfaceBackground ? resolvePhiBackgroundWidgetStyle(surfaceBackground) : {}),
+      backgroundColor: PHI_SURFACE_TONE_GROUND,
+    }
+    : backgroundConfig == null || ground != null
+      ? null
+      : backgroundMoves
+        ? resolvePhiBackgroundMotionHostStyle(backgroundConfig)
+        : resolvePhiBackgroundWidgetStyle(backgroundConfig);
 
   const chromeInput = {
     shadow: surface?.shadow ?? undefined,
@@ -362,7 +379,7 @@ export function resolvePhiCmsRegionShell({
    * the stored one: the Builder persists an empty Background record for every Region an author has ever
    * opened, and the raw value is never null for those.
    */
-  const usesShellChromeOverlay = phiRegionUsesShellChromeOverlay({
+  const usesShellChromeOverlay = !toneGround && phiRegionUsesShellChromeOverlay({
     regionKey,
     backgroundConfig,
     pane: shellPane,
@@ -382,13 +399,14 @@ export function resolvePhiCmsRegionShell({
    * drop one of those from an element whose `background` shorthand is still set.
    */
   const liveChrome = paint.kind === "live" ? chrome[paint.mode] : null;
+  // A toned Region publishes no Shell ground: `shell.css` would paint a gradient one beneath its own.
   const modeStyle: PhiCmsRegionShellModeStyle = liveChrome
     ? {}
     : {
-      ...(chrome.light.background == null
+      ...(chrome.light.background == null || toneGround
         ? {}
         : { "--phi-region-background-light": String(chrome.light.background) }),
-      ...(chrome.dark.background == null
+      ...(chrome.dark.background == null || toneGround
         ? {}
         : { "--phi-region-background-dark": String(chrome.dark.background) }),
       "--phi-region-color-light": String(chrome.light.color),
