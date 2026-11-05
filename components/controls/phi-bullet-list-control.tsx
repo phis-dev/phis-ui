@@ -135,7 +135,8 @@ export function PhiBulletListControl({
           style={{
             display: "flex",
             alignItems: "flex-start",
-            gap: PHI_SPACE.sm,
+            // A marker belongs to its words: one small step between them, not the space between blocks.
+            gap: PHI_SPACE.xs,
             minWidth: 0,
             ...surface.style,
             ...(boxed ? { padding: `${PHI_SPACE.sm} ${PHI_SPACE.md}` } : {}),

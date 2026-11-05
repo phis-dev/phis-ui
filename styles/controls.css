@@ -501,6 +501,18 @@ h5.phi-typography, .phi-typography h5 {
   top: var(--phi-table-sticky-top, var(--phi-shell-sticky-top, 0px)) !important;
 }
 
+/*
+ * A sticky header row is a table of its own, and its columns are the body's: Ant Design measures the
+ * body's columns and writes their widths into the header's `<colgroup>`. In `auto` layout those widths
+ * are only a floor, and a `content` column's header cell carries `width: 1%` -- so each header cell shrank
+ * to its title and a `fill` column took the rest, out of line with the rows under it. Fixed layout makes
+ * the `<colgroup>` the header's widths. The body keeps the configured `layout.mode`; Ant Design writes
+ * that inline on both tables, so the header's is stated over it.
+ */
+.phi-table-control.phi-table-control--sticky-header [class~="ant-table-sticky-holder"] > table {
+  table-layout: fixed !important;
+}
+
 :is([data-phi-modal-body-content], [data-phi-drawer-body-content]) {
   --phi-table-sticky-top: 0px;
 }
@@ -591,6 +603,24 @@ h5.phi-typography, .phi-typography h5 {
 /* The list a compact Select opens writes as the field does; Ant Design gives every Select's list the body size. */
 .phi-select-popup--sm [class~="ant-select-item"] {
   font-size: var(--ant-font-size-sm);
+}
+
+/* --- Running text --------------------------------------------------------------------------------- */
+
+/*
+ * Markdown and HTML text breaks long words at their syllables, by the rules of the page's language
+ * (`<html lang>`), rather than leaving a ragged edge or running a word past its column. Code keeps its
+ * characters as written.
+ */
+.phi-markdown-text,
+.phi-html-widget__content {
+  hyphens: auto;
+  overflow-wrap: break-word;
+}
+
+.phi-markdown-text :is(pre, code),
+.phi-html-widget__content :is(pre, code) {
+  hyphens: manual;
 }
 
 /* --- Plain table --------------------------------------------------------------------------------- */

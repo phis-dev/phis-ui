@@ -24,5 +24,15 @@ export type PhiAnchorNavControlProps = {
  * page, the shape a table of contents takes. It stays where it is drawn and never pins itself.
  */
 export function PhiAnchorNavControl({ items, offsetTop = 0, style }: PhiAnchorNavControlProps) {
-  return <Anchor affix={false} offsetTop={offsetTop} items={[...items]} style={style} />;
+  return (
+    <Anchor
+      affix={false}
+      offsetTop={offsetTop}
+      items={[...items]}
+      className="phi-anchor-nav-control"
+      // As wide as its slot and no wider: Ant Design sizes the list to its longest title, which in a
+      // narrow sider ran past the edge. Within the slot a long title ends in an ellipsis, Ant Design's own.
+      style={{ maxWidth: "100%", minWidth: 0, ...style }}
+    />
+  );
 }

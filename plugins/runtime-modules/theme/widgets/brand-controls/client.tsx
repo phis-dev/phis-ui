@@ -2269,7 +2269,7 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                         </PhiTypographyControl>
                       )}
                     </PhiFlexControl>
-                    <PhiFlexControl align="center" gap={clientToken.paddingXXS} style={{ flexShrink: 0 }}>
+                    <PhiFlexControl vertical align="stretch" gap={clientToken.paddingXXS} style={{ flexShrink: 0 }}>
                       <PhiBrandBlockResetButton
                         disabled={brand.logo?.[mode] == null}
                         blockTitle={markSet.title}
@@ -2647,7 +2647,7 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
                     <PhiTypographyControl type="secondary">
                       {modeLabel}. One layer behind the whole Site, fixed to the viewport.
                     </PhiTypographyControl>
-                    <PhiFlexControl align="center" gap={clientToken.paddingXXS} style={{ flexShrink: 0 }}>
+                    <PhiFlexControl vertical align="stretch" gap={clientToken.paddingXXS} style={{ flexShrink: 0 }}>
                       <PhiBrandBlockResetButton
                         disabled={state.draft.root?.background?.[mode] == null}
                         blockTitle={composition.ground.title}
@@ -2684,7 +2684,7 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
                       {modeLabel}. Shared by the Header, Sider and Footer Regions. Content and Hero never
                       take it, and a Region that authors its own Background or Effect paints over it.
                     </PhiTypographyControl>
-                    <PhiFlexControl align="center" gap={clientToken.paddingXXS} style={{ flexShrink: 0 }}>
+                    <PhiFlexControl vertical align="stretch" gap={clientToken.paddingXXS} style={{ flexShrink: 0 }}>
                       <PhiBrandBlockResetButton
                         disabled={state.draft.root?.chrome?.[mode] == null}
                         blockTitle={composition.ground.title}

@@ -169,6 +169,9 @@ function renderColumn(
   );
 }
 
+/** How much faster the middle slot grows than each balanced side. */
+const PHI_THREE_COLUMN_MIDDLE_GROW = 2;
+
 export function PhiThreeColumnLayout({
   blockId,
   slots,
@@ -207,7 +210,14 @@ export function PhiThreeColumnLayout({
   const resolvedMiddleWidth = normalizePhiCssSize(middleWidth);
   const resolvedRightWidth = normalizePhiCssSize(rightWidth);
   const leftFlex = resolvedLeftWidth ? `0 0 ${resolvedLeftWidth}` : balancedSides ? "1 1 0" : "0 1 auto";
-  const middleFlex = resolvedMiddleWidth ? `0 0 ${resolvedMiddleWidth}` : "1 1 0";
+  /*
+   * The middle is the main thing and takes the larger share: with balanced sides it grows twice as fast as
+   * each side, so the sides stay equal to each other and the middle stays centred; without, it takes what
+   * the sides' content leaves.
+   */
+  const middleFlex = resolvedMiddleWidth
+    ? `0 0 ${resolvedMiddleWidth}`
+    : `${PHI_THREE_COLUMN_MIDDLE_GROW} 1 0`;
   const rightFlex = resolvedRightWidth ? `0 0 ${resolvedRightWidth}` : balancedSides ? "1 1 0" : "0 1 auto";
   const showInsertButton = resolvedRenderMode === "editor";
   const {

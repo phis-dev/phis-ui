@@ -12,7 +12,7 @@ import {
   type ReactNode,
 } from "react";
 
-import { PHI_COLOR, PHI_SPACE } from "../../theme/antd-css-var-contract";
+import { PHI_FONT_SIZE, PHI_COLOR, PHI_SPACE } from "../../theme/antd-css-var-contract";
 import { PHI_THEME_BORDER_WIDTH } from "../../helpers/border-widget-style";
 import {
   normalizePhiCssSize,
@@ -245,7 +245,8 @@ export function PhiFormWidgetFrame(
     <div className="phi-form-descriptor-actions">
       <div
         className="phi-form-cell phi-form-cell--control"
-        style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: PHI_SPACE.sm }}
+        // The ways out are asides to the form, taken now and then, so they write small (`sm`).
+        style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: PHI_SPACE.sm, fontSize: PHI_FONT_SIZE.sm }}
       >
         {links.map((link, index) => (
           <Fragment key={link.key}>

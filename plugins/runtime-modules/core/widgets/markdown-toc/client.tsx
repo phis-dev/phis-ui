@@ -21,13 +21,25 @@ type PhiMarkdownTocSignalState = {
   headings: PhiMarkdownTocHeading[];
 };
 
+/*
+ * Indented by depth below the shallowest heading listed, not below `h1`: a contents that starts at `h3`
+ * (a document whose headings moved down under a page title) would otherwise stand two steps off its line.
+ */
 function buildAnchorItems(headings: PhiMarkdownTocHeading[], indent: number) {
+  const topLevel = headings.reduce((lowest, heading) => Math.min(lowest, heading.level), Infinity);
   return headings.map((heading) => ({
     key: heading.id,
     href: `#${heading.id}`,
     title: (
-      <span style={{ display: "block", paddingInlineStart: (heading.level - 1) * indent }}>
-        {heading.text}
+      // One line, ending in an ellipsis where it is too long; the whole title then shows on hover, in the
+      // house tooltip, and only where something was cut.
+      <span style={{ display: "block", paddingInlineStart: (heading.level - topLevel) * indent, minWidth: 0 }}>
+        <PhiTypographyControl
+          ellipsis={{ tooltip: heading.text }}
+          style={{ display: "block", color: "inherit", fontSize: "inherit", lineHeight: "inherit" }}
+        >
+          {heading.text}
+        </PhiTypographyControl>
       </span>
     ),
   }));

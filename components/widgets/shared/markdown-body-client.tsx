@@ -209,7 +209,17 @@ function renderBlocks(
             items={block.items.map((itemBlocks) => ({
               content: (
                 <div style={{ display: "grid", gap: PHI_SPACE.xs, minWidth: 0 }}>
-                  {renderBlocks(itemBlocks, token, paragraphBlockStyle, headingBlockStyle, { ...lists, depth: lists.depth + 1 })}
+                  {/*
+                    * An entry's paragraphs carry no block spacing of their own: the list's gap stands between
+                    * entries and the grid's between an entry's paragraphs, so an entry reads like running text.
+                    */}
+                  {renderBlocks(
+                    itemBlocks,
+                    token,
+                    { ...paragraphBlockStyle, marginBlockStart: 0, marginBlockEnd: 0 },
+                    headingBlockStyle,
+                    { ...lists, depth: lists.depth + 1 },
+                  )}
                 </div>
               ),
             }))}
@@ -321,10 +331,14 @@ export function PhiMarkdownWidgetClient({ config }: PhiMarkdownWidgetClientProps
      * grid stays, so nothing changes for a text that never asked.
      */
     <div
-      className={config?.imageFloat ? `phi-markdown-body phi-markdown-body--float-${config.imageFloat}` : undefined}
+      className={config?.imageFloat
+        ? `phi-markdown-text phi-markdown-body phi-markdown-body--float-${config.imageFloat}`
+        : "phi-markdown-text"}
+      // The text's line height for everything in it, lists included: a list entry otherwise takes the
+      // browser's `normal`, and its marker centres on a line shorter than the one its words stand on.
       style={config?.imageFloat
-        ? { display: "flow-root", width: "100%", textAlign: config.textAlign, containerType: "inline-size" }
-        : { display: "grid", gap: 0, width: "100%", textAlign: config?.textAlign }}
+        ? { display: "flow-root", width: "100%", textAlign: config.textAlign, containerType: "inline-size", lineHeight: token.lineHeight }
+        : { display: "grid", gap: 0, width: "100%", textAlign: config?.textAlign, lineHeight: token.lineHeight }}
     >
       {renderBlocks(blocks, token, paragraphBlockStyle, headingBlockStyle, {
         style: resolvePhiBulletListStyle(config?.list),

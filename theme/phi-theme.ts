@@ -170,6 +170,8 @@ export function buildPhiComponentTokens(
     Table: { cellFontSize: fontSizeSM, cellFontSizeMD: fontSizeSM, cellFontSizeSM: fontSizeSM },
     // A Tree lists rows like a Table and writes like one: its titles, and the switcher's icon with them.
     Tree: { fontSize: fontSizeSM },
+    // A contents list beside a text is a list like a Tree's, and writes as small.
+    Anchor: { fontSize: fontSizeSM },
     Input: { inputFontSizeSM: fontSizeSM },
     InputNumber: { inputFontSizeSM: fontSizeSM },
     DatePicker: { inputFontSizeSM: fontSizeSM },
