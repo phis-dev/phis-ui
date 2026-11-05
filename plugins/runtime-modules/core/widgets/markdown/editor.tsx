@@ -107,7 +107,15 @@ export function PhiMarkdownWidgetEditor({
        * On the field's own text, not on `style`: `style` places the control as a whole, and with a clear
        * button the control is a wrapper around the textarea, which is where the text is.
        */
-      inputStyle={config?.textAlign ? { textAlign: config.textAlign } : undefined}
+      inputStyle={{
+        ...(config?.textAlign ? { textAlign: config.textAlign } : {}),
+        /*
+         * The text's own padding, stated, as a single-line field's would be: half of what the first line
+         * leaves of a control's height. Stated, the clear button finds the first line by it, as it does in
+         * every field that states one; left to Ant Design it hung at its own offset, half a line above.
+         */
+        paddingBlock: "calc((var(--ant-control-height) - 1lh) / 2)",
+      }}
       style={{
         /*
          * As wide as the slot: the Widget fills its inline axis (`fill-inline`), so the frame decides the

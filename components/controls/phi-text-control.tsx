@@ -1,6 +1,6 @@
 "use client";
 
-import { Input } from "antd";
+import { Input, theme } from "antd";
 import type {
   ChangeEvent,
   CSSProperties,
@@ -91,6 +91,55 @@ function resolveTextInputKind(inputType: PhiTextInputType | null | undefined): R
   }
 }
 
+/*
+ * The first line of a text area, where its clear button belongs.
+ *
+ * Ant Design hangs the button absolutely from the box's top at `paddingXS`, which is the middle of the
+ * first line only for a text area at its own padding. A field restyled to stand in its text -- no
+ * padding, the text's own type, as the inline editors are -- had the cross half a line below its line.
+ * Where the field states its own top padding, the button is given one line of the field from there,
+ * with the cross in its middle: `1lh` in the field's type. A field at Ant Design's padding keeps
+ * Ant Design's place.
+ */
+function readBlockStartPadding(style: CSSProperties | undefined): string | null {
+  const value = style?.paddingBlockStart ?? style?.paddingTop ?? style?.paddingBlock ?? style?.padding;
+  if (value == null) return null;
+  if (typeof value === "number") return `${value}px`;
+  // The first value of a shorthand, read past the spaces inside a `calc()`.
+  const text = String(value).trim();
+  let depth = 0;
+  for (let index = 0; index < text.length; index += 1) {
+    const character = text[index];
+    if (character === "(") depth += 1;
+    else if (character === ")") depth -= 1;
+    else if (depth === 0 && /\s/u.test(character ?? "")) return text.slice(0, index);
+  }
+  return text || null;
+}
+
+function resolveTextAreaClearStyle(
+  style: CSSProperties | undefined,
+  inputStyle: CSSProperties | undefined,
+): CSSProperties | null {
+  const fieldPadding = readBlockStartPadding(inputStyle);
+  if (fieldPadding == null) return null;
+  const boxPadding = readBlockStartPadding(style) ?? "0px";
+  const type: CSSProperties = inputStyle?.font != null
+    ? { font: inputStyle.font }
+    : {
+        fontSize: inputStyle?.fontSize ?? "inherit",
+        lineHeight: inputStyle?.lineHeight ?? "inherit",
+        fontFamily: inputStyle?.fontFamily ?? "inherit",
+      };
+  return {
+    ...type,
+    insetBlockStart: `calc(${boxPadding} + ${fieldPadding})`,
+    height: "1lh",
+    display: "flex",
+    alignItems: "center",
+  };
+}
+
 export function PhiTextControl({
   id,
   value,
@@ -128,10 +177,11 @@ export function PhiTextControl({
 }: PhiTextControlProps) {
   const { labelId, labelledBy } = usePhiControlLabel(label, ariaLabel);
   const resolvedKind = resolveTextInputKind(inputType);
+  const { token } = theme.useToken();
   const stableAllowClear = {
     disabled: !allowClear,
     clearIcon: (
-      <PhiIcon name="close" size="inherit" ariaLabel={clearLabel} />
+      <PhiIcon name="close" size={token.fontSizeIcon} ariaLabel={clearLabel} />
     ),
   };
   const commonProps = {
@@ -167,7 +217,10 @@ export function PhiTextControl({
     control = (
       <Input.TextArea
         {...commonProps}
-        styles={inputStyle ? { textarea: inputStyle } : undefined}
+        styles={{
+          ...(inputStyle ? { textarea: inputStyle } : {}),
+          ...(allowClear ? { clear: resolveTextAreaClearStyle(style, inputStyle) ?? undefined } : {}),
+        }}
         ref={textareaRef}
         allowClear={stableAllowClear}
         onClear={onClear}

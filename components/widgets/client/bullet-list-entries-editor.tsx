@@ -142,6 +142,12 @@ export function PhiBulletListEntriesEditor({
                 color: "inherit",
                 ...fieldStyle,
               }}
+              /*
+               * The text's own padding, stated: half of what the line leaves of the field's height, so the
+               * first line's middle is the marker's (`markerLineHeight` above). That is the padding the
+               * field had from Ant Design already; stated, the clear button can find the line too.
+               */
+              inputStyle={{ paddingBlock: "calc((var(--ant-control-height) - 1lh) / 2)" }}
             />
           ),
           states && onCommit ? (_entry, index) => stepState(index) : undefined,
