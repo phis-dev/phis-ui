@@ -559,7 +559,7 @@ export function PhiHtmlWidgetEditor({
   const initialHtmlRef = useRef(normalizedHtml);
   const latestHtmlRef = useRef(normalizedHtml);
   const resolvedFontFamily = resolvePhiWidgetFontFamily(fontFamily, fonts, token);
-  const resolvedFontSize = resolvePhiWidgetFontSize(fontSize, token, "lg");
+  const resolvedFontSize = resolvePhiWidgetFontSize(fontSize, token, "base");
   const editable = onChange != null;
 
   useEffect(() => {

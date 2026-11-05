@@ -149,6 +149,7 @@ export const PHI_THEME_TOKEN_KEYS = [
   "fontSizeHeading5",
   "fontWeightStrong",
   "lineHeight",
+  "lineHeightSM",
   "lineHeightLG",
   "lineHeightHeading1",
   "lineHeightHeading2",

@@ -103,6 +103,7 @@ export function PhiDescriptionWidgetEditor({
               borderRadius: 999,
               paddingInline: "var(--ant-padding-sm)",
               paddingBlock: "var(--ant-padding-xxs)",
+              fontSize: "var(--ant-font-size-sm)",
               fontWeight: 600,
               letterSpacing: "0.04em",
               color: "var(--ant-color-text-tertiary)",
@@ -166,8 +167,8 @@ export function PhiDescriptionWidgetEditor({
               style={{
                 ...EDITOR_TEXTAREA_STYLE,
                 color: "var(--ant-color-text-secondary)",
-                fontSize: "1.125rem",
-                lineHeight: 1.6,
+                fontSize: "var(--ant-font-size)",
+                lineHeight: 1.5,
               }}
             />
           </div>

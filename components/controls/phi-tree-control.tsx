@@ -193,7 +193,8 @@ function PhiTreeNodeTitle({
           />
         ) : <span>{title}</span>}
         {description != null && description !== "" ? (
-          <Typography.Text type="secondary" ellipsis>{String(description)}</Typography.Text>
+          // The second line writes as the title does: in the Tree's size, not Typography's own.
+          <Typography.Text type="secondary" ellipsis style={{ fontSize: "inherit" }}>{String(description)}</Typography.Text>
         ) : null}
       </div>
       {actions.length ? (

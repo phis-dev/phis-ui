@@ -66,7 +66,7 @@ export function PhiHeaderNavigationWidgetClient({
           minHeight: 0,
           overflow: "hidden",
           whiteSpace: "nowrap",
-          fontSize: token.fontSizeLG,
+          fontSize: token.fontSize,
         }}
       >
         {items.map((item) => (
@@ -105,7 +105,7 @@ export function PhiHeaderNavigationWidgetClient({
         menuTheme={menuTheme}
         selectedKeys={selectedKeys}
         items={menuItems}
-        fontSize={token.fontSizeLG}
+        fontSize={token.fontSize}
         style={{
           display: "flex",
           alignItems: "center",

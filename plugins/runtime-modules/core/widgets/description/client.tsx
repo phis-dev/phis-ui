@@ -16,7 +16,6 @@ import {
 } from "../../../../../components/widgets/shared/bullet-list-vocabulary";
 import { resolvePhiTextPlaceholders } from "../../../../../helpers/text-placeholders";
 const PHI_LINE_HEIGHT_BASE = 1.5;
-const PHI_LINE_HEIGHT_LG = 1.6;
 const PHI_FONT_WEIGHT_STRONG = 600;
 
 export type PhiDescriptionWidgetClientLabels = {
@@ -53,6 +52,7 @@ export function PhiDescriptionWidgetClient({
             borderRadius: 999,
             paddingInline: token.paddingSM,
             paddingBlock: token.paddingXXS,
+            fontSize: token.fontSizeSM,
             fontWeight: PHI_FONT_WEIGHT_STRONG,
             letterSpacing: "0.04em",
             color: token.colorTextTertiary,
@@ -76,8 +76,8 @@ export function PhiDescriptionWidgetClient({
               style={{
                 marginBottom: 0,
                 color: config?.tone ? undefined : token.colorTextSecondary,
-                fontSize: token.fontSizeLG,
-                lineHeight: PHI_LINE_HEIGHT_LG,
+                fontSize: token.fontSize,
+                lineHeight: PHI_LINE_HEIGHT_BASE,
               }}
             >
               {labels.description}

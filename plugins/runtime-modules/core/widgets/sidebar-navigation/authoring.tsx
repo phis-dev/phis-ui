@@ -65,7 +65,7 @@ export const PHI_SIDEBAR_NAVIGATION_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPl
     <PhiWidgetTypographyToolButton
       fontFamily={config.fontFamily}
       fontSize={config.fontSize}
-      defaultFontSize="lg"
+      defaultFontSize="base"
       ariaLabel="Sidebar navigation typography"
       onChange={({ fontFamily, fontSize }) => authoring.updateConfig?.({
         ...(fontFamily !== undefined ? { fontFamily: fontFamily ?? undefined } : {}),

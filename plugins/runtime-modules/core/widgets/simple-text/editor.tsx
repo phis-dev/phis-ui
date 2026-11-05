@@ -130,7 +130,7 @@ export function PhiSimpleTextWidgetTypographyButton({
     <PhiWidgetTypographyToolButton
       fontFamily={config?.fontFamily}
       fontSize={config?.fontSize}
-      defaultFontSize="lg"
+      defaultFontSize="base"
       ariaLabel={labels.text.typography}
       onChange={({ fontFamily, fontSize }) => onChange({
         ...(fontFamily !== undefined ? { fontFamily: fontFamily ?? undefined } : {}),
@@ -167,7 +167,7 @@ export function PhiSimpleTextWidgetEditor({
   const resolvedFontFamily = hasPhiSimpleTextMark(config, "code")
     ? token.fontFamilyCode
     : resolvePhiWidgetFontFamily(config?.fontFamily, fonts, token);
-  const resolvedFontSize = resolvePhiWidgetFontSize(config?.fontSize, token, "lg");
+  const resolvedFontSize = resolvePhiWidgetFontSize(config?.fontSize, token, "base");
 
   return (
     <PhiFlexControl

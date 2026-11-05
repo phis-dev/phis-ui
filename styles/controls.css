@@ -562,6 +562,37 @@ h5.phi-typography, .phi-typography h5 {
   align-self: center;
 }
 
+/*
+ * Its arrow on the switcher's own centre. antd sets the switcher's line height to the row height and lets
+ * the arrow stand on that line's baseline, which leaves a small icon above the middle of the box. The box
+ * keeps a compact control's height, so its hover ground is the square it was.
+ */
+.phi-tree-control.phi-tree-control [class~="ant-tree-switcher"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: var(--ant-control-height-sm);
+}
+
+/* --- Compact Select ------------------------------------------------------------------------------ */
+
+/*
+ * A compact control writes small: Input, InputNumber, DatePicker and Button take the scale's `sm` through
+ * their component tokens (theme/phi-theme.ts). Select has no such token -- it sizes its words by variables
+ * of its own and gives `-sm` the body's -- so its compact form is told here. Both variables move together:
+ * Select reckons its padding as (height - font height) / 2, so a smaller font size with the body's font
+ * height would leave the box short of `controlHeightSM` by the difference.
+ */
+[class~="ant-select"][class~="ant-select-sm"] {
+  --ant-select-font-size: var(--ant-font-size-sm);
+  --ant-select-font-height: calc(var(--ant-font-size-sm) * var(--ant-select-line-height));
+}
+
+/* The list a compact Select opens writes as the field does; Ant Design gives every Select's list the body size. */
+.phi-select-popup--sm [class~="ant-select-item"] {
+  font-size: var(--ant-font-size-sm);
+}
+
 /* --- Plain table --------------------------------------------------------------------------------- */
 
 /* Wide tables scroll inside their own box instead of widening the Page. */
@@ -570,11 +601,12 @@ h5.phi-typography, .phi-typography h5 {
   overflow-x: auto;
 }
 
+/* A table is read across, not down: its cells take the small size, as the Table Control's do. */
 .phi-plain-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--ant-font-size);
-  line-height: var(--ant-line-height);
+  font-size: var(--ant-font-size-sm);
+  line-height: var(--ant-line-height-sm);
   color: var(--ant-color-text);
 }
 

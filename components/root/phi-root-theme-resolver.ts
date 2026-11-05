@@ -118,6 +118,9 @@ export function resolvePhiRootTheme({
     resolvePhiShellRegionBackground(siteTheme?.shell, mode, { family: "header", region: "main" }) ??
     (mode === "dark" ? PHI_DEFAULT_DARK_NAV_BACKGROUND : undefined);
   const sharedComponentDefaults = buildPhiComponentTokens({
+    ...(typeof effectiveThemeTokens.fontSizeSM === "number" ? { fontSizeSM: effectiveThemeTokens.fontSizeSM } : {}),
+    ...(typeof effectiveThemeTokens.fontSize === "number" ? { fontSize: effectiveThemeTokens.fontSize } : {}),
+    ...(typeof effectiveThemeTokens.lineHeight === "number" ? { lineHeight: effectiveThemeTokens.lineHeight } : {}),
     layout: {
       ...(resolvedShellSiderBackground ? { siderBg: resolvedShellSiderBackground } : {}),
       ...(resolvedShellHeaderMainBackground ? { headerBg: resolvedShellHeaderMainBackground } : {}),

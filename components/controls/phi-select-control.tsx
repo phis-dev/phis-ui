@@ -162,6 +162,9 @@ export function PhiSelectControl<TValue extends string | number = string>({
   onChange,
 }: PhiSelectControlProps<TValue>) {
   const { labelId, labelledBy } = usePhiControlLabel(label, ariaLabel);
+  // A compact field opens a compact list: its options write small, as the field does (controls.css).
+  const popupClassName = [popupRootClassName, size === "small" ? "phi-select-popup--sm" : null]
+    .filter(Boolean).join(" ") || undefined;
   const resolvedOptions = groupPhiSelectOptions(separatePhiSelectOptions(options.map((option) => ({
     value: option.value,
     // rc-select synthesizes native HTML title attributes from primitive labels.
@@ -197,7 +200,7 @@ export function PhiSelectControl<TValue extends string | number = string>({
         variant={variant}
         popupMatchSelectWidth={popupMatchSelectWidth}
         getPopupContainer={getPopupContainer}
-        classNames={popupRootClassName ? { popup: { root: popupRootClassName } } : undefined}
+        classNames={popupClassName ? { popup: { root: popupClassName } } : undefined}
         styles={popupZIndex == null ? undefined : { popup: { root: { zIndex: popupZIndex } } }}
         filterOption={!filterOptionsLocally
           ? false
@@ -246,7 +249,7 @@ export function PhiSelectControl<TValue extends string | number = string>({
       variant={variant}
       popupMatchSelectWidth={popupMatchSelectWidth}
       getPopupContainer={getPopupContainer}
-      classNames={popupRootClassName ? { popup: { root: popupRootClassName } } : undefined}
+      classNames={popupClassName ? { popup: { root: popupClassName } } : undefined}
       styles={popupZIndex == null ? undefined : { popup: { root: { zIndex: popupZIndex } } }}
       showSearch
       optionFilterProp={["searchLabel", "value"]}

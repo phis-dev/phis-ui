@@ -26,6 +26,11 @@ export type PhiComponentTokenOptions = {
     overrides?: Record<string, unknown>;
   };
   menu?: Record<string, unknown>;
+  /** The Theme's small size (`fontSizeSM`), for the parts that take it; absent, the scale's `sm`. */
+  fontSizeSM?: number;
+  /** The Theme's body size and line height (`fontSize`, `lineHeight`); absent, the scale's `base`. */
+  fontSize?: number;
+  lineHeight?: number;
   overrides?: Record<string, Record<string, unknown>>;
 };
 
@@ -138,6 +143,9 @@ export function buildPhiThemeStructuralTokens(options: PhiThemeTokenOptions = {}
 export function buildPhiComponentTokens(
   options: PhiComponentTokenOptions = {},
 ): PhiComponentTokens {
+  const fontSizeSM = options.fontSizeSM ?? PHI_FONT_SIZES.sm;
+  const fontSize = options.fontSize ?? PHI_FONT_SIZES.base;
+  const lineHeight = options.lineHeight ?? lineHeightFor(PHI_FONT_SIZES.base);
   return {
     Layout: {
       headerHeight: PHI_LAYOUT.headerHeight,
@@ -154,6 +162,20 @@ export function buildPhiComponentTokens(
       itemMarginInline: PHI_SPACE.sm,
       ...options.menu,
     },
+    /*
+     * The parts that take the scale's small size rather than the body's. A table is read across, not down:
+     * its cells are small, as a plain table's are (controls.css). A compact control -- `size="small"` --
+     * is small in its words as well as its height; Ant Design gives it the body size unless told.
+     */
+    Table: { cellFontSize: fontSizeSM, cellFontSizeMD: fontSizeSM, cellFontSizeSM: fontSizeSM },
+    // A Tree lists rows like a Table and writes like one: its titles, and the switcher's icon with them.
+    Tree: { fontSize: fontSizeSM },
+    Input: { inputFontSizeSM: fontSizeSM },
+    InputNumber: { inputFontSizeSM: fontSizeSM },
+    DatePicker: { inputFontSizeSM: fontSizeSM },
+    Button: { contentFontSizeSM: fontSizeSM },
+    // An Overlay's title is a label over its body, in the body's size; Ant Design gives a Modal the h5's.
+    Modal: { titleFontSize: fontSize, titleLineHeight: lineHeight },
     ...options.overrides,
   };
 }

@@ -55,7 +55,7 @@ function usePhiSidebarMenuPresentation(
 
   return {
     fontFamily: resolvePhiWidgetFontFamily(config?.fontFamily, fonts, token),
-    fontSize: resolvePhiWidgetFontSize(config?.fontSize, token, "lg"),
+    fontSize: resolvePhiWidgetFontSize(config?.fontSize, token, "base"),
     collapsed: sider?.collapsed ?? false,
     collapsedWidth: sider?.collapsedWidth ?? 40,
   };

@@ -95,7 +95,7 @@ export function PhiSimpleTextWidgetClient({
   const resolvedFontFamily = styleValue.code
     ? token.fontFamilyCode
     : resolvePhiWidgetFontFamily(fontFamilyValue, fonts, token);
-  const resolvedFontSize = resolvePhiWidgetFontSize(fontSizeValue, token, "lg");
+  const resolvedFontSize = resolvePhiWidgetFontSize(fontSizeValue, token, "base");
   const receiver = createPhiRenderableBlockReceiver("widget", blockId);
 
   usePhiRenderableBlockSignalListener(receiver, (signal) => {

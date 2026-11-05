@@ -696,6 +696,11 @@ const antdComponentVariableAllowance = new Map([
   ["--ant-table-footer-bg", {
     reason: "Table's own token. The Table Control's stylesheet follows the component it is drawing.",
   }],
+  ...["--ant-select-font-size", "--ant-select-font-height", "--ant-select-line-height"].map((variable) => [variable, {
+    reason: "Select's own token. Select has no small font size of its own, so the compact Select is given "
+      + "the scale's `sm` through the variables it sizes its words and padding by (styles/controls.css, "
+      + "Compact Select).",
+  }]),
   ["--ant-cascader-dropdown-height", {
     reason: "Cascader's own token. The root stylesheet sizes the popup by what the component sizes itself by.",
   }],

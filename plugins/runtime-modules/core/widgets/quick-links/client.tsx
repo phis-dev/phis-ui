@@ -131,8 +131,8 @@ export function PhiQuickLinksWidgetClient({
             width: "100%",
             minWidth: 0,
             color: "inherit",
-            fontSize: token.fontSizeLG,
-            lineHeight: token.lineHeightLG,
+            fontSize: token.fontSize,
+            lineHeight: token.lineHeight,
           }}
         >
           {labels.title}

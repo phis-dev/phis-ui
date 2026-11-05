@@ -41,7 +41,7 @@ export function PhiHtmlWidgetClient({
     fonts,
     token,
   );
-  const resolvedFontSize = resolvePhiWidgetFontSize(fontSizeOverride ?? config?.fontSize, token, "lg");
+  const resolvedFontSize = resolvePhiWidgetFontSize(fontSizeOverride ?? config?.fontSize, token, "base");
   const receiver = createPhiRenderableBlockReceiver("widget", blockId);
 
   usePhiRenderableBlockSignalListener(receiver, (signal) => {

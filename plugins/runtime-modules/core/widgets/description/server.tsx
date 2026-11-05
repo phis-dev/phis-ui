@@ -115,6 +115,7 @@ export async function PhiDescriptionWidget({
             borderRadius: "9999px",
             paddingInline: PHI_SPACE.sm,
             paddingBlock: PHI_SPACE.xxs,
+            fontSize: PHI_FONT_SIZE.sm,
             fontWeight: 600,
             letterSpacing: "0.04em",
             color: PHI_COLOR.textTertiary,
@@ -149,8 +150,8 @@ export async function PhiDescriptionWidget({
                 margin: 0,
                 marginBottom: 0,
                 color: resolveDescriptionToneColor(config?.tone),
-                fontSize: PHI_FONT_SIZE.lg,
-                lineHeight: PHI_LINE_HEIGHT.lg,
+                fontSize: PHI_FONT_SIZE.base,
+                lineHeight: PHI_LINE_HEIGHT.base,
               }}
             >
               {description}

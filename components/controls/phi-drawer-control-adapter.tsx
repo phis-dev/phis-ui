@@ -8,7 +8,7 @@
 import { useSyncExternalStore } from "react";
 import { Drawer } from "antd";
 
-import { PHI_SPACE } from "../../theme/antd-css-var-contract";
+import { PHI_FONT_SIZE, PHI_SPACE } from "../../theme/antd-css-var-contract";
 import {
   PHI_OVERLAY_DEFAULT_MASK,
   resolvePhiOverlayDismissSource,
@@ -107,7 +107,8 @@ export function PhiDrawerControlAdapter({
           padding: 0,
           background: "transparent",
         },
-        title: { width: "100%", minWidth: 0 },
+        // The title in the body's size, as a Modal's is (theme/phi-theme.ts); Ant Design sets a Drawer's at `lg`.
+        title: { width: "100%", minWidth: 0, fontSize: PHI_FONT_SIZE.base, lineHeight: "var(--ant-line-height)" },
         close: {
           position: "absolute",
           top: "50%",
