@@ -2,7 +2,7 @@
 
 import type { CSSProperties, KeyboardEvent, ReactNode } from "react";
 
-import { usePhiConfig } from "../../../components/root/phi-config-provider";
+import { usePhiPageModeToken } from "../../../components/root/phi-config-provider";
 import { PhiButtonControl } from "../../../components/controls/phi-button-control";
 
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
@@ -38,7 +38,8 @@ export function PhiEditScaffoldDrawer({
   chrome,
   style,
 }: PhiEditScaffoldDrawerProps) {
-  const { token } = usePhiConfig();
+  // The editor's colours, not a tone's: a scaffold inside a toned Surface marks it in the page's mode.
+  const token = usePhiPageModeToken();
   const selected = usePhiDeveloperBuilderStateValue((state) =>
       state.selectedRootRegionKey === regionKey &&
       state.nodeId === nodeId &&

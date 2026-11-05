@@ -1,7 +1,8 @@
 "use client";
 
 import { cloneElement, isValidElement, Suspense, useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactElement, type ReactNode } from "react";
-import { usePhiConfig } from "../../../components/root/phi-config-provider";
+import { usePhiPageModeToken } from "../../../components/root/phi-config-provider";
+import { usePhiPageModeTone } from "../../../components/surface/phi-surface-tone";
 
 import { PhiEditScaffoldDrawer } from "./edit-scaffold-drawer";
 import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode, PhiResolvedCmsRenderableTree } from "../../../types/cms";
@@ -424,6 +425,8 @@ function PhiEffectsPreviewButton({
   onRun: () => void;
 }) {
   const previewLabel = formatEffectsPreviewLabel(config, blockKind);
+  // In the editor's mode, not a tone's: the button is the Builder's, whatever mode the Widget is drawn in.
+  const pageModeTone = usePhiPageModeTone();
 
   return (
     /*
@@ -439,7 +442,7 @@ function PhiEffectsPreviewButton({
       }}
       onClick={(event) => event.stopPropagation()}
     >
-      <PhiButtonControl
+      {pageModeTone.wrap(<PhiButtonControl
         className="phi-layout-affordance phi-layout-affordance--effects-preview"
         ariaLabel={previewLabel}
         tooltip={previewLabel}
@@ -458,7 +461,7 @@ function PhiEffectsPreviewButton({
           width: "var(--ant-control-height)",
           "--phi-layout-affordance-size": "var(--ant-control-height)",
         } as CSSProperties & Record<`--${string}`, string>}
-      />
+      />)}
     </span>
   );
 }
@@ -571,7 +574,8 @@ function PhiWidgetEffectsPreviewFrame({
   style?: CSSProperties;
   children: ReactNode;
 }) {
-  const { token } = usePhiConfig();
+  // The editor's colours, not a tone's: a Widget inside a toned Surface is marked in the page's mode.
+  const token = usePhiPageModeToken();
   const selected = usePhiDeveloperBuilderStateValue((state) =>
       blockId != null &&
       regionKey != null &&

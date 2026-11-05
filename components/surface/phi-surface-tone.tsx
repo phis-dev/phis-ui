@@ -52,3 +52,28 @@ export function PhiSurfaceTone({
     </Suspense>
   );
 }
+
+/**
+ * The page's own mode around something that belongs to the page's tools rather than to its content.
+ *
+ * The Builder draws its scaffolds -- tool bars, drag handles, the effects preview -- inside the Surfaces
+ * they edit, and a toned Surface would turn them with its content. This turns them back: inside a tone
+ * scope it mounts the page's mode again (its Ant Design components take it by themselves), outside one it
+ * renders the children as they are. `className` is the class an element of the caller's that reads the
+ * Theme's variables itself must carry, so they resolve in the page's mode there too; empty outside a tone.
+ */
+export function usePhiPageModeTone(): {
+  className: string | undefined;
+  wrap: (children: ReactNode) => ReactNode;
+} {
+  const { mode } = usePhiConfig();
+  const source = usePhiThemeToneSource();
+  const pageMode = source?.pageMode ?? mode;
+  if (pageMode === mode) {
+    return { className: undefined, wrap: (children) => children };
+  }
+  return {
+    className: resolvePhiSurfaceToneClassName(pageMode),
+    wrap: (children) => <PhiSurfaceTone tone={pageMode}>{children}</PhiSurfaceTone>,
+  };
+}

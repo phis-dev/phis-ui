@@ -55,6 +55,11 @@ export type PhiConfig = {
    * the reader rather than quietly working until the day the Theme is computed by something else.
    */
   token: PhiThemeTokens;
+  /**
+   * The page's Theme where `token` is a Surface tone's (`PhiNestedModeConfigProvider`): set only inside
+   * a tone scope, so outside one the page's Theme is `token` itself. Read through `usePhiPageModeToken`.
+   */
+  pageToken?: PhiThemeTokens;
 };
 
 export type PhiFontCatalogueFamily = { family: string; cssVariable: string };
@@ -217,6 +222,18 @@ export function usePhiConfig() {
   return config;
 }
 
+/**
+ * The Theme of the page's own mode, wherever this is asked -- inside a Surface tone too.
+ *
+ * What draws the page's tools rather than its content takes its colours from here: the Builder's scaffolds
+ * mark Layouts and Widgets in the editor's mode, and a Region turned inverse leaves them as they were
+ * instead of turning them with the content they stand around.
+ */
+export function usePhiPageModeToken(): PhiThemeTokens {
+  const config = usePhiConfig();
+  return config.pageToken ?? config.token;
+}
+
 /** The locale the root adapter configures Ant Design with, for whoever hands it on. */
 export type PhiConfigLocale = ConfigProviderProps["locale"];
 
@@ -272,7 +289,7 @@ function PhiNestedModeConfigValue({
   const outer = usePhiConfig();
   const { token } = antdTheme.useToken();
   const value = useMemo<PhiConfig>(
-    () => ({ ...outer, mode, customColors, token }),
+    () => ({ ...outer, mode, customColors, token, pageToken: outer.pageToken ?? outer.token }),
     [customColors, mode, outer, token],
   );
   return <PhiConfigContext.Provider value={value}>{children}</PhiConfigContext.Provider>;

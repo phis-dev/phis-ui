@@ -1,7 +1,8 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
-import { usePhiConfig } from "../../../../components/root/phi-config-provider";
+import { usePhiPageModeToken } from "../../../../components/root/phi-config-provider";
+import { usePhiPageModeTone } from "../../../../components/surface/phi-surface-tone";
 
 import {
   type PhiBuilderInspectableNodeKind,
@@ -42,9 +43,11 @@ export function PhiLayoutPlusButtonOverlay({
   dropTarget,
   children,
 }: PhiLayoutPlusButtonOverlayProps) {
+  // In the editor's mode, not a tone's: the insert button stays the Builder's inside a toned Surface.
+  const pageModeTone = usePhiPageModeTone();
   return (
     <PhiLayoutAnchoredOverlay anchor={anchor} slotRole={slotRole} inset={inset}>
-      {children ?? (
+      {pageModeTone.wrap(children ?? (
         <PhiPlusButtonWidget
           slotIndex={slotIndex}
           label={label}
@@ -52,7 +55,7 @@ export function PhiLayoutPlusButtonOverlay({
           onInsert={onInsert}
           dropTarget={dropTarget}
         />
-      )}
+      ))}
     </PhiLayoutAnchoredOverlay>
   );
 }
@@ -90,7 +93,9 @@ export function PhiLayoutDeleteButtonOverlay({
   leading,
   children,
 }: PhiLayoutDeleteButtonOverlayProps) {
-  const { token } = usePhiConfig();
+  // The editor's colours, not a tone's: a toolbar inside a toned Surface stays in the page's mode.
+  const token = usePhiPageModeToken();
+  const pageModeTone = usePhiPageModeTone();
   const resolvedTop = top ?? (placement ? "auto" : -10);
   const resolvedRight = right ?? (placement === "bottom-left" ? "auto" : 0);
   const resolvedBottom = bottom ?? (placement ? -10 : "auto");
@@ -127,7 +132,7 @@ export function PhiLayoutDeleteButtonOverlay({
 
   return (
     <div
-      className="phi-layout-scaffold-delete"
+      className={pageModeTone.className ? `phi-layout-scaffold-delete ${pageModeTone.className}` : "phi-layout-scaffold-delete"}
       data-phi-builder-scaffold-action="true"
       data-phi-builder-node-kind={nodeKind ?? undefined}
       onClick={(event) => event.stopPropagation()}
@@ -157,7 +162,7 @@ export function PhiLayoutDeleteButtonOverlay({
         "--phi-layout-scaffold-delete-shadow": "var(--ant-box-shadow-tertiary)",
       } as CSSProperties & Record<`--${string}`, string>}
     >
-      {children ?? (
+      {pageModeTone.wrap(children ?? (
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           {leading}
           {onOpenInspector ? (
@@ -165,7 +170,7 @@ export function PhiLayoutDeleteButtonOverlay({
           ) : null}
           <PhiLayoutDeleteButtonWidget onDelete={onDelete} ariaLabel={ariaLabel} />
         </div>
-      )}
+      ))}
     </div>
   );
 }
