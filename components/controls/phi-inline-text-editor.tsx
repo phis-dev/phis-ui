@@ -146,7 +146,12 @@ export function PhiInlineTextEditor({
          * order this field is built on; it is also the width an empty field keeps.
          */
         cols={fitContent ? 1 : undefined}
-        style={fitContent ? { width: "100%", overflow: "hidden" } : { width: "100%" }}
+        /*
+         * `overflowX` and `overflowY`, not the `overflow` shorthand: while it measures, the text area's
+         * `autoSize` sets both longhands and takes them away again, and React warns when a longhand
+         * leaves beside its shorthand -- the shorthand would not be written back.
+         */
+        style={fitContent ? { width: "100%", overflowX: "hidden", overflowY: "hidden" } : { width: "100%" }}
         inputStyle={inputStyle}
         onChange={(nextValue) => onChange(nextValue ?? "")}
         onFocus={onFocus}
