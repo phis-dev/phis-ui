@@ -493,8 +493,13 @@
  * COLOUR the page already computed from them, not the variable -- so the box states its text colour again
  * and its content reads it from the variables in force there. When the content is already in that mode,
  * the class has no variables of its own and this resolves to what the page has anyway.
+ *
+ * The box only, not an Ant Design component inside it: the tone scope keys its variables to the same
+ * class, and Ant Design puts that key on every component it draws there. Stated on those too, the colour
+ * stopped inheritance at each of them -- a Quick Link's words kept the text colour while the link turned
+ * to its hover colour around them.
  */
-:where(.phi-tone-light, .phi-tone-dark, .phi-tone-inverse) {
+:where(.phi-tone-light, .phi-tone-dark, .phi-tone-inverse):where(:not([class^="ant-"], [class*=" ant-"])) {
   color: var(--ant-color-text);
 }
 
