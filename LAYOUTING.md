@@ -170,6 +170,41 @@ on a page is the same mode. `inherit`, the default, is never stored.
   record's, the Chrome Overlay, a pane frosting either -- does not show. A Region's Shell ground and a
   Layout's own chrome that is painted from JavaScript tokens otherwise read the page's mode.
 
+#### The Theme's ground
+
+A Background's Base may be `theme` (`PhiBackgroundBaseTheme`, labelled "Theme" in the Background
+control, whose Base kind is a Select -- with Theme there are more kinds than a segment row holds -- and
+which asks nothing further for it): the box shows the Theme's Chrome Overlay -- its colour or picture and its glass pane, configured
+per mode in the Theme workspace (`root.chrome[mode]`, SHELL.md "Root Background and Shell Backdrop
+Layers") -- instead of a ground of its own. It is a value of the Base's kind, offered wherever a Surface
+Background is chosen: a Region, a Layout, a Widget's Surface. It carries nothing else; an Overlay, Filter
+or motion stored beside it resolves away, because the Theme's Overlay brings its own.
+
+- It is a stated ground (`phiBackgroundWidgetConfigPaintsGround`), so a tone does not paint
+  `PHI_SURFACE_TONE_GROUND` beneath it.
+- It paints the Shell Chrome Overlay's custom properties (`PHI_BACKGROUND_THEME_STYLE`), fixed to the
+  viewport like the Chrome Regions, never on a ground layer. Without a tone that is the Overlay of the
+  page's mode. With one, the tone's class publishes the Overlay of the tone's mode again
+  (`styles/shell.css`), from the per-mode `--phi-shell-chrome-*-light` / `-dark` variables the Root
+  Layout carries: `light` and `dark` take their mode, `inverse` the other mode than the page's, read off
+  the Root Layout's `data-phi-theme-mode` the way the tone scope reads it. So an `inverse` Footer is the
+  dark Overlay on a light page and the light one on a dark page, and turns with the mode switch without a
+  re-render. An untoned box inside a toned one reads its tone's Overlay too.
+- A mode without an Overlay publishes the Overlay's neutral values: the box paints nothing, which is what
+  that mode's Chrome shows.
+- Outside the Root Layout -- inside a Modal or Drawer, which are portalled to `<body>` -- no Overlay is
+  published, and the box falls back to the container ground of its mode (`PHI_SURFACE_TONE_GROUND`): the
+  tone's ground under a tone, the page's container ground without one. An Overlay's own container takes
+  no tone, so a `theme` Background there is the container ground.
+- A Chrome Region (Header, Sider, Footer bands) without a tone takes it exactly as a Region without a
+  Background takes the Overlay -- the `data-phi-shell-chrome` marker, so where the Shell draws its panes
+  the pane behind it shows through rather than a second frosting -- but over any ground the Shell record
+  sets for it. A toned Chrome Region, and every other Region, paints it itself. The family's pane, which
+  carries the page's mode, then paints nothing, so the tone's glass is not laid over the page's (SHELL.md
+  "Root Background and Shell Backdrop Layers").
+- The Theme Root Background and the Chrome Overlay itself do not offer it
+  (`PHI_ROOT_BACKGROUND_BASE_KINDS`, `PHI_SHELL_CHROME_OVERLAY_BASE_KINDS`); a stored one resolves to `none`.
+
 ### Where a Surface's outline comes from
 
 `borderSource` is `none`, `theme`, or `custom` (`types/cms-border-source.ts`).

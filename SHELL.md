@@ -48,7 +48,7 @@ The shell implementation must stay plain HTML/CSS at the container level.
 
 - `sider_left` is not an Ant Design `Layout.Sider` contract.
 - `sider_left` is a normal shell block / `aside` whose width, collapsed width, sticky behavior, and background are driven by `--phi-shell-*` variables and shell state.
-- A Sider that sticks (`Sticky` or `FullHeight`) stands under the Header's measured bottom, `--phi-shell-sticky-top` (`usePhiShellStickyTop`, run by the Region renderer for such a Sider), with its configured `offsetTop` added; `FullHeight` is the viewport below that same line.
+- A `FullHeight` Sider is a Shell column from the viewport's top -- beside the Header, not below it -- and stands at its configured `offsetTop`, as tall as the viewport below that offset. A `Sticky` Sider without `FullHeight` stands in the page below the Header: it sticks under the Header's measured bottom, `--phi-shell-sticky-top` (`usePhiShellStickyTop`, run by the Region renderer for such a Sider), with its `offsetTop` added, and is at most as tall as the viewport below that line, scrolling inside.
 - Ant Design may still be used inside inner widgets such as navigation or controls, but it must not own the shell container geometry contract.
 - Collapse state belongs to the shell contract, not to a UI-library wrapper.
 
@@ -215,7 +215,11 @@ The site-owned Shell Chrome Overlay is its counterpart in front of the scrolling
 - is not painted by a Region that authored any chrome of its own. Every carrier counts: the Background of
   the Region's Surface, the ground the Shell record sets, a glass pane the Region's Surface asks for, and a
   Surface `tone` other than `inherit`, whose ground the Region then paints (LAYOUTING.md "Surface tone").
-  Such a Region paints over the Theme, which is how a Site gives one Region its own chrome
+  Such a Region paints over the Theme, which is how a Site gives one Region its own chrome. A Background
+  whose Base is `theme` states the overlay instead: an untoned Chrome Region then takes it over any Shell
+  record ground, and a toned one paints the overlay of its tone's mode itself (LAYOUTING.md "The Theme's
+  ground"). The tone classes republish the `--phi-shell-chrome-*` properties for their mode inside the
+  Root Layout for that; the Root Layout's own values, which the Regions and panes read, are untouched
 - is never locked out by a shipped Area shell. Area shell presets -- Public, App, Accounting, Admin,
   Editor, and the Builder alike -- author no Surface or colour mode on their
   Regions, and no fixed Region height: those come from the Site's Theme and `site.theme.shell`. A preset
@@ -257,6 +261,16 @@ grid:
   than to a guess
 - the embedded topology, where the Header is an L: `header_bottom` sits beside the Sider, and a grid item
   covers a rectangle, so it takes two panes with the seam on the row the Sider starts in
+
+A family with a toned band (a Surface `tone` other than `inherit`) is the one case a pane gives way. That
+band paints its own ground in its tone's mode -- the tone's container ground, a stated Background, or the
+Overlay of the tone's mode -- while the pane keeps the page's mode, so a ground that lets anything through
+showed the page-mode glass under the tone's. A pane cannot be cut around one band without knowing its
+height, so the family's pane stops painting (`styles/shell.css` sets its `--phi-shell-chrome-*` to the
+neutral values on the pane itself) and the family's untoned bands that carry the `data-phi-shell-chrome`
+marker paint the overlay themselves, band by band, as they do without panes. The pane's geometry, Shadow
+and stacking stay. In the embedded topology the Header's two panes decide separately. A family without a
+toned band is drawn exactly as above.
 
 The Page is isolated so that nothing inside it can stack over the frame, whatever a Page or a Builder
 canvas puts there.

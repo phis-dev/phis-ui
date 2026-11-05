@@ -180,19 +180,22 @@ function resolvePhiCmsRegionShellFamily(regionKey: PhiCmsRegionKey): PhiCmsRegio
 }
 
 /**
- * Whether a Region is a Sider that sticks, and so stands under the Header's measured bottom.
+ * Whether a Region is a Sider that sticks under the Header, and so needs the Header's measured bottom.
  *
- * `Sticky` and `FullHeight` both stick a Sider. Where it stands is not its configured `offsetTop` alone:
- * the Header's bands stick or slide away by their own config, so the Sider stands under the line the
- * Shell publishes as `--phi-shell-sticky-top` (`usePhiShellStickyTop`), with its offset added. The Region
- * renderer runs that measurement for such a Sider, which is why this is asked before the Region renders.
+ * Two kinds of Sider stick, and only one of them under the Header. A `FullHeight` Sider is a column of the
+ * Shell from the viewport's top to its bottom -- an Admin or Builder navigation beside the Header, not
+ * below it -- and stands at its configured `offsetTop`. A `Sticky` Sider without it stands in the page
+ * below the Header -- a contents beside a text -- and sticks under the line the Shell publishes as
+ * `--phi-shell-sticky-top` (`usePhiShellStickyTop`), with its offset added. The Region renderer runs that
+ * measurement for such a Sider, which is why this is asked before the Region renders.
  */
 export function phiCmsRegionSiderSticks(
   regionKey: PhiCmsRegionKey,
   config: Pick<PhiCmsRegionConfig, "flags"> | null | undefined,
 ): boolean {
   return resolvePhiCmsRegionShellFamily(regionKey) === "sider"
-    && (hasPhiFlag(config?.flags, PhiCmsFlags.Sticky) || hasPhiFlag(config?.flags, PhiCmsFlags.FullHeight));
+    && hasPhiFlag(config?.flags, PhiCmsFlags.Sticky)
+    && !hasPhiFlag(config?.flags, PhiCmsFlags.FullHeight);
 }
 
 /** The line a stuck Sider stands at: under the Header as measured, plus its own offset. */
@@ -296,21 +299,24 @@ export function resolvePhiCmsRegionShell({
    * it is unset and the offset is the one configured.
    */
   /*
-   * A stuck Sider stands under the Header as it is measured right now (`phiCmsRegionSiderSticks`), and
-   * its full height is what is left of the viewport below that same line.
+   * A full-height Sider is a Shell column from the viewport's top and stands at its own offset; a sticky
+   * one stands under the Header as it is measured right now (`phiCmsRegionSiderSticks`) and is at most as
+   * tall as what is left of the viewport below that line.
    */
+  const siderUnderHeader = isSider && sticky && !fullHeight;
   const stuckTop = !stuck
     ? undefined
     : isHeader && regionKey !== "header_top"
       ? `calc(${topCss} + var(--phi-shell-header-top-stack, 0px))`
-      : isSider
+      : siderUnderHeader
         ? resolvePhiCmsRegionSiderStuckTop(topCss)
         : top;
   const blockSize = geometry.block.size?.css;
   const fullHeightSize =
     fullHeight && !blockSize
-      ? `calc(100dvh - ${resolvePhiCmsRegionSiderStuckTop(topCss)})`
+      ? `calc(100dvh - ${topCss})`
       : blockSize;
+  const underHeaderMaxSize = siderUnderHeader ? `calc(100dvh - ${resolvePhiCmsRegionSiderStuckTop(topCss)})` : undefined;
   const zIndex = config.zIndex ?? resolvePhiShellRegionZIndex(regionKey, hasPhiFlag(config.flags, PhiCmsFlags.FullHeight));
 
   /*
@@ -331,6 +337,17 @@ export function resolvePhiCmsRegionShell({
    */
   const toneGround = phiSurfaceTakesToneGround(surface?.tone, backgroundConfig != null);
   /*
+   * The Theme's Overlay as the ground (`base.kind: "theme"`). Without a tone a Chrome Region takes it the
+   * way a Region without a Background does -- the `data-phi-shell-chrome` marker, so that where the Shell
+   * draws its panes the pane behind shows through instead of a second frosting -- but over any ground the
+   * Shell record sets. Every other Region, and a toned one, paints it itself, which under a tone's class
+   * is the Overlay of the tone's mode.
+   */
+  const themeGround = backgroundConfig?.base.kind === "theme";
+  const themeGroundIsShellChrome = themeGround
+    && resolvePhiSurfaceToneClassName(surface?.tone) == null
+    && phiRegionUsesShellChromeOverlay({ regionKey, backgroundConfig, grounds: [] });
+  /*
    * A pane on a Region without a ground of its own frosts the Shell's ground for this Region -- the
    * Theme's record, or the family's fallback -- which is what glass on a bare Header has always meant.
    * A Region that paints its own ground carries its pane inside that Background, as every Surface does;
@@ -349,7 +366,9 @@ export function resolvePhiCmsRegionShell({
       motion: null,
     }
     : null;
-  const backgroundStyle: CSSProperties | null = toneGround
+  const backgroundStyle: CSSProperties | null = themeGroundIsShellChrome
+    ? null
+    : toneGround
     ? {
       ...(surfaceBackground ? resolvePhiBackgroundWidgetStyle(surfaceBackground) : {}),
       backgroundColor: PHI_SURFACE_TONE_GROUND,
@@ -379,12 +398,14 @@ export function resolvePhiCmsRegionShell({
    * the stored one: the Builder persists an empty Background record for every Region an author has ever
    * opened, and the raw value is never null for those.
    */
-  const usesShellChromeOverlay = !toneGround && phiRegionUsesShellChromeOverlay({
-    regionKey,
-    backgroundConfig,
-    pane: shellPane,
-    grounds: [chrome.light.background, chrome.dark.background],
-  });
+  const usesShellChromeOverlay = themeGround
+    ? themeGroundIsShellChrome
+    : !toneGround && phiRegionUsesShellChromeOverlay({
+      regionKey,
+      backgroundConfig,
+      pane: shellPane,
+      grounds: [chrome.light.background, chrome.dark.background],
+    });
 
   /*
    * The ground. Published, it is the pair of custom properties `shell.css` paints from, because it may
@@ -399,14 +420,18 @@ export function resolvePhiCmsRegionShell({
    * drop one of those from an element whose `background` shorthand is still set.
    */
   const liveChrome = paint.kind === "live" ? chrome[paint.mode] : null;
-  // A toned Region publishes no Shell ground: `shell.css` would paint a gradient one beneath its own.
+  /*
+   * A toned Region publishes no Shell ground: `shell.css` would paint a gradient one beneath its own. Nor
+   * does one whose ground is the Theme's: the Overlay stands where the Shell record's ground would.
+   */
+  const withoutShellGround = toneGround || themeGround;
   const modeStyle: PhiCmsRegionShellModeStyle = liveChrome
     ? {}
     : {
-      ...(chrome.light.background == null || toneGround
+      ...(chrome.light.background == null || withoutShellGround
         ? {}
         : { "--phi-region-background-light": String(chrome.light.background) }),
-      ...(chrome.dark.background == null || toneGround
+      ...(chrome.dark.background == null || withoutShellGround
         ? {}
         : { "--phi-region-background-dark": String(chrome.dark.background) }),
       "--phi-region-color-light": String(chrome.light.color),
@@ -417,7 +442,7 @@ export function resolvePhiCmsRegionShell({
     liveChrome || paintedChrome.effectStyle?.backgroundColor == null
       ? paintedChrome.effectStyle
       : { ...paintedChrome.effectStyle, backgroundColor: "var(--phi-region-background)" };
-  const groundStyle = liveChrome && backgroundStyle == null
+  const groundStyle = liveChrome && backgroundStyle == null && !themeGround
     ? resolvePhiShellRegionGroundStyle(liveChrome.background)
     : {};
   const typography = resolvePhiShellRegionTypography(regionKey, shellTheme, {
@@ -458,11 +483,11 @@ export function resolvePhiCmsRegionShell({
       maxWidth: geometry.inline.max?.css ?? siderWidth,
       height: fullHeightSize,
       minHeight: geometry.block.min?.css ?? (fullHeight ? fullHeightSize : undefined),
-      maxHeight: geometry.block.max?.css,
+      maxHeight: geometry.block.max?.css ?? underHeaderMaxSize,
       alignSelf: fullHeight ? "stretch" : "start",
       flex: fullHeight ? "1 1 auto" : undefined,
       overflowX: "visible",
-      overflowY: fullHeight ? "auto" : "visible",
+      overflowY: fullHeight || siderUnderHeader ? "auto" : "visible",
     }
     : {
       width: geometry.inline.size?.css ?? "100%",

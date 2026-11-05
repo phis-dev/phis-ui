@@ -294,6 +294,33 @@
   --phi-shell-chrome-filter: var(--phi-shell-chrome-filter-dark, none);
 }
 
+/* The Overlay in a tone's mode (LAYOUTING.md "Surface tone"), for a box whose Background is the Theme's
+   (`PHI_BACKGROUND_THEME_STYLE`). The tone's class publishes the Overlay of the mode it asks for, so the
+   box -- and an untoned box inside it -- reads that mode's variables; `inverse` is read against the page's
+   mode, as the tone scope reads it, and turns with the mode switch. Inside the Root Layout only: a Modal
+   or Drawer portalled to `<body>` has no Overlay published, and its box falls back to the container
+   ground of the tone's mode. The Root Layout's own values above stay what the Chrome Regions and panes
+   read; those are computed on the Root Layout and inherited, so a tone below cannot touch them. */
+:where([data-phi-root-layout="true"]) :where(.phi-tone-light),
+:where([data-phi-root-layout="true"][data-phi-theme-mode="dark"]) :where(.phi-tone-inverse) {
+  --phi-shell-chrome-image: var(--phi-shell-chrome-image-light, none);
+  --phi-shell-chrome-size: var(--phi-shell-chrome-size-light, auto);
+  --phi-shell-chrome-position: var(--phi-shell-chrome-position-light, 0 0);
+  --phi-shell-chrome-repeat: var(--phi-shell-chrome-repeat-light, repeat);
+  --phi-shell-chrome-color: var(--phi-shell-chrome-color-light, transparent);
+  --phi-shell-chrome-filter: var(--phi-shell-chrome-filter-light, none);
+}
+
+:where([data-phi-root-layout="true"]) :where(.phi-tone-dark),
+:where([data-phi-root-layout="true"]:not([data-phi-theme-mode="dark"])) :where(.phi-tone-inverse) {
+  --phi-shell-chrome-image: var(--phi-shell-chrome-image-dark, none);
+  --phi-shell-chrome-size: var(--phi-shell-chrome-size-dark, auto);
+  --phi-shell-chrome-position: var(--phi-shell-chrome-position-dark, 0 0);
+  --phi-shell-chrome-repeat: var(--phi-shell-chrome-repeat-dark, repeat);
+  --phi-shell-chrome-color: var(--phi-shell-chrome-color-dark, transparent);
+  --phi-shell-chrome-filter: var(--phi-shell-chrome-filter-dark, none);
+}
+
 /* A Chrome Region carries the marker only while it authored no ground of its own, so there is nothing
    left to fall back through here: the shared colour is the ground. It needs no light and dark pair
    either, because the pair above has already resolved the mode. This rule follows the two that set the
@@ -439,6 +466,41 @@
   --phi-region-chrome-color: transparent;
   --phi-region-chrome-filter: none;
   --phi-region-chrome-attachment: scroll;
+}
+
+/*
+ * A toned band takes no paint from its family's pane (LAYOUTING.md "Surface tone").
+ *
+ * A toned Chrome Region paints its own ground -- the tone's container ground, a stated Background, or
+ * the Overlay of its tone's mode -- and never carries the marker. The pane behind it keeps the page's
+ * mode, so where that ground lets anything through, the page-mode glass showed under the tone's. The
+ * pane cannot be cut around one band without knowing its height, so it stops painting for the whole
+ * family and the family's marker bands paint the Overlay themselves, as they do without panes. Its
+ * geometry and Shadow stay: the frame's edge is where it was, and the Header still stands over the
+ * Sider. The pane's paint is inline and reads these properties on the pane itself, so they are set
+ * there. Untoned families match nothing here.
+ */
+.shell-sider-full:has(> :is([data-phi-region-key="header_top"], [data-phi-region-key="header_main"], [data-phi-region-key="header_bottom"]):is(.phi-tone-light, .phi-tone-dark, .phi-tone-inverse)) > .phi-shell-chrome-pane--header,
+.shell-sider-embedded:has(> :is([data-phi-region-key="header_top"], [data-phi-region-key="header_main"]):is(.phi-tone-light, .phi-tone-dark, .phi-tone-inverse)) > .phi-shell-chrome-pane--header,
+.shell-sider-embedded:has(> [data-phi-region-key="header_bottom"]:is(.phi-tone-light, .phi-tone-dark, .phi-tone-inverse)) > .phi-shell-chrome-pane--header-bottom,
+[data-phi-shell-chrome-panes="true"]:has(> [data-phi-region-key="sider_left"]:is(.phi-tone-light, .phi-tone-dark, .phi-tone-inverse)) > .phi-shell-chrome-pane--sider,
+[data-phi-shell-chrome-panes="true"]:has(> [data-phi-region-key="sider_right"]:is(.phi-tone-light, .phi-tone-dark, .phi-tone-inverse)) > .phi-shell-chrome-pane--sider-right,
+[data-phi-shell-chrome-panes="true"]:has(> :is([data-phi-region-key="footer_top"], [data-phi-region-key="footer_main"], [data-phi-region-key="footer_bottom"]):is(.phi-tone-light, .phi-tone-dark, .phi-tone-inverse)) > .phi-shell-chrome-pane--footer {
+  --phi-shell-chrome-image: none;
+  --phi-shell-chrome-color: transparent;
+  --phi-shell-chrome-filter: none;
+}
+
+.shell-sider-full:has(> :is([data-phi-region-key="header_top"], [data-phi-region-key="header_main"], [data-phi-region-key="header_bottom"]):is(.phi-tone-light, .phi-tone-dark, .phi-tone-inverse))
+  > .phi-cms-region-shell[data-phi-shell-chrome="true"]:is([data-phi-region-key="header_top"], [data-phi-region-key="header_main"], [data-phi-region-key="header_bottom"]),
+.shell-sider-embedded:has(> :is([data-phi-region-key="header_top"], [data-phi-region-key="header_main"]):is(.phi-tone-light, .phi-tone-dark, .phi-tone-inverse))
+  > .phi-cms-region-shell[data-phi-shell-chrome="true"]:is([data-phi-region-key="header_top"], [data-phi-region-key="header_main"]),
+[data-phi-shell-chrome-panes="true"]:has(> :is([data-phi-region-key="footer_top"], [data-phi-region-key="footer_main"], [data-phi-region-key="footer_bottom"]):is(.phi-tone-light, .phi-tone-dark, .phi-tone-inverse))
+  > .phi-cms-region-shell[data-phi-shell-chrome="true"]:is([data-phi-region-key="footer_top"], [data-phi-region-key="footer_main"], [data-phi-region-key="footer_bottom"]) {
+  --phi-region-chrome-image: var(--phi-shell-chrome-image, none);
+  --phi-region-chrome-color: var(--phi-shell-chrome-color, transparent);
+  --phi-region-chrome-filter: var(--phi-shell-chrome-filter, none);
+  --phi-region-chrome-attachment: fixed;
 }
 
 /* ---------------------------------------------------------------------------------------------

@@ -65,8 +65,10 @@ describe("region shell geometry", () => {
 
   it("gives full height to a Sider only, with a minimum that holds", () => {
     const sider = resolve({ regionKey: "sider_left", config: { flags: PhiCmsFlags.FullHeight, offsetTop: 55 } });
-    expect(sider.style.height).toBe("calc(100dvh - calc(var(--phi-shell-sticky-top, 0px) + 55px))");
-    expect(sider.style.minHeight).toBe("calc(100dvh - calc(var(--phi-shell-sticky-top, 0px) + 55px))");
+    // A full-height Sider is a Shell column from the viewport's top: its own offset, no Header measured.
+    expect(sider.style.height).toBe("calc(100dvh - 55px)");
+    expect(sider.style.minHeight).toBe("calc(100dvh - 55px)");
+    expect(sider.style.top).toBe(55);
     expect(sider.style.position).toBe("sticky");
 
     const header = resolve({ regionKey: "header_main", config: { flags: PhiCmsFlags.FullHeight } });
@@ -208,14 +210,23 @@ describe("a stuck Sider", () => {
     expect(shell.style.top).toBe("calc(var(--phi-shell-sticky-top, 0px) + 16px)");
   });
 
-  it("is as tall as the viewport below that same line", () => {
-    const shell = resolve({ regionKey: "sider_left", config: { flags: PhiCmsFlags.Sticky | PhiCmsFlags.FullHeight } });
-    expect(shell.style.top).toBe("calc(var(--phi-shell-sticky-top, 0px) + 0px)");
-    expect(shell.style.height).toBe("calc(100dvh - calc(var(--phi-shell-sticky-top, 0px) + 0px))");
+  it("is at most as tall as the viewport below that same line, and scrolls inside", () => {
+    const shell = resolve({ regionKey: "sider_right", config: { flags: PhiCmsFlags.Sticky } });
+    expect(shell.style.maxHeight).toBe("calc(100dvh - calc(var(--phi-shell-sticky-top, 0px) + 0px))");
+    expect(shell.style.overflowY).toBe("auto");
+    expect(shell.style.height).toBeUndefined();
   });
 
-  it("is asked for before the Region renders, and only of a Sider", () => {
-    expect(phiCmsRegionSiderSticks("sider_right", { flags: PhiCmsFlags.FullHeight })).toBe(true);
+  it("is a full-height Sider's own column instead, from the viewport's top", () => {
+    const shell = resolve({ regionKey: "sider_left", config: { flags: PhiCmsFlags.Sticky | PhiCmsFlags.FullHeight } });
+    expect(shell.style.top).toBe(0);
+    expect(shell.style.height).toBe("calc(100dvh - 0px)");
+  });
+
+  it("is asked for before the Region renders, only of a Sider, and only where it stands under the Header", () => {
+    expect(phiCmsRegionSiderSticks("sider_right", { flags: PhiCmsFlags.Sticky })).toBe(true);
+    expect(phiCmsRegionSiderSticks("sider_right", { flags: PhiCmsFlags.Sticky | PhiCmsFlags.FullHeight })).toBe(false);
+    expect(phiCmsRegionSiderSticks("sider_right", { flags: PhiCmsFlags.FullHeight })).toBe(false);
     expect(phiCmsRegionSiderSticks("sider_right", {})).toBe(false);
     expect(phiCmsRegionSiderSticks("header_main", { flags: PhiCmsFlags.Sticky })).toBe(false);
   });

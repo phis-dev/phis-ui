@@ -98,13 +98,18 @@ const PHI_SHELL_CHROME_OVERLAY_REGION_KEYS: readonly string[] = [
 ];
 
 /**
- * Whether this Region paints the shared overlay, which it does only while it authored nothing itself.
+ * Whether this Region paints the shared overlay, which it does while it authored nothing itself -- or
+ * while what it authored is the overlay.
  *
  * A Region that authored its own chrome paints over the Theme, and that is how an Area keeps a look of
  * its own. Authored means every carrier, not just one: the Region Surface's Background, the ground the
  * Shell record sets, and a glass pane the Region asks for over that ground. Reading only the
  * first let the Builder's Sider take the Site's overlay on top of the container ground it paints on
  * purpose, which is what this exists to prevent.
+ *
+ * A Background whose Base is `theme` states the overlay, so a Chrome Region takes it whatever the Shell
+ * record says. The caller asks this only for a Region without a tone: a toned one wants the overlay of
+ * its tone's mode, which it paints itself (`PHI_BACKGROUND_THEME_STYLE`).
  */
 export function phiRegionUsesShellChromeOverlay({
   regionKey,
@@ -117,8 +122,13 @@ export function phiRegionUsesShellChromeOverlay({
   pane?: PhiGlassLayoutEffectId | null;
   grounds: readonly (string | number | null | undefined)[];
 }): boolean {
+  if (!PHI_SHELL_CHROME_OVERLAY_REGION_KEYS.includes(regionKey)) {
+    return false;
+  }
+  if (backgroundConfig != null && normalizePhiBackgroundWidgetConfig(backgroundConfig).base.kind === "theme") {
+    return true;
+  }
   return (
-    PHI_SHELL_CHROME_OVERLAY_REGION_KEYS.includes(regionKey) &&
     backgroundConfig == null &&
     pane == null &&
     grounds.every((ground) => ground == null)
