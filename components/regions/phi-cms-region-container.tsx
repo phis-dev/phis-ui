@@ -10,6 +10,7 @@ import { isPhiCmsPageOwnedRegion } from "../../helpers/cms-region-keys";
 import { hasPhiFlag } from "../../helpers/flags";
 import { PhiCmsFlags } from "../../constants/phi-cms";
 import { PhiCmsRegionStatic } from "./phi-cms-region-static";
+import { phiCmsRegionSiderSticks } from "./phi-cms-region-shell";
 import {
   resolveRenderableBlockEffectsAttributes,
   resolveRenderableBlockViewportEffects,
@@ -65,6 +66,8 @@ export function PhiCmsRegionContainer({
     signalParticipant ||
     pageScoped ||
     (!previewMode && readPhiCmsRegionReveal(regionKey, config) !== "always") ||
+    // A stuck Sider stands under the Header as measured, and only the browser can measure it.
+    (!previewMode && phiCmsRegionSiderSticks(regionKey, config)) ||
     hasPhiFlag(config?.flags, PhiCmsFlags.Collapsible) ||
     requiresEffectsObserver ||
     resolvePhiBackgroundMotion(config?.surface?.background) != null;

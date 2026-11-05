@@ -160,9 +160,13 @@ on a page is the same mode. `inherit`, the default, is never stored.
 - The slot frame does this for a Widget whose Surface it draws, `PhiLayoutSurfaceBox` and the Client
   Layouts for a Layout, the Region renderers for a Region, the Builder's structure Region for the draft.
   An Overlay's Surface does not take a tone yet: its box is the Drawer's or Modal's own.
+- A tone turns the ground as well. A Surface whose Background paints nothing takes the mode's own
+  container ground (`PHI_SURFACE_TONE_GROUND`, `var(--ant-color-bg-container)`, from
+  `resolvePhiSurfaceStyle`), which resolves under the box's tone class; a stated ground wins, so a photo
+  under a dark tone stays a photo. An Overlay draws no tone and so paints no tone ground.
 - A Region's Shell ground and a Layout's own chrome that is painted from JavaScript tokens read the page's
-  mode; a tone changes what the Surface paints and what stands inside it. A Surface that changes its mode
-  without a ground of its own lets the page's ground show through under the other mode's text.
+  mode; a Region resolves its ground in the Region shell, not through `resolvePhiSurfaceStyle`, and does
+  not take the tone ground.
 
 ### Where a Surface's outline comes from
 

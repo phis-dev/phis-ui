@@ -48,6 +48,7 @@ The shell implementation must stay plain HTML/CSS at the container level.
 
 - `sider_left` is not an Ant Design `Layout.Sider` contract.
 - `sider_left` is a normal shell block / `aside` whose width, collapsed width, sticky behavior, and background are driven by `--phi-shell-*` variables and shell state.
+- A Sider that sticks (`Sticky` or `FullHeight`) stands under the Header's measured bottom, `--phi-shell-sticky-top` (`usePhiShellStickyTop`, run by the Region renderer for such a Sider), with its configured `offsetTop` added; `FullHeight` is the viewport below that same line.
 - Ant Design may still be used inside inner widgets such as navigation or controls, but it must not own the shell container geometry contract.
 - Collapse state belongs to the shell contract, not to a UI-library wrapper.
 
@@ -238,6 +239,10 @@ is what a single outer Shadow needs as well. The panes are:
 - one Header pane covering `header_top`, `header_main`, and the Page-owned `header_bottom`
 - one pane per Sider, covering `sider_left` and `sider_right`
 - one Footer pane covering `footer_top`, `footer_main`, and `footer_bottom`
+
+The Header's panes stand above every Sider's (`z-index` 51 against 50, both below every Chrome Region): a
+Sider's pane comes later in the DOM, and at an equal level it painted over the Header's ground and cut its
+Shadow where the two meet.
 
 The visible geometry is the grid's, not a measurement. Named areas publish start and end lines, so a pane
 spans from a family's first area to its last without anyone resolving a height, and a Region that is

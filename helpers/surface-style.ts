@@ -66,6 +66,9 @@ export type PhiSurfaceStyleOptions = {
   groundLayer?: boolean;
 };
 
+/** The ground a toned Surface paints where it states none: the container ground of the tone's mode. */
+export const PHI_SURFACE_TONE_GROUND = "var(--ant-color-bg-container)";
+
 const PHI_SURFACE_EMPTY: PhiResolvedSurface = { style: {}, ground: null, paintsGround: false };
 
 function resolvePhiSurfaceCorners(
@@ -118,6 +121,13 @@ export function resolvePhiSurfaceStyle(
     }
     : null;
 
+  /*
+   * A tone turns the ground as well (LAYOUTING.md "Surface tone"): content in another mode on the page's
+   * ground would be light words on a light page. Where the Background paints nothing, the box takes the
+   * mode's own container ground, which resolves under the tone's class it carries. A stated ground wins.
+   */
+  const toneGround = surface.tone != null && surface.tone !== "inherit" && !paintsGround;
+
   const borderSource = resolvePhiCmsBorderSource(surface.borderSource, surface.border);
   const edge = resolvePhiSourcedBorderStyle(borderSource, surface.border);
   const { border: line, ...configuredCorners } = edge;
@@ -126,6 +136,7 @@ export function resolvePhiSurfaceStyle(
   return {
     style: {
       ...hostPaint,
+      ...(toneGround ? { backgroundColor: PHI_SURFACE_TONE_GROUND } : {}),
       ...(line == null ? {} : { border: line }),
       ...resolvePhiSurfaceCorners(options.cornerFallback, configuredCorners),
       ...(boxShadow == null ? {} : { boxShadow }),
@@ -139,12 +150,16 @@ export function resolvePhiSurfaceStyle(
   };
 }
 
-/** Whether a Surface draws anything a reader could see: a ground, a line, or depth. */
+/**
+ * Whether a Surface draws anything a reader could see: a ground (its own, or its tone's), a line, or
+ * depth.
+ */
 export function phiSurfaceDrawsChrome(surface: PhiSurface | null | undefined): boolean {
   if (!surface) {
     return false;
   }
   return phiBackgroundWidgetConfigPaintsGround(surface.background ?? null)
+    || (surface.tone != null && surface.tone !== "inherit")
     || resolvePhiCmsBorderSource(surface.borderSource, surface.border) !== "none"
     || (surface.shadow != null && surface.shadow !== "none");
 }

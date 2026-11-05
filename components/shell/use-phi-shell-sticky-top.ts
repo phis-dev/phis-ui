@@ -2,6 +2,8 @@
 
 import { useEffect, type RefObject } from "react";
 
+import { PHI_SHELL_STICKY_TOP_PROPERTY } from "../root/phi-shell-chrome-overlay";
+
 /**
  * How far down the viewport the Shell's Header holds right now, published on the Shell.
  *
@@ -12,11 +14,11 @@ import { useEffect, type RefObject } from "react";
  * stuck at this moment, written as `--phi-shell-sticky-top` on the Shell element. Unset, a reader falls
  * back to `0px`, which is right for a Shell without a sticky Header.
  *
- * Run by whatever sticks under it -- every sticky Table does -- so a page without one loads nothing for
- * it. Each runner measures all the bands and they all write the same value. Not inside an Overlay: a
- * Modal's or Drawer's body scrolls on its own, and its top edge is the line.
+ * Run by whatever sticks under it -- every sticky Table does, and the Region renderer for a stuck Sider
+ * (`phiCmsRegionSiderSticks`) -- so a page without one loads nothing for it. Each runner measures all the
+ * bands and they all write the same value. Not inside an Overlay: a Modal's or Drawer's body scrolls on
+ * its own, and its top edge is the line.
  */
-const PHI_SHELL_STICKY_TOP_PROPERTY = "--phi-shell-sticky-top";
 
 const HEADER_BANDS = '[data-phi-region-key^="header_"]:not([hidden])';
 

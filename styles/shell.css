@@ -333,6 +333,17 @@
 }
 
 /*
+ * The Header's panes stand above every Sider's. Both are grid items at the same level, and a Sider's
+ * pane comes later in the DOM, so at an equal `z-index` it painted over the Header's where the two meet:
+ * the Sider's ground hid the Header's and cut its Shadow at the Sider's edge. Still below every Chrome
+ * Region (100 and up).
+ */
+.phi-shell-chrome-pane--header,
+.phi-shell-chrome-pane--header-bottom {
+  z-index: 51;
+}
+
+/*
  * What the pane paints is set inline by the Shell, not here.
  *
  * A `backdrop-filter` written in this file does not reach the browser: the rule arrives with its

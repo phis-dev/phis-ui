@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { PHI_BACKGROUND_BLUR_FILTER } from "../components/widgets/config/background";
 import { readPhiSurface } from "../types/surface";
-import { phiSurfaceDrawsChrome, resolvePhiSurfaceStyle } from "./surface-style";
+import { PHI_SURFACE_TONE_GROUND, phiSurfaceDrawsChrome, resolvePhiSurfaceStyle } from "./surface-style";
 import { PHI_THEME_BORDER_LINE } from "./border-widget-style";
 import { PHI_SURFACE_CARD, PHI_SURFACE_WASH, resolvePhiSurfacePresetId } from "./surface-presets";
 
@@ -143,6 +143,21 @@ describe("a Surface in another mode", () => {
   it("gives the box its tone's class", () => {
     expect(resolvePhiSurfaceStyle({ tone: "dark" }).className).toBe("phi-tone-dark");
     expect(resolvePhiSurfaceStyle({ tone: "inverse" }).className).toBe("phi-tone-inverse");
+  });
+
+  it("paints the tone's own ground where the Background paints none", () => {
+    expect(resolvePhiSurfaceStyle({ tone: "inverse" }).style.backgroundColor).toBe(PHI_SURFACE_TONE_GROUND);
+    expect(resolvePhiSurfaceStyle({ tone: "dark", background: { base: { kind: "none" } } }).style.backgroundColor)
+      .toBe(PHI_SURFACE_TONE_GROUND);
+    expect(resolvePhiSurfaceStyle({ shadow: "soft" }).style.backgroundColor).toBeUndefined();
+    expect(phiSurfaceDrawsChrome({ tone: "light" })).toBe(true);
+  });
+
+  it("keeps a stated ground under a tone", () => {
+    const resolved = resolvePhiSurfaceStyle({ tone: "dark", background: { base: { kind: "color", color: "#123456" } } });
+    expect(resolved.style.backgroundColor).not.toBe(PHI_SURFACE_TONE_GROUND);
+    expect(resolvePhiSurfaceStyle({ tone: "dark", background: picture }).style.backgroundColor)
+      .not.toBe(PHI_SURFACE_TONE_GROUND);
   });
 
   it("gives no class for the page's own mode", () => {

@@ -12,7 +12,8 @@ import {
 } from "../../../../../helpers/cms-navigation-catalog";
 import { PhiQuickLinksWidgetClient } from "./client";
 import { PHI_QUICK_LINKS_WIDGET_DEFINITION, type PhiCmsQuickLinksWidgetConfig } from "./config";
-import { mapPhiBuilderNavigationItemsToQuickLinksItems } from "./items";
+import { mapPhiNavItemsToQuickLinksItems } from "./items";
+import { mapPhiBuilderNavigationItemsToNavItems } from "../../../../../components/widgets/builder/navigation-items";
 
 function PhiQuickLinksWidgetBuilderEditor({
   runtime,
@@ -32,14 +33,21 @@ function PhiQuickLinksWidgetBuilderEditor({
   if (!navigation) {
     return null;
   }
-  const items = mapPhiBuilderNavigationItemsToQuickLinksItems(
-    resolvePhiBuilderNavigationPageTargets(
-          currentCmsArea,
-          navigation.items,
-          createPhiBuilderNavigationPageLookup(canvas.pageCatalogForArea),
-        ),
+  /*
+   * The live render's path: the draft's items as the navigation the Site would serve -- hidden ones left
+   * out -- then mapped to links the way the server maps them, so the canvas shows what the page shows.
+   */
+  const items = mapPhiNavItemsToQuickLinksItems(
+    mapPhiBuilderNavigationItemsToNavItems(
+      resolvePhiBuilderNavigationPageTargets(
+        currentCmsArea,
+        navigation.items,
+        createPhiBuilderNavigationPageLookup(canvas.pageCatalogForArea),
+      ),
+    ),
     runtime.locale.current,
     currentCmsArea,
+    false,
   );
 
   return (

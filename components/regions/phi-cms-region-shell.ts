@@ -33,7 +33,7 @@ import { createPhiSignalAddress } from "../../types/signals";
 import type { PhiCmsRegionReveal } from "../../types/cms-presets";
 import { readPhiCmsRegionReveal } from "../../helpers/region-page-scope";
 import { resolvePhiPaddingStyle } from "../layouts/phi-layout-contract";
-import { phiRegionUsesShellChromeOverlay } from "../root/phi-shell-chrome-overlay";
+import { PHI_SHELL_STICKY_TOP_PROPERTY, phiRegionUsesShellChromeOverlay } from "../root/phi-shell-chrome-overlay";
 import {
   normalizePhiBackgroundWidgetConfig,
   phiBackgroundWidgetConfigPaintsGround,
@@ -175,6 +175,27 @@ function resolvePhiCmsRegionShellFamily(regionKey: PhiCmsRegionKey): PhiCmsRegio
   return "other";
 }
 
+/**
+ * Whether a Region is a Sider that sticks, and so stands under the Header's measured bottom.
+ *
+ * `Sticky` and `FullHeight` both stick a Sider. Where it stands is not its configured `offsetTop` alone:
+ * the Header's bands stick or slide away by their own config, so the Sider stands under the line the
+ * Shell publishes as `--phi-shell-sticky-top` (`usePhiShellStickyTop`), with its offset added. The Region
+ * renderer runs that measurement for such a Sider, which is why this is asked before the Region renders.
+ */
+export function phiCmsRegionSiderSticks(
+  regionKey: PhiCmsRegionKey,
+  config: Pick<PhiCmsRegionConfig, "flags"> | null | undefined,
+): boolean {
+  return resolvePhiCmsRegionShellFamily(regionKey) === "sider"
+    && (hasPhiFlag(config?.flags, PhiCmsFlags.Sticky) || hasPhiFlag(config?.flags, PhiCmsFlags.FullHeight));
+}
+
+/** The line a stuck Sider stands at: under the Header as measured, plus its own offset. */
+function resolvePhiCmsRegionSiderStuckTop(topCss: string) {
+  return `calc(var(${PHI_SHELL_STICKY_TOP_PROPERTY}, 0px) + ${topCss})`;
+}
+
 /*
  * A Region's edge, from its Surface.
  *
@@ -270,15 +291,21 @@ export function resolvePhiCmsRegionShell({
    * `scroll-up` band ever publishes it (SHELL.md "Region visibility per Page"), so for every other Shell
    * it is unset and the offset is the one configured.
    */
+  /*
+   * A stuck Sider stands under the Header as it is measured right now (`phiCmsRegionSiderSticks`), and
+   * its full height is what is left of the viewport below that same line.
+   */
   const stuckTop = !stuck
     ? undefined
     : isHeader && regionKey !== "header_top"
       ? `calc(${topCss} + var(--phi-shell-header-top-stack, 0px))`
-      : top;
+      : isSider
+        ? resolvePhiCmsRegionSiderStuckTop(topCss)
+        : top;
   const blockSize = geometry.block.size?.css;
   const fullHeightSize =
     fullHeight && !blockSize
-      ? `calc(100dvh - ${topCss})`
+      ? `calc(100dvh - ${resolvePhiCmsRegionSiderStuckTop(topCss)})`
       : blockSize;
   const zIndex = config.zIndex ?? resolvePhiShellRegionZIndex(regionKey, hasPhiFlag(config.flags, PhiCmsFlags.FullHeight));
 

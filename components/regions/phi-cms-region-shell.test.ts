@@ -1,7 +1,7 @@
 import { PhiCmsFlags } from "../../constants/phi-cms";
 import { describe, expect, it } from "vitest";
 
-import { resolvePhiCmsRegionShell, type PhiCmsRegionShellInput } from "./phi-cms-region-shell";
+import { phiCmsRegionSiderSticks, resolvePhiCmsRegionShell, type PhiCmsRegionShellInput } from "./phi-cms-region-shell";
 
 const shellTheme = {
   header: {
@@ -64,8 +64,8 @@ describe("region shell geometry", () => {
 
   it("gives full height to a Sider only, with a minimum that holds", () => {
     const sider = resolve({ regionKey: "sider_left", config: { flags: PhiCmsFlags.FullHeight, offsetTop: 55 } });
-    expect(sider.style.height).toBe("calc(100dvh - 55px)");
-    expect(sider.style.minHeight).toBe("calc(100dvh - 55px)");
+    expect(sider.style.height).toBe("calc(100dvh - calc(var(--phi-shell-sticky-top, 0px) + 55px))");
+    expect(sider.style.minHeight).toBe("calc(100dvh - calc(var(--phi-shell-sticky-top, 0px) + 55px))");
     expect(sider.style.position).toBe("sticky");
 
     const header = resolve({ regionKey: "header_main", config: { flags: PhiCmsFlags.FullHeight } });
@@ -124,5 +124,25 @@ describe("region shell chrome overlay", () => {
       config: { visibility: "hidden" },
       paint: { kind: "published" },
     })).toBeNull();
+  });
+});
+
+describe("a stuck Sider", () => {
+  it("stands under the Header's measured bottom, its offset added", () => {
+    const shell = resolve({ regionKey: "sider_right", config: { flags: PhiCmsFlags.Sticky, offsetTop: 16 } });
+    expect(shell.style.position).toBe("sticky");
+    expect(shell.style.top).toBe("calc(var(--phi-shell-sticky-top, 0px) + 16px)");
+  });
+
+  it("is as tall as the viewport below that same line", () => {
+    const shell = resolve({ regionKey: "sider_left", config: { flags: PhiCmsFlags.Sticky | PhiCmsFlags.FullHeight } });
+    expect(shell.style.top).toBe("calc(var(--phi-shell-sticky-top, 0px) + 0px)");
+    expect(shell.style.height).toBe("calc(100dvh - calc(var(--phi-shell-sticky-top, 0px) + 0px))");
+  });
+
+  it("is asked for before the Region renders, and only of a Sider", () => {
+    expect(phiCmsRegionSiderSticks("sider_right", { flags: PhiCmsFlags.FullHeight })).toBe(true);
+    expect(phiCmsRegionSiderSticks("sider_right", {})).toBe(false);
+    expect(phiCmsRegionSiderSticks("header_main", { flags: PhiCmsFlags.Sticky })).toBe(false);
   });
 });

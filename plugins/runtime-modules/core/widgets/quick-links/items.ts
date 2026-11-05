@@ -1,7 +1,4 @@
 import { resolvePhiNavHref } from "../../../../../helpers/locale";
-import {
-  type PhiBuilderNavigationItem,
-} from "../../../../../helpers/cms-navigation-catalog";
 import type { PhiNavItem } from "../../../../../components/shell/shell-types";
 import type { PhiQuickLinksWidgetItem } from "./client";
 
@@ -20,28 +17,6 @@ export function mapPhiNavItemsToQuickLinksItems(
         icon: item.icon,
         external: item.external,
         newTab: interactive ? item.newTab : false,
-      }),
-    );
-}
-
-function flattenPhiBuilderNavigationItems(items: PhiBuilderNavigationItem[]): PhiBuilderNavigationItem[] {
-  return items.flatMap((item) => [item, ...(Array.isArray(item.children) ? flattenPhiBuilderNavigationItems(item.children) : [])]);
-}
-
-export function mapPhiBuilderNavigationItemsToQuickLinksItems(
-  items: PhiBuilderNavigationItem[],
-  locale: string,
-  area: string,
-): PhiQuickLinksWidgetItem[] {
-  return flattenPhiBuilderNavigationItems(items)
-    .filter((item) => item.href !== null)
-    .map(
-      (item): PhiQuickLinksWidgetItem => ({
-        label: item.label,
-        href: resolvePhiNavHref(locale, area, item.href!),
-        icon: item.icon ?? undefined,
-        external: false,
-        newTab: false,
       }),
     );
 }

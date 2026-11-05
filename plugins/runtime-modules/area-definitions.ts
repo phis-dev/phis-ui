@@ -146,8 +146,9 @@ function sidebarAnchors(
  * The Public surfaces carry one intrinsic entry, the terms, and export it as the one anchor.
  *
  * The terms are Core's, so their entry is; the contact entry hangs after it, and a Site package's
- * landing places its Home entry before it. Public has no sidebar surface: the Public Shell draws a
- * header and a footer, and a surface nothing renders is a promise nobody can see kept.
+ * landing places its Home entry before it. Public has no sidebar and no quick-links surface: the Public
+ * Shell draws a header and a footer -- the footer's Quick Links Widget reads `public:footer` -- and a
+ * surface nothing renders is a promise nobody can see kept.
  */
 const publicTermsItem = {
   itemKey: "@phis/ui/modules/public/nav/terms",
@@ -166,12 +167,6 @@ const publicNavigationSurfaces = [
   {
     navKey: "public:footer",
     label: label("Public footer navigation"),
-    items: [publicTermsItem],
-    exportedItemKeys: [publicTermsItem.itemKey],
-  },
-  {
-    navKey: "public:quicklinks",
-    label: label("Public quick links"),
     items: [publicTermsItem],
     exportedItemKeys: [publicTermsItem.itemKey],
   },

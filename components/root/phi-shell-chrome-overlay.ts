@@ -298,6 +298,13 @@ export const PHI_SHELL_HEADER_TOP_EXTENT_PROPERTY = "--phi-shell-header-top-exte
 export const PHI_SHELL_HEADER_TOP_STACK_PROPERTY = "--phi-shell-header-top-stack";
 
 /**
+ * The Header's measured bottom: the lowest bottom of every Header band stuck right now, written on the
+ * Shell by `usePhiShellStickyTop` (components/shell/use-phi-shell-sticky-top.ts). A sticky Table header
+ * and a stuck Sider stand under it; unset, it reads `0px`.
+ */
+export const PHI_SHELL_STICKY_TOP_PROPERTY = "--phi-shell-sticky-top";
+
+/**
  * How `header_top` behaves where the browser decides it, as far as the Header pane is concerned.
  */
 export type PhiShellHeaderTopBehaviour = {

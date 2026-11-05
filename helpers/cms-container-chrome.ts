@@ -15,7 +15,12 @@ import { resolvePhiSurfaceStyle, type PhiResolvedSurface } from "./surface-style
 export function resolvePhiCmsContainerSurface(
   config: PhiCmsContainerChromeConfig,
 ): PhiResolvedSurface {
-  const resolved = resolvePhiSurfaceStyle(config.surface, { groundLayer: false });
+  /*
+   * An Overlay draws no tone -- neither the class nor the scope -- so it does not paint a tone's ground
+   * either: without the class the ground would be the page's, laid over the Overlay's own.
+   */
+  const surface = config.surface?.tone ? { ...config.surface, tone: undefined } : config.surface;
+  const resolved = resolvePhiSurfaceStyle(surface, { groundLayer: false });
   const background = config.surface?.background
     ? normalizePhiBackgroundWidgetConfig(config.surface.background)
     : null;
