@@ -161,7 +161,11 @@ export function PhiCardWidgetEditor({ config, onChange }: PhiCardWidgetEditorPro
     && presentation.width < canvasWidth;
 
   return (
-    <div ref={canvasRef} className="phi-card-editor" style={{ position: "relative", width: "100%" }}>
+    /*
+     * A flex box, so the card is stretched to this box's height as it is to its slot's on the page: the
+     * card fills both ways, and a block box here stood it at its content height in a row of equal slots.
+     */
+    <div ref={canvasRef} className="phi-card-editor" style={{ position: "relative", display: "flex", width: "100%" }}>
       <PhiCardWidgetClient
         labels={{
           eyebrow: config.eyebrow,

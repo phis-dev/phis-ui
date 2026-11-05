@@ -25,7 +25,7 @@ import {
 import { PhiInlineTextEditor } from "../../../components/controls/phi-inline-text-editor";
 import { PhiButtonControl } from "../../../components/controls/phi-button-control";
 import {
-  usePhiAuthoringLayoutDefinition,
+  usePhiAuthoringLayoutDefinitionResolver,
   usePhiRuntimeModuleAuthoringRegistration,
   type PhiAuthoringLayoutDefinition,
 } from "../../../plugins/runtime-modules/client-authoring-module";
@@ -289,11 +289,13 @@ function PhiAuthoringLayoutLoader({
     plugin: PhiCmsLayoutPlugin<unknown>,
     definition: PhiAuthoringLayoutDefinition,
     widgetDefinitionsByType: ReadonlyMap<string, PhiRuntimeModuleClientWidgetDefinition>,
+    resolveLayoutDefinition: (type: string) => PhiAuthoringLayoutDefinition | null,
   ) => ReactNode;
 }) {
   const activeModules = usePhiRuntimeModuleState();
   const layoutType = resolvePhiAuthoringLayoutType(type);
-  const definition = usePhiAuthoringLayoutDefinition(layoutType);
+  const resolveLayoutDefinition = usePhiAuthoringLayoutDefinitionResolver();
+  const definition = resolveLayoutDefinition(layoutType);
   if (!definition) {
     return <PhiCmsRenderDiagnostic issue={{
       code: "missing-renderer",
@@ -327,7 +329,7 @@ function PhiAuthoringLayoutLoader({
     >
       <Suspense fallback={null}>
         <LazyAuthoringLayout>
-          {(plugin) => children(plugin, definition, activeModules.widgetDefinitionsByType)}
+          {(plugin) => children(plugin, definition, activeModules.widgetDefinitionsByType, resolveLayoutDefinition)}
         </LazyAuthoringLayout>
       </Suspense>
     </PhiCmsRenderErrorBoundary>
@@ -1006,21 +1008,6 @@ function PhiLayoutEffectsPreviewFrame({
   );
 }
 
-function PhiAuthoringLayoutEffectsPreviewFrame({
-  type,
-  ...props
-}: Omit<Parameters<typeof PhiLayoutEffectsPreviewFrame>[0], "slotSizePolicy"> & {
-  type: string;
-}) {
-  const definition = usePhiAuthoringLayoutDefinition(resolvePhiAuthoringLayoutType(type));
-  return (
-    <PhiLayoutEffectsPreviewFrame
-      {...props}
-      slotSizePolicy={definition?.slotSizePolicy}
-    />
-  );
-}
-
 /**
  * The band under a scaffold: what this node is called, and then what it is.
  *
@@ -1637,16 +1624,27 @@ export function renderPhiRootNodeScaffold(
     </PhiEditScaffoldDrawer>
   );
 
-  const renderChildLayoutNode = (node: PhiCmsLayoutRenderNode) => {
+  /*
+   * A nested Layout's frame states its policy on the element the parent Layout sizes its slot by.
+   *
+   * It was looked up inside that element, which is too late: the parent reads the element's props
+   * before it renders, found a Layout with no policy, took the Layout default -- fill both ways -- and
+   * let the slot grow and shrink in its column. A Grid of cards in a Flex was squeezed below its
+   * content on the canvas and the cards ran out of their scaffold, while the page laid it out at its
+   * content height, as its `fill-inline` says.
+   */
+  const renderChildLayoutNodeWith = (
+    resolveLayoutDefinition: (type: string) => PhiAuthoringLayoutDefinition | null,
+  ) => function renderChildLayoutNode(node: PhiCmsLayoutRenderNode) {
     const nodeKind = "layout" as const;
     const rootProps = resolveLayoutNodeRootProps(node);
     const rootPropsGeometry = resolvePhiRenderableBlockGeometry(
       normalizePhiBuilderRootNodeDraft(rootProps).rootNodeGeometry,
     );
     return (
-      <PhiAuthoringLayoutEffectsPreviewFrame
-        type={node.widgetType}
+      <PhiLayoutEffectsPreviewFrame
         kind={nodeKind}
+        slotSizePolicy={resolveLayoutDefinition(resolvePhiAuthoringLayoutType(node.widgetType))?.slotSizePolicy}
         blockId={node.id}
         config={node.config as Partial<PhiRenderableBlockBase>}
         explicitInlineSize={rootPropsGeometry.explicitInline}
@@ -1698,7 +1696,7 @@ export function renderPhiRootNodeScaffold(
             renderInsertPicker: options?.renderInsertPicker,
           },
         )}
-      </PhiAuthoringLayoutEffectsPreviewFrame>
+      </PhiLayoutEffectsPreviewFrame>
     );
   };
 
@@ -1708,7 +1706,7 @@ export function renderPhiRootNodeScaffold(
       kind="layout"
       blockId={normalizedRootNode.id ?? -1}
     >
-      {(plugin, definition, widgetDefinitionsByType) => {
+      {(plugin, definition, widgetDefinitionsByType, resolveLayoutDefinition) => {
         const rendered = resolvePhiRootNodeRenderedBody(
           normalizedRootNode,
           "editor",
@@ -1716,7 +1714,7 @@ export function renderPhiRootNodeScaffold(
           definition,
           widgetDefinitionsByType,
           regionKey,
-          renderChildLayoutNode,
+          renderChildLayoutNodeWith(resolveLayoutDefinition),
           onDeleteRootNode
             ? (widget) =>
                 onDeleteRootNode({

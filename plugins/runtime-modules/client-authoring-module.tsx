@@ -3,6 +3,7 @@
 import {
   createContext,
   lazy,
+  useCallback,
   useContext,
   useMemo,
   type ComponentType,
@@ -121,8 +122,10 @@ export function usePhiRuntimeModuleAuthoringRegistration(
   return moduleId ? modules.get(moduleId) ?? null : null;
 }
 
-export function usePhiAuthoringLayoutDefinition(type: string) {
-  const modules = useContext(PhiRuntimeModuleAuthoringContext);
+function findPhiAuthoringLayoutDefinition(
+  modules: ReadonlyMap<string, PhiRuntimeModuleAuthoringRegistration>,
+  type: string,
+) {
   for (const registration of modules.values()) {
     const definition = registration.layoutsByType.get(type);
     if (definition) {
@@ -130,4 +133,16 @@ export function usePhiAuthoringLayoutDefinition(type: string) {
     }
   }
   return null;
+}
+
+/**
+ * The authoring Layout definitions, as a lookup by type rather than one type's answer.
+ *
+ * A Layout names its nested Layouts only while it renders its children, and a parent Layout sizes each
+ * slot by the props of the element standing in it, before that element renders: a nested Layout's
+ * element has to carry its policy already, and a hook inside it would be too late.
+ */
+export function usePhiAuthoringLayoutDefinitionResolver() {
+  const modules = useContext(PhiRuntimeModuleAuthoringContext);
+  return useCallback((type: string) => findPhiAuthoringLayoutDefinition(modules, type), [modules]);
 }
