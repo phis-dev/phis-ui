@@ -1624,14 +1624,18 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                       key: "createPage",
                       emits: [{ capabilityId: "command", value: "createPage" }],
                       label: labels.pages.newPage,
+                      tooltip: labels.pages.newPage,
                       icon: "plus",
+                      display: "icon",
                       variant: "primary",
                     },
                     {
                       key: "editPageMeta",
                       emits: [{ capabilityId: "command", value: "editPageMeta" }],
                       label: labels.pages.pageMeta,
+                      tooltip: labels.pages.pageMeta,
                       icon: "edit",
+                      display: "icon",
                     },
                     {
                       key: "deletePage",
