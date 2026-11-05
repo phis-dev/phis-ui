@@ -378,7 +378,8 @@ export function resolvePhiShellSiderWidth(shellTheme: PhiShellRegionTheme | unde
   return (
     resolvePhiShellMetric(shellTheme, "width", { family: "sider", region: "left" }) ??
     resolvePhiShellMetric(shellTheme, "width", { family: "sider", region: "right" }) ??
-    200
+    // The scale's sider width, which the Builder's defaults and the page grid already use.
+    PHI_LAYOUT.sidebarWidth
   ) as CSSProperties["width"];
 }
 
