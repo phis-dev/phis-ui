@@ -22,6 +22,7 @@ import type { PhiSignalRouteSet } from "../../../types/signals";
 import { usePhiControlSignalController } from "../client/shared/phi-control-signals";
 import type { PhiThemeTokens } from "../../../theme/phi-theme-tokens";
 import { PHI_COLOR, PHI_SPACE } from "../../../theme/antd-css-var-contract";
+import { PHI_THEME_HEADING_FONT_VARIABLE } from "../../../theme/phi-theme-typography";
 import { PHI_CARD_TEXT_SLOTS, readPhiCardBillingPeriod } from "./card-vocabulary";
 import type {
   PhiCardBillingPeriod,
@@ -394,6 +395,8 @@ export function PhiCardWidgetClient({
   const iconCorner = (side: number) =>
     `calc(var(--phi-control-radius-lg, ${token.borderRadiusLG}px) * ${side / token.controlHeightLG})`;
 
+  /* The framed box an icon before the title stands in. */
+  const inlineIconFrame = iconSize + 16;
   const iconMark = (size: number, framed: number) => iconName ? (
     <span
       aria-hidden="true"
@@ -421,18 +424,46 @@ export function PhiCardWidgetClient({
    * unreadable. A card whose figure is the only thing it has makes the figure the link.
    */
   const valueText = renderText ? renderText("value", labels.value) : null;
+  /*
+   * Beside an icon before the title, the figure starts where the title's words do, under them rather
+   * than under the icon: the number belongs to the heading, the icon only marks it. On a line set to its
+   * start only -- centred or at the end, the figure already stands with the words.
+   */
+  const figureIndent: CSSProperties =
+    iconPlacement === "inline" && iconName && (textAlign === "start" || textAlign === "justify")
+      ? { paddingInlineStart: inlineIconFrame + gap }
+      : {};
+  /*
+   * The figure is set like the title it belongs to: in the font the Theme gives headings, and with digits
+   * of one width, so a figure that changes does not shift as it counts. No fallback in the `var()`, as for
+   * the headings themselves (`styles/layout.css`): a Theme that keeps headings on the body font sets no
+   * variable, and the figure inherits the body font.
+   */
+  const figureType: CSSProperties = {
+    fontFamily: `var(${PHI_THEME_HEADING_FONT_VARIABLE})`,
+    fontVariantNumeric: "tabular-nums",
+  };
   const figure = valueText != null ? (
-    <div style={{ fontSize: token.fontSizeHeading3, color: highlight ? PHI_COLOR.primary : PHI_COLOR.textHeading, ...slotWidth }}>
+    <div
+      style={{
+        ...figureType,
+        fontSize: token.fontSizeHeading3,
+        color: highlight ? PHI_COLOR.primary : PHI_COLOR.textHeading,
+        ...slotWidth,
+        ...figureIndent,
+      }}
+    >
       {valueText}
     </div>
   ) : (
     <PhiStatisticControl
       value={binding?.error ?? labels.value ?? ""}
       loading={binding?.loading === true || overrides.loading === true}
+      style={figureIndent}
       styles={{
         content: binding?.error
           ? { color: PHI_COLOR.error, fontSize: token.fontSize }
-          : { color: highlight ? PHI_COLOR.primary : PHI_COLOR.textHeading },
+          : { ...figureType, color: highlight ? PHI_COLOR.primary : PHI_COLOR.textHeading },
       }}
     />
   );
@@ -482,7 +513,7 @@ export function PhiCardWidgetClient({
 
   const headingRow = iconPlacement === "inline" && iconName ? (
     <div style={{ display: "flex", alignItems: "center", justifyContent: justify, gap, ...slotWidth }}>
-      {iconMark(iconSize, iconSize + 16)}
+      {iconMark(iconSize, inlineIconFrame)}
       {heading}
     </div>
   ) : heading;
