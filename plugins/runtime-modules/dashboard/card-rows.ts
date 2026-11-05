@@ -3,6 +3,8 @@ import { readPhiTimelineEntry, type PhiTimelineEntry } from "@phis/contracts/tim
 import {
   isPhiDashboardCardId,
   type PhiDashboardCardPayload,
+  type PhiDashboardCardSeries,
+  type PhiDashboardCardSeriesPoint,
   type PhiDashboardCardRow,
 } from "../../../types/dashboard-cards";
 import {
@@ -20,7 +22,7 @@ import {
  * which the Collection shows as the card list's error.
  */
 
-const PHI_DASHBOARD_CARD_FORMS = ["stat", "list"] as const;
+const PHI_DASHBOARD_CARD_FORMS = ["stat", "list", "series"] as const;
 
 function readCardId(reader: PhiConfigReader) {
   return requirePhiField(reader, "cardId", "a Dashboard card id", (key) =>
@@ -31,9 +33,35 @@ function readTimelineEntry(reader: PhiConfigReader, index: number): PhiTimelineE
   return readPhiTimelineEntry(reader.record) ?? reader.fail(String(index), "a timeline entry with a key", reader.record);
 }
 
+/*
+ * A series is read whole: a point with one value too few would draw a line that drops to nothing on the
+ * day it lost, which looks like data. So each point states a finite number for every label, or the payload
+ * is an error naming the point.
+ */
+function readSeries(reader: PhiConfigReader): PhiDashboardCardSeries {
+  const labels = requirePhiField(reader, "labels", "a list of series labels", reader.stringList);
+  if (labels.length === 0) {
+    reader.fail("labels", "at least one series label", labels);
+  }
+  const points = requirePhiField(reader, "points", "a list of points", (key) =>
+    reader.list(key, (point): PhiDashboardCardSeriesPoint => ({
+      at: requirePhiField(point, "at", "an ISO date or instant", point.string),
+      values: requirePhiField(point, "values", `${labels.length} finite numbers, one per label`, (valuesKey) =>
+        point.value(valuesKey, `${labels.length} finite numbers, one per label`, (value) =>
+          Array.isArray(value)
+          && value.length === labels.length
+          && value.every((entry) => typeof entry === "number" && Number.isFinite(entry))
+            ? (value as number[])
+            : undefined)),
+    })));
+  const unit = reader.string("unit");
+  return { labels, points, ...(unit === undefined ? {} : { unit }) };
+}
+
 function readPayloadFields(reader: PhiConfigReader): PhiDashboardCardPayload {
   const value = reader.string("value");
   const entries = reader.list("entries", readTimelineEntry);
+  const series = reader.object("series", readSeries);
   const description = reader.string("description");
   const meta = reader.string("meta");
   const error = reader.string("error");
@@ -41,6 +69,7 @@ function readPayloadFields(reader: PhiConfigReader): PhiDashboardCardPayload {
     cardId: readCardId(reader),
     ...(value === undefined ? {} : { value }),
     ...(entries === undefined ? {} : { entries }),
+    ...(series === undefined ? {} : { series }),
     ...(description === undefined ? {} : { description }),
     ...(meta === undefined ? {} : { meta }),
     ...(error === undefined ? {} : { error }),
@@ -56,7 +85,7 @@ function readRowFields(reader: PhiConfigReader): PhiDashboardCardRow {
   const payload = reader.object("payload", readPayloadFields);
   return {
     cardId: readCardId(reader),
-    form: requirePhiField(reader, "form", '"stat" or "list"', (key) => reader.oneOf(key, PHI_DASHBOARD_CARD_FORMS)),
+    form: requirePhiField(reader, "form", '"stat", "list" or "series"', (key) => reader.oneOf(key, PHI_DASHBOARD_CARD_FORMS)),
     title: requirePhiField(reader, "title", "a text", reader.string),
     ...(eyebrow === undefined ? {} : { eyebrow }),
     ...(description === undefined ? {} : { description }),
@@ -74,4 +103,10 @@ export function readPhiDashboardCardRows(value: unknown, source = "The Dashboard
 /** One card's refreshed payload. */
 export function readPhiDashboardCardPayload(value: unknown): PhiDashboardCardPayload {
   return readPayloadFields(createPhiResponseReader(value, "The Dashboard card"));
+}
+
+/** The latest figure of the first series: the headline of a `series` card whose provider states none. */
+export function readPhiDashboardSeriesHeadline(series: PhiDashboardCardSeries, locale: string): string | undefined {
+  const latest = series.points[series.points.length - 1]?.values[0];
+  return latest === undefined ? undefined : new Intl.NumberFormat(locale).format(latest);
 }

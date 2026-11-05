@@ -9,7 +9,9 @@
  * `text` is a heading. `stat` is a labelled figure: the label is the heading, so a card that counts
  * something says what it counted in the same place and type a text card says what it is about, and the
  * figure is drawn by the house's one statistic Control. `list` is a heading over a few lines the caller
- * draws and hands in (`listContent`), which only a Dashboard does today. `plan` is an offer: a price
+ * draws and hands in (`listContent`), which only a Dashboard does today. `series` is a figure over time:
+ * the headline as a `stat` draws it, over a chart the caller draws and hands in the same way -- a Dashboard
+ * again, so the chart Control never loads with a Card on a Public page. `plan` is an offer: a price
  * and what it is paid per, a monthly and a yearly one of each, over a list of what the plan includes and
  * what it does not (`PhiBulletListEntry.state`). Several plan cards side by side are a Layout's row, and
  * the recommended one is the card that is `highlight`ed.
@@ -17,7 +19,7 @@
  * The body is chosen, never inferred from whether a value happens to have arrived. A card that decided
  * by presence would draw as text and reflow into a statistic the moment its figure landed.
  */
-export type PhiCardWidgetBody = "text" | "stat" | "list" | "plan";
+export type PhiCardWidgetBody = "text" | "stat" | "list" | "series" | "plan";
 
 /**
  * Which of a plan card's two prices it shows. A plan states one, the other, or both; one that states

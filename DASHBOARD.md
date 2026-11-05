@@ -1,7 +1,7 @@
 # Dashboard: Design
 
-**Status: the contribution, the fan-in and the two phases are built; the clock and the Site's decisions
-are not.** What exists is sections 1 to 3, 5, 6 and 8: a Module contributes card descriptors
+**Status: the contribution, the fan-in, the two phases and the three card forms -- `stat`, `list` and
+`series` -- are built; the clock and the Site's decisions are not.** What exists is sections 1 to 3, 5, 6 and 8: a Module contributes card descriptors
 (`types/dashboard-cards.ts`, `dashboardCards` on the catalog entry), the Site answers the list, each card's
 first payload with it, and each payload on its own at `/api/site/dashboard-cards`
 (`gateway/dashboard-cards-route.ts`), the `dashboard` Module fans them in through one Collection
@@ -29,7 +29,7 @@ whether it failed, and draws them; what asks, and when, is the Dashboard's card 
 what makes the clock a move rather than a rewrite, and it is `design/STATE_MACHINES.md`'s rule that a
 Widget presents a state it was given rather than holding one.
 
-Two forms are offered. `stat` draws: Core's card takes a `body`, and the `stat` body is
+Three forms are offered. `stat` draws: Core's card takes a `body`, and the `stat` body is
 `PhiStatisticControl` -- the same Control the Theme inspector uses, so the house keeps one statistic
 rather than two. Before that the figure was written into the card's title slot, which left the eyebrow
 as the only word saying what had been counted. `list` came with the Builder's Dashboard, where what a
@@ -37,8 +37,17 @@ structure author looks for first is what is open and what changed rather than ho
 carries `entries` in the Timeline's shape (`@phis/contracts/timeline`), at most
 `PHI_DASHBOARD_CARD_LIST_LIMIT` (five) of them drawn, each time formatted relative in the page's locale.
 The card View draws them with `PhiTimelineControl` and hands them to the card as `listContent` -- the
-Card is on Public pages, and a list Control it imported itself would load on every one of them. A series
-card waits for the case that needs it, on the terms section 9 states.
+Card is on Public pages, and a list Control it imported itself would load on every one of them.
+
+`series` came with the project-stats Add-on, which reports daily GitHub views, clones and release
+downloads and npm downloads: a figure over time. Its payload carries `series` -- `labels` naming up to
+`PHI_DASHBOARD_CARD_SERIES_LIMIT` (three) series, `points` oldest first, each an `at` (an ISO date or an
+instant) with one finite number per label, and an optional translated `unit` -- and the headline is the
+payload's `value`, as on a `stat` card, or the first series' latest point where the provider states
+none. The card View formats each day in the page's locale and draws the chart with
+`PhiSeriesChartControl` -- SVG, no dependency, no hooks, every colour a Theme variable -- and hands it in
+as `listContent` for the reason a list is handed in; the Card draws the headline with
+`PhiStatisticControl` above it.
 
 Decisions taken while writing this are stated where they apply, including the ones that rejected an
 earlier answer, because the rejected ones are the ones that come back.
@@ -252,14 +261,17 @@ one.
   turn the Dashboard into a contest.
 - **Where the Site's decisions are stored.** Controller state or the page tree; both are plausible and
   the choice has consequences for what survives a preset change.
-- **Whether a series card is needed.** `stat` and `list` carry the cases in sight, and both are built.
-  A chart is a Core control when somebody actually has a series, and every form Core offers is a promise
-  it then keeps.
+
+Whether a series card is needed was the third question, and the project-stats Add-on answered it: it had
+a series, so `series` is built (top of this document). The chart is a Core Control,
+`PhiSeriesChartControl`, and the form is a promise Core now keeps on two terms -- every point states a
+value for every series, so the chart never decides how to bridge a gap, and a card draws three series
+at most.
 
 ## 10. Order
 
 1. The contribution descriptor, and the fan-in provider in the `dashboard` Module.
-2. The card forms -- `stat` and `list` -- against the existing card presentation. **Done.**
+2. The card forms -- `stat`, `list` and `series` -- against the existing card presentation. **Done.**
 3. The Controller as a clock: staleness, floor, stagger, visibility, backoff.
 4. The Site's decisions: candidates minus decisions, dismissing through the item action.
 5. The first two real contributions, from `@phis/ui/threads` and `@phis/support`. **Both are done**:

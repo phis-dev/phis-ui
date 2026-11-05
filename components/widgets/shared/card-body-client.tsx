@@ -145,7 +145,7 @@ export type PhiCardWidgetClientProps = PhiClientBlockBaseProps<
 > & {
   binding?: PhiCardWidgetClientBinding;
   /**
-   * What a `list` body draws, and a `plan` body's features, already drawn.
+   * What a `list` body draws, a `series` body's chart, and a `plan` body's features, already drawn.
    *
    * Handed in rather than drawn here: the Card is on Public pages, and a list Control imported by it
    * would load on every page with a Card. A Dashboard draws its entries and passes them; a plan card's
@@ -646,6 +646,15 @@ export function PhiCardWidgetClient({
       ) : null}
       {headingRow}
       {body === "stat" ? figure : null}
+      {body === "series" ? (
+        <>
+          {/* The headline where there is one, and the figure's loading and failure in its place either way. */}
+          {labels.value || binding?.error || binding?.loading === true || overrides.loading === true ? figure : null}
+          {list != null && !binding?.error && binding?.loading !== true && overrides.loading !== true ? (
+            <div style={{ justifySelf: "stretch", minWidth: 0 }}>{list}</div>
+          ) : null}
+        </>
+      ) : null}
       {body === "list" && list != null ? (
         /* The lines take the card's width whatever the text alignment centres. */
         <div style={{ justifySelf: "stretch", minWidth: 0 }}>{list}</div>

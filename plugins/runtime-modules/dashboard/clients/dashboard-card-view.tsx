@@ -9,9 +9,11 @@ import { readPhiTimelineEntries, type PhiTimelineEntry } from "@phis/contracts/t
 
 import {
   PHI_DASHBOARD_CARD_LIST_LIMIT,
+  PHI_DASHBOARD_CARD_SERIES_LIMIT,
   type PhiDashboardCardForm,
   type PhiDashboardCardPayload,
   type PhiDashboardCardRow,
+  type PhiDashboardCardSeries,
 } from "../../../../types/dashboard-cards";
 import { PhiCardWidgetClient } from "../../../../components/widgets/shared/card-body-client";
 import { type PhiCardWidgetBody } from "../../../../components/widgets/shared/card-vocabulary";
@@ -20,10 +22,15 @@ import { PhiCollectionViewControl } from "../../../../components/controls/phi-co
 import { PhiAlertControl } from "../../../../components/controls/phi-alert-control";
 import { PhiEmptyControl } from "../../../../components/controls/phi-empty-control";
 import { usePhiPathname } from "../../../../components/runtime/use-phi-pathname";
-import { readPhiDashboardCardPayload, readPhiDashboardCardRows } from "../card-rows";
+import {
+  readPhiDashboardCardPayload,
+  readPhiDashboardCardRows,
+  readPhiDashboardSeriesHeadline,
+} from "../card-rows";
 import { PhiTimelineControl } from "../../../../components/controls/phi-timeline-control";
+import { PhiSeriesChartControl } from "../../../../components/controls/phi-series-chart-control";
 import { usePhiIntlLocale } from "../../../../components/root/phi-intl-locale";
-import { formatPhiRelativeTime } from "../../../../helpers/format-date-time";
+import { formatPhiDate, formatPhiRelativeTime } from "../../../../helpers/format-date-time";
 
 /**
  * A Dashboard, drawn.
@@ -46,8 +53,7 @@ const CARD_MIN_COLUMN_WIDTH = 260;
  * A Module's form, and the Core body that draws it.
  *
  * Two vocabularies that agree today, and deliberately not one type. `form` is what a Module
- * declares about its contribution; `body` is what Core draws. They agree now and are allowed to stop:
- * a `series` form would reasonably draw in whatever body Core has for a graphic, under another name.
+ * declares about its contribution; `body` is what Core draws. They agree now and are allowed to stop.
  *
  * A total map rather than a condition, so a form that joins the vocabulary stops this file compiling
  * instead of quietly falling back to a heading.
@@ -55,6 +61,7 @@ const CARD_MIN_COLUMN_WIDTH = 260;
 const CARD_BODY_BY_FORM: Record<PhiDashboardCardForm, PhiCardWidgetBody> = {
   stat: "stat",
   list: "list",
+  series: "series",
 };
 
 /**
@@ -77,6 +84,34 @@ function PhiDashboardCardList({ entries }: { entries: readonly PhiTimelineEntry[
         ...(entry.tone ? { tone: entry.tone } : {}),
         ...(entry.pending ? { pending: true } : {}),
       }))}
+    />
+  );
+}
+
+/*
+ * A point's day as the calendar day it names. An ISO date read by `Date` is midnight in UTC, which is
+ * the day before west of Greenwich; an instant is formatted where the reader is.
+ */
+function formatSeriesKey(at: string, locale: string) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(at)
+    ? new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" }).format(new Date(`${at}T00:00:00Z`))
+    : formatPhiDate(at, locale);
+}
+
+/**
+ * A `series` card's chart: its first few series over every point, each day in the page's locale. Drawn
+ * here and handed to the card, as a list is, so a Card on a Public page never loads the chart Control.
+ */
+function PhiDashboardCardSeriesChart({ series, title }: { series: PhiDashboardCardSeries; title: string }) {
+  const locale = usePhiIntlLocale();
+  const labels = series.labels.slice(0, PHI_DASHBOARD_CARD_SERIES_LIMIT);
+  return (
+    <PhiSeriesChartControl
+      locale={locale}
+      title={title}
+      keys={series.points.map((point) => formatSeriesKey(point.at, locale))}
+      series={labels.map((label, index) => ({ label, values: series.points.map((point) => point.values[index]!) }))}
+      {...(series.unit ? { unit: series.unit } : {})}
     />
   );
 }
@@ -112,6 +147,7 @@ function PhiDashboardCard({
    * says the same thing by comparison: an answer to a question no longer being asked is simply not this
    * card's answer.
    */
+  const locale = usePhiIntlLocale();
   const requestKey = `${area}\u0000${pathname}\u0000${row.cardId}`;
   const delivered = row.payload ?? null;
   const [resolved, setResolved] = useState<{
@@ -159,6 +195,8 @@ function PhiDashboardCard({
   const payload = current?.payload ?? null;
   const error = current?.failure ?? payload?.error ?? null;
   const entries = row.form === "list" ? readPhiTimelineEntries(payload?.entries) : [];
+  const series = row.form === "series" ? payload?.series ?? null : null;
+  const value = payload?.value ?? (series ? readPhiDashboardSeriesHeadline(series, locale) : undefined);
   return (
     <PhiCardWidgetClient
       labels={{
@@ -171,7 +209,7 @@ function PhiDashboardCard({
          * screen together and the card reads the same before and after it resolves.
          */
         title: row.title,
-        ...(payload?.value ? { value: payload.value } : {}),
+        ...(value ? { value } : {}),
         ...(payload?.description ?? row.description
           ? { description: payload?.description ?? row.description }
           : {}),
@@ -190,7 +228,9 @@ function PhiDashboardCard({
        * clock (DASHBOARD.md section 4).
        */
       binding={{ loading: current === null, error }}
-      listContent={entries.length > 0 ? <PhiDashboardCardList entries={entries} /> : null}
+      listContent={series ? (
+        <PhiDashboardCardSeriesChart series={series} title={row.title} />
+      ) : entries.length > 0 ? <PhiDashboardCardList entries={entries} /> : null}
     />
   );
 }

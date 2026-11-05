@@ -16,11 +16,14 @@ import "server-only";
 export {
   createPhiDashboardCardId,
   isPhiDashboardCardId,
+  PHI_DASHBOARD_CARD_SERIES_LIMIT,
   type PhiDashboardCardContext,
   type PhiDashboardCardDescriptor,
   type PhiDashboardCardForm,
   type PhiDashboardCardId,
   type PhiDashboardCardPayload,
   type PhiDashboardCardProvider,
+  type PhiDashboardCardSeries,
+  type PhiDashboardCardSeriesPoint,
 } from "./types/dashboard-cards";
 export { fetchPhiSiteApi, type PhiSiteApiRequest } from "./gateway/site-api-request";

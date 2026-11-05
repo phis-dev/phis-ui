@@ -42,16 +42,52 @@ export function createPhiDashboardCardId(moduleId: string, leaf: string): PhiDas
  * `stat` is a figure, what it is, and where to go for more. `list` is a handful of entries -- what
  * changed, what is waiting -- each a line with an optional time and tone; the Builder's Dashboard is the
  * case that asked for it, because what a structure author looks for first is what is open rather than
- * how many. The form names a renderer and the payload fills it, and a form Core offers is a promise it
- * then keeps: a series card stays open until somebody has a series (DASHBOARD.md section 9).
+ * how many. `series` is a figure over time -- a day's views, clones or downloads for the last month --
+ * drawn as a line per series under its headline; the project-stats Add-on is the case that asked for it
+ * (DASHBOARD.md section 9). The form names a renderer and the payload fills it, and a form Core offers
+ * is a promise it then keeps.
  */
-export type PhiDashboardCardForm = "stat" | "list";
+export type PhiDashboardCardForm = "stat" | "list" | "series";
 
 /**
  * How many entries a `list` card draws. A card shows little and leads out (DASHBOARD.md section 2); a
  * provider that has more says so in `meta` and lets the card's target show the rest.
  */
 export const PHI_DASHBOARD_CARD_LIST_LIMIT = 5;
+
+/**
+ * How many series a `series` card draws. Two or three lines on a card's width still read as a comparison
+ * -- views and unique visitors -- and a fourth is a chart that wants a page of its own; a provider that has
+ * more puts them on separate cards or on the card's target.
+ */
+export const PHI_DASHBOARD_CARD_SERIES_LIMIT = 3;
+
+/**
+ * A `series` card's figures over time.
+ *
+ * Point by point, oldest first, because that is how a provider counts: one row per day, each with a value
+ * for every series. `labels` names the series in the order each point's `values` states them, so a point
+ * carries exactly one number per label -- a day nothing was counted on is a `0`, not a missing value,
+ * because a gap a line would have to bridge or break is a decision the card should not be making.
+ *
+ * `at` is when the point stands: an ISO date (`2026-11-05`) for a day, or an instant. The card formats it
+ * in the page's locale, a date as the calendar day it names. `unit` is a word for what is counted,
+ * already translated ("views", "downloads"), drawn after the figure in the chart's spoken label.
+ *
+ * The headline is the payload's `value`, as on a `stat` card: a figure the provider states -- a total
+ * over the period, which the points cannot add up to when the provider counts uniques. Absent, the card
+ * shows the latest point of the first series.
+ */
+export type PhiDashboardCardSeries = {
+  labels: string[];
+  points: PhiDashboardCardSeriesPoint[];
+  unit?: string;
+};
+
+export type PhiDashboardCardSeriesPoint = {
+  at: string;
+  values: number[];
+};
 
 export type PhiDashboardCardDescriptor = {
   cardId: PhiDashboardCardId;
@@ -110,7 +146,7 @@ export type PhiDashboardCardDescriptor = {
  */
 export type PhiDashboardCardPayload = {
   cardId: PhiDashboardCardId;
-  /** A `stat` card's figure, drawn under the descriptor's title. */
+  /** A `stat` card's figure, drawn under the descriptor's title, and a `series` card's headline. */
   value?: string;
   /**
    * A `list` card's entries, newest or most pressing first, at most `PHI_DASHBOARD_CARD_LIST_LIMIT` of
@@ -118,6 +154,8 @@ export type PhiDashboardCardPayload = {
    * card formats in the page's locale, or in words where words are what the provider has.
    */
   entries?: PhiTimelineEntry[];
+  /** A `series` card's points, drawn under the headline `value`. */
+  series?: PhiDashboardCardSeries;
   description?: string;
   meta?: string;
   error?: string | null;
