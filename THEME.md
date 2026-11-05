@@ -164,6 +164,8 @@ sparse: readers normalize absent values.
     structured Background contract (`PhiCmsBackgroundWidgetConfig`). A mode without one uses the resolved
     Ant Design `colorBgLayout`.
   - `root.chrome.light` / `root.chrome.dark` -- the Chrome Overlay the Header, Sider, and Footer Regions share.
+    Any Surface may show it as its ground with the Background Base `theme`, in the mode of its tone
+    ([LAYOUTING.md](./LAYOUTING.md#the-themes-ground)).
   - `root.chrome.shadow.header | sider | footer` -- the Shadow each Chrome family casts at its outer edge
     (`PhiShadow`), independent of mode.
 

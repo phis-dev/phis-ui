@@ -66,6 +66,7 @@ import { PhiColorFieldControl } from "../../../../../components/controls/phi-col
 import { PhiBrandControl, resolvePhiBrandLogoUrl } from "../../../../../components/controls/phi-brand-control";
 import { PhiBackgroundControl, type PhiBackgroundControlProps } from "../../../../../components/controls/phi-background-control";
 import {
+  PHI_ROOT_BACKGROUND_BASE_KINDS,
   PHI_ROOT_BACKGROUND_IMAGE_SOURCE_KINDS,
   PHI_ROOT_BACKGROUND_FILTERS,
   PHI_ROOT_BACKGROUND_MOTION_MODES,
@@ -2666,6 +2667,7 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
                     value={rootBackground}
                     motionModes={PHI_ROOT_BACKGROUND_MOTION_MODES}
                     filters={PHI_ROOT_BACKGROUND_FILTERS}
+                    baseKinds={PHI_ROOT_BACKGROUND_BASE_KINDS}
                     imageSourceKinds={PHI_ROOT_BACKGROUND_IMAGE_SOURCE_KINDS}
                     renderMediaPicker={renderPhiThemeRootBackgroundMediaPicker}
                     editTransaction={editTransaction}

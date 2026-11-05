@@ -23,6 +23,7 @@ const PHI_BACKGROUND_WIDGET_LABEL_SET = definePhiLabelSet({
     base_color: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.base.color,
     base_gradient: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.base.gradient,
     base_image: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.base.image,
+    base_theme: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.base.theme,
     image_url: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.image.url,
     image_alt: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.image.alt,
     image_position: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.image.position,
@@ -110,6 +111,7 @@ export async function getPhiBackgroundWidgetLabels(options: PhiGlobalTranslatorO
       color: labels.base_color,
       gradient: labels.base_gradient,
       image: labels.base_image,
+      theme: labels.base_theme,
     },
     image: {
       url: labels.image_url,

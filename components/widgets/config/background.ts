@@ -64,6 +64,20 @@ export type PhiBackgroundBaseNone = {
   kind: "none";
 };
 
+/**
+ * The Theme's Chrome Overlay as the ground (LAYOUTING.md "Surface tone", SHELL.md "Root Background and
+ * Shell Backdrop Layers").
+ *
+ * The box paints what the Theme workspace calls the Chrome Overlay -- its colour or picture and its glass
+ * pane -- instead of a ground of its own. It carries nothing else: the Overlay is the Theme's, per mode
+ * (`root.chrome[mode]`), and the box reads the mode it stands in. A Surface `tone` is that mode, so an
+ * `inverse` Footer is the dark Overlay on a light page and the light one on a dark page. It is a stated
+ * ground: a tone does not paint its own container ground beneath it.
+ */
+export type PhiBackgroundBaseTheme = {
+  kind: "theme";
+};
+
 export type PhiBackgroundBaseGradient = {
   kind: "gradient";
   direction: PhiBackgroundDirection;
@@ -103,7 +117,37 @@ export const PHI_BACKGROUND_BASE_KINDS: readonly PhiCmsBackgroundWidgetConfig["b
   "color",
   "gradient",
   "image",
+  "theme",
 ];
+
+/**
+ * The container ground of the mode a box stands in. What a toned Surface paints where it states no
+ * ground (`PHI_SURFACE_TONE_GROUND`), and what a `theme` ground falls back to where the Theme's Overlay
+ * is not published.
+ */
+export const PHI_BACKGROUND_CONTAINER_GROUND = "var(--ant-color-bg-container)";
+
+/**
+ * What a `theme` Base paints: the Shell Chrome Overlay's custom properties, the same ones the Shell's
+ * chrome panes paint from (components/shell/phi-cms-shell.tsx).
+ *
+ * The Root Layout publishes them for the page's mode, and `styles/shell.css` publishes them again under a
+ * tone's class for the tone's mode, so the box needs no colour of its own and turns with the mode switch.
+ * Outside the Root Layout -- a Modal or Drawer portalled to `<body>` -- nothing publishes them, and the box
+ * takes the container ground of its mode instead: the tone's ground, or the Overlay's own where it has no
+ * tone. Fixed attachment for the reason the Chrome Regions have it: every box is a window onto one
+ * viewport-sized painting.
+ */
+export const PHI_BACKGROUND_THEME_STYLE: Readonly<CSSProperties> = {
+  backgroundColor: `var(--phi-shell-chrome-color, ${PHI_BACKGROUND_CONTAINER_GROUND})`,
+  backgroundImage: "var(--phi-shell-chrome-image, none)",
+  backgroundSize: "var(--phi-shell-chrome-size, auto)",
+  backgroundPosition: "var(--phi-shell-chrome-position, 0 0)",
+  backgroundRepeat: "var(--phi-shell-chrome-repeat, repeat)",
+  backgroundAttachment: "fixed",
+  backdropFilter: "var(--phi-shell-chrome-filter, none)",
+  WebkitBackdropFilter: "var(--phi-shell-chrome-filter, none)",
+};
 
 export const PHI_BACKGROUND_MOTION_MODES: readonly PhiBackgroundMotionMode[] = [
   "static",
@@ -172,7 +216,12 @@ export type PhiBackgroundOverlay =
 export const PHI_BACKGROUND_OVERLAY_DEFAULT_OPACITY = 0.14;
 
 export type PhiCmsBackgroundWidgetConfig = {
-  base: PhiBackgroundBaseColor | PhiBackgroundBaseGradient | PhiBackgroundBaseImage | PhiBackgroundBaseNone;
+  base:
+    | PhiBackgroundBaseColor
+    | PhiBackgroundBaseGradient
+    | PhiBackgroundBaseImage
+    | PhiBackgroundBaseNone
+    | PhiBackgroundBaseTheme;
   overlay?: PhiBackgroundOverlay | null;
   filter?: PhiBackgroundFilter | null;
   motion?: PhiBackgroundMotion | null;
@@ -306,7 +355,7 @@ function normalizePhiBackgroundBase(value: unknown): PhiCmsBackgroundWidgetConfi
       ? { ...normalized, ...source }
       : { ...normalized, ...source };
   }
-  if (kind === "none") return { kind };
+  if (kind === "none" || kind === "theme") return { kind };
   if (kind === "color") {
     const color = readString(raw.color);
     return color ? { kind, color } : null;
@@ -424,6 +473,10 @@ export function normalizePhiBackgroundWidgetConfig(config: unknown): PhiCmsBackg
 
   const raw = config as Record<string, unknown>;
   const base = normalizePhiBackgroundBase(raw.base) ?? normalizePhiBackgroundBase(raw) ?? { kind: "none" as const };
+  // The Theme's Overlay is the whole ground: it carries its own Overlay and pane, and takes none of the box's.
+  if (base.kind === "theme") {
+    return { base, overlay: null, filter: null, motion: null };
+  }
   return {
     base,
     overlay: readBackgroundOverlay(raw.overlay),
@@ -451,6 +504,8 @@ export function readPhiBackgroundPatternInkFromCss(css: string): PhiBackgroundPa
 
 export function serializePhiBackgroundBaseCss(base: PhiCmsBackgroundWidgetConfig["base"]) {
   if (base.kind === "none") return "none";
+  // Not a value a Base can be read back from: the Overlay's colour, as far as one CSS value can say it.
+  if (base.kind === "theme") return String(PHI_BACKGROUND_THEME_STYLE.backgroundColor);
   if (base.kind === "color") return base.color;
   if (base.kind === "gradient") {
     return `linear-gradient(${base.direction}, ${base.stops.map((stop) => `${stop.color} ${stop.percent}%`).join(", ")})`;
@@ -506,6 +561,9 @@ function resolvePhiBackgroundOverlayLayer(overlay: PhiBackgroundOverlay | null |
 export function resolvePhiBackgroundWidgetStyle(config: unknown): CSSProperties {
   const normalized = normalizePhiBackgroundWidgetConfig(config);
   const base = normalized.base;
+  if (base.kind === "theme") {
+    return { ...PHI_BACKGROUND_THEME_STYLE };
+  }
   const style: CSSProperties = {};
 
   if (base.kind === "color") style.backgroundColor = base.color;
@@ -591,7 +649,8 @@ export function phiBackgroundWidgetConfigPaintsGround(config: unknown): boolean 
 export function phiBackgroundBaseSupportsGlassEffect(
   base: PhiCmsBackgroundWidgetConfig["base"],
 ): boolean {
-  return base.kind !== "image" && base.kind !== "gradient";
+  // The Theme's Overlay brings its own pane, and a second one over it is nothing anybody asked for.
+  return base.kind !== "image" && base.kind !== "gradient" && base.kind !== "theme";
 }
 
 /**

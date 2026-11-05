@@ -80,11 +80,31 @@ function withoutPhiRootBackgroundFilter(
   return config ? { ...normalizePhiBackgroundWidgetConfig(config), filter: null } : null;
 }
 
+/**
+ * The Base kinds the Theme Root Background offers and honours: every one but `theme`.
+ *
+ * `theme` is the Chrome Overlay standing in for a box's ground, and the Root Background is no box on the
+ * page but the ground beneath all of them. A stored value outside the offer resolves to `none`.
+ */
+export const PHI_ROOT_BACKGROUND_BASE_KINDS: readonly PhiCmsBackgroundWidgetConfig["base"]["kind"][] = [
+  "none",
+  "color",
+  "gradient",
+  "image",
+];
+
 function readPhiRootBackgroundConfig(
   root: PhiSiteThemeRoot | null | undefined,
   mode: PhiThemeMode,
 ): PhiCmsBackgroundWidgetConfig | null {
-  return (mode === "dark" ? root?.background?.dark : root?.background?.light) ?? null;
+  const configured = (mode === "dark" ? root?.background?.dark : root?.background?.light) ?? null;
+  if (configured == null) {
+    return null;
+  }
+  const normalized = normalizePhiBackgroundWidgetConfig(configured);
+  return PHI_ROOT_BACKGROUND_BASE_KINDS.includes(normalized.base.kind)
+    ? configured
+    : { ...normalized, base: { kind: "none" } };
 }
 
 /**

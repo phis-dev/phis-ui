@@ -190,7 +190,7 @@ const BACKGROUND_IMAGE_VARIANT_OPTIONS: DefaultOptionType[] = [
 
 function toPickerValue(background: PhiCmsBackgroundWidgetConfig | null | undefined): string {
   const normalized = normalizePhiBackgroundWidgetConfig(background ?? null);
-  if (normalized.base.kind === "none") {
+  if (normalized.base.kind === "none" || normalized.base.kind === "theme") {
     return "rgba(255, 255, 255, 0)";
   }
 
@@ -292,6 +292,7 @@ export function PhiBackgroundControl({
     { value: "color", label: labels.base.color },
     { value: "gradient", label: labels.base.gradient },
     { value: "image", label: labels.base.image },
+    { value: "theme", label: labels.base.theme },
   ];
   const baseKindOptions = baseKindCatalog.filter((option) => baseKinds.includes(option.value));
   const backgroundPositionOptions = [
@@ -399,7 +400,13 @@ export function PhiBackgroundControl({
   );
   const activeFilterKind =
     currentValue.filter && isOfferedFilter(currentValue.filter) ? currentValue.filter : "none";
-  const canOpenPreview = currentValue.base.kind !== "none";
+  // The Theme's Overlay is edited in the Theme workspace; here it has nothing to open.
+  const canOpenPreview = currentValue.base.kind !== "none" && currentValue.base.kind !== "theme";
+  /*
+   * A `theme` Base is the Theme's Overlay whole -- its own Overlay and pane included -- so the Background
+   * offers nothing to lay over it, and the Filter segment has nothing to offer either.
+   */
+  const offersOverlay = currentValue.base.kind !== "theme";
   useEffect(() => {
     if (currentValue.base.kind === "color") {
       lastColorBaseRef.current = currentValue.base;
@@ -477,8 +484,14 @@ export function PhiBackgroundControl({
     });
   }
 
-  function updateBaseKind(kind: "none" | "color" | "gradient" | "image") {
+  function updateBaseKind(kind: PhiCmsBackgroundWidgetConfig["base"]["kind"]) {
     if (kind === currentValue.base.kind) {
+      return;
+    }
+
+    // The last colour, gradient and picture stay remembered (the effect above), so switching back finds them.
+    if (kind === "theme") {
+      emit({ base: { kind: "theme" }, overlay: null, filter: null, motion: null });
       return;
     }
 
@@ -970,12 +983,16 @@ export function PhiBackgroundControl({
 
       <div style={{ display: "flex", flexDirection: "column", gap: token.paddingXS, width: "100%" }}>
         <Typography.Text>{labels.sections.base}</Typography.Text>
-        <PhiSegmentedControl
-          block
+        {/* A Select, not a segment: with Theme the Base has more kinds than a segment row holds. */}
+        <PhiSelectControl<PhiCmsBackgroundWidgetConfig["base"]["kind"]>
+          ariaLabel={labels.sections.base}
           disabled={isDisabled}
           value={currentValue.base.kind}
           options={baseKindOptions}
-          onChange={(next) => updateBaseKind(next as "none" | "color" | "gradient" | "image")}
+          style={{ width: "100%" }}
+          onChange={(next) => {
+            if (next != null) updateBaseKind(next);
+          }}
         />
       </div>
 
@@ -1115,7 +1132,7 @@ export function PhiBackgroundControl({
             </div>
           ) : null}
         </div>
-      ) : currentValue.base.kind !== "none" ? (
+      ) : currentValue.base.kind === "color" || currentValue.base.kind === "gradient" ? (
         <div style={{ display: "flex", flexDirection: "column", gap: token.paddingSM, width: "100%" }}>
           {currentValue.base.kind === "color" ? (
             <Flex align="center" justify="space-between" gap={token.paddingSM} wrap="wrap">
@@ -1158,9 +1175,9 @@ export function PhiBackgroundControl({
         </div>
       ) : null}
 
-      <Divider dashed size="small" />
+      {offersOverlay ? <Divider dashed size="small" /> : null}
 
-      <PhiFlexControl vertical gap={8} style={{ width: "100%" }}>
+      {offersOverlay ? <PhiFlexControl vertical gap={8} style={{ width: "100%" }}>
         <Typography.Text>{labels.sections.overlay}</Typography.Text>
         <PhiSegmentedControl
           block
@@ -1336,7 +1353,7 @@ export function PhiBackgroundControl({
               : null}
           </PhiFlexControl>
         ) : null}
-      </PhiFlexControl>
+      </PhiFlexControl> : null}
 
       {filterKindOptions.length > 1 ? (
         <>

@@ -14,6 +14,7 @@ export type PhiBackgroundWidgetLabels = {
     color: string;
     gradient: string;
     image: string;
+    theme: string;
   };
   image: {
     url: string;
@@ -125,6 +126,7 @@ export const PHI_BACKGROUND_WIDGET_DEFAULT_LABELS: PhiBackgroundWidgetLabels = {
     color: "Color",
     gradient: "Gradient",
     image: "Image",
+    theme: "Theme",
   },
   image: {
     url: "Image URL",

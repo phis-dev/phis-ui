@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 
 import {
+  PHI_BACKGROUND_CONTAINER_GROUND,
   normalizePhiBackgroundWidgetConfig,
   phiBackgroundWidgetConfigPaintsGround,
   resolvePhiBackgroundGroundFilter,
@@ -67,12 +68,12 @@ export type PhiSurfaceStyleOptions = {
 };
 
 /** The ground a toned Surface paints where it states none: the container ground of the tone's mode. */
-export const PHI_SURFACE_TONE_GROUND = "var(--ant-color-bg-container)";
+export const PHI_SURFACE_TONE_GROUND = PHI_BACKGROUND_CONTAINER_GROUND;
 
 /**
  * Whether a Surface takes its tone's ground (`PHI_SURFACE_TONE_GROUND`): it asks for a mode of its own and
- * its Background paints nothing. A stated ground wins. The one rule for every box with a Surface -- this
- * resolver's and the Region shell's.
+ * its Background paints nothing. A stated ground wins, and the Theme's Overlay (`base.kind: "theme"`) is
+ * one. The one rule for every box with a Surface -- this resolver's and the Region shell's.
  */
 export function phiSurfaceTakesToneGround(
   tone: PhiSurface["tone"] | null | undefined,
@@ -117,8 +118,13 @@ export function resolvePhiSurfaceStyle(
   const paintsGround = phiBackgroundWidgetConfigPaintsGround(background);
   const groundFilter = background ? resolvePhiBackgroundGroundFilter(background) : null;
   const motion = background ? resolvePhiBackgroundMotion(background) : null;
+  /*
+   * The Theme's Overlay never goes on a layer: it is a window onto one viewport-sized painting, so there
+   * is nothing to move or zoom, and its pane has to frost the page behind the box rather than the box.
+   */
   const needsGroundLayer = options.groundLayer !== false
     && paintsGround
+    && background?.base.kind !== "theme"
     && (groundFilter != null || motion != null || options.forceGroundLayer === true);
 
   const paint = background ? resolvePhiBackgroundWidgetStyle(background) : {};
