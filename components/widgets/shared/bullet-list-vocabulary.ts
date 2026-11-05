@@ -54,8 +54,11 @@ export type PhiResolvedBulletListStyle = {
   flags: number;
 };
 
-/** The markers a browser cycles through, and a tight gap. */
-const PHI_BULLET_LIST_DEFAULT_STYLE = {
+/**
+ * The markers a browser cycles through, and a tight gap. Exported so a Widget can state them as its
+ * defaults, which is what an Inspector shows for a list nobody has set yet.
+ */
+export const PHI_BULLET_LIST_DEFAULT_STYLE = {
   level1: "dot",
   level2: "circle",
   level3: "dash",

@@ -6,6 +6,7 @@ import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsResolvedContent } from "../../../../../types/cms";
 import {
   buildPhiBulletListFields,
+  PHI_BULLET_LIST_DEFAULT_STYLE,
   readPhiBulletListStyle,
   type PhiBulletListStyle,
 } from "../../../../../components/widgets/shared/bullet-list-vocabulary";
@@ -132,6 +133,9 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
     textBlockSpacingAfter: "sm",
     headingBlockSpacingBefore: "sm",
     headingBlockSpacingAfter: "sm",
+    headingOffset: 0,
+    // What the list draws with when nothing is set, so the Inspector shows it rather than empty fields.
+    list: { ...PHI_BULLET_LIST_DEFAULT_STYLE },
   },
   contentBinding: {
     storage: "markdown",
@@ -176,6 +180,8 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
       key: "imageFloat",
       type: "choice",
       label: "Image Float",
+      // No float is the default and stores nothing; the line says so instead of an empty picker.
+      emptyOption: { value: "none", label: "None" },
       options: PHI_MARKDOWN_IMAGE_FLOAT_OPTIONS,
     },
     {
@@ -206,12 +212,23 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
       key: "headingOffset",
       type: "number",
       label: "Heading Offset",
+      description:
+        "Moves every heading of the text down by this many levels: at 1, a # heading is drawn as H2, ## as H3, and so on. For a text that stands under a page title of its own, so its first heading does not compete with it.",
       min: 0,
       max: PHI_MARKDOWN_HEADING_OFFSET_MAX,
       precision: 0,
     },
-    { key: "tocKey", type: "string", label: "TOC Key" },
-    ...buildPhiBulletListFields("list", "Lists"),
+    {
+      key: "tocKey",
+      type: "string",
+      label: "TOC Key",
+      // Empty is no key, and a TOC on "Auto" connects to the text all the same.
+      placeholder: "Auto",
+      description:
+        "A name for this text's table of contents. A Markdown TOC widget set to Binding Mode \"Target\" with the same TOC Key lists this text's headings and no other's. Leave it empty while the page has one Markdown text: a TOC on \"Auto\" finds it by itself.",
+    },
+    // The markers are an unordered list's: a `1.` list counts, whatever its level's marker says.
+    ...buildPhiBulletListFields("list", "Unordered Lists"),
   ],
   parseConfig: parsePhiCmsMarkdownWidgetConfig,
 } satisfies Pick<

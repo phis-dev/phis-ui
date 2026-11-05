@@ -77,11 +77,25 @@ export const PHI_MARKDOWN_TOC_WIDGET_DEFINITION = {
       placeholder: "Select widget",
       visibleWhen: { field: "bindingMode", equals: "target" },
     },
-    { key: "tocKey", type: "string", label: "TOC Key", visibleWhen: { field: "bindingMode", equals: "target" } },
+    {
+      key: "tocKey",
+      type: "string",
+      label: "TOC Key",
+      description:
+        "The TOC Key of the Markdown widget whose headings this table of contents lists, as set in that widget's settings. Useful when a page has several Markdown texts; a Markdown Widget picked above narrows it to that one.",
+      visibleWhen: { field: "bindingMode", equals: "target" },
+    },
     { key: "title", type: "string", label: "Title" },
     { key: "minLevel", type: "number", label: "Min Heading Level", min: 1, max: 6, precision: 0 },
     { key: "maxLevel", type: "number", label: "Max Heading Level", min: 1, max: 6, precision: 0 },
-    { key: "offsetTop", type: "number", label: "Offset Top" },
+    {
+      key: "offsetTop",
+      type: "number",
+      label: "Offset Top",
+      description:
+        "How far below the window's top edge a heading stands after a click in the contents, in pixels. Set it to the height of whatever stays fixed at the top, such as a sticky header, so the heading is not hidden beneath it.",
+      prefix: "px",
+    },
     { key: "showTitle", type: "boolean", label: "Show Title" },
   ],
   parseConfig: parsePhiCmsMarkdownTocWidgetConfig,
