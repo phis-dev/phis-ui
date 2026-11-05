@@ -1,5 +1,6 @@
 import type { AliasToken, SeedToken } from "antd/es/theme/interface";
 import darkAlgorithm from "antd/es/theme/themes/dark";
+import { generateColorPalettes as generateDarkColorPalettes } from "antd/es/theme/themes/dark/colors";
 import defaultAlgorithm from "antd/es/theme/themes/default";
 import seedToken from "antd/es/theme/themes/seed";
 import formatToken from "antd/es/theme/util/alias";
@@ -43,6 +44,25 @@ export function createPhiAntdThemeCssVarKey(scope: string, identity: unknown) {
   return `phi-${normalizedScope}-${hashPhiAntdThemeIdentity(identity)}`;
 }
 
+/*
+ * A link and an info colour pointed at turn lighter in the dark mode, as a primary button does.
+ *
+ * Ant Design takes both hovers from step 4 of the colour's palette in either mode. In the light palette
+ * that step is a lighter tint; the dark algorithm reorders its palette so the low steps fade into the dark
+ * ground for borders and fills, and step 4 there is the border's -- darker than the colour itself, so a
+ * link went dim on a dark ground when pointed at (#3867b5 to #274069 on #08153a). The primary hover takes
+ * step 5, which in the dark palette is the lighter one; these take it too. A hover a Theme states itself
+ * still wins: `formatToken` lays the stated tokens over this.
+ */
+function withPhiDarkHoverSteps<T extends object>(seed: SeedToken, derived: T): T {
+  const linkBase = seed.colorLink || seed.colorInfo;
+  return {
+    ...derived,
+    ...(linkBase ? { colorLinkHover: generateDarkColorPalettes(linkBase)[5] } : {}),
+    ...(seed.colorInfo ? { colorInfoHover: generateDarkColorPalettes(seed.colorInfo)[5] } : {}),
+  };
+}
+
 export function resolvePhiAntdAliasTokens(
   mode: PhiThemeMode,
   token: Record<string, unknown>,
@@ -53,7 +73,7 @@ export function resolvePhiAntdAliasTokens(
   } as SeedToken;
   const derivativeToken =
     mode === "dark"
-      ? darkAlgorithm(mergedSeedToken)
+      ? withPhiDarkHoverSteps(mergedSeedToken, darkAlgorithm(mergedSeedToken))
       : defaultAlgorithm(mergedSeedToken);
 
   return formatToken({
