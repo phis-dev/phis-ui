@@ -18,6 +18,7 @@ import {
   PHI_CARD_HOVER_EFFECTS,
   PHI_CARD_ICON_PLACEMENTS,
   PHI_CARD_TEXT_ALIGNS,
+  PHI_CARD_BADGE_STYLES,
   PHI_CARD_VARIANTS,
   readPhiCardBillingPeriod,
   type PhiCardBillingPeriod,
@@ -25,6 +26,7 @@ import {
   type PhiCardHoverEffect,
   type PhiCardIconPlacement,
   type PhiCardTextAlign,
+  type PhiCardBadgeStyle,
   type PhiCardVariant,
   type PhiCardWidgetBody,
 } from "../../../../../components/widgets/shared/card-vocabulary";
@@ -61,6 +63,8 @@ export type PhiCmsCardWidgetConfig = PhiCmsWidgetConfigBase & PhiCardImageSource
   badge?: string;
   /** The band's colour; absent, the Theme's primary. */
   badgeColor?: string;
+  /** How the badge is drawn (`PHI_CARD_BADGE_STYLES`); absent, `none`. */
+  badgeStyle?: PhiCardBadgeStyle;
   /** A `plan` body's prices, never translated, and what each is paid per (`/ month`), which is. */
   price?: string;
   pricePeriod?: string;
@@ -124,6 +128,7 @@ function parsePhiCmsCardWidgetConfig(config: Record<string, unknown>): PhiCmsCar
     value: readString(config.value),
     badge: readString(config.badge),
     badgeColor: readString(config.badgeColor),
+    badgeStyle: readChoice(readString(config.badgeStyle), PHI_CARD_BADGE_STYLES),
     price: readString(config.price),
     pricePeriod: readString(config.pricePeriod),
     priceYearly: readString(config.priceYearly),
@@ -166,6 +171,7 @@ const PHI_CARD_DEFAULT_CONFIG = {
   imageOpacity: 100,
   headingLevel: "h3",
   textAlign: "start",
+  badgeStyle: "none",
 } satisfies Partial<PhiCmsCardWidgetConfig>;
 
 export const PHI_CARD_WIDGET_DEFINITION = {
@@ -358,12 +364,27 @@ export const PHI_CARD_WIDGET_DEFINITION = {
       ],
     },
     { key: "highlight", type: "boolean", label: "Highlight" },
-    /* The band's words are written on the card; its colour is the one thing asked here. */
+    /* The band's words are written on the card; how it is drawn and its colour are asked here. */
+    {
+      key: "badgeStyle",
+      type: "choice",
+      heading: "Badge",
+      label: "Style",
+      presentation: "segmented",
+      description:
+        "Corner: a band in the card's top corner. Tag: a rounded mark a little down the edge. Ribbon: hangs over the card's edge with a fold, and needs room beside the card -- a Layout that clips at the card's edge cuts it off. None: hides the badge and keeps its words.",
+      options: [
+        { value: "none", label: "None" },
+        { value: "corner", label: "Corner" },
+        { value: "tag", label: "Tag" },
+        { value: "ribbon", label: "Ribbon" },
+      ],
+    },
     {
       key: "badgeColor",
       type: "color",
-      heading: "Badge",
       label: "Color",
+      visibleWhen: { field: "badgeStyle", notEquals: "none" },
       mode: "single",
       defaultToken: "colorPrimary",
     },

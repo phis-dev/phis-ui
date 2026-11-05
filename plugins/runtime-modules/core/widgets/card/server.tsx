@@ -170,6 +170,7 @@ export async function PhiCardWidget({
     body: config?.body,
     highlight: config?.highlight,
     badgeColor: config?.badgeColor,
+    badgeStyle: config?.badgeStyle,
     billingPeriod: config?.billingPeriod,
     // Only a card that leads somewhere answers the pointer; the preview has no link but shows it.
     hoverEffect: config?.linkTarget ? config.hoverEffect : undefined,

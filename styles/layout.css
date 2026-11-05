@@ -581,6 +581,43 @@
   transition: scale 300ms ease;
 }
 
+/*
+ * A card with a ribbon stands in the ribbon's wrapper (`PhiRibbonWrapControl`): a column that takes the
+ * slot's size and hands it to the card. A card that lifts carries its ribbon with it -- the ribbon is the
+ * card's sibling, so the wrapper moves it when the card moves.
+ */
+:where(.phi-card-ribbon) {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+:where(.phi-card-ribbon) > :where(.phi-card) {
+  flex: 1 1 auto;
+}
+
+/*
+ * A little lower than Ant Design sets it, so the ribbon stands centred on the eyebrow's line. Outside
+ * `:where`: Ant Design's own `.ant-ribbon` states `top`, and this has to outrank it.
+ */
+.phi-card-ribbon > .ant-ribbon {
+  top: calc(var(--ant-margin-xs) + 3px);
+}
+
+:where(.phi-card-ribbon--lift) > :where(.ant-ribbon) {
+  transition: translate 200ms ease;
+}
+
+@media (hover: hover) {
+  :where(.phi-card-ribbon--lift):has(> .phi-card:hover) > :where(.ant-ribbon) {
+    translate: 0 -4px;
+  }
+}
+
+:where(.phi-card-ribbon--lift):has(> .phi-card:focus-within) > :where(.ant-ribbon) {
+  translate: 0 -4px;
+}
+
 @media (hover: hover) {
   :where(.phi-card--hover-lift):hover {
     translate: 0 -4px;
@@ -634,7 +671,8 @@
     transition: none;
   }
 
-  .phi-card--hover-lift:is(:hover, :focus-within) {
+  .phi-card--hover-lift:is(:hover, :focus-within),
+  .phi-card-ribbon--lift > .ant-ribbon {
     translate: none;
   }
 

@@ -1,6 +1,7 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, MouseEventHandler, ReactNode } from "react";
 
 import { PHI_COLOR, PHI_FONT_SIZE, PHI_SPACE } from "../../theme/antd-css-var-contract";
+import { PhiTruncatedHoverText } from "./phi-truncated-hover-text";
 
 export type PhiRibbonControlProps = {
   children: ReactNode;
@@ -12,6 +13,14 @@ export type PhiRibbonControlProps = {
    */
   placement?: "corner" | "edge";
   style?: CSSProperties;
+  /**
+   * The band's whole words, shown on hover when its ellipsis cut them short (`PhiTruncatedHoverText`).
+   * A band with a hover text takes the pointer, so it needs `onClick` to hand a click on to what lies
+   * under it.
+   */
+  fullText?: string;
+  /** What a click on the band does, for a band that takes the pointer: the box's own click, passed on. */
+  onClick?: MouseEventHandler<HTMLSpanElement>;
 };
 
 /**
@@ -27,10 +36,11 @@ export type PhiRibbonControlProps = {
  * box's top inset it was too thin to read. In the corner it stands over the inset and a little into the
  * first line's end, which a long eyebrow in a narrow box can reach.
  *
- * It sits above what the box draws, the highlight's ring included, and takes no clicks, so a card that
- * is a link stays one under its band.
+ * It sits above what the box draws, the highlight's ring included. Without a hover text it takes no
+ * clicks, so a card that is a link stays one under its band; with one it has to take the pointer to be
+ * pointed at, and hands a click on through `onClick`.
  */
-export function PhiRibbonControl({ children, color, placement = "edge", style }: PhiRibbonControlProps) {
+export function PhiRibbonControl({ children, color, placement = "edge", style, fullText, onClick }: PhiRibbonControlProps) {
   const radius = "var(--phi-control-radius-sm)";
   const position: CSSProperties = placement === "corner"
     ? {
@@ -45,7 +55,7 @@ export function PhiRibbonControl({ children, color, placement = "edge", style }:
         borderStartStartRadius: radius,
         borderEndStartRadius: radius,
       };
-  return (
+  const band = (
     <span
       className="phi-ribbon-control"
       style={{
@@ -63,12 +73,15 @@ export function PhiRibbonControl({ children, color, placement = "edge", style }:
         whiteSpace: "nowrap",
         overflow: "hidden",
         textOverflow: "ellipsis",
-        pointerEvents: "none",
+        pointerEvents: fullText ? "auto" : "none",
+        ...(fullText && onClick ? { cursor: "pointer" } : {}),
         ...position,
         ...style,
       }}
+      {...(onClick ? { onClick } : {})}
     >
       {children}
     </span>
   );
+  return fullText ? <PhiTruncatedHoverText title={fullText}>{band}</PhiTruncatedHoverText> : band;
 }

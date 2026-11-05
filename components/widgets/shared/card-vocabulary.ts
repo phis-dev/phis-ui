@@ -51,6 +51,15 @@ export const PHI_CARD_TEXT_ALIGNS = ["start", "center", "end", "justify"] as con
 export type PhiCardTextAlign = (typeof PHI_CARD_TEXT_ALIGNS)[number];
 
 /**
+ * How a card's badge is drawn. `corner` is a band flush in the top end corner, `tag` a rounded mark a
+ * little down the end edge -- both inside the card. `ribbon` hangs over the end edge with a fold behind
+ * it, and needs room beside the card. `none` draws nothing and keeps the words, to hide a badge for a
+ * while. Absent is `none`: a card has a badge once a style is chosen for it.
+ */
+export const PHI_CARD_BADGE_STYLES = ["none", "corner", "tag", "ribbon"] as const;
+export type PhiCardBadgeStyle = (typeof PHI_CARD_BADGE_STYLES)[number];
+
+/**
  * Where the icon stands: before the heading, small, or at the top, large -- at the start, the middle or
  * the end of the line, over the picture when the card has one, on a ground of its own so it reads on any
  * picture. Logical like the text alignment: `top` is the left in a left-to-right page.

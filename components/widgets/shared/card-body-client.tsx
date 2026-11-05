@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
 
 import { PhiButtonControl } from "../../controls/phi-button-control";
 import { PhiFlexControl } from "../../controls/phi-flex-control";
 import { PhiImageControl, type PhiImageControlSource } from "../../controls/phi-image-control";
 import { PhiRibbonControl } from "../../controls/phi-ribbon-control";
+import { PhiRibbonWrapControl } from "../../controls/phi-ribbon-wrap-control";
 import { PhiSkeletonControl } from "../../controls/phi-skeleton-control";
 import { PhiStatisticControl } from "../../controls/phi-statistic-control";
 import { PhiTypographyControl } from "../../controls/phi-typography-control";
@@ -25,6 +26,7 @@ import { PHI_COLOR, PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import { PHI_THEME_HEADING_FONT_VARIABLE } from "../../../theme/phi-theme-typography";
 import { PHI_CARD_TEXT_SLOTS, readPhiCardBillingPeriod } from "./card-vocabulary";
 import type {
+  PhiCardBadgeStyle,
   PhiCardBillingPeriod,
   PhiCardHeadingLevel,
   PhiCardHoverEffect,
@@ -36,6 +38,7 @@ import type {
 } from "./card-vocabulary";
 
 export type {
+  PhiCardBadgeStyle,
   PhiCardBillingPeriod,
   PhiCardHeadingLevel,
   PhiCardHoverEffect,
@@ -115,6 +118,8 @@ export type PhiCardWidgetClientConfig = {
   highlight?: boolean;
   /** The badge's ground; absent, the Theme's primary. */
   badgeColor?: string;
+  /** How the badge is drawn; absent, `none`. */
+  badgeStyle?: PhiCardBadgeStyle;
   /** Which price a `plan` shows until a `billingPeriod` signal says otherwise. Absent is `monthly`. */
   billingPeriod?: PhiCardBillingPeriod;
   hoverEffect?: PhiCardHoverEffect;
@@ -635,10 +640,27 @@ export function PhiCardWidgetClient({
    * The band in the card's top end corner, floating (`PhiRibbonControl`): the words below it start where
    * they start in a card without one, so plans side by side keep their headings on one line.
    */
-  const ribbon = badge != null ? (
+  const badgeStyle = config?.badgeStyle ?? "none";
+  const ribbon = badge != null && (badgeStyle === "corner" || badgeStyle === "tag") ? (
     <PhiRibbonControl
       color={config?.badgeColor}
-      placement="corner"
+      placement={badgeStyle === "tag" ? "edge" : "corner"}
+      /*
+       * On the page, the whole words on hover where the band cut them short; pointed at, the band takes
+       * the pointer, so a click on it is handed to the card's link as a click anywhere else on the card.
+       * An editor's band holds a field and shows its words in full there.
+       */
+      {...(!renderText && labels.badge
+        ? {
+            fullText: labels.badge,
+            ...(href
+              ? {
+                  onClick: (event: ReactMouseEvent<HTMLSpanElement>) =>
+                    event.currentTarget.closest(".phi-card")?.querySelector<HTMLAnchorElement>(".phi-card__link")?.click(),
+                }
+              : {}),
+          }
+        : {})}
       /* An editor writes in the band, so it takes the pointer there and keeps room for a word. */
       {...(renderText ? { style: { pointerEvents: "auto", minWidth: "6em" } } : {})}
     >
@@ -727,7 +749,7 @@ export function PhiCardWidgetClient({
     </>
   );
 
-  return (
+  const card = (
     <article
       className={[
         "phi-card",
@@ -744,4 +766,19 @@ export function PhiCardWidgetClient({
       {surface.className ? <PhiSurfaceTone tone={config?.surface?.tone}>{content}</PhiSurfaceTone> : content}
     </article>
   );
+
+  /*
+   * A ribbon hangs over the card's edge, which the card -- clipping for its picture and its zoom -- cannot
+   * give a child of its own; it wraps the card instead (`PhiRibbonWrapControl`). An editor writes in it.
+   */
+  return badge != null && badgeStyle === "ribbon" ? (
+    <PhiRibbonWrapControl
+      text={badge}
+      {...(config?.badgeColor ? { color: config.badgeColor } : {})}
+      interactive={renderText != null}
+      className={hoverEffect === "lift" ? "phi-card-ribbon phi-card-ribbon--lift" : "phi-card-ribbon"}
+    >
+      {card}
+    </PhiRibbonWrapControl>
+  ) : card;
 }

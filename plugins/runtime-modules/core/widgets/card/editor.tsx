@@ -54,7 +54,11 @@ const PHI_CARD_BODY_TEXT_SLOTS: Partial<Record<PhiCardTextSlot, PhiCmsCardWidget
  * Slots a card often goes without. Empty, they stand on the canvas only while the card is under the
  * pointer or being written in (`styles/layout.css`), so an empty card does not read as four empty lines.
  */
-const PHI_CARD_OPTIONAL_TEXT_SLOTS: ReadonlySet<PhiCardTextSlot> = new Set(["eyebrow", "meta", "badge"]);
+/*
+ * Not the badge: it is drawn only once a style is chosen for it, and a band or ribbon that disappeared
+ * whenever the pointer left the card left nothing to see of the choice just made.
+ */
+const PHI_CARD_OPTIONAL_TEXT_SLOTS: ReadonlySet<PhiCardTextSlot> = new Set(["eyebrow", "meta"]);
 
 /**
  * One of the card's words, edited where it stands: underlined, in the type of the text it edits.
@@ -94,7 +98,12 @@ function PhiCardInlineText({
        * into beside them, and its wrapping is the card's own anyway. The text still wraps and aligns as
        * the card sets it.
        */
-      style={{ width: "100%" }}
+      /*
+       * The ground stays the card's, here as well as on the text: with a clear button the field is a
+       * wrapper around the text, and Ant Design's underlined wrapper paints the container ground -- white
+       * over the badge's band, whose light words then vanished on it.
+       */
+      style={{ width: "100%", backgroundColor: "transparent" }}
       /* The text's own type, and the page showing through: an edit in place reads like what it edits. */
       inputStyle={{
         paddingInline: 0,
@@ -223,6 +232,7 @@ export function PhiCardWidgetEditor({ config, onChange }: PhiCardWidgetEditorPro
           body: config.body,
           highlight: config.highlight,
           badgeColor: config.badgeColor,
+          badgeStyle: config.badgeStyle,
           billingPeriod: config.billingPeriod,
           hoverEffect: config.linkTarget ? config.hoverEffect : undefined,
         }}
