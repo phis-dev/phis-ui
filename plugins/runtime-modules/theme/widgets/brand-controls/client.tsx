@@ -93,13 +93,12 @@ import {
 import { createPhiMediaPickerAssetControllerRoutes } from "../../../../../components/media/asset-controller-routes";
 import { PhiPresetSizeControl, type PhiPresetSizeOption } from "../../../../../components/controls/phi-preset-size-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
-import { PhiCascaderControl } from "../../../../../components/controls/phi-cascader-control";
 import { PhiCheckboxControl } from "../../../../../components/controls/phi-checkbox-control";
 import { PhiLabeledControl } from "../../../../../components/controls/phi-labeled-control";
 import { PhiNumberControl } from "../../../../../components/controls/phi-number-control";
 import { PhiColorControl } from "../../../../../components/controls/phi-color-control";
-import { usePhiControlOptionsProvider } from "../../../../../components/controls/phi-options-provider";
-import { PHI_AUTHORING_OPTION_PROVIDER_KEYS } from "../../../../../constants/authoring-option-provider-keys";
+import { PhiLinkTargetControl } from "../../../../../components/widgets/client/shared/phi-link-target-control";
+import { usePhiPageReferenceOptions } from "../../../../../components/widgets/client/shared/use-page-reference-options";
 import { PhiShadowControl } from "../../../../../components/controls/phi-shadow-control";
 import type { PhiShadow } from "../../../../../types/layout-style";
 import type {
@@ -2205,13 +2204,14 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
    */
   const fallbackWordmark = runtime.site.name ?? runtime.site.key;
   /*
-   * The Pages of the public Area, from the same provider the Builder's own Page Cascader reads. The
-   * Widget declares the provider so the Page mounts it; without that the list is simply empty, which
-   * would look like a Site with one Page.
+   * The Pages of the public Area as references, from the list every link picker outside the Builder's
+   * own catalog reads (`/api/site/page-references`). The Brand leads into the public Area wherever it
+   * is drawn, so that is the Area written into the target.
    */
-  const { options: homePathOptions } = usePhiControlOptionsProvider({
-    optionsProvider: { providerKey: PHI_AUTHORING_OPTION_PROVIDER_KEYS.pages },
-  });
+  const { options: homePageOptions, failed: homePagesFailed } = usePhiPageReferenceOptions(
+    "public",
+    "phi-theme-brand",
+  );
 
   function updateWordmarkPart(index: number, patch: Partial<PhiSiteThemeWordmarkPart>) {
     publishDraft(mergeThemeWordmarkParts(
@@ -2349,17 +2349,26 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                       />
                     </PhiLabeledControl>
                     {/*
-                      Where the Brand leads, picked from the Pages that exist rather than typed.
-                      A Cascader has no empty value -- its empty is spelled `/` -- which is exactly the
-                      default here, so an author who never touches it has already said the right thing.
+                      Where the Brand leads: a link target like every other (`REFERENCES.md`), a Page
+                      kept by reference so it survives being moved. No target is the Site root, which
+                      is what the first answer says -- an author who never touches it has already said
+                      the right thing, and an unfinished answer stores nothing and leads there too.
                     */}
                     <PhiLabeledControl label="Forward" fill>
-                      <PhiCascaderControl
-                        value={brand.homeHref ?? "/"}
-                        options={homePathOptions}
-                        placeholder="Where the Brand leads"
+                      <PhiLinkTargetControl
+                        value={brand.homeLinkTarget}
+                        options={homePageOptions}
+                        area="public"
+                        labels={{
+                          none: "Site root",
+                          page: "Page",
+                          external: "Address",
+                          pagePlaceholder: homePagesFailed ? "The Pages could not be loaded." : "Select a Page",
+                          externalPlaceholder: "https://example.com",
+                          newTab: "Open in a new tab",
+                        }}
                         onChange={(next) => publishDraft(mergeThemeBrand(state.draft, {
-                          homeHref: next === "/" ? null : next,
+                          homeLinkTarget: next ?? null,
                         }))}
                       />
                     </PhiLabeledControl>

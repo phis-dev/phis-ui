@@ -186,7 +186,13 @@ See [Fonts and typography](#fonts-and-typography).
 `brand?: PhiSiteThemeBrand`, rendered by the Brand Widget. Site identity lives here and never in an Area
 preset.
 
-- `homeHref?: string` -- where the Brand leads; the Site root when absent.
+- `homeLinkTarget?: PhiLinkTarget` -- where the Brand leads: a Page by reference or an external address,
+  the same target every link stores ([REFERENCES.md](./REFERENCES.md#stable-internal-targets)). The Page
+  target names the public Area, since the Brand leads there wherever it is drawn. It is resolved on the
+  Server in the render's one batch of link targets, and the Brand Widget is handed the address. Absent,
+  or a Page that no longer resolves, is the Site root in the language being read. The server's reference
+  index reads CMS trees and not the Theme record, so this target is not among the affected references a
+  path change counts.
 - `eyebrow?: string` -- the small line above the Wordmark.
 - `logo?: { light?, dark? }` -- one Logo per mode, each one of
   - `{ sourceKind: "asset", assetId: number, url?: string }` (`url` is resolved on read and written by the

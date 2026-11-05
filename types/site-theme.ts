@@ -1,4 +1,5 @@
 import type { PhiShadow } from "./layout-style";
+import type { PhiLinkTarget } from "./references";
 import type { PhiCmsBackgroundWidgetConfig } from "../components/widgets/config/background";
 
 /**
@@ -118,8 +119,15 @@ export type PhiSiteThemeBrandLine = {
  * decides is whether and how the Brand Widget appears; what it shows is decided here.
  */
 export type PhiSiteThemeBrand = {
-  /** Where the Brand Widget leads when it is clicked. The Site root where nothing says otherwise. */
-  homeHref?: string | null;
+  /**
+   * Where the Brand Widget leads when it is clicked. The Site root where nothing says otherwise.
+   *
+   * A link target like every other destination an author picks (`REFERENCES.md`): a Page by reference,
+   * resolved to its address per render, so a Page that is renamed or moved keeps the Brand leading to
+   * it. A Page that no longer resolves leads to the Site root rather than to a 404. The key ends in
+   * `LinkTarget`, which is what the reference collectors go by.
+   */
+  homeLinkTarget?: PhiLinkTarget | null;
   /** The small line above the Wordmark, for Sites whose name needs a word of context. */
   eyebrow?: string | null;
   /** The Logo, one picture per mode. A mode the record says nothing about wears the Theme Set's. */

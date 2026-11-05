@@ -1,4 +1,5 @@
 import { PHI_CMS_AREA_KEYS, type PhiCmsAreaKey } from "../constants/cms-areas";
+import { isPhiExternalHref } from "./external-href";
 
 export { PHI_CANONICAL_SOURCE_LOCALE } from "@phis/contracts/locale";
 import { PHI_CANONICAL_SOURCE_LOCALE } from "@phis/contracts/locale";
@@ -152,6 +153,28 @@ function prefixPath(prefix: string, targetPath: string) {
 
 export function localizePath(locale: SiteLocale | string, targetPath: string) {
   return prefixPath(locale, targetPath);
+}
+
+/**
+ * A Public path in the language being read, unless it already names one.
+ *
+ * A path stored without a locale (`/home`) gets `locale` in front, as `/` does; one whose first segment
+ * is one of the Site's locales (`/de/home`) and an external URL stay as they are. The locales are needed
+ * to tell a locale segment from a page, which `matchPhiLocalePrefixSegment` does.
+ */
+export function localizePathUnlessLocalized(
+  locale: SiteLocale | string,
+  targetPath: string,
+  availableLocales: readonly string[],
+) {
+  if (isPhiExternalHref(targetPath)) {
+    return targetPath;
+  }
+  const firstSegment = targetPath.split("/").filter(Boolean)[0];
+  if (firstSegment && matchPhiLocalePrefixSegment(firstSegment, { availableLocales })) {
+    return targetPath;
+  }
+  return localizePath(locale, targetPath);
 }
 
 /**

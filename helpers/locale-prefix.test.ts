@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { localizePath, matchPhiLocalePrefixSegment, phiAreaPath, stripLocaleFromPathname } from "./locale";
+import {
+  localizePath,
+  localizePathUnlessLocalized,
+  matchPhiLocalePrefixSegment,
+  phiAreaPath,
+  stripLocaleFromPathname,
+} from "./locale";
 
 const options = { defaultLocale: "en", availableLocales: ["en", "de", "de-AT", "pt-BR"] };
 
@@ -55,5 +61,22 @@ describe("localizePath and phiAreaPath", () => {
   it("pass an absolute URL through", () => {
     expect(localizePath("de", "https://example.com/x")).toBe("https://example.com/x");
     expect(phiAreaPath("admin", "http://example.com")).toBe("http://example.com");
+  });
+});
+
+describe("localizePathUnlessLocalized", () => {
+  const locales = options.availableLocales;
+
+  it("puts the locale in front of a path that names none", () => {
+    expect(localizePathUnlessLocalized("de", "/home", locales)).toBe("/de/home");
+    expect(localizePathUnlessLocalized("de", "/", locales)).toBe("/de");
+    expect(localizePathUnlessLocalized("de", "/de-facto", locales)).toBe("/de/de-facto");
+  });
+
+  it("leaves a localized path and an external URL alone", () => {
+    expect(localizePathUnlessLocalized("de", "/en/home", locales)).toBe("/en/home");
+    expect(localizePathUnlessLocalized("de", "/pt-br", locales)).toBe("/pt-br");
+    expect(localizePathUnlessLocalized("de", "https://example.com/x", locales)).toBe("https://example.com/x");
+    expect(localizePathUnlessLocalized("de", "mailto:a@example.com", locales)).toBe("mailto:a@example.com");
   });
 });

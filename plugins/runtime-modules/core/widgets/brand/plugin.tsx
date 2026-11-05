@@ -1,5 +1,6 @@
 import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
 import { resolvePhiBrandWordmarkText } from "../../../../../helpers/brand-wordmark";
+import { resolvePhiBrandWidgetHome } from "./home";
 import { PhiBrandWidget } from "./server";
 import {
   PHI_BRAND_WIDGET_DEFINITION,
@@ -18,21 +19,21 @@ import {
  */
 export const PHI_BRAND_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsBrandWidgetConfig> = {
   ...PHI_BRAND_WIDGET_DEFINITION,
-  render: ({ widget, config, runtime }) => (
+  render: ({ widget, config, runtime, links }) => (
     <PhiBrandWidget
       key={`widget-${widget.id}`}
       fallbackTitle={resolvePhiBrandWordmarkText(runtime)}
-      locale={runtime.locale.current}
+      home={resolvePhiBrandWidgetHome(runtime, links)}
       mode={config.mode}
       fontFamily={config.fontFamily}
       fontSize={config.fontSize}
     />
   ),
-  renderPreview: ({ widget, config, runtime }) => (
+  renderPreview: ({ widget, config, runtime, links }) => (
     <PhiBrandWidget
       key={`widget-${widget.id}`}
       fallbackTitle={resolvePhiBrandWordmarkText(runtime)}
-      locale={runtime.locale.current}
+      home={resolvePhiBrandWidgetHome(runtime, links)}
       mode={config.mode}
       fontFamily={config.fontFamily}
       fontSize={config.fontSize}

@@ -75,6 +75,13 @@ describe("the Pages a tree's configs point at", () => {
       .toEqual([`-|${PAGE}`]);
   });
 
+  it("finds the Brand's target in the Theme record, by the same field-name rule", () => {
+    expect(askedFor({
+      homeLinkTarget: { kind: "page", reference: PAGE, area: "public" },
+      logo: { light: { sourceKind: "none" } },
+    })).toEqual([`public|${PAGE}`]);
+  });
+
   it("has nothing to ask about a config that links nowhere", () => {
     expect(askedFor({ title: "Pricing", href: "/pricing" })).toEqual([]);
   });

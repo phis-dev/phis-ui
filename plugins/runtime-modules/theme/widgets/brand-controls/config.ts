@@ -4,7 +4,6 @@ import {
   type PhiCmsAreaKey,
 } from "../../../../../constants/cms-areas";
 import { PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS } from "../../../../../constants/media-library-provider-keys";
-import { PHI_AUTHORING_OPTION_PROVIDER_KEYS } from "../../../../../constants/authoring-option-provider-keys";
 import { PHI_THEME_SIGNAL_CHANNELS } from "../../../../../plugins/runtime-modules/theme/controller/signals";
 import { createPhiCmsWidgetDefinition } from "../../../../../components/widgets/config/helpers";
 import { readString } from "../../../../../components/widgets/config/parser-primitives";
@@ -84,15 +83,12 @@ export const PHI_BUILDER_BRAND_IDENTITY_CONTROLS_WIDGET_DEFINITION: PhiBuilderBr
   iconFamily: "theme",
   slotSizePolicy: "fill-inline",
   /*
-   * The Logo is picked from the Media library and the Brand's link from the Page catalogue, and a Page
-   * mounts only the Data Providers its tree asks for. The scan reads this declaration; a Provider a
-   * Widget reaches for from inside its client code is invisible to it. Same reason the Background
-   * panel declares its own.
+   * The Logo is picked from the Media library, and a Page mounts only the Data Providers its tree asks
+   * for. The scan reads this declaration; a Provider a Widget reaches for from inside its client code is
+   * invisible to it. Same reason the Background panel declares its own. The Brand's link needs none: its
+   * Pages come from `/api/site/page-references`, as every link picker's outside the Builder catalog do.
    */
-  requiredDataProviders: [
-    PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection,
-    PHI_AUTHORING_OPTION_PROVIDER_KEYS.pages,
-  ],
+  requiredDataProviders: [PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection],
   runtimeSignals: PHI_BUILDER_BRAND_PREVIEW_MODE_SIGNALS,
   fields: [
     { key: "themeKey", type: "string", label: "Theme Key" },

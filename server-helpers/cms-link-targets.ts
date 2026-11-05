@@ -33,6 +33,12 @@ export async function resolvePhiCmsTreeLinkTargets(
   for (const node of [...tree.regions, ...tree.overlays, ...tree.layoutNodes, ...tree.contentWidgets]) {
     collectPhiLinkTargetReferences(node.config, references);
   }
+  /*
+   * And the Brand's, which is the Site's and not any node's (THEME.md "Brand"): the Brand Widget leads
+   * where the Theme says, and that target resolves with the rest of the page rather than in a round
+   * trip of its own per Brand drawn -- a header and a footer would be two.
+   */
+  collectPhiLinkTargetReferences(runtime.site.theme?.brand, references);
   return resolvePhiLinkTargetReferences(references, runtime);
 }
 

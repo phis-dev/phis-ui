@@ -4,7 +4,7 @@ import type { PhiBrandWidgetClientProps, PhiBrandWidgetConfig } from "./client";
 
 export type PhiBrandWidgetProps = Pick<
   PhiBrandWidgetClientProps,
-  "fallbackTitle" | "interactive" | "locale"
+  "fallbackTitle" | "interactive" | "home"
 > & PhiBrandWidgetConfig;
 
 /*
@@ -14,7 +14,7 @@ export type PhiBrandWidgetProps = Pick<
 export function PhiBrandWidget({
   fallbackTitle,
   interactive,
-  locale,
+  home,
   mode,
   fontFamily,
   fontSize,
@@ -27,7 +27,7 @@ export function PhiBrandWidget({
       componentProps={{
         config,
         fallbackTitle,
-        locale,
+        home,
         interactive,
       }}
     />
