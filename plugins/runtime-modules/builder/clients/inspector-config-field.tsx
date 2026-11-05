@@ -1456,6 +1456,7 @@ function renderPhiInspectorConfigFieldBody({
         }
         disabled={disabled || !onChange}
         inputType={field.type === "url" ? "url" : "text"}
+        {...("placeholder" in field && field.placeholder ? { placeholder: field.placeholder } : {})}
         style={{ width: "100%" }}
         onChange={(nextValue) => onChange?.({
           [field.key]: nextValue || ("emptyValue" in field ? field.emptyValue : undefined),
@@ -1497,6 +1498,26 @@ function renderPhiInspectorConfigFieldBody({
 
   if (field.type === "flags") {
     const mask = typeof value === "number" ? value : typeof defaultValue === "number" ? defaultValue : 0;
+    /*
+     * One flag is a yes or no, and reads as one: the field's name with a switch behind it on its row,
+     * like a boolean field, rather than a group of a single checkbox under a heading. The other bits of
+     * the mask stay as they are.
+     */
+    const [onlyOption] = field.options.length === 1 ? field.options : [];
+    if (onlyOption) {
+      return renderPhiInspectorSwitchRow({
+        key: field.key,
+        label: renderPhiInspectorConfigFieldLabel(field),
+        checked: (mask & onlyOption.value) !== 0,
+        disabled: disabled || !onChange,
+        ...(onChange
+          ? {
+              onChange: (checked: boolean) =>
+                onChange({ [field.key]: checked ? mask | onlyOption.value : mask & ~onlyOption.value }),
+            }
+          : {}),
+      });
+    }
     return renderPhiInspectorConfigFieldBlock(
       field,
       <PhiCheckboxGroupControl<number>

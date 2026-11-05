@@ -165,6 +165,8 @@ export type PhiCmsConfigField =
        * Button that is only its icon.
        */
       emptyValue?: "";
+      /** What an empty box shows: what an unset value means, such as `Auto`. Not stored. */
+      placeholder?: string;
     })
   | (PhiCmsConfigFieldBase & {
       /**
