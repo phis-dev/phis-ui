@@ -160,6 +160,12 @@ export function PhiSimpleTextWidgetClient({
     }));
   });
 
+  /*
+   * A linked text's colour is the link's (`PhiLink`), which answers the pointer; the words inside inherit
+   * it. Stated on them as well, the colour stood over the link's and the hover never showed.
+   */
+  const contentColor = hasHref ? undefined : textColor;
+
   const contentNode = (
     <PhiFlexControl
       align="center"
@@ -170,7 +176,7 @@ export function PhiSimpleTextWidgetClient({
         minWidth: 0,
         fontSize: resolvedFontSize ?? "inherit",
         lineHeight: resolvedFontSize ? PHI_LINE_HEIGHT_LG : "inherit",
-        color: textColor ?? undefined,
+        color: contentColor ?? undefined,
         fontFamily: resolvedFontFamily,
       }}
     >
@@ -184,7 +190,7 @@ export function PhiSimpleTextWidgetClient({
         disabled={styleValue.disabled}
         code={styleValue.code}
         style={{
-          color: textColor ?? "inherit",
+          color: contentColor ?? "inherit",
           fontSize: resolvedFontSize ?? "inherit",
           lineHeight: resolvedFontSize ? PHI_LINE_HEIGHT_LG : "inherit",
           ...(resolvedFontFamily ? { fontFamily: resolvedFontFamily } : {}),

@@ -43,10 +43,15 @@ export function PhiLink({
 
   const linkStyle = useMemo<CSSProperties>(
     () => ({
-      color: active ? token.colorLinkActive : hovered ? token.colorLinkHover : token.colorLink,
       textDecoration: "none",
       cursor: "pointer",
       ...style,
+      /*
+       * A colour the caller states is the link at rest -- a Header's text colour, a list's inherited one --
+       * and never more: pointed at and pressed, a link answers in the Theme's link colours whatever it
+       * rests in. Spread after `style`, a stated colour had silenced the hover of every link that set one.
+       */
+      color: active ? token.colorLinkActive : hovered ? token.colorLinkHover : style?.color ?? token.colorLink,
     }),
     [active, hovered, style, token.colorLink, token.colorLinkActive, token.colorLinkHover],
   );
