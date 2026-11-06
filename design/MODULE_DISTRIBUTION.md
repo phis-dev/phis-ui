@@ -7,7 +7,7 @@ a package the package manager can already resolve and fetches nothing itself.
 A Module may be distributed as a compiled package without publishing its TypeScript or TSX
 sources. The archive form below is unchanged by how it travels: phis packages are fetched from a
 source rather than resolved from a registry, and the delivered package carries the Module half, the
-Add-on half, or both. See [DISTRIBUTION.md](../../phis-server/design/DISTRIBUTION.md) in `@phis/server`. The source repository may remain private while CI publishes only the generated ESM,
+Add-on half, or both. See [DISTRIBUTION.md](https://github.com/phis-dev/phis-server/blob/main/design/DISTRIBUTION.md) in `@phis/server`. The source repository may remain private while CI publishes only the generated ESM,
 declaration files, documentation, and license metadata. npm does not require a public source
 repository or the original `src/` tree.
 

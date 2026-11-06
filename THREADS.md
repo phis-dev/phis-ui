@@ -6,7 +6,7 @@ to any third party that shows a conversation.
 
 **The data model is not here.** Threads, messages, participants, the visibility predicate, message
 confidentiality and attachment custody are Core's, and they are written down in
-[phis-server design/THREADS.md](../phis-server/design/THREADS.md). That document is cited by section
+[phis-server design/THREADS.md](https://github.com/phis-dev/phis-server/blob/main/design/THREADS.md). That document is cited by section
 number from elsewhere in this package; this one never restates it, because a second description of a
 schema is the copy that eventually disagrees.
 
@@ -87,7 +87,7 @@ operate would be offering something it cannot answer for.
 
 Custody follows the uploader: a person writes into their own User Space, never the Site Space. The rule
 and what it does not change are Core's, in
-[phis-server design/THREADS.md](../phis-server/design/THREADS.md) section 5.
+[phis-server design/THREADS.md](https://github.com/phis-dev/phis-server/blob/main/design/THREADS.md) section 5.
 
 What this Module declares is the need -- `mediaSpaces.user.kinds` -- and the list is its own module
 because both halves of the offer read it from opposite sides of the Server/Client seam: the Module
@@ -190,7 +190,7 @@ surface needs.
 ### The one place a language is stored
 
 `thread_messages.source_lang` exists and stays, and **only an integration writes it**
-([phis-server design/THREADS.md §14](../phis-server/design/THREADS.md)). An Add-on delivering messages
+([phis-server design/THREADS.md §14](https://github.com/phis-dev/phis-server/blob/main/design/THREADS.md)). An Add-on delivering messages
 usually knows the language for nothing -- a mail header, the locale of the page a form was submitted
 from, the browser language a chat widget saw -- and that is a fact which is lost if there is nowhere to
 put it. It is also the only kind of value a *filter* can use: routing Portuguese enquiries to the people

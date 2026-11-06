@@ -1120,7 +1120,7 @@ A Module without server requirements binds to Core with `PHI_CORE_SERVER_BINDING
 as `@phis/server/authentication:v1`. During request resolution the Site reads the Site's capability
 snapshot from `phis`; a selected Module activates only when its provider is available and every required
 capability is present. The server side of this contract is
-[phis-server SERVER_ADDONS.md](../phis-server/SERVER_ADDONS.md).
+[phis-server SERVER_ADDONS.md](https://github.com/phis-dev/phis-server/blob/main/SERVER_ADDONS.md).
 
 The Site Module never imports Add-on code. The Add-on never imports React or the Site Module. Versioned,
 React-free wire contracts may be shared through a neutral package. Module activation cannot install,

@@ -1,11 +1,11 @@
 # Phi Access and Visibility Contract
 
 This document is the contract for viewer access and responsive visibility in `@phis/ui`.
-[phis-server AUTHORIZATION.md](../phis-server/AUTHORIZATION.md) owns role and group-claim persistence and
-server-side authorization; [phis-server AUTHORIZATION.md, "Add-on roles"](../phis-server/AUTHORIZATION.md#5-add-on-roles) and
-[phis-server SERVER_ADDONS.md](../phis-server/SERVER_ADDONS.md) own Add-on roles;
-[phis-server GROUPS_AND_STORAGE.md](../phis-server/GROUPS_AND_STORAGE.md) owns general group membership and
-Media Space semantics; [phis-server design/DIRECTORY_PROVIDERS.md](../phis-server/design/DIRECTORY_PROVIDERS.md)
+[phis-server AUTHORIZATION.md](https://github.com/phis-dev/phis-server/blob/main/AUTHORIZATION.md) owns role and group-claim persistence and
+server-side authorization; [phis-server AUTHORIZATION.md, "Add-on roles"](https://github.com/phis-dev/phis-server/blob/main/AUTHORIZATION.md#5-add-on-roles) and
+[phis-server SERVER_ADDONS.md](https://github.com/phis-dev/phis-server/blob/main/SERVER_ADDONS.md) own Add-on roles;
+[phis-server GROUPS_AND_STORAGE.md](https://github.com/phis-dev/phis-server/blob/main/GROUPS_AND_STORAGE.md) owns general group membership and
+Media Space semantics; [phis-server design/DIRECTORY_PROVIDERS.md](https://github.com/phis-dev/phis-server/blob/main/design/DIRECTORY_PROVIDERS.md)
 describes provider authority, Directory bindings, and external membership provenance. Shared UI consumes
 those contracts rather than inventing Page-, Widget-, Navigation-, Collection-, or Module-specific access
 paths.

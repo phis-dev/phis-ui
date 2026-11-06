@@ -5,7 +5,7 @@ Shell CSS topology, the Root Background and Chrome Overlay layers, and Region ch
 [SHELL.md](./SHELL.md). How font files reach the page is owned by
 [NEXT_INTEGRATION.md](./NEXT_INTEGRATION.md#fonts). Shipping Theme blocks from a Module is walked through in
 [THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#5-add-a-theme-preset). Locale availability is not a Theme
-concern; it is resolved by `@phis/server` ([phis-server TRANSLATIONS.md, "Locale capability"](../phis-server/TRANSLATIONS.md#locale-capability)).
+concern; it is resolved by `@phis/server` ([phis-server TRANSLATIONS.md, "Locale capability"](https://github.com/phis-dev/phis-server/blob/main/TRANSLATIONS.md#locale-capability)).
 
 ## Where the Theme comes from
 

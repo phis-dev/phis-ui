@@ -3,7 +3,7 @@
 This document defines the `@phis/ui` contract for mutable Site Page paths,
 structured internal Page and Asset references, navigation targets, and references embedded in Markdown
 or HTML. Persistence, authorization, reference indexing, and authoritative resolution are owned by
-`@phis/server`; see [phis-server REFERENCES.md](../phis-server/REFERENCES.md).
+`@phis/server`; see [phis-server REFERENCES.md](https://github.com/phis-dev/phis-server/blob/main/REFERENCES.md).
 
 ## Identity and canonical Page paths
 

@@ -304,7 +304,7 @@ The workspace renders a provider-backed Table over the Localization Table Provid
 `editorTranslations` resource. Rows are source messages of the current Site, each with zero or one
 translation for the selected target locale, so missing translations are visible. The Provider reads and
 writes through the Site route `/api/site/editor/translations` (`GET`, `PATCH`, `DELETE`); the endpoint
-contract belongs to `@phis/server` ([phis-server docs/API.md](../phis-server/docs/API.md)). Source messages
+contract belongs to `@phis/server` ([phis-server docs/API.md](https://github.com/phis-dev/phis-server/blob/main/docs/API.md)). Source messages
 are never created here; they are collected by normal rendering and content extraction.
 
 ### Builder drag and drop contract

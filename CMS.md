@@ -99,8 +99,9 @@ lives in `@phis/contracts/cms`, because `phis` derives the same ids.
   saving, and publishing preserve it; publish never remaps ids.
 - A Module Page is addressed by `createPhiPresetCmsPageId({ ownerModuleId, presetKey })`; a Site Page by
   its path ([REFERENCES.md](./REFERENCES.md)).
-- Third-party code never creates ids or concrete CMS nodes. Presets use local node keys; the central
-  instantiator derives the ids. Node type never takes part in addressing, because several instances share
-  a type.
+- No preset spells out an id. A preset builder names its nodes by local keys and derives their ids from
+  its identity with `createPhiPresetCmsInstanceIdMap` (`@phis/ui/types`); a Region in a Page tree carries
+  a synthetic negative id instead ([MODULES.md](./MODULES.md#descriptor-identity-and-instantiation)).
+  Node type never takes part in addressing, because several instances share a type.
 - Duplicate node keys in a preset, invalid encodings, unresolved references, and collisions are errors;
   there are no compatibility ids or collision retries.

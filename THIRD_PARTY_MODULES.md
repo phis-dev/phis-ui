@@ -1,8 +1,9 @@
 # Third-party Site Module guide
 
 This guide is the practical entry point for building a Site Module package against `@phis/ui`: package
-structure, identifiers, Controllers, Widgets, Theme presets, Preset Forms, the fixed package exports,
-building, installing, and verification.
+structure, identifiers, Controllers, Widgets, Theme presets, Preset Forms, the Pages a Module brings
+([section 6a](#6a-pages-a-module-brings)), the fixed package exports, building, installing, and
+verification.
 
 The contracts it applies are:
 
@@ -873,7 +874,8 @@ export const STATUS_THEMES = [{
 ```
 
 `themeKey` and the loaded preset's `key` must match, as must their titles. Increment the descriptor and
-preset versions when the published preset contract changes. `palette.seed` carries the seeds both modes
+preset versions when a release of your package changes the published preset contract, for the same
+reason a route preset raises `presetVersion` ([Pages a Module brings](#6a-pages-a-module-brings)). `palette.seed` carries the seeds both modes
 share; `modes.light` / `modes.dark` carry the two base seeds, explicit colour tokens under `overrides`
 and the ten custom colours under `customColors`. A Site's own `theme.palette` has exactly this shape and
 is laid over the preset field by field.
@@ -958,6 +960,288 @@ The Form contract is [FORMS.md](./FORMS.md); the step-by-step guide is
   (`controller:@phis/ui/modules/core/controller/form:<instanceKey>`) unless the Module has a genuinely
   different lifecycle.
 
+## 6a. Pages a Module brings
+
+A Page a Module brings is a **route preset**: a descriptor that says where the Page answers and a tree
+loader that says what it draws. Nothing about it is a Next.js route, nothing is written to the database
+when it is installed, and it does not have to be seeded: the tree is built in memory from the descriptor
+on each request, until an author changes the Page and the Site saves a Draft of its own
+([MODULES.md](./MODULES.md#descriptor-identity-and-instantiation)).
+
+### The route descriptor
+
+`PhiCmsRoutePresetDescriptor` (`types/cms-module-descriptors.ts`, public from `@phis/ui/types`) is one
+entry of the catalog entry's `routes` ([section 7](#7-export-the-server-contributions)). The catalog
+compiles every active Module's `routes` into the Area's route table; the Module definition itself names
+no route.
+
+- `ownerModuleId` and `presetKey` are the Page's identity. The Builder addresses the Page by
+  `createPhiPresetCmsPageId({ ownerModuleId, presetKey })`, links reach it by a reference built from the
+  same pair, and its node ids are derived from it, so a `presetKey` is as permanent as a Widget type: rename
+  it and every saved copy, link and node id belongs to a Page that no longer exists. It is unique among
+  all the preset descriptors of the Module, routes, shells, overlays and Themes alike.
+- `area` is the one Area the Page answers in; the Module must list it in `eligibleAreas`.
+- `path` is the Area-local path. Outside Public it is served under the package path (`/status` in
+  `@acme/status` answers at `/app/acme/status/status` in the App Area); in Public it is applied for as
+  written, and the Site settles a collision when the Module is enabled ([Addresses are granted, not
+  owned](#addresses-are-granted-not-owned)). A path is exact or has one whole-segment parameter
+  (`/incidents/:slug`), which reaches `loadTree` as `params`.
+- `landingPage: true` on a Public route at `/` offers the Page as the Area's landing; it is an offer and
+  not a claim ([MODULES.md](./MODULES.md#who-owns-an-address)).
+- `title` is the Page's name in the Builder's Page tree and in link pickers, and its document title
+  where the tree's `page.pageMeta` names none; it is translated through the Site-scoped path. A
+  description, or a title label of its own, the tree returns through `pageMeta`
+  ([NEXT_INTEGRATION.md](./NEXT_INTEGRATION.md#page-metadata-indexing-and-sitemap)).
+  `defaultPageFlags` sets the `PhiCmsFlags` a Page of this route starts with -- `NoIndex` keeps it out
+  of the sitemap and the index. It is copied onto the Page when the route is instantiated; once the Site
+  changes it, the record answers and the descriptor is not consulted again.
+- `navigation` optionally places an entry that names this route by `routePresetKey`
+  ([section 8a](#8a-what-a-module-package-exports), Navigation). An entry names a preset, never a path.
+- `loadTree` returns the Page tree. Import the builder lazily, as below: the descriptors go into every
+  request's route table, the tree is needed only for the Page being drawn. The catalog checks what it
+  returns -- every id a preset id, every parent and Region root present, no id twice.
+- `presetVersion` is a positive integer. It is recorded on a Page built from the preset as its source
+  version, and the Revisions table uses it to tell a saved copy that it was made from an older preset. It
+  takes no part in ids, and a Page nobody has saved always draws the installed tree, so a changed tree
+  needs no bump to appear. Start at `1`, and raise it when a release of your package changes the
+  preset in a way a saved copy should hear about -- a Region, Layout or Widget added, removed or
+  re-keyed. That is what lets the Revisions table tell an author their saved Page is behind. (The
+  Modules that ship inside `@phis/ui` keep theirs at `1` until phis reaches v1; that rule is for this
+  repository, not for your package, whose users already hold saved copies.)
+
+### The tree builder
+
+A Page tree (`PhiResolvedCmsPageTree`) is the Page, its Regions, and the Layouts and Widgets inside them.
+It is built along one path ([MODULES.md](./MODULES.md#descriptor-identity-and-instantiation)):
+
+1. State the identity once: `{ domain: "page", ownerModuleId, presetKey }`.
+2. Turn the node keys into ids with `createPhiPresetCmsInstanceIdMap(identity, nodeKeys)` from
+   `@phis/ui/types`. Each id is a hash of the identity and the key, so it is the same in every release, on
+   every Site, and on the server side; a key listed twice throws. Two Pages built by one function differ by
+   `presetKey`, and so get different nodes from the same keys.
+3. Build the nodes with `createPhiCmsPresetNodes(page)` from `@phis/ui/helpers`. Handed the Page row
+   `loadTree` received, it returns `page`, `region`, `layout`, `widget`, `stack`, `overlay` and `dialog`,
+   and fills in what every node of a Page repeats -- Site, visibility mask, status, flags, and a
+   `sortOrder` that follows `slotIndex` unless given.
+
+What the tree contains:
+
+- **Regions** are the Page-owned zones of the shell: `PhiCmsRegionType.Content`, `SiderRight`, `Hero`,
+  `HeaderBottom`, `FooterTop`, `Drawer` ([CMS.md](./CMS.md#the-cms-tree)). A Region carries a synthetic
+  **negative** `id` the builder picks, unique among the package's presets, a `regionType`, its
+  `rootLayoutNodeId`, a `sortOrder`, and `config`: geometry such as `maxSize` and `margin`, and behaviour as
+  `PhiCmsFlags` bits in `config.flags` -- `Sticky` keeps a Sider in view under the Header, with
+  `offsetTop` as the air between them ([LAYOUTING.md](./LAYOUTING.md), [SHELL.md](./SHELL.md)). A Region
+  never holds a Widget directly.
+- **Layouts** by `typeKey`: `content` as a Region's root, `flex-vertical` for a stack, `flex` for a row,
+  `grid` and the rest of Core's families. `parentLayoutNodeId: null` marks a Region root; every other
+  node names its parent and its `slotIndex`, and a slot holds one child. For Core's families give
+  `creationPreset` (`{ layoutKind: "verticalflex", preset: "panel" }`, `{ layoutKind: "flex", preset:
+  "panel" }`), which selects their starting values; for your own Layouts leave it out
+  ([section 4a](#4a-add-a-layout)).
+- **Widgets** by `typeKey`, with `config` checked against Core's placement types
+  ([section 4b](#4b-place-core-widgets)). There is no heading Widget: a heading is Markdown (`#`).
+
+### Links are references, never paths
+
+A Page is linked by what it is, not where it currently answers. `createPhiPageReference({ kind:
+"module", ownerModuleId, presetKey })` from `@phis/ui/references` builds the reference; a Site Page is
+`{ kind: "site", pageScopeId }`, and the Public base's own Pages are in `PHI_PUBLIC_BASE_PAGE_REFERENCES`
+(`contact`, ...). A Widget link carries it as `linkTarget: { kind: "page", reference }`; Markdown carries
+it as a `phis:page/...` URI, which `createPhiPageUri(reference)` writes. Both are resolved on the server
+per render, to the address the Site assigned, namespace and locale included
+([REFERENCES.md](./REFERENCES.md)). A root-relative link such as `/status/incidents` is not a second
+way in: the Markdown Widget drops it and renders the text alone, and a link target refuses it on write.
+
+### Example
+
+Two Public Pages of the Status Module from [section 1](#1-define-stable-ids): an overview with an
+introduction, a button to the incident log and a sticky note in the right Sider, and the log itself.
+
+```ts
+// presets.ts
+import { PhiCmsFlags } from "@phis/ui/constants";
+import { createPhiPageReference } from "@phis/ui/references";
+import type { PhiCmsRoutePresetDescriptor } from "@phis/ui/types";
+import { STATUS_MODULE_ID } from "./ids";
+
+export const STATUS_OVERVIEW_ROUTE_PRESET_KEY = "status-overview";
+export const STATUS_INCIDENTS_ROUTE_PRESET_KEY = "status-incidents";
+
+/** The incident log, named by identity: the same value wherever it is linked from. */
+export const STATUS_INCIDENTS_PAGE = createPhiPageReference({
+  kind: "module",
+  ownerModuleId: STATUS_MODULE_ID,
+  presetKey: STATUS_INCIDENTS_ROUTE_PRESET_KEY,
+});
+
+export const STATUS_ROUTES = [{
+  ownerModuleId: STATUS_MODULE_ID,
+  presetKey: STATUS_OVERVIEW_ROUTE_PRESET_KEY,
+  presetVersion: 1,
+  area: "public",
+  path: "/status",
+  title: "Status",
+  loadTree: ({ page }) => import("./pages/overview-page-tree")
+    .then((module) => module.buildStatusOverviewPageTree({ page })),
+}, {
+  ownerModuleId: STATUS_MODULE_ID,
+  presetKey: STATUS_INCIDENTS_ROUTE_PRESET_KEY,
+  presetVersion: 1,
+  area: "public",
+  path: "/status/incidents",
+  title: "Incidents",
+  defaultPageFlags: PhiCmsFlags.NoIndex,
+  loadTree: ({ page }) => import("./pages/incidents-page-tree")
+    .then((module) => module.buildStatusIncidentsPageTree({ page })),
+}] satisfies readonly PhiCmsRoutePresetDescriptor[];
+```
+
+```ts
+// pages/overview-page-tree.ts
+import { PhiCmsFlags, PhiCmsPageType, PhiCmsRegionType } from "@phis/ui/constants";
+import { createPhiCmsPresetNodes } from "@phis/ui/helpers";
+import { createPhiPageUri } from "@phis/ui/references";
+import {
+  createPhiPresetCmsInstanceIdMap,
+  type PhiCmsPageNode,
+  type PhiResolvedCmsPageTree,
+} from "@phis/ui/types";
+import { STATUS_MODULE_ID } from "../ids";
+import { STATUS_INCIDENTS_PAGE, STATUS_OVERVIEW_ROUTE_PRESET_KEY } from "../presets";
+
+/** Synthetic Region ids: negative, and unique among this package's presets. */
+const REGION_IDS = { content: -710, siderRight: -711 } as const;
+
+const IDENTITY = {
+  domain: "page",
+  ownerModuleId: STATUS_MODULE_ID,
+  presetKey: STATUS_OVERVIEW_ROUTE_PRESET_KEY,
+} as const;
+
+const LAYOUT_IDS = createPhiPresetCmsInstanceIdMap(IDENTITY, ["content", "stack", "actions", "sider"]);
+const WIDGET_IDS = createPhiPresetCmsInstanceIdMap(IDENTITY, ["intro", "incidents", "siderNote"]);
+
+export function buildStatusOverviewPageTree({ page }: { page: PhiCmsPageNode }): PhiResolvedCmsPageTree {
+  const nodes = createPhiCmsPresetNodes(page);
+  return {
+    page: nodes.page({ pageType: PhiCmsPageType.Standard }),
+    overlays: [],
+    regions: [
+      nodes.region({
+        id: REGION_IDS.content,
+        regionType: PhiCmsRegionType.Content,
+        rootLayoutNodeId: LAYOUT_IDS.content,
+        sortOrder: 30,
+        config: { maxSize: { width: 860 }, margin: "0 auto" },
+      }),
+      // Optional: stays in view under the Header while the content scrolls.
+      nodes.region({
+        id: REGION_IDS.siderRight,
+        regionType: PhiCmsRegionType.SiderRight,
+        rootLayoutNodeId: LAYOUT_IDS.sider,
+        sortOrder: 40,
+        config: { flags: PhiCmsFlags.Sticky, offsetTop: 16 },
+      }),
+    ],
+    layoutNodes: [
+      nodes.layout({
+        typeKey: "content",
+        id: LAYOUT_IDS.content,
+        parentLayoutNodeId: null,
+        slotIndex: 0,
+        label: "status page",
+        config: {},
+      }),
+      nodes.layout({
+        typeKey: "flex-vertical",
+        creationPreset: { layoutKind: "verticalflex", preset: "panel" },
+        id: LAYOUT_IDS.stack,
+        parentLayoutNodeId: LAYOUT_IDS.content,
+        slotIndex: 0,
+        label: "status sections",
+        config: { anchor: { horizontal: "left", vertical: "top" } },
+      }),
+      nodes.layout({
+        typeKey: "flex",
+        creationPreset: { layoutKind: "flex", preset: "panel" },
+        id: LAYOUT_IDS.actions,
+        parentLayoutNodeId: LAYOUT_IDS.stack,
+        slotIndex: 1,
+        label: "status actions",
+        config: { padding: 0 },
+      }),
+      nodes.layout({
+        typeKey: "flex-vertical",
+        creationPreset: { layoutKind: "verticalflex", preset: "panel" },
+        id: LAYOUT_IDS.sider,
+        parentLayoutNodeId: null,
+        slotIndex: 0,
+        label: "status sider",
+        config: {},
+      }),
+    ],
+    contentWidgets: [
+      nodes.widget({
+        typeKey: "markdown",
+        id: WIDGET_IDS.intro,
+        parentLayoutNodeId: LAYOUT_IDS.stack,
+        slotIndex: 0,
+        label: "status intro",
+        config: { sourceMode: "inline", markdown: "# Service status\n\nAll systems are operational." },
+      }),
+      nodes.widget({
+        typeKey: "button",
+        id: WIDGET_IDS.incidents,
+        parentLayoutNodeId: LAYOUT_IDS.actions,
+        slotIndex: 0,
+        label: "status incidents button",
+        config: {
+          key: "incidents",
+          label: "Past incidents",
+          variant: "primary",
+          linkTarget: { kind: "page", reference: STATUS_INCIDENTS_PAGE },
+        },
+      }),
+      nodes.widget({
+        typeKey: "markdown",
+        id: WIDGET_IDS.siderNote,
+        parentLayoutNodeId: LAYOUT_IDS.sider,
+        slotIndex: 0,
+        label: "status sider note",
+        config: {
+          sourceMode: "inline",
+          markdown: `Something wrong? See the [incident log](${createPhiPageUri(STATUS_INCIDENTS_PAGE)}).`,
+        },
+      }),
+    ],
+  };
+}
+```
+
+`pages/incidents-page-tree.ts` is built the same way under its own identity. The labels are the nodes'
+names in the Builder's structure tree, not visible copy. `@phis/example` shows the smallest form of the
+same thing: one landing offered for the Public root, one Content Region with one Markdown Widget, built
+node by node with `buildPhiCmsLayoutNode` and `buildPhiCmsWidgetNode`.
+
+### From package to answering route
+
+1. **Contribute** the descriptors as `routes` on the catalog entry ([section 7](#7-export-the-server-contributions)).
+2. **Build** the package (`tsc` to `dist`, [section 8b](#8b-how-the-package-is-built)). A Site reads the
+   package's `exports`, which point into `dist`: a source change it has not been rebuilt for does not reach
+   the Site.
+3. **Install** it into the Site: `phis module add --site <site key> --package <@scope/name> [--spec
+   <version or workspace:*>] [--path <site root>]`, then rebuild the Site ([section 9](#9-install-without-patching-the-skeleton)).
+4. **Activate** the Module for the Area in the Builder and publish that module change. Installing enables
+   nothing, and a third-party Module is in no Area's default selection
+   ([MODULES.md](./MODULES.md#when-a-modules-page-actually-appears)). In Public, enabling checks the
+   declared paths and asks for another address where one is taken.
+5. **Request** the path. The route and its navigation entry are computed per request from the active
+   catalog, so they need no publish of their own, and the Page renders straight from the preset. A Draft
+   exists only once an author edits and saves the Page, and its published copy answers once it is
+   published; neither follows later changes to the preset, while an untouched Page always draws the
+   installed one.
+
 ## 7. Export the Server contributions
 
 A package hands its Modules over under fixed names, one per boundary. The root entrypoint exports the
@@ -1010,7 +1294,8 @@ export const phiModuleServerContributions = definePhiModuleServerContributions([
   Site assembly.
 
 Routes, Area shells, overlays, navigation injections, and Themes are descriptors on the same catalog
-entry ([MODULES.md](./MODULES.md#descriptor-identity-and-instantiation)). Modules never create physical
+entry ([MODULES.md](./MODULES.md#descriptor-identity-and-instantiation)); a route and the tree it draws
+are [section 6a](#6a-pages-a-module-brings). Modules never create physical
 Next.js routes. Outside Public, a route answers under its package: `/orders` in `@acme/shop` is served
 at `/acme/shop/orders` -- the scope loses its `@`, and the module key is not part of it. Public carries no
 namespace, and `/` is an application for the Area root slot. A Settings page is placed by its navigation
@@ -1246,7 +1531,7 @@ the handler, against `roles:v1`. A Module that gates only in the client has hidd
 
 Like the other provider-scoped policies, this one is owner-checked: a Module may name its own Add-on and
 Core, and not somebody else's. The policy is part of [ACCESS.md](./ACCESS.md); Add-on roles are declared
-as described in [phis-server AUTHORIZATION.md, "Add-on roles"](../phis-server/AUTHORIZATION.md#5-add-on-roles).
+as described in [phis-server AUTHORIZATION.md, "Add-on roles"](https://github.com/phis-dev/phis-server/blob/main/AUTHORIZATION.md#5-add-on-roles).
 
 ## 9. Install without patching the Skeleton
 
@@ -1294,7 +1579,7 @@ uninstall its Modules.
 After installation, rebuild the Site. Installing never enables a Module: the Site selects it per Area
 in the Builder, and only ids present in the build can be selected. If the package also carries an
 Add-on half, install and enable the Add-on through `phis addon` ([phis-server
-SERVER_ADDONS.md](../phis-server/SERVER_ADDONS.md)); Module activation never installs or enables it.
+SERVER_ADDONS.md](https://github.com/phis-dev/phis-server/blob/main/SERVER_ADDONS.md)); Module activation never installs or enables it.
 
 ## 10. Access, server capabilities, and errors
 

@@ -118,4 +118,4 @@ same page opened with `?check=1`, which renders dynamically. They must show the 
 | Route factories of the static tree | `next/area-route.tsx` (`createPhiNextStaticPublic*`), `next/root-route.tsx` (`createPhiNextStaticRootLayout`) |
 | The memory cache | `next/cache-handler.mjs` |
 | The Site's route tree | [NEXT_INTEGRATION.md](./NEXT_INTEGRATION.md#area-route-graph) |
-| The marker | `gateway/site-config.ts`, [gateway/CACHES.md](./gateway/CACHES.md), [phis-server DB.md](../phis-server/DB.md) |
+| The marker | `gateway/site-config.ts`, [gateway/CACHES.md](./gateway/CACHES.md), [phis-server DB.md](https://github.com/phis-dev/phis-server/blob/main/DB.md) |

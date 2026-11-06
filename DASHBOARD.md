@@ -165,7 +165,7 @@ after the payload is not a chain, and neither is paging inside a card somebody h
 rule covers the path to a readable card.
 
 **One read for cards that ask the same thing.** Several cards of one Module often read one route --
-the four cards of `@phis/releases` all draw on its `stats` answer. The list resolves its cards in a
+a release Module's view, clone and download cards may all draw on one `stats` answer. The list resolves its cards in a
 Route Handler, outside a render, so `React.cache` and `definePhiRequestMemo` do not reach them there.
 What they share is the card context: the list resolves it once and hands the same object to every card.
 `definePhiDashboardCardRead(load)` from `@phis/ui/module/dashboard-cards` keys a read by that object, so
@@ -220,7 +220,7 @@ payload the card resolved, and it lives wherever that data lives. The card prese
 so: a path to something already servable.
 
 A third party that wants a real picture of its own has a Space for it. Custody follows the uploader
-([phis-server design/THREADS.md](../phis-server/design/THREADS.md) section 5): a person writes into
+([phis-server design/THREADS.md](https://github.com/phis-dev/phis-server/blob/main/design/THREADS.md) section 5): a person writes into
 their own User Space, an Add-on into its own Add-on Space. Not the Site Space, but not nothing either
 -- and once it is a delivery path, it is a picture in the content and needs no rule of its own.
 

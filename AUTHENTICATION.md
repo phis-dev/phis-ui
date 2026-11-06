@@ -3,7 +3,7 @@
 This document is the frontend Runtime Module projection of the Site authentication contract. Global
 users, credentials, provider validation, account linking, Site policy, sessions, server endpoints, and CLI
 recovery are owned by `@phis/server` and defined in
-[phis-server AUTHENTICATION.md](../phis-server/AUTHENTICATION.md). This package
+[phis-server AUTHENTICATION.md](https://github.com/phis-dev/phis-server/blob/main/AUTHENTICATION.md). This package
 must not create a second identity, policy, or session model.
 
 ## 1. One optional multi-Area Module
@@ -305,7 +305,7 @@ browser logs.
 
 The installation catalog endpoints, their fields, test capability, disable/delete rules, and callback URI
 derivation are server-owned; see
-[phis-server AUTHENTICATION.md section 6](../phis-server/AUTHENTICATION.md#6-provider-installation-and-callback-flow).
+[phis-server AUTHENTICATION.md section 6](https://github.com/phis-dev/phis-server/blob/main/AUTHENTICATION.md#6-provider-installation-and-callback-flow).
 The Settings page presents the catalog through the generic Table and Form contracts on the Settings page
 shell: the `auth-installations` Table data provider with inline enablement edits plus test and guarded
 delete row actions, and descriptor create/edit Forms.

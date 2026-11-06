@@ -2,7 +2,7 @@
 
 This document defines how `@phis/ui` shows and writes the entries of a content type -- News, Blog, and
 whatever kind Core declares next. What an entry is, who may write and publish it, and how versions and
-submissions work is Core's ([phis-server CONTENT.md](../phis-server/CONTENT.md)); this is the surface over
+submissions work is Core's ([phis-server CONTENT.md](https://github.com/phis-dev/phis-server/blob/main/CONTENT.md)); this is the surface over
 it.
 
 ## One surface, several kinds

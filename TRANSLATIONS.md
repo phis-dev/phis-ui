@@ -3,9 +3,9 @@
 This document owns the `@phis/ui` side of translation: the server-only helpers, Label Sets, source
 locales, structured documents, and what the package does with the resolved request locale.
 Persistence, canonical storage envelopes, provider requests, and change markers are owned by
-`@phis/server` ([TRANSLATIONS.md](../phis-server/TRANSLATIONS.md)). The locale capability superset, each
+`@phis/server` ([TRANSLATIONS.md](https://github.com/phis-dev/phis-server/blob/main/TRANSLATIONS.md)). The locale capability superset, each
 Site's validated subset, and `GET /api/v1/site/locale` are owned by `@phis/server`
-([phis-server TRANSLATIONS.md, "Locale capability"](../phis-server/TRANSLATIONS.md#locale-capability)). How translations are
+([phis-server TRANSLATIONS.md, "Locale capability"](https://github.com/phis-dev/phis-server/blob/main/TRANSLATIONS.md#locale-capability)). How translations are
 cached in a Site process is described in [gateway/CACHES.md](./gateway/CACHES.md#translation-caching).
 
 ## Helpers
@@ -204,7 +204,7 @@ is generated rather than declared, so two installations key the same string unde
 and no mirror can answer either of them. What would make those strings shareable is a package that
 declares its canonical text beside its own language; a local pre-translation is not the same thing, and
 looks like it is
-([phis-server TRANSLATIONS.md, "Translation modes"](../phis-server/TRANSLATIONS.md#translation-modes)).
+([phis-server TRANSLATIONS.md, "Translation modes"](https://github.com/phis-dev/phis-server/blob/main/TRANSLATIONS.md#translation-modes)).
 
 Module category, id, Provider keys, capabilities, and other machine identities remain stable keys. A
 separate global category Label Set may present a category key to users. Optional Site-owned presentation
