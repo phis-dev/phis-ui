@@ -14,8 +14,9 @@ import {
  * window that is dirty rather than glass that is lighter.
  */
 export const PHI_GLASS_LAYOUT_EFFECT_DEFINITIONS = {
-  glass: { filter: "blur(24px) saturate(1.2)", strengthPercent: 36 },
-  haze: { filter: "blur(10px) saturate(1.1)", strengthPercent: 60 },
+  clear: { filter: "blur(14px) saturate(1.6) brightness(1.08)", strengthPercent: 22 },
+  glass: { filter: "blur(28px) saturate(1.3)", strengthPercent: 34 },
+  haze: { filter: "blur(48px) saturate(1.2)", strengthPercent: 48 },
 } as const satisfies Record<PhiGlassLayoutEffectId, { filter: string; strengthPercent: number }>;
 
 function resolvePhiGlassBackground(

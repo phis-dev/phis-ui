@@ -39,7 +39,7 @@ import type { PhiCmsRegionReveal } from "../../types/cms-presets";
  * A wash of colour over the frame is an Overlay rather than a Filter, and the overlay offers those
  * unnarrowed.
  */
-export const PHI_SHELL_CHROME_OVERLAY_FILTERS: readonly PhiBackgroundFilter[] = ["glass", "haze"];
+export const PHI_SHELL_CHROME_OVERLAY_FILTERS: readonly PhiBackgroundFilter[] = ["glass", "haze", "clear"];
 
 /**
  * The Base kinds the overlay offers and honours, which is the whole contract.

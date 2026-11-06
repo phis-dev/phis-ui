@@ -279,6 +279,11 @@ export function resolvePhiCmsRegionShell({
     normalizeCssLength(config.collapsedWidth) ?? resolvePhiShellSiderCollapsedWidth(shellTheme);
   const top = normalizeCssLength(config.offsetTop) ?? 0;
   const topCss = typeof top === "number" ? `${top}px` : top;
+  // How far `content` reaches up into the Hero; `styles/shell.css` applies it only where there is one.
+  const heroOverlap = regionKey === "content" ? normalizeCssLength(config.heroOverlap) : null;
+  const heroOverlapCss = heroOverlap == null || heroOverlap === 0
+    ? null
+    : typeof heroOverlap === "number" ? `${heroOverlap}px` : heroOverlap;
   const sticky = hasPhiFlag(config.flags, PhiCmsFlags.Sticky);
   // A preview shows the Region where it stands, so an author can see what they are editing.
   const reveal = previewMode ? "always" : readPhiCmsRegionReveal(regionKey, config);
@@ -554,6 +559,7 @@ export function resolvePhiCmsRegionShell({
       ? { marginBlockEnd: `calc(-1 * ${blockSize ?? "var(--phi-region-reveal-extent, 0px)"})` }
       : {}),
     ...(reveal === "always" ? {} : { "--phi-region-reveal-offset": topCss } as CSSProperties),
+    ...(heroOverlapCss ? { "--phi-region-hero-overlap": heroOverlapCss } as CSSProperties : {}),
   };
 
   return {

@@ -193,11 +193,11 @@ The site-owned Shell Chrome Overlay is its counterpart in front of the scrolling
   around the Page rather than as four pictures meeting at the corners — and what the frame shows of it
   are its edges, which is what makes flat pictures (textures, fields of color, the outer reaches of a
   landscape) the ones that work. A picture and `glass` are mutually exclusive: see the Filter rule below
-- offers the two glass panes, `glass` and `haze`, as its only Background Filters, and offers no motion at
+- offers the three glass panes, `glass`, `haze` and `clear`, as its only Background Filters, and offers no motion at
   all. The overlay is handed to the Regions that paint it as custom properties, with no layer of its own,
   so there is no separate paint for `blur` to soften without softening those Regions' own content. A pane
   acts on what is behind a Region instead, which is what a shared frame over a scrolling Page wants —
-  `glass` frosts the Page underneath, `haze` only clouds it;
+  `clear` frosts the Page underneath lightly, `glass` at medium strength, `haze` strongly;
   motion has nothing to travel against on a viewport-anchored ground. Tinting the frame is the business
   of the color Overlay, which the overlay offers unnarrowed
 - cannot frost a picture, at either strength. A pane works by thinning the Base so the filtered backdrop reads through it,
@@ -445,6 +445,21 @@ matching mode.
 
 A Hero with one picture and a fixed tone still works; its words follow the tone, the Header does not. A
 Header that has to read over such a picture needs a ground of its own.
+
+### Content reaching into the Hero
+
+A Page's `content` may reach up into its Hero by `heroOverlap` (a length on the `content` Region's config,
+"Reaches into the Hero" under Geometry in the Region Inspector): its first boxes -- cards, a form -- stand
+on the lower part of the Hero's picture, which runs on under them.
+
+- Only `content`, and only where the Page has a Hero; a Page without one ignores it, so the same value
+  does nothing on a Page that drops its Hero.
+- The Region publishes `--phi-region-hero-overlap`, and `styles/shell.css` sets it up by that much
+  (important, as a Region's root states `margin: 0`). `content` follows the Hero in the DOM at the same
+  z-index, so it paints over the picture; the Hero keeps its height, and what comes after the content
+  moves up with it.
+- The Hero does not make room for it: its own words should end above the overlap, which its bottom inset
+  is for.
 
 ## Page Layout Boundary
 

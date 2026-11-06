@@ -383,6 +383,7 @@ export function PhiBackgroundControl({
   ];
   const filterKindCatalog: Array<{ value: "none" | PhiBackgroundFilter; label: string }> = [
     { value: "none", label: labels.common.none },
+    { value: "clear", label: labels.filter.clear },
     { value: "glass", label: labels.filter.glass },
     { value: "haze", label: labels.filter.haze },
     { value: "blur", label: labels.filter.blur },

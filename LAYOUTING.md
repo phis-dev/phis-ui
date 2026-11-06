@@ -293,10 +293,13 @@ stored `fixed` resolves to no motion. Its host geometry belongs to [SHELL.md](./
 ### Background filter
 
 A Background carries one optional `filter` (`types/layout-style.ts`, `PHI_BACKGROUND_FILTERS`): `glass`,
-`haze`, or `blur`. It acts on the Background, never on the content of the box that carries it.
+`haze`, `clear`, or `blur`. It acts on the Background, never on the content of the box that carries it.
 
-- `glass` and `haze` are panes: a `backdrop-filter` on the box frosts what lies behind it, through a ground
-  thinned from the Base colour. They need a Base there is something to thin, so they are neither offered nor
+- `glass`, `haze` and `clear` are panes: a `backdrop-filter` on the box frosts what lies behind it, through a
+  ground thinned from the Base colour (`PHI_GLASS_LAYOUT_EFFECT_DEFINITIONS`). Three strengths: `clear`
+  (light) keeps 22 % of the colour under a 14 px frost and lifts and saturates what shows through, for
+  glass over a photograph or a dark gradient; `glass` (medium) 34 % under 28 px; `haze` (strong) 48 %
+  under 48 px, which leaves only colour and light of what lies behind. They need a Base there is something to thin, so they are neither offered nor
   rendered over an image or a gradient.
 - `blur` softens the paint itself -- a picture, a gradient, a pattern or noise; a flat colour softened is the
   same colour, so it is neither offered nor rendered there. A filter on the box would soften the content with
@@ -310,7 +313,24 @@ A Background carries one optional `filter` (`types/layout-style.ts`, `PHI_BACKGR
 A stored value the Background cannot render resolves to no filter without being rewritten
 (`resolvePhiBackgroundFilter`), and the Control offers only what the current Background can render
 (`phiBackgroundSupportsFilter`). A surface narrows the offer with `filters` the way it narrows
-`motionModes`: the Shell Chrome Overlay offers the two panes, the Theme Root Background none.
+`motionModes`: the Shell Chrome Overlay offers the three panes, the Theme Root Background none.
+
+### Gradient glows
+
+A gradient Base may carry `glows`: soft radial fields of light laid over its linear gradient, first on
+top -- an ember in one corner, a wash of colour on one side, as a Theme's ground often wants.
+
+```ts
+{ kind: "gradient", direction: "160deg", stops: [...],
+  glows: [{ color: "#E59544", opacity: 0.35, x: "82%", y: "8%", width: "60%", height: "50%", fade: 70 }] }
+```
+
+`color` at `opacity` (0--1, default 1) in the centre at `x`, `y`, fading to nothing at `fade` percent
+(default 70) of the radii `width` and `height` (default `width`). Lengths are CSS lengths -- `%`, `px`,
+`rem`, `em`, `vw`, `vh`; a number is a percentage. A field that cannot be read is left out. They work
+wherever a gradient Base does: the Theme's ground, the Chrome Overlay, Regions, Layouts and Widgets, per
+mode with `backgroundDark`. A Preset or an agent states them; the Background Control does not offer them
+yet, and keeps them through its edits, because it changes a Base by spreading it.
 
 ## Form grid
 

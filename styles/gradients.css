@@ -47,11 +47,11 @@
  * left. A filter eases with the rest.
  */
 .ant-btn.ant-btn.phi-btn-gradient.phi-btn-gradient:not(:disabled):not(.ant-btn-disabled):hover {
-  filter: brightness(1.08);
+  filter: brightness(1.18) saturate(1.15);
 }
 
 .ant-btn.ant-btn.phi-btn-gradient.phi-btn-gradient:not(:disabled):not(.ant-btn-disabled):active {
-  filter: brightness(0.92);
+  filter: brightness(0.88);
 }
 
 /*

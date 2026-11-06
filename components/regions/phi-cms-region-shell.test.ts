@@ -231,3 +231,20 @@ describe("a stuck Sider", () => {
     expect(phiCmsRegionSiderSticks("header_main", { flags: PhiCmsFlags.Sticky })).toBe(false);
   });
 });
+
+describe("region shell ground per mode and Hero overlap", () => {
+  it("paints a Region's own ground per mode", () => {
+    const shell = resolve({
+      regionKey: "hero",
+      config: { surface: { background: { base: { kind: "color", color: "#ffffff" } }, backgroundDark: { base: { kind: "color", color: "#000000" } } } },
+    });
+    expect(shell.style.backgroundColor).toBe("var(--phi-mode-light-gate, #000000) var(--phi-mode-dark-gate, #ffffff)");
+  });
+
+  it("publishes how far content reaches into the Hero, and only on content", () => {
+    const content = resolve({ regionKey: "content", config: { heroOverlap: 120 } });
+    expect((content.style as Record<string, unknown>)["--phi-region-hero-overlap"]).toBe("120px");
+    const footer = resolve({ regionKey: "footer_main", config: { heroOverlap: 120 } });
+    expect((footer.style as Record<string, unknown>)["--phi-region-hero-overlap"]).toBeUndefined();
+  });
+});

@@ -99,8 +99,8 @@ const PHI_PRIMARY_BUTTON_GRADIENT_TOKENS = {
 } as const;
 
 /** A run a little lighter under the pointer, a little darker while it is pressed. */
-const PHI_GRADIENT_HOVER_FILTER = "brightness(1.08)";
-const PHI_GRADIENT_ACTIVE_FILTER = "brightness(0.92)";
+const PHI_GRADIENT_HOVER_FILTER = "brightness(1.18) saturate(1.15)";
+const PHI_GRADIENT_ACTIVE_FILTER = "brightness(0.88)";
 
 type Rgb = { r: number; g: number; b: number };
 

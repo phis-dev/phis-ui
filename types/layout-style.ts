@@ -2,13 +2,14 @@ import { isPhiRecord } from "../helpers/is-record";
 /**
  * The Background filters that are a pane rather than a treatment of the paint itself.
  *
- * `glass` and `haze` are the same thing at two strengths: a sheet that frosts what shows through it.
- * `glass` is the frosted pane, `haze` the barely clouded one -- both a smaller radius and more of the
- * ground let through, because moving only one of the two reads as a dirty window rather than as
- * lighter glass. Everything that used to test for `glass` asks this instead, so a further strength
- * would be a table entry and not another branch.
+ * `clear`, `glass` and `haze` are the same thing at three strengths: a sheet that frosts what shows
+ * through it, light, medium and strong. The frost and the share of the ground's colour rise together,
+ * because moving only one of the two reads as a dirty window rather than as another strength of glass.
+ * `clear` lifts and saturates what it shows so it still reads as glass with little tint. Everything
+ * that used to test for `glass` asks this instead, so a further strength is a table entry and not
+ * another branch.
  */
-export const PHI_GLASS_LAYOUT_EFFECT_IDS = ["glass", "haze"] as const;
+export const PHI_GLASS_LAYOUT_EFFECT_IDS = ["glass", "haze", "clear"] as const;
 
 export type PhiGlassLayoutEffectId = (typeof PHI_GLASS_LAYOUT_EFFECT_IDS)[number];
 
@@ -50,12 +51,12 @@ export function readPhiShadow(value: unknown): PhiShadow | undefined {
 /**
  * What a Background does to the light that reaches it, beside what it paints.
  *
- * `glass` and `haze` are panes: they frost what shows THROUGH the surface, so they act on the backdrop and
+ * `glass`, `haze` and `clear` are panes: they frost what shows THROUGH the surface, so they act on the backdrop and
  * on a ground thinned enough to let it through. `blur` softens the Background's own paint -- the picture,
  * the gradient, the pattern -- and nothing in front of it: the content a surface carries is never filtered.
  * Darkening is not a filter; a colour Overlay at an opacity does it, and lets the colour be chosen.
  */
-export const PHI_BACKGROUND_FILTERS = ["glass", "haze", "blur"] as const;
+export const PHI_BACKGROUND_FILTERS = ["glass", "haze", "clear", "blur"] as const;
 
 export type PhiBackgroundFilter = (typeof PHI_BACKGROUND_FILTERS)[number];
 

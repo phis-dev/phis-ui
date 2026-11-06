@@ -48,7 +48,7 @@ describe("theme gradients", () => {
 
     const filled = buildPhiThemeGradientTokens({ gradients: undefined, token, primaryButtonGradient: "gradient2" });
     expect(filled.phiPrimaryButtonGradient).toBe(filled.phiGradient2);
-    expect(filled.phiPrimaryButtonGradientHover).toBe("brightness(1.08)");
+    expect(filled.phiPrimaryButtonGradientHover).toBe("brightness(1.18) saturate(1.15)");
     expect(filled.phiPrimaryButtonGradientText).toBe(filled.phiGradient2Text);
   });
 

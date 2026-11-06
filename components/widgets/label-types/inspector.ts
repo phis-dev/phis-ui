@@ -69,6 +69,8 @@ export type PhiInspectorRegionVisibilityLabels = {
   hover: string;
   scrollUp: string;
   pageOwned: string;
+  /** How far the Page's `content` reaches up into its Hero (`PhiCmsRegionConfig.heroOverlap`). */
+  heroOverlap: string;
 };
 
 export type PhiInspectorLinkTargetLabels = {
@@ -133,6 +135,7 @@ export const PHI_INSPECTOR_WIDGET_DEFAULT_LABELS: PhiInspectorWidgetLabels = {
     hover: "At the top edge",
     scrollUp: "When scrolling up",
     pageOwned: "This Region belongs to its Page and stands on that Page alone.",
+    heroOverlap: "Reaches into the Hero",
   },
   surfaceStyle: {
     title: "Style",

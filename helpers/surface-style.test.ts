@@ -86,7 +86,7 @@ describe("a Surface as CSS", () => {
 
   it("frosts the box under a glass pane and needs no layer for it", () => {
     const resolved = resolvePhiSurfaceStyle({ background: { base: { kind: "color", color: "#123456" }, filter: "glass" } });
-    expect(resolved.style.backdropFilter).toBe("blur(24px) saturate(1.2)");
+    expect(resolved.style.backdropFilter).toBe("blur(28px) saturate(1.3)");
     expect(resolved.ground).toBeNull();
   });
 

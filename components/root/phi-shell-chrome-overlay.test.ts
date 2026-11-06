@@ -76,13 +76,13 @@ describe("shell chrome overlay filters", () => {
     expect(String(style?.backgroundColor)).toContain("color-mix");
   });
 
-  it("clouds without frosting under haze, the lighter of the two panes", () => {
+  it("frosts strongest under haze, the strongest of the three panes", () => {
     const style = resolvePhiShellChromeOverlayStyle(
       { chrome: { light: { base: { kind: "color" as const, color: "#123456" }, filter: "haze" as const } } },
       "light",
     );
-    expect(String(style?.backdropFilter)).toContain("blur(10px)");
-    expect(String(style?.backgroundColor)).toContain("60%");
+    expect(String(style?.backdropFilter)).toContain("blur(48px)");
+    expect(String(style?.backgroundColor)).toContain("48%");
   });
 
   it("resolves a Filter it does not offer away", () => {

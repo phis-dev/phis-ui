@@ -1406,7 +1406,7 @@ function renderPhiInspectorConfigFieldBody({
         value={value === null ? null : readPhiSurface(value) ?? readPhiSurface(defaultValue)}
         tone={field.tone !== false}
         // A box inside a Widget has no layer of its own to blur.
-        backgroundFilters={["glass", "haze"]}
+        backgroundFilters={["glass", "haze", "clear"]}
         backgroundLabels={backgroundLabels}
         borderLabels={borderLabels}
         colorPickerLabels={colorPickerLabels}

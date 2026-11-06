@@ -67,6 +67,11 @@ export type PhiCmsRegionConfig = Record<string, unknown> & PhiCmsContainerChrome
   pageScope?: PhiCmsRegionPageScope;
   /** How `header_top` comes into view (`helpers/region-page-scope.ts`); every other Region ignores it. */
   reveal?: PhiCmsRegionReveal;
+  /**
+   * How far the Page's `content` reaches up into its Hero, the Hero's picture running on under it (SHELL.md
+   * "Content reaching into the Hero"). Read on `content` alone, and only where the Page has a Hero.
+   */
+  heroOverlap?: PhiCssLength;
 };
 
 /**

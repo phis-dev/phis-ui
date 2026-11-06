@@ -59,8 +59,8 @@ describe("background glass filter", () => {
       base: { kind: "color", color: "#123456" },
       filter: "glass",
     });
-    expect(style.backdropFilter).toBe("blur(24px) saturate(1.2)");
-    expect(style.backgroundColor).toBe("color-mix(in srgb, #123456 36%, transparent)");
+    expect(style.backdropFilter).toBe("blur(28px) saturate(1.3)");
+    expect(style.backgroundColor).toBe("color-mix(in srgb, #123456 34%, transparent)");
   });
 });
 

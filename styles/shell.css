@@ -613,3 +613,10 @@
 [data-phi-shell-layout]:not([data-phi-shell-variant="embedded-sider"]) > [data-phi-region-key="hero"] > .phi-cms-region-shell__content > .phi-slot-child > [data-layout-kind] {
   padding-block-start: calc(var(--phi-shell-header-height, 0px) + var(--phi-layout-padding-top, 0px)) !important;
 }
+
+/* Content reaching into the Hero (SHELL.md): the Page's `content` set up by its `heroOverlap`, so its first
+   boxes stand on the Hero's picture. It follows the Hero in the DOM at the same z-index, so it paints over
+   it. Important because a Region's root states `margin: 0` inline. Nothing happens without a Hero. */
+[data-phi-shell-layout]:has(> [data-phi-region-key="hero"]) > main [data-phi-region-key="content"] {
+  margin-block-start: calc(-1 * var(--phi-region-hero-overlap, 0px)) !important;
+}

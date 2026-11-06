@@ -34,7 +34,7 @@ describe("shell region chrome background", () => {
       effect: "glass",
       tokens: { colorBgElevated: "#ffffff" },
     });
-    expect(chrome.background).toBe("color-mix(in srgb, #ffffff 36%, transparent)");
+    expect(chrome.background).toBe("color-mix(in srgb, #ffffff 34%, transparent)");
     expect(chrome.effectStyle?.backdropFilter).toBeTruthy();
   });
 });

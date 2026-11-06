@@ -82,6 +82,27 @@ export type PhiBackgroundBaseGradient = {
   kind: "gradient";
   direction: PhiBackgroundDirection;
   stops: PhiBackgroundGradientStop[];
+  /**
+   * Soft radial fields of light laid over the linear gradient, first on top: an ember in a corner, a
+   * wash of colour on one side. Stated by a Preset or an agent; the Background Control does not offer
+   * them yet, and keeps them through its edits because it changes the Base by spreading it.
+   */
+  glows?: PhiBackgroundGradientGlow[];
+};
+
+/**
+ * One field of light: `color` at `opacity` in its centre (`x`, `y` from the box's top left), fading to
+ * nothing at `fade` percent of its radii (`width`, `height`). Lengths are CSS lengths, mostly percentages
+ * of the box.
+ */
+export type PhiBackgroundGradientGlow = {
+  color: string;
+  opacity?: number;
+  x: string;
+  y: string;
+  width: string;
+  height?: string;
+  fade?: number;
 };
 
 export type PhiBackgroundBaseImage = {
@@ -263,6 +284,48 @@ function readBackgroundDirection(value: unknown): PhiBackgroundDirection {
   return direction && /^-?\d+(\.\d+)?deg$/.test(direction) ? (direction as PhiBackgroundDirection) : "to right";
 }
 
+const PHI_BACKGROUND_GLOW_LENGTH = /^-?\d+(\.\d+)?(%|px|rem|em|vw|vh)$/;
+
+function readBackgroundGlowLength(value: unknown): string | undefined {
+  const length = typeof value === "number" && Number.isFinite(value) ? `${value}%` : readString(value)?.trim();
+  return length && PHI_BACKGROUND_GLOW_LENGTH.test(length) ? length : undefined;
+}
+
+/** The fields of light a gradient states; one that cannot be read is left out, the rest still paint. */
+function readBackgroundGlows(value: unknown): PhiBackgroundGradientGlow[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+  const glows = value.flatMap((entry): PhiBackgroundGradientGlow[] => {
+    if (!isPhiRecord(entry)) return [];
+    const raw = entry as Record<string, unknown>;
+    const color = readString(raw.color)?.trim();
+    const x = readBackgroundGlowLength(raw.x);
+    const y = readBackgroundGlowLength(raw.y);
+    const width = readBackgroundGlowLength(raw.width);
+    if (!color || !x || !y || !width) return [];
+    const height = readBackgroundGlowLength(raw.height);
+    const opacity = readNumber(raw.opacity);
+    const fade = readNumber(raw.fade);
+    return [{
+      color,
+      x,
+      y,
+      width,
+      ...(height ? { height } : {}),
+      ...(opacity == null ? {} : { opacity: Math.max(0, Math.min(1, opacity)) }),
+      ...(fade == null ? {} : { fade: Math.max(1, Math.min(100, fade)) }),
+    }];
+  });
+  return glows.length > 0 ? glows : undefined;
+}
+
+function serializePhiBackgroundGlow(glow: PhiBackgroundGradientGlow) {
+  const opacity = Math.round((glow.opacity ?? 1) * 1000) / 10;
+  const color = opacity >= 100 ? glow.color : `color-mix(in srgb, ${glow.color} ${opacity}%, transparent)`;
+  return `radial-gradient(${glow.width} ${glow.height ?? glow.width} at ${glow.x} ${glow.y}, ${color} 0%, transparent ${glow.fade ?? 70}%)`;
+}
+
 function readBackgroundStops(value: unknown): PhiBackgroundGradientStop[] | undefined {
   if (!Array.isArray(value)) {
     return undefined;
@@ -336,7 +399,8 @@ function normalizePhiBackgroundBase(value: unknown): PhiCmsBackgroundWidgetConfi
     // Stops or nothing: a gradient without them has nothing to paint, and inventing white to black
     // would put a Background on screen that nobody authored.
     const stops = readBackgroundStops(raw.stops);
-    return stops ? { kind, direction: readBackgroundDirection(raw.direction), stops } : null;
+    const glows = readBackgroundGlows(raw.glows);
+    return stops ? { kind, direction: readBackgroundDirection(raw.direction), stops, ...(glows ? { glows } : {}) } : null;
   }
   if (kind === "image") {
     const source = readPhiMediaImageSourceConfig(raw);
@@ -508,7 +572,8 @@ export function serializePhiBackgroundBaseCss(base: PhiCmsBackgroundWidgetConfig
   if (base.kind === "theme") return String(PHI_BACKGROUND_THEME_STYLE.backgroundColor);
   if (base.kind === "color") return base.color;
   if (base.kind === "gradient") {
-    return `linear-gradient(${base.direction}, ${base.stops.map((stop) => `${stop.color} ${stop.percent}%`).join(", ")})`;
+    const linear = `linear-gradient(${base.direction}, ${base.stops.map((stop) => `${stop.color} ${stop.percent}%`).join(", ")})`;
+    return [...(base.glows ?? []).map(serializePhiBackgroundGlow), linear].join(", ");
   }
   const presentation = resolvePhiBackgroundImagePresentation(base);
   return presentation.url

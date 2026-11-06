@@ -28,6 +28,7 @@ import { PhiTypographyControl } from "../../../../components/controls/phi-typogr
 import type { PhiInspectorRegionVisibilityLabels } from "../../../../components/widgets/label-types/inspector";
 import { PHI_INSPECTOR_WIDGET_DEFAULT_LABELS } from "../../../../components/widgets/label-types/inspector";
 import { PhiRegionVisibilityFields } from "./region-visibility-fields";
+import { renderPhiInspectorConfigField } from "./inspector-config-field";
 const PHI_GAP_SM = "var(--ant-padding-sm)";
 
 const REGION_PADDING_KEYS = [
@@ -121,6 +122,22 @@ export function PhiDeveloperBuilderRegionInspectorWidgetClient({
                       onChange={(geometry) => updateDraft(geometry)}
                       labels={geometryLabels}
                     />
+                    {selectedRegionKey === "content" ? renderPhiInspectorConfigField({
+                      field: { key: "heroOverlap", type: "length", label: visibilityLabels.heroOverlap, min: 0 },
+                      value: effectiveDraft.regionConfig?.heroOverlap,
+                      defaultValue: undefined,
+                      config: effectiveDraft.regionConfig ?? {},
+                      disabled: isPreviewMode || !onDraftChange,
+                      onChange: (patch) => {
+                        const next = { ...(effectiveDraft.regionConfig ?? {}) };
+                        if (patch.heroOverlap == null || patch.heroOverlap === 0) {
+                          delete next.heroOverlap;
+                        } else {
+                          next.heroOverlap = patch.heroOverlap;
+                        }
+                        updateDraft({ regionConfig: next });
+                      },
+                    }) : null}
                   </div>
                 ),
               },
