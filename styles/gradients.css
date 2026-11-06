@@ -1,0 +1,85 @@
+/*
+ * Gradients and glass on Controls (theme/phi-theme-gradients.ts).
+ *
+ * Ant Design 6 draws a Button's ground with `background-color` from its own variables
+ * (`--ant-btn-bg-color`, `-hover`, `-active`) and never sets `background-image`. So a run laid on as
+ * `background-image` sits over Ant Design's colour without fighting it and keeps that colour as the edge
+ * a gradient cannot draw. A disabled Button is left out of every rule here: its run would outweigh the
+ * `background` shorthand Ant Design greys it out with. Text colour goes through Ant Design's text variables, which is
+ * what its hover and active rules read.
+ *
+ * The selectors repeat a class for the reason `control-shape.css` gives: Ant Design's rules weigh up to
+ * four classes, and a tie is settled by source order this file does not control.
+ */
+
+/*
+ * Every primary Button, where the Theme fills them with a gradient (`theme.buttons.primaryGradient`).
+ * A Button of the `gradient` variant is primary underneath and has a run of its own, so it is left out.
+ */
+.ant-btn.ant-btn.ant-btn-color-primary.ant-btn-variant-solid:not(.ant-btn-background-ghost):not(.phi-btn-gradient):not(:disabled):not(.ant-btn-disabled) {
+  background-image: var(--ant-phi-primary-button-gradient, none);
+  --ant-btn-text-color: var(--ant-phi-primary-button-gradient-text, var(--ant-color-text-light-solid));
+}
+
+.ant-btn.ant-btn.ant-btn-color-primary.ant-btn-variant-solid:not(.ant-btn-background-ghost):not(.phi-btn-gradient):not(:disabled):not(.ant-btn-disabled):hover {
+  filter: var(--ant-phi-primary-button-gradient-hover, none);
+}
+
+.ant-btn.ant-btn.ant-btn-color-primary.ant-btn-variant-solid:not(.ant-btn-background-ghost):not(.phi-btn-gradient):not(:disabled):not(.ant-btn-disabled):active {
+  filter: var(--ant-phi-primary-button-gradient-active, none);
+}
+
+/*
+ * A Button of the `gradient` variant: its slot's run, whatever the Theme does with primary Buttons. The
+ * Control states the slot as `--phi-control-gradient` and its text as `--phi-control-gradient-text`.
+ */
+.ant-btn.ant-btn.phi-btn-gradient.phi-btn-gradient:not(:disabled):not(.ant-btn-disabled) {
+  background-image: var(--phi-control-gradient);
+  --ant-btn-border-color: transparent;
+  --ant-btn-text-color: var(--phi-control-gradient-text);
+  --ant-btn-text-color-hover: var(--phi-control-gradient-text);
+  --ant-btn-text-color-active: var(--phi-control-gradient-text);
+}
+
+/*
+ * Under the pointer and pressed the run stays the same picture and only its light changes: Ant Design
+ * transitions every property of a Button, and a picture swapped on hover crossfaded badly as the pointer
+ * left. A filter eases with the rest.
+ */
+.ant-btn.ant-btn.phi-btn-gradient.phi-btn-gradient:not(:disabled):not(.ant-btn-disabled):hover {
+  filter: brightness(1.08);
+}
+
+.ant-btn.ant-btn.phi-btn-gradient.phi-btn-gradient:not(:disabled):not(.ant-btn-disabled):active {
+  filter: brightness(0.92);
+}
+
+/*
+ * A Button of the `glass` variant: a pane of the container ground of the mode it stands in, frosting
+ * whatever shows through it -- a picture, a gradient. Inside a dark Surface tone the ground is the dark
+ * one, so the pane darkens instead of misting a dark picture white.
+ */
+.ant-btn.ant-btn.phi-btn-glass.phi-btn-glass {
+  --ant-btn-bg-color: color-mix(in srgb, var(--ant-color-bg-container) 24%, transparent);
+  --ant-btn-bg-color-hover: color-mix(in srgb, var(--ant-color-bg-container) 38%, transparent);
+  --ant-btn-bg-color-active: color-mix(in srgb, var(--ant-color-bg-container) 48%, transparent);
+  --ant-btn-border-color: color-mix(in srgb, var(--ant-color-text) 24%, transparent);
+  --ant-btn-border-color-hover: color-mix(in srgb, var(--ant-color-text) 40%, transparent);
+  --ant-btn-border-color-active: color-mix(in srgb, var(--ant-color-text) 40%, transparent);
+  --ant-btn-text-color: var(--ant-color-text);
+  --ant-btn-text-color-hover: var(--ant-color-text);
+  --ant-btn-text-color-active: var(--ant-color-text);
+  /* The frost itself is inline on the Button: a `backdrop-filter` in a stylesheet does not survive the build (styles/shell.css). */
+}
+
+/* A Switch that is on, filled with its slot's run instead of the primary colour. */
+.ant-switch.ant-switch.ant-switch.phi-switch-gradient.ant-switch-checked {
+  background-image: var(--phi-control-gradient);
+}
+
+/* The thumb a Segmented slides under its selected item, and the item itself once the thumb has gone. */
+.ant-segmented.ant-segmented.phi-segmented-gradient .ant-segmented-thumb,
+.ant-segmented.ant-segmented.phi-segmented-gradient .ant-segmented-item-selected {
+  background-image: var(--phi-control-gradient);
+  color: var(--phi-control-gradient-text);
+}

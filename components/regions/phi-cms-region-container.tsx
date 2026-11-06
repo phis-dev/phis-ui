@@ -68,6 +68,8 @@ export function PhiCmsRegionContainer({
     (!previewMode && readPhiCmsRegionReveal(regionKey, config) !== "always") ||
     // A stuck Sider stands under the Header as measured, and only the browser can measure it.
     (!previewMode && phiCmsRegionSiderSticks(regionKey, config)) ||
+    // A Hero stands behind the Header bands, whose heights only the browser can measure for certain.
+    (!previewMode && regionKey === "hero") ||
     hasPhiFlag(config?.flags, PhiCmsFlags.Collapsible) ||
     requiresEffectsObserver ||
     resolvePhiBackgroundMotion(config?.surface?.background) != null;

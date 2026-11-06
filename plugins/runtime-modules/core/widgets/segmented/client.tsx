@@ -42,6 +42,7 @@ export function PhiSegmentedWidget({
       disabled={choice.disabled}
       readOnly={choice.readOnly}
       size={config?.controlSize}
+      {...(config?.gradient ? { gradient: config.gradient } : {})}
       options={choice.options}
       onChange={(resolvedValue) => {
           onChange?.(resolvedValue);

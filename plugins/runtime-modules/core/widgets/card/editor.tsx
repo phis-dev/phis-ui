@@ -226,13 +226,19 @@ export function PhiCardWidgetEditor({ config, onChange }: PhiCardWidgetEditorPro
            * Builder. The button is drawn whenever it is on, wherever it would lead.
            */
           action: config.actionEnabled === true
-            ? { ...(config.actionIcon ? { icon: config.actionIcon } : {}), ariaLabel: PHI_CARD_WIDGET_DEFAULT_LABELS.actionLabel }
+            ? {
+                ...(config.actionIcon ? { icon: config.actionIcon } : {}),
+                ariaLabel: PHI_CARD_WIDGET_DEFAULT_LABELS.actionLabel,
+                ...(config.actionVariant ? { variant: config.actionVariant } : {}),
+                ...(config.actionGradient ? { gradient: config.actionGradient } : {}),
+              }
             : null,
           variant: config.variant,
           body: config.body,
           highlight: config.highlight,
           badgeColor: config.badgeColor,
           badgeStyle: config.badgeStyle,
+          badgeGradient: config.badgeGradient,
           billingPeriod: config.billingPeriod,
           hoverEffect: config.linkTarget ? config.hoverEffect : undefined,
         }}

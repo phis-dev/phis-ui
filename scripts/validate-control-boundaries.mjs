@@ -704,6 +704,21 @@ const antdComponentVariableAllowance = new Map([
       + "the scale's `sm` through the variables it sizes its words and padding by (styles/controls.css, "
       + "Compact Select).",
   }]),
+  ...[
+    "--ant-btn-bg-color",
+    "--ant-btn-bg-color-hover",
+    "--ant-btn-bg-color-active",
+    "--ant-btn-border-color",
+    "--ant-btn-border-color-hover",
+    "--ant-btn-border-color-active",
+    "--ant-btn-text-color",
+    "--ant-btn-text-color-hover",
+    "--ant-btn-text-color-active",
+  ].map((variable) => [variable, {
+    reason: "Button's own variables. Ant Design 6 draws a Button's ground, edge and words from them in "
+      + "every state, so the gradient and glass Buttons set what they change there instead of fighting "
+      + "its hover and active rules (styles/gradients.css).",
+  }]),
   ["--ant-cascader-dropdown-height", {
     reason: "Cascader's own token. The root stylesheet sizes the popup by what the component sizes itself by.",
   }],

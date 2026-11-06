@@ -67,6 +67,7 @@ export function PhiSwitchWidget({
       label={config?.label}
       checkedLabel={config?.checkedLabel}
       uncheckedLabel={config?.uncheckedLabel}
+      {...(config?.gradient ? { gradient: config.gradient } : {})}
       onChange={publish}
     />
   );

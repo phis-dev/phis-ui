@@ -1,4 +1,6 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import { readPhiThemeGradientKey, type PhiThemeGradientKey } from "../../../../../theme/phi-theme-gradients";
+import { PHI_THEME_GRADIENT_FIELD_OPTIONS } from "../../../../../components/widgets/config/theme-gradient";
 import {
   PHI_BUTTON_VARIANT_FIELD_OPTIONS,
   readPhiButtonVariant,
@@ -44,6 +46,8 @@ export type PhiButtonWidgetConfig = PhiCmsWidgetConfigBase & PhiControlBadgeConf
   icon?: string;
   value?: string;
   variant?: PhiButtonVariant;
+  /** The Theme gradient slot a `gradient` Button is filled with; absent, the first. */
+  gradient?: PhiThemeGradientKey;
   /**
    * Where it leads, for a Button that is a way somewhere rather than a command.
    *
@@ -75,6 +79,7 @@ function parsePhiButtonWidgetConfig(config: Record<string, unknown>): PhiButtonW
     icon: readString(config.icon),
     value: readString(config.value),
     variant: readPhiButtonVariant(config.variant),
+    gradient: readPhiThemeGradientKey(config.gradient),
     linkTarget: readPhiLinkTarget(config.linkTarget) ?? undefined,
     danger: readBoolean(config.danger),
   };
@@ -126,6 +131,15 @@ export const PHI_BUTTON_WIDGET_DEFINITION = {
       type: "choice",
       label: "Variant",
       options: [...PHI_BUTTON_VARIANT_FIELD_OPTIONS],
+    },
+    {
+      key: "gradient",
+      type: "choice",
+      label: "Gradient",
+      description: "Which of the Theme's gradients fills the Button. The Theme decides how each one looks, per mode.",
+      options: [...PHI_THEME_GRADIENT_FIELD_OPTIONS],
+      placeholder: "Gradient 1",
+      visibleWhen: { field: "variant", equals: "gradient" },
     },
     { key: "label", type: "string", label: "Label", emptyValue: "" },
     { key: "tooltip", type: "string", label: "Tooltip" },

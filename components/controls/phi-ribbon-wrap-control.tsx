@@ -3,6 +3,8 @@
 import Ribbon from "antd/es/badge/Ribbon";
 import type { CSSProperties, ReactNode } from "react";
 
+import { PHI_THEME_GRADIENT_CSS_VARS, type PhiThemeGradientKey } from "../../theme/phi-theme-gradients";
+
 export type PhiRibbonWrapControlProps = {
   /** The box the ribbon hangs on. */
   children: ReactNode;
@@ -10,6 +12,11 @@ export type PhiRibbonWrapControlProps = {
   text: ReactNode;
   /** The ribbon's ground; absent, the Theme's primary. The fold under it is a darker shade of it. */
   color?: string;
+  /**
+   * A Theme gradient slot to fill the ribbon with. The fold under it keeps one colour -- `color`, else the
+   * Theme's primary -- because Ant Design draws it as a border, which takes a colour and no run.
+   */
+  gradient?: PhiThemeGradientKey;
   /** Takes the pointer, for an editor that writes in the ribbon; otherwise clicks pass to the box. */
   interactive?: boolean;
   className?: string;
@@ -28,8 +35,13 @@ export type PhiRibbonWrapControlProps = {
  * Imported from its own module, not from `antd`'s Badge: the Badge brings its scroll-number motion along,
  * which a ribbon never uses.
  */
-export function PhiRibbonWrapControl({ children, text, color, interactive = false, className }: PhiRibbonWrapControlProps) {
-  const indicator: CSSProperties = interactive ? { zIndex: 4 } : { zIndex: 4, pointerEvents: "none" };
+export function PhiRibbonWrapControl({ children, text, color, gradient, interactive = false, className }: PhiRibbonWrapControlProps) {
+  const gradientVars = gradient ? PHI_THEME_GRADIENT_CSS_VARS[gradient] : null;
+  const indicator: CSSProperties = {
+    zIndex: 4,
+    ...(interactive ? {} : { pointerEvents: "none" }),
+    ...(gradientVars ? { background: `var(${gradientVars.paint})`, color: `var(${gradientVars.text})` } : {}),
+  };
   /*
    * An editor's field in the ribbon measures itself against the ribbon, which is as wide as its words:
    * empty, both were nothing, and only the fold showed. Room for a word, as the inner band keeps it.

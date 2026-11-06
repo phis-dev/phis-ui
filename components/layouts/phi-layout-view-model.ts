@@ -95,9 +95,18 @@ export function resolvePhiBaseLayoutChrome({
    * a Tree take. A Layout without a Surface states no corner: there is no box there to round.
    */
   const resolvedSurface = resolvePhiSurfaceStyle(surface, { cornerFallback: PHI_LAYOUT_SURFACE_RADIUS });
+  const paddingStyle = resolvePhiPaddingStyle({ padding, paddingTop, paddingRight, paddingBottom, paddingLeft });
   const style: CSSProperties = {
     ...resolvedSurface.style,
-    ...resolvePhiPaddingStyle({ padding, paddingTop, paddingRight, paddingBottom, paddingLeft }),
+    ...paddingStyle,
+    /*
+     * The top inset once more, as a value a stylesheet can add to: a Hero behind the Header gives its
+     * root Layout the Header's height on top of it (`styles/shell.css`), and an inline `padding-top`
+     * cannot be read from CSS. Only where a top inset is stated; absent, the rule falls back to none.
+     */
+    ...(paddingStyle.paddingTop == null
+      ? {}
+      : { "--phi-layout-padding-top": String(paddingStyle.paddingTop) } as CSSProperties),
     /*
      * The label column, written the two ways it is read: as the grid line a descriptor form places its
      * labels on, and as the share of the width a labelled Control needs, which knows nothing of the

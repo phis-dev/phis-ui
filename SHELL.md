@@ -375,6 +375,60 @@ The code preset's `header_top` (the Brand lines) carries `pageScope: { mode: "ro
 out of the tree on every Page but `/`, a rule that lived in the preset code and was gone the moment an
 author saved the Area.
 
+## Hero at the top
+
+A Page with a Hero shows it from the top of the window, behind the Header bands. A Page without one
+keeps its content below them. Nothing switches this: the Hero is the stage behind the Header, the
+content is the surface under it, and which one a Page has decides how it starts.
+
+| Region | Where it starts | What stands over it |
+| --- | --- | --- |
+| `hero` | the top of the window | `header_top`, `header_main`, `header_bottom`, and the Header's Chrome pane |
+| `content`, on a Page with a Hero | below the Hero | nothing |
+| `content`, on a Page without one | below the Header bands | nothing |
+| `header_bottom` | below `header_top` and `header_main` | -- (it is itself over the Hero) |
+| `sider_right`, `footer_top` | where they always do | nothing |
+
+What an author can rely on:
+
+- The Hero's ground -- its own Surface, or the Surface of its root Layout, which is where a picture
+  usually is -- runs up behind the bands to the top edge.
+- The Hero's content starts below the bands. Its root Layout is given their combined height on top of
+  its own top inset, so an inset set in the Inspector is still the distance from the Header, not from the
+  window.
+- The Header's glass stays: the Chrome pane covers all three bands and frosts the Hero under it. A Header
+  Layout may still carry glass of its own.
+- Every band keeps its behaviour. `header_main` sticks as before, `header_top` still reveals, and the
+  Hero scrolls up under the stuck bands like any content.
+- Nothing below the Hero moves for it: the Hero is exactly as tall as it draws, and the content follows
+  directly.
+
+How it works (`styles/shell.css`, "Hero at the top"):
+
+- The Shell recognises a Hero with `:has(> [data-phi-region-key="hero"])`, so the first server paint is
+  right and a client navigation to a Page with or without a Hero switches with the Page. No Page or Region
+  setting is stored.
+- The three Header rows are fixed at `0px` and the Hero spans them from `header_top-start`. Fixed rows
+  cannot grow, so the grid depends on no measurement and the Hero cannot inflate the Header rows.
+- Each band is set down by the bands above it, from `--phi-shell-band-top`, `--phi-shell-band-main` and
+  `--phi-shell-band-bottom` on the Shell element. Their sum, `--phi-shell-header-height`, is the Chrome
+  pane's height and the Hero's extra top inset (read together with `--phi-layout-padding-top`, which every
+  Layout publishes for its stated top inset). The second Header pane, over `header_bottom`, is not drawn.
+- The server writes the first two from the configured band heights (`phi-cms-root-layout.tsx`); the
+  browser measures all three while a Hero is on the Page (`components/shell/use-phi-shell-header-bands.ts`,
+  run by the Hero's Region renderer). A band's room is its height less what it gives back below itself,
+  so a `header_top` that reveals on hover counts as none. A late value moves a band or the Hero's words for
+  a frame, never the page below.
+
+Limits:
+
+- Not in the embedded topology with a `sider_left`: there the Sider shares the `header_bottom` row and
+  would start behind the Header too. Such a Shell keeps the Hero below the bands.
+- The Header keeps its tone. A Header written for a light page reads poorly over a dark picture; until the
+  Header can follow the picture under it, a Header Layout with a ground of its own -- a dark glass -- is
+  the way to keep it legible on every Page.
+- The Builder's preview canvas does not show the Hero behind the bands yet.
+
 ## Page Layout Boundary
 
 The shell ends where the page content begins.

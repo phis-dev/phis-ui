@@ -26,6 +26,12 @@ export type PhiCmsShellProps = {
    * pane and the bands below read it.
    */
   headerTopRoom?: Record<`--phi-shell-header-top-${string}`, string>;
+  /**
+   * The room the Header bands hold, as far as the Area's configs state it (`--phi-shell-band-top`,
+   * `--phi-shell-band-main`): what a Hero stands behind on the first paint. The browser measures the
+   * rest, `header_bottom` included (`use-phi-shell-header-bands.ts`).
+   */
+  headerBandRoom?: Record<`--phi-shell-band-${string}`, string>;
 };
 
 /**
@@ -111,8 +117,11 @@ export function PhiCmsShell({
   drawer,
   headerPaneStickyTop,
   headerTopRoom,
+  headerBandRoom,
 }: PhiCmsShellProps) {
-  const roomStyle = headerTopRoom as CSSProperties | undefined;
+  const roomStyle = headerTopRoom || headerBandRoom
+    ? { ...headerTopRoom, ...headerBandRoom } as CSSProperties
+    : undefined;
   const hasLeftFullHeightSidebar = siderLeftFullHeight && Boolean(siderLeft);
   const shellVariant = hasLeftFullHeightSidebar
     ? "full-height-sider"

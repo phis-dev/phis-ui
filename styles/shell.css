@@ -556,3 +556,56 @@
     transition: none;
   }
 }
+
+/* -------------------------------------------------------------------------------------------------
+   Hero at the top.
+
+   A Page with a Hero starts it at the top of the window, behind the Header bands; a Page without one
+   keeps its content below them. No setting decides it: the Hero is the stage behind the Header, the
+   content the surface under it.
+
+   The Header rows hold no room here -- fixed at zero, so the Hero spanning them cannot grow them -- and
+   the grid depends on no measurement. Each band stands where the bands above it end, the glass pane
+   covers their sum, and the Hero's root Layout keeps its content below them by the same sum on top of
+   its own inset. Those values come from the Area's configs on the first paint and from the browser after
+   (`use-phi-shell-header-bands.ts`); a late one moves a band or the Hero's words, never the page.
+
+   Not where a Sider is embedded beside `header_bottom`: there the Sider would start behind the Header too.
+   The band offsets are important because a Region's root states `margin: 0` inline.
+   --------------------------------------------------------------------------------------------- */
+[data-phi-shell-layout]:not([data-phi-shell-variant="embedded-sider"]):has(> [data-phi-region-key="hero"]) {
+  --phi-shell-header-height: calc(var(--phi-shell-band-top, 0px) + var(--phi-shell-band-main, 0px) + var(--phi-shell-band-bottom, 0px));
+  grid-template-rows: 0px 0px 0px auto minmax(0, 1fr) auto auto auto;
+}
+
+[data-phi-shell-layout]:not([data-phi-shell-variant="embedded-sider"]):has(> [data-phi-region-key="hero"]) > [data-phi-region-key^="header_"] {
+  align-self: start;
+}
+
+[data-phi-shell-layout]:not([data-phi-shell-variant="embedded-sider"]):has(> [data-phi-region-key="hero"]) > [data-phi-region-key="header_main"] {
+  margin-block-start: var(--phi-shell-band-top, 0px) !important;
+}
+
+[data-phi-shell-layout]:not([data-phi-shell-variant="embedded-sider"]):has(> [data-phi-region-key="hero"]) > [data-phi-region-key="header_bottom"] {
+  margin-block-start: calc(var(--phi-shell-band-top, 0px) + var(--phi-shell-band-main, 0px)) !important;
+}
+
+[data-phi-shell-layout]:not([data-phi-shell-variant="embedded-sider"]):has(> [data-phi-region-key="hero"]) > [data-phi-region-key="hero"] {
+  grid-row-start: header_top-start;
+}
+
+/* One pane over all three bands, its height their sum; the second Header pane has nothing left to cover. */
+[data-phi-shell-layout]:not([data-phi-shell-variant="embedded-sider"]):has(> [data-phi-region-key="hero"]) > .phi-shell-chrome-pane--header {
+  grid-row: header_top-start / header_top-end;
+  align-self: start;
+  height: var(--phi-shell-header-height);
+}
+
+[data-phi-shell-layout]:not([data-phi-shell-variant="embedded-sider"]):has(> [data-phi-region-key="hero"]) > .phi-shell-chrome-pane--header-bottom {
+  display: none;
+}
+
+/* Important because the Layout's padding is inline; the rule only adds to it, read back from `--phi-layout-padding-top`. */
+[data-phi-shell-layout]:not([data-phi-shell-variant="embedded-sider"]) > [data-phi-region-key="hero"] > .phi-cms-region-shell__content > .phi-slot-child > [data-layout-kind] {
+  padding-block-start: calc(var(--phi-shell-header-height, 0px) + var(--phi-layout-padding-top, 0px)) !important;
+}

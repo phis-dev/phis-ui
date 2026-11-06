@@ -5,6 +5,10 @@ import { Button } from "antd";
 import type { ButtonProps } from "antd";
 
 import type { PhiControlSize } from "../../types/control";
+import {
+  PHI_THEME_GRADIENT_CSS_VARS,
+  type PhiThemeGradientKey,
+} from "../../theme/phi-theme-gradients";
 import { PhiLink } from "../navigation/phi-link";
 import type { PhiButtonType } from "./phi-button-types";
 import { PhiHoverText } from "./phi-hover-text";
@@ -69,6 +73,17 @@ export type PhiButtonControlProps = {
    * not a kind of button -- it is any kind of button, drawn for a background it does not own.
    */
   ghost?: boolean;
+  /**
+   * Fills the button with one of the Theme's gradient slots (theme/phi-theme-gradients.ts), whatever
+   * `type` says: it is drawn as a primary button with the run over it (`styles/gradients.css`), so the
+   * primary colour stays its edge and where the run is not drawn -- a disabled button -- its fallback.
+   */
+  gradient?: PhiThemeGradientKey;
+  /**
+   * Draws the button as a frosted pane of the ground of the mode it stands in, for a button over a picture
+   * or a gradient -- where `ghost` keeps the outline and loses the words in a busy background.
+   */
+  glass?: boolean;
   disabled?: boolean;
   /**
    * Shown as it is and answering nothing: no hover, no press, no click -- where `disabled` greys it out.
@@ -96,6 +111,8 @@ export type PhiButtonControlProps = {
   onClick?: () => void;
 };
 
+const PHI_GLASS_BUTTON_FILTER = "blur(12px) saturate(140%)";
+
 export function PhiButtonControl({
   label,
   ariaLabel,
@@ -109,6 +126,8 @@ export function PhiButtonControl({
   shape,
   danger,
   ghost,
+  gradient,
+  glass,
   disabled,
   readOnly,
   loading,
@@ -125,13 +144,29 @@ export function PhiButtonControl({
     ? null
     : tooltip;
   const inert = disabled || (!readOnly && !onClick && !href && htmlType !== "submit");
+  const gradientVars = gradient ? PHI_THEME_GRADIENT_CSS_VARS[gradient] : null;
+  const paintedStyle = gradientVars
+    ? {
+        ...style,
+        "--phi-control-gradient": `var(${gradientVars.paint})`,
+        "--phi-control-gradient-text": `var(${gradientVars.text})`,
+      } as ButtonProps["style"]
+    : glass
+      /* Inline, as the Shell's panes frost: a `backdrop-filter` in a stylesheet does not survive the build. */
+      ? { ...style, backdropFilter: PHI_GLASS_BUTTON_FILTER, WebkitBackdropFilter: PHI_GLASS_BUTTON_FILTER }
+      : style;
+  const paintedClassName = [
+    className,
+    gradientVars ? "phi-btn-gradient" : null,
+    glass && !gradientVars ? "phi-btn-glass" : null,
+  ].filter(Boolean).join(" ") || undefined;
   const button = (
     <Button
       ref={ref}
-      className={className}
+      className={paintedClassName}
       aria-label={ariaLabel}
       aria-pressed={ariaPressed}
-      type={type}
+      type={gradientVars ? "primary" : glass ? "default" : type}
       shape={shape}
       danger={danger}
       ghost={ghost}
@@ -141,7 +176,7 @@ export function PhiButtonControl({
       block={block}
       size={size}
       /* Not a pointer target at all, so the Button's own hover and press states never start. */
-      style={readOnly ? { ...style, pointerEvents: "none" } : style}
+      style={readOnly ? { ...paintedStyle, pointerEvents: "none" } : paintedStyle}
       aria-disabled={readOnly || undefined}
       icon={icon}
       onClick={readOnly ? undefined : onClick}

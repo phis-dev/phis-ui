@@ -34,6 +34,7 @@ import {
   type PhiCmsRegionShellTheme,
 } from "../phi-cms-region-shell";
 import { usePhiShellStickyTop } from "../../shell/use-phi-shell-sticky-top";
+import { usePhiShellHeaderBands } from "../../shell/use-phi-shell-header-bands";
 import { usePhiVisualAnchor } from "../../runtime/runtime-visual-anchors";
 import { usePhiPathname } from "../../runtime/use-phi-pathname";
 import { stripLocaleAndAreaFromPathname } from "../../../helpers/locale";
@@ -158,6 +159,10 @@ export function PhiCmsRegionContainerClient({
   });
   usePhiShellStickyTop({
     active: !previewMode && inScope && phiCmsRegionSiderSticks(regionKey, initialConfig),
+    elementRef,
+  });
+  usePhiShellHeaderBands({
+    active: !previewMode && inScope && regionKey === "hero",
     elementRef,
   });
 

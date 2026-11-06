@@ -16,7 +16,7 @@ import { registerPhiSignalInstance } from "../../../runtime/runtime-signal-regis
 import { usePhiSignalRuntimePartition } from "../../../runtime/runtime-signal-partition";
 import type { PhiToolbarControlItem } from "../../../controls/phi-toolbar-control";
 import type { PhiControlBadgePresentation } from "../../../controls/phi-button-control";
-import { resolvePhiButtonVariantType } from "../../config/button-variant";
+import { resolvePhiButtonVariantPresentation } from "../../config/button-variant";
 import type { PhiCommonControlLabels } from "../../label-types/common-controls";
 import { resolvePhiCommonControlAction } from "./phi-common-controls";
 import { resolvePhiButtonIcon } from "./phi-button-icons";
@@ -367,7 +367,11 @@ export function usePhiCommandButtons({
       label,
       tooltip: buttonState.tooltip ?? button.tooltip,
       showLabel: button.display == null ? undefined : button.display !== "icon",
-      type: resolvePhiButtonVariantType(action ? action.variant : button.variant) ?? "default",
+      /*
+       * A toolbar draws its buttons by primitive type alone, so a `gradient` command button stands as the
+       * primary one it is underneath and a `glass` one as the plain one.
+       */
+      type: resolvePhiButtonVariantPresentation(action ? action.variant : button.variant).type ?? "default",
       danger: action ? action.danger === true : button.danger === true,
       disabled: button.disabled === true || buttonState.enabled === false,
       readOnly: button.readOnly === true,

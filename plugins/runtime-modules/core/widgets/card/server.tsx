@@ -164,6 +164,8 @@ export async function PhiCardWidget({
           ...(actionLink ? { href: actionLink.href, newTab: actionLink.newTab, external: actionLink.external } : {}),
           ...(config?.actionIcon ? { icon: config.actionIcon } : {}),
           ...(defaultLabels ? { ariaLabel: defaultLabels.actionLabel } : {}),
+          ...(config?.actionVariant ? { variant: config.actionVariant } : {}),
+          ...(config?.actionGradient ? { gradient: config.actionGradient } : {}),
         }
       : null,
     variant: config?.variant,
@@ -171,6 +173,7 @@ export async function PhiCardWidget({
     highlight: config?.highlight,
     badgeColor: config?.badgeColor,
     badgeStyle: config?.badgeStyle,
+    badgeGradient: config?.badgeGradient,
     billingPeriod: config?.billingPeriod,
     // Only a card that leads somewhere answers the pointer; the preview has no link but shows it.
     hoverEffect: config?.linkTarget ? config.hoverEffect : undefined,

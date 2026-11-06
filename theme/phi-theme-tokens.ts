@@ -175,9 +175,25 @@ export const PHI_THEME_TOKEN_KEYS = [
  * It is a separate list and not one more entry above, because `PhiThemeTokens` is cut from Ant
  * Design's type and a name Ant Design does not know cannot be cut from it. A Client Component that
  * needs one of these reads it as a CSS variable, the way a Server Component does.
+ *
+ * The `phiGradient*` names are the Theme's gradient slots and the primary Buttons' run
+ * (theme/phi-theme-gradients.ts): tokens of this package's own, laid over the resolved ones so Ant
+ * Design writes them per mode and per Surface tone like every other.
  */
 export const PHI_THEME_OWN_TOKEN_KEYS = [
   "paddingXXL",
+  "phiGradient1",
+  "phiGradient1Text",
+  "phiGradient2",
+  "phiGradient2Text",
+  "phiGradient3",
+  "phiGradient3Text",
+  "phiGradient4",
+  "phiGradient4Text",
+  "phiPrimaryButtonGradient",
+  "phiPrimaryButtonGradientHover",
+  "phiPrimaryButtonGradientActive",
+  "phiPrimaryButtonGradientText",
 ] as const;
 
 export type PhiThemeTokenKey = (typeof PHI_THEME_TOKEN_KEYS)[number];

@@ -1,4 +1,5 @@
 import { assertPhiThemeVocabulary } from "./phi-theme-tokens";
+import type { PhiThemeGradientPalette } from "./phi-theme-gradients";
 
 export type PhiThemeMode = "light" | "dark";
 export type PhiThemeCustomColorKey =
@@ -27,6 +28,8 @@ export type PhiThemePaletteMode = {
   seed?: Record<string, string>;
   overrides?: Record<string, string>;
   customColors?: Partial<PhiThemeCustomColorPalette>;
+  /** The mode's gradient slots (theme/phi-theme-gradients.ts); a slot left out is derived. */
+  gradients?: PhiThemeGradientPalette;
 };
 
 /**
@@ -167,6 +170,9 @@ function mergePhiThemePaletteModes(
       : {}),
     ...(base?.customColors || own?.customColors
       ? { customColors: { ...(base?.customColors ?? {}), ...(own?.customColors ?? {}) } }
+      : {}),
+    ...(base?.gradients || own?.gradients
+      ? { gradients: { ...(base?.gradients ?? {}), ...(own?.gradients ?? {}) } }
       : {}),
   };
 }

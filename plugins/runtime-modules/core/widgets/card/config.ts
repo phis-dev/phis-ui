@@ -1,3 +1,10 @@
+import { readPhiThemeGradientKey, type PhiThemeGradientKey } from "../../../../../theme/phi-theme-gradients";
+import { PHI_THEME_GRADIENT_FIELD_OPTIONS } from "../../../../../components/widgets/config/theme-gradient";
+import {
+  PHI_BUTTON_VARIANT_FIELD_OPTIONS,
+  readPhiButtonVariant,
+  type PhiButtonVariant,
+} from "../../../../../components/widgets/config/button-variant";
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
@@ -65,6 +72,8 @@ export type PhiCmsCardWidgetConfig = PhiCmsWidgetConfigBase & PhiCardImageSource
   badgeColor?: string;
   /** How the badge is drawn (`PHI_CARD_BADGE_STYLES`); absent, `none`. */
   badgeStyle?: PhiCardBadgeStyle;
+  /** A Theme gradient slot the badge is filled with, over `badgeColor`; absent, the colour. */
+  badgeGradient?: PhiThemeGradientKey;
   /** A `plan` body's prices, never translated, and what each is paid per (`/ month`), which is. */
   price?: string;
   pricePeriod?: string;
@@ -101,6 +110,10 @@ export type PhiCmsCardWidgetConfig = PhiCmsWidgetConfigBase & PhiCardImageSource
   actionIcon?: string;
   /** Where the action button leads; absent, nowhere -- it then only emits `activate`. */
   actionLinkTarget?: PhiLinkTarget;
+  /** How the action button stands out; absent, primary on a highlighted card and normal otherwise. */
+  actionVariant?: PhiButtonVariant;
+  /** The Theme gradient slot a `gradient` action button is filled with; absent, the first. */
+  actionGradient?: PhiThemeGradientKey;
   /** How the card is set; the look is the card's Surface. */
   variant?: PhiCardVariant;
   highlight?: boolean;
@@ -129,6 +142,7 @@ function parsePhiCmsCardWidgetConfig(config: Record<string, unknown>): PhiCmsCar
     badge: readString(config.badge),
     badgeColor: readString(config.badgeColor),
     badgeStyle: readChoice(readString(config.badgeStyle), PHI_CARD_BADGE_STYLES),
+    badgeGradient: readPhiThemeGradientKey(config.badgeGradient),
     price: readString(config.price),
     pricePeriod: readString(config.pricePeriod),
     priceYearly: readString(config.priceYearly),
@@ -150,6 +164,8 @@ function parsePhiCmsCardWidgetConfig(config: Record<string, unknown>): PhiCmsCar
     actionLabel: readPhiControlLabel(config.actionLabel),
     actionIcon: readString(config.actionIcon),
     actionLinkTarget: readPhiLinkTarget(config.actionLinkTarget) ?? undefined,
+    actionVariant: readPhiButtonVariant(config.actionVariant),
+    actionGradient: readPhiThemeGradientKey(config.actionGradient),
     variant: readChoice(readString(config.variant), PHI_CARD_VARIANTS),
     highlight: readBoolean(config.highlight),
     hoverEffect: readChoice(readString(config.hoverEffect), PHI_CARD_HOVER_EFFECTS),
@@ -353,6 +369,23 @@ export const PHI_CARD_WIDGET_DEFINITION = {
       visibleWhen: { field: "actionEnabled", equals: true },
     },
     {
+      key: "actionVariant",
+      type: "choice",
+      label: "Variant",
+      description: "How the button stands out. Empty follows the card: primary when it is highlighted, normal otherwise.",
+      options: [...PHI_BUTTON_VARIANT_FIELD_OPTIONS],
+      emptyOption: { value: "", label: "Card" },
+      visibleWhen: { field: "actionEnabled", equals: true },
+    },
+    {
+      key: "actionGradient",
+      type: "choice",
+      label: "Gradient",
+      options: [...PHI_THEME_GRADIENT_FIELD_OPTIONS],
+      placeholder: "Gradient 1",
+      visibleWhen: { field: "actionVariant", equals: "gradient" },
+    },
+    {
       key: "variant",
       type: "choice",
       heading: "Appearance",
@@ -387,6 +420,15 @@ export const PHI_CARD_WIDGET_DEFINITION = {
       visibleWhen: { field: "badgeStyle", notEquals: "none" },
       mode: "single",
       defaultToken: "colorPrimary",
+    },
+    {
+      key: "badgeGradient",
+      type: "choice",
+      label: "Gradient",
+      description: "Fills the badge with one of the Theme's gradients instead of the colour. A ribbon's fold keeps the colour.",
+      options: [...PHI_THEME_GRADIENT_FIELD_OPTIONS],
+      emptyOption: { value: "", label: "None" },
+      visibleWhen: { field: "badgeStyle", notEquals: "none" },
     },
     ...buildPhiBulletListFields("featureList", "Features").map((field) => ({
       ...field,

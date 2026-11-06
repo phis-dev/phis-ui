@@ -1,3 +1,5 @@
+import { readPhiThemeGradientKey, type PhiThemeGradientKey } from "../../../../../theme/phi-theme-gradients";
+import { PHI_THEME_GRADIENT_FIELD_OPTIONS } from "../../../../../components/widgets/config/theme-gradient";
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { readBoolean, readString } from "../../../../../components/widgets/config/parser-primitives";
@@ -16,6 +18,8 @@ export type PhiSwitchWidgetConfig = PhiControlConfig<PhiSwitchControlSize> & {
   defaultChecked?: boolean;
   checkedLabel?: string;
   uncheckedLabel?: string;
+  /** A Theme gradient slot the switch is filled with while on; absent, the primary colour. */
+  gradient?: PhiThemeGradientKey;
 };
 
 function parsePhiSwitchWidgetConfig(config: Record<string, unknown>): PhiSwitchWidgetConfig {
@@ -31,6 +35,7 @@ function parsePhiSwitchWidgetConfig(config: Record<string, unknown>): PhiSwitchW
     defaultChecked: readBoolean(config.defaultChecked) ?? false,
     checkedLabel: readString(config.checkedLabel),
     uncheckedLabel: readString(config.uncheckedLabel),
+    gradient: readPhiThemeGradientKey(config.gradient),
   };
 }
 
@@ -59,6 +64,14 @@ export const PHI_SWITCH_WIDGET_DEFINITION = {
     { key: "checkedLabel", type: "string", label: "Checked Text" },
     { key: "uncheckedLabel", type: "string", label: "Unchecked Text" },
     ...PHI_COMPACT_CONTROL_PRESENTATION_FIELDS,
+    {
+      key: "gradient",
+      type: "choice",
+      label: "Gradient",
+      description: "Fills the switch with one of the Theme's gradients while it is on.",
+      options: [...PHI_THEME_GRADIENT_FIELD_OPTIONS],
+      emptyOption: { value: "", label: "None" },
+    },
     ...PHI_CONTROL_STATE_FIELDS,
   ],
   defaultConfig: {

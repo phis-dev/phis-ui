@@ -33,6 +33,17 @@ import {
   type PhiThemeCustomColorPalette,
 } from "../../../../../theme/phi-theme-presets";
 import { buildPhiThemeCustomColorPalette, resolvePhiThemePaletteCustomColors } from "../../../../../theme/phi-theme-palette";
+import {
+  buildPhiThemeGradientTokens,
+  PHI_THEME_GRADIENT_KEYS,
+  readPhiThemeGradient,
+  readPhiThemeGradientKey,
+  resolvePhiThemeGradients,
+  resolvePhiThemeGradientText,
+  resolvePhiThemeGradientWorstContrast,
+  type PhiThemeGradient,
+  type PhiThemeGradientKey,
+} from "../../../../../theme/phi-theme-gradients";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { usePhiThemeBlockCatalog } from "../../../../../components/root/phi-theme-block-catalog-provider";
 import {
@@ -384,6 +395,7 @@ const THEME_COLOR_SEED_SECTIONS = [
 /** The Collapse order of the colour panel, which decides which section an author finds open. */
 const BRAND_THEME_COLOR_SECTION_KEYS: readonly string[] = [
   "custom",
+  "gradients",
   ...THEME_COLOR_SEED_SECTIONS.map((section) => section.key),
 ];
 
@@ -417,7 +429,7 @@ function mergeThemePaletteMode(
   const palette = theme.palette ?? {};
   const written = rewrite(palette.modes?.[mode] ?? {});
   const nextMode = Object.fromEntries(
-    (["seed", "overrides", "customColors"] as const)
+    (["seed", "overrides", "customColors", "gradients"] as const)
       .filter((part) => Object.keys(written[part] ?? {}).length > 0)
       .map((part) => [part, written[part]]),
   ) as PhiThemePaletteMode;
@@ -505,10 +517,35 @@ function mergeThemeButtonShadow(
   if (choice !== "theme") {
     shadow[kind] = choice;
   }
+  const { shadow: _previousShadow, ...otherButtons } = theme.buttons ?? {};
+  return withThemeButtons(theme, Object.keys(shadow).length > 0 ? { ...otherButtons, shadow } : otherButtons);
+}
+
+/** The Button settings written back, the `buttons` entry gone when nothing is left in it. */
+function withThemeButtons(theme: ThemePayload, buttons: NonNullable<ThemePayload["buttons"]>): ThemePayload {
   const withoutButtons = omitThemeFields(theme, "buttons");
-  return Object.keys(shadow).length > 0
-    ? { ...withoutButtons, buttons: { ...(theme.buttons ?? {}), shadow } }
-    : withoutButtons;
+  return Object.keys(buttons).length > 0 ? { ...withoutButtons, buttons } : withoutButtons;
+}
+
+/** Every primary Button filled with a Theme gradient, or handed back to its one colour. */
+function mergeThemePrimaryButtonGradient(theme: ThemePayload, gradient: PhiThemeGradientKey | null): ThemePayload {
+  const { primaryGradient: _previous, ...otherButtons } = theme.buttons ?? {};
+  return withThemeButtons(theme, gradient ? { ...otherButtons, primaryGradient: gradient } : otherButtons);
+}
+
+/** One gradient slot stated for the mode being edited, or handed back to the derived run with `null`. */
+function mergeThemeGradient(
+  theme: ThemePayload,
+  key: PhiThemeGradientKey,
+  gradient: PhiThemeGradient | null,
+  mode: PhiThemeMode,
+): ThemePayload {
+  return mergeThemePaletteMode(theme, mode, (current) => {
+    const gradients = { ...(current.gradients ?? {}) };
+    delete gradients[key];
+    if (gradient) gradients[key] = gradient;
+    return { ...current, gradients };
+  });
 }
 
 /** A structural token the author set, laid over the style block under `style.token`. */
@@ -707,13 +744,22 @@ function resolveBrandDraftAliasTokens(
   mode: "light" | "dark",
   fonts: { body?: string | null; mono?: string | null } = {},
 ) {
-  return resolvePhiAntdAliasTokens(mode, {
+  const aliasTokens = resolvePhiAntdAliasTokens(mode, {
     ...buildPhiEffectiveNonColorThemeTokens(resolvedTheme),
     ...resolvePhiThemeColorTokens(preset, resolvedTheme.palette, mode),
     ...(resolvedTheme.style?.token ?? {}),
     ...(fonts.body ? { fontFamily: fonts.body } : {}),
     ...(fonts.mono ? { fontFamilyCode: fonts.mono } : {}),
   });
+  // The gradient slots and the primary Buttons' run, as the root lays them over its tokens.
+  return {
+    ...aliasTokens,
+    ...buildPhiThemeGradientTokens({
+      gradients: mergePhiThemePalettes(preset.palette, resolvedTheme.palette).modes?.[mode]?.gradients,
+      token: aliasTokens,
+      primaryButtonGradient: readPhiThemeGradientKey(resolvedTheme.buttons?.primaryGradient),
+    }),
+  };
 }
 
 function readEffectiveTokenNumber(token: Record<string, unknown>, key: string, fallback: number) {
@@ -1374,6 +1420,8 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
     customPalette,
     customColorOptions,
     computedToken,
+    gradients,
+    ownGradients,
   } = useMemo(() => {
     const themeComposition = resolvePhiThemeComposition(state.draft, themeBlocks);
     const selectedPreset = resolveThemePayloadPreset(state.draft, themePresets);
@@ -1407,6 +1455,15 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
       ...buildPhiEffectiveNonColorThemeTokens(state.draft),
       ...baseColorToken,
     });
+    /*
+     * The gradient slots as the Site draws them: stated by the palette block or the draft, else derived
+     * from the mode's colours as they resolve WITH the author's overrides -- what the root derives from.
+     */
+    const gradients = resolvePhiThemeGradients(
+      mergePhiThemePalettes(selectedPreset.palette, state.draft.palette).modes?.[previewMode]?.gradients,
+      resolvePhiAntdAliasTokens(previewMode, { ...buildPhiEffectiveNonColorThemeTokens(state.draft), ...colorToken }),
+    );
+    const ownGradients = ownPalette.modes?.[previewMode]?.gradients ?? {};
     return {
       themeComposition,
       selectedPreset,
@@ -1416,6 +1473,8 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
       customPalette,
       customColorOptions,
       computedToken,
+      gradients,
+      ownGradients,
     };
   }, [customLabel, previewMode, state.draft, themeBlocks, themePresets]);
 
@@ -1510,6 +1569,117 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                           />
                         </div>
                       ))}
+                  </PhiFlexControl>
+                ),
+              },
+              {
+                key: "gradients",
+                label: (
+                  <PhiFlexControl align="center" gap={clientToken.paddingSM} wrap="wrap" style={{ minWidth: 0 }}>
+                    <PhiTypographyControl strong style={{ width: sectionLabelWidth }}>
+                      Gradients
+                    </PhiTypographyControl>
+                    <PhiFlexControl gap={clientToken.paddingXXS} aria-hidden>
+                      {PHI_THEME_GRADIENT_KEYS.map((key) => (
+                        <span
+                          key={key}
+                          style={{
+                            width: clientToken.controlHeightSM * 1.5,
+                            height: clientToken.controlHeightSM,
+                            borderRadius: clientToken.borderRadiusSM,
+                            background: `linear-gradient(${gradients[key].direction}, ${gradients[key].stops
+                              .map((stop) => `${stop.color} ${stop.percent}%`).join(", ")})`,
+                          }}
+                        />
+                      ))}
+                    </PhiFlexControl>
+                  </PhiFlexControl>
+                ),
+                children: (
+                  <PhiFlexControl vertical gap={clientToken.padding}>
+                    <PhiTypographyControl type="secondary">
+                      Four runs Buttons, badges, tags and switches can be filled with. {previewMode === "dark" ? "Dark" : "Light"} mode;
+                      a slot left alone follows the palette&apos;s colours.
+                    </PhiTypographyControl>
+                    {PHI_THEME_GRADIENT_KEYS.map((key, index) => {
+                      const gradient = gradients[key];
+                      const own = readPhiThemeGradient(ownGradients[key]);
+                      const text = resolvePhiThemeGradientText(gradient);
+                      const contrast = resolvePhiThemeGradientWorstContrast(gradient, text);
+                      const paint = `linear-gradient(${gradient.direction}, ${gradient.stops
+                        .map((stop) => `${stop.color} ${stop.percent}%`).join(", ")})`;
+                      return (
+                        <PhiFlexControl key={key} vertical gap={clientToken.paddingXS}>
+                          <PhiFlexControl align="center" justify="space-between" gap={clientToken.paddingXS}>
+                            <PhiTypographyControl strong>{`Gradient ${index + 1}`}</PhiTypographyControl>
+                            {own ? (
+                              <PhiButtonControl
+                                size="small"
+                                type="link"
+                                disabled={saving}
+                                style={{ paddingInline: 0, height: clientToken.controlHeightSM }}
+                                onClick={() => publishDraft(mergeThemeGradient(draftRef.current, key, null, previewMode))}
+                                label="Reset to palette"
+                              />
+                            ) : null}
+                          </PhiFlexControl>
+                          <div
+                            style={{
+                              background: paint,
+                              color: text,
+                              borderRadius: clientToken.borderRadius,
+                              paddingBlock: clientToken.paddingXS,
+                              textAlign: "center",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {`Gradient ${index + 1}`}
+                          </div>
+                          <PhiBackgroundControl
+                            key={`${key}-${previewMode}`}
+                            value={normalizePhiBackgroundWidgetConfig({
+                              base: { kind: "gradient", direction: gradient.direction, stops: gradient.stops },
+                            })}
+                            baseKinds={["gradient"]}
+                            filters={[]}
+                            motionModes={[]}
+                            imageSourceKinds={[]}
+                            disabled={saving}
+                            onChange={(value) => {
+                              const base = normalizePhiBackgroundWidgetConfig(value).base;
+                              if (base.kind !== "gradient") return;
+                              publishDraft(mergeThemeGradient(
+                                draftRef.current,
+                                key,
+                                { direction: base.direction, stops: base.stops, ...(own?.text ? { text: own.text } : {}) },
+                                previewMode,
+                              ));
+                            }}
+                          />
+                          <PhiColorFieldControl
+                            {...pickerTransaction}
+                            label="Text"
+                            tokenKey={`${key}Text`}
+                            value={text}
+                            defaultValue={resolvePhiThemeGradientText({ ...gradient, text: undefined })}
+                            disabled={saving}
+                            customColors={customColorOptions}
+                            presets={PHI_COLOR_PICKER_PRESETS}
+                            labels={colorPickerLabels}
+                            onChange={(value) => {
+                              publishDraft(mergeThemeGradient(draftRef.current, key, { ...gradient, text: value }, previewMode));
+                            }}
+                          />
+                          {contrast != null && contrast < 4.5 ? (
+                            <PhiAlertControl
+                              level="warning"
+                              title={`The text reads at ${contrast.toFixed(1)}:1 where the run is weakest.`}
+                              description="4.5:1 is what normal-sized text needs to read reliably."
+                            />
+                          ) : null}
+                        </PhiFlexControl>
+                      );
+                    })}
                   </PhiFlexControl>
                 ),
               },
@@ -1795,6 +1965,23 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                       onChange={(choice) => publishDraft(mergeThemeButtonShadow(state.draft, item.key, choice))}
                     />
                   ))}
+                  <PhiDividerControl style={{ marginBlock: 0 }} />
+                  <PhiTypographyControl type="secondary">
+                    Fills every primary Button with one of the Theme&apos;s gradients (Color tab). A Button can still
+                    choose its own with the Gradient variant.
+                  </PhiTypographyControl>
+                  <PhiSelectControl<PhiThemeGradientKey | "none">
+                    label="Primary fill"
+                    value={readPhiThemeGradientKey(state.draft.buttons?.primaryGradient) ?? "none"}
+                    options={[
+                      { value: "none", label: "Colour" },
+                      ...PHI_THEME_GRADIENT_KEYS.map((key, index) => ({ value: key, label: `Gradient ${index + 1}` })),
+                    ]}
+                    disabled={saving}
+                    onChange={(choice) => publishDraft(
+                      mergeThemePrimaryButtonGradient(state.draft, choice === "none" ? null : choice),
+                    )}
+                  />
                 </PhiFlexControl>
               ),
             },

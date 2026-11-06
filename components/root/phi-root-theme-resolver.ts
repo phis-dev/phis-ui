@@ -16,6 +16,7 @@ import {
   buildPhiThemeStructuralTokens,
 } from "../../theme/phi-theme";
 import {
+  mergePhiThemePalettes,
   PHI_THEME_PALETTE_MODE_SEED_KEYS,
   resolvePhiThemePresetPlugin,
   resolvePhiThemeColorTokens,
@@ -24,6 +25,7 @@ import {
 } from "../../theme/phi-theme-presets";
 import { assertPhiThemeVocabulary } from "../../theme/phi-theme-tokens";
 import { applyPhiButtonShadowComponentTokens } from "../../theme/phi-button-shadow";
+import { buildPhiThemeGradientTokens, readPhiThemeGradientKey } from "../../theme/phi-theme-gradients";
 import {
   applyPhiControlShapeComponentTokens,
   applyPhiSurfaceShapeComponentTokens,
@@ -151,8 +153,18 @@ export function resolvePhiRootTheme({
     resolvedControlShape,
     effectiveThemeTokens,
   );
+  /*
+   * The gradient slots ride as tokens of their own, so Ant Design writes them as custom properties under
+   * this mode's class like every other token (theme/phi-theme-gradients.ts). Derived from the resolved
+   * colours, so a slot the palette leaves out follows the brand.
+   */
   const token = {
     ...effectiveThemeTokens,
+    ...buildPhiThemeGradientTokens({
+      gradients: mergePhiThemePalettes(themePreset.palette, siteTheme?.palette).modes?.[mode]?.gradients,
+      token: effectiveThemeTokens,
+      primaryButtonGradient: readPhiThemeGradientKey(siteTheme?.buttons?.primaryGradient),
+    }),
   };
   return {
     mode,

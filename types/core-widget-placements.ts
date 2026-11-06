@@ -19,6 +19,7 @@ import type {
   PhiTableWidgetPresentation,
 } from "./table-widget";
 import type { PhiButtonVariant } from "../components/widgets/config/button-variant";
+import type { PhiThemeGradientKey } from "../theme/phi-theme-gradients";
 import type { PhiTextTone } from "../components/widgets/config/text-tone";
 import type { PhiCommonControlActionKey } from "../components/widgets/label-types/common-controls";
 import type { PhiMaskConfig } from "../components/widgets/config/mask";
@@ -141,6 +142,8 @@ export type PhiButtonWidgetPlacement = PhiWidgetPlacementBase &
   icon?: string;
   value?: string;
   variant?: PhiButtonVariant;
+  /** The Theme gradient slot a `gradient` Button is filled with; absent, the first. */
+  gradient?: PhiThemeGradientKey;
   linkTarget?: PhiLinkTarget;
   danger?: boolean;
 };

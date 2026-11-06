@@ -410,6 +410,23 @@ export async function PhiCmsAreaShell({
     extent: headerTopExtent,
     stack: headerTopReveal === "scroll-up" ? headerTopExtent : 0,
   };
+  /*
+   * The room the two Area bands hold, where their configs state a height: what a Hero stands behind on
+   * the first paint (`styles/shell.css`, "Hero at the top"). A `header_top` the browser decides holds
+   * what it was just resolved to hold.
+   */
+  const headerTopBandRoom = !hasRenderableHeaderTop
+    ? 0
+    : headerTopBehaviour != null
+      ? headerTopRoom.extent
+      : readPhiShellChromePanePixels(headerTopBand?.height);
+  const headerMainBandRoom = hasRenderableHeaderMain
+    ? readPhiShellChromePanePixels(readPhiShellChromePaneBand(headerMainRegion?.config)?.height)
+    : 0;
+  const headerBandRoom = {
+    ...(headerTopBandRoom == null ? {} : { "--phi-shell-band-top": `${headerTopBandRoom}px` }),
+    ...(headerMainBandRoom == null ? {} : { "--phi-shell-band-main": `${headerMainBandRoom}px` }),
+  } as Record<`--phi-shell-band-${string}`, string>;
   const headerPaneStickyTop = resolvePhiShellHeaderPaneStickyTop(
     headerTopBand,
     hasRenderableHeaderMain ? readPhiShellChromePaneBand(headerMainRegion?.config) : null,
@@ -421,6 +438,7 @@ export async function PhiCmsAreaShell({
     <PhiCmsShell
       content={children}
       headerPaneStickyTop={headerPaneStickyTop}
+      headerBandRoom={headerBandRoom}
       headerTopRoom={headerTopBehaviour == null ? undefined : {
         [PHI_SHELL_HEADER_TOP_EXTENT_PROPERTY]: `${headerTopRoom.extent}px`,
         [PHI_SHELL_HEADER_TOP_STACK_PROPERTY]: `${headerTopRoom.stack}px`,

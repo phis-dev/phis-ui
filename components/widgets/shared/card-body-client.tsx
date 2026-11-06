@@ -3,6 +3,8 @@
 import { useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
 
 import { PhiButtonControl } from "../../controls/phi-button-control";
+import { resolvePhiButtonVariantPresentation, type PhiButtonVariant } from "../config/button-variant";
+import type { PhiThemeGradientKey } from "../../../theme/phi-theme-gradients";
 import { PhiFlexControl } from "../../controls/phi-flex-control";
 import { PhiImageControl, type PhiImageControlSource } from "../../controls/phi-image-control";
 import { PhiRibbonControl } from "../../controls/phi-ribbon-control";
@@ -120,6 +122,8 @@ export type PhiCardWidgetClientConfig = {
   badgeColor?: string;
   /** How the badge is drawn; absent, `none`. */
   badgeStyle?: PhiCardBadgeStyle;
+  /** A Theme gradient slot the badge is filled with, over `badgeColor`. */
+  badgeGradient?: PhiThemeGradientKey;
   /** Which price a `plan` shows until a `billingPeriod` signal says otherwise. Absent is `monthly`. */
   billingPeriod?: PhiCardBillingPeriod;
   hoverEffect?: PhiCardHoverEffect;
@@ -143,6 +147,10 @@ export type PhiCardWidgetAction = {
   icon?: string;
   /** The button's name where it shows only its icon. */
   ariaLabel?: string;
+  /** How it stands out; absent, primary on a highlighted card and normal otherwise. */
+  variant?: PhiButtonVariant;
+  /** The Theme gradient slot a `gradient` button is filled with. */
+  gradient?: PhiThemeGradientKey;
 };
 
 export type PhiCardWidgetClientProps = PhiClientBlockBaseProps<
@@ -624,7 +632,9 @@ export function PhiCardWidgetClient({
       style={footAction ? { marginTop: "auto", alignSelf: textAlign === "center" ? "center" : textAlign === "end" ? "flex-end" : "flex-start" } : undefined}
     >
       <PhiButtonControl
-        type={highlight ? "primary" : "default"}
+        {...(action.variant
+          ? resolvePhiButtonVariantPresentation(action.variant, action.gradient)
+          : { type: highlight ? "primary" as const : "default" as const })}
         size={buttonSize}
         {...(action.href ? { href: action.href, newTab: action.newTab, external: action.external } : {})}
         label={labels.actionLabel || undefined}
@@ -644,6 +654,7 @@ export function PhiCardWidgetClient({
   const ribbon = badge != null && (badgeStyle === "corner" || badgeStyle === "tag") ? (
     <PhiRibbonControl
       color={config?.badgeColor}
+      {...(config?.badgeGradient ? { gradient: config.badgeGradient } : {})}
       placement={badgeStyle === "tag" ? "edge" : "corner"}
       /*
        * On the page, the whole words on hover where the band cut them short; pointed at, the band takes
@@ -775,6 +786,7 @@ export function PhiCardWidgetClient({
     <PhiRibbonWrapControl
       text={badge}
       {...(config?.badgeColor ? { color: config.badgeColor } : {})}
+      {...(config?.badgeGradient ? { gradient: config.badgeGradient } : {})}
       interactive={renderText != null}
       className={hoverEffect === "lift" ? "phi-card-ribbon phi-card-ribbon--lift" : "phi-card-ribbon"}
     >

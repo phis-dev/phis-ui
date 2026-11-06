@@ -1,8 +1,10 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { Segmented } from "antd";
 
 import type { PhiControlSize } from "../../types/control";
+import { PHI_THEME_GRADIENT_CSS_VARS, type PhiThemeGradientKey } from "../../theme/phi-theme-gradients";
 import type { PhiControlOption } from "./phi-control-options";
 import { PhiLabeledControl, usePhiControlLabel } from "./phi-labeled-control";
 
@@ -18,6 +20,8 @@ export type PhiSegmentedControlProps<TValue extends string | number = string> = 
   readOnly?: boolean;
   block?: boolean;
   size?: PhiControlSize;
+  /** A Theme gradient slot the selected segment is filled with; its words take the slot's text colour. */
+  gradient?: PhiThemeGradientKey;
   onFocus?: () => void;
   onBlur?: () => void;
   onChange?: (value: TValue) => void;
@@ -31,11 +35,13 @@ export function PhiSegmentedControl<TValue extends string | number = string>({
   readOnly,
   block,
   size,
+  gradient,
   onFocus,
   onBlur,
   onChange,
 }: PhiSegmentedControlProps<TValue>) {
   const { labelId, labelledBy } = usePhiControlLabel(label);
+  const gradientVars = gradient ? PHI_THEME_GRADIENT_CSS_VARS[gradient] : null;
   const control = (
     <Segmented
       aria-labelledby={labelledBy}
@@ -58,7 +64,17 @@ export function PhiSegmentedControl<TValue extends string | number = string>({
       onChange={(nextValue) => onChange?.(nextValue as TValue)}
       onFocus={onFocus}
       onBlur={onBlur}
-      style={{ minWidth: 0, width: block ? "100%" : undefined }}
+      className={gradientVars ? "phi-segmented-gradient" : undefined}
+      style={{
+        minWidth: 0,
+        width: block ? "100%" : undefined,
+        ...(gradientVars
+          ? {
+              "--phi-control-gradient": `var(${gradientVars.paint})`,
+              "--phi-control-gradient-text": `var(${gradientVars.text})`,
+            } as CSSProperties
+          : {}),
+      }}
     />
   );
 

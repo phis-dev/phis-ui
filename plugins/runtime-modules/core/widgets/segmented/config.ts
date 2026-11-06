@@ -1,3 +1,5 @@
+import { readPhiThemeGradientKey, type PhiThemeGradientKey } from "../../../../../theme/phi-theme-gradients";
+import { PHI_THEME_GRADIENT_FIELD_OPTIONS } from "../../../../../components/widgets/config/theme-gradient";
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import {
@@ -9,10 +11,13 @@ import {
 } from "../../../../../components/widgets/config/choice-shared";
 import { PHI_SELECT_CONTROL_SIGNALS } from "../../../../../components/widgets/signals/control-signal-capabilities";
 
-export type PhiSegmentedWidgetConfig = PhiStackChoiceControlConfig;
+export type PhiSegmentedWidgetConfig = PhiStackChoiceControlConfig & {
+  /** A Theme gradient slot the selected segment is filled with; absent, Ant Design's selected ground. */
+  gradient?: PhiThemeGradientKey;
+};
 
 function parsePhiSegmentedWidgetConfig(config: Record<string, unknown>): PhiSegmentedWidgetConfig {
-  return parsePhiStackChoiceControlConfig(config);
+  return { ...parsePhiStackChoiceControlConfig(config), gradient: readPhiThemeGradientKey(config.gradient) };
 }
 
 export const PHI_SEGMENTED_WIDGET_DEFINITION = {
@@ -33,6 +38,14 @@ export const PHI_SEGMENTED_WIDGET_DEFINITION = {
     PHI_CHOICE_CONTROL_VALUE_MODE_FIELD,
     ...buildPhiChoiceControlOptionFields("toolbar"),
     ...PHI_CHOICE_CONTROL_CONFIG_FIELDS,
+    {
+      key: "gradient",
+      type: "choice",
+      label: "Gradient",
+      description: "Fills the selected segment with one of the Theme's gradients.",
+      options: [...PHI_THEME_GRADIENT_FIELD_OPTIONS],
+      emptyOption: { value: "", label: "None" },
+    },
   ],
   defaultConfig: {
     key: "segmented",

@@ -1,12 +1,15 @@
 import type { CSSProperties, MouseEventHandler, ReactNode } from "react";
 
 import { PHI_COLOR, PHI_FONT_SIZE, PHI_SPACE } from "../../theme/antd-css-var-contract";
+import { PHI_THEME_GRADIENT_CSS_VARS, type PhiThemeGradientKey } from "../../theme/phi-theme-gradients";
 import { PhiTruncatedHoverText } from "./phi-truncated-hover-text";
 
 export type PhiRibbonControlProps = {
   children: ReactNode;
   /** The band's ground; absent, the Theme's primary. Its words are the light text on any ground. */
   color?: string;
+  /** A Theme gradient slot to fill the band with instead; its words then take the slot's text colour. */
+  gradient?: PhiThemeGradientKey;
   /**
    * Where the band stands: `corner` flush with the box's top and end edge, its top end corner the box's
    * own; `edge` a small padding down the end edge. Either way it floats: nothing in the box moves for it.
@@ -40,7 +43,8 @@ export type PhiRibbonControlProps = {
  * clicks, so a card that is a link stays one under its band; with one it has to take the pointer to be
  * pointed at, and hands a click on through `onClick`.
  */
-export function PhiRibbonControl({ children, color, placement = "edge", style, fullText, onClick }: PhiRibbonControlProps) {
+export function PhiRibbonControl({ children, color, gradient, placement = "edge", style, fullText, onClick }: PhiRibbonControlProps) {
+  const gradientVars = gradient ? PHI_THEME_GRADIENT_CSS_VARS[gradient] : null;
   const radius = "var(--phi-control-radius-sm)";
   const position: CSSProperties = placement === "corner"
     ? {
@@ -65,8 +69,8 @@ export function PhiRibbonControl({ children, color, placement = "edge", style, f
         maxWidth: "70%",
         boxSizing: "border-box",
         paddingInline: PHI_SPACE.sm,
-        background: color ?? PHI_COLOR.primary,
-        color: PHI_COLOR.textLightSolid,
+        background: gradientVars ? `var(${gradientVars.paint})` : color ?? PHI_COLOR.primary,
+        color: gradientVars ? `var(${gradientVars.text})` : PHI_COLOR.textLightSolid,
         fontSize: PHI_FONT_SIZE.sm,
         fontWeight: 600,
         lineHeight: 2,

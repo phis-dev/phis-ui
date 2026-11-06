@@ -1,4 +1,5 @@
 import type { PhiThemeMode } from "./phi-theme-presets";
+import type { PhiThemeGradientKey } from "./phi-theme-gradients";
 
 /**
  * The shadow under each kind of Button, as a step rather than as CSS.
@@ -25,6 +26,11 @@ export type PhiButtonShadowStep = (typeof PHI_BUTTON_SHADOW_STEPS)[number];
 
 export type PhiThemeButtons = {
   shadow?: Partial<Record<PhiButtonShadowKind, PhiButtonShadowStep>> | null;
+  /**
+   * The Theme gradient every primary Button is filled with (theme/phi-theme-gradients.ts); absent, they
+   * keep their one colour. A Button can still choose a gradient of its own with the `gradient` variant.
+   */
+  primaryGradient?: PhiThemeGradientKey | null;
 };
 
 const PHI_BUTTON_SHADOW_CSS: Record<PhiThemeMode, Record<PhiButtonShadowStep, string>> = {
