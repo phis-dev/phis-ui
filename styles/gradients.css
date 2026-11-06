@@ -18,6 +18,10 @@
  */
 .ant-btn.ant-btn.ant-btn-color-primary.ant-btn-variant-solid:not(.ant-btn-background-ghost):not(.phi-btn-gradient):not(:disabled):not(.ant-btn-disabled) {
   background-image: var(--ant-phi-primary-button-gradient, none);
+  /* From the outer edge and once: from the padding box it tiled again under the border, and a pill's
+     ends showed the other end of the run. */
+  background-origin: border-box;
+  background-repeat: no-repeat;
   --ant-btn-text-color: var(--ant-phi-primary-button-gradient-text, var(--ant-color-text-light-solid));
 }
 
@@ -35,7 +39,15 @@
  */
 .ant-btn.ant-btn.phi-btn-gradient.phi-btn-gradient:not(:disabled):not(.ant-btn-disabled) {
   background-image: var(--phi-control-gradient);
+  background-origin: border-box;
+  background-repeat: no-repeat;
+  /* The run is the whole ground: a colour beneath it showed through the anti-aliased rim of a pill. */
+  --ant-btn-bg-color: transparent;
+  --ant-btn-bg-color-hover: transparent;
+  --ant-btn-bg-color-active: transparent;
   --ant-btn-border-color: transparent;
+  --ant-btn-border-color-hover: transparent;
+  --ant-btn-border-color-active: transparent;
   --ant-btn-text-color: var(--phi-control-gradient-text);
   --ant-btn-text-color-hover: var(--phi-control-gradient-text);
   --ant-btn-text-color-active: var(--phi-control-gradient-text);
