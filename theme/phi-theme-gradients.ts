@@ -1,11 +1,11 @@
 /**
- * The Theme's gradients: four named slots, like the ten custom colours, that a control can take its
+ * The Theme's gradients: three named slots, like the ten custom colours, that a control can take its
  * ground from instead of from one colour.
  *
  * A gradient belongs to a mode for the reason a mode seed does: the ground that reads as a brand on a
  * light page -- a deep burgundy run -- is a hole in a dark one, where the same brand reads as gold. So a
  * palette states each slot per mode (`modes[mode].gradients`), and a slot it leaves out is derived from
- * the mode's own colours, which is what lets every Theme offer all four without anybody drawing them.
+ * the mode's own colours, which is what lets every Theme offer all three without anybody drawing them.
  *
  * They reach the page as Ant Design tokens -- `phiGradient1` and its `phiGradient1Text` -- and Ant Design
  * writes every token as a custom property under the Theme's class (`--ant-phi-gradient-1`). That is the
@@ -14,7 +14,7 @@
  * wherever it stands without asking which one that is.
  */
 
-export const PHI_THEME_GRADIENT_KEYS = ["gradient1", "gradient2", "gradient3", "gradient4"] as const;
+export const PHI_THEME_GRADIENT_KEYS = ["gradient1", "gradient2", "gradient3"] as const;
 export type PhiThemeGradientKey = (typeof PHI_THEME_GRADIENT_KEYS)[number];
 
 export type PhiThemeGradientDirection = "to right" | "to left" | "to bottom" | "to top" | `${number}deg`;
@@ -25,11 +25,31 @@ export type PhiThemeGradientStop = { color: string; percent: number };
 export type PhiThemeGradient = {
   direction: PhiThemeGradientDirection;
   stops: PhiThemeGradientStop[];
-  /** The text that stands on it; absent, whichever of white and near-black reads better on its middle. */
-  text?: string;
+  /**
+   * Which of the Theme's two text colours stands on it (`PhiThemeGradientInks`); absent, whichever reads
+   * better where it reads worst. No colour of its own: words on a run read like the Theme's other words,
+   * and follow when the Theme's text colours change.
+   */
+  text?: PhiThemeGradientTextTone;
 };
 
-export type PhiThemeGradientPalette = Partial<Record<PhiThemeGradientKey, PhiThemeGradient>>;
+export const PHI_THEME_GRADIENT_TEXT_TONES = ["light", "dark"] as const;
+export type PhiThemeGradientTextTone = (typeof PHI_THEME_GRADIENT_TEXT_TONES)[number];
+
+/**
+ * The Theme's two text colours for words on a run, in one mode: `light` is the text it sets on a solid
+ * coloured ground (`colorTextLightSolid`), `dark` the darker of its text and its ground -- its text in
+ * light mode, its ground in dark mode, where the text is the light one.
+ */
+export type PhiThemeGradientInks = Record<PhiThemeGradientTextTone, string>;
+
+/**
+ * A slot as a palette states it: a whole run, or only which text colour stands on the run the slot
+ * derives -- so choosing the words does not freeze the palette's colours into the slot.
+ */
+export type PhiThemeGradientSlot = PhiThemeGradient | { text: PhiThemeGradientTextTone };
+
+export type PhiThemeGradientPalette = Partial<Record<PhiThemeGradientKey, PhiThemeGradientSlot>>;
 
 function isPhiThemeGradientKey(value: unknown): value is PhiThemeGradientKey {
   return typeof value === "string" && (PHI_THEME_GRADIENT_KEYS as readonly string[]).includes(value);
@@ -45,6 +65,12 @@ function isGradientDirection(value: unknown): value is PhiThemeGradientDirection
     && (["to right", "to left", "to bottom", "to top"].includes(value) || /^-?\d+(\.\d+)?deg$/.test(value));
 }
 
+/** The text tone a stored slot states, with or without a run of its own. */
+export function readPhiThemeGradientTextTone(value: unknown): PhiThemeGradientTextTone | undefined {
+  const text = value && typeof value === "object" ? (value as { text?: unknown }).text : undefined;
+  return PHI_THEME_GRADIENT_TEXT_TONES.find((tone) => tone === text);
+}
+
 /** A stored gradient, read strictly: two stops at least, each a colour and a place on the run. */
 export function readPhiThemeGradient(value: unknown): PhiThemeGradient | null {
   if (!value || typeof value !== "object") return null;
@@ -58,7 +84,7 @@ export function readPhiThemeGradient(value: unknown): PhiThemeGradient | null {
       : [];
   });
   if (stops.length < 2) return null;
-  const text = typeof raw.text === "string" && raw.text.trim() ? raw.text.trim() : undefined;
+  const text = PHI_THEME_GRADIENT_TEXT_TONES.find((tone) => tone === raw.text);
   return { direction: raw.direction, stops, ...(text ? { text } : {}) };
 }
 
@@ -74,14 +100,12 @@ const PHI_THEME_GRADIENT_TOKEN_NAMES: Record<PhiThemeGradientKey, { paint: strin
   gradient1: { paint: "phiGradient1", text: "phiGradient1Text" },
   gradient2: { paint: "phiGradient2", text: "phiGradient2Text" },
   gradient3: { paint: "phiGradient3", text: "phiGradient3Text" },
-  gradient4: { paint: "phiGradient4", text: "phiGradient4Text" },
 };
 
 export const PHI_THEME_GRADIENT_CSS_VARS: Record<PhiThemeGradientKey, { paint: string; text: string }> = {
   gradient1: { paint: "--ant-phi-gradient-1", text: "--ant-phi-gradient-1-text" },
   gradient2: { paint: "--ant-phi-gradient-2", text: "--ant-phi-gradient-2-text" },
   gradient3: { paint: "--ant-phi-gradient-3", text: "--ant-phi-gradient-3-text" },
-  gradient4: { paint: "--ant-phi-gradient-4", text: "--ant-phi-gradient-4-text" },
 };
 
 /*
@@ -99,25 +123,41 @@ const PHI_PRIMARY_BUTTON_GRADIENT_TOKENS = {
 } as const;
 
 /** A run a little lighter under the pointer, a little darker while it is pressed. */
-const PHI_GRADIENT_HOVER_FILTER = "brightness(1.18) saturate(1.15)";
+export const PHI_GRADIENT_HOVER_FILTER = "brightness(1.18) saturate(1.15)";
 const PHI_GRADIENT_ACTIVE_FILTER = "brightness(0.88)";
 
 type Rgb = { r: number; g: number; b: number };
+type Rgba = Rgb & { a: number };
 
-/* Enough of CSS colour for what a palette states: hex in its three lengths and `rgb()`/`rgba()`. */
-function parseColor(value: string): Rgb | null {
+/* Enough of CSS colour for what a palette states: hex in its four lengths and `rgb()`/`rgba()`. */
+function parseColor(value: string): Rgba | null {
   const text = value.trim().toLowerCase();
   const hex = /^#([0-9a-f]{3,8})$/.exec(text)?.[1];
   if (hex) {
-    const full = hex.length <= 4 ? [...hex.slice(0, 3)].map((digit) => digit + digit).join("") : hex.slice(0, 6);
+    const full = hex.length <= 4 ? [...hex].map((digit) => digit + digit).join("") : hex;
     return {
       r: Number.parseInt(full.slice(0, 2), 16),
       g: Number.parseInt(full.slice(2, 4), 16),
       b: Number.parseInt(full.slice(4, 6), 16),
+      a: full.length >= 8 ? Number.parseInt(full.slice(6, 8), 16) / 255 : 1,
     };
   }
-  const rgb = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/.exec(text);
-  return rgb ? { r: Number(rgb[1]), g: Number(rgb[2]), b: Number(rgb[3]) } : null;
+  const rgb = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)(?:[\s,/]+([\d.]+)(%?))?/.exec(text);
+  if (!rgb) return null;
+  const alpha = rgb[4] == null ? 1 : Number(rgb[4]) / (rgb[5] ? 100 : 1);
+  return { r: Number(rgb[1]), g: Number(rgb[2]), b: Number(rgb[3]), a: Math.min(1, Math.max(0, alpha)) };
+}
+
+/** A translucent text colour as it lands on its ground: the near-black `0.88` text is not black. */
+function composite(top: Rgba, ground: Rgb): Rgb {
+  const mix = (front: number, back: number) => front * top.a + back * (1 - top.a);
+  return { r: mix(top.r, ground.r), g: mix(top.g, ground.g), b: mix(top.b, ground.b) };
+}
+
+/* What `filter: brightness(n)` does to a colour: each channel scaled and clipped. */
+function brighten(colour: Rgb, factor: number): Rgb {
+  const scale = (channel: number) => Math.min(255, channel * factor);
+  return { r: scale(colour.r), g: scale(colour.g), b: scale(colour.b) };
 }
 
 function relativeLuminance({ r, g, b }: Rgb) {
@@ -128,31 +168,75 @@ function relativeLuminance({ r, g, b }: Rgb) {
   return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
 }
 
-function phiContrastRatio(a: string, b: string): number | null {
-  const first = parseColor(a);
-  const second = parseColor(b);
-  if (!first || !second) return null;
+function contrastOf(first: Rgb, second: Rgb) {
   const [light, dark] = [relativeLuminance(first), relativeLuminance(second)].sort((x, y) => y - x);
   return (light! + 0.05) / (dark! + 0.05);
 }
 
+/** How much lighter a gradient Control is under the pointer (`styles/gradients.css`). */
+const PHI_GRADIENT_HOVER_BRIGHTNESS = 1.18;
+
 const PHI_GRADIENT_LIGHT_TEXT = "#ffffff";
 const PHI_GRADIENT_DARK_TEXT = "rgba(0, 0, 0, 0.88)";
 
-/**
- * The weakest contrast a text colour has anywhere on the run. Text crosses the whole run, so the stop it
- * reads worst on is the one that decides; the Theme workspace warns below 4.5:1.
- */
-export function resolvePhiThemeGradientWorstContrast(gradient: PhiThemeGradient, text: string): number | null {
-  const ratios = gradient.stops.map((stop) => phiContrastRatio(stop.color, text));
-  return ratios.some((ratio) => ratio == null) ? null : Math.min(...(ratios as number[]));
+/** The two text colours of one mode's resolved tokens (`PhiThemeGradientInks`). */
+export function resolvePhiThemeGradientInks(token: Record<string, unknown>): PhiThemeGradientInks {
+  const light = tokenColor(token, "colorTextLightSolid", PHI_GRADIENT_LIGHT_TEXT);
+  const candidates = [tokenColor(token, "colorText", PHI_GRADIENT_DARK_TEXT), tokenColor(token, "colorBgBase", PHI_GRADIENT_DARK_TEXT)];
+  const darkness = (colour: string) => {
+    const parsed = parseColor(colour);
+    return parsed ? relativeLuminance(composite(parsed, { r: 255, g: 255, b: 255 })) : Number.POSITIVE_INFINITY;
+  };
+  const dark = candidates.reduce((darkest, next) => (darkness(next) < darkness(darkest) ? next : darkest));
+  return { light, dark: Number.isFinite(darkness(dark)) ? dark : PHI_GRADIENT_DARK_TEXT };
 }
 
-function pickReadableText(stops: readonly PhiThemeGradientStop[]) {
-  const gradient: PhiThemeGradient = { direction: "90deg", stops: [...stops] };
-  const light = resolvePhiThemeGradientWorstContrast(gradient, PHI_GRADIENT_LIGHT_TEXT) ?? 0;
-  const dark = resolvePhiThemeGradientWorstContrast(gradient, "#000000") ?? 0;
-  return light >= dark ? PHI_GRADIENT_LIGHT_TEXT : PHI_GRADIENT_DARK_TEXT;
+/** Where a text colour reads worst on a gradient: the ratio, the stop, and whether under the pointer. */
+export type PhiThemeGradientContrast = {
+  ratio: number;
+  stopIndex: number;
+  color: string;
+  hover: boolean;
+};
+
+/**
+ * Where a text colour reads worst on the run. Text crosses the whole run, so the stop it reads worst on
+ * decides -- at rest and under the pointer, where the hover filter lightens run and words alike. A
+ * translucent text colour is laid on each stop first. `null` where a colour is not one this can read
+ * (`hsl()`, a variable): the Theme workspace then says nothing rather than something wrong.
+ */
+export function resolvePhiThemeGradientContrast(gradient: PhiThemeGradient, text: string): PhiThemeGradientContrast | null {
+  const words = parseColor(text);
+  if (!words) return null;
+  let worst: PhiThemeGradientContrast | null = null;
+  for (const [stopIndex, stop] of gradient.stops.entries()) {
+    const ground = parseColor(stop.color);
+    if (!ground) return null;
+    for (const hover of [false, true]) {
+      const factor = hover ? PHI_GRADIENT_HOVER_BRIGHTNESS : 1;
+      const lit = brighten(ground, factor);
+      const ratio = contrastOf(lit, brighten(composite(words, ground), factor));
+      if (worst == null || ratio < worst.ratio - 1e-9) {
+        worst = { ratio, stopIndex, color: stop.color, hover };
+      }
+    }
+  }
+  return worst;
+}
+
+/** The weakest contrast a text colour has anywhere on the run, at rest or under the pointer. */
+export function resolvePhiThemeGradientWorstContrast(gradient: PhiThemeGradient, text: string): number | null {
+  return resolvePhiThemeGradientContrast(gradient, text)?.ratio ?? null;
+}
+
+/** Which of the two text colours reads better where the run reads worst for it. */
+export function resolvePhiThemeGradientAutoTextTone(
+  gradient: PhiThemeGradient,
+  inks: PhiThemeGradientInks,
+): PhiThemeGradientTextTone {
+  const light = resolvePhiThemeGradientWorstContrast(gradient, inks.light) ?? 0;
+  const dark = resolvePhiThemeGradientWorstContrast(gradient, inks.dark) ?? 0;
+  return light >= dark ? "light" : "dark";
 }
 
 function tokenColor(token: Record<string, unknown>, key: string, fallback: string) {
@@ -161,10 +245,11 @@ function tokenColor(token: Record<string, unknown>, key: string, fallback: strin
 }
 
 /**
- * The four slots a mode offers when its palette states none: runs within the mode's own colours, so they
- * belong to whichever brand the Theme carries. The primary's hover into its pressed shade first, the
- * warning colour second because a palette's accent sits there, then the info colour into the primary and
- * the primary into the info colour.
+ * The three slots a mode offers when its palette states none: runs within the mode's own colours, so they
+ * belong to whichever brand the Theme carries. The primary's hover into its pressed shade first -- the
+ * brand --, the warning colour second because a palette's accent sits there, then the info colour into
+ * the primary, a run for the chrome. Three cover what a site asks of a run; a fourth was the third
+ * turned round.
  */
 function buildPhiThemeDefaultGradients(token: Record<string, unknown>): Record<PhiThemeGradientKey, PhiThemeGradient> {
   const primary = tokenColor(token, "colorPrimary", "#1677ff");
@@ -178,7 +263,6 @@ function buildPhiThemeDefaultGradients(token: Record<string, unknown>): Record<P
     gradient1: { direction: "135deg", stops: [{ color: primaryHover, percent: 0 }, { color: primaryActive, percent: 100 }] },
     gradient2: { direction: "135deg", stops: [{ color: warningHover, percent: 0 }, { color: warningActive, percent: 100 }] },
     gradient3: { direction: "135deg", stops: [{ color: info, percent: 0 }, { color: primary, percent: 100 }] },
-    gradient4: { direction: "135deg", stops: [{ color: primary, percent: 0 }, { color: info, percent: 100 }] },
   };
 }
 
@@ -190,12 +274,14 @@ export function resolvePhiThemeGradients(
   const defaults = buildPhiThemeDefaultGradients(token);
   return Object.fromEntries(PHI_THEME_GRADIENT_KEYS.map((key) => {
     const own = readPhiThemeGradient(stated?.[key]);
-    return [key, own ?? defaults[key]];
+    const text = readPhiThemeGradientTextTone(stated?.[key]);
+    return [key, own ?? (text ? { ...defaults[key], text } : defaults[key])];
   })) as Record<PhiThemeGradientKey, PhiThemeGradient>;
 }
 
-export function resolvePhiThemeGradientText(gradient: PhiThemeGradient): string {
-  return gradient.text ?? pickReadableText(gradient.stops);
+/** The text colour on a run: the tone it states, else the one that reads better. */
+export function resolvePhiThemeGradientText(gradient: PhiThemeGradient, inks: PhiThemeGradientInks): string {
+  return inks[gradient.text ?? resolvePhiThemeGradientAutoTextTone(gradient, inks)];
 }
 
 /**
@@ -214,11 +300,12 @@ export function buildPhiThemeGradientTokens({
   primaryButtonGradient?: PhiThemeGradientKey | null;
 }): Record<string, string> {
   const resolved = resolvePhiThemeGradients(gradients, token);
+  const inks = resolvePhiThemeGradientInks(token);
   const tokens: Record<string, string> = {};
   for (const key of PHI_THEME_GRADIENT_KEYS) {
     const names = PHI_THEME_GRADIENT_TOKEN_NAMES[key];
     tokens[names.paint] = serializePhiThemeGradientCss(resolved[key]);
-    tokens[names.text] = resolvePhiThemeGradientText(resolved[key]);
+    tokens[names.text] = resolvePhiThemeGradientText(resolved[key], inks);
   }
   if (primaryButtonGradient && isPhiThemeGradientKey(primaryButtonGradient)) {
     const paint = tokens[PHI_THEME_GRADIENT_TOKEN_NAMES[primaryButtonGradient].paint]!;

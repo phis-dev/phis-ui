@@ -118,6 +118,11 @@ export type PhiBackgroundControlProps = {
    * for it.
    */
   baseKinds?: readonly PhiCmsBackgroundWidgetConfig["base"]["kind"][];
+  /**
+   * Whether the surface draws an Overlay over its Base. A Theme gradient slot is one run and nothing
+   * over it, so it offers none; absent is offered.
+   */
+  overlay?: boolean;
   renderMediaPicker?: (props: {
     purpose: "preview" | "field";
     value?: number | null;
@@ -217,6 +222,7 @@ export function PhiBackgroundControl({
   filters = PHI_BACKGROUND_FILTERS,
   imageSourceKinds = PHI_BACKGROUND_IMAGE_SOURCE_KINDS,
   baseKinds = PHI_BACKGROUND_BASE_KINDS,
+  overlay: overlayOffered = true,
   renderMediaPicker,
   editTransaction,
   onChange,
@@ -407,7 +413,7 @@ export function PhiBackgroundControl({
    * A `theme` Base is the Theme's Overlay whole -- its own Overlay and pane included -- so the Background
    * offers nothing to lay over it, and the Filter segment has nothing to offer either.
    */
-  const offersOverlay = currentValue.base.kind !== "theme";
+  const offersOverlay = overlayOffered && currentValue.base.kind !== "theme";
   useEffect(() => {
     if (currentValue.base.kind === "color") {
       lastColorBaseRef.current = currentValue.base;
@@ -973,6 +979,13 @@ export function PhiBackgroundControl({
   }
 
   const showPreview = mode !== "config";
+  /*
+   * Only what can be changed is shown. One Base kind is no choice, so its Select goes; and where the
+   * preview is drawn, a click on it opens the colour or gradient picker, so the second picker beside it
+   * would only repeat it.
+   */
+  const soleBaseKind = baseKinds.length === 1;
+  const basePickerInPreview = soleBaseKind && showPreview;
 
   return (
     <PhiFlexControl vertical gap={12} style={{ width: "100%" }}>
@@ -982,7 +995,7 @@ export function PhiBackgroundControl({
         </ConfigPreviewShell>
       ) : null}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: token.paddingXS, width: "100%" }}>
+      {soleBaseKind ? null : <div style={{ display: "flex", flexDirection: "column", gap: token.paddingXS, width: "100%" }}>
         <Typography.Text>{labels.sections.base}</Typography.Text>
         {/* A Select, not a segment: with Theme the Base has more kinds than a segment row holds. */}
         <PhiSelectControl<PhiCmsBackgroundWidgetConfig["base"]["kind"]>
@@ -995,7 +1008,7 @@ export function PhiBackgroundControl({
             if (next != null) updateBaseKind(next);
           }}
         />
-      </div>
+      </div>}
 
       {currentValue.base.kind === "image" ? (
         <div style={{ display: "flex", flexDirection: "column", gap: token.paddingSM, width: "100%" }}>
@@ -1135,7 +1148,7 @@ export function PhiBackgroundControl({
         </div>
       ) : currentValue.base.kind === "color" || currentValue.base.kind === "gradient" ? (
         <div style={{ display: "flex", flexDirection: "column", gap: token.paddingSM, width: "100%" }}>
-          {currentValue.base.kind === "color" ? (
+          {basePickerInPreview ? null : currentValue.base.kind === "color" ? (
             <Flex align="center" justify="space-between" gap={token.paddingSM} wrap="wrap">
               <Typography.Text>{labels.base.color}</Typography.Text>
               <PhiColorControl

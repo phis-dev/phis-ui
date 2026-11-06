@@ -37,11 +37,16 @@ import {
   buildPhiThemeGradientTokens,
   PHI_THEME_GRADIENT_KEYS,
   readPhiThemeGradient,
+  readPhiThemeGradientTextTone,
+  type PhiThemeGradientSlot,
   readPhiThemeGradientKey,
   resolvePhiThemeGradients,
   resolvePhiThemeGradientText,
-  resolvePhiThemeGradientWorstContrast,
-  type PhiThemeGradient,
+  resolvePhiThemeGradientContrast,
+  resolvePhiThemeGradientAutoTextTone,
+  resolvePhiThemeGradientInks,
+  PHI_GRADIENT_HOVER_FILTER,
+  type PhiThemeGradientTextTone,
   type PhiThemeGradientKey,
 } from "../../../../../theme/phi-theme-gradients";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
@@ -537,7 +542,7 @@ function mergeThemePrimaryButtonGradient(theme: ThemePayload, gradient: PhiTheme
 function mergeThemeGradient(
   theme: ThemePayload,
   key: PhiThemeGradientKey,
-  gradient: PhiThemeGradient | null,
+  gradient: PhiThemeGradientSlot | null,
   mode: PhiThemeMode,
 ): ThemePayload {
   return mergeThemePaletteMode(theme, mode, (current) => {
@@ -1421,6 +1426,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
     customColorOptions,
     computedToken,
     gradients,
+    gradientInks,
     ownGradients,
   } = useMemo(() => {
     const themeComposition = resolvePhiThemeComposition(state.draft, themeBlocks);
@@ -1459,10 +1465,13 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
      * The gradient slots as the Site draws them: stated by the palette block or the draft, else derived
      * from the mode's colours as they resolve WITH the author's overrides -- what the root derives from.
      */
+    const gradientToken = resolvePhiAntdAliasTokens(previewMode, { ...buildPhiEffectiveNonColorThemeTokens(state.draft), ...colorToken });
     const gradients = resolvePhiThemeGradients(
       mergePhiThemePalettes(selectedPreset.palette, state.draft.palette).modes?.[previewMode]?.gradients,
-      resolvePhiAntdAliasTokens(previewMode, { ...buildPhiEffectiveNonColorThemeTokens(state.draft), ...colorToken }),
+      gradientToken,
     );
+    // The Theme's two text colours in this mode, which the words on a run are chosen from.
+    const gradientInks = resolvePhiThemeGradientInks(gradientToken);
     const ownGradients = ownPalette.modes?.[previewMode]?.gradients ?? {};
     return {
       themeComposition,
@@ -1474,6 +1483,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
       customColorOptions,
       computedToken,
       gradients,
+      gradientInks,
       ownGradients,
     };
   }, [customLabel, previewMode, state.draft, themeBlocks, themePresets]);
@@ -1598,21 +1608,35 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                 children: (
                   <PhiFlexControl vertical gap={clientToken.padding}>
                     <PhiTypographyControl type="secondary">
-                      Four runs Buttons, badges, tags and switches can be filled with. {previewMode === "dark" ? "Dark" : "Light"} mode;
+                      Three runs Buttons, badges, tags and switches can be filled with. {previewMode === "dark" ? "Dark" : "Light"} mode;
                       a slot left alone follows the palette&apos;s colours.
                     </PhiTypographyControl>
                     {PHI_THEME_GRADIENT_KEYS.map((key, index) => {
                       const gradient = gradients[key];
+                      // The run the author stated, and the text tone they chose -- either may stand alone.
                       const own = readPhiThemeGradient(ownGradients[key]);
-                      const text = resolvePhiThemeGradientText(gradient);
-                      const contrast = resolvePhiThemeGradientWorstContrast(gradient, text);
+                      const ownTone = readPhiThemeGradientTextTone(ownGradients[key]);
+                      const text = resolvePhiThemeGradientText(gradient, gradientInks);
+                      const contrast = resolvePhiThemeGradientContrast(gradient, text);
+                      const tone = gradient.text ?? resolvePhiThemeGradientAutoTextTone(gradient, gradientInks);
+                      const otherTone = tone === "light" ? "dark" : "light";
+                      // Neither of the Theme's text colours reads: then the run itself is what has to change.
+                      const otherContrast = resolvePhiThemeGradientContrast(gradient, gradientInks[otherTone]);
+                      const neitherReads = otherContrast != null && otherContrast.ratio < 4.5;
+                      /*
+                       * An error where the author's choice is what reads poorly: a run they stated, or a text
+                       * colour they chose while the other one would read. Otherwise the palette's colours are
+                       * what falls short, and it is a hint.
+                       */
+                      const contrastLevel = own || (ownTone && !neitherReads) ? "error" : "info";
+
                       const paint = `linear-gradient(${gradient.direction}, ${gradient.stops
                         .map((stop) => `${stop.color} ${stop.percent}%`).join(", ")})`;
                       return (
                         <PhiFlexControl key={key} vertical gap={clientToken.paddingXS}>
                           <PhiFlexControl align="center" justify="space-between" gap={clientToken.paddingXS}>
                             <PhiTypographyControl strong>{`Gradient ${index + 1}`}</PhiTypographyControl>
-                            {own ? (
+                            {own || ownTone ? (
                               <PhiButtonControl
                                 size="small"
                                 type="link"
@@ -1623,24 +1647,54 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                               />
                             ) : null}
                           </PhiFlexControl>
-                          <div
-                            style={{
-                              background: paint,
-                              color: text,
-                              borderRadius: clientToken.borderRadius,
-                              paddingBlock: clientToken.paddingXS,
-                              textAlign: "center",
-                              fontWeight: 600,
-                            }}
-                          >
-                            {`Gradient ${index + 1}`}
-                          </div>
+                          {/*
+                            What the run fills, at the size it fills it: a Button at rest and under the pointer
+                            (the hover filter of `styles/gradients.css`), and a badge.
+                          */}
+                          <PhiFlexControl align="center" gap={clientToken.paddingSM} wrap="wrap" aria-hidden>
+                            {[false, true].map((hover) => (
+                              <span
+                                key={hover ? "hover" : "rest"}
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  height: clientToken.controlHeight,
+                                  paddingInline: clientToken.padding,
+                                  borderRadius: 999,
+                                  background: paint,
+                                  color: text,
+                                  fontSize: clientToken.fontSize,
+                                  fontWeight: 600,
+                                  whiteSpace: "nowrap",
+                                  ...(hover ? { filter: PHI_GRADIENT_HOVER_FILTER } : {}),
+                                }}
+                              >
+                                {hover ? "Hover" : `Gradient ${index + 1}`}
+                              </span>
+                            ))}
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                paddingInline: clientToken.paddingXS,
+                                borderRadius: clientToken.borderRadiusSM,
+                                background: paint,
+                                color: text,
+                                fontSize: clientToken.fontSizeSM,
+                                fontWeight: 600,
+                                lineHeight: 2,
+                              }}
+                            >
+                              Badge
+                            </span>
+                          </PhiFlexControl>
                           <PhiBackgroundControl
                             key={`${key}-${previewMode}`}
                             value={normalizePhiBackgroundWidgetConfig({
                               base: { kind: "gradient", direction: gradient.direction, stops: gradient.stops },
                             })}
                             baseKinds={["gradient"]}
+                            overlay={false}
                             filters={[]}
                             motionModes={[]}
                             imageSourceKinds={[]}
@@ -1651,30 +1705,57 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                               publishDraft(mergeThemeGradient(
                                 draftRef.current,
                                 key,
-                                { direction: base.direction, stops: base.stops, ...(own?.text ? { text: own.text } : {}) },
+                                { direction: base.direction, stops: base.stops, ...(ownTone ? { text: ownTone } : {}) },
                                 previewMode,
                               ));
                             }}
                           />
-                          <PhiColorFieldControl
-                            {...pickerTransaction}
-                            label="Text"
-                            tokenKey={`${key}Text`}
-                            value={text}
-                            defaultValue={resolvePhiThemeGradientText({ ...gradient, text: undefined })}
-                            disabled={saving}
-                            customColors={customColorOptions}
-                            presets={PHI_COLOR_PICKER_PRESETS}
-                            labels={colorPickerLabels}
-                            onChange={(value) => {
-                              publishDraft(mergeThemeGradient(draftRef.current, key, { ...gradient, text: value }, previewMode));
-                            }}
-                          />
-                          {contrast != null && contrast < 4.5 ? (
+                          <PhiFlexControl vertical gap={clientToken.paddingXXS}>
+                            {/*
+                              Which of the Theme's two text colours stands on this run -- not the mode, which the
+                              switch above the sections picks. The Buttons above show the choice on the run.
+                            */}
+                            <PhiTypographyControl type="secondary">Label colour</PhiTypographyControl>
+                            <PhiSegmentedControl<"auto" | PhiThemeGradientTextTone>
+                              block
+                              disabled={saving}
+                              value={ownTone ?? "auto"}
+                              options={[
+                                { value: "auto", label: "Automatic" },
+                                { value: "light", label: "Light text" },
+                                { value: "dark", label: "Dark text" },
+                              ]}
+                              onChange={(next) => {
+                                // Only the words change: a run the author stated stays theirs, a derived one stays derived.
+                                const run = own ? { direction: own.direction, stops: own.stops } : null;
+                                const slot = next === "auto"
+                                  ? run
+                                  : run ? { ...run, text: next } : { text: next };
+                                publishDraft(mergeThemeGradient(draftRef.current, key, slot, previewMode));
+                              }}
+                            />
+                          </PhiFlexControl>
+                          {contrast != null && contrast.ratio < 4.5 ? (
                             <PhiAlertControl
-                              level="warning"
-                              title={`The text reads at ${contrast.toFixed(1)}:1 where the run is weakest.`}
-                              description="4.5:1 is what normal-sized text needs to read reliably."
+                              showIcon
+                              level={contrastLevel}
+                              // Small: a note beside a setting in a narrow panel, not a page's message.
+                              title={(
+                                <span style={{ display: "block", fontSize: clientToken.fontSize, fontWeight: 600, lineHeight: 1.4 }}>
+                                  {`Label contrast ${contrast.ratio.toFixed(1)}:1 at stop ${contrast.stopIndex + 1} (${contrast.color})${contrast.hover ? " under the pointer" : ""}.`}
+                                </span>
+                              )}
+                              description={(
+                                <span style={{ display: "block", fontSize: clientToken.fontSizeSM, lineHeight: 1.45 }}>
+                                  {[
+                                    own ? null : "This run is derived from the palette's colours.",
+                                    "Labels on Buttons, badges and tags need 4.5:1 to read reliably.",
+                                    neitherReads
+                                      ? "Neither of the Theme's text colours reaches it here: make the run's stops lighter or darker."
+                                      : `The ${otherTone} text reads better: choose it, or move the stops away from the ${tone} text.`,
+                                  ].filter(Boolean).join(" ")}
+                                </span>
+                              )}
                             />
                           ) : null}
                         </PhiFlexControl>

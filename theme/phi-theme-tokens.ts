@@ -188,8 +188,6 @@ export const PHI_THEME_OWN_TOKEN_KEYS = [
   "phiGradient2Text",
   "phiGradient3",
   "phiGradient3Text",
-  "phiGradient4",
-  "phiGradient4Text",
   "phiPrimaryButtonGradient",
   "phiPrimaryButtonGradientHover",
   "phiPrimaryButtonGradientActive",
