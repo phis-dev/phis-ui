@@ -10,6 +10,7 @@ export type PhiGeometryWidgetLabels = {
   fields: {
     sticky: string;
     offsetTop: string;
+    offsetBottom: string;
     size: string;
     minSize: string;
     maxSize: string;
@@ -38,6 +39,7 @@ export const PHI_GEOMETRY_WIDGET_DEFAULT_LABELS: PhiGeometryWidgetLabels = {
   fields: {
     sticky: "Sticky",
     offsetTop: "Offset top",
+    offsetBottom: "Offset bottom",
     size: "Size",
     minSize: "Min size",
     maxSize: "Max size",

@@ -10,7 +10,7 @@ import { isPhiCmsPageOwnedRegion } from "../../helpers/cms-region-keys";
 import { hasPhiFlag } from "../../helpers/flags";
 import { PhiCmsFlags } from "../../constants/phi-cms";
 import { PhiCmsRegionStatic } from "./phi-cms-region-static";
-import { phiCmsRegionSiderSticks } from "./phi-cms-region-shell";
+import { phiCmsRegionFooterSticks, phiCmsRegionSiderSticks } from "./phi-cms-region-shell";
 import {
   resolveRenderableBlockEffectsAttributes,
   resolveRenderableBlockViewportEffects,
@@ -68,6 +68,8 @@ export function PhiCmsRegionContainer({
     (!previewMode && readPhiCmsRegionReveal(regionKey, config) !== "always") ||
     // A stuck Sider stands under the Header as measured, and only the browser can measure it.
     (!previewMode && phiCmsRegionSiderSticks(regionKey, config)) ||
+    // A stuck Footer tells the Shell how much of the viewport's bottom it holds, which is measured.
+    (!previewMode && phiCmsRegionFooterSticks(regionKey, config)) ||
     // A Hero stands behind the Header bands, whose heights only the browser can measure for certain.
     (!previewMode && regionKey === "hero") ||
     hasPhiFlag(config?.flags, PhiCmsFlags.Collapsible) ||

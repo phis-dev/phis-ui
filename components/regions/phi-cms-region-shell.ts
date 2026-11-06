@@ -38,7 +38,11 @@ import { createPhiSignalAddress } from "../../types/signals";
 import type { PhiCmsRegionReveal } from "../../types/cms-presets";
 import { readPhiCmsRegionReveal } from "../../helpers/region-page-scope";
 import { resolvePhiPaddingStyle } from "../layouts/phi-layout-contract";
-import { PHI_SHELL_STICKY_TOP_PROPERTY, phiRegionUsesShellChromeOverlay } from "../root/phi-shell-chrome-overlay";
+import {
+  PHI_SHELL_STICKY_BOTTOM_PROPERTY,
+  PHI_SHELL_STICKY_TOP_PROPERTY,
+  phiRegionUsesShellChromeOverlay,
+} from "../root/phi-shell-chrome-overlay";
 import {
   normalizePhiBackgroundWidgetConfig,
   phiBackgroundWidgetConfigPaintsGround,
@@ -199,6 +203,22 @@ export function phiCmsRegionSiderSticks(
     && !hasPhiFlag(config?.flags, PhiCmsFlags.FullHeight);
 }
 
+/**
+ * Whether a Region is the Footer band that sticks to the viewport's bottom.
+ *
+ * Only `footer_bottom`, the counterpart of `header_top`: the lowest band is the one that can stand at the
+ * bottom edge while the page scrolls past it. A middle band that stuck would have the band below it either
+ * cover it or stick with it, and neither is a Footer anybody asked for; `footer_top` and `footer_main`
+ * scroll with the page and arrive above it at the end. It measures the room it holds
+ * (`usePhiShellStickyBottom`), so a Sider stuck under the Header ends above it.
+ */
+export function phiCmsRegionFooterSticks(
+  regionKey: PhiCmsRegionKey,
+  config: Pick<PhiCmsRegionConfig, "flags"> | null | undefined,
+): boolean {
+  return regionKey === "footer_bottom" && hasPhiFlag(config?.flags, PhiCmsFlags.Sticky);
+}
+
 /** The line a stuck Sider stands at: under the Header as measured, plus its own offset. */
 function resolvePhiCmsRegionSiderStuckTop(topCss: string) {
   return `calc(var(${PHI_SHELL_STICKY_TOP_PROPERTY}, 0px) + ${topCss})`;
@@ -297,7 +317,12 @@ export function resolvePhiCmsRegionShell({
    * A revealing `header_top` sticks whatever its flag says: coming back into view at the top edge is what
    * revealing means, and only a sticky band has a top edge to come back to.
    */
-  const stuck = isHeader ? sticky || reveal !== "always" : isSider && (sticky || fullHeight);
+  const footerSticks = phiCmsRegionFooterSticks(regionKey, config);
+  const stuck = isHeader
+    ? sticky || reveal !== "always"
+    : footerSticks || (isSider && (sticky || fullHeight));
+  const bottom = normalizeCssLength(config.offsetBottom) ?? 0;
+  const stuckBottom = footerSticks ? (typeof bottom === "number" ? `${bottom}px` : bottom) : undefined;
   /*
    * The Header bands below `header_top` stick under it while it is in view and close up when it leaves.
    * `--phi-shell-header-top-stack` is how much of the viewport's top it holds right now; only a
@@ -310,7 +335,7 @@ export function resolvePhiCmsRegionShell({
    * tall as what is left of the viewport below that line.
    */
   const siderUnderHeader = isSider && sticky && !fullHeight;
-  const stuckTop = !stuck
+  const stuckTop = !stuck || footerSticks
     ? undefined
     : isHeader && regionKey !== "header_top"
       ? `calc(${topCss} + var(--phi-shell-header-top-stack, 0px))`
@@ -322,7 +347,10 @@ export function resolvePhiCmsRegionShell({
     fullHeight && !blockSize
       ? `calc(100dvh - ${topCss})`
       : blockSize;
-  const underHeaderMaxSize = siderUnderHeader ? `calc(100dvh - ${resolvePhiCmsRegionSiderStuckTop(topCss)})` : undefined;
+  // Below the Header as measured, and above a stuck Footer as measured: the room left between the two.
+  const underHeaderMaxSize = siderUnderHeader
+    ? `calc(100dvh - ${resolvePhiCmsRegionSiderStuckTop(topCss)} - var(${PHI_SHELL_STICKY_BOTTOM_PROPERTY}, 0px))`
+    : undefined;
   const zIndex = config.zIndex ?? resolvePhiShellRegionZIndex(regionKey, hasPhiFlag(config.flags, PhiCmsFlags.FullHeight));
 
   /*
@@ -529,6 +557,7 @@ export function resolvePhiCmsRegionShell({
     position: stuck ? "sticky" : "relative",
     top: stuckTop,
     insetBlockStart: isHeader ? stuckTop : undefined,
+    bottom: stuckBottom,
     zIndex,
     ...geometryStyle,
     color: liveChrome ? liveChrome.color : "var(--phi-region-color)",

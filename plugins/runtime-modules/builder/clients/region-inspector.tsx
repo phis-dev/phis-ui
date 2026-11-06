@@ -92,6 +92,19 @@ export function PhiDeveloperBuilderRegionInspectorWidgetClient({
   const isPreviewMode = builderMode === "preview";
   const effectiveDraft = currentDraft ?? (selectedRegionKey ? getDefaultRegionDraft(selectedRegionKey) : null);
 
+  /*
+   * Which edge the selected Region can stick to, if any. The Header bands and the Siders stick at the top;
+   * `footer_bottom` sticks at the bottom (`phiCmsRegionFooterSticks`); every other Region ignores the flag,
+   * so it is not offered there.
+   */
+  const stickyEdge: "top" | "bottom" | null = selectedRegionKey == null
+    ? null
+    : selectedRegionKey === "footer_bottom"
+      ? "bottom"
+      : selectedRegionKey.startsWith("header_") || selectedRegionKey.startsWith("sider_")
+        ? "top"
+        : null;
+
   function updateDraft(patch: Partial<PhiDeveloperBuilderRegionDraft>) {
     if (!selectedRegionKey || !effectiveDraft || !onDraftChange) {
       return;
@@ -118,10 +131,28 @@ export function PhiDeveloperBuilderRegionInspectorWidgetClient({
                       mode="control"
                       disabled={isPreviewMode}
                       showViewport={false}
+                      showSticky={stickyEdge !== null}
+                      showOffsetTop={stickyEdge === "top"}
                       value={effectiveDraft}
                       onChange={(geometry) => updateDraft(geometry)}
                       labels={geometryLabels}
                     />
+                    {stickyEdge === "bottom" ? renderPhiInspectorConfigField({
+                      field: { key: "offsetBottom", type: "length", label: geometryLabels?.fields.offsetBottom ?? "Offset bottom", min: 0 },
+                      value: effectiveDraft.regionConfig?.offsetBottom,
+                      defaultValue: undefined,
+                      config: effectiveDraft.regionConfig ?? {},
+                      disabled: isPreviewMode || !onDraftChange || !effectiveDraft.sticky,
+                      onChange: (patch) => {
+                        const next = { ...(effectiveDraft.regionConfig ?? {}) };
+                        if (patch.offsetBottom == null || patch.offsetBottom === 0) {
+                          delete next.offsetBottom;
+                        } else {
+                          next.offsetBottom = patch.offsetBottom;
+                        }
+                        updateDraft({ regionConfig: next });
+                      },
+                    }) : null}
                     {selectedRegionKey === "content" ? renderPhiInspectorConfigField({
                       field: { key: "heroOverlap", type: "length", label: visibilityLabels.heroOverlap, min: 0 },
                       value: effectiveDraft.regionConfig?.heroOverlap,

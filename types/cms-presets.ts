@@ -62,6 +62,8 @@ export type PhiCmsRegionConfig = Record<string, unknown> & PhiCmsContainerChrome
   fontSize?: CSSProperties["fontSize"];
   lineHeight?: CSSProperties["lineHeight"];
   offsetTop?: PhiCssLength;
+  /** The air below a `Sticky` `footer_bottom` when it sticks to the viewport's bottom; nobody else reads it. */
+  offsetBottom?: PhiCssLength;
   zIndex?: number;
   /** Which of the Area's Pages show this Shell Region (`helpers/region-page-scope.ts`). */
   pageScope?: PhiCmsRegionPageScope;

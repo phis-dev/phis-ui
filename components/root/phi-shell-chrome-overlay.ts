@@ -315,6 +315,13 @@ export const PHI_SHELL_HEADER_TOP_STACK_PROPERTY = "--phi-shell-header-top-stack
 export const PHI_SHELL_STICKY_TOP_PROPERTY = "--phi-shell-sticky-top";
 
 /**
+ * The Footer's measured top, from below: how much of the viewport's bottom a stuck `footer_bottom` holds
+ * right now, written on the Shell by `usePhiShellStickyBottom` (components/shell/use-phi-shell-sticky-bottom.ts).
+ * A Sider stuck under the Header ends above it; unset, it reads `0px`.
+ */
+export const PHI_SHELL_STICKY_BOTTOM_PROPERTY = "--phi-shell-sticky-bottom";
+
+/**
  * How `header_top` behaves where the browser decides it, as far as the Header pane is concerned.
  */
 export type PhiShellHeaderTopBehaviour = {

@@ -29,11 +29,13 @@ import { PhiSlotChildEffectsVisibilityObserver } from "../../../plugins/runtime/
 import { PhiSlotChildViewportEffectsObserver } from "../../../plugins/runtime/phi-slot-child-viewport-effects-observer";
 import { PhiFlexControl } from "../../controls/phi-flex-control";
 import {
+  phiCmsRegionFooterSticks,
   phiCmsRegionSiderSticks,
   resolvePhiCmsRegionShell,
   type PhiCmsRegionShellTheme,
 } from "../phi-cms-region-shell";
 import { usePhiShellStickyTop } from "../../shell/use-phi-shell-sticky-top";
+import { usePhiShellStickyBottom } from "../../shell/use-phi-shell-sticky-bottom";
 import { usePhiShellHeaderBands } from "../../shell/use-phi-shell-header-bands";
 import { usePhiVisualAnchor } from "../../runtime/runtime-visual-anchors";
 import { usePhiPathname } from "../../runtime/use-phi-pathname";
@@ -159,6 +161,10 @@ export function PhiCmsRegionContainerClient({
   });
   usePhiShellStickyTop({
     active: !previewMode && inScope && phiCmsRegionSiderSticks(regionKey, initialConfig),
+    elementRef,
+  });
+  usePhiShellStickyBottom({
+    active: !previewMode && inScope && resolvedVisibility !== "hidden" && phiCmsRegionFooterSticks(regionKey, initialConfig),
     elementRef,
   });
   usePhiShellHeaderBands({

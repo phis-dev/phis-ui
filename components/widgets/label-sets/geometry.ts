@@ -19,6 +19,7 @@ const PHI_GEOMETRY_WIDGET_LABEL_SET = definePhiLabelSet({
     section_stacking: PHI_GEOMETRY_WIDGET_DEFAULT_LABELS.sections.stacking,
     field_sticky: PHI_GEOMETRY_WIDGET_DEFAULT_LABELS.fields.sticky,
     field_offset_top: PHI_GEOMETRY_WIDGET_DEFAULT_LABELS.fields.offsetTop,
+    field_offset_bottom: PHI_GEOMETRY_WIDGET_DEFAULT_LABELS.fields.offsetBottom,
     field_size: PHI_GEOMETRY_WIDGET_DEFAULT_LABELS.fields.size,
     field_min_size: PHI_GEOMETRY_WIDGET_DEFAULT_LABELS.fields.minSize,
     field_max_size: PHI_GEOMETRY_WIDGET_DEFAULT_LABELS.fields.maxSize,
@@ -45,6 +46,7 @@ export async function getPhiGeometryWidgetLabels(options: PhiGlobalTranslatorOpt
     fields: {
       sticky: labels.field_sticky,
       offsetTop: labels.field_offset_top,
+      offsetBottom: labels.field_offset_bottom,
       size: labels.field_size,
       minSize: labels.field_min_size,
       maxSize: labels.field_max_size,

@@ -203,6 +203,29 @@ describe("region shell tone ground", () => {
   });
 });
 
+describe("a stuck Footer", () => {
+  it("is footer_bottom, standing at the viewport's bottom with its offset", () => {
+    const shell = resolve({ regionKey: "footer_bottom", config: { flags: PhiCmsFlags.Sticky, offsetBottom: 12 } });
+    expect(shell.style.position).toBe("sticky");
+    expect(shell.style.bottom).toBe("12px");
+    expect(shell.style.top).toBeUndefined();
+  });
+
+  it("is no other Footer band: footer_top and footer_main scroll with the page", () => {
+    for (const regionKey of ["footer_top", "footer_main"] as const) {
+      const shell = resolve({ regionKey, config: { flags: PhiCmsFlags.Sticky, offsetBottom: 12 } });
+      expect(shell.style.position).toBe("relative");
+      expect(shell.style.bottom).toBeUndefined();
+    }
+  });
+
+  it("stays in the flow without the flag", () => {
+    const shell = resolve({ regionKey: "footer_bottom", config: { offsetBottom: 12 } });
+    expect(shell.style.position).toBe("relative");
+    expect(shell.style.bottom).toBeUndefined();
+  });
+});
+
 describe("a stuck Sider", () => {
   it("stands under the Header's measured bottom, its offset added", () => {
     const shell = resolve({ regionKey: "sider_right", config: { flags: PhiCmsFlags.Sticky, offsetTop: 16 } });
@@ -212,7 +235,7 @@ describe("a stuck Sider", () => {
 
   it("is at most as tall as the viewport below that same line, and scrolls inside", () => {
     const shell = resolve({ regionKey: "sider_right", config: { flags: PhiCmsFlags.Sticky } });
-    expect(shell.style.maxHeight).toBe("calc(100dvh - calc(var(--phi-shell-sticky-top, 0px) + 0px))");
+    expect(shell.style.maxHeight).toBe("calc(100dvh - calc(var(--phi-shell-sticky-top, 0px) + 0px) - var(--phi-shell-sticky-bottom, 0px))");
     expect(shell.style.overflowY).toBe("auto");
     expect(shell.style.height).toBeUndefined();
   });
