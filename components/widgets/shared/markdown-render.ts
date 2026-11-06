@@ -155,11 +155,28 @@ function resolveExternalDocumentUrl(value: string, sourceUrl: string) {
   }
 }
 
-function projectExternalMarkdownNodes(nodes: MarkdownNode[] | undefined, sourceUrl: string): MarkdownNode[] {
+/*
+ * The address a reader is sent to for the document the text was fetched from. GitHub serves a file's
+ * bytes on one host and its page on another; the bytes are what the Widget reads and what a picture
+ * needs, but a link in the text means the page -- a neighbouring document opened as raw text in a new
+ * tab is the source, not the document. Any other host is its own page.
+ */
+function readExternalDocumentPageUrl(sourceUrl: string) {
+  const githubRawMatch = sourceUrl.match(/^https:\/\/raw\.githubusercontent\.com\/([^/]+)\/([^/]+)\/([^/]+)\/(.+)$/u);
+  if (!githubRawMatch) return sourceUrl;
+  const [, owner, repo, ref, path] = githubRawMatch;
+  return `https://github.com/${owner}/${repo}/blob/${ref}/${path}`;
+}
+
+function projectExternalMarkdownNodes(
+  nodes: MarkdownNode[] | undefined,
+  sourceUrl: string,
+  pageUrl = readExternalDocumentPageUrl(sourceUrl),
+): MarkdownNode[] {
   return (nodes ?? []).flatMap((node) => {
-    const children = projectExternalMarkdownNodes(node.children, sourceUrl);
+    const children = projectExternalMarkdownNodes(node.children, sourceUrl, pageUrl);
     if (node.type === "link") {
-      const url = resolveExternalDocumentUrl(node.url ?? "", sourceUrl);
+      const url = resolveExternalDocumentUrl(node.url ?? "", pageUrl);
       return url ? [{ ...node, url, children }] : children;
     }
     if (node.type === "image") {
