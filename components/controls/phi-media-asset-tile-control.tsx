@@ -145,7 +145,7 @@ export function PhiMediaAssetTileControl({
               position: "absolute",
               left: "0.375rem",
               top: "0.375rem",
-              color: "#fff",
+              color: token.colorTextLightSolid,
               fontSize: assetTileLabelFontSize,
               lineHeight: 1,
               textShadow: "0 1px 2px rgba(0, 0, 0, 0.95), 0 0 4px rgba(0, 0, 0, 0.85)",
@@ -161,7 +161,7 @@ export function PhiMediaAssetTileControl({
               position: "absolute",
               top: "0.375rem",
               right: "0.375rem",
-              color: "#fff",
+              color: token.colorTextLightSolid,
               fontSize: assetTileLabelFontSize,
               lineHeight: 1,
               textShadow: "0 1px 2px rgba(0, 0, 0, 0.95), 0 0 4px rgba(0, 0, 0, 0.85)",
@@ -198,25 +198,29 @@ export function PhiMediaAssetTileControl({
           </Typography.Text>
         </div>
       </div>
+      {/*
+        * One row, always: the type gives way and ends in an ellipsis rather than pushing the delete
+        * button onto a line of its own. No background of its own either -- the row is part of the
+        * tile, so it shows the tile's surface, selected or not, in the light mode and the dark one.
+        */}
       {showTypeLabel || showDeleteAction ? (
         <Flex
           align="center"
           justify="space-between"
           gap={token.paddingXS}
-          wrap
           style={{
             minHeight: token.controlHeightSM,
             paddingInline: compact ? token.paddingXS : token.paddingSM,
-            background: "rgba(255, 255, 255, 0.78)",
           }}
         >
           {showTypeLabel ? (
             <Typography.Text
-              ellipsis
+              ellipsis={{ tooltip: resolvePhiMediaAssetTypeLabel(asset.kind, asset.contentType, asset.originalName) }}
               style={{
                 display: "block",
+                flex: "1 1 auto",
                 minWidth: 0,
-                color: "rgba(0, 0, 0, 0.88)",
+                color: token.colorText,
                 fontSize: assetTileLabelFontSize,
               }}
             >
@@ -225,6 +229,7 @@ export function PhiMediaAssetTileControl({
           ) : <span />}
           {showDeleteAction && onDelete ? (
             <span
+              style={{ flex: "none" }}
               onClick={(event) => event.stopPropagation()}
               onKeyDown={(event) => event.stopPropagation()}
             >
@@ -298,7 +303,6 @@ export function PhiMediaAssetCollectionSkeletonControl({
         style={{
           minHeight: token.controlHeightSM,
           paddingInline: compact ? token.paddingXS : token.paddingSM,
-          background: "rgba(255, 255, 255, 0.78)",
         }}
         align="center"
         justify="space-between"
