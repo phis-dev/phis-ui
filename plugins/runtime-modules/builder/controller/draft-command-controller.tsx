@@ -436,9 +436,10 @@ export function usePhiBuilderDraftCommandController({
       pageKey: effectivePageKey,
     };
     /*
-     * A preview is of the saved draft or of nothing. Opening the live page when there was none -- or when
-     * the read failed -- let the author take what is published for their draft; the failure is the
-     * command's error now. What the saved draft leaves out is said before it opens.
+     * A preview is of the saved draft, or -- when nothing is saved -- of what is published, which is then
+     * what the page is. A read that failed is the command's error rather than the live page: the author
+     * would take what is published for a draft that may exist. What the preview leaves out is said
+     * before it opens, and which of the two it shows.
      */
     const result = await previewPhiDeveloperBuilderDraft(state, workspaceKind, {
       pathname,
@@ -447,7 +448,9 @@ export function usePhiBuilderDraftCommandController({
     if (hasUnsavedChanges) {
       showMessage({
         level: "warning",
-        content: "The preview shows the last saved draft. Save to include your latest changes.",
+        content: result.revisionId == null
+          ? "Nothing is saved yet, so the preview shows the published page. Save to include your changes."
+          : "The preview shows the last saved draft. Save to include your latest changes.",
       });
     }
     window.open(result.previewHref, "_blank", "noopener,noreferrer");

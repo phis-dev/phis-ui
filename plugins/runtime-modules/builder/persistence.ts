@@ -1257,8 +1257,16 @@ export async function previewPhiDeveloperBuilderDraft(
             : { path: resolvePhiBuilderCmsStoragePath(area, pageKey, pages) }),
         });
 
+  /*
+   * No saved draft is not a failure: what the preview has to show is then what is published, so it
+   * opens the live page. A read that failed still throws -- that is not knowing, which is different
+   * from there being nothing.
+   */
   if (!draft || !Number.isInteger(draft.revisionId) || (draft.revisionId as number) <= 0) {
-    throw new Error("No saved draft found. Save first before opening live preview.");
+    return {
+      revisionId: null,
+      previewHref: buildPhiBuilderLiveHref(area, pageKey, pages, workspaceKind),
+    };
   }
 
   return {
