@@ -17,5 +17,6 @@ export function PhiStaticTableResourceEditor({
   if (!config.source) {
     throw new Error("Static Table resource authoring requires a Provider resource binding.");
   }
-  return <PhiTableWidgetClient config={config} labels={labels} />;
+  // An authoring surface: what does not hold is the author's to read.
+  return <PhiTableWidgetClient config={config} renderMode="editor" labels={labels} />;
 }

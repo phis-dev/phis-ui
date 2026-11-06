@@ -16,6 +16,7 @@ export const PHI_ENTRY_LIST_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiEntryList
       registry={registry}
       links={links}
       translate={!hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate)}
+      widgetId={widget.id}
     />
   )),
 };

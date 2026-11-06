@@ -8,5 +8,5 @@ import { PHI_TABLE_WIDGET_DEFAULT_LABELS } from "../../../../../components/widge
 
 export const PHI_TABLE_WIDGET_BUILDER_PLUGIN = createPhiCmsBuilderWidgetPlugin<PhiTableWidgetConfig>(
   PHI_TABLE_WIDGET_DEFINITION,
-  ({ config }) => <PhiTableWidgetClient config={config} labels={PHI_TABLE_WIDGET_DEFAULT_LABELS} />,
+  ({ config }) => <PhiTableWidgetClient config={config} renderMode="editor" labels={PHI_TABLE_WIDGET_DEFAULT_LABELS} />,
 );

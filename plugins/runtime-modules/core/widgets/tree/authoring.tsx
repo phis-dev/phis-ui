@@ -8,5 +8,5 @@ import { PHI_TREE_WIDGET_DEFAULT_LABELS } from "../../../../../components/widget
 
 export const PHI_TREE_WIDGET_BUILDER_PLUGIN = createPhiCmsBuilderWidgetPlugin<PhiTreeWidgetConfig>(
   PHI_TREE_WIDGET_DEFINITION,
-  ({ config }) => <PhiTreeWidgetClient config={config} labels={PHI_TREE_WIDGET_DEFAULT_LABELS} />,
+  ({ config }) => <PhiTreeWidgetClient config={config} renderMode="editor" labels={PHI_TREE_WIDGET_DEFAULT_LABELS} />,
 );

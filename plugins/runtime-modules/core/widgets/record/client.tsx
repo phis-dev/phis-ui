@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { readPhiDotPath } from "../../../../../helpers/dot-path";
 
-import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { PhiDescriptionListControl } from "../../../../../components/controls/phi-description-list-control";
 import { PhiEmptyControl } from "../../../../../components/controls/phi-empty-control";
 import { PhiSkeletonControl } from "../../../../../components/controls/phi-skeleton-control";
@@ -16,18 +15,24 @@ import {
   formatPhiRecordWidgetLabel,
   type PhiRecordWidgetLabels,
 } from "../../../../../components/widgets/label-types/record";
+import { PhiWidgetFailure } from "../../../../../components/widgets/shared/widget-failure-client";
+import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiRecordWidgetConfig } from "../../../../../types/record-widget";
+import type { PhiRenderableBlockRenderMode } from "../../../../../types/renderable-block";
 import type { PhiTableRowIdentity } from "../../../../../types/table-widget";
 import { readPhiTableActionSignalValue } from "../../../../../types/table-signal-values";
 
 export type PhiRecordWidgetClientProps = {
   config: PhiRecordWidgetConfig;
   labels?: PhiRecordWidgetLabels;
+  /** Where this draws, which decides who reads a failed read: the author, or only the log. */
+  renderMode: PhiRenderableBlockRenderMode;
 };
 
 export function PhiRecordWidgetClient({
   config,
   labels = PHI_RECORD_WIDGET_DEFAULT_LABELS,
+  renderMode,
 }: PhiRecordWidgetClientProps) {
   /*
    * Which record to show arrives as a signal, and is not read out of a store this Widget knows about.
@@ -138,8 +143,12 @@ export function PhiRecordWidgetClient({
   if (loading) {
     return <PhiSkeletonControl lines={config.presentation.fields.length || 7} withTitle />;
   }
+  /*
+   * Every error here is the source's -- no binding, a resource that reads no single records, a read that
+   * failed -- and none of them is the reader's to fix, so it goes the way of every such failure.
+   */
   if (error) {
-    return <PhiAlertControl level="error" showIcon title={error} />;
+    return <PhiWidgetFailure renderMode={renderMode} widgetType={PhiCmsWidgetType.Record} title={error} />;
   }
   if (!record) {
     return <PhiEmptyControl description={labels.empty} />;

@@ -142,6 +142,12 @@ export function usePhiTreeBinding({
   const nodesRef = useRef(nodes);
   const [loading, setLoading] = useState(Boolean(source));
   const [error, setError] = useState<PhiTreeProviderError | null>(null);
+  /*
+   * What the last read of the source failed with, apart from `error`, which also holds a refused change
+   * -- that one the person who made it has to read. A failed read is the source's failure, which the
+   * Widget leaves to `PhiWidgetFailure`; only the query writes it, so an edit cannot hide the Tree.
+   */
+  const [queryFailure, setQueryFailure] = useState<PhiTreeProviderError | null>(null);
   const [selectedNodeIdentities, setSelectedNodeIdentities] = useState<readonly PhiTreeNodeIdentity[]>([]);
   const [checkedNodeIdentities, setCheckedNodeIdentities] = useState<readonly PhiTreeNodeIdentity[]>([]);
   const [expandedNodeIdentities, setExpandedNodeIdentities] = useState<readonly PhiTreeNodeIdentity[]>(defaultExpandedNodeIdentities);
@@ -192,6 +198,7 @@ export function usePhiTreeBinding({
       if (!controller.signal.aborted) {
         setLoading(true);
         setError(null);
+        setQueryFailure(null);
       }
     });
     void provider.query({ resourceKey: source.resourceKey, query, params: source.params, signal: controller.signal })
@@ -216,7 +223,9 @@ export function usePhiTreeBinding({
         if (!controller.signal.aborted) {
           setNodes([]);
           setLoading(false);
-          setError(readPhiTreeProviderError(queryError));
+          const failure = readPhiTreeProviderError(queryError);
+          setError(failure);
+          setQueryFailure(failure);
         }
       });
     return () => controller.abort();
@@ -339,7 +348,7 @@ export function usePhiTreeBinding({
   return {
     provider, resource, bindingError,
     query, setQuery,
-    nodes, loading, error,
+    nodes, loading, error, queryError: queryFailure,
     selectedNodeIdentities, setSelectedNodeIdentities,
     checkedNodeIdentities, setCheckedNodeIdentities,
     expandedNodeIdentities, setExpandedNodeIdentities,

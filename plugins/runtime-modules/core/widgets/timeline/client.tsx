@@ -8,10 +8,12 @@ import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
 import { createPhiSignalAddress } from "../../../../../types/signals";
 import { isPhiRecord } from "../../../../../helpers/is-record";
 import { formatPhiDate, formatPhiDateTime, formatPhiRelativeTime } from "../../../../../helpers/format-date-time";
-import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { PhiTimelineControl, type PhiTimelineControlItem } from "../../../../../components/controls/phi-timeline-control";
 import { usePhiControlSignalController } from "../../../../../components/widgets/client/shared/phi-control-signals";
 import { usePhiTimelineProviderEntries } from "../../../../../components/widgets/client/shared/phi-timeline-provider";
+import { PhiWidgetFailure } from "../../../../../components/widgets/shared/widget-failure-client";
+import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
+import { readPhiRuntimeTreeRenderMode } from "../../../render-mode";
 
 function formatEntryTime(entry: PhiTimelineEntry, format: PhiTimelineTimeFormat, locale: string) {
   /* Words the entry states are shown as written; a date is formatted for the reader. */
@@ -25,14 +27,11 @@ export function PhiTimelineWidget({
   config,
   blockId,
   locale = "en",
-  showProviderErrors = false,
 }: {
   config?: PhiTimelineWidgetConfig | null;
   blockId?: PhiCmsInstanceId | null;
   /** The page's locale, which a date is formatted in; never the browser's. */
   locale?: string;
-  /** In the Builder an author sees why a Provider answers nothing; a reader sees an empty Timeline. */
-  showProviderErrors?: boolean;
 }) {
   /*
    * Params a signal chose, over the stored ones. Kept with the binding they were chosen for, so a
@@ -86,10 +85,21 @@ export function PhiTimelineWidget({
     pending: entry.pending,
   }));
 
-  return (
-    <>
-      {showProviderErrors && provided.error ? <PhiAlertControl level="warning" showIcon title={provided.error} /> : null}
-      <PhiTimelineControl items={items} placement={config?.placement} />
-    </>
-  );
+  /*
+   * A Provider that is not there or did not answer leaves nothing to draw, and an empty Timeline would
+   * say there was nothing to tell. The config carries where it draws, so the author reads why and a
+   * reader is shown nothing.
+   */
+  if (provided.error) {
+    return (
+      <PhiWidgetFailure
+        renderMode={readPhiRuntimeTreeRenderMode(config ?? {})}
+        widgetType={PhiCmsWidgetType.Timeline}
+        widgetId={blockId}
+        title={provided.error}
+      />
+    );
+  }
+
+  return <PhiTimelineControl items={items} placement={config?.placement} />;
 }

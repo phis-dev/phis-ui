@@ -107,6 +107,7 @@ export function PhiBuilderRuntimeModuleAuthoringBoundary({
       dataProviderDescriptors={dataProviderDescriptors}
       calendarAdapterDescriptors={calendarAdapterDescriptors}
       videoProviderDescriptors={videoProviderDescriptors}
+      collectionItemRendererDescriptors={collectionItemRendererDescriptors}
     >
       <PhiRuntimeModuleAuthoringDataProviderHost providerKeys={authoringDataProviderKeys}>
         {/*

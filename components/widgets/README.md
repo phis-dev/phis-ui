@@ -165,6 +165,15 @@ exports complete Widgets only.
 - `PhiAlertControl` is inline feedback and `PhiConfirmControl` local anchored confirmation. Application
   messages and notifications are not Controls: feature code sends them with `usePhiApplicationFeedback`
   ([SIGNALS.md](../../SIGNALS.md#site-core-runtime-controller)).
+- A Widget whose own data or configuration failed -- a Provider not offered, a binding that does not
+  hold, a renderer that is gone, a read of its source that failed -- never raises a `PhiAlertControl`
+  of its own. It returns `PhiWidgetFailure` (Client, `shared/widget-failure-client.tsx`) or
+  `PhiWidgetFailureServer` (Server, `shared/widget-failure.server.tsx`) with the node's `renderMode`:
+  nothing on a live page (a revision preview is one) and a logged warning, the cause as an error card
+  in the Builder. Keep a source's read failure apart from an action's refusal -- the bindings expose
+  `queryError` beside `error` for this -- so an edit someone made can never make the Widget disappear.
+  What a visitor is meant to read (a form's answer, an empty state, a refusal addressed to them) stays
+  ordinary content.
 - Label and description use `PhiLabeledControl`: label plus description renders the label with an info
   tooltip using `PHI_DESCRIPTION_TOOLTIP_ICON`. Label and description text never becomes a native `title`
   attribute. A Control that renders a label takes its id from `usePhiControlLabel` and points its

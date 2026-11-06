@@ -8,7 +8,7 @@ import { PhiStaticTimelineToolButton } from "../../../../../components/widgets/b
 export const PHI_TIMELINE_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugin<PhiTimelineWidgetConfig> = {
   ...PHI_TIMELINE_WIDGET_DEFINITION,
   renderEditor: ({ widget, config, runtime }) => (
-    <PhiTimelineWidget blockId={widget.id} config={config} locale={runtime.locale.current} showProviderErrors />
+    <PhiTimelineWidget blockId={widget.id} config={config} locale={runtime.locale.current} />
   ),
   /* The Widget's own entries, only while no Provider answers in their place. */
   renderEditorTools: ({ config, authoring }) => authoring?.updateConfig && !config.entriesProvider ? (

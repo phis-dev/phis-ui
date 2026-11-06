@@ -3,10 +3,10 @@
 import { createElement } from "react";
 
 import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
-import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { PhiCollectionViewSkeletonControl } from "../../../../../components/controls/phi-collection-view-control";
 import { normalizePhiCssSize } from "../../../../../components/layouts/phi-layout-contract";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
+import { usePhiRuntimeModuleState } from "../../../../../components/runtime/runtime-module-context";
 import { usePhiRuntimeModuleRenderClient } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import { usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
 import { usePhiVisualAnchorParts } from "../../../../../components/runtime/runtime-visual-anchors";
@@ -15,6 +15,13 @@ import { createPhiSignalAddress } from "../../../../../types/signals";
 import type { PhiVisualAnchorAddress } from "../../../../../types/visual-anchors";
 import { usePhiControlSignalController } from "../../../../../components/widgets/client/shared/phi-control-signals";
 import { usePhiCollectionViewBinding } from "../../../../../components/widgets/client/shared/phi-collection-view-binding";
+import {
+  PhiCollectionSourceFailureText,
+  readPhiCollectionViewDeclaredFailure,
+} from "../../../../../components/widgets/shared/collection-source-failure";
+import { PhiWidgetFailure } from "../../../../../components/widgets/shared/widget-failure-client";
+import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
+import type { PhiRenderableBlockRenderMode } from "../../../../../types/renderable-block";
 
 /**
  * The parts of a Collection View a Tour can point at, as `cms:<instanceId>:<part>` (design/TOURS.md): the
@@ -27,16 +34,52 @@ export type PhiCollectionViewWidgetProps = {
   config?: PhiCmsCollectionViewWidgetConfig | null;
   widgetId?: PhiCmsInstanceId | null;
   labels?: unknown;
+  /** Where this draws; the parsed config does not carry it, so the plugin reads it off the node. */
+  renderMode: PhiRenderableBlockRenderMode;
   preview?: boolean;
   skeletonActive?: boolean;
 };
 
+/**
+ * The shape the items will take, since the Builder reads no data -- or the reason there will be none.
+ *
+ * A skeleton alone hid every misconfiguration from the one person who could fix it: the canvas looked
+ * right and the live page was empty. What is plain from the declarations is said here -- in the editor
+ * against the descriptors the Builder holds for the edited Area, in the server preview by the plugin,
+ * which has that Area's registry. A read that would fail is not knowable without reading, and the
+ * Builder does not read.
+ */
 function PhiCollectionViewWidgetPreview({
   config,
+  widgetId,
+  renderMode,
   skeletonActive = true,
-}: Pick<PhiCollectionViewWidgetProps, "config" | "skeletonActive">) {
+}: Pick<PhiCollectionViewWidgetProps, "config" | "widgetId" | "renderMode" | "skeletonActive">) {
   const { token } = usePhiConfig();
+  const { dataProviderDescriptorsByKey, collectionItemRendererKeys } = usePhiRuntimeModuleState();
   const presentation = config?.presentation;
+  /*
+   * Judged only in the editor: that is where the Builder mounts the edited Area's descriptors. Anywhere
+   * else the context could be another Area's or none, and an empty one would claim every provider gone.
+   */
+  const declaredFailure = renderMode === "editor"
+    ? readPhiCollectionViewDeclaredFailure({
+        source: config?.source,
+        itemRendererKey: config?.itemRendererKey,
+        dataProviderDescriptorsByKey,
+        itemRendererKeys: collectionItemRendererKeys,
+      })
+    : null;
+  if (declaredFailure) {
+    return (
+      <PhiWidgetFailure
+        renderMode={renderMode}
+        widgetType={PhiCmsWidgetType.CollectionView}
+        widgetId={widgetId}
+        title={declaredFailure}
+      />
+    );
+  }
   return (
     <PhiCollectionViewSkeletonControl
       mode={presentation?.mode ?? "grid"}
@@ -51,6 +94,7 @@ function PhiCollectionViewWidgetLive({
   config,
   labels,
   widgetId,
+  renderMode,
 }: PhiCollectionViewWidgetProps) {
   const signalIdentity = usePhiSignalIdentity();
   usePhiVisualAnchorParts(
@@ -58,7 +102,7 @@ function PhiCollectionViewWidgetLive({
     PHI_COLLECTION_VIEW_VISUAL_ANCHOR_PARTS,
   );
   const source = config?.source ?? null;
-  const { resource, bindingError, binding } = usePhiCollectionViewBinding({
+  const { resource, bindingError, queryError, binding } = usePhiCollectionViewBinding({
     source,
     initialQuery: config?.initialQuery,
     pageSize: config?.features.pagination?.pageSize,
@@ -78,26 +122,42 @@ function PhiCollectionViewWidgetLive({
       return true;
     },
   });
-  if (!config || bindingError || !resource || !ItemRenderer) {
+  /*
+   * The source's failures end the Widget here, before any renderer: the binding, the renderer and the
+   * read. An action the Provider refused is not among them -- that lands in `binding.error` alone, and
+   * the renderer says it to the person who acted.
+   */
+  const failure = !config
+    ? "Collection View configuration is unavailable."
+    : bindingError ??
+      (!ItemRenderer && rendererKey ? PhiCollectionSourceFailureText.rendererUnavailable(rendererKey) : null) ??
+      queryError;
+  if (failure || !config || !resource || !ItemRenderer) {
     return (
-      <PhiAlertControl
-        level="error"
-        showIcon
-        title={bindingError ??
-          (rendererKey && !ItemRenderer
-            ? `Item renderer "${rendererKey}" is not available from the active runtime modules.`
-            : "Collection View configuration is unavailable.")}
+      <PhiWidgetFailure
+        renderMode={renderMode}
+        widgetType={PhiCmsWidgetType.CollectionView}
+        widgetId={widgetId}
+        title={failure ?? "Collection View configuration is unavailable."}
       />
     );
   }
   // `createElement` rather than a JSX tag: the renderer is looked up, not written down, and a looked-up
   // component in tag position reads to React -- and to `react-hooks/static-components` -- as a new
   // component per render. This is the same call `PhiRuntimeModuleRenderClientHost` makes for a Widget.
-  return createElement(ItemRenderer, { config, binding, labels, widgetId });
+  // `renderMode` goes along so a renderer's own configuration failures are said the same way.
+  return createElement(ItemRenderer, { config, binding, labels, widgetId, renderMode });
 }
 
 export function PhiCollectionViewWidget(props: PhiCollectionViewWidgetProps) {
   return props.preview
-    ? <PhiCollectionViewWidgetPreview config={props.config} skeletonActive={props.skeletonActive} />
+    ? (
+      <PhiCollectionViewWidgetPreview
+        config={props.config}
+        widgetId={props.widgetId}
+        renderMode={props.renderMode}
+        skeletonActive={props.skeletonActive}
+      />
+    )
     : <PhiCollectionViewWidgetLive {...props} />;
 }

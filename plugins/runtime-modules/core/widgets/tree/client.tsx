@@ -21,6 +21,9 @@ import { PhiButtonControl } from "../../../../../components/controls/phi-button-
 import { PhiCollectionHeaderControl } from "../../../../../components/controls/phi-collection-header-control";
 import { PhiToolbarControl } from "../../../../../components/controls/phi-toolbar-control";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
+import { PhiWidgetFailure } from "../../../../../components/widgets/shared/widget-failure-client";
+import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
+import type { PhiRenderableBlockRenderMode } from "../../../../../types/renderable-block";
 import { usePhiControlOptionsProvider } from "../../../../../components/controls/phi-options-provider";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import {
@@ -82,7 +85,12 @@ function TreeBindingTool({
   );
 }
 
-export function PhiTreeWidgetClient({ config, labels }: { config: PhiTreeWidgetConfig; labels: PhiTreeWidgetLabels }) {
+export function PhiTreeWidgetClient({ config, labels, renderMode }: {
+  config: PhiTreeWidgetConfig;
+  labels: PhiTreeWidgetLabels;
+  /** Where this draws, which decides who reads a failure of the source: the author, or only the log. */
+  renderMode: PhiRenderableBlockRenderMode;
+}) {
   const { token } = usePhiConfig();
   /*
    * What the reader set, tagged with the configured params it was set against: a Builder edit of those
@@ -302,6 +310,23 @@ export function PhiTreeWidgetClient({ config, labels }: { config: PhiTreeWidgetC
     </PhiToolbarControl>
   ) : null;
 
+  /*
+   * The source's failures end the Tree here: a binding that does not hold, a resource the configuration
+   * does not fit, a read that failed. A refused change stays in `binding.error` alone, said above the
+   * nodes to the person who made it.
+   */
+  const sourceFailure = binding.bindingError ?? contractError ?? binding.queryError?.message ?? null;
+  if (sourceFailure) {
+    return (
+      <PhiWidgetFailure
+        renderMode={renderMode}
+        widgetType={PhiCmsWidgetType.Tree}
+        title={sourceFailure}
+        error={binding.queryError}
+      />
+    );
+  }
+
   return (
     <div
       style={{
@@ -319,13 +344,8 @@ export function PhiTreeWidgetClient({ config, labels }: { config: PhiTreeWidgetC
         filters={queryControls}
         toolbar={toolbar}
       />
-      {binding.bindingError || binding.error || contractError ? (
-        <PhiAlertControl
-          level="error"
-          title={binding.bindingError ?? binding.error?.message ?? contractError ?? undefined}
-        />
-      ) : null}
-      {!binding.loading && !binding.bindingError && !binding.error && !contractError && binding.nodes.length === 0 ? (
+      {binding.error ? <PhiAlertControl level="error" title={binding.error.message} /> : null}
+      {!binding.loading && !binding.error && binding.nodes.length === 0 ? (
         <PhiTypographyControl type="secondary">{labels.empty}</PhiTypographyControl>
       ) : null}
       <PhiTreeControl

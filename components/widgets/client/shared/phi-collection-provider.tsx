@@ -20,6 +20,7 @@ import type {
   PhiCollectionProviderQueryRequest,
 } from "../../../../types/collection-provider";
 import type { PhiProviderResourceSource } from "../../../../types/runtime-data-provider";
+import { PhiCollectionSourceFailureText } from "../../shared/collection-source-failure";
 
 export type PhiCollectionProviderRegistration = {
   key: PhiRuntimeDataProviderKey;
@@ -115,11 +116,11 @@ export function usePhiCollectionProvider(source: PhiProviderResourceSource | nul
     provider,
     resource,
     bindingError: !source
-      ? "Collection data provider is not configured."
+      ? PhiCollectionSourceFailureText.notConfigured()
       : !provider
-        ? `Collection provider "${source.providerKey}" is not available from the active runtime modules.`
+        ? PhiCollectionSourceFailureText.providerUnavailable(source.providerKey)
         : !resource
-          ? `Collection resource "${source.resourceKey}" is not available from provider "${source.providerKey}".`
+          ? PhiCollectionSourceFailureText.resourceUnavailable(source.resourceKey, source.providerKey)
         : null,
   };
 }

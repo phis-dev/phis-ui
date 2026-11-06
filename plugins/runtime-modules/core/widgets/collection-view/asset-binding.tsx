@@ -37,6 +37,9 @@ import {
   combinePhiMediaFlagValues,
   resolvePhiMediaFolderIdFromValue,
 } from "../../../../../components/media/media-folder-options";
+import { PhiWidgetFailure } from "../../../../../components/widgets/shared/widget-failure-client";
+import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
+import type { PhiRenderableBlockRenderMode } from "../../../../../types/renderable-block";
 import { PHI_ASSET_CONTROLLER_STORE_KEY } from "../../../../../components/media/asset-controller-signals";
 import { applyPhiAssetCollectionData } from "../../../../../components/media/asset-collection-runtime";
 import { readPhiMediaAssetTiles, readPhiMediaFolders } from "../../../../../components/media/phi-image-preview-data";
@@ -85,11 +88,14 @@ export function PhiAssetCollectionViewBinding({
   binding,
   labels: rawLabels,
   widgetId,
+  renderMode,
 }: {
   config: PhiCmsCollectionViewWidgetConfig;
   binding: PhiCollectionViewBindingModel;
   labels?: unknown;
   widgetId?: PhiCmsInstanceId | null;
+  /** Handed on by the Collection View, so a configuration this renderer cannot serve is said its way. */
+  renderMode: PhiRenderableBlockRenderMode;
 }) {
   const labels = useMemo(
     () => overlayPhiAssetLabels<PhiAssetWidgetLabels>(PHI_MEDIA_WIDGET_DEFAULT_LABELS, config.presentation.labels ?? rawLabels),
@@ -188,9 +194,10 @@ export function PhiAssetCollectionViewBinding({
 
   if (unsupportedFilter || unsupportedAction) {
     return (
-      <PhiAlertControl
-        level="error"
-        showIcon
+      <PhiWidgetFailure
+        renderMode={renderMode}
+        widgetType={PhiCmsWidgetType.CollectionView}
+        widgetId={widgetId}
         title={unsupportedFilter
           ? `Asset collection filter "${unsupportedFilter.key}" is not supported.`
           : `Asset collection action "${unsupportedAction?.key ?? "unknown"}" is not supported.`}
@@ -430,6 +437,10 @@ export function PhiAssetCollectionViewBinding({
           }}
         />
       ) : null}
+      /*
+       * Only what an action left behind reaches this: a failed read of the source ends the Collection
+       * View before this renderer is drawn. A refusal is the acting person's to read, live or not.
+       */
       diagnostics={state.error ? <PhiAlertControl level="error" showIcon title={state.error} /> : null}
       body={body}
       items={state.assets.map((asset) => (

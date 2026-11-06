@@ -7,9 +7,11 @@ import { PhiCollectionViewWidget } from "./client";
 
 export const PHI_COLLECTION_VIEW_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugin<PhiCmsCollectionViewWidgetConfig> = {
   ...PHI_COLLECTION_VIEW_WIDGET_DEFINITION,
-  renderEditor: ({ config }) => (
+  renderEditor: ({ widget, config }) => (
     <PhiCollectionViewWidget
       config={config}
+      widgetId={widget.id}
+      renderMode="editor"
       preview
       skeletonActive={false}
     />

@@ -32,6 +32,15 @@ export function usePhiCollectionViewBinding({
   const [data, setData] = useState<PhiCollectionViewBindingModel["data"]>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /*
+   * What the last read of the source failed with, apart from `error`.
+   *
+   * `error` is also where an action's refusal lands -- a delete the Provider turned down -- and that is
+   * the reader's to see. A read that failed is the source's failure, which the Widget hands to
+   * `PhiWidgetFailure` instead: nothing on a live page, the cause in the Builder. Only the query writes
+   * it, so an action can never make the Widget disappear.
+   */
+  const [queryError, setQueryError] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState(0);
   const [openPanelKey, setOpenPanelKey] = useState<string | null>(null);
   /*
@@ -57,6 +66,7 @@ export function usePhiCollectionViewBinding({
       setQuery((current) => JSON.stringify(current) === JSON.stringify(nextQuery) ? current : nextQuery);
       setData(null);
       setError(null);
+      setQueryError(null);
       setOpenPanelKey(null);
     }, 0);
     return () => window.clearTimeout(timer);
@@ -71,6 +81,7 @@ export function usePhiCollectionViewBinding({
       if (abortController.signal.aborted) return;
       setLoading(true);
       setError(null);
+      setQueryError(null);
     }, 0);
     void provider.query({
       resourceKey: source.resourceKey,
@@ -81,9 +92,12 @@ export function usePhiCollectionViewBinding({
       if (!isCurrent()) return;
       setData(nextData);
       setError(nextData.error);
+      setQueryError(nextData.error);
     }).catch((nextError: unknown) => {
       if (isCurrent()) {
-        setError(nextError instanceof Error ? nextError.message : "Collection request failed.");
+        const message = nextError instanceof Error ? nextError.message : "Collection request failed.";
+        setError(message);
+        setQueryError(message);
       }
     }).finally(() => {
       // Superseded by an action is still finished loading; only a newer query takes the flag over.
@@ -131,5 +145,5 @@ export function usePhiCollectionViewBinding({
     activate,
   }), [activate, data, error, loading, openPanelKey, query, reload]);
 
-  return { provider, resource, bindingError, binding };
+  return { provider, resource, bindingError, queryError, binding };
 }

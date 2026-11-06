@@ -9,6 +9,9 @@ import { Fragment, useCallback, useEffect, useEffectEvent, useMemo, useRef, useS
 
 import { PhiMultiSelectControl } from "../../../../../components/controls/phi-multi-select-control";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
+import { PhiWidgetFailure } from "../../../../../components/widgets/shared/widget-failure-client";
+import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
+import type { PhiRenderableBlockRenderMode } from "../../../../../types/renderable-block";
 import { usePhiConfirmDialog } from "../../../../../components/controls/phi-confirm-dialog";
 import { PhiCascaderControl } from "../../../../../components/controls/phi-cascader-control";
 import { PhiCollectionHeaderControl } from "../../../../../components/controls/phi-collection-header-control";
@@ -103,6 +106,8 @@ const PHI_TABLE_ACTION_BUTTON_STYLE = { whiteSpace: "nowrap" } as const;
 
 export type PhiTableWidgetClientProps = {
   config: PhiTableWidgetConfig;
+  /** Where this draws, which decides who reads a failure of the source: the author, or only the log. */
+  renderMode: PhiRenderableBlockRenderMode;
   externalSearch?: string;
   externalQuery?: PhiTableQuery;
   refreshKey?: string | number;
@@ -318,6 +323,7 @@ function resolveTableActions(
 
 export function PhiTableWidgetClient({
   config: inputConfig,
+  renderMode,
   externalSearch,
   externalQuery,
   refreshKey,
@@ -463,6 +469,7 @@ export function PhiTableWidgetClient({
     summary,
     loading,
     error,
+    queryError,
     query,
     resolvedQuery,
     setQuery,
@@ -1019,6 +1026,23 @@ export function PhiTableWidgetClient({
     </PhiToolbarControl>
   ) : null;
 
+  /*
+   * The source's failures end the Table here: a binding that does not hold, a resource the
+   * configuration does not fit, a read that failed. A refused edit is not one of them -- it stays in
+   * `error` alone and is said above the rows to the person who made it.
+   */
+  const sourceFailure = bindingError ?? contractError ?? queryError?.message ?? null;
+  if (sourceFailure) {
+    return (
+      <PhiWidgetFailure
+        renderMode={renderMode}
+        widgetType={PhiCmsWidgetType.Table}
+        title={sourceFailure}
+        error={queryError}
+      />
+    );
+  }
+
   return (
     <PhiFlexControl
       vertical
@@ -1047,15 +1071,15 @@ export function PhiTableWidgetClient({
         )}
       />
       ) : null}
-      {bindingError || contractError || error ? (
-        <PhiAlertControl level="error" showIcon title={bindingError ?? contractError ?? error?.message} />
-      ) : null}
+      {error ? <PhiAlertControl level="error" showIcon title={error.message} /> : null}
       <PhiTableBindingControl
         rows={rows}
         fields={resource?.fields ?? []}
         sourceConfig={bindingParams}
-        renderDiagnostics={(warnings) => warnings.map((warning) =>
-          <PhiAlertControl key={warning} level="error" showIcon title={warning} />)}
+        /* Options an editor could not be given: the rows still stand, the author reads why. */
+        renderDiagnostics={(warnings) => warnings.map((warning) => (
+          <PhiWidgetFailure key={warning} renderMode={renderMode} widgetType={PhiCmsWidgetType.Table} title={warning} />
+        ))}
         rowIdentityPath={resource?.rowIdentityPath ?? "id"}
         columns={columns}
         columnOrder={columnOrder}

@@ -9,6 +9,7 @@ import type {
 import type { PhiRuntimeDataProviderKey } from "../../types/runtime-data-provider";
 import type { PhiCalendarAdapterDescriptor, PhiCalendarAdapterKey } from "../../types/calendar";
 import type { PhiVideoProviderDescriptor, PhiVideoProviderKey } from "../../types/video";
+import type { PhiCollectionItemRendererDescriptor } from "../../types/collection-provider";
 
 type PhiRuntimeModuleClientState = {
   moduleIds: ReadonlySet<string>;
@@ -25,6 +26,15 @@ type PhiRuntimeModuleClientState = {
    * nothing, which is how a placement outlives the Module that once served it.
    */
   videoProviderDescriptorsByKey: ReadonlyMap<PhiVideoProviderKey, PhiVideoProviderDescriptor>;
+  /**
+   * The Collection item renderers the Area's Modules declare, by key -- or null where nobody said.
+   *
+   * Only the Builder says: it is where a Collection View's configuration is judged without drawing any
+   * items, and a renderer a Site picked from another Module is one of the things it judges. A live page
+   * looks its renderer up in the Render Client manifest, which is the real answer there. Null rather than
+   * an empty set, so that "not known here" can never read as "none offered".
+   */
+  collectionItemRendererKeys: ReadonlySet<string> | null;
 };
 
 const EMPTY_RUNTIME_MODULE_STATE: PhiRuntimeModuleClientState = {
@@ -35,6 +45,7 @@ const EMPTY_RUNTIME_MODULE_STATE: PhiRuntimeModuleClientState = {
   dataProviderDescriptorsByKey: new Map(),
   calendarAdapterDescriptorsByKey: new Map(),
   videoProviderDescriptorsByKey: new Map(),
+  collectionItemRendererKeys: null,
 };
 
 const PhiRuntimeModuleContext = createContext<PhiRuntimeModuleClientState>(
@@ -49,6 +60,7 @@ export function PhiRuntimeModuleProvider({
   dataProviderDescriptors = [],
   calendarAdapterDescriptors = [],
   videoProviderDescriptors = [],
+  collectionItemRendererDescriptors,
   children,
 }: {
   moduleIds: readonly string[];
@@ -58,6 +70,7 @@ export function PhiRuntimeModuleProvider({
   dataProviderDescriptors?: readonly PhiRuntimeModuleDataProviderDescriptor[];
   calendarAdapterDescriptors?: readonly PhiCalendarAdapterDescriptor[];
   videoProviderDescriptors?: readonly PhiVideoProviderDescriptor[];
+  collectionItemRendererDescriptors?: readonly PhiCollectionItemRendererDescriptor[];
   children: ReactNode;
 }) {
   const state = useMemo<PhiRuntimeModuleClientState>(() => ({
@@ -76,8 +89,12 @@ export function PhiRuntimeModuleProvider({
     videoProviderDescriptorsByKey: new Map(
       videoProviderDescriptors.map((descriptor) => [descriptor.key, descriptor]),
     ),
+    collectionItemRendererKeys: collectionItemRendererDescriptors
+      ? new Set(collectionItemRendererDescriptors.map((descriptor) => descriptor.key))
+      : null,
   }), [
     calendarAdapterDescriptors,
+    collectionItemRendererDescriptors,
     dataProviderDescriptors,
     layoutTypes,
     moduleIds,

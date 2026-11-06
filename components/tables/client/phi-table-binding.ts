@@ -179,6 +179,15 @@ export function usePhiTableBinding({
     () => new Set(),
   );
   const [error, setError] = useState<PhiTableProviderError | null>(null);
+  /*
+   * What the last read of the source failed with, apart from `error`.
+   *
+   * `error` is also where a mutation's refusal lands, and that one the person who edited has to read. A
+   * read that failed -- or answered rows the resource cannot stand behind -- is the source's failure,
+   * which the Widget leaves to `PhiWidgetFailure`. Only the query writes it, so an edit can never make
+   * the Table disappear.
+   */
+  const [queryFailure, setQueryFailure] = useState<PhiTableProviderError | null>(null);
   const [selectedRowIdentities, setSelectedRowIdentities] = useState<readonly PhiTableRowIdentity[]>([]);
   const [expandedRowIdentities, setExpandedRowIdentities] = useState<readonly PhiTableRowIdentity[]>(
     initialExpandedRowIdentities,
@@ -234,6 +243,7 @@ export function usePhiTableBinding({
     setQuery((current) => ({ ...current, page: 1, cursor: null }));
     setQueryLoading(sourceKey !== "null");
     setError(null);
+    setQueryFailure(null);
   }
   // What a render cannot reset: requests in flight and the bookkeeping kept beside state.
   useEffect(() => {
@@ -291,10 +301,12 @@ export function usePhiTableBinding({
       setHasMore(false);
       setSummary({});
       setQueryLoading(false);
-      setError(new PhiTableProviderError(
+      const failure = new PhiTableProviderError(
         "missing-row-identity",
         `Table Provider row is missing identity field "${resource.rowIdentityPath}".`,
-      ));
+      );
+      setError(failure);
+      setQueryFailure(failure);
       return;
     }
     const summaryError = validateProviderSummary(resource, data.summary);
@@ -305,7 +317,9 @@ export function usePhiTableBinding({
       setHasMore(false);
       setSummary({});
       setQueryLoading(false);
-      setError(new PhiTableProviderError("invalid-summary", summaryError));
+      const failure = new PhiTableProviderError("invalid-summary", summaryError);
+      setError(failure);
+      setQueryFailure(failure);
       return;
     }
     rowsRef.current = data.rows;
@@ -318,6 +332,7 @@ export function usePhiTableBinding({
     setSummary(data.summary ?? {});
     setQueryLoading(false);
     setError(null);
+    setQueryFailure(null);
     if (!preserveSelectedRowIdentities) {
       const available = new Set(data.rows.flatMap((row) => {
         const identity = readPhiTableRowIdentity(row, resource.rowIdentityPath);
@@ -360,6 +375,7 @@ export function usePhiTableBinding({
       if (!abortController.signal.aborted) {
         if (!background) setQueryLoading(true);
         setError(null);
+        setQueryFailure(null);
       }
     });
     void provider.query({
@@ -404,7 +420,9 @@ export function usePhiTableBinding({
           setSummary({});
         }
         setQueryLoading(false);
-        setError(readPhiTableProviderError(queryError));
+        const failure = readPhiTableProviderError(queryError);
+        setError(failure);
+        setQueryFailure(failure);
       }
     });
     return () => abortController.abort();
@@ -730,6 +748,7 @@ export function usePhiTableBinding({
     contractError: resourceError,
     loading: queryLoading && !bindingError && !resourceError,
     error,
+    queryError: queryFailure,
     query,
     resolvedQuery,
     setQuery,
