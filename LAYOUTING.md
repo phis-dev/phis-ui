@@ -227,6 +227,17 @@ a Light / Dark choice picks which of the two is edited.
 - A Region honours it where it paints a ground of its own in light mode, and not for the Theme's ground,
   which is per mode already.
 
+#### A Card's picture overlay
+
+A Card may lay an Overlay over its picture (`imageOverlay`, the Background Overlay's shape), under its
+badge, icon and words: a gradient that fades the picture into the card, a colour cast. A colour or a
+gradient is drawn as CSS there, each colour mixed down to the Overlay's opacity, so a Theme variable
+resolves -- `{ kind: "color", opacity: 0.85, ink: { kind: "gradient", direction: "180deg", stops:
+[{ color: "transparent", percent: 35 }, { color: "var(--ant-color-bg-container)", percent: 100 }] } }`
+fades into the card's own ground in either mode. A Background draws its colour Overlay into an SVG
+picture instead, where no variable reaches. Stated by a Preset or an agent; the Inspector does not offer
+it yet.
+
 ### Where a Surface's outline comes from
 
 `borderSource` is `none`, `theme`, or `custom` (`types/cms-border-source.ts`).

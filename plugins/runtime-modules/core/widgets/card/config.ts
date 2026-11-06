@@ -13,6 +13,7 @@ import type { PhiImageAssetVariantKeyValue } from "../../../../../types/media";
 import { readPhiLinkTarget, type PhiLinkTarget } from "../../../../../types/references";
 import { readPhiMediaImageSourceConfig } from "../../../../../components/widgets/config/image-source-parser";
 import { PHI_SURFACE_CARD } from "../../../../../helpers/surface-presets";
+import { normalizePhiBackgroundWidgetConfig, type PhiBackgroundOverlay } from "../../../../../components/widgets/config/background";
 import {
   buildPhiBulletListFields,
   readPhiBulletListEntries,
@@ -98,6 +99,12 @@ export type PhiCmsCardWidgetConfig = PhiCmsWidgetConfigBase & PhiCardImageSource
   alt?: string;
   /** How much of the picture shows, in percent; the card's ground shows through the rest. */
   imageOpacity?: number;
+  /**
+   * A layer laid over the picture, under the card's marks and words: a colour, a gradient that fades the
+   * picture into the card, a pattern. The Background Overlay's shape (`PhiBackgroundOverlay`); stated by
+   * a Preset or an agent, not offered in the Inspector yet.
+   */
+  imageOverlay?: PhiBackgroundOverlay;
   /** Where the whole card leads. */
   linkTarget?: PhiLinkTarget;
   /** Whether the card draws its action button. */
@@ -124,6 +131,11 @@ export type PhiCmsCardWidgetConfig = PhiCmsWidgetConfigBase & PhiCardImageSource
 
 function readPhiCardImageOpacity(value: unknown) {
   return typeof value === "number" && Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : undefined;
+}
+
+/** The Overlay over the picture, read as a Background reads its own; one it cannot read is none. */
+function readPhiCardImageOverlay(value: unknown): PhiBackgroundOverlay | undefined {
+  return value == null ? undefined : normalizePhiBackgroundWidgetConfig({ base: { kind: "none" }, overlay: value }).overlay ?? undefined;
 }
 
 function readChoice<T extends string>(value: unknown, choices: readonly T[]): T | undefined {
@@ -159,6 +171,7 @@ function parsePhiCmsCardWidgetConfig(config: Record<string, unknown>): PhiCmsCar
     iconBackground: readString(config.iconBackground),
     alt: readString(config.alt),
     imageOpacity: readPhiCardImageOpacity(config.imageOpacity),
+    imageOverlay: readPhiCardImageOverlay(config.imageOverlay),
     linkTarget: readPhiLinkTarget(config.linkTarget) ?? undefined,
     actionEnabled: readBoolean(config.actionEnabled),
     actionLabel: readPhiControlLabel(config.actionLabel),

@@ -3,6 +3,11 @@
 import { useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
 
 import { PhiButtonControl } from "../../controls/phi-button-control";
+import {
+  PHI_BACKGROUND_OVERLAY_DEFAULT_OPACITY,
+  resolvePhiBackgroundWidgetStyle,
+  type PhiBackgroundOverlay,
+} from "../config/background";
 import { resolvePhiButtonVariantPresentation, type PhiButtonVariant } from "../config/button-variant";
 import type { PhiThemeGradientKey } from "../../../theme/phi-theme-gradients";
 import { PhiFlexControl } from "../../controls/phi-flex-control";
@@ -84,11 +89,33 @@ export type PhiCardWidgetClientBinding = {
   error?: string | null;
 };
 
+/**
+ * The layer over a card's picture. A colour or a gradient is drawn as CSS, each colour mixed down to the
+ * Overlay's opacity, so a Theme variable (`var(--ant-color-bg-container)`) resolves and the picture fades
+ * into the card's own ground in either mode; a Background draws the same Overlay into an SVG picture,
+ * where no variable reaches. A pattern or noise is drawn as a Background draws it.
+ */
+function resolvePhiCardImageOverlayStyle(overlay: PhiBackgroundOverlay): CSSProperties {
+  if (overlay.kind !== "color") {
+    return resolvePhiBackgroundWidgetStyle({ base: { kind: "none" }, overlay });
+  }
+  const opacity = Math.round(Math.max(0, Math.min(1, overlay.opacity ?? PHI_BACKGROUND_OVERLAY_DEFAULT_OPACITY)) * 1000) / 10;
+  const mix = (color: string) => (color === "transparent" || opacity >= 100
+    ? color
+    : `color-mix(in srgb, ${color} ${opacity}%, transparent)`);
+  const ink = overlay.ink ?? { kind: "color" as const, color: "#000000" };
+  return ink.kind === "color"
+    ? { backgroundColor: mix(ink.color) }
+    : { backgroundImage: `linear-gradient(${ink.direction}, ${ink.stops.map((stop) => `${mix(stop.color)} ${stop.percent}%`).join(", ")})` };
+}
+
 /** The card's picture, already resolved: which bytes, how they are framed, how they may arrive. */
 export type PhiCardWidgetImage = {
   presentation: PhiImagePresentation;
   /** 0 to 1; absent is the whole picture. */
   opacity?: number;
+  /** A layer over the picture, under the card's marks (`PhiCmsCardWidgetConfig.imageOverlay`). */
+  overlay?: PhiBackgroundOverlay | null;
   source: PhiImageControlSource;
   alt: string;
   blurDataUrl?: string | null;
@@ -553,6 +580,18 @@ export function PhiCardWidgetClient({
           ...(image.opacity == null || image.opacity >= 1 ? {} : { opacity: image.opacity }),
         }}
       />
+      {image.overlay ? (
+        <span
+          aria-hidden="true"
+          className="phi-card__media-overlay"
+          style={{
+            ...resolvePhiCardImageOverlayStyle(image.overlay),
+            position: "absolute",
+            inset: 0,
+            pointerEvents: "none",
+          }}
+        />
+      ) : null}
       {iconAtTop && iconName ? (
         <span
           aria-hidden="true"
