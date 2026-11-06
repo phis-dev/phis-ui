@@ -63,7 +63,8 @@ export function PhiMediaAssetTileControl({
   const { token } = usePhiConfig();
   const compact = size === "small";
   const assetTileIconSize = compact ? 20 : 24;
-  const assetTileLabelFontSize = compact ? token.fontSizeSM : token.fontSize;
+  // A tile's captions are labels, not body text: the small step of the scale at either tile size.
+  const assetTileLabelFontSize = token.fontSizeSM;
   const isSelectable = Boolean(onSelect) && !disabled;
   const isPublic = isPhiMediaAssetPublic(asset.deliveryPolicy, asset.lifecycleStatus);
   const isRestricted = !isPublic;
@@ -310,7 +311,7 @@ export function PhiMediaAssetCollectionSkeletonControl({
           style={{
             width: "55%",
             minWidth: 0,
-            height: token.fontSize * token.lineHeight,
+            height: token.fontSizeSM * token.lineHeightSM,
           }}
         />
         <PhiSkeletonControl
