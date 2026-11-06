@@ -35,6 +35,16 @@ const CHECKS = {
     label: "Ant Design doctor",
     command: "pnpm",
     args: ["exec", "antd", "doctor"],
+    /*
+     * The antd CLI keeps a config and a cache under the user's home, and refuses to start without one.
+     * The account verification runs as has none on purpose (its home is `/nonexistent`), so both live in
+     * the repository's own cache instead. Only for this step: pnpm keeps reading its store from where it
+     * always does, which a moved home would not.
+     */
+    env: {
+      XDG_CONFIG_HOME: path.join(repositoryRoot, "node_modules/.cache/antd-cli/config"),
+      XDG_CACHE_HOME: path.join(repositoryRoot, "node_modules/.cache/antd-cli/cache"),
+    },
   },
   antdCss: {
     label: "Ant Design static structure (every style hook reached)",
@@ -90,7 +100,7 @@ if (requestedProfile === "changed") {
 
 for (const checkKey of checkKeys) {
   const check = CHECKS[checkKey];
-  const result = await runCaptured(check.command, check.args);
+  const result = await runCaptured(check.command, check.args, check.env);
   if (result.exitCode !== 0) {
     console.error(`Verification failed: ${check.label}`);
     console.error(`$ ${formatCommand(check.command, check.args)}`);
@@ -216,12 +226,13 @@ async function containsAntdRelevantChange(files) {
     /(?:from\s+|import\s*\()["'](?:antd|@ant-design\/)/u.test(content));
 }
 
-function runCaptured(command, args) {
+function runCaptured(command, args, env = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd: repositoryRoot,
       env: {
         ...process.env,
+        ...env,
         FORCE_COLOR: "0",
         NO_COLOR: "1",
       },
