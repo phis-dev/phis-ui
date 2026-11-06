@@ -400,17 +400,22 @@ h5.phi-typography, .phi-typography h5 {
 /* --- Dropdown ------------------------------------------------------------------------------------ */
 
 /*
- * The shared pill trigger: a bordered, fully rounded label that reacts to hover. Hover is a CSS
- * state, not React state, so a trigger never re-renders to change its own border colour.
+ * The shared pill trigger: a bordered label that reacts to hover. Hover is a CSS state, not React
+ * state, so a trigger never re-renders to change its own border colour.
+ *
+ * Its corner, its line and its air are the Theme's: the small Control's radius from the Style's control
+ * shape (a capsule under `pill`, a sharp box under `square`, the small step of the scale otherwise), the
+ * Theme's line width, and the spacing scale -- so it stands beside the header's buttons as one of them
+ * rather than as the one round thing a square Theme left behind.
  */
 .phi-dropdown-control__pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 3.5rem;
-  padding: 4px 10px;
-  border: 1px solid var(--ant-color-border);
-  border-radius: 999px;
+  padding: var(--ant-padding-xxs) var(--ant-padding-sm);
+  border: var(--ant-line-width) solid var(--ant-color-border);
+  border-radius: var(--phi-control-radius-sm);
   color: inherit;
   font-size: inherit;
   line-height: 1;
