@@ -17,7 +17,7 @@ describe("the Theme workspace's Tour", () => {
   it("turns only the Stack, with what the Stack listens for, and turns it back", () => {
     const listens = PHI_STACK_LAYOUT_DEFINITION.runtimeSignals.listens;
     const panelSteps = PHI_THEME_WORKSPACE_TOUR.steps.filter((step) => "prepare" in step);
-    expect(panelSteps.map((step) => step.key)).toEqual(["color", "style", "background", "brand"]);
+    expect(panelSteps.map((step) => step.key)).toEqual(["color", "gradients", "style", "background", "brand"]);
     for (const step of panelSteps) {
       expect("release" in step, step.key).toBe(true);
       for (const signal of [...step.prepare, ...("release" in step ? step.release : [])]) {

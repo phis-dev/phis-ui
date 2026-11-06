@@ -15,6 +15,8 @@ import type { PhiColorPickerLabels } from "../../../../../components/widgets/lab
 
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
 import { usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
+import { usePhiVisualAnchorParts } from "../../../../../components/runtime/runtime-visual-anchors";
+import { PHI_VISUAL_ANCHOR_PART_ATTRIBUTE, type PhiVisualAnchorAddress } from "../../../../../types/visual-anchors";
 import { usePhiControlSignalController } from "../../../../../components/widgets/client/shared/phi-control-signals";
 import { PHI_SIGNAL_VALUE_SCHEMAS, type PhiSignalAddress } from "../../../../../types/signals";
 import type { PhiBlockRuntime } from "../../../../../types/widget-runtime";
@@ -1386,6 +1388,9 @@ function resolveThemeFontSlots(
   }));
 }
 
+/** The parts of the colour panel a Tour may point at. */
+const PHI_BRAND_THEME_CONTROLS_ANCHOR_PARTS = ["gradients"] as const;
+
 export function PhiBuilderBrandThemeControlsWidgetClient({
   runtime,
   config,
@@ -1398,6 +1403,12 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
   const { presets: themePresets, token: clientToken } = usePhiConfig();
   const themeBlocks = usePhiThemeBlockCatalog();
   const sectionLabelWidth = clientToken.controlHeight * 3;
+  // The Gradients section is a part a Tour can point at (`cms:<id>:gradients`, theme/tour.ts).
+  const anchorAddress = usePhiSignalIdentity().receiver ?? null;
+  usePhiVisualAnchorParts(
+    anchorAddress?.startsWith("cms:") ? anchorAddress as PhiVisualAnchorAddress : null,
+    PHI_BRAND_THEME_CONTROLS_ANCHOR_PARTS,
+  );
   const colorControlWidth = clientToken.controlHeight * 5.5;
   const themeKey = resolveThemeKey(config);
   const { state, draftRef, publishDraft, pickerTransaction } = usePhiBrandThemeDraft(runtime, themeKey);
@@ -1585,7 +1596,13 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
               {
                 key: "gradients",
                 label: (
-                  <PhiFlexControl align="center" gap={clientToken.paddingSM} wrap="wrap" style={{ minWidth: 0 }}>
+                  <PhiFlexControl
+                    align="center"
+                    gap={clientToken.paddingSM}
+                    wrap="wrap"
+                    style={{ minWidth: 0 }}
+                    {...{ [PHI_VISUAL_ANCHOR_PART_ATTRIBUTE]: "gradients" }}
+                  >
                     <PhiTypographyControl strong style={{ width: sectionLabelWidth }}>
                       Gradients
                     </PhiTypographyControl>

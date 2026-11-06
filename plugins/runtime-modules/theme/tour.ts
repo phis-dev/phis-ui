@@ -41,7 +41,7 @@ function panelStep(key: string, slot: number, controls: PhiCmsInstanceId, title:
  */
 export const PHI_THEME_WORKSPACE_TOUR = {
   id: `${PHI_THEME_RUNTIME_MODULE_ID}/workspace`,
-  version: 1,
+  version: 2,
   steps: [
     {
       key: "theme-choice",
@@ -64,6 +64,15 @@ export const PHI_THEME_WORKSPACE_TOUR = {
       "Colour from a few seeds",
       "A palette is picked whole, or each colour is set on its own. Every colour is a seed: Primary, Info, Success, Warning, Error, Link, the text and the background each grow into the shades for hover, borders and backgrounds, and Custom grows into ten steps of its own.",
     ),
+    {
+      key: "gradients",
+      target: `cms:${PHI_THEME_PAGE_WIDGET_IDS.widgetBrandThemeControls}:gradients`,
+      title: "Three gradients",
+      description: "Below the colours, three runs that Buttons, badges, ribbons, tags and switches can be filled with: the brand, an accent and one for the chrome. Each starts from the palette's colours and follows them until you set its stops and direction yourself, separately for light and dark. Its labels take the theme's light or dark text, whichever reads better unless you choose; the preview shows a Button, its hover and a badge, and a note says where a label would read poorly.",
+      placement: "right",
+      prepare: [showPanel(0)],
+      release: [showPanel(0)],
+    },
     panelStep(
       "style",
       1,
