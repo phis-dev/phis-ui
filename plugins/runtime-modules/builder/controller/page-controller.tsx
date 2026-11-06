@@ -35,6 +35,7 @@ import {
   PHI_BUILDER_AREA_SEARCH_PARAM,
   PHI_BUILDER_PAGE_SEARCH_PARAM,
 } from "../../../../helpers/cms-scope-search-params";
+import { PHI_BUILDER_PREVIEW_SEARCH_PARAM } from "../preview-transport";
 import {
   mergePhiDeveloperRegionDrafts,
   openPhiBuilderPage,
@@ -145,6 +146,12 @@ export function usePhiBuilderPageController({
       const nextSearchParams = new URLSearchParams(searchParams.toString());
       nextSearchParams.set(PHI_BUILDER_AREA_SEARCH_PARAM, effectiveArea);
       nextSearchParams.set(PHI_BUILDER_PAGE_SEARCH_PARAM, pageKey);
+      /*
+       * Another Page opens in the Editor. The preview was of the Page that was open -- its snapshot holds
+       * that Page's drafts -- so carrying it over would show the new Page in a mode it was never put in,
+       * from a snapshot that is not its own.
+       */
+      nextSearchParams.delete(PHI_BUILDER_PREVIEW_SEARCH_PARAM);
       router.replace(`${pathname}?${nextSearchParams.toString()}`, { scroll: false });
     }
   }
