@@ -22,6 +22,7 @@
      ends showed the other end of the run. */
   background-origin: border-box;
   background-repeat: no-repeat;
+  will-change: filter;
   --ant-btn-text-color: var(--ant-phi-primary-button-gradient-text, var(--ant-color-text-light-solid));
 }
 
@@ -41,6 +42,9 @@
   background-image: var(--phi-control-gradient);
   background-origin: border-box;
   background-repeat: no-repeat;
+  /* Its own layer at rest as well: the browser otherwise lifts the Button onto one only while the
+     filter eases, rasterises its rounded rim there, and the pill seemed to change size twice. */
+  will-change: filter;
   /* The run is the whole ground: a colour beneath it showed through the anti-aliased rim of a pill. */
   --ant-btn-bg-color: transparent;
   --ant-btn-bg-color-hover: transparent;
