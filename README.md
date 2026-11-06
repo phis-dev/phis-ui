@@ -50,7 +50,11 @@ It does not own:
   `createPhiNextStaticAreaLayout`, and the Area bridges in `@phis/ui/next/areas/<area>`). They hold no CMS,
   locale, or access logic. Behavior fixes arrive by updating the package, not by editing the Site.
 - Install Module packages with `phis module add --site <site key> --package <name>`, rebuild, and enable
-  the Module per Area in the Builder.
+  the Module per Area in the Builder. `--spec <version or workspace:*>` also writes the package into the
+  Site's dependencies (without it the package must already resolve; nothing is fetched), and `--path
+  <site root>` names the Site when it is not the Site's configured source path. A package resolves through
+  its `exports`, which point into `dist`, so a local or workspace package must be built (`pnpm build`)
+  before it is added, and rebuilt after every change for the Site to see it.
 - The Site boundary, the route graph, fonts, and metadata are [NEXT_INTEGRATION.md](./NEXT_INTEGRATION.md).
 
 ## For Module authors
@@ -68,9 +72,9 @@ The root export (`@phis/ui`) is not an integration surface; import from the grou
 
 | Group | Entry points |
 | --- | --- |
-| Next.js Site | `next/area-route`, `next/areas/<area>`, `next/areas/<area>-client`, `next/root-route`, `next/root-error-page`, `next/global-error`, `next/site-bridge`, `next/site-proxy`, `next/proxy-runtime`, `next/route-handlers`, `next/seo-routes`, `next/overlay-zones`, `next/overlay-zones-client`, `next/cache-handler`, `next/runtime-module-client-boundary` |
+| Next.js Site | `next/config` (`withPhiNextConfig` for the Site's `next.config`), `next/area-route`, `next/areas/<area>`, `next/areas/<area>-client`, `next/root-route`, `next/root-error-page`, `next/global-error`, `next/site-bridge`, `next/site-proxy`, `next/proxy-runtime`, `next/route-handlers`, `next/seo-routes`, `next/overlay-zones`, `next/overlay-zones-client`, `next/cache-handler`, `next/runtime-module-client-boundary` |
 | CMS rendering | `cms`, `cms/root-layout`, `cms/root-page`, `cms/root-slot-page`, `cms/error-page`, `cms/request`, `cms/plugins`, `cms/plugins/<area>` |
-| Module packages | `module`, `module/client`, `module/authoring-client`, `module/labels`, `module/dashboard-cards`, `module/projection`, `module/projection/client`, `module/projection/authoring-client`, `module/site-modules`, `module/site-modules-client` |
+| Module packages | `module`, `module/client`, `module/authoring-client`, `module/labels`, `module/dashboard-cards`, `module/records`, `module/projection`, `module/projection/client`, `module/projection/authoring-client`, `module/site-modules`, `module/site-modules-client` |
 | Runtime Clients | `runtime`, `runtime/controller-client`, `runtime/render-client`, `runtime/signal-client`, `runtime/data-provider-client`, `runtime/authoring-client`, `runtime/authoring-manifest-client`, `runtime/calendar-adapter-client`, `runtime/user-state-client`, `runtime/client-manifests/<area>` |
 | UI | `widgets`, `core-widgets`, `widget-config`, `controls`, `controls/config`, `controls/date-time`, `layouts`, `shells`, `root`, `navigation`, `forms`, `forms/client`, `media`, `references`, `state`, `theme` |
 | Builder | `builder-api-route` |
@@ -99,6 +103,8 @@ graph.
 | Tables, Trees, Collections | [TABLES.md](./TABLES.md), [TREES.md](./TREES.md), [COLLECTIONS.md](./COLLECTIONS.md) |
 | Overlays | [OVERLAYS.md](./OVERLAYS.md) |
 | Conversation surfaces | [THREADS.md](./THREADS.md) |
+| Area Dashboards and Module cards | [DASHBOARD.md](./DASHBOARD.md) |
+| Content entries (blog, news) and their Pages | [CONTENT_ENTRIES.md](./CONTENT_ENTRIES.md) |
 | Builder | [BUILDER.md](./BUILDER.md) |
 | Settings | [SETTINGS.md](./SETTINGS.md) |
 | Access and visibility | [ACCESS.md](./ACCESS.md) |

@@ -80,3 +80,11 @@ export type {
   PhiRuntimeModuleDataProviderClientDefinition,
   PhiRuntimeModuleDataProviderDescriptor,
 } from "./types/cms-plugins";
+/*
+ * What a Widget bound to one of these Providers renders when the binding cannot be served in the browser
+ * -- the Area does not offer the Provider, a read failed after hydration: the error card in the Builder,
+ * nothing on a live page, one `cms.widget.unavailable` warning per distinct failure. The Server twin,
+ * `PhiWidgetFailureServer`, is Server-only and lives in `@phis/ui/module/records`.
+ */
+export { PhiWidgetFailure } from "./components/widgets/shared/widget-failure-client";
+export type { PhiWidgetFailureProps } from "./components/widgets/shared/widget-failure";

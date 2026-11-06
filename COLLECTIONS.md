@@ -107,9 +107,15 @@ When exactly one compatible resource exists it may be selected automatically. Wi
 resources, automatic selection is allowed only for one descriptor-declared generic default; Core must not
 recognize an Asset Provider key or impose a domain ordering.
 
-The selected binding remains persisted when its Module is disabled or uninstalled. The live view and
-Authoring view render a `PhiAlertControl` diagnostic for the unavailable Provider/resource and never switch
-to another Provider automatically. Restoring the Module therefore restores the same binding without
+The selected binding remains persisted when its Module is disabled or uninstalled, and the Widget never
+switches to another Provider automatically. What it shows for the unavailable Provider/resource depends on
+who is looking: in the Builder it renders an error card (`PhiAlertControl`) naming the cause, because the
+author can rebind it; on a live page, a revision preview included, it renders nothing, because a visitor
+cannot, and an error or an empty frame would read as a broken Site. Both log a `cms.widget.unavailable`
+warning. The split is one shared piece, `components/widgets/shared/widget-failure.tsx`, in two variants:
+`PhiWidgetFailureServer` for a failure found during the server render and `PhiWidgetFailure` for one found
+in the browser. A Module package's own Widgets use the same pieces from `@phis/ui/module/records` (Server)
+and `@phis/ui/runtime/data-provider-client` (Client); see [MODULES.md](./MODULES.md). Restoring the Module therefore restores the same binding without
 rewriting Widget config. A module-owned preset may persist its own concrete binding directly.
 
 ## Widget configuration

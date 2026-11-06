@@ -140,7 +140,15 @@ sparse: readers normalize absent values.
   - `modes.light` / `modes.dark`, each with
     - `seed` -- the per-mode base seeds `colorTextBase` and `colorBgBase`;
     - `overrides` -- explicit colour tokens that are not seeds, such as `colorLinkHover` or `colorBgLayout`;
-    - `customColors` -- the ten Phi custom colours `custom1` through `custom10`.
+    - `customColors` -- the ten Phi custom colours `custom1` through `custom10`;
+    - `gradients` -- the three gradient slots `gradient1` through `gradient3`, each a direction and two or
+      more colour stops (`theme/phi-theme-gradients.ts`). They are per mode for the reason a mode seed is:
+      the run that reads as the brand on a light page can be a hole in a dark one. A slot the palette leaves
+      out is derived from the mode's own resolved colours (primary, warning, info), so every Theme offers
+      all three without anybody drawing them. A palette block's slots and `theme.palette`'s are merged per
+      slot (`phi-theme-presets.ts`). They reach the page as the tokens `phiGradient1`-`phiGradient3`
+      (with a matching `…Text` colour), which Ant Design writes as `--ant-phi-gradient-1` and so on; a
+      Control or a Background reads the property and is in the right mode wherever it stands.
 
 ### Style
 
@@ -151,6 +159,11 @@ sparse: readers normalize absent values.
   `none | soft | strong` (`theme/phi-button-shadow.ts`). A step becomes the Button component token
   (`defaultShadow`, `primaryShadow`, `dangerShadow`) per mode, because a shadow that reads on a light ground
   disappears on a dark one. A kind left unset keeps Ant Design's tinted line.
+- `buttons.primaryGradient?: "gradient1" | "gradient2" | "gradient3" | null` -- the Theme gradient every primary
+  Button is filled with (`theme/phi-button-shadow.ts`, resolved in `phi-theme-gradients.ts`). Absent, primary
+  Buttons keep their one colour. Hover and press lay a filter over the run instead of swapping it for a
+  second picture, because Ant Design transitions every Button property and a swapped picture crossfades
+  badly. A single Button can still choose a gradient of its own with the `gradient` variant.
 - `typography?: { headings?: "body" | "serif" | "display" }` -- the font slot `h1` to `h3` take
   (`theme/phi-theme-typography.ts`). Absent means `body`. A non-body choice sets `--phi-font-heading` on the
   root; a slot without a family falls back to the body font.
@@ -277,9 +290,11 @@ Per mode, `resolvePhiRootTheme(...)` (`components/root/phi-root-theme-resolver.t
 4. `fontFamily` / `fontFamilyCode` from the resolved `body` / `mono` slots.
 
 Ant Design's algorithm derives the rest, except the type scale: every size is set from `PHI_FONT_SIZES`
-(`theme/phi-tokens.ts`) -- `xs = 9`, `sm = 11`, `base = 13`, `lg = 15`, then the spacing sequence with
-`xl = 21`, `xxl = 34`, `display = 55` -- each with a line height of its size plus 8 px. Headings `h1`-`h5` are
-34, 21, 15, 13, 13; `h4` and `h5` differ by weight and colour. `sm`-`xl` and the headings are Ant Design
+(`theme/phi-tokens.ts`) -- `xs = 9`, `sm = 13`, `base = 16`, `lg = 21`, `xl = 26`, `xxl = 34`,
+`display = 55` -- each with a line height of its size plus 8 px. The ladder is phi from the body size 16,
+the browser's own: `sm`, `lg`, `xxl` and `display` are the Fibonacci sizes around it, `xl` is 16 x phi, and
+`xs` keeps the 9 a counter or a superscript needs. Body text is `base`, 16. Headings `h1`-`h5` are 34, 26,
+21, 16, 13; `h4` and `h5` sit at the body and `sm` sizes and are set apart by weight and colour. `sm`-`xl` and the headings are Ant Design
 tokens and may be overridden in `style.token`; `xs`, `xxl` and `display` have no token and are fixed until v1. Size tokens are numeric values such as `padding = 21`. Components are the shared
 component defaults merged per component with `theme.components`, the Button shadow steps, and the Control
 shape tokens.

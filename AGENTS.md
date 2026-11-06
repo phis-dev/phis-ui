@@ -164,8 +164,11 @@ change. If a contract is unclear, stop and ask instead of guessing.
 - `constants/*` holds runtime constants, enums, and flags; `types/*` is type-only apart from readers that
   belong to a type; `helpers/*` holds pure helpers; `server-helpers/*` public server-only helpers.
 - `gateway/*` is the internal `phis` adapter layer and has no package export. A Site mounts its route
-  handlers from `@phis/ui/next/route-handlers`; Label Set helpers are exported from
-  `@phis/ui/server-helpers`.
+  handlers from `@phis/ui/next/route-handlers`. Label Set helpers are exported from
+  `@phis/ui/module/labels`, the one-file door a Module package must use; `@phis/ui/server-helpers`
+  carries the same names for a Site's server code, but a Module package that takes them there pulls
+  `next/headers` into a graph the browser reaches and every page answers 500. First-party Modules import
+  `gateway/label-set` directly.
 - `components/controls/*` holds the Phi Controls, `components/layouts/*` the Layout implementations,
   `components/forms/*` the Form host and providers, `components/overlays/*` the Overlay renderer, and
   `components/widgets/*` code shared by several Widgets. A Widget itself lives in its owner Module under

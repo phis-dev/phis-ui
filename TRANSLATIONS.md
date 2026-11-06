@@ -48,8 +48,19 @@ Rules:
 
 ## Label Sets
 
-Phi-owned UI copy is loaded through Label Sets (`gateway/label-set.ts`, exported from
-`@phis/ui/server-helpers`):
+Phi-owned UI copy is loaded through Label Sets (`gateway/label-set.ts`). Where the helpers come from
+depends on who imports them:
+
+- A Module package outside `@phis/ui` takes them from `@phis/ui/module/labels`, never from
+  `@phis/ui/server-helpers`. The server barrel carries the same names, but with them `server-helpers/cms-root`
+  and `next/headers`; a Module definition is reachable from the browser graph too, because Client Widgets
+  render the Label Sets bound to it, so taking them from the barrel compiles and then answers `500` on
+  every page of the Site (see [THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md)).
+- A Site's own server code may take them from `@phis/ui/server-helpers`.
+- First-party Modules inside this package import `gateway/label-set` directly, which is as narrow as
+  `@phis/ui/module/labels` is.
+
+The helpers:
 
 - `definePhiLabelSet({ key, ctx, sourceLocale?, labels })` declares a set. `labels` maps semantic keys to
   default text. An entry may name its own register as `{ text, ctx }`; `definePhiMessageLabel(text)` marks

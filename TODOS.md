@@ -347,24 +347,22 @@ built. Remove an entry when it is done.
   is the one that would warm the door) and warming from outside would mean one Area's render reaching
   another Area's catalog, which `NEXT_INTEGRATION.md` forbids. Holding the door in Core -- a Site process
   that learns a door publishes it, the proxy asks Core on a local miss -- would close it, and needs an
-  endpoint and operator approval. The measurements behind this are in
-  `browser-test/notes/ANALYSE-area-switch-loop.md` and `browser-test/scripts/check-area-link-loop.mjs`.
+  endpoint and operator approval.
 
-- **The Builder got heavier and nobody said why.** Measured against production builds two weeks apart
-  (`browser-test/notes/MESSUNG-payloads.md`, which also says how to run the three measurements and which
-  of them answer which question): between 09.09. and 24.09. the Builder gained **18 scripts, 169 kB over
-  the wire and 479 kB decoded** on a cold load of `/builder/phis/ui/dashboard`. In the same fortnight
+- **The Builder got heavier and nobody said why.** Measured against production builds two weeks apart,
+  between 2026-09-09 and 2026-09-24, the Builder gained **18 scripts, 169 kB over the wire and 479 kB
+  decoded** on a cold load of `/builder/phis/ui/dashboard`. In the same fortnight
   Public and the landing page each *lost* around 180 kB over the wire and 600 kB decoded.
 
   The Builder is the surface with the smallest audience and the largest load, so a rise there is the one
-  that should be argued for rather than noticed later. Find what joined its graph and either justify it in
-  that note or move it out.
+  that should be argued for rather than noticed later. Find what joined its graph and either justify it
+  here or move it out.
 
-- **The Public bundle drifts upward unremarked.** 21.09. to 24.09.: **+5,320 raw and +1,457 gzip**, same
-  script count, measured against a production server the way `browser-test/notes/MESSUNG-payloads.md` describes. Small, but it has only
+- **The Public bundle drifts upward unremarked.** 2026-09-21 to 2026-09-24: **+5,320 raw and +1,457
+  gzip**, same script count, measured against a production server. Small, but it has only
   ever gone one way, and the guard reports contents rather than size, so nothing fails when it grows.
-  `TODOS.md` already carries "freeze the module-graph audit"; a size budget belongs beside it, and the
-  numbers to set it from are in the note.
+  `TODOS.md` already carries "freeze the module-graph audit"; a size budget belongs beside it, set from
+  the figures above.
 
 - **An own Button inside `PhiButtonControl`.** The antd Button is on every Public page, and with it
   Collapse and the color-picker: `antd/es/button/style/token.js` imports `isBright` from

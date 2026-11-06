@@ -7,6 +7,11 @@
  * types say what it is asked with, `fetchPhiSiteApi` asks Core with the credentials the context carries,
  * and `resolvePhiRecordSource` is how one of the package's Server Widgets reads the record its binding
  * names -- once per request, however many Widgets are bound to it.
+ *
+ * `PhiWidgetFailureServer` is what such a Widget renders when that read, or its binding, fails: the error
+ * card in the Builder, nothing on a live page, and the `cms.widget.unavailable` warning either way. It is
+ * here rather than in a shared barrel because it is Server-only; its browser twin, `PhiWidgetFailure`, is
+ * in `@phis/ui/runtime/data-provider-client`.
  */
 
 import "server-only";
@@ -18,3 +23,5 @@ export type {
 } from "./types/record-provider";
 export { resolvePhiRecordSource, type PhiRecordSourceResult } from "./server-helpers/record-source";
 export { fetchPhiSiteApi, type PhiSiteApiRequest } from "./gateway/site-api-request";
+export { PhiWidgetFailureServer } from "./components/widgets/shared/widget-failure.server";
+export type { PhiWidgetFailureProps } from "./components/widgets/shared/widget-failure";

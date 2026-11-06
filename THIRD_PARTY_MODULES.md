@@ -245,9 +245,14 @@ Page the Site authored. So:
 
 One case runs the other way, and it is worth knowing because your Module cannot resolve it. A Page the
 Site authored before your package was installed can sit on your package path outside Public. There your
-Module has nothing to yield with -- that path is its identity -- so activation is refused, naming the
-occupied path, until the Site moves the Page. It needs an operator, and there is nothing to build
-against it: no Module code can avoid or detect it.
+Module has nothing to yield with -- that path is its identity. Activation is not refused today: nothing
+checks a Site Page against a package path outside Public (the check is open in [TODOS.md](./TODOS.md)).
+What happens instead is decided by how a request is resolved (`plugins/runtime-modules/route-page-resolution.ts`):
+for a static route of your Module the Page is looked up by your preset's identity, not by its path, so
+your Page answers and the Site's Page stays stored but is no longer reached at that address until the Site
+moves it or your Module is switched off. For a route with parameters an exact Site Page at the concrete
+path still wins. It needs an operator, and there is nothing to build against it: no Module code can
+avoid or detect it.
 
 Enabling a Module for Public checks its declared paths against Site Pages and other Modules and asks for
 another address where one is taken (`plugins/runtime-modules/builder/public-route-collisions.ts`).
@@ -533,6 +538,29 @@ What a throw does is the same for every Widget, Core's or yours, and whatever it
 The older lenient readers (`readString`, `readNumber`, ...) are still exported for parsers that have not
 moved; they turn a wrong value into `undefined` and should not be used in a new Widget.
 
+A Provider binding in a config -- `{ providerKey, scopeKey?, params? }` -- is read with
+`readPhiRuntimeDataProviderBinding` from `@phis/ui/types`, the reader Core's own Widgets use, so the
+shape is read once and the same everywhere. It answers `null` for anything that is not a binding (no
+namespaced Provider key) rather than throwing, so a strict parser decides what `null` means: absent may
+be the Widget's default, while present-but-unreadable, or a binding to a Provider the Widget cannot draw,
+is a stored mistake and goes to `fail` like any other field.
+
+A config that parses can still name data the page cannot have: the Provider it is bound to is not
+offered in this Area, the record cannot be read, the read itself failed. That is not a throw from
+`parseConfig` -- the setting is right, the world is not -- and it is not the Widget's to explain to a
+visitor. Render the shared failure piece instead of drawing an alert of your own:
+`PhiWidgetFailureServer` from `@phis/ui/module/records` where the Server half finds it, `PhiWidgetFailure`
+from `@phis/ui/runtime/data-provider-client` where a Client finds it after hydration. Both take
+`{ renderMode, widgetType, widgetId?, title, description?, error? }` (`PhiWidgetFailureProps`) and do what
+Core's Widgets do: in the Builder an error card with `title` and `description` stands in the Widget's
+place, on a live page -- a revision preview included -- the Widget is absent and the rest of the page
+stands, and either way one `cms.widget.unavailable` warning is logged with `error` attached. The render
+mode is `widget.config.renderMode` in the render arguments, `"preview"` or `"editor"`, and live
+otherwise; pass it to a Client half as a prop. The Server variant logs during the render, the Client
+variant from an effect once per distinct failure, so pick the one where the failure is found. What a
+visitor is meant to read -- a form's own answer, an empty state, "no such record" answered as a 404 --
+is content and does not go through them.
+
 ### Runtime and Preview plugin
 
 ```tsx
@@ -547,6 +575,19 @@ export const STATUS_CARD_WIDGET_PLUGIN = {
   ...STATUS_CARD_WIDGET_DEFINITION,
   render: ({ config }) => <section><h2>{config.title}</h2><p>Operational</p></section>,
   renderPreview: ({ config }) => <section><h2>{config.title}</h2><p>Preview</p></section>,
+} satisfies PhiCmsServerWidgetPlugin<StatusCardConfig>;
+```
+
+A Widget whose Preview is simply its live output, made inert, need not write `renderPreview` by hand:
+`definePhiPassiveWidgetRenderers(render)` from `@phis/ui/cms/plugins` returns `{ render, renderPreview }`,
+where the Preview is the same render wrapped in an `inert` frame -- the way a Core Widget draws its
+Preview, so links do not navigate and controls do not take focus on the Canvas:
+
+```tsx
+export const STATUS_CARD_WIDGET_PLUGIN = {
+  ...STATUS_CARD_WIDGET_DEFINITION,
+  ...definePhiPassiveWidgetRenderers<StatusCardConfig>(({ config }) =>
+    <section><h2>{config.title}</h2><p>Operational</p></section>),
 } satisfies PhiCmsServerWidgetPlugin<StatusCardConfig>;
 ```
 
@@ -996,7 +1037,14 @@ dashboardCards: {
   namespace is refused) and `fetchPhiSiteApi` for the question to Core. A card about the viewer asks with
   `context.cookieHeader`.
 - `target` names the Module's own route preset, and `accessPolicy` keeps the card from a viewer who may
-  not see it. `@phis/support` is the worked example (`src/cards.ts`).
+  not see it.
+- Cards that draw on the same answer share one read: wrap the fetch in
+  `definePhiDashboardCardRead(load)` from the same door and call the result from each card. The list
+  resolves its cards in a Route Handler, outside a render, so `React.cache` does not reach them; what they
+  share is the card context, which the list resolves once and hands to every card, and the read is keyed
+  by that object. The cards of one Dashboard make one call; a card refreshed through its endpoint gets a
+  fresh context and so a fresh read ([DASHBOARD.md](./DASHBOARD.md)). Four cards each fetching the same
+  figures is per-request fan-out.
 
 ### Records a Page is about
 
@@ -1019,7 +1067,11 @@ recordProviders: [{
 ```
 
 - Everything comes from `@phis/ui/module/records`, a Server-only door: the resolver types,
-  `fetchPhiSiteApi` for the question to Core, and `resolvePhiRecordSource` for the Module's Server Widgets.
+  `fetchPhiSiteApi` for the question to Core, `resolvePhiRecordSource` for the Module's Server Widgets, and
+  `PhiWidgetFailureServer` for the Widget whose read comes back `unavailable`
+  ([Reading a config](#reading-a-config)).
+- The Widget's parser reads the binding with `readPhiRuntimeDataProviderBinding` from `@phis/ui/types` and
+  insists it names the Module's own record Provider.
 - The resolver answers the record or `null` for "no such record", and throws where it cannot ask.
 - A Widget's config carries the binding, `{ providerKey, params: { slug } }`; the route's tree writes the
   route's parameter into it. The Widget reads it with `resolvePhiRecordSource({ registry, runtime, binding })`
@@ -1149,7 +1201,7 @@ no stylesheet, and `validate-module-dependency-direction` keeps it so; a package
 neither Node types nor CSS declarations. The server doors -- `module/labels`, `server-helpers`, `net` --
 are server code and reach Node: the credentials reader takes `node:fs`. A package that imports one of them
 runs on Node and says so: `@types/node` in its `devDependencies` and `"types": ["node"]` in its
-`tsconfig.json`, as `@phis/support` does. `@phis/ui` does not hand Node's globals to a package whose
+`tsconfig.json`. `@phis/ui` does not hand Node's globals to a package whose
 client code has no use for them.
 
 `phis module check` inspects the installed package without loading it

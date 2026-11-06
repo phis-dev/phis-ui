@@ -45,15 +45,18 @@ Terminology across the Site/server boundary is strict:
 | `@phis/ui/modules/builder` | Area base | `builder` | Builder shell, workspaces, Canvas, drafts, Inspector, wiring |
 | `@phis/ui/modules/asset` | optional | all | Media, upload, asset picking, asset data |
 | `@phis/ui/modules/auth` | optional | `public`, `admin`, `app` | Site login and authentication workflows ([AUTHENTICATION.md](./AUTHENTICATION.md)) |
+| `@phis/ui/modules/blog` | optional | `public`, `editor` | the face of Core's `blog` content kind: its three Pages (read in Public, written in the Editor) and two Forms; the list and detail Widgets are Core's ([CONTENT_ENTRIES.md](./CONTENT_ENTRIES.md)) |
 | `@phis/ui/modules/avatar` | optional | `app` | a personal picture in the person's own Media Space |
 | `@phis/ui/modules/dashboard` | optional | `app`, `accounting`, `admin`, `builder`, `editor` | Area Dashboard routes |
 | `@phis/ui/modules/form-builder` | optional | `builder` | Form-definition authoring lifecycle |
 | `@phis/ui/modules/groups` | optional | `admin`, `app` | Site groups and their Media Spaces |
 | `@phis/ui/modules/localization` | optional | `admin`, `editor` | locale and translation administration |
+| `@phis/ui/modules/news` | optional | `public`, `editor` | the face of Core's `news` content kind, as the blog Module is of `blog` ([CONTENT_ENTRIES.md](./CONTENT_ENTRIES.md)) |
 | `@phis/ui/modules/observability` | optional | `admin` | Site-runtime log administration |
 | `@phis/ui/modules/revisions` | optional | `builder` | revision history, restore, deletion |
 | `@phis/ui/modules/theme` | optional | `builder` | Theme and brand editing ([THEME.md](./THEME.md)) |
 | `@phis/ui/modules/threads` | optional | `app` | conversations a person is in, and the one composer every Module writing into one reuses |
+| `@phis/ui/modules/tour` | optional | all | the Controller that runs the guided Tours other Modules attach to their route presets, and each person's Tour progress; switched off, Tours are off for every Module alike |
 | `@phis/ui/modules/user-management` | optional | `admin` | users, roles, invites |
 | `@phis/ui/modules/video` | optional | `public`, `app` | the video providers a Site may embed from, and the Widget that asks before it fetches one ([design/CONSENT.md](./design/CONSENT.md)) |
 
@@ -238,7 +241,13 @@ keeps both: `index.tsx` re-exports, `client.tsx` implements.
 Third-party packages use the equivalent public export layout documented in `THIRD_PARTY_MODULES.md`.
 Their internal filenames are not ABI, but the same physical Server/live/Controls/Authoring separation is.
 
-## Building a new Module, step by step
+## Building a new first-party Module, step by step
+
+These steps are for a Module inside `@phis/ui`: they name this repository's files
+(`constants/runtime-module-ownership.ts`, `area-contributions/<area>.ts`) and its relative imports. A
+Module package outside it has neither -- it declares its Areas in its `package.json`, reaches this package
+only through the public doors, and is wired into a Site by `phis module add` -- and follows
+[THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md) instead.
 
 1. **Pick the module key and write `ids.ts`.** Name the Module for what it does. `core` means a
    package's unselectable base Module; a new Module gets a real name. Every identifier it owns is built
@@ -417,8 +426,22 @@ resolver threw) renders the diagnostic in a workspace, with the namespace and th
 standing as a node that waits; on a live page it stays absent and the resolver's failure is logged
 (`cms.features.resolve_failed`). `missing-node`: a Region or Overlay zone whose root layout node is not in
 the tree is a stored inconsistency, logged (`cms.render.region_root_missing`) and shown in the zone's place
-in a workspace. On a live page the diagnostic renders nothing, by design (O7 of the 05.10.2026 audit): a
-visitor cannot repair a Module, and the warning is written either way.
+in a workspace. On a live page the diagnostic renders nothing, by design: a visitor cannot repair a
+Module, and the warning is written either way.
+
+A Widget that renders but cannot show what it was placed to show -- the Provider it is bound to is not
+offered, the binding does not hold, the record cannot be read, the read itself failed -- follows the same
+split through one shared piece (`components/widgets/shared/widget-failure.tsx`). In the Builder the Widget's
+place holds an error card (`PhiAlertControl`) with the cause, because the author can rebind it. On a live
+page, a revision preview included, the Widget is absent and the rest of the page stands: a heading over an
+error, or over an empty frame, reads to a visitor as a broken Site. Either way a `cms.widget.unavailable`
+warning is logged, which is where an operator finds it. There are two variants so that the warning is
+written once: `PhiWidgetFailureServer` logs during the server render, `PhiWidgetFailure` from an effect,
+once per distinct failure while the Widget is mounted. A Module package reaches them through
+`@phis/ui/module/records` (the Server variant; that door is Server-only) and
+`@phis/ui/runtime/data-provider-client` (the Client variant). What a visitor is meant to read -- a form's
+own answer, an empty state, a refusal addressed to them -- is content, not a failure, and does not go
+through them.
 
 ## Definition and Controller
 
@@ -873,11 +896,28 @@ addressed by its path.
 - A Theme descriptor declares `themeKey` and `title` and an optional `description`; Theme blocks are
   described in [THEME.md](./THEME.md#theme-blocks).
 
-Preset templates carry no instance ids. Nodes use preset-local `nodeKey` values, and the central
-instantiator derives each canonical id from `(version, domain, ownerModuleId, presetKey, nodeKey)`
-(`createPhiPresetCmsInstanceId` in `@phis/contracts/cms`). Preset version, Site, Area, path, node type,
-and catalog order never participate. Preset authors never create ids or concrete CMS nodes; raw node
-keys never cross contribution boundaries. See [CMS.md](./CMS.md#instance-identity) for the codec.
+A preset node's id is never invented: it is derived from `(version, domain, ownerModuleId, presetKey,
+nodeKey)` (`createPhiPresetCmsInstanceId` in `@phis/contracts/cms`), where `nodeKey` is a name local to the
+preset. Preset version, Site, Area, path, node type, and catalog order never participate, so the same
+node keeps its id across releases and phi-server derives the same id on its side. See
+[CMS.md](./CMS.md#instance-identity) for the codec.
+
+Today a preset builder still creates its concrete nodes itself, along one path:
+
+1. it states its identity -- `{ domain, ownerModuleId, presetKey }` -- once;
+2. `createPhiPresetCmsInstanceIdMap(identity, nodeKeys)` (`types/cms-instance-id.ts`, public from
+   `@phis/ui/types`) turns the preset's node keys into ids, and refuses a key listed twice, which would
+   hand two nodes one id;
+3. `createPhiCmsPresetNodes(defaults)` (`helpers/cms-preset-nodes.ts`, public from `@phis/ui/helpers`)
+   builds the Layout and Widget nodes with those ids and the Site, visibility and status filled in from
+   the defaults (or from the Page it is handed). A package may also build nodes one at a time with `buildPhiCmsLayoutNode` and
+   `buildPhiCmsWidgetNode` from the same door, as `@phis/example` does.
+
+What a builder does not do is spell out a Layout or Widget id, and raw node keys never cross contribution
+boundaries. (A Region in a Page tree still carries a synthetic negative id the builder picks, unique among
+the package's presets, as `@phis/example`'s Markdown page does.) A few first-party builders still return concrete trees with synthetic ids of their own; moving
+them, and eventually every builder, to local-key templates the central instantiator expands is open in
+[TODOS.md](./TODOS.md) ("Convert concrete preset builders to local-key templates").
 
 Instantiation is in memory and needs no Draft. Once an Area or route tree is saved, its Draft and
 Published snapshots are independent of later descriptor versions; an untouched route uses the installed
@@ -905,10 +945,13 @@ a title. The Site settles it when the Module is enabled, and whoever asks second
 newcomer is offered another address and cannot be enabled without taking one, while the holder keeps what
 it has. A holder is another active Module or a Page the Site authored; both answer the same way.
 
-Outside Public that same principle produces the other outcome, because there the newcomer has nothing to
-yield with. A Site Page authored before a package was installed can sit on that package's path, and
-activation is then refused -- naming the occupied path -- until the Site moves the Page. A Site Page may
-not be moved onto the path of a package active in its Area, so the case can only arise in that one order.
+Outside Public the newcomer has nothing to yield with, because its package path is its identity. A Site
+Page authored before a package was installed can sit on that package's path, and nothing checks for it
+yet: activation goes through (the refusal is open in [TODOS.md](./TODOS.md)). The request resolution then
+decides (`plugins/runtime-modules/route-page-resolution.ts`): a static Module route looks its Page up by
+preset identity rather than by path, so the Module's Page answers and the Site Page is shadowed -- still
+stored, no longer reached at that address -- until the Site moves it or the Module is switched off. For a
+route with parameters an exact Site Page at the concrete path wins.
 
 One holder yields instead of keeping: the Public base Module, `@phis/ui/modules/public`. Its Pages --
 the error Pages, `/terms-and-conditions`, `/contact` -- are there so that a Site is never without them,
@@ -1016,7 +1059,7 @@ graph leakage are hard validation errors.
   `PhiTimelineEntry` shape of `@phis/contracts/timeline` -- key, content, optional title, `at` (ISO date
   the Widget formats for the page locale) or `time` (words shown as written), icon, tone, pending. It
   declares no resources. Its Client is `createPhiTimelineProviderClient({ key, load, resolveLoadKey? })`
-  from `@phis/ui/runtime-data-provider-client`; it translates its own texts, as an options Provider does.
+  from `@phis/ui/runtime/data-provider-client`; it translates its own texts, as an options Provider does.
 
 ### Module UI provider
 

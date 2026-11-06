@@ -283,8 +283,8 @@ at most.
 2. The card forms -- `stat`, `list` and `series` -- against the existing card presentation. **Done.**
 3. The Controller as a clock: staleness, floor, stagger, visibility, backoff.
 4. The Site's decisions: candidates minus decisions, dismissing through the item action.
-5. The first two real contributions, from `@phis/ui/threads` and `@phis/support`. **Both are done**:
-   Support's open-tickets card is the first from outside this package, through
+5. The first two real contributions, from `@phis/ui/modules/threads` and from a Module package outside
+   this one. **Both are done**: the package's card is the first from outside `@phis/ui`, through
    `@phis/ui/module/dashboard-cards`.
 
 Step 5 is last on purpose. Until two Modules that know nothing of each other have both put a card on

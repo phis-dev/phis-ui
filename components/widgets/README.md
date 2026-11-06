@@ -221,9 +221,14 @@ Generic control Widgets reuse the capability sets in `signals/control-signal-cap
 - The Command Toolbar (`command-toolbar`) groups command buttons. Each button has a stable `key` that
   becomes its subcontrol address (`cms:<instanceId>:<key>`) and an `emits` list referencing route
   `capabilityId`s; scope, channel, action, and receiver live only in the routes. Buttons may set `label`,
-  `tooltip`, `icon`, `display` (`icon | label | icon-label`), `danger`, `disabled`, and `variant`
-  (`normal | primary | dashed | subtle | link`). The
-  toolbar knows no workspace, page, or publish semantics; Controllers attach context. A button listens
+  `tooltip`, `icon`, `display` (`icon | label | icon-label`), `danger`, `disabled`, and `variant` -- one
+  of `PHI_BUTTON_VARIANTS` (`config/button-variant.ts`): `normal | primary | dashed | subtle | link |
+  gradient | glass`. `gradient` is filled with one of the Theme's gradient slots and `glass` is a frosted
+  pane for a button over a picture or a run; a Button Widget names its slot with the `gradient` key
+  (`gradient1`-`gradient3`, absent means the first; `PhiButtonWidgetPlacement` in
+  `types/core-widget-placements.ts`). A toolbar draws its buttons by primitive type alone, so there a
+  `gradient` button stands as the primary one it is underneath and a `glass` one as the plain one
+  (`client/shared/phi-command-buttons.ts`). The toolbar knows no workspace, page, or publish semantics; Controllers attach context. A button listens
   as its subcontrol for `enabled`, `loading`, `visibility`, `badge`, `icon`, `label`, and `tooltip`
   (`change`, `string` for the last two); a received tooltip replaces the one the button was placed with
   until another arrives -- the Builder's Undo names the step it would take back that way.

@@ -29,7 +29,7 @@ The builder area is the workspace for composing site structure, page trees, bran
 - The scoped store API is described in [components/state/README.md](./components/state/README.md).
 - Region draft state may use the same shared scoped store basis when a separate transient slice is needed.
 - The builder must not move persistent CMS data into the scoped store.
-- A Region draft holds its root Layout as `rootNode`, one Layout node like every node nested in it. The Inspector finds and patches it like a nested Layout (one path in `inspector-controller.ts`), the Canvas scaffolds it from its node, and persistence stores it like every Layout below it. Its anchor, inset and Surface live in its `config` and are read from there; nothing keeps a second copy. The Region's own fields (`surface`, `regionConfig`, size, `zIndex`, `sticky`, `offsetTop`) stay beside it and belong to the Region, not to the Layout.
+- A Region draft holds its root Layout as `rootNode`, one Layout node like every node nested in it. The Inspector finds and patches it like a nested Layout (one path in `inspector-controller.ts`), the Canvas scaffolds it from its node, and persistence stores it like every Layout below it. Its anchor, inset and Surface live in its `config` and are read from there; nothing keeps a second copy. The Region's own fields (`surface`, `regionConfig`, size, `zIndex`, `flags` (`Sticky`), `offsetTop`, `offsetBottom`) stay beside it and belong to the Region, not to the Layout.
 - Widget draft config must follow the same pattern: the widget inspector and any preview/editor consumers must merge the builder meta `defaultConfig` with the current draft through the shared builder helper before rendering or serializing. Do not introduce a caller-local fallback that reconstructs widget defaults separately.
 - A Widget's bound field (`contentBinding`) is content, not structure (phis-server `CONTENT.md`). The Builder edits it in the draft config like any field, and every structure save hands it back with the version it was read from (`contentVersionId`): phi-server writes a new content version only for a changed value, refuses a changed value that does not build on the current version (`409`), and stores the tree without the field. Publishing a Page never publishes its texts; a Widget the Site created shows nothing live until its content is published.
 - Shared preset trees are the exception: a preset node keeps its shipped `config.text` until a content write binds it. The Builder reads preset trees with the current content of bound nodes put in (`applyPhiPresetTreeCurrentContent`).
@@ -890,6 +890,18 @@ The builder must support a clear change lifecycle.
 - Save should be scoped to the active selection when possible.
 - Persisted config should be sparse: omit values that are unset, empty, or equal to the canonical default.
 - Save should serialize the smallest stable override shape and let the reader restore defaults on load.
+- `Save` and `Publish` are plain buttons, not primary ones (the `save` and `publish` common actions in
+  `components/widgets/label-types/common-controls.ts` state no variant): they stand on every Builder
+  toolbar, and a primary fill on both read too heavy there. A footer whose Save closes one decision -- the
+  Inspector's effects footer, Cancel beside Save -- states `variant: "primary"` on its own button.
+
+### Live preview
+
+- `Live preview` opens the saved draft as a revision preview of the page or the shell.
+- With no saved draft it opens the published page: what the preview has to show is then what is live, so
+  nothing saved is not a failure (`previewPhiDeveloperBuilderDraft` in
+  `plugins/runtime-modules/builder/persistence.ts`). Only a draft read that failed is an error -- that is
+  not knowing, which is different from there being nothing.
 
 ### Publish
 

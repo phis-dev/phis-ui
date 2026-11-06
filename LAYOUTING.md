@@ -378,7 +378,19 @@ Regions own shell and page placement rather than child topology. They may config
   config's `flags` (`Sticky`, `FullHeight`, `Collapsible`): a stored config states a yes-or-no answer as a
   bit, never as a boolean field;
 - a `surface` (see [Surface](#surface));
-- `padding`, `paddingTop`, `paddingRight`, `paddingBottom`, and `paddingLeft`.
+- `padding`, `paddingTop`, `paddingRight`, `paddingBottom`, and `paddingLeft`;
+- `offsetTop`, the distance a `Sticky` or `FullHeight` Sider keeps from the top it sticks to, and
+  `offsetBottom`, the air below a `Sticky` `footer_bottom` above the viewport's bottom edge -- no other
+  Region reads it;
+- `heroOverlap`, read on `content` alone and only where the Page has a Hero: how far the content reaches
+  up into the Hero, its picture running on under it;
+- `pageScope`, for the five Shell Regions: which Pages of the Area the Region stands on (`all`, `root`,
+  `include` / `exclude` with Page references or folders);
+- `reveal`, for `header_top` alone: `always`, `hover`, or `scroll-up`.
+
+The types are `PhiCmsRegionConfig` in `types/cms-presets.ts`. What each of the last five does to the frame
+is the Shell's to say: [SHELL.md](./SHELL.md) (Shell Variants for the offsets, "Region visibility per Page"
+for `pageScope` and `reveal`, "Content reaching into the Hero" for `heroOverlap`).
 
 Region padding is applied to the Region root and is independent of root-Layout padding. It is stored
 flat in the Region config, parsed through the shared padding value rules, and edited as a Region
