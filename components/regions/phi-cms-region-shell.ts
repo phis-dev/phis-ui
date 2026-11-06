@@ -1,4 +1,5 @@
 import { resolvePhiSurfaceToneClassName, type PhiSurfaceTone } from "../../types/surface";
+import { composePhiModePaint, resolvePhiModeValue } from "../../helpers/mode-paint";
 import type { CSSProperties } from "react";
 
 import { PHI_THEME_BORDER_LINE, resolvePhiBorderWidgetStyle } from "../../helpers/border-widget-style";
@@ -358,10 +359,26 @@ export function resolvePhiCmsRegionShell({
     animatesBackground &&
     backgroundConfig != null &&
     resolvePhiBackgroundMotion(backgroundConfig) != null;
-  const groundFilter = backgroundConfig == null ? null : resolvePhiBackgroundGroundFilter(backgroundConfig);
+  /*
+   * The ground in dark mode (`PhiSurface.backgroundDark`), for a Region that paints a ground of its own in
+   * light mode: the page's mode picks between the two in CSS (`helpers/mode-paint.ts`). Not for the
+   * Theme's Overlay, which is per mode already, nor for a moving picture, which the motion layer draws
+   * from one Background.
+   */
+  const backgroundDarkConfig = backgroundConfig != null && !themeGround && !backgroundMoves && surface?.backgroundDark
+    ? normalizePhiBackgroundWidgetConfig(surface.backgroundDark)
+    : null;
+  const groundFilterLight = backgroundConfig == null ? null : resolvePhiBackgroundGroundFilter(backgroundConfig);
+  const groundFilterDark = backgroundDarkConfig == null ? null : resolvePhiBackgroundGroundFilter(backgroundDarkConfig);
+  const groundFilter = backgroundDarkConfig && groundFilterLight !== groundFilterDark
+    ? resolvePhiModeValue(groundFilterLight ?? "none", groundFilterDark ?? "none")
+    : groundFilterLight;
+  const layerPaint = (entry: PhiCmsBackgroundWidgetConfig) => resolvePhiBackgroundWidgetStyle({ ...entry, filter: null, motion: null });
   const ground: PhiSurfaceGround | null = backgroundConfig != null && groundFilter != null && !backgroundMoves
     ? {
-      paint: resolvePhiBackgroundWidgetStyle({ ...backgroundConfig, filter: null, motion: null }),
+      paint: backgroundDarkConfig
+        ? composePhiModePaint(layerPaint(backgroundConfig), layerPaint(backgroundDarkConfig))
+        : layerPaint(backgroundConfig),
       filter: groundFilter,
       motion: null,
     }
@@ -377,7 +394,9 @@ export function resolvePhiCmsRegionShell({
       ? null
       : backgroundMoves
         ? resolvePhiBackgroundMotionHostStyle(backgroundConfig)
-        : resolvePhiBackgroundWidgetStyle(backgroundConfig);
+        : backgroundDarkConfig
+          ? composePhiModePaint(resolvePhiBackgroundWidgetStyle(backgroundConfig), resolvePhiBackgroundWidgetStyle(backgroundDarkConfig))
+          : resolvePhiBackgroundWidgetStyle(backgroundConfig);
 
   const chromeInput = {
     shadow: surface?.shadow ?? undefined,

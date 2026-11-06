@@ -578,8 +578,12 @@
   grid-template-rows: 0px 0px 0px auto minmax(0, 1fr) auto auto auto;
 }
 
+/* Sized by their content, not their zero row: a band without a stated height whose content fills it by
+   percentage (`height: 100%`) would otherwise resolve against the row and fold to nothing. A stated height
+   is inline and wins. */
 [data-phi-shell-layout]:not([data-phi-shell-variant="embedded-sider"]):has(> [data-phi-region-key="hero"]) > [data-phi-region-key^="header_"] {
   align-self: start;
+  height: max-content;
 }
 
 [data-phi-shell-layout]:not([data-phi-shell-variant="embedded-sider"]):has(> [data-phi-region-key="hero"]) > [data-phi-region-key="header_main"] {

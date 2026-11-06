@@ -205,6 +205,28 @@ or motion stored beside it resolves away, because the Theme's Overlay brings its
 - The Theme Root Background and the Chrome Overlay itself do not offer it
   (`PHI_ROOT_BACKGROUND_BASE_KINDS`, `PHI_SHELL_CHROME_OVERLAY_BASE_KINDS`); a stored one resolves to `none`.
 
+#### A ground per mode
+
+`backgroundDark` gives a Surface a ground of its own in dark mode -- a Hero's dark picture on a dark page,
+its light one on a light page. Absent, `background` stands in both modes. In the Background part of the
+Surface Control, "Own background in dark mode" switches it on (starting as a copy of the light ground) and
+a Light / Dark choice picks which of the two is edited.
+
+- The page's mode picks, in CSS, so the server needs no mode and the mode switch, which only turns
+  `data-phi-theme-mode` on the Root Layout, needs no render (`helpers/mode-paint.ts`). Each paint
+  property that differs is written once, inline, as two gated values:
+  `var(--phi-mode-light-gate, DARK) var(--phi-mode-dark-gate, LIGHT)`. `styles/root.css` sets the open
+  mode's gate empty and the closed one's to the guaranteed-invalid value, so only the closed fallback is
+  left. A property one mode does not state takes its neutral value there (`none`, `transparent`), so the
+  light picture does not stay behind a dark colour.
+- It reads the page's mode, not a tone's: a Surface with a ground per mode is meant to follow the page,
+  and normally states no tone.
+- A softened ground (`blur`) goes on the ground layer when either mode blurs; the filter is gated the
+  same way. Both pictures are resolved with the page (`background-asset-projection.ts` walks by shape).
+- Not with a moving picture: the motion layer draws one Background, and keeps the light one in both modes.
+- A Region honours it where it paints a ground of its own in light mode, and not for the Theme's ground,
+  which is per mode already.
+
 ### Where a Surface's outline comes from
 
 `borderSource` is `none`, `theme`, or `custom` (`types/cms-border-source.ts`).

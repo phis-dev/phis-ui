@@ -28,6 +28,7 @@ export function resolvePhiInspectorSurfaceLabels(labels: PhiInspectorWidgetLabel
         dark: labels.tone.dark,
         inverse: labels.tone.inverse,
       },
+      backgroundPerMode: labels.tone.backgroundPerMode,
     },
   };
 }

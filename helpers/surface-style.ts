@@ -13,6 +13,7 @@ import {
 import { resolvePhiCmsBorderSource } from "../types/cms-border-source";
 import { resolvePhiSurfaceToneClassName, type PhiSurface } from "../types/surface";
 import { resolvePhiSourcedBorderStyle } from "./border-widget-style";
+import { composePhiModePaint, resolvePhiModeValue } from "./mode-paint";
 import { combinePhiBoxShadows, resolvePhiShadow } from "./layout-style";
 
 /**
@@ -115,26 +116,46 @@ export function resolvePhiSurfaceStyle(
   }
 
   const background = surface.background ? normalizePhiBackgroundWidgetConfig(surface.background) : null;
-  const paintsGround = phiBackgroundWidgetConfigPaintsGround(background);
-  const groundFilter = background ? resolvePhiBackgroundGroundFilter(background) : null;
   const motion = background ? resolvePhiBackgroundMotion(background) : null;
+  /*
+   * The ground in dark mode, where the Surface states one. A moving picture is drawn by the motion layer
+   * from one Background and keeps it in both modes.
+   */
+  const backgroundDark = surface.backgroundDark && motion == null
+    ? normalizePhiBackgroundWidgetConfig(surface.backgroundDark)
+    : null;
+  const modes = backgroundDark ? [background, backgroundDark] : [background];
+  const paintsGround = modes.some((entry) => phiBackgroundWidgetConfigPaintsGround(entry));
+  const groundFilters = modes.map((entry) => (entry ? resolvePhiBackgroundGroundFilter(entry) : null));
   /*
    * The Theme's Overlay never goes on a layer: it is a window onto one viewport-sized painting, so there
    * is nothing to move or zoom, and its pane has to frost the page behind the box rather than the box.
    */
   const needsGroundLayer = options.groundLayer !== false
     && paintsGround
-    && background?.base.kind !== "theme"
-    && (groundFilter != null || motion != null || options.forceGroundLayer === true);
+    && modes.some((entry) => entry != null && entry.base.kind !== "theme")
+    && (groundFilters.some((filter) => filter != null) || motion != null || options.forceGroundLayer === true);
 
-  const paint = background ? resolvePhiBackgroundWidgetStyle(background) : {};
-  const hostPaint: CSSProperties = needsGroundLayer
-    ? (background ? resolvePhiBackgroundMotionHostStyle(background) : {})
-    : paint;
-  const ground: PhiSurfaceGround | null = needsGroundLayer && background
+  const paintOf = (entry: PhiCmsBackgroundWidgetConfig | null) => (entry ? resolvePhiBackgroundWidgetStyle(entry) : {});
+  const hostPaintOf = (entry: PhiCmsBackgroundWidgetConfig | null) => (needsGroundLayer
+    ? (entry ? resolvePhiBackgroundMotionHostStyle(entry) : {})
+    : paintOf(entry));
+  const layerPaintOf = (entry: PhiCmsBackgroundWidgetConfig | null) => (entry
+    ? resolvePhiBackgroundWidgetStyle({ ...entry, filter: null, motion: null })
+    : {});
+  const paint = paintOf(background);
+  const hostPaint: CSSProperties = backgroundDark
+    ? composePhiModePaint(hostPaintOf(background), hostPaintOf(backgroundDark))
+    : hostPaintOf(background);
+  const groundFilter = backgroundDark && groundFilters[0] !== groundFilters[1]
+    ? resolvePhiModeValue(groundFilters[0] ?? "none", groundFilters[1] ?? "none")
+    : groundFilters[0];
+  const ground: PhiSurfaceGround | null = needsGroundLayer && (background || backgroundDark)
     ? {
-      paint: resolvePhiBackgroundWidgetStyle({ ...background, filter: null, motion: null }),
-      filter: groundFilter,
+      paint: backgroundDark
+        ? composePhiModePaint(layerPaintOf(background), layerPaintOf(backgroundDark))
+        : layerPaintOf(background),
+      filter: groundFilter ?? null,
       motion: motion ? background : null,
     }
     : null;
@@ -177,6 +198,7 @@ export function phiSurfaceDrawsChrome(surface: PhiSurface | null | undefined): b
     return false;
   }
   return phiBackgroundWidgetConfigPaintsGround(surface.background ?? null)
+    || phiBackgroundWidgetConfigPaintsGround(surface.backgroundDark ?? null)
     || (surface.tone != null && surface.tone !== "inherit")
     || resolvePhiCmsBorderSource(surface.borderSource, surface.border) !== "none"
     || (surface.shadow != null && surface.shadow !== "none");

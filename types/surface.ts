@@ -32,6 +32,9 @@ function isPhiSurfaceTone(value: unknown): value is PhiSurfaceTone {
  * `effects`, which say how it arrives rather than what it is.
  *
  * - `background` carries its own Filter: a glass pane or a softened paint is something the ground does.
+ * - `backgroundDark` is the ground in dark mode, where the box wants another one than in light mode -- a
+ *   Hero's dark picture for a dark page. Absent, `background` stands in both modes. The page's mode
+ *   picks, in CSS (`helpers/mode-paint.ts`), so a mode switch needs no render.
  * - `borderSource` says where the line comes from. Only `custom` reads `border`, corners included; under
  *   `theme` and `none` the corner is the Site's surface step, so a shape change is seen at once.
  * - `shadow` is depth.
@@ -41,6 +44,7 @@ function isPhiSurfaceTone(value: unknown): value is PhiSurfaceTone {
  */
 export type PhiSurface = {
   background?: PhiCmsBackgroundWidgetConfig | null;
+  backgroundDark?: PhiCmsBackgroundWidgetConfig | null;
   borderSource?: PhiCmsBorderSource;
   border?: PhiCmsBorderWidgetConfig | null;
   shadow?: PhiShadow | null;
@@ -75,6 +79,9 @@ export function readPhiSurface(value: unknown): PhiSurface | null {
   const background = isPhiRecord(raw.background)
     ? normalizePhiBackgroundWidgetConfig(raw.background)
     : null;
+  const backgroundDark = isPhiRecord(raw.backgroundDark)
+    ? normalizePhiBackgroundWidgetConfig(raw.backgroundDark)
+    : null;
   const borderSource = readPhiCmsBorderSource(raw.borderSource);
   const border = isPhiRecord(raw.border)
     ? readPhiCmsBorderWidgetConfig(raw.border) ?? null
@@ -84,6 +91,7 @@ export function readPhiSurface(value: unknown): PhiSurface | null {
 
   const surface: PhiSurface = {
     ...(background ? { background } : {}),
+    ...(backgroundDark ? { backgroundDark } : {}),
     ...(borderSource ? { borderSource } : {}),
     ...(border ? { border } : {}),
     ...(shadow ? { shadow } : {}),

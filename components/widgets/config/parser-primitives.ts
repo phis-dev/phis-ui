@@ -57,7 +57,7 @@ export function readCssSize(value: unknown) {
 function assertPhiSurfaceConfig(surface: PhiConfigReader) {
   const cssSize = (value: unknown) =>
     (typeof value === "number" && Number.isFinite(value)) || typeof value === "string" ? value : undefined;
-  surface.object("background", (background) => {
+  const readBackground = (background: PhiConfigReader) => {
     background.value("base", "a background base: a CSS value or an object with a kind", (value) =>
       typeof value === "string" ||
         (isPhiRecord(value) && ["color", "gradient", "image", "none"].includes(String(value.kind)))
@@ -66,7 +66,9 @@ function assertPhiSurfaceConfig(surface: PhiConfigReader) {
     background.value("overlay", "a background overlay", (value) => (isPhiRecord(value) ? value : undefined));
     background.oneOf("filter", PHI_BACKGROUND_FILTERS);
     background.value("motion", "a background motion", (value) => (isPhiRecord(value) ? value : undefined));
-  });
+  };
+  surface.object("background", readBackground);
+  surface.object("backgroundDark", readBackground);
   surface.oneOf("borderSource", PHI_CMS_BORDER_SOURCES);
   surface.object("border", (border) => {
     border.number("borderWidth");

@@ -27,9 +27,9 @@ export type PhiCmsShellProps = {
    */
   headerTopRoom?: Record<`--phi-shell-header-top-${string}`, string>;
   /**
-   * The room the Header bands hold, as far as the Area's configs state it (`--phi-shell-band-top`,
-   * `--phi-shell-band-main`): what a Hero stands behind on the first paint. The browser measures the
-   * rest, `header_bottom` included (`use-phi-shell-header-bands.ts`).
+   * The room the Header bands hold, as far as the configs state it (`--phi-shell-band-top`,
+   * `--phi-shell-band-main`, and `--phi-shell-band-bottom` where the Page states it): what a Hero stands
+   * behind on the first paint. The browser measures the rest (`use-phi-shell-header-bands.ts`).
    */
   headerBandRoom?: Record<`--phi-shell-band-${string}`, string>;
 };

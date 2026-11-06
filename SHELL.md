@@ -409,13 +409,18 @@ How it works (`styles/shell.css`, "Hero at the top"):
   right and a client navigation to a Page with or without a Hero switches with the Page. No Page or Region
   setting is stored.
 - The three Header rows are fixed at `0px` and the Hero spans them from `header_top-start`. Fixed rows
-  cannot grow, so the grid depends on no measurement and the Hero cannot inflate the Header rows.
+  cannot grow, so the grid depends on no measurement and the Hero cannot inflate the Header rows. The
+  bands themselves are `height: max-content`: a band without a stated height whose content fills it by
+  percentage (`height: 100%`, as a Layout in a Region does) would otherwise resolve against its zero row
+  and fold to nothing, its content spilling over the band above. A stated height is inline and wins.
 - Each band is set down by the bands above it, from `--phi-shell-band-top`, `--phi-shell-band-main` and
   `--phi-shell-band-bottom` on the Shell element. Their sum, `--phi-shell-header-height`, is the Chrome
   pane's height and the Hero's extra top inset (read together with `--phi-layout-padding-top`, which every
   Layout publishes for its stated top inset). The second Header pane, over `header_bottom`, is not drawn.
-- The server writes the first two from the configured band heights (`phi-cms-root-layout.tsx`); the
-  browser measures all three while a Hero is on the Page (`components/shell/use-phi-shell-header-bands.ts`,
+- The server writes all three from the configured band heights (`phi-cms-root-layout.tsx`), the Page's
+  `header_bottom` included where it states one; a `header_bottom` sized by its content is known only to
+  the browser, so the Hero's words move down by it once on load. The browser measures all three while a
+  Hero is on the Page (`components/shell/use-phi-shell-header-bands.ts`,
   run by the Hero's Region renderer). A band's room is its height less what it gives back below itself,
   so a `header_top` that reveals on hover counts as none. A late value moves a band or the Hero's words for
   a frame, never the page below.
@@ -424,10 +429,22 @@ Limits:
 
 - Not in the embedded topology with a `sider_left`: there the Sider shares the `header_bottom` row and
   would start behind the Header too. Such a Shell keeps the Hero below the bands.
-- The Header keeps its tone. A Header written for a light page reads poorly over a dark picture; until the
-  Header can follow the picture under it, a Header Layout with a ground of its own -- a dark glass -- is
-  the way to keep it legible on every Page.
+- The Header keeps the page's mode. A Hero that should read in both modes gives its ground a dark variant
+  (see "Hero grounds per mode" below); a Hero held in one tone keeps a Header written for the other mode
+  over it, so such a Header needs a ground of its own to stay legible.
 - The Builder's preview canvas does not show the Hero behind the bands yet.
+
+### Hero grounds per mode
+
+The Header keeps the page's mode over a Hero, and so does everything below it, so the Header reads the
+same while the Hero is under it and after it has scrolled away. A Hero that should carry a picture in both
+modes states a ground per mode (`backgroundDark`, LAYOUTING.md "A ground per mode") -- a light picture
+for the light page, a dark one for the dark page -- on its root Layout's Surface or the Hero Region's, and
+no tone. The Header's glass is per mode already (the Chrome Overlay), so it frosts each picture in the
+matching mode.
+
+A Hero with one picture and a fixed tone still works; its words follow the tone, the Header does not. A
+Header that has to read over such a picture needs a ground of its own.
 
 ## Page Layout Boundary
 

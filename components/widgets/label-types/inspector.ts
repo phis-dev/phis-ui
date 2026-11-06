@@ -33,6 +33,8 @@ export type PhiInspectorWidgetLabels = {
     light: string;
     dark: string;
     inverse: string;
+    /** The switch that gives a Surface a ground of its own in dark mode (`PhiSurface.backgroundDark`). */
+    backgroundPerMode: string;
   };
   /**
    * A Grid's columns -- how many slots a row holds at each width, and where one slot stands -- and a
@@ -145,6 +147,7 @@ export const PHI_INSPECTOR_WIDGET_DEFAULT_LABELS: PhiInspectorWidgetLabels = {
     light: "Light",
     dark: "Dark",
     inverse: "Inverse",
+    backgroundPerMode: "Own background in dark mode",
   },
   grid: {
     columns: "Slots per row",

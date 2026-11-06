@@ -423,9 +423,21 @@ export async function PhiCmsAreaShell({
   const headerMainBandRoom = hasRenderableHeaderMain
     ? readPhiShellChromePanePixels(readPhiShellChromePaneBand(headerMainRegion?.config)?.height)
     : 0;
+  /*
+   * The Page's own `header_bottom` where it states a height, so a Hero's words start below it on the first
+   * paint too; a band sized by its content is the browser's to measure.
+   */
+  const resolvedPage = scope.rootScope.resolvedRequest?.page;
+  const pageHeaderBottom = resolvedPage?.regions.find((region) => region.regionType === PhiCmsRegionType.HeaderBottom);
+  const headerBottomBandRoom = !resolvedPage
+    ? null
+    : pageHeaderBottom
+      ? readPhiShellChromePanePixels(readPhiShellChromePaneBand(pageHeaderBottom.config)?.height)
+      : 0;
   const headerBandRoom = {
     ...(headerTopBandRoom == null ? {} : { "--phi-shell-band-top": `${headerTopBandRoom}px` }),
     ...(headerMainBandRoom == null ? {} : { "--phi-shell-band-main": `${headerMainBandRoom}px` }),
+    ...(headerBottomBandRoom == null ? {} : { "--phi-shell-band-bottom": `${headerBottomBandRoom}px` }),
   } as Record<`--phi-shell-band-${string}`, string>;
   const headerPaneStickyTop = resolvePhiShellHeaderPaneStickyTop(
     headerTopBand,

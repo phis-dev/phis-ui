@@ -6,6 +6,7 @@ import { PhiBackgroundControl, type PhiBackgroundControlProps } from "./phi-back
 import { PhiBorderControl } from "./phi-border-control";
 import { PhiFlexControl } from "./phi-flex-control";
 import { PhiSegmentedControl } from "./phi-segmented-control";
+import { PhiSwitchControl } from "./phi-switch-control";
 import { PhiShadowControl } from "./phi-shadow-control";
 import { PhiDividerControl } from "./phi-divider-control";
 import type { PhiBackgroundWidgetLabels } from "../widgets/label-types/background";
@@ -35,6 +36,8 @@ export type PhiSurfaceControlLabels = {
   shadow: string;
   tone: string;
   tones: Record<PhiSurfaceTone, string>;
+  /** The switch for a ground of its own in dark mode; the two grounds are then named by `tones`. */
+  backgroundPerMode?: string;
 };
 
 const PHI_SURFACE_CONTROL_DEFAULT_LABELS: PhiSurfaceControlLabels = {
@@ -50,6 +53,7 @@ const PHI_SURFACE_CONTROL_DEFAULT_LABELS: PhiSurfaceControlLabels = {
     dark: "Dark",
     inverse: "Inverse",
   },
+  backgroundPerMode: "Own background in dark mode",
 };
 
 /** Read only where the Border labels have not arrived; the words themselves live in their label set. */
@@ -131,6 +135,10 @@ export function PhiSurfaceControl({
    * next selected node) drops it, one this Control wrote keeps it.
    */
   const [customChosen, setCustomChosen] = useState(false);
+  /* Which of the two grounds is open, where the Surface has one per mode. */
+  const [backgroundMode, setBackgroundMode] = useState<"light" | "dark">("light");
+  const perMode = current.backgroundDark != null;
+  const editedMode = perMode ? backgroundMode : "light";
   const [seenValue, setSeenValue] = useState(value);
   const [writtenValue, setWrittenValue] = useState<PhiSurface | null | undefined>(undefined);
   if (seenValue !== value) {
@@ -190,11 +198,36 @@ export function PhiSurfaceControl({
         <>
           <PhiFlexControl vertical gap="small" style={{ width: "100%", minWidth: 0 }}>
             <PhiDividerControl titlePlacement="start" style={{ marginBlock: 0 }}>{labels.background}</PhiDividerControl>
+            <PhiSwitchControl
+              label={labels.backgroundPerMode ?? PHI_SURFACE_CONTROL_DEFAULT_LABELS.backgroundPerMode}
+              checked={perMode}
+              disabled={isDisabled}
+              onChange={(checked) => {
+                // Switched on, the dark ground starts as a copy of the light one, to be changed from there.
+                setBackgroundMode(checked ? "dark" : "light");
+                patch({ backgroundDark: checked ? (current.background ?? { base: { kind: "none" } }) : undefined });
+              }}
+            />
+            {perMode ? (
+              <PhiSegmentedControl<"light" | "dark">
+                value={editedMode}
+                options={[
+                  { value: "light", label: labels.tones.light },
+                  { value: "dark", label: labels.tones.dark },
+                ]}
+                block
+                disabled={isDisabled}
+                onChange={setBackgroundMode}
+              />
+            ) : null}
             <PhiBackgroundControl
+              key={editedMode}
               mode="control"
               disabled={isDisabled}
-              value={current.background ?? null}
-              onChange={(background) => patch({ background })}
+              value={(editedMode === "dark" ? current.backgroundDark : current.background) ?? null}
+              onChange={(next) => patch(editedMode === "dark"
+                ? { backgroundDark: next ?? { base: { kind: "none" } } }
+                : { background: next })}
               labels={backgroundLabels}
               colorPickerLabels={colorPickerLabels}
               colorPickerPlacement={colorPickerPlacement}

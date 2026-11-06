@@ -237,3 +237,21 @@ samp {
     animation-delay: 0s !important;
   }
 }
+
+/* The gates a paint per mode reads (`helpers/mode-paint.ts`): the open one is empty, the closed one is the
+   guaranteed-invalid value, so the closed mode's value is the one a `var()` falls back to. Light outside
+   the Root Layout as well -- a Modal portalled to <body> still reads one value. */
+:root {
+  --phi-mode-light-gate: ;
+  --phi-mode-dark-gate: initial;
+}
+
+:where([data-phi-theme-mode="light"]) {
+  --phi-mode-light-gate: ;
+  --phi-mode-dark-gate: initial;
+}
+
+:where([data-phi-theme-mode="dark"]) {
+  --phi-mode-light-gate: initial;
+  --phi-mode-dark-gate: ;
+}
