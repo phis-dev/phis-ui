@@ -27,3 +27,4 @@ export {
   type PhiDashboardCardSeriesPoint,
 } from "./types/dashboard-cards";
 export { fetchPhiSiteApi, type PhiSiteApiRequest } from "./gateway/site-api-request";
+export { definePhiDashboardCardRead } from "./gateway/dashboard-card-memo";

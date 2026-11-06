@@ -1,4 +1,6 @@
 export type { PhiCmsSiteBridge } from "../types/cms-plugins";
+// A package's Widget draws its Preview inert the way a Core Widget does, rather than live.
+export { definePhiPassiveWidgetRenderers } from "../plugins/factories/widget-renderers";
 export {
   assertPhiCmsPresetTreeContract,
   buildPhiCmsPresetIdentityKey,

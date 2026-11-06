@@ -164,6 +164,15 @@ cards on a local database, and the slowest thing on the Site with twelve Modules
 after the payload is not a chain, and neither is paging inside a card somebody has clicked into: the
 rule covers the path to a readable card.
 
+**One read for cards that ask the same thing.** Several cards of one Module often read one route --
+the four cards of `@phis/releases` all draw on its `stats` answer. The list resolves its cards in a
+Route Handler, outside a render, so `React.cache` and `definePhiRequestMemo` do not reach them there.
+What they share is the card context: the list resolves it once and hands the same object to every card.
+`definePhiDashboardCardRead(load)` from `@phis/ui/module/dashboard-cards` keys a read by that object, so
+the cards of one Dashboard make one call, and a card refreshed through its endpoint gets a fresh context
+and a fresh read. Four cards each fetching the same figures is per-request fan-out, which an audit
+counts as a finding.
+
 This one stays a rule rather than becoming a mechanism, and the reason is worth keeping: enforcing it
 would mean Core orchestrating each card's fetching, and for that it would have to know what each card
 needs -- the coupling this whole design exists to avoid.

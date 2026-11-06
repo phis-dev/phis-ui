@@ -158,7 +158,7 @@ export type {
 export type * from "./types/cms-presets";
 export type * from "./types/slot-size-policy";
 export type * from "./types/runtime-data-provider";
-export { isPhiRuntimeDataProviderKey } from "./types/runtime-data-provider";
+export { isPhiRuntimeDataProviderKey, readPhiRuntimeDataProviderBinding } from "./types/runtime-data-provider";
 export type * from "./types/table-widget";
 export type * from "./types/tree-widget";
 export type * from "./types/collection-provider";
