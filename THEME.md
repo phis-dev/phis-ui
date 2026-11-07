@@ -521,7 +521,9 @@ are not part of this field.
 The base spacing scale is global across Phi Sites (`PHI_PADDING`, `theme/phi-tokens.ts`):
 `xxs = 3`, `xs = 8`, `sm = 13`, `base = 21`, `md = 34`, `lg = 55`, `xl = 89`, `xxl = 144`.
 It is one scale for every distance a Phi surface states, inside a frame (`padding`) and between two things
-(`gap`) alike: server styles and presets write `PHI_SPACE` (`var(--ant-padding-*)`), and the spacing
+(`gap`) alike: server styles and presets write `PHI_SPACE` (`var(--ant-padding-*)`, exported from
+`@phis/ui/theme` with `PHI_COLOR` and `PHI_RADIUS`; `scripts/validate-preset-theme-vocabulary.mjs` refuses
+the spelled-out property in a preset), and the spacing
 choices in the Inspector offer that one scale. Ant Design's `margin*` family is seeded from the same
 sequence because its own components read it; Phi code does not write it.
 Site Themes override from that base; they do not replace it with an unrelated spacing system. Theme resolution

@@ -1053,6 +1053,48 @@ per render, to the address the Site assigned, namespace and locale included
 ([REFERENCES.md](./REFERENCES.md)). A root-relative link such as `/status/incidents` is not a second
 way in: the Markdown Widget drops it and renders the text alone, and a link target refuses it on write.
 
+### Distances, colours and corners come from the Theme
+
+A preset never states a look of its own: every distance, colour role and corner in its configs is a
+reference the Theme resolves per Site and per mode. `@phis/ui/theme` exports them by their Phi name:
+
+- `PHI_SPACE` -- the one spacing scale (`xxs`, `xs`, `sm`, `base`, `md`, `lg`, `xl`, `xxl`; 3 to 144 px in
+  the default Theme, `THEME.md` "Phi scale") for every `padding`, `paddingLeft` ..., `gap` and `offsetTop`.
+  It is what the Inspector offers, so an author opening the page sees `md`, not a number.
+- `PHI_COLOR` -- colour roles such as `bgContainer`, `text`, `primary`, for a colour that must follow the
+  Theme, for example the stop a card picture fades into.
+- `PHI_RADIUS` -- corners, where a Surface states its own.
+
+What they resolve to is the adapter's business. A preset that spells it out -- `"var(--ant-padding-lg)"`,
+`"var(--ant-color-bg-container)"` -- hides which step it took and breaks the day the adapter changes; Core
+refuses it in its own presets (`scripts/validate-preset-theme-vocabulary.mjs`), and a package keeps to the same rule.
+`PHI_PADDING` holds the scale as plain numbers; it is for arithmetic, and a preset that writes
+`${PHI_PADDING.md}px` freezes the default Theme's value instead of following the Site's.
+
+The same goes for the rest of a look: a Button takes the Theme's gradient by slot (`variant: "gradient"`,
+`gradient: "gradient1"`), a Surface its tone (`tone: "dark"`), its ground per mode
+(`background`, `backgroundDark`) and its pane strength (`filter: "clear" | "glass" | "haze"`)
+([LAYOUTING.md](./LAYOUTING.md)). Literal colours belong in a Theme block ([section 5](#5-add-a-theme-preset)) or
+in a picture's own Overlay, where they describe that picture and not the Site.
+
+```ts
+import { PHI_COLOR, PHI_SPACE } from "@phis/ui/theme";
+
+nodes.layout({
+  typeKey: "flex-vertical",
+  /* ... */
+  config: { gap: PHI_SPACE.base, padding: PHI_SPACE.xl, anchor: { horizontal: "left", vertical: "top" } },
+});
+const fade = {
+  kind: "color",
+  opacity: 0.85,
+  ink: { kind: "gradient", direction: "180deg", stops: [
+    { color: "transparent", percent: 40 },
+    { color: PHI_COLOR.bgContainer, percent: 100 },
+  ] },
+};
+```
+
 ### Example
 
 Two Public Pages of the Status Module from [section 1](#1-define-stable-ids): an overview with an
@@ -1728,6 +1770,8 @@ for the provider and still discloses the page it comes from.
 - No registry is populated by import side effects or mutable module globals.
 - No database value is passed to an unrestricted dynamic import.
 - Every persisted identity and provider key is package-namespaced and stable.
+- A preset names distances, colour roles and corners through `PHI_SPACE`, `PHI_COLOR` and `PHI_RADIUS`
+  from `@phis/ui/theme`; it never spells out an adapter property such as `var(--ant-padding-lg)`.
 - Controller fields and the `Controller` Client are either complete as one group or absent as one group.
 - Every controllerless Module contributes at least one meaningful owned artifact and no no-op Controller.
 - Widgets use Phi Controls, providers, signaling, and the shared Canvas scaffold contracts.
