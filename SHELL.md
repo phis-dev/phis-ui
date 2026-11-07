@@ -483,6 +483,11 @@ Editor and App set it; the Builder offers it in the Region Inspector's Viewport 
   `--phi-shell-sider-drawer-top`, where the viewport's top is on the Shell at that moment.
 - Opening needs JavaScript; without it the Sider stays off screen on a phone.
 
+A Header Navigation does the same for its own entries, in the Widget rather than the Shell
+(`phoneMenu`, default `button`): below 768px its row gives way to a menu button at the Widget's inline
+end, which opens the entries in a Drawer from the right -- the other side from the Sider's button, so an
+Area with both keeps them apart. `row` keeps the row, where what does not fit folds into "…".
+
 ## Page Layout Boundary
 
 The shell ends where the page content begins.

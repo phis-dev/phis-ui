@@ -17,6 +17,7 @@ export const PHI_HEADER_NAVIGATION_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCm
       height={resolvePhiRenderableBlockGeometry(regionConfig).block.size?.css}
       align={config.align}
       selectionStyle={config.selectionStyle}
+      phoneMenu={config.phoneMenu}
       interactive={true}
     />
   ),

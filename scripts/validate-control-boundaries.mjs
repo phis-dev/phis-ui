@@ -91,6 +91,7 @@ const overlayShellConsumers = new Map([
     "components/overlays/phi-overlay-container-client.tsx",
   ])],
   ["PhiDrawerControl", new Set([
+    "components/controls/phi-dialog-control.tsx",
     "components/overlays/phi-overlay-container-client.tsx",
   ])],
 ]);

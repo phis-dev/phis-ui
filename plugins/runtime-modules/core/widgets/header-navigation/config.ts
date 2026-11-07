@@ -19,7 +19,14 @@ export type PhiCmsHeaderNavigationWidgetConfig = PhiCmsWidgetConfigBase & {
   align?: "left" | "center";
   /** How the current entry is marked (`PHI_MENU_SELECTION_STYLES`); absent is `auto`. */
   selectionStyle?: PhiMenuSelectionStyle;
+  /**
+   * How the entries stand on a phone (below 768px): behind a menu button that opens them in a Drawer, the
+   * default, or in the row as on a wider screen, where what does not fit folds into "…".
+   */
+  phoneMenu?: PhiHeaderNavigationPhoneMenu;
 };
+
+export type PhiHeaderNavigationPhoneMenu = "button" | "row";
 
 function parsePhiCmsHeaderNavigationWidgetConfig(
   config: Record<string, unknown>,
@@ -29,12 +36,13 @@ function parsePhiCmsHeaderNavigationWidgetConfig(
     navKey: readString(config.navKey),
     align: readString(config.align) === "center" ? "center" : "left",
     selectionStyle: PHI_MENU_SELECTION_STYLES.find((style) => style === readString(config.selectionStyle)),
+    phoneMenu: readString(config.phoneMenu) === "row" ? "row" : "button",
   };
 }
 
 export type PhiHeaderNavigationWidgetRenderableConfig = Pick<
   PhiCmsHeaderNavigationWidgetConfig,
-  "align" | "selectionStyle"
+  "align" | "selectionStyle" | "phoneMenu"
 > & {
   height?: CSSProperties["height"];
 };
@@ -49,7 +57,7 @@ export const PHI_HEADER_NAVIGATION_WIDGET_DEFINITION = {
   iconFamily: "navigation",
   slotSizePolicy: "fill",
   /* What the Inspector shows chosen where a header states nothing, and what an absent value renders as. */
-  defaultConfig: { align: "left", selectionStyle: "auto" },
+  defaultConfig: { align: "left", selectionStyle: "auto", phoneMenu: "button" },
   fields: [
     {
       key: "navKey",
@@ -85,6 +93,16 @@ export const PHI_HEADER_NAVIGATION_WIDGET_DEFINITION = {
         { value: "auto", label: "Automatic" },
         { value: "underline", label: "Underline" },
         { value: "pill", label: "Pill" },
+      ],
+    },
+    {
+      key: "phoneMenu",
+      type: "choice",
+      label: "On a phone",
+      presentation: "segmented",
+      options: [
+        { value: "button", label: "Menu button" },
+        { value: "row", label: "Row" },
       ],
     },
   ],

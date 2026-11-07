@@ -712,6 +712,29 @@
   }
 }
 
+/*
+ * A Header Navigation on a phone (`phoneMenu: "button"`): the row gives way to a menu button at the
+ * Widget's inline end, which opens the entries in a Drawer. The phone is the Shell's width, as above.
+ */
+.phi-header-nav__button {
+  display: none;
+}
+
+@container phi-render-viewport (width < 768px) {
+  .phi-header-nav--phone-button {
+    justify-content: flex-end !important;
+  }
+
+  .phi-header-nav--phone-button > .phi-header-nav__row {
+    display: none !important;
+  }
+
+  .phi-header-nav--phone-button > .phi-header-nav__button {
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   [data-phi-sider-mobile="drawer"] {
     transition: none !important;

@@ -12,6 +12,7 @@ import { PhiCompactGroupControl } from "./phi-compact-group-control";
 import type { PhiButtonType } from "./phi-button-types";
 import { PhiFlexControl } from "./phi-flex-control";
 import { PhiModalControl } from "./phi-modal-control";
+import { PhiDrawerControl, type PhiDrawerControlProps } from "./phi-drawer-control";
 
 /**
  * A Dialog built in code: a title, one subject, an optional notice above it, and the actions below.
@@ -36,10 +37,9 @@ import { PhiModalControl } from "./phi-modal-control";
  * the same tokens rather than from each other -- the Layout presets are creation defaults a Builder may
  * edit afterwards, which is not a constant to depend on.
  *
- * Modal only, on purpose. `PhiDrawerControl` zeroes its zones the same way and will want the same
- * treatment, but no Dialog in the house is built in code *and* drawn as a Drawer, and a branch with no
- * caller is a guess about the one that eventually arrives. When it arrives, `presentation` is the prop
- * it becomes, and its placement and size come with it.
+ * A Modal unless `presentation` says `drawer`: the Header Navigation's entries on a phone were the first
+ * Dialog built in code and drawn from the side. `PhiDrawerControl` zeroes its zones as the Modal does, so
+ * the inside is the same; `placement` and `size` are the Drawer's own and nobody else reads them.
  */
 
 export type PhiDialogControlAction = {
@@ -81,6 +81,12 @@ export type PhiDialogControlProps = {
   mountPolicy?: PhiCmsMountPolicy;
   /** A styling hook for a surface that mounts the Dialog inside its own popup container. */
   rootClassName?: string;
+  /** A Modal (the default) or a Drawer from the side. */
+  presentation?: "modal" | "drawer";
+  /** The edge a Drawer comes from. */
+  placement?: PhiDrawerControlProps["placement"];
+  /** A Drawer's width (or height, from the top or bottom). */
+  size?: PhiDrawerControlProps["size"];
   onDismiss?: (source: PhiOverlayCloseSource) => void;
   afterOpenChange?: (open: boolean) => void;
 };
@@ -98,23 +104,13 @@ export function PhiDialogControl({
   mask,
   mountPolicy,
   rootClassName,
+  presentation = "modal",
+  placement,
+  size,
   onDismiss,
   afterOpenChange,
 }: PhiDialogControlProps) {
-  return (
-    <PhiModalControl
-      open={open}
-      title={title}
-      closable={closable}
-      keyboard={keyboard}
-      mask={mask}
-      mountPolicy={mountPolicy}
-      centered={centered}
-      controlSize={controlSize}
-      rootClassName={rootClassName}
-      onDismiss={onDismiss}
-      afterOpenChange={afterOpenChange}
-      body={
+  const body = (
         <PhiFlexControl
           vertical
           gap={PHI_SPACE.base}
@@ -123,13 +119,14 @@ export function PhiDialogControl({
           {alert == null ? null : <PhiAlertControl {...alert} />}
           {children}
         </PhiFlexControl>
-      }
+  );
+  const footer = (
       /*
        * The actions are one compact group, as a tree Overlay's footer is (OVERLAYS.md): Cancel and Apply
        * are the two ends of one decision, and a gap between them read as two unrelated offers. A compact
        * group does not wrap.
        */
-      footer={actions == null || actions.length === 0 ? null : (
+      actions == null || actions.length === 0 ? null : (
         <PhiFlexControl
           align="center"
           justify="end"
@@ -155,7 +152,43 @@ export function PhiDialogControl({
           ))}
           </PhiCompactGroupControl>
         </PhiFlexControl>
-      )}
+      )
+  );
+
+  if (presentation === "drawer") {
+    return (
+      <PhiDrawerControl
+        open={open}
+        title={title}
+        closable={closable}
+        keyboard={keyboard}
+        mask={mask}
+        mountPolicy={mountPolicy}
+        placement={placement}
+        size={size}
+        onDismiss={onDismiss}
+        afterOpenChange={afterOpenChange}
+        body={body}
+        footer={footer}
+      />
+    );
+  }
+
+  return (
+    <PhiModalControl
+      open={open}
+      title={title}
+      closable={closable}
+      keyboard={keyboard}
+      mask={mask}
+      mountPolicy={mountPolicy}
+      centered={centered}
+      controlSize={controlSize}
+      rootClassName={rootClassName}
+      onDismiss={onDismiss}
+      afterOpenChange={afterOpenChange}
+      body={body}
+      footer={footer}
     />
   );
 }
