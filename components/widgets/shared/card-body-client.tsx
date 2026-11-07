@@ -661,11 +661,12 @@ export function PhiCardWidgetClient({
   };
 
   /*
-   * A plan's button stands at the card's foot: plans side by side in a row have lists of different
-   * lengths, and their buttons belong on one line. The words keep their grid; the grid and the button
-   * stand in a column that fills the card, and the button takes what is left above it.
+   * The button stands at the card's foot, whatever the body: cards side by side in a Grid row are one
+   * height, their words are not, and their buttons belong on one line. The words keep their grid; the
+   * grid and the button stand in a column that fills the card, and the button takes what is left above
+   * it. A card standing alone is as tall as its content, so there the foot is right under the words.
    */
-  const footAction = body === "plan" && action != null;
+  const footAction = action != null;
 
   const actionButton = action ? (
     <div

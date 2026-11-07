@@ -301,7 +301,10 @@ record's source text instead of its localized version.
   `compact`, `featured`, which is size and nothing else); a `stat` body draws the label as that heading and
   the figure beneath it. `textAlign` is `start`, `center` or `end`. `linkTarget` makes the whole card the
   link -- one anchor, the heading's, reaching over the box -- and `actionLinkTarget` with `actionLabel` adds
-  a button that stands above it, never a link inside a link. `hoverEffect` (`none`, `lift`, `zoom`) answers
+  a button that stands above it, never a link inside a link. The button stands at the card's foot, whatever
+  the body, so cards side by side in a Grid row -- one height -- keep their buttons on one line however long
+  their words are. `mediaAspectRatio` sets how tall the picture stands (LAYOUTING.md, "A Card's picture
+  proportion"). `hoverEffect` (`none`, `lift`, `zoom`) answers
   only on a card that is a link, only under a hovering pointer or keyboard focus, and not for a reader who
   asked for less motion; a further effect is an entry in `PHI_CARD_HOVER_EFFECTS` and a rule in
   `styles/layout.css`. Asset sources persist `assetId` and `variantKey`; only `url` sources persist
@@ -309,8 +312,7 @@ record's source text instead of its localized version.
 - A `plan` body is an offer: a price and its period (`price`, `pricePeriod`) and a yearly pair
   (`priceYearly`, `pricePeriodYearly`) over the plan's `features`, a list whose entries carry a state, set
   by `featureList`. `billingPeriod` (`monthly` default, `yearly`) picks the price shown; a card without a
-  yearly price keeps the monthly one. The button stands at the card's foot, so plans side by side in a
-  row keep their buttons on one line; the recommended plan is the `highlight`ed card. Prices are never
+  yearly price keeps the monthly one. Its button stands at the foot like every card's; the recommended plan is the `highlight`ed card. Prices are never
   translated, periods and features are. The card listens on `price`, `pricePeriod`, `priceYearly`,
   `pricePeriodYearly` and `billingPeriod`, so a Controller can set a price by the reader's country and a
   Segmented Widget with the values `monthly` and `yearly` switches every plan on the page. The features
