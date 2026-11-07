@@ -733,6 +733,28 @@
     display: inline-flex;
     align-items: center;
   }
+
+  /*
+   * The button keeps its width. Its row hidden, the Widget has no width of its own, and the slot frames
+   * around it -- `min-width: 0` all -- gave it up to the Widgets beside it, down to a pixel.
+   */
+  .phi-header-nav--phone-button,
+  .phi-slot-child:has(.phi-header-nav--phone-button) {
+    min-width: var(--ant-control-height) !important;
+  }
+
+  /*
+   * The account menu on a phone is its avatar: the pill with the name and the chevron is kept for a
+   * screen reader, which reads it as the button's name, and taken out of the row.
+   */
+  .phi-account-menu .phi-dropdown-control__pill {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

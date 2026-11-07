@@ -703,3 +703,15 @@
     --phi-split-card-ground-width: 100%;
   }
 }
+
+/*
+ * A Three Column Layout on a phone (`phi-three-column-layout-client.tsx`): balanced sides give way to
+ * sides as wide as their content, and the middle takes what is left. The phone is the render viewport's
+ * width, as for `viewportFlags`.
+ */
+@container phi-render-viewport (width < 768px) {
+  [data-layout-kind="threecol"] {
+    --phi-three-column-side-flex: 0 1 auto;
+    --phi-three-column-middle-flex: 1 1 0;
+  }
+}

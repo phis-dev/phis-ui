@@ -488,6 +488,11 @@ A Header Navigation does the same for its own entries, in the Widget rather than
 end, which opens the entries in a Drawer from the right -- the other side from the Sider's button, so an
 Area with both keeps them apart. `row` keeps the row, where what does not fit folds into "…".
 
+Two more answers to the phone's width: a Three Column Layout with balanced sides gives them up below
+768px, every side as wide as its content and an empty one nothing, the middle taking the rest
+(`styles/layout.css`); and the account menu is its avatar, its name and chevron kept for a screen reader
+as the button's name. The Header Navigation's button keeps its width wherever its Widget stands.
+
 ## Page Layout Boundary
 
 The shell ends where the page content begins.

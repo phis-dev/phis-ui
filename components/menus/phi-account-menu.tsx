@@ -252,6 +252,8 @@ export function PhiAccountMenu({
       showLabel={resolvedShowLabel}
       showChevron={resolvedShowChevron}
       labelPill={resolvedShowLabel}
+      // On a phone the label pill is read, not shown: the avatar alone opens the menu (`styles/shell.css`).
+      className="phi-account-menu"
     />
   );
 }
