@@ -33,6 +33,8 @@ export type PhiButtonControlProps = {
   ariaLabel?: string;
   /** For a button that is a toggle -- pause and play -- whether it is on. */
   ariaPressed?: boolean;
+  /** Whether what the Button opens is open: a menu button's `aria-expanded`. */
+  ariaExpanded?: boolean;
   /**
    * Renders the button as a link rather than a command.
    *
@@ -117,6 +119,7 @@ export function PhiButtonControl({
   label,
   ariaLabel,
   ariaPressed,
+  ariaExpanded,
   href,
   newTab,
   external,
@@ -166,6 +169,7 @@ export function PhiButtonControl({
       className={paintedClassName}
       aria-label={ariaLabel}
       aria-pressed={ariaPressed}
+      aria-expanded={ariaExpanded}
       type={gradientVars ? "primary" : glass ? "default" : type}
       shape={shape}
       danger={danger}

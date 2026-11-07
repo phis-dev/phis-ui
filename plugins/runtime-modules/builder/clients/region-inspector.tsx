@@ -29,6 +29,8 @@ import type { PhiInspectorRegionVisibilityLabels } from "../../../../components/
 import { PHI_INSPECTOR_WIDGET_DEFAULT_LABELS } from "../../../../components/widgets/label-types/inspector";
 import { PhiRegionVisibilityFields } from "./region-visibility-fields";
 import { renderPhiInspectorConfigField } from "./inspector-config-field";
+import { hasPhiFlag, readPhiFlags } from "../../../../helpers/flags";
+import { PhiCmsFlags } from "../../../../constants/phi-cms";
 const PHI_GAP_SM = "var(--ant-padding-sm)";
 
 const REGION_PADDING_KEYS = [
@@ -176,12 +178,33 @@ export function PhiDeveloperBuilderRegionInspectorWidgetClient({
                 key: "viewport",
                 title: geometryLabels?.fields.viewport ?? "Viewport",
                 children: (
-                  <PhiViewportVisibilityControl
-                    disabled={isPreviewMode || !onDraftChange}
-                    value={effectiveDraft.viewportFlags}
-                    labels={geometryLabels?.viewport}
-                    onChange={(viewportFlags) => updateDraft({ viewportFlags })}
-                  />
+                  <div style={{ display: "grid", gap: PHI_GAP_SM, width: "100%" }}>
+                    <PhiViewportVisibilityControl
+                      disabled={isPreviewMode || !onDraftChange}
+                      value={effectiveDraft.viewportFlags}
+                      labels={geometryLabels?.viewport}
+                      onChange={(viewportFlags) => updateDraft({ viewportFlags })}
+                    />
+                    {/* SHELL.md "The Sider on a phone": `sider_left` alone, the Area's navigation column. */}
+                    {selectedRegionKey === "sider_left" ? renderPhiInspectorConfigField({
+                      field: { key: "mobileDrawer", type: "boolean", label: visibilityLabels.siderMobileDrawer },
+                      value: hasPhiFlag(readPhiFlags(effectiveDraft.regionConfig?.flags), PhiCmsFlags.MobileDrawer),
+                      defaultValue: false,
+                      config: effectiveDraft.regionConfig ?? {},
+                      disabled: isPreviewMode || !onDraftChange,
+                      onChange: (patch) => {
+                        const flags = readPhiFlags(effectiveDraft.regionConfig?.flags);
+                        updateDraft({
+                          regionConfig: {
+                            ...(effectiveDraft.regionConfig ?? {}),
+                            flags: patch.mobileDrawer === true
+                              ? flags | PhiCmsFlags.MobileDrawer
+                              : flags & ~PhiCmsFlags.MobileDrawer,
+                          },
+                        });
+                      },
+                    }) : null}
+                  </div>
                 ),
               },
               {

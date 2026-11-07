@@ -462,6 +462,27 @@ on the lower part of the Hero's picture, which runs on under them.
 - The Hero does not make room for it: its own words should end above the overlap, which its bottom inset
   is for.
 
+## The Sider on a phone
+
+A `sider_left` whose config carries `PhiCmsFlags.MobileDrawer` leaves its column below 768px, the
+phone band of `viewportFlags`, and opens from the side over the page. The Area Shell presets of Admin,
+Editor and App set it; the Builder offers it in the Region Inspector's Viewport section, for
+`sider_left` alone. `sider_right` belongs to the Page and keeps its column.
+
+- **Nothing moves or mounts twice.** The Region renders where it always does; the resolver marks it
+  `data-phi-sider-mobile="drawer"` and `styles/shell.css` stands it off screen at the inline start. Its
+  pane is not drawn on a phone; a Sider without a ground of its own takes the Theme's elevated ground
+  there, an authored ground stays. Its fold bar is hidden: a drawer does not fold.
+- **`PhiShellSiderDrawer`** (`components/shell/phi-shell-sider-drawer.tsx`) is mounted by the Shell only
+  where the flag is set. It puts the menu button at the inline start of `header_main` -- the Header's
+  content makes room for it -- or at the Shell's top where there is no `header_main`, and marks the Shell
+  `data-phi-sider-drawer-open`. A mask covers the page; Escape, the mask, a link in the drawer and a
+  change of Page close it.
+- **The Shell is a container**, so `position: fixed` inside it is fixed to the Shell, not the viewport.
+  While the drawer is open the page does not scroll, and the drawer and its mask stand at
+  `--phi-shell-sider-drawer-top`, where the viewport's top is on the Shell at that moment.
+- Opening needs JavaScript; without it the Sider stays off screen on a phone.
+
 ## Page Layout Boundary
 
 The shell ends where the page content begins.

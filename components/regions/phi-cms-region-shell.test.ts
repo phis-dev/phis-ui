@@ -271,3 +271,16 @@ describe("region shell ground per mode and Hero overlap", () => {
     expect((footer.style as Record<string, unknown>)["--phi-region-hero-overlap"]).toBeUndefined();
   });
 });
+
+/* SHELL.md "The Sider on a phone": the mark `styles/shell.css` turns into a drawer, on `sider_left` alone. */
+describe("region shell phone drawer", () => {
+  it("marks a sider_left with MobileDrawer", () => {
+    const shell = resolve({ regionKey: "sider_left", config: { flags: PhiCmsFlags.MobileDrawer } });
+    expect(shell.attributes["data-phi-sider-mobile"]).toBe("drawer");
+  });
+
+  it("leaves sider_right and an unflagged sider_left in their column", () => {
+    expect(resolve({ regionKey: "sider_right", config: { flags: PhiCmsFlags.MobileDrawer } }).attributes["data-phi-sider-mobile"]).toBeUndefined();
+    expect(resolve({ regionKey: "sider_left", config: { flags: PhiCmsFlags.Sticky } }).attributes["data-phi-sider-mobile"]).toBeUndefined();
+  });
+});

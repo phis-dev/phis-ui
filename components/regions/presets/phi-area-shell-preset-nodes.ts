@@ -157,7 +157,8 @@ export function buildPhiAreaShellSiderLeftNodes({
         sortOrder: 25,
         // Structure only: the frame's look is the Theme's (SHELL.md, Shell Chrome Overlay).
         config: {
-          flags: PhiCmsFlags.Sticky | PhiCmsFlags.FullHeight | PhiCmsFlags.Collapsible,
+          // On a phone the navigation opens from the Header's menu button (SHELL.md "The Sider on a phone").
+          flags: PhiCmsFlags.Sticky | PhiCmsFlags.FullHeight | PhiCmsFlags.Collapsible | PhiCmsFlags.MobileDrawer,
           size: { width: `${resolvedShellLeftWidth}px` },
           ...(typeof shellSiderLeftOffsetTop === "number" ? { offsetTop: shellSiderLeftOffsetTop } : { offsetTop: 0 }),
         },

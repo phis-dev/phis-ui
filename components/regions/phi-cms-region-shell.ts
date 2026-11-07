@@ -97,6 +97,7 @@ export type PhiCmsRegionShellAttributes = PhiRenderableBlockEffectsAttributes & 
   "data-phi-viewport-flags": number | undefined;
   "data-phi-block-enabled": "true" | "false";
   "data-phi-region-reveal": Exclude<PhiCmsRegionReveal, "always"> | undefined;
+  "data-phi-sider-mobile": "drawer" | undefined;
   className: string;
 };
 
@@ -217,6 +218,19 @@ export function phiCmsRegionFooterSticks(
   config: Pick<PhiCmsRegionConfig, "flags"> | null | undefined,
 ): boolean {
   return regionKey === "footer_bottom" && hasPhiFlag(config?.flags, PhiCmsFlags.Sticky);
+}
+
+/**
+ * Whether a Region is the Sider that opens as a drawer on a phone (SHELL.md "The Sider on a phone").
+ *
+ * `sider_left` alone: it is the Area's, where an Area's navigation stands, and the Shell's menu button sits
+ * at the inline start of the Header beside it. `sider_right` belongs to the Page and keeps its column.
+ */
+function phiCmsRegionSiderOpensAsDrawer(
+  regionKey: PhiCmsRegionKey,
+  config: Pick<PhiCmsRegionConfig, "flags"> | null | undefined,
+): boolean {
+  return regionKey === "sider_left" && hasPhiFlag(config?.flags, PhiCmsFlags.MobileDrawer);
 }
 
 /** The line a stuck Sider stands at: under the Header as measured, plus its own offset. */
@@ -615,6 +629,8 @@ export function resolvePhiCmsRegionShell({
       "data-phi-viewport-flags": viewportFlags,
       "data-phi-block-enabled": enabled ? "true" : "false",
       "data-phi-region-reveal": reveal === "always" ? undefined : reveal,
+      // `styles/shell.css` takes this Sider out of its column on a phone; `PhiShellSiderDrawer` opens it.
+      "data-phi-sider-mobile": phiCmsRegionSiderOpensAsDrawer(regionKey, config) ? "drawer" : undefined,
       ...effectsAttributes,
       className: ["phi-cms-region-shell", resolvePhiSurfaceToneClassName(surface?.tone), className]
         .filter(Boolean)

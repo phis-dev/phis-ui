@@ -71,6 +71,8 @@ export type PhiInspectorRegionVisibilityLabels = {
   pageOwned: string;
   /** How far the Page's `content` reaches up into its Hero (`PhiCmsRegionConfig.heroOverlap`). */
   heroOverlap: string;
+  /** `sider_left` opens as a drawer on a phone (`PhiCmsFlags.MobileDrawer`). */
+  siderMobileDrawer: string;
 };
 
 export type PhiInspectorLinkTargetLabels = {
@@ -136,6 +138,7 @@ export const PHI_INSPECTOR_WIDGET_DEFAULT_LABELS: PhiInspectorWidgetLabels = {
     scrollUp: "When scrolling up",
     pageOwned: "This Region belongs to its Page and stands on that Page alone.",
     heroOverlap: "Reaches into the Hero",
+    siderMobileDrawer: "On a phone, opens from the menu button",
   },
   surfaceStyle: {
     title: "Style",

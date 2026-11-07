@@ -620,3 +620,100 @@
 [data-phi-shell-layout]:has(> [data-phi-region-key="hero"]) > main [data-phi-region-key="content"] {
   margin-block-start: calc(-1 * var(--phi-region-hero-overlap, 0px)) !important;
 }
+
+/* -------------------------------------------------------------------------------------------------
+ * The Sider on a phone (SHELL.md). A `sider_left` with `MobileDrawer` leaves its column below 768px
+ * and stands at the inline start, off screen, until `PhiShellSiderDrawer` marks the Shell open. The
+ * `!important`s win over the Region's inline geometry, which is the column's. Fixed inside the Shell
+ * means fixed to the Shell, a container: `--phi-shell-sider-drawer-top` moves it to the viewport's top.
+ * ---------------------------------------------------------------------------------------------- */
+.phi-shell-sider-drawer-button,
+.phi-shell-sider-drawer-mask {
+  display: none;
+}
+
+@container phi-render-viewport (width < 768px) {
+  [data-phi-shell-sider-drawer] > .phi-shell-chrome-pane--sider {
+    display: none;
+  }
+
+  [data-phi-sider-mobile="drawer"] {
+    position: fixed !important;
+    top: var(--phi-shell-sider-drawer-top, 0px) !important;
+    bottom: auto !important;
+    inset-inline-start: 0 !important;
+    width: min(max(var(--phi-shell-sider-width, 200px), 16rem), 85vw) !important;
+    min-width: min(max(var(--phi-shell-sider-width, 200px), 16rem), 85vw) !important;
+    max-width: 85vw !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    max-height: 100dvh !important;
+    overflow-y: auto !important;
+    z-index: 1001 !important;
+    background-color: var(--ant-color-bg-elevated);
+    box-shadow: var(--ant-box-shadow-secondary);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform 200ms ease, visibility 0s linear 200ms;
+  }
+
+  /*
+   * A Sider without a ground of its own shows the Shell's pane behind it, and on a phone there is no pane
+   * behind it: it stands over the page. It takes the Theme's elevated ground; an authored ground stays.
+   */
+  [data-phi-sider-mobile="drawer"][data-phi-shell-chrome="true"] {
+    background: var(--ant-color-bg-elevated) !important;
+    backdrop-filter: none !important;
+  }
+
+  [data-phi-sider-mobile="drawer"] .phi-sider-collapse-bar {
+    display: none !important;
+  }
+
+  [dir="rtl"] [data-phi-sider-mobile="drawer"] {
+    transform: translateX(100%);
+  }
+
+  [data-phi-sider-drawer-open="true"] [data-phi-sider-mobile="drawer"] {
+    transform: none;
+    visibility: visible;
+    transition: transform 200ms ease;
+  }
+
+  [data-phi-sider-drawer-open="true"] > .phi-shell-sider-drawer-mask {
+    display: block;
+    position: fixed;
+    top: var(--phi-shell-sider-drawer-top, 0px);
+    inset-inline: 0;
+    height: 100dvh;
+    z-index: 1000;
+    background: var(--ant-color-bg-mask);
+  }
+
+  .phi-shell-sider-drawer-button {
+    display: inline-flex;
+    position: absolute;
+    inset-inline-start: var(--ant-padding-xs);
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1;
+  }
+
+  /* No `header_main` to sit in: the button stands at the Shell's top. */
+  .phi-shell-sider-drawer-button--shell {
+    top: var(--ant-padding-xs);
+    transform: none;
+    z-index: 999;
+  }
+
+  /* The Header's content makes room for the button at its start. */
+  [data-phi-region-key="header_main"]:has(> .phi-shell-sider-drawer-button) > .phi-cms-region-shell__content {
+    padding-inline-start: calc(var(--ant-control-height) + var(--ant-padding-xs)) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-phi-sider-mobile="drawer"] {
+    transition: none !important;
+  }
+}

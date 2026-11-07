@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import "../../styles/shell.css";
+import { PhiShellSiderDrawer } from "./phi-shell-sider-drawer";
 
 export type PhiCmsShellProps = {
   content?: ReactNode;
@@ -10,6 +11,8 @@ export type PhiCmsShellProps = {
   siderLeft?: ReactNode;
   siderRight?: ReactNode;
   siderLeftFullHeight?: boolean;
+  /** `sider_left` opens as a drawer on a phone (SHELL.md "The Sider on a phone"). */
+  siderLeftMobileDrawer?: boolean;
   footerTop?: ReactNode;
   footerMain?: ReactNode;
   footerBottom?: ReactNode;
@@ -111,6 +114,7 @@ export function PhiCmsShell({
   siderLeft,
   siderRight,
   siderLeftFullHeight = false,
+  siderLeftMobileDrawer = false,
   footerTop,
   footerMain,
   footerBottom,
@@ -135,6 +139,9 @@ export function PhiCmsShell({
    */
   const hasHeader = Boolean(headerTop || headerMain || headerBottom);
   const hasFooter = Boolean(footerTop || footerMain || footerBottom);
+  // The Client is mounted only where a Sider asks for it: every other Shell stays without one.
+  const siderDrawer = siderLeftMobileDrawer && siderLeft ? <PhiShellSiderDrawer /> : null;
+  const siderDrawerAttribute = siderDrawer ? "sider_left" : undefined;
 
   if (hasLeftFullHeightSidebar) {
     return (
@@ -143,8 +150,10 @@ export function PhiCmsShell({
         data-phi-shell-layout="cms"
         data-phi-shell-variant={shellVariant}
         data-phi-shell-chrome-panes="true"
+        data-phi-shell-sider-drawer={siderDrawerAttribute}
         style={roomStyle}
       >
+        {siderDrawer}
         {hasHeader ? <PhiShellChromePane family="header" stickyTop={headerPaneStickyTop} /> : null}
         <PhiShellChromePane family="sider" />
         {siderRight ? <PhiShellChromePane family="sider-right" /> : null}
@@ -170,8 +179,10 @@ export function PhiCmsShell({
       data-phi-shell-layout="cms"
       data-phi-shell-variant={shellVariant}
       data-phi-shell-chrome-panes="true"
+      data-phi-shell-sider-drawer={siderDrawerAttribute}
       style={roomStyle}
     >
+      {siderDrawer}
       {/*
         Two Header panes here, not one: `header_bottom` sits beside the Sider in this topology, so the
         family is an L and a grid item cannot be one. The seam falls on the row the Sider starts in.

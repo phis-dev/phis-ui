@@ -487,6 +487,7 @@ export async function PhiCmsAreaShell({
       ) : undefined}
       siderRight={siderRight}
       siderLeftFullHeight={hasPhiConfigFlag(siderLeftRegion?.config, PhiCmsFlags.FullHeight) && hasRenderableSiderLeft}
+      siderLeftMobileDrawer={hasRenderableSiderLeft && hasPhiConfigFlag(siderLeftRegion?.config, PhiCmsFlags.MobileDrawer)}
       footerTop={footerTop}
       drawer={drawer}
       footerMain={hasRenderableFooterMain ? (

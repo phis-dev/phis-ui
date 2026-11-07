@@ -40,6 +40,7 @@ const PHI_INSPECTOR_WIDGET_LABEL_SET = definePhiLabelSet({
     region_visibility_always: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.regionVisibility.always,
     region_visibility_hover: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.regionVisibility.hover,
     region_hero_overlap: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.regionVisibility.heroOverlap,
+    region_sider_mobile_drawer: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.regionVisibility.siderMobileDrawer,
     region_visibility_scroll_up: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.regionVisibility.scrollUp,
     region_visibility_page_owned: definePhiMessageLabel(PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.regionVisibility.pageOwned),
     surface_style_title: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.surfaceStyle.title,
@@ -123,6 +124,7 @@ export async function getPhiInspectorWidgetLabels(
       scrollUp: labels.region_visibility_scroll_up,
       pageOwned: labels.region_visibility_page_owned,
       heroOverlap: labels.region_hero_overlap,
+      siderMobileDrawer: labels.region_sider_mobile_drawer,
     },
     surfaceStyle: {
       title: labels.surface_style_title,

@@ -300,6 +300,8 @@ export function PhiCmsRegionContainerClient({
         >
           {collapsible ? (
             <PhiFlexControl
+              // Hidden where the Sider is a phone's drawer (`styles/shell.css`): a drawer does not fold.
+              className="phi-sider-collapse-bar"
               align="center"
               justify={collapsed ? "center" : isRightSider ? "flex-end" : "flex-start"}
               style={{
