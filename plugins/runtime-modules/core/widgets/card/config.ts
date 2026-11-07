@@ -205,6 +205,7 @@ function parsePhiCmsCardWidgetConfig(config: Record<string, unknown>): PhiCmsCar
 
 const PHI_CARD_DEFAULT_CONFIG = {
   body: "text",
+  mediaAspectRatio: "auto",
   imageOpacity: 100,
   headingLevel: "h3",
   textAlign: "start",
@@ -322,7 +323,6 @@ export const PHI_CARD_WIDGET_DEFINITION = {
         { value: "2:1", label: "2:1" },
         { value: "1:1", label: "1:1" },
       ],
-      placeholder: "Automatic",
     },
     {
       key: "imageOpacity",

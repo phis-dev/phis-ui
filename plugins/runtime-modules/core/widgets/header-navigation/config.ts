@@ -48,6 +48,8 @@ export const PHI_HEADER_NAVIGATION_WIDGET_DEFINITION = {
   category: "navigation",
   iconFamily: "navigation",
   slotSizePolicy: "fill",
+  /* What the Inspector shows chosen where a header states nothing, and what an absent value renders as. */
+  defaultConfig: { align: "left", selectionStyle: "auto" },
   fields: [
     {
       key: "navKey",
@@ -97,6 +99,7 @@ export const PHI_HEADER_NAVIGATION_WIDGET_DEFINITION = {
   | "category"
   | "iconFamily"
   | "slotSizePolicy"
+  | "defaultConfig"
 
   | "fields"
   | "parseConfig"
