@@ -16,6 +16,9 @@ import { PhiPlainTable } from "../../tables/phi-plain-table";
 import { PhiTypographyControl } from "../../controls/phi-typography-control";
 import { PhiDividerControl } from "../../controls/phi-divider-control";
 import { PhiBulletListControl } from "../../controls/phi-bullet-list-control";
+import { PhiImageControl } from "../../controls/phi-image-control";
+import type { PhiImagePresentation } from "../../media/image-presentation";
+import { resolvePhiMarkdownFigureSizes, type PhiMarkdownFigureFloat } from "./markdown-image-vocabulary";
 import {
   resolvePhiBulletListStyle,
   type PhiBulletListStyle,
@@ -33,6 +36,21 @@ export type PhiMarkdownInline =
   | { kind: "break" };
 
 export type PhiMarkdownTableAlign = "left" | "center" | "right" | null;
+
+/**
+ * A Media picture standing on its own in the text, resolved on the server (`markdown-render.ts`): which
+ * bytes and how they are framed, the box it stands in, and where it stands.
+ */
+export type PhiMarkdownFigure = {
+  presentation: PhiImagePresentation;
+  alt: string;
+  title?: string;
+  blurDataUrl: string | null;
+  optimizable: boolean;
+  /** The box as CSS (`16 / 9`) where a step was chosen; `null` is the picture's own proportion. */
+  aspectRatio: string | null;
+  float: PhiMarkdownFigureFloat;
+};
 
 export type PhiMarkdownBlock =
   | { kind: "heading"; id: string; level: 1 | 2 | 3 | 4 | 5; inlines: PhiMarkdownInline[] }
@@ -57,7 +75,8 @@ export type PhiMarkdownBlock =
       /** One entry per column, from the GFM delimiter row; `null` where the column states none. */
       align: PhiMarkdownTableAlign[];
     }
-  | { kind: "divider" };
+  | { kind: "divider" }
+  | { kind: "image"; image: PhiMarkdownFigure };
 
 export type PhiMarkdownWidgetClientProps = PhiClientBlockBaseProps<
   PhiNoLabels,
@@ -187,6 +206,8 @@ function renderBlocks(
             {renderInlineNodes(block.inlines)}
           </PhiTypographyControl>
         );
+      case "image":
+        return <PhiMarkdownFigureBlock key={key} figure={block.image} />;
       case "blockquote":
         return (
           <blockquote
@@ -370,5 +391,32 @@ export function PhiMarkdownWidgetClient({ config }: PhiMarkdownWidgetClientProps
         depth: 1,
       }, true)}
     </div>
+  );
+}
+
+/*
+ * A picture standing on its own: a figure, so it is a block between the paragraphs and never a box inside
+ * one. The box is reserved from the start -- the chosen proportion, else the picture's own -- so the text
+ * does not jump when the bytes arrive, and its corners are the Theme's surface step (`styles/controls.css`).
+ */
+function PhiMarkdownFigureBlock({ figure }: { figure: PhiMarkdownFigure }) {
+  const { presentation } = figure;
+  const ownRatio = presentation.width && presentation.height ? `${presentation.width} / ${presentation.height}` : undefined;
+  return (
+    <figure className={`phi-markdown-figure phi-markdown-figure--float-${figure.float}`}>
+      <div className="phi-markdown-figure__frame" style={{ aspectRatio: figure.aspectRatio ?? ownRatio }}>
+        <PhiImageControl
+          presentation={presentation}
+          source="asset"
+          alt={figure.alt}
+          title={figure.title}
+          blurDataUrl={figure.blurDataUrl}
+          optimizable={figure.optimizable}
+          sizes={resolvePhiMarkdownFigureSizes(figure.float)}
+          style={{ width: "100%", height: "100%" }}
+          imageStyle={{ width: "100%", height: "100%" }}
+        />
+      </div>
+    </figure>
   );
 }

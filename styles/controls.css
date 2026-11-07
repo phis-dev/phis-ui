@@ -717,7 +717,7 @@ h5.phi-typography, .phi-typography h5 {
  * nobody reads, so there the picture stands on its own line at full width, as an unfloated one does. The
  * width is a share of the text with a ceiling, so a wide column does not grow the picture past a glance.
  */
-.phi-markdown-body :is(img) {
+.phi-markdown-body :is(img):not(:where(.phi-markdown-figure *)) {
   display: block;
   margin-block-end: var(--ant-margin, 16px);
   /*
@@ -728,13 +728,43 @@ h5.phi-typography, .phi-typography h5 {
 }
 
 @container (min-width: 560px) {
-  .phi-markdown-body--float-start :is(img) {
+  .phi-markdown-body--float-start :is(img):not(:where(.phi-markdown-figure *)) {
     float: inline-start;
     width: min(45%, 440px);
     margin-inline-end: var(--ant-margin-lg, 24px);
   }
 
-  .phi-markdown-body--float-end :is(img) {
+  .phi-markdown-body--float-end :is(img):not(:where(.phi-markdown-figure *)) {
+    float: inline-end;
+    width: min(45%, 440px);
+    margin-inline-start: var(--ant-margin-lg, 24px);
+  }
+}
+
+/*
+ * A Media picture standing on its own (`PhiMarkdownFigure`): a figure whose frame holds the picture at its
+ * proportion, cropped into it, on the Theme's surface corner. It floats as the Widget says or as its own
+ * address says (`float=start|end|none`), at the same width and from the same container width as above.
+ */
+.phi-markdown-figure {
+  margin: 0 0 var(--ant-margin, 16px);
+}
+
+.phi-markdown-figure__frame {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--phi-surface-radius, 0);
+}
+
+@container (min-width: 560px) {
+  .phi-markdown-figure--float-start {
+    float: inline-start;
+    width: min(45%, 440px);
+    margin-inline-end: var(--ant-margin-lg, 24px);
+  }
+
+  .phi-markdown-figure--float-end {
     float: inline-end;
     width: min(45%, 440px);
     margin-inline-start: var(--ant-margin-lg, 24px);

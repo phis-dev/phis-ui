@@ -253,6 +253,19 @@ The picture goes to the image optimiser with `sizes` (`PHI_CARD_IMAGE_SIZES`: th
 phone, half of it beside another card), so a card loads a width near the one it is drawn at rather than
 the file's own.
 
+#### Pictures in a Markdown text
+
+A Media picture that stands on its own in a Markdown text -- a paragraph that is the picture and nothing
+else -- is a figure, drawn by `PhiImageControl` like an Image Widget's or a Card's: optimised with `sizes`,
+its box reserved before the bytes arrive, cropped around the focal rectangle, and on the Theme's surface
+corner. A picture inside a sentence, and one on somebody else's server, stays the plain picture it was.
+
+Two places say what a figure does, and the nearer wins. The Widget states it for every picture in its text
+(`imageFloat`: `start`, `end`, or none; `imageAspectRatio`: `auto` -- the picture's own -- or `3:2`, `4:3`,
+`16:9`, `2:1`, `1:1`). A picture that needs something else says so in its own address:
+`![Server](phis:asset/12?ratio=16:9&float=none)`. The address stays a `phis:asset/<id>` reference for
+everything that reads one -- the server's reference index finds the id at its start -- and it is plain
+Markdown, so a translation carries it through. The vocabulary is `markdown-image-vocabulary.ts`.
 ### Where a Surface's outline comes from
 
 `borderSource` is `none`, `theme`, or `custom` (`types/cms-border-source.ts`).

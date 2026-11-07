@@ -1,5 +1,9 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiMarkdownImageFloat, PhiMarkdownTextAlign } from "../../../../../types/core-widget-placements";
+import {
+  readPhiMarkdownImageAspectRatio,
+  type PhiMarkdownImageAspectRatio,
+} from "../../../../../components/widgets/shared/markdown-image-vocabulary";
 import { PHI_SPACING_SCALE_KEYS, type PhiSpacingScaleKey } from "../../../../../components/widgets/config/spacing-options";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
@@ -29,6 +33,11 @@ export type PhiCmsMarkdownWidgetConfig = PhiCmsWidgetConfigBase & {
   textAlign?: PhiMarkdownTextAlign;
   /** Pictures stand at this edge and the text flows past them; absent, a picture is a line of its own. */
   imageFloat?: PhiMarkdownImageFloat;
+  /**
+   * How tall every Media picture standing on its own in the text is (`markdown-image-vocabulary.ts`);
+   * absent is `auto`, the picture's own proportion. A picture's own address may say otherwise.
+   */
+  imageAspectRatio?: PhiMarkdownImageAspectRatio;
   textBlockSpacingBefore?: PhiSpacingScaleKey;
   textBlockSpacingAfter?: PhiSpacingScaleKey;
   headingBlockSpacingBefore?: PhiSpacingScaleKey;
@@ -98,6 +107,7 @@ export function parsePhiCmsMarkdownWidgetConfig(config: Record<string, unknown>)
     revalidateSeconds: readNumber(config.revalidateSeconds),
     textAlign: readMarkdownTextAlign(config.textAlign),
     imageFloat: readMarkdownImageFloat(config.imageFloat),
+    imageAspectRatio: readPhiMarkdownImageAspectRatio(config.imageAspectRatio),
     textBlockSpacingBefore: readMarkdownSpacingKey(config.textBlockSpacingBefore),
     textBlockSpacingAfter: readMarkdownSpacingKey(config.textBlockSpacingAfter),
     headingBlockSpacingBefore: readMarkdownSpacingKey(config.headingBlockSpacingBefore),
@@ -128,6 +138,7 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
   slotSizePolicy: "fill-inline",
   defaultConfig: {
     revalidateSeconds: 14400,
+    imageAspectRatio: "auto",
     textAlign: "start",
     textBlockSpacingBefore: "none",
     textBlockSpacingAfter: "sm",
@@ -183,6 +194,23 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
       // No float is the default and stores nothing; the line says so instead of an empty picker.
       emptyOption: { value: "none", label: "None" },
       options: PHI_MARKDOWN_IMAGE_FLOAT_OPTIONS,
+    },
+    /*
+     * Every picture standing on its own takes this box; one that needs another says so in its own address
+     * (`phis:asset/12?ratio=16:9`, and `float=start|end|none` beside it). Automatic is the picture's own.
+     */
+    {
+      key: "imageAspectRatio",
+      type: "choice",
+      label: "Image Proportion",
+      options: [
+        { value: "auto", label: "Automatic" },
+        { value: "3:2", label: "3:2" },
+        { value: "4:3", label: "4:3" },
+        { value: "16:9", label: "16:9" },
+        { value: "2:1", label: "2:1" },
+        { value: "1:1", label: "1:1" },
+      ],
     },
     {
       key: "textBlockSpacingBefore",

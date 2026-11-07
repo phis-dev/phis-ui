@@ -92,5 +92,8 @@ export async function resolvePhiWidgetInternalReferences(input: {
   // renderable and must not be re-filtered here.
   const assetUrls = new Map([...projection.assets.values()]
     .flatMap((asset) => asset.deliveryUrl ? [[asset.id, asset.deliveryUrl] as const] : []));
-  return { pagePaths, assetUrls };
+  /* The whole public projection as well, for a reader that draws the picture and not only links it. */
+  const assets = new Map([...projection.assets.values()]
+    .flatMap((asset) => asset.deliveryUrl ? [[asset.id, asset] as const] : []));
+  return { pagePaths, assetUrls, assets };
 }

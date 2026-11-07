@@ -13,7 +13,7 @@ const translate = vi.hoisted(() => vi.fn(async (...args: unknown[]) => {
 }));
 vi.mock("../../../server-helpers/translate", () => ({ trBulk: translate, trBulkForLocale: translate }));
 vi.mock("../helpers/internal-reference-resolver.server", () => ({
-  resolvePhiWidgetInternalReferences: async () => ({ pagePaths: new Map(), assetUrls: new Map() }),
+  resolvePhiWidgetInternalReferences: async () => ({ pagePaths: new Map(), assetUrls: new Map(), assets: new Map() }),
 }));
 
 import { resolveMarkdownRenderData } from "./markdown-render";

@@ -7,7 +7,17 @@ import { trBulk, trBulkForLocale } from "../../../server-helpers/translate";
 import type { PhiBlockRuntime, PhiRenderableBlockRenderMode } from "../../../types";
 import type { PhiCmsResolvedContent } from "../../../types/cms";
 import type { PhiMarkdownTocHeading } from "../../../types/markdown";
-import type { PhiMarkdownBlock, PhiMarkdownInline, PhiMarkdownTableAlign } from "./markdown-body-client";
+import type { PhiMarkdownBlock, PhiMarkdownFigure, PhiMarkdownInline, PhiMarkdownTableAlign } from "./markdown-body-client";
+import type { PhiPublicMediaAssetReference } from "../../../types/media";
+import type { PhiMarkdownImageFloat } from "../../../types/core-widget-placements";
+import { resolvePhiImagePresentation } from "../../media/image-presentation";
+import { isPhiMediaSvgContentType } from "../../../constants/media";
+import {
+  readPhiMarkdownImageAddress,
+  resolvePhiMarkdownImageAspectRatioValue,
+  type PhiMarkdownFigureFloat,
+  type PhiMarkdownImageAspectRatio,
+} from "./markdown-image-vocabulary";
 import { resolvePhiCodeLanguage, tokenizePhiCode } from "./markdown-code-tokens";
 import { readPhiInternalReference, type PhiPageReference } from "../../../types/references";
 import { resolvePhiWidgetInternalReferences } from "../helpers/internal-reference-resolver.server";
@@ -59,6 +69,16 @@ export type PhiMarkdownSourceConfig = {
    * header -- starts at `h2`, so `#` does not draw a second title of the same size. The level stops at 5.
    */
   headingOffset?: number;
+  /** What every picture in the text does, unless its own address says otherwise (`markdown-image-vocabulary.ts`). */
+  imageAspectRatio?: PhiMarkdownImageAspectRatio;
+  imageFloat?: PhiMarkdownImageFloat;
+};
+
+/** A Media picture found in the text, by the address its image node carries after the projection. */
+type MarkdownFigureSource = {
+  asset: PhiPublicMediaAssetReference;
+  aspectRatio?: PhiMarkdownImageAspectRatio;
+  float?: PhiMarkdownFigureFloat;
 };
 
 const MARKDOWN_DEFAULT_REVALIDATE_SECONDS = 14400;
@@ -190,13 +210,14 @@ function projectExternalMarkdownNodes(
 async function projectInternalMarkdownNodes(
   tree: MarkdownNode,
   runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer">,
-) {
+): Promise<Map<string, MarkdownFigureSource>> {
   const pageReferences: PhiPageReference[] = [];
   const assetIds: number[] = [];
+  const figures = new Map<string, MarkdownFigureSource>();
   const collect = (nodes: MarkdownNode[] | undefined) => {
     for (const node of nodes ?? []) {
       if (node.type === "link" || node.type === "image") {
-        const reference = readPhiInternalReference(node.url);
+        const reference = readPhiInternalReference(node.type === "image" ? readPhiMarkdownImageAddress(node.url ?? "").reference : node.url);
         if (reference?.kind === "page") pageReferences.push(reference.reference);
         if (reference?.kind === "asset") assetIds.push(reference.assetId);
       }
@@ -217,10 +238,22 @@ async function projectInternalMarkdownNodes(
       return [{ ...node, children }];
     }
     if (node.type === "image") {
-      const reference = readPhiInternalReference(node.url);
+      const address = readPhiMarkdownImageAddress(node.url ?? "");
+      const reference = readPhiInternalReference(address.reference);
       if (reference?.kind === "asset") {
-        const src = resolved.assetUrls.get(reference.assetId);
-        return src ? [{ ...node, url: src, children }] : [];
+        const asset = resolved.assets.get(reference.assetId);
+        if (!asset) return [];
+        /*
+         * Each picture gets an address of its own, so two pictures of one Asset can say different things:
+         * the fragment never reaches the server, and it travels with the address through a translation.
+         */
+        const src = `${asset.deliveryUrl}#phi-figure-${figures.size}`;
+        figures.set(src, {
+          asset,
+          ...(address.aspectRatio ? { aspectRatio: address.aspectRatio } : {}),
+          ...(address.float ? { float: address.float } : {}),
+        });
+        return [{ ...node, url: src, children }];
       }
       if (!/^https?:/iu.test(node.url ?? "") && !PHI_INLINE_IMAGE_DATA_URL.test(node.url ?? "")) return [];
       return [{ ...node, children }];
@@ -228,6 +261,62 @@ async function projectInternalMarkdownNodes(
     return [{ ...node, ...(node.children ? { children } : {}) }];
   });
   tree.children = project(tree.children);
+  return figures;
+}
+
+/*
+ * A paragraph that is one Media picture and nothing else is a figure: a block of its own, drawn by the
+ * house's picture Control -- optimised, sized, its box reserved and its corners the Theme's. A picture in
+ * the middle of a sentence, or one on somebody else's server, stays the plain picture it was.
+ */
+function promoteMarkdownFigures(
+  blocks: PhiMarkdownBlock[],
+  figures: ReadonlyMap<string, MarkdownFigureSource>,
+  defaults: { aspectRatio?: PhiMarkdownImageAspectRatio; float?: PhiMarkdownImageFloat },
+): PhiMarkdownBlock[] {
+  if (figures.size === 0) return blocks;
+  return blocks.map((block): PhiMarkdownBlock => {
+    if (block.kind === "blockquote") return { ...block, children: promoteMarkdownFigures(block.children, figures, defaults) };
+    if (block.kind === "list") return { ...block, items: block.items.map((item) => promoteMarkdownFigures(item, figures, defaults)) };
+    if (block.kind !== "paragraph") return block;
+    const content = block.inlines.filter((inline) => !(inline.kind === "text" && !inline.text.trim()));
+    const only = content.length === 1 ? content[0] : null;
+    const source = only?.kind === "image" ? figures.get(only.src) : undefined;
+    if (!only || only.kind !== "image" || !source) return block;
+    return { kind: "image", image: buildMarkdownFigure(only, source, defaults) };
+  });
+}
+
+function buildMarkdownFigure(
+  image: Extract<PhiMarkdownInline, { kind: "image" }>,
+  source: MarkdownFigureSource,
+  defaults: { aspectRatio?: PhiMarkdownImageAspectRatio; float?: PhiMarkdownImageFloat },
+): PhiMarkdownFigure {
+  const aspectRatio = source.aspectRatio ?? defaults.aspectRatio ?? "auto";
+  const frameAspectRatio = resolvePhiMarkdownImageAspectRatioValue(aspectRatio);
+  const { asset } = source;
+  const presentation = resolvePhiImagePresentation({
+    sourceKind: "asset",
+    assetId: asset.id,
+    variantKey: null,
+    variantVersion: asset.variantVersion,
+    deliveryRevision: asset.deliveryRevision,
+    originalUrl: asset.deliveryUrl,
+    focalRect: asset.focalRect,
+    sourceWidth: asset.width,
+    sourceHeight: asset.height,
+    frameAspectRatio,
+  });
+  return {
+    presentation,
+    alt: (image.alt || asset.altText || "").trim(),
+    ...(image.title ? { title: image.title } : {}),
+    blurDataUrl: asset.blurDataUrl,
+    // Only a public Asset resolves here; the optimiser takes every original that is not an SVG.
+    optimizable: !isPhiMediaSvgContentType(asset.contentType),
+    aspectRatio: frameAspectRatio == null ? null : aspectRatio.replace(":", " / "),
+    float: source.float ?? defaults.float ?? "none",
+  };
 }
 
 function mapInlineNodes(nodes: MarkdownNode[] | undefined): PhiMarkdownInline[] {
@@ -687,6 +776,10 @@ export async function resolveMarkdownRenderData(
     runtime,
     config?.extent ?? "document",
     config?.headingOffset ?? 0,
+    {
+      ...(config?.imageAspectRatio ? { aspectRatio: config.imageAspectRatio } : {}),
+      ...(config?.imageFloat ? { float: config.imageFloat } : {}),
+    },
   );
 }
 
@@ -700,6 +793,7 @@ async function resolveMarkdownRenderDataFromSource(
   runtime?: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer">,
   extent: "document" | "first-paragraph" = "document",
   headingOffset = 0,
+  imageDefaults: { aspectRatio?: PhiMarkdownImageAspectRatio; float?: PhiMarkdownImageFloat } = {},
 ): Promise<MarkdownRenderData> {
   const tree = parseMarkdown(markdown);
   if (extent === "first-paragraph") {
@@ -707,10 +801,11 @@ async function resolveMarkdownRenderDataFromSource(
     const paragraph = tree.children?.find((node) => node.type === "paragraph");
     tree.children = paragraph ? [paragraph] : [];
   }
+  let figures: ReadonlyMap<string, MarkdownFigureSource> = new Map();
   if (sourceMode === "url" && sourceUrl) {
     tree.children = projectExternalMarkdownNodes(tree.children, sourceUrl);
   } else if (runtime) {
-    await projectInternalMarkdownNodes(tree, runtime);
+    figures = await projectInternalMarkdownNodes(tree, runtime);
   }
   const context: MarkdownMapContext = {
     headings: [],
@@ -719,7 +814,7 @@ async function resolveMarkdownRenderDataFromSource(
     headingOffset,
   };
   const inlineMap = await buildMarkdownInlineMap(tree, translate, sourceLocale, runtime?.locale.current);
-  const blocks = mapBlockNodes(tree.children, context, inlineMap);
+  const blocks = promoteMarkdownFigures(mapBlockNodes(tree.children, context, inlineMap), figures, imageDefaults);
 
   return { blocks, headings: context.headings };
 }
