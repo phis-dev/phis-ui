@@ -1,6 +1,10 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiMarkdownImageFloat, PhiMarkdownTextAlign } from "../../../../../types/core-widget-placements";
 import {
+  readPhiMarkdownFoldSections,
+  type PhiMarkdownFoldSections,
+} from "../../../../../components/widgets/shared/markdown-sections";
+import {
   readPhiMarkdownImageAspectRatio,
   type PhiMarkdownImageAspectRatio,
 } from "../../../../../components/widgets/shared/markdown-image-vocabulary";
@@ -17,6 +21,7 @@ import {
 import {
   readNumber,
   readRenderableBlockConfig,
+  readBoolean,
   readString,
   type PhiCmsWidgetConfigBase,
 } from "../../../../../components/widgets/config/parser-primitives";
@@ -38,6 +43,13 @@ export type PhiCmsMarkdownWidgetConfig = PhiCmsWidgetConfigBase & {
    * absent is `auto`, the picture's own proportion. A picture's own address may say otherwise.
    */
   imageAspectRatio?: PhiMarkdownImageAspectRatio;
+  /**
+   * Whether every `##` section folds under its heading -- each on its own or one at a time
+   * (`markdown-sections.ts`) -- the way a page of questions and answers reads; absent, `none`.
+   */
+  foldSections?: PhiMarkdownFoldSections;
+  /** With folding sections: state them as schema.org `FAQPage` data for search engines. */
+  faqStructuredData?: boolean;
   textBlockSpacingBefore?: PhiSpacingScaleKey;
   textBlockSpacingAfter?: PhiSpacingScaleKey;
   headingBlockSpacingBefore?: PhiSpacingScaleKey;
@@ -108,6 +120,8 @@ export function parsePhiCmsMarkdownWidgetConfig(config: Record<string, unknown>)
     textAlign: readMarkdownTextAlign(config.textAlign),
     imageFloat: readMarkdownImageFloat(config.imageFloat),
     imageAspectRatio: readPhiMarkdownImageAspectRatio(config.imageAspectRatio),
+    foldSections: readPhiMarkdownFoldSections(config.foldSections),
+    faqStructuredData: readBoolean(config.faqStructuredData),
     textBlockSpacingBefore: readMarkdownSpacingKey(config.textBlockSpacingBefore),
     textBlockSpacingAfter: readMarkdownSpacingKey(config.textBlockSpacingAfter),
     headingBlockSpacingBefore: readMarkdownSpacingKey(config.headingBlockSpacingBefore),
@@ -139,6 +153,7 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
   defaultConfig: {
     revalidateSeconds: 14400,
     imageAspectRatio: "auto",
+    foldSections: "none",
     textAlign: "start",
     textBlockSpacingBefore: "none",
     textBlockSpacingAfter: "sm",
@@ -186,6 +201,26 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
       type: "choice",
       label: "Align",
       options: PHI_MARKDOWN_TEXT_ALIGN_OPTIONS,
+    },
+    /*
+     * A page of questions and answers: every `##` folds under its heading. Each on its own, or one open at
+     * a time; a link to a question opens it. With it, the questions can be stated for search engines.
+     */
+    {
+      key: "foldSections",
+      type: "choice",
+      label: "Fold Sections",
+      options: [
+        { value: "none", label: "None" },
+        { value: "independent", label: "Each on its own" },
+        { value: "accordion", label: "One at a time" },
+      ],
+    },
+    {
+      key: "faqStructuredData",
+      type: "boolean",
+      label: "FAQ for search engines",
+      visibleWhen: { field: "foldSections", notEquals: "none" },
     },
     {
       key: "imageFloat",

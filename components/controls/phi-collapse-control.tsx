@@ -30,8 +30,12 @@ export type PhiCollapseControlProps = {
   openKeys: readonly string[];
   onOpenKeysChange?: (keys: string[]) => void;
   accordion?: boolean;
-  /** What folds a section: its whole header, only the icon, or nothing. */
-  collapsible?: "header" | "icon" | "disabled";
+  /**
+   * What folds a section: the whole header row (`row`), the header's title and its icon (`header`), only
+   * the icon, or nothing. Ant Design's `header` answers on the words alone, so a click beside a short
+   * title does nothing; `row` is its default, which takes the whole bar.
+   */
+  collapsible?: "row" | "header" | "icon" | "disabled";
   /** No ground of its own for headers and bodies. */
   ghost?: boolean;
   expandIconPlacement?: "start" | "end";
@@ -94,7 +98,7 @@ export function PhiCollapseControl({
       // The caller's box draws the outline; what stays here is `ghost`, which decides the inside.
       bordered={false}
       ghost={ghost}
-      collapsible={collapsible}
+      collapsible={collapsible === "row" ? undefined : collapsible}
       destroyOnHidden={false}
       expandIconPlacement={expandIconPlacement}
       size={size}
@@ -102,7 +106,7 @@ export function PhiCollapseControl({
       items={sections.map((section) => ({
         key: section.key,
         label: section.label,
-        collapsible,
+        collapsible: collapsible === "row" ? undefined : collapsible,
         forceRender: section.forceRender,
         ...(section.hidden ? { style: { display: "none" } } : {}),
         children: section.children,

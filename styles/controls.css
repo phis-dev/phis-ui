@@ -333,8 +333,17 @@ h5.phi-typography, .phi-typography h5 {
 
 .phi-menu-control--selection-underline.ant-menu-dark.ant-menu-horizontal
   > :is(.ant-menu-item-selected, .ant-menu-submenu-selected)::after {
-  border-bottom-width: var(--ant-line-width-bold);
+  /* Ant Design's own `lineWidthBold`, which it derives as `lineWidth + 1`. */
+  border-bottom-width: calc(var(--ant-line-width) + 1px);
   border-bottom-color: var(--ant-color-primary);
+}
+
+/*
+ * A Markdown text's sections that fold (`foldSections`): a fine rule of the Theme's between the questions,
+ * so a list of them reads as a list while every one is closed.
+ */
+.phi-markdown-folds :where(.ant-collapse-item + .ant-collapse-item) {
+  border-block-start: var(--ant-line-width, 1px) solid var(--ant-color-split);
 }
 
 /* --- Labeled control ---------------------------------------------------------------------------- */

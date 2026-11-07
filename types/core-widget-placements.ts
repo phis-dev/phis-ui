@@ -1,4 +1,6 @@
 import type { PhiBulletListEntry, PhiBulletListStyle } from "../components/widgets/shared/bullet-list-vocabulary";
+import type { PhiMarkdownImageAspectRatio } from "../components/widgets/shared/markdown-image-vocabulary";
+import type { PhiMarkdownFoldSections } from "../components/widgets/shared/markdown-sections";
 import type { PhiRenderableBlockBase } from "./renderable-block";
 import type { PhiTextSource } from "../helpers/text-source";
 import type { PhiRuntimeConditionExpression } from "./runtime-condition";
@@ -84,6 +86,9 @@ export type PhiMarkdownWidgetPlacement = PhiWidgetPlacementBase & {
   revalidateSeconds?: number;
   textAlign?: PhiMarkdownTextAlign;
   imageFloat?: PhiMarkdownImageFloat;
+  imageAspectRatio?: PhiMarkdownImageAspectRatio;
+  foldSections?: PhiMarkdownFoldSections;
+  faqStructuredData?: boolean;
   textBlockSpacingBefore?: PhiSpacingScaleKey;
   textBlockSpacingAfter?: PhiSpacingScaleKey;
   headingBlockSpacingBefore?: PhiSpacingScaleKey;

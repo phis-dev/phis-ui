@@ -28,7 +28,7 @@ export function readPhiMarkdownImageAspectRatio(value: unknown): PhiMarkdownImag
   return PHI_MARKDOWN_IMAGE_ASPECT_RATIOS.find((ratio) => ratio === value);
 }
 
-export function readPhiMarkdownFigureFloat(value: unknown): PhiMarkdownFigureFloat | undefined {
+function readPhiMarkdownFigureFloat(value: unknown): PhiMarkdownFigureFloat | undefined {
   return PHI_MARKDOWN_FIGURE_FLOATS.find((float) => float === value);
 }
 

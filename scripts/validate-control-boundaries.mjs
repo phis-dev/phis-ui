@@ -738,6 +738,16 @@ const antdComponentVariableAllowance = new Map([
     reason: "Menu's own token. PhiMenuControl sets what it changes as variables instead of a ConfigProvider "
       + "of its own, which would derive the whole Theme again per request (styles/controls.css, Menu).",
   }]),
+  ...[
+    "--ant-menu-active-bar-height",
+    "--ant-menu-horizontal-item-border-radius",
+    "--ant-menu-horizontal-item-selected-bg",
+    "--ant-menu-dark-item-selected-bg",
+    "--ant-menu-dark-item-selected-color",
+  ].map((variable) => [variable, {
+    reason: "Menu's own token. A horizontal menu's mark for the current entry -- bar or pill, per mode -- is "
+      + "set as the Menu's variables (styles/controls.css, `PhiMenuControl` `selectionStyle`).",
+  }]),
 ]);
 
 const SPACING_SEGMENTS = new Set(["xxs", "xs", "sm", "md", "lg", "xl", "xxl"]);

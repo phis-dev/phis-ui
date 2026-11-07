@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, type CSSProperties, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 
 import { PhiProtectedMailText } from "../../navigation/use-phi-protected-mail";
 import { PhiLink } from "../../navigation/phi-link";
@@ -18,6 +18,13 @@ import { PhiTypographyControl } from "../../controls/phi-typography-control";
 import { PhiDividerControl } from "../../controls/phi-divider-control";
 import { PhiBulletListControl } from "../../controls/phi-bullet-list-control";
 import { PhiImageControl } from "../../controls/phi-image-control";
+import { PhiCollapseControl } from "../../controls/phi-collapse-control";
+import {
+  resolvePhiMarkdownFoldLevel,
+  splitPhiMarkdownSegments,
+  type PhiMarkdownFoldSections,
+  type PhiMarkdownSection,
+} from "./markdown-sections";
 import type { PhiImagePresentation } from "../../media/image-presentation";
 import { resolvePhiMarkdownFigureSizes, type PhiMarkdownFigureFloat } from "./markdown-image-vocabulary";
 import {
@@ -97,6 +104,10 @@ export type PhiMarkdownWidgetClientProps = PhiClientBlockBaseProps<
     headingBlockSpacingAfter?: PhiSpacingScaleKey;
     /** How the text's lists are set (`bullet-list-vocabulary.ts`). */
     list?: PhiBulletListStyle;
+    /** Whether the text's `##` sections fold (`markdown-sections.ts`); absent, `none`. */
+    foldSections?: PhiMarkdownFoldSections;
+    /** How far the text's headings moved down, which moves the level that folds with them. */
+    headingOffset?: number;
   }
 >;
 
@@ -375,6 +386,8 @@ export function PhiMarkdownWidgetClient({ config }: PhiMarkdownWidgetClientProps
     marginBlockEnd: resolvePhiSpacingScaleValue(config?.headingBlockSpacingAfter ?? "sm"),
   };
 
+  const lists = { style: resolvePhiBulletListStyle(config?.list), depth: 1 };
+
   return (
     /*
      * Pictures that the text flows past need ordinary flow: in a grid every paragraph is a box of its
@@ -391,10 +404,78 @@ export function PhiMarkdownWidgetClient({ config }: PhiMarkdownWidgetClientProps
         ? { display: "flow-root", width: "100%", textAlign: config.textAlign, containerType: "inline-size", lineHeight: token.lineHeight }
         : { display: "grid", gap: 0, width: "100%", textAlign: config?.textAlign, lineHeight: token.lineHeight }}
     >
-      {renderBlocks(blocks, token, paragraphBlockStyle, headingBlockStyle, {
-        style: resolvePhiBulletListStyle(config?.list),
-        depth: 1,
-      }, true)}
+      {config?.foldSections && config.foldSections !== "none"
+        ? splitPhiMarkdownSegments(blocks, resolvePhiMarkdownFoldLevel(config.headingOffset)).map((segment, index) =>
+          segment.kind === "text"
+            ? <Fragment key={`text-${index}`}>{renderBlocks(segment.blocks, token, paragraphBlockStyle, headingBlockStyle, lists, index === 0)}</Fragment>
+            : (
+              <PhiMarkdownFoldedSections
+                key={`sections-${index}`}
+                sections={segment.sections}
+                accordion={config.foldSections === "accordion"}
+                renderBody={(sectionBlocks) => renderBlocks(sectionBlocks, token, paragraphBlockStyle, headingBlockStyle, lists, true)}
+              />
+            ))
+        : renderBlocks(blocks, token, paragraphBlockStyle, headingBlockStyle, lists, true)}
+    </div>
+  );
+}
+
+/*
+ * The sections that fold: each heading is a header, what follows it the body. Every answer is drawn even
+ * while folded, so a search engine and the browser's own find read the whole text. A heading keeps its id,
+ * so the table of contents and a link to `#that-question` reach it -- and a link to it opens it, on arrival
+ * and whenever the address's fragment changes.
+ */
+function PhiMarkdownFoldedSections({
+  sections,
+  accordion,
+  renderBody,
+}: {
+  sections: readonly PhiMarkdownSection[];
+  accordion: boolean;
+  renderBody: (blocks: PhiMarkdownBlock[]) => ReactNode;
+}) {
+  const [openKeys, setOpenKeys] = useState<string[]>([]);
+  useEffect(() => {
+    const openFromAddress = () => {
+      const id = decodeURIComponent(window.location.hash.slice(1));
+      if (!id) return;
+      const section = sections.find((entry) =>
+        entry.heading.id === id || entry.blocks.some((block) => block.kind === "heading" && block.id === id));
+      if (!section) return;
+      setOpenKeys((current) => accordion ? [section.heading.id] : [...new Set([...current, section.heading.id])]);
+      window.requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: "start" }));
+    };
+    openFromAddress();
+    window.addEventListener("hashchange", openFromAddress);
+    return () => window.removeEventListener("hashchange", openFromAddress);
+  }, [accordion, sections]);
+
+  return (
+    <div className="phi-markdown-folds">
+      <PhiCollapseControl
+        sections={sections.map((section) => ({
+          key: section.heading.id,
+          label: (
+            <PhiTypographyControl presentation="title" id={section.heading.id} level={section.heading.level} style={{ margin: 0 }}>
+              {renderInlineNodes(section.heading.inlines)}
+            </PhiTypographyControl>
+          ),
+          children: renderBody(section.blocks),
+          forceRender: true,
+        }))}
+        openKeys={openKeys}
+        onOpenKeysChange={setOpenKeys}
+        accordion={accordion}
+        // A question is answered wherever its row is clicked, not only on its words.
+        collapsible="row"
+        ghost
+        expandIconPlacement="end"
+        // Flush with the text around them: a question starts where a paragraph starts.
+        headerPadding={`${PHI_SPACE.sm} 0`}
+        bodyPadding={`0 0 ${PHI_SPACE.sm}`}
+      />
     </div>
   );
 }
