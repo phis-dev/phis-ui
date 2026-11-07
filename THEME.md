@@ -446,6 +446,8 @@ as `--phi-surface-radius` and, where a component has a token for it, as that tok
   because there is no box there to round. The step is applied as longhands, so it never stands beside the
   corners a configured border writes. For Phi Controls the shape wins over conflicting component radius
   overrides. The **Split Card** is one card split in two, so its corner is simply its Surface's.
+- **Pictures** -- an Image Widget's corners the author left unstated, and every picture in a Markdown text.
+  A corner the Image Widget states keeps its value, as a Layout's does; a mask draws its own outline.
 - **A Phi Control that draws its own surface** -- the frame of a bordered Tree, and a media tile together with
   the skeleton standing in for it. There is no component token to carry the step to a box phis draws itself, so
   it reads the variable, bare. The Config Provider declares it on its element in the server render and mirrors

@@ -12,6 +12,7 @@ import { PhiEmptyControl } from "../../../../../components/controls/phi-empty-co
 import { PhiImageControl } from "../../../../../components/controls/phi-image-control";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
+import { PHI_LAYOUT_SURFACE_RADIUS } from "../../../../../components/layouts/phi-layout-contract";
 
 function formatImageSize(value: number | string | null | undefined) {
   if (typeof value === "number" && Number.isFinite(value)) {
@@ -100,11 +101,15 @@ export function PhiImageWidget({
   const renderedWidth = formatImageSize(width);
   const renderedHeight = formatImageSize(height);
   const maskStyle = resolvePhiMaskStyle(config?.mask);
+  /*
+   * A picture is a surface: a corner the author left unstated is the Theme's surface step, as a Layout's
+   * and a Markdown picture's are (THEME.md "Control shape"); a corner the author stated keeps its value.
+   */
   const radiusStyle = {
-    borderTopLeftRadius: config?.borderTopLeftRadius,
-    borderTopRightRadius: config?.borderTopRightRadius,
-    borderBottomLeftRadius: config?.borderBottomLeftRadius,
-    borderBottomRightRadius: config?.borderBottomRightRadius,
+    borderTopLeftRadius: config?.borderTopLeftRadius ?? PHI_LAYOUT_SURFACE_RADIUS,
+    borderTopRightRadius: config?.borderTopRightRadius ?? PHI_LAYOUT_SURFACE_RADIUS,
+    borderBottomLeftRadius: config?.borderBottomLeftRadius ?? PHI_LAYOUT_SURFACE_RADIUS,
+    borderBottomRightRadius: config?.borderBottomRightRadius ?? PHI_LAYOUT_SURFACE_RADIUS,
   } as const;
 
   if (!renderUrl) {
@@ -153,9 +158,8 @@ export function PhiImageWidget({
       style={{
         ...radiusStyle,
         ...maskStyle,
-        overflow: presentation.simulatedCropStyle || Object.values(radiusStyle).some((value) => value != null)
-          ? "hidden"
-          : undefined,
+        // Every corner has a radius now, the Theme's at least, so the box always clips its picture.
+        overflow: "hidden",
       }}
       imageStyle={radiusStyle}
     />
