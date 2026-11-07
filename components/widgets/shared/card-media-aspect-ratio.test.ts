@@ -32,6 +32,9 @@ describe("card picture proportion", () => {
   it("states a box only for a step", () => {
     expect(resolvePhiCardMediaAspectRatioCss("16:9")).toBe("16 / 9");
     expect(resolvePhiCardMediaAspectRatioValue("2:1")).toBe(2);
+    expect(resolvePhiCardMediaAspectRatioCss("phi")).toBe("1.618034 / 1");
+    expect(resolvePhiCardMediaAspectRatioValue("phi")).toBeCloseTo(1.618034, 6);
+    expect(resolvePhiCardImageVariantKey({ sourceKind: "asset", variantKey: null, mediaAspectRatio: "phi" })).toBeNull();
     expect(resolvePhiCardMediaAspectRatioCss("auto")).toBeNull();
     expect(resolvePhiCardMediaAspectRatioValue("original")).toBeNull();
     expect(resolvePhiCardMediaAspectRatioCss(undefined)).toBeNull();

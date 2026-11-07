@@ -714,9 +714,16 @@ h5.phi-typography, .phi-typography h5 {
  * Markdown pictures the text flows past (`imageFloat` on the Markdown Widget).
  *
  * Only where there is room for both: below 560px a picture beside the words leaves each of them a column
- * nobody reads, so there the picture stands on its own line at full width, as an unfloated one does. The
- * width is a share of the text with a ceiling, so a wide column does not grow the picture past a glance.
+ * nobody reads, so there the picture stands on its own line at full width, as an unfloated one does.
+ *
+ * Beside the words the line is shared in the golden ratio: what is left after the gap between them goes
+ * 1 : φ to picture and text (`PHI_GOLDEN_RATIO`, 1 + φ = 2.618), so the text is 1.618 times as wide as the
+ * picture at any column width -- 407 px of picture beside 658 px of text in a 1120 px column.
  */
+.phi-markdown-body {
+  --phi-markdown-float-width: calc((100% - var(--ant-margin-lg, 24px)) / 2.618034);
+}
+
 .phi-markdown-body :is(img):not(:where(.phi-markdown-figure *)) {
   display: block;
   margin-block-end: var(--ant-margin, 16px);
@@ -730,13 +737,13 @@ h5.phi-typography, .phi-typography h5 {
 @container (min-width: 560px) {
   .phi-markdown-body--float-start :is(img):not(:where(.phi-markdown-figure *)) {
     float: inline-start;
-    width: min(45%, 440px);
+    width: var(--phi-markdown-float-width);
     margin-inline-end: var(--ant-margin-lg, 24px);
   }
 
   .phi-markdown-body--float-end :is(img):not(:where(.phi-markdown-figure *)) {
     float: inline-end;
-    width: min(45%, 440px);
+    width: var(--phi-markdown-float-width);
     margin-inline-start: var(--ant-margin-lg, 24px);
   }
 }
@@ -744,7 +751,7 @@ h5.phi-typography, .phi-typography h5 {
 /*
  * A Media picture standing on its own (`PhiMarkdownFigure`): a figure whose frame holds the picture at its
  * proportion, cropped into it, on the Theme's surface corner. It floats as the Widget says or as its own
- * address says (`float=start|end|none`), at the same width and from the same container width as above.
+ * address says (`float=start|end|none`), in the same golden share and from the same container width as above.
  */
 .phi-markdown-figure {
   margin: 0 0 var(--ant-margin, 16px);
@@ -760,13 +767,13 @@ h5.phi-typography, .phi-typography h5 {
 @container (min-width: 560px) {
   .phi-markdown-figure--float-start {
     float: inline-start;
-    width: min(45%, 440px);
+    width: var(--phi-markdown-float-width);
     margin-inline-end: var(--ant-margin-lg, 24px);
   }
 
   .phi-markdown-figure--float-end {
     float: inline-end;
-    width: min(45%, 440px);
+    width: var(--phi-markdown-float-width);
     margin-inline-start: var(--ant-margin-lg, 24px);
   }
 }

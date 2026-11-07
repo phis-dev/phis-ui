@@ -245,7 +245,7 @@ How tall a Card's picture stands is the Card's, not the picture's (`mediaAspectR
 that names no variant that file is the Media library's Card variant: 960 x 640, cropped around the focal
 rectangle. So cards side by side stand at one height without anybody choosing one, and the browser loads
 a file made for a card instead of the original. A variant the Card names is kept, with its proportion; a
-picture given by address keeps its own. `original` shows the Media original uncropped. A step -- `3:2`,
+picture given by address keeps its own. `original` shows the Media original uncropped. A step -- `phi`, the golden rectangle φ : 1, and `3:2`,
 `4:3`, `16:9`, `2:1`, `1:1` -- crops into that box around the focal rectangle, from the Card variant at
 3:2 and from the original otherwise, and wins over the `compact` variant's 2:1 strip.
 
@@ -261,8 +261,10 @@ its box reserved before the bytes arrive, cropped around the focal rectangle, an
 corner. A picture inside a sentence, and one on somebody else's server, stays the plain picture it was.
 
 Two places say what a figure does, and the nearer wins. The Widget states it for every picture in its text
-(`imageFloat`: `start`, `end`, or none; `imageAspectRatio`: `auto` -- the picture's own -- or `3:2`, `4:3`,
-`16:9`, `2:1`, `1:1`). A picture that needs something else says so in its own address:
+(`imageFloat`: `start`, `end`, or none; `imageAspectRatio`: `auto` -- the picture's own -- or `phi`, the
+golden rectangle, `3:2`, `4:3`, `16:9`, `2:1`, `1:1`). A floated picture shares the line with the text in
+the golden ratio: after the gap between them, the text is φ times as wide as the picture
+(`PHI_GOLDEN_RATIO`, `theme/phi-tokens.ts`) -- 407 px of picture beside 658 px of text in a 1120 px column. A picture that needs something else says so in its own address:
 `![Server](phis:asset/12?ratio=16:9&float=none)`. The address stays a `phis:asset/<id>` reference for
 everything that reads one -- the server's reference index finds the id at its start -- and it is plain
 Markdown, so a translation carries it through. The vocabulary is `markdown-image-vocabulary.ts`.

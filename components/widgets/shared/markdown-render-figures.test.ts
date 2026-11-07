@@ -72,6 +72,11 @@ describe("Media pictures in Markdown", () => {
       .toEqual([["a", "16 / 9", "none"], ["b", "3 / 2", "end"]]);
   });
 
+  it("crops to the golden rectangle under phi", async () => {
+    const [block] = await blocksOf("![](phis:asset/12?ratio=phi)");
+    expect(block).toMatchObject({ kind: "image", image: { aspectRatio: "1.618034 / 1" } });
+  });
+
   it("leaves a picture inside a sentence inline", async () => {
     const [block] = await blocksOf("Before ![rack](phis:asset/12) after.");
     expect(block?.kind).toBe("paragraph");

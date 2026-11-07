@@ -1,4 +1,11 @@
 /**
+ * The golden ratio, φ = (1 + √5) / 2 ≈ 1.618: the step of the spacing scale below (each step the sum of
+ * the two before it), the golden rectangle a picture may be cropped to, and how a picture shares a line
+ * with text -- the text φ times as wide as the picture.
+ */
+export const PHI_GOLDEN_RATIO = (1 + Math.sqrt(5)) / 2;
+
+/**
  * The one spacing scale: the distance inside a frame and the distance between two things alike.
  *
  * Ant Design has two families for it, `padding*` and `margin*`, and its own components read both. Here

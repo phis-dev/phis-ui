@@ -4,6 +4,7 @@
  */
 
 import { PhiImageAssetVariantKey } from "../../../constants/media";
+import { PHI_GOLDEN_RATIO } from "../../../theme/phi-tokens";
 
 /**
  * What fills a card between its eyebrow and its description.
@@ -97,24 +98,28 @@ export type PhiCardVariant = (typeof PHI_CARD_VARIANTS)[number];
  * rather than the original. A picture that names a variant shows that variant and its proportion; one
  * given by address, its own. `original` is the escape: the Media picture's original file, uncropped.
  *
+ * `phi` is the golden rectangle, φ : 1 (`PHI_GOLDEN_RATIO`), between 3:2 and 16:9.
+ *
  * A step crops whatever file the card shows into that box around the focal rectangle. 3:2 is the Card
  * variant's own proportion, so it keeps taking that file; every other step shows the original, which the
  * image optimiser scales to the card's width.
  */
-export const PHI_CARD_MEDIA_ASPECT_RATIOS = ["auto", "original", "3:2", "4:3", "16:9", "2:1", "1:1"] as const;
+export const PHI_CARD_MEDIA_ASPECT_RATIOS = ["auto", "original", "phi", "3:2", "4:3", "16:9", "2:1", "1:1"] as const;
 export type PhiCardMediaAspectRatio = (typeof PHI_CARD_MEDIA_ASPECT_RATIOS)[number];
 
 
 /** A step as a number, width over height; `auto` and `original` have none -- the file decides. */
 export function resolvePhiCardMediaAspectRatioValue(ratio: PhiCardMediaAspectRatio | undefined): number | null {
   if (ratio == null || ratio === "auto" || ratio === "original") return null;
+  if (ratio === "phi") return PHI_GOLDEN_RATIO;
   const [width, height] = ratio.split(":").map(Number);
   return width! / height!;
 }
 
 /** A step as CSS writes it (`3 / 2`); `auto` and `original` have none. */
 export function resolvePhiCardMediaAspectRatioCss(ratio: PhiCardMediaAspectRatio | undefined): string | null {
-  return ratio == null || ratio === "auto" || ratio === "original" ? null : ratio.replace(":", " / ");
+  if (ratio == null || ratio === "auto" || ratio === "original") return null;
+  return ratio === "phi" ? `${PHI_GOLDEN_RATIO.toFixed(6)} / 1` : ratio.replace(":", " / ");
 }
 
 /**

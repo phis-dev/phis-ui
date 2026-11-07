@@ -10,11 +10,14 @@
  * its start), and it is plain Markdown, so a translation carries it through untouched.
  */
 
+import { PHI_GOLDEN_RATIO } from "../../../theme/phi-tokens";
+
 /**
  * How tall a picture stands, as a proportion of its width. `auto` is the picture's own proportion -- a text
- * shows what was put in it; a step crops into that box around the picture's focal rectangle.
+ * shows what was put in it; a step crops into that box around the picture's focal rectangle. `phi` is the
+ * golden rectangle, φ : 1 (`PHI_GOLDEN_RATIO`), between 3:2 and 16:9.
  */
-export const PHI_MARKDOWN_IMAGE_ASPECT_RATIOS = ["auto", "3:2", "4:3", "16:9", "2:1", "1:1"] as const;
+export const PHI_MARKDOWN_IMAGE_ASPECT_RATIOS = ["auto", "phi", "3:2", "4:3", "16:9", "2:1", "1:1"] as const;
 export type PhiMarkdownImageAspectRatio = (typeof PHI_MARKDOWN_IMAGE_ASPECT_RATIOS)[number];
 
 /** Where a picture stands: at an edge with the text flowing past it, or on a line of its own (`none`). */
@@ -32,8 +35,16 @@ export function readPhiMarkdownFigureFloat(value: unknown): PhiMarkdownFigureFlo
 /** A step as a number, width over height; `auto` has none -- the picture decides. */
 export function resolvePhiMarkdownImageAspectRatioValue(ratio: PhiMarkdownImageAspectRatio | undefined): number | null {
   if (ratio == null || ratio === "auto") return null;
+  if (ratio === "phi") return PHI_GOLDEN_RATIO;
   const [width, height] = ratio.split(":").map(Number);
   return width! / height!;
+}
+
+/** A step as CSS writes it (`16 / 9`); `auto` has none. */
+export function resolvePhiMarkdownImageAspectRatioCss(ratio: PhiMarkdownImageAspectRatio | undefined): string | null {
+  const value = resolvePhiMarkdownImageAspectRatioValue(ratio);
+  if (value == null) return null;
+  return ratio === "phi" ? `${PHI_GOLDEN_RATIO.toFixed(6)} / 1` : ratio!.replace(":", " / ");
 }
 
 /**
@@ -59,8 +70,9 @@ export function readPhiMarkdownImageAddress(url: string): {
 }
 
 /**
- * How wide a picture is drawn, for the image optimiser: beside the text at most the floated width
- * (`styles/controls.css`, `min(45%, 440px)`), on a line of its own the reading column's.
+ * How wide a picture is drawn, for the image optimiser: beside the text its golden share of the column
+ * (`styles/controls.css`, about 0.38 of a reading column of at most 1120 px), on a line of its own the
+ * reading column's.
  */
 export function resolvePhiMarkdownFigureSizes(float: PhiMarkdownFigureFloat) {
   return float === "none" ? "(max-width: 768px) 100vw, 1120px" : "(max-width: 560px) 100vw, 440px";

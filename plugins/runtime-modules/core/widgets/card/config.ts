@@ -317,6 +317,7 @@ export const PHI_CARD_WIDGET_DEFINITION = {
       options: [
         { value: "auto", label: "Automatic" },
         { value: "original", label: "Original" },
+        { value: "phi", label: "φ (golden)" },
         { value: "3:2", label: "3:2" },
         { value: "4:3", label: "4:3" },
         { value: "16:9", label: "16:9" },

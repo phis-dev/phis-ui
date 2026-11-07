@@ -205,6 +205,7 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
       label: "Image Proportion",
       options: [
         { value: "auto", label: "Automatic" },
+        { value: "phi", label: "φ (golden)" },
         { value: "3:2", label: "3:2" },
         { value: "4:3", label: "4:3" },
         { value: "16:9", label: "16:9" },
