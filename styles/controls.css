@@ -296,15 +296,19 @@ h5.phi-typography, .phi-typography h5 {
 /*
  * A horizontal menu's mark for the current entry (`PhiMenuControl` `selectionStyle`).
  *
- * The pill: the entry stands at the control height in the middle of its bar, on a rounded ground of the
- * Theme's corner -- a light primary tint in light mode, the primary mixed into the dark ground in dark
+ * The pill: the entry stands at the control height in the middle of its bar, on a ground in the Theme's
+ * Control shape -- a light primary tint in light mode, the primary mixed into the dark ground in dark
  * mode -- and no bar under it. Ant Design writes the bar's width under a dark menu as a number rather than
  * its variable, so it is set to nothing on the entry itself.
  */
 .phi-menu-control--selection-pill.ant-menu.ant-menu-root.ant-menu-horizontal,
 .phi-menu-control--selection-auto.ant-menu-dark.ant-menu-root.ant-menu-horizontal {
   --ant-menu-active-bar-height: 0px;
-  --ant-menu-horizontal-item-border-radius: var(--ant-border-radius);
+  /*
+   * The Theme's Control shape at the default size: one Control line tall, so the radius a grown Control
+   * holds is exactly this entry's -- the shape's number, or the capsule under `pill`.
+   */
+  --ant-menu-horizontal-item-border-radius: var(--phi-control-radius-grown-md, var(--ant-border-radius));
   --ant-menu-horizontal-item-selected-bg: var(--ant-color-primary-bg);
   --ant-menu-dark-item-selected-bg: color-mix(in srgb, var(--ant-color-primary) 30%, transparent);
 }

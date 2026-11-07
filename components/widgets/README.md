@@ -186,7 +186,7 @@ exports complete Widgets only.
   presentation and the one media tile; asset surfaces compose them instead of new tile renderers.
 - `PhiMenuControl` is the one navigation menu, stacked in a Sider and horizontal in a header bar. A
   horizontal menu marks the reader's entry by `selectionStyle` (`phi-menu-control-vocabulary.ts`):
-  `underline` is a bar under it, `pill` a rounded ground of the Theme's corner at the control height, and
+  `underline` is a bar under it, `pill` a ground in the Theme's Control shape at the control height, and
   `auto` -- the Header Navigation Widget's default, its Inspector field "Current entry" -- the bar in light
   mode and the pill in dark mode. Ant Design's own dark menu fills the whole bar with the primary colour,
   square. The choice is a class and the Menu's variables in `styles/controls.css`, decided by the Menu's
