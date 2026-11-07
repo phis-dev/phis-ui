@@ -4,6 +4,11 @@ import type { PhiResolvedLinkTargets } from "../../../../../types/references";
 import type { PhiCmsCardWidgetConfig } from "./config";
 import { isPhiMediaSvgContentType } from "../../../../../constants/media";
 import { resolvePhiImagePresentation } from "../../../../../components/media/image-presentation";
+import {
+  resolvePhiCardImageVariantKey,
+  resolvePhiCardMediaAspectRatioCss,
+  resolvePhiCardMediaAspectRatioValue,
+} from "../../../../../components/widgets/shared/card-vocabulary";
 import { resolvePhiPublicAssetReference } from "../../../../../components/widgets/helpers/internal-reference-resolver.server";
 import { resolvePhiLinkHref } from "../../../../../helpers/link-target";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
@@ -115,7 +120,13 @@ export async function PhiCardWidget({
   const presentation = resolvePhiImagePresentation({
     sourceKind: config?.sourceKind,
     assetId: resolvedAsset?.id,
-    variantKey: config?.sourceKind === "asset" ? config.variantKey : null,
+    /* The card's own variant, else the Card variant where its box is that variant's proportion. */
+    variantKey: resolvePhiCardImageVariantKey({
+      sourceKind: config?.sourceKind,
+      variantKey: config?.sourceKind === "asset" ? config?.variantKey : null,
+      mediaAspectRatio: config?.mediaAspectRatio,
+    }),
+    frameAspectRatio: resolvePhiCardMediaAspectRatioValue(config?.mediaAspectRatio),
     variantVersion: resolvedAsset?.variantVersion,
     deliveryRevision: resolvedAsset?.deliveryRevision,
     originalUrl: resolvedAsset?.deliveryUrl,
@@ -131,6 +142,7 @@ export async function PhiCardWidget({
 
   const clientConfig: PhiCardWidgetClientConfig = {
     surface: config?.surface ?? null,
+    mediaAspectRatio: resolvePhiCardMediaAspectRatioCss(config?.mediaAspectRatio),
     image: presentation.url
       ? {
           presentation,

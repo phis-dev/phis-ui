@@ -4,6 +4,11 @@ import { useEffect, useRef, useState } from "react";
 
 import { buildPhiMediaAssetContentDeliveryUrl } from "../../../../../constants/media";
 import { resolvePhiImagePresentation } from "../../../../../components/media/image-presentation";
+import {
+  resolvePhiCardImageVariantKey,
+  resolvePhiCardMediaAspectRatioCss,
+  resolvePhiCardMediaAspectRatioValue,
+} from "../../../../../components/widgets/shared/card-vocabulary";
 import { usePhiAuthoringAssetDetails } from "../../../../../components/media/use-authoring-asset-details";
 import { PhiInlineTextEditor } from "../../../../../components/controls/phi-inline-text-editor";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
@@ -154,7 +159,13 @@ export function PhiCardWidgetEditor({ config, onChange }: PhiCardWidgetEditorPro
   const presentation = resolvePhiImagePresentation({
     sourceKind: config.sourceKind,
     assetId,
-    variantKey: config.sourceKind === "asset" ? config.variantKey : null,
+    /* The card's own variant, else the Card variant where its box is that variant's proportion. */
+    variantKey: resolvePhiCardImageVariantKey({
+      sourceKind: config.sourceKind,
+      variantKey: config.sourceKind === "asset" ? config.variantKey : null,
+      mediaAspectRatio: config.mediaAspectRatio,
+    }),
+    frameAspectRatio: resolvePhiCardMediaAspectRatioValue(config.mediaAspectRatio),
     variantVersion: asset?.variantVersion ?? (config.sourceKind === "asset" ? config.variantVersion : null),
     deliveryRevision: asset?.deliveryRevision,
     originalUrl: assetId == null ? null : buildPhiMediaAssetContentDeliveryUrl(assetId),
@@ -206,6 +217,7 @@ export function PhiCardWidgetEditor({ config, onChange }: PhiCardWidgetEditorPro
         config={{
           // A card that states no Surface has none, on the canvas as on the page: "None" is its contents.
           surface: config.surface ?? null,
+          mediaAspectRatio: resolvePhiCardMediaAspectRatioCss(config.mediaAspectRatio),
           image: presentation.url
             ? {
                 presentation,

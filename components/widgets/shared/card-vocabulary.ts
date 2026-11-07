@@ -3,6 +3,8 @@
  * a value imported from the Client file would make that file a client reference of every route.
  */
 
+import { PhiImageAssetVariantKey } from "../../../constants/media";
+
 /**
  * What fills a card between its eyebrow and its description.
  *
@@ -85,6 +87,62 @@ export type PhiCardHoverEffect = (typeof PHI_CARD_HOVER_EFFECTS)[number];
  */
 export const PHI_CARD_VARIANTS = ["default", "compact", "center"] as const;
 export type PhiCardVariant = (typeof PHI_CARD_VARIANTS)[number];
+
+/**
+ * How tall a card's picture stands, as a proportion of its width.
+ *
+ * `auto` is the proportion of the file the card shows. A Media picture that names no variant is shown as
+ * the Media library's Card variant (3:2, cropped around the picture's focal rectangle), so cards side by
+ * side stand at one height without anybody choosing one, and the browser gets a file sized for a card
+ * rather than the original. A picture that names a variant shows that variant and its proportion; one
+ * given by address, its own. `original` is the escape: the Media picture's original file, uncropped.
+ *
+ * A step crops whatever file the card shows into that box around the focal rectangle. 3:2 is the Card
+ * variant's own proportion, so it keeps taking that file; every other step shows the original, which the
+ * image optimiser scales to the card's width.
+ */
+export const PHI_CARD_MEDIA_ASPECT_RATIOS = ["auto", "original", "3:2", "4:3", "16:9", "2:1", "1:1"] as const;
+export type PhiCardMediaAspectRatio = (typeof PHI_CARD_MEDIA_ASPECT_RATIOS)[number];
+
+
+/** A step as a number, width over height; `auto` and `original` have none -- the file decides. */
+export function resolvePhiCardMediaAspectRatioValue(ratio: PhiCardMediaAspectRatio | undefined): number | null {
+  if (ratio == null || ratio === "auto" || ratio === "original") return null;
+  const [width, height] = ratio.split(":").map(Number);
+  return width! / height!;
+}
+
+/** A step as CSS writes it (`3 / 2`); `auto` and `original` have none. */
+export function resolvePhiCardMediaAspectRatioCss(ratio: PhiCardMediaAspectRatio | undefined): string | null {
+  return ratio == null || ratio === "auto" || ratio === "original" ? null : ratio.replace(":", " / ");
+}
+
+/**
+ * Which variant of a Media picture the card shows: the one the card names, else the Card variant where the
+ * box is the Card variant's own proportion (`auto`, `3:2`), else the original.
+ */
+export function resolvePhiCardImageVariantKey({
+  sourceKind,
+  variantKey,
+  mediaAspectRatio,
+}: {
+  sourceKind: string | undefined;
+  variantKey: number | null | undefined;
+  mediaAspectRatio: PhiCardMediaAspectRatio | undefined;
+}): number | null {
+  if (sourceKind !== "asset") return null;
+  if (variantKey != null) return variantKey;
+  return mediaAspectRatio == null || mediaAspectRatio === "auto" || mediaAspectRatio === "3:2"
+    ? PhiImageAssetVariantKey.Card
+    : null;
+}
+
+/**
+ * How wide a card's picture is drawn, for the image optimiser: the window's width on a phone, where cards
+ * stand one under the other, and at most half of it beside another card. Without it the optimiser takes
+ * the file's own width -- a 1920 px original for a 350 px card.
+ */
+export const PHI_CARD_IMAGE_SIZES = "(max-width: 768px) 100vw, 50vw";
 
 /**
  * The words a card shows, each in its own place; what an editor can put a field in, and what a signal can

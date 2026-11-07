@@ -578,7 +578,7 @@ for (const path of [
   const cardBody = await readSource("components/widgets/shared/card-body-client.tsx");
   assert.match(
     cardBody,
-    /aspectRatio: metrics\.mediaAspectRatio \?\? resolveMediaAspectRatio\(image\.presentation\)/u,
+    /aspectRatio: config\?\.mediaAspectRatio \?\? metrics\.mediaAspectRatio \?\? resolveMediaAspectRatio\(image\.presentation\)/u,
   );
 }
 

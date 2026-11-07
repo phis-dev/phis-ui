@@ -27,6 +27,7 @@ import {
   PHI_CARD_ICON_PLACEMENTS,
   PHI_CARD_TEXT_ALIGNS,
   PHI_CARD_BADGE_STYLES,
+  PHI_CARD_MEDIA_ASPECT_RATIOS,
   PHI_CARD_VARIANTS,
   readPhiCardBillingPeriod,
   type PhiCardBillingPeriod,
@@ -35,6 +36,7 @@ import {
   type PhiCardIconPlacement,
   type PhiCardTextAlign,
   type PhiCardBadgeStyle,
+  type PhiCardMediaAspectRatio,
   type PhiCardVariant,
   type PhiCardWidgetBody,
 } from "../../../../../components/widgets/shared/card-vocabulary";
@@ -97,6 +99,11 @@ export type PhiCmsCardWidgetConfig = PhiCmsWidgetConfigBase & PhiCardImageSource
   iconBackground?: string;
   /** The picture's words for a reader who cannot see it; an Asset brings its own. */
   alt?: string;
+  /**
+   * How tall the picture stands (`PHI_CARD_MEDIA_ASPECT_RATIOS`); absent is `auto`, the proportion of the
+   * file shown -- for a Media picture the Card variant's 3:2.
+   */
+  mediaAspectRatio?: PhiCardMediaAspectRatio;
   /** How much of the picture shows, in percent; the card's ground shows through the rest. */
   imageOpacity?: number;
   /**
@@ -170,6 +177,7 @@ function parsePhiCmsCardWidgetConfig(config: Record<string, unknown>): PhiCmsCar
     iconColor: readString(config.iconColor),
     iconBackground: readString(config.iconBackground),
     alt: readString(config.alt),
+    mediaAspectRatio: readChoice(readString(config.mediaAspectRatio), PHI_CARD_MEDIA_ASPECT_RATIOS),
     imageOpacity: readPhiCardImageOpacity(config.imageOpacity),
     imageOverlay: readPhiCardImageOverlay(config.imageOverlay),
     linkTarget: readPhiLinkTarget(config.linkTarget) ?? undefined,
@@ -297,6 +305,25 @@ export const PHI_CARD_WIDGET_DEFINITION = {
       ],
     },
     { key: "image", type: "image", heading: "Image", label: "Image" },
+    /*
+     * Automatic is the Card variant's 3:2 for a Media picture, so a row of cards stands at one height; a
+     * step crops every card it is set on into the same box, Original shows the whole picture.
+     */
+    {
+      key: "mediaAspectRatio",
+      type: "choice",
+      label: "Proportion",
+      options: [
+        { value: "auto", label: "Automatic" },
+        { value: "original", label: "Original" },
+        { value: "3:2", label: "3:2" },
+        { value: "4:3", label: "4:3" },
+        { value: "16:9", label: "16:9" },
+        { value: "2:1", label: "2:1" },
+        { value: "1:1", label: "1:1" },
+      ],
+      placeholder: "Automatic",
+    },
     {
       key: "imageOpacity",
       type: "number",

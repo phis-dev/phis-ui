@@ -233,10 +233,25 @@ A Card may lay an Overlay over its picture (`imageOverlay`, the Background Overl
 badge, icon and words: a gradient that fades the picture into the card, a colour cast. A colour or a
 gradient is drawn as CSS there, each colour mixed down to the Overlay's opacity, so a Theme variable
 resolves -- `{ kind: "color", opacity: 0.85, ink: { kind: "gradient", direction: "180deg", stops:
-[{ color: "transparent", percent: 35 }, { color: "var(--ant-color-bg-container)", percent: 100 }] } }`
+[{ color: "transparent", percent: 35 }, { color: PHI_COLOR.bgContainer, percent: 100 }] } }`
 fades into the card's own ground in either mode. A Background draws its colour Overlay into an SVG
 picture instead, where no variable reaches. Stated by a Preset or an agent; the Inspector does not offer
 it yet.
+
+#### A Card's picture proportion
+
+How tall a Card's picture stands is the Card's, not the picture's (`mediaAspectRatio`, Inspector
+"Proportion"). `auto`, the default, is the proportion of the file the Card shows, and for a Media picture
+that names no variant that file is the Media library's Card variant: 960 x 640, cropped around the focal
+rectangle. So cards side by side stand at one height without anybody choosing one, and the browser loads
+a file made for a card instead of the original. A variant the Card names is kept, with its proportion; a
+picture given by address keeps its own. `original` shows the Media original uncropped. A step -- `3:2`,
+`4:3`, `16:9`, `2:1`, `1:1` -- crops into that box around the focal rectangle, from the Card variant at
+3:2 and from the original otherwise, and wins over the `compact` variant's 2:1 strip.
+
+The picture goes to the image optimiser with `sizes` (`PHI_CARD_IMAGE_SIZES`: the window's width on a
+phone, half of it beside another card), so a card loads a width near the one it is drawn at rather than
+the file's own.
 
 ### Where a Surface's outline comes from
 

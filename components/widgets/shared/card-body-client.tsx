@@ -31,7 +31,7 @@ import { usePhiControlSignalController } from "../client/shared/phi-control-sign
 import type { PhiThemeTokens } from "../../../theme/phi-theme-tokens";
 import { PHI_COLOR, PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import { PHI_THEME_HEADING_FONT_VARIABLE } from "../../../theme/phi-theme-typography";
-import { PHI_CARD_TEXT_SLOTS, readPhiCardBillingPeriod } from "./card-vocabulary";
+import { PHI_CARD_IMAGE_SIZES, PHI_CARD_TEXT_SLOTS, readPhiCardBillingPeriod } from "./card-vocabulary";
 import type {
   PhiCardBadgeStyle,
   PhiCardBillingPeriod,
@@ -125,6 +125,8 @@ export type PhiCardWidgetImage = {
 export type PhiCardWidgetClientConfig = {
   surface?: PhiSurface | null;
   image?: PhiCardWidgetImage | null;
+  /** The picture's box as CSS (`3 / 2`) where the card states one; absent, the variant's or the file's. */
+  mediaAspectRatio?: string | null;
   iconName?: string;
   iconPlacement?: PhiCardIconPlacement;
   /** The icon's colour and its ground; absent, the Theme's. */
@@ -563,7 +565,7 @@ export function PhiCardWidgetClient({
       className="phi-card__media"
       style={{
         position: "relative",
-        aspectRatio: metrics.mediaAspectRatio ?? resolveMediaAspectRatio(image.presentation),
+        aspectRatio: config?.mediaAspectRatio ?? metrics.mediaAspectRatio ?? resolveMediaAspectRatio(image.presentation),
         overflow: "hidden",
       }}
     >
@@ -573,6 +575,7 @@ export function PhiCardWidgetClient({
         alt={image.alt}
         blurDataUrl={image.blurDataUrl}
         optimizable={image.optimizable}
+        sizes={PHI_CARD_IMAGE_SIZES}
         style={{ width: "100%", height: "100%" }}
         imageStyle={{
           width: "100%",
