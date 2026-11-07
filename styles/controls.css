@@ -720,6 +720,11 @@ h5.phi-typography, .phi-typography h5 {
 .phi-markdown-body :is(img) {
   display: block;
   margin-block-end: var(--ant-margin, 16px);
+  /*
+   * A picture is a surface, so its corners are the Theme's surface step (`--phi-surface-radius`, THEME.md
+   * "Control shape"): square under `square`, the widest step of the scale under `pill`.
+   */
+  border-radius: var(--phi-surface-radius, 0);
 }
 
 @container (min-width: 560px) {
