@@ -148,18 +148,26 @@ export function PhiSplitCardLayout({
     swapped: swapRatio,
     inset: resolvePhiPaddingStyle({ padding, paddingTop, paddingRight, paddingBottom, paddingLeft }),
   };
+  /*
+   * The box is the query container -- for the shared Background's `cqw` and for the stacking rule in
+   * `styles/layout.css` -- and the grid is the element inside it: a container cannot ask about its own
+   * width. Below the rule's width the two cards stand one above the other, the first on top.
+   */
   const resolvedStyle: CSSProperties = {
     position: "relative",
     containerType: "inline-size",
+    containerName: "phi-split-card",
     ...resolvedLayoutStyle,
-    display: "grid",
-    gridTemplateColumns: resolvePhiSplitCardColumns(swapRatio),
-    gap: resolvedGap,
-    alignItems: "stretch",
+    // Not the grid `[data-layout-kind="split"]` makes every split box: the grid is the element inside.
+    display: "block",
     minWidth: 0,
     minHeight: 0,
     ...style,
   };
+  const gridStyle = {
+    "--phi-split-card-columns": resolvePhiSplitCardColumns(swapRatio),
+    gap: resolvedGap,
+  } as CSSProperties;
 
   return (
     <PhiLayoutSurfaceBox
@@ -173,6 +181,7 @@ export function PhiSplitCardLayout({
       className="phi-layout"
       style={resolvedStyle}
     >
+      <div className="phi-split-card__grid" style={gridStyle}>
       {renderSplitCardSlot(
         isAuthoringRender,
         "slot-1",
@@ -197,6 +206,7 @@ export function PhiSplitCardLayout({
         "Slot 2",
         card,
       )}
+      </div>
     </PhiLayoutSurfaceBox>
   );
 }

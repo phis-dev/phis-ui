@@ -28,9 +28,13 @@ export function resolvePhiSplitCardGroundFrame(
 ): PhiSurfaceGroundFrame {
   const leftShare = swapped ? ` * ${PHI_SPLIT_CARD_RATIO}` : "";
   const leftWidth = `((100cqw - ${gap})${leftShare} / ${PHI_SPLIT_CARD_SHARES})`;
+  /*
+   * Stacked (`styles/layout.css`), each card shows the whole Background on its own: the cards no longer
+   * share a row, and the height the lower card's piece would start at is not something CSS knows.
+   */
   return {
-    left: side === "left" ? "0px" : `calc(-1 * (${leftWidth} + ${gap}))`,
-    width: "100cqw",
+    left: `var(--phi-split-card-ground-left, ${side === "left" ? "0px" : `calc(-1 * (${leftWidth} + ${gap}))`})`,
+    width: "var(--phi-split-card-ground-width, 100cqw)",
   };
 }
 

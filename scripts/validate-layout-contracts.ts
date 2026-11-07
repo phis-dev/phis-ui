@@ -524,6 +524,9 @@ assert.equal(
   const box = markup.match(/<div[^>]*class="phi-layout" style="([^"]*)"/u)?.[1] ?? "";
   assert.doesNotMatch(box, /background|box-shadow|border:/u, "The Split Card's own box paints nothing.");
   assert.match(box, /container-type:inline-size/u, "The Split Card is the container its cards measure against.");
+  assert.match(box, /container-name:phi-split-card/u, "The Split Card is the container its stacking rule asks about.");
+  assert.match(markup, /class="phi-split-card__grid" style="--phi-split-card-columns:minmax\(0, 1fr\) minmax\(0, 1\.61803398875fr\)/u,
+    "The cards stand in a grid inside the box, which `styles/layout.css` stacks below 36rem.");
   assert.doesNotMatch(box, /padding/u, "The Split Card's padding is not around its cards.");
   assert.equal(
     (markup.match(/padding-top:16px;padding-right:16px;padding-bottom:16px;padding-left:16px/gu) ?? []).length,
@@ -534,9 +537,10 @@ assert.equal(
   const paints = [...markup.matchAll(/data-phi-surface-ground-paint="true" style="([^"]*)"/gu)].map((match) => match[1]);
   assert.equal(paints.length, 2, "Each card carries its part of the one Background.");
   assert.ok(paints.every((paint) => paint.includes("#123456")), "Both parts are the same paint.");
-  assert.ok(paints.every((paint) => paint.includes("width:100cqw")), "Each part is as wide as both cards together.");
-  assert.match(paints[0]!, /left:0px/u, "The left card shows the Background from its start.");
-  assert.match(paints[1]!, /left:calc\(-1 \* \(\(\(100cqw - 20px\) \/ 2\.61803398875\) \+ 20px\)\)/u,
+  assert.ok(paints.every((paint) => paint.includes("width:var(--phi-split-card-ground-width, 100cqw)")),
+    "Each part is as wide as both cards together, unless the cards stack (`styles/layout.css`).");
+  assert.match(paints[0]!, /left:var\(--phi-split-card-ground-left, 0px\)/u, "The left card shows the Background from its start.");
+  assert.match(paints[1]!, /left:var\(--phi-split-card-ground-left, calc\(-1 \* \(\(\(100cqw - 20px\) \/ 2\.61803398875\) \+ 20px\)\)\)/u,
     "The right card shows it from past the left card and the gap.");
 
   // Swapped, the left card is the larger one, and the right card's part of the Background follows it.
@@ -547,10 +551,10 @@ assert.equal(
     surface: { background: { base: { kind: "color", color: "#123456" } } },
     slots: [createElement("span", { key: "a" }, "left"), createElement("span", { key: "b" }, "right")],
   }));
-  assert.match(swapped, /grid-template-columns:minmax\(0, 1\.61803398875fr\) minmax\(0, 1fr\)/u,
+  assert.match(swapped, /--phi-split-card-columns:minmax\(0, 1\.61803398875fr\) minmax\(0, 1fr\)/u,
     "Swapped, the larger card stands left.");
   const swappedPaints = [...swapped.matchAll(/data-phi-surface-ground-paint="true" style="([^"]*)"/gu)].map((match) => match[1]);
-  assert.match(swappedPaints[1]!, /left:calc\(-1 \* \(\(\(100cqw - 20px\) \* 1\.61803398875 \/ 2\.61803398875\) \+ 20px\)\)/u,
+  assert.match(swappedPaints[1]!, /left:var\(--phi-split-card-ground-left, calc\(-1 \* \(\(\(100cqw - 20px\) \* 1\.61803398875 \/ 2\.61803398875\) \+ 20px\)\)\)/u,
     "Swapped, the right card shows the Background from past the larger left card and the gap.");
 
   // The cards are the creation's: a default would bring them back under a node whose author chose None.

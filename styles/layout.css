@@ -680,3 +680,26 @@
     scale: none;
   }
 }
+
+/*
+ * The Split Card's grid (`phi-split-card-layout-client.tsx`): the two cards side by side in the golden
+ * ratio, and one above the other where the Split Card itself is narrower than 36rem -- its own width,
+ * not the screen's, so it stacks in a narrow column on a wide screen as well. Stacked, each card shows
+ * the whole shared Background (`resolvePhiSplitCardGroundFrame`).
+ */
+.phi-split-card__grid {
+  display: grid;
+  grid-template-columns: var(--phi-split-card-columns);
+  align-items: stretch;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+
+@container phi-split-card (width < 36rem) {
+  .phi-split-card__grid {
+    grid-template-columns: minmax(0, 1fr);
+    --phi-split-card-ground-left: 0px;
+    --phi-split-card-ground-width: 100%;
+  }
+}
