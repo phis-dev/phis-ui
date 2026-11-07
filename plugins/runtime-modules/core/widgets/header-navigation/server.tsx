@@ -6,7 +6,7 @@ import type { PhiHeaderNavigationWidgetClientProps } from "./client";
 
 export type PhiHeaderNavigationWidgetProps = Pick<
   PhiHeaderNavigationWidgetClientProps,
-  "menuTheme" | "height" | "align" | "interactive"
+  "menuTheme" | "height" | "align" | "selectionStyle" | "interactive"
 > & {
   runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer" | "request">;
   navKey?: string;
@@ -18,6 +18,7 @@ export async function PhiHeaderNavigationWidget({
   menuTheme,
   height,
   align,
+  selectionStyle,
   interactive = true,
 }: PhiHeaderNavigationWidgetProps) {
   const items = await resolvePhiNavigationItems(runtime, navKey?.trim() || `${runtime.area}:header`);
@@ -34,6 +35,7 @@ export async function PhiHeaderNavigationWidget({
         menuTheme,
         height,
         align,
+        selectionStyle,
         interactive,
       }}
     />

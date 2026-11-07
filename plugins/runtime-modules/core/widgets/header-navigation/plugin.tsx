@@ -16,6 +16,7 @@ export const PHI_HEADER_NAVIGATION_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCm
       navKey={config.navKey ?? `${runtime.area}:header`}
       height={resolvePhiRenderableBlockGeometry(regionConfig).block.size?.css}
       align={config.align}
+      selectionStyle={config.selectionStyle}
       interactive={true}
     />
   ),

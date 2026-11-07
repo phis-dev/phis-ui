@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 
 import { collectPhiSelectedNavKeys } from "../../../../../helpers/nav-selection";
 import { PhiMenuControl } from "../../../../../components/controls/phi-menu-control";
+import type { PhiMenuSelectionStyle } from "../../../../../components/controls/phi-menu-control-vocabulary";
 import type { PhiClientBlockBaseProps, PhiBlockRuntime, PhiNoLabels } from "../../../../../types";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { mapPhiNavItems } from "../../../../../components/shell/menu-items";
@@ -21,6 +22,7 @@ export type PhiHeaderNavigationWidgetClientProps = PhiClientBlockBaseProps<
   menuTheme?: PhiMenuTheme;
   height?: CSSProperties["height"];
   align?: "left" | "center";
+  selectionStyle?: PhiMenuSelectionStyle;
   interactive?: boolean;
 };
 
@@ -30,6 +32,7 @@ export function PhiHeaderNavigationWidgetClient({
   menuTheme,
   height,
   align = "left",
+  selectionStyle = "auto",
   interactive = true,
 }: PhiHeaderNavigationWidgetClientProps) {
   const { token } = usePhiConfig();
@@ -103,6 +106,7 @@ export function PhiHeaderNavigationWidgetClient({
       <PhiMenuControl
         mode="horizontal"
         menuTheme={menuTheme}
+        selectionStyle={selectionStyle}
         selectedKeys={selectedKeys}
         items={menuItems}
         fontSize={token.fontSize}

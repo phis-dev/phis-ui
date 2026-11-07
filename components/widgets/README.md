@@ -184,6 +184,13 @@ exports complete Widgets only.
   resolved options.
 - `PhiCollectionLayoutControl` and `PhiMediaAssetTileControl` are the one grid/masonry/stack
   presentation and the one media tile; asset surfaces compose them instead of new tile renderers.
+- `PhiMenuControl` is the one navigation menu, stacked in a Sider and horizontal in a header bar. A
+  horizontal menu marks the reader's entry by `selectionStyle` (`phi-menu-control-vocabulary.ts`):
+  `underline` is a bar under it, `pill` a rounded ground of the Theme's corner at the control height, and
+  `auto` -- the Header Navigation Widget's default, its Inspector field "Current entry" -- the bar in light
+  mode and the pill in dark mode. Ant Design's own dark menu fills the whole bar with the primary colour,
+  square. The choice is a class and the Menu's variables in `styles/controls.css`, decided by the Menu's
+  theme class, so a page rendered for both modes needs no script to mark the entry right.
 - `PhiStepsControl` (where a sequence stands) and `PhiTimelineControl` (what happened, in order) take
   items as data -- strings, Phi icon names, a tone instead of a colour -- never Ant Design's item nodes.
   `PhiFloatButtonControl` takes the Toolbar's items: one is a Float Button, more are its group.

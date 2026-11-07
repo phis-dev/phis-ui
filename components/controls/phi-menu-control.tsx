@@ -5,6 +5,7 @@ import { Menu } from "antd";
 import type { ItemType } from "antd/es/menu/interface";
 
 import { usePhiConfig } from "../root/phi-config-provider";
+import type { PhiMenuSelectionStyle } from "./phi-menu-control-vocabulary";
 
 export type PhiMenuControlDivider = {
   type: "divider";
@@ -41,6 +42,8 @@ export type PhiMenuControlItem = PhiMenuControlDivider | PhiMenuControlGroup | P
 export type PhiMenuControlProps = {
   items: readonly PhiMenuControlItem[];
   mode: "inline" | "horizontal";
+  /** A horizontal menu's mark for the current entry (`styles/controls.css`); absent, Ant Design's own. */
+  selectionStyle?: PhiMenuSelectionStyle;
   /** Defaults to the active Phi theme mode. */
   menuTheme?: "light" | "dark";
   selectedKeys?: readonly string[];
@@ -87,6 +90,7 @@ export function PhiMenuControl({
   inlineIndent,
   fontFamily,
   fontSize,
+  selectionStyle,
   style,
 }: PhiMenuControlProps) {
   const { mode: themeMode } = usePhiConfig();
@@ -117,6 +121,11 @@ export function PhiMenuControl({
      * defaults, whose item spacing is what separates the entries in a header bar.
      */
     mode === "inline" ? "phi-menu-control--inline" : null,
+    /*
+     * Decided by the Menu's own theme class in CSS, not here: `auto` is one class whatever the mode, so the
+     * page a server rendered for both modes marks the entry right in the one the reader sees.
+     */
+    mode === "horizontal" && selectionStyle ? `phi-menu-control--selection-${selectionStyle}` : null,
     fontFamily ? "phi-menu-control--font-family" : null,
     fontSize ? "phi-menu-control--font-size" : null,
     mode === "inline" && collapsedWidth !== undefined ? "phi-menu-control--collapsed-width" : null,

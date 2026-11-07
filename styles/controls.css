@@ -293,6 +293,46 @@ h5.phi-typography, .phi-typography h5 {
   --ant-menu-icon-margin-inline-end: calc(var(--ant-control-height-sm) - var(--phi-menu-font-size));
 }
 
+/*
+ * A horizontal menu's mark for the current entry (`PhiMenuControl` `selectionStyle`).
+ *
+ * The pill: the entry stands at the control height in the middle of its bar, on a rounded ground of the
+ * Theme's corner -- a light primary tint in light mode, the primary mixed into the dark ground in dark
+ * mode -- and no bar under it. Ant Design writes the bar's width under a dark menu as a number rather than
+ * its variable, so it is set to nothing on the entry itself.
+ */
+.phi-menu-control--selection-pill.ant-menu.ant-menu-root.ant-menu-horizontal,
+.phi-menu-control--selection-auto.ant-menu-dark.ant-menu-root.ant-menu-horizontal {
+  --ant-menu-active-bar-height: 0px;
+  --ant-menu-horizontal-item-border-radius: var(--ant-border-radius);
+  --ant-menu-horizontal-item-selected-bg: var(--ant-color-primary-bg);
+  --ant-menu-dark-item-selected-bg: color-mix(in srgb, var(--ant-color-primary) 30%, transparent);
+}
+
+.phi-menu-control--selection-pill.ant-menu-horizontal > :is(.ant-menu-item, .ant-menu-submenu),
+.phi-menu-control--selection-auto.ant-menu-dark.ant-menu-horizontal > :is(.ant-menu-item, .ant-menu-submenu) {
+  align-self: center;
+  height: var(--ant-control-height);
+  line-height: var(--ant-control-height);
+}
+
+.phi-menu-control--selection-pill.ant-menu-horizontal > :is(.ant-menu-item, .ant-menu-submenu)::after,
+.phi-menu-control--selection-auto.ant-menu-dark.ant-menu-horizontal > :is(.ant-menu-item, .ant-menu-submenu)::after {
+  border-bottom-width: 0;
+}
+
+/* The bar in dark mode as well: no ground, and the bar Ant Design leaves out under a dark menu. */
+.phi-menu-control--selection-underline.ant-menu-dark.ant-menu-root.ant-menu-horizontal {
+  --ant-menu-dark-item-selected-bg: transparent;
+  --ant-menu-dark-item-selected-color: var(--ant-color-primary);
+}
+
+.phi-menu-control--selection-underline.ant-menu-dark.ant-menu-horizontal
+  > :is(.ant-menu-item-selected, .ant-menu-submenu-selected)::after {
+  border-bottom-width: var(--ant-line-width-bold);
+  border-bottom-color: var(--ant-color-primary);
+}
+
 /* --- Labeled control ---------------------------------------------------------------------------- */
 
 /*

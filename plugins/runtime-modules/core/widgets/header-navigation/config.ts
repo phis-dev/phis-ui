@@ -5,6 +5,10 @@ import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { PHI_AUTHORING_OPTION_PROVIDER_KEYS } from "../../../../../constants/authoring-option-provider-keys";
 import {
+  PHI_MENU_SELECTION_STYLES,
+  type PhiMenuSelectionStyle,
+} from "../../../../../components/controls/phi-menu-control-vocabulary";
+import {
   readRenderableBlockConfig,
   readString,
   type PhiCmsWidgetConfigBase,
@@ -13,6 +17,8 @@ import {
 export type PhiCmsHeaderNavigationWidgetConfig = PhiCmsWidgetConfigBase & {
   navKey?: string;
   align?: "left" | "center";
+  /** How the current entry is marked (`PHI_MENU_SELECTION_STYLES`); absent is `auto`. */
+  selectionStyle?: PhiMenuSelectionStyle;
 };
 
 function parsePhiCmsHeaderNavigationWidgetConfig(
@@ -22,12 +28,13 @@ function parsePhiCmsHeaderNavigationWidgetConfig(
     ...readRenderableBlockConfig(config),
     navKey: readString(config.navKey),
     align: readString(config.align) === "center" ? "center" : "left",
+    selectionStyle: PHI_MENU_SELECTION_STYLES.find((style) => style === readString(config.selectionStyle)),
   };
 }
 
 export type PhiHeaderNavigationWidgetRenderableConfig = Pick<
   PhiCmsHeaderNavigationWidgetConfig,
-  "align"
+  "align" | "selectionStyle"
 > & {
   height?: CSSProperties["height"];
 };
@@ -64,6 +71,18 @@ export const PHI_HEADER_NAVIGATION_WIDGET_DEFINITION = {
       options: [
         { value: "left", label: "Left" },
         { value: "center", label: "Center" },
+      ],
+    },
+    /* Automatic is a bar in light mode and a rounded ground in dark mode, where a bar is hard to see. */
+    {
+      key: "selectionStyle",
+      type: "choice",
+      label: "Current entry",
+      presentation: "segmented",
+      options: [
+        { value: "auto", label: "Automatic" },
+        { value: "underline", label: "Underline" },
+        { value: "pill", label: "Pill" },
       ],
     },
   ],
