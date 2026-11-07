@@ -264,7 +264,8 @@ Two places say what a figure does, and the nearer wins. The Widget states it for
 (`imageFloat`: `start`, `end`, or none; `imageAspectRatio`: `auto` -- the picture's own -- or `phi`, the
 golden rectangle, `3:2`, `4:3`, `16:9`, `2:1`, `1:1`). A floated picture shares the line with the text in
 the golden ratio: after the gap between them, the text is φ times as wide as the picture
-(`PHI_GOLDEN_RATIO`, `theme/phi-tokens.ts`) -- 407 px of picture beside 658 px of text in a 1120 px column. A picture that needs something else says so in its own address:
+(`PHI_GOLDEN_RATIO`, `theme/phi-tokens.ts`), with the Phi scale's `md` between them -- 415 px of picture
+beside 671 px of text in a 1120 px column. A picture that needs something else says so in its own address:
 `![Server](phis:asset/12?ratio=16:9&float=none)`. The address stays a `phis:asset/<id>` reference for
 everything that reads one -- the server's reference index finds the id at its start -- and it is plain
 Markdown, so a translation carries it through. The vocabulary is `markdown-image-vocabulary.ts`.

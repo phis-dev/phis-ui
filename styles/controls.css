@@ -718,15 +718,18 @@ h5.phi-typography, .phi-typography h5 {
  *
  * Beside the words the line is shared in the golden ratio: what is left after the gap between them goes
  * 1 : φ to picture and text (`PHI_GOLDEN_RATIO`, 1 + φ = 2.618), so the text is 1.618 times as wide as the
- * picture at any column width -- 407 px of picture beside 658 px of text in a 1120 px column.
+ * picture at any column width -- 415 px of picture beside 671 px of text in a 1120 px column, with the
+ * Phi scale's `md` (34 px) between them. Every distance here is the Phi scale's, never `--ant-margin-*`.
  */
 .phi-markdown-body {
-  --phi-markdown-float-width: calc((100% - var(--ant-margin-lg, 24px)) / 2.618034);
+  /* The gap between picture and text, on the Phi scale (`PHI_SPACE.md`), not Ant Design's margins. */
+  --phi-markdown-float-gap: var(--ant-padding-md, 34px);
+  --phi-markdown-float-width: calc((100% - var(--phi-markdown-float-gap)) / 2.618034);
 }
 
 .phi-markdown-body :is(img):not(:where(.phi-markdown-figure *)) {
   display: block;
-  margin-block-end: var(--ant-margin, 16px);
+  margin-block-end: var(--ant-padding, 21px);
   /*
    * A picture is a surface, so its corners are the Theme's surface step (`--phi-surface-radius`, THEME.md
    * "Control shape"): square under `square`, the widest step of the scale under `pill`.
@@ -738,13 +741,13 @@ h5.phi-typography, .phi-typography h5 {
   .phi-markdown-body--float-start :is(img):not(:where(.phi-markdown-figure *)) {
     float: inline-start;
     width: var(--phi-markdown-float-width);
-    margin-inline-end: var(--ant-margin-lg, 24px);
+    margin-inline-end: var(--phi-markdown-float-gap);
   }
 
   .phi-markdown-body--float-end :is(img):not(:where(.phi-markdown-figure *)) {
     float: inline-end;
     width: var(--phi-markdown-float-width);
-    margin-inline-start: var(--ant-margin-lg, 24px);
+    margin-inline-start: var(--phi-markdown-float-gap);
   }
 }
 
@@ -754,7 +757,7 @@ h5.phi-typography, .phi-typography h5 {
  * address says (`float=start|end|none`), in the same golden share and from the same container width as above.
  */
 .phi-markdown-figure {
-  margin: 0 0 var(--ant-margin, 16px);
+  margin: 0 0 var(--ant-padding, 21px);
 }
 
 .phi-markdown-figure__frame {
@@ -768,12 +771,12 @@ h5.phi-typography, .phi-typography h5 {
   .phi-markdown-figure--float-start {
     float: inline-start;
     width: var(--phi-markdown-float-width);
-    margin-inline-end: var(--ant-margin-lg, 24px);
+    margin-inline-end: var(--phi-markdown-float-gap);
   }
 
   .phi-markdown-figure--float-end {
     float: inline-end;
     width: var(--phi-markdown-float-width);
-    margin-inline-start: var(--ant-margin-lg, 24px);
+    margin-inline-start: var(--phi-markdown-float-gap);
   }
 }
