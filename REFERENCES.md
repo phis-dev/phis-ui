@@ -149,6 +149,25 @@ For an external document:
 The same rule applies when an external document happens to originate from a hostname also used by the
 Site. Only internally persisted trusted content may contain resolvable Phi references.
 
+## E-mail addresses in delivered pages
+
+An address a page shows is kept out of its source, for crawlers that harvest them
+(`helpers/protected-mail.ts`). The server writes it as `phi-mail:` and a scrambled hex string; the client
+writes the address back once the page is hydrated (`components/navigation/use-phi-protected-mail.tsx`).
+It is obfuscation, not secrecy: whoever runs the page sees the address.
+
+- **Where:** a `mailto:` target and an address in the text of Markdown (inline, fetched, or from a
+  Content record), a Simple Text's link target, and every Navigation entry. `PhiLink` and `PhiNavLink`
+  draw a protected target as a plain anchor without `href` until hydration, whatever `external` says.
+- **When:** on delivery only. A stored config keeps `mailto:` as written, and the Builder shows and edits
+  it as it is; Simple Text protects only in live render mode. The key is derived from the address, so a
+  server and a client render of the same value agree.
+- **Not:** the HTML Widget, which delivers its markup as written -- an author who wants an address hidden
+  there hides it. Values a Provider sends as data (a table's `email` renderer) are in the page's payload
+  anyway. Without JavaScript a protected address shows nothing.
+- **Source stays on the server:** the Markdown Widget hands the client its blocks, not `markdown` or
+  `resolvedContent`; a Widget that protects what it draws must not also send the text it drew it from.
+
 ## Validation, indexing, and failure behavior
 
 The server maintains one indexed reference projection for structured Page and Asset references across

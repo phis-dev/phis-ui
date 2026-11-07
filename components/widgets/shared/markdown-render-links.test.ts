@@ -54,3 +54,12 @@ describe("addresses in a document fetched from GitHub", () => {
     expect(blocks).toContain('"href":"https://docs.example.net/guide/CLI.md#site"');
   });
 });
+
+describe("addresses written into the text", () => {
+  it("reach the blocks protected, as link and as text", async () => {
+    const blocks = await render("https://example.org/doc.md", "Mail [us](mailto:info@phis.dev) or <sales@phis.dev>.");
+    expect(blocks).not.toContain("@phis.dev");
+    expect(blocks).toContain('"href":"phi-mail:');
+    expect(blocks).toContain('"kind":"mail_text"');
+  });
+});

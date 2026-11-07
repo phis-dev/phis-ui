@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useMemo, type CSSProperties, type ReactNode } from "react";
 
+import { PhiProtectedMailText } from "../../navigation/use-phi-protected-mail";
 import { PhiLink } from "../../navigation/phi-link";
 import type { PhiClientBlockBaseProps, PhiNoLabels } from "../../../types";
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
@@ -27,6 +28,8 @@ import {
 
 export type PhiMarkdownInline =
   | { kind: "text"; text: string }
+  /** An address in the text, protected (`helpers/protected-mail.ts`) and written in once mounted. */
+  | { kind: "mail_text"; token: string }
   | { kind: "strong"; children: PhiMarkdownInline[] }
   | { kind: "emphasis"; children: PhiMarkdownInline[] }
   | { kind: "delete"; children: PhiMarkdownInline[] }
@@ -141,6 +144,8 @@ function renderInlineNodes(inlines: PhiMarkdownInline[]): ReactNode[] {
     switch (inline.kind) {
       case "text":
         return <Fragment key={key}>{inline.text}</Fragment>;
+      case "mail_text":
+        return <PhiProtectedMailText key={key} token={inline.token} />;
       case "strong":
         return <strong key={key}>{renderInlineNodes(inline.children)}</strong>;
       case "emphasis":

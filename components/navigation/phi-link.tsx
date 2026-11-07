@@ -4,7 +4,9 @@ import { useMemo, useState } from "react";
 import type { CSSProperties, MouseEventHandler, ReactNode } from "react";
 import Link from "next/link";
 import { isPhiExternalHref } from "../../helpers/external-href";
+import { isPhiProtectedMail } from "../../helpers/protected-mail";
 import { usePhiConfig } from "../root/phi-config-provider";
+import { usePhiRevealedHref } from "./use-phi-protected-mail";
 
 export type PhiLinkProps = {
   href: string;
@@ -39,7 +41,10 @@ export function PhiLink({
   const { token } = usePhiConfig();
   const [hovered, setHovered] = useState(false);
   const [active, setActive] = useState(false);
-  const useAnchor = external ?? isPhiExternalHref(href);
+  // A protected address is never a route, whatever the caller says it is.
+  const useAnchor = isPhiProtectedMail(href) || (external ?? isPhiExternalHref(href));
+  // A protected address (`helpers/protected-mail.ts`) is written into the anchor once mounted.
+  const anchorHref = usePhiRevealedHref(href);
 
   const linkStyle = useMemo<CSSProperties>(
     () => ({
@@ -70,7 +75,7 @@ export function PhiLink({
   if (useAnchor) {
     return (
       <a
-        href={href}
+        href={anchorHref}
         target={newTab ? "_blank" : undefined}
         rel={newTab ? "noreferrer noopener" : undefined}
         className={className}

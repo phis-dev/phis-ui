@@ -14,6 +14,7 @@ import { resolvePhiImagePresentation } from "../../media/image-presentation";
 import { isPhiMediaSvgContentType } from "../../../constants/media";
 import {
   readPhiMarkdownImageAddress,
+  resolvePhiMarkdownImageAspectRatioCss,
   resolvePhiMarkdownImageAspectRatioValue,
   type PhiMarkdownFigureFloat,
   type PhiMarkdownImageAspectRatio,
@@ -21,6 +22,7 @@ import {
 import { resolvePhiCodeLanguage, tokenizePhiCode } from "./markdown-code-tokens";
 import { readPhiInternalReference, type PhiPageReference } from "../../../types/references";
 import { resolvePhiWidgetInternalReferences } from "../helpers/internal-reference-resolver.server";
+import { protectPhiMailHref, splitPhiMailAddresses } from "../../../helpers/protected-mail";
 import { resolvePhiWidgetSourceUrl } from "../helpers/widget-source-url";
 
 type MarkdownNode = {
@@ -314,7 +316,7 @@ function buildMarkdownFigure(
     blurDataUrl: asset.blurDataUrl,
     // Only a public Asset resolves here; the optimiser takes every original that is not an SVG.
     optimizable: !isPhiMediaSvgContentType(asset.contentType),
-    aspectRatio: frameAspectRatio == null ? null : aspectRatio.replace(":", " / "),
+    aspectRatio: resolvePhiMarkdownImageAspectRatioCss(aspectRatio),
     float: source.float ?? defaults.float ?? "none",
   };
 }
@@ -814,7 +816,11 @@ async function resolveMarkdownRenderDataFromSource(
     headingOffset,
   };
   const inlineMap = await buildMarkdownInlineMap(tree, translate, sourceLocale, runtime?.locale.current);
-  const blocks = promoteMarkdownFigures(mapBlockNodes(tree.children, context, inlineMap), figures, imageDefaults);
+  const blocks = promoteMarkdownFigures(
+    protectMarkdownMail(mapBlockNodes(tree.children, context, inlineMap)),
+    figures,
+    imageDefaults,
+  );
 
   return { blocks, headings: context.headings };
 }
@@ -828,4 +834,49 @@ function readMarkdownTableAlign(value: string | null | undefined): PhiMarkdownTa
     return null;
   }
   throw new Error(`Unknown Markdown table alignment "${value}".`);
+}
+
+/*
+ * Every address in the finished blocks, protected (`helpers/protected-mail.ts`): a `mailto:` link's
+ * target, and an address written as text, a link's own label among them. Once, over the blocks, because
+ * they are built along two roads -- straight from the tree and back out of a translation.
+ */
+function protectMarkdownMail(blocks: PhiMarkdownBlock[]): PhiMarkdownBlock[] {
+  return blocks.map((block): PhiMarkdownBlock => {
+    switch (block.kind) {
+      case "heading":
+      case "paragraph":
+        return { ...block, inlines: protectMarkdownInlineMail(block.inlines) };
+      case "blockquote":
+        return { ...block, children: protectMarkdownMail(block.children) };
+      case "list":
+        return { ...block, items: block.items.map(protectMarkdownMail) };
+      case "table":
+        return {
+          ...block,
+          header: block.header.map(protectMarkdownInlineMail),
+          rows: block.rows.map((cells) => cells.map(protectMarkdownInlineMail)),
+        };
+      default:
+        return block;
+    }
+  });
+}
+
+function protectMarkdownInlineMail(inlines: PhiMarkdownInline[]): PhiMarkdownInline[] {
+  return inlines.flatMap((inline): PhiMarkdownInline[] => {
+    switch (inline.kind) {
+      case "text":
+        return splitPhiMailAddresses(inline.text).map((segment): PhiMarkdownInline =>
+          segment.kind === "mail" ? { kind: "mail_text", token: segment.token } : { kind: "text", text: segment.text });
+      case "link":
+        return [{ ...inline, href: protectPhiMailHref(inline.href), children: protectMarkdownInlineMail(inline.children) }];
+      case "strong":
+      case "emphasis":
+      case "delete":
+        return [{ ...inline, children: protectMarkdownInlineMail(inline.children) }];
+      default:
+        return [inline];
+    }
+  });
 }

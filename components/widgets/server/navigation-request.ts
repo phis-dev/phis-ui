@@ -9,6 +9,7 @@ import { phiRuntime } from "../../../server-helpers/phi-runtime";
 import { resolvePhiCmsReviewParams } from "../../../server-helpers/cms-review";
 import type { PhiBlockRuntime } from "../../../types";
 import type { PhiNavItem } from "../../shell/shell-types";
+import { protectPhiMailHref } from "../../../helpers/protected-mail";
 import {
   resolvePhiDescriptorNavigationItems,
 } from "../navigation-descriptor-resolver.server";
@@ -58,5 +59,17 @@ export async function resolvePhiNavigationItems(
   if (navRevision != null && overlay == null) {
     return null;
   }
-  return (await resolvePhiDescriptorNavigationItems(runtime, navKey, overlay)) ?? [];
+  return protectPhiNavMailHrefs((await resolvePhiDescriptorNavigationItems(runtime, navKey, overlay)) ?? []);
+}
+
+/*
+ * An entry that writes to somebody leaves here protected (`helpers/protected-mail.ts`): the items go to
+ * the client as props, and a `mailto:` in them stood in the page's payload for any crawler to read.
+ */
+function protectPhiNavMailHrefs(items: PhiNavItem[]): PhiNavItem[] {
+  return items.map((item) => ({
+    ...item,
+    ...(item.href ? { href: protectPhiMailHref(item.href) } : {}),
+    ...(item.children ? { children: protectPhiNavMailHrefs(item.children) } : {}),
+  }));
 }

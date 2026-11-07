@@ -18,7 +18,8 @@ function inlineText(inlines: readonly PhiMarkdownInline[]): string {
   return inlines.map((inline) => {
     if (inline.kind === "text" || inline.kind === "inline_code") return inline.text;
     if (inline.kind === "break") return " ";
-    if (inline.kind === "image") return "";
+    // A teaser is plain text, so a protected address (`helpers/protected-mail.ts`) is left out of it.
+    if (inline.kind === "image" || inline.kind === "mail_text") return "";
     return inlineText(inline.children);
   }).join("");
 }

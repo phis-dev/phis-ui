@@ -1,3 +1,3 @@
 export function isPhiExternalHref(href: string) {
-  return /^(https?:)?\/\//.test(href) || href.startsWith("mailto:") || href.startsWith("tel:");
+  return /^(https?:)?\/\//.test(href) || href.startsWith("mailto:") || href.startsWith("tel:") || href.startsWith("phi-mail:");
 }

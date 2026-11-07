@@ -3,6 +3,7 @@ import type { PhiTextSource } from "../../../../../helpers/text-source";
 import { maskPhiTextPlaceholders, resolvePhiTextPlaceholders } from "../../../../../helpers/text-placeholders";
 import type { PhiCmsInstanceId, PhiRenderableBlockBase, PhiServerBlockBaseProps } from "../../../../../types";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
+import { protectPhiMailHref } from "../../../../../helpers/protected-mail";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import type { PhiSimpleTextWidgetClientConfig } from "./client";
 
@@ -59,8 +60,17 @@ export async function PhiSimpleTextWidget({
       componentProps={{
         blockId,
         labels: { text },
-        config: config satisfies PhiSimpleTextWidgetClientConfig | undefined,
+        config: protectPhiSimpleTextMailHref(config) satisfies PhiSimpleTextWidgetClientConfig | undefined,
       }}
     />
   );
+}
+
+/*
+ * Live, a `mailto:` target leaves protected (`helpers/protected-mail.ts`). In the Builder the config is
+ * the operator's to edit and goes as it is.
+ */
+function protectPhiSimpleTextMailHref(config: PhiSimpleTextWidgetConfig | undefined) {
+  if (!config?.href || (config.renderMode != null && config.renderMode !== "live")) return config;
+  return { ...config, href: protectPhiMailHref(config.href) };
 }
