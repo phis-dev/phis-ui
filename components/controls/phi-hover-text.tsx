@@ -11,7 +11,7 @@ import { lazy, Suspense, type ReactNode } from "react";
  * text, whether it had one or not. The Theme mode switch on the Landing has no label and no description,
  * and still preloaded the Tooltip, Typography and the Form library through `PhiLabeledControl`.
  */
-export const PhiLazyTooltip = lazy(() => import("antd/es/tooltip"));
+const PhiLazyTooltip = lazy(() => import("antd/es/tooltip"));
 
 /**
  * A hover text around one element, for the Controls in this directory.
