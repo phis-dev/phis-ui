@@ -78,17 +78,20 @@ export async function PhiDescriptionWidget({
   translate,
 }: PhiDescriptionWidgetProps & { translate: boolean }) {
   const locale = runtime?.locale.current;
-  const eyebrow = await translateLabel(locale, labels.eyebrow ?? config?.eyebrow, runtime, translate, config?.textSource);
-  const title = await translateLabel(locale, labels.title ?? config?.title, runtime, translate, config?.textSource);
-  const description = await translateLabel(locale, labels.description ?? config?.description, runtime, translate, config?.textSource);
-  const asideTitle = await translateLabel(locale, labels.asideTitle ?? config?.asideTitle, runtime, translate, config?.textSource);
-  const asideEntries = await Promise.all(
-    (labels.asideItems ?? config?.asideItems ?? []).map(async (entry) => ({
-      ...entry,
-      text: await translateLabel(locale, entry.text, runtime, translate, config?.textSource, entry.values),
-    })),
-  );
-  const footer = await translateLabel(locale, labels.footer ?? config?.footer, runtime, translate, config?.textSource);
+  // Six translations of one Widget, asked together rather than one after another.
+  const [eyebrow, title, description, asideTitle, footer, asideEntries] = await Promise.all([
+    translateLabel(locale, labels.eyebrow ?? config?.eyebrow, runtime, translate, config?.textSource),
+    translateLabel(locale, labels.title ?? config?.title, runtime, translate, config?.textSource),
+    translateLabel(locale, labels.description ?? config?.description, runtime, translate, config?.textSource),
+    translateLabel(locale, labels.asideTitle ?? config?.asideTitle, runtime, translate, config?.textSource),
+    translateLabel(locale, labels.footer ?? config?.footer, runtime, translate, config?.textSource),
+    Promise.all(
+      (labels.asideItems ?? config?.asideItems ?? []).map(async (entry) => ({
+        ...entry,
+        text: await translateLabel(locale, entry.text, runtime, translate, config?.textSource, entry.values),
+      })),
+    ),
+  ]);
   const resolvedAsideItems = buildPhiBulletListTree(
     asideEntries.filter((entry) => Boolean(entry.text)),
     (entry) => entry.text,

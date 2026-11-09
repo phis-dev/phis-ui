@@ -92,6 +92,13 @@ describe("buildPhiSiteProxyHandlers", () => {
     expect(await loadsAround(() => handlers.GET(request, context))).toBe(1);
   });
 
+  it.each([["user-state"], ["threads", "42", "messages"], ["account", "avatar"]])(
+    "keeps the read cache for a personal write under %s",
+    async (...path) => {
+      expect(await loadsAround(() => handlers.POST(request, at(...path)))).toBe(1);
+    },
+  );
+
   it("refuses a CMS write the Widgets cannot read before it reaches Core", async () => {
     writeCheck.refusal = new Response("invalid-config", { status: 422 });
     const response = await handlers.POST(request, context);

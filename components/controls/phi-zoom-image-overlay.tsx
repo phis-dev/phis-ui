@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useEffectEvent, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 
 import { usePhiConfig } from "../root/phi-config-provider";
@@ -32,19 +32,25 @@ export function PhiZoomImageOverlay({ open, src, alt, title, onClose }: PhiZoomI
   const mounted = useSyncExternalStore(subscribeNever, () => true, () => false);
   const overlayRef = useRef<HTMLDivElement | null>(null);
 
+  /*
+   * `onClose` is an event, not a dependency: a caller hands over a new closure each render, and keyed on
+   * it the effect ran again on every render of the open overlay, took the overlay itself as the element
+   * to return focus to, and so never gave focus back to the picture that was clicked.
+   */
+  const close = useEffectEvent(() => onClose());
   useEffect(() => {
     if (!open) return undefined;
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     overlayRef.current?.focus();
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") close();
     };
     document.addEventListener("keydown", closeOnEscape);
     return () => {
       document.removeEventListener("keydown", closeOnEscape);
       previousFocus?.focus();
     };
-  }, [onClose, open]);
+  }, [open]);
 
   if (!mounted || !open) return null;
 

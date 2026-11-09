@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { createContext, useContext } from "react";
+import { createContext, useContext, useMemo } from "react";
 
 export type PhiSiderContextValue = {
   collapsed: boolean;
@@ -17,7 +17,12 @@ export function PhiSiderContextProvider({
   value: PhiSiderContextValue;
   children: ReactNode;
 }) {
-  return <PhiSiderContext.Provider value={value}>{children}</PhiSiderContext.Provider>;
+  // One object while its two fields hold, whatever object the caller wrote: the readers render for a change, not for a render.
+  const held = useMemo<PhiSiderContextValue>(
+    () => ({ collapsed: value.collapsed, collapsedWidth: value.collapsedWidth }),
+    [value.collapsed, value.collapsedWidth],
+  );
+  return <PhiSiderContext.Provider value={held}>{children}</PhiSiderContext.Provider>;
 }
 
 export function usePhiSiderContext() {

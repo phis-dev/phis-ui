@@ -78,6 +78,37 @@ function findPagePathSegments(
   return null;
 }
 
+/**
+ * Every node's path, indexed by key, once per catalog array.
+ *
+ * The catalog's own walkers asked `findPhiPageNodePath` for every node they visited, each call a walk
+ * of the whole tree with a copy of the array: the Builder's page list, its storage paths and its
+ * navigation targets were quadratic in the number of Pages. The index is held on the array it was
+ * built from, so a catalog that is handed around is walked once.
+ */
+const pageNodePathIndex = new WeakMap<readonly PhiPresetPageNode[], Map<string, PhiPresetPageNode[]>>();
+
+function readPhiPageNodePath(pages: readonly PhiPresetPageNode[], targetKey: string): PhiPresetPageNode[] | null {
+  let index = pageNodePathIndex.get(pages);
+  if (!index) {
+    index = new Map();
+    const collect = (nodes: readonly PhiPresetPageNode[], prefix: PhiPresetPageNode[]) => {
+      for (const node of nodes) {
+        const path = [...prefix, node];
+        if (!index!.has(node.key)) {
+          index!.set(node.key, path);
+        }
+        if (node.children) {
+          collect(node.children, path);
+        }
+      }
+    };
+    collect(pages, []);
+    pageNodePathIndex.set(pages, index);
+  }
+  return index.get(targetKey) ?? null;
+}
+
 export function findPhiPageNodePath(
   pages: PhiPresetPageNode[],
   targetKey: string,
@@ -156,7 +187,7 @@ export function resolvePhiBuilderActivePageKey(
   pages: readonly PhiPresetPageNode[],
 ) {
   const normalizedPageKey = requestedPageKey?.trim() ?? "";
-  if (normalizedPageKey && findPhiPageNodePath([...pages], normalizedPageKey)) {
+  if (normalizedPageKey && readPhiPageNodePath(pages, normalizedPageKey)) {
     return normalizedPageKey;
   }
 
@@ -171,14 +202,14 @@ export function resolvePhiBuilderPagePresetSource(
   pageKey: string,
   pages: readonly PhiPresetPageNode[],
 ) {
-  return findPhiPageNodePath([...pages], pageKey)?.at(-1)?.sourcePreset ?? null;
+  return readPhiPageNodePath(pages, pageKey)?.at(-1)?.sourcePreset ?? null;
 }
 
 export function resolvePhiBuilderPageDefaultFlags(
   pageKey: string,
   pages: readonly PhiPresetPageNode[],
 ) {
-  return findPhiPageNodePath([...pages], pageKey)?.at(-1)?.defaultPageFlags ?? 0;
+  return readPhiPageNodePath(pages, pageKey)?.at(-1)?.defaultPageFlags ?? 0;
 }
 
 export function normalizePhiBuilderCmsCatalogPath(value: string) {
@@ -225,7 +256,7 @@ export function resolvePhiBuilderCmsStoragePathForCatalog(
   pageKey: string,
   pages: readonly PhiPresetPageNode[],
 ) {
-  const node = findPhiPageNodePath([...pages], pageKey)?.at(-1);
+  const node = readPhiPageNodePath(pages, pageKey)?.at(-1);
   if (!node) {
     throw new Error(`Page "${area}:${pageKey}" is not present in the active Builder Page catalog.`);
   }
@@ -250,7 +281,7 @@ export function findPhiBuilderCatalogPathForCatalog(
   pageKey: string,
   pages: readonly PhiPresetPageNode[],
 ) {
-  return findPhiPageNodePath([...pages], pageKey)
+  return readPhiPageNodePath(pages, pageKey)
     ? resolvePhiBuilderCatalogPathForCatalog(area, pageKey, pages)
     : null;
 }
@@ -261,7 +292,7 @@ export function resolvePhiBuilderCatalogPathForCatalog(
   pageKey: string,
   pages: readonly PhiPresetPageNode[],
 ) {
-  const node = findPhiPageNodePath([...pages], pageKey)?.at(-1);
+  const node = readPhiPageNodePath(pages, pageKey)?.at(-1);
   if (node?.catalogPath) {
     return normalizePhiBuilderCmsCatalogPath(node.catalogPath);
   }

@@ -220,12 +220,18 @@ export function buildPhiBuilderNavigationOverlay(
 
 export async function savePhiBuilderNavigationDraft(navigation: PhiBuilderNavigationTree) {
   const normalizedKey = requirePhiBuilderNavigationScopeKey(navigation.key);
-  const persistedDraft = await loadPhiBuilderNavigationOverlay(normalizedKey, "draft");
-  const source = persistedDraft ?? await loadPhiBuilderNavigationOverlay(normalizedKey, "published");
-  const requestedNextNodeSequence = Math.max(
-    navigation.draftAllocation?.nextNodeSequence ?? 1,
-    source?.nextNodeSequence ?? 1,
-  );
+  /*
+   * The next node sequence has to be at least what is stored. The allocation the client holds came from
+   * the server's last answer and is already that; only a tree with no allocation -- never saved from
+   * this client -- asks what the draft or the published overlay stands at. Two reads before every save
+   * were the price of asking regardless.
+   */
+  let requestedNextNodeSequence = navigation.draftAllocation?.nextNodeSequence ?? null;
+  if (requestedNextNodeSequence == null) {
+    const persistedDraft = await loadPhiBuilderNavigationOverlay(normalizedKey, "draft");
+    const source = persistedDraft ?? await loadPhiBuilderNavigationOverlay(normalizedKey, "published");
+    requestedNextNodeSequence = Math.max(1, source?.nextNodeSequence ?? 1);
+  }
   const response = await fetch("/api/site/cms/navigation", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

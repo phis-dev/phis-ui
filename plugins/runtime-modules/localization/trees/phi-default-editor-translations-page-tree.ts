@@ -38,16 +38,12 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
-  const labels = await getPhiEditorTranslationsPageLabels({
+  const translator = {
     apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
     internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
-  });
-  const widgetLabels = await getPhiEditorTranslationsWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  });
+  };
+  const [labels, widgetLabels] = await Promise.all([getPhiEditorTranslationsPageLabels(translator), getPhiEditorTranslationsWidgetLabels(translator)]);
 
   const scaffold = buildPhiBasePageContentScaffold({
     page,

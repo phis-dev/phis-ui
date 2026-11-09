@@ -2037,12 +2037,14 @@ export async function composePhiCmsActiveAreaOverlayPresets({
   const contentWidgets = [...tree.contentWidgets];
   let controllerSettings = tree.controllerSettings ?? [];
 
-  for (const descriptor of descriptors) {
-    const contribution = await descriptor.loadTree({
-      page,
-      runtime: resolveTargetRuntime(runtime, area),
-      catalog,
-    });
+  // Loaded side by side -- each contribution is a Core round trip of its own -- and merged in
+  // declaration order, which is what the ids and the controller settings below depend on.
+  const targetRuntime = resolveTargetRuntime(runtime, area);
+  const contributions = await Promise.all(descriptors.map((descriptor) =>
+    descriptor.loadTree({ page, runtime: targetRuntime, catalog }),
+  ));
+  for (const [index, descriptor] of descriptors.entries()) {
+    const contribution = contributions[index]!;
     assertPhiCmsAreaOverlayTree(descriptor, contribution, page);
     for (const node of [
       ...contribution.overlays,

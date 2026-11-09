@@ -56,15 +56,26 @@ function readContextOptions(value: unknown) {
   };
 }
 
-async function loadPlatformLocales() {
-  const response = await fetch("/api/site/admin/locales?page=1&pageSize=1", {
-    cache: "no-store",
-    credentials: "include",
-    headers: { accept: "application/json" },
+/**
+ * One request for the two providers below. Each provider deduplicates its own loads, not another's, and
+ * both read this endpoint when a page with both controls builds; the one in flight answers both.
+ */
+let platformLocalesInFlight: Promise<unknown> | null = null;
+
+function loadPlatformLocales() {
+  platformLocalesInFlight ??= (async () => {
+    const response = await fetch("/api/site/admin/locales?page=1&pageSize=1", {
+      cache: "no-store",
+      credentials: "include",
+      headers: { accept: "application/json" },
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) throw new Error("Failed to load available locales.");
+    return payload;
+  })().finally(() => {
+    platformLocalesInFlight = null;
   });
-  const payload = await response.json().catch(() => null);
-  if (!response.ok) throw new Error("Failed to load available locales.");
-  return payload;
+  return platformLocalesInFlight;
 }
 
 function resolveAdminSiteLocales(context: PhiControlOptionsProviderContext) {

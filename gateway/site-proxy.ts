@@ -86,9 +86,22 @@ async function buildLocallyAnsweredHandlers(
 }
 
 /**
+ * Writes that are one person's own and change nothing the read cache holds. The cache keeps the Site's
+ * config, Navigation overlays, capabilities and Area doors -- what a publish changes. A Dashboard card
+ * dismissed, a message written, an avatar changed are a person's business, and emptying the Site's
+ * cache for each of them left it cold for everybody as soon as a few people were signed in.
+ */
+const PERSONAL_WRITE_SEGMENTS = new Set(["user-state", "threads", "account"]);
+
+function isPersonalWrite(path: readonly string[] | undefined) {
+  return path?.[0] !== undefined && PERSONAL_WRITE_SEGMENTS.has(path[0]);
+}
+
+/**
  * A write Core accepted may have changed what this Site process keeps in its read cache. Which writes do
  * is not worth listing: config and Navigation carry the theme draft, settings, logo revision and Page
- * paths, and a list would fall behind the next endpoint. Every accepted write clears it.
+ * paths, and a list would fall behind the next endpoint. Every accepted write clears it, except the
+ * personal ones named above, which cannot have.
  *
  * Translations are not cleared here. The next Site config read carries their change markers, and
  * helpers/translation-cache.ts empties only a store whose marker moved.
@@ -96,7 +109,7 @@ async function buildLocallyAnsweredHandlers(
 function clearingReadCacheOnWrite(handler: PhiNextProxyHandler): PhiNextProxyHandler {
   return async (request, context) => {
     const response = await handler(request, context);
-    if (response.ok) {
+    if (response.ok && !isPersonalWrite((await context.params).path)) {
       clearPhiSiteReadCache();
     }
     return response;

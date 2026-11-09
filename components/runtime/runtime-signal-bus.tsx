@@ -4,6 +4,7 @@ import {
   useCallback,
   useEffect,
   useEffectEvent,
+  useMemo,
 } from "react";
 
 import type {
@@ -483,6 +484,36 @@ export function usePhiSignalDispatcher(): PhiSignalDispatch {
   }, [partition]);
 }
 
+function listKey(list: readonly unknown[] | undefined) {
+  return list ? list.map(String).join("\u0001") : "";
+}
+
+/**
+ * A filter's content as one string, so that an effect can depend on what a filter says rather than on
+ * which object says it.
+ *
+ * Callers write the filter as a literal -- `{ scopes: ["page"], channels: [...], receiver }` -- and a
+ * literal is a new object every render. Keyed on the object, the subscription below was torn down and
+ * made again on every render of every Controller, and each re-subscription with a receiver flushed the
+ * partition's pending signals once more. Equality by content, decided here once, lets a caller write
+ * what it means.
+ */
+function filterKey(filter: PhiSignalFilter | null | undefined) {
+  if (filter === null) return "null";
+  if (filter === undefined) return "";
+  const context = filter.context;
+  return [
+    listKey(filter.scopes), listKey(filter.channels), listKey(filter.actions), listKey(filter.valueSchemas),
+    filter.receiver === undefined ? "" : String(filter.receiver),
+    context ? [context.siteKey, context.area, context.pageKey, context.regionKey, context.slotKey].map(String).join("\u0001") : "",
+  ].join("\u0002");
+}
+
+function receiverKey(receiver: PhiSignalAddress | readonly PhiSignalAddress[] | null | undefined) {
+  if (receiver == null) return receiver === null ? "null" : "";
+  return Array.isArray(receiver) ? `[${listKey(receiver)}]` : String(receiver);
+}
+
 export function usePhiSignalListener(
   handler: (signal: PhiSignal) => void,
   filter?: PhiSignalFilter | null,
@@ -492,11 +523,16 @@ export function usePhiSignalListener(
   const handleSignal = useEffectEvent((signal: PhiSignal) => {
     handler(signal);
   });
+  const filterContent = filterKey(filter);
+  const receiverContent = receiverKey(readyReceiver);
+  // The same filter in a new object is the same subscription (filterKey above); the keys stand for them.
+  const stableFilter = useMemo(() => filter, [filterContent]); // eslint-disable-line react-hooks/exhaustive-deps
+  const stableReceiver = useMemo(() => readyReceiver, [receiverContent]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (filter === null) {
+    if (stableFilter === null) {
       return undefined;
     }
-    return subscribePhiSignals(partition, handleSignal, filter, readyReceiver);
-  }, [filter, partition, readyReceiver]);
+    return subscribePhiSignals(partition, handleSignal, stableFilter, stableReceiver);
+  }, [stableFilter, partition, stableReceiver]);
 }

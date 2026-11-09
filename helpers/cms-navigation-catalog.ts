@@ -260,7 +260,8 @@ export function resolvePhiBuilderNavigationPageTargets(
     return index;
   };
 
-  return items.map((item) => {
+  // One index per Area for the whole tree: the recursion below shares it rather than building its own.
+  const resolve = (list: readonly PhiBuilderNavigationItem[]): PhiBuilderNavigationItem[] => list.map((item) => {
     const targetArea = item.targetArea ?? area;
     const page = item.targetReference ? pageIndex(targetArea).get(item.targetReference) : null;
     return {
@@ -271,7 +272,8 @@ export function resolvePhiBuilderNavigationPageTargets(
           : null,
         targetDeleted: page == null || page.tombstoned === true,
       } : {}),
-      children: resolvePhiBuilderNavigationPageTargets(area, item.children, pagesForArea),
+      children: resolve(item.children),
     };
   });
+  return resolve(items);
 }

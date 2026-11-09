@@ -44,16 +44,12 @@ export async function buildPhiDefaultAdminLocalesPageTree({
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
-  const labels = await getPhiAdminLocalesPageLabels({
+  const translator = {
     apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
     internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
-  });
-  const widgetLabels = await getPhiAdminLocalesWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  });
+  };
+  const [labels, widgetLabels] = await Promise.all([getPhiAdminLocalesPageLabels(translator), getPhiAdminLocalesWidgetLabels(translator)]);
 
   const scaffold = buildPhiBasePageContentScaffold({
     page,

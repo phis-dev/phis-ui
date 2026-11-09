@@ -49,16 +49,12 @@ export async function buildPhiDefaultAdminLogsPageTree({
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
-  const labels = await getPhiAdminLogsPageLabels({
+  const translator = {
     apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
     internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
-  });
-  const widgetLabels = await getPhiObservabilityLogsWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  });
+  };
+  const [labels, widgetLabels] = await Promise.all([getPhiAdminLogsPageLabels(translator), getPhiObservabilityLogsWidgetLabels(translator)]);
 
   const scaffold = buildPhiBasePageContentScaffold({
     page,

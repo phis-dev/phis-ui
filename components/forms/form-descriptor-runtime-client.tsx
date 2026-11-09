@@ -151,9 +151,10 @@ export function PhiFormDescriptorRuntimeClient({
         ? [condition.controllerAddress]
         : []),
   ), [descriptor.fields]);
+  const fieldKeys = useMemo(() => descriptor.fields.map((field) => field.key), [descriptor.fields]);
   const runtimeBinding = usePhiRuntimeFormBinding({
     formRef,
-    fieldKeys: descriptor.fields.map((field) => field.key),
+    fieldKeys,
     controllerAddress: formControllerAddress,
     scope: identity.scope ?? "page",
   });
