@@ -785,6 +785,8 @@ export async function publishPhiDeveloperBuilderModulesDraft(
   options: {
     builderPlugins: readonly PhiBuilderPluginMeta[];
     scope: { area: PhiDeveloperBuilderArea };
+    /** As on save: without it an Area with no stored revision met the 409 fallback with nothing to write. */
+    shellPresetDrafts?: Record<string, PhiDeveloperBuilderRegionDraft> | null;
   },
 ) {
   const area = options.scope.area;

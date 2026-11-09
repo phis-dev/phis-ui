@@ -344,6 +344,7 @@ export function usePhiBuilderDraftCommandController({
           {
             builderPlugins: builderModuleMetas.plugins,
             scope: { area },
+            shellPresetDrafts: shellPresetDraftsByArea[area] ?? null,
           },
         );
       }

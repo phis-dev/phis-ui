@@ -143,6 +143,11 @@ export function PhiThreadConversationWidgetClient({
   const listenRoutes = config?.signalRoutes?.listens;
   const addressedThreadId = readPhiThreadAddressId(searchParams.get("thread"));
   const [threadId, setThreadId] = useState<number | null>(addressedThreadId);
+  // What is chosen now, for an answer that arrives after the choice moved on (see `refresh`).
+  const chosenThreadId = useRef(threadId);
+  useEffect(() => {
+    chosenThreadId.current = threadId;
+  }, [threadId]);
   /*
    * What loaded, and what failed, each tagged with the conversation it belongs to.
    *
@@ -211,6 +216,14 @@ export function PhiThreadConversationWidgetClient({
    */
   const refresh = useCallback(async (id: number) => {
     const result = await fetchPhiThreadDetail(id);
+    /*
+     * Chosen A, then B before A answered: A's late answer used to replace B's conversation, which was
+     * already on screen, and B stayed in its loading state until chosen again. An answer for a
+     * conversation no longer chosen is nobody's any more.
+     */
+    if (chosenThreadId.current !== id) {
+      return;
+    }
     if (!result.ok) {
       receive(id, result);
       return;

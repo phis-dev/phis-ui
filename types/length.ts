@@ -9,6 +9,7 @@ export type PhiCssLengthPart = {
 };
 
 const CSS_LENGTH_PATTERN = /^([+-]?(?:\d+(?:\.\d+)?|\.\d+))(px|%|em|rem|vw|vh)$/;
+const BARE_NUMBER_PATTERN = /^[+-]?(?:\d+(?:\.\d+)?|\.\d+)$/;
 
 export function readPhiCssLengthPart(value: unknown): PhiCssLengthPart | null {
   if (typeof value === "number") {
@@ -20,9 +21,13 @@ export function readPhiCssLengthPart(value: unknown): PhiCssLengthPart | null {
   }
 
   const trimmed = value.trim();
-  const numeric = Number(trimmed);
-  if (Number.isFinite(numeric)) {
-    return { value: numeric, unit: "px" };
+  // `Number("")` is 0 and `Number("0x1f")` is 31: a field emptied in the Inspector read as "0px", and a
+  // hex literal as a length. Only a decimal, with or without a unit, is one.
+  if (!trimmed) {
+    return null;
+  }
+  if (BARE_NUMBER_PATTERN.test(trimmed)) {
+    return { value: Number(trimmed), unit: "px" };
   }
 
   const match = CSS_LENGTH_PATTERN.exec(trimmed);

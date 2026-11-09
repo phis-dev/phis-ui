@@ -55,24 +55,22 @@ export {
   type PhiCmsThemePresetDescriptor,
   type PhiRuntimeModuleId,
 } from "./types/cms-module-descriptors";
-export type {
+export {
   expandPhiBorderRadiusConfig,
   mergePhiBorderWidgetConfig,
   mergePhiCmsConfigValues,
   mergePhiPaddingWidgetConfig,
   normalizePhiPaddingWidgetConfig,
+} from "./types/cms-config";
+export type {
   PhiCmsBorderWidgetConfig,
   PhiCmsPaddingWidgetConfig,
   PhiCmsPluginConfigBase,
   PhiCmsRenderableBlockConfigBase,
 } from "./types/cms-config";
-export type { readPhiCmsBorderWidgetConfig } from "./types/cms-border-config";
-export type {
-  PHI_CMS_BORDER_SOURCES,
-  PhiCmsBorderSource,
-  readPhiCmsBorderSource,
-  resolvePhiCmsBorderSource,
-} from "./types/cms-border-source";
+export { readPhiCmsBorderWidgetConfig } from "./types/cms-border-config";
+export { PHI_CMS_BORDER_SOURCES, readPhiCmsBorderSource, resolvePhiCmsBorderSource } from "./types/cms-border-source";
+export type { PhiCmsBorderSource } from "./types/cms-border-source";
 export type * from "./types/renderable-block";
 export * from "./types/layout-style";
 export * from "./types/control";
