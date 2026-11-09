@@ -37,18 +37,22 @@ no results Page; a Search Box placed there sends its query to the Public one.
 - When a Site process first sees the Site's read marker, and whenever it moves -- which a publish does.
   A burst of publishes is one run; a marker that moves during a run queues one more.
 - Only the sets whose fingerprint phis does not hold: the fingerprint names the live revisions, the Area
-  preset, the active Modules, the Site's locales and the extraction format, so a publish, an unpublish,
-  a path change, a Module switched on or off, a language added, or a new version of this package
-  rewrites the set, and nothing else does. Several processes noticing one publish produce one write.
+  preset, the active Modules, the Site's locales, the extraction format, the Site's read marker and its
+  translation markers, so a publish, an unpublish, a path change, a Module switched on or off, a
+  language added, published content a Widget is bound to, a corrected translation, or a new version of
+  this package rewrites the set, and nothing else does. Several processes noticing one publish produce
+  one write.
 - An Area is indexed by the process that hosts it: the Area host registers its Bridge when it is created
   (`next/areas/public.ts`, `next/areas/app.ts`).
 
 ## What a Page contributes
 
-Its title and description, and every Widget's `searchText`, in tree order. A Page that resolves to
-nothing, forwards, is `NoIndex`, or needs more than the reader has is not written. A Widget that fails
-to answer costs the Page its words and is logged; a Page that fails to resolve is logged and the rest of
-the set is written.
+Its title and description, and every Widget's `searchText`, in tree order -- of the Widgets the reader
+of that set would see: a Layout or Widget whose access policy is narrower than the Page's is filtered
+out as the live render filters it, so nothing a reader cannot see reaches that reader's index. A Page
+that resolves to nothing, forwards, is `NoIndex`, or needs more than the reader has is not written. A
+Widget that fails to answer costs the Page its words and is logged; a Page that fails to resolve is
+logged and the rest of the set is written.
 
 ## Not in v1
 

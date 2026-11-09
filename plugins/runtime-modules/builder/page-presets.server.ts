@@ -543,7 +543,6 @@ async function buildPageMetaForScope(
     };
   }
 
-
   if (resolvedPage?.page?.pageMeta) {
     return {
       title: resolvedPage.page.pageMeta.title?.value ?? null,
@@ -601,41 +600,4 @@ export const buildPhiBuilderPageMetaForScope = cache(async function buildPhiBuil
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
 ): Promise<PhiBuilderPageMeta> {
   return buildPageMetaForScope(runtime, area, pageKey, runtimeModuleCatalog);
-});
-
-export const buildPhiBuilderPagePresetDrafts = cache(async function buildPhiBuilderPagePresetDrafts(
-  runtime: PhiBlockRuntime,
-  area: PhiDeveloperBuilderArea,
-  pageKey: string,
-  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
-): Promise<PhiBuilderCurrentPageDrafts> {
-  const presetResolution = await resolvePhiRegistryPresetPageBinding({
-    runtime,
-    runtimeModuleCatalog,
-    area,
-    pageKey,
-  });
-  const presetTree = presetResolution
-    ? await buildPhiRegistryPresetPageTree({
-        runtime,
-        runtimeModuleCatalog,
-        binding: presetResolution.binding,
-        activeModuleKeys: presetResolution.activeModuleKeys,
-        path: resolvePresetFetchPath(area, presetResolution.binding.descriptor.path),
-      })
-    : null;
-
-  return {
-    area,
-    pageKey,
-    drafts: presetTree
-      ? await buildPhiProjectedBuilderRegionDrafts(
-          runtime,
-          presetTree,
-          area,
-          pageKey,
-          PHI_BUILDER_PAGE_REGION_KEYS,
-        )
-      : {},
-  };
 });

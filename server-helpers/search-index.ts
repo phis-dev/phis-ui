@@ -7,8 +7,13 @@ import { PHI_SEARCH_MAX_DOCUMENTS, type PhiSearchDocument } from "@phis/contract
 import { resolvePhiCmsPageRedirect } from "../components/cms/phi-cms-page-redirect";
 import type { PhiCmsAreaKey } from "../constants/cms-areas";
 import { getSiteAreaWithPublishedPages } from "../gateway/site-area";
+import { getResolvedSiteConfig } from "../gateway/site-config";
 import { onPhiSiteReadMarker } from "../gateway/site-read-marker-listeners";
 import { fetchPhiSiteSearchIndexStates, putPhiSiteSearchIndexSet } from "../gateway/site-search";
+import {
+  buildPhiRuntimeModuleAccessRegistry,
+  filterPhiCmsRenderableTreeForViewer,
+} from "../helpers/cms-access-policy";
 import { readPhiAreaLandingSelection, readPhiAreaPublicRoutePaths } from "../helpers/cms-area-config";
 import { collectPhiSitemapCandidates } from "../helpers/phi-seo";
 import {
@@ -59,6 +64,8 @@ const PHI_SEARCH_INDEX_DEBOUNCE_MS = 2_000;
  * Site on its next start, which the published revisions alone would not do.
  */
 const PHI_SEARCH_INDEX_FORMAT = 2;
+
+type PhiSearchAccessRegistry = ReturnType<typeof buildPhiRuntimeModuleAccessRegistry>;
 
 type PhiSearchIndexRegistry = {
   bridges: Map<PhiSearchIndexArea, PhiCmsSiteBridge>;
@@ -202,6 +209,8 @@ async function indexArea({
 
   // The Site's languages and its server, read once as the anonymous reader; the locale is per set.
   const anonymous = await loadPhiSiteRequestContext(siteKey, "", "", apiBaseUrl, internalToken);
+  // The Site config's change markers, from the same answer the context above was built from.
+  const { readMarker, translationMarkers } = await getResolvedSiteConfig({ apiBaseUrl, internalToken, siteKey });
   const locales = anonymous.site.availableLocales.map((option) => option.code);
   const { area: areaPreset, publishedPages } = await getSiteAreaWithPublishedPages({
     apiBaseUrl,
@@ -228,6 +237,13 @@ async function indexArea({
     moduleRoutes: [...routeTable.exactByPath].map(([path, descriptor]) => [path, descriptor] as const),
     publishedPages,
   });
+  /*
+   * The read marker and the translation markers are in here because what a Page says is not only its
+   * structure: a Widget bound to content reads the content's published version, and every text is
+   * translated. Publishing content moves the read marker (the Site's publish triggers), correcting a
+   * translation moves a translation marker, and without them here either left the old words in the
+   * index. The price is a run per published change, which is what SEARCH.md promises.
+   */
   const fingerprint = createHash("sha256").update(JSON.stringify({
     format: PHI_SEARCH_INDEX_FORMAT,
     area,
@@ -235,6 +251,8 @@ async function indexArea({
     areaPreset: areaPreset?.preset ?? null,
     activeModuleIds: [...activeModuleIds].sort(),
     locales,
+    readMarker,
+    translationMarkers,
   })).digest("hex");
 
   // The Area's Module scope as the live render resolves it: the preset's selection, the locked ones implied.
@@ -244,6 +262,8 @@ async function indexArea({
     areaPreset: areaPreset?.preset ?? null,
     serverCapabilities: anonymous.serverCapabilities,
   });
+  // The same access registry the live render filters a Page's tree with (phi-cms-page-render-scope.tsx).
+  const accessRegistry = buildPhiRuntimeModuleAccessRegistry(moduleSet);
   const plugins = new Map<string, Promise<PhiCmsRuntimeWidgetPlugin<unknown> | null>>();
   const loadPlugin = (type: string) => {
     let pending = plugins.get(type);
@@ -268,7 +288,7 @@ async function indexArea({
       await loadPhiSiteRequestContext(siteKey, locale, "", apiBaseUrl, internalToken),
       area,
     );
-    const documents = await readDocuments({ bridge, area, locale, context, candidates, loadPlugin });
+    const documents = await readDocuments({ bridge, area, locale, context, candidates, loadPlugin, accessRegistry });
     const answer = await putPhiSiteSearchIndexSet({
       ...credentials,
       area,
@@ -293,6 +313,7 @@ async function readDocuments({
   context,
   candidates,
   loadPlugin,
+  accessRegistry,
 }: {
   bridge: PhiCmsSiteBridge;
   area: PhiSearchIndexArea;
@@ -300,6 +321,7 @@ async function readDocuments({
   context: PhiSiteRequestContext;
   candidates: readonly { path: string }[];
   loadPlugin: (type: string) => Promise<PhiCmsRuntimeWidgetPlugin<unknown> | null>;
+  accessRegistry: PhiSearchAccessRegistry;
 }): Promise<PhiSearchDocument[]> {
   const documents = new Array<PhiSearchDocument | null>(candidates.length).fill(null);
   let next = 0;
@@ -308,7 +330,7 @@ async function readDocuments({
       const index = next++;
       const path = candidates[index]!.path;
       try {
-        documents[index] = await readDocument({ bridge, area, locale, context, path, loadPlugin });
+        documents[index] = await readDocument({ bridge, area, locale, context, path, loadPlugin, accessRegistry });
       } catch (error) {
         console.error(`[phis-ui] The search index could not read ${area}:${path} (${locale}).`, error);
       }
@@ -323,7 +345,9 @@ async function readDocuments({
 /**
  * One Page as a document, or `null` where a reader of this Area would not get one: nothing resolves
  * there, it forwards, it asked to stay out of the index, or its access policy is narrower than the
- * reader's. The words are the Page's title and description and every Widget's own answer, in tree order.
+ * reader's. The words are the Page's title and description and every Widget's own answer, in tree order
+ * -- of the Widgets this reader would see: a Layout or Widget with a narrower policy than the Page's is
+ * left out here as the live render leaves it out, so its words never reach a reader it is hidden from.
  */
 async function readDocument({
   bridge,
@@ -332,6 +356,7 @@ async function readDocument({
   context,
   path,
   loadPlugin,
+  accessRegistry,
 }: {
   bridge: PhiCmsSiteBridge;
   area: PhiCmsAreaKey;
@@ -339,6 +364,7 @@ async function readDocument({
   context: PhiSiteRequestContext;
   path: string;
   loadPlugin: (type: string) => Promise<PhiCmsRuntimeWidgetPlugin<unknown> | null>;
+  accessRegistry: PhiSearchAccessRegistry;
 }): Promise<PhiSearchDocument | null> {
   const resolved = await resolvePhiCmsLookup({
     bridge,
@@ -361,9 +387,14 @@ async function readDocument({
    * timer after a publish. Without this scope every Widget that translates fails and a Page is indexed
    * by title and description alone, which is what the first production index was.
    */
+  const visible = filterPhiCmsRenderableTreeForViewer({
+    tree: resolved.page,
+    viewer: resolved.runtime.viewer,
+    registry: accessRegistry,
+  });
   const lines = await runWithPhiRequestRuntime(resolved.runtime, async () => {
     const collected: string[] = [];
-    for (const widget of resolved.page.contentWidgets) {
+    for (const widget of visible.contentWidgets) {
       const plugin = await loadPlugin(widget.widgetType);
       if (!plugin?.searchText) continue;
       try {

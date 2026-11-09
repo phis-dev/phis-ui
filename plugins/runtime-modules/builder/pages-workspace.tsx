@@ -4,7 +4,6 @@ import { PHI_BUILDER_PREVIEW_SEARCH_PARAM, type PhiBuilderPreviewRegionDraft } f
 import { loadPhiBuilderPreviewSnapshot } from "./preview-store";
 import {
   buildPhiBuilderPagesDraftsByScope,
-  buildPhiBuilderPagePresetDrafts,
   buildPhiBuilderPageMetaForScope,
   resolvePhiBuilderCurrentPageScope,
 } from "./page-presets.server";
@@ -53,12 +52,6 @@ export async function PhiDeveloperBuilderPagesWorkspaceWidget({
     previewPageKey,
     registry.runtimeModuleCatalog,
   );
-  const pagePresetDraftsPromise = buildPhiBuilderPagePresetDrafts(
-    runtime,
-    previewArea,
-    previewPageKey,
-    registry.runtimeModuleCatalog,
-  );
   const moduleIdsPromise = buildPhiBuilderRuntimeModuleIdsForArea(
     runtime,
     previewArea,
@@ -74,10 +67,9 @@ export async function PhiDeveloperBuilderPagesWorkspaceWidget({
     internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
-  const [pageDraftsByScope, pageMeta, pagePresetDrafts, moduleIds, chromeLabels, regionLabels] = await Promise.all([
+  const [pageDraftsByScope, pageMeta, moduleIds, chromeLabels, regionLabels] = await Promise.all([
     pageDraftsByScopePromise,
     pageMetaPromise,
-    pagePresetDraftsPromise,
     moduleIdsPromise,
     labelsPromise,
     regionLabelsPromise,
@@ -130,7 +122,6 @@ export async function PhiDeveloperBuilderPagesWorkspaceWidget({
       >
         <PhiDeveloperBuilderPagesWorkspaceWidgetClient
           pageDraftsByScope={pageDraftsByScope}
-          pagePresetDrafts={pagePresetDrafts.drafts}
           pageMeta={pageMeta}
           pageMetaArea={previewArea}
           pageMetaPageKey={previewPageKey}

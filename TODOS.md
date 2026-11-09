@@ -164,6 +164,13 @@ built. Remove an entry when it is done.
 - **Normalize Preset Content roots to vertical Flex.** Audit first-party Page presets and use a vertical
   Flex Layout as the Content Region root, keeping another root only where the Page has a semantic reason.
   The legacy Content Layout path is still registered.
+- **Dashboard Cards hint with the browser's `title`, not a Tooltip.** On the Admin Dashboard the Cards
+  show their hints as native `title` attributes -- the browser's delayed, unstyled bubble, unreachable
+  by touch and outside the Theme. The house has a Tooltip (`PhiDescriptionTooltipIcon` and the antd
+  Tooltip behind it, inside `components/controls/`); the Cards' hints move onto it, and no Card or
+  card Control sets a native `title` on an element. Find the sites by rendering the Dashboard, not by
+  grep alone: the attribute may come from a Control's ellipsis or from antd. Noted 2026-11-09 for the
+  next release.
 ## Regions and Overlays
 
 - **Parameterized Region shape dividers.** One Region-edge contract for optional top and bottom

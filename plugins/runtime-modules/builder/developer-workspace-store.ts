@@ -55,7 +55,6 @@ function createDefaultBuilderState(): PhiDeveloperBuilderState {
     selectedRegionKey: null,
     selectedRootRegionKey: null,
     selectedLayoutAnchor: "center",
-    pagePresetDrafts: {},
     pageMetaDrafts: {},
     sidebarKey: "pages",
     pagesOpen: false,
@@ -760,18 +759,6 @@ export function mergePhiDeveloperRegionDrafts(drafts: Record<string, PhiDevelope
   });
 }
 
-export function mergePhiDeveloperPagePresetDrafts(
-  drafts: Record<string, PhiDeveloperBuilderRegionDraft>,
-) {
-  builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => ({
-    ...current,
-    pagePresetDrafts: {
-      ...current.pagePresetDrafts,
-      ...drafts,
-    },
-  }));
-}
-
 export function mergePhiDeveloperPageMetaDrafts(
   area: PhiDeveloperBuilderArea,
   drafts: Record<string, PhiDeveloperBuilderPageMetaDraft>,
@@ -890,10 +877,36 @@ function readMergedHydrationSnapshot(): PhiDeveloperBuilderWorkspaceState {
   return mergedHydrationSnapshot;
 }
 
+type SelectedSnapshot<TSelected> = {
+  source: PhiDeveloperBuilderWorkspaceState;
+  selector: (state: PhiDeveloperBuilderWorkspaceState) => TSelected;
+  selected: TSelected;
+};
+
 export function usePhiDeveloperBuilderStateValue<TSelected>(
   selector: (state: PhiDeveloperBuilderWorkspaceState) => TSelected,
 ) {
-  const selectedRef = useRef<{ source: PhiDeveloperBuilderWorkspaceState; selected: TSelected } | null>(null);
+  /*
+   * Cached on the source and on the selector, as `components/state/scoped-state-store.ts` does. Keyed
+   * on the source alone, a selector that changed while the store did not -- a region key, a node id, a
+   * target Area carried in its closure -- kept answering with what the previous one selected. An
+   * inline selector is new each render, so it runs once per render; within one render every read
+   * agrees, which is what `useSyncExternalStore` needs.
+   */
+  const selectedRef = useRef<SelectedSnapshot<TSelected> | null>(null);
+  const selectedHydrationRef = useRef<SelectedSnapshot<TSelected> | null>(null);
+  const select = (
+    ref: typeof selectedRef,
+    source: PhiDeveloperBuilderWorkspaceState,
+  ) => {
+    const cached = ref.current;
+    if (cached && Object.is(cached.source, source) && cached.selector === selector) {
+      return cached.selected;
+    }
+    const selected = selector(source);
+    ref.current = { source, selector, selected };
+    return selected;
+  };
   return useSyncExternalStore(
     (listener) => {
       const unsubscribeTool = builderWorkspaceStore.subscribe(PHI_WORKSPACE_CATALOG_SCOPE, listener);
@@ -903,17 +916,8 @@ export function usePhiDeveloperBuilderStateValue<TSelected>(
         unsubscribeCatalog();
       };
     },
-    () => {
-      const source = readMergedWorkspaceSnapshot();
-      const cached = selectedRef.current;
-      if (cached && Object.is(cached.source, source)) {
-        return cached.selected;
-      }
-      const selected = selector(source);
-      selectedRef.current = { source, selected };
-      return selected;
-    },
-    () => selector(readMergedHydrationSnapshot()),
+    () => select(selectedRef, readMergedWorkspaceSnapshot()),
+    () => select(selectedHydrationRef, readMergedHydrationSnapshot()),
   );
 }
 
