@@ -9,6 +9,7 @@ import { createPhiPresetCmsInstanceIdMap } from "../../../../types/cms-instance-
 import { PHI_SIGNAL_VALUE_SCHEMAS, createPhiSignalAddress } from "../../../../types/signals";
 import { buildPhiSettingsPageShellTree } from "../../../../components/regions/presets/phi-settings-page-shell-tree";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 
 const SYNTHETIC_AUTH_SETTINGS_REGION_IDS = {
   regionContent: -482,
@@ -22,11 +23,7 @@ export async function buildPhiDefaultAdminAuthSettingsPageTree({
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
   const [labels, settings] = await Promise.all([
-    getPhiAuthAdminSettingsLabels({
-      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-      internalToken: readPhiServerApiCredentials().internalToken,
-      locale: runtime.locale.current,
-    }),
+    getPhiAuthAdminSettingsLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
     getResolvedSiteAuthAdminSettings({
       apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
       internalToken: readPhiServerApiCredentials().internalToken,

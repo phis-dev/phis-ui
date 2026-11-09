@@ -6,7 +6,7 @@ import {
 } from "../workspace-headers/config";
 import { getPhiPageTitleWidgetLabels } from "../../../../../components/widgets/label-sets/page-title";
 import type { PhiBlockRuntime } from "../../../../../types";
-import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../../components/widgets/label-sets/runtime-options";
 
 async function PhiDeveloperBuilderPagesHeaderWidgetServer({
   runtime,
@@ -17,11 +17,7 @@ async function PhiDeveloperBuilderPagesHeaderWidgetServer({
   config: PhiDeveloperBuilderPagesHeaderWidgetConfig;
   disabled?: boolean;
 }) {
-  const labels = await getPhiPageTitleWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  });
+  const labels = await getPhiPageTitleWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
 
   return (
     <PhiDeveloperBuilderPagesHeaderWidget

@@ -172,6 +172,37 @@ function resolveAreaOwnedStoragePath(path: string, areaMask: number) {
   return null;
 }
 
+/**
+ * What an Area answers under a preset: the active Module ids and the route table compiled from them.
+ *
+ * Nine readers -- the page request, the root shell, the dashboard cards, the navigation targets, the
+ * page references, the public login, the search index and two more -- each wrote these two steps out,
+ * and the two reads of the Area config between them. Stated once, the readers cannot drift in which
+ * config they compile from.
+ */
+export function resolvePhiAreaRouteScope(input: {
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog;
+  catalog: ReturnType<typeof resolvePhiCmsDescriptorCatalog>;
+  area: PhiCmsAreaKey;
+  preset: PhiResolvedCmsAreaPresetPayload["preset"] | null;
+  serverCapabilities: PhiCapabilitySnapshot | null;
+}) {
+  const activeModuleIds = resolveActivePresetModuleKeys(
+    input.runtimeModuleCatalog,
+    input.area,
+    input.preset ? { preset: input.preset } : null,
+    input.serverCapabilities,
+  );
+  const routeTable = compilePhiCmsActiveRouteTable({
+    catalog: input.catalog,
+    area: input.area,
+    activeModuleIds,
+    publicRoutePaths: readPhiAreaPublicRoutePaths(input.preset?.preset.config),
+    landingSelection: readPhiAreaLandingSelection(input.preset?.preset.config),
+  });
+  return { activeModuleIds, routeTable };
+}
+
 export function resolveActivePresetModuleKeys(
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
   area: PhiCmsAreaKey,
@@ -335,12 +366,13 @@ export async function resolvePhiCmsRequest({
   const effectiveAreaPreset = exactAreaPreset ?? localAreaPreset;
   const siteId = localAreaPreset?.preset.preset.siteId ?? resolvedRequestContext.site.id;
   const areaOwnedStoragePath = resolveAreaOwnedStoragePath(path, areaMask);
-  const activeModuleKeys = resolveActivePresetModuleKeys(
+  const { activeModuleIds: activeModuleKeys, routeTable } = resolvePhiAreaRouteScope({
     runtimeModuleCatalog,
-    requestedAreaKey,
-    effectiveAreaPreset,
-    resolvedRequestContext.serverCapabilities,
-  );
+    catalog,
+    area: requestedAreaKey,
+    preset: effectiveAreaPreset?.preset ?? null,
+    serverCapabilities: resolvedRequestContext.serverCapabilities,
+  });
   const runtimeWithAuthProvider: PhiBlockRuntime = {
     ...runtime,
     authUiProvider: resolvePhiAuthUiRuntimeProjection(
@@ -349,13 +381,6 @@ export async function resolvePhiCmsRequest({
       requestedAreaKey,
     ),
   };
-  const routeTable = compilePhiCmsActiveRouteTable({
-    catalog,
-    area: requestedAreaKey,
-    activeModuleIds: activeModuleKeys,
-    publicRoutePaths: readPhiAreaPublicRoutePaths(effectiveAreaPreset?.preset.preset.config),
-    landingSelection: readPhiAreaLandingSelection(effectiveAreaPreset?.preset.preset.config),
-  });
   if (ownsRequestState) {
     setPhiRequestRuntime(runtimeWithAuthProvider);
     setPhiRequestNavigationContext(requestedAreaKey, catalog, activeModuleKeys, routeTable);

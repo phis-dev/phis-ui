@@ -50,7 +50,7 @@ export function isPhiCmsPageOwnedRegion(regionKey: string): regionKey is (typeof
  */
 export type PhiCmsRegionOwnership = "shell" | "page";
 
-export function resolvePhiCmsRegionOwnership(
+function resolvePhiCmsRegionOwnership(
   regionKey: string | null | undefined,
 ): PhiCmsRegionOwnership | undefined {
   if (!regionKey) {

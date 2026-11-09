@@ -14,6 +14,7 @@ import { definePhiRuntimeModuleForm } from "../../../components/forms/form-regis
 import { PHI_CMS_AREA_KEYS } from "../../../constants/cms-areas";
 import { PhisThreadKind } from "../../../constants/threads";
 import { PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS, PHI_THREADS_RUNTIME_MODULE_ID } from "./ids";
+import { phiFormLabel as label } from "../../../components/forms/form-descriptor-text";
 
 export const PHI_THREADS_FORM_IDS = {
   newConversation: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "threads/new-conversation"),
@@ -24,7 +25,6 @@ const PHI_THREADS_FORM_HANDLER_KEYS = {
 } as const;
 
 const LABEL_SET_KEY = "@phis/ui/modules/threads/labels/forms" as const;
-const label = (key: string, fallback: string) => ({ kind: "label", key, fallback } as const);
 
 /**
  * Opening a conversation, as a declared Form rather than as a panel.

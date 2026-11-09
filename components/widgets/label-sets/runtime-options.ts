@@ -3,7 +3,7 @@ import type { PhiGlobalTranslatorOptions } from "../../../gateway/tr";
 import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 export function buildPhiWidgetLabelTranslatorOptions(
-  runtime: Pick<PhiBlockRuntime, "locale" | "site">,
+  runtime: Pick<PhiBlockRuntime, "locale">,
 ): PhiGlobalTranslatorOptions {
   return {
     apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,

@@ -14,10 +14,8 @@ import {
   buildPhiRuntimeModuleAccessRegistry,
   filterPhiCmsRenderableTreeForViewer,
 } from "../helpers/cms-access-policy";
-import { readPhiAreaLandingSelection, readPhiAreaPublicRoutePaths } from "../helpers/cms-area-config";
 import { collectPhiSitemapCandidates } from "../helpers/phi-seo";
 import {
-  compilePhiCmsActiveRouteTable,
   resolvePhiCmsAreaShellPresetBinding,
   resolvePhiCmsDescriptorCatalog,
 } from "../plugins/runtime-modules/descriptor-compiler";
@@ -26,7 +24,7 @@ import { canPhiViewerAccess } from "../types/access";
 import type { PhiCmsSiteBridge, PhiCmsRuntimeWidgetPlugin } from "../types/cms-plugins";
 import type { PhiSiteRequestContext } from "../types/site-request-context";
 import { resolvePhiCmsLookup } from "./cms-lookup";
-import { resolveActivePresetModuleKeys } from "./cms-request";
+import { resolvePhiAreaRouteScope } from "./cms-request";
 import { runWithPhiRequestRuntime } from "./request-runtime";
 import { loadPhiSiteRequestContext } from "./runtime";
 import { joinPhiSearchText } from "./search-text";
@@ -220,18 +218,12 @@ async function indexArea({
     sourcePreset,
     area,
   });
-  const activeModuleIds = resolveActivePresetModuleKeys(
-    bridge.runtimeModuleCatalog,
-    area,
-    areaPreset ? { preset: areaPreset.preset } : null,
-    anonymous.serverCapabilities,
-  );
-  const routeTable = compilePhiCmsActiveRouteTable({
+    const { activeModuleIds, routeTable } = resolvePhiAreaRouteScope({
+    runtimeModuleCatalog: bridge.runtimeModuleCatalog,
     catalog,
     area,
-    activeModuleIds,
-    publicRoutePaths: readPhiAreaPublicRoutePaths(areaPreset?.preset.preset.config),
-    landingSelection: readPhiAreaLandingSelection(areaPreset?.preset.preset.config),
+    preset: areaPreset?.preset ?? null,
+    serverCapabilities: anonymous.serverCapabilities,
   });
   const candidates = collectPhiSitemapCandidates({
     moduleRoutes: [...routeTable.exactByPath].map(([path, descriptor]) => [path, descriptor] as const),

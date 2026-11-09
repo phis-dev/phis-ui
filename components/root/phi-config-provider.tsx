@@ -28,6 +28,7 @@ import {
   resolvePhiSurfaceShapeRadius,
   type PhiControlShape,
 } from "../../theme/phi-control-shape";
+import { joinPhiClassNames } from "../../helpers/class-names";
 
 export type PhiConfig = {
   customColors: PhiThemeCustomColorPalette;
@@ -158,7 +159,7 @@ function PhiConfigValueProvider({
   return (
     <PhiConfigContext.Provider value={value}>
       <div
-        className={[themeCssVarKey, rootClassName].filter(Boolean).join(" ")}
+        className={joinPhiClassNames(themeCssVarKey, rootClassName)}
         style={{
           ...rootStyle,
           ...controlShapeVars,

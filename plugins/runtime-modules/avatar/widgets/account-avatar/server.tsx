@@ -2,7 +2,7 @@ import type { PhiBlockRuntime } from "../../../../../types";
 import { getPhiAvatarWidgetLabels } from "../../labels";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
-import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../../components/widgets/label-sets/runtime-options";
 
 export type PhiAccountAvatarWidgetProps = {
   runtime: Pick<PhiBlockRuntime, "site" | "locale" | "viewer" | "area">;
@@ -17,11 +17,7 @@ export async function PhiAccountAvatarWidget({ runtime, config }: PhiAccountAvat
     return null;
   }
 
-  const labels = await getPhiAvatarWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  });
+  const labels = await getPhiAvatarWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
 
   return (
     <PhiRuntimeModuleRenderClientHost

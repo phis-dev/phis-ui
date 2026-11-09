@@ -113,7 +113,7 @@ function PhiGroupsControllerView({
   return null;
 }
 
-export const PHI_GROUPS_RUNTIME_CONTROLLER_PLUGIN = {
+const PHI_GROUPS_RUNTIME_CONTROLLER_PLUGIN = {
   ...PHI_GROUPS_RUNTIME_CONTROLLER_DEFINITION,
   renderController: ({ key, address, config }) =>
     <PhiGroupsControllerView key={key} address={address} config={config} />,

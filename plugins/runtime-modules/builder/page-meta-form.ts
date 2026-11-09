@@ -11,7 +11,8 @@ import { PHI_FORM_FIELD_PROVIDER_KEYS, PHI_FORM_VALIDATION_PROVIDER_KEYS } from 
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
 import { PHI_BUILDER_EFFECTS_SECTIONS } from "./effects-form-values";
 import type { PhiFormLabelSetLoader } from "../../../components/forms/form-resolution";
-import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../components/widgets/label-sets/runtime-options";
+import { phiFormLabel as label } from "../../../components/forms/form-descriptor-text";
 
 export const PHI_BUILDER_PAGE_META_FORM_ID = createPhiFormId(PHI_SHARED_PACKAGE_NAME, "builder/page-meta");
 const PHI_BUILDER_PAGE_META_FORM_LABEL_SET_KEY = "@phis/ui/modules/builder/labels/page-meta" as const;
@@ -22,7 +23,6 @@ export const PHI_BUILDER_EFFECTS_FORM_IDS = {
   viewport: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "builder/effects/viewport"),
 } as const;
 const literal = (value: string) => ({ kind: "literal", value } as const);
-const label = (key: string, fallback: string) => ({ kind: "label", key, fallback } as const);
 const option = (value: string, label = value) => ({ value, label: literal(label) });
 /*
  * An option whose caption comes from the Effects label set, named by the path it has there.
@@ -526,11 +526,7 @@ const descriptor: PhiFormDescriptor = {
 
 const loadPhiBuilderPageMetaFormLabels: PhiFormLabelSetLoader = async ({ runtime }) => {
   const { getPhiBuilderChromeWidgetLabels } = await import("../../../components/widgets/label-sets/builder-chrome");
-  const labels = await getPhiBuilderChromeWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  });
+  const labels = await getPhiBuilderChromeWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
   return {
     "fields.title.label": labels.pages.form.title,
     "fields.title.required": labels.pages.form.titleRequired,
@@ -571,11 +567,7 @@ const loadPhiBuilderEffectsFormLabels: PhiFormLabelSetLoader = async ({ runtime 
     import("../../../components/forms/form-labels"),
     import("../../../components/widgets/label-sets/effects"),
   ]);
-  return flattenPhiFormLabels(await getPhiEffectsWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  }));
+  return flattenPhiFormLabels(await getPhiEffectsWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime)));
 };
 
 export const PHI_BUILDER_EFFECTS_FORMS = PHI_BUILDER_EFFECTS_SECTIONS.map(

@@ -75,7 +75,6 @@ import {
   resetPhiBuilderSignalWiringSession,
   openPhiBuilderPage,
   openPhiBuilderPageInOpenArea,
-  openPhiBuilderPagesPanel,
   selectPhiBuilderPageNode,
   setPhiBuilderCommandWorkspace,
   setPhiBuilderDebugScaffold,
@@ -1315,7 +1314,7 @@ function usePhiDeveloperBuilderWorkspaceController(
 
 	        emitPageTitleInputValue(nextPageKey);
 
-        openPhiBuilderPageInOpenArea(nextPageKey, { closePages: true });
+        openPhiBuilderPageInOpenArea(nextPageKey);
         return;
       }
 
@@ -1638,11 +1637,6 @@ function usePhiDeveloperBuilderWorkspaceController(
           correlationId: signal.correlationId,
           timestamp: Date.now(),
         });
-        return;
-      }
-
-      if (addressedHere && signal.channel === "command" && signal.action === "activate" && signal.value === "pagesOpen") {
-        openPhiBuilderPagesPanel();
         return;
       }
 

@@ -27,8 +27,8 @@ import {
   PHI_LOCALIZATION_CONTROLLER_TYPE,
   createPhiLocalizationControllerAddress,
 } from "../controller/address";
-import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../../helpers/cms-dialog";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 
 const SYNTHETIC_EDITOR_TRANSLATIONS_REGION_IDS = { regionContent: -561 } as const;
 export async function buildPhiDefaultEditorTranslationsPageTree({
@@ -38,11 +38,7 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
-  const translator = {
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  };
+  const translator = buildPhiWidgetLabelTranslatorOptions(runtime);
   const [labels, widgetLabels] = await Promise.all([getPhiEditorTranslationsPageLabels(translator), getPhiEditorTranslationsWidgetLabels(translator)]);
 
   const scaffold = buildPhiBasePageContentScaffold({

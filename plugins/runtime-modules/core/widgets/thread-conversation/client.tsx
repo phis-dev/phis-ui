@@ -13,11 +13,7 @@ import { PhiDividerControl } from "../../../../../components/controls/phi-divide
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 import { PhiIcon } from "../../../../../components/shell/phi-icon";
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
-import {
-  usePhiSignalEmitter,
-  usePhiSignalIdentity,
-} from "../../../../../components/runtime/runtime-signal-identity";
-import { findPhiSignalRoutesByCapabilityId } from "../../../../../types/signals";
+import { emitPhiSignalCapability, usePhiSignalEmitter, usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
 import { readPhiThreadSignalValue } from "../../../../../types/thread-widget";
 import {
   buildPhiThreadListenFilter,
@@ -354,20 +350,7 @@ export function PhiThreadConversationWidgetClient({
       return;
     }
     announcedThreadId.current = openedThreadId;
-    for (const route of findPhiSignalRoutesByCapabilityId(config?.signalRoutes?.emits, "opened")) {
-      if (route.receiver == null) {
-        continue;
-      }
-      emitSignal({
-        scope: route.scope,
-        channel: route.channel,
-        action: route.action,
-        value: route.valueType === "none" ? null : { threadId: openedThreadId },
-        valueType: route.valueType,
-        valueSchema: route.valueSchema ?? null,
-        receiver: route.receiver,
-      });
-    }
+    emitPhiSignalCapability(emitSignal, config?.signalRoutes?.emits, "opened", { threadId: openedThreadId });
   }, [config?.signalRoutes?.emits, emitSignal, openedThreadId]);
 
   /*
@@ -376,20 +359,12 @@ export function PhiThreadConversationWidgetClient({
    */
   const reply = useCallback(() => {
     if (threadId == null) return;
-    for (const route of findPhiSignalRoutesByCapabilityId(config?.signalRoutes?.emits, "reply")) {
-      if (route.receiver == null) continue;
-      emitSignal({
-        scope: route.scope,
-        channel: route.channel,
-        action: route.action,
-        value: route.valueType === "none"
-          ? null
-          : { actionKey: "reply", rowIdentity: threadId, selectedRowIdentities: [threadId] },
-        valueType: route.valueType,
-        valueSchema: route.valueSchema ?? null,
-        receiver: route.receiver,
-      });
-    }
+    emitPhiSignalCapability(
+      emitSignal,
+      config?.signalRoutes?.emits,
+      "reply",
+      { actionKey: "reply", rowIdentity: threadId, selectedRowIdentities: [threadId] },
+    );
   }, [config?.signalRoutes?.emits, emitSignal, threadId]);
 
   const newestMessageId = detail?.messages.at(-1)?.id ?? null;

@@ -17,7 +17,7 @@ import { getPhiGroupFormLabels } from "../labels";
 import { canPhiViewerManageSomeGroup } from "../page-visibility";
 import { canPhiViewerAccess, PHI_VIEWER_ACCESS_DEVELOPER_TOOLS } from "../../../../types/access";
 import { PHI_GROUPS_FORM_IDS } from "../forms";
-import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 
 const SYNTHETIC_APP_GROUPS_REGION_IDS = {
   regionContent: -452,
@@ -38,11 +38,7 @@ export async function buildPhiDefaultAppGroupsPageTree({
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
-  const labels = await getPhiGroupFormLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  });
+  const labels = await getPhiGroupFormLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
   const controllerAddress = createPhiGroupsControllerAddress();
   const myGroupsTableAddress = createPhiSignalAddress("cms", PHI_APP_GROUPS_PAGE_WIDGET_IDS.widgetMyGroupsTable);
   const membersTableAddress = createPhiSignalAddress("cms", PHI_APP_GROUPS_PAGE_WIDGET_IDS.widgetMembersTable);

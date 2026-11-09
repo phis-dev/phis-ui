@@ -8,13 +8,11 @@ import { PhiWidgetEditorPlaceholder } from "../../../../../components/widgets/bu
 export const PHI_IMAGE_INSPECTOR_WIDGET_BUILDER_PLUGIN =
   createPhiCmsBuilderWidgetPlugin<PhiCmsAssetInspectorWidgetConfig>(
     PHI_IMAGE_INSPECTOR_WIDGET_DEFINITION,
-    ({ widget, config }) => (
+    ({ widget }) => (
       <PhiWidgetEditorPlaceholder
         widget={widget}
         pluginTitle={PHI_IMAGE_INSPECTOR_WIDGET_DEFINITION.title}
-        summary={config.scopeKey
-          ? `Scope: ${config.scopeKey}`
-          : "Builder preview for the asset inspector."}
+        summary="Builder preview for the asset inspector."
       />
     ),
   );

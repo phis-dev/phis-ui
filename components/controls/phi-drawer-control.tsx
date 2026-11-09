@@ -1,10 +1,11 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 
 import type { PhiCmsOverlayConfig, PhiCmsOverlaySize, PhiOverlayPushBehaviour } from "../../types/cms-overlay";
 import type { PhiOverlayControlCommonProps } from "./phi-overlay-control-contract";
+import { usePhiHydrated } from "../state/use-phi-hydrated";
 
 export type PhiDrawerControlProps = PhiOverlayControlCommonProps & {
   placement?: PhiCmsOverlayConfig["placement"];
@@ -18,8 +19,6 @@ export type PhiDrawerControlProps = PhiOverlayControlCommonProps & {
 const PhiDrawerControlAdapter = dynamic(() =>
   import("./phi-drawer-control-adapter").then((module) => module.PhiDrawerControlAdapter));
 
-const subscribeHydration = () => () => undefined;
-
 /**
  * The Drawer shell, loaded the first time it has something to show.
  *
@@ -28,7 +27,7 @@ const subscribeHydration = () => () => undefined;
  * its content hidden after hydration. Once loaded it stays, so closing plays the shell's own exit.
  */
 export function PhiDrawerControl(props: PhiDrawerControlProps) {
-  const hydrated = useSyncExternalStore(subscribeHydration, () => true, () => false);
+  const hydrated = usePhiHydrated();
   const wanted = props.open || (hydrated && props.mountPolicy === "eager");
   const [loaded, setLoaded] = useState(wanted);
   if (wanted && !loaded) {

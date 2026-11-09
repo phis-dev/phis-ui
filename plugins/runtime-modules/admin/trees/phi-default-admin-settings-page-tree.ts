@@ -7,6 +7,7 @@ import { getPhiAdminSettingsWidgetLabels } from "../../../../components/widgets/
 import { getPhiAdminSettingsPageLabels } from "./admin-settings-label-set";
 import { buildPhiSettingsPageShellTree } from "../../../../components/regions/presets/phi-settings-page-shell-tree";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 
 const SYNTHETIC_ADMIN_SETTINGS_REGION_IDS = {
   regionContent: -471,
@@ -19,11 +20,7 @@ export async function buildPhiDefaultAdminSettingsPageTree({
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
-  const labelOptions = {
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  };
+  const labelOptions = buildPhiWidgetLabelTranslatorOptions(runtime);
   const [pageLabels, labels, settings] = await Promise.all([
     getPhiAdminSettingsPageLabels(labelOptions),
     getPhiAdminSettingsWidgetLabels(labelOptions),

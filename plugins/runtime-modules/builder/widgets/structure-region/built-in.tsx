@@ -110,6 +110,7 @@ import { PhiIcon } from "../../../../../components/shell/phi-icon";
 import { PhiSurfaceTone } from "../../../../../components/surface/phi-surface-tone";
 import { resolvePhiSurfaceToneClassName } from "../../../../../types/surface";
 import { PHI_SURFACE_TONE_GROUND, phiSurfaceTakesToneGround } from "../../../../../helpers/surface-style";
+import { joinPhiClassNames } from "../../../../../helpers/class-names";
 
 export type PhiStructureRegionWidgetConfig = {
   slotKind?: "structure" | "content";
@@ -1797,7 +1798,7 @@ export function PhiStructureRegionScaffold({
       <div
         data-phi-region-slot={config.regionKey}
         {...{ [PHI_VISUAL_ANCHOR_PART_ATTRIBUTE]: config.regionKey }}
-        className={["phi-builder-structure-region__slot", regionToneClassName].filter(Boolean).join(" ")}
+        className={joinPhiClassNames("phi-builder-structure-region__slot", regionToneClassName)}
         data-phi-builder-region-mode="preview"
         data-phi-builder-region-has-root-node={hasRootNode ? "true" : "false"}
         data-phi-builder-region-selected="false"
@@ -1916,7 +1917,7 @@ export function PhiStructureRegionScaffold({
         <div
               ref={setRootDropNodeRef}
               data-phi-region-slot={config.regionKey}
-              className={["phi-builder-structure-region__slot", regionToneClassName].filter(Boolean).join(" ")}
+              className={joinPhiClassNames("phi-builder-structure-region__slot", regionToneClassName)}
               data-phi-builder-region-mode="editor"
               data-phi-structure-drop-state={
                 rootDropAccepted

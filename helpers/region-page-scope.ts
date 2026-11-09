@@ -9,7 +9,7 @@ import {
   type PhiCmsRegionReveal,
   type PhiCmsResolvedRegionPageScope,
 } from "../types/cms-presets";
-import { readPhiLinkTarget, type PhiPageReference, type PhiResolvedLinkTargets } from "../types/references";
+import { readPhiLinkTarget, type PhiResolvedLinkTargets } from "../types/references";
 import { isPhiCmsShellOwnedRegion } from "./cms-region-keys";
 import { hasPhiFlag } from "./flags";
 import { stripLocaleAndAreaFromPathname } from "./locale";
@@ -64,12 +64,6 @@ export function readPhiCmsRegionPageScopeEntries(value: unknown): PhiCmsRegionPa
     const folder = typeof record.folder === "string" ? normalizePhiCmsRegionScopePath(record.folder) : null;
     return folder == null ? [] : [{ folder }];
   });
-}
-
-/** The Pages a scope names by reference, for the render that resolves them. */
-export function collectPhiCmsRegionPageScopeReferences(scope: PhiCmsRegionPageScope | null): PhiPageReference[] {
-  return (scope?.entries ?? []).flatMap((entry) =>
-    "pageLinkTarget" in entry && entry.pageLinkTarget.kind === "page" ? [entry.pageLinkTarget.reference] : []);
 }
 
 /**

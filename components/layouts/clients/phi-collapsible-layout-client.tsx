@@ -38,6 +38,7 @@ import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
 import { usePhiLayoutSignalSurface } from "../phi-layout-signal-surface";
 import { PhiSurfaceTone } from "../../surface/phi-surface-tone";
 import { resolvePhiSurfaceToneClassName } from "../../../types/surface";
+import { joinPhiClassNames } from "../../../helpers/class-names";
 
 export type PhiCollapsibleLayoutSlotMeta = {
   key: string;
@@ -669,7 +670,7 @@ function PhiCollapsibleLayoutBody({
         data-phi-block-render-mode={resolvedRenderMode}
         data-phi-layout-debug-layer={phiLayoutDebugLayerMarker(isAuthoringRender)}
         data-phi-layout-has-explicit-layout-background={hasExplicitLayoutBackground ? "true" : "false"}
-        className={["phi-layout", resolvePhiSurfaceToneClassName(surface?.tone)].filter(Boolean).join(" ")}
+        className={joinPhiClassNames("phi-layout", resolvePhiSurfaceToneClassName(surface?.tone))}
         style={resolvedStyle}
       >
         <PhiSurfaceGroundLayer ground={ground} />

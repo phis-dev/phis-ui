@@ -15,6 +15,7 @@ import {
 } from "../../../components/forms/form-provider-contract";
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
 import { createPhiUserManagementControllerAddress } from "./controller/address";
+import { phiFormLabel as label, phiFormRequired as required } from "../../../components/forms/form-descriptor-text";
 
 export const PHI_USER_MANAGEMENT_FORM_IDS = {
   create: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "user-management/create"),
@@ -27,7 +28,6 @@ const PHI_USER_MANAGEMENT_FORM_HANDLER_KEYS = {
 } as const;
 
 const LABEL_SET_KEY = "@phis/ui/modules/user-management/labels/forms" as const;
-const label = (key: string, fallback: string) => ({ kind: "label", key, fallback } as const);
 const controllerAddress = createPhiUserManagementControllerAddress();
 const readOnlyCondition = {
   source: "controller",
@@ -51,10 +51,6 @@ const selfEnabledCondition = {
   reason: "Your own account cannot be enabled or disabled here.",
 } as const satisfies PhiRuntimeValueCondition;
 
-const required = (key: string, fallback: string) => ([{
-  providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.required,
-  message: label(key, fallback),
-}] as const);
 
 const roleOptions = PHI_BASE_ROLE_OPTIONS.map((option) => ({
   value: option.value,

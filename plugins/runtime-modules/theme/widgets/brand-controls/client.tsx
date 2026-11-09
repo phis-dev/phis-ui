@@ -1413,8 +1413,6 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
   const themeKey = resolveThemeKey(config);
   const { state, draftRef, publishDraft, pickerTransaction } = usePhiBrandThemeDraft(runtime, themeKey);
   const previewMode = usePhiBrandPreviewMode(resolveThemePayloadMode(state.draft), config?.signalRoutes);
-  const loading = false;
-  const saving = false;
   const [activeColorSection, changeActiveColorSection] = usePhiBrandAccordionSection(
     BRAND_THEME_COLOR_COLLAPSE_STORAGE_KEY,
     BRAND_THEME_COLOR_SECTION_KEYS,
@@ -1500,7 +1498,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
   }, [customLabel, previewMode, state.draft, themeBlocks, themePresets]);
 
   return (
-    <PhiFlexControl vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0, opacity: loading ? 0.65 : 1 }}>
+    <PhiFlexControl vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0 }}>
       <PhiCardControl size="small">
         <PhiFlexControl vertical gap={clientToken.paddingSM}>
           {/*
@@ -1547,7 +1545,6 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                         tokenKey="custom6"
                         value={customPalette.custom6}
                         defaultValue={resolvePhiThemePaletteCustomColors(selectedPreset.palette, previewMode).custom6}
-                        disabled={saving}
                         customColors={customColorOptions}
                         presets={PHI_COLOR_PICKER_PRESETS}
                         labels={colorPickerLabels}
@@ -1577,7 +1574,6 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                             tokenKey={item.key}
                             value={item.value}
                             defaultValue={resolvePhiThemePaletteCustomColors(selectedPreset.palette, previewMode)[item.key as PhiThemeCustomColorKey]}
-                            disabled={saving}
                             customColors={customColorOptions}
                             presets={PHI_COLOR_PICKER_PRESETS}
                             labels={colorPickerLabels}
@@ -1657,7 +1653,6 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                               <PhiButtonControl
                                 size="small"
                                 type="link"
-                                disabled={saving}
                                 style={{ paddingInline: 0, height: clientToken.controlHeightSM }}
                                 onClick={() => publishDraft(mergeThemeGradient(draftRef.current, key, null, previewMode))}
                                 label="Reset to palette"
@@ -1715,7 +1710,6 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                             filters={[]}
                             motionModes={[]}
                             imageSourceKinds={[]}
-                            disabled={saving}
                             onChange={(value) => {
                               const base = normalizePhiBackgroundWidgetConfig(value).base;
                               if (base.kind !== "gradient") return;
@@ -1735,7 +1729,6 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                             <PhiTypographyControl type="secondary">Label colour</PhiTypographyControl>
                             <PhiSegmentedControl<"auto" | PhiThemeGradientTextTone>
                               block
-                              disabled={saving}
                               value={ownTone ?? "auto"}
                               options={[
                                 { value: "auto", label: "Automatic" },
@@ -1811,7 +1804,6 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                         tokenKey={section.key}
                         value={seedValue}
                         defaultValue={seedDefaultValue}
-                        disabled={saving}
                         customColors={customColorOptions}
                         labels={colorPickerLabels}
                         presets={section.presets}
@@ -1843,7 +1835,6 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                               tokenKey={item.key}
                               value={overridden ? readEffectiveTokenString(colorToken, item.key, fallback) : fallback}
                               defaultValue={fallback}
-                              disabled={saving}
                               customColors={customColorOptions}
                               labels={colorPickerLabels}
                               onChange={(value, tokenKey) => {
@@ -1857,7 +1848,6 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                               <PhiButtonControl
                                 size="small"
                                 type="link"
-                                disabled={saving}
                                 style={{ alignSelf: "flex-start", paddingInline: 0, height: clientToken.controlHeightSM }}
                                 onClick={() => publishDraft(omitThemeColorOverride(state.draft, item.key, previewMode))}
                                 label="Reset override"
@@ -1891,8 +1881,6 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
   const fieldLabelWidth = clientToken.controlHeight * 4;
   const themeKey = resolveThemeKey(config);
   const { state, publishDraft } = usePhiBrandThemeDraft(runtime, themeKey);
-  const loading = false;
-  const saving = false;
   const [activeStyleSection, changeActiveStyleSection] = usePhiBrandAccordionSection(
     BRAND_THEME_STYLE_COLLAPSE_STORAGE_KEY,
     BRAND_THEME_STYLE_SECTION_KEYS,
@@ -1924,7 +1912,6 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
         <PhiFlexControl key={item.key} align="center" gap={clientToken.paddingSM} wrap="nowrap">
           <PhiTypographyControl style={{ flex: `0 0 ${fieldLabelWidth}px` }}>{item.label}</PhiTypographyControl>
           <PhiPresetSizeControl<PhiStyleSizePresetKey>
-            disabled={saving}
             value={item.value}
             fallbackKey={item.fallbackPreset}
             options={options}
@@ -1993,7 +1980,7 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
   ], [fontFamilies, resolvedCatalogueFamilies, siteFontAssets.options]);
 
   return (
-    <PhiFlexControl vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0, opacity: loading ? 0.65 : 1 }}>
+    <PhiFlexControl vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0 }}>
       {siteFontFaceCss ? (
         <style href="phi-theme-font-picker-faces" precedence="default" dangerouslySetInnerHTML={{ __html: siteFontFaceCss }} />
       ) : null}
@@ -2034,7 +2021,6 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                       ...PHI_CONTROL_SHAPES.map((value) => ({ value, label: formatShapeLabel(value) })),
                     ]}
                     block
-                    disabled={saving}
                     onChange={(value) => publishDraft(
                       value === "theme"
                         ? clearThemeShapeScale(state.draft)
@@ -2059,7 +2045,6 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                       value={readThemeButtonShadowChoice(state.draft, item.key)}
                       options={PHI_THEME_BUTTON_SHADOW_OPTIONS}
                       block
-                      disabled={saving}
                       onChange={(choice) => publishDraft(mergeThemeButtonShadow(state.draft, item.key, choice))}
                     />
                   ))}
@@ -2075,7 +2060,6 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                       { value: "none", label: "Colour" },
                       ...PHI_THEME_GRADIENT_KEYS.map((key, index) => ({ value: key, label: `Gradient ${index + 1}` })),
                     ]}
-                    disabled={saving}
                     onChange={(choice) => publishDraft(
                       mergeThemePrimaryButtonGradient(state.draft, choice === "none" ? null : choice),
                     )}
@@ -2120,7 +2104,6 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                         placeholder={item.inherited || "Not installed"}
                         options={fontOptions}
                         allowClear
-                        disabled={saving}
                         size="medium"
                         style={{ minWidth: 0, flex: "1 1 auto" }}
                         onChange={(value) => publishDraft(
@@ -2140,7 +2123,6 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                     <PhiSegmentedControl<PhiThemeHeadingFont>
                       value={readPhiThemeHeadingFont(state.draft.typography)}
                       options={PHI_THEME_HEADING_FONT_OPTIONS}
-                      disabled={saving}
                       size="small"
                       onChange={(heading) => publishDraft(mergeThemeHeadingFont(state.draft, heading))}
                     />
@@ -2171,7 +2153,6 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                   <PhiTypographyControl type="secondary">Dividing lines in dialogs and popovers, outlined steps and radios</PhiTypographyControl>
                   <PhiSwitchControl
                     checked={wireframe}
-                    disabled={saving}
                     checkedLabel="On"
                     uncheckedLabel="Off"
                     onChange={(checked) => updateToken({ wireframe: checked })}

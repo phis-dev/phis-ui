@@ -14,6 +14,7 @@ import {
 } from "../../../components/forms/form-provider-contract";
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
 import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
+import { phiFormLabel as label } from "../../../components/forms/form-descriptor-text";
 
 export const PHI_MEDIA_SETTINGS_FORM_IDS = {
   general: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "asset/media-settings"),
@@ -24,7 +25,6 @@ const PHI_MEDIA_SETTINGS_FORM_HANDLER_KEYS = {
 } as const;
 
 const LABEL_SET_KEY = "@phis/ui/modules/asset/labels/settings" as const;
-const label = (key: string, fallback: string) => ({ kind: "label", key, fallback } as const);
 
 const PHI_MEDIA_SETTINGS_FORM_DESCRIPTOR: PhiFormDescriptor = {
   schemaVersion: 1,

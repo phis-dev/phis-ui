@@ -1,11 +1,12 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 
 import type { PhiControlSize } from "../../types/control";
 import type { PhiRenderableBlockSize } from "../../types/renderable-block";
 import type { PhiModalWidth, PhiOverlayControlCommonProps } from "./phi-overlay-control-contract";
+import { usePhiHydrated } from "../state/use-phi-hydrated";
 
 export type PhiModalControlProps = PhiOverlayControlCommonProps & {
   centered?: boolean;
@@ -19,8 +20,6 @@ export type PhiModalControlProps = PhiOverlayControlCommonProps & {
 const PhiModalControlAdapter = dynamic(() =>
   import("./phi-modal-control-adapter").then((module) => module.PhiModalControlAdapter));
 
-const subscribeHydration = () => () => undefined;
-
 /**
  * The Modal shell, loaded the first time it has something to show.
  *
@@ -33,7 +32,7 @@ const subscribeHydration = () => () => undefined;
  * Opened during the server render, the shell renders there too, and Next ships its code with the page.
  */
 export function PhiModalControl(props: PhiModalControlProps) {
-  const hydrated = useSyncExternalStore(subscribeHydration, () => true, () => false);
+  const hydrated = usePhiHydrated();
   const wanted = props.open || (hydrated && props.mountPolicy === "eager");
   const [loaded, setLoaded] = useState(wanted);
   if (wanted && !loaded) {

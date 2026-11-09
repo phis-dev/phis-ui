@@ -130,15 +130,12 @@ export type PhiDeveloperBuilderState = {
   nodeKey: string;
   nodeId: PhiCmsInstanceId | null;
   nodeKind: PhiDeveloperBuilderNodeKind;
-  selectedRegionType: number | null;
   selectedRegionKey: string | null;
   selectedRootRegionKey: string | null;
   selectedLayoutAnchor: PhiAnchorWidgetPlacement;
   pageMetaDrafts: Record<string, PhiDeveloperBuilderPageMetaDraft>;
   deletedPageDrafts: Record<string, boolean>;
   draftAllocations: Record<string, PhiDeveloperBuilderDraftAllocation>;
-  sidebarKey: string;
-  pagesOpen: boolean;
   inspectorOpen: boolean;
   /**
    * The Signal wiring session behind the wiring overlay.
@@ -177,7 +174,6 @@ export type PhiDeveloperBuilderState = {
   moduleDeactivationRequest: PhiBuilderModuleDeactivationRequest | null;
   builderMode: PhiDeveloperBuilderMode;
   search: string;
-  darkMode: boolean;
   debugScaffold: boolean;
   commandWorkspace: PhiDeveloperBuilderCommandWorkspace;
   pickerWidgetCategoryFilters: string[];

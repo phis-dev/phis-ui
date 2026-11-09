@@ -5,8 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { buildPhiDataSourceUrl, type PhiApiDataSource } from "../../../../../gateway/data-source";
 import type { PhiCmsInstanceId } from "../../../../../types";
 import type { PhiSignalRouteSet, PhiSignalValue } from "../../../../../types/signals";
-import { findPhiSignalRoutesByCapabilityId } from "../../../../../types/signals";
-import { usePhiSignalEmitter, usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
+import { emitPhiSignalCapability, usePhiSignalEmitter, usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
 import { usePhiRuntimePageConditionState } from "../../../../../components/runtime/runtime-page-condition-state";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { PhiDescriptionListControl } from "../../../../../components/controls/phi-description-list-control";
@@ -69,18 +68,7 @@ export function PhiFormPreviewWidgetClient({
   const loading = token.length > 0 && state === null;
 
   const emitCapability = useCallback((capabilityId: string, value: PhiSignalValue) => {
-    for (const route of findPhiSignalRoutesByCapabilityId(emitRoutes, capabilityId)) {
-      if (route.receiver == null || (route.valueType === "json" && !route.valueSchema)) continue;
-      emitSignal({
-        scope: route.scope,
-        channel: route.channel,
-        action: route.action,
-        value: route.valueType === "none" ? null : value,
-        valueType: route.valueType,
-        valueSchema: route.valueSchema ?? null,
-        receiver: route.receiver,
-      });
-    }
+    emitPhiSignalCapability(emitSignal, emitRoutes, capabilityId, value);
   }, [emitRoutes, emitSignal]);
 
   useEffect(() => {

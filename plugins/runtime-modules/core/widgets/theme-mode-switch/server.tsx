@@ -3,7 +3,7 @@ import type { PhiThemeModeSwitchWidgetConfig } from "./config";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import { getPhiThemeModeSwitchWidgetLabels } from "../../../../../components/widgets/label-sets/theme-mode-switch";
-import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../../components/widgets/label-sets/runtime-options";
 
 /** The labels are the button's accessible name, translated here because a Widget client has no translation. */
 export async function PhiThemeModeSwitchWidgetServer({
@@ -17,11 +17,7 @@ export async function PhiThemeModeSwitchWidgetServer({
   runtime: PhiBlockRuntime;
   preview?: boolean;
 }) {
-  const labels = await getPhiThemeModeSwitchWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  });
+  const labels = await getPhiThemeModeSwitchWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
 
   return (
     <PhiRuntimeModuleRenderClientHost

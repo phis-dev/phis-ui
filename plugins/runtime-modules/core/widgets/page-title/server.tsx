@@ -4,7 +4,7 @@ import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import { getPhiPageTitleWidgetLabels } from "../../../../../components/widgets/label-sets/page-title";
 import type { PhiPageTitleWidgetLabels } from "../../../../../components/widgets/label-types/page-title";
-import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../../components/widgets/label-sets/runtime-options";
 
 function PhiPageTitleWidget({
   labels,
@@ -26,11 +26,7 @@ function PhiPageTitleWidget({
 export async function PhiPageTitleWidgetServer({
   runtime,
 }: Pick<PhiServerBlockBaseProps<PhiPageTitleWidgetLabels, PhiPageTitleWidgetConfig>, "runtime">) {
-  const labels = await getPhiPageTitleWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  });
+  const labels = await getPhiPageTitleWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
 
   return <PhiPageTitleWidget labels={labels} runtime={runtime} config={{}} />;
 }

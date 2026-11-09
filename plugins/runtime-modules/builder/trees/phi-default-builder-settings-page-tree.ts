@@ -4,7 +4,7 @@ import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/c
 import type { PhiBlockRuntime } from "../../../../types";
 import { getPhiBuilderSettingsPageLabels } from "./builder-settings-label-set";
 import { buildPhiSettingsPageShellTree } from "../../../../components/regions/presets/phi-settings-page-shell-tree";
-import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 
 const SYNTHETIC_BUILDER_SETTINGS_REGION_IDS = {
   regionContent: -583,
@@ -25,11 +25,7 @@ export async function buildPhiDefaultBuilderSettingsPageTree({
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
-  const labels = await getPhiBuilderSettingsPageLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  });
+  const labels = await getPhiBuilderSettingsPageLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
 
   const tree = buildPhiSettingsPageShellTree({
     page,

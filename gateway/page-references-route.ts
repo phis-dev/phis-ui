@@ -5,19 +5,14 @@ import type { NextRequest } from "next/server";
 
 import { isPhiBuilderAreaKey, isPhiCmsAreaKey } from "../constants/cms-areas";
 import { canPhiViewerAccess, PHI_VIEWER_ACCESS_CONTENT_EDITING, PHI_VIEWER_ACCESS_STRUCTURE_AUTHORING } from "../types/access";
-import {
-  readPhiAreaLandingSelection,
-  readPhiAreaPublicRoutePaths,
-} from "../helpers/cms-area-config";
 import { resolvePhiBuilderActivePageCatalog } from "../helpers/cms-page-catalog";
 import {
-  compilePhiCmsActiveRouteTable,
   resolvePhiCmsAreaShellPresetBinding,
   resolvePhiCmsDescriptorCatalog,
 } from "../plugins/runtime-modules/descriptor-compiler";
 import { buildPhiAreaActivePresetPages } from "../helpers/cms-preset-page-tree";
 import { buildPhiBuilderPageReferenceTree } from "../helpers/page-reference-tree";
-import { resolveActivePresetModuleKeys } from "../server-helpers/cms-request";
+import { resolvePhiAreaRouteScope } from "../server-helpers/cms-request";
 import { getPhiExactSiteArea } from "../server-helpers/cms";
 import { loadPhiSiteRequestContext } from "../server-helpers/runtime";
 import { getSiteCmsPageCatalog } from "./site-page";
@@ -86,18 +81,12 @@ export function buildPhiPageReferencesRouteHandler({
             },
           })
         : null;
-      const activeModuleIds = resolveActivePresetModuleKeys(
-        bridge.runtimeModuleCatalog,
-        area,
-        areaPreset ? { preset: areaPreset.preset } : null,
-        requestContext.serverCapabilities,
-      );
-      const routeTable = compilePhiCmsActiveRouteTable({
+            const { routeTable } = resolvePhiAreaRouteScope({
+        runtimeModuleCatalog: bridge.runtimeModuleCatalog,
         catalog,
         area,
-        activeModuleIds,
-        publicRoutePaths: readPhiAreaPublicRoutePaths(areaPreset?.preset.preset.config),
-        landingSelection: readPhiAreaLandingSelection(areaPreset?.preset.preset.config),
+        preset: areaPreset?.preset ?? null,
+        serverCapabilities: requestContext.serverCapabilities,
       });
       const persistedPages = await getSiteCmsPageCatalog({
         apiBaseUrl: runtime.apiBaseUrl,

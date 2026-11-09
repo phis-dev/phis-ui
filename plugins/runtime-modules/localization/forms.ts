@@ -2,7 +2,6 @@ import { createPhiFormLabelSetLoader } from "../../../components/forms/shared-fo
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
 import {
   PHI_FORM_FIELD_PROVIDER_KEYS,
-  PHI_FORM_VALIDATION_PROVIDER_KEYS,
   createPhiSharedFormProviderKey,
 } from "../../../components/forms/form-provider-contract";
 import { createPhiFormId } from "../../../types/form-id";
@@ -10,6 +9,7 @@ import type { PhiFormDescriptor, PhiFormHandlerProviderDescriptor } from "../../
 import { PHI_LOCALIZATION_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/localization/ids";
 import { PHI_SHARED_PACKAGE_NAME } from "../../../types/signals";
 import { PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_KEYS } from "./ids";
+import { phiFormLabel as label, phiFormRequired as required } from "../../../components/forms/form-descriptor-text";
 
 export const PHI_LOCALIZATION_FORM_IDS = {
   siteLocales: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "localization/site-locales"),
@@ -32,11 +32,6 @@ const PHI_LOCALIZATION_FORM_HANDLER_LEAVES = {
 } as const satisfies Record<keyof typeof PHI_LOCALIZATION_FORM_HANDLER_KEYS, string>;
 
 const LABEL_SET_KEY = "@phis/ui/modules/localization/labels/forms" as const;
-const label = (key: string, fallback: string) => ({ kind: "label", key, fallback } as const);
-const required = (key: string, fallback: string) => ([{
-  providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.required,
-  message: label(key, fallback),
-}] as const);
 
 const translationFields = [
   { key: "action", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.hidden, initialValue: "translation" },

@@ -21,8 +21,8 @@ import {
   PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS,
   PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS,
 } from "../addresses";
-import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../../helpers/cms-dialog";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 
 const SYNTHETIC_ADMIN_USERS_REGION_IDS = {
   regionContent: -431,
@@ -35,11 +35,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
-  const labelOptions = {
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  };
+  const labelOptions = buildPhiWidgetLabelTranslatorOptions(runtime);
   const [labels, widgetLabels] = await Promise.all([
     getPhiAdminUsersPageLabels(labelOptions),
     getPhiAdminUsersTableWidgetLabels(labelOptions),

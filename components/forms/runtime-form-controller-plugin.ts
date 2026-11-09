@@ -10,7 +10,7 @@ import {
 } from "./runtime-form-controller-definition";
 import { PhiRuntimeFormControllerMount } from "./runtime-form-controller-mount";
 
-export const PHI_RUNTIME_FORM_CONTROLLER_PLUGIN = {
+const PHI_RUNTIME_FORM_CONTROLLER_PLUGIN = {
   ...PHI_RUNTIME_FORM_CONTROLLER_DEFINITION,
   renderController: ({ address, instanceKey }) =>
     createElement(PhiRuntimeFormControllerMount, {

@@ -4,7 +4,6 @@ import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runt
 import { getPhiGalleryWidgetLabels } from "../../../../../components/widgets/label-sets/gallery";
 import { PhiWidgetFailureServer } from "../../../../../components/widgets/shared/widget-failure.server";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
-import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
 import { resolvePhiRecordSource } from "../../../../../server-helpers/record-source";
 import type { PhiBlockRuntime } from "../../../../../types";
 import type { PhiCmsRuntimeRenderRegistry } from "../../../../../types/cms-plugins";
@@ -12,6 +11,7 @@ import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
 import type { PhiPublicMediaAssetReference } from "../../../../../types/media";
 import { readPhiRuntimeTreeRenderMode } from "../../../render-mode";
 import type { PhiCmsGalleryWidgetConfig } from "./config";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../../components/widgets/label-sets/runtime-options";
 
 export type PhiGalleryWidgetServerProps = {
   runtime: PhiBlockRuntime;
@@ -34,11 +34,7 @@ function isPublicAssetReference(value: unknown): value is PhiPublicMediaAssetRef
  * read and is nothing on a live page, rather than an empty gallery anywhere.
  */
 export async function PhiGalleryWidgetServer({ runtime, registry, config, widgetId }: PhiGalleryWidgetServerProps) {
-  const labels = await getPhiGalleryWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  });
+  const labels = await getPhiGalleryWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
   const renderMode = readPhiRuntimeTreeRenderMode(config);
   const result = registry && config.source
     ? await resolvePhiRecordSource({ registry, runtime, binding: config.source })

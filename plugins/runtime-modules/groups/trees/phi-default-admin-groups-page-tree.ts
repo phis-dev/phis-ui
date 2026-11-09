@@ -15,7 +15,7 @@ import { PHI_GROUPS_PAGE_LAYOUT_IDS, PHI_GROUPS_PAGE_OVERLAY_IDS, PHI_GROUPS_PAG
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "../../../../components/regions/presets/phi-base-page-layout";
 import { getPhiGroupFormLabels } from "../labels";
 import { PHI_GROUPS_FORM_IDS } from "../forms";
-import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 
 const SYNTHETIC_ADMIN_GROUPS_REGION_IDS = {
   regionContent: -451,
@@ -39,11 +39,7 @@ export async function buildPhiDefaultAdminGroupsPageTree({
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
-  const labels = await getPhiGroupFormLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  });
+  const labels = await getPhiGroupFormLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
   const controllerAddress = createPhiGroupsControllerAddress();
   const membersTableAddress = createPhiSignalAddress("cms", PHI_GROUPS_PAGE_WIDGET_IDS.widgetMembersTable);
   const createFormAddress = createPhiSignalAddress("cms", PHI_GROUPS_PAGE_WIDGET_IDS.widgetCreateForm);

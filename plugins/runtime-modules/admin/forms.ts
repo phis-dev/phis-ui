@@ -12,6 +12,7 @@ import {
   createPhiSharedFormProviderKey,
 } from "../../../components/forms/form-provider-contract";
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
+import { phiFormLabel as label } from "../../../components/forms/form-descriptor-text";
 
 export const PHI_ADMIN_SETTINGS_FORM_IDS = {
   general: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "admin/settings-general"),
@@ -22,7 +23,6 @@ const PHI_ADMIN_SETTINGS_FORM_HANDLER_KEYS = {
 } as const;
 
 const LABEL_SET_KEY = "@phis/ui/modules/admin/labels/settings" as const;
-const label = (key: string, fallback: string) => ({ kind: "label", key, fallback } as const);
 
 const required = (key: string, fallback: string) => ({
   providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.required,

@@ -13,12 +13,11 @@ export type PhiSidebarNavigationWidgetProps = Pick<
   navKey?: string;
 };
 
-export async function PhiSidebarNavigationWidget({
-  runtime,
-  navKey,
-  config,
-  menuTheme,
-}: PhiSidebarNavigationWidgetProps) {
+/** The Widget and its preview differ in nothing but the Client type the host mounts. */
+async function renderSidebarNavigation(
+  { runtime, navKey, config, menuTheme }: PhiSidebarNavigationWidgetProps,
+  type: typeof PhiCmsWidgetType.SidebarNavigation | typeof PhiRuntimeRenderClientType.SidebarNavigationPreview,
+) {
   const resolvedItems = await resolvePhiNavigationItems(runtime, navKey?.trim() || `${runtime.area}:sidebar`);
   if (resolvedItems == null || resolvedItems.length === 0) {
     return null;
@@ -26,7 +25,7 @@ export async function PhiSidebarNavigationWidget({
 
   return (
     <PhiRuntimeModuleRenderClientHost
-      type={PhiCmsWidgetType.SidebarNavigation}
+      type={type}
       componentProps={{
         runtime: { site: runtime.site, locale: runtime.locale, area: runtime.area },
         config,
@@ -37,26 +36,10 @@ export async function PhiSidebarNavigationWidget({
   );
 }
 
-export async function PhiSidebarNavigationWidgetPreview({
-  runtime,
-  navKey,
-  config,
-  menuTheme,
-}: PhiSidebarNavigationWidgetProps) {
-  const resolvedItems = await resolvePhiNavigationItems(runtime, navKey?.trim() || `${runtime.area}:sidebar`);
-  if (resolvedItems == null || resolvedItems.length === 0) {
-    return null;
-  }
+export async function PhiSidebarNavigationWidget(props: PhiSidebarNavigationWidgetProps) {
+  return renderSidebarNavigation(props, PhiCmsWidgetType.SidebarNavigation);
+}
 
-  return (
-    <PhiRuntimeModuleRenderClientHost
-      type={PhiRuntimeRenderClientType.SidebarNavigationPreview}
-      componentProps={{
-        runtime: { site: runtime.site, locale: runtime.locale, area: runtime.area },
-        config,
-        items: resolvedItems,
-        menuTheme,
-      }}
-    />
-  );
+export async function PhiSidebarNavigationWidgetPreview(props: PhiSidebarNavigationWidgetProps) {
+  return renderSidebarNavigation(props, PhiRuntimeRenderClientType.SidebarNavigationPreview);
 }

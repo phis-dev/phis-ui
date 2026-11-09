@@ -26,7 +26,7 @@ import {
 } from "../../../helpers/cms-scope-search-params";
 import { getPhiBuilderChromeWidgetLabels } from "../../../components/widgets/label-sets/builder-chrome";
 import { getPhiRegionWidgetLabels } from "../../../components/widgets/label-sets/region";
-import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../components/widgets/label-sets/runtime-options";
 
 export async function PhiDeveloperBuilderPagesWorkspaceWidget({
   runtime,
@@ -57,16 +57,8 @@ export async function PhiDeveloperBuilderPagesWorkspaceWidget({
     previewArea,
     registry.runtimeModuleCatalog,
   );
-  const labelsPromise = getPhiBuilderChromeWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  });
-  const regionLabelsPromise = getPhiRegionWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  });
+  const labelsPromise = getPhiBuilderChromeWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
+  const regionLabelsPromise = getPhiRegionWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
   const [pageDraftsByScope, pageMeta, moduleIds, chromeLabels, regionLabels] = await Promise.all([
     pageDraftsByScopePromise,
     pageMetaPromise,

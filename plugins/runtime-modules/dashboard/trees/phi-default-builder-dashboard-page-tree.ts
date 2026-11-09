@@ -7,9 +7,9 @@ import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/c
 import type { PhiBlockRuntime } from "../../../../types";
 import { buildPhiBasePageContentScaffold } from "../../../../components/regions/presets/phi-base-page-layout";
 import { getPhiBuilderChromeWidgetLabels } from "../../../../components/widgets/label-sets/builder-chrome";
-import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 import { buildPhiDashboardCardsWidget } from "./dashboard-cards-page-tree";
 import { getPhiDashboardCardsEmptyDescription } from "./area-dashboard-label-set";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 
 /*
  * No Header bottom band: the Dashboard has no commands -- nothing to save, preview or publish -- and the
@@ -34,11 +34,7 @@ export async function buildPhiDefaultBuilderDashboardPageTree({
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
-  const translatorOptions = {
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  };
+  const translatorOptions = buildPhiWidgetLabelTranslatorOptions(runtime);
   const [labels, emptyDescription] = await Promise.all([
     getPhiBuilderChromeWidgetLabels(translatorOptions),
     getPhiDashboardCardsEmptyDescription(translatorOptions),

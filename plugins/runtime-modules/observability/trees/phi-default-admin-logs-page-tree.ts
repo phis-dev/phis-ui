@@ -10,8 +10,8 @@ import { getPhiAdminLogsPageLabels } from "./admin-logs-label-set";
 import { getPhiObservabilityLogsWidgetLabels } from "../../../../components/widgets/label-sets/observability-logs";
 import { PHI_OBSERVABILITY_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
 import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
-import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 import { PHI_DIALOG_BODY_CONFIG } from "../../../../helpers/cms-dialog";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 
 const SYNTHETIC_ADMIN_LOGS_REGION_IDS = {
   regionContent: -441,
@@ -49,11 +49,7 @@ export async function buildPhiDefaultAdminLogsPageTree({
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
-  const translator = {
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  };
+  const translator = buildPhiWidgetLabelTranslatorOptions(runtime);
   const [labels, widgetLabels] = await Promise.all([getPhiAdminLogsPageLabels(translator), getPhiObservabilityLogsWidgetLabels(translator)]);
 
   const scaffold = buildPhiBasePageContentScaffold({

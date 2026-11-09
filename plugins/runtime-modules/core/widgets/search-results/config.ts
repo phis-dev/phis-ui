@@ -2,12 +2,7 @@ import { PHI_SEARCH_DEFAULT_LIMIT, PHI_SEARCH_MAX_LIMIT } from "@phis/contracts/
 
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
-import {
-  readInteger,
-  readRenderableBlockConfig,
-  readString,
-  type PhiCmsWidgetConfigBase,
-} from "../../../../../components/widgets/config/parser-primitives";
+import { readClampedPositiveInteger, readRenderableBlockConfig, readString, type PhiCmsWidgetConfigBase } from "../../../../../components/widgets/config/parser-primitives";
 
 /**
  * The Pages matching the query in the page's URL (SEARCH.md), read from Core while the page is drawn.
@@ -23,16 +18,10 @@ export type PhiSearchResultsWidgetConfig = PhiCmsWidgetConfigBase & {
   title: string;
 };
 
-function readLimit(value: unknown) {
-  const limit = readInteger(value);
-  if (!limit || limit <= 0) return PHI_SEARCH_DEFAULT_LIMIT;
-  return Math.min(limit, PHI_SEARCH_MAX_LIMIT);
-}
-
 function normalizePhiSearchResultsWidgetConfig(raw: Record<string, unknown>): PhiSearchResultsWidgetConfig {
   return {
     ...readRenderableBlockConfig(raw),
-    limit: readLimit(raw.limit),
+    limit: readClampedPositiveInteger(raw.limit, PHI_SEARCH_DEFAULT_LIMIT, PHI_SEARCH_MAX_LIMIT),
     title: readString(raw.title)?.trim() ?? "",
   };
 }

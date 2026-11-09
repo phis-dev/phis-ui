@@ -1,11 +1,12 @@
 "use client";
 
-import { useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
+import { type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { FloatButton } from "antd";
 
 import { PhiIcon } from "../shell/phi-icon";
 import type { PhiToolbarControlItem } from "./phi-toolbar-control";
+import { usePhiHydrated } from "../state/use-phi-hydrated";
 
 export type PhiFloatButtonControlPlacement = "bottom-end" | "bottom-start" | "top-end" | "top-start";
 
@@ -35,8 +36,6 @@ export type PhiFloatButtonControlProps = {
   onActivate?: (key: string) => void;
 };
 
-const subscribeNever = () => () => {};
-
 /**
  * Where a fixed button is drawn: on `document.body`, outside every box of the page.
  *
@@ -48,7 +47,7 @@ const subscribeNever = () => () => {};
  * to portal into, and a fixed button needs none of the page's flow.
  */
 function PhiFloatButtonPortal({ children }: { children: ReactNode }) {
-  const mounted = useSyncExternalStore(subscribeNever, () => true, () => false);
+  const mounted = usePhiHydrated();
   return mounted ? createPortal(children, document.body) : null;
 }
 

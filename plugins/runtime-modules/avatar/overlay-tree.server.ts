@@ -5,8 +5,8 @@ import { createPhiSignalAddress } from "../../../types/signals";
 import type { PhiBlockRuntime } from "../../../types/widget-runtime";
 import { getPhiAvatarWidgetLabels } from "./labels";
 import { PHI_AVATAR_OVERLAY_IDS } from "./addresses";
-import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 import { PHI_DIALOG_BODY_CONFIG } from "../../../helpers/cms-dialog";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../components/widgets/label-sets/runtime-options";
 
 /**
  * The Avatar Module's Overlay: one modal holding the picker.
@@ -24,11 +24,7 @@ export async function buildPhiAvatarAreaPickerOverlayTree({
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
   const ids = PHI_AVATAR_OVERLAY_IDS;
-  const labels = await getPhiAvatarWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  });
+  const labels = await getPhiAvatarWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
 
   const nodes = createPhiCmsPresetNodes(page);
   return {

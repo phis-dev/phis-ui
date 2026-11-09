@@ -6,16 +6,12 @@ import {
   PHI_BUILDER_INSPECTOR_HEADER_WIDGET_DEFINITION,
   type PhiBuilderChromeWidgetConfig,
 } from "../chrome/config";
-import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../../components/widgets/label-sets/runtime-options";
 
 export const PHI_BUILDER_INSPECTOR_HEADER_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiBuilderChromeWidgetConfig> = {
   ...PHI_BUILDER_INSPECTOR_HEADER_WIDGET_DEFINITION,
   render: async ({ runtime }) => {
-    const options = {
-      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-      internalToken: readPhiServerApiCredentials().internalToken,
-      locale: runtime.locale.current,
-    };
+    const options = buildPhiWidgetLabelTranslatorOptions(runtime);
     const [inspectorLabels, regionLabels] = await Promise.all([
       getPhiInspectorWidgetLabels(options),
       getPhiRegionWidgetLabels(options),

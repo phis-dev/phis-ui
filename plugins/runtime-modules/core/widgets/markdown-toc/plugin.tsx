@@ -6,14 +6,10 @@ import {
 } from "./config";
 import { PhiMarkdownTocWidget } from "./server";
 import { getPhiMarkdownTocWidgetDefaultLabels } from "../../../../../components/widgets/label-sets/markdown-toc";
-import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../../components/widgets/label-sets/runtime-options";
 
 async function loadDefaultLabels(runtime: Parameters<NonNullable<PhiCmsServerWidgetPlugin<PhiCmsMarkdownTocWidgetConfig>["render"]>>[0]["runtime"]) {
-  return getPhiMarkdownTocWidgetDefaultLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  });
+  return getPhiMarkdownTocWidgetDefaultLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
 }
 
 export const PHI_MARKDOWN_TOC_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsMarkdownTocWidgetConfig> = {

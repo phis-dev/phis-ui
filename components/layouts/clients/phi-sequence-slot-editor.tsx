@@ -29,6 +29,7 @@ import { PhiIcon } from "../../shell/phi-icon";
 import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
 import { PhiSurfaceTone } from "../../surface/phi-surface-tone";
 import { resolvePhiSurfaceToneClassName } from "../../../types/surface";
+import { joinPhiClassNames } from "../../../helpers/class-names";
 
 /**
  * Authoring a sequence, one slot at a time.
@@ -129,7 +130,7 @@ export function PhiSequenceSlotEditor({
         data-phi-block-render-mode={renderMode}
         data-phi-layout-debug-layer={phiLayoutDebugLayerMarker(isAuthoringRender)}
         data-phi-layout-has-explicit-layout-background={hasExplicitLayoutBackground ? "true" : "false"}
-        className={["phi-layout", resolvePhiSurfaceToneClassName(chrome.surface?.tone)].filter(Boolean).join(" ")}
+        className={joinPhiClassNames("phi-layout", resolvePhiSurfaceToneClassName(chrome.surface?.tone))}
         style={{
           position: "relative",
           display: "flex",

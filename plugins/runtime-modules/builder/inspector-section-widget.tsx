@@ -29,7 +29,6 @@ import {
 import { PhiRuntimeModuleAuthoringDataProviderHost } from "../../../components/runtime/runtime-module-authoring-host";
 import { PhiRuntimeModuleDataProviderClientHost } from "../../../components/runtime/runtime-module-data-provider-client-manifest";
 import { resolvePhiBuilderAuthoringPickerDataProviderKeysFromCatalog } from "./authoring-provider-keys";
-import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 export type PhiBuilderInspectorSectionWidgetProps = {
   runtime: PhiBlockRuntime;
@@ -86,38 +85,14 @@ export async function PhiBuilderInspectorSectionWidget({
     iconPickerLabels,
     inspectorLabels,
   ] = await Promise.all([
-    getPhiBackgroundWidgetLabels({
-      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-      internalToken: readPhiServerApiCredentials().internalToken,
-      locale: runtime.locale.current,
-    }),
-    getPhiBorderWidgetLabels({
-      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-      internalToken: readPhiServerApiCredentials().internalToken,
-      locale: runtime.locale.current,
-    }),
-    getPhiPaddingWidgetLabels({
-      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-      internalToken: readPhiServerApiCredentials().internalToken,
-      locale: runtime.locale.current,
-    }),
-    getPhiGeometryWidgetLabels({
-      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-      internalToken: readPhiServerApiCredentials().internalToken,
-      locale: runtime.locale.current,
-    }),
-    getPhiSignalsWidgetLabels({
-      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-      internalToken: readPhiServerApiCredentials().internalToken,
-      locale: runtime.locale.current,
-    }),
+    getPhiBackgroundWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
+    getPhiBorderWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
+    getPhiPaddingWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
+    getPhiGeometryWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
+    getPhiSignalsWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
     getPhiColorPickerLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
     getPhiIconPickerLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
-    getPhiInspectorWidgetLabels({
-      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-      internalToken: readPhiServerApiCredentials().internalToken,
-      locale: runtime.locale.current,
-    }),
+    getPhiInspectorWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
   ]);
   const surfaceLabels = resolvePhiInspectorSurfaceLabels(inspectorLabels);
 

@@ -1,16 +1,20 @@
 import { PHI_SHARED_PACKAGE_NAME } from "../../constants/package";
 import { createPhiRuntimeModuleId } from "../../constants/module-identity";
 import type {
+  PhiCmsPreviewWidgetPlugin,
+  PhiCmsRuntimeWidgetPlugin,
+  PhiCmsWidgetPluginDefinition,
+  PhiRuntimeControllerDefinition,
   PhiRuntimeModule,
-  PhiRuntimeModuleDefinition,
   PhiRuntimeModuleCatalog,
   PhiRuntimeModuleCatalogEntry,
-  PhiRuntimeModuleId,
-  PhiRuntimeModuleLayoutDefinition,
-  PhiRuntimeModuleWidgetDefinition,
-  PhiRuntimeControllerDefinition,
   PhiRuntimeModuleControllerDescriptor,
   PhiRuntimeModuleDataProviderDescriptor,
+  PhiRuntimeModuleDefinition,
+  PhiRuntimeModuleId,
+  PhiRuntimeModuleLayoutDefinition,
+  PhiRuntimeModuleRenderPolicies,
+  PhiRuntimeModuleWidgetDefinition,
 } from "../../types/cms-plugins";
 import type { PhiRuntimeDataProviderKey } from "../../types/runtime-data-provider";
 import { isPhiCalendarAdapterKey, type PhiCalendarAdapterKey } from "../../types/calendar";
@@ -1152,4 +1156,21 @@ export function assertPhiRuntimeModule(module: PhiRuntimeModule) {
       );
     }
   }
+}
+
+/**
+ * A Widget a first-party Module contributes, typed by its config.
+ *
+ * The options are the definition the Builder reads and the two loaders the render and the preview
+ * call; the cast is what `PhiRuntimeModuleWidgetDefinition` asks for, since it erases the config type.
+ * Seven Modules each wrote this ten-line function for themselves.
+ */
+export function definePhiFirstPartyWidget<TConfig>(options: {
+  definition: PhiCmsWidgetPluginDefinition<TConfig>;
+  ownerModuleId: `${string}/${string}`;
+  renderPolicies: PhiRuntimeModuleRenderPolicies;
+  loadRuntime: () => Promise<PhiCmsRuntimeWidgetPlugin<TConfig>>;
+  loadPreview: () => Promise<PhiCmsPreviewWidgetPlugin<TConfig>>;
+}): PhiRuntimeModuleWidgetDefinition {
+  return options as PhiRuntimeModuleWidgetDefinition;
 }

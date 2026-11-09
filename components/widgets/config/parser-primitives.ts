@@ -149,3 +149,15 @@ export function readNavItems(value: unknown): PhiNavItem[] | undefined {
 
   return items.length > 0 ? items : undefined;
 }
+
+/**
+ * A positive whole number from a config, `fallback` where there is none or it is not positive, and no
+ * more than `max` where one is named. The list Widgets each parsed their page size this way.
+ */
+export function readClampedPositiveInteger(value: unknown, fallback: number, max?: number) {
+  const parsed = readInteger(value);
+  if (parsed == null || parsed <= 0) {
+    return fallback;
+  }
+  return max == null ? parsed : Math.min(parsed, max);
+}

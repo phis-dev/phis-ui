@@ -10,6 +10,7 @@ import { resolvePhiSplitCardGroundFrame } from "../split-card-geometry";
 import { PhiSurfaceTone } from "../../surface/phi-surface-tone";
 import { PHI_LAYOUT_SURFACE_RADIUS } from "../phi-layout-contract";
 import { usePhiLayoutSignalSurface } from "../phi-layout-signal-surface";
+import { joinPhiClassNames } from "../../../helpers/class-names";
 
 export type PhiSplitCardHalfProps = Omit<HTMLAttributes<HTMLDivElement>, "style" | "children"> & {
   [attribute: `data-${string}`]: string | undefined;
@@ -61,7 +62,7 @@ export function PhiSplitCardHalf({
   return (
     <div
       {...attributes}
-      className={[className, toneClassName].filter(Boolean).join(" ") || undefined}
+      className={joinPhiClassNames(className, toneClassName)}
       style={{ ...card.style, ...style }}
     >
       <PhiSurfaceGroundLayer ground={card.ground} frame={resolvePhiSplitCardGroundFrame(side, gap, swapped)} />

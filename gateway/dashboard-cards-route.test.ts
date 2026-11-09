@@ -35,6 +35,9 @@ vi.mock("../server-helpers/cms-route", () => ({
 }));
 vi.mock("../server-helpers/cms-request", () => ({
   resolveActivePresetModuleKeys: () => scope.activeModuleIds,
+  // No route matches, so no card resolves an href. Where a target leads is `resolveCardHref`'s own
+  // question and turns on a route table this test has no business compiling.
+  resolvePhiAreaRouteScope: () => ({ activeModuleIds: scope.activeModuleIds, routeTable: { exactByPath: new Map() } }),
 }));
 vi.mock("../plugins/runtime-modules/descriptor-compiler", () => ({
   resolvePhiCmsDescriptorCatalog: () => ({
@@ -43,9 +46,6 @@ vi.mock("../plugins/runtime-modules/descriptor-compiler", () => ({
   resolvePhiCmsAreaShellPresetBinding: () => ({
     descriptor: { ownerModuleId: "@phis/ui/modules/admin", presetKey: "admin-area-preset" },
   }),
-  // No route matches, so no card resolves an href. Where a target leads is `resolveCardHref`'s own
-  // question and turns on a route table this test has no business compiling.
-  compilePhiCmsActiveRouteTable: () => ({ exactByPath: new Map() }),
 }));
 vi.mock("../helpers/cms-area-config", () => ({
   readPhiAreaPublicRoutePaths: () => [],

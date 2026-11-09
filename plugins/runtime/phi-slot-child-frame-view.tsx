@@ -35,6 +35,7 @@ import {
 } from "./slot-size-policy";
 import { resolvePhiRenderableBlockGeometry } from "../../types/renderable-block-geometry";
 import type { PhiRenderableBlockReceiver } from "../../components/runtime/renderable-block-runtime";
+import { joinPhiClassNames } from "../../helpers/class-names";
 
 export type PhiSlotChildFrameViewProps = {
   kind: PhiSlotChildKind;
@@ -132,7 +133,7 @@ export function PhiSlotChildFrameView({
     <div
       ref={anchorRef}
       hidden={resolvedVisibility === "hidden"}
-      className={[buildPhiSlotChildClassName(policy), className, resolvedConfig.className, surface?.className].filter(Boolean).join(" ")}
+      className={joinPhiClassNames(buildPhiSlotChildClassName(policy), className, resolvedConfig.className, surface?.className)}
       data-phi-slot-child-frame="true"
       data-phi-renderable-block="true"
       data-phi-slot-child-kind={kind}

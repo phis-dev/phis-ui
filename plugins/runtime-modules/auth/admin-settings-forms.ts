@@ -10,6 +10,7 @@ import {
 } from "../../../components/forms/form-provider-contract";
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
 import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
+import { phiFormLabel as label } from "../../../components/forms/form-descriptor-text";
 
 export const PHI_AUTH_ADMIN_SETTINGS_FORM_IDS = {
   policy: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "auth/admin-policy"),
@@ -28,7 +29,6 @@ const PHI_AUTH_ADMIN_SETTINGS_FORM_HANDLER_KEYS = {
 } as const;
 
 const LABEL_SET_KEY = "@phis/ui/modules/auth/labels/admin-settings" as const;
-const label = (key: string, fallback: string) => ({ kind: "label", key, fallback } as const);
 
 const FORM_LAYOUT = {
   columns: { compact: 1, medium: 1, wide: 1 },

@@ -9,17 +9,12 @@ import {
 } from "../constants/cms-areas";
 import { canPhiViewerAccess } from "../types/access";
 import {
-  readPhiAreaLandingSelection,
-  readPhiAreaPublicRoutePaths,
-} from "../helpers/cms-area-config";
-import {
-  compilePhiCmsActiveRouteTable,
   normalizePhiCmsRoutePath,
   resolvePhiCmsAreaShellPresetBinding,
   resolvePhiCmsDescriptorCatalog,
   resolvePhiCmsRoutePreset,
 } from "../plugins/runtime-modules/descriptor-compiler";
-import { resolveActivePresetModuleKeys } from "../server-helpers/cms-request";
+import { resolvePhiAreaRouteScope } from "../server-helpers/cms-request";
 import { resolvePhiCmsLookup } from "../server-helpers/cms-lookup";
 import { getPhiCmsPage, getPhiExactSiteArea } from "../server-helpers/cms";
 import { resolveCmsRootRoute } from "../server-helpers/cms-route";
@@ -145,20 +140,14 @@ export function buildPhiNavigationTargetRouteHandler({
         cookieHeader,
         sourcePreset,
       });
-      const activeModuleIds = resolveActivePresetModuleKeys(
-        bridge.runtimeModuleCatalog,
-        area,
-        areaPreset ? { preset: areaPreset.preset } : null,
-        requestContext.serverCapabilities,
-      );
-      const storagePath = resolveAreaStoragePath(resolvedRoute.cmsPath, area);
-      const routeTable = compilePhiCmsActiveRouteTable({
+            const { routeTable } = resolvePhiAreaRouteScope({
+        runtimeModuleCatalog: bridge.runtimeModuleCatalog,
         catalog,
         area,
-        activeModuleIds,
-        publicRoutePaths: readPhiAreaPublicRoutePaths(areaPreset?.preset.preset.config),
-        landingSelection: readPhiAreaLandingSelection(areaPreset?.preset.preset.config),
+        preset: areaPreset?.preset ?? null,
+        serverCapabilities: requestContext.serverCapabilities,
       });
+      const storagePath = resolveAreaStoragePath(resolvedRoute.cmsPath, area);
       const routeBinding = storagePath
         ? resolvePhiCmsRoutePreset(routeTable, storagePath)
         : null;

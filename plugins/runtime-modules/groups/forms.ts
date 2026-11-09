@@ -14,6 +14,7 @@ import {
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
 import { PHI_GROUPS_RUNTIME_DATA_PROVIDER_KEYS } from "./ids";
 import { PhiGroupMembershipFlags } from "../../../constants/site-groups";
+import { phiFormLabel as label, phiFormRequired as required } from "../../../components/forms/form-descriptor-text";
 
 export const PHI_GROUPS_FORM_IDS = {
   create: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "groups/create"),
@@ -28,11 +29,6 @@ const PHI_GROUPS_FORM_HANDLER_KEYS = {
 } as const;
 
 const LABEL_SET_KEY = "@phis/ui/modules/groups/labels/forms" as const;
-const label = (key: string, fallback: string) => ({ kind: "label", key, fallback } as const);
-const required = (key: string, fallback: string) => ([{
-  providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.required,
-  message: label(key, fallback),
-}] as const);
 
 /**
  * Creating a group is Site administration, not group membership: a group is an authorization unit that

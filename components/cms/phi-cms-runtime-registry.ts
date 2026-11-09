@@ -47,7 +47,7 @@ const resolvePhiCmsRuntimeModuleScopeForRequest = cache(
   },
 );
 
-export function resolvePhiCmsRuntimeModuleScope({
+function resolvePhiCmsRuntimeModuleScope({
   cmsBridge,
   moduleIds,
   area,

@@ -7,7 +7,7 @@ import {
   type PhiCoreRuntimeControllerConfig,
 } from "./core-runtime-controller-definition";
 
-export const PHI_CORE_RUNTIME_CONTROLLER_PLUGIN = {
+const PHI_CORE_RUNTIME_CONTROLLER_PLUGIN = {
   ...PHI_CORE_RUNTIME_CONTROLLER_DEFINITION,
   renderController: () => null,
 } satisfies PhiRuntimeControllerPlugin<PhiCoreRuntimeControllerConfig>;

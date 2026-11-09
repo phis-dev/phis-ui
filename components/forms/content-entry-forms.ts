@@ -15,15 +15,11 @@ import {
   type PhiContentEntryKind,
 } from "../../constants/content-entry-kinds";
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../constants/core-data-provider-keys";
+import { phiFormLabel as label, phiFormRequired as required } from "./form-descriptor-text";
 
 /** Where the page that places the entry Form names the Site's source language, for the empty "Written in". */
 export const PHI_CONTENT_ENTRY_SOURCE_LOCALE_PLACEHOLDER_CONFIG_KEY = "sourceLocalePlaceholder";
 
-const label = (key: string, fallback: string) => ({ kind: "label", key, fallback } as const);
-const required = (key: string, fallback: string) => ([{
-  providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.required,
-  message: label(key, fallback),
-}] as const);
 
 function entryFields(kind: PhiContentEntryKind) {
   return [

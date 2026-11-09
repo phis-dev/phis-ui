@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  phiCmsRegionAcceptsWidget,
-  resolvePhiCmsRegionOwnership,
-} from "./cms-region-keys";
+import { phiCmsRegionAcceptsWidget } from "./cms-region-keys";
 
 /**
  * Where a Widget may stand, asked of the Region rather than of the Widget's name.
@@ -14,18 +11,6 @@ import {
  * recognises is not a reason to hide a Widget from an author.
  */
 describe("Region ownership", () => {
-  it("names the shell Regions and the Page Regions apart", () => {
-    expect(resolvePhiCmsRegionOwnership("sider_left")).toBe("shell");
-    expect(resolvePhiCmsRegionOwnership("header_main")).toBe("shell");
-    expect(resolvePhiCmsRegionOwnership("content")).toBe("page");
-    expect(resolvePhiCmsRegionOwnership("header_bottom")).toBe("page");
-  });
-
-  it("knows nothing about a Region it was never told about", () => {
-    expect(resolvePhiCmsRegionOwnership("gallery_strip")).toBeUndefined();
-    expect(resolvePhiCmsRegionOwnership(undefined)).toBeUndefined();
-  });
-
   it("lets a Widget that asks for nothing stand anywhere", () => {
     expect(phiCmsRegionAcceptsWidget("content", undefined)).toBe(true);
     expect(phiCmsRegionAcceptsWidget("sider_left", null)).toBe(true);

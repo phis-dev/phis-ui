@@ -11,15 +11,11 @@ import {
 import { canPhiViewerAccess } from "../types/access";
 import { localizeAreaPath } from "../helpers/locale";
 import {
-  readPhiAreaLandingSelection,
-  readPhiAreaPublicRoutePaths,
-} from "../helpers/cms-area-config";
-import {
   compilePhiCmsActiveRouteTable,
   resolvePhiCmsAreaShellPresetBinding,
   resolvePhiCmsDescriptorCatalog,
 } from "../plugins/runtime-modules/descriptor-compiler";
-import { resolveActivePresetModuleKeys } from "../server-helpers/cms-request";
+import { resolvePhiAreaRouteScope } from "../server-helpers/cms-request";
 import { getPhiExactSiteArea } from "../server-helpers/cms";
 import { resolveCmsRootRoute } from "../server-helpers/cms-route";
 import {
@@ -136,18 +132,12 @@ async function resolveDashboardCardScope({
       presetKey: shellBinding.descriptor.presetKey,
     },
   });
-  const activeModuleIds = resolveActivePresetModuleKeys(
-    bridge.runtimeModuleCatalog,
-    area,
-    areaPreset ? { preset: areaPreset.preset } : null,
-    requestContext.serverCapabilities,
-  );
-  const routeTable = compilePhiCmsActiveRouteTable({
+    const { activeModuleIds, routeTable } = resolvePhiAreaRouteScope({
+    runtimeModuleCatalog: bridge.runtimeModuleCatalog,
     catalog,
     area,
-    activeModuleIds,
-    publicRoutePaths: readPhiAreaPublicRoutePaths(areaPreset?.preset.preset.config),
-    landingSelection: readPhiAreaLandingSelection(areaPreset?.preset.preset.config),
+    preset: areaPreset?.preset ?? null,
+    serverCapabilities: requestContext.serverCapabilities,
   });
 
   const cardContext: PhiDashboardCardContext = {

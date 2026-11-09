@@ -1,7 +1,7 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { PHI_PAGINATION_CONTROL_SIGNALS } from "../../../../../components/widgets/signals/control-signal-capabilities";
-import { readBoolean, readInteger, readString } from "../../../../../components/widgets/config/parser-primitives";
+import { readBoolean, readClampedPositiveInteger, readString } from "../../../../../components/widgets/config/parser-primitives";
 import {
   PHI_CONTROL_PRESENTATION_FIELDS,
   PHI_CONTROL_STATE_FIELDS,
@@ -24,11 +24,6 @@ export type PhiPaginationWidgetConfig = PhiControlConfig & {
   simple?: boolean;
 };
 
-function readPositiveInteger(value: unknown, fallback: number) {
-  const parsed = readInteger(value);
-  return parsed != null && parsed > 0 ? parsed : fallback;
-}
-
 function parsePhiPaginationWidgetConfig(config: Record<string, unknown>): PhiPaginationWidgetConfig {
   const controlState = parsePhiControlConfig(config, {
     key: "pagination",
@@ -37,9 +32,9 @@ function parsePhiPaginationWidgetConfig(config: Record<string, unknown>): PhiPag
   return {
     ...controlState,
     label: readString(config.label),
-    page: readPositiveInteger(config.page, 1),
-    pageSize: readPositiveInteger(config.pageSize, 20),
-    total: readPositiveInteger(config.total, 0),
+    page: readClampedPositiveInteger(config.page, 1),
+    pageSize: readClampedPositiveInteger(config.pageSize, 20),
+    total: readClampedPositiveInteger(config.total, 0),
     showSizeChanger: readBoolean(config.showSizeChanger),
     simple: readBoolean(config.simple),
   };

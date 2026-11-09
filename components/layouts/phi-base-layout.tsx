@@ -17,6 +17,7 @@ import {
   phiLayoutDebugLayerMarker,
 } from "../../helpers/layout-authoring-markers";
 import { PhiLayoutSurfaceBox } from "./phi-layout-surface-box";
+import { joinPhiClassNames } from "../../helpers/class-names";
 
 export type { PhiBaseLayoutProps } from "./phi-layout-view-model";
 
@@ -178,7 +179,7 @@ export function PhiBaseLayout({
       data-phi-layout-debug-layer={phiLayoutDebugLayerMarker(isAuthoringRender)}
       data-phi-debug-scaffold={resolvedDebugMode ? "on" : undefined}
       data-phi-layout-has-explicit-layout-background={hasExplicitLayoutBackground ? "true" : "false"}
-      className={["phi-layout", className].filter(Boolean).join(" ")}
+      className={joinPhiClassNames("phi-layout", className)}
       style={resolvedContainerStyle}
     >
       {underlay}

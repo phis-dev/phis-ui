@@ -253,7 +253,7 @@ function PhiThreadsControllerView({
   return null;
 }
 
-export const PHI_THREADS_RUNTIME_CONTROLLER_PLUGIN = {
+const PHI_THREADS_RUNTIME_CONTROLLER_PLUGIN = {
   ...PHI_THREADS_RUNTIME_CONTROLLER_DEFINITION,
   renderController: ({ key, address, config }) =>
     <PhiThreadsControllerView key={key} address={address} config={config} />,

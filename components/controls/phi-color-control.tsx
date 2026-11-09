@@ -15,6 +15,7 @@ import { PhiLabeledControl } from "./phi-labeled-control";
 import { PhiSelectControl } from "./phi-select-control";
 import { usePhiImmediatePicker } from "./use-phi-immediate-picker";
 import { readPhiCssLinearGradient } from "../../helpers/css-linear-gradient";
+import { joinPhiClassNames } from "../../helpers/class-names";
 
 export type PhiColorPickerMode = "single" | "gradient" | "both";
 
@@ -148,7 +149,7 @@ export function PhiColorControl({
       showText={resolvedShowText}
       presets={antdPresets}
       getPopupContainer={getPopupContainer}
-      classNames={{ popup: { root: ["phi-color-widget-popup", popupClassName].filter(Boolean).join(" ") } }}
+      classNames={{ popup: { root: joinPhiClassNames("phi-color-widget-popup", popupClassName) } }}
       styles={{
         root: {
           display: "inline-flex",

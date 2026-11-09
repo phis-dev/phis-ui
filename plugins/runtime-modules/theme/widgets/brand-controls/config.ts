@@ -1,8 +1,4 @@
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
-import {
-  isPhiCmsAreaKey,
-  type PhiCmsAreaKey,
-} from "../../../../../constants/cms-areas";
 import { PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS } from "../../../../../constants/media-library-provider-keys";
 import { PHI_THEME_SIGNAL_CHANNELS } from "../../../../../plugins/runtime-modules/theme/controller/signals";
 import { createPhiCmsWidgetDefinition } from "../../../../../components/widgets/config/helpers";
@@ -14,11 +10,9 @@ import {
 
 export type PhiBuilderBrandWidgetConfig = Pick<PhiControlSignalConfig, "key" | "signalRoutes"> & {
   themeKey?: string;
-  reviewArea?: PhiCmsAreaKey;
 };
 
 function parseBuilderBrandWidgetConfig(config: Record<string, unknown>): PhiBuilderBrandWidgetConfig {
-  const reviewArea = readString(config.reviewArea);
   return {
     /*
      * The routes are read like any Widget's: the preview mode reaches a panel through the route its tree
@@ -27,7 +21,6 @@ function parseBuilderBrandWidgetConfig(config: Record<string, unknown>): PhiBuil
      */
     ...parsePhiControlSignalConfig(config, { key: "brandPreviewThemeMode" }),
     themeKey: readString(config.themeKey),
-    reviewArea: isPhiCmsAreaKey(reviewArea) ? reviewArea : undefined,
   };
 }
 
@@ -70,7 +63,6 @@ export const PHI_BUILDER_BRAND_THEME_CONTROLS_WIDGET_DEFINITION: PhiBuilderBrand
   runtimeSignals: PHI_BUILDER_BRAND_PREVIEW_MODE_SIGNALS,
   fields: [
     { key: "themeKey", type: "string", label: "Theme Key" },
-    { key: "reviewArea", type: "string", label: "Review Area" },
   ],
   parseConfig: parseBuilderBrandWidgetConfig,
 });
@@ -92,7 +84,6 @@ export const PHI_BUILDER_BRAND_IDENTITY_CONTROLS_WIDGET_DEFINITION: PhiBuilderBr
   runtimeSignals: PHI_BUILDER_BRAND_PREVIEW_MODE_SIGNALS,
   fields: [
     { key: "themeKey", type: "string", label: "Theme Key" },
-    { key: "reviewArea", type: "string", label: "Review Area" },
   ],
   parseConfig: parseBuilderBrandWidgetConfig,
 });
@@ -106,7 +97,6 @@ export const PHI_BUILDER_BRAND_STYLE_CONTROLS_WIDGET_DEFINITION: PhiBuilderBrand
   slotSizePolicy: "fill-inline",
   fields: [
     { key: "themeKey", type: "string", label: "Theme Key" },
-    { key: "reviewArea", type: "string", label: "Review Area" },
   ],
   parseConfig: parseBuilderBrandWidgetConfig,
 });
@@ -130,7 +120,6 @@ export const PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_DEFINITION: PhiBuilder
   runtimeSignals: PHI_BUILDER_BRAND_PREVIEW_MODE_SIGNALS,
   fields: [
     { key: "themeKey", type: "string", label: "Theme Key" },
-    { key: "reviewArea", type: "string", label: "Review Area" },
   ],
   parseConfig: parseBuilderBrandWidgetConfig,
 });
@@ -145,7 +134,6 @@ export const PHI_BUILDER_BRAND_THEME_PREVIEW_WIDGET_DEFINITION: PhiBuilderBrandW
   runtimeSignals: PHI_BUILDER_BRAND_PREVIEW_MODE_SIGNALS,
   fields: [
     { key: "themeKey", type: "string", label: "Theme Key" },
-    { key: "reviewArea", type: "string", label: "Review Area" },
   ],
   parseConfig: parseBuilderBrandWidgetConfig,
 });

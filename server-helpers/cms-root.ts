@@ -26,17 +26,12 @@ import {
 } from "./request-runtime";
 import { buildPhiBlockRuntime, loadPhiSiteRequestContext } from "./runtime";
 import {
-  compilePhiCmsActiveRouteTable,
   composePhiCmsActiveAreaOverlayPresets,
   resolvePhiCmsAreaShellPresetBinding,
   resolvePhiCmsDescriptorCatalog,
 } from "../plugins/runtime-modules/descriptor-compiler";
-import {
-  readPhiAreaLandingSelection,
-  readPhiAreaPublicRoutePaths,
-} from "../helpers/cms-area-config";
 import { resolvePhiAuthUiRuntimeProjection } from "./auth-ui-provider";
-import { resolveActivePresetModuleKeys } from "./cms-request";
+import { resolvePhiAreaRouteScope } from "./cms-request";
 import {
   applyPhiBackgroundAssetProjection,
   resolvePhiBackgroundAssetProjection,
@@ -211,22 +206,16 @@ const loadPhiCmsRootScopeCached = cache(async function loadPhiCmsRootScopeCached
     });
   const baseResolvedAreaPreset: PhiResolvedCmsAreaPresetTree | null =
     exactAreaPreset?.preset ?? localAreaPreset?.preset ?? null;
-  const activeModuleIds = resolveActivePresetModuleKeys(
-    cmsBridge.runtimeModuleCatalog,
-    resolvedRoute.area,
-    baseResolvedAreaPreset ? { preset: baseResolvedAreaPreset } : null,
-    requestContext.serverCapabilities,
-  );
   /*
    * The same table the page request compiles, from the same Area config: what the shell's navigation
    * links has to be what the request answers, assigned Public addresses and the awarded root included.
    */
-  const routeTable = compilePhiCmsActiveRouteTable({
+  const { activeModuleIds, routeTable } = resolvePhiAreaRouteScope({
+    runtimeModuleCatalog: cmsBridge.runtimeModuleCatalog,
     catalog: descriptorCatalog,
     area: resolvedRoute.area,
-    activeModuleIds,
-    publicRoutePaths: readPhiAreaPublicRoutePaths(baseResolvedAreaPreset?.preset.config),
-    landingSelection: readPhiAreaLandingSelection(baseResolvedAreaPreset?.preset.config),
+    preset: baseResolvedAreaPreset,
+    serverCapabilities: requestContext.serverCapabilities,
   });
   const composedAreaPreset = baseResolvedAreaPreset
     ? await composePhiCmsActiveAreaOverlayPresets({

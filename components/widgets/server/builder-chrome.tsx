@@ -2,7 +2,7 @@ import type { PhiBlockRuntime } from "../../../types";
 import { getPhiBuilderChromeWidgetLabels } from "../label-sets/builder-chrome";
 import { PhiRuntimeRenderClientType } from "../../../constants/runtime-render-client-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../runtime/runtime-module-render-client-manifest";
-import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
+import { buildPhiWidgetLabelTranslatorOptions } from "../label-sets/runtime-options";
 
 export type PhiBuilderChromeWidgetProps = {
   runtime: Pick<PhiBlockRuntime, "locale">;
@@ -10,11 +10,7 @@ export type PhiBuilderChromeWidgetProps = {
 };
 
 async function getLabels(runtime: PhiBuilderChromeWidgetProps["runtime"]) {
-  return getPhiBuilderChromeWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  });
+  return getPhiBuilderChromeWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
 }
 
 export async function PhiBuilderModeSwitchWidget({

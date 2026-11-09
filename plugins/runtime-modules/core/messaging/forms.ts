@@ -12,6 +12,7 @@ import { PHI_SHARED_FORM_IDS } from "../../../../components/forms/shared-form-id
 import { PHI_CMS_AREA_KEYS } from "../../../../constants/cms-areas";
 import { PhisThreadMessageFlag } from "../../../../constants/threads";
 import { PHI_CORE_RUNTIME_MODULE_ID } from "../ids";
+import { phiFormLabel as label } from "../../../../components/forms/form-descriptor-text";
 
 /*
  * Answering a conversation, as Core's Form, for every Module that runs conversations.
@@ -29,7 +30,6 @@ import { PHI_CORE_RUNTIME_MODULE_ID } from "../ids";
  */
 
 const LABEL_SET_KEY = "@phis/ui/modules/core/labels/form:thread-reply" as const;
-const label = (key: string, fallback: string) => ({ kind: "label", key, fallback } as const);
 const FULL_ROW = { start: 1, end: PHI_FORM_GRID_LAST_LINE };
 const FULL_WIDTH = { compact: FULL_ROW, medium: FULL_ROW, wide: FULL_ROW };
 

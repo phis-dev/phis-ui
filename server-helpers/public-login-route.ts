@@ -8,18 +8,13 @@ import { getPhiExactSiteArea } from "./cms";
 import { getPhiCapabilitySnapshot } from "../gateway/server-capabilities";
 import { resolvePhiRequestLocale } from "./request-locale";
 import {
-  readPhiAreaLandingSelection,
-  readPhiAreaPublicRoutePaths,
-} from "../helpers/cms-area-config";
-import {
-  compilePhiCmsActiveRouteTable,
   resolvePhiCmsAreaShellPresetBinding,
   resolvePhiCmsDescriptorCatalog,
   resolvePhiCmsRoutePresetByPageId,
 } from "../plugins/runtime-modules/descriptor-compiler";
 import { PHI_PUBLIC_LOGIN_ROUTE_IDENTITY } from "../constants/public-login-route";
 import { createPhiPresetCmsPageId } from "../types/cms-instance-id";
-import { resolveActivePresetModuleKeys } from "./cms-request";
+import { resolvePhiAreaRouteScope } from "./cms-request";
 import type { PhiCmsSiteBridge } from "../types/cms-plugins";
 import { PHIS_REQUEST_PATH_HEADER, PHIS_REQUEST_SEARCH_HEADER } from "../constants/http-headers";
 import type { PhiCapabilitySnapshot } from "../types/server-capabilities";
@@ -93,18 +88,12 @@ export const resolvePhiPublicLoginHref = cache(async function resolvePhiPublicLo
     },
   });
 
-  const activeModuleIds = resolveActivePresetModuleKeys(
-    cmsBridge.runtimeModuleCatalog,
-    "public",
-    areaPreset ? { preset: areaPreset.preset } : null,
-    serverCapabilities ?? null,
-  );
-  const routeTable = compilePhiCmsActiveRouteTable({
+    const { routeTable } = resolvePhiAreaRouteScope({
+    runtimeModuleCatalog: cmsBridge.runtimeModuleCatalog,
     catalog,
     area: "public",
-    activeModuleIds,
-    publicRoutePaths: readPhiAreaPublicRoutePaths(areaPreset?.preset.preset.config),
-    landingSelection: readPhiAreaLandingSelection(areaPreset?.preset.preset.config),
+    preset: areaPreset?.preset ?? null,
+    serverCapabilities: serverCapabilities ?? null,
   });
 
   const login = resolvePhiCmsRoutePresetByPageId(routeTable, PHI_PUBLIC_LOGIN_PAGE_ID);

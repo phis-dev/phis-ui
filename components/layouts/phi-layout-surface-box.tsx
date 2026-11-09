@@ -10,6 +10,7 @@ import { PhiSurfaceTone } from "../surface/phi-surface-tone";
 import { resolvePhiSurfaceToneClassName } from "../../types/surface";
 import { PHI_LAYOUT_SURFACE_RADIUS } from "./phi-layout-contract";
 import { usePhiLayoutSignalSurface } from "./phi-layout-signal-surface";
+import { joinPhiClassNames } from "../../helpers/class-names";
 
 /*
  * Kept where a Signal replaces the Surface: the Layout states them for its topology as well, and a box
@@ -71,7 +72,7 @@ export function PhiLayoutSurfaceBox({
   return (
     <div
       {...attributes}
-      className={[attributes.className, toneClassName].filter(Boolean).join(" ") || undefined}
+      className={joinPhiClassNames(attributes.className, toneClassName)}
       style={next.style}
     >
       <PhiSurfaceGroundLayer ground={next.ground} />

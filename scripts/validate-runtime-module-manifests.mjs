@@ -251,7 +251,7 @@ assertSameMembers(
 
 const widgetDefinitionsByOwnerFile = new Map(widgetManifestFiles.map((file) => {
   const source = readSourceSync(file);
-  const definitions = [...source.matchAll(/defineFirstPartyWidget\(\{([\s\S]*?)\n\s*\}\),/g)]
+  const definitions = [...source.matchAll(/definePhiFirstPartyWidget\(\{([\s\S]*?)\n\s*\}\),/g)]
     .map((match) => {
       const definition = match[1].match(/definition:\s+(PHI_[A-Z0-9_]+_WIDGET_DEFINITION),/);
       if (!definition) {

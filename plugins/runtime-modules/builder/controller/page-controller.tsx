@@ -140,7 +140,7 @@ export function usePhiBuilderPageController({
   }
 
   function navigateToBuilderPage(pageKey: string) {
-    openPhiBuilderPage(effectiveArea, pageKey, { closePages: true });
+    openPhiBuilderPage(effectiveArea, pageKey);
 
     if (typeof pathname === "string") {
       const nextSearchParams = new URLSearchParams(searchParams.toString());

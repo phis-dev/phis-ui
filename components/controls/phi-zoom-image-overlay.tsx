@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useEffectEvent, useRef, useSyncExternalStore } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 import { createPortal } from "react-dom";
 
 import { usePhiConfig } from "../root/phi-config-provider";
+import { usePhiHydrated } from "../state/use-phi-hydrated";
 
 export type PhiZoomImageOverlayProps = {
   open: boolean;
@@ -12,8 +13,6 @@ export type PhiZoomImageOverlayProps = {
   title?: string;
   onClose: () => void;
 };
-
-const subscribeNever = () => () => {};
 
 /** Ant Design's `zIndexPopupBase`, the layer its Modal stands on; the Phi token set does not carry it. */
 const PHI_ZOOM_OVERLAY_Z_INDEX = 1000;
@@ -29,7 +28,7 @@ const PHI_ZOOM_OVERLAY_Z_INDEX = 1000;
  */
 export function PhiZoomImageOverlay({ open, src, alt, title, onClose }: PhiZoomImageOverlayProps) {
   const { token } = usePhiConfig();
-  const mounted = useSyncExternalStore(subscribeNever, () => true, () => false);
+  const mounted = usePhiHydrated();
   const overlayRef = useRef<HTMLDivElement | null>(null);
 
   /*

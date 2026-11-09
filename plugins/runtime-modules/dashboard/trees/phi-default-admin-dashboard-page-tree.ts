@@ -4,7 +4,7 @@ import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/c
 import type { PhiBlockRuntime } from "../../../../types";
 import { getPhiAdminDashboardPageLabels } from "./admin-dashboard-label-set";
 import { buildPhiDashboardCardsPageTree } from "./dashboard-cards-page-tree";
-import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 
 /**
  * The Admin Dashboard: one Widget, and whatever the Area's Modules offer it.
@@ -37,11 +37,7 @@ export async function buildPhiDefaultAdminDashboardPageTree({
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
-  const labels = await getPhiAdminDashboardPageLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  });
+  const labels = await getPhiAdminDashboardPageLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
   return buildPhiDashboardCardsPageTree({
     page,
     area: "admin",

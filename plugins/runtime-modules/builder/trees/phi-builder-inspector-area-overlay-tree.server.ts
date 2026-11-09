@@ -35,8 +35,8 @@ import { getPhiEffectsWidgetLabels } from "../../../../components/widgets/label-
 import { getPhiInspectorWidgetLabels } from "../../../../components/widgets/label-sets/inspector";
 import { getPhiSignalsWidgetLabels } from "../../../../components/widgets/label-sets/signals";
 import type { PhiInspectorWidgetLabels } from "../../../../components/widgets/label-types/inspector";
-import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../../helpers/cms-dialog";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 
 const PHI_BUILDER_INSPECTOR_SECTIONS = {
   region: [
@@ -91,11 +91,7 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
-  const labelOptions = {
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  };
+  const labelOptions = buildPhiWidgetLabelTranslatorOptions(runtime);
   const [inspectorLabels, signalsLabels, effectsLabels] = await Promise.all([
     getPhiInspectorWidgetLabels(labelOptions),
     getPhiSignalsWidgetLabels(labelOptions),

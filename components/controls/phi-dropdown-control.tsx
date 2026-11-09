@@ -14,6 +14,7 @@ import {
 import { Dropdown } from "antd";
 
 import { toPhiAntdMenuItems, type PhiMenuControlItem } from "./phi-menu-control";
+import { joinPhiClassNames } from "../../helpers/class-names";
 
 /**
  * Ant Design reopens a hover-and-click dropdown when the click that should close it lands on the
@@ -164,7 +165,7 @@ export function PhiPillDropdownControl({
       <button
         ref={triggerRef}
         type="button"
-        className={["phi-dropdown-control", className].filter(Boolean).join(" ")}
+        className={joinPhiClassNames("phi-dropdown-control", className)}
         style={{
           display: "inline-flex",
           alignItems: "center",

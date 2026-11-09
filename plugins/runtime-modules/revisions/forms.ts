@@ -8,13 +8,13 @@ import {
 } from "../../../components/forms/form-provider-contract";
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
 import { PHI_REVISIONS_RUNTIME_MODULE_ID } from "./ids";
+import { phiFormLabel as label } from "../../../components/forms/form-descriptor-text";
 
 export const PHI_REVISIONS_FORM_IDS = {
   deleteArea: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "revisions/delete-area"),
 } as const;
 
 const LABEL_SET_KEY = "@phis/ui/modules/revisions/labels/forms" as const;
-const label = (key: string, fallback: string) => ({ kind: "label", key, fallback } as const);
 
 /**
  * The typed confirmation for deleting an Area's own shell.

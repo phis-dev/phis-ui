@@ -1,9 +1,8 @@
 "use client";
 
-import { cloneElement, lazy, Suspense, useState, type ReactElement, type ReactNode, type Ref } from "react";
+import { cloneElement, Suspense, useState, type ReactElement, type ReactNode, type Ref } from "react";
+import { PhiLazyTooltip } from "./phi-hover-text";
 
-/* The same Tooltip `PhiHoverText` loads, and loaded the same way: only where one is drawn. */
-const PhiLazyTooltip = lazy(() => import("antd/es/tooltip"));
 
 /** Whether an element shows less than its text: cut off at its end by an ellipsis, or by its height. */
 function isPhiElementTruncated(element: HTMLElement | null): boolean {

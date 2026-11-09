@@ -1,18 +1,7 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
-
 import { decodePhiProtectedMail, isPhiProtectedMail } from "../../helpers/protected-mail";
-
-const subscribeNever = () => () => {};
-
-/**
- * Whether this render runs in a hydrated browser. False on the server and during hydration -- the HTML a
- * crawler reads -- and true in the render that follows.
- */
-function usePhiHydrated() {
-  return useSyncExternalStore(subscribeNever, () => true, () => false);
-}
+import { usePhiHydrated } from "../state/use-phi-hydrated";
 
 /**
  * The href a link may show: a protected address only once the page is hydrated, everything else at once.

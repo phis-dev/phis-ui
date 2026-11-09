@@ -10,7 +10,7 @@ import {
 } from "../../../../components/widgets/label-sets/profile";
 import { PHI_SITE_LOCALES_CONFIG_KEY } from "../../../../components/forms/site-locales-config";
 import { createPhiCoreRuntimeControllerAddress } from "../../../../components/runtime/core-runtime-controller-address";
-import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 
 const REGION_CONTENT_ID = -286;
 
@@ -37,11 +37,7 @@ export async function buildPhiDefaultAppProfilePageTree({
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
-  const labelOptions = {
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  };
+  const labelOptions = buildPhiWidgetLabelTranslatorOptions(runtime);
   const [labels, localeLabels, themeLabels] = await Promise.all([
     getPhiProfilePageLabels(labelOptions),
     getPhiProfileLocaleWidgetLabels(labelOptions),

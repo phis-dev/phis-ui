@@ -222,7 +222,7 @@ export function PhiSlotChildViewportEffectsObserver({
     );
     const handleScrollOrResize = () => scheduleUpdate();
 
-    target.style.setProperty("--phi-stableEffects-viewport-scale", "1");
+    target.style.setProperty("--phi-effects-viewport-scale", "1");
     observer.observe(target);
     window.addEventListener("scroll", handleScrollOrResize, { passive: true });
     window.addEventListener("resize", handleScrollOrResize);

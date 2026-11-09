@@ -7,18 +7,14 @@ import {
   type PhiLengthWidgetConfig,
 } from "./config";
 import { getPhiLengthWidgetLabels } from "../../../../../components/widgets/label-sets/length";
-import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../../components/widgets/label-sets/runtime-options";
 
 async function renderLengthWidget(
   config: PhiLengthWidgetConfig,
   runtime: Parameters<PhiCmsServerWidgetPlugin<PhiLengthWidgetConfig>["render"]>[0]["runtime"],
   signalsEnabled: boolean,
 ) {
-  const labels = await getPhiLengthWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  });
+  const labels = await getPhiLengthWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
 
   return (
     <PhiRuntimeModuleRenderClientHost

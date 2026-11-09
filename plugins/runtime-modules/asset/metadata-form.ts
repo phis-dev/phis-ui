@@ -6,13 +6,13 @@ import { createPhiFormId } from "../../../types/form-id";
 import { PHI_SHARED_PACKAGE_NAME } from "../../../types/signals";
 import {
   PHI_FORM_FIELD_PROVIDER_KEYS,
-  PHI_FORM_VALIDATION_PROVIDER_KEYS,
   createPhiSharedFormProviderKey,
 } from "../../../components/forms/form-provider-contract";
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
 import { flattenPhiFormLabels } from "../../../components/forms/form-labels";
 import { PHI_ASSET_FOCAL_RECT_FORM_PROVIDER_KEY } from "./form-providers";
 import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
+import { phiFormLabel as label, phiFormRequired as required } from "../../../components/forms/form-descriptor-text";
 
 export const PHI_ASSET_METADATA_FORM_ID = createPhiFormId(PHI_SHARED_PACKAGE_NAME, "asset/metadata");
 export const PHI_ASSET_FOLDER_FORM_ID = createPhiFormId(PHI_SHARED_PACKAGE_NAME, "asset/folder-create");
@@ -20,11 +20,6 @@ const PHI_ASSET_METADATA_FORM_HANDLER_KEY = "site.asset.metadata.update";
 const PHI_ASSET_FOLDER_FORM_HANDLER_KEY = "site.asset.folder.create";
 const PHI_ASSET_FORM_LABEL_SET_KEY = "@phis/ui/modules/asset/labels/metadata" as const;
 
-const label = (key: string, fallback: string) => ({ kind: "label", key, fallback } as const);
-const required = (key: string, fallback: string) => ([{
-  providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.required,
-  message: label(key, fallback),
-}] as const);
 const flagOptions = [
   [PhiMediaAssetFlags.Featured, "featuredFlagLabel", "Featured"],
   [PhiMediaAssetFlags.Locked, "lockedFlagLabel", "Locked"],

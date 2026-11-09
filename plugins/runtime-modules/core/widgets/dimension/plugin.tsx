@@ -7,18 +7,14 @@ import {
   type PhiDimensionWidgetConfig,
 } from "./config";
 import { getPhiDimensionWidgetLabels } from "../../../../../components/widgets/label-sets/dimension";
-import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../../components/widgets/label-sets/runtime-options";
 
 async function renderDimensionWidget(
   config: PhiDimensionWidgetConfig,
   runtime: Parameters<PhiCmsServerWidgetPlugin<PhiDimensionWidgetConfig>["render"]>[0]["runtime"],
   signalsEnabled: boolean,
 ) {
-  const labels = await getPhiDimensionWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  });
+  const labels = await getPhiDimensionWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
 
   return (
     <PhiRuntimeModuleRenderClientHost

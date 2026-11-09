@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  collectPhiCmsRegionPageScopeReferences,
   phiCmsRegionPageScopeIncludes,
   readPhiCmsRegionPageScope,
   readPhiCmsRegionReveal,
@@ -41,7 +40,6 @@ describe("Region Page scope", () => {
     const stored = readPhiCmsRegionPageScope("header_top", {
       pageScope: { mode: "include", entries: [{ pageLinkTarget: { kind: "page", reference: about } }] },
     });
-    expect(collectPhiCmsRegionPageScopeReferences(stored)).toEqual([about]);
     const scope = resolvePhiCmsRegionPageScope(stored, links([[about, "/de/ueber-uns"]]), locales);
     expect(phiCmsRegionPageScopeIncludes(scope, "/ueber-uns")).toBe(true);
     expect(phiCmsRegionPageScopeIncludes(scope, "/ueber-uns/team")).toBe(false);

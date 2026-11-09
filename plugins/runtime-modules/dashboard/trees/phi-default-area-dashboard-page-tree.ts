@@ -6,8 +6,8 @@ import {
   getPhiAreaDashboardPageLabels,
   type PhiAreaDashboardKey,
 } from "./area-dashboard-label-set";
-import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 import { buildPhiDashboardCardsPageTree } from "./dashboard-cards-page-tree";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 
 /**
  * The Dashboard an Area gets when it has nothing more specific to show.
@@ -50,11 +50,7 @@ export async function buildPhiDefaultAreaDashboardPageTree({
   if (regionId === undefined) {
     throw new Error(`Area "${area}" has no generic Dashboard region id.`);
   }
-  const labels = await getPhiAreaDashboardPageLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  }, area);
+  const labels = await getPhiAreaDashboardPageLabels(buildPhiWidgetLabelTranslatorOptions(runtime), area);
   return buildPhiDashboardCardsPageTree({
     page,
     area,

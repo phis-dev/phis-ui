@@ -32,7 +32,7 @@ const MEDIA_KINDS = new Set<string>(Object.values(PhiMediaKind));
  * Exported because a handler and a test read the same shape, and because the one thing a caller must not
  * do is guess it from a sample payload.
  */
-export function readPhiFormUploadAssetIds(value: unknown): readonly number[] {
+function readPhiFormUploadAssetIds(value: unknown): readonly number[] {
   if (!Array.isArray(value)) {
     return [];
   }

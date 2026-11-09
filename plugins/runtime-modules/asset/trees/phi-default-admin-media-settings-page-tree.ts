@@ -7,6 +7,7 @@ import type { PhiBlockRuntime } from "../../../../types";
 import { buildPhiSettingsPageShellTree } from "../../../../components/regions/presets/phi-settings-page-shell-tree";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 import { PHI_STORAGE_SIZE_UNIT_LABEL, phiBytesToStorageSize } from "../../../../components/forms/storage-size";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 
 function formatMegabytes(bytes: number | null | undefined) {
   const size = phiBytesToStorageSize(bytes);
@@ -25,11 +26,7 @@ export async function buildPhiDefaultAdminMediaSettingsPageTree({
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
   const [labels, settings] = await Promise.all([
-    getPhiMediaSettingsPageLabels({
-      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-      internalToken: readPhiServerApiCredentials().internalToken,
-      locale: runtime.locale.current,
-    }),
+    getPhiMediaSettingsPageLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
     getResolvedSiteMediaSettings({
       apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
       internalToken: readPhiServerApiCredentials().internalToken,

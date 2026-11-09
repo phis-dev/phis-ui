@@ -73,8 +73,8 @@ import {
 import { PHI_BUILDER_PAGE_META_FORM_ID } from "../page-meta-form";
 import { PHI_BUILDER_AREA_SETTINGS_FORM_ID } from "../area-settings-form";
 import { getPhiBuilderNavigationPageLabels } from "./builder-navigation-label-set";
-import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../../helpers/cms-dialog";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 
 const SYNTHETIC_DEV_REGION_IDS = {
   regionHeaderTop: -509,
@@ -436,11 +436,7 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
   const nodes = createPhiCmsPresetNodes(page);
-  const labelOptions = {
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  };
+  const labelOptions = buildPhiWidgetLabelTranslatorOptions(runtime);
   const labels = await getPhiBuilderChromeWidgetLabels(labelOptions);
   const builderPageTitleSource = resolveBuilderPageTitleSource("dashboard");
   const builderPageTitle = resolveBuilderPageTitle(
@@ -761,11 +757,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
   presetKey: string;
 }): Promise<PhiResolvedCmsPageTree> {
   const nodes = createPhiCmsPresetNodes(page);
-  const labels = await getPhiBuilderChromeWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  });
+  const labels = await getPhiBuilderChromeWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
   /*
    * Which workspace this is, asked of the preset rather than of the path.
    *
@@ -784,18 +776,10 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
    * the Region titles above it were translated. `structure.surface.siderFullHeight` is that caption, and
    * a second key holding the same words would have been the same sentence translated twice.
    */
-  const structureLabels = isStructurePage ? await getPhiRegionWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  }) : null;
+  const structureLabels = isStructurePage ? await getPhiRegionWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime)) : null;
   const siderFullHeightLabel = structureLabels?.structure.surface.siderFullHeight
     ?? PHI_REGION_WIDGET_DEFAULT_LABELS.structure.surface.siderFullHeight;
-  const modulesLabels = isModulesPage ? await getPhiBuilderModulesPageLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  }) : null;
+  const modulesLabels = isModulesPage ? await getPhiBuilderModulesPageLabels(buildPhiWidgetLabelTranslatorOptions(runtime)) : null;
   const modulesDetailLabels = modulesLabels ? {
     moduleId: modulesLabels.detail.moduleId,
     title: modulesLabels.columns.title,
@@ -807,11 +791,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
     yes: modulesLabels.detail.yes,
     no: modulesLabels.detail.no,
   } : null;
-  const navigationLabels = isNavigationPage ? await getPhiBuilderNavigationPageLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  }) : null;
+  const navigationLabels = isNavigationPage ? await getPhiBuilderNavigationPageLabels(buildPhiWidgetLabelTranslatorOptions(runtime)) : null;
   const builderCommandToolbarConfig = buildBuilderCommandToolbarConfig(
     {
       /*

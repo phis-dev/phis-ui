@@ -6,7 +6,6 @@ import {
 import { PhiCmsFlags, PhiCmsRegionType, PhiCmsStatus } from "../../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import { resolvePhiShellHeaderHeight } from "../../../../helpers/shell-region-style";
-import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 import type { PhiCmsPageNode, PhiCmsTreeControllerSettings, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
 import type { PhiCmsCompiledDescriptorCatalog } from "../../../../types/cms-module-descriptors";
@@ -34,6 +33,7 @@ import { PHI_THEME_SIGNAL_CHANNELS } from "../controller/signals";
 import { PHI_THEME_RUNTIME_MODULE_ID } from "../ids";
 import { buildPhiThemeSetSelectOptions } from "../set-options";
 import { PHI_THEME_PAGE_LAYOUT_IDS, PHI_THEME_PAGE_WIDGET_IDS } from "../page-ids";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 
 /**
  * A Theme panel's way to hear the preview mode switch: the switch broadcasts on the Page, and every panel
@@ -182,11 +182,7 @@ export async function buildPhiDefaultBuilderThemePageTree({
   registry: PhiCmsCompiledDescriptorCatalog;
 }): Promise<PhiResolvedCmsPageTree> {
   const nodes = createPhiCmsPresetNodes(page);
-  const labels = await getPhiBuilderChromeWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  });
+  const labels = await getPhiBuilderChromeWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
   const themeToolbarId = createPhiCommandToolbarId(
     PHI_THEME_RUNTIME_MODULE_ID,
     PHI_THEME_PAGE_PRESET_KEY,

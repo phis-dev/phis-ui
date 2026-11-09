@@ -220,7 +220,7 @@ function PhiUserManagementControllerView({
   return null;
 }
 
-export const PHI_USER_MANAGEMENT_RUNTIME_CONTROLLER_PLUGIN = {
+const PHI_USER_MANAGEMENT_RUNTIME_CONTROLLER_PLUGIN = {
   ...PHI_USER_MANAGEMENT_RUNTIME_CONTROLLER_DEFINITION,
   renderController: ({ key, address, runtime, config }) => (
     <PhiUserManagementControllerView key={key} address={address} runtime={runtime} config={config} />

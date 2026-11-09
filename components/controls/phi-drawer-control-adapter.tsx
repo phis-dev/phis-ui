@@ -5,7 +5,6 @@
  * the same split as the Modal, for the same reason.
  */
 
-import { useSyncExternalStore } from "react";
 import { Drawer } from "antd";
 
 import { PHI_FONT_SIZE, PHI_SPACE } from "../../theme/antd-css-var-contract";
@@ -15,8 +14,8 @@ import {
   resolvePhiOverlayMaskPresentation,
 } from "./phi-overlay-control-contract";
 import type { PhiDrawerControlProps } from "./phi-drawer-control";
+import { usePhiHydrated } from "../state/use-phi-hydrated";
 
-const subscribeHydration = () => () => undefined;
 const PHI_DRAWER_HEADER_MIN_BLOCK_SIZE = `calc(var(--ant-control-height) + ${PHI_SPACE.xs} + ${PHI_SPACE.xs})`;
 /** Where a title starts when the close button stands before it: past the button, not beneath it. */
 const PHI_DRAWER_TITLE_AFTER_CLOSE = `calc(${PHI_SPACE.sm} + var(--ant-control-height) + ${PHI_SPACE.xs})`;
@@ -42,7 +41,7 @@ export function PhiDrawerControlAdapter({
   afterOpenChange,
   panelRef,
 }: PhiDrawerControlProps) {
-  const hydrated = useSyncExternalStore(subscribeHydration, () => true, () => false);
+  const hydrated = usePhiHydrated();
   const resolvedMask = resolvePhiOverlayMaskPresentation(mask);
   const closeAtInlineStart = placement === "right";
   // A drawer with nothing to say in its header draws none: no title, no header content, no close button.

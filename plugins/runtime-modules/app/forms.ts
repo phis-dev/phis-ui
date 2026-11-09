@@ -12,6 +12,7 @@ import {
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../constants/core-data-provider-keys";
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
 import { PHI_APP_RUNTIME_MODULE_ID } from "./ids";
+import { phiFormLabel as label } from "../../../components/forms/form-descriptor-text";
 
 /**
  * What a signed-in person can settle about their own account, as Forms rather than as Widgets.
@@ -44,7 +45,6 @@ const NEWSLETTER_LABEL_SET_KEY = "@phis/ui/modules/app/labels/profile-newsletter
 const LOCALE_LABEL_SET_KEY = "@phis/ui/modules/app/labels/profile-locale" as const;
 const THEME_LABEL_SET_KEY = "@phis/ui/modules/app/labels/profile-theme" as const;
 
-const label = (key: string, fallback: string) => ({ kind: "label", key, fallback } as const);
 
 const nameDescriptor: PhiFormDescriptor = {
   schemaVersion: 1,

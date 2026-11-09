@@ -1,7 +1,5 @@
-import type { PhiCmsWidgetPluginDefinition } from "../../../types/builder";
-import type { PhiCmsPreviewWidgetPlugin, PhiCmsRuntimeWidgetPlugin } from "../../../types/cms-plugins";
 import { PHI_CORE_RUNTIME_MODULE_ID } from "./ids";
-import type { PhiRuntimeModuleRenderPolicies, PhiRuntimeModuleWidgetDefinition } from "../contracts";
+import type { PhiRuntimeModuleWidgetDefinition } from "../contracts";
 import {
   PHI_ACCOUNT_WIDGET_DEFINITION,
 } from "./widgets/account/config";
@@ -152,19 +150,10 @@ import {
 import {
   PHI_TREE_WIDGET_DEFINITION,
 } from "./widgets/tree/config";
-
-function defineFirstPartyWidget<TConfig>(options: {
-  definition: PhiCmsWidgetPluginDefinition<TConfig>;
-  ownerModuleId: `${string}/${string}`;
-  renderPolicies: PhiRuntimeModuleRenderPolicies;
-  loadRuntime: () => Promise<PhiCmsRuntimeWidgetPlugin<TConfig>>;
-  loadPreview: () => Promise<PhiCmsPreviewWidgetPlugin<TConfig>>;
-}): PhiRuntimeModuleWidgetDefinition {
-  return options as PhiRuntimeModuleWidgetDefinition;
-}
+import { definePhiFirstPartyWidget } from "../contracts";
 
 export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefinition[] = [
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_DATE_INPUT_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
@@ -173,189 +162,189 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
     loadPreview: () => import("./widgets/date-input/plugin")
       .then((module) => module.PHI_DATE_INPUT_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_ACCOUNT_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/account/plugin").then((module) => module.PHI_ACCOUNT_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/account/plugin").then((module) => module.PHI_ACCOUNT_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_BRAND_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/brand/plugin").then((module) => module.PHI_BRAND_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/brand/plugin").then((module) => module.PHI_BRAND_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_BREADCRUMB_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/breadcrumb/plugin").then((module) => module.PHI_BREADCRUMB_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/breadcrumb/plugin").then((module) => module.PHI_BREADCRUMB_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_BUTTON_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/button/plugin").then((module) => module.PHI_BUTTON_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/button/plugin").then((module) => module.PHI_BUTTON_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_CARD_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/card/plugin").then((module) => module.PHI_CARD_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/card/plugin").then((module) => module.PHI_CARD_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_CASCADER_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/cascader/plugin").then((module) => module.PHI_CASCADER_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/cascader/plugin").then((module) => module.PHI_CASCADER_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_COLLECTION_VIEW_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/collection-view/plugin").then((module) => module.PHI_COLLECTION_VIEW_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/collection-view/plugin").then((module) => module.PHI_COLLECTION_VIEW_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_COLOR_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/color/plugin").then((module) => module.PHI_COLOR_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/color/plugin").then((module) => module.PHI_COLOR_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_COMMAND_TOOLBAR_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/command-toolbar/plugin").then((module) => module.PHI_COMMAND_TOOLBAR_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/command-toolbar/plugin").then((module) => module.PHI_COMMAND_TOOLBAR_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_DESCRIPTION_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/description/plugin").then((module) => module.PHI_DESCRIPTION_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/description/plugin").then((module) => module.PHI_DESCRIPTION_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_DRAFT_STATUS_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/draft-status/plugin").then((module) => module.PHI_DRAFT_STATUS_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/draft-status/plugin").then((module) => module.PHI_DRAFT_STATUS_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_DIMENSION_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/dimension/plugin").then((module) => module.PHI_DIMENSION_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/dimension/plugin").then((module) => module.PHI_DIMENSION_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_LENGTH_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/length/plugin").then((module) => module.PHI_LENGTH_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/length/plugin").then((module) => module.PHI_LENGTH_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_FORM_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: { runtime: "custom", preview: "custom", authoring: "custom" },
     loadRuntime: () => import("./widgets/form/plugin").then((module) => module.PHI_FORM_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/form/plugin").then((module) => module.PHI_FORM_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_FORM_PREVIEW_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: { runtime: "custom", preview: "custom", authoring: "custom" },
     loadRuntime: () => import("./widgets/form-preview/plugin").then((module) => module.PHI_FORM_PREVIEW_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/form-preview/plugin").then((module) => module.PHI_FORM_PREVIEW_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_HEADER_NAVIGATION_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/header-navigation/plugin").then((module) => module.PHI_HEADER_NAVIGATION_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/header-navigation/plugin").then((module) => module.PHI_HEADER_NAVIGATION_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_HTML_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/html/plugin").then((module) => module.PHI_HTML_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/html/plugin").then((module) => module.PHI_HTML_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_ICON_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/icon/plugin").then((module) => module.PHI_ICON_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/icon/plugin").then((module) => module.PHI_ICON_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_IMAGE_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/image/plugin").then((module) => module.PHI_IMAGE_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/image/plugin").then((module) => module.PHI_IMAGE_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_INPUT_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/input/plugin").then((module) => module.PHI_INPUT_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/input/plugin").then((module) => module.PHI_INPUT_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_OTP_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/otp/plugin").then((module) => module.PHI_OTP_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/otp/plugin").then((module) => module.PHI_OTP_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_NUMBER_INPUT_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/number-input/plugin").then((module) => module.PHI_NUMBER_INPUT_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/number-input/plugin").then((module) => module.PHI_NUMBER_INPUT_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_SLIDER_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/slider/plugin").then((module) => module.PHI_SLIDER_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/slider/plugin").then((module) => module.PHI_SLIDER_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_RATE_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/rate/plugin").then((module) => module.PHI_RATE_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/rate/plugin").then((module) => module.PHI_RATE_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_CHECKBOX_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/checkbox/plugin").then((module) => module.PHI_CHECKBOX_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/checkbox/plugin").then((module) => module.PHI_CHECKBOX_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_CHECKBOX_GROUP_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/checkbox-group/plugin").then((module) => module.PHI_CHECKBOX_GROUP_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/checkbox-group/plugin").then((module) => module.PHI_CHECKBOX_GROUP_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_SLOT_UPLOAD_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
@@ -364,112 +353,112 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
     loadPreview: () => import("./widgets/slot-upload/plugin")
       .then((module) => module.PHI_SLOT_UPLOAD_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_LOCALE_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/locale/plugin").then((module) => module.PHI_LOCALE_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/locale/plugin").then((module) => module.PHI_LOCALE_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_MARKDOWN_TOC_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/markdown-toc/plugin").then((module) => module.PHI_MARKDOWN_TOC_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/markdown-toc/plugin").then((module) => module.PHI_MARKDOWN_TOC_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_MARKDOWN_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/markdown/plugin").then((module) => module.PHI_MARKDOWN_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/markdown/plugin").then((module) => module.PHI_MARKDOWN_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_MULTI_SELECT_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/multi-select/plugin").then((module) => module.PHI_MULTI_SELECT_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/multi-select/plugin").then((module) => module.PHI_MULTI_SELECT_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_PAGE_TITLE_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/page-title/plugin").then((module) => module.PHI_PAGE_TITLE_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/page-title/plugin").then((module) => module.PHI_PAGE_TITLE_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_PAGINATION_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/pagination/plugin").then((module) => module.PHI_PAGINATION_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/pagination/plugin").then((module) => module.PHI_PAGINATION_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_QUICK_LINKS_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/quick-links/plugin").then((module) => module.PHI_QUICK_LINKS_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/quick-links/plugin").then((module) => module.PHI_QUICK_LINKS_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_RECORD_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/record/plugin").then((module) => module.PHI_RECORD_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/record/plugin").then((module) => module.PHI_RECORD_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_RESULT_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/result/plugin").then((module) => module.PHI_RESULT_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/result/plugin").then((module) => module.PHI_RESULT_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_SEGMENTED_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/segmented/plugin").then((module) => module.PHI_SEGMENTED_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/segmented/plugin").then((module) => module.PHI_SEGMENTED_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_SELECT_BOX_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/select-box/plugin").then((module) => module.PHI_SELECT_BOX_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/select-box/plugin").then((module) => module.PHI_SELECT_BOX_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_SIDEBAR_NAVIGATION_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/sidebar-navigation/plugin").then((module) => module.PHI_SIDEBAR_NAVIGATION_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/sidebar-navigation/plugin").then((module) => module.PHI_SIDEBAR_NAVIGATION_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_SIMPLE_TEXT_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/simple-text/plugin").then((module) => module.PHI_SIMPLE_TEXT_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/simple-text/plugin").then((module) => module.PHI_SIMPLE_TEXT_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_GALLERY_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/gallery/plugin").then((module) => module.PHI_GALLERY_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/gallery/plugin").then((module) => module.PHI_GALLERY_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_STEPS_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/steps/plugin").then((module) => module.PHI_STEPS_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/steps/plugin").then((module) => module.PHI_STEPS_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_TIMELINE_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
@@ -477,14 +466,14 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
     loadPreview: () => import("./widgets/timeline/plugin").then((module) => module.PHI_TIMELINE_WIDGET_PLUGIN),
   }),
   // The Site's own search (SEARCH.md): the box a visitor types into and the Page that answers it.
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_SEARCH_BOX_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/search-box/plugin").then((module) => module.PHI_SEARCH_BOX_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/search-box/plugin").then((module) => module.PHI_SEARCH_BOX_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_SEARCH_RESULTS_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
@@ -492,21 +481,21 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
     loadPreview: () => import("./widgets/search-results/plugin").then((module) => module.PHI_SEARCH_RESULTS_WIDGET_PLUGIN),
   }),
   // A content kind's entries and one entry of it, for every kind's Module (`CONTENT_ENTRIES.md`).
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_ENTRY_LIST_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/entry-list/plugin").then((module) => module.PHI_ENTRY_LIST_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/entry-list/plugin").then((module) => module.PHI_ENTRY_LIST_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_ENTRY_DETAIL_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/entry-detail/plugin").then((module) => module.PHI_ENTRY_DETAIL_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/entry-detail/plugin").then((module) => module.PHI_ENTRY_DETAIL_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_ENTRY_HEADER_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
@@ -514,63 +503,63 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
     loadPreview: () => import("./widgets/entry-header/plugin").then((module) => module.PHI_ENTRY_HEADER_WIDGET_PLUGIN),
   }),
   // A conversation, for every Module that runs conversations of its own kind (`messaging/`).
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_THREAD_CONVERSATION_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: { runtime: "custom", preview: "custom", authoring: "custom" },
     loadRuntime: () => import("./widgets/thread-conversation/plugin").then((module) => module.PHI_THREAD_CONVERSATION_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/thread-conversation/plugin").then((module) => module.PHI_THREAD_CONVERSATION_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_FLOAT_BUTTON_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/float-button/plugin").then((module) => module.PHI_FLOAT_BUTTON_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/float-button/plugin").then((module) => module.PHI_FLOAT_BUTTON_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_SPACER_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/spacer/plugin").then((module) => module.PHI_SPACER_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/spacer/plugin").then((module) => module.PHI_SPACER_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_SWITCH_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/switch/plugin").then((module) => module.PHI_SWITCH_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/switch/plugin").then((module) => module.PHI_SWITCH_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_THEME_MODE_SWITCH_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/theme-mode-switch/plugin").then((module) => module.PHI_THEME_MODE_SWITCH_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/theme-mode-switch/plugin").then((module) => module.PHI_THEME_MODE_SWITCH_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_TOUR_BUTTON_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/tour-button/plugin").then((module) => module.PHI_TOUR_BUTTON_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/tour-button/plugin").then((module) => module.PHI_TOUR_BUTTON_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_TAB_BAR_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("../../../components/widgets/plugins/stack-tabs-widget-plugin").then((module) => module.PHI_TAB_BAR_WIDGET_PLUGIN),
     loadPreview: () => import("../../../components/widgets/plugins/stack-tabs-widget-plugin").then((module) => module.PHI_TAB_BAR_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_TABLE_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/table/plugin").then((module) => module.PHI_TABLE_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/table/plugin").then((module) => module.PHI_TABLE_WIDGET_PLUGIN),
   }),
-  defineFirstPartyWidget({
+  definePhiFirstPartyWidget({
     definition: PHI_TREE_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},

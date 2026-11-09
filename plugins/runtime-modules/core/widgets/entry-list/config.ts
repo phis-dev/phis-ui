@@ -25,11 +25,7 @@ import {
   PhiContentEntryPart,
   readPhiContentEntryParts,
 } from "../../../../../constants/content-entry-parts";
-import {
-  readInteger,
-  readRenderableBlockConfig,
-  type PhiCmsWidgetConfigBase,
-} from "../../../../../components/widgets/config/parser-primitives";
+import { readClampedPositiveInteger, readRenderableBlockConfig, type PhiCmsWidgetConfigBase } from "../../../../../components/widgets/config/parser-primitives";
 
 /**
  * How the entries stand on the page (`CONTENT_ENTRIES.md`): `stack` is each entry whole, one under the
@@ -109,14 +105,6 @@ function readCategories(value: unknown): string[] {
   return [...new Set(categories)];
 }
 
-function readLimit(value: unknown) {
-  const limit = readInteger(value);
-  if (!limit || limit <= 0) {
-    return PHI_ENTRY_LIST_DEFAULT_LIMIT;
-  }
-  return Math.min(limit, PHI_ENTRY_LIST_MAX_LIMIT);
-}
-
 function failSequence(key: string, value: unknown, expected: string): never {
   throw new Error(`Invalid Entries ${key} ${JSON.stringify(value)}. Expected ${expected}.`);
 }
@@ -142,7 +130,7 @@ export function normalizePhiEntryListWidgetConfig(config: unknown): PhiEntryList
     presentation: (PHI_ENTRY_LIST_PRESENTATIONS as readonly unknown[]).includes(raw.presentation)
       ? raw.presentation as PhiEntryListPresentation
       : "stack",
-    limit: readLimit(raw.limit),
+    limit: readClampedPositiveInteger(raw.limit, PHI_ENTRY_LIST_DEFAULT_LIMIT, PHI_ENTRY_LIST_MAX_LIMIT),
     // Absent means the default parts: a Site that never opened the Inspector gets the entry as it was
     // published, tags and link included, rather than a list quietly missing half of what was written.
     show: readPhiContentEntryParts(raw.show, PHI_ENTRY_LIST_PARTS, PHI_ENTRY_LIST_DEFAULT_PARTS),

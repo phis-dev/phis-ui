@@ -6,7 +6,6 @@ import { PhiCmsFlags, PhiCmsRegionType, PhiCmsStatus } from "../../../../constan
 import { PhiMediaKind } from "../../../../constants/media";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import { resolvePhiShellHeaderHeight } from "../../../../helpers/shell-region-style";
-import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import {
   PHI_SIGNAL_VALUE_SCHEMAS,
@@ -33,6 +32,7 @@ import {
   PHI_ASSET_MEDIA_PAGE_WIDGET_IDS,
 } from "../media-page-ids";
 import { PHI_DIALOG_BLEED_BODY_CONFIG, PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../../helpers/cms-dialog";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 
 const PHI_ASSET_MEDIA_PAGE_REGION_IDS = {
   regionHeaderBottom: -511,
@@ -56,11 +56,7 @@ export async function buildPhiDefaultBuilderMediaPageTree({
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
   const nodes = createPhiCmsPresetNodes(page);
-  const credentials = {
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  };
+  const credentials = buildPhiWidgetLabelTranslatorOptions(runtime);
   const [chromeLabels, mediaLabels] = await Promise.all([
     getPhiBuilderChromeWidgetLabels(credentials),
     getPhiMediaWidgetLabels(credentials),

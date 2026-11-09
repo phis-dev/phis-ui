@@ -14,8 +14,8 @@ import {
   PHI_AUTH_LOGIN_OVERLAY_IDS,
   type PhiAuthLoginOverlayArea,
 } from "../overlay-ids";
-import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 import { PHI_DIALOG_BODY_CONFIG } from "../../../../helpers/cms-dialog";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 
 export async function buildPhiAuthAreaLoginOverlayTree({
   page,
@@ -35,11 +35,7 @@ export async function buildPhiAuthAreaLoginOverlayTree({
     locale: runtime.locale.current,
     authControllerAddress: createPhiAuthControllerAddress(),
   });
-  const labels = await getPhiLoginFormLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  });
+  const labels = await getPhiLoginFormLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
 
   const nodes = createPhiCmsPresetNodes(page);
   const overlayAddress = createPhiSignalAddress("cms", ids.overlayLogin);

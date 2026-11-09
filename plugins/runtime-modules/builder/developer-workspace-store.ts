@@ -51,13 +51,10 @@ function createDefaultBuilderState(): PhiDeveloperBuilderState {
     nodeKey: `page:${defaultPageKey}`,
     nodeId: null,
     nodeKind: "page",
-    selectedRegionType: null,
     selectedRegionKey: null,
     selectedRootRegionKey: null,
     selectedLayoutAnchor: "center",
     pageMetaDrafts: {},
-    sidebarKey: "pages",
-    pagesOpen: false,
     inspectorOpen: false,
     signalWiringRequest: null,
     signalWiring: {
@@ -72,7 +69,6 @@ function createDefaultBuilderState(): PhiDeveloperBuilderState {
     moduleDeactivationRequest: null,
     builderMode: "editor",
     search: "",
-    darkMode: false,
     debugScaffold: false,
     commandWorkspace: null,
     pickerWidgetCategoryFilters: [],
@@ -251,25 +247,20 @@ export type PhiDeveloperBuilderNodeSelection = {
 /**
  * The selection a Page opens with: the Page itself, nothing inside it chosen, the Inspector closed and
  * the Pages sidebar showing. One answer for every way a Page is opened -- a click in the tree, a route
- * change, a new Page -- which used to be four copies that had drifted apart. `chrome` resets the
- * chrome controls as well, `closePages` folds the Pages panel.
+ * change, a new Page -- which used to be four copies that had drifted apart.
  */
 function resetPhiBuilderSelectionToPage(
   current: PhiDeveloperBuilderState,
   pageKey: string,
-  options: { closePages?: boolean } = {},
 ): PhiDeveloperBuilderState {
   return {
     ...current,
     nodeKey: `page:${pageKey}`,
     nodeId: null,
     nodeKind: "page",
-    selectedRegionType: null,
     selectedRegionKey: null,
     selectedRootRegionKey: null,
     inspectorOpen: false,
-    sidebarKey: "pages",
-    ...(options.closePages ? { pagesOpen: false } : {}),
   };
 }
 
@@ -281,8 +272,6 @@ export function selectPhiDeveloperBuilderNode(
     nodeKey: selection.nodeKey,
     nodeId: selection.nodeId ?? null,
     nodeKind: selection.nodeKind,
-    selectedRegionType:
-      selection.nodeKind === "region" ? selection.regionType ?? null : null,
     selectedRegionKey:
       selection.nodeKind === "region" || selection.nodeKind === "slot"
         ? selection.regionKey ?? null
@@ -310,14 +299,6 @@ export function selectPhiDeveloperBuilderNode(
       (selection.nodeKind === "region" ||
         selection.nodeKind === "layout" ||
         selection.nodeKind === "widget"),
-    sidebarKey:
-      selection.nodeKind === "region" || selection.nodeKind === "slot"
-        ? "structure"
-        : current.sidebarKey,
-    pagesOpen:
-      selection.nodeKind === "region" || selection.nodeKind === "slot"
-        ? false
-        : current.pagesOpen,
   }));
 }
 
@@ -940,21 +921,17 @@ export function getPhiDeveloperBuilderStateSnapshot(): PhiDeveloperBuilderWorksp
  */
 
 /** Opens a Page of an Area: the catalog says what is open, the selection starts at the Page itself. */
-export function openPhiBuilderPage(
-  area: PhiDeveloperBuilderArea,
-  pageKey: string,
-  options: { closePages?: boolean } = {},
-) {
+export function openPhiBuilderPage(area: PhiDeveloperBuilderArea, pageKey: string) {
   openPhiWorkspacePage(area, pageKey);
   builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) =>
-    resetPhiBuilderSelectionToPage(current, pageKey, options));
+    resetPhiBuilderSelectionToPage(current, pageKey));
 }
 
 /** Opens a Page of the Area that is open. */
-export function openPhiBuilderPageInOpenArea(pageKey: string, options: { closePages?: boolean } = {}) {
+export function openPhiBuilderPageInOpenArea(pageKey: string) {
   setPhiWorkspacePageKey(pageKey);
   builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) =>
-    resetPhiBuilderSelectionToPage(current, pageKey, options));
+    resetPhiBuilderSelectionToPage(current, pageKey));
 }
 
 /** Points the selection at a Page the catalog opened by itself, leaving the rest of the tool as it is. */
@@ -977,10 +954,6 @@ export function setPhiBuilderMode(builderMode: PhiDeveloperBuilderMode) {
 
 export function setPhiBuilderDebugScaffold(debugScaffold: boolean) {
   setToolField("debugScaffold", debugScaffold);
-}
-
-export function openPhiBuilderPagesPanel() {
-  setToolField("pagesOpen", true);
 }
 
 export function setPhiBuilderInspectorOpen(inspectorOpen: boolean) {

@@ -23,8 +23,7 @@ import {
   type PhiModalResponsiveMode,
 } from "./phi-overlay-control-contract";
 import type { PhiModalControlProps } from "./phi-modal-control";
-
-const subscribeHydration = () => () => undefined;
+import { usePhiHydrated } from "../state/use-phi-hydrated";
 
 const PHI_MODAL_MODE_QUERIES = [
   `(min-width: ${PHI_MODAL_RESPONSIVE_MIN_WIDTH.medium}px)`,
@@ -100,7 +99,7 @@ export function PhiModalControlAdapter({
   panelRef,
 }: PhiModalControlProps) {
   const { token } = usePhiConfig();
-  const hydrated = useSyncExternalStore(subscribeHydration, () => true, () => false);
+  const hydrated = usePhiHydrated();
   const mode = useSyncExternalStore(subscribeModalMode, readModalMode, readServerModalMode);
   const bodyMeasureRef = useRef<HTMLDivElement | null>(null);
   const bodyContentRef = useRef<HTMLDivElement | null>(null);

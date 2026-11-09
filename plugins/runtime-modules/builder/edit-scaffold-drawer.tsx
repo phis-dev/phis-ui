@@ -8,6 +8,7 @@ import { PhiButtonControl } from "../../../components/controls/phi-button-contro
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import { usePhiDeveloperBuilderStateValue } from "./developer-workspace-store";
 import { PhiIcon } from "../../../components/shell/phi-icon";
+import { joinPhiClassNames } from "../../../helpers/class-names";
 
 export type PhiEditScaffoldDrawerProps = {
   kind: "layout";
@@ -61,7 +62,7 @@ export function PhiEditScaffoldDrawer({
 
   return (
     <div
-      className={["phi-edit-scaffold-drawer", className].filter(Boolean).join(" ")}
+      className={joinPhiClassNames("phi-edit-scaffold-drawer", className)}
       data-phi-edit-scaffold-kind={kind}
       data-phi-edit-scaffold-selected={selected ? "true" : undefined}
       data-phi-edit-scaffold-empty={isEmpty ? "true" : undefined}

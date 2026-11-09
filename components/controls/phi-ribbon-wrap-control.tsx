@@ -4,6 +4,7 @@ import Ribbon from "antd/es/badge/Ribbon";
 import type { CSSProperties, ReactNode } from "react";
 
 import { PHI_THEME_GRADIENT_CSS_VARS, type PhiThemeGradientKey } from "../../theme/phi-theme-gradients";
+import { joinPhiClassNames } from "../../helpers/class-names";
 
 export type PhiRibbonWrapControlProps = {
   /** The box the ribbon hangs on. */
@@ -51,7 +52,7 @@ export function PhiRibbonWrapControl({ children, text, color, gradient, interact
     <Ribbon
       text={text}
       {...(color ? { color } : {})}
-      rootClassName={["phi-ribbon-wrap-control", className].filter(Boolean).join(" ")}
+      rootClassName={joinPhiClassNames("phi-ribbon-wrap-control", className)}
       styles={{ indicator, ...(content ? { content } : {}) }}
     >
       {children}

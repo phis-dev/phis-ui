@@ -491,6 +491,7 @@ function buildPhiBuilderPreviewPath(area: PhiDeveloperBuilderArea, storagePath: 
   return area === "public" ? storagePath || "/" : phiAreaPath(area, storagePath);
 }
 
+/** Where the live Page is, with the revision to preview when one is named. */
 function buildPhiBuilderLivePreviewHref(
   area: PhiDeveloperBuilderArea,
   pageKey: string,
@@ -498,12 +499,7 @@ function buildPhiBuilderLivePreviewHref(
   workspaceKind: PhiDeveloperBuilderWorkspaceKind,
   revisionId: number,
 ) {
-  void workspaceKind;
-  const storagePath = resolvePhiBuilderCmsStoragePath(area, pageKey, pages);
-  const href = buildPhiBuilderPreviewPath(area, storagePath);
-  const url = new URL(href, typeof window !== "undefined" ? window.location.origin : "http://localhost");
-  url.searchParams.set("revision", String(revisionId));
-  return `${url.pathname}${url.search}${url.hash}`;
+  return buildPhiBuilderLiveHref(area, pageKey, pages, workspaceKind, revisionId);
 }
 
 export function buildPhiBuilderLiveHref(
@@ -511,11 +507,15 @@ export function buildPhiBuilderLiveHref(
   pageKey: string,
   pages: readonly PhiPresetPageNode[],
   workspaceKind: PhiDeveloperBuilderWorkspaceKind,
+  revisionId?: number,
 ) {
   void workspaceKind;
   const storagePath = resolvePhiBuilderCmsStoragePath(area, pageKey, pages);
   const href = buildPhiBuilderPreviewPath(area, storagePath);
   const url = new URL(href, typeof window !== "undefined" ? window.location.origin : "http://localhost");
+  if (revisionId != null) {
+    url.searchParams.set("revision", String(revisionId));
+  }
   return `${url.pathname}${url.search}${url.hash}`;
 }
 
@@ -882,7 +882,7 @@ function buildAreaStructureWritePayload(
 export async function savePhiDeveloperBuilderDraft(
   state: Pick<
     PhiDeveloperBuilderWorkspaceState,
-    "area" | "pageKey" | "sidebarKey" | "pageMetaDrafts" | "deletedPageDrafts" | "draftAllocations" | "modulePresetPagesByArea" | "customPages" | "persistedPageCatalogByArea" | "areaPresetSourcesByArea" | "areaRootRouteDrafts" | "areaRootRoutes" | "areaMetaDrafts" | "areaMeta"
+    "area" | "pageKey" | "pageMetaDrafts" | "deletedPageDrafts" | "draftAllocations" | "modulePresetPagesByArea" | "customPages" | "persistedPageCatalogByArea" | "areaPresetSourcesByArea" | "areaRootRouteDrafts" | "areaRootRoutes" | "areaMetaDrafts" | "areaMeta"
     | "areaControllerSettings" | "pageControllerSettings"
   >,
   regionDrafts: Record<string, PhiDeveloperBuilderRegionDraft>,
@@ -1220,7 +1220,7 @@ export async function createPhiDeveloperBuilderPageDraft(input: {
 export async function previewPhiDeveloperBuilderDraft(
   state: Pick<
     PhiDeveloperBuilderWorkspaceState,
-    "area" | "pageKey" | "sidebarKey" | "modulePresetPagesByArea" | "customPages" | "persistedPageCatalogByArea" | "areaPresetSourcesByArea"
+    "area" | "pageKey" | "modulePresetPagesByArea" | "customPages" | "persistedPageCatalogByArea" | "areaPresetSourcesByArea"
   >,
   workspaceKind: PhiDeveloperBuilderWorkspaceKind,
   options?: {
@@ -1286,7 +1286,7 @@ export async function previewPhiDeveloperBuilderDraft(
 export async function publishPhiDeveloperBuilderDraft(
   state: Pick<
     PhiDeveloperBuilderWorkspaceState,
-    "area" | "pageKey" | "sidebarKey" | "pageMetaDrafts" | "deletedPageDrafts" | "draftAllocations" | "runtimeModuleDefinitions" | "runtimeModuleIdsByArea" | "modulePresetPagesByArea" | "customPages" | "persistedPageCatalogByArea" | "areaPresetSourcesByArea" | "areaRootRouteDrafts" | "areaRootRoutes" | "areaMetaDrafts" | "areaMeta"
+    "area" | "pageKey" | "pageMetaDrafts" | "deletedPageDrafts" | "draftAllocations" | "runtimeModuleDefinitions" | "runtimeModuleIdsByArea" | "modulePresetPagesByArea" | "customPages" | "persistedPageCatalogByArea" | "areaPresetSourcesByArea" | "areaRootRouteDrafts" | "areaRootRoutes" | "areaMetaDrafts" | "areaMeta"
     | "areaControllerSettings" | "pageControllerSettings"
   >,
   regionDrafts: Record<string, PhiDeveloperBuilderRegionDraft>,
