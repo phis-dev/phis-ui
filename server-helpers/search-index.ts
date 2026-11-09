@@ -22,6 +22,7 @@ import type { PhiCmsSiteBridge, PhiCmsRuntimeWidgetPlugin } from "../types/cms-p
 import type { PhiSiteRequestContext } from "../types/site-request-context";
 import { resolvePhiCmsLookup } from "./cms-lookup";
 import { resolveActivePresetModuleKeys } from "./cms-request";
+import { runWithPhiRequestRuntime } from "./request-runtime";
 import { loadPhiSiteRequestContext } from "./runtime";
 import { joinPhiSearchText } from "./search-text";
 
@@ -57,7 +58,7 @@ const PHI_SEARCH_INDEX_DEBOUNCE_MS = 2_000;
  * What the extraction is, named in the fingerprint: a change in how documents are built reindexes every
  * Site on its next start, which the published revisions alone would not do.
  */
-const PHI_SEARCH_INDEX_FORMAT = 1;
+const PHI_SEARCH_INDEX_FORMAT = 2;
 
 type PhiSearchIndexRegistry = {
   bridges: Map<PhiSearchIndexArea, PhiCmsSiteBridge>;
@@ -353,18 +354,28 @@ async function readDocument({
   if (resolved.runtime.page?.noindex === true) return null;
   if (!canPhiViewerAccess(resolved.runtime.viewer, page.accessPolicy)) return null;
 
-  const lines: string[] = [];
-  for (const widget of resolved.page.contentWidgets) {
-    const plugin = await loadPlugin(widget.widgetType);
-    if (!plugin?.searchText) continue;
-    try {
-      const config = plugin.parseConfig(widget.config);
-      lines.push(...await plugin.searchText({ widget, config, runtime: resolved.runtime }));
-    } catch (error) {
-      // One Widget that cannot say its words costs the Page those words, not the Page.
-      console.error(`[phis-ui] The search index could not read the Widget "${widget.widgetType}" on ${area}:${path}.`, error);
+  /*
+   * The Widgets answer inside a request scope of their own. `searchText` is given the runtime, but the
+   * shared server helpers a Widget reaches for -- the translation of its texts first of all -- read the
+   * request runtime from the scope, and the indexer runs where no request is: at start-up, or on a
+   * timer after a publish. Without this scope every Widget that translates fails and a Page is indexed
+   * by title and description alone, which is what the first production index was.
+   */
+  const lines = await runWithPhiRequestRuntime(resolved.runtime, async () => {
+    const collected: string[] = [];
+    for (const widget of resolved.page.contentWidgets) {
+      const plugin = await loadPlugin(widget.widgetType);
+      if (!plugin?.searchText) continue;
+      try {
+        const config = plugin.parseConfig(widget.config);
+        collected.push(...await plugin.searchText({ widget, config, runtime: resolved.runtime }));
+      } catch (error) {
+        // One Widget that cannot say its words costs the Page those words, not the Page.
+        console.error(`[phis-ui] The search index could not read the Widget "${widget.widgetType}" on ${area}:${path}.`, error);
+      }
     }
-  }
+    return collected;
+  });
 
   return {
     path: page.path,
