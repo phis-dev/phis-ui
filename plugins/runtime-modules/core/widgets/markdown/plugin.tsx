@@ -1,7 +1,9 @@
 import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
 import { PhiWidgetInertPreview } from "../../../../../components/widgets/built-in/widget-preview";
+import { resolveMarkdownRenderData } from "../../../../../components/widgets/shared/markdown-render";
 import { PhiCmsFlags } from "../../../../../constants/phi-cms";
 import { hasPhiFlag } from "../../../../../helpers/flags";
+import { readPhiMarkdownSearchText } from "../../../../../server-helpers/search-text";
 import { PhiMarkdownWidget } from "./server";
 import {
   PHI_MARKDOWN_WIDGET_DEFINITION,
@@ -11,6 +13,20 @@ import {
 
 export const PHI_MARKDOWN_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsMarkdownWidgetConfig> = {
   ...PHI_MARKDOWN_WIDGET_DEFINITION,
+  /*
+   * The document as the render would draw it -- inline, from its record, or fetched from its address --
+   * translated for the index's language, read back as lines (SEARCH.md). A source that cannot be read
+   * contributes nothing rather than failing the Page: the render shows the error in its place.
+   */
+  searchText: async ({ widget, config, runtime }) => {
+    const data = await resolveMarkdownRenderData({
+      ...config,
+      widgetId: widget.id,
+      resolvedContent: widget.resolvedContent ?? null,
+      translate: !hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate),
+    }, runtime);
+    return "error" in data ? [] : readPhiMarkdownSearchText(data.blocks);
+  },
   render: ({ widget, config, runtime }) => (
     <PhiMarkdownWidget
       key={`widget-${widget.id}`}

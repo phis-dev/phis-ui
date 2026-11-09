@@ -47,6 +47,7 @@ covers every contract document below, closed enums, discriminated unions, and sh
 | Auth Module | [AUTHENTICATION.md](./AUTHENTICATION.md) |
 | Page paths and internal references | [REFERENCES.md](./REFERENCES.md) |
 | Content entries (News, Blog): Widgets, Providers, kind Modules | [CONTENT_ENTRIES.md](./CONTENT_ENTRIES.md) |
+| Site search: the index the Site writes, `searchText`, the search Widgets and Pages | [SEARCH.md](./SEARCH.md) |
 | Translation helpers, Label Sets, locales | [TRANSLATIONS.md](./TRANSLATIONS.md) |
 | Gateway caches | [gateway/CACHES.md](./gateway/CACHES.md) |
 | Designs that are not contracts | [design/](./design/README.md) |

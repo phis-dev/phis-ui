@@ -597,6 +597,23 @@ small Client component. If that component is selected through
 `PhiRuntimeModuleRenderClientHost`, list it in `renderClients` of the package's
 `phiModuleClientContributions` ([section 8](#8-export-the-client-and-authoring-contributions)).
 
+A Widget that draws words a visitor would search for says them to the Site's search index
+([SEARCH.md](./SEARCH.md)) with `searchText` on the same plugin: the text as the reader sees it, in
+reading order, one entry per line or paragraph, translated for `runtime.locale` the way the render
+translates it (`translatePhiSearchWidgetTexts` from `@phis/ui/server-helpers` does that for a Widget's
+own sentences). A Widget without it contributes nothing, which is right for a picture, a form or a
+navigation.
+
+```tsx
+export const STATUS_CARD_WIDGET_PLUGIN = {
+  ...STATUS_CARD_WIDGET_DEFINITION,
+  searchText: ({ config, runtime }) =>
+    translatePhiSearchWidgetTexts(runtime, [config.title, "Operational"], { translate: true }),
+  ...definePhiPassiveWidgetRenderers<StatusCardConfig>(({ config }) =>
+    <section><h2>{config.title}</h2><p>Operational</p></section>),
+} satisfies PhiCmsServerWidgetPlugin<StatusCardConfig>;
+```
+
 ### Server Widget loader descriptor
 
 ```ts

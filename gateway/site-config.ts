@@ -2,6 +2,7 @@ import "server-only";
 
 import { syncPhiTranslationChangeMarkers } from "../helpers/translation-cache";
 import { clearPhiSiteReadCache, readPhiSiteReadCache } from "./site-read-cache";
+import { emitPhiSiteReadMarker } from "./site-read-marker-listeners";
 import { fetchPhiSiteApi } from "./site-api-request";
 import type { PhiSiteConfig } from "../types/site-config";
 
@@ -96,8 +97,13 @@ async function fetchSiteConfig(
   const markerKey = siteKey.trim().toLowerCase();
   const previous = seen.get(markerKey);
   seen.set(markerKey, payload.site.readMarker);
-  if (previous !== undefined && previous !== payload.site.readMarker) {
+  const moved = previous !== undefined && previous !== payload.site.readMarker;
+  if (moved) {
     clearPhiSiteReadCache({ keep: cacheKey });
+  }
+  // The first sight and every move: whoever rebuilds from a publish listens here (site-read-marker-listeners.ts).
+  if (previous === undefined || moved) {
+    emitPhiSiteReadMarker({ siteKey: markerKey, marker: payload.site.readMarker, moved });
   }
   return payload.site;
 }

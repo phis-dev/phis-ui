@@ -50,3 +50,5 @@ export {
   type LoadPhiRootLayoutContextOptions,
   type PhiRootLayoutContext,
 } from "./server-helpers/root-layout";
+
+export { translatePhiSearchWidgetTexts } from "./server-helpers/search-text";

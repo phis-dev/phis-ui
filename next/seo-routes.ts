@@ -3,7 +3,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 
 import { resolvePhiCmsPageRedirect } from "../components/cms/phi-cms-page-redirect";
-import { getPublicSiteAreaWithPublishedPages, type PhiPublishedPublicPage } from "../gateway/site-area";
+import { getSiteAreaWithPublishedPages, type PhiPublishedPage } from "../gateway/site-area";
 import {
   PHI_AREA_META_PUBLIC_DEFAULTS,
   readPhiAreaLandingSelection,
@@ -44,7 +44,7 @@ type PhiPublicSeoContext = {
   publicBase: string | null;
   areaPreset: Awaited<ReturnType<typeof getPhiExactSiteArea>>;
   /** Asked only by the sitemap; robots.txt needs the switches and nothing else. */
-  publishedPages: PhiPublishedPublicPage[];
+  publishedPages: PhiPublishedPage[];
   /** Whether this Site has a sitemap at all: a public base, and a Public Area that is indexed and listed. */
   sitemapEnabled: boolean;
 };
@@ -77,7 +77,7 @@ async function loadPhiPublicSeoContext(
     presetKey: shellBinding.descriptor.presetKey,
   };
   const { area: areaPreset, publishedPages } = withPublishedPages
-    ? await getPublicSiteAreaWithPublishedPages({ apiBaseUrl, internalToken, siteKey, locale, sourcePreset })
+    ? await getSiteAreaWithPublishedPages({ apiBaseUrl, internalToken, siteKey, locale, sourcePreset })
     : {
         area: await getPhiExactSiteArea({
           path: "/",

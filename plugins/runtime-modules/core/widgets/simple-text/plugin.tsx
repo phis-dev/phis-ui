@@ -1,6 +1,7 @@
 import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
 import { PhiCmsFlags } from "../../../../../constants/phi-cms";
 import { hasPhiFlag } from "../../../../../helpers/flags";
+import { translatePhiSearchWidgetTexts } from "../../../../../server-helpers/search-text";
 import { PhiSimpleTextWidget } from "./server";
 import {
   PHI_SIMPLE_TEXT_WIDGET_DEFINITION,
@@ -11,6 +12,20 @@ import {
 
 export const PHI_SIMPLE_TEXT_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsSimpleTextWidgetConfig> = {
   ...PHI_SIMPLE_TEXT_WIDGET_DEFINITION,
+  // The text as the render shows it: a record's already in the page's language, the Widget's own translated here.
+  searchText: ({ widget, config, runtime }) => {
+    const noTranslate = hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate);
+    const hasResolvedText = Boolean(widget.resolvedContent?.textFields.text);
+    const text = resolvePhiSimpleTextWidgetText(
+      { ...config, resolvedContent: widget.resolvedContent ?? null },
+      { preferSource: noTranslate },
+      "",
+    );
+    return translatePhiSearchWidgetTexts(runtime, [text], {
+      translate: !noTranslate && !hasResolvedText,
+      textSource: config.textSource,
+    });
+  },
   render: ({ widget, config, runtime }) => {
     const noTranslate = hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate);
     // A record's text is already translated; only the Widget's own still has to be.

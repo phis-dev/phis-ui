@@ -590,6 +590,26 @@ export type PhiCmsWidgetPlugin<TConfig> = {
   parseConfig: (raw: Record<string, unknown>) => TConfig;
   render: PhiBivariantCallback<[PhiCmsWidgetPluginRenderArgs<TConfig>], ReactNode>;
   renderPreview: PhiBivariantCallback<[PhiCmsWidgetPluginRenderArgs<TConfig>], ReactNode>;
+  /**
+   * The words this Widget shows a reader, for the Site's search index (SEARCH.md).
+   *
+   * Called by the indexer, never by a render, for each Widget of a published Page in each language: it
+   * answers the text as the reader sees it -- translated for `runtime.locale`, with the Page's values
+   * filled in -- and nothing a reader does not see. A Widget without it contributes no text, which is
+   * right for a picture, a form or a navigation; a Widget that draws words a visitor would search for
+   * says them here, in reading order, one entry per line or paragraph.
+   */
+  searchText?: PhiBivariantCallback<
+    [PhiCmsWidgetSearchTextArgs<TConfig>],
+    Promise<readonly string[]> | readonly string[]
+  >;
+};
+
+/** What a Widget is handed to say its words: the node, its parsed config and the render's runtime. */
+export type PhiCmsWidgetSearchTextArgs<TConfig> = {
+  widget: PhiCmsContentWidgetNode;
+  config: TConfig;
+  runtime: PhiBlockRuntime;
 };
 
 /**
@@ -640,12 +660,12 @@ export type PhiCmsBuilderWidgetPlugin<TConfig> = PhiCmsWidgetPluginDefinition<TC
 
 export type PhiCmsServerWidgetPlugin<TConfig> = PhiCmsWidgetPluginDefinition<TConfig> & Pick<
   PhiCmsWidgetPlugin<TConfig>,
-  "render" | "renderPreview"
+  "render" | "renderPreview" | "searchText"
 >;
 
 export type PhiCmsRuntimeWidgetPlugin<TConfig> = PhiCmsWidgetPluginDefinition<TConfig> & Pick<
   PhiCmsWidgetPlugin<TConfig>,
-  "render"
+  "render" | "searchText"
 >;
 
 export type PhiCmsPreviewWidgetPlugin<TConfig> = PhiCmsWidgetPluginDefinition<TConfig> & Pick<

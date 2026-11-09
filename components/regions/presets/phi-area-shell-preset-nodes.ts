@@ -142,6 +142,11 @@ export function buildPhiAreaShellSiderLeftNodes({
     regionSiderLeft: number;
     layoutSiderLeft: PhiCmsInstanceId;
     widgetSiderLeftNav: PhiCmsInstanceId;
+    /**
+     * A search box above the navigation (SEARCH.md), for an Area whose Pages are indexed. Absent draws
+     * none: the operator's Areas have nothing a reader searches.
+     */
+    widgetSiderLeftSearch?: PhiCmsInstanceId;
   };
 }): PhiAreaShellPresetNodes {
   const shell = runtime.site.theme?.shell;
@@ -185,12 +190,27 @@ export function buildPhiAreaShellSiderLeftNodes({
       }),
     ],
     contentWidgets: [
+      ...(ids.widgetSiderLeftSearch
+        ? [
+            nodes.widget({
+              typeKey: "search-box",
+              id: ids.widgetSiderLeftSearch,
+              parentLayoutNodeId: ids.layoutSiderLeft,
+              slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+              sortOrder: 0,
+              label: `${labelPrefix} sider left search`,
+              // The Area's own results Page; the box reads which from where it stands.
+              config: { padding: PHI_SPACE.xs },
+            }),
+          ]
+        : []),
       nodes.widget({
         typeKey: "sidebar-navigation",
         id: ids.widgetSiderLeftNav,
         parentLayoutNodeId: ids.layoutSiderLeft,
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-        sortOrder: 0,
+        // The stack flows by slot, one child each: the navigation takes the slot after the search box.
+        slotIndex: ids.widgetSiderLeftSearch ? 1 : PHI_CMS_DEFAULT_SLOT_INDEX,
+        sortOrder: 1,
         label: `${labelPrefix} sider left navigation`,
         config: {
           side: "left",

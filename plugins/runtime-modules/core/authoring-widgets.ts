@@ -126,6 +126,8 @@ import { PHI_GALLERY_WIDGET_DEFINITION } from "./widgets/gallery/config";
 import { PHI_STEPS_WIDGET_DEFINITION } from "./widgets/steps/config";
 import { PHI_TIMELINE_WIDGET_DEFINITION } from "./widgets/timeline/config";
 import { PHI_ENTRY_LIST_WIDGET_DEFINITION } from "./widgets/entry-list/config";
+import { PHI_SEARCH_BOX_WIDGET_DEFINITION } from "./widgets/search-box/config";
+import { PHI_SEARCH_RESULTS_WIDGET_DEFINITION } from "./widgets/search-results/config";
 import { PHI_ENTRY_DETAIL_WIDGET_DEFINITION } from "./widgets/entry-detail/config";
 import { PHI_ENTRY_HEADER_WIDGET_DEFINITION } from "./widgets/entry-header/config";
 import { PHI_THREAD_CONVERSATION_WIDGET_DEFINITION } from "./widgets/thread-conversation/config";
@@ -331,6 +333,14 @@ export default createPhiAuthoringWidgetModule([
   definePhiAuthoringWidgetModuleLoader(
     PHI_TIMELINE_WIDGET_DEFINITION,
     () => import("./widgets/timeline/authoring").then((module) => module.PHI_TIMELINE_WIDGET_BUILDER_PLUGIN),
+  ),
+  definePhiAuthoringWidgetModuleLoader(
+    PHI_SEARCH_BOX_WIDGET_DEFINITION,
+    () => import("./widgets/search-box/authoring").then((module) => module.PHI_SEARCH_BOX_WIDGET_BUILDER_PLUGIN),
+  ),
+  definePhiAuthoringWidgetModuleLoader(
+    PHI_SEARCH_RESULTS_WIDGET_DEFINITION,
+    () => import("./widgets/search-results/authoring").then((module) => module.PHI_SEARCH_RESULTS_WIDGET_BUILDER_PLUGIN),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_ENTRY_LIST_WIDGET_DEFINITION,

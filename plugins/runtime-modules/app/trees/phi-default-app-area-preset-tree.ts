@@ -20,7 +20,7 @@ const SYNTHETIC_APP_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
   domain: "area",
   ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
   presetKey: "app-area-preset",
-}, ["widgetSiderLeftNav"]);
+}, ["widgetSiderLeftNav", "widgetSiderLeftSearch"]);
 
 /**
  * The App's own left sider, laid over the Site shell rather than replacing it.
@@ -32,7 +32,8 @@ const SYNTHETIC_APP_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
  *
  * The sider is where the Area's navigation belongs, and the reason is in SETTINGS.md section 3: a
  * shell Region outlives a move between Pages, while a Page-owned one is built again for each of them.
- * Navigation placed in the latter rebuilds itself under the hand that just used it.
+ * Navigation placed in the latter rebuilds itself under the hand that just used it. The search box
+ * stands above it for the same reason (SEARCH.md): a member searches from wherever they are.
  */
 export async function buildPhiDefaultAppAreaPresetTree({
   page,

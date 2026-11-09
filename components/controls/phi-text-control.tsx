@@ -24,6 +24,11 @@ export type PhiTextControlPresentation = "input" | "password" | "textarea" | "hi
 export type PhiTextControlProps = {
   /** The DOM id of the input, so a `<label for>` outside the control can name it. */
   id?: string;
+  /**
+   * The field's name in a form that submits the browser's way -- a `GET` form the page answers by its
+   * query. Only such a form has a use for it; a controlled field in a Form host reads its value.
+   */
+  name?: string;
   value?: string | null;
   label?: ReactNode;
   description?: ReactNode;
@@ -142,6 +147,7 @@ function resolveTextAreaClearStyle(
 
 export function PhiTextControl({
   id,
+  name,
   value,
   label,
   description,
@@ -187,6 +193,7 @@ export function PhiTextControl({
   const commonProps = {
     ref: inputRef,
     id,
+    name,
     "aria-label": ariaLabel,
     "aria-labelledby": labelledBy,
     autoFocus,

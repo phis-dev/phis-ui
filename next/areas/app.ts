@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createPhiAppRuntimeModuleCatalog } from "../../plugins/runtime-modules/area-catalogs/app";
+import { registerPhiSearchIndexArea } from "../../server-helpers/search-index";
 import { createPhiNextCmsSiteBridge } from "../site-bridge";
 import type { PhiSiteModuleServerAreaContributions } from "../../plugins/runtime-modules/site-modules";
 
@@ -13,9 +14,12 @@ import type { PhiSiteModuleServerAreaContributions } from "../../plugins/runtime
 export function createPhiAppCmsSiteBridge(
   siteModules: PhiSiteModuleServerAreaContributions = {},
 ) {
-  return createPhiNextCmsSiteBridge({
+  const bridge = createPhiNextCmsSiteBridge({
     runtimeModuleCatalog: createPhiAppRuntimeModuleCatalog(siteModules),
   });
+  // The App Pages are indexed for the Site's search from this Bridge (SEARCH.md).
+  registerPhiSearchIndexArea("app", bridge);
+  return bridge;
 }
 
 export const PHI_APP_CMS_SITE_BRIDGE = createPhiAppCmsSiteBridge();

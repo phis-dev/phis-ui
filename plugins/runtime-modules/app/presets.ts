@@ -4,7 +4,9 @@ import type {
   PhiCmsRoutePresetDescriptor,
 } from "../../../types/cms-module-descriptors";
 import { PHI_BASE_PAGE_LAYOUT_VERSION } from "../../../components/regions/presets/phi-base-page-layout";
+import { PhiCmsFlags } from "../../../constants/phi-cms";
 import { buildPhiAreaRootRoutePresetDescriptor } from "../area-root-route";
+import { PHI_APP_SEARCH_PAGE_PRESET_KEY } from "../search-page-references";
 import { PHI_APP_RUNTIME_MODULE_ID } from "./ids";
 
 /* What the App base Module brings: its Area shell, the Area root and the profile Page. */
@@ -76,5 +78,27 @@ export const PHI_APP_RUNTIME_MODULE_ROUTES = [
     loadTree: ({ page, runtime }: PhiCmsDescriptorBuildContext) =>
       import("./trees/phi-default-app-profile-page-tree")
         .then((module) => module.buildPhiDefaultAppProfilePageTree({ page, runtime })),
+  },
+  /*
+   * The App's own results Page (SEARCH.md). A signed-in member searches the App and the Public Site
+   * at once, and that is decided by where the results Widget stands: on this Page, in the App. The box
+   * in the App's sider leads here. No menu entry and `NoIndex`, as for the Public one.
+   */
+  {
+    ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
+    presetKey: PHI_APP_SEARCH_PAGE_PRESET_KEY,
+    presetVersion: 1,
+    area: "app" as const,
+    title: "Search",
+    path: "/search",
+    navigation: [],
+    defaultPageFlags: PhiCmsFlags.NoIndex,
+    loadTree: ({ page }: PhiCmsDescriptorBuildContext) =>
+      import("../search-page-tree")
+        .then((module) => module.buildPhiDefaultSearchPageTree({
+          page,
+          ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
+          presetKey: PHI_APP_SEARCH_PAGE_PRESET_KEY,
+        })),
   },
 ] satisfies readonly PhiCmsRoutePresetDescriptor[];

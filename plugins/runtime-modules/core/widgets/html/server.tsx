@@ -43,11 +43,15 @@ const loadRemoteHtml = cache(async function loadRemoteHtml(resolvedUrl: string, 
   return response.text();
 });
 
-export async function PhiHtmlWidget({
-  blockId,
-  config,
-  runtime,
-}: PhiHtmlWidgetProps) {
+/**
+ * The fragment as the reader gets it: read from its source, its references resolved, sanitised and
+ * translated for the render's language. Empty where the Widget has nothing to show. The render draws it;
+ * the search index reads its words (SEARCH.md).
+ */
+export async function resolvePhiHtmlWidgetTranslatedHtml(
+  config: PhiHtmlWidgetConfig | undefined,
+  runtime: PhiHtmlWidgetProps["runtime"],
+): Promise<string> {
   const sourceMode = config?.sourceMode ?? (config?.sourceUrl?.trim() ? "url" : "inline");
   const sourceUrl = config?.sourceUrl?.trim() ?? "";
   /*
@@ -79,18 +83,24 @@ export async function PhiHtmlWidget({
       }))
     : "";
   if (!sourceHtml) {
-    return null;
+    return "";
   }
 
-  const translatedHtml =
-    (sourceMode !== "url" && config?.resolvedContent != null) || config?.preferSource === true
-      ? sourceHtml
-      : await translateSemanticHtml(
-          sourceHtml,
-          sourceMode === "url" ? config?.sourceLocale?.trim() : undefined,
-          runtime.locale.current,
-        );
+  return (sourceMode !== "url" && config?.resolvedContent != null) || config?.preferSource === true
+    ? sourceHtml
+    : translateSemanticHtml(
+        sourceHtml,
+        sourceMode === "url" ? config?.sourceLocale?.trim() : undefined,
+        runtime.locale.current,
+      );
+}
 
+export async function PhiHtmlWidget({
+  blockId,
+  config,
+  runtime,
+}: PhiHtmlWidgetProps) {
+  const translatedHtml = await resolvePhiHtmlWidgetTranslatedHtml(config, runtime);
   if (!translatedHtml) {
     return null;
   }
