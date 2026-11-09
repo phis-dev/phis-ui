@@ -13,6 +13,7 @@ function configResponse(readMarker: string) {
       key: "site",
       name: "Site",
       sourceLocale: "en",
+      timeZone: "UTC",
       localeCapabilities: [],
       translationMarkers: { global: "g1", site: "s1" },
       readMarker,

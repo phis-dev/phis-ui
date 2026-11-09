@@ -21,6 +21,7 @@ import type { PhiSiteConfig } from "../../types/site-config";
 import { loadPhiAntdLocale } from "../../helpers/antd-locale";
 import type { PhiResolvedLocale } from "../../helpers/site-locale-config";
 import { PhiDayjsLocale } from "./phi-dayjs-locale";
+import { readPhiRenderMoment } from "../../helpers/format-date-time";
 import { PhiRootLiveThemeProvider } from "./phi-root-live-theme-provider";
 import { resolvePhiRootThemeState } from "./phi-root-theme-resolver";
 import { PhiSignalRuntimePartitionProvider } from "../runtime/runtime-signal-partition";
@@ -240,6 +241,8 @@ export async function PhiRootLayout({
               <PhiDayjsLocale
                 locale={resolvedLocale?.locale ?? resolvedLocale?.intlLocale}
                 intlLocale={resolvedLocale?.intlLocale ?? site.defaultLocale}
+                timeZone={site.timeZone}
+                renderedAt={readPhiRenderMoment()}
               >
                 {children}
               </PhiDayjsLocale>

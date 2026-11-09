@@ -89,6 +89,7 @@ async function getPhiCmsRuntimeInfo({
     availableLocales: site.availableLocales,
     defaultLocale: site.defaultLocale,
     sourceLocale: site.sourceLocale,
+    timeZone: site.timeZone,
     store: site.store,
     themeRevision: site.themeRevision,
     /*

@@ -193,10 +193,15 @@ function resolvePhiDayjsLocale(locale: string | null | undefined): PhiDayjsLocal
 export function PhiDayjsLocale({
   locale,
   intlLocale,
+  timeZone,
+  renderedAt,
   children,
 }: {
   locale?: string | null;
   intlLocale: string;
+  /** The Site's time zone and the moment of this render (components/root/phi-intl-locale.tsx). */
+  timeZone: string;
+  renderedAt: number;
   children: ReactNode;
 }) {
   useEffect(() => {
@@ -220,5 +225,9 @@ export function PhiDayjsLocale({
     };
   }, [locale]);
 
-  return <PhiIntlLocaleProvider locale={intlLocale}>{children}</PhiIntlLocaleProvider>;
+  return (
+    <PhiIntlLocaleProvider locale={intlLocale} timeZone={timeZone} renderedAt={renderedAt}>
+      {children}
+    </PhiIntlLocaleProvider>
+  );
 }

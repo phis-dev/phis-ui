@@ -89,6 +89,12 @@ export type PhiSiteConfig = {
    * language a visitor is shown first, which is `defaultLocale` and may differ.
    */
   sourceLocale: string;
+  /**
+   * The IANA zone every date and time of the Site is shown in (`phis site set --time-zone`). One zone
+   * for the server render and the browser: both format the same instant with it, so the text a page
+   * is hydrated against is the text the reader sees. Neither the host's zone nor the reader's.
+   */
+  timeZone: string;
   availableLocales: PhiSiteLocaleOption[];
   /** What each served locale means, so a request naming one is resolved without asking Core. */
   localeCapabilities: PhiLocaleCapability[];

@@ -131,7 +131,7 @@ export async function buildPhiEntryViews({
         subtitle: entry.subtitle,
         blocks: bodyMode === "full" && !("error" in body) ? body.blocks : [],
         teaser: readTeaser(entry.subtitle, "error" in body ? [] : body.blocks),
-        date: formatPhiDate(entry.created, locale),
+        date: formatPhiDate(entry.created, locale, runtime.site.timeZone),
         machineDate: entry.created,
         link: settings.showLinks ? resolvePhiLinkHref(entry.link, resolvedLinks) : null,
         // The kind's detail route with this entry's slug; no route that resolves, no link on the title.

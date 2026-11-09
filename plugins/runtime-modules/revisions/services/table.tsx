@@ -57,6 +57,8 @@ type RevisionsTableParams = {
   labels: PhiBuilderRevisionsWidgetLabels;
   /** The locale the Page was rendered in, for the dates written into a message. */
   locale: string;
+  /** The Site's time zone, which those dates are shown in. */
+  timeZone: string;
 };
 
 function readPresetSource(value: unknown): PhiCmsPresetSource | null {
@@ -89,10 +91,14 @@ function readRevisionScope(value: unknown): PhiBuilderRevisionScope | null {
 }
 
 function readParams(value: unknown): RevisionsTableParams {
-  if (!isPhiRecord(value) || !isPhiRecord(value.labels) || typeof value.locale !== "string") {
+  if (
+    !isPhiRecord(value) || !isPhiRecord(value.labels) || typeof value.locale !== "string"
+    || typeof value.timeZone !== "string"
+  ) {
     throw new Error("Revisions table parameters are missing.");
   }
   const locale = value.locale;
+  const timeZone = value.timeZone;
   if (!isPhiRecord(value.scope) && typeof window !== "undefined") {
     const state = getPhiWorkspaceCatalogSnapshot();
     const search = new URLSearchParams(window.location.search);
@@ -157,6 +163,7 @@ function readParams(value: unknown): RevisionsTableParams {
       navScopeKey,
       labels: value.labels as unknown as PhiBuilderRevisionsWidgetLabels,
       locale,
+      timeZone,
     };
   }
   const scope = readRevisionScope(value.scope);
@@ -176,6 +183,7 @@ function readParams(value: unknown): RevisionsTableParams {
     navScopeKey: value.navScopeKey,
     labels: value.labels as unknown as PhiBuilderRevisionsWidgetLabels,
     locale,
+    timeZone,
   };
 }
 
@@ -373,7 +381,7 @@ function formatRevisionMessageWithLastSave(
   return formatTemplate(
     params.labels.messages.lastSaved,
     message,
-    formatPhiDateTime(row.savedAt, params.locale),
+    formatPhiDateTime(row.savedAt, params.locale, params.timeZone),
     row.savedByLabel ?? params.labels.systemLabel,
   );
 }

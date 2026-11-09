@@ -61,7 +61,7 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
   const credentials = {
     apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
     internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
+    locale: runtime.locale.current, timeZone: runtime.site.timeZone,
   };
   const [chromeLabels, revisionsLabels] = await Promise.all([
     getPhiBuilderChromeWidgetLabels(credentials),
@@ -441,7 +441,7 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
           source: {
             providerKey: PHI_REVISIONS_RUNTIME_DATA_PROVIDER_KEYS.table,
             resourceKey: "history",
-            params: { labels: revisionsLabels, locale: runtime.locale.current },
+            params: { labels: revisionsLabels, locale: runtime.locale.current, timeZone: runtime.site.timeZone },
           },
           presentation: {
             borders: true,

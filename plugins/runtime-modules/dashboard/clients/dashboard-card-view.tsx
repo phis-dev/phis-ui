@@ -29,7 +29,7 @@ import {
 } from "../card-rows";
 import { PhiTimelineControl } from "../../../../components/controls/phi-timeline-control";
 import { PhiSeriesChartControl } from "../../../../components/controls/phi-series-chart-control";
-import { usePhiIntlLocale } from "../../../../components/root/phi-intl-locale";
+import { usePhiIntlLocale, usePhiIntlRenderedAt, usePhiIntlTimeZone } from "../../../../components/root/phi-intl-locale";
 import { formatPhiDate, formatPhiRelativeTime } from "../../../../helpers/format-date-time";
 
 /**
@@ -73,13 +73,14 @@ const CARD_BODY_BY_FORM: Record<PhiDashboardCardForm, PhiCardWidgetBody> = {
  */
 function PhiDashboardCardList({ entries }: { entries: readonly PhiTimelineEntry[] }) {
   const locale = usePhiIntlLocale();
+  const renderedAt = usePhiIntlRenderedAt();
   return (
     <PhiTimelineControl
       items={entries.slice(0, PHI_DASHBOARD_CARD_LIST_LIMIT).map((entry) => ({
         key: entry.key,
         ...(entry.title ? { title: entry.title } : {}),
         content: entry.content,
-        ...(entry.time ?? entry.at ? { time: entry.time ?? formatPhiRelativeTime(entry.at, locale) } : {}),
+        ...(entry.time ?? entry.at ? { time: entry.time ?? formatPhiRelativeTime(entry.at, locale, renderedAt) } : {}),
         ...(entry.icon ? { icon: entry.icon } : {}),
         ...(entry.tone ? { tone: entry.tone } : {}),
         ...(entry.pending ? { pending: true } : {}),
@@ -92,10 +93,10 @@ function PhiDashboardCardList({ entries }: { entries: readonly PhiTimelineEntry[
  * A point's day as the calendar day it names. An ISO date read by `Date` is midnight in UTC, which is
  * the day before west of Greenwich; an instant is formatted where the reader is.
  */
-function formatSeriesKey(at: string, locale: string) {
+function formatSeriesKey(at: string, locale: string, timeZone: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(at)
     ? new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" }).format(new Date(`${at}T00:00:00Z`))
-    : formatPhiDate(at, locale);
+    : formatPhiDate(at, locale, timeZone);
 }
 
 /**
@@ -104,12 +105,13 @@ function formatSeriesKey(at: string, locale: string) {
  */
 function PhiDashboardCardSeriesChart({ series, title }: { series: PhiDashboardCardSeries; title: string }) {
   const locale = usePhiIntlLocale();
+  const timeZone = usePhiIntlTimeZone();
   const labels = series.labels.slice(0, PHI_DASHBOARD_CARD_SERIES_LIMIT);
   return (
     <PhiSeriesChartControl
       locale={locale}
       title={title}
-      keys={series.points.map((point) => formatSeriesKey(point.at, locale))}
+      keys={series.points.map((point) => formatSeriesKey(point.at, locale, timeZone))}
       series={labels.map((label, index) => ({ label, values: series.points.map((point) => point.values[index]!) }))}
       {...(series.unit ? { unit: series.unit } : {})}
     />

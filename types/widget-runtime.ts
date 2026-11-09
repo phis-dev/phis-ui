@@ -26,6 +26,8 @@ export type PhiBlockRuntimeSite = {
   defaultLocale: string;
   /** The language the Site's own words are written in (`PhiSiteConfig.sourceLocale`). */
   sourceLocale: string;
+  /** The IANA zone the Site's dates and times are shown in (`PhiSiteConfig.timeZone`). */
+  timeZone: string;
   store: {
     enabled: boolean;
   };

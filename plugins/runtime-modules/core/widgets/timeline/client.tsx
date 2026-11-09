@@ -12,15 +12,24 @@ import { PhiTimelineControl, type PhiTimelineControlItem } from "../../../../../
 import { usePhiControlSignalController } from "../../../../../components/widgets/client/shared/phi-control-signals";
 import { usePhiTimelineProviderEntries } from "../../../../../components/widgets/client/shared/phi-timeline-provider";
 import { PhiWidgetFailure } from "../../../../../components/widgets/shared/widget-failure-client";
+import { usePhiIntlRenderedAt, usePhiIntlTimeZone } from "../../../../../components/root/phi-intl-locale";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { readPhiRuntimeTreeRenderMode } from "../../../render-mode";
 
-function formatEntryTime(entry: PhiTimelineEntry, format: PhiTimelineTimeFormat, locale: string) {
+function formatEntryTime(
+  entry: PhiTimelineEntry,
+  format: PhiTimelineTimeFormat,
+  locale: string,
+  timeZone: string,
+  renderedAt: number,
+) {
   /* Words the entry states are shown as written; a date is formatted for the reader. */
   if (entry.time) return entry.time;
   if (!entry.at) return undefined;
-  if (format === "relative") return formatPhiRelativeTime(entry.at, locale);
-  return format === "datetime" ? formatPhiDateTime(entry.at, locale) : formatPhiDate(entry.at, locale);
+  if (format === "relative") return formatPhiRelativeTime(entry.at, locale, renderedAt);
+  return format === "datetime"
+    ? formatPhiDateTime(entry.at, locale, timeZone)
+    : formatPhiDate(entry.at, locale, timeZone);
 }
 
 export function PhiTimelineWidget({
@@ -37,6 +46,8 @@ export function PhiTimelineWidget({
    * Params a signal chose, over the stored ones. Kept with the binding they were chosen for, so a
    * Provider changed in the Inspector starts from its own stored params again.
    */
+  const timeZone = usePhiIntlTimeZone();
+  const renderedAt = usePhiIntlRenderedAt();
   const storedBinding = config?.entriesProvider ?? null;
   const [chosen, setChosen] = useState<{ providerKey: string; params: Record<string, unknown> } | null>(null);
   const binding = useMemo(() => storedBinding
@@ -79,7 +90,7 @@ export function PhiTimelineWidget({
     key: entry.key,
     title: entry.title,
     content: entry.content,
-    time: formatEntryTime(entry, format, locale),
+    time: formatEntryTime(entry, format, locale, timeZone, renderedAt),
     icon: entry.icon,
     tone: entry.tone,
     pending: entry.pending,

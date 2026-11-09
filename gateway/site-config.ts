@@ -82,6 +82,10 @@ async function fetchSiteConfig(
   if (!payload.site.translationMarkers) {
     throw new Error("Missing translation markers in site config payload.");
   }
+
+  if (typeof payload.site.timeZone !== "string" || !payload.site.timeZone.trim()) {
+    throw new Error("Missing time zone in site config payload.");
+  }
   // Every fresh answer, cached or not afterwards, is where this process learns a translation changed.
   syncPhiTranslationChangeMarkers({
     siteKey,
