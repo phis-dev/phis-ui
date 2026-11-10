@@ -216,7 +216,13 @@ export function PhiFlexLayout({
             flexBasis: "auto",
             ...collapsedStyle,
             width: shouldFillCrossAxis ? "100%" : undefined,
-            height: shouldFillMainAxis ? "100%" : undefined,
+            /*
+             * No `height: 100%` on the main axis: filling it is `flex-grow`'s job. A percentage here is
+             * the flex basis, and once the column's height is known -- the sum of its slots' content,
+             * from the intrinsic pass -- every filling slot would start at the whole column and be
+             * shrunk back in equal shares, cutting each below its content so it ran into the next.
+             * From content, a slot only grows into room that is left over.
+             */
             minWidth: 0,
             minHeight: 0,
             alignSelf: shouldFillCrossAxis ? "stretch" : undefined,
