@@ -26,7 +26,6 @@ const PhiAuthWorkflowBody = lazy(
 );
 
 type SecurityPayload = {
-  ok: boolean;
   policy: { factor: { requiredMethod?: "totp" | null } | null };
   factors: Array<{
     id: string;
@@ -84,7 +83,11 @@ export function PhiAuthSecurityWidgetClient({
     setLoading(true);
     try {
       const { ok, payload: next } = await requestPhiJson<SecurityPayload>(apiPath, { signal });
-      if (!ok || !next?.ok) throw new Error(labels.errors.loadFailed);
+      /*
+       * The HTTP status is the answer. The body is the account's state and carries no `ok` of its own:
+       * asking it for one refused every answer, and the panel said "could not be loaded" to everybody.
+       */
+      if (!ok || !next || !Array.isArray(next.sessions)) throw new Error(labels.errors.loadFailed);
       setPayload(next);
       setError(null);
     } catch (caught) {
