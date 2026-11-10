@@ -502,14 +502,15 @@ export async function buildPhiDefaultThreadsPageTree({
                * second opinion about it.
                */
               /*
-               * Named rather than drawn. Only one of the two is ever on a row, so there is no column of
-               * repeated buttons to compress -- and the icon vocabulary has no mark for archiving that
-               * does not already mean deleting or retiring, which is the one thing this must not say.
+               * Drawn, with the name in the tooltip, like every other row action. Archiving is the inbox
+               * tray -- put away, not deleted -- and reopening the step back out of it. Only one of the two
+               * is ever on a row, so both are icons or the column changes width from row to row.
                */
               row: [{
                 key: "archive",
                 label: labels.actions.archive,
-                display: "label",
+                icon: "antd:inbox",
+                display: "icon",
                 execution: "provider",
                 confirm: {
                   title: labels.actions.archiveConfirmTitle,
@@ -520,7 +521,8 @@ export async function buildPhiDefaultThreadsPageTree({
               }, {
                 key: "reopen",
                 label: labels.actions.reopen,
-                display: "label",
+                icon: "antd:rollback",
+                display: "icon",
                 execution: "provider",
               }],
             },
