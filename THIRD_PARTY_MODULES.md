@@ -205,6 +205,67 @@ package-local Ant Design path. The one place a Module renders Ant Design itself 
 component a Control delegates to -- a calendar adapter for `PhiCalendarControl` -- and there it uses
 what Ant Design draws, since that is what it is supplying.
 
+## The contract between a package's two halves
+
+A package with an Add-on half is one product in two processes. The Module half runs in the Site and the
+browser, the Add-on half inside `phis`, and neither imports the other. They still have to agree on a
+handful of values: the route and hook paths the Module calls, a header of the package's own, the role
+names the Module gates on, the states a row answers in, and the paths of the Module's Pages that the
+Add-on writes into links. Those values are the package's own contract, and they live in one place:
+
+```text
+@acme/status/
+└── src/
+    ├── contract/
+    │   └── index.ts      values and types both halves import; it imports nothing
+    ├── ids.ts            the Module half's identifiers; re-exports what it uses from contract/
+    └── addon/
+        └── constants.ts  the Add-on half's names; re-exports what it uses from contract/
+```
+
+- **It imports nothing.** No React, no `@phis/ui`, no server library, no Node built-in: it is compiled
+  into both halves, and whatever it imported would be imported by both. Plain constants and types only.
+  `@phis/contracts` is the wire contract between an Add-on and Core; this is the contract between the
+  two halves of one package, and nobody outside the package reads it.
+- **It is shared when the package is built, not while it runs.** The Add-on bundler and the Module build
+  each copy the values into their own artifact. Once installed, the halves know nothing of each other
+  and meet only on the wire, so a value both copies carry is a promise between two separately installed
+  artifacts.
+- **Changing a value is a breaking change between the halves.** The two halves are installed by
+  different commands (`phis addon upgrade`, `phis module`) and may run at different versions for a
+  while. Change a contract value only by rolling both halves out together, or answer the old value
+  beside the new one until no installed half speaks it.
+- **A header of the package's own never starts with `x-phis-`.** The Site's door drops every request
+  header with that prefix, and `authorization`, before it forwards to Core.
+- **Add-on import paths carry their extension.** `phis` loads the manifest entrypoint unbundled in Node,
+  so the Add-on half imports `../contract/index.js`; the Module half imports `./contract` as the rest of
+  its source does.
+
+### Paths the Add-on writes into links
+
+Inside the Site a link is a page reference, never a path
+([Links are references, never paths](#links-are-references-never-paths)). Some links are made outside
+it: the return address a payment Provider sends the buyer back to, the link in a confirmation mail.
+Nothing resolves a reference there, so the Add-on writes a Site-relative path, and Core puts the Site's
+public address in front of it. That is safe to promise for a Page the Module brings: a Module Page's
+path is owned by the Module and locked in the Builder, so no Site author can move it. The path belongs
+in the contract, and the Module's route descriptor is built from the same constant:
+
+```ts
+// src/contract/index.ts
+/** The receipt page: served by the Module, written into return addresses and mails by the Add-on. */
+export const ACME_STATUS_INCIDENT_PAGE_PATH = "/status/incident" as const;
+
+// src/presets.ts (Module half)
+path: `${ACME_STATUS_INCIDENT_PAGE_PATH}/:number`,
+
+// src/addon/runtime.ts (Add-on half)
+link: `${ACME_STATUS_INCIDENT_PAGE_PATH}/${number}`,
+```
+
+`@phis/shop` (`phis-shop`) follows this layout: its order page path, order-token header, route bases,
+roles and order states are in `src/contract/`.
+
 ## Distribution and commercial Modules
 
 Distributing compiled and commercial Modules is designed, not built; see
@@ -1069,6 +1130,8 @@ it as a `phis:page/...` URI, which `createPhiPageUri(reference)` writes. Both ar
 per render, to the address the Site assigned, namespace and locale included
 ([REFERENCES.md](./REFERENCES.md)). A root-relative link such as `/status/incidents` is not a second
 way in: the Markdown Widget drops it and renders the text alone, and a link target refuses it on write.
+A link made outside the Site -- a payment return address, a link in a mail -- is the one place an
+Add-on writes a path; see [Paths the Add-on writes into links](#paths-the-add-on-writes-into-links).
 
 ### Distances, colours and corners come from the Theme
 
