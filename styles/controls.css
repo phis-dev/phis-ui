@@ -698,11 +698,22 @@ h5.phi-typography, .phi-typography h5 {
   color: var(--ant-color-text);
 }
 
+/*
+ * No syllable breaks in a cell: a column is narrow by nature, and running text's `hyphens: auto` cut its
+ * words into pieces there. A cell breaks between words, and a word longer than its column still breaks
+ * rather than running into the next.
+ */
 .phi-plain-table th,
 .phi-plain-table td {
   padding: var(--ant-padding-xs) var(--ant-padding-sm);
   text-align: start;
   vertical-align: top;
+  hyphens: manual;
+}
+
+/* A column of short entries stays on one line; the scroll box above takes what does not fit. */
+.phi-plain-table .phi-plain-table__nowrap {
+  white-space: nowrap;
 }
 
 .phi-plain-table th {

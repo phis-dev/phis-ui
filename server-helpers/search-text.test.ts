@@ -25,7 +25,7 @@ describe("the search text of a Widget", () => {
       { kind: "paragraph", inlines: [{ kind: "text", text: "Write to " }, { kind: "mail_text", token: "phi-mail:00" }, { kind: "text", text: " today." }] },
       { kind: "list", ordered: false, items: [[{ kind: "paragraph", inlines: [{ kind: "text", text: "One" }] }], [{ kind: "paragraph", inlines: [{ kind: "inline_code", text: "two" }] }]] },
       { kind: "code", language: "sh", tokens: [{ kind: "text", text: "apt install " }, { kind: "text", text: "phis" }] as never },
-      { kind: "table", header: [[{ kind: "text", text: "Name" }]], rows: [[[{ kind: "text", text: "Debian" }]]], align: [null] },
+      { kind: "table", header: [[{ kind: "text", text: "Name" }]], rows: [[[{ kind: "text", text: "Debian" }]]], align: [null], widths: null, nowrap: [false] },
       { kind: "divider" },
     ];
 

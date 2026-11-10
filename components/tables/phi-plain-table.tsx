@@ -7,6 +7,10 @@ export type PhiPlainTableColumn = {
   key: string;
   title: ReactNode;
   align?: PhiPlainTableAlign;
+  /** The column's width, a CSS length such as `30%`; absent, the browser shares the row out by content. */
+  width?: string;
+  /** Keep the column's cells on one line; the column then takes the width of its longest entry. */
+  nowrap?: boolean;
 };
 
 export type PhiPlainTableRow = {
@@ -37,10 +41,22 @@ export function PhiPlainTable({
   return (
     <div className="phi-plain-table__scroll">
       <table className="phi-plain-table">
+        {columns.some((column) => column.width) ? (
+          <colgroup>
+            {columns.map((column) => (
+              <col key={column.key} style={column.width ? { width: column.width } : undefined} />
+            ))}
+          </colgroup>
+        ) : null}
         <thead>
           <tr>
             {columns.map((column) => (
-              <th key={column.key} scope="col" style={column.align ? { textAlign: column.align } : undefined}>
+              <th
+                key={column.key}
+                scope="col"
+                className={column.nowrap ? "phi-plain-table__nowrap" : undefined}
+                style={column.align ? { textAlign: column.align } : undefined}
+              >
                 {column.title}
               </th>
             ))}
@@ -50,7 +66,11 @@ export function PhiPlainTable({
           {rows.map((row) => (
             <tr key={row.key}>
               {columns.map((column, columnIndex) => (
-                <td key={column.key} style={column.align ? { textAlign: column.align } : undefined}>
+                <td
+                  key={column.key}
+                  className={column.nowrap ? "phi-plain-table__nowrap" : undefined}
+                  style={column.align ? { textAlign: column.align } : undefined}
+                >
                   {row.cells[columnIndex] ?? null}
                 </td>
               ))}

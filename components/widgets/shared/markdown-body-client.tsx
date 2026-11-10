@@ -84,6 +84,13 @@ export type PhiMarkdownBlock =
       rows: PhiMarkdownInline[][][];
       /** One entry per column, from the GFM delimiter row; `null` where the column states none. */
       align: PhiMarkdownTableAlign[];
+      /**
+       * Each column's share of the width in percent, from the lengths of the delimiter row's dashes, or
+       * `null` when they are all equal and the browser decides.
+       */
+      widths: number[] | null;
+      /** One entry per column: kept on one line because every text in it is short. */
+      nowrap: boolean[];
     }
   | { kind: "divider" }
   | { kind: "image"; image: PhiMarkdownFigure };
@@ -320,6 +327,8 @@ function renderBlocks(
               key: `column-${columnIndex}`,
               title: renderInlineNodes(header),
               align: block.align[columnIndex] ?? null,
+              width: block.widths?.[columnIndex] != null ? `${block.widths[columnIndex]}%` : undefined,
+              nowrap: block.nowrap[columnIndex] ?? false,
             }))}
             rows={block.rows.map((cells, rowIndex) => ({
               key: `row-${rowIndex}`,

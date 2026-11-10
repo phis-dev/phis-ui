@@ -953,6 +953,17 @@ that move in its Working Draft.
 Native Markdown tables render their parsed rows through `PhiPlainTable`, which has no query, editing, or
 Provider lifecycle.
 
+Their columns follow three rules (`components/widgets/shared/markdown-render.ts`):
+
+- Cells do not hyphenate. Running text's `hyphens: auto` stops at the table; a cell breaks between words,
+  and a word longer than its column still breaks rather than running into the next.
+- A column whose every text, heading included, is at most 24 characters long after translation stays on
+  one line (`nowrap`), so it takes the width of its longest entry and leaves the row to the others.
+- The lengths of the delimiter row's dashes are the columns' widths when they differ: `|---|---------|`
+  is 25 % to 75 %, alignment colons not counted. GFM asks only for three dashes, so every other renderer
+  still reads an ordinary table. Equal dashes state nothing and leave the widths to the browser. A table
+  with widths keeps no column on one line: its author has decided.
+
 A reusable Provider-backed Table embedded in Markdown uses a closed Phi embed descriptor containing a
 validated Provider/resource reference plus approved presentation data. Markdown must not execute
 arbitrary Provider keys, URLs, callbacks, React components, or module code. The embed is resolved through

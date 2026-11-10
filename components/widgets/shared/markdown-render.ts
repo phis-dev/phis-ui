@@ -39,6 +39,8 @@ type MarkdownNode = {
   children?: MarkdownNode[];
   /** GFM tables: one alignment per column, as the delimiter row states it. */
   align?: (string | null)[];
+  /** Where the node stands in the source; a table reads its delimiter row from there. */
+  position?: { start: { line: number }; end: { line: number } };
 };
 
 /**
@@ -91,6 +93,8 @@ export type MarkdownRenderData = {
 };
 
 type MarkdownMapContext = {
+  /** The source's lines, for what the tree does not keep: the length of a table's delimiter cells. */
+  sourceLines: readonly string[];
   headings: PhiMarkdownTocHeading[];
   headingIdCounts: Map<string, number>;
   headingIdPrefix: string | null;
@@ -670,7 +674,11 @@ function mapBlockNodes(
           inlineMap.get(cell) ?? mapInlineNodes(cell.children)));
         const header = cells[0] ?? [];
         const align = header.map((_, columnIndex) => readMarkdownTableAlign(node.align?.[columnIndex]));
-        blocks.push({ kind: "table", header, rows: cells.slice(1), align });
+        const widths = readMarkdownTableWidths(node, context.sourceLines, header.length);
+        const nowrap = widths
+          ? header.map(() => false)
+          : header.map((_, columnIndex) => isMarkdownTableColumnShort(cells, columnIndex));
+        blocks.push({ kind: "table", header, rows: cells.slice(1), align, widths, nowrap });
         break;
       }
     }
@@ -810,6 +818,7 @@ async function resolveMarkdownRenderDataFromSource(
     figures = await projectInternalMarkdownNodes(tree, runtime);
   }
   const context: MarkdownMapContext = {
+    sourceLines: markdown.split(/\r?\n/),
     headings: [],
     headingIdCounts: new Map(),
     headingIdPrefix,
@@ -823,6 +832,52 @@ async function resolveMarkdownRenderDataFromSource(
   );
 
   return { blocks, headings: context.headings };
+}
+
+/*
+ * How wide a table's columns are, when the text says so.
+ *
+ * Markdown has no syntax for a column's width, and GFM asks only for at least three dashes per cell of
+ * the delimiter row. Their number is free, so it carries the width here: `|---|------|` is one part to
+ * two, and every other renderer still reads an ordinary table. Equal dashes say nothing -- the way almost
+ * every table is written -- and leave the widths to the browser, as before.
+ *
+ * The tree keeps no dashes, so the row is read from the source: the line after the table's first. A
+ * quote's or a list's markers before it are stepped over; a row that does not read as one cell per
+ * column gives no widths rather than wrong ones.
+ */
+function readMarkdownTableWidths(
+  node: MarkdownNode,
+  sourceLines: readonly string[],
+  columnCount: number,
+): number[] | null {
+  const startLine = node.position?.start.line;
+  if (!startLine || columnCount < 2) return null;
+  const line = sourceLines[startLine];
+  if (line === undefined) return null;
+  const row = line.replace(/^\s*(?:>\s*)*(?:(?:[-*+]|\d+[.)])\s+)?/, "").trim().replace(/^\|/, "").replace(/\|$/, "");
+  const cells = row.split("|").map((cell) => cell.trim());
+  if (cells.length !== columnCount || !cells.every((cell) => /^:?-{3,}:?$/.test(cell))) return null;
+  const dashes = cells.map((cell) => cell.replace(/:/g, "").length);
+  if (dashes.every((count) => count === dashes[0])) return null;
+  const total = dashes.reduce((sum, count) => sum + count, 0);
+  return dashes.map((count) => Math.round((count / total) * 1000) / 10);
+}
+
+/**
+ * The longest text a column may hold and still be kept on one line. Names, versions, commands and short
+ * labels fit; a sentence does not, and wraps as before.
+ */
+const MARKDOWN_TABLE_SHORT_COLUMN_CHARACTERS = 24;
+
+/*
+ * Whether a column holds only short texts, heading included, so it is set without a line break: it then
+ * takes the width of its longest entry and leaves the rest of the row to the columns that need it.
+ * Measured on the text as shown, after translation.
+ */
+function isMarkdownTableColumnShort(cells: readonly PhiMarkdownInline[][][], columnIndex: number) {
+  return cells.every((row) =>
+    getInlineText(row[columnIndex] ?? []).trim().length <= MARKDOWN_TABLE_SHORT_COLUMN_CHARACTERS);
 }
 
 /** remark-gfm states `left`, `center`, `right` or nothing; nothing else can come out of its parser. */
