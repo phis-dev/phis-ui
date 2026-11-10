@@ -46,9 +46,27 @@ const PhiRuntimeModuleAuthoringContext = createContext<
   ReadonlyMap<string, PhiRuntimeModuleAuthoringRegistration>
 >(new Map());
 
+/*
+ * `lazy` keeps a rejected import for as long as the component lives, so one dropped connection would
+ * leave a layout broken until the page is reloaded. The import is therefore tried again before the
+ * failure is handed to React; a chunk that is really gone still fails, a moment later.
+ */
+const AUTHORING_LAYOUT_RETRY_DELAYS_MS = [400, 1200] as const;
+
+async function loadPhiAuthoringLayoutWithRetry(load: PhiAuthoringLayoutModuleLoader["load"]) {
+  for (const delay of AUTHORING_LAYOUT_RETRY_DELAYS_MS) {
+    try {
+      return await load();
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+  return load();
+}
+
 function createPhiLazyAuthoringLayout(load: PhiAuthoringLayoutModuleLoader["load"]) {
   return lazy(async () => {
-    const plugin = await load();
+    const plugin = await loadPhiAuthoringLayoutWithRetry(load);
     return {
       default: function PhiLoadedAuthoringLayout({ children }: PhiAuthoringLayoutLoaderProps) {
         return children(plugin);

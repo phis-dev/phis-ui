@@ -11,7 +11,7 @@ import {
   resolvePhiRuntimeControllerMount,
   type PhiAnyRuntimeControllerDefinition,
 } from "../../plugins/registries/runtime-controller-core";
-import type { PhiSignalRuntimeContext } from "../../types/signals";
+import type { PhiSignalAddress, PhiSignalRuntimeContext } from "../../types/signals";
 import type { PhiCapabilitySnapshot } from "../../types/server-capabilities";
 import { PhiRuntimeModuleControllerClientHost } from "./runtime-module-controller-client-host";
 import { PhiPlatformRuntimeControllerClientHost } from "./platform-runtime-controller-client-host";
@@ -47,6 +47,8 @@ export async function resolvePhiRuntimeControllerPreloads({
   const activeControllers: PhiRuntimeControllerSetting[] = [];
   const preloadDataByAddress: PhiRuntimeControllerPreloadMap = {};
   const seenAddresses = new Set<string>();
+  // Started only once every mount has been checked, so a refused mount leaves no preload running.
+  const preloads: { address: PhiSignalAddress; load: () => Promise<unknown> | unknown }[] = [];
 
   for (const setting of controllers ?? []) {
     const definition = registry.get(setting.type);
@@ -75,18 +77,28 @@ export async function resolvePhiRuntimeControllerPreloads({
     }
 
     const parsedConfig = parsePhiRuntimeControllerConfig(definition, setting.config);
-    preloadDataByAddress[address] = await definition.serverPreload({
-      key: definition.key,
-      instanceKey,
+    const serverPreload = definition.serverPreload;
+    preloads.push({
       address,
-      mountScope: setting.mountScope,
-      runtime,
-      runtimeModuleCatalog,
-      serverCapabilities,
-      setting: resolvedSetting,
-      config: parsedConfig,
+      load: () => serverPreload({
+        key: definition.key,
+        instanceKey,
+        address,
+        mountScope: setting.mountScope,
+        runtime,
+        runtimeModuleCatalog,
+        serverCapabilities,
+        setting: resolvedSetting,
+        config: parsedConfig,
+      }),
     });
   }
+
+  // Controllers do not read each other's preload, so the reads run together; the map keeps mount order.
+  const loaded = await Promise.all(preloads.map((entry) => entry.load()));
+  preloads.forEach((entry, index) => {
+    preloadDataByAddress[entry.address] = loaded[index];
+  });
 
   return {
     controllers: activeControllers,

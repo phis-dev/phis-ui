@@ -22,7 +22,7 @@ import {
 } from "../../helpers/region-page-scope";
 
 import { hasRenderableRegionRoot } from "./phi-cms-region-helpers";
-import { loadPhiCmsAreaRenderScope } from "./phi-cms-area-render-scope";
+import { loadPhiCmsAreaRenderControllers, loadPhiCmsAreaRenderScope } from "./phi-cms-area-render-scope";
 import { hasPhiCmsRevisionPreview } from "../../server-helpers/cms-root";
 import { performPhiCmsPageRedirect, resolvePhiCmsPageRedirect } from "./phi-cms-page-redirect";
 import { rememberPhiAreaRootDoor } from "../../gateway/area-root-door";
@@ -254,6 +254,9 @@ export async function PhiCmsAreaBoundary({
     });
   }
 
+  // After the guards and the forward: a request that is refused or sent elsewhere loads no Controller.
+  const areaControllers = await loadPhiCmsAreaRenderControllers({ root, path: path ?? pagePath, cmsBridge });
+
   return (
     <PhiSignalRuntimePartitionProvider
       id={`area:${runtime.site.key}:${runtime.area}`}
@@ -277,11 +280,11 @@ export async function PhiCmsAreaBoundary({
         <PhiRuntimeModuleDataProviderHost
           providerKeys={[...scope.runtimeRegistry.dataProviderDescriptorsByKey.keys()]}
         >
-          {scope.registeredControllerSettings && scope.registeredControllerSettings.length > 0 ? (
+          {areaControllers.registeredControllerSettings && areaControllers.registeredControllerSettings.length > 0 ? (
             <PhiRuntimeControllerServerHost
-              controllers={scope.registeredControllerSettings}
+              controllers={areaControllers.registeredControllerSettings}
               runtime={runtime}
-              registry={scope.controllerDefinitionsByType}
+              registry={areaControllers.controllerDefinitionsByType}
               controllerModuleIdsByType={runtimeModuleScope.moduleSet.ownerModuleIdByControllerType}
               runtimeModuleCatalog={scope.runtimeRegistry.runtimeModuleCatalog}
               serverCapabilities={scope.runtimeRegistry.serverCapabilities}

@@ -151,32 +151,20 @@ const loadPhiCmsRootScopeCached = cache(async function loadPhiCmsRootScopeCached
   const effectivePath =
     path && path.length > 0 ? path : derivePathSegmentsFromRequestPath(root, request.pathname);
   const resolvedRoute = await resolveCmsRootRoute(root, effectivePath, bridgeRuntime);
-  const baseRequestContext = await loadPhiSiteRequestContext(
-    siteKey,
-    resolvedRoute.locale,
-    cookieHeader,
-    bridgeRuntime?.apiBaseUrl,
-    bridgeRuntime?.internalToken,
-  );
-  const requestContext = await resolvePhiCmsThemeReviewRequestContext({
-    requestContext: baseRequestContext,
-    searchParams: request.searchParams,
-    cookieHeader,
-  });
   const resolvedAreaMask = resolvePhiCmsAreaMask(resolvedRoute.area);
   const review = resolvePhiCmsReviewParams(request.searchParams);
-  const runtime = buildPhiBlockRuntime({
-    requestContext,
-    areaMask: resolvedAreaMask,
-    request,
-  });
-  setPhiRequestRuntime(runtime);
   const descriptorCatalog = resolvePhiCmsDescriptorCatalog(cmsBridge.runtimeModuleCatalog);
   const areaShellBinding = resolvePhiCmsAreaShellPresetBinding(descriptorCatalog, resolvedRoute.area);
   if (!areaShellBinding) {
     throw new Error(`Area "${resolvedRoute.area}" has no shell preset binding.`);
   }
-  const exactAreaPreset = await getPhiExactSiteArea({
+  /*
+   * The stored Area needs the route, the cookie and the review, none of which the request context
+   * supplies, so its read starts here and travels beside the context's. A failure is kept for the
+   * `await` below; the empty handler only stops it from being reported as unhandled when the context
+   * read fails first and that `await` is never reached.
+   */
+  const exactAreaPresetRead = getPhiExactSiteArea({
     path: resolvedRoute.cmsPath,
     apiBaseUrl: bridgeRuntime?.apiBaseUrl,
     internalToken: bridgeRuntime?.internalToken,
@@ -190,6 +178,26 @@ const loadPhiCmsRootScopeCached = cache(async function loadPhiCmsRootScopeCached
       presetKey: areaShellBinding.descriptor.presetKey,
     },
   });
+  exactAreaPresetRead.catch(() => undefined);
+  const baseRequestContext = await loadPhiSiteRequestContext(
+    siteKey,
+    resolvedRoute.locale,
+    cookieHeader,
+    bridgeRuntime?.apiBaseUrl,
+    bridgeRuntime?.internalToken,
+  );
+  const requestContext = await resolvePhiCmsThemeReviewRequestContext({
+    requestContext: baseRequestContext,
+    searchParams: request.searchParams,
+    cookieHeader,
+  });
+  const runtime = buildPhiBlockRuntime({
+    requestContext,
+    areaMask: resolvedAreaMask,
+    request,
+  });
+  setPhiRequestRuntime(runtime);
+  const exactAreaPreset = await exactAreaPresetRead;
   /*
    * The code-owned Shell only where the Site has none stored. Building it beside the read, to save the
    * round trip on a Site that never saved its Area, cost every other Site a full Shell instantiation --

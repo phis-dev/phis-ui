@@ -61,6 +61,29 @@ const loadPhiCmsAreaRenderScopeCached = cache(async function loadPhiCmsAreaRende
     moduleScope: runtimeModuleScope,
     trees: filteredLayoutTree ? [filteredLayoutTree] : [],
   });
+  return {
+    rootScope,
+    runtime,
+    runtimeModuleScope,
+    filteredLayoutTree,
+    runtimeRegistry,
+  };
+});
+
+/**
+ * The Controllers the Area's own render mounts, and the code that runs them.
+ *
+ * Kept apart from the scope above because only the Layout that draws the Area needs them. An Overlay
+ * opened later asks for the same scope from a request of its own and mounts its own Controllers; it
+ * would otherwise load every Area Controller's module to throw the result away.
+ */
+const loadPhiCmsAreaRenderControllersCached = cache(async function loadPhiCmsAreaRenderControllersCached(
+  root: string,
+  pathKey: string,
+  cmsBridge: PhiCmsSiteBridge,
+) {
+  const { filteredLayoutTree, runtimeModuleScope } =
+    await loadPhiCmsAreaRenderScopeCached(root, pathKey, cmsBridge);
   const registeredControllerSettings = filteredLayoutTree
     ? materializePhiRuntimeControllerSettings({
         tree: filteredLayoutTree,
@@ -82,29 +105,23 @@ const loadPhiCmsAreaRenderScopeCached = cache(async function loadPhiCmsAreaRende
       })
     : new Map();
 
-  return {
-    rootScope,
-    runtime,
-    runtimeModuleScope,
-    filteredLayoutTree,
-    runtimeRegistry,
-    registeredControllerSettings,
-    controllerDefinitionsByType,
-  };
+  return { registeredControllerSettings, controllerDefinitionsByType };
 });
 
-export async function loadPhiCmsAreaRenderScope({
-  root,
-  path,
-  cmsBridge,
-}: {
+type PhiCmsAreaRenderScopeInput = {
   root: string;
   path?: string[];
   cmsBridge: PhiCmsSiteBridge;
-}) {
-  return loadPhiCmsAreaRenderScopeCached(
-    root,
-    path?.length ? path.join(PATH_KEY_SEPARATOR) : "",
-    cmsBridge,
-  );
+};
+
+function areaRenderScopePathKey(path: string[] | undefined) {
+  return path?.length ? path.join(PATH_KEY_SEPARATOR) : "";
+}
+
+export async function loadPhiCmsAreaRenderControllers({ root, path, cmsBridge }: PhiCmsAreaRenderScopeInput) {
+  return loadPhiCmsAreaRenderControllersCached(root, areaRenderScopePathKey(path), cmsBridge);
+}
+
+export async function loadPhiCmsAreaRenderScope({ root, path, cmsBridge }: PhiCmsAreaRenderScopeInput) {
+  return loadPhiCmsAreaRenderScopeCached(root, areaRenderScopePathKey(path), cmsBridge);
 }
