@@ -1018,7 +1018,7 @@ export function PhiTableWidgetClient({
           onActivate={() => activateAction(action, undefined, selectedRowIdentities)} />;
       })}
       {hasQueryTools && features.tools?.reset !== false ? (
-        <PhiButtonControl icon={<PhiIcon name="undo" size="inherit" />} ariaLabel={labels.reset} size={resolvedControlSize} onClick={resetQuery} />
+        <PhiButtonControl icon={<PhiIcon name="clear-outlined" size="inherit" />} ariaLabel={labels.reset} tooltip={labels.reset} size={resolvedControlSize} onClick={resetQuery} />
       ) : null}
       {features.tools?.reload ? (
         <PhiButtonControl icon={<PhiIcon name="reload" size="inherit" />} ariaLabel={labels.reload} tooltip={labels.reload} size={resolvedControlSize} onClick={reload} />

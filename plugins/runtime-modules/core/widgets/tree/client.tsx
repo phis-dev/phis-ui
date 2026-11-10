@@ -301,7 +301,7 @@ export function PhiTreeWidgetClient({ config, labels, renderMode }: {
         />
       ))}
       {hasResettableQuery && tools?.reset !== false ? (
-        <PhiButtonControl icon={<PhiIcon name="undo" size="inherit" />} ariaLabel={labels.reset} size={controlSize} onClick={resetTools} />
+        <PhiButtonControl icon={<PhiIcon name="clear-outlined" size="inherit" />} ariaLabel={labels.reset} tooltip={labels.reset} size={controlSize} onClick={resetTools} />
       ) : null}
       {tools?.reload ? (
         <PhiButtonControl icon={<PhiIcon name="reload" size="inherit" />} ariaLabel={labels.reload} tooltip={labels.reload}

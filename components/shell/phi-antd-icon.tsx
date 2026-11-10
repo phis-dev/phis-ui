@@ -39,6 +39,7 @@ const PHI_ANTD_ICON_LOADERS = {
   BranchesOutlined: () => import("@ant-design/icons-svg/es/asn/BranchesOutlined"),
   CalendarOutlined: () => import("@ant-design/icons-svg/es/asn/CalendarOutlined"),
   CheckOutlined: () => import("@ant-design/icons-svg/es/asn/CheckOutlined"),
+  ClearOutlined: () => import("@ant-design/icons-svg/es/asn/ClearOutlined"),
   CloseOutlined: () => import("@ant-design/icons-svg/es/asn/CloseOutlined"),
   CloudDownloadOutlined: () => import("@ant-design/icons-svg/es/asn/CloudDownloadOutlined"),
   CloudUploadOutlined: () => import("@ant-design/icons-svg/es/asn/CloudUploadOutlined"),
@@ -227,6 +228,8 @@ export const PHI_ANTD_ICON_NAMES: Readonly<Record<string, PhiAntdIconKey>> = {
   "branches-outlined": "BranchesOutlined",
   check: "CheckOutlined",
   "check-outlined": "CheckOutlined",
+  // Only the long name: a bare `clear` already means the close mark on a Button (phi-button-icons.tsx).
+  "clear-outlined": "ClearOutlined",
   close: "CloseOutlined",
   "close-outlined": "CloseOutlined",
   code: "CodeOutlined",

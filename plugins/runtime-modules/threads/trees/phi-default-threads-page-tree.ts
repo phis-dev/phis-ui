@@ -455,7 +455,7 @@ export async function buildPhiDefaultThreadsPageTree({
             sorting: { mode: "none" },
             search: { enabled: false },
             // An inbox goes stale by itself: the messages that change it are written by other people.
-            tools: { mode: "self-contained", reload: true },
+            tools: { mode: "self-contained", reset: false, reload: true },
             /*
              * Two of the three filters the resource declares. `kind` is left out deliberately: this
              * Page is every conversation a person is in, and a Site that wants one kind pins it in the
