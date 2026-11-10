@@ -10,6 +10,7 @@ import { canPhiViewerAccess } from "../../types/access";
 import { resolvePhiCmsDescriptorCatalog } from "../../plugins/runtime-modules/descriptor-compiler";
 import { resolvePhiPublicLoginHref } from "../../server-helpers/public-login-route";
 import { localizeAreaPath } from "../../helpers/locale";
+import { PHI_ALL_RUNTIME_AREA_DEFINITIONS } from "../../plugins/runtime-modules/area-definitions";
 
 /**
  * Refuses an Area root the viewer may not enter, and returns only when they may.
@@ -64,7 +65,14 @@ export async function guardPhiCmsAreaAccess({
      * until they disagree: a claim this side cannot read, an Area switched off. Then the home Area is
      * as closed as this one, and forwarding there is a loop rather than a way out.
      */
-    const homeDefinition = areaDefinitions.get(viewer.resolvedArea);
+    /*
+     * The catalog in hand is this Area's own and declares no other Area, so the home Area's policy is
+     * read from the Core's list of Areas. Looked up in the catalog alone, every home but this Area was
+     * missing, and every viewer without the roles for it was refused rather than sent home -- a member
+     * signing in from an Admin address landed on 403 instead of the App.
+     */
+    const homeDefinition = areaDefinitions.get(viewer.resolvedArea)
+      ?? PHI_ALL_RUNTIME_AREA_DEFINITIONS.find((definition) => definition.area === viewer.resolvedArea);
     if (
       viewer.resolvedArea === resolvedRoute.area ||
       !homeDefinition ||

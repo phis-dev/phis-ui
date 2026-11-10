@@ -84,6 +84,13 @@ describe("guardPhiCmsAreaAccess", () => {
     await expect(guard({ viewer: viewer("authenticated", "app") })).rejects.toThrow("redirect:/app");
   });
 
+  it("sends a viewer home although this Area's catalog declares no other Area", async () => {
+    // An Area's catalog holds that Area alone; the App's policy has to come from the Core's list.
+    areaDefinitions.clear();
+    areaDefinitions.set("admin", { accessPolicy: PHI_VIEWER_ACCESS_SITE_ADMIN });
+    await expect(guard({ viewer: viewer("authenticated", "app") })).rejects.toThrow("redirect:/app");
+  });
+
   it("refuses instead of forwarding where the way back would be refused as well", async () => {
     areaDefinitions.set("admin", { accessPolicy: PHI_VIEWER_ACCESS_SITE_ADMIN });
     // Home is this very Area: a forward would land here again.
@@ -92,8 +99,9 @@ describe("guardPhiCmsAreaAccess", () => {
     areaDefinitions.set("app", { accessPolicy: PHI_VIEWER_ACCESS_SITE_ADMIN });
     await expect(guard({ viewer: viewer("authenticated", "app") })).rejects.toThrow("forbidden");
     // Home is not an Area this build declares.
-    areaDefinitions.delete("app");
-    await expect(guard({ viewer: viewer("authenticated", "app") })).rejects.toThrow("forbidden");
+    await expect(
+      guard({ viewer: { ...viewer("authenticated", "app"), resolvedArea: "nowhere" } as unknown as PhiBlockRuntimeViewer }),
+    ).rejects.toThrow("forbidden");
   });
 
   it("lets a viewer through who may enter", async () => {
