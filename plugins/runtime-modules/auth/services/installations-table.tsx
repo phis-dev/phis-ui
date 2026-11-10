@@ -21,6 +21,7 @@ const API_PATH = "/api/auth/admin/installations";
 
 type InstallationRow = Record<string, unknown> & {
   installationKey?: unknown;
+  loginEnabled?: unknown;
   validation?: unknown;
 };
 
@@ -77,7 +78,9 @@ async function queryInstallations({
     throw new PhiTableProviderError("resource-not-found", `Unknown Auth resource "${resourceKey}".`);
   }
   const rows = await loadInstallations(signal);
-  return { rows, total: rows.length };
+  // What the footer counts beside the rows: the installations the sign-in page actually offers.
+  const loginEnabledCount = rows.filter((row) => row.loginEnabled === true).length;
+  return { rows, total: rows.length, summary: { loginEnabledCount } };
 }
 
 async function readInstallationRecord({ rowIdentity, signal }: PhiTableProviderRecordRequest) {

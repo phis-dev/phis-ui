@@ -44,6 +44,7 @@ export async function buildPhiDefaultAdminAuthSettingsPageTree({
     "overlayInstallationEdit",
     "overlayInstallationEditForm",
   ]);
+  const columns = labels.installations.columns;
   const tableAddress = createPhiSignalAddress("cms", widgetIds.widgetInstallationsTable);
   const editFormAddress = createPhiSignalAddress("cms", widgetIds.overlayInstallationEditForm);
   const createOverlayAddress = createPhiSignalAddress("cms", widgetIds.overlayInstallationCreate);
@@ -121,8 +122,12 @@ export async function buildPhiDefaultAdminAuthSettingsPageTree({
               controlSize: "small",
               borders: true,
               layout: { mode: "auto", overflowX: "auto" },
+              /*
+               * Short heads, the explanation in each head's hint: nine columns under their full names were
+               * wider than the panel and were cut at the top.
+               */
               columns: [
-                { key: "installationKey", fieldKey: "installationKey", title: labels.installations.installationKey, sizing: { mode: "content" }, sticky: "left" },
+                { key: "installationKey", fieldKey: "installationKey", title: columns.key.title, description: columns.key.hint, sizing: { mode: "content" }, sticky: "left" },
                 {
                   key: "providerKey",
                   fieldKey: "providerKey",
@@ -131,13 +136,14 @@ export async function buildPhiDefaultAdminAuthSettingsPageTree({
                   sizing: { mode: "content" },
                   tagColorMap: { google: "processing", apple: "default", github: "default", microsoft: "processing" },
                 },
-                { key: "enabled", fieldKey: "enabled", title: labels.providers.enabled, renderer: "switch", editor: { control: "switch" }, sizing: { mode: "content" } },
-                { key: "loginEnabled", fieldKey: "loginEnabled", title: labels.providers.loginEnabled, renderer: "switch", editor: { control: "switch" }, sizing: { mode: "content" } },
-                { key: "sortOrder", fieldKey: "sortOrder", title: labels.providers.sortOrder, sizing: { mode: "content" } },
+                { key: "enabled", fieldKey: "enabled", title: columns.enabled.title, description: columns.enabled.hint, renderer: "switch", editor: { control: "switch" }, sizing: { mode: "content" } },
+                { key: "loginEnabled", fieldKey: "loginEnabled", title: columns.login.title, description: columns.login.hint, renderer: "switch", editor: { control: "switch" }, sizing: { mode: "content" } },
+                { key: "sortOrder", fieldKey: "sortOrder", title: columns.order.title, description: columns.order.hint, sizing: { mode: "content" } },
                 {
                   key: "secretStatus",
                   fieldKey: "secretStatus",
-                  title: labels.installations.secret,
+                  title: columns.secret.title,
+                  description: columns.secret.hint,
                   renderer: "badge",
                   sizing: { mode: "content" },
                   tagColorMap: { configured: "success", missing: "error" },
@@ -145,15 +151,24 @@ export async function buildPhiDefaultAdminAuthSettingsPageTree({
                 {
                   key: "validationStatus",
                   fieldKey: "validationStatus",
-                  title: labels.installations.validation,
+                  title: columns.validation.title,
+                  description: columns.validation.hint,
                   renderer: "badge",
                   sizing: { mode: "content" },
                   tagColorMap: { ok: "success", failed: "error", "not-testable": "default", untested: "warning" },
                 },
-                { key: "linkedIdentities", fieldKey: "linkedIdentities", title: labels.installations.linkedIdentities, sizing: { mode: "content" } },
-                { key: "callbackUri", fieldKey: "callbackUri", title: labels.installations.callbackUri, sizing: { mode: "fill" } },
+                { key: "linkedIdentities", fieldKey: "linkedIdentities", title: columns.linked.title, description: columns.linked.hint, sizing: { mode: "content" } },
+                { key: "callbackUri", fieldKey: "callbackUri", title: columns.callback.title, description: columns.callback.hint, sizing: { mode: "fill" } },
               ],
-              emptyState: labels.installations.empty,
+              emptyState: { title: labels.installations.empty },
+              footer: {
+                template: labels.installations.footer,
+                values: [
+                  { key: "installations", value: { source: "core", fieldKey: "totalRows" } },
+                  { key: "loginEnabled", value: { source: "provider", fieldKey: "loginEnabledCount" } },
+                ],
+                align: "start",
+              },
             },
             features: {
               pagination: { enabled: false },

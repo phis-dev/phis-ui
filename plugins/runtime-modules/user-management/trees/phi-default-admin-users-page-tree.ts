@@ -344,7 +344,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
               { key: "lastLoginAt", fieldKey: "lastLoginAt", title: widgetLabels.columns.lastLogin, renderer: "datetime", sizing: { mode: "content" }, sortable: true },
               { key: "createdAt", fieldKey: "createdAt", title: widgetLabels.columns.created, renderer: "datetime", sizing: { mode: "content" }, sortable: true },
             ],
-            emptyState: widgetLabels.empty,
+            emptyState: { title: widgetLabels.empty.title, description: widgetLabels.empty.text },
             footer: {
               template: widgetLabels.footer,
               values: [

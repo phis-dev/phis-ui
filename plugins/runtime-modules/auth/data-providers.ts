@@ -17,6 +17,9 @@ export const PHI_AUTH_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
         title: "Provider installations",
         rowIdentityPath: "installationKey",
         recordRead: true,
+        summaryFields: [
+          { key: "loginEnabledCount", title: "Offered on login", type: "number" },
+        ],
         fields: [
           { key: "installationKey", title: "Installation", type: "string", required: true },
           { key: "providerKey", title: "Provider", type: "string", required: true },
