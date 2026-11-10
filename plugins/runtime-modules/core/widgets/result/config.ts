@@ -17,6 +17,8 @@ export type PhiCmsResultWidgetConfig = PhiCmsWidgetConfigBase & {
   subTitle?: string;
   homeLink?: boolean;
   homeLinkLabel?: string;
+  /** Where the link goes: the root of the Area the result renders in, or the Site's public home. */
+  homeLinkTarget?: PhiResultHomeLinkTarget;
   /** Whose words `title`, `subTitle` and `homeLinkLabel` are (`helpers/text-source.ts`). */
   textSource?: PhiTextSource;
 };
@@ -32,6 +34,15 @@ export type PhiCmsResultWidgetConfig = PhiCmsWidgetConfigBase & {
  * On by default. A Result ends something, and a page that ends something should say where to go next;
  * the presets that want silence say so, which is the rarer case and the one worth spelling out.
  */
+export type PhiResultHomeLinkTarget = "area" | "site";
+
+/*
+ * Two answers, both resolved rather than typed: the Area's own root, or the Site's public home. A refusal
+ * needs the second -- the root of the Area that refused is the same door again -- and the public home is
+ * the one page every visitor may open.
+ */
+const PHI_RESULT_HOME_LINK_TARGETS = ["area", "site"] as const satisfies readonly PhiResultHomeLinkTarget[];
+
 export const PHI_RESULT_HOME_LINK_SOURCE_LABEL = "Back to homepage" as const;
 
 const PHI_RESULT_STATUS_OPTIONS: Array<{ value: PhiResultWidgetVisualStatus; label: string }> = [
@@ -59,6 +70,7 @@ function parsePhiCmsResultWidgetConfig(config: Record<string, unknown>): PhiCmsR
     subTitle: readString(config.subTitle),
     homeLink: readBoolean(config.homeLink) ?? true,
     homeLinkLabel: readString(config.homeLinkLabel),
+    homeLinkTarget: PHI_RESULT_HOME_LINK_TARGETS.find((target) => target === config.homeLinkTarget) ?? "area",
     textSource: readPhiTextSource(config.textSource),
   };
 }
@@ -94,6 +106,15 @@ export const PHI_RESULT_WIDGET_DEFINITION = {
     { key: "subTitle", type: "string", label: "Subtitle" },
     { key: "homeLink", type: "boolean", label: "Show Home Link" },
     { key: "homeLinkLabel", type: "string", label: "Home Link Label" },
+    {
+      key: "homeLinkTarget",
+      type: "choice",
+      label: "Home Link Target",
+      options: [
+        { value: "area", label: "This Area's start" },
+        { value: "site", label: "The site's homepage" },
+      ],
+    },
   ],
   defaultConfig: {
     status: "info",

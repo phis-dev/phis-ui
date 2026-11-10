@@ -112,12 +112,12 @@ export async function buildPhiDefaultPubErrorPageTree({
           title: copy.title,
           subTitle: copy.subTitle,
           /*
-           * Only the 404 offers the way out, and only because only the 404 has one.
-           *
-           * The link goes to the root of the Area the refusal happened in. For a missing page that is
-           * somewhere the visitor may go; for 401 and 403 it is the same door that just refused them.
+           * Every error page offers a way out: it draws no Shell, so there is nothing else to press. A
+           * missing page goes to the root of its own Area, which the visitor may open. A refusal goes to
+           * the Site's public home instead -- the Area's root is the same door that just refused them.
            */
-          homeLink: code === 404,
+          homeLink: true,
+          homeLinkTarget: code === 404 ? "area" : "site",
         },
       }),
     ],

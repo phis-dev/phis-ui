@@ -61,7 +61,7 @@ export async function PhiResultWidget({ config, runtime, translate }: PhiResultW
    * locale it was rendered for. `localizeAreaPath` is the same answer the navigation gives.
    */
   const homeHref = config?.homeLink
-    ? localizeAreaPath(runtime.locale.current, runtime.area, "/")
+    ? localizeAreaPath(runtime.locale.current, config.homeLinkTarget === "site" ? "public" : runtime.area, "/")
     : undefined;
   return (
     <PhiResultWidgetBody
