@@ -28,9 +28,6 @@ export type PhiBlockRuntimeSite = {
   sourceLocale: string;
   /** The IANA zone the Site's dates and times are shown in (`PhiSiteConfig.timeZone`). */
   timeZone: string;
-  store: {
-    enabled: boolean;
-  };
   themeRevision?: {
     publishedRevisionId: number | null;
     workingDraftRevisionId: number | null;

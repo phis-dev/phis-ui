@@ -90,7 +90,6 @@ async function getPhiCmsRuntimeInfo({
     defaultLocale: site.defaultLocale,
     sourceLocale: site.sourceLocale,
     timeZone: site.timeZone,
-    store: site.store,
     themeRevision: site.themeRevision,
     /*
      * The Theme record whole, with the mode decided: a Site that never chose one is light, which is the

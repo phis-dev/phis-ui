@@ -92,6 +92,14 @@ export { PhiSurfaceControl } from "./components/controls/phi-surface-control";
 export type { PhiSurfaceControlLabels, PhiSurfaceControlProps } from "./components/controls/phi-surface-control";
 export { PhiImageControl } from "./components/controls/phi-image-control";
 export type { PhiImageControlProps, PhiImageControlSource } from "./components/controls/phi-image-control";
+// The answer `PhiImageControl` draws: a Module showing a picture of its own asks the same resolver the
+// Image and Card Widgets ask, instead of composing an address and a framing of its own.
+export { resolvePhiImagePresentation } from "./components/media/image-presentation";
+export type {
+  PhiImagePresentation,
+  PhiImagePresentationFit,
+  PhiImagePresentationInput,
+} from "./components/media/image-presentation";
 export { PhiGeometryControl } from "./components/controls/phi-geometry-control";
 export type { PhiGeometryControlProps } from "./components/controls/phi-geometry-control";
 export { PhiSliderControl } from "./components/controls/phi-slider-control";

@@ -98,10 +98,6 @@ export type PhiSiteConfig = {
   availableLocales: PhiSiteLocaleOption[];
   /** What each served locale means, so a request naming one is resolved without asking Core. */
   localeCapabilities: PhiLocaleCapability[];
-  /** Whether the Site runs a store; the server computes it for every Site, so it is never absent. */
-  store: {
-    enabled: boolean;
-  };
   theme: PhiSiteTheme;
   themeRevision: {
     publishedRevisionId: number | null;

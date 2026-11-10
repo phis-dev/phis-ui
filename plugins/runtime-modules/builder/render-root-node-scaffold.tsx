@@ -1158,7 +1158,6 @@ function resolvePhiRootNodeRenderedBody(
       name: "Preview",
       hostname: null,
       availableLocales: [],
-      store: { enabled: false },
       theme: { mode: "light" },
     },
     locale: {

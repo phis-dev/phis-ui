@@ -198,7 +198,10 @@ Modules use Phi Controls for supported presentation and do not import Ant Design
 Control exists: inline feedback is `PhiAlertControl`, anchored confirmation `PhiConfirmControl`, text
 `PhiTypographyControl`, the arrangement inside one Widget `PhiFlexControl` (a gap, not `Space`), a
 placeholder `PhiSkeletonControl`, and a count on a button the `badge` of `PhiButtonControl`; icons are
-drawn with `PhiIcon` by name (`@phis/ui/navigation`), never imported from `@ant-design/icons`.
+drawn with `PhiIcon` by name (`@phis/ui/navigation`), never imported from `@ant-design/icons`. A
+picture is `PhiImageControl`, drawn from what `resolvePhiImagePresentation` answers (both from
+`@phis/ui/controls`); a file an Add-on keeps in a slot is `{ sourceKind: "url", sourceUrl: contentPath }`
+with `source="url"`.
 Application messages and notifications are sent with `usePhiApplicationFeedback`
 (`@phis/ui/runtime/signal-client`). A missing reusable capability is a Core contract extension, not a
 package-local Ant Design path. The one place a Module renders Ant Design itself is where it supplies the
@@ -1119,6 +1122,12 @@ What the tree contains:
   ([section 4a](#4a-add-a-layout)).
 - **Widgets** by `typeKey`, with `config` checked against Core's placement types
   ([section 4b](#4b-place-core-widgets)). There is no heading Widget: a heading is Markdown (`#`).
+- **Copy** the tree writes into a Widget -- a Button's label, a Markdown heading -- is the Module's own
+  text. A Widget translates its config text from the Site's source language, and a Site written in German
+  would read the Module's English as German and never translate it. Read such copy from a Module Label Set
+  in `runtime.locale.current` while building the tree, and set `PhiCmsFlags.NoTranslate` on the node
+  (`flags`): the text is then already in the reader's language. A Page title is the route's `title` and
+  needs neither.
 
 ### Links are references, never paths
 
