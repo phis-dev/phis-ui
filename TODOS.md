@@ -307,6 +307,26 @@ built. Remove an entry when it is done.
   is written in [THEME.md](./THEME.md#selection-and-resolution) for whoever reads contracts, and it wants
   saying once in the workspace itself, for whoever does not. A Tour is the shape for it; the design is
   [design/TOURS.md](./design/TOURS.md) and nothing of it is built, so this waits on that.
+- **Folder flags have no reader and no control.** `PhiMediaFolderFlags` travels in the Folder payload and
+  nothing here reads it. Core now enforces `Locked` (2026-11-10): a locked Folder is not renamed, moved
+  or deleted, and nothing is created in it, uploaded into it, moved into or out of it or deleted from it;
+  the request answers `409` with `media_folder_locked`. The Media workspace needs a control that sets and
+  clears the lock, has to show a locked Folder as locked and keep its own actions from being offered on
+  it, and has to say why when Core refuses. `Hidden` and `Collapsed` are display state Core does not
+  enforce: the Folder tree should leave a hidden Folder out unless asked to show it, and start a
+  collapsed one collapsed; both need a control as well.
+
+## Threads
+
+- **A locked thread looks like any other.** Core refuses every new message into a thread that carries
+  `PhisThreadFlag.Locked` (2026-11-10) and takes `locked` on `PATCH /api/site/threads/{id}` from whoever
+  may change the status. The Threads Module needs the control that sets and clears it, has to show the
+  state in the conversation and its list, and has to put the composer out of use instead of letting a
+  message be written and then refused. Add-ons have no capability method for the lock yet; that is a
+  contract extension.
+- **`Muted` waits on thread notifications.** A participant's `Muted` flag is reserved in Core: nothing
+  notifies a participant of a thread message today, so there is nothing to silence and no setter. The
+  control belongs with the notifications when they are built.
 
 ## Translations and preferences
 
