@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
-vi.mock("../../../../helpers/phis-server-credentials", () => ({
+vi.mock("../../helpers/phis-server-credentials", () => ({
   readPhiServerApiCredentials: () => ({ apiBaseUrl: "https://core.test", internalToken: "token" }),
 }));
-vi.mock("../../../../gateway/site-auth-settings", () => ({
+vi.mock("../../gateway/site-auth-settings", () => ({
   getResolvedSiteAuthAdminSettings: async () => ({
     policy: { registrationMode: "automatic", existingAccountLinking: "verified-email-confirm", allowPrivilegedAutoLink: false },
     passwordMethod: { enabled: true, sortOrder: 10 },
@@ -12,11 +12,11 @@ vi.mock("../../../../gateway/site-auth-settings", () => ({
   }),
 }));
 
-import { PhiCmsPageType, PhiCmsStatus } from "../../../../constants/phi-cms";
-import { PHI_VIEWER_ACCESS_ANYONE } from "../../../../types/access";
-import type { PhiCmsPageNode } from "../../../../types/cms";
-import { parsePhiTableWidgetConfig } from "../../core/widgets/table/config";
-import { buildPhiDefaultAdminAuthSettingsPageTree } from "./phi-default-admin-auth-settings-page-tree";
+import { PhiCmsPageType, PhiCmsStatus } from "../../constants/phi-cms";
+import { PHI_VIEWER_ACCESS_ANYONE } from "../../types/access";
+import type { PhiCmsPageNode } from "../../types/cms";
+import { parsePhiTableWidgetConfig } from "./core/widgets/table/config";
+import { buildPhiDefaultAdminAuthSettingsPageTree } from "./auth/trees/phi-default-admin-auth-settings-page-tree";
 
 const PAGE = {
   id: 1,
@@ -40,6 +40,9 @@ const PAGE = {
 } satisfies PhiCmsPageNode;
 
 /*
+ * A Foundation test, beside the module system rather than inside Auth, because it reads the Auth preset
+ * with the Core Table's reader and a Module may not reach another (MODULES.md, "The dependency rule").
+ *
  * The identity provider Table is the only way to add a provider, and a config the Table's reader refuses
  * is not rendered at all -- the page showed the panel with nothing in it, no row and no add button. The
  * empty state was a bare text where the reader wants `{ title, description }`, and nothing between the
