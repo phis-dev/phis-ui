@@ -372,9 +372,10 @@ both for the Page it renders, so the first paint is already right. The pane's of
 `top` of `header_main` and `header_bottom` read them; where no band publishes them they resolve to the
 configured offsets unchanged. A preview ignores both settings and shows the Region where it stands.
 
-The code preset's `header_top` (the Brand lines) carries `pageScope: { mode: "root" }`. It used to be left
-out of the tree on every Page but `/`, a rule that lived in the preset code and was gone the moment an
-author saved the Area.
+The code preset for Public and App brings no `header_top`: its main band carries the Brand, the
+navigation and the actions, and the contact link stands in the Footer. A Site that wants a strip above it
+adds the Region in the Builder, and can keep it to the Area's own `/` with `pageScope: { mode: "root" }`,
+a rule the Region carries rather than the preset code, so it still holds after the Area is saved.
 
 ## Hero at the top
 

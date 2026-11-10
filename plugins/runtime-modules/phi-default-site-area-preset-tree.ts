@@ -27,7 +27,6 @@ import {
 } from "./preset-contracts/pub-area";
 
 const SYNTHETIC_REGION_IDS = {
-  regionHeaderTop: -1,
   regionHeaderMain: -2,
   regionFooterTop: -27,
   regionFooterMain: -28,
@@ -60,9 +59,6 @@ export async function buildPhiDefaultSiteAreaPresetTree({
   const headerMainRegion = PHI_DEFAULT_PUB_AREA_PRESET.regions.find(
     (region) => region.key === "header_main",
   );
-  const headerTopRegion = PHI_DEFAULT_PUB_AREA_PRESET.regions.find(
-    (region) => region.key === "header_top",
-  );
   const footerMainRegion = PHI_DEFAULT_PUB_AREA_PRESET.regions.find(
     (region) => region.key === "footer_main",
   );
@@ -80,7 +76,8 @@ export async function buildPhiDefaultSiteAreaPresetTree({
   /*
    * The Preset's words stay in the source language and say they are the Preset's; the Widgets translate
    * them through the global store (`helpers/text-source.ts`). The contact label is the Preset's only
-   * while the Site's theme names none.
+   * while the Site's theme names none. It stands in the Footer; the Header has no strip above its main
+   * band, which a Site adds in the Builder when it wants one.
    */
   const contactLabelIsPreset = !runtime.site.theme?.contact?.label?.trim();
   /*
@@ -92,11 +89,6 @@ export async function buildPhiDefaultSiteAreaPresetTree({
    * `helpers/text-placeholders.ts` has the names it may use.
    */
   const footerBottomText = "© {year} {site.name}. All rights reserved.";
-  const shellHeaderTopHeight = resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "top");
-  const shellHeaderTopOffsetTop = resolvePhiShellMetric(runtime.site.theme?.shell, "offsetTop", {
-    family: "header",
-    region: "top",
-  });
   const shellHeaderMainHeight = resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "main");
   const shellHeaderMainOffsetTop = resolvePhiShellMetric(runtime.site.theme?.shell, "offsetTop", {
     family: "header",
@@ -120,24 +112,6 @@ export async function buildPhiDefaultSiteAreaPresetTree({
     runtimeModuleIds: createPhiDefaultAreaRuntimeModuleIds(runtimeModuleArea),
     overlays: [],
     regions: [
-      ...(headerTopRegion
-        ? [
-            nodes.region({
-              id: SYNTHETIC_REGION_IDS.regionHeaderTop,
-              regionType: PhiCmsRegionType.HeaderTop,
-              rootLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutHeaderTop,
-              status: headerTopRegion.status,
-              flags: headerTopRegion.flags,
-              visibilityMask: headerTopRegion.visibilityMask,
-              sortOrder: headerTopRegion.sortOrder,
-              config: {
-                ...headerTopRegion.config,
-                size: { ...(headerTopRegion.config.size ?? {}), height: `${shellHeaderTopHeight}px` },
-                ...(typeof shellHeaderTopOffsetTop === "number" ? { offsetTop: shellHeaderTopOffsetTop } : {}),
-              },
-            }),
-          ]
-        : []),
       ...(headerMainRegion
         ? [
             nodes.region({
@@ -215,26 +189,6 @@ export async function buildPhiDefaultSiteAreaPresetTree({
         : []),
     ],
     layoutNodes: [
-      ...(headerTopRegion
-        ? [
-            {
-              id: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutHeaderTop,
-              siteId: page.siteId,
-              parentLayoutNodeId: null,
-              widgetType: buildPhiCmsLayoutNamespacedTypeKey(resolvePhiCmsLayoutPluginKey("three-column"), "three-column"),
-              slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-              sortOrder: -10,
-              status: 1,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
-              label: "pub header top three column",
-              config: {
-                ...resolvePhiLayoutCreationPreset("threecol", "panel"),
-                balancedSides: true,
-              },
-            },
-          ]
-        : []),
       {
         id: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutHeaderMain,
         siteId: page.siteId,
@@ -362,69 +316,6 @@ export async function buildPhiDefaultSiteAreaPresetTree({
         : []),
     ],
     contentWidgets: [
-      ...(headerTopRegion
-        ? [
-            /*
-             * The Brand's own two lines, drawn by the Brand Widget rather than copied into a Text one.
-             *
-             * They say what the Site says about itself, so they are read from the Theme record when the
-             * page renders and are set where the rest of the Brand is set, in the Theme workspace. A
-             * Site that has stated neither shows neither: the strip keeps its shape, and an invented
-             * slogan in everybody's header was never this Preset's to write.
-             */
-            {
-              id: PHI_DEFAULT_PUB_AREA_WIDGET_IDS.widgetHeaderTopLeft,
-              siteId: page.siteId,
-              parentLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutHeaderTop,
-              widgetType: buildPhiCmsWidgetNamespacedTypeKey(resolvePhiCmsWidgetPluginKey("brand"), "brand"),
-              slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Left,
-              sortOrder: 0,
-              status: 1,
-              flags: PhiCmsFlags.NoTranslate,
-              visibilityMask: page.visibilityMask,
-              label: "pub header top left",
-              config: {
-                mode: "slogan",
-              },
-              contentVersionId: null,
-            },
-            {
-              id: PHI_DEFAULT_PUB_AREA_WIDGET_IDS.widgetHeaderTopMiddle,
-              siteId: page.siteId,
-              parentLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutHeaderTop,
-              widgetType: buildPhiCmsWidgetNamespacedTypeKey(resolvePhiCmsWidgetPluginKey("brand"), "brand"),
-              slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
-              sortOrder: 10,
-              status: 1,
-              flags: PhiCmsFlags.NoTranslate,
-              visibilityMask: page.visibilityMask,
-              label: "pub header top middle",
-              config: {
-                mode: "location",
-              },
-              contentVersionId: null,
-            },
-            {
-              id: PHI_DEFAULT_PUB_AREA_WIDGET_IDS.widgetHeaderTopRight,
-              siteId: page.siteId,
-              parentLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutHeaderTop,
-              widgetType: buildPhiCmsWidgetNamespacedTypeKey(resolvePhiCmsWidgetPluginKey("simple-text"), "simple-text"),
-              slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Right,
-              sortOrder: 20,
-              status: 1,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
-              label: "pub header top right",
-              config: {
-                text: contactLabel,
-                ...(contactLabelIsPreset ? { textSource: PHI_TEXT_SOURCE_PRESET } : {}),
-                href: contactHref,
-                icon: contactIcon,
-              },
-              contentVersionId: null,
-            },
-          ]
-        : []),
       {
         id: PHI_DEFAULT_PUB_AREA_WIDGET_IDS.widgetBrand,
         siteId: page.siteId,
@@ -451,8 +342,10 @@ export async function buildPhiDefaultSiteAreaPresetTree({
         flags: 0,
         visibilityMask: page.visibilityMask,
         label: "pub header main navigation",
+        /* The current entry on a rounded ground rather than a bar under it, in either mode. */
         config: {
           navKey: `${runtimeModuleArea}:header`,
+          selectionStyle: "pill",
         },
         contentVersionId: null,
       },

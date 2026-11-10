@@ -3,26 +3,6 @@ import { PHI_PADDING } from "../../theme/phi-tokens";
 import type { PhiCmsAreaPreset, PhiCmsResolvedRegion } from "../../types";
 import { createPhiDefaultAreaRuntimeModuleIds } from "./area-module-defaults";
 
-const PUB_HEADER_TOP_REGION: PhiCmsResolvedRegion = {
-  key: "header_top",
-  status: 1,
-  flags: 0,
-  visibilityMask: 0,
-  sortOrder: -10,
-  config: {
-    offsetTop: 0,
-    /*
-     * The strip of Brand lines stands on the Area's own `/` alone. A rule the Region carries, so it is
-     * still the rule after an author has saved the Area and the code no longer answers.
-     */
-    pageScope: { mode: "root" },
-  },
-  rootLayoutNodeId: null,
-  rootLayoutNode: null,
-  source: "fallback",
-  allowedPageSlotInjections: [],
-};
-
 const PUB_HEADER_MAIN_REGION: PhiCmsResolvedRegion = {
   key: "header_main",
   status: 1,
@@ -133,7 +113,6 @@ export const PHI_DEFAULT_PUB_AREA_PRESET: PhiCmsAreaPreset = {
     runtimeModules: createPhiDefaultAreaRuntimeModuleIds("public"),
   },
   regions: [
-    PUB_HEADER_TOP_REGION,
     PUB_HEADER_MAIN_REGION,
     PUB_CONTENT_REGION,
     PUB_FOOTER_TOP_REGION,

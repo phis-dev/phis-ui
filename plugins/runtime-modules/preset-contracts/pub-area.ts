@@ -1,7 +1,6 @@
 export const PHI_DEFAULT_PUB_AREA_PRESET_KEY = "public-area-preset";
 
 export const PHI_DEFAULT_PUB_AREA_LAYOUT_NODE_KEYS = [
-  "layoutHeaderTop",
   "layoutHeaderMain",
   "layoutHeaderActions",
   "layoutHeaderBottom",
@@ -12,9 +11,6 @@ export const PHI_DEFAULT_PUB_AREA_LAYOUT_NODE_KEYS = [
 ] as const;
 
 export const PHI_DEFAULT_PUB_AREA_WIDGET_NODE_KEYS = [
-  "widgetHeaderTopLeft",
-  "widgetHeaderTopMiddle",
-  "widgetHeaderTopRight",
   "widgetBrand",
   "widgetNav",
   "widgetLocale",
