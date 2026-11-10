@@ -626,8 +626,14 @@
  * and stands at the inline start, off screen, until `PhiShellSiderDrawer` marks the Shell open. The
  * `!important`s win over the Region's inline geometry, which is the column's. Fixed inside the Shell
  * means fixed to the Shell, a container: `--phi-shell-sider-drawer-top` moves it to the viewport's top.
+ *
+ * The button is portalled into `header_main`, and a Region's children are `display: flex` by a rule of
+ * two classes (`.shell-sider-full .phi-shell-region > *`). One class lost to it: the button stood under
+ * the brand on every width. Both display rules for the button are therefore stated through the Region
+ * as well, three classes, so the width decides and not the order of the sheet.
  * ---------------------------------------------------------------------------------------------- */
 .phi-shell-sider-drawer-button,
+.phi-shell-region > .phi-shell-sider-drawer-button.phi-shell-sider-drawer-button,
 .phi-shell-sider-drawer-mask {
   display: none;
 }
@@ -690,8 +696,12 @@
     background: var(--ant-color-bg-mask);
   }
 
-  .phi-shell-sider-drawer-button {
+  .phi-shell-sider-drawer-button,
+  .phi-shell-region > .phi-shell-sider-drawer-button.phi-shell-sider-drawer-button {
     display: inline-flex;
+  }
+
+  .phi-shell-sider-drawer-button {
     position: absolute;
     inset-inline-start: var(--ant-padding-xs);
     top: 50%;
