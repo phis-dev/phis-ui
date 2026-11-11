@@ -17,6 +17,8 @@ export {
   buildPhiCmsWidgetNode,
 } from "./helpers/cms-node-factories";
 export * from "./helpers/cms-preset-nodes";
+/* The Page rule as a check, for a package to run over the trees its presets build (THIRD_PARTY_MODULES.md 6b). */
+export { checkPhiPagePresetLayout, type PhiPageLayoutFinding } from "./helpers/page-layout-check";
 export * from "./helpers/cms-dialog";
 /*
  * The one Settings page shell (SETTINGS.md section 4). Public because the contract holds for every
