@@ -33,6 +33,15 @@ built. Remove an entry when it is done.
 
 ## Layouts and Widgets
 
+- **An eyebrow on the Markdown Widget (approved 2026-11-11, next release).** A section's label above its
+  heading -- "The story", "Why phis" -- has no form in Markdown, so presets wrote it as a bold paragraph,
+  which renders at body size and reads as a small title. The Markdown Widget gains an `eyebrow` field
+  (translatable text) drawn exactly as the Card Widget's eyebrow, above the text, so a label looks the same
+  wherever it stands. Then the phis.dev package's bold-line labels move to it.
+- **Simple Text: capitals and letter spacing by config (approved 2026-11-11, next release).** Two config
+  fields on the Simple Text Widget, e.g. `textTransform: "uppercase"` and a `letterSpacing` step, so a preset
+  or an agent can set a label like the Card eyebrow without a style of its own. The Inspector need not offer
+  them yet; the reader, the renderer and the field definitions do.
 - **Block geometry: the rules each reader kept, now settled one at a time.** The move is done: one
   reader, `resolvePhiRenderableBlockGeometry` (types/renderable-block-geometry.ts), and a guard that
   names who draws geometry and who merely touches the fields (`scripts/validate-block-geometry-readers.mjs`;
@@ -296,6 +305,9 @@ built. Remove an entry when it is done.
 
 ## Media and Theme
 
+- **`PHI_COLOR.primaryBg`.** The primary colour's quietest tint (`--ant-color-primary-bg`) has no role in
+  `PHI_COLOR`, so a preset that wants that ground has to spell the variable out -- the phis.dev package does,
+  once, with a comment. A contract extension; needs approval.
 - **Media Inspector variant hand-over.** The Inspector always simulates the variant crop from the original
   (`components/media/phi-asset-inspector-section.tsx`) and never shows the generated variant. Decide
   whether that stays and the contract says so, or whether unsaved focal edits get an owner and the preview
@@ -349,6 +361,11 @@ built. Remove an entry when it is done.
 
 ## Modules and packaging
 
+- **The Page rule checked in packages.** THIRD_PARTY_MODULES.md "6b. Laying out a Page" is enforced for
+  Core's presets only (`scripts/validate-preset-theme-vocabulary.mjs`). Offer the check to a package --
+  refusing a spelled-out `var(--ant-...)`, a number or `clamp()` in `padding`/`gap`, padding on a Layout
+  without a Surface, and a step above `md` but a Hero's bottom beside `heroOverlap` -- and consider the
+  spacing roles as named constants in `@phis/ui/theme`. Needs approval.
 - **Groups administration package.** The Groups Runtime Module ships in this package as
   `@phis/ui/modules/groups` (`plugins/runtime-modules/groups/`), with Admin and App pages. Decide whether it
   moves to a separate `phis-cli`-installable package. Either way it binds only to Core
