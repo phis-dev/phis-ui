@@ -11,7 +11,7 @@ import { PhiIcon } from "./phi-icon";
 const PHI_SHELL_SIDER_DRAWER_TOP_PROPERTY = "--phi-shell-sider-drawer-top";
 
 /**
- * A `sider_left` with `MobileDrawer`, on a phone: the menu button that opens it, the mask behind it, and
+ * A `sider_left` without `MobileColumn`, on a phone: the menu button that opens it, the mask behind it, and
  * the rules that close it again (SHELL.md "The Sider on a phone").
  *
  * The Sider itself does not move. `styles/shell.css` takes it out of its column below 768px and stands it

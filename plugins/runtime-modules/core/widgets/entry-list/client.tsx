@@ -247,7 +247,7 @@ export function PhiEntryBody({
 }) {
   return (
     <PhiFlexControl vertical gap={PHI_SPACE.xs}>
-      {entry.blocks.length > 0 ? <PhiMarkdownWidgetClient config={{ blocks: entry.blocks }} /> : null}
+      {entry.blocks.length > 0 ? <PhiMarkdownWidgetClient labels={{}} config={{ blocks: entry.blocks }} /> : null}
       {hasPhiContentEntryPart(parts, PhiContentEntryPart.Tags) ? <PhiEntryTags tags={entry.tags} /> : null}
       {hasPhiContentEntryPart(parts, PhiContentEntryPart.Link) && entry.link ? (
         <PhiLink href={entry.link.href} external={entry.link.external} newTab={entry.link.newTab}>

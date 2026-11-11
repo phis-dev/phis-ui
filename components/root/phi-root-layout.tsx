@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { preload } from "react-dom";
-import { AntdRegistry } from "@ant-design/nextjs-registry";
 import "antd/dist/reset.css";
 /*
  * Ant Design's structure, generated in the Site from its Ant Design (`@phis/ui/next/config`) because the
@@ -23,6 +22,7 @@ import type { PhiResolvedLocale } from "../../helpers/site-locale-config";
 import { PhiDayjsLocale } from "./phi-dayjs-locale";
 import { readPhiRenderMoment } from "../../helpers/format-date-time";
 import { PhiRootLiveThemeProvider } from "./phi-root-live-theme-provider";
+import { PhiAntdRegistry } from "./phi-antd-registry";
 import { resolvePhiRootThemeState } from "./phi-root-theme-resolver";
 import { PhiSignalRuntimePartitionProvider } from "../runtime/runtime-signal-partition";
 import { PhiCoreRuntimeApplicationAdapter } from "../runtime/core-runtime-application-adapter";
@@ -204,7 +204,7 @@ export async function PhiRootLayout({
           dangerouslySetInnerHTML={{ __html: assetFonts.css }}
         />
       ) : null}
-      <AntdRegistry>
+      <PhiAntdRegistry>
         <PhiSignalRuntimePartitionProvider
           id={`site:${site.key}`}
           kind="site"
@@ -249,7 +249,7 @@ export async function PhiRootLayout({
             </div>
           </PhiRootLiveThemeProvider>
         </PhiSignalRuntimePartitionProvider>
-      </AntdRegistry>
+      </PhiAntdRegistry>
     </>
   );
 }

@@ -71,7 +71,7 @@ export type PhiInspectorRegionVisibilityLabels = {
   pageOwned: string;
   /** How far the Page's `content` reaches up into its Hero (`PhiCmsRegionConfig.heroOverlap`). */
   heroOverlap: string;
-  /** `sider_left` opens as a drawer on a phone (`PhiCmsFlags.MobileDrawer`). */
+  /** `sider_left` opens as a drawer on a phone: on unless `PhiCmsFlags.MobileColumn` is set. */
   siderMobileDrawer: string;
 };
 

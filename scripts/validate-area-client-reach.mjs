@@ -49,6 +49,8 @@ const runtimeModulesDirectory = path.join(repositoryRoot, "plugins/runtime-modul
  * and after.
  */
 const ROOT_CLIENT_REFERENCES = [
+  // In place of `AntdRegistry`, which the root rendered from node_modules; the same code, cssinjs ships with antd.
+  "components/root/phi-antd-registry.tsx",
   "components/root/phi-dayjs-locale.tsx",
   "components/root/phi-root-live-theme-provider.tsx",
   "components/runtime/core-runtime-application-adapter.tsx",

@@ -1,24 +1,24 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import dynamic from "next/dynamic";
 
 import { PhiProtectedMailText } from "../../navigation/use-phi-protected-mail";
 import { PhiLink } from "../../navigation/phi-link";
-import type { PhiClientBlockBaseProps, PhiNoLabels } from "../../../types";
+import type { PhiClientBlockBaseProps } from "../../../types";
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
 import { usePhiSignalEmitter } from "../../runtime/runtime-signal-identity";
 import { usePhiConfig, type PhiConfig } from "../../root/phi-config-provider";
 import type { PhiCodeToken, PhiCodeTokenKind } from "./markdown-code-tokens";
 import type { PhiMarkdownImageFloat, PhiMarkdownTextAlign } from "../../../types/core-widget-placements";
 import { resolvePhiSpacingScaleValue, type PhiSpacingScaleKey } from "../config/spacing-options";
-import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
+import { PHI_COLOR, PHI_SPACE } from "../../../theme/antd-css-var-contract";
+import { resolvePhiEyebrowTypeStyle } from "./eyebrow-style";
 import type { PhiMarkdownTocHeading } from "../../../types/markdown";
 import { PhiPlainTable } from "../../tables/phi-plain-table";
 import { PhiTypographyControl } from "../../controls/phi-typography-control";
 import { PhiDividerControl } from "../../controls/phi-divider-control";
 import { PhiBulletListControl } from "../../controls/phi-bullet-list-control";
-import { PhiImageControl } from "../../controls/phi-image-control";
-import { PhiCollapseControl } from "../../controls/phi-collapse-control";
 import {
   resolvePhiMarkdownFoldLevel,
   splitPhiMarkdownSegments,
@@ -96,7 +96,8 @@ export type PhiMarkdownBlock =
   | { kind: "image"; image: PhiMarkdownFigure };
 
 export type PhiMarkdownWidgetClientProps = PhiClientBlockBaseProps<
-  PhiNoLabels,
+  /** The label above the text, translated on the server. */
+  { eyebrow?: string },
   {
     blocks: PhiMarkdownBlock[];
     error?: string;
@@ -117,6 +118,17 @@ export type PhiMarkdownWidgetClientProps = PhiClientBlockBaseProps<
     headingOffset?: number;
   }
 >;
+
+/*
+ * A picture standing on its own and the folding sections, each its own chunk. Most texts have neither,
+ * and the picture brings `next/image` with its loader and blur placeholder, the folds Ant Design's
+ * Collapse: statically imported they were on every page with a Markdown text, the Public landing's
+ * largest addition since 04.11.2026 (AUDIT-2026-10-13-performance.md, 0g). Rendered on the server as
+ * before, so the HTML is the same and a figure's box is reserved from the start; the browser fetches the
+ * chunk where one is drawn.
+ */
+const PhiImageControl = dynamic(() => import("../../controls/phi-image-control").then((module) => module.PhiImageControl));
+const PhiCollapseControl = dynamic(() => import("../../controls/phi-collapse-control").then((module) => module.PhiCollapseControl));
 
 /** How the text's lists are set, and how deep the list being drawn stands. */
 type PhiMarkdownListContext = { style: PhiResolvedBulletListStyle; depth: number };
@@ -340,7 +352,7 @@ function renderBlocks(
   });
 }
 
-export function PhiMarkdownWidgetClient({ config }: PhiMarkdownWidgetClientProps) {
+export function PhiMarkdownWidgetClient({ config, labels }: PhiMarkdownWidgetClientProps) {
   const { token } = usePhiConfig();
   const blocks = config?.blocks ?? [];
   const headings = useMemo(() => config?.headings ?? [], [config?.headings]);
@@ -413,6 +425,19 @@ export function PhiMarkdownWidgetClient({ config }: PhiMarkdownWidgetClientProps
         ? { display: "flow-root", width: "100%", textAlign: config.textAlign, containerType: "inline-size", lineHeight: token.lineHeight }
         : { display: "grid", gap: 0, width: "100%", textAlign: config?.textAlign, lineHeight: token.lineHeight }}
     >
+      {labels?.eyebrow ? (
+        <PhiTypographyControl
+          type="secondary"
+          style={{
+            ...resolvePhiEyebrowTypeStyle(token),
+            display: "block",
+            color: PHI_COLOR.textTertiary,
+            marginBlockEnd: PHI_SPACE.xs,
+          }}
+        >
+          {labels.eyebrow}
+        </PhiTypographyControl>
+      ) : null}
       {config?.foldSections && config.foldSections !== "none"
         ? splitPhiMarkdownSegments(blocks, resolvePhiMarkdownFoldLevel(config.headingOffset)).map((segment, index) =>
           segment.kind === "text"

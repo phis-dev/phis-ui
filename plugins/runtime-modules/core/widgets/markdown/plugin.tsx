@@ -3,7 +3,7 @@ import { PhiWidgetInertPreview } from "../../../../../components/widgets/built-i
 import { resolveMarkdownRenderData } from "../../../../../components/widgets/shared/markdown-render";
 import { PhiCmsFlags } from "../../../../../constants/phi-cms";
 import { hasPhiFlag } from "../../../../../helpers/flags";
-import { readPhiMarkdownSearchText } from "../../../../../server-helpers/search-text";
+import { readPhiMarkdownSearchText, translatePhiSearchWidgetTexts } from "../../../../../server-helpers/search-text";
 import { PhiMarkdownWidget } from "./server";
 import {
   PHI_MARKDOWN_WIDGET_DEFINITION,
@@ -25,7 +25,11 @@ export const PHI_MARKDOWN_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsMarkdown
       resolvedContent: widget.resolvedContent ?? null,
       translate: !hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate),
     }, runtime);
-    return "error" in data ? [] : readPhiMarkdownSearchText(data.blocks);
+    if ("error" in data) return [];
+    const eyebrow = await translatePhiSearchWidgetTexts(runtime, [config.eyebrow], {
+      translate: !hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate),
+    });
+    return [...eyebrow, ...readPhiMarkdownSearchText(data.blocks)];
   },
   render: ({ widget, config, runtime }) => (
     <PhiMarkdownWidget

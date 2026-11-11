@@ -20,6 +20,14 @@ import {
   readPhiWidgetFontSize,
 } from "../../../../../components/widgets/helpers/font-size";
 import {
+  PHI_LETTER_SPACING_FIELD_OPTIONS,
+  PHI_TEXT_TRANSFORM_FIELD_OPTIONS,
+  readPhiLetterSpacingStep,
+  readPhiTextTransform,
+  type PhiLetterSpacingStep,
+  type PhiTextTransform,
+} from "../../../../../components/widgets/config/text-case-vocabulary";
+import {
   PHI_TEXT_TONE_FIELD_OPTIONS,
   readPhiTextTone,
   type PhiTextTone,
@@ -43,6 +51,10 @@ export type PhiCmsSimpleTextWidgetConfig = PhiCmsWidgetConfigBase & {
   newTab?: boolean;
   tone?: PhiTextTone;
   marks?: PhiSimpleTextMark[];
+  /** Capitals for a label (`text-case-vocabulary.ts`); absent, as written. */
+  textTransform?: PhiTextTransform;
+  /** A spacing step for a label in capitals; absent, normal. */
+  letterSpacing?: PhiLetterSpacingStep;
   disabled?: boolean;
   /** `"preset"` while the words are a Preset's and translated globally (`helpers/text-source.ts`). */
   textSource?: PhiTextSource;
@@ -65,6 +77,8 @@ function parsePhiCmsSimpleTextWidgetConfig(
     newTab: readBoolean(config.newTab),
     tone: readPhiTextTone(config.tone),
     marks: readSimpleTextMarks(config.marks),
+    textTransform: readPhiTextTransform(config.textTransform),
+    letterSpacing: readPhiLetterSpacingStep(config.letterSpacing),
     disabled: readBoolean(config.disabled),
     textSource: readPhiTextSource(config.textSource),
   };
@@ -115,6 +129,18 @@ export const PHI_SIMPLE_TEXT_WIDGET_DEFINITION = {
       type: "choice",
       label: "Tone",
       options: [...PHI_TEXT_TONE_FIELD_OPTIONS],
+    },
+    {
+      key: "textTransform",
+      type: "choice",
+      label: "Case",
+      options: [...PHI_TEXT_TRANSFORM_FIELD_OPTIONS],
+    },
+    {
+      key: "letterSpacing",
+      type: "choice",
+      label: "Letter Spacing",
+      options: [...PHI_LETTER_SPACING_FIELD_OPTIONS],
     },
     { key: "external", type: "boolean", label: "External" },
     { key: "newTab", type: "boolean", label: "Open In New Tab" },

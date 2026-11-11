@@ -1,6 +1,7 @@
 import type { PhiBulletListEntry, PhiBulletListStyle } from "../components/widgets/shared/bullet-list-vocabulary";
 import type { PhiMarkdownImageAspectRatio } from "../components/widgets/shared/markdown-image-vocabulary";
 import type { PhiMarkdownFoldSections } from "../components/widgets/shared/markdown-sections";
+import type { PhiLetterSpacingStep, PhiTextTransform } from "../components/widgets/config/text-case-vocabulary";
 import type { PhiRenderableBlockBase } from "./renderable-block";
 import type { PhiTextSource } from "../helpers/text-source";
 import type { PhiRuntimeConditionExpression } from "./runtime-condition";
@@ -79,6 +80,8 @@ export type PhiMarkdownTextAlign = "start" | "center" | "end" | "justify";
 export type PhiMarkdownImageFloat = "start" | "end";
 
 export type PhiMarkdownWidgetPlacement = PhiWidgetPlacementBase & {
+  /** A section's label above the text, drawn as a Card's eyebrow; translated like the text. */
+  eyebrow?: string;
   sourceMode?: "inline" | "url";
   markdown?: string;
   sourceUrl?: string;
@@ -116,6 +119,10 @@ export type PhiSimpleTextWidgetPlacement = PhiWidgetPlacementBase & {
   newTab?: boolean;
   tone?: PhiTextTone;
   marks?: PhiSimpleTextMark[];
+  /** Capitals for a label; absent, as written. */
+  textTransform?: PhiTextTransform;
+  /** A spacing step for a label in capitals; absent, normal. */
+  letterSpacing?: PhiLetterSpacingStep;
   disabled?: boolean;
   /** `"preset"` while the words are a Preset's (`helpers/text-source.ts`). */
   textSource?: PhiTextSource;

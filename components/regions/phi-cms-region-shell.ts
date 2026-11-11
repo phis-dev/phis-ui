@@ -230,7 +230,7 @@ function phiCmsRegionSiderOpensAsDrawer(
   regionKey: PhiCmsRegionKey,
   config: Pick<PhiCmsRegionConfig, "flags"> | null | undefined,
 ): boolean {
-  return regionKey === "sider_left" && hasPhiFlag(config?.flags, PhiCmsFlags.MobileDrawer);
+  return regionKey === "sider_left" && !hasPhiFlag(config?.flags, PhiCmsFlags.MobileColumn);
 }
 
 /** The line a stuck Sider stands at: under the Header as measured, plus its own offset. */

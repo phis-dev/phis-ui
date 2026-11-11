@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  PHI_LETTER_SPACING_STEPS,
+  type PhiLetterSpacingStep,
+  type PhiTextTransform,
+} from "../../../../../components/widgets/config/text-case-vocabulary";
 import { isPhiRecord } from "../../../../../helpers/is-record";
 import { useState } from "react";
 
@@ -37,6 +42,8 @@ export type PhiSimpleTextWidgetClientConfig = {
   newTab?: boolean;
   tone?: PhiTextTone;
   marks?: PhiSimpleTextMark[];
+  textTransform?: PhiTextTransform;
+  letterSpacing?: PhiLetterSpacingStep;
   disabled?: boolean;
 };
 
@@ -194,6 +201,8 @@ export function PhiSimpleTextWidgetClient({
           fontSize: resolvedFontSize ?? "inherit",
           lineHeight: resolvedFontSize ? PHI_LINE_HEIGHT_LG : "inherit",
           ...(resolvedFontFamily ? { fontFamily: resolvedFontFamily } : {}),
+          ...(config?.textTransform === "uppercase" ? { textTransform: "uppercase" } : {}),
+          ...(config?.letterSpacing ? { letterSpacing: PHI_LETTER_SPACING_STEPS[config.letterSpacing] } : {}),
         }}
       >
         {textValue}

@@ -30,6 +30,10 @@
     "typecheck": "tsc --noEmit",
     "verify": "node scripts/verify.mjs"
   },
+  "sideEffects": [
+    "**/*.css",
+    "./components/shell/phi-icon.tsx"
+  ],
   "exports": {
     ".": {
       "import": "./index.js",
@@ -580,7 +584,6 @@
   "devDependencies": {
     "@ant-design/cli": "^6.7.0",
     "@ant-design/icons": "^6.3.4",
-    "@ant-design/nextjs-registry": "^1.3.0",
     "@testing-library/react": "^16.3.3",
     "@types/node": "^26.6.1",
     "@types/react": "^19.3.0",
@@ -602,7 +605,6 @@
   },
   "peerDependencies": {
     "@ant-design/icons": "^6.3.2",
-    "@ant-design/nextjs-registry": "^1.3.0",
     "antd": "^6.5.1",
     "next": "^16.2.11",
     "react": "^19.2.8",
@@ -669,6 +671,228 @@
       "./server-helpers",
       "./shells",
       "./widgets"
-    ]
+    ],
+    "clientExports": {
+      "./cms/plugins": [
+        "createPhiCmsBuilderWidgetPlugin"
+      ],
+      "./controls": [
+        "PHI_CONFIRM_PLACEMENTS",
+        "PhiAlertControl",
+        "PhiBackgroundControl",
+        "PhiBorderControl",
+        "PhiButtonControl",
+        "PhiCardControl",
+        "PhiCascaderControl",
+        "PhiCheckboxControl",
+        "PhiCheckboxGroupControl",
+        "PhiCollectionHeaderControl",
+        "PhiCollectionLayoutControl",
+        "PhiCollectionViewControl",
+        "PhiColorControl",
+        "PhiConfirmControl",
+        "PhiDialogControl",
+        "PhiDimensionControl",
+        "PhiDragHandleControl",
+        "PhiDropdownControl",
+        "PhiEmptyControl",
+        "PhiFlexControl",
+        "PhiFloatButtonControl",
+        "PhiFormControl",
+        "PhiGeometryControl",
+        "PhiIconPickerControl",
+        "PhiImageControl",
+        "PhiLabeledControl",
+        "PhiLengthControl",
+        "PhiMaskPickerControl",
+        "PhiMediaAssetCollectionSkeletonControl",
+        "PhiMediaAssetTileControl",
+        "PhiMediaPickerControl",
+        "PhiMenuControl",
+        "PhiMultiSelectControl",
+        "PhiNumberControl",
+        "PhiOtpControl",
+        "PhiPaddingControl",
+        "PhiPaginationControl",
+        "PhiPillDropdownControl",
+        "PhiPopoverControl",
+        "PhiRadioGroupControl",
+        "PhiRateControl",
+        "PhiSegmentedControl",
+        "PhiSelectControl",
+        "PhiShadowControl",
+        "PhiSkeletonControl",
+        "PhiSliderControl",
+        "PhiStepsControl",
+        "PhiSurfaceControl",
+        "PhiSwitchControl",
+        "PhiTableControl",
+        "PhiTabsControl",
+        "PhiTagControl",
+        "PhiTextControl",
+        "PhiTimelineControl",
+        "PhiToolbarControl",
+        "PhiTreeActionButton",
+        "PhiTreeControl",
+        "PhiTreeSelectControl",
+        "PhiTypographyControl",
+        "PhiVideoEmbedControl",
+        "normalizePhiCascaderValue",
+        "readPhiTableControlValue"
+      ],
+      "./controls/date-time": [
+        "PhiCalendarControl",
+        "PhiDatePickerControl"
+      ],
+      "./forms/client": [
+        "PhiFormControl",
+        "PhiFormProviderRegistryProvider",
+        "PhiRuntimeFormControllerMount",
+        "createPhiFormProviderRegistry",
+        "extendPhiFormProviderRegistry",
+        "usePhiFormProviderRegistry",
+        "usePhiRuntimeFormClient"
+      ],
+      "./media": [
+        "PhiAreaUploadWidget",
+        "PhiAssetConfigWidget",
+        "PhiAssetFolderControl"
+      ],
+      "./navigation": [
+        "PhiAccountMenu",
+        "PhiAvatar",
+        "PhiIcon",
+        "PhiLink",
+        "PhiLocaleSwitch",
+        "PhiNavLink",
+        "mapPhiNavItems"
+      ],
+      "./runtime/authoring-client": [
+        "PhiStaticOptionsToolButton",
+        "PhiStaticTableResourceEditor",
+        "createPhiAuthoringWidgetModule",
+        "createPhiRuntimeModuleAuthoringClient",
+        "definePhiAuthoringLayoutModuleLoader",
+        "definePhiAuthoringWidgetModuleLoader"
+      ],
+      "./runtime/authoring-manifest-client": [
+        "PhiRuntimeModuleAuthoringClientManifestProvider",
+        "createPhiRuntimeModuleAuthoringClientManifest",
+        "definePhiRuntimeModuleAuthoringClientContribution",
+        "extendPhiRuntimeModuleAuthoringClientManifest"
+      ],
+      "./runtime/calendar-adapter-client": [
+        "PhiRuntimeModuleCalendarAdapterClientManifestProvider",
+        "createPhiRuntimeModuleCalendarAdapterClientManifest",
+        "extendPhiRuntimeModuleCalendarAdapterClientManifest",
+        "usePhiCalendarAdapterClient"
+      ],
+      "./runtime/client-manifests/accounting": [
+        "PHI_ACCOUNTING_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST",
+        "PHI_ACCOUNTING_RUNTIME_MODULE_CONTROLLER_CLIENT_MANIFEST",
+        "PHI_ACCOUNTING_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST",
+        "PHI_ACCOUNTING_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST"
+      ],
+      "./runtime/client-manifests/admin": [
+        "PHI_ADMIN_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST",
+        "PHI_ADMIN_RUNTIME_MODULE_CONTROLLER_CLIENT_MANIFEST",
+        "PHI_ADMIN_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST",
+        "PHI_ADMIN_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST"
+      ],
+      "./runtime/client-manifests/app": [
+        "PHI_APP_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST",
+        "PHI_APP_RUNTIME_MODULE_CONTROLLER_CLIENT_MANIFEST",
+        "PHI_APP_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST",
+        "PHI_APP_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST"
+      ],
+      "./runtime/client-manifests/builder": [
+        "PHI_BUILDER_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST",
+        "PHI_BUILDER_RUNTIME_MODULE_CONTROLLER_CLIENT_MANIFEST",
+        "PHI_BUILDER_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST",
+        "PHI_BUILDER_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST",
+        "PHI_BUILDER_TARGET_RUNTIME_MODULE_AUTHORING_CLIENT_MANIFEST"
+      ],
+      "./runtime/client-manifests/editor": [
+        "PHI_EDITOR_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST",
+        "PHI_EDITOR_RUNTIME_MODULE_CONTROLLER_CLIENT_MANIFEST",
+        "PHI_EDITOR_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST",
+        "PHI_EDITOR_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST"
+      ],
+      "./runtime/client-manifests/public": [
+        "PHI_PUBLIC_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST",
+        "PHI_PUBLIC_RUNTIME_MODULE_CONTROLLER_CLIENT_MANIFEST",
+        "PHI_PUBLIC_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST",
+        "PHI_PUBLIC_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST"
+      ],
+      "./runtime/controller-client": [
+        "PhiRuntimeModuleControllerClientManifestProvider",
+        "createPhiRuntimeControllerClient",
+        "definePhiRuntimeModuleControllerClientAreaContribution",
+        "extendPhiRuntimeModuleControllerClientManifest",
+        "usePhiRuntimeConditionStateResponder",
+        "usePhiStateMachineBinding"
+      ],
+      "./runtime/data-provider-client": [
+        "PhiCardCollectionViewBinding",
+        "PhiCollectionProviderClient",
+        "PhiRuntimeModuleDataProviderClientManifestProvider",
+        "PhiTableBindingControl",
+        "PhiTableProviderClient",
+        "PhiTimelineProviderClient",
+        "PhiTreeProviderClient",
+        "PhiWidgetFailure",
+        "createPhiCollectionProviderClient",
+        "createPhiControlOptionsProviderClient",
+        "createPhiRuntimeModuleDataProviderClientManifest",
+        "createPhiStaticControlOptionsProviderClient",
+        "createPhiTableProviderClient",
+        "createPhiTimelineProviderClient",
+        "createPhiTreeProviderClient",
+        "extendPhiRuntimeModuleDataProviderClientManifest",
+        "usePhiCollectionProvider",
+        "usePhiCollectionProviderAction",
+        "usePhiTableBinding",
+        "usePhiTreeBinding",
+        "usePhiTreeProvider"
+      ],
+      "./runtime/render-client": [
+        "PhiRuntimeModuleRenderClientManifestProvider",
+        "createPhiRuntimeModuleRenderClientManifest",
+        "definePhiRuntimeModuleRenderClient",
+        "extendPhiRuntimeModuleRenderClientManifest",
+        "usePhiIntlLocale"
+      ],
+      "./runtime/signal-client": [
+        "usePhiApplicationFeedback",
+        "usePhiControlSignalController",
+        "usePhiSignalDispatcher",
+        "usePhiSignalIdentity",
+        "usePhiSignalListener"
+      ],
+      "./runtime/user-state-client": [
+        "PhiUserStateError",
+        "clearPhiUserState",
+        "fetchPhiUserState",
+        "writePhiUserState"
+      ],
+      "./widgets": [
+        "PhiAreaUploadWidget",
+        "PhiAssetConfigWidget",
+        "PhiButtonWidget",
+        "PhiCascaderWidget",
+        "PhiCheckboxGroupWidget",
+        "PhiCheckboxWidget",
+        "PhiDimensionWidget",
+        "PhiInputWidget",
+        "PhiLengthWidget",
+        "PhiMultiSelectWidget",
+        "PhiNumberInputWidget",
+        "PhiOtpWidget",
+        "PhiPaginationWidget",
+        "PhiRateWidget",
+        "PhiSegmentedWidget",
+        "PhiSliderWidget"
+      ]
+    }
   }
 }

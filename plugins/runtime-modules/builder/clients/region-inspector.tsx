@@ -188,8 +188,9 @@ export function PhiDeveloperBuilderRegionInspectorWidgetClient({
                     {/* SHELL.md "The Sider on a phone": `sider_left` alone, the Area's navigation column. */}
                     {selectedRegionKey === "sider_left" ? renderPhiInspectorConfigField({
                       field: { key: "mobileDrawer", type: "boolean", label: visibilityLabels.siderMobileDrawer },
-                      value: hasPhiFlag(readPhiFlags(effectiveDraft.regionConfig?.flags), PhiCmsFlags.MobileDrawer),
-                      defaultValue: false,
+                      // On unless the Sider says it keeps its column (`MobileColumn`).
+                      value: !hasPhiFlag(readPhiFlags(effectiveDraft.regionConfig?.flags), PhiCmsFlags.MobileColumn),
+                      defaultValue: true,
                       config: effectiveDraft.regionConfig ?? {},
                       disabled: isPreviewMode || !onDraftChange,
                       onChange: (patch) => {
@@ -197,9 +198,9 @@ export function PhiDeveloperBuilderRegionInspectorWidgetClient({
                         updateDraft({
                           regionConfig: {
                             ...(effectiveDraft.regionConfig ?? {}),
-                            flags: patch.mobileDrawer === true
-                              ? flags | PhiCmsFlags.MobileDrawer
-                              : flags & ~PhiCmsFlags.MobileDrawer,
+                            flags: patch.mobileDrawer === false
+                              ? flags | PhiCmsFlags.MobileColumn
+                              : flags & ~PhiCmsFlags.MobileColumn,
                           },
                         });
                       },

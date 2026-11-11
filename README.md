@@ -39,7 +39,6 @@ It does not own:
 | `react`, `react-dom` | `^19.2.8` |
 | `antd` | `^6.5.1` |
 | `@ant-design/icons` | `^6.3.2` |
-| `@ant-design/nextjs-registry` | `^1.3.0` |
 
 ## For Site operators
 

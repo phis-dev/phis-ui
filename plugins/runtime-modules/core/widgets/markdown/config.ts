@@ -27,6 +27,12 @@ import {
 } from "../../../../../components/widgets/config/parser-primitives";
 
 export type PhiCmsMarkdownWidgetConfig = PhiCmsWidgetConfigBase & {
+  /**
+   * A section's label above the text -- "The story", "Why phis" -- drawn as a Card's eyebrow is
+   * (`eyebrow-style.ts`) and translated like the text. Markdown has no form for it, and a bold line
+   * reads as a small title.
+   */
+  eyebrow?: string;
   sourceMode?: "inline" | "url";
   markdown?: string;
   widgetId?: string | number | null;
@@ -111,6 +117,7 @@ export function parsePhiCmsMarkdownWidgetConfig(config: Record<string, unknown>)
 
   return {
     ...readRenderableBlockConfig(config),
+    eyebrow: readString(config.eyebrow),
     sourceMode: readMarkdownSourceMode(config.sourceMode) ?? (sourceUrl ? "url" : "inline"),
     widgetId: typeof config.widgetId === "number" || typeof config.widgetId === "string" ? config.widgetId : undefined,
     markdown: readString(config.markdown),
@@ -174,6 +181,7 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
     },
   },
   fields: [
+    { key: "eyebrow", type: "string", label: "Eyebrow" },
     {
       key: "sourceMode",
       type: "choice",

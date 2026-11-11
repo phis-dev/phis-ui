@@ -465,10 +465,11 @@ on the lower part of the Hero's picture, which runs on under them.
 
 ## The Sider on a phone
 
-A `sider_left` whose config carries `PhiCmsFlags.MobileDrawer` leaves its column below 768px, the
-phone band of `viewportFlags`, and opens from the side over the page. The Area Shell presets of Admin,
-Editor and App set it; the Builder offers it in the Region Inspector's Viewport section, for
-`sider_left` alone. `sider_right` belongs to the Page and keeps its column.
+A `sider_left` leaves its column below 768px, the phone band of `viewportFlags`, and opens from the
+side over the page -- by default, so no Area or Page has to ask for it. One that should stay beside the
+content on a phone, a narrow icon rail say, carries `PhiCmsFlags.MobileColumn`; the Builder offers the
+switch in the Region Inspector's Viewport section, for `sider_left` alone. `sider_right` belongs to the
+Page and keeps its column.
 
 - **Nothing moves or mounts twice.** The Region renders where it always does; the resolver marks it
   `data-phi-sider-mobile="drawer"` and `styles/shell.css` stands it off screen at the inline start. Its

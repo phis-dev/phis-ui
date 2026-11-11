@@ -1,5 +1,6 @@
 "use client";
 
+import { resolvePhiEyebrowTypeStyle } from "./eyebrow-style";
 import { useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
 
 import { PhiButtonControl } from "../../controls/phi-button-control";
@@ -403,7 +404,7 @@ export function PhiCardWidgetClient({
   const description = textOf("description");
   const meta = textOf("meta");
   const badge = textOf("badge");
-  const eyebrowType: CSSProperties = { fontSize: token.fontSizeSM, letterSpacing: "0.04em", textTransform: "uppercase" };
+  const eyebrowType = resolvePhiEyebrowTypeStyle(token);
   /* On the picture's corner where the variant puts it there and there is a picture to put it on. */
   const eyebrowOnMedia = metrics.eyebrowOnMedia === true && image != null;
   const heading = title != null ? (

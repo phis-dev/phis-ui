@@ -678,6 +678,49 @@ export const STATUS_CARD_WIDGET_PLUGIN = {
 } satisfies PhiCmsServerWidgetPlugin<StatusCardConfig>;
 ```
 
+### What a Server half may import
+
+A Widget's server half -- `plugin.tsx`, `server.tsx` and what they import -- is part of the server graph
+of **every route of the Site**, not only of the Pages the Widget stands on. The Site registers every
+installed Module's Server contributions in one catalog, and the loaders in it are reachable from every
+route, lazy or not. Next turns every `"use client"` file the server graph reaches into a Client reference
+of the route, and the browser fetches the chunks of all of them on every page. A Control is such a file:
+every `Phi*Control`, `PhiIcon` and the other Client components in `@phis/ui/controls`,
+`@phis/ui/navigation` or `@phis/ui/forms/client` are Client components.
+
+So a server half that renders a Control itself ships that Control, and everything Ant Design brings
+with it, to the Public landing of every Site that installs the package -- whether or not any Page uses
+the Widget. On 11.11.2026 one Download Widget whose `server.tsx` drew its card from `@phis/ui/controls`
+doubled the Public landing's JavaScript (356 to 724 kB gzip). Before `@phis/ui` declared which of its
+files have side effects, the bundler also had to keep every other export of the door it imported from,
+so it carried Table, Tree, Form and the editing Controls along; now it keeps the ones named, and those
+still ship everywhere.
+
+What a server half does instead:
+
+- **Render plain HTML, or hand the browser a view model.** A server half that needs a Control draws
+  through its own Render Client: it resolves data, translates words and passes a serializable view model
+  to `PhiRuntimeModuleRenderClientHost`; the Client file imports the Controls. The Render Client is listed
+  in `renderClients` ([section 8](#8-export-the-client-and-authoring-contributions)) and loaded only in
+  the Areas the Module serves and only where the Widget is placed. That is how every Core Widget is built.
+- **Import from a door only what runs on the server**: types, constants, helpers, `@phis/ui/module/*`,
+  `@phis/ui/server-helpers`, `@phis/ui/theme`. A `type` import is always free.
+- **Never import a Client value into `plugin.tsx`, `server.tsx`, a loader descriptor, a Card or a Records
+  resolver** -- not a Control, not `PhiIcon`, not a hook. The same holds for the package's `.` and
+  `./server` doors.
+- **Authoring stays authoring.** The editor of a Widget is built from Controls in `@phis/ui/controls`, in
+  the `./authoring-client` door, which only the Builder loads.
+
+`phis module check` refuses it (`client_in_server_graph`): it walks the package's `./server` door --
+dynamic imports included, because the Widget loaders are -- and names the file that takes a Client
+component, whether a name `@phis/ui` states in `package.json#phis.clientExports` or a file of the package's
+own that begins with `"use client"`. `PhiRuntimeModuleRenderClientHost` is the one Client component a
+server half renders.
+
+Measure it, do not assume it: build the Site in production with and without the package and compare the
+JavaScript the Public landing names (`browser-test/scripts/measure-html-payloads.mjs`). A Widget that
+nobody has placed must not change it.
+
 ### Server Widget loader descriptor
 
 ```ts
@@ -1720,6 +1763,8 @@ client code has no use for them.
 - `./client` and `./authoring-client` begin with `"use client"`; `.` and `./server` do not;
 - `react` and `@phis/ui` are not ordinary dependencies, and the package carries no copy of its own;
 - a package that ships CSS states CSS side effects;
+- the `./server` graph takes no Client component
+  ([What a Server half may import](#what-a-server-half-may-import));
 - the `phis` block declares the package's Modules, each id belongs to the package, and each category is
   known.
 
@@ -1941,6 +1986,8 @@ for the provider and still discloses the page it comes from.
   the provider registry and the Form Controller client are in `@phis/ui/forms/client`. A Module's Server
   door is reached by every route of the Site, so a Client value it reaches ships everywhere
   (`scripts/validate-server-contract-doors.mjs` keeps the doors a Server half reads free of them).
+- A Widget's server half renders no Control, `PhiIcon` or other Client component itself; it draws plain
+  HTML or hands a view model to its Render Client ([What a Server half may import](#what-a-server-half-may-import)).
 - A live Widget client takes only types from its `config.ts`. The config module is the parser, with the
   block defaults merge behind it; a helper the client needs at runtime lives in a file of its own beside
   it (`scripts/validate-render-client-boundaries.mjs` checks first-party Widgets).

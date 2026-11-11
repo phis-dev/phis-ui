@@ -158,7 +158,7 @@ change. If a contract is unclear, stop and ask instead of guessing.
 - `@phis/ui` is published to npm. The release workflow builds `dist/` with `pnpm build` and publishes from
   there; `pnpm package:pack` packs the same artifact. Inside the Phi workspace, consumers link the source
   with `workspace:*` and set `transpilePackages: ["@phis/ui"]`, so source edits need no rebuild.
-- `react`, `react-dom`, `next`, `antd`, `@ant-design/icons`, and `@ant-design/nextjs-registry` are peer
+- `react`, `react-dom`, `next`, `antd`, and `@ant-design/icons` are peer
   dependencies. Never introduce a second runtime copy of them, and do not use `file:` dependencies as a
   development path.
 - The distribution build emits unbundled ESM with declarations and CSS, preserves `"use client"`,

@@ -1,4 +1,5 @@
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
+import { trBulk, trBulkForLocale } from "../../../../../server-helpers/translate";
 import type { PhiNoLabels, PhiServerBlockBaseProps } from "../../../../../types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import { resolveMarkdownRenderData } from "../../../../../components/widgets/shared/markdown-render";
@@ -34,7 +35,11 @@ export async function PhiMarkdownWidget({
    * out of a Content record -- went to the page's payload as well, every address in it in the clear while
    * the blocks protected them (`helpers/protected-mail.ts`).
    */
-  const { markdown: _markdown, resolvedContent: _resolvedContent, ...presentation } = config ?? {};
+  const { markdown: _markdown, resolvedContent: _resolvedContent, eyebrow: sourceEyebrow, ...presentation } = config ?? {};
+  // The label above the text, translated as the text is: not where the node says `NoTranslate`.
+  const [eyebrow] = sourceEyebrow && config?.translate !== false
+    ? await (runtime?.locale.current ? trBulkForLocale(runtime.locale.current, [sourceEyebrow]) : trBulk([sourceEyebrow]))
+    : [sourceEyebrow];
 
   /*
    * The folding sections as questions and answers, written into the page for search engines: data, never
@@ -55,6 +60,7 @@ export async function PhiMarkdownWidget({
       <PhiRuntimeModuleRenderClientHost
         type={PhiCmsWidgetType.Markdown}
         componentProps={{
+          labels: { eyebrow: eyebrow || undefined },
           config: {
             ...presentation,
             blocks: renderData.blocks,

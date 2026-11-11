@@ -33,15 +33,6 @@ built. Remove an entry when it is done.
 
 ## Layouts and Widgets
 
-- **An eyebrow on the Markdown Widget (approved 2026-11-11, next release).** A section's label above its
-  heading -- "The story", "Why phis" -- has no form in Markdown, so presets wrote it as a bold paragraph,
-  which renders at body size and reads as a small title. The Markdown Widget gains an `eyebrow` field
-  (translatable text) drawn exactly as the Card Widget's eyebrow, above the text, so a label looks the same
-  wherever it stands. Then the phis.dev package's bold-line labels move to it.
-- **Simple Text: capitals and letter spacing by config (approved 2026-11-11, next release).** Two config
-  fields on the Simple Text Widget, e.g. `textTransform: "uppercase"` and a `letterSpacing` step, so a preset
-  or an agent can set a label like the Card eyebrow without a style of its own. The Inspector need not offer
-  them yet; the reader, the renderer and the field definitions do.
 - **Block geometry: the rules each reader kept, now settled one at a time.** The move is done: one
   reader, `resolvePhiRenderableBlockGeometry` (types/renderable-block-geometry.ts), and a guard that
   names who draws geometry and who merely touches the fields (`scripts/validate-block-geometry-readers.mjs`;
