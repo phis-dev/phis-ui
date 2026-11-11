@@ -4,6 +4,7 @@ import {
   buildPhiTranslationCacheKey,
   clearPhiTranslationCache,
   getPhiTranslationCacheSize,
+  PHI_TRANSLATION_CACHE_MAX_AGE_MS,
   PHI_TRANSLATION_CACHE_MAX_ENTRIES,
   readPhiTranslationCache,
   readPhiTranslationCacheGeneration,
@@ -62,12 +63,18 @@ describe("translation cache", () => {
     expect(readPhiTranslationCache(key({ msg: "Away" }))).toBeNull();
   });
 
-  it("keeps an entry however long ago it was written", () => {
+  /*
+   * A day and its spread: long enough that the markers, not the age, decide freshness; short enough that a
+   * text still shown reaches Core once a day, which notes when a message was last read.
+   */
+  it("keeps an entry for a day and lets it go after the day and its spread", () => {
     vi.useFakeTimers();
     try {
       writePhiTranslationCache(key(), "Startseite");
-      vi.advanceTimersByTime(24 * 60 * 60 * 1000);
+      vi.advanceTimersByTime(PHI_TRANSLATION_CACHE_MAX_AGE_MS - 1);
       expect(readPhiTranslationCache(key())).toBe("Startseite");
+      vi.advanceTimersByTime(4 * 60 * 60 * 1000 + 2);
+      expect(readPhiTranslationCache(key())).toBeNull();
     } finally {
       vi.useRealTimers();
     }

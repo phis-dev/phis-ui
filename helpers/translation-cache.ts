@@ -13,7 +13,8 @@
  * limit collects. Neither event needs to invalidate anything.
  *
  * What does change a stored value is a write to the translation store -- an edit, a delete, a changed
- * translation configuration. Entries do not expire for it. Core keeps a change marker per store, one
+ * translation configuration. Entries do not wait to expire for it (they leave after a day for another
+ * reason, `PHI_TRANSLATION_CACHE_MAX_AGE_MS`). Core keeps a change marker per store, one
  * global and one per Site, and hands both out with the Site config; `syncPhiTranslationChangeMarkers`
  * empties a store whose marker differs from the one this process saw last. The process that forwarded
  * an edit reads the Site config fresh on its next render (its proxy cleared the read cache), and every
@@ -34,11 +35,23 @@
  */
 export const PHI_TRANSLATION_CACHE_MAX_ENTRIES = 5_000;
 
+/**
+ * How long an entry is kept: a day, and up to four hours more so that entries written together do not
+ * all leave in the same minute. Not for freshness -- the change markers see to that -- but so that a text
+ * this Site still shows is asked for again once a day. Core notes when a message was last read
+ * (phis-server TRANSLATIONS.md, "When a message was last read"), and a text served from here forever
+ * would look unread there.
+ */
+export const PHI_TRANSLATION_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+const PHI_TRANSLATION_CACHE_AGE_SPREAD_MS = 4 * 60 * 60 * 1000;
+
 /** ASCII unit separator: the one character a locale, a context, or a format will never contain. */
 const SEPARATOR = String.fromCharCode(31);
 
+type PhiTranslationCacheEntry = { value: string; expiresAt: number };
+
 type PhiTranslationCacheState = {
-  entries: Map<string, string>;
+  entries: Map<string, PhiTranslationCacheEntry>;
   /** Moves on every clear, so a request that began before it cannot write what it read into the cache. */
   generation: number;
   markers: { global: string | null; sites: Map<string, string> };
@@ -46,7 +59,7 @@ type PhiTranslationCacheState = {
 
 // Named for its shape: a process that outlives a code change (a dev server's HMR) still holds the old
 // value under the old name, and must not hand it to code that expects this one.
-const TRANSLATION_CACHE_STORE_KEY = Symbol.for("phis-ui.translation-cache.entries-generation-markers");
+const TRANSLATION_CACHE_STORE_KEY = Symbol.for("phis-ui.translation-cache.expiring-entries-generation-markers");
 const STATE: PhiTranslationCacheState = (() => {
   const holder = globalThis as typeof globalThis & {
     [TRANSLATION_CACHE_STORE_KEY]?: PhiTranslationCacheState;
@@ -83,15 +96,19 @@ export function buildPhiTranslationCacheKey({
 }
 
 export function readPhiTranslationCache(key: string) {
-  const value = TRANSLATION_CACHE.get(key);
-  if (value == null) {
+  const entry = TRANSLATION_CACHE.get(key);
+  if (entry == null) {
+    return null;
+  }
+  if (entry.expiresAt <= Date.now()) {
+    TRANSLATION_CACHE.delete(key);
     return null;
   }
   // Re-inserting moves the entry to the end, so the size limit evicts what is least recently read
   // rather than what was written first -- a Navigation label read on every request outlives a one-off.
   TRANSLATION_CACHE.delete(key);
-  TRANSLATION_CACHE.set(key, value);
-  return value;
+  TRANSLATION_CACHE.set(key, entry);
+  return entry.value;
 }
 
 /** Taken before a request to Core, and handed back to `writePhiTranslationCache` with its answer. */
@@ -108,7 +125,10 @@ export function writePhiTranslationCache(key: string, value: string, generation?
     return;
   }
   TRANSLATION_CACHE.delete(key);
-  TRANSLATION_CACHE.set(key, value);
+  TRANSLATION_CACHE.set(key, {
+    value,
+    expiresAt: Date.now() + PHI_TRANSLATION_CACHE_MAX_AGE_MS + Math.random() * PHI_TRANSLATION_CACHE_AGE_SPREAD_MS,
+  });
   while (TRANSLATION_CACHE.size > PHI_TRANSLATION_CACHE_MAX_ENTRIES) {
     const oldest = TRANSLATION_CACHE.keys().next();
     if (oldest.done) {
