@@ -69,9 +69,13 @@ function renderSplitCardSlot(
       key={key}
       style={{
         position: "relative",
-        height: "100%",
+        /*
+         * No `height: 100%` and no `minHeight: 0`: the grid stretches both cards to the row already, and
+         * the content's own height has to stay the card's lower bound. Without it Safari keeps the row's
+         * height when the Split Card's width changes, and text that wraps onto more lines runs out of the
+         * card (`styles/layout.css`, the Split Card).
+         */
         minWidth: 0,
-        minHeight: 0,
         display: "flex",
         alignItems: "stretch",
         boxSizing: "border-box",

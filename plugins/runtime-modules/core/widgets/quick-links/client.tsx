@@ -6,10 +6,7 @@ import { PhiLink } from "../../../../../components/navigation/phi-link";
 import { PhiIcon } from "../../../../../components/shell/phi-icon";
 import type { PhiClientBlockBaseProps } from "../../../../../types";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
-import {
-  PHI_CONTAINER_BREAKPOINT_COL2,
-  PHI_CONTAINER_BREAKPOINT_COL3,
-} from "../../../../../theme/phi-container-breakpoints";
+import { PHI_CONTAINER_BREAKPOINT_COL2 } from "../../../../../theme/phi-container-breakpoints";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 import { usePhiPathname } from "../../../../../components/runtime/use-phi-pathname";
@@ -45,10 +42,6 @@ function useQuickLinksContainerWidth() {
    */
   const [node, ref] = useState<HTMLDivElement | null>(null);
   const [width, setWidth] = useState(0);
-  const breakpoints = {
-    col2: PHI_CONTAINER_BREAKPOINT_COL2,
-    col3: PHI_CONTAINER_BREAKPOINT_COL3,
-  };
 
   useEffect(() => {
     if (!node) {
@@ -76,7 +69,7 @@ function useQuickLinksContainerWidth() {
     };
   }, [node]);
 
-  return { ref, width, breakpoints };
+  return { ref, width };
 }
 
 function groupQuickLinksItems(items: PhiQuickLinksWidgetItem[], columns: 1 | 2 | 3) {
@@ -100,14 +93,21 @@ export function PhiQuickLinksWidgetClient({
   config,
 }: PhiQuickLinksWidgetClientProps) {
   const { token } = usePhiConfig();
-  const { ref, width, breakpoints } = useQuickLinksContainerWidth();
+  const { ref, width } = useQuickLinksContainerWidth();
   const pathname = usePhiPathname();
 
   const maxColumns = config?.columns === 1 || config?.columns === 3 ? config.columns : 2;
   const interactive = config?.interactive !== false;
   const items = config?.items ?? [];
-  const effectiveColumnsByWidth =
-    width >= breakpoints.col3 ? 3 : width >= breakpoints.col2 ? 2 : 1;
+  /*
+   * As many columns as fit with each at least `PHI_CONTAINER_BREAKPOINT_COL2` wide, the space between
+   * two columns (`paddingMD` on either side of their edge) counted. The ruler's step was once read as
+   * the width two columns need together, so a footer 275px wide still split "Terms & Conditions" across
+   * two lines beside a second column.
+   */
+  const columnGutter = token.paddingMD * 2;
+  const effectiveColumnsByWidth = Math.max(1, Math.min(3,
+    Math.floor((width + columnGutter) / (PHI_CONTAINER_BREAKPOINT_COL2 + columnGutter)))) as 1 | 2 | 3;
   const effectiveColumns =
     maxColumns === 1
       ? 1

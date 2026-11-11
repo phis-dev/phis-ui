@@ -696,6 +696,39 @@
   height: 100%;
 }
 
+/*
+ * A card is at least as tall as its content, and its content fills it by stretching, never by a
+ * percentage.
+ *
+ * The grid row takes its height from the cards. With `min-height: 0` on the card and its anchor, and
+ * `height: 100%` down the chain under it -- anchor, its content, the slot child, the Layout -- the
+ * content gave the row no lower bound of its own. Safari then keeps the row's height when the Split
+ * Card's width changes (fresh layouts are right): the window narrows, the text wraps onto more lines,
+ * and it runs out of a card that stays as tall as it was; widened again, the card stays too tall.
+ * `min-height: auto` on the card and the anchor carries the content's height into the row, which is
+ * what fixes it; stretching instead of percentages keeps the content filling the card. Every step is
+ * a flex row, so stretching gives the same height. Only the direct chain, child by child: a Layout
+ * further in keeps its own rules. `!important` where the anchor and the slot child state the old values
+ * inline.
+ */
+/* The card itself: `:where([data-layout-kind])` gives every Layout element `min-height: 0`. */
+.phi-split-card__grid > * {
+  min-height: auto;
+}
+
+.phi-split-card__grid > * > .phi-layout-scaffold-anchor--flow {
+  height: auto !important;
+  min-height: auto !important;
+}
+
+.phi-split-card__grid > * > .phi-layout-scaffold-anchor--flow > .phi-layout-scaffold-anchor__content[data-phi-slot-size-block="fill"],
+.phi-split-card__grid > * > .phi-layout-scaffold-anchor--flow > .phi-layout-scaffold-anchor__content > .phi-slot-child--block-fill,
+.phi-split-card__grid > * > .phi-layout-scaffold-anchor--flow > .phi-layout-scaffold-anchor__content > .phi-slot-child--block-fill > .phi-layout {
+  height: auto !important;
+  max-height: none !important;
+  align-self: stretch;
+}
+
 @container phi-split-card (width < 36rem) {
   .phi-split-card__grid {
     grid-template-columns: minmax(0, 1fr);
