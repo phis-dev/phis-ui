@@ -1172,7 +1172,8 @@ import { PHI_COLOR, PHI_SPACE } from "@phis/ui/theme";
 nodes.layout({
   typeKey: "flex-vertical",
   /* ... */
-  config: { gap: PHI_SPACE.base, padding: PHI_SPACE.xl, anchor: { horizontal: "left", vertical: "top" } },
+  /* The Page column of section 6b: the section gap, and no padding of its own. */
+  config: { gap: PHI_SPACE.md, anchor: { horizontal: "left", vertical: "top" } },
 });
 const fade = {
   kind: "color",
@@ -1372,6 +1373,85 @@ node by node with `buildPhiCmsLayoutNode` and `buildPhiCmsWidgetNode`.
    exists only once an author edits and saves the Page, and its published copy answers once it is
    published; neither follows later changes to the preset, while an untouched Page always draws the
    installed one.
+
+## 6b. Laying out a Page
+
+A Page is assembled from the Layouts and Widgets phis-ui already has, set through their config. A preset
+never draws its own structure: no Layout of its own for arranging, no wrapper, no CSS, no literal size. If
+the existing Layouts cannot express a Page, that is a gap to raise ([AGENTS.md](./AGENTS.md), "A missing
+piece is asked for"), not something to build beside them. This section is what every Page preset follows,
+whoever writes it -- a person or an agent -- so that the Pages of a Site, and the Sites of an installation,
+are built alike.
+
+### The skeleton
+
+Every Page has the same three levels in its `content` Region:
+
+1. **Region** `content`: the Page's edge. It carries the only outer inset and the reading width
+   (`maxSize`, centred with `margin: "0 auto"`). Nothing inside it adds a second edge. The Public and App
+   presets give it `md` already; a Page Region states only its width.
+2. **Page column**: one `flex-vertical` under the Region's `content` Layout, `padding` none, `gap` the
+   section role. Its slots are the sections, top to bottom.
+3. **Sections**: each slot of the column holds one Widget or one Layout. A section that needs columns uses
+   `grid`, two cards side by side use `split-card`, a row of buttons uses `flex`, a section of its own
+   rows a `flex-vertical` again. The Page column itself stays one vertical stack.
+
+### Spacing roles
+
+Every distance on a Page is one of four roles, and every role is one step of `PHI_SPACE`
+([section 6a](#distances-colours-and-corners-come-from-the-theme)). A preset names the step, never a number,
+never a CSS string, never `clamp()`:
+
+| Role | Where | Step |
+| --- | --- | --- |
+| Page edge | `padding` of the Region `content` | `md` |
+| Between sections | `gap` of the Page column | `md` |
+| Inside a surface | `padding` of a Layout that carries a Surface -- a band, a card, a Split Card | `md` |
+| Inside a section | `gap` of a section's own Layout: heading to content, card to card, button to button | `sm`, the Layout default: leave it unset |
+
+A Layout without a Surface has no padding: it only arranges. Padding belongs to a thing whose edge one
+can see.
+
+- **No nesting of insets.** A surface inside a surface does not add its padding to its parent's. A Split
+  Card's slot holds its Widget directly; a code block is a Markdown fence and brings its own ground, so it
+  needs no Layout with a dark Surface around it.
+- **Emphasis is the author's.** A preset or an agent stays at `md` and below. A larger step -- `lg` and up --
+  is a deliberate emphasis, and choosing it is the author's decision in the Builder's Paddings panel, on
+  that Page. A section that should stand out in a preset takes another Surface (a tone, a wash, a
+  gradient), not a larger distance.
+- The one fixed exception is a Hero that content reaches into, below.
+
+### The Page's Regions
+
+`content` is one of the Regions a Page owns. The others are the Page's too, and follow the same roles:
+
+| Region | What goes there | Spacing |
+| --- | --- | --- |
+| `hero` | The Page's opening: its title, one or two sentences, its ways on, a picture or a ground. Only where the Page opens with a statement, and one per Page. | Its root Layout carries the Surface and `padding` `md`. The Shell adds the Header bands' height above it ([SHELL.md](./SHELL.md), "Hero at the top"); never pad for them yourself. |
+| `header_bottom` | A band under the Header that belongs to this Page: a breadcrumb, a sub-navigation, a notice. Not a second title. | `paddingLeft`/`paddingRight` `sm`, nothing above or below. |
+| `sider_right` | What accompanies the text: a table of contents, related links. | `padding` none; the Region's `offsetTop` keeps it below the Header. |
+| `footer_top` | The Page's closing, when it is not a section of the content: a call to action, a newsletter. | Like a section with a Surface: `padding` `md`. |
+
+`header_top`, `header_main`, `footer_main` and `footer_bottom` are the Area's, shared by every Page of it.
+A Page preset never places anything in them.
+
+### Content reaching into the Hero
+
+To let the first boxes of the content -- cards, a form -- stand on the lower part of the Hero, set
+`heroOverlap` on the `content` Region to a step of `PHI_SPACE`, usually `lg` ([SHELL.md](./SHELL.md),
+"Content reaching into the Hero"). The Hero does not make room for it on its own: its root Layout takes a
+`paddingBottom` one step above the overlap, so its words end above the boxes. This is the one place a
+preset uses a step above `md`, and only together with `heroOverlap`.
+
+### Checklist for a Page preset
+
+- One `flex-vertical` Page column under `content`, `padding` none, `gap` `PHI_SPACE.md`.
+- Every `padding` and `gap` is a `PHI_SPACE` step; none is a string, a number or a `clamp()`.
+- Padding only on a Layout with a Surface, at `md`; the Region's edge is not repeated inside it.
+- No Layout whose only job is to give one Widget a background.
+- The reading width comes from the Region's `maxSize`, never from padding.
+- A Hero only with a ground of its own; `heroOverlap` always with the Hero's larger `paddingBottom`.
+- Nothing in the Area's Regions.
 
 ## 7. Export the Server contributions
 

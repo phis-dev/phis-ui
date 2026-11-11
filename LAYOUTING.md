@@ -77,6 +77,10 @@ which runs edge to edge. "None" in the Paddings panel writes 0, so a default
 is switched off for good; a side stated on its own wins over the uniform padding, so a Three-column row
 loses its sides by setting each to none. No Layout brings a Surface by default.
 
+Which step a Page preset takes for which distance -- the Page edge, between sections, inside a surface,
+inside a section -- is fixed once in [THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md), "6b. Laying out a
+Page", and holds for every Page, Core's and a package's alike.
+
 A Region has no padding by default. A gap between a Region's edge and its root Layout is something an
 author -- or a Page preset -- states on the Region; it is never implied by a Layout.
 

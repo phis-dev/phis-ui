@@ -145,6 +145,9 @@ change. If a contract is unclear, stop and ask instead of guessing.
   alignment, `style`, and visual overrides are opt-in on explicit request.
 - Hardcoded colors, radii, typography, or bespoke visual tuning are exceptions that need an explicit
   request ([THEME.md](./THEME.md)).
+- A Page preset follows [THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md), "6b. Laying out a Page": one
+  `flex-vertical` Page column, the four spacing roles as `PHI_SPACE` steps, padding only on a Surface, no
+  step above `md` except a Hero's bottom beside `heroOverlap`. Config only; nothing set by hand.
 - Viewer authorization uses provider-scoped role claims and `canPhiViewerAccess`
   ([ACCESS.md](./ACCESS.md)); a surface whose capabilities differ by role binds `disabledWhen` conditions
   to a Controller permission instead of branching on a role.
