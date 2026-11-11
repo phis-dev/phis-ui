@@ -59,3 +59,23 @@ export function resolvePhiPublishedThemeCustomColors(
   const preset = resolvePhiThemePresetPlugin(presets, siteTheme.preset);
   return resolvePhiThemePaletteCustomColors(mergePhiThemePalettes(preset.palette, siteTheme.palette), mode);
 }
+
+/** The token a custom colour rides as, and so the custom property Ant Design writes for it. */
+function resolvePhiThemeCustomColorTokenName(key: (typeof PHI_THEME_CUSTOM_COLOR_KEYS)[number]) {
+  return `phiCustom${key.slice("custom".length)}`;
+}
+
+/**
+ * The custom colours of one mode as tokens of the Theme's own, laid over the resolved ones like the
+ * gradient slots, so Ant Design writes them per mode and per Surface tone (`--ant-phi-custom-1` ...) and a
+ * config can name one by its role (`PHI_COLOR.custom1`) instead of copying its value.
+ */
+export function buildPhiThemeCustomColorTokens(
+  palette: PhiThemePalette | null | undefined,
+  mode: PhiThemeMode,
+): Record<string, string> {
+  const colors = resolvePhiThemePaletteCustomColors(palette, mode);
+  return Object.fromEntries(
+    PHI_THEME_CUSTOM_COLOR_KEYS.map((key) => [resolvePhiThemeCustomColorTokenName(key), colors[key]]),
+  );
+}

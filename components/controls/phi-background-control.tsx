@@ -228,7 +228,8 @@ export function PhiBackgroundControl({
   onChange,
 }: PhiBackgroundControlProps) {
   const { token } = theme.useToken();
-  const colorPickerPresets = usePhiColorControlPresets({ labels: colorPickerLabels });
+  // A Theme swatch stores its role, so a ground picked from the Theme follows it and the mode.
+  const colorPickerPresets = usePhiColorControlPresets({ labels: colorPickerLabels, storeThemeRoles: true });
   const currentValue = useMemo(() => normalizePhiBackgroundWidgetConfig(value ?? config ?? null), [value, config]);
   const isDisabled = disabled || !onChange;
   const colorPickerTransaction = {

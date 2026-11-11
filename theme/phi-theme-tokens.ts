@@ -178,7 +178,8 @@ export const PHI_THEME_TOKEN_KEYS = [
  *
  * The `phiGradient*` names are the Theme's gradient slots and the primary Buttons' run
  * (theme/phi-theme-gradients.ts): tokens of this package's own, laid over the resolved ones so Ant
- * Design writes them per mode and per Surface tone like every other.
+ * Design writes them per mode and per Surface tone like every other. The `phiCustom*` names are the
+ * palette's custom colours, laid over the same way (theme/phi-theme-palette.ts).
  */
 export const PHI_THEME_OWN_TOKEN_KEYS = [
   "paddingXXL",
@@ -192,6 +193,16 @@ export const PHI_THEME_OWN_TOKEN_KEYS = [
   "phiPrimaryButtonGradientHover",
   "phiPrimaryButtonGradientActive",
   "phiPrimaryButtonGradientText",
+  "phiCustom1",
+  "phiCustom2",
+  "phiCustom3",
+  "phiCustom4",
+  "phiCustom5",
+  "phiCustom6",
+  "phiCustom7",
+  "phiCustom8",
+  "phiCustom9",
+  "phiCustom10",
 ] as const;
 
 export type PhiThemeTokenKey = (typeof PHI_THEME_TOKEN_KEYS)[number];

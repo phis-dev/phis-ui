@@ -5,15 +5,33 @@
  * `usePhiConfig().token` when they need the resolved value in JavaScript.
  */
 export const PHI_COLOR = {
-  primary: "var(--ant-color-primary)",
+  /*
+   * The primary colour's ladder, as the Theme derives it per mode -- the same ten the colour picker offers
+   * as the Theme's primary swatches, so a colour picked there is stored as its role and follows the Theme.
+   */
+  primaryBg: "var(--ant-color-primary-bg)",
+  primaryBgHover: "var(--ant-color-primary-bg-hover)",
+  primaryBorder: "var(--ant-color-primary-border)",
+  primaryBorderHover: "var(--ant-color-primary-border-hover)",
   primaryHover: "var(--ant-color-primary-hover)",
+  primary: "var(--ant-color-primary)",
   primaryActive: "var(--ant-color-primary-active)",
+  primaryTextHover: "var(--ant-color-primary-text-hover)",
+  primaryText: "var(--ant-color-primary-text)",
+  primaryTextActive: "var(--ant-color-primary-text-active)",
   link: "var(--ant-color-link)",
   linkHover: "var(--ant-color-link-hover)",
+  /* The text ladder, likewise the picker's text swatches. */
+  textBase: "var(--ant-color-text-base)",
   text: "var(--ant-color-text)",
   textSecondary: "var(--ant-color-text-secondary)",
   textTertiary: "var(--ant-color-text-tertiary)",
+  textQuaternary: "var(--ant-color-text-quaternary)",
   textHeading: "var(--ant-color-text-heading)",
+  textLabel: "var(--ant-color-text-label)",
+  textDescription: "var(--ant-color-text-description)",
+  textPlaceholder: "var(--ant-color-text-placeholder)",
+  textDisabled: "var(--ant-color-text-disabled)",
   textLightSolid: "var(--ant-color-text-light-solid)",
   bgContainer: "var(--ant-color-bg-container)",
   bgLayout: "var(--ant-color-bg-layout)",
@@ -30,6 +48,20 @@ export const PHI_COLOR = {
   error: "var(--ant-color-error)",
   success: "var(--ant-color-success)",
   warning: "var(--ant-color-warning)",
+  /*
+   * The palette's ten custom colours, per mode, written by the Theme as tokens of its own
+   * (`phiCustom1` ... `phiCustom10`, theme/phi-theme-palette.ts).
+   */
+  custom1: "var(--ant-phi-custom-1)",
+  custom2: "var(--ant-phi-custom-2)",
+  custom3: "var(--ant-phi-custom-3)",
+  custom4: "var(--ant-phi-custom-4)",
+  custom5: "var(--ant-phi-custom-5)",
+  custom6: "var(--ant-phi-custom-6)",
+  custom7: "var(--ant-phi-custom-7)",
+  custom8: "var(--ant-phi-custom-8)",
+  custom9: "var(--ant-phi-custom-9)",
+  custom10: "var(--ant-phi-custom-10)",
 } as const;
 
 /**

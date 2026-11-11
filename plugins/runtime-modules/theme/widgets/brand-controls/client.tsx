@@ -34,7 +34,11 @@ import {
   type PhiThemeCustomColorKey,
   type PhiThemeCustomColorPalette,
 } from "../../../../../theme/phi-theme-presets";
-import { buildPhiThemeCustomColorPalette, resolvePhiThemePaletteCustomColors } from "../../../../../theme/phi-theme-palette";
+import {
+  buildPhiThemeCustomColorPalette,
+  buildPhiThemeCustomColorTokens,
+  resolvePhiThemePaletteCustomColors,
+} from "../../../../../theme/phi-theme-palette";
 import {
   buildPhiThemeGradientTokens,
   PHI_THEME_GRADIENT_KEYS,
@@ -758,11 +762,13 @@ function resolveBrandDraftAliasTokens(
     ...(fonts.body ? { fontFamily: fonts.body } : {}),
     ...(fonts.mono ? { fontFamilyCode: fonts.mono } : {}),
   });
-  // The gradient slots and the primary Buttons' run, as the root lays them over its tokens.
+  // The custom colours, the gradient slots and the primary Buttons' run, as the root lays them over its tokens.
+  const mergedPalette = mergePhiThemePalettes(preset.palette, resolvedTheme.palette);
   return {
     ...aliasTokens,
+    ...buildPhiThemeCustomColorTokens(mergedPalette, mode),
     ...buildPhiThemeGradientTokens({
-      gradients: mergePhiThemePalettes(preset.palette, resolvedTheme.palette).modes?.[mode]?.gradients,
+      gradients: mergedPalette.modes?.[mode]?.gradients,
       token: aliasTokens,
       primaryButtonGradient: readPhiThemeGradientKey(resolvedTheme.buttons?.primaryGradient),
     }),

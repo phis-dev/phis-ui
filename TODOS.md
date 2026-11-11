@@ -305,9 +305,6 @@ built. Remove an entry when it is done.
 
 ## Media and Theme
 
-- **`PHI_COLOR.primaryBg`.** The primary colour's quietest tint (`--ant-color-primary-bg`) has no role in
-  `PHI_COLOR`, so a preset that wants that ground has to spell the variable out -- the phis.dev package does,
-  once, with a comment. A contract extension; needs approval.
 - **Media Inspector variant hand-over.** The Inspector always simulates the variant crop from the original
   (`components/media/phi-asset-inspector-section.tsx`) and never shows the generated variant. Decide
   whether that stays and the contract says so, or whether unsaved focal edits get an owner and the preview
@@ -361,11 +358,6 @@ built. Remove an entry when it is done.
 
 ## Modules and packaging
 
-- **The Page rule checked in packages.** THIRD_PARTY_MODULES.md "6b. Laying out a Page" is enforced for
-  Core's presets only (`scripts/validate-preset-theme-vocabulary.mjs`). Offer the check to a package --
-  refusing a spelled-out `var(--ant-...)`, a number or `clamp()` in `padding`/`gap`, padding on a Layout
-  without a Surface, and a step above `md` but a Hero's bottom beside `heroOverlap` -- and consider the
-  spacing roles as named constants in `@phis/ui/theme`. Needs approval.
 - **Groups administration package.** The Groups Runtime Module ships in this package as
   `@phis/ui/modules/groups` (`plugins/runtime-modules/groups/`), with Admin and App pages. Decide whether it
   moves to a separate `phis-cli`-installable package. Either way it binds only to Core

@@ -42,6 +42,8 @@ export type PhiColorFieldControlProps = {
   onDiscard?: (originalValue: string | null) => void;
   onClear?: () => void;
   customColors?: ReadonlyArray<PhiColorControlCustomColor>;
+  /** A Theme swatch stores its role instead of its colour (`usePhiColorControlPresets`). */
+  storeThemeRoles?: boolean;
   labels?: PhiColorPickerLabels;
   onChange?: (value: string, tokenKey?: string) => void;
   onValueChange?: (value: string | null, tokenKey?: string) => void;
@@ -75,6 +77,7 @@ export function PhiColorFieldControl({
   onDiscard,
   onClear,
   customColors,
+  storeThemeRoles = false,
   labels = PHI_COLOR_PICKER_DEFAULT_LABELS,
   onChange,
   onValueChange,
@@ -83,7 +86,7 @@ export function PhiColorFieldControl({
   const tokenValue = defaultToken ? token[defaultToken] : undefined;
   const defaultValue = typeof tokenValue === "string" ? tokenValue : fixedDefaultValue;
   const resolvedValue = value?.trim() || defaultValue;
-  const pickerPresets = usePhiColorControlPresets({ labels, customColors, presets });
+  const pickerPresets = usePhiColorControlPresets({ labels, customColors, presets, storeThemeRoles });
 
   function publish(nextValue: string | null) {
     if (nextValue == null) {

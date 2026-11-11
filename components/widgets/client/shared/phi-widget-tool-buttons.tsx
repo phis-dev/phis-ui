@@ -110,6 +110,7 @@ export function PhiWidgetColorToolButton({
       value={currentColor}
       defaultValue={currentColor ?? "#1677ff"}
       allowClear
+      storeThemeRoles
       getPopupContainer={popup.getPopupContainer}
       popupClassName={popup.rootClassName}
       onOpenChange={popup.setOpen}

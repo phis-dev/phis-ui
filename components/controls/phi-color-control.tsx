@@ -24,8 +24,34 @@ export type PhiColorPickerPreset = {
   label: string;
   colors: readonly string[];
   colorLabels?: readonly string[];
+  /**
+   * What a swatch stores, where that is not its colour: the Theme role it shows (`PHI_COLOR.primaryBg`,
+   * `PHI_COLOR.custom3`). A role follows the Theme and the mode; the colour it showed would stay as it was.
+   */
+  colorReferences?: readonly string[];
   defaultOpen?: boolean;
 };
+
+/** Every role a set of presets names, with the colour it shows now. */
+function collectPhiColorReferences(presets: readonly PhiColorPickerPreset[]) {
+  const references = new Map<string, string>();
+  for (const preset of presets) {
+    preset.colorReferences?.forEach((reference, index) => {
+      const color = preset.colors[index];
+      if (reference && color) references.set(reference, color);
+    });
+  }
+  return references;
+}
+
+/**
+ * A value as the picker can show it: every role in it replaced by the colour it shows now. The value
+ * itself keeps the role; only the swatch and the panel need a colour they can parse.
+ */
+function resolvePhiColorReferences(value: string | null, references: ReadonlyMap<string, string>) {
+  if (!value || references.size === 0 || !value.includes("var(")) return value;
+  return value.replace(/var\(--[a-z0-9-]+\)/giu, (reference) => references.get(reference) ?? reference);
+}
 
 export type PhiColorPickerPresets = readonly PhiColorPickerPreset[];
 
@@ -119,7 +145,9 @@ export function PhiColorControl({
   const selectedPalette = presets.find((preset) => preset.key === paletteKey) ?? presets[0];
   const selectedPaletteKey = selectedPalette?.key;
   const selectedPaletteLabel = selectedPalette?.label ?? selectedPaletteKey;
-  const selectedCssValue = picker.value ?? defaultValue;
+  const references = useMemo(() => collectPhiColorReferences(presets), [presets]);
+  const storedValue = picker.value ?? defaultValue;
+  const selectedCssValue = resolvePhiColorReferences(storedValue, references) ?? defaultValue;
   /*
    * A single colour names itself, a gradient cannot.
    *
@@ -139,7 +167,7 @@ export function PhiColorControl({
   return (
     <ColorPicker
       mode={resolveAntdMode(mode)}
-      value={resolveAntdColorValue(picker.value, defaultValue)}
+      value={resolveAntdColorValue(resolvePhiColorReferences(picker.value, references), defaultValue)}
       open={picker.open}
       disabled={disabled}
       allowClear={allowClear}
@@ -201,7 +229,8 @@ export function PhiColorControl({
                   }}
                 >
                   {selectedPalette.colors.map((presetColor, index) => {
-                    const selected = presetColor === selectedCssValue;
+                    const reference = selectedPalette.colorReferences?.[index];
+                    const selected = reference ? reference === storedValue : presetColor === selectedCssValue;
                     const swatchLabel = selectedPalette.colorLabels?.[index]
                       ?? `${selectedPaletteLabel} ${index + 1}`;
                     return (
@@ -214,7 +243,7 @@ export function PhiColorControl({
                           aria-label={`${swatchLabel}: ${presetColor}`}
                           aria-pressed={selected}
                           disabled={disabled}
-                          onClick={() => picker.changeValue(presetColor)}
+                          onClick={() => picker.changeValue(reference ?? presetColor)}
                           style={{
                             width: 22,
                             height: 22,

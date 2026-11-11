@@ -16,6 +16,7 @@ import type { PhiWidgetControlMode } from "../../types/widget-ui";
 import { ConfigPreviewShell } from "./config-preview-shell";
 import { PhiBoundRadiusControl } from "./phi-bound-radius-control";
 import { PhiColorControl } from "./phi-color-control";
+import { usePhiColorControlPresets } from "./use-phi-color-control-presets";
 import type { PhiPickerPlacement } from "./phi-picker-control-contract";
 import { PhiCompactGroupControl } from "./phi-compact-group-control";
 
@@ -83,10 +84,13 @@ export function PhiBorderControl({
   disabled = false,
   mode = "control",
   labels = PHI_BORDER_WIDGET_DEFAULT_LABELS,
+  colorPickerLabels,
   colorPickerPlacement,
   onChange,
 }: PhiBorderControlProps) {
   const { token } = theme.useToken();
+  // The Theme's swatches, each storing its role, so a line picked from the Theme follows it and the mode.
+  const colorPickerPresets = usePhiColorControlPresets({ labels: colorPickerLabels, storeThemeRoles: true });
   const currentValue = mergePhiBorderWidgetConfig(config, value);
   const isDisabled = disabled || !onChange || mode === "preview";
   const resolvedValue = resolveCurrentValue(currentValue, token.colorPrimary);
@@ -164,6 +168,7 @@ export function PhiBorderControl({
             disabled={isDisabled}
             mode="single"
             placement={colorPickerPlacement}
+            presets={colorPickerPresets}
             onChange={(resolvedCss) => {
               if (resolvedCss == null) return;
               emit({

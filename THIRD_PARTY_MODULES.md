@@ -1150,8 +1150,10 @@ reference the Theme resolves per Site and per mode. `@phis/ui/theme` exports the
 - `PHI_SPACE` -- the one spacing scale (`xxs`, `xs`, `sm`, `base`, `md`, `lg`, `xl`, `xxl`; 3 to 144 px in
   the default Theme, `THEME.md` "Phi scale") for every `padding`, `paddingLeft` ..., `gap` and `offsetTop`.
   It is what the Inspector offers, so an author opening the page sees `md`, not a number.
-- `PHI_COLOR` -- colour roles such as `bgContainer`, `text`, `primary`, for a colour that must follow the
-  Theme, for example the stop a card picture fades into.
+- `PHI_COLOR` -- colour roles that follow the Theme and the mode: the primary ladder (`primaryBg` ...
+  `primaryTextActive`), the text ladder, grounds, fills and borders, the states, and the palette's ten custom
+  colours (`custom1` ... `custom10`) -- for example the stop a card picture fades into, or a band's quiet
+  tint.
 - `PHI_RADIUS` -- corners, where a Surface states its own.
 
 What they resolve to is the adapter's business. A preset that spells it out -- `"var(--ant-padding-lg)"`,
@@ -1388,8 +1390,8 @@ are built alike.
 Every Page has the same three levels in its `content` Region:
 
 1. **Region** `content`: the Page's edge. It carries the only outer inset and the reading width
-   (`maxSize`, centred with `margin: "0 auto"`). Nothing inside it adds a second edge. The Public and App
-   presets give it `md` already; a Page Region states only its width.
+   (`maxSize`, centred with `margin: "0 auto"`). Nothing inside it adds a second edge. A Page that brings its
+   own `content` Region replaces the Area's, padding included, so it states `padding: PHI_SPACE.md` itself.
 2. **Page column**: one `flex-vertical` under the Region's `content` Layout, `padding` none, `gap` the
    section role. Its slots are the sections, top to bottom.
 3. **Sections**: each slot of the column holds one Widget or one Layout. A section that needs columns uses
@@ -1442,6 +1444,17 @@ To let the first boxes of the content -- cards, a form -- stand on the lower par
 "Content reaching into the Hero"). The Hero does not make room for it on its own: its root Layout takes a
 `paddingBottom` one step above the overlap, so its words end above the boxes. This is the one place a
 preset uses a step above `md`, and only together with `heroOverlap`.
+
+### Checking a Page preset
+
+`checkPhiPagePresetLayout(tree)` (`@phis/ui/helpers`) reads a tree a route preset builds and returns what
+breaks this section: a distance that is not a `PHI_SPACE` step, a step above `md` outside a Hero's bottom
+beside `heroOverlap`, padding on a Layout without a Surface (and a Grid that keeps its default inset), a
+content Region without the `md` edge, and a Page column that is not one `flex-vertical`. A package runs it
+over every route preset in its own verify step and fails on a finding.
+
+It is for presets only. A Page an author edits in the Builder is never checked against it: the Inspector
+offers the scale, and a value off it is the author's choice and is saved as it is.
 
 ### Checklist for a Page preset
 

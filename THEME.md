@@ -498,9 +498,18 @@ are not part of this field.
 - `--phi-*` is reserved for Phi-owned structural or technical values that Ant Design does not model -- Shell
   geometry, Builder scaffold geometry, effects, font sources, Control shape radii. Do not
   mirror Ant Design colours, spacing, radii, typography, shadows, control sizes, or motion into `--phi-*`.
-- Custom colours are data in `usePhiConfig().customColors`, never global CSS variables; consumers do not
-  reconstruct them from CSS or substitute semantic tokens. The Theme workspace is the only place that supplies
-  an unpublished draft palette explicitly.
+- Custom colours are data in `usePhiConfig().customColors`, and the Theme also writes them per mode as tokens
+  of its own (`phiCustom1` ... `phiCustom10`, so `--ant-phi-custom-1` ...), laid over the resolved tokens like
+  the gradient slots (`theme/phi-theme-palette.ts`). A config names one by its role, `PHI_COLOR.custom3`, and
+  it follows the Theme and the mode; consumers do not reconstruct them from CSS otherwise or substitute
+  semantic tokens. The Theme workspace is the only place that supplies an unpublished draft palette
+  explicitly.
+- The colour picker offers the Theme's custom colours and its primary and text ladders. In a field that
+  styles content -- the Inspector's colour fields, a Background, a Border, a text colour -- a Theme swatch
+  stores its role (`var(--ant-color-primary-bg)`, `var(--ant-phi-custom-3)`) rather than its colour, so what
+  an author picks from the Theme follows it (`usePhiColorControlPresets`, `storeThemeRoles`). A colour from
+  the free picker or a fixed palette stays a value. The Theme workspace stores values: it is where those
+  colours are set.
 - A component-scoped custom property may bridge a live token into a selector or pseudo-element; it is an
   implementation detail, not a second theme API.
 - Use inline styles for geometry and per-instance layout values. Do not hydrate token-derived visual end

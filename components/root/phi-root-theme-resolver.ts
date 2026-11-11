@@ -26,6 +26,7 @@ import {
 import { assertPhiThemeVocabulary } from "../../theme/phi-theme-tokens";
 import { applyPhiButtonShadowComponentTokens } from "../../theme/phi-button-shadow";
 import { buildPhiThemeGradientTokens, readPhiThemeGradientKey } from "../../theme/phi-theme-gradients";
+import { buildPhiThemeCustomColorTokens } from "../../theme/phi-theme-palette";
 import {
   applyPhiControlShapeComponentTokens,
   applyPhiSurfaceShapeComponentTokens,
@@ -158,10 +159,13 @@ export function resolvePhiRootTheme({
    * this mode's class like every other token (theme/phi-theme-gradients.ts). Derived from the resolved
    * colours, so a slot the palette leaves out follows the brand.
    */
+  const mergedPalette = mergePhiThemePalettes(themePreset.palette, siteTheme?.palette);
   const token = {
     ...effectiveThemeTokens,
+    // The custom colours ride the same way, so a config names one by its role (`PHI_COLOR.custom1`).
+    ...buildPhiThemeCustomColorTokens(mergedPalette, mode),
     ...buildPhiThemeGradientTokens({
-      gradients: mergePhiThemePalettes(themePreset.palette, siteTheme?.palette).modes?.[mode]?.gradients,
+      gradients: mergedPalette.modes?.[mode]?.gradients,
       token: effectiveThemeTokens,
       primaryButtonGradient: readPhiThemeGradientKey(siteTheme?.buttons?.primaryGradient),
     }),

@@ -1393,6 +1393,7 @@ function renderPhiInspectorConfigFieldBody({
         mode={resolveInspectorColorMode(field.mode)}
         placement="left"
         labels={colorPickerLabels}
+        storeThemeRoles
         onChange={(nextValue) => onChange?.({ [field.key]: nextValue || undefined })}
       />,
     );
