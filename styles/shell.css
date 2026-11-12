@@ -854,6 +854,19 @@
   }
 }
 
+/* Closing plays it backwards, back into the magnifier; the field is removed when it ends. */
+.phi-search-box__expand--closing {
+  animation: phi-search-box-collapse 180ms ease-in forwards;
+  pointer-events: none;
+}
+
+@keyframes phi-search-box-collapse {
+  to {
+    width: var(--ant-control-height);
+    opacity: 0.4;
+  }
+}
+
 /*
  * Opened on a phone: a row over the whole band, the field and its close mark, on the page's own ground
  * so the band's widgets do not show through it, light or dark.
@@ -872,6 +885,17 @@
 
 @keyframes phi-search-box-row {
   from {
+    opacity: 0;
+  }
+}
+
+.phi-search-box__row--closing {
+  animation: phi-search-box-row-out 160ms ease-in forwards;
+  pointer-events: none;
+}
+
+@keyframes phi-search-box-row-out {
+  to {
     opacity: 0;
   }
 }
@@ -902,7 +926,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   .phi-search-box__expand,
-  .phi-search-box__row {
+  .phi-search-box__expand--closing,
+  .phi-search-box__row,
+  .phi-search-box__row--closing {
     animation: none;
   }
 }

@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type AnimationEvent,
+  type FormEvent,
+  type KeyboardEvent,
+} from "react";
 import { createPortal } from "react-dom";
 import { PHI_SEARCH_QUERY_PARAM } from "@phis/contracts/search";
 
@@ -48,7 +56,16 @@ function readPhiSearchBoxOnPhone(element: HTMLElement): boolean {
   return window.innerWidth < PHI_SEARCH_BOX_PHONE_WIDTH;
 }
 
-type PhiSearchBoxOpen = null | { kind: "inline" } | { kind: "row"; region: HTMLElement };
+/** `closing` while the field folds back into the magnifier; it is gone when that animation ends. */
+type PhiSearchBoxOpen =
+  | null
+  | { kind: "inline"; closing?: true }
+  | { kind: "row"; region: HTMLElement; closing?: true };
+
+/** Whether the reader asked for less motion: then there is no fold to wait for. */
+function readPhiReducedMotion(): boolean {
+  return typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
+}
 
 /**
  * A `GET` form around one search field (SEARCH.md), as the input or as a magnifier alone that opens into one (`icon-only`).
@@ -62,7 +79,7 @@ type PhiSearchBoxOpen = null | { kind: "inline" } | { kind: "row"; region: HTMLE
  * a script too. After that it opens the field where it stands -- the field grows out of it -- or, on a
  * phone, as a row over the whole band it stands in: a header on a phone has no room for a field beside
  * the brand and the menu button, and one that wrapped would push the page down. Escape, the close mark,
- * or leaving the field empty closes it again.
+ * or leaving the field empty closes it again, the field folding back into the magnifier as it came.
  *
  * `auto` draws both the field and the magnifier and `styles/shell.css` shows one, the way the Header
  * Navigation draws its row and its menu button: whether this is a phone is the Shell's width, known to
@@ -77,7 +94,20 @@ export function PhiSearchBoxWidgetClient({ labels, config }: PhiSearchBoxWidgetC
   const variant = config?.variant ?? "input";
   const placeholder = config?.placeholder ?? "";
 
-  const close = useCallback(() => setOpen(null), []);
+  /*
+   * Closing plays the opening backwards: the field is marked `closing`, folds, and is removed when its
+   * animation ends (`finishClosing`). Without motion there is nothing to wait for.
+   */
+  const close = useCallback(() => {
+    if (readPhiReducedMotion()) {
+      setOpen(null);
+      return;
+    }
+    setOpen((current) => (current && !current.closing ? { ...current, closing: true } : current));
+  }, []);
+  const finishClosing = (event: AnimationEvent<HTMLElement>) => {
+    if (event.target === event.currentTarget && open?.closing) setOpen(null);
+  };
 
   /*
    * The band the row covers is its containing block. A band that is already positioned -- a sticky
@@ -99,7 +129,7 @@ export function PhiSearchBoxWidgetClient({ labels, config }: PhiSearchBoxWidgetC
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    if (event.key === "Escape" && open) {
+    if (event.key === "Escape" && open && !open.closing) {
       event.preventDefault();
       close();
     }
@@ -145,7 +175,14 @@ export function PhiSearchBoxWidgetClient({ labels, config }: PhiSearchBoxWidgetC
   };
 
   const magnifier = open?.kind === "inline"
-    ? <span className="phi-search-box__expand">{form({ autoFocus: true, collapsible: true })}</span>
+    ? (
+      <span
+        className={open.closing ? "phi-search-box__expand phi-search-box__expand--closing" : "phi-search-box__expand"}
+        onAnimationEnd={finishClosing}
+      >
+        {form({ autoFocus: true, collapsible: true })}
+      </span>
+    )
     : (
       <span className="phi-search-box__magnifier">
         <PhiButtonControl
@@ -168,7 +205,10 @@ export function PhiSearchBoxWidgetClient({ labels, config }: PhiSearchBoxWidgetC
       {variant === "input" ? null : magnifier}
       {open?.kind === "row"
         ? createPortal(
-          <div className="phi-search-box__row">
+          <div
+            className={open.closing ? "phi-search-box__row phi-search-box__row--closing" : "phi-search-box__row"}
+            onAnimationEnd={finishClosing}
+          >
             {form({ autoFocus: true })}
             <PhiButtonControl
               type="text"
