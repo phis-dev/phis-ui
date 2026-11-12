@@ -8,7 +8,7 @@ import { PHI_SEARCH_BOX_WIDGET_DEFINITION, type PhiSearchBoxWidgetConfig } from 
 /**
  * The box as a visitor sees it -- the field, or the magnifier -- in the size and words its author chose,
  * but inert: a submit on the canvas would leave the Builder for the results Page, so the field takes no
- * input and the magnifier does not open. Where it leads is in the Inspector, not on the canvas.
+ * input and the magnifier does not open.
  */
 export const PHI_SEARCH_BOX_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugin<PhiSearchBoxWidgetConfig> = {
   ...PHI_SEARCH_BOX_WIDGET_DEFINITION,

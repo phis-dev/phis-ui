@@ -34,7 +34,6 @@ export const PHI_SEARCH_RESULTS_WIDGET_DEFINITION = {
   description: "The Site's pages matching the search in the page's address, best first.",
   category: "content",
   tags: ["search", "results", "find"],
-  translatesOwnText: true,
   icon: "antd:search",
   slotSizePolicy: "fill-inline",
   fields: [
@@ -59,7 +58,6 @@ export const PHI_SEARCH_RESULTS_WIDGET_DEFINITION = {
   | "tags"
   | "icon"
   | "slotSizePolicy"
-  | "translatesOwnText"
   | "fields"
   | "defaultConfig"
   | "parseConfig"

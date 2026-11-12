@@ -21,7 +21,6 @@ import type { PhiSearchResultsWidgetConfig } from "./config";
 import type { PhiSearchResultsWidgetClientConfig, PhiSearchResultsWidgetHit } from "./client";
 
 export type PhiSearchResultsWidgetProps = PhiServerBlockBaseProps<PhiNoLabels, PhiSearchResultsWidgetConfig> & {
-  translate?: boolean;
   widgetId?: PhiCmsInstanceId | null;
 };
 
@@ -46,13 +45,13 @@ function readHitArea(areaMask: number): PhiCmsAreaKey {
  * A failed read is `PhiWidgetFailureServer`: an empty list would tell the visitor the Site has nothing on
  * the subject, which is not what happened.
  */
-export async function PhiSearchResultsWidget({ config, runtime, translate = true, widgetId }: PhiSearchResultsWidgetProps) {
+export async function PhiSearchResultsWidget({ config, runtime, widgetId }: PhiSearchResultsWidgetProps) {
   const rt = phiRuntime(runtime);
   const locale = runtime.locale.current;
   const renderMode = readPhiRuntimeTreeRenderMode(config ?? {});
   const [labels, [title]] = await Promise.all([
     getPhiSearchResultsWidgetLabels({ apiBaseUrl: rt.apiBaseUrl, internalToken: rt.internalToken, locale }),
-    config?.title && translate ? trBulkForLocale(locale, [config.title]) : [config?.title ?? ""],
+    config?.title ? trBulkForLocale(locale, [config.title]) : [""],
   ]);
 
   const raw = runtime.request?.searchParams?.[PHI_SEARCH_QUERY_PARAM];
