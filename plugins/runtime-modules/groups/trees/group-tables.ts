@@ -7,6 +7,7 @@ import type {
   PhiTableWidgetFeatures,
   PhiTableWidgetPresentation,
 } from "../../../../types/table-widget";
+import type { PhiProviderResourceSource } from "../../../../types/runtime-data-provider";
 import { PHI_GROUPS_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
 import type { getPhiGroupFormLabels } from "../labels";
 
@@ -117,7 +118,7 @@ export function buildPhiGroupMembersTable({
   tools?: PhiTableToolsConfig;
   toolbar?: PhiTableActionDefinition[];
 }): {
-  source: { providerKey: string; resourceKey: string };
+  source: PhiProviderResourceSource;
   presentation: PhiTableWidgetPresentation;
   features: PhiTableWidgetFeatures;
 } {
