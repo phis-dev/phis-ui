@@ -85,6 +85,7 @@ import {
 import { PHI_COLOR_PICKER_NEUTRAL_PRESETS, PHI_COLOR_PICKER_PRESETS } from "../../../../../components/widgets/config/color-picker-presets";
 import { PHI_SPACING_TOKEN_KEYS } from "../../../../../components/widgets/config/spacing-options";
 import { PhiColorFieldControl } from "../../../../../components/controls/phi-color-field-control";
+import { usePhiColorControlPresets } from "../../../../../components/controls/use-phi-color-control-presets";
 import { PhiBrandControl, resolvePhiBrandLogoUrl } from "../../../../../components/controls/phi-brand-control";
 import { PhiBackgroundControl, type PhiBackgroundControlProps } from "../../../../../components/controls/phi-background-control";
 import {
@@ -2419,6 +2420,19 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
     const resolvedDraft = resolvePhiThemeRuntimePayload(state.draft, themeBlocks).theme;
     return resolveBrandDraftAliasTokens(resolvedDraft, resolveThemePayloadPreset(resolvedDraft, themePresets), mode);
   }, [mode, state.draft, themeBlocks, themePresets]);
+  /*
+   * A Wordmark part picks from what every colour field of the Theme offers: the draft's custom colours in
+   * the mode being authored, the primary and text ladders, then the fixed palettes. It stores the colour,
+   * not the role -- the Theme is where those roles are set.
+   */
+  const wordmarkCustomColors = useMemo(() => {
+    const palette = resolveThemeCustomPalette(state.draft, resolveThemePayloadPreset(state.draft, themePresets), mode);
+    return PHI_THEME_CUSTOM_COLOR_KEYS.map((key, index) => ({ key, label: `Custom ${index + 1}`, value: palette[key] }));
+  }, [mode, state.draft, themePresets]);
+  const wordmarkColorPresets = usePhiColorControlPresets({
+    customColors: wordmarkCustomColors,
+    presets: PHI_COLOR_PICKER_PRESETS,
+  });
   const [activeIdentitySection, changeActiveIdentitySection] = usePhiBrandAccordionSection(
     BRAND_THEME_IDENTITY_COLLAPSE_STORAGE_KEY,
     BRAND_THEME_IDENTITY_SECTION_KEYS,
@@ -2703,7 +2717,7 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                           // A part's row is narrow: the swatch says the colour, the value would overflow it.
                           showText={false}
                           value={part.color ?? null}
-                          presets={PHI_COLOR_PICKER_PRESETS}
+                          presets={wordmarkColorPresets}
                           onChange={(next) => updateWordmarkPart(index, { color: next })}
                         />
                         <PhiButtonControl
