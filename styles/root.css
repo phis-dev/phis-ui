@@ -91,7 +91,9 @@ samp {
 }
 
 :where([data-phi-renderable-block="true"][data-phi-effects-transition], [data-phi-renderable-block="true"][data-phi-effects-viewport]) {
+  /* `--phi-effects-viewport-perspective` is unset unless a viewport effect turns about x or y; it must lead. */
   --phi-effects-viewport-transform:
+    var(--phi-effects-viewport-perspective,)
     translate3d(var(--phi-effects-viewport-x, 0px), var(--phi-effects-viewport-y, 0px), 0)
     rotateX(var(--phi-effects-viewport-rotate-x, 0deg))
     rotateY(var(--phi-effects-viewport-rotate-y, 0deg))

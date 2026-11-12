@@ -148,6 +148,11 @@ export type PhiRenderableBlockViewportEffect = {
   rangeEnd?: PhiRenderableBlockViewportEffectRangePoint | number | null;
   easing?: PhiRenderableBlockTransitionEasing | null;
   clamp?: boolean | null;
+  /**
+   * How far the eye stands from a turn about `x` or `y`, in pixels: smaller is deeper. Without it such a
+   * turn only foreshortens flat. `0` turns it off; `z` and the other properties ignore it.
+   */
+  perspectivePx?: number | null;
 };
 
 export type PhiRenderableBlockEffects = {

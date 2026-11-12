@@ -410,6 +410,14 @@ const effectsDescriptors = {
         initialValue: true,
       },
       {
+        key: "viewportPerspectivePx",
+        fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.number,
+        label: label("fields.perspective", "Perspective"),
+        initialValue: 800,
+        config: { min: 0 },
+        visibleWhen: formEquals("viewportProperty", "rotate"),
+      },
+      {
         key: "viewportEffects",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.table,
         label: label("sections.viewportEffects", "Viewport Effects"),
@@ -432,6 +440,7 @@ const effectsDescriptors = {
               rangeEnd: "exit",
               easing: "linear",
               clamp: true,
+              perspectivePx: 800,
             },
             sourceFields: {
               property: "viewportProperty",
@@ -443,6 +452,7 @@ const effectsDescriptors = {
               rangeEnd: "viewportRangeEnd",
               easing: "viewportEasing",
               clamp: "viewportClamp",
+              perspectivePx: "viewportPerspectivePx",
             },
             resetFields: {
               viewportProperty: "translate",
@@ -454,6 +464,7 @@ const effectsDescriptors = {
               viewportRangeEnd: "exit",
               viewportEasing: "linear",
               viewportClamp: true,
+              viewportPerspectivePx: 800,
             },
           },
           remove: { enabled: true, label: "Remove viewport effect" },

@@ -173,6 +173,14 @@ built. Remove an entry when it is done.
   next release.
 ## Regions and Overlays
 
+- **Group headings in a dropdown navigation.** `mapPhiNavItems` (components/shell/menu-items.tsx) turns
+  every entry with children into a submenu, so a third level opens sideways (Docs ▸ Architecture ▸
+  Server). `PhiMenuControl` already draws antd's `type: "group"`; nothing maps to it. Wanted: inside a
+  dropdown, an entry with children and no address of its own stands as a heading over its children
+  instead. Decide whether that is the rule or a flag the navigation item states, and how the Sider (inline
+  menu) and the mobile drawer show it. First user: the Docs entry of `@phis/dev`, which uses submenus until
+  then.
+
 - **Parameterized Region shape dividers.** One Region-edge contract for optional top and bottom
   decorations, rendered centrally by the Region container. Scope: `header_bottom.bottom`, `hero.top`,
   `hero.bottom`, `footer_top.top`. Closed shape catalog (wave, layered wave, zigzag, curve, slope) with

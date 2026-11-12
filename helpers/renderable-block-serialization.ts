@@ -256,6 +256,7 @@ function normalizeRenderableBlockViewportEffect(value: unknown): PhiRenderableBl
   const rangeEnd = normalizeRenderableBlockViewportEffectRangePoint(value.rangeEnd);
   const easing = normalizeRenderableBlockTransitionEasing(value.easing);
   const clamp = typeof value.clamp === "boolean" ? value.clamp : undefined;
+  const perspectivePx = normalizeRenderableBlockTransitionNumber(value.perspectivePx, 0, 10000);
 
   if (
     !axis &&
@@ -266,7 +267,8 @@ function normalizeRenderableBlockViewportEffect(value: unknown): PhiRenderableBl
     rangeStart == null &&
     rangeEnd == null &&
     !easing &&
-    clamp == null
+    clamp == null &&
+    perspectivePx == null
   ) {
     return undefined;
   }
@@ -281,6 +283,7 @@ function normalizeRenderableBlockViewportEffect(value: unknown): PhiRenderableBl
     ...(rangeEnd == null ? {} : { rangeEnd }),
     ...(easing ? { easing } : {}),
     ...(clamp == null ? {} : { clamp }),
+    ...(perspectivePx == null ? {} : { perspectivePx }),
   };
 }
 
@@ -504,6 +507,9 @@ function stripRenderableBlockEffects(
       }
       if (merged.clamp !== PHI_RENDERABLE_BLOCK_DEFAULT_VIEWPORT_EFFECT.clamp) {
         nextViewportEffect.clamp = merged.clamp;
+      }
+      if (merged.perspectivePx !== PHI_RENDERABLE_BLOCK_DEFAULT_VIEWPORT_EFFECT.perspectivePx) {
+        nextViewportEffect.perspectivePx = merged.perspectivePx;
       }
 
       return nextViewportEffect;

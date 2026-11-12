@@ -13,6 +13,7 @@ type ViewportEffectRuntimeValues = {
   rotateZ: string;
   scale: string;
   opacity: string | null;
+  perspective: string | null;
 };
 
 function resolveRangePoint(
@@ -105,6 +106,7 @@ function resolveViewportEffectValues(
     rotateZ: "0deg",
     scale: "1",
     opacity: null,
+    perspective: null,
   };
 
   for (const effect of effects) {
@@ -134,6 +136,12 @@ function resolveViewportEffectValues(
       } else {
         values.rotateY = rotateValue;
       }
+      // A turn about `x` or `y` tilts into the page only when seen from a distance; the first that names one
+      // holds for the element, as one transform has one eye.
+      const perspectivePx = effect.perspectivePx ?? PHI_RENDERABLE_BLOCK_DEFAULT_VIEWPORT_EFFECT.perspectivePx;
+      if (axis !== "z" && values.perspective == null && perspectivePx) {
+        values.perspective = `perspective(${perspectivePx}px)`;
+      }
       continue;
     }
 
@@ -155,6 +163,11 @@ function applyViewportEffectValues(target: HTMLElement, values: ViewportEffectRu
   target.style.setProperty("--phi-effects-viewport-rotate-y", values.rotateY);
   target.style.setProperty("--phi-effects-viewport-rotate-z", values.rotateZ);
   target.style.setProperty("--phi-effects-viewport-scale", values.scale);
+  if (values.perspective == null) {
+    target.style.removeProperty("--phi-effects-viewport-perspective");
+  } else {
+    target.style.setProperty("--phi-effects-viewport-perspective", values.perspective);
+  }
   if (values.opacity == null) {
     target.style.removeProperty("--phi-effects-viewport-opacity");
   } else {

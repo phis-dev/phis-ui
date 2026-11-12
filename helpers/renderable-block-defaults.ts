@@ -46,6 +46,7 @@ export const PHI_RENDERABLE_BLOCK_DEFAULT_VIEWPORT_EFFECT: PhiRenderableBlockVie
   rangeEnd: "exit",
   easing: "linear",
   clamp: true,
+  perspectivePx: 800,
 };
 export const PHI_RENDERABLE_BLOCK_DEFAULT_EFFECTS: PhiRenderableBlockEffects = {
   opacity: 1,
