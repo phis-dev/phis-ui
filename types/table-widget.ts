@@ -175,6 +175,13 @@ type PhiTableFilterCommon = {
    * nothing. `none` drops it, for a Control whose own value already asks the question ("All areas").
    */
   labelPlacement?: "above" | "inline" | "none";
+  /**
+   * What the filter does, for a reader the label does not tell enough -- already in their language.
+   *
+   * Carried the way every Control carries a description: the information glyph after a label that is
+   * shown, the hover text of the Control itself where `labelPlacement` is `none`.
+   */
+  description?: string;
 };
 
 export type PhiTableFilterDefinition = PhiTableFilterCommon & (

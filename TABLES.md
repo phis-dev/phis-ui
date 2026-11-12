@@ -193,6 +193,9 @@ For `self-contained`, Table and Tree share one Collection Header contract. Its f
 - the optional title is strong; a configured description renders only as the `(i)` tooltip immediately
   beside that title and never as a persistent description row;
 - a description without a title renders no isolated information icon;
+- a filter may carry its own `description`, shown the way every Phi Control shows one: the `(i)` tooltip
+  after the filter's label where the label is shown, the hover text of the Control itself where
+  `labelPlacement` is `none`. It never becomes a persistent text row beside the filter;
 - when the title is absent, the filter/query zone starts at the left edge;
 - a binding Control may omit its visible `label` when the surrounding collection context already names
   the value; omission removes the label region and does not reserve an empty placeholder;

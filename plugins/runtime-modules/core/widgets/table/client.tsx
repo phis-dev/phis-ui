@@ -5,7 +5,7 @@ import { PHI_TABLE_WIDGET_DEFAULT_LABELS } from "../../../../../components/widge
 import { formatPhiTableWidgetLabel } from "../../../../../components/widgets/label-types/table";
 import { PhiNameControl } from "../../../../../components/controls/phi-name-control";
 import { PhiDescriptionHint } from "../../../../../components/controls/phi-description-tooltip-icon";
-import { Fragment, useCallback, useEffect, useEffectEvent, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { PhiMultiSelectControl } from "../../../../../components/controls/phi-multi-select-control";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
@@ -973,15 +973,20 @@ export function PhiTableWidgetClient({
             }}
           />
         );
+        // The description goes where every Control's goes: behind the glyph after a shown label, and
+        // as the Control's own hover text where the label is dropped.
         if (filter.labelPlacement === "none") {
-          return <Fragment key={filter.key}>{control}</Fragment>;
+          return <PhiLabeledControl key={filter.key} description={filter.description}>{control}</PhiLabeledControl>;
         }
         if (filter.labelPlacement === "inline") {
-          return <PhiLabeledControl key={filter.key} label={filter.label}>{control}</PhiLabeledControl>;
+          return <PhiLabeledControl key={filter.key} label={filter.label} description={filter.description}>{control}</PhiLabeledControl>;
         }
         return (
           <PhiFlexControl key={filter.key} vertical gap="small">
-            <PhiTypographyControl type="secondary">{filter.label}</PhiTypographyControl>
+            <PhiFlexControl align="center" gap={token.paddingXXS}>
+              <PhiTypographyControl type="secondary">{filter.label}</PhiTypographyControl>
+              {filter.description ? <PhiDescriptionHint description={filter.description} /> : null}
+            </PhiFlexControl>
             {control}
           </PhiFlexControl>
         );
@@ -1018,7 +1023,7 @@ export function PhiTableWidgetClient({
           onActivate={() => activateAction(action, undefined, selectedRowIdentities)} />;
       })}
       {hasQueryTools && features.tools?.reset !== false ? (
-        <PhiButtonControl icon={<PhiIcon name="clear-outlined" size="inherit" />} ariaLabel={labels.reset} tooltip={labels.reset} size={resolvedControlSize} onClick={resetQuery} />
+        <PhiButtonControl icon={<PhiIcon name="rollback-outlined" size="inherit" />} ariaLabel={labels.reset} tooltip={labels.reset} size={resolvedControlSize} onClick={resetQuery} />
       ) : null}
       {features.tools?.reload ? (
         <PhiButtonControl icon={<PhiIcon name="reload" size="inherit" />} ariaLabel={labels.reload} tooltip={labels.reload} size={resolvedControlSize} onClick={reload} />

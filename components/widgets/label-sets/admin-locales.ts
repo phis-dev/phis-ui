@@ -9,7 +9,6 @@ const PHI_ADMIN_LOCALES_WIDGET_LABEL_SET = definePhiLabelSet({
   labels: {
     title: "Locales",
     description: definePhiMessageLabel("Manage the current site's available languages and site translations."),
-    source_locale_label: "Source language",
     default_locale_label: "Default language",
     available_locales_label: "Available languages",
     save_locales_label: "Save languages",
@@ -59,7 +58,6 @@ export async function getPhiAdminLocalesWidgetLabels(options: PhiGlobalTranslato
   return {
     title: labels.title,
     description: labels.description,
-    sourceLocaleLabel: labels.source_locale_label,
     defaultLocaleLabel: labels.default_locale_label,
     availableLocalesLabel: labels.available_locales_label,
     saveLocalesLabel: labels.save_locales_label,

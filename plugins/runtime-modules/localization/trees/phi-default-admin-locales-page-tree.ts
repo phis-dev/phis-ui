@@ -35,7 +35,6 @@ export const SYNTHETIC_ADMIN_LOCALES_WIDGET_IDS = createPhiPresetCmsInstanceIdMa
 }, [
   "widgetLocales",
   "widgetSiteLocalesForm",
-  "widgetSourceLocale",
 ]);
 
 export async function buildPhiDefaultAdminLocalesPageTree({
@@ -55,8 +54,11 @@ export async function buildPhiDefaultAdminLocalesPageTree({
 
   const nodes = createPhiCmsPresetNodes(page);
   /*
-   * What every site translation starts from. Shown and not edited: a Site's source language is fixed
-   * when the Site is created, and the Site config carries it, so no request is needed to name it.
+   * What every site translation starts from, as the Table's heading: the list is the place the source
+   * language matters, and a heading saying "Site translations" on a page called Locales told nothing.
+   * Under the column's own word, "Source", so the heading and the column name the same thing.
+   * Shown and not edited -- a Site's source language is fixed when the Site is created, and the Site
+   * config carries it, so no request is needed to name it.
    */
   const sourceLocale = runtime.site.availableLocales.find((option) => option.code === runtime.site.sourceLocale);
   const sourceLocaleText = sourceLocale ? `${sourceLocale.label} (${sourceLocale.code})` : runtime.site.sourceLocale;
@@ -89,25 +91,10 @@ export async function buildPhiDefaultAdminLocalesPageTree({
     ],
     contentWidgets: [
       nodes.widget({
-        id: SYNTHETIC_ADMIN_LOCALES_WIDGET_IDS.widgetSourceLocale,
-        parentLayoutNodeId: SYNTHETIC_ADMIN_LOCALES_LAYOUT_IDS.layoutGrid,
-        typeKey: "input",
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-        sortOrder: 0,
-        label: "site source locale",
-        config: {
-          text: sourceLocaleText,
-          label: widgetLabels.sourceLocaleLabel,
-          readOnly: true,
-          allowClear: false,
-          controlSize: "small",
-        },
-      }),
-      nodes.widget({
         id: SYNTHETIC_ADMIN_LOCALES_WIDGET_IDS.widgetSiteLocalesForm,
         parentLayoutNodeId: SYNTHETIC_ADMIN_LOCALES_LAYOUT_IDS.layoutGrid,
         typeKey: "form",
-        slotIndex: 1,
+        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
         label: "site locale settings form",
         config: {
@@ -158,7 +145,7 @@ export async function buildPhiDefaultAdminLocalesPageTree({
         id: SYNTHETIC_ADMIN_LOCALES_WIDGET_IDS.widgetLocales,
         parentLayoutNodeId: SYNTHETIC_ADMIN_LOCALES_LAYOUT_IDS.layoutGrid,
         typeKey: "table",
-        slotIndex: 2,
+        slotIndex: 1,
         label: labels.widgetLabel,
         config: {
           source: {
@@ -166,8 +153,7 @@ export async function buildPhiDefaultAdminLocalesPageTree({
             resourceKey: "siteTranslations",
           },
           presentation: {
-            title: widgetLabels.translationsTitle,
-            description: widgetLabels.translationsDescription,
+            title: `${widgetLabels.columns.source}: ${sourceLocaleText}`,
             borders: true,
             layout: { mode: "auto", overflowX: "auto" },
             columns: [
@@ -212,6 +198,8 @@ export async function buildPhiDefaultAdminLocalesPageTree({
                * it reads as the question the empty filter asks and goes away once one is chosen.
                */
               labelPlacement: "none",
+              // What the list under it is, said by the choice that decides it rather than under the heading.
+              description: widgetLabels.translationsDescription,
               optionsProvider: { providerKey: PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_KEYS.adminSiteLocales },
             }],
             pagination: { enabled: true, pageSize: 25, pageSizes: [25, 50, 100] },
@@ -225,13 +213,14 @@ export async function buildPhiDefaultAdminLocalesPageTree({
               mode: "cell",
               disabledWhen: { source: "row", valuePath: "protected", operator: "truthy" },
             },
-            tools: { mode: "self-contained", reload: true },
+            // No reset: one language choice and a search box are cleared faster by hand than found again.
+            tools: { mode: "self-contained", reload: true, reset: false },
             actions: {
               bulk: [{
                 key: "deleteSelected",
                 label: widgetLabels.deleteSelectedLabel,
                 icon: "antd:delete",
-                display: "icon-label",
+                display: "icon",
                 mode: "danger",
                 execution: "provider",
                 confirm: {

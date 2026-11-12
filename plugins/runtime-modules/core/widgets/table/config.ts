@@ -328,6 +328,7 @@ function readFilter(reader: PhiConfigReader): PhiTableFilterDefinition {
   const key = requireString(reader, "key");
   const label = requireString(reader, "label");
   const labelPlacement = reader.oneOf("labelPlacement", ["inline", "none"] as const);
+  const description = reader.string("description");
   const type = reader.oneOf("type", ["text", "select", "boolean", "dateRange"] as const) ?? "text";
   if (type === "select") {
     return {
@@ -335,6 +336,7 @@ function readFilter(reader: PhiConfigReader): PhiTableFilterDefinition {
       type,
       label,
       labelPlacement,
+      description,
       multiple: reader.boolean("multiple"),
       options: reader.list("options", (optionReader) => ({
         label: requireString(optionReader, "label"),
@@ -362,6 +364,7 @@ function readFilter(reader: PhiConfigReader): PhiTableFilterDefinition {
       control: reader.oneOf("control", ["switch"] as const),
       label,
       labelPlacement,
+      description,
       defaultValue: reader.boolean("defaultValue"),
     };
   }
@@ -371,6 +374,7 @@ function readFilter(reader: PhiConfigReader): PhiTableFilterDefinition {
       type,
       label,
       labelPlacement,
+      description,
       startKey: requireString(reader, "startKey"),
       endKey: requireString(reader, "endKey"),
       startPlaceholder: reader.string("startPlaceholder"),
@@ -386,6 +390,7 @@ function readFilter(reader: PhiConfigReader): PhiTableFilterDefinition {
     type,
     label,
     labelPlacement,
+    description,
     placeholder: reader.string("placeholder"),
     defaultValue: reader.string("defaultValue"),
   };
@@ -829,6 +834,7 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
             { value: "dateRange", label: "Date Range" },
           ],
         },
+        { key: "description", type: "string", label: "Description" },
         { key: "placeholder", type: "string", label: "Placeholder", visibleWhen: { field: "type", equals: "text" } },
         { key: "defaultValue", type: "string", label: "Default", visibleWhen: { field: "type", equals: "text" } },
         { key: "multiple", type: "boolean", label: "Multiple", visibleWhen: { field: "type", equals: "select" } },
