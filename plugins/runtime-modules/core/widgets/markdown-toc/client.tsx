@@ -112,7 +112,12 @@ export function PhiMarkdownTocWidgetClient({ config }: PhiMarkdownTocWidgetClien
     >
       <div style={{ display: "grid", gap: token.paddingSM, width: "100%", minWidth: 0 }}>
         {showTitle ? (
-          <PhiTypographyControl strong style={{ color: token.colorTextHeading }}>
+          // Indented as far as the entries' text: the Anchor's rail (`lineWidthBold`) and its link inset
+          // (`linkPaddingInlineStart`, which is `padding`).
+          <PhiTypographyControl
+            strong
+            style={{ color: token.colorTextHeading, paddingInlineStart: token.lineWidthBold + token.padding }}
+          >
             {title}
           </PhiTypographyControl>
         ) : null}

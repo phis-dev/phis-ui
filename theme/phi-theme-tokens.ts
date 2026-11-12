@@ -123,6 +123,8 @@ export const PHI_THEME_TOKEN_KEYS = [
   "borderRadiusLG",
   "borderRadiusOuter",
   "lineWidth",
+  // The bold rule: an Anchor's rail and the like. Content set beside such a rail lines up with it.
+  "lineWidthBold",
   "lineType",
   "boxShadow",
   "boxShadowSecondary",
