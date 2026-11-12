@@ -784,6 +784,11 @@
     position: absolute !important;
     width: 1px !important;
     height: 1px !important;
+    /* The pill's own `min-width` outweighs the width above; left standing, it kept the box 56px wide and
+       pushed it past the screen's edge, so every page scrolled sideways by a few pixels. */
+    min-width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
     overflow: hidden !important;
     clip-path: inset(50%) !important;
     white-space: nowrap !important;
