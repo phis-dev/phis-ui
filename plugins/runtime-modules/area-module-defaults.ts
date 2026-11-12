@@ -25,10 +25,20 @@ const PHI_REVISIONS_RUNTIME_MODULE_ID = firstPartyModuleId("revisions");
  * entry leading nowhere. Public has neither.
  */
 const PHI_THREADS_RUNTIME_MODULE_ID = firstPartyModuleId("threads");
+/*
+ * Tours explain the working Areas, so every Area but Public starts with the Module that runs them: the
+ * Pages carry their Tours either way, and without it their buttons stay hidden. Public has no Tour to give.
+ */
+const PHI_TOUR_RUNTIME_MODULE_ID = firstPartyModuleId("tour");
 
 export function createPhiDefaultAreaRuntimeModuleIds(
   area: PhiBuilderAreaKey,
 ): PhiRuntimeModuleId[] {
+  const moduleIds = listAreaRuntimeModuleIds(area);
+  return area === "public" ? moduleIds : [...moduleIds, PHI_TOUR_RUNTIME_MODULE_ID];
+}
+
+function listAreaRuntimeModuleIds(area: PhiBuilderAreaKey): PhiRuntimeModuleId[] {
   if (area === "public") {
     return [PHI_AUTH_RUNTIME_MODULE_ID];
   }
