@@ -62,6 +62,8 @@ type PhiCmsRegionContainerClientProps = {
   pageScope?: PhiCmsResolvedRegionPageScope | null;
   /** The Site's locales, handed over only where the Region has a Page scope to ask. */
   availableLocales?: string[];
+  /** Whether the Region's top Layout paints a ground of its own (`phiCmsRegionRootLayoutPaintsGround`). */
+  rootPaintsGround?: boolean;
 };
 
 /**
@@ -83,6 +85,7 @@ export function PhiCmsRegionContainerClient({
   routeScope,
   pageScope: resolvedPageScope = null,
   availableLocales,
+  rootPaintsGround = false,
 }: PhiCmsRegionContainerClientProps) {
   const { mode: liveThemeMode, token } = usePhiConfig();
   const receiver = createPhiRenderableBlockReceiver("region", regionKey);
@@ -200,6 +203,7 @@ export function PhiCmsRegionContainerClient({
     regionType,
     className,
     style,
+    rootPaintsGround,
   });
   if (shell == null) {
     return null;

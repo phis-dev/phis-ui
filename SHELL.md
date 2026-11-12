@@ -216,6 +216,8 @@ The site-owned Shell Chrome Overlay is its counterpart in front of the scrolling
 - is not painted by a Region that authored any chrome of its own. Every carrier counts: the Background of
   the Region's Surface, the ground the Shell record sets, a glass pane the Region's Surface asks for, and a
   Surface `tone` other than `inherit`, whose ground the Region then paints (LAYOUTING.md "Surface tone").
+  A Region whose top Layout paints a ground counts as well, and its family's pane then steps aside
+  ("A band with a ground of its own" below).
   Such a Region paints over the Theme, which is how a Site gives one Region its own chrome. A Background
   whose Base is `theme` states the overlay instead: an untoned Chrome Region then takes it over any Shell
   record ground, and a toned one paints the overlay of its tone's mode itself (LAYOUTING.md "The Theme's
@@ -263,15 +265,34 @@ grid:
 - the embedded topology, where the Header is an L: `header_bottom` sits beside the Sider, and a grid item
   covers a rectangle, so it takes two panes with the seam on the row the Sider starts in
 
-A family with a toned band (a Surface `tone` other than `inherit`) is the one case a pane gives way. That
-band paints its own ground in its tone's mode -- the tone's container ground, a stated Background, or the
-Overlay of the tone's mode -- while the pane keeps the page's mode, so a ground that lets anything through
-showed the page-mode glass under the tone's. A pane cannot be cut around one band without knowing its
-height, so the family's pane stops painting (`styles/shell.css` sets its `--phi-shell-chrome-*` to the
-neutral values on the pane itself) and the family's untoned bands that carry the `data-phi-shell-chrome`
-marker paint the overlay themselves, band by band, as they do without panes. The pane's geometry, Shadow
-and stacking stay. In the embedded topology the Header's two panes decide separately. A family without a
-toned band is drawn exactly as above.
+### A band with a ground of its own
+
+A family with a band that paints a ground of its own is the one case a pane gives way. A band paints one
+when
+
+- its Region states a Surface `tone` other than `inherit`,
+- its Region's Surface carries a Background that paints something (`phiBackgroundWidgetConfigPaintsGround`),
+  other than the Theme's Overlay taken as the Shell's (`base.kind: "theme"` on an untoned Region), or
+- the Layout at the top of the Region paints one: a tone, or a Background that paints something in either
+  mode. Only the top Layout counts -- a Card or a Button somewhere inside the band is content, not the
+  band's chrome. This is the floating Header bar: a transparent Region holding a narrower box with its
+  own glass.
+
+Nothing is switched for this; the ground is the statement. The Region carries
+`data-phi-shell-own-ground` -- `band` where the Region paints the ground, `box` where its top Layout does
+-- and paints no Chrome Overlay itself. The pane would otherwise paint the frame under a ground that is
+already there: the page-mode glass under a tone's, a second frosting under a glass band, a full-width
+strip behind a floating bar. A pane cannot be cut around one band without knowing its height, so the
+family's pane stops painting (`styles/shell.css` sets its `--phi-shell-chrome-*` to the neutral values on
+the pane itself) and the family's other bands that carry the `data-phi-shell-chrome` marker paint the
+overlay themselves, band by band, as they do without panes. The pane's geometry and stacking stay. Its
+Shadow stays for a `band`, whose edge is the frame's; a `box` takes it away, because the frame's edge
+would run the full width behind a bar that is narrower and wears its own. In the embedded topology the
+Header's two panes decide separately. A family without such a band is drawn exactly as above.
+
+Because the rule reads the Region config as rendered, a Page that overrides a Header band with a ground of
+its own sets the frame aside on that Page only, and an Area whose Header is a floating bar -- typically
+Public -- keeps the Theme's frame in every other Area.
 
 The Page is isolated so that nothing inside it can stack over the frame, whatever a Page or a Builder
 canvas puts there.

@@ -469,38 +469,61 @@
 }
 
 /*
- * A toned band takes no paint from its family's pane (LAYOUTING.md "Surface tone").
+ * A band with a ground of its own takes no paint from its family's pane (SHELL.md "A band with a ground
+ * of its own").
  *
- * A toned Chrome Region paints its own ground -- the tone's container ground, a stated Background, or
- * the Overlay of its tone's mode -- and never carries the marker. The pane behind it keeps the page's
- * mode, so where that ground lets anything through, the page-mode glass showed under the tone's. The
- * pane cannot be cut around one band without knowing its height, so it stops painting for the whole
- * family and the family's marker bands paint the Overlay themselves, as they do without panes. Its
- * geometry and Shadow stay: the frame's edge is where it was, and the Header still stands over the
- * Sider. The pane's paint is inline and reads these properties on the pane itself, so they are set
- * there. Untoned families match nothing here.
+ * The band carries `data-phi-shell-own-ground` when it paints its own ground: a tone (LAYOUTING.md
+ * "Surface tone"), an authored Background other than the Theme's Overlay taken as the Shell's, or a top
+ * Layout that paints one -- the floating Header bar. Such a band never carries the marker. The pane
+ * behind it would paint the frame under a ground that is already there: a second frosting under a
+ * glass band, the page-mode glass under a tone's, a full-width strip behind a floating bar. The pane
+ * cannot be cut around one band without knowing its height, so it stops painting for the whole family
+ * and the family's marker bands paint the Overlay themselves, as they do without panes. Its geometry and
+ * Shadow stay: the frame's edge is where it was, and the Header still stands over the Sider. The pane's
+ * paint is inline and reads these properties on the pane itself, so they are set there. Families
+ * without such a band match nothing here.
  */
-.shell-sider-full:has(> :is([data-phi-region-key="header_top"], [data-phi-region-key="header_main"], [data-phi-region-key="header_bottom"]):is(.phi-tone-light, .phi-tone-dark, .phi-tone-inverse)) > .phi-shell-chrome-pane--header,
-.shell-sider-embedded:has(> :is([data-phi-region-key="header_top"], [data-phi-region-key="header_main"]):is(.phi-tone-light, .phi-tone-dark, .phi-tone-inverse)) > .phi-shell-chrome-pane--header,
-.shell-sider-embedded:has(> [data-phi-region-key="header_bottom"]:is(.phi-tone-light, .phi-tone-dark, .phi-tone-inverse)) > .phi-shell-chrome-pane--header-bottom,
-[data-phi-shell-chrome-panes="true"]:has(> [data-phi-region-key="sider_left"]:is(.phi-tone-light, .phi-tone-dark, .phi-tone-inverse)) > .phi-shell-chrome-pane--sider,
-[data-phi-shell-chrome-panes="true"]:has(> [data-phi-region-key="sider_right"]:is(.phi-tone-light, .phi-tone-dark, .phi-tone-inverse)) > .phi-shell-chrome-pane--sider-right,
-[data-phi-shell-chrome-panes="true"]:has(> :is([data-phi-region-key="footer_top"], [data-phi-region-key="footer_main"], [data-phi-region-key="footer_bottom"]):is(.phi-tone-light, .phi-tone-dark, .phi-tone-inverse)) > .phi-shell-chrome-pane--footer {
+.shell-sider-full:has(> :is([data-phi-region-key="header_top"], [data-phi-region-key="header_main"], [data-phi-region-key="header_bottom"])[data-phi-shell-own-ground]) > .phi-shell-chrome-pane--header,
+.shell-sider-embedded:has(> :is([data-phi-region-key="header_top"], [data-phi-region-key="header_main"])[data-phi-shell-own-ground]) > .phi-shell-chrome-pane--header,
+.shell-sider-embedded:has(> [data-phi-region-key="header_bottom"][data-phi-shell-own-ground]) > .phi-shell-chrome-pane--header-bottom,
+[data-phi-shell-chrome-panes="true"]:has(> [data-phi-region-key="sider_left"][data-phi-shell-own-ground]) > .phi-shell-chrome-pane--sider,
+[data-phi-shell-chrome-panes="true"]:has(> [data-phi-region-key="sider_right"][data-phi-shell-own-ground]) > .phi-shell-chrome-pane--sider-right,
+[data-phi-shell-chrome-panes="true"]:has(> :is([data-phi-region-key="footer_top"], [data-phi-region-key="footer_main"], [data-phi-region-key="footer_bottom"])[data-phi-shell-own-ground]) > .phi-shell-chrome-pane--footer {
   --phi-shell-chrome-image: none;
   --phi-shell-chrome-color: transparent;
   --phi-shell-chrome-filter: none;
 }
 
-.shell-sider-full:has(> :is([data-phi-region-key="header_top"], [data-phi-region-key="header_main"], [data-phi-region-key="header_bottom"]):is(.phi-tone-light, .phi-tone-dark, .phi-tone-inverse))
+.shell-sider-full:has(> :is([data-phi-region-key="header_top"], [data-phi-region-key="header_main"], [data-phi-region-key="header_bottom"])[data-phi-shell-own-ground])
   > .phi-cms-region-shell[data-phi-shell-chrome="true"]:is([data-phi-region-key="header_top"], [data-phi-region-key="header_main"], [data-phi-region-key="header_bottom"]),
-.shell-sider-embedded:has(> :is([data-phi-region-key="header_top"], [data-phi-region-key="header_main"]):is(.phi-tone-light, .phi-tone-dark, .phi-tone-inverse))
+.shell-sider-embedded:has(> :is([data-phi-region-key="header_top"], [data-phi-region-key="header_main"])[data-phi-shell-own-ground])
   > .phi-cms-region-shell[data-phi-shell-chrome="true"]:is([data-phi-region-key="header_top"], [data-phi-region-key="header_main"]),
-[data-phi-shell-chrome-panes="true"]:has(> :is([data-phi-region-key="footer_top"], [data-phi-region-key="footer_main"], [data-phi-region-key="footer_bottom"]):is(.phi-tone-light, .phi-tone-dark, .phi-tone-inverse))
+[data-phi-shell-chrome-panes="true"]:has(> :is([data-phi-region-key="footer_top"], [data-phi-region-key="footer_main"], [data-phi-region-key="footer_bottom"])[data-phi-shell-own-ground])
   > .phi-cms-region-shell[data-phi-shell-chrome="true"]:is([data-phi-region-key="footer_top"], [data-phi-region-key="footer_main"], [data-phi-region-key="footer_bottom"]) {
   --phi-region-chrome-image: var(--phi-shell-chrome-image, none);
   --phi-region-chrome-color: var(--phi-shell-chrome-color, transparent);
   --phi-region-chrome-filter: var(--phi-shell-chrome-filter, none);
   --phi-region-chrome-attachment: fixed;
+}
+
+/*
+ * A bar inside the band (`box`: the band's top Layout paints the ground, not the band) takes the pane's
+ * Shadow away as well. The Shadow marks the frame's edge across the full width, and the frame has stepped
+ * aside for a bar that is narrower and wears its own edge. A tone or a band's own Background keeps it.
+ */
+.shell-sider-full:has(> :is([data-phi-region-key="header_top"], [data-phi-region-key="header_main"], [data-phi-region-key="header_bottom"])[data-phi-shell-own-ground="box"]) > .phi-shell-chrome-pane--header,
+.shell-sider-embedded:has(> :is([data-phi-region-key="header_top"], [data-phi-region-key="header_main"])[data-phi-shell-own-ground="box"]) > .phi-shell-chrome-pane--header,
+.shell-sider-embedded:has(> [data-phi-region-key="header_bottom"][data-phi-shell-own-ground="box"]) > .phi-shell-chrome-pane--header-bottom {
+  --phi-shell-chrome-shadow-header: none;
+}
+[data-phi-shell-chrome-panes="true"]:has(> [data-phi-region-key="sider_left"][data-phi-shell-own-ground="box"]) > .phi-shell-chrome-pane--sider {
+  --phi-shell-chrome-shadow-sider-left: none;
+}
+[data-phi-shell-chrome-panes="true"]:has(> [data-phi-region-key="sider_right"][data-phi-shell-own-ground="box"]) > .phi-shell-chrome-pane--sider-right {
+  --phi-shell-chrome-shadow-sider-right: none;
+}
+[data-phi-shell-chrome-panes="true"]:has(> :is([data-phi-region-key="footer_top"], [data-phi-region-key="footer_main"], [data-phi-region-key="footer_bottom"])[data-phi-shell-own-ground="box"]) > .phi-shell-chrome-pane--footer {
+  --phi-shell-chrome-shadow-footer: none;
 }
 
 /* ---------------------------------------------------------------------------------------------

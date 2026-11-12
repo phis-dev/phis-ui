@@ -30,6 +30,7 @@ import {
 } from "../../plugins/runtime/slot-size-policy";
 import { PhiSlotChildFrame } from "../../plugins/runtime/phi-slot-child-frame";
 import { PhiCmsRegionContainer } from "../regions/phi-cms-region-container";
+import { phiCmsRegionRootLayoutPaintsGround } from "../regions/phi-cms-region-shell";
 import { PhiCmsRenderErrorBoundary } from "./phi-cms-render-error-boundary";
 import { PhiCmsRenderDiagnostic } from "./phi-cms-render-diagnostic";
 import type { PhiResolvedRuntimeRenderRegistry } from "../../plugins/runtime-modules/contracts";
@@ -1199,6 +1200,7 @@ export async function PhiCmsLayoutRenderer({
         )}
         shellTheme={runtime.site.theme?.shell}
         previewMode={root?.config.renderMode === "preview"}
+        rootPaintsGround={phiCmsRegionRootLayoutPaintsGround(root?.config)}
         runtime={runtime}
         signalParticipant={signalParticipants.has(createPhiSignalAddress("region", regionKey))}
       >

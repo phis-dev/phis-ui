@@ -2,7 +2,12 @@ import { PhiCmsFlags } from "../../constants/phi-cms";
 import { describe, expect, it } from "vitest";
 
 import { PHI_SURFACE_TONE_GROUND } from "../../helpers/surface-style";
-import { phiCmsRegionSiderSticks, resolvePhiCmsRegionShell, type PhiCmsRegionShellInput } from "./phi-cms-region-shell";
+import {
+  phiCmsRegionRootLayoutPaintsGround,
+  phiCmsRegionSiderSticks,
+  resolvePhiCmsRegionShell,
+  type PhiCmsRegionShellInput,
+} from "./phi-cms-region-shell";
 
 const shellTheme = {
   header: {
@@ -282,5 +287,47 @@ describe("region shell phone drawer", () => {
   it("leaves sider_right and a sider_left with MobileColumn in their column", () => {
     expect(resolve({ regionKey: "sider_right", config: {} }).attributes["data-phi-sider-mobile"]).toBeUndefined();
     expect(resolve({ regionKey: "sider_left", config: { flags: PhiCmsFlags.MobileColumn } }).attributes["data-phi-sider-mobile"]).toBeUndefined();
+  });
+});
+
+/**
+ * A band with a ground of its own (SHELL.md): the family's pane steps aside for it. `band` where the Region
+ * paints the ground, `box` where its top Layout does -- the floating Header bar, which also takes the
+ * pane's Shadow away.
+ */
+describe("region shell own ground", () => {
+  it("marks nothing on a bare band, which takes the Chrome Overlay", () => {
+    const shell = resolve({ regionKey: "header_main" });
+    expect(shell.attributes["data-phi-shell-own-ground"]).toBeUndefined();
+    expect(shell.attributes["data-phi-shell-chrome"]).toBe("true");
+  });
+
+  it("marks a band whose Region paints a ground, or a tone", () => {
+    const painted = resolve({ regionKey: "header_main", config: { surface: { background: { base: { kind: "color", color: "#202020" } } } } });
+    const toned = resolve({ regionKey: "footer_main", config: { surface: { tone: "dark" } } });
+    expect(painted.attributes["data-phi-shell-own-ground"]).toBe("band");
+    expect(toned.attributes["data-phi-shell-own-ground"]).toBe("band");
+  });
+
+  it("does not count the Theme's Overlay taken as the Shell's", () => {
+    const shell = resolve({ regionKey: "header_main", config: { surface: { background: { base: { kind: "theme" } } } } });
+    expect(shell.attributes["data-phi-shell-chrome"]).toBe("true");
+    expect(shell.attributes["data-phi-shell-own-ground"]).toBeUndefined();
+  });
+
+  it("marks a band whose top Layout paints a ground as a box, which paints no overlay itself", () => {
+    const shell = resolve({ regionKey: "header_main", rootPaintsGround: true });
+    expect(shell.attributes["data-phi-shell-own-ground"]).toBe("box");
+    expect(shell.attributes["data-phi-shell-chrome"]).toBeUndefined();
+  });
+
+  it("reads the top Layout's Surface: a painting Background in either mode or a tone, never an empty record", () => {
+    expect(phiCmsRegionRootLayoutPaintsGround(null)).toBe(false);
+    expect(phiCmsRegionRootLayoutPaintsGround({})).toBe(false);
+    expect(phiCmsRegionRootLayoutPaintsGround({ surface: { background: { base: { kind: "none" } } } })).toBe(false);
+    expect(phiCmsRegionRootLayoutPaintsGround({ surface: { background: { base: { kind: "color", color: "rgba(255, 255, 255, 0.45)" }, filter: "glass" } } })).toBe(true);
+    expect(phiCmsRegionRootLayoutPaintsGround({ surface: { backgroundDark: { base: { kind: "color", color: "#101820" } } } })).toBe(true);
+    expect(phiCmsRegionRootLayoutPaintsGround({ surface: { tone: "light" } })).toBe(true);
+    expect(phiCmsRegionRootLayoutPaintsGround({ surface: { tone: "inherit" } })).toBe(false);
   });
 });

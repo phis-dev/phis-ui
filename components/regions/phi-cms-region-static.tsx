@@ -14,6 +14,8 @@ export type PhiCmsRegionStaticProps = {
   style?: CSSProperties;
   regionType?: number;
   previewMode?: boolean;
+  /** Whether the Region's top Layout paints a ground of its own (`phiCmsRegionRootLayoutPaintsGround`). */
+  rootPaintsGround?: boolean;
 };
 
 /**
@@ -30,6 +32,7 @@ export function PhiCmsRegionStatic({
   style,
   regionType,
   previewMode = false,
+  rootPaintsGround = false,
 }: PhiCmsRegionStaticProps) {
   const shell = resolvePhiCmsRegionShell({
     regionKey,
@@ -40,6 +43,7 @@ export function PhiCmsRegionStatic({
     regionType,
     className,
     style,
+    rootPaintsGround,
   });
   if (shell == null) {
     return null;

@@ -1,4 +1,4 @@
-import { resolvePhiSurfaceToneClassName, type PhiSurfaceTone } from "../../types/surface";
+import { readPhiSurface, resolvePhiSurfaceToneClassName, type PhiSurfaceTone } from "../../types/surface";
 import { composePhiModePaint, resolvePhiModeValue } from "../../helpers/mode-paint";
 import type { CSSProperties } from "react";
 
@@ -91,6 +91,7 @@ export type PhiCmsRegionShellAttributes = PhiRenderableBlockEffectsAttributes & 
   "data-phi-region-key": PhiCmsRegionKey;
   "data-phi-region-type": number | undefined;
   "data-phi-shell-chrome": "true" | undefined;
+  "data-phi-shell-own-ground": "band" | "box" | undefined;
   "data-phi-renderable-block": "true";
   "data-phi-signal-receiver": string;
   "data-phi-block-visibility": string;
@@ -117,6 +118,13 @@ export type PhiCmsRegionShellInput = {
   regionType?: number;
   className?: string;
   style?: CSSProperties;
+  /**
+   * Whether the Layout at the top of this Region paints a ground of its own
+   * (`phiCmsRegionRootLayoutPaintsGround`). Such a band brings its own chrome -- a floating Header bar is
+   * the case it was made for -- so it neither paints the Theme's Chrome Overlay itself nor lets its
+   * family's pane paint one behind it (SHELL.md "A band with a ground of its own").
+   */
+  rootPaintsGround?: boolean;
 };
 
 export type PhiCmsRegionShell = {
@@ -283,6 +291,24 @@ function resolveRegionBorderLine(surface: PhiSurface | null | undefined): string
  * The Region's shell, or null where the Region renders nothing: hidden, or collapsed in a preview.
  * `header_bottom` is exempt from the preview collapse because the Page, not the Area, owns its content.
  */
+/**
+ * Whether a Region's top Layout paints a ground of its own: a tone, or a Background that paints something
+ * in either mode. Only the top Layout counts -- a Card or a Button somewhere inside a Header is content,
+ * not the band's chrome. "Paints" is `phiBackgroundWidgetConfigPaintsGround`'s answer, so the empty
+ * Background record the Builder stores on every box it has opened is no ground.
+ */
+export function phiCmsRegionRootLayoutPaintsGround(rootConfig: unknown): boolean {
+  const surface = readPhiSurface(
+    rootConfig != null && typeof rootConfig === "object" ? (rootConfig as { surface?: unknown }).surface : null,
+  );
+  if (!surface) {
+    return false;
+  }
+  return resolvePhiSurfaceToneClassName(surface.tone) != null
+    || phiBackgroundWidgetConfigPaintsGround(surface.background ?? null)
+    || phiBackgroundWidgetConfigPaintsGround(surface.backgroundDark ?? null);
+}
+
 export function resolvePhiCmsRegionShell({
   regionKey,
   config,
@@ -293,6 +319,7 @@ export function resolvePhiCmsRegionShell({
   regionType,
   className,
   style,
+  rootPaintsGround = false,
 }: PhiCmsRegionShellInput): PhiCmsRegionShell | null {
   const visibility = config.visibility ?? "visible";
   const enabled = config.enabled ?? true;
@@ -464,7 +491,9 @@ export function resolvePhiCmsRegionShell({
    * the stored one: the Builder persists an empty Background record for every Region an author has ever
    * opened, and the raw value is never null for those.
    */
-  const usesShellChromeOverlay = themeGround
+  const usesShellChromeOverlay = rootPaintsGround
+    ? false
+    : themeGround
     ? themeGroundIsShellChrome
     : !toneGround && phiRegionUsesShellChromeOverlay({
       regionKey,
@@ -623,6 +652,18 @@ export function resolvePhiCmsRegionShell({
       "data-phi-region-key": regionKey,
       "data-phi-region-type": regionType,
       "data-phi-shell-chrome": usesShellChromeOverlay ? "true" : undefined,
+      /*
+       * A band with a ground of its own (SHELL.md): `band` where the Region paints it -- a tone, or an
+       * authored Background other than the Theme's Overlay taken as the Shell's -- and `box` where its top
+       * Layout does, which is a bar inside the band rather than the band. `shell.css` lets the family's
+       * pane step aside for either, and for a `box` takes the pane's Shadow away too: the frame's edge
+       * would run the full width behind a bar that is narrower.
+       */
+      "data-phi-shell-own-ground": rootPaintsGround
+        ? "box"
+        : resolvePhiSurfaceToneClassName(surface?.tone) != null || (backgroundConfig != null && !themeGroundIsShellChrome)
+          ? "band"
+          : undefined,
       "data-phi-renderable-block": "true",
       "data-phi-signal-receiver": createPhiSignalAddress("region", regionKey),
       "data-phi-block-visibility": visibility,
