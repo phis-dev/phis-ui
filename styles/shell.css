@@ -795,3 +795,114 @@
     transition: none !important;
   }
 }
+
+/*
+ * The Search Box (SEARCH.md): the input, a magnifier alone that opens into one (`icon-only`), or `auto` -- both drawn, and the
+ * Shell's phone decides which shows, as it does for the Header Navigation's menu button above.
+ */
+.phi-search-box {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.phi-search-box__field,
+.phi-search-box__form {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.phi-search-box--input,
+.phi-search-box--auto {
+  width: 100%;
+}
+
+.phi-search-box__magnifier {
+  display: inline-flex;
+  align-items: center;
+}
+
+.phi-search-box--auto > .phi-search-box__magnifier,
+.phi-search-box--auto > .phi-search-box__expand {
+  display: none;
+}
+
+/*
+ * The magnifier keeps its own width. The Widget fills its slot's inline size as a field does; a magnifier
+ * that filled it would push the Widgets beside it away, so the innermost slot around it hugs it instead.
+ */
+.phi-slot-child:has(.phi-search-box--icon-only):not(:has(.phi-slot-child)) {
+  width: auto !important;
+  flex: 0 0 auto !important;
+  min-width: var(--ant-control-height) !important;
+}
+
+/* Opened where it stands: the field grows out of the magnifier. */
+.phi-search-box__expand {
+  display: block;
+  width: 15rem;
+  max-width: 100%;
+  animation: phi-search-box-expand 180ms ease-out;
+}
+
+@keyframes phi-search-box-expand {
+  from {
+    width: var(--ant-control-height);
+    opacity: 0.4;
+  }
+}
+
+/*
+ * Opened on a phone: a row over the whole band, the field and its close mark, on the page's own ground
+ * so the band's widgets do not show through it, light or dark.
+ */
+.phi-search-box__row {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: var(--ant-padding-xs, 8px);
+  padding-inline: var(--ant-padding, 16px);
+  background: var(--ant-color-bg-container);
+  animation: phi-search-box-row 160ms ease-out;
+}
+
+@keyframes phi-search-box-row {
+  from {
+    opacity: 0;
+  }
+}
+
+@container phi-render-viewport (width < 768px) {
+  .phi-search-box--auto {
+    width: auto;
+  }
+
+  .phi-search-box--auto > .phi-search-box__field {
+    display: none;
+  }
+
+  .phi-search-box--auto > .phi-search-box__magnifier {
+    display: inline-flex;
+  }
+
+  .phi-search-box--auto > .phi-search-box__expand {
+    display: block;
+  }
+
+  .phi-slot-child:has(.phi-search-box--auto):not(:has(.phi-slot-child)) {
+    width: auto !important;
+    flex: 0 0 auto !important;
+    min-width: var(--ant-control-height) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phi-search-box__expand,
+  .phi-search-box__row {
+    animation: none;
+  }
+}

@@ -2,6 +2,9 @@ import "server-only";
 
 import { createHash } from "node:crypto";
 
+import { PHI_SHARED_PACKAGE_NAME } from "../constants/package";
+import { createPhiRuntimeModuleId } from "../constants/module-identity";
+
 import { PHI_SEARCH_MAX_DOCUMENTS, type PhiSearchDocument } from "@phis/contracts/search";
 
 import { resolvePhiCmsPageRedirect } from "../components/cms/phi-cms-page-redirect";
@@ -49,6 +52,12 @@ import { joinPhiSearchText } from "./search-text";
  */
 
 const PHI_SEARCH_INDEX_AREAS = ["public", "app"] as const;
+
+/*
+ * The first-party Search Module, named by id as data (MODULES.md, "The dependency rule"): an Area is
+ * indexed only where it is switched on, since only there is anything placed that reads the index.
+ */
+const PHI_SEARCH_RUNTIME_MODULE_ID = createPhiRuntimeModuleId(PHI_SHARED_PACKAGE_NAME, "search");
 type PhiSearchIndexArea = (typeof PHI_SEARCH_INDEX_AREAS)[number];
 
 /** How many Pages are resolved at once; each is a page lookup against the server. */
@@ -225,6 +234,7 @@ async function indexArea({
     preset: areaPreset?.preset ?? null,
     serverCapabilities: anonymous.serverCapabilities,
   });
+  if (!activeModuleIds.has(PHI_SEARCH_RUNTIME_MODULE_ID)) return;
   const candidates = collectPhiSitemapCandidates({
     moduleRoutes: [...routeTable.exactByPath].map(([path, descriptor]) => [path, descriptor] as const),
     publishedPages,

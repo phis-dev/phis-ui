@@ -9,7 +9,7 @@ import { phiRuntime } from "../../../../../server-helpers/phi-runtime";
 import { trBulkForLocale } from "../../../../../server-helpers/translate";
 import type { PhiNoLabels, PhiServerBlockBaseProps } from "../../../../../types";
 import type { PhiResolvedLinkTargets } from "../../../../../types/references";
-import { resolvePhiSearchPageLinkTarget } from "../../../search-page-references";
+import { resolvePhiSearchPageLinkTarget } from "../../page-references";
 import type { PhiSearchBoxWidgetConfig } from "./config";
 
 export type PhiSearchBoxWidgetProps = PhiServerBlockBaseProps<PhiNoLabels, PhiSearchBoxWidgetConfig> & {
@@ -23,7 +23,7 @@ export type PhiSearchBoxWidgetProps = PhiServerBlockBaseProps<PhiNoLabels, PhiSe
  * The search box, resolved on the server: where the form goes, what the box says, what it already holds.
  *
  * The results Page is a reference, resolved as every link is -- through the page's targets where the
- * author picked one, or alone where the box takes the Area's own Page. An Area whose search Page does not
+ * author picked one, or alone where the box takes the Search Module's Page of its Area. An Area whose search Page does not
  * resolve -- a Module switched off, a Page unpublished -- draws no box at all rather than one that
  * leads to "not found".
  *
@@ -59,8 +59,9 @@ export async function PhiSearchBoxWidget({ config, runtime, links, translate = t
         labels,
         config: {
           action: href.href,
-          placeholder: placeholder || labels.placeholder,
+          placeholder,
           ...(config?.controlSize ? { size: config.controlSize } : {}),
+          ...(config?.variant ? { variant: config.variant } : {}),
           initialQuery: runtime.request?.searchParams?.[PHI_SEARCH_QUERY_PARAM] ?? "",
         },
       }}

@@ -188,6 +188,13 @@ export type PhiCmsConfigField =
        * that leads nowhere does not have. Cleared when the target is.
        */
       clearsWhenEmpty?: readonly string[];
+      /**
+       * A Page of the Site and nothing else: no "None" and no address. For a field whose empty answer is
+       * not "no link" but a target of the Widget's own -- a Search Box's results Page -- which
+       * `placeholder` names while nothing is picked.
+       */
+      pagesOnly?: boolean;
+      placeholder?: string;
     })
   | (PhiCmsConfigFieldBase & {
       type: "readonly";

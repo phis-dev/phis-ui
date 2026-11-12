@@ -13,6 +13,7 @@ export const PHI_DEFAULT_PUB_AREA_LAYOUT_NODE_KEYS = [
 export const PHI_DEFAULT_PUB_AREA_WIDGET_NODE_KEYS = [
   "widgetBrand",
   "widgetNav",
+  "widgetSearch",
   "widgetLocale",
   "widgetAccount",
   "widgetSiderRightNav",

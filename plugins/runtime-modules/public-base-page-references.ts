@@ -20,7 +20,6 @@ export const PHI_PUBLIC_BASE_PAGE_PRESET_KEYS = {
   terms: "public-terms-page",
   contact: "public-contact-page",
   unsubscribe: "public-unsubscribe-page",
-  search: "public-search-page",
 } as const;
 
 // Named by id, as data, for the same reason: `public/ids` would bind the door to the Module folder.

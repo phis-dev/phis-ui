@@ -349,6 +349,27 @@ export async function buildPhiDefaultSiteAreaPresetTree({
         },
         contentVersionId: null,
       },
+      /*
+       * The magnifier, in Public only: the Area every visitor reads, and the one whose results Page it
+       * opens. The App carries its box in its Sider where its preset puts one; the operator's Areas are
+       * not searched. Before the locale switch, in the slot nothing else of this preset takes.
+       */
+      ...(runtimeModuleArea === "public"
+        ? [{
+            id: PHI_DEFAULT_PUB_AREA_WIDGET_IDS.widgetSearch,
+            siteId: page.siteId,
+            parentLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutHeaderActions,
+            widgetType: buildPhiCmsWidgetNamespacedTypeKey(resolvePhiCmsWidgetPluginKey("search-box"), "search-box"),
+            slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
+            sortOrder: 5,
+            status: 1,
+            flags: 0,
+            visibilityMask: page.visibilityMask,
+            label: "pub header main search",
+            config: { variant: "icon-only" },
+            contentVersionId: null,
+          }]
+        : []),
       {
         id: PHI_DEFAULT_PUB_AREA_WIDGET_IDS.widgetLocale,
         siteId: page.siteId,

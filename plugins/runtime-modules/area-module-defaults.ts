@@ -20,6 +20,11 @@ const PHI_DASHBOARD_RUNTIME_MODULE_ID = firstPartyModuleId("dashboard");
 const PHI_NEWS_RUNTIME_MODULE_ID = firstPartyModuleId("news");
 const PHI_REVISIONS_RUNTIME_MODULE_ID = firstPartyModuleId("revisions");
 /*
+ * The Site's search starts on where it is read (SEARCH.md): the Public header carries its magnifier and
+ * the App's sider its box, and both go with the Module when a Site switches it off.
+ */
+const PHI_SEARCH_RUNTIME_MODULE_ID = firstPartyModuleId("search");
+/*
  * Conversations are a Site's communication system, so every Area with a sidebar starts with them: the
  * Area ships the Page and its sidebar offers the entry, and a default without the Module would offer an
  * entry leading nowhere. Public has neither.
@@ -40,11 +45,16 @@ export function createPhiDefaultAreaRuntimeModuleIds(
 
 function listAreaRuntimeModuleIds(area: PhiBuilderAreaKey): PhiRuntimeModuleId[] {
   if (area === "public") {
-    return [PHI_AUTH_RUNTIME_MODULE_ID];
+    return [PHI_AUTH_RUNTIME_MODULE_ID, PHI_SEARCH_RUNTIME_MODULE_ID];
   }
 
   if (area === "app") {
-    return [PHI_AUTH_RUNTIME_MODULE_ID, PHI_DASHBOARD_RUNTIME_MODULE_ID, PHI_THREADS_RUNTIME_MODULE_ID];
+    return [
+      PHI_AUTH_RUNTIME_MODULE_ID,
+      PHI_DASHBOARD_RUNTIME_MODULE_ID,
+      PHI_THREADS_RUNTIME_MODULE_ID,
+      PHI_SEARCH_RUNTIME_MODULE_ID,
+    ];
   }
 
   if (area === "builder") {

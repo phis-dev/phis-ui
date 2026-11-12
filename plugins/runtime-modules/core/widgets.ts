@@ -126,8 +126,6 @@ import { PHI_GALLERY_WIDGET_DEFINITION } from "./widgets/gallery/config";
 import { PHI_STEPS_WIDGET_DEFINITION } from "./widgets/steps/config";
 import { PHI_TIMELINE_WIDGET_DEFINITION } from "./widgets/timeline/config";
 import { PHI_ENTRY_LIST_WIDGET_DEFINITION } from "./widgets/entry-list/config";
-import { PHI_SEARCH_BOX_WIDGET_DEFINITION } from "./widgets/search-box/config";
-import { PHI_SEARCH_RESULTS_WIDGET_DEFINITION } from "./widgets/search-results/config";
 import { PHI_ENTRY_DETAIL_WIDGET_DEFINITION } from "./widgets/entry-detail/config";
 import { PHI_ENTRY_HEADER_WIDGET_DEFINITION } from "./widgets/entry-header/config";
 import { PHI_THREAD_CONVERSATION_WIDGET_DEFINITION } from "./widgets/thread-conversation/config";
@@ -464,21 +462,6 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/timeline/plugin").then((module) => module.PHI_TIMELINE_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/timeline/plugin").then((module) => module.PHI_TIMELINE_WIDGET_PLUGIN),
-  }),
-  // The Site's own search (SEARCH.md): the box a visitor types into and the Page that answers it.
-  definePhiFirstPartyWidget({
-    definition: PHI_SEARCH_BOX_WIDGET_DEFINITION,
-    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
-    renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
-    loadRuntime: () => import("./widgets/search-box/plugin").then((module) => module.PHI_SEARCH_BOX_WIDGET_PLUGIN),
-    loadPreview: () => import("./widgets/search-box/plugin").then((module) => module.PHI_SEARCH_BOX_WIDGET_PLUGIN),
-  }),
-  definePhiFirstPartyWidget({
-    definition: PHI_SEARCH_RESULTS_WIDGET_DEFINITION,
-    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
-    renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
-    loadRuntime: () => import("./widgets/search-results/plugin").then((module) => module.PHI_SEARCH_RESULTS_WIDGET_PLUGIN),
-    loadPreview: () => import("./widgets/search-results/plugin").then((module) => module.PHI_SEARCH_RESULTS_WIDGET_PLUGIN),
   }),
   // A content kind's entries and one entry of it, for every kind's Module (`CONTENT_ENTRIES.md`).
   definePhiFirstPartyWidget({

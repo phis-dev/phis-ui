@@ -379,13 +379,13 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
     [
       PhiCmsWidgetType.SearchBox,
       definePhiRuntimeModuleRenderClient(
-        dynamic(() => import("../core/widgets/search-box/client").then((module) => module.PhiSearchBoxWidgetClient)),
+        dynamic(() => import("../search/widgets/search-box/client").then((module) => module.PhiSearchBoxWidgetClient)),
       ),
     ],
     [
       PhiCmsWidgetType.SearchResults,
       definePhiRuntimeModuleRenderClient(
-        dynamic(() => import("../core/widgets/search-results/client").then((module) => module.PhiSearchResultsWidgetClient)),
+        dynamic(() => import("../search/widgets/search-results/client").then((module) => module.PhiSearchResultsWidgetClient)),
       ),
     ],
     [

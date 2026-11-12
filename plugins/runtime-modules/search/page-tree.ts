@@ -1,13 +1,14 @@
 import {
   buildPhiBasePageContentScaffold,
   PHI_BASE_PAGE_LAYOUT_NODE_ID,
-} from "../../components/regions/presets/phi-base-page-layout";
-import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../constants/cms-layout-types";
-import { PhiCmsPageType } from "../../constants/phi-cms";
-import { createPhiCmsPresetNodes } from "../../helpers/cms-preset-nodes";
-import { PHI_SPACE } from "../../theme/antd-css-var-contract";
-import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../types/cms";
-import { createPhiPresetCmsInstanceIdMap } from "../../types/cms-instance-id";
+} from "../../../components/regions/presets/phi-base-page-layout";
+import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
+import { PhiCmsPageType } from "../../../constants/phi-cms";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
+import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
+import { PHI_LAYOUT } from "../../../theme/phi-tokens";
+import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
+import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id";
 
 /** Synthetic Region id; negative, and unique among the base Presets. */
 const SYNTHETIC_SEARCH_REGION_IDS = {
@@ -60,7 +61,8 @@ export async function buildPhiDefaultSearchPageTree({
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
         label: "search page box",
-        config: { controlSize: "large" },
+        // The field at the house's size, no wider than a form: a query is a few words, not a line of prose.
+        config: { controlSize: "medium", maxSize: { width: PHI_LAYOUT.contentMax } },
       }),
       nodes.widget({
         typeKey: "search-results",

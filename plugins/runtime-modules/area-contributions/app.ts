@@ -4,6 +4,7 @@ import { createPhiDashboardRuntimeModuleServerAreaContribution } from "../dashbo
 import { createPhiGroupsRuntimeModuleServerAreaContribution } from "../groups/server";
 import { createPhiAuthRuntimeModuleServerAreaContribution } from "../auth/server";
 import { createPhiVideoRuntimeModuleServerAreaContribution } from "../video/server";
+import { createPhiSearchRuntimeModuleServerAreaContribution } from "../search/server";
 import { PHI_APP_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION } from "../app/server";
 
 export const PHI_APP_RUNTIME_MODULE_AREA_CONTRIBUTIONS = [
@@ -13,5 +14,6 @@ export const PHI_APP_RUNTIME_MODULE_AREA_CONTRIBUTIONS = [
   createPhiGroupsRuntimeModuleServerAreaContribution(),
   createPhiAvatarRuntimeModuleServerAreaContribution(),
   createPhiVideoRuntimeModuleServerAreaContribution(),
+  createPhiSearchRuntimeModuleServerAreaContribution(),
   PHI_APP_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION,
 ] as const;

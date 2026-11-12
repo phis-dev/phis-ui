@@ -54,6 +54,7 @@ Terminology across the Site/server boundary is strict:
 | `@phis/ui/modules/news` | optional | `public`, `editor` | the face of Core's `news` content kind, as the blog Module is of `blog` ([CONTENT_ENTRIES.md](./CONTENT_ENTRIES.md)) |
 | `@phis/ui/modules/observability` | optional | `admin` | Site-runtime log administration |
 | `@phis/ui/modules/revisions` | optional | `builder` | revision history, restore, deletion |
+| `@phis/ui/modules/search` | optional | `public`, `app` | the Site's own search: the Search Box and Search Results Widgets and the results Pages, and the Areas the indexer writes; on in both as shipped ([SEARCH.md](./SEARCH.md)) |
 | `@phis/ui/modules/theme` | optional | `builder` | Theme and brand editing ([THEME.md](./THEME.md)) |
 | `@phis/ui/modules/threads` | optional | `app` | conversations a person is in, and the one composer every Module writing into one reuses |
 | `@phis/ui/modules/tour` | optional | all | the Controller that runs the guided Tours other Modules attach to their route presets, and each person's Tour progress; switched off, Tours are off for every Module alike |

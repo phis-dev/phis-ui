@@ -22,11 +22,17 @@ export function PhiInspectorLinkTargetFieldControl({
   value,
   disabled,
   labels = PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.fields.linkTarget,
+  pagesOnly,
+  placeholder,
   onChange,
 }: {
   value: unknown;
   disabled?: boolean;
   labels?: PhiInspectorLinkTargetLabels;
+  /** A Page and nothing else; see `pagesOnly` on the `link-target` field. */
+  pagesOnly?: boolean;
+  /** What the empty Page picker says when `pagesOnly`. */
+  placeholder?: string;
   /**
    * The target as it now stands. `none` is set when the author answered "None" -- the link is gone, not
    * only incomplete -- so what depends on a link can go with it.
@@ -46,6 +52,8 @@ export function PhiInspectorLinkTargetFieldControl({
       options={options}
       labels={labels}
       disabled={disabled}
+      {...(pagesOnly ? { pagesOnly: true } : {})}
+      {...(placeholder ? { placeholder } : {})}
       onChange={onChange}
       // A row like every switch in the Inspector: its words on the left, the switch in the control column.
       newTabRow={(control) => (

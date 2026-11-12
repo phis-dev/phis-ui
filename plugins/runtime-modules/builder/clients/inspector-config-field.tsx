@@ -1489,6 +1489,8 @@ function renderPhiInspectorConfigFieldBody({
         value={value ?? defaultValue}
         disabled={disabled || !onChange}
         labels={fieldLabels.linkTarget}
+        {...(field.pagesOnly ? { pagesOnly: true } : {})}
+        {...(field.placeholder ? { placeholder: field.placeholder } : {})}
         onChange={(next, none) => onChange?.({
           [field.key]: next,
           ...(none ? Object.fromEntries((field.clearsWhenEmpty ?? []).map((key) => [key, undefined])) : {}),

@@ -17,8 +17,20 @@ Public and App, as the reader who may search them. The Public Area is read anony
 reads it; the App as a signed-in member with no further roles -- the least any member holds, so what the
 index knows every member may read. A Page with a narrower access policy is not in the set. The results
 Widget searches where it stands: on a Public Page the Public Area, on an App Page the App and Public
-Areas, and nobody reaches an App Page without signing in. The operator's Areas are not indexed and have
-no results Page; a Search Box placed there sends its query to the Public one.
+Areas, and nobody reaches an App Page without signing in. The operator's Areas are not indexed, and
+the Search Module is not offered there.
+
+## The Search Module
+
+The box, the results and the Pages that answer are a Module of their own, `@phis/ui/modules/search`
+(`plugins/runtime-modules/search/`), for Public and App and switched on in both as shipped. A box is
+only worth placing where something answers it, and what answers it is the Module's own results Page,
+which always holds the results Widget. Switched off in an Area, its Widgets are gone from the Area's
+catalog and from every Page that placed one, its Page is gone, and the indexer leaves the Area alone.
+
+What stays outside it is what any search needs: `searchText` on every Widget plugin, the indexer's
+reading of a Page, and phis-server's index and query endpoints. A package that brings a search of its own
+brings its own box, Page and results the same way, as a Module, over the same endpoints.
 
 ## The pieces
 
@@ -26,11 +38,23 @@ no results Page; a Search Box placed there sends its query to the Public one.
 |---|---|
 | `searchText` on a Widget plugin | The words a Widget shows, in reading order, translated for the language being indexed (`types/cms-plugins.ts`). A Widget without it contributes nothing. Markdown, Simple Text, HTML, Description and Card say theirs; a Module's Widget that draws words a visitor would search for says them the same way (THIRD_PARTY_MODULES.md "Add a Widget"). |
 | `server-helpers/search-text.ts` | What a `searchText` is made of: the Widget's own sentences masked, translated and filled the way its render does them; a rendered Markdown document as lines; an HTML fragment without its tags. |
-| `server-helpers/search-index.ts` | The indexer. It enumerates an Area's Pages the way the sitemap does, resolves each one per language as a lookup, asks every Widget on it for its words, and writes one set per Area and language to phis under a fingerprint of what it was built from. |
+| `server-helpers/search-index.ts` | The indexer. For each Area the Search Module is on in, it enumerates the Pages the way the sitemap does, resolves each one per language as a lookup, asks every Widget on it for its words, and writes one set per Area and language to phis under a fingerprint of what it was built from. |
 | `gateway/site-read-marker-listeners.ts` | How the indexer learns of a publish: the Site config read says when the read marker was first seen or moved, and the indexer listens. |
-| `search-box` Widget | A `GET` form the browser submits to the results Page, `?q=` in the URL. It works before anything hydrated and in a static render. Where it leads is a Page reference; absent, the Area's own results Page (`plugins/runtime-modules/search-page-references.ts`). |
+| `search-box` Widget | A `GET` form the browser submits to the results Page, `?q=` in the URL. It works before anything hydrated and in a static render. Where it leads is a Page reference; absent, the Module's results Page of the Area it stands in (`search/page-references.ts`). The Inspector offers only Pages there, no "None" and no address: empty is the Module's Page, and another Page needs a Search Results Widget on it. `variant` draws it as the input, as a magnifier alone that opens into the field (`icon-only`, see below), or `auto`: the input, and the magnifier on a phone. The Builder draws it as a visitor sees it, inert. |
 | `search-results` Widget | Reads `q` from the page's address, asks phis with the Areas this reader may search, and lists the hits: title, address, description, the passage with the words marked. No `q` says what to do; a `q` too short says what a query needs. |
-| `/search` in Public and App | The results Pages every Site has: the box and the results, no menu entry, `NoIndex`. The App's sider carries a Search Box above its navigation. |
+| The results Pages | The Module's routes (`search/presets.ts`): `/search` in Public, and in App under the package as every Module route outside Public, `/app/phis/ui/search`. The box at a form's width and the results, no menu entry, `NoIndex`. The Public header preset carries a magnifier before the locale switch; the App's preset carries a Search Box in its Sider above the navigation. Both are ordinary Widgets of their presets: nothing places a box on its own, and a Builder removes or moves them like any other. |
+
+## The magnifier
+
+A header has no room for a field beside a brand, a menu and an account, and a field that wrapped would
+push the page down on a phone. So the box can stand as a magnifier:
+
+- Until the page has hydrated it is a link to the results Page, so it leads somewhere without a script.
+- After that, pressing it opens the field where it stands, the field growing out of it; on a phone (the
+  Shell's phone, below 768px of the render viewport) it opens as a row over the whole header band, the
+  field and a close mark, on the page's ground.
+- Escape, the close mark, or leaving the field empty closes it. Enter submits as the field always does.
+- Outside a header band it always opens in place: a row over the content Region would cover the page.
 
 ## When the index is written
 

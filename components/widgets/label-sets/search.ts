@@ -19,6 +19,7 @@ const PHI_SEARCH_WIDGET_LABEL_SET = definePhiLabelSet({
     aria_label: PHI_SEARCH_WIDGET_DEFAULT_LABELS.ariaLabel,
     clear_label: PHI_SEARCH_WIDGET_DEFAULT_LABELS.clearLabel,
     submit_label: PHI_SEARCH_WIDGET_DEFAULT_LABELS.submitLabel,
+    close_label: PHI_SEARCH_WIDGET_DEFAULT_LABELS.closeLabel,
   },
 });
 
@@ -32,5 +33,6 @@ export async function getPhiSearchWidgetLabels(
     ariaLabel: labels.aria_label,
     clearLabel: labels.clear_label,
     submitLabel: labels.submit_label,
+    closeLabel: labels.close_label,
   };
 }

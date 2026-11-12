@@ -51,6 +51,8 @@ export function PhiLinkTargetControl({
   labels,
   area,
   disabled,
+  pagesOnly = false,
+  placeholder,
   newTabRow = (control) => (
     <PhiFlexControl align="center" gap={8}>
       {control}
@@ -64,6 +66,13 @@ export function PhiLinkTargetControl({
   labels: PhiLinkTargetControlLabels;
   area?: PhiCmsAreaKey;
   disabled?: boolean;
+  /**
+   * Only the Page picker: no "None" and no address. For a link whose empty answer is a target of the
+   * caller's own rather than "no link"; `placeholder` names it while nothing is picked.
+   */
+  pagesOnly?: boolean;
+  /** What the empty Page picker says; the label set's words otherwise. */
+  placeholder?: string;
   /** How the new-tab switch stands beside its words; the Inspector puts it in its own field row. */
   newTabRow?: (control: ReactNode) => ReactNode;
   /**
@@ -73,7 +82,8 @@ export function PhiLinkTargetControl({
   onChange?: (next: PhiLinkTarget | undefined, none?: boolean) => void;
 }) {
   const target = readPhiLinkTarget(value);
-  const [mode, setMode] = useState<PhiLinkTargetMode>(target?.kind ?? "none");
+  const [chosenMode, setMode] = useState<PhiLinkTargetMode>(target?.kind ?? "none");
+  const mode: PhiLinkTargetMode = pagesOnly ? "page" : chosenMode;
   /*
    * The address as it is being typed, which the stored value cannot be: a target is only written when
    * it is storable, so reading the box back out of the value would erase every character before the
@@ -125,23 +135,25 @@ export function PhiLinkTargetControl({
 
   return (
     <PhiFlexControl vertical gap={8} style={{ width: "100%", minWidth: 0 }}>
-      <PhiSegmentedControl<PhiLinkTargetMode>
-        value={mode}
-        block
-        disabled={disabled || !onChange}
-        options={[
-          { value: "none", label: labels.none },
-          { value: "page", label: labels.page },
-          { value: "external", label: labels.external },
-        ]}
-        onChange={changeMode}
-      />
+      {pagesOnly ? null : (
+        <PhiSegmentedControl<PhiLinkTargetMode>
+          value={mode}
+          block
+          disabled={disabled || !onChange}
+          options={[
+            { value: "none", label: labels.none },
+            { value: "page", label: labels.page },
+            { value: "external", label: labels.external },
+          ]}
+          onChange={changeMode}
+        />
+      )}
 
       {mode === "page" ? (
         <PhiTreeSelectControl<PhiPageReferenceSelection>
           value={target?.kind === "page" ? target.reference : null}
           options={options}
-          placeholder={labels.pagePlaceholder}
+          placeholder={placeholder ?? labels.pagePlaceholder}
           disabled={disabled || !onChange}
           allowClear
           style={{ width: "100%" }}

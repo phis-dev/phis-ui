@@ -117,29 +117,6 @@ export const PHI_PUBLIC_RUNTIME_MODULE_ROUTES = [
       import("./trees/phi-default-pub-terms-page-tree")
         .then((module) => module.buildPhiDefaultPubTermsPageTree({ page })),
   },
-  /*
-   * Where a search goes (SEARCH.md): the box on any Page sends its query here, and the results Widget
-   * reads it from the address. Core's, because the box is Core's and a box without a Page to answer it is
-   * a field that leads nowhere. No menu entry -- nobody browses to a results Page -- and `NoIndex`, so
-   * neither a crawler nor the Site's own index lists a Page whose words are whatever was last searched.
-   */
-  {
-    ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
-    presetKey: PHI_PUBLIC_BASE_PAGE_PRESET_KEYS.search,
-    presetVersion: 1,
-    area: "public",
-    title: "Search",
-    path: "/search",
-    navigation: [],
-    defaultPageFlags: PhiCmsFlags.NoIndex,
-    loadTree: ({ page }) =>
-      import("../search-page-tree")
-        .then((module) => module.buildPhiDefaultSearchPageTree({
-          page,
-          ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
-          presetKey: PHI_PUBLIC_BASE_PAGE_PRESET_KEYS.search,
-        })),
-  },
 ] satisfies readonly PhiCmsRoutePresetDescriptor[];
 
 /**
