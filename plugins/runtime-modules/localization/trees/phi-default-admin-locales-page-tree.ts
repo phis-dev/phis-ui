@@ -35,6 +35,7 @@ export const SYNTHETIC_ADMIN_LOCALES_WIDGET_IDS = createPhiPresetCmsInstanceIdMa
 }, [
   "widgetLocales",
   "widgetSiteLocalesForm",
+  "widgetSourceLocale",
 ]);
 
 export async function buildPhiDefaultAdminLocalesPageTree({
@@ -53,6 +54,12 @@ export async function buildPhiDefaultAdminLocalesPageTree({
   });
 
   const nodes = createPhiCmsPresetNodes(page);
+  /*
+   * What every site translation starts from. Shown and not edited: a Site's source language is fixed
+   * when the Site is created, and the Site config carries it, so no request is needed to name it.
+   */
+  const sourceLocale = runtime.site.availableLocales.find((option) => option.code === runtime.site.sourceLocale);
+  const sourceLocaleText = sourceLocale ? `${sourceLocale.label} (${sourceLocale.code})` : runtime.site.sourceLocale;
   return {
     page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     pageMeta: {
@@ -82,10 +89,25 @@ export async function buildPhiDefaultAdminLocalesPageTree({
     ],
     contentWidgets: [
       nodes.widget({
+        id: SYNTHETIC_ADMIN_LOCALES_WIDGET_IDS.widgetSourceLocale,
+        parentLayoutNodeId: SYNTHETIC_ADMIN_LOCALES_LAYOUT_IDS.layoutGrid,
+        typeKey: "input",
+        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+        sortOrder: 0,
+        label: "site source locale",
+        config: {
+          text: sourceLocaleText,
+          label: widgetLabels.sourceLocaleLabel,
+          readOnly: true,
+          allowClear: false,
+          controlSize: "small",
+        },
+      }),
+      nodes.widget({
         id: SYNTHETIC_ADMIN_LOCALES_WIDGET_IDS.widgetSiteLocalesForm,
         parentLayoutNodeId: SYNTHETIC_ADMIN_LOCALES_LAYOUT_IDS.layoutGrid,
         typeKey: "form",
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+        slotIndex: 1,
         sortOrder: 0,
         label: "site locale settings form",
         config: {
@@ -136,7 +158,7 @@ export async function buildPhiDefaultAdminLocalesPageTree({
         id: SYNTHETIC_ADMIN_LOCALES_WIDGET_IDS.widgetLocales,
         parentLayoutNodeId: SYNTHETIC_ADMIN_LOCALES_LAYOUT_IDS.layoutGrid,
         typeKey: "table",
-        slotIndex: 1,
+        slotIndex: 2,
         label: labels.widgetLabel,
         config: {
           source: {
@@ -162,7 +184,8 @@ export async function buildPhiDefaultAdminLocalesPageTree({
                 fieldKey: "translation",
                 title: widgetLabels.columns.translation,
                 sizing: { mode: "fill", minWidth: 320 },
-                editor: {},
+                // A translation is as long as its source: several lines, wrapped, not one cut-off row.
+                editor: { control: "textarea" },
               },
               { key: "updatedAt", fieldKey: "updatedAt", title: widgetLabels.columns.updated, renderer: "datetime", sizing: { mode: "content" } },
             ],

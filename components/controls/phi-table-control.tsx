@@ -695,6 +695,24 @@ function EditableTableCell({ value, editor, onCommit }: {
       disabled={disabled} size="small" variant={variant} options={editor.options ?? []} style={{ width: "100%" }}
       onChange={(next) => { draftRef.current = next; setDraft(next); onCommit(next); }} />;
   }
+  if (editor.type === "string" && editor.control === "textarea") {
+    /*
+     * Several lines in a cell: the area is as tall as its text, so a long value wraps instead of
+     * running out of the column. Enter still commits, as in every other cell; Shift+Enter is the line
+     * break. No clear glyph -- it would stand over the first line's end.
+     */
+    return <PhiTextControl presentation="textarea" autoSize={{ minRows: 1 }}
+      value={typeof draft === "string" ? draft : ""} variant={variant}
+      disabled={disabled} size="small" style={{ width: "100%" }}
+      onChange={(next) => { draftRef.current = next; setDraft(next); }} onBlur={commitOnBlur}
+      onKeyDown={(event) => {
+        if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
+        event.preventDefault();
+        skipNextBlurRef.current = true;
+        commit();
+        event.currentTarget.blur();
+      }} />;
+  }
   return <PhiTextControl value={typeof draft === "string" ? draft : ""} variant={variant}
     inputRef={textInputRef}
     disabled={disabled} allowClear={!editor.required} size="small" style={{ width: "100%" }}

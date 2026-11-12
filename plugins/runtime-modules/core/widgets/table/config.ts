@@ -162,7 +162,7 @@ const PHI_TABLE_COLUMN_RENDERERS = [
   "text", "email", "date", "datetime", "badge", "tags", "link", "code", "json", "switch", "checkbox", "icon",
 ] as const;
 const PHI_TABLE_COLUMN_EDITOR_CONTROLS = [
-  "switch", "checkbox", "select", "radio", "segmented", "multi-select", "checkbox-group", "icon-picker",
+  "switch", "checkbox", "select", "radio", "segmented", "multi-select", "checkbox-group", "icon-picker", "textarea",
 ] as const;
 const PHI_TABLE_ALIGNS = ["left", "center", "right"] as const;
 
@@ -790,6 +790,7 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
             { value: "multi-select", label: "Multi-select" },
             { value: "checkbox-group", label: "Checkbox group" },
             { value: "icon-picker", label: "Icon picker" },
+            { value: "textarea", label: "Text area" },
           ],
         },
         // The unit beside a number editor; the column title names the value, not its unit.

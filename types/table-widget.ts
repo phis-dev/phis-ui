@@ -162,7 +162,9 @@ export type PhiTableColumnEditorControl =
   | "segmented"
   | "multi-select"
   | "checkbox-group"
-  | "icon-picker";
+  | "icon-picker"
+  /** A `string` field edited over several lines: the cell grows with its text and wraps it. */
+  | "textarea";
 
 type PhiTableFilterCommon = {
   key: string;
@@ -1030,6 +1032,7 @@ export function validatePhiTableWidgetBinding(
       (field?.type === "enum" && (column.editor.control === "select" || column.editor.control === "radio" ||
         column.editor.control === "segmented")) ||
       (field?.type === "string" && Boolean(field.rowOptionsPath) && column.editor.control === "select") ||
+      (field?.type === "string" && column.editor.control === "textarea") ||
       (field?.type === "enum[]" && (column.editor.control === "multi-select" ||
         column.editor.control === "checkbox-group"));
     if (column.editor && !editorControlCompatible) {

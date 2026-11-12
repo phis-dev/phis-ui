@@ -88,7 +88,8 @@ function readTableCellEditor(value: unknown): PhiTableControlCellEditor | undefi
       editor.control === "segmented" ||
       editor.control === "multi-select" ||
       editor.control === "checkbox-group" ||
-      editor.control === "icon-picker"
+      editor.control === "icon-picker" ||
+      editor.control === "textarea"
         ? editor.control
         : undefined,
     required: editor.required === true,

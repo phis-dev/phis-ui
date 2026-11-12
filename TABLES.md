@@ -360,6 +360,13 @@ and not to the title: a header saying "Window (days)" leaves the number unitless
 | `icon` | `icon-picker` | `icon-picker` |
 | `enum` | `select`, `radio`, `segmented` | `select` |
 | `enum[]` | `multi-select`, `checkbox-group` | `multi-select` |
+| `string` | `textarea`; `select` with row options | single-line text input |
+
+`textarea` edits a `string` field over several lines, for values longer than a column is wide -- a
+translation, a description. The area is as tall as its text and wraps it; Enter commits as in every
+other cell and Shift+Enter breaks the line. The value is the same string either way: the Control changes
+how it is typed, never how it is stored, and a Provider that must not receive line breaks refuses them
+in its own validation.
 
 `boolean[]` is not a Provider field type. An array of positional truth values has no stable option
 identity and must not be used to model a choice group. A scalar consent or enabled state remains
