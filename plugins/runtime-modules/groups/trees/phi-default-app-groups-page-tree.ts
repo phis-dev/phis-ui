@@ -1,7 +1,6 @@
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../../constants/cms-layout-types";
 import { PhiCmsPageType } from "../../../../constants/phi-cms";
 import { PHI_GROUPS_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
-import { PhiGroupMembershipFlags } from "../../../../constants/site-groups";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import type { PhiBlockRuntime } from "../../../../types";
@@ -14,6 +13,13 @@ import {
 import { PHI_APP_GROUPS_PAGE_WIDGET_IDS } from "../addresses";
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "../../../../components/regions/presets/phi-base-page-layout";
 import { getPhiGroupFormLabels } from "../labels";
+import {
+  buildPhiGroupLevelValueMap,
+  buildPhiGroupMembersTable,
+  buildPhiGroupRetireAction,
+  buildPhiGroupSettingColumns,
+  buildPhiGroupsFooter,
+} from "./group-tables";
 import { canPhiViewerManageSomeGroup } from "../page-visibility";
 import { canPhiViewerAccess, PHI_VIEWER_ACCESS_DEVELOPER_TOOLS } from "../../../../types/access";
 import { PHI_GROUPS_FORM_IDS } from "../forms";
@@ -47,12 +53,7 @@ export async function buildPhiDefaultAppGroupsPageTree({
     siteWide: canPhiViewerAccess(runtime.viewer, PHI_VIEWER_ACCESS_DEVELOPER_TOOLS),
     groupClaims: runtime.viewer.groupClaims,
   });
-  const levelOptions = {
-    [String(PhiGroupMembershipFlags.Member)]: labels.levels.member,
-    [String(PhiGroupMembershipFlags.Author)]: labels.levels.author,
-    [String(PhiGroupMembershipFlags.Editor)]: labels.levels.editor,
-    [String(PhiGroupMembershipFlags.Manager)]: labels.levels.manager,
-  };
+  const levelOptions = buildPhiGroupLevelValueMap(labels);
 
   const scaffold = buildPhiBasePageContentScaffold({
     page,
@@ -154,33 +155,10 @@ export async function buildPhiDefaultAppGroupsPageTree({
               { key: "spaceQuotaBytes", fieldKey: "spaceQuotaBytes", title: labels.columns.spaceQuota, sizing: { mode: "content" } },
               // Present only for someone who manages a group: a switch nobody here may touch is worse
               // than no switch, so the column is left out rather than shown disabled.
-              ...(managesSomeGroup ? [{
-                key: "showMemberCompany",
-                fieldKey: "showMemberCompany",
-                title: labels.columns.showCompany,
-                description: labels.columns.showCompanyHint,
-                renderer: "switch" as const,
-                editor: { control: "switch" as const },
-                sizing: { mode: "content" as const },
-              }, {
-                key: "threads",
-                fieldKey: "threads",
-                title: labels.columns.threads,
-                description: labels.columns.threadsHint,
-                renderer: "switch" as const,
-                editor: { control: "switch" as const },
-                sizing: { mode: "content" as const },
-              }, {
-                key: "crossGroupThreads",
-                fieldKey: "crossGroupThreads",
-                title: labels.columns.crossGroupThreads,
-                description: labels.columns.crossGroupThreadsHint,
-                renderer: "switch" as const,
-                editor: { control: "switch" as const },
-                sizing: { mode: "content" as const },
-              }] : []),
+              ...(managesSomeGroup ? buildPhiGroupSettingColumns(labels) : []),
             ],
             emptyState: { title: labels.mine.empty, description: labels.mine.emptyHint },
+            footer: buildPhiGroupsFooter(labels),
           },
           features: {
             rowSelection: { mode: "single", preserveSelectedRowIdentities: true },
@@ -197,26 +175,10 @@ export async function buildPhiDefaultAppGroupsPageTree({
             ...(managesSomeGroup ? {
               actions: {
                 rowLayout: "compact" as const,
-                row: [{
-                  key: "retire",
-                  label: labels.actions.retire,
-                  icon: "antd:stop",
-                  display: "icon" as const,
-                  mode: "danger" as const,
-                  execution: "provider" as const,
-                  disabledWhen: { match: "any" as const, conditions: [
-                    { source: "row" as const, valuePath: "manages", operator: "falsy" as const,
-                      reason: labels.actions.retire },
-                    { source: "row" as const, valuePath: "local", operator: "falsy" as const,
-                      reason: labels.actions.retire },
-                  ] },
-                  confirm: {
-                    title: labels.actions.retireConfirmTitle,
-                    description: labels.actions.retireConfirmText,
-                    okText: labels.actions.retireConfirmOk,
-                    cancelText: labels.actions.removeConfirmCancel,
-                  },
-                }],
+                row: [buildPhiGroupRetireAction(labels, [
+                  { valuePath: "manages", operator: "falsy" },
+                  { valuePath: "local", operator: "falsy" },
+                ])],
               },
             } : {}),
           },
@@ -259,60 +221,7 @@ export async function buildPhiDefaultAppGroupsPageTree({
         sortOrder: 1,
         label: labels.members.title,
         config: {
-          source: {
-            providerKey: PHI_GROUPS_RUNTIME_DATA_PROVIDER_KEYS.table,
-            resourceKey: "groupMembers",
-          },
-          presentation: {
-            title: labels.members.title,
-            description: labels.members.description,
-            layout: { mode: "auto", overflowX: "auto" },
-            controlSize: "small",
-            // No address and no source column: a colleague is recognized by name, and where a
-            // membership comes from is an administration question.
-            columns: [
-              { key: "displayName", fieldKey: "displayName", title: labels.columns.name, sizing: { mode: "fill", minWidth: 200 } },
-              { key: "companyName", fieldKey: "companyName", title: labels.columns.company, sizing: { mode: "content" } },
-              {
-                key: "membershipFlags",
-                fieldKey: "membershipFlags",
-                title: labels.columns.level,
-                renderer: "badge",
-                valueMap: levelOptions,
-                // Editable only where the control plane says this actor administers this group, which
-                // it states per row -- a member sees the same table without an editor.
-                editor: { control: "select" },
-                sizing: { mode: "content" },
-              },
-            ],
-            emptyState: { title: labels.members.empty, description: "" },
-          },
-          features: {
-            pagination: { enabled: true, pageSize: 25, pageSizes: [25, 50, 100] },
-            sorting: { mode: "none" },
-            search: { enabled: false },
-            editing: { mode: "cell" },
-            actions: {
-              rowLayout: "compact",
-              row: [{
-                key: "delete",
-                label: labels.actions.remove,
-                icon: "antd:delete",
-                display: "icon",
-                mode: "danger",
-                execution: "provider",
-                disabledWhen: { match: "any", conditions: [
-                  { source: "row", valuePath: "manageable", operator: "falsy", reason: labels.actions.remove },
-                ] },
-                confirm: {
-                  title: labels.actions.removeConfirmTitle,
-                  description: labels.actions.removeConfirmText,
-                  okText: labels.actions.removeConfirmOk,
-                  cancelText: labels.actions.removeConfirmCancel,
-                },
-              }],
-            },
-          },
+          ...buildPhiGroupMembersTable({ labels, audience: "colleagues" }),
           signalRoutes: {
             listens: [{
               routeKey: "app-groups-member-filter",
