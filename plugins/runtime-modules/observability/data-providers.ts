@@ -43,6 +43,11 @@ export const PHI_OBSERVABILITY_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
         pagination: "offset",
         total: true,
       },
+      // A period with more records than one request reads is cut to the newest; the page says so.
+      summaryFields: [
+        { key: "truncated", title: "Cut at the record limit", type: "boolean" },
+        { key: "recordLimit", title: "Record limit", type: "number" },
+      ],
       recordRead: true,
     }],
   },

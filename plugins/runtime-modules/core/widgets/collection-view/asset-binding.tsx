@@ -389,7 +389,7 @@ export function PhiAssetCollectionViewBinding({
         <PhiButtonControl
           ariaLabel={labels.tool.resetLabel}
           tooltip={labels.tool.resetLabel}
-          icon={resolvePhiButtonIcon("antd:clear-outlined")}
+          icon={resolvePhiButtonIcon("antd:rollback-outlined")}
           size={controlSize}
           onClick={() => binding.setQuery({
             ...(config.initialQuery ?? {}),

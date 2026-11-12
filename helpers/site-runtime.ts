@@ -3,6 +3,8 @@ import "server-only";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
+import { notePhiLogSiteKey } from "../net/log";
+
 export type PhiSiteRuntimeConfig = {
   site: {
     key: string;
@@ -89,6 +91,8 @@ export function readPhiSiteRuntimeConfigSync(): PhiSiteRuntimeConfig {
     },
   };
   siteRuntimeConfig = { configPath, value };
+  // Every record this process writes belongs to this Site (net/log.ts).
+  notePhiLogSiteKey(value.site.key);
   return value;
 }
 

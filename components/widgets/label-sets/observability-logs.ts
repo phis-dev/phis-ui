@@ -42,6 +42,8 @@ const PHI_OBSERVABILITY_LOGS_WIDGET_LABEL_SET = definePhiLabelSet({
     detail_status: "Status",
     empty_title: definePhiMessageLabel("No logs found."),
     empty_text: definePhiMessageLabel("Adjust the filters or extend the time window."),
+    count_footer: definePhiMessageLabel("%1 entries found."),
+    truncated_footer: definePhiMessageLabel("%1 entries found. Only the newest %2 of this time window were read; choose a shorter window to see the older ones."),
   },
 });
 
@@ -95,5 +97,7 @@ export async function getPhiObservabilityLogsWidgetLabels(options: PhiGlobalTran
       title: labels.empty_title,
       text: labels.empty_text,
     },
+    countFooter: labels.count_footer,
+    truncatedFooter: labels.truncated_footer,
   };
 }

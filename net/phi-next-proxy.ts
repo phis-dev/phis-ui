@@ -241,8 +241,16 @@ async function proxyRequest(
       });
     }
 
+    /*
+     * How loud a status is depends on what it says. A 5xx is the Server failing: an error. A 409 is a write
+     * the Server refused because it collides with what is there -- someone tried something and it did not
+     * happen: a warning. Every other 4xx is the Server answering as designed -- no draft is a 404, a visitor
+     * who is not signed in a 401 on every page -- and warned about, those buried the rest under hundreds of
+     * lines a day. They stay in the log as debug, where a search for one request finds them.
+     */
     if (!targetResponse.ok) {
-      logRuntimeEvent("warn", "proxy.request.unhealthy_response", {
+      const level = targetResponse.status >= 500 ? "error" : targetResponse.status === 409 ? "warn" : "debug";
+      logRuntimeEvent(level, "proxy.request.unhealthy_response", {
         area: "proxy",
         message: "Proxy upstream responded with a non-OK status.",
         method: request.method,

@@ -165,6 +165,19 @@ export async function buildPhiDefaultAdminLogsPageTree({
               title: widgetLabels.empty.title,
               description: widgetLabels.empty.text,
             },
+            // How many entries the window holds; where the Provider cut it, the line says so too.
+            footer: {
+              template: widgetLabels.countFooter,
+              values: [{ key: "total", value: { source: "core", fieldKey: "totalRows" } }],
+              variants: [{
+                when: { value: { source: "provider", fieldKey: "truncated" }, operator: "truthy" },
+                template: widgetLabels.truncatedFooter,
+                values: [
+                  { key: "total", value: { source: "core", fieldKey: "totalRows" } },
+                  { key: "limit", value: { source: "provider", fieldKey: "recordLimit" } },
+                ],
+              }],
+            },
             controlSize: "small",
           },
           features: {

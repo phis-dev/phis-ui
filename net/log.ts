@@ -46,6 +46,26 @@ function emit(level: PhiLogLevel, payload: Record<string, unknown>) {
   console.info(line);
 }
 
+/*
+ * The Site this process serves, stamped on every record that does not name one.
+ *
+ * A Site process serves exactly one Site, but its callers almost never passed `siteKey`, so nearly every
+ * record carried null and the Site's admin log, which shows only that Site's records, came up empty. The
+ * Site's runtime reader notes the key when it reads the configuration (`notePhiLogSiteKey`); in the browser
+ * nothing does, and a record there stays as it was. Kept on `globalThis` because the server bundles this
+ * file once per layer, and the key noted in one layer must be read in the others.
+ */
+const PHI_LOG_SITE_KEY = Symbol.for("phis.log.siteKey");
+
+export function notePhiLogSiteKey(siteKey: string) {
+  if (siteKey) (globalThis as Record<symbol, unknown>)[PHI_LOG_SITE_KEY] = siteKey;
+}
+
+function readNotedSiteKey(): string | null {
+  const value = (globalThis as Record<symbol, unknown>)[PHI_LOG_SITE_KEY];
+  return typeof value === "string" ? value : null;
+}
+
 function normalizeContext(context: Partial<PhiLoggerContext>): PhiLoggerContext {
   if (!context.service) {
     throw new Error("Logger service is required.");
@@ -53,7 +73,7 @@ function normalizeContext(context: Partial<PhiLoggerContext>): PhiLoggerContext 
 
   return {
     service: context.service,
-    siteKey: context.siteKey ?? null,
+    siteKey: context.siteKey ?? readNotedSiteKey(),
     area: context.area ?? null,
     requestId: context.requestId ?? null,
     userId: context.userId ?? null,

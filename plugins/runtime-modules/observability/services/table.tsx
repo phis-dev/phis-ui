@@ -20,6 +20,7 @@ import { PHI_OBSERVABILITY_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../../../..
 type LogsResponse = {
   rows?: unknown;
   total?: unknown;
+  summary?: { truncated?: unknown; recordLimit?: unknown };
   error?: unknown;
 };
 
@@ -66,6 +67,10 @@ async function loadRows({
   return {
     rows,
     total: typeof payload.total === "number" && Number.isFinite(payload.total) ? payload.total : undefined,
+    summary: {
+      truncated: payload.summary?.truncated === true,
+      recordLimit: typeof payload.summary?.recordLimit === "number" ? payload.summary.recordLimit : null,
+    },
   };
 }
 
