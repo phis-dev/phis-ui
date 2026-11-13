@@ -170,10 +170,67 @@ canonical `[html]`, `[extern]`, and `[html:extern]` storage envelope.
 
 - Markdown and HTML are parsed into semantic translation units before the gateway is called.
 - One heading, paragraph, list-item paragraph, block-quote paragraph, or table cell is one unit.
-- Inline formatting and visible link text are preserved through translation-safe HTML markup.
-- Code, inline code, and link destinations are never translated. Image alt text is translatable.
+- Code, inline code, and link destinations are never translated. Image alt text and titles are.
 - All units from one document use the bulk gateway. The server resolves cache hits and provider request
   chunking while preserving unit order.
+
+### The Markdown unit format
+
+A Markdown unit is sent with `format: "html"` and is plain, standard HTML that any provider's HTML mode
+handles -- DeepL with `tag_handling=html`, Google with `text/html`, Azure with `textType=html`, a language
+model told to keep the tags. It is provider-neutral on purpose: a translation provider is an Add-on
+(`PhisTranslationProvider` in `@phis/contracts/translation`), and nothing in the unit may depend on one
+provider's options. What must not be translated leaves the text as a numbered `%n`, the same token Label
+Sets and Site copy placeholders already use (`helpers/text-placeholders.ts`), which a provider returns
+unchanged. The format is `components/widgets/shared/markdown-translation-unit.ts`, and this table is the
+contract:
+
+| Markdown | Unit |
+| --- | --- |
+| text | the text, with `&`, `<`, `>` and `"` escaped as HTML entities |
+| inline code | `%n`; the code leaves the text and is put back by number |
+| strong | `<b>…</b>` |
+| emphasis | `<i>…</i>` |
+| delete (strikethrough) | `<s>…</s>` |
+| link `[text](url)` | `<a href="%n">text</a>`; the address is masked and put back by number |
+| image `![alt](src "title")` | `%n` in the sentence; its alt text and its title are units of their own (`format: "text"`) |
+| hard break | `<br>` |
+| `%` followed by digits, written in the prose | `%n`, put back exactly as written |
+| a reference link or image, a footnote reference | its text content, as before |
+| inline raw HTML | nothing, as the rendered page shows nothing for it |
+
+Before and after:
+
+| Before | After |
+| --- | --- |
+| `<x-strong>Storage and services.</x-strong> Media on disk …` | `<b>Storage and services.</b> Media on disk …` |
+| `` `GET /api/v1/site/page` reads a Page `` sent as `<x-code data-index="0" translate="no">GET /api/v1/site/page</x-code> reads a Page` | `%1 reads a Page` |
+
+The catalogue key covers the first 50 characters of a message. The invented `<x-*>` markup this format
+replaced spent those characters on itself, so every list item that opened with inline code was one
+message to the store, and only the first of them was ever translated.
+
+- **Numbering.** One sequence per unit, in the order the source shows its tokens: a link's address is
+  numbered where the link opens, before the text it carries. A producer that also masks Site copy
+  placeholders (`{site.name}` and the others) numbers them in the same sequence, as it numbers tokens
+  the text already carries; the Markdown body masks none ("Site copy placeholders").
+- **Restore by number, never by order.** A provider moves a link or a code span to wherever the sentence
+  needs it in its own language.
+- **Escape.** `%` followed by digits in the prose would read as a token, so it leaves the text as a
+  `%n` of its own and is put back verbatim. Digits that follow a token directly would read as part of
+  its number (`%1` and `2 times` are `%12`), so they are masked the same way: `%1%2 times`.
+- **A unit with nothing left to translate is not sent.** A paragraph that is one code span or one picture
+  is drawn from its source; a picture's alt text and title are still translated.
+- **Validation.** An answer is used only if it reads back: every `%n` of the source exactly once and
+  none other, a link's `%n` only as `<a href="%n">` and the others only in the text, `<b>`, `<i>`, `<s>`
+  and `<a>` opened and closed in turn, no tag or attribute outside the table (`<br/>` and quoting of the
+  `href` may vary). An answer that does not read back is shown as its source. Core checks every `html`
+  answer before it stores it -- the same `%n` tokens as often as in the source, `<b>`, `<i>`, `<s>` and
+  `<a>` balanced, every `href="%n"` of the source intact -- and treats one that fails like a provider
+  failure for that unit: a stand-in, shown in the source and never stored ([phis-server TRANSLATIONS.md, "Markdown and HTML"](https://github.com/phis-dev/phis-server/blob/main/TRANSLATIONS.md#markdown-and-html)).
+
+The HTML Widget sends its own sanitized markup as units (`components/widgets/helpers/semantic-html-translation.ts`),
+with `code` and `pre` marked `translate="no"`; it does not use this table.
 
 HTML sanitization follows trust boundaries rather than render frequency. Canonical inline HTML is
 sanitized by `@phis/server` before persistence. External documents and provider-produced HTML are

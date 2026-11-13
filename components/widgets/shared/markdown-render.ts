@@ -24,6 +24,11 @@ import { readPhiInternalReference, type PhiPageReference } from "../../../types/
 import { resolvePhiWidgetInternalReferences } from "../helpers/internal-reference-resolver.server";
 import { protectPhiMailHref, splitPhiMailAddresses } from "../../../helpers/protected-mail";
 import { resolvePhiWidgetSourceUrl } from "../helpers/widget-source-url";
+import {
+  buildMarkdownTranslationUnit,
+  readMarkdownTranslationUnit,
+  type MarkdownTranslationUnit,
+} from "./markdown-translation-unit";
 
 type MarkdownNode = {
   type: string;
@@ -361,85 +366,16 @@ function mapInlineNodes(nodes: MarkdownNode[] | undefined): PhiMarkdownInline[] 
   });
 }
 
-type MarkdownInlineUnitMetadata = {
-  links: string[];
-  images: string[];
-  // Parallel to `images`: entry N is the title authored on image N, empty when there is none.
-  titles: string[];
-  code: string[];
-};
-
-type MarkdownTranslationUnit = {
+type MarkdownTranslationUnitEntry = {
   node: MarkdownNode;
-  html: string;
-  metadata: MarkdownInlineUnitMetadata;
+  unit: MarkdownTranslationUnit;
 };
 
-function escapeTranslationHtml(value: string) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
-}
-
-function decodeTranslationHtml(value: string) {
-  return value
-    .replaceAll("&quot;", '"')
-    .replaceAll("&#39;", "'")
-    .replaceAll("&gt;", ">")
-    .replaceAll("&lt;", "<")
-    .replaceAll("&amp;", "&");
-}
-
-function serializeMarkdownInlines(
-  nodes: MarkdownNode[] | undefined,
-  metadata: MarkdownInlineUnitMetadata,
-): string {
-  return (nodes ?? []).map((node) => {
-    switch (node.type) {
-      case "text":
-        return escapeTranslationHtml(node.value ?? "");
-      case "strong":
-        return `<x-strong>${serializeMarkdownInlines(node.children, metadata)}</x-strong>`;
-      case "emphasis":
-        return `<x-emphasis>${serializeMarkdownInlines(node.children, metadata)}</x-emphasis>`;
-      case "delete":
-        return `<x-delete>${serializeMarkdownInlines(node.children, metadata)}</x-delete>`;
-      case "link": {
-        const index = metadata.links.push(node.url?.trim() ?? "") - 1;
-        return `<x-link data-index="${index}">${serializeMarkdownInlines(node.children, metadata)}</x-link>`;
-      }
-      case "image": {
-        /*
-         * The title is prose and gets translated, but as a unit of its own rather than as more content
-         * inside the image token. Two separate sentences in one token read as one run of text: asked to
-         * translate `alt` and title together, a translator returned them merged and re-split at a
-         * different point. Keeping the token's shape also leaves every already-translated image
-         * unchanged, since the string the catalogue is keyed by does not move.
-         */
-        const index = metadata.images.push(node.url?.trim() ?? "") - 1;
-        metadata.titles[index] = node.title?.trim() ?? "";
-        return `<x-image data-index="${index}">${escapeTranslationHtml(node.alt ?? "")}</x-image>`;
-      }
-      case "inlineCode": {
-        const index = metadata.code.push(node.value ?? "") - 1;
-        return `<x-code data-index="${index}" translate="no">${escapeTranslationHtml(node.value ?? "")}</x-code>`;
-      }
-      case "break":
-        return "<br/>";
-      default:
-        return serializeMarkdownInlines(node.children, metadata);
-    }
-  }).join("");
-}
-
-function collectMarkdownTranslationUnits(node: MarkdownNode, units: MarkdownTranslationUnit[]) {
+function collectMarkdownTranslationUnits(node: MarkdownNode, units: MarkdownTranslationUnitEntry[]) {
   if (node.type === "heading" || node.type === "paragraph" || node.type === "tableCell") {
-    const metadata: MarkdownInlineUnitMetadata = { links: [], images: [], titles: [], code: [] };
-    const html = serializeMarkdownInlines(node.children, metadata);
-    if (html.replace(/<[^>]+>/g, "").trim()) {
-      units.push({ node, html, metadata });
+    const unit = buildMarkdownTranslationUnit(node.children);
+    if (unit.translatable || unit.slots.some((slot) => slot.kind === "image")) {
+      units.push({ node, unit });
     }
     return;
   }
@@ -449,69 +385,6 @@ function collectMarkdownTranslationUnits(node: MarkdownNode, units: MarkdownTran
   for (const child of node.children ?? []) {
     collectMarkdownTranslationUnits(child, units);
   }
-}
-
-type MarkdownInlineFrame = {
-  kind: "root" | "strong" | "emphasis" | "delete" | "link" | "image" | "code";
-  index?: number;
-  children: PhiMarkdownInline[];
-};
-
-function parseTranslatedMarkdownInlines(
-  translatedHtml: string,
-  metadata: MarkdownInlineUnitMetadata,
-): PhiMarkdownInline[] | null {
-  const stack: MarkdownInlineFrame[] = [{ kind: "root", children: [] }];
-  const tokenPattern = /<\/?x-(?:strong|emphasis|delete|link|image|code)\b[^>]*>|<br\s*\/?>/gi;
-  let cursor = 0;
-  const appendText = (value: string) => {
-    if (value) stack.at(-1)?.children.push({ kind: "text", text: decodeTranslationHtml(value) });
-  };
-  for (const match of translatedHtml.matchAll(tokenPattern)) {
-    appendText(translatedHtml.slice(cursor, match.index));
-    const token = match[0];
-    cursor = (match.index ?? 0) + token.length;
-    if (/^<br/i.test(token)) {
-      stack.at(-1)?.children.push({ kind: "break" });
-      continue;
-    }
-    const closing = /^<\//.test(token);
-    const kindMatch = token.match(/^<\/?x-(strong|emphasis|delete|link|image|code)/i);
-    const kind = kindMatch?.[1]?.toLowerCase() as MarkdownInlineFrame["kind"] | undefined;
-    if (!kind) return null;
-    if (!closing) {
-      const indexMatch = token.match(/data-index=["']?(\d+)/i);
-      stack.push({ kind, index: indexMatch ? Number(indexMatch[1]) : undefined, children: [] });
-      continue;
-    }
-    const frame = stack.pop();
-    if (!frame || frame.kind !== kind || stack.length === 0) return null;
-    const parent = stack.at(-1);
-    if (!parent) return null;
-    if (kind === "strong" || kind === "emphasis" || kind === "delete") {
-      parent.children.push({ kind, children: frame.children });
-    } else if (kind === "link") {
-      const href = metadata.links[frame.index ?? -1];
-      if (href == null) return null;
-      parent.children.push({ kind: "link", href, external: /^https?:\/\//.test(href), children: frame.children });
-    } else if (kind === "image") {
-      const src = metadata.images[frame.index ?? -1];
-      if (src == null) return null;
-      const title = metadata.titles[frame.index ?? -1]?.trim() ?? "";
-      parent.children.push({
-        kind: "image",
-        src,
-        alt: getInlineText(frame.children),
-        ...(title ? { title } : {}),
-      });
-    } else if (kind === "code") {
-      const text = metadata.code[frame.index ?? -1];
-      if (text == null) return null;
-      parent.children.push({ kind: "inline_code", text });
-    }
-  }
-  appendText(translatedHtml.slice(cursor));
-  return stack.length === 1 ? stack[0]?.children ?? [] : null;
 }
 
 /*
@@ -536,31 +409,40 @@ async function buildMarkdownInlineMap(
   sourceLocale?: string,
   locale?: string,
 ) {
-  const units: MarkdownTranslationUnit[] = [];
+  const units: MarkdownTranslationUnitEntry[] = [];
   collectMarkdownTranslationUnits(tree, units);
-  const translated = translate && units.length > 0
-    ? await translateUnits(locale, units.map((unit) => unit.html), "html", sourceLocale)
-    : units.map((unit) => unit.html);
+  const sent = units.filter((entry) => entry.unit.translatable);
+  const translated = new Map<MarkdownTranslationUnitEntry, string>();
+  if (translate && sent.length > 0) {
+    const answers = await translateUnits(locale, sent.map((entry) => entry.unit.html), "html", sourceLocale);
+    sent.forEach((entry, index) => translated.set(entry, answers[index] || entry.unit.html));
+  }
 
   /*
-   * Image titles are prose and translate as plain text, each on its own: they are separate sentences
-   * from the alt text they sit beside, and asking for both in one string invites a translator to merge
-   * them. They are collected across every unit so this stays one request.
+   * A picture's alt text and title are prose and translate as plain text, each on its own: they are
+   * separate sentences from the one the picture stands in, and asked for together a translator merged
+   * them and re-split them at another point. They are collected across every unit so this stays one
+   * request.
    */
-  const titleSlots = units.flatMap((unit) =>
-    unit.metadata.titles.flatMap((title, index) => title ? [{ metadata: unit.metadata, index, title }] : []),
-  );
-  if (translate && titleSlots.length > 0) {
-    const translatedTitles = await translateUnits(locale, titleSlots.map((slot) => slot.title), "text", sourceLocale);
-    titleSlots.forEach((slot, index) => {
-      slot.metadata.titles[slot.index] = translatedTitles[index] || slot.title;
+  const imageTexts = units.flatMap(({ unit }) => unit.slots.flatMap((slot) => slot.kind !== "image"
+    ? []
+    : (["alt", "title"] as const).flatMap((field) => slot[field].trim() ? [{ slot, field, text: slot[field] }] : [])));
+  if (translate && imageTexts.length > 0) {
+    const answers = await translateUnits(locale, imageTexts.map((entry) => entry.text), "text", sourceLocale);
+    imageTexts.forEach((entry, index) => {
+      entry.slot[entry.field] = answers[index] || entry.text;
     });
   }
 
-  return new Map(units.map((unit, index) => [
-    unit.node,
-    parseTranslatedMarkdownInlines(translated[index] ?? unit.html, unit.metadata) ?? mapInlineNodes(unit.node.children),
-  ]));
+  return new Map(units.map((entry) => {
+    const answer = translated.get(entry);
+    return [
+      entry.node,
+      (answer !== undefined ? readMarkdownTranslationUnit(answer, entry.unit.slots) : null)
+        ?? readMarkdownTranslationUnit(entry.unit.html, entry.unit.slots)
+        ?? mapInlineNodes(entry.node.children),
+    ];
+  }));
 }
 
 function getInlineText(inlines: PhiMarkdownInline[]): string {
