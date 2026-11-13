@@ -1557,6 +1557,8 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
         "phi-table-control",
         hasClosingBlock ? "phi-table-control--closing-block" : null,
         stickyHeader && showHeader !== false ? "phi-table-control--sticky-header" : null,
+        // No rows, nothing measured: the sticky header's fixed layout would have no widths to fix.
+        !loading && dataSource.length === 0 ? "phi-table-control--empty" : null,
       ]
         .filter(Boolean)
         .join(" ")}

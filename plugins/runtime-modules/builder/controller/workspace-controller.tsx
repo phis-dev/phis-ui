@@ -840,11 +840,22 @@ function usePhiDeveloperBuilderWorkspaceController(
    * The Pages workspace derives which Pages are visible from which Modules are active, so an unsaved
    * Module change has to reach it even though the change itself is made and persisted from elsewhere --
    * the URL is what carries it across that gap.
+   *
+   * It writes last, on top of an address that already names its Area and Page. The address is also
+   * written by the effect that settles the Area and Page below, and both built their next address from
+   * the same old one, so each dropped what the other had set; and before the Area's Modules had loaded
+   * this one wrote an empty list. Every write is a server render of the canvas -- five per open, some of
+   * them aborted, one of them a Shell with no Modules -- and when the last one died the canvas stayed
+   * "Rendering" with its Regions empty. So it waits for the Modules and for the Area and Page to be in
+   * the address, and adds the Modules to that.
    */
   useEffect(() => {
     if (
       typeof pathname !== "string" ||
       (builderWorkspaceKey !== "shells" && builderWorkspaceKey !== "pages") ||
+      state.runtimeModuleIdsByArea == null ||
+      scopeAreaFromSearch == null ||
+      scopePageFromSearch == null ||
       searchParams.get(PHI_BUILDER_RUNTIME_MODULES_SEARCH_PARAM) === selectedRuntimeModuleIdsSearchValue
     ) {
       return;
@@ -855,7 +866,16 @@ function usePhiDeveloperBuilderWorkspaceController(
       selectedRuntimeModuleIdsSearchValue,
     );
     router.replace(`${pathname}?${nextSearchParams.toString()}`, { scroll: false });
-  }, [builderWorkspaceKey, pathname, router, searchParams, selectedRuntimeModuleIdsSearchValue]);
+  }, [
+    builderWorkspaceKey,
+    pathname,
+    router,
+    scopeAreaFromSearch,
+    scopePageFromSearch,
+    searchParams,
+    selectedRuntimeModuleIdsSearchValue,
+    state.runtimeModuleIdsByArea,
+  ]);
 
   useEffect(() => {
     if (builderWorkspaceKey !== "shells") {
