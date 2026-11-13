@@ -831,6 +831,27 @@ registry, each icon loaded as its own chunk where it is drawn, and `validate-pre
 on a preset's `antd:` name that neither it nor the Button resolver's aliases know. It found `antd:send`
 on the News editor and `antd:cluster` on the Groups cards, both blank until then.
 
+### Navigation surfaces
+
+A navigation entry goes into a surface an Area declares (`navigationSurfaces` in
+`plugins/runtime-modules/area-definitions.ts`), named by its `navKey`, and a Widget draws the surface.
+Which Widget reads which surface is a property of the shipped Area shells, not of the surface:
+
+| Area | `navKey` | Drawn by | Way in for a Module entry |
+| --- | --- | --- | --- |
+| Public | `public:header` | Header Navigation Widget in the Public shell's header | `after` / `before` `@phis/ui/modules/public/nav/terms`, or `parentItemKey: null` alone |
+| Public | `public:footer` | Quick Links Widget ("Quick Links") in the Public shell's `footer_main` | the same |
+| App | `app:header`, `app:footer` | Header Navigation and Quick Links Widgets in the App shell, the same shell tree as Public | `parentItemKey: null`; nothing is exported |
+| App | `app:quicklinks` | no shipped Widget; a Quick Links Widget a Site places with this `navKey` | `parentItemKey: null` |
+| App, Accounting, Admin, Editor, Builder | `<area>:sidebar` | the Area shell's sidebar | an anchor: `start`, `main`, `settings`, `end` ([THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#8a-what-a-module-package-exports), Navigation) |
+| every Area | `<area>:account` | the Account Widget's menu | `parentItemKey` `@phis/ui/modules/<area>/nav/account` |
+
+Every surface is computed per request from the descriptors and then read through the Site's stored
+navigation overlay, which only adds, relabels, reorders, or removes ids it names (see above). So "the Quick
+Links in the footer" are `public:footer`, they come from route presets, and a Module that wants an entry
+there adds one to its route's `navigation` -- never a database row. Whether a Site has stored an overlay
+for a surface is `site_nav_scopes.published_revision_id`; absent, the descriptors alone answer.
+
 ### Descriptor identity and instantiation
 
 Area-shell, Area-Overlay, route, navigation, Theme, and Theme-block descriptors are separate families

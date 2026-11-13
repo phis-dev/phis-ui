@@ -1738,6 +1738,24 @@ The older keyed form still compiles: `before`, `after`, and `parentItemKey` must
 surface exports through `exportedItemKeys` or at one the Module injects itself, and are the only way
 into a surface without anchors, such as `<area>:account`.
 
+A surface without anchors -- the Public header and footer, App's header, footer and quick links, every
+`<area>:account` -- takes the keyed form. The Public footer's Quick Links read `public:footer`, so an
+entry there is one more item in the route's `navigation`:
+
+```ts
+navigation: [
+  { navKey: "public:header", parentItemKey: null, item: { itemKey: "@acme/site/nav/public/about",
+    label: { defaultMessage: "About us" }, routePresetKey: "acme-about-page" } },
+  { navKey: "public:footer", parentItemKey: null, after: "@phis/ui/modules/public/nav/terms",
+    item: { itemKey: "@acme/site/nav/public/footer/about", label: { defaultMessage: "About us" },
+      routePresetKey: "acme-about-page" } },
+],
+```
+
+Which surfaces each Area declares, and which Widget draws each, is the table in
+[MODULES.md](./MODULES.md#navigation-surfaces). An entry is computed per request; it never needs a
+database row, and a navigation the Site has saved in the Builder does not hide it.
+
 ## 8b. How the package is built
 
 A Module package ships compiled. `dist` holds transpiled ESM with `"use client"` intact, `.d.ts` beside

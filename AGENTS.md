@@ -31,6 +31,7 @@ covers every contract document below, closed enums, discriminated unions, and sh
 | Areas, CMS tree, renderable blocks, instance identity | [CMS.md](./CMS.md) |
 | Signals, addresses, Core Runtime Controller, drag and drop | [SIGNALS.md](./SIGNALS.md) |
 | Runtime Modules: ownership, activation, loading, presets, addresses | [MODULES.md](./MODULES.md) |
+| Navigation surfaces (header menu, footer Quick Links, sidebar, account menu) and how an entry gets in | [MODULES.md](./MODULES.md#navigation-surfaces), [THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#8a-what-a-module-package-exports) |
 | Building a third-party Module package | [THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md) |
 | Next.js Site boundary, route graph, fonts, metadata and sitemap | [NEXT_INTEGRATION.md](./NEXT_INTEGRATION.md) |
 | Static rendering of Public pages | [STATIC_RENDERING.md](./STATIC_RENDERING.md) |
@@ -60,6 +61,21 @@ its Page's `tour`, the Tour Module offers it; the design and what is built of it
 
 Read the relevant owner documents and the affected preset and component files before a structural
 change. If a contract is unclear, stop and ask instead of guessing.
+
+## Before you say where something comes from
+
+What a Site shows is computed per request from code-owned descriptors -- route, shell, navigation, Theme
+presets -- and only then adjusted by what the Site stored: Area module selections, drafts and revisions,
+navigation overlays, translations. Stored state amends the descriptors; it does not replace them.
+
+- Name the thing by its contract term first. A label on screen ("Quick Links", "the menu") is a Widget
+  reading a surface; find both in the owner document above before searching code or the database.
+- Read the preset that would produce it, then the stored state that could amend it. Claim neither until
+  you have checked both.
+- Never tell the operator that something must be edited by hand in the database while a descriptor
+  could carry it. A database edit is the answer only where the owner document says the value is stored.
+- If the documents do not answer where a thing comes from, that is a documentation gap: say so and add
+  it to the owner document once the answer is known.
 
 ## Working rules
 
