@@ -79,7 +79,8 @@ function readPhiReducedMotion(): boolean {
  * a script too. After that it opens the field where it stands -- the field grows out of it -- or, on a
  * phone, as a row over the whole band it stands in: a header on a phone has no room for a field beside
  * the brand and the menu button, and one that wrapped would push the page down. Escape, the close mark,
- * or leaving the field empty closes it again, the field folding back into the magnifier as it came.
+ * or leaving the field empty -- a press outside it, or Tab -- closes it again, the field folding back
+ * into the magnifier as it came.
  *
  * `auto` draws both the field and the magnifier and `styles/shell.css` shows one, the way the Header
  * Navigation draws its row and its menu button: whether this is a phone is the Shell's width, known to
@@ -93,6 +94,8 @@ export function PhiSearchBoxWidgetClient({ labels, config }: PhiSearchBoxWidgetC
   const interactive = config?.interactive !== false;
   const variant = config?.variant ?? "input";
   const placeholder = config?.placeholder ?? "";
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
 
   /*
    * Closing plays the opening backwards: the field is marked `closing`, folds, and is removed when its
@@ -124,6 +127,23 @@ export function PhiSearchBoxWidgetClient({ labels, config }: PhiSearchBoxWidgetC
     };
   }, [open]);
 
+  /*
+   * The inline field closes when the reader leaves it empty, and only then -- not whenever it loses focus.
+   * Safari's password AutoFill moves focus into a sign-in form's field by itself, so on the login page a
+   * close on blur shut the field the moment it opened. A press outside the box is the reader leaving it
+   * with the pointer; Tab (in `onKeyDown`) is leaving it with the keyboard.
+   */
+  useEffect(() => {
+    if (open?.kind !== "inline" || open.closing) return undefined;
+    const pressed = (event: PointerEvent) => {
+      const root = rootRef.current;
+      if (root && event.target instanceof Node && root.contains(event.target)) return;
+      if (!draftRef.current.trim()) close();
+    };
+    document.addEventListener("pointerdown", pressed, true);
+    return () => document.removeEventListener("pointerdown", pressed, true);
+  }, [open, close]);
+
   const submit = (event: FormEvent<HTMLFormElement>) => {
     if (!interactive || !config?.action) event.preventDefault();
   };
@@ -133,9 +153,11 @@ export function PhiSearchBoxWidgetClient({ labels, config }: PhiSearchBoxWidgetC
       event.preventDefault();
       close();
     }
+    // Leaving the inline field with the keyboard; focus moves on as usual.
+    if (event.key === "Tab" && open?.kind === "inline" && !open.closing && !draft.trim()) close();
   };
 
-  const form = ({ autoFocus = false, collapsible = false }: { autoFocus?: boolean; collapsible?: boolean } = {}) => (
+  const form = ({ autoFocus = false }: { autoFocus?: boolean } = {}) => (
     <form
       method="get"
       action={interactive ? config?.action : undefined}
@@ -158,9 +180,6 @@ export function PhiSearchBoxWidgetClient({ labels, config }: PhiSearchBoxWidgetC
         onChange={(value) => setDraft(value ?? "")}
         onClear={() => setDraft("")}
         onKeyDown={onKeyDown}
-        onBlur={collapsible ? () => {
-          if (!draft.trim()) close();
-        } : undefined}
         style={{ width: "100%" }}
       />
     </form>
@@ -180,7 +199,7 @@ export function PhiSearchBoxWidgetClient({ labels, config }: PhiSearchBoxWidgetC
         className={open.closing ? "phi-search-box__expand phi-search-box__expand--closing" : "phi-search-box__expand"}
         onAnimationEnd={finishClosing}
       >
-        {form({ autoFocus: true, collapsible: true })}
+        {form({ autoFocus: true })}
       </span>
     )
     : (
