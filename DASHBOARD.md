@@ -45,7 +45,8 @@ downloads and npm downloads: a figure over time. Its payload carries `series` --
 instant) with one finite number per label, and an optional translated `unit` -- and the headline is the
 payload's `value`, as on a `stat` card, or the first series' latest point where the provider states
 none. The card View formats each day in the page's locale and draws the chart with
-`PhiSeriesChartControl` -- SVG, no dependency, no hooks, every colour a Theme variable -- and hands it in
+`PhiSeriesChartControl` -- SVG, no dependency, no hooks, every colour a Theme variable, its latest figures
+in the house hover text rather than an SVG `<title>` -- and hands it in
 as `listContent` for the reason a list is handed in; the Card draws the headline with
 `PhiStatisticControl` above it.
 

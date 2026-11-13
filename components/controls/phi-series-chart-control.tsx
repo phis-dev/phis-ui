@@ -1,4 +1,7 @@
+import type { ReactNode } from "react";
+
 import { PHI_COLOR, PHI_FONT_SIZE, PHI_SPACE } from "../../theme/antd-css-var-contract";
+import { PhiHoverText } from "./phi-hover-text";
 
 /**
  * Figures over time: a line per series across the width it is given.
@@ -111,9 +114,11 @@ export function PhiSeriesChartControl({
     ? `${linePath(first)} L${round(first[first.length - 1]!.x)} ${round(geometry.baseline)} L${round(first[0]!.x)} ${round(geometry.baseline)} Z`
     : null;
 
+  const withHoverText = (drawing: ReactNode) => spoken ? <PhiHoverText title={spoken}>{drawing}</PhiHoverText> : drawing;
+
   return (
     <figure style={{ margin: 0, display: "grid", gap: PHI_SPACE.xxs, minWidth: 0 }} data-phi-series-chart="">
-      <div style={{ position: "relative", height, minWidth: 0 }}>
+      {withHoverText(<div style={{ position: "relative", height, minWidth: 0 }}>
         <svg
           role="img"
           aria-label={spoken || undefined}
@@ -123,7 +128,6 @@ export function PhiSeriesChartControl({
           height={height}
           style={{ display: "block", overflow: "visible" }}
         >
-          {spoken ? <title>{spoken}</title> : null}
           <line
             x1={0}
             x2={VIEW_WIDTH}
@@ -182,7 +186,7 @@ export function PhiSeriesChartControl({
             />
           ) : null;
         })}
-      </div>
+      </div>)}
       {series.length > 1 || pointCount > 1 ? (
         <figcaption
           aria-hidden="true"

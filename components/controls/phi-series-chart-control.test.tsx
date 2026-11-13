@@ -24,7 +24,8 @@ describe("PhiSeriesChartControl", () => {
     expect(dots(html)).toBe(1);
     expect(html).toContain("left:50%");
     expect(html).toContain('aria-label="Downloads -- Nov 5, 2026: npm 1,500 downloads"');
-    expect(html).toContain("<title>Downloads -- Nov 5, 2026: npm 1,500 downloads</title>");
+    // Said by the house hover text, never the browser's own bubble.
+    expect(html).not.toContain("<title>");
   });
 
   it("draws a flat series as a level line, and an all-zero one on the baseline", () => {
