@@ -99,7 +99,8 @@ samp {
     rotateY(var(--phi-effects-viewport-rotate-y, 0deg))
     rotateZ(var(--phi-effects-viewport-rotate-z, 0deg))
     scale(var(--phi-effects-viewport-scale, 1));
-  animation-fill-mode: both;
+  /* `backwards` where the entrance ends at rest (helpers/renderable-block-effects.ts), so it lets go when done. */
+  animation-fill-mode: var(--phi-effects-animation-fill, both);
   transform: var(--phi-effects-viewport-transform);
   will-change: opacity, transform;
 }

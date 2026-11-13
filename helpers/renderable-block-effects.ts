@@ -12,6 +12,9 @@ import { PHI_RENDERABLE_BLOCK_DEFAULT_TRANSITION } from "./renderable-block-defa
 
 type PhiRenderableBlockEffectsCssVars = CSSProperties & Record<`--${string}`, string>;
 
+/** A last frame that leaves the Block where it stands: no shift, no turn, no scale. */
+const PHI_RESTING_TRANSFORM = /^(translate3d\(0, 0, 0\)|scale\(1\)|rotate[XYZ]?\(0deg\))$/;
+
 export type PhiRenderableBlockEffectsAttributes = {
   "data-phi-effects-transition"?: string;
   "data-phi-effects-trigger"?: string;
@@ -163,6 +166,7 @@ export function resolveRenderableBlockEffectsStyle(
   const style: PhiRenderableBlockEffectsCssVars = {};
   let transformIndex = 0;
   let opacityIndex = 0;
+  let endsAtRest = true;
 
   for (const transition of transitions) {
     const step = resolveTransitionStep(transition);
@@ -181,6 +185,7 @@ export function resolveRenderableBlockEffectsStyle(
       animationCompositions.push("replace");
       style[`--phi-effects-opacity-${cappedIndex}-from`] = String((step.fromOpacity ?? 1) * finalOpacity);
       style[`--phi-effects-opacity-${cappedIndex}-to`] = String((step.toOpacity ?? 1) * finalOpacity);
+      if ((step.toOpacity ?? 1) !== 1) endsAtRest = false;
     }
 
     if (step.kind === "transform") {
@@ -192,6 +197,7 @@ export function resolveRenderableBlockEffectsStyle(
       const perspective = step.perspectivePx ? `perspective(${step.perspectivePx}px)` : "";
       style[`--phi-effects-transform-${cappedIndex}-from`] = [perspective, step.fromTransform].filter(Boolean).join(" ") || "none";
       style[`--phi-effects-transform-${cappedIndex}-to`] = [perspective, step.toTransform].filter(Boolean).join(" ") || "none";
+      if (step.toTransform && !PHI_RESTING_TRANSFORM.test(step.toTransform)) endsAtRest = false;
     }
 
     transformOrigin = step.origin ?? transformOrigin;
@@ -199,6 +205,14 @@ export function resolveRenderableBlockEffectsStyle(
   }
 
   if (animationNames.length > 0) {
+    /*
+     * An entrance that ends where the Block stands anyway lets go of it when it is done: it holds only its
+     * first frame, for the wait before it starts. One held after its end keeps adding its last frame to the
+     * Block's transform, and Firefox runs such a held transform animation on its compositor against the
+     * transform the Block had when the animation began -- under a viewport effect that was the flat one,
+     * so the picture flipped between flat and turned on every scroll. An exit keeps its last frame.
+     */
+    if (endsAtRest) style["--phi-effects-animation-fill"] = "backwards";
     style["--phi-effects-animation-name"] = animationNames.join(", ");
     style["--phi-effects-animation-duration"] = animationDurations.join(", ");
     style["--phi-effects-animation-delay"] = animationDelays.join(", ");

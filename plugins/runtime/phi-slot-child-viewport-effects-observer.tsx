@@ -26,8 +26,13 @@ function resolveRangePoint(
   const viewportSize = axis === "x" ? viewportWidth : viewportHeight;
   const targetSize = axis === "x" ? rect.width : rect.height;
 
+  /*
+   * A number is a share of the viewport along the axis, where the block's leading edge stands: 0 the top
+   * (or left) edge, 1 the bottom (or right) -- the same 0..1 the config reader keeps it to. It was taken
+   * as pixels here, so every number landed within a pixel of the top and the effect became a switch.
+   */
   if (typeof point === "number" && Number.isFinite(point)) {
-    return point;
+    return point * viewportSize;
   }
 
   if (point === "center") {
@@ -91,11 +96,38 @@ function formatViewportEffectValue(value: number, unit: PhiRenderableBlockViewpo
   return `${value}${unit ?? PHI_RENDERABLE_BLOCK_DEFAULT_VIEWPORT_EFFECT.unit ?? "px"}`;
 }
 
+/**
+ * Where the block lies in the viewport as laid out, before its own transform.
+ *
+ * The effect moves, turns and scales the block, so its drawn box is a product of the last answer: a turn
+ * seen in perspective makes the box taller, which moves its top, which moves the progress, which moves
+ * the turn. Measured that way the block swung between two states on every scroll -- plainly so in Firefox
+ * on a strongly turned picture. The layout box is what the scroll alone moves. Transforms of ancestors
+ * are not undone; a viewport effect inside a transformed parent is measured as laid out there.
+ */
+function readViewportLayoutRect(target: HTMLElement): DOMRect {
+  let left = 0;
+  let top = 0;
+  for (let node: HTMLElement | null = target; node; node = node.offsetParent as HTMLElement | null) {
+    left += node.offsetLeft;
+    top += node.offsetTop;
+    if (!node.offsetParent && getComputedStyle(node).position === "fixed") {
+      return new DOMRect(left, top, target.offsetWidth, target.offsetHeight);
+    }
+  }
+  // Scrolled boxes between the block and the page move it as the window's scroll does.
+  for (let node = target.parentElement; node && node !== document.body && node !== document.documentElement; node = node.parentElement) {
+    left -= node.scrollLeft;
+    top -= node.scrollTop;
+  }
+  return new DOMRect(left - window.scrollX, top - window.scrollY, target.offsetWidth, target.offsetHeight);
+}
+
 function resolveViewportEffectValues(
   effects: readonly PhiRenderableBlockViewportEffect[],
   target: HTMLElement,
 ): ViewportEffectRuntimeValues {
-  const rect = target.getBoundingClientRect();
+  const rect = readViewportLayoutRect(target);
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
   const values: ViewportEffectRuntimeValues = {
@@ -234,15 +266,24 @@ export function PhiSlotChildViewportEffectsObserver({
       { rootMargin: "50% 50% 50% 50%", threshold: 0 },
     );
     const handleScrollOrResize = () => scheduleUpdate();
+    /*
+     * The block's own size moves its range: an image that arrives after the first measure gives the block
+     * its height only then. Without a second measure the effect kept the value it worked out against the
+     * empty box until the first scroll -- in Firefox, where images arrive after the first frame, the
+     * picture stood in a later state and jumped on the first scroll away from the top.
+     */
+    const resizeObserver = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(scheduleUpdate);
 
     target.style.setProperty("--phi-effects-viewport-scale", "1");
     observer.observe(target);
+    resizeObserver?.observe(target);
     window.addEventListener("scroll", handleScrollOrResize, { passive: true });
     window.addEventListener("resize", handleScrollOrResize);
     scheduleUpdate();
 
     return () => {
       observer.disconnect();
+      resizeObserver?.disconnect();
       window.removeEventListener("scroll", handleScrollOrResize);
       window.removeEventListener("resize", handleScrollOrResize);
       if (frameId != null) {

@@ -144,6 +144,11 @@ export type PhiRenderableBlockViewportEffect = {
   from?: number | null;
   to?: number | null;
   unit?: PhiRenderableBlockViewportEffectUnit | null;
+  /**
+   * Where the effect starts and ends, as where the block's leading edge stands in the viewport along the
+   * axis: `enter` at the far edge, `center` with the block centred, `exit` once it has left at the near
+   * edge, or a number from 0 (near edge: top or left) to 1 (far edge), read as a share of the viewport.
+   */
   rangeStart?: PhiRenderableBlockViewportEffectRangePoint | number | null;
   rangeEnd?: PhiRenderableBlockViewportEffectRangePoint | number | null;
   easing?: PhiRenderableBlockTransitionEasing | null;
