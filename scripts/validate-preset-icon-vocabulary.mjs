@@ -18,8 +18,9 @@ import { lineOf } from "./lib/text.mjs";
  * "Presets, paths, and navigation").
  *
  * What is bundled is fine, and `antd:` is not the only bundled thing: a mark a Module ships in its own
- * source -- an inline SVG, a glyph -- is there whenever the Module is. Only the two lookup prefixes are
- * named below, which is why this reads string literals and not markup.
+ * source -- an inline SVG, a glyph, an icon it registers in its definition and names `module:` -- is
+ * there whenever the Module is. Only the two lookup prefixes are refused below, which is why this reads
+ * string literals and not markup.
  *
  * Only preset sources are read, and only string literals in them. A Widget Client that has to recognise
  * the other prefixes writes them too, and it is out of reach here by where it lives rather than by a
@@ -64,8 +65,50 @@ async function readResolvableAntdIconNames() {
   return names;
 }
 
+/*
+ * And the `module:` names a preset may use: its own package's Module icons, registered.
+ *
+ * A Module's icon is there wherever that Module is active, so a preset that names its own Module's icon
+ * names something that ships with it. Another package's Module may be absent or switched off where the
+ * preset lands, and its icon with it -- the blank this guard exists to prevent. Registered names are read
+ * from the `definePhiModuleIcons` calls in this repository's sources; the grammar is the one
+ * `parsePhiModuleIconName` reads (constants/module-identity.ts): the icon name follows the last `/`.
+ */
+const ownModuleIdPrefix = "@phis/ui/modules/";
+const moduleIconNamePattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
+
+async function readRegisteredModuleIconNames() {
+  const names = new Set();
+  const files = await listSourceFiles(moduleRoot, repositoryRelativeListing);
+  for (const file of files) {
+    const source = await readFile(path.join(repositoryRoot, file), "utf8");
+    for (const call of source.matchAll(/definePhiModuleIcons\(\s*\[([\s\S]*?)\]\s*\)/gu)) {
+      for (const match of call[1].matchAll(/\bname:\s*["'`]([a-z0-9-]+)["'`]/gu)) names.add(match[1]);
+    }
+  }
+  return names;
+}
+
+function readModuleIconFailure(reference) {
+  const cut = reference.lastIndexOf("/");
+  const moduleId = cut < 0 ? "" : reference.slice(0, cut);
+  const name = cut < 0 ? "" : reference.slice(cut + 1);
+  if (!moduleId.includes("/modules/") || !moduleIconNamePattern.test(name)) {
+    return "which is not `module:<runtime module id>/<icon name>`";
+  }
+  if (!moduleId.startsWith(ownModuleIdPrefix)) {
+    return "an icon of another package's Module, which may not be active where this preset lands";
+  }
+  if (!registeredModuleIconNames.has(name)) {
+    return "which no `definePhiModuleIcons` call in this repository registers -- it would render as a blank";
+  }
+  return null;
+}
+
 const resolvableAntdIconNames = await readResolvableAntdIconNames();
+const registeredModuleIconNames = await readRegisteredModuleIconNames();
 let antdIconNames = 0;
+let moduleIconNames = 0;
 
 const failures = [];
 const presetFiles = [
@@ -84,8 +127,8 @@ for (const file of presetFiles) {
     while (match) {
       failures.push(
         `${file}:${lineOf(source, match.index)} names a \`${prefix}\` icon, which is ${reason}. A preset `
-          + "names icons that are already resolved: the bundled `antd:` set, a mark added once to "
-          + "components/shell/phi-icon.tsx, or an inline SVG in the Module's own source.",
+          + "names icons that are already resolved: the bundled `antd:` set, an icon its Module registers "
+          + "in its definition (`module:`), or an inline SVG in the Module's own source.",
       );
       match = pattern.exec(source);
     }
@@ -104,6 +147,16 @@ for (const file of presetFiles) {
     }
     antdMatch = antdPattern.exec(source);
   }
+  const modulePattern = /["'`]module:([^"'`]*)["'`]/gu;
+  let moduleMatch = modulePattern.exec(source);
+  while (moduleMatch) {
+    moduleIconNames += 1;
+    const failure = readModuleIconFailure(moduleMatch[1]);
+    if (failure) {
+      failures.push(`${file}:${lineOf(source, moduleMatch.index)} names \`module:${moduleMatch[1]}\`, ${failure}.`);
+    }
+    moduleMatch = modulePattern.exec(source);
+  }
 }
 
 if (failures.length > 0) {
@@ -113,5 +166,5 @@ if (failures.length > 0) {
 
 console.log(
   `Preset icon vocabulary valid (${presetFiles.length} preset sources name bundled icons only; `
-    + `${antdIconNames} antd: names, all resolvable).`,
+    + `${antdIconNames} antd: and ${moduleIconNames} module: names, all resolvable).`,
 );

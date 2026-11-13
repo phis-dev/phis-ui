@@ -35,6 +35,8 @@ import {
 import { isPhiCmsGatewayAuthError } from "../../gateway/errors";
 import { PhiRuntimeControllerServerHost } from "../runtime/runtime-controller-server-host";
 import { PhiRuntimeModuleProvider } from "../runtime/runtime-module-context";
+import { PhiModuleIconsProvider } from "../shell/phi-module-icons";
+import { collectPhiModuleIconSets } from "../../helpers/module-icons";
 import { PhiRuntimeModuleDataProviderHost } from "../runtime/runtime-module-data-provider-host";
 import { PhiSignalRuntimePartitionProvider } from "../runtime/runtime-signal-partition";
 import { resolvePhiCmsDescriptorCatalog } from "../../plugins/runtime-modules/descriptor-compiler";
@@ -277,30 +279,38 @@ export async function PhiCmsAreaBoundary({
           ...runtimeModuleScope.moduleSet.videoProviderDescriptorsByKey.values(),
         ]}
       >
-        <PhiRuntimeModuleDataProviderHost
-          providerKeys={[...scope.runtimeRegistry.dataProviderDescriptorsByKey.keys()]}
+        {/*
+          * The icons the Area's active Modules register, as props like the video providers above: a
+          * `module:` icon of a Module that is not active here resolves to nothing.
+          */}
+        <PhiModuleIconsProvider
+          sets={collectPhiModuleIconSets(runtimeModuleScope.moduleSet.moduleDefinitionsById.values())}
         >
-          {areaControllers.registeredControllerSettings && areaControllers.registeredControllerSettings.length > 0 ? (
-            <PhiRuntimeControllerServerHost
-              controllers={areaControllers.registeredControllerSettings}
-              runtime={runtime}
-              registry={areaControllers.controllerDefinitionsByType}
-              controllerModuleIdsByType={runtimeModuleScope.moduleSet.ownerModuleIdByControllerType}
-              runtimeModuleCatalog={scope.runtimeRegistry.runtimeModuleCatalog}
-              serverCapabilities={scope.runtimeRegistry.serverCapabilities}
-            />
-          ) : null}
-          {children}
-          {filteredLayoutTree ? (
-            <PhiCmsOverlayRenderer
-              tree={filteredLayoutTree}
-              runtime={runtime}
-              registry={scope.runtimeRegistry}
-              signalScope="area"
-              deferredOrigin={{ area: runtime.area, root, path: path ?? pagePath ?? null }}
-            />
-          ) : null}
-        </PhiRuntimeModuleDataProviderHost>
+          <PhiRuntimeModuleDataProviderHost
+            providerKeys={[...scope.runtimeRegistry.dataProviderDescriptorsByKey.keys()]}
+          >
+            {areaControllers.registeredControllerSettings && areaControllers.registeredControllerSettings.length > 0 ? (
+              <PhiRuntimeControllerServerHost
+                controllers={areaControllers.registeredControllerSettings}
+                runtime={runtime}
+                registry={areaControllers.controllerDefinitionsByType}
+                controllerModuleIdsByType={runtimeModuleScope.moduleSet.ownerModuleIdByControllerType}
+                runtimeModuleCatalog={scope.runtimeRegistry.runtimeModuleCatalog}
+                serverCapabilities={scope.runtimeRegistry.serverCapabilities}
+              />
+            ) : null}
+            {children}
+            {filteredLayoutTree ? (
+              <PhiCmsOverlayRenderer
+                tree={filteredLayoutTree}
+                runtime={runtime}
+                registry={scope.runtimeRegistry}
+                signalScope="area"
+                deferredOrigin={{ area: runtime.area, root, path: path ?? pagePath ?? null }}
+              />
+            ) : null}
+          </PhiRuntimeModuleDataProviderHost>
+        </PhiModuleIconsProvider>
       </PhiRuntimeModuleProvider>
     </PhiSignalRuntimePartitionProvider>
   );

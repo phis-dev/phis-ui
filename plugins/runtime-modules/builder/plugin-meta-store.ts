@@ -6,6 +6,7 @@ import type { PhiCollectionItemRendererDescriptor } from "../../../types/collect
 import type { PhiCalendarAdapterDescriptor } from "../../../types/calendar";
 import type { PhiVideoProviderDescriptor } from "../../../types/video";
 import type { PhiControlOption } from "../../../components/controls/phi-control-options";
+import type { PhiModuleIconSet } from "../../../types/module-icons";
 import { createPhiPluginStateStore } from "../../../components/state/plugin-state-store";
 
 type PhiBuilderModuleMetaState = {
@@ -15,6 +16,8 @@ type PhiBuilderModuleMetaState = {
   calendarAdapters: readonly PhiCalendarAdapterDescriptor[];
   videoProviders: readonly PhiVideoProviderDescriptor[];
   forms: readonly PhiControlOption[];
+  /** The target Area's active Modules' icons, which the Inspector's icon picker offers. */
+  icons: readonly PhiModuleIconSet[];
 };
 
 const builderPluginMetaStore = createPhiPluginStateStore<PhiBuilderModuleMetaState>(
@@ -26,6 +29,7 @@ const builderPluginMetaStore = createPhiPluginStateStore<PhiBuilderModuleMetaSta
     calendarAdapters: [],
     videoProviders: [],
     forms: [],
+    icons: [],
   }),
 );
 

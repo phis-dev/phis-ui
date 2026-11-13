@@ -100,6 +100,19 @@ export function definePhiModuleDefinitions(
 }
 
 /**
+ * The icons a Module registers, for the `icons` of its definition (THIRD_PARTY_MODULES.md, "8d. Icons a
+ * Module brings"). Pure data and pure checks, so the root door stays importable by every boundary.
+ * Name one with `createPhiModuleIconName` from `@phis/ui/constants`.
+ */
+export { definePhiModuleIcons } from "./helpers/module-icons";
+export type {
+  PhiModuleIcon,
+  PhiModuleIconDrawing,
+  PhiModuleIconInput,
+  PhiModuleIconSvgDefinition,
+} from "./types/module-icons";
+
+/**
  * The Controller descriptor a definition carries, for a package whose Module has a Controller.
  *
  * The builder itself is Client-safe -- the contracts file behind it holds types and pure functions --

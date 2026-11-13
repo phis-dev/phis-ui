@@ -1095,6 +1095,16 @@ export type PhiRuntimeModuleDefinition = {
    * reach the browser as props and the placeholder reads them there.
    */
   videoProviders?: readonly import("./video").PhiVideoProviderDescriptor[];
+  /**
+   * Icons this Module brings, for its own presets and for Widget configs on Sites that activate it.
+   *
+   * Plain drawings in `currentColor` the Module bundles itself (`definePhiModuleIcons`), named
+   * `module:<moduleId>/<name>` (`createPhiModuleIconName`). Data like `videoProviders`: the active
+   * Modules' icons reach the browser as props of the Area and of the Builder canvas, and a name whose
+   * Module is not active there draws nothing. Not `icon`, which is the Module's own mark in the Modules
+   * list and stays a name every Area resolves.
+   */
+  icons?: readonly import("./module-icons").PhiModuleIcon[];
   formProviders?: PhiRuntimeModuleFormProviderDescriptors;
   authUiProvider?: {
     providerKey: `${string}/${string}`;

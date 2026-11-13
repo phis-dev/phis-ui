@@ -31,6 +31,7 @@ import { PHI_MODULE_MARKER, isPhiRuntimeModuleId } from "../../constants/module-
 import { isPhiCmsPluginCategory } from "../../constants/cms-plugin-categories";
 import { assertPhiSignalPluginMetaContract, isPhiSignalValueSchema } from "../../types/signals";
 import { isPhiNamespacedRuntimeKey } from "../../types/runtime-data-provider";
+import { collectPhiModuleIconErrors } from "../../helpers/module-icons";
 import {
   isPhiViewerAccessPolicyProviderOwned,
   type PhiRoleProviderId,
@@ -477,6 +478,14 @@ function assertPhiRuntimeModuleMetadata(definition: PhiRuntimeModuleDefinition) 
     throw new Error(`${definition.moduleId}: Phi-owned Modules must use English canonical copy.`);
   }
   assertPhiCollectionItemRenderers(definition);
+  /*
+   * `definePhiModuleIcons` refuses the same where a package writes its icons; a definition that was not
+   * written through it is refused here, before a name it holds twice can resolve to either drawing.
+   */
+  const iconErrors = collectPhiModuleIconErrors(definition.icons ?? []);
+  if (iconErrors.length > 0) {
+    throw new Error(`${definition.moduleId}: ${iconErrors.join(" ")}`);
+  }
   if (definition.authUiProvider) {
     if (!isPhiNamespacedRuntimeKey(definition.authUiProvider.providerKey)) {
       throw new Error(`${definition.moduleId}: Auth UI provider key must be namespaced.`);
@@ -912,6 +921,7 @@ export function createPhiRuntimeModuleCatalog(
       (entry.dashboardCards ? 1 : 0) +
       (definition.dataProviders?.length ?? 0) + (definition.calendarAdapters?.length ?? 0) +
       (definition.videoProviders?.length ?? 0) + (definition.collectionItemRenderers?.length ?? 0) +
+      (definition.icons?.length ?? 0) +
       Object.values(definition.formProviders ?? {}).reduce((count, providers) => count + (providers?.length ?? 0), 0);
     if (definition.kind === "module" && contributionCount === 0 && !hasController) {
       throw new Error(`Controllerless runtime module "${definition.moduleId}" must contribute at least one owned artifact.`);

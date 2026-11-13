@@ -7,6 +7,8 @@ import { Flex, Typography } from "antd";
 import type { PhiControlSize } from "../../types/control";
 
 import { PhiIcon } from "../shell/phi-icon";
+import { usePhiModuleIconSets } from "../shell/phi-module-icons";
+import { createPhiModuleIconName } from "../../constants/module-identity";
 import { usePhiConfig } from "../root/phi-config-provider";
 import {
   PHI_ICON_PICKER_CONTROL_DEFAULT_LABELS,
@@ -184,6 +186,11 @@ export function PhiIconPickerControl({
   labels = PHI_ICON_PICKER_CONTROL_DEFAULT_LABELS,
 }: PhiIconPickerControlProps) {
   const { token } = usePhiConfig();
+  /*
+   * The icons the active Modules register, one group per Module under its title. Which Modules those are
+   * is the provider's answer: the Area's own live, the target Area's in the Builder.
+   */
+  const moduleIconSets = usePhiModuleIconSets();
   const parsedCurrentIcon = parseIconValue(value);
   const picker = usePhiImmediatePicker({
     value: value ?? null,
@@ -432,21 +439,46 @@ export function PhiIconPickerControl({
           />
 
           {mode === "standard" ? (
-            <div style={ICON_BUTTON_GRID_STYLE}>
-              {STANDARD_ICON_CHOICES.map((entry) => (
-                <PhiButtonControl
-                  key={entry.value}
-                  type={picker.value === entry.value ? "primary" : "default"}
-                  size="small"
-                  disabled={disabled}
-                  ariaLabel={entry.label}
-                  tooltip={entry.value}
-                  icon={<PhiIcon name={entry.value} size={16} />}
-                  onClick={() => applyIcon(entry.value)}
-                  style={{ width: "100%", height: 36, padding: 0 }}
-                />
+            <Flex vertical gap={token.paddingXS}>
+              <div style={ICON_BUTTON_GRID_STYLE}>
+                {STANDARD_ICON_CHOICES.map((entry) => (
+                  <PhiButtonControl
+                    key={entry.value}
+                    type={picker.value === entry.value ? "primary" : "default"}
+                    size="small"
+                    disabled={disabled}
+                    ariaLabel={entry.label}
+                    tooltip={entry.value}
+                    icon={<PhiIcon name={entry.value} size={16} />}
+                    onClick={() => applyIcon(entry.value)}
+                    style={{ width: "100%", height: 36, padding: 0 }}
+                  />
+                ))}
+              </div>
+              {moduleIconSets.map((set) => (
+                <Flex key={set.moduleId} vertical gap={4}>
+                  <Typography.Text type="secondary">{set.title}</Typography.Text>
+                  <div style={ICON_BUTTON_GRID_STYLE}>
+                    {set.icons.map((icon) => {
+                      const entryValue = createPhiModuleIconName(set.moduleId, icon.name);
+                      return (
+                        <PhiButtonControl
+                          key={entryValue}
+                          type={picker.value === entryValue ? "primary" : "default"}
+                          size="small"
+                          disabled={disabled}
+                          ariaLabel={icon.label}
+                          tooltip={entryValue}
+                          icon={<PhiIcon name={entryValue} size={16} />}
+                          onClick={() => applyIcon(entryValue)}
+                          style={{ width: "100%", height: 36, padding: 0 }}
+                        />
+                      );
+                    })}
+                  </div>
+                </Flex>
               ))}
-            </div>
+            </Flex>
           ) : (
             <Flex vertical gap={token.paddingXS}>
               <PhiSegmentedControl<PhiIconifySetKey>

@@ -9,6 +9,7 @@ import type { PhiCollectionItemRendererDescriptor } from "../../../types/collect
 import type { PhiRuntimeDataProviderKey } from "../../../types/runtime-data-provider";
 import type { PhiControlOption } from "../../../components/controls/phi-control-options";
 import type { PhiBuilderPluginMeta } from "../../../types/builder";
+import type { PhiModuleIconSet } from "../../../types/module-icons";
 
 export type PhiBuilderModuleAuthoringCatalogEntry = {
   moduleId: PhiRuntimeModuleId;
@@ -24,4 +25,6 @@ export type PhiBuilderModuleAuthoringCatalogEntry = {
   videoProviderDescriptors: readonly PhiVideoProviderDescriptor[];
   formOptions: readonly PhiControlOption[];
   authoringDataProviderKeys: readonly PhiRuntimeDataProviderKey[];
+  /** The icons the Module registers, for the canvas and the icon picker; null when it registers none. */
+  iconSet: PhiModuleIconSet | null;
 };

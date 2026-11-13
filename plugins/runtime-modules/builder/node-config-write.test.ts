@@ -110,6 +110,7 @@ beforeEach(() => {
     calendarAdapters: [],
     videoProviders: [],
     forms: [],
+    icons: [],
   });
   setPhiDeveloperRegionDraft(draftKey, draft());
 });

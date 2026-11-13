@@ -11,6 +11,8 @@ import type { PhiBuilderModuleAuthoringCatalogEntry } from "../module-authoring-
 import { usePhiDeveloperBuilderStateValue } from "../developer-workspace-store";
 import type { PhiDeveloperBuilderArea } from "../developer-workspace-types";
 import type { PhiRuntimeDataProviderKey } from "../../../../types/runtime-data-provider";
+import type { PhiModuleIconSet } from "../../../../types/module-icons";
+import { PhiModuleIconsProvider } from "../../../../components/shell/phi-module-icons";
 
 export function PhiBuilderRuntimeModuleAuthoringBoundary({
   targetArea,
@@ -74,6 +76,10 @@ export function PhiBuilderRuntimeModuleAuthoringBoundary({
     () => activeEntries.flatMap((entry) => entry.formOptions),
     [activeEntries],
   );
+  const iconSets = useMemo(
+    () => activeEntries.flatMap((entry): PhiModuleIconSet[] => entry.iconSet ? [entry.iconSet] : []),
+    [activeEntries],
+  );
   const authoringDataProviderKeys = useMemo(
     () => activeEntries.flatMap((entry) => entry.authoringDataProviderKeys),
     [activeEntries],
@@ -87,12 +93,14 @@ export function PhiBuilderRuntimeModuleAuthoringBoundary({
       calendarAdapters: calendarAdapterDescriptors,
       videoProviders: videoProviderDescriptors,
       forms: formOptions,
+      icons: iconSets,
     });
   }, [
     calendarAdapterDescriptors,
     collectionItemRendererDescriptors,
     dataProviderDescriptors,
     formOptions,
+    iconSets,
     plugins,
     targetArea,
     videoProviderDescriptors,
@@ -120,7 +128,13 @@ export function PhiBuilderRuntimeModuleAuthoringBoundary({
           mode="live"
         >
           <PhiRuntimeModuleAuthoringClientHost moduleIds={moduleIds}>
-            {children}
+            {/*
+              * The target Area's icons replace the Builder Area's own, and one whose Module is not
+              * active there is flagged in the canvas rather than left blank.
+              */}
+            <PhiModuleIconsProvider sets={iconSets} flagUnavailable>
+              {children}
+            </PhiModuleIconsProvider>
           </PhiRuntimeModuleAuthoringClientHost>
         </PhiRuntimeModuleDataProviderClientHost>
       </PhiRuntimeModuleAuthoringDataProviderHost>

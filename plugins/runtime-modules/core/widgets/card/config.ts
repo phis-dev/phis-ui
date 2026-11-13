@@ -91,7 +91,7 @@ export type PhiCmsCardWidgetConfig = PhiCmsWidgetConfigBase & PhiCardImageSource
   /** The tag of the heading; how large it is drawn is the variant's business. */
   headingLevel?: PhiCardHeadingLevel;
   textAlign?: PhiCardTextAlign;
-  /** An icon name, as the icon picker writes it (`antd:*`, `iconify:*`, `asset:*`). */
+  /** An icon name, as the icon picker writes it (`antd:*`, `module:*`, `iconify:*`, `asset:*`). */
   icon?: string;
   iconPlacement?: PhiCardIconPlacement;
   /** The icon's colour and the ground it stands on; absent, the Theme's. */

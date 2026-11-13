@@ -113,3 +113,54 @@ export function isPhiModuleScopedIdentifier(
   const owner = value.slice(0, marker);
   return isPhiRuntimeModuleId(owner) || isPhiNpmPackageName(owner);
 }
+
+/**
+ * The `PhiIcon` namespace of the icons a Module registers in its definition (`icons`).
+ *
+ * ```text
+ * module:<runtime module id>/<icon name>      module:@phis/dev/modules/site/product
+ * ```
+ *
+ * `PhiIcon` splits a name at its first `:`, and a runtime module id holds no `:` but does hold `/` and
+ * `@`, so the icon name is what follows the *last* `/`. An icon name is one lower-case kebab segment,
+ * which is what keeps that cut unambiguous: it never holds a `/` of its own.
+ */
+export const PHI_MODULE_ICON_NAMESPACE = "module";
+
+const MODULE_ICON_NAME_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/** Whether `value` can be the name of an icon a Module registers: one lower-case kebab segment. */
+export function isPhiModuleIconName(value: unknown): value is string {
+  return typeof value === "string" && MODULE_ICON_NAME_PATTERN.test(value);
+}
+
+/** The `PhiIcon` name of icon `name` of Module `moduleId`. Throws on a part the grammar refuses. */
+export function createPhiModuleIconName(moduleId: string, name: string): `module:${string}/${string}` {
+  if (!isPhiRuntimeModuleId(moduleId) || !isPhiModuleIconName(name)) {
+    throw new Error(`Invalid Module icon name parts: ${moduleId} / ${name}.`);
+  }
+  return `${PHI_MODULE_ICON_NAMESPACE}:${moduleId}/${name}`;
+}
+
+/**
+ * The Module and the icon a `module:` icon name names, or null when it is not one.
+ *
+ * The reader for what `createPhiModuleIconName` writes, kept beside it for the reason
+ * `isPhiModuleScopedIdentifier` is.
+ */
+export function parsePhiModuleIconName(
+  value: unknown,
+): { moduleId: `${string}/${string}`; name: string } | null {
+  const prefix = `${PHI_MODULE_ICON_NAMESPACE}:`;
+  if (typeof value !== "string" || !value.startsWith(prefix)) {
+    return null;
+  }
+  const reference = value.slice(prefix.length);
+  const cut = reference.lastIndexOf("/");
+  if (cut < 0) {
+    return null;
+  }
+  const moduleId = reference.slice(0, cut);
+  const name = reference.slice(cut + 1);
+  return isPhiRuntimeModuleId(moduleId) && isPhiModuleIconName(name) ? { moduleId, name } : null;
+}

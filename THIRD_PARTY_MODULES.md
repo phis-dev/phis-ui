@@ -482,7 +482,8 @@ credentials reader as well, for the same reason.
 Module categories listed above and is the same value the package's `phis` block declares. Every Module must also
 declare at least one non-empty visual source: an exact `icon`, a semantic `iconFamily`, or both. The
 Server catalog validates these rules at runtime in addition to the TypeScript contract, so JavaScript
-packages and cast values cannot bypass them.
+packages and cast values cannot bypass them. `icons`, optional, is something else: the icons the
+Module's presets and Widget configs may name, registered as data ([8d](#8d-icons-a-module-brings)).
 
 Module title, description, and package-authored component labels are global product copy shared across
 Sites. The server translates Authoring metadata before it reaches Client option providers. Site CMS
@@ -1820,6 +1821,55 @@ Like the other provider-scoped policies, this one is owner-checked: a Module may
 Core, and not somebody else's. The policy is part of [ACCESS.md](./ACCESS.md); Add-on roles are declared
 as described in [phis-server AUTHORIZATION.md, "Add-on roles"](https://github.com/phis-dev/phis-server/blob/main/AUTHORIZATION.md#5-add-on-roles).
 
+## 8d. Icons a Module brings
+
+A preset or a Widget config names an icon for `PhiIcon`. The bundled `antd:` set covers what the house
+uses; a mark it lacks is the Module's to bring, not the core registry's to grow. A Module registers its
+icons on its **definition**, as plain data it bundles itself -- not on the Client door:
+
+```ts
+// icons.ts
+import { definePhiModuleIcons } from "@phis/ui/module";
+import ProductOutlined from "@ant-design/icons-svg/es/asn/ProductOutlined"; // needs the dependency
+
+export const STATUS_MODULE_ICONS = definePhiModuleIcons([
+  { name: "product", label: "Product", drawing: ProductOutlined },
+  {
+    name: "beacon",
+    label: "Beacon",
+    drawing: { viewBox: "0 0 24 24", paths: ["M12 2a10 10 0 100 20 10 10 0 000-20z"] },
+  },
+]);
+
+// definition.ts:  icons: STATUS_MODULE_ICONS,
+// ids.ts:         export const STATUS_PRODUCT_ICON = createPhiModuleIconName(STATUS_MODULE_ID, "product");
+```
+
+- A drawing is a `viewBox`, one or more path strings and an optional `fillRule`, filled with
+  `currentColor` so it follows the Theme and the colour a Widget gives its icon. An
+  `@ant-design/icons-svg` outline or filled definition is read into one by `definePhiModuleIcons`, so an
+  Ant Design icon the core lacks is one import -- if the package depends on `@ant-design/icons-svg`;
+  copying the path data in as the Module's own drawing is equally fine. A two-tone definition, or one
+  holding anything but `<path>`s, is refused. Nothing is fetched: an `iconify:` icon stays a Builder
+  choice and is refused in presets.
+- A name is one lower-case kebab segment, unique within the Module; `definePhiModuleIcons` refuses a
+  duplicate or a malformed name where the package is written, and the catalog refuses the same again.
+  The `label` is what the Builder's icon picker shows.
+- The icon is named `module:<moduleId>/<name>` -- `module:@phis/dev/modules/site/product`. `PhiIcon`
+  cuts the namespace at the first `:` and the icon name after the last `/`, so a scoped module id reads
+  unambiguously. Write it with `createPhiModuleIconName` from `@phis/ui/constants`, which throws on a
+  part the grammar refuses, and use the constant in presets, Widget configs and Client code alike.
+- **It resolves where the Module is active.** The definition reaches the browser the way `videoProviders`
+  do: the Area's root Layout hands the active Modules' icons to the Area as props, and the Builder hands
+  the target Area's to its canvas and Inspector. On a live page a name whose Module is not active there
+  draws nothing; in the Builder it draws a warning mark with the name as its title. So a preset names its
+  own Module's icons, never another package's, and the Module's own `icon` -- the mark the Modules list
+  shows for Modules that are not active -- stays an `antd:` name.
+- The Builder's icon picker lists the active Modules' icons below the bundled set, one group per Module
+  under its title.
+- Every page of an Area carries its active Modules' icons in its payload. Register the marks the Module
+  uses, not a library.
+
 ## 9. Install without patching the Skeleton
 
 Installing a Module never adds or rewrites Skeleton source. `phis module` records the installation and
@@ -2017,6 +2067,9 @@ for the provider and still discloses the page it comes from.
 - No registry is populated by import side effects or mutable module globals.
 - No database value is passed to an unrestricted dynamic import.
 - Every persisted identity and provider key is package-namespaced and stable.
+- A preset names bundled `antd:` icons or its own Module's `module:` icons, registered with
+  `definePhiModuleIcons` and named with `createPhiModuleIconName`; never `iconify:`, `asset:` or another
+  package's Module icon ([8d](#8d-icons-a-module-brings)).
 - A preset names distances, colour roles and corners through `PHI_SPACE`, `PHI_COLOR` and `PHI_RADIUS`
   from `@phis/ui/theme`; it never spells out an adapter property such as `var(--ant-padding-lg)`.
 - Controller fields and the `Controller` Client are either complete as one group or absent as one group.

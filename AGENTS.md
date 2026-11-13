@@ -152,7 +152,9 @@ navigation overlays, translations. Stored state amends the descriptors; it does 
 - Icons are drawn with `PhiIcon` by name. Only `components/shell/phi-antd-icon.tsx` imports
   `@ant-design/icons`: it loads each icon where it is drawn and maps the house's names onto it. An icon
   that is missing is added there, never imported beside the code that needs it; the validator refuses
-  any other import of the package.
+  any other import of the package. A Module package does not grow that registry: it registers its own
+  icons on its definition and names them `module:<moduleId>/<name>`
+  ([THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#8d-icons-a-module-brings)).
 - Shell and Region infrastructure in the RSC path stays plain React and HTML and imports no Ant Design
   module that needs client context.
 - Use the Layout and slot contracts as they are. Do not add wrapper `<div>` layers, alignment shims, or

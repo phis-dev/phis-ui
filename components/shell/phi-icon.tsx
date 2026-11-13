@@ -8,7 +8,9 @@ import {
   type ComponentType,
 } from "react";
 
+import { PHI_MODULE_ICON_NAMESPACE } from "../../constants/module-identity";
 import { PHI_ANTD_ICON_NAMES, PhiAntdIcon, type PhiAntdIconPresentation } from "./phi-antd-icon";
+import { PhiModuleIcon } from "./phi-module-icons";
 
 type PhiIconifyProps = {
   icon: string;
@@ -19,7 +21,8 @@ type PhiIconifyProps = {
 
 /**
  * `style`, `className`, `title`, `ariaLabel` and `twoToneColor` reach the Ant Design icons, which is
- * where the house draws its interface icons; a motif, Iconify or asset icon takes its size only.
+ * where the house draws its interface icons, and all but `twoToneColor` a Module's own icon
+ * (`module:<runtime module id>/<name>`); a motif, Iconify or asset icon takes its size only.
  */
 type PhiIconProps = {
   name?: string;
@@ -153,6 +156,8 @@ export function PhiIcon({ name, size = 16, ...presentation }: PhiIconProps) {
   }
 
   switch (namespace) {
+    case PHI_MODULE_ICON_NAMESPACE:
+      return <PhiModuleIcon name={name} size={resolvedSize} {...presentation} />;
     case "antd":
       return renderAntdIcon(value, resolvedSize, presentation);
     case "iconify":

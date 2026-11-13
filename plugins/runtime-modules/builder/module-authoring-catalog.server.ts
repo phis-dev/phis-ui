@@ -17,6 +17,7 @@ import {
 } from "./plugin-metas";
 import type { PhiBuilderModuleAuthoringCatalogEntry } from "./module-authoring-catalog";
 import { resolvePhiRuntimeModuleSourceLocale } from "../../../types/runtime-module-locale";
+import { collectPhiModuleIconSets } from "../../../helpers/module-icons";
 
 export function buildPhiBuilderModuleAuthoringCatalog({
   catalog,
@@ -85,6 +86,7 @@ export function buildPhiBuilderModuleAuthoringCatalog({
       authoringDataProviderKeys: (entry.definition.dataProviders ?? [])
         .filter((descriptor) => descriptor.authoringMode !== "none")
         .map((descriptor) => descriptor.key),
+      iconSet: collectPhiModuleIconSets([entry.definition])[0] ?? null,
     }];
   });
 }

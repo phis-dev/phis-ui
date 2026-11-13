@@ -777,9 +777,14 @@ The `antd:*` set is bundled, so it resolves offline, on the first paint, and ask
 ships in its own source -- an inline SVG, a glyph -- is bundled the same way and is as welcome: it is
 there whenever the Module is, and a package that brings its own identity is usually bringing the point of
 itself. Inline rather than a path the build emits, so the mark arrives in the same paint as what carries
-it, and drawn in `currentColor`, so it follows the theme. Where the bundled set is missing a mark that
-several presets would share, it gains one in the icon registry (`components/shell/phi-icon.tsx`) -- a
-decision made once, in the open, rather than per preset.
+it, and drawn in `currentColor`, so it follows the theme. Where the bundled set is missing a mark a
+Module needs, the Module registers its own: `icons` on its definition (`definePhiModuleIcons`), plain
+drawings or an `@ant-design/icons-svg` definition, named `module:<moduleId>/<name>`
+(`createPhiModuleIconName`). The core registry (`components/shell/phi-antd-icon.tsx`) is not grown for
+one Module's sake. A Module icon reaches the browser with the Area's active Modules and resolves only
+where its Module is active -- live a name whose Module is not there draws nothing, in the Builder it is
+flagged -- so a preset names its own Module's icons, never another package's
+([THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#8d-icons-a-module-brings)).
 
 A Module may publish named facts about its own configuration, which conditions on a page can be written
 against. The catalog entry states the namespace and a loader; the loader runs only where a page actually
