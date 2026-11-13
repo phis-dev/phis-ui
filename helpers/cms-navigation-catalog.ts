@@ -121,6 +121,8 @@ function materializeNavigationItem(
 ): PhiBuilderNavigationItem {
   const customItem = customItems.get(item.id);
   const customTarget = customItem?.target;
+  // A Site's stored external link and a Module's external entry resolve to the same target.
+  const externalTarget = item.target?.kind === "custom" && item.target.external === true ? item.target : null;
   const folder = item.kind === "container" ? customItem?.folder ?? overrides.get(item.id)?.folder : undefined;
   return {
     id: item.id,
@@ -140,8 +142,8 @@ function materializeNavigationItem(
     ...(item.target?.kind === "module"
       ? { targetPreset: { ownerModuleId: item.target.ownerModuleId, presetKey: item.target.presetKey } }
       : {}),
-    ...(customTarget?.kind === "external" ? { external: true } : {}),
-    ...(customItem?.newTab === true ? { newTab: true } : {}),
+    ...(customTarget?.kind === "external" || externalTarget ? { external: true } : {}),
+    ...(customItem?.newTab === true || externalTarget?.newTab === true ? { newTab: true } : {}),
     hidden: tombstones.has(item.id),
     ...(folder ? { folder } : {}),
     children: item.children.map((child) => materializeNavigationItem(child, tombstones, customItems, overrides)),

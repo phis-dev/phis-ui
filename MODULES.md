@@ -864,6 +864,18 @@ Links in the footer" are `public:footer`, they come from route presets, and a Mo
 there adds one to its route's `navigation` -- never a database row. Whether a Site has stored an overlay
 for a surface is `site_nav_scopes.published_revision_id`; absent, the descriptors alone answer.
 
+An entry goes to one of three things, never more than one: a route of its Module (`routePresetKey`), an
+Area-owned Overlay of its Module (`overlayPresetKey` with `overlayNodeKey`), or -- for an entry a Module
+injects -- an address outside the Site, `target: { kind: "external", href, newTab? }`. The external
+target is the shape the Builder stores for a Site's own external link, and it resolves to the same thing
+(`{ kind: "custom", path: href, external: true, newTab }`), so every surface renders the two alike: a
+new tab is `target="_blank"` with `rel="noreferrer noopener"`. `compilePhiCmsDescriptorCatalog` refuses
+an entry that combines the external target with a route or an Overlay, and any `href` that is not an
+`https:` address with a host -- `http:`, `mailto:`, a relative or protocol-relative path. The entry stays
+the Module's: `ownerModuleId` on the item says so, the Builder's navigation table shows it as external
+and from that Module, and the Site hides it with a tombstone like any other Module entry. An external
+address is never a redirect destination: an Area root or a Settings container forwards past it.
+
 ### Descriptor identity and instantiation
 
 Area-shell, Area-Overlay, route, navigation, Theme, and Theme-block descriptors are separate families

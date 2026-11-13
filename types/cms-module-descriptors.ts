@@ -235,6 +235,19 @@ export type PhiCmsNavigationSurfaceDescriptor = {
   anchors?: Partial<Record<PhiCmsNavigationAnchor, PhiCmsNavigationAnchorPlacement>>;
 };
 
+/**
+ * An address outside the Site a Module's navigation entry leads to.
+ *
+ * The same shape the Builder stores for a Site's own external link (`PhiCmsNavigationCustomItem`), with
+ * `newTab` beside `href` because a descriptor has no item around it to carry it. Only `https:` is
+ * accepted; the catalog refuses anything else when it is compiled.
+ */
+export type PhiCmsNavigationExternalTarget = {
+  kind: "external";
+  href: string;
+  newTab?: boolean;
+};
+
 export type PhiCmsNavigationInjectionItemDescriptor = {
   itemKey: string;
   label: PhiCmsNavigationLabel;
@@ -246,6 +259,11 @@ export type PhiCmsNavigationInjectionItemDescriptor = {
    */
   overlayPresetKey?: string;
   overlayNodeKey?: string;
+  /**
+   * An address outside the Site. Mutually exclusive with `routePresetKey` and the Overlay keys; resolved
+   * like a Site's stored external link, so every navigation surface renders it the same way.
+   */
+  target?: PhiCmsNavigationExternalTarget;
   accessPolicy?: PhiViewerAccessPolicy;
   /** What this entry sends when it is chosen; see the base item descriptor. */
   signalRoutes?: { emits?: readonly PhiSignalRoute[] };

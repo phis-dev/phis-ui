@@ -131,7 +131,8 @@ function flattenNavigationRows(
     hidden: item.hidden,
     hiddenByAncestor,
     external: item.external === true,
-    newTabEditable: item.kind === "link",
+    // A Module entry's new-tab choice is the Module's: an item override carries no `newTab`.
+    newTabEditable: item.kind === "link" && item.source === "custom",
     newTab: item.newTab === true,
   }, ...flattenNavigationRows(
     item.children,
@@ -499,7 +500,7 @@ export function PhiBuilderNavigationTableProviderClient({ children }: { children
           patch.icon = request.proposedValue || null;
         }
         else if (request.fieldKey === "newTab" && typeof request.proposedValue === "boolean" &&
-          item.kind === "link") patch.newTab = request.proposedValue;
+          item.kind === "link" && item.source === "custom") patch.newTab = request.proposedValue;
         else return { status: "rejected", invalidation: "none", errorCode: "field-readonly", message: "Navigation field cannot be changed." };
         writeNavigation(scope, updateNavigationItem(scope.navigation.items, id, (current) => ({ ...current, ...patch })));
         // The row holds the choice in `href`, whichever item fields the choice changed.

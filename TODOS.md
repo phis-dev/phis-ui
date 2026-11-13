@@ -171,13 +171,6 @@ built. Remove an entry when it is done.
   card Control sets a native `title` on an element. Find the sites by rendering the Dashboard, not by
   grep alone: the attribute may come from a Control's ellipsis or from antd. Noted 2026-11-09 for the
   next release.
-- **A numeric range point of a viewport effect means two things.** The config reader clamps a number in
-  `rangeStart`/`rangeEnd` to 0..1 (`helpers/renderable-block-serialization.ts`, around line 128), the
-  observer resolves a number as pixels (`plugins/runtime/phi-slot-child-viewport-effects-observer.tsx`,
-  `resolveRangePoint`). Every number therefore lands within a pixel of the viewport top and the effect
-  becomes a switch there. Only the named points (`enter`, `center`, `exit`) work today. Decide what a
-  number is -- a share of the viewport height or pixels -- and make reader, observer and Inspector say the
-  same. Contract question.
 
 ## Regions and Overlays
 
@@ -384,15 +377,6 @@ built. Remove an entry when it is done.
   decision time. One check that answers "what stops working if this goes" for renderers, routes and
   bindings together, run where the Module selection is edited and again on publish. Not a fallback: the
   block still refuses to draw something other than what was chosen, the Site is simply told first.
-- **A Module's navigation entry may lead to an external address.** A preset's Widgets can already link out
-  (a Button with `linkTarget: { kind: "external" }`), its navigation entries cannot:
-  `PhiCmsNavigationInjectionItemDescriptor` takes `routePresetKey` or an Overlay only. So phis.dev's GitHub
-  Quick Link is a stored Site item (a `customItems` link in the `public:footer` overlay) on each
-  installation instead of part of the package. Proposed, not yet approved: an optional
-  `target: { kind: "external", href, newTab? }`, exclusive with `routePresetKey` and the Overlay keys, the
-  same shape the Builder stores for its own links; `https` only; the Builder's navigation table marks such
-  an entry as external and from which Module, and it can be hidden like any Module entry. Once it exists,
-  phis-dev declares the link and the stored items on dev and prod are removed.
 
 ## Verification
 

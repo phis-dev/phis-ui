@@ -17,8 +17,8 @@ import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms"
 /**
  * The first place a navigation subtree actually goes.
  *
- * An Overlay opener is not a destination, so it can never be what a redirect lands on. Neither is the
- * path the redirecting page itself answers: an Area root whose sidebar still carries an item pointing
+ * An Overlay opener is not a destination, so it can never be what a redirect lands on, and an external
+ * address is not a place in the Area. Neither is the path the redirecting page itself answers: an Area root whose sidebar still carries an item pointing
  * at "/" would forward to itself forever, which is the whole reason `skipPath` exists.
  */
 export function findFirstPhiCmsNavigationLinkPath(
@@ -26,7 +26,9 @@ export function findFirstPhiCmsNavigationLinkPath(
   skipPath?: string,
 ): string | null {
   for (const item of items) {
-    const path = readPhiCmsNavigationTargetPath(item.target);
+    const path = item.target?.kind === "custom" && item.target.external === true
+      ? null
+      : readPhiCmsNavigationTargetPath(item.target);
     if (item.kind === "link" && path && path !== skipPath) {
       return path;
     }

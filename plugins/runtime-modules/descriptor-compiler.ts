@@ -30,6 +30,7 @@ import type {
   PhiCmsNavigationAnchor,
   PhiCmsNavigationAnchorPlacement,
   PhiCmsNavigationBaseItemDescriptor,
+  PhiCmsNavigationExternalTarget,
   PhiCmsNavigationInjectionItemDescriptor,
   PhiCmsNavigationInjectionDescriptor,
   PhiCmsNavigationItemPlacement,
@@ -37,6 +38,7 @@ import type {
   PhiCmsNavigationOverlayDiagnostic,
   PhiCmsNavigationOverlayResolution,
   PhiCmsResolvedNavigationItem,
+  PhiCmsResolvedNavigationTarget,
   PhiCmsResolvedNavigationSurface,
   PhiCmsRoutePresetBinding,
   PhiCmsRoutePresetDescriptor,
@@ -638,6 +640,17 @@ export function compilePhiCmsDescriptorCatalog({
           `${label}/${item.itemKey}: an item goes to a route or opens an Overlay, never both.`,
         );
       }
+      // Only a Module's injected entry may lead out; an Area's own items carry no `target`.
+      const externalTarget = "target" in item ? item.target : undefined;
+      if (externalTarget !== undefined) {
+        if (item.routePresetKey || item.overlayPresetKey || item.overlayNodeKey) {
+          throw new Error(
+            `${label}/${item.itemKey}: an item leads to an external address, a route or an Overlay, ` +
+            "never more than one.",
+          );
+        }
+        assertNavigationExternalTarget(externalTarget, `${label}/${item.itemKey}`);
+      }
       if (item.overlayPresetKey && !item.overlayNodeKey) {
         throw new Error(
           `${label}/${item.itemKey}: an Overlay reference needs both a preset key and a node key.`,
@@ -1107,6 +1120,30 @@ type ResolvedNavigationNode = {
 };
 
 /**
+ * A Module's external navigation address: `https:` with a host, and nothing else.
+ *
+ * Refused when the catalog is compiled, so a package that names `http:`, `mailto:` or a relative path
+ * fails where it is defined rather than rendering a link nobody checked.
+ */
+function assertNavigationExternalTarget(target: PhiCmsNavigationExternalTarget, label: string) {
+  if (target.kind !== "external") {
+    throw new Error(`${label}: a navigation target must be of kind "external".`);
+  }
+  let url: URL | null = null;
+  try {
+    url = new URL(target.href);
+  } catch {
+    url = null;
+  }
+  if (!url || url.protocol !== "https:" || !url.hostname) {
+    throw new Error(`${label}: an external navigation target must be an https: address, got "${target.href}".`);
+  }
+  if (target.newTab !== undefined && typeof target.newTab !== "boolean") {
+    throw new Error(`${label}: an external navigation target's newTab must be a boolean.`);
+  }
+}
+
+/**
  * What an item points at, if anything currently answers there.
  *
  * Reading a navigation surface may not fail. An item can name a route that no longer answers -- a Module
@@ -1125,7 +1162,18 @@ function resolveNavigationTarget(
   ownerModuleId: PhiRuntimeModuleId,
   routePresetKey: string | undefined,
   overlay?: { presetKey: string; nodeKey: string } | null,
-) {
+  external?: PhiCmsNavigationExternalTarget,
+): PhiCmsResolvedNavigationTarget | null {
+  if (external) {
+    // The shape a Site's stored external link resolves to, so every surface renders both alike. The
+    // entry stays the Module's: `ownerModuleId` on the item, not the target, says whose it is.
+    return {
+      kind: "custom",
+      path: external.href,
+      external: true,
+      ...(external.newTab === true ? { newTab: true } : {}),
+    };
+  }
   if (overlay) {
     // No path and no lookup against the route table: the item opens something that is already in the
     // Area tree. Ownership was checked when the surface was compiled.
@@ -1166,6 +1214,7 @@ function buildResolvedNavigationNode(
     descriptor.overlayPresetKey && descriptor.overlayNodeKey
       ? { presetKey: descriptor.overlayPresetKey, nodeKey: descriptor.overlayNodeKey }
       : null,
+    "target" in descriptor ? descriptor.target : undefined,
   );
   const intrinsicChildren = (descriptor.children ?? []).map((child) =>
     buildResolvedNavigationNode(catalog, routeTable, navKey, ownerModuleId, child, null),

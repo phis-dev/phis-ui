@@ -1750,8 +1750,17 @@ navigation: [
   { navKey: "public:footer", parentItemKey: null, after: "@phis/ui/modules/public/nav/terms",
     item: { itemKey: "@acme/site/nav/public/footer/about", label: { defaultMessage: "About us" },
       routePresetKey: "acme-about-page" } },
+  { navKey: "public:footer", parentItemKey: null, after: "@acme/site/nav/public/footer/about",
+    item: { itemKey: "@acme/site/nav/public/footer/github", label: { defaultMessage: "GitHub" },
+      icon: "antd:github", target: { kind: "external", href: "https://github.com/acme", newTab: true } } },
 ],
 ```
+
+An entry that leads out of the Site names `target: { kind: "external", href, newTab? }` instead of a
+`routePresetKey` or an Overlay, never beside one. Only `https:` is accepted; the catalog refuses anything
+else when it is compiled. It rides on any of the Module's routes -- the one it belongs beside -- renders
+like a link the Site added in the Builder (`newTab` opens it with `rel="noreferrer noopener"`), and is
+shown there as external and from your Module, so the Site can hide it.
 
 Which surfaces each Area declares, and which Widget draws each, is the table in
 [MODULES.md](./MODULES.md#navigation-surfaces). An entry is computed per request; it never needs a
