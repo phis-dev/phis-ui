@@ -30,13 +30,10 @@ import { repositoryRoot } from "./lib/repo-root.mjs";
 const OUT_OF_SCOPE = (relative: string) => relative.startsWith("scripts/") || /^[^/]+\.config\.[cm]?ts$/u.test(relative);
 
 /**
- * Exported and read by nobody, kept on purpose: `validate-media-space-contracts.ts` reads this hook's
- * source for the guarantee that a Collection request without a bound provider surfaces as an error.
- * Where that guarantee belongs now is open (TODOS.md, "Code hygiene"); it goes with that decision.
+ * Exported and read by nobody, kept on purpose while where it belongs is still open -- each entry names
+ * its TODOS.md item. Empty is the normal state.
  */
-const UNDECIDED = new Set([
-  "components/media/asset-collection-runtime.ts#usePhiAssetCollectionRuntime",
-]);
+const UNDECIDED = new Set<string>([]);
 
 /**
  * Exported because another validator reads the text, `export` included:

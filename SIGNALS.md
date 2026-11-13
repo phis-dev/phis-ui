@@ -48,7 +48,8 @@ The scopes are exactly `widget`, `layout`, `region`, `page`, `area`, and `site` 
 - `runtime` is an execution environment and a registry partition, not a scope. `slot` and `block` are
   not scopes.
 - `scope` is not `scopeKey`. A `scopeKey` names a transient store, provider, collection, or data-source
-  namespace and never selects a signal route.
+  namespace and never selects a signal route; it may travel in `value` as data.
+  `scripts/validate-signal-scope-key.ts` refuses a route field or address derived from it.
 - `site` admits exactly one receiver: the Core Runtime Controller (see
   [Site Core Runtime Controller](#site-core-runtime-controller)). A Site-scope signal to a CMS instance,
   a Region, another Controller, or `broadcast` is refused -- by `phis` when the route is written and by

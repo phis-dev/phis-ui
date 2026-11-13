@@ -90,9 +90,14 @@ navigation overlays, translations. Stored state amends the descriptors; it does 
 - Verify with the quiet runner, which prints only failures:
   - `pnpm -s verify` (profile `changed`) picks the smallest check set from the current Git changes; use
     it before a commit.
-  - `pnpm -s verify <profile>` runs a fixed set: `docs` (whitespace), `code` (TypeScript and ESLint),
-    `runtime` (adds `runtime-modules:check`), `antd` (adds the Ant Design doctor), `package` (ESLint and
-    the distribution build with validation), `all`.
+  - `pnpm -s verify <profile>` runs a fixed set: `docs` (whitespace), `code` (TypeScript, ESLint and
+    the module graph budget, `pnpm audit:graph --check`), `runtime` (adds `runtime-modules:check`),
+    `antd` (adds the Ant Design doctor), `package` (ESLint, the graph budget and the distribution build
+    with validation), `all`.
+  - The module graph budget (`scripts/audit-module-graph.budget.json`) fails on a new unreachable
+    source, Client barrel import or duplicate file, on a Client reaching `server-only`, and on a package
+    entry's graph growing past a small headroom. Intended growth is recorded with
+    `pnpm audit:graph --update-budget` and said why in the commit.
   - Use `runtime` after changing Module ownership or lazy descriptors. Do not run `all`, a full build, or
     the Ant Design doctor for an unrelated small change.
   - While a consuming Site runs `next dev`, do not use `next build` as routine verification. Run

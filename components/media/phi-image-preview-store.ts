@@ -32,7 +32,6 @@ export type PhiImagePreviewStoreState = {
   selectedVariantKey: PhiImageAssetVariantKeyValue | null;
   selectedAsset: PhiMediaAssetTile | null;
   refreshToken: number;
-  resolvedCollectionRequestKey: string | null;
 };
 
 function createDefaultState(scopeKey: string): PhiImagePreviewStoreState {
@@ -59,7 +58,6 @@ function createDefaultState(scopeKey: string): PhiImagePreviewStoreState {
     selectedVariantKey: null,
     selectedAsset: null,
     refreshToken: 0,
-    resolvedCollectionRequestKey: null,
   };
 }
 
@@ -119,7 +117,6 @@ export function setPhiImagePreviewResults(
     spaces?: PhiMediaSpaceOption[];
     folders: PhiMediaAssetFolder[];
     pagination: PhiMediaPickerPagination | null;
-    resolvedCollectionRequestKey?: string | null;
   },
 ) {
   phiImagePreviewStore.patch(scopeKey, (current) => ({
@@ -138,10 +135,6 @@ export function setPhiImagePreviewResults(
         : next.assets.find((asset) => asset.id === current.selectedAssetId) ?? current.selectedAsset,
     loading: false,
     error: null,
-    resolvedCollectionRequestKey:
-      next.resolvedCollectionRequestKey === undefined
-        ? current.resolvedCollectionRequestKey
-        : next.resolvedCollectionRequestKey,
   }));
 }
 
@@ -158,14 +151,6 @@ export function updatePhiImagePreviewAsset(
         ? updater(current.selectedAsset)
         : current.selectedAsset,
   }));
-}
-
-export function setPhiImagePreviewLoading(scopeKey: string, loading: boolean) {
-  phiImagePreviewStore.patch(scopeKey, (current) => ({ ...current, loading }));
-}
-
-export function setPhiImagePreviewError(scopeKey: string, error: string | null) {
-  phiImagePreviewStore.patch(scopeKey, (current) => ({ ...current, error, loading: false }));
 }
 
 export function setPhiImagePreviewSelection(

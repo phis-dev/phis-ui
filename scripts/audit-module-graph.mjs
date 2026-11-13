@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import ts from "typescript";
@@ -101,7 +101,27 @@ const summary = {
   exactDuplicateGroupCount: duplicateFiles.length,
 };
 
-if (process.argv.includes("--json")) {
+// Growth a package entry's graph may take without a budget update; see `checkBudget`.
+const BYTE_HEADROOM_RATIO = 0.005;
+const BYTE_HEADROOM_MINIMUM = 8 * 1024;
+const budgetPath = path.join(repositoryRoot, "scripts/audit-module-graph.budget.json");
+
+if (process.argv.includes("--update-budget")) {
+  await writeFile(budgetPath, `${JSON.stringify(measureBudget(), null, 2)}\n`);
+  console.log(`Module graph budget written to ${path.relative(repositoryRoot, budgetPath)}.`);
+} else if (process.argv.includes("--check")) {
+  const failures = checkBudget(JSON.parse(await readFile(budgetPath, "utf8")));
+  if (failures.length > 0) {
+    console.error([
+      "Module graph budget exceeded (scripts/audit-module-graph.budget.json):",
+      ...failures.map((failure) => `- ${failure}`),
+      "",
+      "Take the regression out, or -- when the growth is intended -- say why in TODOS.md or the commit and",
+      "record it with `pnpm audit:graph --update-budget`, so the budget moves in the diff and not by itself.",
+    ].join("\n"));
+    process.exit(1);
+  }
+} else if (process.argv.includes("--json")) {
   console.log(JSON.stringify({
     summary,
     entries: publicEntryReports,
@@ -112,6 +132,72 @@ if (process.argv.includes("--json")) {
   }, null, 2));
 } else {
   printReport();
+}
+
+/*
+ * The budget the audit holds the package to (`--check`, a step of `pnpm verify`).
+ *
+ * Lists are exact: an unreachable source, a broad barrel in a Client graph, or a duplicated file that is
+ * not listed fails, and so does a listed one that is gone -- the list only ever shrinks by somebody
+ * taking the entry out. A Client may never reach a `server-only` file at all. Graph sizes per package
+ * entry may grow by the headroom below, which absorbs ordinary edits to files already in a graph; more
+ * than that means something joined the graph, and that is argued for rather than noticed later.
+ */
+function measureBudget() {
+  return {
+    unreachableSources: deadFiles.filter(isAuditedSource),
+    clientBarrelImports,
+    exactDuplicateGroups: duplicateFiles.map((group) => group.join(" = ")),
+    entries: Object.fromEntries(publicEntryReports
+      .map((entry) => [entry.exportKey, { runtimeBytes: entry.runtimeBytes, clientBytes: entry.clientBytes }])
+      .sort(([left], [right]) => left.localeCompare(right))),
+  };
+}
+
+function checkBudget(budget) {
+  const current = measureBudget();
+  const failures = [];
+  for (const edge of invalidClientServerEdges) {
+    failures.push(`Client reaches a server-only file: ${edge.clientFile} -> ${edge.serverOnlyFile}`);
+  }
+  const compareList = (label, actual, recorded) => {
+    const recordedSet = new Set(recorded);
+    const actualSet = new Set(actual);
+    for (const value of actual) {
+      if (!recordedSet.has(value)) failures.push(`new ${label}: ${value}`);
+    }
+    for (const value of recorded) {
+      if (!actualSet.has(value)) failures.push(`${label} gone, take it out of the budget: ${value}`);
+    }
+  };
+  compareList("unreachable package source", current.unreachableSources, budget.unreachableSources);
+  compareList("broad barrel in a Client graph", current.clientBarrelImports, budget.clientBarrelImports);
+  compareList("exact duplicate group", current.exactDuplicateGroups, budget.exactDuplicateGroups);
+  for (const [exportKey, actual] of Object.entries(current.entries)) {
+    const recorded = budget.entries[exportKey];
+    if (!recorded) {
+      failures.push(`package entry ${exportKey} has no budget yet`);
+      continue;
+    }
+    for (const measure of ["runtimeBytes", "clientBytes"]) {
+      const limit = recorded[measure] + Math.max(recorded[measure] * BYTE_HEADROOM_RATIO, BYTE_HEADROOM_MINIMUM);
+      if (actual[measure] > limit) {
+        failures.push(
+          `${exportKey} ${measure} ${formatBytes(actual[measure])} > budget ${formatBytes(recorded[measure])} ` +
+          `(+${formatBytes(actual[measure] - recorded[measure])}, headroom ${formatBytes(limit - recorded[measure])})`,
+        );
+      }
+    }
+  }
+  for (const exportKey of Object.keys(budget.entries)) {
+    if (!current.entries[exportKey]) failures.push(`package entry ${exportKey} is gone, take it out of the budget`);
+  }
+  return failures;
+}
+
+// Tests are reached by the test runner, not by a package entry; every other unreachable file counts.
+function isAuditedSource(file) {
+  return !/\.test\.[cm]?[jt]sx?$/u.test(file);
 }
 
 function addResolvedDependency(target, importer, specifier) {

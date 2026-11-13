@@ -26,6 +26,11 @@ const CHECKS = {
     command: "pnpm",
     args: ["lint"],
   },
+  graph: {
+    label: "Module graph budget",
+    command: "pnpm",
+    args: ["-s", "audit:graph", "--check"],
+  },
   runtime: {
     label: "Runtime module contracts",
     command: "pnpm",
@@ -60,11 +65,11 @@ const CHECKS = {
 
 const EXPLICIT_PROFILES = {
   docs: ["diff"],
-  code: ["diff", "typecheck", "lint"],
-  runtime: ["diff", "typecheck", "lint", "runtime"],
+  code: ["diff", "typecheck", "lint", "graph"],
+  runtime: ["diff", "typecheck", "lint", "graph", "runtime"],
   antd: ["diff", "typecheck", "lint", "antd", "antdCss"],
-  package: ["diff", "lint", "package"],
-  all: ["diff", "lint", "runtime", "antd", "antdCss", "package"],
+  package: ["diff", "lint", "graph", "package"],
+  all: ["diff", "lint", "graph", "runtime", "antd", "antdCss", "package"],
 };
 
 const requestedProfile = process.argv[2] ?? "changed";
@@ -75,10 +80,10 @@ if (requestedProfile === "--help" || requestedProfile === "help") {
 Profiles:
   changed  Select the smallest relevant check set from Git changes (default)
   docs     Whitespace check only
-  code     TypeScript and ESLint
+  code     TypeScript, ESLint and the module graph budget
   runtime  Code checks plus Runtime module contract validation
   antd     Code checks plus Ant Design doctor and the static structure
-  package  ESLint plus compiled distribution validation
+  package  ESLint, the module graph budget and compiled distribution validation
   all      All checks
 
 Successful verification stays silent. A failing tool prints only the captured output tail.`);
@@ -126,6 +131,8 @@ async function resolveChangedChecks() {
 
   if (hasCodeChange) {
     selectedChecks.add("lint");
+    // A source graph walk of ~3 s: any code change can pull a file into a package entry's graph.
+    selectedChecks.add("graph");
     selectedChecks.add(hasPackageChange ? "package" : "typecheck");
   }
   if (hasRuntimeChange) {

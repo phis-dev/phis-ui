@@ -172,14 +172,13 @@ resetPhiImagePreviewStore(PHI_ASSET_CONTROLLER_STORE_KEY);
 applyPhiAssetCollectionData({
   items: [tile(10, 9, 2)],
   meta: { activeSpace: reportedSpace(9, "user"), folders, pagination: { page: 1, pageSize: 20, hasMore: false } },
-} as never, "request-1");
+} as never);
 const afterUserSpace = phiImagePreviewStore.getSnapshot(PHI_ASSET_CONTROLLER_STORE_KEY);
 assert.deepEqual(afterUserSpace.activeSpace, reportedSpace(9, "user"));
 assert.deepEqual(afterUserSpace.folders.map(({ id }) => id), [1, 2, 3]);
-assert.equal(afterUserSpace.resolvedCollectionRequestKey, "request-1");
 
 // A payload without meta must not throw and must not keep a stale Space claim.
-applyPhiAssetCollectionData({ items: [] } as never, "request-2");
+applyPhiAssetCollectionData({ items: [] } as never);
 const afterEmptyMeta = phiImagePreviewStore.getSnapshot(PHI_ASSET_CONTROLLER_STORE_KEY);
 assert.equal(afterEmptyMeta.activeSpace, null);
 assert.deepEqual(afterEmptyMeta.folders, []);
@@ -612,10 +611,36 @@ assert.deepEqual(
   { available: true },
 );
 
-// A Collection request without a bound provider surfaces as an error, never as an empty gallery.
-const collectionRuntimeSource = await readSource("components/media/asset-collection-runtime.ts");
-assert.match(collectionRuntimeSource, /Media collection provider is unavailable\./u);
-assert.match(collectionRuntimeSource, /bindingError \?\?/u);
+/*
+ * A Collection request without a bound provider surfaces as an error, never as an empty gallery. The two
+ * surfaces that read Media each answer it where they bind the provider: the Collection View ends the
+ * Widget in a failure before any renderer -- the Asset renderer is only ever handed a bound resource --
+ * and the Media Picker says the binding error where it would otherwise say the library is empty.
+ */
+{
+  const collectionView = await readSource("plugins/runtime-modules/core/widgets/collection-view/client.tsx");
+  assert.match(
+    collectionView,
+    /: bindingError \?\?/u,
+    "The Collection View's failure starts from the provider binding error.",
+  );
+  assert.match(
+    collectionView,
+    /if \(failure \|\| !config \|\| !resource \|\| !ItemRenderer\) \{\s*return \(\s*<PhiWidgetFailure/u,
+    "Without a bound resource the Collection View renders a failure, not its item renderer.",
+  );
+  const picker = await readSource("components/media/phi-media-picker-binding.tsx");
+  assert.match(
+    picker,
+    /empty: bindingError \?\? /u,
+    "The Media Picker says the binding error in place of its empty-library text.",
+  );
+  assert.match(
+    picker,
+    /const resolvedAssets = provider && source \? assets : \[\];/u,
+    "The Media Picker shows no stale tiles while its provider is unbound.",
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Module disable and restore
@@ -914,11 +939,10 @@ await assert.rejects(
     /spaceSelectionAllowed && spaceOptions\.length > 1/u,
     "The Collection view renders a Space selector only where the Area allows one.",
   );
-  const runtime = await readSource("components/media/asset-collection-runtime.ts");
-  assert.match(
-    runtime,
-    /spaceAddress: spaceSelectionAllowed \? spaceAddress : null/u,
-    "A surface that may not select carries no Space into its query.",
+  assert.equal(
+    collection.match(/spaceId:/gu)?.length,
+    1,
+    "The Collection view writes a Space into its query only from that selector.",
   );
 
   // An upload follows the Space the surface is reading rather than asking for one of its own.
