@@ -6,6 +6,9 @@ import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runt
 import { getPhiImageWidgetLabels } from "../../../../../components/widgets/label-sets/image";
 import type { PhiImageWidgetLabels } from "../../../../../components/widgets/label-types/image";
 import { buildPhiWidgetLabelTranslatorOptions } from "../../../../../components/widgets/label-sets/runtime-options";
+import { PhiCmsFlags } from "../../../../../constants/phi-cms";
+import { hasPhiFlag } from "../../../../../helpers/flags";
+import { trBulk, trBulkForLocale } from "../../../../../server-helpers/translate";
 
 export type PhiImageWidgetServerProps = {
   runtime: Pick<PhiBlockRuntime, "locale" | "site">;
@@ -28,22 +31,42 @@ export async function PhiImageWidgetServer({
     config?.sourceKind === "asset" && typeof assetId === "number"
       ? await resolvePhiPublicAssetReference({ runtime, assetId }).catch(() => null)
       : null;
-  const title = widget?.resolvedContent?.textFields.title?.value?.trim();
-  const altText = widget?.resolvedContent?.textFields.alt?.value?.trim();
+  const recordTitle = widget?.resolvedContent?.textFields.title?.value?.trim();
+  const recordAlt = widget?.resolvedContent?.textFields.alt?.value?.trim();
+  /*
+   * The picture's description and title in the page's language, as every other Widget's words.
+   *
+   * A Content record's text arrives translated already and is taken as it is. The rest -- the Asset's own
+   * description from the Media library, or what the Widget's config states for an address -- is the Site's
+   * text and goes through the Site's translation, unless the Widget says not to translate.
+   */
+  const translate = !hasPhiFlag(widget?.flags ?? 0, PhiCmsFlags.NoTranslate);
+  const sourceTexts = [
+    recordAlt ? "" : (resolvedAsset?.altText ?? "").trim(),
+    recordTitle ? "" : (resolvedAsset?.title ?? "").trim(),
+    config?.sourceKind === "asset" ? "" : (config?.alt ?? "").trim(),
+    config?.sourceKind === "asset" ? "" : (config?.title ?? "").trim(),
+  ];
+  const [assetAlt, assetTitle, configAlt, configTitle] = translate && sourceTexts.some(Boolean)
+    ? await (runtime.locale.current ? trBulkForLocale(runtime.locale.current, sourceTexts) : trBulk(sourceTexts))
+    : sourceTexts;
   const contentResolvedAsset = resolvedAsset
     ? {
         ...resolvedAsset,
-        title: title || resolvedAsset.title,
-        altText: altText || resolvedAsset.altText,
+        title: recordTitle || assetTitle || resolvedAsset.title,
+        altText: recordAlt || assetAlt || resolvedAsset.altText,
       }
     : null;
+  const translatedConfig = config && config.sourceKind !== "asset"
+    ? { ...config, ...(configAlt ? { alt: configAlt } : {}), ...(configTitle ? { title: configTitle } : {}) }
+    : config;
 
   return (
     <PhiRuntimeModuleRenderClientHost
       type={PhiCmsWidgetType.Image}
       componentProps={{
         labels,
-        config: config ?? undefined,
+        config: translatedConfig ?? undefined,
         resolvedAsset: contentResolvedAsset,
         focalRect: contentResolvedAsset?.focalRect ?? null,
       }}

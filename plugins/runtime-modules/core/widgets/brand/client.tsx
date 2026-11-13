@@ -43,6 +43,8 @@ export type PhiBrandWidgetClientProps = PhiClientBlockBaseProps<
    */
   home?: PhiBrandWidgetHome;
   interactive?: boolean;
+  /** The Logo's description in the page's language, translated on the Server. */
+  logoAlt?: string;
 };
 
 /** A ready address, and whether it leaves the Site -- the shape `resolvePhiLinkHref` answers. */
@@ -64,6 +66,7 @@ export function PhiBrandWidgetClient({
   home,
   fallbackTitle,
   interactive = true,
+  logoAlt,
 }: PhiBrandWidgetClientProps) {
   const brand = usePhiSiteBrand();
   // The Theme's mode, not the Widget's: one picks the Logo's picture, the other what is drawn at all.
@@ -102,6 +105,7 @@ export function PhiBrandWidgetClient({
     mode: themeMode,
     fallbackTitle,
     shows: config?.mode ?? "lockup",
+    logoAlt,
   };
 
   if (phiBrandControlIsEmpty(presentation)) {

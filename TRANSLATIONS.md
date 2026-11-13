@@ -160,6 +160,15 @@ resolved Site locale to an Ant Design locale key and loads it through an explici
 - If the active provider cannot translate the configured external source, the Widget renders the original
   document and does not redetect on every render.
 
+## A picture's description
+
+A picture's alt text and title are words on the page like any other and are translated in the render's
+locale. The Image and Card Widgets translate theirs -- the Media library's description of an Asset, or
+what the config states for an address -- in the Site's store; a Content record's text arrives translated
+and is taken as it is. The Gallery translates each picture's description in one bulk call. The Brand
+Widget translates the Theme's `logoAlt` in the Site's store, and the default "Brand logo" in the global
+one. A Widget flagged `NoTranslate` keeps all of them as written.
+
 ## Context and format
 
 Callers provide only optional natural-language provider context. They do not create internal context

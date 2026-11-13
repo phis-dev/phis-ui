@@ -121,13 +121,6 @@ built. Remove an entry when it is done.
 
 ## Translations and preferences
 
-- **An image's alt text is not translated (next phis-ui release).** The Image Widget passes its `alt`
-  (`plugins/runtime-modules/core/widgets/image/server.tsx`, `textFields.alt`) through as written, while
-  every other Widget text goes through the translation at render. A German page reads an English alt to a
-  screen reader (phis.dev Home: the three hero screenshots, "Brand logo"). Route it through the same
-  translation as the Widget's other texts, and check the other places that carry a picture's description
-  (a Card's picture, the Gallery/Slideshow, the Brand's `logoAlt`). Then enter the four German texts on
-  phis.dev.
 - **Count-aware plural translation.** Add one plural contract to the central translation and placeholder
   formatter before Widgets branch on singular/plural locally -- two already do (`count_one` in
   components/widgets/label-sets/search-results.ts, `configuredPlural` in

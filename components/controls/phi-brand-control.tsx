@@ -38,6 +38,11 @@ export type PhiBrandControlProps = {
    * has one colour per mode for the same reason.
    */
   mode: PhiThemeMode;
+  /**
+   * What a screen reader says for the Logo, in the page's language: the Brand Widget translates it on the
+   * Server. Absent -- the Theme workspace -- it is the Theme's own text as written.
+   */
+  logoAlt?: string;
 };
 
 /** How tall a Logo is drawn. Its width follows the artwork, so a wordmark reads as well as a signet. */
@@ -220,6 +225,7 @@ export function PhiBrandControl({
   fallbackTitle,
   shows = "lockup",
   mode,
+  logoAlt: logoAltProp,
 }: PhiBrandControlProps) {
   /*
    * The Eyebrow travels with the Wordmark, so it goes where the Wordmark does -- switched off by the
@@ -249,7 +255,7 @@ export function PhiBrandControl({
    * way to say "wordmark only" at all. The Wordmark carries the Brand where nothing is picked.
    */
   const logoUrl = shows === "wordmark" ? null : resolvePhiBrandLogoUrl(brand, mode);
-  const logoAlt = brand?.logoAlt?.trim() || "Brand logo";
+  const logoAlt = logoAltProp?.trim() || brand?.logoAlt?.trim() || "Brand logo";
 
   if (!logoUrl && !wordmarkNode && !eyebrow) {
     return null;

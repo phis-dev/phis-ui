@@ -63,6 +63,11 @@ export async function PhiCardWidget({
   const defaultLabels = actionEnabled ? await getPhiCardWidgetLabelsForRuntime(runtime) : null;
   const ownActionLabel = labels.actionLabel ?? config?.actionLabel;
   const plan = config?.body === "plan";
+  // Resolved before the words, because the picture's description is one of them.
+  const resolvedAsset =
+    config?.sourceKind === "asset" && typeof config.assetId === "number"
+      ? await resolvePhiPublicAssetReference({ runtime, assetId: config.assetId }).catch(() => null)
+      : null;
   const textEntries = [
     ["eyebrow", labels.eyebrow ?? config?.eyebrow],
     ["title", labels.title ?? config?.title],
@@ -72,6 +77,8 @@ export async function PhiCardWidget({
     ["badge", labels.badge ?? config?.badge],
     ["pricePeriod", plan ? labels.pricePeriod ?? config?.pricePeriod : undefined],
     ["pricePeriodYearly", plan ? labels.pricePeriodYearly ?? config?.pricePeriodYearly : undefined],
+    // What a screen reader says for the picture, in the page's language like every other word here.
+    ["alt", (config?.alt ?? resolvedAsset?.altText ?? "").trim() || undefined],
   ] as const;
   /*
    * A plan's features, masked as every list entry is: their values stand as `%1` onwards and never reach
@@ -113,10 +120,6 @@ export async function PhiCardWidget({
    * lose its title's translation with it.
    */
   const value = config?.value;
-  const resolvedAsset =
-    config?.sourceKind === "asset" && typeof config.assetId === "number"
-      ? await resolvePhiPublicAssetReference({ runtime, assetId: config.assetId }).catch(() => null)
-      : null;
   const presentation = resolvePhiImagePresentation({
     sourceKind: config?.sourceKind,
     assetId: resolvedAsset?.id,
@@ -149,7 +152,7 @@ export async function PhiCardWidget({
           ...(config?.imageOpacity == null ? {} : { opacity: config.imageOpacity / 100 }),
           ...(config?.imageOverlay ? { overlay: config.imageOverlay } : {}),
           source: config?.sourceKind === "asset" ? "asset" : "url",
-          alt: (config?.alt ?? resolvedAsset?.altText ?? "").trim(),
+          alt: translatedByKey.get("alt") ?? "",
           blurDataUrl: resolvedAsset?.blurDataUrl ?? null,
           /*
            * Only a public Asset resolves here, so the optimiser takes every variant, and every original

@@ -5,6 +5,7 @@ import { getPhiGalleryWidgetLabels } from "../../../../../components/widgets/lab
 import { PhiWidgetFailureServer } from "../../../../../components/widgets/shared/widget-failure.server";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { resolvePhiRecordSource } from "../../../../../server-helpers/record-source";
+import { trBulk, trBulkForLocale } from "../../../../../server-helpers/translate";
 import type { PhiBlockRuntime } from "../../../../../types";
 import type { PhiCmsRuntimeRenderRegistry } from "../../../../../types/cms-plugins";
 import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
@@ -19,6 +20,8 @@ export type PhiGalleryWidgetServerProps = {
   registry?: Pick<PhiCmsRuntimeRenderRegistry, "recordProviderLoadersByKey">;
   config: PhiCmsGalleryWidgetConfig;
   widgetId?: PhiCmsInstanceId | null;
+  /** Whether the pictures' descriptions go through the Site's translation; off where the Widget says so. */
+  translate?: boolean;
 };
 
 function isPublicAssetReference(value: unknown): value is PhiPublicMediaAssetReference {
@@ -33,7 +36,7 @@ function isPublicAssetReference(value: unknown): value is PhiPublicMediaAssetRef
  * another shape is somebody else's Provider bound here by mistake. Either failure is the author's to
  * read and is nothing on a live page, rather than an empty gallery anywhere.
  */
-export async function PhiGalleryWidgetServer({ runtime, registry, config, widgetId }: PhiGalleryWidgetServerProps) {
+export async function PhiGalleryWidgetServer({ runtime, registry, config, widgetId, translate = true }: PhiGalleryWidgetServerProps) {
   const labels = await getPhiGalleryWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
   const renderMode = readPhiRuntimeTreeRenderMode(config);
   const result = registry && config.source
@@ -67,10 +70,21 @@ export async function PhiGalleryWidgetServer({ runtime, registry, config, widget
   if (!images || images.length === 0) {
     return null;
   }
+  /*
+   * Each picture's description from the Media library, in the page's language: the Library's text is
+   * the Site's and is translated in the Site's store, in one round trip for the whole gallery.
+   */
+  const altTexts = images.map((image) => (image.altText ?? "").trim());
+  const translatedAlts = translate && altTexts.some(Boolean)
+    ? await (runtime.locale.current ? trBulkForLocale(runtime.locale.current, altTexts) : trBulk(altTexts))
+    : altTexts;
+  const translatedImages = images.map((image, index) => (
+    translatedAlts[index] ? { ...image, altText: translatedAlts[index] } : image
+  ));
   return (
     <PhiRuntimeModuleRenderClientHost
       type={PhiCmsWidgetType.Gallery}
-      componentProps={{ config, images, labels }}
+      componentProps={{ config, images: translatedImages, labels }}
     />
   );
 }

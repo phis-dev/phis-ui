@@ -1,4 +1,6 @@
 import { definePhiPassiveWidgetRenderers } from "../../../../../plugins/factories/widget-renderers";
+import { PhiCmsFlags } from "../../../../../constants/phi-cms";
+import { hasPhiFlag } from "../../../../../helpers/flags";
 import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
 import {
   PHI_GALLERY_WIDGET_DEFINITION,
@@ -15,6 +17,7 @@ export const PHI_GALLERY_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsGalleryWi
       registry={registry}
       config={config}
       widgetId={widget.id}
+      translate={!hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate)}
     />
   )),
 };

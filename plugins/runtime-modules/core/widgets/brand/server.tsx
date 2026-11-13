@@ -4,7 +4,7 @@ import type { PhiBrandWidgetClientProps, PhiBrandWidgetConfig } from "./client";
 
 export type PhiBrandWidgetProps = Pick<
   PhiBrandWidgetClientProps,
-  "fallbackTitle" | "interactive" | "home"
+  "fallbackTitle" | "interactive" | "home" | "logoAlt"
 > & PhiBrandWidgetConfig;
 
 /*
@@ -15,6 +15,7 @@ export function PhiBrandWidget({
   fallbackTitle,
   interactive,
   home,
+  logoAlt,
   mode,
   fontFamily,
   fontSize,
@@ -29,6 +30,7 @@ export function PhiBrandWidget({
         fallbackTitle,
         home,
         interactive,
+        ...(logoAlt ? { logoAlt } : {}),
       }}
     />
   );
