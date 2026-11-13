@@ -352,6 +352,12 @@
       "types": "./module-records.ts",
       "default": "./module-records.ts"
     },
+    "./module/references": {
+      "import": "./module-references.ts",
+      "require": "./module-references.ts",
+      "types": "./module-references.ts",
+      "default": "./module-references.ts"
+    },
     "./module/projection": {
       "import": "./module-projection.ts",
       "require": "./module-projection.ts",
@@ -651,6 +657,7 @@
       "./module/dashboard-cards",
       "./module/labels",
       "./module/records",
+      "./module/references",
       "./net",
       "./next/area-route",
       "./next/areas/accounting",

@@ -344,6 +344,7 @@ const PHI_SERVER_DOORS = new Set([
   "./module/dashboard-cards",
   "./module/labels",
   "./module/records",
+  "./module/references",
   "./helpers/site-runtime",
   "./cms",
   "./cms/request",

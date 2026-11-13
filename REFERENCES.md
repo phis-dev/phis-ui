@@ -68,6 +68,20 @@ about the reference: the same Page, asked about somewhere else. Whether the read
 the target Area's own answer, and a resolver that cannot establish what answers in that Area resolves
 nothing rather than guessing an address.
 
+### Resolving a target a Widget chose itself
+
+The render resolves, once and before anything draws, every target the stored configs name, and hands a
+Widget the answers as `links`. A target the Widget decides on while rendering is not among them, because
+no config states it: a Module that offers the same Page in several Areas has one preset per Area (a preset
+belongs to exactly one, MODULES.md), and a Widget that should lead to "this Module's Page of the Area I
+stand in" picks the reference by `runtime.area`. The Search Box does that for its results Page.
+
+Such a Widget resolves what it chose with `resolvePhiLinkTargetReferences(references, runtime)` and turns
+the answer into an address with `resolvePhiLinkHref`, the same pair the render uses. A Module package
+outside `@phis/ui` takes the resolver from `@phis/ui/module/references`, a one-file Server door. It is one
+round trip per call, so a Widget asks only for what the batch could not know -- a target the config does
+state is read from `links`.
+
 A Page whose route has a parameter (`/news/:slug`, MODULES.md) is a family of addresses, and a target
 names one of them with `params`: `{ kind: "page", reference, params: { slug: "launch" } }`. The resolver
 answers the route's pattern, and `resolvePhiLinkHref` fills it -- from the target's `params` and from what
