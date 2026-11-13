@@ -148,7 +148,7 @@ export function buildMarkdownTranslationUnit(
 }
 
 /** Whether a unit holds any text once its tags and tokens are out. */
-export function hasMarkdownUnitText(html: string) {
+function hasMarkdownUnitText(html: string) {
   return decodeUnitText(html.replace(/<[^>]*>/g, "").replace(/%\d+/g, "")).trim().length > 0;
 }
 

@@ -828,24 +828,33 @@ for (const attribute of ["title", "width", "height"]) {
     new URL("../components/widgets/shared/markdown-render.ts", import.meta.url),
     "utf8",
   );
+  const unitSource = await readFile(
+    new URL("../components/widgets/shared/markdown-translation-unit.ts", import.meta.url),
+    "utf8",
+  );
   assert.match(
-    markdownSource,
-    /metadata\.titles\[index\] = node\.title\?\.trim\(\) \?\? ""/u,
+    unitSource,
+    /token\(\{ kind: "image", src, alt: node\.alt \?\? "", title: node\.title\?\.trim\(\) \?\? "" \}\)/u,
     "An authored title must be carried beside the image rather than inside its token.",
   );
   assert.match(
     markdownSource,
-    /translateUnits\(locale, titleSlots\.map\(\(slot\) => slot\.title\), "text", sourceLocale\)/u,
+    /\(\["alt", "title"\] as const\)\.flatMap/u,
     "A title must be translated as a unit of its own, never merged into the alt text's string.",
   );
   assert.match(
     markdownSource,
-    /metadata\.images\.push\(node\.url\?\.trim\(\) \?\? ""\)/u,
-    "The url must stay in metadata, where no translation request can see it.",
+    /translateUnits\(locale, imageTexts\.map\(\(entry\) => entry\.text\), "text", sourceLocale\)/u,
+    "An image's alt and title must be translated as plain-text units of their own.",
   );
   assert.match(
-    markdownSource,
-    /const title = metadata\.titles\[frame\.index \?\? -1\]/u,
+    unitSource,
+    /const src = node\.url\?\.trim\(\)/u,
+    "The url must stay in the unit's slot, where no translation request can see it.",
+  );
+  assert.match(
+    unitSource,
+    /children\.push\(\{ kind: "image", src: slot\.src, alt: slot\.alt, \.\.\.\(slot\.title \? \{ title: slot\.title \} : \{\}\) \}\)/u,
     "A translated title must be read back onto the image it was authored on.",
   );
   const markdownBodySource = await readFile(
