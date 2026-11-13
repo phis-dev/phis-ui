@@ -1016,6 +1016,23 @@ function mergeThemeWordmarkParts(
   return mergeThemeWordmark(theme, { parts: hasText ? parts.map((part) => ({ ...part })) : null });
 }
 
+/**
+ * A part's colour with one mode's set or cleared and the other mode's kept. Nothing left in either
+ * mode is no colour at all, so the part goes back to the colour around it.
+ */
+function mergeWordmarkPartColor(
+  color: PhiSiteThemeWordmarkPart["color"],
+  mode: PhiThemeMode,
+  next: string | null | undefined,
+): PhiSiteThemeWordmarkPart["color"] {
+  const merged: Record<string, string> = {};
+  for (const key of ["light", "dark"] as const) {
+    const value = key === mode ? next : color?.[key];
+    if (value) merged[key] = value;
+  }
+  return Object.keys(merged).length > 0 ? merged : null;
+}
+
 /** Whether the Brand draws a name at all. Off is stated; on is simply the Wordmark without the word. */
 function mergeThemeWordmarkShows(theme: ThemePayload, shows: boolean): ThemePayload {
   const wordmark = theme.brand?.wordmark ?? {};
@@ -2423,7 +2440,7 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
   /*
    * A Wordmark part picks from what every colour field of the Theme offers: the draft's custom colours in
    * the mode being authored, the primary and text ladders, then the fixed palettes. It stores the colour,
-   * not the role -- the Theme is where those roles are set.
+   * not the role -- the Theme is where those roles are set -- and stores it for the mode being authored.
    */
   const wordmarkCustomColors = useMemo(() => {
     const palette = resolveThemeCustomPalette(state.draft, resolveThemePayloadPreset(state.draft, themePresets), mode);
@@ -2716,9 +2733,12 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                           allowClear
                           // A part's row is narrow: the swatch says the colour, the value would overflow it.
                           showText={false}
-                          value={part.color ?? null}
+                          // The colour of the mode being authored; the other mode keeps its own.
+                          value={part.color?.[mode] ?? null}
                           presets={wordmarkColorPresets}
-                          onChange={(next) => updateWordmarkPart(index, { color: next })}
+                          onChange={(next) => updateWordmarkPart(index, {
+                            color: mergeWordmarkPartColor(part.color, mode, next),
+                          })}
                         />
                         <PhiButtonControl
                           type="text"

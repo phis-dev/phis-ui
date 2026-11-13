@@ -226,7 +226,10 @@ preset.
   `PHI_BRAND_LINE_FALLBACK_ICONS`), and an icon in front of an empty line would report something missing
   rather than something not asked for.
 - `wordmark?: { fontFamily?, fontWeight?, fontStyle?: "normal" | "italic", letterSpacing?, parts? }` with
-  `parts[]` of `{ text, color?, fontWeight? }`. What a part states wins over the Wordmark.
+  `parts[]` of `{ text, color?: { light?, dark? }, fontWeight? }`. What a part states wins over the
+  Wordmark. The colour is per mode, as the Logo is: a colour picked for a dark ground vanishes on a light
+  one. The Theme editor sets the colour of the mode it is showing; a mode with none draws the part in the
+  colour around it.
 
 A placement never restates any of this. The Brand Widget is asked one thing -- `mode`, which of
 `lockup` | `logo` | `wordmark` | `slogan` | `location` it draws here -- and reads the rest from the

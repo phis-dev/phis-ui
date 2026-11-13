@@ -52,8 +52,17 @@ export type PhiSiteThemeRoot = {
  */
 export type PhiSiteThemeWordmarkPart = {
   text: string;
-  color?: string | null;
+  /**
+   * The part's colour, one per mode, as the Logo has one picture per mode: a colour picked to read on a
+   * dark ground vanishes on a light one. A mode that names none draws the part in the colour around it.
+   */
+  color?: PhiSiteThemeWordmarkPartColor | null;
   fontWeight?: number | string | null;
+};
+
+export type PhiSiteThemeWordmarkPartColor = {
+  light?: string | null;
+  dark?: string | null;
 };
 
 /**

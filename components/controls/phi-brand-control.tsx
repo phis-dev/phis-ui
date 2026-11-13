@@ -33,7 +33,10 @@ export type PhiBrandControlProps = {
   /** The Site's own name, for a Brand that has no Wordmark parts of its own. */
   fallbackTitle?: ReactNode;
   shows?: PhiBrandControlShows;
-  /** The mode whose Logo is drawn: a Logo is artwork in fixed colours, one picture per mode. */
+  /**
+   * The mode being drawn: a Logo is artwork in fixed colours, one picture per mode, and a Wordmark part
+   * has one colour per mode for the same reason.
+   */
   mode: PhiThemeMode;
 };
 
@@ -79,6 +82,7 @@ function wordmarkIsSwitchedOff(wordmark: PhiSiteThemeWordmark | null | undefined
 
 function renderWordmark(
   wordmark: PhiSiteThemeWordmark | null | undefined,
+  mode: PhiThemeMode,
   fallbackTitle?: ReactNode,
   fallbackStyle?: CSSProperties,
 ) {
@@ -106,17 +110,21 @@ function renderWordmark(
 
   return (
     <span style={wordmarkStyle}>
-      {wordmark.parts.map((part, index) => (
+      {wordmark.parts.map((part, index) => {
+        // The mode's own colour; a mode that names none takes the colour around it.
+        const color = part.color?.[mode];
+        return (
         <span
           key={`${part.text}-${index}`}
           style={{
-            ...(part.color ? { color: part.color } : {}),
+            ...(color ? { color } : {}),
             ...(part.fontWeight ? { fontWeight: part.fontWeight } : {}),
           }}
         >
           {part.text}
         </span>
-      ))}
+        );
+      })}
     </span>
   );
 }
@@ -223,7 +231,7 @@ export function PhiBrandControl({
     : brand?.eyebrow ?? null;
   const wordmarkNode = shows === "logo"
     ? null
-    : renderWordmark(brand?.wordmark, fallbackTitle, {
+    : renderWordmark(brand?.wordmark, mode, fallbackTitle, {
       fontSize: PHI_FONT_SIZE_XL,
       lineHeight: PHI_LINE_HEIGHT_LG,
     });
