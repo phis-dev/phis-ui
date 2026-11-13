@@ -42,6 +42,7 @@ const PHI_THREAD_PAGE_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_THREADS_RUN
     state_unread: "New",
     state_open: "Open",
     state_archived: "Archived",
+    state_locked: "Locked",
     kind_direct: "Direct",
     kind_group: "Group",
     kind_cross_group: "Between groups",
@@ -61,6 +62,17 @@ const PHI_THREAD_PAGE_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_THREADS_RUN
       "It closes for everyone in it. Anyone can reopen it later.",
     ),
     archive_confirm_ok: "Archive",
+    /*
+     * Locking asks first for the reason archiving does: it stops everyone in the conversation from
+     * writing, not only the one who pressed it. Unlocking is the way back and asks nothing.
+     */
+    lock_label: "Lock",
+    unlock_label: "Unlock",
+    lock_confirm_title: "Lock this conversation?",
+    lock_confirm_text: definePhiMessageLabel(
+      "Nobody can write in it until it is unlocked. Everything said so far stays readable.",
+    ),
+    lock_confirm_ok: "Lock",
     confirm_cancel: "Cancel",
   },
 });
@@ -89,6 +101,7 @@ export async function getPhiThreadPageLabels(options: PhiGlobalTranslatorOptions
       unread: labels.state_unread,
       open: labels.state_open,
       archived: labels.state_archived,
+      locked: labels.state_locked,
     },
     kinds: {
       direct: labels.kind_direct,
@@ -108,6 +121,11 @@ export async function getPhiThreadPageLabels(options: PhiGlobalTranslatorOptions
       archiveConfirmTitle: labels.archive_confirm_title,
       archiveConfirmText: labels.archive_confirm_text,
       archiveConfirmOk: labels.archive_confirm_ok,
+      lock: labels.lock_label,
+      unlock: labels.unlock_label,
+      lockConfirmTitle: labels.lock_confirm_title,
+      lockConfirmText: labels.lock_confirm_text,
+      lockConfirmOk: labels.lock_confirm_ok,
       confirmCancel: labels.confirm_cancel,
     },
   };

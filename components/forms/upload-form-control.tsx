@@ -106,6 +106,10 @@ function resolveUploadLabels(labels: Readonly<Record<string, string>> | undefine
       PHI_FORM_UPLOAD_LABEL_KEYS.errorStorageUnreachable,
       PHI_MEDIA_UPLOAD_DEFAULT_LABELS.errorStorageUnreachable,
     ),
+    errorFolderLocked: read(
+      PHI_FORM_UPLOAD_LABEL_KEYS.errorFolderLocked,
+      PHI_MEDIA_UPLOAD_DEFAULT_LABELS.errorFolderLocked,
+    ),
   };
 }
 

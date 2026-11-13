@@ -72,8 +72,11 @@ export const PHI_CORE_MESSAGING_DATA_PROVIDER_DESCRIPTORS = [
             { value: "unread", label: "New" },
             { value: "open", label: "Open" },
             { value: "archived", label: "Archived" },
+            { value: "locked", label: "Locked" },
           ] },
           { key: "archived", title: "Archived", type: "boolean" },
+          // `PhisThreadFlag.Locked`, read off the row's flags: Core takes no new message into it.
+          { key: "locked", title: "Locked", type: "boolean" },
           { key: "unread", title: "Unread", type: "boolean" },
           { key: "latestMessageAt", title: "Last activity", type: "datetime" },
           { key: "updatedAt", title: "Changed", type: "datetime" },
@@ -114,6 +117,26 @@ export const PHI_CORE_MESSAGING_DATA_PROVIDER_DESCRIPTORS = [
             scope: "row",
             intent: "write",
             visibleWhen: { source: "row", valuePath: "archived", operator: "truthy" },
+          },
+          /*
+           * The lock is not the archive: a locked conversation stays where it is and stays readable, it
+           * only takes nothing new. It asks first for the same reason archiving does -- it reaches
+           * everybody in it -- and unlocking, the way back, asks nothing.
+           */
+          {
+            key: "lock",
+            title: "Lock",
+            scope: "row",
+            intent: "write",
+            confirmation: "required",
+            visibleWhen: { source: "row", valuePath: "locked", operator: "falsy" },
+          },
+          {
+            key: "unlock",
+            title: "Unlock",
+            scope: "row",
+            intent: "write",
+            visibleWhen: { source: "row", valuePath: "locked", operator: "truthy" },
           },
         ],
       },

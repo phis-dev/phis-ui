@@ -1,6 +1,6 @@
 "use client";
 
-import { PhisThreadStatus } from "../../../../constants/threads";
+import { PhisThreadFlag, PhisThreadStatus } from "../../../../constants/threads";
 import {
   buildPhiTablePageParams,
   createPhiTableProviderRequestInit,
@@ -65,18 +65,23 @@ function buildThreadQuery(query: PhiTableProviderQueryRequest["query"]) {
 /**
  * What a cell shows and what a condition reads, neither of which is a flag.
  *
- * `state` is the name a badge draws and `archived` the answer a row action asks for; the enum values
- * are strings because that is what an enum column and a condition compare against. The status itself
- * stays on the row, because the filter above is written against what the route takes.
+ * `state` is the name a badge draws and `archived` and `locked` the answers a row action asks for; the
+ * enum values are strings because that is what an enum column and a condition compare against. The
+ * status itself stays on the row, because the filter above is written against what the route takes.
+ *
+ * One badge, so one state wins: archived over everything, then unread -- a message waiting to be read is
+ * what the reader acts on, and a lock is read in the conversation once it is open -- then locked.
  */
-function readThreadRow(row: Record<string, unknown>) {
+export function readPhiThreadInboxRow(row: Record<string, unknown>) {
   const archived = row.status === PhisThreadStatus.Archived;
+  const locked = typeof row.flags === "number" && (row.flags & PhisThreadFlag.Locked) !== 0;
   return {
     ...row,
     kind: String(row.kind),
     status: String(row.status),
     archived,
-    state: archived ? "archived" : row.unread === true ? "unread" : "open",
+    locked,
+    state: archived ? "archived" : row.unread === true ? "unread" : locked ? "locked" : "open",
   };
 }
 
@@ -92,7 +97,7 @@ async function queryThreadTable({
     await fetch(`${API_PATH}?${buildThreadQuery(query).toString()}`, createPhiTableProviderRequestInit(signal)),
     RESPONSE_OPTIONS,
   );
-  const rows = readPhiTableRows(payload?.rows).map(readThreadRow);
+  const rows = readPhiTableRows(payload?.rows).map(readPhiThreadInboxRow);
   return {
     rows,
     total: typeof payload?.total === "number" ? payload.total : undefined,
@@ -112,7 +117,22 @@ function readThreadId(value: unknown) {
 }
 
 /**
- * A status change, and then the listing again.
+ * What a row action writes, in the shape `PATCH /api/site/threads/{id}` takes it: archiving and reopening
+ * change the status, locking and unlocking the lock. Both are one row everybody in the conversation
+ * shares, and Core decides who may change them.
+ */
+export function readPhiThreadInboxActionBody(actionKey: string) {
+  switch (actionKey) {
+    case "archive": return { status: PhisThreadStatus.Archived };
+    case "reopen": return { status: PhisThreadStatus.Open };
+    case "lock": return { locked: true };
+    case "unlock": return { locked: false };
+    default: return null;
+  }
+}
+
+/**
+ * A status or lock change, and then the listing again.
  *
  * The answer to a PATCH is the new status and nothing else, but what changed on screen is the row's
  * place in an order kept by last activity -- so the view is reloaded rather than the cell patched. A
@@ -125,15 +145,11 @@ async function mutateThreadTable(request: PhiTableProviderMutationRequest) {
   if (request.kind !== "action") {
     throw new PhiTableProviderError(
       "mutation-not-supported",
-      "A conversation is not edited in a cell; archiving and reopening are actions.",
+      "A conversation is not edited in a cell; archiving, reopening, locking and unlocking are actions.",
     );
   }
-  const status = request.actionKey === "archive"
-    ? PhisThreadStatus.Archived
-    : request.actionKey === "reopen"
-      ? PhisThreadStatus.Open
-      : null;
-  if (status == null) {
+  const body = readPhiThreadInboxActionBody(request.actionKey);
+  if (body == null) {
     throw new PhiTableProviderError(
       "action-not-supported",
       `Unsupported conversation action "${request.actionKey}".`,
@@ -145,7 +161,7 @@ async function mutateThreadTable(request: PhiTableProviderMutationRequest) {
       ...init,
       method: "PATCH",
       headers: { ...init.headers, "content-type": "application/json" },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify(body),
     }),
     RESPONSE_OPTIONS,
   );

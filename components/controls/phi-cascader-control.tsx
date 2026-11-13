@@ -11,6 +11,7 @@ import type { PhiTreeOption } from "../../types/tree";
 import { PhiLabeledControl, usePhiControlLabel } from "./phi-labeled-control";
 import { PhiDescriptionHint } from "./phi-description-tooltip-icon";
 import { usePhiConfig } from "../root/phi-config-provider";
+import { PhiIcon } from "../shell/phi-icon";
 
 export type PhiCascaderNormalizeMode = "raw" | "path";
 
@@ -163,6 +164,10 @@ function insertCascaderOption(
     if (index === segments.length - 1 && option.description && current.description == null) {
       current.description = option.description;
     }
+    // The option's icon, like its description, belongs to its own entry and travels to the row drawn for it.
+    if (index === segments.length - 1 && option.icon && current.icon == null) {
+      current.icon = option.icon;
+    }
 
     if (index < segments.length - 1) {
       current.children = (current.children as DefaultOptionType[] | undefined) ?? [];
@@ -300,9 +305,10 @@ export function PhiCascaderControl({
        * its own target before the label, so passing over the rows does not fire it. The label stays a
        * string on the option, because the search matches and highlights it.
        */
-      optionRender={(option) => option.description ? (
+      optionRender={(option) => option.description || typeof option.icon === "string" ? (
         <span style={{ display: "inline-flex", alignItems: "center", gap: token.paddingXS, minWidth: 0 }}>
-          <PhiDescriptionHint description={option.description as string} />
+          {option.description ? <PhiDescriptionHint description={option.description as string} /> : null}
+          {typeof option.icon === "string" ? <PhiIcon name={option.icon} size={14} /> : null}
           {option.label}
         </span>
       ) : option.label}

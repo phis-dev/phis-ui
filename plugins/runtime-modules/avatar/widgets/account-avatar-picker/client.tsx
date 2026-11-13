@@ -68,6 +68,8 @@ export function PhiAccountAvatarPickerWidgetClient({
     errorQuotaExceeded: labels.feedback.errorQuotaExceeded,
     errorSpaceUnavailable: labels.feedback.errorSpaceUnavailable,
     errorStorageUnreachable: labels.feedback.errorStorageUnreachable,
+    // An avatar is written into the person's own Space and names no Folder, so no lock can refuse it.
+    errorFolderLocked: labels.feedback.errorGeneric,
   }), [labels]);
 
   const { accept, items, upload } = usePhiMediaUpload({

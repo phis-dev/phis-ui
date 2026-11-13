@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 
 import type { PhiBlockRuntime, PhiClientBlockBaseProps } from "../../../../../types";
 import type { PhisThreadDetail, PhisThreadMessage } from "../../../../../types/threads";
-import { PhisThreadMessageFlag, PhisThreadStatus } from "../../../../../constants/threads";
+import { PhisThreadFlag, PhisThreadMessageFlag, PhisThreadStatus } from "../../../../../constants/threads";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiCardControl } from "../../../../../components/controls/phi-card-control";
@@ -565,6 +565,9 @@ export function PhiThreadConversationWidgetClient({
     );
   }
 
+  const archived = detail.thread.status === PhisThreadStatus.Archived;
+  const locked = isPhiThreadLocked(detail);
+
   return (
     <>
       {/*
@@ -576,7 +579,7 @@ export function PhiThreadConversationWidgetClient({
         */}
       <PhiCardControl
         padding={config?.padding}
-        toolbar={config?.reply && detail.thread.status !== PhisThreadStatus.Archived ? (
+        toolbar={config?.reply && !archived && !locked ? (
           // Small, like every control in a heading bar: it sits beside the title, not under the conversation.
           <PhiButtonControl
             label={labels.replyLabel}
@@ -588,8 +591,13 @@ export function PhiThreadConversationWidgetClient({
         title={
           <PhiFlexControl align="center" gap="small" wrap>
             {readThreadTitle(detail, labels)}
-            {detail.thread.status === PhisThreadStatus.Archived ? (
+            {archived ? (
               <PhiTagControl>{labels.archivedLabel}</PhiTagControl>
+            ) : null}
+            {locked ? (
+              <PhiTagControl color="warning">
+                <PhiIcon name="antd:lock" size="inherit" /> {labels.lockedLabel}
+              </PhiTagControl>
             ) : null}
           </PhiFlexControl>
         }
@@ -603,6 +611,13 @@ export function PhiThreadConversationWidgetClient({
             <PhiTypographyControl type="secondary">
               {`${labels.participantsLabel}: ${readParticipantNames(detail, labels).join(", ")}`}
             </PhiTypographyControl>
+          ) : null}
+          {/*
+            * In place of the Reply: a locked conversation takes no message from anybody, so writing one is
+            * not offered and then refused -- the reader is told why there is nothing to press.
+            */}
+          {config?.reply && locked && !archived ? (
+            <PhiAlertControl level="info" showIcon title={labels.lockedText} />
           ) : null}
           {/* A failure on a conversation already on screen stands above it; what was read stays. */}
           {error ? (
@@ -647,6 +662,11 @@ export function PhiThreadConversationWidgetClient({
       </PhiCardControl>
     </>
   );
+}
+
+/** Whether Core takes new messages into this conversation; `PhisThreadFlag.Locked` says it does not. */
+export function isPhiThreadLocked(detail: Pick<PhisThreadDetail, "thread">) {
+  return (detail.thread.flags & PhisThreadFlag.Locked) !== 0;
 }
 
 /**

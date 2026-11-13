@@ -444,7 +444,16 @@ export async function buildPhiDefaultBuilderMediaPageTree({
                 control: "cascader",
                 placeholder: mediaLabels?.tool.folderLabel ?? "Folder",
                 width: 168,
+                /*
+                 * The lock of the chosen Folder, beside the cascader that chose it. Its label is the
+                 * Widget's own (lock or unlock, by the Folder's state); naming it here only places it.
+                 */
                 actions: [{
+                  key: "lockFolder",
+                  label: mediaLabels?.tool.lockFolderLabel ?? "Lock folder",
+                  icon: "antd:lock",
+                  display: "icon",
+                }, {
                   key: "createFolder",
                   label: mediaLabels?.tool.createFolderLabel ?? "Create folder",
                   description: mediaLabels?.tool.createFolderLabel ?? "Create folder",

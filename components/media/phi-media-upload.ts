@@ -11,6 +11,7 @@ import {
   type PhiMediaUploadSessionRunner,
   type PhiMediaUploadInitOptions,
 } from "./media-upload-flow";
+import { PHI_MEDIA_UPLOAD_FOLDER_LOCKED_CODE } from "./media-folder-lock";
 
 /**
  * What a surface accepts, stated by the Module that offers it.
@@ -41,6 +42,8 @@ export type PhiMediaUploadLabels = {
   errorSpaceUnavailable: string;
   /** The body never reached the storage Provider, or the Provider refused it. */
   errorStorageUnreachable: string;
+  /** The Folder the upload was meant for is locked; only an upload that names a Folder can meet it. */
+  errorFolderLocked: string;
 };
 
 /**
@@ -59,6 +62,7 @@ export const PHI_MEDIA_UPLOAD_DEFAULT_LABELS: PhiMediaUploadLabels = {
   errorQuotaExceeded: "There is no room left in this space.",
   errorSpaceUnavailable: "That space is not available.",
   errorStorageUnreachable: "The file storage could not be reached.",
+  errorFolderLocked: "This folder is locked. Nothing can be uploaded into it until it is unlocked.",
 };
 
 /** The `accept` attribute a file dialog should carry, derived rather than written out by each caller. */
@@ -146,6 +150,7 @@ export function readPhiMediaUploadErrorMessage(error: unknown, labels: PhiMediaU
     // Provider, so this is deliberately not the same reading as a network failure.
     case "storage_unreachable":
     case "storage_rejected": return labels.errorStorageUnreachable;
+    case PHI_MEDIA_UPLOAD_FOLDER_LOCKED_CODE: return labels.errorFolderLocked;
     default: break;
   }
   // A TypeError from fetch is the browser saying it never reached the site at all.

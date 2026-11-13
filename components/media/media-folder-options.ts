@@ -1,4 +1,5 @@
 import type { PhiMediaAssetFolder } from "../../types/media";
+import { isPhiMediaFolderLocked } from "./media-folder-lock";
 
 /*
  * Folders as the media Controls offer them: a tree, a path of ids, a cascader value, and back. Pure
@@ -71,17 +72,30 @@ export function buildPhiMediaFolderValueById(folders: PhiMediaAssetFolder[], fol
   return path.length > 0 ? `/${path.join("/")}` : "/";
 }
 
-export function buildPhiMediaFolderCascaderOptions(folders: PhiMediaAssetFolder[]) {
+/**
+ * A locked Folder is drawn with a lock, and named so where the caller has the word for it: the option's
+ * description is the hint every option row carries. It stays selectable -- a locked Folder is still read,
+ * only what it holds does not change.
+ */
+export function buildPhiMediaFolderCascaderOptions(
+  folders: PhiMediaAssetFolder[],
+  presentation?: { lockedLabel?: string },
+) {
   return [...folders]
     .sort((left, right) => {
       const leftPath = buildPhiMediaFolderPathById(folders, left.id);
       const rightPath = buildPhiMediaFolderPathById(folders, right.id);
       return leftPath.length - rightPath.length || left.sortOrder - right.sortOrder || left.id - right.id;
     })
-    .map((folder) => ({
-      value: buildPhiMediaFolderValueById(folders, folder.id),
-      label: folder.name,
-    }));
+    .map((folder) => {
+      const option = { value: buildPhiMediaFolderValueById(folders, folder.id), label: folder.name };
+      if (!isPhiMediaFolderLocked(folder)) return option;
+      return {
+        ...option,
+        icon: "lock",
+        ...(presentation?.lockedLabel ? { description: presentation.lockedLabel } : {}),
+      };
+    });
 }
 
 export function resolvePhiMediaFolderIdFromValue(folders: PhiMediaAssetFolder[], value: string | null | undefined) {

@@ -6,26 +6,6 @@ built. Remove an entry when it is done.
 
 ## Code hygiene
 
-- **One dead export left, and it is the interesting one.** `usePhiAssetCollectionRuntime`
-  (components/media/asset-collection-runtime.ts) has no caller anywhere, but
-  `scripts/validate-media-space-contracts.ts` reads its source and pins the guarantee that *a Collection
-  request without a bound provider surfaces as an error, never as an empty gallery*. Deleting the hook
-  takes the guarantee with it and the check fails, which is the check doing its job. So the question is
-  not whether the export is used -- it is where that guarantee belongs now that the Media Picker binding
-  and the Collection View binding each answer the same question for themselves. Decide that, then move
-  the assertion and drop the hook.
-
-  The rest of the sweep is done. Two findings worth keeping. **The public barrels are not an add-on
-  surface**: `@phis/ui` ships types and functions for Modules, not for Add-ons, so a name sitting behind
-  `export *` in helpers.ts, types.ts or constants.ts is not thereby public API -- nothing chose it, the
-  wildcard swept it up. **A sweep grows as it runs**: removing `isApiV1Path` and `isMedusaApiPath` left
-  `API_PATHS` and `MEDUSA_API_PREFIXES` with no reader, and removing `canAccessPage` left
-  `PageAccessInput`; each removal has to be re-scanned after the one before it, not planned in one list
-  up front.
-
-  `helpers/cms-config-serialization.ts` came out of it holding one function that forwards to
-  `mergeRenderableBlockDefaults` under another name. Worth folding into its single caller,
-  `components/widgets/config/parser-primitives.ts`, rather than keeping a file for a rename.
 - **Convert concrete preset builders to local-key templates.** Some first-party preset builders still
   return concrete trees with synthetic ids (for example
   `plugins/runtime-modules/phi-default-site-area-preset-tree.ts`), so the central instantiator is not
@@ -36,13 +16,6 @@ built. Remove an entry when it is done.
 - **Control badge adoption from real use cases.** The badge contract exists for button and toolbar.
   Evaluate basket, support inbox, and similar domain buttons one by one; migrate only where the generic
   receiver contract fits without losing domain semantics.
-- **Dashboard Cards hint with the browser's `title`, not a Tooltip.** On the Admin Dashboard the Cards
-  show their hints as native `title` attributes -- the browser's delayed, unstyled bubble, unreachable
-  by touch and outside the Theme. The house has a Tooltip (`PhiDescriptionTooltipIcon` and the antd
-  Tooltip behind it, inside `components/controls/`); the Cards' hints move onto it, and no Card or
-  card Control sets a native `title` on an element. Find the sites by rendering the Dashboard, not by
-  grep alone: the attribute may come from a Control's ellipsis or from antd. Noted 2026-11-09 for the
-  next release.
 
 ## Regions and Overlays
 
@@ -52,7 +25,11 @@ built. Remove an entry when it is done.
   dropdown, an entry with children and no address of its own stands as a heading over its children
   instead. Decide whether that is the rule or a flag the navigation item states, and how the Sider (inline
   menu) and the mobile drawer show it. First user: the Docs entry of `@phis/dev`, which uses submenus until
-  then.
+  then. A first cut as an implicit rule (2026-11-13) was taken back: the Builder's
+  navigation table did not show it, a user could steer it only by giving a container an address, and it
+  changed existing headers unasked. The candidates now: a presentation flag on the entry (default
+  submenu; the table edits it, a preset may set it, each menu decides what it does with it), or a switch
+  on the Header Navigation Widget.
 
 - **Parameterized Region shape dividers.** One Region-edge contract for optional top and bottom
   decorations, rendered centrally by the Region container. Scope: `header_bottom.bottom`, `hero.top`,
@@ -112,14 +89,15 @@ built. Remove an entry when it is done.
   whether that stays and the contract says so, or whether unsaved focal edits get an owner and the preview
   switches to the regenerated variant after save.
 - **Module font adoption into the Media library.** Designed in [design/FONTS.md](./design/FONTS.md).
-- **Folder flags have no reader and no control.** `PhiMediaFolderFlags` travels in the Folder payload and
-  nothing here reads it. Core now enforces `Locked` (2026-11-10): a locked Folder is not renamed, moved
-  or deleted, and nothing is created in it, uploaded into it, moved into or out of it or deleted from it;
-  the request answers `409` with `media_folder_locked`. The Media workspace needs a control that sets and
-  clears the lock, has to show a locked Folder as locked and keep its own actions from being offered on
-  it, and has to say why when Core refuses. `Hidden` and `Collapsed` are display state Core does not
-  enforce: the Folder tree should leave a hidden Folder out unless asked to show it, and start a
-  collapsed one collapsed; both need a control as well.
+- **`Hidden` and `Collapsed` Folder flags have no reader and no control.** `Locked` is read and set
+  (components/media/media-folder-lock.ts, the Media page's lock button). `Hidden` and `Collapsed` are
+  display state Core does not enforce: the Folder list should leave a hidden Folder out unless asked to
+  show it, and start a collapsed one collapsed; both need a control as well. The Folder filter is a
+  Cascader, which has no collapsed state of its own -- say first what "collapsed" means there. Two lock
+  refusals still arrive without Core's code and read as the server's English: moving an Asset
+  (`PATCH /api/site/media/{id}`, plain `error` text) and the Folder Form (`/api/v1/forms/media-folder`,
+  `ok: false` with text); the upload route says `folder_locked` where the others say
+  `media_folder_locked`. Core change, then the Asset metadata and Folder Forms map it.
 - **`inverse` has no ground of its own.** A Surface toned `inverse` paints the other mode's Chrome
   Overlay (`styles/shell.css`, the tone rules). A Theme whose Chrome is glass -- phis.dev's is 55 % white or
   ink -- gives an inverse box a near-transparent ground, and its inverted text sits on the page's own
@@ -129,12 +107,14 @@ built. Remove an entry when it is done.
 
 ## Threads
 
-- **A locked thread looks like any other.** Core refuses every new message into a thread that carries
-  `PhisThreadFlag.Locked` (2026-11-10) and takes `locked` on `PATCH /api/site/threads/{id}` from whoever
-  may change the status. The Threads Module needs the control that sets and clears it, has to show the
-  state in the conversation and its list, and has to put the composer out of use instead of letting a
-  message be written and then refused. Add-ons have no capability method for the lock yet; that is a
-  contract extension.
+- **A thread lock refused mid-reply reads as Core's English.** The lock is shown and set (inbox row
+  actions Lock/Unlock, the conversation's tag and notice in place of the Reply). A reply sent into a
+  thread locked after its dialog opened is refused with `400 { error: "This thread is locked." }` -- no
+  code, the same status as every other `PhisThreadError` -- so the Reply Form cannot read it as a lock.
+  Core should answer a code (`thread_locked`, `409`), then the Form maps it. The open conversation is not
+  told when a row action locks, archives or reopens it; a Table's provider action emits nothing a
+  Controller could forward as `threadReload`. Add-ons have no capability method for the lock yet; that
+  is a contract extension.
 - **`Muted` waits on thread notifications.** A participant's `Muted` flag is reserved in Core: nothing
   notifies a participant of a thread message today, so there is nothing to silence and no setter. The
   control belongs with the notifications when they are built.
@@ -217,8 +197,6 @@ built. Remove an entry when it is done.
   Popconfirm, `Input.Search`, DatePicker, Upload) keep the antd Button and bring it when they load.
   Check every submit path (`htmlType`, form footers) before building. An upstream PR moving `isBright` to
   `color-picker/util` would remove the chain alone: ant-design/ant-design#59461 (02.10.).
-- **Freeze the module-graph audit.** `pnpm audit:graph` exists but is not part of `pnpm verify`. Set its
-  output budget and failure thresholds, then add it.
 - **Generated-output budget report** for the Skeleton's development build, separating Turbopack cache,
   source maps, server chunks, and browser chunks.
 
@@ -226,8 +204,6 @@ built. Remove an entry when it is done.
 
 - **Machine-readable JSON schemas.** Signal `valueSchema` ids are enforced by TypeScript readers and
   emitters only. Add a runtime schema registry once the controller and Widget schema inventory is stable.
-- **Keep `scopeKey` separate from signal routing.** Audit new `scopeKey` uses; never derive a signal scope
-  or receiver from it.
 
 ## Operations
 

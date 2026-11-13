@@ -83,6 +83,7 @@ const file = (type: string, size = 10) =>
     ["space_forbidden", labels.errorSpaceUnavailable],
     ["storage_unreachable", labels.errorStorageUnreachable],
     ["storage_rejected", labels.errorStorageUnreachable],
+    ["folder_locked", labels.errorFolderLocked],
   ];
   for (const [code, expected] of codes) {
     assert.equal(readPhiMediaUploadErrorMessage({ code }, labels), expected, code);

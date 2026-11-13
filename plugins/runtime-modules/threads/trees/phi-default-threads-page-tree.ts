@@ -424,8 +424,9 @@ export async function buildPhiDefaultThreadsPageTree({
                   unread: labels.states.unread,
                   open: labels.states.open,
                   archived: labels.states.archived,
+                  locked: labels.states.locked,
                 },
-                tagColorMap: { unread: "processing", open: "default", archived: "default" },
+                tagColorMap: { unread: "processing", open: "default", archived: "default", locked: "warning" },
               },
               {
                 key: "latestMessageAt",
@@ -522,6 +523,28 @@ export async function buildPhiDefaultThreadsPageTree({
                 key: "reopen",
                 label: labels.actions.reopen,
                 icon: "antd:rollback",
+                display: "icon",
+                execution: "provider",
+              }, {
+                /*
+                 * The lock, beside the archive and drawn the same way: one of the two is on a row, the
+                 * closed lock where it is open and the open lock where it is closed.
+                 */
+                key: "lock",
+                label: labels.actions.lock,
+                icon: "antd:lock",
+                display: "icon",
+                execution: "provider",
+                confirm: {
+                  title: labels.actions.lockConfirmTitle,
+                  description: labels.actions.lockConfirmText,
+                  okText: labels.actions.lockConfirmOk,
+                  cancelText: labels.actions.confirmCancel,
+                },
+              }, {
+                key: "unlock",
+                label: labels.actions.unlock,
+                icon: "antd:unlock",
                 display: "icon",
                 execution: "provider",
               }],

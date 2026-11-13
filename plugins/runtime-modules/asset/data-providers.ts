@@ -98,6 +98,9 @@ export const PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
         },
         actions: [
           { key: "createFolder", title: "Create folder", scope: "resource" },
+          // The Folder the listing is filtered to; Core refuses every change to what a locked one holds.
+          { key: "lockFolder", title: "Lock folder", scope: "resource" },
+          { key: "unlockFolder", title: "Unlock folder", scope: "resource" },
           { key: "upload", title: "Upload", scope: "resource", panelKey: "upload" },
           { key: "refresh", title: "Reload", scope: "resource" },
           { key: "update", title: "Update", scope: "item" },

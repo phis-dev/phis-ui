@@ -83,6 +83,7 @@ const PHI_ANTD_ICON_LOADERS = {
   LayoutOutlined: () => import("@ant-design/icons-svg/es/asn/LayoutOutlined"),
   LeftOutlined: () => import("@ant-design/icons-svg/es/asn/LeftOutlined"),
   LinkOutlined: () => import("@ant-design/icons-svg/es/asn/LinkOutlined"),
+  LockOutlined: () => import("@ant-design/icons-svg/es/asn/LockOutlined"),
   LogoutOutlined: () => import("@ant-design/icons-svg/es/asn/LogoutOutlined"),
   MailOutlined: () => import("@ant-design/icons-svg/es/asn/MailOutlined"),
   MenuFoldOutlined: () => import("@ant-design/icons-svg/es/asn/MenuFoldOutlined"),
@@ -122,6 +123,7 @@ const PHI_ANTD_ICON_LOADERS = {
   TeamOutlined: () => import("@ant-design/icons-svg/es/asn/TeamOutlined"),
   TranslationOutlined: () => import("@ant-design/icons-svg/es/asn/TranslationOutlined"),
   UndoOutlined: () => import("@ant-design/icons-svg/es/asn/UndoOutlined"),
+  UnlockOutlined: () => import("@ant-design/icons-svg/es/asn/UnlockOutlined"),
   UnorderedListOutlined: () => import("@ant-design/icons-svg/es/asn/UnorderedListOutlined"),
   UpOutlined: () => import("@ant-design/icons-svg/es/asn/UpOutlined"),
   UploadOutlined: () => import("@ant-design/icons-svg/es/asn/UploadOutlined"),
@@ -372,6 +374,8 @@ export const PHI_ANTD_ICON_NAMES: Readonly<Record<string, PhiAntdIconKey>> = {
   "folder-add-outlined": "FolderAddOutlined",
   link: "LinkOutlined",
   "link-outlined": "LinkOutlined",
+  lock: "LockOutlined",
+  "lock-outlined": "LockOutlined",
   minus: "MinusOutlined",
   "minus-outlined": "MinusOutlined",
   inbox: "InboxOutlined",
@@ -390,6 +394,8 @@ export const PHI_ANTD_ICON_NAMES: Readonly<Record<string, PhiAntdIconKey>> = {
   "stop-outlined": "StopOutlined",
   undo: "UndoOutlined",
   "undo-outlined": "UndoOutlined",
+  unlock: "UnlockOutlined",
+  "unlock-outlined": "UnlockOutlined",
 };
 
 export function PhiAntdIcon({

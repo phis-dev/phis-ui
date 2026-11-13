@@ -122,6 +122,7 @@ function resolveAreaUploadLabels(labels: PhiAreaUploadWidgetLabels): PhiMediaUpl
     errorGeneric: labels.uploadFailedText,
     errorDuplicate: labels.assetExistsLabel,
     errorStorageUnreachable: labels.uploadStorageUnreachableText,
+    errorFolderLocked: labels.uploadFolderLockedText,
   };
 }
 

@@ -119,6 +119,7 @@ export const PHI_FORM_UPLOAD_LABEL_KEYS = {
   errorQuotaExceeded: "uploadErrorQuotaExceeded",
   errorSpaceUnavailable: "uploadErrorSpaceUnavailable",
   errorStorageUnreachable: "uploadErrorStorageUnreachable",
+  errorFolderLocked: "uploadErrorFolderLocked",
 } as const;
 
 /*

@@ -2,6 +2,13 @@ export type PhiAssetPreviewToolWidgetLabels = {
   searchPlaceholder: string;
   folderLabel: string;
   createFolderLabel: string;
+  /** Beside a locked Folder wherever Folders are offered: the lock is drawn, and this names it. */
+  folderLockedLabel: string;
+  lockFolderLabel: string;
+  unlockFolderLabel: string;
+  /** Standing over a locked Folder's contents, and what a refusal because of the lock reads as. */
+  folderLockedText: string;
+  folderLockFailedText: string;
   flagsLabel: string;
   flagPlaceholder: string;
   uploadToggleLabel: string;
@@ -35,6 +42,8 @@ export type PhiAreaUploadWidgetLabels = {
   uploadFailedText: string;
   /** The body never reached the storage Provider, or the Provider refused it. */
   uploadStorageUnreachableText: string;
+  /** The Folder the upload was meant for is locked. */
+  uploadFolderLockedText: string;
   deleteFailedText: string;
 };
 
@@ -134,6 +143,11 @@ export const PHI_MEDIA_WIDGET_DEFAULT_LABELS: PhiAssetWidgetLabels = {
     searchPlaceholder: "Search assets",
     folderLabel: "Folder",
     createFolderLabel: "Create folder",
+    folderLockedLabel: "Locked",
+    lockFolderLabel: "Lock folder",
+    unlockFolderLabel: "Unlock folder",
+    folderLockedText: "This folder is locked. Nothing can be added to it, moved in or out of it or deleted from it until it is unlocked.",
+    folderLockFailedText: "The folder could not be changed.",
     flagsLabel: "Flags",
     flagPlaceholder: "Flag",
     uploadToggleLabel: "Upload",
@@ -165,6 +179,7 @@ export const PHI_MEDIA_WIDGET_DEFAULT_LABELS: PhiAssetWidgetLabels = {
     uploadSuccessTemplate: "Uploaded %1.",
     uploadFailedText: "Upload failed.",
     uploadStorageUnreachableText: "The file storage could not be reached. The upload never left this browser.",
+    uploadFolderLockedText: "This folder is locked. Nothing can be uploaded into it until it is unlocked.",
     deleteFailedText: "Delete failed.",
   },
   grid: {

@@ -10,6 +10,11 @@ import type {
 import { createPhiCollectionProviderClient } from "../../../../components/widgets/client/shared/phi-collection-provider";
 import { buildPhiMediaRequestHeaders } from "../../../../components/media/phi-media-request-headers";
 import { readPhiImagePreviewResponse } from "../../../../components/media/phi-image-preview-data";
+import {
+  PHI_MEDIA_FOLDER_LOCKED_CODE,
+  PhiMediaFolderLockedError,
+  writePhiMediaFolderLock,
+} from "../../../../components/media/media-folder-lock";
 
 function readFilter(query: PhiCollectionProviderQuery, key: string) {
   return query.filters?.[key];
@@ -104,12 +109,24 @@ function readAssetId(value: unknown) {
   return assetId;
 }
 
+function readFolderId(value: unknown) {
+  const folderId = typeof value === "number" ? value : Number(value);
+  if (!Number.isInteger(folderId) || folderId <= 0) {
+    throw new Error("Folder action requires a positive folder id.");
+  }
+  return folderId;
+}
+
 async function readMutationResponse(response: Response) {
   const payload = await response.json().catch(() => null) as {
     error?: string;
     message?: string;
     asset?: Record<string, unknown> | null;
   } | null;
+  // Core's word for a write a locked Folder refuses, kept as a code so the surface reads it in its own.
+  if (payload?.error === PHI_MEDIA_FOLDER_LOCKED_CODE) {
+    throw new PhiMediaFolderLockedError(payload.message);
+  }
   if (!response.ok || !payload) {
     throw new Error(
       payload?.message ?? payload?.error ?? `Media request failed with status ${response.status}.`,
@@ -146,6 +163,27 @@ async function runMediaCollectionAction(request: PhiCollectionProviderActionRequ
       body: JSON.stringify(request.item ?? {}),
     }));
     actionItem = payload.asset ?? null;
+  } else if (request.actionKey === "lockFolder" || request.actionKey === "unlockFolder") {
+    /*
+     * The lock is one bit of the Folder's flags, and the flags are written whole: the Folder's current
+     * flags come with the action, so the other bits are kept as they are. The Space is the one the
+     * listing reads, because a Folder belongs to the Space it was listed from.
+     */
+    const folderId = readFolderId(request.itemKey);
+    const flags = typeof request.item?.flags === "number" ? request.item.flags : 0;
+    const spaceId = request.query?.filters?.spaceId;
+    const search = typeof spaceId === "string" && spaceId ? `?${new URLSearchParams({ spaceId }).toString()}` : "";
+    await readMutationResponse(await fetch(`/api/site/media/folders/${folderId}${search}`, {
+      method: "PATCH",
+      headers: buildPhiMediaRequestHeaders({
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      }),
+      cache: "no-store",
+      credentials: "include",
+      signal: request.signal,
+      body: JSON.stringify({ flags: writePhiMediaFolderLock(flags, request.actionKey === "lockFolder") }),
+    }));
   } else if (request.actionKey !== "refresh") {
     throw new Error(`Unsupported Asset collection action "${request.actionKey}".`);
   }

@@ -22,6 +22,14 @@ const PHI_THREAD_CONVERSATION_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_COR
     subject_fallback: "Conversation",
     older_label: "Show earlier messages",
     archived_label: "Archived",
+    locked_label: "Locked",
+    /*
+     * Where the Reply would have been. A locked conversation takes no new message from anybody, so the
+     * way to write one is not offered at all rather than offered and then refused.
+     */
+    locked_text: definePhiMessageLabel(
+      "This conversation is locked. Nobody can write in it until it is unlocked.",
+    ),
     /* The action in the conversation's heading that opens a reply. */
     reply_label: "Reply",
     /* Before the names of who is in it, beneath a heading that is the subject. */
@@ -134,6 +142,8 @@ export async function getPhiThreadConversationLabels(options: PhiGlobalTranslato
     subjectFallback: labels.subject_fallback,
     olderLabel: labels.older_label,
     archivedLabel: labels.archived_label,
+    lockedLabel: labels.locked_label,
+    lockedText: labels.locked_text,
     replyLabel: labels.reply_label,
     participantsLabel: labels.participants_label,
     internalLabel: labels.internal_label,

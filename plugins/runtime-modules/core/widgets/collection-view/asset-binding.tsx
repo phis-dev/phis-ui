@@ -44,6 +44,10 @@ import { PHI_ASSET_CONTROLLER_STORE_KEY } from "../../../../../components/media/
 import { applyPhiAssetCollectionData } from "../../../../../components/media/asset-collection-runtime";
 import { readPhiMediaAssetTiles, readPhiMediaFolders } from "../../../../../components/media/phi-image-preview-data";
 import { PhiAssetFolderControl } from "../../../../../components/media/phi-asset-folder-control";
+import {
+  isPhiMediaFolderIdLocked,
+  isPhiMediaFolderLockedError,
+} from "../../../../../components/media/media-folder-lock";
 import { PhiAreaUploadBinding } from "../../../../../components/media/phi-area-upload-widget";
 import { PHI_MEDIA_WIDGET_DEFAULT_LABELS, type PhiAssetWidgetLabels } from "../../../../../components/media/media-widget-labels";
 import { setPhiImagePreviewSelection, usePhiImagePreviewStore } from "../../../../../components/media/phi-image-preview-store";
@@ -150,6 +154,7 @@ export function PhiAssetCollectionViewBinding({
    * dropped in a `finally`, so a refusal clears it as surely as a success does.
    */
   const [deletingAssetIds, setDeletingAssetIds] = useState<readonly number[]>([]);
+  const [folderLockPending, setFolderLockPending] = useState(false);
   const spaceSelectionAllowed = usePhiMediaSpaceSelectionAllowed();
   const activeSpaceAddress = typeof query.filters?.spaceId === "string" && query.filters.spaceId
     ? query.filters.spaceId
@@ -171,8 +176,19 @@ export function PhiAssetCollectionViewBinding({
     ...(features.actions?.toolbar ?? []),
     ...(features.filters ?? []).flatMap((filter) => filter.actions ?? []),
   ];
-  const unsupportedAction = configuredActions.find((action) => action.key !== "upload" && action.key !== "createFolder");
-  const folderOptions = useMemo(() => buildPhiMediaFolderCascaderOptions(state.folders), [state.folders]);
+  const unsupportedAction = configuredActions.find((action) =>
+    action.key !== "upload" && action.key !== "createFolder" && action.key !== "lockFolder");
+  const folderOptions = useMemo(
+    () => buildPhiMediaFolderCascaderOptions(state.folders, { lockedLabel: labels.tool.folderLockedLabel }),
+    [labels.tool.folderLockedLabel, state.folders],
+  );
+  /*
+   * The Folder the listing is filtered to, locked: Core refuses a new Folder in it, an upload into it and
+   * a delete from it, so none of the three is offered while it is chosen. An Asset's own delete reads its
+   * own Folder, because a listing without a Folder filter shows Assets from many.
+   */
+  const currentFolder = state.folderId == null ? null : state.folders.find((folder) => folder.id === state.folderId) ?? null;
+  const currentFolderLocked = isPhiMediaFolderIdLocked(state.folders, state.folderId);
   const folderValue = useMemo(() => buildPhiMediaFolderValueById(state.folders, state.folderId), [state.folderId, state.folders]);
   const selectionSignals = usePhiControlSignalController<Record<string, unknown>>({
     key: "assetSelection",
@@ -205,6 +221,33 @@ export function PhiAssetCollectionViewBinding({
     );
   }
 
+  function readActionFailure(error: unknown, fallback: string) {
+    if (isPhiMediaFolderLockedError(error)) return labels.tool.folderLockedText;
+    return error instanceof Error ? error.message : fallback;
+  }
+
+  async function toggleFolderLock() {
+    if (!currentFolder || folderLockPending) return;
+    setFolderLockPending(true);
+    try {
+      const data = await binding.activate({
+        actionKey: currentFolderLocked ? "unlockFolder" : "lockFolder",
+        itemKey: currentFolder.id,
+        item: { flags: currentFolder.flags },
+        query,
+      });
+      if (data.error) throw new Error(data.error);
+    } catch (error) {
+      showMessage({
+        level: "error",
+        content: isPhiMediaFolderLockedError(error) ? labels.tool.folderLockedText : labels.tool.folderLockFailedText,
+        durationSeconds: 2.8,
+      });
+    } finally {
+      setFolderLockPending(false);
+    }
+  }
+
   async function deleteAsset(asset: PhiMediaAssetTile) {
     setDeletingAssetIds((current) => current.includes(asset.id) ? current : [...current, asset.id]);
     try {
@@ -218,7 +261,7 @@ export function PhiAssetCollectionViewBinding({
     } catch (error) {
       showMessage({
         level: "error",
-        content: error instanceof Error ? error.message : labels.grid.deleteFailedText,
+        content: readActionFailure(error, labels.grid.deleteFailedText),
         durationSeconds: 2.8,
       });
     } finally {
@@ -320,6 +363,7 @@ export function PhiAssetCollectionViewBinding({
         }
         if (filter.key === "folderId" && filter.control === "cascader") {
           const createAction = filter.actions?.find((action) => action.key === "createFolder");
+          const lockAction = filter.actions?.find((action) => action.key === "lockFolder");
           return (
             <PhiAssetFolderControl
               key={filter.key}
@@ -329,6 +373,14 @@ export function PhiAssetCollectionViewBinding({
               allowClear
               showCreate={Boolean(createAction)}
               createLabel={createAction?.label ?? labels.tool.createFolderLabel}
+              createDisabled={currentFolderLocked}
+              lock={lockAction && currentFolder ? {
+                locked: currentFolderLocked,
+                lockLabel: labels.tool.lockFolderLabel,
+                unlockLabel: labels.tool.unlockFolderLabel,
+                pending: folderLockPending,
+                onToggle: () => { void toggleFolderLock(); },
+              } : null}
               size={controlSize}
               style={{ ...style, minWidth: style.minWidth ?? 140 }}
               onCreate={() => actionSignals.emitCapability("actionActivate", {
@@ -379,6 +431,7 @@ export function PhiAssetCollectionViewBinding({
             type={action.mode === "primary" ? "primary" : "default"}
             danger={action.mode === "danger"}
             size={controlSize}
+            disabled={action.key === "upload" && currentFolderLocked}
             onClick={action.key === "upload" ? () => binding.setOpenPanelKey(
               state.uploadPanelOpen ? null : "upload",
             ) : undefined}
@@ -441,7 +494,12 @@ export function PhiAssetCollectionViewBinding({
        * Only what an action left behind reaches this: a failed read of the source ends the Collection
        * View before this renderer is drawn. A refusal is the acting person's to read, live or not.
        */
-      diagnostics={state.error ? <PhiAlertControl level="error" showIcon title={state.error} /> : null}
+      diagnostics={state.error ? (
+        <PhiAlertControl level="error" showIcon title={state.error} />
+      ) : currentFolderLocked ? (
+        // Said where the contents are, so the missing upload and delete are not a riddle.
+        <PhiAlertControl level="info" showIcon title={labels.tool.folderLockedText} />
+      ) : null}
       body={body}
       items={state.assets.map((asset) => (
         <PhiMediaAssetTileControl
@@ -455,7 +513,7 @@ export function PhiAssetCollectionViewBinding({
           onDelete={(nextAsset) => { void deleteAsset(nextAsset); }}
           deleteLabel={labels.grid.deleteLabel}
           showTypeLabel
-          showDeleteAction
+          showDeleteAction={!isPhiMediaFolderIdLocked(state.folders, asset.folderId)}
           showDimensions
           showIdLabel
         />

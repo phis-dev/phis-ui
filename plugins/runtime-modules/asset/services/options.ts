@@ -15,6 +15,7 @@ import {
   buildPhiMediaFolderNamesById,
   buildPhiMediaFolderValueById,
 } from "../../../../components/media/media-folder-options";
+import { isPhiMediaFolderLocked } from "../../../../components/media/media-folder-lock";
 
 export const PhiMediaFoldersOptionsProviderClient = createPhiControlOptionsProviderClient({
   key: PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaFolders,
@@ -29,7 +30,15 @@ export const PhiMediaFoldersOptionsProviderClient = createPhiControlOptionsProvi
       return {
         options: [
           ...configuredOptions,
-          ...state.folders.map((folder) => ({ value: String(folder.id), label: namePath(folder.id) })),
+          /*
+           * The Asset's Folder, chosen in its metadata: a locked Folder takes nothing in, so it is not
+           * offered as a destination. The one the Asset already stands in stays readable as the value.
+           */
+          ...state.folders.map((folder) => ({
+            value: String(folder.id),
+            label: namePath(folder.id),
+            ...(isPhiMediaFolderLocked(folder) ? { icon: "lock", disabled: true } : {}),
+          })),
         ],
         value: state.folderId == null ? undefined : String(state.folderId),
       };
@@ -42,7 +51,15 @@ export const PhiMediaFoldersOptionsProviderClient = createPhiControlOptionsProvi
       return {
         options: [
           ...configuredOptions,
-          ...state.folders.map((folder) => ({ value: namePath(folder.id), label: folder.name })),
+          /*
+           * A parent for a new Folder. A locked one is marked rather than disabled: a disabled row in a
+           * cascader cannot be opened, and the Folders below a locked one still take new ones.
+           */
+          ...state.folders.map((folder) => ({
+            value: namePath(folder.id),
+            label: folder.name,
+            ...(isPhiMediaFolderLocked(folder) ? { icon: "lock" } : {}),
+          })),
         ],
         value: namePath(state.folderId),
       };
