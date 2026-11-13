@@ -122,7 +122,8 @@ export function PhiQuickLinksWidgetClient({
 
   return (
     <div ref={ref} style={{ width: "100%", minWidth: 0 }}>
-      <PhiFlexControl vertical style={{ width: "100%", minWidth: 0, gap: token.paddingLG }}>
+      {/* One step above the gap between the entries, so the title reads as theirs rather than as a section of its own. */}
+      <PhiFlexControl vertical style={{ width: "100%", minWidth: 0, gap: token.padding }}>
       {labels.title ? (
         <PhiTypographyControl
           strong

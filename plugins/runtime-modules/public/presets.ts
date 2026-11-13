@@ -151,6 +151,7 @@ export const PHI_PUBLIC_FORM_RUNTIME_MODULE_ROUTES = [
         item: {
           itemKey: "@phis/ui/modules/public/nav/contact",
           label: { defaultMessage: "Contact" },
+          icon: "antd:mail",
           routePresetKey: "public-contact-page",
         },
       },
