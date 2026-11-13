@@ -11,6 +11,7 @@ import {
 import { PHI_FORM_RESPONSIVE_MIN_WIDTH } from "../components/forms/form-descriptor-contract";
 import { PHI_GRID_RESPONSIVE_MIN_WIDTH } from "../components/layouts/phi-grid-contract";
 import { PHI_MASONRY_RESPONSIVE_MIN_WIDTH } from "../components/layouts/phi-masonry-contract";
+import { PHI_BLOCK_GEOMETRY_RESPONSIVE_MIN_WIDTH } from "../helpers/block-geometry-profiles";
 
 /**
  * Every named threshold is a member of the scale.
@@ -85,6 +86,29 @@ assert.deepEqual(
 );
 
 /**
+ * Block geometry has one pair for every block, because one rule serves them all -- and it is the Grid's,
+ * so `compact | medium | wide` means one thing across the tree (design/RESPONSIVE_BLOCK_GEOMETRY.md).
+ */
+const blockGeometryThresholds = [...layoutStylesheet.matchAll(/@container phi-slot \(min-width: (\d+)px\)/gu)]
+  .map((match) => Number(match[1]));
+assert.deepEqual(
+  blockGeometryThresholds,
+  [PHI_BLOCK_GEOMETRY_RESPONSIVE_MIN_WIDTH.medium, PHI_BLOCK_GEOMETRY_RESPONSIVE_MIN_WIDTH.wide],
+  "styles/layout.css must compare against the same numbers PHI_BLOCK_GEOMETRY_RESPONSIVE_MIN_WIDTH declares, in that order.",
+);
+assert.deepEqual(
+  PHI_BLOCK_GEOMETRY_RESPONSIVE_MIN_WIDTH,
+  PHI_GRID_RESPONSIVE_MIN_WIDTH,
+  "Block geometry switches at the Grid's pair, so a profile name means the same room everywhere.",
+);
+for (const threshold of Object.values(PHI_BLOCK_GEOMETRY_RESPONSIVE_MIN_WIDTH)) {
+  assert.ok(
+    (PHI_CONTAINER_BREAKPOINTS as readonly number[]).includes(threshold),
+    `Block geometry switches at ${threshold}, which is not on the container-breakpoint scale.`,
+  );
+}
+
+/**
  * And the Shell's thresholds are deliberately NOT on it.
  *
  * They are written as container queries because the Shell measures the render viewport, but what they
@@ -107,5 +131,6 @@ for (const threshold of shellThresholds) {
 console.log(
   `Container breakpoint contracts valid: scale of ${PHI_CONTAINER_BREAKPOINTS.length}, `
   + `Form at ${formThresholds.join(" and ")}, Grid at ${gridThresholds.join(" and ")}, `
+  + `block geometry at ${blockGeometryThresholds.join(" and ")}, `
   + "Shell bands off the scale.",
 );

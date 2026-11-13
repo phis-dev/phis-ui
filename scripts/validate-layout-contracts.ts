@@ -203,6 +203,7 @@ assert.deepEqual(
     minBlockSize: undefined,
     maxInlineSize: undefined,
     maxBlockSize: undefined,
+    queriesRoom: false,
   },
   "Client-enhanced slot children must preserve their sizing policy for parent layouts.",
 );
@@ -236,6 +237,7 @@ assert.deepEqual(
     minBlockSize: "40px",
     maxInlineSize: undefined,
     maxBlockSize: "50vh",
+    queriesRoom: false,
   },
   "Client-enhanced slot child sizing must be resolved to plain values before it is serialized.",
 );

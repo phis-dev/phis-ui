@@ -53,6 +53,7 @@ import {
   resolvePhiBackgroundWidgetStyle,
   type PhiCmsBackgroundWidgetConfig,
 } from "../widgets/config/background";
+import { phiSlotContainerAttributes } from "../../helpers/block-geometry-profiles";
 
 /**
  * The Region-shell resolver (LAYOUTING.md "Regions"): what a Shell Region's root element looks like, for
@@ -125,6 +126,11 @@ export type PhiCmsRegionShellInput = {
    * family's pane paint one behind it (SHELL.md "A band with a ground of its own").
    */
   rootPaintsGround?: boolean;
+  /**
+   * Whether the Layout at the top of this Region names a value per profile; the content wrapper is then
+   * the `phi-slot` container its queries ask (design/RESPONSIVE_BLOCK_GEOMETRY.md).
+   */
+  rootQueriesRoom?: boolean;
 };
 
 export type PhiCmsRegionShell = {
@@ -155,6 +161,8 @@ export type PhiCmsRegionShell = {
   style: CSSProperties;
   /** The content wrapper's style, which is where Region padding lives (LAYOUTING.md "Regions"). */
   contentStyle: CSSProperties;
+  /** The content wrapper's attributes: the `phi-slot` container where the root Layout names a profile. */
+  contentAttributes: ReturnType<typeof phiSlotContainerAttributes>;
 };
 
 /*
@@ -320,6 +328,7 @@ export function resolvePhiCmsRegionShell({
   className,
   style,
   rootPaintsGround = false,
+  rootQueriesRoom = false,
 }: PhiCmsRegionShellInput): PhiCmsRegionShell | null {
   const visibility = config.visibility ?? "visible";
   const enabled = config.enabled ?? true;
@@ -685,5 +694,6 @@ export function resolvePhiCmsRegionShell({
       paddingBottom: config.paddingBottom,
       paddingLeft: config.paddingLeft,
     }),
+    contentAttributes: phiSlotContainerAttributes(rootQueriesRoom),
   };
 }

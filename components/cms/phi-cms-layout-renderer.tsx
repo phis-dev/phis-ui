@@ -1201,6 +1201,11 @@ export async function PhiCmsLayoutRenderer({
         shellTheme={runtime.site.theme?.shell}
         previewMode={root?.config.renderMode === "preview"}
         rootPaintsGround={phiCmsRegionRootLayoutPaintsGround(root?.config)}
+        rootQueriesRoom={root != null && resolvePhiSlotChildSizingForConfig(
+          "layout",
+          undefined,
+          root.config as Partial<PhiRenderableBlock>,
+        ).queriesRoom}
         runtime={runtime}
         signalParticipant={signalParticipants.has(createPhiSignalAddress("region", regionKey))}
       >

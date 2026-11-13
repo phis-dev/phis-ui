@@ -28,6 +28,7 @@ const geometryReaders = new Map([
   ["plugins/runtime/slot-size-policy.ts", "the slot policy, and the constraints a child hands its parent"],
   ["plugins/runtime/phi-slot-child-frame-view.tsx", "the frame around every slot child"],
   ["components/layouts/phi-layout-contract.ts", "a Layout's own inner box"],
+  ["helpers/block-geometry-profiles.ts", "the profile answers as custom properties, for the frame and a Layout's inner box"],
   ["components/regions/phi-cms-region-shell.ts", "a Shell Region, static and live alike"],
   ["plugins/runtime-modules/builder/builder-geometry.ts", "the Builder root scaffold's custom properties and the Canvas sider width"],
   ["plugins/runtime-modules/builder/render-root-node-preview.server.tsx", "the Builder root scaffold, server preview"],

@@ -12,6 +12,12 @@ import {
   type PhiResolvedBlockGeometry,
   type PhiResolvedBlockLength,
 } from "../../types/renderable-block-geometry";
+import {
+  PHI_BLOCK_PROFILED_ATTRIBUTE,
+  phiBlockGeometryQueriesRoom,
+  resolvePhiBlockProfileStyle,
+  type PhiBlockProfileStyle,
+} from "../../helpers/block-geometry-profiles";
 
 export type PhiSlotChildKind = "widget" | "layout";
 
@@ -23,6 +29,11 @@ export type PhiSlotChildSizing = {
   minBlockSize?: CSSProperties["minHeight"];
   maxInlineSize?: CSSProperties["maxWidth"];
   maxBlockSize?: CSSProperties["maxHeight"];
+  /**
+   * The child names a value per profile, so the box that offers it room has to be the `phi-slot`
+   * container its queries ask (design/RESPONSIVE_BLOCK_GEOMETRY.md, "Only where it is needed").
+   */
+  queriesRoom: boolean;
 };
 
 /*
@@ -179,6 +190,7 @@ export function resolvePhiSlotChildSizingForConfig(
     policy: resolvePhiEffectiveSlotSizePolicy(resolvePhiSlotSizePolicy(slotSizePolicy, kind), explicit),
     ...explicit,
     ...resolvePhiSlotChildSizeConstraints(geometry),
+    queriesRoom: phiBlockGeometryQueriesRoom(geometry),
   };
 }
 
@@ -230,6 +242,7 @@ export function resolvePhiSlotChildSizing(
       policy: resolvePhiSlotSizePolicy(undefined, fallbackKind),
       explicitInlineSize: false,
       explicitBlockSize: false,
+      queriesRoom: false,
     };
   }
 
@@ -247,6 +260,7 @@ export function resolvePhiSlotChildSizing(
     "data-phi-slot-min-block-size"?: unknown;
     "data-phi-slot-max-inline-size"?: unknown;
     "data-phi-slot-max-block-size"?: unknown;
+    [PHI_BLOCK_PROFILED_ATTRIBUTE]?: unknown;
     slotChildSizing?: PhiSlotChildSizing | null;
   };
 
@@ -263,6 +277,8 @@ export function resolvePhiSlotChildSizing(
    * stretched what the frame had sized.
    */
   const configExplicit = resolvePhiSlotChildExplicitAxes(configGeometry);
+  const queriesRoom =
+    phiBlockGeometryQueriesRoom(configGeometry) || typeof props[PHI_BLOCK_PROFILED_ATTRIBUTE] === "string";
 
   if (props.slotSizePolicy != null || props.kind != null) {
     const resolvedKind =
@@ -288,6 +304,7 @@ export function resolvePhiSlotChildSizing(
       ),
       ...explicit,
       ...configConstraints,
+      queriesRoom,
     };
   }
 
@@ -318,6 +335,7 @@ export function resolvePhiSlotChildSizing(
     // Idempotent: an element that already wrote the effective policy into its attributes says the same again.
     policy: resolvePhiEffectiveSlotSizePolicy(policy, explicit),
     ...explicit,
+    queriesRoom,
     minInlineSize:
       configConstraints.minInlineSize ??
       (typeof props["data-phi-slot-min-inline-size"] === "string"
@@ -440,4 +458,32 @@ export function resolvePhiSlotChildSizeStyle(
     ...(maxWidth == null ? {} : { maxWidth }),
     ...(geometry.block.max == null ? {} : { maxHeight: geometry.block.max.css }),
   };
+}
+
+/** What the frame writes where a profile states nothing: its own base style for a block without geometry. */
+const PHI_SLOT_CHILD_UNSTATED_PROFILE_VALUES = {
+  width: "auto",
+  height: "auto",
+  "min-width": "0",
+  "min-height": "0",
+  "max-width": "100%",
+  "max-height": "100%",
+} as const;
+
+/**
+ * The frame's profile answers, handed to the stylesheet (`helpers/block-geometry-profiles.ts`).
+ *
+ * The cap rule applies per profile by the same test as the base answer: an absolute inline maximum is
+ * capped at the slot unless the child is `intrinsic`. A declaration handed over is left out of the
+ * frame's inline style -- base style included -- because an inline declaration beats every
+ * `@container` rule.
+ */
+export function resolvePhiSlotChildProfileStyle(
+  geometry: PhiResolvedBlockGeometry,
+  policy: PhiNormalizedSlotSizePolicy,
+): PhiBlockProfileStyle {
+  return resolvePhiBlockProfileStyle(geometry, {
+    unstated: PHI_SLOT_CHILD_UNSTATED_PROFILE_VALUES,
+    inlineMaximum: (maximum) => resolvePhiSlotChildInlineMaximum(maximum, policy.inline) ?? maximum.css,
+  });
 }

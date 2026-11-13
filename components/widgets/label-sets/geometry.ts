@@ -25,6 +25,10 @@ const PHI_GEOMETRY_WIDGET_LABEL_SET = definePhiLabelSet({
     field_max_size: PHI_GEOMETRY_WIDGET_DEFAULT_LABELS.fields.maxSize,
     field_z_index: PHI_GEOMETRY_WIDGET_DEFAULT_LABELS.fields.zIndex,
     field_viewport: PHI_GEOMETRY_WIDGET_DEFAULT_LABELS.fields.viewport,
+    field_profile: PHI_GEOMETRY_WIDGET_DEFAULT_LABELS.fields.profile,
+    profile_compact: PHI_GEOMETRY_WIDGET_DEFAULT_LABELS.profiles.compact,
+    profile_medium: PHI_GEOMETRY_WIDGET_DEFAULT_LABELS.profiles.medium,
+    profile_wide: PHI_GEOMETRY_WIDGET_DEFAULT_LABELS.profiles.wide,
     viewport_compact: PHI_GEOMETRY_WIDGET_DEFAULT_LABELS.viewport.compact,
     viewport_medium: PHI_GEOMETRY_WIDGET_DEFAULT_LABELS.viewport.medium,
     viewport_wide: PHI_GEOMETRY_WIDGET_DEFAULT_LABELS.viewport.wide,
@@ -52,6 +56,12 @@ export async function getPhiGeometryWidgetLabels(options: PhiGlobalTranslatorOpt
       maxSize: labels.field_max_size,
       zIndex: labels.field_z_index,
       viewport: labels.field_viewport,
+      profile: labels.field_profile,
+    },
+    profiles: {
+      compact: labels.profile_compact,
+      medium: labels.profile_medium,
+      wide: labels.profile_wide,
     },
     viewport: {
       compact: labels.viewport_compact,

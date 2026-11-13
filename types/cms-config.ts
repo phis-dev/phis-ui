@@ -373,10 +373,14 @@ export type PhiCmsSplitCardLayoutConfig = PhiCmsLayerBase & {
   swapRatio?: boolean;
 };
 
-/** Children in columns at their own heights: how many columns at each width, and the gap between them. */
+/**
+ * Children in columns at their own heights: how many columns at each width, the gap between them, and
+ * `anchor`, where a child narrower than its column stands in it (inline axis only).
+ */
 export type PhiCmsMasonryLayoutConfig = PhiCmsLayerBase & {
   columns?: PhiResponsiveValue<number>;
   gap?: CSSProperties["gap"];
+  anchor?: PhiRenderableBlockAnchor;
 };
 
 function readRenderableBlockAnchorOrPlacement(value: unknown): PhiRenderableBlockAnchor | undefined {
@@ -545,6 +549,7 @@ export function parsePhiCmsMasonryLayoutConfig(
       ...readLayoutPadding(reader),
       columns: readGridResponsiveCount(reader, "columns", "a Grid column count", isPhiGridColumnCount),
       gap: readCssSizeField(reader, "gap"),
+      anchor: readLayoutAnchor(reader),
     },
     resolvePhiLayoutDefaults("masonry"),
   );

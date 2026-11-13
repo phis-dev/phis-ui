@@ -4,14 +4,12 @@ Every renderable block states `size`, `minSize` and `maxSize` as one value per a
 the same in a 320px column and in a 1600px Region. This document is the design for letting a block name
 a value per profile.
 
-**Step one is built (2026-09-26): the stored form and the resolver.** A length may name a value per
-profile, the resolver hands back the `compact` answer where it always handed back the only answer, and
-the other two stand beside it in `profiles`. Nothing renders differently yet -- no container is
-declared, no stylesheet reads the properties, and the Inspector still edits one value -- so a config
-that names no profile is byte for byte the config it was, and its rendering is unchanged. The rest of
-this document is still design, and the remaining steps are listed under "Order".
+**Built (2026-11-13).** The stored form and the resolver came first (2026-09-26); the container
+declarations, the stylesheet and the Inspector control followed. What is built, and the choices this
+design left open, are in [LAYOUTING.md](../LAYOUTING.md), "Block geometry per profile"; this document
+keeps the reasoning.
 
-The decision it rests on is recorded in [TODOS.md](../TODOS.md) under "One resolver for block geometry":
+The decision it rests on (it once stood in TODOS.md as "One resolver for block geometry"):
 **a profile is measured against the room the block is offered, and CSS decides it -- nothing measures.**
 
 ## Why CSS and not a ResizeObserver
@@ -250,13 +248,12 @@ without either noticing. An unnamed container would be caught by unnamed queries
 
 ## Order
 
-**Done:** the types and the resolver, with the frame still writing exactly what it writes today for a
-block that names no profile. That step moved no pixel and is verified as such -- `PhiResponsiveLength`
-and `PhiRenderableBlockResponsiveSize` in types/renderable-block.ts, `profiles` on the resolved
-geometry, `readResponsiveCssSize` in the config parser so a stored profile value survives
-normalisation, and the geometry Control reading and writing the `compact` entry alone rather than
-flattening what it cannot show.
-
-**Next:** the container declarations and the stylesheet, then the Inspector control. The Grid's per-profile default
-(`PHI_GRID_LAYOUT_DEFAULT_COLUMNS`, settled in TODOS.md) uses the same `PhiResponsiveValue` form; it is
-not a dependency in either direction.
+**Done:** the types and the resolver (2026-09-26); then the container declarations, the stylesheet and
+the Inspector control (2026-11-13). Two choices the design left open were settled on the Grid's
+precedent: the queries are written `@container phi-slot (min-width: …)`, the form the Grid's and the
+Form's use, and where a Layout sizes a slot by its content (a Flex slot that does not grow, a Three
+Column side on a phone) the box that offers the room is the Layout's own box rather than the slot, since
+a size container's width must not come from its content. A Region's own geometry stays one value: the
+Region is not a slot child, and the Inspector offers no profiles for it. The Grid's per-profile default
+(`PHI_GRID_LAYOUT_DEFAULT_COLUMNS`) uses the same `PhiResponsiveValue` form; it was not a dependency in
+either direction.

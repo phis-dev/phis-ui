@@ -33,137 +33,9 @@ built. Remove an entry when it is done.
 
 ## Layouts and Widgets
 
-- **Block geometry: the rules each reader kept, now settled one at a time.** The move is done: one
-  reader, `resolvePhiRenderableBlockGeometry` (types/renderable-block-geometry.ts), and a guard that
-  names who draws geometry and who merely touches the fields (`scripts/validate-block-geometry-readers.mjs`;
-  LAYOUTING.md, "Block geometry is read once"). No pixel was meant to move, and each reader's own
-  fallback stayed at its call site. The per-caller rules are settled; what remains is one piece:
-
-  - The responsive form, in the resolver alone; the readers never learn about profiles. With it the
-    question the palette raises: if a block states a width at `wide` and not at `compact`, does its slot
-    policy change with the viewport, or is "explicit" a property of the block as a whole?
-
-    **Step one is built (2026-09-26): the stored form and the resolver.** A length may name a value per
-    profile, the resolver keeps handing back the `compact` answer where it handed back the only answer
-    before, and the other two stand beside it in `profiles`. Nothing renders differently: no container
-    is declared, no stylesheet reads the properties, and the Control edits the base entry alone instead
-    of flattening what it cannot show. What is left is the container declarations and the stylesheet,
-    then the Control.
-
-    **Decided (2026-09-26): CSS decides, nothing measures**, and the form is settled. Designed in
-    [design/RESPONSIVE_BLOCK_GEOMETRY.md](./design/RESPONSIVE_BLOCK_GEOMETRY.md): the profile sits on
-    the stored length (`PhiResponsiveLength`, on the house `PhiResponsiveValue` the Grid already uses),
-    the resolver keeps handing back today's answer as the `compact` base and adds the other two beside
-    it, and an axis with profiles is written in CSS rather than inline, because an inline style beats
-    every `@container` rule. "Explicit" becomes a property of the block as a whole -- the profiles vary
-    the value, not the policy. The container goes on the box that offers the room, never on the block,
-    and the thresholds are 377 and 610 for every block, because a container query cannot read a custom
-    property in its condition. Building it changes `PhiRenderableBlockBase` and needs operator approval.
-
-    The one profile system that was built and fed by nobody is settled (2026-09-26): the Grid's
-    fallback is a profile value, since 2026-10-04 a column count the Grid states itself
-    (`columns`, default `PHI_GRID_LAYOUT_DEFAULT_COLUMNS` = 1 / 2 / 4), and it lives in
-    `components/layouts/phi-grid-contract.ts` beside the placement it feeds rather than in the client,
-    so it is tested with it. A Grid whose slots carry no authored span reflows: one per row below 377,
-    two below 610, four above. It did not before -- four abreast at every width, only narrower, because
-    the 24 tracks are `minmax(0, 1fr)` and shrink, and the wrapping that did happen was the cursor
-    running past column 24 rather than an answer to the room.
-
-    One rule moved with it. `readGridSlotPlacement` (types/cms-config.ts) invented a span of six to
-    check `offset + span <= 24`; with a `compact` default that fills the row, repeating the default
-    there would reject stored placements that state an offset and no span -- a rule the author never
-    broke. The check is stated of the profiles that name a span, and an offset with no room is clamped
-    by `resolvePhiGridSlotColumns`, as it always was. The Grid still measures itself with a
-    `ResizeObserver`; moving that onto a container query belongs to the responsive form.
-
-- **Placing a child that does not fill.** Mostly settled (2026-09-26); what is left is written at the
-  end of this entry.
-
-  It was written four times. Every Layout translated the anchor into `justify-content`/`align-items`
-  in its own words -- `resolvePhiFlexAxisAlignment`, `resolveAnchorAlignment`, the Grid pair and Three
-  Column's own -- sharing nothing but `resolvePhiSlotCrossMargin`, and the four answers differed in
-  three ways that are real and one that was not. The real ones: the spelling (`flex-start` against
-  `start`), which axis is the main one, and a slot role that overrides or mirrors an axis. The one that
-  was not: what an unstated axis means.
-
-  Now there is one reading. `resolvePhiPlacement` (components/layouts/phi-layout-contract.ts) answers
-  `{ inline, block }` in `start | center | end | null`, takes the anchor in both spellings it arrives
-  in, and takes the slot role as a modifier on one axis (`mirrorInline`, `pinInlineStart`,
-  `pinInlineEnd`). `phiFlexPlacementWord` and `phiGridPlacementWord` spell it; `phiPlacementFromWord`
-  reads a word back, for a Layout whose author set `align` or `justify` directly;
-  `resolvePhiSlotPlacementMargins` turns a placement into the four custom properties. All five call
-  sites go through it and the four translators are gone.
-
-  *The properties are named by the axis they write.* `--phi-slot-cross-margin-*` only ever wrote
-  `margin-inline`, which is the cross axis of a column and the main axis of a row -- the Grid handed its
-  `justify-content` to the same pair. Under that name nobody noticed that one axis had no properties at
-  all. They are `--phi-slot-inline-margin-*` now, `--phi-slot-block-margin-*` exists beside them, and
-  the frame reads all four.
-
-  *And nobody invents a middle any more.* The Anchored Overlay answered an absent anchor with `center`,
-  which quietly made it the place where four kinds got their default: Stack, Carousel, Split Card and
-  Three Column all drew a centre they never declared. They declare it now
-  (`PHI_CENTRED_SLOT_DEFAULT_ANCHOR` in layout-definitions.ts, passed by their plugins), so the same
-  centre is readable in the picker and the Inspector, and an anchor that arrives absent at the overlay
-  means what the house says it means: no anchor, which stretches and starts. No pixel moved.
-
-  **What is left.** Writing the block-axis margins is not enough to make them work: an auto margin
-  places a box only where its parent is a flex or grid container, and in block flow `margin-block: auto`
-  computes to `0`. The Grid's own inner placement box (`resolveGridSlotPlacementStyle`) is a plain block
-  box -- which is exactly why the *inline* margins work there, since `margin-inline: auto` does centre a
-  block box of a definite width. So the block axis needs that box to become a flex column first, per
-  Layout, and until then `resolvePhiSlotPlacementMargins` is called with `block: null` everywhere.
-  Masonry is the other half: it has no anchor at all, no prop and no client, and forces `width: 100%` on
-  every slot, so an intrinsic Widget there cannot follow one. Both are additive rather than
-  consolidating, and each moves pixels where it lands.
-
-  **Findings worth not rediscovering.**
-
-  *A number is a unit, not a type.* `PhiCssLength` is `number | "<n><unit>"` and `serializePhiCssLength`
-  stores a pixel length as a bare number and everything else as a string (`types/length.ts`). So
-  `typeof value === "number"` in a reader means **"is an absolute pixel length"**, and the frame's
-  capping is the correct rule -- an absolute maximum can be wider than its slot, a `%` or `ch` maximum
-  is already relative to something. The guard refuses the `typeof` spelling outright.
-
-  *`size` is two statements in one field.* It is a measurement, and it is the claim "I decide this axis",
-  which flips the slot policy from `fill` to `fixed` (`resolvePhiEffectiveSlotSizePolicy`). The resolver
-  makes that claim once (`explicitInline`, `explicitBlock`).
-
-  *The medium is not symmetric.* A page is definite in width and indefinite in height, so `height: 100%`
-  against an auto-height parent resolves to `auto` and a percentage `max-height` is treated as `none`.
-  That is why the frame caps the inline axis and not the block axis, and it is the same asymmetry that
-  hides the palette defect in the entry below.
-
-- **The layout palette says nothing, and what it inherits is wrong.** A Layout's `slotSizePolicy` answers
-  "when this Layout stands in someone else's slot, how does it size itself". Eleven of twelve Layouts
-  answer nothing and inherit `fill` on both axes; only Three Column declares (`fill-inline`).
-
-  Flex and Three Column are the same shape -- a row of slots -- and run different policies today for no
-  reason anybody wrote down. And a vertical Flex is **not** the mirror of a horizontal one: mirroring
-  would give it `inline: intrinsic`, which shrink-wraps a page column to its widest child, and
-  `block: fill`, which resolves to `auto` and does nothing. Both axes of the symmetric answer are wrong,
-  for the reason above -- width is definite, height is not.
-
-  What the palette should say, on that reading: **`fill-inline` for Flex, Flex Vertical, Three Column,
-  Grid, Masonry, Split Card, Content, Collapsible, Stack and Carousel** -- take the inline size you are
-  given, be as tall as your content -- and **`fill` only for Page Region and Structure Region**, which
-  genuinely fill a definite height. The default is the rare case today and the exception is silent.
-
-  It has stayed invisible because `block: fill` is `height: 100%`, which does nothing wherever the parent
-  height is auto. It bites only where a parent does have a definite height, and there it looks like a bug
-  in the parent: two such were fixed on 24.09. (the Stack stage's height, and the anchor that ignored
-  `bottom`). Widgets do not have this problem -- their default is `intrinsic`, which suits the controls,
-  and 38 of 67 declare something else where it matters. The Layouts inherit an answer that nothing forces
-  them to notice.
-
-  This moves pixels wherever a definite height is in play, so it is its own change, after the resolver.
-
 - **Control badge adoption from real use cases.** The badge contract exists for button and toolbar.
   Evaluate basket, support inbox, and similar domain buttons one by one; migrate only where the generic
   receiver contract fits without losing domain semantics.
-- **Normalize Preset Content roots to vertical Flex.** Audit first-party Page presets and use a vertical
-  Flex Layout as the Content Region root, keeping another root only where the Page has a semantic reason.
-  The legacy Content Layout path is still registered.
 - **Dashboard Cards hint with the browser's `title`, not a Tooltip.** On the Admin Dashboard the Cards
   show their hints as native `title` attributes -- the browser's delayed, unstyled bubble, unreachable
   by touch and outside the Theme. The house has a Tooltip (`PhiDescriptionTooltipIcon` and the antd
@@ -187,88 +59,18 @@ built. Remove an entry when it is done.
   `hero.bottom`, `footer_top.top`. Closed shape catalog (wave, layered wave, zigzag, curve, slope) with
   validated ids and bounded parameters, never raw SVG or path data. Static inline SVG outside Region layout
   metrics; optional transform-only, reduced-motion-safe animation that a static Region never loads.
-- **An Overlay is a block, and should be sized like one.** This began as "Modal sizing: either drop
-  `width` from Modal config or admit it in the contract", and the answer turned out to be neither. The
-  question is not which of the two sizing fields wins. It is why an Overlay has private sizing fields at
-  all.
+- **An Overlay is a block, and should be sized like one.** Responsive block geometry is built
+  (design/RESPONSIVE_BLOCK_GEOMETRY.md). Remaining: `PhiCmsOverlayConfig` adopts `size`/`minSize`/`maxSize`
+  from the block contract (a Modal states its viewport limit as `maxSize` in `vw`), the presets restate
+  their 400-720px widths and the auth floor as `minSize`, and then `width` goes -- with it the viewport
+  `{xs, md, lg}` / `PHI_MODAL_RESPONSIVE_MIN_WIDTH` handed to antd, the Drawer's single-length `size`
+  and its bare-number `maxSize`. `controlSize` stays.
 
-  Every renderable block carries `size`, `minSize`, `maxSize` and `collapsedSizeHint`, each a
-  `{ width?, height? }` (types/renderable-block.ts). `PhiCmsOverlayConfig` carries none of them: it
-  extends `PhiCmsContainerChromeConfig`, which is padding and a Surface and no
-  geometry at all (types/cms-container.ts). So the Overlay grew three fields of its own, each weaker
-  than the one it stands in for -- `width` is a width with no height, the Drawer's `size` is a single
-  length under the same name the block contract uses for a pair, and `maxSize` is a bare number under
-  the same name the block contract uses for a pair.
-
-  **What the missing vocabulary costs is visible in the presets.** The auth Overlay says in its own
-  comment that "the width has a floor rather than a preference" -- and then writes two widths, 400 and
-  420, both chosen to sit above the 360 at which the form inside puts its labels back over its inputs.
-  The floor is simulated by picking values above it, because there is no `minSize` to state it with. At
-  the other end, the viewport clamp every Modal gets is hard-wired in the Control
-  (`calc(100vw - 2 x base)`, components/controls/phi-modal-control.tsx) rather than written as a
-  `maxSize` where any other block would write it. And an authored height cannot be expressed at all:
-  height reaches a Modal only through the transient `size` signal and is gone at the next remount.
-
-  **The shape of it.** Adopt `size`, `minSize` and `maxSize` on the Overlay from the block contract and
-  drop `width`. `controlSize` stays, in the role it has everywhere else -- three steps for whoever does
-  not want to name a number, the same role a Button's size has -- and it is not a responsive vocabulary:
-  `small` is 520px on a phone and on a 4K screen alike. Its three widths also fit none of the eight
-  Overlay presets, which want 400, 420, 480, 520, 560, 600, 640 and 720; adding steps for them would
-  damage a vocabulary that belongs to Controls rather than to Overlays.
-
-  **And this is the part that reaches past Overlays.** `PhiRenderableBlockSize` is a plain
-  `{ width, height }`. The `compact | medium | wide` axis lives only on Grid spans and offsets and on
-  the Overlay `width` being removed here, so adopting block geometry as it stands would lose the 20--80px
-  each preset gains on a wide screen. Block geometry therefore has to take the responsive form first,
-  and that is a change to every renderable block, not to Overlays. Order matters, and the first step is
-  done: the container-breakpoint scale in `theme/phi-container-breakpoints.ts` is what a profile is
-  measured against. Next is "One resolver for block geometry" under Layouts and Widgets, which is where
-  the responsive form would be built; then the Overlay adoption, then `width` goes -- the other order
-  would drop distinctions the presets are making on purpose.
-
-  **The decision that has to come before any of it: what a profile is measured against.** "Responsive"
-  is not one mechanism here, it is three, and the tree is not of one mind about them:
-
-  - *CSS decides on its own, nothing is authored.* A Flex Layout's `wrap` is a boolean and the room
-    decides; a Masonry with `minColumnWidth` filled as many columns as fit, and with `columns` did not (it
-    answers by profile now, LAYOUTING.md "Masonry columns").
-  - *The block measures its own width.* A Form declares `container-type: inline-size` and switches at
-    360px and 768px (styles/layout.css); a Grid runs a `ResizeObserver` on its own container and reads
-    `compact | medium | wide` off it (components/layouts/clients/phi-grid-layout-client.tsx); the Shell
-    does the same for its visibility flags at 768 and 1200 (styles/shell.css).
-  - *Neither.* A Split Card has no wrap and no profiles at all -- its two cards do not stack. And
-    `size`, `minSize` and `maxSize` are a number that never becomes another one.
-
-  The Overlay is the one exception, and it matters for this decision: its responsive `width` is handed
-  to Ant Design as `{ xs, md, lg }`, which are **viewport** media queries. Every other responsive thing
-  in the tree answers to its own measured width. So block geometry cannot simply "become responsive" --
-  it has to say against what, and the two answers are not compatible: a `medium` that means "this block
-  is between 360 and 768 wide" and a `medium` that means "the window is" would be the same word for the
-  third time.
-
-  **Decided (2026-09-25): a profile is measured against the block's own width.** What forces the
-  content is the room the block actually stands in, and that keeps one meaning of `compact | medium |
-  wide` across Grid, Form and block geometry -- a word that means three things is worse than a word
-  that covers one case less well. A Modal genuinely hangs on the viewport rather than standing in a
-  Layout; it says so with `maxSize` in `vw` units, not with a second profile system. The Overlay's
-  `{ xs, md, lg }` handed to Ant Design is therefore the thing that goes, not the thing the rest adopts.
-
-  What follows from it was the first question of the responsive form, and it is answered under Layouts
-  and Widgets: **CSS decides, nothing measures** (2026-09-26). The scale stays the container-breakpoint
-  one (theme/phi-container-breakpoints.ts), the query goes on the box that offers the room rather than
-  on the block, and a block that states no responsive value pays nothing, because it writes no
-  properties and no rule matches it.
-- **What the Shell is on a phone.** Today the answer is subtraction: the Shell hides Regions by
-  `viewportFlags` below 768px (styles/shell.css), so a narrow screen gets the same Shell with parts
-  missing. Nothing is re-arranged, and the navigation that lived in the sider is simply gone.
-
-  An idea rather than a design: collect the navigation items that the sider, the header and the footer
-  each contribute into one menu, so a phone gets one way in instead of three that do not fit. What would
-  have to be decided before it is a design -- which Regions may contribute, what orders the result, and
-  who owns the collecting. The last one is the trap: a menu that gathers items from every Region is one
-  step from being the single place that knows all five Areas' presets, catalogs and module sets, which
-  NEXT_INTEGRATION.md forbids outright. The Area-switch entry under Verification ran into the same wall
-  from the other side.
+- **What the Shell is on a phone.** The Sider becomes a drawer below 768px (`MobileDrawer`, SHELL.md);
+  other Regions are still only hidden by `viewportFlags`. Idea, not design: gather the navigation items
+  header, sider and footer contribute into one menu. To decide first: which Regions contribute, what
+  orders them, and who collects without becoming the one place that knows every Area's presets
+  (NEXT_INTEGRATION.md forbids that).
 
 - **Overlay authoring in Builder.** Designed in [design/OVERLAY_AUTHORING.md](./design/OVERLAY_AUTHORING.md).
 
@@ -310,12 +112,6 @@ built. Remove an entry when it is done.
   whether that stays and the contract says so, or whether unsaved focal edits get an owner and the preview
   switches to the regenerated variant after save.
 - **Module font adoption into the Media library.** Designed in [design/FONTS.md](./design/FONTS.md).
-- **A Tour for the Theme workspace.** The one thing `/builder/theme` does not say out loud is that a
-  Module's Theme is offered and never taken: installing a package that ships a look changes nothing until
-  somebody picks it here, and the "your logo" placeholder in the header is the sign that nobody has. That
-  is written in [THEME.md](./THEME.md#selection-and-resolution) for whoever reads contracts, and it wants
-  saying once in the workspace itself, for whoever does not. A Tour is the shape for it; the design is
-  [design/TOURS.md](./design/TOURS.md) and nothing of it is built, so this waits on that.
 - **Folder flags have no reader and no control.** `PhiMediaFolderFlags` travels in the Folder payload and
   nothing here reads it. Core now enforces `Locked` (2026-11-10): a locked Folder is not renamed, moved
   or deleted, and nothing is created in it, uploaded into it, moved into or out of it or deleted from it;
@@ -346,7 +142,9 @@ built. Remove an entry when it is done.
 ## Translations and preferences
 
 - **Count-aware plural translation.** Add one plural contract to the central translation and placeholder
-  formatter before Widgets branch on singular/plural locally. Providers keep returning scalar counts.
+  formatter before Widgets branch on singular/plural locally -- two already do (`count_one` in
+  components/widgets/label-sets/search-results.ts, `configuredPlural` in
+  components/widgets/label-types/effects.ts). Providers keep returning scalar counts.
 - **User-profile Tooltip preference.** A per-user setting to disable optional Tooltips, resolved centrally
   and applied through the Phi Control adapters; essential validation, warning, confirmation, and
   accessibility text stays available.
@@ -369,14 +167,15 @@ built. Remove an entry when it is done.
   moves to a separate `phis-cli`-installable package. Either way it binds only to Core
   `@phis/server/groups:v1`, never branches on a Directory provider, and leaves provider setup and sync to
   the Add-on half.
-- **Module distribution.** Designed in [design/MODULE_DISTRIBUTION.md](./design/MODULE_DISTRIBUTION.md).
-- **Say what a Site loses before it switches a Module off.** Deactivating a Module leaves every reference
-  to it dangling, and each kind is only discovered when the page renders: a Collection View naming one of
-  its item renderers, a signal route pointing at a receiver it owned, a data-provider binding to one of
-  its resources. Each reports itself in the block, which is right at render time and far too late at
-  decision time. One check that answers "what stops working if this goes" for renderers, routes and
-  bindings together, run where the Module selection is edited and again on publish. Not a fallback: the
-  block still refuses to draw something other than what was chosen, the Site is simply told first.
+- **Module distribution.** Local and resolved install via `phis module add|del|sync` exists. Still
+  missing: acquisition from a source (a list with version, digest, minimum `phisVersion`), two-half
+  packages, provenance (resolved version, lockfile integrity, stated digest) and update checks. Designed
+  in [design/MODULE_DISTRIBUTION.md](./design/MODULE_DISTRIBUTION.md) and phis-server design/DISTRIBUTION.md.
+- **Say what a Site loses before it switches a Module off.** The Module's own blocks are reported
+  (module-usage, in the Builder and in `phis module del`; a failed read refuses). Still missing: its
+  item renderers named by Collection Views, signal routes to its receivers, data-provider bindings to
+  its resources, and the same check again on publish. Not a fallback: the block still refuses to draw
+  something other than what was chosen.
 
 ## Verification
 

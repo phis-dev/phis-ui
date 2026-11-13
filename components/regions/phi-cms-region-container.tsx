@@ -38,6 +38,8 @@ export type PhiCmsRegionContainerProps = {
   pageScope?: PhiCmsResolvedRegionPageScope | null;
   /** Whether the Region's top Layout paints a ground of its own (`phiCmsRegionRootLayoutPaintsGround`). */
   rootPaintsGround?: boolean;
+  /** Whether the Region's top Layout names a value per profile (`phiBlockGeometryQueriesRoom`). */
+  rootQueriesRoom?: boolean;
 };
 
 export function PhiCmsRegionContainer({
@@ -53,6 +55,7 @@ export function PhiCmsRegionContainer({
   signalParticipant = false,
   pageScope = null,
   rootPaintsGround = false,
+  rootQueriesRoom = false,
 }: PhiCmsRegionContainerProps) {
   const routeScope: Extract<PhiSignalScope, "area" | "page"> =
     isPhiCmsPageOwnedRegion(regionKey) ? "page" : "area";
@@ -90,6 +93,7 @@ export function PhiCmsRegionContainer({
         regionType={regionType}
         previewMode={previewMode}
         rootPaintsGround={rootPaintsGround}
+        rootQueriesRoom={rootQueriesRoom}
       >
         {children}
       </PhiCmsRegionStatic>
@@ -109,6 +113,7 @@ export function PhiCmsRegionContainer({
         regionType,
         previewMode,
         rootPaintsGround,
+        rootQueriesRoom,
         runtime: {
           siteKey: runtime.site.key,
           publicUrl: runtime.site.publicUrl ?? null,

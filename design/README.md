@@ -18,6 +18,7 @@ into the matching contract document, and open work is tracked in [TODOS.md](../T
 - [OVERLAY_AUTHORING.md](./OVERLAY_AUTHORING.md) -- authoring Modal and Drawer Overlays in Builder.
 - [RESPONSIVE_BLOCK_GEOMETRY.md](./RESPONSIVE_BLOCK_GEOMETRY.md) -- letting a block state a size per
   profile, decided by a container query on the room it is offered rather than by anything that measures.
+  Built; the contract is LAYOUTING.md, "Block geometry per profile", and this keeps the reasoning.
 - [STATE_MACHINES.md](./STATE_MACHINES.md) -- a shared description of multi-step work: states,
   transitions, server-owned projections, and where a flow's state lives.
 - [TOURS.md](./TOURS.md) -- guided UI Tours, visual-anchor resolution, and user progress.

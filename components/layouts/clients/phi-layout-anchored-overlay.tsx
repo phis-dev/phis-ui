@@ -7,6 +7,7 @@ import {
   resolvePhiPlacement,
   resolvePhiSlotPlacementMargins,
 } from "../phi-layout-contract";
+import { phiSlotContainerAttributes } from "../../../helpers/block-geometry-profiles";
 
 export type PhiLayoutAnchorRole = "left" | "middle" | "right";
 
@@ -30,6 +31,8 @@ export type PhiLayoutSlotChildSizing = {
   minBlockSize: CSSProperties["minHeight"];
   maxInlineSize: CSSProperties["maxWidth"];
   maxBlockSize: CSSProperties["maxHeight"];
+  /** The child names a value per profile; the box that offers it room declares the `phi-slot` container. */
+  queriesRoom: boolean;
 };
 
 function isPhiLayoutNodeChild(child: ReactNode) {
@@ -65,6 +68,7 @@ export function resolvePhiLayoutSlotChildSizing(
     minBlockSize: slotSizing.minBlockSize,
     maxInlineSize: slotSizing.maxInlineSize,
     maxBlockSize: slotSizing.maxBlockSize,
+    queriesRoom: slotSizing.queriesRoom,
   };
 }
 
@@ -114,10 +118,20 @@ export function PhiLayoutAnchoredOverlay({
   const horizontal = phiFlexPlacementWord(placement.inline);
   const vertical = phiFlexPlacementWord(placement.block);
   const slotSizing = resolvePhiLayoutSlotChildSizing(children);
-  const placementMargins = resolvePhiSlotPlacementMargins({ inline: placement.inline, block: null });
+  /*
+   * Both axes. The content box below is a flex row, so an auto margin places its child on the block
+   * axis as well as the inline one -- a child stretched to a definite height and capped below it is
+   * moved by the block margins the way a capped width is moved by the inline ones.
+   */
+  const placementMargins = resolvePhiSlotPlacementMargins(placement);
 
   return (
     <div
+      /*
+       * The room this overlay offers, and so the `phi-slot` container where its child names a profile:
+       * the overlay is as wide as the Layout gives it, never as wide as its content.
+       */
+      {...phiSlotContainerAttributes(slotSizing.queriesRoom)}
       className={[
         "phi-layout-scaffold-anchor",
         positionMode === "flow" ? "phi-layout-scaffold-anchor--flow" : null,

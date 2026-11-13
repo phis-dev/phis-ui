@@ -6,7 +6,8 @@ import {
   type ReactNode,
 } from "react";
 
-import { resolvePhiLayoutBoxStyle } from "./phi-layout-contract";
+import { resolvePhiLayoutBox } from "./phi-layout-contract";
+import { omitPhiBlockProfiledDeclarations } from "../../helpers/block-geometry-profiles";
 import {
   resolvePhiBaseLayoutSlotStates,
   resolvePhiBaseLayoutChrome,
@@ -127,14 +128,15 @@ export function PhiBaseLayout({
     paddingLeft,
     surface,
   });
+  const layoutBox = resolvePhiLayoutBox({
+    size,
+    minSize,
+    maxSize,
+    collapsedSizeHint,
+    visibility: resolvedVisibility,
+  });
   const resolvedContainerStyle = {
-    ...resolvePhiLayoutBoxStyle({
-      size,
-      minSize,
-      maxSize,
-      collapsedSizeHint,
-      visibility: resolvedVisibility,
-    }),
+    ...layoutBox.style,
     ...(resolvedZIndex == null ? {} : { zIndex: resolvedZIndex }),
     opacity: resolvedOpacity,
     ...(resolvedMargin == null
@@ -154,6 +156,8 @@ export function PhiBaseLayout({
     overflow: resolvedVisibility === "collapsed" ? "hidden" : undefined,
     ...style,
   } as CSSProperties;
+  /* A declaration handed to the stylesheet per profile is not written inline here either, `minWidth: 0` included. */
+  const resolvedBoxStyle = omitPhiBlockProfiledDeclarations(resolvedContainerStyle, layoutBox.declarations);
 
   return (
     <PhiLayoutSurfaceBox
@@ -179,8 +183,9 @@ export function PhiBaseLayout({
       data-phi-layout-debug-layer={phiLayoutDebugLayerMarker(isAuthoringRender)}
       data-phi-debug-scaffold={resolvedDebugMode ? "on" : undefined}
       data-phi-layout-has-explicit-layout-background={hasExplicitLayoutBackground ? "true" : "false"}
+      {...layoutBox.attributes}
       className={joinPhiClassNames("phi-layout", className)}
-      style={resolvedContainerStyle}
+      style={resolvedBoxStyle}
     >
       {underlay}
       {resolvedSlots}

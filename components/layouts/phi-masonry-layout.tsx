@@ -1,6 +1,13 @@
 import type { CSSProperties, ReactNode } from "react";
 
-import { normalizePhiCssSize } from "./phi-layout-contract";
+import {
+  normalizePhiCssSize,
+  resolvePhiPlacement,
+  resolvePhiSlotPlacementMargins,
+} from "./phi-layout-contract";
+import type { PhiAnchorWidgetPlacement } from "../controls/phi-anchor-control-contract";
+import { phiSlotContainerAttributes } from "../../helpers/block-geometry-profiles";
+import { resolvePhiLayoutSlotChildSizing } from "./clients/phi-layout-anchored-overlay";
 import { PhiBaseLayout, type PhiBaseLayoutProps } from "./phi-base-layout";
 import { resolvePhiLayoutDefaults } from "../../helpers/cms-layout-defaults";
 import {
@@ -21,6 +28,11 @@ export type PhiMasonryLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
   columns?: PhiResponsiveValue<number>;
   /** The distance between children, across and down. */
   gap?: CSSProperties["gap"];
+  /**
+   * Where a child narrower than its column stands in it. Only the inline axis: an item is as tall as
+   * its child, so there is no room on the block axis to place anything in.
+   */
+  editSlotAnchor?: PhiAnchorWidgetPlacement | null;
   style?: CSSProperties;
 };
 
@@ -42,7 +54,16 @@ export function PhiMasonryLayout({
     editSlotAction,
     editSlotLabels,
     editRenderInsertControl,
+    editSlotAnchor,
   } = layoutProps;
+  /*
+   * The anchor as the margins a child is moved by. A slot is a block box as wide as its column, and an
+   * `intrinsic` child is `width: fit-content` in it -- a definite width, so `margin-inline: auto` places
+   * it. The block axis states `0`: the item is the child's height and has nothing over. Every slot
+   * states all four, which is what stops a Layout further up from placing this one's children.
+   */
+  const placement = resolvePhiPlacement(editSlotAnchor);
+  const slotPlacementMargins = resolvePhiSlotPlacementMargins({ inline: placement.inline, block: null });
   const resolvedGap = normalizePhiCssSize(gap) ?? normalizePhiCssSize(PHI_MASONRY_LAYOUT_DEFAULTS.gap as number | string) ?? "0px";
   const isAuthoringRender = isPhiLayoutAuthoringRender(layoutProps);
   const isEditMode = renderMode === "editor";
@@ -54,11 +75,16 @@ export function PhiMasonryLayout({
    * the button stands.
    */
   const renderMasonryItem = (key: string, hasContent: boolean, content: ReactNode) => (
-    <div key={key} className="phi-masonry-layout__item">
+    <div
+      key={key}
+      className="phi-masonry-layout__item"
+      /* The column is the room a profiled child is offered. */
+      {...phiSlotContainerAttributes(hasContent && resolvePhiLayoutSlotChildSizing(content).queriesRoom)}
+    >
       <div
         className={phiLayoutSlotClassName(isAuthoringRender)}
         data-phi-layout-has-content={phiLayoutSlotContentMarker(isAuthoringRender, hasContent)}
-        style={{ minWidth: 0 }}
+        style={{ minWidth: 0, ...slotPlacementMargins } as CSSProperties}
       >
         {content}
       </div>

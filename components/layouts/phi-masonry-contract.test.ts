@@ -45,6 +45,28 @@ describe("a Masonry's columns", () => {
     expect(markup.match(/class="phi-masonry-layout__columns"/gu)).toHaveLength(1);
     expect(markup.match(/class="phi-masonry-layout__item"/gu)).toHaveLength(2);
   });
+
+  /*
+   * A child narrower than its column follows the anchor by the margins its slot hands down: a slot is a
+   * block box as wide as the column, and an intrinsic child's `fit-content` width leaves the room an
+   * auto margin takes. The block axis has none -- an item is as tall as its child -- and states `0`.
+   */
+  it("hands every slot the anchor's inline placement", () => {
+    const markup = renderToStaticMarkup(createElement(PhiMasonryLayout, {
+      slots: [createElement("p", { key: "a" }, "a")],
+      editSlotAnchor: "bottomRight",
+    }));
+    expect(markup).toMatch(/--phi-slot-inline-margin-start:auto;--phi-slot-inline-margin-end:0/u);
+    expect(markup).toMatch(/--phi-slot-block-margin-start:0;--phi-slot-block-margin-end:0/u);
+    expect(markup).not.toMatch(/data-phi-slot-container/u);
+  });
+
+  it("makes a column the room of a child that names a profile", () => {
+    const markup = renderToStaticMarkup(createElement(PhiMasonryLayout, {
+      slots: [createElement("div", { key: "a", kind: "widget", config: { size: { width: { compact: 100, wide: 200 } } } } as never)],
+    }));
+    expect(markup).toMatch(/class="phi-masonry-layout__item" data-phi-slot-container="true"|data-phi-slot-container="true" class="phi-masonry-layout__item"/u);
+  });
 });
 
 /*

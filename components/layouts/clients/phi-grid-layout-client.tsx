@@ -29,20 +29,25 @@ import {
   phiLayoutSlotContentMarker,
 } from "../../../helpers/layout-authoring-markers";
 import { PHI_CMS_MAX_LAYOUT_SLOTS } from "../../../constants/cms-layout-types";
+import { phiSlotContainerAttributes } from "../../../helpers/block-geometry-profiles";
 
 const PHI_GRID_LAYOUT_DEFAULTS = resolvePhiLayoutDefaults("grid");
 
 export type { PhiGridLayoutProps } from "../phi-grid-contract";
 
-function resolveGridSlotPlacementStyle(slot: ReactNode): CSSProperties {
-  /*
-   * The same slot-sizing helper the other layouts use. Going through it rather than reaching into
-   * plugins/runtime directly keeps this client out of the Render Manifest's chunk -- that shared edge
-   * was pulling the whole Grid implementation into every Area's first load, Public included.
-   */
-  const sizing = resolvePhiLayoutSlotChildSizing(slot);
-
+function resolveGridSlotPlacementStyle(
+  sizing: ReturnType<typeof resolvePhiLayoutSlotChildSizing>,
+): CSSProperties {
   return {
+    /*
+     * A flex column, so the child's block margins place it. An auto margin places a box only where its
+     * parent is a flex or grid container; in block flow `margin-block: auto` computes to `0`, and a child
+     * stretched to a cell of definite height and capped below it stood at the top whatever the anchor
+     * said. The inline margins worked here already -- `margin-inline: auto` centres a block box of a
+     * definite width -- and work the same in the column.
+     */
+    display: "flex",
+    flexDirection: "column",
     minWidth: 0,
     minHeight: 0,
     maxWidth: "100%",
@@ -126,7 +131,7 @@ export function PhiGridLayout({
   const resolvedJustifyContent = phiGridPlacementWord(placement.inline);
   const slotPlacementMargins = resolvePhiSlotPlacementMargins({
     inline: phiPlacementFromWord(resolvedJustifyContent),
-    block: null,
+    block: phiPlacementFromWord(resolvedAlignItems),
   });
   const isEditMode = renderMode === "editor";
   const occupiedSlotIndices = slots.reduce<number[]>((next, slot, slotIndex) => {
@@ -157,9 +162,18 @@ export function PhiGridLayout({
       return null;
     }
 
+    /*
+     * The same slot-sizing helper the other layouts use. Going through it rather than reaching into
+     * plugins/runtime directly keeps this client out of the Render Manifest's chunk -- that shared edge
+     * was pulling the whole Grid implementation into every Area's first load, Public included.
+     */
+    const sizing = resolvePhiLayoutSlotChildSizing(slot);
+
     return (
       <div
         key={slotIndex}
+        /* The cell is the room a profiled child is offered: as wide as its tracks, never as its content. */
+        {...phiSlotContainerAttributes(sizing.queriesRoom)}
         className={phiLayoutSlotClassName(isAuthoringRender, "phi-grid-layout__slot")}
         data-phi-layout-has-content={phiLayoutSlotContentMarker(isAuthoringRender, true)}
         style={{
@@ -176,7 +190,7 @@ export function PhiGridLayout({
           ...slotPlacementMargins,
         } as CSSProperties}
       >
-        <div style={resolveGridSlotPlacementStyle(slot)}>
+        <div style={resolveGridSlotPlacementStyle(sizing)}>
           {slot}
         </div>
       </div>

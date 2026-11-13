@@ -16,6 +16,13 @@ export type PhiGeometryWidgetLabels = {
     maxSize: string;
     zIndex: string;
     viewport: string;
+    profile: string;
+  };
+  /** The rooms a size may name a value for, narrow first (design/RESPONSIVE_BLOCK_GEOMETRY.md). */
+  profiles: {
+    compact: string;
+    medium: string;
+    wide: string;
   };
   viewport: {
     compact: string;
@@ -45,6 +52,12 @@ export const PHI_GEOMETRY_WIDGET_DEFAULT_LABELS: PhiGeometryWidgetLabels = {
     maxSize: "Max size",
     zIndex: "z-index",
     viewport: "Viewport",
+    profile: "Room",
+  },
+  profiles: {
+    compact: "< 377",
+    medium: "≥ 377",
+    wide: "≥ 610",
   },
   viewport: {
     compact: "Compact",

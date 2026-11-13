@@ -830,11 +830,10 @@ animates with a transform. A popup anchored inside such a block cannot paint abo
 however high its `z-index`, and a transform additionally re-anchors a `position: fixed` descendant to the
 block instead of to the window. A popup in a portal has left the subtree and meets none of it.
 
-The rule gets wider once a block may state a size per profile: the box that offers a block its room then
-declares `container-type: inline-size`, which brings the same stacking context to every slot holding a
-responsive block. That work is designed in
-[design/RESPONSIVE_BLOCK_GEOMETRY.md](./design/RESPONSIVE_BLOCK_GEOMETRY.md) and is not built; a Widget
-written to this rule today needs no change when it is.
+The rule is wider where a block states a size per profile: the box that offers that block its room
+declares `container-type: inline-size` (the `phi-slot` container, [LAYOUTING.md](./LAYOUTING.md#block-geometry-per-profile)),
+which brings the same stacking context to every slot holding a responsive block. A Widget written to
+this rule needs no change for it.
 
 ## 4a. Add a Layout
 
@@ -1441,6 +1440,13 @@ Every Page has the same three levels in its `content` Region:
 3. **Sections**: each slot of the column holds one Widget or one Layout. A section that needs columns uses
    `grid`, two cards side by side use `split-card`, a row of buttons uses `flex`, a section of its own
    rows a `flex-vertical` again. The Page column itself stays one vertical stack.
+
+What the column hangs under is the Module's choice: the Region's root may be the `content` Layout with
+the column in it, or the `flex-vertical` column may be the root itself, as in phis-ui's own Pages. Where
+a Page stacks several sections, the `flex-vertical` root is usually the simpler choice: the sections are
+its slots, with the section gap between them, and no second level is needed. What
+makes the Pages of a Site agree is the column's spacing roles and the Region's edge, not which Layout the
+column hangs under.
 
 ### Spacing roles
 

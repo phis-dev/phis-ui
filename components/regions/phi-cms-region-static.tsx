@@ -16,6 +16,8 @@ export type PhiCmsRegionStaticProps = {
   previewMode?: boolean;
   /** Whether the Region's top Layout paints a ground of its own (`phiCmsRegionRootLayoutPaintsGround`). */
   rootPaintsGround?: boolean;
+  /** Whether the Region's top Layout names a value per profile (`phiBlockGeometryQueriesRoom`). */
+  rootQueriesRoom?: boolean;
 };
 
 /**
@@ -33,6 +35,7 @@ export function PhiCmsRegionStatic({
   regionType,
   previewMode = false,
   rootPaintsGround = false,
+  rootQueriesRoom = false,
 }: PhiCmsRegionStaticProps) {
   const shell = resolvePhiCmsRegionShell({
     regionKey,
@@ -44,6 +47,7 @@ export function PhiCmsRegionStatic({
     className,
     style,
     rootPaintsGround,
+    rootQueriesRoom,
   });
   if (shell == null) {
     return null;
@@ -53,7 +57,7 @@ export function PhiCmsRegionStatic({
   const element = (
     <Element {...shell.attributes} style={shell.style}>
       <PhiSurfaceGroundLayer ground={shell.ground} />
-      <div className="phi-cms-region-shell__content" style={shell.contentStyle}>
+      <div className="phi-cms-region-shell__content" {...shell.contentAttributes} style={shell.contentStyle}>
         {children}
       </div>
     </Element>

@@ -28,6 +28,7 @@ import {
   resolvePhiEffectiveSlotSizePolicy,
   resolvePhiSlotChildBaseStyle,
   resolvePhiSlotChildExplicitAxes,
+  resolvePhiSlotChildProfileStyle,
   resolvePhiSlotChildSizeConstraints,
   resolvePhiSlotChildSizeStyle,
   resolvePhiSlotSizePolicy,
@@ -36,6 +37,7 @@ import {
 import { resolvePhiRenderableBlockGeometry } from "../../types/renderable-block-geometry";
 import type { PhiRenderableBlockReceiver } from "../../components/runtime/renderable-block-runtime";
 import { joinPhiClassNames } from "../../helpers/class-names";
+import { omitPhiBlockProfiledDeclarations } from "../../helpers/block-geometry-profiles";
 
 export type PhiSlotChildFrameViewProps = {
   kind: PhiSlotChildKind;
@@ -125,6 +127,12 @@ export function PhiSlotChildFrameView({
   const effectsAttributes = disableEffects
     ? undefined
     : resolveRenderableBlockEffectsAttributes(resolvedConfig);
+  /*
+   * A declaration that names a value per profile is the stylesheet's, not the inline style's: the frame
+   * writes the three answers as custom properties and `styles/layout.css` picks one by the room the
+   * nearest `phi-slot` container offers (LAYOUTING.md, "Block geometry per profile").
+   */
+  const profile = resolvePhiSlotChildProfileStyle(geometry, policy);
   const surface = kind === "widget" && surfacePolicy === "frame"
     ? resolvePhiSurfaceStyle(resolvedConfig.surface, { cornerFallback: PHI_LAYOUT_SURFACE_RADIUS })
     : null;
@@ -149,14 +157,21 @@ export function PhiSlotChildFrameView({
       data-phi-builder-popup-open={builderWidgetPopupOpen ? "true" : undefined}
       {...effectsAttributes}
       data-phi-effects-state={effectsState ?? effectsAttributes?.["data-phi-effects-state"]}
+      {...profile.attributes}
       {...buildPhiSlotChildDataAttributes(policy, {
         explicitInlineSize: resolvedExplicitInlineSize,
         explicitBlockSize: resolvedExplicitBlockSize,
         ...resolvePhiSlotChildSizeConstraints(geometry),
       })}
       style={{
-        ...resolvePhiSlotChildBaseStyle(policy),
-        ...resolvePhiSlotChildSizeStyle(geometry, policy),
+        ...omitPhiBlockProfiledDeclarations(
+          {
+            ...resolvePhiSlotChildBaseStyle(policy),
+            ...resolvePhiSlotChildSizeStyle(geometry, policy),
+          },
+          profile.declarations,
+        ),
+        ...profile.properties,
         ...surface?.style,
         ...(resolvedConfig.zIndex == null ? {} : { zIndex: resolvedConfig.zIndex }),
         ...(resolvedConfig.opacity == null ? {} : { opacity: resolvedConfig.opacity }),

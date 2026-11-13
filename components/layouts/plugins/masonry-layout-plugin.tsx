@@ -2,6 +2,7 @@ import type { PhiCmsLayoutPlugin } from "../../../types";
 import type { PhiCmsMasonryLayoutConfig } from "../../../types/cms-config";
 import { parsePhiCmsMasonryLayoutConfig } from "../../../types/cms-config";
 import { PhiMasonryLayout } from "../phi-masonry-layout";
+import { resolvePhiLayoutAnchor } from "../phi-layout-contract";
 import { definePhiLayoutRenderers } from "../layout-plugin-renderers";
 import { PHI_MASONRY_LAYOUT_DEFINITION } from "../layout-definitions";
 
@@ -20,6 +21,7 @@ export const PHI_MASONRY_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsMasonryLayoutCo
       renderMode={renderMode}
       columns={config.columns}
       gap={config.gap}
+      editSlotAnchor={resolvePhiLayoutAnchor(config.anchor)}
       zIndex={config.zIndex}
       surface={config.surface}
       size={config.size}

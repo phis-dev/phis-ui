@@ -15,7 +15,10 @@ import {
   PHI_GEOMETRY_WIDGET_DEFAULT_LABELS,
   type PhiGeometryWidgetLabels,
 } from "../widgets/label-types/geometry";
+import { useState } from "react";
+
 import { PhiDimensionControl } from "./phi-dimension-control";
+import { PhiSegmentedControl } from "./phi-segmented-control";
 import { PhiFlexControl } from "./phi-flex-control";
 import { PhiLengthControl } from "./phi-length-control";
 import { PhiNumberControl } from "./phi-number-control";
@@ -31,48 +34,111 @@ export type PhiGeometryControlProps = {
   showSticky?: boolean;
   showOffsetTop?: boolean;
   showViewport?: boolean;
+  /**
+   * Offer a value per profile for size, minimum and maximum (design/RESPONSIVE_BLOCK_GEOMETRY.md). Off
+   * for a Region, whose own geometry is not a slot child's and answers at one value.
+   */
+  showProfiles?: boolean;
   labels?: PhiGeometryWidgetLabels;
   onChange?: (value: PhiCmsGeometryWidgetConfig) => void;
 };
 
-/**
- * The base length of a stored one, and the way back.
- *
- * A stored length may name a value per profile (`PhiResponsiveLength`). This Control edits one value,
- * so it shows the base -- `compact`, the answer a narrow room gets -- and writes back into that entry
- * alone, leaving `medium` and `wide` where the author put them. Editing a profile value is the
- * Control's own step, designed in design/RESPONSIVE_BLOCK_GEOMETRY.md; until it exists, the rule here
- * is that this Control never silently flattens what it cannot show.
- */
-function readBaseLength(value: PhiResponsiveLength | undefined) {
-  return typeof value === "object" && value !== null ? value.compact ?? null : value ?? null;
+/** The three rooms a length may answer differently, narrow first -- the order the Control asks in. */
+export const PHI_GEOMETRY_PROFILES = ["compact", "medium", "wide"] as const;
+
+export type PhiGeometryProfile = (typeof PHI_GEOMETRY_PROFILES)[number];
+
+type PhiStoredLength = number | string;
+
+function isProfileLength(value: PhiResponsiveLength | undefined): value is Exclude<PhiResponsiveLength, PhiStoredLength | null> {
+  return typeof value === "object" && value !== null;
 }
 
-function writeBaseLength(
-  stored: PhiResponsiveLength | undefined,
-  next: number | string | null | undefined,
-): PhiResponsiveLength {
-  if (typeof stored === "object" && stored !== null) {
-    return next == null ? { ...stored, compact: undefined } : { ...stored, compact: next };
+/**
+ * The value a stored length states at one profile, and what it falls back to there.
+ *
+ * `stated` is the entry the author wrote for that profile -- for a plain length, the length at
+ * `compact` and nothing at the other two. `inherited` is what applies when the entry is empty: the
+ * cascade runs upward from `compact` (`medium` falls back to it, `wide` to `medium`), the reading
+ * `resolvePhiRenderableBlockGeometry` makes, so the Control shows the value that stands there as the
+ * placeholder rather than an empty field that looks like "auto".
+ */
+export function readPhiGeometryProfileLength(
+  value: PhiResponsiveLength | undefined,
+  profile: PhiGeometryProfile,
+): { stated: PhiStoredLength | null; inherited: PhiStoredLength | null } {
+  if (!isProfileLength(value)) {
+    const plain = value ?? null;
+    return profile === "compact" ? { stated: plain, inherited: null } : { stated: null, inherited: plain };
   }
 
-  return next ?? null;
+  const stated = value[profile] ?? null;
+  const inherited =
+    profile === "compact"
+      ? null
+      : profile === "medium"
+        ? value.compact ?? null
+        : value.medium ?? value.compact ?? null;
+  return { stated, inherited };
 }
 
-function readBasePair(pair: PhiRenderableBlockResponsiveSize | undefined): PhiRenderableBlockSize {
+/**
+ * One profile's entry written into a stored length, the other two left where the author put them.
+ *
+ * The stored form stays the smallest one that means the same: a length that names only `compact` is
+ * the plain length -- the same at every profile, byte for byte what a config without profiles holds --
+ * and one that names nothing is nothing.
+ */
+export function writePhiGeometryProfileLength(
+  stored: PhiResponsiveLength | undefined,
+  profile: PhiGeometryProfile,
+  next: PhiStoredLength | null | undefined,
+): PhiResponsiveLength {
+  const entries: Partial<Record<PhiGeometryProfile, PhiStoredLength>> = isProfileLength(stored)
+    ? { ...stored }
+    : stored == null
+      ? {}
+      : { compact: stored };
+
+  if (next == null) {
+    delete entries[profile];
+  } else {
+    entries[profile] = next;
+  }
+
+  const named = PHI_GEOMETRY_PROFILES.filter((key) => entries[key] != null);
+  if (named.length === 0) {
+    return null;
+  }
+  if (named.length === 1 && named[0] === "compact") {
+    return entries.compact ?? null;
+  }
+  return Object.fromEntries(named.map((key) => [key, entries[key]]));
+}
+
+function readProfilePair(pair: PhiRenderableBlockResponsiveSize | undefined, profile: PhiGeometryProfile) {
+  const width = readPhiGeometryProfileLength(pair?.width, profile);
+  const height = readPhiGeometryProfileLength(pair?.height, profile);
   return {
-    width: readBaseLength(pair?.width),
-    height: readBaseLength(pair?.height),
+    value: { width: width.stated, height: height.stated } satisfies PhiRenderableBlockSize,
+    inherited: { width: width.inherited, height: height.inherited } satisfies PhiRenderableBlockSize,
   };
 }
 
-function writeBasePair(
+function writeProfilePair(
   stored: PhiRenderableBlockResponsiveSize | undefined,
+  profile: PhiGeometryProfile,
   next: PhiRenderableBlockSize | null | undefined,
 ): PhiRenderableBlockResponsiveSize | undefined {
-  const width = writeBaseLength(stored?.width, next?.width);
-  const height = writeBaseLength(stored?.height, next?.height);
+  const width = writePhiGeometryProfileLength(stored?.width, profile, next?.width);
+  const height = writePhiGeometryProfileLength(stored?.height, profile, next?.height);
   return width == null && height == null ? undefined : { width, height };
+}
+
+/** Whether any of the three fields names a value at a profile other than `compact`. */
+function statesProfiles(value: PhiCmsGeometryWidgetConfig) {
+  return [value.size, value.minSize, value.maxSize].some((pair) =>
+    isProfileLength(pair?.width) || isProfileLength(pair?.height));
 }
 
 function formatSizeValue(size: PhiRenderableBlockSize | null | undefined) {
@@ -107,14 +173,24 @@ export function PhiGeometryControl({
   showSticky = true,
   showOffsetTop = true,
   showViewport = true,
+  showProfiles = true,
   labels = PHI_GEOMETRY_WIDGET_DEFAULT_LABELS,
   onChange,
 }: PhiGeometryControlProps) {
   const currentValue = normalizePhiGeometryWidgetConfig(value ?? config ?? null);
   const isDisabled = disabled || !onChange;
-  const currentSize = readBasePair(currentValue.size);
-  const currentMinSize = readBasePair(currentValue.minSize);
-  const currentMaxSize = readBasePair(currentValue.maxSize);
+  /*
+   * Narrow first: the cascade runs upward from `compact`, so a block that names only `wide` has no
+   * stated size below 610 and is `auto` there -- the answer a narrow room gets is the one to set first.
+   */
+  const [selectedProfile, setSelectedProfile] = useState<PhiGeometryProfile>("compact");
+  const profile: PhiGeometryProfile = showProfiles ? selectedProfile : "compact";
+  const currentSize = readProfilePair(currentValue.size, profile);
+  const currentMinSize = readProfilePair(currentValue.minSize, profile);
+  const currentMaxSize = readProfilePair(currentValue.maxSize, profile);
+  /* An empty entry above `compact` shows what stands there through the cascade, not a bare "Width". */
+  const placeholder = (inherited: number | string | null | undefined) =>
+    inherited == null ? undefined : String(inherited);
 
   function emit(nextValue: PhiCmsGeometryWidgetConfig) {
     onChange?.(nextValue);
@@ -141,15 +217,15 @@ export function PhiGeometryControl({
           : null}
         {renderGeometryRow(
           labels.fields.size,
-          <Typography.Text type="secondary">{formatSizeValue(currentSize)}</Typography.Text>,
+          <Typography.Text type="secondary">{formatSizeValue(readProfilePair(currentValue.size, "compact").value)}{statesProfiles(currentValue) ? " …" : ""}</Typography.Text>,
         )}
         {renderGeometryRow(
           labels.fields.minSize,
-          <Typography.Text type="secondary">{formatSizeValue(currentMinSize)}</Typography.Text>,
+          <Typography.Text type="secondary">{formatSizeValue(readProfilePair(currentValue.minSize, "compact").value)}</Typography.Text>,
         )}
         {renderGeometryRow(
           labels.fields.maxSize,
-          <Typography.Text type="secondary">{formatSizeValue(currentMaxSize)}</Typography.Text>,
+          <Typography.Text type="secondary">{formatSizeValue(readProfilePair(currentValue.maxSize, "compact").value)}</Typography.Text>,
         )}
         {renderGeometryRow(
           labels.fields.zIndex,
@@ -206,15 +282,33 @@ export function PhiGeometryControl({
 
       {showSticky || showOffsetTop ? <Divider dashed size="small" /> : null}
 
+      {showProfiles
+        ? renderGeometryRow(
+            labels.fields.profile,
+            <PhiSegmentedControl<PhiGeometryProfile>
+              value={selectedProfile}
+              size="small"
+              block
+              options={PHI_GEOMETRY_PROFILES.map((option) => ({
+                value: option,
+                label: labels.profiles[option],
+              }))}
+              onChange={(next) => setSelectedProfile(next)}
+            />,
+          )
+        : null}
+
       {renderGeometryRow(
         labels.fields.size,
         <PhiDimensionControl
-          value={currentSize}
+          value={currentSize.value}
+          widthPlaceholder={placeholder(currentSize.inherited.width)}
+          heightPlaceholder={placeholder(currentSize.inherited.height)}
           disabled={isDisabled}
           onChange={(nextSize) =>
             emit({
               ...currentValue,
-              size: writeBasePair(currentValue.size, nextSize),
+              size: writeProfilePair(currentValue.size, profile, nextSize),
             })
           }
         />,
@@ -223,12 +317,14 @@ export function PhiGeometryControl({
       {renderGeometryRow(
         labels.fields.minSize,
         <PhiDimensionControl
-          value={currentMinSize}
+          value={currentMinSize.value}
+          widthPlaceholder={placeholder(currentMinSize.inherited.width)}
+          heightPlaceholder={placeholder(currentMinSize.inherited.height)}
           disabled={isDisabled}
           onChange={(nextSize) =>
             emit({
               ...currentValue,
-              minSize: writeBasePair(currentValue.minSize, nextSize),
+              minSize: writeProfilePair(currentValue.minSize, profile, nextSize),
             })
           }
         />,
@@ -237,12 +333,14 @@ export function PhiGeometryControl({
       {renderGeometryRow(
         labels.fields.maxSize,
         <PhiDimensionControl
-          value={currentMaxSize}
+          value={currentMaxSize.value}
+          widthPlaceholder={placeholder(currentMaxSize.inherited.width)}
+          heightPlaceholder={placeholder(currentMaxSize.inherited.height)}
           disabled={isDisabled}
           onChange={(nextSize) =>
             emit({
               ...currentValue,
-              maxSize: writeBasePair(currentValue.maxSize, nextSize),
+              maxSize: writeProfilePair(currentValue.maxSize, profile, nextSize),
             })
           }
         />,

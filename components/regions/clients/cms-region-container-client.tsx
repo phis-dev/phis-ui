@@ -64,6 +64,8 @@ type PhiCmsRegionContainerClientProps = {
   availableLocales?: string[];
   /** Whether the Region's top Layout paints a ground of its own (`phiCmsRegionRootLayoutPaintsGround`). */
   rootPaintsGround?: boolean;
+  /** Whether the Region's top Layout names a value per profile (`phiBlockGeometryQueriesRoom`). */
+  rootQueriesRoom?: boolean;
 };
 
 /**
@@ -86,6 +88,7 @@ export function PhiCmsRegionContainerClient({
   pageScope: resolvedPageScope = null,
   availableLocales,
   rootPaintsGround = false,
+  rootQueriesRoom = false,
 }: PhiCmsRegionContainerClientProps) {
   const { mode: liveThemeMode, token } = usePhiConfig();
   const receiver = createPhiRenderableBlockReceiver("region", regionKey);
@@ -204,6 +207,7 @@ export function PhiCmsRegionContainerClient({
     className,
     style,
     rootPaintsGround,
+    rootQueriesRoom,
   });
   if (shell == null) {
     return null;
@@ -249,7 +253,7 @@ export function PhiCmsRegionContainerClient({
     return withTone(
       <Element {...attributes} ref={setElementRef} style={shell.style}>
         {backgroundMotionLayer}
-        <div className="phi-cms-region-shell__content" style={shell.contentStyle}>
+        <div className="phi-cms-region-shell__content" {...shell.contentAttributes} style={shell.contentStyle}>
           {children}
         </div>
         {revealZone}
@@ -353,6 +357,7 @@ export function PhiCmsRegionContainerClient({
           >
             <div
               className="phi-cms-region-shell__content"
+              {...shell.contentAttributes}
               style={{
                 ...shell.contentStyle,
                 transition: collapsible

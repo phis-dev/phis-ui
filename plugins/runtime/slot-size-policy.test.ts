@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   resolvePhiEffectiveSlotSizePolicy,
+  resolvePhiSlotChildProfileStyle,
   resolvePhiSlotChildSizeStyle,
   resolvePhiSlotChildSizing,
   resolvePhiSlotChildSizingForConfig,
@@ -142,5 +143,73 @@ describe("the maximum a slot child frame writes", () => {
 
   it("never caps the block axis", () => {
     expect(styleFor({ maxSize: { height: 400 } }, "fill").maxHeight).toBe("400px");
+  });
+});
+
+/*
+ * The same cap, per profile: the frame hands a varying declaration to the stylesheet, and each of the
+ * three answers is written by the rule the base answer is written by.
+ */
+describe("the profile answers a slot child frame hands to the stylesheet", () => {
+  const profileFor = (
+    config: Parameters<typeof resolvePhiRenderableBlockGeometry>[0],
+    inline: "fill" | "fixed" | "intrinsic",
+  ) =>
+    resolvePhiSlotChildProfileStyle(resolvePhiRenderableBlockGeometry(config), {
+      inline,
+      block: "intrinsic",
+    });
+
+  it("caps an absolute maximum at every profile where the child fills", () => {
+    const profile = profileFor({ maxSize: { width: { compact: 320, wide: 960 } } }, "fill");
+    expect(profile.declarations).toEqual(["max-width"]);
+    expect(profile.properties).toEqual({
+      "--phi-block-max-width": "min(100%, 320px)",
+      "--phi-block-max-width-medium": "min(100%, 320px)",
+      "--phi-block-max-width-wide": "min(100%, 960px)",
+    });
+  });
+
+  it("writes an intrinsic child's maximum plain at every profile", () => {
+    const profile = profileFor({ maxSize: { width: { compact: 320, wide: 960 } } }, "intrinsic");
+    expect(profile.properties["--phi-block-max-width-wide"]).toBe("960px");
+  });
+
+  it("falls back to the frame's own answers where a profile is silent", () => {
+    const profile = profileFor({ size: { height: { medium: 240 } } }, "fill");
+    expect(profile.properties).toEqual({
+      "--phi-block-height": "auto",
+      "--phi-block-height-medium": "240px",
+      "--phi-block-height-wide": "240px",
+    });
+  });
+});
+
+/* A Layout learns that its child asks the room a question the way it learns how the child sizes. */
+describe("a child that names a profile", () => {
+  it("is read from its config", () => {
+    expect(resolvePhiSlotChildSizingForConfig("widget", undefined, {
+      size: { width: { compact: 200, wide: 400 } },
+    }).queriesRoom).toBe(true);
+    expect(resolvePhiSlotChildSizingForConfig("widget", undefined, {
+      size: { width: 200 },
+    }).queriesRoom).toBe(false);
+  });
+
+  it("is read from the attribute a frame wrote", () => {
+    const child = createElement("div", {
+      "data-phi-slot-size-inline": "fixed",
+      "data-phi-block-profiled": "width",
+    });
+    expect(resolvePhiSlotChildSizing(child, "widget").queriesRoom).toBe(true);
+  });
+
+  it("is read from the sizing a gate carries", () => {
+    const child = createElement("div", {
+      slotChildSizing: resolvePhiSlotChildSizingForConfig("layout", "fill-inline", {
+        maxSize: { width: { wide: 960 } },
+      }),
+    } as never);
+    expect(resolvePhiSlotChildSizing(child, "layout").queriesRoom).toBe(true);
   });
 });

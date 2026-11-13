@@ -498,14 +498,22 @@ The parent slot policy is authoritative; child defaults cannot override it.
 ## Sizing and nesting
 
 - Every Widget and Layout definition states its own `slotSizePolicy`; it is a required field, not a
-  default to fall back into. Layouts state `fill` where they fill, Widgets `intrinsic` where they are
-  their content, and a Layout that sizes like a Widget says so -- Three Column states `fill-inline` and
-  is placed in its slot rather than stretched by it. A child is treated by its policy alone: nothing
-  below the definition asks again whether it is a Widget or a Layout.
-- A Flex fills its slot on both axes wherever it stands, nested in a Flex Vertical included: it is there
-  to fill a container, so in one of definite height it grows into the room left over. A Flex that should
-  be as tall as its content says so with a height of its own. A Card fills the same way, so cards in a
-  stretching row end together.
+  default to fall back into. Widgets state `intrinsic` where they are their content. Every Layout of the
+  palette -- Content, Flex, Flex Vertical, Grid, Masonry, Stack, Carousel, Split Card, Collapsible and
+  Three Column -- states `fill-inline`: it takes the width its slot gives and is as tall as its content,
+  so in a slot of definite height it is placed by that slot's anchor rather than stretched by it. Only
+  Page Region and Structure Region state `fill`, because they are the two that fill a definite height.
+  A child is treated by its policy alone: nothing below the definition asks again whether it is a Widget
+  or a Layout.
+- The top Layout of a Region and of an Overlay zone stands in a frame that names no policy, so it takes
+  the Layout default, `fill` on both axes: it is the Region's or the zone's whole box, edge to edge, and
+  a Region with a height of its own (a Hero, a full-height Sider) hands that height to it. Nested
+  Layouts are where the palette's `fill-inline` applies.
+- A Layout that has to be as tall as a definite room says so with a height of its own. Its own anchor
+  places its children only inside the room it has; where it is only as tall as its content, the slot
+  around it decides where it stands. A Split Card's halves are the case that shows it: the card centres
+  what stands in it on both axes (its declared anchor), so a column shorter than the card stands in the
+  card's middle, and a card that should read from its top says so with its anchor (`vertical: "top"`).
 - Layout depth counts actual Layout nodes only; visual config never adds depth.
 - The Canvas, preview, and published runtime must derive sizing from the same declared policies.
 - Responsive behavior belongs to the Layout that knows the actual slot geometry, not to a global
@@ -527,7 +535,17 @@ The parent slot policy is authoritative; child defaults cannot override it.
   placed by the auto margins it reads off them, and custom properties inherit: a slot that states none
   hands its child the placement of whatever Layout stands above. An auto margin places a box only where
   its parent is a flex or grid container -- in block flow `margin-block: auto` computes to `0`, while
-  `margin-inline: auto` still centres a box of a definite width.
+  `margin-inline: auto` still centres a box of a definite width. So every box a child frame stands in
+  directly is a flex container: the Grid's placement box is a flex column, a Flex slot is a flex column,
+  a Three Column's inner box and an anchored slot's content box are flex rows. A Masonry slot is a
+  block box, and a Masonry places on the inline axis alone.
+- Each Layout states the block margins where its slot stretches the child on the block axis -- a Grid
+  for every cell (the cell is as tall as its row), a Flex row where the slot is stretched to the row's
+  height, a Flex Vertical where the slot grows into the column, a Three Column and an anchored slot from
+  their anchor -- and `0` where the slot is as tall as its child, which has nothing left over to be
+  placed in and would otherwise hand the placement further down. A non-filling child in a slot of
+  definite height is placed by the slot's own alignment; a filling child capped by a maximum height is
+  placed by these margins.
 - A box that caps itself inside a Widget reads the same four properties, through
   `PHI_SLOT_INLINE_PLACEMENT_MARGIN_STYLE` and `PHI_SLOT_BLOCK_PLACEMENT_MARGIN_STYLE`. The slot child
   frame is not always where the width is decided -- the Form Widget caps its fields so that the cap is
@@ -550,8 +568,8 @@ the base, what stands without a container query -- and the other two are in `pro
 where a field names more than one. An axis counts as explicit where *any* profile names a size: a slot
 policy and the attribute that carries it are resolved once on the server, and CSS can vary a width but
 not an attribute, so the profiles vary the value rather than the policy. `collapsedSizeHint` stays
-plain. Nothing writes the profile answers to CSS yet; that is
-[design/RESPONSIVE_BLOCK_GEOMETRY.md](./design/RESPONSIVE_BLOCK_GEOMETRY.md). A collapsed block measures by its
+plain. The profile answers reach CSS as [Block geometry per profile](#block-geometry-per-profile)
+describes. A collapsed block measures by its
 `collapsedSizeHint` where it has one; that substitution is the reader's too.
 
 - A bare number is a pixel length, because that is how the vocabulary stores one (`PhiCssLength`); a
@@ -599,6 +617,72 @@ plain. Nothing writes the profile answers to CSS yet; that is
   fields without drawing them with the reason, and fails an entry nothing uses any more. Since a Widget
   states its block base rather than inventing it, no Widget parser is on either list.
 
+### Block geometry per profile
+
+A profile is measured against the room a block is offered, and CSS decides it -- nothing measures
+([design/RESPONSIVE_BLOCK_GEOMETRY.md](./design/RESPONSIVE_BLOCK_GEOMETRY.md) is the design and its
+reasoning). The pieces:
+
+- **One pair of thresholds for every block**: 377 and 610 (`PHI_BLOCK_GEOMETRY_RESPONSIVE_MIN_WIDTH`,
+  `helpers/block-geometry-profiles.ts`), the Grid's pair, so `compact | medium | wide` means one thing
+  across the tree. A container query cannot read a custom property in its condition, so the numbers
+  stand as literals in `styles/layout.css`, and `validate-container-breakpoint-contracts.ts` holds the
+  literals to the constant and the constant to the Grid's.
+- **An axis is written inline or in CSS, never both.** The slot child frame and a Layout's inner box
+  (`resolvePhiLayoutBox`) leave every declaration whose three answers differ out of their inline style
+  -- the frame's base `min-width: 0` and `max-width: 100%` included -- name it in
+  `data-phi-block-profiled` (`"width max-width"`), and write `--phi-block-<declaration>`, `-medium` and
+  `-wide`. All three are written, the silent ones with the box's own answer (the frame: `auto`, `0`,
+  `100%`; the inner box: `auto`, `0`, `none`), because custom properties inherit and a missing one would
+  read an enclosing block's. The frame's cap rule (`min(100%, ...)` for an absolute maximum of a child
+  that is not `intrinsic`) applies per profile by the same test. A declaration that answers the same at
+  every profile stays inline; a block that names no profile hands nothing over.
+- **The container is the box that offers the room, never the block itself**, because inline-size
+  containment and `width: fit-content` exclude each other. It carries `data-phi-slot-container`, and one
+  rule makes it `container: phi-slot / inline-size` -- only where the block standing in it names a
+  profile (`queriesRoom` on the slot child sizing, `phiBlockGeometryQueriesRoom`), so a page that names
+  none is byte for byte what it was. Which box that is follows from the rule that a size container's
+  width must not come from its content:
+  - Grid: the cell (`.phi-grid-layout__slot`), as wide as its tracks.
+  - Flex, Flex Vertical and Three Column: the Layout's own box. A slot that does not grow, and a
+    Three Column side on a phone, are as wide as their content and cannot be containers, so the room is
+    the row or the column.
+  - Stack, Carousel, Content, Split Card, Collapsible: the anchored slot (`PhiLayoutAnchoredOverlay`),
+    which is as wide as the Layout gives it.
+  - Masonry: the column item.
+  - A Region's top Layout: the Region's content wrapper (`rootQueriesRoom`); on the Builder's Canvas the
+    Region slot, and in its server preview the preview's content wrapper.
+- **The rules** are plain attribute selectors (`[data-phi-block-profiled~="width"]`), not `:where()`,
+  so they beat the zero-specificity fill rules; the medium and wide answers stand under
+  `@container phi-slot (min-width: 377px)` and `(min-width: 610px)` -- the `min-width` form the Grid's
+  and the Form's queries use. A named query resolves to the nearest ancestor holding that name, so a
+  `phi-slot` container nests inside `phi-render-viewport`, `phi-grid` and `phi-form` without disturbing
+  them; a box never carries the attribute where it already states a container of its own inline.
+- **The Inspector** (`PhiGeometryControl`) edits size, minimum and maximum one room at a time -- its
+  "Room" switch reads `< 377`, `≥ 377`, `≥ 610`, the width of the room in pixels -- narrow first, and
+  shows what the cascade puts in an empty field as its placeholder. It keeps the smallest stored form
+  that means the same: a length that names only `compact` is stored plain. A Region's own geometry is
+  not a slot child's and is edited at one value (`showProfiles={false}`).
+- What it costs: a `phi-slot` container is layout-contained -- a stacking context and the containing
+  block of absolute and fixed descendants. Popups belong in a portal for that reason; the design lists
+  what the inventory found.
+
+### Findings worth not rediscovering
+
+- *A number is a unit, not a type.* `PhiCssLength` is `number | "<n><unit>"`, and `serializePhiCssLength`
+  stores a pixel length as a bare number and everything else as a string (`types/length.ts`). So
+  `typeof value === "number"` in a reader means "is an absolute pixel length", and the frame's capping is
+  the correct rule -- an absolute maximum can be wider than its slot, a `%` or `ch` maximum is already
+  relative to something. The geometry guard refuses the `typeof` spelling outright.
+- *`size` is two statements in one field.* It is a measurement, and it is the claim "I decide this
+  axis", which flips the slot policy from `fill` to `fixed` (`resolvePhiEffectiveSlotSizePolicy`). The
+  resolver makes that claim once (`explicitInline`, `explicitBlock`).
+- *The medium is not symmetric.* A page is definite in width and indefinite in height, so `height: 100%`
+  against an auto-height parent resolves to `auto` and a percentage `max-height` is treated as `none`.
+  That is why the frame caps the inline axis and not the block axis, and why the palette fills the
+  inline axis only: filling a height was only ever real where a definite height was in play, and there
+  it took over the placement the slot's anchor is for.
+
 ### Grid slot placement
 
 A Grid states how many slots a row holds at each of the shared `compact`, `medium` and `wide`
@@ -645,7 +729,7 @@ nested Grid answers to its own box, the nearest `phi-grid` container.
 The Grid's outer element is its Layout box (`.phi-layout`); the Builder's track guides are drawn inside
 it rather than beside it in a wrapper, which kept the fill rules (`.phi-slot-child--block-fill >
 .phi-layout`) from ever reaching a Grid. Being a size container, the Grid's width cannot come from its
-content: it takes the width its slot gives, as its `fill` policy says. Slot source order remains the logical, focus, accessibility, and authoring order;
+content: it takes the width its slot gives, as its `fill-inline` policy says. Slot source order remains the logical, focus, accessibility, and authoring order;
 an indent changes presentation only and must not reorder or synthesize slots.
 
 Placement belongs to the owning Grid Layout config. A Grid must not inspect a child Widget type, Form
@@ -693,6 +777,12 @@ the packing is a few lines and is ours.
 `gap` is the Paddings panel's, across and down. Down, it is each item's bottom padding, and the column
 box takes the last one back, so nothing stands under the longest column; the authoring slot is the
 element inside the item, so a selected slot outlines the child and not the gap.
+
+`anchor` places a child narrower than its column, on the inline axis only: an item is as tall as its
+child, so there is nothing to place on the block axis. The slot is a block box as wide as the column and
+hands the anchor down as the placement margins; an `intrinsic` child is `width: fit-content` there, which
+leaves the room an auto margin takes. A Masonry declares no default anchor, so a child starts at the
+column's start edge unless the author says otherwise.
 
 ### Stack slot display
 

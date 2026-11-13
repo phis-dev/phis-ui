@@ -15,6 +15,11 @@ import {
   resolvePhiRenderableBlockGeometry,
   type PhiRenderableBlockGeometryInput,
 } from "../../types/renderable-block-geometry";
+import {
+  omitPhiBlockProfiledDeclarations,
+  resolvePhiBlockProfileStyle,
+  type PhiBlockProfileStyle,
+} from "../../helpers/block-geometry-profiles";
 
 export type PhiLayoutProps = {
   size?: PhiRenderableBlockResponsiveSize;
@@ -99,6 +104,16 @@ export function normalizePhiCssSize(value: number | string | undefined) {
   return value;
 }
 
+/** What a Layout's inner box writes where a profile states nothing: no size and no maximum of its own. */
+const PHI_LAYOUT_BOX_UNSTATED_PROFILE_VALUES = {
+  width: "auto",
+  height: "auto",
+  "min-width": "0",
+  "min-height": "0",
+  "max-width": "none",
+  "max-height": "none",
+} as const;
+
 /**
  * A Layout's own inner box: what the block states, and nothing else.
  *
@@ -110,23 +125,43 @@ export function normalizePhiCssSize(value: number | string | undefined) {
  * against it is dropped by the browser rather than obeyed. Whoever renders a Layout outside a frame
  * states the fill in CSS where that frame's job is being done instead (the Builder's edit scaffold
  * drawer, `styles/layout-authoring-scaffold.css`).
+ *
+ * A declaration that names a value per profile is handed to the stylesheet the way the frame hands it
+ * (`helpers/block-geometry-profiles.ts`): left out of `style`, written as custom properties, and named
+ * in `attributes`. `declarations` is for the caller, whose own inline values for the same keys --
+ * `minWidth: 0` -- have to be left out too, or they would beat the `@container` rule.
  */
-export function resolvePhiLayoutBoxStyle({
+export function resolvePhiLayoutBox({
   size,
   minSize,
   maxSize,
   collapsedSizeHint,
   visibility,
-}: PhiRenderableBlockGeometryInput): CSSProperties {
+}: PhiRenderableBlockGeometryInput): {
+  style: CSSProperties;
+  attributes: PhiBlockProfileStyle["attributes"];
+  declarations: PhiBlockProfileStyle["declarations"];
+} {
   const geometry = resolvePhiRenderableBlockGeometry({ size, minSize, maxSize, collapsedSizeHint, visibility });
+  const profile = resolvePhiBlockProfileStyle(geometry, { unstated: PHI_LAYOUT_BOX_UNSTATED_PROFILE_VALUES });
 
   return {
-    ...(geometry.inline.size == null ? {} : { width: geometry.inline.size.css }),
-    ...(geometry.block.size == null ? {} : { height: geometry.block.size.css }),
-    ...(geometry.inline.min == null ? {} : { minWidth: geometry.inline.min.css }),
-    ...(geometry.inline.max == null ? {} : { maxWidth: geometry.inline.max.css }),
-    ...(geometry.block.min == null ? {} : { minHeight: geometry.block.min.css }),
-    ...(geometry.block.max == null ? {} : { maxHeight: geometry.block.max.css }),
+    style: {
+      ...omitPhiBlockProfiledDeclarations(
+        {
+          ...(geometry.inline.size == null ? {} : { width: geometry.inline.size.css }),
+          ...(geometry.block.size == null ? {} : { height: geometry.block.size.css }),
+          ...(geometry.inline.min == null ? {} : { minWidth: geometry.inline.min.css }),
+          ...(geometry.inline.max == null ? {} : { maxWidth: geometry.inline.max.css }),
+          ...(geometry.block.min == null ? {} : { minHeight: geometry.block.min.css }),
+          ...(geometry.block.max == null ? {} : { maxHeight: geometry.block.max.css }),
+        },
+        profile.declarations,
+      ),
+      ...profile.properties,
+    },
+    attributes: profile.attributes,
+    declarations: profile.declarations,
   };
 }
 

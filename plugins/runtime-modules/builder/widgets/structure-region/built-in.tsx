@@ -28,8 +28,13 @@ import { normalizePhiPaddingWidgetConfig } from "../../../../../types/cms-config
 import {
   readPhiRenderableBlockLength,
   resolvePhiRenderableBlockGeometry,
+  type PhiRenderableBlockGeometryInput,
   type PhiResolvedBlockGeometry,
 } from "../../../../../types/renderable-block-geometry";
+import {
+  phiBlockGeometryQueriesRoom,
+  phiSlotContainerAttributes,
+} from "../../../../../helpers/block-geometry-profiles";
 import {
   extractPhiStructureNode as extractStructureNode,
   swapPhiStructureWidgetsAcrossTrees,
@@ -693,6 +698,13 @@ export function PhiStructureRegionScaffold({
       : undefined;
   const rootNode = effectiveDraft?.rootNode ?? null;
   const rootNodeId = rootNode?.id ?? null;
+  /*
+   * The Region slot is the room a profiled root Layout is offered on the Canvas, as the Region's content
+   * wrapper is on the page (LAYOUTING.md, "Block geometry per profile").
+   */
+  const rootSlotContainerAttributes = phiSlotContainerAttributes(phiBlockGeometryQueriesRoom(
+    resolvePhiRenderableBlockGeometry(rootNode?.config as PhiRenderableBlockGeometryInput | null | undefined),
+  ));
   const rootNodeKind = rootNode ? ("layout" as const) : null;
   const rootNodeTypeKey = rootNode?.widgetType ?? "";
   const rootNodeChildLayouts = readPhiBuilderRegionRootChildLayouts(effectiveDraft);
@@ -1799,6 +1811,7 @@ export function PhiStructureRegionScaffold({
         data-phi-region-slot={config.regionKey}
         {...{ [PHI_VISUAL_ANCHOR_PART_ATTRIBUTE]: config.regionKey }}
         className={joinPhiClassNames("phi-builder-structure-region__slot", regionToneClassName)}
+        {...rootSlotContainerAttributes}
         data-phi-builder-region-mode="preview"
         data-phi-builder-region-has-root-node={hasRootNode ? "true" : "false"}
         data-phi-builder-region-selected="false"
@@ -1918,6 +1931,7 @@ export function PhiStructureRegionScaffold({
               ref={setRootDropNodeRef}
               data-phi-region-slot={config.regionKey}
               className={joinPhiClassNames("phi-builder-structure-region__slot", regionToneClassName)}
+              {...rootSlotContainerAttributes}
               data-phi-builder-region-mode="editor"
               data-phi-structure-drop-state={
                 rootDropAccepted

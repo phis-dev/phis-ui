@@ -2,7 +2,7 @@ import type { CSSProperties, ReactNode } from "react";
 
 import {
   normalizePhiCssSize,
-  resolvePhiLayoutBoxStyle,
+  resolvePhiLayoutBox,
   phiFlexPlacementWord,
   resolvePhiPlacement,
   resolvePhiSlotPlacementMargins,
@@ -23,6 +23,11 @@ import {
   phiLayoutSlotContentMarker,
 } from "../../../helpers/layout-authoring-markers";
 import { PhiLayoutSurfaceBox } from "../phi-layout-surface-box";
+import { resolvePhiLayoutSlotChildSizing } from "./phi-layout-anchored-overlay";
+import {
+  omitPhiBlockProfiledDeclarations,
+  phiSlotContainerAttributes,
+} from "../../../helpers/block-geometry-profiles";
 
 const PHI_THREE_COLUMN_LAYOUT_DEFAULTS = resolvePhiLayoutDefaults("threecol");
 
@@ -226,6 +231,7 @@ export function PhiThreeColumnLayout({
     : `var(--phi-three-column-middle-flex, ${PHI_THREE_COLUMN_MIDDLE_GROW} 1 0)`;
   const rightFlex = resolvedRightWidth ? `0 0 ${resolvedRightWidth}` : balancedSides ? balancedSideFlex : "0 1 auto";
   const showInsertButton = resolvedRenderMode === "editor";
+  const layoutBox = resolvePhiLayoutBox({ size, minSize, maxSize, collapsedSizeHint });
   const {
     style: resolvedLayoutStyle,
     ground,
@@ -251,7 +257,15 @@ export function PhiThreeColumnLayout({
       data-phi-debug-scaffold={undefined}
       data-phi-layout-debug-layer={phiLayoutDebugLayerMarker(isAuthoringRender)}
       data-phi-layout-has-explicit-layout-background={hasExplicitLayoutBackground ? "true" : "false"}
-      style={{
+      {...layoutBox.attributes}
+      /*
+       * The room a profiled child is offered is the row: a column on a phone is as wide as its content,
+       * and a box whose width comes from its content cannot be a size container.
+       */
+      {...phiSlotContainerAttributes(
+        slots.slice(0, 3).some((slot) => resolvePhiLayoutSlotChildSizing(slot).queriesRoom),
+      )}
+      style={omitPhiBlockProfiledDeclarations({
         position: "relative",
         minWidth: 0,
         minHeight: 0,
@@ -264,7 +278,7 @@ export function PhiThreeColumnLayout({
          * same call `PhiBaseLayout` makes; this client draws its row itself instead of going through
          * it, which is how it came to miss the one thing the base box does first.
          */
-        ...resolvePhiLayoutBoxStyle({ size, minSize, maxSize, collapsedSizeHint }),
+        ...layoutBox.style,
         ...resolvedLayoutStyle,
         display: "flex",
         flexDirection: "row",
@@ -273,7 +287,7 @@ export function PhiThreeColumnLayout({
       justifyContent: justify,
       gap: normalizePhiCssSize(gap) ?? (resolvePhiLayoutDefaults("threecol").gap as number | string),
       ...style,
-      }}
+      }, layoutBox.declarations)}
     >
       {renderColumn(
         isAuthoringRender,

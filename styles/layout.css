@@ -487,6 +487,107 @@
 }
 
 /*
+ * A block's geometry per profile (LAYOUTING.md, "Block geometry per profile";
+ * design/RESPONSIVE_BLOCK_GEOMETRY.md).
+ *
+ * The box that offers a block its room is the `phi-slot` container -- the Grid's cell, a Flex's or a
+ * Three Column's own box, an anchored slot, a Masonry column, a Region's content -- and only where the
+ * block standing in it names a value per profile, which the box states with `data-phi-slot-container`.
+ * The block's frame and a Layout's inner box name the declarations they hand over in
+ * `data-phi-block-profiled` and write all three answers as `--phi-block-<declaration>`, `-medium` and
+ * `-wide`; these rules pick one by the width of the nearest `phi-slot` container. Nothing measures, so
+ * the server's markup already stands where it stays. A box writes a declaration it hands over nowhere
+ * inline, because an inline declaration beats every `@container` rule.
+ *
+ * Plain attribute selectors rather than `:where()`: they have to beat the zero-specificity fill rules
+ * above, which would otherwise size a profiled frame.
+ */
+[data-phi-slot-container] {
+  container: phi-slot / inline-size;
+}
+
+[data-phi-block-profiled~="width"] {
+  width: var(--phi-block-width);
+}
+
+[data-phi-block-profiled~="height"] {
+  height: var(--phi-block-height);
+}
+
+[data-phi-block-profiled~="min-width"] {
+  min-width: var(--phi-block-min-width);
+}
+
+[data-phi-block-profiled~="min-height"] {
+  min-height: var(--phi-block-min-height);
+}
+
+[data-phi-block-profiled~="max-width"] {
+  max-width: var(--phi-block-max-width);
+}
+
+[data-phi-block-profiled~="max-height"] {
+  max-height: var(--phi-block-max-height);
+}
+
+/*
+ * The same numbers as `PHI_BLOCK_GEOMETRY_RESPONSIVE_MIN_WIDTH` (helpers/block-geometry-profiles.ts) --
+ * the Grid's pair, so `compact | medium | wide` means one thing across the tree -- held together by
+ * `validate-container-breakpoint-contracts.ts`.
+ */
+@container phi-slot (min-width: 377px) {
+  [data-phi-block-profiled~="width"] {
+    width: var(--phi-block-width-medium);
+  }
+
+  [data-phi-block-profiled~="height"] {
+    height: var(--phi-block-height-medium);
+  }
+
+  [data-phi-block-profiled~="min-width"] {
+    min-width: var(--phi-block-min-width-medium);
+  }
+
+  [data-phi-block-profiled~="min-height"] {
+    min-height: var(--phi-block-min-height-medium);
+  }
+
+  [data-phi-block-profiled~="max-width"] {
+    max-width: var(--phi-block-max-width-medium);
+  }
+
+  [data-phi-block-profiled~="max-height"] {
+    max-height: var(--phi-block-max-height-medium);
+  }
+}
+
+@container phi-slot (min-width: 610px) {
+  [data-phi-block-profiled~="width"] {
+    width: var(--phi-block-width-wide);
+  }
+
+  [data-phi-block-profiled~="height"] {
+    height: var(--phi-block-height-wide);
+  }
+
+  [data-phi-block-profiled~="min-width"] {
+    min-width: var(--phi-block-min-width-wide);
+  }
+
+  [data-phi-block-profiled~="min-height"] {
+    min-height: var(--phi-block-min-height-wide);
+  }
+
+  [data-phi-block-profiled~="max-width"] {
+    max-width: var(--phi-block-max-width-wide);
+  }
+
+  [data-phi-block-profiled~="max-height"] {
+    max-height: var(--phi-block-max-height-wide);
+  }
+}
+
+/*
  * A Surface whose content is drawn in another mode (`tone`, LAYOUTING.md "Surface tone").
  *
  * The tone scope writes the other mode's variables under the box's tone class, but text inherits the

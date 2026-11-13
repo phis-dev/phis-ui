@@ -133,6 +133,7 @@ export function PhiDeveloperBuilderRegionInspectorWidgetClient({
                       mode="control"
                       disabled={isPreviewMode}
                       showViewport={false}
+                      showProfiles={false}
                       showSticky={stickyEdge !== null}
                       showOffsetTop={stickyEdge === "top"}
                       value={effectiveDraft}

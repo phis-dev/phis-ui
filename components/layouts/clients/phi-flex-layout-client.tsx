@@ -21,6 +21,7 @@ import {
 } from "../../../helpers/layout-authoring-markers";
 import { PhiLayoutSurfaceBox } from "../phi-layout-surface-box";
 import { PHI_CMS_MAX_LAYOUT_SLOTS } from "../../../constants/cms-layout-types";
+import { phiSlotContainerAttributes } from "../../../helpers/block-geometry-profiles";
 
 type PhiFlexLayoutDistribution = "anchor" | "between" | "around" | "evenly";
 
@@ -241,9 +242,14 @@ export function PhiFlexLayout({
              * instead. Stretching and placing are two jobs, and `align-items` can only do one of them.
              */
             alignItems: shouldFillCrossAxis ? "stretch" : resolvedFlowAlignment.alignItems,
+            /*
+             * And the block axis the same way: a slot that grows into a column of definite height holds
+             * a child that may cap its height below it, and the slot is a flex column, so the child's
+             * block margins place it where the column's own `justify-content` would have put a slot.
+             */
             ...resolvePhiSlotPlacementMargins({
               inline: shouldFillCrossAxis ? phiPlacementFromWord(resolvedFlowAlignment.alignItems) : null,
-              block: null,
+              block: shouldFillMainAxis ? phiPlacementFromWord(resolvedJustifyContent) : null,
             }),
           } as CSSProperties}
         >
@@ -257,7 +263,6 @@ export function PhiFlexLayout({
     const minMainSize = slotSizing.minInlineSize;
     const maxMainSize = slotSizing.maxInlineSize;
     const minCrossSize = slotSizing.minBlockSize;
-    const maxCrossSize = slotSizing.maxBlockSize;
     const shouldWrap = resolvedWrap != null && resolvedWrap !== "nowrap";
     const usesMinMainBasis = shouldWrap && minMainSize != null;
     const canShrinkWithinMax = shouldWrap && maxMainSize != null;
@@ -267,9 +272,13 @@ export function PhiFlexLayout({
         : shouldFillMainAxis
           ? 0
           : "auto";
+    /*
+     * The block axis is the row's cross axis: a slot stretched to the row's height holds a child that may
+     * cap its height below it, and the slot is a flex column, so the child's block margins place it.
+     */
     const slotPlacementMargins = resolvePhiSlotPlacementMargins({
       inline: shouldFillMainAxis ? phiPlacementFromWord(resolvedJustifyContent) : null,
-      block: null,
+      block: shouldFillCrossAxis ? phiPlacementFromWord(resolvedFlowAlignment.alignItems) : null,
     });
 
     return (
@@ -286,7 +295,11 @@ export function PhiFlexLayout({
           minWidth: minMainSize ?? 0,
           minHeight: minCrossSize ?? 0,
           maxWidth: maxMainSize,
-          maxHeight: maxCrossSize,
+          /*
+           * No cap on the cross axis: the child caps itself, and a slot stretched to the row's height
+           * holds the room its block margins place it in. A slot capped at the child's maximum and
+           * stretched stood at the top of the row whatever the anchor said.
+           */
           alignSelf: shouldFillCrossAxis ? "stretch" : undefined,
           display: "flex",
           flexDirection: "column",
@@ -356,6 +369,13 @@ export function PhiFlexLayout({
       </div>
     ) : null;
 
+  /*
+   * The room a profiled child is offered is the row or the column: a slot that does not grow is as wide
+   * as its content, and a box whose width comes from its content cannot be a size container.
+   */
+  const queriesRoom = renderableSlots.some(({ child }) =>
+    !isFlexSeparatorChild(child) && resolvePhiLayoutSlotChildSizing(child).queriesRoom);
+
   const resolvedStyle: CSSProperties = {
     position: "relative",
     ...resolvedLayoutStyle,
@@ -371,6 +391,7 @@ export function PhiFlexLayout({
       ground={ground}
       data-layout-kind={layoutKind}
       data-layout-axis={resolvedVertical ? "vertical" : "horizontal"}
+      {...phiSlotContainerAttributes(queriesRoom)}
       className="phi-layout"
       data-phi-block-render-mode={resolvedRenderMode}
       data-phi-layout-debug-layer={phiLayoutDebugLayerMarker(isAuthoringRender)}

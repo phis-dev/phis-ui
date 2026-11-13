@@ -24,6 +24,10 @@ import {
 } from "./root-node-normalization";
 import { resolvePhiRenderableBlockGeometry } from "../../../types/renderable-block-geometry";
 import { resolvePhiRootScaffoldProperties } from "./builder-geometry";
+import {
+  phiBlockGeometryQueriesRoom,
+  phiSlotContainerAttributes,
+} from "../../../helpers/block-geometry-profiles";
 import { buildPhiBuilderRootNodeRenderableTree } from "./root-node-renderable-tree";
 import { normalizePhiPaddingWidgetConfig } from "../../../types/cms-config";
 import { resolvePhiPaddingStyle } from "../../../components/layouts/phi-layout-contract";
@@ -293,7 +297,11 @@ async function PhiBuilderRootNodeServerPreview({
         height: "100%",
       }}
     >
-      <div className="phi-cms-region-shell__content" style={regionPaddingStyle}>
+      <div
+        className="phi-cms-region-shell__content"
+        {...phiSlotContainerAttributes(phiBlockGeometryQueriesRoom(rootGeometry))}
+        style={regionPaddingStyle}
+      >
         <PhiSlotChildFrame
           className="phi-builder-root-scaffold__slot"
           kind={rootSlotChildKind}

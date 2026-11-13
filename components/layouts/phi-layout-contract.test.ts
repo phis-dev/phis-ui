@@ -13,6 +13,7 @@ import {
   resolvePhiLayoutInset,
   resolvePhiPaddingStyle,
   resolvePhiPlacement,
+  resolvePhiLayoutBox,
   resolvePhiSlotPlacementMargins,
 } from "./phi-layout-contract";
 
@@ -175,5 +176,30 @@ describe("how a padding shorthand reaches the four sides", () => {
       bottom: "8px",
       left: "16px",
     });
+  });
+});
+
+/*
+ * A Layout's inner box hands a varying declaration to the stylesheet the way the frame does, and with
+ * its own answers for silence: no size and no maximum of its own.
+ */
+describe("a Layout's inner box per profile", () => {
+  it("writes a plain geometry inline, as before", () => {
+    const box = resolvePhiLayoutBox({ size: { width: 480 }, maxSize: { height: 300 } });
+    expect(box.style).toEqual({ width: "480px", maxHeight: "300px" });
+    expect(box.attributes).toEqual({});
+    expect(box.declarations).toEqual([]);
+  });
+
+  it("leaves a varying declaration out of the inline style and names it", () => {
+    const box = resolvePhiLayoutBox({ size: { width: 480 }, maxSize: { width: { medium: 600 } } });
+    expect(box.style).toEqual({
+      width: "480px",
+      "--phi-block-max-width": "none",
+      "--phi-block-max-width-medium": "600px",
+      "--phi-block-max-width-wide": "600px",
+    });
+    expect(box.attributes).toEqual({ "data-phi-block-profiled": "max-width" });
+    expect(box.declarations).toEqual(["max-width"]);
   });
 });
