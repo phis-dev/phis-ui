@@ -41,7 +41,6 @@ const SYNTHETIC_WELCOME_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap({
 }, [
   "layoutHeaderBottom",
   "layoutContent",
-  "layoutContentStack",
 ]);
 
 const SYNTHETIC_WELCOME_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
@@ -106,20 +105,15 @@ export async function buildPhiDefaultPubWelcomePageTree({
           contentAlign: "center",
         },
       }),
-      nodes.layout({
-        typeKey: "content",
-        id: SYNTHETIC_WELCOME_LAYOUT_IDS.layoutContent,
-        parentLayoutNodeId: null,
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-        sortOrder: 0,
-        label: "pub welcome page",
-        config: {},
-      }),
+      /*
+       * The page column is the root itself, a vertical Flex like every other Page's. Not the base
+       * scaffold: a landing brings its own chrome, and this column centres its copy in the screen.
+       */
       nodes.layout({
         creationPreset: { layoutKind: "verticalflex", preset: "panel" },
         typeKey: "flex-vertical",
-        id: SYNTHETIC_WELCOME_LAYOUT_IDS.layoutContentStack,
-        parentLayoutNodeId: SYNTHETIC_WELCOME_LAYOUT_IDS.layoutContent,
+        id: SYNTHETIC_WELCOME_LAYOUT_IDS.layoutContent,
+        parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
         label: "pub welcome copy and way on",
@@ -149,7 +143,7 @@ export async function buildPhiDefaultPubWelcomePageTree({
       nodes.widget({
         typeKey: "markdown",
         id: SYNTHETIC_WELCOME_WIDGET_IDS.widgetMarkdown,
-        parentLayoutNodeId: SYNTHETIC_WELCOME_LAYOUT_IDS.layoutContentStack,
+        parentLayoutNodeId: SYNTHETIC_WELCOME_LAYOUT_IDS.layoutContent,
         slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
         sortOrder: 0,
         label: "pub welcome markdown widget",
@@ -178,7 +172,7 @@ export async function buildPhiDefaultPubWelcomePageTree({
       nodes.widget({
         typeKey: "button",
         id: SYNTHETIC_WELCOME_WIDGET_IDS.widgetReadMore,
-        parentLayoutNodeId: SYNTHETIC_WELCOME_LAYOUT_IDS.layoutContentStack,
+        parentLayoutNodeId: SYNTHETIC_WELCOME_LAYOUT_IDS.layoutContent,
         slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
         sortOrder: 0,
         label: "pub welcome read more button",

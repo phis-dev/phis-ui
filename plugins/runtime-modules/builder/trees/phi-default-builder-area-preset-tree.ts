@@ -584,6 +584,11 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
           paddingTop: 0,
         },
       }),
+      /*
+       * A Shell Region's root, not a Page column: the Page-column rule (THIRD_PARTY_MODULES.md, 6b) and
+       * the base scaffold govern the `content` Region only. The Builder's footer ships empty, and the
+       * Content Layout is the neutral one-slot frame an author fills from the Shells canvas.
+       */
       nodes.layout({
         typeKey: "content",
         id: SYNTHETIC_DEV_LAYOUT_IDS.layoutFooterMain,
@@ -1081,7 +1086,8 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 },
               }
           : {
-              typeKey: "content",
+              creationPreset: { layoutKind: "verticalflex", preset: "panel" },
+              typeKey: "flex-vertical",
               id: SYNTHETIC_DEV_LAYOUT_IDS.layoutContent,
               siteId: page.siteId,
               parentLayoutNodeId: null,
