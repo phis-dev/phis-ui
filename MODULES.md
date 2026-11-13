@@ -421,6 +421,13 @@ node-local error: the node renders the shared "not renderable" diagnostic block
 the block; other failures also raise one deduplicated notification. Invalid manifests, duplicate
 ownership, and invalid Area selections are hard errors before rendering starts.
 
+On the Builder canvas the diagnostic stands inside the node's editor scaffold, not in place of it: a
+Widget or Layout that cannot be drawn takes the click itself and offers one tool, delete. A stored tree
+can hold a type that no Module owns any more -- a Widget moved to another Module, a Module switched off
+-- and a node nobody can select is one nobody can remove. Inspector, wiring, effects and the drag handle
+are not offered for it, because each of them reads the definition that is missing; a node whose Module is
+only switched off comes back with its stored config when the Module is switched on.
+
 Two further codes say what a hole would otherwise hide. `feature-unavailable`: a node whose `visibleWhen`
 reads a feature namespace that could not be resolved this render (no active Module publishes it, or its
 resolver threw) renders the diagnostic in a workspace, with the namespace and the reason, instead of

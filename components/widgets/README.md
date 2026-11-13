@@ -139,6 +139,10 @@ editor interaction and chrome; a Widget owns its visual and domain content.
   no signal receiver while loading.
 - The full interaction cover applies to Widget leaves only. Layout scaffolds keep nested slots and child
   scaffolds reachable.
+- A Widget leaf that cannot be drawn -- unknown type, inactive owner Module, no authoring registration, a
+  render that threw -- keeps the scaffold with the "not renderable" diagnostic as its content. Its
+  interaction surface takes the click without opening the Inspector, and its only tool is delete; see
+  "Render modes and diagnostics" in [MODULES.md](../../MODULES.md).
 
 ## Controls
 

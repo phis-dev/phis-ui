@@ -6,6 +6,7 @@ import { usePhiPageModeTone } from "../../../components/surface/phi-surface-tone
 
 import { PhiEditScaffoldDrawer } from "./edit-scaffold-drawer";
 import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode, PhiResolvedCmsRenderableTree } from "../../../types/cms";
+import type { PhiCmsRenderIssue } from "../../../types/cms-plugins";
 import { comparePhiCmsInstanceIds, type PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import type { PhiBlockRuntime } from "../../../types/widget-runtime";
 import { PhiSlotChildFrame } from "../../../plugins/runtime/phi-slot-child-frame";
@@ -166,12 +167,21 @@ function PhiAuthoringWidgetLoader({
   config,
   slotSizePolicy,
   demandControllerContext,
+  renderUnavailable,
   children,
 }: {
   widget: PhiCmsContentWidgetNode;
   config: Partial<PhiRenderableBlockBase>;
   slotSizePolicy?: PhiSlotSizePolicy;
   demandControllerContext?: PhiBuilderDemandControllerContext;
+  /**
+   * Frames the diagnostic of a Widget that cannot be drawn.
+   *
+   * `children` builds the scaffold, and it is only called once type, owner Module and plugin are all
+   * there -- so a Widget that failed any of them stood on the canvas as a bare notice: a click on it
+   * went to the Layout underneath and nothing could remove it. The caller frames the notice instead.
+   */
+  renderUnavailable?: (diagnostic: ReactNode) => ReactNode;
   children: (
     plugin: PhiCmsBuilderWidgetPlugin<unknown>,
     definition: PhiRuntimeModuleClientWidgetDefinition,
@@ -182,41 +192,35 @@ function PhiAuthoringWidgetLoader({
   const activeModules = usePhiRuntimeModuleState();
   const definition = activeModules.widgetDefinitionsByType.get(type);
   const authoringModule = usePhiRuntimeModuleAuthoringRegistration(definition?.ownerModuleId);
+  const frameUnavailable = (diagnostic: ReactNode) => renderUnavailable ? renderUnavailable(diagnostic) : diagnostic;
+  const unavailable = (issue: Pick<PhiCmsRenderIssue, "code" | "detail"> & Pick<Partial<PhiCmsRenderIssue>, "moduleId">) =>
+    frameUnavailable(<PhiCmsRenderDiagnostic issue={{ kind: "widget", type, blockId, ...issue }} />);
   if (!definition) {
     const moduleIsInactive = !activeModules.widgetTypes.has(type);
-    return <PhiCmsRenderDiagnostic issue={{
+    return unavailable({
       code: moduleIsInactive ? "missing-module" : "missing-renderer",
-      kind: "widget",
-      type,
-      blockId,
       detail: moduleIsInactive
         ? "No active Canvas module provides this widget type."
         : "Active widget metadata is unavailable in the Canvas runtime context.",
-    }} />;
+    });
   }
   if (
     !activeModules.moduleIds.has(definition.ownerModuleId) ||
     !activeModules.widgetTypes.has(type)
   ) {
-    return <PhiCmsRenderDiagnostic issue={{
+    return unavailable({
       code: "missing-module",
-      kind: "widget",
-      type,
-      blockId,
       moduleId: definition.ownerModuleId,
       detail: "Widget owner module is not active in the current Canvas sandbox.",
-    }} />;
+    });
   }
 
   if (!authoringModule) {
-    return <PhiCmsRenderDiagnostic issue={{
+    return unavailable({
       code: "missing-renderer",
-      kind: "widget",
-      type,
-      blockId,
       moduleId: definition.ownerModuleId,
       detail: "Widget owner module does not provide its declared AuthoringClient.",
-    }} />;
+    });
   }
 
   const WidgetModule = authoringModule.WidgetModule;
@@ -227,6 +231,7 @@ function PhiAuthoringWidgetLoader({
       blockId={blockId}
       typeKey={type}
       moduleId={definition.ownerModuleId}
+      renderDiagnostic={renderUnavailable}
     >
       <Suspense fallback={(
         <PhiSlotChildFrame
@@ -262,14 +267,11 @@ function PhiAuthoringWidgetLoader({
                   </PhiBuilderDemandControllerRegistration>
                 )
               : children(plugin, definition)
-            : <PhiCmsRenderDiagnostic issue={{
+            : unavailable({
                 code: "missing-renderer",
-                kind: "widget",
-                type,
-                blockId,
                 moduleId: definition.ownerModuleId,
                 detail: "Widget is not registered in its owner module's authoring catalog.",
-              }} />}
+              })}
         </WidgetModule>
       </Suspense>
     </PhiCmsRenderErrorBoundary>
@@ -280,11 +282,14 @@ function PhiAuthoringLayoutLoader({
   type,
   kind,
   blockId,
+  renderUnavailable,
   children,
 }: {
   type: string;
   kind: "layout";
   blockId: PhiCmsInstanceId | null;
+  /** Frames the diagnostic of a Layout that cannot be drawn; see `PhiAuthoringWidgetLoader`. */
+  renderUnavailable?: (diagnostic: ReactNode) => ReactNode;
   children: (
     plugin: PhiCmsLayoutPlugin<unknown>,
     definition: PhiAuthoringLayoutDefinition,
@@ -296,27 +301,25 @@ function PhiAuthoringLayoutLoader({
   const layoutType = resolvePhiAuthoringLayoutType(type);
   const resolveLayoutDefinition = usePhiAuthoringLayoutDefinitionResolver();
   const definition = resolveLayoutDefinition(layoutType);
+  const unavailable = (issue: Pick<PhiCmsRenderIssue, "code" | "detail"> & Pick<Partial<PhiCmsRenderIssue>, "moduleId">) => {
+    const diagnostic = <PhiCmsRenderDiagnostic issue={{ kind, type, blockId, ...issue }} />;
+    return renderUnavailable ? renderUnavailable(diagnostic) : diagnostic;
+  };
   if (!definition) {
-    return <PhiCmsRenderDiagnostic issue={{
+    return unavailable({
       code: "missing-renderer",
-      kind,
-      type,
-      blockId,
       detail: "Layout does not provide a client authoring loader.",
-    }} />;
+    });
   }
   if (
     !activeModules.moduleIds.has(definition.ownerModuleId) ||
     !activeModules.layoutTypes.has(layoutType)
   ) {
-    return <PhiCmsRenderDiagnostic issue={{
+    return unavailable({
       code: "missing-module",
-      kind,
-      type,
-      blockId,
       moduleId: definition.ownerModuleId,
       detail: "Layout owner module is not active in the current Canvas sandbox.",
-    }} />;
+    });
   }
 
   const LazyAuthoringLayout = definition.component;
@@ -326,6 +329,7 @@ function PhiAuthoringLayoutLoader({
       blockId={blockId}
       typeKey={type}
       moduleId={definition.ownerModuleId}
+      renderDiagnostic={renderUnavailable}
     >
       <Suspense fallback={null}>
         <LazyAuthoringLayout>
@@ -1187,6 +1191,41 @@ function resolvePhiRootNodeRenderedBody(
         config={{ ...renderableBlockConfig, renderMode: "editor" }}
         slotSizePolicy={widgetDefinitionsByType.get(widget.widgetType)?.slotSizePolicy}
         demandControllerContext={demandControllerContext}
+        renderUnavailable={renderMode === "editor" && onDeleteWidgetNode ? (diagnostic) => (
+          /*
+           * A Widget that cannot be drawn keeps the scaffold and loses everything in it but the way
+           * out. Settings, wiring, effects and the drag handle all read the Widget's definition, which
+           * is what is missing; the Inspector would open on geometry for something nobody can see.
+           * What is left to do with such a Widget is to remove it -- or to switch its Module on, which
+           * the notice says and which brings the Widget back with its stored config.
+           *
+           * The click is taken and goes nowhere: it must not reach the Layout underneath, which is
+           * what made this Widget unremovable.
+           */
+          <PhiWidgetEffectsPreviewFrame
+            key={`widget-${widget.id}`}
+            kind="widget"
+            blockId={widget.id}
+            regionKey={regionKey}
+            config={{ renderMode: "editor" }}
+            title={widget.label ?? widget.widgetType}
+            onSelect={() => undefined}
+            tools={(
+              <PhiLayoutDeleteButtonOverlay
+                ariaLabel={`Delete ${widget.label ?? widget.widgetType}`}
+                top={-10}
+                bottom="auto"
+                transform="translateY(-50%)"
+                zIndex={40}
+                nodeKind="widget"
+                onDelete={() => onDeleteWidgetNode({ ...widget })}
+              />
+            )}
+            style={{ position: "relative", zIndex: 30 }}
+          >
+            {diagnostic}
+          </PhiWidgetEffectsPreviewFrame>
+        ) : undefined}
       >
         {(plugin, definition) => {
           const resolvedConfig = plugin.parseConfig(widget.config ?? {}) as Record<string, unknown>;
@@ -1699,11 +1738,49 @@ export function renderPhiRootNodeScaffold(
     );
   };
 
+  /*
+   * A Layout that cannot be drawn, framed like one that can: the drawer takes the click, so it stops at
+   * this Layout instead of selecting its parent, and its only tool removes it. Removing a Layout takes
+   * what is in it along, as it does from a Layout that draws.
+   */
+  const renderUnavailableRoot = typeof onDeleteRootNode === "function" && normalizedRootNode.id != null
+    ? (diagnostic: ReactNode) => (
+        <PhiEditScaffoldDrawer
+          className="phi-builder-root-scaffold"
+          kind="layout"
+          nodeId={normalizedRootNode.id!}
+          regionKey={regionKey}
+          title={rootTitle}
+          scaffoldLabel={formatLayoutScaffoldLabel(
+            normalizedRootNode.typeKey,
+            normalizedRootNode.kind,
+            null,
+            normalizedRootNode.title,
+          )}
+          onClick={() => undefined}
+          chrome={(
+            <PhiLayoutDeleteButtonOverlay
+              ariaLabel={`Delete ${rootTitle}`}
+              nodeKind="layout"
+              onDelete={() => onDeleteRootNode({
+                nodeId: normalizedRootNode.id ?? null,
+                nodeKey: normalizedRootNode.typeKey,
+                nodeKind: normalizedRootNode.kind,
+              })}
+            />
+          )}
+        >
+          {diagnostic}
+        </PhiEditScaffoldDrawer>
+      )
+    : undefined;
+
   const scaffold = (
     <PhiAuthoringLayoutLoader
       type={normalizedRootNode.typeKey}
       kind="layout"
       blockId={normalizedRootNode.id ?? -1}
+      renderUnavailable={renderUnavailableRoot}
     >
       {(plugin, definition, widgetDefinitionsByType, resolveLayoutDefinition) => {
         const rendered = resolvePhiRootNodeRenderedBody(

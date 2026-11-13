@@ -12,6 +12,14 @@ export type PhiCmsRenderErrorBoundaryProps = {
   blockId?: PhiCmsInstanceId | null;
   typeKey?: string | null;
   moduleId?: PhiCmsRenderIssue["moduleId"];
+  /**
+   * Where the diagnostic of a failed render is drawn, for a host that frames its nodes.
+   *
+   * The Builder draws every node in a scaffold that selects and removes it, and that scaffold is part
+   * of what failed. Handed the diagnostic, the host frames it again, so a node that throws can still
+   * be taken out of the tree it broke.
+   */
+  renderDiagnostic?: (diagnostic: ReactNode) => ReactNode;
   children: ReactNode;
 };
 
@@ -42,7 +50,7 @@ export class PhiCmsRenderErrorBoundary extends Component<
 
   render() {
     if (this.state.error) {
-      return <PhiCmsRenderDiagnostic issue={{
+      const diagnostic = <PhiCmsRenderDiagnostic issue={{
         code: resolvePhiRenderFailureCode(this.state.error),
         kind: this.props.kind,
         type: this.props.typeKey ?? "unknown",
@@ -50,6 +58,7 @@ export class PhiCmsRenderErrorBoundary extends Component<
         moduleId: this.props.moduleId,
         detail: this.state.error.message,
       }} />;
+      return this.props.renderDiagnostic ? this.props.renderDiagnostic(diagnostic) : diagnostic;
     }
 
     return this.props.children;
