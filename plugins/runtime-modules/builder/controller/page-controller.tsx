@@ -16,6 +16,8 @@ import {
 } from "../../../../helpers/cms-page-catalog";
 import { changePhiBuilderPagePath, loadPhiBuilderPersistedPageCatalog } from "../page-catalog-client";
 import { resolvePhiBuilderCmsStoragePath } from "../../../../helpers/cms-paths";
+import { resolvePhiBuilderAreaAsCmsArea } from "../../../../constants/cms-areas";
+import { resolvePhiRuntimeAreaDefinition } from "../../area-definitions";
 import {
   collectPhiDeveloperBuilderPageKeys,
   collectPhiDeveloperBuilderPageStoragePaths,
@@ -28,7 +30,9 @@ import {
   PhiBuilderPageExistsError,
 } from "../persistence";
 import {
+  describePhiBuilderModuleAddressConflict,
   describePhiBuilderPageAddressConflict,
+  findPhiBuilderModuleAddressConflict,
   findPhiBuilderSitePageAddressConflict,
 } from "../page-address-rule";
 import {
@@ -66,7 +70,7 @@ import { usePhiPathname } from "../../../../components/runtime/use-phi-pathname"
 
 type PhiBuilderPageControllerState = Pick<
   PhiDeveloperBuilderWorkspaceState,
-  "customPages" | "modulePresetPagesByArea" | "pageMetaDrafts" | "persistedPageCatalogByArea"
+  "customPages" | "modulePresetPagesByArea" | "pageMetaDrafts" | "persistedPageCatalogByArea" | "runtimeModuleIdsByArea"
 >;
 
 type PhiPageMetaDialogMode = "create" | "update";
@@ -187,7 +191,9 @@ export function usePhiBuilderPageController({
         }
       : {
           title: pageTitle,
-          path: currentPath,
+          // A pending rename is the address being edited; the one the Page still answers on is shown beside it.
+          path: currentNode?.pendingPath ?? currentPath,
+          livePath: currentNode?.pendingPath ? currentPath : "",
           pathLocked: currentNode?.pathLocked === true ? "true" : "false",
           description: currentMetaDraft.description ?? "",
           /*
@@ -235,7 +241,8 @@ export function usePhiBuilderPageController({
       const currentPath = normalizePhiBuilderCmsCatalogPath(
         resolvePhiBuilderCmsStoragePath(effectiveArea, effectivePageKey, currentPageTree),
       );
-      const pathChanged = requestedPath !== currentPath;
+      // Against the pending rename where there is one: saving the dialog unchanged must not ask again.
+      const pathChanged = requestedPath !== (currentNode?.pendingPath ?? currentPath);
       if (pathChanged && currentNode?.pathLocked) {
         showMessage({
           level: "error",
@@ -252,6 +259,18 @@ export function usePhiBuilderPageController({
         : null;
       if (moveConflict) {
         showMessage({ level: "error", content: describePhiBuilderPageAddressConflict(moveConflict) });
+        return;
+      }
+      const moveModuleConflict = pathChanged
+        ? findPhiBuilderModuleAddressConflict(requestedPath, {
+            area: effectiveArea,
+            activeModuleIds: state.runtimeModuleIdsByArea[effectiveArea] ?? [],
+            catalog: currentPageTree,
+            baseModuleId: resolvePhiRuntimeAreaDefinition(resolvePhiBuilderAreaAsCmsArea(effectiveArea)).baseModuleId,
+          })
+        : null;
+      if (moveModuleConflict) {
+        showMessage({ level: "error", content: describePhiBuilderModuleAddressConflict(moveModuleConflict) });
         return;
       }
       setPageMetaDialogSaving(true);
@@ -345,6 +364,16 @@ export function usePhiBuilderPageController({
     const createConflict = findPhiBuilderSitePageAddressConflict(requestedStoragePath, currentPageTree);
     if (createConflict) {
       showMessage({ level: "error", content: describePhiBuilderPageAddressConflict(createConflict) });
+      return;
+    }
+    const createModuleConflict = findPhiBuilderModuleAddressConflict(requestedStoragePath, {
+      area: effectiveArea,
+      activeModuleIds: state.runtimeModuleIdsByArea[effectiveArea] ?? [],
+      catalog: currentPageTree,
+      baseModuleId: resolvePhiRuntimeAreaDefinition(resolvePhiBuilderAreaAsCmsArea(effectiveArea)).baseModuleId,
+    });
+    if (createModuleConflict) {
+      showMessage({ level: "error", content: describePhiBuilderModuleAddressConflict(createModuleConflict) });
       return;
     }
 

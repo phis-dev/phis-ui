@@ -1,4 +1,5 @@
 import { PHI_MEDIA_SPACE_KINDS } from "@phis/contracts/media";
+import { readPhiMediaFocalRectField, readPhiMediaFontField } from "./media-asset-typed-fields";
 
 import { PhiImageAssetVariantKey, PhiMediaKind, resolvePhiMediaKindFromContentType } from "../../constants/media";
 import type {
@@ -122,7 +123,8 @@ function readPhiMediaAssetFields(reader: PhiConfigReader): PhiImagePreviewApiRec
     blurDataUrl: nullableString(reader, "blurDataUrl"),
     thumbnailUrl: nullableString(reader, "thumbnailUrl"),
     previewUrl: nullableString(reader, "previewUrl"),
-    meta: reader.value("meta", "an object", (value) => (isPlainRecord(value) ? value : undefined)) ?? null,
+    focalRect: readPhiMediaFocalRectField(reader),
+    font: readPhiMediaFontField(reader),
     title: nullableString(reader, "title"),
     altText: nullableString(reader, "altText"),
     lifecycleStatus: requiredInteger(reader, "lifecycleStatus"),
@@ -167,7 +169,6 @@ export function readPhiMediaPagination(value: unknown, source = PHI_MEDIA_LISTIN
 export function readPhiMediaAssetTiles(value: unknown, source = PHI_MEDIA_LISTING): PhiMediaAssetTile[] {
   return createPhiResponseReader({ assets: value }, source).list("assets", (reader): PhiMediaAssetTile => {
     const variantVersion = reader.integer("variantVersion");
-    const meta = reader.value("meta", "an object", (entry) => (isPlainRecord(entry) ? entry : undefined));
     const blurDataUrl = reader.string("blurDataUrl");
     const folder = reader.object("folder", (folderReader) => ({
       id: requiredInteger(folderReader, "id"),
@@ -197,7 +198,8 @@ export function readPhiMediaAssetTiles(value: unknown, source = PHI_MEDIA_LISTIN
       deliveryRevision: requiredInteger(reader, "deliveryRevision"),
       presentationFlags: requiredInteger(reader, "presentationFlags"),
       ...(blurDataUrl === undefined ? {} : { blurDataUrl }),
-      ...(meta === undefined ? {} : { meta }),
+      focalRect: readPhiMediaFocalRectField(reader),
+      font: readPhiMediaFontField(reader),
       folder: folder ?? null,
     };
   }) ?? [];
@@ -291,7 +293,6 @@ export function normalizePhiImagePreviewSelectionAsset(tile: PhiMediaAssetTile):
     ...rest,
     kind: tile.kind,
     blurDataUrl: tile.blurDataUrl ?? null,
-    meta: tile.meta ?? null,
     folder: null,
     variants: null,
   };

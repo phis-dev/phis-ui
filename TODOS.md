@@ -4,6 +4,17 @@ Open work only, grouped by area. Binding contracts live in the contract document
 [design/](./design/README.md). A contract extension named here still needs operator approval before it is
 built. Remove an entry when it is done.
 
+## At the next release
+
+- **Released as `@phis/ui` 0.5.0 together with `@phis/server` 0.3.0** (both already in `package.json`). The
+  Media management responses carry `focalRect` and `font` instead of `meta`, and the Asset PATCH takes
+  `focalRect`: this `phis-ui` against an older Server reads no focal rectangles or font metrics, and an older
+  `phis-ui` against the new Server loses them in the editor. Details in `phis-server/TODOS.md`, "At the next
+  release". Packages that peer-depend on `workspace:^` pick up `^0.5.0` at their next publish.
+- **Module graph budget raised by about 22 KiB** (`scripts/audit-module-graph.budget.json`, every
+  `./cms/plugins/*` and `./next/areas/*` entry) for the Admin Media storage settings: their form, labels,
+  settings reader and profile choices belong to the asset Module, whose definition every Area loads.
+
 ## Code hygiene
 
 - **Convert concrete preset builders to local-key templates.** Some first-party preset builders still
@@ -74,9 +85,6 @@ built. Remove an entry when it is done.
   `plugins/runtime-modules/builder/preview-store.ts` keeps snapshots in a process-local `globalThis` Map.
   Replace it with a shared TTL store bound to the Site and the authorized Builder session, keep the opaque
   id transport, reject cross-session reads, and keep `/builder/api/[[...path]]` transport-only.
-- **Refuse activation when a Site Page holds a Module's package path.** The Public address dialog is
-  built; outside Public nothing checks a Site Page against the package path
-  (THIRD_PARTY_MODULES.md, "Addresses are granted, not owned").
 - **Optional visual Form Builder.** Define the canvas and its Draft/Publish request shape (selection,
   field insertion and reordering, responsive placement, preview, Undo/Redo) before adding persistence
   capabilities to `controller:@phis/ui/modules/form-builder/controller/default:default`. Reuse the `form_definitions` revision
@@ -128,6 +136,22 @@ built. Remove an entry when it is done.
 - **User-profile Tooltip preference.** A per-user setting to disable optional Tooltips, resolved centrally
   and applied through the Phi Control adapters; essential validation, warning, confirmation, and
   accessibility text stays available.
+
+- **admin/locales: say where new translations are made.** The list shows only translations that exist
+  (`listSiteTranslations` joins from `tr_site_lang`), so a locale without any -- English on a German-source
+  Site -- shows "No site translations exist for this language yet." and nothing more. The empty state
+  should say that new translations are entered in Editor > Translations and link there
+  (components/widgets/label-sets/admin-locales.ts `empty_text`). The split stays: Admin manages, the
+  Editor translates.
+- **Last use of a text in the translation Tables.** The data exists -- do not build or measure it again:
+  phis-server keeps the day a message was last read in `phis.tr_msg_usage` / `phis.tr_site_msg_usage`
+  (`msg_id`, `last_used_on DATE`), written at most once per message and day by
+  `src/db/translation-usage.ts` (`notePhiTranslationUse`, called from the lookups in
+  `src/db/translations.ts`), reported by `phis translations usage` (TRANSLATIONS.md "When a message was
+  last read"). Missing is only the display: `listSiteTranslations` and the Editor list query in
+  phis-server `src/db/translations.ts` join `tr_site_msg_usage` and return `lastUsedOn`, and the
+  admin/locales and Editor Translations Tables get a date column for it. No usage row means "not read since
+  tracking began"; a text only ever shown in its source language is never counted as read.
 
 ## Tables and Markdown
 
@@ -206,6 +230,12 @@ built. Remove an entry when it is done.
   emitters only. Add a runtime schema registry once the controller and Widget schema inventory is stable.
 
 ## Operations
+
+- **Page title `display` sweep on each installation, with the release that brings it.** The Page title
+  Widget is a heading (`h1`) unless its config says `display: "label"`, and stored Area revisions still
+  hold the Shell header's title with `config: {}`: walk `site_area_revisions.tree_json` and give every
+  `.../widgets/page-title` node without `display` the value `"label"`. Done on dev (9 revisions); prod
+  `phis_prod` has 13 waiting. Remove this entry once prod is swept.
 
 - **CMS backup/restore and portable transfer.** Exact backup/restore that preserves canonical CMS instance
   ids and DB sequences; portable export/import into a target Draft with central id allocation and atomic

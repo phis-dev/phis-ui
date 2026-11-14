@@ -3,7 +3,7 @@ import "server-only";
 import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
 import type { PhiPublicMediaAssetReference } from "../types/media";
 import { PhiMediaKind } from "../constants/media";
-import { readPhiFontMetricsFields } from "../components/media/media-font-metrics";
+import { readPhiMediaFocalRectField, readPhiMediaFontField } from "../components/media/media-asset-typed-fields";
 import { createPhiResponseReader, requirePhiField } from "../components/widgets/config/strict-config-reader";
 import { readPhiPageReference, type PhiPageReference } from "../types/references";
 import { throwPhiCmsGatewayError } from "./errors";
@@ -65,14 +65,8 @@ export function readPhiPublicMediaAssetReference(entry: unknown): PhiPublicMedia
     altText: nullableText("altText"),
     thumbnailUrl: nullableText("thumbnailUrl"),
     previewUrl: nullableText("previewUrl"),
-    focalRect: reader.object("focalRect", (rect) => {
-      const fraction = (key: string) => {
-        const value = requirePhiField(rect, key, "a number from 0 to 1", rect.number);
-        return value >= 0 && value <= 1 ? value : rect.fail(key, "a number from 0 to 1");
-      };
-      return { x: fraction("x"), y: fraction("y"), width: fraction("width"), height: fraction("height") };
-    }) ?? null,
-    font: reader.object("font", readPhiFontMetricsFields) ?? null,
+    focalRect: readPhiMediaFocalRectField(reader),
+    font: readPhiMediaFontField(reader),
   };
 }
 
@@ -84,6 +78,8 @@ type PhiReferenceBatchRequest = {
   internalToken: string;
   siteKey: string;
   area?: string;
+  /** A preview render: Pages that were never published resolve to their path too. */
+  preview?: boolean;
 };
 
 type PhiPendingReferenceBatch = PhiReferenceBatchRequest & {
@@ -104,7 +100,7 @@ type PhiPendingReferenceBatch = PhiReferenceBatchRequest & {
 const pendingBatches = new Map<string, PhiPendingReferenceBatch>();
 
 function batchKey(input: PhiReferenceBatchRequest) {
-  return JSON.stringify([input.apiBaseUrl, input.internalToken, input.siteKey, input.area ?? ""]);
+  return JSON.stringify([input.apiBaseUrl, input.internalToken, input.siteKey, input.area ?? "", input.preview === true]);
 }
 
 async function requestSiteInternalReferences(
@@ -123,7 +119,12 @@ async function requestSiteInternalReferences(
       jsonBody: true,
     }),
     cache: "no-store",
-    body: JSON.stringify({ ...(input.area ? { area: input.area } : {}), references, assets: assetIds }),
+    body: JSON.stringify({
+      ...(input.area ? { area: input.area } : {}),
+      ...(input.preview ? { preview: true } : {}),
+      references,
+      assets: assetIds,
+    }),
   });
   if (!response.ok) {
     throwPhiCmsGatewayError(
@@ -174,6 +175,11 @@ export async function resolveSiteInternalReferences(input: {
   siteKey: string;
   /** Required only for Page references. Assets are Site scoped and carry no Area. */
   area?: string;
+  /**
+   * The render is a preview the server already authorized (`hasPhiCmsAuthorizedPreviewRead`). Without it a
+   * Page that was never published resolves to no path, because the Public render would answer 404 for it.
+   */
+  preview?: boolean;
   references?: readonly PhiPageReference[];
   assetIds?: readonly number[];
 }): Promise<PhiResolvedInternalReferences> {
@@ -188,6 +194,7 @@ export async function resolveSiteInternalReferences(input: {
     internalToken: input.internalToken,
     siteKey: input.siteKey,
     ...(input.area ? { area: input.area } : {}),
+    ...(input.preview ? { preview: true } : {}),
   };
   if (!keepsReferences()) {
     return requestThroughBatch(request, references, assetIds);
@@ -255,7 +262,7 @@ function keepsReferences() {
 
 // A Page reference resolves within its Area; an Asset is Site scoped and carries none.
 function pageCacheKey(request: PhiReferenceBatchRequest, reference: PhiPageReference) {
-  return `references:${request.siteKey.trim().toLowerCase()}:page:${request.area ?? ""}:${reference}`;
+  return `references:${request.siteKey.trim().toLowerCase()}:page:${request.area ?? ""}:${request.preview ? "preview" : "live"}:${reference}`;
 }
 
 function assetCacheKey(request: PhiReferenceBatchRequest, id: number) {

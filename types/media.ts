@@ -49,6 +49,7 @@ export type PhiMediaAssetFolder = {
 
 export type { PhiFontMetrics, PhiMediaSpaceKind } from "@phis/contracts/media";
 import type { PhiFontMetrics } from "@phis/contracts/media";
+import type { MediaFocalRect } from "../components/media/focal-rect";
 import type { PhiMediaSpaceKind } from "@phis/contracts/media";
 
 /**
@@ -118,7 +119,9 @@ export type PhiMediaAsset = {
   blurDataUrl: string | null;
   thumbnailUrl?: string | null;
   previewUrl?: string | null;
-  meta: Record<string, unknown> | null;
+  /** The entries of the stored `meta` a client acts on. `meta` itself is the server's. */
+  focalRect: MediaFocalRect | null;
+  font: PhiFontMetrics | null;
   title: string | null;
   altText: string | null;
   lifecycleStatus: number;
@@ -155,7 +158,8 @@ export type PhiMediaAssetTile = {
   deliveryRevision: number;
   presentationFlags: number;
   blurDataUrl?: string | null;
-  meta?: Record<string, unknown> | null;
+  focalRect: MediaFocalRect | null;
+  font: PhiFontMetrics | null;
   folder?: Pick<PhiMediaAssetFolder, "id" | "name"> | null;
 };
 

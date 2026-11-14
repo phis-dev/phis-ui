@@ -658,7 +658,7 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
         slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
         sortOrder: 0,
         label: "Page title",
-        config: {},
+        config: { display: "label" },
       }),
       nodes.widget({
         typeKey: "account",
@@ -1889,7 +1889,12 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   source: {
                     providerKey: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.runtimeModulesTable,
                     resourceKey: "publicRouteCollisions",
-                    params: {},
+                    params: {
+                      statusLabels: {
+                        live: modulesLabels?.publicRoutes.live ?? "Live",
+                        notLive: modulesLabels?.publicRoutes.notLive ?? "Not published yet",
+                      },
+                    },
                   },
                   presentation: {
                     borders: true,
@@ -1898,6 +1903,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                       { key: "title", fieldKey: "title", title: modulesLabels?.publicRoutes.page ?? "Page" },
                       { key: "declaredPath", fieldKey: "declaredPath", title: modulesLabels?.publicRoutes.wanted ?? "Wanted", renderer: "code", sizing: { mode: "content" } },
                       { key: "heldBy", fieldKey: "heldBy", title: modulesLabels?.publicRoutes.heldBy ?? "Taken by" },
+                      {
+                        key: "status",
+                        fieldKey: "status",
+                        title: modulesLabels?.publicRoutes.status ?? "Status",
+                        renderer: "badge",
+                        sizing: { mode: "content" },
+                      },
                       {
                         key: "path",
                         fieldKey: "path",

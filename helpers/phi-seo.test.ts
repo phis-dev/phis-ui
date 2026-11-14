@@ -4,6 +4,8 @@ import {
   buildPhiPublicPageAlternates,
   collectPhiSitemapCandidates,
   renderPhiRobotsTxt,
+  renderPhiSitemapDocuments,
+  renderPhiSitemapIndexXml,
   renderPhiSitemapXml,
   resolvePhiSitePublicBase,
 } from "./phi-seo";
@@ -47,6 +49,36 @@ describe("the language versions of a Public Page", () => {
     expect(xml.match(/hreflang="x-default"/g)).toHaveLength(2);
     expect(xml).toContain("<loc>https://phis.dev/de/a&amp;b</loc>");
     expect(xml).toContain("<lastmod>2026-09-01T10:00:00.000Z</lastmod>");
+  });
+});
+
+describe("a sitemap too large for one file", () => {
+  const site = { publicBase: "https://phis.dev", availableLocales: ["de", "en"], defaultLocale: "en" };
+  const pages = Array.from({ length: 5 }, (_value, index) => ({ path: `/p${index}` }));
+
+  it("closes a file at the URL limit, counting one url per Page per locale", () => {
+    const documents = renderPhiSitemapDocuments(pages, site, { maxUrls: 4 });
+    expect(documents.map((document) => document.match(/<url>/g)?.length)).toEqual([4, 4, 2]);
+    for (const document of documents) {
+      expect(document.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
+      expect(document.trimEnd().endsWith("</urlset>")).toBe(true);
+    }
+  });
+
+  it("closes a file at the byte limit too", () => {
+    const one = renderPhiSitemapDocuments(pages.slice(0, 1), site)[0]!;
+    const documents = renderPhiSitemapDocuments(pages, site, { maxBytes: new TextEncoder().encode(one).length });
+    expect(documents).toHaveLength(5);
+  });
+
+  it("keeps a small Site in one file", () => {
+    expect(renderPhiSitemapDocuments(pages, site)).toHaveLength(1);
+  });
+
+  it("lists the parts in an index", () => {
+    const xml = renderPhiSitemapIndexXml(["https://phis.dev/sitemap.xml?part=1", "https://phis.dev/sitemap.xml?part=2"]);
+    expect(xml).toContain("<sitemapindex");
+    expect(xml.match(/<sitemap>/g)).toHaveLength(2);
   });
 });
 

@@ -31,7 +31,11 @@ function resolvePhiBuilderPersistedPublicPages(
     .filter((entry) => !entry.tombstoned && typeof entry.path === "string" && entry.path.length > 0)
     // A Page that came from a Module preset is that Module's route, counted with the Modules below.
     .filter((entry) => !entry.ownerModuleId)
-    .map((entry) => ({ path: entry.path as string, title: entry.path as string }));
+    .map((entry) => ({
+      path: entry.path as string,
+      title: entry.path as string,
+      published: entry.publishedRevisionId != null,
+    }));
 }
 
 /**
@@ -125,12 +129,13 @@ export function resolvePhiBuilderPublicRouteCollisionAnswers(
   return collisions.map((collision) => {
     const path = suggestPhiPublicRoutePath(moduleId, collision.claim.declaredPath, proposed);
     // Two contested routes of one Module must not be offered the same free address.
-    proposed.set(path, { kind: "page", title: collision.claim.title });
+    proposed.set(path, { kind: "page", title: collision.claim.title, published: false });
     return {
       presetKey: collision.claim.presetKey,
       title: collision.claim.title,
       declaredPath: collision.path,
       heldBy: describePhiPublicRouteAddressHolder(collision.heldBy, moduleTitles),
+      published: collision.heldBy.kind === "page" ? collision.heldBy.published : collision.heldBy.claim.live === true,
       path,
     };
   });

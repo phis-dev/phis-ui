@@ -70,7 +70,7 @@ export function PhiImageWidget({
     deliveryRevision: resolvedAsset?.deliveryRevision,
     originalUrl: resolvedAsset?.deliveryUrl,
     sourceUrl: configSourceUrl,
-    focalRect: focalRect ?? resolvedAsset?.meta?.focalRect,
+    focalRect: focalRect ?? resolvedAsset?.focalRect,
     fit: config?.fit,
     objectPosition: config?.objectPosition,
     sourceWidth: resolvedAsset?.width,

@@ -76,6 +76,20 @@ describe("resolving internal references", () => {
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
+  it("keeps a preview render apart from a live one, and says so to the server", async () => {
+    const fetchMock = answerAssets();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await Promise.all([
+      resolveSiteInternalReferences({ ...SERVER, area: "public", assetIds: [1] }),
+      resolveSiteInternalReferences({ ...SERVER, area: "public", preview: true, assetIds: [1] }),
+    ]);
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const bodies = fetchMock.mock.calls.map((call) => JSON.parse(call[1].body) as { preview?: boolean });
+    expect(bodies.map((body) => body.preview === true).sort()).toEqual([false, true]);
+  });
+
   it("starts a new request where the server's limit would be passed", async () => {
     const fetchMock = answerAssets();
     vi.stubGlobal("fetch", fetchMock);

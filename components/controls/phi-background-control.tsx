@@ -768,7 +768,7 @@ export function PhiBackgroundControl({
     width?: number | null;
     height?: number | null;
     thumbnailUrl?: string | null;
-    meta?: Record<string, unknown> | null;
+    focalRect?: unknown;
   }) {
     /**
      * The Picker already holds the delivery facts the live render resolves on the server, so the
@@ -779,7 +779,7 @@ export function PhiBackgroundControl({
       deliveryUrl: asset.deliveryUrl ?? null,
       deliveryRevision: asset.deliveryRevision ?? null,
       variantVersion: asset.variantVersion ?? null,
-      focalRect: normalizeMediaFocalRect(asset.meta?.focalRect ?? null),
+      focalRect: normalizeMediaFocalRect(asset.focalRect ?? null),
       width: asset.width ?? null,
       height: asset.height ?? null,
     };

@@ -111,7 +111,8 @@ export function buildPhiAreaShellHeaderNodes({
         slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
         sortOrder: 0,
         label: "Page title",
-        config: {},
+        /* A caption in the bar: the Page's heading is the Page's. */
+        config: { display: "label" },
       }),
       nodes.widget({
         typeKey: "account",

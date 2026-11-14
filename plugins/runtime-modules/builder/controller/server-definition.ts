@@ -10,6 +10,7 @@ import {
   buildPhiBuilderAreaMetaByArea,
   buildPhiBuilderAreaControllerSettingsByArea,
   buildPhiBuilderPublicRoutePaths,
+  buildPhiBuilderPublishedRuntimeModuleIdsForArea,
   buildPhiBuilderStructureRuntimeModuleIdsByArea,
   buildPhiBuilderUnresolvedRuntimeModuleIdsByArea,
   buildPhiBuilderStructureShellPresetDraftsByArea,
@@ -48,6 +49,7 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_SERVER_DEFINITION = {
       areaControllerSettingsByArea,
       builderLabels,
       historyLabels,
+      livePublicModuleIds,
     ] = await Promise.all([
       buildPhiBuilderStructureShellPresetDraftsByArea(
         runtime,
@@ -64,6 +66,7 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_SERVER_DEFINITION = {
       buildPhiBuilderAreaControllerSettingsByArea(runtime, runtimeModuleCatalog),
       getPhiBuilderChromeWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
       getPhiHistoryLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
+      buildPhiBuilderPublishedRuntimeModuleIdsForArea(runtime, "public", runtimeModuleCatalog),
     ]);
 
     const requestedArea = normalizePhiBuilderAreaSearchParam(
@@ -107,7 +110,11 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_SERVER_DEFINITION = {
       serverUnavailableModules,
       runtimeModuleIdsByArea: effectiveRuntimeModuleIdsByArea,
       unresolvedModuleIdsByArea,
-      publicRouteClaims: buildPhiBuilderPublicRouteClaims(runtimeModuleCatalog),
+      // Marked live where the published Public Area runs the Module, so the collision dialog can say so.
+      publicRouteClaims: buildPhiBuilderPublicRouteClaims(runtimeModuleCatalog).map((claim) => ({
+        ...claim,
+        live: livePublicModuleIds.includes(claim.ownerModuleId),
+      })),
       publicRoutePaths,
       areaRootRoutesByArea,
       areaMetaByArea,

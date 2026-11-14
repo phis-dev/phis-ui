@@ -5,5 +5,5 @@ import { PhiPageTitleWidgetServer } from "./server";
 
 export const PHI_PAGE_TITLE_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiPageTitleWidgetConfig> = {
   ...PHI_PAGE_TITLE_WIDGET_DEFINITION,
-  ...definePhiPassiveWidgetRenderers(({ runtime }) => <PhiPageTitleWidgetServer runtime={runtime} />),
+  ...definePhiPassiveWidgetRenderers(({ runtime, config }) => <PhiPageTitleWidgetServer runtime={runtime} config={config} />),
 };

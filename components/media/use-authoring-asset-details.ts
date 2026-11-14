@@ -62,7 +62,6 @@ export function usePhiAuthoringAssetDetails(assetId: number | null | undefined) 
     return {
       ...currentAssetTile,
       blurDataUrl: currentAssetTile.blurDataUrl ?? null,
-      meta: currentAssetTile.meta ?? null,
       folder: fetchedAsset?.folder ?? null,
       variants: keepFetchedVariants ? fetchedAsset?.variants ?? null : null,
     };

@@ -1,7 +1,8 @@
-import { PHI_ASSET_RUNTIME_MODULE_ID } from "../ids";
+import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS, PHI_ASSET_RUNTIME_MODULE_ID } from "../ids";
 import { PHI_MEDIA_SETTINGS_FORM_IDS } from "../settings-forms";
 import { getPhiMediaSettingsPageLabels } from "../../../../components/media/media-settings-labels";
 import { getResolvedSiteMediaSettings } from "../../../../gateway/site-media-settings";
+import type { PhiSiteMediaStorageSettings } from "../../../../gateway/site-media-storage-reader";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import type { PhiBlockRuntime } from "../../../../types";
 import { buildPhiSettingsPageShellTree } from "../../../../components/regions/presets/phi-settings-page-shell-tree";
@@ -12,6 +13,11 @@ import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/wid
 function formatMegabytes(bytes: number | null | undefined) {
   const size = phiBytesToStorageSize(bytes);
   return size == null ? "—" : `${size} ${PHI_STORAGE_SIZE_UNIT_LABEL}`;
+}
+
+function readDefaultChoice(id: number | null, storage: PhiSiteMediaStorageSettings) {
+  const chosen = id ?? storage.profiles.find((profile) => profile.local)?.id;
+  return chosen == null ? null : String(chosen);
 }
 
 const SYNTHETIC_MEDIA_SETTINGS_REGION_IDS = {
@@ -33,6 +39,69 @@ export async function buildPhiDefaultAdminMediaSettingsPageTree({
       siteKey: runtime.site.key,
     }),
   ]);
+
+  /*
+   * The Spaces that exist, per kind, with the Profile each writes to and its own quota. The Profiles are
+   * this Site's, so their names and the choices of the profile cell are set here (`valueMap`,
+   * `editor.options`) rather than in the resource, which is the same on every Site. Offered only for a kind
+   * the Site's Modules activate, and only among the offered Profiles where the Site restricts them.
+   */
+  const offered = settings.storage.allowedProfileIds.length > 0
+    ? settings.storage.profiles.filter((profile) => settings.storage.allowedProfileIds.includes(profile.id))
+    : settings.storage.profiles;
+  const profileNames = Object.fromEntries(
+    settings.storage.profiles.map((profile) => [String(profile.id), `${profile.key} (${profile.providerId})`]),
+  );
+  const profileChoices = offered.map((profile) => ({ value: String(profile.id), label: profileNames[String(profile.id)]! }));
+  const buildSpacesTable = (nodeKey: string, resourceKey: string, label: string, withEmail: boolean) => ({
+    nodeKey,
+    typeKey: "table",
+    label,
+    config: {
+      source: { providerKey: PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaStorageSpaces, resourceKey },
+      presentation: {
+        controlSize: "small",
+        borders: true,
+        layout: { mode: "auto", overflowX: "auto" },
+        columns: [
+          { key: "owner", fieldKey: "owner", title: labels.spaces.owner, sizing: { mode: "fill", minWidth: 180 } },
+          ...(withEmail ? [{ key: "email", fieldKey: "email", title: labels.spaces.email, sizing: { mode: "content" } }] : []),
+          {
+            key: "storageProfileId",
+            fieldKey: "storageProfileId",
+            title: labels.spaces.profile,
+            valueMap: profileNames,
+            editor: { control: "select", options: profileChoices },
+            sizing: { mode: "content" },
+          },
+          {
+            key: "quotaMegabytes",
+            fieldKey: "quotaMegabytes",
+            title: labels.spaces.quota,
+            description: labels.spaces.quotaHint,
+            editor: { prefix: PHI_STORAGE_SIZE_UNIT_LABEL },
+            sizing: { mode: "content" },
+            align: "right",
+          },
+          { key: "effectiveQuotaMegabytes", fieldKey: "effectiveQuotaMegabytes", title: labels.spaces.effective, sizing: { mode: "content" }, align: "right" },
+          { key: "usedMegabytes", fieldKey: "usedMegabytes", title: labels.spaces.used, sizing: { mode: "content" }, align: "right" },
+        ],
+        emptyState: { title: labels.spaces.empty },
+      },
+      features: {
+        search: { enabled: true, placeholder: labels.spaces.search, debounceMs: 250 },
+        pagination: { enabled: true, pageSize: 25, pageSizes: [25, 50, 100] },
+        sorting: { mode: "none" },
+        editing: { mode: "cell" },
+        tools: { mode: "self-contained", reset: false, reload: true },
+      },
+    },
+  });
+
+  const spaceTables = [
+    ...(settings.userSpacesEnabled ? [buildSpacesTable("widgetUserSpacesTable", "userSpaces", labels.spaces.userTable, true)] : []),
+    ...(settings.groupSpacesEnabled ? [buildSpacesTable("widgetGroupSpacesTable", "groupSpaces", labels.spaces.groupTable, false)] : []),
+  ];
 
   const tree = buildPhiSettingsPageShellTree({
     page,
@@ -61,6 +130,36 @@ export async function buildPhiDefaultAdminMediaSettingsPageTree({
           },
         }],
       },
+      {
+        nodeKey: "panelStorage",
+        title: labels.storage.title,
+        description: labels.storage.description,
+        sections: [{
+          kind: "form",
+          nodeKey: "widgetStorageForm",
+          formId: PHI_MEDIA_SETTINGS_FORM_IDS.storage,
+          label: labels.storage.title,
+          /*
+           * As the choices carry them: a Profile id as text. An unset default is the Site's Local Profile,
+           * which is itself one of the choices -- so it is shown as that choice rather than as an empty
+           * field, and choosing it again is a choice like any other instead of a clear the form drops.
+           */
+          initialValues: {
+            siteSpaceProfileId: String(settings.storage.siteSpaceProfileId),
+            defaultUserProfileId: readDefaultChoice(settings.storage.defaultUserProfileId, settings.storage),
+            defaultGroupProfileId: readDefaultChoice(settings.storage.defaultGroupProfileId, settings.storage),
+            allowedProfileIds: settings.storage.allowedProfileIds.map(String),
+            disabledProfileIds: settings.storage.profiles.filter((profile) => profile.disabled).map((profile) => String(profile.id)),
+          },
+        }],
+      },
+      // Only where the Site's Modules activate a delegated kind: otherwise there is no Space to list.
+      ...(spaceTables.length > 0 ? [{
+        nodeKey: "panelSpaces",
+        title: labels.spaces.title,
+        description: labels.spaces.description,
+        sections: spaceTables,
+      }] : []),
       {
         nodeKey: "panelTechnical",
         title: labels.technical.title,

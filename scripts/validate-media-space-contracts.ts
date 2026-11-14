@@ -100,7 +100,7 @@ const assetResource = "resources" in collectionDescriptor
   : undefined;
 assert.ok(assetResource, "The media Collection provider must expose the assets resource.");
 assert.deepEqual(
-  (assetResource.query?.filterFields ?? []).map(({ key }) => key).sort(),
+  (assetResource.query?.filterFields ?? []).map((field) => (typeof field === "string" ? field : field.key)).sort(),
   ["folderId", "kind", "presentationFlags"],
   "An author must never be able to pin a Space, owner or Storage filter into a Widget's query.",
 );
@@ -712,8 +712,9 @@ assert.throws(
  * declarations -- and therefore restoring it -- survive any Area selection.
  */
 assert.ok(PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG.has(PHI_ASSET_RUNTIME_MODULE_ID));
-// Folders, the collection, the folder choices and the folder pictures record Provider.
-assert.equal(PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS.length, 4);
+// Folders, the collection, the folder choices, the folder pictures record Provider, and the storage
+// profile choices and the Spaces table of the Admin storage settings.
+assert.equal(PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS.length, 6);
 for (const descriptor of PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS) {
   assert.equal(descriptor.ownerModuleId, PHI_ASSET_RUNTIME_MODULE_ID);
   assert.equal(descriptor.executionMode, "live");

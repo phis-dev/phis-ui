@@ -8,7 +8,7 @@ import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../../../../plugi
 import type { PhiTreeProviderRegistration } from "../../../../components/widgets/client/shared/phi-tree-provider";
 import { PhiTreeProviderClient } from "../../../../components/widgets/client/shared/phi-tree-provider";
 import { resolvePhiBuilderCmsFetchPath } from "../../../../helpers/cms-paths";
-import type { PhiPresetPageNode } from "../../../../helpers/cms-page-catalog";
+import { formatPhiBuilderPagePathWithPending, type PhiPresetPageNode } from "../../../../helpers/cms-page-catalog";
 import { resolvePhiBuilderOfferedPageCatalog } from "../offered-page-catalog";
 import {
   buildPhiBuilderNavigationFolderDragSourceKey,
@@ -34,7 +34,7 @@ function flattenPages(
         id: page.key,
         parentId,
         title: page.title,
-        path: resolvePhiBuilderCmsFetchPath(area, page.key, allPages),
+        path: formatPhiBuilderPagePathWithPending(resolvePhiBuilderCmsFetchPath(area, page.key, allPages), page.pendingPath),
         dragIdentity: buildPhiBuilderNavigationPageDragSourceKey(area, page.reference!),
       }, ...flattenPages(area, children, allPages, page.key)];
     }

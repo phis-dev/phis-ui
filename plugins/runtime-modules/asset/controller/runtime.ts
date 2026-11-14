@@ -336,7 +336,7 @@ export function usePhiAssetRuntimeController({
           title: asset.title ?? "",
           altText: asset.altText ?? "",
           presentationFlags: ASSET_FORM_FLAG_VALUES.filter((flag) => (asset.presentationFlags & flag) === flag).map(String),
-          focalRect: normalizeMediaFocalRect(asset.meta?.focalRect) ?? null,
+          focalRect: normalizeMediaFocalRect(asset.focalRect) ?? null,
         },
       }, inspectorRequest.correlationId);
   }, [emitCapability, inspectorRequest, state.assets, state.folders, state.selectedAsset]);

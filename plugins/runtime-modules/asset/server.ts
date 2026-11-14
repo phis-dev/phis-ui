@@ -2,7 +2,7 @@ import {
   PHI_ASSET_FOLDER_RUNTIME_MODULE_FORM,
   PHI_ASSET_METADATA_RUNTIME_MODULE_FORM,
 } from "./metadata-form";
-import { PHI_MEDIA_SETTINGS_RUNTIME_MODULE_FORM } from "./settings-forms";
+import { PHI_MEDIA_SETTINGS_RUNTIME_MODULE_FORM, PHI_MEDIA_STORAGE_SETTINGS_RUNTIME_MODULE_FORM } from "./settings-forms";
 import { definePhiRuntimeModuleServerAreaContribution } from "../area-contributions";
 import { PHI_ASSET_RUNTIME_MODULE_DEFINITION } from "./definition";
 import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "./ids";
@@ -24,6 +24,7 @@ export function createPhiAssetRuntimeModuleServerAreaContribution() {
         PHI_ASSET_METADATA_RUNTIME_MODULE_FORM,
         PHI_ASSET_FOLDER_RUNTIME_MODULE_FORM,
         PHI_MEDIA_SETTINGS_RUNTIME_MODULE_FORM,
+        PHI_MEDIA_STORAGE_SETTINGS_RUNTIME_MODULE_FORM,
       ],
       routes: PHI_ASSET_RUNTIME_MODULE_ROUTES,
       uiProvider: true,

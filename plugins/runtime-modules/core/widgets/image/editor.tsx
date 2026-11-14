@@ -91,7 +91,7 @@ export function PhiImageWidgetEditor({ config, onChange }: PhiImageWidgetEditorP
         labels={PHI_IMAGE_WIDGET_DEFAULT_LABELS}
         config={config ?? undefined}
         resolvedAsset={resolvedAssetDetails}
-        focalRect={resolvedAssetDetails?.meta?.focalRect ?? null}
+        focalRect={resolvedAssetDetails?.focalRect ?? null}
       />
       {assetId != null ? (
         <PhiTypographyControl

@@ -500,6 +500,19 @@ const descriptor: PhiFormDescriptor = {
       config: { maxLength: 512 },
     },
     {
+      key: "livePath",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text,
+      label: label("fields.livePath.label", "Live path"),
+      description: label(
+        "fields.livePath.description",
+        "The Page answers here until you publish; then it moves to the path above.",
+      ),
+      // Only while a rename is pending, and never edited: it is a fact about the published Page.
+      visibleWhen: { source: "form", valuePath: "livePath", operator: "truthy" },
+      disabledWhen: { source: "form", valuePath: "livePath", operator: "truthy" },
+      initialValue: "",
+    },
+    {
       key: "pathLocked",
       fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.hidden,
       initialValue: "false",

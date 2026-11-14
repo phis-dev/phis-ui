@@ -20,6 +20,20 @@ export const PHI_ASSET_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS = [
         .PhiMediaFolderChoicesOptionsProviderClient,
   },
   {
+    key: PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaStorageProfiles,
+    ownerModuleId: PHI_ASSET_RUNTIME_MODULE_ID,
+    loadLive: async () =>
+      (await import("./services/options"))
+        .PhiMediaStorageProfilesOptionsProviderClient,
+  },
+  {
+    key: PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaStorageSpaces,
+    ownerModuleId: PHI_ASSET_RUNTIME_MODULE_ID,
+    loadLive: async () =>
+      (await import("./services/storage-spaces-table"))
+        .PhiMediaStorageSpacesTableProviderClient,
+  },
+  {
     key: PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaCollection,
     ownerModuleId: PHI_ASSET_RUNTIME_MODULE_ID,
     loadLive: async () =>

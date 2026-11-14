@@ -111,8 +111,8 @@ function PhiAssetFocalRectEditor({
   config?: PhiCmsAssetFocalRectWidgetConfig | null;
 }) {
   const currentRect = useMemo(
-    () => normalizeMediaFocalRect(asset?.meta?.focalRect),
-    [asset?.meta?.focalRect],
+    () => normalizeMediaFocalRect(asset?.focalRect),
+    [asset?.focalRect],
   );
   const [draft, setDraft] = useState<MediaFocalRect | null>(() => currentRect ?? createDefaultFocalRect());
   const originalRef = useRef<MediaFocalRect | null>(currentRect);
@@ -191,7 +191,7 @@ function PhiAssetFocalRectEditor({
     const next = normalizeMediaFocalRect(draft);
     updatePhiImagePreviewAsset(PHI_ASSET_CONTROLLER_STORE_KEY, asset.id, (current) => ({
       ...current,
-      meta: { ...(current.meta ?? {}), focalRect: next },
+      focalRect: next,
     }));
     /*
      * The rectangle, and not a field: which field it lands in is written on the route

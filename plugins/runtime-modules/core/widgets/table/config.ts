@@ -300,6 +300,15 @@ function readColumn(reader: PhiConfigReader): PhiTableColumnDefinition {
         control: editorReader.oneOf("control", PHI_TABLE_COLUMN_EDITOR_CONTROLS) as PhiTableColumnEditorControl | undefined,
         disabledWhen: readCondition(editorReader, "disabledWhen"),
         ...(editorReader.string("prefix") ? { prefix: editorReader.string("prefix") } : {}),
+        // The Site's own choices for a select cell, set by the placement (`editor.options`).
+        ...(editorReader.has("options")
+          ? {
+              options: editorReader.list("options", (option) => ({
+                value: requireString(option, "value"),
+                label: requireString(option, "label"),
+              })) ?? [],
+            }
+          : {}),
       });
   return {
     key: requireString(reader, "key"),

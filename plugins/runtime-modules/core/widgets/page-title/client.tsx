@@ -5,15 +5,19 @@ import { useState } from "react";
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
 import { resolvePhiPageTitleSignalValue } from "../../../../../components/widgets/signals/page-title-signals";
 import { createPhiCoreRuntimeControllerAddress } from "../../../../../components/runtime/core-runtime-controller-address";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
+import type { PhiPageTitleWidgetDisplay } from "./config";
 
 export type PhiPageTitleWidgetClientProps = {
   initialTitle: string;
   area?: string | null;
+  display: PhiPageTitleWidgetDisplay;
 };
 
 export function PhiPageTitleWidgetClient({
   initialTitle,
   area,
+  display,
 }: PhiPageTitleWidgetClientProps) {
   const [state, setState] = useState(() => ({
     source: initialTitle,
@@ -55,6 +59,14 @@ export function PhiPageTitleWidgetClient({
     channels: ["pageMeta", "pageTitle"],
     receiver: "broadcast",
   });
+
+  if (display === "heading") {
+    return (
+      <PhiTypographyControl presentation="title" level={1} style={{ margin: 0, textAlign: "center" }}>
+        {title}
+      </PhiTypographyControl>
+    );
+  }
 
   return (
     <div

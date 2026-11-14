@@ -4,6 +4,7 @@ import { resolveSiteInternalReferences } from "../../../gateway/internal-referen
 import { resolvePhiCmsRoutePresetByPageId } from "../../../plugins/runtime-modules/descriptor-compiler";
 import { resolvePhiNavHref } from "../../../helpers/locale";
 import { phiRuntime } from "../../../server-helpers/phi-runtime";
+import { hasPhiCmsAuthorizedPreviewRead } from "../../../server-helpers/cms-review-params";
 import type { PhiCmsAreaKey } from "../../../constants/cms-areas";
 import type { PhiBlockRuntime } from "../../../types";
 import { readPhiPageReference, type PhiPageReference } from "../../../types/references";
@@ -29,7 +30,7 @@ export async function resolvePhiPublicAssetReference(input: {
 }
 
 export async function resolvePhiWidgetInternalReferences(input: {
-  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer">;
+  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer" | "request">;
   /**
    * Which Area to resolve the Page references in. Absent is the one being rendered.
    *
@@ -57,6 +58,9 @@ export async function resolvePhiWidgetInternalReferences(input: {
     internalToken: rt.internalToken,
     siteKey: rt.siteKey,
     area,
+    // A link to a Page that was never published leads nowhere for a visitor, so only an authorized preview
+    // (a draft or revision read Core has already allowed) gets its path.
+    preview: hasPhiCmsAuthorizedPreviewRead(input.runtime.request?.searchParams),
     references: pageReferences,
     assetIds: input.assetIds,
   });

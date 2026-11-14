@@ -24,6 +24,10 @@ export const PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS = {
    * Media page's store, which is not there when a Gallery is configured on some other page.
    */
   mediaFolderChoices: createPhiSharedRuntimeDataProviderKey("options", "media-folder-choices"),
+  /** The Site's Storage Profiles, for the Admin storage settings that point Spaces at one. */
+  mediaStorageProfiles: createPhiSharedRuntimeDataProviderKey("options", "media-storage-profiles"),
+  /** The existing User and Group Spaces with their Profile and quota, for the Admin storage table. */
+  mediaStorageSpaces: createPhiSharedRuntimeDataProviderKey("tables", "media-storage-spaces"),
 } as const;
 
 /** The card this Module ships for its own items; a Site may name another. */

@@ -68,6 +68,10 @@ export type PhiBuilderModulesPageLabels = {
     page: string;
     wanted: string;
     heldBy: string;
+    /** Whether what holds the address answers on it today, which decides what moving it costs. */
+    status: string;
+    live: string;
+    notLive: string;
     address: string;
     assign: string;
     cancel: string;
@@ -154,6 +158,9 @@ export const PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS: PhiBuilderModulesPageLabel
     page: "Page",
     wanted: "Wanted",
     heldBy: "Taken by",
+    status: "Status",
+    live: "Live",
+    notLive: "Not published yet",
     address: "Address",
     assign: "Enable with these addresses",
     cancel: "Cancel",

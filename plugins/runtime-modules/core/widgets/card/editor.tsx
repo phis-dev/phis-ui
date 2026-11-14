@@ -170,7 +170,7 @@ export function PhiCardWidgetEditor({ config, onChange }: PhiCardWidgetEditorPro
     deliveryRevision: asset?.deliveryRevision,
     originalUrl: assetId == null ? null : buildPhiMediaAssetContentDeliveryUrl(assetId),
     sourceUrl: config.sourceKind === "url" ? config.sourceUrl : undefined,
-    focalRect: asset?.meta?.focalRect,
+    focalRect: asset?.focalRect,
     sourceWidth: asset?.width,
     sourceHeight: asset?.height,
   });

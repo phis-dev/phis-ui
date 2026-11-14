@@ -19,11 +19,13 @@ export type PhiPublicRouteClaim = {
   title: string;
   /** The address the Module declared. What it actually answers on may have been assigned. */
   declaredPath: string;
+  /** That the Module answers in the published Public Area, not only in the Builder's draft. */
+  live?: boolean;
 };
 
 export type PhiPublicRouteAddressHolder =
   | { kind: "module"; claim: PhiPublicRouteClaim; assigned: boolean }
-  | { kind: "page"; title: string };
+  | { kind: "page"; title: string; published: boolean };
 
 export type PhiPublicRoutePathCollision = {
   claim: PhiPublicRouteClaim;
@@ -69,12 +71,12 @@ export function buildPhiPublicRouteAddressMap({
   claims: readonly PhiPublicRouteClaim[];
   activeModuleIds: ReadonlySet<PhiRuntimeModuleId>;
   assignments: readonly PhiPublicRoutePathAssignment[];
-  sitePages?: readonly { path: string; title: string }[];
+  sitePages?: readonly { path: string; title: string; published: boolean }[];
 }): Map<string, PhiPublicRouteAddressHolder> {
   const addresses = new Map<string, PhiPublicRouteAddressHolder>();
   for (const page of sitePages) {
     if (!addresses.has(page.path)) {
-      addresses.set(page.path, { kind: "page", title: page.title });
+      addresses.set(page.path, { kind: "page", title: page.title, published: page.published });
     }
   }
   for (const claim of claims) {

@@ -13,7 +13,8 @@ import {
 import {
   collectPhiSitemapCandidates,
   renderPhiRobotsTxt,
-  renderPhiSitemapXml,
+  renderPhiSitemapDocuments,
+  renderPhiSitemapIndexXml,
   resolvePhiSitePublicBase,
   type PhiSitemapCandidate,
 } from "../helpers/phi-seo";
@@ -154,11 +155,11 @@ async function filterPhiSitemapCandidates(
   return candidates.filter((_candidate, index) => listed[index]);
 }
 
-async function buildPhiSitemapXml(
+async function buildPhiSitemapDocuments(
   bridge: PhiCmsSiteBridge,
   context: PhiPublicSeoContext & { publicBase: string },
   activeModuleIds: ReadonlySet<PhiRuntimeModuleId>,
-): Promise<string> {
+): Promise<string[]> {
   const { requestContext, areaPreset, publishedPages } = context;
   const routeTable = compilePhiCmsActiveRouteTable({
     catalog: resolvePhiCmsDescriptorCatalog(bridge.runtimeModuleCatalog),
@@ -173,7 +174,7 @@ async function buildPhiSitemapXml(
   });
   const listed = await filterPhiSitemapCandidates(bridge, context, candidates);
 
-  return renderPhiSitemapXml(listed, {
+  return renderPhiSitemapDocuments(listed, {
     publicBase: context.publicBase,
     availableLocales: requestContext.site.availableLocales.map((option) => option.code),
     defaultLocale: requestContext.site.defaultLocale,
@@ -214,9 +215,9 @@ function buildPhiSitemapFingerprint(
  * fingerprint of that answer changed; resolving every candidate is the part that is skipped.
  */
 export function buildPhiSitemapRouteHandler({ bridge }: { bridge: PhiCmsSiteBridge }) {
-  const cache = createPhiFingerprintCache<string>();
+  const cache = createPhiFingerprintCache<string[]>();
 
-  return async function GET() {
+  return async function GET(request: Request) {
     const context = await loadPhiPublicSeoContext(bridge, { withPublishedPages: true });
     const publicBase = context?.publicBase;
     if (!context?.sitemapEnabled || !publicBase) {
@@ -228,10 +229,27 @@ export function buildPhiSitemapRouteHandler({ bridge }: { bridge: PhiCmsSiteBrid
       context.areaPreset ? { preset: context.areaPreset.preset } : null,
       context.requestContext.serverCapabilities,
     );
-    const xml = await cache.resolve(
+    const documents = await cache.resolve(
       buildPhiSitemapFingerprint(context, activeModuleIds),
-      () => buildPhiSitemapXml(bridge, { ...context, publicBase }, activeModuleIds),
+      () => buildPhiSitemapDocuments(bridge, { ...context, publicBase }, activeModuleIds),
     );
+    /*
+     * One file answers on its own address. More than one -- above 50,000 URLs or 45 MB -- turns
+     * `/sitemap.xml` into an index whose parts are the same route with `?part=<n>`, so the Site needs no
+     * route of its own for them.
+     */
+    const part = new URL(request.url).searchParams.get("part");
+    let xml: string | undefined;
+    if (part === null) {
+      xml = documents.length === 1
+        ? documents[0]
+        : renderPhiSitemapIndexXml(documents.map((_document, index) => `${publicBase}${PHI_SITEMAP_PATH}?part=${index + 1}`));
+    } else if (/^[1-9]\d*$/u.test(part)) {
+      xml = documents[Number(part) - 1];
+    }
+    if (xml === undefined) {
+      return new Response("Not Found", { status: 404, headers: { "cache-control": "no-store" } });
+    }
     return new Response(xml, {
       headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "no-store" },
     });

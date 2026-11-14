@@ -130,12 +130,13 @@ describe("which addresses are free", () => {
         claims,
         activeModuleIds: new Set([]),
         assignments: [],
-        sitePages: [{ path: "/contracts", title: "Contracts" }],
+        sitePages: [{ path: "/contracts", title: "Contracts", published: true }],
       }),
       assignments: [],
     });
     expect(collisions).toHaveLength(1);
-    expect(collisions[0]?.heldBy).toEqual({ kind: "page", title: "Contracts" });
+    // Whether it is published travels with it: the dialog says what moving the address would cost.
+    expect(collisions[0]?.heldBy).toEqual({ kind: "page", title: "Contracts", published: true });
   });
 
   it("does not contest the Area root, which is an application rather than a route", () => {

@@ -142,6 +142,14 @@ export type PhiTableColumnDefinition = {
      * moment the header scrolls away, and invites somebody to type the unit in as well.
      */
     prefix?: string;
+    /**
+     * The choices of a `select` editor where the Site decides them, set by the placement at render.
+     *
+     * A resource field states its options once for every Site; which Storage Profiles a Site has is the
+     * Site's. The placement already says how a value reads (`valueMap`), so it may say what can be chosen
+     * too. Absent, the field's own options apply.
+     */
+    options?: readonly { label: string; value: string }[];
   };
   sizing?: PhiTableColumnSizing;
   align?: "left" | "center" | "right";

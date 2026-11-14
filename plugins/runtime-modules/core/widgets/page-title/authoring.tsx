@@ -7,9 +7,17 @@ import { PhiTypographyControl } from "../../../../../components/controls/phi-typ
 
 export const PHI_PAGE_TITLE_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugin<PhiPageTitleWidgetConfig> = {
   ...PHI_PAGE_TITLE_WIDGET_DEFINITION,
-  renderEditor: () => (
-    <PhiTypographyControl presentation="title" level={5} style={{ margin: 0, whiteSpace: "nowrap" }}>
-      {PHI_PAGE_TITLE_WIDGET_DEFAULT_LABELS.editorPlaceholder}
-    </PhiTypographyControl>
+  renderEditor: ({ config }) => (
+    config.display === "heading"
+      ? (
+          <PhiTypographyControl presentation="title" level={1} style={{ margin: 0, textAlign: "center" }}>
+            {PHI_PAGE_TITLE_WIDGET_DEFAULT_LABELS.editorPlaceholder}
+          </PhiTypographyControl>
+        )
+      : (
+          <PhiTypographyControl presentation="title" level={5} style={{ margin: 0, whiteSpace: "nowrap" }}>
+            {PHI_PAGE_TITLE_WIDGET_DEFAULT_LABELS.editorPlaceholder}
+          </PhiTypographyControl>
+        )
   ),
 };

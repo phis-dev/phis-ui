@@ -140,28 +140,54 @@ function escapePhiXml(value: string) {
     .replace(/'/g, "&apos;");
 }
 
+/** What one sitemap file may hold (sitemaps.org): 50,000 URLs, and 50 MB uncompressed. */
+const PHI_SITEMAP_MAX_URLS = 50_000;
+/** Below the 50 MB limit, so the closing tag and a rounding of the count never cross it. */
+const PHI_SITEMAP_MAX_BYTES = 45 * 1024 * 1024;
+
+const PHI_SITEMAP_URLSET_OPEN = [
+  '<?xml version="1.0" encoding="UTF-8"?>',
+  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
+].join("\n");
+const PHI_SITEMAP_URLSET_CLOSE = "</urlset>";
+
+const utf8 = new TextEncoder();
+function utf8Length(value: string) {
+  return utf8.encode(value).length;
+}
+
 /**
- * The sitemap: one `<url>` per Page per locale, each carrying the whole hreflang set.
+ * The sitemap as one or more `<urlset>` documents: one `<url>` per Page per locale, each carrying the
+ * whole hreflang set.
  *
  * Every version lists every other one, itself included, because that is what makes the set
- * reciprocal -- and a set that is not reciprocal is ignored without a word.
+ * reciprocal -- and a set that is not reciprocal is ignored without a word. A file closes at 50,000
+ * URLs or 45 MB, whichever comes first; a Site that needs more than one is listed by a sitemap index
+ * (`renderPhiSitemapIndexXml`).
  */
-export function renderPhiSitemapXml(
+export function renderPhiSitemapDocuments(
   pages: ReadonlyArray<PhiSitemapCandidate>,
   site: { publicBase: string; availableLocales: readonly string[]; defaultLocale: string },
-) {
-  const lines = [
-    '<?xml version="1.0" encoding="UTF-8"?>',
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
-  ];
+  limits: { maxUrls?: number; maxBytes?: number } = {},
+): string[] {
+  const maxUrls = limits.maxUrls ?? PHI_SITEMAP_MAX_URLS;
+  const maxBytes = limits.maxBytes ?? PHI_SITEMAP_MAX_BYTES;
+  const overhead = utf8Length(`${PHI_SITEMAP_URLSET_OPEN}\n${PHI_SITEMAP_URLSET_CLOSE}\n`);
+  const documents: string[] = [];
+  let entries: string[] = [];
+  let bytes = overhead;
+  const close = () => {
+    documents.push(`${[PHI_SITEMAP_URLSET_OPEN, ...entries, PHI_SITEMAP_URLSET_CLOSE].join("\n")}\n`);
+    entries = [];
+    bytes = overhead;
+  };
   for (const page of pages) {
     for (const locale of site.availableLocales) {
       const alternates = buildPhiPublicPageAlternates({ ...site, path: page.path, locale });
       if (!alternates) {
         continue;
       }
-      lines.push("  <url>");
-      lines.push(`    <loc>${escapePhiXml(alternates.canonical)}</loc>`);
+      const lines = ["  <url>", `    <loc>${escapePhiXml(alternates.canonical)}</loc>`];
       if (page.lastModified) {
         lines.push(`    <lastmod>${escapePhiXml(page.lastModified)}</lastmod>`);
       }
@@ -171,10 +197,36 @@ export function renderPhiSitemapXml(
         );
       }
       lines.push("  </url>");
+      const entry = lines.join("\n");
+      const entryBytes = utf8Length(entry) + 1;
+      if (entries.length > 0 && (entries.length >= maxUrls || bytes + entryBytes > maxBytes)) {
+        close();
+      }
+      entries.push(entry);
+      bytes += entryBytes;
     }
   }
-  lines.push("</urlset>");
-  return `${lines.join("\n")}\n`;
+  close();
+  return documents;
+}
+
+/** The sitemap of a Site small enough for one file, which is nearly every Site. */
+export function renderPhiSitemapXml(
+  pages: ReadonlyArray<PhiSitemapCandidate>,
+  site: { publicBase: string; availableLocales: readonly string[]; defaultLocale: string },
+) {
+  const documents = renderPhiSitemapDocuments(pages, site, { maxUrls: Number.POSITIVE_INFINITY, maxBytes: Number.POSITIVE_INFINITY });
+  return documents[0]!;
+}
+
+/** A sitemap index naming each part by its address. */
+export function renderPhiSitemapIndexXml(partUrls: readonly string[]) {
+  return `${[
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ...partUrls.map((url) => `  <sitemap><loc>${escapePhiXml(url)}</loc></sitemap>`),
+    "</sitemapindex>",
+  ].join("\n")}\n`;
 }
 
 /**

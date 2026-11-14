@@ -2,6 +2,7 @@ import { definePhiRequestMemo } from "../server-helpers/request-memo";
 import "server-only";
 
 import { fetchPhiSiteApi } from "./site-api-request";
+import { readPhiSiteMediaStorageSettings, type PhiSiteMediaStorageSettings } from "./site-media-storage-reader";
 
 type PhiSiteMediaSettings = {
   userSpacesEnabled: boolean;
@@ -27,7 +28,9 @@ type PhiSiteAddonMediaSpace = {
 
 type PhiSiteMediaSettingsResult = PhiSiteMediaSettings & {
   addonSpaces: readonly PhiSiteAddonMediaSpace[];
+  storage: PhiSiteMediaStorageSettings;
 };
+
 
 type GetResolvedSiteMediaSettingsOptions = {
   apiBaseUrl: string;
@@ -43,6 +46,7 @@ export const getResolvedSiteMediaSettings = definePhiRequestMemo(async function 
   const payload = await fetchPhiSiteApi<{
     media?: PhiSiteMediaSettings;
     addonSpaces?: readonly PhiSiteAddonMediaSpace[];
+    storage?: unknown;
   }>({
     context: "getResolvedSiteMediaSettings",
     apiBaseUrl,
@@ -56,5 +60,9 @@ export const getResolvedSiteMediaSettings = definePhiRequestMemo(async function 
   }
 
   // A Site with no Add-on holding files reports none, which is an answer and not a missing field.
-  return { ...payload.media, addonSpaces: payload.addonSpaces ?? [] };
+  return {
+    ...payload.media,
+    addonSpaces: payload.addonSpaces ?? [],
+    storage: readPhiSiteMediaStorageSettings(payload.storage, "The site media storage settings"),
+  };
 });

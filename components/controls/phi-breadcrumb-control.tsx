@@ -6,6 +6,8 @@ import { Breadcrumb } from "antd";
 export type PhiBreadcrumbControlItem = {
   key?: string;
   title: ReactNode;
+  /** Where the item leads; an item without one is text. */
+  href?: string;
 };
 
 export type PhiBreadcrumbControlProps = {

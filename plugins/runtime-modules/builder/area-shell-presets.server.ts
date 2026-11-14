@@ -452,6 +452,31 @@ export function buildPhiBuilderRuntimeModulesConfigForArea(
   );
 }
 
+/**
+ * The Modules the published Area answers with, as opposed to the draft the Builder edits.
+ *
+ * Without a published revision the shell preset's default list decides, which is what a visitor is
+ * served in that case too. Read for the collision dialog, which has to say whether an address it asks to
+ * move already stands on the live Site.
+ */
+export const buildPhiBuilderPublishedRuntimeModuleIdsForArea = cache(async function buildPhiBuilderPublishedRuntimeModuleIdsForArea(
+  runtime: PhiBlockRuntime,
+  area: PhiDeveloperBuilderArea,
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
+): Promise<PhiRuntimeModuleId[]> {
+  const { apiBaseUrl, internalToken } = readPhiServerApiCredentials();
+  const { published } = await loadPhiBuilderAreaStructure(
+    runtime.site.key,
+    runtime.locale.current,
+    apiBaseUrl,
+    internalToken,
+    area,
+    runtimeModuleCatalog,
+  );
+  const tree = published ?? await instantiateAreaShellPresetTree(runtime, area, runtimeModuleCatalog);
+  return readRuntimeModulesConfigFromStructureTree(tree, area, runtimeModuleCatalog).moduleIds;
+});
+
 export async function buildPhiBuilderRuntimeModuleIdsForArea(
   runtime: PhiBlockRuntime,
   area: PhiDeveloperBuilderArea,

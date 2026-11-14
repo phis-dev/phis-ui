@@ -105,3 +105,43 @@ export const PhiMediaFolderChoicesOptionsProviderClient = createPhiControlOption
     };
   },
 });
+
+const STORAGE_SETTINGS_PATH = "/api/site/admin/media/storage";
+
+async function loadStorageProfiles() {
+  const response = await fetch(STORAGE_SETTINGS_PATH, {
+    cache: "no-store",
+    credentials: "include",
+    headers: { accept: "application/json" },
+  });
+  const payload: unknown = await response.json().catch(() => null);
+  if (!response.ok) throw new Error("Failed to load the site's storage profiles.");
+  // Only what a choice shows. A profile this cannot name is left out rather than offered as a guess.
+  const profiles = isPhiRecord(payload) && isPhiRecord(payload.storage) && Array.isArray(payload.storage.profiles)
+    ? payload.storage.profiles
+    : null;
+  if (!profiles) throw new Error("The storage settings route answered without its profiles.");
+  return profiles.flatMap((profile) =>
+    isPhiRecord(profile) && Number.isSafeInteger(profile.id) && typeof profile.key === "string"
+      && typeof profile.providerId === "string"
+      ? [{ id: profile.id as number, key: profile.key, providerId: profile.providerId }]
+      : []);
+}
+
+/**
+ * The Site's Storage Profiles as choices, by id. Named by key and Provider, because that is what the
+ * operator gave them; the key alone does not say whether a Profile is local or a bucket.
+ */
+export const PhiMediaStorageProfilesOptionsProviderClient = createPhiControlOptionsProviderClient({
+  key: PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaStorageProfiles,
+  load: loadStorageProfiles,
+  resolveLoadKey: () => "site-media-storage-profiles",
+  resolve: (context: PhiControlOptionsProviderContext) => {
+    const profiles = Array.isArray(context.asyncData)
+      ? context.asyncData as { id: number; key: string; providerId: string }[]
+      : [];
+    return {
+      options: profiles.map((profile) => ({ value: String(profile.id), label: `${profile.key} (${profile.providerId})` })),
+    };
+  },
+});

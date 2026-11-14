@@ -95,6 +95,8 @@ export type PhiBuilderPublicRouteCollisionAnswer = {
   declaredPath: string;
   /** What holds the address today, said the way the dialog shows it. */
   heldBy: string;
+  /** Whether that holder answers on it in the published Site, or only in this draft. */
+  published: boolean;
   /** The address being proposed instead. Starts at a suggestion, and the Builder may overwrite it. */
   path: string;
 };

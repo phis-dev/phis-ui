@@ -2137,6 +2137,17 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                       />
                     </PhiFlexControl>
                   ))}
+                  {siteFontAssets.options.length > 0 ? (
+                    /*
+                      * A typeface from the library is served in subsets cut to the characters a page uses,
+                      * which changes the file. Some commercial webfont licences forbid exactly that, and the
+                      * choice of a font is where an author can still act on it.
+                      */
+                    <PhiTypographyControl type="secondary" style={{ fontSize: clientToken.fontSizeSM }}>
+                      Typefaces from the media library are delivered as subsets, which modifies the font file.
+                      Check that the font&apos;s licence permits subsetting before using it.
+                    </PhiTypographyControl>
+                  ) : null}
                   <PhiDividerControl style={{ marginBlock: clientToken.paddingXXS }} />
                   {/*
                     * Which of the families above the page's headings wear. Only `h1` to `h3` follow it:

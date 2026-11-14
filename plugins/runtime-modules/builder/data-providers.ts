@@ -251,6 +251,7 @@ export const PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
         { key: "title", title: "Page", type: "string", required: true },
         { key: "declaredPath", title: "Wanted", type: "string", required: true },
         { key: "heldBy", title: "Taken by", type: "string", required: true },
+        { key: "status", title: "Status", type: "string", required: true },
         { key: "path", title: "Address", type: "string", required: true, mutable: true },
       ],
       query: { sorting: "none", pagination: "none" },

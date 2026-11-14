@@ -52,7 +52,7 @@ function collectPhiDeveloperBuilderPagePathOptions(
     );
     paths.set(path, {
       value: path,
-      label: node.title,
+      label: node.pendingPath ? `${node.title} (→ ${node.pendingPath})` : node.title,
     });
     if (node.children) {
       collectPhiDeveloperBuilderPagePathOptions(area, node.children, paths);

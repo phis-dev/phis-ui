@@ -7,9 +7,7 @@ import { createPhiAssetUri } from "../../types/references";
 import type { PhiFontMetrics, PhiMediaAssetTile } from "../../types/media";
 import { usePhiCollectionProvider } from "../widgets/client/shared/phi-collection-provider";
 import { PHI_ASSET_COLLECTION_DATA_SOURCE } from "./asset-collection-runtime";
-import { readPhiFontMetricsFields } from "./media-font-metrics";
 import { readPhiMediaAssetTiles } from "./phi-image-preview-data";
-import { createPhiResponseReader } from "../widgets/config/strict-config-reader";
 
 /**
  * The typefaces a Site owns, as something a font slot can be set to.
@@ -40,9 +38,8 @@ type PhiSiteFontAssetOption = {
 };
 
 function readFontAssetMetrics(asset: PhiMediaAssetTile): PhiFontMetrics | null {
-  // The management tile carries `meta` as stored, and the server stored every field of the metrics.
-  return createPhiResponseReader(asset.meta ?? {}, `The stored metrics of Asset ${asset.id}`, "meta")
-    .object("font", readPhiFontMetricsFields) ?? null;
+  // Read off the tile already: the management projection carries the metrics as a typed field.
+  return asset.font;
 }
 
 function readFontAssetLabel(asset: PhiMediaAssetTile) {

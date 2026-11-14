@@ -125,6 +125,8 @@ type PhiMediaUploadInitResponse = {
    */
   uploaded?: readonly PhiMediaUploadStoredPart[];
   resumed?: boolean;
+  /** Where and how often to say the parts are still being sent. Only for a body sent in parts. */
+  heartbeat?: { url?: unknown; intervalMs?: unknown };
   error?: string;
 };
 
@@ -232,7 +234,46 @@ type PhiMediaUploadInitSession = {
   uploaded: readonly PhiMediaUploadStoredPart[];
   /** Whether this session was taken over rather than opened, which only the Server can say. */
   resumed: boolean;
+  /** Null where the Server asked for none: every plan but one sent in parts. */
+  heartbeat: PhiMediaUploadHeartbeat | null;
 };
+
+type PhiMediaUploadHeartbeat = { url: string; intervalMs: number };
+
+function readPhiMediaUploadHeartbeat(value: PhiMediaUploadInitResponse["heartbeat"]): PhiMediaUploadHeartbeat | null {
+  const url = value?.url;
+  const intervalMs = value?.intervalMs;
+  // A floor, so a Server that misstated the interval cannot turn this into a request loop.
+  return typeof url === "string" && url && typeof intervalMs === "number" && intervalMs >= 1_000
+    ? { url, intervalMs }
+    : null;
+}
+
+/**
+ * Says, every so often, that this page is still sending the parts of this body.
+ *
+ * The beacon on `pagehide` covers a reload or a closed tab; a crashed tab, a killed browser or a power cut
+ * send nothing at all, and their session would sit as if a page were still writing into it. The Server tells
+ * the two apart by this: a session whose beat has lapsed may be continued by the next attempt at the same
+ * file, one that is still beating must not be. A 404 means the session is no longer being delivered
+ * (finalized, swept, taken over), and beating on would renew nothing. Failures are otherwise ignored: a
+ * missed beat costs at most a later continuation, never this upload.
+ *
+ * Returns the way to stop.
+ */
+export function keepPhiMediaUploadHeartbeat(heartbeat: PhiMediaUploadHeartbeat | null) {
+  if (!heartbeat || typeof window === "undefined") {
+    return () => {};
+  }
+  const timer = window.setInterval(() => {
+    void fetch(heartbeat.url, { method: "POST", credentials: "same-origin" })
+      .then((response) => {
+        if (response.status === 404) window.clearInterval(timer);
+      })
+      .catch(() => undefined);
+  }, heartbeat.intervalMs);
+  return () => window.clearInterval(timer);
+}
 
 /**
  * What a Client may say about a body it could not deliver.
@@ -533,6 +574,7 @@ export async function initPhiMediaUploadSession(
     expiresAt: payload.expiresAt,
     uploaded,
     resumed: payload.resumed === true,
+    heartbeat: payload.plan.kind === "multipart-put" ? readPhiMediaUploadHeartbeat(payload.heartbeat) : null,
   };
 }
 
@@ -907,12 +949,14 @@ export async function runPhiMediaUploadSession(
 ): Promise<PhiMediaUploadSessionResult> {
   const init = await readPhiMediaUploadCancellation(() => initPhiMediaUploadSession(file, options, signal), signal);
   const standDown = reportPhiMediaUploadAbandonmentOnLeaving(init.reportUrl, init.plan);
+  const stopBeating = keepPhiMediaUploadHeartbeat(init.heartbeat);
   let upload;
   try {
     upload = await uploadPhiMediaUploadBody(init.plan, file, onProgress, init.uploaded, signal);
     // Stopped after the last byte and before finalize: the body is there, and nobody wants the Asset.
     throwIfPhiMediaUploadAborted(signal);
   } catch (uploadError) {
+    stopBeating();
     standDown();
     // The Server cannot see this leg, so it is told rather than left to infer it from an expiry.
     await reportPhiMediaUploadFailure(
@@ -932,6 +976,7 @@ export async function runPhiMediaUploadSession(
    * body that has already arrived. What this gives up is the sliver where somebody leaves after the body
    * landed and before finalize was sent, and expiry already answers for that.
    */
+  stopBeating();
   standDown();
   const finalize = await finalizePhiMediaUploadSession(init.finalizeUrl, upload.completion);
   return {

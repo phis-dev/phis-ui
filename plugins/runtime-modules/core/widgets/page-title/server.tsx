@@ -9,7 +9,8 @@ import { buildPhiWidgetLabelTranslatorOptions } from "../../../../../components/
 function PhiPageTitleWidget({
   labels,
   runtime,
-}: PhiServerBlockBaseProps<PhiPageTitleWidgetLabels, PhiPageTitleWidgetConfig>) {
+  config,
+}: PhiServerBlockBaseProps<PhiPageTitleWidgetLabels, PhiPageTitleWidgetConfig> & { config: PhiPageTitleWidgetConfig }) {
   const title = runtime.page?.title?.trim() || labels.emptyTitle;
 
   return (
@@ -18,6 +19,7 @@ function PhiPageTitleWidget({
       componentProps={{
         initialTitle: title,
         area: runtime.area ?? null,
+        display: config.display,
       }}
     />
   );
@@ -25,8 +27,11 @@ function PhiPageTitleWidget({
 
 export async function PhiPageTitleWidgetServer({
   runtime,
-}: Pick<PhiServerBlockBaseProps<PhiPageTitleWidgetLabels, PhiPageTitleWidgetConfig>, "runtime">) {
+  config,
+}: Pick<PhiServerBlockBaseProps<PhiPageTitleWidgetLabels, PhiPageTitleWidgetConfig>, "runtime"> & {
+  config: PhiPageTitleWidgetConfig;
+}) {
   const labels = await getPhiPageTitleWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
 
-  return <PhiPageTitleWidget labels={labels} runtime={runtime} config={{}} />;
+  return <PhiPageTitleWidget labels={labels} runtime={runtime} config={config} />;
 }

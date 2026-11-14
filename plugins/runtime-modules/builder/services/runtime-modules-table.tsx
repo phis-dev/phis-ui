@@ -27,6 +27,8 @@ import {
 import { loadPhiBuilderModuleBlockUsage } from "../module-usage-client";
 import type { PhiBuilderModuleUsageEntry } from "../developer-workspace-types";
 import { resolvePhiBuilderPublicRouteCollisionAnswers } from "../public-route-collisions";
+import { findPhiBuilderSitePageOnModulePackagePath } from "../page-address-rule";
+import { loadPhiBuilderPersistedPageCatalog } from "../page-catalog-client";
 import type {
   PhiDeveloperBuilderArea,
   PhiDeveloperBuilderWorkspaceState,
@@ -459,7 +461,16 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
         return queryPhiStaticTableResource(
           {
             descriptor: publicRoutesResourceDescriptor,
-            rows: (builderState.publicRouteCollisionRequest?.answers ?? []).map((answer) => ({ ...answer })),
+            rows: (builderState.publicRouteCollisionRequest?.answers ?? []).map((answer) => {
+              // Moving an address nobody has been served differs from moving one that stands in an index.
+              const statusLabels = readLabelMap(request.params, "statusLabels");
+              return {
+                ...answer,
+                status: answer.published
+                  ? statusLabels?.live ?? "Live"
+                  : statusLabels?.notLive ?? "Not published yet",
+              };
+            }),
           },
           request,
         );
@@ -555,6 +566,35 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
       };
 
       /*
+       * A Site Page on the package path, outside Public, which the Module has no other address to yield to.
+       *
+       * Read from the Area's stored catalog, loaded where this session never opened the Area: the Pages are
+       * the Site's, and an Area the Builder did not visit has them all the same. The newcomer bears the
+       * cost, so the switch springs back with the Page named until the Site moves it.
+       */
+      const findSitePageOnPackagePath = async (cmsAreas: readonly PhiCmsAreaKey[]) => {
+        if (!proposedActive) return null;
+        for (const areaKey of cmsAreas) {
+          if (areaKey === "public" || !isPhiBuilderAreaKey(areaKey)) continue;
+          const pages = builderState.persistedPageCatalogByArea?.[areaKey]
+            ?? await loadPhiBuilderPersistedPageCatalog(areaKey);
+          const sitePagePaths = pages
+            .filter((entry) => !entry.tombstoned && !entry.ownerModuleId && typeof entry.path === "string")
+            .map((entry) => entry.path as string);
+          const held = findPhiBuilderSitePageOnModulePackagePath(definition.moduleId, sitePagePaths);
+          if (held) return { areaKey, ...held };
+        }
+        return null;
+      };
+      const refusePackagePathTaken = (held: { areaKey: string; prefix: string; path: string }) => ({
+        status: "rejected" as const,
+        invalidation: "none" as const,
+        errorCode: "package-path-taken",
+        message: `"${definition.title}" answers under ${held.prefix} in Area ${areaLabelFor(held.areaKey, request.params)}, `
+          + `where the Site Page ${held.path} stands. Move the Page first.`,
+      });
+
+      /*
        * What switching this Module off would stop drawing.
        *
        * Read from the Site rather than from anything the Builder holds: the blocks sit in stored page
@@ -630,6 +670,8 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
             message: `"${definition.title}" is Area "${baseAreaKey}"'s Base module and always runs there.`,
           };
         }
+        const heldPackagePath = await findSitePageOnPackagePath(definition.eligibleAreas);
+        if (heldPackagePath) return refusePackagePathTaken(heldPackagePath);
         if (askAboutPublicAddresses(definition.eligibleAreas)) {
           return { status: "rejected", invalidation: "none", errorCode: "public-address-taken" };
         }
@@ -674,6 +716,8 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
           message: `"${definition.title}" is not eligible for Area "${areaKey}".`,
         };
       }
+      const heldAreaPackagePath = await findSitePageOnPackagePath([areaKey]);
+      if (heldAreaPackagePath) return refusePackagePathTaken(heldAreaPackagePath);
       if (askAboutPublicAddresses([areaKey])) {
         return { status: "rejected", invalidation: "none", errorCode: "public-address-taken" };
       }

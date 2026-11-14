@@ -37,7 +37,7 @@ export function PhiAssetConfigWidget({ config, labels, sitePublicUrl }: PhiAsset
           selectedVariantKey={state.selectedVariantKey}
           sitePublicUrl={sitePublicUrl}
           labels={labels}
-          focalRect={normalizeMediaFocalRect(selectedAsset.meta?.focalRect)}
+          focalRect={normalizeMediaFocalRect(selectedAsset.focalRect)}
           onVariantKeyChange={(nextVariantKey) => {
             setPhiImagePreviewSelection(PHI_ASSET_CONTROLLER_STORE_KEY, selectedAsset.id, nextVariantKey ?? null, selectedAssetTile);
           }}

@@ -5,6 +5,7 @@ import {
   normalizePhiBuilderCmsCatalogPath,
   resolvePhiBuilderActivePageCatalog,
   type PhiPresetPageNode,
+  formatPhiBuilderPagePathWithPending,
 } from "../../../helpers/cms-page-catalog";
 import { resolvePhiBuilderCmsStoragePath, resolvePhiBuilderNavigationTargetPath } from "../../../helpers/cms-paths";
 import type { PhiDeveloperBuilderWorkspaceState } from "./developer-workspace-types";
@@ -58,7 +59,10 @@ export function createPhiBuilderNavigationPathContext(
   const { pages, pagePaths } = readArea(state.area);
   const pageOptions = flattenPhiPresetPages(pages)
     .filter((page) => page.reference && page.tombstoned !== true)
-    .map((page) => ({ value: page.reference!, label: pagePaths.get(page.reference!)!.path }));
+    .map((page) => ({
+      value: page.reference!,
+      label: formatPhiBuilderPagePathWithPending(pagePaths.get(page.reference!)!.path, page.pendingPath),
+    }));
   const resolveLinkPath = (item: PhiBuilderNavigationItem) => {
     if (item.kind !== "link" || item.external === true) return null;
     if (item.targetReference) {

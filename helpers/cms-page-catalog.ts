@@ -37,10 +37,23 @@ export type PhiPresetPageNode = {
   pageScopeId?: number;
   reference?: PhiPageReference;
   tombstoned?: boolean;
+  /**
+   * The address a rename moves the Page to once it is published, or absent while there is none.
+   *
+   * Until then the Page still answers on its current address, so every place that shows that address shows
+   * this beside it (`formatPhiBuilderPagePathWithPending`): an author who renamed a Page and saw the old path
+   * in the picker could only conclude the rename had been lost.
+   */
+  pendingPath?: string | null;
   pathLocked?: boolean;
   pathOwnershipReason?: string;
   children?: PhiPresetPageNode[];
 };
+
+/** A Page's address as the Builder shows it: the current one, and where a pending rename moves it. */
+export function formatPhiBuilderPagePathWithPending(path: string, pendingPath: string | null | undefined) {
+  return pendingPath && pendingPath !== path ? `${path} → ${pendingPath}` : path;
+}
 
 export type PhiBuilderModulePresetPagesByArea = Record<
   PhiBuilderPageCatalogArea,
@@ -419,6 +432,8 @@ export type PhiBuilderPersistedPageCatalogEntry = {
   publishedRevisionId?: number | null;
   workingDraftRevisionId?: number | null;
   tombstoned: boolean;
+  /** Where a pending rename moves the Page when it is published (`draft_path`). */
+  pendingPath?: string | null;
 };
 
 function annotatePageCatalogNode(
@@ -484,6 +499,7 @@ function mergePhiBuilderPageCatalogWithPersistedPages(
       pageScopeId: page.id,
       reference: page.reference,
       tombstoned: page.tombstoned,
+      pendingPath: page.pendingPath ? normalizePhiBuilderCmsCatalogPath(page.pendingPath) : null,
       pathLocked: false,
     } satisfies Partial<PhiPresetPageNode>;
     if (!annotatePageCatalogNode(

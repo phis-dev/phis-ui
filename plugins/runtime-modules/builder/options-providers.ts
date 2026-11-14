@@ -28,6 +28,7 @@ import {
   resolvePhiBuilderActivePageCatalog,
   type PhiBuilderPageCatalogArea,
   type PhiPresetPageNode,
+  formatPhiBuilderPagePathWithPending,
 } from "../../../helpers/cms-page-catalog";
 import {
   resolvePhiBuilderAreaRootApplicants,
@@ -237,7 +238,7 @@ function collectPageReferenceOptions(
           ? [{
               value: node.reference,
               label: node.title,
-              description: storagePath,
+              description: formatPhiBuilderPagePathWithPending(storagePath, node.pendingPath),
             }]
           : []),
         ...collect(node.children ?? []),

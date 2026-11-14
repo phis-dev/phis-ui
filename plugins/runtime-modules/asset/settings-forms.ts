@@ -1,4 +1,4 @@
-import { PHI_ASSET_RUNTIME_MODULE_ID } from "./ids";
+import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS, PHI_ASSET_RUNTIME_MODULE_ID } from "./ids";
 import type {
   PhiFormDescriptor,
   PhiFormHandlerProviderDescriptor,
@@ -18,10 +18,12 @@ import { phiFormLabel as label } from "../../../components/forms/form-descriptor
 
 export const PHI_MEDIA_SETTINGS_FORM_IDS = {
   general: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "asset/media-settings"),
+  storage: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "asset/media-storage-settings"),
 } as const;
 
 const PHI_MEDIA_SETTINGS_FORM_HANDLER_KEYS = {
   general: "site.admin.media-settings",
+  storage: "site.admin.media-storage-settings",
 } as const;
 
 const LABEL_SET_KEY = "@phis/ui/modules/asset/labels/settings" as const;
@@ -132,6 +134,68 @@ const PHI_MEDIA_SETTINGS_FORM_DESCRIPTOR: PhiFormDescriptor = {
   },
 };
 
+const profileChoices = { providerKey: PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaStorageProfiles };
+
+/**
+ * Where the Site's Spaces write, among the Storage Profiles the operator created with `phis storage add`.
+ *
+ * Every choice is a Profile id; an emptied default is the Site's Local Profile, an emptied list offers
+ * every Profile, and the paused list is the whole set -- a Profile left out of it takes uploads again.
+ * The server refuses what does not fit (a Space pointed at a Profile outside the offered list, or newly at
+ * a paused one, or a Provider one serving Instance lacks) and says why.
+ */
+const PHI_MEDIA_STORAGE_SETTINGS_FORM_DESCRIPTOR: PhiFormDescriptor = {
+  schemaVersion: 1,
+  key: PHI_MEDIA_SETTINGS_FORM_IDS.storage,
+  labelSetKey: LABEL_SET_KEY,
+  fields: [
+    {
+      key: "siteSpaceProfileId",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
+      label: label("storageSiteSpace", "Site Space"),
+      description: label("storageSiteSpaceHint", "Where uploads into the site's own media go."),
+      optionsProvider: profileChoices,
+      validation: [{
+        providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.required,
+        message: label("storageSiteSpaceRequired", "Choose where the site's own media is stored."),
+      }],
+    },
+    {
+      key: "defaultUserProfileId",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
+      label: label("storageDefaultUser", "New User Spaces"),
+      description: label("storageDefaultUserHint", "Where a User Space created from now on writes. Existing User Spaces keep theirs."),
+      placeholder: label("storageLocal", "Local storage"),
+      optionsProvider: profileChoices,
+    },
+    {
+      key: "defaultGroupProfileId",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
+      label: label("storageDefaultGroup", "New Group Spaces"),
+      description: label("storageDefaultGroupHint", "Where a Group Space created from now on writes. Existing Group Spaces keep theirs."),
+      placeholder: label("storageLocal", "Local storage"),
+      optionsProvider: profileChoices,
+    },
+    {
+      key: "allowedProfileIds",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.multiSelect,
+      label: label("storageAllowed", "Offered profiles"),
+      description: label("storageAllowedHint", "The storage profiles a Space may be pointed at. Empty offers every profile."),
+      placeholder: label("storageAll", "All profiles"),
+      optionsProvider: profileChoices,
+    },
+    {
+      key: "disabledProfileIds",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.multiSelect,
+      label: label("storageDisabled", "Paused profiles"),
+      description: label("storageDisabledHint", "A paused profile still delivers what it holds but takes no new uploads."),
+      placeholder: label("storageNone", "None"),
+      optionsProvider: profileChoices,
+    },
+  ],
+  layout: PHI_MEDIA_SETTINGS_FORM_DESCRIPTOR.layout,
+};
+
 async function loadLabels(
   context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0],
 ) {
@@ -161,6 +225,65 @@ async function loadLabels(
     unlimited: labels.fields.unlimited,
   });
 }
+
+async function loadStorageLabels(
+  context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0],
+) {
+  const { getPhiMediaSettingsPageLabels } = await import("../../../components/media/media-settings-labels");
+  const labels = await getPhiMediaSettingsPageLabels({
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
+    locale: context.runtime.locale.current,
+  });
+  return flattenPhiFormLabels({
+    actions: { submitLabel: labels.submitLabel },
+    storageSiteSpace: labels.storage.siteSpace,
+    storageSiteSpaceHint: labels.storage.siteSpaceHint,
+    storageSiteSpaceRequired: labels.storage.siteSpaceRequired,
+    storageDefaultUser: labels.storage.defaultUser,
+    storageDefaultUserHint: labels.storage.defaultUserHint,
+    storageDefaultGroup: labels.storage.defaultGroup,
+    storageDefaultGroupHint: labels.storage.defaultGroupHint,
+    storageLocal: labels.storage.local,
+    storageAllowed: labels.storage.allowed,
+    storageAllowedHint: labels.storage.allowedHint,
+    storageAll: labels.storage.all,
+    storageDisabled: labels.storage.disabled,
+    storageDisabledHint: labels.storage.disabledHint,
+    storageNone: labels.storage.none,
+  });
+}
+
+export const PHI_MEDIA_STORAGE_SETTINGS_RUNTIME_MODULE_FORM = definePhiRuntimeModuleForm({
+  ownerModuleId: PHI_ASSET_RUNTIME_MODULE_ID,
+  areas: ["admin"],
+  formId: PHI_MEDIA_SETTINGS_FORM_IDS.storage,
+  version: 1,
+  flags: 0,
+  title: "Media storage settings",
+  description: "Which storage profile the site's Spaces write to, which are offered, and which are paused.",
+  category: "forms",
+  tags: ["settings", "media", "storage", "admin"],
+  descriptor: PHI_MEDIA_STORAGE_SETTINGS_FORM_DESCRIPTOR,
+  submitHandlerKey: PHI_MEDIA_SETTINGS_FORM_HANDLER_KEYS.storage,
+  loadLabels: loadStorageLabels,
+});
+
+export const PHI_MEDIA_STORAGE_SETTINGS_FORM_HANDLER_PROVIDER_DESCRIPTOR = {
+  key: createPhiSharedFormProviderKey("handler", "asset-media-storage-settings"),
+  ownerModuleId: PHI_ASSET_RUNTIME_MODULE_ID,
+  title: "Admin media storage settings",
+  phase: "submit",
+  handlerKey: PHI_MEDIA_SETTINGS_FORM_HANDLER_KEYS.storage,
+  category: "site",
+  transport: "relay",
+  method: "PATCH",
+  endpointKey: null,
+  upstreamPath: "/api/site/admin/media/storage",
+  csrfPath: null,
+  requiresCsrf: false,
+  credentialPolicy: "site-session",
+} satisfies PhiFormHandlerProviderDescriptor;
 
 export const PHI_MEDIA_SETTINGS_RUNTIME_MODULE_FORM = definePhiRuntimeModuleForm({
   ownerModuleId: PHI_ASSET_RUNTIME_MODULE_ID,

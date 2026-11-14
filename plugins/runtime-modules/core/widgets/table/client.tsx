@@ -779,7 +779,7 @@ export function PhiTableWidgetClient({
                   required: field.required,
                   disabled: loading,
                   constraints: field.constraints,
-                  options: field.options,
+                  options: column.editor?.options ?? field.options,
                   prefix: column.editor?.prefix,
                 }
               : undefined;

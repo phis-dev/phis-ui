@@ -310,18 +310,17 @@ Page the Site authored. So:
 
 One case runs the other way, and it is worth knowing because your Module cannot resolve it. A Page the
 Site authored before your package was installed can sit on your package path outside Public. There your
-Module has nothing to yield with -- that path is its identity. Activation is not refused today: nothing
-checks a Site Page against a package path outside Public (the check is open in [TODOS.md](./TODOS.md)).
-What happens instead is decided by how a request is resolved (`plugins/runtime-modules/route-page-resolution.ts`):
-for a static route of your Module the Page is looked up by your preset's identity, not by its path, so
-your Page answers and the Site's Page stays stored but is no longer reached at that address until the Site
-moves it or your Module is switched off. For a route with parameters an exact Site Page at the concrete
-path still wins. It needs an operator, and there is nothing to build against it: no Module code can
-avoid or detect it.
+Module has nothing to yield with -- that path is its identity -- so activation is refused, naming the Page,
+until the Site moves it (`findPhiBuilderSitePageOnModulePackagePath` in
+`plugins/runtime-modules/builder/page-address-rule.ts`). It needs an operator, and there is nothing to build
+against it: no Module code can avoid or detect it.
+
+The other direction is closed as well. The Builder does not let a Site Page be created on, moved onto, or
+put above or beneath an address an active Module answers on: its routes in Public, its whole package path
+everywhere else (`findPhiBuilderModuleAddressConflict`).
 
 Enabling a Module for Public checks its declared paths against Site Pages and other Modules and asks for
 another address where one is taken (`plugins/runtime-modules/builder/public-route-collisions.ts`).
-Nothing checks a Site Page against a Module's package path outside Public.
 
 ## 1. Define stable ids
 
