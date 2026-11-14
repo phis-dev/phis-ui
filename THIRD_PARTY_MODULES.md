@@ -43,6 +43,35 @@ Widget's server half is part of that render. In short:
 
 Signed-in visitors, requests with a query, the Builder and every staff Area render dynamically as before.
 
+## Before you start: a staff page is composed, not drawn
+
+A page in a staff Area -- Admin, Accounting, Editor, Builder -- and every list in the App Area is a tree
+of Core Widgets your preset places, not one Widget of yours that draws the page itself. Every staff page
+of phis-ui is built this way, and a Module's page that is not looks, sorts, translates and acts
+differently from all of them. `@phis/shop`'s Shop page in Accounting was built as one client Widget of
+about 1000 lines, with hand-drawn tables, its own dialogs and its own buttons, and has to be rebuilt.
+
+1. **A list is a `table` Widget on a data provider** your Module registers ([TABLES.md](./TABLES.md)):
+   columns, sorting, paging and filters are the table's. Never a `PhiTableControl` in a Widget of yours.
+2. **Create is a toolbar action of the table, edit and delete are row actions** (`actions.toolbar`,
+   `actions.row`, `display: "icon"`, `execution: "signal"`), answered by your Module's Controller
+   ([section 2](#2-define-an-optional-controller), [SIGNALS.md](./SIGNALS.md)). No button row of your own
+   above the table.
+3. **Create and edit forms are Form Widgets in a dialog** (`dialog` on `createPhiCmsPresetNodes`,
+   [Dialogs](#dialogs), [FORMS.md](./FORMS.md)), not a modal your Widget opens.
+4. **The page carries no heading of its own.** A staff Area's header bar already shows the Page title as
+   a caption; a `page-title` Widget on the page would show it twice.
+5. **An icon is a name**, by the one rule every icon name follows: a short name is the Ant Design name
+   from `PHI_ANTD_ICON_NAMES` (`plus`, `edit`, `delete`, `reload`), there are no aliases, and an unknown
+   name draws nothing ([MODULES.md](./MODULES.md), "Presets, paths, and navigation").
+
+The reference is the Admin Users page,
+`plugins/runtime-modules/user-management/trees/phi-default-admin-users-page-tree.ts`: one table on a
+provider, a create action in its toolbar, history, edit and delete in its rows, create and edit as Form
+dialogs, all answered by the user-management Controller. A Widget of your own is for what no Core Widget
+draws -- a product picture, a calendar, a chart of your data. Where a Core Widget lacks something a staff
+page needs, that is a finding for `@phis/ui`, not a reason to draw the page yourself.
+
 ## Terminology and hard boundaries
 
 - A **Module** is a Site/client extension compiled into a Site application.
@@ -1514,6 +1543,9 @@ offers the scale, and a value off it is the author's choice and is saved as it i
 - The reading width comes from the Region's `maxSize`, never from padding.
 - A Hero only with a ground of its own; `heroOverlap` always with the Hero's larger `paddingBottom`.
 - Nothing in the Area's Regions.
+- On a staff page: every list is a `table` Widget on a provider with its actions, every form a Form
+  Widget in a dialog, no `page-title` Widget, and no Widget of the Module's own that draws tables, button
+  rows or dialogs ([Before you start](#before-you-start-a-staff-page-is-composed-not-drawn)).
 
 ## 7. Export the Server contributions
 

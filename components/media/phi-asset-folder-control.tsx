@@ -53,7 +53,7 @@ export function PhiAssetFolderControl({
     <PhiButtonControl
       ariaLabel={createLabel}
       tooltip={createLabel}
-      icon={resolvePhiButtonIcon("add")}
+      icon={resolvePhiButtonIcon("plus")}
       type="primary"
       size={size}
       disabled={createDisabled}

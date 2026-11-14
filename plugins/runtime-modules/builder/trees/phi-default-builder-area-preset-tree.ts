@@ -1848,7 +1848,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   key: "module-usage-commands",
                   ...PHI_DIALOG_COMMANDS_CONFIG,
                   buttons: [
-                    { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: modulesLabels?.usage.cancel ?? "Keep it on", icon: "cancel" },
+                    { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: modulesLabels?.usage.cancel ?? "Keep it on", icon: "close" },
                     { key: "confirm", emits: [{ capabilityId: "command", value: "confirm" }], variant: "primary" as const, label: modulesLabels?.usage.confirm ?? "Switch off anyway", icon: "save" },
                   ],
                   signalRoutes: {
@@ -1944,7 +1944,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   key: "public-routes-commands",
                   ...PHI_DIALOG_COMMANDS_CONFIG,
                   buttons: [
-                    { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: modulesLabels?.publicRoutes.cancel ?? "Cancel", icon: "cancel" },
+                    { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: modulesLabels?.publicRoutes.cancel ?? "Cancel", icon: "close" },
                     { key: "assign", emits: [{ capabilityId: "command", value: "assign" }], variant: "primary" as const, label: modulesLabels?.publicRoutes.assign ?? "Enable", icon: "save" },
                   ],
                   signalRoutes: {

@@ -837,11 +837,18 @@ are deliberate:
   and an Area that answers signed-out requests with 404 rather than a redirect will not tell the
   difference either.
 
-One more behaved the same way without being deliberate: an `antd:` icon name the registry does not know
-renders nothing at all, silently. `PHI_ANTD_ICON_NAMES` in `components/shell/phi-antd-icon.tsx` is the one
-registry, each icon loaded as its own chunk where it is drawn, and `validate-preset-icon-vocabulary` fails
-on a preset's `antd:` name that neither it nor the Button resolver's aliases know. It found `antd:send`
-on the News editor and `antd:cluster` on the Groups cards, both blank until then.
+One more behaved the same way without being deliberate: an icon name the registry does not know renders
+nothing at all. `PHI_ANTD_ICON_NAMES` in `components/shell/phi-antd-icon.tsx` is the one registry, each
+icon loaded as its own chunk where it is drawn, and every place that takes an icon name resolves it by the
+same rule (`isPhiIconNameKnown` in `components/shell/phi-icon.tsx`): `PhiIcon`, a string given to
+`PhiButtonControl`'s `icon`, a Table action, a Command Toolbar button. A short name (`plus`) is the Ant
+Design icon of that name and means the same as `antd:plus`; one name per icon, case counts, and there are
+no aliases -- the Button resolver's own list (`add`, `cancel`, `trash`, `settings` drawn as a pen) was
+folded into the registry on 14.11.2026, its users renamed. An unknown name is reported once
+(`[phi-icon] ... names no icon`), in the Site service's journal where it is rendered on the server and in
+the browser console otherwise, and `validate-preset-icon-vocabulary` fails on a preset's `antd:` or short
+`icon` name the registry does not know. It found `antd:send` on the News editor and `antd:cluster` on the
+Groups cards, and later `antd:audit` on the Accounting overview entry, all blank until then.
 
 ### Navigation surfaces
 

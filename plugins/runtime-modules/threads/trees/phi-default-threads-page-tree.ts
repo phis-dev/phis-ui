@@ -132,7 +132,7 @@ export async function buildPhiDefaultThreadsPageTree({
       config: {
         key: "app-threads-reply-commands",
         buttons: [
-          { key: "cancel", emits: [{ capabilityId: "close", value: null }], action: "cancel", icon: "cancel" },
+          { key: "cancel", emits: [{ capabilityId: "close", value: null }], action: "cancel", icon: "close" },
           {
             key: "submit",
             emits: [{ capabilityId: "submit", value: null }],
@@ -671,7 +671,7 @@ export async function buildPhiDefaultThreadsPageTree({
           key: "app-threads-new-commands",
           ...PHI_DIALOG_COMMANDS_CONFIG,
           buttons: [
-            { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: labels.cancelLabel, icon: "cancel" },
+            { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: labels.cancelLabel, icon: "close" },
             { key: "save", emits: [{ capabilityId: "command", value: "save" }], label: labels.openConversationLabel, variant: "primary", icon: "save" },
           ],
           signalRoutes: {

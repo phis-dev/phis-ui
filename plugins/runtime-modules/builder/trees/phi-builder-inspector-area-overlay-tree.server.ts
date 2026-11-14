@@ -513,7 +513,7 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
            * follows from that and is not stated -- a compact group does not wrap.
            */
           buttons: [
-            { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: effectsLabels.cancel, variant: "normal", icon: "cancel" },
+            { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: effectsLabels.cancel, variant: "normal", icon: "close" },
             { key: "save", emits: [{ capabilityId: "command", value: "save" }], label: effectsLabels.save, variant: "primary", icon: "save" },
           ],
           signalRoutes: {
@@ -642,7 +642,7 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
            * follows from that and is not stated -- a compact group does not wrap.
            */
           buttons: [
-            { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: signalsLabels.routes.cancel, variant: "normal", icon: "cancel" },
+            { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: signalsLabels.routes.cancel, variant: "normal", icon: "close" },
             /*
              * The primary action reads "Apply", not "Save": it commits one route into the draft, and the
              * Page is saved separately. It sets `icon: "save"` itself so the button keeps that mark, and the

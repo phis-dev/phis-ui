@@ -270,7 +270,7 @@ function buildEntryDialogNodes(
            * follows from that and is not stated -- a compact group does not wrap.
            */
           buttons: [
-            { key: "cancel", emits: [{ capabilityId: "close", value: null }], label: input.cancelLabel, icon: "cancel" },
+            { key: "cancel", emits: [{ capabilityId: "close", value: null }], label: input.cancelLabel, icon: "close" },
             { key: "save", emits: [{ capabilityId: "submit", value: null }], label: input.saveLabel, variant: "primary", icon: "save" },
           ],
           signalRoutes: {

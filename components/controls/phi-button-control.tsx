@@ -10,6 +10,7 @@ import {
   type PhiThemeGradientKey,
 } from "../../theme/phi-theme-gradients";
 import { PhiLink } from "../navigation/phi-link";
+import { PhiIcon } from "../shell/phi-icon";
 import type { PhiButtonType } from "./phi-button-types";
 import { PhiHoverText } from "./phi-hover-text";
 
@@ -62,6 +63,11 @@ export type PhiButtonControlProps = {
    */
   external?: boolean;
   tooltip?: ReactNode;
+  /**
+   * The icon: an element, or a string naming one -- `"plus"`, `"antd:delete"`, `"module:..."` -- by the
+   * rule every icon name follows (`isPhiIconNameKnown`), drawn as `PhiIcon` at the button's text size.
+   * A name is never drawn as text; an unknown one draws nothing and is reported once.
+   */
   icon?: ReactNode;
   type?: PhiButtonType;
   /** A round button is what an icon on its own wants, over a picture or in a toolbar. */
@@ -182,7 +188,7 @@ export function PhiButtonControl({
       /* Not a pointer target at all, so the Button's own hover and press states never start. */
       style={readOnly ? { ...paintedStyle, pointerEvents: "none" } : paintedStyle}
       aria-disabled={readOnly || undefined}
-      icon={icon}
+      icon={typeof icon === "string" ? <PhiIcon name={icon} size="inherit" /> : icon}
       onClick={readOnly ? undefined : onClick}
     >
       {label}

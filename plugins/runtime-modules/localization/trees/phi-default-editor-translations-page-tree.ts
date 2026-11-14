@@ -329,7 +329,7 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
           key: "editor-translation-commands",
           ...PHI_DIALOG_COMMANDS_CONFIG,
           buttons: [
-            { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: widgetLabels.actions.cancel, icon: "cancel" },
+            { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: widgetLabels.actions.cancel, icon: "close" },
             { key: "save", emits: [{ capabilityId: "command", value: "save" }], label: widgetLabels.actions.save, variant: "primary", icon: "save" },
           ],
           signalRoutes: {

@@ -45,24 +45,19 @@ const forbiddenIconPrefixes = new Map([
 ]);
 
 /*
- * And the `antd:` names a preset may use: the ones that resolve.
+ * And the Ant Design names a preset may use, with `antd:` or without: the ones that resolve.
  *
  * A name the registry does not know renders nothing -- no error, no placeholder, a blank where a mark
- * was meant to be. `PHI_ANTD_ICON_NAMES` is what `PhiIcon` resolves; a Button or Command Toolbar icon
- * goes through `resolvePhiButtonIcon` first, whose own aliases (`save`, `publish`, `trash`) resolve as
- * well. Read from the sources rather than imported, so the guard runs without compiling TypeScript.
+ * was meant to be. `PHI_ANTD_ICON_NAMES` is the only list: `PhiIcon`, `PhiButtonControl`, a Table action
+ * and a Command Toolbar all resolve through `isPhiIconNameKnown`, a short name is the Ant Design icon of
+ * that name, and there are no aliases beside it. Read from the sources rather than imported, so the guard
+ * runs without compiling TypeScript.
  */
 async function readResolvableAntdIconNames() {
   const registrySource = await readFile(path.join(repositoryRoot, "components/shell/phi-antd-icon.tsx"), "utf8");
   const registry = registrySource.match(/PHI_ANTD_ICON_NAMES[^=]*=\s*\{([\s\S]*?)\n\};/u);
   if (!registry) throw new Error("PHI_ANTD_ICON_NAMES not found in components/shell/phi-antd-icon.tsx.");
-  const names = new Set([...registry[1].matchAll(/^\s*"?([a-z0-9-]+)"?\s*:/gmu)].map((match) => match[1]));
-  const buttonSource = await readFile(
-    path.join(repositoryRoot, "components/widgets/client/shared/phi-button-icons.tsx"),
-    "utf8",
-  );
-  for (const match of buttonSource.matchAll(/case "([a-z0-9-]+)":/gu)) names.add(match[1]);
-  return names;
+  return new Set([...registry[1].matchAll(/^\s*"?([a-z0-9-]+)"?\s*:/gmu)].map((match) => match[1]));
 }
 
 /*
@@ -137,7 +132,7 @@ for (const file of presetFiles) {
   let antdMatch = antdPattern.exec(source);
   while (antdMatch) {
     antdIconNames += 1;
-    // The Button resolver lowercases; `PhiIcon` does not, so a name with capitals resolves in one place.
+    // Case counts: `PhiIcon` does not lowercase, so a name with capitals resolves nowhere.
     if (!resolvableAntdIconNames.has(antdMatch[1])) {
       failures.push(
         `${file}:${lineOf(source, antdMatch.index)} names \`antd:${antdMatch[1]}\`, which no icon registry `
@@ -146,6 +141,20 @@ for (const file of presetFiles) {
       );
     }
     antdMatch = antdPattern.exec(source);
+  }
+  // A short name, as the value of an `icon` key: the same registry, the same blank when it is missing.
+  const shortPattern = /\bicon:\s*["'`]([a-z0-9-]+)["'`]/gu;
+  let shortMatch = shortPattern.exec(source);
+  while (shortMatch) {
+    antdIconNames += 1;
+    if (!resolvableAntdIconNames.has(shortMatch[1])) {
+      failures.push(
+        `${file}:${lineOf(source, shortMatch.index)} names the icon \`${shortMatch[1]}\`, which no icon registry `
+          + "resolves -- it would render as a blank. A short name is an Ant Design name from "
+          + "PHI_ANTD_ICON_NAMES (components/shell/phi-antd-icon.tsx); there are no aliases.",
+      );
+    }
+    shortMatch = shortPattern.exec(source);
   }
   const modulePattern = /["'`]module:([^"'`]*)["'`]/gu;
   let moduleMatch = modulePattern.exec(source);
@@ -166,5 +175,5 @@ if (failures.length > 0) {
 
 console.log(
   `Preset icon vocabulary valid (${presetFiles.length} preset sources name bundled icons only; `
-    + `${antdIconNames} antd: and ${moduleIconNames} module: names, all resolvable).`,
+    + `${antdIconNames} Ant Design and ${moduleIconNames} module: names, all resolvable).`,
 );

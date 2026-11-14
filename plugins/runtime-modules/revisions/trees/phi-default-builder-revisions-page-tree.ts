@@ -392,7 +392,7 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
               key: "cancel",
               emits: [{ capabilityId: "close", value: null }],
               label: revisionsLabels.deleteArea.cancel,
-              icon: "cancel",
+              icon: "close",
             },
             {
               key: "confirm",

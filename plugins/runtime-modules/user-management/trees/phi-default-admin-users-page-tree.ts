@@ -595,7 +595,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
           key: `admin-users-${mode}-commands`,
           ...PHI_DIALOG_COMMANDS_CONFIG,
           buttons: [
-            { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: widgetLabels.confirm.cancel, icon: "cancel" },
+            { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: widgetLabels.confirm.cancel, icon: "close" },
             { key: "save", emits: [{ capabilityId: "command", value: "save" }], label: saveLabel, variant: "primary", icon: "save" },
           ],
           signalRoutes: {

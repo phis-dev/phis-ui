@@ -120,7 +120,7 @@ export async function buildPhiDefaultAdminGroupsPageTree({
         config: {
           key: `admin-groups-${workflow}-commands`,
           buttons: [
-            { key: "cancel", emits: [{ capabilityId: "close", value: null }], label: labels.actions.cancel, icon: "cancel" },
+            { key: "cancel", emits: [{ capabilityId: "close", value: null }], label: labels.actions.cancel, icon: "close" },
             { key: "save", emits: [{ capabilityId: "submit", value: null }], label: text.submit, variant: "primary", icon: "save" },
           ],
           signalRoutes: {

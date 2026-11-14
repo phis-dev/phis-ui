@@ -500,7 +500,7 @@ export function buildPhiSettingsPageShellTree({
                 key: "cancel",
                 emits: [{ capabilityId: "close", value: null }],
                 ...(overlay.cancelLabel ? { label: overlay.cancelLabel } : { action: "cancel" }),
-                icon: "cancel",
+                icon: "close",
               },
               {
                 key: "submit",

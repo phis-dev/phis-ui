@@ -457,7 +457,7 @@ export async function buildPhiDefaultBuilderMediaPageTree({
                   key: "createFolder",
                   label: mediaLabels?.tool.createFolderLabel ?? "Create folder",
                   description: mediaLabels?.tool.createFolderLabel ?? "Create folder",
-                  icon: "add",
+                  icon: "plus",
                   display: "icon",
                   mode: "primary",
                 }],

@@ -68,6 +68,54 @@ function renderIconFallback(size: number | string) {
   );
 }
 
+function isPhiBuilderIconNamespace(namespace: string) {
+  return namespace.endsWith("/layouts") || namespace.endsWith("/widgets");
+}
+
+/**
+ * Whether `PhiIcon` draws something for `name`: the one rule every icon name in this house follows.
+ *
+ * A name without a prefix is an Ant Design icon from `PHI_ANTD_ICON_NAMES` and means the same as
+ * `antd:<name>`. One name per icon, and the same name in a Button, a Table action, a Command Toolbar and a
+ * preset: there are no aliases (`add`, `cancel`, `trash`) beside it, and case counts. `module:`,
+ * `iconify:`, `asset:` and the Builder's motif namespaces are drawn by their own owners, which say for
+ * themselves whether the name exists, so here they count as known.
+ */
+export function isPhiIconNameKnown(name: string) {
+  const [namespace, ...rest] = name.split(":");
+  const value = rest.join(":");
+  if (!value) return Object.hasOwn(PHI_ANTD_ICON_NAMES, name);
+  if (isPhiBuilderIconNamespace(namespace)) return true;
+  switch (namespace) {
+    case PHI_MODULE_ICON_NAMESPACE:
+    case "iconify":
+    case "asset":
+      return true;
+    case "antd":
+      return Object.hasOwn(PHI_ANTD_ICON_NAMES, value);
+    default:
+      return false;
+  }
+}
+
+const reportedUnknownIconNames = new Set<string>();
+
+/**
+ * Says once per name that it names no icon, where somebody reads it.
+ *
+ * An unknown name draws nothing -- no word, no placeholder -- so without this a typo is a blank nobody
+ * notices. Rendered on the server the warning lands in the Site service's journal, in the browser in its
+ * console. `validate-preset-icon-vocabulary` catches the same mistake in a preset before it ships.
+ */
+export function reportPhiUnknownIconName(name: string) {
+  if (reportedUnknownIconNames.has(name)) return;
+  reportedUnknownIconNames.add(name);
+  console.warn(
+    `[phi-icon] "${name}" names no icon and draws nothing. Use a name from PHI_ANTD_ICON_NAMES `
+      + "(components/shell/phi-antd-icon.tsx), with or without `antd:`, or a `module:`, `iconify:` or `asset:` name.",
+  );
+}
+
 function renderAntdIcon(key: string, size: number | string, presentation: PhiAntdIconPresentation) {
   const icon = PHI_ANTD_ICON_NAMES[key];
   return icon ? <PhiAntdIcon icon={icon} size={size} {...presentation} /> : null;
@@ -78,10 +126,7 @@ function renderBuilderIcon(
   motif: string,
   size: number | string,
 ) {
-  const isLayoutNamespace = namespace.endsWith("/layouts");
-  const isWidgetNamespace = namespace.endsWith("/widgets");
-
-  if (!isLayoutNamespace && !isWidgetNamespace) {
+  if (!isPhiBuilderIconNamespace(namespace)) {
     return null;
   }
 
@@ -139,6 +184,10 @@ function PhiIconifyIcon({ icon, size }: { icon: string; size: number | string })
 
 export function PhiIcon({ name, size = 16, ...presentation }: PhiIconProps) {
   if (!name) {
+    return null;
+  }
+  if (!isPhiIconNameKnown(name)) {
+    reportPhiUnknownIconName(name);
     return null;
   }
   const resolvedSize = size === "inherit" ? "1em" : size;
