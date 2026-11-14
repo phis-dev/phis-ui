@@ -30,6 +30,18 @@ built. Remove an entry when it is done.
 
 ## Regions and Overlays
 
+- **The Accounting Area has no staff shell (found 14.11.2026).** `accounting-area-preset`
+  (`plugins/runtime-modules/accounting/presets.ts`) loads only `buildPhiDefaultSiteAreaPresetTree`, the
+  Public shell with the Site's header and footer. Admin and App compose that tree with the Area shell's
+  header top bar and left sider (`components/regions/presets/phi-area-shell-preset-nodes.ts`, through
+  `shell-tree-composition`), so `accounting:sidebar` -- the overview and phis-shop's "Shop" entry -- is
+  drawn nowhere and the page has no layout of its own. Give Accounting the same composition as Admin: the
+  bar with Page title as `label`, Tour button and Account, the sidebar on `accounting:sidebar`, and an
+  "Admin" Area target the way Admin and Builder link each other. Both Sites on prod hold a published
+  Accounting shell (scopes 14 and 18, revisions 20 and 33), which wins over the preset: sweep them or reset
+  them to the preset when the new shell lands. The overview page (`accounting-overview-page`) is a single
+  Card and wants the same review.
+
 - **Group headings in a dropdown navigation.** `mapPhiNavItems` (components/shell/menu-items.tsx) turns
   every entry with children into a submenu, so a third level opens sideways (Docs ▸ Architecture ▸
   Server). `PhiMenuControl` already draws antd's `type: "group"`; nothing maps to it. Wanted: inside a
