@@ -306,6 +306,18 @@ export const PHI_ADMIN_RUNTIME_AREA_DEFINITIONS = [
               routePresetKey: "admin-settings-general-page",
             }],
           },
+          /*
+           * The Builder, one step away: going from configuring the Site to building it is the most
+           * common switch out of the Admin. Its root forwards to wherever this viewer lands there, and
+           * the entry is shown to whoever the Builder lets in. Last, after Settings, because it leaves.
+           */
+          {
+            itemKey: "@phis/ui/modules/admin/nav/builder",
+            label: label("Builder"),
+            icon: "antd:build",
+            standing: "last",
+            target: { kind: "area", area: "builder" },
+          },
         ],
         exportedItemKeys: [PHI_ADMIN_SETTINGS_NAV_ITEM_KEY],
         anchors: sidebarAnchors(PHI_ADMIN_SETTINGS_NAV_ITEM_KEY),
@@ -361,6 +373,14 @@ const PHI_BUILDER_RUNTIME_AREA_DEFINITIONS = [
             icon: "antd:global",
             routePresetKey: "builder-settings-general-page",
           }],
+        },
+        // The way back into the Admin; see the Admin's Builder entry.
+        {
+          itemKey: "@phis/ui/builder/nav/admin",
+          label: label("Admin"),
+          icon: "antd:cluster",
+          standing: "last",
+          target: { kind: "area", area: "admin" },
         },
       ],
       exportedItemKeys: [

@@ -59,6 +59,7 @@ describe("the first-party sidebars", () => {
     return outline(surface!.items);
   }
 
+  // The Admin and the Builder end on each other: leaving stands after the Settings.
   it("open on the Dashboard and close on the Settings", () => {
     expect(sidebarOf("admin")).toEqual([
       "Dashboard",
@@ -71,6 +72,7 @@ describe("the first-party sidebars", () => {
       "  General",
       "  Media",
       "  Authentication",
+      "Builder",
     ]);
     expect(sidebarOf("app")).toEqual([
       "Dashboard",
@@ -93,6 +95,7 @@ describe("the first-party sidebars", () => {
       "Conversations",
       "Settings",
       "  General",
+      "Admin",
     ]);
     expect(sidebarOf("accounting")).toEqual(["Dashboard", "Overview", "Conversations"]);
     /*

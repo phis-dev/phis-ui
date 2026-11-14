@@ -29,6 +29,8 @@ export type PhiBuilderNavigationItem = {
   /** The Area the reference resolves in, where it is not this Navigation's own. */
   targetArea?: PhiCmsAreaKey | null;
   targetDeleted?: boolean;
+  /** Another Area this entry enters at its root; its `href` is that Area's segment, not a path in this one. */
+  targetAreaRoot?: PhiCmsAreaKey;
   icon?: string | null;
   external?: boolean;
   newTab?: boolean;
@@ -139,6 +141,7 @@ function materializeNavigationItem(
       targetDeleted: customTarget.deleted === true,
     } : {}),
     icon: item.icon ?? null,
+    ...(item.target?.kind === "area" ? { targetAreaRoot: item.target.area } : {}),
     ...(item.target?.kind === "module"
       ? { targetPreset: { ownerModuleId: item.target.ownerModuleId, presetKey: item.target.presetKey } }
       : {}),

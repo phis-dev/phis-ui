@@ -178,6 +178,11 @@ export type PhiCmsNavigationBaseItemDescriptor = {
    */
   overlayPresetKey?: string;
   overlayNodeKey?: string;
+  /**
+   * Another Area, entered at its root. Mutually exclusive with `routePresetKey` and the Overlay keys; see
+   * `PhiCmsNavigationAreaTarget`.
+   */
+  target?: PhiCmsNavigationAreaTarget;
   accessPolicy?: PhiViewerAccessPolicy;
   /**
    * What this entry sends when it is chosen, instead of going somewhere.
@@ -248,6 +253,22 @@ export type PhiCmsNavigationExternalTarget = {
   newTab?: boolean;
 };
 
+/**
+ * Another Area, entered at its root: the Admin's way into the Builder and back.
+ *
+ * The root and not a Page in it, because the root is the one address every Area answers whatever
+ * Modules it has switched on -- its base Module owns it -- and it forwards to wherever this viewer lands
+ * there. A Module Page in another Area is a different question: whether its Module answers there is that
+ * Area's fact, which this request never read, so such a reference does not resolve (`REFERENCES.md`).
+ *
+ * An entry without an `accessPolicy` of its own is shown to whoever the target Area lets in, so it never
+ * leads somebody to a door that turns them away. The target must be another Area than the surface's own.
+ */
+export type PhiCmsNavigationAreaTarget = {
+  kind: "area";
+  area: PhiCmsAreaKey;
+};
+
 export type PhiCmsNavigationInjectionItemDescriptor = {
   itemKey: string;
   label: PhiCmsNavigationLabel;
@@ -260,10 +281,11 @@ export type PhiCmsNavigationInjectionItemDescriptor = {
   overlayPresetKey?: string;
   overlayNodeKey?: string;
   /**
-   * An address outside the Site. Mutually exclusive with `routePresetKey` and the Overlay keys; resolved
-   * like a Site's stored external link, so every navigation surface renders it the same way.
+   * An address outside the Site, or another Area's root. Mutually exclusive with `routePresetKey` and the
+   * Overlay keys. An external address resolves like a Site's stored external link, so every navigation
+   * surface renders it the same way; an Area target is `PhiCmsNavigationAreaTarget`.
    */
-  target?: PhiCmsNavigationExternalTarget;
+  target?: PhiCmsNavigationExternalTarget | PhiCmsNavigationAreaTarget;
   accessPolicy?: PhiViewerAccessPolicy;
   /** What this entry sends when it is chosen; see the base item descriptor. */
   signalRoutes?: { emits?: readonly PhiSignalRoute[] };
@@ -330,6 +352,15 @@ export type PhiCmsResolvedNavigationTarget =
       path: string;
       external?: boolean;
       newTab?: boolean;
+    }
+  /**
+   * Another Area's root. `path` is the Area segment (`/builder`, `/public` for Public), which every
+   * renderer already reads as "that Area" rather than as a path in its own (`resolvePhiNavHref`).
+   */
+  | {
+      kind: "area";
+      area: PhiCmsAreaKey;
+      path: string;
     };
 
 export type PhiCmsResolvedNavigationItem = {

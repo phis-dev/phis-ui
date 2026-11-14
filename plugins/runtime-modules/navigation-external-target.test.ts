@@ -170,9 +170,9 @@ describe("a Module's external navigation entry", () => {
   it("refuses a route or an Overlay beside the external address", () => {
     const target = { kind: "external", href: "https://github.com/acme" } as const;
     expect(() => compile({ target, routePresetKey: "story" }))
-      .toThrow(/external address, a route or an Overlay, never more than one/);
+      .toThrow(/a target, a route or an Overlay, never more than one/);
     expect(() => compile({ target, overlayPresetKey: "story-overlay", overlayNodeKey: "dialog" }))
-      .toThrow(/external address, a route or an Overlay, never more than one/);
+      .toThrow(/a target, a route or an Overlay, never more than one/);
   });
 
   it.each([

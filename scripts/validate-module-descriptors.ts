@@ -371,7 +371,7 @@ const adminNavigationItems = adminNavigationSurfaces
   .find((surface) => surface.navKey === "admin:sidebar")?.items;
 assert.deepEqual(
   adminNavigationItems?.map((item) => readPhiCmsNavigationTargetPath(item.target) ?? null),
-  ["/phis/ui/dashboard", "/phis/ui/locales", "/phis/ui/logs", "/phis/ui/users", null],
+  ["/phis/ui/dashboard", "/phis/ui/locales", "/phis/ui/logs", "/phis/ui/users", null, "/builder"],
 );
 /*
  * An entry hides on its own statement, never on the policy of the route it points at.
@@ -397,7 +397,7 @@ const adminSidebarWithoutViewer = adminNavigationItems
   ?.map((item) => readPhiCmsNavigationTargetPath(item.target) ?? null);
 assert.deepEqual(
   adminSidebarWithoutViewer,
-  ["/phis/ui/dashboard", "/phis/ui/locales", "/phis/ui/logs", "/phis/ui/users", null],
+  ["/phis/ui/dashboard", "/phis/ui/locales", "/phis/ui/logs", "/phis/ui/users", null, "/builder"],
   "Without a reader the sidebar is the published list, Settings container included.",
 );
 /*
@@ -412,8 +412,8 @@ assert.deepEqual(
 for (const role of [PhiBaseRole.Developer, PhiBaseRole.Builder]) {
   assert.deepEqual(
     adminNavigationPathsForRole(role),
-    ["/phis/ui/dashboard", "/phis/ui/locales", "/phis/ui/logs", "/phis/ui/users"],
-    "An entry without a policy is shown to every reader the Area admits.",
+    ["/phis/ui/dashboard", "/phis/ui/locales", "/phis/ui/logs", "/phis/ui/users", "/builder"],
+    "An entry without a policy is shown to every reader the Area admits; the Builder entry to every reader the Builder admits.",
   );
 }
 assert.deepEqual(
@@ -422,7 +422,8 @@ assert.deepEqual(
   "A Site Admin sees the Settings container, because its only child is theirs.",
 );
 
-const adminSettingsContainer = adminNavigationItems?.at(-1);
+// Second to last: the Builder entry stands after it.
+const adminSettingsContainer = adminNavigationItems?.at(-2);
 assert.equal(adminSettingsContainer?.kind, "container");
 assert.deepEqual(
   adminSettingsContainer?.children.map((item) => readPhiCmsNavigationTargetPath(item.target) ?? null),
@@ -570,11 +571,13 @@ assert.deepEqual(
     "/phis/ui/media",
     "/phis/ui/revisions",
     "/phis/ui/theme",
-    // The Settings container, last: the Modules place themselves by the `main` anchor, ahead of it.
+    // The Settings container: the Modules place themselves by the `main` anchor, ahead of it.
     null,
+    // And the way back into the Admin, after it.
+    "/admin",
   ],
 );
-const builderSettingsContainer = builderNavigationItems?.at(-1);
+const builderSettingsContainer = builderNavigationItems?.at(-2);
 assert.equal(builderSettingsContainer?.kind, "container");
 assert.deepEqual(
   builderSettingsContainer?.children.map((item) => readPhiCmsNavigationTargetPath(item.target) ?? null),

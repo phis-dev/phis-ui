@@ -29,6 +29,7 @@ import type {
   PhiCmsCompiledRoutePattern,
   PhiCmsNavigationAnchor,
   PhiCmsNavigationAnchorPlacement,
+  PhiCmsNavigationAreaTarget,
   PhiCmsNavigationBaseItemDescriptor,
   PhiCmsNavigationExternalTarget,
   PhiCmsNavigationInjectionItemDescriptor,
@@ -640,16 +641,19 @@ export function compilePhiCmsDescriptorCatalog({
           `${label}/${item.itemKey}: an item goes to a route or opens an Overlay, never both.`,
         );
       }
-      // Only a Module's injected entry may lead out; an Area's own items carry no `target`.
-      const externalTarget = "target" in item ? item.target : undefined;
-      if (externalTarget !== undefined) {
+      // An external address is a Module's injected entry only; another Area's root either may name.
+      const target = item.target;
+      if (target !== undefined) {
         if (item.routePresetKey || item.overlayPresetKey || item.overlayNodeKey) {
           throw new Error(
-            `${label}/${item.itemKey}: an item leads to an external address, a route or an Overlay, ` +
-            "never more than one.",
+            `${label}/${item.itemKey}: an item leads to a target, a route or an Overlay, never more than one.`,
           );
         }
-        assertNavigationExternalTarget(externalTarget, `${label}/${item.itemKey}`);
+        if (target.kind === "area") {
+          assertNavigationAreaTarget(target, area, `${label}/${item.itemKey}`);
+        } else {
+          assertNavigationExternalTarget(target, `${label}/${item.itemKey}`);
+        }
       }
       if (item.overlayPresetKey && !item.overlayNodeKey) {
         throw new Error(
@@ -1144,6 +1148,19 @@ function assertNavigationExternalTarget(target: PhiCmsNavigationExternalTarget, 
 }
 
 /**
+ * Another Area's root: an Area this Site has, and not the surface's own -- a link to one's own root is
+ * a route of the Area's base Module, and is named as one.
+ */
+function assertNavigationAreaTarget(target: PhiCmsNavigationAreaTarget, ownArea: PhiCmsAreaKey, label: string) {
+  if (!isPhiCmsAreaKey(target.area)) {
+    throw new Error(`${label}: an Area navigation target names an unknown Area "${String(target.area)}".`);
+  }
+  if (target.area === ownArea) {
+    throw new Error(`${label}: an Area navigation target must lead to another Area than "${ownArea}".`);
+  }
+}
+
+/**
  * What an item points at, if anything currently answers there.
  *
  * Reading a navigation surface may not fail. An item can name a route that no longer answers -- a Module
@@ -1162,8 +1179,12 @@ function resolveNavigationTarget(
   ownerModuleId: PhiRuntimeModuleId,
   routePresetKey: string | undefined,
   overlay?: { presetKey: string; nodeKey: string } | null,
-  external?: PhiCmsNavigationExternalTarget,
+  external?: PhiCmsNavigationExternalTarget | PhiCmsNavigationAreaTarget,
 ): PhiCmsResolvedNavigationTarget | null {
+  if (external?.kind === "area") {
+    // The Area segment, which every renderer reads as that Area's root; the root forwards from there.
+    return { kind: "area", area: external.area, path: `/${external.area}` };
+  }
   if (external) {
     // The shape a Site's stored external link resolves to, so every surface renders both alike. The
     // entry stays the Module's: `ownerModuleId` on the item, not the target, says whose it is.
@@ -1214,7 +1235,14 @@ function buildResolvedNavigationNode(
     descriptor.overlayPresetKey && descriptor.overlayNodeKey
       ? { presetKey: descriptor.overlayPresetKey, nodeKey: descriptor.overlayNodeKey }
       : null,
-    "target" in descriptor ? descriptor.target : undefined,
+    descriptor.target,
+  );
+  /*
+   * An Area entry that states no policy of its own is shown to whoever the target Area lets in: an entry
+   * leading to a door that turns the viewer away is a link nobody should have been offered.
+   */
+  const accessPolicy = descriptor.accessPolicy ?? (
+    descriptor.target?.kind === "area" ? catalog.areaDefinitions.get(descriptor.target.area)?.accessPolicy : undefined
   );
   const intrinsicChildren = (descriptor.children ?? []).map((child) =>
     buildResolvedNavigationNode(catalog, routeTable, navKey, ownerModuleId, child, null),
@@ -1237,7 +1265,7 @@ function buildResolvedNavigationNode(
       kind: target || descriptor.signalRoutes?.emits?.length ? "link" : "container",
       label: { ...descriptor.label, sourceLocale },
       ...(descriptor.icon ? { icon: descriptor.icon } : {}),
-      ...(descriptor.accessPolicy ? { accessPolicy: descriptor.accessPolicy } : {}),
+      ...(accessPolicy ? { accessPolicy } : {}),
       ...(descriptor.signalRoutes?.emits?.length
         ? { emits: descriptor.signalRoutes.emits }
         : {}),

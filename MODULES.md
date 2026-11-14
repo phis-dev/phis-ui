@@ -864,9 +864,10 @@ Links in the footer" are `public:footer`, they come from route presets, and a Mo
 there adds one to its route's `navigation` -- never a database row. Whether a Site has stored an overlay
 for a surface is `site_nav_scopes.published_revision_id`; absent, the descriptors alone answer.
 
-An entry goes to one of three things, never more than one: a route of its Module (`routePresetKey`), an
-Area-owned Overlay of its Module (`overlayPresetKey` with `overlayNodeKey`), or -- for an entry a Module
-injects -- an address outside the Site, `target: { kind: "external", href, newTab? }`. The external
+An entry goes to one of four things, never more than one: a route of its Module (`routePresetKey`), an
+Area-owned Overlay of its Module (`overlayPresetKey` with `overlayNodeKey`), another Area's root
+(`target: { kind: "area", area }`), or -- for an entry a Module injects -- an address outside the Site,
+`target: { kind: "external", href, newTab? }`. The external
 target is the shape the Builder stores for a Site's own external link, and it resolves to the same thing
 (`{ kind: "custom", path: href, external: true, newTab }`), so every surface renders the two alike: a
 new tab is `target="_blank"` with `rel="noreferrer noopener"`. `compilePhiCmsDescriptorCatalog` refuses
@@ -875,6 +876,16 @@ an entry that combines the external target with a route or an Overlay, and any `
 the Module's: `ownerModuleId` on the item says so, the Builder's navigation table shows it as external
 and from that Module, and the Site hides it with a tombstone like any other Module entry. An external
 address is never a redirect destination: an Area root or a Settings container forwards past it.
+
+An Area target enters the other Area at its root, which every Area answers through its base Module and
+which forwards to wherever this viewer lands -- the Admin's "Builder" entry and the Builder's "Admin" are
+the two the Areas declare. It is the root and not a Page there on purpose: whether a Module Page answers
+in another Area is that Area's activation, which the request never read, so such a reference does not
+resolve (`REFERENCES.md`). It resolves to `{ kind: "area", area, path: "/<area>" }`, which every menu reads
+as that Area (`resolvePhiNavHref`). An entry that states no `accessPolicy` takes the target Area's, so
+nobody is offered a door that turns them away. The compiler refuses the entry's own Area, an unknown one,
+and a route or an Overlay beside it; it is never a redirect destination, and the Builder's navigation
+table shows its address as the Area segment and offers it to no folder.
 
 ### Descriptor identity and instantiation
 

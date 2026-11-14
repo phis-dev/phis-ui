@@ -31,6 +31,7 @@ export {
   type PhiCmsNavigationAnchor,
   type PhiCmsNavigationAnchoredInjectionDescriptor,
   type PhiCmsNavigationAnchorPlacement,
+  type PhiCmsNavigationAreaTarget,
   type PhiCmsNavigationBaseItemDescriptor,
   type PhiCmsNavigationCustomItem,
   type PhiCmsNavigationExternalTarget,

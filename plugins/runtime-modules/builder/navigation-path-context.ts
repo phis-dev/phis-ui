@@ -64,7 +64,8 @@ export function createPhiBuilderNavigationPathContext(
       label: formatPhiBuilderPagePathWithPending(pagePaths.get(page.reference!)!.path, page.pendingPath),
     }));
   const resolveLinkPath = (item: PhiBuilderNavigationItem) => {
-    if (item.kind !== "link" || item.external === true) return null;
+    // Neither an external address nor another Area's root is a path in this Area.
+    if (item.kind !== "link" || item.external === true || item.targetAreaRoot) return null;
     if (item.targetReference) {
       const area = item.targetArea ? resolvePhiCmsAreaAsBuilderArea(item.targetArea) : state.area;
       const target = area ? readArea(area).pagePaths.get(item.targetReference) : undefined;
