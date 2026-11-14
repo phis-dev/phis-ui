@@ -273,6 +273,14 @@ export const PHI_ACCOUNTING_RUNTIME_AREA_DEFINITIONS = [
         label: label("Overview"),
         icon: "antd:audit",
         routePresetKey: "accounting-overview-page",
+      },
+      // The way into the Admin, as the Builder has one; shown to whoever the Admin lets in.
+      {
+        itemKey: "@phis/ui/modules/accounting/nav/admin",
+        label: label("Admin"),
+        icon: "antd:cluster",
+        standing: "last",
+        target: { kind: "area", area: "admin" },
       }],
       exportedItemKeys: ["@phis/ui/modules/accounting/nav/home"],
       anchors: sidebarAnchors(),

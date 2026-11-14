@@ -15,6 +15,14 @@ built. Remove an entry when it is done.
   `./cms/plugins/*` and `./next/areas/*` entry) for the Admin Media storage settings: their form, labels,
   settings reader and profile choices belong to the asset Module, whose definition every Area loads.
 
+- **Accounting has a staff shell; stored Accounting shells must go.** The Accounting Area now composes the
+  header bar and the sidebar on `accounting:sidebar` as the Admin does, with an "Admin" Area target at the
+  end. A stored Area revision always wins over the preset, and both Sites on prod hold one (scopes 14 and
+  18), so after deploying: clear each Site's Accounting shell back to its preset in the Builder's Revisions
+  (the Area delete, `/api/site/cms/area/override`) and, where the Site's Accounting Modules differ from the defaults
+  (`dashboard`, `threads`) -- phis.dev has the Shop on -- switch them on again in the Builder's Modules;
+  that save stores the new shell. dev.phis.dev was reset on 14.11.2026.
+
 ## Code hygiene
 
 - **Convert concrete preset builders to local-key templates.** Some first-party preset builders still
@@ -29,18 +37,6 @@ built. Remove an entry when it is done.
   receiver contract fits without losing domain semantics.
 
 ## Regions and Overlays
-
-- **The Accounting Area has no staff shell (found 14.11.2026).** `accounting-area-preset`
-  (`plugins/runtime-modules/accounting/presets.ts`) loads only `buildPhiDefaultSiteAreaPresetTree`, the
-  Public shell with the Site's header and footer. Admin and App compose that tree with the Area shell's
-  header top bar and left sider (`components/regions/presets/phi-area-shell-preset-nodes.ts`, through
-  `shell-tree-composition`), so `accounting:sidebar` -- the overview and phis-shop's "Shop" entry -- is
-  drawn nowhere and the page has no layout of its own. Give Accounting the same composition as Admin: the
-  bar with Page title as `label`, Tour button and Account, the sidebar on `accounting:sidebar`, and an
-  "Admin" Area target the way Admin and Builder link each other. Both Sites on prod hold a published
-  Accounting shell (scopes 14 and 18, revisions 20 and 33), which wins over the preset: sweep them or reset
-  them to the preset when the new shell lands. The overview page (`accounting-overview-page`) is a single
-  Card and wants the same review.
 
 - **Group headings in a dropdown navigation.** `mapPhiNavItems` (components/shell/menu-items.tsx) turns
   every entry with children into a submenu, so a third level opens sideways (Docs ▸ Architecture ▸
