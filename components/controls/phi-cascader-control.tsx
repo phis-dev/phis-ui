@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type CSSProperties } from "react";
+import { useMemo, useRef, useState, type CSSProperties } from "react";
 
 import { Cascader } from "antd";
 import type { CascaderProps, DefaultOptionType } from "antd/es/cascader";
@@ -16,6 +16,9 @@ import { PhiIcon } from "../shell/phi-icon";
 export type PhiCascaderNormalizeMode = "raw" | "path";
 
 export type PhiCascaderOption = PhiControlOption;
+
+/** What a click may choose (`PhiCascaderControl`'s `select`). */
+export type PhiCascaderSelect = "any" | "options";
 
 export function normalizePhiCascaderValue(
   value: string | null | undefined,
@@ -219,6 +222,7 @@ export function PhiCascaderControl({
   allowRoot = true,
   allowClear = false,
   expandTrigger = "click",
+  select = "any",
   separator = "/",
   rootValue = "/",
   normalize = "raw",
@@ -239,6 +243,12 @@ export function PhiCascaderControl({
   allowRoot?: boolean;
   allowClear?: boolean;
   expandTrigger?: CascaderProps["expandTrigger"];
+  /**
+   * What a click may choose. `any` (the default) takes every level, so a path picker can stop at a parent;
+   * `options` takes only a value the options name, and a level the Cascader made up from deeper paths is a
+   * group that opens and chooses nothing -- a page picker, whose folders are no Pages.
+   */
+  select?: PhiCascaderSelect;
   separator?: string;
   rootValue?: string;
   normalize?: PhiCascaderNormalizeMode;
@@ -264,11 +274,26 @@ export function PhiCascaderControl({
     normalize,
   });
   const [searchValue, setSearchValue] = useState("");
+  /*
+   * A click on a level that chooses nothing (`select: "options"`) still closes Ant Design's popup, the way
+   * a choice does. It stays open instead, on the level that was opened, so the click reads as "show me
+   * what is in here" rather than as nothing.
+   */
+  const [open, setOpen] = useState(false);
+  const keepOpen = useRef(false);
   const cascaderOptions = useMemo(
     () => buildCascaderOptions(options ?? [], normalizedValue, allowRoot, resolvedSeparator, resolvedRootValue, normalize),
     [allowRoot, normalize, normalizedValue, options, resolvedRootValue, resolvedSeparator],
   );
   const cascaderValue = findOptionPath(cascaderOptions, normalizedValue, resolvedSeparator, resolvedRootValue) ?? [];
+  const choosableValues = useMemo(
+    () => new Set((options ?? []).map((option) => normalizePhiCascaderValue(option.value, {
+      separator: resolvedSeparator,
+      rootValue: resolvedRootValue,
+      normalize,
+    }))),
+    [normalize, options, resolvedRootValue, resolvedSeparator],
+  );
 
   function commit(nextValue: string) {
     const normalizedNextValue = normalizePhiCascaderValue(nextValue, {
@@ -277,6 +302,10 @@ export function PhiCascaderControl({
       normalize,
     });
     if (!allowRoot && normalizedNextValue === resolvedRootValue) {
+      return;
+    }
+    if (select === "options" && !choosableValues.has(normalizedNextValue)) {
+      keepOpen.current = true;
       return;
     }
     setSearchValue("");
@@ -289,6 +318,14 @@ export function PhiCascaderControl({
       allowClear={allowClear}
       changeOnSelect
       expandTrigger={expandTrigger}
+      open={open}
+      onOpenChange={(next) => {
+        if (!next && keepOpen.current) {
+          keepOpen.current = false;
+          return;
+        }
+        setOpen(next);
+      }}
       rootClassName="phi-cascader-control"
       disabled={disabled || readOnly || !onChange}
       displayRender={(_, selectedOptions) => {

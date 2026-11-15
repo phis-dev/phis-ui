@@ -74,6 +74,8 @@ export function PhiCascaderWidget({
           separator={separator}
           rootValue={rootValue}
           normalize={normalize}
+          expandTrigger={config?.expandTrigger ?? "click"}
+          select={config?.select ?? "any"}
           disabled={controlSignals.disabled}
           readOnly={controlSignals.readOnly}
           size={config?.controlSize}

@@ -56,6 +56,13 @@ function resolveProviderArea(context: PhiControlOptionsProviderContext) {
 
 function collectPageOptions(area: PhiBuilderPageCatalogArea, nodes: PhiPresetPageNode[]): PhiControlOption[] {
   return nodes.flatMap((node) => {
+    /*
+     * A folder is offered as its Pages only. The picker chooses only what it is offered
+     * (`select: "options"`), so the folder the Cascader draws for them opens and chooses nothing.
+     */
+    if (!node.storagePath) {
+      return collectPageOptions(area, node.children ?? []);
+    }
     const path = resolvePhiBuilderCatalogPathForCatalog(area, node.key, nodes);
     /*
      * The root reads as the address, not as the title of whatever Page is standing in it.

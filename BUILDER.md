@@ -289,6 +289,13 @@ loading, derived row state, review links, restore, deletion, and active-revision
 
 Dynamic selector options should come from generic option providers where the selector can be modeled as a normal select, cascader, segmented control, or similar generic widget. A specialized workspace selector is acceptable only when the visible control type itself depends on the selected revision kind.
 
+The Pages workspace's Page select is the Core `cascader` Widget with `expandTrigger: "hover"` and
+`select: "options"`: a folder of the Page tree (`/shop/product/:slug` makes `shop` and `product`) opens under
+the pointer and on a click, and chooses nothing; only a Page is offered as an option, and only an option is
+chosen. A folder key that still arrives -- an old address -- opens the first Page inside it
+(`resolvePhiBuilderRequestedPageKey`), never a Page with empty Regions. Without `select: "options"` the
+Widget keeps choosing every level, which is what a path picker wants.
+
 ### `/editor/phis/ui/translations` workspace contract
 
 `/editor/phis/ui/translations` is the site-content translation workspace, contributed by the Editor

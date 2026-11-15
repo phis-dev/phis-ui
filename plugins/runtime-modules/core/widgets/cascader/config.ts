@@ -1,7 +1,7 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { readBoolean, readString } from "../../../../../components/widgets/config/parser-primitives";
-import type { PhiCascaderNormalizeMode, PhiCascaderOption } from "../../../../../components/controls/phi-cascader-control";
+import type { PhiCascaderNormalizeMode, PhiCascaderOption, PhiCascaderSelect } from "../../../../../components/controls/phi-cascader-control";
 import { PHI_PATH_CONTROL_SIGNALS } from "../../../../../components/widgets/signals/control-signal-capabilities";
 import {
   PHI_CONTROL_PRESENTATION_FIELDS,
@@ -23,6 +23,10 @@ export type PhiCascaderWidgetConfig = PhiControlConfig & PhiChoiceOptionsConfig 
   separator?: string;
   rootValue?: string;
   normalize?: PhiCascaderNormalizeMode;
+  /** How a level opens: on a click (the default) or under the pointer. */
+  expandTrigger: "click" | "hover";
+  /** What a click may choose: every level, or only a value the options name (`PhiCascaderControl`). */
+  select: PhiCascaderSelect;
   options: PhiCascaderOption[];
 };
 
@@ -46,6 +50,8 @@ function parsePhiCascaderWidgetConfig(
     separator: readString(config.separator) ?? "/",
     rootValue: readString(config.rootValue) ?? "/",
     normalize: readNormalizeMode(config.normalize),
+    expandTrigger: readString(config.expandTrigger) === "hover" ? "hover" : "click",
+    select: readString(config.select) === "options" ? "options" : "any",
     ...parsePhiChoiceOptionsConfig(config),
   };
 }
@@ -79,6 +85,24 @@ export const PHI_CASCADER_WIDGET_DEFINITION = {
         { value: "path", label: "Path" },
       ],
     },
+    {
+      key: "expandTrigger",
+      type: "choice",
+      label: "Opens",
+      options: [
+        { value: "click", label: "On click" },
+        { value: "hover", label: "On hover" },
+      ],
+    },
+    {
+      key: "select",
+      type: "choice",
+      label: "Choosable",
+      options: [
+        { value: "any", label: "Every level" },
+        { value: "options", label: "Only the options" },
+      ],
+    },
     ...PHI_CONTROL_PRESENTATION_FIELDS,
     ...PHI_CONTROL_STATE_FIELDS,
   ],
@@ -88,6 +112,8 @@ export const PHI_CASCADER_WIDGET_DEFINITION = {
     separator: "/",
     rootValue: "/",
     normalize: "raw",
+    expandTrigger: "click",
+    select: "any",
     optionsProvider: null,
     options: [],
   },

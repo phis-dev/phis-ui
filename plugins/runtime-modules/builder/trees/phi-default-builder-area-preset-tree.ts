@@ -1532,6 +1532,9 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 label: "dev pages select",
                 config: {
                   key: "pageSelect",
+                  // Folders open under the pointer and choose nothing: only a Page is offered.
+                  expandTrigger: "hover",
+                  select: "options",
                   signalRoutes: {
                     emits: [
                       {

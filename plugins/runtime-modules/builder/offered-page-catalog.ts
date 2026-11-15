@@ -10,6 +10,7 @@ import {
   normalizePhiBuilderCmsCatalogPath,
   resolvePhiBuilderActivePageCatalog,
   resolvePhiBuilderActivePageKey,
+  resolvePhiBuilderRequestedPageKey,
   resolvePhiBuilderPageKeyFromCatalogPath,
   type PhiBuilderPageCatalogArea,
   type PhiPresetPageNode,
@@ -297,8 +298,8 @@ export function resolvePhiBuilderOfferedPageKey(
   requestedPageKey: string | null | undefined,
 ): { pages: PhiPresetPageNode[]; pageKey: string | null } {
   const pages = resolvePhiBuilderOfferedPageCatalog(state, area);
-  const requested = requestedPageKey?.trim() ?? "";
-  if (requested && resolvePhiBuilderActivePageKey(requested, pages) === requested) {
+  const requested = resolvePhiBuilderRequestedPageKey(requestedPageKey, pages);
+  if (requested) {
     return { pages, pageKey: requested };
   }
 

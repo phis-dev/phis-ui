@@ -76,12 +76,16 @@ about 1000 lines, with hand-drawn tables, its own dialogs and its own buttons, a
 
 1. **A list is a `table` Widget on a data provider** your Module registers ([TABLES.md](./TABLES.md)):
    columns, sorting, paging and filters are the table's. Never a `PhiTableControl` in a Widget of yours.
+   Search and filters are the table's own query tools in its header row (`features.filters`, TABLES.md,
+   "Query tools"), never Controls of yours above it, and the table keeps its footer with the paging.
 2. **Create is a toolbar action of the table, edit and delete are row actions** (`actions.toolbar`,
    `actions.row`, `display: "icon"`, `execution: "signal"`), answered by your Module's Controller
    ([section 2](#2-define-an-optional-controller), [SIGNALS.md](./SIGNALS.md)). No button row of your own
    above the table.
 3. **Create and edit forms are Form Widgets in a dialog** (`dialog` on `createPhiCmsPresetNodes`,
-   [Dialogs](#dialogs), [FORMS.md](./FORMS.md)), not a modal your Widget opens.
+   [Dialogs](#dialogs), [FORMS.md](./FORMS.md)), not a modal your Widget opens. The Form's own layout
+   places the labels: beside the field from 377px of Form width, above it only below that
+   (`PHI_FORM_DEFAULT_LAYOUT`). A dialog drawn by hand never gets that, which is why its labels stack.
 4. **The page carries no heading of its own.** A staff Area's header bar already shows the Page title as
    a caption; a `page-title` Widget on the page would show it twice.
 5. **An icon is a name**, by the one rule every icon name follows: a short name is the Ant Design name

@@ -198,13 +198,31 @@ function findFirstPhiBuilderPageNodeKey(pages: readonly PhiPresetPageNode[]): st
   return null;
 }
 
-export function resolvePhiBuilderActivePageKey(
+/**
+ * The Page a requested key stands for, or `null` where the catalog knows no such key.
+ *
+ * A folder is no Page: `/shop/p/:slug` made the folders `shop` and `p`, and a workspace opened on one drew
+ * a Page with empty Regions. A folder's key -- from the picker of old, or an address somebody kept -- stands
+ * for the first Page inside it.
+ */
+export function resolvePhiBuilderRequestedPageKey(
   requestedPageKey: string | null | undefined,
   pages: readonly PhiPresetPageNode[],
 ) {
   const normalizedPageKey = requestedPageKey?.trim() ?? "";
-  if (normalizedPageKey && readPhiPageNodePath(pages, normalizedPageKey)) {
-    return normalizedPageKey;
+  const requested = normalizedPageKey ? readPhiPageNodePath(pages, normalizedPageKey)?.at(-1) : null;
+  if (!requested) return null;
+  if (requested.storagePath) return normalizedPageKey;
+  return requested.children ? findFirstPhiBuilderPageNodeKey(requested.children) : null;
+}
+
+export function resolvePhiBuilderActivePageKey(
+  requestedPageKey: string | null | undefined,
+  pages: readonly PhiPresetPageNode[],
+) {
+  const requested = resolvePhiBuilderRequestedPageKey(requestedPageKey, pages);
+  if (requested) {
+    return requested;
   }
 
   /*

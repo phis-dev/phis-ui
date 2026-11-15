@@ -50,6 +50,14 @@ built. Remove an entry when it is done.
 
 ## Regions and Overlays
 
+- **A dialog is as wide as its Form needs (owner, 2026-11-15).** A rule for every Module, ours first: a
+  dialog whose Form is one column takes a narrower width than `PHI_DIALOG_WIDTH` (610, `contentMax`); two
+  columns keep it; a table or an editor states a wider one. The narrow width must leave the Form at least
+  377px (`PHI_FORM_RESPONSIVE_MIN_WIDTH`, medium) inside the dialog's inset, or its labels stack above the
+  fields again -- so not `contentMaxNarrow` itself, but that plus the body's inset on both sides. To decide:
+  the constant (`PHI_DIALOG_WIDTH_SINGLE_COLUMN` or a `controlSize`), whether `dialog` on
+  `createPhiCmsPresetNodes` picks it from the Form's placements by itself, and a check in the descriptor
+  compiler that refuses a one-column Form in a full-width dialog. Then THIRD_PARTY_MODULES.md, "Dialogs".
 - **A Header band's `offsetTop` reserves its room.** Today the offset is only the sticky `top`: a
   floating `header_main` at `offsetTop: 16` is pushed 16px down at rest but holds only its own height in the
   grid, so on a Page without a Hero the content starts under the bar (dev.phisys.com's login and reset
