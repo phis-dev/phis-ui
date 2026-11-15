@@ -170,7 +170,9 @@ export function PhiSequenceViewport({
   const slice = span === 1
     ? "100%"
     : `calc((100% - ${span - 1} * ${gapLength}) / ${span})`;
-  const step = span === 1 ? "100%" : `calc(${slice} + ${gapLength})`;
+  // One place's width plus the gap after it, for one visible item as for several: the track's items stand
+  // that far apart, so a step of the width alone drifts a gap further off the window with every item.
+  const step = `calc(${slice} + ${gapLength})`;
 
   const mountedIndices = new Set<number>();
   for (let index = 0; index < itemCount; index += 1) {

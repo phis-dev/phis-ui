@@ -833,6 +833,8 @@ is shared with the Gallery in `components/motion`:
   the Builder, never in a hidden tab, and not while it is pointed at or tabbed into. A step somebody
   took restarts the interval. Because a finger neither hovers nor tabs, an autoplaying sequence draws a
   Pause button (`aria-pressed`), the one stop that outlives the pointer leaving.
+- On the track a step is one place's width plus the gap, whatever the number of visible items; with one
+  visible item the window shows exactly that item and no edge of a neighbour.
 - The box is a `region` with `aria-roledescription="carousel"`; its items are announced only while it
   stands still (`aria-live` off while the timer runs). Arrows are drawn only when there is more than one
   window.

@@ -1,6 +1,8 @@
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import { resolvePhiSequenceWindowStart } from "./phi-sequence-viewport";
+import { PhiSequenceViewport, resolvePhiSequenceWindowStart } from "./phi-sequence-viewport";
 
 /**
  * Where the window sits.
@@ -50,5 +52,28 @@ describe("degenerate sequences", () => {
 
   it("shows what there is when the window is wider than the sequence", () => {
     expect(start(1, 5, 2, "start")).toBe(0);
+  });
+});
+
+describe("the track's step", () => {
+  const transformOf = (visibleCount: number, activeIndex: number) => {
+    const html = renderToStaticMarkup(createElement(PhiSequenceViewport, {
+      items: ["a", "b", "c", "d"],
+      activeIndex,
+      visibleCount,
+      transition: "slide",
+      gap: 8,
+    }));
+    return html.match(/transform:([^;"]*)/)?.[1];
+  };
+
+  it("moves one visible item by its width and the gap, so no neighbour's edge drifts into the window", () => {
+    // The items stand a width plus a gap apart; a step of the width alone left the window a gap further
+    // off with every item, showing a strip of the one before.
+    expect(transformOf(1, 2)).toBe("translate3d(calc(-1 * 2 * calc(100% + 8px)), 0px, 0)");
+  });
+
+  it("steps several visible items the same way", () => {
+    expect(transformOf(2, 1)).toBe("translate3d(calc(-1 * 1 * calc(calc((100% - 1 * 8px) / 2) + 8px)), 0px, 0)");
   });
 });
