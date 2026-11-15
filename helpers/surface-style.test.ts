@@ -174,7 +174,7 @@ describe("the Layout surfaces a Preset writes", () => {
 
   it("draws a wash as a filling with no line and no depth", () => {
     const style = resolvePhiSurfaceStyle(readPhiSurface(PHI_SURFACE_WASH)).style;
-    expect(style.backgroundColor).toBe("var(--ant-color-fill-quaternary)");
+    expect(style.backgroundColor).toBe("var(--phi-color-fill-quaternary)");
     expect(style.border).toBe("none");
     expect(style.boxShadow).toBe("none");
   });

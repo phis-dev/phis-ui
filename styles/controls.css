@@ -18,38 +18,38 @@
  * selectors under `.phi-typography`, the same tokens through the variables the primitive publishes.
  */
 .phi-typography {
-  color: var(--ant-color-text);
+  color: var(--phi-color-text);
   word-break: break-word;
-  line-height: var(--ant-line-height);
+  line-height: var(--phi-line-height);
 }
 
 .phi-typography--secondary {
-  color: var(--ant-color-text-description);
+  color: var(--phi-color-text-description);
 }
 
 .phi-typography--success {
-  color: var(--ant-color-success-text);
+  color: var(--phi-color-success-text);
 }
 
 .phi-typography--warning {
-  color: var(--ant-color-warning-text);
+  color: var(--phi-color-warning-text);
 }
 
 .phi-typography--danger {
-  color: var(--ant-color-error-text);
+  color: var(--phi-color-error-text);
 }
 
 .phi-typography--danger.phi-typography--link:hover {
-  color: var(--ant-color-error-text-hover);
+  color: var(--phi-color-error-text-hover);
 }
 
 .phi-typography--danger.phi-typography--link:active,
 .phi-typography--danger.phi-typography--link:focus {
-  color: var(--ant-color-error-text-active);
+  color: var(--phi-color-error-text-active);
 }
 
 .phi-typography--disabled {
-  color: var(--ant-color-text-disabled);
+  color: var(--phi-color-text-disabled);
   cursor: not-allowed;
   user-select: none;
 }
@@ -65,35 +65,35 @@ h3.phi-typography, .phi-typography h3,
 h4.phi-typography, .phi-typography h4,
 h5.phi-typography, .phi-typography h5 {
   margin-bottom: 0.5em;
-  color: var(--ant-color-text-heading);
-  font-weight: var(--ant-font-weight-strong);
+  color: var(--phi-color-text-heading);
+  font-weight: var(--phi-font-weight-strong);
 }
 
 h1.phi-typography, .phi-typography h1 {
-  font-size: var(--ant-font-size-heading-1);
-  line-height: var(--ant-line-height-heading-1);
+  font-size: var(--phi-font-size-heading-1);
+  line-height: var(--phi-line-height-heading-1);
 }
 
 h2.phi-typography, .phi-typography h2 {
-  font-size: var(--ant-font-size-heading-2);
-  line-height: var(--ant-line-height-heading-2);
+  font-size: var(--phi-font-size-heading-2);
+  line-height: var(--phi-line-height-heading-2);
 }
 
 h3.phi-typography, .phi-typography h3 {
-  font-size: var(--ant-font-size-heading-3);
-  line-height: var(--ant-line-height-heading-3);
+  font-size: var(--phi-font-size-heading-3);
+  line-height: var(--phi-line-height-heading-3);
 }
 
 h4.phi-typography, .phi-typography h4 {
-  font-size: var(--ant-font-size-heading-4);
-  line-height: var(--ant-line-height-heading-4);
+  font-size: var(--phi-font-size-heading-4);
+  line-height: var(--phi-line-height-heading-4);
 }
 
 /* The same size as `h4` (`theme/phi-tokens.ts`); the colour is what sets it below. */
 h5.phi-typography, .phi-typography h5 {
-  font-size: var(--ant-font-size-heading-5);
-  line-height: var(--ant-line-height-heading-5);
-  color: var(--ant-color-text-secondary);
+  font-size: var(--phi-font-size-heading-5);
+  line-height: var(--phi-line-height-heading-5);
+  color: var(--phi-color-text-secondary);
 }
 
 .phi-typography + h1.phi-typography,
@@ -110,9 +110,9 @@ h5.phi-typography, .phi-typography h5 {
   padding-inline: 0.4em;
   padding-block: 0.2em 0.1em;
   font-size: 85%;
-  font-family: var(--ant-font-family-code);
+  font-family: var(--phi-font-family-code);
   background: rgba(150, 150, 150, 0.1);
-  border: var(--ant-line-width) var(--ant-line-type) rgba(100, 100, 100, 0.2);
+  border: var(--phi-line-width) var(--phi-line-type) rgba(100, 100, 100, 0.2);
   border-radius: 3px;
 }
 
@@ -121,9 +121,9 @@ h5.phi-typography, .phi-typography h5 {
   padding-inline: 0.4em;
   padding-block: 0.15em 0.1em;
   font-size: 90%;
-  font-family: var(--ant-font-family-code);
+  font-family: var(--phi-font-family-code);
   background: rgba(150, 150, 150, 0.06);
-  border: var(--ant-line-width) var(--ant-line-type) rgba(100, 100, 100, 0.2);
+  border: var(--phi-line-width) var(--phi-line-type) rgba(100, 100, 100, 0.2);
   border-bottom-width: 2px;
   border-radius: 3px;
 }
@@ -144,7 +144,7 @@ h5.phi-typography, .phi-typography h5 {
 }
 
 .phi-typography strong {
-  font-weight: var(--ant-font-weight-strong);
+  font-weight: var(--phi-font-weight-strong);
 }
 
 .phi-typography :is(ul, ol) {
@@ -181,9 +181,9 @@ h5.phi-typography, .phi-typography h5 {
   white-space: pre-wrap;
   overflow-wrap: break-word;
   background: rgba(150, 150, 150, 0.1);
-  border: var(--ant-line-width) var(--ant-line-type) rgba(100, 100, 100, 0.2);
+  border: var(--phi-line-width) var(--phi-line-type) rgba(100, 100, 100, 0.2);
   border-radius: 3px;
-  font-family: var(--ant-font-family-code);
+  font-family: var(--phi-font-family-code);
 }
 
 .phi-typography pre code {
@@ -204,44 +204,44 @@ h5.phi-typography, .phi-typography h5 {
 }
 
 .phi-typography--link {
-  color: var(--ant-color-link);
+  color: var(--phi-color-link);
   text-decoration: none;
   outline: none;
   cursor: pointer;
   user-select: text;
-  transition: color var(--ant-motion-duration-slow);
+  transition: color var(--phi-motion-duration-slow);
 }
 
 .phi-typography--link:hover,
 .phi-typography--link:focus {
-  color: var(--ant-color-link-hover);
+  color: var(--phi-color-link-hover);
 }
 
 .phi-typography--link:active {
-  color: var(--ant-color-link-active);
+  color: var(--phi-color-link-active);
 }
 
 .phi-typography--link.phi-typography--disabled,
 .phi-typography--link.phi-typography--disabled:hover,
 .phi-typography--link.phi-typography--disabled:active {
-  color: var(--ant-color-text-disabled);
+  color: var(--phi-color-text-disabled);
   cursor: not-allowed;
 }
 
 .phi-typography--secondary.phi-typography--link {
-  color: var(--ant-color-text-description);
+  color: var(--phi-color-text-description);
 }
 
 .phi-typography--success.phi-typography--link {
-  color: var(--ant-color-success-text);
+  color: var(--phi-color-success-text);
 }
 
 .phi-typography--warning.phi-typography--link {
-  color: var(--ant-color-warning-text);
+  color: var(--phi-color-warning-text);
 }
 
 .phi-typography--danger.phi-typography--link {
-  color: var(--ant-color-error-text);
+  color: var(--phi-color-error-text);
 }
 
 /* --- Menu -------------------------------------------------------------------------------------------- */
@@ -259,27 +259,27 @@ h5.phi-typography, .phi-typography h5 {
 .phi-menu-control--inline.ant-menu-root .ant-menu.ant-menu-sub,
 .phi-menu-control--inline.phi-menu-control__popup.ant-menu,
 .phi-menu-control--inline.phi-menu-control__popup .ant-menu.ant-menu-sub {
-  --ant-menu-item-margin-block: var(--ant-margin-xxs);
-  --ant-menu-item-margin-inline: 0px;
-  --ant-menu-item-width: calc(100% - 0px);
-  --ant-menu-item-bg: transparent;
-  --ant-menu-sub-menu-item-bg: transparent;
-  --ant-menu-dark-item-bg: transparent;
-  --ant-menu-dark-sub-menu-item-bg: transparent;
+  --phi-menu-item-margin-block: var(--phi-margin-xxs);
+  --phi-menu-item-margin-inline: 0px;
+  --phi-menu-item-width: calc(100% - 0px);
+  --phi-menu-item-bg: transparent;
+  --phi-menu-sub-menu-item-bg: transparent;
+  --phi-menu-dark-item-bg: transparent;
+  --phi-menu-dark-sub-menu-item-bg: transparent;
 }
 
 .phi-menu-control--collapsed-width.ant-menu.ant-menu-root,
 .phi-menu-control--collapsed-width.ant-menu-root .ant-menu.ant-menu-sub,
 .phi-menu-control--collapsed-width.phi-menu-control__popup.ant-menu,
 .phi-menu-control--collapsed-width.phi-menu-control__popup .ant-menu.ant-menu-sub {
-  --ant-menu-collapsed-width: var(--phi-menu-collapsed-width);
+  --phi-menu-collapsed-width: var(--phi-menu-collapsed-width);
 }
 
 .phi-menu-control--font-family.ant-menu.ant-menu-root,
 .phi-menu-control--font-family.ant-menu-root .ant-menu.ant-menu-sub,
 .phi-menu-control--font-family.phi-menu-control__popup.ant-menu,
 .phi-menu-control--font-family.phi-menu-control__popup .ant-menu.ant-menu-sub {
-  --ant-font-family: var(--phi-menu-font-family);
+  --phi-font-family: var(--phi-menu-font-family);
 }
 
 /* The Menu's tokens that Ant Design derives from the base size, derived the same way. */
@@ -287,10 +287,10 @@ h5.phi-typography, .phi-typography h5 {
 .phi-menu-control--font-size.ant-menu-root .ant-menu.ant-menu-sub,
 .phi-menu-control--font-size.phi-menu-control__popup.ant-menu,
 .phi-menu-control--font-size.phi-menu-control__popup .ant-menu.ant-menu-sub {
-  --ant-font-size: var(--phi-menu-font-size);
-  --ant-menu-icon-size: var(--phi-menu-font-size);
-  --ant-menu-group-title-font-size: var(--phi-menu-font-size);
-  --ant-menu-icon-margin-inline-end: calc(var(--ant-control-height-sm) - var(--phi-menu-font-size));
+  --phi-font-size: var(--phi-menu-font-size);
+  --phi-menu-icon-size: var(--phi-menu-font-size);
+  --phi-menu-group-title-font-size: var(--phi-menu-font-size);
+  --phi-menu-icon-margin-inline-end: calc(var(--phi-control-height-sm) - var(--phi-menu-font-size));
 }
 
 /*
@@ -303,7 +303,7 @@ h5.phi-typography, .phi-typography h5 {
 .phi-header-nav .ant-menu-horizontal > :is(.ant-menu-item, .ant-menu-submenu) {
   display: flex;
   align-items: center;
-  line-height: var(--ant-control-height);
+  line-height: var(--phi-control-height);
 }
 
 /*
@@ -316,21 +316,21 @@ h5.phi-typography, .phi-typography h5 {
  */
 .phi-menu-control--selection-pill.ant-menu.ant-menu-root.ant-menu-horizontal,
 .phi-menu-control--selection-auto.ant-menu-dark.ant-menu-root.ant-menu-horizontal {
-  --ant-menu-active-bar-height: 0px;
+  --phi-menu-active-bar-height: 0px;
   /*
    * The Theme's Control shape at the default size: one Control line tall, so the radius a grown Control
    * holds is exactly this entry's -- the shape's number, or the capsule under `pill`.
    */
-  --ant-menu-horizontal-item-border-radius: var(--phi-control-radius-grown-md, var(--ant-border-radius));
-  --ant-menu-horizontal-item-selected-bg: var(--ant-color-primary-bg);
-  --ant-menu-dark-item-selected-bg: color-mix(in srgb, var(--ant-color-primary) 30%, transparent);
+  --phi-menu-horizontal-item-border-radius: var(--phi-control-radius-grown-md, var(--phi-border-radius));
+  --phi-menu-horizontal-item-selected-bg: var(--phi-color-primary-bg);
+  --phi-menu-dark-item-selected-bg: color-mix(in srgb, var(--phi-color-primary) 30%, transparent);
 }
 
 .phi-menu-control--selection-pill.ant-menu-horizontal > :is(.ant-menu-item, .ant-menu-submenu),
 .phi-menu-control--selection-auto.ant-menu-dark.ant-menu-horizontal > :is(.ant-menu-item, .ant-menu-submenu) {
   align-self: center;
-  height: var(--ant-control-height);
-  line-height: var(--ant-control-height);
+  height: var(--phi-control-height);
+  line-height: var(--phi-control-height);
 }
 
 .phi-menu-control--selection-pill.ant-menu-horizontal > :is(.ant-menu-item, .ant-menu-submenu)::after,
@@ -340,15 +340,15 @@ h5.phi-typography, .phi-typography h5 {
 
 /* The bar in dark mode as well: no ground, and the bar Ant Design leaves out under a dark menu. */
 .phi-menu-control--selection-underline.ant-menu-dark.ant-menu-root.ant-menu-horizontal {
-  --ant-menu-dark-item-selected-bg: transparent;
-  --ant-menu-dark-item-selected-color: var(--ant-color-primary);
+  --phi-menu-dark-item-selected-bg: transparent;
+  --phi-menu-dark-item-selected-color: var(--phi-color-primary);
 }
 
 .phi-menu-control--selection-underline.ant-menu-dark.ant-menu-horizontal
   > :is(.ant-menu-item-selected, .ant-menu-submenu-selected)::after {
   /* Ant Design's own `lineWidthBold`, which it derives as `lineWidth + 1`. */
-  border-bottom-width: calc(var(--ant-line-width) + 1px);
-  border-bottom-color: var(--ant-color-primary);
+  border-bottom-width: calc(var(--phi-line-width) + 1px);
+  border-bottom-color: var(--phi-color-primary);
 }
 
 /*
@@ -356,7 +356,7 @@ h5.phi-typography, .phi-typography h5 {
  * so a list of them reads as a list while every one is closed.
  */
 .phi-markdown-folds :where(.ant-collapse-item + .ant-collapse-item) {
-  border-block-start: var(--ant-line-width, 1px) solid var(--ant-color-split);
+  border-block-start: var(--phi-line-width, 1px) solid var(--phi-color-split);
 }
 
 /* --- Labeled control ---------------------------------------------------------------------------- */
@@ -380,7 +380,7 @@ h5.phi-typography, .phi-typography h5 {
  */
 .phi-card-control {
   --phi-card-control-radius: var(--phi-surface-radius);
-  --phi-card-control-line: var(--ant-line-width) var(--ant-line-type) var(--ant-color-border-secondary);
+  --phi-card-control-line: var(--phi-line-width) var(--phi-line-type) var(--phi-color-border-secondary);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -388,23 +388,23 @@ h5.phi-typography, .phi-typography h5 {
   min-width: 0;
   border: var(--phi-card-control-line);
   border-radius: var(--phi-card-control-radius);
-  background: var(--ant-color-bg-container);
-  color: var(--ant-color-text);
-  font-size: var(--ant-font-size);
-  line-height: var(--ant-line-height);
+  background: var(--phi-color-bg-container);
+  color: var(--phi-color-text);
+  font-size: var(--phi-font-size);
+  line-height: var(--phi-line-height);
 }
 
 .phi-card-control__head {
   display: flex;
   align-items: center;
-  gap: var(--ant-padding-xs);
-  min-height: calc(var(--ant-font-size-lg) * var(--ant-line-height-lg) + var(--ant-padding) * 2);
-  padding: 0 var(--ant-padding-lg);
+  gap: var(--phi-padding-xs);
+  min-height: calc(var(--phi-font-size-lg) * var(--phi-line-height-lg) + var(--phi-padding) * 2);
+  padding: 0 var(--phi-padding-lg);
   border-bottom: var(--phi-card-control-line);
   border-radius: var(--phi-card-control-radius) var(--phi-card-control-radius) 0 0;
-  color: var(--ant-color-text-heading);
-  font-size: var(--ant-font-size-lg);
-  font-weight: var(--ant-font-weight-strong);
+  color: var(--phi-color-text-heading);
+  font-size: var(--phi-font-size-lg);
+  font-weight: var(--phi-font-weight-strong);
 }
 
 .phi-card-control__title {
@@ -417,20 +417,20 @@ h5.phi-typography, .phi-typography h5 {
 
 .phi-card-control__toolbar {
   margin-inline-start: auto;
-  color: var(--ant-color-text);
-  font-size: var(--ant-font-size);
+  color: var(--phi-color-text);
+  font-size: var(--phi-font-size);
   font-weight: normal;
 }
 
 .phi-card-control--small > .phi-card-control__head {
-  min-height: calc(var(--ant-font-size) * var(--ant-line-height) + var(--ant-padding-xs) * 2);
-  padding: 0 var(--ant-padding-sm);
-  font-size: var(--ant-font-size);
+  min-height: calc(var(--phi-font-size) * var(--phi-line-height) + var(--phi-padding-xs) * 2);
+  padding: 0 var(--phi-padding-sm);
+  font-size: var(--phi-font-size);
 }
 
 /* The cover runs to the frame's outer edge and takes its upper corners when nothing sits above it. */
 .phi-card-control__cover {
-  margin: calc(var(--ant-line-width) * -1) calc(var(--ant-line-width) * -1) 0;
+  margin: calc(var(--phi-line-width) * -1) calc(var(--phi-line-width) * -1) 0;
 }
 
 .phi-card-control__cover > * {
@@ -465,13 +465,13 @@ h5.phi-typography, .phi-typography h5 {
 .phi-card-control--hoverable {
   cursor: pointer;
   transition:
-    box-shadow var(--ant-motion-duration-mid),
-    border-color var(--ant-motion-duration-mid);
+    box-shadow var(--phi-motion-duration-mid),
+    border-color var(--phi-motion-duration-mid);
 }
 
 .phi-card-control--hoverable:hover {
   border-color: transparent;
-  box-shadow: var(--ant-box-shadow);
+  box-shadow: var(--phi-box-shadow);
 }
 
 /* --- Dropdown ------------------------------------------------------------------------------------ */
@@ -490,8 +490,8 @@ h5.phi-typography, .phi-typography h5 {
   align-items: center;
   justify-content: center;
   min-width: 3.5rem;
-  padding: var(--ant-padding-xxs) var(--ant-padding-sm);
-  border: var(--ant-line-width) solid var(--ant-color-border);
+  padding: var(--phi-padding-xxs) var(--phi-padding-sm);
+  border: var(--phi-line-width) solid var(--phi-color-border);
   border-radius: var(--phi-control-radius-sm);
   color: inherit;
   font-size: inherit;
@@ -500,14 +500,14 @@ h5.phi-typography, .phi-typography h5 {
   white-space: nowrap;
   flex-shrink: 0;
   transition:
-    color var(--ant-motion-duration-mid),
-    border-color var(--ant-motion-duration-mid);
+    color var(--phi-motion-duration-mid),
+    border-color var(--phi-motion-duration-mid);
 }
 
 /* Hovering anywhere on the trigger lights the pill -- the account avatar beside it included. */
 .phi-dropdown-control:hover .phi-dropdown-control__pill {
-  border-color: var(--ant-color-primary-hover);
-  color: var(--ant-color-primary-hover);
+  border-color: var(--phi-color-primary-hover);
+  color: var(--phi-color-primary-hover);
 }
 
 /*
@@ -516,7 +516,7 @@ h5.phi-typography, .phi-typography h5 {
  * an icon glyph never matches it. Centred in its box, so it lines up with the label beside it.
  */
 .phi-dropdown-control__chevron {
-  --phi-chevron-size: calc(var(--ant-font-size) / 7 * 5);
+  --phi-chevron-size: calc(var(--phi-font-size) / 7 * 5);
   position: relative;
   display: inline-block;
   flex-shrink: 0;
@@ -532,7 +532,7 @@ h5.phi-typography, .phi-typography h5 {
   left: calc(50% - var(--phi-chevron-size) * 0.3);
   width: calc(var(--phi-chevron-size) * 0.6);
   height: calc(var(--phi-chevron-size) * 0.15);
-  border-radius: var(--ant-border-radius);
+  border-radius: var(--phi-border-radius);
   background-color: currentcolor;
   content: "";
 }
@@ -620,11 +620,11 @@ h5.phi-typography, .phi-typography h5 {
  * and its stylesheet is injected after this one.
  */
 .phi-table-control.phi-table-control [class~="ant-table-summary"] {
-  background: var(--ant-table-footer-bg, var(--ant-color-fill-alter));
+  background: var(--phi-table-footer-bg, var(--phi-color-fill-alter));
 }
 
 .phi-table-control [class~="ant-table-pagination"][class~="ant-pagination"] {
-  margin-block: var(--ant-padding-sm) 0 !important;
+  margin-block: var(--phi-padding-sm) 0 !important;
 }
 
 .phi-table-control
@@ -670,7 +670,7 @@ h5.phi-typography, .phi-typography h5 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-block-size: var(--ant-control-height-sm);
+  min-block-size: var(--phi-control-height-sm);
 }
 
 /* --- Compact Select ------------------------------------------------------------------------------ */
@@ -683,13 +683,13 @@ h5.phi-typography, .phi-typography h5 {
  * height would leave the box short of `controlHeightSM` by the difference.
  */
 [class~="ant-select"][class~="ant-select-sm"] {
-  --ant-select-font-size: var(--ant-font-size-sm);
-  --ant-select-font-height: calc(var(--ant-font-size-sm) * var(--ant-select-line-height));
+  --phi-select-font-size: var(--phi-font-size-sm);
+  --phi-select-font-height: calc(var(--phi-font-size-sm) * var(--phi-select-line-height));
 }
 
 /* The list a compact Select opens writes as the field does; Ant Design gives every Select's list the body size. */
 .phi-select-popup--sm [class~="ant-select-item"] {
-  font-size: var(--ant-font-size-sm);
+  font-size: var(--phi-font-size-sm);
 }
 
 /* --- Running text --------------------------------------------------------------------------------- */
@@ -722,9 +722,9 @@ h5.phi-typography, .phi-typography h5 {
 .phi-plain-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--ant-font-size-sm);
-  line-height: var(--ant-line-height-sm);
-  color: var(--ant-color-text);
+  font-size: var(--phi-font-size-sm);
+  line-height: var(--phi-line-height-sm);
+  color: var(--phi-color-text);
 }
 
 /*
@@ -734,7 +734,7 @@ h5.phi-typography, .phi-typography h5 {
  */
 .phi-plain-table th,
 .phi-plain-table td {
-  padding: var(--ant-padding-xs) var(--ant-padding-sm);
+  padding: var(--phi-padding-xs) var(--phi-padding-sm);
   text-align: start;
   vertical-align: top;
   hyphens: manual;
@@ -746,13 +746,13 @@ h5.phi-typography, .phi-typography h5 {
 }
 
 .phi-plain-table th {
-  font-weight: var(--ant-font-weight-strong);
-  color: var(--ant-color-text-heading);
-  border-block-end: 1px solid var(--ant-color-border-secondary);
+  font-weight: var(--phi-font-weight-strong);
+  color: var(--phi-color-text-heading);
+  border-block-end: 1px solid var(--phi-color-border-secondary);
 }
 
 .phi-plain-table td {
-  border-block-end: 1px solid var(--ant-color-split);
+  border-block-end: 1px solid var(--phi-color-split);
 }
 
 .phi-plain-table tbody tr:last-child td {
@@ -768,17 +768,17 @@ h5.phi-typography, .phi-typography h5 {
  * Beside the words the line is shared in the golden ratio: what is left after the gap between them goes
  * 1 : φ to picture and text (`PHI_GOLDEN_RATIO`, 1 + φ = 2.618), so the text is 1.618 times as wide as the
  * picture at any column width -- 415 px of picture beside 671 px of text in a 1120 px column, with the
- * Phi scale's `md` (34 px) between them. Every distance here is the Phi scale's, never `--ant-margin-*`.
+ * Phi scale's `md` (34 px) between them. Every distance here is the Phi scale's, never `--phi-margin-*`.
  */
 .phi-markdown-body {
   /* The gap between picture and text, on the Phi scale (`PHI_SPACE.md`), not Ant Design's margins. */
-  --phi-markdown-float-gap: var(--ant-padding-md, 34px);
+  --phi-markdown-float-gap: var(--phi-padding-md, 34px);
   --phi-markdown-float-width: calc((100% - var(--phi-markdown-float-gap)) / 2.618034);
 }
 
 .phi-markdown-body :is(img):not(:where(.phi-markdown-figure *)) {
   display: block;
-  margin-block-end: var(--ant-padding, 21px);
+  margin-block-end: var(--phi-padding, 21px);
   /*
    * A picture is a surface, so its corners are the Theme's surface step (`--phi-surface-radius`, THEME.md
    * "Control shape"): square under `square`, the widest step of the scale under `pill`.
@@ -806,7 +806,7 @@ h5.phi-typography, .phi-typography h5 {
  * address says (`float=start|end|none`), in the same golden share and from the same container width as above.
  */
 .phi-markdown-figure {
-  margin: 0 0 var(--ant-padding, 21px);
+  margin: 0 0 var(--phi-padding, 21px);
 }
 
 .phi-markdown-figure__frame {

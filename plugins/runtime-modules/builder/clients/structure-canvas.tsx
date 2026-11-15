@@ -453,7 +453,7 @@ export function PhiDeveloperBuilderStructureCanvas({
         height: "100%",
         minHeight: 0,
       }, {
-        "--phi-builder-structure-canvas-body-padding": isPagesWorkspace ? "0px" : "var(--ant-padding-xs)",
+        "--phi-builder-structure-canvas-body-padding": isPagesWorkspace ? "0px" : "var(--phi-padding-xs)",
         "--phi-builder-structure-canvas-outer-gap": "0px",
       })}
     >
@@ -463,7 +463,7 @@ export function PhiDeveloperBuilderStructureCanvas({
         style={{
           height: "100%",
           flex: "1 1 auto",
-          padding: isPagesWorkspace ? 0 : "var(--ant-padding-xs)",
+          padding: isPagesWorkspace ? 0 : "var(--phi-padding-xs)",
           borderRadius: 0,
           background: token.colorFillSecondary,
           border: "none",

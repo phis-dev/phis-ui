@@ -24,10 +24,10 @@ type PhiBorderWidgetStyleFallback = {
  * has to add this to the sum, and a `1px` typed into that calculation is the same second answer as one
  * typed into a border.
  */
-export const PHI_THEME_BORDER_WIDTH = "var(--ant-line-width, 1px)";
+export const PHI_THEME_BORDER_WIDTH = "var(--phi-line-width, 1px)";
 
 /** The Site's own line: its border colour at its line width. One string, so nobody types a second. */
-export const PHI_THEME_BORDER_LINE = `${PHI_THEME_BORDER_WIDTH} solid var(--ant-color-border)`;
+export const PHI_THEME_BORDER_LINE = `${PHI_THEME_BORDER_WIDTH} solid var(--phi-color-border)`;
 
 /**
  * The same line at a colour the caller names.

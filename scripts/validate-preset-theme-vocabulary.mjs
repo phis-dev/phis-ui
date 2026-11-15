@@ -12,7 +12,7 @@ import { lineOf } from "./lib/text.mjs";
  * Every distance, colour role and corner a preset states is a reference the Theme resolves: `PHI_SPACE.md`,
  * `PHI_COLOR.bgContainer`, `PHI_RADIUS.base` (`theme/antd-css-var-contract.ts`, exported from
  * `@phis/ui/theme`). What they resolve to today is an Ant Design custom property, and that is the adapter's
- * business: written out by hand in a preset, `var(--ant-padding-lg)` reads like a number somebody chose,
+ * business: written out by hand in a preset, `var(--phi-padding-lg)` reads like a number somebody chose,
  * hides which step of the scale it is, and is the one spelling that breaks the day the adapter changes
  * (THEME.md, "Phi scale"; THIRD_PARTY_MODULES.md, "Distances, colours and corners come from the Theme").
  *
@@ -35,7 +35,7 @@ const presetFiles = [
 const failures = [];
 for (const file of presetFiles) {
   const source = await readFile(path.join(repositoryRoot, file), "utf8");
-  const pattern = /var\(--ant-[a-z0-9-]+\)/gu;
+  const pattern = /var\(--phi-[a-z0-9-]+\)/gu;
   let match = pattern.exec(source);
   while (match) {
     failures.push(

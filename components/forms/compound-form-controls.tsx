@@ -222,7 +222,7 @@ export function PhiCompoundTableFormControl({
     if (addResetFields) formContext?.setValues(addResetFields);
   };
   return (
-    <div data-phi-form-keyboard-scope style={{ display: "grid", gap: "var(--ant-padding-sm)", minWidth: 0, width: "100%" }}>
+    <div data-phi-form-keyboard-scope style={{ display: "grid", gap: "var(--phi-padding-sm)", minWidth: 0, width: "100%" }}>
       <PhiCollectionHeaderControl
         title={label}
         description={description}
@@ -278,7 +278,7 @@ export function PhiCompoundTreeFormControl({ field, label, description, value, o
     node: { titleFieldKey: typeof config.titleFieldKey === "string" ? config.titleFieldKey : "title" },
   }) as PhiTreeWidgetPresentation;
   return (
-    <div data-phi-form-keyboard-scope style={{ display: "grid", gap: "var(--ant-padding-sm)", minWidth: 0, width: "100%" }}>
+    <div data-phi-form-keyboard-scope style={{ display: "grid", gap: "var(--phi-padding-sm)", minWidth: 0, width: "100%" }}>
       <PhiCollectionHeaderControl title={label} description={description} />
       <PhiTreeControl
         nodes={nodes}

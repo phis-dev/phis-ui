@@ -36,7 +36,7 @@ export function PhiThemeScopeControl({
   const theme = useMemo<ThemeConfig>(() => ({
     inherit: false,
     cssVar: {
-      prefix: "ant",
+      prefix: "phi",
       key: createPhiAntdThemeCssVarKey(scope, { mode, token, components }),
     },
     token,

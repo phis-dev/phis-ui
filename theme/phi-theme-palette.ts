@@ -62,12 +62,12 @@ export function resolvePhiPublishedThemeCustomColors(
 
 /** The token a custom colour rides as, and so the custom property Ant Design writes for it. */
 function resolvePhiThemeCustomColorTokenName(key: (typeof PHI_THEME_CUSTOM_COLOR_KEYS)[number]) {
-  return `phiCustom${key.slice("custom".length)}`;
+  return `custom${key.slice("custom".length)}`;
 }
 
 /**
  * The custom colours of one mode as tokens of the Theme's own, laid over the resolved ones like the
- * gradient slots, so Ant Design writes them per mode and per Surface tone (`--ant-phi-custom-1` ...) and a
+ * gradient slots, so Ant Design writes them per mode and per Surface tone (`--phi-custom-1` ...) and a
  * config can name one by its role (`PHI_COLOR.custom1`) instead of copying its value.
  */
 export function buildPhiThemeCustomColorTokens(

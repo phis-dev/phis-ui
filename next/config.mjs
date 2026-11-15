@@ -2,9 +2,9 @@
  * What a Site's `next.config` takes from this package: the structural CSS of every Ant Design component,
  * generated from the Ant Design the Site has installed.
  *
- * Ant Design emits two kinds of CSS. The structure -- `.ant-btn{padding:...;color:var(--ant-color-text)}`
+ * Ant Design emits two kinds of CSS. The structure -- `.ant-btn{padding:...;color:var(--phi-color-text)}`
  * -- reads every Theme value through a custom property, so it is the same for every Site, Theme and mode.
- * The custom properties themselves -- `.phi-root-...{--ant-color-primary:...}` -- are what a Theme
+ * The custom properties themselves -- `.phi-root-...{--phi-color-primary:...}` -- are what a Theme
  * decides. The root runs Ant Design with `zeroRuntime`, which drops the structure from rendering and
  * keeps the properties; this file is where the structure comes from instead. Generating it at runtime
  * cost about 10 ms of CPU per page view and 40-140 KB of inline CSS per page (measured 04.10.2026).
@@ -189,7 +189,7 @@ export function generatePhiAntdStaticCss(projectDir = process.cwd()) {
   const h = react.createElement;
   const { createCache, extractStyle, px2remTransformer, StyleProvider } = site.cssinjs;
   const cache = createCache();
-  const theme = { hashed: false, cssVar: { prefix: "ant", key: "phi-static" } };
+  const theme = { hashed: false, cssVar: { prefix: "phi", key: "phi-static" } };
   withoutDeprecationNotices(() => site.renderToString(
     h(StyleProvider, {
       cache,

@@ -119,7 +119,7 @@ function PhiInspectorSliderField({
 }) {
   const [dragged, setDragged] = useState<number | null>(null);
   return (
-    <PhiFlexControl align="center" style={{ minHeight: "var(--ant-control-height)", width: "100%" }}>
+    <PhiFlexControl align="center" style={{ minHeight: "var(--phi-control-height)", width: "100%" }}>
       <PhiSliderControl
         value={dragged ?? value}
         min={min}
@@ -153,7 +153,7 @@ export function renderPhiInspectorSwitchRow({
 }) {
   return renderPhiInspectorSettingsRow(
     label,
-    <PhiFlexControl align="center" style={{ minHeight: "var(--ant-control-height)" }}>
+    <PhiFlexControl align="center" style={{ minHeight: "var(--phi-control-height)" }}>
       <PhiSwitchControl checked={checked} disabled={disabled || !onChange} {...(onChange ? { onChange } : {})} />
     </PhiFlexControl>,
     key,
@@ -819,7 +819,7 @@ function PhiInspectorCollectionFieldControl({
             style={{
               width: "100%",
               minWidth: 0,
-              padding: "var(--ant-padding-xs)",
+              padding: "var(--phi-padding-xs)",
               border: `1px solid ${token.colorBorderSecondary}`,
               borderRadius: token.borderRadius,
               background: token.colorBgContainer,

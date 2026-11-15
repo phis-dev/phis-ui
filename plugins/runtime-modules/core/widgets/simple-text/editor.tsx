@@ -235,7 +235,7 @@ export function PhiSimpleTextWidgetEditor({
            * form and wrong here -- the Widget stands on whatever its Region is painted with. Code text is
            * the exception, because there the fill is part of how the text reads.
            */
-          backgroundColor: hasPhiSimpleTextMark(config, "code") ? "var(--ant-color-fill-secondary, rgba(0, 0, 0, 0.04))" : "transparent",
+          backgroundColor: hasPhiSimpleTextMark(config, "code") ? "var(--phi-color-fill-secondary, rgba(0, 0, 0, 0.04))" : "transparent",
         }}
         fitContent
         style={{

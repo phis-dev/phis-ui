@@ -66,7 +66,7 @@ export function PhiExternalDocumentEditor({
         showIcon
         title={`External ${format} source`}
         description={
-          <PhiFlexControl vertical gap="var(--ant-padding-xs)" style={{ width: "100%", minWidth: 0 }}>
+          <PhiFlexControl vertical gap="var(--phi-padding-xs)" style={{ width: "100%", minWidth: 0 }}>
             <PhiTypographyControl>
               This widget renders the configured external document. Edit its URL and source locale in the widget settings.
             </PhiTypographyControl>

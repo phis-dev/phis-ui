@@ -169,7 +169,7 @@ export function PhiAssetInspectorSection({
         "--phi-labeled-control-label-width": "33.333333%",
       } as CSSProperties}
     >
-      <div style={{ position: "relative", width: "100%", aspectRatio: "4 / 3", overflow: "hidden", borderRadius: "var(--ant-border-radius-lg)", background: "var(--ant-color-fill-tertiary)" }}>
+      <div style={{ position: "relative", width: "100%", aspectRatio: "4 / 3", overflow: "hidden", borderRadius: "var(--phi-border-radius-lg)", background: "var(--phi-color-fill-tertiary)" }}>
         {asset.kind === PhiMediaKind.Image ? (
           isOriginalSelection ? (
             originalCoverImageStyle ? (

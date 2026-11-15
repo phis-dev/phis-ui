@@ -106,7 +106,7 @@ export function PhiBulletListEntriesEditor({
       <PhiBulletListControl
         listStyle={listStyle}
         // Each entry is a borderless text field, whose first line stands at the field's height.
-        markerLineHeight="var(--ant-control-height)"
+        markerLineHeight="var(--phi-control-height)"
         items={buildPhiBulletListTree(
           shown,
           (item, index) => (
@@ -147,7 +147,7 @@ export function PhiBulletListEntriesEditor({
                * first line's middle is the marker's (`markerLineHeight` above). That is the padding the
                * field had from Ant Design already; stated, the clear button can find the line too.
                */
-              inputStyle={{ paddingBlock: "calc((var(--ant-control-height) - 1lh) / 2)" }}
+              inputStyle={{ paddingBlock: "calc((var(--phi-control-height) - 1lh) / 2)" }}
             />
           ),
           states && onCommit ? (_entry, index) => stepState(index) : undefined,

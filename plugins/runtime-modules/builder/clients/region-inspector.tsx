@@ -31,7 +31,7 @@ import { PhiRegionVisibilityFields } from "./region-visibility-fields";
 import { renderPhiInspectorConfigField } from "./inspector-config-field";
 import { hasPhiFlag, readPhiFlags } from "../../../../helpers/flags";
 import { PhiCmsFlags } from "../../../../constants/phi-cms";
-const PHI_GAP_SM = "var(--ant-padding-sm)";
+const PHI_GAP_SM = "var(--phi-padding-sm)";
 
 const REGION_PADDING_KEYS = [
   "padding",

@@ -7,7 +7,7 @@ import { checkPhiPagePresetLayout } from "./page-layout-check";
 
 /* A Page as the rule wants it, and one step off it per test. */
 
-const CARD = { background: { base: { kind: "color", color: "var(--ant-color-bg-container)" } } };
+const CARD = { background: { base: { kind: "color", color: "var(--phi-color-bg-container)" } } };
 
 function layout(id: number, parent: number | null, typeKey: string, config: Record<string, unknown>, label = `l${id}`) {
   return { id, parentLayoutNodeId: parent, widgetType: `x/${typeKey}`, config, label } as never;

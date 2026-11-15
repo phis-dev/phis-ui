@@ -75,7 +75,7 @@ function isPhiSelectSeparatorEntry(entry: unknown): entry is PhiSelectSeparatorE
 }
 
 function renderPhiSelectSeparator() {
-  return <div role="separator" style={{ borderTop: "1px solid var(--ant-color-split)", marginBlock: 4 }} />;
+  return <div role="separator" style={{ borderTop: "1px solid var(--phi-color-split)", marginBlock: 4 }} />;
 }
 
 /* The options with a line where one asks for it -- once, where an option after and one before agree. */

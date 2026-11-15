@@ -146,8 +146,8 @@ sparse: readers normalize absent values.
       the run that reads as the brand on a light page can be a hole in a dark one. A slot the palette leaves
       out is derived from the mode's own resolved colours (primary, warning, info), so every Theme offers
       all three without anybody drawing them. A palette block's slots and `theme.palette`'s are merged per
-      slot (`phi-theme-presets.ts`). They reach the page as the tokens `phiGradient1`-`phiGradient3`
-      (with a matching `…Text` colour), which Ant Design writes as `--ant-phi-gradient-1` and so on; a
+      slot (`phi-theme-presets.ts`). They reach the page as the tokens `gradient1`-`gradient3`
+      (with a matching `…Text` colour), which Ant Design writes as `--phi-gradient-1` and so on; a
       Control or a Background reads the property and is in the right mode wherever it stands.
 
 ### Style
@@ -312,9 +312,9 @@ The published Theme has one server projection and one client projection:
   peer range without a release of this package. Generating fails, and with it the Site's build, when
   a style hook Ant Design declares is not reached; `pnpm antd-css:check` and the package build run the
   same generation against this package's own Ant Design. The structure reads every Theme value through
-  `var(--ant-...)`, so one file serves every Theme, mode and nested scope. It is imported before this package's sheets, so a rule of ours that ties
+  `var(--phi-...)`, so one file serves every Theme, mode and nested scope. It is imported before this package's sheets, so a rule of ours that ties
   on specificity wins.
-- `AntdRegistry` in `PhiRootLayout` extracts what is still rendered during SSR: the `--ant-*` variables
+- `AntdRegistry` in `PhiRootLayout` extracts what is still rendered during SSR: the `--phi-*` variables
   Server Component markup and plain CSS use, per theme scope.
 - `resolvePhiPublishedRootTheme(...)` (`server-only`) emits only Phi-owned structural variables that have no
   Ant Design token.
@@ -346,7 +346,7 @@ translated. What is owned here is the **list**.
   `PhiServerThemeTokens` is cut from the same list, so the two projections cannot drift apart.
 - `PHI_THEME_OWN_TOKEN_KEYS` -- the names this house adds to Ant Design's set. `paddingXXL` is one:
   `buildPhiThemeStructuralTokens` hands it over with the rest of the scale and the cssVar pass emits a
-  variable for every token it is given, so `--ant-padding-xxl` is on the page although `AliasToken` has
+  variable for every token it is given, so `--phi-padding-xxl` is on the page although `AliasToken` has
   no such field. Ant Design's type does not know the name; its output does. Such a name is read as a
   CSS variable, never through the hook, because it cannot be cut from a type that lacks it.
 - `PHI_THEME_PALETTE_SEED_KEYS` and `PHI_THEME_STYLE_SEED_KEYS` -- what a palette may seed and what a
@@ -382,7 +382,7 @@ Two things stay outside the boundary on purpose:
   bridge with Ant Design's own types. That is a decision, not a leak.
 
 `scripts/validate-control-boundaries.mjs` holds both halves. It decides which files may import Ant
-Design at all, and it checks which names cross: every `--ant-*` variable written anywhere in the tree is
+Design at all, and it checks which names cross: every `--phi-*` variable written anywhere in the tree is
 read back as a token name and must be one the list states. That is the way in that needs no import --
 BUILDER.md permits those variables on purpose -- and a typo in one resolves silently to nothing.
 Component tokens are the exception and each is named with its reason. A stated name nothing reads or
@@ -390,13 +390,13 @@ writes fails the check, and so does a permission nobody uses.
 
 ## Page width
 
-How wide a Page may get is the Theme's: the style token `phiPageMax`, in pixels, published as
-`--ant-phi-page-max` and read as `PHI_PAGE.max` (`theme/antd-css-var-contract.ts`). Where a Theme states
+How wide a Page may get is the Theme's: the style token `pageMax`, in pixels, published as
+`--phi-page-max` and read as `PHI_PAGE.max` (`theme/antd-css-var-contract.ts`). Where a Theme states
 nothing it is `PHI_LAYOUT.pageMax`, 1220 (987 + 233). The Style tab edits it under "Page Width".
 
 - **A Page states the reference, never the number.** A preset that frames a wide Page -- a catalogue, a
   Module's overview, `buildPhiBasePageColumnFrame` with `maxWidth: PHI_PAGE.max` -- writes
-  `var(--ant-phi-page-max)` into its `maxSize`, so a Theme that widens its Pages widens every one of them,
+  `var(--phi-page-max)` into its `maxSize`, so a Theme that widens its Pages widens every one of them,
   an edited copy included. A number written into a tree stays what it was the day the copy was made.
 - **Not below 987.** 987 is where a Region counts as wide (`PHI_CONTAINER_BREAKPOINT_REGION`); a Page
   narrower than that could never be wide, so `assertPhiThemeVocabulary` refuses a smaller value and the
@@ -404,6 +404,27 @@ nothing it is `PHI_LAYOUT.pageMax`, 1220 (987 + 233). The Style tab edits it und
 - **Columns keep their own measures.** Prose stops at `PHI_LAYOUT.readingMax`, a labelled form at
   `contentMax`; those are about what is in the column, not about the Page, and the Theme does not move
   them.
+
+## Page padding
+
+How far a Page's content stands in is the Theme's as well: twelve style tokens,
+`pagePadding<Top|Right|Bottom|Left><Phone|Tablet|Desktop>`, each a step of the spacing scale
+(`PHI_SPACE`, or `0`), published as `--phi-page-padding-<side>-<band>`. Where a Theme states nothing
+it is `PHI_LAYOUT.pagePadding`: `base` on a phone, `md` on a tablet and a desktop, the same on all four
+sides. The Style tab edits it under "Page Padding", one band at a time, with the Inspector's padding
+Control.
+
+- **By the screen, not by the room.** The bands are the Shell's device bands on `phi-render-viewport`
+  (styles/shell.css): a phone below 768, a tablet below 1200, a desktop from there. The block profiles'
+  377 and 610 measure the room a block is offered and would put two phones of one class on opposite
+  sides. styles/shell.css ("Page inset") hands the band the screen is in to everything inside the Shell
+  as `--phi-page-inset-<side>`; `PHI_PAGE.padding.<side>` reads it, and outside a Shell the desktop answer.
+- **A default, not a rule.** `buildPhiBasePageColumnFrame` writes `PHI_PAGE.padding` into the Page
+  column's four paddings, so the presets and the packages that build on it follow the Theme. A Layout
+  that states its own padding keeps it; nested Layouts read nothing from here.
+- **Refused when it is no step.** `assertPhiThemeVocabulary` refuses a value that is not a step of the
+  spacing scale: the column reads it as a length, and a word it cannot resolve would leave the side at no
+  padding with nothing to say why.
 
 ## Control shape
 
@@ -472,11 +493,11 @@ as `--phi-surface-radius` and, where a component has a token for it, as that tok
   the skeleton standing in for it. There is no component token to carry the step to a box phis draws itself, so
   it reads the variable, bare. The Config Provider declares it on its element in the server render and mirrors
   it onto the document for portals, and nothing of phis renders outside it (`usePhiConfig` throws there), so
-  an `--ant-*` fallback beside it would only hide a missing Provider.
+  an `--phi-*` fallback beside it would only hide a missing Provider.
 Intrinsic geometry stays authoritative: Switch stays a capsule, Checkbox and Radio keep their shapes, joined
 groups round only their outer boundary.
 
-`--ant-border-radius` means one thing on a surface and another on a Control, so a Widget that draws its own
+`--phi-border-radius` means one thing on a surface and another on a Control, so a Widget that draws its own
 box around a Control must not read it. Ant Design ships a component token in CSS variable mode as a local
 redefinition of the same variable on the Control element (`.ant-input-css-var`, `.ant-select-css-var`), which
 is how the shape reaches the default size at all: on a surface the variable carries the surface radius, on a
@@ -502,7 +523,7 @@ are not part of this field.
     `usePhiConfig().fonts` and the Ant Design token; `system` is the token `fontFamily`.
   - `fontSize = inherit | xs | sm | base | lg | xl | xxl`, resolved to `PHI_FONT_SIZES.xs`, `fontSizeSM`,
     `fontSize`, `fontSizeLG`, `fontSizeXL`, `PHI_FONT_SIZES.xxl`. `display` is not offered there.
-- Sizes use Ant Design tokens and `--ant-font-size*` variables; there is no `--phi-font-size-*` or
+- Sizes use Ant Design tokens and `--phi-font-size*` variables; there is no `--phi-font-size-*` or
   `--phi-font-family-*` contract.
 - Declaration, preloading, Module font contributions, and Site-owned font files:
   [NEXT_INTEGRATION.md](./NEXT_INTEGRATION.md#fonts).
@@ -510,23 +531,31 @@ are not part of this field.
 ## Tokens and CSS rules
 
 - `theme.palette` and `theme.style.token`, resolved over the followed blocks, are the only source of Ant Design
-  design tokens. `cssVar` output and SSR `--ant-*` variables derive from that source. The px2rem pass over
+  design tokens. `cssVar` output and SSR `--phi-*` variables derive from that source. The px2rem pass over
   the generated structure is a rem bridge, not a token source.
 - Client Components read Ant Design semantics from `usePhiConfig().token` (or `theme.useToken()` inside a
-  nested Ant Design provider). Plain CSS and Server Components use `var(--ant-...)`. Server Components never
+  nested Ant Design provider). Plain CSS and Server Components use `var(--phi-...)`. Server Components never
   depend on `ConfigProvider` or client theme hooks.
-- `--phi-*` is reserved for Phi-owned structural or technical values that Ant Design does not model -- Shell
-  geometry, Builder scaffold geometry, effects, font sources, Control shape radii. Do not
-  mirror Ant Design colours, spacing, radii, typography, shadows, control sizes, or motion into `--phi-*`.
+- **One prefix for both writers.** Ant Design writes its tokens as `--phi-*` (`cssVar.prefix: "phi"` in
+  `components/root/phi-root-theme-resolver.ts`, `next/config.mjs` and the nested Theme scope), and so
+  does this package for the values Ant Design does not model -- Shell geometry, Builder scaffold geometry,
+  effects, font sources, Control shape radii, the Page inset. The house's own tokens therefore carry no
+  `phi` of their own (`pageMax`, `gradient1`, `custom1`, ... become `--phi-page-max`, `--phi-gradient-1`,
+  `--phi-custom-1`). The hand-set variables are stated by family in
+  `scripts/lib/css-variable-families.mjs`: a `--phi-` name outside a family must be a stated token
+  (scripts/validate-control-boundaries.mjs), and no variable Ant Design writes may fall inside one
+  (scripts/check-antd-static-css.mjs). Class names keep Ant Design's `ant-` prefix; that is a different
+  setting. Do not mirror Ant Design colours, spacing, radii, typography, shadows, control sizes, or
+  motion into hand-set variables.
 - Custom colours are data in `usePhiConfig().customColors`, and the Theme also writes them per mode as tokens
-  of its own (`phiCustom1` ... `phiCustom10`, so `--ant-phi-custom-1` ...), laid over the resolved tokens like
+  of its own (`custom1` ... `custom10`, so `--phi-custom-1` ...), laid over the resolved tokens like
   the gradient slots (`theme/phi-theme-palette.ts`). A config names one by its role, `PHI_COLOR.custom3`, and
   it follows the Theme and the mode; consumers do not reconstruct them from CSS otherwise or substitute
   semantic tokens. The Theme workspace is the only place that supplies an unpublished draft palette
   explicitly.
 - The colour picker offers the Theme's custom colours and its primary and text ladders. In a field that
   styles content -- the Inspector's colour fields, a Background, a Border, a text colour -- a Theme swatch
-  stores its role (`var(--ant-color-primary-bg)`, `var(--ant-phi-custom-3)`) rather than its colour, so what
+  stores its role (`var(--phi-color-primary-bg)`, `var(--phi-custom-3)`) rather than its colour, so what
   an author picks from the Theme follows it (`usePhiColorControlPresets`, `storeThemeRoles`). A colour from
   the free picker or a fixed palette stays a value. The Theme workspace stores values: it is where those
   colours are set.
@@ -552,7 +581,7 @@ are not part of this field.
 The base spacing scale is global across Phi Sites (`PHI_PADDING`, `theme/phi-tokens.ts`):
 `xxs = 3`, `xs = 8`, `sm = 13`, `base = 21`, `md = 34`, `lg = 55`, `xl = 89`, `xxl = 144`.
 It is one scale for every distance a Phi surface states, inside a frame (`padding`) and between two things
-(`gap`) alike: server styles and presets write `PHI_SPACE` (`var(--ant-padding-*)`, exported from
+(`gap`) alike: server styles and presets write `PHI_SPACE` (`var(--phi-padding-*)`, exported from
 `@phis/ui/theme` with `PHI_COLOR` and `PHI_RADIUS`; `scripts/validate-preset-theme-vocabulary.mjs` refuses
 the spelled-out property in a preset), and the spacing
 choices in the Inspector offer that one scale. Ant Design's `margin*` family is seeded from the same

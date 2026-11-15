@@ -9,118 +9,129 @@ export const PHI_COLOR = {
    * The primary colour's ladder, as the Theme derives it per mode -- the same ten the colour picker offers
    * as the Theme's primary swatches, so a colour picked there is stored as its role and follows the Theme.
    */
-  primaryBg: "var(--ant-color-primary-bg)",
-  primaryBgHover: "var(--ant-color-primary-bg-hover)",
-  primaryBorder: "var(--ant-color-primary-border)",
-  primaryBorderHover: "var(--ant-color-primary-border-hover)",
-  primaryHover: "var(--ant-color-primary-hover)",
-  primary: "var(--ant-color-primary)",
-  primaryActive: "var(--ant-color-primary-active)",
-  primaryTextHover: "var(--ant-color-primary-text-hover)",
-  primaryText: "var(--ant-color-primary-text)",
-  primaryTextActive: "var(--ant-color-primary-text-active)",
-  link: "var(--ant-color-link)",
-  linkHover: "var(--ant-color-link-hover)",
+  primaryBg: "var(--phi-color-primary-bg)",
+  primaryBgHover: "var(--phi-color-primary-bg-hover)",
+  primaryBorder: "var(--phi-color-primary-border)",
+  primaryBorderHover: "var(--phi-color-primary-border-hover)",
+  primaryHover: "var(--phi-color-primary-hover)",
+  primary: "var(--phi-color-primary)",
+  primaryActive: "var(--phi-color-primary-active)",
+  primaryTextHover: "var(--phi-color-primary-text-hover)",
+  primaryText: "var(--phi-color-primary-text)",
+  primaryTextActive: "var(--phi-color-primary-text-active)",
+  link: "var(--phi-color-link)",
+  linkHover: "var(--phi-color-link-hover)",
   /* The text ladder, likewise the picker's text swatches. */
-  textBase: "var(--ant-color-text-base)",
-  text: "var(--ant-color-text)",
-  textSecondary: "var(--ant-color-text-secondary)",
-  textTertiary: "var(--ant-color-text-tertiary)",
-  textQuaternary: "var(--ant-color-text-quaternary)",
-  textHeading: "var(--ant-color-text-heading)",
-  textLabel: "var(--ant-color-text-label)",
-  textDescription: "var(--ant-color-text-description)",
-  textPlaceholder: "var(--ant-color-text-placeholder)",
-  textDisabled: "var(--ant-color-text-disabled)",
-  textLightSolid: "var(--ant-color-text-light-solid)",
-  bgContainer: "var(--ant-color-bg-container)",
-  bgLayout: "var(--ant-color-bg-layout)",
-  bgElevated: "var(--ant-color-bg-elevated)",
-  bgSpotlight: "var(--ant-color-bg-spotlight)",
-  fill: "var(--ant-color-fill)",
-  fillSecondary: "var(--ant-color-fill-secondary)",
-  fillTertiary: "var(--ant-color-fill-tertiary)",
-  fillQuaternary: "var(--ant-color-fill-quaternary)",
-  border: "var(--ant-color-border)",
-  borderSecondary: "var(--ant-color-border-secondary)",
-  linkActive: "var(--ant-color-link-active)",
-  split: "var(--ant-color-split)",
-  error: "var(--ant-color-error)",
-  success: "var(--ant-color-success)",
-  warning: "var(--ant-color-warning)",
+  textBase: "var(--phi-color-text-base)",
+  text: "var(--phi-color-text)",
+  textSecondary: "var(--phi-color-text-secondary)",
+  textTertiary: "var(--phi-color-text-tertiary)",
+  textQuaternary: "var(--phi-color-text-quaternary)",
+  textHeading: "var(--phi-color-text-heading)",
+  textLabel: "var(--phi-color-text-label)",
+  textDescription: "var(--phi-color-text-description)",
+  textPlaceholder: "var(--phi-color-text-placeholder)",
+  textDisabled: "var(--phi-color-text-disabled)",
+  textLightSolid: "var(--phi-color-text-light-solid)",
+  bgContainer: "var(--phi-color-bg-container)",
+  bgLayout: "var(--phi-color-bg-layout)",
+  bgElevated: "var(--phi-color-bg-elevated)",
+  bgSpotlight: "var(--phi-color-bg-spotlight)",
+  fill: "var(--phi-color-fill)",
+  fillSecondary: "var(--phi-color-fill-secondary)",
+  fillTertiary: "var(--phi-color-fill-tertiary)",
+  fillQuaternary: "var(--phi-color-fill-quaternary)",
+  border: "var(--phi-color-border)",
+  borderSecondary: "var(--phi-color-border-secondary)",
+  linkActive: "var(--phi-color-link-active)",
+  split: "var(--phi-color-split)",
+  error: "var(--phi-color-error)",
+  success: "var(--phi-color-success)",
+  warning: "var(--phi-color-warning)",
   /*
    * The palette's ten custom colours, per mode, written by the Theme as tokens of its own
-   * (`phiCustom1` ... `phiCustom10`, theme/phi-theme-palette.ts).
+   * (`custom1` ... `custom10`, theme/phi-theme-palette.ts).
    */
-  custom1: "var(--ant-phi-custom-1)",
-  custom2: "var(--ant-phi-custom-2)",
-  custom3: "var(--ant-phi-custom-3)",
-  custom4: "var(--ant-phi-custom-4)",
-  custom5: "var(--ant-phi-custom-5)",
-  custom6: "var(--ant-phi-custom-6)",
-  custom7: "var(--ant-phi-custom-7)",
-  custom8: "var(--ant-phi-custom-8)",
-  custom9: "var(--ant-phi-custom-9)",
-  custom10: "var(--ant-phi-custom-10)",
+  custom1: "var(--phi-custom-1)",
+  custom2: "var(--phi-custom-2)",
+  custom3: "var(--phi-custom-3)",
+  custom4: "var(--phi-custom-4)",
+  custom5: "var(--phi-custom-5)",
+  custom6: "var(--phi-custom-6)",
+  custom7: "var(--phi-custom-7)",
+  custom8: "var(--phi-custom-8)",
+  custom9: "var(--phi-custom-9)",
+  custom10: "var(--phi-custom-10)",
 } as const;
 
 /**
  * Every distance a Phi surface states, inside a frame (`padding`) and between two things (`gap`), on the
- * one scale (`theme/phi-tokens.ts`, `PHI_PADDING`). Ant Design's `--ant-margin-*` family carries the
+ * one scale (`theme/phi-tokens.ts`, `PHI_PADDING`). Ant Design's `--phi-margin-*` family carries the
  * same values and stays Ant Design's own.
  */
 export const PHI_SPACE = {
-  xxs: "var(--ant-padding-xxs)",
-  xs: "var(--ant-padding-xs)",
-  sm: "var(--ant-padding-sm)",
-  base: "var(--ant-padding)",
-  md: "var(--ant-padding-md)",
-  lg: "var(--ant-padding-lg)",
-  xl: "var(--ant-padding-xl)",
-  xxl: "var(--ant-padding-xxl)",
+  xxs: "var(--phi-padding-xxs)",
+  xs: "var(--phi-padding-xs)",
+  sm: "var(--phi-padding-sm)",
+  base: "var(--phi-padding)",
+  md: "var(--phi-padding-md)",
+  lg: "var(--phi-padding-lg)",
+  xl: "var(--phi-padding-xl)",
+  xxl: "var(--phi-padding-xxl)",
 } as const;
 
 /**
- * How wide a Page may get: the Theme's `phiPageMax` (theme/phi-tokens.ts, `PHI_LAYOUT.pageMax`).
+ * How wide a Page may get: the Theme's `pageMax` (theme/phi-tokens.ts, `PHI_LAYOUT.pageMax`).
  *
  * A Page states this reference and not the number, so the Theme's answer reaches every Page, an edited
  * copy included -- a number written into a preset tree stays what it was the day the copy was made.
  */
 export const PHI_PAGE = {
-  max: "var(--ant-phi-page-max)",
+  max: "var(--phi-page-max)",
+  /*
+   * How far a Page's content stands in, per side: the Theme's `pagePadding<Side><Band>` for the band the
+   * screen is in, chosen by styles/shell.css ("Page inset"). Outside a Shell, where no band is chosen,
+   * the desktop answer.
+   */
+  padding: {
+    top: "var(--phi-page-inset-top, var(--phi-page-padding-top-desktop))",
+    right: "var(--phi-page-inset-right, var(--phi-page-padding-right-desktop))",
+    bottom: "var(--phi-page-inset-bottom, var(--phi-page-padding-bottom-desktop))",
+    left: "var(--phi-page-inset-left, var(--phi-page-padding-left-desktop))",
+  },
 } as const;
 
 export const PHI_RADIUS = {
-  xxs: "var(--ant-border-radius-xs)",
-  xs: "var(--ant-border-radius-sm)",
-  sm: "var(--ant-border-radius)",
-  base: "var(--ant-border-radius-lg)",
-  md: "var(--ant-border-radius-lg)",
-  lg: "var(--ant-border-radius-lg)",
-  xl: "var(--ant-border-radius-outer)",
-  xxl: "var(--ant-border-radius-outer)",
+  xxs: "var(--phi-border-radius-xs)",
+  xs: "var(--phi-border-radius-sm)",
+  sm: "var(--phi-border-radius)",
+  base: "var(--phi-border-radius-lg)",
+  md: "var(--phi-border-radius-lg)",
+  lg: "var(--phi-border-radius-lg)",
+  xl: "var(--phi-border-radius-outer)",
+  xxl: "var(--phi-border-radius-outer)",
 } as const;
 
 export const PHI_CONTROL = {
-  sm: "var(--ant-control-height-sm)",
-  md: "var(--ant-control-height)",
-  lg: "var(--ant-control-height-lg)",
+  sm: "var(--phi-control-height-sm)",
+  md: "var(--phi-control-height)",
+  lg: "var(--phi-control-height-lg)",
 } as const;
 
 export const PHI_SHADOW = {
-  primary: "var(--ant-box-shadow)",
-  secondary: "var(--ant-box-shadow-secondary)",
-  tertiary: "var(--ant-box-shadow-tertiary)",
+  primary: "var(--phi-box-shadow)",
+  secondary: "var(--phi-box-shadow-secondary)",
+  tertiary: "var(--phi-box-shadow-tertiary)",
 } as const;
 
 export const PHI_FONT_SIZE = {
-  base: "var(--ant-font-size)",
-  sm: "var(--ant-font-size-sm)",
-  lg: "var(--ant-font-size-lg)",
-  xl: "var(--ant-font-size-xl)",
-  heading2: "var(--ant-font-size-heading-2)",
-  heading4: "var(--ant-font-size-heading-4)",
-  heading3: "var(--ant-font-size-heading-3)",
+  base: "var(--phi-font-size)",
+  sm: "var(--phi-font-size-sm)",
+  lg: "var(--phi-font-size-lg)",
+  xl: "var(--phi-font-size-xl)",
+  heading2: "var(--phi-font-size-heading-2)",
+  heading4: "var(--phi-font-size-heading-4)",
+  heading3: "var(--phi-font-size-heading-3)",
 } as const;
 
 export const PHI_LINE_HEIGHT = {

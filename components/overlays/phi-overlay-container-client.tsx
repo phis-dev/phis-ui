@@ -88,7 +88,7 @@ function renderOverlayZonesFailure(failure: string) {
 
 /** Stands where the body will be while the zones are on their way, so the shell opens at once. */
 const PHI_OVERLAY_ZONES_PENDING = (
-  <div aria-busy="true" style={{ minBlockSize: "calc(var(--ant-control-height) * 3)" }} />
+  <div aria-busy="true" style={{ minBlockSize: "calc(var(--phi-control-height) * 3)" }} />
 );
 
 /**

@@ -42,9 +42,9 @@ export type PhiColorControlCustomColor = {
   value: string;
 };
 
-/** A Theme colour token's role, the custom property Ant Design writes for it: `colorPrimaryBg` → `var(--ant-color-primary-bg)`. */
+/** A Theme colour token's role, the custom property Ant Design writes for it: `colorPrimaryBg` → `var(--phi-color-primary-bg)`. */
 function resolvePhiColorTokenReference(tokenKey: string) {
-  return `var(--ant-${tokenKey.replace(/[A-Z]/gu, (letter) => `-${letter.toLowerCase()}`)})`;
+  return `var(--phi-${tokenKey.replace(/[A-Z]/gu, (letter) => `-${letter.toLowerCase()}`)})`;
 }
 
 /**

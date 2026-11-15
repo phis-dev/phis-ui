@@ -65,7 +65,7 @@ export const PhiSliderFormControl: ComponentType<PhiFormFieldProviderProps> = ({
     />
   );
   return field.config?.showInput === true ? (
-    <div style={{ display: "grid", gridTemplateColumns: "minmax(96px, 1fr) minmax(0, 2fr)", gap: "var(--ant-padding-sm)", alignItems: "center", minWidth: 0 }}>
+    <div style={{ display: "grid", gridTemplateColumns: "minmax(96px, 1fr) minmax(0, 2fr)", gap: "var(--phi-padding-sm)", alignItems: "center", minWidth: 0 }}>
       <PhiNumberControl
         value={numericValue ?? null}
         min={min}

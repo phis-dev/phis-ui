@@ -159,7 +159,7 @@ export function PhiLayoutDeleteButtonOverlay({
         "--phi-layout-scaffold-delete-background": chromeTheme.background,
         "--phi-layout-scaffold-delete-border": chromeTheme.border,
         "--phi-layout-scaffold-delete-color": chromeTheme.color,
-        "--phi-layout-scaffold-delete-shadow": "var(--ant-box-shadow-tertiary)",
+        "--phi-layout-scaffold-delete-shadow": "var(--phi-box-shadow-tertiary)",
       } as CSSProperties & Record<`--${string}`, string>}
     >
       {pageModeTone.wrap(children ?? (

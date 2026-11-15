@@ -70,14 +70,14 @@ const RADIUS_OPTIONS = [
 
 const RADIUS_COMPARE_ALIASES: Record<PhiRadiusOptionValue, ReadonlyArray<string>> = {
   none: ["0", "0px"],
-  xxs: ["3", "3px", "var(--ant-border-radius-xs)"],
-  xs: ["5", "5px", "var(--ant-border-radius-sm)"],
-  sm: ["8", "8px", "var(--ant-border-radius)"],
-  base: ["13", "13px", "var(--ant-border-radius-lg)"],
-  md: ["21", "21px", "var(--ant-border-radius-lg)"],
-  lg: ["34", "34px", "var(--ant-border-radius-lg)"],
-  xl: ["55", "55px", "var(--ant-border-radius-outer)"],
-  xxl: ["89", "89px", "var(--ant-border-radius-outer)"],
+  xxs: ["3", "3px", "var(--phi-border-radius-xs)"],
+  xs: ["5", "5px", "var(--phi-border-radius-sm)"],
+  sm: ["8", "8px", "var(--phi-border-radius)"],
+  base: ["13", "13px", "var(--phi-border-radius-lg)"],
+  md: ["21", "21px", "var(--phi-border-radius-lg)"],
+  lg: ["34", "34px", "var(--phi-border-radius-lg)"],
+  xl: ["55", "55px", "var(--phi-border-radius-outer)"],
+  xxl: ["89", "89px", "var(--phi-border-radius-outer)"],
   round: ["50%"],
 };
 
@@ -278,7 +278,7 @@ export function PhiBoundRadiusControl({
       <Flex align="center" justify="flex-start" gap={labelWidth == null ? 8 : 12}>
         {showLabel ? (
           <Typography.Text
-            style={labelWidth == null ? undefined : { flex: `0 0 ${labelWidth}px`, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: "var(--ant-control-height)" }}
+            style={labelWidth == null ? undefined : { flex: `0 0 ${labelWidth}px`, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: "var(--phi-control-height)" }}
           >
             {labels.sections.radius}
           </Typography.Text>

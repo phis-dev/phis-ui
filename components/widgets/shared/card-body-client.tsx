@@ -92,7 +92,7 @@ export type PhiCardWidgetClientBinding = {
 
 /**
  * The layer over a card's picture. A colour or a gradient is drawn as CSS, each colour mixed down to the
- * Overlay's opacity, so a Theme variable (`var(--ant-color-bg-container)`) resolves and the picture fades
+ * Overlay's opacity, so a Theme variable (`var(--phi-color-bg-container)`) resolves and the picture fades
  * into the card's own ground in either mode; a Background draws the same Overlay into an SVG picture,
  * where no variable reaches. A pattern or noise is drawn as a Background draws it.
  */

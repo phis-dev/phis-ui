@@ -151,7 +151,7 @@ export function PhiSequenceSlotEditor({
             flex: "0 0 auto",
             width: "100%",
             justifyContent: "center",
-            paddingBottom: "var(--ant-padding-xs)",
+            paddingBottom: "var(--phi-padding-xs)",
           }}
         >
           {/*

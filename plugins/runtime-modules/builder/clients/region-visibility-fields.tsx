@@ -26,7 +26,7 @@ import { usePhiDeveloperBuilderStateValue } from "../developer-workspace-store";
 import { usePhiBuilderOfferedPageCatalog } from "../use-offered-page-catalog";
 import { renderPhiInspectorConfigField, renderPhiInspectorSettingsRow } from "./inspector-config-field";
 
-const PHI_GAP_SM = "var(--ant-padding-sm)";
+const PHI_GAP_SM = "var(--phi-padding-sm)";
 
 /**
  * The Region config with a new Page scope and reveal. `all` and `always` are what a Region does without

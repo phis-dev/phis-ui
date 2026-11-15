@@ -84,7 +84,7 @@ assert.deepEqual(probes, {
 
 const css = extractStyle(cache, true);
 const variableOf = (className: string) =>
-  css.match(new RegExp(`\\.${className}[^{]*\\{[^}]*--ant-color-bg-container:\\s*([^;]+);`, "u"))?.[1] ?? null;
+  css.match(new RegExp(`\\.${className}[^{]*\\{[^}]*--phi-color-bg-container:\\s*([^;]+);`, "u"))?.[1] ?? null;
 assert.equal(variableOf("phi-tone-dark"), darkGround, "The dark tone's variables are written under its class.");
 assert.equal(variableOf("phi-tone-inverse"), darkGround, "Every inverse Surface shares one set of variables.");
 

@@ -138,26 +138,6 @@ built. Remove an entry when it is done.
   ground: light text on a light page. Seen on the phis.dev footer (2026-11-13), now a stated colour per
   mode instead. A Theme needs a way to say what an inverted box stands on -- an opaque ground per mode
   for `inverse`, or the rule that `inverse` never reads a translucent Chrome. Contract question.
-- **Theme CSS variables lose the `ant-` prefix.** Owner's decision (2026-11-15): a Theme variable is
-  not to carry Ant Design's name any more. Today `cssVar.prefix: "ant"`
-  (`components/root/phi-root-theme-resolver.ts`) names every token variable `--ant-*`, the Theme's own
-  tokens included (`phiPageMax` → `--ant-phi-page-max`). About 560 references in some 90 files of this
-  repo read them, as do `antd-css-var-contract.ts` (`PHI_PAGE`, `PHI_SPACE`, …), `styles/*.css` and the
-  packages. To settle first: the new prefix, and how it lives beside the variables Phis already sets
-  under `--phi-*` (`--phi-font-source-*`, `--phi-shell-band-*`, the control-shape variables). A
-  `phi` prefix with own keys still starting `phi` gives `--phi-phi-page-max`, so the own keys drop
-  their `phi` then. The class prefix (`.ant-menu-item` and so on) is a separate setting and not part
-  of this. Stored data names the variables as text: Region and Widget configs on prod hold
-  `var(--ant-padding)` (site 1, Area revision #51, `header_main`). Sweep them per installation with
-  the release, no fallback for the old names. The packages (shop, phisys, dev) move to the new names
-  in the same round.
-- **A Theme page gutter beside `pageMax`.** Owner's decision (2026-11-15): the left and right padding
-  of a page's content column is a Theme setting, as its width is (`PHI_PAGE.max`, THEME.md "Page
-  width"). The presets (login, password reset and the other Core pages) and the packages' pages read
-  it, so a Site sets it once instead of overriding every preset page, which would cut those pages off
-  from later preset changes. Open: the token name and default (first read what each preset pads with
-  today), whether it changes at the 987 "wide" threshold, and its Brand Control field next to
-  "Page Width".
 
 ## Threads
 

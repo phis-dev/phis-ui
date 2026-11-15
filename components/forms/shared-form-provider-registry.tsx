@@ -47,7 +47,7 @@ function lazyPhiFormFieldControl(
     <div
       aria-busy="true"
       style={{
-        blockSize: `calc(var(--ant-control-height) * ${placeholderRows} + var(--ant-padding-sm) * ${placeholderRows - 1})`,
+        blockSize: `calc(var(--phi-control-height) * ${placeholderRows} + var(--phi-padding-sm) * ${placeholderRows - 1})`,
         /*
          * The Control shape, because this stands where a Control is about to stand. `grown-md` is half a
          * Control line, which on the one-row placeholder is exactly the capsule and on a taller one is the
@@ -55,7 +55,7 @@ function lazyPhiFormFieldControl(
          * change under the reader at the moment the chunk lands.
          */
         borderRadius: "var(--phi-control-radius-grown-md)",
-        background: "var(--ant-color-fill-quaternary)",
+        background: "var(--phi-color-fill-quaternary)",
       }}
     />
   );

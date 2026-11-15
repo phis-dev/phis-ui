@@ -655,7 +655,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
               [`--phi-form-cell-gap-${mode}`, part === "label"
                 ? (placed.stacked ? `calc(var(--phi-form-row-gap-${mode}) / 4)` : "0px")
                 : field.key === lastInFlowFieldKey ? "0px" : `var(--phi-form-row-gap-${mode})`],
-              [`--phi-form-label-height-${mode}`, placed.stacked
+              [`--phi-form-label-slot-height-${mode}`, placed.stacked
                 ? "auto"
                 : "var(--phi-form-label-min-height)"],
               [`--phi-form-label-pad-${mode}`, placed.stacked

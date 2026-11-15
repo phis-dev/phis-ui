@@ -1,3 +1,4 @@
+import { PHI_HAND_SET_CSS_VARIABLE_FAMILIES } from "./lib/css-variable-families.mjs";
 import path from "node:path";
 import process from "node:process";
 
@@ -686,65 +687,65 @@ for (const [relativePath, entry] of antdImportAllowance) {
  * Which names cross the boundary, not only who may reach for them.
  *
  * Above, the allowance decides which files may import Ant Design at all. It says nothing about the
- * other way in, which needs no import: a style that writes `var(--ant-color-primary)` reaches the
+ * other way in, which needs no import: a style that writes `var(--phi-color-primary)` reaches the
  * same token from any file in the tree, and a typo in it resolves to nothing at all -- silently, at
  * runtime, in whatever the browser then draws. BUILDER.md permits those variables on purpose, so the
  * rule here is not who writes one but that what it names is a word this house has stated
  * (`theme/phi-theme-tokens.ts`).
  *
- * Component tokens are the exception, and each one is written down. `--ant-table-footer-bg` is
+ * Component tokens are the exception, and each one is written down. `--phi-table-footer-bg` is
  * Table's own, not a name on the alias scale, and the stated vocabulary deliberately stops at the
  * alias level rather than taking Ant Design's whole component tree in as a contract.
  */
 const antdComponentVariableAllowance = new Map([
-  ["--ant-table-footer-bg", {
+  ["--phi-table-footer-bg", {
     reason: "Table's own token. The Table Control's stylesheet follows the component it is drawing.",
   }],
-  ...["--ant-select-font-size", "--ant-select-font-height", "--ant-select-line-height"].map((variable) => [variable, {
+  ...["--phi-select-font-size", "--phi-select-font-height", "--phi-select-line-height"].map((variable) => [variable, {
     reason: "Select's own token. Select has no small font size of its own, so the compact Select is given "
       + "the scale's `sm` through the variables it sizes its words and padding by (styles/controls.css, "
       + "Compact Select).",
   }]),
   ...[
-    "--ant-btn-bg-color",
-    "--ant-btn-bg-color-hover",
-    "--ant-btn-bg-color-active",
-    "--ant-btn-border-color",
-    "--ant-btn-border-color-hover",
-    "--ant-btn-border-color-active",
-    "--ant-btn-text-color",
-    "--ant-btn-text-color-hover",
-    "--ant-btn-text-color-active",
+    "--phi-btn-bg-color",
+    "--phi-btn-bg-color-hover",
+    "--phi-btn-bg-color-active",
+    "--phi-btn-border-color",
+    "--phi-btn-border-color-hover",
+    "--phi-btn-border-color-active",
+    "--phi-btn-text-color",
+    "--phi-btn-text-color-hover",
+    "--phi-btn-text-color-active",
   ].map((variable) => [variable, {
     reason: "Button's own variables. Ant Design 6 draws a Button's ground, edge and words from them in "
       + "every state, so the gradient and glass Buttons set what they change there instead of fighting "
       + "its hover and active rules (styles/gradients.css).",
   }]),
-  ["--ant-cascader-dropdown-height", {
+  ["--phi-cascader-dropdown-height", {
     reason: "Cascader's own token. The root stylesheet sizes the popup by what the component sizes itself by.",
   }],
   ...[
-    "--ant-menu-item-margin-block",
-    "--ant-menu-item-margin-inline",
-    "--ant-menu-item-width",
-    "--ant-menu-item-bg",
-    "--ant-menu-sub-menu-item-bg",
-    "--ant-menu-dark-item-bg",
-    "--ant-menu-dark-sub-menu-item-bg",
-    "--ant-menu-collapsed-width",
-    "--ant-menu-icon-size",
-    "--ant-menu-group-title-font-size",
-    "--ant-menu-icon-margin-inline-end",
+    "--phi-menu-item-margin-block",
+    "--phi-menu-item-margin-inline",
+    "--phi-menu-item-width",
+    "--phi-menu-item-bg",
+    "--phi-menu-sub-menu-item-bg",
+    "--phi-menu-dark-item-bg",
+    "--phi-menu-dark-sub-menu-item-bg",
+    "--phi-menu-collapsed-width",
+    "--phi-menu-icon-size",
+    "--phi-menu-group-title-font-size",
+    "--phi-menu-icon-margin-inline-end",
   ].map((variable) => [variable, {
     reason: "Menu's own token. PhiMenuControl sets what it changes as variables instead of a ConfigProvider "
       + "of its own, which would derive the whole Theme again per request (styles/controls.css, Menu).",
   }]),
   ...[
-    "--ant-menu-active-bar-height",
-    "--ant-menu-horizontal-item-border-radius",
-    "--ant-menu-horizontal-item-selected-bg",
-    "--ant-menu-dark-item-selected-bg",
-    "--ant-menu-dark-item-selected-color",
+    "--phi-menu-active-bar-height",
+    "--phi-menu-horizontal-item-border-radius",
+    "--phi-menu-horizontal-item-selected-bg",
+    "--phi-menu-dark-item-selected-bg",
+    "--phi-menu-dark-item-selected-color",
   ].map((variable) => [variable, {
     reason: "Menu's own token. A horizontal menu's mark for the current entry -- bar or pill, per mode -- is "
       + "set as the Menu's variables (styles/controls.css, `PhiMenuControl` `selectionStyle`).",
@@ -753,10 +754,10 @@ const antdComponentVariableAllowance = new Map([
 
 const SPACING_SEGMENTS = new Set(["xxs", "xs", "sm", "md", "lg", "xl", "xxl"]);
 
-/** `--ant-border-radius-lg` is `borderRadiusLG`: the size suffixes are shouted, the rest is camel. */
+/** `--phi-border-radius-lg` is `borderRadiusLG`: the size suffixes are shouted, the rest is camel. */
 function readAntdVariableTokenName(variable) {
   return variable
-    .slice("--ant-".length)
+    .slice("--phi-".length)
     .split("-")
     .map((segment, index) => {
       if (index === 0) return segment;
@@ -772,7 +773,7 @@ const themeVocabularySource = await readSource("theme/phi-theme-tokens.ts");
  *
  * By name and not by "every quoted word in the file", because the file states other lists beside them
  * -- which seeds a palette may set, which seed flags a style token may carry -- and those are a
- * different permission. Scooping them up here would quietly let `--ant-wireframe` pass.
+ * different permission. Scooping them up here would quietly let `--phi-wireframe` pass.
  */
 function readStatedTokenList(source, constantName) {
   const match = source.match(new RegExp(`export const ${constantName} = \\[([^\\]]*)\\] as const;`, "u"));
@@ -787,6 +788,19 @@ const statedTokenNames = new Set([
   ...readStatedTokenList(themeVocabularySource, "PHI_THEME_TOKEN_KEYS"),
   ...readStatedTokenList(themeVocabularySource, "PHI_THEME_OWN_TOKEN_KEYS"),
 ]);
+/*
+ * Ant Design writes its tokens under the house's own prefix, so a `--phi-` name is either a token or a
+ * variable this package sets by hand. The hand-set ones are stated by family
+ * (`scripts/lib/css-variable-families.mjs`); a name in a family is ours and not checked against the
+ * token vocabulary, and a family nothing uses any more is reported like an unused token.
+ */
+const handSetFamilies = PHI_HAND_SET_CSS_VARIABLE_FAMILIES;
+const handSetFamiliesSeen = new Set();
+function readHandSetFamily(variable) {
+  const name = variable.slice("--phi-".length);
+  return handSetFamilies.find((family) => name === family || name.startsWith(`${family}-`)) ?? null;
+}
+
 const styledSources = await listStyledSources();
 const componentVariablesSeen = new Set();
 const mentionedNames = new Set();
@@ -795,10 +809,18 @@ for (const relativePath of styledSources) {
   const source = await readSource(relativePath);
   const ownVocabulary = relativePath === path.join("theme", "phi-theme-tokens.ts");
 
-  for (const match of source.matchAll(/--ant-[a-z0-9]+(?:-[a-z0-9]+)*/gu)) {
+  for (const match of source.matchAll(/--phi-[a-z0-9]+(?:-[a-z0-9]+)*/gu)) {
     const variable = match[0];
+    // A placeholder in prose or a template (`--phi-menu-*`, `--phi-font-<module>-...`, `--phi-x-${slot}`)
+    // names a family, not a variable.
+    if (source[match.index + variable.length] === "-") continue;
     if (antdComponentVariableAllowance.has(variable)) {
       componentVariablesSeen.add(variable);
+      continue;
+    }
+    const family = readHandSetFamily(variable);
+    if (family) {
+      handSetFamiliesSeen.add(family);
       continue;
     }
     const name = readAntdVariableTokenName(variable);
@@ -806,7 +828,8 @@ for (const relativePath of styledSources) {
     if (statedTokenNames.has(name)) continue;
     failures.push(
       `${relativePath} writes ${variable}, which is ${name} -- a name theme/phi-theme-tokens.ts does not state. `
-        + "State it there, or, for a component's own token, name it in antdComponentVariableAllowance with its reason.",
+        + "State it there; for a component's own token, name it in antdComponentVariableAllowance with its reason; "
+        + "for a variable this package sets by hand, add its family to scripts/lib/css-variable-families.mjs.",
     );
   }
 
@@ -821,6 +844,14 @@ for (const name of statedTokenNames) {
   failures.push(
     `theme/phi-theme-tokens.ts states ${name}, which nothing in the tree reads or writes. `
       + "Remove it rather than keeping a word nobody says.",
+  );
+}
+
+for (const family of handSetFamilies) {
+  if (handSetFamiliesSeen.has(family)) continue;
+  failures.push(
+    `scripts/lib/css-variable-families.mjs states the family ${family}, which no variable uses any more. `
+      + "Remove it rather than reserving a name nobody writes.",
   );
 }
 

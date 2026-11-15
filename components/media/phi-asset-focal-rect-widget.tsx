@@ -315,7 +315,7 @@ function PhiAssetFocalRectEditor({
         maxHeight: "calc(100dvh - 240px)",
         minHeight: 240,
         overflow: "hidden",
-        background: "var(--ant-color-fill-tertiary)",
+        background: "var(--phi-color-fill-tertiary)",
       }}
     >
       <div
@@ -357,9 +357,9 @@ function PhiAssetFocalRectEditor({
                 top: `${draft.y * 100}%`,
                 width: `${draft.width * 100}%`,
                 height: `${draft.height * 100}%`,
-                border: "2px solid var(--ant-color-primary)",
-                boxShadow: "0 0 0 1px var(--ant-color-bg-container) inset",
-                background: "color-mix(in srgb, var(--ant-color-primary) 12%, transparent)",
+                border: "2px solid var(--phi-color-primary)",
+                boxShadow: "0 0 0 1px var(--phi-color-bg-container) inset",
+                background: "color-mix(in srgb, var(--phi-color-primary) 12%, transparent)",
                 cursor,
               }}
             >

@@ -204,7 +204,7 @@ export function resolvePhiControlShapeRadius(
 /**
  * Custom properties `styles/control-shape.css` reads. They carry the resolved numbers rather than a
  * reference to an adapter token so a nested preview -- which runs its own draft scale through a plain
- * `ConfigProvider` and therefore never redefines the ambient `--ant-border-radius-*` -- still resolves
+ * `ConfigProvider` and therefore never redefines the ambient `--phi-border-radius-*` -- still resolves
  * its OWN shape. Inheritance is also what makes nesting work at all: two rules that both match a
  * Control tie on specificity and source order decides, while an inherited custom property is always
  * taken from the nearest ancestor that declares it.

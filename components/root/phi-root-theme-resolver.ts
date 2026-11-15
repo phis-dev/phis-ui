@@ -185,7 +185,7 @@ export function resolvePhiRootTheme({
       hashed: false,
       zeroRuntime: true,
       cssVar: {
-        prefix: "ant",
+        prefix: "phi",
         /*
          * Named after what the tokens are resolved from, not after the tokens: the same Theme record,
          * fonts, palette block and mode always resolve to the same tokens, and the record is a fraction

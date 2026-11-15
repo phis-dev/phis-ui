@@ -73,7 +73,7 @@ function tree() {
       config: {},
     }],
     layoutNodes: [
-      layout(ROOT, null, SPLIT, { gap: "var(--ant-margin)", padding: 16, anchor: "center", surface: CARD_SURFACE }),
+      layout(ROOT, null, SPLIT, { gap: "var(--phi-margin)", padding: 16, anchor: "center", surface: CARD_SURFACE }),
       layout(INNER, ROOT, FLEX, { padding: 8, surface: CARD_SURFACE }),
     ],
     contentWidgets: [widget],

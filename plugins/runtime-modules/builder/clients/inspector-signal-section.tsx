@@ -19,11 +19,11 @@ function renderSignalBlock(label: string, content: ReactNode, key?: string, acti
     <PhiFlexControl key={key} vertical gap={4} style={{ width: "100%" }}>
       {action ? (
         <PhiFlexControl align="center" justify="space-between" gap={8} style={{ width: "100%" }}>
-          <PhiTypographyControl style={{ lineHeight: "var(--ant-control-height)" }}>{label}</PhiTypographyControl>
+          <PhiTypographyControl style={{ lineHeight: "var(--phi-control-height)" }}>{label}</PhiTypographyControl>
           {action}
         </PhiFlexControl>
       ) : (
-        <PhiTypographyControl style={{ lineHeight: "var(--ant-control-height)" }}>{label}</PhiTypographyControl>
+        <PhiTypographyControl style={{ lineHeight: "var(--phi-control-height)" }}>{label}</PhiTypographyControl>
       )}
       {content}
     </PhiFlexControl>
@@ -57,7 +57,7 @@ export function PhiInspectorSignalSection({
     <div
       style={{
         display: "grid",
-        gap: "var(--ant-padding-sm)",
+        gap: "var(--phi-padding-sm)",
         width: "100%",
       }}
     >

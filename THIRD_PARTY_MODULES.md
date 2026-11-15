@@ -1252,8 +1252,8 @@ reference the Theme resolves per Site and per mode. `@phis/ui/theme` exports the
   tint.
 - `PHI_RADIUS` -- corners, where a Surface states its own.
 
-What they resolve to is the adapter's business. A preset that spells it out -- `"var(--ant-padding-lg)"`,
-`"var(--ant-color-bg-container)"` -- hides which step it took and breaks the day the adapter changes; Core
+What they resolve to is the adapter's business. A preset that spells it out -- `"var(--phi-padding-lg)"`,
+`"var(--phi-color-bg-container)"` -- hides which step it took and breaks the day the adapter changes; Core
 refuses it in its own presets (`scripts/validate-preset-theme-vocabulary.mjs`), and a package keeps to the same rule.
 `PHI_PADDING` holds the scale as plain numbers; it is for arithmetic, and a preset that writes
 `${PHI_PADDING.md}px` freezes the default Theme's value instead of following the Site's.
@@ -2167,7 +2167,7 @@ for the provider and still discloses the page it comes from.
   `definePhiModuleIcons` and named with `createPhiModuleIconName`; never `iconify:`, `asset:` or another
   package's Module icon ([8d](#8d-icons-a-module-brings)).
 - A preset names distances, colour roles and corners through `PHI_SPACE`, `PHI_COLOR` and `PHI_RADIUS`
-  from `@phis/ui/theme`; it never spells out an adapter property such as `var(--ant-padding-lg)`.
+  from `@phis/ui/theme`; it never spells out an adapter property such as `var(--phi-padding-lg)`.
 - Controller fields and the `Controller` Client are either complete as one group or absent as one group.
 - Every controllerless Module contributes at least one meaningful owned artifact and no no-op Controller.
 - Widgets use Phi Controls, providers, signaling, and the shared Canvas scaffold contracts.

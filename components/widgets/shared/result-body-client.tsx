@@ -29,9 +29,9 @@ export function PhiResultWidgetBody({
 }: PhiResultWidgetBodyProps) {
   const renderedTitle = code && title && code !== title
     ? (
-        <span style={{ display: "inline-flex", flexDirection: "column", gap: "var(--ant-padding-xxs)" }}>
+        <span style={{ display: "inline-flex", flexDirection: "column", gap: "var(--phi-padding-xxs)" }}>
           <span>{code}</span>
-          <span style={{ fontSize: "var(--ant-font-size-lg)", fontWeight: 400 }}>{title}</span>
+          <span style={{ fontSize: "var(--phi-font-size-lg)", fontWeight: 400 }}>{title}</span>
         </span>
       )
     : (title || code || "Information");

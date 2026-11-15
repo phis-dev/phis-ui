@@ -301,7 +301,7 @@ export function PhiBrandControl({
       ) : null}
       <Flex vertical gap={0} justify="center">
         {eyebrow ? (
-          <span style={{ display: "block", fontSize: "var(--ant-font-size-sm)", opacity: 0.75 }}>
+          <span style={{ display: "block", fontSize: "var(--phi-font-size-sm)", opacity: 0.75 }}>
             {eyebrow}
           </span>
         ) : null}

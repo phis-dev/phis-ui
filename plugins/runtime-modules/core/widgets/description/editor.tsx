@@ -44,7 +44,7 @@ const EDITOR_TEXTAREA_STYLE = {
   paddingBlock: 6,
   borderRadius: 0,
   borderWidth: 0,
-  borderBottom: "1px solid var(--ant-color-border, rgba(0, 0, 0, 0.15))",
+  borderBottom: "1px solid var(--phi-color-border, rgba(0, 0, 0, 0.15))",
   backgroundColor: "transparent",
   resize: "none" as const,
 };
@@ -101,14 +101,14 @@ export function PhiDescriptionWidgetEditor({
             style={{
               width: "fit-content",
               borderRadius: 999,
-              paddingInline: "var(--ant-padding-sm)",
-              paddingBlock: "var(--ant-padding-xxs)",
-              fontSize: "var(--ant-font-size-sm)",
+              paddingInline: "var(--phi-padding-sm)",
+              paddingBlock: "var(--phi-padding-xxs)",
+              fontSize: "var(--phi-font-size-sm)",
               fontWeight: 600,
               letterSpacing: "0.04em",
-              color: "var(--ant-color-text-tertiary)",
-              borderColor: "var(--ant-color-border-secondary)",
-              background: "var(--ant-color-fill-quaternary)",
+              color: "var(--phi-color-text-tertiary)",
+              borderColor: "var(--phi-color-border-secondary)",
+              background: "var(--phi-color-fill-quaternary)",
             }}
           >
             <PhiTextControl
@@ -149,10 +149,10 @@ export function PhiDescriptionWidgetEditor({
               onBlur={() => commitField("title")}
               style={{
                 ...EDITOR_TEXTAREA_STYLE,
-                fontSize: "var(--ant-font-size-heading-2, 2rem)",
+                fontSize: "var(--phi-font-size-heading-2, 2rem)",
                 lineHeight: 1.2,
                 fontWeight: 600,
-                marginBottom: draft.description ? "var(--ant-padding-xs)" : 0,
+                marginBottom: draft.description ? "var(--phi-padding-xs)" : 0,
               }}
             />
             <PhiTextControl
@@ -166,8 +166,8 @@ export function PhiDescriptionWidgetEditor({
               onBlur={() => commitField("description")}
               style={{
                 ...EDITOR_TEXTAREA_STYLE,
-                color: "var(--ant-color-text-secondary)",
-                fontSize: "var(--ant-font-size)",
+                color: "var(--phi-color-text-secondary)",
+                fontSize: "var(--phi-font-size)",
                 lineHeight: 1.5,
               }}
             />
@@ -186,7 +186,7 @@ export function PhiDescriptionWidgetEditor({
               onBlur={() => commitField("asideTitle")}
               style={{
                 ...EDITOR_TEXTAREA_STYLE,
-                color: "var(--ant-color-text-heading)",
+                color: "var(--phi-color-text-heading)",
                 fontWeight: 600,
               }}
             />
@@ -208,7 +208,7 @@ export function PhiDescriptionWidgetEditor({
           onBlur={() => commitField("footer")}
           style={{
             ...EDITOR_TEXTAREA_STYLE,
-            color: "var(--ant-color-text-tertiary)",
+            color: "var(--phi-color-text-tertiary)",
           }}
         />
       </PhiFlexControl>

@@ -152,10 +152,10 @@ assert.deepEqual(
   "A width the placement states no span for is one column wide.",
 );
 assert.deepEqual(
-  resolvePhiPaddingStyle({ padding: 8, paddingRight: "var(--ant-padding)" }),
+  resolvePhiPaddingStyle({ padding: 8, paddingRight: "var(--phi-padding)" }),
   {
     paddingTop: "8px",
-    paddingRight: "var(--ant-padding)",
+    paddingRight: "var(--phi-padding)",
     paddingBottom: "8px",
     paddingLeft: "8px",
   },

@@ -82,7 +82,7 @@ function renderGridGuides(profile: PhiGridLayoutProfile, columns: PhiGridColumnC
           marginInlineStart: `calc(var(--phi-grid-column-gap, 0px) * ${shares.lead} / 24)`,
           marginInlineEnd: `calc(var(--phi-grid-column-gap, 0px) * ${shares.trail} / 24)`,
           border: "1px dashed var(--phi-debug-layer-slot-border)",
-          borderRadius: "var(--ant-border-radius)",
+          borderRadius: "var(--phi-border-radius)",
           background: "var(--phi-debug-layer-slot-background-soft)",
         }}
       />
@@ -208,11 +208,11 @@ export function PhiGridLayout({
           minWidth: 0,
           width: "100%",
           height: "100%",
-          minHeight: "var(--ant-control-height-lg)",
+          minHeight: "var(--phi-control-height-lg)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          borderRadius: "var(--ant-border-radius-lg)",
+          borderRadius: "var(--phi-border-radius-lg)",
         }}
       >
         {editRenderInsertControl({

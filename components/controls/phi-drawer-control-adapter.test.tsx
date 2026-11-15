@@ -17,7 +17,7 @@ function wrapper() {
 describe("the drawer's surface", () => {
   it("stands on the elevated surface when its chrome names no background", () => {
     render(<PhiDrawerControl open title="Menu" body={<p>body</p>} />);
-    expect(wrapper()?.style.background).toBe("var(--ant-color-bg-elevated)");
+    expect(wrapper()?.style.background).toBe("var(--phi-color-bg-elevated)");
   });
 
   it("gives way to the background its chrome names", () => {
@@ -30,7 +30,7 @@ describe("the drawer's header", () => {
   it("starts the title past a close button that stands before it", () => {
     render(<PhiDrawerControl open placement="right" title={<span data-title>Menu</span>} body={null} />);
     const title = document.querySelector<HTMLElement>("[data-title]")!.parentElement!;
-    expect(title.style.insetInlineStart).toContain("var(--ant-control-height)");
+    expect(title.style.insetInlineStart).toContain("var(--phi-control-height)");
   });
 
   it("draws no header band when there is nothing to put in it", () => {

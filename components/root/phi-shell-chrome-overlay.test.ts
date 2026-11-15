@@ -192,7 +192,7 @@ describe("shell chrome overlay participation", () => {
 
   it("stays out of a Region that authored a ground as a plain colour", () => {
     expect(
-      phiRegionUsesShellChromeOverlay({ ...chromeRegion, grounds: ["var(--ant-color-bg-container)"] }),
+      phiRegionUsesShellChromeOverlay({ ...chromeRegion, grounds: ["var(--phi-color-bg-container)"] }),
     ).toBe(false);
   });
 

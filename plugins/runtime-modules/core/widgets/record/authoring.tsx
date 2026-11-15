@@ -24,7 +24,7 @@ export const PHI_RECORD_WIDGET_BUILDER_PLUGIN = createPhiCmsBuilderWidgetPlugin<
           key: field.key,
           label: field.label,
           full: field.full,
-          value: <span style={{ color: "var(--ant-color-text-tertiary)" }}>{field.fieldKey}</span>,
+          value: <span style={{ color: "var(--phi-color-text-tertiary)" }}>{field.fieldKey}</span>,
         }))}
       />
     ),

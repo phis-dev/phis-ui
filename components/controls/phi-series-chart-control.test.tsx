@@ -59,7 +59,7 @@ describe("PhiSeriesChartControl", () => {
     expect(html).toContain(">Unique visitors</span>");
     expect(html).toContain(">Nov 3</span>");
     // Theme variables, never resolved colours, so a Surface tone reaches the lines.
-    expect(html).toContain("stroke:var(--ant-color-primary)");
+    expect(html).toContain("stroke:var(--phi-color-primary)");
     expect(html).not.toMatch(/#[0-9a-f]{6}/i);
   });
 

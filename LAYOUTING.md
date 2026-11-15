@@ -165,7 +165,7 @@ on a page is the same mode. `inherit`, the default, is never stored.
   Layouts for a Layout, the Region renderers for a Region, the Builder's structure Region for the draft.
   An Overlay's Surface does not take a tone yet: its box is the Drawer's or Modal's own.
 - A tone turns the ground as well. A Surface whose Background paints nothing takes the mode's own
-  container ground (`PHI_SURFACE_TONE_GROUND`, `var(--ant-color-bg-container)`, from
+  container ground (`PHI_SURFACE_TONE_GROUND`, `var(--phi-color-bg-container)`, from
   `resolvePhiSurfaceStyle`), which resolves under the box's tone class; a stated ground wins, so a photo
   under a dark tone stays a photo. An Overlay draws no tone and so paints no tone ground.
 - Regions follow the same rule: the Region shell asks `phiSurfaceTakesToneGround`, the predicate

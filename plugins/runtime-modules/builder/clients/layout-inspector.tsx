@@ -54,7 +54,7 @@ import {
 import type { PhiBuilderContainerMeta } from "../../../../types/builder";
 import { PhiTypographyControl } from "../../../../components/controls/phi-typography-control";
 
-const PHI_GAP_SM = "var(--ant-padding-sm)";
+const PHI_GAP_SM = "var(--phi-padding-sm)";
 
 type PhiCmsChromeConfigField = Extract<PhiCmsConfigField, { type: "padding" | "grid-placement" | "column-count" }>;
 

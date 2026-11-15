@@ -16,9 +16,9 @@ import {
 import type { PhiDrawerControlProps } from "./phi-drawer-control";
 import { usePhiHydrated } from "../state/use-phi-hydrated";
 
-const PHI_DRAWER_HEADER_MIN_BLOCK_SIZE = `calc(var(--ant-control-height) + ${PHI_SPACE.xs} + ${PHI_SPACE.xs})`;
+const PHI_DRAWER_HEADER_MIN_BLOCK_SIZE = `calc(var(--phi-control-height) + ${PHI_SPACE.xs} + ${PHI_SPACE.xs})`;
 /** Where a title starts when the close button stands before it: past the button, not beneath it. */
-const PHI_DRAWER_TITLE_AFTER_CLOSE = `calc(${PHI_SPACE.sm} + var(--ant-control-height) + ${PHI_SPACE.xs})`;
+const PHI_DRAWER_TITLE_AFTER_CLOSE = `calc(${PHI_SPACE.sm} + var(--phi-control-height) + ${PHI_SPACE.xs})`;
 
 export function PhiDrawerControlAdapter({
   open,
@@ -85,7 +85,7 @@ export function PhiDrawerControlAdapter({
            * drawer without a configured background was see-through, and the presets only looked right
            * because their glass effect brings a background of its own.
            */
-          background: "var(--ant-color-bg-elevated)",
+          background: "var(--phi-color-bg-elevated)",
           ...containerStyle,
           padding: 0,
         },
@@ -107,7 +107,7 @@ export function PhiDrawerControlAdapter({
           background: "transparent",
         },
         // The title in the body's size, as a Modal's is (theme/phi-theme.ts); Ant Design sets a Drawer's at `lg`.
-        title: { width: "100%", minWidth: 0, fontSize: PHI_FONT_SIZE.base, lineHeight: "var(--ant-line-height)" },
+        title: { width: "100%", minWidth: 0, fontSize: PHI_FONT_SIZE.base, lineHeight: "var(--phi-line-height)" },
         close: {
           position: "absolute",
           top: "50%",

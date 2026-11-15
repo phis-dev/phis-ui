@@ -632,7 +632,7 @@ Control rules:
 - selected node values and Drafts remain Builder Controller/workspace state; Inspector Widget config owns
   only its own presentation and binding metadata
 - the Layout padding Inspector exposes `top`, `left`, `right`, `bottom`, and `gap`; the Region padding Inspector exposes the four padding sides without Layout gap
-- use `usePhiConfig().token` in Client controls and Ant Design `--ant-*` variables in Builder CSS for colors, typography, control sizing, and spacing
+- use `usePhiConfig().token` in Client controls and Ant Design `--phi-*` variables in Builder CSS for colors, typography, control sizing, and spacing
 - use fixed numeric or literal values only when the builder contract explicitly needs hard geometry or no suitable token exists
 - Inspector and workspace widgets use the same module-owned plugin contract as every other Widget;
   their owning Area or optional module controls availability, never a reserved category value

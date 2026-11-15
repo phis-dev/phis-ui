@@ -112,7 +112,7 @@ These are expected to be available through Ant Design runtime CSS variables when
 - shadows
 - font metrics
 
-The canonical source for Ant Design semantics remains the theme token input resolved from `site.theme.palette` and `site.theme.style.token`. Ant Design emits the matching `--ant-*` variables during SSR. Phi must not mirror those values into a second color, spacing, radius, shadow, or typography variable set.
+The canonical source for Ant Design semantics remains the theme token input resolved from `site.theme.palette` and `site.theme.style.token`. Ant Design emits the matching `--phi-*` variables during SSR. Phi must not mirror those values into a second color, spacing, radius, shadow, or typography variable set.
 
 The shared typography seed is `fontSize = 12`. Shell Regions inherit that base unless their persisted Region typography explicitly overrides it; content Widgets may use Ant Design aliases such as `fontSizeLG` as their own default.
 
@@ -137,7 +137,7 @@ These values are not standard Ant Design design tokens and should be set deliber
 
 These values describe shell behavior, not general design tokens.
 
-Phi shell variables should be rem-based whenever the Phi-owned structural value is a visual size. Shell code uses `--phi-shell-*` only for those structural values and uses Ant Design tokens or `--ant-*` variables for generic visual semantics.
+Phi shell variables should be rem-based whenever the Phi-owned structural value is a visual size. Shell code uses `--phi-shell-*` only for those structural values and uses Ant Design tokens or `--phi-*` variables for generic visual semantics.
 
 Default sizing follows Ant Design Sider conventions:
 

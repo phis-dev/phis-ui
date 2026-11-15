@@ -13,7 +13,7 @@ import {
 describe("root background layer style", () => {
   it("falls back to the layout background when nothing is configured", () => {
     const style = resolvePhiRootBackgroundFrameStyle();
-    expect(style.backgroundColor).toBe("var(--ant-color-bg-layout)");
+    expect(style.backgroundColor).toBe("var(--phi-color-bg-layout)");
     expect(style.position).toBe("fixed");
     expect(style.zIndex).toBe(-1);
     expect(style.pointerEvents).toBe("none");

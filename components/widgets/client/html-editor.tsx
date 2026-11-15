@@ -116,8 +116,8 @@ const PHI_HTML_WIDGET_EDITOR_LIVE_STYLE = `
 }
 
 .phi-html-widget-editor__text--code {
-  font-family: var(--ant-font-family-code, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace);
-  background: var(--ant-color-fill-secondary, rgba(0, 0, 0, 0.04));
+  font-family: var(--phi-font-family-code, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace);
+  background: var(--phi-color-fill-secondary, rgba(0, 0, 0, 0.04));
   border-radius: 4px;
   padding: 0 0.2em;
 }
@@ -619,7 +619,7 @@ export function PhiHtmlWidgetEditor({
         width: "100%",
         minWidth: 0,
         maxWidth: "100%",
-        border: "1px solid var(--ant-color-border, rgba(0, 0, 0, 0.12))",
+        border: "1px solid var(--phi-color-border, rgba(0, 0, 0, 0.12))",
         borderRadius: 0,
         overflow: "hidden",
         backgroundColor: "rgba(255,255,255,0.84)",

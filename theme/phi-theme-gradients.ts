@@ -7,8 +7,8 @@
  * palette states each slot per mode (`modes[mode].gradients`), and a slot it leaves out is derived from
  * the mode's own colours, which is what lets every Theme offer all three without anybody drawing them.
  *
- * They reach the page as Ant Design tokens -- `phiGradient1` and its `phiGradient1Text` -- and Ant Design
- * writes every token as a custom property under the Theme's class (`--ant-phi-gradient-1`). That is the
+ * They reach the page as Ant Design tokens -- `gradient1` and its `gradient1Text` -- and Ant Design
+ * writes every token as a custom property under the Theme's class (`--phi-gradient-1`). That is the
  * whole transport: the root writes both modes, a Surface tone writes its own mode on its box, and the
  * Theme workspace's preview writes the draft's, so a control that reads the property is in the right mode
  * wherever it stands without asking which one that is.
@@ -93,19 +93,19 @@ function serializePhiThemeGradientCss(gradient: PhiThemeGradient): string {
 }
 
 /*
- * The custom properties, named the way Ant Design names a token's (`token2CSSVar`): `phiGradient1Text`
- * becomes `--ant-phi-gradient-1-text`. Stated once so CSS and controls never spell them differently.
+ * The custom properties, named the way Ant Design names a token's (`token2CSSVar`): `gradient1Text`
+ * becomes `--phi-gradient-1-text`. Stated once so CSS and controls never spell them differently.
  */
 const PHI_THEME_GRADIENT_TOKEN_NAMES: Record<PhiThemeGradientKey, { paint: string; text: string }> = {
-  gradient1: { paint: "phiGradient1", text: "phiGradient1Text" },
-  gradient2: { paint: "phiGradient2", text: "phiGradient2Text" },
-  gradient3: { paint: "phiGradient3", text: "phiGradient3Text" },
+  gradient1: { paint: "gradient1", text: "gradient1Text" },
+  gradient2: { paint: "gradient2", text: "gradient2Text" },
+  gradient3: { paint: "gradient3", text: "gradient3Text" },
 };
 
 export const PHI_THEME_GRADIENT_CSS_VARS: Record<PhiThemeGradientKey, { paint: string; text: string }> = {
-  gradient1: { paint: "--ant-phi-gradient-1", text: "--ant-phi-gradient-1-text" },
-  gradient2: { paint: "--ant-phi-gradient-2", text: "--ant-phi-gradient-2-text" },
-  gradient3: { paint: "--ant-phi-gradient-3", text: "--ant-phi-gradient-3-text" },
+  gradient1: { paint: "--phi-gradient-1", text: "--phi-gradient-1-text" },
+  gradient2: { paint: "--phi-gradient-2", text: "--phi-gradient-2-text" },
+  gradient3: { paint: "--phi-gradient-3", text: "--phi-gradient-3-text" },
 };
 
 /*
@@ -116,10 +116,10 @@ export const PHI_THEME_GRADIENT_CSS_VARS: Record<PhiThemeGradientKey, { paint: s
  * flickered as the pointer left -- where a filter eases.
  */
 const PHI_PRIMARY_BUTTON_GRADIENT_TOKENS = {
-  paint: "phiPrimaryButtonGradient",
-  hover: "phiPrimaryButtonGradientHover",
-  active: "phiPrimaryButtonGradientActive",
-  text: "phiPrimaryButtonGradientText",
+  paint: "primaryButtonGradient",
+  hover: "primaryButtonGradientHover",
+  active: "primaryButtonGradientActive",
+  text: "primaryButtonGradientText",
 } as const;
 
 /** A run a little lighter under the pointer, a little darker while it is pressed. */

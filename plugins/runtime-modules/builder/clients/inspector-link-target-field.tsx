@@ -50,7 +50,7 @@ export function PhiInspectorLinkTargetFieldControl({
       // A row like every switch in the Inspector: its words on the left, the switch in the control column.
       newTabRow={(control) => (
         <PhiInspectorFieldRow label={labels.newTab}>
-          <PhiFlexControl align="center" style={{ minHeight: "var(--ant-control-height)" }}>
+          <PhiFlexControl align="center" style={{ minHeight: "var(--phi-control-height)" }}>
             {control}
           </PhiFlexControl>
         </PhiInspectorFieldRow>

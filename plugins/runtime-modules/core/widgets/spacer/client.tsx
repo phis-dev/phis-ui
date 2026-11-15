@@ -93,7 +93,7 @@ export function PhiSpacerWidget({
           background: isEditor ? "rgba(71, 85, 105, 0.035)" : "transparent",
           boxShadow: isEditor ? "inset 0 0 0 1px rgba(71, 85, 105, 0.18)" : "none",
           border: isEditor ? "1px dashed rgba(71, 85, 105, 0.45)" : "0",
-          borderRadius: isEditor ? "var(--ant-border-radius-lg)" : 0,
+          borderRadius: isEditor ? "var(--phi-border-radius-lg)" : 0,
         }}
       >
         {isEditor ? (

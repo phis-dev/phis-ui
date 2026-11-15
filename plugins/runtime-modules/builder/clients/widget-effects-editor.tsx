@@ -36,7 +36,7 @@ export function PhiWidgetEffectsToolButton({
       className="phi-layout-affordance phi-layout-affordance--effects"
       onMouseDown={(event) => { event.preventDefault(); event.stopPropagation(); }}
       onClick={(event) => event.stopPropagation()}
-      style={{ "--phi-layout-affordance-size": "var(--ant-control-height-sm)" } as CSSProperties & Record<`--${string}`, string>}
+      style={{ "--phi-layout-affordance-size": "var(--phi-control-height-sm)" } as CSSProperties & Record<`--${string}`, string>}
     >
       <PhiButtonControl
         ariaLabel={labels.openEditor}

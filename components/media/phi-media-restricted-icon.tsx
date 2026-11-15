@@ -4,7 +4,7 @@ import type { CSSProperties } from "react";
 import { PhiIcon } from "../shell/phi-icon";
 
 
-const PHI_COLOR_ERROR = "var(--ant-color-error)";
+const PHI_COLOR_ERROR = "var(--phi-color-error)";
 
 export type PhiMediaRestrictedIconProps = {
   size?: number;

@@ -149,7 +149,7 @@ export function resolvePhiRootBackgroundFrameStyle(): CSSProperties {
      * The fallback ground as a longhand, never as the `background` shorthand: it is the colour under
      * every Picture, including the moment before the first one shows.
      */
-    backgroundColor: "var(--ant-color-bg-layout)",
+    backgroundColor: "var(--phi-color-bg-layout)",
   };
 }
 

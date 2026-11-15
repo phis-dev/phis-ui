@@ -43,8 +43,20 @@ export type PhiThemeTokens = {
   paddingLG: number;
   paddingXL: number;
   paddingXXL: number;
-  /** How wide a Page may get (`PHI_LAYOUT.pageMax`), published as `--ant-phi-page-max`. */
-  phiPageMax: number;
+  /** How wide a Page may get (`PHI_LAYOUT.pageMax`), published as `--phi-page-max`. */
+  pageMax: number;
+  pagePaddingTopPhone: string;
+  pagePaddingRightPhone: string;
+  pagePaddingBottomPhone: string;
+  pagePaddingLeftPhone: string;
+  pagePaddingTopTablet: string;
+  pagePaddingRightTablet: string;
+  pagePaddingBottomTablet: string;
+  pagePaddingLeftTablet: string;
+  pagePaddingTopDesktop: string;
+  pagePaddingRightDesktop: string;
+  pagePaddingBottomDesktop: string;
+  pagePaddingLeftDesktop: string;
   marginXXS: number;
   marginXS: number;
   marginSM: number;
@@ -91,7 +103,20 @@ function buildPhiThemeTokens(options: PhiThemeTokenOptions = {}): PhiThemeTokens
     paddingLG: PHI_PADDING_VALUES.lg,
     paddingXL: PHI_PADDING_VALUES.xl,
     paddingXXL: PHI_PADDING_VALUES.xxl,
-    phiPageMax: PHI_LAYOUT.pageMax,
+    pageMax: PHI_LAYOUT.pageMax,
+    // A Page's inset per side and screen width, as steps of the spacing scale (`PHI_LAYOUT.pagePadding`).
+    pagePaddingTopPhone: PHI_SPACE[PHI_LAYOUT.pagePadding.phone],
+    pagePaddingRightPhone: PHI_SPACE[PHI_LAYOUT.pagePadding.phone],
+    pagePaddingBottomPhone: PHI_SPACE[PHI_LAYOUT.pagePadding.phone],
+    pagePaddingLeftPhone: PHI_SPACE[PHI_LAYOUT.pagePadding.phone],
+    pagePaddingTopTablet: PHI_SPACE[PHI_LAYOUT.pagePadding.tablet],
+    pagePaddingRightTablet: PHI_SPACE[PHI_LAYOUT.pagePadding.tablet],
+    pagePaddingBottomTablet: PHI_SPACE[PHI_LAYOUT.pagePadding.tablet],
+    pagePaddingLeftTablet: PHI_SPACE[PHI_LAYOUT.pagePadding.tablet],
+    pagePaddingTopDesktop: PHI_SPACE[PHI_LAYOUT.pagePadding.desktop],
+    pagePaddingRightDesktop: PHI_SPACE[PHI_LAYOUT.pagePadding.desktop],
+    pagePaddingBottomDesktop: PHI_SPACE[PHI_LAYOUT.pagePadding.desktop],
+    pagePaddingLeftDesktop: PHI_SPACE[PHI_LAYOUT.pagePadding.desktop],
     // Ant Design's second family, on the same scale: its own components read it (phi-tokens.ts).
     marginXXS: PHI_PADDING_VALUES.xxs,
     marginXS: PHI_PADDING_VALUES.xs,

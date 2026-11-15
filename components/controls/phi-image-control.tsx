@@ -104,7 +104,7 @@ export function PhiImageControl({
     maxWidth: "100%",
     lineHeight: 0,
     overflow: presentation.simulatedCropStyle ? "hidden" : undefined,
-    ...(loaded || blur ? {} : { backgroundColor: "var(--ant-color-fill-quaternary)" }),
+    ...(loaded || blur ? {} : { backgroundColor: "var(--phi-color-fill-quaternary)" }),
     ...(zoom ? { cursor: "zoom-in" } : {}),
     ...style,
   };

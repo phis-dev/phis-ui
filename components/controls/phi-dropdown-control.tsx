@@ -169,7 +169,7 @@ export function PhiPillDropdownControl({
         style={{
           display: "inline-flex",
           alignItems: "center",
-          gap: "var(--ant-padding-xs)",
+          gap: "var(--phi-padding-xs)",
           fontSize: "inherit",
           color: "inherit",
           background: "transparent",
@@ -186,7 +186,7 @@ export function PhiPillDropdownControl({
         {leading}
         {hasLabel && pill ? (
           <span className="phi-dropdown-control__pill">
-            <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--ant-padding-xxs)" }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--phi-padding-xxs)" }}>
               <span>{label}</span>
               {chevron}
             </span>

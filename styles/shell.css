@@ -52,6 +52,37 @@
   }
 }
 
+/*
+ * Page inset: how far a Page's content stands in (`PHI_PAGE.padding`), by the same device bands. The
+ * Theme states four sides per band (`pagePadding<Side><Band>`, theme/phi-tokens.ts); these rules hand the
+ * band the screen is in to everything inside the Shell, and a Page column reads only the chosen one. A
+ * Layout that states its own padding is not reading it.
+ */
+:where(.shell-sider-full, .shell-sider-embedded) > * {
+  --phi-page-inset-top: var(--phi-page-padding-top-desktop);
+  --phi-page-inset-right: var(--phi-page-padding-right-desktop);
+  --phi-page-inset-bottom: var(--phi-page-padding-bottom-desktop);
+  --phi-page-inset-left: var(--phi-page-padding-left-desktop);
+}
+
+@container phi-render-viewport (width < 1200px) {
+  :where(.shell-sider-full, .shell-sider-embedded) > * {
+    --phi-page-inset-top: var(--phi-page-padding-top-tablet);
+    --phi-page-inset-right: var(--phi-page-padding-right-tablet);
+    --phi-page-inset-bottom: var(--phi-page-padding-bottom-tablet);
+    --phi-page-inset-left: var(--phi-page-padding-left-tablet);
+  }
+}
+
+@container phi-render-viewport (width < 768px) {
+  :where(.shell-sider-full, .shell-sider-embedded) > * {
+    --phi-page-inset-top: var(--phi-page-padding-top-phone);
+    --phi-page-inset-right: var(--phi-page-padding-right-phone);
+    --phi-page-inset-bottom: var(--phi-page-padding-bottom-phone);
+    --phi-page-inset-left: var(--phi-page-padding-left-phone);
+  }
+}
+
 .shell-sider-full .sider_left {
   grid-area: sider;
   position: sticky;
@@ -264,12 +295,12 @@
    Shell record or the Region itself authored, so the Theme Root Background stays visible beneath it. */
 :where(.phi-cms-region-shell) {
   --phi-region-background: var(--phi-region-background-light, transparent);
-  --phi-region-color: var(--phi-region-color-light, var(--ant-color-text));
+  --phi-region-color: var(--phi-region-color-light, var(--phi-color-text));
 }
 
 :where([data-phi-theme-mode="dark"]) :where(.phi-cms-region-shell) {
   --phi-region-background: var(--phi-region-background-dark, transparent);
-  --phi-region-color: var(--phi-region-color-dark, var(--ant-color-text));
+  --phi-region-color: var(--phi-region-color-dark, var(--phi-color-text));
 }
 
 /* The Shell Chrome Overlay (SHELL.md "Root Background and Shell Backdrop Layers").
@@ -679,8 +710,8 @@
     max-height: 100dvh !important;
     overflow-y: auto !important;
     z-index: 1001 !important;
-    background-color: var(--ant-color-bg-elevated);
-    box-shadow: var(--ant-box-shadow-secondary);
+    background-color: var(--phi-color-bg-elevated);
+    box-shadow: var(--phi-box-shadow-secondary);
     transform: translateX(-100%);
     visibility: hidden;
     transition: transform 200ms ease, visibility 0s linear 200ms;
@@ -691,7 +722,7 @@
    * behind it: it stands over the page. It takes the Theme's elevated ground; an authored ground stays.
    */
   [data-phi-sider-mobile="drawer"][data-phi-shell-chrome="true"] {
-    background: var(--ant-color-bg-elevated) !important;
+    background: var(--phi-color-bg-elevated) !important;
     backdrop-filter: none !important;
   }
 
@@ -716,7 +747,7 @@
     inset-inline: 0;
     height: 100dvh;
     z-index: 1000;
-    background: var(--ant-color-bg-mask);
+    background: var(--phi-color-bg-mask);
   }
 
   .phi-shell-sider-drawer-button,
@@ -726,7 +757,7 @@
 
   .phi-shell-sider-drawer-button {
     position: absolute;
-    inset-inline-start: var(--ant-padding-xs);
+    inset-inline-start: var(--phi-padding-xs);
     top: 50%;
     transform: translateY(-50%);
     z-index: 1;
@@ -734,14 +765,14 @@
 
   /* No `header_main` to sit in: the button stands at the Shell's top. */
   .phi-shell-sider-drawer-button--shell {
-    top: var(--ant-padding-xs);
+    top: var(--phi-padding-xs);
     transform: none;
     z-index: 999;
   }
 
   /* The Header's content makes room for the button at its start. */
   [data-phi-region-key="header_main"]:has(> .phi-shell-sider-drawer-button) > .phi-cms-region-shell__content {
-    padding-inline-start: calc(var(--ant-control-height) + var(--ant-padding-xs)) !important;
+    padding-inline-start: calc(var(--phi-control-height) + var(--phi-padding-xs)) !important;
   }
 }
 
@@ -773,7 +804,7 @@
    */
   .phi-header-nav--phone-button,
   .phi-slot-child:has(.phi-header-nav--phone-button) {
-    min-width: var(--ant-control-height) !important;
+    min-width: var(--phi-control-height) !important;
   }
 
   /*
@@ -841,7 +872,7 @@
 .phi-slot-child:has(.phi-search-box--icon-only):not(:has(.phi-slot-child)) {
   width: auto !important;
   flex: 0 0 auto !important;
-  min-width: var(--ant-control-height) !important;
+  min-width: var(--phi-control-height) !important;
 }
 
 /* Opened where it stands: the field grows out of the magnifier. */
@@ -854,7 +885,7 @@
 
 @keyframes phi-search-box-expand {
   from {
-    width: var(--ant-control-height);
+    width: var(--phi-control-height);
     opacity: 0.4;
   }
 }
@@ -867,7 +898,7 @@
 
 @keyframes phi-search-box-collapse {
   to {
-    width: var(--ant-control-height);
+    width: var(--phi-control-height);
     opacity: 0.4;
   }
 }
@@ -882,9 +913,9 @@
   z-index: 60;
   display: flex;
   align-items: center;
-  gap: var(--ant-padding-xs, 8px);
-  padding-inline: var(--ant-padding, 16px);
-  background: var(--ant-color-bg-container);
+  gap: var(--phi-padding-xs, 8px);
+  padding-inline: var(--phi-padding, 16px);
+  background: var(--phi-color-bg-container);
   animation: phi-search-box-row 160ms ease-out;
 }
 
@@ -925,7 +956,7 @@
   .phi-slot-child:has(.phi-search-box--auto):not(:has(.phi-slot-child)) {
     width: auto !important;
     flex: 0 0 auto !important;
-    min-width: var(--ant-control-height) !important;
+    min-width: var(--phi-control-height) !important;
   }
 }
 

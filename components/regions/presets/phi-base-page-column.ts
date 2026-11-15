@@ -3,7 +3,7 @@ import type { PhiCmsPageNode } from "../../../types/cms";
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { PHI_SURFACE_WASH } from "../../../helpers/surface-presets";
-import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
+import { PHI_PAGE, PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import {
   buildPhiBasePageContentScaffold,
   PHI_BASE_PAGE_LAYOUT_NODE_ID,
@@ -54,7 +54,11 @@ export function buildPhiBasePageColumnFrame({
         config: {
           maxSize: { width: maxWidth },
           surface: PHI_SURFACE_WASH,
-          padding: PHI_SPACE.md,
+          // The Theme's Page inset for the screen it is drawn on (`PHI_PAGE.padding`); a Layout's own wins.
+          paddingTop: PHI_PAGE.padding.top,
+          paddingRight: PHI_PAGE.padding.right,
+          paddingBottom: PHI_PAGE.padding.bottom,
+          paddingLeft: PHI_PAGE.padding.left,
           // The house step between a preset's children; the Widgets keep their own air inside.
           gap: PHI_SPACE.sm,
         },

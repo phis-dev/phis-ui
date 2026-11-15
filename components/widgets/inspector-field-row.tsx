@@ -19,7 +19,7 @@ export function PhiInspectorFieldRow({
   return (
     <PhiFlexControl align="flex-start" gap={12} wrap={false} style={{ width: "100%" }}>
       <PhiTypographyControl
-        style={{ flex: `0 0 ${labelWidth}px`, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: "var(--ant-control-height)" }}
+        style={{ flex: `0 0 ${labelWidth}px`, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: "var(--phi-control-height)" }}
       >
         {label}
       </PhiTypographyControl>

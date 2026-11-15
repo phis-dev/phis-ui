@@ -132,7 +132,7 @@ function PhiConfigValueProvider({
   }, [controlShapeVars]);
   /*
    * The typefaces, for the same reason. The font catalogue's classes are what define
-   * `--phi-font-source-*`, which the Theme's `--ant-font-family` points at; a Drawer or a Modal on
+   * `--phi-font-source-*`, which the Theme's `--phi-font-family` points at; a Drawer or a Modal on
    * `document.body` found the variable undefined and fell back to the browser's sans-serif.
    */
   useEffect(() => {

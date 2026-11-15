@@ -7,8 +7,8 @@ import { PhiMediaKind } from "../../constants/media";
 import type { PhiMediaKindValue } from "../../types/media";
 import { PhiIcon } from "../shell/phi-icon";
 
-const PHI_COLOR_TEXT_SECONDARY = "var(--ant-color-text-secondary)";
-const PHI_COLOR_PRIMARY = "var(--ant-color-primary)";
+const PHI_COLOR_TEXT_SECONDARY = "var(--phi-color-text-secondary)";
+const PHI_COLOR_PRIMARY = "var(--phi-color-primary)";
 
 export type PhiMediaKindIconProps = {
   kind: PhiMediaKindValue;

@@ -441,7 +441,7 @@ assert.equal(
 
 /**
  * A Widget that draws its own box around a `borderless` field must take the Control shape, not
- * `--ant-border-radius`: on a Control element that variable carries the shape itself, because Ant Design
+ * `--phi-border-radius`: on a Control element that variable carries the shape itself, because Ant Design
  * ships a component token in CSS variable mode as a local redefinition of it. Read inline, where no rule
  * in the stylesheet above can reach it, a `pill` Site rendered a Markdown editor several rows tall as a
  * capsule.
@@ -453,7 +453,7 @@ const markdownEditorSource = await readFile(
 assert.match(
   markdownEditorSource,
   /borderRadius: "var\(--phi-control-radius-grown-md\)"/u,
-  "The Markdown editor's own box takes the grown Control radius, never `--ant-border-radius`.",
+  "The Markdown editor's own box takes the grown Control radius, never `--phi-border-radius`.",
 );
 
 /**
@@ -475,7 +475,7 @@ assert.equal(
   "A media tile and its skeleton must both take the surface step.",
 );
 assert.ok(
-  !/--ant-border-radius/u.test(mediaAssetTileSource),
+  !/--phi-border-radius/u.test(mediaAssetTileSource),
   "A media tile states no antd radius variable; the surface step is the whole answer.",
 );
 
@@ -517,7 +517,7 @@ assert.ok(
   "A video frame clips its player, or the corner it just took means nothing.",
 );
 assert.ok(
-  !/--ant-border-radius/u.test(videoEmbedSource),
+  !/--phi-border-radius/u.test(videoEmbedSource),
   "A video frame states no antd radius variable; it reads the Config Provider that declares the step.",
 );
 

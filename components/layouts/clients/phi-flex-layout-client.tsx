@@ -121,8 +121,8 @@ export function PhiFlexLayout({
         minHeight: 1,
         maxHeight: 1,
         alignSelf: "center" as const,
-        backgroundColor: "var(--ant-color-border-secondary)",
-        boxShadow: "inset 0 0 0 1px var(--ant-color-border-secondary)",
+        backgroundColor: "var(--phi-color-border-secondary)",
+        boxShadow: "inset 0 0 0 1px var(--phi-color-border-secondary)",
         pointerEvents: "none" as const,
       }
     : {
@@ -134,8 +134,8 @@ export function PhiFlexLayout({
         maxHeight: resolvedSeparatorCrossSize,
         alignSelf: "center" as const,
         marginInline: 0,
-        backgroundColor: "var(--ant-color-border-secondary)",
-        boxShadow: "inset 0 0 0 1px var(--ant-color-border-secondary)",
+        backgroundColor: "var(--phi-color-border-secondary)",
+        boxShadow: "inset 0 0 0 1px var(--phi-color-border-secondary)",
         pointerEvents: "none" as const,
       };
 

@@ -114,7 +114,7 @@ export function PhiMarkdownWidgetEditor({
          * leaves of a control's height. Stated, the clear button finds the first line by it, as it does in
          * every field that states one; left to Ant Design it hung at its own offset, half a line above.
          */
-        paddingBlock: "calc((var(--ant-control-height) - 1lh) / 2)",
+        paddingBlock: "calc((var(--phi-control-height) - 1lh) / 2)",
       }}
       style={{
         /*
@@ -125,14 +125,14 @@ export function PhiMarkdownWidgetEditor({
         width: "100%",
         height: MARKDOWN_EDITOR_HEIGHT,
         minWidth: 0,
-        padding: "var(--ant-padding-sm)",
-        border: "1px solid var(--ant-color-border-secondary)",
+        padding: "var(--phi-padding-sm)",
+        border: "1px solid var(--phi-color-border-secondary)",
         /*
-         * The Control shape, and not `--ant-border-radius`.
+         * The Control shape, and not `--phi-border-radius`.
          *
          * The field is `borderless`, so this style is the box: it draws the border, the ground and the
          * corner the Control would have drawn itself. The corner is the trap. On a Control element
-         * `--ant-border-radius` does not mean the surface radius -- Ant Design ships a component token in
+         * `--phi-border-radius` does not mean the surface radius -- Ant Design ships a component token in
          * CSS variable mode as a LOCAL redefinition of the same variable on that element, so what is
          * read here is the Control shape, and under `pill` that is the full radius. Inline, where no
          * rule in `styles/control-shape.css` can reach it: a Markdown editor several rows tall came out
@@ -142,10 +142,10 @@ export function PhiMarkdownWidgetEditor({
          * held at every height (THEME.md, "Control shape").
          */
         borderRadius: "var(--phi-control-radius-grown-md)",
-        background: "var(--ant-color-bg-container)",
+        background: "var(--phi-color-bg-container)",
         resize: "none",
         fontFamily:
-          "var(--ant-font-family-code, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace)",
+          "var(--phi-font-family-code, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace)",
         lineHeight: 1.6,
       }}
     />

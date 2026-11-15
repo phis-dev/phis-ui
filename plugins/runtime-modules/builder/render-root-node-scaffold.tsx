@@ -464,8 +464,8 @@ function PhiEffectsPreviewButton({
           transform: "translate(-50%, -50%)",
           // Its own size, for the same reason the tool bar states its width inline: it stands in a frame
           // whose children `styles/layout.css` stretches, and a stylesheet answer did not hold there.
-          width: "var(--ant-control-height)",
-          "--phi-layout-affordance-size": "var(--ant-control-height)",
+          width: "var(--phi-control-height)",
+          "--phi-layout-affordance-size": "var(--phi-control-height)",
         } as CSSProperties & Record<`--${string}`, string>}
       />)}
     </span>
@@ -507,11 +507,11 @@ function PhiViewportIntersectionDiagnostic() {
       title="Hidden at every viewport: this block's Compact/Medium/Wide selection has no overlap with its ancestors."
       style={{
         alignItems: "center",
-        color: "var(--ant-color-warning)",
+        color: "var(--phi-color-warning)",
         display: "inline-flex",
-        height: "var(--ant-control-height-sm)",
+        height: "var(--phi-control-height-sm)",
         justifyContent: "center",
-        width: "var(--ant-control-height-sm)",
+        width: "var(--phi-control-height-sm)",
       }}
     >
       <PhiIcon name="warning" size="inherit" />

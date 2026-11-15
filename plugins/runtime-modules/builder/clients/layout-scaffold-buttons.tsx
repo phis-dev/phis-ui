@@ -84,7 +84,7 @@ export function PhiPlusButtonWidget({
         onClick={() => onInsert(slotIndex)}
         style={
           {
-            "--phi-layout-affordance-size": "var(--ant-control-height)",
+            "--phi-layout-affordance-size": "var(--phi-control-height)",
           } as CSSProperties & Record<`--${string}`, string>
         }
       />
@@ -129,7 +129,7 @@ export function PhiLayoutDragButtonWidget({
       className="phi-layout-affordance phi-layout-affordance--drag"
       style={
         {
-          "--phi-layout-affordance-size": "var(--ant-control-height-sm)",
+          "--phi-layout-affordance-size": "var(--phi-control-height-sm)",
         } as CSSProperties & Record<`--${string}`, string>
       }
     />
@@ -149,7 +149,7 @@ export function PhiLayoutDeleteButtonWidget({ onDelete, ariaLabel = "Delete layo
         onClick={onDelete}
         style={
           {
-            "--phi-layout-affordance-size": "var(--ant-control-height-sm)",
+            "--phi-layout-affordance-size": "var(--phi-control-height-sm)",
           } as CSSProperties & Record<`--${string}`, string>
         }
       />
@@ -172,7 +172,7 @@ export function PhiLayoutConfigButtonWidget({
         onClick={onOpenInspector}
         style={
           {
-            "--phi-layout-affordance-size": "var(--ant-control-height-sm)",
+            "--phi-layout-affordance-size": "var(--phi-control-height-sm)",
           } as CSSProperties & Record<`--${string}`, string>
         }
       />

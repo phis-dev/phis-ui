@@ -58,7 +58,7 @@ import { PhiCmsFlags } from "../../../../constants/phi-cms";
 import { hasPhiFlag } from "../../../../helpers/flags";
 import type { PhiInspectorWidgetLabels } from "../../../../components/widgets/label-types/inspector";
 
-const PHI_GAP_SM = "var(--ant-padding-sm)";
+const PHI_GAP_SM = "var(--phi-padding-sm)";
 
 type PhiDeveloperBuilderWidgetInspectorWidgetClientProps = {
   section?: string;

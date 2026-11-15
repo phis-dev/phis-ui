@@ -42,16 +42,16 @@ describe("theme gradients", () => {
 
   it("writes each slot and its text as tokens, and leaves primary Buttons alone unless asked", () => {
     const plain = buildPhiThemeGradientTokens({ gradients: undefined, token });
-    expect(plain.phiGradient1).toBe("linear-gradient(135deg, #8d1b20 0%, #4d0f11 100%)");
-    expect(plain.phiGradient1Text).toBe("#ffffff");
-    expect(plain.phiPrimaryButtonGradient).toBe("none");
-    expect(plain.phiPrimaryButtonGradientHover).toBe("none");
-    expect(plain.phiPrimaryButtonGradientText).toBeUndefined();
+    expect(plain.gradient1).toBe("linear-gradient(135deg, #8d1b20 0%, #4d0f11 100%)");
+    expect(plain.gradient1Text).toBe("#ffffff");
+    expect(plain.primaryButtonGradient).toBe("none");
+    expect(plain.primaryButtonGradientHover).toBe("none");
+    expect(plain.primaryButtonGradientText).toBeUndefined();
 
     const filled = buildPhiThemeGradientTokens({ gradients: undefined, token, primaryButtonGradient: "gradient2" });
-    expect(filled.phiPrimaryButtonGradient).toBe(filled.phiGradient2);
-    expect(filled.phiPrimaryButtonGradientHover).toBe("brightness(1.18) saturate(1.15)");
-    expect(filled.phiPrimaryButtonGradientText).toBe(filled.phiGradient2Text);
+    expect(filled.primaryButtonGradient).toBe(filled.gradient2);
+    expect(filled.primaryButtonGradientHover).toBe("brightness(1.18) saturate(1.15)");
+    expect(filled.primaryButtonGradientText).toBe(filled.gradient2Text);
   });
 
   it("picks the Theme's text colour that reads on the whole run, or the one the slot states", () => {
@@ -116,7 +116,7 @@ describe("gradient label contrast", () => {
   });
 
   it("says nothing about a colour it cannot read", () => {
-    expect(resolvePhiThemeGradientContrast(run, "var(--ant-color-text)")).toBeNull();
+    expect(resolvePhiThemeGradientContrast(run, "var(--phi-color-text)")).toBeNull();
   });
 });
 

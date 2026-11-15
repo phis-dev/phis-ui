@@ -6,6 +6,7 @@ import {
   resolvePhiThemeColorTokens,
 } from "./phi-theme-presets";
 import { assertPhiThemeVocabulary } from "./phi-theme-tokens";
+import { buildPhiThemeStructuralTokens } from "./phi-theme";
 
 /**
  * Reading a stored Theme, strictly.
@@ -95,14 +96,32 @@ describe("what a stored Theme may say", () => {
   });
 
   it("takes a Page width from the Region threshold up, and refuses one no Page could be wide at", () => {
-    for (const phiPageMax of [987, 1220, 1597]) {
-      expect(() => assertPhiThemeVocabulary({ styleToken: { phiPageMax }, modeSeedKeys, source: "test" })).not.toThrow();
+    for (const pageMax of [987, 1220, 1597]) {
+      expect(() => assertPhiThemeVocabulary({ styleToken: { pageMax }, modeSeedKeys, source: "test" })).not.toThrow();
     }
-    expect(() => assertPhiThemeVocabulary({ styleToken: { phiPageMax: null }, modeSeedKeys, source: "test" })).not.toThrow();
-    expect(() => assertPhiThemeVocabulary({ styleToken: { phiPageMax: 900 }, modeSeedKeys, source: "test" }))
-      .toThrow(/phiPageMax 900, narrower than 987/u);
-    expect(() => assertPhiThemeVocabulary({ styleToken: { phiPageMax: "1220px" }, modeSeedKeys, source: "test" }))
+    expect(() => assertPhiThemeVocabulary({ styleToken: { pageMax: null }, modeSeedKeys, source: "test" })).not.toThrow();
+    expect(() => assertPhiThemeVocabulary({ styleToken: { pageMax: 900 }, modeSeedKeys, source: "test" }))
+      .toThrow(/pageMax 900, narrower than 987/u);
+    expect(() => assertPhiThemeVocabulary({ styleToken: { pageMax: "1220px" }, modeSeedKeys, source: "test" }))
       .toThrow(/not a number of pixels/u);
+  });
+
+  it("takes a Page inset as a step of the spacing scale, and refuses any other length", () => {
+    for (const value of ["var(--phi-padding)", "var(--phi-padding-md)", 0, null]) {
+      expect(() => assertPhiThemeVocabulary({ styleToken: { pagePaddingLeftPhone: value }, modeSeedKeys, source: "test" }))
+        .not.toThrow();
+    }
+    expect(() => assertPhiThemeVocabulary({ styleToken: { pagePaddingTopDesktop: "13px" }, modeSeedKeys, source: "test" }))
+      .toThrow(/pagePaddingTopDesktop as "13px", which is not a step of the spacing scale/u);
+  });
+
+  it("a phone stands one step in from the rest, the same on all four sides", () => {
+    const tokens = buildPhiThemeStructuralTokens({});
+    for (const side of ["Top", "Right", "Bottom", "Left"]) {
+      expect(tokens[`pagePadding${side}Phone` as keyof typeof tokens]).toBe("var(--phi-padding)");
+      expect(tokens[`pagePadding${side}Tablet` as keyof typeof tokens]).toBe("var(--phi-padding-md)");
+      expect(tokens[`pagePadding${side}Desktop` as keyof typeof tokens]).toBe("var(--phi-padding-md)");
+    }
   });
 
   it("says where the key stood, because a Theme is folded from several places", () => {

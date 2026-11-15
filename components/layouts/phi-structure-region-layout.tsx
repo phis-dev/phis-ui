@@ -8,9 +8,9 @@ import { PHI_LAYOUT } from "../../theme/phi-tokens";
 import { usePhiAuthoringRegionOverrides } from "../runtime/authoring-region-overrides";
 import { PhiTypographyControl } from "../controls/phi-typography-control";
 
-const PHI_PADDING = "var(--ant-padding)";
-const PHI_PADDING_XS = "var(--ant-padding-xs)";
-const PHI_COLOR_BORDER_SECONDARY = "var(--ant-color-border-secondary)";
+const PHI_PADDING = "var(--phi-padding)";
+const PHI_PADDING_XS = "var(--phi-padding-xs)";
+const PHI_COLOR_BORDER_SECONDARY = "var(--phi-color-border-secondary)";
 
 export type PhiStructureRegionLayoutProps = {
   blockId?: string | number | null;

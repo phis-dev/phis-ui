@@ -148,7 +148,7 @@ export function PhiDeveloperBuilderShellsWorkspaceWidgetClient({
           minHeight: 0,
           height: "100%",
           padding: 0,
-          background: "var(--ant-color-fill-secondary)",
+          background: "var(--phi-color-fill-secondary)",
         }}
         />
       </div>

@@ -23,36 +23,36 @@
 
 .phi-layout-affordance.ant-btn.phi-layout-affordance--insert.phi-layout-affordance--drop-accepted {
   opacity: 1;
-  color: var(--ant-color-success);
-  border-color: var(--ant-color-success);
-  box-shadow: 0 0 0 2px var(--ant-color-success-bg);
+  color: var(--phi-color-success);
+  border-color: var(--phi-color-success);
+  box-shadow: 0 0 0 2px var(--phi-color-success-bg);
 }
 
 .phi-layout-affordance.ant-btn.phi-layout-affordance--insert.phi-layout-affordance--drop-rejected {
   opacity: 1;
-  color: var(--ant-color-error);
-  border-color: var(--ant-color-error);
-  box-shadow: 0 0 0 2px var(--ant-color-error-bg);
+  color: var(--phi-color-error);
+  border-color: var(--phi-color-error);
+  box-shadow: 0 0 0 2px var(--phi-color-error-bg);
 }
 
 :where(.phi-layout-affordance--delete) {
   padding: 0;
-  background: var(--ant-color-bg-container);
-  box-shadow: var(--ant-box-shadow-tertiary);
+  background: var(--phi-color-bg-container);
+  box-shadow: var(--phi-box-shadow-tertiary);
 }
 
 .phi-layout-affordance.ant-btn.phi-layout-affordance--effects-preview {
   padding: 0;
   border-radius: 999px;
-  color: var(--ant-color-info-text) !important;
-  border-color: var(--ant-color-info-border) !important;
-  background-color: var(--ant-color-info-bg) !important;
-  box-shadow: var(--ant-box-shadow-tertiary);
+  color: var(--phi-color-info-text) !important;
+  border-color: var(--phi-color-info-border) !important;
+  background-color: var(--phi-color-info-bg) !important;
+  box-shadow: var(--phi-box-shadow-tertiary);
 }
 
 .phi-layout-affordance.ant-btn.phi-layout-affordance--effects-preview:hover,
 .phi-layout-affordance.ant-btn.phi-layout-affordance--effects-preview:focus-visible {
-  color: var(--ant-color-info-text-hover) !important;
-  border-color: var(--ant-color-info-border-hover) !important;
-  background-color: var(--ant-color-info-bg-hover) !important;
+  color: var(--phi-color-info-text-hover) !important;
+  border-color: var(--phi-color-info-border-hover) !important;
+  background-color: var(--phi-color-info-bg-hover) !important;
 }

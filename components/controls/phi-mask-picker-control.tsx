@@ -52,8 +52,8 @@ function renderMaskPreview(mask: PhiMaskConfig, label: string, selected = false)
           width: 54,
           height: 54,
           borderRadius: 8,
-          background: "linear-gradient(135deg, var(--ant-color-primary, #1677ff), var(--ant-color-info, #13c2c2))",
-          boxShadow: selected ? "0 0 0 2px var(--ant-color-primary)" : "inset 0 0 0 1px var(--ant-color-border-secondary)",
+          background: "linear-gradient(135deg, var(--phi-color-primary, #1677ff), var(--phi-color-info, #13c2c2))",
+          boxShadow: selected ? "0 0 0 2px var(--phi-color-primary)" : "inset 0 0 0 1px var(--phi-color-border-secondary)",
           ...resolvePhiMaskStyle(mask),
         }}
       />
@@ -112,14 +112,14 @@ export function PhiMaskPickerControl({
   const content = (
     <div
       ref={contentRef}
-      style={{ width: 360, maxWidth: "calc(100vw - (var(--ant-padding-lg) * 2))" }}
+      style={{ width: 360, maxWidth: "calc(100vw - (var(--phi-padding-lg) * 2))" }}
       onClick={(event) => event.stopPropagation()}
       onMouseDown={(event) => event.stopPropagation()}
       onPointerDown={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}
     >
-      <Flex vertical gap="var(--ant-padding-sm)">
-        <Flex align="center" justify="space-between" gap="var(--ant-padding-sm)">
+      <Flex vertical gap="var(--phi-padding-sm)">
+        <Flex align="center" justify="space-between" gap="var(--phi-padding-sm)">
           <Typography.Text strong>Mask</Typography.Text>
           <PhiButtonControl
             size="small"
@@ -145,7 +145,7 @@ export function PhiMaskPickerControl({
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-              gap: "var(--ant-padding-sm)",
+              gap: "var(--phi-padding-sm)",
             }}
           >
             {PHI_MASK_PRESET_OPTIONS.map((preset) => {
@@ -154,7 +154,7 @@ export function PhiMaskPickerControl({
                 <PhiButtonControl
                   key={preset.value}
                   type={selected ? "primary" : "default"}
-                  style={{ height: "auto", padding: "var(--ant-padding-xs)" }}
+                  style={{ height: "auto", padding: "var(--phi-padding-xs)" }}
                   onClick={() => selectPreset(preset.value)}
                   label={renderMaskPreview({
                     ...resolvedMask,
@@ -169,7 +169,7 @@ export function PhiMaskPickerControl({
         ) : null}
 
         {mode === "asset" ? (
-          <Flex vertical gap="var(--ant-padding-xs)">
+          <Flex vertical gap="var(--phi-padding-xs)">
             <PhiMediaPickerControl
               {...mediaPickerProps}
               getPopupContainer={popupContainer}

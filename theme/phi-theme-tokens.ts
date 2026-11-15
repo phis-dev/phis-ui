@@ -1,3 +1,4 @@
+import { PHI_SPACE } from "./antd-css-var-contract";
 import type { GlobalToken } from "antd/es/theme/interface";
 
 import type { PhiThemePalette } from "./phi-theme-presets";
@@ -171,7 +172,7 @@ export const PHI_THEME_TOKEN_KEYS = [
  * The names this house adds to Ant Design's set.
  *
  * `buildPhiThemeTokens` hands Ant Design the whole structural scale, `paddingXXL` included, and the
- * cssVar pass emits a variable for every token it is given -- so `--ant-padding-xxl` is on the page
+ * cssVar pass emits a variable for every token it is given -- so `--phi-padding-xxl` is on the page
  * even though `AliasToken` has no such field. The name is therefore real, usable from CSS, and
  * invisible to the type, which is exactly why it has to be stated somewhere.
  *
@@ -179,38 +180,58 @@ export const PHI_THEME_TOKEN_KEYS = [
  * Design's type and a name Ant Design does not know cannot be cut from it. A Client Component that
  * needs one of these reads it as a CSS variable, the way a Server Component does.
  *
- * `phiPageMax` is how wide a Page may get (theme/phi-tokens.ts, `PHI_LAYOUT.pageMax`); a Page reads it
+ * `pageMax` is how wide a Page may get (theme/phi-tokens.ts, `PHI_LAYOUT.pageMax`); a Page reads it
  * as `PHI_PAGE.max`.
  *
- * The `phiGradient*` names are the Theme's gradient slots and the primary Buttons' run
+ * The `gradient*` names are the Theme's gradient slots and the primary Buttons' run
  * (theme/phi-theme-gradients.ts): tokens of this package's own, laid over the resolved ones so Ant
- * Design writes them per mode and per Surface tone like every other. The `phiCustom*` names are the
+ * Design writes them per mode and per Surface tone like every other. The `custom*` names are the
  * palette's custom colours, laid over the same way (theme/phi-theme-palette.ts).
  */
 export const PHI_THEME_OWN_TOKEN_KEYS = [
   "paddingXXL",
-  "phiPageMax",
-  "phiGradient1",
-  "phiGradient1Text",
-  "phiGradient2",
-  "phiGradient2Text",
-  "phiGradient3",
-  "phiGradient3Text",
-  "phiPrimaryButtonGradient",
-  "phiPrimaryButtonGradientHover",
-  "phiPrimaryButtonGradientActive",
-  "phiPrimaryButtonGradientText",
-  "phiCustom1",
-  "phiCustom2",
-  "phiCustom3",
-  "phiCustom4",
-  "phiCustom5",
-  "phiCustom6",
-  "phiCustom7",
-  "phiCustom8",
-  "phiCustom9",
-  "phiCustom10",
+  "pageMax",
+  "pagePaddingTopPhone",
+  "pagePaddingRightPhone",
+  "pagePaddingBottomPhone",
+  "pagePaddingLeftPhone",
+  "pagePaddingTopTablet",
+  "pagePaddingRightTablet",
+  "pagePaddingBottomTablet",
+  "pagePaddingLeftTablet",
+  "pagePaddingTopDesktop",
+  "pagePaddingRightDesktop",
+  "pagePaddingBottomDesktop",
+  "pagePaddingLeftDesktop",
+  "gradient1",
+  "gradient1Text",
+  "gradient2",
+  "gradient2Text",
+  "gradient3",
+  "gradient3Text",
+  "primaryButtonGradient",
+  "primaryButtonGradientHover",
+  "primaryButtonGradientActive",
+  "primaryButtonGradientText",
+  "custom1",
+  "custom2",
+  "custom3",
+  "custom4",
+  "custom5",
+  "custom6",
+  "custom7",
+  "custom8",
+  "custom9",
+  "custom10",
 ] as const;
+
+/** The Page inset's names, per band and side (`PHI_LAYOUT.pagePadding`, `PHI_PAGE.padding`). */
+export const PHI_THEME_PAGE_PADDING_BANDS = ["Phone", "Tablet", "Desktop"] as const;
+export const PHI_THEME_PAGE_PADDING_SIDES = ["Top", "Right", "Bottom", "Left"] as const;
+type PhiThemePagePaddingTokenKey =
+  `pagePadding${(typeof PHI_THEME_PAGE_PADDING_SIDES)[number]}${(typeof PHI_THEME_PAGE_PADDING_BANDS)[number]}`;
+const PHI_THEME_PAGE_PADDING_TOKEN_KEYS: readonly PhiThemePagePaddingTokenKey[] =
+  PHI_THEME_PAGE_PADDING_BANDS.flatMap((band) => PHI_THEME_PAGE_PADDING_SIDES.map((side) => `pagePadding${side}${band}` as const));
 
 export type PhiThemeTokenKey = (typeof PHI_THEME_TOKEN_KEYS)[number];
 
@@ -307,6 +328,7 @@ export function assertPhiThemeVocabulary({
   }
 
   violations.push(...readPhiThemePageMaxViolations(styleToken, source));
+  violations.push(...readPhiThemePagePaddingViolations(styleToken, source));
 
   if (violations.length > 0) {
     throw new Error(violations.join(" "));
@@ -319,14 +341,27 @@ export function assertPhiThemeVocabulary({
  * Narrower, no Page could ever be wide: a Grid of four columns or anything else that answers to the
  * Region threshold would never draw its wide form, and nothing would say why.
  */
+/**
+ * A Page's inset is a step of the spacing scale on each side and band, or none: the Page column reads it
+ * as a length, and a word it cannot resolve would leave the side at no padding with nothing to say why.
+ */
+function readPhiThemePagePaddingViolations(styleToken: Record<string, unknown> | null | undefined, source: string) {
+  const steps = new Set<unknown>([...Object.values(PHI_SPACE), 0, "0"]);
+  return PHI_THEME_PAGE_PADDING_TOKEN_KEYS.flatMap((key) => {
+    const value = styleToken?.[key];
+    if (value == null || steps.has(value)) return [];
+    return [`${source}: the style token states ${key} as ${JSON.stringify(value)}, which is not a step of the spacing scale.`];
+  });
+}
+
 function readPhiThemePageMaxViolations(styleToken: Record<string, unknown> | null | undefined, source: string) {
-  const value = styleToken?.phiPageMax;
+  const value = styleToken?.pageMax;
   if (value == null) return [];
   if (typeof value !== "number" || !Number.isFinite(value)) {
-    return [`${source}: the style token states phiPageMax as ${JSON.stringify(value)}, which is not a number of pixels.`];
+    return [`${source}: the style token states pageMax as ${JSON.stringify(value)}, which is not a number of pixels.`];
   }
   if (value < PHI_CONTAINER_BREAKPOINT_REGION) {
-    return [`${source}: the style token states phiPageMax ${value}, narrower than ${PHI_CONTAINER_BREAKPOINT_REGION}, from which a Region counts as wide.`];
+    return [`${source}: the style token states pageMax ${value}, narrower than ${PHI_CONTAINER_BREAKPOINT_REGION}, from which a Region counts as wide.`];
   }
   return [];
 }

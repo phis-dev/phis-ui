@@ -5,7 +5,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { PHI_LAYOUT } from "../../theme/phi-tokens";
 import { usePhiAuthoringRegionOverrides } from "../runtime/authoring-region-overrides";
 
-const PHI_PADDING = "var(--ant-padding)";
+const PHI_PADDING = "var(--phi-padding)";
 
 export type PhiPageRegionLayoutProps = {
   blockId?: string | number | null;

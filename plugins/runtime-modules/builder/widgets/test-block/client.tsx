@@ -27,7 +27,7 @@ export function PhiTestBlockWidget({ labels, config }: PhiTestBlockWidgetProps) 
         alignItems: "center",
         justifyContent: "center",
         textAlign: "center",
-        border: "1px solid var(--ant-color-primary)",
+        border: "1px solid var(--phi-color-primary)",
       }}
     >
       {labels.text}

@@ -71,7 +71,7 @@ function resolveCurrentValue(
 }
 
 function resolveDisplayBorderColor(color: string, primaryColor: string) {
-  if (color === "var(--ant-color-primary)") {
+  if (color === "var(--phi-color-primary)") {
     return primaryColor;
   }
 

@@ -83,7 +83,7 @@ export function PhiModuleIcon({
         size={size}
         title={name}
         className={className ? `phi-module-icon-unavailable ${className}` : "phi-module-icon-unavailable"}
-        style={{ color: "var(--ant-color-warning)", ...style }}
+        style={{ color: "var(--phi-color-warning)", ...style }}
       />
     ) : null;
   }

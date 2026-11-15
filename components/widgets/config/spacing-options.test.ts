@@ -12,18 +12,18 @@ import {
  */
 describe("the spacing scale", () => {
   it("offers each step as the value it writes", () => {
-    expect(resolvePhiSpacingScaleValue("base")).toBe("var(--ant-padding)");
-    expect(buildPhiSpacingScaleOptions().find((option) => option.label === "base")?.value).toBe("var(--ant-padding)");
+    expect(resolvePhiSpacingScaleValue("base")).toBe("var(--phi-padding)");
+    expect(buildPhiSpacingScaleOptions().find((option) => option.label === "base")?.value).toBe("var(--phi-padding)");
   });
 
   it("recognizes a written step however it is written", () => {
-    expect(resolvePhiSpacingScaleKey("var(--ant-padding)")).toBe("base");
+    expect(resolvePhiSpacingScaleKey("var(--phi-padding)")).toBe("base");
     expect(resolvePhiSpacingScaleKey(21)).toBe("base");
     expect(resolvePhiSpacingScaleKey("21px")).toBe("base");
     expect(resolvePhiSpacingScaleKey("0")).toBe("none");
   });
 
   it("does not know Ant Design's margin family, which Phi code does not write", () => {
-    expect(resolvePhiSpacingScaleKey("var(--ant-margin)")).toBeNull();
+    expect(resolvePhiSpacingScaleKey("var(--phi-margin)")).toBeNull();
   });
 });

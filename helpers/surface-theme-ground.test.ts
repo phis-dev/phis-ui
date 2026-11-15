@@ -18,7 +18,7 @@ import { readPhiSurface } from "../types/surface";
 import { PHI_SURFACE_TONE_GROUND, resolvePhiSurfaceStyle } from "./surface-style";
 
 const theme = { base: { kind: "theme" as const } };
-const themeColour = "var(--phi-shell-chrome-color, var(--ant-color-bg-container))";
+const themeColour = "var(--phi-shell-chrome-color, var(--phi-color-bg-container))";
 
 describe("a Background that is the Theme's", () => {
   it("is a Base kind of its own, offered by default, and reads back as itself", () => {

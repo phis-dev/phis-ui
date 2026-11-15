@@ -146,7 +146,7 @@ export const PHI_BACKGROUND_BASE_KINDS: readonly PhiCmsBackgroundWidgetConfig["b
  * ground (`PHI_SURFACE_TONE_GROUND`), and what a `theme` ground falls back to where the Theme's Overlay
  * is not published.
  */
-export const PHI_BACKGROUND_CONTAINER_GROUND = "var(--ant-color-bg-container)";
+export const PHI_BACKGROUND_CONTAINER_GROUND = "var(--phi-color-bg-container)";
 
 /**
  * What a `theme` Base paints: the Shell Chrome Overlay's custom properties, the same ones the Shell's

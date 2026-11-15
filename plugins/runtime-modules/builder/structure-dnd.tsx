@@ -119,8 +119,8 @@ function PhiStructureDragSnapshot({
         overflow: "hidden",
         pointerEvents: "none",
         opacity: 0.86,
-        borderRadius: "var(--ant-border-radius)",
-        boxShadow: "var(--ant-box-shadow-secondary)",
+        borderRadius: "var(--phi-border-radius)",
+        boxShadow: "var(--phi-box-shadow-secondary)",
       }}
     />
   );

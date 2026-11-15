@@ -11,7 +11,7 @@
 }
 
 :where([data-layout-kind]) {
-  --phi-layout-gap: var(--ant-margin);
+  --phi-layout-gap: var(--phi-margin);
 }
 
 :where([data-layout-kind="flex"]) {
@@ -356,7 +356,7 @@
 .phi-form-cell--label {
   display: flex;
   align-items: center;
-  min-height: var(--phi-form-label-height-compact);
+  min-height: var(--phi-form-label-slot-height-compact);
   padding-inline-end: var(--phi-form-label-pad-compact);
 }
 
@@ -391,7 +391,7 @@
   }
 
   .phi-form-cell--label {
-    min-height: var(--phi-form-label-height-medium);
+    min-height: var(--phi-form-label-slot-height-medium);
     padding-inline-end: var(--phi-form-label-pad-medium);
   }
 
@@ -409,7 +409,7 @@
   }
 
   .phi-form-cell--label {
-    min-height: var(--phi-form-label-height-wide);
+    min-height: var(--phi-form-label-slot-height-wide);
     padding-inline-end: var(--phi-form-label-pad-wide);
   }
 
@@ -601,7 +601,7 @@
  * to its hover colour around them.
  */
 :where(.phi-tone-light, .phi-tone-dark, .phi-tone-inverse):where(:not([class^="ant-"], [class*=" ant-"])) {
-  color: var(--ant-color-text);
+  color: var(--phi-color-text);
 }
 
 :where(.phi-tone-light) {
@@ -647,7 +647,7 @@
 }
 
 :where(.phi-card--link):focus-within {
-  outline: calc(var(--ant-line-width) * 2) solid var(--ant-color-primary-border);
+  outline: calc(var(--phi-line-width) * 2) solid var(--phi-color-primary-border);
   outline-offset: 2px;
 }
 
@@ -702,7 +702,7 @@
  * `:where`: Ant Design's own `.ant-ribbon` states `top`, and this has to outrank it.
  */
 .phi-card-ribbon > .ant-ribbon {
-  top: calc(var(--ant-margin-xs) + 3px);
+  top: calc(var(--phi-margin-xs) + 3px);
 }
 
 :where(.phi-card-ribbon--lift) > :where(.ant-ribbon) {
@@ -722,7 +722,7 @@
 @media (hover: hover) {
   :where(.phi-card--hover-lift):hover {
     translate: 0 -4px;
-    box-shadow: var(--ant-box-shadow-secondary) !important;
+    box-shadow: var(--phi-box-shadow-secondary) !important;
   }
 
   :where(.phi-card--hover-zoom):hover :where(.phi-card__ground, .phi-card__media img) {
@@ -732,7 +732,7 @@
 
 :where(.phi-card--hover-lift):focus-within {
   translate: 0 -4px;
-  box-shadow: var(--ant-box-shadow-secondary) !important;
+  box-shadow: var(--phi-box-shadow-secondary) !important;
 }
 
 :where(.phi-card--hover-zoom):focus-within :where(.phi-card__ground, .phi-card__media img) {

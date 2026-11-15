@@ -32,8 +32,8 @@
 }
 
 .phi-html-widget-editor__text--code {
-  font-family: var(--ant-font-family-code, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace);
-  background: var(--ant-color-fill-secondary, rgba(0, 0, 0, 0.04));
+  font-family: var(--phi-font-family-code, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace);
+  background: var(--phi-color-fill-secondary, rgba(0, 0, 0, 0.04));
   border-radius: 4px;
   padding: 0 0.2em;
 }
@@ -53,13 +53,13 @@
 }
 
 :where([data-phi-debug-scaffold="on"]) {
-  --phi-debug-layer-layout-background: var(--ant-color-success-bg);
-  --phi-debug-layer-layout-border: var(--ant-color-success);
+  --phi-debug-layer-layout-background: var(--phi-color-success-bg);
+  --phi-debug-layer-layout-border: var(--phi-color-success);
 
-  --phi-debug-layer-slot-background: var(--ant-color-warning-bg);
+  --phi-debug-layer-slot-background: var(--phi-color-warning-bg);
   /* The Grid's track guides: a tint light enough that a slot's own band stays the stronger mark. */
-  --phi-debug-layer-slot-background-soft: color-mix(in srgb, var(--ant-color-warning-bg) 50%, transparent);
-  --phi-debug-layer-slot-border: var(--ant-color-warning);
+  --phi-debug-layer-slot-background-soft: color-mix(in srgb, var(--phi-color-warning-bg) 50%, transparent);
+  --phi-debug-layer-slot-border: var(--phi-color-warning);
 
   --phi-debug-layer-scaffold-background: rgba(114, 46, 209, 0.10);
   --phi-debug-layer-scaffold-background-strong: rgba(114, 46, 209, 0.18);
@@ -134,10 +134,10 @@
     .phi-layout[data-phi-block-render-mode="preview"]
 ) {
   --phi-debug-layer-layout-background: transparent;
-  --phi-debug-layer-layout-border: var(--ant-color-success-border-hover);
+  --phi-debug-layer-layout-border: var(--phi-color-success-border-hover);
   --phi-debug-layer-slot-background: transparent;
   --phi-debug-layer-slot-background-soft: transparent;
-  --phi-debug-layer-slot-border: var(--ant-color-warning-border-hover);
+  --phi-debug-layer-slot-border: var(--phi-color-warning-border-hover);
   outline-width: 1px;
   outline-offset: -1px;
 }
@@ -257,7 +257,7 @@
   color: var(--phi-layout-scaffold-delete-color);
   background: var(--phi-layout-scaffold-delete-background);
   border: 1px solid var(--phi-layout-scaffold-delete-border);
-  border-radius: var(--ant-border-radius);
+  border-radius: var(--phi-border-radius);
   overflow: hidden;
   box-shadow: var(--phi-layout-scaffold-delete-shadow);
   transform: var(--phi-layout-scaffold-delete-transform);
@@ -299,14 +299,14 @@
   top: 100%;
   left: 0;
   z-index: 45;
-  max-width: min(100%, calc(var(--ant-control-height) * 10));
-  padding: 0 var(--ant-padding-xxs);
+  max-width: min(100%, calc(var(--phi-control-height) * 10));
+  padding: 0 var(--phi-padding-xxs);
   border: 1px solid var(--phi-edit-scaffold-label-border);
-  border-radius: var(--ant-border-radius);
+  border-radius: var(--phi-border-radius);
   background: var(--phi-edit-scaffold-label-background);
   color: var(--phi-edit-scaffold-label-color);
-  font-size: var(--ant-font-size-sm);
-  line-height: var(--ant-control-height-sm);
+  font-size: var(--phi-font-size-sm);
+  line-height: var(--phi-control-height-sm);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -515,14 +515,14 @@
   top: 100%;
   left: 0;
   z-index: 45;
-  max-width: min(100%, calc(var(--ant-control-height) * 10));
-  padding: 0 var(--ant-padding-xxs);
+  max-width: min(100%, calc(var(--phi-control-height) * 10));
+  padding: 0 var(--phi-padding-xxs);
   border: 1px solid var(--phi-builder-widget-scaffold-label-border);
-  border-radius: var(--ant-border-radius);
+  border-radius: var(--phi-border-radius);
   background: var(--phi-builder-widget-scaffold-label-background);
   color: var(--phi-builder-widget-scaffold-label-color);
-  font-size: var(--ant-font-size-sm);
-  line-height: var(--ant-control-height-sm);
+  font-size: var(--phi-font-size-sm);
+  line-height: var(--phi-control-height-sm);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

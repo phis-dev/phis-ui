@@ -75,7 +75,7 @@ describe("PhiBulletListControl", () => {
     );
     // Two state markers, and nothing for the neutral entry of a list whose marker is none.
     expect(count(html, /<span aria-hidden="true" style="display:inline-flex/g)).toBe(2);
-    expect(html).toMatch(/color:var\(--ant-color-text-tertiary\)[^>]*>out</);
+    expect(html).toMatch(/color:var\(--phi-color-text-tertiary\)[^>]*>out</);
     expect(html).not.toContain("<button");
   });
 
