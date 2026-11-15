@@ -1553,8 +1553,11 @@ preset uses a step above `md`, and only together with `heroOverlap`.
 `checkPhiPagePresetLayout(tree)` (`@phis/ui/helpers`) reads a tree a route preset builds and returns what
 breaks this section: a distance that is not a `PHI_SPACE` step, a step above `md` outside a Hero's bottom
 beside `heroOverlap`, padding on a Layout without a Surface (and a Grid that keeps its default inset), a
-content Region without the `md` edge, and a Page column that is not one `flex-vertical`. A package runs it
-over every route preset in its own verify step and fails on a finding.
+content Region without the `md` edge, and a Page column that is not one `flex-vertical`. It also refuses a Layout config its own parser does not
+take, for example a Grid of five columns (the Grid takes 1, 2, 3, 4 or 6: each divides its 24 tracks); on a
+live page such a Layout is left out without a message, which is why a package runs the check over every
+preset tree before it ships. A package runs it over every route preset in its own verify step and fails on
+a finding.
 
 It is for presets only. A Page an author edits in the Builder is never checked against it: the Inspector
 offers the scale, and a value off it is the author's choice and is saved as it is.
@@ -1563,6 +1566,8 @@ offers the scale, and a value off it is the author's choice and is saved as it i
 
 - One `flex-vertical` Page column under `content`, `padding` none, `gap` `PHI_SPACE.md`.
 - Every `padding` and `gap` is a `PHI_SPACE` step; none is a string, a number or a `clamp()`.
+- Every Layout config is one its parser takes (a Grid has 1, 2, 3, 4 or 6 columns, never 5);
+  `checkPhiPagePresetLayout` reports it.
 - Padding only on a Layout with a Surface, at `md`; the Region's edge is not repeated inside it.
 - No Layout whose only job is to give one Widget a background.
 - The reading width comes from the Region's `maxSize`, never from padding.

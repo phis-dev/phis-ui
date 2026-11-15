@@ -2,6 +2,18 @@ import { PhiCmsRegionType } from "../constants/phi-cms";
 
 import { PHI_SPACE } from "../theme/antd-css-var-contract";
 import type { PhiCmsLayoutNode, PhiResolvedCmsPageTree } from "../types/cms";
+import {
+  parsePhiCmsCarouselLayoutConfig,
+  parsePhiCmsCollapsibleLayoutConfig,
+  parsePhiCmsContentLayoutConfig,
+  parsePhiCmsFlexLayoutConfig,
+  parsePhiCmsFlexVerticalLayoutConfig,
+  parsePhiCmsGridLayoutConfig,
+  parsePhiCmsMasonryLayoutConfig,
+  parsePhiCmsSplitCardLayoutConfig,
+  parsePhiCmsStackLayoutConfig,
+  parsePhiCmsThreeColumnLayoutConfig,
+} from "../types/cms-config";
 import { readPhiSurface } from "../types/surface";
 
 /**
@@ -12,7 +24,10 @@ import { readPhiSurface } from "../types/surface";
  * on what an author saves in the Builder: there the scale is what the Inspector offers, and a value off it
  * is the author's to choose.
  *
- * It reads the stated config only and resolves nothing: a distance is a step of `PHI_SPACE` or nothing.
+ * It reads the stated config only and resolves nothing: a distance is a step of `PHI_SPACE` or nothing, and
+ * a Layout's config is one its own parser takes -- a Grid of five columns is refused, for the Grid takes 1,
+ * 2, 3, 4 or 6, and on a live page a Layout whose config is refused is left out without a message. Widget
+ * configs are not parsed here; their parsers live with the Widgets.
  */
 
 export type PhiPageLayoutFinding = {
@@ -30,6 +45,20 @@ const EMPHASIS_STEPS = ["lg", "xl", "xxl"] as const;
 
 /** Layouts that bring a padding of their own by default (LAYOUTING.md): stated, or they keep it. */
 const DEFAULT_PADDED_LAYOUTS = new Set(["grid", "masonry", "three-column"]);
+
+/** The strict parser of each Layout type that has one in the contract layer (the plugins' `parseConfig`). */
+const LAYOUT_CONFIG_PARSERS: Record<string, (config: Record<string, unknown>) => unknown> = {
+  content: parsePhiCmsContentLayoutConfig,
+  flex: parsePhiCmsFlexLayoutConfig,
+  "flex-vertical": parsePhiCmsFlexVerticalLayoutConfig,
+  masonry: parsePhiCmsMasonryLayoutConfig,
+  stack: parsePhiCmsStackLayoutConfig,
+  carousel: parsePhiCmsCarouselLayoutConfig,
+  collapsible: parsePhiCmsCollapsibleLayoutConfig,
+  grid: parsePhiCmsGridLayoutConfig,
+  "three-column": parsePhiCmsThreeColumnLayoutConfig,
+  "split-card": parsePhiCmsSplitCardLayoutConfig,
+};
 
 function stepOf(value: unknown): string | null {
   if (value === 0 || value === "0") return "none";
@@ -97,6 +126,18 @@ export function checkPhiPagePresetLayout(tree: PhiResolvedCmsPageTree): PhiPageL
     const config = (node.config ?? {}) as Record<string, unknown>;
     const typeKey = typeKeyOf(node);
     const surface = readPhiSurface(config.surface);
+
+    const parse = Object.hasOwn(LAYOUT_CONFIG_PARSERS, typeKey) ? LAYOUT_CONFIG_PARSERS[typeKey] : undefined;
+    if (parse) {
+      try {
+        parse(config);
+      } catch (error) {
+        findings.push({
+          node: nameOf(node),
+          message: `its config is refused: ${error instanceof Error ? error.message : String(error)}`,
+        });
+      }
+    }
 
     for (const key of SPACING_KEYS) {
       const value = config[key];

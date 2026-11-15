@@ -70,4 +70,25 @@ describe("checkPhiPagePresetLayout", () => {
     (tree.layoutNodes[1] as { widgetType: string }).widgetType = "x/grid";
     expect(checkPhiPagePresetLayout(tree).some((finding) => finding.message.includes("Page column"))).toBe(true);
   });
+
+  it("refuses a Grid of five columns, naming the node and the parser's message", () => {
+    const findings = checkPhiPagePresetLayout(page({ nodes: [
+      layout(5, 2, "grid", { padding: 0, columns: { compact: 1, medium: 2, wide: 5 } }, "five"),
+    ] }));
+    expect(findings).toHaveLength(1);
+    expect(findings[0].node).toBe("five");
+    expect(findings[0].message).toMatch(/^its config is refused: .*column/i);
+  });
+
+  it("takes the same Grid at three columns", () => {
+    expect(checkPhiPagePresetLayout(page({ nodes: [
+      layout(5, 2, "grid", { padding: 0, columns: { compact: 1, medium: 2, wide: 3 } }),
+    ] }))).toEqual([]);
+  });
+
+  it("does not parse a Layout type that has no parser", () => {
+    expect(checkPhiPagePresetLayout(page({ nodes: [
+      layout(5, 2, "unknown-layout", { columns: { wide: 5 } }),
+    ] }))).toEqual([]);
+  });
 });
