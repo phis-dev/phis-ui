@@ -1,3 +1,4 @@
+import type { PhiRecordFieldKind } from "../constants/record-field-kinds";
 import type { PhiRuntimeDataProviderKey } from "./runtime-data-provider";
 import type { PhiBlockRuntime } from "./widget-runtime";
 
@@ -68,12 +69,6 @@ export type PhiRuntimeRecordSamplesReader = (
  * text, a picture, a date. That is what lets a Page laid out once serve every record -- its Widgets name a
  * field -- and what a list of such records binds its cards to.
  */
-
-/** The kinds a field can be. Closed: a Widget says which of them it draws, and the Builder offers only those. */
-export const PHI_RECORD_FIELD_KINDS = [
-  "text", "markdown", "picture", "pictures", "list", "tag", "date", "number", "link",
-] as const;
-export type PhiRecordFieldKind = (typeof PHI_RECORD_FIELD_KINDS)[number];
 
 /** A picture as a record names it: where it is served from -- Site-relative or absolute -- and what it shows. */
 export type PhiRecordPicture = { src: string; alt?: string };
@@ -147,3 +142,5 @@ export type PhiCmsPageRecordDescriptor = {
   titleField?: string;
   descriptionField?: string;
 };
+
+export type { PhiRecordFieldKind } from "../constants/record-field-kinds";

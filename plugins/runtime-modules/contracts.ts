@@ -17,7 +17,8 @@ import type {
   PhiRuntimeModuleWidgetDefinition,
 } from "../../types/cms-plugins";
 import type { PhiRuntimeDataProviderKey } from "../../types/runtime-data-provider";
-import { PHI_RECORD_FIELD_KINDS, type PhiRecordDeclaration } from "../../types/record-provider";
+import { PHI_RECORD_FIELD_KINDS } from "../../constants/record-field-kinds";
+import type { PhiRecordDeclaration } from "../../types/record-provider";
 import { isPhiCalendarAdapterKey, type PhiCalendarAdapterKey } from "../../types/calendar";
 import {
   collectPhiVideoProviderDescriptorErrors,
