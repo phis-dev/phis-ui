@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
+import { notFound } from "next/navigation";
 
 import {
   resolvePhiCmsAreaKey,
@@ -42,6 +43,7 @@ import { logRuntimeEvent } from "../net/log";
 import { getPhiCmsPage, getPhiExactSiteArea } from "./cms";
 import { buildPhiLocalCmsAreaPayload } from "./cms-area";
 import { applyPhiPresetTreePublishedContent } from "./cms-bound-content";
+import { resolvePhiCmsPageRecord } from "./cms-page-record";
 import { resolvePhiAreaPageReferencePath, resolvePhiAreaRootRouteDecision } from "./area-root-route";
 import { fetchSiteNavigationFolderTarget } from "../gateway/site-nav";
 import type { PhiPageReference } from "../types/references";
@@ -277,8 +279,31 @@ function mapResolvedPageToRequestedContext(
   };
 }
 
+/** The record's own title and description on the Page; `msgId: 0`, because they are no Site message. */
+function applyPhiPageRecordMeta(
+  pagePayload: PhiResolvedCmsPagePayload,
+  record: { title: string | null; description: string | null },
+): PhiResolvedCmsPagePayload {
+  if (!record.title && !record.description) {
+    return pagePayload;
+  }
+  const field = (value: string) => ({ msgId: 0, source: value, value });
+  const pageMeta = pagePayload.page.pageMeta;
+  return {
+    ...pagePayload,
+    page: {
+      ...pagePayload.page,
+      pageMeta: {
+        title: record.title ? field(record.title) : pageMeta?.title ?? null,
+        description: record.description ? field(record.description) : pageMeta?.description ?? null,
+      },
+    },
+  };
+}
+
 function buildPhiRuntimePage(
   pagePayload: PhiResolvedCmsPagePayload,
+  record?: NonNullable<PhiBlockRuntime["page"]>["record"],
 ): PhiBlockRuntime["page"] {
   const pageMeta: PhiCmsResolvedPageMeta | null | undefined = pagePayload.page.pageMeta;
 
@@ -290,6 +315,7 @@ function buildPhiRuntimePage(
     title: pageMeta?.title?.value ?? null,
     description: pageMeta?.description?.value ?? null,
     noindex: hasPhiFlag(pagePayload.page.page.flags, PhiCmsFlags.NoIndex),
+    ...(record ? { record } : {}),
   };
 }
 
@@ -407,6 +433,30 @@ export async function resolvePhiCmsRequest({
   });
 
   /*
+   * The record the Page is about, where its route names one: read once, here, for the Module's own tree
+   * and for a stored override of it alike -- the override holds no address, only Widgets bound to the
+   * record's fields. A Page stored at this exact address is its own and about no record. An address that
+   * names no record is no Page: a 404 while rendering, nothing for a lookup.
+   */
+  const routeIsParametrised = routeBinding ? Object.keys(routeBinding.params).length > 0 : false;
+  const routePresetAnswered = loadedPage?.sourcePreset?.presetKey === routeBinding?.descriptor.presetKey
+    && loadedPage?.sourcePreset?.ownerModuleId === routeBinding?.descriptor.ownerModuleId;
+  const pageRecord = loadedPage && routeBinding && routeIsParametrised && routePresetAnswered
+    ? await resolvePhiCmsPageRecord({
+        binding: routeBinding,
+        runtime: runtimeWithAuthProvider,
+        runtimeModuleCatalog,
+        activeModuleIds: activeModuleKeys,
+      })
+    : null;
+  if (pageRecord?.status === "missing") {
+    if (purpose === "lookup") {
+      return null;
+    }
+    notFound();
+  }
+
+  /*
    * The Area root, as the Builder configured it.
    *
    * It is read here rather than inside the preset because the preset is the fallback: with nothing
@@ -470,14 +520,14 @@ export async function resolvePhiCmsRequest({
     ? mapResolvedPageToRequestedContext(resolvedPage, areaMask, path)
     : null;
 
-  const resolvedContent = effectivePage;
-  if (!resolvedContent) {
+  if (!effectivePage) {
     return null;
   }
+  const resolvedContent = pageRecord ? applyPhiPageRecordMeta(effectivePage, pageRecord) : effectivePage;
 
   const resolvedRuntime: PhiBlockRuntime = {
     ...runtimeWithAuthProvider,
-    page: buildPhiRuntimePage(resolvedContent),
+    page: buildPhiRuntimePage(resolvedContent, pageRecord?.binding),
   };
   if (purpose === "lookup") {
     return {

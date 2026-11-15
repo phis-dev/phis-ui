@@ -122,6 +122,11 @@ export type PhiBlockRuntimePage = {
    * a Page says, and this can only add to that, never take it back.
    */
   noindex?: boolean;
+  /**
+   * The record this Page is about, as a binding: the Provider and the parameters the address filled in.
+   * Present on a route that names a `pageRecord`; a Widget reads the record's fields through it.
+   */
+  record?: import("./runtime-data-provider").PhiRuntimeDataProviderBinding;
 };
 
 /**

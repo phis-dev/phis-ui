@@ -95,6 +95,12 @@ export type PhiCmsRoutePresetDescriptor = PhiCmsPresetIdentity & {
       params: Readonly<Record<string, string>>;
     },
   ) => PhiResolvedCmsPageTree | Promise<PhiResolvedCmsPageTree>;
+  /**
+   * The record this route's Page is about (MODULES.md, "The fields of a record, and the record a Page is
+   * about"). Only on a route with a parameter. Core reads it before anything is drawn -- no record is a
+   * 404 -- and the Page's Widgets bind to its fields, in the Module's tree and in a stored override alike.
+   */
+  pageRecord?: import("./record-provider").PhiCmsPageRecordDescriptor;
   navigation?: readonly PhiCmsNavigationInjectionDescriptor[];
   /**
    * The Page's guided Tour, in the owning Module's language (design/TOURS.md). Read with the route, not

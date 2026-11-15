@@ -723,6 +723,11 @@ export type PhiCmsRuntimeRenderRegistry = {
     PhiRuntimeDataProviderKey,
     () => Promise<import("./record-provider").PhiRuntimeRecordProviderResolver>
   >;
+  /** The field readers of the `record` Providers that declare fields, by key. */
+  recordFieldsLoadersByKey: ReadonlyMap<
+    PhiRuntimeDataProviderKey,
+    () => Promise<import("./record-provider").PhiRuntimeRecordFieldsReader>
+  >;
   dataProviderDescriptorsByKey: ReadonlyMap<
     PhiRuntimeDataProviderKey,
     PhiRuntimeModuleDataProviderDescriptor
@@ -1180,7 +1185,13 @@ export type PhiRuntimeModuleDataProviderDescriptor = PhiRuntimeModuleDataProvide
       resources: readonly import("./collection-provider").PhiCollectionProviderResourceDescriptor[];
     }
   | {
-      kind: Exclude<PhiRuntimeDataProviderKind, "table" | "tree" | "collection">;
+      kind: "record";
+      resources?: never;
+      /** Whose the record is and what it consists of; what a Widget binds to as a field of it. */
+      record?: import("./record-provider").PhiRecordDeclaration;
+    }
+  | {
+      kind: Exclude<PhiRuntimeDataProviderKind, "table" | "tree" | "collection" | "record">;
       resources?: never;
     }
 );

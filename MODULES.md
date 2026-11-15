@@ -721,6 +721,35 @@ that names nothing. A Client Provider answers after the page has loaded, which i
 - A binding to a record mounts nothing in the browser: the tree scan that mounts Provider Clients skips the
   kind.
 
+#### The fields of a record, and the record a Page is about
+
+A record Provider may declare what its record consists of, and a route with a parameter may name the
+record its Page is about (design/RECORD_TEMPLATES.md). The two together are what lets one stored Page
+serve every record: its Widgets name a *field of the page record*, never the record's address.
+
+- **Declared fields.** The descriptor's `record` names whose the record is and its fields:
+  `record: { audience, fields: [{ key, label, kind }] }`. `audience` is `public` -- the same for
+  everybody, so a Public page may be rendered once -- or `viewer`, the signed-in account's own; a route in
+  Public cannot name a `viewer` record. The kinds are closed (`PHI_RECORD_FIELD_KINDS`): `text`,
+  `markdown`, `picture`, `pictures`, `list`, `tag`, `date`, `number`, `link`. What each kind's value is,
+  is typed in `types/record-provider.ts`; a date is an ISO instant and a number a number, formatted by
+  Core in the page's language, and everything a domain formats itself -- a price with its currency, tax
+  note and period -- is a `text` the Module hands over finished.
+- **The field reader.** The server half gains `loadFields`: a function from the record its resolver
+  answered to the declared fields' values. The catalog refuses declared fields without a reader and a
+  reader without declared fields. A value that is not of its declared kind is left out and logged
+  (`cms.record.field_invalid`); a Widget bound to it draws as it does for a field that is empty.
+- **The page record.** A route descriptor with a parameter may carry
+  `pageRecord: { providerKey, params, titleField?, descriptionField? }`; `params` maps each parameter the
+  Provider takes to the route parameter that fills it (`{ slug: "slug" }`). Core then reads the record
+  once per request, before anything is drawn: no record is a 404, the two named `text` fields become the
+  Page's title and description, and `runtime.page.record` carries the binding. This holds for the
+  Module's own tree and for a stored override alike, which is what makes the override a template. A Page
+  stored at the exact address of one record still wins, and has no page record.
+- **Reading a field.** A Server Widget reads with `resolvePhiPageRecordFields({ registry, runtime })`
+  (`@phis/ui/module/records`): the same memoised read as every other binding to that record, so the Page
+  costs its Provider one answer.
+
 The first is Core's content entry Provider (`PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntry`), which
 the header, text and related list of a detail Page are bound to (CONTENT_ENTRIES.md).
 The second is the Asset Module's media folder pictures Provider

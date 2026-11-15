@@ -209,6 +209,16 @@ export function compilePhiCmsRoutePattern(
       `${descriptor.ownerModuleId}/${descriptor.presetKey}: a route may contain at most one dynamic segment.`,
     );
   }
+  // A page record is filled in from the address, so every route parameter it names has to be in the path.
+  if (descriptor.pageRecord) {
+    const routeParams = new Set(dynamicSegments.map((segment) => segment.slice(1)));
+    const named = Object.values(descriptor.pageRecord.params);
+    if (named.length === 0 || named.some((param) => !routeParams.has(param))) {
+      throw new Error(
+        `${descriptor.ownerModuleId}/${descriptor.presetKey}: a page record's params must each name a parameter of the route path.`,
+      );
+    }
+  }
   for (const segment of segments) {
     if (
       segment.includes("*") ||

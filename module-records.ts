@@ -6,7 +6,8 @@
  * Server half every route of the Site imports. A Provider's resolver is the package's own function; the
  * types say what it is asked with, `fetchPhiSiteApi` asks Core with the credentials the context carries,
  * and `resolvePhiRecordSource` is how one of the package's Server Widgets reads the record its binding
- * names -- once per request, however many Widgets are bound to it.
+ * names -- once per request, however many Widgets are bound to it. `resolvePhiPageRecordFields` reads the
+ * declared fields of the record the Page is about, through the same read.
  *
  * `PhiWidgetFailureServer` is what such a Widget renders when that read, or its binding, fails: the error
  * card in the Builder, nothing on a live page, and the `cms.widget.unavailable` warning either way. It is
@@ -17,11 +18,17 @@
 import "server-only";
 
 export type {
+  PhiRecordField,
+  PhiRecordLink,
+  PhiRecordPicture,
+  PhiRecordTag,
   PhiRuntimeModuleRecordProviderServerDefinition,
+  PhiRuntimeRecordFieldsReader,
   PhiRuntimeRecordProviderContext,
   PhiRuntimeRecordProviderResolver,
 } from "./types/record-provider";
 export { resolvePhiRecordSource, type PhiRecordSourceResult } from "./server-helpers/record-source";
+export { resolvePhiPageRecordFields, type PhiPageRecordFieldsResult } from "./server-helpers/record-fields";
 export { fetchPhiSiteApi, type PhiSiteApiRequest } from "./gateway/site-api-request";
 export { PhiWidgetFailureServer } from "./components/widgets/shared/widget-failure.server";
 export type { PhiWidgetFailureProps } from "./components/widgets/shared/widget-failure";

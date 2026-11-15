@@ -66,11 +66,22 @@ A Core Grid, two columns from the 987 "wide" threshold, stacked below it. Whethe
 draw a main picture with thumbnails is to be checked; if not, it is a proposal for a Gallery variant. The
 related products need the shop's product list rebuilt on the Core Card collection, which is due anyway.
 
-## Open
+## Decided (owner, 2026-11-15)
 
-- Field bindings to a page record (recommended) or placeholders in binding params.
-- The field kinds a record provider declares, and how a Widget refuses a field of the wrong kind
-  (strict config readers: a wrong type is an error the Builder shows).
-- Formatted fields from the Module (recommended for prices) or a Core price Widget.
-- Whether a Site Page stored at an exact record path (`/shop/p/foo`) still wins over the template, as
-  today.
+- **Field bindings, not placeholders.** A Widget names a field of the page record; nothing writes the
+  record's address into binding params. Placeholders would have been the smaller change, but text, image
+  and title Widgets still could not show a field, and the template would have to carry the address.
+- **Declared field kinds, strict.** A record provider declares its fields: `text`, `markdown`,
+  `picture`, `pictures`, `list`, `tag`, and `date`, `number` and `link` -- Core formats a date and a number
+  in the page's language, and a link is what a licence's download or a record's own page is. A Widget
+  handed a field of a kind it does not draw is a config error the Builder shows. Free paths into the
+  record were the alternative: nothing for the Inspector to offer, and errors only on the page.
+- **Formatted fields from the Module, no Core price Widget.** A price is a `text` field the shop
+  formats. A Core price Widget is proposed only once a second Module shows prices and text is not enough.
+- **A Page stored at an exact record path wins over the template**, as today, so one record can have a
+  Page of its own.
+- **A provider says whose its record is.** `public` (a product: the same for everybody, so the page may
+  be rendered once) or `viewer` (a licence, an order: the signed-in account's own, rendered per request).
+- **One field declaration for the page and for lists.** The same declared fields are what a card
+  collection of such records will bind to ("more products", "my licences"). Only the single page is built
+  now; the declaration is cut so a list can reuse it.

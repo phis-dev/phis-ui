@@ -17,6 +17,7 @@ import type {
   PhiRuntimeModuleWidgetDefinition,
 } from "../../types/cms-plugins";
 import type { PhiRuntimeDataProviderKey } from "../../types/runtime-data-provider";
+import { PHI_RECORD_FIELD_KINDS, type PhiRecordDeclaration } from "../../types/record-provider";
 import { isPhiCalendarAdapterKey, type PhiCalendarAdapterKey } from "../../types/calendar";
 import {
   collectPhiVideoProviderDescriptorErrors,
@@ -979,19 +980,52 @@ export function createPhiRuntimeModuleCatalog(
  * and answers nothing, a function without a descriptor is never offered. Both are caught here, where the
  * catalog is built, rather than on the first page that binds them.
  */
+function assertPhiRecordDeclaration(owner: string, declaration: PhiRecordDeclaration) {
+  if (declaration.audience !== "public" && declaration.audience !== "viewer") {
+    throw new Error(`${owner} has an invalid audience.`);
+  }
+  const keys = new Set<string>();
+  for (const field of declaration.fields) {
+    if (!/^[a-z][A-Za-z0-9]*$/.test(field.key)) {
+      throw new Error(`${owner} has an invalid field key "${field.key}".`);
+    }
+    if (keys.has(field.key)) {
+      throw new Error(`${owner} declares field "${field.key}" twice.`);
+    }
+    keys.add(field.key);
+    if (!(PHI_RECORD_FIELD_KINDS as readonly string[]).includes(field.kind)) {
+      throw new Error(`${owner} field "${field.key}" has an invalid kind.`);
+    }
+    if (!field.label.trim()) {
+      throw new Error(`${owner} field "${field.key}" has no label.`);
+    }
+  }
+}
+
 function assertPhiRuntimeModuleRecordProviders(
   definition: PhiRuntimeModuleDefinition,
   entry: PhiRuntimeModuleCatalogEntry,
 ) {
-  const declared = new Set(
-    (definition.dataProviders ?? []).filter((provider) => provider.kind === "record").map((provider) => provider.key),
-  );
+  const descriptors = (definition.dataProviders ?? []).flatMap((provider) => provider.kind === "record" ? [provider] : []);
+  const declared = new Set(descriptors.map((provider) => provider.key));
+  const withFields = new Set<string>();
+  for (const descriptor of descriptors) {
+    if (!descriptor.record) continue;
+    withFields.add(descriptor.key);
+    assertPhiRecordDeclaration(`${definition.moduleId}: record descriptor "${descriptor.key}"`, descriptor.record);
+  }
   const served = new Set<string>();
   for (const provider of entry.recordProviders ?? []) {
     if (!declared.has(provider.key)) {
       throw new Error(
         `${definition.moduleId}: record provider "${provider.key}" has no record descriptor in its dataProviders.`,
       );
+    }
+    // Declared fields and their reader come as a pair, for the reason the descriptor and its resolver do.
+    if (withFields.has(provider.key) !== (provider.loadFields !== undefined)) {
+      throw new Error(provider.loadFields
+        ? `${definition.moduleId}: record provider "${provider.key}" has a field reader, but its descriptor declares no fields.`
+        : `${definition.moduleId}: record descriptor "${provider.key}" declares fields, but its server half has no field reader.`);
     }
     if (served.has(provider.key)) {
       throw new Error(`${definition.moduleId}: record provider "${provider.key}" is served twice.`);
