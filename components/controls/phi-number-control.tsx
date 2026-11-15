@@ -12,6 +12,11 @@ export type PhiNumberControlProps = {
   value?: number | null;
   label?: string;
   /**
+   * The field's accessible name where it shows no `label`. A visible `label` wins: the field is named by
+   * it (`aria-labelledby`) and `ariaLabel` is not set.
+   */
+  ariaLabel?: string;
+  /**
    * What the number is in, shown inside the field.
    *
    * A unit belongs to the value, not to the field's name: a label saying "Tracking (em)" leaves the
@@ -38,6 +43,7 @@ export function PhiNumberControl({
   id,
   value,
   label,
+  ariaLabel,
   prefix,
   placeholder,
   min,
@@ -53,10 +59,12 @@ export function PhiNumberControl({
   onBlur,
   onKeyDown,
 }: PhiNumberControlProps) {
+  // A visible label names the field; `usePhiControlLabel` is asked without `ariaLabel` so that stays so.
   const { labelId, labelledBy } = usePhiControlLabel(label);
   const control = (
     <InputNumber
       id={id}
+      aria-label={labelledBy ? undefined : ariaLabel}
       aria-labelledby={labelledBy}
       value={value}
       prefix={prefix}
