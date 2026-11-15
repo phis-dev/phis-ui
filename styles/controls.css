@@ -294,6 +294,19 @@ h5.phi-typography, .phi-typography h5 {
 }
 
 /*
+ * Header Navigation: the row is as tall as the room its Layout gives it (the Widget's `height: 100%`), and
+ * each entry stretches to the row and centres its words in it. Ant Design centres them with a line height
+ * as tall as the bar, which is a length, and the length the Widget used to hand it was the Region's height
+ * -- padding included, so the entries of a Header that keeps its floating gap as padding stood below the
+ * brand and the buttons beside them. The pill below still stands at the control height in the middle.
+ */
+.phi-header-nav .ant-menu-horizontal > :is(.ant-menu-item, .ant-menu-submenu) {
+  display: flex;
+  align-items: center;
+  line-height: var(--ant-control-height);
+}
+
+/*
  * A horizontal menu's mark for the current entry (`PhiMenuControl` `selectionStyle`).
  *
  * The pill: the entry stands at the control height in the middle of its bar, on a ground in the Theme's

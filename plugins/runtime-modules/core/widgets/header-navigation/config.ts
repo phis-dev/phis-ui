@@ -1,5 +1,4 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
-import type { CSSProperties } from "react";
 
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
@@ -43,9 +42,7 @@ function parsePhiCmsHeaderNavigationWidgetConfig(
 export type PhiHeaderNavigationWidgetRenderableConfig = Pick<
   PhiCmsHeaderNavigationWidgetConfig,
   "align" | "selectionStyle" | "phoneMenu"
-> & {
-  height?: CSSProperties["height"];
-};
+>;
 
 export const PHI_HEADER_NAVIGATION_WIDGET_DEFINITION = {
   kind: "widget",

@@ -5,28 +5,25 @@ import {
   type PhiCmsHeaderNavigationWidgetConfig,
 } from "./config";
 import { PhiHeaderNavigationWidget } from "./server";
-import { resolvePhiRenderableBlockGeometry } from "../../../../../types/renderable-block-geometry";
 
 export const PHI_HEADER_NAVIGATION_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsHeaderNavigationWidgetConfig> = {
   ...PHI_HEADER_NAVIGATION_WIDGET_DEFINITION,
-  render: ({ widget, runtime, regionConfig, config }) => (
+  render: ({ widget, runtime, config }) => (
     <PhiHeaderNavigationWidget
       key={`widget-${widget.id}`}
       runtime={runtime}
       navKey={config.navKey ?? `${runtime.area}:header`}
-      height={resolvePhiRenderableBlockGeometry(regionConfig).block.size?.css}
       align={config.align}
       selectionStyle={config.selectionStyle}
       phoneMenu={config.phoneMenu}
       interactive={true}
     />
   ),
-  renderPreview: ({ widget, runtime, regionConfig, config }) => (
+  renderPreview: ({ widget, runtime, config }) => (
     <PhiHeaderNavigationWidget
       key={`widget-${widget.id}`}
       runtime={runtime}
       navKey={config.navKey ?? `${runtime.area}:header`}
-      height={resolvePhiRenderableBlockGeometry(regionConfig).block.size?.css}
       align={config.align}
       interactive={false}
     />

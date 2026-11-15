@@ -20,7 +20,6 @@ import type {
   PhiCmsWidgetAuthoringCanvas,
 } from "../../../../../types";
 import { mapPhiBuilderNavigationItemsToNavItems } from "../../../../../components/widgets/builder/navigation-items";
-import { resolvePhiRenderableBlockGeometry } from "../../../../../types/renderable-block-geometry";
 
 function PhiHeaderNavigationWidgetEditor({
   runtime,
@@ -52,7 +51,6 @@ function PhiHeaderNavigationWidgetEditor({
         ),
       )}
       menuTheme={runtime.site.theme?.mode === "dark" ? "dark" : "light"}
-      height={config.height}
       align={config.align}
       interactive={false}
     />
@@ -61,10 +59,10 @@ function PhiHeaderNavigationWidgetEditor({
 
 export const PHI_HEADER_NAVIGATION_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugin<PhiCmsHeaderNavigationWidgetConfig> = {
   ...PHI_HEADER_NAVIGATION_WIDGET_DEFINITION,
-  renderEditor: ({ runtime, regionConfig, config, authoring }) => authoring ? (
+  renderEditor: ({ runtime, config, authoring }) => authoring ? (
     <PhiHeaderNavigationWidgetEditor
       runtime={runtime}
-      config={{ ...config, height: resolvePhiRenderableBlockGeometry(regionConfig).block.size?.css }}
+      config={config}
       canvas={authoring.canvas}
     />
   ) : null,

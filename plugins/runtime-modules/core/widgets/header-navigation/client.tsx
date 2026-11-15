@@ -25,7 +25,6 @@ export type PhiHeaderNavigationWidgetClientProps = PhiClientBlockBaseProps<
   runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area">;
   items: PhiNavItem[];
   menuTheme?: PhiMenuTheme;
-  height?: CSSProperties["height"];
   align?: "left" | "center";
   selectionStyle?: PhiMenuSelectionStyle;
   /** Below 768px: the entries behind a menu button (the default), or the row as on a wider screen. */
@@ -37,7 +36,6 @@ export function PhiHeaderNavigationWidgetClient({
   runtime,
   items,
   menuTheme,
-  height,
   align = "left",
   selectionStyle = "auto",
   phoneMenu = "button",
@@ -55,8 +53,6 @@ export function PhiHeaderNavigationWidgetClient({
     availableLocales,
     { interactive },
   );
-  const resolvedHeight =
-    typeof height === "number" ? `${height}px` : (height ?? "100%");
   /*
    * The Page the Drawer was opened on: following an entry to another Page closes it without an effect
    * having to notice the navigation (the Shell's Sider drawer does the same).
@@ -176,13 +172,18 @@ export function PhiHeaderNavigationWidgetClient({
           fontSize={token.fontSize}
           style={{
             display: "flex",
-            alignItems: "center",
+            /*
+             * The row is as tall as the room its Layout gives it, not as tall as the Region: a Region's
+             * padding -- the gap a floating Header keeps above its bar -- is not the menu's. Each entry
+             * stretches to the row and centres its words (`styles/controls.css`, "Header Navigation"); the
+             * pill stands at the control height in the middle of it.
+             */
+            alignItems: "stretch",
             justifyContent: align === "center" ? "center" : "flex-start",
             minHeight: 0,
             flex: "1 1 auto",
             paddingInline: 0,
-            height: resolvedHeight,
-            lineHeight: resolvedHeight,
+            height: "100%",
           } as CSSProperties}
         />
       </div>
