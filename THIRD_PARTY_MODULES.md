@@ -198,7 +198,8 @@ beside them):
   `PhiCheckboxControl`, `PhiCheckboxGroupControl`, `PhiRadioGroupControl`, `PhiCascaderControl`,
   `PhiTreeSelectControl`.
 - Commands and menus: `PhiButtonControl`, `PhiToolbarControl`, `PhiCompactGroupControl`,
-  `PhiViewportVisibilityControl`, `PhiFloatButtonControl`, `PhiDropdownControl`,
+  `PhiViewportVisibilityControl`, `PhiPlacementMatrixControl`, `PhiEntryListControl`,
+  `PhiFloatButtonControl`, `PhiDropdownControl`,
   `PhiPillDropdownControl`, `PhiMenuControl`, `PhiConfirmControl`, `PhiPopoverControl`, `PhiTabsControl`,
   `PhiPaginationControl`.
 - Display: `PhiTypographyControl`, `PhiTagControl`, `PhiCardControl`, `PhiFlexControl`, `PhiEmptyControl`,

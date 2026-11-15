@@ -18,6 +18,10 @@ export type {
 export { PhiCompactGroupControl } from "./components/controls/phi-compact-group-control";
 export type { PhiCompactGroupControlProps } from "./components/controls/phi-compact-group-control";
 export { PhiViewportVisibilityControl } from "./components/controls/phi-viewport-visibility-control";
+export { PhiEntryListControl } from "./components/controls/phi-entry-list-control";
+export type { PhiEntryListControlProps, PhiEntryListEntry } from "./components/controls/phi-entry-list-control";
+export { PhiPlacementMatrixControl } from "./components/controls/phi-placement-matrix-control";
+export type { PhiPlacementMatrixControlProps } from "./components/controls/phi-placement-matrix-control";
 export { PhiNumberControl } from "./components/controls/phi-number-control";
 export type { PhiNumberControlProps } from "./components/controls/phi-number-control";
 export { PhiPopoverControl } from "./components/controls/phi-popover-control";
