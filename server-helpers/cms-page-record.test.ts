@@ -136,10 +136,11 @@ describe("resolvePhiRecordFields", () => {
     expect(load.mock.calls[0]![0]).toStrictEqual({ slug: "chair" });
     // What a Widget does with `runtime.page.record`, names and all: the same key, so the same answer.
     const page = await resolvePhiCmsPageRecord({ binding: bindingFor("chair"), runtime, runtimeModuleCatalog: catalog, activeModuleIds: active });
+    if (page?.status !== "ok") throw new Error("The record of the test address was not found.");
     await resolvePhiRecordFields({
       registry: registryOf(catalog),
       runtime,
-      binding: (page as { binding: never }).binding,
+      binding: page.binding,
     });
     expect(load).toHaveBeenCalledTimes(1);
   });
