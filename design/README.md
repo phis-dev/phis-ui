@@ -16,6 +16,9 @@ into the matching contract document, and open work is tracked in [TODOS.md](../T
 - [MODULE_DISTRIBUTION.md](./MODULE_DISTRIBUTION.md) -- distributing compiled and commercial Modules and
   acquiring them from a configured source.
 - [OVERLAY_AUTHORING.md](./OVERLAY_AUTHORING.md) -- authoring Modal and Drawer Overlays in Builder.
+- [RECORD_TEMPLATES.md](./RECORD_TEMPLATES.md) -- a page for one record of many (a product, a content
+  entry) laid out once in the Builder: the preset's page record, field bindings, Builder preview with a
+  sample record. Decided in principle, not built.
 - [RESPONSIVE_BLOCK_GEOMETRY.md](./RESPONSIVE_BLOCK_GEOMETRY.md) -- letting a block state a size per
   profile, decided by a container query on the room it is offered rather than by anything that measures.
   Built; the contract is LAYOUTING.md, "Block geometry per profile", and this keeps the reasoning.

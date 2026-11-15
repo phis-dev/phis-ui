@@ -85,6 +85,10 @@ built. Remove an entry when it is done.
 
 ## Builder
 
+- **Record template pages.** Owner's decision (2026-11-15): a dynamic route preset (`/shop/p/:slug`,
+  a content entry's detail page) gets a template that authors rebuild in the Builder and that serves every
+  record, and any Module can provide one. Designed in [design/RECORD_TEMPLATES.md](./design/RECORD_TEMPLATES.md);
+  its open points are to be decided before code. The shop's product page is the first one.
 - **Author a table where the table is.** A collection field in an Overlay is better than a collection
   field down a narrow column, but for a table it is still describing a thing from beside it. The thing is
   on screen: a `+` in the header row adds a column and opens a picker with that column's settings, a `+`
