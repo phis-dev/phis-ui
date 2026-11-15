@@ -38,6 +38,19 @@ built. Remove an entry when it is done.
 
 ## Regions and Overlays
 
+- **A Header band's `offsetTop` reserves its room.** Today the offset is only the sticky `top`: a
+  floating `header_main` at `offsetTop: 16` is pushed 16px down at rest but holds only its own height in the
+  grid, so on a Page without a Hero the content starts under the bar (dev.phisys.com's login and reset
+  pages, 2026-11-15). Until then a floating Header keeps its gap as Region padding (`paddingTop` plus the
+  height grown by it, `offsetTop: 0`), as phisys does in Area revision #51. Reserving it touches, together:
+  the Region root (a block-start margin of the offset, not for a `hover` band, which takes no room); the
+  Header Chrome Pane (it spans the grown track and sticks at the offset, so its start and height have to
+  leave the gap out, `resolvePhiShellChromePaneStickyTop` and the `header_top` reveal cases with their
+  travel); the Hero rules in `styles/shell.css` (each band set down by its own offset too) and
+  `use-phi-shell-header-bands.ts` (a band's room includes its offset); and the first-paint band rooms in
+  `phi-cms-root-layout.tsx`. Check in a browser: a floating box and a full band with glass, each with and
+  without a Hero, and with a `scroll-up` and a `hover` `header_top`.
+
 - **Group headings in a dropdown navigation.** `mapPhiNavItems` (components/shell/menu-items.tsx) turns
   every entry with children into a submenu, so a third level opens sideways (Docs ▸ Architecture ▸
   Server). `PhiMenuControl` already draws antd's `type: "group"`; nothing maps to it. Wanted: inside a
