@@ -837,6 +837,19 @@ is shared with the Gallery in `components/motion`:
   stands still (`aria-live` off while the timer runs). Arrows are drawn only when there is more than one
   window.
 
+The Gallery Widget has one option the Carousel Layout does not: `thumbnails` (boolean, absent is off, so
+an existing Gallery draws as before). It takes effect only while exactly one picture is visible
+(`visibleCount` 1) and there is more than one picture; with more pictures in the window it does nothing,
+and the Inspector hides the field then (`visibleWhen`). It draws a row of small pictures of all the
+pictures under the main one, for both of the Gallery's sources (the Media Folder and a `pictures` record
+field). Each thumbnail is a real button labelled with the picture's alt text, and the one of the active
+picture is marked (`aria-current`, `aria-pressed`) in Theme colours; pressing one makes that picture the
+active one, the same step the dots take. The row wraps inside its own box and never widens the page. With
+thumbnails the dots are not drawn; the arrows stay as `controls` says, and autoplay, `loop` and
+`transition` work as before, the mark following the active picture. A thumbnail is the same picture
+as the main one, through the same image sources and `variantKey`, requested at thumbnail size; no
+request of its own is added.
+
 ## Styling
 
 - Generic component values use Ant Design tokens or their server-safe resolved equivalents.

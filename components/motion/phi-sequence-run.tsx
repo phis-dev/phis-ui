@@ -30,6 +30,18 @@ export function resolvePhiSequenceRunSpan(visibleCount: number | undefined, item
   return Math.min(visibleCount ?? PHI_SEQUENCE_SETTINGS_DEFAULTS.visibleCount, Math.max(itemCount, 1));
 }
 
+/** One small stand-in for an item: its content, and its name for a screen reader (empty falls back to the page label). */
+export type PhiSequenceThumbnail = { key: string; label: string; content: ReactNode };
+
+/** Whether the thumbnail row is drawn: only over one item at a time, and only where there is something to choose. */
+export function resolvePhiSequenceShowsThumbnails(
+  thumbnails: readonly PhiSequenceThumbnail[] | undefined,
+  span: number,
+  itemCount: number,
+) {
+  return thumbnails !== undefined && span === 1 && itemCount > 1;
+}
+
 /**
  * A run of items shown a few at a time, and the two things the browser will not do for us.
  *
@@ -50,12 +62,21 @@ export function PhiSequenceRun({
   settings,
   labels,
   itemStyle,
+  thumbnails,
+  thumbnailWidth,
 }: {
   /** Keyed by the caller; the run neither wraps nor rekeys them. */
   items: readonly ReactNode[];
   settings: PhiSequenceSettings | undefined;
   labels: PhiSequenceControlLabels;
   itemStyle?: CSSProperties;
+  /**
+   * A row of buttons under the window, one per item, in place of the dots. Acts only while one item is
+   * shown at a time; the active item's is marked and a press makes its item the active one.
+   */
+  thumbnails?: readonly PhiSequenceThumbnail[];
+  /** A thumbnail's width in pixels. */
+  thumbnailWidth?: number;
 }) {
   const { token } = usePhiConfig();
   const defaults = PHI_SEQUENCE_SETTINGS_DEFAULTS;
@@ -99,7 +120,8 @@ export function PhiSequenceRun({
   const atEnd = windowStart >= lastStart;
   // Two disabled arrows over a single item say nothing; the dots already know to stay away.
   const showArrows = (controls === "arrows" || controls === "both") && itemCount > span;
-  const showDots = (controls === "dots" || controls === "both") && pageCount > 1;
+  const showThumbnails = resolvePhiSequenceShowsThumbnails(thumbnails, span, itemCount);
+  const showDots = !showThumbnails && (controls === "dots" || controls === "both") && pageCount > 1;
 
   return (
     <div
@@ -160,6 +182,41 @@ export function PhiSequenceRun({
           </div>
         ) : null}
       </div>
+      {showThumbnails ? (
+        <div
+          role="group"
+          aria-label={labels.pages}
+          style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: resolvePhiSpacingScaleValue("xs"), minWidth: 0 }}
+        >
+          {thumbnails?.map((thumbnail, index) => (
+            <button
+              key={thumbnail.key}
+              type="button"
+              aria-label={thumbnail.label || formatPageLabel(labels.page, index + 1, index + 1)}
+              aria-current={index === activeIndex || undefined}
+              aria-pressed={index === activeIndex}
+              onClick={() => {
+                setActiveIndex(index);
+                autoplay.restart();
+              }}
+              style={{
+                flex: "none",
+                width: thumbnailWidth,
+                padding: 0,
+                cursor: "pointer",
+                overflow: "hidden",
+                background: "none",
+                borderRadius: token.borderRadius,
+                border: `${token.lineWidthBold}px solid ${index === activeIndex ? token.colorPrimary : "transparent"}`,
+                opacity: index === activeIndex ? 1 : 0.7,
+                transition: `border-color ${token.motionDurationMid}, opacity ${token.motionDurationMid}`,
+              }}
+            >
+              {thumbnail.content}
+            </button>
+          ))}
+        </div>
+      ) : null}
       {showDots ? (
         <div role="group" aria-label={labels.pages} style={{ display: "flex", justifyContent: "center", gap: token.marginXXS }}>
           {Array.from({ length: pageCount }, (_, page) => (

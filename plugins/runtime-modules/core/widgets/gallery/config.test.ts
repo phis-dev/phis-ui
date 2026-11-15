@@ -110,3 +110,15 @@ describe("what a Gallery refuses", () => {
     expect(() => parsePhiCmsGalleryWidgetConfig({ loop: "yes" })).toThrow(/true or false/);
   });
 });
+
+describe("the thumbnails option", () => {
+  it("reads true and false as written, and leaves absent absent", () => {
+    expect(parsePhiCmsGalleryWidgetConfig({ thumbnails: true }).thumbnails).toBe(true);
+    expect(parsePhiCmsGalleryWidgetConfig({ thumbnails: false }).thumbnails).toBe(false);
+    expect("thumbnails" in parsePhiCmsGalleryWidgetConfig({})).toBe(false);
+  });
+
+  it("refuses anything that is not a flag", () => {
+    expect(() => parsePhiCmsGalleryWidgetConfig({ thumbnails: "yes" })).toThrow(/Invalid Gallery thumbnails/);
+  });
+});

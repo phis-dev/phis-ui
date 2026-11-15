@@ -11,8 +11,8 @@ declared fields and the page record, read by Core for the Module's tree and a st
 field, the Gallery on `pictures`, the Button's link on a `link` field; and the Builder's Preview of a
 template, which takes the first sample the record Provider offers (`loadSamples`). Not built: a sample
 picker and the canvas showing sample values (the Editor canvas shows each Widget's own content), Core
-Widgets for `list` and `tag`, a Gallery variant with a main picture and thumbnails, and the product page
-(phis-shop's next step).
+Widgets for `list` and `tag`, and the product page (phis-shop's next step). The Gallery's main picture with
+thumbnails is built: the `thumbnails` option (LAYOUTING.md, "Carousel movement").
 
 ## What there is today
 
@@ -71,8 +71,8 @@ own record pages uses.
 └─────────────────────────────────────────────────────────┘
 ```
 
-A Core Grid, two columns from the 987 "wide" threshold, stacked below it. Whether the Core Gallery can
-draw a main picture with thumbnails is to be checked; if not, it is a proposal for a Gallery variant. The
+A Core Grid, two columns from the 987 "wide" threshold, stacked below it. The Core Gallery draws a main
+picture with thumbnails through its `thumbnails` option (one picture visible). The
 related products need the shop's product list rebuilt on the Core Card collection, which is due anyway.
 
 ## Decided (owner, 2026-11-15)

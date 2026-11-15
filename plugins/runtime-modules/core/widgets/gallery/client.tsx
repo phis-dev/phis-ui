@@ -31,6 +31,9 @@ export type PhiGalleryWidgetProps = {
   labels?: PhiGalleryWidgetLabels;
 };
 
+/** A thumbnail's width in pixels: also what the optimiser is told to size it for. */
+const PHI_GALLERY_THUMBNAIL_WIDTH = 80;
+
 /** One picture to draw: a public Asset of the Folder, or a picture a record names by its address. */
 type GalleryItem =
   | { kind: "asset"; key: string; image: PhiPublicMediaAssetReference }
@@ -112,6 +115,22 @@ export function PhiGalleryWidget({ config, images: imagesInput, pictures, labels
   // What a picture of this window is worth of the viewport, for the optimiser's choice of rendition.
   const sizes = span === 1 ? "100vw" : `(max-width: 768px) 100vw, ${Math.ceil(100 / span)}vw`;
   const { aspectRatio, fit } = resolvePhiGalleryFrame(config);
+  const thumbnails = config?.thumbnails === true
+    ? items.map((item) => ({
+        key: item.key,
+        label: (item.kind === "asset" ? item.image.altText : item.picture.alt) ?? "",
+        content: (
+          <GalleryPicture
+            item={item}
+            variantKey={config?.variantKey}
+            fit={fit}
+            preview={false}
+            sizes={`${PHI_GALLERY_THUMBNAIL_WIDTH}px`}
+            aspectRatio={aspectRatio}
+          />
+        ),
+      }))
+    : undefined;
   const frameStyle: CSSProperties = {
     minWidth: 0,
     borderRadius: token.borderRadius,
@@ -134,6 +153,8 @@ export function PhiGalleryWidget({ config, images: imagesInput, pictures, labels
       settings={config}
       labels={labels}
       itemStyle={frameStyle}
+      thumbnails={thumbnails}
+      thumbnailWidth={PHI_GALLERY_THUMBNAIL_WIDTH}
     />
   );
 }

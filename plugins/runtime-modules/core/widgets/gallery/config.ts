@@ -46,6 +46,8 @@ export type PhiCmsGalleryWidgetConfig = PhiCmsWidgetConfigBase & PhiSequenceSett
   variantKey?: PhiImageAssetVariantKeyValue;
   /** Opens a picture larger over the page when clicked. */
   preview?: boolean;
+  /** A row of small pictures under the main one; acts only while one picture is visible. Absent is off. */
+  thumbnails?: boolean;
   /** The frame's proportion for originals; a variant brings its own. */
   aspectRatio?: PhiMediaAspectRatio;
   fit?: "cover" | "contain";
@@ -110,6 +112,7 @@ export function parsePhiCmsGalleryWidgetConfig(raw: Record<string, unknown>): Ph
   const fit = readMember(raw.fit, ["cover", "contain"] as const, "fit");
   const variantKey = readVariantKey(raw.variantKey);
   const preview = readFlag(raw.preview, "preview");
+  const thumbnails = readFlag(raw.thumbnails, "thumbnails");
   const recordField = readRecordField(raw.recordField);
 
   return {
@@ -119,6 +122,7 @@ export function parsePhiCmsGalleryWidgetConfig(raw: Record<string, unknown>): Ph
     ...(recordField === undefined ? {} : { recordField }),
     ...(variantKey === undefined ? {} : { variantKey }),
     ...(preview === undefined ? {} : { preview }),
+    ...(thumbnails === undefined ? {} : { thumbnails }),
     ...(aspectRatio === undefined ? {} : { aspectRatio }),
     ...(fit === undefined ? {} : { fit }),
   };
@@ -190,6 +194,13 @@ export const PHI_GALLERY_WIDGET_DEFINITION = {
     ...PHI_GALLERY_SEQUENCE_FIELDS.window,
     ...PHI_GALLERY_SEQUENCE_FIELDS.movement,
     ...PHI_GALLERY_SEQUENCE_FIELDS.controls,
+    {
+      key: "thumbnails",
+      type: "boolean",
+      label: "Thumbnails",
+      description: "A row of small pictures under the main one, in place of the dots.",
+      visibleWhen: { field: "visibleCount", equals: 1 },
+    },
   ],
   /*
    * Bound to the Folder Provider from the start, so the inspector asks for a folder and nothing else.
