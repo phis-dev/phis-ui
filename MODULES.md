@@ -759,10 +759,12 @@ serve every record: its Widgets name a *field of the page record*, never the rec
   `ReadonlyMap<string, PhiRecordField>` keyed by the declared field key, or `none` (the Page is about no
   record), `missing` or `unavailable`. `result.fields.get(key)` is the field -- `{ kind, value }`, the
   kind narrowing the value -- or `undefined` where the record has none; `PhiRecordField`,
-  `PhiRecordPicture`, `PhiRecordLink` and `PhiRecordTag` are exported beside it. That is the whole of the
-  door: the helper Core's own Widgets use to pick a field by kind (`readPhiPageRecordField`,
-  `resolvePhiWidgetRecordField`), the value reader (`readPhiRecordFieldValue`) and the types
-  `PhiRecordFieldKind` and `PhiRecordFieldValueByKind` are not exported from it.
+  `PhiRecordPicture`, `PhiRecordLink` and `PhiRecordTag` are exported beside it. The same door has what
+  Core's own Widgets use to pick a field by kind: `readPhiPageRecordField(result, key, kinds)` answers the
+  field where the record has one of that key and one of those kinds, and `resolvePhiWidgetRecordField({ registry,
+  runtime, key, kinds })` is the whole step of a bound Widget (`PhiWidgetRecordField`), with the types
+  `PhiRecordFieldKind` and `PhiRecordFieldValueByKind`. A Module's Widget reads through these and does
+  not write the narrowing again. The parser behind them (`readPhiRecordFieldValue`) is not exported.
 - **What a picture's address may be.** A value of kind `picture` or `pictures` is `{ src, alt? }`, and
   `src` is an absolute `http(s)` URL or a Site-relative path starting with one `/`
   (`readAddress`, `helpers/record-fields.ts`). Anything else -- a `data:` URI, a `//host` address, a

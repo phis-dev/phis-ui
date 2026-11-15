@@ -7,7 +7,9 @@
  * types say what it is asked with, `fetchPhiSiteApi` asks Core with the credentials the context carries,
  * and `resolvePhiRecordSource` is how one of the package's Server Widgets reads the record its binding
  * names -- once per request, however many Widgets are bound to it. `resolvePhiPageRecordFields` reads the
- * declared fields of the record the Page is about, through the same read.
+ * declared fields of the record the Page is about, through the same read; `readPhiPageRecordField` picks
+ * one of them by kind, and `resolvePhiWidgetRecordField` is the whole step a bound Widget takes -- the
+ * same one Core's own Widgets take.
  *
  * `PhiWidgetFailureServer` is what such a Widget renders when that read, or its binding, fails: the error
  * card in the Builder, nothing on a live page, and the `cms.widget.unavailable` warning either way. It is
@@ -17,8 +19,10 @@
 
 import "server-only";
 
+export type { PhiRecordFieldKind } from "./constants/record-field-kinds";
 export type {
   PhiRecordField,
+  PhiRecordFieldValueByKind,
   PhiRecordLink,
   PhiRecordPicture,
   PhiRecordSample,
@@ -30,7 +34,13 @@ export type {
   PhiRuntimeRecordSamplesReader,
 } from "./types/record-provider";
 export { resolvePhiRecordSource, type PhiRecordSourceResult } from "./server-helpers/record-source";
-export { resolvePhiPageRecordFields, type PhiPageRecordFieldsResult } from "./server-helpers/record-fields";
+export {
+  readPhiPageRecordField,
+  resolvePhiPageRecordFields,
+  resolvePhiWidgetRecordField,
+  type PhiPageRecordFieldsResult,
+  type PhiWidgetRecordField,
+} from "./server-helpers/record-fields";
 export { fetchPhiSiteApi, type PhiSiteApiRequest } from "./gateway/site-api-request";
 export { PhiWidgetFailureServer } from "./components/widgets/shared/widget-failure.server";
 export type { PhiWidgetFailureProps } from "./components/widgets/shared/widget-failure";
