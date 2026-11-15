@@ -6,6 +6,12 @@ built. Remove an entry when it is done.
 
 ## At the next release
 
+- **0.5.3 renames every Theme variable from `--ant-*` to `--phi-*`.** Stored configs that name a variable as
+  text keep the old name until they are swept, per installation, with the release:
+  `UPDATE phis.site_area_revisions SET tree_json = replace(replace(tree_json::text, '--ant-phi-', '--phi-'), '--ant-', '--phi-')::jsonb WHERE tree_json::text LIKE '%--ant-%';`
+  and the same for `phis.site_page_revisions`. Packages that wrote a variable literally are rebuilt on
+  0.5.3 (`@phis/releases`, `@phis/phisys`). The own tokens drop their `phi` (`pageMax`, `gradient1`,
+  `custom1`, `primaryButtonGradient...`); no stored Theme names them (checked 15.11.2026).
 - **Remove the Ant Design 6.7 Form context patch** once Ant Design imports `FormProvider` directly
   (`antd/es/form/context.js`). The patch (`next/antd-form-context-loader.mjs`, the rule in
   `readPhiAntdFormContextPatchRule`, the `./next/antd-form-context-loader` export, THEME.md) keeps the Form
