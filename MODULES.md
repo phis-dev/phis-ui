@@ -748,7 +748,23 @@ serve every record: its Widgets name a *field of the page record*, never the rec
   stored at the exact address of one record still wins, and has no page record.
 - **Reading a field.** A Server Widget reads with `resolvePhiPageRecordFields({ registry, runtime })`
   (`@phis/ui/module/records`): the same memoised read as every other binding to that record, so the Page
-  costs its Provider one answer.
+  costs its Provider one answer. The answer is `{ status: "ok", fields }` with `fields` a
+  `ReadonlyMap<string, PhiRecordField>` keyed by the declared field key, or `none` (the Page is about no
+  record), `missing` or `unavailable`. `result.fields.get(key)` is the field -- `{ kind, value }`, the
+  kind narrowing the value -- or `undefined` where the record has none; `PhiRecordField`,
+  `PhiRecordPicture`, `PhiRecordLink` and `PhiRecordTag` are exported beside it. That is the whole of the
+  door: the helper Core's own Widgets use to pick a field by kind (`readPhiPageRecordField`,
+  `resolvePhiWidgetRecordField`), the value reader (`readPhiRecordFieldValue`) and the types
+  `PhiRecordFieldKind` and `PhiRecordFieldValueByKind` are not exported from it.
+- **What a picture's address may be.** A value of kind `picture` or `pictures` is `{ src, alt? }`, and
+  `src` is an absolute `http(s)` URL or a Site-relative path starting with one `/`
+  (`readAddress`, `helpers/record-fields.ts`). Anything else -- a `data:` URI, a `//host` address, a
+  `javascript:` link, a bare file name -- makes that picture no picture: for `picture` the field is
+  dropped, and for `pictures` the whole list is, one bad entry included (`cms.record.field_invalid`). A
+  `link`'s `href` is read the same way. What reaches such an address is the provider's own answer or a
+  Media asset's delivery address (`/api/site/media/{id}/content`, NEXT_INTEGRATION.md); a Module has no way
+  to ship a static file for a Page to point at -- the one file a package carries is a Theme ground's
+  picture ([THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#5-add-a-theme-preset)).
 - **Core Widgets that show a field.** A config field of type `record-field` names the kinds a Widget
   draws; the Inspector offers the fields of those kinds that the edited Page's record Provider declares,
   and shows no such row on a Page that is about no record. Simple Text takes a `text`, `number` or `date`
@@ -960,6 +976,19 @@ addressed by its path.
   the request resolution raises before the shell flushes, so the route answers 404
   ([CONTENT_ENTRIES.md](./CONTENT_ENTRIES.md), "The detail route"). Catch-alls,
   optional segments, regexes, match callbacks, and several dynamic segments are rejected.
+- **When the tree is built.** A route's `loadTree` runs while the request is being resolved, before the
+  Page's record is read (`resolvePhiCmsRequest`, `server-helpers/cms-request.ts`: the tree is loaded, then
+  `resolvePhiCmsPageRecord` reads the record the route names). It is handed `page`, `runtime`, `catalog`,
+  `activeModuleIds` and the route's `params`, and nothing else: no Registry, so no Provider can be read
+  with `resolvePhiRecordSource` from there, and `runtime.page` is not yet set, so `runtime.page.record`
+  is absent. The Builder opens the same function by the Page's id and passes `params: {}`. A tree
+  therefore cannot make a node's `visibility` depend on the record. A section that is to be absent for a
+  record without its content is done the other way round: its Widgets are bound to fields the record
+  has only when it has the content, and a Widget bound to a field the record lacks draws nothing
+  ([The fields of a record](#the-fields-of-a-record-and-the-record-a-page-is-about), "Core Widgets that
+  show a field"). `runtime.page.path`, once set, is the path of the request as it was asked
+  (`/shop/p/chair`), never the route's pattern (`/shop/p/:slug`): the Page is stamped with the requested
+  path before the runtime is built (`instantiatePhiRoutePresetPage`, `buildPhiRuntimePage`).
 - `compilePhiCmsDescriptorCatalog` validates the installed descriptor set -- ownership, versions, route
   syntax, navigation anchors, Theme identity, shell composition -- without running a tree loader.
   `compilePhiCmsActiveRouteTable` builds one Area's active route table. Building it never refuses: where

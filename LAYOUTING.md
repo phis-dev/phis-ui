@@ -92,6 +92,24 @@ puts back under a node that leaves a key out. A first-party creation preset may 
 but creation presets are input to the node factory only. Their values are materialized as normal
 Layout config and the preset name is never persisted or interpreted at render time.
 
+In a Page preset that makes four things about the Split Card explicit:
+
+- The cards come only from a `surface` the node states. A preset that wants them gives
+  `creationPreset: { layoutKind: "split", preset: "panel" }` (that is `PHI_SPLIT_CARD_LAYOUT_CREATION_CONFIG`:
+  `PHI_SURFACE_CARD`, the small-step gap and the centred anchor) or writes `surface` itself, for instance
+  `PHI_SURFACE_WASH`; with neither, the halves are not drawn as cards. Its `padding` is no creation value but
+  a default of none, so the inset of each card is stated on the node.
+- `swapRatio: true` puts the larger card on the left. The slots do not move with it: slot `0`
+  (`PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX.Left`) is always the left card and slot `1` the right one, so with
+  `swapRatio` slot `0` is the larger. The slots are `PHI_CMS_SPLIT_LAYOUT_SLOTS` (`slot_0`, `slot_1`,
+  `constants/cms-layout-types.ts`); each holds one child. Narrower than 36rem -- the Split Card's own width,
+  not the screen's -- the cards stand one above the other, slot `0` on top.
+- Each card centres what stands in it on both axes (the default `anchor` is `{ horizontal: "center",
+  vertical: "middle" }`). Content that is to read from the card's top says `anchor: { horizontal: ...,
+  vertical: "top" }` on the Split Card ("Sizing and nesting").
+- A card is at least as tall as its content, and both cards are as tall as the row: the shorter column stands
+  in the middle of its card unless the anchor says otherwise.
+
 ### Surface
 
 A Surface (`types/surface.ts`, `PhiSurface`) is one object for every box that has a look -- a Layout, and
@@ -455,6 +473,14 @@ composition, not alternate Layout kinds.
 - Layouts receive ordered `slots` as the primary child API; free-form `children` is not the public
   placement API.
 - Empty, occupied, preview, and edit rendering use the same slot topology.
+- A Flex Layout (a row, or `flex-vertical`) keeps every slot whose child is not `null`, `undefined` or
+  `false`, and its `gap` is the CSS `gap` between those slots. The frame of a child (`phi-slot-child`, a
+  `display: flex` box) is part of that child, so a Widget that draws nothing -- a bound Widget whose record
+  lacks the field -- still leaves its frame in the slot, and the gap is applied around it. The only node
+  that takes its frame with it is one with a `visibleWhen` that does not hold: the gate sits outside the
+  frame (`wrapPhiRenderedSlotChild`, `components/cms/phi-cms-layout-renderer.tsx`). The same holds for a
+  Layout whose Widgets all draw nothing: it is still drawn, with its own frame, padding and Surface, so its
+  parent's gap stands around it. A parent Grid shares its gap out per slot and was not checked for this.
 - A Layout in the editor draws exactly one insert affordance, at the next free `slotIndex`, and draws it
   itself. There is no insert between the items: the base layout offered one after every slot, which made
   the count grow with the children and turned an empty trailing entry of the slots array into a position

@@ -70,7 +70,7 @@ contract is [LAYOUTING.md](./LAYOUTING.md); the definitions are `components/layo
 | `carousel` | Carousel | A run of slots shown a few at a time, moving on their own or on a signal. | `visibleSlots`, `windowAnchor`, `transition`, `slotGap`, `controls`, `loop`, `autoplayMs` |
 | `grid` | Grid | Slots in rows, as many to a row as the width allows. | `columns` (per width, with span and offset) |
 | `masonry` | Masonry | Slots in columns at their own heights, without rows. | `columns` |
-| `split-card` | Split Card | Two cards on the golden ratio, one Surface for both. | `swapRatio`, `padding`, `surface` |
+| `split-card` | Split Card | Two cards on the golden ratio, one Surface for both. Surface is a creation value, not a default; how it reads in a Preset: [LAYOUTING.md](./LAYOUTING.md#layout-config). | `swapRatio`, `padding`, `surface` |
 | `three-column` | Three Column | Fixed left, middle and right slots. | `balancedSides`, `leftWidth`, `middleWidth`, `rightWidth` |
 
 - A box around an area is the Layout's `surface`, not a Widget: `PHI_SURFACE_CARD` (container ground, quiet
@@ -89,81 +89,88 @@ Page is about the Widget can show or follow instead of its own value
 A dash is no binding. The text is each Widget's own `description`; its `fields` are what the Inspector
 offers.
 
+The last column says whether a Preset's `config` for the Widget is checked at compile time. `typed` is a
+Widget in `PhiCoreWidgetPlacements` (`types/core-widget-placements.ts`, [4b](#4b-place-core-widgets)):
+a misspelt key or a value outside its vocabulary fails to compile. `unchecked` is every other Core Widget --
+among them `gallery`, `breadcrumb`, `page-title` and `markdown-toc`, and `card`: its config is a plain
+record, so a wrong key is dropped without a word. Read its `config.ts` for the fields it takes, and give
+the config a type of your own with `satisfies`.
+
 **Content**
 
-| typeKey | What it draws | Record binding |
-| --- | --- | --- |
-| `simple-text` | Plain text or one link, with icon, `fontSize`, `tone`, `marks` and more. | `recordField` (text, number, date) |
-| `description` | An introductory block: `eyebrow`, `title`, body, a list, a footer. | - |
-| `markdown` | Local or remote Markdown. | `recordField` (markdown, text) |
-| `markdown-toc` | An anchor table of contents for a Markdown Widget. | - |
-| `html` | HTML-backed editorial text (Rich Text). | - |
-| `card` | A card with a picture or an icon, a heading or a figure, and a link. | - |
-| `image` | An image from local media, a trusted URL or a rendition. | `recordField` (picture) |
-| `gallery` | A run of pictures shown a few at a time, with arrows, dots and autoplay. | `recordField` (pictures) |
-| `icon` | A standalone icon. | - |
-| `spacer` | Fills the remaining space in its slot. | - |
-| `result` | A compact result state. | - |
-| `timeline` | What happened, in order: time, title, a line of text. | - |
-| `steps` | Where a sequence stands; can follow and drive a Stack. | - |
+| typeKey | What it draws | Record binding | Preset config |
+| --- | --- | --- | --- |
+| `simple-text` | Plain text or one link, with icon, `fontSize`, `tone`, `marks` and more. | `recordField` (text, number, date) | typed |
+| `description` | An introductory block: `eyebrow`, `title`, body, a list, a footer. | - | typed |
+| `markdown` | Local or remote Markdown. | `recordField` (markdown, text) | typed |
+| `markdown-toc` | An anchor table of contents for a Markdown Widget. | - | unchecked |
+| `html` | HTML-backed editorial text (Rich Text). | - | typed |
+| `card` | A card with a picture or an icon, a heading or a figure, and a link. | - | unchecked |
+| `image` | An image from local media, a trusted URL or a rendition. | `recordField` (picture) | typed |
+| `gallery` | A run of pictures shown a few at a time, with arrows, dots and autoplay; with `thumbnails`, one main picture with a row of small ones under it ([LAYOUTING.md](./LAYOUTING.md#carousel-movement)). | `recordField` (pictures) | unchecked |
+| `icon` | A standalone icon. | - | typed |
+| `spacer` | Fills the remaining space in its slot. | - | typed |
+| `result` | A compact result state. | - | unchecked |
+| `timeline` | What happened, in order: time, title, a line of text. | - | unchecked |
+| `steps` | Where a sequence stands; can follow and drive a Stack. | - | unchecked |
 
 **Navigation and shell**
 
-| typeKey | What it draws | Record binding |
-| --- | --- | --- |
-| `header-navigation` | The horizontal site menu. | - |
-| `sidebar-navigation` | The vertical site menu. | - |
-| `quick-links` | A link list from a selected navigation key. | - |
-| `breadcrumb` | A breadcrumb trail for page and header contexts. | - |
-| `page-title` | The current localized Page title. | - |
-| `brand` | The Site's brand mark and wordmark. | - |
-| `account` | The viewer's account control, guest or signed in. | - |
-| `locale` | The locale switcher. | - |
-| `theme-mode-switch` | Switches the Site between light and dark. | - |
-| `tour-button` | Starts the Tour of the shown Page; hidden where there is none. | - |
+| typeKey | What it draws | Record binding | Preset config |
+| --- | --- | --- | --- |
+| `header-navigation` | The horizontal site menu. | - | unchecked |
+| `sidebar-navigation` | The vertical site menu. | - | unchecked |
+| `quick-links` | A link list from a selected navigation key. | - | unchecked |
+| `breadcrumb` | A breadcrumb trail: Site name, Area, then the segments of the request's path; on a record Page the last one is the slug, not the title ([components/widgets/README.md](./components/widgets/README.md#content-widgets)). | - | unchecked |
+| `page-title` | The current localized Page title. | - | unchecked |
+| `brand` | The Site's brand mark and wordmark. | - | unchecked |
+| `account` | The viewer's account control, guest or signed in. | - | unchecked |
+| `locale` | The locale switcher. | - | unchecked |
+| `theme-mode-switch` | Switches the Site between light and dark. | - | typed |
+| `tour-button` | Starts the Tour of the shown Page; hidden where there is none. | - | unchecked |
 
 **Controls** (they report their state as signals, [SIGNALS.md](./SIGNALS.md))
 
-| typeKey | What it draws | Record binding |
-| --- | --- | --- |
-| `button` | A command button that emits a configured signal. | `valueRecordField` (text), `linkRecordField` (link) |
-| `command-toolbar` | A toolbar of commands; `compact` joins them into one group. | - |
-| `float-button` | Buttons fixed to a corner of the viewport. | - |
-| `input` | A simple text input. | - |
-| `number-input` | A numeric input. | - |
-| `slider` | A scalar slider. | - |
-| `rate` | A rating. | - |
-| `checkbox` | A boolean checkbox. | - |
-| `checkbox-group` | A multi-choice checkbox group, static or provider-backed options. | - |
-| `switch` | A boolean switch. | - |
-| `select-box` | A select. | - |
-| `multi-select` | A multi-select. | - |
-| `segmented` | A segmented control. | - |
-| `tab-bar` | A tab control that emits state and can drive the slots of a Stack. | - |
-| `cascader` | A writable cascader. | - |
-| `date-input` | A date, period, date-time or range input. | - |
-| `color` | A colour control. | - |
-| `length` | A numeric CSS length with a unit. | - |
-| `dimension` | Width and height with explicit CSS units. | - |
-| `otp` | A fixed-length code, one character per cell. | - |
-| `pagination` | A pagination control that emits page state. | - |
+| typeKey | What it draws | Record binding | Preset config |
+| --- | --- | --- | --- |
+| `button` | A command button that emits a configured signal. | `valueRecordField` (text), `linkRecordField` (link) | typed |
+| `command-toolbar` | A toolbar of commands; `compact` joins them into one group. | - | typed |
+| `float-button` | Buttons fixed to a corner of the viewport. | - | unchecked |
+| `input` | A simple text input. | - | unchecked |
+| `number-input` | A numeric input. | - | unchecked |
+| `slider` | A scalar slider. | - | unchecked |
+| `rate` | A rating. | - | unchecked |
+| `checkbox` | A boolean checkbox. | - | unchecked |
+| `checkbox-group` | A multi-choice checkbox group, static or provider-backed options. | - | unchecked |
+| `switch` | A boolean switch. | - | unchecked |
+| `select-box` | A select. | - | unchecked |
+| `multi-select` | A multi-select. | - | unchecked |
+| `segmented` | A segmented control. | - | unchecked |
+| `tab-bar` | A tab control that emits state and can drive the slots of a Stack. | - | unchecked |
+| `cascader` | A writable cascader. | - | unchecked |
+| `date-input` | A date, period, date-time or range input. | - | unchecked |
+| `color` | A colour control. | - | unchecked |
+| `length` | A numeric CSS length with a unit. | - | unchecked |
+| `dimension` | Width and height with explicit CSS units. | - | unchecked |
+| `otp` | A fixed-length code, one character per cell. | - | unchecked |
+| `pagination` | A pagination control that emits page state. | - | unchecked |
 
 **Data, forms and entries**
 
-| typeKey | What it draws | Record binding |
-| --- | --- | --- |
-| `table` | A provider-backed table with columns, rows and actions ([TABLES.md](./TABLES.md)). | - |
-| `tree` | A provider-backed hierarchical tree ([TREES.md](./TREES.md)). | - |
-| `collection-view` | A provider-backed visual collection with tools and pagination ([COLLECTIONS.md](./COLLECTIONS.md)). | - |
-| `record` | One row of a Table Provider as named values, opened by a row action. | - |
-| `form` | A Preset Form a Module contributes ([FORMS.md](./FORMS.md)). | - |
-| `form-preview` | What the token in the address is about, beside the form that spends it. | - |
-| `slot-upload` | Puts a file into a declared slot on a row of an Add-on's table. | - |
-| `draft-status` | Whether a Controller's draft is unsaved, saved or published. | - |
-| `entry-list` | A content kind's published entries ([CONTENT_ENTRIES.md](./CONTENT_ENTRIES.md)). | - |
-| `entry-header` | The opening of one entry: category, title, subtitle, author, date. | - |
-| `entry-detail` | The text of one published entry. | - |
-| `thread-conversation` | The selected conversation: messages, authors and what hangs on them ([THREADS.md](./THREADS.md)). | - |
+| typeKey | What it draws | Record binding | Preset config |
+| --- | --- | --- | --- |
+| `table` | A provider-backed table with columns, rows and actions ([TABLES.md](./TABLES.md)). | - | typed |
+| `tree` | A provider-backed hierarchical tree ([TREES.md](./TREES.md)). | - | unchecked |
+| `collection-view` | A provider-backed visual collection with tools and pagination ([COLLECTIONS.md](./COLLECTIONS.md)). | - | typed |
+| `record` | One row of a Table Provider as named values, opened by a row action. | - | unchecked |
+| `form` | A Preset Form a Module contributes ([FORMS.md](./FORMS.md)). | - | typed |
+| `form-preview` | What the token in the address is about, beside the form that spends it. | - | unchecked |
+| `slot-upload` | Puts a file into a declared slot on a row of an Add-on's table. | - | unchecked |
+| `draft-status` | Whether a Controller's draft is unsaved, saved or published. | - | typed |
+| `entry-list` | A content kind's published entries ([CONTENT_ENTRIES.md](./CONTENT_ENTRIES.md)). | - | unchecked |
+| `entry-header` | The opening of one entry: category, title, subtitle, author, date. | - | unchecked |
+| `entry-detail` | The text of one published entry. | - | unchecked |
+| `thread-conversation` | The selected conversation: messages, authors and what hangs on them ([THREADS.md](./THREADS.md)). | - | typed |
 
 ### Controls a Module's own Widget may use
 
@@ -180,6 +187,8 @@ reach for first:
 | `PhiTagControl` | A coloured mark: `color`, a Theme `gradient`, `variant`, optional `closable`. |
 | `PhiToolbarControl` | A row of commands, compact (joined into one group) by default. |
 | `PhiCompactGroupControl` | Any Controls joined into one group with shared edges: a number field and its button. |
+| `PhiEntryListControl` | A short list of things, one per line: a title, a line about it, a state and one action; it says its own empty state. Not for rows that page. |
+| `PhiPlacementMatrixControl` | A 3 by 3 matrix that picks one of the nine anchor placements (`value`, `onChange`). |
 | `PhiFlexControl` | Arranges the parts inside one leaf. Several Widgets side by side are Layout slots, not this. |
 | `PhiCardControl` | A bordered box with an optional heading bar, on the Theme's inset and corner. |
 | `PhiEmptyControl` | The "nothing here" state; never Ant Design's `Empty`. |
@@ -254,9 +263,12 @@ A Widget's placement adds two more (`PhiWidgetPlacementBase`, [4b](#4b-place-cor
 
 | I need | Use | Where |
 | --- | --- | --- |
-| Two cards side by side | Layout `split-card` (the cards are its Surface) | [LAYOUTING.md](./LAYOUTING.md), "Layout config" |
+| Two cards side by side | Layout `split-card` (the cards are its Surface) | [LAYOUTING.md](./LAYOUTING.md#layout-config) |
 | A box around an area | `surface` on the Layout (`PHI_SURFACE_CARD`, `PHI_SURFACE_WASH`), with `padding` | [LAYOUTING.md](./LAYOUTING.md#surface) |
 | Hide a section | The block's `visibility` (`visible`, `collapsed`, `hidden`) | [CMS.md](./CMS.md#renderable-blocks) |
+| A section that is absent when the record has no content for it | Widgets bound to fields that exist only with content; `visibility` cannot read the record | [MODULES.md](./MODULES.md#descriptor-identity-and-instantiation) |
+| Read a record field in a Widget of mine | `resolvePhiPageRecordFields`, then `result.fields.get(key)` | [MODULES.md](./MODULES.md#the-fields-of-a-record-and-the-record-a-page-is-about) |
+| A picture of a record | A `picture`/`pictures` field whose `src` is an `http(s)` URL or a Site path; no `data:` URI, no file of the Module | [MODULES.md](./MODULES.md#the-fields-of-a-record-and-the-record-a-page-is-about) |
 | Show a section only when something holds | `visibleWhen` on the Widget | [FORMS.md](./FORMS.md#conditions), [4b](#4b-place-core-widgets) |
 | A coloured mark in a Widget of mine | `PhiTagControl` | `@phis/ui/controls` |
 | A coloured mark in a Core Widget template | `simple-text` with `tone` (`secondary`, `success`, `warning`, `danger`) and an `icon` | `simple-text/config.ts` |
@@ -265,11 +277,12 @@ A Widget's placement adds two more (`PhiWidgetPlacementBase`, [4b](#4b-place-cor
 | Controls joined into one group | Widget `command-toolbar` with `compact`; `PhiToolbarControl` for commands or `PhiCompactGroupControl` for any Controls in a Widget of mine | `command-toolbar/config.ts`, `@phis/ui/controls` |
 | A value from the record the Page is about | `recordField`, `valueRecordField`, `linkRecordField` on the Core Widget | [Records a Page is about](#records-a-page-is-about) |
 | Several pictures | `gallery` | `gallery/config.ts` |
+| A main picture with thumbnails under it | `gallery` with `thumbnails` and one picture visible | [LAYOUTING.md](./LAYOUTING.md#carousel-movement) |
 | A picture | `image`; `PhiImageControl` in a Widget of mine | `image/config.ts` |
 | A list or table of records | `table` on a provider you register | [TABLES.md](./TABLES.md) |
 | Records as cards | `collection-view` (the Card Widget as a Collection) | [COLLECTIONS.md](./COLLECTIONS.md) |
 | A form | The `form` Widget on a Preset Form | [FORMS.md](./FORMS.md), [6](#6-add-a-preset-form) |
-| Where the reader is | `breadcrumb` | `breadcrumb/config.ts` |
+| Where the reader is | `breadcrumb` (Site, Area, path segments; the slug, not the title) | [components/widgets/README.md](./components/widgets/README.md#content-widgets) |
 | A dialog | `dialog` on `createPhiCmsPresetNodes`; `PhiDialogControl` in code | [Dialogs](#dialogs), [OVERLAYS.md](./OVERLAYS.md) |
 | Tabs or steps over several sections | Layout `stack` with the `tab-bar` or `steps` Widget | [LAYOUTING.md](./LAYOUTING.md), "Stack slot display" |
 | Sections the reader opens and closes | Layout `collapsible` | [LAYOUTING.md](./LAYOUTING.md) |
@@ -712,7 +725,9 @@ Choose the mount policy on the Module definition:
 The Controller's address is `controller:<pluginKey>/<controllerKey>:<instanceKey>`; for the example
 above that is `controller:@acme/status/modules/status/controller/default:default`. Handler keys, Area
 names, and Widget types do not belong in the address ([SIGNALS.md](./SIGNALS.md#addresses)). Declare signal capabilities through `runtimeSignals`; communicate only via
-the Phi signal bus, not a module-global store or a second event bus.
+the Phi signal bus, not a module-global store or a second event bus. Two `listens` inputs on one channel and
+action are allowed when their `valueType` or `valueSchema` differ
+([SIGNALS.md](./SIGNALS.md#capabilities-and-routes)).
 
 For a controllerless Module, `controllerType`, `controller`, `controllerMountPolicy`,
 `controllerDefinition`, and the `Controller` Client are all absent. These fields form one atomic contract:
@@ -1192,8 +1207,9 @@ drop it without a word.
   holds for a Layout that translates its own text (`translatesOwnText`), such as the Collapsible's panel
   titles: set the flag where the titles you write are already in the reader's language.
 
-**What stays untyped:**
-- a Core Widget not in the map yet, such as Card, whose config is still changing. Untyped is not a
+**What stays untyped** (the [Core Widgets](#core-widgets) table marks each one `unchecked`):
+- a Core Widget not in the map yet, such as Card, `gallery`, `breadcrumb`, `page-title` or `markdown-toc`,
+  whose config is still changing or has no placement type yet. Untyped is not a
   reason to draw it yourself: place it and give its `config` a type of your own, as below;
 - a type key known only at runtime;
 - a Widget named with a `pluginKey`, your own included, since its config is yours to define.
@@ -1926,6 +1942,9 @@ recordProviders: [{
 }],
 ```
 
+- A Widget of the Module reads a field of the page record with `resolvePhiPageRecordFields` and
+  `result.fields.get(key)`; which helpers and types the door exports and which it does not is in
+  [MODULES.md](./MODULES.md#the-fields-of-a-record-and-the-record-a-page-is-about), "Reading a field".
 - Everything comes from `@phis/ui/module/records`, a Server-only door: the resolver types,
   `fetchPhiSiteApi` for the question to Core, `resolvePhiRecordSource` for the Module's Server Widgets, and
   `PhiWidgetFailureServer` for the Widget whose read comes back `unavailable`
@@ -1949,7 +1968,18 @@ To make the Page a template an author can rebuild in the Builder
   `valueRecordField`), not from Widgets of the Module that carry the slug.
 - Do not read the record or call `notFound()` in `loadTree`: Core reads the record once per request and
   answers the 404, for the Module's tree and a stored override alike. The Builder opens `loadTree` with
-  `params: {}`.
+  `params: {}`. `loadTree` runs before the record is read and gets no Registry, and `runtime.page.record` is
+  not set there, so the tree cannot let a node's `visibility` depend on the record; a section a record
+  without the content should lack is made of Widgets bound to fields that exist only with content
+  ([When the tree is built](./MODULES.md#descriptor-identity-and-instantiation)).
+- Mind what an empty section leaves behind: a bound Widget with no field draws nothing, but its frame, and a
+  Layout around Widgets that all draw nothing, stay in the slot and the parent Flex Layout's `gap` is still
+  applied around them ([LAYOUTING.md](./LAYOUTING.md#slots)).
+- `runtime.page.path` is the path of the request (`/shop/p/chair`), not the route's pattern
+  (`/shop/p/:slug`).
+- A `picture`/`pictures` field carries `src` as an `http(s)` URL or a Site-relative path; a `data:` URI makes
+  the picture no picture. A Module ships no static files: a picture is a Media asset or an address the
+  provider answers ([MODULES.md](./MODULES.md#the-fields-of-a-record-and-the-record-a-page-is-about)).
 - Optionally offer `loadSamples` on the server half, a few `{ label, params }` with the Provider's own
   parameters; the Builder's Preview takes the first. Without one a template previews with its Widgets' own
   content.

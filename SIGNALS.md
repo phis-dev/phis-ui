@@ -255,7 +255,12 @@ A plugin declares what it can do; a concrete instance stores how it is wired. Th
   enumValues?, required?, target? }`. Outputs declare no channel and no scope, and name either a schema
   or where to read one, never both.
 - `runtimeSignals.listens` lists receiver inputs: the same fields plus `channel`. Inputs are unique per
-  receiver by `channel + action + valueType + valueSchema` (`assertPhiSignalPluginMetaContract`).
+  receiver by `channel + action + valueType + valueSchema` (`assertPhiSignalPluginMetaContract`), for a
+  Widget, a Layout and a Controller alike. So two inputs on one channel and one action are allowed when
+  their `valueType` or their `valueSchema` differ (one `string` and one `number` input, or two `json`
+  inputs of different schemas), and the same four values twice are refused when the definition is
+  registered: `duplicate receiver input signature "<channel>/<action>:<valueType>"`. The `id` is not part
+  of the key, so a second `id` does not make a duplicate a different input.
   Receiver channels are fixed capabilities; free-text listener channels are not accepted.
 - A Controller's `listens` is what its listeners answer, no more and no less: it is what the wiring UI
   offers as the Controller's inputs. The Builder's had drifted -- a dozen answered channels missing, one
