@@ -182,8 +182,7 @@ exports complete Widgets only.
   tooltip using `PHI_DESCRIPTION_TOOLTIP_ICON`. Label and description text never becomes a native `title`
   attribute. A Control that renders a label takes its id from `usePhiControlLabel` and points its
   focusable element at it with `aria-labelledby`, so the visible label is also the accessible name; an
-  explicit `ariaLabel` takes precedence -- except on `PhiNumberControl`, whose `ariaLabel` names the field
-  only where it shows no `label`: there the visible label wins.
+  explicit `ariaLabel` takes precedence, on every Control that takes one.
 - Option-bearing consumers normalize static options to `PhiControlOption` and resolve dynamic options
   with `PhiControlOptionsProviderConfig` and `usePhiControlOptionsProvider`; the Control receives only
   resolved options.

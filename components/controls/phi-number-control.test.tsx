@@ -42,15 +42,13 @@ describe("PhiNumberControl accessible name", () => {
     expect(inputOf(html)).not.toContain("aria-labelledby");
   });
 
-  it("names the field by its visible label, which wins over ariaLabel", () => {
+  it("names the field by ariaLabel where both are stated, as the other Controls do", () => {
     const html = renderToStaticMarkup(
       <PhiNumberControl value={3} label="Rows" ariaLabel="Columns" onChange={() => undefined} />,
     );
-    const labelId = /<span id="([^"]+)"[^>]*>Rows<\/span>/.exec(html)?.[1];
-    expect(labelId).toBeTruthy();
-    expect(inputOf(html)).toContain(`aria-labelledby="${labelId}"`);
-    expect(inputOf(html)).not.toContain("aria-label=");
-    expect(html).not.toContain("Columns");
+    expect(html).toContain("Rows");
+    expect(inputOf(html)).toContain('aria-label="Columns"');
+    expect(inputOf(html)).not.toContain("aria-labelledby");
   });
 
   it("names the field by its label alone as before", () => {

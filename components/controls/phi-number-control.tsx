@@ -12,8 +12,8 @@ export type PhiNumberControlProps = {
   value?: number | null;
   label?: string;
   /**
-   * The field's accessible name where it shows no `label`. A visible `label` wins: the field is named by
-   * it (`aria-labelledby`) and `ariaLabel` is not set.
+   * The field's accessible name. Stated beside a `label`, it wins over it, as on `PhiTextControl` and
+   * `PhiSelectControl` (`usePhiControlLabel`).
    */
   ariaLabel?: string;
   /**
@@ -59,12 +59,11 @@ export function PhiNumberControl({
   onBlur,
   onKeyDown,
 }: PhiNumberControlProps) {
-  // A visible label names the field; `usePhiControlLabel` is asked without `ariaLabel` so that stays so.
-  const { labelId, labelledBy } = usePhiControlLabel(label);
+  const { labelId, labelledBy } = usePhiControlLabel(label, ariaLabel);
   const control = (
     <InputNumber
       id={id}
-      aria-label={labelledBy ? undefined : ariaLabel}
+      aria-label={ariaLabel}
       aria-labelledby={labelledBy}
       value={value}
       prefix={prefix}
