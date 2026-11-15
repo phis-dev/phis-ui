@@ -146,6 +146,13 @@ built. Remove an entry when it is done.
   `var(--ant-padding)` (site 1, Area revision #51, `header_main`). Sweep them per installation with
   the release, no fallback for the old names. The packages (shop, phisys, dev) move to the new names
   in the same round.
+- **A Theme page gutter beside `pageMax`.** Owner's decision (2026-11-15): the left and right padding
+  of a page's content column is a Theme setting, as its width is (`PHI_PAGE.max`, THEME.md "Page
+  width"). The presets (login, password reset and the other Core pages) and the packages' pages read
+  it, so a Site sets it once instead of overriding every preset page, which would cut those pages off
+  from later preset changes. Open: the token name and default (first read what each preset pads with
+  today), whether it changes at the 987 "wide" threshold, and its Brand Control field next to
+  "Page Width".
 
 ## Threads
 
