@@ -6,6 +6,13 @@ built. Remove an entry when it is done.
 
 ## At the next release
 
+- **0.5.4: data-Provider requests carry `locale` and `timeZone`.** Table, collection and tree query/record
+  requests and the options-provider context require them now. A package that calls a Provider itself
+  (`@phis/calendar` did, `src/client/calendar.tsx`) passes them and is rebuilt on 0.5.4; the shop moved its
+  money to `formatPhisMoney` and the `money`/`interval` renderers in the same round. Needs
+  `@phis/contracts` 0.7.9. Dialogs: a one-column Form in a full-width dialog is refused by the descriptor
+  compiler, so a package's dialogs state `PHI_DIALOG_WIDTH_SINGLE_COLUMN` or hand their Form over as
+  `body.form` (`@phis/support` and `@phis/shop` did).
 - **0.5.3 renames every Theme variable from `--ant-*` to `--phi-*`.** Stored configs that name a variable as
   text keep the old name until they are swept, per installation, with the release:
   `UPDATE phis.site_area_revisions SET tree_json = replace(replace(tree_json::text, '--ant-phi-', '--phi-'), '--ant-', '--phi-')::jsonb WHERE tree_json::text LIKE '%--ant-%';`
