@@ -121,7 +121,7 @@ the config a type of your own with `satisfies`.
 | `header-navigation` | The horizontal site menu. | - | unchecked |
 | `sidebar-navigation` | The vertical site menu. | - | unchecked |
 | `quick-links` | A link list from a selected navigation key. | - | unchecked |
-| `breadcrumb` | A breadcrumb trail: Site name, Area, then the segments of the request's path; on a record Page the last one is the slug, not the title ([components/widgets/README.md](./components/widgets/README.md#content-widgets)). | - | unchecked |
+| `breadcrumb` | A breadcrumb trail: Site name, Area, then the segments of the request's path; on a record Page the last one is the record's title where its route names a `titleField`, else the slug ([components/widgets/README.md](./components/widgets/README.md#content-widgets)). | - | unchecked |
 | `page-title` | The current localized Page title. | - | unchecked |
 | `brand` | The Site's brand mark and wordmark. | - | unchecked |
 | `account` | The viewer's account control, guest or signed in. | - | unchecked |
@@ -282,7 +282,7 @@ A Widget's placement adds two more (`PhiWidgetPlacementBase`, [4b](#4b-place-cor
 | A list or table of records | `table` on a provider you register | [TABLES.md](./TABLES.md) |
 | Records as cards | `collection-view` (the Card Widget as a Collection) | [COLLECTIONS.md](./COLLECTIONS.md) |
 | A form | The `form` Widget on a Preset Form | [FORMS.md](./FORMS.md), [6](#6-add-a-preset-form) |
-| Where the reader is | `breadcrumb` (Site, Area, path segments; the slug, not the title) | [components/widgets/README.md](./components/widgets/README.md#content-widgets) |
+| Where the reader is | `breadcrumb` (Site, Area, path segments; the last one the record's title on a record Page) | [components/widgets/README.md](./components/widgets/README.md#content-widgets) |
 | A dialog | `dialog` on `createPhiCmsPresetNodes`; `PhiDialogControl` in code | [Dialogs](#dialogs), [OVERLAYS.md](./OVERLAYS.md) |
 | Tabs or steps over several sections | Layout `stack` with the `tab-bar` or `steps` Widget | [LAYOUTING.md](./LAYOUTING.md), "Stack slot display" |
 | Sections the reader opens and closes | Layout `collapsible` | [LAYOUTING.md](./LAYOUTING.md) |

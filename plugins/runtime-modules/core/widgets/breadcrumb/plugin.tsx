@@ -9,10 +9,11 @@ import {
 
 export const PHI_BREADCRUMB_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsBreadcrumbWidgetConfig> = {
   ...PHI_BREADCRUMB_WIDGET_DEFINITION,
-  ...definePhiPassiveWidgetRenderers(({ widget, runtime, config }) => (
+  ...definePhiPassiveWidgetRenderers(({ widget, runtime, config, registry }) => (
     <PhiBreadcrumbWidget
       key={`widget-${widget.id}`}
       runtime={runtime}
+      registry={registry}
       config={config}
     />
   )),

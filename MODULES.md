@@ -746,6 +746,13 @@ serve every record: its Widgets name a *field of the page record*, never the rec
   Page's title and description, and `runtime.page.record` carries the binding. This holds for the
   Module's own tree and for a stored override alike, which is what makes the override a template. A Page
   stored at the exact address of one record still wins, and has no page record.
+- **The last item of the Breadcrumb.** The Core Widget `breadcrumb` shows the record's title as the last
+  item of its trail, in place of the path segment, wherever the Page's title is that record's. The folder
+  items before it, their links, a fixed `pathLabel` and `showPath: false` are as they were; so is a Page
+  about no record, and a record that cannot be read (missing or unavailable) leaves the segment -- the
+  trail never fails for it. The Widget adds no read: the title is the Page's (`runtime.page.title`),
+  confirmed against the record's `text` fields from the same memoised read the title came from. The
+  Builder's Preview carries the template's own title, not the sample record's, so it keeps the segment.
 - **Reading a field.** A Server Widget reads with `resolvePhiPageRecordFields({ registry, runtime })`
   (`@phis/ui/module/records`): the same memoised read as every other binding to that record, so the Page
   costs its Provider one answer. The answer is `{ status: "ok", fields }` with `fields` a

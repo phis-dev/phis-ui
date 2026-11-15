@@ -302,8 +302,9 @@ record's source text instead of its localized version.
 - The Breadcrumb Widget (`breadcrumb`) draws, in this order: the Site's name (or `rootLabel`), the Area's key
   (switched off with `showArea: false`), then one item per segment of the request's path
   (`runtime.page.path`, `showPath: false` leaves them out). The segments are the concrete path, decoded,
-  not the route's pattern and not the Page's title: on a Page about a record at `/shop/p/chair` the last item
-  reads `chair`, the slug that stands in the address. `pathLabel` replaces all the segments by one fixed text
+  not the route's pattern: on a Page about a record at `/shop/p/chair` whose route names a `titleField`, the
+  last item reads that record's title, and `chair`, the slug that stands in the address, where there is no
+  title (no record, no `titleField`, a record that cannot be read). `pathLabel` replaces all the segments by one fixed text
   of its own. A folder segment is a link only when its folder address resolves to a Page; the last one, the
   Page itself, is never a link (`plugins/runtime-modules/core/widgets/breadcrumb/`).
 - A Widget that shows a picture draws it with `PhiImageControl`, handing it the answer of

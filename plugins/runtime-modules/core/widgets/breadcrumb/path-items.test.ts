@@ -24,4 +24,19 @@ describe("breadcrumb path segments", () => {
     const items = buildPhiBreadcrumbPathItems("/elsewhere", "/docs/a", ["/docs"]);
     expect(items.every((item) => !("href" in item))).toBe(true);
   });
+
+  it("puts the record's title on the last item only, keeping the folders and their links", () => {
+    const items = buildPhiBreadcrumbPathItems("/de/app/docs/chair", "/docs/chair", ["/docs"], "  The Chair ");
+    expect(items).toEqual([
+      { key: "/docs", title: "docs", href: "/de/app/docs" },
+      { key: "/docs/chair", title: "The Chair" },
+    ]);
+  });
+
+  it("keeps the segment where the title is empty or absent", () => {
+    for (const title of [undefined, null, "", "   "]) {
+      expect(buildPhiBreadcrumbPathItems("/docs/chair%20x", "/docs/chair%20x", [], title).at(-1))
+        .toEqual({ key: "/docs/chair%20x", title: "chair x" });
+    }
+  });
 });
