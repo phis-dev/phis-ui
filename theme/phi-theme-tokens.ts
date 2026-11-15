@@ -1,6 +1,7 @@
 import type { GlobalToken } from "antd/es/theme/interface";
 
 import type { PhiThemePalette } from "./phi-theme-presets";
+import { PHI_CONTAINER_BREAKPOINT_REGION } from "./phi-container-breakpoints";
 
 /**
  * The token vocabulary of this house, stated once.
@@ -178,6 +179,9 @@ export const PHI_THEME_TOKEN_KEYS = [
  * Design's type and a name Ant Design does not know cannot be cut from it. A Client Component that
  * needs one of these reads it as a CSS variable, the way a Server Component does.
  *
+ * `phiPageMax` is how wide a Page may get (theme/phi-tokens.ts, `PHI_LAYOUT.pageMax`); a Page reads it
+ * as `PHI_PAGE.max`.
+ *
  * The `phiGradient*` names are the Theme's gradient slots and the primary Buttons' run
  * (theme/phi-theme-gradients.ts): tokens of this package's own, laid over the resolved ones so Ant
  * Design writes them per mode and per Surface tone like every other. The `phiCustom*` names are the
@@ -185,6 +189,7 @@ export const PHI_THEME_TOKEN_KEYS = [
  */
 export const PHI_THEME_OWN_TOKEN_KEYS = [
   "paddingXXL",
+  "phiPageMax",
   "phiGradient1",
   "phiGradient1Text",
   "phiGradient2",
@@ -301,7 +306,27 @@ export function assertPhiThemeVocabulary({
     );
   }
 
+  violations.push(...readPhiThemePageMaxViolations(styleToken, source));
+
   if (violations.length > 0) {
     throw new Error(violations.join(" "));
   }
+}
+
+/**
+ * A Page's maximum is a number of pixels and at least the width from which a Region counts as wide.
+ *
+ * Narrower, no Page could ever be wide: a Grid of four columns or anything else that answers to the
+ * Region threshold would never draw its wide form, and nothing would say why.
+ */
+function readPhiThemePageMaxViolations(styleToken: Record<string, unknown> | null | undefined, source: string) {
+  const value = styleToken?.phiPageMax;
+  if (value == null) return [];
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return [`${source}: the style token states phiPageMax as ${JSON.stringify(value)}, which is not a number of pixels.`];
+  }
+  if (value < PHI_CONTAINER_BREAKPOINT_REGION) {
+    return [`${source}: the style token states phiPageMax ${value}, narrower than ${PHI_CONTAINER_BREAKPOINT_REGION}, from which a Region counts as wide.`];
+  }
+  return [];
 }

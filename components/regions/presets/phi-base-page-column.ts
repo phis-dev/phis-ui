@@ -33,8 +33,11 @@ export function buildPhiBasePageColumnFrame({
   regionId: number;
   columnId: PhiCmsInstanceId;
   label: string;
-  /** Where the column stops, a `PHI_LAYOUT` measure: `readingMax` for prose, `contentMaxWide` for a page. */
-  maxWidth: number;
+  /**
+   * Where the column stops: a `PHI_LAYOUT` measure such as `readingMax` for prose, or `PHI_PAGE.max` for a
+   * Page as wide as the Theme lets one get.
+   */
+  maxWidth: number | string;
 }) {
   const scaffold = buildPhiBasePageContentScaffold({ page, regionId });
   return {

@@ -36,5 +36,8 @@ export const PHI_CONTAINER_BREAKPOINT_COL3: PhiContainerBreakpoint = 377;
  */
 export const PHI_CONTAINER_BREAKPOINT_CONTENT: PhiContainerBreakpoint = 610;
 
-/** The wide content maximum (`PHI_LAYOUT.contentMaxWide`): a Region running the width of the page. */
+/**
+ * From here a Region counts as wide: one running the width of a Page. Not a Page's width -- that is the
+ * Theme's (`PHI_PAGE.max`), and a Theme may not state one below this.
+ */
 export const PHI_CONTAINER_BREAKPOINT_REGION: PhiContainerBreakpoint = 987;

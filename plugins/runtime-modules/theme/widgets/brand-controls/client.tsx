@@ -79,9 +79,11 @@ import { buildPhiThemeStructuralTokens } from "../../../../../theme/phi-theme";
 import type { PhiControlOption } from "../../../../../components/controls/phi-control-options";
 import {
   PHI_CONTROL_HEIGHTS,
+  PHI_LAYOUT,
   PHI_PADDING,
   PHI_RADII,
 } from "../../../../../theme/phi-tokens";
+import { PHI_CONTAINER_BREAKPOINT_REGION } from "../../../../../theme/phi-container-breakpoints";
 import { PHI_COLOR_PICKER_NEUTRAL_PRESETS, PHI_COLOR_PICKER_PRESETS } from "../../../../../components/widgets/config/color-picker-presets";
 import { PHI_SPACING_TOKEN_KEYS } from "../../../../../components/widgets/config/spacing-options";
 import { PhiColorFieldControl } from "../../../../../components/controls/phi-color-field-control";
@@ -205,6 +207,7 @@ const BRAND_THEME_STYLE_SECTION_KEYS = [
   "fontFamily",
   "fontSize",
   "wireframe",
+  "pageWidth",
 ] as const;
 
 /*
@@ -1946,6 +1949,7 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
     </PhiFlexControl>
   );
   const wireframe = readEffectiveTokenBoolean(styleTokenInput, "wireframe", true);
+  const pageMax = readEffectiveTokenNumber(styleTokenInput, "phiPageMax", PHI_LAYOUT.pageMax);
   const baseFontSize = readEffectiveTokenNumber(styleTokenInput, "fontSize", 12);
 
   function updateToken(tokenPatch: Record<string, unknown>) {
@@ -2192,6 +2196,32 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                     uncheckedLabel="Off"
                     onChange={(checked) => updateToken({ wireframe: checked })}
                   />
+                </PhiFlexControl>
+              ),
+            },
+            {
+              /*
+               * How wide a Page may get (`PHI_PAGE.max`). Never below the width from which a Region counts
+               * as wide: a narrower Page could never be wide, and the Theme refuses one when it is saved.
+               * Emptied, the Theme says nothing and the house default stands.
+               */
+              key: "pageWidth",
+              label: <PhiTypographyControl strong>Page Width</PhiTypographyControl>,
+              children: (
+                <PhiFlexControl vertical gap={clientToken.paddingXS}>
+                  <PhiFlexControl align="center" gap={clientToken.paddingSM} wrap="nowrap">
+                    <PhiTypographyControl style={{ flex: `0 0 ${fieldLabelWidth}px` }}>Maximum</PhiTypographyControl>
+                    <PhiNumberControl
+                      prefix="px"
+                      value={pageMax}
+                      step={1}
+                      min={PHI_CONTAINER_BREAKPOINT_REGION}
+                      onChange={(next) => updateToken({ phiPageMax: next == null ? undefined : next })}
+                    />
+                  </PhiFlexControl>
+                  <PhiTypographyControl type="secondary">
+                    How wide a Page gets on a wide screen. At least {PHI_CONTAINER_BREAKPOINT_REGION}px, the width from which a Region counts as wide.
+                  </PhiTypographyControl>
                 </PhiFlexControl>
               ),
             },

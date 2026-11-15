@@ -80,6 +80,16 @@ export const PHI_SPACE = {
   xxl: "var(--ant-padding-xxl)",
 } as const;
 
+/**
+ * How wide a Page may get: the Theme's `phiPageMax` (theme/phi-tokens.ts, `PHI_LAYOUT.pageMax`).
+ *
+ * A Page states this reference and not the number, so the Theme's answer reaches every Page, an edited
+ * copy included -- a number written into a preset tree stays what it was the day the copy was made.
+ */
+export const PHI_PAGE = {
+  max: "var(--ant-phi-page-max)",
+} as const;
+
 export const PHI_RADIUS = {
   xxs: "var(--ant-border-radius-xs)",
   xs: "var(--ant-border-radius-sm)",

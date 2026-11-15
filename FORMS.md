@@ -427,8 +427,8 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
   is merged under a node that states nothing (`widgetBlockDefaultsByType`). A Widget field of its own
   reaches a Preset placement no other way; that is the same gap that once left every Preset-placed Form
   uncapped. Both sides name the one constant. A placement that means something else names a length
-  and wins -- `contentMaxNarrow` for a column of Controls with no label beside them, `contentMaxWide` for
-  a Form read across, `100%` for a Form that takes its slot, such as a reply under a conversation that
+  and wins -- `contentMaxNarrow` for a column of Controls with no label beside them, the Page's width
+  (`PHI_PAGE.max`) for a Form read across, `100%` for a Form that takes its slot, such as a reply under a conversation that
   runs the page. "No ceiling" is spelled `100%`, because that is what every other block says.
 - **The cap measures the fields, not the box around them.** It is the Form's own field and deliberately
   not the block's `maxSize`, which is where it stood until the Widget grew a box. A block cap is drawn by

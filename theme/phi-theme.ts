@@ -43,6 +43,8 @@ export type PhiThemeTokens = {
   paddingLG: number;
   paddingXL: number;
   paddingXXL: number;
+  /** How wide a Page may get (`PHI_LAYOUT.pageMax`), published as `--ant-phi-page-max`. */
+  phiPageMax: number;
   marginXXS: number;
   marginXS: number;
   marginSM: number;
@@ -89,6 +91,7 @@ function buildPhiThemeTokens(options: PhiThemeTokenOptions = {}): PhiThemeTokens
     paddingLG: PHI_PADDING_VALUES.lg,
     paddingXL: PHI_PADDING_VALUES.xl,
     paddingXXL: PHI_PADDING_VALUES.xxl,
+    phiPageMax: PHI_LAYOUT.pageMax,
     // Ant Design's second family, on the same scale: its own components read it (phi-tokens.ts).
     marginXXS: PHI_PADDING_VALUES.xxs,
     marginXS: PHI_PADDING_VALUES.xs,

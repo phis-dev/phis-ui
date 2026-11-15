@@ -124,13 +124,24 @@ export const PHI_LAYOUT = {
    * `narrow` is a single column of Controls without a label beside them -- a sign-in, a confirmation.
    * `contentMax` is the one a labelled form wants: the 24-track grid puts labels left of their
    * Controls, and at 377 a label column of 8 tracks leaves the Control too little to show what is in
-   * it. `wide` is for what is read across rather than filled in, such as a table.
+   * it.
    *
    * They are maxima and not widths. A block still fills its slot; these only say where it stops.
    */
   contentMaxNarrow: 377,
   contentMax: 610,
-  contentMaxWide: 987,
+  /*
+   * How wide a Page is allowed to get: the column a catalogue, a landing or a Module's wide Page stands in.
+   *
+   * The Theme's to decide and not a constant: this is only the answer where a Theme says nothing, and a
+   * Page reads it as `PHI_PAGE.max`, the Theme's own variable, never as this number -- a Theme that
+   * widens its Pages then widens every one of them, an edited copy included.
+   *
+   * 987 + 233, off the sequence the way `readingMax` is. 987 itself is not a Page's width but the
+   * threshold from which a Region counts as wide (`PHI_CONTAINER_BREAKPOINT_REGION`), and a Page has to
+   * be able to get past it, which is why a Theme may not state less (`assertPhiThemeVocabulary`).
+   */
+  pageMax: 1220,
   /*
    * How wide a column of prose is allowed to get: an article, an entry and what stands around it.
    *

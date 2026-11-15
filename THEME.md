@@ -388,6 +388,23 @@ BUILDER.md permits those variables on purpose -- and a typo in one resolves sile
 Component tokens are the exception and each is named with its reason. A stated name nothing reads or
 writes fails the check, and so does a permission nobody uses.
 
+## Page width
+
+How wide a Page may get is the Theme's: the style token `phiPageMax`, in pixels, published as
+`--ant-phi-page-max` and read as `PHI_PAGE.max` (`theme/antd-css-var-contract.ts`). Where a Theme states
+nothing it is `PHI_LAYOUT.pageMax`, 1220 (987 + 233). The Style tab edits it under "Page Width".
+
+- **A Page states the reference, never the number.** A preset that frames a wide Page -- a catalogue, a
+  Module's overview, `buildPhiBasePageColumnFrame` with `maxWidth: PHI_PAGE.max` -- writes
+  `var(--ant-phi-page-max)` into its `maxSize`, so a Theme that widens its Pages widens every one of them,
+  an edited copy included. A number written into a tree stays what it was the day the copy was made.
+- **Not below 987.** 987 is where a Region counts as wide (`PHI_CONTAINER_BREAKPOINT_REGION`); a Page
+  narrower than that could never be wide, so `assertPhiThemeVocabulary` refuses a smaller value and the
+  Style tab offers none.
+- **Columns keep their own measures.** Prose stops at `PHI_LAYOUT.readingMax`, a labelled form at
+  `contentMax`; those are about what is in the column, not about the Page, and the Theme does not move
+  them.
+
 ## Control shape
 
 `theme.shape.controls` is `{ topLeft, topRight, bottomRight, bottomLeft }`, each

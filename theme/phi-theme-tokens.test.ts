@@ -94,6 +94,17 @@ describe("what a stored Theme may say", () => {
     })).toThrow(/borderRadiusHuge/u);
   });
 
+  it("takes a Page width from the Region threshold up, and refuses one no Page could be wide at", () => {
+    for (const phiPageMax of [987, 1220, 1597]) {
+      expect(() => assertPhiThemeVocabulary({ styleToken: { phiPageMax }, modeSeedKeys, source: "test" })).not.toThrow();
+    }
+    expect(() => assertPhiThemeVocabulary({ styleToken: { phiPageMax: null }, modeSeedKeys, source: "test" })).not.toThrow();
+    expect(() => assertPhiThemeVocabulary({ styleToken: { phiPageMax: 900 }, modeSeedKeys, source: "test" }))
+      .toThrow(/phiPageMax 900, narrower than 987/u);
+    expect(() => assertPhiThemeVocabulary({ styleToken: { phiPageMax: "1220px" }, modeSeedKeys, source: "test" }))
+      .toThrow(/not a number of pixels/u);
+  });
+
   it("says where the key stood, because a Theme is folded from several places", () => {
     expect(() => assertPhiThemeVocabulary({
       styleToken: { nonsense: 1 },
