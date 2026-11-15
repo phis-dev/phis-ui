@@ -10,7 +10,6 @@ import {
   type PhiThemeGradientKey,
 } from "../../theme/phi-theme-gradients";
 import { PhiLink } from "../navigation/phi-link";
-import { PhiIcon } from "../shell/phi-icon";
 import type { PhiButtonType } from "./phi-button-types";
 import { PhiHoverText } from "./phi-hover-text";
 
@@ -64,11 +63,12 @@ export type PhiButtonControlProps = {
   external?: boolean;
   tooltip?: ReactNode;
   /**
-   * The icon: an element, or a string naming one -- `"plus"`, `"antd:delete"`, `"module:..."` -- by the
-   * rule every icon name follows (`isPhiIconNameKnown`), drawn as `PhiIcon` at the button's text size.
-   * A name is never drawn as text; an unknown one draws nothing and is reported once.
+   * The icon, as an element. A name is resolved before it gets here -- `resolvePhiButtonIcon` for a
+   * Widget's configured name, `PhiIcon` otherwise -- because a control draws and resolves nothing: resolving
+   * here put the icon resolver and the whole name list into every page with a Button, the error pages among
+   * them. A string is refused by the type, so a name can never be drawn as text.
    */
-  icon?: ReactNode;
+  icon?: Exclude<ReactNode, string>;
   type?: PhiButtonType;
   /** A round button is what an icon on its own wants, over a picture or in a toolbar. */
   shape?: ButtonProps["shape"];
@@ -188,7 +188,7 @@ export function PhiButtonControl({
       /* Not a pointer target at all, so the Button's own hover and press states never start. */
       style={readOnly ? { ...paintedStyle, pointerEvents: "none" } : paintedStyle}
       aria-disabled={readOnly || undefined}
-      icon={typeof icon === "string" ? <PhiIcon name={icon} size="inherit" /> : icon}
+      icon={icon}
       onClick={readOnly ? undefined : onClick}
     >
       {label}
