@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { PhiCmsRegionType } from "../constants/phi-cms";
-import { PHI_SPACE } from "../theme/antd-css-var-contract";
+import { PHI_PAGE, PHI_SPACE } from "../theme/antd-css-var-contract";
 import type { PhiResolvedCmsPageTree } from "../types/cms";
 import { checkPhiPagePresetLayout } from "./page-layout-check";
 
@@ -53,6 +53,21 @@ describe("checkPhiPagePresetLayout", () => {
       layout(6, 2, "grid", {}),
     ] }));
     expect(findings.map((finding) => finding.node)).toEqual(["l5", "l6"]);
+  });
+
+  it("takes the Theme's Page inset as a distance, on a column with a Surface", () => {
+    const inset = { paddingTop: PHI_PAGE.padding.top, paddingRight: PHI_PAGE.padding.right,
+      paddingBottom: PHI_PAGE.padding.bottom, paddingLeft: PHI_PAGE.padding.left };
+    expect(checkPhiPagePresetLayout(page({ nodes: [layout(5, 2, "flex-vertical", { ...inset, surface: CARD })] }))).toEqual([]);
+    expect(checkPhiPagePresetLayout(page({ nodes: [layout(5, 2, "flex-vertical", inset)] })).map((f) => f.node)).toEqual(["l5"]);
+  });
+
+  it("leaves a dialog's footer to the dialog contract, and only an Overlay's footer", () => {
+    const footer = layout(7, null, "flex", { padding: PHI_SPACE.base });
+    const tree = page({ nodes: [footer] });
+    expect(checkPhiPagePresetLayout(tree).map((f) => f.node)).toEqual(["l7"]);
+    (tree as unknown as { overlays: unknown[] }).overlays = [{ footerLayoutNodeId: 7 }];
+    expect(checkPhiPagePresetLayout(tree)).toEqual([]);
   });
 
   it("leaves emphasis to the author but for a Hero's bottom beside heroOverlap", () => {

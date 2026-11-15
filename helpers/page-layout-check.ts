@@ -1,6 +1,6 @@
 import { PhiCmsRegionType } from "../constants/phi-cms";
 
-import { PHI_SPACE } from "../theme/antd-css-var-contract";
+import { PHI_PAGE, PHI_SPACE } from "../theme/antd-css-var-contract";
 import type { PhiCmsLayoutNode, PhiResolvedCmsPageTree } from "../types/cms";
 import {
   parsePhiCmsCarouselLayoutConfig,
@@ -60,8 +60,15 @@ const LAYOUT_CONFIG_PARSERS: Record<string, (config: Record<string, unknown>) =>
   "split-card": parsePhiCmsSplitCardLayoutConfig,
 };
 
+/*
+ * The Theme's Page inset (`PHI_PAGE.padding`, THEME.md "Page padding") is a step of the spacing scale per
+ * side and screen, chosen by the Theme: a distance like any other, at the preset level.
+ */
+const PAGE_INSET_REFERENCES = new Set<unknown>(Object.values(PHI_PAGE.padding));
+
 function stepOf(value: unknown): string | null {
   if (value === 0 || value === "0") return "none";
+  if (PAGE_INSET_REFERENCES.has(value)) return "page";
   for (const [step, reference] of Object.entries(PHI_SPACE)) {
     if (value === reference) return step;
   }
@@ -122,6 +129,13 @@ export function checkPhiPagePresetLayout(tree: PhiResolvedCmsPageTree): PhiPageL
   // A band under the Header keeps its sides on the small step without a Surface; nothing above or below.
   const headerBottomRootId = tree.regions
     .find((region) => region.regionType === PhiCmsRegionType.HeaderBottom)?.rootLayoutNodeId;
+  /*
+   * An Overlay's footer is the dialog's action row, built by `dialog` on `createPhiCmsPresetNodes` and held
+   * to its own contract by the descriptor compiler (OVERLAYS.md, "Structured dialogs"): its inset is the
+   * dialog's, not a Page Layout's, so the Surface rule below does not apply to it.
+   */
+  const overlayFooterIds = new Set(tree.overlays.flatMap((overlay) =>
+    overlay.footerLayoutNodeId == null ? [] : [overlay.footerLayoutNodeId]));
   for (const node of tree.layoutNodes) {
     const config = (node.config ?? {}) as Record<string, unknown>;
     const typeKey = typeKeyOf(node);
@@ -174,7 +188,7 @@ export function checkPhiPagePresetLayout(tree: PhiResolvedCmsPageTree): PhiPageL
       continue;
     }
 
-    if (!surface && typeKey !== "content") {
+    if (!surface && typeKey !== "content" && !overlayFooterIds.has(node.id)) {
       if (hasPadding(config)) {
         findings.push({
           node: nameOf(node),

@@ -325,9 +325,12 @@ about 1000 lines, with hand-drawn tables, its own dialogs and its own buttons, a
    Search and filters are the table's own query tools in its header row (`features.filters`, TABLES.md,
    "Query tools"), never Controls of yours above it, and the table keeps its footer with the paging.
 2. **Create is a toolbar action of the table, edit and delete are row actions** (`actions.toolbar`,
-   `actions.row`, `display: "icon"`, `execution: "signal"`), answered by your Module's Controller
-   ([section 2](#2-define-an-optional-controller), [SIGNALS.md](./SIGNALS.md)). No button row of your own
-   above the table.
+   `actions.row`, `display: "icon"`, `execution: "signal"`). No button row of your own above the table.
+   The routes answer them: the Table announces the action and its row, each dialog opens on its own
+   `openActionKey`, the Form saves and closes its dialog and tells the Table to read again, and a delete
+   or a state change is the Provider's action behind a confirmation. Your Module's Controller
+   ([section 2](#2-define-an-optional-controller)) answers only what needs state beyond that
+   ([OVERLAYS.md](./OVERLAYS.md), "A dialog needs no Controller unless it keeps state"; [SIGNALS.md](./SIGNALS.md)).
 3. **Create and edit forms are Form Widgets in a dialog** (`dialog` on `createPhiCmsPresetNodes`,
    [Dialogs](#dialogs), [FORMS.md](./FORMS.md)), not a modal your Widget opens. The Form's own layout
    places the labels: beside the field from 377px of Form width, above it only below that
@@ -341,7 +344,7 @@ about 1000 lines, with hand-drawn tables, its own dialogs and its own buttons, a
 The reference is the Admin Users page,
 `plugins/runtime-modules/user-management/trees/phi-default-admin-users-page-tree.ts`: one table on a
 provider, a create action in its toolbar, history, edit and delete in its rows, create and edit as Form
-dialogs, all answered by the user-management Controller. A Widget of your own is for what no Core Widget
+dialogs, wired by routes and the user-management Controller where a decision needs state. A Widget of your own is for what no Core Widget
 draws -- a product picture, a calendar, a chart of your data. Where a Core Widget lacks something a staff
 page needs, that is a finding for `@phis/ui`, proposed to the operator, not a reason to draw the page
 yourself.
