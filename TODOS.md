@@ -6,6 +6,7 @@ built. Remove an entry when it is done.
 
 ## At the next release
 
+- **`checkPhiPagePresetLayout` and `PhiPageLayoutFinding` moved from `@phis/ui/helpers` to `@phis/ui/module/page-check`.** A package that runs the Page check in its tests changes its import when it moves to the release that carries this.
 - **Released as `@phis/ui` 0.5.0 together with `@phis/server` 0.3.0** (both already in `package.json`). The
   Media management responses carry `focalRect` and `font` instead of `meta`, and the Asset PATCH takes
   `focalRect`: this `phis-ui` against an older Server reads no focal rectangles or font metrics, and an older

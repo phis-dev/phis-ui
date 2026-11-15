@@ -352,6 +352,12 @@
       "types": "./module-records.ts",
       "default": "./module-records.ts"
     },
+    "./module/page-check": {
+      "import": "./module-page-check.ts",
+      "require": "./module-page-check.ts",
+      "types": "./module-page-check.ts",
+      "default": "./module-page-check.ts"
+    },
     "./module/references": {
       "import": "./module-references.ts",
       "require": "./module-references.ts",

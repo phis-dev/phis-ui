@@ -1550,7 +1550,7 @@ preset uses a step above `md`, and only together with `heroOverlap`.
 
 ### Checking a Page preset
 
-`checkPhiPagePresetLayout(tree)` (`@phis/ui/helpers`) reads a tree a route preset builds and returns what
+`checkPhiPagePresetLayout(tree)` (`@phis/ui/module/page-check`, a door of its own: it is verify-time tooling and carries the Layout config parsers, so it is not in `@phis/ui/helpers`) reads a tree a route preset builds and returns what
 breaks this section: a distance that is not a `PHI_SPACE` step, a step above `md` outside a Hero's bottom
 beside `heroOverlap`, padding on a Layout without a Surface (and a Grid that keeps its default inset), a
 content Region without the `md` edge, and a Page column that is not one `flex-vertical`. It also refuses a Layout config its own parser does not

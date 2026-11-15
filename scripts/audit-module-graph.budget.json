@@ -104,7 +104,7 @@
       "clientBytes": 932864
     },
     "./helpers": {
-      "runtimeBytes": 388558,
+      "runtimeBytes": 339646,
       "clientBytes": 0
     },
     "./helpers/site-runtime": {
@@ -137,6 +137,10 @@
     },
     "./module/labels": {
       "runtimeBytes": 50629,
+      "clientBytes": 0
+    },
+    "./module/page-check": {
+      "runtimeBytes": 267426,
       "clientBytes": 0
     },
     "./module/projection": {
