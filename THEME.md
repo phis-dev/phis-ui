@@ -314,6 +314,14 @@ The published Theme has one server projection and one client projection:
   same generation against this package's own Ant Design. The structure reads every Theme value through
   `var(--phi-...)`, so one file serves every Theme, mode and nested scope. It is imported before this package's sheets, so a rule of ours that ties
   on specificity wins.
+- **A build-time patch for Ant Design 6.7, to be removed.** `withPhiNextConfig` also sets a Turbopack rule
+  for `antd/es/form/context.js` (`readPhiAntdFormContextPatchRule`, loader
+  `@phis/ui/next/antd-form-context-loader`): since 6.7.0 every Button reads the Form's variant through that
+  file, which takes `FormProvider` from `@rc-component/form`'s entry -- no `sideEffects`, statics assigned on
+  import -- so each page with a Button loaded the whole Form engine and `async-validator` (about 42 kB
+  raw). The loader points the import at `@rc-component/form/es/FormContext` instead, for 6.7.x only and only
+  where the line reads exactly as 6.7.0 wrote it; anything else is left alone with a warning, and a newer
+  Ant Design than 6.7 says at build time that the patch is to be checked and removed (TODOS.md).
 - `AntdRegistry` in `PhiRootLayout` extracts what is still rendered during SSR: the `--phi-*` variables
   Server Component markup and plain CSS use, per theme scope.
 - `resolvePhiPublishedRootTheme(...)` (`server-only`) emits only Phi-owned structural variables that have no

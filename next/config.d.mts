@@ -17,6 +17,8 @@ export declare function ensurePhiAntdStaticCss(projectDir?: string): string;
 
 /** The host in `config/site-runtime.json`'s `site.publicUrl` under `dir`, or `null` where there is none. */
 export declare function readPhiSitePublicHost(dir?: string): string | null;
+/** The Turbopack rule patching Ant Design 6.7's Form context import, or `null` for any other Ant Design. */
+export declare function readPhiAntdFormContextPatchRule(dir?: string): Record<string, unknown> | null;
 
 /**
  * A Site's `next.config`, with `@phis/ui/antd-static.css` resolved to the structure generated for its

@@ -278,6 +278,35 @@ export function readPhiSitePublicHost(dir = process.cwd()) {
 }
 
 /**
+ * The Turbopack rule that patches Ant Design 6.7's Form context import (next/antd-form-context-loader.mjs),
+ * or none for any other Ant Design: the patch is for 6.7 only, and a newer release is to be checked and the
+ * patch removed rather than carried along by default.
+ */
+export function readPhiAntdFormContextPatchRule(dir = process.cwd()) {
+  let version;
+  try {
+    version = JSON.parse(readFileSync(createRequire(path.join(dir, "package.json")).resolve("antd/package.json"), "utf8")).version;
+  } catch {
+    return null;
+  }
+  if (!/^6\.7\./u.test(version)) {
+    if (/^6\.(?:[89]|\d{2,})\./u.test(version) || /^(?:[7-9]|\d{2,})\./u.test(version)) {
+      console.warn(
+        `@phis/ui: Ant Design ${version} is past 6.7; check whether antd/es/form/context.js still imports `
+          + "@rc-component/form whole, and remove the Form provider patch if it does not (TODOS.md).",
+      );
+    }
+    return null;
+  }
+  return {
+    "context.js": {
+      condition: { path: /[\\/]antd[\\/]es[\\/]form[\\/]context\.js$/u },
+      loaders: ["@phis/ui/next/antd-form-context-loader"],
+    },
+  };
+}
+
+/**
  * A Site's `next.config`, with `@phis/ui/antd-static.css` resolved to the structure generated for its
  * Ant Design, and the Site's own public host allowed to reach the dev server. `dir` is the Site's root,
  * the directory its `package.json` is in.
@@ -295,6 +324,10 @@ export function withPhiNextConfig(nextConfig, { dir = process.cwd() } = {}) {
     ...(allowedDevOrigins.length > 0 ? { allowedDevOrigins } : {}),
     turbopack: {
       ...nextConfig.turbopack,
+      rules: {
+        ...nextConfig.turbopack?.rules,
+        ...readPhiAntdFormContextPatchRule(dir),
+      },
       resolveAlias: {
         ...nextConfig.turbopack?.resolveAlias,
         [PHI_ANTD_STATIC_CSS]: file,

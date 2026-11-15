@@ -154,6 +154,11 @@
       "require": "./next/config.mjs",
       "default": "./next/config.mjs"
     },
+    "./next/antd-form-context-loader": {
+      "import": "./next/antd-form-context-loader.mjs",
+      "require": "./next/antd-form-context-loader.mjs",
+      "default": "./next/antd-form-context-loader.mjs"
+    },
     "./next/overlay-zones-client": {
       "import": "./components/overlays/phi-overlay-zones-loader.tsx",
       "require": "./components/overlays/phi-overlay-zones-loader.tsx",

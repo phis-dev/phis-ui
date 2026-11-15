@@ -390,6 +390,10 @@
     "./widgets": {
       "runtimeBytes": 1704350,
       "clientBytes": 1090780
+    },
+    "./next/antd-form-context-loader": {
+      "runtimeBytes": 1777,
+      "clientBytes": 0
     }
   }
 }

@@ -6,6 +6,11 @@ built. Remove an entry when it is done.
 
 ## At the next release
 
+- **Remove the Ant Design 6.7 Form context patch** once Ant Design imports `FormProvider` directly
+  (`antd/es/form/context.js`). The patch (`next/antd-form-context-loader.mjs`, the rule in
+  `readPhiAntdFormContextPatchRule`, the `./next/antd-form-context-loader` export, THEME.md) keeps the Form
+  engine and `async-validator` off every page with a Button: on the landing about 40 kB raw, 17 kB gzip
+  and 43 modules less (Turbopack analyzer, 15.11.2026). It applies to 6.7.x only and warns from 6.8 on.
 - **`checkPhiPagePresetLayout` and `PhiPageLayoutFinding` moved from `@phis/ui/helpers` to `@phis/ui/module/page-check`.** A package that runs the Page check in its tests changes its import when it moves to the release that carries this.
 - **Released as `@phis/ui` 0.5.0 together with `@phis/server` 0.3.0** (both already in `package.json`). The
   Media management responses carry `focalRect` and `font` instead of `meta`, and the Asset PATCH takes
