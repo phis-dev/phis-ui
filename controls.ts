@@ -15,6 +15,9 @@ export type {
   PhiControlSize,
   PhiFeedbackLevel,
 } from "./types/control";
+export { PhiCompactGroupControl } from "./components/controls/phi-compact-group-control";
+export type { PhiCompactGroupControlProps } from "./components/controls/phi-compact-group-control";
+export { PhiViewportVisibilityControl } from "./components/controls/phi-viewport-visibility-control";
 export { PhiNumberControl } from "./components/controls/phi-number-control";
 export type { PhiNumberControlProps } from "./components/controls/phi-number-control";
 export { PhiPopoverControl } from "./components/controls/phi-popover-control";

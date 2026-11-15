@@ -179,6 +179,7 @@ reach for first:
 | `PhiTypographyControl` | Text, headings, paragraphs and links; `PhiTextControl` is the input, not this. |
 | `PhiTagControl` | A coloured mark: `color`, a Theme `gradient`, `variant`, optional `closable`. |
 | `PhiToolbarControl` | A row of commands, compact (joined into one group) by default. |
+| `PhiCompactGroupControl` | Any Controls joined into one group with shared edges: a number field and its button. |
 | `PhiFlexControl` | Arranges the parts inside one leaf. Several Widgets side by side are Layout slots, not this. |
 | `PhiCardControl` | A bordered box with an optional heading bar, on the Theme's inset and corner. |
 | `PhiEmptyControl` | The "nothing here" state; never Ant Design's `Empty`. |
@@ -196,7 +197,8 @@ beside them):
 - Choosing: `PhiSelectControl`, `PhiMultiSelectControl`, `PhiSegmentedControl`, `PhiSwitchControl`,
   `PhiCheckboxControl`, `PhiCheckboxGroupControl`, `PhiRadioGroupControl`, `PhiCascaderControl`,
   `PhiTreeSelectControl`.
-- Commands and menus: `PhiButtonControl`, `PhiToolbarControl`, `PhiFloatButtonControl`, `PhiDropdownControl`,
+- Commands and menus: `PhiButtonControl`, `PhiToolbarControl`, `PhiCompactGroupControl`,
+  `PhiViewportVisibilityControl`, `PhiFloatButtonControl`, `PhiDropdownControl`,
   `PhiPillDropdownControl`, `PhiMenuControl`, `PhiConfirmControl`, `PhiPopoverControl`, `PhiTabsControl`,
   `PhiPaginationControl`.
 - Display: `PhiTypographyControl`, `PhiTagControl`, `PhiCardControl`, `PhiFlexControl`, `PhiEmptyControl`,
@@ -259,7 +261,7 @@ A Widget's placement adds two more (`PhiWidgetPlacementBase`, [4b](#4b-place-cor
 | A coloured mark in a Core Widget template | `simple-text` with `tone` (`secondary`, `success`, `warning`, `danger`) and an `icon` | `simple-text/config.ts` |
 | A heading | `simple-text` with `fontSize` and `marks`, or `description` (`eyebrow`, `title`) | `simple-text/config.ts`, `description/config.ts` |
 | A quantity to choose | Widget `number-input`; `PhiNumberControl` in a Widget of mine | `@phis/ui/controls` |
-| Controls joined into one group | Widget `command-toolbar` with `compact`; `PhiToolbarControl` in a Widget of mine | `command-toolbar/config.ts` |
+| Controls joined into one group | Widget `command-toolbar` with `compact`; `PhiToolbarControl` for commands or `PhiCompactGroupControl` for any Controls in a Widget of mine | `command-toolbar/config.ts`, `@phis/ui/controls` |
 | A value from the record the Page is about | `recordField`, `valueRecordField`, `linkRecordField` on the Core Widget | [Records a Page is about](#records-a-page-is-about) |
 | Several pictures | `gallery` | `gallery/config.ts` |
 | A picture | `image`; `PhiImageControl` in a Widget of mine | `image/config.ts` |
