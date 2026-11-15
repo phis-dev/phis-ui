@@ -839,8 +839,9 @@ is shared with the Gallery in `components/motion`:
 
 The Gallery Widget has one option the Carousel Layout does not: `thumbnails` (boolean, absent is off, so
 an existing Gallery draws as before). It takes effect only while exactly one picture is visible
-(`visibleCount` 1) and there is more than one picture; with more pictures in the window it does nothing,
-and the Inspector hides the field then (`visibleWhen`). It draws a row of small pictures of all the
+(`visibleCount` 1) and there is more than one picture; with more pictures in the window it does nothing.
+The Inspector always shows the field and its description says so: a Gallery that states no `visibleCount`
+shows one picture, and a field condition cannot say "one or not stated". It draws a row of small pictures of all the
 pictures under the main one, for both of the Gallery's sources (the Media Folder and a `pictures` record
 field). Each thumbnail is a real button labelled with the picture's alt text, and the one of the active
 picture is marked (`aria-current`, `aria-pressed`) in Theme colours; pressing one makes that picture the

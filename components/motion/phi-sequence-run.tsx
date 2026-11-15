@@ -34,7 +34,7 @@ export function resolvePhiSequenceRunSpan(visibleCount: number | undefined, item
 export type PhiSequenceThumbnail = { key: string; label: string; content: ReactNode };
 
 /** Whether the thumbnail row is drawn: only over one item at a time, and only where there is something to choose. */
-export function resolvePhiSequenceShowsThumbnails(
+function resolvePhiSequenceShowsThumbnails(
   thumbnails: readonly PhiSequenceThumbnail[] | undefined,
   span: number,
   itemCount: number,

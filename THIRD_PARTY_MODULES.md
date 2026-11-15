@@ -52,7 +52,7 @@ and its own button. It lines up differently, misses what the Card gains, and has
 Look here before you ask for anything. What follows lists what exists, so a missing piece is a real one and
 not one that was only hard to find. It names things and points at the document that explains each; it does
 not repeat them. Every typeKey and Control name below is checked against the code by
-`helpers/third-party-modules-reference.test.ts`.
+`plugins/runtime-modules/core/third-party-modules-reference.test.ts`.
 
 ### Layouts
 

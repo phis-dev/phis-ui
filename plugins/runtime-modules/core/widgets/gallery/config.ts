@@ -198,8 +198,7 @@ export const PHI_GALLERY_WIDGET_DEFINITION = {
       key: "thumbnails",
       type: "boolean",
       label: "Thumbnails",
-      description: "A row of small pictures under the main one, in place of the dots.",
-      visibleWhen: { field: "visibleCount", equals: 1 },
+      description: "A row of small pictures under the main one, in place of the dots. Acts only while one picture is shown at a time.",
     },
   ],
   /*

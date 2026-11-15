@@ -3,8 +3,8 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { PHI_CORE_LAYOUT_DEFINITIONS } from "../components/layouts/layout-definitions";
-import { PHI_RUNTIME_MODULE_WIDGETS } from "../plugins/runtime-modules/core/widgets";
+import { PHI_CORE_LAYOUT_DEFINITIONS } from "../../../components/layouts/layout-definitions";
+import { PHI_RUNTIME_MODULE_WIDGETS } from "./widgets";
 
 /**
  * The "what the Foundation already has" section of THIRD_PARTY_MODULES.md, held to the code.
@@ -14,7 +14,7 @@ import { PHI_RUNTIME_MODULE_WIDGETS } from "../plugins/runtime-modules/core/widg
  * palette, a Core Widget, or a value `@phis/ui/controls` exports that the section does not name fails
  * here. The names come from the definitions and from `controls.ts` itself, never typed in again.
  */
-const root = fileURLToPath(new URL("../", import.meta.url));
+const root = fileURLToPath(new URL("../../../", import.meta.url));
 const document = readFileSync(`${root}THIRD_PARTY_MODULES.md`, "utf8");
 
 const START = "## Before you start: what the Foundation already has";
