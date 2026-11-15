@@ -47,6 +47,236 @@ of your own:
 draws cards the Core Card Widget already draws as a Collection (`body: "plan"`), with its own price line
 and its own button. It lines up differently, misses what the Card gains, and has to be rebuilt.
 
+## Before you start: what the Foundation already has
+
+Look here before you ask for anything. What follows lists what exists, so a missing piece is a real one and
+not one that was only hard to find. It names things and points at the document that explains each; it does
+not repeat them. Every typeKey and Control name below is checked against the code by
+`helpers/third-party-modules-reference.test.ts`.
+
+### Layouts
+
+A Layout arranges the Widgets and Layouts in its slots. Every one takes the shared `padding` field (the
+Paddings panel, which also holds the gap between slots) and a `surface` (what its box looks like). The
+contract is [LAYOUTING.md](./LAYOUTING.md); the definitions are `components/layouts/layout-definitions.ts`.
+
+| typeKey | Title | For | Main config |
+| --- | --- | --- | --- |
+| `content` | Content | A neutral full-width wrapper with one slot. | `padding` |
+| `flex` | Flex | Slots in a row. | `distribution`, `wrap`, `verticalSeparators`, `separatorBeforeFirst`, `separatorSpan` |
+| `flex-vertical` | Flex Vertical | Slots in a column; the Page column is one. | `padding` |
+| `collapsible` | Collapsible | One collapsible panel per slot, titles kept on the Layout. | `defaultOpenSlotKeys`, `accordion`, `ghost`, `slotDescriptions`, `collapseSize`, `headerPadding`, `innerPadding` |
+| `stack` | Stack | One slot at a time (tabs, steps), or all slots piled in one box. | `slotDisplay` (`single`/`stacked`), `defaultActiveSlotKey`, `mountPolicy`, `slotTransition` |
+| `carousel` | Carousel | A run of slots shown a few at a time, moving on their own or on a signal. | `visibleSlots`, `windowAnchor`, `transition`, `slotGap`, `controls`, `loop`, `autoplayMs` |
+| `grid` | Grid | Slots in rows, as many to a row as the width allows. | `columns` (per width, with span and offset) |
+| `masonry` | Masonry | Slots in columns at their own heights, without rows. | `columns` |
+| `split-card` | Split Card | Two cards on the golden ratio, one Surface for both. | `swapRatio`, `padding`, `surface` |
+| `three-column` | Three Column | Fixed left, middle and right slots. | `balancedSides`, `leftWidth`, `middleWidth`, `rightWidth` |
+
+- A box around an area is the Layout's `surface`, not a Widget: `PHI_SURFACE_CARD` (container ground, quiet
+  line, soft shadow) and `PHI_SURFACE_WASH` (the Theme's quietest filling) from `@phis/ui/helpers`, and
+  `padding` for the inset ([LAYOUTING.md](./LAYOUTING.md), "Surface").
+- Distances between sections, inside a surface and at the Page edge are fixed by
+  [6b. Laying out a Page](#6b-laying-out-a-page).
+- `structure-region` and `page-region` are the Builder's own preview Layouts and are not offered to
+  authors.
+
+### Core Widgets
+
+Place these by type key ([4b](#4b-place-core-widgets)). The last column says which field of the record a
+Page is about the Widget can show or follow instead of its own value
+([Records a Page is about](#records-a-page-is-about)); the words in brackets are the field kinds it accepts.
+A dash is no binding. The text is each Widget's own `description`; its `fields` are what the Inspector
+offers.
+
+**Content**
+
+| typeKey | What it draws | Record binding |
+| --- | --- | --- |
+| `simple-text` | Plain text or one link, with icon, `fontSize`, `tone`, `marks` and more. | `recordField` (text, number, date) |
+| `description` | An introductory block: `eyebrow`, `title`, body, a list, a footer. | - |
+| `markdown` | Local or remote Markdown. | `recordField` (markdown, text) |
+| `markdown-toc` | An anchor table of contents for a Markdown Widget. | - |
+| `html` | HTML-backed editorial text (Rich Text). | - |
+| `card` | A card with a picture or an icon, a heading or a figure, and a link. | - |
+| `image` | An image from local media, a trusted URL or a rendition. | `recordField` (picture) |
+| `gallery` | A run of pictures shown a few at a time, with arrows, dots and autoplay. | `recordField` (pictures) |
+| `icon` | A standalone icon. | - |
+| `spacer` | Fills the remaining space in its slot. | - |
+| `result` | A compact result state. | - |
+| `timeline` | What happened, in order: time, title, a line of text. | - |
+| `steps` | Where a sequence stands; can follow and drive a Stack. | - |
+
+**Navigation and shell**
+
+| typeKey | What it draws | Record binding |
+| --- | --- | --- |
+| `header-navigation` | The horizontal site menu. | - |
+| `sidebar-navigation` | The vertical site menu. | - |
+| `quick-links` | A link list from a selected navigation key. | - |
+| `breadcrumb` | A breadcrumb trail for page and header contexts. | - |
+| `page-title` | The current localized Page title. | - |
+| `brand` | The Site's brand mark and wordmark. | - |
+| `account` | The viewer's account control, guest or signed in. | - |
+| `locale` | The locale switcher. | - |
+| `theme-mode-switch` | Switches the Site between light and dark. | - |
+| `tour-button` | Starts the Tour of the shown Page; hidden where there is none. | - |
+
+**Controls** (they report their state as signals, [SIGNALS.md](./SIGNALS.md))
+
+| typeKey | What it draws | Record binding |
+| --- | --- | --- |
+| `button` | A command button that emits a configured signal. | `valueRecordField` (text), `linkRecordField` (link) |
+| `command-toolbar` | A toolbar of commands; `compact` joins them into one group. | - |
+| `float-button` | Buttons fixed to a corner of the viewport. | - |
+| `input` | A simple text input. | - |
+| `number-input` | A numeric input. | - |
+| `slider` | A scalar slider. | - |
+| `rate` | A rating. | - |
+| `checkbox` | A boolean checkbox. | - |
+| `checkbox-group` | A multi-choice checkbox group, static or provider-backed options. | - |
+| `switch` | A boolean switch. | - |
+| `select-box` | A select. | - |
+| `multi-select` | A multi-select. | - |
+| `segmented` | A segmented control. | - |
+| `tab-bar` | A tab control that emits state and can drive the slots of a Stack. | - |
+| `cascader` | A writable cascader. | - |
+| `date-input` | A date, period, date-time or range input. | - |
+| `color` | A colour control. | - |
+| `length` | A numeric CSS length with a unit. | - |
+| `dimension` | Width and height with explicit CSS units. | - |
+| `otp` | A fixed-length code, one character per cell. | - |
+| `pagination` | A pagination control that emits page state. | - |
+
+**Data, forms and entries**
+
+| typeKey | What it draws | Record binding |
+| --- | --- | --- |
+| `table` | A provider-backed table with columns, rows and actions ([TABLES.md](./TABLES.md)). | - |
+| `tree` | A provider-backed hierarchical tree ([TREES.md](./TREES.md)). | - |
+| `collection-view` | A provider-backed visual collection with tools and pagination ([COLLECTIONS.md](./COLLECTIONS.md)). | - |
+| `record` | One row of a Table Provider as named values, opened by a row action. | - |
+| `form` | A Preset Form a Module contributes ([FORMS.md](./FORMS.md)). | - |
+| `form-preview` | What the token in the address is about, beside the form that spends it. | - |
+| `slot-upload` | Puts a file into a declared slot on a row of an Add-on's table. | - |
+| `draft-status` | Whether a Controller's draft is unsaved, saved or published. | - |
+| `entry-list` | A content kind's published entries ([CONTENT_ENTRIES.md](./CONTENT_ENTRIES.md)). | - |
+| `entry-header` | The opening of one entry: category, title, subtitle, author, date. | - |
+| `entry-detail` | The text of one published entry. | - |
+| `thread-conversation` | The selected conversation: messages, authors and what hangs on them ([THREADS.md](./THREADS.md)). | - |
+
+### Controls a Module's own Widget may use
+
+`@phis/ui/controls` (`controls.ts`) is the only place a Widget of your own takes interactive parts from; the
+rules are in [components/widgets/README.md](./components/widgets/README.md#controls). The ones you will
+reach for first:
+
+| Control | For |
+| --- | --- |
+| `PhiButtonControl` | A button. |
+| `PhiNumberControl` | A numeric field, with the unit shown inside it. |
+| `PhiTextControl` | A text field; `presentation` picks the shape, such as a textarea. |
+| `PhiTypographyControl` | Text, headings, paragraphs and links; `PhiTextControl` is the input, not this. |
+| `PhiTagControl` | A coloured mark: `color`, a Theme `gradient`, `variant`, optional `closable`. |
+| `PhiToolbarControl` | A row of commands, compact (joined into one group) by default. |
+| `PhiFlexControl` | Arranges the parts inside one leaf. Several Widgets side by side are Layout slots, not this. |
+| `PhiCardControl` | A bordered box with an optional heading bar, on the Theme's inset and corner. |
+| `PhiEmptyControl` | The "nothing here" state; never Ant Design's `Empty`. |
+| `PhiDialogControl` | A dialog built in code. A dialog around a tree of Widgets is an Overlay ([Dialogs](#dialogs)). |
+| `PhiSelectControl`, `PhiSegmentedControl`, `PhiSwitchControl` | Choosing and switching. |
+| `PhiImageControl` | A picture, resolved as the Image and Card Widgets resolve it. |
+| `PhiSkeletonControl`, `PhiAlertControl` | Loading and inline feedback. |
+
+The complete list of values `@phis/ui/controls` exports, by group (the types that go with them are exported
+beside them):
+
+- Text and input: `PhiTextControl`, `PhiLabeledControl`, `PhiNumberControl`, `PhiSliderControl`,
+  `PhiRateControl`, `PhiOtpControl`, `PhiDimensionControl`, `PhiLengthControl`, `PhiColorControl`,
+  `PhiIconPickerControl`.
+- Choosing: `PhiSelectControl`, `PhiMultiSelectControl`, `PhiSegmentedControl`, `PhiSwitchControl`,
+  `PhiCheckboxControl`, `PhiCheckboxGroupControl`, `PhiRadioGroupControl`, `PhiCascaderControl`,
+  `PhiTreeSelectControl`.
+- Commands and menus: `PhiButtonControl`, `PhiToolbarControl`, `PhiFloatButtonControl`, `PhiDropdownControl`,
+  `PhiPillDropdownControl`, `PhiMenuControl`, `PhiConfirmControl`, `PhiPopoverControl`, `PhiTabsControl`,
+  `PhiPaginationControl`.
+- Display: `PhiTypographyControl`, `PhiTagControl`, `PhiCardControl`, `PhiFlexControl`, `PhiEmptyControl`,
+  `PhiSkeletonControl`, `PhiAlertControl`, `PhiStepsControl`, `PhiTimelineControl`, `PhiImageControl`,
+  `PhiVideoEmbedControl`.
+- Dialogs and forms: `PhiDialogControl`, `PhiFormControl`.
+- Data: `PhiTableControl`, `PhiTreeControl`, `PhiTreeActionButton`, `PhiCollectionLayoutControl`,
+  `PhiCollectionHeaderControl`, `PhiCollectionViewControl`, `PhiMediaPickerControl`,
+  `PhiMediaAssetTileControl`, `PhiMediaAssetCollectionSkeletonControl`, `PhiMaskPickerControl`,
+  `PhiDragHandleControl`. A list of records is a `table` Widget on a provider, not a `PhiTableControl` of
+  yours ([a staff page is composed](#before-you-start-a-staff-page-is-composed-not-drawn)).
+- Configuration editors: `PhiBackgroundControl`, `PhiBorderControl`, `PhiPaddingControl`,
+  `PhiShadowControl`, `PhiSurfaceControl`, `PhiGeometryControl`.
+- Helpers and constants: `PHI_CONTROL_SIZES`, `PHI_FEEDBACK_LEVELS`, `readPhiControlSize`,
+  `PHI_PICKER_PLACEMENTS`, `PHI_CONFIRM_PLACEMENTS`, `PHI_SLIDER_TOOLTIP_MODES`, `PHI_RATE_DEFAULT_COUNT`,
+  `normalizePhiRateCount`, `normalizePhiRateValue`, `normalizePhiCascaderValue`, `readPhiTableControlValue`,
+  `resolvePhiImagePresentation`, `PHI_ICON_PICKER_CONTROL_DEFAULT_LABELS`,
+  `PHI_MEDIA_PICKER_COLUMN_WIDTH_STEP`, `PHI_MEDIA_PICKER_DEFAULT_COLUMN_WIDTH`,
+  `PHI_MEDIA_PICKER_MAX_COLUMN_WIDTH`, `PHI_MEDIA_PICKER_MIN_COLUMN_WIDTH`,
+  `normalizePhiMediaPickerMinColumnWidth`.
+
+### What every block can do
+
+Layouts, Widgets and Regions share `PhiRenderableBlockBase` (`types/renderable-block.ts`), and the slot frame
+applies it to every Widget alike, so none of these is a field of your Widget. They are written in the
+node's `config`, and [CMS.md](./CMS.md#renderable-blocks) describes them.
+
+| Field | What it does |
+| --- | --- |
+| `visibility` | `visible`, `collapsed` (takes part with `collapsedSizeHint`) or `hidden` (takes no part in the layout). |
+| `enabled` | `false` keeps the block but blocks interaction. |
+| `size`, `minSize`, `maxSize` | Preferred and bounding width and height, each axis per screen profile ([LAYOUTING.md](./LAYOUTING.md#sizing-and-nesting)). |
+| `anchor` | Where the block stands in its slot: `left`/`center`/`right`, `top`/`middle`/`bottom`. |
+| `surface` | What the box looks like: ground, edge, depth. A Layout and a Region draw their own; a Widget's is drawn by its frame if its plugin says so ([LAYOUTING.md](./LAYOUTING.md#surface)). |
+| `zIndex`, `opacity`, `className` | Stacking, transparency and the one supported styling hook. |
+| `effects` | Entrance transitions and scroll-driven viewport effects (`PhiRenderableBlockEffects`). |
+| `accessPolicy`, `viewportFlags` | Who sees the block and on which screen sizes ([ACCESS.md](./ACCESS.md)). |
+| `capabilities` | Which interactions it takes part in: `selectable`, `draggable`, `hoverable`, `activatable`, `focusable`, `droppable`. |
+
+A Widget's placement adds two more (`PhiWidgetPlacementBase`, [4b](#4b-place-core-widgets)):
+
+- `visibleWhen` shows the Widget only while a condition holds. The condition reads one source: `row`,
+  `form`, `controller`, `page`, `widget` or `feature` (`PHI_RUNTIME_CONDITION_SOURCES` in
+  `@phis/contracts/conditions`), and judges it with `truthy`, `falsy`, `equals` or `contains`. The grammar
+  is in [FORMS.md](./FORMS.md#conditions), and a condition on the query is why such a request is never
+  static ([STATIC_RENDERING.md](./STATIC_RENDERING.md)).
+- `signalRoutes` wires the Widget to the signal bus ([SIGNALS.md](./SIGNALS.md)). Runtime changes to the
+  fields above travel as `visibility/change` and the other renderable-block signals
+  ([SIGNALS.md](./SIGNALS.md#renderable-block-channels)).
+
+### I need ... use ...
+
+| I need | Use | Where |
+| --- | --- | --- |
+| Two cards side by side | Layout `split-card` (the cards are its Surface) | [LAYOUTING.md](./LAYOUTING.md), "Layout config" |
+| A box around an area | `surface` on the Layout (`PHI_SURFACE_CARD`, `PHI_SURFACE_WASH`), with `padding` | [LAYOUTING.md](./LAYOUTING.md#surface) |
+| Hide a section | The block's `visibility` (`visible`, `collapsed`, `hidden`) | [CMS.md](./CMS.md#renderable-blocks) |
+| Show a section only when something holds | `visibleWhen` on the Widget | [FORMS.md](./FORMS.md#conditions), [4b](#4b-place-core-widgets) |
+| A coloured mark in a Widget of mine | `PhiTagControl` | `@phis/ui/controls` |
+| A coloured mark in a Core Widget template | `simple-text` with `tone` (`secondary`, `success`, `warning`, `danger`) and an `icon` | `simple-text/config.ts` |
+| A heading | `simple-text` with `fontSize` and `marks`, or `description` (`eyebrow`, `title`) | `simple-text/config.ts`, `description/config.ts` |
+| A quantity to choose | Widget `number-input`; `PhiNumberControl` in a Widget of mine | `@phis/ui/controls` |
+| Controls joined into one group | Widget `command-toolbar` with `compact`; `PhiToolbarControl` in a Widget of mine | `command-toolbar/config.ts` |
+| A value from the record the Page is about | `recordField`, `valueRecordField`, `linkRecordField` on the Core Widget | [Records a Page is about](#records-a-page-is-about) |
+| Several pictures | `gallery` | `gallery/config.ts` |
+| A picture | `image`; `PhiImageControl` in a Widget of mine | `image/config.ts` |
+| A list or table of records | `table` on a provider you register | [TABLES.md](./TABLES.md) |
+| Records as cards | `collection-view` (the Card Widget as a Collection) | [COLLECTIONS.md](./COLLECTIONS.md) |
+| A form | The `form` Widget on a Preset Form | [FORMS.md](./FORMS.md), [6](#6-add-a-preset-form) |
+| Where the reader is | `breadcrumb` | `breadcrumb/config.ts` |
+| A dialog | `dialog` on `createPhiCmsPresetNodes`; `PhiDialogControl` in code | [Dialogs](#dialogs), [OVERLAYS.md](./OVERLAYS.md) |
+| Tabs or steps over several sections | Layout `stack` with the `tab-bar` or `steps` Widget | [LAYOUTING.md](./LAYOUTING.md), "Stack slot display" |
+| Sections the reader opens and closes | Layout `collapsible` | [LAYOUTING.md](./LAYOUTING.md) |
+| Tiles that fill a row | Layout `grid`, or `masonry` for uneven heights | [LAYOUTING.md](./LAYOUTING.md), "Grid slot placement" |
+| An icon | `PhiIcon` by name | [8d](#8d-icons-a-module-brings) |
+
+What is not listed here either does not exist or is missing from this list. In both cases propose it to the
+operator ([Where a Core Widget or Control lacks something](#before-you-start-the-foundations-widgets-and-controls-come-first));
+do not build your way around it.
+
 ## Before you start: Public pages are rendered once for everybody
 
 Read [STATIC_RENDERING.md](./STATIC_RENDERING.md) before building anything that renders on a Public page.
