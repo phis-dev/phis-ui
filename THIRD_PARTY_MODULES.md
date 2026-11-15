@@ -25,6 +25,28 @@ here: one Module with routes, a navigation injection, Theme presets and blocks, 
 all fixed exports. It owns no Widget and no Controller; the Widget and Controller examples below show
 those parts.
 
+## Before you start: the Foundation's Widgets and Controls come first
+
+This holds for every Page and every Area -- Public, App and staff alike -- and for every part of a Widget
+of your own:
+
+1. **A Page is composed from Core Widgets first.** A list, a row of cards, a form, a button, a heading, a
+   picture: if a Core Widget draws it, your preset places that Widget on your Module's provider or
+   Controller ([section 4b](#4b-place-core-widgets)). A Widget of your own is for what no Core Widget
+   draws at all.
+2. **A Widget of your own is drawn from the Foundation's Controls**, never from Ant Design or hand-built
+   markup, and never as a second version of something a Core Widget already draws.
+3. **Where a Core Widget or Control lacks something, there is no quick solution of your own.** Not a
+   Widget of yours that draws it a little differently, not a wrapper that patches it from outside. It is
+   a finding for `@phis/ui`, put to the operator as a proposal: what the Core Widget or Control would
+   have to gain, or what a new Core Widget would have to look like -- its configuration, what it reads
+   from a provider, and which existing Widgets it sits beside. The operator decides; until then the gap
+   stays open rather than being closed in your package.
+
+`@phis/shop`'s catalogue is what breaking this looks like: its product list is a Widget of its own that
+draws cards the Core Card Widget already draws as a Collection (`body: "plan"`), with its own price line
+and its own button. It lines up differently, misses what the Card gains, and has to be rebuilt.
+
 ## Before you start: Public pages are rendered once for everybody
 
 Read [STATIC_RENDERING.md](./STATIC_RENDERING.md) before building anything that renders on a Public page.
@@ -45,7 +67,8 @@ Signed-in visitors, requests with a query, the Builder and every staff Area rend
 
 ## Before you start: a staff page is composed, not drawn
 
-A page in a staff Area -- Admin, Accounting, Editor, Builder -- and every list in the App Area is a tree
+What [the Foundation first](#before-you-start-the-foundations-widgets-and-controls-come-first) means for
+the staff Areas, concretely. A page in a staff Area -- Admin, Accounting, Editor, Builder -- and every list in the App Area is a tree
 of Core Widgets your preset places, not one Widget of yours that draws the page itself. Every staff page
 of phis-ui is built this way, and a Module's page that is not looks, sorts, translates and acts
 differently from all of them. `@phis/shop`'s Shop page in Accounting was built as one client Widget of
@@ -70,7 +93,8 @@ The reference is the Admin Users page,
 provider, a create action in its toolbar, history, edit and delete in its rows, create and edit as Form
 dialogs, all answered by the user-management Controller. A Widget of your own is for what no Core Widget
 draws -- a product picture, a calendar, a chart of your data. Where a Core Widget lacks something a staff
-page needs, that is a finding for `@phis/ui`, not a reason to draw the page yourself.
+page needs, that is a finding for `@phis/ui`, proposed to the operator, not a reason to draw the page
+yourself.
 
 ## Terminology and hard boundaries
 
@@ -932,7 +956,8 @@ drop it without a word.
   titles: set the flag where the titles you write are already in the reader's language.
 
 **What stays untyped:**
-- a Core Widget not in the map yet, such as Card, whose config is still changing;
+- a Core Widget not in the map yet, such as Card, whose config is still changing. Untyped is not a
+  reason to draw it yourself: place it and give its `config` a type of your own, as below;
 - a type key known only at runtime;
 - a Widget named with a `pluginKey`, your own included, since its config is yours to define.
 
@@ -1543,6 +1568,9 @@ offers the scale, and a value off it is the author's choice and is saved as it i
 - The reading width comes from the Region's `maxSize`, never from padding.
 - A Hero only with a ground of its own; `heroOverlap` always with the Hero's larger `paddingBottom`.
 - Nothing in the Area's Regions.
+- On every page: nothing a Core Widget draws is drawn by a Widget of the Module's own, and a gap in a Core
+  Widget is a proposal to the operator, not a workaround
+  ([Before you start](#before-you-start-the-foundations-widgets-and-controls-come-first)).
 - On a staff page: every list is a `table` Widget on a provider with its actions, every form a Form
   Widget in a dialog, no `page-title` Widget, and no Widget of the Module's own that draws tables, button
   rows or dialogs ([Before you start](#before-you-start-a-staff-page-is-composed-not-drawn)).
