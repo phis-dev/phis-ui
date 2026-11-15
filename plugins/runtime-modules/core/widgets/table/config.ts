@@ -160,6 +160,7 @@ const PHI_TABLE_ACTION_CONFIG_FIELDS: PhiCmsConfigField[] = [
 
 const PHI_TABLE_COLUMN_RENDERERS = [
   "text", "email", "date", "datetime", "badge", "tags", "link", "code", "json", "switch", "checkbox", "icon",
+  "money", "interval",
 ] as const;
 const PHI_TABLE_COLUMN_EDITOR_CONTROLS = [
   "switch", "checkbox", "select", "radio", "segmented", "multi-select", "checkbox-group", "icon-picker", "textarea",
@@ -725,6 +726,8 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
             { value: "switch", label: "Switch" },
             { value: "checkbox", label: "Checkbox" },
             { value: "icon", label: "Icon" },
+            { value: "money", label: "Money" },
+            { value: "interval", label: "Interval" },
           ],
         },
         {

@@ -286,7 +286,7 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   given; it never keeps a second value state and never renders a Widget or Layout.
 - Core field providers: `text`, `email`, `password`, `textarea`, `hidden`, `honeypot`, `checkbox`,
   `select`, `url`, `tel`, `number`, `slider`, `multi-select`, `checkbox-group`, `datetime`, `switch`,
-  `segmented`, `cascader`, `table`, `tree`, `storage-size`, `upload`, `link-target`.
+  `segmented`, `cascader`, `table`, `tree`, `storage-size`, `upload`, `link-target`, `money`.
 - A `select` field may be emptied when its `config.allowClear` is `true`, for a choice whose empty answer
   means something ("the Site's own language"); a `multi-select` takes typed values beside its options when
   `config.allowCustom` is `true`, for a vocabulary that grows by use, such as tags.
@@ -304,6 +304,28 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   so a handler, a validator and an API payload see the unit a limit is stored and enforced in, and a
   label never has to carry one. A megabyte is 1 048 576 bytes here, which is what every tool that
   enforces an upload limit means by it.
+- `money` is an amount of money: minor units in the value, major units on screen. The value is
+  - for `config.currency` (an ISO 4217 code), the contract's money `PhisPaymentMoney`
+    (`{ currency: "CHF", minor: "1990" }`, `@phis/contracts/payments`), so a handler passes it to a
+    payment as it came and knows the currency without a second field;
+  - for `config.currencies` (a list of codes), a price list keyed by code (`{ CHF: "1990", EUR: "1850" }`),
+    one input per currency in the order listed. A currency left empty is absent from the list, because no
+    price and a price of nothing are different answers.
+
+  Exactly one of the two is set. `minor` is a canonical integer string, as everywhere in the payment
+  contract, and how many places a currency has is its ISO 4217 exponent (`PHIS_PAYMENT_CURRENCY_EXPONENTS`:
+  two for CHF, none for JPY, three for BHD), never a fixed hundred. The Control (`PhiMoneyControl`)
+  converts on the digits (`helpers/money-amount.ts`), never through a float; it writes the number the way
+  the page's locale does once the field is left, shows what was typed while somebody types, rounds to the
+  currency's places and brings the amount into `config.min`..`config.max` (whole minor units, `0` and up)
+  when the field is left. The currency is its code, on the side the locale puts it ("CHF 12.50",
+  "12,50 EUR"); a code nobody translates, so the field has no wording of its own beyond its label. With
+  nothing entered the field holds `null` in either shape, so whether empty is allowed is the `required`
+  rule -- for a list, "at least one amount". The config is read strictly (`components/forms/money-field.ts`):
+  a wrong or missing currency, a bound that is not a whole number of minor units, or a minimum above the
+  maximum throws a `PhiConfigError`, and so does a value of the wrong shape, rather than showing it empty
+  and saving nothing over it. A currency that comes from another field of the same Form (a destination's
+  own currency) is not expressible: the field states its currency in its config.
 - `upload` is what somebody attached. Its value is the list of Media Asset ids the finished uploads left
   behind, and with nothing attached the field holds no value at all rather than an empty list, so
   `required` means what it says. The transport is the shared one (`usePhiMediaUpload`), so the Site's

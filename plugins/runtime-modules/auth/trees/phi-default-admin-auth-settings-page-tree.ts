@@ -10,6 +10,7 @@ import { PHI_SIGNAL_VALUE_SCHEMAS, createPhiSignalAddress } from "../../../../ty
 import { buildPhiSettingsPageShellTree } from "../../../../components/regions/presets/phi-settings-page-shell-tree";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
+import { PHI_DIALOG_WIDTH_SINGLE_COLUMN } from "../../../../helpers/cms-dialog";
 
 const SYNTHETIC_AUTH_SETTINGS_REGION_IDS = {
   regionContent: -482,
@@ -284,6 +285,7 @@ export async function buildPhiDefaultAdminAuthSettingsPageTree({
         title: labels.installations.createTitle,
         openActionKey: "create",
         formId: PHI_AUTH_ADMIN_SETTINGS_FORM_IDS.installationCreate,
+        width: PHI_DIALOG_WIDTH_SINGLE_COLUMN,
         label: labels.installations.createTitle,
         submitLabel: labels.submitLabel,
         cancelLabel: labels.installations.confirmCancel,
@@ -308,6 +310,7 @@ export async function buildPhiDefaultAdminAuthSettingsPageTree({
         title: labels.installations.editTitle,
         openActionKey: "edit",
         formId: PHI_AUTH_ADMIN_SETTINGS_FORM_IDS.installationEdit,
+        width: PHI_DIALOG_WIDTH_SINGLE_COLUMN,
         label: labels.installations.editTitle,
         submitLabel: labels.submitLabel,
         cancelLabel: labels.installations.confirmCancel,

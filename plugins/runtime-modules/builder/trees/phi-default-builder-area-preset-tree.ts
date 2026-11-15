@@ -73,7 +73,11 @@ import {
 import { PHI_BUILDER_PAGE_META_FORM_ID } from "../page-meta-form";
 import { PHI_BUILDER_AREA_SETTINGS_FORM_ID } from "../area-settings-form";
 import { getPhiBuilderNavigationPageLabels } from "./builder-navigation-label-set";
-import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../../helpers/cms-dialog";
+import {
+  PHI_DIALOG_BODY_CONFIG,
+  PHI_DIALOG_COMMANDS_CONFIG,
+  PHI_DIALOG_WIDTH_SINGLE_COLUMN,
+} from "../../../../helpers/cms-dialog";
 import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 
 const SYNTHETIC_DEV_REGION_IDS = {
@@ -853,7 +857,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
         label: "Builder area settings",
         config: {
           title: labels.areaSettings.title,
-          width: { compact: "calc(100vw - 32px)", medium: 560, wide: 640 },
+          width: PHI_DIALOG_WIDTH_SINGLE_COLUMN,
           /*
            * Mounted with the Page rather than on first open, because the controls inside show state
            * rather than ask for it.
@@ -883,7 +887,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
         label: "Builder page metadata",
         config: {
           title: labels.pages.pageMeta,
-          width: { compact: "calc(100vw - 32px)", medium: 560, wide: 640 },
+          width: PHI_DIALOG_WIDTH_SINGLE_COLUMN,
           mountPolicy: "lazy-keep",
           closeMode: "immediate",
           signalRoutes: {

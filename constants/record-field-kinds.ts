@@ -3,7 +3,7 @@
  * only those. Here rather than beside the record types, so that reading the list at runtime does not load them.
  */
 export const PHI_RECORD_FIELD_KINDS = [
-  "text", "markdown", "picture", "pictures", "list", "tag", "date", "number", "link",
+  "text", "markdown", "picture", "pictures", "list", "tag", "date", "number", "money", "link",
 ] as const;
 
 export type PhiRecordFieldKind = (typeof PHI_RECORD_FIELD_KINDS)[number];

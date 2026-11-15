@@ -317,8 +317,8 @@ What [the Foundation first](#before-you-start-the-foundations-widgets-and-contro
 the staff Areas, concretely. A page in a staff Area -- Admin, Accounting, Editor, Builder -- and every list in the App Area is a tree
 of Core Widgets your preset places, not one Widget of yours that draws the page itself. Every staff page
 of phis-ui is built this way, and a Module's page that is not looks, sorts, translates and acts
-differently from all of them. `@phis/shop`'s Shop page in Accounting was built as one client Widget of
-about 1000 lines, with hand-drawn tables, its own dialogs and its own buttons, and has to be rebuilt.
+differently from all of them. `@phis/shop`'s Accounting page follows it too: Core Tables, Form dialogs
+and row actions, with no client Widget of its own.
 
 1. **A list is a `table` Widget on a data provider** your Module registers ([TABLES.md](./TABLES.md)):
    columns, sorting, paging and filters are the table's. Never a `PhiTableControl` in a Widget of yours.
@@ -1234,6 +1234,14 @@ which returns the Overlay, its Layouts and its Command Toolbar for your tree's `
 `PHI_DIALOG_COMMANDS_CONFIG` into the toolbar (`@phis/ui/helpers`); the descriptor compiler refuses a modal
 whose body or actions say otherwise. A dialog whose content runs to its edges -- an image to crop, a canvas
 -- takes `PHI_DIALOG_BLEED_BODY_CONFIG` instead: the same ground, no inset, and its content draws no corner.
+
+A dialog is as wide as its Form needs: one column takes `PHI_DIALOG_WIDTH_SINGLE_COLUMN`, two columns keep
+`PHI_DIALOG_WIDTH`, a table or an editor states a wider width. Hand the Form your dialog holds to `dialog`
+as `body.form` -- its definition from your `forms`, or `{ descriptor }` -- and it picks the width itself;
+without it, `dialog` takes `PHI_DIALOG_WIDTH`. Where the Form is not yours to hand over (Core's Reply Form,
+say), state `width: PHI_DIALOG_WIDTH_SINGLE_COLUMN` in `config`. The descriptor compiler refuses a modal at
+`PHI_DIALOG_WIDTH` whose Forms are all one column (OVERLAYS.md, "The imperative exemption, and how narrow
+it is").
 
 ## 4c. Messaging
 

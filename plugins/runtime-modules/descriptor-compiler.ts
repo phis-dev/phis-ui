@@ -3,6 +3,9 @@ import {
   resolvePhiCmsAreaMask,
   type PhiCmsAreaKey,
 } from "../../constants/cms-areas";
+import type { PhiFormDescriptor } from "@phis/contracts/forms";
+
+import type { PhiRuntimeModuleFormDefinition } from "../../components/forms/form-registry";
 import { collectPhiTourDefinitionErrors } from "../../types/tours";
 import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../constants/phi-cms";
 import { PhiCmsLayoutType } from "../../constants/cms-layout-type-keys";
@@ -80,6 +83,8 @@ import {
   PHI_DIALOG_BLEED_BODY_CONFIG,
   PHI_DIALOG_BODY_CONFIG,
   PHI_DIALOG_COMMANDS_CONFIG,
+  PHI_DIALOG_WIDTH,
+  isPhiFormSingleColumn,
 } from "../../helpers/cms-dialog";
 import { PhiCmsWidgetType } from "../../constants/cms-widget-types";
 import {
@@ -402,9 +407,13 @@ export function compilePhiCmsDescriptorCatalog({
   const themeByKey = new Map<string, PhiCmsThemePresetBinding>();
   const themeBlockByKey = new Map<string, PhiCmsThemeBlockBinding>();
   const sourceLocaleByModuleId = new Map<PhiRuntimeModuleId, string>();
+  const formDefinitionsById = new Map<string, PhiRuntimeModuleFormDefinition>();
 
   for (const [moduleId, entry] of catalog) {
     sourceLocaleByModuleId.set(moduleId, resolvePhiRuntimeModuleSourceLocale(entry.definition));
+    for (const form of entry.forms ?? []) {
+      formDefinitionsById.set(form.formId, form);
+    }
     const descriptorKeys = new Set<string>();
     const registerIdentity = (presetKey: string) => {
       normalizeRequiredKey(presetKey, `${moduleId} preset key`);
@@ -893,6 +902,7 @@ export function compilePhiCmsDescriptorCatalog({
     themeByKey,
     themeBlockByKey,
     sourceLocaleByModuleId,
+    formDefinitionsById,
   };
 }
 
@@ -1955,9 +1965,17 @@ function assertPhiCmsBasePageLayoutNode(
   }
 }
 
+/** What the tree contract reads of a Form a Module ships: its descriptor, for a dialog's width. */
+type PhiCmsPresetTreeForm = { descriptor: PhiFormDescriptor };
+
+/**
+ * `forms` are the Forms the compiler can see -- the ones the catalog's Modules ship, by id. A Form it
+ * cannot see (one stored on the Site, one of a Module outside the catalog) is not judged.
+ */
 export function assertPhiCmsPresetTreeContract(
   tree: PhiResolvedCmsPageTree,
   expectedPage?: PhiCmsPageNode,
+  forms?: ReadonlyMap<string, PhiCmsPresetTreeForm>,
 ) {
   const layoutIds = new Set<string>();
   const allIds = new Set<string>();
@@ -2051,6 +2069,7 @@ export function assertPhiCmsPresetTreeContract(
   for (const overlay of tree.overlays) {
     if (overlay.overlayType === "modal") {
       assertPhiCmsDialogBody(overlay.id, layoutsById.get(overlay.bodyLayoutNodeId)!);
+      if (forms) assertPhiCmsDialogWidth(overlay, tree, forms);
     }
   }
   for (const rootLayoutNodeId of [
@@ -2071,8 +2090,9 @@ function assertPhiCmsAreaOverlayTree(
   descriptor: PhiCmsAreaOverlayPresetDescriptor,
   tree: PhiResolvedCmsPageTree,
   page: PhiCmsPageNode,
+  forms: ReadonlyMap<string, PhiCmsPresetTreeForm>,
 ) {
-  assertPhiCmsPresetTreeContract(tree, page);
+  assertPhiCmsPresetTreeContract(tree, page, forms);
   if (tree.regions.length > 0) {
     throw new Error(
       `${descriptor.ownerModuleId}/${descriptor.presetKey}: Area Overlay preset must not contribute Regions.`,
@@ -2132,7 +2152,7 @@ export async function composePhiCmsActiveAreaOverlayPresets({
   ));
   for (const [index, descriptor] of descriptors.entries()) {
     const contribution = contributions[index]!;
-    assertPhiCmsAreaOverlayTree(descriptor, contribution, page);
+    assertPhiCmsAreaOverlayTree(descriptor, contribution, page, catalog.formDefinitionsById);
     for (const node of [
       ...contribution.overlays,
       ...contribution.layoutNodes,
@@ -2193,7 +2213,7 @@ async function loadShellTree(
     composedTree = composedTree ? mergePhiCmsShellTrees(composedTree, sourceTree) : sourceTree;
   }
   const ownTree = await descriptor.loadTree({ page, runtime, catalog });
-  assertPhiCmsPresetTreeContract(ownTree, page);
+  assertPhiCmsPresetTreeContract(ownTree, page, catalog.formDefinitionsById);
   return composedTree ? mergePhiCmsShellTrees(composedTree, ownTree) : ownTree;
 }
 
@@ -2217,7 +2237,7 @@ export async function instantiatePhiCmsAreaShellPreset({
     page,
     resolveTargetRuntime(runtime, binding.descriptor.area),
   );
-  assertPhiCmsPresetTreeContract(tree, page);
+  assertPhiCmsPresetTreeContract(tree, page, catalog.formDefinitionsById);
   return tree;
 }
 
@@ -2267,7 +2287,7 @@ export async function instantiatePhiCmsRoutePreset({
           description: loadedTree.pageMeta?.description ?? null,
         },
       };
-  assertPhiCmsPresetTreeContract(tree, page);
+  assertPhiCmsPresetTreeContract(tree, page, catalog.formDefinitionsById);
   return tree;
 }
 
@@ -2307,5 +2327,40 @@ function assertPhiCmsDialogCommands(
         `Preset Overlay "${overlayId}" actions "${widget.id}" do not match the dialog actions (PHI_DIALOG_COMMANDS_CONFIG) at "${mismatch[0]}".`,
       );
     }
+  }
+}
+
+/*
+ * A dialog is as wide as its Form needs (`helpers/cms-dialog.ts`): one column takes
+ * `PHI_DIALOG_WIDTH_SINGLE_COLUMN`, two keep `PHI_DIALOG_WIDTH`. What is refused is the one width a Preset
+ * did not choose -- the default, holding nothing but Forms of one column. Any other width was stated, by a
+ * caller that knows what else the body holds; a Form the compiler cannot see is not judged.
+ */
+function assertPhiCmsDialogWidth(
+  overlay: { id: string; bodyLayoutNodeId: string; config: Record<string, unknown> },
+  tree: PhiResolvedCmsPageTree,
+  forms: ReadonlyMap<string, PhiCmsPresetTreeForm>,
+) {
+  if (stablePresetNodeJson(overlay.config.width) !== stablePresetNodeJson(PHI_DIALOG_WIDTH)) return;
+  const bodyLayoutIds = new Set<string>([overlay.bodyLayoutNodeId]);
+  for (let grown = true; grown;) {
+    grown = false;
+    for (const node of tree.layoutNodes) {
+      if (node.parentLayoutNodeId != null && bodyLayoutIds.has(node.parentLayoutNodeId) && !bodyLayoutIds.has(node.id)) {
+        bodyLayoutIds.add(node.id);
+        grown = true;
+      }
+    }
+  }
+  const formIds = tree.contentWidgets
+    .filter((widget) => widget.widgetType === PhiCmsWidgetType.Form && bodyLayoutIds.has(widget.parentLayoutNodeId))
+    .map((widget) => widget.config.formId);
+  if (formIds.length === 0) return;
+  const descriptors = formIds.map((formId) => (typeof formId === "string" ? forms.get(formId) : undefined)?.descriptor);
+  if (descriptors.every((descriptor) => descriptor != null && isPhiFormSingleColumn(descriptor))) {
+    throw new Error(
+      `Preset Overlay "${overlay.id}" holds the one-column Form "${String(formIds[0])}" at the full dialog width ` +
+      "(PHI_DIALOG_WIDTH). Hand the Form to `dialog` as `body.form`, or state `width: PHI_DIALOG_WIDTH_SINGLE_COLUMN`.",
+    );
   }
 }

@@ -31,7 +31,11 @@ import {
   PHI_REVISIONS_PAGE_WIDGET_IDS,
   PHI_REVISIONS_TABLE_WIDGET_ID,
 } from "../page-ids";
-import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../../helpers/cms-dialog";
+import {
+  PHI_DIALOG_BODY_CONFIG,
+  PHI_DIALOG_COMMANDS_CONFIG,
+  PHI_DIALOG_WIDTH_SINGLE_COLUMN,
+} from "../../../../helpers/cms-dialog";
 import { PHI_BUILDER_REVISIONS_KIND_SEARCH_PARAM } from "../../../../helpers/cms-scope-search-params";
 
 /** Where the history's kind stands in the address, for a `page` condition. */
@@ -124,7 +128,7 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
         label: "Builder delete area",
         config: {
           title: revisionsLabels.deleteArea.title,
-          width: { compact: "calc(100vw - 32px)", medium: 520, wide: 560 },
+          width: PHI_DIALOG_WIDTH_SINGLE_COLUMN,
           /*
            * `remount` rather than `lazy-keep`: the field is the confirmation, and a dialog that kept a
            * half-typed Area key from the last time it was opened would carry an answer across to a

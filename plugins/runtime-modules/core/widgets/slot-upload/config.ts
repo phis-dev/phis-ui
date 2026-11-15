@@ -34,6 +34,8 @@ export const PHI_SLOT_UPLOAD_WIDGET_TYPE = buildPhiCmsWidgetNamespacedTypeKey(
 );
 
 export type PhiSlotUploadWidgetConfig = PhiCmsWidgetConfigBase & {
+  /** What the field is called where it stands -- "Cover picture", "Further pictures". Absent draws none. */
+  label?: string;
   /** The Add-on that owns the table, by package name -- `@scope/name`. */
   addon?: string;
   table?: string;
@@ -44,11 +46,25 @@ export type PhiSlotUploadWidgetConfig = PhiCmsWidgetConfigBase & {
   signalRoutes?: PhiSignalRouteSet | null;
 };
 
-function parsePhiSlotUploadWidgetConfig(
+/*
+ * The label is read strictly: a stored value that is not text is a mistake in the document, and a field
+ * that renders anyway hides it. Absent, null and blank all mean the field carries no label.
+ */
+function readLabel(value: unknown): string | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value !== "string") {
+    throw new Error(`Invalid Slot upload label ${JSON.stringify(value)}. Expected text.`);
+  }
+  return value.trim() || undefined;
+}
+
+export function parsePhiSlotUploadWidgetConfig(
   config: Record<string, unknown>,
 ): PhiSlotUploadWidgetConfig {
+  const label = readLabel(config.label);
   return {
     ...readRenderableBlockConfig(config),
+    ...(label === undefined ? {} : { label }),
     addon: readString(config.addon),
     table: readString(config.table),
     slot: readString(config.slot),
@@ -67,6 +83,7 @@ export const PHI_SLOT_UPLOAD_WIDGET_DEFINITION = {
   description: "Puts a file into a declared slot on a row of an Add-on's table.",
   iconFamily: "media",
   fields: [
+    { key: "label", type: "string", label: "Label", description: "What the field is called where it stands." },
     { key: "addon", type: "string", label: "Add-on" },
     { key: "table", type: "string", label: "Table" },
     { key: "slot", type: "string", label: "Slot" },
@@ -74,6 +91,8 @@ export const PHI_SLOT_UPLOAD_WIDGET_DEFINITION = {
   ],
   defaultConfig: { ownerParam: "id" },
   parseConfig: parsePhiSlotUploadWidgetConfig,
+  // The label is written into the config, so the Widget translates it on the server.
+  translatesOwnText: true,
   runtimeSignals: {
     emits: [
       // So whatever shows the row can read it again. What changed is the row, not this widget.
@@ -92,5 +111,6 @@ export const PHI_SLOT_UPLOAD_WIDGET_DEFINITION = {
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiSlotUploadWidgetConfig>,
   | "kind" | "pluginKey" | "typeKey" | "slotSizePolicy" | "title" | "description"
-  | "category" | "iconFamily" | "fields" | "defaultConfig" | "parseConfig" | "runtimeSignals"
+  | "category" | "iconFamily" | "fields" | "defaultConfig" | "parseConfig" | "translatesOwnText"
+  | "runtimeSignals"
 >;

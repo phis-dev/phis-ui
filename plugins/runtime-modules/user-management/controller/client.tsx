@@ -13,6 +13,7 @@ import { usePhiRuntimeConditionStateResponder } from "../../../../components/run
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../components/runtime/runtime-signal-bus";
 import { dispatchPhiSignalCapability } from "../../../../components/runtime/runtime-signal-identity";
 import { usePhiTableProvider } from "../../../../components/widgets/client/shared/phi-table-provider";
+import { usePhiIntlLocale, usePhiIntlTimeZone } from "../../../../components/root/phi-intl-locale";
 import {
   PHI_USER_MANAGEMENT_RUNTIME_CONTROLLER_DEFINITION,
   type PhiUserManagementControllerConfig,
@@ -55,6 +56,8 @@ function PhiUserManagementControllerView({
     resourceKey: "users",
   }), []);
   const { provider } = usePhiTableProvider(source);
+  const locale = usePhiIntlLocale();
+  const timeZone = usePhiIntlTimeZone();
   // The route lets a Developer in; only a Site admin may change anything. Stated as the policy the
   // rest of the system speaks rather than as a role check, so a widened admin mask carries here too.
   const readOnly = !canPhiViewerAccess(runtime.viewer, PHI_VIEWER_ACCESS_SITE_ADMIN);
@@ -106,6 +109,8 @@ function PhiUserManagementControllerView({
         resourceKey: "users",
         rowIdentity,
         params: {},
+        locale,
+        timeZone,
         signal: new AbortController().signal,
       });
       if (workflowRef.current.correlationId !== correlationId) return;
@@ -114,7 +119,7 @@ function PhiUserManagementControllerView({
     } catch {
       workflowRef.current.selectedSelf = true;
     }
-  }, [conditionState, emitCapability, provider]);
+  }, [conditionState, emitCapability, locale, provider, timeZone]);
 
   usePhiRuntimeConditionStateResponder({ address, scope: "page", state: conditionState });
 

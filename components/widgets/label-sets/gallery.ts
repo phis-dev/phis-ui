@@ -19,6 +19,9 @@ const PHI_GALLERY_WIDGET_LABEL_SET = definePhiLabelSet({
     region: PHI_GALLERY_WIDGET_DEFAULT_LABELS.region,
     pages: definePhiMessageLabel(PHI_GALLERY_WIDGET_DEFAULT_LABELS.pages),
     unavailable: definePhiMessageLabel(PHI_GALLERY_WIDGET_DEFAULT_LABELS.unavailable),
+    canvas_folder: definePhiMessageLabel(PHI_GALLERY_WIDGET_DEFAULT_LABELS.canvasFolder),
+    canvas_no_folder: definePhiMessageLabel(PHI_GALLERY_WIDGET_DEFAULT_LABELS.canvasNoFolder),
+    canvas_record_field: definePhiMessageLabel(PHI_GALLERY_WIDGET_DEFAULT_LABELS.canvasRecordField),
   },
 });
 
@@ -35,5 +38,8 @@ export async function getPhiGalleryWidgetLabels(
     region: labels.region,
     pages: labels.pages,
     unavailable: labels.unavailable,
+    canvasFolder: labels.canvas_folder,
+    canvasNoFolder: labels.canvas_no_folder,
+    canvasRecordField: labels.canvas_record_field,
   };
 }

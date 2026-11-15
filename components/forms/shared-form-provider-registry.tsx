@@ -80,6 +80,8 @@ const PhiLazyNumberFormControl = lazyPhiFormFieldControl(() =>
   import("./extended-form-field-controls").then((module) => module.PhiNumberFormControl));
 const PhiLazyStorageSizeFormControl = lazyPhiFormFieldControl(() =>
   import("./extended-form-field-controls").then((module) => module.PhiStorageSizeFormControl));
+const PhiLazyMoneyFormControl = lazyPhiFormFieldControl(() =>
+  import("./extended-form-field-controls").then((module) => module.PhiMoneyFormControl));
 const PhiLazySliderFormControl = lazyPhiFormFieldControl(() =>
   import("./extended-form-field-controls").then((module) => module.PhiSliderFormControl));
 const PhiLazyCascaderFormControl = lazyPhiFormFieldControl(() =>
@@ -320,6 +322,9 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
     }),
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.linkTarget, {
       Control: PhiLazyLinkTargetFormControl,
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.money, {
+      Control: PhiLazyMoneyFormControl,
     }),
   ],
   validationRules: [

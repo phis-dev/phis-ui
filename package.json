@@ -882,7 +882,8 @@
         "createPhiRuntimeModuleRenderClientManifest",
         "definePhiRuntimeModuleRenderClient",
         "extendPhiRuntimeModuleRenderClientManifest",
-        "usePhiIntlLocale"
+        "usePhiIntlLocale",
+        "usePhiIntlTimeZone"
       ],
       "./runtime/signal-client": [
         "usePhiApplicationFeedback",

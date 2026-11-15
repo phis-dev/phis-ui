@@ -35,7 +35,7 @@ const LABEL_SET_KEY = "@phis/ui/modules/groups/labels/forms" as const;
  * Pages, Navigation, and Assets refer to. The Core route this relays to enforces that -- the form only
  * carries the two values a group starts with.
  */
-const PHI_GROUPS_CREATE_FORM_DESCRIPTOR: PhiFormDescriptor = {
+export const PHI_GROUPS_CREATE_FORM_DESCRIPTOR: PhiFormDescriptor = {
   schemaVersion: 1,
   key: PHI_GROUPS_FORM_IDS.create,
   labelSetKey: LABEL_SET_KEY,
@@ -81,7 +81,7 @@ const PHI_GROUPS_CREATE_FORM_DESCRIPTOR: PhiFormDescriptor = {
  * they already hold is changed in the cell it is read in -- the route accepts either, but a control
  * that means one thing is better than one that quietly means two.
  */
-const PHI_GROUPS_MEMBERSHIP_FORM_DESCRIPTOR: PhiFormDescriptor = {
+export const PHI_GROUPS_MEMBERSHIP_FORM_DESCRIPTOR: PhiFormDescriptor = {
   schemaVersion: 1,
   key: PHI_GROUPS_FORM_IDS.membership,
   labelSetKey: LABEL_SET_KEY,

@@ -5,6 +5,7 @@ import type { PhiCmsBuilderWidgetPlugin } from "../../../../../types";
 
 import { PHI_SLOT_UPLOAD_WIDGET_DEFINITION, type PhiSlotUploadWidgetConfig } from "./config";
 import { PhiSlotUploadWidgetClient } from "./client";
+import { PHI_SLOT_UPLOAD_WIDGET_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/slot-upload";
 
 /**
  * What an author states: where the file goes. What it takes is not among the fields, because the slot
@@ -13,7 +14,9 @@ import { PhiSlotUploadWidgetClient } from "./client";
 export const PHI_SLOT_UPLOAD_WIDGET_BUILDER_PLUGIN:
 PhiCmsBuilderWidgetPlugin<PhiSlotUploadWidgetConfig> = {
   ...PHI_SLOT_UPLOAD_WIDGET_DEFINITION,
-  renderEditor: ({ config }) => <PhiSlotUploadWidgetClient config={config} />,
+  renderEditor: ({ config }) => (
+    <PhiSlotUploadWidgetClient config={config} labels={PHI_SLOT_UPLOAD_WIDGET_DEFAULT_LABELS} />
+  ),
   renderEditorTools: ({ config, authoring }) => {
     const updateConfig = authoring?.updateConfig;
     if (!updateConfig) {

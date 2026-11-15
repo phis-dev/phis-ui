@@ -21,7 +21,11 @@ import {
   PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS,
   PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS,
 } from "../addresses";
-import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../../helpers/cms-dialog";
+import {
+  PHI_DIALOG_BODY_CONFIG,
+  PHI_DIALOG_COMMANDS_CONFIG,
+  PHI_DIALOG_WIDTH_SINGLE_COLUMN,
+} from "../../../../helpers/cms-dialog";
 import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 
 const SYNTHETIC_ADMIN_USERS_REGION_IDS = {
@@ -70,7 +74,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
     id: typeof PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS[keyof typeof PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS],
     rootLayoutNodeId: typeof PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS[keyof typeof PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS],
     title: string,
-    width: Record<string, string | number>,
+    width: Readonly<Record<string, string | number>>,
     key: string,
     formMode?: "create" | "edit",
   ) => nodes.overlay({
@@ -234,7 +238,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
         PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS.overlayCreate,
         PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS.layoutCreate,
         widgetLabels.editor.addTitle,
-        { compact: "calc(100vw - 32px)", medium: 600, wide: 640 },
+        PHI_DIALOG_WIDTH_SINGLE_COLUMN,
         "admin-users-create-modal",
         "create",
       ),
@@ -242,7 +246,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
         PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS.overlayEdit,
         PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS.layoutEdit,
         widgetLabels.editor.editTitle,
-        { compact: "calc(100vw - 32px)", medium: 600, wide: 640 },
+        PHI_DIALOG_WIDTH_SINGLE_COLUMN,
         "admin-users-edit-modal",
         "edit",
       ),

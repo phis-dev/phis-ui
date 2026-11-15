@@ -22,7 +22,11 @@ import { PHI_SHARED_FORM_IDS } from "../../../../components/forms/shared-form-id
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "../../../../components/regions/presets/phi-base-page-layout";
 import { getPhiThreadPageLabels } from "../labels";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
-import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../../helpers/cms-dialog";
+import {
+  PHI_DIALOG_BODY_CONFIG,
+  PHI_DIALOG_COMMANDS_CONFIG,
+  PHI_DIALOG_WIDTH_SINGLE_COLUMN,
+} from "../../../../helpers/cms-dialog";
 
 /** The content region of each Area's conversations Page. */
 const SYNTHETIC_THREADS_REGION_ID_BY_AREA = {
@@ -100,6 +104,8 @@ export async function buildPhiDefaultThreadsPageTree({
     label: "app-threads-reply-modal",
     config: {
       title: labels.composerLabel,
+      // Core's Reply Form is one column, and not this Module's to hand to `dialog` (`body.form`).
+      width: PHI_DIALOG_WIDTH_SINGLE_COLUMN,
       mountPolicy: "remount",
       closeMode: "immediate",
       openActionKey: "reply",
@@ -291,7 +297,7 @@ export async function buildPhiDefaultThreadsPageTree({
       label: "app-threads-new-modal",
       config: {
         title: labels.newConversationLabel,
-        width: { compact: "calc(100vw - 32px)", medium: 560, wide: 600 },
+        width: PHI_DIALOG_WIDTH_SINGLE_COLUMN,
         mountPolicy: "remount",
         closeMode: "request",
         signalRoutes: {

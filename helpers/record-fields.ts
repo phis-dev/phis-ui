@@ -1,4 +1,9 @@
+import { formatPhisMoney, type PhisPaymentMoney } from "@phis/contracts/payments";
+
+import type { PhiRuntimeModuleCatalogEntry } from "../types/cms-plugins";
+import type { PhiRuntimeDataProviderKey } from "../types/runtime-data-provider";
 import type {
+  PhiRecordDeclaration,
   PhiRecordField,
   PhiRecordFieldKind,
   PhiRecordFieldValueByKind,
@@ -6,6 +11,8 @@ import type {
   PhiRecordPicture,
   PhiRecordTag,
 } from "../types/record-provider";
+import { formatPhiDate } from "./format-date-time";
+import { isPhiMinorAmount, readPhiCurrencyExponent } from "./money-amount";
 
 /*
  * A record field's value, checked against its declared kind (`types/record-provider.ts`).
@@ -49,6 +56,14 @@ function readLink(value: unknown): PhiRecordLink | undefined {
   return typeof value.label === "string" && value.label ? { href, label: value.label } : { href };
 }
 
+/** The contract's money exactly: a currency a payment accepts and `minor` as an integer string. */
+function readMoney(value: unknown): PhisPaymentMoney | undefined {
+  if (!isRecord(value) || typeof value.currency !== "string" || readPhiCurrencyExponent(value.currency) === undefined) {
+    return undefined;
+  }
+  return isPhiMinorAmount(value.minor) ? { currency: value.currency, minor: value.minor } : undefined;
+}
+
 function readAll<T>(value: unknown, read: (entry: unknown) => T | undefined): readonly T[] | undefined {
   if (!Array.isArray(value)) return undefined;
   const entries = value.map(read);
@@ -77,25 +92,48 @@ export function readPhiRecordFieldValue(kind: PhiRecordFieldKind, value: unknown
       return typeof value === "string" && !Number.isNaN(Date.parse(value)) ? value : undefined;
     case "number":
       return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+    case "money":
+      return readMoney(value);
     case "link":
       return readLink(value);
   }
 }
 
-/** The kinds a line of text can show: a text as it is, a number and a date in the page's language. */
-export const PHI_RECORD_TEXT_FIELD_KINDS = ["text", "number", "date"] as const satisfies readonly PhiRecordFieldKind[];
+/**
+ * The kinds a line of text can show: a text as it is, a number, a date and an amount of money in the
+ * page's language.
+ */
+export const PHI_RECORD_TEXT_FIELD_KINDS = ["text", "number", "date", "money"] as const satisfies readonly PhiRecordFieldKind[];
 
-/** A text, number or date field as the words a page shows, written for `locale`. */
+/**
+ * A text, number, date or money field as the words a page shows, written for `locale`; a date on the
+ * calendar of the Site's `timeZone`, as every other date the page shows (`formatPhiDate`).
+ */
 export function formatPhiRecordFieldText(
   field: Extract<PhiRecordField, { kind: (typeof PHI_RECORD_TEXT_FIELD_KINDS)[number] }>,
   locale: string,
+  timeZone: string,
 ) {
-  if (field.kind === "text") return field.value;
-  try {
-    return field.kind === "number"
-      ? new Intl.NumberFormat(locale).format(field.value)
-      : new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(field.value));
-  } catch {
-    return String(field.value);
+  switch (field.kind) {
+    case "text":
+      return field.value;
+    case "number":
+      return new Intl.NumberFormat(locale).format(field.value);
+    case "date":
+      return formatPhiDate(field.value, locale, timeZone);
+    case "money":
+      return formatPhisMoney(field.value, locale);
   }
+}
+
+/**
+ * The declarations of the `record` Providers these Modules describe, by key: what a render's registry
+ * answers a record's fields from (`recordDeclarationsByKey`).
+ */
+export function buildPhiRecordDeclarationsByKey(
+  entries: readonly Pick<PhiRuntimeModuleCatalogEntry, "definition">[],
+): ReadonlyMap<PhiRuntimeDataProviderKey, PhiRecordDeclaration> {
+  return new Map(entries.flatMap((entry) =>
+    (entry.definition.dataProviders ?? []).flatMap((provider) =>
+      provider.kind === "record" && provider.record ? [[provider.key, provider.record] as const] : [])));
 }

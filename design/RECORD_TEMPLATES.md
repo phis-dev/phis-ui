@@ -82,12 +82,14 @@ related products need the shop's product list rebuilt on the Core Card collectio
   record's address into binding params. Placeholders would have been the smaller change, but text, image
   and title Widgets still could not show a field, and the template would have to carry the address.
 - **Declared field kinds, strict.** A record provider declares its fields: `text`, `markdown`,
-  `picture`, `pictures`, `list`, `tag`, and `date`, `number` and `link` -- Core formats a date and a number
-  in the page's language, and a link is what a licence's download or a record's own page is. A Widget
+  `picture`, `pictures`, `list`, `tag`, and `date`, `number`, `money` and `link` -- Core formats a date,
+  a number and an amount of money in the page's language, and a link is what a licence's download or a
+  record's own page is. A Widget
   handed a field of a kind it does not draw is a config error the Builder shows. Free paths into the
   record were the alternative: nothing for the Inspector to offer, and errors only on the page.
-- **Formatted fields from the Module, no Core price Widget.** A price is a `text` field the shop
-  formats. A Core price Widget is proposed only once a second Module shows prices and text is not enough.
+- **Money is a kind, no Core price Widget.** A price is a `money` field -- the amount, never a string
+  the shop formatted -- and Core writes it with `formatPhisMoney`; what surrounds it (a tax note, a
+  period) stays `text`. A Core price Widget is proposed only once text and `money` are not enough.
 - **A Page stored at an exact record path wins over the template**, as today, so one record can have a
   Page of its own.
 - **A provider says whose its record is.** `public` (a product: the same for everybody, so the page may

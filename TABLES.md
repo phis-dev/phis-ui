@@ -328,6 +328,40 @@ Standard entries persist the Ant Design color name, not a copied theme value; an
 color uses only the explicit structured custom shape. `tagVariant` applies uniformly to every Tag in
 the column rather than introducing per-value presentation branches.
 
+### Read renderers
+
+`renderer` names how a value is drawn, from one closed vocabulary (`PhiTableValueRenderer`) that a
+column and a `record` Widget field share; `renderPhiValueContent` is its single implementation. Each
+renderer accepts only the Provider field types listed here, and anything else is a contract error:
+
+| Renderer | Provider field type | What is drawn |
+| --- | --- | --- |
+| `text` (default) | any | the value as text, through `valueMap` |
+| `email`, `link`, `code`, `badge` | `string`, `enum` | a mail link, a link, inline code, one Tag |
+| `date`, `datetime` | the same type | the reader's locale, on the Site's time zone |
+| `tags` | `enum[]`, `json` | one Tag per entry |
+| `json` | `json` | inline code in a cell, indented in a record |
+| `switch`, `checkbox` | `boolean` | a read-only mark |
+| `icon` | `icon` | the named icon |
+| `money` | `json` | an amount of money in the reader's locale |
+| `interval` | `json` | a period in Core's words |
+
+`money` reads `{ currency, minor }`, the payment contract's `PhisPaymentMoney`, with `minor` an integer
+string or a safe non-negative integer of minor units, in a currency `PHIS_PAYMENT_CURRENCY_EXPONENTS`
+names. It is written with `formatPhisMoney` (`@phis/contracts/payments`) in the reader's locale
+(`usePhiIntlLocale`), with exactly the currency's own places -- two for the franc, none for the yen,
+three for the dinar -- and no digit passes through a float. A Provider hands over the amount, never a
+formatted string, so every Table, record and Module writes the same amount the same way.
+
+`interval` reads `PhiIntervalValue`, `{ unit: "day" | "week" | "month" | "year", count }` with a whole
+`count` of one or more, and says it with the words of Core's `value:interval` Label Set: "per month"
+for one, "every 3 months" for several. The words come from the Label Set rather than from `Intl`'s unit
+names, which say a length ("3 months") where a price needs a period, and which no translator can reach.
+The Table and record Widgets read the set on the server in the page's language and hand it to their
+Client half with their own labels.
+
+A value that is not of its renderer's shape draws nothing rather than its JSON.
+
 ### Provider field schema and cell editors
 
 Every field exposed by a Provider resource has one stable `key` and one closed semantic `type`. The
@@ -667,8 +701,19 @@ The generic Widget sends a Provider only:
 resourceKey
 opaque binding params
 normalized query
+locale and timeZone
 AbortSignal
 ```
+
+`locale` is the reader's language and `timeZone` the Site's (`usePhiIntlLocale`, `usePhiIntlTimeZone`),
+filled by the binding from the page's Intl context on every query and every record read
+(`PhiTableProviderQueryRequest`, `PhiTableProviderRecordRequest`). They are for a Provider that writes
+words, amounts or dates into what it answers, and they are part of what makes a query new: when the
+reader switches language live, the Table queries again and an open `record` Widget reads its record
+again. A Form's record read carries them too but is not repeated on a switch, because its values are
+what somebody is editing. A Provider that answers raw values -- an amount as `money`, a period as
+`interval`, an instant as `datetime` -- needs neither, and that is the better shape: the renderer writes
+them in the reader's language without a second request.
 
 It must not send the complete Widget config. Providers cannot inspect titles, columns, layout,
 presentation, signal routes, or other CMS state.

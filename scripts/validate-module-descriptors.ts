@@ -637,6 +637,7 @@ const buildTestCatalog = (
   themeByKey: new Map(),
   themeBlockByKey: new Map(),
   sourceLocaleByModuleId: new Map([[TEST_MODULE_ID, "en"]]),
+  formDefinitionsById: new Map(),
 });
 const activeTestModules = new Set([TEST_MODULE_ID]);
 const precedenceTable = compilePhiCmsActiveRouteTable({

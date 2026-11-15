@@ -9,6 +9,7 @@ import type { PhiCmsMediaPickerWidgetConfig } from "../../types/media";
 import type { PhiSearchWidgetLabels } from "../widgets/label-types/search";
 import { usePhiControlSignalController } from "../widgets/client/shared/phi-control-signals";
 import { usePhiCollectionProvider } from "../widgets/client/shared/phi-collection-provider";
+import { usePhiIntlLocale, usePhiIntlTimeZone } from "../root/phi-intl-locale";
 import { PhiMediaPickerControl } from "../controls/phi-media-picker-control";
 import { normalizePhiMediaPickerMinColumnWidth } from "../controls/phi-media-picker-control-contract";
 import type { PhiAssetWidgetLabels } from "./media-widget-labels";
@@ -104,6 +105,8 @@ export function usePhiMediaPickerBinding({
     : null;
   const source = config?.dataSource ?? PHI_ASSET_COLLECTION_DATA_SOURCE;
   const { provider, bindingError } = usePhiCollectionProvider(source);
+  const locale = usePhiIntlLocale();
+  const timeZone = usePhiIntlTimeZone();
   const folderOptions = useMemo(() => buildPhiMediaFolderCascaderOptions(folders), [folders]);
   const spaceOptions = useMemo(
     () => buildPhiMediaSpaceOptions(spaces, labels.space),
@@ -144,6 +147,8 @@ export function usePhiMediaPickerBinding({
           resourceKey: source.resourceKey,
           query,
           params: "params" in source ? source.params : undefined,
+          locale,
+          timeZone,
           signal: abortController.signal,
         });
         if (abortController.signal.aborted) return;
@@ -172,7 +177,7 @@ export function usePhiMediaPickerBinding({
     };
     void load();
     return () => abortController.abort();
-  }, [isOpen, provider, query, refreshToken, source]);
+  }, [isOpen, locale, provider, query, refreshToken, source, timeZone]);
 
   const resolvedAssets = provider && source ? assets : [];
 

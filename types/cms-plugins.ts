@@ -743,6 +743,17 @@ export type PhiCmsRuntimeRenderRegistry = {
     PhiRuntimeDataProviderKey,
     () => Promise<import("./record-provider").PhiRuntimeRecordSamplesReader>
   >;
+  /**
+   * What each active Module's `record` Providers that declare fields consist of, by key: whose the record
+   * is and its declared fields. Keyed off the active set like the loaders, and apart from
+   * `dataProviderDescriptorsByKey`, which holds only what the trees make the browser mount and so never a
+   * `record` Provider.
+   */
+  recordDeclarationsByKey: ReadonlyMap<
+    PhiRuntimeDataProviderKey,
+    import("./record-provider").PhiRecordDeclaration
+  >;
+  /** The Providers the trees make the browser mount, by key; a `record` Provider is never one of them. */
   dataProviderDescriptorsByKey: ReadonlyMap<
     PhiRuntimeDataProviderKey,
     PhiRuntimeModuleDataProviderDescriptor

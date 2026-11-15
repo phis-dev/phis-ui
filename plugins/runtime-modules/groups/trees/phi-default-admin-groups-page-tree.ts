@@ -19,7 +19,12 @@ import {
   buildPhiGroupSettingColumns,
   buildPhiGroupsFooter,
 } from "./group-tables";
-import { PHI_GROUPS_FORM_IDS } from "../forms";
+import {
+  PHI_GROUPS_CREATE_FORM_DESCRIPTOR,
+  PHI_GROUPS_FORM_IDS,
+  PHI_GROUPS_MEMBERSHIP_FORM_DESCRIPTOR,
+} from "../forms";
+import type { PhiFormDescriptor } from "../../../../types";
 import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 
 const SYNTHETIC_ADMIN_GROUPS_REGION_IDS = {
@@ -76,6 +81,7 @@ export async function buildPhiDefaultAdminGroupsPageTree({
     },
     text: { title: string; submit: string },
     formId: (typeof PHI_GROUPS_FORM_IDS)[keyof typeof PHI_GROUPS_FORM_IDS],
+    descriptor: PhiFormDescriptor,
     openActionKey: string,
     overlayAddress: ReturnType<typeof createPhiSignalAddress>,
     formAddress: ReturnType<typeof createPhiSignalAddress>,
@@ -86,6 +92,8 @@ export async function buildPhiDefaultAdminGroupsPageTree({
       bodyLayoutNodeId: ids.body,
       sortOrder,
       label: `admin-groups-${workflow}-modal`,
+      // The dialog takes the width its Form needs.
+      body: { form: { descriptor } },
       config: {
         title: text.title,
         // Opened afresh each time, so a dialog cancelled half filled starts empty again.
@@ -215,6 +223,7 @@ export async function buildPhiDefaultAdminGroupsPageTree({
     },
     { title: labels.create.title, submit: labels.actions.create },
     PHI_GROUPS_FORM_IDS.create,
+    PHI_GROUPS_CREATE_FORM_DESCRIPTOR,
     "create",
     createOverlayAddress,
     createFormAddress,
@@ -231,6 +240,7 @@ export async function buildPhiDefaultAdminGroupsPageTree({
     },
     { title: labels.membership.title, submit: labels.membership.submit },
     PHI_GROUPS_FORM_IDS.membership,
+    PHI_GROUPS_MEMBERSHIP_FORM_DESCRIPTOR,
     "addMember",
     membershipOverlayAddress,
     membershipFormAddress,

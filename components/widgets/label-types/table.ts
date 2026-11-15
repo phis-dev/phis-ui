@@ -1,3 +1,5 @@
+import { PHI_INTERVAL_DEFAULT_LABELS, type PhiIntervalLabels } from "./interval";
+
 export type PhiTableWidgetLabels = {
   search: string;
   reset: string;
@@ -17,6 +19,8 @@ export type PhiTableWidgetLabels = {
   dragRow: string;
   moveRowUp: string;
   moveRowDown: string;
+  /** The words of the `interval` renderer, from their own Label Set. */
+  interval: PhiIntervalLabels;
 };
 
 export const PHI_TABLE_WIDGET_DEFAULT_LABELS: PhiTableWidgetLabels = {
@@ -38,6 +42,7 @@ export const PHI_TABLE_WIDGET_DEFAULT_LABELS: PhiTableWidgetLabels = {
   dragRow: "Drag row",
   moveRowUp: "Move row up",
   moveRowDown: "Move row down",
+  interval: PHI_INTERVAL_DEFAULT_LABELS,
 };
 
 export function formatPhiTableWidgetLabel(

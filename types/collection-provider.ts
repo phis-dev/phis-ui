@@ -98,6 +98,13 @@ export type PhiCollectionProviderQueryRequest = {
   resourceKey: string;
   query: PhiCollectionProviderQuery;
   params?: Record<string, unknown>;
+  /**
+   * The reader's language and the Site's time zone (`usePhiIntlLocale`, `usePhiIntlTimeZone`), filled by
+   * the binding, for a Provider that writes words, amounts or dates into what it answers. Part of the
+   * binding's load key: a live language switch asks again.
+   */
+  locale: string;
+  timeZone: string;
   signal: AbortSignal;
 };
 

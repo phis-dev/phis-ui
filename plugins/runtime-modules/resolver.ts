@@ -40,6 +40,7 @@ import { stripRenderableBlockDefaults } from "../../helpers/renderable-block-ser
 import type { PhiRenderableBlockBase } from "../../types/renderable-block";
 import { PhiCmsWidgetType } from "../../constants/cms-widget-types";
 import { parsePhiFormWidgetConfig } from "../../components/forms/form-widget-config";
+import { buildPhiRecordDeclarationsByKey } from "../../helpers/record-fields";
 
 function loadRuntimeWidgetPlugin(entry: PhiRuntimeModuleWidgetDefinition) {
   return entry.loadRuntime();
@@ -895,6 +896,12 @@ export async function resolvePhiRuntimeRenderRegistry({
       [...moduleSet.moduleDefinitionsById.keys()].flatMap((moduleId) =>
         (catalog.get(moduleId)?.recordProviders ?? []).flatMap((provider) =>
           provider.loadSamples ? [[provider.key, provider.loadSamples] as const] : [])),
+    ),
+    recordDeclarationsByKey: buildPhiRecordDeclarationsByKey(
+      [...moduleSet.moduleDefinitionsById.keys()].flatMap((moduleId) => {
+        const entry = catalog.get(moduleId);
+        return entry ? [entry] : [];
+      }),
     ),
     dataProviderDescriptorsByKey,
     formDefinitionsById: moduleSet.formDefinitionsById,

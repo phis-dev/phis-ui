@@ -19,6 +19,7 @@ import { isPhiControllerSignalAddress } from "../../types/signals";
 import { readPhiRuntimeConditionStateSignalValue } from "../../types/runtime-condition";
 import { collectPhiRuntimeValueConditions } from "../../types/runtime-condition";
 import { usePhiTableProvider } from "../widgets/client/shared/phi-table-provider";
+import { usePhiIntlLocale, usePhiIntlTimeZone } from "../root/phi-intl-locale";
 import { PhiFormControl, type PhiFormControlFormInstance } from "../controls/phi-form-control";
 import { readPhiRuntimeFormValuesSignalValue } from "./runtime-form-state";
 import { resolvePhiFormText } from "./form-descriptor-contract";
@@ -75,6 +76,17 @@ export function PhiFormDescriptorRuntimeClient({
   const emitSignal = usePhiSignalEmitter(identity.sender);
   const source = widgetConfig?.source ?? null;
   const { provider, resource, bindingError } = usePhiTableProvider(source);
+  /*
+   * Sent with the record read, but held in a ref rather than made part of what starts one: a Form's
+   * values are what somebody is editing, and a language switch that read the record again would throw
+   * their edits away. The next read takes the language that is current then.
+   */
+  const locale = usePhiIntlLocale();
+  const timeZone = usePhiIntlTimeZone();
+  const intlRef = useRef({ locale, timeZone });
+  useEffect(() => {
+    intlRef.current = { locale, timeZone };
+  }, [locale, timeZone]);
   const initialValuesInput = widgetConfig?.formConfig.initialValues;
   const initialValuesFromQueryInput = widgetConfig?.formConfig.initialValuesFromQuery;
   const page = usePhiRuntimePageConditionState();
@@ -209,6 +221,7 @@ export function PhiFormDescriptorRuntimeClient({
       resourceKey: source.resourceKey,
       rowIdentity,
       params: source.params,
+      ...intlRef.current,
       signal,
     });
   }, [bindingError, configuredInitialValues, provider, resource?.recordRead, source]);

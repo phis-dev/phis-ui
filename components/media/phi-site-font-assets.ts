@@ -6,6 +6,7 @@ import { PhiMediaKind } from "../../constants/media";
 import { createPhiAssetUri } from "../../types/references";
 import type { PhiFontMetrics, PhiMediaAssetTile } from "../../types/media";
 import { usePhiCollectionProvider } from "../widgets/client/shared/phi-collection-provider";
+import { usePhiIntlLocale, usePhiIntlTimeZone } from "../root/phi-intl-locale";
 import { PHI_ASSET_COLLECTION_DATA_SOURCE } from "./asset-collection-runtime";
 import { readPhiMediaAssetTiles } from "./phi-image-preview-data";
 
@@ -55,6 +56,8 @@ function readFontAssetLabel(asset: PhiMediaAssetTile) {
  */
 export function usePhiSiteFontAssets(enabled = true) {
   const { provider } = usePhiCollectionProvider(PHI_ASSET_COLLECTION_DATA_SOURCE);
+  const locale = usePhiIntlLocale();
+  const timeZone = usePhiIntlTimeZone();
   const [assets, setAssets] = useState<PhiMediaAssetTile[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,6 +78,8 @@ export function usePhiSiteFontAssets(enabled = true) {
         sortOrder: "descending",
         filters: { kind: PhiMediaKind.Font },
       },
+      locale,
+      timeZone,
       signal: abortController.signal,
     }).then((data) => {
       if (abortController.signal.aborted) return;
@@ -92,7 +97,7 @@ export function usePhiSiteFontAssets(enabled = true) {
       if (!abortController.signal.aborted) setLoading(false);
     });
     return () => abortController.abort();
-  }, [enabled, provider]);
+  }, [enabled, locale, provider, timeZone]);
 
   const options = useMemo<readonly PhiSiteFontAssetOption[]>(
     () => assets

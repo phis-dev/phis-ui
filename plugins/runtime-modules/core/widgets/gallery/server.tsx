@@ -20,7 +20,7 @@ export type PhiGalleryWidgetServerProps = {
   /** Where the record binding is answered; absent outside a page render, where nothing is bound. */
   registry?: Pick<
     PhiCmsRuntimeRenderRegistry,
-    "recordProviderLoadersByKey" | "recordFieldsLoadersByKey" | "dataProviderDescriptorsByKey"
+    "recordProviderLoadersByKey" | "recordFieldsLoadersByKey" | "recordDeclarationsByKey"
   >;
   config: PhiCmsGalleryWidgetConfig;
   widgetId?: PhiCmsInstanceId | null;

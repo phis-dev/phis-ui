@@ -12,6 +12,7 @@ import type {
 import type { PhiViewerAccessPolicy } from "./access";
 import type { PhiSignalRoute } from "./signals";
 import type { PhiCmsInstanceId } from "./cms-instance-id";
+import type { PhiRuntimeModuleFormDefinition } from "../components/forms/form-registry";
 
 export type PhiRuntimeModuleId = `${string}/${string}`;
 
@@ -528,6 +529,8 @@ export type PhiCmsCompiledDescriptorCatalog = {
   themeBlockByKey: ReadonlyMap<string, PhiCmsThemeBlockBinding>;
   /** Each Module's source language: the one the text its descriptors ship is written in. */
   sourceLocaleByModuleId: ReadonlyMap<PhiRuntimeModuleId, string>;
+  /** The Forms the Modules ship, by id: what the tree contract reads a dialog's Form from. */
+  formDefinitionsById: ReadonlyMap<string, PhiRuntimeModuleFormDefinition>;
 };
 
 export type PhiCmsActiveRouteTable = {

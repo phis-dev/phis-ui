@@ -1,6 +1,7 @@
 "use client";
 
 import { readPhiDotPath } from "../../helpers/dot-path";
+import { usePhiIntlLocale, usePhiIntlTimeZone } from "../root/phi-intl-locale";
 import {
   createContext,
   createElement,
@@ -69,6 +70,13 @@ export type PhiControlOptionsProviderContext<TValue extends string | number = st
    * knowing which field supplies it or where that field lives.
    */
   dependencies: Record<string, unknown>;
+  /**
+   * The reader's language and the Site's time zone (`usePhiIntlLocale`, `usePhiIntlTimeZone`), for a
+   * provider whose option labels are words, amounts or dates. The hook puts both into every load key,
+   * outside `resolveLoadKey` like the dependencies, so a live language switch asks again.
+   */
+  locale: string;
+  timeZone: string;
   snapshot: unknown;
   asyncData: unknown;
 };
@@ -342,6 +350,8 @@ export function usePhiControlOptionsProvider<TValue extends string | number = st
     }),
     [optionsProvider?.dependencies, formValues, sourceConfig],
   );
+  const locale = usePhiIntlLocale();
+  const timeZone = usePhiIntlTimeZone();
   const defaultProviderLoadKey = JSON.stringify({
     providerKey: optionsProvider?.providerKey ?? null,
     area: optionsProvider?.area ?? null,
@@ -357,11 +367,15 @@ export function usePhiControlOptionsProvider<TValue extends string | number = st
     // keystroke, so taking the search into account is the searching provider's own decision.
     search,
     dependencies: dependencyValues,
+    locale,
+    timeZone,
     snapshot: providerSnapshot,
   };
+  // The language and the zone are prefixed for the same reason the dependencies are.
   const providerLoadKey = registeredProvider?.load
     ? [
         registeredProvider.key,
+        JSON.stringify([locale, timeZone]),
         JSON.stringify(dependencyValues),
         registeredProvider.resolveLoadKey?.(loadContext) ?? defaultProviderLoadKey,
       ].join(":")
@@ -448,6 +462,8 @@ export function usePhiControlOptionsProvider<TValue extends string | number = st
         sourceConfig,
         search,
         dependencies: dependencyValues,
+        locale,
+        timeZone,
         snapshot: providerSnapshot,
         asyncData,
       }),
@@ -458,6 +474,8 @@ export function usePhiControlOptionsProvider<TValue extends string | number = st
     searchState,
     dependenciesSatisfied,
     dependencyValues,
+    locale,
+    timeZone,
     asyncData,
     asyncError,
     asyncPending,

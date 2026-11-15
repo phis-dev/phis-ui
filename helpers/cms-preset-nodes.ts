@@ -1,3 +1,5 @@
+import type { PhiFormDescriptor } from "@phis/contracts/forms";
+
 import {
   buildPhiCmsLayoutNode,
   buildPhiCmsWidgetNode,
@@ -5,7 +7,12 @@ import {
   type PhiCmsWidgetPlacementFields,
 } from "./cms-node-factories";
 import { PhiCmsStatus } from "../constants/phi-cms";
-import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG, PHI_DIALOG_WIDTH } from "./cms-dialog";
+import {
+  PHI_DIALOG_BODY_CONFIG,
+  PHI_DIALOG_COMMANDS_CONFIG,
+  PHI_DIALOG_WIDTH,
+  resolvePhiDialogFormWidth,
+} from "./cms-dialog";
 import type { PhiCommandToolbarWidgetPlacement } from "../types/core-widget-placements";
 import type {
   PhiCmsContentWidgetNode,
@@ -97,18 +104,24 @@ export type PhiCmsPresetOverlayInput = {
  *
  * What it decides is what differs between dialogs: its ids, its title and wiring, what extra the body
  * Layout carries (a form's label column, say), and its buttons. How the body and the actions look is the
- * one answer every dialog shares (`helpers/cms-dialog.ts`), so it is not an input.
+ * one answer every dialog shares (`helpers/cms-dialog.ts`), so it is not an input. Nor is the width, as
+ * long as the dialog can see the Form it holds: given `body.form`, it takes the width that Form needs
+ * (`resolvePhiDialogFormWidth`); given none, `PHI_DIALOG_WIDTH`. A width in `config` is the caller's
+ * own, for a table or an editor that needs more.
  */
 export type PhiCmsPresetDialogInput = {
   id: PhiCmsInstanceId;
   bodyLayoutNodeId: PhiCmsInstanceId;
   sortOrder: number;
   label: string | null;
-  /** The Overlay's config: title, mount and close policy, open action, routes. `width` defaults. */
+  /** The Overlay's config: title, mount and close policy, open action, routes. `width` follows `body.form`. */
   config: Record<string, unknown>;
   headerLayoutNodeId?: PhiCmsInstanceId | null;
-  /** Config the body Layout carries besides the dialog's own: anything but its gap, padding and ground. */
-  body?: { label?: string; config?: Record<string, unknown> };
+  /**
+   * The body Layout: its label, the config it carries besides the dialog's own (anything but its gap,
+   * padding and ground), and the Form the Preset places in it, which the dialog takes its width from.
+   */
+  body?: { label?: string; config?: Record<string, unknown>; form?: { descriptor: PhiFormDescriptor } };
   /** The actions, where the dialog has any. */
   commands?: {
     footerLayoutNodeId: PhiCmsInstanceId;
@@ -235,7 +248,8 @@ function createPhiCmsPresetNodeSet(defaults: PhiCmsPresetNodeDefaults) {
         creationPreset: { layoutKind: "verticalflex", preset: "panel" },
         config: { ...input.body?.config, ...PHI_DIALOG_BODY_CONFIG },
       });
-      const config = { width: PHI_DIALOG_WIDTH, ...input.config };
+      const form = input.body?.form;
+      const config = { width: form ? resolvePhiDialogFormWidth(form.descriptor) : PHI_DIALOG_WIDTH, ...input.config };
       const commands = input.commands;
       if (!commands) {
         return {

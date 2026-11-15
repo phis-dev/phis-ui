@@ -21,6 +21,9 @@ import type {
   PhiTableWidgetFeatures,
   PhiTableWidgetPresentation,
 } from "./table-widget";
+import type { PhiRecordWidgetConfig, PhiRecordWidgetPresentation } from "./record-widget";
+import type { PhiChoiceOptionsConfig, PhiChoiceValueMode } from "../components/widgets/config/choice-shared";
+import type { PhiCmsTabBarWidgetConfig } from "../components/widgets/config/stack-tabs";
 import type { PhiButtonVariant } from "../components/widgets/config/button-variant";
 import type { PhiThemeGradientKey } from "../theme/phi-theme-gradients";
 import type { PhiTextTone } from "../components/widgets/config/text-tone";
@@ -225,6 +228,43 @@ export type PhiTableWidgetPlacement = PhiWidgetPlacementBase & {
   initialQuery?: PhiTableQuery;
   fixedFilters?: PhiTableWidgetConfig["fixedFilters"];
   source?: PhiProviderResourceSource | null;
+};
+
+// Record
+
+/** Which row it shows arrives as a signal from a row action; the placement says how to read it. */
+export type PhiRecordWidgetPlacement = PhiWidgetPlacementBase & {
+  source?: PhiRecordWidgetConfig["source"];
+  openActionKey?: PhiRecordWidgetConfig["openActionKey"];
+  presentation?: Partial<PhiRecordWidgetPresentation>;
+};
+
+// Slot upload
+
+/**
+ * Where a file goes: the Add-on, its table and the slot. What the slot takes is the Add-on's schema
+ * descriptor's answer and is not placed. Written out here rather than read off the Widget's config,
+ * because the Foundation does not import a Module, not even for a type.
+ */
+export type PhiSlotUploadWidgetPlacement = PhiWidgetPlacementBase & {
+  /** What the field is called where it stands; translated like every text written into a config. */
+  label?: string;
+  /** The Add-on that owns the table, by package name -- `@scope/name`. */
+  addon?: string;
+  table?: string;
+  slot?: string;
+  /** Which binding parameter carries the row; `id` where none is named. */
+  ownerParam?: string;
+};
+
+// Tab bar
+
+export type PhiTabBarWidgetPlacement = PhiWidgetPlacementBase &
+  PhiControlPlacement &
+  Partial<PhiChoiceOptionsConfig> & {
+  value?: string;
+  valueMode?: PhiChoiceValueMode;
+  placement?: PhiCmsTabBarWidgetConfig["placement"];
 };
 
 // Form
@@ -532,6 +572,9 @@ export type PhiCoreWidgetPlacements = {
   spacer: PhiSpacerWidgetPlacement;
   html: PhiHtmlWidgetPlacement;
   table: PhiTableWidgetPlacement;
+  record: PhiRecordWidgetPlacement;
+  "slot-upload": PhiSlotUploadWidgetPlacement;
+  "tab-bar": PhiTabBarWidgetPlacement;
   form: PhiFormWidgetPlacement;
   "collection-view": PhiCollectionViewWidgetPlacement;
   "command-toolbar": PhiCommandToolbarWidgetPlacement;

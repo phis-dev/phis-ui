@@ -472,6 +472,22 @@ Overlay, and the Widgets sit in their slots at sequential slot indexes. The foot
 Command Toolbar, not buttons the container draws; a button that must wait for the body enables itself
 through the normal `enabled` channel from whatever in the body decides it.
 
+A dialog is as wide as its Form needs (`helpers/cms-dialog.ts`). A Form of one column takes
+`PHI_DIALOG_WIDTH_SINGLE_COLUMN`: `contentMaxNarrow` -- the 377px from which a Form puts its labels beside
+its fields (`PHI_FORM_RESPONSIVE_MIN_WIDTH.medium`) -- plus the body's `base` inset on both sides, so the
+Form keeps that width inside the body. A Form of two columns keeps `PHI_DIALOG_WIDTH`, the reading measure
+`contentMax`; a table, a preview or an editor states a wider width of its own. Both answer
+`calc(100vw - 32px)` at `compact`. A Form is one column when no field, at `medium` or `wide`, leaves part
+of its row free -- a field whose label and control together do not span the whole grid leaves room for a
+second one beside it, and that is two columns (`isPhiFormSingleColumn`).
+
+`dialog` on `createPhiCmsPresetNodes` picks the width itself from the Form it is handed as `body.form`
+(its definition, or `{ descriptor }`); handed none, it keeps `PHI_DIALOG_WIDTH`, and a `width` in its
+`config` is the caller's own and always wins. The descriptor compiler checks the result against the Forms
+the active Modules ship: a modal at exactly `PHI_DIALOG_WIDTH` whose body holds only Forms of one column is
+refused. Any other stated width passes, and a Form the compiler cannot see -- one stored on the Site -- is
+not judged.
+
 A Builder-only prompt is not exempt for being Builder-only. `mountPolicy` and the Area preset are where a
 workspace dialog belongs just as much as a public one; "it only shows up in the Builder" describes who
 sees it, not what it is.

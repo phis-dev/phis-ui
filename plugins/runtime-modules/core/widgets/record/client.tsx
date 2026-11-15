@@ -6,6 +6,7 @@ import { readPhiDotPath } from "../../../../../helpers/dot-path";
 import { PhiDescriptionListControl } from "../../../../../components/controls/phi-description-list-control";
 import { PhiEmptyControl } from "../../../../../components/controls/phi-empty-control";
 import { PhiSkeletonControl } from "../../../../../components/controls/phi-skeleton-control";
+import { usePhiIntlLocale, usePhiIntlTimeZone } from "../../../../../components/root/phi-intl-locale";
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
 import { usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
 import { renderPhiValueContent } from "../../../../../components/widgets/client/shared/phi-rendered-value";
@@ -50,6 +51,9 @@ export function PhiRecordWidgetClient({
    */
   const listenRoutes = useMemo(() => config.signalRoutes?.listens ?? [], [config.signalRoutes?.listens]);
   const { provider, resource, bindingError } = usePhiTableProvider(config.source);
+  // Sent with the read and part of what makes one new: an open record is read again after a switch.
+  const locale = usePhiIntlLocale();
+  const timeZone = usePhiIntlTimeZone();
   const [selectedRowIdentity, setSelectedRowIdentity] = useState<PhiTableRowIdentity | null>(null);
   const [record, setRecord] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
@@ -85,6 +89,8 @@ export function PhiRecordWidgetClient({
         resourceKey: config.source.resourceKey,
         rowIdentity,
         params: config.source.params,
+        locale,
+        timeZone,
         signal: abortController.signal,
       });
       if (!abortController.signal.aborted) {
@@ -105,7 +111,7 @@ export function PhiRecordWidgetClient({
         setLoading(false);
       }
     }
-  }, [bindingError, config.source, labels, provider, resource?.recordRead]);
+  }, [bindingError, config.source, labels, locale, provider, resource?.recordRead, timeZone]);
 
   usePhiSignalListener(useCallback((signal) => {
     const route = listenRoutes.find((candidate) =>
@@ -162,7 +168,7 @@ export function PhiRecordWidgetClient({
         key: field.key,
         label: field.label,
         full: field.full,
-        value: renderPhiValueContent(readPhiDotPath(record, field.fieldKey), field, "block"),
+        value: renderPhiValueContent(readPhiDotPath(record, field.fieldKey), field, labels, "block"),
       }))}
     />
   );

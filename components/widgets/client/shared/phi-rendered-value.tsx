@@ -1,8 +1,11 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { formatPhisMoney, type PhisPaymentMoney } from "@phis/contracts/payments";
 
 import { formatPhiDate, formatPhiDateTime } from "../../../../helpers/format-date-time";
+import { readPhiMoneyValue } from "../../../../helpers/money-amount";
+import { formatPhiInterval, readPhiIntervalValue, type PhiIntervalLabels } from "../../label-types/interval";
 import { usePhiIntlLocale, usePhiIntlTimeZone } from "../../../root/phi-intl-locale";
 import type {
   PhiTableTagColor,
@@ -32,6 +35,14 @@ export type PhiRenderedValueDefinition = {
   valueMap?: Readonly<Record<string, string>>;
   tagColorMap?: Readonly<Record<string, PhiTableTagColor>>;
   tagVariant?: PhiTableTagVariant;
+};
+
+/**
+ * The words a renderer needs that are not in the value: Core's, from a Label Set the Widget's server
+ * half read in the page's language. Only `interval` has any.
+ */
+export type PhiRenderedValueLabels = {
+  interval: PhiIntervalLabels;
 };
 
 /**
@@ -76,12 +87,30 @@ function PhiRenderedDate({ value, withTime }: { value: string; withTime: boolean
   return withTime ? formatPhiDateTime(value, locale, timeZone) : formatPhiDate(value, locale, timeZone);
 }
 
+/** The reader's locale, not the server's or the browser's, and the currency's own places. */
+function PhiRenderedMoney({ value }: { value: PhisPaymentMoney }) {
+  return formatPhisMoney(value, usePhiIntlLocale());
+}
+
 export function renderPhiValueContent(
   value: unknown,
   definition: PhiRenderedValueDefinition,
+  labels: PhiRenderedValueLabels,
   presentation: PhiRenderedValuePresentation = "cell",
 ): ReactNode {
   if (value == null || value === "") return null;
+  /*
+   * Read before anything is stringified: both are objects, and a value that is not one of them draws
+   * nothing rather than its JSON -- a cell that says `{"currency":"CHF"}` is no amount of money.
+   */
+  if (definition.renderer === "money") {
+    const money = readPhiMoneyValue(value);
+    return money ? <PhiRenderedMoney value={money} /> : null;
+  }
+  if (definition.renderer === "interval") {
+    const interval = readPhiIntervalValue(value);
+    return interval ? formatPhiInterval(interval, labels.interval) : null;
+  }
   const normalizedValue = normalizePhiRenderedText(value);
   const displayValue = definition.valueMap?.[normalizedValue] ?? normalizedValue;
   if (definition.renderer === "email" || definition.renderer === "link") {

@@ -1,3 +1,5 @@
+import type { PhisPaymentMoney } from "@phis/contracts/payments";
+
 import type { PhiRecordFieldKind } from "../constants/record-field-kinds";
 import type { PhiRuntimeDataProviderBinding, PhiRuntimeDataProviderKey } from "./runtime-data-provider";
 import type { PhiBlockRuntime } from "./widget-runtime";
@@ -80,8 +82,10 @@ export type PhiRecordTag = { label: string; tone?: "default" | "success" | "warn
 export type PhiRecordLink = { href: string; label?: string };
 
 /**
- * What a field of each kind holds. A `date` is an ISO instant and a `number` a number: Core writes both in
- * the page's language. What a domain formats itself is a `text`.
+ * What a field of each kind holds. A `date` is an ISO instant, a `number` a number and a `money` the
+ * payment contract's amount (`{ currency, minor }`, `minor` an integer string of minor units): Core writes
+ * all three in the page's language -- a date in the Site's time zone, money with its currency's own
+ * places (`formatPhisMoney`). What a domain formats itself is a `text`.
  */
 export type PhiRecordFieldValueByKind = {
   text: string;
@@ -92,6 +96,7 @@ export type PhiRecordFieldValueByKind = {
   tag: PhiRecordTag;
   date: string;
   number: number;
+  money: PhisPaymentMoney;
   link: PhiRecordLink;
 };
 

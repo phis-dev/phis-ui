@@ -101,7 +101,24 @@ export type PhiTableValueRenderer =
   | "json"
   | "switch"
   | "checkbox"
-  | "icon";
+  | "icon"
+  /**
+   * An amount of money, `{ currency, minor }` -- the payment contract's `PhisPaymentMoney`, with `minor`
+   * an integer string or a safe integer of minor units -- written in the reader's language with the
+   * currency's own number of places (`formatPhisMoney`). Bound to a `json` field.
+   */
+  | "money"
+  /**
+   * How long a period is, `PhiIntervalValue` (`{ unit: "month", count: 3 }`), in Core's words: "per
+   * month", "every 3 months". Bound to a `json` field.
+   */
+  | "interval";
+
+/** The unit of a `PhiIntervalValue`. */
+export type PhiIntervalUnit = "day" | "week" | "month" | "year";
+
+/** A period of `count` (a whole number, one or more) `unit`s, as the `interval` renderer draws it. */
+export type PhiIntervalValue = { unit: PhiIntervalUnit; count: number };
 
 export type PhiTableColumnDefinition = {
   key: string;
@@ -651,6 +668,13 @@ export type PhiTableProviderQueryRequest = {
   resourceKey: string;
   query: PhiTableQuery;
   params?: Record<string, unknown>;
+  /**
+   * The reader's language and the Site's time zone (`usePhiIntlLocale`, `usePhiIntlTimeZone`), filled by
+   * the binding, for a Provider that writes words, amounts or dates into what it answers. Part of the
+   * binding's load key: a live language switch asks again.
+   */
+  locale: string;
+  timeZone: string;
   signal: AbortSignal;
 };
 
@@ -658,6 +682,13 @@ export type PhiTableProviderRecordRequest = {
   resourceKey: string;
   rowIdentity: PhiTableRowIdentity | null;
   params?: Record<string, unknown>;
+  /**
+   * The reader's language and the Site's time zone (`usePhiIntlLocale`, `usePhiIntlTimeZone`), filled by
+   * the binding, for a Provider that writes words, amounts or dates into what it answers. Part of the
+   * binding's load key: a live language switch asks again.
+   */
+  locale: string;
+  timeZone: string;
   signal: AbortSignal;
 };
 
@@ -1060,6 +1091,7 @@ export function validatePhiTableWidgetBinding(
       ((column.renderer === "date" || column.renderer === "datetime") && field?.type === column.renderer) ||
       (column.renderer === "json" && field?.type === "json") ||
       (column.renderer === "tags" && (field?.type === "json" || field?.type === "enum[]")) ||
+      ((column.renderer === "money" || column.renderer === "interval") && field?.type === "json") ||
       ((column.renderer === "email" || column.renderer === "link" || column.renderer === "code" ||
         column.renderer === "badge") && (field?.type === "string" || field?.type === "enum"));
     if (!rendererCompatible) {

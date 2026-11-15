@@ -38,7 +38,7 @@ export const PHI_SIMPLE_TEXT_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsSimpl
      */
     const recordField = await resolvePhiWidgetRecordField({ registry, runtime, key: config.recordField, kinds: PHI_RECORD_TEXT_FIELD_KINDS });
     if (recordField.bound) {
-      const text = recordField.field ? formatPhiRecordFieldText(recordField.field, runtime.locale.current) : "";
+      const text = recordField.field ? formatPhiRecordFieldText(recordField.field, runtime.locale.current, runtime.site.timeZone) : "";
       return text
         ? <PhiSimpleTextWidget blockId={widget.id} key={`widget-${widget.id}`} translate={false} labels={{ text }} config={config} runtime={runtime} />
         : null;

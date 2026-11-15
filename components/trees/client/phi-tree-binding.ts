@@ -19,6 +19,7 @@ import {
 } from "../../../types/tree-widget";
 import { validatePhiTableProviderFieldValue } from "../../../types/table-widget";
 import { usePhiTreeProvider } from "../../widgets/client/shared/phi-tree-provider";
+import { usePhiIntlLocale, usePhiIntlTimeZone } from "../../root/phi-intl-locale";
 
 type TreeNode = Record<string, unknown>;
 type MutationInput = PhiTreeProviderMutationRequest extends infer TRequest
@@ -137,6 +138,9 @@ export function usePhiTreeBinding({
   defaultExpandAll?: boolean;
 }) {
   const { provider, resource, bindingError } = usePhiTreeProvider(source);
+  // Sent with every query and part of what makes one new, so a live language switch asks again.
+  const locale = usePhiIntlLocale();
+  const timeZone = usePhiIntlTimeZone();
   const [query, setQuery] = useState(initialQuery);
   const [nodes, setNodes] = useState<readonly TreeNode[]>([]);
   const nodesRef = useRef(nodes);
@@ -201,7 +205,7 @@ export function usePhiTreeBinding({
         setQueryFailure(null);
       }
     });
-    void provider.query({ resourceKey: source.resourceKey, query, params: source.params, signal: controller.signal })
+    void provider.query({ resourceKey: source.resourceKey, query, params: source.params, locale, timeZone, signal: controller.signal })
       .then((value) => {
         if (controller.signal.aborted) return;
         const result = readPhiTreeProviderQueryResult(value);
@@ -229,7 +233,7 @@ export function usePhiTreeBinding({
         }
       });
     return () => controller.abort();
-  }, [defaultExpandAll, provider, query, refreshRevision, resource, source]);
+  }, [defaultExpandAll, locale, provider, query, refreshRevision, resource, source, timeZone]);
 
   /*
    * One change, shown before it is confirmed where the caller passes what it will look like.

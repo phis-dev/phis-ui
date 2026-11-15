@@ -3,6 +3,7 @@ import "server-only";
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
 import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 import type { PhiTableWidgetLabels } from "../label-types/table";
+import { getPhiIntervalLabels } from "./interval";
 
 const PHI_TABLE_WIDGET_LABEL_SET = definePhiLabelSet({
   key: "widget:table",
@@ -33,7 +34,10 @@ const PHI_TABLE_WIDGET_LABEL_SET = definePhiLabelSet({
 export async function getPhiTableWidgetLabels(
   options: PhiGlobalTranslatorOptions,
 ): Promise<PhiTableWidgetLabels> {
-  const labels = await getPhiLabelSet(options, PHI_TABLE_WIDGET_LABEL_SET);
+  const [labels, interval] = await Promise.all([
+    getPhiLabelSet(options, PHI_TABLE_WIDGET_LABEL_SET),
+    getPhiIntervalLabels(options),
+  ]);
   return {
     search: labels.search,
     reset: labels.reset,
@@ -53,5 +57,6 @@ export async function getPhiTableWidgetLabels(
     dragRow: labels.drag_row,
     moveRowUp: labels.move_row_up,
     moveRowDown: labels.move_row_down,
+    interval,
   };
 }

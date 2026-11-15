@@ -7,6 +7,7 @@ import type {
   PhiCollectionViewBindingModel,
 } from "../../../../types/collection-provider";
 import type { PhiProviderResourceSource } from "../../../../types/runtime-data-provider";
+import { usePhiIntlLocale, usePhiIntlTimeZone } from "../../../root/phi-intl-locale";
 import { usePhiCollectionProvider } from "./phi-collection-provider";
 
 function buildInitialQuery(initialQuery: PhiCollectionProviderQuery | undefined, pageSize: number | undefined) {
@@ -28,6 +29,9 @@ export function usePhiCollectionViewBinding({
   pageSize?: number;
 }) {
   const { provider, resource, bindingError } = usePhiCollectionProvider(source);
+  // Sent with every query and part of its key, so a live language switch asks again.
+  const locale = usePhiIntlLocale();
+  const timeZone = usePhiIntlTimeZone();
   const [query, setQuery] = useState<PhiCollectionProviderQuery>(() => buildInitialQuery(initialQuery, pageSize));
   const [data, setData] = useState<PhiCollectionViewBindingModel["data"]>(null);
   const [loading, setLoading] = useState(false);
@@ -57,8 +61,10 @@ export function usePhiCollectionViewBinding({
     source?.resourceKey ?? null,
     source?.params ?? null,
     query,
+    locale,
+    timeZone,
     refreshToken,
-  ]), [query, refreshToken, source]);
+  ]), [locale, query, refreshToken, source, timeZone]);
 
   useEffect(() => {
     const nextQuery = JSON.parse(initialQueryKey) as PhiCollectionProviderQuery;
@@ -87,6 +93,8 @@ export function usePhiCollectionViewBinding({
       resourceKey: source.resourceKey,
       query,
       params: source.params,
+      locale,
+      timeZone,
       signal: abortController.signal,
     }).then((nextData) => {
       if (!isCurrent()) return;
@@ -107,7 +115,7 @@ export function usePhiCollectionViewBinding({
       window.clearTimeout(loadingTimer);
       abortController.abort();
     };
-  }, [bindingError, provider, query, requestKey, source]);
+  }, [bindingError, locale, provider, query, requestKey, source, timeZone]);
 
   const reload = useCallback(() => setRefreshToken((current) => current + 1), []);
   const activate = useCallback<PhiCollectionViewBindingModel["activate"]>(async (request) => {

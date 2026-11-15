@@ -64,6 +64,11 @@ Provider queries return a flat node list. The generic Binding/Control builds the
 from the declared identity and parent paths. Missing identities, duplicate identities, cycles, and
 unknown parents are contract errors. Complete Widget presentation config is never sent to a Provider.
 
+A query (`PhiTreeProviderQueryRequest`) carries `resourceKey`, the binding's `params`, the query, the
+`AbortSignal`, and `locale` and `timeZone` -- the reader's language and the Site's time zone, filled by
+the Binding from the page's Intl context. They are part of what makes a query new, so a live language
+switch asks again; see [TABLES.md](./TABLES.md#query-result-and-mutation-boundaries).
+
 Tree fields reuse the Core structured-field semantics and compatible Phi Controls used by Tables:
 string, number, boolean, date, datetime, color, icon, enum, enum array, and JSON. `icon` edits use
 `PhiIconPickerControl`; text edits use the configured Core input variant and commit on Enter or blur.

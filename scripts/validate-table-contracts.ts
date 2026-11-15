@@ -755,6 +755,8 @@ const result = await provider.query({
     page: 1,
     pageSize: 10,
   },
+  locale: "en",
+  timeZone: "UTC",
   signal: new AbortController().signal,
 });
 assert.deepEqual(result.rows.map((row) => row.id), ["root", "child-b", "child-a"]);
@@ -800,10 +802,10 @@ const authoringVersionedProvider = createPhiVersionedStaticTableProviderRegistra
   store: versionedStore,
 });
 assert.equal((await liveVersionedProvider.query({
-  resourceKey: "tree", query: {}, signal: new AbortController().signal,
+  resourceKey: "tree", query: {}, locale: "en", timeZone: "UTC", signal: new AbortController().signal,
 })).rows[0]?.id, "published");
 assert.equal((await authoringVersionedProvider.query({
-  resourceKey: "tree", query: {}, signal: new AbortController().signal,
+  resourceKey: "tree", query: {}, locale: "en", timeZone: "UTC", signal: new AbortController().signal,
 })).rows[0]?.id, "draft");
 assert.equal(liveVersionedProvider.mutate, undefined);
 await authoringVersionedProvider.mutate?.({

@@ -3,10 +3,19 @@
 import type { ComponentType } from "react";
 
 import { PhiCascaderControl } from "../controls/phi-cascader-control";
+import { PhiFlexControl } from "../controls/phi-flex-control";
+import { PhiMoneyControl } from "../controls/phi-money-control";
 import { PhiNumberControl } from "../controls/phi-number-control";
 import { PhiSliderControl } from "../controls/phi-slider-control";
 import type { PhiFormFieldProviderProps } from "./form-provider-registry";
 import { resolvePhiFormText } from "./form-descriptor-contract";
+import {
+  readPhiMoneyFieldAmount,
+  readPhiMoneyFieldAmounts,
+  readPhiMoneyFieldConfig,
+  updatePhiMoneyFieldAmounts,
+} from "./money-field";
+import { usePhiIntlLocale } from "../root/phi-intl-locale";
 import {
   PHI_STORAGE_SIZE_UNIT_LABEL,
   phiBytesToStorageSize,
@@ -31,7 +40,7 @@ function readPhiNumberFieldPrefix(prefix: unknown, labels: PhiFormFieldProviderP
 
 /*
  * Field kinds most forms never have, loaded only where one is rendered: the slider, the cascader and
- * the number fields.
+ * the number and money fields.
  *
  * The shared registry is imported by every Form Widget, and a Contact form paid for the slider and the
  * cascader -- and through the compound controls for the Table and Tree Controls with every editor --
@@ -144,5 +153,59 @@ export const PhiStorageSizeFormControl: ComponentType<PhiFormFieldProviderProps>
       style={{ width: "100%" }}
       onChange={(nextValue) => onChange?.(phiStorageSizeToBytes(nextValue))}
     />
+  );
+};
+
+/*
+ * The field holds minor units and shows major ones, as the storage size holds bytes and shows megabytes:
+ * the conversion is the Control's, on the digits (`helpers/money-amount.ts`), and a handler reads the
+ * contract's money and nothing else. The shapes and the config are `money-field.ts`.
+ */
+export const PhiMoneyFormControl: ComponentType<PhiFormFieldProviderProps> = ({
+  id, field, value, onChange, label, placeholder, disabled, readOnly,
+}) => {
+  const locale = usePhiIntlLocale();
+  const config = readPhiMoneyFieldConfig(field.config);
+  const { currency, currencies, min, max } = config;
+  if (currency !== undefined) {
+    return (
+      <PhiMoneyControl
+        id={id}
+        value={readPhiMoneyFieldAmount(value, currency)?.minor ?? null}
+        currency={currency}
+        locale={locale}
+        min={min}
+        max={max}
+        placeholder={placeholder}
+        disabled={disabled}
+        readOnly={readOnly}
+        style={{ width: "100%" }}
+        onChange={(minor) => onChange?.(minor === null ? null : { currency, minor })}
+      />
+    );
+  }
+  const list = currencies ?? [];
+  const amounts = readPhiMoneyFieldAmounts(value, list);
+  return (
+    <PhiFlexControl vertical gap="small">
+      {list.map((entry, index) => (
+        <PhiMoneyControl
+          key={entry}
+          // The field's label names the first input; each one after it is named by the label and its currency.
+          id={index === 0 ? id : undefined}
+          ariaLabel={index === 0 ? undefined : [label, entry].filter(Boolean).join(" ")}
+          value={amounts?.[entry] ?? null}
+          currency={entry}
+          locale={locale}
+          min={min}
+          max={max}
+          placeholder={placeholder}
+          disabled={disabled}
+          readOnly={readOnly}
+          style={{ width: "100%" }}
+          onChange={(minor) => onChange?.(updatePhiMoneyFieldAmounts(amounts, list, entry, minor))}
+        />
+      ))}
+    </PhiFlexControl>
   );
 };

@@ -27,6 +27,7 @@ vi.mock("./phi-runtime", () => ({
   phiRuntime: () => ({ apiBaseUrl: "http://core.test", internalToken: "token", siteKey: "site" }),
 }));
 
+import { buildPhiRecordDeclarationsByKey } from "../helpers/record-fields";
 import { resolvePhiCmsPageRecord } from "./cms-page-record";
 import { readPhiPageRecordField, resolvePhiRecordFields } from "./record-fields";
 import type { PhiBlockRuntime } from "../types";
@@ -77,9 +78,9 @@ function bindingFor(slug: string, area = "public"): PhiCmsRoutePresetBinding {
 const active = new Set([moduleId]);
 
 describe("resolvePhiCmsPageRecord", () => {
-  it("fills the Provider's parameters from the address and names the Page after the record", async () => {
   beforeEach(() => { request.n += 1; });
 
+  it("fills the Provider's parameters from the address and names the Page after the record", async () => {
     const result = await resolvePhiCmsPageRecord({ binding: bindingFor("chair"), runtime, runtimeModuleCatalog: catalogWith(), activeModuleIds: active });
     expect(result).toEqual({
       status: "ok",
@@ -115,18 +116,17 @@ describe("resolvePhiCmsPageRecord", () => {
 });
 
 describe("resolvePhiRecordFields", () => {
-  const registryOf = (catalog: PhiRuntimeModuleCatalog) => {
   beforeEach(() => { request.n += 1; });
 
+  const registryOf = (catalog: PhiRuntimeModuleCatalog) => {
     const entry = catalog.get(moduleId)!;
     return {
       recordProviderLoadersByKey: new Map(entry.recordProviders!.map((provider) => [provider.key, provider.load] as const)),
       recordFieldsLoadersByKey: new Map(entry.recordProviders!.map((provider) => [provider.key, provider.loadFields!] as const)),
-      dataProviderDescriptorsByKey: new Map(entry.definition.dataProviders!.map((provider) => [provider.key, provider] as const)),
+      recordDeclarationsByKey: buildPhiRecordDeclarationsByKey([entry]),
     };
   };
 
-  it("hands over the declared fields and leaves out a value that is not of its kind", async () => {
   it("hands the Provider the parameters only, and a later read by the Page's binding costs no second read", async () => {
     const load = vi.fn(async (params: Readonly<Record<string, unknown>>) => (params.slug === "chair" ? { name: "Chair" } : null));
     const catalog = catalogWith();
@@ -145,6 +145,7 @@ describe("resolvePhiRecordFields", () => {
     expect(load).toHaveBeenCalledTimes(1);
   });
 
+  it("hands over the declared fields and leaves out a value that is not of its kind", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const result = await resolvePhiRecordFields({ registry: registryOf(catalogWith()), runtime, binding: { providerKey, params: { slug: "chair" } } });
     warn.mockRestore();

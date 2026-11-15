@@ -12,7 +12,7 @@ import { definePhiRequestMemoWith } from "./request-memo";
 
 type PhiRecordFieldsRegistry = Pick<
   PhiCmsRuntimeRenderRegistry,
-  "recordProviderLoadersByKey" | "recordFieldsLoadersByKey" | "dataProviderDescriptorsByKey"
+  "recordProviderLoadersByKey" | "recordFieldsLoadersByKey" | "recordDeclarationsByKey"
 >;
 
 /**
@@ -33,8 +33,7 @@ const resolveFields = definePhiRequestMemoWith(async (
   using: { registry: PhiRecordFieldsRegistry; runtime: PhiBlockRuntime; apiBaseUrl: string; internalToken: string },
 ): Promise<PhiPageRecordFieldsResult> => {
   const providerKey = key.providerKey as `${string}/${string}`;
-  const descriptor = using.registry.dataProviderDescriptorsByKey.get(providerKey);
-  const declared = descriptor?.kind === "record" ? descriptor.record?.fields : undefined;
+  const declared = using.registry.recordDeclarationsByKey.get(providerKey)?.fields;
   const loadFields = using.registry.recordFieldsLoadersByKey.get(providerKey);
   if (!declared || !loadFields) {
     return { status: "none" };

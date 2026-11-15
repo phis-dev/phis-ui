@@ -76,8 +76,18 @@ for (const path of [
  */
 assert.match(
   source,
-  /search,\n\s*dependencies: dependencyValues,\n\s*snapshot: providerSnapshot,/u,
-  "The load context must carry the search text and the resolved dependencies.",
+  /search,\n\s*dependencies: dependencyValues,\n\s*locale,\n\s*timeZone,\n\s*snapshot: providerSnapshot,/u,
+  "The load context must carry the search text, the resolved dependencies, the locale and the time zone.",
+);
+/*
+ * The reader's language and the Site's zone reach every provider, and every load key, outside
+ * `resolveLoadKey`: a provider whose labels are words would otherwise keep the old language's answer
+ * after a live switch, and the list would look right until somebody read it.
+ */
+assert.match(
+  source,
+  /registeredProvider\.key,\n\s*JSON\.stringify\(\[locale, timeZone\]\),/u,
+  "The locale and the time zone are part of every load key, outside resolveLoadKey.",
 );
 assert.doesNotMatch(
   source,

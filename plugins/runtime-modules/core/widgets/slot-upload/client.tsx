@@ -21,9 +21,17 @@ import { readPhiTableBindingParamsSignalValue } from "../../../../../types/table
 import type { PhiSignal } from "../../../../../types/signals";
 import { findPhiSignalListenRoute } from "../../../../../helpers/signal-listen-routes";
 import type { PhiSlotUploadWidgetConfig } from "./config";
+import {
+  formatPhiSlotUploadWidgetLabel,
+  type PhiSlotUploadWidgetLabels,
+} from "../../../../../components/widgets/label-types/slot-upload";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 import { PhiIcon } from "../../../../../components/shell/phi-icon";
+import { PhiImageControl } from "../../../../../components/controls/phi-image-control";
+import { PhiLabeledControl } from "../../../../../components/controls/phi-labeled-control";
+import { resolvePhiImagePresentation } from "../../../../../components/media/image-presentation";
+import { PhiMediaKind, resolvePhiMediaKindFromContentType } from "../../../../../constants/media";
 
 /**
  * A file on a row, through the door Core opens under every Add-on's own root.
@@ -52,11 +60,41 @@ type SlotFile = {
   contentType: string;
 };
 
+/** The side of the square a picture of the slot is shown at, beside its type and size. */
+const THUMBNAIL_SIZE = 48;
+
+/*
+ * A picture is shown, everything else is named: its type and size are said either way, because a
+ * thumbnail tells which picture it is but not whether it is the 40 MB original somebody meant to shrink.
+ * The address is Core's delivery path for the file, drawn as it is rather than through the optimiser:
+ * a slot's file is not a public Asset, so the optimiser may not take its bytes.
+ */
+function SlotFileTitle({ file, text }: { file: SlotFile; text: string }) {
+  if (resolvePhiMediaKindFromContentType(file.contentType) !== PhiMediaKind.Image) {
+    return text;
+  }
+  return (
+    <PhiFlexControl align="center" gap={8}>
+      <PhiImageControl
+        presentation={resolvePhiImagePresentation({ sourceKind: "url", sourceUrl: file.contentPath, fit: "cover" })}
+        source="url"
+        alt=""
+        width={THUMBNAIL_SIZE}
+        height={THUMBNAIL_SIZE}
+        loading="lazy"
+        style={{ flex: "none", borderRadius: "var(--phi-border-radius-sm)", overflow: "hidden" }}
+      />
+      <span>{text}</span>
+    </PhiFlexControl>
+  );
+}
+
 export type PhiSlotUploadWidgetClientProps = {
   config?: PhiSlotUploadWidgetConfig;
+  labels: PhiSlotUploadWidgetLabels;
 };
 
-export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientProps) {
+export function PhiSlotUploadWidgetClient({ config, labels }: PhiSlotUploadWidgetClientProps) {
   const addon = config?.addon?.trim() ?? "";
   const table = config?.table?.trim() ?? "";
   const slotName = config?.slot?.trim() ?? "";
@@ -104,11 +142,13 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
     const body = await response.json().catch(() => null) as Record<string, unknown> | null;
     if (!response.ok) {
       throw new Error(
-        typeof body?.error === "string" ? body.error : `The server answered ${response.status}.`,
+        typeof body?.error === "string"
+          ? body.error
+          : formatPhiSlotUploadWidgetLabel(labels.serverAnswered, response.status),
       );
     }
     return body ?? {};
-  }, []);
+  }, [labels.serverAnswered]);
 
   usePhiSignalListener(useCallback((signal: PhiSignal) => {
     if (!findPhiSignalListenRoute(listenRoutes, signal, signalIdentity.receiver)) return;
@@ -138,13 +178,13 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
         const declared = (body.slots as SlotDescriptor[] | undefined ?? [])
           .find((entry) => entry.name === slotName);
         setSlot(declared ?? null);
-        setSlotFailure(declared ? null : `This table declares no slot named "${slotName}".`);
+        setSlotFailure(declared ? null : formatPhiSlotUploadWidgetLabel(labels.slotMissing, slotName));
       })
       .catch((error: unknown) => {
-        if (live) setSlotFailure(error instanceof Error ? error.message : "Unreachable.");
+        if (live) setSlotFailure(error instanceof Error ? error.message : labels.unreachable);
       });
     return () => { live = false; };
-  }, [base, read, slotName]);
+  }, [base, labels.slotMissing, labels.unreachable, read, slotName]);
 
   // Reads rather than stores: what to do with the answer belongs to whoever asked, and an effect that
   // only subscribes is one the rules about effects are happy with.
@@ -164,9 +204,9 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
     try {
       setLoaded({ ownerId, files: await readFiles(ownerId) });
     } catch (error) {
-      setFailure(error instanceof Error ? error.message : "Unreachable.");
+      setFailure(error instanceof Error ? error.message : labels.unreachable);
     }
-  }, [ownerId, readFiles]);
+  }, [labels.unreachable, ownerId, readFiles]);
 
   useEffect(() => {
     if (!base || !ownerId) {
@@ -176,10 +216,10 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
     void readFiles(ownerId)
       .then((files) => { if (live) setLoaded({ ownerId, files }); })
       .catch((error: unknown) => {
-        if (live) setFailure(error instanceof Error ? error.message : "Unreachable.");
+        if (live) setFailure(error instanceof Error ? error.message : labels.unreachable);
       });
     return () => { live = false; };
-  }, [base, ownerId, readFiles]);
+  }, [base, labels.unreachable, ownerId, readFiles]);
 
   /*
    * The session, begun and settled at the Add-on's root; the transfer between them is Core's own and
@@ -254,70 +294,81 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
     try {
       await read(`${base}/${encodeURIComponent(ownerId)}/${encodeURIComponent(id)}`, { method: "DELETE" });
     } catch {
-      setFailure("That file stayed.");
+      setFailure(labels.removeFailed);
       return;
     }
     announceChanged();
     await reload();
-  }, [announceChanged, base, ownerId, read, reload]);
+  }, [announceChanged, base, labels.removeFailed, ownerId, read, reload]);
 
   if (!base || !slotName) {
-    return <PhiTypographyControl type="secondary">This field names no Add-on, table or slot.</PhiTypographyControl>;
+    return (
+      <PhiLabeledControl label={config?.label}>
+        <PhiTypographyControl type="secondary">{labels.unconfigured}</PhiTypographyControl>
+      </PhiLabeledControl>
+    );
   }
 
   return (
-    <PhiFlexControl vertical gap={8} data-phis-slot-upload={slotName}>
-      {ownerId === null ? (
-        <PhiTypographyControl type="secondary">Nothing selected.</PhiTypographyControl>
-      ) : (
-        <>
-          {/*
-            * The file dialog is a plain input the button opens, rather than an Upload wrapper that reacts
-            * to a press on its child: that child would have been a button with nothing of its own to
-            * call, which `PhiButtonControl` renders disabled. The upload itself never went through the
-            * wrapper -- `usePhiMediaUpload` sends every file -- so nothing is lost by leaving it out.
-            */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            hidden
-            multiple={slot?.cardinality === "many"}
-            accept={slot?.contentTypes.join(",")}
-            onChange={(event) => {
-              for (const file of Array.from(event.target.files ?? [])) void upload.upload(file);
-              // Cleared so choosing the same file again is a change, and uploads again.
-              event.target.value = "";
-            }}
-          />
-          <PhiButtonControl
-            icon={<PhiIcon name="upload" size="inherit" />}
-            label="Choose a file"
-            onClick={() => fileInputRef.current?.click()}
-          />
-        </>
-      )}
-      {upload.items.filter((item) => item.status === "uploading").map((item) => (
-        <PhiProgressControl key={item.localId} percent={item.progress} size="small" />
-      ))}
-      {slotFailure ?? failure ? (
-        <PhiTypographyControl type="danger" role="alert">{slotFailure ?? failure}</PhiTypographyControl>
-      ) : null}
-      <PhiEntryListControl
-        emptyDescription="Nothing here yet."
-        entries={[...files].map((file) => ({
-          key: String(file.id),
-          title: `${file.contentType} — ${file.byteSize} bytes`,
-          action: (
-            <PhiButtonControl
-              size="small"
-              icon={<PhiIcon name="delete" size="inherit" />}
-              ariaLabel="Remove this file"
-              tooltip="Remove this file"
-              onClick={() => { void remove(file.id); }}
+    <PhiLabeledControl label={config?.label} fill>
+      <PhiFlexControl vertical gap={8} data-phis-slot-upload={slotName}>
+        {ownerId === null ? (
+          <PhiTypographyControl type="secondary">{labels.noRow}</PhiTypographyControl>
+        ) : (
+          <>
+            {/*
+              * The file dialog is a plain input the button opens, rather than an Upload wrapper that reacts
+              * to a press on its child: that child would have been a button with nothing of its own to
+              * call, which `PhiButtonControl` renders disabled. The upload itself never went through the
+              * wrapper -- `usePhiMediaUpload` sends every file -- so nothing is lost by leaving it out.
+              */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              hidden
+              multiple={slot?.cardinality === "many"}
+              accept={slot?.contentTypes.join(",")}
+              onChange={(event) => {
+                for (const file of Array.from(event.target.files ?? [])) void upload.upload(file);
+                // Cleared so choosing the same file again is a change, and uploads again.
+                event.target.value = "";
+              }}
             />
-          ),
-        }))}
-      />
-    </PhiFlexControl>
+            <PhiButtonControl
+              icon={<PhiIcon name="upload" size="inherit" />}
+              label={labels.choose}
+              onClick={() => fileInputRef.current?.click()}
+            />
+          </>
+        )}
+        {upload.items.filter((item) => item.status === "uploading").map((item) => (
+          <PhiProgressControl key={item.localId} percent={item.progress} size="small" />
+        ))}
+        {slotFailure ?? failure ? (
+          <PhiTypographyControl type="danger" role="alert">{slotFailure ?? failure}</PhiTypographyControl>
+        ) : null}
+        <PhiEntryListControl
+          emptyDescription={labels.empty}
+          entries={[...files].map((file) => ({
+            key: String(file.id),
+            title: (
+              <SlotFileTitle
+                file={file}
+                text={formatPhiSlotUploadWidgetLabel(labels.fileTitle, file.contentType, file.byteSize)}
+              />
+            ),
+            action: (
+              <PhiButtonControl
+                size="small"
+                icon={<PhiIcon name="delete" size="inherit" />}
+                ariaLabel={labels.remove}
+                tooltip={labels.remove}
+                onClick={() => { void remove(file.id); }}
+              />
+            ),
+          }))}
+        />
+      </PhiFlexControl>
+    </PhiLabeledControl>
   );
 }

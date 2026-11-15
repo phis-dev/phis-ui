@@ -31,7 +31,12 @@ import {
   PHI_ASSET_MEDIA_PAGE_LAYOUT_IDS,
   PHI_ASSET_MEDIA_PAGE_WIDGET_IDS,
 } from "../media-page-ids";
-import { PHI_DIALOG_BLEED_BODY_CONFIG, PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../../helpers/cms-dialog";
+import {
+  PHI_DIALOG_BLEED_BODY_CONFIG,
+  PHI_DIALOG_BODY_CONFIG,
+  PHI_DIALOG_COMMANDS_CONFIG,
+  PHI_DIALOG_WIDTH_SINGLE_COLUMN,
+} from "../../../../helpers/cms-dialog";
 import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 
 const PHI_ASSET_MEDIA_PAGE_REGION_IDS = {
@@ -238,7 +243,7 @@ export async function buildPhiDefaultBuilderMediaPageTree({
         config: {
           title: mediaLabels?.editor.createFolderTitle ?? "Create folder",
           controlSize: "medium",
-          width: { compact: "calc(100vw - 32px)", medium: 480, wide: 520 },
+          width: PHI_DIALOG_WIDTH_SINGLE_COLUMN,
           flags: PhiCmsFlags.Centered,
           mountPolicy: "remount",
           closeMode: "immediate",

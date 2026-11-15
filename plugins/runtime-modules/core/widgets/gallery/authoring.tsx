@@ -13,6 +13,10 @@ import {
 import { resolvePhiSpacingScaleValue } from "../../../../../components/widgets/config/spacing-options";
 import { PHI_SEQUENCE_SETTINGS_DEFAULTS } from "../../../../../components/widgets/config/sequence-settings";
 import { resolvePhiGalleryFrame } from "./defaults";
+import {
+  formatPhiGalleryWidgetLabel,
+  PHI_GALLERY_WIDGET_DEFAULT_LABELS,
+} from "../../../../../components/widgets/label-types/gallery";
 
 /** How many dots stand for "more than one page" on the canvas, which does not know how many pictures there are. */
 const EDITOR_DOT_COUNT = 3;
@@ -34,6 +38,16 @@ function PhiGalleryWidgetEditor({ config }: { config: PhiCmsGalleryWidgetConfig 
   const showDots = controls === "dots" || controls === "both";
   const folderId = config?.source?.params?.folderId;
   const hasFolder = folderId != null && folderId !== "";
+  const recordField = config?.recordField;
+  /*
+   * Where a field of the page record is named, the pictures are that field's and the Folder only stands
+   * in on a Page about no record; saying "no folder chosen" there sent the author looking for a setting
+   * that decides nothing.
+   */
+  const labels = PHI_GALLERY_WIDGET_DEFAULT_LABELS;
+  const hint = recordField
+    ? formatPhiGalleryWidgetLabel(labels.canvasRecordField, recordField)
+    : hasFolder ? labels.canvasFolder : labels.canvasNoFolder;
   const { aspectRatio } = resolvePhiGalleryFrame(config);
 
   const arrowStyle: CSSProperties = {
@@ -104,9 +118,7 @@ function PhiGalleryWidgetEditor({ config }: { config: PhiCmsGalleryWidgetConfig 
         </div>
       ) : null}
       <PhiTypographyControl type="secondary" style={{ fontSize: token.fontSizeSM }}>
-        {hasFolder
-          ? "The public pictures of the chosen media folder, read when the page is drawn."
-          : "No folder chosen yet. Pick one in the inspector; its public pictures are read when the page is drawn."}
+        {hint}
       </PhiTypographyControl>
     </div>
   );

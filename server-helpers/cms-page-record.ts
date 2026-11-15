@@ -5,6 +5,7 @@ import type { PhiCmsRoutePresetBinding } from "../types/cms-module-descriptors";
 import type { PhiCmsRuntimeRenderRegistry, PhiRuntimeModuleCatalog, PhiRuntimeModuleId } from "../types/cms-plugins";
 import type { PhiPageRecordBinding } from "../types/record-provider";
 import type { PhiRuntimeDataProviderBinding } from "../types/runtime-data-provider";
+import { buildPhiRecordDeclarationsByKey } from "../helpers/record-fields";
 import { readPhiPageRecordField, resolvePhiRecordFields } from "./record-fields";
 import { resolvePhiRecordSource } from "./record-source";
 
@@ -23,7 +24,7 @@ export type PhiCmsPageRecord =
 function buildRecordRegistry(
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
   activeModuleIds: ReadonlySet<PhiRuntimeModuleId>,
-): Pick<PhiCmsRuntimeRenderRegistry, "recordProviderLoadersByKey" | "recordFieldsLoadersByKey" | "dataProviderDescriptorsByKey"> {
+): Pick<PhiCmsRuntimeRenderRegistry, "recordProviderLoadersByKey" | "recordFieldsLoadersByKey" | "recordDeclarationsByKey"> {
   const entries = [...activeModuleIds].flatMap((moduleId) => {
     const entry = runtimeModuleCatalog.get(moduleId);
     return entry ? [entry] : [];
@@ -33,8 +34,7 @@ function buildRecordRegistry(
       (entry.recordProviders ?? []).map((provider) => [provider.key, provider.load] as const))),
     recordFieldsLoadersByKey: new Map(entries.flatMap((entry) =>
       (entry.recordProviders ?? []).flatMap((provider) => provider.loadFields ? [[provider.key, provider.loadFields] as const] : []))),
-    dataProviderDescriptorsByKey: new Map(entries.flatMap((entry) =>
-      (entry.definition.dataProviders ?? []).map((provider) => [provider.key, provider] as const))),
+    recordDeclarationsByKey: buildPhiRecordDeclarationsByKey(entries),
   };
 }
 
@@ -50,12 +50,12 @@ export async function resolvePhiCmsPageRecord({ binding, runtime, runtimeModuleC
   }
   const route = `${binding.descriptor.ownerModuleId}/${binding.descriptor.presetKey}`;
   const registry = buildRecordRegistry(runtimeModuleCatalog, activeModuleIds);
-  const descriptor = registry.dataProviderDescriptorsByKey.get(declaration.providerKey);
-  if (descriptor?.kind !== "record" || !descriptor.record) {
+  const declared = registry.recordDeclarationsByKey.get(declaration.providerKey);
+  if (!declared) {
     throw new Error(`${route}: its page record names "${declaration.providerKey}", which is no active record Provider with declared fields.`);
   }
   // A Public page is rendered once for everybody, so it cannot be about what only one account may read.
-  if (descriptor.record.audience === "viewer" && binding.descriptor.area === "public") {
+  if (declared.audience === "viewer" && binding.descriptor.area === "public") {
     throw new Error(`${route}: a Public route cannot be about a record of audience "viewer".`);
   }
   const record: PhiRuntimeDataProviderBinding = {

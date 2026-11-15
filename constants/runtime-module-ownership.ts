@@ -48,6 +48,7 @@ const PHI_RUNTIME_MODULE_OWNERSHIP: Readonly<Record<string, readonly [module: st
   "form-field/email": ["core", "email"],
   "form-field/hidden": ["core", "hidden"],
   "form-field/honeypot": ["core", "honeypot"],
+  "form-field/money": ["core", "money"],
   "form-field/multi-select": ["core", "multi-select"],
   "form-field/number": ["core", "number"],
   "form-field/password": ["core", "password"],

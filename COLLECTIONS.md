@@ -62,6 +62,13 @@ The executable Client is created with `createPhiCollectionProviderClient` from
 `View` component per resource. A panel is not a Widget: it is a controlled part of the resource View and
 shares the Binding's open panel state.
 
+A query (`PhiCollectionProviderQueryRequest`) carries `resourceKey`, the binding's `params`, the
+normalized query, the `AbortSignal`, and `locale` and `timeZone`: the reader's language and the Site's
+time zone, which the Binding fills from the page's Intl context (`usePhiIntlLocale`,
+`usePhiIntlTimeZone`) for a Provider that writes words, amounts or dates into its items. Both are part
+of the Binding's request key, so a live language switch queries again
+([TABLES.md](./TABLES.md#query-result-and-mutation-boundaries)). An action request does not carry them.
+
 ### Card presentation and resource-owned Views
 
 Most resources show their items as cards. Such a resource registers `PhiCardCollectionViewBinding`

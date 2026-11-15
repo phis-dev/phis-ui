@@ -53,7 +53,8 @@ function buildMediaQuery(query: PhiCollectionProviderQuery) {
   return search;
 }
 
-async function queryMediaCollection(request: PhiCollectionProviderQueryRequest) {
+/** The Media library answers file names and sizes, nothing in a language, so it reads neither `locale` nor `timeZone`. */
+async function queryMediaCollection(request: Omit<PhiCollectionProviderQueryRequest, "locale" | "timeZone">) {
   if (request.resourceKey !== "assets") {
     throw new Error(`Unknown Asset collection "${request.resourceKey}".`);
   }

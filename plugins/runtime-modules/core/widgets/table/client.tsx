@@ -41,7 +41,7 @@ import { usePhiApplicationFeedback } from "../../../../../components/runtime/use
 import { usePhiTableBinding } from "../../../../../components/tables/client/phi-table-binding";
 import { PhiTableBindingControl } from "../../../../../components/tables/client/phi-table-binding-control";
 import { clearPhiDataDragPayload, readPhiDataDragPayload } from "../../../../../components/runtime/client/phi-data-dnd";
-import { renderPhiValueContent } from "../../../../../components/widgets/client/shared/phi-rendered-value";
+import { renderPhiValueContent, type PhiRenderedValueLabels } from "../../../../../components/widgets/client/shared/phi-rendered-value";
 import { formatPhiTranslation } from "../../../../../helpers/translation-format";
 import {
   readPhiTableFilters,
@@ -134,8 +134,9 @@ function renderTableValue(
   value: unknown,
   column: PhiTableColumnDefinition,
   row: Record<string, unknown> | undefined,
+  labels: PhiRenderedValueLabels,
 ): ReactNode {
-  const content = renderPhiValueContent(value, column);
+  const content = renderPhiValueContent(value, column, labels);
   if (!column.iconFieldKey) {
     return content;
   }
@@ -821,7 +822,7 @@ export function PhiTableWidgetClient({
           proposedValue,
         }).catch(() => undefined);
       } : undefined,
-      render: (value: unknown, row) => renderTableValue(value, column, row),
+      render: (value: unknown, row) => renderTableValue(value, column, row, labels),
     }));
     if (rowActions.length || features.rowReordering?.enabled) {
       result.push({
@@ -855,7 +856,7 @@ export function PhiTableWidgetClient({
       });
     }
     return result;
-  }, [activateAction, commitField, conditionSources, features.actions?.rowLayout, features.editing?.disabledWhen, features.editing?.mode, features.rowReordering?.enabled, isFieldMutationPending, labels.actions, loading, presentation.columns, resolvedControlSize, resource, rowActions]);
+  }, [activateAction, commitField, conditionSources, features.actions?.rowLayout, features.editing?.disabledWhen, features.editing?.mode, features.rowReordering?.enabled, isFieldMutationPending, labels, loading, presentation.columns, resolvedControlSize, resource, rowActions]);
 
   const resolveSummaryValue = useCallback((item: PhiTableSummaryItemDefinition): PhiTableSummaryValue | undefined => {
     if (item.value.source === "provider") return summary[item.value.fieldKey];

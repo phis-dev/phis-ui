@@ -1,8 +1,12 @@
+import { PHI_INTERVAL_DEFAULT_LABELS, type PhiIntervalLabels } from "./interval";
+
 export type PhiRecordWidgetLabels = {
   empty: string;
   missingBinding: string;
   recordReadUnsupported: string;
   loadFailed: string;
+  /** The words of the `interval` renderer, from their own Label Set. */
+  interval: PhiIntervalLabels;
 };
 
 export const PHI_RECORD_WIDGET_DEFAULT_LABELS: PhiRecordWidgetLabels = {
@@ -10,6 +14,7 @@ export const PHI_RECORD_WIDGET_DEFAULT_LABELS: PhiRecordWidgetLabels = {
   missingBinding: "Record provider binding is missing.",
   recordReadUnsupported: 'Table resource "%1" does not offer single records.',
   loadFailed: "The record could not be loaded.",
+  interval: PHI_INTERVAL_DEFAULT_LABELS,
 };
 
 export function formatPhiRecordWidgetLabel(template: string, value: string | number) {

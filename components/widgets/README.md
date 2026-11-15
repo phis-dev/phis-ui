@@ -273,6 +273,10 @@ Generic control Widgets reuse the capability sets in `signals/control-signal-cap
 - A provider returns `{ value, label }` items. An asynchronous provider declares `resolveLoadKey()`
   covering every input that changes its result; equal keys load once across mounted controls. A failed
   load yields an empty result and a warning, never borrowed static options.
+- Its context (`PhiControlOptionsProviderContext`) carries `locale` and `timeZone`, the reader's
+  language and the Site's time zone from the page's Intl context, for a provider whose labels are
+  words, amounts or dates. The hook puts both into every load key, outside `resolveLoadKey` like the
+  dependencies, so a live language switch loads again and no provider can forget to.
 - The emitted signal `value` is the option value; receivers never rely on labels.
 
 ## Content Widgets

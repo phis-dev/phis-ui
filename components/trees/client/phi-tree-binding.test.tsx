@@ -1,6 +1,9 @@
 // @vitest-environment happy-dom
 import { act, renderHook, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
+
+import { PhiIntlLocaleProvider } from "../../root/phi-intl-locale";
 
 import type { PhiTreeProviderMutationRequest } from "../../../types/tree-widget";
 
@@ -46,9 +49,13 @@ const { usePhiTreeBinding } = await import("./phi-tree-binding");
 
 const source = { providerKey: "test-tree", resourceKey: "nodes" };
 
+function wrapper({ children }: { children: ReactNode }) {
+  return <PhiIntlLocaleProvider locale="en" timeZone="UTC" renderedAt={0}>{children}</PhiIntlLocaleProvider>;
+}
+
 async function mountTree() {
   pending.length = 0;
-  const hook = renderHook(() => usePhiTreeBinding({ source: source as never }));
+  const hook = renderHook(() => usePhiTreeBinding({ source: source as never }), { wrapper });
   await waitFor(() => expect(hook.result.current.nodes).toHaveLength(2));
   return hook;
 }
@@ -56,6 +63,13 @@ async function mountTree() {
 function readNode(nodes: readonly Record<string, unknown>[], id: number) {
   return nodes.find((node) => node.id === id);
 }
+
+describe("the query", () => {
+  it("carries the reader's language and the Site's time zone", async () => {
+    await mountTree();
+    expect(provider.query).toHaveBeenLastCalledWith(expect.objectContaining({ locale: "en", timeZone: "UTC" }));
+  });
+});
 
 describe("a failed edit", () => {
   it("takes back its own field and keeps the edit that was accepted meanwhile", async () => {

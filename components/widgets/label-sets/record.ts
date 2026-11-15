@@ -3,6 +3,7 @@ import "server-only";
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
 import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 import type { PhiRecordWidgetLabels } from "../label-types/record";
+import { getPhiIntervalLabels } from "./interval";
 
 const PHI_RECORD_WIDGET_LABEL_SET = definePhiLabelSet({
   key: "widget:record",
@@ -19,11 +20,15 @@ const PHI_RECORD_WIDGET_LABEL_SET = definePhiLabelSet({
 export async function getPhiRecordWidgetLabels(
   options: PhiGlobalTranslatorOptions,
 ): Promise<PhiRecordWidgetLabels> {
-  const labels = await getPhiLabelSet(options, PHI_RECORD_WIDGET_LABEL_SET);
+  const [labels, interval] = await Promise.all([
+    getPhiLabelSet(options, PHI_RECORD_WIDGET_LABEL_SET),
+    getPhiIntervalLabels(options),
+  ]);
   return {
     empty: labels.empty,
     missingBinding: labels.missing_binding,
     recordReadUnsupported: labels.record_read_unsupported,
     loadFailed: labels.load_failed,
+    interval,
   };
 }

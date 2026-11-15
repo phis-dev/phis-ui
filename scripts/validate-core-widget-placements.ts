@@ -60,6 +60,17 @@ const PLACEMENT_ONLY_KEYS: Readonly<Record<string, Readonly<Record<string, strin
   "thread-conversation": { padding: "the card's inset, where a Preset needs another than the Theme's" },
   "theme-mode-switch": {},
   "draft-status": {},
+  record: {},
+  "slot-upload": {},
+  "tab-bar": { key: "the Control's signal identity, as for the Button" },
+};
+
+/*
+ * Where a Core Widget's definition lives when it is not in its own folder under Core's widgets: the
+ * choice Controls are shared Foundation definitions that Core registers.
+ */
+const CONFIG_MODULES: Readonly<Record<string, string>> = {
+  "tab-bar": "../components/widgets/config/stack-tabs",
 };
 
 function writtenPaths(field: PhiCmsConfigField): string[] {
@@ -162,7 +173,7 @@ for (const [typeKey, property] of placements) {
     continue;
   }
   const configModule: Record<string, unknown> =
-    await import(`../plugins/runtime-modules/core/widgets/${typeKey}/config`);
+    await import(CONFIG_MODULES[typeKey] ?? `../plugins/runtime-modules/core/widgets/${typeKey}/config`);
   const definition = Object.values(configModule).find(
     (value): value is { typeKey: string; fields: PhiCmsConfigField[] } =>
       typeof value === "object" &&

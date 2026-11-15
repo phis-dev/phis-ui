@@ -731,10 +731,13 @@ serve every record: its Widgets name a *field of the page record*, never the rec
   `record: { audience, fields: [{ key, label, kind }] }`. `audience` is `public` -- the same for
   everybody, so a Public page may be rendered once -- or `viewer`, the signed-in account's own; a route in
   Public cannot name a `viewer` record. The kinds are closed (`PHI_RECORD_FIELD_KINDS`): `text`,
-  `markdown`, `picture`, `pictures`, `list`, `tag`, `date`, `number`, `link`. What each kind's value is,
-  is typed in `types/record-provider.ts`; a date is an ISO instant and a number a number, formatted by
-  Core in the page's language, and everything a domain formats itself -- a price with its currency, tax
-  note and period -- is a `text` the Module hands over finished.
+  `markdown`, `picture`, `pictures`, `list`, `tag`, `date`, `number`, `money`, `link`. What each kind's
+  value is, is typed in `types/record-provider.ts`; a date is an ISO instant, a number a number and a
+  `money` the payment contract's amount (`PhisPaymentMoney`, `{ currency, minor }` with `minor` an integer
+  string of minor units in a currency `PHIS_PAYMENT_CURRENCY_EXPONENTS` names). Core formats all three
+  in the page's language: a date on the Site's time zone (`formatPhiDate`), money with its currency's own
+  places (`formatPhisMoney`). Everything else a domain formats itself -- a tax note, a period said in
+  words -- is a `text` the Module hands over finished.
 - **The field reader.** The server half gains `loadFields`: a function from the record its resolver
   answered to the declared fields' values. The catalog refuses declared fields without a reader and a
   reader without declared fields. A value that is not of its declared kind is left out and logged
@@ -781,8 +784,9 @@ serve every record: its Widgets name a *field of the page record*, never the rec
   picture ([THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#5-add-a-theme-preset)).
 - **Core Widgets that show a field.** A config field of type `record-field` names the kinds a Widget
   draws; the Inspector offers the fields of those kinds that the edited Page's record Provider declares,
-  and shows no such row on a Page that is about no record. Simple Text takes a `text`, `number` or `date`
-  (`recordField`), Markdown a `markdown` or `text`, Image a `picture`, a Button's signal value a
+  and shows no such row on a Page that is about no record. Simple Text takes a `text`, `number`, `date`
+  or `money` (`recordField`, written by `formatPhiRecordFieldText` in the page's locale and the Site's
+  time zone), Markdown a `markdown` or `text`, Image a `picture`, a Button's signal value a
   `text` (`valueRecordField`) and its link a `link` (`linkRecordField`: the field's `href`, and its
   `label` where the Button's own is empty, untranslated), and the Gallery `pictures` (`recordField`:
   each picture by its address, with its alt text as the record gave it; the Gallery's `source` stays and

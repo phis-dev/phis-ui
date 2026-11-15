@@ -5,6 +5,7 @@ import type {
 } from "../../types/form-descriptor";
 import { createPhiModuleScopedKey } from "../../constants/runtime-module-ownership";
 import { PhiMediaKind } from "../../constants/media";
+import { PHIS_PAYMENT_CURRENCY_EXPONENTS } from "@phis/contracts/payments";
 
 export function createPhiSharedFormProviderKey(
   kind: "field" | "validation" | "handler",
@@ -41,6 +42,7 @@ export const PHI_FORM_FIELD_PROVIDER_KEYS = {
   tree: createPhiSharedFormProviderKey("field", "tree"),
   upload: createPhiSharedFormProviderKey("field", "upload"),
   linkTarget: createPhiSharedFormProviderKey("field", "link-target"),
+  money: createPhiSharedFormProviderKey("field", "money"),
 } as const;
 
 export const PHI_AUTH_FORM_FIELD_PROVIDER_KEYS = {
@@ -132,6 +134,11 @@ export const PHI_FORM_UPLOAD_LABEL_KEYS = {
  */
 export type PhiSharedFormFieldTypeDescriptor = Omit<PhiFormFieldTypeProviderDescriptor, "ownerModuleId">;
 export type PhiSharedFormValidationDescriptor = Omit<PhiFormValidationProviderDescriptor, "ownerModuleId">;
+
+/** Every currency a payment accepts, by its ISO 4217 code, for the money field's settings. */
+const PHI_MONEY_CURRENCY_OPTIONS: { value: string; label: string }[] = Object.keys(PHIS_PAYMENT_CURRENCY_EXPONENTS)
+  .sort()
+  .map((code) => ({ value: code, label: code }));
 
 export const PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS = [
   { key: PHI_FORM_FIELD_PROVIDER_KEYS.text, title: "Text", valueType: "string", presentation: "control", settingsFields: [{ key: "minLength", type: "number", label: "Minimum characters", min: 0 }, { key: "maxLength", type: "number", label: "Maximum characters", min: 0 }] },
@@ -295,6 +302,40 @@ export const PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS = [
     presentation: "control",
     settingsFields: [
       { key: "area", type: "string", label: "Area", description: "Whose Pages are offered; Public when empty." },
+    ],
+  },
+  /*
+   * An amount of money: minor units in the value, major units on screen beside the currency's code.
+   * `json`, because the value is the contract's money (`{ currency, minor }`) for one `currency`, or a
+   * price list (`{ CHF: "1990" }`) for several `currencies` -- see `money-field.ts`. `min` and `max`
+   * are minor units.
+   */
+  {
+    key: PHI_FORM_FIELD_PROVIDER_KEYS.money,
+    title: "Money",
+    valueType: "json",
+    presentation: "control",
+    settingsFields: [
+      {
+        key: "currency",
+        type: "choice",
+        mode: "single",
+        valueType: "string",
+        label: "Currency",
+        description: "The currency of one amount.",
+        options: PHI_MONEY_CURRENCY_OPTIONS,
+      },
+      {
+        key: "currencies",
+        type: "choice",
+        mode: "multiple",
+        valueType: "string[]",
+        label: "Currencies",
+        description: "One amount per currency, instead of a single currency.",
+        options: PHI_MONEY_CURRENCY_OPTIONS,
+      },
+      { key: "min", type: "number", label: "Minimum", description: "In minor units: 100 is 1.00 CHF.", min: 0, precision: 0 },
+      { key: "max", type: "number", label: "Maximum", description: "In minor units.", min: 0, precision: 0 },
     ],
   },
 ] as const satisfies readonly PhiSharedFormFieldTypeDescriptor[];

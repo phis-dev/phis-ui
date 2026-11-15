@@ -27,7 +27,11 @@ import type { PhiProviderResourceSource } from "../../../types/runtime-data-prov
 import { PHI_CONTENT_ENTRY_SOURCE_LOCALE_PLACEHOLDER_CONFIG_KEY } from "../../forms/content-entry-forms";
 import { PHI_CONTENT_ENTRY_CURATION_NONE_CONFIG_KEYS } from "../../forms/content-entry-curation-config";
 import { PHI_SITE_LOCALES_CONFIG_KEY } from "../../forms/site-locales-config";
-import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../helpers/cms-dialog";
+import {
+  PHI_DIALOG_BODY_CONFIG,
+  PHI_DIALOG_COMMANDS_CONFIG,
+  PHI_DIALOG_WIDTH_SINGLE_COLUMN,
+} from "../../../helpers/cms-dialog";
 
 /**
  * The words of an editor Page that differ by kind; everything else is the shared Label Set's.
@@ -171,6 +175,8 @@ function buildEntryDialogNodes(
       label: `${input.routePrefix} ${input.key} modal`,
       config: {
         title: input.title,
+        // Every Form of an entry is one column (helpers/cms-dialog.ts).
+        width: PHI_DIALOG_WIDTH_SINGLE_COLUMN,
         mountPolicy: "remount",
         /*
          * `immediate`: there is nobody to ask. `request` exists so a Controller can refuse while a save
