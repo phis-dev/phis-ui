@@ -46,6 +46,14 @@ describe("record providers", () => {
     }))).toThrow(/is served twice/);
   });
 
+  it("refuses samples where the descriptor declares no fields", () => {
+    expect(catalogWithCore((entry) => ({
+      ...entry,
+      recordProviders: entry.recordProviders!.map((provider) =>
+        provider.key === PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntry ? { ...provider, loadSamples: async () => async () => [] } : provider),
+    }))).toThrow(/offers samples, but its descriptor declares no fields/);
+  });
+
   it("mounts nothing in the browser for a binding to a record", async () => {
     const moduleSet = await resolvePhiRuntimeModuleSet({
       catalog: createPhiPublicRuntimeModuleCatalog(),

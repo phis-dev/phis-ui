@@ -738,6 +738,11 @@ export type PhiCmsRuntimeRenderRegistry = {
     PhiRuntimeDataProviderKey,
     () => Promise<import("./record-provider").PhiRuntimeRecordFieldsReader>
   >;
+  /** The sample readers of the `record` Providers that offer samples, by key: what the Builder previews a template with. */
+  recordSamplesLoadersByKey: ReadonlyMap<
+    PhiRuntimeDataProviderKey,
+    () => Promise<import("./record-provider").PhiRuntimeRecordSamplesReader>
+  >;
   dataProviderDescriptorsByKey: ReadonlyMap<
     PhiRuntimeDataProviderKey,
     PhiRuntimeModuleDataProviderDescriptor

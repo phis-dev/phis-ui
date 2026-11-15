@@ -9,6 +9,7 @@ import { hasPhiFlag } from "../../../helpers/flags";
 import type { PhiBlockRuntime } from "../../../types/widget-runtime";
 import type { PhiRuntimeModuleCatalog, PhiRuntimeModuleId } from "../../../types";
 import type { PhiCmsRoutePresetBinding } from "../../../types/cms-module-descriptors";
+import type { PhiCmsPageRecordDescriptor } from "../../../types/record-provider";
 import { getCurrentCmsPageDraft, getResolvedCmsPage, getSiteCmsPageCatalog } from "../../../gateway/site-page";
 import type { PhiDeveloperBuilderArea, PhiDeveloperBuilderRegionDraft } from "./developer-workspace-types";
 import { buildPhiBuilderModulePresetPagesByArea } from "./page-preset-catalog.server";
@@ -158,6 +159,20 @@ async function resolvePhiRegistryPresetPageBinding({
     ? resolvePhiCmsRoutePresetByPageId(table, pageKey)
     : null;
   return binding ? { binding, activeModuleKeys } : null;
+}
+
+/**
+ * The record a route preset's Page is about, for the Page the Builder is on: `null` for a Page that is no
+ * route preset or whose route names none.
+ */
+export async function resolvePhiBuilderPagePresetRecord(
+  runtime: PhiBlockRuntime,
+  area: PhiDeveloperBuilderArea,
+  pageKey: string,
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
+): Promise<PhiCmsPageRecordDescriptor | null> {
+  const resolution = await resolvePhiRegistryPresetPageBinding({ runtime, runtimeModuleCatalog, area, pageKey });
+  return resolution?.binding.descriptor.pageRecord ?? null;
 }
 
 /**

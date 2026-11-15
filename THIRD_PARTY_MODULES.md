@@ -1695,6 +1695,23 @@ recordProviders: [{
   route's parameter into it. The Widget reads it with `resolvePhiRecordSource({ registry, runtime, binding })`
   -- `registry` is in its render arguments -- and every Widget bound to the same record shares one read.
 
+To make the Page a template an author can rebuild in the Builder
+([MODULES.md](./MODULES.md#the-fields-of-a-record-and-the-record-a-page-is-about)):
+
+- Declare the record's fields on the descriptor, `record: { audience, fields: [{ key, label, kind }] }`,
+  and answer their values from `loadFields` on the server half. A price or a date the domain formats is a
+  `text` field the Module hands over finished.
+- Name `pageRecord: { providerKey, params, titleField?, descriptionField? }` on the route; `params` maps
+  each Provider parameter to the route parameter that fills it.
+- Build the starting tree from Core Widgets bound with `recordField` (and `linkRecordField`,
+  `valueRecordField`), not from Widgets of the Module that carry the slug.
+- Do not read the record or call `notFound()` in `loadTree`: Core reads the record once per request and
+  answers the 404, for the Module's tree and a stored override alike. The Builder opens `loadTree` with
+  `params: {}`.
+- Optionally offer `loadSamples` on the server half, a few `{ label, params }` with the Provider's own
+  parameters; the Builder's Preview takes the first. Without one a template previews with its Widgets' own
+  content.
+
 ## 8. Export the Client and Authoring contributions
 
 `./client` exports the live Client contributions, one entry per Module:

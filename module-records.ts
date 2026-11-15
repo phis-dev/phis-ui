@@ -21,11 +21,13 @@ export type {
   PhiRecordField,
   PhiRecordLink,
   PhiRecordPicture,
+  PhiRecordSample,
   PhiRecordTag,
   PhiRuntimeModuleRecordProviderServerDefinition,
   PhiRuntimeRecordFieldsReader,
   PhiRuntimeRecordProviderContext,
   PhiRuntimeRecordProviderResolver,
+  PhiRuntimeRecordSamplesReader,
 } from "./types/record-provider";
 export { resolvePhiRecordSource, type PhiRecordSourceResult } from "./server-helpers/record-source";
 export { resolvePhiPageRecordFields, type PhiPageRecordFieldsResult } from "./server-helpers/record-fields";

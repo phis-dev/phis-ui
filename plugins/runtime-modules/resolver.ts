@@ -891,6 +891,11 @@ export async function resolvePhiRuntimeRenderRegistry({
         (catalog.get(moduleId)?.recordProviders ?? []).flatMap((provider) =>
           provider.loadFields ? [[provider.key, provider.loadFields] as const] : [])),
     ),
+    recordSamplesLoadersByKey: new Map(
+      [...moduleSet.moduleDefinitionsById.keys()].flatMap((moduleId) =>
+        (catalog.get(moduleId)?.recordProviders ?? []).flatMap((provider) =>
+          provider.loadSamples ? [[provider.key, provider.loadSamples] as const] : [])),
+    ),
     dataProviderDescriptorsByKey,
     formDefinitionsById: moduleSet.formDefinitionsById,
   };

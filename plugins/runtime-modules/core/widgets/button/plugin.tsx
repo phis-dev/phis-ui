@@ -5,10 +5,12 @@ import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import { PHI_BUTTON_WIDGET_DEFINITION, type PhiButtonWidgetConfig } from "./config";
 import { getPhiCommonControlLabelsForRuntime } from "../../../../../components/widgets/label-sets/common-controls";
+import { isPhiExternalHref } from "../../../../../helpers/external-href";
 import { resolvePhiLinkHref } from "../../../../../helpers/link-target";
 import { trBulkForLocale } from "../../../../../server-helpers/translate";
 import { resolvePhiWidgetRecordField } from "../../../../../server-helpers/record-fields";
 import type { PhiBlockRuntime } from "../../../../../types";
+import type { PhiRecordLink } from "../../../../../types/record-provider";
 
 /**
  * The Button's own words in the reader's language.
@@ -33,18 +35,24 @@ async function translatePhiButtonConfig(
 }
 
 /**
- * The signal value from the page record, where the Button names a field for it: a Button on a template
- * sends what the record it stands beside is called, not a value frozen into the Page. A record without
- * the field leaves the Button without a value of its own to send, so it is not drawn.
+ * What the page record says of the Button, where it names a field for its value or its link: a Button on
+ * a template sends what the record it stands beside is called and leads where that record leads, not a
+ * value or a target frozen into the Page. A record without a field the Button names leaves it without
+ * that part of its own, so it is not drawn.
  */
 async function resolvePhiButtonRecordConfig(
   config: PhiButtonWidgetConfig,
   runtime: PhiBlockRuntime,
   registry: Parameters<typeof resolvePhiWidgetRecordField>[0]["registry"],
-): Promise<PhiButtonWidgetConfig | null> {
-  const recordField = await resolvePhiWidgetRecordField({ registry, runtime, key: config.valueRecordField, kinds: ["text"] });
-  if (!recordField.bound) return config;
-  return recordField.field?.value ? { ...config, value: recordField.field.value } : null;
+): Promise<{ config: PhiButtonWidgetConfig; link: PhiRecordLink | null } | null> {
+  const valueField = await resolvePhiWidgetRecordField({ registry, runtime, key: config.valueRecordField, kinds: ["text"] });
+  const linkField = await resolvePhiWidgetRecordField({ registry, runtime, key: config.linkRecordField, kinds: ["link"] });
+  if (valueField.bound && !valueField.field?.value) return null;
+  if (linkField.bound && !linkField.field) return null;
+  return {
+    config: valueField.bound && valueField.field ? { ...config, value: valueField.field.value } : config,
+    link: linkField.bound && linkField.field ? linkField.field.value : null,
+  };
 }
 
 export const PHI_BUTTON_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiButtonWidgetConfig> = {
@@ -55,18 +63,25 @@ export const PHI_BUTTON_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiButtonWidgetConfig>
    * target on this page in one pass before anything drew.
    */
   render: async ({ widget, config: stored, runtime, links, registry }) => {
-    const config = await resolvePhiButtonRecordConfig(stored, runtime, registry);
-    return config ? (
+    const bound = await resolvePhiButtonRecordConfig(stored, runtime, registry);
+    if (!bound) return null;
+    const { link: recordLink } = bound;
+    const translated = await translatePhiButtonConfig(bound.config, runtime, !hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate));
+    /* The record's words stand in for an empty label only, and are the record's own: not translated. */
+    const config = recordLink?.label && !translated.label?.trim() ? { ...translated, label: recordLink.label } : translated;
+    return (
       <PhiRuntimeModuleRenderClientHost
         type={PhiCmsWidgetType.Button}
         componentProps={{
           blockId: widget.id,
-          config: await translatePhiButtonConfig(config, runtime, !hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate)),
+          config,
           labels: await getPhiCommonControlLabelsForRuntime(runtime),
-          link: resolvePhiLinkHref(config.linkTarget, links),
+          link: recordLink
+            ? { href: recordLink.href, newTab: false, external: isPhiExternalHref(recordLink.href) }
+            : resolvePhiLinkHref(bound.config.linkTarget, links),
         }}
       />
-    ) : null;
+    );
   },
   renderPreview: async ({ widget, config, runtime, links }) => (
     <PhiRuntimeModuleRenderClientHost

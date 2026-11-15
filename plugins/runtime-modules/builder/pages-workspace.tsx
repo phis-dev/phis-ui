@@ -6,6 +6,7 @@ import {
   buildPhiBuilderPagesDraftsByScope,
   buildPhiBuilderPageMetaForScope,
   resolvePhiBuilderCurrentPageScope,
+  resolvePhiBuilderPagePresetRecord,
 } from "./page-presets.server";
 import {
   buildPhiBuilderPreviewRenderableTrees,
@@ -13,6 +14,7 @@ import {
 } from "./render-root-node-preview.server";
 import type { PhiDeveloperBuilderArea } from "./developer-workspace-types";
 import { PhiDeveloperBuilderPagesWorkspaceWidgetClient } from "./clients/pages-workspace";
+import { resolvePhiPageRecordSampleBinding } from "../../../server-helpers/record-samples";
 import { buildPhiBuilderRuntimeModuleIdsForArea } from "./area-shell-presets.server";
 import { resolvePhiBuilderCanvasRuntimeModuleSandbox } from "./runtime-module-sandbox.server";
 import { PhiBuilderWorkspaceScopeBoundary } from "./clients/workspace-scope-boundary";
@@ -86,6 +88,20 @@ export async function PhiDeveloperBuilderPagesWorkspaceWidget({
       viewer: runtime.viewer,
     }),
   );
+  /*
+   * A template of a route about a record is previewed with the first sample its Provider offers; the
+   * Editor canvas keeps showing each Widget's own content. A Provider with no samples leaves the Page
+   * about no record, and the template previews with its Widgets' own content as well.
+   */
+  const pageRecord = await resolvePhiBuilderPagePresetRecord(
+    runtime,
+    previewArea,
+    previewPageKey,
+    registry.runtimeModuleCatalog,
+  );
+  const sampleRecord = pageRecord
+    ? await resolvePhiPageRecordSampleBinding({ registry: sandbox.registry, runtime, pageRecord })
+    : null;
   const previewRuntime = {
     ...runtime,
     page: {
@@ -96,6 +112,7 @@ export async function PhiDeveloperBuilderPagesWorkspaceWidget({
       descriptionMsgId: runtime.page?.descriptionMsgId ?? null,
       title: pageMeta.title ?? runtime.page?.title ?? null,
       description: pageMeta.description ?? runtime.page?.description ?? null,
+      ...(sampleRecord ? { record: sampleRecord } : {}),
     },
   };
 

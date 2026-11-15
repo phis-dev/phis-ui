@@ -45,6 +45,12 @@ describe("what a Gallery accepts", () => {
     });
   });
 
+  it("reads the field of the page record that takes the Folder's place", () => {
+    expect(parsePhiCmsGalleryWidgetConfig({ recordField: "pictures" }).recordField).toBe("pictures");
+    expect(parsePhiCmsGalleryWidgetConfig({}).recordField).toBeUndefined();
+    expect(() => parsePhiCmsGalleryWidgetConfig({ recordField: 3 })).toThrow(/Invalid Gallery recordField/);
+  });
+
   it("leaves out what was never written, so the defaults still decide", () => {
     const parsed = parsePhiCmsGalleryWidgetConfig({});
     expect(parsed.source).toBeNull();

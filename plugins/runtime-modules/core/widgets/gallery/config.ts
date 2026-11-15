@@ -37,6 +37,11 @@ import {
 export type PhiCmsGalleryWidgetConfig = PhiCmsWidgetConfigBase & PhiSequenceSettings & {
   /** The Folder the pictures come from: always the Media Folder Provider, with its parameters. */
   source: PhiRuntimeDataProviderBinding | null;
+  /**
+   * A pictures field of the page record that is shown instead of the Folder's pictures. `source` stays:
+   * it is what a Page about no record -- a template open in the Builder -- draws in the field's place.
+   */
+  recordField?: string;
   /** The rendition each picture is drawn in; absent is the original. */
   variantKey?: PhiImageAssetVariantKeyValue;
   /** Opens a picture larger over the page when clicked. */
@@ -86,6 +91,12 @@ function readFolderSource(value: unknown): PhiRuntimeDataProviderBinding | null 
   return binding;
 }
 
+function readRecordField(value: unknown): string | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value !== "string") fail("recordField", value, "the key of a field of the page record");
+  return value.trim() || undefined;
+}
+
 function readVariantKey(value: unknown): PhiImageAssetVariantKeyValue | undefined {
   if (value === undefined || value === null) return undefined;
   if (!PHI_IMAGE_VARIANT_OPTIONS.some((option) => option.value === value)) {
@@ -99,11 +110,13 @@ export function parsePhiCmsGalleryWidgetConfig(raw: Record<string, unknown>): Ph
   const fit = readMember(raw.fit, ["cover", "contain"] as const, "fit");
   const variantKey = readVariantKey(raw.variantKey);
   const preview = readFlag(raw.preview, "preview");
+  const recordField = readRecordField(raw.recordField);
 
   return {
     ...readRenderableBlockConfig(raw),
     ...readPhiSequenceSettings(raw, fail),
     source: readFolderSource(raw.source),
+    ...(recordField === undefined ? {} : { recordField }),
     ...(variantKey === undefined ? {} : { variantKey }),
     ...(preview === undefined ? {} : { preview }),
     ...(aspectRatio === undefined ? {} : { aspectRatio }),
@@ -132,6 +145,13 @@ export const PHI_GALLERY_WIDGET_DEFINITION = {
       // Always a Folder: the Inspector asks for the folder and its order, never for a Provider.
       providerKey: PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.folderImages,
       label: "Source",
+    },
+    {
+      key: "recordField",
+      type: "record-field",
+      label: "Pictures from record",
+      description: "Shows the pictures of a field of the record this page is about, instead of the Folder's.",
+      kinds: ["pictures"],
     },
     {
       key: "variantKey",

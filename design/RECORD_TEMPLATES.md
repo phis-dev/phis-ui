@@ -8,9 +8,11 @@ rebuild it in the Builder.
 Built so far (the contract is MODULES.md, "The fields of a record, and the record a Page is about"):
 declared fields and the page record, read by Core for the Module's tree and a stored override alike; the
 `record-field` Inspector field; Simple Text, Markdown, Image and the Button's signal value bound to a
-field. Not built: the Builder's sample record (a template opens with its Widgets' own content standing
-in), the Gallery on a `pictures` field, Core Widgets for `list`, `tag` and `link`, and the product page
-as the first template.
+field, the Gallery on `pictures`, the Button's link on a `link` field; and the Builder's Preview of a
+template, which takes the first sample the record Provider offers (`loadSamples`). Not built: a sample
+picker and the canvas showing sample values (the Editor canvas shows each Widget's own content), Core
+Widgets for `list` and `tag`, a Gallery variant with a main picture and thumbnails, and the product page
+(phis-shop's next step).
 
 ## What there is today
 

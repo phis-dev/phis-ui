@@ -4,6 +4,7 @@ import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runt
 import { getPhiGalleryWidgetLabels } from "../../../../../components/widgets/label-sets/gallery";
 import { PhiWidgetFailureServer } from "../../../../../components/widgets/shared/widget-failure.server";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
+import { resolvePhiWidgetRecordField } from "../../../../../server-helpers/record-fields";
 import { resolvePhiRecordSource } from "../../../../../server-helpers/record-source";
 import { trBulk, trBulkForLocale } from "../../../../../server-helpers/translate";
 import type { PhiBlockRuntime } from "../../../../../types";
@@ -17,7 +18,10 @@ import { buildPhiWidgetLabelTranslatorOptions } from "../../../../../components/
 export type PhiGalleryWidgetServerProps = {
   runtime: PhiBlockRuntime;
   /** Where the record binding is answered; absent outside a page render, where nothing is bound. */
-  registry?: Pick<PhiCmsRuntimeRenderRegistry, "recordProviderLoadersByKey">;
+  registry?: Pick<
+    PhiCmsRuntimeRenderRegistry,
+    "recordProviderLoadersByKey" | "recordFieldsLoadersByKey" | "dataProviderDescriptorsByKey"
+  >;
   config: PhiCmsGalleryWidgetConfig;
   widgetId?: PhiCmsInstanceId | null;
   /** Whether the pictures' descriptions go through the Site's translation; off where the Widget says so. */
@@ -39,6 +43,21 @@ function isPublicAssetReference(value: unknown): value is PhiPublicMediaAssetRef
 export async function PhiGalleryWidgetServer({ runtime, registry, config, widgetId, translate = true }: PhiGalleryWidgetServerProps) {
   const labels = await getPhiGalleryWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
   const renderMode = readPhiRuntimeTreeRenderMode(config);
+  /*
+   * Where the Page has a record and the Widget names a field of it, the record's pictures take the place
+   * of the Folder's -- by their address, in the page's language already -- and a record without any leaves
+   * nothing to draw. A Page about no record draws the Folder, which stands in for the field.
+   */
+  const recordField = await resolvePhiWidgetRecordField({ registry, runtime, key: config.recordField, kinds: ["pictures"] });
+  if (recordField.bound) {
+    const pictures = recordField.field?.value ?? [];
+    return pictures.length === 0 ? null : (
+      <PhiRuntimeModuleRenderClientHost
+        type={PhiCmsWidgetType.Gallery}
+        componentProps={{ config, pictures, labels }}
+      />
+    );
+  }
   const result = registry && config.source
     ? await resolvePhiRecordSource({ registry, runtime, binding: config.source })
     : { status: "missing" as const };

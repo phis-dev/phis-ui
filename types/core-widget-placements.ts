@@ -164,6 +164,8 @@ export type PhiButtonWidgetPlacement = PhiWidgetPlacementBase &
   danger?: boolean;
   /** A text field of the page record sent as the signal value instead of `value`. */
   valueRecordField?: string;
+  /** A link field of the page record the Button leads to instead of `linkTarget`. */
+  linkRecordField?: string;
 };
 
 // Image

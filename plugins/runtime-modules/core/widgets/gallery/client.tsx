@@ -12,6 +12,7 @@ import {
 } from "../../../../../components/widgets/label-types/gallery";
 import { isPhiMediaSvgContentType } from "../../../../../constants/media";
 import type { PhiImageAssetVariantKeyValue, PhiPublicMediaAssetReference } from "../../../../../types/media";
+import type { PhiRecordPicture } from "../../../../../types/record-provider";
 import type { PhiCmsGalleryWidgetConfig } from "./config";
 import { resolvePhiGalleryFrame } from "./defaults";
 
@@ -25,40 +26,53 @@ export type PhiGalleryWidgetProps = {
   config?: PhiCmsGalleryWidgetConfig;
   /** The server's answer to the binding: public Assets, in the order the Folder was asked for. */
   images?: PhiPublicMediaAssetReference[];
+  /** The page record's pictures, in place of `images`: each by its address, drawn as an Image Widget draws a URL. */
+  pictures?: readonly PhiRecordPicture[];
   labels?: PhiGalleryWidgetLabels;
 };
 
+/** One picture to draw: a public Asset of the Folder, or a picture a record names by its address. */
+type GalleryItem =
+  | { kind: "asset"; key: string; image: PhiPublicMediaAssetReference }
+  | { kind: "url"; key: string; picture: PhiRecordPicture };
+
 function GalleryPicture({
-  image,
+  item,
   variantKey,
   fit,
   preview,
   sizes,
   aspectRatio,
 }: {
-  image: PhiPublicMediaAssetReference;
+  item: GalleryItem;
   variantKey: PhiImageAssetVariantKeyValue | undefined;
   fit: "cover" | "contain";
   preview: boolean;
   sizes: string;
   aspectRatio: string;
 }) {
-  const presentation = resolvePhiImagePresentation({
-    sourceKind: "asset",
-    assetId: image.id,
-    variantKey,
-    variantVersion: image.variantVersion,
-    deliveryRevision: image.deliveryRevision,
-    originalUrl: image.deliveryUrl,
-    focalRect: image.focalRect,
-    fit,
-    sourceWidth: image.width,
-    sourceHeight: image.height,
-    // The frame's proportion is known, so the crop can keep the whole focal rectangle in view.
-    frameAspectRatio: readPhiAspectRatio(aspectRatio),
-  });
+  // The frame's proportion is known, so the crop can keep the whole focal rectangle in view.
+  const frameAspectRatio = readPhiAspectRatio(aspectRatio);
+  const presentation = item.kind === "asset"
+    ? resolvePhiImagePresentation({
+        sourceKind: "asset",
+        assetId: item.image.id,
+        variantKey,
+        variantVersion: item.image.variantVersion,
+        deliveryRevision: item.image.deliveryRevision,
+        originalUrl: item.image.deliveryUrl,
+        focalRect: item.image.focalRect,
+        fit,
+        sourceWidth: item.image.width,
+        sourceHeight: item.image.height,
+        frameAspectRatio,
+      })
+    // A picture of a record has no rendition and no focal rectangle: its address, in the frame.
+    : resolvePhiImagePresentation({ sourceKind: "url", sourceUrl: item.picture.src, fit, frameAspectRatio });
   // The Folder route hands out public Assets only, so a raster original may go through the optimiser.
-  const optimizable = presentation.kind === "generated-variant" || !isPhiMediaSvgContentType(image.contentType);
+  const optimizable = item.kind === "asset"
+    ? presentation.kind === "generated-variant" || !isPhiMediaSvgContentType(item.image.contentType)
+    : false;
   /*
    * The frame is a block of its own inside the track item, not the item itself. A flex item that is
    * stretched (`alignItems: stretch` on the track) has no height of its own for an aspect ratio to
@@ -71,10 +85,10 @@ function GalleryPicture({
     <div style={{ position: "relative", width: "100%", aspectRatio }}>
       <PhiImageControl
         presentation={presentation}
-        source="asset"
-        alt={image.altText ?? ""}
-        title={image.title ?? undefined}
-        blurDataUrl={image.blurDataUrl}
+        source={item.kind === "asset" ? "asset" : "url"}
+        alt={(item.kind === "asset" ? item.image.altText : item.picture.alt) ?? ""}
+        title={item.kind === "asset" ? item.image.title ?? undefined : undefined}
+        blurDataUrl={item.kind === "asset" ? item.image.blurDataUrl : undefined}
         optimizable={optimizable}
         sizes={sizes}
         // Unconditionally eager, and that is the whole mechanism: nothing outside the window and its
@@ -88,11 +102,13 @@ function GalleryPicture({
   );
 }
 
-export function PhiGalleryWidget({ config, images: imagesInput, labels: labelsInput }: PhiGalleryWidgetProps) {
+export function PhiGalleryWidget({ config, images: imagesInput, pictures, labels: labelsInput }: PhiGalleryWidgetProps) {
   const { token } = usePhiConfig();
   const labels = labelsInput ?? PHI_GALLERY_WIDGET_DEFAULT_LABELS;
-  const images = useMemo(() => imagesInput ?? [], [imagesInput]);
-  const span = resolvePhiSequenceRunSpan(config?.visibleCount, images.length);
+  const items = useMemo<GalleryItem[]>(() => pictures
+    ? pictures.map((picture, index) => ({ kind: "url", key: `${index}:${picture.src}`, picture }))
+    : (imagesInput ?? []).map((image) => ({ kind: "asset", key: String(image.id), image })), [imagesInput, pictures]);
+  const span = resolvePhiSequenceRunSpan(config?.visibleCount, items.length);
   // What a picture of this window is worth of the viewport, for the optimiser's choice of rendition.
   const sizes = span === 1 ? "100vw" : `(max-width: 768px) 100vw, ${Math.ceil(100 / span)}vw`;
   const { aspectRatio, fit } = resolvePhiGalleryFrame(config);
@@ -104,10 +120,10 @@ export function PhiGalleryWidget({ config, images: imagesInput, labels: labelsIn
 
   return (
     <PhiSequenceRun
-      items={images.map((image) => (
+      items={items.map((item) => (
         <GalleryPicture
-          key={image.id}
-          image={image}
+          key={item.key}
+          item={item}
           variantKey={config?.variantKey}
           fit={fit}
           preview={config?.preview === true}

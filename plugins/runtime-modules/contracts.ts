@@ -1027,6 +1027,10 @@ function assertPhiRuntimeModuleRecordProviders(
         ? `${definition.moduleId}: record provider "${provider.key}" has a field reader, but its descriptor declares no fields.`
         : `${definition.moduleId}: record descriptor "${provider.key}" declares fields, but its server half has no field reader.`);
     }
+    // A sample stands in for the record a Page is about, so it needs a record that declares fields.
+    if (provider.loadSamples && !withFields.has(provider.key)) {
+      throw new Error(`${definition.moduleId}: record provider "${provider.key}" offers samples, but its descriptor declares no fields.`);
+    }
     if (served.has(provider.key)) {
       throw new Error(`${definition.moduleId}: record provider "${provider.key}" is served twice.`);
     }

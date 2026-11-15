@@ -64,6 +64,8 @@ export type PhiButtonWidgetConfig = PhiCmsWidgetConfigBase & PhiControlBadgeConf
   danger?: boolean;
   /** A text field of the page record that is the signal value instead of `value`. */
   valueRecordField?: string;
+  /** A link field of the page record that is where the Button leads instead of `linkTarget`. */
+  linkRecordField?: string;
 };
 
 function parsePhiButtonWidgetConfig(config: Record<string, unknown>): PhiButtonWidgetConfig {
@@ -85,6 +87,7 @@ function parsePhiButtonWidgetConfig(config: Record<string, unknown>): PhiButtonW
     linkTarget: readPhiLinkTarget(config.linkTarget) ?? undefined,
     danger: readBoolean(config.danger),
     valueRecordField: readString(config.valueRecordField),
+    linkRecordField: readString(config.linkRecordField),
   };
 }
 
@@ -169,6 +172,13 @@ export const PHI_BUTTON_WIDGET_DEFINITION = {
       heading: "Link target",
       label: "Link target",
       visibleWhen: { field: "signalRoutes.emits", equals: null },
+    },
+    {
+      key: "linkRecordField",
+      type: "record-field",
+      label: "Link from record",
+      description: "Leads where a field of the record this page is about leads, instead of the target above.",
+      kinds: ["link"],
     },
     ...PHI_CONTROL_BADGE_FIELDS,
   ],

@@ -42,7 +42,24 @@ export type PhiRuntimeModuleRecordProviderServerDefinition = {
   load: () => Promise<PhiRuntimeRecordProviderResolver>;
   /** The reader of the fields the descriptor declares; present exactly where it declares any. */
   loadFields?: () => Promise<PhiRuntimeRecordFieldsReader>;
+  /**
+   * A few records to show a template with while it is edited; the Builder's Preview takes the first.
+   * Optional: without one a template previews with its Widgets' own content. Only where the descriptor
+   * declares `record` (fields): a sample stands in for the record a Page is about.
+   */
+  loadSamples?: () => Promise<PhiRuntimeRecordSamplesReader>;
 };
+
+/**
+ * One record to show a template with: what the Builder calls it, and the parameters of the Provider that
+ * name it (`{ slug: "chair" }`) -- the Provider's own, not a route's.
+ */
+export type PhiRecordSample = { label: string; params: Readonly<Record<string, string>> };
+
+/** The samples a Provider offers, best first; the Builder's Preview takes the first. */
+export type PhiRuntimeRecordSamplesReader = (
+  context: PhiRuntimeRecordProviderContext,
+) => Promise<readonly PhiRecordSample[]>;
 
 /*
  * The fields of a record, declared (MODULES.md, "The fields of a record, and the record a Page is about").

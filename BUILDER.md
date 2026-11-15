@@ -602,6 +602,7 @@ Preview rendering boundary:
 - the client editor may own selection, inspector state, picker state, drag handles, and insert affordances
 - the client editor must not import widget live renderers or server-only helpers to produce preview output
 - server preview receives a serialized draft tree as input and renders through the normal CMS layout/widget renderer
+- a template of a route with a page record previews with the first sample its record Provider offers (MODULES.md, "The fields of a record, and the record a Page is about"); the Editor canvas keeps showing each Widget's own content
 - draft synchronization into the server preview is an explicit transport concern and must use a documented route, action, or persistence path
 - do not use a second widget preview registry as the long-term contract
 
