@@ -369,6 +369,8 @@ h5.phi-typography, .phi-typography h5 {
   --phi-card-control-radius: var(--phi-surface-radius);
   --phi-card-control-line: var(--ant-line-width) var(--ant-line-type) var(--ant-color-border-secondary);
   position: relative;
+  display: flex;
+  flex-direction: column;
   box-sizing: border-box;
   min-width: 0;
   border: var(--phi-card-control-line);
@@ -428,7 +430,16 @@ h5.phi-typography, .phi-typography h5 {
   border-radius: var(--phi-card-control-radius) var(--phi-card-control-radius) 0 0;
 }
 
+/*
+ * The body takes whatever height the box is given beyond its head and cover. A Card stretched to its row
+ * in a grid of Cards is taller than its own content, and the body is where that height belongs: a caller
+ * whose content is a column of its own (`height: 100%`) can then push its last part -- a price and a
+ * button -- to the bottom edge, so a row of Cards lines up there. A box that is only as tall as its
+ * content gains nothing and loses nothing. The basis is 0 rather than `auto` so the height is definite
+ * where the box's is, which is what lets that `100%` resolve at all.
+ */
 .phi-card-control__body {
+  flex: 1 0 0;
   border-radius: 0 0 var(--phi-card-control-radius) var(--phi-card-control-radius);
 }
 
