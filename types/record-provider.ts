@@ -1,5 +1,5 @@
 import type { PhiRecordFieldKind } from "../constants/record-field-kinds";
-import type { PhiRuntimeDataProviderKey } from "./runtime-data-provider";
+import type { PhiRuntimeDataProviderBinding, PhiRuntimeDataProviderKey } from "./runtime-data-provider";
 import type { PhiBlockRuntime } from "./widget-runtime";
 
 /*
@@ -139,6 +139,19 @@ export type PhiRecordField = {
 export type PhiCmsPageRecordDescriptor = {
   providerKey: PhiRuntimeDataProviderKey;
   params: Readonly<Record<string, string>>;
+  titleField?: string;
+  descriptionField?: string;
+};
+
+/**
+ * The record a Page is about, as `runtime.page.record` carries it: the Provider and the parameters the
+ * address filled in, plus the names of the fields the route's `pageRecord` makes the Page's title and
+ * description. Absent where the route names none, never empty.
+ *
+ * The two names say what the Page takes from the record, not what is asked of the Provider, so they are no
+ * part of what a read is keyed by. A Table or Form binding stays the general `PhiRuntimeDataProviderBinding`.
+ */
+export type PhiPageRecordBinding = PhiRuntimeDataProviderBinding & {
   titleField?: string;
   descriptionField?: string;
 };

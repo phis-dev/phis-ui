@@ -2,19 +2,15 @@ import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import { fetchSiteNavigationFolderTarget } from "../../../../../gateway/site-nav";
 import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
-import { resolvePhiPageRecordFields } from "../../../../../server-helpers/record-fields";
+import { resolvePhiWidgetRecordField } from "../../../../../server-helpers/record-fields";
 import type { PhiBlockRuntime } from "../../../../../types";
-import type { PhiCmsRuntimeRenderRegistry } from "../../../../../types/cms-plugins";
 import type { PhiBreadcrumbWidgetProps } from "./client";
 
 export type PhiBreadcrumbWidgetServerProps = Omit<PhiBreadcrumbWidgetProps, "runtime"> & {
   /** The whole runtime of the render: the record read needs more of it than the client does. */
   runtime: PhiBlockRuntime;
   /** Where the page record is answered; absent outside a page render, where nothing is bound. */
-  registry?: Pick<
-    PhiCmsRuntimeRenderRegistry,
-    "recordProviderLoadersByKey" | "recordFieldsLoadersByKey" | "dataProviderDescriptorsByKey"
-  >;
+  registry?: Parameters<typeof resolvePhiWidgetRecordField>[0]["registry"];
 };
 
 export type {
@@ -59,23 +55,20 @@ async function resolveLinkedFolderPaths(props: PhiBreadcrumbWidgetServerProps): 
 /**
  * The title of the record the Page is about, for the trail's last item; `null` leaves the path segment.
  *
- * Core has already read the record and made its title the Page's (`runtime.page.title`), but the runtime
- * does not say whether that title is the record's or the route's own, and the route's `titleField` is not
- * known here. So the title counts only where it is the value of one of the record's `text` fields. The
- * fields are the read Core itself did for the title, memoised per request by Provider and parameters
- * (`resolvePhiRecordFields`), so this costs the Provider no second read. A record that is missing or
- * unavailable, a Page about no record, and a failure of any kind all give `null`: the trail never fails.
+ * The field is the one the route's `pageRecord` made the Page's title (`runtime.page.record.titleField`),
+ * read like any Widget bound to a field of the page record: the memoised read Core made for the title, so
+ * this costs the Provider no second one. No `titleField`, no record, a record that is missing or
+ * unavailable, no registry, a field that is empty and a failure of any kind all give `null`: the trail
+ * never fails for it.
  */
 async function resolvePageTitle({ config, runtime, registry }: PhiBreadcrumbWidgetServerProps): Promise<string | null> {
-  const title = runtime?.page?.title?.trim();
-  if (!title || !registry || !runtime?.page?.record || config?.showPath === false || config?.pathLabel?.trim()) {
+  const titleField = runtime?.page?.record?.titleField;
+  if (!titleField || !registry || config?.showPath === false || config?.pathLabel?.trim()) {
     return null;
   }
   try {
-    const result = await resolvePhiPageRecordFields({ registry, runtime });
-    if (result.status !== "ok") return null;
-    const isRecordText = [...result.fields.values()].some((field) => field.kind === "text" && field.value.trim() === title);
-    return isRecordText ? title : null;
+    const answer = await resolvePhiWidgetRecordField({ registry, runtime, key: titleField, kinds: ["text"] });
+    return (answer.bound && answer.field?.value.trim()) || null;
   } catch {
     return null;
   }

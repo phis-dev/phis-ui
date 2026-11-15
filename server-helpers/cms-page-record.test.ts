@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /*
  * The record a route's Page is about (MODULES.md, "The fields of a record, and the record a Page is
@@ -7,6 +7,22 @@ import { describe, expect, it, vi } from "vitest";
  */
 
 vi.mock("server-only", () => ({}));
+/*
+ * `React.cache` keeps nothing outside a render, so the request memo would never answer here. This one keeps
+ * its value until the next test, as it does for the rest of one request.
+ */
+const request = vi.hoisted(() => ({ n: 0 }));
+vi.mock("react", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("react")>()),
+  cache: <T,>(read: () => T) => {
+    let seen = -1;
+    let value: T;
+    return () => {
+      if (seen !== request.n) { value = read(); seen = request.n; }
+      return value;
+    };
+  },
+}));
 vi.mock("./phi-runtime", () => ({
   phiRuntime: () => ({ apiBaseUrl: "http://core.test", internalToken: "token", siteKey: "site" }),
 }));
@@ -62,8 +78,24 @@ const active = new Set([moduleId]);
 
 describe("resolvePhiCmsPageRecord", () => {
   it("fills the Provider's parameters from the address and names the Page after the record", async () => {
+  beforeEach(() => { request.n += 1; });
+
     const result = await resolvePhiCmsPageRecord({ binding: bindingFor("chair"), runtime, runtimeModuleCatalog: catalogWith(), activeModuleIds: active });
-    expect(result).toEqual({ status: "ok", binding: { providerKey, params: { slug: "chair" } }, title: "Chair", description: "A chair." });
+    expect(result).toEqual({
+      status: "ok",
+      binding: { providerKey, params: { slug: "chair" }, titleField: "title", descriptionField: "summary" },
+      title: "Chair",
+      description: "A chair.",
+    });
+  });
+
+  it("carries the route's field names in the binding, and leaves out those the route does not name", async () => {
+    const bare = bindingFor("chair");
+    delete (bare.descriptor.pageRecord as { titleField?: string }).titleField;
+    delete (bare.descriptor.pageRecord as { descriptionField?: string }).descriptionField;
+    const result = await resolvePhiCmsPageRecord({ binding: bare, runtime, runtimeModuleCatalog: catalogWith(), activeModuleIds: active });
+    expect(result).toMatchObject({ status: "ok", title: null, description: null });
+    expect((result as { binding: object }).binding).toStrictEqual({ providerKey, params: { slug: "chair" } });
   });
 
   it("says an address that names no record is missing", async () => {
@@ -84,6 +116,8 @@ describe("resolvePhiCmsPageRecord", () => {
 
 describe("resolvePhiRecordFields", () => {
   const registryOf = (catalog: PhiRuntimeModuleCatalog) => {
+  beforeEach(() => { request.n += 1; });
+
     const entry = catalog.get(moduleId)!;
     return {
       recordProviderLoadersByKey: new Map(entry.recordProviders!.map((provider) => [provider.key, provider.load] as const)),
@@ -93,6 +127,23 @@ describe("resolvePhiRecordFields", () => {
   };
 
   it("hands over the declared fields and leaves out a value that is not of its kind", async () => {
+  it("hands the Provider the parameters only, and a later read by the Page's binding costs no second read", async () => {
+    const load = vi.fn(async (params: Readonly<Record<string, unknown>>) => (params.slug === "chair" ? { name: "Chair" } : null));
+    const catalog = catalogWith();
+    (catalog.get(moduleId) as unknown as { recordProviders: { load: () => Promise<typeof load> }[] }).recordProviders[0]!.load = async () => load;
+    await resolvePhiCmsPageRecord({ binding: bindingFor("chair"), runtime, runtimeModuleCatalog: catalog, activeModuleIds: active });
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(load.mock.calls[0]![0]).toStrictEqual({ slug: "chair" });
+    // What a Widget does with `runtime.page.record`, names and all: the same key, so the same answer.
+    const page = await resolvePhiCmsPageRecord({ binding: bindingFor("chair"), runtime, runtimeModuleCatalog: catalog, activeModuleIds: active });
+    await resolvePhiRecordFields({
+      registry: registryOf(catalog),
+      runtime,
+      binding: (page as { binding: never }).binding,
+    });
+    expect(load).toHaveBeenCalledTimes(1);
+  });
+
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const result = await resolvePhiRecordFields({ registry: registryOf(catalogWith()), runtime, binding: { providerKey, params: { slug: "chair" } } });
     warn.mockRestore();

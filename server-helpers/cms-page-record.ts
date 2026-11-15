@@ -3,6 +3,7 @@ import "server-only";
 import type { PhiBlockRuntime } from "../types";
 import type { PhiCmsRoutePresetBinding } from "../types/cms-module-descriptors";
 import type { PhiCmsRuntimeRenderRegistry, PhiRuntimeModuleCatalog, PhiRuntimeModuleId } from "../types/cms-plugins";
+import type { PhiPageRecordBinding } from "../types/record-provider";
 import type { PhiRuntimeDataProviderBinding } from "../types/runtime-data-provider";
 import { readPhiPageRecordField, resolvePhiRecordFields } from "./record-fields";
 import { resolvePhiRecordSource } from "./record-source";
@@ -16,7 +17,7 @@ import { resolvePhiRecordSource } from "./record-source";
  */
 export type PhiCmsPageRecord =
   | { status: "missing" }
-  | { status: "ok"; binding: PhiRuntimeDataProviderBinding; title: string | null; description: string | null };
+  | { status: "ok"; binding: PhiPageRecordBinding; title: string | null; description: string | null };
 
 /** What the record Providers of the active Modules offer, as a render's registry holds it. */
 function buildRecordRegistry(
@@ -67,5 +68,14 @@ export async function resolvePhiCmsPageRecord({ binding, runtime, runtimeModuleC
   }
   const fields = await resolvePhiRecordFields({ registry, runtime, binding: record });
   const text = (key: string | undefined) => readPhiPageRecordField(fields, key, ["text"])?.value.trim() || null;
-  return { status: "ok", binding: record, title: text(declaration.titleField), description: text(declaration.descriptionField) };
+  /*
+   * The Page's binding is the read's own, plus the two names the route gave. They are added after the
+   * reads and the reads were keyed by `record`, so the names are no part of what is asked or memoised.
+   */
+  const pageBinding: PhiPageRecordBinding = {
+    ...record,
+    ...(declaration.titleField ? { titleField: declaration.titleField } : {}),
+    ...(declaration.descriptionField ? { descriptionField: declaration.descriptionField } : {}),
+  };
+  return { status: "ok", binding: pageBinding, title: text(declaration.titleField), description: text(declaration.descriptionField) };
 }

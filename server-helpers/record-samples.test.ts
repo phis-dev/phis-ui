@@ -33,6 +33,17 @@ describe("resolvePhiPageRecordSampleBinding", () => {
     expect(reader.mock.calls[0]![0]).toMatchObject({ apiBaseUrl: "http://core.test", internalToken: "token", siteKey: "site", locale: "de" });
   });
 
+  it("carries the route's title and description field names, and none the route does not name", async () => {
+    const reader = async () => [{ label: "Chair", params: { slug: "chair" } }];
+    expect(await resolvePhiPageRecordSampleBinding({
+      registry: registryOf(reader),
+      runtime,
+      pageRecord: { ...pageRecord, titleField: "name", descriptionField: "summary" },
+    })).toStrictEqual({ providerKey, params: { slug: "chair" }, titleField: "name", descriptionField: "summary" });
+    expect(await resolvePhiPageRecordSampleBinding({ registry: registryOf(reader), runtime, pageRecord }))
+      .toStrictEqual({ providerKey, params: { slug: "chair" } });
+  });
+
   it("answers null for a Provider that offers no samples, or none now", async () => {
     expect(await resolvePhiPageRecordSampleBinding({ registry: registryOf(), runtime, pageRecord })).toBeNull();
     expect(await resolvePhiPageRecordSampleBinding({ registry: registryOf(async () => []), runtime, pageRecord })).toBeNull();

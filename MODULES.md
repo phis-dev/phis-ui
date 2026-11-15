@@ -743,16 +743,21 @@ serve every record: its Widgets name a *field of the page record*, never the rec
   `pageRecord: { providerKey, params, titleField?, descriptionField? }`; `params` maps each parameter the
   Provider takes to the route parameter that fills it (`{ slug: "slug" }`). Core then reads the record
   once per request, before anything is drawn: no record is a 404, the two named `text` fields become the
-  Page's title and description, and `runtime.page.record` carries the binding. This holds for the
+  Page's title and description, and `runtime.page.record` carries the binding -- the Provider and its
+  parameters, plus the route's own `titleField` and `descriptionField` where it names them (a Page
+  binding, `PhiPageRecordBinding` in `types/record-provider.ts`; the binding a Table or Form carries stays
+  the general `PhiRuntimeDataProviderBinding`). The two names are no part of what is asked of the
+  Provider, so they neither change the memoised read nor reach it as parameters. This holds for the
   Module's own tree and for a stored override alike, which is what makes the override a template. A Page
   stored at the exact address of one record still wins, and has no page record.
 - **The last item of the Breadcrumb.** The Core Widget `breadcrumb` shows the record's title as the last
-  item of its trail, in place of the path segment, wherever the Page's title is that record's. The folder
-  items before it, their links, a fixed `pathLabel` and `showPath: false` are as they were; so is a Page
-  about no record, and a record that cannot be read (missing or unavailable) leaves the segment -- the
-  trail never fails for it. The Widget adds no read: the title is the Page's (`runtime.page.title`),
-  confirmed against the record's `text` fields from the same memoised read the title came from. The
-  Builder's Preview carries the template's own title, not the sample record's, so it keeps the segment.
+  item of its trail, in place of the path segment, when the Page's route names a `titleField`: the Widget
+  reads that `text` field of the page record (`runtime.page.record.titleField`) as any Widget bound to a
+  field does. The folder items before it, their links, a fixed `pathLabel` and `showPath: false` are as
+  they were; so is a Page about no record or whose route names no `titleField`, and a record that cannot
+  be read (missing, unavailable, no such field) leaves the segment -- the trail never fails for it. The
+  Widget adds no read: it is the memoised read the title came from. The Builder's Preview with a sample
+  record shows the sample's title; the Editor canvas, with no record, shows the segment.
 - **Reading a field.** A Server Widget reads with `resolvePhiPageRecordFields({ registry, runtime })`
   (`@phis/ui/module/records`): the same memoised read as every other binding to that record, so the Page
   costs its Provider one answer. The answer is `{ status: "ok", fields }` with `fields` a

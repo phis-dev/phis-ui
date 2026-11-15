@@ -38,7 +38,8 @@ the slug into each Widget's binding (`phis-shop/src/trees/product-page-tree.ts`,
 1. **A dynamic preset declares its page record.** Next to `loadTree`, the descriptor names a record
    provider and how the route fills its params (the shop: the product provider, `slug` from `:slug`).
    Core resolves it once per request, answers 404 when it is missing, and takes the page title and
-   description from fields the preset names. The loader stays as the template's starting tree.
+   description from fields the preset names; `runtime.page.record` carries those two names with the
+   binding, so a Widget such as the Breadcrumb can read the title field itself. The loader stays as the template's starting tree.
 2. **One template per preset.** The override that exists per preset identity becomes the template: it
    stores no slug, only Widgets bound to the page record, so it serves every record. Reset deletes it and
    the Module's tree answers again.
