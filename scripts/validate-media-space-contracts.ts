@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { PhiMediaAssetFlags, PhiMediaKind } from "../constants/media";
 import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../plugins/runtime-modules/asset/ids";
 import { PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../plugins/runtime-modules/asset/data-providers";
+import { PHI_CORE_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../plugins/runtime-modules/core/data-providers";
+import { PHI_CORE_RUNTIME_MODULE_ID } from "../plugins/runtime-modules/core/ids";
 import { PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS } from "../constants/media-library-provider-keys";
 import { PHI_ASSET_RUNTIME_MODULE_DEFINITION } from "../plugins/runtime-modules/asset/definition";
 import { PHI_AVATAR_RUNTIME_MODULE_DEFINITION } from "../plugins/runtime-modules/avatar/definition";
@@ -712,16 +714,20 @@ assert.throws(
  * declarations -- and therefore restoring it -- survive any Area selection.
  */
 assert.ok(PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG.has(PHI_ASSET_RUNTIME_MODULE_ID));
-// Folders, the collection, the folder choices, the folder pictures record Provider, and the storage
-// profile choices and the Spaces table of the Admin storage settings.
-assert.equal(PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS.length, 6);
+// Folders, the collection, the folder choices, and the storage profile choices and the Spaces table of
+// the Admin storage settings.
+assert.equal(PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS.length, 5);
 for (const descriptor of PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS) {
   assert.equal(descriptor.ownerModuleId, PHI_ASSET_RUNTIME_MODULE_ID);
   assert.equal(descriptor.executionMode, "live");
 }
-// The record Provider is the Gallery's start binding, so Core may cite its key without the Module.
-assert.ok(PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS.some((descriptor) =>
-  descriptor.kind === "record" && descriptor.key === PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.folderImages));
+// The folder pictures record Provider is Core's: showing what is public needs no Media management in
+// the Area, so a Gallery draws wherever an Image does.
+assert.ok(!PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS.some((descriptor) =>
+  descriptor.key === PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.folderImages));
+assert.ok(PHI_CORE_RUNTIME_DATA_PROVIDER_DESCRIPTORS.some((descriptor) =>
+  descriptor.kind === "record" && descriptor.key === PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.folderImages
+  && descriptor.ownerModuleId === PHI_CORE_RUNTIME_MODULE_ID));
 
 // ---------------------------------------------------------------------------
 // Legacy Media Group and direct Storage paths

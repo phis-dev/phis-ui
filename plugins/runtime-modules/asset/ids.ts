@@ -18,12 +18,11 @@ export const PHI_ASSET_RUNTIME_MODULE_ID =
 export const PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS = {
   mediaFolders: PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.folders,
   mediaCollection: PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection,
-  mediaFolderImages: PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.folderImages,
   /**
    * Every Folder of the Site Space as a choice, loaded by the choice itself. `mediaFolders` reads the
    * Media page's store, which is not there when a Gallery is configured on some other page.
    */
-  mediaFolderChoices: createPhiSharedRuntimeDataProviderKey("options", "media-folder-choices"),
+  mediaFolderChoices: PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.folderChoices,
   /** The Site's Storage Profiles, for the Admin storage settings that point Spaces at one. */
   mediaStorageProfiles: createPhiSharedRuntimeDataProviderKey("options", "media-storage-profiles"),
   /** The existing User and Group Spaces with their Profile and quota, for the Admin storage table. */

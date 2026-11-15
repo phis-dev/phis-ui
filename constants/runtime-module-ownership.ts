@@ -245,7 +245,7 @@ const PHI_RUNTIME_MODULE_OWNERSHIP: Readonly<Record<string, readonly [module: st
   // One published entry with its relatives, read on the server (`types/record-provider.ts`).
   "records/content-entry": ["core", "content-entry"],
   // The public pictures of a Media Folder, for a Gallery that shows a Folder.
-  "records/media-folder-images": ["asset", "media-folder-images"],
+  "records/media-folder-images": ["core", "media-folder-images"],
   "signals/tour-availability": ["tour", "availability"],
   "signals/tour-progress": ["tour", "progress"],
   "signals/tree-action": ["core", "tree-action"],

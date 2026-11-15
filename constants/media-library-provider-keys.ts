@@ -25,8 +25,15 @@ export const PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS = {
   collection: createPhiSharedRuntimeDataProviderKey("collections", "media"),
   folders: createPhiSharedRuntimeDataProviderKey("options", "media-folders"),
   /**
+   * Every Folder of the Site Space as a choice, loaded by the choice itself. The Asset Module answers it,
+   * and the Builder reads it in any Area (`availableToAuthoringChrome`); the folder pictures Provider
+   * names it for its Folder setting.
+   */
+  folderChoices: createPhiSharedRuntimeDataProviderKey("options", "media-folder-choices"),
+  /**
    * The public pictures of one Folder, read on the server while the page is drawn (a `record`
-   * Provider). The Gallery Widget starts bound to it, which is why Core cites the key.
+   * Provider). Served by Core, not by the Asset Module: showing what is public needs no Media
+   * management in the Area, as an Image Widget does not. The Gallery Widget starts bound to it.
    */
   folderImages: createPhiSharedRuntimeDataProviderKey("records", "media-folder-images"),
 } as const;

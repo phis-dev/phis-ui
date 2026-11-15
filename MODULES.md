@@ -752,18 +752,33 @@ serve every record: its Widgets name a *field of the page record*, never the rec
 - **Core Widgets that show a field.** A config field of type `record-field` names the kinds a Widget
   draws; the Inspector offers the fields of those kinds that the edited Page's record Provider declares,
   and shows no such row on a Page that is about no record. Simple Text takes a `text`, `number` or `date`
-  (`recordField`), Markdown a `markdown` or `text`, Image a `picture`, and a Button's signal value a
-  `text` (`valueRecordField`). The rule is one for all of them: where the Page has a record, the field
-  takes the place of the Widget's own content, and a record without the field leaves nothing drawn;
-  where the Page has none -- the template on the Builder's canvas -- the Widget's own content stands in.
-  `list`, `tag`, `link` and `pictures` are declared kinds no Core Widget draws yet.
+  (`recordField`), Markdown a `markdown` or `text`, Image a `picture`, a Button's signal value a
+  `text` (`valueRecordField`) and its link a `link` (`linkRecordField`: the field's `href`, and its
+  `label` where the Button's own is empty, untranslated), and the Gallery `pictures` (`recordField`:
+  each picture by its address, with its alt text as the record gave it; the Gallery's `source` stays and
+  is what a Page about no record draws). The rule is one for all of them: where the Page has a record,
+  the field takes the place of the Widget's own content, and a record without the field leaves nothing
+  drawn; where the Page has none -- the template on the Builder's canvas -- the Widget's own content
+  stands in. A Button that names both a value and a link field is not drawn when either is missing.
+  `list` and `tag` are declared kinds no Core Widget draws yet.
+- **Samples.** The server half may offer `loadSamples`: a function from the same context to a few
+  `{ label, params }`, where `params` are the Provider's own parameters (`{ slug: "chair" }`), not the
+  route's. The catalog allows it only where the descriptor declares `record` fields. The Builder's Preview
+  of a template whose route names a `pageRecord` takes the first sample as the Page's record
+  (`runtime.page.record`); a Provider with no samples, none now, or a reader that throws
+  (`cms.record.samples_failed`) leaves the template previewed with its Widgets' own content. The Editor
+  canvas always shows each Widget's own content.
 
 The first is Core's content entry Provider (`PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntry`), which
 the header, text and related list of a detail Page are bound to (CONTENT_ENTRIES.md).
-The second is the Asset Module's media folder pictures Provider
+The second is Core's media folder pictures Provider
 (`PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.folderImages`): the public pictures of one Folder, with its
 subfolders unless told otherwise, in the public reference projection. The Gallery Widget starts bound to
-it, so a slideshow is a Folder somebody keeps filling rather than a list of named Assets.
+it, so a slideshow is a Folder somebody keeps filling rather than a list of named Assets. It is Core's and
+not the Asset Module's because showing what is public needs no Media management in the Area, as an
+Image Widget does not: the Asset Module is switched on where Media is administered and uploaded, and a
+Gallery draws in every Area. Its Folder setting reads the Asset Module's folder choices, which the Builder
+offers in any Area.
 
 Provider Clients own data access and mutations. Forms own record-oriented validation and submit
 lifecycles. Controllers coordinate runtime state. Signals connect those surfaces. None may silently take

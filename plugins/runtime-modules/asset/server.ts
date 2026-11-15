@@ -5,7 +5,6 @@ import {
 import { PHI_MEDIA_SETTINGS_RUNTIME_MODULE_FORM, PHI_MEDIA_STORAGE_SETTINGS_RUNTIME_MODULE_FORM } from "./settings-forms";
 import { definePhiRuntimeModuleServerAreaContribution } from "../area-contributions";
 import { PHI_ASSET_RUNTIME_MODULE_DEFINITION } from "./definition";
-import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "./ids";
 import { PHI_ASSET_RUNTIME_MODULE_ROUTES } from "./presets";
 import { PHI_RUNTIME_MODULE_WIDGETS as PHI_ASSET_WIDGETS } from "./widgets";
 
@@ -28,10 +27,6 @@ export function createPhiAssetRuntimeModuleServerAreaContribution() {
       ],
       routes: PHI_ASSET_RUNTIME_MODULE_ROUTES,
       uiProvider: true,
-      recordProviders: [{
-        key: PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaFolderImages,
-        load: () => import("./services/folder-images.server").then((module) => module.resolvePhiMediaFolderImagesRecord),
-      }],
       load: () => import("./module").then((module) => module.PHI_ASSET_RUNTIME_MODULE),
     },
   });

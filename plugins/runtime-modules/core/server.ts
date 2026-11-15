@@ -1,4 +1,5 @@
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../constants/core-data-provider-keys";
+import { PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS } from "../../../constants/media-library-provider-keys";
 import { PHI_CORE_RUNTIME_MODULE_THEMES } from "./themes";
 import { definePhiRuntimeModuleServerAreaContribution } from "../area-contributions";
 import { PHI_CORE_RUNTIME_MODULE_DEFINITION } from "./definition";
@@ -27,6 +28,10 @@ export function createPhiCoreRuntimeModuleServerAreaContribution() {
       recordProviders: [{
         key: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntry,
         load: () => import("./content-entries/record.server").then((module) => module.resolvePhiContentEntryRecord),
+      }, {
+        // Showing a Folder's public pictures needs no Media management in the Area, as an Image does not.
+        key: PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.folderImages,
+        load: () => import("./services/media-folder-images.server").then((module) => module.resolvePhiMediaFolderImagesRecord),
       }],
       load: () => import("./module").then((module) => module.PHI_CORE_RUNTIME_MODULE),
     },
