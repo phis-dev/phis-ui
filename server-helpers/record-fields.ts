@@ -119,3 +119,28 @@ export function readPhiPageRecordField<K extends PhiRecordFieldKind>(
   const field = result.fields.get(key);
   return field && (kinds as readonly string[]).includes(field.kind) ? field as Extract<PhiRecordField, { kind: K }> : null;
 }
+
+/**
+ * What a Widget that names a field of the page record is to draw.
+ *
+ * `bound: false` is a Widget that names none, or a Page that is about no record -- a template open in the
+ * Builder, a Widget copied to an ordinary Page: it draws its own content, which stands in for the field.
+ * `bound: true` with no field is a record that does not have it, and the Widget draws nothing of its own
+ * in its place.
+ */
+export type PhiWidgetRecordField<K extends PhiRecordFieldKind> =
+  | { bound: false }
+  | { bound: true; field: Extract<PhiRecordField, { kind: K }> | null };
+
+export async function resolvePhiWidgetRecordField<K extends PhiRecordFieldKind>({ registry, runtime, key, kinds }: {
+  registry: PhiRecordFieldsRegistry | undefined;
+  runtime: PhiBlockRuntime;
+  key: string | null | undefined;
+  kinds: readonly K[];
+}): Promise<PhiWidgetRecordField<K>> {
+  if (!key || !registry) {
+    return { bound: false };
+  }
+  const result = await resolvePhiPageRecordFields({ registry, runtime });
+  return result.status === "none" ? { bound: false } : { bound: true, field: readPhiPageRecordField(result, key, kinds) };
+}

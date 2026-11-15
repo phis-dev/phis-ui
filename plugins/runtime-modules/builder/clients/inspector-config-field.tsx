@@ -14,6 +14,7 @@ import type {
 } from "../../../../types/cms-plugins";
 import type { PhiCalendarAdapterDescriptor } from "../../../../types/calendar";
 import type { PhiVideoProviderDescriptor } from "../../../../types/video";
+import type { PhiRecordFieldDescriptor } from "../../../../types/record-provider";
 import { readPhiLengthValue, type PhiRenderableBlockSize } from "../../../../types";
 import {
   normalizePhiPaddingWidgetConfig,
@@ -1020,6 +1021,7 @@ function renderPhiInspectorConfigFieldBody({
   dataProviderDescriptors = [],
   calendarAdapterDescriptors = [],
   videoProviderDescriptors = [],
+  pageRecordFields = [],
   blockId,
 }: {
   field: PhiCmsConfigField;
@@ -1043,6 +1045,8 @@ function renderPhiInspectorConfigFieldBody({
   dataProviderDescriptors?: readonly PhiRuntimeModuleDataProviderDescriptor[];
   calendarAdapterDescriptors?: readonly PhiCalendarAdapterDescriptor[];
   videoProviderDescriptors?: readonly PhiVideoProviderDescriptor[];
+  /** The declared fields of the record the edited Page is about; empty on a Page that is about none. */
+  pageRecordFields?: readonly PhiRecordFieldDescriptor[];
   onChange?: (next: Record<string, unknown>) => void;
 }) {
   if (field.type === "readonly") {
@@ -1192,6 +1196,27 @@ function renderPhiInspectorConfigFieldBody({
         disabled={disabled || !onChange}
         style={{ width: "100%" }}
         onChange={(calendarAdapterKey) => onChange?.({ [field.key]: calendarAdapterKey })}
+      />,
+    );
+  }
+
+  if (field.type === "record-field") {
+    // A Page that is about no record has no field to name; the row is for the Pages that are.
+    if (pageRecordFields.length === 0 && typeof value !== "string") {
+      return null;
+    }
+    return renderPhiInspectorConfigFieldControl(
+      field,
+      <PhiSelectControl
+        allowClear
+        options={pageRecordFields
+          .filter((recordField) => field.kinds.includes(recordField.kind))
+          .map((recordField) => ({ value: recordField.key, label: recordField.label, description: recordField.description }))}
+        placeholder={fieldLabels.selectRecordField}
+        value={typeof value === "string" ? value : undefined}
+        disabled={disabled || !onChange}
+        style={{ width: "100%" }}
+        onChange={(recordFieldKey) => onChange?.({ [field.key]: typeof recordFieldKey === "string" ? recordFieldKey : undefined })}
       />,
     );
   }

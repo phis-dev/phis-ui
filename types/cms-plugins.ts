@@ -216,6 +216,16 @@ export type PhiCmsConfigField =
       type: "video-provider";
     })
   | (PhiCmsConfigFieldBase & {
+      /**
+       * A field of the record the Page is about (MODULES.md, "The fields of a record, and the record a
+       * Page is about"). The Inspector offers the fields the Page's record Provider declares, of the
+       * kinds the Widget draws; on a Page that is about no record the row is not shown. What is stored
+       * is the field's key.
+       */
+      type: "record-field";
+      kinds: readonly import("./record-provider").PhiRecordFieldKind[];
+    })
+  | (PhiCmsConfigFieldBase & {
       type: "dimension";
       widthKey?: string;
       heightKey?: string;

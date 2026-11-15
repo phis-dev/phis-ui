@@ -42,6 +42,8 @@ export type PhiCmsImageWidgetConfig = PhiCmsWidgetConfigBase &
     borderBottomLeftRadius?: number | string;
     borderBottomRightRadius?: number | string;
     mask?: PhiMaskConfig;
+    /** A picture field of the page record to show instead of the Widget's own picture. */
+    recordField?: string;
   };
 
 function readImageSize(value: unknown): PhiImageWidgetSize | undefined {
@@ -107,6 +109,7 @@ export function normalizePhiImageWidgetConfig(config: unknown): PhiCmsImageWidge
     borderBottomLeftRadius: readCssSize(raw.borderBottomLeftRadius),
     borderBottomRightRadius: readCssSize(raw.borderBottomRightRadius),
     mask: readPhiMaskConfig(raw.mask),
+    recordField: readString(raw.recordField),
   };
   /*
    * An Asset without a word about its variant gets the Card variant; `null` is a word -- the Inspector's
@@ -145,6 +148,13 @@ export const PHI_IMAGE_WIDGET_DEFINITION = {
   icon: "antd:picture-outlined",
   iconFamily: "content",
   fields: [
+    {
+      key: "recordField",
+      type: "record-field",
+      label: "Record field",
+      description: "Shows a picture of the record this page is about instead of the picture chosen here, which stands in where the page has no record.",
+      kinds: ["picture"],
+    },
     {
       key: "sourceKind",
       type: "choice",

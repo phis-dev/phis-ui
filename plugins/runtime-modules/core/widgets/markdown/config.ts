@@ -35,6 +35,8 @@ export type PhiCmsMarkdownWidgetConfig = PhiCmsWidgetConfigBase & {
   eyebrow?: string;
   sourceMode?: "inline" | "url";
   markdown?: string;
+  /** A Markdown or text field of the page record to show instead of the Widget's own text. */
+  recordField?: string;
   widgetId?: string | number | null;
   sourceUrl?: string;
   sourceLocale?: string;
@@ -121,6 +123,7 @@ export function parsePhiCmsMarkdownWidgetConfig(config: Record<string, unknown>)
     sourceMode: readMarkdownSourceMode(config.sourceMode) ?? (sourceUrl ? "url" : "inline"),
     widgetId: typeof config.widgetId === "number" || typeof config.widgetId === "string" ? config.widgetId : undefined,
     markdown: readString(config.markdown),
+    recordField: readString(config.recordField),
     sourceUrl,
     sourceLocale: readString(config.sourceLocale),
     revalidateSeconds: readNumber(config.revalidateSeconds),
@@ -192,6 +195,13 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
       ],
     },
     { key: "sourceUrl", type: "url", label: "Source URL", visibleWhen: { field: "sourceMode", equals: "url" } },
+    {
+      key: "recordField",
+      type: "record-field",
+      label: "Record field",
+      description: "Shows a field of the record this page is about instead of the text. The text stands in where the page has no record.",
+      kinds: ["markdown", "text"],
+    },
     {
       key: "sourceLocale",
       type: "string",

@@ -29,3 +29,12 @@ describe("a record field's value against its kind", () => {
     expect(readPhiRecordFieldValue("pictures", [{ src: "/a.png" }, { src: "data:image/png;base64,AAAA" }])).toBeUndefined();
   });
 });
+
+describe("a text, number or date field as words", () => {
+  it("leaves a text as it is and writes a number and a date for the locale", async () => {
+    const { formatPhiRecordFieldText } = await import("./record-fields");
+    expect(formatPhiRecordFieldText({ kind: "text", value: "CHF 12.00" }, "de-CH")).toBe("CHF 12.00");
+    expect(formatPhiRecordFieldText({ kind: "number", value: 1234.5 }, "en-US")).toBe("1,234.5");
+    expect(formatPhiRecordFieldText({ kind: "date", value: "2026-11-15T10:00:00Z" }, "en-US")).toBe("Nov 15, 2026");
+  });
+});

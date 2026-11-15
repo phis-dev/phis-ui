@@ -1,6 +1,7 @@
 import type { PhiPresetPageNode } from "./cms-page-catalog";
 import type { PhiCmsActiveRouteTable } from "../types/cms-module-descriptors";
 import type { PhiRuntimeModuleId } from "../types";
+import type { PhiRuntimeDataProviderKey } from "../types/runtime-data-provider";
 import { createPhiPresetCmsPageId } from "../types/cms-instance-id";
 import { buildPhiRuntimeModulePackageRoutePrefix } from "./runtime-module-route-path";
 
@@ -26,6 +27,7 @@ export function insertPhiPresetPageTarget(
     presetVersion: number;
     defaultPageFlags?: number;
     landingPage?: true;
+    pageRecord?: { providerKey: PhiRuntimeDataProviderKey };
   },
 ) {
   const sourcePreset = {
@@ -60,6 +62,7 @@ export function insertPhiPresetPageTarget(
       sourcePreset,
       ...(target.defaultPageFlags ? { defaultPageFlags: target.defaultPageFlags } : {}),
       ...(target.landingPage ? { landingPage: true as const } : {}),
+      ...(target.pageRecord ? { pageRecord: { providerKey: target.pageRecord.providerKey } } : {}),
     });
     return;
   }
@@ -83,6 +86,7 @@ export function insertPhiPresetPageTarget(
     sourcePreset,
     ...(target.defaultPageFlags ? { defaultPageFlags: target.defaultPageFlags } : {}),
     ...(target.landingPage ? { landingPage: true as const } : {}),
+    ...(target.pageRecord ? { pageRecord: { providerKey: target.pageRecord.providerKey } } : {}),
   });
 }
 

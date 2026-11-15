@@ -1,3 +1,4 @@
+import { PHI_RECORD_TEXT_FIELD_KINDS } from "../../../../../helpers/record-fields";
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import { readPhiTextSource, type PhiTextSource } from "../../../../../helpers/text-source";
 import { PHI_SIMPLE_TEXT_MARKS, type PhiSimpleTextMark } from "../../../../../types/core-widget-placements";
@@ -58,6 +59,8 @@ export type PhiCmsSimpleTextWidgetConfig = PhiCmsWidgetConfigBase & {
   disabled?: boolean;
   /** `"preset"` while the words are a Preset's and translated globally (`helpers/text-source.ts`). */
   textSource?: PhiTextSource;
+  /** A text, number or date field of the page record to show instead of the Widget's own text. */
+  recordField?: string;
 };
 
 function parsePhiCmsSimpleTextWidgetConfig(
@@ -81,6 +84,7 @@ function parsePhiCmsSimpleTextWidgetConfig(
     letterSpacing: readPhiLetterSpacingStep(config.letterSpacing),
     disabled: readBoolean(config.disabled),
     textSource: readPhiTextSource(config.textSource),
+    recordField: readString(config.recordField),
   };
 }
 
@@ -107,6 +111,13 @@ export const PHI_SIMPLE_TEXT_WIDGET_DEFINITION = {
   fields: [
     ...PHI_RENDERABLE_BLOCK_GEOMETRY_FIELDS,
     { key: "text", type: "string", label: "Text", required: true },
+    {
+      key: "recordField",
+      type: "record-field",
+      label: "Record field",
+      description: "Shows a field of the record this page is about instead of the text. The text stands in where the page has no record.",
+      kinds: PHI_RECORD_TEXT_FIELD_KINDS,
+    },
     { key: "href", type: "url", label: "Href" },
     { key: "icon", type: "icon", label: "Icon", editorPlacement: "toolbar" },
     { key: "color", type: "color", label: "Color", mode: "single", editorPlacement: "toolbar" },

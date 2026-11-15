@@ -4,6 +4,7 @@ import { resolveMarkdownRenderData } from "../../../../../components/widgets/sha
 import { PhiCmsFlags } from "../../../../../constants/phi-cms";
 import { hasPhiFlag } from "../../../../../helpers/flags";
 import { readPhiMarkdownSearchText, translatePhiSearchWidgetTexts } from "../../../../../server-helpers/search-text";
+import { resolvePhiWidgetRecordField } from "../../../../../server-helpers/record-fields";
 import { PhiMarkdownWidget } from "./server";
 import {
   PHI_MARKDOWN_WIDGET_DEFINITION,
@@ -31,19 +32,37 @@ export const PHI_MARKDOWN_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsMarkdown
     });
     return [...eyebrow, ...readPhiMarkdownSearchText(data.blocks)];
   },
-  render: ({ widget, config, runtime }) => (
-    <PhiMarkdownWidget
-      key={`widget-${widget.id}`}
-      config={{
-        ...config,
-        widgetId: widget.id,
-        resolvedContent: widget.resolvedContent ?? null,
-        preferSource: hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate),
-        translate: !hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate),
-      }}
-      runtime={runtime}
-    />
-  ),
+  render: async ({ widget, config, runtime, registry }) => {
+    /*
+     * A field of the page record takes the text's place: inline, in the page's language already, and
+     * nothing where the record does not have it.
+     */
+    const recordField = await resolvePhiWidgetRecordField({ registry, runtime, key: config.recordField, kinds: ["markdown", "text"] });
+    if (recordField.bound) {
+      return recordField.field?.value.trim()
+        ? (
+          <PhiMarkdownWidget
+            key={`widget-${widget.id}`}
+            config={{ ...config, widgetId: widget.id, sourceMode: "inline", markdown: recordField.field.value, resolvedContent: null, translate: false }}
+            runtime={runtime}
+          />
+        )
+        : null;
+    }
+    return (
+      <PhiMarkdownWidget
+        key={`widget-${widget.id}`}
+        config={{
+          ...config,
+          widgetId: widget.id,
+          resolvedContent: widget.resolvedContent ?? null,
+          preferSource: hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate),
+          translate: !hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate),
+        }}
+        runtime={runtime}
+      />
+    );
+  },
   renderPreview: ({ widget, config, runtime }) => (
     <PhiWidgetInertPreview>
       <PhiMarkdownWidget

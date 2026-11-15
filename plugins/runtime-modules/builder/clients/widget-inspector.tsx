@@ -23,6 +23,7 @@ import type { PhiRenderableBlockBase } from "../../../../types";
 import type { PhiRuntimeModuleDataProviderDescriptor } from "../../../../types/cms-plugins";
 import type { PhiCalendarAdapterDescriptor } from "../../../../types/calendar";
 import type { PhiVideoProviderDescriptor } from "../../../../types/video";
+import type { PhiRecordFieldDescriptor } from "../../../../types/record-provider";
 import { mergeRenderableBlockDefaults } from "../../../../helpers/renderable-block-serialization";
 import type { PhiBuilderWidgetMeta } from "../../../../types/builder";
 import {
@@ -88,6 +89,8 @@ type PhiDeveloperBuilderWidgetInspectorWidgetClientProps = {
   dataProviderDescriptors?: readonly PhiRuntimeModuleDataProviderDescriptor[];
   calendarAdapterDescriptors?: readonly PhiCalendarAdapterDescriptor[];
   videoProviderDescriptors?: readonly PhiVideoProviderDescriptor[];
+  /** The declared fields of the record the edited Page is about; empty on a Page that is about none. */
+  pageRecordFields?: readonly PhiRecordFieldDescriptor[];
 };
 
 export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
@@ -116,6 +119,7 @@ export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
   dataProviderDescriptors = [],
   calendarAdapterDescriptors = [],
   videoProviderDescriptors = [],
+  pageRecordFields = [],
 }: PhiDeveloperBuilderWidgetInspectorWidgetClientProps) {
   const isPreviewMode = builderMode === "preview";
   const isTargetKind = selectedStructureNodeKind === "widget";
@@ -193,6 +197,7 @@ export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
       dataProviderDescriptors,
       calendarAdapterDescriptors,
       videoProviderDescriptors,
+      pageRecordFields,
       onChange: (next) => {
         const patch = buildPhiInspectorConfigPathPatch(currentWidgetSettingsConfigRecord, next);
         /*

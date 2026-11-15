@@ -77,6 +77,7 @@ const PHI_INSPECTOR_WIDGET_LABEL_SET = definePhiLabelSet({
     field_select_table_resource: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.fields.selectTableResource,
     field_select_calendar: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.fields.selectCalendar,
     field_select_video_provider: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.fields.selectVideoProvider,
+    field_select_record_field: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.fields.selectRecordField,
     link_none: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.fields.linkTarget.none,
     link_page: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.fields.linkTarget.page,
     link_external: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.fields.linkTarget.external,
@@ -169,6 +170,7 @@ export async function getPhiInspectorWidgetLabels(
       selectTableResource: labels.field_select_table_resource,
       selectCalendar: labels.field_select_calendar,
       selectVideoProvider: labels.field_select_video_provider,
+      selectRecordField: labels.field_select_record_field,
       linkTarget: {
         none: labels.link_none,
         page: labels.link_page,

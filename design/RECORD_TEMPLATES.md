@@ -3,7 +3,14 @@
 A page that shows one record of many -- a product, a content entry, an order -- laid out once in the
 Builder, so that changing the template changes the page of every record. Decided by the owner
 (2026-11-15): the template is a general `@phis/ui` capability, any Module can provide one, and authors
-rebuild it in the Builder. Nothing of it is built.
+rebuild it in the Builder.
+
+Built so far (the contract is MODULES.md, "The fields of a record, and the record a Page is about"):
+declared fields and the page record, read by Core for the Module's tree and a stored override alike; the
+`record-field` Inspector field; Simple Text, Markdown, Image and the Button's signal value bound to a
+field. Not built: the Builder's sample record (a template opens with its Widgets' own content standing
+in), the Gallery on a `pictures` field, Core Widgets for `list`, `tag` and `link`, and the product page
+as the first template.
 
 ## What there is today
 

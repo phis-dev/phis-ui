@@ -749,6 +749,14 @@ serve every record: its Widgets name a *field of the page record*, never the rec
 - **Reading a field.** A Server Widget reads with `resolvePhiPageRecordFields({ registry, runtime })`
   (`@phis/ui/module/records`): the same memoised read as every other binding to that record, so the Page
   costs its Provider one answer.
+- **Core Widgets that show a field.** A config field of type `record-field` names the kinds a Widget
+  draws; the Inspector offers the fields of those kinds that the edited Page's record Provider declares,
+  and shows no such row on a Page that is about no record. Simple Text takes a `text`, `number` or `date`
+  (`recordField`), Markdown a `markdown` or `text`, Image a `picture`, and a Button's signal value a
+  `text` (`valueRecordField`). The rule is one for all of them: where the Page has a record, the field
+  takes the place of the Widget's own content, and a record without the field leaves nothing drawn;
+  where the Page has none -- the template on the Builder's canvas -- the Widget's own content stands in.
+  `list`, `tag`, `link` and `pictures` are declared kinds no Core Widget draws yet.
 
 The first is Core's content entry Provider (`PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntry`), which
 the header, text and related list of a detail Page are bound to (CONTENT_ENTRIES.md).

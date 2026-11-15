@@ -84,6 +84,8 @@ export type PhiMarkdownWidgetPlacement = PhiWidgetPlacementBase & {
   eyebrow?: string;
   sourceMode?: "inline" | "url";
   markdown?: string;
+  /** A Markdown or text field of the page record shown instead of the Widget's own text. */
+  recordField?: string;
   sourceUrl?: string;
   sourceLocale?: string;
   revalidateSeconds?: number;
@@ -126,6 +128,8 @@ export type PhiSimpleTextWidgetPlacement = PhiWidgetPlacementBase & {
   disabled?: boolean;
   /** `"preset"` while the words are a Preset's (`helpers/text-source.ts`). */
   textSource?: PhiTextSource;
+  /** A text, number or date field of the page record shown instead of the Widget's own text. */
+  recordField?: string;
 };
 
 // Description
@@ -158,6 +162,8 @@ export type PhiButtonWidgetPlacement = PhiWidgetPlacementBase &
   gradient?: PhiThemeGradientKey;
   linkTarget?: PhiLinkTarget;
   danger?: boolean;
+  /** A text field of the page record sent as the signal value instead of `value`. */
+  valueRecordField?: string;
 };
 
 // Image
@@ -181,6 +187,8 @@ export type PhiImageWidgetPlacement = PhiWidgetPlacementBase & PhiMediaImageSour
   borderBottomLeftRadius?: number | string;
   borderBottomRightRadius?: number | string;
   mask?: PhiMaskConfig;
+  /** A picture field of the page record shown instead of the Widget's own picture. */
+  recordField?: string;
 };
 
 // Icon

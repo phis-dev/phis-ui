@@ -62,6 +62,8 @@ export type PhiButtonWidgetConfig = PhiCmsWidgetConfigBase & PhiControlBadgeConf
    */
   linkTarget?: PhiLinkTarget;
   danger?: boolean;
+  /** A text field of the page record that is the signal value instead of `value`. */
+  valueRecordField?: string;
 };
 
 function parsePhiButtonWidgetConfig(config: Record<string, unknown>): PhiButtonWidgetConfig {
@@ -82,6 +84,7 @@ function parsePhiButtonWidgetConfig(config: Record<string, unknown>): PhiButtonW
     gradient: readPhiThemeGradientKey(config.gradient),
     linkTarget: readPhiLinkTarget(config.linkTarget) ?? undefined,
     danger: readBoolean(config.danger),
+    valueRecordField: readString(config.valueRecordField),
   };
 }
 
@@ -145,6 +148,13 @@ export const PHI_BUTTON_WIDGET_DEFINITION = {
     { key: "tooltip", type: "string", label: "Tooltip" },
     { key: "icon", type: "icon", label: "Icon", editorPlacement: "toolbar" },
     { key: "value", type: "string", label: "Signal Value" },
+    {
+      key: "valueRecordField",
+      type: "record-field",
+      label: "Signal Value from record",
+      description: "Sends a field of the record this page is about as the signal value, instead of the value above.",
+      kinds: ["text"],
+    },
     /* Above Danger, so Danger stands with the state switches below it. */
     ...PHI_CONTROL_PRESENTATION_FIELDS,
     { key: "danger", type: "boolean", label: "Danger" },

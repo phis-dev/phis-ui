@@ -102,6 +102,7 @@ export type PhiInspectorFieldLabels = {
   selectTableResource: string;
   selectCalendar: string;
   selectVideoProvider: string;
+  selectRecordField: string;
   linkTarget: PhiInspectorLinkTargetLabels;
 };
 
@@ -179,6 +180,7 @@ export const PHI_INSPECTOR_WIDGET_DEFAULT_LABELS: PhiInspectorWidgetLabels = {
     selectTableResource: "Select a Table resource",
     selectCalendar: "Select a calendar",
     selectVideoProvider: "Select a video provider",
+    selectRecordField: "Select a field of the page's record",
     linkTarget: {
       none: "None",
       page: "Page",

@@ -2,6 +2,8 @@ import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
 import { PhiCmsFlags } from "../../../../../constants/phi-cms";
 import { hasPhiFlag } from "../../../../../helpers/flags";
 import { translatePhiSearchWidgetTexts } from "../../../../../server-helpers/search-text";
+import { formatPhiRecordFieldText, PHI_RECORD_TEXT_FIELD_KINDS } from "../../../../../helpers/record-fields";
+import { resolvePhiWidgetRecordField } from "../../../../../server-helpers/record-fields";
 import { PhiSimpleTextWidget } from "./server";
 import {
   PHI_SIMPLE_TEXT_WIDGET_DEFINITION,
@@ -26,10 +28,21 @@ export const PHI_SIMPLE_TEXT_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsSimpl
       textSource: config.textSource,
     });
   },
-  render: ({ widget, config, runtime }) => {
+  render: async ({ widget, config, runtime, registry }) => {
     const noTranslate = hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate);
     // A record's text is already translated; only the Widget's own still has to be.
     const hasResolvedText = Boolean(widget.resolvedContent?.textFields.text);
+    /*
+     * A field of the page record takes the text's place, in the page's language already. A record
+     * without the field leaves nothing to show; a Page about no record shows the Widget's own text.
+     */
+    const recordField = await resolvePhiWidgetRecordField({ registry, runtime, key: config.recordField, kinds: PHI_RECORD_TEXT_FIELD_KINDS });
+    if (recordField.bound) {
+      const text = recordField.field ? formatPhiRecordFieldText(recordField.field, runtime.locale.current) : "";
+      return text
+        ? <PhiSimpleTextWidget blockId={widget.id} key={`widget-${widget.id}`} translate={false} labels={{ text }} config={config} runtime={runtime} />
+        : null;
+    }
 
     return (
       <PhiSimpleTextWidget

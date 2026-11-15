@@ -14,6 +14,8 @@ export type PhiImageWidgetServerProps = {
   runtime: Pick<PhiBlockRuntime, "locale" | "site">;
   widget?: PhiCmsContentWidgetNode | null;
   config?: PhiCmsImageWidgetConfig | null;
+  /** False for words that are in the page's language already -- a record's own. Absent, the Widget's flag decides. */
+  translate?: boolean;
 };
 
 async function resolveImageWidgetLabels(runtime: Pick<PhiBlockRuntime, "locale">): Promise<PhiImageWidgetLabels> {
@@ -24,6 +26,7 @@ export async function PhiImageWidgetServer({
   runtime,
   widget,
   config,
+  translate: translateWords,
 }: PhiImageWidgetServerProps) {
   const labels = await resolveImageWidgetLabels(runtime);
   const assetId = widget?.resolvedContent?.assetId ?? config?.assetId ?? null;
@@ -40,7 +43,7 @@ export async function PhiImageWidgetServer({
    * description from the Media library, or what the Widget's config states for an address -- is the Site's
    * text and goes through the Site's translation, unless the Widget says not to translate.
    */
-  const translate = !hasPhiFlag(widget?.flags ?? 0, PhiCmsFlags.NoTranslate);
+  const translate = translateWords ?? !hasPhiFlag(widget?.flags ?? 0, PhiCmsFlags.NoTranslate);
   const sourceTexts = [
     recordAlt ? "" : (resolvedAsset?.altText ?? "").trim(),
     recordTitle ? "" : (resolvedAsset?.title ?? "").trim(),

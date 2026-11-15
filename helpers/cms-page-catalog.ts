@@ -4,6 +4,7 @@ import {
   type PhiBuilderAreaKey,
 } from "../constants/cms-areas";
 import type { PhiCmsPresetSource } from "../types/cms-module-descriptors";
+import type { PhiRuntimeDataProviderKey } from "../types/runtime-data-provider";
 import {
   createPhiPageReference,
   readPhiPageReference,
@@ -13,6 +14,8 @@ import {
 export type PhiPresetPageNode = {
   key: string;
   title: string;
+  /** The record Provider of the record this Page is about, where its route names one. */
+  pageRecord?: { providerKey: PhiRuntimeDataProviderKey };
   /** The address the Page answers on, including the package namespace outside Public. */
   storagePath?: string;
   /**
