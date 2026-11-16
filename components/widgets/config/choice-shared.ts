@@ -61,8 +61,6 @@ export function buildPhiChoiceControlOptionFields(
   }] satisfies PhiCmsConfigField[];
 }
 
-export const PHI_CHOICE_CONTROL_OPTION_FIELDS = buildPhiChoiceControlOptionFields();
-
 export function parsePhiChoiceOptionsConfig(
   config: Record<string, unknown>,
 ): PhiChoiceOptionsConfig {

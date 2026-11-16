@@ -1,7 +1,7 @@
 import type { PhiCmsWidgetConfigBase } from "./parser-primitives";
 import { createPhiConfigReader } from "./strict-config-reader";
 import {
-  PHI_CHOICE_CONTROL_OPTION_FIELDS,
+  buildPhiChoiceControlOptionFields,
   PHI_CHOICE_CONTROL_CONFIG_FIELDS,
   PHI_CHOICE_CONTROL_VALUE_MODE_FIELD,
   parsePhiStackChoiceControlConfig,
@@ -53,7 +53,8 @@ export const PHI_TAB_BAR_WIDGET_DEFINITION = createPhiCmsWidgetDefinition<PhiCms
         { value: "right", label: "Right" },
       ],
     },
-    ...PHI_CHOICE_CONTROL_OPTION_FIELDS,
+    /* Edited in the scaffold's dialog, as every choice Widget's static options are. */
+    ...buildPhiChoiceControlOptionFields("toolbar"),
     ...PHI_CHOICE_CONTROL_CONFIG_FIELDS,
   ],
   parseConfig: parsePhiCmsTabBarWidgetConfig,
