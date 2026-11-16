@@ -27,6 +27,8 @@ export type PhiLayoutSlotChildSizing = {
    */
   stretchesInline: boolean;
   stretchesBlock: boolean;
+  /** The child states `rest`; a Flex Layout also asks whether it still fills its main axis. */
+  takesRest: boolean;
   minInlineSize: CSSProperties["minWidth"];
   minBlockSize: CSSProperties["minHeight"];
   maxInlineSize: CSSProperties["maxWidth"];
@@ -64,6 +66,7 @@ export function resolvePhiLayoutSlotChildSizing(
     hasExplicitHeight: slotSizing.explicitBlockSize,
     stretchesInline: slotSizing.policy.inline === "fill",
     stretchesBlock: slotSizing.policy.block === "fill",
+    takesRest: slotSizing.policy.takesRest === true,
     minInlineSize: slotSizing.minInlineSize,
     minBlockSize: slotSizing.minBlockSize,
     maxInlineSize: slotSizing.maxInlineSize,
@@ -172,6 +175,7 @@ export function PhiLayoutAnchoredOverlay({
           {
             inline: slotSizing.fillInline ? "fill" : "intrinsic",
             block: slotSizing.fillBlock ? "fill" : "intrinsic",
+            ...(slotSizing.takesRest ? { takesRest: true as const } : {}),
           },
           {
             explicitInlineSize: slotSizing.hasExplicitWidth,

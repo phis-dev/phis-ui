@@ -2,6 +2,7 @@ import { createElement } from "react";
 import { describe, expect, it } from "vitest";
 
 import {
+  buildPhiSlotChildDataAttributes,
   resolvePhiEffectiveSlotSizePolicy,
   resolvePhiSlotChildProfileStyle,
   resolvePhiSlotChildSizeStyle,
@@ -9,6 +10,7 @@ import {
   resolvePhiSlotChildSizingForConfig,
   resolvePhiSlotSizePolicy,
 } from "./slot-size-policy";
+import { PHI_SPACER_WIDGET_DEFINITION } from "../runtime-modules/core/widgets/spacer/config";
 import { PHI_STEPS_WIDGET_DEFINITION } from "../runtime-modules/core/widgets/steps/config";
 import { PHI_CHECKBOX_GROUP_WIDGET_DEFINITION } from "../runtime-modules/core/widgets/checkbox-group/config";
 import { PHI_TAB_BAR_WIDGET_DEFINITION } from "../../components/widgets/config/stack-tabs";
@@ -321,5 +323,54 @@ describe("the Checkbox group's size policy", () => {
 
   it("is as wide and as high as its content when vertical", () => {
     expect(policyFor({ vertical: true })).toEqual({ inline: "intrinsic", block: "intrinsic" });
+  });
+});
+
+describe("the rest policy", () => {
+  it("is fill on both axes and takes the rest", () => {
+    expect(resolvePhiSlotSizePolicy("rest", "widget", null)).toEqual({ inline: "fill", block: "fill", takesRest: true });
+  });
+
+  it("is the only preset that carries the flag", () => {
+    for (const preset of ["intrinsic", "fill", "fill-inline", "fill-block", "fixed"] as const) {
+      expect(resolvePhiSlotSizePolicy(preset, "widget", null)).not.toHaveProperty("takesRest");
+    }
+    expect(resolvePhiSlotSizePolicy({ inline: "fill", block: "fill" }, "widget", null)).not.toHaveProperty("takesRest");
+  });
+
+  it("may be the value of a by-config policy", () => {
+    const policy: PhiSlotSizePolicyByConfig = { configField: "mode", byValue: { grow: "rest" }, otherwise: "intrinsic" };
+    expect(resolvePhiSlotSizePolicy(policy, "widget", { mode: "grow" })).toEqual({
+      inline: "fill",
+      block: "fill",
+      takesRest: true,
+    });
+    expect(resolvePhiSlotSizePolicy(policy, "widget", {})).toEqual({ inline: "intrinsic", block: "intrinsic" });
+  });
+
+  it("makes an axis with a stated size fixed and leaves the flag to the Layout", () => {
+    const rest = resolvePhiSlotSizePolicy("rest", "widget", null);
+    expect(resolvePhiEffectiveSlotSizePolicy(rest, { explicitInlineSize: true })).toEqual({
+      inline: "fixed",
+      block: "fill",
+      takesRest: true,
+    });
+    expect(resolvePhiSlotChildSizingForConfig("widget", "rest", { size: { width: 120 } }).policy.inline).toBe("fixed");
+  });
+
+  it("travels through the data attributes and reads back the same", () => {
+    const policy = resolvePhiSlotSizePolicy("rest", "widget", null);
+    const attributes = buildPhiSlotChildDataAttributes(policy);
+    expect(attributes["data-phi-slot-rest"]).toBe("true");
+    expect(buildPhiSlotChildDataAttributes({ inline: "fill", block: "fill" })["data-phi-slot-rest"]).toBeUndefined();
+    expect(resolvePhiSlotChildSizing(createElement("div", attributes)).policy).toEqual(policy);
+  });
+
+  it("is what the Spacer states", () => {
+    expect(resolvePhiSlotChildSizingForConfig("widget", PHI_SPACER_WIDGET_DEFINITION.slotSizePolicy, {}).policy).toEqual({
+      inline: "fill",
+      block: "fill",
+      takesRest: true,
+    });
   });
 });

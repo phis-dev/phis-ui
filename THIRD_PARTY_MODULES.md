@@ -109,7 +109,7 @@ the config a type of your own with `satisfies`.
 | `image` | An image from local media, a trusted URL or a rendition. | `recordField` (picture) | typed |
 | `gallery` | A run of pictures shown a few at a time, with arrows, dots and autoplay; with `thumbnails`, one main picture with a row of small ones under it ([LAYOUTING.md](./LAYOUTING.md#carousel-movement)). | `recordField` (pictures) | unchecked |
 | `icon` | A standalone icon. | - | typed |
-| `spacer` | Fills the remaining space in its slot. | - | typed |
+| `spacer` | Takes the room left over on the main axis of its Flex row or column; Spacers share it. | - | typed |
 | `result` | A compact result state. | - | unchecked |
 | `timeline` | What happened, in order: time, title, a line of text. | - | unchecked |
 | `steps` | Where a sequence stands; can follow and drive a Stack. | - | unchecked |

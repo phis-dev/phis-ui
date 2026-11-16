@@ -175,6 +175,22 @@ export function PhiFlexLayout({
     return child !== null && child !== undefined && child !== false;
   }
 
+  /*
+   * Whether a content child takes the rest of the main axis. A child does when it states `rest` and still
+   * fills that axis (a stated size makes the axis `fixed`). Where any does, the others that fill the main
+   * axis keep their content size on it, so the rest is shared among those that took it and nobody else.
+   */
+  const mainAxisHasRestTaker = slots.some((child, index) => {
+    if (!isRenderableSlotChild(child) || isFlexSeparatorChild(child)) {
+      return false;
+    }
+    if ((resolvedSlotStates[index] ?? "expanded") !== "expanded") {
+      return false;
+    }
+    const sizing = resolvePhiLayoutSlotChildSizing(child);
+    return sizing.takesRest && (resolvedVertical ? sizing.stretchesBlock : sizing.stretchesInline);
+  });
+
   const renderSlotChild = (child: ReactNode, index: number) => {
     if (isFlexSeparatorChild(child)) {
       return child;
@@ -204,7 +220,7 @@ export function PhiFlexLayout({
       : {};
 
     if (resolvedVertical) {
-      const shouldFillMainAxis = slotSizing.stretchesBlock;
+      const shouldFillMainAxis = slotSizing.stretchesBlock && (!mainAxisHasRestTaker || slotSizing.takesRest);
       const shouldFillCrossAxis = slotSizing.stretchesInline;
       return (
         <div
@@ -258,7 +274,7 @@ export function PhiFlexLayout({
       );
     }
 
-    const shouldFillMainAxis = slotSizing.stretchesInline;
+    const shouldFillMainAxis = slotSizing.stretchesInline && (!mainAxisHasRestTaker || slotSizing.takesRest);
     const shouldFillCrossAxis = slotSizing.stretchesBlock;
     const minMainSize = slotSizing.minInlineSize;
     const maxMainSize = slotSizing.maxInlineSize;

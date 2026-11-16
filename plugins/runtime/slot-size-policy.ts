@@ -127,6 +127,14 @@ export function resolvePhiSlotSizePolicy(
     };
   }
 
+  if (value === "rest") {
+    return {
+      inline: "fill",
+      block: "fill",
+      takesRest: true,
+    };
+  }
+
   if (value === "fill-inline") {
     return {
       inline: "fill",
@@ -185,7 +193,11 @@ export function resolvePhiEffectiveSlotSizePolicy(
 ): PhiNormalizedSlotSizePolicy {
   const inline = explicit?.explicitInlineSize === true ? "fixed" : policy.inline;
   const block = explicit?.explicitBlockSize === true ? "fixed" : policy.block;
-  return inline === policy.inline && block === policy.block ? policy : { inline, block };
+  if (inline === policy.inline && block === policy.block) {
+    return policy;
+  }
+  // The flag is carried as it stands: the Flex Layout asks for it together with a main axis that still fills.
+  return policy.takesRest === true ? { inline, block, takesRest: true } : { inline, block };
 }
 
 export function resolvePhiSlotChildSizeConstraints(geometry: PhiResolvedBlockGeometry) {
@@ -208,7 +220,8 @@ export function resolvePhiSlotChildSizeConstraints(geometry: PhiResolvedBlockGeo
  * `Cannot assign to read only property 'config'` and take the Widget's whole render with it. The account
  * menu was lost to exactly that shape, from a different source; see the Account Widget plugin.
  *
- * Six resolved values carry the same information and share nothing, so there is no reference to fill in.
+ * Resolved values carry the same information and share nothing, so there is no reference to fill in.
+ * The policy is built here as a plain object, `takesRest` included.
  */
 export function resolvePhiSlotChildSizingForConfig(
   kind: PhiSlotChildKind,
@@ -254,6 +267,7 @@ export function buildPhiSlotChildDataAttributes(
   return {
     "data-phi-slot-size-inline": policy.inline,
     "data-phi-slot-size-block": policy.block,
+    "data-phi-slot-rest": policy.takesRest === true ? "true" : undefined,
     "data-phi-layout-fill-slot": fillInline || fillBlock ? "true" : undefined,
     "data-phi-layout-explicit-width": explicitInlineSize ? "true" : undefined,
     "data-phi-layout-explicit-height": explicitBlockSize ? "true" : undefined,
@@ -285,6 +299,7 @@ export function resolvePhiSlotChildSizing(
     config?: PhiRenderableBlockGeometryInput | null;
     "data-phi-slot-size-inline"?: unknown;
     "data-phi-slot-size-block"?: unknown;
+    "data-phi-slot-rest"?: unknown;
     "data-phi-layout-explicit-width"?: unknown;
     "data-phi-layout-explicit-height"?: unknown;
     "data-phi-slot-min-inline-size"?: unknown;
@@ -357,6 +372,8 @@ export function resolvePhiSlotChildSizing(
     fallbackKind,
     props.config,
   );
+  const dataPolicy: PhiNormalizedSlotSizePolicy =
+    props["data-phi-slot-rest"] === "true" ? { ...policy, takesRest: true } : policy;
 
   const explicit = {
     explicitInlineSize: props["data-phi-layout-explicit-width"] === "true" || configExplicit.explicitInlineSize,
@@ -365,7 +382,7 @@ export function resolvePhiSlotChildSizing(
 
   return {
     // Idempotent: an element that already wrote the effective policy into its attributes says the same again.
-    policy: resolvePhiEffectiveSlotSizePolicy(policy, explicit),
+    policy: resolvePhiEffectiveSlotSizePolicy(dataPolicy, explicit),
     ...explicit,
     queriesRoom,
     minInlineSize:

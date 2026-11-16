@@ -502,7 +502,7 @@ composition, not alternate Layout kinds.
   slot. Compositions that need more panels — including Module Settings pages, whose sections become
   Collapsible panels — must split across Layouts or pages instead of exceeding the cap.
 
-The standard size policies are `fill`, `hug`, `fill-inline`, `fill-block`, `fixed`, and `intrinsic`.
+The standard size policies are `fill`, `rest`, `hug`, `fill-inline`, `fill-block`, `fixed`, and `intrinsic`.
 The parent slot policy is authoritative; child defaults cannot override it.
 
 ## Rendering and authoring
@@ -541,6 +541,15 @@ The parent slot policy is authoritative; child defaults cannot override it.
   inline axis unless vertical. `resolvePhiSlotSizePolicy(policy, kind, config)`
   resolves it, and every caller passes the config of the block whose policy it resolves. An axis that
   states a size is `fixed` whatever the policy says.
+- `rest` is a policy of its own: it normalizes to `fill` on both axes with `takesRest` set
+  (`PhiNormalizedSlotSizePolicy`), and no other policy sets the flag. In a Flex row or column, the
+  children that state `rest` alone grow into the room left on the main axis and share it; their filling
+  siblings then keep their content size on that axis. Where no child in the Layout takes the rest, filling
+  children share the room as they always do. A child takes the rest only while it still fills the main
+  axis, so a `rest` child with a size of its own on that axis does not. The cross axis is unchanged.
+  Everywhere else -- Grid, Stack, Carousel, Split Card, Three Column, Masonry, Content, Collapsible,
+  Regions and Overlay zones -- `rest` is the `fill` it normalizes to. There is only room to take where
+  the main axis has a definite size. The Spacer states `rest`.
 - The top Layout of a Region and of an Overlay zone stands in a frame that names no policy, so it takes
   the Layout default, `fill` on both axes: it is the Region's or the zone's whole box, edge to edge, and
   a Region with a height of its own (a Hero, a full-height Sider) hands that height to it. Nested

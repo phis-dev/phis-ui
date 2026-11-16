@@ -17,7 +17,7 @@ export const PHI_SPACER_WIDGET_DEFINITION = {
   category: "structure",
   icon: "antd:column-width-outlined",
   iconFamily: "layout",
-  slotSizePolicy: "fill",
+  slotSizePolicy: "rest",
   fields: [],
   parseConfig: (config: Record<string, unknown>): PhiSpacerWidgetConfig => readRenderableBlockConfig(config),
 } satisfies Pick<

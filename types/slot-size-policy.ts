@@ -5,6 +5,7 @@ export type PhiSlotSizePolicyPreset =
   | "fill-inline"
   | "fill-block"
   | "fill"
+  | "rest"
   | "fixed";
 
 /** A policy that holds whatever the config says. */
@@ -31,4 +32,9 @@ export type PhiSlotSizePolicy = PhiSlotSizePolicyValue | PhiSlotSizePolicyByConf
 export type PhiNormalizedSlotSizePolicy = {
   inline: PhiSlotAxisSizePolicy;
   block: PhiSlotAxisSizePolicy;
+  /**
+   * Set by `"rest"` alone, which is `fill` on both axes and this. Only a Flex Layout reads it: where a
+   * child that fills the Layout's main axis also states it, that child alone grows into the room left over.
+   */
+  takesRest?: true;
 };
