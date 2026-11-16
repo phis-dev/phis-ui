@@ -16,9 +16,11 @@ import {
 import { buildPhiAreaRootRedirectTree } from "../../components/regions/presets/phi-area-root-redirect-tree";
 import type { PhiCmsAreaKey } from "../../constants/cms-areas";
 import { PhiCmsPageType } from "../../constants/phi-cms";
+import { createPhiModuleMediaResolver } from "../../helpers/module-media";
 import type { PhiBlockRuntime } from "../../types";
 import type { PhiCmsPageNode } from "../../types/cms";
 import type { PhiRuntimeModuleId } from "../../types/cms-module-descriptors";
+import { PHI_EMPTY_MODULE_MEDIA_LOADER } from "../../types/module-media";
 
 /**
  * Where an Area's front door leads.
@@ -99,6 +101,7 @@ async function resolveRootRedirect(
     catalog: compiled,
     activeModuleIds,
     params: {},
+    media: createPhiModuleMediaResolver(route.ownerModuleId, PHI_EMPTY_MODULE_MEDIA_LOADER),
   });
   return tree.page;
 }

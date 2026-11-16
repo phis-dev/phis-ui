@@ -1494,7 +1494,8 @@ no route.
 - `path` lies beneath no other route of the same Area, a list's entries (`/blog/:slug`) excepted.
 - `loadTree` returns the Page tree. Import the builder lazily, as below: the descriptors go into every
   request's route table, the tree is needed only for the Page being drawn. The catalog checks what it
-  returns -- every id a preset id, every parent and Region root present, no id twice.
+  returns -- every id a preset id, every parent and Region root present, no id twice. It receives `media`,
+  the resolver of the package's own pictures ([Pictures a Module ships](#pictures-a-module-ships)).
 - `presetVersion` is a positive integer. It is recorded on a Page built from the preset as its source
   version, and the Revisions table uses it to tell a saved copy that it was made from an older preset. It
   takes no part in ids, and a Page nobody has saved always draws the installed tree, so a changed tree
@@ -1867,6 +1868,56 @@ To let the first boxes of the content -- cards, a form -- stand on the lower par
 `paddingBottom` one step above the overlap, so its words end above the boxes. This is the one place a
 preset uses a step above `md`, and only together with `heroOverlap`.
 
+### Pictures a Module ships
+
+A package has no static files, but it may declare pictures and folders in the `phis` block of its
+`package.json`; the Site imports them into its Media library as ordinary Assets, and a preset names them by
+the id the Site holds:
+
+```json
+"phis": {
+  "media": {
+    "folders": [{ "key": "phi-dossier-screenshots", "name": "Screenshots" }],
+    "files": [{ "key": "phi-dossier-icon", "file": "dist/media/phi-dossier-icon.png",
+                "folder": "phi-dossier-screenshots", "alt": "PhiDossier app icon" }]
+  }
+}
+```
+
+`phis module media sync` writes what is missing into the Site's library, and `phis update` runs it for every
+installed package (phis-server `docs/CLI.md`, "module media"). A `key` is the package's own name for the
+thing and never changes once published; an operator may bind a name to another Asset by hand, and the
+Module follows.
+
+`loadTree` of a route, Area shell or Area Overlay preset receives `media`, bound to the package of the
+preset's owner: a Module cannot ask for another package's names. Both calls are asynchronous and return the
+id or `null`; the Site reads the mapping on the first call only, so a preset that never asks costs no
+request.
+
+```ts
+loadTree: async ({ page, media }) => {
+  const icon = await media.asset("phi-dossier-icon");
+  const shots = await media.folder("phi-dossier-screenshots");
+  return buildOverviewPageTree({
+    page,
+    card: {
+      /* ... */
+      ...(icon !== null ? { sourceKind: "asset", assetId: icon } : {}),
+    },
+    gallery: { /* ... */ ...(shots !== null ? { folderId: shots } : {}) },
+  });
+},
+```
+
+`null` means the Site has none: the name is not imported yet, or its Asset or folder was deleted. The preset
+leaves the picture out, as above; a page must not fail for a missing picture. When Core cannot be reached,
+or is older than the route, every name answers `null` and the Site logs it once. A Page saved in the
+Builder keeps the id of that moment; a later rebind reaches the Pages that still come from the preset.
+A Theme preset's `loadPreset` and a block's `loadBlock` have no context and get no resolver.
+
+An `asset:` icon in a preset may be built from `media.asset(...)`; a literal id or path stays refused
+([MODULES.md](./MODULES.md), "An icon a preset names is already resolved when it names it").
+
 ### Checking a Page preset
 
 `checkPhiPagePresetLayout(tree)` (`@phis/ui/module/page-check`, a door of its own: it is verify-time tooling and carries the Layout config parsers, so it is not in `@phis/ui/helpers`) reads a tree a route preset builds and returns what
@@ -1880,6 +1931,12 @@ a finding.
 
 It is for presets only. A Page an author edits in the Builder is never checked against it: the Inspector
 offers the scale, and a value off it is the author's choice and is saved as it is.
+
+`createPhiDeclaredMediaResolver({ assets, folders })`, from the same door, is the `media` a package passes to
+its own `loadTree` in its verify step, where there is no Core. `assets` and `folders` are the keys the
+package declares in `phis.media`. A declared key answers a stable placeholder id (distinct positive
+integers); an undeclared key answers `null` and is recorded. It returns `{ media, findings() }`, and a
+finding -- "asset `<key>` is not declared in the package's `phis.media`" -- fails the check.
 
 `checkPhiPresetTextSources(tree)`, from the same door, reports every Widget that writes text into its
 config without saying whose words they are (`textSource: "preset"` or `"site"`,
@@ -2055,7 +2112,8 @@ To make the Page a template an author can rebuild in the Builder
 - `runtime.page.path` is the path of the request (`/shop/p/chair`), not the route's pattern
   (`/shop/p/:slug`).
 - A `picture`/`pictures` field carries `src` as an `http(s)` URL or a Site-relative path; a `data:` URI makes
-  the picture no picture. A Module ships no static files: a picture is a Media asset or an address the
+  the picture no picture. A Module ships no static files: a picture is a Media asset (one the package
+  declares reaches the Site as one, [Pictures a Module ships](#pictures-a-module-ships)) or an address the
   provider answers ([MODULES.md](./MODULES.md#the-fields-of-a-record-and-the-record-a-page-is-about)).
 - Optionally offer `loadSamples` on the server half, a few `{ label, params }` with the Provider's own
   parameters; the Builder's Preview takes the first. Without one a template previews with its Widgets' own

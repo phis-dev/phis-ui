@@ -94,6 +94,8 @@ import {
   PHI_BASE_PAGE_LAYOUT_NODE_ID,
 } from "../../components/regions/presets/phi-base-page-layout";
 import { concatPhiCmsTreeControllerSettings } from "../../helpers/cms-tree-controller-settings";
+import { createPhiModuleMediaResolver } from "../../helpers/module-media";
+import type { PhiModuleMediaLoader } from "../../types/module-media";
 
 const PHI_CMS_REGION_TYPE_VALUES = new Set<number>(Object.values(PhiCmsRegionType));
 const PHI_ROUTE_PARAMETER_PATTERN = /^:[A-Za-z][A-Za-z0-9_]*$/;
@@ -2220,6 +2222,7 @@ export async function composePhiCmsActiveAreaOverlayPresets({
   area,
   path,
   runtime,
+  loadModuleMedia,
 }: {
   tree: PhiResolvedCmsAreaPresetTree;
   catalog: PhiCmsCompiledDescriptorCatalog;
@@ -2228,6 +2231,7 @@ export async function composePhiCmsActiveAreaOverlayPresets({
   area: PhiCmsAreaKey;
   path: string;
   runtime: PhiBlockRuntime;
+  loadModuleMedia: PhiModuleMediaLoader;
 }): Promise<PhiResolvedCmsAreaPresetTree> {
   const descriptors = (catalog.areaOverlaysByArea.get(area) ?? [])
     .filter((descriptor) => activeModuleIds.has(descriptor.ownerModuleId));
@@ -2248,7 +2252,12 @@ export async function composePhiCmsActiveAreaOverlayPresets({
   // declaration order, which is what the ids and the controller settings below depend on.
   const targetRuntime = resolveTargetRuntime(runtime, area);
   const contributions = await Promise.all(descriptors.map((descriptor) =>
-    descriptor.loadTree({ page, runtime: targetRuntime, catalog }),
+    descriptor.loadTree({
+      page,
+      runtime: targetRuntime,
+      catalog,
+      media: createPhiModuleMediaResolver(descriptor.ownerModuleId, loadModuleMedia),
+    }),
   ));
   for (const [index, descriptor] of descriptors.entries()) {
     const contribution = contributions[index]!;
@@ -2293,6 +2302,7 @@ async function loadShellTree(
   catalog: PhiCmsCompiledDescriptorCatalog,
   page: PhiCmsPageNode,
   runtime: PhiBlockRuntime,
+  loadModuleMedia: PhiModuleMediaLoader,
 ): Promise<PhiResolvedCmsPageTree> {
   let composedTree: PhiResolvedCmsPageTree | null = null;
   for (const source of descriptor.composition ?? []) {
@@ -2305,14 +2315,19 @@ async function loadShellTree(
       );
     }
     const sourceTree = omitPhiCmsShellCompositionNodes(
-      await loadShellTree(sourceDescriptor, catalog, page, runtime),
+      await loadShellTree(sourceDescriptor, catalog, page, runtime, loadModuleMedia),
       sourceDescriptor,
       source.omitRegionTypes ?? [],
       source.omitNodeKeys ?? [],
     );
     composedTree = composedTree ? mergePhiCmsShellTrees(composedTree, sourceTree) : sourceTree;
   }
-  const ownTree = await descriptor.loadTree({ page, runtime, catalog });
+  const ownTree = await descriptor.loadTree({
+    page,
+    runtime,
+    catalog,
+    media: createPhiModuleMediaResolver(descriptor.ownerModuleId, loadModuleMedia),
+  });
   assertPhiCmsPresetTreeContract(ownTree, page, catalog.formDefinitionsById);
   return composedTree ? mergePhiCmsShellTrees(composedTree, ownTree) : ownTree;
 }
@@ -2323,12 +2338,14 @@ export async function instantiatePhiCmsAreaShellPreset({
   siteId,
   path,
   runtime,
+  loadModuleMedia,
 }: {
   binding: PhiCmsAreaShellPresetBinding;
   catalog: PhiCmsCompiledDescriptorCatalog;
   siteId: number;
   path: string;
   runtime: PhiBlockRuntime;
+  loadModuleMedia: PhiModuleMediaLoader;
 }) {
   const page = createSyntheticPresetPage({ siteId, area: binding.descriptor.area, path });
   const tree = await loadShellTree(
@@ -2336,6 +2353,7 @@ export async function instantiatePhiCmsAreaShellPreset({
     catalog,
     page,
     resolveTargetRuntime(runtime, binding.descriptor.area),
+    loadModuleMedia,
   );
   assertPhiCmsPresetTreeContract(tree, page, catalog.formDefinitionsById);
   return tree;
@@ -2348,6 +2366,7 @@ export async function instantiatePhiCmsRoutePreset({
   siteId,
   path,
   runtime,
+  loadModuleMedia,
   resolveMissingPageTitle,
 }: {
   binding: PhiCmsRoutePresetBinding;
@@ -2356,6 +2375,7 @@ export async function instantiatePhiCmsRoutePreset({
   siteId: number;
   path: string;
   runtime: PhiBlockRuntime;
+  loadModuleMedia: PhiModuleMediaLoader;
   resolveMissingPageTitle?: (sourceTitle: string) => string | Promise<string>;
 }) {
   const descriptor = binding.descriptor;
@@ -2371,6 +2391,7 @@ export async function instantiatePhiCmsRoutePreset({
     catalog,
     activeModuleIds,
     params: binding.params,
+    media: createPhiModuleMediaResolver(descriptor.ownerModuleId, loadModuleMedia),
   });
   const tree = loadedTree.pageMeta?.title
     ? loadedTree

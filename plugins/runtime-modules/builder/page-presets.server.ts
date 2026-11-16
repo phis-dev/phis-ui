@@ -41,6 +41,7 @@ import {
   buildPhiBuilderRuntimeModulesConfigForArea,
 } from "./area-shell-presets.server";
 import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
+import { createPhiModuleMediaLoader } from "../../../gateway/server-module-media";
 import type { PhiCmsTreeControllerSettings } from "../../../types/cms";
 
 export type PhiBuilderPageDraftsByScope = Partial<
@@ -199,6 +200,7 @@ async function buildPhiRegistryPresetPageTree({
     siteId: runtime.site.id,
     path,
     runtime,
+    loadModuleMedia: createPhiModuleMediaLoader(runtime.site.key),
   }), {
     runtimeModuleCatalog,
     siteKey: runtime.site.key,

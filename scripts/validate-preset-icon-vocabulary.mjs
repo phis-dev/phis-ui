@@ -22,6 +22,11 @@ import { lineOf } from "./lib/text.mjs";
  * there whenever the Module is. Only the two lookup prefixes are refused below, which is why this reads
  * string literals and not markup.
  *
+ * A picture the Module's own package declares (`phis.media`) is the exception that follows from the same
+ * reasoning: the Site imports it, so it is on every Site that installed the package, and the resolver
+ * a preset is handed answers its id. An `asset:` icon built from `media.asset(...)` is therefore allowed;
+ * a literal id or path stays refused, which is what the literal reading below enforces.
+ *
  * Only preset sources are read, and only string literals in them. A Widget Client that has to recognise
  * the other prefixes writes them too, and it is out of reach here by where it lives rather than by a
  * list somebody has to keep.

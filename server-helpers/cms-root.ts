@@ -25,6 +25,7 @@ import {
   setPhiRequestRuntime,
 } from "./request-runtime";
 import { buildPhiBlockRuntime, loadPhiSiteRequestContext } from "./runtime";
+import { createPhiModuleMediaLoader } from "../gateway/server-module-media";
 import {
   composePhiCmsActiveAreaOverlayPresets,
   resolvePhiCmsAreaShellPresetBinding,
@@ -234,6 +235,7 @@ const loadPhiCmsRootScopeCached = cache(async function loadPhiCmsRootScopeCached
         area: resolvedRoute.area,
         path: resolvedRoute.cmsPath,
         runtime,
+        loadModuleMedia: createPhiModuleMediaLoader(requestContext.site.key),
       })
     : null;
   // The shell Header, Hero, and Footer Backgrounds live in this tree, and it is composed after the

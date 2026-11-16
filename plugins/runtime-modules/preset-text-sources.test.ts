@@ -67,10 +67,12 @@ import { PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG } from "./catalog";
 import { resolvePhiCmsDescriptorCatalog } from "./descriptor-compiler";
 import { resolvePhiCmsAreaMask, type PhiCmsAreaKey } from "../../constants/cms-areas";
 import { PhiCmsPageType, PhiCmsStatus } from "../../constants/phi-cms";
+import { createPhiModuleMediaResolver } from "../../helpers/module-media";
 import { checkPhiPresetTextSources } from "../../module-page-check";
 import type { PhiBlockRuntime } from "../../types";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../types/cms";
 import type { PhiRuntimeModuleId } from "../../types/cms-module-descriptors";
+import { PHI_EMPTY_MODULE_MEDIA_LOADER } from "../../types/module-media";
 
 /**
  * Whose words phis-ui's own Presets write (`helpers/preset-text-source-check.ts`).
@@ -168,6 +170,7 @@ function collectPresetLoads(): PresetLoad[] {
           catalog,
           activeModuleIds,
           params,
+          media: createPhiModuleMediaResolver(descriptor.ownerModuleId, PHI_EMPTY_MODULE_MEDIA_LOADER),
         }),
       });
     }
@@ -179,6 +182,7 @@ function collectPresetLoads(): PresetLoad[] {
           page: pageAt(descriptor.area, "/"),
           runtime: { ...runtime, area: descriptor.area },
           catalog,
+          media: createPhiModuleMediaResolver(descriptor.ownerModuleId, PHI_EMPTY_MODULE_MEDIA_LOADER),
         }),
       });
     }
@@ -190,6 +194,7 @@ function collectPresetLoads(): PresetLoad[] {
           page: pageAt(descriptor.area, "/"),
           runtime: { ...runtime, area: descriptor.area },
           catalog,
+          media: createPhiModuleMediaResolver(descriptor.ownerModuleId, PHI_EMPTY_MODULE_MEDIA_LOADER),
         }),
       });
     }

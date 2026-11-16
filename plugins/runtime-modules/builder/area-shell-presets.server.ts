@@ -39,6 +39,7 @@ import {
   normalizePhiBuilderAreaSearchParam,
 } from "../../../helpers/cms-scope-search-params";
 import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
+import { createPhiModuleMediaLoader } from "../../../gateway/server-module-media";
 
 /**
  * Every Area's installed Shell as the Builder edits it: with the current content of every node somebody
@@ -62,6 +63,7 @@ const loadInstalledAreaShellPresetTrees = cache(async function loadInstalledArea
       siteId: runtime.site.id,
       path: resolveStructureAreaPath(area),
       runtime,
+      loadModuleMedia: createPhiModuleMediaLoader(runtime.site.key),
     });
     return [area, tree] as const;
   }))).filter((entry) => entry != null);

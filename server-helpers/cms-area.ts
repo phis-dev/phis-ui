@@ -10,6 +10,7 @@ import type {
 import type { PhiBlockRuntime } from "../types";
 import type { PhiRuntimeModuleCatalog } from "../types/cms-plugins";
 import { applyPhiPresetTreePublishedContent } from "./cms-bound-content";
+import { createPhiModuleMediaLoader } from "../gateway/server-module-media";
 import {
   instantiatePhiCmsAreaShellPreset,
   resolvePhiCmsAreaShellPresetBinding,
@@ -89,7 +90,14 @@ export async function buildPhiLocalCmsAreaPayload({
     return null;
   }
   const tree = await applyPhiPresetTreePublishedContent(
-    await instantiatePhiCmsAreaShellPreset({ binding, catalog, siteId, path, runtime }),
+    await instantiatePhiCmsAreaShellPreset({
+      binding,
+      catalog,
+      siteId,
+      path,
+      runtime,
+      loadModuleMedia: createPhiModuleMediaLoader(runtime.site.key),
+    }),
     { runtimeModuleCatalog, siteKey: runtime.site.key, locale: runtime.locale.current },
   );
 

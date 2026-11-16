@@ -10,6 +10,7 @@
  * No `server-only` here, on purpose: a test in a package loads this door without a mock.
  */
 
+export { createPhiDeclaredMediaResolver, type PhiModuleMediaFinding } from "./helpers/module-media-check";
 export { checkPhiPagePresetLayout, type PhiPageLayoutFinding } from "./helpers/page-layout-check";
 export { checkPhiPresetTextSources, type PhiPresetTextSourceFinding } from "./helpers/preset-text-source-check";
 export { checkPhiRouteAddresses, type PhiRouteAddressFinding, type PhiRouteAddressSubject } from "./helpers/route-address-check";

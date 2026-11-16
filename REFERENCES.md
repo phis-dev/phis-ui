@@ -196,7 +196,9 @@ for Markdown and HTML bodies. This is what the server's reference collector read
 an Asset under another shape, a copied delivery URL, or a Storage key authors a reference the delete
 guard cannot see, and the Asset it needs can be deleted while the Widget still renders it. A Module
 picture the Site takes over -- a ground somebody edited -- is uploaded into the Site Media Space on the
-way to the server and is referenced by id from then on, like any other Asset.
+way to the server and is referenced by id from then on, like any other Asset. A picture a Module's package
+declares (`phis.media`) is an Asset of the Site as well; a preset names it by the id its `media` resolver
+answers, never by a literal id ([THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#pictures-a-module-ships)).
 
 A Control that persists a link target writes it into a field named `linkTarget`, or into one whose name
 ends in `LinkTarget`, and nothing else identifies a link target in persisted config. The rule is the

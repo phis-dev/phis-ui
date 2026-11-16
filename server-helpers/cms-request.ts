@@ -71,6 +71,7 @@ import {
   readPhiAreaPublicRoutePaths,
 } from "../helpers/cms-area-config";
 import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
+import { createPhiModuleMediaLoader } from "../gateway/server-module-media";
 import type { PhiSiteRequestContext } from "../types/site-request-context";
 
 type LoadPhiResolvedCmsPage = (
@@ -148,6 +149,7 @@ async function instantiatePhiRoutePresetPage({
       siteId,
       path: requestedPath,
       runtime,
+      loadModuleMedia: createPhiModuleMediaLoader(runtime.site.key),
       // The route's title is the owning Module's text, written in that Module's language.
       resolveMissingPageTitle: (sourceTitle) => trForLocale(
         runtime.locale.current,

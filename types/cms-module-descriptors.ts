@@ -13,6 +13,7 @@ import type { PhiViewerAccessPolicy } from "./access";
 import type { PhiSignalRoute } from "./signals";
 import type { PhiCmsInstanceId } from "./cms-instance-id";
 import type { PhiRuntimeModuleFormDefinition } from "../components/forms/form-registry";
+import type { PhiModuleMediaResolver } from "./module-media";
 
 export type PhiRuntimeModuleId = `${string}/${string}`;
 
@@ -42,6 +43,12 @@ export type PhiCmsDescriptorBuildContext = {
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
   catalog: PhiCmsCompiledDescriptorCatalog;
+  /**
+   * The ids the Site's Media library holds for the names the owning Module's own package declares
+   * (`phis.media`). Area shell, Area Overlay and route presets get it; a Theme preset or block loader has
+   * no context and does not.
+   */
+  media: PhiModuleMediaResolver;
 };
 
 export type PhiCmsAreaShellPresetDescriptor = PhiCmsPresetIdentity & {

@@ -164,3 +164,17 @@ export function parsePhiModuleIconName(
   const name = reference.slice(cut + 1);
   return isPhiRuntimeModuleId(moduleId) && isPhiModuleIconName(name) ? { moduleId, name } : null;
 }
+
+/**
+ * The npm package a runtime module id belongs to: its first two path segments
+ * (`@phis/phisys/modules/site` -> `@phis/phisys`).
+ *
+ * What is declared per package -- the pictures of `phis.media` -- is looked up by this name, so a Module
+ * reaches its own package's names and nobody else's. Throws on an id that is not a runtime module id.
+ */
+export function readPhiRuntimeModulePackageName(moduleId: string): string {
+  if (!isPhiRuntimeModuleId(moduleId)) {
+    throw new Error(`Invalid Phi runtime module id: ${moduleId}.`);
+  }
+  return moduleId.split("/", 2).join("/");
+}

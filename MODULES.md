@@ -779,9 +779,11 @@ serve every record: its Widgets name a *field of the page record*, never the rec
   `javascript:` link, a bare file name -- makes that picture no picture: for `picture` the field is
   dropped, and for `pictures` the whole list is, one bad entry included (`cms.record.field_invalid`). A
   `link`'s `href` is read the same way. What reaches such an address is the provider's own answer or a
-  Media asset's delivery address (`/api/site/media/{id}/content`, NEXT_INTEGRATION.md); a Module has no way
-  to ship a static file for a Page to point at -- the one file a package carries is a Theme ground's
-  picture ([THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#5-add-a-theme-preset)).
+  Media asset's delivery address (`/api/site/media/{id}/content`, NEXT_INTEGRATION.md); a Module has no static
+  file for a Page to point at. A picture its package declares in `phis.media` becomes an ordinary Asset of
+  the Site, and a preset names it by the id the resolver answers
+  ([THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#pictures-a-module-ships)); a Theme ground's picture
+  is the other file a package carries ([THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#5-add-a-theme-preset)).
 - **Core Widgets that show a field.** A config field of type `record-field` names the kinds a Widget
   draws; the Inspector offers the fields of those kinds that the edited Page's record Provider declares,
   and shows no such row on a Page that is about no record. Simple Text takes a `text`, `number`, `date`
@@ -857,7 +859,10 @@ not a choice. It ships with the Module, to every Site that activates it, and nob
 to what it names. An Iconify icon is fetched from Iconify's API by the visitor's browser, which turns a
 default into a third-party request on someone else's page; an `asset:` icon names a file that a fresh
 Site does not have. Both are lookups against something that may be elsewhere or absent, and that is the
-whole of the objection.
+whole of the objection. A picture the Module's own package declares in `phis.media` is the exception: the
+Site imports it, so it is on every Site that installed the package, and the resolver a preset is handed
+(`media.asset(key)`) answers its id -- an `asset:` icon built from that answer is allowed, a literal id or
+path stays refused ([THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#pictures-a-module-ships)).
 
 The `antd:*` set is bundled, so it resolves offline, on the first paint, and asks nobody. A mark a Module
 ships in its own source -- an inline SVG, a glyph -- is bundled the same way and is as welcome: it is

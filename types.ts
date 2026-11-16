@@ -57,6 +57,7 @@ export {
   type PhiCmsThemePresetDescriptor,
   type PhiRuntimeModuleId,
 } from "./types/cms-module-descriptors";
+export type { PhiModuleMediaResolver } from "./types/module-media";
 export {
   expandPhiBorderRadiusConfig,
   mergePhiBorderWidgetConfig,
