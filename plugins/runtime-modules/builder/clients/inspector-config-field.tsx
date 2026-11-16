@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useMemo, useState, type ReactNode } from "react";
-import type { PhiBackgroundControlProps } from "../../../../components/controls/phi-background-control";
+import { PhiBackgroundControl, type PhiBackgroundControlProps } from "../../../../components/controls/phi-background-control";
 import { readPhiDotPath } from "../../../../helpers/dot-path";
 import { PhiCheckboxGroupControl } from "../../../../components/controls/phi-checkbox-group-control";
 import { PhiDividerControl } from "../../../../components/controls/phi-divider-control";
@@ -53,6 +53,7 @@ import type { PhiBackgroundWidgetLabels } from "../../../../components/widgets/l
 import type { PhiBorderWidgetLabels } from "../../../../components/widgets/label-types/border";
 import { PHI_INSPECTOR_FIELD_LABEL_WIDTH, PhiInspectorFieldRow } from "../../../../components/widgets/inspector-field-row";
 import { PhiSurfaceControl } from "../../../../components/controls/phi-surface-control";
+import type { PhiBackgroundOverlay } from "../../../../components/widgets/config/background";
 import { readPhiSurface } from "../../../../types/surface";
 import {
   readInspectorChoiceMultiValue,
@@ -1439,6 +1440,27 @@ function renderPhiInspectorConfigFieldBody({
         renderMediaPicker={renderMediaPicker}
         onChange={(nextValue) => onChange?.({ [field.key]: nextValue })}
       />,
+    );
+  }
+
+  /*
+   * The Control names its own section ("Overlay", from the Background labels), so the field adds no label
+   * above it. The Base is not edited here and is passed as `none`; a cleared Overlay removes the key.
+   */
+  if (field.type === "background-overlay") {
+    return (
+      <PhiFlexControl key={field.key} vertical style={{ width: "100%", minWidth: 0 }}>
+        <PhiBackgroundControl
+          mode="control"
+          base={false}
+          disabled={disabled || !onChange}
+          value={{ base: { kind: "none" }, overlay: (value ?? null) as PhiBackgroundOverlay | null }}
+          labels={backgroundLabels}
+          colorPickerLabels={colorPickerLabels}
+          renderMediaPicker={renderMediaPicker}
+          onChange={(next) => onChange?.({ [field.key]: next?.overlay ?? undefined })}
+        />
+      </PhiFlexControl>
     );
   }
 

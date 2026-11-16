@@ -621,6 +621,10 @@ Field rows:
 - a field the Inspector can describe is a `PhiCmsConfigField` drawn by `renderPhiInspectorConfigField`, which
   adds the required mark and the description hint; a field it cannot -- a Page tree, a link target -- is
   handed to `renderPhiInspectorSettingsRow`. A switch takes `renderPhiInspectorSwitchRow`.
+- a `background-overlay` field edits one Background Overlay (`PhiBackgroundOverlay`) stored under its `key`,
+  for a Widget that draws one over something of its own (the Card over its picture). It is the
+  `PhiBackgroundControl` with `base={false}`, so only the Overlay section shows, titled by the Background
+  labels; absent or `null` is no Overlay, and choosing "none" removes the key.
 - a field control never carries a `label` of its own: it would draw its words above itself and stand out of
   line with every row around it. `scripts/validate-inspector-field-rows.mjs` refuses it in the Builder's
   Inspector clients.

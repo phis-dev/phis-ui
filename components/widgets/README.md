@@ -336,7 +336,9 @@ record's source text instead of its localized version.
   a button that stands above it, never a link inside a link. The button stands at the card's foot, whatever
   the body, so cards side by side in a Grid row -- one height -- keep their buttons on one line however long
   their words are. `mediaAspectRatio` sets how tall the picture stands (LAYOUTING.md, "A Card's picture
-  proportion"). `hoverEffect` (`none`, `lift`, `zoom`) answers
+  proportion"). `imageOverlay` is a Background Overlay drawn over the picture (a tint, a gradient fade for
+  text, a pattern), edited by the `background-overlay` field type and stored as `PhiBackgroundOverlay`.
+  `hoverEffect` (`none`, `lift`, `zoom`) answers
   only on a card that is a link, only under a hovering pointer or keyboard focus, and not for a reader who
   asked for less motion; a further effect is an entry in `PHI_CARD_HOVER_EFFECTS` and a rule in
   `styles/layout.css`. Asset sources persist `assetId` and `variantKey`; only `url` sources persist
@@ -398,8 +400,16 @@ record's source text instead of its localized version.
 - Backgrounds use the structured background config edited by `PhiBackgroundControl`. A pattern overlay
   persists a namespaced `patternKey` (`@phis/ui/modules/core/background-patterns/stripes`, `grid`,
   `dots`, `checker`, `crosshatch`) plus provider-owned `values`, and an `overlay.ink` color or gradient.
+  In the Inspector the ink of a `color` or `pattern` Overlay is chosen like the Base: a colour/gradient
+  switch (the Base's own labels), a single-colour picker or a gradient picker, and for a gradient the same
+  direction editor. Switching remembers the last ink of each kind the Control held; with none, a colour
+  becomes a fade to `transparent` ("to bottom") and a gradient becomes its first stop. An Overlay with no
+  stored ink still means the default ink, and nothing is written until the author changes something. The
+  gradient picker carries no direction, so an edit of the stops keeps the ink's `direction`.
   Noise is a separate grain preset (`fine`, `medium`, `coarse`). An unavailable pattern key stays
-  persisted and renders nothing. Image motion (`static`, `fixed`, `parallax`) is described in
+  persisted and renders nothing. `base={false}` is the counterpart of `overlay={false}`: the Control then
+  edits the Overlay alone (no Base, position, motion or Filter, no divider, no preview), which is what the
+  Inspector's `background-overlay` field type uses; both `false` render nothing. Image motion (`static`, `fixed`, `parallax`) is described in
   [LAYOUTING.md](../../LAYOUTING.md#background-motion), the Background `filter` (`glass`, `haze`, `blur`)
   in [LAYOUTING.md](../../LAYOUTING.md#background-filter). Darkening or tinting is a `color` Overlay at an
   opacity, never a filter.

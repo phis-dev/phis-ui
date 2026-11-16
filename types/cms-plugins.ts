@@ -390,6 +390,15 @@ export type PhiCmsConfigField =
       tone?: false;
     })
   | (PhiCmsConfigFieldBase & {
+      /**
+       * A Background Overlay (`PhiBackgroundOverlay`, `components/widgets/config/background.ts`) edited
+       * alone, for a Widget that draws one over something of its own, such as the Card over its picture.
+       * `key` holds the Overlay; absent or `null` is no Overlay, and choosing "none" removes the key.
+       * The Inspector shows the Background Control's Overlay section only (`base={false}`).
+       */
+      type: "background-overlay";
+    })
+  | (PhiCmsConfigFieldBase & {
       type: "grid-placement" | "column-count";
       section?: string;
     });

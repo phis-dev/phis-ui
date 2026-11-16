@@ -45,7 +45,7 @@ describe("PhiBackgroundControl and the Theme's ground", () => {
     const html = renderToStaticMarkup(<PhiBackgroundControl value={null} onChange={() => {}} />);
     expect(html).toContain(`aria-label="${PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.sections.base}"`);
     expect(html).toContain("ant-select");
-    // The Overlay's kind is still a segment; the Base's is not among them.
+    // The Base's kinds are no segment row.
     expect(html).not.toContain(`>${PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.base.gradient}</div>`);
     expect(selectedBase(html)).toBe(PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.base.none);
     expect(html).toContain(overlaySection);
@@ -67,5 +67,62 @@ describe("PhiBackgroundControl and the Theme's ground", () => {
     );
     expect(selectedBase(html)).not.toBe("Theme");
     expect(html).not.toContain(">Theme<");
+  });
+});
+
+describe("PhiBackgroundControl Overlay ink", () => {
+  const labels = PHI_BACKGROUND_WIDGET_DEFAULT_LABELS;
+  const gradientInk = {
+    kind: "gradient",
+    direction: "100deg",
+    stops: [
+      { color: "#000000", percent: 0 },
+      { color: "#222222", percent: 30 },
+      { color: "#444444", percent: 70 },
+      { color: "transparent", percent: 100 },
+    ],
+  } as const;
+
+  it("offers colour and gradient for a color Overlay, with the direction editor only for a gradient", () => {
+    const withColour = renderToStaticMarkup(
+      <PhiBackgroundControl value={{ base: { kind: "none" }, overlay: { kind: "color" } }} onChange={() => {}} />,
+    );
+    const withGradient = renderToStaticMarkup(
+      <PhiBackgroundControl
+        value={{ base: { kind: "none" }, overlay: { kind: "color", ink: gradientInk } }}
+        onChange={() => {}}
+      />,
+    );
+    expect(withColour).toContain(`>${labels.base.gradient}<`);
+    expect(withColour).not.toContain(`>${labels.gradient.direction}<`);
+    expect(withGradient).toContain(`>${labels.gradient.direction}<`);
+    expect(withGradient).toContain('value="100"');
+  });
+
+  it("offers no ink kind for a noise Overlay", () => {
+    const html = renderToStaticMarkup(
+      <PhiBackgroundControl
+        value={{ base: { kind: "none" }, overlay: { kind: "noise", grain: "fine" } }}
+        onChange={() => {}}
+      />,
+    );
+    expect(html).not.toContain(`>${labels.gradient.direction}<`);
+  });
+
+  it("shows the Overlay section alone without the Base (`base={false}`), and nothing without both", () => {
+    const value = {
+      base: { kind: "none" as const },
+      overlay: {
+        kind: "color" as const,
+        ink: { kind: "gradient" as const, direction: "180deg" as const, stops: [{ color: "transparent", percent: 40 }, { color: "#000000", percent: 100 }] },
+      },
+    };
+    const html = renderToStaticMarkup(<PhiBackgroundControl mode="control" base={false} value={value} onChange={() => {}} />);
+    expect(html).toContain(`>${labels.sections.overlay}<`);
+    expect(html).toContain(`>${labels.gradient.direction}<`);
+    expect(html).not.toContain(`>${labels.sections.base}<`);
+    expect(renderToStaticMarkup(
+      <PhiBackgroundControl mode="control" base={false} overlay={false} value={value} onChange={() => {}} />,
+    )).not.toContain(`>${labels.sections.overlay}<`);
   });
 });

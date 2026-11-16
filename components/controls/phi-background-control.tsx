@@ -40,11 +40,14 @@ import {
 } from "../widgets/config/background-pattern-authoring";
 import {
   PHI_DEFAULT_BACKGROUND_PATTERN_KEY,
+  type PhiBackgroundPatternInk,
   type PhiBackgroundPatternKey,
 } from "../widgets/config/background-pattern-contract";
 import {
-  PHI_BACKGROUND_COLOR_OVERLAY_DEFAULT_INK,
-  PHI_BACKGROUND_PATTERN_DEFAULT_INK,
+  mergePhiBackgroundPatternInkEdit,
+  resolvePhiBackgroundOverlayInk,
+  switchPhiBackgroundPatternInkKind,
+  withPhiBackgroundPatternInkDirection,
   resolvePhiBackgroundPatternLiveLayer,
 } from "../widgets/config/background-pattern-live";
 import { PhiImageAssetVariantKeyName } from "../../constants/media";
@@ -123,6 +126,14 @@ export type PhiBackgroundControlProps = {
    * over it, so it offers none; absent is offered.
    */
   overlay?: boolean;
+  /**
+   * Whether the Control edits the Base, the counterpart of `overlay`; absent is offered. With `false` it
+   * shows the Overlay section alone: no Base kind, colour, gradient, image, position, motion or Filter,
+   * no divider above the Overlay, and no preview (an Overlay drawn over nothing shows nothing worth
+   * looking at). The value's Base is passed through untouched, so the host gives it `none`. `base={false}`
+   * with `overlay={false}` leaves nothing to edit and renders nothing.
+   */
+  base?: boolean;
   renderMediaPicker?: (props: {
     purpose: "preview" | "field";
     value?: number | null;
@@ -223,6 +234,7 @@ export function PhiBackgroundControl({
   imageSourceKinds = PHI_BACKGROUND_IMAGE_SOURCE_KINDS,
   baseKinds = PHI_BACKGROUND_BASE_KINDS,
   overlay: overlayOffered = true,
+  base: baseOffered = true,
   renderMediaPicker,
   editTransaction,
   onChange,
@@ -281,6 +293,8 @@ export function PhiBackgroundControl({
   const lastGradientBaseRef = useRef<PhiCmsBackgroundWidgetConfig["base"] | null>(
     currentValue.base.kind === "gradient" ? currentValue.base : null,
   );
+  const lastColorInkRef = useRef<PhiBackgroundPatternInk | null>(null);
+  const lastGradientInkRef = useRef<PhiBackgroundPatternInk | null>(null);
   const lastImageBaseRef = useRef<PhiCmsBackgroundWidgetConfig["base"] | null>(
     currentValue.base.kind === "image" ? currentValue.base : null,
   );
@@ -340,7 +354,7 @@ export function PhiBackgroundControl({
     { value: "rate", label: labels.motion.rate },
     { value: "range", label: labels.motion.range },
   ];
-  const overlayKindOptions = [
+  const overlayKindOptions: Array<{ value: PhiBackgroundOverlay["kind"] | "none"; label: string }> = [
     { value: "none", label: labels.common.none },
     { value: "color", label: labels.overlay.color },
     { value: "pattern", label: labels.overlay.pattern },
@@ -592,6 +606,41 @@ export function PhiBackgroundControl({
     if (currentValue.base.kind === "image") {
       lastImageBaseRef.current = currentValue.base;
     }
+  }
+
+  const overlayInk =
+    currentValue.overlay && currentValue.overlay.kind !== "noise"
+      ? resolvePhiBackgroundOverlayInk(currentValue.overlay)
+      : null;
+  const overlayInkKindOptions = [
+    { value: "color" as const, label: labels.base.color },
+    { value: "gradient" as const, label: labels.base.gradient },
+  ];
+  useEffect(() => {
+    if (overlayInk?.kind === "color") lastColorInkRef.current = overlayInk;
+    if (overlayInk?.kind === "gradient") lastGradientInkRef.current = overlayInk;
+  }, [overlayInk]);
+
+  function switchOverlayInkKind(kind: PhiBackgroundPatternInk["kind"]) {
+    const overlay = currentValue.overlay;
+    if (!overlay || overlay.kind === "noise" || !overlayInk || overlayInk.kind === kind) return;
+    // Remember what is being left, so the way back restores it rather than deriving it again.
+    if (overlayInk.kind === "color") lastColorInkRef.current = overlayInk;
+    else lastGradientInkRef.current = overlayInk;
+    const remembered = kind === "gradient" ? lastGradientInkRef.current : lastColorInkRef.current;
+    emit({
+      ...currentValue,
+      overlay: { ...overlay, ink: switchPhiBackgroundPatternInkKind(overlayInk, kind, remembered) },
+    });
+  }
+
+  function updateOverlayInkDirection(direction: PhiBackgroundDirection) {
+    const overlay = currentValue.overlay;
+    if (!overlay || overlay.kind === "noise" || !overlayInk || overlayInk.kind !== "gradient") return;
+    emit({
+      ...currentValue,
+      overlay: { ...overlay, ink: withPhiBackgroundPatternInkDirection(overlayInk, direction) },
+    });
   }
 
   function updateGradientDirection(direction: PhiBackgroundDirection) {
@@ -979,13 +1028,15 @@ export function PhiBackgroundControl({
     );
   }
 
-  const showPreview = mode !== "config";
+  if (!baseOffered && !overlayOffered) return null;
+
+  const showPreview = mode !== "config" && baseOffered;
   /*
    * Only what can be changed is shown. One Base kind is no choice, so its Select goes; and where the
    * preview is drawn, a click on it opens the colour or gradient picker, so the second picker beside it
    * would only repeat it.
    */
-  const soleBaseKind = baseKinds.length === 1;
+  const soleBaseKind = baseKinds.length === 1 || !baseOffered;
   const basePickerInPreview = soleBaseKind && showPreview;
 
   return (
@@ -1011,7 +1062,7 @@ export function PhiBackgroundControl({
         />
       </div>}
 
-      {currentValue.base.kind === "image" ? (
+      {baseOffered && currentValue.base.kind === "image" ? (
         <div style={{ display: "flex", flexDirection: "column", gap: token.paddingSM, width: "100%" }}>
           <Flex align="center" justify="space-between" gap={token.paddingXS} wrap={false} style={{ width: "100%" }}>
             <Typography.Text>{labels.sections.image}</Typography.Text>
@@ -1147,7 +1198,7 @@ export function PhiBackgroundControl({
             </div>
           ) : null}
         </div>
-      ) : currentValue.base.kind === "color" || currentValue.base.kind === "gradient" ? (
+      ) : baseOffered && (currentValue.base.kind === "color" || currentValue.base.kind === "gradient") ? (
         <div style={{ display: "flex", flexDirection: "column", gap: token.paddingSM, width: "100%" }}>
           {basePickerInPreview ? null : currentValue.base.kind === "color" ? (
             <Flex align="center" justify="space-between" gap={token.paddingSM} wrap="wrap">
@@ -1190,16 +1241,23 @@ export function PhiBackgroundControl({
         </div>
       ) : null}
 
-      {offersOverlay ? <Divider dashed size="small" /> : null}
+      {baseOffered && offersOverlay ? <Divider dashed size="small" /> : null}
 
       {offersOverlay ? <PhiFlexControl vertical gap={8} style={{ width: "100%" }}>
         <Typography.Text>{labels.sections.overlay}</Typography.Text>
-        <PhiSegmentedControl
-          block
+        {/*
+          * A Select like the Base's kind, not a segment: four kinds in a row left no room in the Inspector's
+          * column, and the ink's own choice (colour or gradient) stands right below as the one segment row.
+          */}
+        <PhiSelectControl<PhiBackgroundOverlay["kind"] | "none">
+          ariaLabel={labels.sections.overlay}
           disabled={isDisabled}
           value={currentValue.overlay?.kind ?? "none"}
           options={overlayKindOptions}
-          onChange={(next) => updateOverlayKind(next as PhiBackgroundOverlay["kind"] | "none")}
+          style={{ width: "100%" }}
+          onChange={(next) => {
+            if (next != null) updateOverlayKind(next);
+          }}
         />
 
         {currentValue.overlay ? (
@@ -1257,36 +1315,49 @@ export function PhiBackgroundControl({
             ) : null}
 
             {currentValue.overlay.kind === "noise" ? null : (
-              <Flex align="center" justify="space-between" gap={token.paddingSM} wrap="wrap">
-                <Typography.Text>{labels.overlay.color}</Typography.Text>
-                {/*
-                  * One picker for both shapes of ink, and for both kinds that paint with it. The value
-                  * travels as CSS and comes back parsed by the same reader the Base uses, so a gradient
-                  * the author builds here is stored in the same structure a Base gradient is -- which is
-                  * what lets a wash fade rather than only cover.
-                  */}
-                <PhiColorControl
-                  {...colorPickerTransaction}
-                  mode="both"
-                  value={serializePhiBackgroundPatternInkCss(
-                    currentValue.overlay.ink ?? (currentValue.overlay.kind === "color"
-                      ? PHI_BACKGROUND_COLOR_OVERLAY_DEFAULT_INK
-                      : PHI_BACKGROUND_PATTERN_DEFAULT_INK),
-                  )}
+              <>
+                <PhiSegmentedControl<PhiBackgroundPatternInk["kind"]>
+                  block
+                  value={overlayInk!.kind}
+                  options={overlayInkKindOptions}
                   disabled={isDisabled}
-                  presets={colorPickerPresets}
-                  placement={colorPickerPlacement}
-                  onChange={(nextCss) => {
-                    const overlay = currentValue.overlay;
-                    const nextInk = nextCss == null ? null : readPhiBackgroundPatternInkFromCss(nextCss);
-                    if (!nextInk || !overlay || overlay.kind === "noise") return;
-                    emit({
-                      ...currentValue,
-                      overlay: { ...overlay, ink: nextInk },
-                    });
-                  }}
+                  onChange={switchOverlayInkKind}
                 />
-              </Flex>
+                <Flex align="center" justify="space-between" gap={token.paddingSM} wrap="wrap">
+                  <Typography.Text>{labels.overlay.color}</Typography.Text>
+                  {/*
+                    * The ink is a colour or a gradient, chosen above like the Base's kind. The value
+                    * travels as CSS and comes back parsed by the same reader the Base uses, so a gradient
+                    * built here is stored in the structure a Base gradient is -- which is what lets a
+                    * wash fade rather than only cover. The picker carries no direction; the editor below
+                    * does, and an edit of the stops keeps it.
+                    */}
+                  <PhiColorControl
+                    {...colorPickerTransaction}
+                    mode={overlayInk!.kind === "gradient" ? "gradient" : "single"}
+                    value={serializePhiBackgroundPatternInkCss(overlayInk!)}
+                    disabled={isDisabled}
+                    presets={colorPickerPresets}
+                    placement={colorPickerPlacement}
+                    onChange={(nextCss) => {
+                      const overlay = currentValue.overlay;
+                      if (nextCss == null || !overlay || overlay.kind === "noise") return;
+                      const nextInk = mergePhiBackgroundPatternInkEdit(
+                        resolvePhiBackgroundOverlayInk(overlay),
+                        readPhiBackgroundPatternInkFromCss(nextCss),
+                      );
+                      if (!nextInk) return;
+                      emit({
+                        ...currentValue,
+                        overlay: { ...overlay, ink: nextInk },
+                      });
+                    }}
+                  />
+                </Flex>
+                {overlayInk!.kind === "gradient"
+                  ? renderDirectionEditor(labels.gradient.direction, overlayInk!.direction, updateOverlayInkDirection)
+                  : null}
+              </>
             )}
 
             <Flex align="center" justify="space-between" gap={token.paddingSM} wrap="wrap">
@@ -1370,7 +1441,7 @@ export function PhiBackgroundControl({
         ) : null}
       </PhiFlexControl> : null}
 
-      {filterKindOptions.length > 1 ? (
+      {baseOffered && filterKindOptions.length > 1 ? (
         <>
           <Divider dashed size="small" />
 

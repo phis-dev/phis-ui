@@ -360,6 +360,7 @@ export const PHI_CARD_WIDGET_DEFINITION = {
       step: 5,
       suffix: "%",
     },
+    { key: "imageOverlay", type: "background-overlay", label: "Overlay" },
     /* The icon and where it stands, under one divider: what else an icon will need goes here as well. */
     { key: "icon", type: "icon", heading: "Icon", label: "Icon" },
     {

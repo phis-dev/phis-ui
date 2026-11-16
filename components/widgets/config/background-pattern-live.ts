@@ -240,3 +240,67 @@ export function resolvePhiBackgroundNoiseLiveLayer(
     repeats: ["repeat"],
   };
 }
+
+/**
+ * The ink the Inspector shows for an Overlay: the stored one, or the default of its kind when none is
+ * stored. An absent ink keeps meaning the default; nothing here writes one.
+ */
+export function resolvePhiBackgroundOverlayInk(overlay: {
+  kind: "color" | "pattern";
+  ink?: PhiBackgroundPatternInk | null;
+}): PhiBackgroundPatternInk {
+  return (
+    overlay.ink ??
+    (overlay.kind === "color" ? PHI_BACKGROUND_COLOR_OVERLAY_DEFAULT_INK : PHI_BACKGROUND_PATTERN_DEFAULT_INK)
+  );
+}
+
+/**
+ * The ink of the other kind, for the colour/gradient switch.
+ *
+ * `remembered` is the last ink of the wanted kind the Control held. Without one, colour to gradient fades
+ * the colour to `transparent` (so a wash fades instead of covering), and gradient to colour takes the
+ * first stop.
+ */
+export function switchPhiBackgroundPatternInkKind(
+  current: PhiBackgroundPatternInk,
+  kind: PhiBackgroundPatternInk["kind"],
+  remembered: PhiBackgroundPatternInk | null,
+): PhiBackgroundPatternInk {
+  if (current.kind === kind) return current;
+  if (remembered?.kind === kind) return remembered;
+  if (current.kind === "color") {
+    return {
+      kind: "gradient",
+      direction: "to bottom",
+      stops: [
+        { color: current.color, percent: 0 },
+        { color: "transparent", percent: 100 },
+      ],
+    };
+  }
+  return { kind: "color", color: current.stops[0]?.color ?? "#ffffff" };
+}
+
+/** A gradient ink with another direction; its stops are untouched. A colour ink has no direction. */
+export function withPhiBackgroundPatternInkDirection(
+  ink: PhiBackgroundPatternInk,
+  direction: PhiBackgroundDirection,
+): PhiBackgroundPatternInk {
+  return ink.kind === "gradient" ? { ...ink, direction } : ink;
+}
+
+/**
+ * The ink a picker's CSS means, for an Overlay that holds `current`. The picker offers no direction of its
+ * own, so a gradient keeps the direction it had; a colour the gradient picker collapses to paints every
+ * stop. Returns `null` for CSS no ink can hold, and the caller keeps what it had.
+ */
+export function mergePhiBackgroundPatternInkEdit(
+  current: PhiBackgroundPatternInk,
+  next: PhiBackgroundPatternInk | null,
+): PhiBackgroundPatternInk | null {
+  if (!next) return null;
+  if (current.kind !== "gradient") return next;
+  if (next.kind === "gradient") return { ...next, direction: current.direction };
+  return { ...current, stops: current.stops.map((stop) => ({ ...stop, color: next.color })) };
+}
