@@ -25,6 +25,7 @@ import {
   PHI_CARD_HEADING_LEVELS,
   PHI_CARD_HOVER_EFFECTS,
   PHI_CARD_ICON_PLACEMENTS,
+  PHI_CARD_ICON_SIZES,
   PHI_CARD_TEXT_ALIGNS,
   PHI_CARD_BADGE_STYLES,
   PHI_CARD_MEDIA_ASPECT_RATIOS,
@@ -34,6 +35,7 @@ import {
   type PhiCardHeadingLevel,
   type PhiCardHoverEffect,
   type PhiCardIconPlacement,
+  type PhiCardIconSize,
   type PhiCardTextAlign,
   type PhiCardBadgeStyle,
   type PhiCardMediaAspectRatio,
@@ -97,6 +99,10 @@ export type PhiCmsCardWidgetConfig = PhiCmsWidgetConfigBase & PhiCardImageSource
   /** The icon's colour and the ground it stands on; absent, the Theme's. */
   iconColor?: string;
   iconBackground?: string;
+  /** How large the icon is drawn, in fixed steps. Absent is `default`. */
+  iconSize?: PhiCardIconSize;
+  /** `false` draws the icon without its ground; absent is framed. */
+  iconFramed?: boolean;
   /** The picture's words for a reader who cannot see it; an Asset brings its own. */
   alt?: string;
   /**
@@ -176,6 +182,8 @@ function parsePhiCmsCardWidgetConfig(config: Record<string, unknown>): PhiCmsCar
     iconPlacement: readChoice(readString(config.iconPlacement), PHI_CARD_ICON_PLACEMENTS),
     iconColor: readString(config.iconColor),
     iconBackground: readString(config.iconBackground),
+    iconSize: readChoice(readString(config.iconSize), PHI_CARD_ICON_SIZES),
+    iconFramed: readBoolean(config.iconFramed),
     alt: readString(config.alt),
     mediaAspectRatio: readChoice(readString(config.mediaAspectRatio), PHI_CARD_MEDIA_ASPECT_RATIOS),
     imageOpacity: readPhiCardImageOpacity(config.imageOpacity),
@@ -210,6 +218,8 @@ const PHI_CARD_DEFAULT_CONFIG = {
   headingLevel: "h3",
   textAlign: "start",
   badgeStyle: "none",
+  // Shown on in the Inspector; the reader treats an absent value as framed all the same.
+  iconFramed: true,
 } satisfies Partial<PhiCmsCardWidgetConfig>;
 
 export const PHI_CARD_WIDGET_DEFINITION = {
@@ -366,6 +376,18 @@ export const PHI_CARD_WIDGET_DEFINITION = {
       // Shown with an icon, and not under the Center variant, which puts it over the picture itself.
       visibleWhen: [{ field: "icon", notEquals: null }, { field: "variant", notEquals: "center" }],
     },
+    {
+      key: "iconSize",
+      type: "choice",
+      label: "Icon size",
+      options: [
+        { value: "default", label: "Default" },
+        { value: "large", label: "Large" },
+        { value: "xlarge", label: "Extra large" },
+      ],
+      visibleWhen: { field: "icon", notEquals: null },
+    },
+    { key: "iconFramed", type: "boolean", label: "Icon ground", visibleWhen: { field: "icon", notEquals: null } },
     /* Left empty, the Theme's: the secondary text colour on its quietest fill. */
     {
       key: "iconColor",
@@ -381,7 +403,8 @@ export const PHI_CARD_WIDGET_DEFINITION = {
       label: "Background",
       mode: "single",
       defaultToken: "colorFillQuaternary",
-      visibleWhen: { field: "icon", notEquals: null },
+      // Without a ground there is nothing to colour.
+      visibleWhen: [{ field: "icon", notEquals: null }, { field: "iconFramed", notEquals: false }],
     },
     /*
      * Where the whole card leads, and how it answers the pointer: only a card that leads somewhere has

@@ -39,6 +39,7 @@ import type {
   PhiCardHeadingLevel,
   PhiCardHoverEffect,
   PhiCardIconPlacement,
+  PhiCardIconSize,
   PhiCardTextAlign,
   PhiCardTextSlot,
   PhiCardVariant,
@@ -51,6 +52,7 @@ export type {
   PhiCardHeadingLevel,
   PhiCardHoverEffect,
   PhiCardIconPlacement,
+  PhiCardIconSize,
   PhiCardTextAlign,
   PhiCardTextSlot,
   PhiCardVariant,
@@ -133,6 +135,10 @@ export type PhiCardWidgetClientConfig = {
   /** The icon's colour and its ground; absent, the Theme's. */
   iconColor?: string;
   iconBackground?: string;
+  /** How large the icon is drawn; absent is `default`. */
+  iconSize?: PhiCardIconSize;
+  /** `false` draws the icon without its ground; absent is framed, as a card always drew it. */
+  iconFramed?: boolean;
   textAlign?: PhiCardTextAlign;
   headingLevel?: PhiCardHeadingLevel;
   /** Where the whole card leads, already resolved to an address. */
@@ -214,8 +220,8 @@ type PhiCardVariantMetrics = {
    */
   headingType: Record<PhiCardHeadingLevel, { fontSize: number | string; lineHeight: number | string }>;
   descriptionSize: number | string;
-  iconSize: number;
-  topIconSize: number;
+  /** The icon's size per step, before the heading (`inline`) and at the top (`top`). */
+  iconSizes: Record<PhiCardIconSize, { inline: number; top: number }>;
   buttonSize: "small" | "medium";
   /**
    * The picture's box, where a variant sets it rather than the picture's own proportion. The picture is
@@ -242,8 +248,7 @@ const PHI_CARD_VARIANT_METRICS: Record<PhiCardVariant, (token: PhiThemeTokens) =
       h4: { fontSize: token.fontSizeHeading4, lineHeight: token.lineHeightHeading4 },
     },
     descriptionSize: token.fontSizeLG,
-    iconSize: 24,
-    topIconSize: 40,
+    iconSizes: { default: { inline: 24, top: 40 }, large: { inline: 40, top: 64 }, xlarge: { inline: 64, top: 96 } },
     buttonSize: "medium",
   }),
   compact: (token) => ({
@@ -255,8 +260,7 @@ const PHI_CARD_VARIANT_METRICS: Record<PhiCardVariant, (token: PhiThemeTokens) =
       h4: { fontSize: token.fontSizeHeading5, lineHeight: token.lineHeightHeading5 },
     },
     descriptionSize: token.fontSize,
-    iconSize: 20,
-    topIconSize: 32,
+    iconSizes: { default: { inline: 20, top: 32 }, large: { inline: 24, top: 40 }, xlarge: { inline: 40, top: 64 } },
     buttonSize: "small",
     // A strip rather than a poster, so the words stay the larger part of a compact card.
     mediaAspectRatio: "2 / 1",
@@ -340,9 +344,11 @@ export function PhiCardWidgetClient({
   const variant = config?.variant ?? "default";
   const body = config?.body ?? "text";
   const metrics = (PHI_CARD_VARIANT_METRICS[variant] ?? PHI_CARD_VARIANT_METRICS.default)(token);
-  const { inset, gap, headingType, descriptionSize, iconSize, topIconSize, buttonSize } = metrics;
+  const { inset, gap, headingType, descriptionSize, buttonSize } = metrics;
   const textAlign = metrics.arrangement?.textAlign ?? config?.textAlign ?? "start";
   const headingLevel = config?.headingLevel ?? "h3";
+  const { inline: iconSize, top: topIconSize } = metrics.iconSizes[config?.iconSize ?? "default"];
+  const iconFramed = config?.iconFramed !== false;
   const iconPlacement = metrics.arrangement?.iconPlacement ?? config?.iconPlacement ?? "inline";
   const highlight = overrides.highlight ?? config?.highlight === true;
   const href = config?.href;
@@ -420,14 +426,18 @@ export function PhiCardWidgetClient({
   /*
    * The icon's colours as custom properties, which `.phi-card__icon` paints (`styles/layout.css`): the
    * `icon` hover effect turns them round, and a colour stated inline could not be turned by a rule.
+   * An icon without its ground takes no part in that: it has no ground to turn the colours onto, so it
+   * carries no `phi-card__icon` class and states its colour directly, which no hover rule reaches.
    */
   const iconColours = (color: string, background: string) =>
-    ({
-      "--phi-card-icon-color": color,
-      "--phi-card-icon-background": background,
-      /* The mark's colour once the `icon` effect turns them round: a ground it can be read on. */
-      "--phi-card-icon-hover-color": config?.iconBackground ?? PHI_COLOR.bgContainer,
-    }) as CSSProperties;
+    (iconFramed
+      ? {
+          "--phi-card-icon-color": color,
+          "--phi-card-icon-background": background,
+          /* The mark's colour once the `icon` effect turns them round: a ground it can be read on. */
+          "--phi-card-icon-hover-color": config?.iconBackground ?? PHI_COLOR.bgContainer,
+        }
+      : { color }) as CSSProperties;
 
   /*
    * The corner of the icon's ground: the Theme's Control shape at the large size, scaled from a large
@@ -439,11 +449,12 @@ export function PhiCardWidgetClient({
     `calc(var(--phi-control-radius-lg, ${token.borderRadiusLG}px) * ${side / token.controlHeightLG})`;
 
   /* The framed box an icon before the title stands in. */
-  const inlineIconFrame = iconSize + 16;
+  const inlineIconFrame = iconFramed ? iconSize + 16 : iconSize;
+  const topIconFrame = iconFramed ? topIconSize + 24 : topIconSize;
   const iconMark = (size: number, framed: number) => iconName ? (
     <span
       aria-hidden="true"
-      className="phi-card__icon"
+      className={iconFramed ? "phi-card__icon" : undefined}
       style={{
         display: "inline-flex",
         flex: "none",
@@ -451,7 +462,7 @@ export function PhiCardWidgetClient({
         justifyContent: "center",
         width: framed,
         height: framed,
-        borderRadius: iconCorner(framed),
+        ...(iconFramed ? { borderRadius: iconCorner(framed) } : {}),
         ...iconColours(
           config?.iconColor ?? (highlight ? PHI_COLOR.primary : PHI_COLOR.textSecondary),
           config?.iconBackground ?? PHI_COLOR.fillQuaternary,
@@ -568,6 +579,8 @@ export function PhiCardWidgetClient({
         position: "relative",
         aspectRatio: config?.mediaAspectRatio ?? metrics.mediaAspectRatio ?? resolveMediaAspectRatio(image.presentation),
         overflow: "hidden",
+        // The icon stands in the picture's middle: a picture shorter than its box would clip it.
+        ...(iconAtTop && iconName ? { minHeight: topIconFrame } : {}),
       }}
     >
       <PhiImageControl
@@ -599,7 +612,7 @@ export function PhiCardWidgetClient({
       {iconAtTop && iconName ? (
         <span
           aria-hidden="true"
-          className="phi-card__icon"
+          className={iconFramed ? "phi-card__icon" : undefined}
           style={{
             position: "absolute",
             insetInlineStart: markSide === "start" ? inset : markSide === "end" ? undefined : "50%",
@@ -609,15 +622,15 @@ export function PhiCardWidgetClient({
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
-            width: topIconSize + 24,
-            height: topIconSize + 24,
-            borderRadius: iconCorner(topIconSize + 24),
+            width: topIconFrame,
+            height: topIconFrame,
+            ...(iconFramed ? { borderRadius: iconCorner(topIconFrame) } : {}),
             // A ground of its own, so the mark reads on a bright picture and on a dark one alike.
             ...iconColours(
               config?.iconColor ?? (highlight ? PHI_COLOR.primary : PHI_COLOR.text),
               config?.iconBackground ?? `color-mix(in srgb, ${PHI_COLOR.bgContainer} 88%, transparent)`,
             ),
-            boxShadow: token.boxShadowTertiary,
+            ...(iconFramed ? { boxShadow: token.boxShadowTertiary } : {}),
           }}
         >
           <PhiIcon name={iconName} size={topIconSize} />
@@ -727,7 +740,7 @@ export function PhiCardWidgetClient({
     <div style={{ display: "grid", gap, padding: footAction ? 0 : inset, justifyItems }}>
       {iconAtTop && iconName && !image ? (
         <div style={{ justifySelf: markSide === "center" ? "center" : markSide === "end" ? "end" : "start" }}>
-          {iconMark(topIconSize, topIconSize + 24)}
+          {iconMark(topIconSize, topIconFrame)}
         </div>
       ) : null}
       {eyebrow != null && !eyebrowOnMedia && !labels.eyebrowEnd ? (

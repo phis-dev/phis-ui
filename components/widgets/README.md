@@ -325,6 +325,10 @@ record's source text instead of its localized version.
   a `PhiCardControl` box. It carries a picture at the top (`PhiImageControl`, any variant; the box takes
   the variant's proportion, and the canvas says when the variant is narrower than the card) and an `icon`
   by name (`iconPlacement` `inline` before the heading or `top`, over the picture on a ground of its own).
+  `iconSize` is a fixed step -- `default` (absent), `large`, `xlarge`; the variant's table says what each is
+  in pixels, before the heading and at the top. `iconFramed: false` draws the icon without its ground: its
+  box is the icon itself, with no colour, shadow or corner, and the `icon` hover effect leaves it alone;
+  absent is framed. `iconBackground` has nothing to colour then and the Inspector hides it.
   The heading's tag is `headingLevel` (`h2`, `h3` default, `h4`), its size the `variant` (`default`,
   `compact`, `featured`, which is size and nothing else); a `stat` body draws the label as that heading and
   the figure beneath it. `textAlign` is `start`, `center` or `end`. `linkTarget` makes the whole card the

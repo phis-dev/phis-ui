@@ -22,3 +22,19 @@ describe("card image overlay", () => {
     expect(parse({ imageOverlay: "dark" }).imageOverlay).toBeUndefined();
   });
 });
+
+describe("card icon", () => {
+  it("reads a step of the icon size, and a value that is none falls back to absent", () => {
+    expect(parse({ iconSize: "large" }).iconSize).toBe("large");
+    expect(parse({ iconSize: "xlarge" }).iconSize).toBe("xlarge");
+    expect(parse({ iconSize: "48" }).iconSize).toBeUndefined();
+    expect(parse({}).iconSize).toBeUndefined();
+  });
+
+  it("keeps an explicit unframed icon and states nothing where nothing is given", () => {
+    expect(parse({ iconFramed: false }).iconFramed).toBe(false);
+    expect(parse({ iconFramed: true }).iconFramed).toBe(true);
+    expect(parse({}).iconFramed).toBeUndefined();
+    expect(parse({ iconFramed: "no" }).iconFramed).toBeUndefined();
+  });
+});

@@ -71,6 +71,14 @@ export const PHI_CARD_ICON_PLACEMENTS = ["inline", "top", "top-center", "top-end
 export type PhiCardIconPlacement = (typeof PHI_CARD_ICON_PLACEMENTS)[number];
 
 /**
+ * How large the icon is drawn: fixed steps, no pixel entry, so every card of a Site stands on the same few
+ * sizes and the variant's table (`PHI_CARD_VARIANT_METRICS`) decides what each step is for its placement.
+ * Absent is `default`, which is what a card drew before the steps existed.
+ */
+export const PHI_CARD_ICON_SIZES = ["default", "large", "xlarge"] as const;
+export type PhiCardIconSize = (typeof PHI_CARD_ICON_SIZES)[number];
+
+/**
  * How a card that leads somewhere answers the pointer; a card without a link has none. A list, so a
  * further effect is an entry and a rule in `styles/layout.css`, not another flag. `lift` raises the card, `zoom` enlarges its picture, `icon`
  * turns its icon's colours round. Only under a pointer that hovers, or keyboard focus within the card;

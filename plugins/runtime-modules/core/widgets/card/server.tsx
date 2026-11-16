@@ -143,6 +143,8 @@ export async function PhiCardWidget({
     iconPlacement: config?.iconPlacement,
     iconColor: config?.iconColor,
     iconBackground: config?.iconBackground,
+    iconSize: config?.iconSize,
+    iconFramed: config?.iconFramed,
     textAlign: config?.textAlign,
     headingLevel: config?.headingLevel,
     href: link?.href,
