@@ -114,11 +114,10 @@ built. Remove an entry when it is done.
 ## Builder
 
 - **Module routes nest only as a list's entries** (THIRD_PARTY_MODULES.md, "Addresses and folders",
-  2026-11-16). Checked at verify time (`checkPhiRouteAddresses`): phis-ui's own routes keep it, and so
-  does `@phis/phisys`. `@phis/shop` does not yet (`/shop` above `/shop/cart`, `/shop/checkout`,
-  `/shop/order`; its TODOS.md). Once it does, make the check part of compiling the catalog, so an
-  installed package that breaks it is refused, and extend it to the Public addresses a Site assigns at
-  activation (`public-route-collisions.ts` compares equality only, so a reassigned route can still land
+  2026-11-16). Checked at verify time (`checkPhiRouteAddresses`): phis-ui's own routes keep it, and so do
+  `@phis/phisys` and `@phis/shop` (catalogue moved to `/shop/products`). Next: run it over the other
+  first-party packages' routes, then make it part of compiling the catalog, so an installed package that
+  breaks it is refused, and extend it to the Public addresses a Site assigns at activation (`public-route-collisions.ts` compares equality only, so a reassigned route can still land
   beneath a Site Page or another Module's route).
 - **A container's title as a link, later.** Owner's idea (2026-11-16): a container with a folder target
   could lead there when its title is clicked, the chevron still opening it. Today every menu draws an

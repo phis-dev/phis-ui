@@ -1631,34 +1631,37 @@ export function resolvePhiCmsActiveNavigationSurfaces({
 }
 
 /**
- * The Page a Module container's folder address leads to by its descriptor (`folderTarget`), or null.
+ * The Pages Module containers' folder addresses lead to by their descriptors (`folderTarget`), keyed by
+ * address; an address no Module container answers is not in the map.
  *
- * Asked where no Page answers and the Site's published Navigations name no target for the address
- * (`server-helpers/cms-request.ts`): a Site's choice replaces the Module's, not the reverse. Every
- * surface of the Area is searched, because a folder address is the Area's, not one menu's.
+ * Asked where the Site's published Navigations name no target for an address -- a request no Page
+ * answers (`server-helpers/cms-request.ts`), a breadcrumb's folders -- so a Site's choice replaces the
+ * Module's, not the reverse. Every surface of the Area is searched once, because a folder address is the
+ * Area's, not one menu's.
  */
-export function resolvePhiCmsModuleNavigationFolderTarget(input: {
+export function resolvePhiCmsModuleNavigationFolderTargets(input: {
   catalog: PhiCmsCompiledDescriptorCatalog;
   area: PhiCmsAreaKey;
   activeModuleIds: ReadonlySet<PhiRuntimeModuleId>;
   routeTable: PhiCmsActiveRouteTable;
-  address: string;
-}): string | null {
-  const find = (items: readonly PhiCmsResolvedNavigationItem[]): string | null => {
+  addresses: readonly string[];
+}): Map<string, string> {
+  const wanted = new Set(input.addresses);
+  const found = new Map<string, string>();
+  const visit = (items: readonly PhiCmsResolvedNavigationItem[]) => {
     for (const item of items) {
-      if (item.folder?.address === input.address && item.folder.target?.kind === "page") {
-        return item.folder.target.reference;
+      const address = item.folder?.address;
+      if (address && wanted.has(address) && !found.has(address) && item.folder?.target?.kind === "page") {
+        found.set(address, item.folder.target.reference);
       }
-      const below = find(item.children);
-      if (below) return below;
+      visit(item.children);
     }
-    return null;
   };
+  if (wanted.size === 0) return found;
   for (const surface of resolvePhiCmsActiveNavigationSurfaces(input)) {
-    const reference = find(surface.items);
-    if (reference) return reference;
+    visit(surface.items);
   }
-  return null;
+  return found;
 }
 
 export function resolvePhiCmsNavigationOverlay(

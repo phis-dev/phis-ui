@@ -5,6 +5,8 @@ vi.mock("server-only", () => ({}));
 const readField = vi.hoisted(() => vi.fn());
 vi.mock("../../../../../server-helpers/record-fields", () => ({ resolvePhiWidgetRecordField: readField }));
 vi.mock("../../../../../gateway/site-nav", () => ({ fetchSiteNavigationFolderTarget: vi.fn(async () => null) }));
+const moduleFolders = vi.hoisted(() => vi.fn((_area: unknown, _addresses: readonly string[]) => new Map<string, string>()));
+vi.mock("../../../../../server-helpers/module-folder-targets", () => ({ resolvePhiRequestModuleFolderTargets: moduleFolders }));
 vi.mock("../../../../../helpers/phis-server-credentials", () => ({
   readPhiServerApiCredentials: () => ({ apiBaseUrl: "http://core", internalToken: "t" }),
 }));
@@ -70,5 +72,18 @@ describe("breadcrumb server: the title field of the Page's record", () => {
     expect(await titleFor({ titleField: "name" })).toBeNull();
     readField.mockRejectedValue(new Error("boom"));
     expect(await titleFor({ titleField: "name" })).toBeNull();
+  });
+});
+
+describe("breadcrumb server: the folders that lead somewhere", () => {
+  it("links a folder a Module container leads to where the Site chose no target", async () => {
+    moduleFolders.mockReturnValueOnce(new Map([["/faq", "module:faq-overview"]]));
+    const element = await PhiBreadcrumbWidget({
+      runtime: { site: { key: "site" }, area: "public", page: { path: "/faq/hosting", title: "Hosting" } },
+      config: {},
+    } as never);
+    expect((element.props as { componentProps: { linkedFolderPaths: string[] } }).componentProps.linkedFolderPaths)
+      .toEqual(["/faq"]);
+    expect(moduleFolders).toHaveBeenLastCalledWith("public", ["/faq"]);
   });
 });

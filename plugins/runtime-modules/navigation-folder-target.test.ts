@@ -18,7 +18,7 @@ import {
   compilePhiCmsActiveRouteTable,
   resolvePhiCmsActiveNavigationSurfaces,
   resolvePhiCmsDescriptorCatalog,
-  resolvePhiCmsModuleNavigationFolderTarget,
+  resolvePhiCmsModuleNavigationFolderTargets,
 } from "./descriptor-compiler";
 
 const loadTree = (() => {
@@ -125,7 +125,7 @@ function faq(item: Partial<PhiCmsNavigationInjectionItemDescriptor>, paths = { o
   const [surface] = resolvePhiCmsActiveNavigationSurfaces({ catalog, area: "public", activeModuleIds, routeTable });
   return {
     container: surface!.items.find((entry) => entry.label.defaultMessage === "FAQ")!,
-    lookup: (address: string) => resolvePhiCmsModuleNavigationFolderTarget({ catalog, area: "public", activeModuleIds, routeTable, address }),
+    lookup: (address: string) => resolvePhiCmsModuleNavigationFolderTargets({ catalog, area: "public", activeModuleIds, routeTable, addresses: [address] }).get(address) ?? null,
     builder: materializePhiBuilderNavigationSurface(surface!, null),
   };
 }

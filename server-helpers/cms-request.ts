@@ -26,7 +26,7 @@ import {
   normalizePhiCmsRoutePath,
   resolvePhiCmsAreaShellPresetBinding,
   resolvePhiCmsDescriptorCatalog,
-  resolvePhiCmsModuleNavigationFolderTarget,
+  resolvePhiCmsModuleNavigationFolderTargets,
   resolvePhiCmsRoutePreset,
 } from "../plugins/runtime-modules/descriptor-compiler";
 import { resolvePhiRuntimeModuleIdsForArea } from "../plugins/runtime-modules/settings";
@@ -513,13 +513,13 @@ export async function resolvePhiCmsRequest({
     : null;
   // Where the Site chose no target, a Module container's own (`folderTarget`) answers.
   const folderTargetReference = siteFolderTargetReference ?? (folderLookup
-    ? resolvePhiCmsModuleNavigationFolderTarget({
+    ? resolvePhiCmsModuleNavigationFolderTargets({
         catalog,
         area: requestedAreaKey,
         activeModuleIds: activeModuleKeys,
         routeTable,
-        address: areaOwnedStoragePath,
-      })
+        addresses: [areaOwnedStoragePath],
+      }).get(areaOwnedStoragePath) ?? null
     : null);
   const folderTargetPath = folderTargetReference
     ? await resolvePhiAreaPageReferencePath({

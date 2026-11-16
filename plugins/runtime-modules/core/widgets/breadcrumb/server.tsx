@@ -3,6 +3,7 @@ import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runt
 import { fetchSiteNavigationFolderTarget } from "../../../../../gateway/site-nav";
 import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
 import { resolvePhiWidgetRecordField } from "../../../../../server-helpers/record-fields";
+import { resolvePhiRequestModuleFolderTargets } from "../../../../../server-helpers/module-folder-targets";
 import type { PhiBlockRuntime } from "../../../../../types";
 import type { PhiBreadcrumbWidgetProps } from "./client";
 
@@ -29,7 +30,8 @@ export function listPhiBreadcrumbFolderPaths(pagePath: string) {
  * Which folders of the Page's path lead somewhere, so the client links exactly those.
  *
  * A folder segment is a link when its folder address resolves to a Page (REFERENCES.md, "Folder
- * addresses"); one that resolves to nothing would be a link into a 404. Asked once per folder of the
+ * addresses") or a Module container's `folderTarget` leads it to one; one that resolves to nothing
+ * would be a link into a 404. Asked once per folder of the
  * path, which is the depth of the path and not the size of the Site, and only when the trail shows the
  * path at all. A failed lookup leaves that segment unlinked rather than failing the trail.
  */
@@ -49,7 +51,12 @@ async function resolveLinkedFolderPaths(props: PhiBreadcrumbWidgetServerProps): 
     area: String(runtime.area),
     path,
   }).catch(() => null)));
-  return folders.filter((_path, index) => answers[index] != null);
+  // Where the Site chose no target, a Module container's own (`folderTarget`) answers, as on a request.
+  const unanswered = folders.filter((_path, index) => answers[index] == null);
+  const moduleTargets = unanswered.length > 0
+    ? resolvePhiRequestModuleFolderTargets(runtime.area, unanswered)
+    : new Map<string, string>();
+  return folders.filter((path, index) => answers[index] != null || moduleTargets.has(path));
 }
 
 /**
