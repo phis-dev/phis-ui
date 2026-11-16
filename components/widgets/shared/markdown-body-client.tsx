@@ -26,7 +26,11 @@ import {
   type PhiMarkdownSection,
 } from "./markdown-sections";
 import type { PhiImagePresentation } from "../../media/image-presentation";
-import { resolvePhiMarkdownFigureSizes, type PhiMarkdownFigureFloat } from "./markdown-image-vocabulary";
+import {
+  resolvePhiMarkdownFigureSizes,
+  type PhiMarkdownFigureFloat,
+  type PhiMarkdownImageFloatWidth,
+} from "./markdown-image-vocabulary";
 import {
   resolvePhiBulletListStyle,
   type PhiBulletListStyle,
@@ -60,6 +64,8 @@ export type PhiMarkdownFigure = {
   /** The box as CSS (`16 / 9`) where a step was chosen; `null` is the picture's own proportion. */
   aspectRatio: string | null;
   float: PhiMarkdownFigureFloat;
+  /** The step of the line a floated picture takes; it says nothing while `float` is `none`. */
+  floatWidth: PhiMarkdownImageFloatWidth;
 };
 
 export type PhiMarkdownBlock =
@@ -106,6 +112,7 @@ export type PhiMarkdownWidgetClientProps = PhiClientBlockBaseProps<
     headings?: PhiMarkdownTocHeading[];
     textAlign?: PhiMarkdownTextAlign;
     imageFloat?: PhiMarkdownImageFloat;
+    imageFloatWidth?: PhiMarkdownImageFloatWidth;
     textBlockSpacingBefore?: PhiSpacingScaleKey;
     textBlockSpacingAfter?: PhiSpacingScaleKey;
     headingBlockSpacingBefore?: PhiSpacingScaleKey;
@@ -417,7 +424,8 @@ export function PhiMarkdownWidgetClient({ config, labels }: PhiMarkdownWidgetCli
      */
     <div
       className={config?.imageFloat
-        ? `phi-markdown-text phi-markdown-body phi-markdown-body--float-${config.imageFloat}`
+        ? `phi-markdown-text phi-markdown-body phi-markdown-body--float-${config.imageFloat}${
+          config.imageFloatWidth ? ` phi-markdown-body--float-width-${config.imageFloatWidth}` : ""}`
         : "phi-markdown-text"}
       // The text's line height for everything in it, lists included: a list entry otherwise takes the
       // browser's `normal`, and its marker centres on a line shorter than the one its words stand on.
@@ -527,7 +535,7 @@ function PhiMarkdownFigureBlock({ figure }: { figure: PhiMarkdownFigure }) {
   const { presentation } = figure;
   const ownRatio = presentation.width && presentation.height ? `${presentation.width} / ${presentation.height}` : undefined;
   return (
-    <figure className={`phi-markdown-figure phi-markdown-figure--float-${figure.float}`}>
+    <figure className={`phi-markdown-figure phi-markdown-figure--float-${figure.float} phi-markdown-figure--width-${figure.floatWidth}`}>
       <div className="phi-markdown-figure__frame" style={{ aspectRatio: figure.aspectRatio ?? ownRatio }}>
         <PhiImageControl
           presentation={presentation}
@@ -536,7 +544,7 @@ function PhiMarkdownFigureBlock({ figure }: { figure: PhiMarkdownFigure }) {
           title={figure.title}
           blurDataUrl={figure.blurDataUrl}
           optimizable={figure.optimizable}
-          sizes={resolvePhiMarkdownFigureSizes(figure.float)}
+          sizes={resolvePhiMarkdownFigureSizes(figure.float, figure.floatWidth)}
           style={{ width: "100%", height: "100%" }}
           imageStyle={{ width: "100%", height: "100%" }}
         />

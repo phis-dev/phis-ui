@@ -4,8 +4,9 @@
  * reference of every route.
  *
  * Two places say it, and the nearer one wins. The Widget states what every picture in its text does -- the
- * Inspector's "Image proportion" and "Image Float" -- and a picture that needs something else says so in its
- * own address, after the Asset: `![Server](phis:asset/12?ratio=16:9&float=none)`. The address stays a
+ * Inspector's "Image proportion", "Image Float" and "Image Width" -- and a picture that needs something else
+ * says so in its own address, after the Asset: `![Server](phis:asset/12?ratio=16:9&float=none)`, or
+ * `![Icon](phis:asset/27?float=end&width=small)`. The address stays a
  * `phis:asset/<id>` reference for everything that reads one (the server's reference index finds the id at
  * its start), and it is plain Markdown, so a translation carries it through untouched.
  */
@@ -23,6 +24,22 @@ export type PhiMarkdownImageAspectRatio = (typeof PHI_MARKDOWN_IMAGE_ASPECT_RATI
 /** Where a picture stands: at an edge with the text flowing past it, or on a line of its own (`none`). */
 export const PHI_MARKDOWN_FIGURE_FLOATS = ["start", "end", "none"] as const;
 export type PhiMarkdownFigureFloat = (typeof PHI_MARKDOWN_FIGURE_FLOATS)[number];
+
+/**
+ * How much of the line a picture beside the text takes, in fixed steps and never a measure of its own: what
+ * is left of the column after the gap, divided by a power of φ (`PHI_GOLDEN_RATIO`) -- `small` φ⁴ (about
+ * 0.15 of the column), `medium` φ³ (0.24), `large` φ² (0.38) and `xlarge` φ (0.62). `large` is what a picture
+ * has that says nothing: text and picture in the golden ratio. `small` is an app icon's or a portrait's
+ * step. It says nothing for a picture on a line of its own, which is as wide as the column; the divisors
+ * themselves are `styles/controls.css`.
+ */
+export const PHI_MARKDOWN_IMAGE_FLOAT_WIDTHS = ["small", "medium", "large", "xlarge"] as const;
+export type PhiMarkdownImageFloatWidth = (typeof PHI_MARKDOWN_IMAGE_FLOAT_WIDTHS)[number];
+export const PHI_MARKDOWN_IMAGE_FLOAT_WIDTH_DEFAULT: PhiMarkdownImageFloatWidth = "large";
+
+export function readPhiMarkdownImageFloatWidth(value: unknown): PhiMarkdownImageFloatWidth | undefined {
+  return PHI_MARKDOWN_IMAGE_FLOAT_WIDTHS.find((width) => width === value);
+}
 
 export function readPhiMarkdownImageAspectRatio(value: unknown): PhiMarkdownImageAspectRatio | undefined {
   return PHI_MARKDOWN_IMAGE_ASPECT_RATIOS.find((ratio) => ratio === value);
@@ -48,32 +65,48 @@ export function resolvePhiMarkdownImageAspectRatioCss(ratio: PhiMarkdownImageAsp
 }
 
 /**
- * A picture's address read apart: the reference, and what the picture says for itself. Only `ratio` and
- * `float` are read; anything else after the `?` is left out of the reference and ignored, so an address a
+ * A picture's address read apart: the reference, and what the picture says for itself. Only `ratio`,
+ * `float` and `width` are read; anything else after the `?` is left out of the reference and ignored, so an address a
  * later release learns more words for still names its Asset today.
  */
 export function readPhiMarkdownImageAddress(url: string): {
   reference: string;
   aspectRatio?: PhiMarkdownImageAspectRatio;
   float?: PhiMarkdownFigureFloat;
+  floatWidth?: PhiMarkdownImageFloatWidth;
 } {
   const question = url.indexOf("?");
   if (question < 0) return { reference: url };
   const params = new URLSearchParams(url.slice(question + 1));
   const aspectRatio = readPhiMarkdownImageAspectRatio(params.get("ratio"));
   const float = readPhiMarkdownFigureFloat(params.get("float"));
+  const floatWidth = readPhiMarkdownImageFloatWidth(params.get("width"));
   return {
     reference: url.slice(0, question),
     ...(aspectRatio ? { aspectRatio } : {}),
     ...(float ? { float } : {}),
+    ...(floatWidth ? { floatWidth } : {}),
   };
 }
 
+/** The widest a floated picture of each step is drawn, in a reading column of 1120 px (`styles/controls.css`). */
+const PHI_MARKDOWN_FLOAT_WIDTH_PIXELS: Record<PhiMarkdownImageFloatWidth, number> = {
+  small: 160,
+  medium: 260,
+  large: 440,
+  xlarge: 680,
+};
+
 /**
- * How wide a picture is drawn, for the image optimiser: beside the text its golden share of the column
- * (`styles/controls.css`, about 0.38 of a reading column of at most 1120 px), on a line of its own the
- * reading column's.
+ * How wide a picture is drawn, for the image optimiser: beside the text its step's share of the column
+ * (`styles/controls.css`, a reading column of at most 1120 px), on a line of its own the reading column's.
+ * Below 560 px a floated picture stands on its own line at full width, whatever its step.
  */
-export function resolvePhiMarkdownFigureSizes(float: PhiMarkdownFigureFloat) {
-  return float === "none" ? "(max-width: 768px) 100vw, 1120px" : "(max-width: 560px) 100vw, 440px";
+export function resolvePhiMarkdownFigureSizes(
+  float: PhiMarkdownFigureFloat,
+  floatWidth: PhiMarkdownImageFloatWidth = PHI_MARKDOWN_IMAGE_FLOAT_WIDTH_DEFAULT,
+) {
+  return float === "none"
+    ? "(max-width: 768px) 100vw, 1120px"
+    : `(max-width: 560px) 100vw, ${PHI_MARKDOWN_FLOAT_WIDTH_PIXELS[floatWidth]}px`;
 }

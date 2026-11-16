@@ -6,7 +6,9 @@ import {
 } from "../../../../../components/widgets/shared/markdown-sections";
 import {
   readPhiMarkdownImageAspectRatio,
+  readPhiMarkdownImageFloatWidth,
   type PhiMarkdownImageAspectRatio,
+  type PhiMarkdownImageFloatWidth,
 } from "../../../../../components/widgets/shared/markdown-image-vocabulary";
 import { PHI_SPACING_SCALE_KEYS, type PhiSpacingScaleKey } from "../../../../../components/widgets/config/spacing-options";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
@@ -46,6 +48,11 @@ export type PhiCmsMarkdownWidgetConfig = PhiCmsWidgetConfigBase & {
   textAlign?: PhiMarkdownTextAlign;
   /** Pictures stand at this edge and the text flows past them; absent, a picture is a line of its own. */
   imageFloat?: PhiMarkdownImageFloat;
+  /**
+   * The step of the line every floated picture takes (`markdown-image-vocabulary.ts`); absent is `large`,
+   * text and picture in the golden ratio. A picture's own address may say otherwise (`width=small`).
+   */
+  imageFloatWidth?: PhiMarkdownImageFloatWidth;
   /**
    * How tall every Media picture standing on its own in the text is (`markdown-image-vocabulary.ts`);
    * absent is `auto`, the picture's own proportion. A picture's own address may say otherwise.
@@ -129,6 +136,7 @@ export function parsePhiCmsMarkdownWidgetConfig(config: Record<string, unknown>)
     revalidateSeconds: readNumber(config.revalidateSeconds),
     textAlign: readMarkdownTextAlign(config.textAlign),
     imageFloat: readMarkdownImageFloat(config.imageFloat),
+    imageFloatWidth: readPhiMarkdownImageFloatWidth(config.imageFloatWidth),
     imageAspectRatio: readPhiMarkdownImageAspectRatio(config.imageAspectRatio),
     foldSections: readPhiMarkdownFoldSections(config.foldSections),
     faqStructuredData: readBoolean(config.faqStructuredData),
@@ -247,6 +255,22 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
       // No float is the default and stores nothing; the line says so instead of an empty picker.
       emptyOption: { value: "none", label: "None" },
       options: PHI_MARKDOWN_IMAGE_FLOAT_OPTIONS,
+    },
+    /*
+     * Fixed steps of the line, never a measure: a floated picture takes this share and the text the rest.
+     * `large` is the default and stores nothing. A single picture says its own in its address (`width=small`).
+     * Shown without a float as well: a picture may float by its own address and takes this step then.
+     */
+    {
+      key: "imageFloatWidth",
+      type: "choice",
+      label: "Image Width",
+      emptyOption: { value: "large", label: "Large (golden)" },
+      options: [
+        { value: "small", label: "Small" },
+        { value: "medium", label: "Medium" },
+        { value: "xlarge", label: "Extra large" },
+      ],
     },
     /*
      * Every picture standing on its own takes this box; one that needs another says so in its own address

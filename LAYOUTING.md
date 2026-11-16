@@ -287,8 +287,12 @@ Two places say what a figure does, and the nearer wins. The Widget states it for
 golden rectangle, `3:2`, `4:3`, `16:9`, `2:1`, `1:1`). A floated picture shares the line with the text in
 the golden ratio: after the gap between them, the text is φ times as wide as the picture
 (`PHI_GOLDEN_RATIO`, `theme/phi-tokens.ts`), with the Phi scale's `md` between them -- 415 px of picture
-beside 671 px of text in a 1120 px column. A picture that needs something else says so in its own address:
-`![Server](phis:asset/12?ratio=16:9&float=none)`. The address stays a `phis:asset/<id>` reference for
+beside 671 px of text in a 1120 px column. That is the step `large` of `imageFloatWidth`; the others are
+fixed steps as well, never a measure: the column after the gap divided by a power of φ -- `small` (φ⁴, about
+0.15 of the column, an app icon's step), `medium` (φ³, 0.24) and `xlarge` (φ, 0.62). Below 560 px a floated
+picture stands on its own line at full width, whatever its step. A picture that needs something else says
+so in its own address: `![Server](phis:asset/12?ratio=16:9&float=none)`, or
+`![Icon](phis:asset/27?float=end&width=small)`. The address stays a `phis:asset/<id>` reference for
 everything that reads one -- the server's reference index finds the id at its start -- and it is plain
 Markdown, so a translation carries it through. The vocabulary is `markdown-image-vocabulary.ts`.
 ### Where a Surface's outline comes from

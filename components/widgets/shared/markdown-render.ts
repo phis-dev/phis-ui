@@ -18,6 +18,8 @@ import {
   resolvePhiMarkdownImageAspectRatioValue,
   type PhiMarkdownFigureFloat,
   type PhiMarkdownImageAspectRatio,
+  type PhiMarkdownImageFloatWidth,
+  PHI_MARKDOWN_IMAGE_FLOAT_WIDTH_DEFAULT,
 } from "./markdown-image-vocabulary";
 import { resolvePhiCodeLanguage, tokenizePhiCode } from "./markdown-code-tokens";
 import { readPhiInternalReference, type PhiPageReference } from "../../../types/references";
@@ -81,6 +83,14 @@ export type PhiMarkdownSourceConfig = {
   /** What every picture in the text does, unless its own address says otherwise (`markdown-image-vocabulary.ts`). */
   imageAspectRatio?: PhiMarkdownImageAspectRatio;
   imageFloat?: PhiMarkdownImageFloat;
+  imageFloatWidth?: PhiMarkdownImageFloatWidth;
+};
+
+/** What the Widget says for every picture of its text; a picture's own address says otherwise. */
+type MarkdownImageDefaults = {
+  aspectRatio?: PhiMarkdownImageAspectRatio;
+  float?: PhiMarkdownImageFloat;
+  floatWidth?: PhiMarkdownImageFloatWidth;
 };
 
 /** A Media picture found in the text, by the address its image node carries after the projection. */
@@ -88,6 +98,7 @@ type MarkdownFigureSource = {
   asset: PhiPublicMediaAssetReference;
   aspectRatio?: PhiMarkdownImageAspectRatio;
   float?: PhiMarkdownFigureFloat;
+  floatWidth?: PhiMarkdownImageFloatWidth;
 };
 
 const MARKDOWN_DEFAULT_REVALIDATE_SECONDS = 14400;
@@ -263,6 +274,7 @@ async function projectInternalMarkdownNodes(
           asset,
           ...(address.aspectRatio ? { aspectRatio: address.aspectRatio } : {}),
           ...(address.float ? { float: address.float } : {}),
+          ...(address.floatWidth ? { floatWidth: address.floatWidth } : {}),
         });
         return [{ ...node, url: src, children }];
       }
@@ -283,7 +295,7 @@ async function projectInternalMarkdownNodes(
 function promoteMarkdownFigures(
   blocks: PhiMarkdownBlock[],
   figures: ReadonlyMap<string, MarkdownFigureSource>,
-  defaults: { aspectRatio?: PhiMarkdownImageAspectRatio; float?: PhiMarkdownImageFloat },
+  defaults: MarkdownImageDefaults,
 ): PhiMarkdownBlock[] {
   if (figures.size === 0) return blocks;
   return blocks.map((block): PhiMarkdownBlock => {
@@ -301,7 +313,7 @@ function promoteMarkdownFigures(
 function buildMarkdownFigure(
   image: Extract<PhiMarkdownInline, { kind: "image" }>,
   source: MarkdownFigureSource,
-  defaults: { aspectRatio?: PhiMarkdownImageAspectRatio; float?: PhiMarkdownImageFloat },
+  defaults: MarkdownImageDefaults,
 ): PhiMarkdownFigure {
   const aspectRatio = source.aspectRatio ?? defaults.aspectRatio ?? "auto";
   const frameAspectRatio = resolvePhiMarkdownImageAspectRatioValue(aspectRatio);
@@ -327,6 +339,7 @@ function buildMarkdownFigure(
     optimizable: !isPhiMediaSvgContentType(asset.contentType),
     aspectRatio: resolvePhiMarkdownImageAspectRatioCss(aspectRatio),
     float: source.float ?? defaults.float ?? "none",
+    floatWidth: source.floatWidth ?? defaults.floatWidth ?? PHI_MARKDOWN_IMAGE_FLOAT_WIDTH_DEFAULT,
   };
 }
 
@@ -671,6 +684,7 @@ export async function resolveMarkdownRenderData(
     {
       ...(config?.imageAspectRatio ? { aspectRatio: config.imageAspectRatio } : {}),
       ...(config?.imageFloat ? { float: config.imageFloat } : {}),
+      ...(config?.imageFloatWidth ? { floatWidth: config.imageFloatWidth } : {}),
     },
   );
 }
@@ -685,7 +699,7 @@ async function resolveMarkdownRenderDataFromSource(
   runtime?: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer">,
   extent: "document" | "first-paragraph" = "document",
   headingOffset = 0,
-  imageDefaults: { aspectRatio?: PhiMarkdownImageAspectRatio; float?: PhiMarkdownImageFloat } = {},
+  imageDefaults: MarkdownImageDefaults = {},
 ): Promise<MarkdownRenderData> {
   const tree = parseMarkdown(markdown);
   if (extent === "first-paragraph") {

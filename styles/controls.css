@@ -773,7 +773,32 @@ h5.phi-typography, .phi-typography h5 {
 .phi-markdown-body {
   /* The gap between picture and text, on the Phi scale (`PHI_SPACE.md`), not Ant Design's margins. */
   --phi-markdown-float-gap: var(--phi-padding-md, 34px);
-  --phi-markdown-float-width: calc((100% - var(--phi-markdown-float-gap)) / 2.618034);
+  /*
+   * The step of the line a floated picture takes (`PHI_MARKDOWN_IMAGE_FLOAT_WIDTHS`): the divisor is a power
+   * of φ -- φ⁴, φ³, φ² and φ. Without a word it is φ², the golden share above. The Widget sets it for all
+   * its pictures on the body, a figure for itself; the width is written out where it is used, because a
+   * custom property holding the whole `calc()` would be settled on the body and never see a figure's step.
+   */
+  --phi-markdown-float-divisor: 2.618034;
+}
+
+.phi-markdown-body--float-width-small,
+.phi-markdown-figure--width-small {
+  --phi-markdown-float-divisor: 6.854102;
+}
+
+.phi-markdown-body--float-width-medium,
+.phi-markdown-figure--width-medium {
+  --phi-markdown-float-divisor: 4.236068;
+}
+
+.phi-markdown-figure--width-large {
+  --phi-markdown-float-divisor: 2.618034;
+}
+
+.phi-markdown-body--float-width-xlarge,
+.phi-markdown-figure--width-xlarge {
+  --phi-markdown-float-divisor: 1.618034;
 }
 
 .phi-markdown-body :is(img):not(:where(.phi-markdown-figure *)) {
@@ -789,13 +814,13 @@ h5.phi-typography, .phi-typography h5 {
 @container (min-width: 560px) {
   .phi-markdown-body--float-start :is(img):not(:where(.phi-markdown-figure *)) {
     float: inline-start;
-    width: var(--phi-markdown-float-width);
+    width: calc((100% - var(--phi-markdown-float-gap)) / var(--phi-markdown-float-divisor));
     margin-inline-end: var(--phi-markdown-float-gap);
   }
 
   .phi-markdown-body--float-end :is(img):not(:where(.phi-markdown-figure *)) {
     float: inline-end;
-    width: var(--phi-markdown-float-width);
+    width: calc((100% - var(--phi-markdown-float-gap)) / var(--phi-markdown-float-divisor));
     margin-inline-start: var(--phi-markdown-float-gap);
   }
 }
@@ -819,13 +844,13 @@ h5.phi-typography, .phi-typography h5 {
 @container (min-width: 560px) {
   .phi-markdown-figure--float-start {
     float: inline-start;
-    width: var(--phi-markdown-float-width);
+    width: calc((100% - var(--phi-markdown-float-gap)) / var(--phi-markdown-float-divisor));
     margin-inline-end: var(--phi-markdown-float-gap);
   }
 
   .phi-markdown-figure--float-end {
     float: inline-end;
-    width: var(--phi-markdown-float-width);
+    width: calc((100% - var(--phi-markdown-float-gap)) / var(--phi-markdown-float-divisor));
     margin-inline-start: var(--phi-markdown-float-gap);
   }
 }

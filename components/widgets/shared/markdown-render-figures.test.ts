@@ -72,6 +72,17 @@ describe("Media pictures in Markdown", () => {
       .toEqual([["a", "16 / 9", "none"], ["b", "3 / 2", "end"]]);
   });
 
+  it("gives a floated picture the Widget's width step, and its own where its address names one", async () => {
+    const blocks = await blocksOf(
+      "![a](phis:asset/12?width=small)\n\n![b](phis:asset/12)\n\n![c](phis:asset/12?width=12px)",
+      { imageFloat: "end", imageFloatWidth: "medium" },
+    );
+    expect(blocks.map((block) => block.kind === "image" ? [block.image.alt, block.image.floatWidth] : null))
+      .toEqual([["a", "small"], ["b", "medium"], ["c", "medium"]]);
+    const [plain] = await blocksOf("![](phis:asset/12?float=end)");
+    expect(plain).toMatchObject({ kind: "image", image: { float: "end", floatWidth: "large" } });
+  });
+
   it("crops to the golden rectangle under phi", async () => {
     const [block] = await blocksOf("![](phis:asset/12?ratio=phi)");
     expect(block).toMatchObject({ kind: "image", image: { aspectRatio: "1.618034 / 1" } });
