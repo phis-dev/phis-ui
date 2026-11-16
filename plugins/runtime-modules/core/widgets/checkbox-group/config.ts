@@ -35,7 +35,7 @@ export const PHI_CHECKBOX_GROUP_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("checkbox-group"),
   typeKey: "checkbox-group",
-  slotSizePolicy: "intrinsic",
+  slotSizePolicy: { configField: "vertical", byValue: { true: "intrinsic" }, otherwise: "fill-inline" },
   title: "Checkbox Group",
   description: "Reusable multi-choice checkbox group with static or provider-backed options.",
   category: "form",

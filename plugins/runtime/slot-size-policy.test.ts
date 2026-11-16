@@ -9,6 +9,8 @@ import {
   resolvePhiSlotChildSizingForConfig,
   resolvePhiSlotSizePolicy,
 } from "./slot-size-policy";
+import { PHI_STEPS_WIDGET_DEFINITION } from "../runtime-modules/core/widgets/steps/config";
+import { PHI_CHECKBOX_GROUP_WIDGET_DEFINITION } from "../runtime-modules/core/widgets/checkbox-group/config";
 import { PHI_TAB_BAR_WIDGET_DEFINITION } from "../../components/widgets/config/stack-tabs";
 import type { PhiSlotSizePolicyByConfig } from "../../types/slot-size-policy";
 import { resolvePhiRenderableBlockGeometry } from "../../types/renderable-block-geometry";
@@ -230,14 +232,26 @@ describe("a policy one config field decides", () => {
     expect(resolvePhiSlotSizePolicy(byConfig, "widget", { mode: "tall" })).toEqual({ inline: "intrinsic", block: "fill" });
   });
 
-  it("gives otherwise for a missing field, a non-string value, an unknown value and no config", () => {
+  it("gives otherwise for a missing field, a number or object value, an unknown value and no config", () => {
     const otherwise = { inline: "intrinsic", block: "intrinsic" };
     expect(resolvePhiSlotSizePolicy(byConfig, "widget", {})).toEqual(otherwise);
     expect(resolvePhiSlotSizePolicy(byConfig, "widget", { mode: 3 })).toEqual(otherwise);
+    expect(resolvePhiSlotSizePolicy(byConfig, "widget", { mode: { wide: true } })).toEqual(otherwise);
     expect(resolvePhiSlotSizePolicy(byConfig, "widget", { mode: "other" })).toEqual(otherwise);
     expect(resolvePhiSlotSizePolicy(byConfig, "widget", { mode: "toString" })).toEqual(otherwise);
     expect(resolvePhiSlotSizePolicy(byConfig, "widget", null)).toEqual(otherwise);
     expect(resolvePhiSlotSizePolicy(byConfig, "widget", undefined)).toEqual(otherwise);
+  });
+
+  it("reads a boolean field as the key true or false", () => {
+    const byFlag: PhiSlotSizePolicyByConfig = {
+      configField: "flag",
+      byValue: { true: "fill-inline", false: "fill-block" },
+      otherwise: "intrinsic",
+    };
+    expect(resolvePhiSlotSizePolicy(byFlag, "widget", { flag: true })).toEqual(fillInline);
+    expect(resolvePhiSlotSizePolicy(byFlag, "widget", { flag: false })).toEqual({ inline: "intrinsic", block: "fill" });
+    expect(resolvePhiSlotSizePolicy(byFlag, "widget", { flag: "true" })).toEqual(fillInline);
   });
 
   it("holds for a Layout as for a Widget", () => {
@@ -279,5 +293,33 @@ describe("the Tab bar's size policy", () => {
   it("is as wide as its content and fills the block axis at left and right", () => {
     expect(policyFor("left")).toEqual({ inline: "intrinsic", block: "fill" });
     expect(policyFor("right")).toEqual({ inline: "intrinsic", block: "fill" });
+  });
+});
+
+describe("the Steps size policy", () => {
+  const policyFor = (config: Record<string, unknown>) =>
+    resolvePhiSlotSizePolicy(PHI_STEPS_WIDGET_DEFINITION.slotSizePolicy, "widget", config);
+
+  it("fills the inline axis when horizontal or when the orientation is absent", () => {
+    expect(policyFor({ orientation: "horizontal" })).toEqual({ inline: "fill", block: "intrinsic" });
+    expect(policyFor({})).toEqual({ inline: "fill", block: "intrinsic" });
+  });
+
+  it("is as wide and as high as its content when vertical", () => {
+    expect(policyFor({ orientation: "vertical" })).toEqual({ inline: "intrinsic", block: "intrinsic" });
+  });
+});
+
+describe("the Checkbox group's size policy", () => {
+  const policyFor = (config: Record<string, unknown>) =>
+    resolvePhiSlotSizePolicy(PHI_CHECKBOX_GROUP_WIDGET_DEFINITION.slotSizePolicy, "widget", config);
+
+  it("fills the inline axis as a wrapping row, vertical false or absent", () => {
+    expect(policyFor({ vertical: false })).toEqual({ inline: "fill", block: "intrinsic" });
+    expect(policyFor({})).toEqual({ inline: "fill", block: "intrinsic" });
+  });
+
+  it("is as wide and as high as its content when vertical", () => {
+    expect(policyFor({ vertical: true })).toEqual({ inline: "intrinsic", block: "intrinsic" });
   });
 });

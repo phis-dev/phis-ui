@@ -45,7 +45,7 @@ export const PHI_STEPS_WIDGET_DEFINITION = {
   category: "content",
   icon: "antd:ordered-list-outlined",
   iconFamily: "basic",
-  slotSizePolicy: "intrinsic",
+  slotSizePolicy: { configField: "orientation", byValue: { vertical: "intrinsic" }, otherwise: "fill-inline" },
   runtimeSignals: {
     ...PHI_SELECT_CONTROL_SIGNALS,
   },

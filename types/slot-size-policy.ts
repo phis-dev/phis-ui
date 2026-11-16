@@ -17,6 +17,7 @@ export type PhiSlotSizePolicyValue =
 
 /**
  * A policy one field of the block's own config decides: `byValue[config[configField]]`, else `otherwise`.
+ * A string field is read as it is, a boolean field as the key `"true"` or `"false"`; anything else is `otherwise`.
  * Declarative on purpose: the policy travels to the Builder as data.
  */
 export type PhiSlotSizePolicyByConfig = {

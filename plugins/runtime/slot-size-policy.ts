@@ -72,8 +72,8 @@ function normalizePhiSlotPolicyAxis(
 /**
  * The value a by-config policy holds for this config.
  *
- * Only a top-level config field with a string value is read; a missing field, a non-string value, an
- * unknown value and no config at all give `otherwise`. A policy that is already a value passes through.
+ * Only a top-level config field with a string or boolean value is read (a boolean as the key `"true"` or
+ * `"false"`); a missing field, any other value, an unknown value and no config at all give `otherwise`. A policy that is already a value passes through.
  */
 function resolvePhiSlotSizePolicyValue(
   policy: PhiSlotSizePolicy | null | undefined,
@@ -82,7 +82,8 @@ function resolvePhiSlotSizePolicyValue(
   if (policy == null || typeof policy === "string" || !("configField" in policy)) {
     return policy;
   }
-  const selected = config?.[policy.configField];
+  const field = config?.[policy.configField];
+  const selected = typeof field === "boolean" ? String(field) : field;
   return typeof selected === "string" && Object.hasOwn(policy.byValue, selected)
     ? policy.byValue[selected]
     : policy.otherwise;

@@ -533,11 +533,12 @@ The parent slot policy is authoritative; child defaults cannot override it.
   or a Layout.
 - A definition's `slotSizePolicy` may depend on one field of the block's own config:
   `{ configField, byValue, otherwise }` (`PhiSlotSizePolicyByConfig`) holds `byValue[config[configField]]`,
-  else `otherwise`. Only a top-level config field with a string value is read; a missing field, a
-  non-string value, an unknown value, or a site that has no config (a palette preview) gives `otherwise`.
+  else `otherwise`. Only a top-level config field with a string value is read (a boolean as `"true"`/`"false"`); a missing field, a
+  value of another type, an unknown value, or a site that has no config (a palette preview) gives `otherwise`.
   The form is data, not a function, so it travels to the Builder unchanged; it has no nesting and names
   one field. It holds for Widgets and Layouts alike. The Tab bar is the example: `left` and `right`
-  placement state `fill-block`, every other placement `fill-inline`. `resolvePhiSlotSizePolicy(policy, kind, config)`
+  placement state `fill-block`, every other placement `fill-inline`; Steps and the Checkbox group fill the
+  inline axis unless vertical. `resolvePhiSlotSizePolicy(policy, kind, config)`
   resolves it, and every caller passes the config of the block whose policy it resolves. An axis that
   states a size is `fixed` whatever the policy says.
 - The top Layout of a Region and of an Overlay zone stands in a frame that names no policy, so it takes
