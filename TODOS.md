@@ -6,6 +6,15 @@ built. Remove an entry when it is done.
 
 ## At the next release
 
+- **0.5.6: presets ask for their package's pictures** (THIRD_PARTY_MODULES.md, "Pictures a Module
+  ships"). Every preset loader's context carries `media`, so a Module package that calls its own
+  `loadTree` in a test or check script passes one: `createPhiDeclaredMediaResolver` from
+  `@phis/ui/module/page-check`, with the keys its `package.json` declares under `phis.media`. A caller of
+  `instantiatePhiCmsRoutePreset`, `instantiatePhiCmsAreaShellPreset` or
+  `composePhiCmsActiveAreaOverlayPresets` passes `loadModuleMedia`. The pictures reach the library through
+  `phis module media sync` / `phis update`, which need Core 0.3.6; against an older Core every name
+  answers `null`. The Card has `iconSize` (`default`, `large`, `xlarge`) and `iconFramed`.
+
 - **0.5.5: Widget config text is translated by the renderer** (TRANSLATIONS.md, "Widget config text").
   A Module's Preset states `textSource: "preset"` (or `"site"`) on every Widget with text and runs
   `checkPhiPresetTextSources` in its tests; text read from a Label Set keeps `NoTranslate` on the node.
