@@ -6,6 +6,12 @@ built. Remove an entry when it is done.
 
 ## At the next release
 
+- **0.5.7: a floated Markdown picture has a width step, an Overlay's ink is a colour or a gradient with a
+  direction, and a field edits an Overlay alone.** `imageFloatWidth` on the Markdown Widget and `width=` in
+  a picture's address take `small`, `medium`, `large` (the default, as before) or `xlarge` (LAYOUTING.md).
+  A Module's Widget offers a `PhiBackgroundOverlay` of its own in the Inspector with a field of type
+  `background-overlay` (BUILDER.md); the Card does so for `imageOverlay`. Nothing stored changes.
+
 - **0.5.6: presets ask for their package's pictures** (THIRD_PARTY_MODULES.md, "Pictures a Module
   ships"). Every preset loader's context carries `media`, so a Module package that calls its own
   `loadTree` in a test or check script passes one: `createPhiDeclaredMediaResolver` from
