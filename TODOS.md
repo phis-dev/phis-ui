@@ -6,6 +6,15 @@ built. Remove an entry when it is done.
 
 ## At the next release
 
+- **0.5.5: Widget config text is translated by the renderer** (TRANSLATIONS.md, "Widget config text").
+  A Module's Preset states `textSource: "preset"` (or `"site"`) on every Widget with text and runs
+  `checkPhiPresetTextSources` in its tests; text read from a Label Set keeps `NoTranslate` on the node.
+  `@phis/support` and `@phis/marketplace` did. Controls lost the `NoTranslate` switch -- only Markdown,
+  HTML, Simple Text and Description keep it. Config text now translates under "Web UI label" / "Web UI
+  message" instead of context 0, so each installation translates it once more; the old context-0 rows are
+  left for the unused-text cleanup. `PhiCardWidget` lost its `translate` prop, `PhiQuickLinksWidget` its
+  `translate` and `textSource` props: their texts arrive translated.
+
 - **0.5.4: data-Provider requests carry `locale` and `timeZone`.** Table, collection and tree query/record
   requests and the options-provider context require them now. A package that calls a Provider itself
   (`@phis/calendar` did, `src/client/calendar.tsx`) passes them and is rebuilt on 0.5.4; the shop moved its
@@ -196,6 +205,16 @@ built. Remove an entry when it is done.
   phis-server `src/db/translations.ts` join `tr_site_msg_usage` and return `lastUsedOn`, and the
   admin/locales and Editor Translations Tables get a date column for it. No usage row means "not read since
   tracking began"; a text only ever shown in its source language is never counted as read.
+- **Table texts in the renderer's pass.** An author's Table texts -- column titles, filter and option
+  labels, the empty state, footer and summary labels -- stay untranslated: the Table's fields are dotted
+  paths (`presentation.columns`, `features.filters`, `presentation.emptyState...`) and
+  `collectPhiConfigTexts` (helpers/config-text-fields.ts) reads `config[field.key]` only, and the Table
+  translates nothing itself. Module Tables are fine today because they place Label Set text that is
+  already translated. Order: (1) let `checkPhiPresetTextSources` (helpers/preset-text-source-check.ts)
+  look into nested objects and mark every Module Table that places Label Set text `NoTranslate` --
+  `@phis/support`'s conversations and inbox Tables (`src/route-tree.ts`, `flags: 0`) are such cases;
+  (2) teach the collector and `writePhiConfigTexts` dotted field paths. Doing (2) first sends German
+  Label Set titles to the translator a second time.
 
 ## Tables and Markdown
 
