@@ -3,7 +3,8 @@ import type { PhiPresetPageNode } from "../../../helpers/cms-page-catalog";
 
 /** A Page the Navigation can point at: it has a stable reference and has not been deleted. */
 export function isPhiBuilderNavigablePage(node: PhiPresetPageNode) {
-  return Boolean(node.reference) && node.tombstoned !== true;
+  // A list's entries are no Page a link can name (`routeParameter`): a link names one entry.
+  return Boolean(node.reference) && node.tombstoned !== true && !node.routeParameter;
 }
 
 /** Whether a catalog node would give the Navigation anything: a live Page, or one somewhere beneath it. */

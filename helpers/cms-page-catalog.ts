@@ -50,6 +50,13 @@ export type PhiPresetPageNode = {
   pendingPath?: string | null;
   pathLocked?: boolean;
   pathOwnershipReason?: string;
+  /**
+   * A route that answers a family of Pages, by its parameter's name: `slug` for `/blog/:slug`. Every
+   * entry of a list answers on it, so it is shown as their kind ("Slug") rather than as one Page, and
+   * nothing links to it -- a link names one entry. It stands beneath its list's Page where there is one
+   * (`helpers/cms-preset-page-tree.ts`).
+   */
+  routeParameter?: string;
   children?: PhiPresetPageNode[];
 };
 

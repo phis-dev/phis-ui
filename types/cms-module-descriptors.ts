@@ -203,6 +203,15 @@ export type PhiCmsNavigationBaseItemDescriptor = {
    * Mutually exclusive with a target in practice: an entry that emits has nowhere to go.
    */
   signalRoutes?: { emits?: readonly PhiSignalRoute[] };
+  /**
+   * On an entry with children: where its folder address leads -- the itemKey of one direct child that
+   * goes to a route of the same Module, usually an overview. The folder address is the folder the
+   * children's paths share (`/faq` for `/faq/overview` and `/faq/hosting`); a request for it is
+   * forwarded to that child's Page. A Page is never a folder, so the overview is a child like the
+   * others and the container has no Page of its own. A Site's own choice in the Builder replaces it
+   * (phis-server REFERENCES.md, "Folder addresses"); THIRD_PARTY_MODULES.md, "Addresses and folders".
+   */
+  folderTarget?: string;
   children?: readonly PhiCmsNavigationBaseItemDescriptor[];
 };
 
@@ -296,6 +305,8 @@ export type PhiCmsNavigationInjectionItemDescriptor = {
   accessPolicy?: PhiViewerAccessPolicy;
   /** What this entry sends when it is chosen; see the base item descriptor. */
   signalRoutes?: { emits?: readonly PhiSignalRoute[] };
+  /** As on an Area's own entry: the direct child the folder address leads to. */
+  folderTarget?: string;
   children?: readonly PhiCmsNavigationInjectionItemDescriptor[];
 };
 
@@ -380,6 +391,12 @@ export type PhiCmsResolvedNavigationItem = {
   accessPolicy?: PhiViewerAccessPolicy;
   /** The routes this entry sends on when it is chosen, carried through from its descriptor. */
   emits?: readonly PhiSignalRoute[];
+  /**
+   * A Module container's folder, from its descriptor's `folderTarget`: the address its children share
+   * and the Page of the child it names. Absent where the children share no folder. A Site's override
+   * for the container replaces it.
+   */
+  folder?: PhiCmsNavigationFolder;
   children: readonly PhiCmsResolvedNavigationItem[];
 };
 

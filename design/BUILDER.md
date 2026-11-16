@@ -51,6 +51,9 @@ Expected behavior:
 - the active page is highlighted
 - selecting a page opens its canvas
 - `+` actions create pages; a page is never a folder, so a page cannot be created beneath another page
+- a folder and a Page of the same address are one node; a list's entries (`/blog/:slug`) hang beneath the
+  list's Page and are marked by their parameter (`Slug · /blog/:slug`), not offered as a link target or a
+  Navigation drag source -- a link names one entry (`helpers/cms-preset-page-tree.ts`)
 - `+` on a folder node can create a page inside that folder or a submenu entry
 
 The page tree must mirror the target site structure as closely as possible. The contract should not introduce a second independent navigation model.
@@ -302,7 +305,7 @@ Rules:
 - `+` actions must always respect the active area and shell selector.
 - `+` actions must only appear where the current contract allows creation.
 - `+ page` may appear in the pages tree and in a folder's context menu. There is no `+ child page`: a
-  page is never a folder (see phis-server `TODOS.md`, "Folder addresses").
+  page is never a folder (phis-server `REFERENCES.md`, "A Page is never a folder").
 - `+ submenu` may appear when the selected node can own navigation children.
 - `+ layout` and `+ widget` may appear inside the Canvas and slot context.
 - `+ slot` may appear only on Layouts that explicitly own named or sequential slots.

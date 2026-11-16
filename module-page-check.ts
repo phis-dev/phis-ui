@@ -12,3 +12,4 @@
 
 export { checkPhiPagePresetLayout, type PhiPageLayoutFinding } from "./helpers/page-layout-check";
 export { checkPhiPresetTextSources, type PhiPresetTextSourceFinding } from "./helpers/preset-text-source-check";
+export { checkPhiRouteAddresses, type PhiRouteAddressFinding, type PhiRouteAddressSubject } from "./helpers/route-address-check";

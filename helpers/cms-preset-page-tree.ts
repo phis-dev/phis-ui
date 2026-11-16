@@ -67,9 +67,19 @@ export function insertPhiPresetPageTarget(
     return;
   }
 
+  /*
+   * A segment is one node, whether a Page answers on it or it only holds what lies beneath: a folder
+   * and a Page of the same address side by side read as two entries for one place. The one nesting
+   * routes may have is a list's entries beneath the list (`/blog/:slug` under `/blog`,
+   * `helpers/route-address-check.ts`), so they hang beneath the list's Page; whichever route comes
+   * first, the Page takes the folder's place and keeps what it held.
+   */
   let siblings = roots;
+  let folderPath = "";
   for (const segment of segments.slice(0, -1)) {
-    let group = siblings.find((node) => node.key === segment);
+    folderPath = `${folderPath}/${segment}`;
+    let group = siblings.find((node) => node.catalogPath === folderPath)
+      ?? siblings.find((node) => node.key === segment && !node.storagePath);
     if (!group) {
       group = { key: segment, title: humanizePageKey(segment), children: [] };
       siblings.push(group);
@@ -78,6 +88,9 @@ export function insertPhiPresetPageTarget(
     siblings = group.children;
   }
 
+  const last = segments[segments.length - 1]!;
+  const folderIndex = siblings.findIndex((node) => node.key === last && !node.storagePath);
+  const held = folderIndex >= 0 ? siblings.splice(folderIndex, 1)[0]!.children ?? [] : [];
   siblings.push({
     key: pageId,
     title: target.title,
@@ -87,6 +100,8 @@ export function insertPhiPresetPageTarget(
     ...(target.defaultPageFlags ? { defaultPageFlags: target.defaultPageFlags } : {}),
     ...(target.landingPage ? { landingPage: true as const } : {}),
     ...(target.pageRecord ? { pageRecord: { providerKey: target.pageRecord.providerKey } } : {}),
+    ...(last.startsWith(":") ? { routeParameter: last.slice(1) } : {}),
+    ...(held.length > 0 ? { children: held } : {}),
   });
 }
 

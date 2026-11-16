@@ -125,7 +125,10 @@ function materializeNavigationItem(
   const customTarget = customItem?.target;
   // A Site's stored external link and a Module's external entry resolve to the same target.
   const externalTarget = item.target?.kind === "custom" && item.target.external === true ? item.target : null;
-  const folder = item.kind === "container" ? customItem?.folder ?? overrides.get(item.id)?.folder : undefined;
+  // A Site's own choice first; a Module container's descriptor names its default (`folderTarget`).
+  const folder = item.kind === "container"
+    ? customItem?.folder ?? overrides.get(item.id)?.folder ?? item.folder
+    : undefined;
   return {
     id: item.id,
     source: item.ownerModuleId === null ? "custom" : "module",

@@ -26,6 +26,7 @@ import {
   normalizePhiCmsRoutePath,
   resolvePhiCmsAreaShellPresetBinding,
   resolvePhiCmsDescriptorCatalog,
+  resolvePhiCmsModuleNavigationFolderTarget,
   resolvePhiCmsRoutePreset,
 } from "../plugins/runtime-modules/descriptor-compiler";
 import { resolvePhiRuntimeModuleIdsForArea } from "../plugins/runtime-modules/settings";
@@ -500,7 +501,8 @@ export async function resolvePhiCmsRequest({
    * a folder whose Navigation container leads to one. The server follows the published Navigations to a
    * Page reference, and the reference is resolved here, where Module routes are known.
    */
-  const folderTargetReference = !loadedPage && areaAllowed && areaOwnedStoragePath && areaOwnedStoragePath !== "/"
+  const folderLookup = !loadedPage && areaAllowed && areaOwnedStoragePath && areaOwnedStoragePath !== "/";
+  const siteFolderTargetReference = folderLookup
     ? await fetchSiteNavigationFolderTarget({
         apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
         internalToken: readPhiServerApiCredentials().internalToken,
@@ -509,6 +511,16 @@ export async function resolvePhiCmsRequest({
         path: areaOwnedStoragePath,
       })
     : null;
+  // Where the Site chose no target, a Module container's own (`folderTarget`) answers.
+  const folderTargetReference = siteFolderTargetReference ?? (folderLookup
+    ? resolvePhiCmsModuleNavigationFolderTarget({
+        catalog,
+        area: requestedAreaKey,
+        activeModuleIds: activeModuleKeys,
+        routeTable,
+        address: areaOwnedStoragePath,
+      })
+    : null);
   const folderTargetPath = folderTargetReference
     ? await resolvePhiAreaPageReferencePath({
         runtime: runtimeWithAuthProvider,

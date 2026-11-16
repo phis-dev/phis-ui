@@ -459,7 +459,9 @@ export function PhiMarkdownWidgetClient({ config, labels }: PhiMarkdownWidgetCli
  * The sections that fold: each heading is a header, what follows it the body. Every answer is drawn even
  * while folded, so a search engine and the browser's own find read the whole text. A heading keeps its id,
  * so the table of contents and a link to `#that-question` reach it -- and a link to it opens it, on arrival
- * and whenever the address's fragment changes.
+ * and whenever the address's fragment changes. The table of contents announces its jumps as a fragment
+ * change of its own (`phi-anchor-nav-control.tsx`) and scrolls there itself, with the Header's offset;
+ * only on arrival and on the browser's own change is the heading scrolled to here.
  */
 function PhiMarkdownFoldedSections({
   sections,
@@ -472,13 +474,15 @@ function PhiMarkdownFoldedSections({
 }) {
   const [openKeys, setOpenKeys] = useState<string[]>([]);
   useEffect(() => {
-    const openFromAddress = () => {
+    const openFromAddress = (event?: Event) => {
       const id = decodeURIComponent(window.location.hash.slice(1));
       if (!id) return;
       const section = sections.find((entry) =>
         entry.heading.id === id || entry.blocks.some((block) => block.kind === "heading" && block.id === id));
       if (!section) return;
       setOpenKeys((current) => accordion ? [section.heading.id] : [...new Set([...current, section.heading.id])]);
+      // A change the page sent itself comes with its own scroll (the table of contents').
+      if (event && !event.isTrusted) return;
       window.requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: "start" }));
     };
     openFromAddress();

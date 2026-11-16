@@ -628,6 +628,55 @@ everywhere else (`findPhiBuilderModuleAddressConflict`).
 Enabling a Module for Public checks its declared paths against Site Pages and other Modules and asks for
 another address where one is taken (`plugins/runtime-modules/builder/public-route-collisions.ts`).
 
+## Addresses and folders
+
+A Page is never a folder. This holds for a Module's routes as it holds for the Site's own Pages (phis-server
+[REFERENCES.md](../phis-server/REFERENCES.md), "A Page is never a folder"): no route of yours answers on a
+path another route of yours lies beneath. `/faq` beside `/faq/hosting` is refused; `/faq/overview` beside
+`/faq/hosting` is the same pair, done right.
+
+The reason is what a folder is. A path segment with Pages beneath it is a folder, and a folder's address
+leads somewhere only through the Navigation: a container whose children share that folder names one of
+them, and a request for the folder is forwarded there. A Page on the same address would shadow that
+choice, the Builder's Page tree would show the Page and a folder of the same name side by side, and the
+Navigation editor would offer a target that can never apply.
+
+**One nesting is allowed: a list's entries directly beneath the list.** `/blog` and `/blog/:slug` stand
+together, because one route answers every entry and no Navigation links it -- a link names one entry,
+never the family. The Builder shows such a route beneath its list's Page, marked by its parameter
+(`Slug · /blog/:slug`). Nothing deeper: `/blog/:slug/edit` and `/blog/archive` are Pages beneath a Page
+again.
+
+**An overview is a child like the others.** Put it beside the Pages it introduces and let the container
+name it with `folderTarget`, the itemKey of that direct child:
+
+```ts
+navigation: [{
+  navKey: "public:header",
+  parentItemKey: null,
+  after: "@phis/ui/modules/public/nav/terms",
+  item: {
+    itemKey: "@acme/site/nav/public/header/faq",
+    label: { defaultMessage: "FAQ" },
+    folderTarget: "@acme/site/nav/public/header/faq-overview",
+    children: [
+      { itemKey: "@acme/site/nav/public/header/faq-overview", label: { defaultMessage: "Overview" }, routePresetKey: "faq-overview" },
+      { itemKey: "@acme/site/nav/public/header/faq-hosting", label: { defaultMessage: "Hosting" }, routePresetKey: "faq-hosting" },
+    ],
+  },
+}],
+```
+
+`/faq` then forwards to the overview with no step in the Builder. The folder address is the folder the
+children's paths share as they answer on this Site -- a Public path the Site reassigned moves it, and
+children from different folders give no address and no forward. The catalog refuses a `folderTarget`
+that names no direct child going to a route. A Site's own choice for the container, made in the
+Builder's Navigation table, replaces yours; the Builder shows yours until it does. A Site cannot switch
+a Module's forward off by choosing "nowhere": that choice is read as no choice, and your target answers.
+
+`checkPhiRouteAddresses(routes)` (`@phis/ui/module/page-check`) reports every route beneath another of
+the same Area. Run it over your route descriptors in your verify step and fail on a finding.
+
 ## 1. Define stable ids
 
 Build every identifier from the Module id rather than spelling it out. The factories validate as they
@@ -1440,6 +1489,9 @@ no route.
   changes it, the record answers and the descriptor is not consulted again.
 - `navigation` optionally places an entry that names this route by `routePresetKey`
   ([section 8a](#8a-what-a-module-package-exports), Navigation). An entry names a preset, never a path.
+  An entry with children is a container; `folderTarget` names the child its folder address leads to
+  ([Addresses and folders](#addresses-and-folders)).
+- `path` lies beneath no other route of the same Area, a list's entries (`/blog/:slug`) excepted.
 - `loadTree` returns the Page tree. Import the builder lazily, as below: the descriptors go into every
   request's route table, the tree is needed only for the Page being drawn. The catalog checks what it
   returns -- every id a preset id, every parent and Region root present, no id twice.
@@ -1843,6 +1895,9 @@ is the Site's, which is what no marker means.
   `checkPhiPagePresetLayout` reports it.
 - Every Widget with text states `textSource` (`"preset"` or `"site"`); `checkPhiPresetTextSources`
   reports it. A Site's own package leaves it out.
+- No route beneath another of the same Area, except a list's entries (`/blog/:slug`) directly beneath
+  the list; an overview stands beside its Pages and the container names it with `folderTarget`
+  ([Addresses and folders](#addresses-and-folders)). `checkPhiRouteAddresses` reports it.
 - Padding only on a Layout with a Surface, at `md`; the Region's edge is not repeated inside it.
 - No Layout whose only job is to give one Widget a background.
 - The reading width comes from the Region's `maxSize`, never from padding.

@@ -54,6 +54,10 @@ function resolveProviderArea(context: PhiControlOptionsProviderContext) {
     : builderArea;
 }
 
+function humanizeRouteParameter(name: string) {
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
 function collectPageOptions(area: PhiBuilderPageCatalogArea, nodes: PhiPresetPageNode[]): PhiControlOption[] {
   return nodes.flatMap((node) => {
     /*
@@ -78,11 +82,14 @@ function collectPageOptions(area: PhiBuilderPageCatalogArea, nodes: PhiPresetPag
      * by an author, and either way it hides where the Page answers: "Zz Nw Test" is `/zz-nw-test`.
      */
     const address = node.storagePath ?? path;
+    // A list's entries are a kind, not one Page: named so beside their pattern, `Slug · /blog/:slug`.
+    const description = node.routeParameter ? `${humanizeRouteParameter(node.routeParameter)} · ${address}` : address;
     return [
       {
         value: path,
         label,
-        ...(address !== label ? { description: address } : {}),
+        ...(description !== label ? { description } : {}),
+        ...(node.routeParameter ? { icon: "antd:unordered-list" } : {}),
       },
       ...collectPageOptions(area, node.children ?? []),
     ];

@@ -113,6 +113,21 @@ built. Remove an entry when it is done.
 
 ## Builder
 
+- **Module routes nest only as a list's entries** (THIRD_PARTY_MODULES.md, "Addresses and folders",
+  2026-11-16). Checked at verify time (`checkPhiRouteAddresses`): phis-ui's own routes keep it, and so
+  does `@phis/phisys`. `@phis/shop` does not yet (`/shop` above `/shop/cart`, `/shop/checkout`,
+  `/shop/order`; its TODOS.md). Once it does, make the check part of compiling the catalog, so an
+  installed package that breaks it is refused, and extend it to the Public addresses a Site assigns at
+  activation (`public-route-collisions.ts` compares equality only, so a reassigned route can still land
+  beneath a Site Page or another Module's route).
+- **A container's title as a link, later.** Owner's idea (2026-11-16): a container with a folder target
+  could lead there when its title is clicked, the chevron still opening it. Today every menu draws an
+  entry with children as an opener only (`components/shell/menu-items.tsx`). Not before the owner asks;
+  the overview as the first child does the job meanwhile.
+- **A Page with Pages beneath it stays out** (2026-11-16, decided against for now): it would need a link
+  with children in every menu, the Navigation table, the breadcrumb, subtree moves and the server's
+  `path_nested` rule. Revisit only with the clickable container title above.
+
 - **Record template pages.** Owner's decision (2026-11-15): a dynamic route preset (`/shop/p/:slug`,
   a content entry's detail page) gets a template that authors rebuild in the Builder and that serves every
   record, and any Module can provide one. Designed in [design/RECORD_TEMPLATES.md](./design/RECORD_TEMPLATES.md);

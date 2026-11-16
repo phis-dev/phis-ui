@@ -35,6 +35,7 @@ import type {
   PhiCmsNavigationAreaTarget,
   PhiCmsNavigationBaseItemDescriptor,
   PhiCmsNavigationExternalTarget,
+  PhiCmsNavigationFolder,
   PhiCmsNavigationInjectionItemDescriptor,
   PhiCmsNavigationInjectionDescriptor,
   PhiCmsNavigationItemPlacement,
@@ -71,6 +72,7 @@ import {
   omitPhiCmsShellCompositionNodes,
 } from "./shell-tree-composition";
 import { resolvePhiRuntimeModuleAreaRoutePath } from "../../helpers/runtime-module-route-path";
+import { createPhiPageReference } from "../../types/references";
 import {
   choosePhiAreaRootApplicant,
   orderPhiAreaPathClaimsByCover,
@@ -695,6 +697,18 @@ export function compilePhiCmsDescriptorCatalog({
           label: `${label}/${item.itemKey}`,
         });
       }
+      if (item.folderTarget !== undefined) {
+        /*
+         * The child's Page answers the folder address. Only a route has one: an Overlay, an external
+         * address or a sub-container is no Page to forward to.
+         */
+        const child = (item.children ?? []).find((entry) => entry.itemKey === item.folderTarget);
+        if (!child?.routePresetKey) {
+          throw new Error(
+            `${label}/${item.itemKey}: folderTarget "${item.folderTarget}" names no direct child that goes to a route.`,
+          );
+        }
+      }
       visitNavigationRouteReferences(item.children ?? [], ownerModuleId, area, label);
     }
   };
@@ -1133,6 +1147,8 @@ type ResolvedNavigationNode = {
   standsLast: boolean;
   intrinsicChildren: ResolvedNavigationNode[];
   isUnrouted: boolean;
+  /** The direct child the folder address leads to (`folderTarget`), by its item key. */
+  folderTargetItemKey: string | null;
   injection: {
     descriptor: PhiCmsNavigationInjectionDescriptor;
     /** Absent for a Module-level contribution, which has no Page to come from. */
@@ -1297,8 +1313,55 @@ function buildResolvedNavigationNode(
     standsLast: "standing" in descriptor && descriptor.standing === "last",
     // An item that named a route and got nothing back. A container never is one: it named nothing.
     isUnrouted: Boolean(descriptor.routePresetKey) && !target,
+    folderTargetItemKey: descriptor.folderTarget ?? null,
     intrinsicChildren,
     injection,
+  };
+}
+
+/** The folder a path lies in; `/` is the Area root, a slot and no folder. */
+function parentNavigationFolder(path: string) {
+  const index = path.lastIndexOf("/");
+  return index > 0 ? path.slice(0, index) : "/";
+}
+
+function resolveModuleNavigationFolderAddress(children: readonly PhiCmsResolvedNavigationItem[]): string | null {
+  const folders = new Set(children.flatMap((child) => {
+    const path = child.kind === "container"
+      ? resolveModuleNavigationFolderAddress(child.children)
+      : child.target?.kind === "module" ? child.target.path : null;
+    return path ? [parentNavigationFolder(path)] : [];
+  }));
+  const [address] = folders;
+  return folders.size === 1 && address && address !== "/" ? address : null;
+}
+
+/**
+ * A Module container's folder, as its `folderTarget` names it: the folder its direct children share --
+ * a link by its route's path, a sub-container by its own folder -- and the Page of the child it names.
+ * The same rule as a Site's folder (`builder/navigation-folder-address.ts`). None where the children
+ * share no folder, or the named child does not answer here: the address then leads nowhere, as a
+ * container without a target does.
+ */
+function resolveModuleNavigationFolder(
+  node: ResolvedNavigationNode,
+  children: readonly PhiCmsResolvedNavigationItem[],
+): PhiCmsNavigationFolder | null {
+  const address = resolveModuleNavigationFolderAddress(children);
+  if (!address) {
+    return null;
+  }
+  const childId = node.intrinsicChildren.find((child) => child.definitionItemKey === node.folderTargetItemKey)?.item.id;
+  const target = children.find((child) => child.id === childId)?.target;
+  if (target?.kind !== "module") {
+    return null;
+  }
+  return {
+    address,
+    target: {
+      kind: "page",
+      reference: createPhiPageReference({ kind: "module", ownerModuleId: target.ownerModuleId, presetKey: target.presetKey }),
+    },
   };
 }
 
@@ -1545,14 +1608,17 @@ export function resolvePhiCmsActiveNavigationSurfaces({
     ): readonly PhiCmsResolvedNavigationItem[] =>
       orderNavigationSiblings(intrinsic, injected, parentItemKey)
         .filter(isNavigationNodeVisible)
-        .map((node) => ({
-          ...node.item,
-          children: materialize(
+        .map((node) => {
+          const children = materialize(
             node.intrinsicChildren,
             injectedByParent.get(node.definitionItemKey) ?? [],
             node.definitionItemKey,
-          ),
-        }))
+          );
+          const folder = node.item.kind === "container" && node.folderTargetItemKey
+            ? resolveModuleNavigationFolder(node, children)
+            : null;
+          return { ...node.item, ...(folder ? { folder } : {}), children };
+        })
         .filter((item) => item.kind !== "container" || item.children.length > 0);
 
     return {
@@ -1562,6 +1628,37 @@ export function resolvePhiCmsActiveNavigationSurfaces({
       items: materialize(roots, injectedRoots, null),
     };
   });
+}
+
+/**
+ * The Page a Module container's folder address leads to by its descriptor (`folderTarget`), or null.
+ *
+ * Asked where no Page answers and the Site's published Navigations name no target for the address
+ * (`server-helpers/cms-request.ts`): a Site's choice replaces the Module's, not the reverse. Every
+ * surface of the Area is searched, because a folder address is the Area's, not one menu's.
+ */
+export function resolvePhiCmsModuleNavigationFolderTarget(input: {
+  catalog: PhiCmsCompiledDescriptorCatalog;
+  area: PhiCmsAreaKey;
+  activeModuleIds: ReadonlySet<PhiRuntimeModuleId>;
+  routeTable: PhiCmsActiveRouteTable;
+  address: string;
+}): string | null {
+  const find = (items: readonly PhiCmsResolvedNavigationItem[]): string | null => {
+    for (const item of items) {
+      if (item.folder?.address === input.address && item.folder.target?.kind === "page") {
+        return item.folder.target.reference;
+      }
+      const below = find(item.children);
+      if (below) return below;
+    }
+    return null;
+  };
+  for (const surface of resolvePhiCmsActiveNavigationSurfaces(input)) {
+    const reference = find(surface.items);
+    if (reference) return reference;
+  }
+  return null;
 }
 
 export function resolvePhiCmsNavigationOverlay(
