@@ -7,7 +7,10 @@ import {
   resolvePhiSlotChildSizeStyle,
   resolvePhiSlotChildSizing,
   resolvePhiSlotChildSizingForConfig,
+  resolvePhiSlotSizePolicy,
 } from "./slot-size-policy";
+import { PHI_TAB_BAR_WIDGET_DEFINITION } from "../../components/widgets/config/stack-tabs";
+import type { PhiSlotSizePolicyByConfig } from "../../types/slot-size-policy";
 import { resolvePhiRenderableBlockGeometry } from "../../types/renderable-block-geometry";
 
 /**
@@ -211,5 +214,70 @@ describe("a child that names a profile", () => {
       }),
     } as never);
     expect(resolvePhiSlotChildSizing(child, "layout").queriesRoom).toBe(true);
+  });
+});
+
+describe("a policy one config field decides", () => {
+  const byConfig: PhiSlotSizePolicyByConfig = {
+    configField: "mode",
+    byValue: { wide: "fill-inline", tall: { inline: "intrinsic", block: "fill" } },
+    otherwise: "intrinsic",
+  };
+  const fillInline = { inline: "fill", block: "intrinsic" };
+
+  it("picks the value the field names", () => {
+    expect(resolvePhiSlotSizePolicy(byConfig, "widget", { mode: "wide" })).toEqual(fillInline);
+    expect(resolvePhiSlotSizePolicy(byConfig, "widget", { mode: "tall" })).toEqual({ inline: "intrinsic", block: "fill" });
+  });
+
+  it("gives otherwise for a missing field, a non-string value, an unknown value and no config", () => {
+    const otherwise = { inline: "intrinsic", block: "intrinsic" };
+    expect(resolvePhiSlotSizePolicy(byConfig, "widget", {})).toEqual(otherwise);
+    expect(resolvePhiSlotSizePolicy(byConfig, "widget", { mode: 3 })).toEqual(otherwise);
+    expect(resolvePhiSlotSizePolicy(byConfig, "widget", { mode: "other" })).toEqual(otherwise);
+    expect(resolvePhiSlotSizePolicy(byConfig, "widget", { mode: "toString" })).toEqual(otherwise);
+    expect(resolvePhiSlotSizePolicy(byConfig, "widget", null)).toEqual(otherwise);
+    expect(resolvePhiSlotSizePolicy(byConfig, "widget", undefined)).toEqual(otherwise);
+  });
+
+  it("holds for a Layout as for a Widget", () => {
+    expect(resolvePhiSlotSizePolicy(byConfig, "layout", { mode: "wide" })).toEqual(fillInline);
+    expect(resolvePhiSlotSizePolicy(byConfig, "layout", {})).toEqual({ inline: "intrinsic", block: "intrinsic" });
+  });
+
+  it("leaves a policy that is already a value alone", () => {
+    expect(resolvePhiSlotSizePolicy("fill-inline", "widget", { mode: "tall" })).toEqual(fillInline);
+  });
+
+  it("is overridden by an explicit size on an axis", () => {
+    const sizing = resolvePhiSlotChildSizingForConfig("widget", byConfig, {
+      mode: "wide",
+      size: { width: 200 },
+    } as never);
+    expect(sizing.policy).toEqual({ inline: "fixed", block: "intrinsic" });
+  });
+
+  it("reads the config of a framed child", () => {
+    const child = createElement("div", {
+      slotSizePolicy: byConfig,
+      kind: "widget",
+      config: { mode: "tall" },
+    } as never);
+    expect(resolvePhiSlotChildSizing(child).policy).toEqual({ inline: "intrinsic", block: "fill" });
+  });
+});
+
+describe("the Tab bar's size policy", () => {
+  const policyFor = (placement: string) =>
+    resolvePhiSlotSizePolicy(PHI_TAB_BAR_WIDGET_DEFINITION.slotSizePolicy, "widget", { placement });
+
+  it("fills the inline axis and is as high as its content at top and bottom", () => {
+    expect(policyFor("top")).toEqual({ inline: "fill", block: "intrinsic" });
+    expect(policyFor("bottom")).toEqual({ inline: "fill", block: "intrinsic" });
+  });
+
+  it("is as wide as its content and fills the block axis at left and right", () => {
+    expect(policyFor("left")).toEqual({ inline: "intrinsic", block: "fill" });
+    expect(policyFor("right")).toEqual({ inline: "intrinsic", block: "fill" });
   });
 });

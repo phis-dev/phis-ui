@@ -531,6 +531,15 @@ The parent slot policy is authoritative; child defaults cannot override it.
   Page Region and Structure Region state `fill`, because they are the two that fill a definite height.
   A child is treated by its policy alone: nothing below the definition asks again whether it is a Widget
   or a Layout.
+- A definition's `slotSizePolicy` may depend on one field of the block's own config:
+  `{ configField, byValue, otherwise }` (`PhiSlotSizePolicyByConfig`) holds `byValue[config[configField]]`,
+  else `otherwise`. Only a top-level config field with a string value is read; a missing field, a
+  non-string value, an unknown value, or a site that has no config (a palette preview) gives `otherwise`.
+  The form is data, not a function, so it travels to the Builder unchanged; it has no nesting and names
+  one field. It holds for Widgets and Layouts alike. The Tab bar is the example: `left` and `right`
+  placement state `fill-block`, every other placement `fill-inline`. `resolvePhiSlotSizePolicy(policy, kind, config)`
+  resolves it, and every caller passes the config of the block whose policy it resolves. An axis that
+  states a size is `fixed` whatever the policy says.
 - The top Layout of a Region and of an Overlay zone stands in a frame that names no policy, so it takes
   the Layout default, `fill` on both axes: it is the Region's or the zone's whole box, edge to edge, and
   a Region with a height of its own (a Hero, a full-height Sider) hands that height to it. Nested

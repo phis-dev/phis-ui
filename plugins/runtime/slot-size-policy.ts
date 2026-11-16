@@ -1,6 +1,11 @@
 import { isValidElement, type CSSProperties, type ReactNode } from "react";
 
-import type { PhiSlotAxisSizePolicy, PhiSlotSizePolicy, PhiNormalizedSlotSizePolicy } from "../../types";
+import type {
+  PhiSlotAxisSizePolicy,
+  PhiSlotSizePolicy,
+  PhiSlotSizePolicyValue,
+  PhiNormalizedSlotSizePolicy,
+} from "../../types";
 import type { PhiCssLengthUnit } from "../../types/length";
 import {
   PHI_SLOT_BLOCK_PLACEMENT_MARGIN_STYLE,
@@ -64,13 +69,38 @@ function normalizePhiSlotPolicyAxis(
   return axis === "fill" || axis === "fixed" || axis === "intrinsic" ? axis : fallback;
 }
 
+/**
+ * The value a by-config policy holds for this config.
+ *
+ * Only a top-level config field with a string value is read; a missing field, a non-string value, an
+ * unknown value and no config at all give `otherwise`. A policy that is already a value passes through.
+ */
+function resolvePhiSlotSizePolicyValue(
+  policy: PhiSlotSizePolicy | null | undefined,
+  config: Record<string, unknown> | null | undefined,
+): PhiSlotSizePolicyValue | null | undefined {
+  if (policy == null || typeof policy === "string" || !("configField" in policy)) {
+    return policy;
+  }
+  const selected = config?.[policy.configField];
+  return typeof selected === "string" && Object.hasOwn(policy.byValue, selected)
+    ? policy.byValue[selected]
+    : policy.otherwise;
+}
+
+/**
+ * `config` is the config of the block whose policy this is; a by-config policy reads its field there.
+ * A caller without the block's config passes `null` and gets `otherwise`.
+ */
 export function resolvePhiSlotSizePolicy(
   policy: PhiSlotSizePolicy | null | undefined,
   kind: PhiSlotChildKind,
+  config: Record<string, unknown> | null | undefined,
 ): PhiNormalizedSlotSizePolicy {
   const fallback = PHI_SLOT_CHILD_DEFAULT_POLICY[kind];
+  const value = resolvePhiSlotSizePolicyValue(policy, config);
 
-  if (policy == null) {
+  if (value == null) {
     return fallback;
   }
 
@@ -82,35 +112,35 @@ export function resolvePhiSlotSizePolicy(
    * Layout asked, so nothing moved -- but the word has to mean what it says now that every definition
    * has to say it.
    */
-  if (policy === "intrinsic") {
+  if (value === "intrinsic") {
     return {
       inline: "intrinsic",
       block: "intrinsic",
     };
   }
 
-  if (policy === "fill") {
+  if (value === "fill") {
     return {
       inline: "fill",
       block: "fill",
     };
   }
 
-  if (policy === "fill-inline") {
+  if (value === "fill-inline") {
     return {
       inline: "fill",
       block: "intrinsic",
     };
   }
 
-  if (policy === "fill-block") {
+  if (value === "fill-block") {
     return {
       inline: "intrinsic",
       block: "fill",
     };
   }
 
-  if (policy === "fixed") {
+  if (value === "fixed") {
     return {
       inline: "fixed",
       block: "fixed",
@@ -118,8 +148,8 @@ export function resolvePhiSlotSizePolicy(
   }
 
   return {
-    inline: normalizePhiSlotPolicyAxis(policy.inline, fallback.inline),
-    block: normalizePhiSlotPolicyAxis(policy.block, fallback.block),
+    inline: normalizePhiSlotPolicyAxis(value.inline, fallback.inline),
+    block: normalizePhiSlotPolicyAxis(value.block, fallback.block),
   };
 }
 
@@ -187,7 +217,7 @@ export function resolvePhiSlotChildSizingForConfig(
   const geometry = resolvePhiRenderableBlockGeometry(config);
   const explicit = resolvePhiSlotChildExplicitAxes(geometry);
   return {
-    policy: resolvePhiEffectiveSlotSizePolicy(resolvePhiSlotSizePolicy(slotSizePolicy, kind), explicit),
+    policy: resolvePhiEffectiveSlotSizePolicy(resolvePhiSlotSizePolicy(slotSizePolicy, kind, config), explicit),
     ...explicit,
     ...resolvePhiSlotChildSizeConstraints(geometry),
     queriesRoom: phiBlockGeometryQueriesRoom(geometry),
@@ -239,7 +269,7 @@ export function resolvePhiSlotChildSizing(
 ): PhiSlotChildSizing {
   if (!isValidElement(child)) {
     return {
-      policy: resolvePhiSlotSizePolicy(undefined, fallbackKind),
+      policy: resolvePhiSlotSizePolicy(undefined, fallbackKind, null),
       explicitInlineSize: false,
       explicitBlockSize: false,
       queriesRoom: false,
@@ -299,7 +329,7 @@ export function resolvePhiSlotChildSizing(
 
     return {
       policy: resolvePhiEffectiveSlotSizePolicy(
-        resolvePhiSlotSizePolicy(props.slotSizePolicy, resolvedKind),
+        resolvePhiSlotSizePolicy(props.slotSizePolicy, resolvedKind, props.config),
         explicit,
       ),
       ...explicit,
@@ -324,6 +354,7 @@ export function resolvePhiSlotChildSizing(
           : undefined,
     },
     fallbackKind,
+    props.config,
   );
 
   const explicit = {

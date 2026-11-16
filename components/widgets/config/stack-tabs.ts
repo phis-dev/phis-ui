@@ -28,7 +28,7 @@ export const PHI_TAB_BAR_WIDGET_DEFINITION = createPhiCmsWidgetDefinition<PhiCms
   description: "Reusable tab control that emits runtime state signals and can optionally control stack slots.",
   category: "navigation",
   iconFamily: "basic",
-  slotSizePolicy: "fill-block",
+  slotSizePolicy: { configField: "placement", byValue: { left: "fill-block", right: "fill-block" }, otherwise: "fill-inline" },
   runtimeSignals: {
     ...PHI_SELECT_CONTROL_SIGNALS,
   },

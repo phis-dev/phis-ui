@@ -73,13 +73,17 @@ samp {
 }
 
 :where(.phi-tab-bar.ant-tabs) {
-  height: 100%;
   line-height: 1;
 }
 
 :where(.phi-tab-bar.ant-tabs > .ant-tabs-nav) {
-  height: 100%;
   margin: 0;
+}
+
+/* Left and right placement fill the block axis (the Tab bar's `slotSizePolicy`); top and bottom are as high as their content. */
+:where(.phi-tab-bar.ant-tabs-left, .phi-tab-bar.ant-tabs-right),
+:where(.phi-tab-bar.ant-tabs-left > .ant-tabs-nav, .phi-tab-bar.ant-tabs-right > .ant-tabs-nav) {
+  height: 100%;
 }
 
 :where(.phi-tab-bar.ant-tabs > .ant-tabs-content-holder) {

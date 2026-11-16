@@ -117,7 +117,7 @@ export function PhiSlotChildFrameView({
    * whatever reads its attributes, and a frame carrying a width of its own while announcing "fill"
    * makes every reader below it wrong in the same way at once.
    */
-  const policy = resolvePhiEffectiveSlotSizePolicy(resolvePhiSlotSizePolicy(slotSizePolicy, kind), {
+  const policy = resolvePhiEffectiveSlotSizePolicy(resolvePhiSlotSizePolicy(slotSizePolicy, kind, config), {
     explicitInlineSize: resolvedExplicitInlineSize,
     explicitBlockSize: resolvedExplicitBlockSize,
   });
