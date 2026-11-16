@@ -29,6 +29,7 @@ import {
   resolvePhiCmsRoutePreset,
 } from "../plugins/runtime-modules/descriptor-compiler";
 import { resolvePhiRuntimeModuleIdsForArea } from "../plugins/runtime-modules/settings";
+import { composePhiCmsPagePresetOverlays } from "../plugins/runtime-modules/page-preset-overlays";
 import { resolvePhiCmsRoutePage } from "../plugins/runtime-modules/route-page-resolution";
 import { PhiCmsFlags } from "../constants/phi-cms";
 import { hasPhiFlag } from "../helpers/flags";
@@ -417,20 +418,44 @@ export async function resolvePhiCmsRequest({
   const routeBinding = areaOwnedStoragePath && areaAllowed
     ? resolvePhiCmsRoutePreset(routeTable, areaOwnedStoragePath)
     : null;
-  const loadedPage = await resolvePhiCmsRoutePage({
+  const presetOrigin = { instantiated: false };
+  const instantiateRoutePreset = (binding: NonNullable<typeof routeBinding>) => instantiatePhiRoutePresetPage({
+    binding,
+    requestedPath: path,
+    areaMask,
+    siteId,
+    runtime: runtimeWithAuthProvider,
+    runtimeModuleCatalog,
+    activeModuleKeys,
+  });
+  const routePage = await resolvePhiCmsRoutePage({
     binding: routeBinding,
     requestedPath: path,
     loadPage: loadResolvedCmsPage,
-    instantiatePreset: (binding) => instantiatePhiRoutePresetPage({
-      binding,
-      requestedPath: path,
-      areaMask,
-      siteId,
-      runtime: runtimeWithAuthProvider,
-      runtimeModuleCatalog,
-      activeModuleKeys,
-    }),
+    instantiatePreset: (binding) => {
+      presetOrigin.instantiated = true;
+      return instantiateRoutePreset(binding);
+    },
   });
+  const routePresetAnswered = routePage?.sourcePreset?.presetKey === routeBinding?.descriptor.presetKey
+    && routePage?.sourcePreset?.ownerModuleId === routeBinding?.descriptor.ownerModuleId;
+
+  /*
+   * A stored Page that answers for the route's preset holds no copy of the Overlays the preset declares;
+   * they are laid over it here, from the preset instantiated beside it (OVERLAYS.md, "Page preset
+   * Overlays"). The instantiated preset already has them, an exact Site Page of a dynamic route is its own
+   * Page, and a lookup renders nothing.
+   */
+  const presetOverlayPage = purpose !== "lookup" && routePage && routeBinding && routePresetAnswered
+    && !presetOrigin.instantiated
+    ? await instantiateRoutePreset(routeBinding)
+    : null;
+  const loadedPage = routePage && presetOverlayPage
+    ? {
+        ...routePage,
+        page: composePhiCmsPagePresetOverlays({ tree: routePage.page, presetTree: presetOverlayPage.page }),
+      }
+    : routePage;
 
   /*
    * The record the Page is about, where its route names one: read once, here, for the Module's own tree
@@ -439,8 +464,6 @@ export async function resolvePhiCmsRequest({
    * names no record is no Page: a 404 while rendering, nothing for a lookup.
    */
   const routeIsParametrised = routeBinding ? Object.keys(routeBinding.params).length > 0 : false;
-  const routePresetAnswered = loadedPage?.sourcePreset?.presetKey === routeBinding?.descriptor.presetKey
-    && loadedPage?.sourcePreset?.ownerModuleId === routeBinding?.descriptor.ownerModuleId;
   const pageRecord = loadedPage && routeBinding && routeIsParametrised && routePresetAnswered
     ? await resolvePhiCmsPageRecord({
         binding: routeBinding,

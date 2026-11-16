@@ -46,10 +46,36 @@ An Overlay is not:
 - Overlay, Layout, and Widget instance ids share the canonical `PhiCmsInstanceId` namespace.
 - Overlay signal addresses use `cms:<instanceId>`; no new signal address family is introduced.
 - An Overlay in an Area tree is Area-owned and uses Area signal scope.
-- An Overlay in a Page tree is Page-owned and uses Page signal scope.
+- An Overlay in a Page tree is Page-owned and uses Page signal scope. A stored Page's `overlays` is what it
+  stores, not everything the Page shows: see [Page preset Overlays](#page-preset-overlays).
 - Code-owned ids retain their Module and preset origin through the canonical preset-id factory.
 - Removing or disabling a Module removes only the Overlay instances contributed by that Module's
   active preset or revision source; it does not change Core Overlay availability.
+
+### Page preset Overlays
+
+An Overlay a Page preset declares stays the Module's as long as nobody has stored it. A stored Page -- a
+Site's saved snapshot of that preset -- holds no copy of it, and four rules follow:
+
+1. When a stored Page that answers for a route preset is shown, the Overlays of that preset are laid over
+   it: the preset is instantiated beside the stored tree, and each of its Overlays comes with every Layout
+   and Widget under its Header, Body and Footer roots. This is `composePhiCmsPagePresetOverlays`
+   (`plugins/runtime-modules/page-preset-overlays.ts`), run by `resolvePhiCmsRequest` for every purpose
+   except `lookup`. The Area precedent is `composePhiCmsActiveAreaOverlayPresets`.
+2. A stored Overlay wins. Where the stored tree holds an Overlay with the id of a preset Overlay, the stored
+   one stands with what the stored tree holds for it, and the preset's Overlay and its subtree are left out.
+   A Layout or Widget id the preset's Overlay subtree shares with a stored node is an error that names the
+   id.
+3. No Module, no Overlay. If the preset is not answered (Module inactive, route gone) nothing is laid over,
+   and an Overlay a new version of the Module no longer declares is gone. A Page at the exact address of a
+   dynamic route is its own Page and gets nothing. Signals to a receiver that is missing are dropped, as
+   they are everywhere.
+4. The stored Page's own nodes, Regions and Controller settings are not changed by this. Wiring from the
+   Page to an Overlay is the stored Page's, so a stored route may name an Overlay id the stored tree does
+   not hold: the Core accepts a route to a preset-origin id (phis-server's signal validation).
+
+Only the request path composes. The Builder shows and saves a stored Page as stored (its preview posts
+`overlays: []`), and has no Overlay editor.
 
 ## Structure
 

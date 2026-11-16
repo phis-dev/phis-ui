@@ -3,7 +3,8 @@
 Builder does not author Overlays. Presets declare complete Overlay instances and their named zone Layouts,
 and runtime and preview render them through the canonical path described in
 [OVERLAYS.md](../OVERLAYS.md). This document is the design for authoring them; implementing it follows
-the runtime and preset ABI in OVERLAYS.md and requires operator approval.
+the runtime and preset ABI in OVERLAYS.md and requires operator approval. A stored Overlay with the id of a Page preset Overlay replaces it
+([OVERLAYS.md](../OVERLAYS.md#page-preset-overlays)), which is where authoring will write.
 
 ## Target behavior
 
