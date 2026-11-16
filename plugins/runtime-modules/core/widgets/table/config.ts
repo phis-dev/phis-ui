@@ -51,7 +51,7 @@ const PHI_TABLE_DISABLED_CONDITION_CONFIG_FIELDS: PhiCmsConfigField[] = [
     { value: "contains", label: "Contains" },
   ] },
   { key: "value", type: "string", label: "String Value" },
-  { key: "reason", type: "string", label: "Disabled Reason" },
+  { key: "reason", type: "string", label: "Disabled Reason", text: "message" },
 ];
 
 function buildPhiTableConditionExpressionConfigFields(

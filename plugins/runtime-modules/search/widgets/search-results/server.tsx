@@ -13,7 +13,6 @@ import type { PhiCmsAreaKey } from "../../../../../constants/cms-areas";
 import { resolvePhiNavHref } from "../../../../../helpers/locale";
 import { fetchPhiSiteSearch } from "../../../../../gateway/site-search";
 import { phiRuntime } from "../../../../../server-helpers/phi-runtime";
-import { trBulkForLocale } from "../../../../../server-helpers/translate";
 import type { PhiNoLabels, PhiServerBlockBaseProps } from "../../../../../types";
 import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
 import { readPhiRuntimeTreeRenderMode } from "../../../render-mode";
@@ -49,10 +48,9 @@ export async function PhiSearchResultsWidget({ config, runtime, widgetId }: PhiS
   const rt = phiRuntime(runtime);
   const locale = runtime.locale.current;
   const renderMode = readPhiRuntimeTreeRenderMode(config ?? {});
-  const [labels, [title]] = await Promise.all([
-    getPhiSearchResultsWidgetLabels({ apiBaseUrl: rt.apiBaseUrl, internalToken: rt.internalToken, locale }),
-    config?.title ? trBulkForLocale(locale, [config.title]) : [""],
-  ]);
+  // The heading arrives translated (server-helpers/cms-widget-texts.ts).
+  const title = config?.title ?? "";
+  const labels = await getPhiSearchResultsWidgetLabels({ apiBaseUrl: rt.apiBaseUrl, internalToken: rt.internalToken, locale });
 
   const raw = runtime.request?.searchParams?.[PHI_SEARCH_QUERY_PARAM];
   const query = readPhiSearchQuery(raw);

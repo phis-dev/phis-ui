@@ -167,6 +167,12 @@ export type PhiCmsConfigField =
       emptyValue?: "";
       /** What an empty box shows: what an unset value means, such as `Auto`. Not stored. */
       placeholder?: string;
+      /**
+       * Whether the field holds words a reader reads, where its name answers wrongly: the name decides
+       * otherwise (`helpers/config-text-fields.ts`). `false` keeps a field called like a text from being
+       * translated; a register makes a field translated that is not called like one.
+       */
+      text?: false | "label" | "message";
     })
   | (PhiCmsConfigFieldBase & {
       /**
@@ -412,6 +418,18 @@ export type PhiCmsPluginLicenseState = {
   expiresAt?: string | null;
 };
 
+/**
+ * One text a Widget declares in its config beyond its fields: `config[key]`, or with `item` each entry's
+ * `config[key][].item`, whose `values` (`config[key][].<values>`) stand in its sentence as `%1` onwards
+ * and are filled after the translation, never sent with it.
+ */
+export type PhiCmsWidgetConfigText = {
+  key: string;
+  register: "label" | "message";
+  item?: string;
+  values?: string;
+};
+
 export type PhiCmsWidgetContentBinding = {
   storage: "text" | "html" | "markdown" | "asset";
   sourceField: string;
@@ -556,13 +574,21 @@ export type PhiCmsWidgetPlugin<TConfig> = {
   requiredDataProviders?: readonly PhiRuntimeDataProviderKey[];
   contentBinding?: PhiCmsWidgetContentBinding | null;
   /**
-   * The Widget translates the text written into its own config.
+   * The Widget translates the text written into its own config, and the renderer's pass
+   * (`server-helpers/cms-widget-texts.ts`) leaves it out: a content Widget, whose text is parsed before it
+   * is translated and which an author may want left as written.
    *
-   * Turning that off is the node's `NoTranslate` flag, not a config field: the answer is the same for
-   * every Widget that writes text, so it lives where every node keeps its yes-or-no answers. A Widget
-   * that says so here gets the Inspector's switch for it.
+   * Turning that off is the node's `NoTranslate` flag, not a config field. A Widget that says so here
+   * gets the Inspector's switch for it; no other Widget does, for a Control's words are always
+   * translated.
    */
   translatesOwnText?: true;
+  /**
+   * Texts in the config that no Inspector field edits -- a Card's title and its plan's lines are written
+   * on the canvas -- which the renderer translates beside the fields' (`server-helpers/cms-widget-texts.ts`).
+   * Fields need no entry here: their names answer it (`helpers/config-text-fields.ts`).
+   */
+  configTexts?: readonly PhiCmsWidgetConfigText[];
   slotSizePolicy: PhiSlotSizePolicy;
   /**
    * Who draws the node's Surface (`config.surface`).
@@ -651,6 +677,7 @@ export type PhiCmsWidgetPluginDefinition<TConfig> = Pick<
   | "requiredDataProviders"
   | "contentBinding"
   | "translatesOwnText"
+  | "configTexts"
   | "slotSizePolicy"
   | "surface"
   | "requiredRegionOwnership"

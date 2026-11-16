@@ -108,7 +108,6 @@ export const PHI_BUTTON_WIDGET_DEFINITION = {
   category: "form",
   icon: "antd:edit-outlined",
   iconFamily: "form",
-  translatesOwnText: true,
   slotSizePolicy: "intrinsic",
   runtimeSignals: {
     ...PHI_BUTTON_CONTROL_SIGNALS,
@@ -195,7 +194,6 @@ export const PHI_BUTTON_WIDGET_DEFINITION = {
   parseConfig: parsePhiButtonWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiButtonWidgetConfig>,
-  | "translatesOwnText"
   | "kind"
   | "pluginKey"
   | "typeKey"

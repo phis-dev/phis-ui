@@ -46,6 +46,54 @@ Rules:
 - `phiRuntime()` (`@phis/ui/server-helpers`) is for runtime metadata itself -- `apiBaseUrl`,
   `internalToken`, `siteKey`, `locale`, and `fetchSiteLocaleConfig()` -- not for translating.
 
+## Widget config text
+
+The words written into a Widget's config are translated by the renderer, not by the Widget. One pass per
+rendered tree (`server-helpers/cms-widget-texts.ts`) runs beside the feature and link passes, collects the
+text of every Widget, translates it with one bulk request per store and register, and hands each Widget
+its config with the words already in the reader's language. A Widget's render reads `config` as it
+arrives and does not call a translation helper for its own fields.
+
+Which fields hold text is answered by the field's name (`helpers/config-text-fields.ts`):
+
+- `label`, `title`, `subtitle`, `placeholder`, `tooltip`, `eyebrow`, `footer` and `alt`, and every key
+  ending in `Label`, `Title` or `Placeholder`, are labels and translate under `PHI_TR_CTX_WEB_UI_LABEL`.
+- `description` and every key ending in `Description` are sentences and translate under
+  `PHI_TR_CTX_WEB_UI_MESSAGE`.
+- Every other key -- `key`, `value`, `format`, `timeZone`, `separator`, ... -- is what the Widget works
+  with and is never translated.
+- Only `string` fields count, and the rule reaches into a `collection`'s entries, so a select's
+  `options[].label` and `options[].description` are translated with the Widget.
+- A field the name gets wrong states `text` on its definition: `text: false` for a field called like a
+  text that is not one, `text: "label"` or `text: "message"` for one that is not called like a text (a
+  Timeline entry's `content`, a Slider's `tooltipSuffix`, a Table action's disabled `reason`).
+
+So a new Widget whose caption is called `label` is translated without anybody remembering to say so, and
+the same word shares one translation with the Label Sets that use the same register.
+
+A text no Inspector field edits -- the Card's title, badge and plan lines are written on the canvas -- is
+declared by the Widget in `configTexts`: a key with its register, or with `item` each list entry's text,
+whose `values` stand in the sentence as `%1` onwards. Every text is masked before it is sent and filled
+after ([Site copy placeholders](#site-copy-placeholders)): `{site.name}` and `{year}` never reach a
+translator, a list entry's values are never sent along, and the names are filled in every Widget's
+words, not only a Card's. The search index reads a Page's words through the same pass.
+
+**Whose words they are** decides the store (`helpers/text-source.ts`). `textSource: "preset"` sends a
+Widget's words to the global store: the Module's own text, written in English and translated once for
+every installation. `textSource: "site"` -- or no marker -- sends them to the Site's store. A Module's
+Preset states one of the two on every Widget it fills with text; `"site"` is for what the Site configured
+and the Preset only places, such as the Site's contact address. The Builder drops `"preset"` the moment an
+author edits one of the Widget's texts. `checkPhiPresetTextSources(tree)` (`@phis/ui/module/page-check`)
+reports a Widget in a Module's Preset that writes text and states neither; a Site's own package does not
+run it, since every word in its Pages is the Site's.
+
+**The switch.** Only content Widgets keep the node flag `PhiCmsFlags.NoTranslate` and the Inspector's
+switch for it: Markdown, HTML, Simple Text and Description, which declare `translatesOwnText` and
+translate their own text (a Markdown body is parsed into units first). The renderer leaves them out of
+the pass. A Control or a Card has no switch: its words are always translated. A Preset that places words it read
+from a Label Set in the reader's language sets `NoTranslate` on the node, and the pass sends none of its
+words, though it still fills their placeholders; no author can set it on a Control.
+
 ## Label Sets
 
 Phi-owned UI copy is loaded through Label Sets (`gateway/label-set.ts`). Where the helpers come from
@@ -163,11 +211,11 @@ resolved Site locale to an Ant Design locale key and loads it through an explici
 ## A picture's description
 
 A picture's alt text and title are words on the page like any other and are translated in the render's
-locale. The Image and Card Widgets translate theirs -- the Media library's description of an Asset, or
-what the config states for an address -- in the Site's store; a Content record's text arrives translated
-and is taken as it is. The Gallery translates each picture's description in one bulk call. The Brand
-Widget translates the Theme's `logoAlt` in the Site's store, and the default "Brand logo" in the global
-one. A Widget flagged `NoTranslate` keeps all of them as written.
+locale. What a Widget's config states for an address arrives translated with the rest of its config
+([Widget config text](#widget-config-text)). The Image and Card Widgets translate the Media library's
+description of an Asset in the Site's store; a Content record's text arrives translated and is taken as
+it is. The Gallery translates each picture's description in one bulk call. The Brand Widget translates
+the Theme's `logoAlt` in the Site's store, and the default "Brand logo" in the global one.
 
 ## Context and format
 

@@ -6,7 +6,6 @@ import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { resolvePhiLinkHref } from "../../../../../helpers/link-target";
 import { resolvePhiLinkTargetReferences } from "../../../../../server-helpers/cms-link-targets";
 import { phiRuntime } from "../../../../../server-helpers/phi-runtime";
-import { trBulkForLocale } from "../../../../../server-helpers/translate";
 import type { PhiNoLabels, PhiServerBlockBaseProps } from "../../../../../types";
 import { resolvePhiSearchPageLinkTarget } from "../../page-references";
 import type { PhiSearchBoxWidgetConfig } from "./config";
@@ -39,10 +38,9 @@ export async function PhiSearchBoxWidget({ config, runtime }: PhiSearchBoxWidget
     return null;
   }
 
-  const [labels, [placeholder]] = await Promise.all([
-    getPhiSearchWidgetLabels({ apiBaseUrl: rt.apiBaseUrl, internalToken: rt.internalToken, locale }),
-    config?.placeholder ? trBulkForLocale(locale, [config.placeholder]) : [""],
-  ]);
+  // The placeholder arrives translated (server-helpers/cms-widget-texts.ts).
+  const placeholder = config?.placeholder ?? "";
+  const labels = await getPhiSearchWidgetLabels({ apiBaseUrl: rt.apiBaseUrl, internalToken: rt.internalToken, locale });
 
   return (
     <PhiRuntimeModuleRenderClientHost

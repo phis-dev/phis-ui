@@ -20,7 +20,6 @@ import {
   buildPhiBulletListTree,
   resolvePhiBulletListStyle,
 } from "../../../../../components/widgets/shared/bullet-list-vocabulary";
-import { maskPhiTextPlaceholders, resolvePhiTextPlaceholders } from "../../../../../helpers/text-placeholders";
 
 export type PhiCardWidgetLabels = {
   eyebrow?: string;
@@ -45,10 +44,8 @@ export async function PhiCardWidget({
   config,
   runtime,
   links,
-  translate,
   preview = false,
 }: PhiCardWidgetProps & {
-  translate: boolean;
   /**
    * The Builder's preview: the card answers the pointer as it will live -- its hover effect is what the
    * author is looking at -- but leads nowhere and says nothing, so a click cannot leave the Builder.
@@ -68,7 +65,17 @@ export async function PhiCardWidget({
     config?.sourceKind === "asset" && typeof config.assetId === "number"
       ? await resolvePhiPublicAssetReference({ runtime, assetId: config.assetId }).catch(() => null)
       : null;
-  const textEntries = [
+  /*
+   * The card's own words arrive translated, `{site.name}` and a plan line's values filled in
+   * (server-helpers/cms-widget-texts.ts, the Card's `configTexts`). Only the Media library's
+   * description of an Asset is read here, and translated in the Site's store like every Asset's.
+   */
+  const ownAlt = config?.alt?.trim();
+  const assetAlt = !ownAlt ? resolvedAsset?.altText?.trim() : undefined;
+  const alt = ownAlt || (assetAlt
+    ? (await (runtime?.locale.current ? trBulkForLocale(runtime.locale.current, [assetAlt]) : trBulk([assetAlt])))[0]?.trim() || assetAlt
+    : undefined);
+  const translatedByKey = new Map<string, string | undefined>([
     ["eyebrow", labels.eyebrow ?? config?.eyebrow],
     ["title", labels.title ?? config?.title],
     ["description", labels.description ?? config?.description],
@@ -77,35 +84,9 @@ export async function PhiCardWidget({
     ["badge", labels.badge ?? config?.badge],
     ["pricePeriod", plan ? labels.pricePeriod ?? config?.pricePeriod : undefined],
     ["pricePeriodYearly", plan ? labels.pricePeriodYearly ?? config?.pricePeriodYearly : undefined],
-    // What a screen reader says for the picture, in the page's language like every other word here.
-    ["alt", (config?.alt ?? resolvedAsset?.altText ?? "").trim() || undefined],
-  ] as const;
-  /*
-   * A plan's features, masked as every list entry is: their values stand as `%1` onwards and never reach
-   * a translator, and `{site.name}` is filled after (`helpers/text-placeholders.ts`).
-   */
-  const features = plan ? (config?.features ?? []).filter((entry) => Boolean(entry.text)) : [];
-  const maskedFeatures = features.map((entry) => maskPhiTextPlaceholders(entry.text, entry.values?.length ?? 0));
-
-  const sourceTexts = [...textEntries.map(([, value]) => value ?? ""), ...maskedFeatures.map((masked) => masked.text)];
-  const translatedTexts = translate
-    ? await (runtime?.locale.current
-      ? trBulkForLocale(runtime.locale.current, sourceTexts)
-      : trBulk(sourceTexts))
-    : sourceTexts;
-
-  const translatedByKey = new Map<string, string | undefined>(
-    textEntries.map(([key], index) => [key, translatedTexts[index] || undefined]),
-  );
-  const translatedFeatures = features.map((entry, index) => ({
-    ...entry,
-    text: resolvePhiTextPlaceholders(
-      translatedTexts[textEntries.length + index] ?? entry.text,
-      maskedFeatures[index]!.names,
-      runtime,
-      entry.values,
-    ),
-  }));
+    ["alt", alt],
+  ]);
+  const translatedFeatures = plan ? (config?.features ?? []).filter((entry) => Boolean(entry.text)) : [];
   /* Drawn here, so the list Control never reaches the browser with the Card (`listContent`). */
   const featureList = translatedFeatures.length > 0 ? (
     <PhiBulletListControl
@@ -114,11 +95,7 @@ export async function PhiCardWidget({
     />
   ) : null;
 
-  /*
-   * The figure is left out of the translation on purpose: a Site's own number is not a word, and
-   * `translate` is a per-Widget switch, so a stat card that turned it off to protect the figure would
-   * lose its title's translation with it.
-   */
+  // The figure is not translated: a Site's own number is not a word (`value` is no text field).
   const value = config?.value;
   const presentation = resolvePhiImagePresentation({
     sourceKind: config?.sourceKind,

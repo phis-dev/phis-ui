@@ -1,3 +1,4 @@
+import { PHI_TEXT_SOURCE_PRESET } from "../../../../helpers/text-source";
 import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
   PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS,
@@ -267,6 +268,7 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
         label: "dev revisions area shell delete",
         config: {
           key: "revisions-area-shell-delete",
+          textSource: PHI_TEXT_SOURCE_PRESET,
           controlSize: "small",
           compact: true,
           showLabels: true,
@@ -390,6 +392,7 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
         label: "Builder delete area commands",
         config: {
           key: "delete-area-commands",
+          textSource: PHI_TEXT_SOURCE_PRESET,
           ...PHI_DIALOG_COMMANDS_CONFIG,
           buttons: [
             {

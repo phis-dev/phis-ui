@@ -1,3 +1,4 @@
+import { PHI_TEXT_SOURCE_PRESET } from "../../../../helpers/text-source";
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../../constants/cms-layout-types";
 import { PhiCmsFlags } from "../../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
@@ -506,6 +507,7 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
         label: "Builder effects commands",
         config: {
           key: "builder-effects-commands",
+          textSource: PHI_TEXT_SOURCE_PRESET,
           ...PHI_DIALOG_COMMANDS_CONFIG,
           /*
            * The two buttons as one group, the way the Area settings footer states it: they are the two
@@ -635,6 +637,7 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
         label: "Builder signal wiring commands",
         config: {
           key: "builder-signal-wiring-commands",
+          textSource: PHI_TEXT_SOURCE_PRESET,
           ...PHI_DIALOG_COMMANDS_CONFIG,
           /*
            * The two buttons as one group, the way the Area settings footer states it: they are the two

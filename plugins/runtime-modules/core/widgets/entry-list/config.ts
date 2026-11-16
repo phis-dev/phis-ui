@@ -156,7 +156,6 @@ export const PHI_ENTRY_LIST_WIDGET_DEFINITION = {
   category: "content",
   tags: ["news", "blog", "content", "list"],
   // The heading is the Site's own words; the entries arrive translated from Core.
-  translatesOwnText: true,
   icon: "antd:read",
   slotSizePolicy: "fill-inline",
   fields: [
@@ -243,7 +242,6 @@ export const PHI_ENTRY_LIST_WIDGET_DEFINITION = {
   | "tags"
   | "icon"
   | "slotSizePolicy"
-  | "translatesOwnText"
   | "fields"
   | "defaultConfig"
   | "parseConfig"

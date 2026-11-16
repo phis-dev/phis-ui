@@ -221,7 +221,22 @@ export const PHI_CARD_WIDGET_DEFINITION = {
   description: "Content card with a picture or an icon, a heading or a figure, and a link.",
   icon: "antd:idcard-outlined",
   iconFamily: "basic",
-  translatesOwnText: true,
+  /*
+   * The card's words are written on the canvas, not in Inspector fields, so the card names them for the
+   * renderer's translation (TRANSLATIONS.md, "Widget config text"); a plan line's values stay out of it.
+   */
+  configTexts: [
+    { key: "eyebrow", register: "label" },
+    { key: "title", register: "label" },
+    { key: "description", register: "message" },
+    { key: "meta", register: "label" },
+    { key: "actionLabel", register: "label" },
+    { key: "badge", register: "label" },
+    { key: "pricePeriod", register: "label" },
+    { key: "pricePeriodYearly", register: "label" },
+    { key: "alt", register: "label" },
+    { key: "features", item: "text", values: "values", register: "message" },
+  ],
   /*
    * A card fills its slot both ways, as a Layout does.
    *
@@ -479,7 +494,7 @@ export const PHI_CARD_WIDGET_DEFINITION = {
   parseConfig: parsePhiCmsCardWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiCmsCardWidgetConfig>,
-  | "translatesOwnText"
+  | "configTexts"
   | "kind"
   | "pluginKey"
   | "typeKey"

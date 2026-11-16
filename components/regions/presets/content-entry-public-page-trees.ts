@@ -1,3 +1,4 @@
+import { PHI_TEXT_SOURCE_PRESET } from "../../../helpers/text-source";
 import "server-only";
 
 import { notFound } from "next/navigation";
@@ -175,6 +176,7 @@ export async function buildPhiContentEntryDetailPageTree({
         config: {
           kind,
           source: "related",
+          textSource: PHI_TEXT_SOURCE_PRESET,
           relatedTo: entry,
           presentation: related.presentation,
           ...listPartsFor(related.presentation),

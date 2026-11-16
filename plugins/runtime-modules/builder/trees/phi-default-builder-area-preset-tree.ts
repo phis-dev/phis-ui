@@ -1,3 +1,4 @@
+import { PHI_TEXT_SOURCE_PRESET } from "../../../../helpers/text-source";
 import {
   createPhiPresetCmsInstanceIdMap,
   type PhiCmsInstanceId,
@@ -630,6 +631,7 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
         label: "dev builder area selector",
         config: {
           key: "builder-area-selector",
+          textSource: PHI_TEXT_SOURCE_PRESET,
           value: "public",
           /*
            * Disabled is the selector's resting state: only Builder pages that edit one Area at a
@@ -683,6 +685,7 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
           label: labels.themeSwitch.debug,
           defaultChecked: false,
           key: "debugScaffold",
+          textSource: PHI_TEXT_SOURCE_PRESET,
           /*
            * Disabled is the switch's resting state, the same way the Area selector rests: only the
            * pages that draw a canvas arm it, via the workspace controller's "enabled" signal
@@ -1330,6 +1333,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 label: siderFullHeightLabel,
                 defaultChecked: true,
                 key: "dev-structure-sider-full-height-switch",
+                textSource: PHI_TEXT_SOURCE_PRESET,
                 signalRoutes: {
                   emits: [
                     {
@@ -1445,6 +1449,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               label: "dev area settings action",
               config: {
                 key: "areaSettingsAction",
+                textSource: PHI_TEXT_SOURCE_PRESET,
                 compact: true,
                 showLabels: true,
                 buttons: [{
@@ -1476,6 +1481,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               label: "Area settings commands",
               config: {
                 key: "area-settings-commands",
+                textSource: PHI_TEXT_SOURCE_PRESET,
                 ...PHI_DIALOG_COMMANDS_CONFIG,
                 /*
                  * The two buttons as one group rather than as two things that happen to stand near
@@ -1536,6 +1542,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 label: "dev pages select",
                 config: {
                   key: "pageSelect",
+                  textSource: PHI_TEXT_SOURCE_PRESET,
                   // Folders open under the pointer and choose nothing: only a Page is offered.
                   expandTrigger: "hover",
                   select: "options",
@@ -1570,6 +1577,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   text: "",
                   placeholder: labels.pages.form.title,
                   key: "pageTitle",
+                  textSource: PHI_TEXT_SOURCE_PRESET,
                   signalRoutes: {
                     listens: [
                       {
@@ -1597,6 +1605,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 label: "dev pages meta toolbar",
                 config: {
                   key: "pageMetaToolbar",
+                  textSource: PHI_TEXT_SOURCE_PRESET,
                   signalRoutes: {
                     emits: [
                       {
@@ -1853,6 +1862,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 label: "Builder module usage commands",
                 config: {
                   key: "module-usage-commands",
+                  textSource: PHI_TEXT_SOURCE_PRESET,
                   ...PHI_DIALOG_COMMANDS_CONFIG,
                   buttons: [
                     { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: modulesLabels?.usage.cancel ?? "Keep it on", icon: "close" },
@@ -1949,6 +1959,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 label: "Builder public route collision commands",
                 config: {
                   key: "public-routes-commands",
+                  textSource: PHI_TEXT_SOURCE_PRESET,
                   ...PHI_DIALOG_COMMANDS_CONFIG,
                   buttons: [
                     { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: modulesLabels?.publicRoutes.cancel ?? "Cancel", icon: "close" },

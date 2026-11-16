@@ -1,5 +1,3 @@
-import { PhiCmsFlags } from "../../../../../constants/phi-cms";
-import { hasPhiFlag } from "../../../../../helpers/flags";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
@@ -7,32 +5,9 @@ import { PHI_BUTTON_WIDGET_DEFINITION, type PhiButtonWidgetConfig } from "./conf
 import { getPhiCommonControlLabelsForRuntime } from "../../../../../components/widgets/label-sets/common-controls";
 import { isPhiExternalHref } from "../../../../../helpers/external-href";
 import { resolvePhiLinkHref } from "../../../../../helpers/link-target";
-import { trBulkForLocale } from "../../../../../server-helpers/translate";
 import { resolvePhiWidgetRecordField } from "../../../../../server-helpers/record-fields";
 import type { PhiBlockRuntime } from "../../../../../types";
 import type { PhiRecordLink } from "../../../../../types/record-provider";
-
-/**
- * The Button's own words in the reader's language.
- *
- * Every Widget translates the text written into it itself; nothing does it for them on the way in. The
- * common control labels beside it are a global label set and arrive translated already.
- */
-async function translatePhiButtonConfig(
-  config: PhiButtonWidgetConfig,
-  runtime: PhiBlockRuntime,
-  translate: boolean,
-): Promise<PhiButtonWidgetConfig> {
-  if (!translate) return config;
-  const entries = ([["label", config.label], ["tooltip", config.tooltip]] as const)
-    .filter((entry): entry is readonly ["label" | "tooltip", string] => Boolean(entry[1]?.trim()));
-  if (entries.length === 0) return config;
-  const translated = await trBulkForLocale(runtime.locale.current, entries.map(([, text]) => text));
-  return {
-    ...config,
-    ...Object.fromEntries(entries.map(([key, text], index) => [key, translated[index]?.trim() || text])),
-  };
-}
 
 /**
  * What the page record says of the Button, where it names a field for its value or its link: a Button on
@@ -66,8 +41,11 @@ export const PHI_BUTTON_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiButtonWidgetConfig>
     const bound = await resolvePhiButtonRecordConfig(stored, runtime, registry);
     if (!bound) return null;
     const { link: recordLink } = bound;
-    const translated = await translatePhiButtonConfig(bound.config, runtime, !hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate));
-    /* The record's words stand in for an empty label only, and are the record's own: not translated. */
+    /*
+     * The Button's own words arrive translated (server-helpers/cms-widget-texts.ts). The record's stand
+     * in for an empty label only, and are the record's own: not translated.
+     */
+    const translated = bound.config;
     const config = recordLink?.label && !translated.label?.trim() ? { ...translated, label: recordLink.label } : translated;
     return (
       <PhiRuntimeModuleRenderClientHost
@@ -88,7 +66,7 @@ export const PHI_BUTTON_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiButtonWidgetConfig>
       type={PhiCmsWidgetType.Button}
       componentProps={{
         blockId: widget.id,
-        config: await translatePhiButtonConfig(config, runtime, !hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate)),
+        config,
         labels: await getPhiCommonControlLabelsForRuntime(runtime),
         link: resolvePhiLinkHref(config.linkTarget, links),
         disabled: true,

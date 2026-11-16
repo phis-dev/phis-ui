@@ -1,3 +1,4 @@
+import { PHI_TEXT_SOURCE_PRESET } from "../../../../helpers/text-source";
 import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
   PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS,
@@ -397,6 +398,7 @@ export async function buildPhiDefaultBuilderThemePageTree({
             draft: runtime.site.themeRevision?.workingDraftRevisionId != null,
           }),
           key: "brand-theme-preset",
+          textSource: PHI_TEXT_SOURCE_PRESET,
           signalRoutes: {
             emits: [
               {
@@ -468,6 +470,7 @@ export async function buildPhiDefaultBuilderThemePageTree({
           checkedLabel: labels.themeSwitch.dark,
           uncheckedLabel: labels.themeSwitch.light,
           key: "brandPreviewThemeMode",
+          textSource: PHI_TEXT_SOURCE_PRESET,
           signalRoutes: {
             emits: [
               {
@@ -493,6 +496,7 @@ export async function buildPhiDefaultBuilderThemePageTree({
         config: {
           value: "0",
           valueMode: "stack-slot-index",
+          textSource: PHI_TEXT_SOURCE_PRESET,
           key: PHI_THEME_STACK_SIGNAL_KEY,
           signalRoutes: {
             emits: [

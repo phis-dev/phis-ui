@@ -1,5 +1,6 @@
 import "server-only";
 
+import { translatePhiWidgetConfigTexts } from "./cms-widget-texts";
 import { createHash } from "node:crypto";
 
 import { PHI_SHARED_PACKAGE_NAME } from "../constants/package";
@@ -396,11 +397,22 @@ async function readDocument({
   });
   const lines = await runWithPhiRequestRuntime(resolved.runtime, async () => {
     const collected: string[] = [];
-    for (const widget of visible.contentWidgets) {
-      const plugin = await loadPlugin(widget.widgetType);
+    const plugins = await Promise.all(visible.contentWidgets.map((widget) => loadPlugin(widget.widgetType)));
+    // The words as the render shows them: translated by the same pass (`server-helpers/cms-widget-texts.ts`).
+    const translatedConfigs = await translatePhiWidgetConfigTexts(
+      visible.contentWidgets.map((widget, index) => ({
+        id: widget.id,
+        flags: widget.flags,
+        config: widget.config,
+        definition: plugins[index]?.searchText ? plugins[index] : null,
+      })),
+      resolved.runtime,
+    );
+    for (const [index, widget] of visible.contentWidgets.entries()) {
+      const plugin = plugins[index];
       if (!plugin?.searchText) continue;
       try {
-        const config = plugin.parseConfig(widget.config);
+        const config = plugin.parseConfig(translatedConfigs.get(widget.id) ?? widget.config);
         collected.push(...await plugin.searchText({ widget, config, runtime: resolved.runtime }));
       } catch (error) {
         // One Widget that cannot say its words costs the Page those words, not the Page.

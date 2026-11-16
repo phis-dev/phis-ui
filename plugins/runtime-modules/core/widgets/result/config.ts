@@ -91,7 +91,6 @@ export const PHI_RESULT_WIDGET_DEFINITION = {
    * moves nothing. A Result that ends a page still fills one -- by being put in a slot that is that
    * wide, which is the layout's business rather than the widget's.
    */
-  translatesOwnText: true,
   slotSizePolicy: "intrinsic",
   fields: [
     ...PHI_RENDERABLE_BLOCK_GEOMETRY_FIELDS,
@@ -125,7 +124,6 @@ export const PHI_RESULT_WIDGET_DEFINITION = {
   parseConfig: parsePhiCmsResultWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiCmsResultWidgetConfig>,
-  | "translatesOwnText"
   | "kind"
   | "pluginKey"
   | "typeKey"

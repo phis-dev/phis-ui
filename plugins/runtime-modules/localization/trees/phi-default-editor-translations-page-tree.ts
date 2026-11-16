@@ -1,3 +1,4 @@
+import { PHI_TEXT_SOURCE_PRESET } from "../../../../helpers/text-source";
 import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
   PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS,
@@ -148,6 +149,7 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
         label: "editor source locale",
         config: {
           text: sourceLocaleText,
+          textSource: PHI_TEXT_SOURCE_PRESET,
           placeholder: widgetLabels.sourceLocaleLabel,
           readOnly: true,
           allowClear: false,
@@ -327,6 +329,7 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
         label: "editor translation commands",
         config: {
           key: "editor-translation-commands",
+          textSource: PHI_TEXT_SOURCE_PRESET,
           ...PHI_DIALOG_COMMANDS_CONFIG,
           buttons: [
             { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: widgetLabels.actions.cancel, icon: "close" },

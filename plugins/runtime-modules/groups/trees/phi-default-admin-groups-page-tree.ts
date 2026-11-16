@@ -1,3 +1,4 @@
+import { PHI_TEXT_SOURCE_PRESET } from "../../../../helpers/text-source";
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../../constants/cms-layout-types";
 import { PhiCmsPageType } from "../../../../constants/phi-cms";
 import { PHI_GROUPS_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
@@ -127,6 +128,7 @@ export async function buildPhiDefaultAdminGroupsPageTree({
         label: text.submit,
         config: {
           key: `admin-groups-${workflow}-commands`,
+          textSource: PHI_TEXT_SOURCE_PRESET,
           buttons: [
             { key: "cancel", emits: [{ capabilityId: "close", value: null }], label: labels.actions.cancel, icon: "close" },
             { key: "save", emits: [{ capabilityId: "submit", value: null }], label: text.submit, variant: "primary", icon: "save" },

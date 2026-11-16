@@ -116,6 +116,19 @@ export function createPhiLayoutOwnTextTranslator(
   };
 }
 
+/**
+ * The tree with its Widgets' words in the reader's language (`server-helpers/cms-widget-texts.ts`),
+ * imported lazily as the passes beside it are.
+ */
+async function translatePhiCmsTreeWidgetTexts<TTree extends PhiResolvedCmsRenderableTree>(
+  tree: TTree,
+  registry: PhiResolvedRuntimeRenderRegistry,
+  runtime: PhiBlockRuntime,
+): Promise<TTree> {
+  const { translatePhiCmsTreeWidgetTexts: translate } = await import("../../server-helpers/cms-widget-texts");
+  return translate(tree, registry, runtime);
+}
+
 /** Lazily imported for the reason above: the pass is `server-only`, the helpers beside it are not. */
 async function resolvePhiCmsTreeLinkTargets(
   ...args: Parameters<
@@ -446,16 +459,17 @@ export async function preparePhiCmsOverlayRenderContext({
   registry: PhiResolvedRuntimeRenderRegistry;
   signalScope: Extract<PhiSignalScope, "area" | "page">;
 }): Promise<PhiCmsOverlayRenderContext> {
-  const [featureResolution, links] = await Promise.all([
+  const [featureResolution, links, translatedTree] = await Promise.all([
     resolvePhiCmsTreeFeatures(tree, registry, runtime),
     resolvePhiCmsTreeLinkTargets(tree, runtime),
+    translatePhiCmsTreeWidgetTexts(tree, registry, runtime),
   ]);
   return {
-    tree,
+    tree: translatedTree,
     runtime,
     registry,
     signalScope,
-    createNode: buildLayoutNodeResolver(tree, registry.widgetBlockDefaultsByType),
+    createNode: buildLayoutNodeResolver(translatedTree, registry.widgetBlockDefaultsByType),
     // From the whole tree, not the Overlay alone: a block is a participant when anything in the tree
     // addresses it, and that is the same answer whether the zones render with the page or on demand.
     signalParticipants: resolvePhiTreeSignalParticipants(tree),
@@ -1125,14 +1139,15 @@ export async function PhiCmsLayoutRenderer({
   stackGap = 21,
   registry,
 }: PhiCmsLayoutRendererProps) {
-  const filteredTree = filterPhiCmsRenderableTreeForViewer({
+  const viewerTree = filterPhiCmsRenderableTreeForViewer({
     tree,
     viewer: runtime.viewer,
     registry,
   });
-  const [{ features, failures: featureFailures }, links] = await Promise.all([
-    resolvePhiCmsTreeFeatures(filteredTree, registry, runtime),
-    resolvePhiCmsTreeLinkTargets(filteredTree, runtime),
+  const [{ features, failures: featureFailures }, links, filteredTree] = await Promise.all([
+    resolvePhiCmsTreeFeatures(viewerTree, registry, runtime),
+    resolvePhiCmsTreeLinkTargets(viewerTree, runtime),
+    translatePhiCmsTreeWidgetTexts(viewerTree, registry, runtime),
   ]);
   const signalParticipants = resolvePhiTreeSignalParticipants(filteredTree);
   const allowedRegionTypes = regionTypes ? new Set(regionTypes) : null;

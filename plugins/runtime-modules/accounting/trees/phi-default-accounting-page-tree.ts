@@ -1,3 +1,4 @@
+import { PHI_TEXT_SOURCE_PRESET } from "../../../../helpers/text-source";
 import { createPhiPresetCmsInstanceIdMap } from "../../../../types/cms-instance-id";
 import { PHI_SURFACE_CARD } from "../../../../helpers/surface-presets";
 import { PHI_ACCOUNTING_RUNTIME_MODULE_ID } from "../ids";
@@ -47,6 +48,7 @@ export async function buildPhiDefaultAccountingPageTree({
         label: "Accounting",
         config: {
           eyebrow: "Accounting",
+          textSource: PHI_TEXT_SOURCE_PRESET,
           title: "Accounting",
           description: "Invoices and billing workflows for this site.",
           variant: "compact",

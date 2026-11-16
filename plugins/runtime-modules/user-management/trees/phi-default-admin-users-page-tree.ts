@@ -1,3 +1,4 @@
+import { PHI_TEXT_SOURCE_PRESET } from "../../../../helpers/text-source";
 import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
 } from "../../../../constants/cms-layout-types";
@@ -597,6 +598,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
         label: `admin users ${mode} commands`,
         config: {
           key: `admin-users-${mode}-commands`,
+          textSource: PHI_TEXT_SOURCE_PRESET,
           ...PHI_DIALOG_COMMANDS_CONFIG,
           buttons: [
             { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], label: widgetLabels.confirm.cancel, icon: "close" },

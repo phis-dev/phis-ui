@@ -1,6 +1,3 @@
-import { PhiCmsFlags } from "../../../../../constants/phi-cms";
-import { hasPhiFlag } from "../../../../../helpers/flags";
-import { translatePhiSearchWidgetTexts } from "../../../../../server-helpers/search-text";
 import type { PhiCmsServerWidgetPlugin, PhiCmsWidgetPluginRenderArgs } from "../../../../../types";
 import type { PhiCmsCardWidgetConfig } from "./config";
 import { PhiCardWidget } from "./server";
@@ -23,7 +20,6 @@ function renderPhiCard(
       config={config}
       runtime={runtime}
       links={links}
-      translate={!hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate)}
       preview={preview}
     />
   );
@@ -32,25 +28,22 @@ function renderPhiCard(
 export const PHI_CARD_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsCardWidgetConfig> = {
   ...PHI_CARD_WIDGET_DEFINITION,
   /*
-   * The card's words as the render draws them (SEARCH.md): the texts it translates, translated the same
-   * way; the figure and the prices as written, which the render never translates either.
+   * The card's words as the render draws them (SEARCH.md): they arrive translated by the same pass the
+   * render's do; the figure and the prices as written, which the render never translates either.
    */
-  searchText: async ({ widget, config, runtime }) => {
+  searchText: ({ config }) => {
     const plan = config.body === "plan";
-    const translated = await translatePhiSearchWidgetTexts(
-      runtime,
-      [
-        config.eyebrow,
-        config.title,
-        config.description,
-        config.meta,
-        config.badge,
-        config.actionEnabled ? config.actionLabel : undefined,
-        ...(plan ? (config.features ?? []).map((entry) => entry.text) : []),
-      ],
-      { translate: !hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate) },
-    );
-    return [...translated, config.value ?? "", ...(plan ? [config.price ?? "", config.priceYearly ?? ""] : [])];
+    return [
+      config.eyebrow,
+      config.title,
+      config.description,
+      config.meta,
+      config.badge,
+      config.actionEnabled ? config.actionLabel : undefined,
+      ...(plan ? (config.features ?? []).map((entry) => entry.text) : []),
+      config.value,
+      ...(plan ? [config.price, config.priceYearly] : []),
+    ].filter((text): text is string => typeof text === "string" && text.trim().length > 0);
   },
   /*
    * Not the passive renderers' preview: that one is inert, and an inert card answers no pointer, so its

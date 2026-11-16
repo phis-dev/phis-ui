@@ -53,7 +53,6 @@ export const PHI_TIMELINE_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("timeline"),
   typeKey: "timeline",
-  translatesOwnText: true,
   title: "Timeline",
   description: "What happened, in order: entries with a time, a title and a line of text.",
   category: "content",
@@ -90,7 +89,7 @@ export const PHI_TIMELINE_WIDGET_DEFINITION = {
       itemFields: [
         { key: "key", type: "string", label: "Key", required: true },
         { key: "title", type: "string", label: "Title" },
-        { key: "content", type: "string", label: "Text" },
+        { key: "content", type: "string", label: "Text", text: "message" },
       ],
     },
     { key: "entriesProvider", type: "data-provider", providerKind: "timeline", label: "Entries Source" },
@@ -128,7 +127,6 @@ export const PHI_TIMELINE_WIDGET_DEFINITION = {
   parseConfig: parsePhiTimelineWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiTimelineWidgetConfig>,
-  | "translatesOwnText"
   | "kind"
   | "pluginKey"
   | "typeKey"

@@ -1,3 +1,4 @@
+import { PHI_TEXT_SOURCE_PRESET } from "../../../../helpers/text-source";
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../../constants/cms-layout-types";
 import { PhiCmsPageType } from "../../../../constants/phi-cms";
 import { PHI_GROUPS_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
@@ -279,6 +280,7 @@ export async function buildPhiDefaultAppGroupsPageTree({
         label: labels.membership.submit,
         config: {
           key: "app-groups-membership-commands",
+          textSource: PHI_TEXT_SOURCE_PRESET,
           compact: false,
           wrap: true,
           showLabels: true,

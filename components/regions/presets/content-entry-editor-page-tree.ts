@@ -1,3 +1,4 @@
+import { PHI_TEXT_SOURCE_PRESET } from "../../../helpers/text-source";
 import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
   PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS,
@@ -269,6 +270,7 @@ function buildEntryDialogNodes(
         label: `${input.routePrefix} ${input.key} commands`,
         config: {
           key: `${prefix}-commands`,
+          textSource: PHI_TEXT_SOURCE_PRESET,
           ...PHI_DIALOG_COMMANDS_CONFIG,
           /*
            * The two buttons as one group, the way every other overlay footer states it: they are the two

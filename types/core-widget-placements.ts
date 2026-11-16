@@ -62,6 +62,11 @@ export type PhiWidgetPlacementBase = Omit<PhiRenderableBlockBase, "renderMode" |
   /** Shows the Widget only while the condition holds; the renderer evaluates it for every Widget. */
   visibleWhen?: PhiRuntimeConditionExpression;
   signalRoutes?: PhiWidgetPlacementSignalRoutes | null;
+  /**
+   * Whose words the Widget's text is, which decides the store that translates it (`helpers/text-source.ts`):
+   * a Module's Preset states it on every Widget with text (TRANSLATIONS.md, "Widget config text").
+   */
+  textSource?: PhiTextSource;
 };
 
 /** The routes a placement wires. Read-only lists, so a Preset can build them from shared constants. */

@@ -39,18 +39,16 @@ export async function PhiImageWidgetServer({
   /*
    * The picture's description and title in the page's language, as every other Widget's words.
    *
-   * A Content record's text arrives translated already and is taken as it is. The rest -- the Asset's own
-   * description from the Media library, or what the Widget's config states for an address -- is the Site's
-   * text and goes through the Site's translation, unless the Widget says not to translate.
+   * A Content record's text arrives translated already and is taken as it is, and so does what the
+   * Widget's config states for an address (server-helpers/cms-widget-texts.ts). The Asset's own
+   * description from the Media library is the Site's text and goes through the Site's translation.
    */
   const translate = translateWords ?? !hasPhiFlag(widget?.flags ?? 0, PhiCmsFlags.NoTranslate);
   const sourceTexts = [
     recordAlt ? "" : (resolvedAsset?.altText ?? "").trim(),
     recordTitle ? "" : (resolvedAsset?.title ?? "").trim(),
-    config?.sourceKind === "asset" ? "" : (config?.alt ?? "").trim(),
-    config?.sourceKind === "asset" ? "" : (config?.title ?? "").trim(),
   ];
-  const [assetAlt, assetTitle, configAlt, configTitle] = translate && sourceTexts.some(Boolean)
+  const [assetAlt, assetTitle] = translate && sourceTexts.some(Boolean)
     ? await (runtime.locale.current ? trBulkForLocale(runtime.locale.current, sourceTexts) : trBulk(sourceTexts))
     : sourceTexts;
   const contentResolvedAsset = resolvedAsset
@@ -60,9 +58,7 @@ export async function PhiImageWidgetServer({
         altText: recordAlt || assetAlt || resolvedAsset.altText,
       }
     : null;
-  const translatedConfig = config && config.sourceKind !== "asset"
-    ? { ...config, ...(configAlt ? { alt: configAlt } : {}), ...(configTitle ? { title: configTitle } : {}) }
-    : config;
+  const translatedConfig = config;
 
   return (
     <PhiRuntimeModuleRenderClientHost

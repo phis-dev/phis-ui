@@ -178,6 +178,7 @@ export async function buildPhiDefaultPubWelcomePageTree({
         label: "pub welcome read more button",
         config: {
           key: "read-more",
+          textSource: PHI_TEXT_SOURCE_PRESET,
           label: "Read more...",
           variant: "primary",
           /*

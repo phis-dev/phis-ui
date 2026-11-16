@@ -1206,9 +1206,11 @@ drop it without a word.
 - `PhiCoreWidgetPlacements` maps each listed type key to its placement type.
 - `PhiWidgetPlacementBase` is the envelope every placement shares: the block geometry, `visibleWhen`
   and `signalRoutes`. The slot frame applies the block to every Widget alike.
-- Translation is off through the node flag `PhiCmsFlags.NoTranslate` (`flags`), not through config. The same
-  holds for a Layout that translates its own text (`translatesOwnText`), such as the Collapsible's panel
-  titles: set the flag where the titles you write are already in the reader's language.
+- A Widget's config text is translated by the renderer, by field name
+  ([TRANSLATIONS.md, "Widget config text"](./TRANSLATIONS.md#widget-config-text)). Only content Widgets
+  (Markdown, HTML, Simple Text, Description) can be kept untranslated, through the node flag
+  `PhiCmsFlags.NoTranslate` (`flags`), not through config; so can a Layout that translates its own text
+  (`translatesOwnText`), such as the Collapsible's panel titles.
 
 **What stays untyped** (the [Core Widgets](#core-widgets) table marks each one `unchecked`):
 - a Core Widget not in the map yet, such as Card, `gallery`, `breadcrumb`, `page-title` or `markdown-toc`,
@@ -1482,12 +1484,13 @@ What the tree contains:
   ([section 4a](#4a-add-a-layout)).
 - **Widgets** by `typeKey`, with `config` checked against Core's placement types
   ([section 4b](#4b-place-core-widgets)). There is no heading Widget: a heading is Markdown (`#`).
-- **Copy** the tree writes into a Widget -- a Button's label, a Markdown heading -- is the Module's own
-  text. A Widget translates its config text from the Site's source language, and a Site written in German
-  would read the Module's English as German and never translate it. Read such copy from a Module Label Set
-  in `runtime.locale.current` while building the tree, and set `PhiCmsFlags.NoTranslate` on the node
-  (`flags`): the text is then already in the reader's language. A Page title is the route's `title` and
-  needs neither.
+- **Copy** the tree writes into a Widget -- a Button's label, a select's options -- is the Module's own
+  text. Write it in English and state `textSource: "preset"` in the Widget's config: the renderer then
+  translates it from the global store, once for every installation, as it does Core's own Pages. Where
+  the tree places what the Site configured -- its contact address, its name -- state `textSource:
+  "site"` instead. Every Widget with text states one of the two; `checkPhiPresetTextSources` reports one
+  that does not ([Checking a Page preset](#checking-a-page-preset)). A Page title is the route's `title`
+  and needs neither.
 
 ### Links are references, never paths
 
@@ -1826,12 +1829,20 @@ a finding.
 It is for presets only. A Page an author edits in the Builder is never checked against it: the Inspector
 offers the scale, and a value off it is the author's choice and is saved as it is.
 
+`checkPhiPresetTextSources(tree)`, from the same door, reports every Widget that writes text into its
+config without saying whose words they are (`textSource: "preset"` or `"site"`,
+[TRANSLATIONS.md, "Widget config text"](./TRANSLATIONS.md#widget-config-text)). A Module runs it over
+every tree its presets build, beside the Page rule. A Site's own package does not: every word in its Pages
+is the Site's, which is what no marker means.
+
 ### Checklist for a Page preset
 
 - One `flex-vertical` Page column under `content`, `padding` none, `gap` `PHI_SPACE.md`.
 - Every `padding` and `gap` is a `PHI_SPACE` step; none is a string, a number or a `clamp()`.
 - Every Layout config is one its parser takes (a Grid has 1, 2, 3, 4 or 6 columns, never 5);
   `checkPhiPagePresetLayout` reports it.
+- Every Widget with text states `textSource` (`"preset"` or `"site"`); `checkPhiPresetTextSources`
+  reports it. A Site's own package leaves it out.
 - Padding only on a Layout with a Surface, at `md`; the Region's edge is not repeated inside it.
 - No Layout whose only job is to give one Widget a background.
 - The reading width comes from the Region's `maxSize`, never from padding.

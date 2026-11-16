@@ -84,7 +84,7 @@ export const PHI_SLIDER_WIDGET_DEFINITION = {
         { value: "hidden", label: "Hidden" },
       ],
     },
-    { key: "tooltipSuffix", type: "string", label: "Tooltip suffix" },
+    { key: "tooltipSuffix", type: "string", label: "Tooltip suffix", text: "label" },
     ...PHI_CONTROL_STATE_FIELDS,
   ],
   defaultConfig: {

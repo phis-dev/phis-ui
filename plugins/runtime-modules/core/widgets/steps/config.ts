@@ -39,7 +39,6 @@ export const PHI_STEPS_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("steps"),
   typeKey: "steps",
-  translatesOwnText: true,
   title: "Steps",
   description: "Where a sequence stands, as numbered steps; can follow and drive a Stack.",
   category: "content",
@@ -92,7 +91,6 @@ export const PHI_STEPS_WIDGET_DEFINITION = {
   parseConfig: parsePhiStepsWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiStepsWidgetConfig>,
-  | "translatesOwnText"
   | "kind"
   | "pluginKey"
   | "typeKey"

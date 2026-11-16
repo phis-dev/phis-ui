@@ -4,7 +4,6 @@ import { PhiWidgetFailureServer } from "../../../../../components/widgets/shared
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { fetchPhiSiteContentEntries } from "../../../../../gateway/content-entries";
 import { phiRuntime } from "../../../../../server-helpers/phi-runtime";
-import { trBulkForLocale } from "../../../../../server-helpers/translate";
 import type { PhiNoLabels, PhiServerBlockBaseProps } from "../../../../../types";
 import type { PhiCmsRuntimeRenderRegistry } from "../../../../../types/cms-plugins";
 import type { PhiResolvedLinkTargets } from "../../../../../types/references";
@@ -19,8 +18,6 @@ export type PhiEntryListWidgetProps = PhiServerBlockBaseProps<PhiNoLabels, PhiEn
   /** Where the record binding is answered; absent outside a page render, where nothing is bound. */
   registry?: Pick<PhiCmsRuntimeRenderRegistry, "recordProviderLoadersByKey">;
   links?: PhiResolvedLinkTargets | null;
-  /** Whether the heading is translated: the node's `NoTranslate` flag, read by the plugin. */
-  translate?: boolean;
   widgetId?: PhiCmsInstanceId | null;
 };
 
@@ -45,7 +42,6 @@ export async function PhiEntryListWidget({
   runtime,
   registry,
   links,
-  translate = true,
   widgetId,
 }: PhiEntryListWidgetProps) {
   const settings = normalizePhiEntryListWidgetConfig(config);
@@ -119,7 +115,8 @@ export async function PhiEntryListWidget({
     headingOffset: 2,
   });
 
-  const [title] = settings.title && translate ? await trBulkForLocale(locale, [settings.title]) : [settings.title];
+  // The heading arrives translated (server-helpers/cms-widget-texts.ts).
+  const title = settings.title;
 
   return (
     <PhiRuntimeModuleRenderClientHost

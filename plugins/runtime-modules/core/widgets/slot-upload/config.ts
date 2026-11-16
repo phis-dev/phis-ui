@@ -91,8 +91,6 @@ export const PHI_SLOT_UPLOAD_WIDGET_DEFINITION = {
   ],
   defaultConfig: { ownerParam: "id" },
   parseConfig: parsePhiSlotUploadWidgetConfig,
-  // The label is written into the config, so the Widget translates it on the server.
-  translatesOwnText: true,
   runtimeSignals: {
     emits: [
       // So whatever shows the row can read it again. What changed is the row, not this widget.
@@ -111,6 +109,6 @@ export const PHI_SLOT_UPLOAD_WIDGET_DEFINITION = {
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiSlotUploadWidgetConfig>,
   | "kind" | "pluginKey" | "typeKey" | "slotSizePolicy" | "title" | "description"
-  | "category" | "iconFamily" | "fields" | "defaultConfig" | "parseConfig" | "translatesOwnText"
+  | "category" | "iconFamily" | "fields" | "defaultConfig" | "parseConfig"
   | "runtimeSignals"
 >;

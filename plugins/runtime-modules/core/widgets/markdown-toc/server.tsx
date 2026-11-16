@@ -1,7 +1,6 @@
 import { PhiCmsFlags } from "../../../../../constants/phi-cms";
 import { hasPhiFlag } from "../../../../../helpers/flags";
 import type { PhiNoLabels, PhiServerBlockBaseProps } from "../../../../../types";
-import { trForLocale } from "../../../../../server-helpers/translate";
 import type { PhiCmsContentWidgetNode, PhiResolvedCmsRenderableTree } from "../../../../../types/cms";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiMarkdownTocHeading } from "../../../../../types/markdown";
@@ -53,11 +52,10 @@ export async function PhiMarkdownTocWidget({
   runtime,
 }: PhiMarkdownTocWidgetProps) {
   /*
-   * The author's title in the render's locale; the default is a label set's and arrives translated, so
-   * asking for it again would hand a translator text that is no longer in the source language.
+   * The author's title arrives translated (server-helpers/cms-widget-texts.ts); the default is a label
+   * set's and arrives translated too.
    */
-  const ownTitle = config?.title?.trim();
-  const title = ownTitle ? await trForLocale(runtime.locale.current, ownTitle) : defaultLabels.title;
+  const title = config?.title?.trim() || defaultLabels.title;
   const targetWidget = resolveTargetMarkdownWidget(tree, config);
   if (!targetWidget) {
     return (

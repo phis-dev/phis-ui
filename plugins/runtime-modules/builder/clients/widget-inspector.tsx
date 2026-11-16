@@ -1,6 +1,6 @@
 "use client";
 
-import { isPhiAuthoredTextField, readPhiTextSource } from "../../../../helpers/text-source";
+import { PHI_TEXT_SOURCE_PRESET, isPhiAuthoredTextField, readPhiTextSource } from "../../../../helpers/text-source";
 import { useEffect } from "react";
 
 import { PhiGeometryControl } from "../../../../components/controls/phi-geometry-control";
@@ -205,7 +205,7 @@ export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
          * Site's store translates them, not the global one (`helpers/text-source.ts`).
          */
         if (
-          readPhiTextSource(currentWidgetSettingsConfigRecord.textSource) != null
+          readPhiTextSource(currentWidgetSettingsConfigRecord.textSource) === PHI_TEXT_SOURCE_PRESET
           && isPhiAuthoredTextField(field)
         ) {
           patch.textSource = undefined;

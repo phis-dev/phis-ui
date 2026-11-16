@@ -1,3 +1,6 @@
+import { readPhiConfigFieldTextRegister } from "./config-text-fields";
+import type { PhiCmsConfigField } from "../types/cms-plugins";
+
 /**
  * Whose words a text Widget holds, which decides the store that translates them.
  *
@@ -12,13 +15,25 @@
  */
 export const PHI_TEXT_SOURCE_PRESET = "preset" as const;
 
-export type PhiTextSource = typeof PHI_TEXT_SOURCE_PRESET;
+/**
+ * The Site's words written by a Preset: what the Site configured -- its contact address, its name --
+ * placed into a Widget by a Module's Preset. Stated, not left out, so that a Module's Preset says of
+ * every Widget with text whose words it holds (`helpers/preset-text-source-check.ts`); it is read like
+ * no marker at all, and the Site's store translates them.
+ */
+export const PHI_TEXT_SOURCE_SITE = "site" as const;
+
+export type PhiTextSource = typeof PHI_TEXT_SOURCE_PRESET | typeof PHI_TEXT_SOURCE_SITE;
 
 export function readPhiTextSource(value: unknown): PhiTextSource | undefined {
-  return value === PHI_TEXT_SOURCE_PRESET ? value : undefined;
+  return value === PHI_TEXT_SOURCE_PRESET || value === PHI_TEXT_SOURCE_SITE ? value : undefined;
 }
 
-/** Whether a Builder edit of this field ends the Preset's ownership of the Widget's words. */
-export function isPhiAuthoredTextField(field: { type?: string }) {
-  return field.type === "string";
+/**
+ * Whether a Builder edit of this field ends the Preset's ownership of the Widget's words: a text
+ * field's, or a list's whose entries hold text -- a select's options.
+ */
+export function isPhiAuthoredTextField(field: PhiCmsConfigField): boolean {
+  if (field.type === "collection") return field.itemFields.some(isPhiAuthoredTextField);
+  return readPhiConfigFieldTextRegister(field) != null;
 }
