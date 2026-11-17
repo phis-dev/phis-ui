@@ -21,6 +21,8 @@ Ant Design Table and shared Phi Controls
 - `PhiTableControl` is the presentation adapter over Ant Design. It has no CMS, provider, persistence,
   module, route, signal, or controller knowledge. It receives controlled values and state and reports
   user interactions through callbacks.
+- Lines and sums whose amounts must stand in one column (a cart, an order) are not a Table: they are the
+  display-only `PhiAmountListControl` ([THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md)).
 - `PhiTableBinding` is the reusable, headless Core binding and state machine. It resolves one declared
   Provider/resource binding, owns normalized query and asynchronous request state, calls Provider reads
   and mutations, reconciles accepted or rejected edits, and exposes a controlled Table view model.

@@ -20,6 +20,12 @@ export type { PhiCompactGroupControlProps } from "./components/controls/phi-comp
 export { PhiViewportVisibilityControl } from "./components/controls/phi-viewport-visibility-control";
 export { PhiEntryListControl } from "./components/controls/phi-entry-list-control";
 export type { PhiEntryListControlProps, PhiEntryListEntry } from "./components/controls/phi-entry-list-control";
+export { PhiAmountListControl } from "./components/controls/phi-amount-list-control";
+export type {
+  PhiAmountListControlProps,
+  PhiAmountListItem,
+  PhiAmountListTotal,
+} from "./components/controls/phi-amount-list-control";
 export { PhiPlacementMatrixControl } from "./components/controls/phi-placement-matrix-control";
 export type { PhiPlacementMatrixControlProps } from "./components/controls/phi-placement-matrix-control";
 export { PhiNumberControl } from "./components/controls/phi-number-control";

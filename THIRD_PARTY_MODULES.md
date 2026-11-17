@@ -188,6 +188,7 @@ reach for first:
 | `PhiToolbarControl` | A row of commands, compact (joined into one group) by default. |
 | `PhiCompactGroupControl` | Any Controls joined into one group with shared edges: a number field and its button. |
 | `PhiEntryListControl` | A short list of things, one per line: a title, a line about it, a state and one action; it says its own empty state. Not for rows that page. |
+| `PhiAmountListControl` | Lines and sums whose amounts stand in one right-aligned column with equal-width digits: a cart, a checkout, an order, a receipt. Display only ([below](#phiamountlistcontrol-amounts-in-one-column)). |
 | `PhiPlacementMatrixControl` | A 3 by 3 matrix that picks one of the nine anchor placements (`value`, `onChange`). |
 | `PhiFlexControl` | Arranges the parts inside one leaf. Several Widgets side by side are Layout slots, not this. |
 | `PhiCardControl` | A bordered box with an optional heading bar, on the Theme's inset and corner. |
@@ -207,7 +208,7 @@ beside them):
   `PhiCheckboxControl`, `PhiCheckboxGroupControl`, `PhiRadioGroupControl`, `PhiCascaderControl`,
   `PhiTreeSelectControl`.
 - Commands and menus: `PhiButtonControl`, `PhiToolbarControl`, `PhiCompactGroupControl`,
-  `PhiViewportVisibilityControl`, `PhiPlacementMatrixControl`, `PhiEntryListControl`,
+  `PhiViewportVisibilityControl`, `PhiPlacementMatrixControl`, `PhiEntryListControl`, `PhiAmountListControl`,
   `PhiFloatButtonControl`, `PhiDropdownControl`,
   `PhiPillDropdownControl`, `PhiMenuControl`, `PhiConfirmControl`, `PhiPopoverControl`, `PhiTabsControl`,
   `PhiPaginationControl`.
@@ -229,6 +230,43 @@ beside them):
   `PHI_MEDIA_PICKER_COLUMN_WIDTH_STEP`, `PHI_MEDIA_PICKER_DEFAULT_COLUMN_WIDTH`,
   `PHI_MEDIA_PICKER_MAX_COLUMN_WIDTH`, `PHI_MEDIA_PICKER_MIN_COLUMN_WIDTH`,
   `normalizePhiMediaPickerMinColumnWidth`.
+
+#### `PhiAmountListControl`: amounts in one column
+
+Lines and sums of a cart, a checkout, an order, a subscription sign-up or a receipt, where every amount --
+the items' and the totals' -- stands in one shared, right-aligned column with equal-width digits, so the
+right edges are one line. It knows nothing about money, a shop or a currency: an amount is text you have
+already formatted.
+
+| Prop | Meaning |
+| --- | --- |
+| `items` | `PhiAmountListItem[]`: `key`, `title` (wraps), `description` (quiet second line), `media`, `controls` (free: a quantity field, a remove button), `amount`, `amountNote` (quiet, under the amount). |
+| `totals` | `PhiAmountListTotal[]`: `key`, `label`, `amount`, `note`, `emphasis` (`normal` or `strong`), `divided` (a rule above, in the Theme's line colour). |
+| `size` | `small`, `medium` (default) or `large`, as the other Controls. |
+| `emptyText` | Stands in place of the list when there are no items and no totals. |
+| `ariaLabel` | Names the list for screen readers. |
+
+```tsx
+<PhiAmountListControl
+  ariaLabel="Your order"
+  items={[
+    { key: "a", title: "Annual plan", description: "per year", amount: "120,00 CHF" },
+    { key: "b", title: "Extra seat", description: "2 x 12,00 CHF", amount: "24,00 CHF", controls: <MyQuantityField /> },
+  ]}
+  totals={[
+    { key: "sub", label: "Subtotal", amount: "144,00 CHF" },
+    { key: "total", label: "Total", amount: "144,00 CHF", note: "incl. VAT", emphasis: "strong", divided: true },
+  ]}
+/>
+```
+
+It is display. It has no data source, sorts, pages and edits nothing, and is not a replacement for the
+Table Widget ([TABLES.md](./TABLES.md)); what a row can be operated with is whatever you pass as
+`controls`. Below 30rem of the list's own width (a container query, not the viewport) an item becomes two
+lines -- media and text, then controls and amount -- and the amounts stay in the same column. The items are
+a list (`ul`) and the totals a description list (`dl`). It takes the width of its parent and has none of its
+own, so give it a parent with a width, not a shrink-to-fit box. It renders on the server, so a Module's server half
+may import it (it is not in `package.json#phis.clientExports`).
 
 ### What every block can do
 

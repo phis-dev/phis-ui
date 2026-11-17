@@ -1,0 +1,142 @@
+/*
+ * PhiAmountListControl (components/controls/phi-amount-list-control.tsx).
+ *
+ * One grid for the whole list: [media] [text] [controls] [amount]. Item rows and total rows are subgrids
+ * of it, so the amount column is the same column for all of them and sized by the widest amount. The
+ * cells carry their own inset instead of the grid a `column-gap`: a column no row uses (no media in the
+ * list, no controls) is then 0 wide and leaves no empty gap.
+ *
+ * Narrow is the list's own width (`@container`), not the viewport's: below 30rem an item is two lines.
+ */
+
+.phi-amount-list {
+  container: phi-amount-list / inline-size;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto max-content;
+  width: 100%;
+  min-width: 0;
+  font-size: var(--phi-font-size);
+  line-height: var(--phi-line-height);
+  color: var(--phi-color-text);
+}
+
+.phi-amount-list--small {
+  font-size: var(--phi-font-size-sm);
+}
+
+.phi-amount-list--large {
+  font-size: var(--phi-font-size-lg);
+}
+
+.phi-amount-list__items,
+.phi-amount-list__totals,
+.phi-amount-list__item,
+.phi-amount-list__total {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+}
+
+.phi-amount-list__items,
+.phi-amount-list__totals {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.phi-amount-list__totals {
+  margin-block-start: var(--phi-padding-xs);
+}
+
+.phi-amount-list__item,
+.phi-amount-list__total {
+  align-items: start;
+  padding-block: var(--phi-padding-xs);
+}
+
+.phi-amount-list--small .phi-amount-list__item,
+.phi-amount-list--small .phi-amount-list__total {
+  padding-block: var(--phi-padding-xxs);
+}
+
+.phi-amount-list--large .phi-amount-list__item,
+.phi-amount-list--large .phi-amount-list__total {
+  padding-block: var(--phi-padding-sm);
+}
+
+.phi-amount-list__media {
+  grid-column: 1;
+  padding-inline-end: var(--phi-padding-sm);
+}
+
+.phi-amount-list__text {
+  grid-column: 2;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.phi-amount-list__controls {
+  grid-column: 3;
+  align-self: center;
+  padding-inline-start: var(--phi-padding-sm);
+}
+
+.phi-amount-list__amount {
+  grid-column: 4;
+  margin: 0;
+  padding-inline-start: var(--phi-padding-sm);
+  text-align: end;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.phi-amount-list__description,
+.phi-amount-list__note {
+  color: var(--phi-color-text-description);
+}
+
+.phi-amount-list__note {
+  display: block;
+  font-size: var(--phi-font-size-sm);
+}
+
+.phi-amount-list__label {
+  grid-column: 1 / 4;
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.phi-amount-list__total--strong {
+  font-weight: var(--phi-font-weight-strong);
+}
+
+.phi-amount-list__total--divided {
+  border-block-start: 1px solid var(--phi-color-split);
+}
+
+.phi-amount-list__empty {
+  color: var(--phi-color-text-description);
+}
+
+@container phi-amount-list (max-width: 30rem) {
+  .phi-amount-list__media {
+    grid-row: 1;
+  }
+
+  .phi-amount-list__text {
+    grid-column: 2 / -1;
+    grid-row: 1;
+  }
+
+  .phi-amount-list__controls {
+    grid-column: 1 / 4;
+    grid-row: 2;
+    justify-self: start;
+    padding-inline-start: 0;
+  }
+
+  .phi-amount-list__item > .phi-amount-list__amount {
+    grid-row: 2;
+  }
+}

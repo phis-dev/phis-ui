@@ -13,6 +13,7 @@ import "../../styles/root.css";
 import "../../styles/layout.css";
 import "../../styles/control-shape.css";
 import "../../styles/controls.css";
+import "../../styles/amount-list.css";
 import "../../styles/gradients.css";
 
 import { getResolvedSiteConfig } from "../../gateway/site-config";
