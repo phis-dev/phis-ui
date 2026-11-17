@@ -25,8 +25,10 @@ export type BuildPhiSiteProxyHandlersOptions = {
  * `module-diagnostics` compares what this Site's Modules require against what its server offers;
  * `navigation-target` resolves where a forwarding Area root would send this viewer; and
  * `dashboard-cards` fans the Area's active Modules in to one list of cards, then answers each card's
- * payload; and `page-references` lists the Pages of an Area a link may point at. All five read the
- * Site's own Module catalogs, which phi-server deliberately knows nothing about.
+ * payload; `page-references` lists the Pages of an Area a link may point at; and `signet` delivers the
+ * Theme's Signet as a picture, the address the document head and `/favicon.ico` lead to
+ * (`gateway/signet-route.ts`). All six read the Site's own Module catalogs, which phi-server
+ * deliberately knows nothing about.
  *
  * They are one segment each and matched exactly, so nothing deeper is captured by accident: an Asset
  * under `/api/site/media/...` goes upstream as it always did. It is also why `dashboard-cards` names
@@ -38,6 +40,7 @@ const LOCALLY_ANSWERED = [
   "navigation-target",
   "dashboard-cards",
   "page-references",
+  "signet",
 ] as const;
 
 type PhiLocallyAnsweredPath = (typeof LOCALLY_ANSWERED)[number];
@@ -57,6 +60,7 @@ function locallyAnswered(path: string[] | undefined): PhiLocallyAnsweredPath | n
 async function buildLocallyAnsweredHandlers(
   answered: PhiLocallyAnsweredPath,
   { upstreamBaseUrl, timeoutMs, buildHeaders, loadAreaBridge }: BuildPhiSiteProxyHandlersOptions,
+  proxied: PhiNextProxyHandler,
 ): Promise<Partial<PhiNextProxyHandlers>> {
   if (answered === "forms") {
     const { buildPhiSiteFormRouteHandlers } = await import("./site-form-route");
@@ -80,6 +84,10 @@ async function buildLocallyAnsweredHandlers(
   if (answered === "page-references") {
     const { buildPhiPageReferencesRouteHandler } = await import("./page-references-route");
     return { GET: buildPhiPageReferencesRouteHandler({ loadAreaBridge }) };
+  }
+  if (answered === "signet") {
+    const { buildPhiSignetRouteHandler } = await import("./signet-route");
+    return { GET: buildPhiSignetRouteHandler({ loadAreaBridge, proxied }) };
   }
   const { buildPhiNavigationTargetRouteHandler } = await import("./navigation-target-route");
   return { GET: buildPhiNavigationTargetRouteHandler({ loadAreaBridge }) };
@@ -178,13 +186,13 @@ export function buildPhiSiteProxyHandlers(
       }
       let pending = built.get(answered);
       if (!pending) {
-        pending = buildLocallyAnsweredHandlers(answered, options);
+        pending = buildLocallyAnsweredHandlers(answered, options, handlers.GET);
         built.set(answered, pending);
       }
-      const handlers = await pending;
-      const local = handlers[method] ?? (method === "HEAD" ? handlers.GET : undefined);
+      const answeredHandlers = await pending;
+      const local = answeredHandlers[method] ?? (method === "HEAD" ? answeredHandlers.GET : undefined);
       if (!local) {
-        const allow = Object.keys(handlers).join(", ");
+        const allow = Object.keys(answeredHandlers).join(", ");
         return new Response(null, { status: 405, headers: { allow } });
       }
       return local(request, context);

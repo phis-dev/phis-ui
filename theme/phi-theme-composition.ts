@@ -16,7 +16,13 @@ import {
   type PhiThemeSetBlock,
   type PhiThemeStyleBlock,
 } from "./phi-theme-blocks";
-import type { PhiSiteFontSlots, PhiSiteThemeBrandLogos, PhiSiteThemeRoot } from "../types/site-theme";
+import { readPhiThemeSiteSignet, type PhiThemeSignet } from "./phi-theme-signet";
+import type {
+  PhiSiteFontSlots,
+  PhiSiteThemeBrandLogos,
+  PhiSiteThemeBrandSignet,
+  PhiSiteThemeRoot,
+} from "../types/site-theme";
 
 /**
  * What a Site follows, and what its author changed on top of it.
@@ -66,7 +72,10 @@ export type PhiThemeCompositionSource = {
   presetVersion?: number | null;
   root?: PhiSiteThemeRoot | null;
   fonts?: PhiSiteFontSlots | null;
+  /** Only the Signet is read from the Brand here; the Logo has its own resolver below. */
+  brand?: { signet?: PhiSiteThemeBrandSignet | null } | null;
 };
+
 
 /**
  * Which blocks a stored Theme names.
@@ -106,6 +115,11 @@ export type PhiThemeComposition = {
    * Set where it names none or one that is not available, the same floor every part falls back to.
    */
   markSet: PhiThemeSetBlock;
+  /**
+   * The Signet: the Site's own where its record states one, the `markSet`'s otherwise, and none where
+   * neither has one. See `resolvePhiThemeSignet`.
+   */
+  signet: PhiThemeSignet | null;
   /** The parts whose selection could not be resolved and are running on the core block instead. */
   unavailable: {
     palette: string | null;
@@ -159,6 +173,7 @@ export function resolvePhiThemeComposition(
     fonts: fonts.block,
     set: set?.available ? set.set : null,
     markSet,
+    signet: resolvePhiThemeSignet(theme?.brand?.signet, markSet),
     unavailable: {
       palette: palette.available ? null : palette.requested,
       style: style.available ? null : style.requested,
@@ -188,6 +203,22 @@ export function resolvePhiThemeEffectiveFonts(
     }
   }
   return merged;
+}
+
+/**
+ * The Signet a Site wears: its own, the Set's where the record says nothing.
+ *
+ * The Site's own comes first because a save made it the Site's (`materializePhiThemeBrandSignet`), and
+ * what a Site keeps must not change when the Set it follows does. `from` says which it is, because only
+ * the Site's has an address (`GET /api/site/signet`); a Set's is a data URL the head names itself.
+ */
+export function resolvePhiThemeSignet(
+  authored: PhiSiteThemeBrandSignet | null | undefined,
+  set: PhiThemeSetBlock,
+): PhiThemeSignet | null {
+  const own = readPhiThemeSiteSignet(authored);
+  if (own) return { ...own, from: "site" };
+  return set.signet?.startsWith("data:image/") ? { kind: "data", source: set.signet, from: "set" } : null;
 }
 
 /**

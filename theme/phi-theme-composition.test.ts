@@ -6,6 +6,7 @@ import {
   resolvePhiThemeComposition,
   resolvePhiThemeEffectiveFonts,
   resolvePhiThemeEffectiveRoot,
+  resolvePhiThemeSignet,
 } from "./phi-theme-composition";
 import { PHI_CORE_THEME_FONTS_BLOCKS, PHI_CORE_THEME_GROUND_BLOCKS, type PhiThemeFontsBlock } from "./phi-theme-blocks";
 
@@ -157,5 +158,42 @@ describe("effective root", () => {
     expect(effective.background?.light).toBeNull();
     expect(effective.chrome?.dark).toBeNull();
     expect(effective.chrome?.shadow).toBeUndefined();
+  });
+});
+
+describe("the Signet a Theme wears", () => {
+  const core = PHI_CORE_THEME_BLOCK_CATALOG.sets[0];
+  const withSignet = { ...core, key: "@acme/ui/sets/dunes", signet: "data:image/png;base64,AAAA" };
+
+  it("is the Set's where the record says nothing", () => {
+    expect(resolvePhiThemeSignet(null, withSignet)).toEqual({ kind: "data", source: "data:image/png;base64,AAAA", from: "set" });
+    expect(resolvePhiThemeSignet({ sourceKind: "url", sourceUrl: "/x.png" }, withSignet))
+      .toEqual({ kind: "data", source: "data:image/png;base64,AAAA", from: "set" });
+  });
+
+  it("is the Site's own Asset before the Set's", () => {
+    expect(resolvePhiThemeSignet({ sourceKind: "asset", assetId: 9 }, withSignet)).toEqual({ kind: "asset", assetId: 9, from: "site" });
+  });
+
+  it("is the Site's own inline picture before the Set's", () => {
+    expect(resolvePhiThemeSignet({ sourceKind: "url", sourceUrl: "data:image/svg+xml;utf8,%3Csvg/%3E" }, withSignet))
+      .toEqual({ kind: "data", source: "data:image/svg+xml;utf8,%3Csvg/%3E", from: "site" });
+  });
+
+  it("is nothing where neither has one, and the core Set has none", () => {
+    expect(resolvePhiThemeSignet(null, core)).toBeNull();
+    expect(resolvePhiThemeSignet({ sourceKind: "asset", assetId: 0 }, core)).toBeNull();
+  });
+
+  it("comes out of the composition", () => {
+    const catalog = { ...PHI_CORE_THEME_BLOCK_CATALOG, sets: [...PHI_CORE_THEME_BLOCK_CATALOG.sets, withSignet] };
+    const followed = resolvePhiThemeComposition({ blocks: { set: { key: withSignet.key } } }, catalog);
+    expect(followed.signet).toEqual({ kind: "data", source: "data:image/png;base64,AAAA", from: "set" });
+    const saved = resolvePhiThemeComposition(
+      { blocks: { set: { key: withSignet.key } }, brand: { signet: { sourceKind: "asset", assetId: 4 } } },
+      catalog,
+    );
+    expect(saved.signet).toEqual({ kind: "asset", assetId: 4, from: "site" });
+    expect(resolvePhiThemeComposition({}).signet).toBeNull();
   });
 });

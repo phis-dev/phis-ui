@@ -19,7 +19,7 @@ import { createPhiCoreRuntimeControllerAddress } from "../../../../components/ru
 import { usePhiConfig } from "../../../../components/root/phi-config-provider";
 import { usePhiThemeBlockCatalog } from "../../../../components/root/phi-theme-block-catalog-provider";
 import { resolvePhiThemeComposition } from "../../../../theme/phi-theme-composition";
-import { materializePhiThemeBrandLogo, materializePhiThemeModuleBlocks } from "../materialize-images";
+import { materializePhiThemeBrandLogo, materializePhiThemeBrandSignet, materializePhiThemeModuleBlocks } from "../materialize-images";
 import {
   buildPhiSiteThemeSelectOptions,
   createPhiSiteThemeSelectionValue,
@@ -494,9 +494,17 @@ export function PhiThemeControllerRuntime({
        * The Logo is taken the same way, from every Set, core included: a Set offers it, and a Site that
        * saved has decided to keep it -- as a picture in its own library, not as a data URL in its record.
        */
-      nextTheme = await materializePhiThemeBrandLogo(
+      const withLogo = await materializePhiThemeBrandLogo(
         materialized.theme,
         resolvePhiThemeComposition(materialized.theme, themeBlocks).markSet,
+      );
+      /*
+       * And the Signet, which the browser tab wears: the Site delivers it from its own Media library
+       * under a real address, so Safari -- which loads no icon from a data URL -- shows it too.
+       */
+      nextTheme = await materializePhiThemeBrandSignet(
+        withLogo,
+        resolvePhiThemeComposition(withLogo, themeBlocks).markSet,
       );
       const response = await fetch("/api/site/cms/theme", {
         method: "POST",

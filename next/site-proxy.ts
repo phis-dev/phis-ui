@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isPhiAssetOrBackendPath } from "./static-asset-path";
+import { PHI_SIGNET_ALIAS_PARAM, PHI_SIGNET_ALIAS_PATHS, PHI_SIGNET_PATH } from "../helpers/phi-signet-paths";
 import { PHI_SITE_SESSION_COOKIE } from "../constants/site-cookies";
 
 import { PHI_CMS_SPECIAL_ROOTS } from "../helpers/cms-routing";
@@ -177,6 +178,21 @@ export async function proxyPhiNextSiteRequest(request: NextRequest) {
     return request.headers.get(PHI_STATIC_RENDER_PASS_HEADER) === readPhiStaticRenderPass()
       ? NextResponse.next()
       : new NextResponse(null, { status: 404 });
+  }
+  const signetAlias = request.method === "GET" || request.method === "HEAD"
+    ? PHI_SIGNET_ALIAS_PATHS[pathname]
+    : undefined;
+  if (signetAlias) {
+    /*
+     * The paths a browser asks for without reading the document: Safari takes no icon from a data URL
+     * and asks for these instead. They are answered by the Site's Signet route, which has the picture
+     * and says 404 where there is none or it is not a PNG for the Apple paths. A rewrite, so the address
+     * the browser asked for stays what it asked for. This stands in front of a file of the Site's own
+     * at the same path, which is the cost of needing no file in the Site (THEME.md, Signet).
+     */
+    const target = new URL(PHI_SIGNET_PATH, request.url);
+    target.searchParams.set(PHI_SIGNET_ALIAS_PARAM, signetAlias);
+    return NextResponse.rewrite(target);
   }
   if (isPhiAssetOrBackendPath(pathname)) {
     /*

@@ -85,8 +85,55 @@ Three consequences make the explicit choice the cheaper one:
 Saving a Theme that resolves to a Module's palette, style (with its Control shape), ground, or fonts copies
 that block into the Site's own fields (`theme/phi-theme-adoption.ts`). Parts the author already set are kept;
 the block key stays in `blocks` as provenance. A picture a Module ground carries inline is uploaded into the
-Site's Media library by the same save, and so is a Module Set's Logo. Core blocks are followed, never
-copied -- the Set included, so the placeholder Logo never becomes a Site's own Asset.
+Site's Media library by the same save, and so are a Module Set's Logo and Signet. Core blocks are followed,
+never copied -- the Set included, so the placeholder Logo never becomes a Site's own Asset.
+
+### Signet
+
+The Signet is the square mark a browser tab, a home screen and a bookmark wear -- the favicon. A Set
+carries it as `signet`, a data URL (`PhiThemeSetBlock.signet`); the Site's record may carry its own as
+`brand.signet`. `resolvePhiThemeComposition(...).signet` answers which one a Site wears: the record's
+(an Asset, or an inline `data:image/` picture) before the Set's, and nothing where neither has one. The core
+Set has none, so a Site that follows only core blocks has no Signet and its head says nothing about one.
+
+**A real address comes with saving the Theme.** Only the Site's own Signet is delivered at one. Saving
+takes a Module Set's Signet into the Media library and writes `brand.signet` as an Asset, exactly as the
+Logo is taken (`materializePhiThemeBrandSignet`, `plugins/runtime-modules/theme/materialize-images.ts`; the
+upload is tagged `theme-brand-signet`): that is the moment the Site takes the Signet over. A Signet that is
+already an Asset stays; an address on another server is neither fetched nor copied. Before a save, a Site
+that merely follows a Set wears the Set's Signet and loses it with the Module, like every followed part.
+Core stores the Theme record as it is given and indexes any `assetId` in it, so the delete guard protects
+the Signet's Asset; Core resolves a delivery address only for the Logo, so the record carries the plain
+`/api/site/media/{id}/content` address written by the save.
+
+**Followed Set: the data URL, no icon in Safari.** The head of a Site that follows a Set and saved nothing
+names the Set's data URL as `icons.icon`, as it always did. Chrome and Firefox show it; Safari loads no
+favicon from a data URL, and `/favicon.ico` answers 404 because the Site has no Signet of its own yet. Saving
+the Theme is the fix.
+
+**The Site's own is delivered at a real address.** `GET /api/site/signet` (`gateway/signet-route.ts`,
+answered in the Site like `forms`) reads `theme.brand.signet` of the published record and nothing else -- it
+resolves no Set, so it needs no Theme blocks. An inline `data:image/` picture is decoded (only `image/png`,
+`image/svg+xml`, `image/x-icon` and `image/webp`, base64, or text for SVG); an Asset is read through the media
+door. The picture is answered with its own `Content-Type`. A Site without its own Signet, a data URL that is
+not an allowed picture, and an address on another server answer 404 (not a redirect: that would send every
+visitor's favicon request to a third party, and nothing writes such a record). SVG is served under a
+sandboxing `Content-Security-Policy`.
+
+- The head names `/api/site/signet?v=<identifier>` as `icons.icon` with `type` and, for a PNG, `sizes`;
+  `icons.apple` is added for a PNG of at least 180 px, read from its header (`describePhiSignetHead`,
+  `helpers/phi-signet.ts`). The identifier is a ten-character hash of the picture's bytes, so a changed
+  Signet is a new address; at the identified address the response is cached for a year (`immutable`). For an
+  Asset the bytes are not known where the head is written, so the identifier is the Asset's id, the head
+  states no type or size, and the response is cached for an hour -- a picture replaced in place under the
+  same id reaches the tab within the hour, not at once.
+- `/favicon.ico`, `/apple-touch-icon.png` and `/apple-touch-icon-precomposed.png` are rewritten by the Site
+  proxy to the same route (`?as=favicon|apple`) and answer the same picture with an hour of cache (a missing
+  Signet: five minutes). The Apple paths answer only for a PNG of at least 180 px and 404 otherwise, so an SVG
+  Signet has no Apple icon.
+- The head of a Theme under review names the Signet of the draft; the route always delivers the published
+  Site's. An identifier that is not the published one is answered with the published picture and the short
+  cache, never with a 404.
 
 ### Theme workspace selection
 
@@ -218,6 +265,10 @@ preset.
   A mode the record leaves unset shows the followed Set's Logo; where that Set is a Module's, the first
   save takes it into the Media library. The core Set's is followed and never copied, like every other
   core block -- its Logo is the "your logo" placeholder, and a Site must not come to own a blank.
+- `signet?: { sourceKind: "asset", assetId: number, url?: string } | { sourceKind: "url", sourceUrl: string }`
+  -- the Site's own [Signet](#signet), one picture for both modes. There is no `none`. Absent means the
+  followed Set's. The Theme editor has no field for it: the only way it enters the record is the save
+  described under Signet.
 - `logoAlt?: string` -- falls back to the Asset's own alt text.
 - `logoYOffset?: number` -- pixels the Logo is nudged against the Wordmark, to correct the artwork's own
   whitespace. Applied only where the Logo is drawn. Absent means none.

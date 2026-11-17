@@ -14,6 +14,7 @@ import { resolvePhiThemeComposition, type PhiThemeBlockCatalog } from "../theme/
 import { composePhiFontCatalogue } from "../theme/phi-font-catalogue";
 import { PHI_REM_ROOT_PX } from "../theme/phi-css-vars";
 import { buildPhiRootMetadata } from "../helpers/phi-metadata";
+import { describePhiSignetHead } from "../helpers/phi-signet-head";
 import { localizePath } from "../helpers/locale";
 import {
   readPhiSiteRuntimeConfigSync,
@@ -117,11 +118,13 @@ function buildPhiNextRootMetadata(
         "Canonical starter structure for PHIS-powered sites.",
     },
     /*
-     * The Set that is followed, resolved the same way the Brand Widget resolves the Logo, so the tab
-     * and the header cannot end up wearing two different marks. A Site that follows a Set without one
-     * hands over nothing and the head stays quiet.
+     * The Signet the Site wears, resolved the way the Brand Widget resolves the Logo -- the Site's own,
+     * then the followed Set's -- so the tab and the header cannot end up wearing two different marks.
+     * The Site's own has an address and the head names it; a followed Set's is named as the data URL it
+     * is, which Safari does not show until a Theme save has made it the Site's own. A Site with no
+     * Signet hands over nothing and the head stays quiet.
      */
-    signet: resolvePhiThemeComposition(site.theme, themeBlocks).markSet.signet,
+    signet: describePhiSignetHead(resolvePhiThemeComposition(site.theme, themeBlocks).signet),
   });
 }
 

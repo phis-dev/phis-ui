@@ -56,7 +56,7 @@ function isPhiThemeModuleImage(base: ThemeImageBase | null | undefined) {
   return isPhiThemeCarriedSource(base.sourceUrl);
 }
 
-function isPhiThemeCarriedSource(source: unknown) {
+function isPhiThemeCarriedSource(source: unknown): source is string {
   if (typeof source !== "string") return false;
   /*
    * A path on this origin starts with one slash and nothing slash-like after it: `//host/x` is a
@@ -229,4 +229,44 @@ export async function materializePhiThemeBrandLogo<T extends { brand?: PhiSiteTh
   }
 
   return { ...theme, brand: { ...(theme.brand ?? {}), logo: next } };
+}
+
+/**
+ * Takes the Signet a Theme wears into the Site's record, the picture into the Media library.
+ *
+ * The Logo's rule, for the mark the browser tab wears: a Module's Set is taken over, the core Set is
+ * followed and never copied, and a Site that saved has decided to keep what it saw. From then on the
+ * record names an Asset, the Site delivers it at a real address like any other picture of its own, and
+ * switching the Module off no longer blanks the tab.
+ *
+ * What is taken is a picture still carried inline or served from this origin -- the record's own
+ * `url` Signet, or, where the record says nothing, the followed Set's. A Signet that is already an
+ * Asset stays; an address on somebody else's server is neither fetched nor copied. There is no picker
+ * for it: the Theme editor offers no Signet field, and this is the only way one enters the record.
+ */
+export async function materializePhiThemeBrandSignet<T extends { brand?: PhiSiteThemeBrand | null }>(
+  theme: T,
+  markSet: PhiThemeSetBlock,
+): Promise<T> {
+  const authored = theme.brand?.signet;
+  if (authored?.sourceKind === "asset") return theme;
+  // A core Set offers nothing to take, like its Logo; what the author set is still theirs.
+  const offered = isPhiCoreThemeSet(markSet) ? null : markSet.signet;
+  const source = authored?.sourceKind === "url"
+    ? authored.sourceUrl
+    : typeof offered === "string" && offered.startsWith("data:image/") ? offered : null;
+  if (!isPhiThemeCarriedSource(source)) return theme;
+
+  const file = await readPhiThemeImageFile(source, `${markSet.key}-signet`);
+  const result = await runPhiMediaUploadSession(file, undefined, {
+    meta: { source: PhiMediaAssetSource.ThemeBrandSignet },
+  });
+  const assetId = result.asset.id;
+  return {
+    ...theme,
+    brand: {
+      ...(theme.brand ?? {}),
+      signet: { sourceKind: "asset", assetId, url: buildPhiMediaAssetContentDeliveryUrl(assetId) },
+    },
+  };
 }

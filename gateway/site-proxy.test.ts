@@ -47,6 +47,9 @@ vi.mock("./dashboard-cards-route", () => ({
     async () => new Response("dashboard-cards", { status: 200 }),
 }));
 
+vi.mock("./signet-route", () => ({
+  buildPhiSignetRouteHandler: () => async () => new Response("signet", { status: 200 }),
+}));
 /*
  * The CMS write check reads the Widgets' parsers from the Area's catalog; its own rules are the strict
  * reader's and the Table validator's to pin. Here only the door matters: a refusal stops the write before
@@ -123,6 +126,7 @@ describe("buildPhiSiteProxyHandlers", () => {
     ["module-diagnostics", "GET"],
     ["navigation-target", "GET"],
     ["dashboard-cards", "GET"],
+    ["signet", "GET"],
   ] as const)("answers /%s from the Site on %s", async (segment, method) => {
     const response = await handlers[method](request, at(segment));
     expect(await response.text()).toBe(segment);

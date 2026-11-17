@@ -393,6 +393,18 @@ paths under `/api/site` whose answer is in the Site rather than in Core -- `form
 them from the Site's own Modules. The Site hands it `loadAreaBridge`, a loader for one Area's Bridge, and
 that is the whole of what it contributes; adding another such path adds nothing to a Site.
 
+The Site's own Signet is one of those paths and needs no file in the Site either: `GET /api/site/signet`
+(`gateway/signet-route.ts`) delivers `theme.brand.signet` of the published Theme as a picture, and the Site
+proxy (`next/site-proxy.ts`) rewrites the three addresses a browser asks for without reading the head --
+`/favicon.ico`, `/apple-touch-icon.png`, `/apple-touch-icon-precomposed.png` -- to it. The route reads only
+that record field and resolves no Theme Set, so it carries none of the Theme blocks. The root head names
+`/api/site/signet?v=<identifier>` as `icons.icon`, and as `icons.apple` where the picture is a PNG of at
+least 180 px, **once the Site owns the Signet**. A Site that only follows a Set with a Signet has the Set's
+data URL in its head (Chrome and Firefox show it, Safari does not): a favicon at a real address comes into
+being when the Theme is saved ([THEME.md](./THEME.md#signet)). The rewrite stands in front of a file of
+the Site's own at one of those three paths: a Site that keeps its own `favicon.ico` in `public/` or `app/`
+is shadowed by it.
+
 Asset bytes need no route of their own. Every delivery address this package builds is
 `/api/site/media/{id}/content|variants|subsets`, which the Site's `/api/site` proxy already forwards, and
 `images.localPatterns` admits exactly that prefix. A Site mounting a shorter public media address would be

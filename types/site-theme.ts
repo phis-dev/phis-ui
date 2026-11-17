@@ -109,6 +109,16 @@ export type PhiSiteThemeBrandLogo =
   }
   | { sourceKind: "url"; sourceUrl: string };
 
+/**
+ * The Site's own Signet: where the browser tab's mark comes from once a save has made it the Site's.
+ *
+ * The Logo's `asset` and `url` shapes and nothing else -- there is no "none". A Signet is a square the
+ * Site either carries or leaves to the followed Set, and a Site that wants no mark simply follows a
+ * Set that has none. `url` is the state before a save takes the picture into the Media library (a data
+ * URL, a Set's own Signet); an `asset` is the state after.
+ */
+export type PhiSiteThemeBrandSignet = Exclude<PhiSiteThemeBrandLogo, { sourceKind: "none" }>;
+
 export type PhiSiteThemeBrandLogos = {
   light?: PhiSiteThemeBrandLogo | null;
   dark?: PhiSiteThemeBrandLogo | null;
@@ -141,6 +151,12 @@ export type PhiSiteThemeBrand = {
   eyebrow?: string | null;
   /** The Logo, one picture per mode. A mode the record says nothing about wears the Theme Set's. */
   logo?: PhiSiteThemeBrandLogos | null;
+  /**
+   * The Signet, one picture for both modes. Absent means the followed Theme Set's, and that is how a
+   * Site that never saved a Theme still wears one: a save (`materializePhiThemeBrandSignet`) takes a
+   * Module Set's Signet into the Media library and writes the Asset here, the way it does the Logo.
+   */
+  signet?: PhiSiteThemeBrandSignet | null;
   /** What the Logo says to somebody who cannot see it. Falls back to the asset's own alt text. */
   logoAlt?: string | null;
   /**

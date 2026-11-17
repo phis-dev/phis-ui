@@ -100,7 +100,7 @@ export type PhiThemeSetBlock = PhiThemeBlockIdentity & {
    * The Signet: the square the Site is marked with where only a square will do -- the browser tab, the
    * home screen, an avatar.
    *
-   * One picture, not one per mode, and no authored counterpart beside it the way the Logo has: a Signet
+   * One picture, not one per mode, and no editor field for an authored one the way the Logo has: a Signet
    * carries its own ground, so it does not need the mode, and a Signet that did not match the Logo it
    * stands in for would be a mistake rather than a choice. Whoever wants another one changes the Set.
    *
@@ -108,11 +108,12 @@ export type PhiThemeSetBlock = PhiThemeBlockIdentity & {
    * because a file did not ship. Its media type comes with it, so a Set is free to mark itself with
    * something that is not a drawing.
    *
-   * It is read per request and never copied into the Site's record the way the four parts are, nor
-   * taken into the Media library the way the Logo is on the first save. What those two protect is a
-   * decision the author made -- the Logo of a Set becomes the Site's own the moment it is kept. The
-   * Signet is nobody's decision but the Set's, so it lives and goes with it: switch the Module off and
-   * the tab goes blank, the same way `unavailable.set` already says the look is gone.
+   * Followed per request while the Site only follows the Set: switch the Module off and the tab goes
+   * blank, the way `unavailable.set` already says the look is gone. Saving the Theme changes that, as it
+   * does for the Logo -- the Signet of a Module's Set is taken into the Media library and the record's
+   * `brand.signet` names the Asset from then on (`materializePhiThemeBrandSignet`); the core Set offers
+   * none and is never copied. The record's own Signet is read before the Set's
+   * (`resolvePhiThemeSignet`). Only the Site's own is delivered at a real address (THEME.md, Signet).
    */
   signet?: string | null;
 };

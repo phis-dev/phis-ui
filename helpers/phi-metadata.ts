@@ -6,6 +6,7 @@ import {
   PHI_AREA_TITLE_TEMPLATE_PLACEHOLDER,
   type PhiAreaMeta,
 } from "./cms-area-config";
+import type { PhiSignetHead } from "./phi-signet-head";
 import { buildPhiPublicPageAlternates, type PhiPublicPageAddress } from "./phi-seo";
 
 export type PhiMetadataScope = {
@@ -24,14 +25,15 @@ export type PhiRootMetadataInput = {
   area?: PhiMetadataScope | null;
   page?: PhiMetadataScope | null;
   /**
-   * The Signet's address, as the Theme Set that is followed states it -- a data URL for the Sets that
-   * draw their own mark.
+   * The Signet as the head names it (`describePhiSignetHead`).
    *
-   * Only `icon`, not `apple`: an Apple touch icon has to be a raster of a stated size, and pointing the
-   * home screen at a drawing it cannot read would be worse than saying nothing. A Site that has no
-   * Signet says nothing at all here, which leaves the browser the `/favicon.ico` it asks for anyway.
+   * The Site's own is the address it delivers it at, with its media type and size where they are known;
+   * `apple` is present only where the picture is a PNG of at least 180 px, because an Apple touch icon
+   * has to be a raster of a stated size. A followed Set's Signet is its data URL and nothing else:
+   * Chrome and Firefox show it, Safari does not, and a Theme save is what gives the Site a real address.
+   * A Site that has no Signet says nothing at all here, and `/favicon.ico` answers 404 for it.
    */
-  signet?: string | null;
+  signet?: PhiSignetHead | null;
 };
 
 function resolveFirstText(...values: Array<string | null | undefined>) {
@@ -90,7 +92,7 @@ export function buildPhiRootMetadata(options: PhiRootMetadataInput = {}): Metada
     resolvedAreaTitle,
   );
   const resolvedMetadataBase = resolveMetadataBase(options.metadataBase);
-  const resolvedSignet = resolveFirstText(options.signet);
+  const signet = options.signet?.href?.trim() ? options.signet : null;
   const shouldNoIndex =
     options.page?.noindex === true ||
     options.area?.noindex === true ||
@@ -100,7 +102,14 @@ export function buildPhiRootMetadata(options: PhiRootMetadataInput = {}): Metada
     ...(resolvedMetadataBase ? { metadataBase: resolvedMetadataBase } : {}),
     ...(resolvedApplicationName ? { applicationName: resolvedApplicationName } : {}),
     ...(resolvedDescription ? { description: resolvedDescription } : {}),
-    ...(resolvedSignet ? { icons: { icon: resolvedSignet } } : {}),
+    ...(signet
+      ? {
+          icons: {
+            icon: { url: signet.href, ...(signet.type ? { type: signet.type } : {}), ...(signet.sizes ? { sizes: signet.sizes } : {}) },
+            ...(signet.apple ? { apple: { url: signet.apple.href, type: signet.apple.type, sizes: signet.apple.sizes } } : {}),
+          },
+        }
+      : {}),
     ...(shouldNoIndex
       ? {
           robots: {
