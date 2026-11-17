@@ -1,7 +1,7 @@
 "use client";
 
 import { lazy, Suspense, type ReactNode, type Ref } from "react";
-import { Button } from "antd";
+import { Button, theme } from "antd";
 import type { ButtonProps } from "antd";
 
 import type { PhiControlSize } from "../../types/control";
@@ -121,6 +121,9 @@ export type PhiButtonControlProps = {
 
 const PHI_GLASS_BUTTON_FILTER = "blur(12px) saturate(140%)";
 
+/* How far the badge centre sits outside the icon's top-right corner, in px. */
+const PHI_ICON_ONLY_BADGE_OUTSET = 2;
+
 export function PhiButtonControl({
   label,
   ariaLabel,
@@ -149,6 +152,7 @@ export function PhiButtonControl({
   ref,
   onClick,
 }: PhiButtonControlProps) {
+  const { token } = theme.useToken();
   const visibleTooltip = typeof label === "string" && typeof tooltip === "string" && label === tooltip
     ? null
     : tooltip;
@@ -219,6 +223,17 @@ export function PhiButtonControl({
     </PhiLink>
   ) : button;
   /*
+   * Ant Design centres the badge on the corner of what it wraps. Around a button with a label that is the
+   * button's corner, but around an icon-only button the box is far larger than the icon and the count
+   * floats beside it. So the count is moved in by the padding between box and icon, leaving it a little
+   * outside the icon's corner. Box and icon follow the Button's own size tokens: the height is
+   * `controlHeight*`, the icon inherits the content font size (`fontSize`, `fontSizeLG` for large).
+   */
+  const iconOnly = icon != null && (label == null || label === false || label === "");
+  const iconOnlyHeight = size === "small" ? token.controlHeightSM : size === "large" ? token.controlHeightLG : token.controlHeight;
+  const iconOnlySize = size === "large" ? token.fontSizeLG : token.fontSize;
+  const iconOnlyInset = Math.max(0, Math.round((iconOnlyHeight - iconOnlySize) / 2 - PHI_ICON_ONLY_BADGE_OUTSET));
+  /*
    * Rendered on the Server it is complete, and hydration waits for the chunk. Mounted in the browser before
    * the chunk is there, the Button stands without its count until it arrives.
    */
@@ -230,6 +245,7 @@ export function PhiButtonControl({
         overflowCount={badge.overflowCount}
         showZero={badge.showZero}
         size="small"
+        offset={iconOnly && iconOnlyInset > 0 ? [-iconOnlyInset, iconOnlyInset] : undefined}
       >
         {linked}
       </PhiLazyBadge>

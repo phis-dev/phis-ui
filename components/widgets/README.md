@@ -228,7 +228,8 @@ Generic control Widgets reuse the capability sets in `signals/control-signal-cap
   choice contract. `segmented` is another presentation of the same option model.
 - Badge chrome is an optional control capability: config `badgeEnabled`, `badgeText`, `badgeCount`,
   `badgeShowZero`, `badgeOverflowCount`, `badgeColor`; runtime updates arrive on `badge/change` as
-  `string` or `number`.
+  `string` or `number`. On a button that shows only its icon the count sits on the icon's top-right
+  corner, slightly outside it; on a button with a label it sits on the button's corner.
 - The Command Toolbar (`command-toolbar`) groups command buttons. Each button has a stable `key` that
   becomes its subcontrol address (`cms:<instanceId>:<key>`) and an `emits` list referencing route
   `capabilityId`s; scope, channel, action, and receiver live only in the routes. Buttons may set `label`,
