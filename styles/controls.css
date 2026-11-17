@@ -673,20 +673,167 @@ h5.phi-typography, .phi-typography h5 {
   min-block-size: var(--phi-control-height-sm);
 }
 
-/* --- Compact Select ------------------------------------------------------------------------------ */
+/* --- Single-line fields -------------------------------------------------------------------------- */
+
+/*
+ * A single-line field is exactly as high as a Button of its size: the Theme's control height
+ * (`--phi-control-height-sm`, `--phi-control-height`, `--phi-control-height-lg`), whatever that height is.
+ * Ant Design gives a Button that height outright, but a field only the sum of its parts -- the line, a
+ * padding it reckons as (control height - line) / 2 - border, and the border -- and clamps the padding at
+ * zero. A Theme whose small control height is shorter than its small line (21 px against 22 px) therefore
+ * got fields taller than the Buttons beside them, and at the other sizes a fraction over or under. So the
+ * field's line is the field's inside, its height minus the border above and below, the padding is nothing,
+ * and the text stands in the middle of that line. A field that grows -- TextArea, Mentions, a Select or
+ * Date Picker that takes several values -- keeps the control height as its minimum, as before.
+ */
+
+/*
+ * Select, and with it Cascader, TreeSelect and AutoComplete, reckon their box from variables of their own,
+ * written under Ant Design's component prefix, `--ant-select-*`: only the global tokens follow
+ * `cssVar.prefix` (`--phi-`), so a `--phi-select-*` name would set a variable nothing reads. The padding is
+ * (height - font height) / 2 - border, so a font height that is the inside of the field leaves none, and
+ * the line height is that same length.
+ */
+[class~="ant-select"][class~="ant-select-single"] {
+  --ant-select-font-height: calc(var(--ant-select-height) - 2 * var(--ant-select-border-size));
+  --ant-select-line-height: var(--ant-select-font-height);
+}
 
 /*
  * A compact control writes small: Input, InputNumber, DatePicker and Button take the scale's `sm` through
- * their component tokens (theme/phi-theme.ts). Select has no such token -- it sizes its words by variables
- * of its own and gives `-sm` the body's -- so its compact form is told here. Those variables are written
- * under Ant Design's component prefix, `--ant-select-*`: only the global tokens follow `cssVar.prefix`
- * (`--phi-`), so a `--phi-select-*` name would set a variable nothing reads. Both variables move together:
- * Select reckons its padding as (height - font height) / 2, so a smaller font size with the body's font
- * height would leave the box short of `controlHeightSM` by the difference.
+ * their component tokens (theme/phi-theme.ts). Select has no such token -- it gives `-sm` the body's size.
  */
 [class~="ant-select"][class~="ant-select-sm"] {
   --ant-select-font-size: var(--phi-font-size-sm);
-  --ant-select-font-height: calc(var(--phi-font-size-sm) * var(--ant-select-line-height));
+}
+
+/*
+ * Input, its prefix and suffix form (the affix wrapper, which is also Search and Password), and the
+ * addons of a group have no variable for their height: they set a padding from tokens and let the line
+ * make up the rest, so these set `height` and the line themselves. An input inside an affix wrapper
+ * takes its height from the wrapper, hence that rule comes after the others at the same weight.
+ */
+input.ant-input {
+  height: var(--phi-control-height);
+  padding-block: 0;
+  line-height: calc(var(--phi-control-height) - 2 * var(--phi-line-width));
+}
+
+input.ant-input.ant-input-sm {
+  height: var(--phi-control-height-sm);
+  line-height: calc(var(--phi-control-height-sm) - 2 * var(--phi-line-width));
+}
+
+input.ant-input.ant-input-lg {
+  height: var(--phi-control-height-lg);
+  line-height: calc(var(--phi-control-height-lg) - 2 * var(--phi-line-width));
+}
+
+.ant-input-affix-wrapper:not(.ant-input-textarea-affix-wrapper) {
+  height: var(--phi-control-height);
+  padding-block: 0;
+}
+
+.ant-input-affix-wrapper.ant-input-affix-wrapper-sm:not(.ant-input-textarea-affix-wrapper) {
+  height: var(--phi-control-height-sm);
+}
+
+.ant-input-affix-wrapper.ant-input-affix-wrapper-lg:not(.ant-input-textarea-affix-wrapper) {
+  height: var(--phi-control-height-lg);
+}
+
+.ant-input-affix-wrapper > input.ant-input {
+  height: auto;
+}
+
+/*
+ * A group with addons is a table, and its input is an inline box in an unnamed cell: the line of the table
+ * is that box's strut, so it is the field's line too, or the row stays taller than the input in it. An
+ * addon is a cell of that row; its own padding would only add to the row.
+ */
+.ant-input-group {
+  line-height: calc(var(--phi-control-height) - 2 * var(--phi-line-width));
+}
+
+.ant-input-group-wrapper-sm .ant-input-group {
+  line-height: calc(var(--phi-control-height-sm) - 2 * var(--phi-line-width));
+}
+
+.ant-input-group-wrapper-lg .ant-input-group {
+  line-height: calc(var(--phi-control-height-lg) - 2 * var(--phi-line-width));
+}
+
+/* The input rides at the top of its cell, so the strut's baseline cannot add a fraction to the row. */
+.ant-input-group > input.ant-input {
+  vertical-align: top;
+}
+
+.ant-input-group-addon {
+  padding-block: 0;
+  line-height: inherit;
+}
+
+/*
+ * Search's Button is the control height through `--ant-input-search-btn-height`, but a small one also
+ * carries a floor of its own, reckoned from the small line (23.875 px with a 14 px font), which would keep
+ * it above the field beside it. The floor is the height itself.
+ */
+.ant-input-search.ant-input-search-small .ant-input-search-btn {
+  min-height: var(--ant-input-search-btn-height);
+}
+
+.ant-input-search.ant-input-search-small .ant-input-search-btn.ant-btn-icon-only {
+  min-width: var(--ant-input-search-btn-height);
+}
+
+/*
+ * Input Number sets its inner input's padding through `--ant-input-number-input-padding-block`, but its
+ * borderless forms rewrite that variable at the weight of these rules, so the padding is cleared on the
+ * input itself. The wrapper's line is inherited by the input.
+ */
+.ant-input-number {
+  height: var(--phi-control-height);
+  line-height: calc(var(--phi-control-height) - 2 * var(--phi-line-width));
+}
+
+.ant-input-number.ant-input-number-sm {
+  height: var(--phi-control-height-sm);
+  line-height: calc(var(--phi-control-height-sm) - 2 * var(--phi-line-width));
+}
+
+.ant-input-number.ant-input-number-lg {
+  height: var(--phi-control-height-lg);
+  line-height: calc(var(--phi-control-height-lg) - 2 * var(--phi-line-width));
+}
+
+.ant-input-number .ant-input-number-input {
+  padding-block: 0;
+}
+
+/* Date Picker, Range Picker and Time Picker: the box, and the line of the input in it. */
+.ant-picker:not(.ant-picker-multiple) {
+  height: var(--phi-control-height);
+  padding-block: 0;
+}
+
+.ant-picker:not(.ant-picker-multiple) .ant-picker-input > input {
+  line-height: calc(var(--phi-control-height) - 2 * var(--phi-line-width));
+}
+
+.ant-picker.ant-picker-small:not(.ant-picker-multiple) {
+  height: var(--phi-control-height-sm);
+}
+
+.ant-picker.ant-picker-small:not(.ant-picker-multiple) .ant-picker-input > input {
+  line-height: calc(var(--phi-control-height-sm) - 2 * var(--phi-line-width));
+}
+
+.ant-picker.ant-picker-large:not(.ant-picker-multiple) {
+  height: var(--phi-control-height-lg);
+}
+
+.ant-picker.ant-picker-large:not(.ant-picker-multiple) .ant-picker-input > input {
+  line-height: calc(var(--phi-control-height-lg) - 2 * var(--phi-line-width));
 }
 
 /* The list a compact Select opens writes as the field does; Ant Design gives every Select's list the body size. */

@@ -195,6 +195,9 @@ exports complete Widgets only.
   mode and the pill in dark mode. Ant Design's own dark menu fills the whole bar with the primary colour,
   square. The choice is a class and the Menu's variables in `styles/controls.css`, decided by the Menu's
   theme class, so a page rendered for both modes needs no script to mark the entry right.
+- A single-line field Control (Input, Input Number, single Select, Date/Time Picker) is exactly as high as a
+  Button of its size, the Theme's control height; a TextArea, Mentions or multiple Select grows and keeps it
+  as a minimum. The rule is in `styles/controls.css` and [THEME.md](../../THEME.md#single-line-fields-have-the-buttons-height).
 - `PhiStepsControl` (where a sequence stands) and `PhiTimelineControl` (what happened, in order) take
   items as data -- strings, Phi icon names, a tone instead of a colour -- never Ant Design's item nodes.
   `PhiFloatButtonControl` takes the Toolbar's items: one is a Float Button, more are its group.

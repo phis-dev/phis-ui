@@ -450,6 +450,23 @@ drawable yet: resolving it throws.
   side, not a capsule, so `pill` there is half the Control height rounded up rather than the full radius.
   The other three shapes state a number and are unaffected.
 
+## Single-line fields have the Button's height
+
+A single-line field is exactly as high as a Button of its size: the Theme's control height
+(`--phi-control-height-sm`, `--phi-control-height`, `--phi-control-height-lg`), whatever the Theme sets it to.
+Ant Design gives a Button that height outright but a field only the sum of line, padding and border, with
+the padding reckoned as (control height - line) / 2 - border and clamped at zero, so a Theme whose small
+control height is below its small line got fields taller than the Buttons beside them, and fractions over or
+under at the other sizes. `styles/controls.css` ("Single-line fields") states the rule once: the field's
+outer height is the control height, its line is the inside (control height minus the border above and
+below), the padding is nothing, and the text stands in the middle of that line. It covers Input (also with
+prefix, suffix, clear, Search, Password, addons and `Space.Compact`), Input Number, a single Select with
+Cascader, TreeSelect and AutoComplete, and Date, Range and Time Picker, in every size and variant. A
+field that grows -- TextArea, Mentions, a Select or Picker that takes several values -- keeps the control
+height as its minimum. Select reads its box from `--ant-select-*` variables, which the rule sets; the
+others have no variable for it, so the rule sets `height` and `line-height`. Do not add a per-Site or
+per-Widget height to a field to fit it beside a Button.
+
 The shape reaches the default Control size through Ant Design component tokens and the small and large sizes
 through `styles/control-shape.css`, which reads `--phi-control-radius-*` variables built from the live tokens.
 Grown Controls take all three sizes from that stylesheet, the default size included: that is the size where
