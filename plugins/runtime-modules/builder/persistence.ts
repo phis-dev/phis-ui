@@ -13,6 +13,7 @@ import type {
 import { readPhiCmsInstanceId, type PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import type { PhiDeveloperBuilderArea, PhiDeveloperBuilderRegionDraft, PhiDeveloperBuilderWorkspaceState } from "./developer-workspace-types";
 import {
+  getPhiBuilderPageDraftKey,
   getPhiBuilderRegionDraftKey,
   PHI_BUILDER_PAGE_REGION_KEYS,
   PHI_BUILDER_SHELL_REGION_KEYS,
@@ -910,7 +911,7 @@ export async function savePhiDeveloperBuilderDraft(
   const pagePath = resolvePhiBuilderCmsStoragePath(area, pageKey, pages);
   const currentPagePresetSource = resolvePhiBuilderPagePresetSource(pageKey, pages);
   const currentAreaPresetSource = state.areaPresetSourcesByArea[area] ?? null;
-  const pageMetaDraft = state.pageMetaDrafts?.[getPhiBuilderRegionDraftKey(area, "page_meta", pageKey)] ?? null;
+  const pageMetaDraft = state.pageMetaDrafts?.[getPhiBuilderPageDraftKey(area, "page_meta", pageKey)] ?? null;
   /*
    * The Page flags travel apart from the rest of the meta draft: the titles become translated
    * messages and this is a column on the row, so the payload splits them even though the dialog
@@ -927,7 +928,7 @@ export async function savePhiDeveloperBuilderDraft(
   const pageFlags = pageMetaDraft?.index == null
     ? resolvePhiBuilderPageDefaultFlags(pageKey, pages)
     : pageMetaDraft.index === false ? PhiCmsFlags.NoIndex : 0;
-  const isDeletedPageDraft = state.deletedPageDrafts?.[getPhiBuilderRegionDraftKey(area, "page_delete", pageKey)] === true;
+  const isDeletedPageDraft = state.deletedPageDrafts?.[getPhiBuilderPageDraftKey(area, "page_delete", pageKey)] === true;
   const allocationKey = createPhiBuilderDraftAllocationKey(
     area,
     pageKey,
@@ -1033,7 +1034,7 @@ export async function savePhiDeveloperBuilderDraft(
       contentWidgets,
       controllerSettings: requirePhiBuilderControllerSettings(
         state.pageControllerSettings,
-        getPhiBuilderRegionDraftKey(area, "page_meta", pageKey),
+        getPhiBuilderPageDraftKey(area, "page_meta", pageKey),
         `Page "${pageKey}"`,
       ),
     });

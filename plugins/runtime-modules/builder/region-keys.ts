@@ -22,3 +22,17 @@ export function getPhiBuilderRegionDraftKey(area: string, regionKey: string, pag
 
   return `${area}:${regionKey}`;
 }
+
+/** What the Builder keeps per Page beside its Regions: the meta as edited, and that the Page is to be deleted. */
+export type PhiBuilderPageDraftKind = "page_meta" | "page_delete";
+
+/**
+ * The key of a Page's own draft state in the workspace.
+ *
+ * Not a Region key: `page_meta` and `page_delete` are not Regions, so `getPhiBuilderRegionDraftKey` leaves the
+ * Page out of them and every Page of an Area would share one slot -- the first Page opened would fill it, and
+ * the rest would save its title, description and indexing as their own.
+ */
+export function getPhiBuilderPageDraftKey(area: string, kind: PhiBuilderPageDraftKind, pageKey: string) {
+  return `${area}:${pageKey}:${kind}`;
+}

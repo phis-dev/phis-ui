@@ -11,7 +11,7 @@ import {
 import { usePhiApplicationFeedback } from "../../../../components/runtime/use-phi-application-feedback";
 import type { PhiBuilderSavedHistoryHead } from "./draft-status-controller";
 import { createPhiDefaultAreaRuntimeModuleIds } from "../../area-module-defaults";
-import { getPhiBuilderRegionDraftKey } from "../region-keys";
+import { getPhiBuilderPageDraftKey } from "../region-keys";
 import { resolvePhiBuilderCmsStoragePath } from "../../../../helpers/cms-paths";
 import {
   resolvePhiBuilderActivePageCatalog,
@@ -566,7 +566,7 @@ export function usePhiBuilderDraftCommandController({
             pageKey: effectivePageKey,
             title: "",
           });
-          const pageDeleteDraftKey = getPhiBuilderRegionDraftKey(effectiveArea, "page_delete", effectivePageKey);
+          const pageDeleteDraftKey = getPhiBuilderPageDraftKey(effectiveArea, "page_delete", effectivePageKey);
           mergePhiDeveloperRegionDrafts(nextDrafts);
           markPhiBuilderPageDeleted(pageDeleteDraftKey);
           const result = await savePhiDeveloperBuilderDraft(

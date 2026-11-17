@@ -51,7 +51,7 @@ import type {
   PhiDeveloperBuilderArea,
   PhiDeveloperBuilderWorkspaceState,
 } from "../developer-workspace-types";
-import { getPhiBuilderRegionDraftKey } from "../region-keys";
+import { getPhiBuilderPageDraftKey } from "../region-keys";
 import {
   capturePhiBuilderWorkspaceHistoryState,
   createPhiBuilderHistoryContext,
@@ -161,7 +161,7 @@ export function usePhiBuilderPageController({
   }
 
   function openPageMetaDialog(mode: PhiPageMetaDialogMode) {
-    const pageMetaDraftKey = getPhiBuilderRegionDraftKey(effectiveArea, "page_meta", effectivePageKey);
+    const pageMetaDraftKey = getPhiBuilderPageDraftKey(effectiveArea, "page_meta", effectivePageKey);
     const currentMetaDraft = state.pageMetaDrafts[pageMetaDraftKey] ?? {};
     const pageTitle = currentMetaDraft.title?.trim() || resolvePageTitleForInput(effectivePageKey);
     const currentPath = normalizePhiBuilderCmsCatalogPath(
@@ -282,7 +282,7 @@ export function usePhiBuilderPageController({
               path: requestedPath,
             })
           : null;
-      const pageMetaDraftKey = getPhiBuilderRegionDraftKey(effectiveArea, "page_meta", effectivePageKey);
+      const pageMetaDraftKey = getPhiBuilderPageDraftKey(effectiveArea, "page_meta", effectivePageKey);
       const historyBefore = capturePhiBuilderWorkspaceHistoryState(
         getPhiDeveloperBuilderStateSnapshot(),
       );
@@ -397,9 +397,9 @@ export function usePhiBuilderPageController({
       addPhiWorkspaceCustomPage(effectiveArea, { key: requestedKey, title, storagePath: requestedStoragePath });
       // The page's meta and delete drafts are edits in progress, so they stay with the Builder.
       startPhiBuilderNewPageDrafts({
-        metaDraftKey: getPhiBuilderRegionDraftKey(effectiveArea, "page_meta", requestedKey),
+        metaDraftKey: getPhiBuilderPageDraftKey(effectiveArea, "page_meta", requestedKey),
         meta: { title, description, ...indexPatch },
-        deleteDraftKey: getPhiBuilderRegionDraftKey(effectiveArea, "page_delete", requestedKey),
+        deleteDraftKey: getPhiBuilderPageDraftKey(effectiveArea, "page_delete", requestedKey),
       });
       await reloadPersistedPageCatalog(effectiveArea);
       navigateToBuilderPage(requestedKey);

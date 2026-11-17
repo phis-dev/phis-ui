@@ -6,7 +6,7 @@ import { PhiDeveloperBuilderCanvasWidgetClient } from "./canvas-widget";
 import type { PhiDeveloperBuilderStructureCanvasProps } from "./structure-canvas";
 import type { PhiBuilderPageDraftsMapByScope, PhiBuilderPageMeta } from "../page-presets.server";
 import type { PhiBuilderPreviewRegionDraft } from "../preview-transport";
-import { getPhiBuilderRegionDraftKey } from "../region-keys";
+import { getPhiBuilderPageDraftKey } from "../region-keys";
 import {
   mergePhiDeveloperDeletedPageDrafts,
   mergePhiDeveloperPageMetaDrafts,
@@ -46,14 +46,14 @@ export function PhiDeveloperBuilderPagesWorkspaceWidgetClient({
 
   useEffect(() => {
     mergePhiDeveloperPageMetaDrafts(pageMetaArea, {
-      [getPhiBuilderRegionDraftKey(pageMetaArea, "page_meta", pageMetaPageKey)]: {
+      [getPhiBuilderPageDraftKey(pageMetaArea, "page_meta", pageMetaPageKey)]: {
         title: pageMeta?.title ?? null,
         description: pageMeta?.description ?? null,
         index: pageMeta?.index ?? true,
       },
     });
     mergePhiDeveloperDeletedPageDrafts(pageMetaArea, {
-      [getPhiBuilderRegionDraftKey(pageMetaArea, "page_delete", pageMetaPageKey)]: pageMeta?.isDeleted === true,
+      [getPhiBuilderPageDraftKey(pageMetaArea, "page_delete", pageMetaPageKey)]: pageMeta?.isDeleted === true,
     });
   }, [
     pageMeta?.description,
@@ -71,7 +71,7 @@ export function PhiDeveloperBuilderPagesWorkspaceWidgetClient({
   useEffect(() => {
     if (!pageMeta) return;
     setPhiDeveloperBuilderPageControllerSettings(
-      getPhiBuilderRegionDraftKey(pageMetaArea, "page_meta", pageMetaPageKey),
+      getPhiBuilderPageDraftKey(pageMetaArea, "page_meta", pageMetaPageKey),
       constructedRoot ? [] : pageMeta.controllerSettings,
     );
   }, [constructedRoot, pageMeta, pageMetaArea, pageMetaPageKey]);
