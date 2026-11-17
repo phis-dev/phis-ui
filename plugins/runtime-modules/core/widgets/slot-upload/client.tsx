@@ -3,14 +3,17 @@
 import { PhiEntryListControl } from "../../../../../components/controls/phi-entry-list-control";
 import { PhiProgressControl } from "../../../../../components/controls/phi-progress-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { usePhiMediaUpload } from "../../../../../components/media/phi-media-upload";
 import {
   runPhiAddonAssetUpload,
   type PhiAddonAssetReservation,
 } from "../../../../../components/media/media-upload-flow";
-import { PHI_MEDIA_UPLOAD_DEFAULT_LABELS } from "../../../../../components/media/phi-media-upload";
+import { resolvePhiAreaUploadLabels, resolvePhiUploadStatusLabel } from "../../../../../components/media/phi-media-upload";
+import { PhiUploadDropArea } from "../../../../../components/media/phi-upload-drop-area";
+import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
+import { readPhiSlotUploadAcceptance, type PhiSlotDescriptor } from "./slot";
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
 import {
   emitPhiSignalCapability,
@@ -44,13 +47,6 @@ import { PhiMediaKind, resolvePhiMediaKindFromContentType } from "../../../../..
  * Until one arrives there is nothing to upload to, and the widget says so rather than offering a button
  * that would fail.
  */
-
-type SlotDescriptor = {
-  name: string;
-  cardinality: "one" | "many";
-  maxBytes: number;
-  contentTypes: string[];
-};
 
 type SlotFile = {
   id: string;
@@ -113,7 +109,7 @@ export function PhiSlotUploadWidgetClient({ config, labels }: PhiSlotUploadWidge
   );
 
   const [ownerId, setOwnerId] = useState<string | null>(null);
-  const [slot, setSlot] = useState<SlotDescriptor | null>(null);
+  const [slot, setSlot] = useState<PhiSlotDescriptor | null>(null);
   /*
    * Kept with the row it was read for, rather than cleared when the row changes.
    *
@@ -175,7 +171,7 @@ export function PhiSlotUploadWidgetClient({ config, labels }: PhiSlotUploadWidge
     void read(base)
       .then((body) => {
         if (!live) return;
-        const declared = (body.slots as SlotDescriptor[] | undefined ?? [])
+        const declared = (body.slots as PhiSlotDescriptor[] | undefined ?? [])
           .find((entry) => entry.name === slotName);
         setSlot(declared ?? null);
         setSlotFailure(declared ? null : formatPhiSlotUploadWidgetLabel(labels.slotMissing, slotName));
@@ -261,18 +257,11 @@ export function PhiSlotUploadWidgetClient({ config, labels }: PhiSlotUploadWidge
     return { asset: { id: view.mediaAssetId } };
   }, [base, ownerId, read, slotName]);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const slotUpload = useMemo(() => readPhiSlotUploadAcceptance(slot), [slot]);
+  const uploadLabels = useMemo(() => resolvePhiAreaUploadLabels(labels.upload), [labels.upload]);
   const upload = usePhiMediaUpload({
-    labels: PHI_MEDIA_UPLOAD_DEFAULT_LABELS,
-    ...(slot
-      ? {
-        acceptance: {
-          contentTypes: slot.contentTypes,
-          maxBytes: slot.maxBytes,
-          multiple: slot.cardinality === "many",
-        },
-      }
-      : {}),
+    labels: uploadLabels,
+    ...(slotUpload ? { acceptance: slotUpload.acceptance } : {}),
     runSession,
     onUploaded: async () => {
       setFailure(null);
@@ -283,6 +272,37 @@ export function PhiSlotUploadWidgetClient({ config, labels }: PhiSlotUploadWidge
   });
 
   const files = loaded?.ownerId === ownerId ? loaded.files : [];
+
+  /*
+   * A file still on its way or one that failed, as a line above the files that arrived: its name, then
+   * the percentage or "Failed" the Media folder's tiles say, a bar while it travels, and Retry for a
+   * failure. The reason for a failure is the alert's, which `onRejected` fills for both.
+   */
+  const pending = upload.items.filter((item) => item.status !== "done").map((item) => ({
+    key: item.localId,
+    title: (
+      <PhiFlexControl vertical gap={4}>
+        <PhiFlexControl align="center" gap={8} wrap>
+          <span>{item.file.name}</span>
+          <PhiTagControl color={item.status === "error" ? "red" : "blue"}>
+            {resolvePhiUploadStatusLabel(item, labels.upload)}
+          </PhiTagControl>
+        </PhiFlexControl>
+        {item.status === "uploading" ? <PhiProgressControl percent={item.progress} size="small" /> : null}
+      </PhiFlexControl>
+    ),
+    ...(item.status === "error"
+      ? {
+        action: (
+          <PhiButtonControl
+            size="small"
+            label={labels.upload.retryLabel}
+            onClick={() => { void upload.retry(item.localId); }}
+          />
+        ),
+      }
+      : {}),
+  }));
 
   /*
    * The removal and the read after it fail apart: a DELETE that went through and a list that could not
@@ -317,39 +337,26 @@ export function PhiSlotUploadWidgetClient({ config, labels }: PhiSlotUploadWidge
         ) : (
           <>
             {/*
-              * The file dialog is a plain input the button opens, rather than an Upload wrapper that reacts
-              * to a press on its child: that child would have been a button with nothing of its own to
-              * call, which `PhiButtonControl` renders disabled. The upload itself never went through the
-              * wrapper -- `usePhiMediaUpload` sends every file -- so nothing is lost by leaving it out.
+              * The drop area is the one the Media folder draws (`PhiUploadDropArea`): files are dropped on
+              * it or chosen by pressing it, with the keyboard too. It stays off until the slot has said
+              * what it takes, so no file goes up unchecked. A slot of `one` takes a single file and a
+              * new one replaces the old one at Core, as before.
               */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              hidden
-              multiple={slot?.cardinality === "many"}
-              accept={slot?.contentTypes.join(",")}
-              onChange={(event) => {
-                for (const file of Array.from(event.target.files ?? [])) void upload.upload(file);
-                // Cleared so choosing the same file again is a change, and uploads again.
-                event.target.value = "";
-              }}
-            />
-            <PhiButtonControl
-              icon={<PhiIcon name="upload" size="inherit" />}
-              label={labels.choose}
-              onClick={() => fileInputRef.current?.click()}
+            <PhiUploadDropArea
+              {...(slotUpload ? { accept: slotUpload.accept, multiple: slotUpload.multiple } : {})}
+              disabled={!slotUpload}
+              title={labels.upload.dropTitle}
+              hint={labels.upload.dropHint}
+              onFile={(file) => void upload.upload(file)}
             />
           </>
         )}
-        {upload.items.filter((item) => item.status === "uploading").map((item) => (
-          <PhiProgressControl key={item.localId} percent={item.progress} size="small" />
-        ))}
         {slotFailure ?? failure ? (
           <PhiTypographyControl type="danger" role="alert">{slotFailure ?? failure}</PhiTypographyControl>
         ) : null}
         <PhiEntryListControl
           emptyDescription={labels.empty}
-          entries={[...files].map((file) => ({
+          entries={[...pending, ...files.map((file) => ({
             key: String(file.id),
             title: (
               <SlotFileTitle
@@ -366,7 +373,7 @@ export function PhiSlotUploadWidgetClient({ config, labels }: PhiSlotUploadWidge
                 onClick={() => { void remove(file.id); }}
               />
             ),
-          }))}
+          }))]}
         />
       </PhiFlexControl>
     </PhiLabeledControl>

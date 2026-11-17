@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { PhiMediaKind, resolvePhiMediaKindFromContentType } from "../../constants/media";
 import type { PhiMediaKindValue } from "../../types/media";
+import type { PhiAreaUploadWidgetLabels } from "./media-widget-labels";
 import {
   PhiMediaUploadError,
   isPhiMediaUploadCancelled,
@@ -64,6 +65,31 @@ export const PHI_MEDIA_UPLOAD_DEFAULT_LABELS: PhiMediaUploadLabels = {
   errorStorageUnreachable: "The file storage could not be reached.",
   errorFolderLocked: "This folder is locked. Nothing can be uploaded into it until it is unlocked.",
 };
+
+/**
+ * The wording of every refusal on a Media upload surface that has the Media label set: the Widget's own
+ * duplicate, failure and storage texts, and the shared ones for the rest -- so no control plane string
+ * reaches a person. The Media folder's upload Widget and an Add-on's slot upload read it the same way.
+ */
+export function resolvePhiAreaUploadLabels(labels: PhiAreaUploadWidgetLabels): PhiMediaUploadLabels {
+  return {
+    ...PHI_MEDIA_UPLOAD_DEFAULT_LABELS,
+    errorGeneric: labels.uploadFailedText,
+    errorDuplicate: labels.assetExistsLabel,
+    errorStorageUnreachable: labels.uploadStorageUnreachableText,
+    errorFolderLocked: labels.uploadFolderLockedText,
+  };
+}
+
+/** What an item of an upload says of its state: the percentage on its way, "Failed", or "Done". */
+export function resolvePhiUploadStatusLabel(
+  item: { status: "uploading" | "done" | "error"; progress: number },
+  labels: Pick<PhiAreaUploadWidgetLabels, "failedLabel" | "doneLabel">,
+) {
+  if (item.status === "error") return labels.failedLabel;
+  if (item.status === "uploading") return `${item.progress}%`;
+  return labels.doneLabel;
+}
 
 /** The `accept` attribute a file dialog should carry, derived rather than written out by each caller. */
 export function resolvePhiMediaUploadAccept(acceptance: PhiMediaUploadAcceptance | undefined) {

@@ -165,12 +165,32 @@ the config a type of your own with `satisfies`.
 | `record` | One row of a Table Provider as named values, opened by a row action. | - | unchecked |
 | `form` | A Preset Form a Module contributes ([FORMS.md](./FORMS.md)). | - | typed |
 | `form-preview` | What the token in the address is about, beside the form that spends it. | - | unchecked |
-| `slot-upload` | Puts a file into a declared slot on a row of an Add-on's table. | - | unchecked |
+| `slot-upload` | Puts a file into a declared slot on a row of an Add-on's table: a drop area, and the slot's files with preview and remove ([below](#slot-upload-files-on-a-row)). | - | unchecked |
 | `draft-status` | Whether a Controller's draft is unsaved, saved or published. | - | typed |
 | `entry-list` | A content kind's published entries ([CONTENT_ENTRIES.md](./CONTENT_ENTRIES.md)). | - | unchecked |
 | `entry-header` | The opening of one entry: category, title, subtitle, author, date. | - | unchecked |
 | `entry-detail` | The text of one published entry. | - | unchecked |
 | `thread-conversation` | The selected conversation: messages, authors and what hangs on them ([THREADS.md](./THREADS.md)). | - | typed |
+
+#### `slot-upload`: files on a row
+
+The field for an Add-on's image slot (`@phis/shop`: the cover `cover`, the offer pictures `image`). Config is
+unchanged: `addon`, `table`, `slot`, optional `ownerParam` and `label`; the row arrives as a Signal. What the
+slot takes -- content types, ceiling, one file or many -- is asked from Core, never configured.
+
+- It draws the same drop area as the Media folder: files are dropped on it or chosen by pressing it (it is
+  a focusable button, Enter and Space open the dialog), and the dialog offers the slot's types and, for
+  cardinality `many`, several files. It stays disabled until the slot has answered, so no file goes up
+  unchecked.
+- The slot's rules (type, size, one or many) are checked before anything is sent, as before. A refusal
+  shows as an alert; an upload on its way shows as a line with its percentage or "Failed" and Retry.
+- A slot of cardinality `one` takes one file; a new one replaces the old one at Core (the client sends the
+  file and reads the row's files again; it removes nothing itself). The list below the area keeps the
+  slot's files with a preview and a remove button.
+- The area's title and hint, the state words and the refusals are the Media folder's texts (Label Set
+  `widget:media`, keys `upload_drop_title`, `upload_drop_hint`, `upload_retry_label`, `upload_failed_label`,
+  ...), so a translation is written once. The Widget's own Label Set `widget:slot-upload` keeps the rest.
+- Transport is `usePhiMediaUpload`, the one the Media folder and the form field `upload` use.
 
 ### Controls a Module's own Widget may use
 
@@ -189,6 +209,7 @@ reach for first:
 | `PhiCompactGroupControl` | Any Controls joined into one group with shared edges: a number field and its button. |
 | `PhiEntryListControl` | A short list of things, one per line: a title, a line about it, a state and one action; it says its own empty state. Not for rows that page. |
 | `PhiAmountListControl` | Lines and sums whose amounts stand in one right-aligned column with equal-width digits: a cart, a checkout, an order, a receipt. Display only ([below](#phiamountlistcontrol-amounts-in-one-column)). |
+| `PhiFileDropControl` | A file dialog and a drop area, nothing more: it hands you the files, it uploads nothing ([below](#phifiledropcontrol-the-drop-area)). |
 | `PhiPlacementMatrixControl` | A 3 by 3 matrix that picks one of the nine anchor placements (`value`, `onChange`). |
 | `PhiFlexControl` | Arranges the parts inside one leaf. Several Widgets side by side are Layout slots, not this. |
 | `PhiCardControl` | A bordered box with an optional heading bar, on the Theme's inset and corner. |
@@ -209,7 +230,7 @@ beside them):
   `PhiTreeSelectControl`.
 - Commands and menus: `PhiButtonControl`, `PhiToolbarControl`, `PhiCompactGroupControl`,
   `PhiViewportVisibilityControl`, `PhiPlacementMatrixControl`, `PhiEntryListControl`, `PhiAmountListControl`,
-  `PhiFloatButtonControl`, `PhiDropdownControl`,
+  `PhiFileDropControl`, `PhiFloatButtonControl`, `PhiDropdownControl`,
   `PhiPillDropdownControl`, `PhiMenuControl`, `PhiConfirmControl`, `PhiPopoverControl`, `PhiTabsControl`,
   `PhiPaginationControl`.
 - Display: `PhiTypographyControl`, `PhiTagControl`, `PhiCardControl`, `PhiFlexControl`, `PhiEmptyControl`,
@@ -267,6 +288,35 @@ lines -- media and text, then controls and amount -- and the amounts stay in the
 a list (`ul`) and the totals a description list (`dl`). It takes the width of its parent and has none of its
 own, so give it a parent with a width, not a shrink-to-fit box. It renders on the server, so a Module's server half
 may import it (it is not in `package.json#phis.clientExports`).
+
+#### `PhiFileDropControl`: the drop area
+
+A file dialog and, with `dropZone`, a framed area that also takes a drop. **It is the area; it uploads
+nothing.** It calls `onFile` once per file chosen or dropped and holds no list, no progress and no state of
+the transfer. The transport is not part of it: the Slot upload Widget (a file on an Add-on's row) and the
+form field `upload` (a file in a Form) bring theirs, through `usePhiMediaUpload`.
+
+| Prop | Meaning |
+| --- | --- |
+| `onFile` | `(file: File) => void`, once per file. Required. |
+| `accept` | What the dialog offers, a MIME or extension list. A hint: whoever uploads is what refuses. |
+| `multiple` | Several files in one choice or drop. Without it only the first is taken. |
+| `disabled` | Takes no click and no drop. |
+| `dropZone` | A framed area instead of a trigger. |
+| `children` | The trigger, or the inside of the area. |
+| `style`, `className` | Presentation. |
+
+```tsx
+<PhiFileDropControl dropZone accept="image/*" onFile={(file) => myUpload(file)}>
+  <PhiTypographyControl>Drop a picture here or click</PhiTypographyControl>
+</PhiFileDropControl>
+```
+
+The area is a focusable button, so Enter and Space open the dialog; it takes its accessible name from what you
+put inside it, so put the text there. It is a Client Control (listed in `package.json#phis.clientExports`).
+`PhiFileDropGuard`, which stops a file dropped beside an area from opening in the tab, is not exported: the
+Media folder's drop area (`PhiUploadDropArea`) brings it, and a Module that needs the whole area takes
+the Slot upload Widget or the form field instead of assembling one.
 
 ### What every block can do
 

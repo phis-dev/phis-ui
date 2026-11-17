@@ -716,6 +716,7 @@
         "PhiDropdownControl",
         "PhiEmptyControl",
         "PhiEntryListControl",
+        "PhiFileDropControl",
         "PhiFlexControl",
         "PhiFloatButtonControl",
         "PhiFormControl",

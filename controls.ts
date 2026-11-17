@@ -26,6 +26,8 @@ export type {
   PhiAmountListItem,
   PhiAmountListTotal,
 } from "./components/controls/phi-amount-list-control";
+export { PhiFileDropControl } from "./components/controls/phi-file-drop-control";
+export type { PhiFileDropControlProps } from "./components/controls/phi-file-drop-control";
 export { PhiPlacementMatrixControl } from "./components/controls/phi-placement-matrix-control";
 export type { PhiPlacementMatrixControlProps } from "./components/controls/phi-placement-matrix-control";
 export { PhiNumberControl } from "./components/controls/phi-number-control";

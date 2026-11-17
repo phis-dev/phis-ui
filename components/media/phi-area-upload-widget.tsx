@@ -4,7 +4,7 @@ import { resolvePhiMediaAssetTypeLabel } from "./asset-type-label";
 import { PhiTagControl } from "../controls/phi-tag-control";
 import { PhiButtonControl } from "../controls/phi-button-control";
 import NextImage from "next/image";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
 import type { PhiCmsAreaUploadWidgetConfig } from "../../types/media";
 import { PhiCollectionLayoutControl } from "../controls/phi-collection-layout-control";
@@ -24,9 +24,9 @@ import {
   type PhiMediaUploadSessionResult,
 } from "./media-upload-flow";
 import {
-  PHI_MEDIA_UPLOAD_DEFAULT_LABELS,
+  resolvePhiAreaUploadLabels,
+  resolvePhiUploadStatusLabel,
   usePhiMediaUpload,
-  type PhiMediaUploadLabels,
 } from "./phi-media-upload";
 import { usePhiImagePreviewStore, type PhiImagePreviewStoreState } from "./phi-image-preview-store";
 import { PHI_ASSET_CONTROLLER_STORE_KEY } from "./asset-controller-signals";
@@ -35,12 +35,11 @@ import {
   buildPhiAssetCollectionQuery,
   PHI_ASSET_COLLECTION_DATA_SOURCE,
 } from "./asset-collection-runtime";
-import { PhiFileDropGuard } from "./phi-file-drop-guard";
+import { PhiUploadDropArea } from "./phi-upload-drop-area";
 import { usePhiApplicationFeedback } from "../runtime/use-phi-application-feedback";
 import { resolvePhiThemeBorderLine } from "../../helpers/border-widget-style";
 import { usePhiConfig } from "../root/phi-config-provider";
 import { usePhiCollectionProviderAction } from "../widgets/client/shared/phi-collection-provider";
-import { PhiFileDropControl } from "../controls/phi-file-drop-control";
 import { PhiProgressControl } from "../controls/phi-progress-control";
 import { PhiFlexControl } from "../controls/phi-flex-control";
 import { PhiTypographyControl } from "../controls/phi-typography-control";
@@ -100,32 +99,6 @@ function buildUploadWallItem(asset: PhiMediaAssetTile, localId: string): UploadW
   };
 }
 
-function resolveUploadStatusLabel(item: UploadWallItem, labels: PhiAreaUploadWidgetLabels) {
-  if (item.status === "error") {
-    return labels.failedLabel;
-  }
-
-  if (item.status === "uploading") {
-    return `${item.progress}%`;
-  }
-
-  return labels.doneLabel;
-}
-
-/**
- * The Widget's own wording over the shared reading of every refusal: its duplicate, failure and storage
- * texts, and the shared ones for the rest -- so no control plane string reaches a person.
- */
-function resolveAreaUploadLabels(labels: PhiAreaUploadWidgetLabels): PhiMediaUploadLabels {
-  return {
-    ...PHI_MEDIA_UPLOAD_DEFAULT_LABELS,
-    errorGeneric: labels.uploadFailedText,
-    errorDuplicate: labels.assetExistsLabel,
-    errorStorageUnreachable: labels.uploadStorageUnreachableText,
-    errorFolderLocked: labels.uploadFolderLockedText,
-  };
-}
-
 /** A file still on its way, or one that failed, drawn as a tile like the Assets that arrived. */
 function buildPendingWallItem(
   item: { localId: string; file: File; progress: number; status: "uploading" | "done" | "error"; error: string | null },
@@ -158,15 +131,11 @@ function resolveUploadWallDisplayDimensions(item: Pick<UploadWallItem, "contentT
 export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collectionContext }: PhiAreaUploadWidgetProps) {
   const { token } = usePhiConfig();
   const { showMessage } = usePhiApplicationFeedback();
-  const uploadTileMinHeight = token.controlHeight * 4;
   const uploadTileFrameSize = token.controlHeight * 3;
-  const uploadTileIconSize = token.fontSizeHeading3;
   const uploadTileLabelFontSize = token.fontSizeSM;
   const previewState = usePhiImagePreviewStore(PHI_ASSET_CONTROLLER_STORE_KEY);
   const activateCollectionAction = usePhiCollectionProviderAction(PHI_ASSET_COLLECTION_DATA_SOURCE);
-  const dragDepth = useRef(0);
   const [uploadWall, setUploadWall] = useState<UploadWallItem[]>([]);
-  const [isDragActive, setIsDragActive] = useState(false);
   const allowDelete = config?.allowDelete ?? true;
   const accept = config?.accept?.trim() || "*/*";
   const multiple = config?.multiple ?? true;
@@ -238,7 +207,7 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
    * often than not -- so no Asset is finalized that nobody sees arrive. What is this Widget's own is the
    * wall: an Asset that arrived becomes a tile, and the listing behind it hears of it.
    */
-  const areaUploadLabels = useMemo(() => resolveAreaUploadLabels(labels), [labels]);
+  const areaUploadLabels = useMemo(() => resolvePhiAreaUploadLabels(labels), [labels]);
   const upload = usePhiMediaUpload<PhiMediaUploadSessionResult["asset"]>({
     labels: areaUploadLabels,
     initOptions: uploadInitOptions,
@@ -260,59 +229,13 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
 
   return (
     <PhiFlexControl vertical gap={12} style={{ width: "100%" }}>
-      <PhiFileDropGuard />
-      <div
-        data-phi-media-dropzone="true"
-        onDragEnter={() => {
-          dragDepth.current += 1;
-          setIsDragActive(true);
-        }}
-        onDragLeave={() => {
-          dragDepth.current = Math.max(0, dragDepth.current - 1);
-          if (dragDepth.current === 0) {
-            setIsDragActive(false);
-          }
-        }}
-        onDragOver={(event) => {
-          event.preventDefault();
-          event.dataTransfer.dropEffect = "copy";
-          setIsDragActive(true);
-        }}
-        onDrop={() => {
-          dragDepth.current = 0;
-          setIsDragActive(false);
-        }}
-        style={{ width: "100%" }}
-      >
-        <PhiFileDropControl
-          dropZone
-          multiple={multiple}
-          accept={accept}
-          onFile={(file) => void upload.upload(file)}
-          style={{
-            padding: 0,
-            width: "100%",
-            borderColor: isDragActive ? token.colorPrimary : undefined,
-            background: isDragActive ? token.colorFillQuaternary : undefined,
-          }}
-        >
-          <PhiFlexControl
-            vertical
-            align="center"
-            gap={4}
-            style={{
-              width: "100%",
-              minHeight: uploadTileMinHeight,
-              justifyContent: "center",
-              cursor: isDragActive ? "copy" : "default",
-            }}
-          >
-            <PhiIcon name="upload" size="inherit" style={{ fontSize: uploadTileIconSize, color: token.colorTextSecondary }} />
-            <PhiTypographyControl strong>{labels.dropTitle}</PhiTypographyControl>
-            <PhiTypographyControl type="secondary">{labels.dropHint}</PhiTypographyControl>
-          </PhiFlexControl>
-        </PhiFileDropControl>
-      </div>
+      <PhiUploadDropArea
+        multiple={multiple}
+        accept={accept}
+        title={labels.dropTitle}
+        hint={labels.dropHint}
+        onFile={(file) => void upload.upload(file)}
+      />
 
       <PhiCollectionLayoutControl
         mode="grid"
@@ -452,7 +375,7 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
                 </PhiFlexControl>
                 <PhiFlexControl align="center" gap={6} wrap>
                   <PhiTagControl color={item.status === "error" ? "red" : item.status === "uploading" ? "blue" : "green"}>
-                    {resolveUploadStatusLabel(item, labels)}
+                    {resolvePhiUploadStatusLabel(item, labels)}
                   </PhiTagControl>
                   {item.status === "error" && item.file ? (
                     <PhiButtonControl

@@ -166,6 +166,9 @@ exports complete Widgets only.
   `PhiPaddingControl`, `PhiGeometryControl`, `PhiViewportVisibilityControl`, and
   `PhiPlacementMatrixControl`. They take controlled values, resolved labels, disabled state, and
   callbacks. Their Builder Inspector counterparts are Builder Module Widgets.
+- `PhiFileDropControl` is the file dialog and drop area, and uploads nothing. The Media folder, the form
+  field `upload`, the avatar picker and the Slot upload Widget all use it; the first and the last draw the
+  same area through `components/media/phi-upload-drop-area.tsx` and send through `usePhiMediaUpload`.
 - `PhiAlertControl` is inline feedback and `PhiConfirmControl` local anchored confirmation. Application
   messages and notifications are not Controls: feature code sends them with `usePhiApplicationFeedback`
   ([SIGNALS.md](../../SIGNALS.md#site-core-runtime-controller)).

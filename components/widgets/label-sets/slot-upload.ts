@@ -2,6 +2,7 @@ import "server-only";
 
 import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
+import { getPhiMediaWidgetLabels } from "../../media/label-sets/media";
 import {
   PHI_SLOT_UPLOAD_WIDGET_DEFAULT_LABELS,
   type PhiSlotUploadWidgetLabels,
@@ -13,7 +14,6 @@ const PHI_SLOT_UPLOAD_WIDGET_LABEL_SET = definePhiLabelSet({
   key: "widget:slot-upload",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
-    choose: DEFAULTS.choose,
     remove: DEFAULTS.remove,
     unconfigured: definePhiMessageLabel(DEFAULTS.unconfigured),
     no_row: definePhiMessageLabel(DEFAULTS.noRow),
@@ -29,11 +29,13 @@ const PHI_SLOT_UPLOAD_WIDGET_LABEL_SET = definePhiLabelSet({
 export async function getPhiSlotUploadWidgetLabels(
   options: PhiGlobalTranslatorOptions,
 ): Promise<PhiSlotUploadWidgetLabels> {
-  const labels = await getPhiLabelSet(options, PHI_SLOT_UPLOAD_WIDGET_LABEL_SET);
+  const [labels, media] = await Promise.all([
+    getPhiLabelSet(options, PHI_SLOT_UPLOAD_WIDGET_LABEL_SET),
+    getPhiMediaWidgetLabels(options),
+  ]);
   return {
     unconfigured: labels.unconfigured,
     noRow: labels.no_row,
-    choose: labels.choose,
     empty: labels.empty,
     remove: labels.remove,
     fileTitle: labels.file_title,
@@ -41,5 +43,6 @@ export async function getPhiSlotUploadWidgetLabels(
     serverAnswered: labels.server_answered,
     unreachable: labels.unreachable,
     removeFailed: labels.remove_failed,
+    upload: media.upload,
   };
 }
