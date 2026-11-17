@@ -35,9 +35,9 @@ export function describePhiSignetHead(signet: PhiThemeSignet | null | undefined)
   const image = decodePhiSignetDataUrl(signet.source);
   if (!image) return null;
   const href = buildPhiSignetHref(buildPhiSignetVersion(image.bytes));
-  const size = image.contentType === "image/png" ? readPhiPngSize(image.bytes) : null;
-  const sizes = size ? `${size.width}x${size.height}` : undefined;
-  const apple = size && size.width >= PHI_SIGNET_APPLE_MIN_SIZE && size.height >= PHI_SIGNET_APPLE_MIN_SIZE
+  const dimensions = image.contentType === "image/png" ? readPhiPngSize(image.bytes) : null;
+  const sizes = dimensions ? `${dimensions.width}x${dimensions.height}` : undefined;
+  const apple = dimensions && dimensions.width >= PHI_SIGNET_APPLE_MIN_SIZE && dimensions.height >= PHI_SIGNET_APPLE_MIN_SIZE
     ? { href, type: image.contentType, sizes: sizes as string }
     : undefined;
   return {

@@ -106,8 +106,8 @@ export function buildPhiSignetRouteHandler({
 
     const alias = request.nextUrl.searchParams.get(PHI_SIGNET_ALIAS_PARAM);
     if (alias === "apple") {
-      const size = image.contentType === "image/png" ? readPhiPngSize(image.bytes) : null;
-      if (!size || size.width < PHI_SIGNET_APPLE_MIN_SIZE || size.height < PHI_SIGNET_APPLE_MIN_SIZE) {
+      const dimensions = image.contentType === "image/png" ? readPhiPngSize(image.bytes) : null;
+      if (!dimensions || dimensions.width < PHI_SIGNET_APPLE_MIN_SIZE || dimensions.height < PHI_SIGNET_APPLE_MIN_SIZE) {
         return missing();
       }
     }
