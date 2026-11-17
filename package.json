@@ -608,7 +608,7 @@
     "@types/sanitize-html": "2.16.1",
     "@typescript-eslint/eslint-plugin": "^8.70.0",
     "@typescript-eslint/parser": "^8.70.0",
-    "antd": "^6.7.0",
+    "antd": "^6.7.1",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.3.5",
     "happy-dom": "^20.14.5",
@@ -622,7 +622,7 @@
   },
   "peerDependencies": {
     "@ant-design/icons": "^6.3.2",
-    "antd": "^6.7.0",
+    "antd": "^6.7.1",
     "next": "^16.2.11",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
