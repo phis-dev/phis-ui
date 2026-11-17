@@ -94,7 +94,7 @@ describe("a page's Widget words, translated in one pass", () => {
     ]), registry, runtime);
 
     expect(trBulkForLocale).toHaveBeenCalledTimes(1);
-    expect(trBulkForLocale).toHaveBeenCalledWith("de", ["One", "Two"], "Web UI label");
+    expect(trBulkForLocale).toHaveBeenCalledWith("de", ["One", "Two"], "Web UI label", "text", undefined, runtime);
     expect(trGlobalBulkForLocale).toHaveBeenCalledTimes(1);
   });
 
@@ -114,7 +114,7 @@ describe("a page's Widget words, translated in one pass", () => {
       }),
     ]), registry, runtime);
 
-    expect(trBulkForLocale).toHaveBeenCalledWith("de", ["Up to %1 users on %2"], "Web UI message");
+    expect(trBulkForLocale).toHaveBeenCalledWith("de", ["Up to %1 users on %2"], "Web UI message", "text", undefined, runtime);
     expect((result as { contentWidgets: { config: unknown }[] }).contentWidgets[0]!.config).toEqual({
       badge: "site[Web UI label]:Popular",
       features: [{ text: "site[Web UI message]:Up to 10 users on Acme", values: ["10"] }],

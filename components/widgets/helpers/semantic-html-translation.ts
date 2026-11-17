@@ -4,6 +4,7 @@ import renderHtml from "dom-serializer";
 import { parseDocument } from "htmlparser2";
 
 import { trBulk, trBulkForLocale } from "../../../server-helpers/translate";
+import type { PhiBlockRuntime } from "../../../types";
 import { sanitizePhiHtmlWidgetMarkup } from "./html-content";
 
 type HtmlNode = {
@@ -78,6 +79,8 @@ export async function translateSemanticHtml(
   sourceLocale?: string,
   /** The render's locale. Without it the request's is asked, and a static render has no request. */
   locale?: string,
+  /** The render's runtime, when the caller holds one: the Site's store is then named, not looked up in the request. */
+  runtime?: Pick<PhiBlockRuntime, "site">,
 ) {
   const sanitized = sanitizePhiHtmlWidgetMarkup(sourceHtml);
   if (!sanitized) {
@@ -95,7 +98,7 @@ export async function translateSemanticHtml(
   }
   const msgs = units.map((unit) => unit.html);
   const translated = locale
-    ? await trBulkForLocale(locale, msgs, 0, "html", sourceLocale)
+    ? await trBulkForLocale(locale, msgs, 0, "html", sourceLocale, runtime)
     : await trBulk(msgs, 0, "html", sourceLocale);
   units.forEach((unit, index) => {
     const fragment = parseDocument(translated[index] ?? unit.html) as unknown as HtmlNode;

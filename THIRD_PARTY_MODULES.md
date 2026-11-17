@@ -1113,6 +1113,15 @@ translates it (`translatePhiSearchWidgetTexts` from `@phis/ui/server-helpers` do
 own sentences). A Widget without it contributes nothing, which is right for a picture, a form or a
 navigation.
 
+The index runs outside any request -- at start-up and on a timer after a publish -- and a built Site may
+hold the request scope in another copy of its module than the Widget's, so `searchText` must not depend on
+it: it receives `runtime` and hands it on. Nothing that reads the request's runtime
+(`getPhiRequestRuntime`, `tr`, `trBulk`, `phiRuntime()` without a source) may be reached from it; the
+`...ForLocale` translators take the runtime as their last argument (`trBulkForLocale(locale, msgs, 0, "text",
+undefined, runtime)`), and the helpers `translatePhiSearchWidgetTexts` and `resolveMarkdownRenderData` take
+it as theirs. A `searchText` that throws costs its Page those words; the run logs the Widget type once, with
+the number of Pages it failed on.
+
 ```tsx
 export const STATUS_CARD_WIDGET_PLUGIN = {
   ...STATUS_CARD_WIDGET_DEFINITION,

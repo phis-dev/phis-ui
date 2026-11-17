@@ -113,7 +113,7 @@ export async function translatePhiWidgetConfigTexts(
       const ctx = CTX_BY_REGISTER[register];
       const translated = store === "global"
         ? await trGlobalBulkForLocale(locale, texts, ctx)
-        : await trBulkForLocale(locale, texts, ctx);
+        : await trBulkForLocale(locale, texts, ctx, "text", undefined, runtime);
       return [key, translated] as const;
     }),
   ));

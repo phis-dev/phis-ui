@@ -20,12 +20,20 @@ import { getPhiRequestRuntime } from "./request-runtime";
 import { resolvePhiRequestLocale } from "./request-locale";
 import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
 import { PHI_TEXT_SOURCE_PRESET, type PhiTextSource } from "../helpers/text-source";
+import type { PhiBlockRuntime } from "../types";
 
 export { PHI_TR_CTX_WEB_UI_LABEL };
 export type { PhiTranslationParams } from "../helpers/translation-format";
 
-function buildTranslatorOptions(locale: string, sourceLocale?: string) {
-  const requestRuntime = getPhiRequestRuntime();
+/**
+ * The part of a runtime a Site's translation needs: whose store answers. A caller that holds the
+ * runtime hands it over; one that does not is read from the request scope, which a render has and a
+ * background run (the search index) may not.
+ */
+export type PhiTranslationRuntime = Pick<PhiBlockRuntime, "site">;
+
+function buildTranslatorOptions(locale: string, sourceLocale?: string, runtime?: PhiTranslationRuntime) {
+  const requestRuntime = runtime ?? getPhiRequestRuntime();
   const resolvedRuntime = resolvePhiRuntimeConfig({
     apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
     internalToken: readPhiServerApiCredentials().internalToken,
@@ -113,6 +121,8 @@ export async function trForLocale(
   format: PhiTranslationFormat = "text",
   /** The language `msg` is written in, when it is not the Site's own -- a Module's text. */
   sourceLocale?: string,
+  /** The runtime the caller holds; without it the request's is read. */
+  runtime?: PhiTranslationRuntime,
 ) {
   const normalizedMessage = msg.trim();
   if (!normalizedMessage) {
@@ -120,7 +130,7 @@ export async function trForLocale(
   }
 
   const locale = resolvePhiTranslationLocale(localeInput);
-  const options = buildTranslatorOptions(locale, sourceLocale);
+  const options = buildTranslatorOptions(locale, sourceLocale, runtime);
   const translated = await requestInternalTranslation(
     options,
     normalizedMessage,
@@ -176,6 +186,8 @@ export async function trBulkForLocale(
   ctx: string | number = 0,
   format: PhiTranslationFormat = "text",
   sourceLocale?: string,
+  /** The runtime the caller holds; without it the request's is read. */
+  runtime?: PhiTranslationRuntime,
 ) {
   const normalizedMessages = normalizeMessages(msgs);
   if (!normalizedMessages.some(Boolean)) {
@@ -183,7 +195,7 @@ export async function trBulkForLocale(
   }
 
   const locale = resolvePhiTranslationLocale(localeInput);
-  const options = buildTranslatorOptions(locale, sourceLocale);
+  const options = buildTranslatorOptions(locale, sourceLocale, runtime);
   return requestInternalTranslationBulk(
     options,
     normalizedMessages,

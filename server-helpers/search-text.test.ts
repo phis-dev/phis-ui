@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 vi.mock("./translate", () => ({
-  trBulkForLocale: vi.fn(async (_locale: string, msgs: string[]) => msgs.map((msg) => (msg ? `de:${msg}` : ""))),
+  trBulkForLocale: vi.fn(async (_locale: string, msgs: string[], ..._rest: unknown[]) => msgs.map((msg) => (msg ? `de:${msg}` : ""))),
   trGlobalBulkForLocale: vi.fn(async (_locale: string, msgs: string[]) => msgs.map((msg) => (msg ? `global:${msg}` : ""))),
 }));
 
@@ -13,6 +13,8 @@ import {
   readPhiMarkdownSearchText,
   translatePhiSearchTexts,
 } from "./search-text";
+
+const runtime = { site: { key: "site-1" }, locale: { current: "de" } } as never;
 
 /*
  * What the index is made of: the words a reader sees, one line per block, and nothing else -- no
@@ -50,10 +52,10 @@ describe("the search text of a Widget", () => {
   });
 
   it("translates through the Site's store, or the platform's for a Preset's words, keeping places", async () => {
-    await expect(translatePhiSearchTexts("de", ["Hello", "", "World"], { translate: true })).resolves
+    await expect(translatePhiSearchTexts(runtime, ["Hello", "", "World"], { translate: true })).resolves
       .toEqual(["de:Hello", "", "de:World"]);
-    await expect(translatePhiSearchTexts("de", ["Hello"], { translate: true, textSource: "preset" })).resolves
+    await expect(translatePhiSearchTexts(runtime, ["Hello"], { translate: true, textSource: "preset" })).resolves
       .toEqual(["global:Hello"]);
-    await expect(translatePhiSearchTexts("de", ["Hello"], { translate: false })).resolves.toEqual(["Hello"]);
+    await expect(translatePhiSearchTexts(runtime, ["Hello"], { translate: false })).resolves.toEqual(["Hello"]);
   });
 });

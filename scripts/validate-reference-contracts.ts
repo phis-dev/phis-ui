@@ -844,7 +844,7 @@ for (const attribute of ["title", "width", "height"]) {
   );
   assert.match(
     markdownSource,
-    /translateUnits\(locale, imageTexts\.map\(\(entry\) => entry\.text\), "text", sourceLocale\)/u,
+    /translateUnits\(locale, imageTexts\.map\(\(entry\) => entry\.text\), "text", sourceLocale, runtime\)/u,
     "An image's alt and title must be translated as plain-text units of their own.",
   );
   assert.match(

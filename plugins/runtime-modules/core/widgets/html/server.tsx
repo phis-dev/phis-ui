@@ -92,6 +92,7 @@ export async function resolvePhiHtmlWidgetTranslatedHtml(
         sourceHtml,
         sourceMode === "url" ? config?.sourceLocale?.trim() : undefined,
         runtime.locale.current,
+        runtime,
       );
 }
 

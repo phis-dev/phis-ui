@@ -410,9 +410,10 @@ function translateUnits(
   msgs: string[],
   format: "html" | "text",
   sourceLocale?: string,
+  runtime?: Pick<PhiBlockRuntime, "site">,
 ) {
   return locale
-    ? trBulkForLocale(locale, msgs, 0, format, sourceLocale)
+    ? trBulkForLocale(locale, msgs, 0, format, sourceLocale, runtime)
     : trBulk(msgs, 0, format, sourceLocale);
 }
 
@@ -421,13 +422,14 @@ async function buildMarkdownInlineMap(
   translate: boolean,
   sourceLocale?: string,
   locale?: string,
+  runtime?: Pick<PhiBlockRuntime, "site">,
 ) {
   const units: MarkdownTranslationUnitEntry[] = [];
   collectMarkdownTranslationUnits(tree, units);
   const sent = units.filter((entry) => entry.unit.translatable);
   const translated = new Map<MarkdownTranslationUnitEntry, string>();
   if (translate && sent.length > 0) {
-    const answers = await translateUnits(locale, sent.map((entry) => entry.unit.html), "html", sourceLocale);
+    const answers = await translateUnits(locale, sent.map((entry) => entry.unit.html), "html", sourceLocale, runtime);
     sent.forEach((entry, index) => translated.set(entry, answers[index] || entry.unit.html));
   }
 
@@ -441,7 +443,7 @@ async function buildMarkdownInlineMap(
     ? []
     : (["alt", "title"] as const).flatMap((field) => slot[field].trim() ? [{ slot, field, text: slot[field] }] : [])));
   if (translate && imageTexts.length > 0) {
-    const answers = await translateUnits(locale, imageTexts.map((entry) => entry.text), "text", sourceLocale);
+    const answers = await translateUnits(locale, imageTexts.map((entry) => entry.text), "text", sourceLocale, runtime);
     imageTexts.forEach((entry, index) => {
       entry.slot[entry.field] = answers[index] || entry.text;
     });
@@ -720,7 +722,7 @@ async function resolveMarkdownRenderDataFromSource(
     headingIdPrefix,
     headingOffset,
   };
-  const inlineMap = await buildMarkdownInlineMap(tree, translate, sourceLocale, runtime?.locale.current);
+  const inlineMap = await buildMarkdownInlineMap(tree, translate, sourceLocale, runtime?.locale.current, runtime);
   const blocks = promoteMarkdownFigures(
     protectMarkdownMail(mapBlockNodes(tree.children, context, inlineMap)),
     figures,

@@ -18,10 +18,11 @@ import { trBulkForLocale, trGlobalBulkForLocale } from "./translate";
 /**
  * The Widget's own words in the reader's language, the way the Widget's render translates them: a
  * Preset's sentence through the platform's store, an author's through the Site's. Empty entries stay
- * in place so the caller can line answers up with what it asked.
+ * in place so the caller can line answers up with what it asked. The runtime is the one `searchText`
+ * was given and is named to the translation: the index runs where no request scope may be read.
  */
 export async function translatePhiSearchTexts(
-  locale: string,
+  runtime: Pick<PhiBlockRuntime, "site" | "locale">,
   texts: readonly (string | undefined | null)[],
   options: { translate: boolean; textSource?: PhiTextSource },
 ): Promise<string[]> {
@@ -30,8 +31,8 @@ export async function translatePhiSearchTexts(
     return source;
   }
   const translated = options.textSource === PHI_TEXT_SOURCE_PRESET
-    ? await trGlobalBulkForLocale(locale, source)
-    : await trBulkForLocale(locale, source);
+    ? await trGlobalBulkForLocale(runtime.locale.current, source)
+    : await trBulkForLocale(runtime.locale.current, source, 0, "text", undefined, runtime);
   return translated.map((text, index) => text || source[index] || "");
 }
 
@@ -48,7 +49,7 @@ export async function translatePhiSearchWidgetTexts(
   const present = texts.filter((text): text is string => typeof text === "string" && text.trim().length > 0);
   if (present.length === 0) return [];
   const masked = present.map((text) => maskPhiTextPlaceholders(text, 0));
-  const translated = await translatePhiSearchTexts(runtime.locale.current, masked.map((entry) => entry.text), options);
+  const translated = await translatePhiSearchTexts(runtime, masked.map((entry) => entry.text), options);
   return translated
     .map((text, index) => resolvePhiTextPlaceholders(text, masked[index]!.names, runtime, []))
     .filter(Boolean);

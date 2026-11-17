@@ -73,6 +73,13 @@ const PHI_SEARCH_INDEX_DEBOUNCE_MS = 2_000;
  */
 const PHI_SEARCH_INDEX_FORMAT = 2;
 
+/**
+ * The Widgets that could not say their words in one run, by type: how many Pages lost them, and the
+ * first Page and error as the example. A Widget type that fails fails on every Page that holds it, so the
+ * run names it once at its end instead of once per Page and set.
+ */
+type PhiSearchWidgetFailures = Map<string, { pages: number; first: string; error: unknown }>;
+
 type PhiSearchAccessRegistry = ReturnType<typeof buildPhiRuntimeModuleAccessRegistry>;
 
 type PhiSearchIndexRegistry = {
@@ -156,6 +163,7 @@ async function indexRegisteredAreas(registry: PhiSearchIndexRegistry) {
     internalToken: bridgeRuntime.internalToken,
     siteKey: bridgeRuntime.siteKey,
   };
+  const failures: PhiSearchWidgetFailures = new Map();
   const held = await fetchPhiSiteSearchIndexStates(credentials);
   const heldFingerprint = (areaMask: number, locale: string) =>
     held.find((state) => state.areaMask === areaMask && state.locale === locale)?.fingerprint ?? null;
@@ -164,10 +172,16 @@ async function indexRegisteredAreas(registry: PhiSearchIndexRegistry) {
     const bridge = registry.bridges.get(area);
     if (!bridge) continue;
     try {
-      await indexArea({ area, bridge, credentials, heldFingerprint });
+      await indexArea({ area, bridge, credentials, heldFingerprint, failures });
     } catch (error) {
       console.error(`[phis-ui] Indexing the ${area} Area for search failed.`, error);
     }
+  }
+  for (const [widgetType, failure] of failures) {
+    console.error(
+      `[phis-ui] The search index could not read the Widget "${widgetType}" on ${failure.pages} page(s) in this run; first on ${failure.first}.`,
+      failure.error,
+    );
   }
 }
 
@@ -196,11 +210,13 @@ async function indexArea({
   bridge,
   credentials,
   heldFingerprint,
+  failures,
 }: {
   area: PhiSearchIndexArea;
   bridge: PhiCmsSiteBridge;
   credentials: PhiSearchIndexCredentials;
   heldFingerprint: (areaMask: number, locale: string) => string | null;
+  failures: PhiSearchWidgetFailures;
 }) {
   const { apiBaseUrl, internalToken, siteKey } = credentials;
   const catalog = resolvePhiCmsDescriptorCatalog(bridge.runtimeModuleCatalog);
@@ -291,7 +307,7 @@ async function indexArea({
       await loadPhiSiteRequestContext(siteKey, locale, "", apiBaseUrl, internalToken),
       area,
     );
-    const documents = await readDocuments({ bridge, area, locale, context, candidates, loadPlugin, accessRegistry });
+    const documents = await readDocuments({ bridge, area, locale, context, candidates, loadPlugin, accessRegistry, failures });
     const answer = await putPhiSiteSearchIndexSet({
       ...credentials,
       area,
@@ -317,6 +333,7 @@ async function readDocuments({
   candidates,
   loadPlugin,
   accessRegistry,
+  failures,
 }: {
   bridge: PhiCmsSiteBridge;
   area: PhiSearchIndexArea;
@@ -325,6 +342,7 @@ async function readDocuments({
   candidates: readonly { path: string }[];
   loadPlugin: (type: string) => Promise<PhiCmsRuntimeWidgetPlugin<unknown> | null>;
   accessRegistry: PhiSearchAccessRegistry;
+  failures: PhiSearchWidgetFailures;
 }): Promise<PhiSearchDocument[]> {
   const documents = new Array<PhiSearchDocument | null>(candidates.length).fill(null);
   let next = 0;
@@ -333,7 +351,7 @@ async function readDocuments({
       const index = next++;
       const path = candidates[index]!.path;
       try {
-        documents[index] = await readDocument({ bridge, area, locale, context, path, loadPlugin, accessRegistry });
+        documents[index] = await readDocument({ bridge, area, locale, context, path, loadPlugin, accessRegistry, failures });
       } catch (error) {
         console.error(`[phis-ui] The search index could not read ${area}:${path} (${locale}).`, error);
       }
@@ -360,6 +378,7 @@ async function readDocument({
   path,
   loadPlugin,
   accessRegistry,
+  failures,
 }: {
   bridge: PhiCmsSiteBridge;
   area: PhiCmsAreaKey;
@@ -368,6 +387,7 @@ async function readDocument({
   path: string;
   loadPlugin: (type: string) => Promise<PhiCmsRuntimeWidgetPlugin<unknown> | null>;
   accessRegistry: PhiSearchAccessRegistry;
+  failures: PhiSearchWidgetFailures;
 }): Promise<PhiSearchDocument | null> {
   const resolved = await resolvePhiCmsLookup({
     bridge,
@@ -384,11 +404,12 @@ async function readDocument({
   if (!canPhiViewerAccess(resolved.runtime.viewer, page.accessPolicy)) return null;
 
   /*
-   * The Widgets answer inside a request scope of their own. `searchText` is given the runtime, but the
-   * shared server helpers a Widget reaches for -- the translation of its texts first of all -- read the
-   * request runtime from the scope, and the indexer runs where no request is: at start-up, or on a
-   * timer after a publish. Without this scope every Widget that translates fails and a Page is indexed
-   * by title and description alone, which is what the first production index was.
+   * `searchText` is given the runtime and names it to every helper it reaches (the translation of its
+   * texts first of all), so a Widget never depends on a request scope. The scope below is kept for the
+   * helpers that still read the request's runtime, since the indexer runs where no request is: at
+   * start-up, or on a timer after a publish. A built Site showed this scope not carrying into the
+   * Widget's code (the first production index was title and description alone), which is why the
+   * runtime is passed and not left to be found.
    */
   const visible = filterPhiCmsRenderableTreeForViewer({
     tree: resolved.page,
@@ -415,8 +436,10 @@ async function readDocument({
         const config = plugin.parseConfig(translatedConfigs.get(widget.id) ?? widget.config);
         collected.push(...await plugin.searchText({ widget, config, runtime: resolved.runtime }));
       } catch (error) {
-        // One Widget that cannot say its words costs the Page those words, not the Page.
-        console.error(`[phis-ui] The search index could not read the Widget "${widget.widgetType}" on ${area}:${path}.`, error);
+        // One Widget that cannot say its words costs the Page those words, not the Page; the run names the type once.
+        const failure = failures.get(widget.widgetType);
+        if (failure) failure.pages += 1;
+        else failures.set(widget.widgetType, { pages: 1, first: `${area}:${path} (${locale})`, error });
       }
     }
     return collected;

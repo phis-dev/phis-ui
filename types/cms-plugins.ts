@@ -642,7 +642,8 @@ export type PhiCmsWidgetPlugin<TConfig> = {
    * answers the text as the reader sees it -- translated for `runtime.locale`, with the Page's values
    * filled in -- and nothing a reader does not see. A Widget without it contributes no text, which is
    * right for a picture, a form or a navigation; a Widget that draws words a visitor would search for
-   * says them here, in reading order, one entry per line or paragraph.
+   * says them here, in reading order, one entry per line or paragraph. It runs outside a request, so it
+   * uses the `runtime` it is given and passes it to what it calls, never the request's scope.
    */
   searchText?: PhiBivariantCallback<
     [PhiCmsWidgetSearchTextArgs<TConfig>],

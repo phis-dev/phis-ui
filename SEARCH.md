@@ -75,8 +75,10 @@ Its title and description, and every Widget's `searchText`, in tree order -- of 
 of that set would see: a Layout or Widget whose access policy is narrower than the Page's is filtered
 out as the live render filters it, so nothing a reader cannot see reaches that reader's index. A Page
 that resolves to nothing, forwards, is `NoIndex`, or needs more than the reader has is not written. A
-Widget that fails to answer costs the Page its words and is logged; a Page that fails to resolve is
-logged and the rest of the set is written.
+Widget that fails to answer costs the Page its words and is logged once per Widget type and run, with
+the number of Pages and the first one; a Page that fails to resolve is logged and the rest of the set is
+written. A `searchText` gets the runtime and passes it on to whatever translates or resolves for it: the
+indexer runs outside a request, so nothing it calls may read the request's scope.
 
 ## Not in v1
 
