@@ -290,9 +290,10 @@ The users Table also shows **Add-on roles** (Core 0.4.1; [phis-server AUTHORIZAT
 - Filter "Add-on role", one select whose options come from `GET /api/site/addon-roles` (options Provider
   `@phis/ui/modules/user-management/options/addon-roles`): an Add-on (users with at least one stored role of it)
   or one role of an Add-on (users who hold it stored or through `includes`). Both keep every enabled Site Admin,
-  which is the Core's rule. It sends the Core's `addonId` and `addonRole` query parameters, and replaces the
-  former Account filter (Shop / Local roles / Auth); the Account column stays, and the Core's `accountType`
-  parameter is no longer sent.
+  which is the Core's rule. It sends the Core's `addonId` and `addonRole` query parameters. It stands beside
+  the Account filter (External / Local roles / Auth, default Local roles, sent as `accountType`); the two filters
+  work together, so with the default a user with an Add-on role but no Core role is not listed until Account is
+  widened.
 - Not built: the Add-on roles section of the "Edit user" dialog (a section per enabled Add-on with a multi-select
   of its roles, saved with one `PUT /api/site/addon-roles` per changed Add-on after the user is saved). It needs
   a Widget type owned by User Management (a new `PhiCmsWidgetType` and Widget plugin key, closed registries)

@@ -322,7 +322,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
                 renderer: "badge",
                 sizing: { mode: "content" },
                 valueMap: {
-                  customer: widgetLabels.accountTypes.shop,
+                  customer: widgetLabels.accountTypes.external,
                   roles: widgetLabels.accountTypes.roles,
                   auth: widgetLabels.accountTypes.auth,
                 },
@@ -373,6 +373,17 @@ export async function buildPhiDefaultAdminUsersPageTree({
           features: {
             search: { enabled: true, placeholder: widgetLabels.searchPlaceholder, debounceMs: 250 },
             filters: [
+              {
+                key: "accountType",
+                type: "select",
+                label: widgetLabels.columns.account,
+                defaultValue: "roles",
+                options: [
+                  { value: "customer", label: widgetLabels.accountTypes.external },
+                  { value: "roles", label: widgetLabels.accountTypes.roles },
+                  { value: "auth", label: widgetLabels.accountTypes.auth },
+                ],
+              },
               {
                 key: "addonRole",
                 type: "select",

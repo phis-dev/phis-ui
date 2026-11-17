@@ -57,7 +57,7 @@ export const PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
         ],
         query: {
           search: true,
-          filterFields: ["addonRole", "enabled"],
+          filterFields: ["accountType", "addonRole", "enabled"],
           sorting: "single",
           pagination: "offset",
           total: true,

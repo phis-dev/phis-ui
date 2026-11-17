@@ -30,7 +30,7 @@ const PHI_USER_MANAGEMENT_DASHBOARD_CARD_LABEL_SET = definePhiRuntimeModuleLabel
     accounts_eyebrow: "Accounts",
     accounts_title: "Site users",
     accounts_description: "User accounts on this site",
-    accounts_meta: "Admin, editor, accounting, auth, and shop accounts",
+    accounts_meta: "Admin, editor, accounting, auth, and external accounts",
   },
 });
 

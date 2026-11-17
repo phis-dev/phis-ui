@@ -45,9 +45,11 @@ async function loadUsers({
 }: PhiTableProviderQueryRequest): Promise<PhiTableProviderQueryResult> {
   const params = buildPhiTablePageParams(query, 20);
   const search = query.search?.trim() ?? "";
+  const accountType = readPhiTableStringFilter(query, "accountType");
   const addonRole = parsePhiAddonRoleFilter(readPhiTableStringFilter(query, "addonRole"));
   const enabled = readPhiTableStringFilter(query, "enabled");
   if (search) params.set("search", search);
+  if (accountType) params.set("accountType", accountType);
   // The Core's two filters: an Add-on, and optionally one of its roles (`addonRole` needs `addonId`).
   if (addonRole) {
     params.set("addonId", addonRole.addonId);

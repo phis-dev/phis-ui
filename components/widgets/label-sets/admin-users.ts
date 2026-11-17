@@ -14,7 +14,7 @@ const PHI_ADMIN_USERS_TABLE_WIDGET_LABEL_SET = definePhiLabelSet({
     add_label: "Add user",
     footer_count: "%1 users of %2 total",
     account_type_all: "All",
-    account_type_shop: "Shop",
+    account_type_external: "External",
     account_type_roles: "Local roles",
     account_type_auth: "Auth",
     enabled_all: "All",
@@ -103,7 +103,7 @@ export async function getPhiAdminUsersTableWidgetLabels(options: PhiGlobalTransl
     footer: labels.footer_count,
     accountTypes: {
       all: labels.account_type_all,
-      shop: labels.account_type_shop,
+      external: labels.account_type_external,
       roles: labels.account_type_roles,
       auth: labels.account_type_auth,
     },
