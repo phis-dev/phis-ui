@@ -504,7 +504,8 @@ drawable yet: resolving it throws.
 ## Single-line fields have the Button's height
 
 A single-line field is exactly as high as a Button of its size: the Theme's control height
-(`--phi-control-height-sm`, `--phi-control-height`, `--phi-control-height-lg`), whatever the Theme sets it to.
+(`--phi-control-height-sm`, `--phi-control-height`, `--phi-control-height-lg`), whatever the Theme sets it to (the house's own are 21, 34 and 55, `PHI_CONTROL_HEIGHTS`; the small 21 carries the
+small text, 13).
 Ant Design gives a Button that height outright but a field only the sum of line, padding and border, with
 the padding reckoned as (control height - line) / 2 - border and clamped at zero, so a Theme whose small
 control height is below its small line got fields taller than the Buttons beside them, and fractions over or

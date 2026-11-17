@@ -64,8 +64,12 @@ export const PHI_RADII = {
   xxl: 89,
 } as const;
 
+/*
+ * The Fibonacci row 21, 34, 55. A single-line field is as high as the Button of its size, so the small 21
+ * is the height that carries the small text (13).
+ */
 export const PHI_CONTROL_HEIGHTS = {
-  sm: 26,
+  sm: 21,
   md: 34,
   lg: 55,
 } as const;
