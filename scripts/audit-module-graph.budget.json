@@ -264,11 +264,11 @@
       "clientBytes": 725174
     },
     "./next/root-route": {
-      "runtimeBytes": 1127941,
+      "runtimeBytes": 1138153,
       "clientBytes": 498672
     },
     "./next/route-handlers": {
-      "runtimeBytes": 1092393,
+      "runtimeBytes": 1104143,
       "clientBytes": 0
     },
     "./next/runtime-module-client-boundary": {
