@@ -227,7 +227,7 @@ const publicBaseRoutes = compilePhiCmsActiveRouteTable({
   activeModuleIds: publicBaseModuleIds,
 });
 /*
- * The base Module owns the landing, the error Pages, the terms and the contact page: the floor a Site
+ * The base Module owns the landing, the error Pages, the privacy notice, the terms and the contact page: the floor a Site
  * without a Site package stands on, and what a package Module covers (MODULES.md, "Who owns an
  * address").
  */
@@ -235,6 +235,7 @@ assert.equal(resolvePhiCmsRoutePreset(publicBaseRoutes, "/")?.descriptor.presetK
 assert.equal(resolvePhiCmsRoutePreset(publicBaseRoutes, "/")?.descriptor.landingPage, undefined);
 assert.equal(resolvePhiCmsRoutePreset(publicBaseRoutes, "/contact")?.descriptor.ownerModuleId, PHI_PUBLIC_RUNTIME_MODULE_ID);
 assert.equal(resolvePhiCmsRoutePreset(publicBaseRoutes, "/terms-and-conditions")?.descriptor.ownerModuleId, PHI_PUBLIC_RUNTIME_MODULE_ID);
+assert.equal(resolvePhiCmsRoutePreset(publicBaseRoutes, "/privacy")?.descriptor.ownerModuleId, PHI_PUBLIC_RUNTIME_MODULE_ID);
 const publicError404Id = createPhiPresetCmsPageId({
   ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
   presetKey: "public-error-404-page",

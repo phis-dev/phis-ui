@@ -18,7 +18,7 @@ export const PHI_PUBLIC_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION =
       forms: PHI_PUBLIC_RUNTIME_MODULE_FORMS,
       areaShells: PHI_PUBLIC_RUNTIME_MODULE_AREA_SHELLS,
       /*
-       * The landing, the error Pages, the terms, and the contact page: what no Site can do without. Each
+       * The landing, the error Pages, the privacy notice, the terms, and the contact page: what no Site can do without. Each
        * is a floor a package Module may cover (MODULES.md, "Who owns an address") -- the landing through
        * the root slot, the others through their path.
        */

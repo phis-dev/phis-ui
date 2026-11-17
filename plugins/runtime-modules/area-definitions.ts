@@ -143,7 +143,9 @@ function sidebarAnchors(
 }
 
 /*
- * The Public surfaces carry one intrinsic entry, the terms, and export it as the one anchor.
+ * The Public header carries one intrinsic entry, the terms, and exports it as the one anchor. The footer
+ * carries two, the privacy notice and the terms in that order, and exports both: a Site package that has
+ * its own imprint places it before the privacy notice.
  *
  * The terms are Core's, so their entry is; the contact entry hangs after it, and a Site package's
  * landing places its Home entry before it. Public has no sidebar and no quick-links surface: the Public
@@ -157,6 +159,13 @@ const publicTermsItem = {
   routePresetKey: "public-terms-page",
 } as const;
 
+const publicPrivacyItem = {
+  itemKey: "@phis/ui/modules/public/nav/privacy",
+  label: label("Privacy"),
+  icon: "antd:safety-certificate",
+  routePresetKey: "public-privacy-page",
+} as const;
+
 const publicNavigationSurfaces = [
   {
     navKey: "public:header",
@@ -167,8 +176,8 @@ const publicNavigationSurfaces = [
   {
     navKey: "public:footer",
     label: label("Public footer navigation"),
-    items: [publicTermsItem],
-    exportedItemKeys: [publicTermsItem.itemKey],
+    items: [publicPrivacyItem, publicTermsItem],
+    exportedItemKeys: [publicPrivacyItem.itemKey, publicTermsItem.itemKey],
   },
   accountNavigationSurface(PHI_PUBLIC_ACCOUNT_NAV_ITEM_KEY, "public:account"),
 ] as const;

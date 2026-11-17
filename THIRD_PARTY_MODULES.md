@@ -641,7 +641,7 @@ Page the Site authored. So:
 - **A taken address is not a fault.** On a Site that has grown it is the ordinary case.
 - **Yielding an address costs nothing else.** A renamed route, like a landing offer the Site did not
   choose, leaves every other route your Module has standing.
-- **A Public base Page is yours to replace.** Declare `/contact`, `/terms-and-conditions`, or
+- **A Public base Page is yours to replace.** Declare `/contact`, `/privacy`, `/terms-and-conditions`, or
   `/error/404` and your Page is served there, as long as no other package Module declares the same path;
   the base Page steps aside and comes back when your Module is switched off. Links and navigation that
   point at the base Page reach yours through the path, so you do not need a navigation item of your own.
@@ -2282,6 +2282,11 @@ navigation: [
       icon: "antd:github", target: { kind: "external", href: "https://github.com/acme", newTab: true } } },
 ],
 ```
+
+The Public footer exports two base entries to stand beside, `@phis/ui/modules/public/nav/privacy` and
+`@phis/ui/modules/public/nav/terms`, in the order Privacy, Terms (the contact entry follows them). The header exports the
+terms only. A Module that covers `/privacy` brings no entry of its own: the base entry leads to its Page through the
+path.
 
 An entry that leads out of the Site names `target: { kind: "external", href, newTab? }` instead of a
 `routePresetKey` or an Overlay, never beside one. Only `https:` is accepted; the catalog refuses anything

@@ -950,7 +950,7 @@ Which Widget reads which surface is a property of the shipped Area shells, not o
 | Area | `navKey` | Drawn by | Way in for a Module entry |
 | --- | --- | --- | --- |
 | Public | `public:header` | Header Navigation Widget in the Public shell's header | `after` / `before` `@phis/ui/modules/public/nav/terms`, or `parentItemKey: null` alone |
-| Public | `public:footer` | Quick Links Widget ("Quick Links") in the Public shell's `footer_main` | the same |
+| Public | `public:footer` | Quick Links Widget ("Quick Links") in the Public shell's `footer_main` | the same, and `after` / `before` `@phis/ui/modules/public/nav/privacy`; the footer stands Privacy, Terms, Contact |
 | App | `app:header`, `app:footer` | Header Navigation and Quick Links Widgets in the App shell, the same shell tree as Public | `parentItemKey: null`; nothing is exported |
 | App | `app:quicklinks` | no shipped Widget; a Quick Links Widget a Site places with this `navKey` | `parentItemKey: null` |
 | App, Accounting, Admin, Editor, Builder | `<area>:sidebar` | the Area shell's sidebar | an anchor: `start`, `main`, `settings`, `end` ([THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#8a-what-a-module-package-exports), Navigation) |
@@ -1122,7 +1122,7 @@ stored, no longer reached at that address -- until the Site moves it or the Modu
 route with parameters an exact Site Page at the concrete path wins.
 
 One holder yields instead of keeping: the Public base Module, `@phis/ui/modules/public`. Its Pages --
-the error Pages, `/terms-and-conditions`, `/contact` -- are there so that a Site is never without them,
+the error Pages, `/privacy`, `/terms-and-conditions`, `/contact` -- are there so that a Site is never without them,
 not because the Site chose them, so a Module that brings its own is not a newcomer to be sent elsewhere
 but the reason the floor can step aside. The rule is exact:
 

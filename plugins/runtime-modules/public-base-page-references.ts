@@ -17,6 +17,7 @@ import { createPhiRuntimeModuleId } from "../../constants/module-identity";
 export const PHI_PUBLIC_BASE_PAGE_PRESET_KEYS = {
   welcome: "public-welcome-page",
   home: "public-home-page",
+  privacy: "public-privacy-page",
   terms: "public-terms-page",
   contact: "public-contact-page",
   unsubscribe: "public-unsubscribe-page",
@@ -28,7 +29,7 @@ const PHI_PUBLIC_RUNTIME_MODULE_ID = createPhiRuntimeModuleId(PHI_SHARED_PACKAGE
 /**
  * Ready-made references to the Pages every Site has, for a Module that links to one.
  *
- * The Public base brings a welcome, a home, terms and a contact Page, and a package Module may
+ * The Public base brings a welcome, a home, privacy, terms and a contact Page, and a package Module may
  * reasonably point at any of them -- phis.dev's closing line does exactly that. Without this it would
  * either type a path, which goes stale and cannot say which Module's Page it means where one covers
  * another, or assemble a reference from a preset key it copied, which nothing checks.

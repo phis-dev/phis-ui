@@ -108,6 +108,17 @@ export const PHI_PUBLIC_RUNTIME_MODULE_ROUTES = [
   })),
   {
     ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
+    presetKey: PHI_PUBLIC_BASE_PAGE_PRESET_KEYS.privacy,
+    presetVersion: 1,
+    area: "public",
+    title: "Privacy",
+    path: "/privacy",
+    loadTree: ({ page }) =>
+      import("./trees/phi-default-pub-privacy-page-tree")
+        .then((module) => module.buildPhiDefaultPubPrivacyPageTree({ page })),
+  },
+  {
+    ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
     presetKey: PHI_PUBLIC_BASE_PAGE_PRESET_KEYS.terms,
     presetVersion: 2,
     area: "public",

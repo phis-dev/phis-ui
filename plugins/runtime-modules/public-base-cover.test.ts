@@ -72,9 +72,28 @@ function compile(entries: PhiRuntimeModuleCatalog, activeModuleIds = new Set([..
 }
 
 describe("a package covering a Public base Page", () => {
+  it("answers /privacy with the package's Page, and the base footer entry leads there", () => {
+    const { catalog, activeModuleIds, table } = compile(withPackages(buildPackageEntry(ACME_ID, ["/privacy"])));
+    expect(resolvePhiCmsRoutePreset(table, "/privacy")?.descriptor.ownerModuleId).toBe(ACME_ID);
+    const footer = resolvePhiCmsActiveNavigationSurfaces({ catalog, area: "public", activeModuleIds, routeTable: table })
+      .find((surface) => surface.navKey === "public:footer");
+    const privacy = footer?.items.find((item) =>
+      item.target?.kind === "module" && item.target.presetKey === "public-privacy-page");
+    expect(privacy?.target).toMatchObject({ path: "/privacy" });
+  });
+
+  it("stands the base footer Privacy, Terms, Contact", () => {
+    const { catalog, activeModuleIds, table } = compile(withPackages());
+    const footer = resolvePhiCmsActiveNavigationSurfaces({ catalog, area: "public", activeModuleIds, routeTable: table })
+      .find((surface) => surface.navKey === "public:footer");
+    expect(footer?.items.map((item) => item.label.defaultMessage)).toEqual(["Privacy", "Terms & Conditions", "Contact"]);
+  });
+
   it("answers the base path with the package's Page", () => {
     const { table } = compile(withPackages(buildPackageEntry(ACME_ID, ["/contact", "/error/404"])));
     expect(resolvePhiCmsRoutePreset(table, "/contact")?.descriptor.ownerModuleId).toBe(ACME_ID);
+    expect(resolvePhiCmsRoutePreset(table, "/privacy")?.descriptor.ownerModuleId)
+      .toBe(PHI_PUBLIC_RUNTIME_MODULE_ID);
     expect(resolvePhiCmsRoutePreset(table, "/error/404")?.descriptor.ownerModuleId).toBe(ACME_ID);
     expect(resolvePhiCmsRoutePreset(table, "/terms-and-conditions")?.descriptor.ownerModuleId)
       .toBe(PHI_PUBLIC_RUNTIME_MODULE_ID);
