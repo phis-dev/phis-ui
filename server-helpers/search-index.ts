@@ -31,6 +31,7 @@ import { resolvePhiCmsLookup } from "./cms-lookup";
 import { resolvePhiAreaRouteScope } from "./cms-request";
 import { runWithPhiRequestRuntime } from "./request-runtime";
 import { loadPhiSiteRequestContext } from "./runtime";
+import { getPhiSiteBuildId } from "./site-build-id";
 import { joinPhiSearchText } from "./search-text";
 
 /**
@@ -66,12 +67,6 @@ const PHI_SEARCH_INDEX_RESOLVE_CONCURRENCY = 4;
 
 /** How long after the marker moved the run starts, so a burst of publishes is one run. */
 const PHI_SEARCH_INDEX_DEBOUNCE_MS = 2_000;
-
-/**
- * What the extraction is, named in the fingerprint: a change in how documents are built reindexes every
- * Site on its next start, which the published revisions alone would not do.
- */
-const PHI_SEARCH_INDEX_FORMAT = 2;
 
 /**
  * The Widgets that could not say their words in one run, by type: how many Pages lost them, and the
@@ -262,9 +257,14 @@ async function indexArea({
    * translated. Publishing content moves the read marker (the Site's publish triggers), correcting a
    * translation moves a translation marker, and without them here either left the old words in the
    * index. The price is a run per published change, which is what SEARCH.md promises.
+   *
+   * The build is in here because what a document contains depends on the code that builds it (phis-ui,
+   * the Site package, the Modules), and no list of inputs can name that. A new build of the Site is
+   * therefore a reason to write again, and the build's id says exactly that. The consequence is one run
+   * per Area and language after every rollout, and none between.
    */
   const fingerprint = createHash("sha256").update(JSON.stringify({
-    format: PHI_SEARCH_INDEX_FORMAT,
+    build: getPhiSiteBuildId(),
     area,
     publishedPages,
     areaPreset: areaPreset?.preset ?? null,

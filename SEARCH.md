@@ -61,11 +61,14 @@ push the page down on a phone. So the box can stand as a magnifier:
 - When a Site process first sees the Site's read marker, and whenever it moves -- which a publish does.
   A burst of publishes is one run; a marker that moves during a run queues one more.
 - Only the sets whose fingerprint phis does not hold: the fingerprint names the live revisions, the Area
-  preset, the active Modules, the Site's locales, the extraction format, the Site's read marker and its
+  preset, the active Modules, the Site's locales, the Site's build, the Site's read marker and its
   translation markers, so a publish, an unpublish, a path change, a Module switched on or off, a
-  language added, published content a Widget is bound to, a corrected translation, or a new version of
-  this package rewrites the set, and nothing else does. Several processes noticing one publish produce
-  one write.
+  language added, published content a Widget is bound to, a corrected translation, or a new build of
+  the Site rewrites the set, and nothing else does. The build is Next's `BUILD_ID`
+  (`server-helpers/site-build-id.ts`): what a document contains depends on the code that builds it
+  (this package, the Site package, Modules), so every rollout writes each set once and no number is kept
+  by hand. Without that file (`next dev`) the process makes its own id, so every start writes again.
+  Several processes noticing one publish produce one write.
 - An Area is indexed by the process that hosts it: the Area host registers its Bridge when it is created
   (`next/areas/public.ts`, `next/areas/app.ts`).
 
