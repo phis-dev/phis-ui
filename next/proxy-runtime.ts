@@ -11,6 +11,13 @@ import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials"
 
 const HOP_BY_HOP_HEADERS = new Set(["connection", "content-length", "host"]);
 
+/**
+ * The browser's `accept-encoding` is its agreement with the Site, not with Core: encoding is each hop's
+ * own. The Site's `fetch` negotiates its own and decodes, and the answer is compressed again towards the
+ * browser by the runtime or nginx. Passed on, it let Core answer in an encoding this hop had not chosen.
+ */
+const ENCODING_NEGOTIATION_HEADER = "accept-encoding";
+
 /** Headers Core reads as statements about the Site or the caller's standing. None may come from outside. */
 const PHIS_HEADER_PREFIX = "x-phis-";
 
@@ -115,6 +122,7 @@ export function buildPhiNextProxyHeaders(
     const name = key.toLowerCase();
     if (
       !HOP_BY_HOP_HEADERS.has(name) &&
+      name !== ENCODING_NEGOTIATION_HEADER &&
       !name.startsWith(PHIS_HEADER_PREFIX) &&
       name !== "authorization" &&
       !name.startsWith(FORWARDING_HEADER_PREFIX) &&
@@ -142,6 +150,15 @@ export function buildPhiNextProxyHeaders(
   const clientIp = readPhiSiteClientIp(request.headers);
   if (clientIp) {
     headers.set("x-forwarded-for", clientIp);
+  }
+
+  /*
+   * A range names bytes of the representation as stored. The Site hands the browser decoded bytes, so
+   * what it asks Core for must be the bytes themselves: `identity`, or a range into a compressed body
+   * would be cut out of the compressed stream and decoded into nothing.
+   */
+  if (headers.has("range")) {
+    headers.set(ENCODING_NEGOTIATION_HEADER, "identity");
   }
 
   if (!headers.has("user-agent")) {

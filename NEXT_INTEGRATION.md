@@ -49,9 +49,24 @@ The Site runtime unit binds `127.0.0.1` behind the nginx profile, which appends 
 the one proxy the default assumes. A Site behind a further proxy (a CDN in front of nginx) sets
 `TRUST_PROXY` in its unit to the number of hops.
 
-`fetch` decodes the Server's compressed bodies, so a `GET`/`HEAD` answered through it loses
-`content-encoding` and `content-length` on the way back; the Node path for bodies passes the Server's
-bytes on as they came, encoding included.
+## Encoding
+
+Encoding is each hop's own, and a proxy door passes none of it on.
+
+- Request: the browser's `accept-encoding` is not forwarded (`buildPhiNextProxyHeaders`). The hop from the
+  Site to Core negotiates for itself: `fetch` sends its own and decodes the answer. A request with a
+  `range` is the one exception and asks Core for `accept-encoding: identity`, because a range names bytes
+  of the stored representation and must not be cut out of a compressed stream.
+- Response: the body is passed on decoded, so `content-encoding`, `content-length` and the hop headers
+  (`connection`, `keep-alive`, `transfer-encoding`) of Core's answer are dropped
+  (`buildPhiProxyResponseHeaders`); `content-range`, `accept-ranges`, `etag`, `vary`, `cache-control` and
+  every `set-cookie` are kept. Compression towards the browser is the runtime's (Next compresses route
+  handler responses from 16.4.6 on) or nginx's. Passing Core's `content-encoding` on instead produced a
+  body labelled twice, or compressed and unlabelled, depending on the Next patch release.
+- Every method takes this one way (`net/phi-next-proxy.ts`): a body is streamed to `fetch`, never read
+  into memory first, and the answer streams back -- Assets and ranges (`206`, `content-range`), `304`
+  with validators, and long answers are passed on as they come. `/api/site/forms` and the Signet route
+  read Core's JSON or an Asset through `fetch` as well and build their own answer.
 
 ## Static graph boundary
 

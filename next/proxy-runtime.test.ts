@@ -153,3 +153,29 @@ describe("the caller's address and scheme a Site states to Core", () => {
     expect(headers.get("x-forwarded-port")).toBeNull();
   });
 });
+
+/*
+ * Encoding is each hop's own: the browser's `accept-encoding` is its agreement with the Site. Core is asked
+ * by the Site's `fetch`, which negotiates and decodes for itself.
+ */
+describe("the encoding a Site asks Core for", () => {
+  it("does not pass the browser's accept-encoding on", () => {
+    const headers = buildPhiNextProxyHeaders(
+      requestWith({ "accept-encoding": "gzip, deflate, br, zstd", accept: "application/json" }),
+      "test/1.0",
+    );
+
+    expect(headers.get("accept-encoding")).toBeNull();
+    expect(headers.get("accept")).toBe("application/json");
+  });
+
+  it("asks for the bytes themselves where the browser asked for a range", () => {
+    const headers = buildPhiNextProxyHeaders(
+      requestWith({ "accept-encoding": "gzip", range: "bytes=0-99" }),
+      "test/1.0",
+    );
+
+    expect(headers.get("range")).toBe("bytes=0-99");
+    expect(headers.get("accept-encoding")).toBe("identity");
+  });
+});

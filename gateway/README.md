@@ -25,6 +25,10 @@ This directory is the internal adapter layer between `@phis/ui` and `@phis/serve
 - upstream target selection for the Site's proxy route handlers, so a Site repository only mounts them,
   and the dispatch that keeps a path under `/api/site` in the Site (`site-proxy.ts`, `site-area-bridges.ts`,
   `module-diagnostics-route.ts`, `navigation-target-route.ts`, `signet-route.ts`)
+- encoding at the proxy doors: the browser's `accept-encoding` is not forwarded to Core and Core's
+  `content-encoding`/`content-length` are not passed back, because the Site's `fetch` negotiates and decodes
+  its own hop and compression towards the browser is the runtime's or nginx's
+  ([NEXT_INTEGRATION.md](../NEXT_INTEGRATION.md#encoding), `net/phi-next-proxy.ts`)
 - the data-source (`data-source.ts`) and mutation (`mutation.ts`) descriptor types; mutations are a
   separate write contract and are never modeled as cacheable reads
 

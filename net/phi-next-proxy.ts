@@ -1,10 +1,5 @@
 import "server-only";
 
-import { request as httpRequest } from "node:http";
-import { request as httpsRequest } from "node:https";
-import { Readable } from "node:stream";
-import type { ReadableStream as NodeReadableStream } from "node:stream/web";
-
 import type { NextRequest } from "next/server";
 import { logRuntimeEvent } from "./log";
 
@@ -84,105 +79,28 @@ function buildTargetUrl(
   return targetUrl;
 }
 
-function toHeadersObject(headers: Headers) {
-  return Object.fromEntries(headers.entries());
-}
-
 /** Headers that describe one connection, not the response: the runtime writes its own on the way out. */
 const HOP_BY_HOP_RESPONSE_HEADERS = ["connection", "keep-alive", "transfer-encoding"];
 
 /**
  * The upstream response's headers as the browser may see them.
  *
- * `fetch` hands over a body it has already decoded: undici asks for gzip, deflate and br on its own and
- * undoes whatever the Server applied. Passing the Server's `content-encoding` on then tells the browser
- * to decode plain bytes a second time (`ERR_CONTENT_DECODING_FAILED`), and its `content-length` counts
- * the compressed bytes. Both go for a decoded body; the runtime frames the body it actually sends.
- * Asking upstream for `identity` instead would rest on the Server honouring it -- this holds either way.
+ * Encoding is each hop's own business. This hop to the Server negotiates for itself -- `fetch` asks for
+ * gzip, deflate and br on its own and hands over a body it has already decoded
+ * (`buildPhiNextProxyHeaders` does not pass the browser's `accept-encoding` on). Passing the Server's
+ * `content-encoding` on then tells the browser to decode plain bytes a second time
+ * (`ERR_CONTENT_DECODING_FAILED`), and a runtime that compresses route handler responses itself (Next
+ * from 16.4.6) would stack a second layer on a body that still claims the first -- or, from 16.4.5, drop
+ * the claim and leave a compressed body unlabelled. The `content-length` counts the compressed bytes.
+ * Both go for a decoded body; the runtime frames the body it actually sends and compresses towards the
+ * browser itself, as nginx does in front of it.
  */
-export function buildPhiProxyResponseHeaders(upstream: Headers, options: { bodyDecoded: boolean }) {
+export function buildPhiProxyResponseHeaders(upstream: Headers) {
   const headers = new Headers(upstream);
   for (const name of HOP_BY_HOP_RESPONSE_HEADERS) headers.delete(name);
-  if (options.bodyDecoded) {
-    headers.delete("content-encoding");
-    headers.delete("content-length");
-  }
+  headers.delete("content-encoding");
+  headers.delete("content-length");
   return headers;
-}
-
-function buildResponseHeaders(headers: Record<string, string | string[] | undefined>) {
-  const responseHeaders = new Headers();
-  for (const [key, value] of Object.entries(headers)) {
-    if (HOP_BY_HOP_RESPONSE_HEADERS.includes(key.toLowerCase())) {
-      continue;
-    }
-    if (typeof value === "string") {
-      responseHeaders.set(key, value);
-      continue;
-    }
-    if (Array.isArray(value)) {
-      for (const item of value) {
-        responseHeaders.append(key, item);
-      }
-    }
-  }
-  return responseHeaders;
-}
-
-async function proxyRequestWithNodeHttp(
-  request: NextRequest,
-  targetUrl: URL,
-  headers: Headers,
-  timeoutMs: number,
-) {
-  const transport = targetUrl.protocol === "https:" ? httpsRequest : httpRequest;
-  const requestHeaders = toHeadersObject(headers);
-  const hasBody = request.method !== "GET" && request.method !== "HEAD";
-
-  return await new Promise<Response>((resolve, reject) => {
-    const proxyRequest = transport(
-      targetUrl,
-      {
-        method: request.method,
-        headers: requestHeaders,
-      },
-      (proxyResponse) => {
-        const chunks: Buffer[] = [];
-
-        proxyResponse.on("data", (chunk) => {
-          chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-        });
-
-        proxyResponse.on("end", () => {
-          resolve(
-            new Response(Buffer.concat(chunks), {
-              status: proxyResponse.statusCode ?? 502,
-              headers: buildResponseHeaders(proxyResponse.headers),
-            }),
-          );
-        });
-
-        proxyResponse.on("error", reject);
-      },
-    );
-
-    const timeoutHandle = setTimeout(() => {
-      proxyRequest.destroy(new Error("Proxy request timed out."));
-    }, timeoutMs);
-    timeoutHandle.unref?.();
-
-    proxyRequest.on("error", reject);
-    proxyRequest.on("close", () => clearTimeout(timeoutHandle));
-
-    if (!hasBody || !request.body) {
-      proxyRequest.end();
-      return;
-    }
-
-    const bodyStream = Readable.fromWeb(request.body as NodeReadableStream<Uint8Array>);
-    bodyStream.on("error", reject);
-    bodyStream.pipe(proxyRequest);
-  });
 }
 
 async function proxyRequest(
@@ -209,21 +127,20 @@ async function proxyRequest(
   const startedAt = Date.now();
 
   try {
-    const hasBody = request.method !== "GET" && request.method !== "HEAD";
-    const targetResponse = hasBody
-      ? await proxyRequestWithNodeHttp(
-          request,
-          targetUrl,
-          config.buildHeaders(request, path),
-          config.timeoutMs,
-        )
-      : await fetch(targetUrl, {
-          method: request.method,
-          headers: config.buildHeaders(request, path),
-          ...(config.buildFetchInit?.(request, path) ?? { cache: "no-store" }),
-          redirect: "manual",
-          signal: AbortSignal.timeout(config.timeoutMs),
-        });
+    /*
+     * One way upstream for every method, so one rule for what comes back. A body is streamed through
+     * (`duplex: "half"` is what fetch asks for a request body that is a stream); the answer is whatever
+     * fetch decoded, never the Server's bytes as they came.
+     */
+    const hasBody = request.method !== "GET" && request.method !== "HEAD" && request.body !== null;
+    const targetResponse = await fetch(targetUrl, {
+      method: request.method,
+      headers: config.buildHeaders(request, path),
+      ...(hasBody ? { body: request.body, duplex: "half" } : {}),
+      ...(config.buildFetchInit?.(request, path) ?? { cache: "no-store" }),
+      redirect: "manual",
+      signal: AbortSignal.timeout(config.timeoutMs),
+    } as RequestInit);
 
     const durationMs = Date.now() - startedAt;
     if (durationMs >= config.timeoutMs / 2 && targetResponse.ok) {
@@ -264,12 +181,9 @@ async function proxyRequest(
       });
     }
 
-    // The Node path hands over the Server's bytes as they came, still encoded; `fetch` decoded them.
     return new Response(targetResponse.body, {
       status: targetResponse.status,
-      headers: hasBody
-        ? targetResponse.headers
-        : buildPhiProxyResponseHeaders(targetResponse.headers, { bodyDecoded: true }),
+      headers: buildPhiProxyResponseHeaders(targetResponse.headers),
     });
   } catch (error) {
     logRuntimeEvent("error", "proxy.request.failed", {

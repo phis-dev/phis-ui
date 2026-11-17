@@ -189,8 +189,13 @@ export async function proxyPhiNextSiteRequest(request: NextRequest) {
      * and says 404 where there is none or it is not a PNG for the Apple paths. A rewrite, so the address
      * the browser asked for stays what it asked for. This stands in front of a file of the Site's own
      * at the same path, which is the cost of needing no file in the Site (THEME.md, Signet).
+     *
+     * Plain HTTP for the same reason as the static tree's address below: behind a proxy that terminates
+     * TLS `request.url` says `https://localhost:<port>`, and Next fetches a rewrite it counts as external
+     * from this process, which speaks HTTP only (`EPROTO`, a 500 on `/favicon.ico`).
      */
     const target = new URL(PHI_SIGNET_PATH, request.url);
+    target.protocol = "http:";
     target.searchParams.set(PHI_SIGNET_ALIAS_PARAM, signetAlias);
     return NextResponse.rewrite(target);
   }
