@@ -117,7 +117,19 @@ export type PhiSiteThemeBrandLogo =
  * Set that has none. `url` is the state before a save takes the picture into the Media library (a data
  * URL, a Set's own Signet); an `asset` is the state after.
  */
-export type PhiSiteThemeBrandSignet = Exclude<PhiSiteThemeBrandLogo, { sourceKind: "none" }>;
+export type PhiSiteThemeBrandSignet =
+  | (Extract<PhiSiteThemeBrandLogo, { sourceKind: "asset" }> & {
+    /**
+     * What the Core states about the Asset when it resolves the Site config (Core 0.4.1): `url` carries the
+     * delivered address with the Asset's revision (`?r=<revision>`), and the type and size of the picture
+     * are stated beside it. All absent from a record an older Core resolved, or one a draft carries; the
+     * head and the route then fall back to what the id alone says.
+     */
+    contentType?: string | null;
+    width?: number | null;
+    height?: number | null;
+  })
+  | Extract<PhiSiteThemeBrandLogo, { sourceKind: "url" }>;
 
 export type PhiSiteThemeBrandLogos = {
   light?: PhiSiteThemeBrandLogo | null;

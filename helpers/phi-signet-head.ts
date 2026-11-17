@@ -1,6 +1,6 @@
 import type { PhiThemeSignet } from "../theme/phi-theme-signet";
 import { PHI_SIGNET_APPLE_MIN_SIZE, PHI_SIGNET_PATH, PHI_SIGNET_VERSION_PARAM } from "./phi-signet-paths";
-import { buildPhiSignetVersion, decodePhiSignetDataUrl, readPhiPngSize } from "./phi-signet";
+import { buildPhiSignetAssetIdentity, buildPhiSignetVersion, decodePhiSignetDataUrl, readPhiPngSize } from "./phi-signet";
 
 /** What the document head needs to say about the Signet; `appleHref` only where a raster of 180 px or more is known. */
 export type PhiSignetHead = {
@@ -22,15 +22,27 @@ function buildPhiSignetHref(version: string) {
  * into the Media library is what gives that Site an icon there.
  *
  * A data URL that does not decode is not named: pointing the tab at an address that answers 404 would
- * be worse than leaving the browser its own `/favicon.ico` request. An Asset is named without a type or
- * a size, because the picture is not at hand here -- the response carries its type, and the Apple path
- * answers for itself from the bytes.
+ * be worse than leaving the browser its own `/favicon.ico` request. An Asset is named by its id and, where
+ * the Core states it (0.4.1), its revision, type and size -- the bytes are not at hand here. Without those
+ * fields (an older Core, a draft) it is named by the id alone and without a type or a size, and the
+ * response carries its type; the Apple path answers for itself from the bytes.
  */
 export function describePhiSignetHead(signet: PhiThemeSignet | null | undefined): PhiSignetHead | null {
   if (!signet) return null;
   if (signet.from === "set") return signet.kind === "data" ? { href: signet.source } : null;
   if (signet.kind === "asset") {
-    return { href: buildPhiSignetHref(buildPhiSignetVersion(`asset:${signet.assetId}`)) };
+    const href = buildPhiSignetHref(buildPhiSignetVersion(buildPhiSignetAssetIdentity(signet)));
+    const sizes = signet.width != null && signet.height != null ? `${signet.width}x${signet.height}` : undefined;
+    const apple = signet.contentType === "image/png" && signet.width != null && signet.height != null &&
+      signet.width >= PHI_SIGNET_APPLE_MIN_SIZE && signet.height >= PHI_SIGNET_APPLE_MIN_SIZE
+      ? { href, type: signet.contentType, sizes: sizes as string }
+      : undefined;
+    return {
+      href,
+      ...(signet.contentType ? { type: signet.contentType } : {}),
+      ...(sizes ? { sizes } : {}),
+      ...(apple ? { apple } : {}),
+    };
   }
   const image = decodePhiSignetDataUrl(signet.source);
   if (!image) return null;

@@ -10,6 +10,7 @@ import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from ".
 import { getPhiAdminUsersPageLabels } from "./admin-users-label-set";
 import { getPhiAdminUsersTableWidgetLabels } from "../../../../components/widgets/label-sets/admin-users";
 import { PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
+import { PHI_USER_MANAGEMENT_ADDON_ALL_ROLES_TAG } from "../addon-roles";
 import { createPhiSignalAddress, createPhiSignalSubcontrolAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
 import {
   createPhiUserManagementControllerAddress,
@@ -344,6 +345,16 @@ export async function buildPhiDefaultAdminUsersPageTree({
                   accountant: "default",
                 },
               },
+              {
+                key: "addonRoleTags",
+                fieldKey: "addonRoleTags",
+                title: widgetLabels.columns.addonRoles,
+                renderer: "tags",
+                sizing: { mode: "content" },
+                // A Site Admin holds every role of every Add-on, which one tag says instead of listing them.
+                valueMap: { [PHI_USER_MANAGEMENT_ADDON_ALL_ROLES_TAG]: widgetLabels.addonRoles.all },
+                tagColorMap: { [PHI_USER_MANAGEMENT_ADDON_ALL_ROLES_TAG]: "error" },
+              },
               { key: "userFlagTags", fieldKey: "userFlagTags", title: widgetLabels.columns.userFlags, renderer: "tags", sizing: { mode: "content" } },
               { key: "siteFlagTags", fieldKey: "siteFlagTags", title: widgetLabels.columns.siteFlags, renderer: "tags", sizing: { mode: "content" } },
               { key: "lastLoginAt", fieldKey: "lastLoginAt", title: widgetLabels.columns.lastLogin, renderer: "datetime", sizing: { mode: "content" }, sortable: true },
@@ -363,15 +374,11 @@ export async function buildPhiDefaultAdminUsersPageTree({
             search: { enabled: true, placeholder: widgetLabels.searchPlaceholder, debounceMs: 250 },
             filters: [
               {
-                key: "accountType",
+                key: "addonRole",
                 type: "select",
-                label: widgetLabels.columns.account,
-                defaultValue: "roles",
-                options: [
-                  { value: "customer", label: widgetLabels.accountTypes.shop },
-                  { value: "roles", label: widgetLabels.accountTypes.roles },
-                  { value: "auth", label: widgetLabels.accountTypes.auth },
-                ],
+                label: widgetLabels.filters.addonRole,
+                description: widgetLabels.filters.addonRoleHint,
+                optionsProvider: { providerKey: PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS.addonRoleOptions },
               },
               {
                 key: "enabled",

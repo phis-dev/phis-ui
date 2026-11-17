@@ -40,6 +40,10 @@ import { stripRenderableBlockDefaults } from "../../helpers/renderable-block-ser
 import type { PhiRenderableBlockBase } from "../../types/renderable-block";
 import { PhiCmsWidgetType } from "../../constants/cms-widget-types";
 import { parsePhiFormWidgetConfig } from "../../components/forms/form-widget-config";
+import {
+  PHI_MEDIA_ASSET_FORM_FIELD_PROVIDER_KEY,
+  PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS,
+} from "../../constants/media-library-provider-keys";
 import { buildPhiRecordDeclarationsByKey } from "../../helpers/record-fields";
 
 function loadRuntimeWidgetPlugin(entry: PhiRuntimeModuleWidgetDefinition) {
@@ -147,7 +151,11 @@ export async function resolvePhiRuntimeModuleSet({
   }
   const installedOwnerModuleIdByWidgetType = new Map<string, PhiRuntimeModuleId>();
   const installedOwnerModuleIdByLayoutType = new Map<string, PhiRuntimeModuleId>();
+  const installedOwnerModuleIdByFormFieldTypeKey = new Map<PhiFormProviderKey, PhiRuntimeModuleId>();
   for (const [moduleId, entry] of catalog) {
+    for (const descriptor of entry.definition.formProviders?.fieldTypes ?? []) {
+      installedOwnerModuleIdByFormFieldTypeKey.set(descriptor.key, moduleId);
+    }
     for (const widget of entry.widgets) {
       const type = buildPhiRuntimeModuleWidgetType(widget);
       installedOwnerModuleIdByWidgetType.set(type, moduleId);
@@ -334,7 +342,15 @@ export async function resolvePhiRuntimeModuleSet({
 
   for (const form of formDefinitionsById.values()) {
     for (const field of form.descriptor.fields) {
-      if (!formFieldTypeProviderDescriptorsByKey.has(field.fieldProviderKey)) {
+      /*
+       * A field type that an installed Module owns, but that is not active in this Area, is not an error:
+       * the Form still stands there, and the field says that its Module is not available
+       * (`PhiFormControl`'s `unavailableFieldKeys`). A key nobody installed declares is one.
+       */
+      if (
+        !formFieldTypeProviderDescriptorsByKey.has(field.fieldProviderKey) &&
+        !installedOwnerModuleIdByFormFieldTypeKey.has(field.fieldProviderKey)
+      ) {
         throw new Error(
           `Form "${form.formId}" requires unavailable field provider "${field.fieldProviderKey}".`,
         );
@@ -380,6 +396,7 @@ export async function resolvePhiRuntimeModuleSet({
     platformModuleId,
     installedOwnerModuleIdByWidgetType,
     installedOwnerModuleIdByLayoutType,
+    installedOwnerModuleIdByFormFieldTypeKey,
     ownerModuleIdByControllerType,
     areaControllerSettings,
   };
@@ -543,6 +560,17 @@ export function collectPhiRuntimeDataProviderKeys({
             knownProviderKeys,
             collected,
           );
+          /*
+           * A `media-asset` field reads the Media library through the picker, and a field descriptor names
+           * no Provider of its own to find it by. The field type is what needs it, so the scan says so
+           * once, here, instead of every Form that has one repeating the Provider in its descriptor.
+           */
+          if (
+            form.descriptor.fields.some((field) => field.fieldProviderKey === PHI_MEDIA_ASSET_FORM_FIELD_PROVIDER_KEY) &&
+            knownProviderKeys.has(PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection)
+          ) {
+            collected.add(PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection);
+          }
         }
       }
     }
@@ -581,7 +609,12 @@ export function collectPhiRuntimeDataProviderKeys({
   return collected;
 }
 
-function collectPhiRuntimeFormOwnerModuleIds({
+/**
+ * The Modules the Forms on these Pages need mounted: each Form's owner, and the owner of every field
+ * type the Form uses, where that Module is active. A field type is a Module's to offer, and the Form
+ * widget mounts that Module's field Providers beside the Form owner's (`PhiFormWidget`).
+ */
+function collectPhiRuntimeFormModuleIds({
   moduleSet,
   trees,
 }: {
@@ -606,6 +639,12 @@ function collectPhiRuntimeFormOwnerModuleIds({
       const form = moduleSet.formDefinitionsById.get(config.formId);
       if (form) {
         collected.add(form.ownerModuleId);
+        for (const field of form.descriptor.fields) {
+          const fieldOwner = moduleSet.formFieldTypeProviderDescriptorsByKey.get(field.fieldProviderKey)?.ownerModuleId;
+          if (fieldOwner) {
+            collected.add(fieldOwner);
+          }
+        }
       }
     }
   }
@@ -640,7 +679,7 @@ export async function resolvePhiRuntimeRenderRegistry({
   const widgetImplementationModes = collectTreeWidgetImplementationModes({ moduleSet, trees });
   const layoutTypes = collectTreeLayoutTypes(trees);
   const dataProviderKeys = collectPhiRuntimeDataProviderKeys({ moduleSet, trees });
-  const formOwnerModuleIds = collectPhiRuntimeFormOwnerModuleIds({ moduleSet, trees });
+  const formModuleIds = collectPhiRuntimeFormModuleIds({ moduleSet, trees });
 
   const renderIssuesByWidgetType = new Map<string, PhiCmsRenderIssue>();
   const runtimeWidgetRenderIssuesByType = new Map<string, PhiCmsRenderIssue>();
@@ -695,7 +734,7 @@ export async function resolvePhiRuntimeRenderRegistry({
   const usedModuleIds = new Set<PhiRuntimeModuleId>([
     ...widgetEntries.map(([, entry]) => entry.ownerModuleId),
     ...layoutEntries.map(([, entry]) => entry.ownerModuleId),
-    ...formOwnerModuleIds,
+    ...formModuleIds,
   ]);
   const dataProviderDescriptorsByKey = new Map(
     [...dataProviderKeys].flatMap((providerKey) => {
@@ -867,6 +906,8 @@ export async function resolvePhiRuntimeRenderRegistry({
     ),
     ownerModuleIdByLayoutType: new Map(layoutEntries.map(([type, entry]) => [type, entry.ownerModuleId])),
     uiProviderModuleIds,
+    activeModuleIds: moduleSet.activeModuleIds,
+    ownerModuleIdByFormFieldTypeKey: moduleSet.installedOwnerModuleIdByFormFieldTypeKey,
     /*
      * Every active Module's published facts, whether or not its Widgets happen to be on this page.
      *

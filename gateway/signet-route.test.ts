@@ -105,4 +105,17 @@ describe("the Signet route", () => {
     upstream.response = () => new Response("x", { headers: { "content-type": "text/html" } });
     expect((await ask(get)).status).toBe(404);
   });
+
+  it("caches a library Signet that carries its revision for a year at the address with that identifier", async () => {
+    const get = handler({ sourceKind: "asset", assetId: 12, url: "/api/site/media/12/content?r=5", contentType: "image/png", width: 256, height: 256 });
+    upstream.response = () => new Response(pngOf(256, 256), { headers: { "content-type": "image/png" } });
+    const response = await ask(get, `?v=${buildPhiSignetVersion("asset:12:r5")}`);
+    expect(response.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
+    // The address of the picture before it was replaced is not the current one: the new picture, briefly.
+    const replaced = await ask(get, `?v=${buildPhiSignetVersion("asset:12:r4")}`);
+    expect(replaced.status).toBe(200);
+    expect(replaced.headers.get("cache-control")).toBe("public, max-age=3600");
+    // The id-only identifier no longer matches once a revision is known.
+    expect((await ask(get, `?v=${buildPhiSignetVersion("asset:12")}`)).headers.get("cache-control")).toBe("public, max-age=3600");
+  });
 });

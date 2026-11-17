@@ -26,6 +26,10 @@ const PHI_ADMIN_USERS_TABLE_WIDGET_LABEL_SET = definePhiLabelSet({
     column_name: "Name",
     column_email: "Email",
     column_roles: "Roles",
+    column_addon_roles: "Add-on roles",
+    addon_roles_all: "all roles",
+    filter_addon_role: "Add-on role",
+    filter_addon_role_hint: definePhiMessageLabel("Show users who hold a role of an Add-on, or one role of it. Site Admins hold every role."),
     column_user_flags: "User flags",
     column_site_flags: "Site flags",
     column_last_login: "Last login",
@@ -103,6 +107,13 @@ export async function getPhiAdminUsersTableWidgetLabels(options: PhiGlobalTransl
       roles: labels.account_type_roles,
       auth: labels.account_type_auth,
     },
+    addonRoles: {
+      all: labels.addon_roles_all,
+    },
+    filters: {
+      addonRole: labels.filter_addon_role,
+      addonRoleHint: labels.filter_addon_role_hint,
+    },
     enabledOptions: {
       all: labels.enabled_all,
       enabled: labels.enabled_enabled,
@@ -115,6 +126,7 @@ export async function getPhiAdminUsersTableWidgetLabels(options: PhiGlobalTransl
       name: labels.column_name,
       email: labels.column_email,
       roles: labels.column_roles,
+      addonRoles: labels.column_addon_roles,
       userFlags: labels.column_user_flags,
       siteFlags: labels.column_site_flags,
       lastLogin: labels.column_last_login,

@@ -1256,6 +1256,17 @@ to that Module at build time, which is the Module-to-Module edge the dependency 
 contract above holds no such reference. Whether anything answers the keys is an installation question,
 and a Widget whose provider is absent degrades to an empty library instead of failing to build.
 
+A Form that stores a picture does not need any of this: give the field the `media-asset` type
+(the Asset Module's field type, `PHI_MEDIA_ASSET_FORM_FIELD_PROVIDER_KEY`, [FORMS.md](./FORMS.md)) and the
+Page mounts the library for it. Where the Asset Module is not active in the Area, the field says it is not
+available there and keeps its value. The field offers the Site Space only, shows the chosen picture, and holds the Asset id as a number (`null`
+for none), which is what your handler receives. `config.mediaType` names the kind (`image` by default) and
+`config.publicOnly` greys out Assets that are not delivered publicly. Both are the interface; your handler
+is what decides which Asset it accepts, so read the Asset there before storing its id. `PhiMediaPickerControl` is public but
+controlled only (it takes the Assets, the Folders and the paging as props, and `isAssetSelectable` to grey
+out Assets); the binding that feeds it from the library (`usePhiMediaPickerBinding`) is Foundation-internal,
+so a Widget that needs a picker where no Form fits has to ask for that binding rather than rebuild it.
+
 Inside the Builder's own chrome the library is always readable, whatever the edited Area activates -- a
 `phis:asset/...` reference is resolved by the core reference resolver, so an Area without the Asset
 Module still renders its images. That availability is declared by the owning Module through
@@ -1534,6 +1545,15 @@ The Form contract is [FORMS.md](./FORMS.md); the step-by-step guide is
 - contribute the Form through `catalogEntry.forms`; catalog construction rejects a missing or
   mismatched phase handler;
 - render fields through Phi Controls, not CMS Widgets;
+- to **offer a field type other Modules' Forms may use**, declare its descriptor in your own
+  `formProviders.fieldTypes` (`ownerModuleId` is yours, the key is a `form-field` key under your Module),
+  register the control in your Module's UI provider (`uiProvider: true`; `lazyPhiFormFieldControl` keeps its
+  code out of every other Form), and let a Form name the key in `fieldProviderKey`. The Form widget mounts
+  your UI provider for any Form that uses the type, where your Module is active in the Area, and shows a
+  calm "not available in this area" notice in the fields of an Area where it is not, keeping their value
+  ([FORMS.md](./FORMS.md#field-and-validation-providers)). The Form never names your Module and you never
+  name the Form. A Form that *uses* another Module's field type adds the key to its fields and nothing
+  else;
 - place the Form in CMS trees with the generic Form Widget (`@phis/ui/modules/core/widgets/form`) and its
   `formId`; never register a domain Form Widget;
 - use the demand-materialized Core Form controller

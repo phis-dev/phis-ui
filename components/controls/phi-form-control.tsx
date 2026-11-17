@@ -41,6 +41,8 @@ import { PhiAlertControl } from "./phi-alert-control";
 import { PhiDescriptionHint } from "./phi-description-tooltip-icon";
 import {
   PHI_FORM_FIELD_PROVIDER_KEYS,
+  PHI_FORM_FIELD_UNAVAILABLE_DEFAULT_LABEL,
+  PHI_FORM_FIELD_UNAVAILABLE_LABEL_KEY,
   PHI_FORM_VALIDATION_PROVIDER_KEYS,
 } from "../forms/form-provider-contract";
 import {
@@ -75,6 +77,12 @@ export type PhiFormControlProps = {
   disabled?: boolean;
   readOnly?: boolean;
   conditionControllerStates?: Readonly<Record<string, Record<string, unknown>>>;
+  /**
+   * The fields whose field type belongs to a Module that is not active in this Area. Each says so in the
+   * place of its control instead of failing as a missing Provider, and its value is neither validated nor
+   * dropped: what the form holds for it goes out with the submit unchanged.
+   */
+  unavailableFieldKeys?: readonly string[];
   form?: PhiFormControlFormInstance;
   onValuesChange?: (
     changedValues: Record<string, unknown>,
@@ -316,6 +324,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
   disabled = false,
   readOnly = false,
   conditionControllerStates = PHI_FORM_NO_CONTROLLER_STATES,
+  unavailableFieldKeys,
   form: providedForm,
   onValuesChange,
   onSubmit,
@@ -334,6 +343,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
     ),
     [contributedRegistry, registry],
   );
+  const unavailableKeys = useMemo(() => new Set(unavailableFieldKeys ?? []), [unavailableFieldKeys]);
   const [internalForm] = Form.useForm<Record<string, unknown>>();
   const form = providedForm ?? internalForm;
   /*
@@ -450,7 +460,16 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
     setSubmitting(true);
     onSubmittingChange?.(true);
     try {
-      await onSubmit(values);
+      /*
+       * A field that is not drawn is not part of what the form validated, and so not part of `values`.
+       * What it holds is what the Server knows about it, and a save that leaves it out would say it was
+       * emptied.
+       */
+      const kept = Object.fromEntries([...unavailableKeys].flatMap((key) => {
+        const held = form.getFieldValue(key);
+        return held === undefined ? [] : [[key, held]];
+      }));
+      await onSubmit({ ...kept, ...values });
     } finally {
       setSubmitting(false);
       onSubmittingChange?.(false);
@@ -546,15 +565,17 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
    */
   const lastInFlowFieldKey = useMemo(() => {
     const inFlow = renderedFields.filter((field) =>
+      unavailableKeys.has(field.key) ||
       activeRegistry.fieldTypesByKey.get(field.fieldProviderKey)?.presentation === "control");
     return inFlow.length === 0 ? null : inFlow[inFlow.length - 1].key;
-  }, [activeRegistry, renderedFields]);
+  }, [activeRegistry, renderedFields, unavailableKeys]);
 
   const placementByMode = useMemo(() => {
     const entries = renderedFields.map((field) => ({
       key: field.key,
       placement: field.placement,
-      inFlow: activeRegistry.fieldTypesByKey.get(field.fieldProviderKey)?.presentation === "control",
+      inFlow: unavailableKeys.has(field.key) ||
+        activeRegistry.fieldTypesByKey.get(field.fieldProviderKey)?.presentation === "control",
       hasLabel: field.label != null && field.controlLabel == null,
     }));
     return {
@@ -562,7 +583,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
       medium: resolvePhiFormGridPlacement(layout, entries, "medium"),
       wide: resolvePhiFormGridPlacement(layout, entries, "wide"),
     };
-  }, [activeRegistry, layout, renderedFields]);
+  }, [activeRegistry, layout, renderedFields, unavailableKeys]);
 
   return (
     <div style={{ width: "100%", minWidth: 0 }}>
@@ -668,6 +689,19 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
             ];
           }),
         ) as CSSProperties;
+
+        if (!provider && unavailableKeys.has(field.key)) {
+          const unavailableLabel = field.label ? resolvePhiFormText(field.label, labels, formConfig) : undefined;
+          return (
+            <div key={field.key} className="phi-form-cell phi-form-cell--control" style={cellProperties("control")}>
+              <PhiAlertControl
+                level="info"
+                title={labels?.[PHI_FORM_FIELD_UNAVAILABLE_LABEL_KEY]?.trim() || PHI_FORM_FIELD_UNAVAILABLE_DEFAULT_LABEL}
+                description={unavailableLabel}
+              />
+            </div>
+          );
+        }
 
         if (!provider) {
           return (

@@ -53,6 +53,8 @@ export type PhiFormDescriptorRuntimeClientProps = {
   formId: string;
   formControllerAddress: PhiSignalAddress;
   widgetConfig?: PhiCmsFormWidgetConfig;
+  /** The fields whose field type belongs to a Module that is not active in this Area. */
+  unavailableFieldKeys?: readonly string[];
 };
 
 export function PhiFormDescriptorRuntimeClient({
@@ -62,6 +64,7 @@ export function PhiFormDescriptorRuntimeClient({
   formId,
   formControllerAddress,
   widgetConfig,
+  unavailableFieldKeys,
 }: PhiFormDescriptorRuntimeClientProps) {
   const formClient = usePhiRuntimeFormClient({ controllerAddress: formControllerAddress });
   const formRef = useRef<PhiFormControlFormInstance | null>(null);
@@ -539,6 +542,7 @@ export function PhiFormDescriptorRuntimeClient({
           }
         }}
         conditionControllerStates={conditionControllerStates}
+        unavailableFieldKeys={unavailableFieldKeys}
         onValuesChange={(changed, all) => {
           // A value moved, so whatever validation refused before is no longer what is being asked.
           rejectedRef.current = false;

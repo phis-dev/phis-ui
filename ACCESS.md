@@ -279,6 +279,25 @@ projects `permissions.readOnly`, and the page binds cell editing, the create too
 edit and delete row actions to it. `@phis/server` mirrors the split per method: GET behind the Developer
 guard, every mutating method behind the Admin-only one.
 
+The users Table also shows **Add-on roles** (Core 0.4.1; [phis-server AUTHORIZATION.md](https://github.com/phis-dev/phis-server/blob/main/AUTHORIZATION.md), "Add-on roles"):
+
+- Column "Add-on roles": one tag per Add-on with the roles stored for the user, `<addonId>: <role>, <role>`
+  (the Add-on's `title` is its id until a manifest carries a display name). A Site Admin -- an enabled row
+  whose `roleTags` hold `admin` -- *holds* every declared role of every enabled Add-on without a stored
+  assignment, so the row shows the single tag "all roles" instead (`buildPhiAddonRoleTags`,
+  `plugins/runtime-modules/user-management/addon-roles.ts`); assignments stored for a Site Admin apply once the
+  person is no longer one and are not listed there.
+- Filter "Add-on role", one select whose options come from `GET /api/site/addon-roles` (options Provider
+  `@phis/ui/modules/user-management/options/addon-roles`): an Add-on (users with at least one stored role of it)
+  or one role of an Add-on (users who hold it stored or through `includes`). Both keep every enabled Site Admin,
+  which is the Core's rule. It sends the Core's `addonId` and `addonRole` query parameters, and replaces the
+  former Account filter (Shop / Local roles / Auth); the Account column stays, and the Core's `accountType`
+  parameter is no longer sent.
+- Not built: the Add-on roles section of the "Edit user" dialog (a section per enabled Add-on with a multi-select
+  of its roles, saved with one `PUT /api/site/addon-roles` per changed Add-on after the user is saved). It needs
+  a Widget type owned by User Management (a new `PhiCmsWidgetType` and Widget plugin key, closed registries)
+  and a save handshake the Controller does not have; see [TODOS.md](./TODOS.md).
+
 That split is the pattern for every case that used to reach for a route policy. Where a Module must go
 further than read-only and show nothing at all, it returns a different tree rather than a different
 route.

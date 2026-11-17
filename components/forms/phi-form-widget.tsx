@@ -11,6 +11,7 @@ import type { PhiFormWidgetFrameProps } from "./phi-form-widget-frame";
 import { PhiRuntimeModuleRenderClientHost } from "../runtime/runtime-module-render-client-manifest";
 import { PhiRuntimeRenderClientType } from "../../constants/runtime-render-client-types";
 import type { PhiFormId } from "../../types/form-id";
+import { readPhiFormFieldProviderModules } from "./form-field-provider-modules";
 import type { PhiCmsFormWidgetConfig } from "./form-widget-config";
 import { resolvePhiFormText } from "./form-descriptor-contract";
 import { PHI_FORM_DEFAULT_SUBMIT_LABEL } from "../../types/form-descriptor";
@@ -23,7 +24,13 @@ import { PhiRuntimeModuleUiProviderHost } from "../runtime/runtime-module-ui-pro
 export type PhiFormWidgetProps = {
   runtime: Pick<PhiBlockRuntime, "site" | "locale"> &
     Partial<Pick<PhiBlockRuntime, "area">>;
-  registry: Pick<PhiCmsRuntimeRenderRegistry, "formDefinitionsById" | "uiProviderModuleIds">;
+  registry: Pick<
+    PhiCmsRuntimeRenderRegistry,
+    | "formDefinitionsById"
+    | "uiProviderModuleIds"
+    | "activeModuleIds"
+    | "ownerModuleIdByFormFieldTypeKey"
+  >;
   formId: PhiFormId;
   formInstanceKey?: string | number | null;
   config?: PhiCmsFormWidgetConfig;
@@ -67,6 +74,21 @@ export async function PhiFormWidget({
 
   const ownerModuleId = resolvedForm.definition.ownerModuleId;
   const hasUiProvider = registry.uiProviderModuleIds.has(ownerModuleId);
+
+  /*
+   * A field type belongs to a Module, and the Form is not always that Module's own: the Media library's
+   * `media-asset` field stands in Forms of any Module. So the widget reads whose field types this Form
+   * uses and mounts those Modules' UI providers beside the Form owner's -- each wraps only this Form's
+   * subtree, and composes with the one outside it. A Module that is not active in this Area has nothing
+   * to mount; its fields are marked, and the Form says so in their place (`unavailableFieldKeys`).
+   */
+  const { providerModuleIds: fieldProviderModuleIds, unavailableFieldKeys } = readPhiFormFieldProviderModules({
+    fields: resolvedForm.definition.descriptor.fields,
+    formOwnerModuleId: ownerModuleId,
+    ownerModuleIdByFieldTypeKey: registry.ownerModuleIdByFormFieldTypeKey,
+    activeModuleIds: registry.activeModuleIds,
+    uiProviderModuleIds: registry.uiProviderModuleIds,
+  });
 
   /*
    * Both reads happen here, on the server, and both are the form's own: what it is called, and what it
@@ -124,11 +146,16 @@ export async function PhiFormWidget({
         componentProps={frameProps}
       />
     );
-    return hasUiProvider
-      ? (
-        <PhiRuntimeModuleUiProviderHost moduleId={ownerModuleId}>{framed}</PhiRuntimeModuleUiProviderHost>
-      )
-      : framed;
+    const providerModuleIds = [
+      ...(hasUiProvider ? [ownerModuleId] : []),
+      ...fieldProviderModuleIds,
+    ];
+    return providerModuleIds.reduceRight<ReactNode>(
+      (children, moduleId) => (
+        <PhiRuntimeModuleUiProviderHost moduleId={moduleId}>{children}</PhiRuntimeModuleUiProviderHost>
+      ),
+      framed,
+    );
   };
 
   return wrapFormUiProvider(
@@ -141,6 +168,7 @@ export async function PhiFormWidget({
         formId: resolvedForm.definition.formId,
         formControllerAddress: renderOptions.formControllerAddress,
         widgetConfig: config,
+        ...(unavailableFieldKeys.length > 0 ? { unavailableFieldKeys } : {}),
       }}
     />
   );

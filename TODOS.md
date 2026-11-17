@@ -264,6 +264,21 @@ built. Remove an entry when it is done.
 
 ## Modules and packaging
 
+- **User Management: the Add-on roles section of the "Edit user" dialog.** The users Table and its filter show
+  Add-on roles (ACCESS.md); the dialog does not yet. Wanted: per Add-on enabled for the Site and declaring roles,
+  one section (title = the catalog's `title`) with its roles as a multi-select (`description` as help, roles
+  implied through `includes` ticked and locked as "included in <role>", roles with `grantable: false` visible and
+  locked, a note for a Site Admin that they hold every role while the stored ones stay editable), saved after the
+  user with one `PUT /api/site/addon-roles` per changed Add-on, a refusal shown with its role and reason without
+  losing the rest of the dialog. The number of sections is only known at run time, which neither the static
+  `PhiFormDescriptor` nor a Form field Provider can express: a field Provider cannot make a second request
+  after the submit, and the Form's relay handler makes exactly one. What is missing is (1) a Widget type owned
+  by User Management for the section -- a new member of the closed `PhiCmsWidgetType` /
+  `PHI_CMS_WIDGET_PLUGIN_KEYS` registries -- and (2) a save handshake in the User Management Controller: on the
+  edit Form's `submitSuccess` ask the section to write, and close the dialog only when it reports success. Both
+  need operator approval. `plugins/runtime-modules/user-management/addon-roles.ts` already reads the catalog and
+  the stored roles.
+
 - **Groups administration package.** The Groups Runtime Module ships in this package as
   `@phis/ui/modules/groups` (`plugins/runtime-modules/groups/`), with Admin and App pages. Decide whether it
   moves to a separate `phis-cli`-installable package. Either way it binds only to Core

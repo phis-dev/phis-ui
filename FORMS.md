@@ -280,13 +280,34 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
 - Executable providers live in a `PhiFormProviderRegistry` created with `createPhiFormProviderRegistry`
   and combined with `extendPhiFormProviderRegistry`. `PhiFormControl` reads the registry from its prop or
   the nearest `PhiFormProviderRegistryProvider`; Core supplies the base registry, and a Module adds its
-  own providers through its lazy UI provider (`catalogEntry.loadUiProvider`), which wraps only that
-  Module's render subtree. There is no global registry and no registration through imports.
+  own providers through its lazy UI provider (`uiProvider: true`, [MODULES.md](./MODULES.md#module-ui-provider)),
+  which wraps only that Module's render subtree. There is no global registry and no registration through
+  imports.
+- **A Form mounts the field Providers of the Modules whose field types it uses.** `PhiFormWidget` mounts
+  the UI provider of the Module that owns the Form and, beside it, the UI provider of every *other* Module
+  that owns a field type the Form uses -- read from each field's `fieldProviderKey` against the owning
+  Module's `formProviders.fieldTypes` (`PhiCmsRuntimeRenderRegistry.ownerModuleIdByFormFieldTypeKey`) --
+  provided that Module is active in the Area. The providers nest and compose
+  (`PhiFormProviderRegistryProvider` extends the registry above it), each wrapping this one Form's subtree
+  and nothing else, and each is loaded lazily from the Area's Client manifest like any UI provider. This is
+  how a Module offers a field type other Modules' Forms may use: it declares the descriptor in its
+  `formProviders.fieldTypes` (`ownerModuleId` is its own), registers the control in its UI provider
+  (`lazyPhiFormFieldControl` keeps the control's code out of every other Form), and a Form of any Module
+  names the key. No Form states the Module, and the Module is not told about the Form.
+- **A field whose Module is not active in the Area stays in the Form and says so.** The Form is still
+  valid there (the catalog knows the key; a key nobody installed declares is refused when the Area
+  resolves). In place of the control `PhiFormControl` draws a calm information notice -- the Label Set
+  key `fieldUnavailable`, falling back to "This field is not available in this area." -- under the field's
+  label, validates nothing for it, and sends the value the form holds for it (an initial or loaded value)
+  unchanged with every submit, so a save from such an Area does not clear what another Area set. The Form
+  widget names these fields to the client in `unavailableFieldKeys`. A Module that is active but ships no UI
+  provider for its field type is a wiring fault and still fails as "Missing field provider".
 - A field provider renders Phi Controls and forwards the controlled `value`/`checked` and `onChange` it is
   given; it never keeps a second value state and never renders a Widget or Layout.
 - Core field providers: `text`, `email`, `password`, `textarea`, `hidden`, `honeypot`, `checkbox`,
   `select`, `url`, `tel`, `number`, `slider`, `multi-select`, `checkbox-group`, `datetime`, `switch`,
-  `segmented`, `cascader`, `table`, `tree`, `storage-size`, `upload`, `link-target`, `money`.
+  `segmented`, `cascader`, `table`, `tree`, `storage-size`, `upload`, `link-target`, `money`. The Asset Module
+  owns `media-asset` (below); it is not part of the shared registry.
 - A `select` field may be emptied when its `config.allowClear` is `true`, for a choice whose empty answer
   means something ("the Site's own language"); a `multi-select` takes typed values beside its options when
   `config.allowCustom` is `true`, for a vocabulary that grows by use, such as tags.
@@ -357,6 +378,51 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   Builder's picker does and answers the same tree, to everybody who writes for the Site. The Control is
   the shared link control the Inspector uses (`phi-link-target-control.tsx`), and its wording is the
   Label Set keys in `PHI_FORM_LINK_TARGET_LABEL_KEYS`, falling back to English.
+- `media-asset` is **owned by the Asset Module** (`@phis/ui/modules/asset/form-field/media-asset`,
+  `PHI_MEDIA_ASSET_FORM_FIELD_PROVIDER_KEY` in `constants/media-library-provider-keys.ts`, the Foundation's name for it), because
+  that Module owns the Media library. It is declared in the Module's `formProviders.fieldTypes` and
+  registered in its UI provider, so it costs the shared registry and the Controls entry nothing; any Form
+  may use it where the Asset Module is active, and says "This field is not available in this area." in the
+  Areas where it is not (see above; a stored Asset id is kept and sent unchanged). It is one Asset of the
+  Site's Media library, for a Form that stores a picture (a logo, a
+  cover) rather than receiving a file -- `upload` is the field for a file somebody brings. The value is
+  the Asset id as a number and `null` for none, so a save that removes the picture says so and `required`
+  means "an Asset". The field shows the chosen Asset as a preview with its name; "Choose" (or "Change",
+  once there is one) opens the library's own picker -- the same binding the Theme logo and the Inspector's
+  image field run on (`usePhiMediaPickerBinding`) -- and "Remove" empties the field. An id that arrived as
+  an initial value is read through the Asset detail route (`GET /api/site/media/<id>`), which needs the
+  Media access the picker needs itself; where that read is refused the field shows the id, says the file
+  could not be read, and still lets it be changed or removed. Settings, read strictly
+  (`plugins/runtime-modules/asset/media-asset-field.ts`: a wrong value throws a `PhiConfigError` naming the setting):
+  - `mediaType`: the kind the picker lists, one of `image` (the default), `video`, `audio`, `pdf`,
+    `markdown`, `font`.
+  - `publicOnly`: `true` greys out the Assets whose delivery is not public (the list states
+    `deliveryPolicy` and `lifecycleStatus` for each Asset, and `isPhiMediaAssetPublic` is the question), so
+    they stay visible but cannot be chosen. An already stored Asset that is not public is flagged beside
+    the preview. The Core list route has no filter for the delivery; the Assets are marked, not hidden.
+
+  The field offers the **Site Space only**, in every Area: there is no Space selector, and the query names
+  no Space, which Core answers with the Site Space. A picture whose id is stored for everybody who reads the
+  value has no business in somebody's personal or a group's Space. This and `publicOnly` are the interface.
+  What is enforced is enforced by the Server that takes the value: a handler that must hold the line reads
+  the Asset (its Space and its delivery policy) before it stores the id, because a request does not have to
+  come through this field. The handler receives the id as a JSON number (`{ "logo": 42 }`, or `null`).
+  Wording is the Label Set keys in `PHI_FORM_MEDIA_ASSET_LABEL_KEYS` (`mediaAssetChoose`,
+  `mediaAssetChange`, `mediaAssetRemove`, `mediaAssetPublicOnlyHint`, `mediaAssetNotPublic`,
+  `mediaAssetUnavailable`), falling back to English; the picker's own wording is the Media picker's. A Page
+  that renders a Form with a `media-asset` field mounts the Media library Provider for it
+  (`PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection`; the resolver's scan of the Form's descriptor), where a
+  Module of the Area serves it -- the Asset Module, which is also what makes the field available.
+
+  ```ts
+  {
+    key: "logo",
+    fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.mediaAsset,
+    label: label("logo", "Logo"),
+    config: { mediaType: "image", publicOnly: true },
+    validation: required("logoRequired", "Choose a logo."),
+  }
+  ```
 - A field Provider whose value is only complete later holds the submit itself through
   `formContext.holdSubmit(fieldKey, reason)` and releases it with `null`. `PhiFormControl` refuses a
   submit while any hold stands; the handler is not called.

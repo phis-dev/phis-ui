@@ -5,6 +5,7 @@ import { NextRequest } from "next/server";
 import { readPhiThemeSiteSignet } from "../theme/phi-theme-signet";
 import { PHI_SIGNET_ALIAS_PARAM, PHI_SIGNET_APPLE_MIN_SIZE, PHI_SIGNET_VERSION_PARAM } from "../helpers/phi-signet-paths";
 import {
+  buildPhiSignetAssetIdentity,
   buildPhiSignetVersion,
   decodePhiSignetDataUrl,
   readPhiPngSize,
@@ -14,12 +15,15 @@ import { getResolvedSiteConfig } from "./site-config";
 import type { PhiNextProxyHandler } from "../net/phi-next-proxy";
 import type { PhiSiteAreaBridgeLoader } from "./site-area-bridges";
 
-/** An address that names the picture's own content never changes what it answers: a year, immutable. */
+/**
+ * An address that names the picture's own content never changes what it answers: a year, immutable. For a
+ * library picture that is the identifier built from the Asset's revision, which moves with the bytes.
+ */
 const PHI_SIGNET_CACHE_IDENTIFIED = "public, max-age=31536000, immutable";
 /**
  * Everything else: the browser's own `/favicon.ico` and Apple paths, an address whose identifier is not
- * the current one, and a library picture, whose identifier cannot see the bytes. Short, so a changed
- * Signet reaches the tab within the hour.
+ * the current one, and a library picture whose Core states no revision (an older Core), whose identifier
+ * cannot see the bytes. Short, so a changed Signet reaches the tab within the hour.
  */
 const PHI_SIGNET_CACHE_SHORT = "public, max-age=3600";
 const PHI_SIGNET_CACHE_MISSING = "public, max-age=300";
@@ -100,7 +104,7 @@ export function buildPhiSignetRouteHandler({
       identity = image?.bytes ?? "";
     } else {
       image = await readPhiSignetAsset(signet.assetId, request, proxied);
-      identity = `asset:${signet.assetId}`;
+      identity = buildPhiSignetAssetIdentity(signet);
     }
     if (!image) return missing();
 
@@ -119,7 +123,9 @@ export function buildPhiSignetRouteHandler({
       headers: {
         "content-type": image.contentType,
         "content-length": String(image.bytes.length),
-        "cache-control": identified && signet.kind === "data" ? PHI_SIGNET_CACHE_IDENTIFIED : PHI_SIGNET_CACHE_SHORT,
+        "cache-control": identified && (signet.kind === "data" || signet.revision != null)
+          ? PHI_SIGNET_CACHE_IDENTIFIED
+          : PHI_SIGNET_CACHE_SHORT,
         ...PHI_SIGNET_SECURITY_HEADERS,
       },
     });

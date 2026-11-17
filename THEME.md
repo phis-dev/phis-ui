@@ -121,12 +121,23 @@ visitor's favicon request to a third party, and nothing writes such a record). S
 sandboxing `Content-Security-Policy`.
 
 - The head names `/api/site/signet?v=<identifier>` as `icons.icon` with `type` and, for a PNG, `sizes`;
-  `icons.apple` is added for a PNG of at least 180 px, read from its header (`describePhiSignetHead`,
-  `helpers/phi-signet.ts`). The identifier is a ten-character hash of the picture's bytes, so a changed
-  Signet is a new address; at the identified address the response is cached for a year (`immutable`). For an
-  Asset the bytes are not known where the head is written, so the identifier is the Asset's id, the head
-  states no type or size, and the response is cached for an hour -- a picture replaced in place under the
-  same id reaches the tab within the hour, not at once.
+  `icons.apple` is added for a PNG of at least 180 px (`describePhiSignetHead`, `helpers/phi-signet-head.ts`).
+  - An inline picture: the identifier is a ten-character hash of the picture's bytes, read from the data
+    URL, so a changed Signet is a new address; at the identified address the response is cached for a
+    year (`immutable`).
+  - A library Asset, from Core 0.4.1 on: the Core resolves `brand.signet` like the Logo --
+    `{ sourceKind: "asset", assetId, url: "/api/site/media/<id>/content?r=<revision>", contentType, width?,
+    height? }` -- and `readPhiThemeSiteSignet` takes the revision from that address (only the delivered
+    address of this Asset counts), and the type and size beside it. The identifier is a hash of
+    `asset:<id>:r<revision>` (`buildPhiSignetAssetIdentity`), so a replaced picture is a new address at
+    once, and at the address whose identifier is the current one the response is cached for a year
+    (`immutable`), like the data URL. The head states `type` and `sizes` (`<width>x<height>`) from the
+    Core's fields, and `icons.apple` for `image/png` of at least 180 px on both sides. Each field is used
+    only if present and valid (an `image/*` type without parameters, whole positive sizes).
+  - A library Asset without those fields (a record an older Core resolved, or a draft): the identifier is the
+    Asset's id, the head states no type or size and no Apple icon, and the response is cached for an hour -- a
+    picture replaced in place under the same id reaches the tab within the hour, not at once. The route
+    itself reads the Apple path from the bytes, as before.
 - `/favicon.ico`, `/apple-touch-icon.png` and `/apple-touch-icon-precomposed.png` are rewritten by the Site
   proxy to the same route (`?as=favicon|apple`) and answer the same picture with an hour of cache (a missing
   Signet: five minutes). The Apple paths answer only for a PNG of at least 180 px and 404 otherwise, so an SVG
@@ -265,7 +276,7 @@ preset.
   A mode the record leaves unset shows the followed Set's Logo; where that Set is a Module's, the first
   save takes it into the Media library. The core Set's is followed and never copied, like every other
   core block -- its Logo is the "your logo" placeholder, and a Site must not come to own a blank.
-- `signet?: { sourceKind: "asset", assetId: number, url?: string } | { sourceKind: "url", sourceUrl: string }`
+- `signet?: { sourceKind: "asset", assetId: number, url?: string, contentType?: string, width?: number, height?: number } | { sourceKind: "url", sourceUrl: string }`
   -- the Site's own [Signet](#signet), one picture for both modes. There is no `none`. Absent means the
   followed Set's. The Theme editor has no field for it: the only way it enters the record is the save
   described under Signet.

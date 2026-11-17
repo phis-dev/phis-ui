@@ -106,6 +106,14 @@ export const PHI_FORM_LINK_TARGET_LABEL_KEYS = {
   pagesUnavailable: "linkTargetPagesUnavailable",
 } as const;
 
+/**
+ * What a field says in the place of its control when the Module that owns its field type is not active in
+ * this Area (`PhiFormControl`'s `unavailableFieldKeys`), read from the Form's Label Set and falling back to
+ * English. The value the field holds is kept and sent unchanged.
+ */
+export const PHI_FORM_FIELD_UNAVAILABLE_LABEL_KEY = "fieldUnavailable";
+export const PHI_FORM_FIELD_UNAVAILABLE_DEFAULT_LABEL = "This field is not available in this area.";
+
 export const PHI_FORM_UPLOAD_LABEL_KEYS = {
   trigger: "uploadTrigger",
   /** Beneath the trigger in an upload area (`config.presentation: "area"`): that a drop works too. */

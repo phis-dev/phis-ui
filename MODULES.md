@@ -1246,7 +1246,11 @@ every route that reached the catalog -- the Auth Module's Form provider brought 
 every page, Landings without a Form included. A Module whose entry says `uiProvider: true` and whose
 Client half brings none is refused at render, by name. The provider:
 
-- never wraps the application root or another Module's subtree;
+- never wraps the application root or another Module's subtree -- a Form widget is the one place where
+  several Module providers meet: it mounts the provider of the Form's owner and, nested beside it, the
+  provider of each other active Module that owns a field type the Form uses (and says "not available in
+  this area" in the fields of a Module that is not active), each around that Form's subtree alone
+  ([FORMS.md](./FORMS.md#field-and-validation-providers));
 - installs no signal bus, Controller registry, or renderer;
 - scopes resets, generated styles, variables, and portal containers to the Module root or sandbox;
 - is disposed with its subtree.

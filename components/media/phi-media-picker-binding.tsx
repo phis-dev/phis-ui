@@ -51,6 +51,20 @@ export type PhiMediaPickerBindingProps = {
   trigger?: ReactNode;
   getPopupContainer?: (triggerNode: HTMLElement) => HTMLElement;
   popupRootClassName?: string;
+  /**
+   * Offers the Site Space and nothing else, wherever the surface stands: no Space selector, and the query
+   * names no Space, which the control plane answers with the Site Space. For a place that stores a
+   * reference to an Asset for everybody to see, which a personal or a group Space cannot honestly be.
+   * An interface rule like `usePhiMediaSpaceSelectionAllowed`; the server that takes the reference is what
+   * enforces it.
+   */
+  siteSpaceOnly?: boolean;
+  /**
+   * Which of the listed Assets may be chosen; the others stay in the list, greyed out. The list is the
+   * control plane's answer and is not narrowed here -- an Asset the question refuses is still one the
+   * reader can see exists.
+   */
+  isAssetSelectable?: (asset: PhiMediaAssetTile) => boolean;
 };
 
 export function usePhiMediaPickerBinding({
@@ -68,6 +82,8 @@ export function usePhiMediaPickerBinding({
   trigger,
   getPopupContainer,
   popupRootClassName,
+  siteSpaceOnly = false,
+  isAssetSelectable,
 }: PhiMediaPickerBindingProps) {
   const [localOpen, setLocalOpen] = useState(false);
   const [localValue, setLocalValue] = useState<number | null>(controlledValue ?? null);
@@ -92,7 +108,7 @@ export function usePhiMediaPickerBinding({
    * been given.
    */
   const [requestedSpaceAddress, setRequestedSpaceAddress] = useState<string | null>(null);
-  const spaceSelectionAllowed = usePhiMediaSpaceSelectionAllowed();
+  const spaceSelectionAllowed = usePhiMediaSpaceSelectionAllowed() && !siteSpaceOnly;
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -235,6 +251,7 @@ export function usePhiMediaPickerBinding({
     labels: { trigger: labels.picker.triggerLabel, title: labels.picker.popoverTitle, search: labels.tool.searchPlaceholder ?? searchLabels.placeholder, folder: labels.tool.folderLabel, space: labels.space.label, empty: bindingError ?? (loadFailed ? labels.picker.loadFailedDescription : labels.picker.emptyDescription), clear: labels.picker.clearLabel, reload: labels.tool.reloadLabel, tileSize: labels.picker.tileSizeLabel },
     getPopupContainer,
     popupRootClassName,
+    isAssetSelectable,
     onOpenChange: updateOpen,
     onCommit,
     onDiscard,

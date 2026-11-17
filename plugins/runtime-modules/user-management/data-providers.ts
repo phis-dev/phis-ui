@@ -5,6 +5,15 @@ import { createPhiUserManagementControllerAddress } from "../../../plugins/runti
 
 export const PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
   {
+    key: PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS.addonRoleOptions,
+    ownerModuleId: PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
+    kind: "options",
+    executionMode: "live",
+    authoringMode: "none",
+    title: "Add-on roles",
+    description: "The Add-ons enabled for the Site and their declared roles, for filtering users by them.",
+  },
+  {
     key: PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS.table,
     ownerModuleId: PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
     kind: "table",
@@ -37,6 +46,8 @@ export const PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
           { key: "email", title: "Email", type: "string" },
           { key: "accountType", title: "Account type", type: "string" },
           { key: "roleTags", title: "Roles", type: "json" },
+          { key: "addonRoles", title: "Add-on role assignments", type: "json" },
+          { key: "addonRoleTags", title: "Add-on roles", type: "json" },
           { key: "userFlagTags", title: "User flags", type: "json" },
           { key: "siteFlagTags", title: "Site flags", type: "json" },
           { key: "lastLoginAt", title: "Last login", type: "datetime" },
@@ -46,7 +57,7 @@ export const PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
         ],
         query: {
           search: true,
-          filterFields: ["accountType", "enabled"],
+          filterFields: ["addonRole", "enabled"],
           sorting: "single",
           pagination: "offset",
           total: true,

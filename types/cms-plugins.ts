@@ -751,6 +751,13 @@ export type PhiCmsRuntimeRenderRegistry = {
   ownerModuleIdByLayoutType: ReadonlyMap<string, PhiRuntimeModuleId>;
   /** The used Modules whose catalog entry says they bring a UI provider through their Client half. */
   uiProviderModuleIds: ReadonlySet<PhiRuntimeModuleId>;
+  /** The Modules active in this Area. */
+  activeModuleIds: ReadonlySet<PhiRuntimeModuleId>;
+  /**
+   * Which installed Module owns each Form field type, active here or not. A Form widget mounts the field
+   * Providers of the active owners its Form uses, and marks the fields of the others as unavailable.
+   */
+  ownerModuleIdByFormFieldTypeKey: ReadonlyMap<PhiFormProviderKey, PhiRuntimeModuleId>;
   /**
    * How to ask each active Module for the facts it publishes, by the namespace it publishes them under.
    *
@@ -1386,6 +1393,7 @@ export type PhiResolvedRuntimeModuleSet = {
   platformModuleId: PhiRuntimeModuleId;
   installedOwnerModuleIdByWidgetType: ReadonlyMap<string, PhiRuntimeModuleId>;
   installedOwnerModuleIdByLayoutType: ReadonlyMap<string, PhiRuntimeModuleId>;
+  installedOwnerModuleIdByFormFieldTypeKey: ReadonlyMap<PhiFormProviderKey, PhiRuntimeModuleId>;
   ownerModuleIdByControllerType: ReadonlyMap<string, PhiRuntimeModuleId>;
   areaControllerSettings: readonly PhiRuntimeControllerSetting[];
 };

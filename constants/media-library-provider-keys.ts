@@ -1,3 +1,5 @@
+import type { PhiFormProviderKey } from "../types/form-descriptor";
+import { createPhiModuleScopedKey } from "./runtime-module-ownership";
 import {
   createPhiSharedRuntimeDataProviderKey,
   createPhiSharedRuntimeItemRendererKey,
@@ -48,3 +50,13 @@ export const PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS = {
  */
 export const PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY =
   createPhiSharedRuntimeItemRendererKey("media-asset");
+
+/**
+ * The `media-asset` Form field type, named on the same terms: one Asset of the Site's Media library,
+ * chosen with the library's picker. A Form of any Module cites this key in its `fieldProviderKey`; the
+ * Asset Module owns the field type, declares it in its `formProviders` and serves its control, and the
+ * Form widget mounts that for the Form where the Module is active (FORMS.md). The Foundation names it and
+ * holds no reference to the Module -- the resolver reads it to mount the library Provider the picker needs.
+ */
+export const PHI_MEDIA_ASSET_FORM_FIELD_PROVIDER_KEY =
+  createPhiModuleScopedKey("form-field", "media-asset") as PhiFormProviderKey;

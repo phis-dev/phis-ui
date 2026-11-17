@@ -4,6 +4,7 @@ import { buildPhiRootMetadata } from "./phi-metadata";
 import { buildPhiSignetVersion, decodePhiSignetDataUrl, readPhiPngSize } from "./phi-signet";
 import { describePhiSignetHead } from "./phi-signet-head";
 import { PHI_SIGNET_PATH } from "./phi-signet-paths";
+import { readPhiThemeSiteSignet } from "../theme/phi-theme-signet";
 
 /** A PNG header of the stated size: signature, IHDR, and nothing after it that a reader of the size needs. */
 function pngOf(width: number, height: number) {
@@ -139,5 +140,65 @@ describe("the root metadata", () => {
   it("carries no icons without a Signet", () => {
     expect(buildPhiRootMetadata({}).icons).toBeUndefined();
     expect(buildPhiRootMetadata({ signet: null }).icons).toBeUndefined();
+  });
+});
+
+function siteHead(authored: Parameters<typeof readPhiThemeSiteSignet>[0]) {
+  const picture = readPhiThemeSiteSignet(authored);
+  if (!picture) throw new Error("not a deliverable Signet");
+  return describePhiSignetHead({ ...picture, from: "site" });
+}
+
+describe("a library Signet as the Core 0.4.1 resolves it", () => {
+  const resolved = (extra: Record<string, unknown> = {}) => ({
+    sourceKind: "asset" as const,
+    assetId: 7,
+    url: "/api/site/media/7/content?r=3",
+    contentType: "image/png",
+    width: 512,
+    height: 512,
+    ...extra,
+  });
+
+  it("reads the revision from the delivered address, and the type and size beside it", () => {
+    expect(readPhiThemeSiteSignet(resolved())).toEqual({
+      kind: "asset", assetId: 7, revision: 3, contentType: "image/png", width: 512, height: 512,
+    });
+  });
+
+  it("reads only what it can trust: the address of this Asset, an image type, a whole size", () => {
+    expect(readPhiThemeSiteSignet(resolved({ url: "/api/site/media/8/content?r=3" }))).not.toHaveProperty("revision");
+    expect(readPhiThemeSiteSignet(resolved({ url: "https://example.com/api/site/media/7/content?r=3" }))).not.toHaveProperty("revision");
+    expect(readPhiThemeSiteSignet(resolved({ url: "/api/site/media/7/content?r=x" }))).not.toHaveProperty("revision");
+    expect(readPhiThemeSiteSignet(resolved({ url: "/api/site/media/7/content" }))).not.toHaveProperty("revision");
+    expect(readPhiThemeSiteSignet(resolved({ contentType: "text/html" }))).not.toHaveProperty("contentType");
+    expect(readPhiThemeSiteSignet(resolved({ width: 512, height: null }))).not.toHaveProperty("width");
+  });
+
+  it("names the address by the revision, so a replaced picture is a new address", () => {
+    const first = siteHead(resolved());
+    const replaced = siteHead(resolved({ url: "/api/site/media/7/content?r=4" }));
+    expect(first?.href).toBe(`${PHI_SIGNET_PATH}?v=${buildPhiSignetVersion("asset:7:r3")}`);
+    expect(replaced?.href).not.toBe(first?.href);
+  });
+
+  it("states type and size, and an Apple touch icon for a PNG of 180 px or more", () => {
+    const head = siteHead(resolved());
+    expect(head).toMatchObject({ type: "image/png", sizes: "512x512" });
+    expect(head?.apple).toEqual({ href: head?.href, type: "image/png", sizes: "512x512" });
+  });
+
+  it("leaves the Apple touch icon out below 180 px and for another type", () => {
+    const small = siteHead(resolved({ width: 64, height: 64 }));
+    expect(small).toMatchObject({ type: "image/png", sizes: "64x64" });
+    expect(small?.apple).toBeUndefined();
+    const svg = siteHead(resolved({ contentType: "image/svg+xml" }));
+    expect(svg?.type).toBe("image/svg+xml");
+    expect(svg?.apple).toBeUndefined();
+  });
+
+  it("is named as before where the Core states none of it", () => {
+    const head = siteHead({ sourceKind: "asset", assetId: 7 });
+    expect(head).toEqual({ href: `${PHI_SIGNET_PATH}?v=${buildPhiSignetVersion("asset:7")}` });
   });
 });

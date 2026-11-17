@@ -2,6 +2,7 @@
 
 import { isPhiRecord } from "../../../../helpers/is-record";
 import { PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
+import { buildPhiAddonRoleTags, parsePhiAddonRoleFilter } from "../addon-roles";
 import {
   buildPhiTablePageParams,
   createPhiTableProviderRequestInit,
@@ -44,10 +45,14 @@ async function loadUsers({
 }: PhiTableProviderQueryRequest): Promise<PhiTableProviderQueryResult> {
   const params = buildPhiTablePageParams(query, 20);
   const search = query.search?.trim() ?? "";
-  const accountType = readPhiTableStringFilter(query, "accountType");
+  const addonRole = parsePhiAddonRoleFilter(readPhiTableStringFilter(query, "addonRole"));
   const enabled = readPhiTableStringFilter(query, "enabled");
   if (search) params.set("search", search);
-  if (accountType) params.set("accountType", accountType);
+  // The Core's two filters: an Add-on, and optionally one of its roles (`addonRole` needs `addonId`).
+  if (addonRole) {
+    params.set("addonId", addonRole.addonId);
+    if (addonRole.addonRole) params.set("addonRole", addonRole.addonRole);
+  }
   if (enabled) params.set("enabled", enabled);
   const primarySort = query.sorts?.[0];
   if (primarySort) {
@@ -59,7 +64,7 @@ async function loadUsers({
     await fetch(`${API_PATH}?${params.toString()}`, createPhiTableProviderRequestInit(signal)),
     RESPONSE_OPTIONS,
   );
-  const rows = readPhiTableRows(result?.rows);
+  const rows = readPhiTableRows(result?.rows).map((row) => ({ ...row, addonRoleTags: buildPhiAddonRoleTags(row) }));
   if (typeof result?.siteTotal !== "number" || !Number.isFinite(result.siteTotal) || result.siteTotal < 0) {
     throw new PhiTableProviderError("invalid-response", "User Management site total is invalid.");
   }

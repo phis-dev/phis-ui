@@ -56,3 +56,15 @@ export function readPhiPngSize(bytes: Uint8Array): { width: number; height: numb
 export function buildPhiSignetVersion(identity: Uint8Array | string): string {
   return createHash("sha256").update(identity).digest("hex").slice(0, 10);
 }
+
+/**
+ * What identifies a library picture in the address the head names, and in the route that answers it.
+ *
+ * With the Asset's revision where the Core states one (Core 0.4.1), so a picture that is replaced gets a
+ * new address at once and the address can be cached for a year. Without it, the id alone: the bytes are
+ * not known where the head is written, a replaced picture keeps its address, and the route answers it
+ * with a short cache.
+ */
+export function buildPhiSignetAssetIdentity(asset: { assetId: number; revision?: number }): string {
+  return asset.revision != null ? `asset:${asset.assetId}:r${asset.revision}` : `asset:${asset.assetId}`;
+}

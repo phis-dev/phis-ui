@@ -58,6 +58,8 @@ export type PhiMediaPickerControlProps = PhiPickerTransactionCallbacks<number | 
   showFolderFilter?: boolean;
   showPagination?: boolean;
   trigger?: ReactNode;
+  /** Which Assets may be chosen. The others are listed and greyed out; absent, every Asset may be. */
+  isAssetSelectable?: (asset: PhiMediaAssetTile) => boolean;
   labels?: Partial<{
     trigger: string;
     title: string;
@@ -100,6 +102,7 @@ export function PhiMediaPickerControl({
   showFolderFilter = true,
   showPagination = true,
   trigger,
+  isAssetSelectable,
   labels,
   getPopupContainer,
   popupRootClassName,
@@ -134,7 +137,7 @@ export function PhiMediaPickerControl({
       minColumnWidth={resolvedMinColumnWidth}
       selected={asset.id === picker.value}
       size="small"
-      disabled={locked}
+      disabled={locked || (isAssetSelectable != null && !isAssetSelectable(asset))}
       showTypeLabel={false}
       showDeleteAction={false}
       showDimensions={false}
