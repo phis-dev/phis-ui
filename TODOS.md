@@ -174,6 +174,12 @@ built. Remove an entry when it is done.
 
 ## Media and Theme
 
+- **A Module cannot offer "choose a picture from the Media library" (found by @phis/shop, 2026-11-17).**
+  `PhiMediaPickerControl` is public and fully controlled; what feeds it -- the provider query, folders,
+  Spaces, paging (`components/media/phi-media-picker-binding.tsx`) -- is reachable from inside only, and
+  there is no form field for an Asset. Wanted: a field type `media-asset` (value: the Asset id) or the
+  binding as a public door, restrictable to the Site's Space and to publicly delivered Assets. The picker's
+  query has no filter on the delivery policy today.
 - **Media Inspector variant hand-over.** The Inspector always simulates the variant crop from the original
   (`components/media/phi-asset-inspector-section.tsx`) and never shows the generated variant. Decide
   whether that stays and the contract says so, or whether unsaved focal edits get an owner and the preview
