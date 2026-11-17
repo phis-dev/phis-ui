@@ -678,13 +678,15 @@ h5.phi-typography, .phi-typography h5 {
 /*
  * A compact control writes small: Input, InputNumber, DatePicker and Button take the scale's `sm` through
  * their component tokens (theme/phi-theme.ts). Select has no such token -- it sizes its words by variables
- * of its own and gives `-sm` the body's -- so its compact form is told here. Both variables move together:
+ * of its own and gives `-sm` the body's -- so its compact form is told here. Those variables are written
+ * under Ant Design's component prefix, `--ant-select-*`: only the global tokens follow `cssVar.prefix`
+ * (`--phi-`), so a `--phi-select-*` name would set a variable nothing reads. Both variables move together:
  * Select reckons its padding as (height - font height) / 2, so a smaller font size with the body's font
  * height would leave the box short of `controlHeightSM` by the difference.
  */
 [class~="ant-select"][class~="ant-select-sm"] {
-  --phi-select-font-size: var(--phi-font-size-sm);
-  --phi-select-font-height: calc(var(--phi-font-size-sm) * var(--phi-select-line-height));
+  --ant-select-font-size: var(--phi-font-size-sm);
+  --ant-select-font-height: calc(var(--phi-font-size-sm) * var(--ant-select-line-height));
 }
 
 /* The list a compact Select opens writes as the field does; Ant Design gives every Select's list the body size. */

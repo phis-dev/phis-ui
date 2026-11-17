@@ -701,11 +701,6 @@ const antdComponentVariableAllowance = new Map([
   ["--phi-table-footer-bg", {
     reason: "Table's own token. The Table Control's stylesheet follows the component it is drawing.",
   }],
-  ...["--phi-select-font-size", "--phi-select-font-height", "--phi-select-line-height"].map((variable) => [variable, {
-    reason: "Select's own token. Select has no small font size of its own, so the compact Select is given "
-      + "the scale's `sm` through the variables it sizes its words and padding by (styles/controls.css, "
-      + "Compact Select).",
-  }]),
   ...[
     "--phi-btn-bg-color",
     "--phi-btn-bg-color-hover",
