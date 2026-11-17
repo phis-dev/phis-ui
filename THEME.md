@@ -553,9 +553,13 @@ are not part of this field.
   `scripts/lib/css-variable-families.mjs`: a `--phi-` name outside a family must be a stated token
   (scripts/validate-control-boundaries.mjs), and no variable Ant Design writes may fall inside one
   (scripts/check-antd-static-css.mjs). Class names keep Ant Design's `ant-` prefix; that is a different
-  setting. So do the variables a component sizes itself by (Select's `--ant-select-font-size`,
-  `--ant-select-font-height`, `--ant-select-line-height`, ...): only the global and component tokens follow
-  `cssVar.prefix`, and a style that sets such a variable names it with `--ant-`, or it sets a name nothing reads. Do not mirror Ant Design colours, spacing, radii, typography, shadows, control sizes, or
+  setting. So do the variables a component builds with `genCssVar` (Select's `--ant-select-font-size`,
+  `--ant-select-font-height`, Button's `--ant-btn-bg-color`, `--ant-btn-border-color`, `--ant-btn-text-color`
+  and their `-hover`/`-active` forms, the variables of Input Number, Date Picker, Pagination, Table, Tooltip, ...):
+  only the global and component tokens follow `cssVar.prefix`, and a style that sets or reads such a variable
+  names it with `--ant-`, or it names something nothing reads. One component can have both kinds (Button:
+  the token `--phi-button-content-font-size-sm`, the variable `--ant-btn-bg-color`). The boundary check
+  reads the `genCssVar` names out of the installed Ant Design and refuses their `--phi-` spelling. Do not mirror Ant Design colours, spacing, radii, typography, shadows, control sizes, or
   motion into hand-set variables.
 - Custom colours are data in `usePhiConfig().customColors`, and the Theme also writes them per mode as tokens
   of its own (`custom1` ... `custom10`, so `--phi-custom-1` ...), laid over the resolved tokens like

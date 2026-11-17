@@ -1,4 +1,5 @@
 import { PHI_HAND_SET_CSS_VARIABLE_FAMILIES } from "./lib/css-variable-families.mjs";
+import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
@@ -701,21 +702,6 @@ const antdComponentVariableAllowance = new Map([
   ["--phi-table-footer-bg", {
     reason: "Table's own token. The Table Control's stylesheet follows the component it is drawing.",
   }],
-  ...[
-    "--phi-btn-bg-color",
-    "--phi-btn-bg-color-hover",
-    "--phi-btn-bg-color-active",
-    "--phi-btn-border-color",
-    "--phi-btn-border-color-hover",
-    "--phi-btn-border-color-active",
-    "--phi-btn-text-color",
-    "--phi-btn-text-color-hover",
-    "--phi-btn-text-color-active",
-  ].map((variable) => [variable, {
-    reason: "Button's own variables. Ant Design 6 draws a Button's ground, edge and words from them in "
-      + "every state, so the gradient and glass Buttons set what they change there instead of fighting "
-      + "its hover and active rules (styles/gradients.css).",
-  }]),
   ["--phi-cascader-dropdown-height", {
     reason: "Cascader's own token. The root stylesheet sizes the popup by what the component sizes itself by.",
   }],
@@ -796,6 +782,44 @@ function readHandSetFamily(variable) {
   return handSetFamilies.find((family) => name === family || name.startsWith(`${family}-`)) ?? null;
 }
 
+/*
+ * The other family of Ant Design variables. A component that builds its variables with `genCssVar(antCls,
+ * component)` writes them under the class prefix (`--ant-btn-bg-color`, `--ant-select-font-size`), and
+ * `cssVar.prefix` does not move them: a `--phi-` name for one is a variable nothing reads, and the rule
+ * that sets it does nothing. The names are read out of the installed Ant Design, so a component that
+ * starts using `genCssVar` is covered without a list kept here.
+ */
+async function readAntdComponentVariableNames() {
+  const names = new Map();
+  const styleRoot = path.join(repositoryRoot, "node_modules", "antd", "es");
+  let components = [];
+  try {
+    components = await readdir(styleRoot, { withFileTypes: true });
+  } catch {
+    return names;
+  }
+  for (const component of components) {
+    if (!component.isDirectory()) continue;
+    const styleDirectory = path.join(styleRoot, component.name, "style");
+    let files = [];
+    try {
+      files = await readdir(styleDirectory);
+    } catch {
+      continue;
+    }
+    for (const file of files.filter((entry) => entry.endsWith(".js"))) {
+      const source = await readFile(path.join(styleDirectory, file), "utf8");
+      const prefixes = [...source.matchAll(/genCssVar\((?:token\.)?antCls, '([a-z0-9-]+)'\)/gu)].map((match) => match[1]);
+      if (prefixes.length === 0) continue;
+      for (const use of source.matchAll(/\b(?:varName|varRef)\('([a-z0-9-]+)'/gu)) {
+        for (const prefix of prefixes) names.set(`--phi-${prefix}-${use[1]}`, `--ant-${prefix}-${use[1]}`);
+      }
+    }
+  }
+  return names;
+}
+const antdClassPrefixedVariables = await readAntdComponentVariableNames();
+
 const styledSources = await listStyledSources();
 const componentVariablesSeen = new Set();
 const mentionedNames = new Set();
@@ -809,6 +833,14 @@ for (const relativePath of styledSources) {
     // A placeholder in prose or a template (`--phi-menu-*`, `--phi-font-<module>-...`, `--phi-x-${slot}`)
     // names a family, not a variable.
     if (source[match.index + variable.length] === "-") continue;
+    const classPrefixedName = antdClassPrefixedVariables.get(variable);
+    if (classPrefixedName) {
+      failures.push(
+        `${relativePath} names ${variable}, a variable Ant Design builds with genCssVar: it is written as `
+          + `${classPrefixedName}, because only tokens follow cssVar.prefix, so the --phi- name sets or reads nothing.`,
+      );
+      continue;
+    }
     if (antdComponentVariableAllowance.has(variable)) {
       componentVariablesSeen.add(variable);
       continue;
