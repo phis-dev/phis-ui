@@ -3,6 +3,8 @@ import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { renderPhiWidgetPreviewPlaceholder } from "../../../../../plugins/factories/widget-renderers";
 import { getPhiEffectsWidgetLabels } from "../../../../../components/widgets/label-sets/effects";
 import { getPhiAuthoringToolsLabels } from "../../../../../components/widgets/label-sets/authoring-tools";
+import { getPhiMediaWidgetLabels } from "../../../../../components/media/label-sets/media";
+import { PhiMediaPickerLabelsProvider } from "../../../../../components/media/phi-media-picker-labels";
 import {
   PHI_BUILDER_PREVIEW_SEARCH_PARAM,
 } from "../../../../../plugins/runtime-modules/builder/preview-transport";
@@ -40,9 +42,10 @@ export const PHI_STRUCTURE_REGION_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiStructure
     const currentPageDrafts = isPhiBuilderPageScopedRegion(regionKey)
       ? await buildPhiBuilderCurrentPageDrafts(runtime, registry.runtimeModuleCatalog)
       : undefined;
-    const [effectsLabels, authoringToolsLabels] = await Promise.all([
+    const [effectsLabels, authoringToolsLabels, mediaPickerLabels] = await Promise.all([
       getPhiEffectsWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
       getPhiAuthoringToolsLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
+      getPhiMediaWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
     ]);
     const fallbackStructureDraft =
       currentStructureDrafts.drafts[`${currentStructureDrafts.area}:${regionKey}`] ?? null;
@@ -81,33 +84,39 @@ export const PHI_STRUCTURE_REGION_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiStructure
 
     const { PhiStructureRegionWidget } = await import("./built-in");
 
+    /*
+     * The picker the tool buttons and the mask picker open says its words in the reader's language. The
+     * provider wraps the whole widget, so every nested scaffold below it reads the same set.
+     */
     return (
-      <PhiStructureRegionWidget
-        config={{
-          slotKind: config.slotKind ?? "structure",
-          origin: config.origin ?? PHI_STRUCTURE_REGION_WIDGET_DEFINITION.pluginKey,
-          regionKey,
-          title: config.title ?? config.regionKey ?? "Region",
-          subtitle: config.subtitle ?? null,
-          allowSelect: config.allowSelect ?? true,
-          allowInsert: config.allowInsert ?? true,
-          pickItems: config.pickItems ?? [],
-          fallbackMinHeight: config.fallbackMinHeight,
-        }}
-        structureDraftsByArea={structureDraftsByArea}
-        pageDraftsByScope={pageDraftsByScope}
-        effectsLabels={effectsLabels}
-        authoringToolsLabels={authoringToolsLabels}
-        serverPreview={
-          <PhiBuilderRegionServerPreview
-            snapshot={snapshot}
-            draft={resolvedPreviewDraft}
-            regionKey={regionKey}
-            runtime={runtime}
-            registry={registry}
-          />
-        }
-      />
+      <PhiMediaPickerLabelsProvider labels={mediaPickerLabels}>
+        <PhiStructureRegionWidget
+          config={{
+            slotKind: config.slotKind ?? "structure",
+            origin: config.origin ?? PHI_STRUCTURE_REGION_WIDGET_DEFINITION.pluginKey,
+            regionKey,
+            title: config.title ?? config.regionKey ?? "Region",
+            subtitle: config.subtitle ?? null,
+            allowSelect: config.allowSelect ?? true,
+            allowInsert: config.allowInsert ?? true,
+            pickItems: config.pickItems ?? [],
+            fallbackMinHeight: config.fallbackMinHeight,
+          }}
+          structureDraftsByArea={structureDraftsByArea}
+          pageDraftsByScope={pageDraftsByScope}
+          effectsLabels={effectsLabels}
+          authoringToolsLabels={authoringToolsLabels}
+          serverPreview={
+            <PhiBuilderRegionServerPreview
+              snapshot={snapshot}
+              draft={resolvedPreviewDraft}
+              regionKey={regionKey}
+              runtime={runtime}
+              registry={registry}
+            />
+          }
+        />
+      </PhiMediaPickerLabelsProvider>
     );
   },
   renderPreview: ({ widget }) => renderPhiWidgetPreviewPlaceholder(widget),

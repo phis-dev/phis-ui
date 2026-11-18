@@ -1,6 +1,6 @@
 import type { PhiBlockRuntime } from "../../../../../types";
 import type { PhiCmsAreaUploadWidgetConfig } from "../../../../../types/media";
-import { getPhiMediaWidgetLabels } from "../../../../../components/media/label-sets/media";
+import { getPhiMediaUploadLabels } from "../../../../../components/media/label-sets/media-upload";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import { buildPhiWidgetLabelTranslatorOptions } from "../../../../../components/widgets/label-sets/runtime-options";
@@ -14,12 +14,12 @@ export async function PhiAreaUploadWidgetServer({
   runtime,
   config,
 }: PhiAreaUploadWidgetServerProps) {
-  const labels = await getPhiMediaWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
+  const { upload } = await getPhiMediaUploadLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
 
   return (
     <PhiRuntimeModuleRenderClientHost
       type={PhiCmsWidgetType.AreaUpload}
-      componentProps={{ labels: labels.upload, config }}
+      componentProps={{ labels: upload, config }}
     />
   );
 }

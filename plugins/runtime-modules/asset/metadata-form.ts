@@ -118,28 +118,37 @@ export const PHI_ASSET_FOLDER_FORM_DESCRIPTOR = {
 } as const satisfies PhiFormDescriptor;
 
 async function loadAssetFormLabels(context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0]) {
-  const { getPhiMediaWidgetLabels } = await import("../../../components/media/label-sets/media");
-  const labels = await getPhiMediaWidgetLabels({
+  const [{ getPhiMediaWidgetLabels }, { getPhiAssetModuleLabels }] = await Promise.all([
+    import("../../../components/media/label-sets/media"),
+    import("./labels"),
+  ]);
+  const options = {
     apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
     internalToken: readPhiServerApiCredentials().internalToken,
     locale: context.runtime.locale.current,
-  });
+  };
+  // The editor's own words are this Module's; the four flag words are the Foundation's, because Core's
+  // toolbar flag filter says the same ones.
+  const [{ editor }, { tool }] = await Promise.all([
+    getPhiAssetModuleLabels(options),
+    getPhiMediaWidgetLabels(options),
+  ]);
   return flattenPhiFormLabels({
-    folderPathLabel: labels.editor.folderPathLabel,
-    folderPathPlaceholder: labels.editor.folderPathPlaceholder,
-    titleLabel: labels.editor.titleLabel,
-    altLabel: labels.editor.altLabel,
-    flagsLabel: labels.editor.flagsLabel,
-    focalRectLabel: labels.editor.focalRectLabel,
-    folderNameLabel: labels.editor.folderNameLabel,
-    folderNamePlaceholder: labels.editor.folderNamePlaceholder,
-    folderNameRequired: labels.editor.folderNameRequired,
-    parentFolderLabel: labels.editor.parentFolderLabel,
-    topLevelFolderLabel: labels.editor.topLevelFolderLabel,
-    featuredFlagLabel: labels.editor.featuredFlagLabel,
-    lockedFlagLabel: labels.editor.lockedFlagLabel,
-    maskFlagLabel: labels.editor.maskFlagLabel,
-    backgroundFlagLabel: labels.editor.backgroundFlagLabel,
+    folderPathLabel: editor.folderPathLabel,
+    folderPathPlaceholder: editor.folderPathPlaceholder,
+    titleLabel: editor.titleLabel,
+    altLabel: editor.altLabel,
+    flagsLabel: editor.flagsLabel,
+    focalRectLabel: editor.focalRectLabel,
+    folderNameLabel: editor.folderNameLabel,
+    folderNamePlaceholder: editor.folderNamePlaceholder,
+    folderNameRequired: editor.folderNameRequired,
+    parentFolderLabel: editor.parentFolderLabel,
+    topLevelFolderLabel: editor.topLevelFolderLabel,
+    featuredFlagLabel: tool.featuredFlagLabel,
+    lockedFlagLabel: tool.lockedFlagLabel,
+    maskFlagLabel: tool.maskFlagLabel,
+    backgroundFlagLabel: tool.backgroundFlagLabel,
   });
 }
 

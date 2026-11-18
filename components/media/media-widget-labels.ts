@@ -13,11 +13,9 @@ export type PhiAssetPreviewToolWidgetLabels = {
   folderLockFailedText: string;
   flagsLabel: string;
   flagPlaceholder: string;
-  uploadToggleLabel: string;
   kindLabel: string;
   resetLabel: string;
   reloadLabel: string;
-  assetsTemplate: string;
   imageKindLabel: string;
   videoKindLabel: string;
   audioKindLabel: string;
@@ -28,6 +26,14 @@ export type PhiAssetPreviewToolWidgetLabels = {
   fontKindLabel: string;
   binaryKindLabel: string;
   otherKindLabel: string;
+  /**
+   * The four flag words. Here and not with the Asset Module's editor because Core's toolbar flag filter
+   * reads them, and Core cannot import the Module; the Module's metadata form reads them from here.
+   */
+  featuredFlagLabel: string;
+  lockedFlagLabel: string;
+  maskFlagLabel: string;
+  backgroundFlagLabel: string;
 };
 
 export type PhiAreaUploadWidgetLabels = {
@@ -68,11 +74,9 @@ export type PhiAssetInspectorWidgetLabels = {
   logoVariantLabel: string;
   landscapeVariantLabel: string;
   portraitVariantLabel: string;
-  storageKeyLabel: string;
   publicUrlLabel: string;
   contentTypeLabel: string;
   originalNameLabel: string;
-  restrictedLabel: string;
   copyLabelTemplate: string;
 };
 
@@ -81,7 +85,6 @@ export type PhiAssetInspectorEditorWidgetLabels = {
   altLabel: string;
   folderPathLabel: string;
   folderPathPlaceholder: string;
-  folderPathHelp: string;
   createFolderTitle: string;
   folderNameLabel: string;
   folderNamePlaceholder: string;
@@ -91,28 +94,30 @@ export type PhiAssetInspectorEditorWidgetLabels = {
   flagsLabel: string;
   focalRectLabel: string;
   focalRectButtonLabel: string;
-  focalRectSaveLabel: string;
-  focalRectResetLabel: string;
-  focalRectClearLabel: string;
-  focalRectHelpLabel: string;
-  saveLabel: string;
-  savingLabel: string;
-  saveSuccessText: string;
-  saveFailedText: string;
-  featuredFlagLabel: string;
-  lockedFlagLabel: string;
-  maskFlagLabel: string;
-  backgroundFlagLabel: string;
 };
 
+/**
+ * What the Foundation's Media surfaces say, one Label Set for all of them (`label-sets/media.ts`): the
+ * picker, the Space names, the grid and the toolbar, and the upload surface's own texts, which are Core's
+ * `widget:upload` set. The inspector and the metadata editor are the Asset Module's and are not here.
+ */
 export type PhiAssetWidgetLabels = {
   tool: PhiAssetPreviewToolWidgetLabels;
   upload: PhiAreaUploadWidgetLabels;
   grid: PhiAssetPreviewGridWidgetLabels;
-  inspector: PhiAssetInspectorWidgetLabels;
-  editor: PhiAssetInspectorEditorWidgetLabels;
   picker: PhiMediaPickerWidgetLabels;
   space: PhiMediaSpaceSelectorLabels;
+};
+
+/**
+ * What the Asset Module's own surfaces say: the Inspector's sections and the metadata editor. The types
+ * and the English defaults stay in the Foundation because Foundation components draw them (the inspector
+ * section, the focal rect) and take them as props; only the Label Set that translates them, and its
+ * loader, are the Module's (`plugins/runtime-modules/asset/labels.ts`).
+ */
+export type PhiAssetModuleLabels = {
+  inspector: PhiAssetInspectorWidgetLabels;
+  editor: PhiAssetInspectorEditorWidgetLabels;
 };
 
 /**
@@ -129,7 +134,6 @@ export type PhiMediaSpaceSelectorLabels = {
 export type PhiMediaPickerWidgetLabels = {
   triggerLabel: string;
   popoverTitle: string;
-  selectedLabel: string;
   emptyDescription: string;
   loadFailedDescription: string;
   clearLabel: string;
@@ -148,11 +152,9 @@ export const PHI_MEDIA_WIDGET_DEFAULT_LABELS: PhiAssetWidgetLabels = {
     folderLockFailedText: "The folder could not be changed.",
     flagsLabel: "Flags",
     flagPlaceholder: "Flag",
-    uploadToggleLabel: "Upload",
     kindLabel: "Kind",
     resetLabel: "Reset",
     reloadLabel: "Reload",
-    assetsTemplate: "%1 assets",
     imageKindLabel: "image",
     videoKindLabel: "video",
     audioKindLabel: "audio",
@@ -163,6 +165,10 @@ export const PHI_MEDIA_WIDGET_DEFAULT_LABELS: PhiAssetWidgetLabels = {
     fontKindLabel: "font",
     binaryKindLabel: "binary",
     otherKindLabel: "other",
+    featuredFlagLabel: "featured",
+    lockedFlagLabel: "locked",
+    maskFlagLabel: "mask",
+    backgroundFlagLabel: "background",
   },
   upload: {
     dropTitle: "Drop assets here",
@@ -183,6 +189,23 @@ export const PHI_MEDIA_WIDGET_DEFAULT_LABELS: PhiAssetWidgetLabels = {
     deleteSuccessTemplate: "Asset %1 deleted.",
     deleteFailedText: "Delete failed.",
   },
+  picker: {
+    triggerLabel: "Mediathek",
+    popoverTitle: "Mediathek",
+    emptyDescription: "No assets found.",
+    loadFailedDescription: "The media library could not be loaded.",
+    clearLabel: "Clear selection",
+    tileSizeLabel: "Tile size",
+  },
+  space: {
+    label: "Space",
+    site: "Site library",
+    user: "My files",
+    group: "Group",
+  },
+};
+
+export const PHI_ASSET_MODULE_DEFAULT_LABELS: PhiAssetModuleLabels = {
   inspector: {
     inspectorTitle: "Asset inspector",
     previewTitle: "Preview",
@@ -199,11 +222,9 @@ export const PHI_MEDIA_WIDGET_DEFAULT_LABELS: PhiAssetWidgetLabels = {
     logoVariantLabel: "Logo",
     landscapeVariantLabel: "Landscape",
     portraitVariantLabel: "Portrait",
-    storageKeyLabel: "Storage key",
     publicUrlLabel: "Public URL",
     contentTypeLabel: "Content type",
     originalNameLabel: "Original name",
-    restrictedLabel: "Restricted",
     copyLabelTemplate: "Copy %1",
   },
   editor: {
@@ -211,7 +232,6 @@ export const PHI_MEDIA_WIDGET_DEFAULT_LABELS: PhiAssetWidgetLabels = {
     altLabel: "Alt text",
     folderPathLabel: "Folder path",
     folderPathPlaceholder: "Summer 2024 / Costa Rica",
-    folderPathHelp: "Select an existing folder.",
     createFolderTitle: "Create folder",
     folderNameLabel: "Name",
     folderNamePlaceholder: "Folder name",
@@ -221,32 +241,5 @@ export const PHI_MEDIA_WIDGET_DEFAULT_LABELS: PhiAssetWidgetLabels = {
     flagsLabel: "Flags",
     focalRectLabel: "Focal rect",
     focalRectButtonLabel: "Focal rect",
-    focalRectSaveLabel: "Save focal rect",
-    focalRectResetLabel: "Reset",
-    focalRectClearLabel: "Clear",
-    focalRectHelpLabel: "Drag a rectangle over the original image. The rect is stored on the asset and clears cached variants when changed.",
-    saveLabel: "Save",
-    savingLabel: "Saving...",
-    saveSuccessText: "Asset saved.",
-    saveFailedText: "Save failed.",
-    featuredFlagLabel: "featured",
-    lockedFlagLabel: "locked",
-    maskFlagLabel: "mask",
-    backgroundFlagLabel: "background",
-  },
-  picker: {
-    triggerLabel: "Mediathek",
-    popoverTitle: "Mediathek",
-    selectedLabel: "Selected asset",
-    emptyDescription: "No assets found.",
-    loadFailedDescription: "The media library could not be loaded.",
-    clearLabel: "Clear selection",
-    tileSizeLabel: "Tile size",
-  },
-  space: {
-    label: "Space",
-    site: "Site library",
-    user: "My files",
-    group: "Group",
   },
 };

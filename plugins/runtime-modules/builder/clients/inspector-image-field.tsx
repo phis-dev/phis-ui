@@ -4,7 +4,7 @@ import { PhiFlexControl } from "../../../../components/controls/phi-flex-control
 import { PhiSelectControl } from "../../../../components/controls/phi-select-control";
 import { PhiTextControl } from "../../../../components/controls/phi-text-control";
 import { PhiMediaPickerBinding } from "../../../../components/media/phi-media-picker-binding";
-import { PHI_MEDIA_WIDGET_DEFAULT_LABELS } from "../../../../components/media/media-widget-labels";
+import { usePhiMediaPickerLabels } from "../../../../components/media/phi-media-picker-labels";
 import { PHI_SEARCH_WIDGET_DEFAULT_LABELS } from "../../../../components/widgets/label-types/search";
 import { PHI_IMAGE_VARIANT_OPTIONS } from "../../../../components/widgets/config/image-variant-options";
 import { PhiInspectorFieldRow } from "../../../../components/widgets/inspector-field-row";
@@ -32,6 +32,7 @@ export function PhiInspectorImageFieldControl({
   disabled?: boolean;
   onChange?: (patch: Record<string, unknown>) => void;
 }) {
+  const mediaPickerLabels = usePhiMediaPickerLabels();
   const assetId = config.sourceKind === "asset" && typeof config.assetId === "number" ? config.assetId : null;
   const asset = usePhiAuthoringAssetDetails(assetId);
   const sourceUrl = typeof config.sourceUrl === "string" ? config.sourceUrl : "";
@@ -48,7 +49,7 @@ export function PhiInspectorImageFieldControl({
           showGroupFilter: true,
           showSearchBar: true,
         }}
-        labels={PHI_MEDIA_WIDGET_DEFAULT_LABELS}
+        labels={mediaPickerLabels}
         searchLabels={PHI_SEARCH_WIDGET_DEFAULT_LABELS}
         value={assetId}
         onAssetSelect={editable

@@ -11,6 +11,8 @@ import { getPhiInspectorWidgetLabels } from "../../../components/widgets/label-s
 import { resolvePhiInspectorSurfaceLabels } from "./clients/inspector-surface-labels";
 import { getPhiColorPickerLabels } from "../../../components/widgets/label-sets/color-picker";
 import { getPhiIconPickerLabels } from "../../../components/widgets/label-sets/icon-picker";
+import { getPhiMediaWidgetLabels } from "../../../components/media/label-sets/media";
+import { PhiMediaPickerLabelsProvider } from "../../../components/media/phi-media-picker-labels";
 import {
   PhiBuilderLayoutInspectorSectionWidgetClient,
   PhiBuilderRegionInspectorSectionWidgetClient,
@@ -84,6 +86,7 @@ export async function PhiBuilderInspectorSectionWidget({
     colorPickerLabels,
     iconPickerLabels,
     inspectorLabels,
+    mediaPickerLabels,
   ] = await Promise.all([
     getPhiBackgroundWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
     getPhiBorderWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
@@ -93,60 +96,64 @@ export async function PhiBuilderInspectorSectionWidget({
     getPhiColorPickerLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
     getPhiIconPickerLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
     getPhiInspectorWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
+    getPhiMediaWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
   ]);
   const surfaceLabels = resolvePhiInspectorSurfaceLabels(inspectorLabels);
 
   return (
-    <PhiRuntimeModuleAuthoringDataProviderHost
-      providerKeys={authoringDataProviderKeys}
-    >
-      <PhiRuntimeModuleDataProviderClientHost
-        providerKeys={resolvePhiBuilderAuthoringPickerDataProviderKeysFromCatalog(
-          registry.runtimeModuleCatalog,
-        )}
-        mode="live"
+    // The pickers the Inspector's image and background fields open say their words in the reader's language.
+    <PhiMediaPickerLabelsProvider labels={mediaPickerLabels}>
+      <PhiRuntimeModuleAuthoringDataProviderHost
+        providerKeys={authoringDataProviderKeys}
       >
-        {view === "region" ? (
-          <PhiBuilderRegionInspectorSectionWidgetClient
-            section={section}
-            signalRoutes={signalRoutes}
-            geometryLabels={geometryLabels}
-            backgroundLabels={backgroundLabels}
-            borderLabels={borderLabels}
-            paddingLabels={paddingLabels}
-            surfaceLabels={surfaceLabels}
-            visibilityLabels={inspectorLabels.regionVisibility}
-            colorPickerLabels={colorPickerLabels}
-          />
-        ) : view === "layout" ? (
-          <PhiBuilderLayoutInspectorSectionWidgetClient
-            section={section}
-            signalRoutes={signalRoutes}
-            signalsLabels={signalsLabels}
-            backgroundLabels={backgroundLabels}
-            borderLabels={borderLabels}
-            paddingLabels={paddingLabels}
-            surfaceLabels={surfaceLabels}
-            gridLabels={inspectorLabels.grid}
-            colorPickerLabels={colorPickerLabels}
-            iconPickerLabels={iconPickerLabels}
-            fieldLabels={inspectorLabels.fields}
-          />
-        ) : (
-          <PhiBuilderWidgetInspectorSectionWidgetClient
-            section={section}
-            signalRoutes={signalRoutes}
-            geometryLabels={geometryLabels}
-            surfaceLabels={surfaceLabels}
-            backgroundLabels={backgroundLabels}
-            borderLabels={borderLabels}
-            signalsLabels={signalsLabels}
-            colorPickerLabels={colorPickerLabels}
-            iconPickerLabels={iconPickerLabels}
-            fieldLabels={inspectorLabels.fields}
-          />
-        )}
-      </PhiRuntimeModuleDataProviderClientHost>
-    </PhiRuntimeModuleAuthoringDataProviderHost>
+        <PhiRuntimeModuleDataProviderClientHost
+          providerKeys={resolvePhiBuilderAuthoringPickerDataProviderKeysFromCatalog(
+            registry.runtimeModuleCatalog,
+          )}
+          mode="live"
+        >
+          {view === "region" ? (
+            <PhiBuilderRegionInspectorSectionWidgetClient
+              section={section}
+              signalRoutes={signalRoutes}
+              geometryLabels={geometryLabels}
+              backgroundLabels={backgroundLabels}
+              borderLabels={borderLabels}
+              paddingLabels={paddingLabels}
+              surfaceLabels={surfaceLabels}
+              visibilityLabels={inspectorLabels.regionVisibility}
+              colorPickerLabels={colorPickerLabels}
+            />
+          ) : view === "layout" ? (
+            <PhiBuilderLayoutInspectorSectionWidgetClient
+              section={section}
+              signalRoutes={signalRoutes}
+              signalsLabels={signalsLabels}
+              backgroundLabels={backgroundLabels}
+              borderLabels={borderLabels}
+              paddingLabels={paddingLabels}
+              surfaceLabels={surfaceLabels}
+              gridLabels={inspectorLabels.grid}
+              colorPickerLabels={colorPickerLabels}
+              iconPickerLabels={iconPickerLabels}
+              fieldLabels={inspectorLabels.fields}
+            />
+          ) : (
+            <PhiBuilderWidgetInspectorSectionWidgetClient
+              section={section}
+              signalRoutes={signalRoutes}
+              geometryLabels={geometryLabels}
+              surfaceLabels={surfaceLabels}
+              backgroundLabels={backgroundLabels}
+              borderLabels={borderLabels}
+              signalsLabels={signalsLabels}
+              colorPickerLabels={colorPickerLabels}
+              iconPickerLabels={iconPickerLabels}
+              fieldLabels={inspectorLabels.fields}
+            />
+          )}
+        </PhiRuntimeModuleDataProviderClientHost>
+      </PhiRuntimeModuleAuthoringDataProviderHost>
+    </PhiMediaPickerLabelsProvider>
   );
 }

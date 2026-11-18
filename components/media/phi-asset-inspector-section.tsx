@@ -18,7 +18,7 @@ import { PhiTagControl } from "../controls/phi-tag-control";
 import { usePhiConfig } from "../root/phi-config-provider";
 import { PhiMediaKindIcon } from "./phi-media-kind-icon";
 import { resolvePhiMediaAssetDisplayDimensions } from "./phi-image-preview-data";
-import type { PhiAssetWidgetLabels } from "./media-widget-labels";
+import type { PhiAssetModuleLabels } from "./media-widget-labels";
 import type { MediaFocalRect } from "./focal-rect";
 import { resolveFocalRectCoverImageStyle } from "./focal-rect";
 import { resolvePhiImagePresentation } from "./image-presentation";
@@ -93,7 +93,7 @@ export function PhiAssetInspectorSection({
   selectedVariantKey: PhiImageAssetVariantKeyValue | null;
   sitePublicUrl?: string | null;
   onVariantKeyChange?: (value: PhiImageAssetVariantKeyValue | null) => void;
-  labels: Pick<PhiAssetWidgetLabels, "inspector" | "editor">;
+  labels: PhiAssetModuleLabels;
   focalRect: MediaFocalRect | null;
   onFocalRectOpen?: () => void;
 }) {

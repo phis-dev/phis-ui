@@ -187,9 +187,9 @@ slot takes -- content types, ceiling, one file or many -- is asked from Core, ne
 - A slot of cardinality `one` takes one file; a new one replaces the old one at Core (the client sends the
   file and reads the row's files again; it removes nothing itself). The list below the area keeps the
   slot's files with a preview and a remove button.
-- The area's title and hint, the state words and the refusals are the Media folder's texts (Label Set
-  `widget:media`, keys `upload_drop_title`, `upload_drop_hint`, `upload_retry_label`, `upload_failed_label`,
-  ...), so a translation is written once. The Widget's own Label Set `widget:slot-upload` keeps the rest.
+- The area's title and hint, the state words and the refusals are the Media upload surface's texts (Core's
+  Label Set `widget:upload`, keys `area_drop_title`, `area_drop_hint`, `area_retry_label`,
+  `area_failed_label`, ...; `getPhiMediaUploadLabels(...).upload`), so a translation is written once. The Widget's own Label Set `widget:slot-upload` keeps the rest.
 - Transport is `usePhiMediaUpload`, the one the Media folder and the form field `upload` use.
 
 ### Controls a Module's own Widget may use

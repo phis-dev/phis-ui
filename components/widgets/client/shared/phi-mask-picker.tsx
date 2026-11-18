@@ -8,7 +8,7 @@ import { bumpPhiImagePreviewRefreshToken } from "../../../media/phi-image-previe
 import { usePhiMediaPickerBinding } from "../../../media/phi-media-picker-binding";
 import { isPhiMediaUploadCancelled, runPhiMediaUploadSession } from "../../../media/media-upload-flow";
 import { readPhiMediaUploadErrorMessage } from "../../../media/phi-media-upload";
-import { PHI_MEDIA_WIDGET_DEFAULT_LABELS } from "../../../media/media-widget-labels";
+import { usePhiMediaPickerLabels } from "../../../media/phi-media-picker-labels";
 import { PHI_SEARCH_WIDGET_DEFAULT_LABELS } from "../../label-types/search";
 import { formatPhiMaskPickerLabel } from "../../label-types/mask-picker";
 import {
@@ -73,6 +73,7 @@ export function PhiMaskPickerButton({
   const { showMessage } = usePhiApplicationFeedback();
   const popup = usePhiWidgetScaffoldPopup();
   const toolLabels = usePhiAuthoringToolsLabels();
+  const mediaPickerLabels = usePhiMediaPickerLabels();
   const iconifyRequiredMessage = toolLabels.mask.iconifyRequired;
   const uploadRefusals = toolLabels.mask.uploadRefusals;
   const uploadedTemplate = toolLabels.mask.uploaded;
@@ -137,7 +138,7 @@ export function PhiMaskPickerButton({
   }, [onChange, value]);
 
   const mediaPickerProps = usePhiMediaPickerBinding({
-    labels: PHI_MEDIA_WIDGET_DEFAULT_LABELS,
+    labels: mediaPickerLabels,
     searchLabels: PHI_SEARCH_WIDGET_DEFAULT_LABELS,
     config: {
       mediaType: PhiMediaKind.Image,

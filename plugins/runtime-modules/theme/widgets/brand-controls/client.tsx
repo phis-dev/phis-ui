@@ -117,7 +117,7 @@ import {
 } from "../../../../../components/root/phi-shell-chrome-overlay";
 import { normalizePhiBackgroundWidgetConfig, type PhiCmsBackgroundWidgetConfig } from "../../../../../components/widgets/config/background";
 import { PhiMediaPickerBinding } from "../../../../../components/media/phi-media-picker-binding";
-import { PHI_MEDIA_WIDGET_DEFAULT_LABELS } from "../../../../../components/media/media-widget-labels";
+import { usePhiMediaPickerLabels } from "../../../../../components/media/phi-media-picker-labels";
 import { PHI_SEARCH_WIDGET_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/search";
 import {
   buildPhiMediaAssetContentDeliveryUrl,
@@ -716,6 +716,39 @@ function readEffectiveTokenBoolean(token: Record<string, unknown>, key: string, 
   return typeof value === "boolean" ? value : fallback;
 }
 
+/**
+ * The media picker a Background Control opens. A component and not the render function itself, because
+ * the picker's words are read from the context the server half of the Widget fills
+ * (`usePhiMediaPickerLabels`), and a hook cannot be called from a module-level render function.
+ */
+function PhiThemeRootBackgroundMediaPicker(
+  props: Parameters<NonNullable<PhiBackgroundControlProps["renderMediaPicker"]>>[0],
+) {
+  const mediaPickerLabels = usePhiMediaPickerLabels();
+  return (
+    <PhiMediaPickerBinding
+      config={{
+        mediaType: PhiMediaKind.Image,
+        presentationFlags: PhiMediaAssetFlags.Background,
+        pageSize: 12,
+        showPagination: true,
+        showGroupFilter: true,
+        showSearchBar: true,
+      }}
+      labels={mediaPickerLabels}
+      searchLabels={PHI_SEARCH_WIDGET_DEFAULT_LABELS}
+      value={props.value}
+      open={props.open}
+      trigger={props.trigger}
+      onOpenChange={props.onOpenChange}
+      onCommit={props.onCommit}
+      onDiscard={props.onDiscard}
+      onAssetSelect={props.onAssetSelect}
+      onAssetClear={props.onAssetClear}
+    />
+  );
+}
+
 /*
  * The renderer a Background Control asks for its media picker.
  *
@@ -725,28 +758,7 @@ function readEffectiveTokenBoolean(token: Record<string, unknown>, key: string, 
  */
 const renderPhiThemeRootBackgroundMediaPicker: NonNullable<PhiBackgroundControlProps["renderMediaPicker"]> =
   function renderPhiThemeRootBackgroundMediaPicker(props) {
-    return (
-      <PhiMediaPickerBinding
-        config={{
-          mediaType: PhiMediaKind.Image,
-          presentationFlags: PhiMediaAssetFlags.Background,
-          pageSize: 12,
-          showPagination: true,
-          showGroupFilter: true,
-          showSearchBar: true,
-        }}
-        labels={PHI_MEDIA_WIDGET_DEFAULT_LABELS}
-        searchLabels={PHI_SEARCH_WIDGET_DEFAULT_LABELS}
-        value={props.value}
-        open={props.open}
-        trigger={props.trigger}
-        onOpenChange={props.onOpenChange}
-        onCommit={props.onCommit}
-        onDiscard={props.onDiscard}
-        onAssetSelect={props.onAssetSelect}
-        onAssetClear={props.onAssetClear}
-      />
-    );
+    return <PhiThemeRootBackgroundMediaPicker {...props} />;
   };
 
 /** The Theme root's ground (`background`) or its chrome overlay (`chrome`) for one colour mode. */
@@ -2428,6 +2440,7 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
   config?: PhiBuilderBrandWidgetConfig | null;
 }) {
   const { presets: themePresets, token: clientToken } = usePhiConfig();
+  const mediaPickerLabels = usePhiMediaPickerLabels();
   const themeBlocks = usePhiThemeBlockCatalog();
   const themeKey = resolveThemeKey(config);
   const { state, publishDraft } = usePhiBrandThemeDraft(runtime, themeKey);
@@ -2598,7 +2611,7 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                       showGroupFilter: true,
                       showSearchBar: true,
                     }}
-                    labels={PHI_MEDIA_WIDGET_DEFAULT_LABELS}
+                    labels={mediaPickerLabels}
                     searchLabels={PHI_SEARCH_WIDGET_DEFAULT_LABELS}
                     value={logo?.sourceKind === "asset" ? logo.assetId : null}
                     onAssetSelect={(asset) => publishDraft(mergeThemeBrandLogo(state.draft, mode, {

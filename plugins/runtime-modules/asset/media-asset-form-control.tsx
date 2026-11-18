@@ -5,6 +5,7 @@ import { useMemo, type ComponentType } from "react";
 import { PhiButtonControl } from "../../../components/controls/phi-button-control";
 import { PhiFlexControl } from "../../../components/controls/phi-flex-control";
 import { PhiMediaAssetTileControl } from "../../../components/controls/phi-media-asset-tile-control";
+import { PHI_FORM_MEDIA_ASSET_PICKER_LABEL_KEYS } from "../../../components/forms/media-asset-field-keys";
 import { PhiMediaPickerControl } from "../../../components/controls/phi-media-picker-control";
 import { PhiTypographyControl } from "../../../components/controls/phi-typography-control";
 import { PHI_MEDIA_WIDGET_DEFAULT_LABELS } from "../../../components/media/media-widget-labels";
@@ -66,13 +67,32 @@ export const PhiMediaAssetFormControl: ComponentType<PhiFormFieldProviderProps> 
   const choose = read("choose");
   const change = read("change");
 
-  const pickerLabels = useMemo(() => ({
-    ...PHI_MEDIA_WIDGET_DEFAULT_LABELS,
-    picker: {
-      ...PHI_MEDIA_WIDGET_DEFAULT_LABELS.picker,
-      triggerLabel: assetId == null ? choose : change,
-    },
-  }), [assetId, change, choose]);
+  // The picker's words come from the Media Label Set, which the Form Widget read for this Form
+  // (`resolvePhiFormFieldLabels`); outside a Form that read them, the English defaults stand.
+  const pickerLabels = useMemo(() => {
+    const keys = PHI_FORM_MEDIA_ASSET_PICKER_LABEL_KEYS;
+    const readPicker = (key: keyof typeof keys, fallback: string) => labels?.[keys[key]]?.trim() || fallback;
+    const base = PHI_MEDIA_WIDGET_DEFAULT_LABELS;
+    return {
+      ...base,
+      tool: {
+        ...base.tool,
+        searchPlaceholder: readPicker("searchPlaceholder", base.tool.searchPlaceholder),
+        folderLabel: readPicker("folderLabel", base.tool.folderLabel),
+        reloadLabel: readPicker("reloadLabel", base.tool.reloadLabel),
+      },
+      picker: {
+        ...base.picker,
+        triggerLabel: assetId == null ? choose : change,
+        popoverTitle: readPicker("popoverTitle", base.picker.popoverTitle),
+        emptyDescription: readPicker("emptyDescription", base.picker.emptyDescription),
+        loadFailedDescription: readPicker("loadFailedDescription", base.picker.loadFailedDescription),
+        clearLabel: readPicker("clearLabel", base.picker.clearLabel),
+        tileSizeLabel: readPicker("tileSizeLabel", base.picker.tileSizeLabel),
+      },
+      space: { ...base.space, label: readPicker("spaceLabel", base.space.label) },
+    };
+  }, [assetId, change, choose, labels]);
 
   const picker = usePhiMediaPickerBinding({
     config: {

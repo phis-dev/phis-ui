@@ -10,7 +10,7 @@ import type {
   PhiMediaAssetTile,
 } from "../../../../types/media";
 import { PhiMediaPickerBinding } from "../../../media/phi-media-picker-binding";
-import { PHI_MEDIA_WIDGET_DEFAULT_LABELS } from "../../../media/media-widget-labels";
+import { usePhiMediaPickerLabels } from "../../../media/phi-media-picker-labels";
 import { PHI_SEARCH_WIDGET_DEFAULT_LABELS } from "../../label-types/search";
 import { usePhiWidgetScaffoldPopup } from "./phi-widget-scaffold-popup";
 import { usePhiAuthoringToolsLabels } from "./phi-authoring-tools-labels";
@@ -51,11 +51,12 @@ export function PhiInternalAssetReferencePickerButton({
   onClear?: () => void;
 }) {
   const labels = usePhiAuthoringToolsLabels();
+  const mediaLabels = usePhiMediaPickerLabels();
   const popup = usePhiWidgetScaffoldPopup();
 
   return (
     <PhiMediaPickerBinding
-      labels={PHI_MEDIA_WIDGET_DEFAULT_LABELS}
+      labels={mediaLabels}
       searchLabels={PHI_SEARCH_WIDGET_DEFAULT_LABELS}
       config={{
         mediaType: PhiMediaKind.Image,

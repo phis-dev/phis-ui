@@ -358,7 +358,8 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   refusals of the upload -- is Core's `widget:upload` Label Set (`components/media/label-sets/media-upload.ts`),
   which the Form Widget reads for every Form with an upload field (`form-field-labels.ts`) and lays the
   Form's own Label Set over. A Module that places an upload field translates none of it; the same set is what the Media
-  folder, the slot upload and the mask picker say their refusals with. Removing an entry takes the id out of the value and
+  folder, the slot upload and the mask picker say their refusals with, and the Media folder and the slot
+  upload say their own drop area, state words and messages from it too (its `area_*` keys). Removing an entry takes the id out of the value and
   leaves the Asset where it is, because the file belongs to the person who uploaded it and not to the
   Form. An id that arrived as an
   initial value is shown as an id: resolving a stored Asset to its name needs a reader this field does
@@ -412,7 +413,10 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   come through this field. The handler receives the id as a JSON number (`{ "logo": 42 }`, or `null`).
   Wording is the Label Set keys in `PHI_FORM_MEDIA_ASSET_LABEL_KEYS` (`mediaAssetChoose`,
   `mediaAssetChange`, `mediaAssetRemove`, `mediaAssetPublicOnlyHint`, `mediaAssetNotPublic`,
-  `mediaAssetUnavailable`), falling back to English; the picker's own wording is the Media picker's. A Page
+  `mediaAssetUnavailable`), falling back to English. The picker's own wording is the Media Label Set's
+  (`widget:media`): the Form Widget reads it for every Form with a `media-asset` field
+  (`form-field-labels.ts`) and hands it to the control under `PHI_FORM_MEDIA_ASSET_PICKER_LABEL_KEYS`
+  (`components/forms/media-asset-field-keys.ts`), so a Module that places the field translates none of it. A Page
   that renders a Form with a `media-asset` field mounts the Media library Provider for it
   (`PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection`; the resolver's scan of the Form's descriptor), where a
   Module of the Area serves it -- the Asset Module, which is also what makes the field available. The

@@ -428,5 +428,12 @@ record's source text instead of its localized version.
   domain wrappers that only fix a Provider, Form id, labels, or routes are forbidden.
 - `PhiMediaPickerControl` is the controlled media selection surface; `PhiMediaPickerWidget` adds CMS
   identity, config, Provider binding, and signals. Forms, Inspector sections, and toolbars use the
-  Control.
+  Control. A surface that opens the picker without a Media Widget of its own -- the Builder's tool buttons
+  and mask picker, the Inspector's image and background fields, the Theme's Logo and Background controls --
+  reads the picker's words with `usePhiMediaPickerLabels()` (`components/media/phi-media-picker-labels.tsx`).
+  The server half that renders the surface loads `getPhiMediaWidgetLabels` and wraps the client subtree in
+  `PhiMediaPickerLabelsProvider`; outside one the words are the English defaults. The Media Label Sets are
+  split by owner: `widget:media` (Foundation: picker, Spaces, grid, toolbar and its flag words), `widget:upload`
+  (Core: every upload surface's texts) and the Asset Module's own set for the Inspector and the metadata
+  editor (`plugins/runtime-modules/asset/labels.ts`).
 - Remote reads and caching follow [gateway/CACHES.md](../../gateway/CACHES.md).

@@ -2,7 +2,7 @@ import "server-only";
 
 import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
-import { getPhiMediaWidgetLabels } from "../../media/label-sets/media";
+import { getPhiMediaUploadLabels } from "../../media/label-sets/media-upload";
 import {
   PHI_SLOT_UPLOAD_WIDGET_DEFAULT_LABELS,
   type PhiSlotUploadWidgetLabels,
@@ -29,9 +29,9 @@ const PHI_SLOT_UPLOAD_WIDGET_LABEL_SET = definePhiLabelSet({
 export async function getPhiSlotUploadWidgetLabels(
   options: PhiGlobalTranslatorOptions,
 ): Promise<PhiSlotUploadWidgetLabels> {
-  const [labels, media] = await Promise.all([
+  const [labels, upload] = await Promise.all([
     getPhiLabelSet(options, PHI_SLOT_UPLOAD_WIDGET_LABEL_SET),
-    getPhiMediaWidgetLabels(options),
+    getPhiMediaUploadLabels(options),
   ]);
   return {
     unconfigured: labels.unconfigured,
@@ -43,6 +43,6 @@ export async function getPhiSlotUploadWidgetLabels(
     serverAnswered: labels.server_answered,
     unreachable: labels.unreachable,
     removeFailed: labels.remove_failed,
-    upload: media.upload,
+    upload: upload.upload,
   };
 }

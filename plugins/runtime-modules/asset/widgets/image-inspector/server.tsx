@@ -1,6 +1,6 @@
 import type { PhiBlockRuntime } from "../../../../../types";
 import type { PhiCmsAssetInspectorWidgetConfig } from "../../../../../types/media";
-import { getPhiMediaWidgetLabels } from "../../../../../components/media/label-sets/media";
+import { getPhiAssetModuleLabels } from "../../labels";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import { buildPhiWidgetLabelTranslatorOptions } from "../../../../../components/widgets/label-sets/runtime-options";
@@ -14,7 +14,7 @@ export async function PhiAssetConfigWidgetServer({
   runtime,
   config,
 }: PhiAssetConfigWidgetServerProps) {
-  const labels = await getPhiMediaWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
+  const labels = await getPhiAssetModuleLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
 
   return (
     <PhiRuntimeModuleRenderClientHost

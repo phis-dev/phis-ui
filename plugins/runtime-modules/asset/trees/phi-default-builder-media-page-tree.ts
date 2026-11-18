@@ -16,6 +16,7 @@ import {
 import { PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import { getPhiBuilderChromeWidgetLabels } from "../../../../components/widgets/label-sets/builder-chrome";
 import { getPhiMediaWidgetLabels } from "../../../../components/media/label-sets/media";
+import { getPhiAssetModuleLabels } from "../labels";
 import {
   createPhiAssetControllerAddress,
   PHI_ASSET_CONTROLLER_INSTANCE_KEY,
@@ -62,9 +63,10 @@ export async function buildPhiDefaultBuilderMediaPageTree({
 }): Promise<PhiResolvedCmsPageTree> {
   const nodes = createPhiCmsPresetNodes(page);
   const credentials = buildPhiWidgetLabelTranslatorOptions(runtime);
-  const [chromeLabels, mediaLabels] = await Promise.all([
+  const [chromeLabels, mediaLabels, assetLabels] = await Promise.all([
     getPhiBuilderChromeWidgetLabels(credentials),
     getPhiMediaWidgetLabels(credentials),
+    getPhiAssetModuleLabels(credentials),
   ]);
 
   const inspectorOverlay = createPhiSignalAddress("cms", PHI_ASSET_INSPECTOR_OVERLAY_IDS.overlayMediaInspector);
@@ -163,7 +165,7 @@ export async function buildPhiDefaultBuilderMediaPageTree({
         sortOrder: 0,
         label: "Asset inspector",
         config: {
-          title: mediaLabels?.inspector.inspectorTitle ?? "Asset inspector",
+          title: assetLabels.inspector.inspectorTitle ?? "Asset inspector",
           placement: "right",
           size: 377,
           mountPolicy: "lazy-keep",
@@ -203,7 +205,7 @@ export async function buildPhiDefaultBuilderMediaPageTree({
         sortOrder: 1,
         label: "Asset focal rectangle",
         config: {
-          title: mediaLabels?.editor.focalRectLabel ?? "Focal rectangle",
+          title: assetLabels.editor.focalRectLabel ?? "Focal rectangle",
           controlSize: "large",
           flags: PhiCmsFlags.Centered,
           mountPolicy: "remount",
@@ -242,7 +244,7 @@ export async function buildPhiDefaultBuilderMediaPageTree({
         sortOrder: 2,
         label: "Create asset folder",
         config: {
-          title: mediaLabels?.editor.createFolderTitle ?? "Create folder",
+          title: assetLabels.editor.createFolderTitle ?? "Create folder",
           controlSize: "medium",
           width: PHI_DIALOG_WIDTH_SINGLE_COLUMN,
           flags: PhiCmsFlags.Centered,
@@ -365,8 +367,8 @@ export async function buildPhiDefaultBuilderMediaPageTree({
           padding: PHI_SPACE.sm,
           innerPadding: PHI_SPACE.sm,
           slotTitles: [
-            mediaLabels?.inspector.previewTitle ?? "Preview",
-            mediaLabels?.inspector.metadataTitle ?? "Metadata",
+            assetLabels.inspector.previewTitle ?? "Preview",
+            assetLabels.inspector.metadataTitle ?? "Metadata",
           ],
           defaultOpenSlotKeys: ["slot_0", "slot_1"],
         },
@@ -474,8 +476,8 @@ export async function buildPhiDefaultBuilderMediaPageTree({
               toolbar: [
                 {
                   key: "upload",
-                  label: mediaLabels?.tool.uploadToggleLabel ?? "Upload",
-                  description: mediaLabels?.tool.uploadToggleLabel ?? "Upload",
+                  label: mediaLabels?.upload.uploadToggleLabel ?? "Upload",
+                  description: mediaLabels?.upload.uploadToggleLabel ?? "Upload",
                   icon: "upload",
                   display: "icon",
                   mode: "primary",

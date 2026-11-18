@@ -1,13 +1,20 @@
 import "server-only";
 
+import { getPhiMediaWidgetLabels } from "../media/label-sets/media";
 import { getPhiMediaUploadLabels } from "../media/label-sets/media-upload";
+import { PHI_MEDIA_ASSET_FORM_FIELD_PROVIDER_KEY } from "../../constants/media-library-provider-keys";
+import type { PhiGlobalTranslatorOptions } from "../../gateway/tr";
 import { phiRuntime } from "../../server-helpers/phi-runtime";
 import type { PhiFormDescriptor } from "../../types/form-descriptor";
+import { PHI_FORM_MEDIA_ASSET_PICKER_LABEL_KEYS } from "./media-asset-field-keys";
 import { PHI_FORM_UPLOAD_FIELD_PROVIDER_KEY, PHI_FORM_UPLOAD_LABEL_KEYS } from "./upload-field-keys";
 import type { PhiFormRenderContext } from "./form-resolution";
 
 /**
  * What a Form's field types say for themselves, under the keys their controls read.
+ *
+ * The `media-asset` field is the same: the picker it opens says the Media Label Set's words, read here
+ * for every Form that has such a field (`media-asset-field-keys.ts`).
  *
  * A field type whose control speaks -- the upload field's trigger, its drop hint, its holds and the
  * refusals of the upload -- says it from Core's `widget:upload` Label Set, read here for every Form that
@@ -22,15 +29,24 @@ export async function resolvePhiFormFieldLabels(
   context: PhiFormRenderContext,
   descriptor: PhiFormDescriptor,
 ): Promise<Record<string, string>> {
-  if (!descriptor.fields.some((field) => field.fieldProviderKey === PHI_FORM_UPLOAD_FIELD_PROVIDER_KEY)) {
-    return {};
-  }
+  const hasUpload = descriptor.fields.some((field) => field.fieldProviderKey === PHI_FORM_UPLOAD_FIELD_PROVIDER_KEY);
+  const hasMediaAsset = descriptor.fields.some((field) => field.fieldProviderKey === PHI_MEDIA_ASSET_FORM_FIELD_PROVIDER_KEY);
+  if (!hasUpload && !hasMediaAsset) return {};
   const rt = phiRuntime(context.runtime);
-  const { field, refusals } = await getPhiMediaUploadLabels({
+  const options = {
     apiBaseUrl: rt.apiBaseUrl,
     internalToken: rt.internalToken,
     locale: context.runtime.locale.current,
-  });
+  };
+  const [upload, media] = await Promise.all([
+    hasUpload ? readUploadFieldLabels(options) : {},
+    hasMediaAsset ? readMediaAssetFieldLabels(options) : {},
+  ]);
+  return { ...upload, ...media };
+}
+
+async function readUploadFieldLabels(options: PhiGlobalTranslatorOptions): Promise<Record<string, string>> {
+  const { field, refusals } = await getPhiMediaUploadLabels(options);
   const keys = PHI_FORM_UPLOAD_LABEL_KEYS;
   return {
     [keys.trigger]: field.trigger,
@@ -46,5 +62,21 @@ export async function resolvePhiFormFieldLabels(
     [keys.errorSpaceUnavailable]: refusals.errorSpaceUnavailable,
     [keys.errorStorageUnreachable]: refusals.errorStorageUnreachable,
     [keys.errorFolderLocked]: refusals.errorFolderLocked,
+  };
+}
+
+async function readMediaAssetFieldLabels(options: PhiGlobalTranslatorOptions): Promise<Record<string, string>> {
+  const { tool, picker, space } = await getPhiMediaWidgetLabels(options);
+  const keys = PHI_FORM_MEDIA_ASSET_PICKER_LABEL_KEYS;
+  return {
+    [keys.popoverTitle]: picker.popoverTitle,
+    [keys.searchPlaceholder]: tool.searchPlaceholder,
+    [keys.folderLabel]: tool.folderLabel,
+    [keys.spaceLabel]: space.label,
+    [keys.emptyDescription]: picker.emptyDescription,
+    [keys.loadFailedDescription]: picker.loadFailedDescription,
+    [keys.clearLabel]: picker.clearLabel,
+    [keys.reloadLabel]: tool.reloadLabel,
+    [keys.tileSizeLabel]: picker.tileSizeLabel,
   };
 }

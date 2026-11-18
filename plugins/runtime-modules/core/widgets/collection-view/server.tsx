@@ -4,6 +4,9 @@ import type { PhiCmsCollectionViewWidgetConfig } from "../../../../../types/coll
 import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
 import type { PhiRenderableBlockRenderMode } from "../../../../../types/renderable-block";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
+import { PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS } from "../../../../../constants/media-library-provider-keys";
+import { getPhiMediaWidgetLabels } from "../../../../../components/media/label-sets/media";
+import { buildPhiWidgetLabelTranslatorOptions } from "../../../../../components/widgets/label-sets/runtime-options";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import { readPhiCollectionViewDeclaredFailure } from "../../../../../components/widgets/shared/collection-source-failure";
 import { PhiWidgetFailureServer } from "../../../../../components/widgets/shared/widget-failure.server";
@@ -19,6 +22,7 @@ export type PhiCollectionViewWidgetServerProps = {
 };
 
 export async function PhiCollectionViewWidgetServer({
+  runtime,
   config,
   widgetId,
   registry,
@@ -57,10 +61,20 @@ export async function PhiCollectionViewWidgetServer({
     );
   }
 
+  /*
+   * The Media collection's renderer says the Media Label Set's words (the toolbar, the flag filter, the
+   * grid, the upload surface) and Core may not import the Asset Module to get them, so they are the
+   * Foundation's and loaded here -- only for a Widget bound to that collection, so no other source pays.
+   * `config.presentation.labels` still lays over them.
+   */
+  const labels = config?.source?.providerKey === PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection
+    ? await getPhiMediaWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime))
+    : undefined;
+
   return (
     <PhiRuntimeModuleRenderClientHost
       type={PhiCmsWidgetType.CollectionView}
-      componentProps={{ config, widgetId, renderMode, preview: false }}
+      componentProps={{ config, widgetId, renderMode, preview: false, labels }}
     />
   );
 }

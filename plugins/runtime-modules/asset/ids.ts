@@ -1,5 +1,6 @@
 import { PHI_SHARED_PACKAGE_NAME } from "../../../types/signals";
 import { createPhiSharedRuntimeDataProviderKey } from "../../../constants/runtime-data-provider-key";
+import type { PhiRuntimeModuleDefinition } from "../../../types/cms-plugins";
 import type { PhiRuntimeModuleId } from "../contracts";
 import {
   PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS,
@@ -9,6 +10,14 @@ import {
 export const PHI_ASSET_RUNTIME_MODULE_ID =
   `${PHI_SHARED_PACKAGE_NAME}/modules/asset` as const satisfies PhiRuntimeModuleId;
 
+/**
+ * The Module's identity as its Label Sets inherit it (`definePhiRuntimeModuleLabelSet`): the id and,
+ * where a Module declares one, its source locale. Stated here beside the id and spread into the
+ * definition, so a Label Set a tree or a form reads does not import the definition that imports the tree.
+ */
+export const PHI_ASSET_RUNTIME_MODULE_IDENTITY = {
+  moduleId: PHI_ASSET_RUNTIME_MODULE_ID,
+} as const satisfies Pick<PhiRuntimeModuleDefinition, "moduleId" | "sourceLocale">;
 
 /**
  * The Module's own view of the two keys it answers. The names themselves are a Foundation contract, so

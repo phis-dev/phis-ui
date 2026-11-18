@@ -4,17 +4,14 @@ import type { PhiCmsAssetInspectorWidgetConfig } from "../../types/media";
 import { normalizePhiImagePreviewSelectionAsset } from "./phi-image-preview-data";
 import { PhiAssetInspectorSection } from "./phi-asset-inspector-section";
 import { setPhiImagePreviewSelection, usePhiImagePreviewStore } from "./phi-image-preview-store";
-import type { PhiAssetInspectorWidgetLabels, PhiAssetWidgetLabels } from "./media-widget-labels";
+import type { PhiAssetModuleLabels } from "./media-widget-labels";
 import { PHI_ASSET_CONTROLLER_STORE_KEY } from "./asset-controller-signals";
 import { normalizeMediaFocalRect } from "./focal-rect";
 import { usePhiControlSignalController } from "../widgets/client/shared/phi-control-signals";
 
 export type PhiAssetConfigWidgetProps = {
   config?: PhiCmsAssetInspectorWidgetConfig | null;
-  labels: {
-    inspector: PhiAssetInspectorWidgetLabels;
-    editor: PhiAssetWidgetLabels["editor"];
-  };
+  labels: PhiAssetModuleLabels;
   sitePublicUrl?: string | null;
   locale: string;
 };

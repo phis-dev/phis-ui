@@ -4,7 +4,7 @@ import { useCallback, useMemo, type ReactNode } from "react";
 import { findPhiPageNodePath } from "../../../../helpers/cms-page-catalog";
 import type { PhiBackgroundControlProps } from "../../../../components/controls/phi-background-control";
 import { PhiMediaPickerBinding } from "../../../../components/media/phi-media-picker-binding";
-import { PHI_MEDIA_WIDGET_DEFAULT_LABELS } from "../../../../components/media/media-widget-labels";
+import { usePhiMediaPickerLabels } from "../../../../components/media/phi-media-picker-labels";
 import { PHI_SEARCH_WIDGET_DEFAULT_LABELS } from "../../../../components/widgets/label-types/search";
 import { PhiMediaAssetFlags, PhiMediaKind } from "../../../../constants/media";
 
@@ -152,6 +152,7 @@ type PhiBuilderInspectorSectionWidgetClientProps = {
 };
 
 function usePhiBuilderInspectorSectionState(signalRoutes?: PhiSignalRouteSet) {
+  const mediaPickerLabels = usePhiMediaPickerLabels();
   const dispatchSignal = usePhiSignalDispatcher();
   const area = usePhiDeveloperBuilderStateValue((state) => state.area);
   const pageKey = usePhiDeveloperBuilderStateValue((state) => state.pageKey);
@@ -269,7 +270,7 @@ function usePhiBuilderInspectorSectionState(signalRoutes?: PhiSignalRouteSet) {
         showGroupFilter: true,
         showSearchBar: true,
       }}
-      labels={PHI_MEDIA_WIDGET_DEFAULT_LABELS}
+      labels={mediaPickerLabels}
       searchLabels={PHI_SEARCH_WIDGET_DEFAULT_LABELS}
       value={props.value}
       open={props.open}
@@ -280,7 +281,7 @@ function usePhiBuilderInspectorSectionState(signalRoutes?: PhiSignalRouteSet) {
       onAssetSelect={props.onAssetSelect}
       onAssetClear={props.onAssetClear}
     />
-  ), []);
+  ), [mediaPickerLabels]);
   return {
     activeCalendarAdapterDescriptors,
     activeVideoProviderDescriptors,

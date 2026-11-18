@@ -2,7 +2,7 @@ import { PHI_ASSET_RUNTIME_CONTROLLER_DEFINITION } from "./controller/definition
 import { PHI_ASSET_CONTROLLER_TYPE } from "../../../components/media/asset-controller-address";
 import type { PhiRuntimeModuleDefinition } from "../contracts";
 import { buildPhiRuntimeModuleControllerDescriptor } from "../contracts";
-import { PHI_ASSET_RUNTIME_ITEM_RENDERER_KEY, PHI_ASSET_RUNTIME_MODULE_ID } from "./ids";
+import { PHI_ASSET_RUNTIME_ITEM_RENDERER_KEY, PHI_ASSET_RUNTIME_MODULE_IDENTITY } from "./ids";
 import { PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "./data-providers";
 import { PHI_CMS_AREA_KEYS } from "../../../constants/cms-areas";
 import { PHI_CORE_SERVER_BINDING } from "../../../types/server-capabilities";
@@ -20,7 +20,7 @@ import {
 } from "./settings-forms";
 
 export const PHI_ASSET_RUNTIME_MODULE_DEFINITION = {
-  moduleId: PHI_ASSET_RUNTIME_MODULE_ID,
+  ...PHI_ASSET_RUNTIME_MODULE_IDENTITY,
   kind: "module",
   // Part of the platform: every image picker in every Area opens this library. No Site selects it.
   activation: "always",

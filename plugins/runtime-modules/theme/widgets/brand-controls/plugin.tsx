@@ -17,6 +17,8 @@ import {
   type PhiBuilderBrandWidgetConfig,
 } from "./config";
 import { getPhiColorPickerLabels } from "../../../../../components/widgets/label-sets/color-picker";
+import { getPhiMediaWidgetLabels } from "../../../../../components/media/label-sets/media";
+import { PhiMediaPickerLabelsProvider } from "../../../../../components/media/phi-media-picker-labels";
 
 export const PHI_BUILDER_BRAND_THEME_CONTROLS_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiBuilderBrandWidgetConfig> = {
   ...PHI_BUILDER_BRAND_THEME_CONTROLS_WIDGET_DEFINITION,
@@ -56,7 +58,12 @@ export const PHI_BUILDER_BRAND_STYLE_CONTROLS_WIDGET_PLUGIN: PhiCmsWidgetPlugin<
 
 export const PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiBuilderBrandWidgetConfig> = {
   ...PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_DEFINITION,
-  render: ({ runtime, config }) => <PhiBuilderBrandBackgroundControlsWidgetClient runtime={runtime} config={config} />,
+  // The picker the Background Control opens says its words in the reader's language.
+  render: async ({ runtime, config }) => (
+    <PhiMediaPickerLabelsProvider labels={await getPhiMediaWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime))}>
+      <PhiBuilderBrandBackgroundControlsWidgetClient runtime={runtime} config={config} />
+    </PhiMediaPickerLabelsProvider>
+  ),
   renderPreview: ({ widget }) => (
     <PhiWidgetPreviewFallback
       widget={widget}
@@ -68,7 +75,12 @@ export const PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_PLUGIN: PhiCmsWidgetPl
 
 export const PHI_BUILDER_BRAND_IDENTITY_CONTROLS_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiBuilderBrandWidgetConfig> = {
   ...PHI_BUILDER_BRAND_IDENTITY_CONTROLS_WIDGET_DEFINITION,
-  render: ({ runtime, config }) => <PhiBuilderBrandIdentityControlsWidgetClient runtime={runtime} config={config} />,
+  // The picker the Logo field opens says its words in the reader's language.
+  render: async ({ runtime, config }) => (
+    <PhiMediaPickerLabelsProvider labels={await getPhiMediaWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime))}>
+      <PhiBuilderBrandIdentityControlsWidgetClient runtime={runtime} config={config} />
+    </PhiMediaPickerLabelsProvider>
+  ),
   renderPreview: ({ widget }) => (
     <PhiWidgetPreviewFallback
       widget={widget}

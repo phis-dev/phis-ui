@@ -101,8 +101,15 @@ export function PhiAssetCollectionViewBinding({
   /** Handed on by the Collection View, so a configuration this renderer cannot serve is said its way. */
   renderMode: PhiRenderableBlockRenderMode;
 }) {
+  /*
+   * The English defaults, under what the server half loaded for this Widget (`rawLabels`, the Media Label
+   * Set in the reader's language), under what the Widget's own configuration says.
+   */
   const labels = useMemo(
-    () => overlayPhiAssetLabels<PhiAssetWidgetLabels>(PHI_MEDIA_WIDGET_DEFAULT_LABELS, config.presentation.labels ?? rawLabels),
+    () => overlayPhiAssetLabels<PhiAssetWidgetLabels>(
+      overlayPhiAssetLabels<PhiAssetWidgetLabels>(PHI_MEDIA_WIDGET_DEFAULT_LABELS, rawLabels),
+      config.presentation.labels,
+    ),
     [config.presentation.labels, rawLabels],
   );
   const { token } = usePhiConfig();
@@ -341,10 +348,10 @@ export function PhiAssetCollectionViewBinding({
               value={readAssetFlagValues(state.presentationFlags)}
               placeholder={filter.placeholder ?? labels.tool.flagPlaceholder}
               options={[
-                { value: PhiMediaAssetFlags.Featured, label: labels.editor.featuredFlagLabel },
-                { value: PhiMediaAssetFlags.Locked, label: labels.editor.lockedFlagLabel },
-                { value: PhiMediaAssetFlags.Mask, label: labels.editor.maskFlagLabel },
-                { value: PhiMediaAssetFlags.Background, label: labels.editor.backgroundFlagLabel },
+                { value: PhiMediaAssetFlags.Featured, label: labels.tool.featuredFlagLabel },
+                { value: PhiMediaAssetFlags.Locked, label: labels.tool.lockedFlagLabel },
+                { value: PhiMediaAssetFlags.Mask, label: labels.tool.maskFlagLabel },
+                { value: PhiMediaAssetFlags.Background, label: labels.tool.backgroundFlagLabel },
               ]}
               allowClear
               maxTagCount={1}
@@ -420,7 +427,7 @@ export function PhiAssetCollectionViewBinding({
     <PhiToolbarControl compact size={controlSize}>
       {(features.actions?.toolbar ?? []).map((action) => {
         const display = action.display ?? "icon";
-        const label = action.label ?? (action.key === "upload" ? labels.tool.uploadToggleLabel : action.key);
+        const label = action.label ?? (action.key === "upload" ? labels.upload.uploadToggleLabel : action.key);
         return (
           <PhiButtonControl
             key={action.key}

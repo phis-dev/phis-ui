@@ -5,8 +5,8 @@ import { PHI_MEDIA_WIDGET_DEFAULT_LABELS, type PhiAreaUploadWidgetLabels } from 
  * reading of `PHI_MEDIA_UPLOAD_DEFAULT_LABELS`, the same as on every other Media upload surface.
  *
  * The drop area's title and hint, the state of an upload and its retry are not written a second time
- * either: `upload` is the Media folder's own set (`label-sets/media.ts`), so the two surfaces share one
- * wording and one translation key per text.
+ * either: `upload` is the Media upload surface's own texts, which are Core's `widget:upload` set
+ * (`label-sets/media-upload.ts`), so the two surfaces share one wording and one translation key per text.
  */
 export type PhiSlotUploadWidgetLabels = {
   /** The field names no Add-on, table or slot, so there is nowhere to put a file. */
