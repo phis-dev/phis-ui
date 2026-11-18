@@ -118,12 +118,6 @@ export const PHI_CONTROL = {
   lg: "var(--phi-control-height-lg)",
 } as const;
 
-export const PHI_SHADOW = {
-  primary: "var(--phi-box-shadow)",
-  secondary: "var(--phi-box-shadow-secondary)",
-  tertiary: "var(--phi-box-shadow-tertiary)",
-} as const;
-
 export const PHI_FONT_SIZE = {
   base: "var(--phi-font-size)",
   sm: "var(--phi-font-size-sm)",

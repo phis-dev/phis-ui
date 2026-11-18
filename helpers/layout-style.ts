@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 
-import { PHI_COLOR, PHI_SHADOW } from "../theme/antd-css-var-contract";
+import { PHI_COLOR } from "../theme/antd-css-var-contract";
+import { PHI_SURFACE_SHADOW_VARIABLES } from "../theme/phi-surface-shadow";
 import {
   type PhiGlassLayoutEffectId,
   type PhiShadow,
@@ -31,8 +32,9 @@ function resolvePhiGlassBackground(
 
 export const PHI_SHADOW_DEFINITIONS = {
   none: "none",
-  soft: PHI_SHADOW.tertiary,
-  strong: PHI_SHADOW.primary,
+  // The house's own depths, not Ant Design's menu and popover shadows (theme/phi-surface-shadow.ts).
+  soft: PHI_SURFACE_SHADOW_VARIABLES.soft,
+  strong: PHI_SURFACE_SHADOW_VARIABLES.strong,
 } as const;
 
 export function resolvePhiShadow(value: PhiShadow | null | undefined): CSSProperties["boxShadow"] | undefined {

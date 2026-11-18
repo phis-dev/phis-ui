@@ -61,6 +61,13 @@ import {
   type PhiThemeGradientKey,
 } from "../../../../../theme/phi-theme-gradients";
 import { buildPhiThemeLinkTokens, readPhiThemeExternalLinkMark } from "../../../../../theme/phi-link-mark";
+import {
+  PHI_SURFACE_SHADOW_STEPS,
+  buildPhiSurfaceShadowTokens,
+  readPhiSurfaceShadowDepth,
+  type PhiSurfaceShadowDepth,
+  type PhiSurfaceShadowStep,
+} from "../../../../../theme/phi-surface-shadow";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { usePhiThemeBlockCatalog } from "../../../../../components/root/phi-theme-block-catalog-provider";
 import {
@@ -240,6 +247,12 @@ const PHI_THEME_BUTTON_SHADOW_OPTIONS: readonly {
   { value: "none", label: "None" },
   { value: "soft", label: "Soft" },
   { value: "strong", label: "Strong" },
+];
+const PHI_THEME_SURFACE_SHADOW_LABELS: Record<PhiSurfaceShadowStep, string> = { soft: "Soft", strong: "Strong" };
+const PHI_THEME_SURFACE_SHADOW_OPTIONS: readonly { value: PhiSurfaceShadowDepth; label: string }[] = [
+  { value: "flat", label: "Flat" },
+  { value: "normal", label: "Normal" },
+  { value: "pronounced", label: "Pronounced" },
 ];
 const PHI_STYLE_SIZE_PRESET_KEYS = PHI_SPACING_TOKEN_KEYS;
 type PhiStyleSizePresetKey = (typeof PHI_STYLE_SIZE_PRESET_KEYS)[number];
@@ -461,6 +474,21 @@ function mergeThemeButtonShadow(
 function withThemeButtons(theme: ThemePayload, buttons: NonNullable<ThemePayload["buttons"]>): ThemePayload {
   const withoutButtons = omitThemeFields(theme, "buttons");
   return Object.keys(buttons).length > 0 ? { ...withoutButtons, buttons } : withoutButtons;
+}
+
+/**
+ * The depth of one Surface shadow step. `normal` is what a Theme that says nothing gets, so choosing it
+ * removes the entry rather than storing it.
+ */
+function mergeThemeSurfaceShadowDepth(
+  theme: ThemePayload,
+  step: PhiSurfaceShadowStep,
+  depth: PhiSurfaceShadowDepth,
+): ThemePayload {
+  const { [step]: _previous, ...otherSteps } = theme.shadows ?? {};
+  const shadows = depth === "normal" ? otherSteps : { ...otherSteps, [step]: depth };
+  const withoutShadows = omitThemeFields(theme, "shadows");
+  return Object.keys(shadows).length > 0 ? { ...withoutShadows, shadows } : withoutShadows;
 }
 
 /**
@@ -709,6 +737,7 @@ function resolveBrandDraftAliasTokens(
       primaryButtonGradient: readPhiThemeGradientKey(resolvedTheme.buttons?.primaryGradient),
     }),
     ...buildPhiThemeLinkTokens(resolvedTheme.links),
+    ...buildPhiSurfaceShadowTokens(resolvedTheme.shadows, mode),
   };
 }
 
@@ -2062,6 +2091,27 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                       mergeThemePrimaryButtonGradient(state.draft, choice === "none" ? null : choice),
                     )}
                   />
+                </PhiFlexControl>
+              ),
+            },
+            {
+              key: "surfaceShadow",
+              label: <PhiTypographyControl strong>Surface Shadow</PhiTypographyControl>,
+              children: (
+                <PhiFlexControl vertical gap={clientToken.paddingSM}>
+                  <PhiTypographyControl type="secondary">
+                    How deep the Soft and Strong shadow of cards, layouts and pictures are; each mode has its own.
+                  </PhiTypographyControl>
+                  {PHI_SURFACE_SHADOW_STEPS.map((step) => (
+                    <PhiSegmentedControl<PhiSurfaceShadowDepth>
+                      key={step}
+                      label={PHI_THEME_SURFACE_SHADOW_LABELS[step]}
+                      value={readPhiSurfaceShadowDepth(state.draft.shadows, step)}
+                      options={PHI_THEME_SURFACE_SHADOW_OPTIONS}
+                      block
+                      onChange={(depth) => publishDraft(mergeThemeSurfaceShadowDepth(state.draft, step, depth))}
+                    />
+                  ))}
                 </PhiFlexControl>
               ),
             },

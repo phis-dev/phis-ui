@@ -128,7 +128,9 @@ in the same shape a Region, an Overlay and a Widget:
   [Background filter](#background-filter)) and its motion;
 - `borderSource` and `border` -- where the line comes from, and the line with its four corners;
 - `shadow` -- a semantic id (`none`, `soft`, `strong`) or `{ kind: "custom", value: "<box-shadow>" }`;
-  presets store the id, not CSS;
+  presets store the id, not CSS. `soft` and `strong` draw `--phi-surface-shadow-soft` and
+  `--phi-surface-shadow-strong`, the house's own depths per mode (`theme/phi-surface-shadow.ts`), never
+  Ant Design's menu and popover shadows; a Theme sets how deep each is (THEME.md, `shadows`);
 - `tone` -- the mode the box and its content are drawn in (`inherit`, `light`, `dark`, `inverse`; see
   [Surface tone](#surface-tone)).
 

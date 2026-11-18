@@ -187,7 +187,8 @@ export const PHI_THEME_TOKEN_KEYS = [
  * (theme/phi-theme-gradients.ts): tokens of this package's own, laid over the resolved ones so Ant
  * Design writes them per mode and per Surface tone like every other. The `custom*` names are the
  * palette's custom colours, laid over the same way (theme/phi-theme-palette.ts). `linkExternalMark` is
- * the `display` of the mark behind a link that leaves the Site (theme/phi-link-mark.ts).
+ * the `display` of the mark behind a link that leaves the Site (theme/phi-link-mark.ts). The
+ * `surfaceShadow*` names are what a Surface's `soft` and `strong` steps draw (theme/phi-surface-shadow.ts).
  */
 export const PHI_THEME_OWN_TOKEN_KEYS = [
   "paddingXXL",
@@ -215,6 +216,8 @@ export const PHI_THEME_OWN_TOKEN_KEYS = [
   "primaryButtonGradientActive",
   "primaryButtonGradientText",
   "linkExternalMark",
+  "surfaceShadowSoft",
+  "surfaceShadowStrong",
   "custom1",
   "custom2",
   "custom3",

@@ -222,6 +222,12 @@ sparse: readers normalize absent values.
   Buttons keep their one colour. Hover and press lay a filter over the run instead of swapping it for a
   second picture, because Ant Design transitions every Button property and a swapped picture crossfades
   badly. A single Button can still choose a gradient of its own with the `gradient` variant.
+- `shadows?: { soft?: "flat" | "normal" | "pronounced"; strong?: … }` -- how deep a Surface's `soft` and
+  `strong` shadow are (`theme/phi-surface-shadow.ts`). Absent is `normal`; only another depth is stored. A
+  depth becomes each mode's own CSS, darker in the dark, as the tokens `surfaceShadowSoft` and
+  `surfaceShadowStrong` (`--phi-surface-shadow-soft`, `--phi-surface-shadow-strong`). They are not Ant
+  Design's `boxShadow` tokens, which its dropdowns and popovers keep drawing with. Brand tab: Style,
+  "Surface Shadow".
 - `links?: { externalMark?: boolean }` -- whether a link in running text that leads to another site wears a
   small arrow after its words (`theme/phi-link-mark.ts`). Absent is on; only `false` is stored. It rides as
   the token `linkExternalMark` (`--phi-link-external-mark`, the mark's `display`), drawn by
