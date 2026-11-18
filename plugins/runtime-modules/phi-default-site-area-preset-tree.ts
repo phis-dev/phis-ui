@@ -39,12 +39,18 @@ export async function buildPhiDefaultSiteAreaPresetTree({
   presetKey,
   ownerModuleId,
   runtimeModuleArea,
+  footerContact = true,
 }: {
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
   presetKey: string;
   ownerModuleId: PhiRuntimeModuleId;
   runtimeModuleArea: PhiBuilderAreaKey;
+  /**
+   * Whether the Footer's right column carries the Site's contact link. An Area whose visitors reach
+   * the Site's people from inside it -- the App, with its own Support -- leaves the column empty.
+   */
+  footerContact?: boolean;
 }): Promise<PhiResolvedCmsPageTree> {
   const PHI_DEFAULT_PUB_AREA_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap({
     domain: "area",
@@ -444,7 +450,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               },
               contentVersionId: null,
             },
-            {
+            ...(footerContact ? [{
               id: PHI_DEFAULT_PUB_AREA_WIDGET_IDS.widgetFooterRight,
               siteId: page.siteId,
               parentLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutFooterMain,
@@ -462,7 +468,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
                 icon: contactIcon,
               },
               contentVersionId: null,
-            },
+            }] : []),
           ]
         : []),
       ...(footerBottomRegion

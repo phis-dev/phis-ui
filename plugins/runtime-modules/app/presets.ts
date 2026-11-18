@@ -21,7 +21,8 @@ export const PHI_APP_RUNTIME_MODULE_AREA_SHELLS = [
      * App's header and footer are Public's -- one Brand, one account trigger, one description of both.
      * What App has that Public does not is somewhere for the Modules a signed-in person works with,
      * and that is the whole of the overlay. Nothing is omitted from the base, so the two trees cannot
-     * disagree about a Region: composition refuses a Region type stated twice.
+     * disagree about a Region: composition refuses a Region type stated twice. The one thing the base
+     * is told is to leave the contact link out of the Footer: somebody signed in asks through Support.
      */
     loadTree: async ({ page, runtime }: PhiCmsDescriptorBuildContext) => {
       const [
@@ -40,6 +41,7 @@ export const PHI_APP_RUNTIME_MODULE_AREA_SHELLS = [
           presetKey: "app-area-preset",
           ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
           runtimeModuleArea: "app",
+          footerContact: false,
         }),
         buildPhiDefaultAppAreaPresetTree({ page, runtime }),
       ]);
