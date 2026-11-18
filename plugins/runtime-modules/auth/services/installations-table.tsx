@@ -205,7 +205,9 @@ async function mutateInstallation(request: PhiTableProviderMutationRequest) {
   throw new PhiTableProviderError("action-not-supported", `Unsupported Auth installation action "${request.actionKey}".`);
 }
 
-const resources = PHI_AUTH_RUNTIME_DATA_PROVIDER_DESCRIPTORS[0].resources ?? [];
+// Its own descriptor by key, not by position: a Provider added to the list must not take its place.
+const resources = PHI_AUTH_RUNTIME_DATA_PROVIDER_DESCRIPTORS
+  .find((descriptor) => descriptor.key === PHI_AUTH_RUNTIME_DATA_PROVIDER_KEYS.installations)?.resources ?? [];
 
 export const PhiAuthInstallationsTableProviderClient = createPhiTableProviderClient({
   key: PHI_AUTH_RUNTIME_DATA_PROVIDER_KEYS.installations,

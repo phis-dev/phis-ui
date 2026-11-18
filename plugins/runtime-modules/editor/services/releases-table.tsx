@@ -22,6 +22,10 @@ import {
 import { PHI_EDITOR_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../data-providers";
 import { PHI_EDITOR_RELEASES_DATA_PROVIDER_KEY, PHI_EDITOR_RELEASES_RESOURCE_KEY } from "../ids";
 
+// Its own descriptor by key, not by position: a Provider added to the list must not take its place.
+const PHI_EDITOR_RELEASES_RESOURCES = PHI_EDITOR_RUNTIME_DATA_PROVIDER_DESCRIPTORS
+  .find((descriptor) => descriptor.key === PHI_EDITOR_RELEASES_DATA_PROVIDER_KEY)?.resources ?? [];
+
 const RELEASES_API_PATH = "/api/site/editor/releases";
 const RESPONSE_OPTIONS: ReadPhiTableProviderResponseOptions = { subject: "Releases" };
 
@@ -217,7 +221,7 @@ export function PhiEditorReleasesTableProviderClient({ children }: { children: R
 
   const registration = useMemo<PhiTableProviderRegistration>(() => ({
     key: PHI_EDITOR_RELEASES_DATA_PROVIDER_KEY,
-    resources: PHI_EDITOR_RUNTIME_DATA_PROVIDER_DESCRIPTORS[0].resources,
+    resources: PHI_EDITOR_RELEASES_RESOURCES,
     query,
     mutate,
   }), [mutate, query]);

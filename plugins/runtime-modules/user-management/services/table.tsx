@@ -214,7 +214,9 @@ async function mutateUser(request: PhiTableProviderMutationRequest) {
   return { status: "accepted" as const, invalidation: "view" as const };
 }
 
-const resources = PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_DESCRIPTORS[0].resources ?? [];
+// Its own descriptor by key: the list holds the Module's other Providers too, in no promised order.
+const resources = PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_DESCRIPTORS
+  .find((descriptor) => descriptor.key === PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS.table)?.resources ?? [];
 
 export const PhiUserManagementTableProviderClient = createPhiTableProviderClient({
   key: PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS.table,

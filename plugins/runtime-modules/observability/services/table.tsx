@@ -97,7 +97,9 @@ async function readRecord({
   return payload.record as Record<string, unknown>;
 }
 
-const resources = PHI_OBSERVABILITY_RUNTIME_DATA_PROVIDER_DESCRIPTORS[0].resources ?? [];
+// Its own descriptor by key, not by position: a Provider added to the list must not take its place.
+const resources = PHI_OBSERVABILITY_RUNTIME_DATA_PROVIDER_DESCRIPTORS
+  .find((descriptor) => descriptor.key === PHI_OBSERVABILITY_RUNTIME_DATA_PROVIDER_KEYS.table)?.resources ?? [];
 
 export const PhiObservabilityTableProviderClient = createPhiTableProviderClient({
   key: PHI_OBSERVABILITY_RUNTIME_DATA_PROVIDER_KEYS.table,
