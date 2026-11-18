@@ -48,18 +48,19 @@ The shared fields are:
 Layout-family plugins add only topology-specific or explicitly family-specific fields. A family must
 not duplicate shared parsing or serialization, and it never declares chrome of its own.
 
-The Split Card is two cards on the golden ratio (`components/layouts/split-card-geometry.ts`), and its
-Surface is the cards': each card draws the edge, corner, depth, pane and mode (`PhiSplitCardHalf`). The
-Background runs once across both cards and shows only inside them -- each card's ground layer is as wide
-as the Split Card's content box (`100cqw`, the Split Card being the query container) and moved by the
-card's own offset, so a picture or a gradient goes on behind the right card instead of starting again.
-Around and between the cards the Split Card is transparent. A moving Background does not move there:
-each card would move a copy of its own. Its fields are `swapRatio`, which puts the larger card on the
-left, the Paddings panel and the Surface. Its `padding` is each card's inset -- the distance from the
-card's edge to what stands in it, as every Layout's padding is the distance from its own edge to its
-slots -- and its `gap` stands between the cards; by default the padding is none. The space around the
-cards is not the Split Card's: on the sign-in, registration, password reset, confirmation and contact
-Pages the content Region states it, and the Split Card states the inset of its cards.
+The Split Card is two cards side by side, on the golden ratio unless its `ratio` says otherwise
+(`components/layouts/split-card-geometry.ts`), and its Surface is the cards': each card draws the edge,
+corner, depth, pane and mode (`PhiSplitCardHalf`). The Background runs once across both cards and shows
+only inside them -- each card's ground layer is as wide as the Split Card's content box (`100cqw`, the
+Split Card being the query container) and moved by the card's own offset, so a picture or a gradient goes
+on behind the right card instead of starting again. Around and between the cards the Split Card is
+transparent. A moving Background does not move there: each card would move a copy of its own. Its fields
+are `ratio`, `swapRatio`, which puts the larger card on the left, the Paddings panel and the Surface. Its
+`padding` is each card's inset -- the distance from the card's edge to what stands in it, as every
+Layout's padding is the distance from its own edge to its slots -- and its `gap` stands between the
+cards; by default the padding is none. The space around the cards is not the Split Card's: on the
+sign-in, registration, password reset, confirmation and contact Pages the content Region states it, and
+the Split Card states the inset of its cards.
 
 The named looks a Surface can start from are plain values in `helpers/surface-presets.ts`:
 `PHI_SURFACE_CARD` (container ground, quiet line, soft shadow) and `PHI_SURFACE_WASH` (the Theme's
@@ -99,8 +100,16 @@ In a Page preset that makes four things about the Split Card explicit:
   `PHI_SURFACE_CARD`, the small-step gap and the centred anchor) or writes `surface` itself, for instance
   `PHI_SURFACE_WASH`; with neither, the halves are not drawn as cards. Its `padding` is no creation value but
   a default of none, so the inset of each card is stated on the node.
-- `swapRatio: true` puts the larger card on the left. The slots do not move with it: slot `0`
-  (`PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX.Left`) is always the left card and slot `1` the right one, so with
+- `ratio` is the ratio the cards stand in: `golden` (φ, the larger card φ times as wide as the smaller),
+  `50-50` or `20-80`. φ is the default and is stored as absent -- the Inspector's "φ" writes nothing --
+  because it is the ratio the Split Card always had; any other value is a config error, said in the
+  Builder. The columns are `fr` (`resolvePhiSplitCardColumns`), so the gap comes out of the row first and
+  the rest is shared in the ratio, and the shared Background's piece behind the right card follows the
+  same ratio (`resolvePhiSplitCardGroundFrame`). The Inspector shows Ratio above Swap ratio: at `50-50`
+  there is no larger card, the switch is hidden and a stored `swapRatio` changes nothing; the slots never
+  move with either field.
+- `swapRatio: true` puts the larger card on the left, at φ and at 20/80. The slots do not move with it:
+  slot `0` (`PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX.Left`) is always the left card and slot `1` the right one, so with
   `swapRatio` slot `0` is the larger. The slots are `PHI_CMS_SPLIT_LAYOUT_SLOTS` (`slot_0`, `slot_1`,
   `constants/cms-layout-types.ts`); each holds one child. Narrower than 36rem -- the Split Card's own width,
   not the screen's -- the cards stand one above the other, slot `0` on top.

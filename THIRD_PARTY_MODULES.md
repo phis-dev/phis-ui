@@ -70,7 +70,7 @@ contract is [LAYOUTING.md](./LAYOUTING.md); the definitions are `components/layo
 | `carousel` | Carousel | A run of slots shown a few at a time, moving on their own or on a signal. | `visibleSlots`, `windowAnchor`, `transition`, `slotGap`, `controls`, `loop`, `autoplayMs` |
 | `grid` | Grid | Slots in rows, as many to a row as the width allows. | `columns` (per width, with span and offset) |
 | `masonry` | Masonry | Slots in columns at their own heights, without rows. | `columns` |
-| `split-card` | Split Card | Two cards on the golden ratio, one Surface for both. Surface is a creation value, not a default; how it reads in a Preset: [LAYOUTING.md](./LAYOUTING.md#layout-config). | `swapRatio`, `padding`, `surface` |
+| `split-card` | Split Card | Two cards side by side (golden ratio, 50/50 or 20/80), one Surface for both. Surface is a creation value, not a default; how it reads in a Preset: [LAYOUTING.md](./LAYOUTING.md#layout-config). | `ratio`, `swapRatio`, `padding`, `surface` |
 | `three-column` | Three Column | Fixed left, middle and right slots. | `balancedSides`, `sideShare`, `leftWidth`, `middleWidth`, `rightWidth` |
 
 - A box around an area is the Layout's `surface`, not a Widget: `PHI_SURFACE_CARD` (container ground, quiet

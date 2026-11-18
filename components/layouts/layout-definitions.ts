@@ -516,7 +516,7 @@ export const PHI_SPLIT_CARD_LAYOUT_DEFINITION = {
   defaultAnchor: PHI_CENTRED_SLOT_DEFAULT_ANCHOR,
   slotSizePolicy: "fill-inline",
   title: "Split Card",
-  description: "Two cards on the golden ratio, one Surface for both.",
+  description: "Two cards side by side, one Surface for both.",
   category: "structure",
   iconName: "split-card",
   defaultConfig: { ...PHI_SPLIT_CARD_LAYOUT_DEFAULTS },
@@ -524,7 +524,27 @@ export const PHI_SPLIT_CARD_LAYOUT_DEFINITION = {
   creationConfig: { ...PHI_SPLIT_CARD_LAYOUT_CREATION_CONFIG },
   // The outer inset and the gap between the cards are the Paddings panel's; the rest is the Surface.
   fields: [
-    { key: "swapRatio", type: "boolean", label: "Swap ratio" },
+    /*
+     * Above the switch, not under it: the switch goes at 50/50, which has no larger card to swap, and a
+     * picker under it would move up a row the moment that is chosen. φ is the default and stores nothing.
+     */
+    {
+      key: "ratio",
+      type: "choice",
+      label: "Ratio",
+      presentation: "segmented",
+      emptyOption: { value: "golden", label: "φ" },
+      options: [
+        { value: "50-50", label: "50/50" },
+        { value: "20-80", label: "20/80" },
+      ],
+    },
+    {
+      key: "swapRatio",
+      type: "boolean",
+      label: "Swap ratio",
+      visibleWhen: { field: "ratio", notEquals: "50-50" },
+    },
     ...PHI_LAYOUT_PADDING_FIELDS,
   ],
   slots: [...PHI_CMS_SPLIT_LAYOUT_SLOTS],

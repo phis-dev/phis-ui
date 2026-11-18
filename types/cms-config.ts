@@ -36,8 +36,11 @@ import { createPhiConfigReader, type PhiConfigReader } from "../components/widge
 import { PHI_SPACING_SCALE_KEYS, type PhiSpacingScaleKey } from "../components/widgets/config/spacing-options";
 import { PHI_GRID_COLUMN_COUNTS, isPhiGridColumnCount } from "../constants/grid-columns";
 import {
+  PHI_CMS_SPLIT_CARD_DEFAULT_RATIO,
+  PHI_CMS_SPLIT_CARD_RATIOS,
   PHI_CMS_THREE_COLUMN_DEFAULT_SIDE_SHARE,
   PHI_CMS_THREE_COLUMN_SIDE_SHARES,
+  type PhiCmsSplitCardRatio,
   type PhiCmsThreeColumnSideShare,
 } from "../constants/cms-layout-proportions";
 
@@ -373,14 +376,16 @@ export type PhiCmsThreeColumnLayoutConfig = PhiCmsDirectionalLayoutConfigBase & 
 };
 
 /**
- * Two cards on the golden ratio. The Layout's Surface is the cards' -- each half draws its edge, corner,
- * depth and pane -- and its Background runs once across both and shows only inside them. What stands in
- * a half sets its own inset; a half has none of its own.
+ * Two cards side by side, on the golden ratio unless `ratio` says otherwise. The Layout's Surface is
+ * the cards' -- each half draws its edge, corner, depth and pane -- and its Background runs once across
+ * both and shows only inside them. What stands in a half sets its own inset; a half has none of its own.
  */
 export type PhiCmsSplitCardLayoutConfig = PhiCmsLayerBase & {
   gap?: CSSProperties["gap"];
-  /** The golden ratio the other way round: the left card the larger one. */
+  /** The ratio the other way round: the left card the larger one. Nothing to swap at `50-50`. */
   swapRatio?: boolean;
+  /** The ratio the cards stand in: `golden` (φ, absent), `50-50` or `20-80`. */
+  ratio?: PhiCmsSplitCardRatio;
 };
 
 /**
@@ -769,6 +774,7 @@ export function parsePhiCmsSplitCardLayoutConfig(
       labelEnd: readLayoutLabelEnd(reader),
       gap: readCssSizeField(reader, "gap"),
       swapRatio: reader.boolean("swapRatio"),
+      ratio: reader.oneOf("ratio", PHI_CMS_SPLIT_CARD_RATIOS) ?? PHI_CMS_SPLIT_CARD_DEFAULT_RATIO,
       padding: readCssSizeField(reader, "padding"),
       paddingTop: readCssSizeField(reader, "paddingTop"),
       paddingBottom: readCssSizeField(reader, "paddingBottom"),

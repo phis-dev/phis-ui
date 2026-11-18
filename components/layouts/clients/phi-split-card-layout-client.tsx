@@ -21,11 +21,15 @@ import {
 import { PhiLayoutSurfaceBox } from "../phi-layout-surface-box";
 import { PhiSplitCardHalf, type PhiSplitCardHalfProps } from "./phi-split-card-half";
 import { resolvePhiSplitCardColumns } from "../split-card-geometry";
+import {
+  PHI_CMS_SPLIT_CARD_DEFAULT_RATIO,
+  type PhiCmsSplitCardRatio,
+} from "../../../constants/cms-layout-proportions";
 
 const PHI_SPLIT_CARD_LAYOUT_DEFAULTS = resolvePhiLayoutDefaults("split");
 
 /**
- * Two cards on the golden ratio.
+ * Two cards side by side, on the golden ratio unless `ratio` says otherwise.
  *
  * The Layout's Surface is worn by both: each card draws its edge, corner,
  * depth, pane and mode (`PhiSplitCardHalf`), and the Background runs once across the two and shows only
@@ -36,8 +40,10 @@ const PHI_SPLIT_CARD_LAYOUT_DEFAULTS = resolvePhiLayoutDefaults("split");
 export type PhiSplitCardLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
   slots: ReactNode[];
   gap?: CSSProperties["gap"];
-  /** The larger card on the left instead of the right. */
+  /** The larger card on the left instead of the right; nothing to swap at `50-50`. */
   swapRatio?: boolean;
+  /** The ratio the cards stand in: φ (`golden`, the default), `50-50` or `20-80`. */
+  ratio?: PhiCmsSplitCardRatio;
   editSlotAnchor?: PhiAnchorWidgetPlacement | null;
 };
 
@@ -51,7 +57,7 @@ function renderSplitCardSlot(
   editSlotAction: PhiSplitCardLayoutProps["editSlotAction"],
   editRenderInsertControl: PhiLayoutEditRenderInsertControl | undefined,
   label: ReactNode,
-  card: Pick<PhiSplitCardHalfProps, "blockId" | "surface" | "gap" | "swapped"> & { inset: CSSProperties },
+  card: Pick<PhiSplitCardHalfProps, "blockId" | "surface" | "gap" | "swapped" | "ratio"> & { inset: CSSProperties },
 ) {
   const hasContent = child !== null && child !== undefined && child !== false;
   const showInsertButton = typeof editSlotAction === "function" && editRenderInsertControl != null;
@@ -63,6 +69,7 @@ function renderSplitCardSlot(
       side={slotRole}
       gap={card.gap}
       swapped={card.swapped}
+      ratio={card.ratio}
       data-layout-kind="split"
       className={phiLayoutSlotClassName(isAuthoringRender)}
       data-phi-layout-has-content={phiLayoutSlotContentMarker(isAuthoringRender, hasContent)}
@@ -117,6 +124,7 @@ export function PhiSplitCardLayout({
   slots,
   gap,
   swapRatio = false,
+  ratio = PHI_CMS_SPLIT_CARD_DEFAULT_RATIO,
   editSlotAction,
   editRenderInsertControl,
   editSlotAnchor = "center",
@@ -150,6 +158,7 @@ export function PhiSplitCardLayout({
     surface,
     gap: gapLength,
     swapped: swapRatio,
+    ratio,
     inset: resolvePhiPaddingStyle({ padding, paddingTop, paddingRight, paddingBottom, paddingLeft }),
   };
   /*
@@ -169,7 +178,7 @@ export function PhiSplitCardLayout({
     ...style,
   };
   const gridStyle = {
-    "--phi-split-card-columns": resolvePhiSplitCardColumns(swapRatio),
+    "--phi-split-card-columns": resolvePhiSplitCardColumns(swapRatio, ratio),
     gap: resolvedGap,
   } as CSSProperties;
 

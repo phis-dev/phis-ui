@@ -11,6 +11,7 @@ import { PhiSurfaceTone } from "../../surface/phi-surface-tone";
 import { PHI_LAYOUT_SURFACE_RADIUS } from "../phi-layout-contract";
 import { usePhiLayoutSignalSurface } from "../phi-layout-signal-surface";
 import { joinPhiClassNames } from "../../../helpers/class-names";
+import type { PhiCmsSplitCardRatio } from "../../../constants/cms-layout-proportions";
 
 export type PhiSplitCardHalfProps = Omit<HTMLAttributes<HTMLDivElement>, "style" | "children"> & {
   [attribute: `data-${string}`]: string | undefined;
@@ -22,6 +23,8 @@ export type PhiSplitCardHalfProps = Omit<HTMLAttributes<HTMLDivElement>, "style"
   gap: string;
   /** Whether the left card is the larger one; the right card's part of the Background follows it. */
   swapped?: boolean;
+  /** The ratio the cards stand in; the right card's part of the Background follows it. */
+  ratio?: PhiCmsSplitCardRatio;
   style?: CSSProperties;
   children?: ReactNode;
 };
@@ -43,6 +46,7 @@ export function PhiSplitCardHalf({
   side,
   gap,
   swapped,
+  ratio,
   style,
   className,
   children,
@@ -65,7 +69,7 @@ export function PhiSplitCardHalf({
       className={joinPhiClassNames(className, toneClassName)}
       style={{ ...card.style, ...style }}
     >
-      <PhiSurfaceGroundLayer ground={card.ground} frame={resolvePhiSplitCardGroundFrame(side, gap, swapped)} />
+      <PhiSurfaceGroundLayer ground={card.ground} frame={resolvePhiSplitCardGroundFrame(side, gap, swapped, ratio)} />
       {toneClassName ? <PhiSurfaceTone tone={still?.tone}>{children}</PhiSurfaceTone> : children}
     </div>
   );
