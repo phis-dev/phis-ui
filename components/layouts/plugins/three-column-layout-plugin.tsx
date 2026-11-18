@@ -19,6 +19,7 @@ export const PHI_THREE_COLUMN_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsThreeColum
       layoutKind="threecol"
       slots={renderSequentialSlotChildren(node)}
       balancedSides={config.balancedSides}
+      sideShare={config.sideShare}
       gap={config.gap}
       align={config.align}
       justify={config.justify}

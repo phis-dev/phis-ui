@@ -11,6 +11,10 @@ import {
 import { resolvePhiBaseLayoutChrome, type PhiBaseLayoutProps } from "../phi-layout-view-model";
 import { resolvePhiLayoutDefaults } from "../../../helpers/cms-layout-defaults";
 import { PHI_CMS_THREE_COLUMN_LAYOUT_SLOTS } from "../../../constants/cms-layout-types";
+import {
+  PHI_CMS_THREE_COLUMN_DEFAULT_SIDE_SHARE,
+  type PhiCmsThreeColumnSideShare,
+} from "../../../constants/cms-layout-proportions";
 import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control-contract";
 import type {
   PhiRenderableBlockResponsiveSize,
@@ -51,6 +55,8 @@ export type PhiThreeColumnLayoutProps = Pick<
 > & {
   slots: ReactNode[];
   balancedSides?: boolean;
+  /** What each balanced side takes of the row, in percent; the middle takes the rest. Default 25. */
+  sideShare?: PhiCmsThreeColumnSideShare;
   wrap?: boolean | CSSProperties["flexWrap"];
   align?: CSSProperties["alignItems"];
   justify?: CSSProperties["justifyContent"];
@@ -174,13 +180,54 @@ function renderColumn(
   );
 }
 
-/** How much faster the middle slot grows than each balanced side. */
-const PHI_THREE_COLUMN_MIDDLE_GROW = 2;
+/** How much faster the middle slot grows than a side that does not grow at all: it takes the rest. */
+const PHI_THREE_COLUMN_UNBALANCED_MIDDLE_GROW = 2;
+
+/**
+ * The `flex` of each column.
+ *
+ * A balanced side grows by its share and the middle by what two sides leave of a hundred, so 25 is
+ * 25 : 50 : 25 -- the 1 : 2 : 1 the Layout always had -- and 33 is 33 : 34 : 33. Growth, not a percent
+ * width: the gaps come out of the row first and the rest is shared, where three percent widths and two
+ * gaps would be wider than the row.
+ *
+ * On a phone (`styles/layout.css`) the variables give way to sides as wide as their content and a middle
+ * taking the rest, whatever the share. A fixed width wins over both, on every screen.
+ */
+export function resolvePhiThreeColumnFlex({
+  balancedSides = true,
+  sideShare = PHI_CMS_THREE_COLUMN_DEFAULT_SIDE_SHARE,
+  leftWidth,
+  middleWidth,
+  rightWidth,
+}: Pick<PhiThreeColumnLayoutProps, "balancedSides" | "sideShare" | "leftWidth" | "middleWidth" | "rightWidth">) {
+  const resolvedLeftWidth = normalizePhiCssSize(leftWidth);
+  const resolvedMiddleWidth = normalizePhiCssSize(middleWidth);
+  const resolvedRightWidth = normalizePhiCssSize(rightWidth);
+  /*
+   * Balanced sides are a wide screen's: on a phone (`styles/layout.css`) the variables below make every
+   * side as wide as its content and nothing when empty, and the middle takes the rest. A centred middle
+   * was worth two equal sides of a 390px row; a link of 83px in a side of 81 was not.
+   */
+  const sideFlex = balancedSides ? `var(--phi-three-column-side-flex, ${sideShare} 1 0)` : "0 1 auto";
+  /*
+   * The middle is the main thing: with balanced sides it grows by the rest of the hundred, so the sides
+   * stay equal to each other and the middle stays centred; without, it takes what the sides' content
+   * leaves.
+   */
+  const middleGrow = balancedSides ? 100 - 2 * sideShare : PHI_THREE_COLUMN_UNBALANCED_MIDDLE_GROW;
+  return {
+    left: resolvedLeftWidth ? `0 0 ${resolvedLeftWidth}` : sideFlex,
+    middle: resolvedMiddleWidth ? `0 0 ${resolvedMiddleWidth}` : `var(--phi-three-column-middle-flex, ${middleGrow} 1 0)`,
+    right: resolvedRightWidth ? `0 0 ${resolvedRightWidth}` : sideFlex,
+  };
+}
 
 export function PhiThreeColumnLayout({
   blockId,
   slots,
   balancedSides = true,
+  sideShare = PHI_CMS_THREE_COLUMN_DEFAULT_SIDE_SHARE,
   gap = PHI_THREE_COLUMN_LAYOUT_DEFAULTS.gap as number | string,
   wrap = PHI_THREE_COLUMN_LAYOUT_DEFAULTS.wrap as boolean | CSSProperties["flexWrap"] | undefined,
   align,
@@ -211,25 +258,11 @@ export function PhiThreeColumnLayout({
     collapsedSizeHint,
   } = layoutProps;
   const resolvedRenderMode = renderMode ?? "live";
-  const resolvedLeftWidth = normalizePhiCssSize(leftWidth);
-  const resolvedMiddleWidth = normalizePhiCssSize(middleWidth);
-  const resolvedRightWidth = normalizePhiCssSize(rightWidth);
-  /*
-   * Balanced sides are a wide screen's: on a phone (`styles/layout.css`) the variables below make every
-   * side as wide as its content and nothing when empty, and the middle takes the rest. A centred middle
-   * was worth two equal sides of a 390px row; a link of 83px in a side of 81 was not.
-   */
-  const balancedSideFlex = "var(--phi-three-column-side-flex, 1 1 0)";
-  const leftFlex = resolvedLeftWidth ? `0 0 ${resolvedLeftWidth}` : balancedSides ? balancedSideFlex : "0 1 auto";
-  /*
-   * The middle is the main thing and takes the larger share: with balanced sides it grows twice as fast as
-   * each side, so the sides stay equal to each other and the middle stays centred; without, it takes what
-   * the sides' content leaves.
-   */
-  const middleFlex = resolvedMiddleWidth
-    ? `0 0 ${resolvedMiddleWidth}`
-    : `var(--phi-three-column-middle-flex, ${PHI_THREE_COLUMN_MIDDLE_GROW} 1 0)`;
-  const rightFlex = resolvedRightWidth ? `0 0 ${resolvedRightWidth}` : balancedSides ? balancedSideFlex : "0 1 auto";
+  const {
+    left: leftFlex,
+    middle: middleFlex,
+    right: rightFlex,
+  } = resolvePhiThreeColumnFlex({ balancedSides, sideShare, leftWidth, middleWidth, rightWidth });
   const showInsertButton = resolvedRenderMode === "editor";
   const layoutBox = resolvePhiLayoutBox({ size, minSize, maxSize, collapsedSizeHint });
   const {

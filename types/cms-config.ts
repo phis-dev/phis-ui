@@ -35,6 +35,11 @@ import { isPhiRecord } from "../helpers/is-record";
 import { createPhiConfigReader, type PhiConfigReader } from "../components/widgets/config/strict-config-reader";
 import { PHI_SPACING_SCALE_KEYS, type PhiSpacingScaleKey } from "../components/widgets/config/spacing-options";
 import { PHI_GRID_COLUMN_COUNTS, isPhiGridColumnCount } from "../constants/grid-columns";
+import {
+  PHI_CMS_THREE_COLUMN_DEFAULT_SIDE_SHARE,
+  PHI_CMS_THREE_COLUMN_SIDE_SHARES,
+  type PhiCmsThreeColumnSideShare,
+} from "../constants/cms-layout-proportions";
 
 export type PhiCmsPluginConfigBase = Record<string, unknown>;
 
@@ -356,6 +361,11 @@ export type PhiCmsGridLayoutConfig = PhiCmsLayerBase & {
 
 export type PhiCmsThreeColumnLayoutConfig = PhiCmsDirectionalLayoutConfigBase & {
   balancedSides?: boolean;
+  /**
+   * What each balanced side takes of the row, in percent (10, 20, 25, 30 or 33); the middle takes the
+   * rest. Read only while `balancedSides` holds; a side with a fixed width keeps it. Absent is 25.
+   */
+  sideShare?: PhiCmsThreeColumnSideShare;
   leftWidth?: PhiCssLength;
   middleWidth?: PhiCssLength;
   rightWidth?: PhiCssLength;
@@ -733,6 +743,7 @@ export function parsePhiCmsThreeColumnLayoutConfig(
       labelEnd: readLayoutLabelEnd(reader),
       ...readLayoutPadding(reader),
       balancedSides: reader.boolean("balancedSides") ?? true,
+      sideShare: reader.oneOf("sideShare", PHI_CMS_THREE_COLUMN_SIDE_SHARES) ?? PHI_CMS_THREE_COLUMN_DEFAULT_SIDE_SHARE,
       gap: readCssSizeField(reader, "gap"),
       anchor: readLayoutAnchor(reader),
       align: reader.string("align") as CSSProperties["alignItems"] | undefined,

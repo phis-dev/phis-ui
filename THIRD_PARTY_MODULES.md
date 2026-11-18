@@ -71,7 +71,7 @@ contract is [LAYOUTING.md](./LAYOUTING.md); the definitions are `components/layo
 | `grid` | Grid | Slots in rows, as many to a row as the width allows. | `columns` (per width, with span and offset) |
 | `masonry` | Masonry | Slots in columns at their own heights, without rows. | `columns` |
 | `split-card` | Split Card | Two cards on the golden ratio, one Surface for both. Surface is a creation value, not a default; how it reads in a Preset: [LAYOUTING.md](./LAYOUTING.md#layout-config). | `swapRatio`, `padding`, `surface` |
-| `three-column` | Three Column | Fixed left, middle and right slots. | `balancedSides`, `leftWidth`, `middleWidth`, `rightWidth` |
+| `three-column` | Three Column | Fixed left, middle and right slots. | `balancedSides`, `sideShare`, `leftWidth`, `middleWidth`, `rightWidth` |
 
 - A box around an area is the Layout's `surface`, not a Widget: `PHI_SURFACE_CARD` (container ground, quiet
   line, soft shadow) and `PHI_SURFACE_WASH` (the Theme's quietest filling) from `@phis/ui/helpers`, and

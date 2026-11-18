@@ -544,6 +544,24 @@ export const PHI_THREE_COLUMN_LAYOUT_DEFINITION = {
   fields: [
     ...PHI_LAYOUT_PADDING_FIELDS,
     { key: "balancedSides", type: "boolean", label: "Balanced Sides" },
+    /*
+     * What each balanced side takes of the row; the middle takes the rest. 25 % is the default and stores
+     * nothing (`constants/cms-layout-proportions.ts`). A side with a fixed width below keeps it.
+     */
+    {
+      key: "sideShare",
+      type: "choice",
+      valueType: "number",
+      label: "Side Width",
+      visibleWhen: { field: "balancedSides", equals: true },
+      emptyOption: { value: "default", label: "25 %", separator: "after" },
+      options: [
+        { value: 10, label: "10 %" },
+        { value: 20, label: "20 %" },
+        { value: 30, label: "30 %" },
+        { value: 33, label: "33 % (equal columns)" },
+      ],
+    },
     { key: "leftWidth", type: "length", label: "Left Width", min: 0 },
     { key: "middleWidth", type: "length", label: "Middle Width", min: 0 },
     { key: "rightWidth", type: "length", label: "Right Width", min: 0 },

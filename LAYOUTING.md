@@ -902,6 +902,27 @@ thumbnails the dots are not drawn; the arrows stay as `controls` says, and autop
 as the main one, through the same image sources and `variantKey`, requested at thumbnail size; no
 request of its own is added.
 
+### Three Column sides
+
+A Three Column Layout has a left, a middle and a right slot in one row (`phi-three-column-layout-client.tsx`).
+With `balancedSides` (default on) the two sides are as wide as each other, whatever stands in them, so the
+middle stays centred; without it each side is as wide as its content and the middle takes the rest.
+
+`sideShare` says what each balanced side takes of the row, in percent: `10`, `20`, `25`, `30` or `33`, the
+middle taking the rest (10 leaves it 80, 30 leaves it 40, 33 is three equal columns at 33 : 34 : 33). It is
+offered and read only while `balancedSides` is on. `25` is the default and is stored as absent -- the
+Inspector's "25 %" line writes nothing -- because it is the 1 : 2 : 1 the Layout always had, so a row that
+states nothing reads as before. Any other value is a config error, said in the Builder.
+
+The share is a growth ratio, not a width: a side grows by its share and the middle by `100 - 2 * share`
+(`resolvePhiThreeColumnFlex`). The gaps come out of the row first and the rest is shared in that ratio,
+where three percent widths and two gaps would be wider than the row.
+
+A `leftWidth`, `middleWidth` or `rightWidth` that is set wins: that column keeps its length on every
+screen and the others share what is left in their own ratio. Below 768px of render viewport
+(`styles/layout.css`) balanced sides give way, share or not, to sides as wide as their content -- an empty
+one nothing -- and the middle takes the rest.
+
 ## Styling
 
 - Generic component values use Ant Design tokens or their server-safe resolved equivalents.
