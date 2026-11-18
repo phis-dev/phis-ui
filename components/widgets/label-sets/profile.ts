@@ -237,8 +237,9 @@ const PHI_PASSWORD_CHANGE_REQUIRED_LABEL_SET = definePhiLabelSet({
       "Enter the one you signed in with, then your new one. If you do not know it, use the link in " +
       "the email we sent you.",
     ),
+    // Not opening as `text` does: a message is keyed by how it starts, and the two must stay two.
     email_only_text: definePhiMessageLabel(
-      "An administrator asked you to choose a new password before you continue. " +
+      "Before you continue, an administrator asked you to choose a new password. " +
       "Use the link in the email we sent you to set it, then sign in again.",
     ),
     sign_out: "Sign out",
