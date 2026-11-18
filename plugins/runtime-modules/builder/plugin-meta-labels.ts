@@ -73,6 +73,26 @@ function mapPhiConfigFieldText(
     };
   }
 
+  /* What a field shows while it is empty is read like its label, so it is translated with it. */
+  if (mapped.type === "string" || mapped.type === "url" || mapped.type === "icon") {
+    return mapped.placeholder == null ? mapped : { ...mapped, placeholder: mapOptionalText(mapped.placeholder, mapText) };
+  }
+
+  if (mapped.type === "dimension") {
+    return {
+      ...mapped,
+      ...(mapped.widthPlaceholder == null ? {} : { widthPlaceholder: mapOptionalText(mapped.widthPlaceholder, mapText) }),
+      ...(mapped.heightPlaceholder == null ? {} : { heightPlaceholder: mapOptionalText(mapped.heightPlaceholder, mapText) }),
+    };
+  }
+
+  if (mapped.type === "flags") {
+    return {
+      ...mapped,
+      options: mapped.options.map((option) => ({ ...option, label: mapOptionalText(option.label, mapText) ?? option.label })),
+    };
+  }
+
   if (mapped.type === "collection") {
     return {
       ...mapped,

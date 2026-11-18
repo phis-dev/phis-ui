@@ -153,7 +153,7 @@ export const PHI_GALLERY_WIDGET_DEFINITION = {
     {
       key: "recordField",
       type: "record-field",
-      label: "Pictures from record",
+      label: "Record",
       description: "Shows the pictures of a field of the record this page is about, instead of the Folder's.",
       kinds: ["pictures"],
     },

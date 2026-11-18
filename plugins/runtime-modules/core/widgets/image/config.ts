@@ -151,7 +151,7 @@ export const PHI_IMAGE_WIDGET_DEFINITION = {
     {
       key: "recordField",
       type: "record-field",
-      label: "Record field",
+      label: "Record",
       description: "Shows a picture of the record this page is about instead of the picture chosen here, which stands in where the page has no record.",
       kinds: ["picture"],
     },

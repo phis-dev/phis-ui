@@ -206,7 +206,7 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
     {
       key: "recordField",
       type: "record-field",
-      label: "Record field",
+      label: "Record",
       description: "Shows a field of the record this page is about instead of the text. The text stands in where the page has no record.",
       kinds: ["markdown", "text"],
     },
