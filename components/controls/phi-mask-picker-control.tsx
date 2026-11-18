@@ -6,11 +6,17 @@ import { Flex, Typography } from "antd";
 import {
   mergePhiMaskConfigDefaults,
   mergePhiMaskConfigPatch,
-  PHI_MASK_PRESET_OPTIONS,
+  PHI_MASK_PRESET_VALUES,
   resolvePhiMaskStyle,
   type PhiMaskConfig,
   type PhiMaskPreset,
 } from "../widgets/config/mask";
+import {
+  formatPhiMaskPickerLabel,
+  PHI_MASK_PICKER_CONTROL_DEFAULT_LABELS,
+  type PhiMaskPickerControlLabels,
+} from "../widgets/label-types/mask-picker";
+import type { PhiIconPickerControlLabels } from "../widgets/label-types/icon-picker";
 import { PhiIcon } from "../shell/phi-icon";
 import { PhiFileDropControl } from "./phi-file-drop-control";
 import { PhiButtonControl } from "./phi-button-control";
@@ -38,6 +44,10 @@ export type PhiMaskPickerControlProps = PhiPickerTransactionCallbacks<PhiMaskCon
   getPopupContainer?: (triggerNode: HTMLElement) => HTMLElement;
   onUploadFile?: (file: File) => void;
   onIconSelect?: (icon: string | null) => void;
+  /** What the picker says; English where nobody passes the translated set. */
+  labels?: PhiMaskPickerControlLabels;
+  /** What the Iconify picker inside it says, handed on as it is. */
+  iconPickerLabels?: PhiIconPickerControlLabels;
 };
 
 function resolveInitialMode(mask: PhiMaskConfig | null | undefined): PhiMaskPickerMode {
@@ -65,7 +75,7 @@ function renderMaskPreview(mask: PhiMaskConfig, label: string, selected = false)
 export function PhiMaskPickerControl({
   value,
   open,
-  buttonAriaLabel = "Select mask",
+  buttonAriaLabel,
   buttonIcon = <PhiIcon name="star" size="inherit" />,
   placement = "bottomRight",
   mediaPickerProps,
@@ -76,11 +86,14 @@ export function PhiMaskPickerControl({
   getPopupContainer,
   onUploadFile,
   onIconSelect,
+  labels = PHI_MASK_PICKER_CONTROL_DEFAULT_LABELS,
+  iconPickerLabels,
   onChange,
   onCommit,
   onDiscard,
   onOpenChange,
 }: PhiMaskPickerControlProps) {
+  const uploadingLabel = formatPhiMaskPickerLabel(labels.uploading, uploadProgress);
   const contentRef = useRef<HTMLDivElement | null>(null);
   const [mode, setMode] = useState<PhiMaskPickerMode>(resolveInitialMode(value));
   const picker = usePhiImmediatePicker<PhiMaskConfig | undefined>({
@@ -120,13 +133,13 @@ export function PhiMaskPickerControl({
     >
       <Flex vertical gap="var(--phi-padding-sm)">
         <Flex align="center" justify="space-between" gap="var(--phi-padding-sm)">
-          <Typography.Text strong>Mask</Typography.Text>
+          <Typography.Text strong>{labels.title}</Typography.Text>
           <PhiButtonControl
             size="small"
             type="text"
             danger
             icon={<PhiIcon name="delete" size="inherit" />}
-            ariaLabel="Clear mask"
+            ariaLabel={labels.clear}
             onClick={() => picker.changeValue(undefined)}
           />
         </Flex>
@@ -134,8 +147,8 @@ export function PhiMaskPickerControl({
           block
           value={mode}
           options={[
-            { value: "preset", label: "Presets" },
-            { value: "asset", label: "Media" },
+            { value: "preset", label: labels.modePresets },
+            { value: "asset", label: labels.modeMedia },
           ]}
           onChange={setMode}
         />
@@ -148,20 +161,20 @@ export function PhiMaskPickerControl({
               gap: "var(--phi-padding-sm)",
             }}
           >
-            {PHI_MASK_PRESET_OPTIONS.map((preset) => {
-              const selected = resolvedMask.source !== "asset" && resolvedMask.preset === preset.value;
+            {PHI_MASK_PRESET_VALUES.map((preset) => {
+              const selected = resolvedMask.source !== "asset" && resolvedMask.preset === preset;
               return (
                 <PhiButtonControl
-                  key={preset.value}
+                  key={preset}
                   type={selected ? "primary" : "default"}
                   style={{ height: "auto", padding: "var(--phi-padding-xs)" }}
-                  onClick={() => selectPreset(preset.value)}
+                  onClick={() => selectPreset(preset)}
                   label={renderMaskPreview({
                     ...resolvedMask,
                     enabled: true,
                     source: "preset",
-                    preset: preset.value,
-                  }, preset.label, selected)}
+                    preset,
+                  }, labels.presets[preset], selected)}
                 />
               );
             })}
@@ -176,7 +189,7 @@ export function PhiMaskPickerControl({
               popupRootClassName={popupRootClassName}
               trigger={
                 <span style={{ display: "block" }}>
-                  <PhiButtonControl block label="Select mask asset" onClick={() => undefined} />
+                  <PhiButtonControl block label={labels.selectAsset} onClick={() => undefined} />
                 </span>
               }
             />
@@ -191,7 +204,7 @@ export function PhiMaskPickerControl({
                   block
                   icon={<PhiIcon name="upload" size="inherit" />}
                   loading={uploading}
-                  label={uploading ? `Uploading ${uploadProgress}%` : "Upload SVG or PNG mask"}
+                  label={uploading ? uploadingLabel : labels.upload}
                   onClick={() => undefined}
                 />
               </span>
@@ -200,9 +213,10 @@ export function PhiMaskPickerControl({
               value={selectedIcon}
               onChange={onIconSelect}
               disabled={uploading}
-              buttonAriaLabel="Select Iconify mask"
+              buttonAriaLabel={labels.selectIconify}
               buttonIcon={selectedIcon ? <PhiIcon name={selectedIcon} size={16} /> : <PhiIcon name="star" size="inherit" />}
-              buttonLabel={uploading ? `Uploading ${uploadProgress}%` : "Select Iconify icon"}
+              buttonLabel={uploading ? uploadingLabel : labels.iconifyButton}
+              labels={iconPickerLabels}
               buttonType="default"
               buttonSize="medium"
               buttonBlock
@@ -214,10 +228,10 @@ export function PhiMaskPickerControl({
         ) : null}
 
         {([
-          ["Scale", Math.round((resolvedMask.scale ?? 1) * 100), 25, 200, "%", (next: number) => patchMask({ scale: next / 100 })],
-          ["Offset X", resolvedMask.offsetX ?? 0, -100, 100, "%", (next: number) => patchMask({ offsetX: next })],
-          ["Offset Y", resolvedMask.offsetY ?? 0, -100, 100, "%", (next: number) => patchMask({ offsetY: next })],
-          ["Rotation", resolvedMask.rotationDeg ?? 0, -180, 180, "deg", (next: number) => patchMask({ rotationDeg: next })],
+          [labels.scale, Math.round((resolvedMask.scale ?? 1) * 100), 25, 200, "%", (next: number) => patchMask({ scale: next / 100 })],
+          [labels.offsetX, resolvedMask.offsetX ?? 0, -100, 100, "%", (next: number) => patchMask({ offsetX: next })],
+          [labels.offsetY, resolvedMask.offsetY ?? 0, -100, 100, "%", (next: number) => patchMask({ offsetY: next })],
+          [labels.rotation, resolvedMask.rotationDeg ?? 0, -180, 180, "deg", (next: number) => patchMask({ rotationDeg: next })],
         ] as const).map(([label, sliderValue, min, max, suffix, change]) => (
           <Flex key={label} vertical gap={4}>
             <Flex align="center" justify="space-between">
@@ -255,7 +269,7 @@ export function PhiMaskPickerControl({
           type="text"
           size="small"
           icon={buttonIcon}
-          ariaLabel={buttonAriaLabel}
+          ariaLabel={buttonAriaLabel ?? labels.button}
           style={{ width: 24, minWidth: 24, height: 24, padding: 0 }}
           onClick={() => {
             if (picker.open) picker.closePicker("commit");

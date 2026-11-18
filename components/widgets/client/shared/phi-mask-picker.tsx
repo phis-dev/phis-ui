@@ -10,6 +10,7 @@ import { isPhiMediaUploadCancelled, runPhiMediaUploadSession } from "../../../me
 import { readPhiMediaUploadErrorMessage } from "../../../media/phi-media-upload";
 import { PHI_MEDIA_WIDGET_DEFAULT_LABELS } from "../../../media/media-widget-labels";
 import { PHI_SEARCH_WIDGET_DEFAULT_LABELS } from "../../label-types/search";
+import { formatPhiMaskPickerLabel } from "../../label-types/mask-picker";
 import {
   mergePhiMaskConfigPatch,
   type PhiMaskConfig,
@@ -79,6 +80,8 @@ export function PhiMaskPickerButton({
   const toolLabels = usePhiAuthoringToolsLabels();
   const iconifyRequiredMessage = toolLabels.mask.iconifyRequired;
   const uploadRefusals = toolLabels.mask.uploadRefusals;
+  const uploadedTemplate = toolLabels.mask.uploaded;
+  const iconSelectedTemplate = toolLabels.mask.iconSelected;
   const [open, setOpen] = useState(false);
   const [mediaOpen, setMediaOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -173,7 +176,7 @@ export function PhiMaskPickerButton({
     ).then((result) => {
       if (controller.signal.aborted) return;
       applyUploadedAsset(result.asset);
-      showMessage({ level: "success", content: `Uploaded ${file.name}.` });
+      showMessage({ level: "success", content: formatPhiMaskPickerLabel(uploadedTemplate, file.name) });
     }).catch((error: unknown) => {
       if (controller.signal.aborted || isPhiMediaUploadCancelled(error)) return;
       // One reading of every refusal, rather than whatever string the control plane happened to send.
@@ -182,7 +185,7 @@ export function PhiMaskPickerButton({
         content: readPhiMediaUploadErrorMessage(error, uploadRefusals),
       });
     }).finally(() => endUpload(controller));
-  }, [applyUploadedAsset, beginUpload, endUpload, showMessage, uploadRefusals]);
+  }, [applyUploadedAsset, beginUpload, endUpload, showMessage, uploadRefusals, uploadedTemplate]);
 
   const uploadIconifyMask = useCallback((nextIconValue: string | null) => {
     setSelectedIcon(nextIconValue);
@@ -215,7 +218,7 @@ export function PhiMaskPickerButton({
       .then((result) => {
         if (controller.signal.aborted) return;
         applyUploadedAsset(result.asset);
-        showMessage({ level: "success", content: `Selected ${icon.iconKey}.` });
+        showMessage({ level: "success", content: formatPhiMaskPickerLabel(iconSelectedTemplate, icon.iconKey) });
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted || isPhiMediaUploadCancelled(error)) return;
@@ -225,7 +228,15 @@ export function PhiMaskPickerButton({
         });
       })
       .finally(() => endUpload(controller));
-  }, [applyUploadedAsset, beginUpload, endUpload, iconifyRequiredMessage, showMessage, uploadRefusals]);
+  }, [
+    applyUploadedAsset,
+    beginUpload,
+    endUpload,
+    iconSelectedTemplate,
+    iconifyRequiredMessage,
+    showMessage,
+    uploadRefusals,
+  ]);
 
   return (
     <PhiMaskPickerControl
@@ -236,6 +247,8 @@ export function PhiMaskPickerButton({
       buttonIcon={buttonIcon}
       mediaPickerProps={mediaPickerProps}
       selectedIcon={selectedIcon}
+      labels={toolLabels.mask.control}
+      iconPickerLabels={toolLabels.iconPicker}
       uploading={uploading}
       uploadProgress={uploadProgress}
       popupRootClassName={popup.rootClassName}

@@ -6,19 +6,22 @@ import { createPhiConfigReader } from "./strict-config-reader";
 
 export type PhiMaskSource = "preset" | "asset";
 
-/** The preset shapes and their names, in the order a picker lists them. */
-const PHI_MASK_PRESET_ENTRIES = [
-  ["circle", "Circle"],
-  ["ellipse", "Ellipse"],
-  ["triangle", "Triangle"],
-  ["diamond", "Diamond"],
-  ["hexagon", "Hexagon"],
-  ["star", "Star"],
-  ["cloud", "Cloud"],
-  ["blob", "Blob"],
+/**
+ * The preset shapes, in the order a picker lists them. What each is called is the picker's to say, in
+ * the reader's language (`label-types/mask-picker.ts`), so no name stands here.
+ */
+export const PHI_MASK_PRESET_VALUES = [
+  "circle",
+  "ellipse",
+  "triangle",
+  "diamond",
+  "hexagon",
+  "star",
+  "cloud",
+  "blob",
 ] as const;
 
-export type PhiMaskPreset = (typeof PHI_MASK_PRESET_ENTRIES)[number][0];
+export type PhiMaskPreset = (typeof PHI_MASK_PRESET_VALUES)[number];
 
 export type PhiMaskRepeat = "no-repeat" | "repeat";
 
@@ -39,7 +42,7 @@ export type PhiMaskConfig = {
   mode?: PhiMaskMode;
 };
 
-const PHI_MASK_PRESETS = new Set<PhiMaskPreset>(PHI_MASK_PRESET_ENTRIES.map(([preset]) => preset));
+const PHI_MASK_PRESETS = new Set<PhiMaskPreset>(PHI_MASK_PRESET_VALUES);
 
 const PHI_MASK_DEFAULT_CONFIG: PhiMaskConfig = {
   enabled: false,
@@ -54,8 +57,6 @@ const PHI_MASK_DEFAULT_CONFIG: PhiMaskConfig = {
   mode: "alpha",
 };
 
-export const PHI_MASK_PRESET_OPTIONS: ReadonlyArray<{ value: PhiMaskPreset; label: string }> =
-  PHI_MASK_PRESET_ENTRIES.map(([value, label]) => ({ value, label }));
 
 const PHI_MASK_PRESET_SVG_PATHS: Record<PhiMaskPreset, string> = {
   circle: '<circle cx="50" cy="50" r="48" fill="white"/>',

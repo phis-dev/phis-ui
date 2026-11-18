@@ -6,6 +6,10 @@ import {
   PHI_ICON_PICKER_CONTROL_DEFAULT_LABELS,
   type PhiIconPickerControlLabels,
 } from "./icon-picker";
+import {
+  PHI_MASK_PICKER_CONTROL_DEFAULT_LABELS,
+  type PhiMaskPickerControlLabels,
+} from "./mask-picker";
 
 /**
  * What the Builder's authoring tools say -- the buttons in a Widget's scaffold, not the Widget.
@@ -49,6 +53,12 @@ export type PhiAuthoringToolsLabels = {
   mask: {
     select: string;
     iconifyRequired: string;
+    /** A mask file that arrived; `%1` is its name. */
+    uploaded: string;
+    /** An Iconify icon taken as the mask; `%1` is its key. */
+    iconSelected: string;
+    /** What the picker itself says. */
+    control: PhiMaskPickerControlLabels;
     /** The upload's own refusals, which are Core's `widget:upload` texts and not the picker's. */
     uploadRefusals: PhiMediaUploadLabels;
   };
@@ -159,6 +169,9 @@ export const PHI_AUTHORING_TOOLS_DEFAULT_LABELS: PhiAuthoringToolsLabels = {
   mask: {
     select: "Select mask",
     iconifyRequired: "Select an Iconify icon for mask uploads.",
+    uploaded: "Uploaded %1.",
+    iconSelected: "Selected %1.",
+    control: PHI_MASK_PICKER_CONTROL_DEFAULT_LABELS,
     uploadRefusals: PHI_MEDIA_UPLOAD_DEFAULT_LABELS,
   },
   descriptions: {
