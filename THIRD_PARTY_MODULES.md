@@ -42,6 +42,14 @@ of your own:
    have to gain, or what a new Core Widget would have to look like -- its configuration, what it reads
    from a provider, and which existing Widgets it sits beside. The operator decides; until then the gap
    stays open rather than being closed in your package.
+4. **Arrangement and spacing are the Foundation's as well.** A preset composes the Layouts the Foundation
+   has -- Flex, vertical Flex, Grid, Split Card and the rest ([Layouts](#layouts)) -- and sets their
+   documented configuration: `gap`, `padding`, `anchor`, `ratio`, columns. It invents no spacing, no
+   wrapper structure and no placement rule of its own, and a package's own content model or tree
+   builder is no place to grow one either: a new option there that the Foundation does not have is a
+   new Layout in disguise. Where the Layouts' configuration does not reach what a Page needs, ask the
+   operator before building anything; the answer is either a configuration that already exists or a
+   finding for `@phis/ui`.
 
 `@phis/shop`'s catalogue is what breaking this looks like: its product list is a Widget of its own that
 draws cards the Core Card Widget already draws as a Collection (`body: "plan"`), with its own price line
