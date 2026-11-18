@@ -25,6 +25,8 @@ export const PHI_AUTH_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
           { key: "providerKey", title: "Provider", type: "string", required: true },
           { key: "clientId", title: "Client ID", type: "string" },
           { key: "tenant", title: "Tenant", type: "string" },
+          { key: "teamId", title: "Team ID", type: "string" },
+          { key: "keyId", title: "Key ID", type: "string" },
           { key: "enabled", title: "Installation enabled", type: "boolean", mutable: true },
           { key: "loginEnabled", title: "Offer on login", type: "boolean", mutable: true },
           { key: "sortOrder", title: "Order", type: "number" },

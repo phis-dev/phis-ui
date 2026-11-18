@@ -1,6 +1,6 @@
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "./ids";
 import { PHI_BASE_ROLE_OPTIONS } from "../../../constants/phi-base-role-metadata";
-import type { PhiFormDescriptor } from "../../../types";
+import type { PhiFormDescriptor, PhiFormFieldDescriptor } from "../../../types";
 import { createPhiFormId, type PhiFormId } from "../../../types/form-id";
 import { PHI_SHARED_PACKAGE_NAME } from "../../../types/signals";
 import { flattenPhiFormLabels } from "../../../components/forms/form-labels";
@@ -146,6 +146,24 @@ const PROVIDER_OPTIONS = [
   { value: "microsoft", label: label("providerMicrosoft", "Microsoft") },
 ] as const;
 
+/*
+ * Which settings a provider has, as the Form shows them: a field the chosen provider does not read is
+ * not drawn. The provider is the create Form's own select and a hidden field of the edit Form, filled
+ * from the row. The server refuses a setting a provider has no use for either way
+ * (`buildAuthInstallationConfig`); this only keeps the Form from offering it.
+ */
+function forProviders(...providerKeys: readonly string[]): NonNullable<PhiFormFieldDescriptor["visibleWhen"]> {
+  return {
+    match: "any",
+    conditions: providerKeys.map((value) => ({
+      source: "form" as const,
+      valuePath: "providerKey",
+      operator: "equals" as const,
+      value,
+    })),
+  };
+}
+
 const INSTALLATION_SHARED_FIELDS = [
   {
     key: "clientId",
@@ -161,7 +179,10 @@ const INSTALLATION_SHARED_FIELDS = [
     key: "clientSecret",
     fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.password,
     label: label("installationClientSecret", "Client secret"),
-    description: label("installationClientSecretHint", "Leave empty to keep the currently stored secret."),
+    description: label(
+      "installationClientSecretHint",
+      "Leave empty to keep the currently stored secret. For Apple, the contents of the .p8 key file.",
+    ),
     autoComplete: "new-password",
   },
   {
@@ -171,6 +192,27 @@ const INSTALLATION_SHARED_FIELDS = [
     description: label("installationTenantHint", "Microsoft only: common, organizations, consumers, or a tenant UUID."),
     placeholder: label("installationTenantPlaceholder", "common"),
     autoComplete: "off",
+    visibleWhen: forProviders("microsoft"),
+  },
+  /*
+   * Apple issues a signing key instead of a client secret; the client secret is signed from the key,
+   * the developer team and the key's id for every token request.
+   */
+  {
+    key: "teamId",
+    fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text,
+    label: label("installationTeamId", "Team ID"),
+    description: label("installationTeamIdHint", "The ten characters shown at the top right of the Apple Developer account."),
+    autoComplete: "off",
+    visibleWhen: forProviders("apple"),
+  },
+  {
+    key: "keyId",
+    fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text,
+    label: label("installationKeyId", "Key ID"),
+    description: label("installationKeyIdHint", "The ten characters of the Sign in with Apple key under Keys."),
+    autoComplete: "off",
+    visibleWhen: forProviders("apple"),
   },
   /*
    * The provider's own settings, in one field each.
@@ -202,6 +244,7 @@ const INSTALLATION_SHARED_FIELDS = [
       "Space separated, and empty admits everyone the provider admits. GitHub organizations for GitHub, hosted domains for Google.",
     ),
     autoComplete: "off",
+    visibleWhen: forProviders("google", "github"),
   },
   {
     key: "prompt",
@@ -209,6 +252,7 @@ const INSTALLATION_SHARED_FIELDS = [
     label: label("installationPrompt", "Prompt"),
     description: label("installationPromptHint", "OpenID providers only: login, consent, or select_account."),
     autoComplete: "off",
+    visibleWhen: forProviders("google", "microsoft"),
   },
   {
     key: "trustedEmailLink",
@@ -276,6 +320,8 @@ const INSTALLATION_EDIT_FORM_DESCRIPTOR: PhiFormDescriptor = {
   labelSetKey: LABEL_SET_KEY,
   fields: [
     { key: "installationKey", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.hidden },
+    // Read by the fields' conditions only; an installation keeps its provider.
+    { key: "providerKey", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.hidden },
     ...INSTALLATION_SHARED_FIELDS,
     {
       key: "loginEnabled",
@@ -348,6 +394,10 @@ async function loadLabels(
     installationTenant: labels.providers.tenant,
     installationTenantHint: labels.installations.tenantHint,
     installationTenantPlaceholder: labels.providers.tenantPlaceholder,
+    installationTeamId: labels.providers.teamId,
+    installationTeamIdHint: labels.providers.teamIdHint,
+    installationKeyId: labels.providers.keyId,
+    installationKeyIdHint: labels.providers.keyIdHint,
     installationScopes: labels.providers.scopes,
     installationScopesHint: labels.providers.scopesHint,
     installationRestrictions: labels.providers.restrictions,

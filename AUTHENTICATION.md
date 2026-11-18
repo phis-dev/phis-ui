@@ -289,8 +289,12 @@ The settings surface separates a configured provider installation from an enable
 provider catalog may create more than one stable installation and renders provider-owned configuration
 metadata such as client id, write-only secret, tenant/organization restrictions, enabled state, login
 presentation state/order, exact callback URI, and validation/test status. Microsoft is presented as
-Microsoft rather than Windows and includes an explicit tenant mode or tenant id. Built-in provider issuer
-and discovery rules are server-derived and are not arbitrary browser input.
+Microsoft rather than Windows and includes an explicit tenant mode or tenant id. Apple takes its Team ID
+and Key ID, and its secret is the `.p8` signing key. The installation Forms draw only the settings the
+chosen provider reads (`visibleWhen` on the provider, a hidden field in the edit Form): the tenant for
+Microsoft, the restriction for Google and GitHub, the prompt for Google and Microsoft, the two ids for
+Apple. Built-in provider issuer and discovery rules are server-derived and are not arbitrary browser
+input.
 
 Site policy separately controls whether a factor is allowed, required, or accepted for step-up/recovery;
 when enforcement begins; and which membership/role scope it covers. A requirement cannot be published
