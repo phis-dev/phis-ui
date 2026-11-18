@@ -1218,6 +1218,13 @@ export const STATUS_CARD_BUILDER_PLUGIN = {
 } satisfies PhiCmsBuilderWidgetPlugin<StatusCardConfig>;
 ```
 
+`renderEditor` is for a Widget that can show something meaningful on the canvas: its own words, sample
+values, the shape of its settings. A Widget that cannot -- its rows are the signed-in viewer's own, say --
+leaves `renderEditor` out and declares `preview: "visualPlaceholder"`: the Builder draws the house
+placeholder (the Widget's name, type and description) on the canvas and in the Preview. It never draws a
+skeleton of its own as a stand-in (`components/widgets/README.md`, "Drawing itself, or the house
+placeholder").
+
 Register the adapter only in the owner Module's Authoring Client, which section 8 exports:
 
 ```tsx
@@ -2815,6 +2822,9 @@ for the provider and still discloses the page it comes from.
 - Controller fields and the `Controller` Client are either complete as one group or absent as one group.
 - Every controllerless Module contributes at least one meaningful owned artifact and no no-op Controller.
 - Widgets use Phi Controls, providers, signaling, and the shared Canvas scaffold contracts.
+- A Widget draws itself in the Builder only with meaningful content (sample values, the shape of its
+  settings); otherwise it leaves `renderEditor` out and declares `preview: "visualPlaceholder"`, and draws
+  no skeleton of its own.
 - A Widget's popups render in a portal; `getPopupContainer` never names a node inside the block.
 - Server handlers revalidate Form input and enforce authorization independently of Client validation.
 - No Public Widget's server half reads cookies, headers or the viewer, or renders a per-visitor value
