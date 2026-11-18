@@ -87,7 +87,11 @@ const PHI_EFFECTS_WIDGET_LABEL_SET = definePhiLabelSet({
     viewport_x: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.viewport.x,
     viewport_y: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.viewport.y,
     viewport_z: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.viewport.z,
-    viewport_translate: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.viewport.translate,
+    /*
+     * Moving an element, not putting it into another language: "Translate" in this register is the
+     * Messaging button's, so the motion property names its own.
+     */
+    viewport_translate: { text: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.viewport.translate, ctx: "Web UI label, motion" },
     viewport_opacity: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.viewport.opacity,
     viewport_rotate: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.viewport.rotate,
     viewport_scale: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.viewport.scale,

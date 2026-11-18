@@ -34,7 +34,7 @@ export const PHI_BREADCRUMB_WIDGET_DEFINITION = {
     { key: "showArea", type: "boolean", label: "Show Area" },
     { key: "showPath", type: "boolean", label: "Show Path" },
     { key: "pathLabel", type: "string", label: "Path Label" },
-    { key: "separator", type: "string", label: "Separator" },
+    { key: "separator", type: "string", label: "Separator character" },
   ],
   parseConfig: parsePhiCmsBreadcrumbWidgetConfig,
 } satisfies Pick<

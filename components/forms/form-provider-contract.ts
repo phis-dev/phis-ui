@@ -195,7 +195,7 @@ export const PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS = [
     presentation: "control",
     settingsFields: [
       { key: "allowRoot", type: "boolean", label: "Allow Root" },
-      { key: "separator", type: "string", label: "Separator" },
+      { key: "separator", type: "string", label: "Separator character" },
       { key: "rootValue", type: "string", label: "Root Value" },
       {
         key: "normalize",

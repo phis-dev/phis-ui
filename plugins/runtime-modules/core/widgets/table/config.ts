@@ -745,7 +745,7 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
           options: [
             { value: "outlined", label: "Outlined" },
             { value: "filled", label: "Filled" },
-            { value: "solid", label: "Solid" },
+            { value: "solid", label: "Solid color" },
           ],
         },
         {

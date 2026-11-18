@@ -74,7 +74,7 @@ export const PHI_CASCADER_WIDGET_DEFINITION = {
     { key: "placeholder", type: "string", label: "Placeholder" },
     ...buildPhiChoiceControlOptionFields("toolbar"),
     { key: "allowRoot", type: "boolean", label: "Allow Root" },
-    { key: "separator", type: "string", label: "Separator" },
+    { key: "separator", type: "string", label: "Separator character" },
     { key: "rootValue", type: "string", label: "Root Value" },
     {
       key: "normalize",

@@ -8,7 +8,11 @@ const PHI_ACCOUNT_MENU_LABEL_SET = definePhiLabelSet({
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
     account: "Account",
-    login: "Login",
+    /*
+     * The action, not the column head: "Login" in this register is a table's, so the button and the
+     * dialog it opens name their own.
+     */
+    login: { text: "Login", ctx: "Web UI label, action" },
     register: "Register",
     // The Areas, named here because the menu is where a person reads them rather than routes by them.
     areas_title: "Go to",
@@ -24,7 +28,7 @@ const PHI_LOGIN_MODAL_LABEL_SET = definePhiLabelSet({
   key: "widget:login-modal",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
-    title: "Login",
+    title: { text: "Login", ctx: "Web UI label, action" },
     submit_label: "Sign in",
     email_label: "Email",
     password_label: "Password",

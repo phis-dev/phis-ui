@@ -209,7 +209,7 @@ export const PHI_RECORD_WIDGET_DEFINITION = {
           options: [
             { value: "outlined", label: "Outlined" },
             { value: "filled", label: "Filled" },
-            { value: "solid", label: "Solid" },
+            { value: "solid", label: "Solid color" },
           ],
         },
         {

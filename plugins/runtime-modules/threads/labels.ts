@@ -40,7 +40,11 @@ const PHI_THREAD_PAGE_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_THREADS_RUN
     column_state: "State",
     column_activity: "Last activity",
     state_unread: "New",
-    state_open: "Open",
+    /*
+     * A conversation that is open, not the action that opens one: "Open" in this register is the
+     * button's, so the state names its own.
+     */
+    state_open: { text: "Open", ctx: "Web UI label, state" },
     state_archived: "Archived",
     state_locked: "Locked",
     kind_direct: "Direct",
@@ -49,7 +53,7 @@ const PHI_THREAD_PAGE_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_THREADS_RUN
     kind_support: "Support",
     filter_unread_label: "Unread only",
     filter_status_label: "Status",
-    filter_status_open: "Open",
+    filter_status_open: { text: "Open", ctx: "Web UI label, state" },
     filter_status_archived: "Archived",
     archive_label: "Archive",
     reopen_label: "Reopen",
