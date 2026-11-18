@@ -7,7 +7,6 @@ import { PhiSplitCardLayout } from "./clients/phi-split-card-layout-client";
 import { PHI_SPLIT_CARD_LAYOUT_DEFINITION } from "./layout-definitions";
 import { parsePhiCmsSplitCardLayoutConfig } from "../../types/cms-config";
 import { isPhiConfigError } from "../widgets/config/strict-config-reader";
-import { isPhiInspectorConfigFieldVisible } from "../../plugins/runtime-modules/builder/clients/inspector-config-field";
 import { findPhiCmsConfigViolations } from "../../helpers/cms-config-field-validation";
 
 describe("the Split Card ratio", () => {
@@ -80,9 +79,8 @@ describe("the Split Card ratio", () => {
     const swap = PHI_SPLIT_CARD_LAYOUT_DEFINITION.fields.find((field) => field.key === "swapRatio");
     expect(ratio).toMatchObject({ type: "choice", presentation: "segmented", emptyOption: { value: "golden", label: "φ" } });
     if (!ratio || !swap) return;
-    expect(isPhiInspectorConfigFieldVisible(swap, {})).toBe(true);
-    expect(isPhiInspectorConfigFieldVisible(swap, { ratio: "20-80" })).toBe(true);
-    expect(isPhiInspectorConfigFieldVisible(swap, { ratio: "50-50" })).toBe(false);
+    // How the Inspector reads the rule is the Builder's test (inspector-layout-field-visibility.test.ts).
+    expect(swap.visibleWhen).toEqual({ field: "ratio", notEquals: "50-50" });
     expect(findPhiCmsConfigViolations([ratio], { ratio: "50-50" })).toEqual([]);
     expect(findPhiCmsConfigViolations([ratio], { ratio: "30-70" })).not.toEqual([]);
   });

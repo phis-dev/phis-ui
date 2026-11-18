@@ -6,7 +6,6 @@ import { PhiThreeColumnLayout, resolvePhiThreeColumnFlex } from "./phi-three-col
 import { parsePhiCmsThreeColumnLayoutConfig } from "../../../types/cms-config";
 import { isPhiConfigError } from "../../widgets/config/strict-config-reader";
 import { PHI_THREE_COLUMN_LAYOUT_DEFINITION } from "../layout-definitions";
-import { isPhiInspectorConfigFieldVisible } from "../../../plugins/runtime-modules/builder/clients/inspector-config-field";
 import { findPhiCmsConfigViolations } from "../../../helpers/cms-config-field-validation";
 
 function side(grow: number) {
@@ -90,8 +89,8 @@ describe("the Three Column side share", () => {
     const field = PHI_THREE_COLUMN_LAYOUT_DEFINITION.fields.find((entry) => entry.key === "sideShare");
     expect(field).toBeDefined();
     if (!field) return;
-    expect(isPhiInspectorConfigFieldVisible(field, { balancedSides: true })).toBe(true);
-    expect(isPhiInspectorConfigFieldVisible(field, { balancedSides: false })).toBe(false);
+    // How the Inspector reads the rule is the Builder's test (inspector-layout-field-visibility.test.ts).
+    expect(field.visibleWhen).toEqual({ field: "balancedSides", equals: true });
     expect(field).toMatchObject({ type: "choice", valueType: "number", emptyOption: { label: "25 %" } });
     expect(findPhiCmsConfigViolations([field], { sideShare: 33 })).toEqual([]);
     expect(findPhiCmsConfigViolations([field], { sideShare: 15 })).not.toEqual([]);
