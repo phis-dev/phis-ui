@@ -90,7 +90,7 @@ describe("the Three Column side share", () => {
     expect(field).toBeDefined();
     if (!field) return;
     // How the Inspector reads the rule is the Builder's test (inspector-layout-field-visibility.test.ts).
-    expect(field.visibleWhen).toEqual({ field: "balancedSides", equals: true });
+    expect(field).toMatchObject({ visibleWhen: { field: "balancedSides", equals: true } });
     expect(field).toMatchObject({ type: "choice", valueType: "number", emptyOption: { label: "25 %" } });
     expect(findPhiCmsConfigViolations([field], { sideShare: 33 })).toEqual([]);
     expect(findPhiCmsConfigViolations([field], { sideShare: 15 })).not.toEqual([]);

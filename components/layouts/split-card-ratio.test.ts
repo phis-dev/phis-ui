@@ -80,7 +80,7 @@ describe("the Split Card ratio", () => {
     expect(ratio).toMatchObject({ type: "choice", presentation: "segmented", emptyOption: { value: "golden", label: "φ" } });
     if (!ratio || !swap) return;
     // How the Inspector reads the rule is the Builder's test (inspector-layout-field-visibility.test.ts).
-    expect(swap.visibleWhen).toEqual({ field: "ratio", notEquals: "50-50" });
+    expect(swap).toMatchObject({ visibleWhen: { field: "ratio", notEquals: "50-50" } });
     expect(findPhiCmsConfigViolations([ratio], { ratio: "50-50" })).toEqual([]);
     expect(findPhiCmsConfigViolations([ratio], { ratio: "30-70" })).not.toEqual([]);
   });
