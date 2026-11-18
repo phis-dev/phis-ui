@@ -1,3 +1,4 @@
+import { PHI_THEME_COLOR_SEED_DERIVATIONS } from "./phi-theme-seed-derivation";
 import { assertPhiThemeVocabulary } from "./phi-theme-tokens";
 import type { PhiThemeGradientPalette } from "./phi-theme-gradients";
 
@@ -182,8 +183,9 @@ function mergePhiThemePaletteModes(
  *
  * This is the whole authoring model for colour: the block a Site follows is the base, what the Site
  * owns -- a palette it took over from a Module, or the seeds its author changed -- lies on top. A key
- * the upper palette states wins; everything else shows through. Merging before resolving is what keeps
- * a Site's shared seed from being undercut by a mode override the block declares.
+ * the upper palette states wins; everything else shows through. The colour tokens are not resolved from
+ * this merge: there a Site's value must win across levels too (`resolvePhiThemeColorTokens`). It serves
+ * what is matched slot by slot -- custom colours, gradients -- and a palette taken over from a Module.
  */
 export function mergePhiThemePalettes(
   base: PhiThemePalette | null | undefined,
@@ -217,6 +219,13 @@ export function resolvePhiThemePaletteTokens(
  * The token input of a Site in one mode: the palette block it follows, with the Site's own palette on
  * top. Every colour consumer -- root layout, server snapshot, workspace preview -- resolves through this
  * one function so the two can never disagree.
+ *
+ * The block only proposes. Each side is resolved on its own (shared seeds, mode seeds, mode overrides)
+ * and everything the Site states lies over everything the block states, whatever level either put it on:
+ * a Site's shared `colorPrimary` wins over a dark `colorPrimary` the block states for its own dark mode.
+ * And a seed the Site states takes the block's derived colours of that seed with it
+ * (`PHI_THEME_COLOR_SEED_DERIVATIONS`): a hover tone the block tuned to its own primary would not suit
+ * the Site's, so Ant Design derives it from the Site's seed. Derived colours the Site states itself stay.
  */
 export function resolvePhiThemeColorTokens(
   preset: PhiThemePresetPlugin,
@@ -238,5 +247,11 @@ export function resolvePhiThemeColorTokens(
     modeSeedKeys: PHI_THEME_PALETTE_MODE_SEED_KEYS,
     source: "The Site's own Theme",
   });
-  return resolvePhiThemePaletteTokens(mergePhiThemePalettes(preset.palette, sitePalette), mode);
+  const blockTokens = resolvePhiThemePaletteTokens(preset.palette, mode);
+  const siteTokens = resolvePhiThemePaletteTokens(sitePalette, mode);
+  for (const seed of PHI_THEME_COLOR_SEED_DERIVATIONS) {
+    if (!Object.prototype.hasOwnProperty.call(siteTokens, seed.key)) continue;
+    for (const item of seed.derived) delete blockTokens[item.key];
+  }
+  return { ...blockTokens, ...siteTokens };
 }

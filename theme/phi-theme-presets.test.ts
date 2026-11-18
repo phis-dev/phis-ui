@@ -60,6 +60,59 @@ describe("theme palettes", () => {
     expect(merged.modes?.light?.overrides?.colorLink).toBe("#000002");
   });
 
+  /*
+   * The block only proposes: what the Site states wins on every level, and a seed the Site states takes
+   * the block's derived colours of that seed with it, so Ant Design derives them from the Site's seed.
+   */
+  describe("a Site's colours over a block that states derived colours", () => {
+    const block = {
+      ...phis,
+      palette: {
+        seed: { colorPrimary: "#78171a", colorLink: "#78171a" },
+        modes: {
+          light: { overrides: { colorPrimaryHover: "#8d1b1f", colorText: "#666475", colorLinkHover: "#4d0f11" } },
+          dark: { overrides: { colorPrimary: "#d95861", colorPrimaryHover: "#e57a82", colorBgContainer: "#211b30" } },
+        },
+      },
+    };
+
+    it("lets a Site's shared seed win over a mode value of the block", () => {
+      const tokens = resolvePhiThemeColorTokens(block, { seed: { colorPrimary: "#00aa00" } }, "dark");
+      expect(tokens.colorPrimary).toBe("#00aa00");
+    });
+
+    it("lets a Site state a seed for one mode alone", () => {
+      const site = { modes: { dark: { overrides: { colorPrimary: "#00aa00" } } } };
+      expect(resolvePhiThemeColorTokens(block, site, "dark").colorPrimary).toBe("#00aa00");
+      expect(resolvePhiThemeColorTokens(block, site, "light").colorPrimary).toBe("#78171a");
+    });
+
+    it("drops the block's derived colours of a seed the Site states, in that mode", () => {
+      const site = { modes: { dark: { overrides: { colorPrimary: "#00aa00" } } } };
+      const dark = resolvePhiThemeColorTokens(block, site, "dark");
+      expect(dark).not.toHaveProperty("colorPrimaryHover");
+      // The block's other colours stay, and the light mode keeps its own hover.
+      expect(dark.colorBgContainer).toBe("#211b30");
+      expect(resolvePhiThemeColorTokens(block, site, "light").colorPrimaryHover).toBe("#8d1b1f");
+    });
+
+    it("drops them for a mode seed too", () => {
+      const light = resolvePhiThemeColorTokens(block, { modes: { light: { seed: { colorTextBase: "#101010" } } } }, "light");
+      expect(light.colorTextBase).toBe("#101010");
+      expect(light).not.toHaveProperty("colorText");
+      expect(light.colorLinkHover).toBe("#4d0f11");
+    });
+
+    it("keeps a derived colour the Site states itself", () => {
+      const site = { seed: { colorPrimary: "#00aa00" }, modes: { light: { overrides: { colorPrimaryHover: "#00cc00" } } } };
+      expect(resolvePhiThemeColorTokens(block, site, "light").colorPrimaryHover).toBe("#00cc00");
+    });
+
+    it("keeps the block's derived colours while the Site states no seed", () => {
+      expect(resolvePhiThemeColorTokens(block, null, "dark").colorPrimaryHover).toBe("#e57a82");
+    });
+  });
+
   it("derives custom colours per mode from the merged palette", () => {
     const colors = resolvePhiPublishedThemeCustomColors(
       { preset: "phis", palette: { modes: { dark: { customColors: { custom1: "#123456" } } } } },

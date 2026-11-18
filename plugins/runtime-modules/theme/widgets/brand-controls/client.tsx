@@ -27,6 +27,7 @@ import {
   isPhiThemePaletteModeSeedKey,
   mergePhiThemePalettes,
   resolvePhiThemeColorTokens,
+  resolvePhiThemePaletteTokens,
   type PhiThemeMode,
   type PhiThemePalette,
   type PhiThemePaletteMode,
@@ -34,6 +35,10 @@ import {
   type PhiThemeCustomColorKey,
   type PhiThemeCustomColorPalette,
 } from "../../../../../theme/phi-theme-presets";
+import {
+  PHI_THEME_COLOR_DERIVED_TOKEN_KEYS,
+  PHI_THEME_COLOR_SEED_DERIVATIONS,
+} from "../../../../../theme/phi-theme-seed-derivation";
 import {
   buildPhiThemeCustomColorPalette,
   buildPhiThemeCustomColorTokens,
@@ -274,143 +279,26 @@ const PHI_STYLE_CONTROL_HEIGHT_PRESET_OPTIONS: ReadonlyArray<PhiPresetSizeOption
     value: PHI_STYLE_CONTROL_HEIGHT_PRESETS[key],
   }));
 
-const THEME_COLOR_SEED_SECTIONS = [
-  {
-    key: "colorPrimary",
-    label: "Primary",
-    fallback: "#E05A2A",
-    presets: PHI_COLOR_PICKER_PRESETS,
-    derived: [
-      { key: "colorPrimaryBg", label: "Bg" },
-      { key: "colorPrimaryBgHover", label: "Bg Hover" },
-      { key: "colorPrimaryBorder", label: "Border" },
-      { key: "colorPrimaryBorderHover", label: "Border Hover" },
-      { key: "colorPrimaryHover", label: "Hover" },
-      { key: "colorPrimaryActive", label: "Active" },
-      { key: "colorPrimaryText", label: "Text" },
-      { key: "colorPrimaryTextHover", label: "Text Hover" },
-      { key: "colorPrimaryTextActive", label: "Text Active" },
-    ],
-  },
-  {
-    key: "colorInfo",
-    label: "Info",
-    fallback: "#1677ff",
-    presets: PHI_COLOR_PICKER_PRESETS,
-    derived: [
-      { key: "colorInfoBg", label: "Bg" },
-      { key: "colorInfoBgHover", label: "Bg Hover" },
-      { key: "colorInfoBorder", label: "Border" },
-      { key: "colorInfoBorderHover", label: "Border Hover" },
-      { key: "colorInfoHover", label: "Hover" },
-      { key: "colorInfoActive", label: "Active" },
-      { key: "colorInfoText", label: "Text" },
-      { key: "colorInfoTextHover", label: "Text Hover" },
-      { key: "colorInfoTextActive", label: "Text Active" },
-    ],
-  },
-  {
-    key: "colorSuccess",
-    label: "Success",
-    fallback: "#52c41a",
-    presets: PHI_COLOR_PICKER_PRESETS,
-    derived: [
-      { key: "colorSuccessBg", label: "Bg" },
-      { key: "colorSuccessBgHover", label: "Bg Hover" },
-      { key: "colorSuccessBorder", label: "Border" },
-      { key: "colorSuccessBorderHover", label: "Border Hover" },
-      { key: "colorSuccessHover", label: "Hover" },
-      { key: "colorSuccessActive", label: "Active" },
-      { key: "colorSuccessText", label: "Text" },
-      { key: "colorSuccessTextHover", label: "Text Hover" },
-      { key: "colorSuccessTextActive", label: "Text Active" },
-    ],
-  },
-  {
-    key: "colorWarning",
-    label: "Warning",
-    fallback: "#faad14",
-    presets: PHI_COLOR_PICKER_PRESETS,
-    derived: [
-      { key: "colorWarningBg", label: "Bg" },
-      { key: "colorWarningBgHover", label: "Bg Hover" },
-      { key: "colorWarningBorder", label: "Border" },
-      { key: "colorWarningBorderHover", label: "Border Hover" },
-      { key: "colorWarningHover", label: "Hover" },
-      { key: "colorWarningActive", label: "Active" },
-      { key: "colorWarningText", label: "Text" },
-      { key: "colorWarningTextHover", label: "Text Hover" },
-      { key: "colorWarningTextActive", label: "Text Active" },
-    ],
-  },
-  {
-    key: "colorError",
-    label: "Error",
-    fallback: "#ff4d4f",
-    presets: PHI_COLOR_PICKER_PRESETS,
-    derived: [
-      { key: "colorErrorBg", label: "Bg" },
-      { key: "colorErrorBgHover", label: "Bg Hover" },
-      { key: "colorErrorBgFilledHover", label: "Bg Filled Hover" },
-      { key: "colorErrorBgActive", label: "Bg Active" },
-      { key: "colorErrorBorder", label: "Border" },
-      { key: "colorErrorBorderHover", label: "Border Hover" },
-      { key: "colorErrorHover", label: "Hover" },
-      { key: "colorErrorActive", label: "Active" },
-      { key: "colorErrorText", label: "Text" },
-      { key: "colorErrorTextHover", label: "Text Hover" },
-      { key: "colorErrorTextActive", label: "Text Active" },
-    ],
-  },
-  {
-    key: "colorLink",
-    label: "Link",
-    fallback: "#1677ff",
-    presets: PHI_COLOR_PICKER_PRESETS,
-    derived: [
-      { key: "colorLinkHover", label: "Hover" },
-      { key: "colorLinkActive", label: "Active" },
-    ],
-  },
-  {
-    key: "colorTextBase",
-    label: "Text Base",
-    fallback: "#000000",
-    presets: PHI_COLOR_PICKER_NEUTRAL_PRESETS,
-    derived: [
-      { key: "colorText", label: "Text" },
-      { key: "colorTextSecondary", label: "Secondary" },
-      { key: "colorTextTertiary", label: "Tertiary" },
-      { key: "colorTextQuaternary", label: "Quaternary" },
-      { key: "colorTextHeading", label: "Heading" },
-      { key: "colorTextLabel", label: "Label" },
-      { key: "colorTextDescription", label: "Description" },
-      { key: "colorTextDisabled", label: "Disabled" },
-      { key: "colorTextPlaceholder", label: "Placeholder" },
-      { key: "colorTextLightSolid", label: "Light Solid" },
-    ],
-  },
-  {
-    key: "colorBgBase",
-    label: "Background Base",
-    fallback: "#ffffff",
-    presets: PHI_COLOR_PICKER_NEUTRAL_PRESETS,
-    derived: [
-      { key: "colorBgLayout", label: "Layout" },
-      { key: "colorBgContainer", label: "Container" },
-      { key: "colorBgElevated", label: "Elevated" },
-      { key: "colorBgSpotlight", label: "Spotlight" },
-      { key: "colorBgContainerDisabled", label: "Container Disabled" },
-      { key: "colorFill", label: "Fill" },
-      { key: "colorFillSecondary", label: "Fill Secondary" },
-      { key: "colorFillTertiary", label: "Fill Tertiary" },
-      { key: "colorFillQuaternary", label: "Fill Quaternary" },
-      { key: "colorBorder", label: "Border" },
-      { key: "colorBorderSecondary", label: "Border Secondary" },
-      { key: "colorBorderDisabled", label: "Border Disabled" },
-    ],
-  },
-] as const;
+/* What the Brand tab adds to each seed of the derivation table: its label, its fallback and its swatches. */
+const THEME_COLOR_SEED_EDITING = {
+  colorPrimary: { label: "Primary", fallback: "#E05A2A", presets: PHI_COLOR_PICKER_PRESETS },
+  colorInfo: { label: "Info", fallback: "#1677ff", presets: PHI_COLOR_PICKER_PRESETS },
+  colorSuccess: { label: "Success", fallback: "#52c41a", presets: PHI_COLOR_PICKER_PRESETS },
+  colorWarning: { label: "Warning", fallback: "#faad14", presets: PHI_COLOR_PICKER_PRESETS },
+  colorError: { label: "Error", fallback: "#ff4d4f", presets: PHI_COLOR_PICKER_PRESETS },
+  colorLink: { label: "Link", fallback: "#1677ff", presets: PHI_COLOR_PICKER_PRESETS },
+  colorTextBase: { label: "Text Base", fallback: "#000000", presets: PHI_COLOR_PICKER_NEUTRAL_PRESETS },
+  colorBgBase: { label: "Background Base", fallback: "#ffffff", presets: PHI_COLOR_PICKER_NEUTRAL_PRESETS },
+} satisfies Record<(typeof PHI_THEME_COLOR_SEED_DERIVATIONS)[number]["key"], {
+  label: string;
+  fallback: string;
+  presets: unknown;
+}>;
+
+const THEME_COLOR_SEED_SECTIONS = PHI_THEME_COLOR_SEED_DERIVATIONS.map((seed) => ({
+  ...seed,
+  ...THEME_COLOR_SEED_EDITING[seed.key],
+}));
 
 /** The Collapse order of the colour panel, which decides which section an author finds open. */
 const BRAND_THEME_COLOR_SECTION_KEYS: readonly string[] = [
@@ -460,8 +348,10 @@ function mergeThemePaletteMode(
 }
 
 /**
- * A seed the author set. The two base seeds belong to the mode being edited, every other seed to the
- * palette as a whole, because Ant Design derives both modes from the one value. Setting a seed takes
+ * A seed the author set, for the mode being edited: a primary that suits the light ground may be wrong on
+ * the dark one, so each mode holds its own. The two base seeds go where Ant Design reads mode seeds,
+ * every other seed is stated outright for the mode, which Ant Design reads as that mode's seed as well.
+ * Whatever the palette block states lies under it (`resolvePhiThemeColorTokens`). Setting a seed takes
  * the section's derived overrides of that mode with it: they were tuned to the old seed.
  */
 function mergeThemeSeedToken(
@@ -471,24 +361,50 @@ function mergeThemeSeedToken(
   mode: PhiThemeMode,
 ): ThemePayload {
   const derivedTokenKeys = new Set<string>(section.derived.map((item) => item.key));
-  const withoutDerived = mergeThemePaletteMode(theme, mode, (current) => ({
-    ...current,
-    overrides: Object.fromEntries(
+  return mergeThemePaletteMode(theme, mode, (current) => {
+    const overrides = Object.fromEntries(
       Object.entries(current.overrides ?? {}).filter(([key]) => !derivedTokenKeys.has(key)),
-    ),
-  }));
-
-  if (isPhiThemePaletteModeSeedKey(section.key)) {
-    return mergeThemePaletteMode(withoutDerived, mode, (current) => ({
-      ...current,
-      seed: { ...(current.seed ?? {}), [section.key]: value },
-    }));
-  }
-  const palette = withoutDerived.palette ?? {};
-  return withThemePalette(withoutDerived, {
-    ...palette,
-    seed: { ...(palette.seed ?? {}), [section.key]: value },
+    );
+    return isPhiThemePaletteModeSeedKey(section.key)
+      ? { ...current, overrides, seed: { ...(current.seed ?? {}), [section.key]: value } }
+      : { ...current, overrides: { ...overrides, [section.key]: value } };
   });
+}
+
+/** Whether the Site's palette states this seed for the mode, on any level. */
+function isThemeSeedAuthored(palette: PhiThemePalette, key: string, mode: PhiThemeMode): boolean {
+  const own = (record: Record<string, string> | undefined) => Object.prototype.hasOwnProperty.call(record ?? {}, key);
+  return own(palette.seed) || own(palette.modes?.[mode]?.seed) || own(palette.modes?.[mode]?.overrides);
+}
+
+/**
+ * The seed handed back to the Theme in the mode being edited. The value this mode holds goes, and so
+ * does a shared one, which an older draft may still carry and which would otherwise show through; the
+ * other mode keeps that shared value as its own, so resetting one mode leaves the other as it looked.
+ */
+function omitThemeSeedToken(theme: ThemePayload, section: ThemeColorSeedSection, mode: PhiThemeMode): ThemePayload {
+  const without = (record: Record<string, string> | undefined) =>
+    Object.fromEntries(Object.entries(record ?? {}).filter(([key]) => key !== section.key));
+  const shared = theme.palette?.seed?.[section.key];
+  const otherMode: PhiThemeMode = mode === "light" ? "dark" : "light";
+  let next = mergeThemePaletteMode(theme, mode, (current) => ({
+    ...current,
+    seed: without(current.seed),
+    overrides: without(current.overrides),
+  }));
+  if (shared === undefined) {
+    return next;
+  }
+  const otherPalette = next.palette?.modes?.[otherMode] ?? {};
+  const otherStates = Object.prototype.hasOwnProperty.call(otherPalette.seed ?? {}, section.key)
+    || Object.prototype.hasOwnProperty.call(otherPalette.overrides ?? {}, section.key);
+  if (!otherStates) {
+    next = mergeThemePaletteMode(next, otherMode, (current) => isPhiThemePaletteModeSeedKey(section.key)
+      ? { ...current, seed: { ...(current.seed ?? {}), [section.key]: shared } }
+      : { ...current, overrides: { ...(current.overrides ?? {}), [section.key]: shared } });
+  }
+  const palette = next.palette ?? {};
+  return withThemePalette(next, { ...palette, seed: without(palette.seed) });
 }
 
 /** A derived colour stated outright for one mode: a hover tone that suits light is wrong in dark. */
@@ -1466,6 +1382,8 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
     customPalette,
     customColorOptions,
     computedToken,
+    themeColorToken,
+    themeStatedKeys,
     gradients,
     gradientInks,
     ownGradients,
@@ -1487,9 +1405,24 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
      */
     const baseColorToken = resolvePhiThemeColorTokens(
       selectedPreset,
-      mergeThemePaletteMode(state.draft, previewMode, (current) => ({ ...current, overrides: {} })).palette,
+      mergeThemePaletteMode(state.draft, previewMode, (current) => ({
+        ...current,
+        overrides: Object.fromEntries(
+          Object.entries(current.overrides ?? {}).filter(([key]) => !PHI_THEME_COLOR_DERIVED_TOKEN_KEYS.has(key)),
+        ),
+      })).palette,
       previewMode,
     );
+    /*
+     * The Theme alone, for the mode being edited: what a seed falls back to once the author hands it
+     * back, and which colours the palette block states outright rather than leaving them to the
+     * algorithm -- the ones the tab marks as the Theme's until the author sets the seed or the colour.
+     */
+    const themeColorToken = resolvePhiAntdAliasTokens(previewMode, {
+      ...buildPhiEffectiveNonColorThemeTokens(state.draft),
+      ...resolvePhiThemeColorTokens(selectedPreset, null, previewMode),
+    });
+    const themeStatedKeys = new Set(Object.keys(resolvePhiThemePaletteTokens(selectedPreset.palette, previewMode)));
     const customPalette = resolveThemeCustomPalette(state.draft, selectedPreset, previewMode);
     const customColorOptions = PHI_THEME_CUSTOM_COLOR_KEYS.map((key, index) => ({
       key,
@@ -1523,6 +1456,8 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
       customPalette,
       customColorOptions,
       computedToken,
+      themeColorToken,
+      themeStatedKeys,
       gradients,
       gradientInks,
       ownGradients,
@@ -1807,10 +1742,8 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                 ),
               },
               ...THEME_COLOR_SEED_SECTIONS.map((section) => {
-              const seedAuthored =
-                Object.prototype.hasOwnProperty.call(ownPalette.seed ?? {}, section.key) ||
-                Object.prototype.hasOwnProperty.call(ownPalette.modes?.[previewMode]?.seed ?? {}, section.key);
-              const seedDefaultValue = readEffectiveTokenString(computedToken, section.key, section.fallback);
+              const seedAuthored = isThemeSeedAuthored(ownPalette, section.key, previewMode);
+              const seedDefaultValue = readEffectiveTokenString(themeColorToken, section.key, section.fallback);
               const seedValue = seedAuthored
                 ? readEffectiveTokenString(colorToken, section.key, seedDefaultValue)
                 : seedDefaultValue;
@@ -1844,6 +1777,17 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                         }}
                       />
                     </div>
+                    {seedAuthored ? (
+                      <div onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}>
+                        <PhiButtonControl
+                          size="small"
+                          type="link"
+                          style={{ paddingInline: 0, height: clientToken.controlHeightSM }}
+                          onClick={() => publishDraft(omitThemeSeedToken(draftRef.current, section, previewMode))}
+                          label="Reset to Theme"
+                        />
+                      </div>
+                    ) : null}
                   </PhiFlexControl>
                 ),
                 children: (
@@ -1884,6 +1828,12 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                                 onClick={() => publishDraft(omitThemeColorOverride(state.draft, item.key, previewMode))}
                                 label="Reset override"
                               />
+                            ) : !seedAuthored && themeStatedKeys.has(item.key) ? (
+                              /*
+                               * The palette block states this colour outright, so it does not follow the seed
+                               * the algorithm would derive it from; setting the seed above releases it.
+                               */
+                              <PhiTypographyControl type="secondary">Set by the Theme</PhiTypographyControl>
                             ) : null}
                           </PhiFlexControl>
                         </div>
