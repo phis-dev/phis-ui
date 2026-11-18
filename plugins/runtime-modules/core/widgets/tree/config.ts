@@ -1,4 +1,5 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import { readPhiLinkTarget } from "../../../../../types/references";
 import { isPhiRuntimeDataProviderKey } from "../../../../../types/runtime-data-provider";
 import type { PhiCmsConfigField, PhiCmsWidgetPlugin } from "../../../../../types/cms-plugins";
 import type {
@@ -29,7 +30,7 @@ function readActions(value: unknown): PhiTreeActionDefinition[] {
       icon: readString(entry.icon),
       display: entry.display === "icon" || entry.display === "icon-label" ? entry.display : "label",
       mode: entry.mode === "primary" || entry.mode === "danger" ? entry.mode : "normal",
-      href: readString(entry.href),
+      linkTarget: readPhiLinkTarget(entry.linkTarget) ?? undefined,
       hrefPath: readString(entry.hrefPath),
       newTab: readBoolean(entry.newTab),
       confirm: confirmTitle ? {

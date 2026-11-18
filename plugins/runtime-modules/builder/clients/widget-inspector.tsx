@@ -56,7 +56,8 @@ import {
 import { PhiTypographyControl } from "../../../../components/controls/phi-typography-control";
 import { PhiCmsFlags } from "../../../../constants/phi-cms";
 import { hasPhiFlag } from "../../../../helpers/flags";
-import type { PhiInspectorWidgetLabels } from "../../../../components/widgets/label-types/inspector";
+import { PHI_INSPECTOR_WIDGET_DEFAULT_LABELS, type PhiInspectorWidgetLabels } from "../../../../components/widgets/label-types/inspector";
+import { isPhiInspectorTranslateSwitchShown, resolvePhiInspectorTranslateSwitchIndex } from "./inspector-translate-switch";
 
 const PHI_GAP_SM = "var(--phi-padding-sm)";
 
@@ -170,9 +171,7 @@ export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
     }
     if (ownSlot.state === "hidden") ownSlot.show();
   }, [ownSlot, section, surfaceSectionHidden]);
-  /* A heading over the very first field names the Widget's own group rather than starting another. */
-  const headedFieldIndex = settingsFields.findIndex((field, index) => index > 0 && field.heading != null);
-  const firstHeadedFieldIndex = headedFieldIndex === -1 ? settingsFields.length : headedFieldIndex;
+  const translateSwitchIndex = resolvePhiInspectorTranslateSwitchIndex(settingsFields);
   const renderSettingsField = (field: (typeof settingsFields)[number]) => {
     const lock = resolvePhiInspectorFieldLock(
       field,
@@ -244,22 +243,18 @@ export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
                   </PhiTypographyControl>
                 ) : (
                   <div style={{ display: "grid", gap: PHI_GAP_SM, width: "100%" }}>
-                    {/*
-                      * "Translate text" closes the Widget's own fields, before the next headed group:
-                      * it is about the words above it, and a group under a heading -- the Badge -- is
-                      * a part of its own.
-                      */}
-                    {settingsFields.slice(0, firstHeadedFieldIndex).map(renderSettingsField)}
-                    {selectedStructureWidgetMeta.translatesOwnText
+                    {/* Where the translate switch stands: `resolvePhiInspectorTranslateSwitchIndex`. */}
+                    {settingsFields.slice(0, translateSwitchIndex).map(renderSettingsField)}
+                    {isPhiInspectorTranslateSwitchShown(selectedStructureWidgetMeta, currentDraft?.config as Record<string, unknown> | null | undefined)
                       ? renderPhiInspectorSwitchRow({
                         key: "translate-text",
-                        label: "Translate text",
+                        label: (fieldLabels ?? PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.fields).translateText,
                         checked: !hasPhiFlag(currentDraft?.flags ?? 0, PhiCmsFlags.NoTranslate),
                         disabled: isPreviewMode,
                         ...(onTranslateChange ? { onChange: onTranslateChange } : {}),
                       })
                       : null}
-                    {settingsFields.slice(firstHeadedFieldIndex).map(renderSettingsField)}
+                    {settingsFields.slice(translateSwitchIndex).map(renderSettingsField)}
                   </div>
                 ),
               },

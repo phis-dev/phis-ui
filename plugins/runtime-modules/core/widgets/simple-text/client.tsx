@@ -31,20 +31,23 @@ export type PhiSimpleTextWidgetClientLabels = {
   text: string;
 };
 
+/** Where a linked text leads, resolved on the server: a Page reference means nothing in a browser. */
+export type PhiSimpleTextWidgetLink = {
+  href: string;
+  newTab: boolean;
+  external: boolean;
+};
+
 export type PhiSimpleTextWidgetClientConfig = {
   renderMode?: PhiRenderableBlockRenderMode;
-  href?: string;
   icon?: string;
   color?: string;
   fontFamily?: PhiWidgetFontFamilyKey;
   fontSize?: PhiWidgetFontSizeKey;
-  external?: boolean;
-  newTab?: boolean;
   tone?: PhiTextTone;
   marks?: PhiSimpleTextMark[];
   textTransform?: PhiTextTransform;
   letterSpacing?: PhiLetterSpacingStep;
-  disabled?: boolean;
 };
 
 export type PhiSimpleTextWidgetClientProps = PhiClientBlockBaseProps<
@@ -52,12 +55,15 @@ export type PhiSimpleTextWidgetClientProps = PhiClientBlockBaseProps<
   PhiSimpleTextWidgetClientConfig
 > & {
   blockId: PhiCmsInstanceId;
+  /** Absent, or `null` for a target that resolved to nothing: the text draws as text. */
+  link?: PhiSimpleTextWidgetLink | null;
 };
 
 export function PhiSimpleTextWidgetClient({
   blockId,
   labels,
   config,
+  link = null,
 }: PhiSimpleTextWidgetClientProps) {
   const { fonts, token } = usePhiConfig();
   const [textOverride, setTextOverride] = useState<string | null>(null);
@@ -84,7 +90,6 @@ export function PhiSimpleTextWidgetClient({
     delete?: boolean;
     code?: boolean;
   }>({});
-  const hasHref = typeof config?.href === "string" && config.href.trim().length > 0;
   const isLiveMode = config?.renderMode == null || config.renderMode === "live";
   const textValue = textOverride ?? labels.text;
   const iconValue = iconOverride.active ? iconOverride.value : config?.icon;
@@ -96,7 +101,6 @@ export function PhiSimpleTextWidgetClient({
     italic: styleOverride.italic ?? hasPhiSimpleTextMark(config, "italic"),
     underline: styleOverride.underline ?? hasPhiSimpleTextMark(config, "underline"),
     delete: styleOverride.delete ?? hasPhiSimpleTextMark(config, "strike"),
-    disabled: config?.disabled,
     code: styleOverride.code ?? hasPhiSimpleTextMark(config, "code"),
   };
   const resolvedFontFamily = styleValue.code
@@ -171,7 +175,7 @@ export function PhiSimpleTextWidgetClient({
    * A linked text's colour is the link's (`PhiLink`), which answers the pointer; the words inside inherit
    * it. Stated on them as well, the colour stood over the link's and the hover never showed.
    */
-  const contentColor = hasHref ? undefined : textColor;
+  const contentColor = link ? undefined : textColor;
 
   const contentNode = (
     <PhiFlexControl
@@ -194,7 +198,6 @@ export function PhiSimpleTextWidgetClient({
         italic={styleValue.italic}
         underline={styleValue.underline}
         delete={styleValue.delete}
-        disabled={styleValue.disabled}
         code={styleValue.code}
         style={{
           color: contentColor ?? "inherit",
@@ -210,15 +213,15 @@ export function PhiSimpleTextWidgetClient({
     </PhiFlexControl>
   );
 
-  if (!hasHref) {
+  if (!link) {
     return contentNode;
   }
 
   return (
     <PhiLink
-      href={config.href!}
-      external={config.external}
-      newTab={config.newTab}
+      href={link.href}
+      external={link.external}
+      newTab={link.newTab}
       onClick={
         isLiveMode
           ? undefined

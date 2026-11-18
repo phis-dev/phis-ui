@@ -6,7 +6,8 @@ import { usePhiBaseLayoutOwnSlotController } from "../../../../components/layout
 import type { PhiBackgroundControlProps } from "../../../../components/controls/phi-background-control";
 import { PhiSurfaceControl } from "../../../../components/controls/phi-surface-control";
 import type { PhiInspectorSurfaceLabels } from "./inspector-surface-labels";
-import type { PhiInspectorWidgetLabels } from "../../../../components/widgets/label-types/inspector";
+import { PHI_INSPECTOR_WIDGET_DEFAULT_LABELS, type PhiInspectorWidgetLabels } from "../../../../components/widgets/label-types/inspector";
+import { isPhiInspectorTranslateSwitchShown } from "./inspector-translate-switch";
 import { PhiViewportVisibilityControl } from "../../../../components/controls/phi-viewport-visibility-control";
 import { PhiPlacementMatrixControl } from "../../../../components/controls/phi-placement-matrix-control";
 import type { PhiBackgroundWidgetLabels } from "../../../../components/widgets/label-types/background";
@@ -305,10 +306,10 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                             }),
                           )}
                           {/* The same switch a Widget that translates its own text offers, under the same words. */}
-                          {selectedStructurePlugin?.translatesOwnText
+                          {isPhiInspectorTranslateSwitchShown(selectedStructurePlugin, currentDraftRecord)
                             ? renderPhiInspectorSwitchRow({
                               key: "translate-text",
-                              label: "Translate text",
+                              label: (fieldLabels ?? PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.fields).translateText,
                               checked: !hasPhiFlag(currentDraft?.node.flags ?? 0, PhiCmsFlags.NoTranslate),
                               disabled: isPreviewMode,
                               ...(onTranslateChange ? { onChange: onTranslateChange } : {}),

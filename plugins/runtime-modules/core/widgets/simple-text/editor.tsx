@@ -18,6 +18,7 @@ import { usePhiWidgetScaffoldPopup } from "../../../../../components/widgets/cli
 import { usePhiAuthoringToolsLabels } from "../../../../../components/widgets/client/shared/phi-authoring-tools-labels";
 import { PHI_SIMPLE_TEXT_MARKS, type PhiSimpleTextMark } from "../../../../../types/core-widget-placements";
 import {
+  applyPhiSimpleTextColor,
   resolvePhiSimpleTextWidgetText,
   type PhiSimpleTextWidgetRenderableConfig,
 } from "./config";
@@ -291,7 +292,8 @@ export function PhiSimpleTextWidgetEditorPluginTools({
   return (
     <>
       <PhiWidgetIconToolButton value={config.icon ?? null} ariaLabel={labels.text.icon} onChange={(icon) => onChange({ icon: icon ?? undefined })} />
-      <PhiSimpleTextWidgetColorButton config={config} onChange={(color) => onChange({ color: color ?? undefined })} />
+      {/* A colour of the author's own replaces the tone: the two exclude each other (`config.ts`). */}
+      <PhiSimpleTextWidgetColorButton config={config} onChange={(color) => onChange(applyPhiSimpleTextColor(color))} />
       <PhiSimpleTextWidgetTypographyButton config={config} onChange={onChange} />
       <PhiSimpleTextWidgetStyleButton config={config} onChange={onChange} />
     </>

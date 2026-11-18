@@ -20,6 +20,7 @@ import {
   type PhiTableSummaryValueSource,
 } from "../../../../../types/table-widget";
 import { PHI_SIGNAL_VALUE_SCHEMAS, readPhiSignalRouteSet } from "../../../../../types/signals";
+import { readPhiLinkTarget } from "../../../../../types/references";
 import type { PhiFeedbackLevel } from "../../../../../types/control";
 import type {
   PhiCmsConfigField,
@@ -139,8 +140,15 @@ const PHI_TABLE_ACTION_CONFIG_FIELDS: PhiCmsConfigField[] = [
     { value: "primary", label: "Primary" },
     { value: "danger", label: "Danger" },
   ] },
-  { key: "href", type: "url", label: "Href", visibleWhen: { field: "execution", equals: "link" } },
-  { key: "hrefPath", type: "string", label: "Row Href Path", visibleWhen: { field: "execution", equals: "link" } },
+  { key: "linkTarget", type: "link-target", label: "Link target", visibleWhen: { field: "execution", equals: "link" } },
+  {
+    key: "hrefPath",
+    type: "string",
+    label: "Row Href Path",
+    description: "Leads to the address a row holds at this path, instead of the target above.",
+    visibleWhen: { field: "execution", equals: "link" },
+  },
+  /* For a row's own address only: an address chosen as the target says whether it opens a new tab itself. */
   { key: "newTab", type: "boolean", label: "Open In New Tab", visibleWhen: { field: "execution", equals: "link" } },
   ...buildPhiTableConditionExpressionConfigFields("visibleWhen", "Visible Conditions", "all", "Always visible"),
   ...buildPhiTableConditionExpressionConfigFields("disabledWhen", "Disabled Conditions", "any", "No disabled conditions"),
@@ -415,7 +423,7 @@ function readAction(reader: PhiConfigReader): PhiTableActionDefinition {
     icon: reader.string("icon"),
     display: reader.oneOf("display", ["icon", "label", "icon-label"] as const),
     mode: reader.oneOf("mode", ["normal", "primary", "danger"] as const) ?? "normal",
-    href: reader.string("href"),
+    linkTarget: reader.value("linkTarget", "a link target", (value) => readPhiLinkTarget(value) ?? undefined),
     hrefPath: reader.string("hrefPath"),
     newTab: reader.boolean("newTab"),
     visibleWhen: readCondition(reader, "visibleWhen"),

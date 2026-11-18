@@ -103,6 +103,10 @@ export type PhiInspectorFieldLabels = {
   selectCalendar: string;
   selectVideoProvider: string;
   selectRecordField: string;
+  /** The first entry of a record-field select: the Widget shows its own content. */
+  recordFieldNone: string;
+  /** The switch that leaves a Widget's own words as written (`NoTranslate`). */
+  translateText: string;
   linkTarget: PhiInspectorLinkTargetLabels;
 };
 
@@ -181,6 +185,8 @@ export const PHI_INSPECTOR_WIDGET_DEFAULT_LABELS: PhiInspectorWidgetLabels = {
     selectCalendar: "Select a calendar",
     selectVideoProvider: "Select a video provider",
     selectRecordField: "Select a field of the page's record",
+    recordFieldNone: "None",
+    translateText: "Translate text",
     linkTarget: {
       none: "None",
       page: "Page",

@@ -12,6 +12,7 @@ import type {
   PhiSignalRouteSet,
 } from "./signals";
 import type { PhiRuntimeConditionExpression } from "./runtime-condition";
+import type { PhiLinkTarget } from "./references";
 import { isPhiRecord } from "../helpers/is-record";
 import { isPhiTableQueryValue, readRowIdentities } from "./table-signal-values";
 
@@ -254,9 +255,20 @@ export type PhiTableActionDefinition = {
   icon?: string;
   display?: "icon" | "label" | "icon-label";
   mode?: "normal" | "primary" | "danger";
-  href?: string;
+  /**
+   * Where a `link` action leads, as every Control that leads somewhere keeps it: a Page by identity, an
+   * address elsewhere as a URL with its own new-tab choice (`REFERENCES.md`).
+   */
+  linkTarget?: PhiLinkTarget;
+  /** A row's own address, read from the row at this path, for a link that differs per row. */
   hrefPath?: string;
+  /** Whether a row's own address (`hrefPath`) opens in a new tab; a `linkTarget` says so itself. */
   newTab?: boolean;
+  /**
+   * The address `linkTarget` leads to, resolved by the server for this render and never stored: a Page
+   * reference means nothing in a browser. `null` is a target that resolved to nothing, which draws no link.
+   */
+  link?: { href: string; newTab: boolean; external: boolean } | null;
   visibleWhen?: PhiRuntimeConditionExpression;
   disabledWhen?: PhiRuntimeConditionExpression;
   confirm?: {

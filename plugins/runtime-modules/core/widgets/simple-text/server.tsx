@@ -5,7 +5,7 @@ import type { PhiCmsInstanceId, PhiRenderableBlockBase, PhiServerBlockBaseProps 
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { protectPhiMailHref } from "../../../../../helpers/protected-mail";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
-import type { PhiSimpleTextWidgetClientConfig } from "./client";
+import type { PhiSimpleTextWidgetClientConfig, PhiSimpleTextWidgetLink } from "./client";
 
 export type PhiSimpleTextWidgetLabels = {
   text: string;
@@ -30,6 +30,8 @@ export type PhiSimpleTextWidgetProps = PhiServerBlockBaseProps<
    * written in while the Description and Card Widgets beside it were translating theirs.
    */
   translate?: boolean;
+  /** Where the text leads, resolved by the caller from the target or the record; absent, it leads nowhere. */
+  link?: PhiSimpleTextWidgetLink | null;
 };
 
 export async function PhiSimpleTextWidget({
@@ -38,6 +40,7 @@ export async function PhiSimpleTextWidget({
   config,
   translate,
   textSource,
+  link = null,
   runtime,
 }: PhiSimpleTextWidgetProps) {
   const locale = runtime?.locale.current;
@@ -60,7 +63,8 @@ export async function PhiSimpleTextWidget({
       componentProps={{
         blockId,
         labels: { text },
-        config: protectPhiSimpleTextMailHref(config) satisfies PhiSimpleTextWidgetClientConfig | undefined,
+        config: config satisfies PhiSimpleTextWidgetClientConfig | undefined,
+        link: protectPhiSimpleTextMailLink(link, config),
       }}
     />
   );
@@ -70,7 +74,7 @@ export async function PhiSimpleTextWidget({
  * Live, a `mailto:` target leaves protected (`helpers/protected-mail.ts`). In the Builder the config is
  * the operator's to edit and goes as it is.
  */
-function protectPhiSimpleTextMailHref(config: PhiSimpleTextWidgetConfig | undefined) {
-  if (!config?.href || (config.renderMode != null && config.renderMode !== "live")) return config;
-  return { ...config, href: protectPhiMailHref(config.href) };
+function protectPhiSimpleTextMailLink(link: PhiSimpleTextWidgetLink | null, config: PhiSimpleTextWidgetConfig | undefined) {
+  if (!link || (config?.renderMode != null && config.renderMode !== "live")) return link;
+  return { ...link, href: protectPhiMailHref(link.href) };
 }

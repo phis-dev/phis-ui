@@ -31,7 +31,7 @@ const CANVAS = "edited on the canvas, not in the Inspector";
 const TEXT_SOURCE = "a Preset marks its own words; the Inspector drops the marker when an author edits a text";
 const PLACEMENT_ONLY_KEYS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
   markdown: { markdown: CANVAS },
-  "simple-text": { textSource: TEXT_SOURCE },
+  "simple-text": { text: CANVAS, textSource: TEXT_SOURCE },
   description: { textSource: TEXT_SOURCE },
   button: {
     key: "the Control's signal identity: `defaultConfig` gives one, a Preset names its own for routes",

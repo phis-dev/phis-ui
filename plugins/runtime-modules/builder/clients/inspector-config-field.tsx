@@ -15,6 +15,11 @@ import type {
 import type { PhiCalendarAdapterDescriptor } from "../../../../types/calendar";
 import type { PhiVideoProviderDescriptor } from "../../../../types/video";
 import type { PhiRecordFieldDescriptor } from "../../../../types/record-provider";
+import {
+  PHI_INSPECTOR_RECORD_FIELD_NONE,
+  buildPhiInspectorRecordFieldOptions,
+  readPhiInspectorRecordFieldChoice,
+} from "./inspector-record-field-options";
 import { readPhiLengthValue, type PhiRenderableBlockSize } from "../../../../types";
 import {
   normalizePhiPaddingWidgetConfig,
@@ -35,6 +40,14 @@ import {
   type PhiControlOption,
 } from "../../../../components/controls/phi-control-options";
 import { usePhiControlOptionsProvider } from "../../../../components/controls/phi-options-provider";
+import { PhiCascaderControl } from "../../../../components/controls/phi-cascader-control";
+import {
+  PHI_INSPECTOR_CHOICE_CASCADER_ROOT,
+  PHI_INSPECTOR_CHOICE_CASCADER_SEPARATOR,
+  buildPhiInspectorChoiceCascader,
+  readPhiInspectorChoiceCascaderPath,
+  readPhiInspectorChoiceCascaderValue,
+} from "./inspector-choice-cascader";
 import { PhiTextControl } from "../../../../components/controls/phi-text-control";
 import { PhiNumberControl } from "../../../../components/controls/phi-number-control";
 import { PhiMultiSelectControl } from "../../../../components/controls/phi-multi-select-control";
@@ -608,6 +621,10 @@ function PhiInspectorChoiceFieldControl({
     () => resolveInspectorChoiceOptions(field, widgetReferenceOptions, providerResult.options),
     [field, providerResult.options, widgetReferenceOptions],
   );
+  const cascader = useMemo(
+    () => field.presentation === "cascader" ? buildPhiInspectorChoiceCascader(resolvedOptions) : null,
+    [field.presentation, resolvedOptions],
+  );
 
   if (field.mode === "multiple" || field.valueType === "string[]") {
     const selectedValues = readInspectorChoiceMultiValue(value, defaultValue);
@@ -637,6 +654,45 @@ function PhiInspectorChoiceFieldControl({
     value == null
       ? emptyOptionValue ?? readInspectorChoiceSingleValue(undefined, defaultValue)
       : readInspectorChoiceSingleValue(value, defaultValue);
+
+  /*
+   * The options as a hierarchy by their `parentValue`. Every level can be chosen -- a Folder that holds
+   * others is a Folder too -- and what is stored is the chosen option's own value. The empty option is
+   * the Cascader's clear, not a level.
+   */
+  if (cascader) {
+    const writeChoice = (next: unknown) => onChange?.({
+      [field.key]: next,
+      ...buildPhiInspectorOptionPresetPatch(field.optionPresets, value, next),
+      ...(field.patchOnChange ?? {}),
+    });
+    return renderChoiceRow(
+      <PhiCascaderControl
+        value={readPhiInspectorChoiceCascaderPath(
+          cascader,
+          emptyOptionValue != null && selectedValue === emptyOptionValue ? undefined : selectedValue,
+        )}
+        options={cascader.options}
+        allowRoot={false}
+        allowClear={field.emptyOption != null}
+        select="any"
+        separator={PHI_INSPECTOR_CHOICE_CASCADER_SEPARATOR}
+        rootValue={PHI_INSPECTOR_CHOICE_CASCADER_ROOT}
+        placeholder={field.placeholder ?? field.emptyOption?.label ?? (cascader.options.length === 0 ? labels.noMatchingOptions : undefined)}
+        disabled={disabled || !onChange}
+        style={{ width: "100%" }}
+        onChange={(path) => {
+          if (path === PHI_INSPECTOR_CHOICE_CASCADER_ROOT) {
+            if (field.emptyOption) writeChoice(field.emptyValue);
+            return;
+          }
+          const next = readPhiInspectorChoiceCascaderValue(cascader, path);
+          if (next != null) writeChoice(next);
+        }}
+      />,
+    );
+  }
+
   const options = ensureInspectorChoiceOption(
     field.emptyOption ? [field.emptyOption, ...resolvedOptions] : resolvedOptions,
     field.allowCustom ? selectedValue : null,
@@ -1205,15 +1261,11 @@ function renderPhiInspectorConfigFieldBody({
     return renderPhiInspectorConfigFieldControl(
       field,
       <PhiSelectControl
-        allowClear
-        options={pageRecordFields
-          .filter((recordField) => field.kinds.includes(recordField.kind))
-          .map((recordField) => ({ value: recordField.key, label: recordField.label, description: recordField.description }))}
-        placeholder={fieldLabels.selectRecordField}
-        value={typeof value === "string" ? value : undefined}
+        options={buildPhiInspectorRecordFieldOptions(field.kinds, pageRecordFields, fieldLabels.recordFieldNone)}
+        value={readPhiInspectorRecordFieldChoice(value) ?? PHI_INSPECTOR_RECORD_FIELD_NONE}
         disabled={disabled || !onChange}
         style={{ width: "100%" }}
-        onChange={(recordFieldKey) => onChange?.({ [field.key]: typeof recordFieldKey === "string" ? recordFieldKey : undefined })}
+        onChange={(recordFieldKey) => onChange?.({ [field.key]: readPhiInspectorRecordFieldChoice(recordFieldKey) })}
       />,
     );
   }

@@ -4,10 +4,10 @@ import { readPhiTextSource, type PhiTextSource } from "../../../../../helpers/te
 import { PHI_SIMPLE_TEXT_MARKS, type PhiSimpleTextMark } from "../../../../../types/core-widget-placements";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PHI_RENDERABLE_BLOCK_GEOMETRY_FIELDS } from "../../../../../helpers/renderable-block-plugin-fields";
+import { readPhiLinkTarget, type PhiLinkTarget } from "../../../../../types/references";
 import type { PhiCmsResolvedContent, PhiCmsWidgetPlugin } from "../../../../../types";
 import type { PhiWidgetFontFamilyKey, PhiWidgetFontSizeKey } from "../../../../../types/site-theme";
 import {
-  readBoolean,
   readRenderableBlockConfig,
   readString,
   type PhiCmsWidgetConfigBase,
@@ -43,20 +43,24 @@ function readSimpleTextMarks(value: unknown): PhiSimpleTextMark[] | undefined {
 
 export type PhiCmsSimpleTextWidgetConfig = PhiCmsWidgetConfigBase & {
   text?: string;
-  href?: string;
+  /**
+   * Where the text leads, as every Control that leads somewhere keeps it: a Page by identity, an address
+   * elsewhere as a URL with its own new-tab choice (`REFERENCES.md`). A text box for a path was what this
+   * Widget had before, and the paths typed into it went stale the moment their Page moved.
+   */
+  linkTarget?: PhiLinkTarget;
+  /** A link field of the page record that is where the text leads instead of `linkTarget`. */
+  linkRecordField?: string;
   icon?: string;
   color?: string;
   fontFamily?: PhiWidgetFontFamilyKey;
   fontSize?: PhiWidgetFontSizeKey;
-  external?: boolean;
-  newTab?: boolean;
   tone?: PhiTextTone;
   marks?: PhiSimpleTextMark[];
   /** Capitals for a label (`text-case-vocabulary.ts`); absent, as written. */
   textTransform?: PhiTextTransform;
   /** A spacing step for a label in capitals; absent, normal. */
   letterSpacing?: PhiLetterSpacingStep;
-  disabled?: boolean;
   /** `"preset"` while the words are a Preset's and translated globally (`helpers/text-source.ts`). */
   textSource?: PhiTextSource;
   /** A text, number or date field of the page record to show instead of the Widget's own text. */
@@ -71,18 +75,16 @@ function parsePhiCmsSimpleTextWidgetConfig(
   return {
     ...renderableBlockConfig,
     text: readString(config.text),
-    href: readString(config.href),
+    linkTarget: readPhiLinkTarget(config.linkTarget) ?? undefined,
+    linkRecordField: readString(config.linkRecordField),
     icon: readString(config.icon),
     color: readString(config.color),
     fontFamily: readPhiWidgetFontFamily(config.fontFamily),
     fontSize: readPhiWidgetFontSize(config.fontSize),
-    external: readBoolean(config.external),
-    newTab: readBoolean(config.newTab),
     tone: readPhiTextTone(config.tone),
     marks: readSimpleTextMarks(config.marks),
     textTransform: readPhiTextTransform(config.textTransform),
     letterSpacing: readPhiLetterSpacingStep(config.letterSpacing),
-    disabled: readBoolean(config.disabled),
     textSource: readPhiTextSource(config.textSource),
     recordField: readString(config.recordField),
   };
@@ -110,15 +112,18 @@ export const PHI_SIMPLE_TEXT_WIDGET_DEFINITION = {
   },
   fields: [
     ...PHI_RENDERABLE_BLOCK_GEOMETRY_FIELDS,
-    { key: "text", type: "string", label: "Text", required: true },
+    /*
+     * No `text` field: the words are written on the canvas, as a Card's and a Markdown's are. The Widget
+     * translates them itself (`translatesOwnText`), so nothing reads the field list to find them.
+     */
     {
       key: "recordField",
       type: "record-field",
-      label: "Record field",
+      heading: "Text",
+      label: "Record",
       description: "Shows a field of the record this page is about instead of the text. The text stands in where the page has no record.",
       kinds: PHI_RECORD_TEXT_FIELD_KINDS,
     },
-    { key: "href", type: "url", label: "Href" },
     { key: "icon", type: "icon", label: "Icon", editorPlacement: "toolbar" },
     { key: "color", type: "color", label: "Color", mode: "single", editorPlacement: "toolbar" },
     {
@@ -135,11 +140,31 @@ export const PHI_SIMPLE_TEXT_WIDGET_DEFINITION = {
       editorPlacement: "toolbar",
       options: [...PHI_WIDGET_FONT_SIZE_OPTIONS],
     },
+    /*
+     * A tone and a colour of the author's own exclude each other: the colour is what draws while both
+     * are set, so choosing a tone takes the colour away, and the toolbar's colour takes the tone away
+     * (`editor.tsx`). The field is declared twice, each shown in one of the two states, because that is
+     * what the choice vocabulary can say without a property of its own: while a colour is set the select
+     * reads "Custom" -- its empty line, never stored -- and picking a tone from there clears the colour.
+     */
     {
       key: "tone",
       type: "choice",
       label: "Tone",
+      visibleWhen: { field: "color", equals: null },
+      emptyOption: { value: "default", label: "Default" },
+      emptyValue: undefined,
       options: [...PHI_TEXT_TONE_FIELD_OPTIONS],
+    },
+    {
+      key: "tone",
+      type: "choice",
+      label: "Tone",
+      visibleWhen: { field: "color", notEquals: null },
+      emptyOption: { value: "custom", label: "Custom" },
+      emptyValue: undefined,
+      options: [...PHI_TEXT_TONE_FIELD_OPTIONS],
+      patchOnChange: { color: undefined },
     },
     {
       key: "textTransform",
@@ -153,10 +178,15 @@ export const PHI_SIMPLE_TEXT_WIDGET_DEFINITION = {
       label: "Letter Spacing",
       options: [...PHI_LETTER_SPACING_FIELD_OPTIONS],
     },
-    { key: "external", type: "boolean", label: "External" },
-    { key: "newTab", type: "boolean", label: "Open In New Tab" },
     { key: "marks", type: "string", label: "Marks", editorPlacement: "toolbar" },
-    { key: "disabled", type: "boolean", label: "Disabled" },
+    { key: "linkTarget", type: "link-target", heading: "Link target", label: "Link target" },
+    {
+      key: "linkRecordField",
+      type: "record-field",
+      label: "Link from record",
+      description: "Leads where a field of the record this page is about leads, instead of the target above.",
+      kinds: ["link"],
+    },
   ],
   defaultConfig: {
     /*
@@ -209,3 +239,11 @@ export function resolvePhiSimpleTextWidgetText(
 }
 
 export const PHI_SIMPLE_TEXT_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.SimpleText;
+
+/**
+ * The patch the toolbar's colour writes: a colour of the author's own replaces the tone, because the two
+ * exclude each other and the colour is what would draw. Taking the colour away leaves the default tone.
+ */
+export function applyPhiSimpleTextColor(color: string | null | undefined): Pick<PhiCmsSimpleTextWidgetConfig, "color" | "tone"> {
+  return color ? { color, tone: undefined } : { color: undefined };
+}

@@ -17,6 +17,7 @@ import { PhiTextControl } from "./phi-text-control";
 import { PhiConfirmControl } from "./phi-confirm-control";
 import { PhiExpandIndicator } from "./phi-expand-indicator";
 import { PhiLink } from "../navigation/phi-link";
+import { resolvePhiTableRowActionLink } from "../../helpers/table-action-row-link";
 import { PhiSkeletonControl } from "./phi-skeleton-control";
 
 type TreeRecord = Record<string, unknown>;
@@ -202,8 +203,8 @@ function PhiTreeNodeTitle({
           {actions.map((action) => (
             <PhiTreeActionButton
               key={action.key}
-              action={action.execution === "link" && action.hrefPath
-                ? { ...action, href: String(readPath(node.record, action.hrefPath) ?? "") }
+              action={action.execution === "link"
+                ? resolvePhiTableRowActionLink(action, action.hrefPath ? readPath(node.record, action.hrefPath) : undefined)
                 : action}
               size={controlSize}
               onActivate={() => onAction?.(action, node.identity)}
@@ -240,8 +241,8 @@ export function PhiTreeActionButton({
       {display !== "icon" ? action.label : null}
     </Button>
   );
-  const actionable = action.execution === "link" && action.href
-    ? <PhiLink href={action.href} external={action.newTab} newTab={action.newTab}>{button}</PhiLink>
+  const actionable = action.execution === "link" && action.link
+    ? <PhiLink href={action.link.href} external={action.link.external} newTab={action.link.newTab}>{button}</PhiLink>
     : button;
   return action.confirm && action.execution !== "link" ? (
     <PhiConfirmControl

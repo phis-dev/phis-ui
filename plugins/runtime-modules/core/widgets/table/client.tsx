@@ -29,6 +29,7 @@ import {
 } from "../../../../../components/controls/phi-table-control";
 import { PhiTextControl } from "../../../../../components/controls/phi-text-control";
 import { PhiLink } from "../../../../../components/navigation/phi-link";
+import { resolvePhiTableRowActionLink } from "../../../../../helpers/table-action-row-link";
 import { PhiIcon } from "../../../../../components/shell/phi-icon";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
@@ -836,11 +837,10 @@ export function PhiTableWidgetClient({
           const renderedActions = rowActions.map((action) => {
               if (!matchesAllConditions(row, action.visibleWhen, conditionSources)) return null;
               const disabled = findMatchingCondition(row, action.disabledWhen, conditionSources);
-              const rowHref = action.hrefPath ? readPhiTableControlValue(row, action.hrefPath) : action.href;
               return (
                 <TableAction
                   key={action.key}
-                  action={typeof rowHref === "string" ? { ...action, href: rowHref } : action}
+                  action={resolvePhiTableRowActionLink(action, action.hrefPath ? readPhiTableControlValue(row, action.hrefPath) : undefined)}
                   disabled={Boolean(disabled)}
                   disabledReason={disabled && "reason" in disabled ? disabled.reason : undefined}
                   templateValue={resource ? readRowIdentity(row, resource.rowIdentityPath) : null}
@@ -1301,8 +1301,8 @@ function TableAction({ action, disabled = false, disabledReason, templateValue, 
       />
     </span>
   );
-  if (action.execution === "link" && action.href) {
-    return disabled ? content : <PhiLink href={action.href} external={action.newTab} newTab={action.newTab}>{content}</PhiLink>;
+  if (action.execution === "link" && action.link) {
+    return disabled ? content : <PhiLink href={action.link.href} external={action.link.external} newTab={action.link.newTab}>{content}</PhiLink>;
   }
   return action.confirm && !disabled ? (
     <PhiConfirmControl title={formatTableActionTemplate(action.confirm.title, templateValue)}

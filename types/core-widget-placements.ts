@@ -124,20 +124,20 @@ export type PhiSimpleTextMark = (typeof PHI_SIMPLE_TEXT_MARKS)[number];
 
 export type PhiSimpleTextWidgetPlacement = PhiWidgetPlacementBase & {
   text?: string;
-  href?: string;
+  /** Where the text leads: a Page by identity, or an address elsewhere (`REFERENCES.md`). */
+  linkTarget?: PhiLinkTarget;
+  /** A link field of the page record that is where the text leads instead of `linkTarget`. */
+  linkRecordField?: string;
   icon?: string;
   color?: string;
   fontFamily?: PhiWidgetFontFamilyKey;
   fontSize?: PhiWidgetFontSizeKey;
-  external?: boolean;
-  newTab?: boolean;
   tone?: PhiTextTone;
   marks?: PhiSimpleTextMark[];
   /** Capitals for a label; absent, as written. */
   textTransform?: PhiTextTransform;
   /** A spacing step for a label in capitals; absent, normal. */
   letterSpacing?: PhiLetterSpacingStep;
-  disabled?: boolean;
   /** `"preset"` while the words are a Preset's (`helpers/text-source.ts`). */
   textSource?: PhiTextSource;
   /** A text, number or date field of the page record shown instead of the Widget's own text. */

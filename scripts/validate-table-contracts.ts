@@ -689,7 +689,7 @@ assert.deepEqual(parsedProviderAction.features.actions?.toolbar, [{
   icon: "antd:reload",
   display: "icon",
   mode: "normal",
-  href: undefined,
+  linkTarget: undefined,
   hrefPath: undefined,
   newTab: undefined,
   visibleWhen: undefined,
