@@ -97,10 +97,18 @@ export function PhiImageControl({
   const drawnHeight = height ?? presentation.height;
   const blur = source === "asset" ? blurDataUrl ?? null : null;
   const loaded = loadedUrl === url;
+  /*
+   * A box of two numbers keeps their proportion rather than their height: where its column is narrower
+   * than the width and `maxWidth` takes it in, the height comes down with it. A fixed height would stay
+   * and leave the picture a tall strip, with air above and below what stands beside it.
+   */
+  const proportion = typeof drawnWidth === "number" && typeof drawnHeight === "number" && drawnWidth > 0 && drawnHeight > 0
+    ? `${drawnWidth} / ${drawnHeight}`
+    : undefined;
   const boxStyle: CSSProperties = {
     position: presentation.simulatedCropStyle ? "relative" : undefined,
     width: toCssSize(drawnWidth) ?? "100%",
-    height: toCssSize(drawnHeight),
+    ...(proportion ? { height: "auto", aspectRatio: proportion } : { height: toCssSize(drawnHeight) }),
     maxWidth: "100%",
     lineHeight: 0,
     overflow: presentation.simulatedCropStyle ? "hidden" : undefined,
