@@ -115,7 +115,7 @@ export function renderPhiValueContent(
   const displayValue = definition.valueMap?.[normalizedValue] ?? normalizedValue;
   if (definition.renderer === "email" || definition.renderer === "link") {
     const href = String(value);
-    return <PhiLink href={definition.renderer === "email" ? `mailto:${href}` : href}>{displayValue}</PhiLink>;
+    return <PhiLink href={definition.renderer === "email" ? `mailto:${href}` : href} markExternal>{displayValue}</PhiLink>;
   }
   if (definition.renderer === "tags") {
     const values = Array.isArray(value) ? value : [value];

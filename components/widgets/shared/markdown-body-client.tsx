@@ -197,7 +197,7 @@ function renderInlineNodes(inlines: PhiMarkdownInline[]): ReactNode[] {
         );
       case "link":
         return (
-          <PhiLink key={key} href={inline.href || "#"} external={inline.external} newTab={inline.external}>
+          <PhiLink key={key} href={inline.href || "#"} external={inline.external} newTab={inline.external} markExternal>
             {renderInlineNodes(inline.children)}
           </PhiLink>
         );

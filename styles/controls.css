@@ -1003,3 +1003,23 @@ input.ant-input.ant-input-lg {
     margin-inline-start: var(--phi-markdown-float-gap);
   }
 }
+
+/* --- External link mark --------------------------------------------------------------------------- */
+
+/*
+ * The arrow after a link in running text that leads to another site (theme/phi-link-mark.ts). `PhiLink`
+ * sets the attribute where its caller asks for the mark; the Theme's `--phi-link-external-mark` is the
+ * mark's `display`, `none` where the Theme turned marks off. Drawn in the link's own colour, so it follows
+ * hover and press with the words.
+ */
+a[data-phi-external-mark]::after {
+  content: "";
+  display: var(--phi-link-external-mark, inline-block);
+  width: 0.7em;
+  height: 0.7em;
+  margin-inline-start: 0.2em;
+  vertical-align: baseline;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M6 2h8v8h-2V5.4l-8.3 8.3-1.4-1.4L10.6 4H6z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M6 2h8v8h-2V5.4l-8.3 8.3-1.4-1.4L10.6 4H6z'/%3E%3C/svg%3E") center / contain no-repeat;
+}

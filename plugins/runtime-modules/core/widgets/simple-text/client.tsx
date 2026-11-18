@@ -222,6 +222,7 @@ export function PhiSimpleTextWidgetClient({
       href={link.href}
       external={link.external}
       newTab={link.newTab}
+      markExternal
       onClick={
         isLiveMode
           ? undefined

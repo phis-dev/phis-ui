@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import type { CSSProperties, MouseEventHandler, ReactNode } from "react";
 import Link from "next/link";
 import { isPhiExternalHref } from "../../helpers/external-href";
+import { PHI_LINK_EXTERNAL_MARK_ATTRIBUTE, isPhiMarkableExternalHref } from "../../theme/phi-link-mark";
 import { isPhiProtectedMail } from "../../helpers/protected-mail";
 import { usePhiConfig } from "../root/phi-config-provider";
 import { usePhiRevealedHref } from "./use-phi-protected-mail";
@@ -23,6 +24,12 @@ export type PhiLinkProps = {
    * prefetched.
    */
   prefetch?: boolean;
+  /**
+   * Whether this link, where it leads to another site, wears the external mark (theme/phi-link-mark.ts).
+   * Said by a link in running text -- Markdown, Simple Text, a link cell -- and left out by a link that
+   * is a button, a logo or a picture. The Theme can still turn every mark off.
+   */
+  markExternal?: boolean;
   className?: string;
   style?: CSSProperties;
   onClick?: MouseEventHandler<HTMLAnchorElement>;
@@ -34,6 +41,7 @@ export function PhiLink({
   external,
   newTab,
   prefetch,
+  markExternal,
   className,
   style,
   onClick,
@@ -45,6 +53,9 @@ export function PhiLink({
   const useAnchor = isPhiProtectedMail(href) || (external ?? isPhiExternalHref(href));
   // A protected address (`helpers/protected-mail.ts`) is written into the anchor once mounted.
   const anchorHref = usePhiRevealedHref(href);
+  const markProps = markExternal && useAnchor && isPhiMarkableExternalHref(href)
+    ? { [PHI_LINK_EXTERNAL_MARK_ATTRIBUTE]: "" }
+    : {};
 
   const linkStyle = useMemo<CSSProperties>(
     () => ({
@@ -81,6 +92,7 @@ export function PhiLink({
         className={className}
         style={linkStyle}
         onClick={onClick}
+        {...markProps}
         {...interactionProps}
       >
         {children}

@@ -10,6 +10,7 @@ import type { PhiThemeBlockSelection } from "../theme/phi-theme-composition";
 import type { PhiThemeDerivation } from "../theme/phi-theme-selection";
 import type { PhiControlShapeCorners } from "../theme/phi-control-shape";
 import type { PhiThemeButtons } from "../theme/phi-button-shadow";
+import type { PhiThemeLinks } from "../theme/phi-link-mark";
 import type { PhiThemeTypography } from "../theme/phi-theme-typography";
 
 /*
@@ -63,6 +64,8 @@ export type PhiSiteTheme = {
   } | null;
   /** The shadow under each kind of Button, as a step the root theme turns into CSS per mode. */
   buttons?: PhiThemeButtons | null;
+  /** Whether a link to another site wears its mark (theme/phi-link-mark.ts); absent is on. */
+  links?: PhiThemeLinks | null;
   /** Which font slot the page's headings take; body unless stated (theme/phi-theme-typography.ts). */
   typography?: PhiThemeTypography | null;
   /** Site-level component overrides, merged per component over the shared component defaults. */

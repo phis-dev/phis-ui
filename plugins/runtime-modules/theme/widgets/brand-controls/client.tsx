@@ -60,6 +60,7 @@ import {
   type PhiThemeGradientTextTone,
   type PhiThemeGradientKey,
 } from "../../../../../theme/phi-theme-gradients";
+import { buildPhiThemeLinkTokens, readPhiThemeExternalLinkMark } from "../../../../../theme/phi-link-mark";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { usePhiThemeBlockCatalog } from "../../../../../components/root/phi-theme-block-catalog-provider";
 import {
@@ -462,6 +463,17 @@ function withThemeButtons(theme: ThemePayload, buttons: NonNullable<ThemePayload
   return Object.keys(buttons).length > 0 ? { ...withoutButtons, buttons } : withoutButtons;
 }
 
+/**
+ * Links to other sites with or without their mark. On is the default, so turning it back on removes the
+ * entry rather than storing `true`.
+ */
+function mergeThemeExternalLinkMark(theme: ThemePayload, shown: boolean): ThemePayload {
+  const { externalMark: _previous, ...otherLinks } = theme.links ?? {};
+  const links = shown ? otherLinks : { ...otherLinks, externalMark: false };
+  const withoutLinks = omitThemeFields(theme, "links");
+  return Object.keys(links).length > 0 ? { ...withoutLinks, links } : withoutLinks;
+}
+
 /** Every primary Button filled with a Theme gradient, or handed back to its one colour. */
 function mergeThemePrimaryButtonGradient(theme: ThemePayload, gradient: PhiThemeGradientKey | null): ThemePayload {
   const { primaryGradient: _previous, ...otherButtons } = theme.buttons ?? {};
@@ -696,6 +708,7 @@ function resolveBrandDraftAliasTokens(
       token: aliasTokens,
       primaryButtonGradient: readPhiThemeGradientKey(resolvedTheme.buttons?.primaryGradient),
     }),
+    ...buildPhiThemeLinkTokens(resolvedTheme.links),
   };
 }
 
@@ -2048,6 +2061,23 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                     onChange={(choice) => publishDraft(
                       mergeThemePrimaryButtonGradient(state.draft, choice === "none" ? null : choice),
                     )}
+                  />
+                </PhiFlexControl>
+              ),
+            },
+            {
+              key: "externalLinks",
+              label: <PhiTypographyControl strong>External Links</PhiTypographyControl>,
+              children: (
+                <PhiFlexControl align="center" justify="space-between" gap={clientToken.paddingSM} wrap="wrap">
+                  <PhiTypographyControl type="secondary">
+                    An arrow after a link in text that leads to another site
+                  </PhiTypographyControl>
+                  <PhiSwitchControl
+                    checked={readPhiThemeExternalLinkMark(state.draft.links)}
+                    checkedLabel="On"
+                    uncheckedLabel="Off"
+                    onChange={(checked) => publishDraft(mergeThemeExternalLinkMark(state.draft, checked))}
                   />
                 </PhiFlexControl>
               ),

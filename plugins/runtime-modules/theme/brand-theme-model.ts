@@ -41,6 +41,7 @@ const PHI_THEME_HISTORY_PART_BY_FIELD = {
   shape: "style",
   style: "style",
   buttons: "style",
+  links: "style",
   fonts: "fonts",
   typography: "fonts",
   brand: "brand",
@@ -163,14 +164,17 @@ export function applyThemePreset(theme: ThemePayload, preset: PhiThemePresetPlug
   };
 }
 
-/** Back to the blocks alone: the palette, the proportions, the Button shadows and the component overrides all go. */
+/**
+ * Back to the blocks alone: the palette, the proportions, the Button shadows, the link marks and the
+ * component overrides all go.
+ */
 export function resetThemeToPreset(
   theme: ThemePayload,
   presets: readonly PhiThemePresetPlugin[],
   preset = resolveThemePayloadPreset(theme, presets),
 ): ThemePayload {
   return {
-    ...omitThemeFields(theme, "palette", "style", "buttons", "components"),
+    ...omitThemeFields(theme, "palette", "style", "buttons", "links", "components"),
     preset: preset.key,
     presetVersion: preset.version,
   };

@@ -222,6 +222,13 @@ sparse: readers normalize absent values.
   Buttons keep their one colour. Hover and press lay a filter over the run instead of swapping it for a
   second picture, because Ant Design transitions every Button property and a swapped picture crossfades
   badly. A single Button can still choose a gradient of its own with the `gradient` variant.
+- `links?: { externalMark?: boolean }` -- whether a link in running text that leads to another site wears a
+  small arrow after its words (`theme/phi-link-mark.ts`). Absent is on; only `false` is stored. It rides as
+  the token `linkExternalMark` (`--phi-link-external-mark`, the mark's `display`), drawn by
+  `a[data-phi-external-mark]::after` in `styles/controls.css`. `PhiLink` sets the attribute where its
+  caller passes `markExternal` -- Markdown, Simple Text and a link cell do, a button, a logo or a picture
+  link does not -- and the address goes over the web (`http`, `https`, `//`); mail and phone links are
+  never marked. Brand tab: Style, "External Links".
 - `typography?: { headings?: "body" | "serif" | "display" }` -- the font slot `h1` to `h3` take
   (`theme/phi-theme-typography.ts`). Absent means `body`. A non-body choice sets `--phi-font-heading` on the
   root; a slot without a family falls back to the body font.

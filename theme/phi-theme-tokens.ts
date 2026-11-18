@@ -186,7 +186,8 @@ export const PHI_THEME_TOKEN_KEYS = [
  * The `gradient*` names are the Theme's gradient slots and the primary Buttons' run
  * (theme/phi-theme-gradients.ts): tokens of this package's own, laid over the resolved ones so Ant
  * Design writes them per mode and per Surface tone like every other. The `custom*` names are the
- * palette's custom colours, laid over the same way (theme/phi-theme-palette.ts).
+ * palette's custom colours, laid over the same way (theme/phi-theme-palette.ts). `linkExternalMark` is
+ * the `display` of the mark behind a link that leaves the Site (theme/phi-link-mark.ts).
  */
 export const PHI_THEME_OWN_TOKEN_KEYS = [
   "paddingXXL",
@@ -213,6 +214,7 @@ export const PHI_THEME_OWN_TOKEN_KEYS = [
   "primaryButtonGradientHover",
   "primaryButtonGradientActive",
   "primaryButtonGradientText",
+  "linkExternalMark",
   "custom1",
   "custom2",
   "custom3",

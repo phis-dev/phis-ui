@@ -26,6 +26,7 @@ import {
 import { assertPhiThemeVocabulary } from "../../theme/phi-theme-tokens";
 import { applyPhiButtonShadowComponentTokens } from "../../theme/phi-button-shadow";
 import { buildPhiThemeGradientTokens, readPhiThemeGradientKey } from "../../theme/phi-theme-gradients";
+import { buildPhiThemeLinkTokens } from "../../theme/phi-link-mark";
 import { buildPhiThemeCustomColorTokens } from "../../theme/phi-theme-palette";
 import {
   applyPhiControlShapeComponentTokens,
@@ -169,6 +170,7 @@ export function resolvePhiRootTheme({
       token: effectiveThemeTokens,
       primaryButtonGradient: readPhiThemeGradientKey(siteTheme?.buttons?.primaryGradient),
     }),
+    ...buildPhiThemeLinkTokens(siteTheme?.links),
   };
   return {
     mode,
