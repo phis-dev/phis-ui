@@ -14,10 +14,10 @@ import {
 export default createPhiAuthoringWidgetModule([
   definePhiAuthoringWidgetModuleLoader(
     PHI_ACCOUNT_AVATAR_WIDGET_DEFINITION,
-    () => import("./widgets/account-avatar/authoring").then((module) => module.PHI_ACCOUNT_AVATAR_WIDGET_BUILDER_PLUGIN),
+    () => Promise.resolve(PHI_ACCOUNT_AVATAR_WIDGET_DEFINITION),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_ACCOUNT_AVATAR_PICKER_WIDGET_DEFINITION,
-    () => import("./widgets/account-avatar-picker/authoring").then((module) => module.PHI_ACCOUNT_AVATAR_PICKER_WIDGET_BUILDER_PLUGIN),
+    () => Promise.resolve(PHI_ACCOUNT_AVATAR_PICKER_WIDGET_DEFINITION),
   ),
 ]);

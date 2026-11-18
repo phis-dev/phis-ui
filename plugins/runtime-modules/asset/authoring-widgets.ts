@@ -25,11 +25,11 @@ export default createPhiAuthoringWidgetModule([
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_IMAGE_INSPECTOR_WIDGET_DEFINITION,
-    () => import("./widgets/image-inspector/authoring").then((module) => module.PHI_IMAGE_INSPECTOR_WIDGET_BUILDER_PLUGIN),
+    () => Promise.resolve(PHI_IMAGE_INSPECTOR_WIDGET_DEFINITION),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_ASSET_FOCAL_RECT_WIDGET_DEFINITION,
-    () => import("./widgets/asset-focal-rect/authoring").then((module) => module.PHI_ASSET_FOCAL_RECT_WIDGET_BUILDER_PLUGIN),
+    () => Promise.resolve(PHI_ASSET_FOCAL_RECT_WIDGET_DEFINITION),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_MEDIA_PICKER_WIDGET_DEFINITION,

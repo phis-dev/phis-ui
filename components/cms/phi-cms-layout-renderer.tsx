@@ -21,6 +21,7 @@ import type {
   PhiCmsPreviewWidgetPlugin,
   PhiCmsRenderIssue,
   PhiCmsRuntimeWidgetPlugin,
+  PhiPreviewRenderPolicy,
   PhiRuntimeModuleRenderPolicies,
 } from "../../types/cms-plugins";
 import { PhiFlexVerticalLayout } from "../layouts/phi-flex-vertical-layout";
@@ -143,11 +144,22 @@ function resolvePhiRuntimeWidgetRenderer(
   runtimePlugin: PhiCmsRuntimeWidgetPlugin<unknown> | null,
   previewPlugin: PhiCmsPreviewWidgetPlugin<unknown> | null,
   implementationMode: PhiRuntimeWidgetImplementationMode | null,
+  previewPolicy: PhiPreviewRenderPolicy | null,
 ) {
   if (implementationMode === "runtime") {
     return runtimePlugin?.render ?? null;
   }
   if (implementationMode === "preview") {
+    // Declared, not inferred: only `visualPlaceholder` draws the house placeholder, and a `custom`
+    // policy without `renderPreview` stays a missing renderer. Imported where it is drawn, because this
+    // renderer is on every route and the placeholder only ever stands in a Preview.
+    if (previewPolicy === "visualPlaceholder") {
+      return previewPlugin
+        ? async ({ widget }: { widget: PhiCmsContentWidgetNode }) =>
+            (await import("../../plugins/factories/widget-renderers"))
+              .renderPhiWidgetPreviewPlaceholder(widget, previewPlugin.title)
+        : null;
+    }
     return previewPlugin?.renderPreview ?? null;
   }
   return null;
@@ -633,6 +645,7 @@ function renderContentWidget(
         runtimePlugin,
         previewPlugin,
         implementationMode,
+        policies?.preview ?? null,
       );
       const moduleId = context.runtimeRegistry.ownerModuleIdByWidgetType.get(widget.widgetType) ?? null;
       if (!renderWidget) {

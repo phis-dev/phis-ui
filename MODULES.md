@@ -434,8 +434,17 @@ A rendered artifact runs in one of these modes: `runtime` (normal mounted render
 Every placeable Widget and Layout declares `renderPolicies` (`PhiRuntimeModuleRenderPolicies`):
 
 - `runtime` is `custom`;
-- `preview` is `custom`, `runtimeReadOnly`, `visualSkeleton`, or `visualPlaceholder`;
-- `authoring` is `custom` or `usePreview`.
+- `preview` is `custom` (the plugin's `renderPreview`), `runtimeReadOnly` (its `render`), or -- for a
+  Widget only -- `visualPlaceholder` (the house placeholder, `renderPhiWidgetPreviewPlaceholder`: the
+  Widget's name and type, still; the plugin has no `renderPreview`);
+- `authoring` is `custom` or `usePreview`. Either way the canvas draws the Widget's `renderEditor`, and
+  where the Widget leaves it out, the house placeholder (`PhiWidgetEditorPlaceholder`).
+
+A Widget declares the placeholder when it has nothing meaningful to show where there is no visitor: its
+data is the signed-in viewer's own, or it exists only once a visitor arrives with something. It never draws
+a skeleton of its own in place of that content ([components/widgets/README.md](./components/widgets/README.md#drawing-itself-or-the-house-placeholder)).
+`visualSkeleton` is gone from the vocabulary (18.11.2026): it named a Widget's own skeleton, which is
+either `custom` or the placeholder.
 
 Nothing falls back implicitly. A workspace Widget renders its real workspace only in `runtime`; its
 `preview` and `authoring` policies use a side-effect-free skeleton that mounts no Controller, emits no

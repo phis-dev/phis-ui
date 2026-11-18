@@ -17,9 +17,19 @@ export function definePhiPassiveWidgetRenderers<TConfig>(
   };
 }
 
+/**
+ * The house placeholder in a Preview: the Widget's name and type, still.
+ *
+ * Drawn by the renderer for a Widget whose Preview policy is `visualPlaceholder`; a Widget does not
+ * call it from a `renderPreview` of its own.
+ */
 export function renderPhiWidgetPreviewPlaceholder(
   widget: PhiCmsContentWidgetNode,
-  summary = "This widget is inactive in preview mode.",
+  pluginTitle?: string | null,
 ) {
-  return createElement(PhiWidgetPreviewFallback, { widget, summary });
+  return createElement(PhiWidgetPreviewFallback, {
+    widget,
+    pluginTitle,
+    summary: "This widget is inactive in preview mode.",
+  });
 }

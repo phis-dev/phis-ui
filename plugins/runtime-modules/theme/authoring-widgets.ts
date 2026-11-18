@@ -16,22 +16,22 @@ import {
 export default createPhiAuthoringWidgetModule([
   definePhiAuthoringWidgetModuleLoader(
     PHI_BUILDER_BRAND_STYLE_CONTROLS_WIDGET_DEFINITION,
-    () => import("./widgets/brand-controls/authoring").then((module) => module.PHI_BUILDER_BRAND_STYLE_CONTROLS_WIDGET_BUILDER_PLUGIN),
+    () => Promise.resolve(PHI_BUILDER_BRAND_STYLE_CONTROLS_WIDGET_DEFINITION),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_BUILDER_BRAND_THEME_CONTROLS_WIDGET_DEFINITION,
-    () => import("./widgets/brand-controls/authoring").then((module) => module.PHI_BUILDER_BRAND_THEME_CONTROLS_WIDGET_BUILDER_PLUGIN),
+    () => Promise.resolve(PHI_BUILDER_BRAND_THEME_CONTROLS_WIDGET_DEFINITION),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_DEFINITION,
-    () => import("./widgets/brand-controls/authoring").then((module) => module.PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_BUILDER_PLUGIN),
+    () => Promise.resolve(PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_DEFINITION),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_BUILDER_BRAND_IDENTITY_CONTROLS_WIDGET_DEFINITION,
-    () => import("./widgets/brand-controls/authoring").then((module) => module.PHI_BUILDER_BRAND_IDENTITY_CONTROLS_WIDGET_BUILDER_PLUGIN),
+    () => Promise.resolve(PHI_BUILDER_BRAND_IDENTITY_CONTROLS_WIDGET_DEFINITION),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_BUILDER_BRAND_THEME_PREVIEW_WIDGET_DEFINITION,
-    () => import("./widgets/brand-controls/authoring").then((module) => module.PHI_BUILDER_BRAND_THEME_PREVIEW_WIDGET_BUILDER_PLUGIN),
+    () => Promise.resolve(PHI_BUILDER_BRAND_THEME_PREVIEW_WIDGET_DEFINITION),
   ),
 ]);

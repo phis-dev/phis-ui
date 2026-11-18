@@ -489,7 +489,7 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
   definePhiFirstPartyWidget({
     definition: PHI_THREAD_CONVERSATION_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
-    renderPolicies: { runtime: "custom", preview: "custom", authoring: "custom" },
+    renderPolicies: { runtime: "custom", preview: "visualPlaceholder", authoring: "custom" },
     loadRuntime: () => import("./widgets/thread-conversation/plugin").then((module) => module.PHI_THREAD_CONVERSATION_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/thread-conversation/plugin").then((module) => module.PHI_THREAD_CONVERSATION_WIDGET_PLUGIN),
   }),

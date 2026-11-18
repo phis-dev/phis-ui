@@ -1,5 +1,4 @@
 import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
-import { renderPhiWidgetPreviewPlaceholder } from "../../../../../plugins/factories/widget-renderers";
 import type { PhiCmsMediaPickerWidgetConfig } from "../../../../../types/media";
 import { PhiMediaPickerWidgetServer } from "../../../../../components/media/phi-media-picker-server";
 import { PHI_MEDIA_PICKER_WIDGET_DEFINITION } from "./config";
@@ -9,5 +8,4 @@ export const PHI_MEDIA_PICKER_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsMedi
   render: ({ widget, runtime, config }) => (
     <PhiMediaPickerWidgetServer key={`widget-${widget.id}`} runtime={runtime} config={config} />
   ),
-  renderPreview: ({ widget }) => renderPhiWidgetPreviewPlaceholder(widget),
 };

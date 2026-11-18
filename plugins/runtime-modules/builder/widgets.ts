@@ -48,14 +48,14 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
   definePhiFirstPartyWidget({
     definition: PHI_BUILDER_PAGES_WORKSPACE_WIDGET_DEFINITION,
     ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
-    renderPolicies: {"runtime":"custom","preview":"visualSkeleton","authoring":"usePreview"},
+    renderPolicies: {"runtime":"custom","preview":"custom","authoring":"usePreview"},
     loadRuntime: () => import("./widgets/pages-workspace/plugin").then((module) => module.PHI_BUILDER_PAGES_WORKSPACE_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/pages-workspace/preview-plugin").then((module) => module.PHI_BUILDER_PAGES_WORKSPACE_WIDGET_PREVIEW_PLUGIN),
   }),
   definePhiFirstPartyWidget({
     definition: PHI_BUILDER_SHELLS_WORKSPACE_WIDGET_DEFINITION,
     ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
-    renderPolicies: {"runtime":"custom","preview":"visualSkeleton","authoring":"usePreview"},
+    renderPolicies: {"runtime":"custom","preview":"custom","authoring":"usePreview"},
     loadRuntime: () => import("./widgets/shells-workspace/plugin").then((module) => module.PHI_BUILDER_SHELLS_WORKSPACE_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/shells-workspace/preview-plugin").then((module) => module.PHI_BUILDER_SHELLS_WORKSPACE_WIDGET_PREVIEW_PLUGIN),
   }),
@@ -76,7 +76,7 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
   definePhiFirstPartyWidget({
     definition: PHI_STRUCTURE_REGION_WIDGET_DEFINITION,
     ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
-    renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
+    renderPolicies: {"runtime":"custom","preview":"visualPlaceholder","authoring":"custom"},
     loadRuntime: () => import("./widgets/structure-region/plugin").then((module) => module.PHI_STRUCTURE_REGION_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/structure-region/plugin").then((module) => module.PHI_STRUCTURE_REGION_WIDGET_PLUGIN),
   }),

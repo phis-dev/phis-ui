@@ -640,7 +640,15 @@ export type PhiCmsWidgetPlugin<TConfig> = {
   fields: PhiCmsConfigField[];
   parseConfig: (raw: Record<string, unknown>) => TConfig;
   render: PhiBivariantCallback<[PhiCmsWidgetPluginRenderArgs<TConfig>], ReactNode>;
-  renderPreview: PhiBivariantCallback<[PhiCmsWidgetPluginRenderArgs<TConfig>], ReactNode>;
+  /**
+   * The Widget in a Preview, where its policy (`renderPolicies.preview`) is `custom`.
+   *
+   * Left out where the policy is `visualPlaceholder`: a Widget with nothing to show there -- its rows are
+   * a viewer's, or drawing it would start what only a visitor may start -- is drawn as the house
+   * placeholder (`renderPhiWidgetPreviewPlaceholder`), its name and type, and draws no skeleton of its
+   * own. A `custom` policy without it is a missing renderer, and the node renders the diagnostic.
+   */
+  renderPreview?: PhiBivariantCallback<[PhiCmsWidgetPluginRenderArgs<TConfig>], ReactNode>;
   /**
    * The words this Widget shows a reader, for the Site's search index (SEARCH.md).
    *
@@ -707,7 +715,16 @@ export type PhiCmsBuilderWidgetEditorInteraction = "inert" | "authoring";
 
 export type PhiCmsBuilderWidgetPlugin<TConfig> = PhiCmsWidgetPluginDefinition<TConfig> & {
   editorInteraction?: PhiCmsBuilderWidgetEditorInteraction;
-  renderEditor: PhiBivariantCallback<[PhiCmsBuilderWidgetRenderArgs<TConfig>], ReactNode>;
+  /**
+   * The Widget on the Builder canvas, drawn by itself.
+   *
+   * Only where it can show something that means something there: sample values, or the shape of its
+   * settings. A Widget that cannot -- its data is the signed-in viewer's own, or it exists only once a
+   * visitor arrives with something -- leaves it out, and the canvas draws the house placeholder
+   * (`PhiWidgetEditorPlaceholder`): its name, its type and its description. No Widget draws a skeleton
+   * of its own in place of content.
+   */
+  renderEditor?: PhiBivariantCallback<[PhiCmsBuilderWidgetRenderArgs<TConfig>], ReactNode>;
   renderEditorTools?: PhiBivariantCallback<[PhiCmsBuilderWidgetRenderArgs<TConfig>], ReactNode>;
 };
 
@@ -1028,10 +1045,14 @@ export type PhiRuntimeModuleAuthoringClientProps = {
 };
 
 export type PhiRuntimeRenderPolicy = "custom";
+/**
+ * How a Widget or Layout is drawn in a Preview: by its own `renderPreview` (`custom`), by its runtime
+ * render (`runtimeReadOnly`), or -- a Widget only -- as the house placeholder (`visualPlaceholder`),
+ * which needs no renderer of its own.
+ */
 export type PhiPreviewRenderPolicy =
   | "custom"
   | "runtimeReadOnly"
-  | "visualSkeleton"
   | "visualPlaceholder";
 export type PhiAuthoringRenderPolicy = "custom" | "usePreview";
 

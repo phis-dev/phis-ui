@@ -1,5 +1,4 @@
 import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
-import { renderPhiWidgetPreviewPlaceholder } from "../../../../../plugins/factories/widget-renderers";
 import type { PhiCmsAssetFocalRectWidgetConfig } from "../../../../../types/media";
 import { PhiAssetFocalRectWidgetServer } from "./server";
 import {
@@ -11,5 +10,4 @@ export const PHI_ASSET_FOCAL_RECT_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCms
   render: ({ widget, runtime, config }) => (
     <PhiAssetFocalRectWidgetServer key={`widget-${widget.id}`} runtime={runtime} config={config} />
   ),
-  renderPreview: ({ widget }) => renderPhiWidgetPreviewPlaceholder(widget),
 };

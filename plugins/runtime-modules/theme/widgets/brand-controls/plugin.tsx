@@ -1,6 +1,5 @@
 import { buildPhiWidgetLabelTranslatorOptions } from "../../../../../components/widgets/label-sets/runtime-options";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
-import { PhiWidgetPreviewFallback } from "../../../../../components/widgets/built-in/widget-preview";
 import {
   PhiBuilderBrandBackgroundControlsWidgetClient,
   PhiBuilderBrandIdentityControlsWidgetClient,
@@ -29,13 +28,6 @@ export const PHI_BUILDER_BRAND_THEME_CONTROLS_WIDGET_PLUGIN: PhiCmsWidgetPlugin<
       colorPickerLabels={await getPhiColorPickerLabels(buildPhiWidgetLabelTranslatorOptions(runtime))}
     />
   ),
-  renderPreview: ({ widget }) => (
-    <PhiWidgetPreviewFallback
-      widget={widget}
-      pluginTitle="Builder Brand Theme Controls"
-      summary="Brand theme controls are rendered live in the builder."
-    />
-  ),
 };
 
 export const PHI_BUILDER_BRAND_THEME_PREVIEW_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiBuilderBrandWidgetConfig> = {
@@ -47,13 +39,6 @@ export const PHI_BUILDER_BRAND_THEME_PREVIEW_WIDGET_PLUGIN: PhiCmsWidgetPlugin<P
 export const PHI_BUILDER_BRAND_STYLE_CONTROLS_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiBuilderBrandWidgetConfig> = {
   ...PHI_BUILDER_BRAND_STYLE_CONTROLS_WIDGET_DEFINITION,
   render: ({ runtime, config }) => <PhiBuilderBrandStyleControlsWidgetClient runtime={runtime} config={config} />,
-  renderPreview: ({ widget }) => (
-    <PhiWidgetPreviewFallback
-      widget={widget}
-      pluginTitle="Builder Brand Style Controls"
-      summary="Brand style controls are rendered live in the builder."
-    />
-  ),
 };
 
 export const PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiBuilderBrandWidgetConfig> = {
@@ -64,13 +49,6 @@ export const PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_PLUGIN: PhiCmsWidgetPl
       <PhiBuilderBrandBackgroundControlsWidgetClient runtime={runtime} config={config} />
     </PhiMediaPickerLabelsProvider>
   ),
-  renderPreview: ({ widget }) => (
-    <PhiWidgetPreviewFallback
-      widget={widget}
-      pluginTitle="Builder Brand Background Controls"
-      summary="The Theme Root Background is authored live in the builder."
-    />
-  ),
 };
 
 export const PHI_BUILDER_BRAND_IDENTITY_CONTROLS_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiBuilderBrandWidgetConfig> = {
@@ -80,12 +58,5 @@ export const PHI_BUILDER_BRAND_IDENTITY_CONTROLS_WIDGET_PLUGIN: PhiCmsWidgetPlug
     <PhiMediaPickerLabelsProvider labels={await getPhiMediaWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime))}>
       <PhiBuilderBrandIdentityControlsWidgetClient runtime={runtime} config={config} />
     </PhiMediaPickerLabelsProvider>
-  ),
-  renderPreview: ({ widget }) => (
-    <PhiWidgetPreviewFallback
-      widget={widget}
-      pluginTitle="Builder Brand Identity Controls"
-      summary="The Logo and the Wordmark are authored live in the builder."
-    />
   ),
 };

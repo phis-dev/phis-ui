@@ -217,7 +217,7 @@ export default createPhiAuthoringWidgetModule([
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_FORM_PREVIEW_WIDGET_DEFINITION,
-    () => import("./widgets/form-preview/authoring").then((module) => module.PHI_FORM_PREVIEW_WIDGET_BUILDER_PLUGIN),
+    () => Promise.resolve(PHI_FORM_PREVIEW_WIDGET_DEFINITION),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_HEADER_NAVIGATION_WIDGET_DEFINITION,
@@ -346,7 +346,7 @@ export default createPhiAuthoringWidgetModule([
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_THREAD_CONVERSATION_WIDGET_DEFINITION,
-    () => import("./widgets/thread-conversation/authoring").then((module) => module.PHI_THREAD_CONVERSATION_WIDGET_BUILDER_PLUGIN),
+    () => Promise.resolve(PHI_THREAD_CONVERSATION_WIDGET_DEFINITION),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_FLOAT_BUTTON_WIDGET_DEFINITION,

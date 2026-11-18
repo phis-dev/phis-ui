@@ -60,7 +60,7 @@ export default createPhiAuthoringWidgetModule([
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_STRUCTURE_REGION_WIDGET_DEFINITION,
-    () => import("./widgets/structure-region/internal-builder").then((module) => module.PHI_STRUCTURE_REGION_WIDGET_BUILDER_PLUGIN),
+    () => Promise.resolve(PHI_STRUCTURE_REGION_WIDGET_DEFINITION),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_TEST_BLOCK_WIDGET_DEFINITION,

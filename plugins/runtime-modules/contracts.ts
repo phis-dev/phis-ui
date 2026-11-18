@@ -572,6 +572,7 @@ function assertPhiRuntimeModuleRenderPolicies(
   moduleId: PhiRuntimeModuleId,
   type: string,
   policies: PhiRuntimeModuleWidgetDefinition["renderPolicies"],
+  kind: "widget" | "layout",
 ) {
   if (!policies || typeof policies !== "object") {
     throw new Error(`${moduleId}: artifact "${type}" has no render policies.`);
@@ -579,8 +580,12 @@ function assertPhiRuntimeModuleRenderPolicies(
   if (policies.runtime !== "custom") {
     throw new Error(`${moduleId}: artifact "${type}" declares an invalid Runtime render policy.`);
   }
-  if (!["custom", "runtimeReadOnly", "visualSkeleton", "visualPlaceholder"].includes(policies.preview)) {
+  if (!["custom", "runtimeReadOnly", "visualPlaceholder"].includes(policies.preview)) {
     throw new Error(`${moduleId}: artifact "${type}" declares an invalid Preview render policy.`);
+  }
+  // The house placeholder stands in for a Widget; a Layout holds Regions and has no such stand-in.
+  if (kind === "layout" && policies.preview === "visualPlaceholder") {
+    throw new Error(`${moduleId}: layout "${type}" declares the Widget-only Preview policy "visualPlaceholder".`);
   }
   if (!["custom", "usePreview"].includes(policies.authoring)) {
     throw new Error(`${moduleId}: artifact "${type}" declares an invalid Authoring render policy.`);
@@ -1151,7 +1156,7 @@ function assertPhiRuntimeModuleArtifacts(
     if (typeof widget.loadRuntime !== "function" || typeof widget.loadPreview !== "function") {
       throw new Error(`${moduleId}: owned widget "${type}" must declare Runtime and Preview loaders.`);
     }
-    assertPhiRuntimeModuleRenderPolicies(moduleId, type, widget.renderPolicies);
+    assertPhiRuntimeModuleRenderPolicies(moduleId, type, widget.renderPolicies, "widget");
     assertPhiSignalPluginMetaContract(widget.definition.runtimeSignals, `${type}.runtimeSignals`);
     assertOwnedAccessPolicy(
       moduleId,
@@ -1185,7 +1190,7 @@ function assertPhiRuntimeModuleArtifacts(
     if (typeof layout.loadRuntime !== "function") {
       throw new Error(`${moduleId}: owned layout "${type}" must declare a Runtime loader.`);
     }
-    assertPhiRuntimeModuleRenderPolicies(moduleId, type, layout.renderPolicies);
+    assertPhiRuntimeModuleRenderPolicies(moduleId, type, layout.renderPolicies, "layout");
     assertPhiSignalPluginMetaContract(layout.definition.runtimeSignals, `${type}.runtimeSignals`);
     assertOwnedAccessPolicy(
       moduleId,

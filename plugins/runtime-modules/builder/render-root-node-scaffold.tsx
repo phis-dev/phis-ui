@@ -68,6 +68,7 @@ import {
 import { resolvePhiRenderableBlockGeometry } from "../../../types/renderable-block-geometry";
 import { resolvePhiRootScaffoldProperties } from "./builder-geometry";
 import { PhiWidgetPreviewFallback } from "../../../components/widgets/built-in/widget-preview";
+import { PhiWidgetEditorPlaceholder } from "../../../components/widgets/builder/widget-editor-placeholder";
 import { splitPhiCmsLayoutNamespacedTypeKey } from "../../../constants/cms-layout-types";
 import type {
   PhiLayoutEditInsertControl,
@@ -1086,17 +1087,29 @@ function resolvePhiAuthoringLayoutRenderer(
     : null;
 }
 
+/**
+ * The house placeholder on the canvas, for a Widget that leaves `renderEditor` out: its name, its type
+ * and its description, still. Leaving it out is the declaration; nothing else falls back to it.
+ */
+function renderPhiAuthoringWidgetPlaceholder(
+  plugin: PhiCmsBuilderWidgetPlugin<unknown>,
+): NonNullable<PhiCmsBuilderWidgetPlugin<unknown>["renderEditor"]> {
+  return function PhiAuthoringWidgetPlaceholder({ widget }) {
+    return <PhiWidgetEditorPlaceholder widget={widget} pluginTitle={plugin.title} summary={plugin.description} />;
+  };
+}
+
 function resolvePhiAuthoringWidgetRenderer(
   plugin: PhiCmsBuilderWidgetPlugin<unknown>,
   definition: PhiRuntimeModuleClientWidgetDefinition,
 ) {
   switch (definition.renderPolicies.authoring) {
     case "custom":
-      return plugin.renderEditor;
+      return plugin.renderEditor ?? renderPhiAuthoringWidgetPlaceholder(plugin);
     case "usePreview":
       // `loadAuthoring` supplies the explicit client-safe preview adapter. It is never the server
       // plugin's `renderPreview()` implementation or an implicit runtime fallback.
-      return plugin.renderEditor;
+      return plugin.renderEditor ?? renderPhiAuthoringWidgetPlaceholder(plugin);
   }
 }
 

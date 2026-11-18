@@ -1,5 +1,4 @@
 import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
-import { renderPhiWidgetPreviewPlaceholder } from "../../../../../plugins/factories/widget-renderers";
 import type { PhiCmsAssetInspectorWidgetConfig } from "../../../../../types/media";
 import { PhiAssetConfigWidgetServer } from "./server";
 import {
@@ -11,5 +10,4 @@ export const PHI_IMAGE_INSPECTOR_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsA
   render: ({ widget, runtime, config }) => (
     <PhiAssetConfigWidgetServer key={`widget-${widget.id}`} runtime={runtime} config={config} />
   ),
-  renderPreview: ({ widget }) => renderPhiWidgetPreviewPlaceholder(widget),
 };

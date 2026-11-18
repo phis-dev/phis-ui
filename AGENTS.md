@@ -141,6 +141,10 @@ navigation overlays, translations. Stored state amends the descriptors; it does 
 - Cross-Widget, Inspector, and shell coordination uses the signal bus ([SIGNALS.md](./SIGNALS.md)), not
   preset-local or Widget-name-specific logic. Replies pass `signal.correlationId`; listeners name the
   addresses they read; `condition/reload` is answered with `usePhiRuntimeConditionStateResponder`.
+- A Widget draws itself in the Builder only with meaningful content -- sample values, or the shape of its
+  settings. Without any, it leaves `renderEditor` out and declares `renderPolicies.preview:
+  "visualPlaceholder"`, and the house placeholder stands in its place; no Widget draws its own skeleton
+  as a stand-in ([components/widgets/README.md](./components/widgets/README.md#drawing-itself-or-the-house-placeholder)).
 - The Builder Inspector reads only declarative Widget metadata (`fields`, `runtimeSignals`,
   `contentBinding`, `slotSizePolicy`); no `if` or `switch` on Widget type, key, or plugin identity.
 - Ant Design is imported only inside the canonical `Phi*Control` adapters and root/theme adapters. When a

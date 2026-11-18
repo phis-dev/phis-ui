@@ -12,22 +12,18 @@ import {
 export default createPhiAuthoringWidgetModule([
   definePhiAuthoringWidgetModuleLoader(
     PHI_AUTH_LOGOUT_WIDGET_DEFINITION,
-    () => import("./widgets/logout/authoring")
-      .then((module) => module.PHI_AUTH_LOGOUT_WIDGET_BUILDER_PLUGIN),
+    () => Promise.resolve(PHI_AUTH_LOGOUT_WIDGET_DEFINITION),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_AUTH_SECURITY_WIDGET_DEFINITION,
-    () => import("./widgets/security/authoring")
-      .then((module) => module.PHI_AUTH_SECURITY_WIDGET_BUILDER_PLUGIN),
+    () => Promise.resolve(PHI_AUTH_SECURITY_WIDGET_DEFINITION),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_AUTH_WORKFLOW_WIDGET_DEFINITION,
-    () => import("./widgets/auth-workflow/authoring")
-      .then((module) => module.PHI_AUTH_WORKFLOW_WIDGET_BUILDER_PLUGIN),
+    () => Promise.resolve(PHI_AUTH_WORKFLOW_WIDGET_DEFINITION),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_AUTH_METHODS_WIDGET_DEFINITION,
-    () => import("./widgets/auth-methods/authoring")
-      .then((module) => module.PHI_AUTH_METHODS_WIDGET_BUILDER_PLUGIN),
+    () => Promise.resolve(PHI_AUTH_METHODS_WIDGET_DEFINITION),
   ),
 ]);

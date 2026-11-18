@@ -1,6 +1,5 @@
 import { buildPhiWidgetLabelTranslatorOptions } from "../../../../../components/widgets/label-sets/runtime-options";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
-import { renderPhiWidgetPreviewPlaceholder } from "../../../../../plugins/factories/widget-renderers";
 import { getPhiEffectsWidgetLabels } from "../../../../../components/widgets/label-sets/effects";
 import { getPhiAuthoringToolsLabels } from "../../../../../components/widgets/label-sets/authoring-tools";
 import { getPhiMediaWidgetLabels } from "../../../../../components/media/label-sets/media";
@@ -119,5 +118,4 @@ export const PHI_STRUCTURE_REGION_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiStructure
       </PhiMediaPickerLabelsProvider>
     );
   },
-  renderPreview: ({ widget }) => renderPhiWidgetPreviewPlaceholder(widget),
 };

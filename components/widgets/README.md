@@ -10,7 +10,8 @@ and loading are [MODULES.md](../../MODULES.md); signal capabilities, routes, and
 
 - Every Widget belongs to one Runtime Module and lives in
   `plugins/runtime-modules/<owner>/widgets/<name>/`, with `config.ts` (server-safe definition and
-  parser), `plugin.tsx` (Runtime and Preview), `authoring.tsx` (the Builder editor), and `client.tsx` or
+  parser), `plugin.tsx` (Runtime and Preview), `authoring.tsx` (the Builder editor, where the Widget draws
+  itself on the canvas -- see "Drawing itself, or the house placeholder" below), and `client.tsx` or
   `server.tsx` where the Widget needs them. The owner's `widgets.ts` and `authoring-widgets.ts` register
   them.
 - This folder holds what several Widgets share: `config/` (shared config models such as background,
@@ -104,6 +105,28 @@ and loading are [MODULES.md](../../MODULES.md); signal capabilities, routes, and
 - `renderEditor()` serves the structure-authoring workspaces (`/builder/phis/ui/pages`,
   `/builder/phis/ui/shells`). Builder pages that render live (navigation, theme, revisions, media) use
   the normal Runtime path.
+
+### Drawing itself, or the house placeholder
+
+**A Widget draws itself in the editor only when it can show meaningful content**: sample values (a buy
+area with a sample price, a product list with three sample cards, in the Module's source-language words,
+nothing clickable doing anything), or the shape of its settings (which entries a list will read, which
+video id was entered and whether it resolves). Where it can show neither -- its data is the signed-in
+viewer's own (orders, subscriptions, the account's security), or it exists only once a visitor arrives with
+something (a token, a second-factor step, a selected conversation) -- it leaves `renderEditor` out and
+declares the Preview policy `visualPlaceholder`.
+
+- Without `renderEditor`, the canvas draws the house placeholder (`PhiWidgetEditorPlaceholder`): the
+  Widget's name, its type and its `description`, still. The authoring loader then hands the definition
+  itself (`definePhiAuthoringWidgetModuleLoader(DEFINITION, () => Promise.resolve(DEFINITION))`) and the
+  Widget has no `authoring.tsx`.
+- With `renderPolicies.preview: "visualPlaceholder"`, the Preview draws the house placeholder
+  (`renderPhiWidgetPreviewPlaceholder`), and the plugin has no `renderPreview`. A `custom` policy without
+  `renderPreview` stays a missing renderer and renders the diagnostic: the placeholder is declared, never
+  inferred.
+- **No Widget draws its own skeleton, empty card or "nothing to show here" text as a stand-in**, and no
+  Widget calls the house placeholder from a `renderEditor` or `renderPreview` of its own. A Skeleton in a
+  Widget is a loading state of the live Widget, while its data is on its way, and nothing else.
 
 ## Editor scaffold contract
 

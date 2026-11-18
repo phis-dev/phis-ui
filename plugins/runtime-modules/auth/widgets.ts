@@ -9,7 +9,7 @@ export const PHI_AUTH_RUNTIME_MODULE_WIDGETS = [
   definePhiFirstPartyWidget({
     definition: PHI_AUTH_LOGOUT_WIDGET_DEFINITION,
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
-    renderPolicies: { runtime: "custom", preview: "custom", authoring: "custom" },
+    renderPolicies: { runtime: "custom", preview: "visualPlaceholder", authoring: "custom" },
     loadRuntime: () => import("./widgets/logout/plugin")
       .then((module) => module.PHI_AUTH_LOGOUT_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/logout/plugin")
@@ -18,7 +18,7 @@ export const PHI_AUTH_RUNTIME_MODULE_WIDGETS = [
   definePhiFirstPartyWidget({
     definition: PHI_AUTH_SECURITY_WIDGET_DEFINITION,
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
-    renderPolicies: { runtime: "custom", preview: "custom", authoring: "custom" },
+    renderPolicies: { runtime: "custom", preview: "visualPlaceholder", authoring: "custom" },
     loadRuntime: () => import("./widgets/security/plugin")
       .then((module) => module.PHI_AUTH_SECURITY_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/security/plugin")
@@ -27,7 +27,9 @@ export const PHI_AUTH_RUNTIME_MODULE_WIDGETS = [
   definePhiFirstPartyWidget({
     definition: PHI_AUTH_WORKFLOW_WIDGET_DEFINITION,
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
-    renderPolicies: { runtime: "custom", preview: "custom", authoring: "custom" },
+    // The placeholder rather than the real body, as for account security: drawing it would start an
+    // enrolment against Core from inside the Builder.
+    renderPolicies: { runtime: "custom", preview: "visualPlaceholder", authoring: "custom" },
     loadRuntime: () => import("./widgets/auth-workflow/plugin")
       .then((module) => module.PHI_AUTH_WORKFLOW_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/auth-workflow/plugin")

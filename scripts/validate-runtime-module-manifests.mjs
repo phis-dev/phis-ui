@@ -287,7 +287,10 @@ const clientAuthoringFileByOwnerFile = new Map(widgetManifestFiles.map((ownerFil
 const clientAuthoringDefinitions = [...clientAuthoringFileByOwnerFile].flatMap(
   ([ownerFile, clientFile]) => {
     const definitions = [
-      ...readSourceSync(clientFile).matchAll(/\n\s+(PHI_[A-Z0-9_]+_WIDGET_DEFINITION),\n\s+\(\) => import/g),
+      // A Widget that leaves `renderEditor` out is authored by its definition alone (the house placeholder).
+      ...readSourceSync(clientFile).matchAll(
+        /\n\s+(PHI_[A-Z0-9_]+_WIDGET_DEFINITION),\n\s+\(\) => (?:import|Promise\.resolve\(\1\))/g,
+      ),
     ].map((match) => match[1]);
     assertSameMembers(
       `${clientFile} owner module`,
