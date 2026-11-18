@@ -192,7 +192,7 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
     },
   },
   fields: [
-    { key: "eyebrow", type: "string", label: "Eyebrow" },
+    { key: "eyebrow", type: "string", heading: "Text", label: "Eyebrow" },
     {
       key: "sourceMode",
       type: "choice",
@@ -247,6 +247,25 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
       type: "boolean",
       label: "FAQ for search engines",
       visibleWhen: { field: "foldSections", notEquals: "none" },
+    },
+    {
+      key: "headingOffset",
+      type: "number",
+      label: "Heading Offset",
+      description:
+        "Moves every heading of the text down by this many levels: at 1, a # heading is drawn as H2, ## as H3, and so on. For a text that stands under a page title of its own, so its first heading does not compete with it.",
+      min: 0,
+      max: PHI_MARKDOWN_HEADING_OFFSET_MAX,
+      precision: 0,
+    },
+    {
+      key: "tocKey",
+      type: "string",
+      label: "TOC Key",
+      // Empty is no key, and a TOC on "Auto" connects to the text all the same.
+      placeholder: "Auto",
+      description:
+        "A name for this text's table of contents. A Markdown TOC widget set to Binding Mode \"Target\" with the same TOC Key lists this text's headings and no other's. Leave it empty while the page has one Markdown text: a TOC on \"Auto\" finds it by itself.",
     },
     {
       key: "imageFloat",
@@ -315,25 +334,6 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
       type: "choice",
       label: "After Header",
       options: PHI_MARKDOWN_SPACING_OPTIONS,
-    },
-    {
-      key: "headingOffset",
-      type: "number",
-      label: "Heading Offset",
-      description:
-        "Moves every heading of the text down by this many levels: at 1, a # heading is drawn as H2, ## as H3, and so on. For a text that stands under a page title of its own, so its first heading does not compete with it.",
-      min: 0,
-      max: PHI_MARKDOWN_HEADING_OFFSET_MAX,
-      precision: 0,
-    },
-    {
-      key: "tocKey",
-      type: "string",
-      label: "TOC Key",
-      // Empty is no key, and a TOC on "Auto" connects to the text all the same.
-      placeholder: "Auto",
-      description:
-        "A name for this text's table of contents. A Markdown TOC widget set to Binding Mode \"Target\" with the same TOC Key lists this text's headings and no other's. Leave it empty while the page has one Markdown text: a TOC on \"Auto\" finds it by itself.",
     },
     // The markers are an unordered list's: a `1.` list counts, whatever its level's marker says.
     ...buildPhiBulletListFields("list", "Unordered Lists"),
