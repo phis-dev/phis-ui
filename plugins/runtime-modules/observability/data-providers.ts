@@ -19,7 +19,7 @@ export const PHI_OBSERVABILITY_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
         { key: "id", title: "ID", type: "string", required: true },
         { key: "ts", title: "Timestamp", type: "datetime" },
         { key: "level", title: "Level", type: "string" },
-        { key: "service", title: "Service", type: "string" },
+        { key: "service", title: "Source", type: "string" },
         { key: "event", title: "Event", type: "string" },
         { key: "area", title: "Area", type: "string" },
         { key: "userId", title: "User ID", type: "string" },

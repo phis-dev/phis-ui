@@ -8,7 +8,7 @@ const PHI_OBSERVABILITY_LOGS_WIDGET_LABEL_SET = definePhiLabelSet({
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
     search_placeholder: "Search messages, events, and metadata",
-    service_label: "Service",
+    service_label: "Source",
     level_label: "Level",
     event_label: "Event",
     area_label: "Area",
@@ -27,7 +27,7 @@ const PHI_OBSERVABILITY_LOGS_WIDGET_LABEL_SET = definePhiLabelSet({
     filter_error: "Error",
     column_time: "Time",
     column_level: "Level",
-    column_service: "Service",
+    column_service: "Source",
     column_event: "Event",
     column_area: "Area",
     column_user: "User",
