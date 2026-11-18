@@ -57,6 +57,7 @@ import type {
   PhiTableColumnSizing,
   PhiTableLayoutConfig,
 } from "../../types/table-widget";
+import { PhiTruncatedHoverText } from "./phi-truncated-hover-text";
 import type { PhiControlOption } from "./phi-control-options";
 import { PhiColorControl } from "./phi-color-control";
 import { PhiCheckboxControl } from "./phi-checkbox-control";
@@ -743,6 +744,19 @@ function buildRowMove<TRow extends Record<string, unknown>>(
   };
 }
 
+
+/* The box that cuts a column's name short is the one the hover text measures. */
+const PHI_TABLE_COLUMN_TITLE_STYLE = { display: "block", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } as const;
+
+/** A column's name, cut with an ellipsis where the column is narrower, and then said whole in the house tooltip. */
+function renderPhiTableColumnTitle(title: ReactNode) {
+  return (
+    <PhiTruncatedHoverText title={title}>
+      <span style={PHI_TABLE_COLUMN_TITLE_STYLE}>{title}</span>
+    </PhiTruncatedHoverText>
+  );
+}
+
 export function PhiTableControl<TRow extends Record<string, unknown>>({
   rows,
   rowIdentityPath,
@@ -1013,8 +1027,8 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
     const canReorder = columnReordering && column.fixed === undefined && reorderIndex >= 0;
     const columnStyle = buildColumnStyle(column.sizing);
     const title = canReorder ? (
-      <Flex align="center" gap={4}>
-        <span>{column.title}</span>
+      <Flex align="center" gap={4} style={{ minWidth: 0 }}>
+        {renderPhiTableColumnTitle(column.title)}
         {/* The header sorts when it is clicked, so the reorder click has to stop at the element around it. */}
         <span onClick={(event) => event.stopPropagation()}>
           <PhiButtonControl
@@ -1039,7 +1053,7 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
           />
         </span>
       </Flex>
-    ) : column.title;
+    ) : renderPhiTableColumnTitle(column.title);
     return {
       key: column.key,
       columnKey: sortField,
