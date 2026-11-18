@@ -287,17 +287,22 @@ The users Table also shows **Add-on roles** (Core 0.4.1; [phis-server AUTHORIZAT
   assignment, so the row shows the single tag "all roles" instead (`buildPhiAddonRoleTags`,
   `plugins/runtime-modules/user-management/addon-roles.ts`); assignments stored for a Site Admin apply once the
   person is no longer one and are not listed there.
-- Filter "Add-on role", one select whose options come from `GET /api/site/addon-roles` (options Provider
-  `@phis/ui/modules/user-management/options/addon-roles`): an Add-on (users with at least one stored role of it)
-  or one role of an Add-on (users who hold it stored or through `includes`). Both keep every enabled Site Admin,
-  which is the Core's rule. It sends the Core's `addonId` and `addonRole` query parameters. It stands beside
-  the Account filter (External / Local roles / Auth, default Local roles, sent as `accountType`); the two filters
-  work together, so with the default a user with an Add-on role but no Core role is not listed until Account is
-  widened.
-- Not built: the Add-on roles section of the "Edit user" dialog (a section per enabled Add-on with a multi-select
-  of its roles, saved with one `PUT /api/site/addon-roles` per changed Add-on after the user is saved). It needs
-  a Widget type owned by User Management (a new `PhiCmsWidgetType` and Widget plugin key, closed registries)
-  and a save handshake the Controller does not have; see [TODOS.md](./TODOS.md).
+- Filter "Add-on", one select whose options come from `GET /api/site/addon-roles` (options Provider
+  `@phis/ui/modules/user-management/options/addon-roles`): one option per Add-on, never a single role, labelled
+  with the Add-on's `title` and its id as description where the two differ (`buildPhiAddonFilterOptions`). It
+  finds users with at least one stored role of that Add-on and keeps every enabled Site Admin, which is the
+  Core's rule; it sends the Core's `addonId` alone, never `addonRole`. It stands beside the Account filter
+  (External / Local roles / Auth, default Local roles, sent as `accountType`); the two filters work together, so
+  with the default a user with an Add-on role but no Core role is not listed until Account is widened.
+- Field "Add-on roles" in the "Edit user" form, under the Core roles: one multi-select, grouped by Add-on, value
+  `"<addonId>:<role>"` per role, prefilled from the record (`addonRoles`) and saved with the user as the Core's
+  `addonRoles` -- the whole list the person is to hold afterwards. Its options Provider
+  (`@phis/ui/modules/user-management/options/addon-role-choices`, from
+  `GET /api/site/addon-roles?userId=`) offers the roles the acting user may grant (`grantable`) and lists a role
+  the person holds that the actor may not grant as a disabled option, so it stays in the value and is sent
+  unchanged (`buildPhiAddonRoleChoiceOptions`). Disabled when the page is read-only, for the actor's own account,
+  and while the form's Core roles hold `admin` (a Site Admin holds every Add-on role). The create form has no
+  such field: the Core's create takes no Add-on roles.
 
 That split is the pattern for every case that used to reach for a route policy. Where a Module must go
 further than read-only and show nothing at all, it returns a different tree rather than a different

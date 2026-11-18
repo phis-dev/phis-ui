@@ -2,11 +2,17 @@ import { isPhiRecord } from "../../../helpers/is-record";
 
 /*
  * What User Management knows about Add-on roles, as the Core states it (phis-server AUTHORIZATION.md, "Add-on
- * roles"): the catalog `GET /api/site/addon-roles` answers, the stored assignments a user row carries, and the
- * filter value the users Table sends. Pure, so the Table Provider and the options Provider share one reading.
+ * roles"): the catalog `GET /api/site/addon-roles` answers, the stored assignments a user row carries, the
+ * Add-ons the users Table filters by and the roles the edit form offers. Pure, so the Table Provider and the
+ * options Providers share one reading.
  */
 
-export type PhiAddonRole = { name: string };
+export type PhiAddonRole = {
+  name: string;
+  description?: string;
+  /** Whether the acting person may hand this role out, as the Core decided it for this request. */
+  grantable: boolean;
+};
 
 export type PhiAddonRoleCatalogEntry = {
   addonId: string;
@@ -34,7 +40,8 @@ export function readPhiAddonRoleCatalog(payload: unknown): PhiAddonRoleCatalogEn
       if (!isPhiRecord(role)) return [];
       const name = readString(role.name);
       if (!name || !ROLE_NAME.test(name)) return [];
-      return [{ name }];
+      const description = readString(role.description);
+      return [{ name, ...(description ? { description } : {}), grantable: role.grantable === true }];
     });
     return roles.length > 0 ? [{ addonId, title: readString(addon.title) ?? addonId, roles }] : [];
   });
@@ -75,20 +82,49 @@ export function buildPhiAddonRoleTags(row: Record<string, unknown>): string[] {
   return [...byAddon].map(([addonId, roles]) => `${addonId}: ${roles.join(", ")}`);
 }
 
-/** The filter's options: each Add-on (any role), then each of its roles. Values are `<addonId>` and `<addonId>:<role>`. */
-export function buildPhiAddonRoleFilterOptions(catalog: readonly PhiAddonRoleCatalogEntry[]) {
-  return catalog.flatMap((entry) => [
-    { value: entry.addonId, label: entry.title },
-    ...entry.roles.map((role) => ({ value: `${entry.addonId}:${role.name}`, label: `${entry.title}: ${role.name}` })),
-  ]);
+/**
+ * The users Table filter's options: one per Add-on, never a single role -- choosing one finds whoever holds
+ * any of its roles (the Core's `addonId` filter). The label is the Add-on's title; the id is the description,
+ * left out while the title is the id itself, so the list does not say everything twice.
+ */
+export function buildPhiAddonFilterOptions(catalog: readonly PhiAddonRoleCatalogEntry[]) {
+  return catalog.map((entry) => ({
+    value: entry.addonId,
+    label: entry.title,
+    ...(entry.title === entry.addonId ? {} : { description: entry.addonId }),
+  }));
 }
 
-/** The Core's `addonId` and optional `addonRole` filters from the one value the Table filter holds. */
-export function parsePhiAddonRoleFilter(value: string): { addonId: string; addonRole: string | null } | null {
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-  const cut = trimmed.lastIndexOf(":");
-  const role = cut > 0 ? trimmed.slice(cut + 1) : null;
-  if (role !== null && ROLE_NAME.test(role)) return { addonId: trimmed.slice(0, cut), addonRole: role };
-  return { addonId: trimmed, addonRole: null };
+/** One role as the user save names it: `"<addonId>:<role>"`, which the Core splits at the last colon. */
+function formatPhiAddonRoleValue(addonId: string, role: string) {
+  return `${addonId}:${role}`;
+}
+
+/**
+ * The edit form's Add-on role choices, under one heading per Add-on: every role the acting person may grant,
+ * and the ones the person edited holds that the actor may not grant, disabled.
+ *
+ * The save takes the whole list of roles the person is to hold afterwards and checks every difference to
+ * what is stored against the actor. A held role missing from the choices would be a value with no option,
+ * which the control lets anyone remove -- and the save would then ask to take back a role the actor has no
+ * standing over. As a disabled option it stays in the value as a tag nobody can remove, and the save sends it
+ * unchanged. `held` is null where the Core did not say what the person holds; every role the actor may not
+ * grant is listed disabled then, so whichever of them the person holds is kept the same way.
+ */
+export function buildPhiAddonRoleChoiceOptions(
+  catalog: readonly PhiAddonRoleCatalogEntry[],
+  held: readonly PhiAddonRoleAssignment[] | null,
+) {
+  const heldValues = held ? new Set(held.map(({ addonId, role }) => formatPhiAddonRoleValue(addonId, role))) : null;
+  return catalog.flatMap((entry) => entry.roles.flatMap((role) => {
+    const value = formatPhiAddonRoleValue(entry.addonId, role.name);
+    if (!role.grantable && heldValues && !heldValues.has(value)) return [];
+    return [{
+      value,
+      label: role.name,
+      ...(role.description ? { description: role.description } : {}),
+      group: entry.title,
+      ...(role.grantable ? {} : { disabled: true }),
+    }];
+  }));
 }

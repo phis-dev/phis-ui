@@ -20,4 +20,5 @@ export const PHI_USER_MANAGEMENT_RUNTIME_MODULE_IDENTITY = {
 export const PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS = {
   table: createPhiSharedRuntimeDataProviderKey("tables", "user-management"),
   addonRoleOptions: createPhiSharedRuntimeDataProviderKey("options", "user-management-addon-roles"),
+  addonRoleChoiceOptions: createPhiSharedRuntimeDataProviderKey("options", "user-management-addon-role-choices"),
 } as const;

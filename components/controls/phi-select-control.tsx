@@ -103,9 +103,9 @@ function separatePhiSelectOptions<TValue extends string | number>(
 
 /*
  * Consecutive options that name the same group, under one heading. Options without a group stay at the
- * top level, and a list that names no group at all comes back unchanged.
+ * top level, and a list that names no group at all comes back unchanged. The Multi Select groups with it.
  */
-function groupPhiSelectOptions<TValue extends string | number>(
+export function groupPhiSelectOptions<TValue extends string | number>(
   resolved: Array<PhiResolvedSelectOption<TValue> | PhiSelectSeparatorEntry>,
 ) {
   if (!resolved.some((entry) => !isPhiSelectSeparatorEntry(entry) && entry.option.group)) {

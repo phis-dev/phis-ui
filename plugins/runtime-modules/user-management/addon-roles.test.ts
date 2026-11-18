@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   PHI_USER_MANAGEMENT_ADDON_ALL_ROLES_TAG,
-  buildPhiAddonRoleFilterOptions,
+  buildPhiAddonFilterOptions,
+  buildPhiAddonRoleChoiceOptions,
   buildPhiAddonRoleTags,
-  parsePhiAddonRoleFilter,
   readPhiAddonRoleAssignments,
   readPhiAddonRoleCatalog,
 } from "./addon-roles";
@@ -20,6 +20,11 @@ const catalog = readPhiAddonRoleCatalog({
         { name: "Bad Name", grantable: true },
       ],
     },
+    {
+      addonId: "@acme/shop",
+      title: "Shop",
+      roles: [{ name: "clerk", grantableBy: { role: "manager" }, grantable: "yes" }],
+    },
     { addonId: "@acme/empty", title: "Empty", roles: [] },
     { title: "no id", roles: [{ name: "x" }] },
     "not a record",
@@ -30,6 +35,15 @@ describe("the Add-on role catalog", () => {
   it("keeps Add-ons with declared roles, with the title as stated, and drops what does not read", () => {
     expect(catalog.map((entry) => [entry.addonId, entry.title, entry.roles.map((role) => role.name)])).toEqual([
       ["@acme/market", "@acme/market", ["market-admin", "vendor"]],
+      ["@acme/shop", "Shop", ["clerk"]],
+    ]);
+  });
+
+  it("reads each role's description and whether the actor may grant it, which only `true` says", () => {
+    expect(catalog.flatMap((entry) => entry.roles)).toEqual([
+      { name: "market-admin", grantable: true },
+      { name: "vendor", description: "Sells things.", grantable: false },
+      { name: "clerk", grantable: false },
     ]);
   });
 
@@ -75,17 +89,59 @@ describe("the Add-on role tags of a user row", () => {
 });
 
 describe("the Add-on role filter", () => {
-  it("offers each Add-on and each of its roles", () => {
-    expect(buildPhiAddonRoleFilterOptions(catalog)).toEqual([
+  it("offers each Add-on and never a single role", () => {
+    expect(buildPhiAddonFilterOptions(catalog)).toEqual([
       { value: "@acme/market", label: "@acme/market" },
-      { value: "@acme/market:market-admin", label: "@acme/market: market-admin" },
-      { value: "@acme/market:vendor", label: "@acme/market: vendor" },
+      { value: "@acme/shop", label: "Shop", description: "@acme/shop" },
+    ]);
+  });
+});
+
+describe("the Add-on roles the edit form offers", () => {
+  const grantAll = readPhiAddonRoleCatalog({
+    addons: [
+      {
+        addonId: "@acme/market",
+        title: "Market",
+        roles: [
+          { name: "market-admin", grantable: true },
+          { name: "vendor", description: "Sells things.", grantable: true },
+        ],
+      },
+      { addonId: "@acme/shop", title: "@acme/shop", roles: [{ name: "clerk", grantable: true }] },
+    ],
+  });
+
+  it("lists every role under its Add-on's name, valued as the save takes it", () => {
+    expect(buildPhiAddonRoleChoiceOptions(grantAll, [])).toEqual([
+      { value: "@acme/market:market-admin", label: "market-admin", group: "Market" },
+      { value: "@acme/market:vendor", label: "vendor", description: "Sells things.", group: "Market" },
+      { value: "@acme/shop:clerk", label: "clerk", group: "@acme/shop" },
     ]);
   });
 
-  it("sends the Core's addonId, and addonRole only for a role", () => {
-    expect(parsePhiAddonRoleFilter("@acme/market")).toEqual({ addonId: "@acme/market", addonRole: null });
-    expect(parsePhiAddonRoleFilter("@acme/market:vendor")).toEqual({ addonId: "@acme/market", addonRole: "vendor" });
-    expect(parsePhiAddonRoleFilter("  ")).toBeNull();
+  it("leaves out a role the actor may not grant and the person does not hold", () => {
+    expect(buildPhiAddonRoleChoiceOptions(catalog, []).map((option) => option.value)).toEqual([
+      "@acme/market:market-admin",
+    ]);
+  });
+
+  it("keeps a held role the actor may not grant, disabled, so the save sends it unchanged", () => {
+    expect(buildPhiAddonRoleChoiceOptions(catalog, [
+      { addonId: "@acme/market", role: "vendor" },
+      { addonId: "@acme/other", role: "vendor" },
+    ])).toEqual([
+      { value: "@acme/market:market-admin", label: "market-admin", group: "@acme/market" },
+      { value: "@acme/market:vendor", label: "vendor", description: "Sells things.", group: "@acme/market", disabled: true },
+    ]);
+  });
+
+  it("lists every role the actor may not grant disabled where what the person holds is not known", () => {
+    expect(buildPhiAddonRoleChoiceOptions(catalog, null).map((option) => [option.value, option.disabled === true]))
+      .toEqual([
+        ["@acme/market:market-admin", false],
+        ["@acme/market:vendor", true],
+        ["@acme/shop:clerk", true],
+      ]);
   });
 });

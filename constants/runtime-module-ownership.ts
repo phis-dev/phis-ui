@@ -171,6 +171,7 @@ const PHI_RUNTIME_MODULE_OWNERSHIP: Readonly<Record<string, readonly [module: st
   "options/admin-site-locales": ["localization", "admin-site-locales"],
   "options/core-site-locales": ["core", "site-locales"],
   "options/user-management-addon-roles": ["user-management", "addon-roles"],
+  "options/user-management-addon-role-choices": ["user-management", "addon-role-choices"],
   "options/builder-area-root-route": ["builder", "area-root-route"],
   "options/builder-landing-page": ["builder", "landing-page"],
   "options/builder-collection-item-renderers": ["builder", "collection-item-renderers"],

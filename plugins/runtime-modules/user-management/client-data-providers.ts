@@ -13,6 +13,13 @@ export const PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS = [
         .PhiUserManagementAddonRoleOptionsProviderClient,
   },
   {
+    key: PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS.addonRoleChoiceOptions,
+    ownerModuleId: PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
+    loadLive: async () =>
+      (await import("../../../plugins/runtime-modules/user-management/services/options"))
+        .PhiUserManagementAddonRoleChoiceOptionsProviderClient,
+  },
+  {
     key: PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS.table,
     ownerModuleId: PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
     loadLive: async () =>

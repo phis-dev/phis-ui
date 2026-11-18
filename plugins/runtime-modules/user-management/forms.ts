@@ -1,6 +1,9 @@
 import { createPhiFormLabelSetLoader } from "../../../components/forms/shared-form-loaders";
 import { PHI_BASE_ROLE_OPTIONS } from "../../../constants/phi-base-role-metadata";
-import { PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/user-management/ids";
+import {
+  PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS,
+  PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
+} from "../../../plugins/runtime-modules/user-management/ids";
 import type {
   PhiFormDescriptor,
   PhiFormHandlerProviderDescriptor,
@@ -42,6 +45,17 @@ const selfRoleCondition = {
   valuePath: "selection.self",
   operator: "truthy",
   reason: "Your own roles cannot be changed here.",
+} as const satisfies PhiRuntimeValueCondition;
+/*
+ * A Site Admin holds every Add-on role whatever is stored, so choosing some says nothing. Read off the form's
+ * own Core roles rather than the record: whoever takes `admin` away in the same dialog may then choose.
+ */
+const siteAdminTargetCondition = {
+  source: "form",
+  valuePath: "roles",
+  operator: "contains",
+  value: "admin",
+  reason: "A Site Admin holds every Add-on role.",
 } as const satisfies PhiRuntimeValueCondition;
 const selfEnabledCondition = {
   source: "controller",
@@ -133,7 +147,35 @@ function descriptor(
           ? { match: "any", conditions: [readOnlyCondition, selfRoleCondition] } as const
           : readOnlyCondition,
       },
+      /*
+       * Edit only: the Core's create takes no Add-on roles. The value is the whole list the person is to hold
+       * afterwards; a held role the actor may not grant is a disabled option, so it stays in the value and is
+       * sent unchanged (`buildPhiAddonRoleChoiceOptions`).
+       */
       ...(edit ? [
+        {
+          key: "addonRoles",
+          fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.multiSelect,
+          label: label("addonRoles", "Add-on roles"),
+          placeholder: label("addonRolesPlaceholder", "Choose Add-on roles"),
+          description: label(
+            "addonRolesHint",
+            "A Site Admin holds every Add-on role. Your own Add-on roles cannot be changed here.",
+          ),
+          optionsProvider: {
+            providerKey: PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS.addonRoleChoiceOptions,
+            /*
+             * Which roles the person holds decides which ones the actor may not grant are still listed. Required,
+             * so the catalog is asked once the record has filled the form, not once before it as well.
+             */
+            dependencies: [{ param: "userId", source: "form" as const, valuePath: "userId", required: true }],
+          },
+          initialValue: [],
+          disabledWhen: {
+            match: "any",
+            conditions: [readOnlyCondition, selfRoleCondition, siteAdminTargetCondition],
+          } as const,
+        },
         {
           key: "enabled",
           fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.switch,
@@ -170,6 +212,9 @@ const loadLabels = createPhiFormLabelSetLoader(
     roles: labels.editor.roles,
     rolesPlaceholder: labels.editor.rolesPlaceholder,
     rolesHint: labels.editor.selfRoleHint,
+    addonRoles: labels.editor.addonRoles,
+    addonRolesPlaceholder: labels.editor.addonRolesPlaceholder,
+    addonRolesHint: labels.editor.addonRolesHint,
     authOnlyHint: labels.editor.authOnlyHint,
     createPasswordHint: labels.editor.createPasswordHint,
     enabled: labels.columns.enabled,

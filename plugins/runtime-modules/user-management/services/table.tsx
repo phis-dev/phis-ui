@@ -2,14 +2,13 @@
 
 import { isPhiRecord } from "../../../../helpers/is-record";
 import { PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
-import { buildPhiAddonRoleTags, parsePhiAddonRoleFilter } from "../addon-roles";
+import { buildPhiAddonRoleTags } from "../addon-roles";
 import {
-  buildPhiTablePageParams,
   createPhiTableProviderRequestInit,
   readPhiPositiveInteger,
   readPhiTableRows,
-  readPhiTableStringFilter,
 } from "../../../../components/widgets/client/shared/phi-table-provider-request";
+import { buildPhiUserManagementUsersQueryParams } from "./users-query";
 import {
   PhiTableProviderError,
   type PhiTableProviderMutationRequest,
@@ -43,25 +42,7 @@ async function loadUsers({
   query,
   signal,
 }: PhiTableProviderQueryRequest): Promise<PhiTableProviderQueryResult> {
-  const params = buildPhiTablePageParams(query, 20);
-  const search = query.search?.trim() ?? "";
-  const accountType = readPhiTableStringFilter(query, "accountType");
-  const addonRole = parsePhiAddonRoleFilter(readPhiTableStringFilter(query, "addonRole"));
-  const enabled = readPhiTableStringFilter(query, "enabled");
-  if (search) params.set("search", search);
-  if (accountType) params.set("accountType", accountType);
-  // The Core's two filters: an Add-on, and optionally one of its roles (`addonRole` needs `addonId`).
-  if (addonRole) {
-    params.set("addonId", addonRole.addonId);
-    if (addonRole.addonRole) params.set("addonRole", addonRole.addonRole);
-  }
-  if (enabled) params.set("enabled", enabled);
-  const primarySort = query.sorts?.[0];
-  if (primarySort) {
-    params.set("sortKey", primarySort.key);
-    params.set("sortOrder", primarySort.direction === "descending" ? "descend" : "ascend");
-  }
-
+  const params = buildPhiUserManagementUsersQueryParams(query);
   const result = await readPhiTableProviderResponse<ApiResponse>(
     await fetch(`${API_PATH}?${params.toString()}`, createPhiTableProviderRequestInit(signal)),
     RESPONSE_OPTIONS,
@@ -131,6 +112,10 @@ async function readUserRecord({ rowIdentity, signal }: PhiTableProviderRecordReq
     ...user,
     userId: String(userId),
     roles: Array.isArray(user.roleTags) ? user.roleTags : [],
+    // `"<addonId>:<role>"`, the form the save takes back.
+    addonRoles: Array.isArray(user.addonRoles)
+      ? user.addonRoles.filter((entry): entry is string => typeof entry === "string")
+      : [],
     changePassword: false,
   };
 }

@@ -8,6 +8,7 @@ import type { PhiControlSize, PhiControlVariant } from "../../types/control";
 import type { PhiControlOption } from "./phi-control-options";
 import { PhiControlOptionContent } from "./phi-control-option-content";
 import { PhiLabeledControl, usePhiControlLabel } from "./phi-labeled-control";
+import { groupPhiSelectOptions } from "./phi-select-control";
 
 export type PhiMultiSelectControlProps<TValue extends string | number = string> = {
   /** The DOM id of the input, so a `<label for>` outside the control can name it. */
@@ -52,15 +53,16 @@ export function PhiMultiSelectControl<TValue extends string | number = string>({
   onChange,
 }: PhiMultiSelectControlProps<TValue>) {
   const { labelId, labelledBy } = usePhiControlLabel(label);
+  // Options that name a group are listed under its heading, as the Select lists them.
   const selectOptions = useMemo(
-    () => options.map((option) => ({
+    () => groupPhiSelectOptions(options.map((option) => ({
       value: option.value,
       // Keep labels non-primitive so rc-select cannot add native HTML titles.
       label: <>{option.label}</>,
       searchLabel: option.label,
       option,
       disabled: option.disabled,
-    })),
+    }))),
     [options],
   );
   const control = (
@@ -79,7 +81,7 @@ export function PhiMultiSelectControl<TValue extends string | number = string>({
          * With `allowCustom` the Select offers what is being typed as an option of its own, and that one
          * carries no Phi option: it is a value nobody declared yet, drawn as the text it is.
          */
-        const item = option.data.option as PhiControlOption<TValue> | undefined;
+        const item = (option.data as { option?: PhiControlOption<TValue> }).option;
         return item
           ? <PhiControlOptionContent option={item} presentation="dropdown" />
           : <>{String(option.value ?? "")}</>;
