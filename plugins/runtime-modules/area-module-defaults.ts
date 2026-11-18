@@ -10,7 +10,6 @@ import type { PhiRuntimeModuleId } from "../../types";
  */
 const firstPartyModuleId = (moduleKey: string) =>
   createPhiRuntimeModuleId(PHI_SHARED_PACKAGE_NAME, moduleKey);
-const PHI_ASSET_RUNTIME_MODULE_ID = firstPartyModuleId("asset");
 const PHI_AUTH_RUNTIME_MODULE_ID = firstPartyModuleId("auth");
 const PHI_THEME_RUNTIME_MODULE_ID = firstPartyModuleId("theme");
 const PHI_LOCALIZATION_RUNTIME_MODULE_ID = firstPartyModuleId("localization");
@@ -35,6 +34,11 @@ const PHI_THREADS_RUNTIME_MODULE_ID = firstPartyModuleId("threads");
  * Pages carry their Tours either way, and without it their buttons stay hidden. Public has no Tour to give.
  */
 const PHI_TOUR_RUNTIME_MODULE_ID = firstPartyModuleId("tour");
+
+/*
+ * The Asset Module is in none of these lists: it is declared `activation: "always"`, so it is active in
+ * every Area without being selected, and a list that named it would be refused on its first save.
+ */
 
 export function createPhiDefaultAreaRuntimeModuleIds(
   area: PhiBuilderAreaKey,
@@ -62,7 +66,6 @@ function listAreaRuntimeModuleIds(area: PhiBuilderAreaKey): PhiRuntimeModuleId[]
       PHI_DASHBOARD_RUNTIME_MODULE_ID,
       PHI_REVISIONS_RUNTIME_MODULE_ID,
       PHI_THEME_RUNTIME_MODULE_ID,
-      PHI_ASSET_RUNTIME_MODULE_ID,
       PHI_THREADS_RUNTIME_MODULE_ID,
     ];
   }
@@ -70,7 +73,6 @@ function listAreaRuntimeModuleIds(area: PhiBuilderAreaKey): PhiRuntimeModuleId[]
   if (area === "admin") {
     return [
       PHI_AUTH_RUNTIME_MODULE_ID,
-      PHI_ASSET_RUNTIME_MODULE_ID,
       PHI_DASHBOARD_RUNTIME_MODULE_ID,
       PHI_LOCALIZATION_RUNTIME_MODULE_ID,
       PHI_OBSERVABILITY_RUNTIME_MODULE_ID,

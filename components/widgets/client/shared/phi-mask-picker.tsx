@@ -20,7 +20,6 @@ import type { PhiPickerPlacement } from "../../../controls/phi-picker-control-co
 import { usePhiApplicationFeedback } from "../../../runtime/use-phi-application-feedback";
 import { usePhiWidgetScaffoldPopup } from "./phi-widget-scaffold-popup";
 import { usePhiAuthoringToolsLabels } from "./phi-authoring-tools-labels";
-import { createPhiMediaPickerAssetControllerRoutes } from "../../../media/asset-controller-routes";
 import { PhiIcon } from "../../../shell/phi-icon";
 
 type ParsedIconifyIcon = {
@@ -29,10 +28,6 @@ type ParsedIconifyIcon = {
   iconKey: string;
 };
 
-const PHI_MASK_PICKER_MEDIA_ROUTES = createPhiMediaPickerAssetControllerRoutes(
-  "mask-picker-media",
-  "area",
-);
 const PHI_MASK_MEDIA_SCOPE_KEY = "image-mask-picker";
 
 export type PhiMaskPickerButtonProps = {
@@ -151,7 +146,6 @@ export function PhiMaskPickerButton({
       showPagination: true,
       showGroupFilter: true,
       showSearchBar: true,
-      signalRoutes: PHI_MASK_PICKER_MEDIA_ROUTES,
     },
     open: mediaOpen,
     onOpenChange: setMediaOpen,

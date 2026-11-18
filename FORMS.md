@@ -383,9 +383,10 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
 - `media-asset` is **owned by the Asset Module** (`@phis/ui/modules/asset/form-field/media-asset`,
   `PHI_MEDIA_ASSET_FORM_FIELD_PROVIDER_KEY` in `constants/media-library-provider-keys.ts`, the Foundation's name for it), because
   that Module owns the Media library. It is declared in the Module's `formProviders.fieldTypes` and
-  registered in its UI provider, so it costs the shared registry and the Controls entry nothing; any Form
-  may use it where the Asset Module is active, and says "This field is not available in this area." in the
-  Areas where it is not (see above; a stored Asset id is kept and sent unchanged). It is one Asset of the
+  registered in its UI provider, so it costs the shared registry and the Controls entry nothing. The Asset
+  Module is active in every Area (`activation: "always"`, MODULES.md), so any Form may use it; it says
+  "This field is not available in this area." only where the Module is off because the server part it
+  needs is missing (see above; a stored Asset id is kept and sent unchanged). It is one Asset of the
   Site's Media library, for a Form that stores a picture (a logo, a
   cover) rather than receiving a file -- `upload` is the field for a file somebody brings. The value is
   the Asset id as a number and `null` for none, so a save that removes the picture says so and `required`
@@ -414,7 +415,9 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   `mediaAssetUnavailable`), falling back to English; the picker's own wording is the Media picker's. A Page
   that renders a Form with a `media-asset` field mounts the Media library Provider for it
   (`PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection`; the resolver's scan of the Form's descriptor), where a
-  Module of the Area serves it -- the Asset Module, which is also what makes the field available.
+  Module of the Area serves it -- the Asset Module, which is also what makes the field available. The
+  field's picker sends nothing to the Asset Controller, so a Form with this field mounts no Controller
+  for it.
 
   ```ts
   {

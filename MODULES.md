@@ -43,7 +43,7 @@ Terminology across the Site/server boundary is strict:
 | `@phis/ui/modules/editor` | Area base | `editor` | Editor shell, content editor Widgets and workflows |
 | `@phis/ui/modules/accounting` | Area base | `accounting` | Accounting shell, navigation surface, workspace route |
 | `@phis/ui/modules/builder` | Area base | `builder` | Builder shell, workspaces, Canvas, drafts, Inspector, wiring |
-| `@phis/ui/modules/asset` | optional | all | Media, upload, asset picking, asset data |
+| `@phis/ui/modules/asset` | always active | all | Media, upload, asset picking, asset data |
 | `@phis/ui/modules/auth` | optional | `public`, `admin`, `app` | Site login and authentication workflows ([AUTHENTICATION.md](./AUTHENTICATION.md)) |
 | `@phis/ui/modules/blog` | optional | `public`, `editor` | the face of Core's `blog` content kind: its three Pages (read in Public, written in the Editor) and two Forms; the list and detail Widgets are Core's ([CONTENT_ENTRIES.md](./CONTENT_ENTRIES.md)) |
 | `@phis/ui/modules/avatar` | optional | `app` | a personal picture in the person's own Media Space |
@@ -323,9 +323,20 @@ Installation is build-time; activation is per Site and Area.
 - Every Area has exactly one locked base Module and one versioned shell preset
   (`plugins/runtime-modules/area-definitions.ts`). The base Module is always active in its Area, is shown
   locked in the Module selector, and is never persisted.
+- A Module declared `activation: "always"` is active in every Area it is eligible for. Nobody selects or
+  deselects it, the Module selector shows it locked like a base Module, and it is never persisted. It is
+  for what the platform cannot work without: the Asset Module is the one there is, because every image
+  picker in every Area opens its library. Only a Module of this package may declare it -- installing a
+  package never switches anything on -- and the catalog refuses it together with `mediaSpaces`,
+  `threadKinds`, `seed`, `userState` and `authUiProvider`, which are derived from the stored selection
+  (by the Builder on save, and by phi-server for `userState`) and would be dropped for a Module that is
+  never in it.
 - Optional Modules are persisted per Area as `runtimeModules`: a unique array of Module ids, selection
   only. Controller types, instance keys, addresses, and config do not belong in it. A duplicate id or a
-  selected locked Module is an error (`plugins/runtime-modules/settings.ts`, `resolver.ts`).
+  selected locked Module is an error (`plugins/runtime-modules/settings.ts`, `resolver.ts`). Locked is
+  one question with one reader, `isPhiRuntimeModuleSelectable`: the Platform Module, an Area's base
+  Module, and an always-active Module. Wherever an Area's active set is built, the always-active ones are
+  added with `listPhiAlwaysActiveRuntimeModuleIds`.
 - `eligibleAreas` on the definition is the only statement of where a Module may be selected. A Module never
   enables itself, and installing a package never selects it. An installed package states it in its
   `package.json#phis` instead, and the generated projection completes the definition with it
@@ -333,6 +344,7 @@ Installation is build-time; activation is per Site and Area.
 - A selected Module activates only when its server binding is available (see
   [Add-on boundary](#add-on-boundary)). An unavailable Module is left out of route, Controller, Widget,
   Layout, and Provider resolution while its selection stays persisted, and produces a scoped diagnostic.
+  An always-active Module is held to the same rule.
 - Controller requirements, Module dependencies, signal routes, Widget occurrences, and Provider demand
   never activate a Module.
 
@@ -346,7 +358,19 @@ A Controller-bearing Module declares `controllerMountPolicy`:
 - `area` -- the `default` instance mounts while the Module is active in the Area;
 - `demand` -- instances are materialized only from CMS instances that require them
   (`requiredRuntimeControllers`), with `mountScope` `area` for shell-owned and `page` for Page-owned
-  instances. The Form controller works this way.
+  instances. The Form controller works this way, and so does the Asset Controller: its Module is active
+  in every Area, and a Page that draws no Media mounts nothing for it. A Widget that draws the
+  Controller's state (the upload area, the Asset inspector, the focal rectangle) asks for it
+  (`components/media/asset-controller-requirement.ts`); a placed picker or Collection asks only where its
+  routes name the Controller, so a Gallery that only lists the library mounts none. The Media Page states
+  the Controller in its tree as well, with the routes it answers into, and the two are one instance. A
+  media picker opened from authoring chrome -- the canvas' image tool and mask picker, the Inspector's
+  image fields and Backgrounds, the Theme's Logo and Background, a Form's `media-asset` field -- keeps
+  its own search, folder and page and sends the Controller nothing, so none of their hosts asks. They
+  stand in two scopes, the Inspector's Area Overlay and the Page beside it, and every one of them asking
+  would mount two Controllers behind one address. `scripts/validate-controller-mount-contracts.ts`
+  refuses a file outside the Asset Module that addresses the Controller in code without a Widget that
+  asks for it.
 
 Additional instances never reload the Module. The generic runtime controller host is the only mount path;
 Widgets, Layouts, and Controllers never mount a Controller themselves. A Controller definition may declare
@@ -378,7 +402,9 @@ nothing may be held in a Page-hosted Controller that a Page after it depends on.
 ### Module selection: one tolerant reader, one strict writer
 
 A stored selection may name a Module this build cannot serve: one that was uninstalled, one the Area is
-not eligible for, one that is locked. Two readers answer that, deliberately:
+not eligible for, one that is locked -- which a Module becomes when a release declares it
+`activation: "always"`, while the lists written before still name it. Two readers answer that,
+deliberately:
 
 - `resolvePhiRuntimeModuleIdsForArea` (`plugins/runtime-modules/settings.ts`) reads past such an entry.
   The Area renders with what it can, the entry is logged (`runtime_modules.selection.unresolved`), and the
@@ -812,9 +838,9 @@ The second is Core's media folder pictures Provider
 subfolders unless told otherwise, in the public reference projection. The Gallery Widget starts bound to
 it, so a slideshow is a Folder somebody keeps filling rather than a list of named Assets. It is Core's and
 not the Asset Module's because showing what is public needs no Media management in the Area, as an
-Image Widget does not: the Asset Module is switched on where Media is administered and uploaded, and a
-Gallery draws in every Area. Its Folder setting reads the Asset Module's folder choices, which the Builder
-offers in any Area.
+Image Widget does not: the Asset Module is active in every Area, and what it adds there is administering
+and uploading Media, which a Gallery does not need. Its Folder setting reads the Asset Module's folder
+choices.
 
 Provider Clients own data access and mutations. Forms own record-oriented validation and submit
 lifecycles. Controllers coordinate runtime state. Signals connect those surfaces. None may silently take
@@ -908,7 +934,8 @@ What *is* stored is which Modules an Area carries. `config.modules.runtimeModule
 the whole switch. The Builder writes it as a module-change draft and it takes effect when that draft is
 published. An Area that has never been asked carries no such config at all, and then the code-owned
 default applies (`createPhiDefaultAreaRuntimeModuleIds`) -- which is the shipped selection and says
-nothing about what a Site has chosen. `[]` is a different answer again: every optional Module off.
+nothing about what a Site has chosen. `[]` is a different answer again: every optional Module off. A
+Module declared `activation: "always"` is in neither: it is active whatever the config says.
 
 So the sequence for a new Module page is: activate the Module for the Area, save, publish the module
 change. Nothing about the route or the entry is published separately and nothing is swept.

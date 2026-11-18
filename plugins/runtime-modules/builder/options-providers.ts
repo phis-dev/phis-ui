@@ -6,6 +6,7 @@ import {
   isPhiRuntimeAreaBaseModuleId,
   resolvePhiRuntimeAreaDefinition,
 } from "../../../plugins/runtime-modules/area-definitions";
+import { isPhiRuntimeModuleSelectable } from "../../../plugins/runtime-modules/settings";
 import type { PhiControlOption } from "../../../components/controls/phi-control-options";
 import { isPhiCmsErrorPagePath } from "../../../constants/cms-error-pages";
 import {
@@ -177,9 +178,7 @@ function resolveRuntimeModulesOptions(context: PhiControlOptionsProviderContext)
         label: definition.title,
         description: definition.description,
         icon: definition.icon ?? (definition.iconFamily ? `@phis/ui/widgets:${definition.iconFamily}` : undefined),
-        disabled:
-          definition.kind === "platform" ||
-          definition.moduleId === baseModuleId,
+        disabled: !isPhiRuntimeModuleSelectable(definition),
       }))
       .sort((left, right) => left.label.localeCompare(right.label, "en", { sensitivity: "base" })),
   };

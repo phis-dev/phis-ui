@@ -4,7 +4,7 @@ import {
   isPhiRuntimeAreaBaseModuleId,
   resolvePhiRuntimeAreaDefinition,
 } from "../area-definitions";
-import { assertPhiRuntimeModuleIdsAllowedForArea } from "../settings";
+import { assertPhiRuntimeModuleIdsAllowedForArea, isPhiRuntimeModuleSelectable } from "../settings";
 import { getPhiDeveloperBuilderStateSnapshot, markPhiBuilderModuleAreasDirty } from "./developer-workspace-store";
 import { setPhiWorkspaceModuleSelection } from "./workspace-catalog-actions";
 import {
@@ -30,8 +30,9 @@ function areRuntimeModuleIdsEqual(
  *
  * Every id has to name an installed Module, and a Base Module id from a different Area is refused
  * outright -- selecting one would silently activate a foreign Area's own required Module. The Platform
- * Module and this Area's own Base Module are never taken from the input at all: they are implicit, and
- * `resolvePhiRuntimeModuleIdsForArea` adds them back regardless of what was asked for.
+ * Module, this Area's own Base Module and a Module declared `activation: "always"` are never taken from
+ * the input at all: they are implicit, and wherever the Area's active set is built they are added
+ * regardless of what was asked for.
  */
 function normalizeRuntimeModuleSelection(
   selectedIds: readonly string[],
@@ -57,8 +58,7 @@ function normalizeRuntimeModuleSelection(
 
   const moduleIds = definitions
     .filter((definition) =>
-      definition.kind === "module" &&
-      definition.moduleId !== baseModuleId &&
+      isPhiRuntimeModuleSelectable(definition) &&
       selectedIdSet.has(definition.moduleId),
     )
     .map((definition) => definition.moduleId);

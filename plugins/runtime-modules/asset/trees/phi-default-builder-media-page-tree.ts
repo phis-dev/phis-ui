@@ -81,9 +81,10 @@ export async function buildPhiDefaultBuilderMediaPageTree({
     /*
      * Whom the Asset Controller answers into on this Page.
      *
-     * The Area runs that Controller for every Page -- its pickers need it everywhere -- and this Page is
-     * the one with an inspector, a folder dialog and a gallery to reload. So the Page says so here, and
-     * while it is shown the running Controller is told (`collectPhiRuntimeControllerConfigOverlays`).
+     * The Controller mounts on demand, and this Page is the one with an inspector, a folder dialog and
+     * a gallery to reload. So the Page states it here: the setting mounts the Controller for the Page,
+     * with these routes, and the Widgets on it that ask for the Controller get this one instance
+     * (`materializePhiRuntimeControllerSettings`).
      */
     controllerSettings: [{
       type: PHI_ASSET_CONTROLLER_TYPE,

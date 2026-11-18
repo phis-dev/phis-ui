@@ -9,14 +9,12 @@ import type {
   PhiImageAssetVariantKeyValue,
   PhiMediaAssetTile,
 } from "../../../../types/media";
-import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
 import { PhiMediaPickerBinding } from "../../../media/phi-media-picker-binding";
 import { PHI_MEDIA_WIDGET_DEFAULT_LABELS } from "../../../media/media-widget-labels";
 import { PHI_SEARCH_WIDGET_DEFAULT_LABELS } from "../../label-types/search";
 import { usePhiWidgetScaffoldPopup } from "./phi-widget-scaffold-popup";
 import { usePhiAuthoringToolsLabels } from "./phi-authoring-tools-labels";
 import { PhiButtonControl } from "../../../controls/phi-button-control";
-import { createPhiMediaPickerAssetControllerRoutes } from "../../../media/asset-controller-routes";
 import { PhiIcon } from "../../../shell/phi-icon";
 
 type PhiWidgetImageToolButtonCommonPatch = {
@@ -38,13 +36,16 @@ export type PhiWidgetImageToolButtonPatch = PhiWidgetImageToolButtonCommonPatch 
     }
 );
 
+/**
+ * A picker opened from authoring chrome keeps its own search, folder and page, and sends the Asset
+ * Controller nothing: that Controller belongs to the Media Page, and what a tool button searched for
+ * is no business of the gallery there.
+ */
 export function PhiInternalAssetReferencePickerButton({
-  blockId,
   ariaLabel,
   onSelect,
   onClear,
 }: {
-  blockId: PhiCmsInstanceId;
   ariaLabel?: string;
   onSelect: (asset: PhiMediaAssetTile) => void;
   onClear?: () => void;
@@ -62,10 +63,6 @@ export function PhiInternalAssetReferencePickerButton({
         showPagination: true,
         showGroupFilter: true,
         showSearchBar: true,
-        signalRoutes: createPhiMediaPickerAssetControllerRoutes(
-          `internal-asset-reference-${blockId}`,
-          "area",
-        ),
       }}
       getPopupContainer={popup.getPopupContainer}
       popupRootClassName={popup.rootClassName}
@@ -89,10 +86,8 @@ export function PhiInternalAssetReferencePickerButton({
 }
 
 export function PhiWidgetImageToolButton({
-  blockId,
   onChange,
 }: {
-  blockId: PhiCmsInstanceId;
   onChange: (patch: PhiWidgetImageToolButtonPatch) => void;
 }) {
   const selectAsset = (asset: PhiMediaAssetTile) => {
@@ -108,7 +103,6 @@ export function PhiWidgetImageToolButton({
 
   return (
     <PhiInternalAssetReferencePickerButton
-      blockId={blockId}
       onSelect={selectAsset}
       onClear={() => {
         onChange({

@@ -61,12 +61,6 @@ import {
   findPhiBuilderLayoutNodeById,
   findPhiBuilderWidgetNodeByIdInLayouts,
 } from "../node-finders";
-import { createPhiMediaPickerAssetControllerRoutes } from "../../../../components/media/asset-controller-routes";
-
-const PHI_BUILDER_BACKGROUND_MEDIA_ROUTES = {
-  preview: createPhiMediaPickerAssetControllerRoutes("builder-background-preview-media", "area"),
-  field: createPhiMediaPickerAssetControllerRoutes("builder-background-field-media", "area"),
-} as const;
 
 function collectWidgetReferenceOptionsFromWidgets(
   widgets: PhiCmsContentWidgetNode[] | undefined,
@@ -274,7 +268,6 @@ function usePhiBuilderInspectorSectionState(signalRoutes?: PhiSignalRouteSet) {
         showPagination: true,
         showGroupFilter: true,
         showSearchBar: true,
-        signalRoutes: PHI_BUILDER_BACKGROUND_MEDIA_ROUTES[props.purpose],
       }}
       labels={PHI_MEDIA_WIDGET_DEFAULT_LABELS}
       searchLabels={PHI_SEARCH_WIDGET_DEFAULT_LABELS}

@@ -23,7 +23,10 @@ import {
   usePhiSignalListener,
 } from "../../../../components/runtime/runtime-signal-bus";
 import { usePhiApplicationFeedback } from "../../../../components/runtime/use-phi-application-feedback";
-import { resolvePhiRuntimeModuleIdsForArea } from "../../../../plugins/runtime-modules/settings";
+import {
+  listPhiAlwaysActiveRuntimeModuleIds,
+  resolvePhiRuntimeModuleIdsForArea,
+} from "../../../../plugins/runtime-modules/settings";
 import type { PhiAnchorWidgetPlacement } from "../../../../components/controls/phi-anchor-control-contract";
 import {
   PHI_BUILDER_PREVIEW_SEARCH_PARAM,
@@ -249,6 +252,7 @@ function resolveBuilderActiveModuleIds(
     ...definitions
       .filter((definition) => definition.kind === "platform")
       .map((definition) => definition.moduleId),
+    ...listPhiAlwaysActiveRuntimeModuleIds(area, definitions),
     ...selectRuntimeModuleIds(moduleIds, area, definitions),
   ]);
   return activeModuleIds;
@@ -992,6 +996,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     persistedPageCatalogByArea: state.persistedPageCatalogByArea,
     navigationSurfacesByArea: state.navigationSurfacesByArea,
     runtimeModuleIdsByArea: state.runtimeModuleIdsByArea,
+    runtimeModuleDefinitions: state.runtimeModuleDefinitions,
     areaRootRoutes: state.areaRootRoutes,
   }), [
     state.modulePresetPagesByArea,
@@ -999,6 +1004,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     state.persistedPageCatalogByArea,
     state.navigationSurfacesByArea,
     state.runtimeModuleIdsByArea,
+    state.runtimeModuleDefinitions,
     state.areaRootRoutes,
   ]);
 

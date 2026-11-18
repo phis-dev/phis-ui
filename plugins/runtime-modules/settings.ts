@@ -37,6 +37,44 @@ export function readPhiRuntimeModuleIds(value: unknown): PhiRuntimeModuleId[] | 
   return moduleIds;
 }
 
+/**
+ * Whether a Site chooses this Module per Area, or it is active without being chosen.
+ *
+ * Three kinds of Module are locked: the Platform Module, an Area's Base Module, and a Module declared
+ * `activation: "always"`. None of them is ever part of a stored selection -- each is added where the
+ * active set is built -- so this is the one question every reader and writer of a selection asks.
+ */
+export function isPhiRuntimeModuleSelectable(
+  definition: Pick<PhiRuntimeModuleDefinition, "moduleId" | "kind" | "activation">,
+) {
+  return (
+    definition.kind === "module" &&
+    definition.activation !== "always" &&
+    !isPhiRuntimeAreaBaseModuleId(definition.moduleId)
+  );
+}
+
+/**
+ * The Modules declared `activation: "always"` that are active in an Area: every one eligible for it.
+ *
+ * In catalog order, so the active set a render builds is the same on every request. Whether its server
+ * part is there is not answered here; the callers that build an active set ask that of every Module
+ * they add, selected or not.
+ */
+export function listPhiAlwaysActiveRuntimeModuleIds(
+  area: string,
+  moduleDefinitions: Iterable<Pick<PhiRuntimeModuleDefinition, "moduleId" | "activation" | "eligibleAreas">>,
+): PhiRuntimeModuleId[] {
+  const cmsArea = resolveSelectionArea(area);
+  const moduleIds: PhiRuntimeModuleId[] = [];
+  for (const definition of moduleDefinitions) {
+    if (definition.activation === "always" && definition.eligibleAreas.includes(cmsArea)) {
+      moduleIds.push(definition.moduleId);
+    }
+  }
+  return moduleIds;
+}
+
 function resolveSelectionArea(area: string): PhiCmsAreaKey {
   const cmsArea = area === "public" ? "public" : area;
   if (!isPhiCmsAreaKey(cmsArea)) {
@@ -64,7 +102,7 @@ export function assertPhiRuntimeModuleIdsAllowedForArea(
         `Runtime module "${moduleId}" is not eligible for Area "${cmsArea}".`,
       );
     }
-    if (definition.kind === "platform" || isPhiRuntimeAreaBaseModuleId(moduleId)) {
+    if (!isPhiRuntimeModuleSelectable(definition)) {
       throw new Error(`Locked runtime module "${moduleId}" must not be persisted in Area settings.`);
     }
   }
@@ -110,9 +148,10 @@ export type PhiRuntimeModuleSelectionReading = {
  * `assertPhiRuntimeModuleIdsAllowedForArea` is what a Builder save still goes through, so nothing
  * unresolvable is ever written back.
  *
- * The Area's own Base Module and the Platform Module are not part of this at all. They are implicit and
- * added elsewhere; a build missing one of those cannot serve the Area, and that is a failure rather
- * than a selection to trim.
+ * The Area's own Base Module, the Platform Module and a Module declared `activation: "always"` are not
+ * part of this at all. They are implicit and added where the active set is built
+ * (`listPhiAlwaysActiveRuntimeModuleIds` for the last); a build missing a Base or the Platform Module
+ * cannot serve the Area, and that is a failure rather than a selection to trim.
  */
 export function readPhiRuntimeModuleIdsForArea(
   area: string,
@@ -135,7 +174,7 @@ export function readPhiRuntimeModuleIdsForArea(
       reading.unresolved.push({ moduleId, reason: "ineligible" });
       continue;
     }
-    if (definition.kind === "platform" || isPhiRuntimeAreaBaseModuleId(moduleId)) {
+    if (!isPhiRuntimeModuleSelectable(definition)) {
       reading.unresolved.push({ moduleId, reason: "locked" });
       continue;
     }

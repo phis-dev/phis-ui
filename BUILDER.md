@@ -3,8 +3,8 @@
 This document defines the contract for the `builder` Area. The Builder base Module is
 `@phis/ui/modules/builder`; its routes live under its package, so its workspaces answer at
 `/builder/phis/ui/<workspace>`. Its sidebar lists Modules, Shells, Pages, Navigation, and Settings, and
-optional Modules add their own workspaces: Media (`@phis/ui/modules/asset`), Revisions
-(`@phis/ui/modules/revisions`), Theme (`@phis/ui/modules/theme`), and Dashboard
+other Modules add their own workspaces: Media (`@phis/ui/modules/asset`, always active), and the
+optional Revisions (`@phis/ui/modules/revisions`), Theme (`@phis/ui/modules/theme`), and Dashboard
 (`@phis/ui/modules/dashboard`). The signal contract the Builder uses is in [SIGNALS.md](./SIGNALS.md);
 Overlays are in [OVERLAYS.md](./OVERLAYS.md). Designs for Builder surfaces that do not exist are in
 [design/BUILDER.md](./design/BUILDER.md).
@@ -111,7 +111,8 @@ Authentication, commerce, and site-specific capabilities are optional modules fo
 The Shell runtime-module selector is a projection of the injected runtime catalog for the current
 target Area:
 
-- the Platform module and the Area's locked base module are visible, selected, and disabled;
+- the Platform module, the Area's locked base module and every Module declared `activation: "always"`
+  that is eligible for the Area are visible, selected, and disabled;
 - eligible optional modules are visible and may be selected or removed;
 - only optional module IDs are persisted;
 - a third-party module appears without Builder-specific code when its injected definition declares
@@ -813,7 +814,7 @@ Rules:
 
 - the picker is the primary insertion UI for Layouts and Widgets
 - the picker source is exactly the `core` Module plus the target Area's locked base module plus the
-  optional modules active in that Area
+  always-active Modules eligible for that Area plus the optional modules active in it
 - the picker must not apply a second Widget-level Area list, authoring policy, category blacklist, or
   first-party registry after resolving that active module set
 - an optional third-party module may declare eligibility for any canonical Area; activating it in one

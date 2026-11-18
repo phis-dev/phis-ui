@@ -35,6 +35,7 @@ import {
   resolvePhiCmsRoutePresetByPageId,
 } from "../../../plugins/runtime-modules/descriptor-compiler";
 import { resolvePhiBuilderAreaAsCmsArea } from "../../../constants/cms-areas";
+import { listPhiAlwaysActiveRuntimeModuleIds } from "../settings";
 import { createPhiPresetCmsPageId, isPhiCmsInstanceId } from "../../../types/cms-instance-id";
 import {
   buildPhiBuilderAreaLandingSelection,
@@ -121,6 +122,12 @@ const resolvePhiBuilderAreaRouteTable = cache(async function resolvePhiBuilderAr
   }
   activeModuleKeys.add(runtimeModuleCatalog.platformModuleId);
   const cmsArea = resolvePhiBuilderAreaAsCmsArea(area);
+  for (const moduleId of listPhiAlwaysActiveRuntimeModuleIds(
+    cmsArea,
+    [...runtimeModuleCatalog.values()].map((entry) => entry.definition),
+  )) {
+    activeModuleKeys.add(moduleId);
+  }
   const catalog = resolvePhiCmsDescriptorCatalog(runtimeModuleCatalog);
   const areaDefinition = catalog.areaDefinitions.get(cmsArea);
   if (!areaDefinition) {

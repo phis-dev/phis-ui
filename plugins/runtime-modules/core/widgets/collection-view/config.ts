@@ -15,6 +15,7 @@ import type {
 import { readPhiProviderResourceSource } from "../../../../../types/runtime-data-provider";
 import type { PhiCmsWidgetPlugin } from "../../../../../types/cms-plugins";
 import { PHI_SIGNAL_VALUE_SCHEMAS, readPhiSignalRouteSet } from "../../../../../types/signals";
+import { resolvePhiAssetControllerRouteRequirements } from "../../../../../components/media/asset-controller-requirement";
 import { isPhiNamespacedRuntimeKey } from "../../../../../types/runtime-data-provider";
 import { PHI_AUTHORING_OPTION_PROVIDER_KEYS } from "../../../../../constants/authoring-option-provider-keys";
 import { readPhiLengthValue } from "../../../../../types/length";
@@ -175,6 +176,12 @@ export const PHI_COLLECTION_VIEW_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("collection-view"),
   typeKey: "collection-view",
+  /*
+   * The Media collection is drawn here (`asset-binding.tsx`), and where its placement sends a selection
+   * or an action to the Asset Controller, that Controller is mounted with it -- it mounts on demand. A
+   * collection that only lists asks for nothing.
+   */
+  requiredRuntimeControllers: ({ config }) => resolvePhiAssetControllerRouteRequirements(config.signalRoutes),
   title: "Collection View",
   description: "Provider-backed visual collection with generic tools and pagination.",
   category: "data",
@@ -366,6 +373,7 @@ export const PHI_COLLECTION_VIEW_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "requiredRuntimeControllers"
   | "title"
   | "description"
   | "category"

@@ -11,7 +11,7 @@ What carries it:
 | Shapes, key grammar, limits, the write reader | `@phis/contracts/user-state` |
 | The store | `phis.user_site_memberships.module_state`, one `jsonb_set` per write |
 | The route | `GET/PATCH/DELETE /api/site/user-state`, session-authenticated |
-| What a Module may write | the key's prefix against the union of `runtimeModules` over published Areas |
+| What a Module may write | the key's prefix against the union of `runtimeModules` over published Areas (so a Module declared `activation: "always"`, which is in no stored selection, keeps no user state; the catalog refuses the combination) |
 | Declaring keys | `userState` on a Module definition ([types/cms-plugins.ts](../types/cms-plugins.ts)) |
 | Writing, from the browser | `@phis/ui/runtime/user-state-client` |
 | Reading, while rendering | `getPhiUserState` from `@phis/ui/server-helpers` |

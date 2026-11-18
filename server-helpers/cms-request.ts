@@ -29,7 +29,10 @@ import {
   resolvePhiCmsModuleNavigationFolderTargets,
   resolvePhiCmsRoutePreset,
 } from "../plugins/runtime-modules/descriptor-compiler";
-import { resolvePhiRuntimeModuleIdsForArea } from "../plugins/runtime-modules/settings";
+import {
+  listPhiAlwaysActiveRuntimeModuleIds,
+  resolvePhiRuntimeModuleIdsForArea,
+} from "../plugins/runtime-modules/settings";
 import { composePhiCmsPagePresetOverlays } from "../plugins/runtime-modules/page-preset-overlays";
 import { resolvePhiCmsRoutePage } from "../plugins/runtime-modules/route-page-resolution";
 import { PhiCmsFlags } from "../constants/phi-cms";
@@ -227,11 +230,13 @@ export function resolveActivePresetModuleKeys(
   }
   activeModuleKeys.add(areaDefinition.baseModuleId);
   const configuredModuleKeys = readPhiAreaPresetRuntimeModuleIds(areaPreset?.preset, area);
-  for (const moduleKey of resolvePhiRuntimeModuleIdsForArea(
-    area,
-    configuredModuleKeys,
-    [...runtimeModuleCatalog.values()].map((entry) => entry.definition),
-  )) {
+  const moduleDefinitions = [...runtimeModuleCatalog.values()].map((entry) => entry.definition);
+  // The Modules declared `activation: "always"` come first and on the same terms as the selected ones:
+  // the active set here has to be the one `resolvePhiRuntimeModuleSet` builds for the render.
+  for (const moduleKey of [
+    ...listPhiAlwaysActiveRuntimeModuleIds(area, moduleDefinitions),
+    ...resolvePhiRuntimeModuleIdsForArea(area, configuredModuleKeys, moduleDefinitions),
+  ]) {
     const definition = runtimeModuleCatalog.get(moduleKey)?.definition;
     if (definition) {
       // A Module is on for an Area or it is not. It is never switched off for one reader (ACCESS.md):
@@ -241,11 +246,11 @@ export function resolveActivePresetModuleKeys(
         serverCapabilities,
       );
       if (!bindingResolution.available) {
-        // The Module is selected and installed, and the server half it needs is not there. It stays off
+        // The Module is active and installed, and the server half it needs is not there. It stays off
         // for the whole Area -- and the log names it, because the page it leaves looks like a page the
         // Site chose.
         logRuntimeEvent("warn", "runtime_modules.server_capability.unavailable", {
-          message: "A selected Module is off: its server capability requirement is unavailable.",
+          message: "An active Module is off: its server capability requirement is unavailable.",
           area,
           pluginKey: moduleKey,
           meta: {

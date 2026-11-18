@@ -466,7 +466,6 @@ export function PhiHtmlWidgetToolbarTools({
         }}
       />
       <PhiInternalAssetReferencePickerButton
-        blockId={blockId}
         ariaLabel={labels.richText.insertAsset}
         onSelect={(asset) => {
           bridge?.insertImage(
@@ -580,7 +579,6 @@ export function PhiMarkdownWidgetToolbarTools({
         }}
       />
       <PhiInternalAssetReferencePickerButton
-        blockId={blockId}
         ariaLabel={labels.richText.insertAsset}
         onSelect={(asset) => {
           const alt = (asset.altText?.trim() || asset.title?.trim() || asset.originalName)

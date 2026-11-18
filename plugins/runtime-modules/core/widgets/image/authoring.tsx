@@ -21,9 +21,9 @@ export const PHI_IMAGE_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugin<PhiCmsIm
       <PhiImageWidgetEditor config={config} onChange={authoring?.updateConfig} />
     </Suspense>
   ),
-  renderEditorTools: ({ widget, config, authoring }) => authoring ? (
+  renderEditorTools: ({ config, authoring }) => authoring ? (
     <Suspense fallback={null}>
-      <PhiImageWidgetEditorTools blockId={widget.id} config={config} onChange={authoring.updateConfig} />
+      <PhiImageWidgetEditorTools config={config} onChange={authoring.updateConfig} />
     </Suspense>
   ) : null,
 };

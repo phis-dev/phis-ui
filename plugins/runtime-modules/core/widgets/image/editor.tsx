@@ -7,7 +7,6 @@ import {
   resolvePhiImageAssetVariantSpec,
 } from "../../../../../constants/media";
 import type { PhiMediaAsset } from "../../../../../types/media";
-import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
 import type { PhiCmsImageWidgetConfig } from "./config";
 import { PHI_IMAGE_WIDGET_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/image";
 import { PhiMaskPickerButton } from "../../../../../components/widgets/client/shared/phi-mask-picker";
@@ -130,15 +129,14 @@ export function PhiImageWidgetEditor({ config, onChange }: PhiImageWidgetEditorP
 }
 
 export function PhiImageWidgetEditorTools({
-  blockId,
   config,
   onChange,
-}: PhiImageWidgetEditorProps & { blockId: PhiCmsInstanceId }) {
+}: PhiImageWidgetEditorProps) {
   return (
     <span
       style={{ display: "inline-flex" }}
     >
-      <PhiWidgetImageToolButton blockId={blockId} onChange={(patch) => onChange?.(patch)} />
+      <PhiWidgetImageToolButton onChange={(patch) => onChange?.(patch)} />
       {/*
         * Above the image rather than below its tools: the tools sit on the image's top edge, and a picker
         * hanging down from them covered exactly the picture the mask is being set on.

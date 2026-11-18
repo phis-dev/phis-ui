@@ -2,6 +2,7 @@ import { isPhiRecord } from "../../../../../helpers/is-record";
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsAssetInspectorWidgetConfig } from "../../../../../types/media";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
+import { requirePhiAssetController } from "../../../../../components/media/asset-controller-requirement";
 import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../../ids";
 import { readPhiSignalRouteSet } from "../../../../../types/signals";
 
@@ -25,6 +26,8 @@ export const PHI_IMAGE_INSPECTOR_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("image-inspector"),
   typeKey: "image-inspector",
+  // It draws the Asset the Controller was told is selected, so the Controller is where this is.
+  requiredRuntimeControllers: requirePhiAssetController,
   title: "Asset Inspector",
   description: "Drawer inspector for the selected asset.",
   category: "media",
@@ -50,6 +53,7 @@ export const PHI_IMAGE_INSPECTOR_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "requiredRuntimeControllers"
   | "title"
   | "description"
   | "category"

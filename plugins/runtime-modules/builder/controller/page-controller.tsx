@@ -34,6 +34,7 @@ import {
   describePhiBuilderPageAddressConflict,
   findPhiBuilderModuleAddressConflict,
   findPhiBuilderSitePageAddressConflict,
+  listPhiBuilderAddressedModuleIds,
 } from "../page-address-rule";
 import {
   PHI_BUILDER_AREA_SEARCH_PARAM,
@@ -70,7 +71,12 @@ import { usePhiPathname } from "../../../../components/runtime/use-phi-pathname"
 
 type PhiBuilderPageControllerState = Pick<
   PhiDeveloperBuilderWorkspaceState,
-  "customPages" | "modulePresetPagesByArea" | "pageMetaDrafts" | "persistedPageCatalogByArea" | "runtimeModuleIdsByArea"
+  | "customPages"
+  | "modulePresetPagesByArea"
+  | "pageMetaDrafts"
+  | "persistedPageCatalogByArea"
+  | "runtimeModuleIdsByArea"
+  | "runtimeModuleDefinitions"
 >;
 
 type PhiPageMetaDialogMode = "create" | "update";
@@ -264,7 +270,7 @@ export function usePhiBuilderPageController({
       const moveModuleConflict = pathChanged
         ? findPhiBuilderModuleAddressConflict(requestedPath, {
             area: effectiveArea,
-            activeModuleIds: state.runtimeModuleIdsByArea[effectiveArea] ?? [],
+            activeModuleIds: listPhiBuilderAddressedModuleIds(state, effectiveArea),
             catalog: currentPageTree,
             baseModuleId: resolvePhiRuntimeAreaDefinition(resolvePhiBuilderAreaAsCmsArea(effectiveArea)).baseModuleId,
           })
@@ -368,7 +374,7 @@ export function usePhiBuilderPageController({
     }
     const createModuleConflict = findPhiBuilderModuleAddressConflict(requestedStoragePath, {
       area: effectiveArea,
-      activeModuleIds: state.runtimeModuleIdsByArea[effectiveArea] ?? [],
+      activeModuleIds: listPhiBuilderAddressedModuleIds(state, effectiveArea),
       catalog: currentPageTree,
       baseModuleId: resolvePhiRuntimeAreaDefinition(resolvePhiBuilderAreaAsCmsArea(effectiveArea)).baseModuleId,
     });

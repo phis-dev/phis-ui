@@ -30,10 +30,10 @@ import {
   resolvePhiAuthUiProviderModuleId,
   resolvePhiDeclaredMediaSpaces,
   resolvePhiDeclaredSeeds,
+  isPhiRuntimeModuleSelectable,
   resolvePhiDeclaredThreadKinds,
   resolvePhiRuntimeModuleIdsForArea,
 } from "../../../plugins/runtime-modules/settings";
-import { isPhiRuntimeAreaBaseModuleId } from "../../../plugins/runtime-modules/area-definitions";
 import { createPhiBuilderDraftAllocationKey } from "./draft-allocation-key";
 import {
   clearPhiBuilderDraftAllocation,
@@ -175,7 +175,7 @@ function assertPersistableAreaRuntimeModuleIds(
     if (!definition) {
       throw new Error(`Runtime module "${moduleId}" is not installed.`);
     }
-    if (definition.kind !== "platform" && !isPhiRuntimeAreaBaseModuleId(moduleId)) {
+    if (isPhiRuntimeModuleSelectable(definition)) {
       continue;
     }
     throw new Error(

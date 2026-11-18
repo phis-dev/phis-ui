@@ -19,6 +19,7 @@ import { findFirstPhiCmsNavigationLinkPath } from "../../../components/regions/p
 import type { PhiPageReference } from "../../../types/references";
 import { resolvePhiRuntimeAreaDefinition } from "../area-definitions";
 import { resolvePhiAreaRootRouteNavKey } from "../area-root-route";
+import { listPhiAlwaysActiveRuntimeModuleIds } from "../settings";
 import type { PhiRuntimeModuleId } from "../../../types/cms-module-descriptors";
 import { readPhiBuilderStoredAreaRootRoute } from "./developer-workspace-store";
 import type { PhiDeveloperBuilderWorkspaceState } from "./developer-workspace-types";
@@ -37,6 +38,7 @@ export type PhiBuilderOfferedCatalogState = Pick<
   | "persistedPageCatalogByArea"
   | "navigationSurfacesByArea"
   | "runtimeModuleIdsByArea"
+  | "runtimeModuleDefinitions"
   | "areaRootRoutes"
 >;
 
@@ -46,18 +48,22 @@ export type PhiBuilderOfferedCatalogState = Pick<
  * Switched on here, or the Area's own base Module -- which is never in the selection because it is
  * never switchable: the Area is its Module. Leaving it out would drop the landing every Site starts
  * with from the list of the landings it may choose, and would leave the root slot with no applicant
- * to fall back to.
+ * to fall back to. A Module declared `activation: "always"` is not in the selection either, and
+ * answers in every Area it is eligible for.
  */
 function resolvePhiBuilderAreaModuleActivation(
-  state: Pick<PhiBuilderOfferedCatalogState, "runtimeModuleIdsByArea">,
+  state: Pick<PhiBuilderOfferedCatalogState, "runtimeModuleIdsByArea" | "runtimeModuleDefinitions">,
   area: PhiBuilderPageCatalogArea,
 ) {
   const baseModuleId = resolvePhiRuntimeAreaDefinition(resolvePhiBuilderAreaAsCmsArea(area))?.baseModuleId ?? null;
-  const selectedModuleIds = new Set(state.runtimeModuleIdsByArea?.[area] ?? []);
+  const activeModuleIds = new Set([
+    ...listPhiAlwaysActiveRuntimeModuleIds(area, state.runtimeModuleDefinitions ?? []),
+    ...(state.runtimeModuleIdsByArea?.[area] ?? []),
+  ]);
   return {
     baseModuleId,
     isActive: (moduleId: PhiRuntimeModuleId) =>
-      moduleId === baseModuleId || selectedModuleIds.has(moduleId),
+      moduleId === baseModuleId || activeModuleIds.has(moduleId),
   };
 }
 

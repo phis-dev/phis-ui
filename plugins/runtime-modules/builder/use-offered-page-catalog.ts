@@ -17,8 +17,8 @@ import {
  * looking at two entries both reading `/home` picks one by guess, with a fair chance of the one nobody
  * is ever served. The same narrowing settles `/`, which is a slot rather than an address.
  *
- * A hook rather than a call each time, because the answer needs six pieces of the workspace state and
- * a dependency list that names all six. Three surfaces had written that out themselves; two of them
+ * A hook rather than a call each time, because the answer needs seven pieces of the workspace state and
+ * a dependency list that names all seven. Three surfaces had written that out themselves; two of them
  * had written it out wrong, in the same way, and the third was written by copying one of those.
  */
 export function usePhiBuilderOfferedPageCatalog(
@@ -31,6 +31,7 @@ export function usePhiBuilderOfferedPageCatalog(
     persistedPageCatalogByArea,
     navigationSurfacesByArea,
     runtimeModuleIdsByArea,
+    runtimeModuleDefinitions,
     areaRootRoutes,
   } = state;
 
@@ -41,6 +42,7 @@ export function usePhiBuilderOfferedPageCatalog(
       persistedPageCatalogByArea,
       navigationSurfacesByArea,
       runtimeModuleIdsByArea,
+      runtimeModuleDefinitions,
       areaRootRoutes,
     }, area),
     [
@@ -50,6 +52,7 @@ export function usePhiBuilderOfferedPageCatalog(
       modulePresetPagesByArea,
       navigationSurfacesByArea,
       persistedPageCatalogByArea,
+      runtimeModuleDefinitions,
       runtimeModuleIdsByArea,
     ],
   );

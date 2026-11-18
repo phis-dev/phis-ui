@@ -9,6 +9,7 @@ import {
 } from "../../../helpers/cms-area-config";
 import { assignPhiWorkspacePublicRoutePaths } from "./workspace-catalog-actions";
 import type { PhiRuntimeModuleId } from "../../../types";
+import { listPhiAlwaysActiveRuntimeModuleIds } from "../settings";
 import { markPhiBuilderModuleAreasDirty } from "./developer-workspace-store";
 import type {
   PhiBuilderPublicRouteCollisionAnswer,
@@ -48,13 +49,19 @@ function resolvePhiBuilderPersistedPublicPages(
 function buildPhiBuilderPublicAddressMap(
   state: Pick<
     PhiDeveloperBuilderWorkspaceState,
-    "publicRouteClaims" | "publicRoutePaths" | "runtimeModuleIdsByArea" | "persistedPageCatalogByArea"
+    | "publicRouteClaims"
+    | "publicRoutePaths"
+    | "runtimeModuleIdsByArea"
+    | "runtimeModuleDefinitions"
+    | "persistedPageCatalogByArea"
   >,
   options?: { without?: PhiRuntimeModuleId },
 ) {
-  const activeModuleIds = new Set(
-    (state.runtimeModuleIdsByArea?.public ?? []).filter((moduleId) => moduleId !== options?.without),
-  );
+  // A Module declared `activation: "always"` answers on Public without being in the selection.
+  const activeModuleIds = new Set([
+    ...listPhiAlwaysActiveRuntimeModuleIds("public", state.runtimeModuleDefinitions ?? []),
+    ...(state.runtimeModuleIdsByArea?.public ?? []),
+  ].filter((moduleId) => moduleId !== options?.without));
   return buildPhiPublicRouteAddressMap({
     claims: state.publicRouteClaims ?? [],
     activeModuleIds,
@@ -154,6 +161,7 @@ export function findPhiBuilderPublicRouteAnswerProblem(
     | "publicRouteClaims"
     | "publicRoutePaths"
     | "runtimeModuleIdsByArea"
+    | "runtimeModuleDefinitions"
     | "persistedPageCatalogByArea"
   >,
   request: Pick<PhiBuilderPublicRouteCollisionRequest, "moduleId" | "answers">,

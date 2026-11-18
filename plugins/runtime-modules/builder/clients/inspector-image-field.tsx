@@ -5,13 +5,11 @@ import { PhiSelectControl } from "../../../../components/controls/phi-select-con
 import { PhiTextControl } from "../../../../components/controls/phi-text-control";
 import { PhiMediaPickerBinding } from "../../../../components/media/phi-media-picker-binding";
 import { PHI_MEDIA_WIDGET_DEFAULT_LABELS } from "../../../../components/media/media-widget-labels";
-import { createPhiMediaPickerAssetControllerRoutes } from "../../../../components/media/asset-controller-routes";
 import { PHI_SEARCH_WIDGET_DEFAULT_LABELS } from "../../../../components/widgets/label-types/search";
 import { PHI_IMAGE_VARIANT_OPTIONS } from "../../../../components/widgets/config/image-variant-options";
 import { PhiInspectorFieldRow } from "../../../../components/widgets/inspector-field-row";
 import { usePhiAuthoringAssetDetails } from "../../../../components/media/use-authoring-asset-details";
 import { PhiImageAssetVariantKey, PhiMediaKind } from "../../../../constants/media";
-import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
 
 const PHI_IMAGE_FIELD_ORIGINAL_VARIANT = "__original__";
 
@@ -27,12 +25,10 @@ const PHI_IMAGE_FIELD_ORIGINAL_VARIANT = "__original__";
  */
 export function PhiInspectorImageFieldControl({
   config,
-  blockId,
   disabled,
   onChange,
 }: {
   config: Record<string, unknown>;
-  blockId?: PhiCmsInstanceId | null;
   disabled?: boolean;
   onChange?: (patch: Record<string, unknown>) => void;
 }) {
@@ -51,7 +47,6 @@ export function PhiInspectorImageFieldControl({
           showPagination: true,
           showGroupFilter: true,
           showSearchBar: true,
-          signalRoutes: createPhiMediaPickerAssetControllerRoutes(`inspector-image-${blockId ?? "field"}`, "area"),
         }}
         labels={PHI_MEDIA_WIDGET_DEFAULT_LABELS}
         searchLabels={PHI_SEARCH_WIDGET_DEFAULT_LABELS}

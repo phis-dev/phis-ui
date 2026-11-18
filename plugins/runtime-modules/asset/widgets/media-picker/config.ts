@@ -8,6 +8,7 @@ import {
   readPhiSignalRouteSet,
 } from "../../../../../types/signals";
 import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../../ids";
+import { resolvePhiAssetControllerRouteRequirements } from "../../../../../components/media/asset-controller-requirement";
 import type { PhiProviderResourceSource } from "../../../../../types/runtime-data-provider";
 import { readBoolean, readNumber, readString } from "../../../../../components/widgets/config/parser-primitives";
 import {
@@ -63,6 +64,8 @@ export const PHI_MEDIA_PICKER_WIDGET_DEFINITION = {
   pluginKey: resolvePhiCmsWidgetPluginKey("media-picker"),
   typeKey: "media-picker",
   slotSizePolicy: "intrinsic",
+  // The Controller this picker's routes tell what is searched and chosen, where the placement wires any.
+  requiredRuntimeControllers: ({ config }) => resolvePhiAssetControllerRouteRequirements(config.signalRoutes),
   title: "Mediathek",
   description: "Button-based media picker with search, read-only folder context, thumbnails, and pagination.",
   category: "media",
@@ -110,6 +113,7 @@ export const PHI_MEDIA_PICKER_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "requiredRuntimeControllers"
   | "slotSizePolicy"
   | "title"
   | "description"

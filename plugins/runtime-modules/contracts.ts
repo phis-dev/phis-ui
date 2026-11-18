@@ -630,6 +630,59 @@ function assertNavigationItemAccessPolicies(
   }
 }
 
+/**
+ * What `activation: "always"` may be declared with (`PhiRuntimeModuleDefinition.activation`).
+ *
+ * The declarations it refuses are the ones read from an Area's stored selection, which an always-active
+ * Module is never in: they would be accepted here and then dropped by every reader.
+ */
+const PHI_SELECTION_DERIVED_DECLARATIONS = [
+  "mediaSpaces",
+  "threadKinds",
+  "seed",
+  "userState",
+  "authUiProvider",
+] as const satisfies readonly (keyof PhiRuntimeModuleDefinition)[];
+
+function assertPhiRuntimeModuleActivation(
+  definition: PhiRuntimeModuleDefinition,
+  areaDefinitions: readonly PhiCmsAreaDefinition[],
+) {
+  const activation: unknown = definition.activation;
+  if (activation === undefined) {
+    return;
+  }
+  if (activation !== "always") {
+    throw new Error(`${definition.moduleId}: activation must be "always" or absent.`);
+  }
+  if (definition.kind !== "module") {
+    throw new Error(
+      `${definition.moduleId}: the Platform Module is active everywhere already and must not declare activation.`,
+    );
+  }
+  if (areaDefinitions.some(({ baseModuleId }) => baseModuleId === definition.moduleId)) {
+    throw new Error(
+      `${definition.moduleId}: an Area's Base Module is active in its own Area and must not declare activation.`,
+    );
+  }
+  if (!definition.moduleId.startsWith(`${PHI_SHARED_PACKAGE_NAME}/${PHI_MODULE_MARKER}/`)) {
+    throw new Error(
+      `${definition.moduleId}: only a Module of ${PHI_SHARED_PACKAGE_NAME} may declare activation "always"; ` +
+      `installing a package must not switch a Module on.`,
+    );
+  }
+  if (definition.eligibleAreas.length === 0) {
+    throw new Error(`${definition.moduleId}: an always-active Module must be eligible for at least one Area.`);
+  }
+  const declared = PHI_SELECTION_DERIVED_DECLARATIONS.filter((key) => definition[key] !== undefined);
+  if (declared.length > 0) {
+    throw new Error(
+      `${definition.moduleId}: an always-active Module must not declare ${declared.join(", ")}. ` +
+      `They are derived from an Area's stored Module selection, which an always-active Module is never part of.`,
+    );
+  }
+}
+
 export function createPhiRuntimeModuleCatalog(
   entries: readonly PhiRuntimeModuleCatalogEntry[],
   areaDefinitions: readonly PhiCmsAreaDefinition[],
@@ -659,6 +712,7 @@ export function createPhiRuntimeModuleCatalog(
     }
     assertPhiRuntimeModuleMetadata(definition);
     assertPhiRuntimeModuleServerBinding(definition);
+    assertPhiRuntimeModuleActivation(definition, areaDefinitions);
     const ownerProviderId = definition.serverBinding.providerId as PhiRoleProviderId;
     const hasController = hasPhiRuntimeModuleController(definition);
     if (hasController) {

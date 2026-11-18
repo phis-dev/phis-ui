@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 
+import { PHI_ASSET_CONTROLLER_TYPE } from "../components/media/asset-controller-address";
 import { PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/catalog";
 import { repositoryRoot } from "./lib/repo-root.mjs";
 import { listPhiPresetTreeFiles } from "./preset-tree-files";
@@ -51,6 +52,8 @@ assert.match(
   "The resolver mounts a Controller for its Area only under the `area` policy; if that changes, this validator's rule changes with it.",
 );
 
+const PHI_ASSET_CONTROLLER_ADDRESS_MODULE = "components/media/asset-controller-address";
+
 /** Controller type by the address module that exports it, for the Modules that mount on demand. */
 const demandControllerTypesByAddressModule = new Map<string, { moduleId: string; controllerType: string }>();
 for (const [moduleId, entry] of PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG) {
@@ -67,7 +70,22 @@ for (const [moduleId, entry] of PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG) {
     moduleId,
     controllerType: definition.controllerType,
   });
+  /*
+   * The Asset Controller's address is not in its Module's folder: pickers in the Foundation, the Builder
+   * and the Theme Module send to it, so it lives beside them (`components/media/asset-controller-address.ts`).
+   * A tree importing it is wiring to that Controller all the same.
+   */
+  if (definition.controllerType === PHI_ASSET_CONTROLLER_TYPE) {
+    demandControllerTypesByAddressModule.set(
+      path.join(repositoryRoot, PHI_ASSET_CONTROLLER_ADDRESS_MODULE),
+      { moduleId, controllerType: definition.controllerType },
+    );
+  }
 }
+assert.ok(
+  demandControllerTypesByAddressModule.has(path.join(repositoryRoot, PHI_ASSET_CONTROLLER_ADDRESS_MODULE)),
+  "The Asset Module no longer mounts its Controller on demand; the Asset rules of this validator are stale.",
+);
 assert.ok(
   demandControllerTypesByAddressModule.size > 0,
   "No Module mounts its Controller on demand; this validator has nothing to read and is stale.",
@@ -94,7 +112,7 @@ function readTreeWithLocalBuilders(file: string, source: string) {
 const failures: string[] = [];
 for (const file of listPhiPresetTreeFiles(repositoryRoot)) {
   const source = readFileSync(file, "utf8");
-  for (const match of source.matchAll(/from\s+"([^"]*\/controller\/address)"/gu)) {
+  for (const match of source.matchAll(/from\s+"([^"]*\/(?:controller\/address|asset-controller-address))"/gu)) {
     const resolved = path.resolve(path.dirname(file), match[1]!);
     const owner = demandControllerTypesByAddressModule.get(resolved);
     if (!owner) continue;
@@ -121,8 +139,75 @@ for (const file of listPhiPresetTreeFiles(repositoryRoot)) {
   }
 }
 
+/*
+ * A file that addresses the Asset Controller in code belongs to a Widget that asks for the Controller.
+ *
+ * The trees above are one way to send to a `demand` Controller. The other is a client file that builds
+ * the routes itself, as the pickers of the authoring chrome did until 18.11.2026: the canvas' image tool
+ * and mask picker, the Inspector's image fields and Backgrounds, the Theme's Logo and Background each
+ * sent the Controller what they searched. No tree names such routes, so no tree can be asked whether it
+ * mounts their receiver -- and the hosts stand in two scopes, the Inspector's Area Overlay and the Page
+ * beside it, so every one of them asking would have mounted two Controllers behind one address. Those
+ * pickers keep their own state and send the Controller nothing now.
+ *
+ * So the address has two readers, named here: the requirement a Widget declares
+ * (`components/media/asset-controller-requirement.ts`) and the Asset Module, whose Media Page states the
+ * Controller in its tree. Any other file that imports the address is wiring to the Controller in code.
+ * It fails here unless it is in the table below, which names the Widget definition that draws it, and
+ * that definition asks for the Controller. The table is empty because nothing does.
+ */
+const PHI_ASSET_CONTROLLER_ADDRESS_READERS = [
+  "components/media/asset-controller-address.ts",
+  "components/media/asset-controller-requirement.ts",
+] as const;
+const PHI_ASSET_CONTROLLER_CODE_HOSTS = new Map<string, string>([]);
+
+function listSourceFiles(directory: string): string[] {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const file = path.join(directory, entry.name);
+    if (entry.isDirectory()) {
+      return entry.name === "node_modules" ? [] : listSourceFiles(file);
+    }
+    return /\.tsx?$/u.test(entry.name) && !/\.test\.tsx?$/u.test(entry.name) ? [file] : [];
+  });
+}
+
+const assetControllerAddressFiles = ["components", "plugins"]
+  .flatMap((directory) => listSourceFiles(path.join(repositoryRoot, directory)))
+  .map((file) => path.relative(repositoryRoot, file))
+  .filter((file) =>
+    !PHI_ASSET_CONTROLLER_ADDRESS_READERS.some((reader) => reader === file) &&
+    !file.startsWith("plugins/runtime-modules/asset/"))
+  .filter((file) => /from\s+"[^"]*\/asset-controller-address"/u.test(readFileSync(path.join(repositoryRoot, file), "utf8")));
+for (const file of assetControllerAddressFiles) {
+  const hostDefinition = PHI_ASSET_CONTROLLER_CODE_HOSTS.get(file);
+  if (!hostDefinition) {
+    failures.push(
+      `${file} addresses the Asset Controller in code, which is mounted on demand, and no Widget is named ` +
+      "as its host. A picker of the authoring chrome sends the Controller nothing; anything else declares " +
+      "`requiredRuntimeControllers` on the Widget that draws it (components/media/asset-controller-requirement.ts) " +
+      "and adds the pair to PHI_ASSET_CONTROLLER_CODE_HOSTS.",
+    );
+    continue;
+  }
+  if (!/requirePhiAssetController|resolvePhiAssetControllerRouteRequirements/u
+    .test(readFileSync(path.join(repositoryRoot, hostDefinition), "utf8"))) {
+    failures.push(
+      `${hostDefinition} hosts ${file}, which addresses the Asset Controller, and does not ask for it ` +
+      "(`requiredRuntimeControllers`, components/media/asset-controller-requirement.ts).",
+    );
+  }
+}
+for (const file of PHI_ASSET_CONTROLLER_CODE_HOSTS.keys()) {
+  assert.ok(
+    assetControllerAddressFiles.includes(file),
+    `${file} no longer addresses the Asset Controller; take it out of PHI_ASSET_CONTROLLER_CODE_HOSTS.`,
+  );
+}
+
 assert.deepEqual(failures, [], `\n${failures.join("\n")}\n`);
 
 console.log(
-  `validate-controller-mount-contracts: ${demandControllerTypesByAddressModule.size} demand-mounted Controllers, every preset wiring to one mounts it.`,
+  `validate-controller-mount-contracts: ${new Set([...demandControllerTypesByAddressModule.values()].map(({ controllerType }) => controllerType)).size} demand-mounted Controllers, every preset wiring to one mounts it; ` +
+  `${assetControllerAddressFiles.length} files address the Asset Controller in code outside its Module.`,
 );

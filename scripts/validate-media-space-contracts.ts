@@ -16,8 +16,11 @@ import { PHI_ASSET_RUNTIME_MODULE_ID } from "../plugins/runtime-modules/asset/id
 import { resolvePhiRuntimeModuleServerBinding } from "../plugins/runtime-modules/server-capabilities";
 import {
   readPhiRuntimeModuleIds,
+  readPhiRuntimeModuleIdsForArea,
   resolvePhiDeclaredMediaSpaces,
   assertPhiRuntimeModuleIdsAllowedForArea,
+  isPhiRuntimeModuleSelectable,
+  listPhiAlwaysActiveRuntimeModuleIds,
   resolvePhiRuntimeModuleIdsForArea,
 } from "../plugins/runtime-modules/settings";
 import type { PhiRuntimeModuleId } from "../types/cms-module-descriptors";
@@ -71,8 +74,6 @@ import {
   PHI_ASSET_INSPECTOR_WIDGET_IDS,
   PHI_ASSET_MEDIA_PAGE_WIDGET_IDS,
 } from "../plugins/runtime-modules/asset/media-page-ids";
-import { createPhiAssetControllerAddress } from "../components/media/asset-controller-address";
-import { createPhiMediaPickerAssetControllerRoutes } from "../components/media/asset-controller-routes";
 import { readSource } from "./lib/text.mjs";
 
 
@@ -277,26 +278,6 @@ assert.equal(combinePhiMediaFlagValues([]), 0);
 // ---------------------------------------------------------------------------
 // Picker and Inspector binding
 // ---------------------------------------------------------------------------
-
-const pickerRoutes = createPhiMediaPickerAssetControllerRoutes("test-picker", "area");
-const assetControllerAddress = createPhiAssetControllerAddress();
-const pickerEmits = pickerRoutes.emits ?? [];
-assert.ok(pickerEmits.length > 0);
-for (const route of pickerEmits) {
-  assert.equal(route.receiver, assetControllerAddress, "Every Picker emit addresses the Asset controller.");
-  assert.equal(route.scope, "area");
-  assert.ok(route.routeKey.startsWith("test-picker-"));
-}
-assert.equal(
-  new Set(pickerEmits.map(({ routeKey }) => routeKey)).size,
-  pickerEmits.length,
-  "Route keys must stay unique so two Pickers on one Page do not collide.",
-);
-assert.deepEqual(
-  (createPhiMediaPickerAssetControllerRoutes("a", "area").emits ?? []).map(({ capabilityId }) => capabilityId),
-  (createPhiMediaPickerAssetControllerRoutes("b", "page").emits ?? []).map(({ capabilityId }) => capabilityId),
-  "The capability set is independent of prefix and scope.",
-);
 
 // Inspector, Overlay and Media page instance ids must not collide with each other.
 const inspectorIds = [
@@ -651,26 +632,46 @@ assert.deepEqual(
 const moduleDefinitions = [...PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG.values()]
   .map(({ definition }) => definition) as unknown as readonly PhiRuntimeModuleDefinition[];
 
-// The Asset module is an ordinary, selectable module in every Area -- so it can be turned off and on.
+/*
+ * The Asset Module is part of the platform: active in every Area without being selected, and never in a
+ * stored selection. A list written before that still names it; reading drops it as locked, writing
+ * refuses it.
+ */
 assert.equal(PHI_ASSET_RUNTIME_MODULE_DEFINITION.kind, "module");
+assert.equal(PHI_ASSET_RUNTIME_MODULE_DEFINITION.activation, "always");
+assert.equal(
+  PHI_ASSET_RUNTIME_MODULE_DEFINITION.controllerMountPolicy,
+  "demand",
+  "Active everywhere, the Asset Controller is mounted only where something asks for it.",
+);
 for (const area of ["public", "app", "admin", "builder", "editor", "accounting"] as const) {
+  assert.ok(
+    listPhiAlwaysActiveRuntimeModuleIds(area, moduleDefinitions).includes(PHI_ASSET_RUNTIME_MODULE_ID),
+    `The Asset module is always active in Area "${area}".`,
+  );
   assert.deepEqual(
-    resolvePhiRuntimeModuleIdsForArea(area, [PHI_ASSET_RUNTIME_MODULE_ID], moduleDefinitions),
-    [PHI_ASSET_RUNTIME_MODULE_ID],
-    `The Asset module must stay selectable in Area "${area}".`,
+    readPhiRuntimeModuleIdsForArea(area, [PHI_ASSET_RUNTIME_MODULE_ID], moduleDefinitions),
+    { moduleIds: [], unresolved: [{ moduleId: PHI_ASSET_RUNTIME_MODULE_ID, reason: "locked" }] },
+    `A stored selection of Area "${area}" that names the Asset module is read past it.`,
+  );
+  assert.throws(
+    () => assertPhiRuntimeModuleIdsAllowedForArea(area, [PHI_ASSET_RUNTIME_MODULE_ID], moduleDefinitions),
+    /Locked runtime module/u,
+    `The Asset module is not written into the selection of Area "${area}".`,
   );
   assert.deepEqual(resolvePhiRuntimeModuleIdsForArea(area, [], moduleDefinitions), []);
   assert.deepEqual(resolvePhiRuntimeModuleIdsForArea(area, null, moduleDefinitions), []);
 }
 // Restoring a module that is already selected is idempotent rather than a duplicate.
-assert.deepEqual(
-  resolvePhiRuntimeModuleIdsForArea(
-    "builder",
-    [PHI_ASSET_RUNTIME_MODULE_ID, PHI_ASSET_RUNTIME_MODULE_ID],
-    moduleDefinitions,
-  ),
-  [PHI_ASSET_RUNTIME_MODULE_ID],
-);
+{
+  const selectable = moduleDefinitions.find((definition) =>
+    isPhiRuntimeModuleSelectable(definition) && definition.eligibleAreas.includes("builder"));
+  assert.ok(selectable, "The first-party catalog has a selectable Module for the Builder Area.");
+  assert.deepEqual(
+    resolvePhiRuntimeModuleIdsForArea("builder", [selectable.moduleId, selectable.moduleId], moduleDefinitions),
+    [selectable.moduleId],
+  );
+}
 /*
  * Reading a stored selection drops what this build cannot serve; writing one refuses it. A locked
  * Module and a Module nobody installed are both simply absent from the reading, and both stop a save.

@@ -56,6 +56,7 @@ function workspace(input: {
     persistedPageCatalogByArea: {},
     navigationSurfacesByArea: {},
     runtimeModuleIdsByArea: { ...emptyByArea<PhiRuntimeModuleId>(), public: input.moduleIds ?? [] },
+    runtimeModuleDefinitions: [],
     areaRootRoutes: { public: input.stored },
     ...(input.unsaved !== undefined ? { areaRootRouteDrafts: { public: input.unsaved } } : {}),
   };

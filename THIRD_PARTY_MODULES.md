@@ -449,6 +449,9 @@ yourself.
 - Every Widget, Layout, Form, provider, route, Theme preset, and authoring adapter has exactly one
   `ownerModuleId`.
 - Installation is build-time. Area activation is persisted separately through `runtimeModules`.
+  `activation: "always"` on a definition -- active in every eligible Area without being selected -- is
+  for Modules of `@phis/ui` only, and the catalog refuses it on any other package's
+  ([MODULES.md](./MODULES.md#activation)).
 - A database package name must never become a dynamic `import()` target.
 - Global registries, import-side-effect registration, and client/server compatibility fallbacks are
   not extension APIs.
@@ -1267,8 +1270,8 @@ and a Widget whose provider is absent degrades to an empty library instead of fa
 
 A Form that stores a picture does not need any of this: give the field the `media-asset` type
 (the Asset Module's field type, `PHI_MEDIA_ASSET_FORM_FIELD_PROVIDER_KEY`, [FORMS.md](./FORMS.md)) and the
-Page mounts the library for it. Where the Asset Module is not active in the Area, the field says it is not
-available there and keeps its value. The field offers the Site Space only, shows the chosen picture, and holds the Asset id as a number (`null`
+Page mounts the library for it. The Asset Module is active in every Area (`activation: "always"`), so the
+field is available wherever a Form stands. The field offers the Site Space only, shows the chosen picture, and holds the Asset id as a number (`null`
 for none), which is what your handler receives. `config.mediaType` names the kind (`image` by default) and
 `config.publicOnly` greys out Assets that are not delivered publicly. Both are the interface; your handler
 is what decides which Asset it accepts, so read the Asset there before storing its id. `PhiMediaPickerControl` is public but
@@ -1276,10 +1279,10 @@ controlled only (it takes the Assets, the Folders and the paging as props, and `
 out Assets); the binding that feeds it from the library (`usePhiMediaPickerBinding`) is Foundation-internal,
 so a Widget that needs a picker where no Form fits has to ask for that binding rather than rebuild it.
 
-Inside the Builder's own chrome the library is always readable, whatever the edited Area activates -- a
-`phis:asset/...` reference is resolved by the core reference resolver, so an Area without the Asset
-Module still renders its images. That availability is declared by the owning Module through
-`availableToAuthoringChrome` on its provider descriptor, not listed anywhere in the Builder.
+Inside the Builder's own chrome the library is always readable, whatever the edited Area activates. That
+availability is declared by the owning Module through `availableToAuthoringChrome` on its provider
+descriptor, not listed anywhere in the Builder. A `phis:asset/...` reference is resolved by the core
+reference resolver and needs no Module at all.
 
 ### A popup leaves the block
 

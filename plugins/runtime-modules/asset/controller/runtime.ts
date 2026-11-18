@@ -107,8 +107,8 @@ export function usePhiAssetRuntimeController({
    *
    * The receivers -- the inspector and folder dialogs, their Forms, the collection -- used to be Widget
    * ids of the Media Page written into this file, so the Controller worked on that one Page and on no
-   * copy of it. The Page names them now (`controllerSettings`); a Page that names none, or an Area that
-   * runs this Controller only for its pickers, gets a Controller that opens nothing.
+   * copy of it. The Page names them now (`controllerSettings`); a Page that names none gets a
+   * Controller that opens nothing.
    */
   const emitRoutes = useMemo(() => config.signalRoutes?.emits ?? [], [config.signalRoutes?.emits]);
   const emitCapability = useCallback((

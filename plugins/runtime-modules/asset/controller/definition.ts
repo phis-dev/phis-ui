@@ -12,8 +12,8 @@ import { PHI_ASSET_SIGNAL_CHANNELS } from "../../../../components/media/asset-co
 
 /**
  * Whom the Controller answers into: the inspector and folder dialogs, their Forms and the collection
- * they reload. The Page that holds them says so (`controllerSettings`); an Area runs this Controller
- * for its pickers too, and there it is told nothing and opens nothing.
+ * they reload. The Page that holds them says so (`controllerSettings`); mounted for a Widget on a Page
+ * that says nothing, it is told nothing and opens nothing.
  */
 export type PhiAssetRuntimeControllerConfig = {
   signalRoutes: PhiSignalRouteSet | null;

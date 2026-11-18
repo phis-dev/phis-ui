@@ -181,7 +181,6 @@ export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
     );
     return renderPhiInspectorConfigField({
       field,
-      blockId: currentDraft?.id ?? null,
       value: lock ? lock.value : readPhiInspectorConfigPathValue(currentWidgetSettingsConfigRecord, field.key),
       defaultValue: readPhiInspectorConfigPathValue(widgetDefaultConfigRecord, field.key),
       config: currentWidgetSettingsConfigRecord,

@@ -14,7 +14,7 @@ import {
   type PhiCmsAreaKey,
 } from "../../../../constants/cms-areas";
 import { readPhiRuntimeModuleCategory } from "../../../../constants/runtime-module-categories";
-import type { PhiRuntimeModuleId } from "../../../../types";
+import type { PhiRuntimeModuleDefinition, PhiRuntimeModuleId } from "../../../../types";
 import { resolvePhiRuntimeAreaDefinition } from "../../area-definitions";
 import { applyPhiBuilderRuntimeModuleSelectionChanges } from "../runtime-module-selection";
 import {
@@ -76,15 +76,22 @@ function readAreaLabels(params: Record<string, unknown> | undefined) {
   return candidate as Record<string, string>;
 }
 
+/**
+ * Whether the Module runs in an Area it is eligible for. A Module declared `activation: "always"` does
+ * without being in the Area's selection, the way a Base Module does in its own Area.
+ */
 function isModuleActiveInArea(
   state: Pick<PhiDeveloperBuilderWorkspaceState, "runtimeModuleIdsByArea">,
-  moduleId: string,
+  definition: Pick<PhiRuntimeModuleDefinition, "moduleId" | "activation">,
   cmsArea: PhiCmsAreaKey,
 ) {
+  if (definition.activation === "always") {
+    return true;
+  }
   if (!isPhiBuilderAreaKey(cmsArea)) {
     return false;
   }
-  return (state.runtimeModuleIdsByArea[cmsArea] ?? []).includes(moduleId as PhiRuntimeModuleId);
+  return (state.runtimeModuleIdsByArea[cmsArea] ?? []).includes(definition.moduleId);
 }
 
 type PhiRuntimeModulesTableView = {
@@ -153,13 +160,15 @@ export function buildRuntimeModuleRows(
       const baseAreaKey = resolveModuleBaseAreaKey(definition.moduleId);
       const activeAreas = PHI_CMS_AREA_KEYS.filter((areaKey) =>
         definition.eligibleAreas.includes(areaKey) &&
-        (areaKey === baseAreaKey || isModuleActiveInArea(state, definition.moduleId, areaKey)));
+        (areaKey === baseAreaKey || isModuleActiveInArea(state, definition, areaKey)));
       return {
         moduleId: definition.moduleId,
         // "Runs anywhere": a base Module always does (its own Area never lets go of it), which is
         // exactly why its switch is locked -- the checkboxes carry the per-Area choice that remains.
+        // A Module declared `activation: "always"` runs in every Area it is eligible for and leaves
+        // no choice at all.
         active: activeAreas.length > 0,
-        locked: baseAreaKey != null,
+        locked: baseAreaKey != null || definition.activation === "always",
         icon: definition.icon ?? (definition.iconFamily ? `@phis/ui/widgets:${definition.iconFamily}` : ""),
         title: definition.title,
         description: definition.description,
@@ -327,7 +336,7 @@ function readRuntimeModuleActiveAreas(
   const baseAreaKey = resolveModuleBaseAreaKey(definition.moduleId);
   return PHI_CMS_AREA_KEYS.filter((areaKey) =>
     definition.eligibleAreas.includes(areaKey) &&
-    (areaKey === baseAreaKey || isModuleActiveInArea(state, definition.moduleId, areaKey)));
+    (areaKey === baseAreaKey || isModuleActiveInArea(state, definition, areaKey)));
 }
 
 function buildRuntimeModuleActiveAreasLabel(
@@ -609,7 +618,7 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
         }
         const areas = cmsAreas.filter(
           (areaKey): areaKey is PhiCmsAreaKey & PhiDeveloperBuilderArea =>
-            isPhiBuilderAreaKey(areaKey) && isModuleActiveInArea(builderState, definition.moduleId, areaKey),
+            isPhiBuilderAreaKey(areaKey) && isModuleActiveInArea(builderState, definition, areaKey),
         );
         const signInLost = leavesPublicWithoutSignIn(builderState, definition, areas);
         const usage: PhiBuilderModuleUsageEntry[] = signInLost
@@ -659,6 +668,16 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
           });
         applyPhiBuilderRuntimeModuleSelectionChanges(changes);
       };
+
+      // Always active: neither the row's switch nor an Area's checkbox has anything to decide.
+      if (definition.activation === "always") {
+        return {
+          status: "rejected",
+          invalidation: "none",
+          errorCode: "locked",
+          message: `"${definition.title}" is part of the platform and runs in every Area it is eligible for.`,
+        };
+      }
 
       // The row's switch: the Module as a whole, i.e. every eligible Area in one gesture.
       if (request.fieldKey === "active") {

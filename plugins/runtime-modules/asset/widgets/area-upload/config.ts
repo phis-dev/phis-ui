@@ -2,6 +2,7 @@ import { isPhiRecord } from "../../../../../helpers/is-record";
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsAreaUploadWidgetConfig } from "../../../../../types/media";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
+import { requirePhiAssetController } from "../../../../../components/media/asset-controller-requirement";
 import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../../ids";
 import {
   readBoolean,
@@ -42,6 +43,8 @@ export const PHI_AREA_UPLOAD_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("area-upload"),
   typeKey: "area-upload",
+  // An upload goes into the folder the Asset Controller holds, so the Controller is where this is.
+  requiredRuntimeControllers: requirePhiAssetController,
   title: "Area Upload",
   description: "Dropzone and temporary upload wall for area-scoped media assets.",
   category: "media",
@@ -68,6 +71,7 @@ export const PHI_AREA_UPLOAD_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "requiredRuntimeControllers"
   | "title"
   | "description"
   | "category"

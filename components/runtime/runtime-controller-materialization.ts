@@ -90,10 +90,11 @@ function readTreeControllerSettings(
 /**
  * The configs a Page gives Controllers its Area already runs.
  *
- * The Asset Controller is mounted for the whole Area, and the Media Page is the one that knows which
- * dialog and which Form it answers into. Mounting a second Asset Controller for the Page would put two
- * listeners behind one address; instead the Page's config reaches the running one while the Page is
- * shown (`PhiRuntimeControllerConfigOverlays`) and leaves with it.
+ * A Controller its Module mounts for the whole Area (`controllerMountPolicy: "area"`) is running before
+ * any Page is shown, and a Page may be the one that knows what it answers into -- the Theme Page tells
+ * the Theme Controller. Mounting a second one for the Page would put two listeners behind one address;
+ * instead the Page's config reaches the running one while the Page is shown
+ * (`PhiRuntimeControllerConfigOverlays`) and leaves with it.
  */
 export function collectPhiRuntimeControllerConfigOverlays({
   tree,

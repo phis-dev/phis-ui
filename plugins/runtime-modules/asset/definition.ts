@@ -22,6 +22,8 @@ import {
 export const PHI_ASSET_RUNTIME_MODULE_DEFINITION = {
   moduleId: PHI_ASSET_RUNTIME_MODULE_ID,
   kind: "module",
+  // Part of the platform: every image picker in every Area opens this library. No Site selects it.
+  activation: "always",
   eligibleAreas: PHI_CMS_AREA_KEYS,
   serverBinding: PHI_CORE_SERVER_BINDING,
   controllerType: PHI_ASSET_CONTROLLER_TYPE,
@@ -30,7 +32,13 @@ export const PHI_ASSET_RUNTIME_MODULE_DEFINITION = {
   description: "Media, upload, asset picking, and asset-backed data orchestration.",
   category: "media",
   iconFamily: "media",
-  controllerMountPolicy: "area",
+  /*
+   * On demand, because the Module is active everywhere: a Page that draws no Media mounts nothing for
+   * it. A Widget that draws the Controller's state, or whose placement routes to it, asks for it
+   * (`components/media/asset-controller-requirement.ts`), and the Media Page states it in its tree. A
+   * picker opened from authoring chrome sends it nothing.
+   */
+  controllerMountPolicy: "demand",
   dataProviders: PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS,
   // Its own card, declared like anybody else's would be: what a Site picks from is one list, and the
   // renderer a provider ships is in it under its own name rather than as an unnamed default.

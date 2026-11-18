@@ -17,6 +17,7 @@ import type {
 } from "../../../types";
 import type { PhiCmsResolvedNavigationSurface } from "../../../types/cms-module-descriptors";
 import { fetchSiteNavigationScopes } from "../../../gateway/site-nav";
+import { listPhiAlwaysActiveRuntimeModuleIds } from "../settings";
 import { createPhiBuilderCustomNavigationSurface } from "../../../helpers/cms-navigation-catalog";
 import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
@@ -39,6 +40,7 @@ export async function buildPhiBuilderNavigationSurfacesByArea(
     internalToken: readPhiServerApiCredentials().internalToken,
     siteKey: runtime.site.key,
   });
+  const moduleDefinitions = [...runtimeModuleCatalog.values()].map((entry) => entry.definition);
   return Object.fromEntries(PHI_BUILDER_AREA_KEYS.map((builderArea) => {
     const area = resolvePhiBuilderAreaAsCmsArea(builderArea);
     const areaDefinition = catalog.areaDefinitions.get(area);
@@ -48,6 +50,7 @@ export async function buildPhiBuilderNavigationSurfacesByArea(
     const activeModuleIds = new Set<PhiRuntimeModuleId>([
       platformModuleId,
       areaDefinition.baseModuleId,
+      ...listPhiAlwaysActiveRuntimeModuleIds(area, moduleDefinitions),
       ...(optionalModuleIdsByArea[builderArea] ?? []),
     ]);
     // The declared table: this catalog names surfaces and entries, and reads no Area config, so a

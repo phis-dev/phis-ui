@@ -27,7 +27,6 @@ import {
   PhiInspectorLinkTargetFieldControl,
 } from "./inspector-link-target-field";
 import { PhiInspectorImageFieldControl } from "./inspector-image-field";
-import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
 import { PHI_RADIUS_CONTROL_DEFAULT_LABELS, PhiBoundRadiusControl } from "../../../../components/controls/phi-bound-radius-control";
 import { PhiDimensionControl } from "../../../../components/controls/phi-dimension-control";
 import { PhiLengthControl } from "../../../../components/controls/phi-length-control";
@@ -1023,7 +1022,6 @@ function renderPhiInspectorConfigFieldBody({
   calendarAdapterDescriptors = [],
   videoProviderDescriptors = [],
   pageRecordFields = [],
-  blockId,
 }: {
   field: PhiCmsConfigField;
   value: unknown;
@@ -1031,8 +1029,6 @@ function renderPhiInspectorConfigFieldBody({
   config: Record<string, unknown>;
   defaultConfig?: Record<string, unknown> | null;
   disabled: boolean;
-  /** The edited node, for a field that opens something addressed by it -- the image field's picker. */
-  blockId?: PhiCmsInstanceId | null;
   widgetReferenceOptions?: PhiInspectorWidgetReferenceOption[];
   paddingLabels?: PhiPaddingWidgetLabels;
   backgroundLabels?: PhiBackgroundWidgetLabels;
@@ -1522,7 +1518,6 @@ function renderPhiInspectorConfigFieldBody({
       field,
       <PhiInspectorImageFieldControl
         config={config}
-        blockId={blockId}
         disabled={disabled}
         {...(onChange ? { onChange } : {})}
       />,

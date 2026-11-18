@@ -9,7 +9,19 @@ import { applyPhiBuilderRuntimeModuleSelectionChanges } from "./runtime-module-s
 
 const MODULE_A = "@phis/test/module-a" as PhiRuntimeModuleDefinition["moduleId"];
 
+const MODULE_ALWAYS = "@phis/test/module-always" as PhiRuntimeModuleDefinition["moduleId"];
+
 const TEST_DEFINITIONS: readonly PhiRuntimeModuleDefinition[] = [{
+  moduleId: MODULE_ALWAYS,
+  kind: "module",
+  activation: "always",
+  eligibleAreas: ["public", "admin"],
+  serverBinding: { providerId: "@phis/core" as never, requiredCapabilities: [] },
+  title: "Test module always",
+  description: "A module that is active without being selected.",
+  category: "content",
+  iconFamily: "widgets",
+}, {
   moduleId: MODULE_A,
   kind: "module",
   eligibleAreas: ["public", "admin"],
@@ -94,6 +106,14 @@ describe("applyPhiBuilderRuntimeModuleSelectionChanges", () => {
     if (undoneSnapshot?.kind === "modules") {
       expect(Object.keys(undoneSnapshot.moduleIdsByArea)).toEqual(["admin"]);
     }
+  });
+
+  it("leaves an always-active Module out of the selection it writes", () => {
+    // The Modules table shows it switched on, so a gesture's id list may well carry it; it is implicit.
+    applyPhiBuilderRuntimeModuleSelectionChanges(
+      [{ area: "public", selectedIds: [MODULE_ALWAYS, MODULE_A] }],
+    );
+    expect(getPhiDeveloperBuilderStateSnapshot().runtimeModuleIdsByArea.public).toEqual([MODULE_A]);
   });
 
   it("refuses a selection that names an ineligible area", () => {

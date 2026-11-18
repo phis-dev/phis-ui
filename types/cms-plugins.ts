@@ -1068,6 +1068,27 @@ type PhiRuntimeModuleIconMetadata =
 export type PhiRuntimeModuleDefinition = {
   moduleId: PhiRuntimeModuleId;
   kind: "platform" | "module";
+  /**
+   * Whether a Site chooses this Module, or has it.
+   *
+   * Absent, a Module is selected per Area: its id is stored in the Area's `runtimeModules`, and a Site
+   * switches it on and off in the Builder. `"always"` takes the choice away. The Module is active in
+   * every Area it is eligible for (`eligibleAreas`), the Builder shows it switched on and locked the way
+   * it shows an Area's Base Module, and its id is never part of a stored selection -- a write that names
+   * it is refused, and a stored list that still does is read past and logged.
+   *
+   * It is for what the platform cannot work without and no Site would ever switch off: the Media library
+   * is what every image picker opens, in every Area. Only a Module of this package may declare it.
+   * Installing a third-party package enables nothing (THIRD_PARTY_MODULES.md), and a package that could
+   * mark itself always active would be switched on by its installation.
+   *
+   * An always-active Module declares none of `mediaSpaces`, `threadKinds`, `seed`, `userState` and
+   * `authUiProvider`. All five are derived from the stored selection -- here when the selection is
+   * saved, and by phi-server for `userState`, which reads `runtimeModules` of the published Areas -- and
+   * an always-active Module is not in it. The catalog refuses the combination rather than letting the
+   * declaration be dropped without a word.
+   */
+  activation?: "always";
   eligibleAreas: readonly PhiCmsAreaKey[];
   serverBinding: import("./server-capabilities").PhiRuntimeModuleServerBinding;
   controllerType?: `${string}/${string}`;

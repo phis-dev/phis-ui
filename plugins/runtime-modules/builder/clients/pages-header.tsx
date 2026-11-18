@@ -109,6 +109,8 @@ export function PhiDeveloperBuilderPagesHeaderSection({
   );
   const runtimeModuleIdsByArea = usePhiDeveloperBuilderStateValue((state) => state.runtimeModuleIdsByArea,
   );
+  const runtimeModuleDefinitions = usePhiDeveloperBuilderStateValue((state) => state.runtimeModuleDefinitions,
+  );
   const areaRootRoutes = usePhiDeveloperBuilderStateValue((state) => state.areaRootRoutes,
   );
   const pageCatalogHydratedByArea = usePhiDeveloperBuilderStateValue((state) => state.pageCatalogHydratedByArea,
@@ -133,6 +135,7 @@ export function PhiDeveloperBuilderPagesHeaderSection({
     persistedPageCatalogByArea,
     navigationSurfacesByArea,
     runtimeModuleIdsByArea,
+    runtimeModuleDefinitions,
     areaRootRoutes,
   };
   const pageTree = resolvePhiBuilderOfferedPageCatalog(offeredCatalogState, area);

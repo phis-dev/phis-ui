@@ -124,7 +124,6 @@ import {
   PhiMediaAssetFlags,
   PhiMediaKind,
 } from "../../../../../constants/media";
-import { createPhiMediaPickerAssetControllerRoutes } from "../../../../../components/media/asset-controller-routes";
 import { PhiPresetSizeControl, type PhiPresetSizeOption } from "../../../../../components/controls/phi-preset-size-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiCheckboxControl } from "../../../../../components/controls/phi-checkbox-control";
@@ -718,20 +717,6 @@ function readEffectiveTokenBoolean(token: Record<string, unknown>, key: string, 
 }
 
 /*
- * One route set per purpose: the preview swatch and the image field each open their own picker.
- *
- * There used to be a set per mode as well, because the light and the dark ground were edited side by
- * side and their four pickers were mounted at once -- two senders on one route are indistinguishable
- * to anything that reads the route set. Only the mode being edited is mounted now, so the mode is a
- * property of the value and not of the route. The Control is rebuilt when the mode changes, so a
- * picker can never outlive the ground it was opened for.
- */
-const PHI_THEME_ROOT_BACKGROUND_MEDIA_ROUTES = {
-  preview: createPhiMediaPickerAssetControllerRoutes("theme-root-background-preview-media", "area"),
-  field: createPhiMediaPickerAssetControllerRoutes("theme-root-background-field-media", "area"),
-} as const;
-
-/*
  * The renderer a Background Control asks for its media picker.
  *
  * Built once at module level rather than per render, so its identity is stable without a hook. Both
@@ -749,7 +734,6 @@ const renderPhiThemeRootBackgroundMediaPicker: NonNullable<PhiBackgroundControlP
           showPagination: true,
           showGroupFilter: true,
           showSearchBar: true,
-          signalRoutes: PHI_THEME_ROOT_BACKGROUND_MEDIA_ROUTES[props.purpose],
         }}
         labels={PHI_MEDIA_WIDGET_DEFAULT_LABELS}
         searchLabels={PHI_SEARCH_WIDGET_DEFAULT_LABELS}
@@ -2395,18 +2379,6 @@ function PhiBrandCopyModeButton({
   );
 }
 
-/*
- * The Logo's picker has a route set of its own.
- *
- * Two senders on one route are indistinguishable to whatever reads it, and the Identity panel can be
- * mounted while a Background picker still holds the Theme ground routes -- they live in different Stack
- * slots today, but a route set is cheap and a crossed picker is not.
- */
-const PHI_THEME_BRAND_LOGO_MEDIA_ROUTES = createPhiMediaPickerAssetControllerRoutes(
-  "theme-brand-logo-media",
-  "area",
-);
-
 /**
  * The stored tracking as a number the control can hold.
  *
@@ -2625,7 +2597,6 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                       showPagination: true,
                       showGroupFilter: true,
                       showSearchBar: true,
-                      signalRoutes: PHI_THEME_BRAND_LOGO_MEDIA_ROUTES,
                     }}
                     labels={PHI_MEDIA_WIDGET_DEFAULT_LABELS}
                     searchLabels={PHI_SEARCH_WIDGET_DEFAULT_LABELS}

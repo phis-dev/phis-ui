@@ -5,7 +5,7 @@ import path from "node:path";
 import { PHI_CMS_AREA_KEYS, type PhiCmsAreaKey } from "../constants/cms-areas";
 import { PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/catalog";
 import { createPhiDefaultAreaRuntimeModuleIds } from "../plugins/runtime-modules/area-module-defaults";
-import { isPhiRuntimeAreaBaseModuleId } from "../plugins/runtime-modules/area-definitions";
+import { isPhiRuntimeModuleSelectable } from "../plugins/runtime-modules/settings";
 import { repositoryRoot } from "./lib/repo-root.mjs";
 import { listPhiPresetTreeFiles } from "./preset-tree-files";
 
@@ -244,7 +244,8 @@ const registeredByArea = new Map<PhiCmsAreaKey, Set<string>>(
  * News Table shipped with a sidebar entry and no rows, and it is why the Editor's defaults name
  * localization: the Translations Page is the Editor's, the data is not.
  *
- * Locked Modules count as on: a platform Module and an Area's own base Module are not somebody's choice.
+ * Locked Modules count as on: a platform Module, an Area's own base Module and a Module declared
+ * `activation: "always"` are not somebody's choice.
  */
 const ownerByProviderKey = new Map<string, string>();
 const lockedModuleIds = new Set<string>();
@@ -252,7 +253,7 @@ for (const [moduleId, entry] of PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG) {
   for (const provider of entry.definition.dataProviders ?? []) {
     ownerByProviderKey.set(provider.key, moduleId);
   }
-  if (entry.definition.kind === "platform" || isPhiRuntimeAreaBaseModuleId(moduleId)) {
+  if (!isPhiRuntimeModuleSelectable(entry.definition)) {
     lockedModuleIds.add(moduleId);
   }
 }

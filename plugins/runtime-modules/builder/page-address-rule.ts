@@ -1,6 +1,8 @@
 import { normalizePhiBuilderCmsCatalogPath, type PhiPresetPageNode } from "../../../helpers/cms-page-catalog";
 import { buildPhiRuntimeModulePackageRoutePrefix } from "../../../helpers/runtime-module-route-path";
 import type { PhiRuntimeModuleId } from "../../../types";
+import { listPhiAlwaysActiveRuntimeModuleIds } from "../settings";
+import type { PhiDeveloperBuilderArea, PhiDeveloperBuilderWorkspaceState } from "./developer-workspace-types";
 
 export type PhiBuilderPageAddressConflict = {
   kind: "collision" | "nested";
@@ -107,6 +109,21 @@ export function findPhiBuilderModuleAddressConflict(
     return null;
   };
   return visit(input.catalog);
+}
+
+/**
+ * The Modules whose addresses an Area's Site Pages keep clear of: the ones the Area selects and the
+ * ones declared `activation: "always"`, which answer there without being selected. The Area's Base
+ * Module is named apart (`baseModuleId`), because its Pages are edited in place.
+ */
+export function listPhiBuilderAddressedModuleIds(
+  state: Pick<PhiDeveloperBuilderWorkspaceState, "runtimeModuleIdsByArea" | "runtimeModuleDefinitions">,
+  area: PhiDeveloperBuilderArea,
+): PhiRuntimeModuleId[] {
+  return [...new Set([
+    ...listPhiAlwaysActiveRuntimeModuleIds(area, state.runtimeModuleDefinitions ?? []),
+    ...(state.runtimeModuleIdsByArea?.[area] ?? []),
+  ])];
 }
 
 export function describePhiBuilderModuleAddressConflict(conflict: PhiBuilderModuleAddressConflict) {

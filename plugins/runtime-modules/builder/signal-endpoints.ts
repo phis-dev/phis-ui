@@ -12,7 +12,10 @@ import {
   type PhiSignalEndpoint,
 } from "../../../components/widgets/signals/signal-endpoints";
 import { resolvePhiRuntimeAreaDefinition } from "../../../plugins/runtime-modules/area-definitions";
-import { resolvePhiRuntimeModuleIdsForArea } from "../../../plugins/runtime-modules/settings";
+import {
+  listPhiAlwaysActiveRuntimeModuleIds,
+  resolvePhiRuntimeModuleIdsForArea,
+} from "../../../plugins/runtime-modules/settings";
 import { getPhiRegionWidgetLabelEntry, type PhiRegionWidgetLabels } from "../../../components/widgets/label-types/region";
 import { isPhiBuilderPageScopedRegion, } from "./region-keys";
 import type { PhiBuilderPluginMeta } from "../../../types/builder";
@@ -178,6 +181,7 @@ export function collectPhiBuilderControllerSignalEndpoints({
   const activeModuleIds = new Set([
     ...moduleDefinitions.filter((definition) => definition.kind === "platform").map((definition) => definition.moduleId),
     resolvePhiRuntimeAreaDefinition(area === "public" ? "public" : area).baseModuleId,
+    ...listPhiAlwaysActiveRuntimeModuleIds(area, moduleDefinitions),
     ...resolvePhiRuntimeModuleIdsForArea(area, selectedModuleIds as never, moduleDefinitions),
   ]);
 

@@ -12,6 +12,7 @@ import {
   resolvePhiRuntimeModuleSet,
   resolvePhiRuntimeRenderRegistry,
 } from "../../../plugins/runtime-modules/resolver";
+import { resolvePhiRuntimeModuleIdsForArea } from "../../../plugins/runtime-modules/settings";
 import type { PhiAccessViewer } from "../../../types/access";
 import {
   buildPhiRuntimeModuleAccessRegistry,
@@ -33,10 +34,20 @@ export async function resolvePhiBuilderCanvasRuntimeModuleSandbox({
   viewer: PhiAccessViewer;
   serverCapabilities: PhiCapabilitySnapshot | null;
 }) {
+  /*
+   * The ids arrive from a preview snapshot, the address bar or the stored Area, and only the last was
+   * read tolerantly before it got here. A browser tab opened before a release keeps sending the
+   * selection it loaded -- one that may name a Module this build no longer has or has since locked --
+   * and the canvas must not go down over it, so all three are read the way a stored selection is.
+   */
   const moduleSet = await resolvePhiRuntimeModuleSet({
     catalog,
     area: resolvePhiBuilderAreaAsCmsArea(area),
-    moduleIds,
+    moduleIds: resolvePhiRuntimeModuleIdsForArea(
+      area,
+      moduleIds,
+      [...catalog.values()].map((entry) => entry.definition),
+    ),
     serverCapabilities,
   });
   const accessRegistry = buildPhiRuntimeModuleAccessRegistry(moduleSet);

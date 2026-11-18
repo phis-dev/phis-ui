@@ -1,6 +1,7 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsAssetFocalRectWidgetConfig } from "../../../../../types/media";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
+import { requirePhiAssetController } from "../../../../../components/media/asset-controller-requirement";
 import {
   PHI_SIGNAL_VALUE_SCHEMAS,
   readPhiSignalRouteSet,
@@ -18,6 +19,8 @@ export const PHI_ASSET_FOCAL_RECT_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("asset-focal-rect"),
   typeKey: "asset-focal-rect",
+  // It edits the Asset the Controller was told is selected, so the Controller is where this is.
+  requiredRuntimeControllers: requirePhiAssetController,
   title: "Asset Focal Rectangle",
   description: "Spatial editor for the selected Asset focal rectangle.",
   category: "media",
@@ -50,6 +53,7 @@ export const PHI_ASSET_FOCAL_RECT_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "requiredRuntimeControllers"
   | "title"
   | "description"
   | "category"

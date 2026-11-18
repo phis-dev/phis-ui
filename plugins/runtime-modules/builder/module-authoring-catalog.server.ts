@@ -43,7 +43,9 @@ export function buildPhiBuilderModuleAuthoringCatalog({
     areaDefinition.baseModuleId,
   ]);
   return [...catalog.entries()].flatMap(([moduleId, entry]) => {
-    const locked = lockedModuleIds.has(moduleId);
+    // Locked is "active without being selected": the client keeps a locked entry whatever the Area's
+    // selection says, and a Module declared `activation: "always"` is in no selection.
+    const locked = lockedModuleIds.has(moduleId) || entry.definition.activation === "always";
     if (!activeModuleIds.has(moduleId)) {
       return [];
     }

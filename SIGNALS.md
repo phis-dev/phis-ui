@@ -323,7 +323,9 @@ type PhiSignalRoute = {
   (`components/runtime/runtime-controller-materialization.ts`). Three mount policies, three answers to
   who mounts: `site` and `area` are mounted for the scope they name whether anything asks or not, and
   `demand` is mounted by whoever needs it -- a tree through `controllerSettings`, or a Widget through its
-  `requiredRuntimeControllers` (a `conditionStateRequest` route, the Auth step's `authWorkflowRequest`).
+  `requiredRuntimeControllers` (a `conditionStateRequest` route, the Auth step's `authWorkflowRequest`,
+  a Widget that draws the Asset Controller's state or whose placement routes to it; a media picker
+  opened from authoring chrome keeps its own state and sends that Controller nothing).
   A Widget in a deferred Area Overlay demands at `area` scope, and its Controller arrives with the
   Overlay's zones when it first opens (OVERLAYS.md); a Widget on a Page demands at `page` scope. Nobody
   asking means no Controller, and a Module whose policy is `demand` must allow every scope it is asked
@@ -331,10 +333,12 @@ type PhiSignalRoute = {
   - a `demand` Controller nothing else mounts is mounted in the tree's scope;
   - one the Area already runs (`area` policy) is not mounted a second time by a Page: the Page's config
     is laid over the running one for as long as the Page is shown (`PhiRuntimeControllerConfigOverlays`),
-    which is how the Media Page tells the Asset Controller about its inspector. A key the Page sets
-    replaces the Area's, except `signalRoutes`, which join: the Area's own receivers stand on every
-    Page, and a Page that replaced their routes silenced them while it was shown. A Page route with the
-    `routeKey` of an Area route takes its place (`mergePhiRuntimeControllerConfigOverlay`);
+    which is how the Theme Page tells the Theme Controller about its toolbar. (The Asset Controller is
+    `demand`: the Media Page's setting mounts it for the Page, with the routes to its inspector.) A key
+    the Page sets replaces the Area's, except `signalRoutes`, which join: the Area's own receivers
+    stand on every Page, and a Page that replaced their routes silenced them while it was shown. A Page
+    route with the `routeKey` of an Area route takes its place
+    (`mergePhiRuntimeControllerConfigOverlay`);
   - one whose only asker is a deferred Area Overlay arrives with that Overlay, config included;
   - one no active Module owns is not run. The tree's config to it is inert until the Module is back.
   In every case the tree's config keys win over what a Widget asked with. A composed tree -- a Shell

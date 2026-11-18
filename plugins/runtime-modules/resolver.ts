@@ -32,6 +32,7 @@ import {
   type PhiRuntimeWidgetImplementationMode,
 } from "./render-mode";
 import { resolvePhiRuntimeModuleServerBinding } from "./server-capabilities";
+import { listPhiAlwaysActiveRuntimeModuleIds } from "./settings";
 import {
   PHI_VIEWER_ACCESS_ANYONE,
   type PhiRoleProviderId,
@@ -190,11 +191,26 @@ export async function resolvePhiRuntimeModuleSet({
     if (area && !catalogEntry.definition.eligibleAreas.includes(area)) {
       throw new Error(`Runtime module "${moduleId}" is not eligible for Area "${area}".`);
     }
-    if (catalogEntry.definition.kind === "platform" || baseModuleIds.has(moduleId)) {
+    if (
+      catalogEntry.definition.kind === "platform" ||
+      catalogEntry.definition.activation === "always" ||
+      baseModuleIds.has(moduleId)
+    ) {
       throw new Error(
         `Locked runtime module "${moduleId}" must not be selected in Area runtimeModules.`,
       );
     }
+  }
+  /*
+   * A Module declared `activation: "always"` is active in every Area it is eligible for, ahead of what
+   * the Area selects and on the same terms: where its server part is missing it stays off and is named
+   * with the selected Modules that are. Without an Area there is nothing to be eligible for.
+   */
+  const alwaysActiveModuleIds = area
+    ? listPhiAlwaysActiveRuntimeModuleIds(area, [...catalog.values()].map((entry) => entry.definition))
+    : [];
+  for (const moduleId of [...alwaysActiveModuleIds, ...selectedModuleIds]) {
+    const catalogEntry = catalog.get(moduleId)!;
     const bindingResolution = resolvePhiRuntimeModuleServerBinding(
       catalogEntry.definition.serverBinding,
       serverCapabilities,
