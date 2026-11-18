@@ -9,6 +9,8 @@ export type PhiTreeOption<TMeta = unknown> = {
    * path and the title stop being one.
    */
   description?: string;
+  /** An icon name drawn before the label, as a control option's is: what kind of node this is, at a glance. */
+  icon?: string;
   children?: PhiTreeOption<TMeta>[];
   disabled?: boolean;
   meta?: TMeta;

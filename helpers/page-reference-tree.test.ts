@@ -76,6 +76,17 @@ describe("the Pages a link picker offers", () => {
     expect(docs?.children?.[0]).toMatchObject({ value: reference(7) });
   });
 
+  it("marks a container with a folder, and a Page or a deleted Page with nothing", () => {
+    const [docs, old] = tree([
+      page({ key: "docs", title: "Docs", children: [page({ key: "guides", title: "Guides", reference: reference(7) })] }),
+      page({ key: "old", title: "Old", reference: reference(9), tombstoned: true }),
+    ]);
+
+    expect(docs?.icon).toBe("antd:folder");
+    expect(docs?.children?.[0]?.icon).toBeUndefined();
+    expect(old?.icon).toBeUndefined();
+  });
+
   /*
    * A published deletion keeps its Page Scope and its address, so the node stays -- but nothing new may
    * be pointed at it. The contract has Authoring resolve an existing reference to a deleted diagnostic;

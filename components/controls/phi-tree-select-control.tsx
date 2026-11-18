@@ -69,6 +69,7 @@ function buildPhiTreeSelectNodes<TMeta>(
           value: option.value,
           label: option.label,
           ...(option.description ? { description: option.description } : {}),
+          ...(option.icon ? { icon: option.icon } : {}),
         }}
         presentation="tree"
       />

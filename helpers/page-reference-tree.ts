@@ -43,6 +43,7 @@ export function buildPhiBuilderPageReferenceTree(
       value: reference ?? node.key,
       label: node.storagePath === "/" ? labelLanding(node.title, labels) : node.title,
       description: path,
+      ...(isPhiPageContainerNode(node) ? { icon: PHI_PAGE_CONTAINER_ICON } : {}),
       ...(reference
         ? { meta: { reference, title: node.title, path } }
         : { disabled: true }),
@@ -51,6 +52,14 @@ export function buildPhiBuilderPageReferenceTree(
         : {}),
     };
   });
+}
+
+/** What a container stands under in a Page tree: a folder, so it reads apart from the Pages beside it. */
+const PHI_PAGE_CONTAINER_ICON = "antd:folder";
+
+/** A path with no Page of its own -- a container -- as opposed to a Page, or a Page whose deletion was published. */
+function isPhiPageContainerNode(node: PhiPresetPageNode) {
+  return node.reference == null && node.tombstoned !== true;
 }
 
 function labelLanding(title: string, labels: PhiBuilderPageReferenceTreeLabels) {
@@ -91,6 +100,7 @@ export function buildPhiBuilderPageScopeTree(
       value: reference ?? (folder ? `${PHI_PAGE_SCOPE_FOLDER_VALUE_PREFIX}${folder}` : node.key),
       label: node.storagePath === "/" ? labelLanding(node.title, labels) : node.title,
       description: folder ?? resolvePhiBuilderCmsFetchPath(area, node.key, allNodes),
+      ...(isPhiPageContainerNode(node) ? { icon: PHI_PAGE_CONTAINER_ICON } : {}),
       ...(reference == null && folder == null ? { disabled: true } : {}),
       ...(children ? { children } : {}),
     };
