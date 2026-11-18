@@ -124,6 +124,20 @@ describe("what a stored Theme may say", () => {
     }
   });
 
+  it("the signed-in Areas stand one step in less, a phone again one below the rest", () => {
+    const tokens = buildPhiThemeStructuralTokens({});
+    for (const side of ["Top", "Right", "Bottom", "Left"]) {
+      expect(tokens[`signedInPagePadding${side}Phone` as keyof typeof tokens]).toBe("var(--phi-padding-sm)");
+      expect(tokens[`signedInPagePadding${side}Tablet` as keyof typeof tokens]).toBe("var(--phi-padding)");
+      expect(tokens[`signedInPagePadding${side}Desktop` as keyof typeof tokens]).toBe("var(--phi-padding)");
+    }
+  });
+
+  it("refuses a signed-in inset that is no step of the spacing scale", () => {
+    expect(() => assertPhiThemeVocabulary({ styleToken: { signedInPagePaddingLeftPhone: "13px" }, modeSeedKeys, source: "test" }))
+      .toThrow(/signedInPagePaddingLeftPhone as "13px", which is not a step of the spacing scale/u);
+  });
+
   it("says where the key stood, because a Theme is folded from several places", () => {
     expect(() => assertPhiThemeVocabulary({
       styleToken: { nonsense: 1 },

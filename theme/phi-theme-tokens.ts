@@ -205,6 +205,18 @@ export const PHI_THEME_OWN_TOKEN_KEYS = [
   "pagePaddingRightDesktop",
   "pagePaddingBottomDesktop",
   "pagePaddingLeftDesktop",
+  "signedInPagePaddingTopPhone",
+  "signedInPagePaddingRightPhone",
+  "signedInPagePaddingBottomPhone",
+  "signedInPagePaddingLeftPhone",
+  "signedInPagePaddingTopTablet",
+  "signedInPagePaddingRightTablet",
+  "signedInPagePaddingBottomTablet",
+  "signedInPagePaddingLeftTablet",
+  "signedInPagePaddingTopDesktop",
+  "signedInPagePaddingRightDesktop",
+  "signedInPagePaddingBottomDesktop",
+  "signedInPagePaddingLeftDesktop",
   "gradient1",
   "gradient1Text",
   "gradient2",
@@ -233,10 +245,12 @@ export const PHI_THEME_OWN_TOKEN_KEYS = [
 /** The Page inset's names, per band and side (`PHI_LAYOUT.pagePadding`, `PHI_PAGE.padding`). */
 export const PHI_THEME_PAGE_PADDING_BANDS = ["Phone", "Tablet", "Desktop"] as const;
 export const PHI_THEME_PAGE_PADDING_SIDES = ["Top", "Right", "Bottom", "Left"] as const;
+/** Whose inset a token is: Public's (`pagePadding…`) or the signed-in Areas' (`signedInPagePadding…`). */
+export const PHI_THEME_PAGE_PADDING_SCOPES = ["pagePadding", "signedInPagePadding"] as const;
 type PhiThemePagePaddingTokenKey =
-  `pagePadding${(typeof PHI_THEME_PAGE_PADDING_SIDES)[number]}${(typeof PHI_THEME_PAGE_PADDING_BANDS)[number]}`;
-const PHI_THEME_PAGE_PADDING_TOKEN_KEYS: readonly PhiThemePagePaddingTokenKey[] =
-  PHI_THEME_PAGE_PADDING_BANDS.flatMap((band) => PHI_THEME_PAGE_PADDING_SIDES.map((side) => `pagePadding${side}${band}` as const));
+  `${(typeof PHI_THEME_PAGE_PADDING_SCOPES)[number]}${(typeof PHI_THEME_PAGE_PADDING_SIDES)[number]}${(typeof PHI_THEME_PAGE_PADDING_BANDS)[number]}`;
+const PHI_THEME_PAGE_PADDING_TOKEN_KEYS: readonly PhiThemePagePaddingTokenKey[] = PHI_THEME_PAGE_PADDING_SCOPES.flatMap((scope) =>
+  PHI_THEME_PAGE_PADDING_BANDS.flatMap((band) => PHI_THEME_PAGE_PADDING_SIDES.map((side) => `${scope}${side}${band}` as const)));
 
 export type PhiThemeTokenKey = (typeof PHI_THEME_TOKEN_KEYS)[number];
 

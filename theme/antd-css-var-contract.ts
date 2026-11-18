@@ -99,6 +99,16 @@ export const PHI_PAGE = {
     bottom: "var(--phi-page-inset-bottom, var(--phi-page-padding-bottom-desktop))",
     left: "var(--phi-page-inset-left, var(--phi-page-padding-left-desktop))",
   },
+  /*
+   * The same in the signed-in Areas -- App and the staff Areas: the Theme's `signedInPagePadding<Side><Band>`
+   * for the band the screen is in.
+   */
+  signedInPadding: {
+    top: "var(--phi-signed-in-page-inset-top, var(--phi-signed-in-page-padding-top-desktop))",
+    right: "var(--phi-signed-in-page-inset-right, var(--phi-signed-in-page-padding-right-desktop))",
+    bottom: "var(--phi-signed-in-page-inset-bottom, var(--phi-signed-in-page-padding-bottom-desktop))",
+    left: "var(--phi-signed-in-page-inset-left, var(--phi-signed-in-page-padding-left-desktop))",
+  },
 } as const;
 
 export const PHI_RADIUS = {

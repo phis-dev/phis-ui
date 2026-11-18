@@ -48,6 +48,7 @@ export const PHI_HAND_SET_CSS_VARIABLE_FAMILIES = Object.freeze([
   "markdown-float",
   "masonry",
   "page-inset",
+  "signed-in-page-inset",
   "menu-font-family",
   "menu-font-size",
   "mode-dark-gate",

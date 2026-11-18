@@ -57,6 +57,18 @@ export type PhiThemeTokens = {
   pagePaddingRightDesktop: string;
   pagePaddingBottomDesktop: string;
   pagePaddingLeftDesktop: string;
+  signedInPagePaddingTopPhone: string;
+  signedInPagePaddingRightPhone: string;
+  signedInPagePaddingBottomPhone: string;
+  signedInPagePaddingLeftPhone: string;
+  signedInPagePaddingTopTablet: string;
+  signedInPagePaddingRightTablet: string;
+  signedInPagePaddingBottomTablet: string;
+  signedInPagePaddingLeftTablet: string;
+  signedInPagePaddingTopDesktop: string;
+  signedInPagePaddingRightDesktop: string;
+  signedInPagePaddingBottomDesktop: string;
+  signedInPagePaddingLeftDesktop: string;
   marginXXS: number;
   marginXS: number;
   marginSM: number;
@@ -117,6 +129,19 @@ function buildPhiThemeTokens(options: PhiThemeTokenOptions = {}): PhiThemeTokens
     pagePaddingRightDesktop: PHI_SPACE[PHI_LAYOUT.pagePadding.desktop],
     pagePaddingBottomDesktop: PHI_SPACE[PHI_LAYOUT.pagePadding.desktop],
     pagePaddingLeftDesktop: PHI_SPACE[PHI_LAYOUT.pagePadding.desktop],
+    // The signed-in Areas' inset, the same way (`PHI_LAYOUT.signedInPagePadding`).
+    signedInPagePaddingTopPhone: PHI_SPACE[PHI_LAYOUT.signedInPagePadding.phone],
+    signedInPagePaddingRightPhone: PHI_SPACE[PHI_LAYOUT.signedInPagePadding.phone],
+    signedInPagePaddingBottomPhone: PHI_SPACE[PHI_LAYOUT.signedInPagePadding.phone],
+    signedInPagePaddingLeftPhone: PHI_SPACE[PHI_LAYOUT.signedInPagePadding.phone],
+    signedInPagePaddingTopTablet: PHI_SPACE[PHI_LAYOUT.signedInPagePadding.tablet],
+    signedInPagePaddingRightTablet: PHI_SPACE[PHI_LAYOUT.signedInPagePadding.tablet],
+    signedInPagePaddingBottomTablet: PHI_SPACE[PHI_LAYOUT.signedInPagePadding.tablet],
+    signedInPagePaddingLeftTablet: PHI_SPACE[PHI_LAYOUT.signedInPagePadding.tablet],
+    signedInPagePaddingTopDesktop: PHI_SPACE[PHI_LAYOUT.signedInPagePadding.desktop],
+    signedInPagePaddingRightDesktop: PHI_SPACE[PHI_LAYOUT.signedInPagePadding.desktop],
+    signedInPagePaddingBottomDesktop: PHI_SPACE[PHI_LAYOUT.signedInPagePadding.desktop],
+    signedInPagePaddingLeftDesktop: PHI_SPACE[PHI_LAYOUT.signedInPagePadding.desktop],
     // Ant Design's second family, on the same scale: its own components read it (phi-tokens.ts).
     marginXXS: PHI_PADDING_VALUES.xxs,
     marginXS: PHI_PADDING_VALUES.xs,

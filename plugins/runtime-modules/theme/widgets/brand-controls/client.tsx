@@ -98,7 +98,11 @@ import {
 } from "../../../../../theme/phi-tokens";
 import { PHI_CONTAINER_BREAKPOINT_REGION } from "../../../../../theme/phi-container-breakpoints";
 import { PHI_SPACE } from "../../../../../theme/antd-css-var-contract";
-import { PHI_THEME_PAGE_PADDING_BANDS, PHI_THEME_PAGE_PADDING_SIDES } from "../../../../../theme/phi-theme-tokens";
+import {
+  PHI_THEME_PAGE_PADDING_BANDS,
+  PHI_THEME_PAGE_PADDING_SCOPES,
+  PHI_THEME_PAGE_PADDING_SIDES,
+} from "../../../../../theme/phi-theme-tokens";
 import type { PhiCmsPaddingWidgetConfig } from "../../../../../types/cms-config";
 import { PHI_COLOR_PICKER_NEUTRAL_PRESETS, PHI_COLOR_PICKER_PRESETS } from "../../../../../components/widgets/config/color-picker-presets";
 import { PHI_SPACING_TOKEN_KEYS } from "../../../../../components/widgets/config/spacing-options";
@@ -1944,10 +1948,12 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
   const wireframe = readEffectiveTokenBoolean(styleTokenInput, "wireframe", true);
   const pageMax = readEffectiveTokenNumber(styleTokenInput, "pageMax", PHI_LAYOUT.pageMax);
   const [pagePaddingBand, setPagePaddingBand] = useState<(typeof PHI_THEME_PAGE_PADDING_BANDS)[number]>("Phone");
-  const pagePaddingDefault = PHI_SPACE[PHI_LAYOUT.pagePadding[pagePaddingBand.toLowerCase() as "phone" | "tablet" | "desktop"]];
+  // Whose inset is edited: Public's (`pagePadding…`) or the signed-in Areas' (`signedInPagePadding…`).
+  const [pagePaddingScope, setPagePaddingScope] = useState<(typeof PHI_THEME_PAGE_PADDING_SCOPES)[number]>("pagePadding");
+  const pagePaddingDefault = PHI_SPACE[PHI_LAYOUT[pagePaddingScope][pagePaddingBand.toLowerCase() as "phone" | "tablet" | "desktop"]];
   const pagePadding = Object.fromEntries(PHI_THEME_PAGE_PADDING_SIDES.map((side) => [
     `padding${side}`,
-    readEffectiveTokenString(styleTokenInput, `pagePadding${side}${pagePaddingBand}`, pagePaddingDefault),
+    readEffectiveTokenString(styleTokenInput, `${pagePaddingScope}${side}${pagePaddingBand}`, pagePaddingDefault),
   ])) as PhiCmsPaddingWidgetConfig;
   const baseFontSize = readEffectiveTokenNumber(styleTokenInput, "fontSize", 12);
 
@@ -2264,14 +2270,23 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
             },
             {
               /*
-               * How far a Page's content stands in (`PHI_PAGE.padding`), per side and per screen: a phone
-               * below 768, a tablet below 1200, a desktop from there. Only the default of the Page column
-               * the presets and packages build; a Layout that states its own padding keeps it.
+               * How far a Page's content stands in, per side and per screen -- a phone below 768, a tablet
+               * below 1200, a desktop from there -- in Public (`PHI_PAGE.padding`) and in the signed-in
+               * Areas (`PHI_PAGE.signedInPadding`). The default of a Page's content Region; a Region that
+               * states its own padding keeps it.
                */
               key: "pagePadding",
               label: <PhiTypographyControl strong>Page Padding</PhiTypographyControl>,
               children: (
                 <PhiFlexControl vertical gap={clientToken.paddingXS}>
+                  <PhiSegmentedControl<(typeof PHI_THEME_PAGE_PADDING_SCOPES)[number]>
+                    value={pagePaddingScope}
+                    options={[
+                      { value: "pagePadding", label: "Public" },
+                      { value: "signedInPagePadding", label: "Signed in" },
+                    ]}
+                    onChange={setPagePaddingScope}
+                  />
                   <PhiSegmentedControl<(typeof PHI_THEME_PAGE_PADDING_BANDS)[number]>
                     value={pagePaddingBand}
                     options={PHI_THEME_PAGE_PADDING_BANDS.map((band) => ({ value: band, label: band }))}
@@ -2282,11 +2297,11 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                     showGap={false}
                     onChange={(next) => updateToken(Object.fromEntries(PHI_THEME_PAGE_PADDING_SIDES.map((side) => {
                       const value = next?.[`padding${side}`] ?? next?.padding;
-                      return [`pagePadding${side}${pagePaddingBand}`, value == null ? undefined : value];
+                      return [`${pagePaddingScope}${side}${pagePaddingBand}`, value == null ? undefined : value];
                     })))}
                   />
                   <PhiTypographyControl type="secondary">
-                    The default of a Page that does not set its own: a phone below 768px, a tablet below 1200px.
+                    The default of a Page that does not set its own, in Public or in App and the staff Areas: a phone below 768px, a tablet below 1200px.
                   </PhiTypographyControl>
                 </PhiFlexControl>
               ),

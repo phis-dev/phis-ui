@@ -156,6 +156,12 @@ export const PHI_LAYOUT = {
    */
   pagePadding: { phone: "base", tablet: "md", desktop: "md" },
   /*
+   * The same inset in the signed-in Areas -- App and the staff Areas -- where a Page is a tool among the
+   * Shell's navigation rather than a page to read: one step below Public, a phone again one below the
+   * rest. The Theme's as well, read as `PHI_PAGE.signedInPadding`.
+   */
+  signedInPagePadding: { phone: "sm", tablet: "base", desktop: "base" },
+  /*
    * How wide a column of prose is allowed to get: an article, an entry and what stands around it.
    *
    * Off the three steps above on purpose, because a text is measured in characters and not in Controls.

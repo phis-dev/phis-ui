@@ -53,8 +53,9 @@
 }
 
 /*
- * Page inset: how far a Page's content stands in (`PHI_PAGE.padding`), by the same device bands. The
- * Theme states four sides per band (`pagePadding<Side><Band>`, theme/phi-tokens.ts); these rules hand the
+ * Page inset: how far a Page's content stands in (`PHI_PAGE.padding` in Public, `PHI_PAGE.signedInPadding`
+ * in the signed-in Areas), by the same device bands. The Theme states four sides per band
+ * (`pagePadding<Side><Band>`, `signedInPagePadding<Side><Band>`, theme/phi-tokens.ts); these rules hand the
  * band the screen is in to everything inside the Shell, and a Page column reads only the chosen one. A
  * Layout that states its own padding is not reading it.
  */
@@ -63,6 +64,10 @@
   --phi-page-inset-right: var(--phi-page-padding-right-desktop);
   --phi-page-inset-bottom: var(--phi-page-padding-bottom-desktop);
   --phi-page-inset-left: var(--phi-page-padding-left-desktop);
+  --phi-signed-in-page-inset-top: var(--phi-signed-in-page-padding-top-desktop);
+  --phi-signed-in-page-inset-right: var(--phi-signed-in-page-padding-right-desktop);
+  --phi-signed-in-page-inset-bottom: var(--phi-signed-in-page-padding-bottom-desktop);
+  --phi-signed-in-page-inset-left: var(--phi-signed-in-page-padding-left-desktop);
 }
 
 @container phi-render-viewport (width < 1200px) {
@@ -71,6 +76,10 @@
     --phi-page-inset-right: var(--phi-page-padding-right-tablet);
     --phi-page-inset-bottom: var(--phi-page-padding-bottom-tablet);
     --phi-page-inset-left: var(--phi-page-padding-left-tablet);
+    --phi-signed-in-page-inset-top: var(--phi-signed-in-page-padding-top-tablet);
+    --phi-signed-in-page-inset-right: var(--phi-signed-in-page-padding-right-tablet);
+    --phi-signed-in-page-inset-bottom: var(--phi-signed-in-page-padding-bottom-tablet);
+    --phi-signed-in-page-inset-left: var(--phi-signed-in-page-padding-left-tablet);
   }
 }
 
@@ -80,6 +89,10 @@
     --phi-page-inset-right: var(--phi-page-padding-right-phone);
     --phi-page-inset-bottom: var(--phi-page-padding-bottom-phone);
     --phi-page-inset-left: var(--phi-page-padding-left-phone);
+    --phi-signed-in-page-inset-top: var(--phi-signed-in-page-padding-top-phone);
+    --phi-signed-in-page-inset-right: var(--phi-signed-in-page-padding-right-phone);
+    --phi-signed-in-page-inset-bottom: var(--phi-signed-in-page-padding-bottom-phone);
+    --phi-signed-in-page-inset-left: var(--phi-signed-in-page-padding-left-phone);
   }
 }
 

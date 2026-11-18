@@ -485,23 +485,27 @@ nothing it is `PHI_LAYOUT.pageMax`, 1220 (987 + 233). The Style tab edits it und
 
 ## Page padding
 
-How far a Page's content stands in is the Theme's as well: twelve style tokens,
-`pagePadding<Top|Right|Bottom|Left><Phone|Tablet|Desktop>`, each a step of the spacing scale
-(`PHI_SPACE`, or `0`), published as `--phi-page-padding-<side>-<band>`. Where a Theme states nothing
-it is `PHI_LAYOUT.pagePadding`: `base` on a phone, `md` on a tablet and a desktop, the same on all four
-sides. The Style tab edits it under "Page Padding", one band at a time, with the Inspector's padding
-Control.
+How far a Page's content stands in is the Theme's as well, once for Public and once for the signed-in
+Areas (App and the staff Areas): twelve style tokens each, `pagePadding<Top|Right|Bottom|Left><Phone|Tablet|Desktop>`
+and `signedInPagePadding<…>`, each a step of the spacing scale (`PHI_SPACE`, or `0`), published as
+`--phi-page-padding-<side>-<band>` and `--phi-signed-in-page-padding-<side>-<band>`. Where a Theme states
+nothing they are `PHI_LAYOUT.pagePadding` -- `base` on a phone, `md` on a tablet and a desktop -- and
+`PHI_LAYOUT.signedInPagePadding` -- `sm` on a phone, `base` on a tablet and a desktop --, the same on
+all four sides. The Style tab edits them under "Page Padding", Public or Signed in, one band at a time,
+with the Inspector's padding Control.
 
 - **By the screen, not by the room.** The bands are the Shell's device bands on `phi-render-viewport`
   (styles/shell.css): a phone below 768, a tablet below 1200, a desktop from there. The block profiles'
   377 and 610 measure the room a block is offered and would put two phones of one class on opposite
   sides. styles/shell.css ("Page inset") hands the band the screen is in to everything inside the Shell
-  as `--phi-page-inset-<side>`; `PHI_PAGE.padding.<side>` reads it, and outside a Shell the desktop answer.
+  as `--phi-page-inset-<side>` and `--phi-signed-in-page-inset-<side>`; `PHI_PAGE.padding.<side>` and
+  `PHI_PAGE.signedInPadding.<side>` read them, and outside a Shell the desktop answer.
 - **On the content Region, and only there.** `buildPhiBasePageContentScaffold` writes `PHI_PAGE.padding`
-  into the four paddings of a Page's content Region in Public and App, so every built-in Page there -- the
-  sign-in and contact Pages, the Pages with a wash column, the App's Pages -- and every package that builds
-  on the scaffold stands in from the screen's edge by the Theme's step. The Hero and the Footer top are
-  Regions of their own and keep the full width; the staff Areas keep the house step `base`. The scaffold
+  into the four paddings of a Page's content Region in Public and `PHI_PAGE.signedInPadding` in App and
+  the staff Areas, so every built-in Page -- the sign-in and contact Pages, the Pages with a wash column,
+  the Dashboards, the App's and the staff Areas' Pages -- and every package that builds on the scaffold
+  stands in from the screen's edge by the Theme's step. A package Page with a content Region of its own
+  states the same reference. The Hero and the Footer top are Regions of their own and keep the full width. The scaffold
   (the Region's root vertical Flex) has no padding; what stands in it with a ground of its own insets its
   content by `base` -- the wash column, a Split Card's cards. A Region config a preset states wins.
 - **Refused when it is no step.** `assertPhiThemeVocabulary` refuses a value that is not a step of the
