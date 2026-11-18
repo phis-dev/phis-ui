@@ -78,5 +78,10 @@ async function readMediaAssetFieldLabels(options: PhiGlobalTranslatorOptions): P
     [keys.clearLabel]: picker.clearLabel,
     [keys.reloadLabel]: tool.reloadLabel,
     [keys.tileSizeLabel]: picker.tileSizeLabel,
+    [keys.sourceLabel]: picker.sourceLabel,
+    [keys.sourceFailedText]: picker.sourceFailedText,
+    [keys.importingLabel]: picker.importingLabel,
+    [keys.importFailedText]: picker.importFailedText,
+    [keys.loadMoreLabel]: picker.loadMoreLabel,
   };
 }

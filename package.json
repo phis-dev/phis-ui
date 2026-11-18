@@ -483,6 +483,12 @@
       "types": "./runtime-calendar-adapter-client.ts",
       "default": "./runtime-calendar-adapter-client.ts"
     },
+    "./runtime/media-source-client": {
+      "import": "./runtime-media-source-client.ts",
+      "require": "./runtime-media-source-client.ts",
+      "types": "./runtime-media-source-client.ts",
+      "default": "./runtime-media-source-client.ts"
+    },
     "./runtime/signal-client": {
       "import": "./runtime-signal-client.ts",
       "require": "./runtime-signal-client.ts",
@@ -729,6 +735,7 @@
         "PhiMediaAssetCollectionSkeletonControl",
         "PhiMediaAssetTileControl",
         "PhiMediaPickerControl",
+        "PhiMediaSourceItemTileControl",
         "PhiMenuControl",
         "PhiMultiSelectControl",
         "PhiNumberControl",
@@ -814,24 +821,28 @@
         "PHI_ACCOUNTING_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST",
         "PHI_ACCOUNTING_RUNTIME_MODULE_CONTROLLER_CLIENT_MANIFEST",
         "PHI_ACCOUNTING_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST",
+        "PHI_ACCOUNTING_RUNTIME_MODULE_MEDIA_SOURCE_CLIENT_MANIFEST",
         "PHI_ACCOUNTING_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST"
       ],
       "./runtime/client-manifests/admin": [
         "PHI_ADMIN_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST",
         "PHI_ADMIN_RUNTIME_MODULE_CONTROLLER_CLIENT_MANIFEST",
         "PHI_ADMIN_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST",
+        "PHI_ADMIN_RUNTIME_MODULE_MEDIA_SOURCE_CLIENT_MANIFEST",
         "PHI_ADMIN_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST"
       ],
       "./runtime/client-manifests/app": [
         "PHI_APP_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST",
         "PHI_APP_RUNTIME_MODULE_CONTROLLER_CLIENT_MANIFEST",
         "PHI_APP_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST",
+        "PHI_APP_RUNTIME_MODULE_MEDIA_SOURCE_CLIENT_MANIFEST",
         "PHI_APP_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST"
       ],
       "./runtime/client-manifests/builder": [
         "PHI_BUILDER_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST",
         "PHI_BUILDER_RUNTIME_MODULE_CONTROLLER_CLIENT_MANIFEST",
         "PHI_BUILDER_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST",
+        "PHI_BUILDER_RUNTIME_MODULE_MEDIA_SOURCE_CLIENT_MANIFEST",
         "PHI_BUILDER_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST",
         "PHI_BUILDER_TARGET_RUNTIME_MODULE_AUTHORING_CLIENT_MANIFEST"
       ],
@@ -839,12 +850,14 @@
         "PHI_EDITOR_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST",
         "PHI_EDITOR_RUNTIME_MODULE_CONTROLLER_CLIENT_MANIFEST",
         "PHI_EDITOR_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST",
+        "PHI_EDITOR_RUNTIME_MODULE_MEDIA_SOURCE_CLIENT_MANIFEST",
         "PHI_EDITOR_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST"
       ],
       "./runtime/client-manifests/public": [
         "PHI_PUBLIC_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST",
         "PHI_PUBLIC_RUNTIME_MODULE_CONTROLLER_CLIENT_MANIFEST",
         "PHI_PUBLIC_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST",
+        "PHI_PUBLIC_RUNTIME_MODULE_MEDIA_SOURCE_CLIENT_MANIFEST",
         "PHI_PUBLIC_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST"
       ],
       "./runtime/controller-client": [
@@ -877,6 +890,12 @@
         "usePhiTableBinding",
         "usePhiTreeBinding",
         "usePhiTreeProvider"
+      ],
+      "./runtime/media-source-client": [
+        "PhiRuntimeModuleMediaSourceClientManifestProvider",
+        "createPhiRuntimeModuleMediaSourceClientManifest",
+        "extendPhiRuntimeModuleMediaSourceClientManifest",
+        "usePhiMediaSourceClientDefinitions"
       ],
       "./runtime/render-client": [
         "PhiRuntimeModuleRenderClientManifestProvider",

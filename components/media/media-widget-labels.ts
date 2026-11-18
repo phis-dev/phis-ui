@@ -138,6 +138,12 @@ export type PhiMediaPickerWidgetLabels = {
   loadFailedDescription: string;
   clearLabel: string;
   tileSizeLabel: string;
+  /** The switch beside the Space select: the Site's library, or a media source. */
+  sourceLabel: string;
+  sourceFailedText: string;
+  importingLabel: string;
+  importFailedText: string;
+  loadMoreLabel: string;
 };
 
 export const PHI_MEDIA_WIDGET_DEFAULT_LABELS: PhiAssetWidgetLabels = {
@@ -196,6 +202,11 @@ export const PHI_MEDIA_WIDGET_DEFAULT_LABELS: PhiAssetWidgetLabels = {
     loadFailedDescription: "The media library could not be loaded.",
     clearLabel: "Clear selection",
     tileSizeLabel: "Tile size",
+    sourceLabel: "Source",
+    sourceFailedText: "The source did not answer.",
+    importingLabel: "Importing...",
+    importFailedText: "The file could not be imported.",
+    loadMoreLabel: "Load more",
   },
   space: {
     label: "Space",

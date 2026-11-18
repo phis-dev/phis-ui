@@ -79,6 +79,7 @@ export * from "./types/layout-style";
 export * from "./types/control";
 export * from "./types/calendar";
 export * from "./types/calendar-keys";
+export type * from "./types/media-source";
 export * from "./types/dimension";
 export * from "./types/length";
 export * from "./types/responsive";

@@ -275,6 +275,9 @@ export async function PhiCmsAreaBoundary({
         calendarAdapterDescriptors={[
           ...runtimeModuleScope.moduleSet.calendarAdapterDescriptorsByKey.values(),
         ]}
+        mediaSourceDescriptors={[
+          ...runtimeModuleScope.moduleSet.mediaSourceDescriptorsByKey.values(),
+        ]}
         videoProviderDescriptors={[
           ...runtimeModuleScope.moduleSet.videoProviderDescriptorsByKey.values(),
         ]}

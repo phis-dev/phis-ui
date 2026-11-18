@@ -20,6 +20,7 @@ import type { PhiRuntimeDataProviderKey } from "../../types/runtime-data-provide
 import { PHI_RECORD_FIELD_KINDS } from "../../constants/record-field-kinds";
 import type { PhiRecordDeclaration } from "../../types/record-provider";
 import { isPhiCalendarAdapterKey, type PhiCalendarAdapterKey } from "../../types/calendar";
+import type { PhiMediaSourceKey } from "../../types/media-source";
 import {
   collectPhiVideoProviderDescriptorErrors,
   isPhiVideoProviderKey,
@@ -693,6 +694,7 @@ export function createPhiRuntimeModuleCatalog(
   const ownerModuleIdByLayoutType = new Map<string, PhiRuntimeModuleId>();
   const ownerModuleIdByDataProviderKey = new Map<PhiRuntimeDataProviderKey, PhiRuntimeModuleId>();
   const ownerModuleIdByCalendarAdapterKey = new Map<PhiCalendarAdapterKey, PhiRuntimeModuleId>();
+  const ownerModuleIdByMediaSourceKey = new Map<PhiMediaSourceKey, PhiRuntimeModuleId>();
   const ownerModuleIdByVideoProviderKey = new Map<PhiVideoProviderKey, PhiRuntimeModuleId>();
   const ownerModuleIdByFormFieldTypeKey = new Map<PhiFormProviderKey, PhiRuntimeModuleId>();
   const ownerModuleIdByFormValidationKey = new Map<PhiFormProviderKey, PhiRuntimeModuleId>();
@@ -827,6 +829,21 @@ export function createPhiRuntimeModuleCatalog(
         );
       }
       ownerModuleIdByCalendarAdapterKey.set(adapter.key, definition.moduleId);
+    }
+    for (const source of definition.mediaSources ?? []) {
+      if (!isPhiNamespacedRuntimeKey(source.key)) {
+        throw new Error(`${definition.moduleId}: invalid media source key "${source.key}".`);
+      }
+      if (source.ownerModuleId !== definition.moduleId) {
+        throw new Error(`${definition.moduleId}: media source "${source.key}" has a different owner module id.`);
+      }
+      const currentSourceOwner = ownerModuleIdByMediaSourceKey.get(source.key);
+      if (currentSourceOwner) {
+        throw new Error(
+          `Media source "${source.key}" is owned by both "${currentSourceOwner}" and "${definition.moduleId}".`,
+        );
+      }
+      ownerModuleIdByMediaSourceKey.set(source.key, definition.moduleId);
     }
     for (const provider of definition.videoProviders ?? []) {
       if (!isPhiVideoProviderKey(provider.key)) {
@@ -976,6 +993,7 @@ export function createPhiRuntimeModuleCatalog(
       (entry.themes?.length ?? 0) + (entry.themeBlocks?.length ?? 0) +
       (entry.dashboardCards ? 1 : 0) +
       (definition.dataProviders?.length ?? 0) + (definition.calendarAdapters?.length ?? 0) +
+      (definition.mediaSources?.length ?? 0) +
       (definition.videoProviders?.length ?? 0) + (definition.collectionItemRenderers?.length ?? 0) +
       (definition.icons?.length ?? 0) +
       Object.values(definition.formProviders ?? {}).reduce((count, providers) => count + (providers?.length ?? 0), 0);
@@ -1249,6 +1267,13 @@ export function assertPhiRuntimeModule(module: PhiRuntimeModule) {
     if (descriptor.ownerModuleId !== module.moduleId) {
       throw new Error(
         `${module.moduleId}: Calendar adapter "${descriptor.key}" has a different owner module id.`,
+      );
+    }
+  }
+  for (const descriptor of module.mediaSources ?? []) {
+    if (descriptor.ownerModuleId !== module.moduleId) {
+      throw new Error(
+        `${module.moduleId}: media source "${descriptor.key}" has a different owner module id.`,
       );
     }
   }

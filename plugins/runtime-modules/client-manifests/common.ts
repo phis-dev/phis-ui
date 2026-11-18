@@ -16,6 +16,8 @@ import { PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY } from "../../../constants/media-li
 import { PHI_DASHBOARD_CARD_ITEM_RENDERER_KEY } from "../../../constants/dashboard-card-provider-keys";
 import { createPhiRuntimeModuleCalendarAdapterClientManifest } from "../../../components/runtime/runtime-module-calendar-adapter-client-manifest";
 import { PHI_CORE_CALENDAR_ADAPTER_CLIENT_DEFINITIONS } from "../core/client-calendar-adapters";
+import { createPhiRuntimeModuleMediaSourceClientManifest } from "../../../components/runtime/runtime-module-media-source-client-manifest";
+import { PHI_CORE_MEDIA_SOURCE_CLIENT_DEFINITIONS } from "../core/client-media-sources";
 import { PhiLazyAssetRuntimeControllerClient } from "../asset/client";
 import {
   createPhiRuntimeModuleUiProviderClientManifest,
@@ -25,6 +27,11 @@ import { PHI_AUTH_RUNTIME_MODULE_ID } from "../auth/ids";
 export const PHI_COMMON_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST =
   createPhiRuntimeModuleCalendarAdapterClientManifest(
     PHI_CORE_CALENDAR_ADAPTER_CLIENT_DEFINITIONS,
+  );
+
+export const PHI_COMMON_RUNTIME_MODULE_MEDIA_SOURCE_CLIENT_MANIFEST =
+  createPhiRuntimeModuleMediaSourceClientManifest(
+    PHI_CORE_MEDIA_SOURCE_CLIENT_DEFINITIONS,
   );
 
 /**

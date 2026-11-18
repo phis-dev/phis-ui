@@ -53,6 +53,7 @@ import type {
   PhiCalendarAdapterKey,
 } from "./calendar";
 export type { PhiRuntimeModuleFormDefinition } from "../components/forms/form-registry";
+import type { PhiMediaSourceDescriptor, PhiMediaSourceKey } from "./media-source";
 import type { PhiBuilderAreaKey } from "../constants/cms-areas";
 import type { PhiBuilderNavigationTree } from "../helpers/cms-navigation-catalog";
 import type { PhiBuilderActivePageCatalog } from "../helpers/cms-page-catalog";
@@ -1183,6 +1184,12 @@ export type PhiRuntimeModuleDefinition = {
   collectionItemRenderers?: readonly import("./collection-provider").PhiCollectionItemRendererDescriptor[];
   calendarAdapters?: readonly PhiCalendarAdapterDescriptor[];
   /**
+   * Media sources this Module offers the Media picker: somewhere else a file can be taken from. The
+   * picker lists them beside the Site's library when the Module is active in the Area, and imports what
+   * is chosen as an ordinary Asset. The Client half is `mediaSources` of `phiModuleClientContributions`.
+   */
+  mediaSources?: readonly PhiMediaSourceDescriptor[];
+  /**
    * Places a video may be fetched from, once somebody has asked for it.
    *
    * A contribution rather than a Core table, for the same reason Calendar adapters are: the Video Module
@@ -1398,6 +1405,7 @@ export type PhiResolvedRuntimeModuleSet = {
   layoutDefinitionsByType: ReadonlyMap<string, PhiRuntimeModuleLayoutDefinition>;
   dataProviderDescriptorsByKey: ReadonlyMap<PhiRuntimeDataProviderKey, PhiRuntimeModuleDataProviderDescriptor>;
   calendarAdapterDescriptorsByKey: ReadonlyMap<PhiCalendarAdapterKey, PhiCalendarAdapterDescriptor>;
+  mediaSourceDescriptorsByKey: ReadonlyMap<PhiMediaSourceKey, PhiMediaSourceDescriptor>;
   videoProviderDescriptorsByKey: ReadonlyMap<
     import("./video").PhiVideoProviderKey,
     import("./video").PhiVideoProviderDescriptor

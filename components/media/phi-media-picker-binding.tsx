@@ -1,6 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
+import {
+  PHIS_MEDIA_SOURCE_PAGE_MAX_ITEMS,
+  PHIS_MEDIA_SOURCE_QUERY_MAX_LENGTH,
+  type PhisMediaSourceItem,
+} from "@phis/contracts/media-source";
 
 import { PhiImageAssetVariantKey, PhiMediaKind } from "../../constants/media";
 import type { PhiCollectionProviderQuery } from "../../types/collection-provider";
@@ -35,6 +40,11 @@ import {
   usePhiMediaSpaceSelectionAllowed,
 } from "./media-space-selection";
 import { isPhiRecord } from "../../helpers/is-record";
+import {
+  readPhiMediaSourceImportErrorMessage,
+  usePhiMediaSources,
+} from "./phi-media-sources";
+import { usePhiCollectionProviderAction } from "../widgets/client/shared/phi-collection-provider";
 
 export type PhiMediaPickerBindingProps = {
   config?: PhiCmsMediaPickerWidgetConfig | null;
@@ -109,6 +119,17 @@ export function usePhiMediaPickerBinding({
    */
   const [requestedSpaceAddress, setRequestedSpaceAddress] = useState<string | null>(null);
   const spaceSelectionAllowed = usePhiMediaSpaceSelectionAllowed() && !siteSpaceOnly;
+  // "" is the Site's library; anything else is the id of a media source (`phi-media-sources.tsx`).
+  const [sourceId, setSourceId] = useState("");
+  // Tagged with the source that answered, so that another source never shows these for a frame.
+  const [sourcePageOf, setSourcePageOf] = useState<{ sourceId: string; items: readonly PhisMediaSourceItem[] }>({ sourceId: "", items: [] });
+  const [sourceCursor, setSourceCursor] = useState<string | null>(null);
+  const [sourceLoading, setSourceLoading] = useState(false);
+  const [sourceFailed, setSourceFailed] = useState(false);
+  const [importingItemId, setImportingItemId] = useState<string | null>(null);
+  const [importFailure, setImportFailure] = useState<string | null>(null);
+  const sourceRequestRef = useRef<AbortController | null>(null);
+  const importRequestRef = useRef<AbortController | null>(null);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -121,6 +142,7 @@ export function usePhiMediaPickerBinding({
     : null;
   const source = config?.dataSource ?? PHI_ASSET_COLLECTION_DATA_SOURCE;
   const { provider, bindingError } = usePhiCollectionProvider(source);
+  const updateAsset = usePhiCollectionProviderAction(source);
   const locale = usePhiIntlLocale();
   const timeZone = usePhiIntlTimeZone();
   const folderOptions = useMemo(() => buildPhiMediaFolderCascaderOptions(folders), [folders]);
@@ -129,6 +151,25 @@ export function usePhiMediaPickerBinding({
     [labels.space, spaces],
   );
   const folderValue = useMemo(() => buildPhiMediaFolderValueById(folders, folderId), [folderId, folders]);
+  /*
+   * The sources are asked for when the picker is open and not before. The switch is shown only on the Site
+   * Space, because an import always goes to the Site Space: where the surface may name a Space, the one
+   * the last answer served decides; a surface that never may (`siteSpaceOnly`, the Builder, the Editor)
+   * is on the Site Space by construction. Before the first answer nothing was named, which is the Site Space.
+   */
+  const mediaSources = usePhiMediaSources({ enabled: isOpen });
+  const activeSpaceKind = spaces.find((space) => space.address === spaceAddress)?.kind ?? null;
+  const onSiteSpace = !spaceSelectionAllowed || spaceAddress == null || activeSpaceKind === "site";
+  const sourceSwitchShown = onSiteSpace && mediaSources.length > 0;
+  const activeSource = sourceSwitchShown ? mediaSources.find((entry) => entry.id === sourceId) ?? null : null;
+  const sourceOptions = useMemo(
+    () => sourceSwitchShown
+      ? [{ value: "", label: labels.space.site }, ...mediaSources.map((entry) => ({ value: entry.id, label: entry.label }))]
+      : [],
+    [labels.space.site, mediaSources, sourceSwitchShown],
+  );
+  const sourceQuery = searchQuery.trim().slice(0, PHIS_MEDIA_SOURCE_QUERY_MAX_LENGTH);
+  const sourcePageSize = Math.min(Math.max(pageSize, 1), PHIS_MEDIA_SOURCE_PAGE_MAX_ITEMS);
   const query = useMemo<PhiCollectionProviderQuery>(() => ({
     page,
     pageSize,
@@ -154,6 +195,8 @@ export function usePhiMediaPickerBinding({
   useEffect(() => {
     if (!isOpen) return;
     if (!provider || !source) return;
+    // The source's items stand where the library's tiles do; the library is read again when it comes back.
+    if (activeSource) return;
     const abortController = new AbortController();
     const load = async () => {
       setLoading(true);
@@ -193,13 +236,142 @@ export function usePhiMediaPickerBinding({
     };
     void load();
     return () => abortController.abort();
-  }, [isOpen, locale, provider, query, refreshToken, source, timeZone]);
+  }, [activeSource, isOpen, locale, provider, query, refreshToken, source, timeZone]);
+
+  const activeSourceId = activeSource?.id ?? null;
+  const readSourcePage = useCallback(async (cursor: string | null, signal: AbortSignal) => {
+    if (!activeSource) return null;
+    return activeSource.list({
+      query: sourceQuery,
+      kinds: [mediaType],
+      cursor,
+      limit: sourcePageSize,
+      locale,
+      signal,
+    });
+  }, [activeSource, locale, mediaType, sourcePageSize, sourceQuery]);
+
+  // The first page of the active source, again whenever the source or what was typed changes.
+  useEffect(() => {
+    if (!isOpen || !activeSourceId) return;
+    const abortController = new AbortController();
+    sourceRequestRef.current = abortController;
+    void (async () => {
+      setSourceLoading(true);
+      setSourceFailed(false);
+      setSourcePageOf({ sourceId: activeSourceId, items: [] });
+      setSourceCursor(null);
+      try {
+        const page = await readSourcePage(null, abortController.signal);
+        if (!page || abortController.signal.aborted) return;
+        setSourcePageOf({ sourceId: activeSourceId, items: page.items });
+        setSourceCursor(page.nextCursor);
+      } catch (error) {
+        if (abortController.signal.aborted) return;
+        console.error("Media source failed to list.", error);
+        setSourceFailed(true);
+      } finally {
+        if (!abortController.signal.aborted) setSourceLoading(false);
+      }
+    })();
+    // Also what "Load more" asked since: it answers the question that was asked before.
+    return () => {
+      abortController.abort();
+      sourceRequestRef.current?.abort();
+    };
+  }, [activeSourceId, isOpen, readSourcePage]);
+
+  // A closed picker stops what it asked: the listing and an import on its way.
+  useEffect(() => {
+    if (isOpen) return;
+    sourceRequestRef.current?.abort();
+    importRequestRef.current?.abort();
+    importRequestRef.current = null;
+  }, [isOpen]);
+  useEffect(() => () => {
+    sourceRequestRef.current?.abort();
+    importRequestRef.current?.abort();
+  }, []);
+
+  const loadMoreSourceItems = () => {
+    if (!sourceCursor || sourceLoading) return;
+    const abortController = new AbortController();
+    sourceRequestRef.current = abortController;
+    setSourceLoading(true);
+    setSourceFailed(false);
+    void (async () => {
+      try {
+        const page = await readSourcePage(sourceCursor, abortController.signal);
+        if (!page || abortController.signal.aborted) return;
+        setSourcePageOf((current) => ({ sourceId: current.sourceId, items: [...current.items, ...page.items] }));
+        setSourceCursor(page.nextCursor);
+      } catch (error) {
+        if (abortController.signal.aborted) return;
+        console.error("Media source failed to list.", error);
+        setSourceFailed(true);
+      } finally {
+        if (!abortController.signal.aborted) setSourceLoading(false);
+      }
+    })();
+  };
+
+  /**
+   * Imports the chosen item and answers the Asset it became, which the Control then chooses exactly as it
+   * would a tile of the library. Nothing but a refusal says anything: a stopped import (the picker closed,
+   * another source chosen) is not a failure, and the picker stays in the source view for the reader to
+   * try again.
+   */
+  const importSourceItem = async (item: PhisMediaSourceItem): Promise<PhiMediaAssetTile | null> => {
+    if (!activeSource || importRequestRef.current) return null;
+    const abortController = new AbortController();
+    importRequestRef.current = abortController;
+    setImportingItemId(item.id);
+    setImportFailure(null);
+    try {
+      const imported = await activeSource.importItem({ item, folderId, signal: abortController.signal });
+      if (abortController.signal.aborted) return null;
+      let tile = imported.asset;
+      if (imported.metadata) {
+        /*
+         * A Module's file arrives titled after its file name; its own title and alt text are written
+         * through the Asset update the library already has. The Asset exists by now, so a refusal here
+         * leaves it chosen with the file's name rather than losing what was imported.
+         */
+        try {
+          await updateAsset({
+            actionKey: "update",
+            itemKey: tile.id,
+            item: { title: imported.metadata.title, altText: imported.metadata.altText },
+            query,
+          });
+          tile = { ...tile, title: imported.metadata.title, altText: imported.metadata.altText };
+        } catch (error) {
+          console.error("Media picker could not set the imported Asset's title.", error);
+        }
+        if (abortController.signal.aborted) return null;
+      }
+      assetCacheRef.current.set(tile.id, tile);
+      setSourceId("");
+      return tile;
+    } catch (error) {
+      if (abortController.signal.aborted) return null;
+      console.error("Media source import failed.", error);
+      setImportFailure(readPhiMediaSourceImportErrorMessage(error, labels.upload.refusals, labels.picker.importFailedText));
+      return null;
+    } finally {
+      if (importRequestRef.current === abortController) importRequestRef.current = null;
+      setImportingItemId(null);
+    }
+  };
 
   const resolvedAssets = provider && source ? assets : [];
 
   const updateOpen = (next: boolean) => {
     if (controlledOpen == null) setLocalOpen(next);
     if (next) {
+      // A picker opens on the Site's library, whatever source the last opening ended in.
+      setSourceId("");
+      setImportFailure(null);
       setRefreshToken((current) => current + 1);
       reloadSignals.emitCapability("reload", null);
       kindSignals.emitCapability("kind", mediaType);
@@ -236,6 +408,12 @@ export function usePhiMediaPickerBinding({
     assets: resolvedAssets,
     spaces: spaceSelectionAllowed ? spaceOptions : [],
     spaceValue: spaceSelectionAllowed ? spaceAddress : null,
+    sources: sourceOptions,
+    sourceValue: activeSource?.id ?? "",
+    sourceItems: activeSource && sourcePageOf.sourceId === activeSource.id ? sourcePageOf.items : [],
+    sourceHasMore: activeSource != null && sourceCursor != null,
+    importingItemId,
+    sourceNotice: importFailure,
     folders: provider && source ? folderOptions : [],
     folderValue,
     query: searchQuery,
@@ -243,12 +421,12 @@ export function usePhiMediaPickerBinding({
     pageSize,
     minColumnWidth,
     total: provider && source ? total : 0,
-    loading,
+    loading: activeSource ? sourceLoading : loading,
     showSearchBar: config?.showSearchBar ?? true,
     showFolderFilter: config?.showFolderFilter ?? true,
     showPagination: config?.showPagination ?? true,
     trigger,
-    labels: { trigger: labels.picker.triggerLabel, title: labels.picker.popoverTitle, search: labels.tool.searchPlaceholder ?? searchLabels.placeholder, folder: labels.tool.folderLabel, space: labels.space.label, empty: bindingError ?? (loadFailed ? labels.picker.loadFailedDescription : labels.picker.emptyDescription), clear: labels.picker.clearLabel, reload: labels.tool.reloadLabel, tileSize: labels.picker.tileSizeLabel },
+    labels: { trigger: labels.picker.triggerLabel, title: labels.picker.popoverTitle, search: labels.tool.searchPlaceholder ?? searchLabels.placeholder, folder: labels.tool.folderLabel, space: labels.space.label, empty: bindingError ?? (loadFailed ? labels.picker.loadFailedDescription : labels.picker.emptyDescription), sourceEmpty: sourceFailed ? labels.picker.sourceFailedText : labels.picker.emptyDescription, clear: labels.picker.clearLabel, reload: labels.tool.reloadLabel, tileSize: labels.picker.tileSizeLabel, source: labels.picker.sourceLabel, importing: labels.picker.importingLabel, loadMore: labels.picker.loadMoreLabel },
     getPopupContainer,
     popupRootClassName,
     isAssetSelectable,
@@ -264,6 +442,15 @@ export function usePhiMediaPickerBinding({
       setFolderId(null);
       setPage(1);
     },
+    onSourceChange: (nextSource: string) => {
+      // What was asked of the source before is not an answer to what is asked now.
+      importRequestRef.current?.abort();
+      importRequestRef.current = null;
+      setImportFailure(null);
+      setSourceId(nextSource);
+    },
+    onSourceItemSelect: importSourceItem,
+    onSourceLoadMore: loadMoreSourceItems,
     onFolderChange: (nextFolder: string) => { setFolderId(resolvePhiMediaFolderIdFromValue(folders, nextFolder)); setPage(1); pathSignals.emitCapability("path", nextFolder); },
     onPageChange: (nextPage: number, nextPageSize: number) => { setPage(nextPage); setPageSize(nextPageSize); paginationSignals.emitCapability("pagination", { page: nextPage, pageSize: nextPageSize, total }); },
     onMinColumnWidthChange: setMinColumnWidth,

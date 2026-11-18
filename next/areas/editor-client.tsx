@@ -3,6 +3,7 @@
 import {
   PHI_EDITOR_RUNTIME_MODULE_CONTROLLER_CLIENT_MANIFEST,
   PHI_EDITOR_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST,
+  PHI_EDITOR_RUNTIME_MODULE_MEDIA_SOURCE_CLIENT_MANIFEST,
   PHI_EDITOR_RUNTIME_MODULE_UI_PROVIDER_CLIENT_MANIFEST,
   PHI_EDITOR_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST,
   PHI_EDITOR_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST,
@@ -30,6 +31,7 @@ export function createPhiEditorRuntimeModuleClientBoundary(
     render: PHI_EDITOR_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST,
     dataProvider: PHI_EDITOR_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST,
     calendarAdapter: PHI_EDITOR_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST,
+    mediaSource: PHI_EDITOR_RUNTIME_MODULE_MEDIA_SOURCE_CLIENT_MANIFEST,
     uiProvider: PHI_EDITOR_RUNTIME_MODULE_UI_PROVIDER_CLIENT_MANIFEST,
   });
 
@@ -41,6 +43,7 @@ export function createPhiEditorRuntimeModuleClientBoundary(
     return (
       <PhiNextRuntimeModuleClientBoundary
         calendarAdapterManifest={manifests.calendarAdapter}
+        mediaSourceManifest={manifests.mediaSource}
         controllerManifest={manifests.controller}
         dataProviderManifest={manifests.dataProvider}
         renderManifest={manifests.render}

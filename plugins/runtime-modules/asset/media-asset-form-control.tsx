@@ -89,6 +89,11 @@ export const PhiMediaAssetFormControl: ComponentType<PhiFormFieldProviderProps> 
         loadFailedDescription: readPicker("loadFailedDescription", base.picker.loadFailedDescription),
         clearLabel: readPicker("clearLabel", base.picker.clearLabel),
         tileSizeLabel: readPicker("tileSizeLabel", base.picker.tileSizeLabel),
+        sourceLabel: readPicker("sourceLabel", base.picker.sourceLabel),
+        sourceFailedText: readPicker("sourceFailedText", base.picker.sourceFailedText),
+        importingLabel: readPicker("importingLabel", base.picker.importingLabel),
+        importFailedText: readPicker("importFailedText", base.picker.importFailedText),
+        loadMoreLabel: readPicker("loadMoreLabel", base.picker.loadMoreLabel),
       },
       space: { ...base.space, label: readPicker("spaceLabel", base.space.label) },
     };

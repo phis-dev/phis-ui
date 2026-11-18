@@ -19,4 +19,9 @@ export const PHI_FORM_MEDIA_ASSET_PICKER_LABEL_KEYS = {
   clearLabel: "mediaAssetPickerClear",
   reloadLabel: "mediaAssetPickerReload",
   tileSizeLabel: "mediaAssetPickerTileSize",
+  sourceLabel: "mediaAssetPickerSource",
+  sourceFailedText: "mediaAssetPickerSourceFailed",
+  importingLabel: "mediaAssetPickerImporting",
+  importFailedText: "mediaAssetPickerImportFailed",
+  loadMoreLabel: "mediaAssetPickerLoadMore",
 } as const;

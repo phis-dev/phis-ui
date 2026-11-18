@@ -3,6 +3,7 @@ import type { PhiCmsAreaKey } from "../../constants/cms-areas";
 import type { PhiCmsRenderIssue, PhiRuntimeControllerSetting } from "../../types/cms-plugins";
 import type { PhiRuntimeDataProviderKey } from "../../types/runtime-data-provider";
 import type { PhiCalendarAdapterKey } from "../../types/calendar";
+import type { PhiMediaSourceDescriptor, PhiMediaSourceKey } from "../../types/media-source";
 import type { PhiVideoProviderDescriptor, PhiVideoProviderKey } from "../../types/video";
 import type { PhiFormProviderKey } from "../../types/form-descriptor";
 import type { PhiCapabilitySnapshot } from "../../types/server-capabilities";
@@ -124,6 +125,14 @@ function loadModule(
       );
     }
     if (
+      JSON.stringify(runtimeModule.mediaSources ?? []) !==
+      JSON.stringify(catalogEntry.definition.mediaSources ?? [])
+    ) {
+      throw new Error(
+        `Runtime module "${moduleId}" media source descriptors do not match its catalog definition.`,
+      );
+    }
+    if (
       JSON.stringify(runtimeModule.videoProviders ?? []) !==
       JSON.stringify(catalogEntry.definition.videoProviders ?? [])
     ) {
@@ -237,6 +246,7 @@ export async function resolvePhiRuntimeModuleSet({
       ? T
       : never
   >();
+  const mediaSourceDescriptorsByKey = new Map<PhiMediaSourceKey, PhiMediaSourceDescriptor>();
   const videoProviderDescriptorsByKey = new Map<PhiVideoProviderKey, PhiVideoProviderDescriptor>();
   const formFieldTypeProviderDescriptorsByKey = new Map<
     PhiFormProviderKey,
@@ -316,6 +326,12 @@ export async function resolvePhiRuntimeModuleSet({
         throw new Error(`Calendar adapter "${descriptor.key}" is owned by more than one runtime module.`);
       }
       calendarAdapterDescriptorsByKey.set(descriptor.key, descriptor);
+    }
+    for (const descriptor of definition.mediaSources ?? []) {
+      if (mediaSourceDescriptorsByKey.has(descriptor.key)) {
+        throw new Error(`Media source "${descriptor.key}" is owned by more than one runtime module.`);
+      }
+      mediaSourceDescriptorsByKey.set(descriptor.key, descriptor);
     }
     for (const descriptor of definition.videoProviders ?? []) {
       if (videoProviderDescriptorsByKey.has(descriptor.key)) {
@@ -401,6 +417,7 @@ export async function resolvePhiRuntimeModuleSet({
     layoutDefinitionsByType,
     dataProviderDescriptorsByKey,
     calendarAdapterDescriptorsByKey,
+    mediaSourceDescriptorsByKey,
     videoProviderDescriptorsByKey,
     formFieldTypeProviderDescriptorsByKey,
     formValidationProviderDescriptorsByKey,

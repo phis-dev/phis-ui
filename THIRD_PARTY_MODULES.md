@@ -239,7 +239,8 @@ beside them):
 - Dialogs and forms: `PhiDialogControl`, `PhiFormControl`.
 - Data: `PhiTableControl`, `PhiTreeControl`, `PhiTreeActionButton`, `PhiCollectionLayoutControl`,
   `PhiCollectionHeaderControl`, `PhiCollectionViewControl`, `PhiMediaPickerControl`,
-  `PhiMediaAssetTileControl`, `PhiMediaAssetCollectionSkeletonControl`, `PhiMaskPickerControl`,
+  `PhiMediaAssetTileControl`, `PhiMediaAssetCollectionSkeletonControl`, `PhiMediaSourceItemTileControl`,
+  `PhiMaskPickerControl`,
   `PhiDragHandleControl`. A list of records is a `table` Widget on a provider, not a `PhiTableControl` of
   yours ([a staff page is composed](#before-you-start-a-staff-page-is-composed-not-drawn)).
 - Configuration editors: `PhiBackgroundControl`, `PhiBorderControl`, `PhiPaddingControl`,
@@ -1284,6 +1285,113 @@ availability is declared by the owning Module through `availableToAuthoringChrom
 descriptor, not listed anywhere in the Builder. A `phis:asset/...` reference is resolved by the core
 reference resolver and needs no Module at all.
 
+### Offering a media source
+
+A media source is somewhere other than the Site's library that a file can be taken from: a stock archive,
+a brand portal, your customer's own DAM. The Media picker shows it beside the library, behind a switch
+labelled "Source", whenever the picker stands on the Site Space and at least one source exists. A picker
+with none looks and behaves as it always did.
+
+**A source is listed, and what is chosen is imported.** Choosing an item brings its file into the Site's
+Media library as an ordinary Asset, and what a field, a Widget or a Theme stores is that Asset's id.
+Nothing ever stores a reference into your source, so a Site keeps its pictures when a subscription ends and
+variants, focal rectangle, delivery and quota work on Assets and on nothing else. Do not ask the picker for
+a way to keep your item's id on a placement; there is none by design.
+
+The Server half declares the source in the Module's definition, keyed like a data provider
+(`<owner>/<name>`), owned by the Module that declares it, and owned once:
+
+```ts
+// definition.ts
+  mediaSources: [
+    { key: `${STATUS_MODULE_ID}/stock`, ownerModuleId: STATUS_MODULE_ID, title: "Stock photos" },
+  ],
+```
+
+The Client half is `mediaSources` beside `calendarAdapters` in `phiModuleClientContributions`
+([section 8](#8-export-the-client-and-authoring-contributions)). `load` is a lazy `import()`, so the Client
+is fetched only when a picker is open:
+
+```ts
+// client.ts
+"use client";
+
+import { definePhiModuleClientContributions } from "@phis/ui/module/client";
+import type { PhiMediaSourceClientDefinition } from "@phis/ui/types";
+import { STATUS_MODULE_ID } from "./ids";
+
+const stock: PhiMediaSourceClientDefinition = {
+  key: `${STATUS_MODULE_ID}/stock`,
+  ownerModuleId: STATUS_MODULE_ID,
+  load: () => import("./media-source/stock").then((module) => module.STOCK_MEDIA_SOURCE),
+};
+
+export const phiModuleClientContributions = definePhiModuleClientContributions({
+  modules: [/* ... */],
+  mediaSources: [stock],
+});
+```
+
+```ts
+// media-source/stock.ts
+import type { PhiMediaSourceClient } from "@phis/ui/types";
+
+export const STOCK_MEDIA_SOURCE: PhiMediaSourceClient = {
+  async describe({ locale }) {
+    return { label: locale.startsWith("de") ? "Bildarchiv" : "Stock photos" };
+  },
+  async list({ query, kinds, cursor, limit, locale, signal }) {
+    const response = await fetch(`${ARCHIVE}/search?${new URLSearchParams({ q: query, cursor: cursor ?? "" })}`, { signal });
+    const body = await response.json();
+    return { items: body.hits.slice(0, limit).map(toItem), nextCursor: body.next ?? null };
+  },
+  async take({ itemId, signal }) {
+    const response = await fetch(`${ARCHIVE}/photos/${encodeURIComponent(itemId)}/download`, { signal });
+    return { file: await response.blob(), fileName: `${itemId}.jpg`, title: "...", altText: null, credit: "Photo: A. Name" };
+  },
+};
+```
+
+What the three must answer (the types are `@phis/contracts/media-source`, the Client's are `@phis/ui`):
+
+- `describe({ locale })` answers `{ label }`, what the switch says, in the reader's language. You translate
+  your own words; the Foundation's Label Sets do not reach a Module's text. A source that cannot be
+  described is left out of the switch.
+- `list(input)` answers `{ items, nextCursor }`. `input.query` is what somebody typed, trimmed and cut to
+  `PHIS_MEDIA_SOURCE_QUERY_MAX_LENGTH`; empty means whatever you show unasked. `input.kinds` is what the
+  picker can take (`null` is any), and you answer no item of another kind. Paging is by cursor: `cursor` is
+  `null` for the first page, and otherwise the `nextCursor` you gave, handed back unread. `limit` is at most
+  `PHIS_MEDIA_SOURCE_PAGE_MAX_ITEMS`. Honour `signal`: the picker stops the request when it closes or when
+  somebody types on. An item is `{ id, kind, title, thumbnailUrl, width, height, credit }`; `id` is yours and
+  opaque to everybody else. A page that does not hold the contract -- too many items, a thumbnail that is
+  not an absolute `https:` address -- is "the source did not answer", not a page to show in part.
+- `take({ itemId })` answers the file: `{ file, fileName, title, altText?, credit? }`, as a `Blob` in the
+  reader's browser. The picker, not your Module, uploads it into the Site Space and the Folder the picker
+  shows -- through the same init, bytes and finalize as every upload -- and then writes `title` and
+  `altText` onto the new Asset. It records `{ source: "media-source", sourceKey, itemId, credit }` as the
+  upload's `meta`: a record of where the file came from, which nothing reads to find the file again. The
+  library's own refusals (too large, a type the Site does not take, no room left, a locked Folder) are said
+  in the words the uploads already have. Your Module never writes an Asset itself.
+
+**Thumbnails load in the reader's browser, straight from the source.** The picker draws
+`<img src={thumbnailUrl} loading="lazy" referrerPolicy="no-referrer">` and nothing else: never through
+`next/image` and never through the Site's server, because the Site's server must not fetch a foreign
+address. So `thumbnailUrl` is an absolute `https:` address of a small rendition, never the original, and it
+loads without your credentials. Nothing of the Site travels with that request but the fact that somebody
+looked.
+
+A source whose Module is not active in the Area is not offered, and neither is a descriptor without a Client
+or a Client without a descriptor. A Client and a descriptor that name different owners are an error that
+names the key, and a key two Clients claim is refused where the Site is composed. No first-party Module
+offers a source.
+
+An Add-on offers a source from the server instead, through the service kind
+`@phis/server/service/media-source` (`PhisMediaSourceAdapterV1`: `probe`, `list`, `take`), with the same
+list contract and no Module involved. Core asks it on the picker's behalf, the Add-on's `take` hands over
+bytes (Core fetches nothing from an address), and Core imports what is chosen. The design is
+`phis-server/design/MEDIA_SOURCES.md`. The picker reads those sources from
+`GET /api/site/media/sources` the first time a picker opens on a page, and shows them in the same switch.
+
 ### A popup leaves the block
 
 A Widget that opens a Tooltip, a Dropdown, a Select menu or a Popover lets it render in a portal. That is
@@ -2273,6 +2381,10 @@ export const phiModuleClientContributions = definePhiModuleClientContributions({
 - `calendarAdapters` (beside `modules`) lists Calendar adapter Clients. Their Server descriptors are
   `calendarAdapters` in the definition, keyed `<owner>/calendars/<key>`. An Area holds the adapters of
   the packages its generated Client file imports, which are the packages with a Module for that Area.
+- `mediaSources` (beside `modules`) lists media source Clients, `{ key, ownerModuleId, load }`
+  ([Offering a media source](#offering-a-media-source)). Their Server descriptors are `mediaSources` in the
+  definition, keyed `<owner>/<name>`. Like the adapters they are held flat, not per Area: the picker offers
+  the ones whose Module is active in the Area it is open in.
 - The door is imported only into the generated Client files of the Areas the package's Modules serve.
   Keep it a list of `next/dynamic` loaders and small constants: whatever it reaches statically is paid
   on every page of those Areas.
@@ -2314,6 +2426,11 @@ Widget; `@phis/calendar` is an optional Module package with event calendars and 
 ./authoring-client  phiModuleAuthoringContributions  definePhiModuleAuthoringContributions @phis/ui/module/authoring-client
 ./fonts             phiModuleFontContributions       definePhiModuleFontContributions      @phis/ui/module   (optional)
 ```
+
+`phiModuleClientContributions` carries `calendarAdapters` and `mediaSources` beside `modules`; the types a
+package names them with (`PhiMediaSourceDescriptor`, `PhiMediaSourceClient`, `PhiMediaSourceClientDefinition`,
+`PhiMediaSourceTakenFile`, `PhiMediaSourceKey`) come from `@phis/ui/types`, and the manifest a Site composes from
+`@phis/ui/runtime/media-source-client`.
 
 A generator cannot guess an export it was never told about, so these names are fixed (`module.ts`). Each
 is keyed by Module id, because one package may carry several Modules. No generated file imports the

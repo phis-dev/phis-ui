@@ -6,6 +6,10 @@ import {
   type PhiRuntimeModuleCalendarAdapterClientManifest,
 } from "../../components/runtime/runtime-module-calendar-adapter-client-manifest";
 import {
+  extendPhiRuntimeModuleMediaSourceClientManifest,
+  type PhiRuntimeModuleMediaSourceClientManifest,
+} from "../../components/runtime/runtime-module-media-source-client-manifest";
+import {
   extendPhiRuntimeModuleDataProviderClientManifest,
   type PhiRuntimeModuleDataProviderClientManifest,
 } from "../../components/runtime/runtime-module-data-provider-client-manifest";
@@ -45,6 +49,7 @@ export type PhiSiteModuleClientManifests = {
   render: PhiRuntimeModuleRenderClientManifest;
   dataProvider: PhiRuntimeModuleDataProviderClientManifest;
   calendarAdapter: PhiRuntimeModuleCalendarAdapterClientManifest;
+  mediaSource: PhiRuntimeModuleMediaSourceClientManifest;
   uiProvider: PhiRuntimeModuleUiProviderClientManifest;
 };
 
@@ -77,6 +82,10 @@ export function extendWithPhiSiteModuleClientManifests(
     calendarAdapter: extendPhiRuntimeModuleCalendarAdapterClientManifest(
       base.calendarAdapter,
       contributions.calendarAdapters,
+    ),
+    mediaSource: extendPhiRuntimeModuleMediaSourceClientManifest(
+      base.mediaSource,
+      contributions.mediaSources,
     ),
     uiProvider: extendPhiRuntimeModuleUiProviderClientManifest(
       base.uiProvider,

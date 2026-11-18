@@ -81,6 +81,8 @@ export type {
   PhiMediaAssetCollectionSkeletonControlProps,
   PhiMediaAssetTileControlProps,
 } from "./components/controls/phi-media-asset-tile-control";
+export { PhiMediaSourceItemTileControl } from "./components/controls/phi-media-source-item-tile-control";
+export type { PhiMediaSourceItemTileControlProps } from "./components/controls/phi-media-source-item-tile-control";
 export { PhiVideoEmbedControl } from "./components/controls/phi-video-embed-control";
 export type {
   PhiVideoEmbedControlLabels,

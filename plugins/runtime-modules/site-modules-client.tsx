@@ -6,6 +6,7 @@ import type {
   PhiRuntimeModuleCalendarAdapterClientDefinition,
   PhiRuntimeModuleDataProviderClientDefinition,
 } from "../../types/cms-plugins";
+import type { PhiMediaSourceClientDefinition } from "../../types/media-source";
 import type { PhiRuntimeModuleControllerClientAreaContribution } from "./area-contributions-controller-client";
 import type {
   PhiRuntimeModuleUiProviderClientDefinition,
@@ -26,6 +27,9 @@ import type {
  * their type when a Widget renders; an Area dimension would model a distinction the runtime does not
  * make.
  *
+ * Media sources are held flat for the same reason: the picker resolves them by key, and whether one is
+ * offered is decided by its Module being active in the Area, not by a list per Area.
+ *
  * Authoring contributions are not here either, and for a stronger reason than shape: they live in
  * `site-modules-authoring-client.tsx` and in a generated file of their own, so that importing this
  * projection cannot drag a Builder implementation into a live Area's bundle.
@@ -43,10 +47,12 @@ export type PhiSiteModuleClientAreaContributions = {
 export type PhiSiteModuleClientContributions = {
   areas: Readonly<Partial<Record<PhiCmsAreaKey, PhiSiteModuleClientAreaContributions>>>;
   calendarAdapters: readonly PhiRuntimeModuleCalendarAdapterClientDefinition[];
+  mediaSources: readonly PhiMediaSourceClientDefinition[];
 };
 
 /** A Site that installed no Modules of its own. */
 export const PHI_NO_SITE_MODULE_CLIENT_CONTRIBUTIONS: PhiSiteModuleClientContributions = {
   areas: {},
   calendarAdapters: [],
+  mediaSources: [],
 };

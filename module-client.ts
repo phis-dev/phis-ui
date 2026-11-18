@@ -3,6 +3,7 @@
 import type { PhiRuntimeModuleControllerClient } from "./components/runtime/runtime-module-controller-client-manifest";
 import type { PhiRuntimeModuleRenderClient } from "./components/runtime/runtime-module-render-client-manifest";
 import type { PhiRuntimeModuleId } from "./types/cms-module-descriptors";
+import type { PhiMediaSourceClientDefinition } from "./types/media-source";
 import type {
   PhiRuntimeModuleCalendarAdapterClientDefinition,
   PhiRuntimeModuleDataProviderClientDefinition,
@@ -22,7 +23,8 @@ import type {
  *
  * Calendar adapters sit beside the Modules rather than inside them: they are resolved by their type
  * wherever a Widget renders, and no Area holds a different set. They are stated here so a package has one
- * Client entrypoint, and the projection flattens them.
+ * Client entrypoint, and the projection flattens them. Media sources are held the same way: the Media
+ * picker lists those whose Module is active in the Area it is open in.
  */
 export type PhiModuleClientContribution = {
   moduleId: PhiRuntimeModuleId;
@@ -40,6 +42,8 @@ export type PhiModuleClientContribution = {
 export type PhiModuleClientContributions = {
   modules: readonly PhiModuleClientContribution[];
   calendarAdapters?: readonly PhiRuntimeModuleCalendarAdapterClientDefinition[];
+  /** Media sources, beside the Calendar adapters for the same reason: the picker resolves them by key. */
+  mediaSources?: readonly PhiMediaSourceClientDefinition[];
 };
 
 export function definePhiModuleClientContributions(

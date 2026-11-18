@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Flex, Typography } from "antd";
+import type { PhisMediaSourceItem } from "@phis/contracts/media-source";
 
 import type { PhiMediaAssetTile } from "../../types/media";
 import { usePhiConfig } from "../root/phi-config-provider";
@@ -15,6 +16,7 @@ import {
   PhiMediaAssetCollectionSkeletonControl,
   PhiMediaAssetTileControl,
 } from "./phi-media-asset-tile-control";
+import { PhiMediaSourceItemTileControl } from "./phi-media-source-item-tile-control";
 import {
   PHI_MEDIA_PICKER_COLUMN_WIDTH_STEP,
   PHI_MEDIA_PICKER_DEFAULT_COLUMN_WIDTH,
@@ -43,6 +45,22 @@ export type PhiMediaPickerControlProps = PhiPickerTransactionCallbacks<number | 
    */
   spaces?: readonly PhiControlOption[];
   spaceValue?: string | null;
+  /**
+   * The places a file can be chosen from: the Site's library first, then each media source. Empty
+   * unless there is a source to choose and the picker stands on the Site Space, so a picker without
+   * one never renders the switch.
+   */
+  sources?: readonly PhiControlOption[];
+  /** Which of `sources` is shown; `""` is the Site's library. */
+  sourceValue?: string;
+  /** What the source offers, in the order it answered; drawn instead of the library's tiles. */
+  sourceItems?: readonly PhisMediaSourceItem[];
+  /** Whether the source has a further page, which "Load more" asks for. */
+  sourceHasMore?: boolean;
+  /** The item whose import is in flight, if any. */
+  importingItemId?: string | null;
+  /** Why the last import did not work, said above the tiles. */
+  sourceNotice?: string | null;
   folders?: readonly PhiControlOption[];
   folderValue?: string;
   query?: string;
@@ -67,14 +85,26 @@ export type PhiMediaPickerControlProps = PhiPickerTransactionCallbacks<number | 
     folder: string;
     space: string;
     empty: string;
+    /** What an empty or failed source says, where the library's `empty` would be the wrong words. */
+    sourceEmpty: string;
     clear: string;
     reload: string;
     tileSize: string;
+    source: string;
+    importing: string;
+    loadMore: string;
   }>;
   getPopupContainer?: (triggerNode: HTMLElement) => HTMLElement;
   popupRootClassName?: string;
   onQueryChange?: (query: string) => void;
   onSpaceChange?: (space: string) => void;
+  onSourceChange?: (source: string) => void;
+  /**
+   * An item was chosen. Answers the Asset it became -- chosen then as if it had been picked in the
+   * library -- or null where nothing was imported and the picker stays as it is.
+   */
+  onSourceItemSelect?: (item: PhisMediaSourceItem) => Promise<PhiMediaAssetTile | null>;
+  onSourceLoadMore?: () => void;
   onFolderChange?: (folder: string) => void;
   onPageChange?: (page: number, pageSize: number) => void;
   onMinColumnWidthChange?: (minColumnWidth: number) => void;
@@ -87,6 +117,12 @@ export function PhiMediaPickerControl({
   assets,
   spaces = [],
   spaceValue = null,
+  sources = [],
+  sourceValue = "",
+  sourceItems = [],
+  sourceHasMore = false,
+  importingItemId = null,
+  sourceNotice = null,
   folders = [],
   folderValue = "/",
   query = "",
@@ -109,6 +145,9 @@ export function PhiMediaPickerControl({
   onOpenChange,
   onQueryChange,
   onSpaceChange,
+  onSourceChange,
+  onSourceItemSelect,
+  onSourceLoadMore,
   onFolderChange,
   onPageChange,
   onMinColumnWidthChange,
@@ -130,6 +169,28 @@ export function PhiMediaPickerControl({
     onOpenChange,
   });
   const selected = assets.find((asset) => asset.id === picker.value) ?? null;
+  // A source is shown while one other than the library is named; its items stand where the tiles do.
+  const sourceActive = sources.length > 1 && sourceValue !== "";
+  const importing = importingItemId != null;
+  const sourceTileItems = sourceItems.map((item) => (
+    <PhiMediaSourceItemTileControl
+      key={item.id}
+      title={item.title}
+      thumbnailUrl={item.thumbnailUrl}
+      credit={item.credit}
+      minColumnWidth={resolvedMinColumnWidth}
+      busy={importingItemId === item.id}
+      busyLabel={labels?.importing}
+      disabled={locked || importing}
+      onSelect={() => {
+        void onSourceItemSelect?.(item).then((asset) => {
+          if (!asset) return;
+          picker.changeValue(asset.id);
+          picker.closePicker("commit");
+        });
+      }}
+    />
+  ));
   const tileItems = assets.map((asset) => (
     <PhiMediaAssetTileControl
       key={asset.id}
@@ -186,6 +247,21 @@ export function PhiMediaPickerControl({
             />
           </div>
         ) : null}
+        {sources.length > 1 ? (
+          <div style={{ flex: "0 1 160px" }}>
+            <PhiSelectControl
+              value={sourceValue}
+              options={sources}
+              size="small"
+              ariaLabel={labels?.source ?? "Source"}
+              placeholder={labels?.source ?? "Source"}
+              disabled={locked || importing}
+              getPopupContainer={getPopupContainer}
+              popupRootClassName={popupRootClassName}
+              onChange={(next) => { if (typeof next === "string") onSourceChange?.(next); }}
+            />
+          </div>
+        ) : null}
         {showFolderFilter ? (
           <div style={{ flex: "1 1 180px" }}>
             <PhiCascaderControl
@@ -212,8 +288,30 @@ export function PhiMediaPickerControl({
           onClick={onReload}
         />
       </Flex>
+      {sourceActive && sourceNotice ? (
+        <Typography.Text type="danger" role="alert">{sourceNotice}</Typography.Text>
+      ) : null}
       <div style={{ flex: "1 1 auto", minHeight: 0, overflow: "auto" }}>
-        {loading && assets.length === 0 ? (
+        {sourceActive ? (
+          loading && sourceItems.length === 0 ? (
+            <PhiMediaAssetCollectionSkeletonControl
+              mode="grid"
+              gap={token.paddingSM}
+              minColumnWidth={resolvedMinColumnWidth}
+              count={Math.min(pageSize, 12)}
+              size="small"
+            />
+          ) : sourceItems.length === 0 ? (
+            <PhiEmptyControl description={labels?.sourceEmpty ?? labels?.empty ?? "No media"} />
+          ) : (
+            <PhiCollectionLayoutControl
+              mode="grid"
+              gap={token.paddingSM}
+              minColumnWidth={resolvedMinColumnWidth}
+              items={sourceTileItems}
+            />
+          )
+        ) : loading && assets.length === 0 ? (
           <PhiMediaAssetCollectionSkeletonControl
             mode="grid"
             gap={token.paddingSM}
@@ -262,7 +360,17 @@ export function PhiMediaPickerControl({
           disabled={locked || picker.value == null}
           onClick={() => picker.changeValue(null)}
         />
-        {showPagination ? (
+        {sourceActive ? (
+          sourceHasMore ? (
+            <PhiButtonControl
+              label={labels?.loadMore ?? "Load more"}
+              size="small"
+              loading={loading}
+              disabled={locked || importing}
+              onClick={onSourceLoadMore}
+            />
+          ) : null
+        ) : showPagination ? (
           <PhiPaginationControl
             page={page}
             pageSize={pageSize}

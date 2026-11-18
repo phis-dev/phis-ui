@@ -13,7 +13,7 @@ import {
   type PhiMediaUploadSessionRunner,
   type PhiMediaUploadInitOptions,
 } from "./media-upload-flow";
-import { PHI_MEDIA_UPLOAD_FOLDER_LOCKED_CODE } from "./media-folder-lock";
+import { readPhiMediaUploadRefusalMessage } from "./media-upload-refusals";
 
 /**
  * What a surface accepts, stated by the Module that offers it.
@@ -117,21 +117,8 @@ export function readPhiMediaUploadErrorMessage(error: unknown, labels: PhiMediaU
   const code = error instanceof PhiMediaUploadError
     ? error.code
     : (error as { code?: unknown } | null)?.code;
-  switch (code) {
-    case "media_asset_exists": return labels.errorDuplicate;
-    case "media_asset_too_large": return labels.errorTooLarge;
-    case "content_type_not_allowed": return labels.errorTypeNotAllowed;
-    case "media_quota_exceeded": return labels.errorQuotaExceeded;
-    case "space_kind_unavailable":
-    case "space_forbidden":
-    case "space_not_found": return labels.errorSpaceUnavailable;
-    // A presigned plan is delivered past the Site: reaching the Site says nothing about reaching the
-    // Provider, so this is deliberately not the same reading as a network failure.
-    case "storage_unreachable":
-    case "storage_rejected": return labels.errorStorageUnreachable;
-    case PHI_MEDIA_UPLOAD_FOLDER_LOCKED_CODE: return labels.errorFolderLocked;
-    default: break;
-  }
+  const refusal = readPhiMediaUploadRefusalMessage(code, labels);
+  if (refusal) return refusal;
   // A TypeError from fetch is the browser saying it never reached the site at all.
   return error instanceof TypeError ? labels.errorNetwork : labels.errorGeneric;
 }

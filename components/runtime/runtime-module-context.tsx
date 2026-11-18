@@ -8,6 +8,7 @@ import type {
 } from "../../types/cms-plugins";
 import type { PhiRuntimeDataProviderKey } from "../../types/runtime-data-provider";
 import type { PhiCalendarAdapterDescriptor, PhiCalendarAdapterKey } from "../../types/calendar";
+import type { PhiMediaSourceDescriptor, PhiMediaSourceKey } from "../../types/media-source";
 import type { PhiVideoProviderDescriptor, PhiVideoProviderKey } from "../../types/video";
 import type { PhiCollectionItemRendererDescriptor } from "../../types/collection-provider";
 
@@ -18,6 +19,8 @@ type PhiRuntimeModuleClientState = {
   widgetDefinitionsByType: ReadonlyMap<string, PhiRuntimeModuleClientWidgetDefinition>;
   dataProviderDescriptorsByKey: ReadonlyMap<PhiRuntimeDataProviderKey, PhiRuntimeModuleDataProviderDescriptor>;
   calendarAdapterDescriptorsByKey: ReadonlyMap<PhiCalendarAdapterKey, PhiCalendarAdapterDescriptor>;
+  /** The media sources the Area's active Modules declare; a source whose Module is not active is absent. */
+  mediaSourceDescriptorsByKey: ReadonlyMap<PhiMediaSourceKey, PhiMediaSourceDescriptor>;
   /**
    * Where a video may be fetched from, by provider key.
    *
@@ -44,6 +47,7 @@ const EMPTY_RUNTIME_MODULE_STATE: PhiRuntimeModuleClientState = {
   widgetDefinitionsByType: new Map(),
   dataProviderDescriptorsByKey: new Map(),
   calendarAdapterDescriptorsByKey: new Map(),
+  mediaSourceDescriptorsByKey: new Map(),
   videoProviderDescriptorsByKey: new Map(),
   collectionItemRendererKeys: null,
 };
@@ -59,6 +63,7 @@ export function PhiRuntimeModuleProvider({
   widgetDefinitions = [],
   dataProviderDescriptors = [],
   calendarAdapterDescriptors = [],
+  mediaSourceDescriptors = [],
   videoProviderDescriptors = [],
   collectionItemRendererDescriptors,
   children,
@@ -69,6 +74,7 @@ export function PhiRuntimeModuleProvider({
   widgetDefinitions?: readonly PhiRuntimeModuleClientWidgetDefinition[];
   dataProviderDescriptors?: readonly PhiRuntimeModuleDataProviderDescriptor[];
   calendarAdapterDescriptors?: readonly PhiCalendarAdapterDescriptor[];
+  mediaSourceDescriptors?: readonly PhiMediaSourceDescriptor[];
   videoProviderDescriptors?: readonly PhiVideoProviderDescriptor[];
   collectionItemRendererDescriptors?: readonly PhiCollectionItemRendererDescriptor[];
   children: ReactNode;
@@ -86,6 +92,9 @@ export function PhiRuntimeModuleProvider({
     calendarAdapterDescriptorsByKey: new Map(
       calendarAdapterDescriptors.map((descriptor) => [descriptor.key, descriptor]),
     ),
+    mediaSourceDescriptorsByKey: new Map(
+      mediaSourceDescriptors.map((descriptor) => [descriptor.key, descriptor]),
+    ),
     videoProviderDescriptorsByKey: new Map(
       videoProviderDescriptors.map((descriptor) => [descriptor.key, descriptor]),
     ),
@@ -97,6 +106,7 @@ export function PhiRuntimeModuleProvider({
     collectionItemRendererDescriptors,
     dataProviderDescriptors,
     layoutTypes,
+    mediaSourceDescriptors,
     moduleIds,
     videoProviderDescriptors,
     widgetDefinitions,

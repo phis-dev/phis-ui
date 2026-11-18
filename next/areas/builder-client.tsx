@@ -3,6 +3,7 @@
 import {
   PHI_BUILDER_RUNTIME_MODULE_CONTROLLER_CLIENT_MANIFEST,
   PHI_BUILDER_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST,
+  PHI_BUILDER_RUNTIME_MODULE_MEDIA_SOURCE_CLIENT_MANIFEST,
   PHI_BUILDER_RUNTIME_MODULE_UI_PROVIDER_CLIENT_MANIFEST,
   PHI_BUILDER_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST,
   PHI_BUILDER_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST,
@@ -42,6 +43,7 @@ export function createPhiBuilderRuntimeModuleClientBoundary(
     render: PHI_BUILDER_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST,
     dataProvider: PHI_BUILDER_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST,
     calendarAdapter: PHI_BUILDER_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST,
+    mediaSource: PHI_BUILDER_RUNTIME_MODULE_MEDIA_SOURCE_CLIENT_MANIFEST,
     uiProvider: PHI_BUILDER_RUNTIME_MODULE_UI_PROVIDER_CLIENT_MANIFEST,
   });
   // The Builder authors every Area, so it receives the complete installed Authoring union.
@@ -59,6 +61,7 @@ export function createPhiBuilderRuntimeModuleClientBoundary(
       <PhiNextRuntimeModuleClientBoundary
         authoringManifest={authoringManifest}
         calendarAdapterManifest={manifests.calendarAdapter}
+        mediaSourceManifest={manifests.mediaSource}
         controllerManifest={manifests.controller}
         dataProviderManifest={manifests.dataProvider}
         renderManifest={manifests.render}

@@ -1,5 +1,6 @@
 export {
   PHI_PUBLIC_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST,
+  PHI_PUBLIC_RUNTIME_MODULE_MEDIA_SOURCE_CLIENT_MANIFEST,
   PHI_PUBLIC_RUNTIME_MODULE_CONTROLLER_CLIENT_MANIFEST,
   PHI_PUBLIC_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST,
   PHI_PUBLIC_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST,
@@ -8,3 +9,4 @@ export type { PhiRuntimeModuleControllerClientManifest } from "./components/runt
 export type { PhiRuntimeModuleRenderClientManifest } from "./components/runtime/runtime-module-render-client-manifest";
 export type { PhiRuntimeModuleDataProviderClientManifest } from "./components/runtime/runtime-module-data-provider-client-manifest";
 export type { PhiRuntimeModuleCalendarAdapterClientManifest } from "./components/runtime/runtime-module-calendar-adapter-client-manifest";
+export type { PhiRuntimeModuleMediaSourceClientManifest } from "./components/runtime/runtime-module-media-source-client-manifest";

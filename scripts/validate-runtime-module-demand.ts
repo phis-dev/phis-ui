@@ -34,6 +34,7 @@ const INACTIVE_MODULE_ID = "@test/pkg/modules/inactive" as PhiRuntimeModuleId;
 const FORM_OWNER_MODULE_ID = "@test/pkg/modules/form-owner" as PhiRuntimeModuleId;
 const PROVIDER_KEY = "@test/options/items" as const;
 const TABLE_PROVIDER_KEY = "@test/tables/items" as const;
+const MEDIA_SOURCE_KEY = "@test/pkg/stock" as const;
 const CALENDAR_ADAPTER_KEY = "@test/pkg/modules/controllerless/calendars/gregory" as const;
 const WIDGET_TYPE = "@test/pkg/modules/widget";
 const INACTIVE_WIDGET_TYPE = "@test/pkg/modules/inactive-widget";
@@ -197,6 +198,11 @@ const controllerlessModuleDefinition = {
   description: "Controllerless Calendar adapter test module.",
   category: "other",
   iconFamily: "test",
+  mediaSources: [{
+    key: MEDIA_SOURCE_KEY,
+    ownerModuleId: CONTROLLERLESS_MODULE_ID,
+    title: "Stock",
+  }],
   calendarAdapters: [{
     key: CALENDAR_ADAPTER_KEY,
     ownerModuleId: CONTROLLERLESS_MODULE_ID,
@@ -341,6 +347,8 @@ assert.deepEqual(
 );
 assert.equal(moduleSet.activeModuleIds.has(BUILDER_BASE_MODULE_ID), false);
 assert.equal(moduleSet.calendarAdapterDescriptorsByKey.get(CALENDAR_ADAPTER_KEY)?.ownerModuleId,
+  CONTROLLERLESS_MODULE_ID);
+assert.equal(moduleSet.mediaSourceDescriptorsByKey.get(MEDIA_SOURCE_KEY)?.ownerModuleId,
   CONTROLLERLESS_MODULE_ID);
 assert.equal(moduleSet.ownerModuleIdByControllerType.has(CONTROLLERLESS_MODULE_ID), false);
 assert.equal(loads.get(CONTROLLERLESS_MODULE_ID), undefined,

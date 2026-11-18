@@ -26,7 +26,8 @@ import {
  * dropped: a package with Modules for different Areas brings all of them through its one door.
  *
  * Calendar adapters are not placed by Module. They resolve by type wherever a Widget renders, so an Area
- * holds the adapters of every package whose Client door its file imports.
+ * holds the adapters of every package whose Client door its file imports. Media sources are held the same
+ * way: whether one is offered is decided by its Module being active in the Area the picker is open in.
  *
  * Authoring contributions are not here at all. They have their own projection and their own generated
  * file, because a value this object can reach is a value every Area host that imports it must ship --
@@ -83,5 +84,6 @@ export function collectPhiSiteModuleClientContributions(input: {
   return {
     areas: Object.fromEntries(collected),
     calendarAdapters: input.clients.flatMap((client) => [...(client.calendarAdapters ?? [])]),
+    mediaSources: input.clients.flatMap((client) => [...(client.mediaSources ?? [])]),
   };
 }

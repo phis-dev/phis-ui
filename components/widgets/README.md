@@ -436,4 +436,14 @@ record's source text instead of its localized version.
   split by owner: `widget:media` (Foundation: picker, Spaces, grid, toolbar and its flag words), `widget:upload`
   (Core: every upload surface's texts) and the Asset Module's own set for the Inspector and the metadata
   editor (`plugins/runtime-modules/asset/labels.ts`).
+- **Media sources in the picker.** `usePhiMediaPickerBinding` owns the state, so every host gets a source
+  switch without being touched, and `PhiMediaPickerControl` only draws it: `sources`, `sourceValue` and
+  `onSourceChange` in the style of `spaces`, `spaceValue` and `onSpaceChange`, and the source's items,
+  "Load more" and the import's busy and refusal states as props. The Control fetches nothing. The sources
+  come from `usePhiMediaSources` (`components/media/phi-media-sources.tsx`): Modules' (`mediaSources`) and
+  Add-ons' (`GET /api/site/media/sources`, asked once per page and only when a picker first opens). The
+  switch appears only on the Site Space, because an import always goes there. What is chosen is imported
+  into the library and then chosen like any Asset of it; the thumbnails are plain `<img>` elements loaded
+  by the reader's browser, never `next/image` (`PhiMediaSourceItemTileControl`). See
+  [THIRD_PARTY_MODULES.md](../../THIRD_PARTY_MODULES.md#offering-a-media-source).
 - Remote reads and caching follow [gateway/CACHES.md](../../gateway/CACHES.md).

@@ -93,6 +93,7 @@ assert.match(
 // The shipped client seam is empty too, so the first-party manifests reach the boundary untouched.
 assert.deepEqual(PHI_NO_SITE_MODULE_CLIENT_CONTRIBUTIONS.areas, {});
 assert.deepEqual(PHI_NO_SITE_MODULE_CLIENT_CONTRIBUTIONS.calendarAdapters, []);
+assert.deepEqual(PHI_NO_SITE_MODULE_CLIENT_CONTRIBUTIONS.mediaSources, []);
 
 const clientInstalled: PhiSiteModuleClientContributions = {
   areas: {
@@ -106,6 +107,7 @@ const clientInstalled: PhiSiteModuleClientContributions = {
     },
   },
   calendarAdapters: [{ key: "@acme/shop/calendars/deliveries" }],
+  mediaSources: [{ key: "@acme/shop/stock" }],
 } as unknown as PhiSiteModuleClientContributions;
 
 const authoringInstalled = {
@@ -117,6 +119,7 @@ const emptyManifests = () => ({
   render: new Map(),
   dataProvider: new Map(),
   calendarAdapter: new Map(),
+  mediaSource: new Map(),
 }) as unknown as Parameters<typeof extendWithPhiSiteModuleClientManifests>[2];
 
 // An Area receives its own Modules...
@@ -133,6 +136,12 @@ for (const area of ["public", "editor"] as const) {
     manifests.calendarAdapter.has("@acme/shop/calendars/deliveries"),
     `Calendar adapters must reach ${area} as well`,
   );
+}
+
+// ...and the media sources, held flat for the same reason.
+for (const area of ["public", "editor"] as const) {
+  const manifests = extendWithPhiSiteModuleClientManifests(clientInstalled, area, emptyManifests());
+  assert.ok(manifests.mediaSource.has("@acme/shop/stock"), `media sources must reach ${area} as well`);
 }
 
 // The Builder reads the Authoring contributions whole; no Area holds any.
@@ -237,6 +246,7 @@ const projectedClient = collectPhiSiteModuleClientContributions({
       { moduleId: "@acme/shop/modules/ghost", dataProviders: [{ key: "@acme/shop/ghost" }] },
     ],
     calendarAdapters: [{ key: "@acme/shop/calendars/deliveries" }],
+    mediaSources: [{ key: "@acme/shop/stock" }],
   }],
 } as unknown as Parameters<typeof collectPhiSiteModuleClientContributions>[0]);
 
@@ -269,7 +279,16 @@ assert.deepEqual(
   ["@acme/shop/calendars/deliveries"],
   "Calendar adapters are flattened, never placed into an Area",
 );
+assert.deepEqual(
+  projectedClient.mediaSources.map((entry) => entry.key),
+  ["@acme/shop/stock"],
+  "media sources are flattened, never placed into an Area",
+);
 for (const area of Object.values(projectedClient.areas)) {
+  assert.ok(
+    !JSON.stringify(Object.keys(area ?? {})).includes("mediaSource"),
+    "no Area may carry its own media sources",
+  );
   assert.ok(
     !JSON.stringify(Object.keys(area ?? {})).includes("calendar"),
     "no Area may carry its own Calendar adapters",

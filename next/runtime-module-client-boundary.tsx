@@ -10,6 +10,8 @@ import type { PhiRuntimeModuleAuthoringClientManifest } from "../components/runt
 import { PhiRuntimeModuleAuthoringClientManifestProvider } from "../components/runtime/runtime-module-authoring-client-manifest";
 import type { PhiRuntimeModuleCalendarAdapterClientManifest } from "../components/runtime/runtime-module-calendar-adapter-client-manifest";
 import { PhiRuntimeModuleCalendarAdapterClientManifestProvider } from "../components/runtime/runtime-module-calendar-adapter-client-manifest";
+import type { PhiRuntimeModuleMediaSourceClientManifest } from "../components/runtime/runtime-module-media-source-client-manifest";
+import { PhiRuntimeModuleMediaSourceClientManifestProvider } from "../components/runtime/runtime-module-media-source-client-manifest";
 import {
   PhiRuntimeModuleUiProviderClientManifestProvider,
   type PhiRuntimeModuleUiProviderClientManifest,
@@ -22,6 +24,7 @@ export function PhiNextRuntimeModuleClientBoundary({
   dataProviderManifest,
   authoringManifest,
   calendarAdapterManifest,
+  mediaSourceManifest,
   uiProviderManifest,
 }: {
   children: React.ReactNode;
@@ -30,6 +33,7 @@ export function PhiNextRuntimeModuleClientBoundary({
   dataProviderManifest: PhiRuntimeModuleDataProviderClientManifest;
   authoringManifest?: PhiRuntimeModuleAuthoringClientManifest;
   calendarAdapterManifest?: PhiRuntimeModuleCalendarAdapterClientManifest;
+  mediaSourceManifest?: PhiRuntimeModuleMediaSourceClientManifest;
   uiProviderManifest: PhiRuntimeModuleUiProviderClientManifest;
 }) {
   const content = authoringManifest ? (
@@ -43,9 +47,11 @@ export function PhiNextRuntimeModuleClientBoundary({
       <PhiRuntimeModuleRenderClientManifestProvider manifest={renderManifest}>
         <PhiRuntimeModuleCalendarAdapterClientManifestProvider manifest={calendarAdapterManifest}>
           <PhiRuntimeModuleDataProviderClientManifestProvider manifest={dataProviderManifest}>
-            <PhiRuntimeModuleUiProviderClientManifestProvider manifest={uiProviderManifest}>
-              {content}
-            </PhiRuntimeModuleUiProviderClientManifestProvider>
+            <PhiRuntimeModuleMediaSourceClientManifestProvider manifest={mediaSourceManifest}>
+              <PhiRuntimeModuleUiProviderClientManifestProvider manifest={uiProviderManifest}>
+                {content}
+              </PhiRuntimeModuleUiProviderClientManifestProvider>
+            </PhiRuntimeModuleMediaSourceClientManifestProvider>
           </PhiRuntimeModuleDataProviderClientManifestProvider>
         </PhiRuntimeModuleCalendarAdapterClientManifestProvider>
       </PhiRuntimeModuleRenderClientManifestProvider>

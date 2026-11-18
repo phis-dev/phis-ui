@@ -1240,9 +1240,15 @@ graph leakage are hard validation errors.
   Client component; the Server host passes active Module ids and serializable mount data to the generic
   Client host.
 - Each live Area boundary receives immutable Client manifests -- Controller Clients (made with
-  `next/dynamic`), Render Clients, Data Provider Clients (`loadLive`), Calendar adapters -- containing only
+  `next/dynamic`), Render Clients, Data Provider Clients (`loadLive`), Calendar adapters, media sources -- containing only
   the Modules eligible for that Area and no other Area's base Module or Authoring code. Server and
   Controller Client projections pair 1:1 by `moduleId`.
+- A Module may offer a media source: somewhere other than the Site's library that the Media picker can take
+  a file from. Like a Calendar adapter it has a Server descriptor (`mediaSources` in the definition, a
+  namespaced key the declaring Module owns) and a Client half (`mediaSources` of the Client contributions),
+  held flat rather than per Area, and it is offered only where its Module is active. What is chosen is
+  imported as an ordinary Asset and nothing stores a reference into the source
+  ([THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#offering-a-media-source)).
 - The Builder additionally receives the Authoring manifest (`loadAuthoring` per installed target-Area
   Module) and Data Provider `loadAuthoring` edges for providers whose `authoringMode` is `read` or `edit`.
   Live-only providers stay unavailable in authoring.
