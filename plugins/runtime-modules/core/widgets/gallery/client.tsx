@@ -4,6 +4,7 @@ import { usePhiConfig } from "../../../../../components/root/phi-config-provider
 import { useMemo, type CSSProperties } from "react";
 
 import { PhiSequenceRun, resolvePhiSequenceRunSpan } from "../../../../../components/motion/phi-sequence-run";
+import { PhiEmptyControl } from "../../../../../components/controls/phi-empty-control";
 import { PhiImageControl } from "../../../../../components/controls/phi-image-control";
 import { readPhiAspectRatio, resolvePhiImagePresentation } from "../../../../../components/media/image-presentation";
 import {
@@ -136,6 +137,10 @@ export function PhiGalleryWidget({ config, images: imagesInput, pictures, labels
     borderRadius: token.borderRadius,
     overflow: "hidden",
   };
+
+  if (items.length === 0) {
+    return <PhiEmptyControl description={labels.empty} />;
+  }
 
   return (
     <PhiSequenceRun

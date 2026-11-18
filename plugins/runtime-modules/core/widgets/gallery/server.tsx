@@ -39,19 +39,23 @@ function isPublicAssetReference(value: unknown): value is PhiPublicMediaAssetRef
  * they are in the HTML and the window knows what to load before anything is on screen. A record of
  * another shape is somebody else's Provider bound here by mistake. Either failure is the author's to
  * read and is nothing on a live page, rather than an empty gallery anywhere.
+ *
+ * Having no picture is not a failure: a product without pictures, an empty Folder, a Gallery with no
+ * Folder chosen. The Gallery says so itself, in the Foundation's empty state, so a page never needs a
+ * second Widget standing by for the case.
  */
 export async function PhiGalleryWidgetServer({ runtime, registry, config, widgetId, translate = true }: PhiGalleryWidgetServerProps) {
   const labels = await getPhiGalleryWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
   const renderMode = readPhiRuntimeTreeRenderMode(config);
   /*
    * Where the Page has a record and the Widget names a field of it, the record's pictures take the place
-   * of the Folder's -- by their address, in the page's language already -- and a record without any leaves
-   * nothing to draw. A Page about no record draws the Folder, which stands in for the field.
+   * of the Folder's -- by their address, in the page's language already -- and a record without any shows
+   * the empty state. A Page about no record draws the Folder, which stands in for the field.
    */
   const recordField = await resolvePhiWidgetRecordField({ registry, runtime, key: config.recordField, kinds: ["pictures"] });
   if (recordField.bound) {
     const pictures = recordField.field?.value ?? [];
-    return pictures.length === 0 ? null : (
+    return (
       <PhiRuntimeModuleRenderClientHost
         type={PhiCmsWidgetType.Gallery}
         componentProps={{ config, pictures, labels }}
@@ -87,7 +91,12 @@ export async function PhiGalleryWidgetServer({ runtime, registry, config, widget
     );
   }
   if (!images || images.length === 0) {
-    return null;
+    return (
+      <PhiRuntimeModuleRenderClientHost
+        type={PhiCmsWidgetType.Gallery}
+        componentProps={{ config, images: [], labels }}
+      />
+    );
   }
   /*
    * Each picture's description from the Media library, in the page's language: the Library's text is
