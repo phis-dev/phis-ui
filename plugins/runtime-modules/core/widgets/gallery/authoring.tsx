@@ -14,7 +14,6 @@ import { resolvePhiSpacingScaleValue } from "../../../../../components/widgets/c
 import { PHI_SEQUENCE_SETTINGS_DEFAULTS } from "../../../../../components/widgets/config/sequence-settings";
 import { resolvePhiGalleryFrame } from "./defaults";
 import {
-  formatPhiGalleryWidgetLabel,
   PHI_GALLERY_WIDGET_DEFAULT_LABELS,
 } from "../../../../../components/widgets/label-types/gallery";
 
@@ -40,14 +39,12 @@ function PhiGalleryWidgetEditor({ config }: { config: PhiCmsGalleryWidgetConfig 
   const hasFolder = folderId != null && folderId !== "";
   const recordField = config?.recordField;
   /*
-   * Where a field of the page record is named, the pictures are that field's and the Folder only stands
-   * in on a Page about no record; saying "no folder chosen" there sent the author looking for a setting
-   * that decides nothing.
+   * Where a field of the page record is named, the pictures are that field's and the Inspector already
+   * says which: the canvas adds no sentence. Saying "no folder chosen" there sent the author looking for
+   * a setting that decides nothing, so the Folder hints are for a Gallery that reads a Folder only.
    */
   const labels = PHI_GALLERY_WIDGET_DEFAULT_LABELS;
-  const hint = recordField
-    ? formatPhiGalleryWidgetLabel(labels.canvasRecordField, recordField)
-    : hasFolder ? labels.canvasFolder : labels.canvasNoFolder;
+  const hint = recordField ? null : hasFolder ? labels.canvasFolder : labels.canvasNoFolder;
   const { aspectRatio } = resolvePhiGalleryFrame(config);
 
   const arrowStyle: CSSProperties = {
@@ -117,9 +114,11 @@ function PhiGalleryWidgetEditor({ config }: { config: PhiCmsGalleryWidgetConfig 
           ))}
         </div>
       ) : null}
-      <PhiTypographyControl type="secondary" style={{ fontSize: token.fontSizeSM }}>
-        {hint}
-      </PhiTypographyControl>
+      {hint ? (
+        <PhiTypographyControl type="secondary" style={{ fontSize: token.fontSizeSM }}>
+          {hint}
+        </PhiTypographyControl>
+      ) : null}
     </div>
   );
 }

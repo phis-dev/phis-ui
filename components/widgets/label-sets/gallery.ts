@@ -22,7 +22,6 @@ const PHI_GALLERY_WIDGET_LABEL_SET = definePhiLabelSet({
     empty: PHI_GALLERY_WIDGET_DEFAULT_LABELS.empty,
     canvas_folder: definePhiMessageLabel(PHI_GALLERY_WIDGET_DEFAULT_LABELS.canvasFolder),
     canvas_no_folder: definePhiMessageLabel(PHI_GALLERY_WIDGET_DEFAULT_LABELS.canvasNoFolder),
-    canvas_record_field: definePhiMessageLabel(PHI_GALLERY_WIDGET_DEFAULT_LABELS.canvasRecordField),
   },
 });
 
@@ -42,6 +41,5 @@ export async function getPhiGalleryWidgetLabels(
     empty: labels.empty,
     canvasFolder: labels.canvas_folder,
     canvasNoFolder: labels.canvas_no_folder,
-    canvasRecordField: labels.canvas_record_field,
   };
 }
