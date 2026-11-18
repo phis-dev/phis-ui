@@ -154,7 +154,9 @@ type PhiFormTextDescriptor =
 
 - Required state is the `required` validation rule; there is no `required` boolean on a field.
 - Static `options` and an `optionsProvider` follow the options contract of the Controls. A field whose
-  options depend on another value declares `optionsProvider.dependencies`.
+  options depend on another value declares `optionsProvider.dependencies`. An option's `parentValue`
+  names the option it stands under (see [components/widgets/README.md](components/widgets/README.md));
+  a Control that cannot draw a hierarchy lists the options as they come.
 - Options resolution reads the field's own `config` with the placement's `formConfig` layered over it,
   the placement winning where both name a key. A descriptor is registered once and reads the same on
   every Site; a list that varies by Site is what the placement knows, and it belongs there. Because this

@@ -12,6 +12,7 @@ import { PHI_ASSET_CONTROLLER_STORE_KEY } from "../../../../components/media/ass
 import { phiImagePreviewStore, type PhiImagePreviewStoreState } from "../../../../components/media/phi-image-preview-store";
 import {
   buildPhiMediaFolderCascaderOptions,
+  buildPhiMediaFolderChoiceOptions,
   buildPhiMediaFolderNamesById,
   buildPhiMediaFolderValueById,
 } from "../../../../components/media/media-folder-options";
@@ -73,10 +74,11 @@ export const PhiMediaFoldersOptionsProviderClient = createPhiControlOptionsProvi
 });
 
 /**
- * Every Folder of the Site Space, by its path, for a setting that names one on a page that is not the
- * Media page. `PhiMediaFoldersOptionsProviderClient` reads the library's store, which only the Media
- * page fills; this asks the folders route itself and keeps the whole list, because the list is small
- * and a Gallery's author reads it once.
+ * Every Folder of the Site Space by its id, each under the Folder it stands in (`parentValue`), for a
+ * setting that names one on a page that is not the Media page -- a cascader shows the tree.
+ * `PhiMediaFoldersOptionsProviderClient` reads the library's store, which only the Media page fills;
+ * this asks the folders route itself and keeps the whole list, because the list is small and a
+ * Gallery's author reads it once.
  */
 const FOLDERS_PATH = "/api/site/media/folders";
 
@@ -97,12 +99,7 @@ export const PhiMediaFolderChoicesOptionsProviderClient = createPhiControlOption
   resolveLoadKey: () => "site-media-folders",
   resolve: (context: PhiControlOptionsProviderContext) => {
     const folders = Array.isArray(context.asyncData) ? context.asyncData as PhiMediaAssetFolder[] : [];
-    const pathOf = (folderId: number) => buildPhiMediaFolderNamesById(folders, folderId).join(" / ");
-    return {
-      options: [...folders]
-        .sort((left, right) => pathOf(left.id).localeCompare(pathOf(right.id)))
-        .map((folder) => ({ value: String(folder.id), label: pathOf(folder.id) })),
-    };
+    return { options: buildPhiMediaFolderChoiceOptions(folders) };
   },
 });
 

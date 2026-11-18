@@ -189,6 +189,15 @@ exports complete Widgets only.
 - Option-bearing consumers normalize static options to `PhiControlOption` and resolve dynamic options
   with `PhiControlOptionsProviderConfig` and `usePhiControlOptionsProvider`; the Control receives only
   resolved options.
+- An option may name the option it stands under with `parentValue` (same type as `value`); one without
+  it is top level, and a list in which no option carries it is the flat list it always was. A
+  `parentValue` that names no option in the list, or a chain of them that leads back to the option, leaves
+  the option at the top level. An Inspector `choice` field with `presentation: "cascader"` shows the
+  options as that hierarchy in `PhiCascaderControl`: every level can be chosen, and the field stores the
+  chosen option's own `value`, never a path (`builder/clients/inspector-choice-cascader.ts`). The Media
+  folder choices Provider (`PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.folderChoices`) answers in this shape --
+  each Folder by id, under its own name, with its parent Folder's id as `parentValue` -- and the Gallery's
+  Folder setting is such a cascader.
 - `PhiCollectionLayoutControl` and `PhiMediaAssetTileControl` are the one grid/masonry/stack
   presentation and the one media tile; asset surfaces compose them instead of new tile renderers.
 - `PhiMenuControl` is the one navigation menu, stacked in a Sider and horizontal in a header bar. A

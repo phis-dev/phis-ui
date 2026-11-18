@@ -151,7 +151,7 @@ function loadProviderData<TValue extends string | number>(
 }
 
 function normalizeStaticOptions<TValue extends string | number>(
-  options?: readonly { value: TValue; label?: string; disabled?: boolean; description?: string; icon?: string }[] | null,
+  options?: readonly { value: TValue; label?: string; disabled?: boolean; description?: string; icon?: string; parentValue?: TValue }[] | null,
 ): PhiControlOption<TValue>[] {
   return (options ?? []).map((option) => ({
     value: option.value,
@@ -159,6 +159,7 @@ function normalizeStaticOptions<TValue extends string | number>(
     disabled: option.disabled,
     description: option.description,
     icon: option.icon,
+    parentValue: option.parentValue,
   }));
 }
 
@@ -287,7 +288,7 @@ export function usePhiControlOptionsProvider<TValue extends string | number = st
   searchDraft = "",
   formValues,
 }: {
-  options?: readonly { value: TValue; label?: string; disabled?: boolean; description?: string; icon?: string }[] | null;
+  options?: readonly { value: TValue; label?: string; disabled?: boolean; description?: string; icon?: string; parentValue?: TValue }[] | null;
   optionsProvider?: PhiControlOptionsProviderConfig | null;
   sourceConfig?: Record<string, unknown> | null;
   /** Raw text from the control. Debouncing and the minimum length are applied here, once, for everyone. */

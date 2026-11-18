@@ -117,7 +117,12 @@ export type PhiCmsConfigFieldChoicePresentation =
   | "segmented"
   | "tabs"
   | "autocomplete"
-  | "radio";
+  | "radio"
+  /*
+   * The options as a hierarchy, each one level below the option its `parentValue` names. Every level
+   * can be chosen, and what is stored is the chosen option's own `value`, never a path.
+   */
+  | "cascader";
 
 /**
  * Where a collection is edited.

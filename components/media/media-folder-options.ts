@@ -98,6 +98,21 @@ export function buildPhiMediaFolderCascaderOptions(
     });
 }
 
+/**
+ * Every Folder as a choice by its id, for a setting that names one: its own name, and the Folder it
+ * stands in as its `parentValue`, so a cascader shows the tree and a Folder that holds others can be
+ * chosen itself.
+ */
+export function buildPhiMediaFolderChoiceOptions(folders: readonly PhiMediaAssetFolder[]) {
+  return [...folders]
+    .sort((left, right) => left.name.localeCompare(right.name) || left.id - right.id)
+    .map((folder) => ({
+      value: String(folder.id),
+      label: folder.name,
+      ...(folder.parentId == null ? {} : { parentValue: String(folder.parentId) }),
+    }));
+}
+
 export function resolvePhiMediaFolderIdFromValue(folders: PhiMediaAssetFolder[], value: string | null | undefined) {
   const trimmed = value?.trim() ?? "";
   if (!trimmed || trimmed === "/") {

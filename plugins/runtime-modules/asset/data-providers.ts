@@ -70,7 +70,7 @@ export const PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
     executionMode: "live",
     authoringMode: "none",
     title: "Media folder choices",
-    description: "Every folder of the Site's media, by its path, for a setting that names one.",
+    description: "Every folder of the Site's media, under the folder it stands in, for a setting that names one.",
     // Named in a record binding's parameters, which the Builder edits on any page.
     availableToAuthoringChrome: true,
   },
