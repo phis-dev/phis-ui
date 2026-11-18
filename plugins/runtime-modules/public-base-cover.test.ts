@@ -82,11 +82,11 @@ describe("a package covering a Public base Page", () => {
     expect(privacy?.target).toMatchObject({ path: "/privacy" });
   });
 
-  it("stands the base footer Privacy, Terms, Contact", () => {
+  it("stands the base footer Privacy, Terms, Contact, Register", () => {
     const { catalog, activeModuleIds, table } = compile(withPackages());
     const footer = resolvePhiCmsActiveNavigationSurfaces({ catalog, area: "public", activeModuleIds, routeTable: table })
       .find((surface) => surface.navKey === "public:footer");
-    expect(footer?.items.map((item) => item.label.defaultMessage)).toEqual(["Privacy", "Terms & Conditions", "Contact"]);
+    expect(footer?.items.map((item) => item.label.defaultMessage)).toEqual(["Privacy", "Terms & Conditions", "Contact", "Register"]);
   });
 
   it("answers the base path with the package's Page", () => {

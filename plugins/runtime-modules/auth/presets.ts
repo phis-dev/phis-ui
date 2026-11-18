@@ -61,17 +61,26 @@ function buildFormRouteNavigation(template: (typeof FORM_ROUTE_TEMPLATES)[number
     return [];
   }
 
-  // Unanchored: the Public header exports no base item, so the entry lands at the end of the surface.
+  // One key on both surfaces, as Contact has: it is one entry, offered in two places.
+  const item = {
+    itemKey: `@phis/ui/modules/auth/nav/public/${template.key}`,
+    label: { defaultMessage: template.title },
+    /* Signing up, not signing in: the account trigger beside it carries the way back. */
+    icon: "antd:user-add",
+    routePresetKey: `public-${template.key}-page`,
+  } as const;
+  /*
+   * Unanchored on both surfaces, so the entry lands at the end of each: the Public header exports no
+   * base item, and in the footer's Quick Links it belongs after the legal entries and Contact.
+   */
   return [{
     navKey: "public:header",
     parentItemKey: null,
-    item: {
-      itemKey: `@phis/ui/modules/auth/nav/public/${template.key}`,
-      label: { defaultMessage: template.title },
-      /* Signing up, not signing in: the account trigger beside it carries the way back. */
-      icon: "antd:user-add",
-      routePresetKey: `public-${template.key}-page`,
-    },
+    item,
+  }, {
+    navKey: "public:footer",
+    parentItemKey: null,
+    item,
   }] as const;
 }
 
