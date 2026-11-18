@@ -293,6 +293,7 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
     {
       key: "textBlockSpacingBefore",
       type: "choice",
+      heading: "Spacing",
       label: "Before Paragraph",
       options: PHI_MARKDOWN_SPACING_OPTIONS,
     },
