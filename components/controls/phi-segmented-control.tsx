@@ -7,6 +7,15 @@ import type { PhiControlSize } from "../../types/control";
 import { PHI_THEME_GRADIENT_CSS_VARS, type PhiThemeGradientKey } from "../../theme/phi-theme-gradients";
 import type { PhiControlOption } from "./phi-control-options";
 import { PhiLabeledControl, usePhiControlLabel } from "./phi-labeled-control";
+import { PhiTruncatedHoverText } from "./phi-truncated-hover-text";
+
+/* The segment's own box cuts its words: the hover text measures this element and nothing around it. */
+const PHI_SEGMENT_LABEL_STYLE: CSSProperties = {
+  display: "block",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+};
 
 export type PhiSegmentedControlProps<TValue extends string | number = string> = {
   /**
@@ -50,7 +59,17 @@ export function PhiSegmentedControl<TValue extends string | number = string>({
       disabled={disabled || readOnly || !onChange}
       options={options.map((option) => ({
         value: option.value,
-        label: option.label,
+        /*
+         * A segment too narrow for its words shows them whole in the house tooltip, and only then. A
+         * segment with a description says that instead, which is more than its label.
+         */
+        label: option.description
+          ? option.label
+          : (
+            <PhiTruncatedHoverText title={option.label}>
+              <span style={PHI_SEGMENT_LABEL_STYLE}>{option.label}</span>
+            </PhiTruncatedHoverText>
+          ),
         disabled: option.disabled,
         /*
          * No browser tooltip: left out, the Segmented writes the label into `title` and every segment
