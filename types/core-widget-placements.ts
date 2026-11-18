@@ -196,10 +196,6 @@ export type PhiImageWidgetPlacement = PhiWidgetPlacementBase & PhiMediaImageSour
   objectPosition?: string;
   title?: string;
   imageSize?: PhiImageWidgetSize;
-  borderTopLeftRadius?: number | string;
-  borderTopRightRadius?: number | string;
-  borderBottomLeftRadius?: number | string;
-  borderBottomRightRadius?: number | string;
   mask?: PhiMaskConfig;
   /** A picture field of the page record shown instead of the Widget's own picture. */
   recordField?: string;

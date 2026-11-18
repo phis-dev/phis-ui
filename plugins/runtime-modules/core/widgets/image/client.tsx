@@ -12,7 +12,7 @@ import { PhiEmptyControl } from "../../../../../components/controls/phi-empty-co
 import { PhiImageControl } from "../../../../../components/controls/phi-image-control";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
-import { PHI_LAYOUT_SURFACE_RADIUS } from "../../../../../components/layouts/phi-layout-contract";
+import { resolvePhiPictureSurface } from "../../../../../components/media/picture-surface";
 
 function formatImageSize(value: number | string | null | undefined) {
   if (typeof value === "number" && Number.isFinite(value)) {
@@ -102,15 +102,11 @@ export function PhiImageWidget({
   const renderedHeight = formatImageSize(height);
   const maskStyle = resolvePhiMaskStyle(config?.mask);
   /*
-   * A picture is a surface: a corner the author left unstated is the Theme's surface step, as a Layout's
-   * and a Markdown picture's are (THEME.md "Control shape"); a corner the author stated keeps its value.
+   * The picture's own Surface (`components/media/picture-surface.ts`): its corners, the Theme's surface
+   * step where it states none, and its edge, depth and ground on the picture's box.
    */
-  const radiusStyle = {
-    borderTopLeftRadius: config?.borderTopLeftRadius ?? PHI_LAYOUT_SURFACE_RADIUS,
-    borderTopRightRadius: config?.borderTopRightRadius ?? PHI_LAYOUT_SURFACE_RADIUS,
-    borderBottomLeftRadius: config?.borderBottomLeftRadius ?? PHI_LAYOUT_SURFACE_RADIUS,
-    borderBottomRightRadius: config?.borderBottomRightRadius ?? PHI_LAYOUT_SURFACE_RADIUS,
-  } as const;
+  const pictureSurface = resolvePhiPictureSurface(config?.surface);
+  const radiusStyle = pictureSurface.corners;
 
   if (!renderUrl) {
     return (
@@ -156,7 +152,7 @@ export function PhiImageWidget({
       preview={(config?.previewMode ?? "none") === "lightbox"}
       zoom={config?.previewMode === "native"}
       style={{
-        ...radiusStyle,
+        ...pictureSurface.style,
         ...maskStyle,
         // Every corner has a radius now, the Theme's at least, so the box always clips its picture.
         overflow: "hidden",

@@ -37,10 +37,6 @@ export type PhiCmsImageWidgetConfig = PhiCmsWidgetConfigBase &
      * Absent, the image takes the variant's own size.
      */
     imageSize?: PhiImageWidgetSize;
-    borderTopLeftRadius?: number | string;
-    borderTopRightRadius?: number | string;
-    borderBottomLeftRadius?: number | string;
-    borderBottomRightRadius?: number | string;
     mask?: PhiMaskConfig;
     /** A picture field of the page record to show instead of the Widget's own picture. */
     recordField?: string;
@@ -83,10 +79,6 @@ export function normalizePhiImageWidgetConfig(config: unknown): PhiCmsImageWidge
       preload: false,
       previewMode: "none",
       imageSize: undefined,
-      borderTopLeftRadius: undefined,
-      borderTopRightRadius: undefined,
-      borderBottomLeftRadius: undefined,
-      borderBottomRightRadius: undefined,
       mask: undefined,
     };
   }
@@ -104,10 +96,6 @@ export function normalizePhiImageWidgetConfig(config: unknown): PhiCmsImageWidge
     preload: readBoolean(raw.preload) ?? false,
     previewMode: readImagePreviewMode(raw.previewMode),
     imageSize: readImageSize(raw.imageSize),
-    borderTopLeftRadius: readCssSize(raw.borderTopLeftRadius),
-    borderTopRightRadius: readCssSize(raw.borderTopRightRadius),
-    borderBottomLeftRadius: readCssSize(raw.borderBottomLeftRadius),
-    borderBottomRightRadius: readCssSize(raw.borderBottomRightRadius),
     mask: readPhiMaskConfig(raw.mask),
     recordField: readString(raw.recordField),
   };
@@ -142,6 +130,12 @@ export const PHI_IMAGE_WIDGET_DEFINITION = {
   pluginKey: resolvePhiCmsWidgetPluginKey("image"),
   typeKey: "image",
   slotSizePolicy: "intrinsic",
+  /*
+   * The picture draws its Surface itself -- edge, corners, depth and a ground behind a transparent or
+   * contained picture -- on its own box, which clips the picture to the corners. The corners were a field
+   * of the Image's own until 2026-11-18; they are the Surface's edge now, as on every other box.
+   */
+  surface: "own",
   title: "Image",
   description: "Flexible image renderer for local media, trusted URLs, and on-demand renditions.",
   category: "content",
@@ -218,15 +212,6 @@ export const PHI_IMAGE_WIDGET_DEFINITION = {
       widthPlaceholder: "Width",
       heightPlaceholder: "Height",
     },
-    {
-      key: "radius",
-      type: "radius",
-      label: "Corner radius",
-      topLeftKey: "borderTopLeftRadius",
-      topRightKey: "borderTopRightRadius",
-      bottomLeftKey: "borderBottomLeftRadius",
-      bottomRightKey: "borderBottomRightRadius",
-    },
   ],
   contentBinding: {
     storage: "asset",
@@ -242,6 +227,7 @@ export const PHI_IMAGE_WIDGET_DEFINITION = {
   | "pluginKey"
   | "typeKey"
   | "slotSizePolicy"
+  | "surface"
   | "title"
   | "description"
   | "category"

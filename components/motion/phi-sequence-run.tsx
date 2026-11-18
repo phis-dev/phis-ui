@@ -62,6 +62,7 @@ export function PhiSequenceRun({
   settings,
   labels,
   itemStyle,
+  windowStyle,
   thumbnails,
   thumbnailWidth,
 }: {
@@ -70,6 +71,11 @@ export function PhiSequenceRun({
   settings: PhiSequenceSettings | undefined;
   labels: PhiSequenceControlLabels;
   itemStyle?: CSSProperties;
+  /**
+   * The window the items run in, with the arrows on it: where a caller's Surface goes (the Gallery's),
+   * so its depth stands around what is seen rather than being cut off with the items outside it.
+   */
+  windowStyle?: CSSProperties;
   /**
    * A row of buttons under the window, one per item, in place of the dots. Acts only while one item is
    * shown at a time; the active item's is marked and a press makes its item the active one.
@@ -133,7 +139,7 @@ export function PhiSequenceRun({
       {...gestures.handlers}
     >
       {/* Announced only while it stands still: a moving sequence read aloud is noise. */}
-      <div style={{ position: "relative", minWidth: 0 }} aria-live={autoplay.running ? "off" : "polite"}>
+      <div style={{ position: "relative", minWidth: 0, ...windowStyle }} aria-live={autoplay.running ? "off" : "polite"}>
         <PhiSequenceViewport
           items={[...items]}
           activeIndex={activeIndex}

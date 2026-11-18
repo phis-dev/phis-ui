@@ -16,6 +16,7 @@ import type { PhiImageAssetVariantKeyValue, PhiPublicMediaAssetReference } from 
 import type { PhiRecordPicture } from "../../../../../types/record-provider";
 import type { PhiCmsGalleryWidgetConfig } from "./config";
 import { resolvePhiGalleryFrame } from "./defaults";
+import { resolvePhiPictureSurface } from "../../../../../components/media/picture-surface";
 
 /**
  * A run of pictures. How it moves and stops is `PhiSequenceRun`'s; what is here is the picture: its
@@ -137,6 +138,13 @@ export function PhiGalleryWidget({ config, images: imagesInput, pictures, labels
     borderRadius: token.borderRadius,
     overflow: "hidden",
   };
+  /*
+   * The Gallery's own Surface goes on the window the pictures run in, with the arrows on it: its depth
+   * stands around what is seen, and its corners clip the run. Without one the window is bare, as before.
+   */
+  const windowStyle: CSSProperties | undefined = config?.surface
+    ? { ...resolvePhiPictureSurface(config.surface).style, overflow: "hidden" }
+    : undefined;
 
   if (items.length === 0) {
     return <PhiEmptyControl description={labels.empty} />;
@@ -158,6 +166,7 @@ export function PhiGalleryWidget({ config, images: imagesInput, pictures, labels
       settings={config}
       labels={labels}
       itemStyle={frameStyle}
+      windowStyle={windowStyle}
       thumbnails={thumbnails}
       thumbnailWidth={PHI_GALLERY_THUMBNAIL_WIDTH}
     />

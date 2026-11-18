@@ -360,6 +360,14 @@ record's source text instead of its localized version.
   while an Asset loads, a plain placeholder for every foreign address. The blur is read from the resolved
   Asset, never stored in a node's config. `preview` opens it in `PhiLightboxImageControl`, the one place
   the lightbox lives.
+- The Image and the Gallery Widget draw their own Surface (`surface: "own"`) through
+  `resolvePhiPictureSurface` (`components/media/picture-surface.ts`): edge, corners, depth and a ground
+  behind a transparent or contained picture, the corners the Site's surface step where none is stated. The
+  Image puts it on its picture's box, which clips the picture to the corners; the Gallery on the window its
+  pictures run in (`PhiSequenceRun`'s `windowStyle`, with the arrows on it), so its depth stands around what
+  is seen instead of being cut off with the pictures outside the window, and the dots below stay outside.
+  A tone is not drawn on a picture. The Image's former corner fields are the Surface's edge since
+  2026-11-18.
 - The Card Widget draws its own Surface (`surface: "own"`, default `PHI_SURFACE_CARD`) rather than
   a `PhiCardControl` box. It carries a picture at the top (`PhiImageControl`, any variant; the box takes
   the variant's proportion, and the canvas says when the variant is narrower than the card) and an `icon`

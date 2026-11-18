@@ -136,6 +136,11 @@ export const PHI_GALLERY_WIDGET_DEFINITION = {
   typeKey: "gallery",
   // A slideshow is as wide as the place it is put; its height follows from the aspect ratio.
   slotSizePolicy: "fill-inline",
+  /*
+   * The Gallery draws its Surface itself, on the window its pictures run in: around the slot frame it
+   * would stand around the dots below as well, and on each picture the window would cut its depth off.
+   */
+  surface: "own",
   title: "Gallery",
   description: "A run of pictures shown a few at a time, with arrows, dots and optional autoplay.",
   category: "media",
@@ -220,6 +225,7 @@ export const PHI_GALLERY_WIDGET_DEFINITION = {
   | "pluginKey"
   | "typeKey"
   | "slotSizePolicy"
+  | "surface"
   | "title"
   | "description"
   | "category"
