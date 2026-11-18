@@ -5,6 +5,7 @@ import type { PhiCmsRuntimeRenderRegistry } from "../../types/cms-plugins";
 import { phiRuntime } from "../../server-helpers/phi-runtime";
 import { getResolvedFormDefinition } from "../../gateway/form-registry";
 import type { PhiFormRenderOptions } from "./form-resolution";
+import { resolvePhiFormFieldLabels } from "./form-field-labels";
 import { resolvePhiFormLabels } from "./form-resolution";
 import { createPhiRuntimeFormControllerAddress } from "./runtime-form-controller-address";
 import type { PhiFormWidgetFrameProps } from "./phi-form-widget-frame";
@@ -96,10 +97,13 @@ export async function PhiFormWidget({
    * become interactive, which is the wait a visitor reads as a slow site.
    */
   const renderContext = { runtime, resolvedForm, options: renderOptions };
-  const [labels, loadedInitialValues] = await Promise.all([
+  const [fieldLabels, formLabels, loadedInitialValues] = await Promise.all([
+    resolvePhiFormFieldLabels(renderContext, resolvedForm.definition.descriptor),
     resolvePhiFormLabels(renderContext),
     resolvedForm.definition.loadInitialValues?.(renderContext) ?? null,
   ]);
+  // What the field types say for themselves, under what the Form says for itself.
+  const labels = { ...fieldLabels, ...formLabels };
 
   /*
    * A link is offered only where it leads somewhere that exists: a Site with registration switched off

@@ -6,6 +6,7 @@ import type {
 import { createPhiModuleScopedKey } from "../../constants/runtime-module-ownership";
 import { PhiMediaKind } from "../../constants/media";
 import { PHIS_PAYMENT_CURRENCY_EXPONENTS } from "@phis/contracts/payments";
+import { PHI_FORM_UPLOAD_FIELD_PROVIDER_KEY } from "./upload-field-keys";
 
 export function createPhiSharedFormProviderKey(
   kind: "field" | "validation" | "handler",
@@ -40,7 +41,8 @@ export const PHI_FORM_FIELD_PROVIDER_KEYS = {
   cascader: createPhiSharedFormProviderKey("field", "cascader"),
   table: createPhiSharedFormProviderKey("field", "table"),
   tree: createPhiSharedFormProviderKey("field", "tree"),
-  upload: createPhiSharedFormProviderKey("field", "upload"),
+  // Spelled beside its label keys, which the Form Widget reads on the Server without this whole file.
+  upload: PHI_FORM_UPLOAD_FIELD_PROVIDER_KEY,
   linkTarget: createPhiSharedFormProviderKey("field", "link-target"),
   money: createPhiSharedFormProviderKey("field", "money"),
 } as const;
@@ -114,23 +116,7 @@ export const PHI_FORM_LINK_TARGET_LABEL_KEYS = {
 export const PHI_FORM_FIELD_UNAVAILABLE_LABEL_KEY = "fieldUnavailable";
 export const PHI_FORM_FIELD_UNAVAILABLE_DEFAULT_LABEL = "This field is not available in this area.";
 
-export const PHI_FORM_UPLOAD_LABEL_KEYS = {
-  trigger: "uploadTrigger",
-  /** Beneath the trigger in an upload area (`config.presentation: "area"`): that a drop works too. */
-  dropHint: "uploadDropHint",
-  tooMany: "uploadErrorTooMany",
-  /** Shown on the field when the Form is submitted while a file is still on its way. */
-  pending: "uploadPending",
-  errorGeneric: "uploadErrorGeneric",
-  errorNetwork: "uploadErrorNetwork",
-  errorTooLarge: "uploadErrorTooLarge",
-  errorDuplicate: "uploadErrorDuplicate",
-  errorTypeNotAllowed: "uploadErrorTypeNotAllowed",
-  errorQuotaExceeded: "uploadErrorQuotaExceeded",
-  errorSpaceUnavailable: "uploadErrorSpaceUnavailable",
-  errorStorageUnreachable: "uploadErrorStorageUnreachable",
-  errorFolderLocked: "uploadErrorFolderLocked",
-} as const;
+export { PHI_FORM_UPLOAD_LABEL_KEYS } from "./upload-field-keys";
 
 /*
  * The field types and validation rules every Form can use, described without an owner.

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 
+import { PHI_MEDIA_UPLOAD_DEFAULT_LABELS } from "../components/media/media-upload-labels";
 import {
-  PHI_MEDIA_UPLOAD_DEFAULT_LABELS,
   readPhiMediaUploadErrorMessage,
   readPhiMediaUploadRejection,
   resolvePhiMediaUploadAccept,

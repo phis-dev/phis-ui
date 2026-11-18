@@ -92,19 +92,7 @@ const PHI_THREAD_REPLY_FORM_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_CORE_
      */
     audience_everyone: "To everyone in it",
     audience_internal: "Internal note",
-    reply_attach_label: "Attach a file",
-    reply_attach_drop_hint: "or drop it here",
     reply_send_label: "Send",
-    reply_attach_too_many: definePhiMessageLabel("No more files fit here."),
-    reply_attach_pending: definePhiMessageLabel("Wait until the file has arrived, then send."),
-    reply_error_generic: definePhiMessageLabel("The file could not be attached."),
-    reply_error_network: definePhiMessageLabel("The site could not be reached."),
-    reply_error_too_large: definePhiMessageLabel("That file is too large."),
-    reply_error_duplicate: definePhiMessageLabel("That file is already attached."),
-    reply_error_type_not_allowed: definePhiMessageLabel("That kind of file cannot be attached."),
-    reply_error_quota_exceeded: definePhiMessageLabel("There is no room left in your space."),
-    reply_error_space_unavailable: definePhiMessageLabel("Files cannot be attached on this site."),
-    reply_error_storage_unreachable: definePhiMessageLabel("The file storage could not be reached."),
   },
 });
 
@@ -117,19 +105,7 @@ export async function getPhiThreadReplyFormLabels(options: PhiGlobalTranslatorOp
     replyThreadRequired: labels.reply_thread_required,
     audienceEveryone: labels.audience_everyone,
     audienceInternal: labels.audience_internal,
-    replyAttachLabel: labels.reply_attach_label,
-    replyAttachDropHint: labels.reply_attach_drop_hint,
     replySendLabel: labels.reply_send_label,
-    replyAttachTooMany: labels.reply_attach_too_many,
-    replyAttachPending: labels.reply_attach_pending,
-    replyErrorGeneric: labels.reply_error_generic,
-    replyErrorNetwork: labels.reply_error_network,
-    replyErrorTooLarge: labels.reply_error_too_large,
-    replyErrorDuplicate: labels.reply_error_duplicate,
-    replyErrorTypeNotAllowed: labels.reply_error_type_not_allowed,
-    replyErrorQuotaExceeded: labels.reply_error_quota_exceeded,
-    replyErrorSpaceUnavailable: labels.reply_error_space_unavailable,
-    replyErrorStorageUnreachable: labels.reply_error_storage_unreachable,
   };
 }
 

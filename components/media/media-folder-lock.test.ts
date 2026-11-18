@@ -9,7 +9,8 @@ import {
   writePhiMediaFolderLock,
 } from "./media-folder-lock";
 import { buildPhiMediaFolderCascaderOptions } from "./media-folder-options";
-import { PHI_MEDIA_UPLOAD_DEFAULT_LABELS, readPhiMediaUploadErrorMessage } from "./phi-media-upload";
+import { PHI_MEDIA_UPLOAD_DEFAULT_LABELS } from "./media-upload-labels";
+import { readPhiMediaUploadErrorMessage } from "./phi-media-upload";
 
 function folder(id: number, flags: number, parentId: number | null = null): PhiMediaAssetFolder {
   return { id, siteId: 1, spaceId: 1, parentId, name: `Folder ${id}`, sortOrder: 0, flags };

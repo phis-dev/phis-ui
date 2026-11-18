@@ -1,4 +1,8 @@
 import {
+  PHI_MEDIA_UPLOAD_DEFAULT_LABELS,
+  type PhiMediaUploadLabels,
+} from "../../media/media-upload-labels";
+import {
   PHI_ICON_PICKER_CONTROL_DEFAULT_LABELS,
   type PhiIconPickerControlLabels,
 } from "./icon-picker";
@@ -45,6 +49,8 @@ export type PhiAuthoringToolsLabels = {
   mask: {
     select: string;
     iconifyRequired: string;
+    /** The upload's own refusals, which are Core's `widget:upload` texts and not the picker's. */
+    uploadRefusals: PhiMediaUploadLabels;
   };
   descriptions: {
     items: string;
@@ -153,6 +159,7 @@ export const PHI_AUTHORING_TOOLS_DEFAULT_LABELS: PhiAuthoringToolsLabels = {
   mask: {
     select: "Select mask",
     iconifyRequired: "Select an Iconify icon for mask uploads.",
+    uploadRefusals: PHI_MEDIA_UPLOAD_DEFAULT_LABELS,
   },
   descriptions: {
     items: "Description items",

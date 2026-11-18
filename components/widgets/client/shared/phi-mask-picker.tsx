@@ -7,10 +7,7 @@ import { normalizePhiImagePreviewTile } from "../../../media/phi-image-preview-d
 import { bumpPhiImagePreviewRefreshToken } from "../../../media/phi-image-preview-store";
 import { usePhiMediaPickerBinding } from "../../../media/phi-media-picker-binding";
 import { isPhiMediaUploadCancelled, runPhiMediaUploadSession } from "../../../media/media-upload-flow";
-import {
-  PHI_MEDIA_UPLOAD_DEFAULT_LABELS,
-  readPhiMediaUploadErrorMessage,
-} from "../../../media/phi-media-upload";
+import { readPhiMediaUploadErrorMessage } from "../../../media/phi-media-upload";
 import { PHI_MEDIA_WIDGET_DEFAULT_LABELS } from "../../../media/media-widget-labels";
 import { PHI_SEARCH_WIDGET_DEFAULT_LABELS } from "../../label-types/search";
 import {
@@ -81,6 +78,7 @@ export function PhiMaskPickerButton({
   const popup = usePhiWidgetScaffoldPopup();
   const toolLabels = usePhiAuthoringToolsLabels();
   const iconifyRequiredMessage = toolLabels.mask.iconifyRequired;
+  const uploadRefusals = toolLabels.mask.uploadRefusals;
   const [open, setOpen] = useState(false);
   const [mediaOpen, setMediaOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -181,10 +179,10 @@ export function PhiMaskPickerButton({
       // One reading of every refusal, rather than whatever string the control plane happened to send.
       showMessage({
         level: "error",
-        content: readPhiMediaUploadErrorMessage(error, PHI_MEDIA_UPLOAD_DEFAULT_LABELS),
+        content: readPhiMediaUploadErrorMessage(error, uploadRefusals),
       });
     }).finally(() => endUpload(controller));
-  }, [applyUploadedAsset, beginUpload, endUpload, showMessage]);
+  }, [applyUploadedAsset, beginUpload, endUpload, showMessage, uploadRefusals]);
 
   const uploadIconifyMask = useCallback((nextIconValue: string | null) => {
     setSelectedIcon(nextIconValue);
@@ -223,11 +221,11 @@ export function PhiMaskPickerButton({
         if (controller.signal.aborted || isPhiMediaUploadCancelled(error)) return;
         showMessage({
           level: "error",
-          content: readPhiMediaUploadErrorMessage(error, PHI_MEDIA_UPLOAD_DEFAULT_LABELS),
+          content: readPhiMediaUploadErrorMessage(error, uploadRefusals),
         });
       })
       .finally(() => endUpload(controller));
-  }, [applyUploadedAsset, beginUpload, endUpload, iconifyRequiredMessage, showMessage]);
+  }, [applyUploadedAsset, beginUpload, endUpload, iconifyRequiredMessage, showMessage, uploadRefusals]);
 
   return (
     <PhiMaskPickerControl

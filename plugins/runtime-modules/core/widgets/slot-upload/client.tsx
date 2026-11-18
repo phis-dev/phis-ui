@@ -10,7 +10,7 @@ import {
   runPhiAddonAssetUpload,
   type PhiAddonAssetReservation,
 } from "../../../../../components/media/media-upload-flow";
-import { resolvePhiAreaUploadLabels, resolvePhiUploadStatusLabel } from "../../../../../components/media/phi-media-upload";
+import { resolvePhiUploadStatusLabel } from "../../../../../components/media/phi-media-upload";
 import { PhiUploadDropArea } from "../../../../../components/media/phi-upload-drop-area";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 import { readPhiSlotUploadAcceptance, type PhiSlotDescriptor } from "./slot";
@@ -258,9 +258,8 @@ export function PhiSlotUploadWidgetClient({ config, labels }: PhiSlotUploadWidge
   }, [base, ownerId, read, slotName]);
 
   const slotUpload = useMemo(() => readPhiSlotUploadAcceptance(slot), [slot]);
-  const uploadLabels = useMemo(() => resolvePhiAreaUploadLabels(labels.upload), [labels.upload]);
   const upload = usePhiMediaUpload({
-    labels: uploadLabels,
+    labels: labels.upload.refusals,
     ...(slotUpload ? { acceptance: slotUpload.acceptance } : {}),
     runSession,
     onUploaded: async () => {

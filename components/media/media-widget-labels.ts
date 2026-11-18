@@ -1,3 +1,5 @@
+import { PHI_MEDIA_UPLOAD_DEFAULT_LABELS, type PhiMediaUploadLabels } from "./media-upload-labels";
+
 export type PhiAssetPreviewToolWidgetLabels = {
   searchPlaceholder: string;
   folderLabel: string;
@@ -36,15 +38,11 @@ export type PhiAreaUploadWidgetLabels = {
   deleteLabel: string;
   doneLabel: string;
   failedLabel: string;
-  assetExistsLabel: string;
   deleteSuccessTemplate: string;
   uploadSuccessTemplate: string;
-  uploadFailedText: string;
-  /** The body never reached the storage Provider, or the Provider refused it. */
-  uploadStorageUnreachableText: string;
-  /** The Folder the upload was meant for is locked. */
-  uploadFolderLockedText: string;
   deleteFailedText: string;
+  /** The upload's own refusals, which are Core's `widget:upload` texts and not this Widget's. */
+  refusals: PhiMediaUploadLabels;
 };
 
 export type PhiAssetPreviewGridWidgetLabels = {
@@ -174,13 +172,10 @@ export const PHI_MEDIA_WIDGET_DEFAULT_LABELS: PhiAssetWidgetLabels = {
     deleteLabel: "Delete",
     doneLabel: "Done",
     failedLabel: "Failed",
-    assetExistsLabel: "This asset already exists.",
     deleteSuccessTemplate: "Asset %1 deleted.",
     uploadSuccessTemplate: "Uploaded %1.",
-    uploadFailedText: "Upload failed.",
-    uploadStorageUnreachableText: "The file storage could not be reached. The upload never left this browser.",
-    uploadFolderLockedText: "This folder is locked. Nothing can be uploaded into it until it is unlocked.",
     deleteFailedText: "Delete failed.",
+    refusals: PHI_MEDIA_UPLOAD_DEFAULT_LABELS,
   },
   grid: {
     emptyDescription: "No assets found.",

@@ -13,16 +13,22 @@ import { PhiTypographyControl } from "../controls/phi-typography-control";
 import { PhiIcon } from "../shell/phi-icon";
 import {
   PHI_MEDIA_UPLOAD_DEFAULT_LABELS,
-  usePhiMediaUpload,
+  PHI_MEDIA_UPLOAD_FIELD_DEFAULT_LABELS,
   type PhiMediaUploadLabels,
-} from "../media/phi-media-upload";
+} from "../media/media-upload-labels";
+import { usePhiMediaUpload } from "../media/phi-media-upload";
 import { PHI_FORM_UPLOAD_LABEL_KEYS } from "./form-provider-contract";
 import type { PhiFormFieldProviderProps } from "./form-provider-registry";
 
-const DEFAULT_TRIGGER_LABEL = "Choose a file";
-const DEFAULT_DROP_HINT_LABEL = "or drop it here";
-const DEFAULT_TOO_MANY_LABEL = "No more files fit here.";
-const DEFAULT_PENDING_LABEL = "Wait until the file has arrived.";
+/*
+ * The texts arrive in the Form's labels under `PHI_FORM_UPLOAD_LABEL_KEYS`, put there by the Form
+ * Widget from Core's `widget:upload` set for every Form with an upload field. The defaults are that
+ * set's source wording, for a Form rendered without a resolution behind it.
+ */
+const DEFAULT_TRIGGER_LABEL = PHI_MEDIA_UPLOAD_FIELD_DEFAULT_LABELS.trigger;
+const DEFAULT_DROP_HINT_LABEL = PHI_MEDIA_UPLOAD_FIELD_DEFAULT_LABELS.dropHint;
+const DEFAULT_TOO_MANY_LABEL = PHI_MEDIA_UPLOAD_FIELD_DEFAULT_LABELS.tooMany;
+const DEFAULT_PENDING_LABEL = PHI_MEDIA_UPLOAD_FIELD_DEFAULT_LABELS.pending;
 
 const MEDIA_KINDS = new Set<string>(Object.values(PhiMediaKind));
 

@@ -353,10 +353,12 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   `max_object_bytes` and `allowed_content_types` are what bind; the field's `kinds`, `maxBytes` and
   `maxFiles` narrow that for one Form and can never widen it. `space` names the Media Space the file
   lands in -- `user` for the viewer's own Space, absent for the Site's -- and the Control's `placeholder`
-  is what its trigger says -- or the Label Set key `uploadTrigger`, where the descriptor names no
-  placeholder. A refusal is wording too, so the eight `uploadError*` keys and `uploadErrorTooMany`
-  (`PHI_FORM_UPLOAD_LABEL_KEYS`) are read from the Form's Label Set and fall back to the shared upload
-  defaults where a Form has not translated them. Removing an entry takes the id out of the value and
+  is what its trigger says where a Form means other words than the field's own. Everything else the
+  field says -- its trigger, the drop hint, the hold while a file is on its way, "no more files" and the
+  refusals of the upload -- is Core's `widget:upload` Label Set (`components/media/label-sets/media-upload.ts`),
+  which the Form Widget reads for every Form with an upload field (`form-field-labels.ts`) and lays the
+  Form's own Label Set over. A Module that places an upload field translates none of it; the same set is what the Media
+  folder, the slot upload and the mask picker say their refusals with. Removing an entry takes the id out of the value and
   leaves the Asset where it is, because the file belongs to the person who uploaded it and not to the
   Form. An id that arrived as an
   initial value is shown as an id: resolving a stored Asset to its name needs a reader this field does

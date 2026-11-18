@@ -23,11 +23,7 @@ import {
   resolvePhiMediaUploadInitOptions,
   type PhiMediaUploadSessionResult,
 } from "./media-upload-flow";
-import {
-  resolvePhiAreaUploadLabels,
-  resolvePhiUploadStatusLabel,
-  usePhiMediaUpload,
-} from "./phi-media-upload";
+import { resolvePhiUploadStatusLabel, usePhiMediaUpload } from "./phi-media-upload";
 import { usePhiImagePreviewStore, type PhiImagePreviewStoreState } from "./phi-image-preview-store";
 import { PHI_ASSET_CONTROLLER_STORE_KEY } from "./asset-controller-signals";
 import {
@@ -207,9 +203,8 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
    * often than not -- so no Asset is finalized that nobody sees arrive. What is this Widget's own is the
    * wall: an Asset that arrived becomes a tile, and the listing behind it hears of it.
    */
-  const areaUploadLabels = useMemo(() => resolvePhiAreaUploadLabels(labels), [labels]);
   const upload = usePhiMediaUpload<PhiMediaUploadSessionResult["asset"]>({
-    labels: areaUploadLabels,
+    labels: labels.refusals,
     initOptions: uploadInitOptions,
     onUploaded: (asset, file) => {
       const uploadedTile = normalizePhiImagePreviewTile(asset, []);
@@ -330,7 +325,7 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
                     }}
                   >
                     <PhiTypographyControl style={{ color: token.colorTextLightSolid }}>
-                      {item.error ?? labels.uploadFailedText}
+                      {item.error ?? labels.refusals.errorGeneric}
                     </PhiTypographyControl>
                   </div>
                 ) : null}

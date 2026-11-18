@@ -6,6 +6,7 @@ import {
   PHI_MEDIA_WIDGET_DEFAULT_LABELS,
   type PhiAssetWidgetLabels,
 } from "../media-widget-labels";
+import { getPhiMediaUploadLabels } from "./media-upload";
 
 const PHI_MEDIA_WIDGET_LABEL_SET = definePhiLabelSet({
   key: "widget:media",
@@ -43,12 +44,8 @@ const PHI_MEDIA_WIDGET_LABEL_SET = definePhiLabelSet({
     upload_delete_label: PHI_MEDIA_WIDGET_DEFAULT_LABELS.upload.deleteLabel,
     upload_done_label: PHI_MEDIA_WIDGET_DEFAULT_LABELS.upload.doneLabel,
     upload_failed_label: PHI_MEDIA_WIDGET_DEFAULT_LABELS.upload.failedLabel,
-    upload_asset_exists_label: definePhiMessageLabel(PHI_MEDIA_WIDGET_DEFAULT_LABELS.upload.assetExistsLabel),
     upload_delete_success_template: definePhiMessageLabel(PHI_MEDIA_WIDGET_DEFAULT_LABELS.upload.deleteSuccessTemplate),
     upload_upload_success_template: definePhiMessageLabel(PHI_MEDIA_WIDGET_DEFAULT_LABELS.upload.uploadSuccessTemplate),
-    upload_upload_failed_text: definePhiMessageLabel(PHI_MEDIA_WIDGET_DEFAULT_LABELS.upload.uploadFailedText),
-    upload_storage_unreachable_text: definePhiMessageLabel(PHI_MEDIA_WIDGET_DEFAULT_LABELS.upload.uploadStorageUnreachableText),
-    upload_folder_locked_text: definePhiMessageLabel(PHI_MEDIA_WIDGET_DEFAULT_LABELS.upload.uploadFolderLockedText),
     upload_delete_failed_text: definePhiMessageLabel(PHI_MEDIA_WIDGET_DEFAULT_LABELS.upload.deleteFailedText),
     grid_empty_description: definePhiMessageLabel(PHI_MEDIA_WIDGET_DEFAULT_LABELS.grid.emptyDescription),
     grid_delete_label: PHI_MEDIA_WIDGET_DEFAULT_LABELS.grid.deleteLabel,
@@ -120,7 +117,10 @@ const PHI_MEDIA_WIDGET_LABEL_SET = definePhiLabelSet({
 export async function getPhiMediaWidgetLabels(
   options: PhiGlobalTranslatorOptions,
 ): Promise<PhiAssetWidgetLabels> {
-  const labels = await getPhiLabelSet(options, PHI_MEDIA_WIDGET_LABEL_SET);
+  const [labels, upload] = await Promise.all([
+    getPhiLabelSet(options, PHI_MEDIA_WIDGET_LABEL_SET),
+    getPhiMediaUploadLabels(options),
+  ]);
   return {
     tool: {
       searchPlaceholder: labels.tool_search_placeholder,
@@ -157,13 +157,10 @@ export async function getPhiMediaWidgetLabels(
       deleteLabel: labels.upload_delete_label,
       doneLabel: labels.upload_done_label,
       failedLabel: labels.upload_failed_label,
-      assetExistsLabel: labels.upload_asset_exists_label,
       deleteSuccessTemplate: labels.upload_delete_success_template,
       uploadSuccessTemplate: labels.upload_upload_success_template,
-      uploadFailedText: labels.upload_upload_failed_text,
-      uploadStorageUnreachableText: labels.upload_storage_unreachable_text,
-      uploadFolderLockedText: labels.upload_folder_locked_text,
       deleteFailedText: labels.upload_delete_failed_text,
+      refusals: upload.refusals,
     },
     grid: {
       emptyDescription: labels.grid_empty_description,

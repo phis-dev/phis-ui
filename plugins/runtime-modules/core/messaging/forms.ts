@@ -2,7 +2,6 @@ import { createPhiFormLabelSetLoader } from "../../../../components/forms/shared
 import type { PhiFormDescriptor, PhiFormHandlerProviderDescriptor } from "../../../../types";
 import {
   PHI_FORM_FIELD_PROVIDER_KEYS,
-  PHI_FORM_UPLOAD_LABEL_KEYS,
   PHI_FORM_VALIDATION_PROVIDER_KEYS,
   createPhiSharedFormProviderKey,
 } from "../../../../components/forms/form-provider-contract";
@@ -82,12 +81,11 @@ const PHI_THREAD_REPLY_FORM_DESCRIPTOR: PhiFormDescriptor = {
     /*
      * The attachment narrows nothing the Site has not narrowed already: the kinds are what the writer's
      * own Space accepts, which the control plane answers for. An area rather than a button, because a
-     * file is part of what a reply says.
+     * file is part of what a reply says. What it says is the upload field's own (`widget:upload`).
      */
     {
       key: "assetIds",
       fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.upload,
-      placeholder: label("replyAttach", "Attach a file"),
       config: { space: PHI_THREAD_REPLY_SPACE, presentation: "area" },
     },
   ],
@@ -105,19 +103,7 @@ const loadLabels = createPhiFormLabelSetLoader(
     replyThreadRequired: labels.replyThreadRequired,
     audienceEveryone: labels.audienceEveryone,
     audienceInternal: labels.audienceInternal,
-    replyAttach: labels.replyAttachLabel,
     replySend: labels.replySendLabel,
-    [PHI_FORM_UPLOAD_LABEL_KEYS.dropHint]: labels.replyAttachDropHint,
-    [PHI_FORM_UPLOAD_LABEL_KEYS.tooMany]: labels.replyAttachTooMany,
-    [PHI_FORM_UPLOAD_LABEL_KEYS.pending]: labels.replyAttachPending,
-    [PHI_FORM_UPLOAD_LABEL_KEYS.errorGeneric]: labels.replyErrorGeneric,
-    [PHI_FORM_UPLOAD_LABEL_KEYS.errorNetwork]: labels.replyErrorNetwork,
-    [PHI_FORM_UPLOAD_LABEL_KEYS.errorTooLarge]: labels.replyErrorTooLarge,
-    [PHI_FORM_UPLOAD_LABEL_KEYS.errorDuplicate]: labels.replyErrorDuplicate,
-    [PHI_FORM_UPLOAD_LABEL_KEYS.errorTypeNotAllowed]: labels.replyErrorTypeNotAllowed,
-    [PHI_FORM_UPLOAD_LABEL_KEYS.errorQuotaExceeded]: labels.replyErrorQuotaExceeded,
-    [PHI_FORM_UPLOAD_LABEL_KEYS.errorSpaceUnavailable]: labels.replyErrorSpaceUnavailable,
-    [PHI_FORM_UPLOAD_LABEL_KEYS.errorStorageUnreachable]: labels.replyErrorStorageUnreachable,
   }),
 );
 

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PhiMediaKind, resolvePhiMediaKindFromContentType } from "../../constants/media";
 import type { PhiMediaKindValue } from "../../types/media";
 import type { PhiAreaUploadWidgetLabels } from "./media-widget-labels";
+import type { PhiMediaUploadLabels } from "./media-upload-labels";
 import {
   PhiMediaUploadError,
   isPhiMediaUploadCancelled,
@@ -32,54 +33,6 @@ export type PhiMediaUploadAcceptance = {
   maxBytes?: number;
   multiple?: boolean;
 };
-
-export type PhiMediaUploadLabels = {
-  errorGeneric: string;
-  errorNetwork: string;
-  errorTooLarge: string;
-  errorDuplicate: string;
-  errorTypeNotAllowed: string;
-  errorQuotaExceeded: string;
-  errorSpaceUnavailable: string;
-  /** The body never reached the storage Provider, or the Provider refused it. */
-  errorStorageUnreachable: string;
-  /** The Folder the upload was meant for is locked; only an upload that names a Folder can meet it. */
-  errorFolderLocked: string;
-};
-
-/**
- * Text for a surface that has no label set of its own.
- *
- * Not a substitute for one: it exists so a surface without translations still says something an ordinary
- * person can act on, rather than showing whatever string the server happened to send. Leaking a control
- * plane message into an interface is what these replace.
- */
-export const PHI_MEDIA_UPLOAD_DEFAULT_LABELS: PhiMediaUploadLabels = {
-  errorGeneric: "The upload did not work.",
-  errorNetwork: "The site could not be reached.",
-  errorTooLarge: "That file is too large.",
-  errorDuplicate: "That file is already here.",
-  errorTypeNotAllowed: "That file type is not accepted here.",
-  errorQuotaExceeded: "There is no room left in this space.",
-  errorSpaceUnavailable: "That space is not available.",
-  errorStorageUnreachable: "The file storage could not be reached.",
-  errorFolderLocked: "This folder is locked. Nothing can be uploaded into it until it is unlocked.",
-};
-
-/**
- * The wording of every refusal on a Media upload surface that has the Media label set: the Widget's own
- * duplicate, failure and storage texts, and the shared ones for the rest -- so no control plane string
- * reaches a person. The Media folder's upload Widget and an Add-on's slot upload read it the same way.
- */
-export function resolvePhiAreaUploadLabels(labels: PhiAreaUploadWidgetLabels): PhiMediaUploadLabels {
-  return {
-    ...PHI_MEDIA_UPLOAD_DEFAULT_LABELS,
-    errorGeneric: labels.uploadFailedText,
-    errorDuplicate: labels.assetExistsLabel,
-    errorStorageUnreachable: labels.uploadStorageUnreachableText,
-    errorFolderLocked: labels.uploadFolderLockedText,
-  };
-}
 
 /** What an item of an upload says of its state: the percentage on its way, "Failed", or "Done". */
 export function resolvePhiUploadStatusLabel(

@@ -9,6 +9,7 @@ import {
   PHI_AUTHORING_TOOLS_DEFAULT_LABELS,
   type PhiAuthoringToolsLabels,
 } from "../label-types/authoring-tools";
+import { getPhiMediaUploadLabels } from "../../media/label-sets/media-upload";
 import { getPhiIconPickerLabels } from "./icon-picker";
 
 /**
@@ -100,9 +101,10 @@ const PHI_AUTHORING_TOOLS_LABEL_SET = definePhiLabelSet({
 export async function getPhiAuthoringToolsLabels(
   options: PhiGlobalTranslatorOptions,
 ): Promise<PhiAuthoringToolsLabels> {
-  const [labels, iconPicker] = await Promise.all([
+  const [labels, iconPicker, upload] = await Promise.all([
     getPhiLabelSet(options, PHI_AUTHORING_TOOLS_LABEL_SET),
     getPhiIconPickerLabels(options),
+    getPhiMediaUploadLabels(options),
   ]);
   return {
     text: {
@@ -135,6 +137,7 @@ export async function getPhiAuthoringToolsLabels(
     mask: {
       select: labels.mask_select,
       iconifyRequired: labels.mask_iconify_required,
+      uploadRefusals: upload.refusals,
     },
     descriptions: {
       items: labels.descriptions_items,
