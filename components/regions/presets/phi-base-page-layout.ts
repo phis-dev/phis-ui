@@ -4,6 +4,8 @@ import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { PHI_SHARED_PACKAGE_NAME } from "../../../constants/package";
 import type { PhiCmsLayoutNode, PhiCmsPageNode, PhiCmsRegionNode } from "../../../types/cms";
 import { createPhiPresetCmsInstanceId } from "../../../types/cms-instance-id";
+import { resolvePhiCmsAreaMask } from "../../../constants/cms-areas";
+import { PHI_PAGE, PHI_SPACE } from "../../../theme/antd-css-var-contract";
 
 /**
  * The shared content-region scaffold of the built-in page presets.
@@ -54,9 +56,34 @@ export function buildPhiBasePageLayoutNode(page: PhiCmsPageNode): PhiCmsLayoutNo
   });
 }
 
+/** The Areas a visitor reads in: their content Region stands in by the Theme's Page padding. */
+const PHI_VISITOR_AREA_MASK = resolvePhiCmsAreaMask("public") | resolvePhiCmsAreaMask("app");
+
+/**
+ * The distance from the screen's edge to a Page's content, on its content Region and nowhere else.
+ *
+ * In Public and App it is the Theme's Page padding (THEME.md "Page padding", `PHI_PAGE.padding`): 21 on a
+ * phone and 34 from a tablet on, as the Theme states. The Hero and the Footer top are Regions of their
+ * own and keep the full width. The staff Areas keep the house step `base`. The scaffold inside has no
+ * padding; what stands in it with a ground of its own -- the wash column, a Split Card's cards -- insets
+ * its content by `base`.
+ */
+function resolvePhiBasePageRegionInset(page: PhiCmsPageNode): Record<string, unknown> {
+  const visitorPage = page.areaMask !== 0 && (page.areaMask & ~PHI_VISITOR_AREA_MASK) === 0;
+  return visitorPage
+    ? {
+        paddingTop: PHI_PAGE.padding.top,
+        paddingRight: PHI_PAGE.padding.right,
+        paddingBottom: PHI_PAGE.padding.bottom,
+        paddingLeft: PHI_PAGE.padding.left,
+      }
+    : { padding: PHI_SPACE.base };
+}
+
 /**
  * Content region rooted on the scaffold. The region keeps its per-page identity -- `regionId` stays the
- * preset's synthetic id -- and spans the full page width; the built-in pages set no reading width.
+ * preset's synthetic id -- and spans the full page width; the built-in pages set no reading width. It
+ * carries the Page's inset (`resolvePhiBasePageRegionInset`); a `regionConfig` the caller states wins.
  * Only the tree below the root is standardised.
  */
 export function buildPhiBasePageContentScaffold({
@@ -74,7 +101,7 @@ export function buildPhiBasePageContentScaffold({
       regionType: PhiCmsRegionType.Content,
       rootLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
       sortOrder: 30,
-      config: regionConfig,
+      config: { ...resolvePhiBasePageRegionInset(page), ...regionConfig },
     }),
     layoutNode: buildPhiBasePageLayoutNode(page),
   };

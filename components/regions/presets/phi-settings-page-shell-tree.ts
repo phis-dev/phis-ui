@@ -221,7 +221,7 @@ export function buildPhiSettingsPageShellTree({
   });
   const layoutNodes: PhiCmsLayoutNode[] = [
     scaffold.layoutNode,
-    // The base scaffold owns padding and background; the Collapsible only stacks the panels.
+    // The Region carries the padding, the base scaffold the background; the Collapsible only stacks the panels.
     nodes.layout({
       id: layouts.settingsPanels,
       parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,

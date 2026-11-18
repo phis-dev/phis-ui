@@ -86,7 +86,11 @@ const PHI_FLEX_VERTICAL_LAYOUT_PANEL_PRESET = {
  */
 const PHI_FLEX_VERTICAL_LAYOUT_PAGE_BASE_PRESET = {
     gap: PHI_SPACE.sm,
-    padding: PHI_SPACE.base,
+    /*
+     * None: the distance from the screen's edge is the content Region's, the Theme's Page padding in Public
+     * and App (`buildPhiBasePageContentScaffold`). The scaffold only holds its slots together.
+     */
+    padding: 0,
     /*
      * No Surface, so whatever the theme paints behind the page -- a colour, an image, the frosted
      * Chrome pane -- reaches the content region instead of stopping at a grey plate. A page that

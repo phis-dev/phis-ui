@@ -51,7 +51,7 @@ export async function buildPhiDefaultPubContactPageTree({
     overlays: [],
     regions: [scaffold.region],
     layoutNodes: [
-      // The base scaffold every module Page stands on; it carries the page's padding, the card its own.
+      // The base scaffold every module Page stands on; the Region carries the page's padding, the card its own.
       scaffold.layoutNode,
       nodes.layout({
         creationPreset: { layoutKind: "split", preset: "panel" },

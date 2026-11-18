@@ -72,7 +72,7 @@ export async function buildPhiDefaultAdminLocalesPageTree({
     regions: [scaffold.region],
     layoutNodes: [
       scaffold.layoutNode,
-      // The base scaffold owns padding and background; this grid only arranges the slots inside it.
+      // The Region carries the padding, the base scaffold the background; this grid only arranges the slots inside it.
       nodes.layout({
         id: SYNTHETIC_ADMIN_LOCALES_LAYOUT_IDS.layoutGrid,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,

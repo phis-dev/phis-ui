@@ -3,7 +3,7 @@ import type { PhiCmsPageNode } from "../../../types/cms";
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { PHI_SURFACE_WASH } from "../../../helpers/surface-presets";
-import { PHI_PAGE, PHI_SPACE } from "../../../theme/antd-css-var-contract";
+import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import {
   buildPhiBasePageContentScaffold,
   PHI_BASE_PAGE_LAYOUT_NODE_ID,
@@ -13,8 +13,8 @@ import {
  * A module Page's content as one column on the base scaffold: the Region, the scaffold, and a vertical
  * Flex in it that stops at `maxWidth` and wears the wash (LAYOUTING.md; `CONTENT_ENTRIES.md`, The frame).
  *
- * The scaffold spans the content Region, carries the page's padding and anchors what stands in it to the
- * centre, so the column only says where it stops. The width is a maximum: on a phone the column fills the
+ * The content Region carries the Page's padding, the scaffold spans it and anchors what stands in it to
+ * the centre, so the column only says where it stops. The width is a maximum: on a phone the column fills the
  * screen. Its corners are the Theme's -- the wash states no line, and a Surface without its own line takes
  * the Site's surface step.
  *
@@ -54,11 +54,11 @@ export function buildPhiBasePageColumnFrame({
         config: {
           maxSize: { width: maxWidth },
           surface: PHI_SURFACE_WASH,
-          // The Theme's Page inset for the screen it is drawn on (`PHI_PAGE.padding`); a Layout's own wins.
-          paddingTop: PHI_PAGE.padding.top,
-          paddingRight: PHI_PAGE.padding.right,
-          paddingBottom: PHI_PAGE.padding.bottom,
-          paddingLeft: PHI_PAGE.padding.left,
+          /*
+           * The wash's own inset, the house step: the Page's distance from the screen's edge is the content
+           * Region's (`buildPhiBasePageContentScaffold`), not the column's.
+           */
+          padding: PHI_SPACE.base,
           // The house step between a preset's children; the Widgets keep their own air inside.
           gap: PHI_SPACE.sm,
         },

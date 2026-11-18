@@ -497,9 +497,13 @@ Control.
   377 and 610 measure the room a block is offered and would put two phones of one class on opposite
   sides. styles/shell.css ("Page inset") hands the band the screen is in to everything inside the Shell
   as `--phi-page-inset-<side>`; `PHI_PAGE.padding.<side>` reads it, and outside a Shell the desktop answer.
-- **A default, not a rule.** `buildPhiBasePageColumnFrame` writes `PHI_PAGE.padding` into the Page
-  column's four paddings, so the presets and the packages that build on it follow the Theme. A Layout
-  that states its own padding keeps it; nested Layouts read nothing from here.
+- **On the content Region, and only there.** `buildPhiBasePageContentScaffold` writes `PHI_PAGE.padding`
+  into the four paddings of a Page's content Region in Public and App, so every built-in Page there -- the
+  sign-in and contact Pages, the Pages with a wash column, the App's Pages -- and every package that builds
+  on the scaffold stands in from the screen's edge by the Theme's step. The Hero and the Footer top are
+  Regions of their own and keep the full width; the staff Areas keep the house step `base`. The scaffold
+  (the Region's root vertical Flex) has no padding; what stands in it with a ground of its own insets its
+  content by `base` -- the wash column, a Split Card's cards. A Region config a preset states wins.
 - **Refused when it is no step.** `assertPhiThemeVocabulary` refuses a value that is not a step of the
   spacing scale: the column reads it as a length, and a word it cannot resolve would leave the side at no
   padding with nothing to say why.
