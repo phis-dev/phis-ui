@@ -16,7 +16,6 @@ import { PHI_TEXT_SOURCE_PRESET } from "../../helpers/text-source";
 import { PHI_SPACE } from "../../theme/antd-css-var-contract";
 import { buildPhiCmsWidgetNamespacedTypeKey } from "../../constants/cms-widget-types";
 import { createPhiCmsPresetNodes } from "../../helpers/cms-preset-nodes";
-import { resolvePhiBrandContact } from "../../helpers/brand-contact";
 import { resolvePhiShellHeaderHeight, resolvePhiShellMetric } from "../../helpers/shell-region-style";
 import { resolvePhiLayoutCreationPreset } from "../../helpers/cms-layout-defaults";
 import { PHI_DEFAULT_PUB_AREA_PRESET } from "./pub-area-preset";
@@ -39,18 +38,12 @@ export async function buildPhiDefaultSiteAreaPresetTree({
   presetKey,
   ownerModuleId,
   runtimeModuleArea,
-  footerContact = true,
 }: {
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
   presetKey: string;
   ownerModuleId: PhiRuntimeModuleId;
   runtimeModuleArea: PhiBuilderAreaKey;
-  /**
-   * Whether the Footer's right column carries the Site's contact link. An Area whose visitors reach
-   * the Site's people from inside it -- the App, with its own Support -- leaves the column empty.
-   */
-  footerContact?: boolean;
 }): Promise<PhiResolvedCmsPageTree> {
   const PHI_DEFAULT_PUB_AREA_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap({
     domain: "area",
@@ -74,18 +67,13 @@ export async function buildPhiDefaultSiteAreaPresetTree({
   const footerBottomRegion = PHI_DEFAULT_PUB_AREA_PRESET.regions.find(
     (region) => region.key === "footer_bottom",
   );
-  const {
-    label: contactLabel,
-    href: contactHref,
-    icon: contactIcon,
-  } = resolvePhiBrandContact(runtime);
   /*
    * The Preset's words stay in the source language and say they are the Preset's; the Widgets translate
-   * them through the global store (`helpers/text-source.ts`). The contact label is the Preset's only
-   * while the Site's theme names none. It stands in the Footer; the Header has no strip above its main
-   * band, which a Site adds in the Builder when it wants one.
+   * them through the global store (`helpers/text-source.ts`).
+   *
+   * The Footer's right column is left empty. It used to hold a mailto link to whoever runs the Site,
+   * which the Site's own contact page (`/contact`, with its Form) and the App's Support have replaced.
    */
-  const contactLabelIsPreset = !runtime.site.theme?.contact?.label?.trim();
   /*
    * A template rather than a finished sentence, and left untranslated here.
    *
@@ -450,25 +438,6 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               },
               contentVersionId: null,
             },
-            ...(footerContact ? [{
-              id: PHI_DEFAULT_PUB_AREA_WIDGET_IDS.widgetFooterRight,
-              siteId: page.siteId,
-              parentLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutFooterMain,
-              widgetType: buildPhiCmsWidgetNamespacedTypeKey(resolvePhiCmsWidgetPluginKey("simple-text"), "simple-text"),
-              slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Right,
-              sortOrder: 20,
-              status: 1,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
-              label: "pub footer main right",
-              config: {
-                text: contactLabel,
-                ...(contactLabelIsPreset ? { textSource: PHI_TEXT_SOURCE_PRESET } : {}),
-                href: contactHref,
-                icon: contactIcon,
-              },
-              contentVersionId: null,
-            }] : []),
           ]
         : []),
       ...(footerBottomRegion

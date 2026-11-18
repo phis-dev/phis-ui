@@ -19,7 +19,6 @@ export const PHI_DEFAULT_PUB_AREA_WIDGET_NODE_KEYS = [
   "widgetSiderRightNav",
   "widgetFooterLeft",
   "widgetFooterMiddle",
-  "widgetFooterRight",
   "widgetFooterBottomText",
 ] as const;
 
