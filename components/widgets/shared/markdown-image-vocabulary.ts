@@ -4,7 +4,7 @@
  * reference of every route.
  *
  * Two places say it, and the nearer one wins. The Widget states what every picture in its text does -- the
- * Inspector's "Image proportion", "Image Float" and "Image Width" -- and a picture that needs something else
+ * Inspector's "Proportion", "Float" and "Width" under "Image" -- and a picture that needs something else
  * says so in its own address, after the Asset: `![Server](phis:asset/12?ratio=16:9&float=none)`, or
  * `![Icon](phis:asset/27?float=end&width=small)`. The address stays a
  * `phis:asset/<id>` reference for everything that reads one (the server's reference index finds the id at

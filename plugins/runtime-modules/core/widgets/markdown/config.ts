@@ -251,7 +251,8 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
     {
       key: "imageFloat",
       type: "choice",
-      label: "Image Float",
+      heading: "Image",
+      label: "Float",
       // No float is the default and stores nothing; the line says so instead of an empty picker.
       emptyOption: { value: "none", label: "None" },
       options: PHI_MARKDOWN_IMAGE_FLOAT_OPTIONS,
@@ -264,7 +265,7 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
     {
       key: "imageFloatWidth",
       type: "choice",
-      label: "Image Width",
+      label: "Width",
       emptyOption: { value: "large", label: "Large (golden)" },
       options: [
         { value: "small", label: "Small" },
@@ -279,7 +280,7 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
     {
       key: "imageAspectRatio",
       type: "choice",
-      label: "Image Proportion",
+      label: "Proportion",
       options: [
         { value: "auto", label: "Automatic" },
         { value: "phi", label: "φ (golden)" },
