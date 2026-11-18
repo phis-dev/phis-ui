@@ -51,6 +51,13 @@ of your own:
    operator before building anything; the answer is either a configuration that already exists or a
    finding for `@phis/ui`.
 
+   The reason is the Builder. A Page a preset lays out is a Page somebody edits later, with the Builder's
+   Layouts, Widgets and Inspector fields and nothing else. What a preset composes from those stays
+   editable there: the gap of a vertical Flex, the ratio of a Split Card, the Widget in a slot. What a
+   package invents for itself has no form in the Builder -- it cannot be seen as what it is, changed or
+   rebuilt, and the next edit undoes it or cannot reach it. This holds for presets written by hand and
+   by an AI alike: only what the Builder can express is built.
+
 `@phis/shop`'s catalogue is what breaking this looks like: its product list is a Widget of its own that
 draws cards the Core Card Widget already draws as a Collection (`body: "plan"`), with its own price line
 and its own button. It lines up differently, misses what the Card gains, and has to be rebuilt.
