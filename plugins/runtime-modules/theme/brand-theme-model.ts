@@ -43,7 +43,6 @@ const PHI_THEME_HISTORY_PART_BY_FIELD = {
   buttons: "style",
   fonts: "fonts",
   typography: "fonts",
-  contact: "contact",
   brand: "brand",
   widgets: "widgets",
   shell: "shell",

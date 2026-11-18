@@ -184,13 +184,6 @@ export type PhiSiteThemeBrand = {
   wordmark?: PhiSiteThemeWordmark | null;
 };
 
-/** The one way to reach whoever runs this Site, as the frame offers it. */
-export type PhiSiteThemeContact = {
-  label?: string | null;
-  href?: string | null;
-  icon?: string | null;
-};
-
 export type PhiWidgetFontFamilyKey =
   | "inherit"
   | "system"

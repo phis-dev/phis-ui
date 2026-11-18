@@ -313,11 +313,6 @@ In the Builder canvas an unwritten line is drawn as itself -- its fallback icon,
 which part of the Theme is empty -- because there a Widget has to be visible to be worked with, and the
 slot it occupies offers no `+` of its own.
 
-### Contact
-
-`contact?: { label?, href?, icon? }` -- the one way to reach whoever runs the Site, as the frame offers it
-(`helpers/brand-contact.ts`). Defaults: label `Contact`, href `mailto:info@<site hostname>`, icon `antd:mail`.
-
 ### Widget defaults
 
 - `widgets.locale?: { mode?: "label-list" | "compact-pill", showText?: boolean }` -- read by the Locale

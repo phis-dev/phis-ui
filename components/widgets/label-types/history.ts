@@ -55,7 +55,6 @@ export type PhiHistoryThemePartKey =
   | "fonts"
   | "style"
   | "brand"
-  | "contact"
   | "shell"
   | "root"
   | "widgets"
@@ -117,7 +116,6 @@ export const PHI_HISTORY_DEFAULT_LABELS: PhiHistoryLabels = {
     fonts: "fonts",
     style: "style",
     brand: "brand",
-    contact: "contact",
     shell: "shell",
     root: "page background",
     widgets: "widgets",

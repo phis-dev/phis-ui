@@ -2,7 +2,6 @@ import type { PhiShellTheme } from "../components/shell/shell-types";
 import type {
   PhiSiteFontSlots,
   PhiSiteThemeBrand,
-  PhiSiteThemeContact,
   PhiSiteThemeRoot,
 } from "./site-theme";
 import type { PhiLocaleCapability } from "../helpers/site-locale-config";
@@ -36,7 +35,6 @@ export type PhiSiteTheme = {
     controls?: PhiControlShapeCorners | null;
   } | null;
   fonts?: PhiSiteFontSlots;
-  contact?: PhiSiteThemeContact | null;
   brand?: PhiSiteThemeBrand | null;
   widgets?: {
     locale?: {
