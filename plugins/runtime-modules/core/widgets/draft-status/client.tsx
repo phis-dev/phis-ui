@@ -7,7 +7,7 @@ import { readPhiDraftStatusSignalValue, type PhiDraftStatusSignalValue } from ".
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
 import { usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
-import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
+import { PhiStatusDotControl } from "../../../../../components/controls/phi-status-dot-control";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 import {
@@ -36,7 +36,8 @@ function buildStatusLabel(state: PhiDraftStatusSignalValue | null, labels: PhiDr
 }
 
 /**
- * The draft state a Controller states, drawn as a tag in the Theme's status colours.
+ * The draft state a Controller states, drawn as a dot in the Theme's status colours; its word is the
+ * tooltip over the row, path and dot alike.
  *
  * Nothing is read here and nothing is worked out. The Controller the placement names is asked once,
  * when this mounts, and answers to this address; every change after reaches it as a broadcast from
@@ -148,14 +149,13 @@ export function PhiDraftStatusWidget({
 
   return (
     <PhiFlexControl align="center" justify="space-between" gap={12} wrap="wrap" style={{ width: "100%" }}>
-      <PhiFlexControl align="center" gap={8} wrap>
+      <PhiStatusDotControl color={color} label={buildStatusLabel(state, labels)}>
         {state?.subject ? (
           <PhiTypographyControl code>
             {state.subject}
           </PhiTypographyControl>
         ) : null}
-        <PhiTagControl color={color}>{buildStatusLabel(state, labels)}</PhiTagControl>
-      </PhiFlexControl>
+      </PhiStatusDotControl>
       {error ? (
         <PhiTypographyControl type="danger">
           {error}
