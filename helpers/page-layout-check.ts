@@ -1,6 +1,7 @@
 import { PhiCmsRegionType } from "../constants/phi-cms";
 
 import { PHI_PAGE, PHI_SPACE } from "../theme/antd-css-var-contract";
+import { resolvePhiPageInset } from "./page-inset";
 import type { PhiCmsLayoutNode, PhiResolvedCmsPageTree } from "../types/cms";
 import {
   parsePhiCmsCarouselLayoutConfig,
@@ -64,7 +65,8 @@ const LAYOUT_CONFIG_PARSERS: Record<string, (config: Record<string, unknown>) =>
  * The Theme's Page inset (`PHI_PAGE.padding`, THEME.md "Page padding") is a step of the spacing scale per
  * side and screen, chosen by the Theme: a distance like any other, at the preset level.
  */
-const PAGE_INSET_REFERENCES = new Set<unknown>(Object.values(PHI_PAGE.padding));
+const PAGE_INSET_REFERENCES = new Set<unknown>([...Object.values(PHI_PAGE.padding), ...Object.values(PHI_PAGE.signedInPadding)]);
+const PAGE_INSET_SIDES = [["paddingTop", "top"], ["paddingRight", "right"], ["paddingBottom", "bottom"], ["paddingLeft", "left"]] as const;
 
 function stepOf(value: unknown): string | null {
   if (value === 0 || value === "0") return "none";
@@ -98,11 +100,16 @@ export function checkPhiPagePresetLayout(tree: PhiResolvedCmsPageTree): PhiPageL
   const heroOverlap = heroRegion ? regionConfig.heroOverlap : undefined;
 
   if (contentRegion) {
-    const edge = stepOf(regionConfig.padding);
-    if (edge !== "md") {
+    /*
+     * The Page's edge is the Theme's, on all four sides: a number, or a step of the scale, would stay what
+     * it was the day the preset was written, whatever the Site's Theme says.
+     */
+    const inset = resolvePhiPageInset(tree.page?.areaMask);
+    const scope = inset === PHI_PAGE.padding ? "PHI_PAGE.padding" : "PHI_PAGE.signedInPadding";
+    if (PAGE_INSET_SIDES.some(([key, side]) => regionConfig[key] !== inset[side])) {
       findings.push({
         node: `region ${contentRegion.id}`,
-        message: "The content Region is the Page's edge and states `padding: PHI_SPACE.md`.",
+        message: `The content Region is the Page's edge and states the Theme's inset on all four sides: \`paddingTop\` to \`paddingLeft\` from \`${scope}\`.`,
       });
     }
     if (heroOverlap != null && stepOf(heroOverlap) == null) {

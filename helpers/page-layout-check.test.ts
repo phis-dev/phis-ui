@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 import { PhiCmsRegionType } from "../constants/phi-cms";
 import { PHI_PAGE, PHI_SPACE } from "../theme/antd-css-var-contract";
 import type { PhiResolvedCmsPageTree } from "../types/cms";
+import { resolvePhiCmsAreaMask } from "../constants/cms-areas";
 import { checkPhiPagePresetLayout } from "./page-layout-check";
+import { resolvePhiPageInsetConfig } from "./page-inset";
 
 /* A Page as the rule wants it, and one step off it per test. */
 
@@ -13,15 +15,18 @@ function layout(id: number, parent: number | null, typeKey: string, config: Reco
   return { id, parentLayoutNodeId: parent, widgetType: `x/${typeKey}`, config, label } as never;
 }
 
-function page(overrides: { content?: Record<string, unknown>; nodes?: unknown[]; hero?: boolean } = {}) {
+const PUBLIC = resolvePhiCmsAreaMask("public");
+
+function page(overrides: { content?: Record<string, unknown>; nodes?: unknown[]; hero?: boolean; areaMask?: number } = {}) {
+  const areaMask = overrides.areaMask ?? PUBLIC;
   return {
-    page: {} as never,
+    page: { areaMask } as never,
     overlays: [],
     contentWidgets: [],
     regions: [
       ...(overrides.hero ? [{ id: -2, regionType: PhiCmsRegionType.Hero, rootLayoutNodeId: 10, config: {} }] : []),
       { id: -1, regionType: PhiCmsRegionType.Content, rootLayoutNodeId: 1,
-        config: { padding: PHI_SPACE.md, ...overrides.content } },
+        config: { ...resolvePhiPageInsetConfig(areaMask), ...overrides.content } },
     ],
     layoutNodes: [
       layout(1, null, "content", {}),
@@ -38,8 +43,17 @@ describe("checkPhiPagePresetLayout", () => {
     expect(checkPhiPagePresetLayout(page())).toEqual([]);
   });
 
-  it("wants the Page edge on the content Region", () => {
-    expect(checkPhiPagePresetLayout(page({ content: { padding: undefined } }))).toHaveLength(1);
+  it("wants the Theme's Page inset on the content Region, all four sides", () => {
+    expect(checkPhiPagePresetLayout(page({ content: { paddingBottom: undefined } }))).toHaveLength(1);
+    const fixed = { paddingTop: PHI_SPACE.md, paddingRight: PHI_SPACE.md, paddingBottom: PHI_SPACE.md, paddingLeft: PHI_SPACE.md };
+    expect(checkPhiPagePresetLayout(page({ content: fixed }))).toHaveLength(1);
+  });
+
+  it("wants Public's inset in Public and the signed-in one elsewhere", () => {
+    const app = resolvePhiCmsAreaMask("app");
+    expect(checkPhiPagePresetLayout(page({ areaMask: app }))).toEqual([]);
+    expect(checkPhiPagePresetLayout(page({ areaMask: app, content: resolvePhiPageInsetConfig(PUBLIC) }))).toHaveLength(1);
+    expect(checkPhiPagePresetLayout(page({ content: resolvePhiPageInsetConfig(app) }))).toHaveLength(1);
   });
 
   it("refuses a distance spelled out", () => {

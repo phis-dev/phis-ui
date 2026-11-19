@@ -489,9 +489,10 @@ How far a Page's content stands in is the Theme's as well, once for Public and o
 Areas (App and the staff Areas): twelve style tokens each, `pagePadding<Top|Right|Bottom|Left><Phone|Tablet|Desktop>`
 and `signedInPagePadding<…>`, each a step of the spacing scale (`PHI_SPACE`, or `0`), published as
 `--phi-page-padding-<side>-<band>` and `--phi-signed-in-page-padding-<side>-<band>`. Where a Theme states
-nothing they are `PHI_LAYOUT.pagePadding` -- `base` on a phone, `md` on a tablet and a desktop -- and
+nothing they are `PHI_LAYOUT.pagePadding` -- `base` on every screen -- and
 `PHI_LAYOUT.signedInPagePadding` -- `sm` on a phone, `base` on a tablet and a desktop --, the same on
-all four sides. The Style tab edits them under "Page Padding", Public or Signed in, one band at a time,
+all four sides. A Site that wants its Public Pages to stand in further states it in its Theme (phisys:
+`md` on a tablet and a desktop). The Style tab edits them under "Page Padding", Public or Signed in, one band at a time,
 with the Inspector's padding Control.
 
 - **By the screen, not by the room.** The bands are the Shell's device bands on `phi-render-viewport`
@@ -505,7 +506,8 @@ with the Inspector's padding Control.
   the staff Areas, so every built-in Page -- the sign-in and contact Pages, the Pages with a wash column,
   the Dashboards, the App's and the staff Areas' Pages -- and every package that builds on the scaffold
   stands in from the screen's edge by the Theme's step. A package Page with a content Region of its own
-  states the same reference. The Hero and the Footer top are Regions of their own and keep the full width. The scaffold
+  states the same reference, on all four sides; `checkPhiPagePresetLayout` refuses anything else, a step
+  of the scale included, because a number written into a preset stays what it was whatever the Theme says. The Hero and the Footer top are Regions of their own and keep the full width. The scaffold
   (the Region's root vertical Flex) has no padding; what stands in it with a ground of its own insets its
   content by `base` -- the wash column, a Split Card's cards. A Region config a preset states wins.
 - **Refused when it is no step.** `assertPhiThemeVocabulary` refuses a value that is not a step of the

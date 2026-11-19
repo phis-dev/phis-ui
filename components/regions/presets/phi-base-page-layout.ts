@@ -4,8 +4,7 @@ import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { PHI_SHARED_PACKAGE_NAME } from "../../../constants/package";
 import type { PhiCmsLayoutNode, PhiCmsPageNode, PhiCmsRegionNode } from "../../../types/cms";
 import { createPhiPresetCmsInstanceId } from "../../../types/cms-instance-id";
-import { resolvePhiCmsAreaMask } from "../../../constants/cms-areas";
-import { PHI_PAGE } from "../../../theme/antd-css-var-contract";
+import { resolvePhiPageInsetConfig } from "../../../helpers/page-inset";
 
 /**
  * The shared content-region scaffold of the built-in page presets.
@@ -56,27 +55,17 @@ export function buildPhiBasePageLayoutNode(page: PhiCmsPageNode): PhiCmsLayoutNo
   });
 }
 
-/** Public: its content Region stands in by the Theme's Page padding; the signed-in Areas by their own. */
-const PHI_PUBLIC_AREA_MASK = resolvePhiCmsAreaMask("public");
-
 /**
  * The distance from the screen's edge to a Page's content, on its content Region and nowhere else.
  *
- * Both are the Theme's (THEME.md "Page padding"): in Public `PHI_PAGE.padding` (21 on a phone and 34
- * from a tablet on unless the Theme says otherwise), in App and the staff Areas `PHI_PAGE.signedInPadding`
- * (13 on a phone, 21 from a tablet on). The Hero and the Footer top are Regions of their own and keep the
- * full width. The scaffold inside has no padding; what stands in it with a ground of its own -- the wash
- * column, a Split Card's cards -- insets its content by `base`.
+ * Both are the Theme's (THEME.md "Page padding"): in Public `PHI_PAGE.padding` (21 unless the Theme says
+ * otherwise), in App and the staff Areas `PHI_PAGE.signedInPadding` (13 on a phone, 21 from a tablet on).
+ * The Hero and the Footer top are Regions of their own and keep the full width. The scaffold inside has no
+ * padding; what stands in it with a ground of its own -- the wash column, a Split Card's cards -- insets
+ * its content by `base`.
  */
 function resolvePhiBasePageRegionInset(page: PhiCmsPageNode): Record<string, unknown> {
-  const publicPage = page.areaMask !== 0 && (page.areaMask & ~PHI_PUBLIC_AREA_MASK) === 0;
-  const inset = publicPage ? PHI_PAGE.padding : PHI_PAGE.signedInPadding;
-  return {
-    paddingTop: inset.top,
-    paddingRight: inset.right,
-    paddingBottom: inset.bottom,
-    paddingLeft: inset.left,
-  };
+  return resolvePhiPageInsetConfig(page.areaMask);
 }
 
 /**

@@ -2057,7 +2057,9 @@ Every Page has the same three levels in its `content` Region:
 
 1. **Region** `content`: the Page's edge. It carries the only outer inset and the reading width
    (`maxSize`, centred with `margin: "0 auto"`). Nothing inside it adds a second edge. A Page that brings its
-   own `content` Region replaces the Area's, padding included, so it states `padding: PHI_SPACE.md` itself.
+   own `content` Region replaces the Area's, padding included, so it states the Theme's Page inset itself, on
+   all four sides: `paddingTop` to `paddingLeft` from `PHI_PAGE.padding` in Public, from
+   `PHI_PAGE.signedInPadding` in App and the staff Areas ([THEME.md](./THEME.md#page-padding)).
 2. **Page column**: one `flex-vertical` under the Region's `content` Layout, `padding` none, `gap` the
    section role. Its slots are the sections, top to bottom.
 3. **Sections**: each slot of the column holds one Widget or one Layout. A section that needs columns uses
@@ -2079,7 +2081,7 @@ never a CSS string, never `clamp()`:
 
 | Role | Where | Step |
 | --- | --- | --- |
-| Page edge | `padding` of the Region `content` | `md` |
+| Page edge | `paddingTop` … `paddingLeft` of the Region `content` | the Theme's (`PHI_PAGE.padding`, `PHI_PAGE.signedInPadding`) |
 | Between sections | `gap` of the Page column | `md` |
 | Inside a surface | `padding` of a Layout that carries a Surface -- a band, a card, a Split Card | `md` |
 | Inside a section | `gap` of a section's own Layout: heading to content, card to card, button to button | `sm`, the Layout default: leave it unset |
@@ -2173,7 +2175,7 @@ An `asset:` icon in a preset may be built from `media.asset(...)`; a literal id 
 `checkPhiPagePresetLayout(tree)` (`@phis/ui/module/page-check`, a door of its own: it is verify-time tooling and carries the Layout config parsers, so it is not in `@phis/ui/helpers`) reads a tree a route preset builds and returns what
 breaks this section: a distance that is not a `PHI_SPACE` step, a step above `md` outside a Hero's bottom
 beside `heroOverlap`, padding on a Layout without a Surface (and a Grid that keeps its default inset), a
-content Region without the `md` edge, and a Page column that is not one `flex-vertical`. It also refuses a Layout config its own parser does not
+content Region whose four paddings are not the Theme's Page inset for its Area, and a Page column that is not one `flex-vertical`. It also refuses a Layout config its own parser does not
 take, for example a Grid of five columns (the Grid takes 1, 2, 3, 4 or 6: each divides its 24 tracks); on a
 live page such a Layout is left out without a message, which is why a package runs the check over every
 preset tree before it ships. A package runs it over every route preset in its own verify step and fails on

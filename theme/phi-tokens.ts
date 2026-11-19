@@ -150,15 +150,15 @@ export const PHI_LAYOUT = {
    * How far a Page's content stands in from the room it is given, by the screen it is drawn on: the
    * Shell's device bands on `phi-render-viewport` (styles/shell.css), a phone below 768, a tablet below
    * 1200, a desktop from there -- not the block profiles' 377 and 610, which measure room and would put
-   * two phones of one class on opposite sides. Steps of the spacing scale, the same on all four sides; a
-   * phone one step below the rest. The Theme's to decide, as `pageMax` is: a Page reads it as
-   * `PHI_PAGE.padding`, and a Layout that states its own padding keeps it.
+   * two phones of one class on opposite sides. Steps of the spacing scale, the same on all four sides:
+   * `base` on every screen. A Site that wants more room states it in its Theme, as `pageMax` is the
+   * Theme's: a Page reads it as `PHI_PAGE.padding`, and a Layout that states its own padding keeps it.
    */
-  pagePadding: { phone: "base", tablet: "md", desktop: "md" },
+  pagePadding: { phone: "base", tablet: "base", desktop: "base" },
   /*
    * The same inset in the signed-in Areas -- App and the staff Areas -- where a Page is a tool among the
-   * Shell's navigation rather than a page to read: one step below Public, a phone again one below the
-   * rest. The Theme's as well, read as `PHI_PAGE.signedInPadding`.
+   * Shell's navigation rather than a page to read: Public's step from a tablet on, a phone one below it.
+   * The Theme's as well, read as `PHI_PAGE.signedInPadding`.
    */
   signedInPagePadding: { phone: "sm", tablet: "base", desktop: "base" },
   /*

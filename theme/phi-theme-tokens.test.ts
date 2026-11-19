@@ -115,16 +115,16 @@ describe("what a stored Theme may say", () => {
       .toThrow(/pagePaddingTopDesktop as "13px", which is not a step of the spacing scale/u);
   });
 
-  it("a phone stands one step in from the rest, the same on all four sides", () => {
+  it("a Public Page stands in by `base` on every screen, the same on all four sides", () => {
     const tokens = buildPhiThemeStructuralTokens({});
     for (const side of ["Top", "Right", "Bottom", "Left"]) {
       expect(tokens[`pagePadding${side}Phone` as keyof typeof tokens]).toBe("var(--phi-padding)");
-      expect(tokens[`pagePadding${side}Tablet` as keyof typeof tokens]).toBe("var(--phi-padding-md)");
-      expect(tokens[`pagePadding${side}Desktop` as keyof typeof tokens]).toBe("var(--phi-padding-md)");
+      expect(tokens[`pagePadding${side}Tablet` as keyof typeof tokens]).toBe("var(--phi-padding)");
+      expect(tokens[`pagePadding${side}Desktop` as keyof typeof tokens]).toBe("var(--phi-padding)");
     }
   });
 
-  it("the signed-in Areas stand one step in less, a phone again one below the rest", () => {
+  it("the signed-in Areas stand in by `base` from a tablet on, a phone one step below", () => {
     const tokens = buildPhiThemeStructuralTokens({});
     for (const side of ["Top", "Right", "Bottom", "Left"]) {
       expect(tokens[`signedInPagePadding${side}Phone` as keyof typeof tokens]).toBe("var(--phi-padding-sm)");
