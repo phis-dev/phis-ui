@@ -260,7 +260,6 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
         label: "Builder inspector header",
         config: {
           anchor: { horizontal: "left", vertical: "middle" },
-          gap: PHI_SPACE.sm,
           padding: 0,
           paddingLeft: PHI_SPACE.lg,
         },

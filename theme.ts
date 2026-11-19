@@ -16,7 +16,7 @@ export * from "./theme/phi-tokens";
  * Each is a reference the Theme resolves per Site and per mode, never a value of its own, so a preset
  * that names one follows whatever Theme it lands in (THEME.md, "Phi scale").
  */
-export { PHI_COLOR, PHI_PAGE, PHI_RADIUS, PHI_SPACE } from "./theme/antd-css-var-contract";
+export { PHI_COLOR, PHI_LAYOUT_GAP, PHI_PAGE, PHI_RADIUS, PHI_SPACE } from "./theme/antd-css-var-contract";
 export {
   type PhiThemeBlockIdentity,
   type PhiThemeFontsBlock,

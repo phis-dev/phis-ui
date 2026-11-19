@@ -13,6 +13,8 @@ export type PhiPaddingWidgetLabels = {
   placeholders: {
     value: string;
   };
+  /** The gap select's choice for a Layout that takes the Theme's Layout gap. */
+  gapTheme: string;
   /** The steps of the spacing scale, as the select box in each cell of the grid names them. */
   scaleSizes: PhiSpacingScaleLabels;
 };
@@ -30,5 +32,6 @@ export const PHI_PADDING_WIDGET_DEFAULT_LABELS: PhiPaddingWidgetLabels = {
   placeholders: {
     value: "none",
   },
+  gapTheme: "Theme",
   scaleSizes: { ...PHI_SPACING_SCALE_DEFAULT_LABELS },
 };

@@ -36,7 +36,7 @@ import { parsePhiCmsContentLayoutConfig, parsePhiCmsGridLayoutConfig } from "../
 import { resolvePhiGridSlotPlacement } from "../components/layouts/phi-grid-contract";
 import { PHI_CORE_LAYOUT_KIND_BY_TYPE_KEY, PHI_SPLIT_CARD_LAYOUT_DEFINITION } from "../components/layouts/layout-definitions";
 import { listPhiPresetTreeFiles } from "./preset-tree-files";
-import { PHI_SPACE } from "../theme/antd-css-var-contract";
+import { PHI_LAYOUT_GAP, PHI_SPACE } from "../theme/antd-css-var-contract";
 import {
   resolvePhiSlotChildSizing,
   resolvePhiSlotChildSizingForConfig,
@@ -306,7 +306,7 @@ assert.equal(
 );
 
 /*
- * LAYOUTING.md: a Layout's defaults follow what it is for. Every gap is the small step; the padding is
+ * LAYOUTING.md: a Layout's defaults follow what it is for. Every gap is the Theme's Layout gap; the padding is
  * none for a Layout that only arranges its children (a Split Card among them), the base step around a
  * field of tiles (Grid, Masonry), and the base step at the sides of a Three-column row. No
  * Layout brings a Surface by default -- a look is something an author, or a creation config, gives it.
@@ -334,11 +334,11 @@ for (const layoutKind of layoutKinds) {
     );
   }
   if (PHI_GAPPED_LAYOUT_KINDS.includes(layoutKind)) {
-    assert.equal(defaults.gap, PHI_SPACE.sm, `${layoutKind}.gap must be the small step by default.`);
+    assert.equal(defaults.gap, PHI_LAYOUT_GAP, `${layoutKind}.gap must be the Theme's Layout gap by default.`);
     assert.equal(
-      resolvePhiLayoutCreationPreset(layoutKind, "panel").gap,
-      PHI_SPACE.sm,
-      `${layoutKind}'s panel preset must space its children by the small step.`,
+      "gap" in resolvePhiLayoutCreationPreset(layoutKind, "panel"),
+      false,
+      `${layoutKind}'s panel preset must state no gap, so a new Layout follows the Theme's.`,
     );
   }
 
@@ -347,8 +347,9 @@ for (const layoutKind of layoutKinds) {
 }
 
 /*
- * The preset trees keep the same rhythm: a gap they state is the small step, or none where children
- * meet edge to edge on purpose. A wider gap written into one tree is the drift this check is for.
+ * The preset trees keep the same rhythm: they state no gap and take the Theme's (`PHI_LAYOUT_GAP`), or
+ * none where children meet edge to edge on purpose. A step written into one tree -- the small one
+ * included, which would stay `sm` whatever the Theme says -- is the drift this check is for.
  */
 {
   const { readFile } = await import("node:fs/promises");
@@ -358,12 +359,12 @@ for (const layoutKind of layoutKinds) {
     const source = await readFile(file, "utf8");
     for (const match of source.matchAll(/\n\s*gap:\s*([^,\n]+),?\n/gu)) {
       const value = match[1]!.trim();
-      if (value !== "PHI_SPACE.sm" && value !== "0") {
+      if (value !== "0") {
         offending.push(`${path.relative(root, file)}: gap ${value}`);
       }
     }
   }
-  assert.deepEqual(offending, [], `Preset trees space children by PHI_SPACE.sm or 0:\n${offending.join("\n")}`);
+  assert.deepEqual(offending, [], `Preset trees state no gap but 0; the Theme's Layout gap is the default:\n${offending.join("\n")}`);
 }
 
 /**

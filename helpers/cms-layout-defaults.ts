@@ -1,4 +1,4 @@
-import { PHI_SPACE } from "../theme/antd-css-var-contract";
+import { PHI_LAYOUT_GAP, PHI_SPACE } from "../theme/antd-css-var-contract";
 import type { PhiLayoutKind } from "../components/layouts/phi-layout-contract";
 import { PHI_RENDERABLE_BLOCK_DEFAULT_ANCHOR } from "./renderable-block-defaults";
 import { isPhiRecord } from "./is-record";
@@ -15,7 +15,10 @@ export type PhiLayoutCreationPreset = "panel" | "overlay-actions" | "page-base";
 /*
  * What a Layout states when its node states nothing.
  *
- * Every gap is the small step (`sm`): one rhythm between children, whatever arranges them. The padding
+ * Every gap is the Theme's Layout gap (`PHI_LAYOUT_GAP`, `sm` unless the Theme says otherwise): one rhythm
+ * between children, whatever arranges them, and one the Site changes in its Theme. A creation preset
+ * therefore states no gap -- what it wrote would be the day's number, not the Theme's -- and a node that
+ * states one keeps it; only an Overlay's action row is closer on purpose (`xs`). The padding
  * follows what the Layout is for. A Layout that only arranges its children -- Content, Flex, the
  * vertical Flex, Stack, Carousel, Collapsible, Split Card -- has none, so nesting one in another adds
  * nothing. A Layout that shows a field of tiles -- Grid, Masonry -- keeps them off its edge by the base
@@ -37,9 +40,9 @@ const PHI_CONTENT_LAYOUT_PANEL_PRESET = {
 
 const PHI_FLEX_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     distribution: "anchor",
-    // A fresh row starts left-aligned and vertically centred, its children one small step apart.
+    // A fresh row starts left-aligned and vertically centred, its children the Theme's gap apart.
     anchor: { horizontal: "left", vertical: "middle" },
-    gap: PHI_SPACE.sm,
+    gap: PHI_LAYOUT_GAP,
     verticalSeparators: false,
     separatorBeforeFirst: false,
     separatorSpan: "75%",
@@ -47,7 +50,6 @@ const PHI_FLEX_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
 };
 const PHI_FLEX_LAYOUT_PANEL_PRESET = {
     distribution: "anchor",
-    gap: PHI_SPACE.sm,
     verticalSeparators: false,
     separatorBeforeFirst: false,
     separatorSpan: "75%",
@@ -73,10 +75,9 @@ const PHI_FLEX_LAYOUT_OVERLAY_ACTIONS_PRESET = {
 } as const;
 
 const PHI_FLEX_VERTICAL_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
-    gap: PHI_SPACE.sm,
+    gap: PHI_LAYOUT_GAP,
 };
 const PHI_FLEX_VERTICAL_LAYOUT_PANEL_PRESET = {
-    gap: PHI_SPACE.sm,
     padding: PHI_SPACE.base,
 } as const;
 /**
@@ -85,7 +86,6 @@ const PHI_FLEX_VERTICAL_LAYOUT_PANEL_PRESET = {
  * touching this config -- the preset tree contract rejects a deviating copy.
  */
 const PHI_FLEX_VERTICAL_LAYOUT_PAGE_BASE_PRESET = {
-    gap: PHI_SPACE.sm,
     /*
      * None: the distance from the screen's edge is the content Region's, the Theme's Page padding in Public
      * and App (`buildPhiBasePageContentScaffold`). The scaffold only holds its slots together.
@@ -100,23 +100,21 @@ const PHI_FLEX_VERTICAL_LAYOUT_PAGE_BASE_PRESET = {
 } as const;
 
 const PHI_GRID_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
-    gap: PHI_SPACE.sm,
+    gap: PHI_LAYOUT_GAP,
     padding: PHI_SPACE.base,
     columns: { ...PHI_GRID_LAYOUT_DEFAULT_COLUMNS },
 };
 const PHI_GRID_LAYOUT_PANEL_PRESET = {
-    gap: PHI_SPACE.sm,
     padding: PHI_SPACE.base,
 } as const;
 
 const PHI_MASONRY_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     columns: { ...PHI_MASONRY_LAYOUT_DEFAULT_COLUMNS },
-    gap: PHI_SPACE.sm,
+    gap: PHI_LAYOUT_GAP,
     padding: PHI_SPACE.base,
 };
 const PHI_MASONRY_LAYOUT_PANEL_PRESET = {
     columns: { ...PHI_MASONRY_LAYOUT_DEFAULT_COLUMNS },
-    gap: PHI_SPACE.sm,
     padding: PHI_SPACE.base,
 } as const;
 
@@ -197,13 +195,13 @@ const PHI_COLLAPSIBLE_LAYOUT_PANEL_PRESET = {
 /** A split card centres what stands in its cards, on both axes, unless it says otherwise. */
 const PHI_SPLIT_CARD_LAYOUT_DEFAULT_ANCHOR = { horizontal: "center", vertical: "middle" } as const;
 /*
- * The two cards stand the small step apart. Their padding -- the distance from a card's edge to what
+ * The two cards stand the Theme's Layout gap apart. Their padding -- the distance from a card's edge to what
  * stands in it, as every Layout's padding is the distance from its own edge to its slots -- is none
  * until somebody states one.
  */
 export const PHI_SPLIT_CARD_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     anchor: PHI_SPLIT_CARD_LAYOUT_DEFAULT_ANCHOR,
-    gap: PHI_SPACE.sm,
+    gap: PHI_LAYOUT_GAP,
 };
 
 /*
@@ -212,7 +210,7 @@ export const PHI_SPLIT_CARD_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
  * Card whose author took the cards away would have them back on the next render.
  */
 export const PHI_SPLIT_CARD_LAYOUT_CREATION_CONFIG = {
-    ...PHI_SPLIT_CARD_LAYOUT_DEFAULTS,
+    anchor: PHI_SPLIT_CARD_LAYOUT_DEFAULT_ANCHOR,
     surface: PHI_SURFACE_CARD,
 } as const;
 
@@ -220,14 +218,13 @@ const PHI_SPLIT_CARD_LAYOUT_PANEL_PRESET = PHI_SPLIT_CARD_LAYOUT_CREATION_CONFIG
 
 const PHI_THREE_COLUMN_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     balancedSides: true,
-    gap: PHI_SPACE.sm,
+    gap: PHI_LAYOUT_GAP,
     wrap: false,
     paddingLeft: PHI_SPACE.base,
     paddingRight: PHI_SPACE.base,
 };
 const PHI_THREE_COLUMN_LAYOUT_PANEL_PRESET = {
     balancedSides: true,
-    gap: PHI_SPACE.sm,
     wrap: false,
     paddingTop: 0,
     paddingBottom: 0,

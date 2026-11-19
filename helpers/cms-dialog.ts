@@ -32,7 +32,6 @@ import { PHI_LAYOUT } from "../theme/phi-tokens";
 
 /** The body Layout's config: a vertical Flex with the `panel` creation preset under it. */
 export const PHI_DIALOG_BODY_CONFIG = {
-  gap: PHI_SPACE.sm,
   margin: 0,
   padding: PHI_SPACE.base,
   surface: PHI_SURFACE_WASH,

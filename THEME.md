@@ -514,6 +514,21 @@ with the Inspector's padding Control.
   spacing scale: the column reads it as a length, and a word it cannot resolve would leave the side at no
   padding with nothing to say why.
 
+## Layout gap
+
+The distance between a Layout's children, rows and columns alike, where the Layout states none, is the
+Theme's: one style token, `layoutGap`, a step of the spacing scale (`PHI_SPACE`, or `0`), published as
+`--phi-layout-gap` and read as `PHI_LAYOUT_GAP`. Where a Theme states nothing it is `PHI_LAYOUT.layoutGap`,
+`sm`. The Style tab edits it under "Layout Gap".
+
+- **The defaults read it, the presets leave it out.** The defaults of a Flex, a vertical Flex, a Grid, a
+  Masonry, a Three-column row and a Split Card are `PHI_LAYOUT_GAP` (`helpers/cms-layout-defaults.ts`).
+  The creation presets and the built-in preset trees state no gap, so a Site's Layouts follow its Theme; a
+  number or a step written into a node is the author's and stays. The Overlay action bar keeps its `xs`.
+- **"Theme" in the Inspector.** The gap select of a Layout whose default is the Theme's shows a gap the
+  node does not state as "Theme"; choosing it clears the node's own.
+- **Refused when it is no step**, by `assertPhiThemeVocabulary`, as a Page's inset is.
+
 ## Control shape
 
 `theme.shape.controls` is `{ topLeft, topRight, bottomRight, bottomLeft }`, each

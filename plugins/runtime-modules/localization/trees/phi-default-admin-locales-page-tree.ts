@@ -11,7 +11,6 @@ import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../ty
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "../../../../components/regions/presets/phi-base-page-layout";
 import { getPhiAdminLocalesPageLabels } from "./admin-locales-label-set";
 import { getPhiAdminLocalesWidgetLabels } from "../../../../components/widgets/label-sets/admin-locales";
-import { PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import { PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
 import { PHI_LOCALIZATION_FORM_IDS } from "../forms";
 import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
@@ -82,7 +81,6 @@ export async function buildPhiDefaultAdminLocalesPageTree({
         sortOrder: 0,
         label: labels.contentLabel,
         config: {
-          gap: PHI_SPACE.sm,
           // One slot a row at every width: the form and the list stand under one another.
           columns: { compact: 1, medium: 1, wide: 1 },
           padding: 0,

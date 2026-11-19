@@ -59,8 +59,7 @@ export function buildPhiBasePageColumnFrame({
            * Region's (`buildPhiBasePageContentScaffold`), not the column's.
            */
           padding: PHI_SPACE.base,
-          // The house step between a preset's children; the Widgets keep their own air inside.
-          gap: PHI_SPACE.sm,
+          // No gap of its own: its children stand the Theme's Layout gap apart (`PHI_LAYOUT_GAP`).
         },
       }),
     ],

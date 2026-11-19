@@ -105,7 +105,14 @@ import {
 } from "../../../../../theme/phi-theme-tokens";
 import type { PhiCmsPaddingWidgetConfig } from "../../../../../types/cms-config";
 import { PHI_COLOR_PICKER_NEUTRAL_PRESETS, PHI_COLOR_PICKER_PRESETS } from "../../../../../components/widgets/config/color-picker-presets";
-import { PHI_SPACING_TOKEN_KEYS } from "../../../../../components/widgets/config/spacing-options";
+import {
+  PHI_SPACING_SCALE_KEYS,
+  PHI_SPACING_TOKEN_KEYS,
+  resolvePhiSpacingScaleKey,
+  resolvePhiSpacingScaleValue,
+  type PhiSpacingScaleKey,
+} from "../../../../../components/widgets/config/spacing-options";
+import { PHI_SPACING_SCALE_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/spacing-scale";
 import { PhiColorFieldControl } from "../../../../../components/controls/phi-color-field-control";
 import { usePhiColorControlPresets } from "../../../../../components/controls/use-phi-color-control-presets";
 import { PhiBrandControl, resolvePhiBrandLogoUrl } from "../../../../../components/controls/phi-brand-control";
@@ -229,6 +236,7 @@ const BRAND_THEME_STYLE_SECTION_KEYS = [
   "wireframe",
   "pageWidth",
   "pagePadding",
+  "layoutGap",
 ] as const;
 
 /*
@@ -1955,6 +1963,10 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
     `padding${side}`,
     readEffectiveTokenString(styleTokenInput, `${pagePaddingScope}${side}${pagePaddingBand}`, pagePaddingDefault),
   ])) as PhiCmsPaddingWidgetConfig;
+  // The gap of a Layout that states none (`PHI_LAYOUT_GAP`), as a step of the spacing scale.
+  const layoutGap = resolvePhiSpacingScaleKey(
+    readEffectiveTokenString(styleTokenInput, "layoutGap", PHI_SPACE[PHI_LAYOUT.layoutGap]),
+  ) ?? PHI_LAYOUT.layoutGap;
   const baseFontSize = readEffectiveTokenNumber(styleTokenInput, "fontSize", 12);
 
   function updateToken(tokenPatch: Record<string, unknown>) {
@@ -2302,6 +2314,35 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                   />
                   <PhiTypographyControl type="secondary">
                     The default of a Page that does not set its own, in Public or in App and the staff Areas: a phone below 768px, a tablet below 1200px.
+                  </PhiTypographyControl>
+                </PhiFlexControl>
+              ),
+            },
+            {
+              /*
+               * The distance between a Layout's children, rows and columns alike, where the Layout states
+               * none (`PHI_LAYOUT_GAP`): a Flex, a vertical Flex, a Grid, a Masonry, a Three-column row, a
+               * Split Card. A Layout that states its own gap keeps it.
+               */
+              key: "layoutGap",
+              label: <PhiTypographyControl strong>Layout Gap</PhiTypographyControl>,
+              children: (
+                <PhiFlexControl vertical gap={clientToken.paddingXS}>
+                  <PhiFlexControl align="center" gap={clientToken.paddingSM} wrap="nowrap">
+                    <PhiTypographyControl style={{ flex: `0 0 ${fieldLabelWidth}px` }}>Gap</PhiTypographyControl>
+                    <PhiSelectControl<PhiSpacingScaleKey>
+                      ariaLabel="Layout gap"
+                      size="medium"
+                      value={layoutGap}
+                      options={PHI_SPACING_SCALE_KEYS.map((key) => ({ value: key, label: PHI_SPACING_SCALE_DEFAULT_LABELS[key] }))}
+                      style={{ minWidth: 0, flex: "1 1 auto" }}
+                      onChange={(key) => updateToken({
+                        layoutGap: key === PHI_LAYOUT.layoutGap ? undefined : resolvePhiSpacingScaleValue(key),
+                      })}
+                    />
+                  </PhiFlexControl>
+                  <PhiTypographyControl type="secondary">
+                    Between the rows and columns of a Layout that does not set its own gap.
                   </PhiTypographyControl>
                 </PhiFlexControl>
               ),

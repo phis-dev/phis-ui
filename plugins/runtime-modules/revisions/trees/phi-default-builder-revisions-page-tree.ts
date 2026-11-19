@@ -223,7 +223,6 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
             horizontal: "center",
             vertical: "top",
           },
-          gap: PHI_SPACE.sm,
           margin: 0,
           padding: PHI_SPACE.base,
         },

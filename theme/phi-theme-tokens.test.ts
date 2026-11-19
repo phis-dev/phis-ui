@@ -115,6 +115,15 @@ describe("what a stored Theme may say", () => {
       .toThrow(/pagePaddingTopDesktop as "13px", which is not a step of the spacing scale/u);
   });
 
+  it("a Layout without a gap of its own takes `sm`, and the Theme may state another step only", () => {
+    expect(buildPhiThemeStructuralTokens({}).layoutGap).toBe("var(--phi-padding-sm)");
+    for (const value of ["var(--phi-padding-md)", 0, null]) {
+      expect(() => assertPhiThemeVocabulary({ styleToken: { layoutGap: value }, modeSeedKeys, source: "test" })).not.toThrow();
+    }
+    expect(() => assertPhiThemeVocabulary({ styleToken: { layoutGap: "12px" }, modeSeedKeys, source: "test" }))
+      .toThrow(/layoutGap as "12px", which is not a step of the spacing scale/u);
+  });
+
   it("a Public Page stands in by `base` on every screen, the same on all four sides", () => {
     const tokens = buildPhiThemeStructuralTokens({});
     for (const side of ["Top", "Right", "Bottom", "Left"]) {

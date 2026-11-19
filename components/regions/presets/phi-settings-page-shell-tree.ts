@@ -4,7 +4,6 @@ import {
 } from "../../../constants/cms-layout-types";
 import { PhiCmsFlags, PhiCmsPageType } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
-import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import { PHI_LAYOUT } from "../../../theme/phi-tokens";
 import type { PhiCmsPageNode, PhiCmsContentWidgetNode, PhiCmsLayoutNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiRuntimeModuleId } from "../../../types/cms-module-descriptors";
@@ -263,7 +262,6 @@ export function buildPhiSettingsPageShellTree({
         slotIndex: panelIndex,
         label: panel.title,
         config: {
-          gap: PHI_SPACE.sm,
           padding: 0,
           /*
            * A panel reads from its left edge, as its title does. A vertical flex centres by default, and

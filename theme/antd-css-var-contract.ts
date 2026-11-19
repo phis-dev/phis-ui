@@ -111,6 +111,13 @@ export const PHI_PAGE = {
   },
 } as const;
 
+/**
+ * The gap of a Layout that states none: the Theme's `layoutGap` (theme/phi-tokens.ts, `PHI_LAYOUT.layoutGap`,
+ * `sm` unless the Theme says otherwise). A Layout's defaults read it, so a Layout without a gap of its own
+ * follows the Theme; a preset leaves the gap out rather than stating this.
+ */
+export const PHI_LAYOUT_GAP = "var(--phi-layout-gap)";
+
 export const PHI_RADIUS = {
   xxs: "var(--phi-border-radius-xs)",
   xs: "var(--phi-border-radius-sm)",

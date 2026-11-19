@@ -9,6 +9,7 @@ import {
   type PhiPaddingWidgetLabels,
 } from "../widgets/label-types/padding";
 import { usePhiConfig } from "../root/phi-config-provider";
+import { PHI_LAYOUT_GAP } from "../../theme/antd-css-var-contract";
 import { PhiLabeledControl } from "./phi-labeled-control";
 import type { PhiControlOption } from "./phi-control-options";
 import type { PhiWidgetControlMode } from "../../types/widget-ui";
@@ -35,13 +36,20 @@ function normalizePaddingScaleKey(value: number | string | null | undefined): Ph
   return resolvePhiSpacingScaleKey(value);
 }
 
+/*
+ * The gap select's word for "none stated": the Layout takes the Theme's Layout gap (`PHI_LAYOUT_GAP`).
+ * Choosing it clears the gap rather than writing the reference, so the node states nothing again.
+ */
+const THEME_GAP = "theme";
+type PhiGapChoice = PhiPaddingScaleKey | typeof THEME_GAP;
+
 function resolveNextPadding(
   currentValue: PhiCmsPaddingWidgetConfig | null,
   key: "padding" | "gap" | "paddingTop" | "paddingRight" | "paddingBottom" | "paddingLeft",
-  value: PhiPaddingScaleKey,
+  value: PhiGapChoice,
 ) {
   // A padding and a gap are steps of the same scale (theme/phi-tokens.ts).
-  const nextValue = resolvePhiSpacingScaleValue(value);
+  const nextValue = value === THEME_GAP ? undefined : resolvePhiSpacingScaleValue(value);
   const nextPadding: PhiCmsPaddingWidgetConfig = {
     ...(currentValue ?? {}),
     [key]: nextValue ?? undefined,
@@ -86,19 +94,20 @@ function renderPaddingGridCell(content: ReactNode, style?: CSSProperties) {
   );
 }
 
-function renderPaddingInput(
+function renderPaddingInput<TValue extends PhiGapChoice>(
   label: string,
   value: number | string | null | undefined,
   disabled: boolean,
-  options: readonly PhiControlOption<PhiPaddingScaleKey>[],
-  onChange: (nextValue: PhiPaddingScaleKey) => void,
+  options: readonly PhiControlOption<TValue>[],
+  onChange: (nextValue: TValue) => void,
+  unset: TValue = "none" as TValue,
 ) {
   return (
     <PhiLabeledControl description={label} fill>
-      <Select<PhiPaddingScaleKey>
+      <Select<TValue>
         aria-label={label}
         disabled={disabled}
-        value={normalizePaddingScaleKey(value) ?? "none"}
+        value={(normalizePaddingScaleKey(value) as TValue | null) ?? unset}
         onChange={onChange}
         options={[...options]}
         style={{ width: "100%", minWidth: 0 }}
@@ -135,6 +144,16 @@ export function PhiPaddingControl({
   const displayValue = displayState.source === currentValue ? displayState.value : currentValue;
   const resolvedDisplayValue = displayValue ?? currentValue;
   const resolvedGapValue = resolvedDisplayValue?.gap ?? null;
+  /*
+   * A Layout whose default gap is the Theme's -- the defaults handed in as `config` say so -- shows an
+   * unstated gap as "Theme" and offers it back; anything else keeps "none" for nothing stated.
+   */
+  const gapFollowsTheme = normalizePhiPaddingWidgetConfig(config ?? null)?.gap === PHI_LAYOUT_GAP;
+  const gapOptions = useMemo<readonly PhiControlOption<PhiGapChoice>[]>(
+    () => (gapFollowsTheme ? [{ value: THEME_GAP, label: labels.gapTheme }, ...scaleOptions] : scaleOptions),
+    [gapFollowsTheme, labels, scaleOptions],
+  );
+  const displayGapValue = gapFollowsTheme && resolvedGapValue === PHI_LAYOUT_GAP ? null : resolvedGapValue;
 
   const grid = (
     <div
@@ -172,16 +191,17 @@ export function PhiPaddingControl({
         },
       )}
       {showGap
-        ? renderPaddingInput(
+        ? renderPaddingInput<PhiGapChoice>(
             labels.fields.gap,
-            resolvedGapValue,
+            displayGapValue,
             isDisabled,
-            scaleOptions,
+            gapOptions,
             (next) => {
               const nextPadding = resolveNextPadding(resolvedDisplayValue, "gap", next);
               setDisplayState({ source: currentValue, value: nextPadding });
               emit(nextPadding);
             },
+            gapFollowsTheme ? THEME_GAP : "none",
           )
         : renderPaddingGridCell(null)}
       {renderPaddingInput(

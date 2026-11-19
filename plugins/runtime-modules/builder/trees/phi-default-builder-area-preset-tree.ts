@@ -612,7 +612,6 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
         sortOrder: 0,
         label: "dev header main right actions",
         config: {
-          gap: PHI_SPACE.sm,
           anchor: { horizontal: "right", vertical: "middle" },
           wrap: false,
           padding: 0,
@@ -1038,7 +1037,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   horizontal: "center",
                   vertical: "top",
                 },
-                gap: PHI_SPACE.sm,
                 margin: 0,
                 padding: PHI_SPACE.base,
               },
@@ -1061,7 +1059,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     horizontal: "left",
                     vertical: "top",
                   },
-                  gap: PHI_SPACE.sm,
                   wrap: true,
                   margin: 0,
                   padding: PHI_SPACE.base,
@@ -1087,7 +1084,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     horizontal: "center",
                     vertical: "top",
                   },
-                  gap: PHI_SPACE.sm,
                   margin: 0,
                   padding: PHI_SPACE.base,
                 },
@@ -1122,7 +1118,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               config: {
                 balancedSides: true,
                 contentAlign: "center",
-                gap: PHI_SPACE.sm,
                 padding: PHI_SPACE.xs,
                 paddingLeft: 0,
                 paddingRight: 0,
@@ -1218,7 +1213,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           sortOrder: 0,
           label: "Builder area settings fields",
           config: {
-            gap: PHI_SPACE.sm,
           },
         }),
         nodes.layout({

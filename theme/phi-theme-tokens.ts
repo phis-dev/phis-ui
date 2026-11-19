@@ -181,7 +181,8 @@ export const PHI_THEME_TOKEN_KEYS = [
  * needs one of these reads it as a CSS variable, the way a Server Component does.
  *
  * `pageMax` is how wide a Page may get (theme/phi-tokens.ts, `PHI_LAYOUT.pageMax`); a Page reads it
- * as `PHI_PAGE.max`.
+ * as `PHI_PAGE.max`. `layoutGap` is the gap of a Layout that states none (`PHI_LAYOUT.layoutGap`), read
+ * as `PHI_LAYOUT_GAP`.
  *
  * The `gradient*` names are the Theme's gradient slots and the primary Buttons' run
  * (theme/phi-theme-gradients.ts): tokens of this package's own, laid over the resolved ones so Ant
@@ -217,6 +218,7 @@ export const PHI_THEME_OWN_TOKEN_KEYS = [
   "signedInPagePaddingRightDesktop",
   "signedInPagePaddingBottomDesktop",
   "signedInPagePaddingLeftDesktop",
+  "layoutGap",
   "gradient1",
   "gradient1Text",
   "gradient2",
@@ -348,6 +350,7 @@ export function assertPhiThemeVocabulary({
 
   violations.push(...readPhiThemePageMaxViolations(styleToken, source));
   violations.push(...readPhiThemePagePaddingViolations(styleToken, source));
+  violations.push(...readPhiThemeLayoutGapViolations(styleToken, source));
 
   if (violations.length > 0) {
     throw new Error(violations.join(" "));
@@ -371,6 +374,13 @@ function readPhiThemePagePaddingViolations(styleToken: Record<string, unknown> |
     if (value == null || steps.has(value)) return [];
     return [`${source}: the style token states ${key} as ${JSON.stringify(value)}, which is not a step of the spacing scale.`];
   });
+}
+
+/** A Layout's gap is a step of the spacing scale, or none, for the same reason as a Page's inset. */
+function readPhiThemeLayoutGapViolations(styleToken: Record<string, unknown> | null | undefined, source: string) {
+  const value = styleToken?.layoutGap;
+  if (value == null || new Set<unknown>([...Object.values(PHI_SPACE), 0, "0"]).has(value)) return [];
+  return [`${source}: the style token states layoutGap as ${JSON.stringify(value)}, which is not a step of the spacing scale.`];
 }
 
 function readPhiThemePageMaxViolations(styleToken: Record<string, unknown> | null | undefined, source: string) {

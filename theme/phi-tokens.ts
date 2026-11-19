@@ -162,6 +162,13 @@ export const PHI_LAYOUT = {
    */
   signedInPagePadding: { phone: "sm", tablet: "base", desktop: "base" },
   /*
+   * The distance between a Layout's children, its rows and its columns alike, where the Layout states
+   * none: a Flex, a vertical Flex, a Grid, a Masonry, a Three-column row and a Split Card. A step of the
+   * spacing scale, `sm` by default; the Theme's to change for the whole Site, read as `PHI_LAYOUT_GAP`.
+   * A Layout that states its own gap keeps it.
+   */
+  layoutGap: "sm",
+  /*
    * How wide a column of prose is allowed to get: an article, an entry and what stands around it.
    *
    * Off the three steps above on purpose, because a text is measured in characters and not in Controls.

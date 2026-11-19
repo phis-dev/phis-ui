@@ -68,9 +68,13 @@ quietest filling, no line, no depth -- the Form Widget's `wash` step in Surface 
 them, and the Inspector's style switch writes the same values -- None (transparent), Card, Wash, and
 Custom, which opens the parts on the values the Surface has; nothing stores their names.
 
-A Layout's defaults follow what it is for (`helpers/cms-layout-defaults.ts`). Every gap is the small
-step (`sm`), in the defaults and in every preset; the one exception is the Overlay action bar
-(`overlay-actions`, `xs`), which is a row of buttons and not a composition. The padding is none for a
+A Layout's defaults follow what it is for (`helpers/cms-layout-defaults.ts`). Every gap is the Theme's
+Layout gap (`PHI_LAYOUT_GAP`, the Theme's `layoutGap`, `sm` unless the Theme says otherwise --
+[THEME.md](./THEME.md#layout-gap)), across and down, for a Flex, a vertical Flex, a Grid, a Masonry, a
+Three-column row and a Split Card. A creation preset and a preset tree state no gap, so they follow the
+Theme; a node that states one keeps it, and the Inspector shows a gap that is not stated as "Theme",
+which clears the node's own again. The one exception is the Overlay action bar (`overlay-actions`, `xs`),
+which is a row of buttons and not a composition. The padding is none for a
 Layout that only arranges its children -- Content, Flex, the vertical Flex, Stack, Carousel, Split Card
 and Collapsible (whose panel keeps its own `innerPadding`) -- so nesting one in another adds nothing; the
 base step around a field of tiles (Grid, Masonry); and the base step at the sides of a Three-column row,
@@ -97,7 +101,7 @@ In a Page preset that makes four things about the Split Card explicit:
 
 - The cards come only from a `surface` the node states. A preset that wants them gives
   `creationPreset: { layoutKind: "split", preset: "panel" }` (that is `PHI_SPLIT_CARD_LAYOUT_CREATION_CONFIG`:
-  `PHI_SURFACE_CARD`, the small-step gap and the centred anchor) or writes `surface` itself, for instance
+  `PHI_SURFACE_CARD` and the centred anchor; the gap is the Theme's) or writes `surface` itself, for instance
   `PHI_SURFACE_WASH`; with neither, the halves are not drawn as cards. Its `padding` is no creation value but
   a default of none, so the inset of each card is stated on the node.
 - `ratio` is the ratio the cards stand in: `golden` (φ, the larger card φ times as wide as the smaller),

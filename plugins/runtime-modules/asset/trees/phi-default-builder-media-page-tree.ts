@@ -312,7 +312,6 @@ export async function buildPhiDefaultBuilderMediaPageTree({
         label: "dev header bottom three column",
         config: {
           balancedSides: false,
-          gap: PHI_SPACE.sm,
           leftWidth: 130,
           rightWidth: 130,
         },
@@ -333,7 +332,6 @@ export async function buildPhiDefaultBuilderMediaPageTree({
             horizontal: "center",
             vertical: "top",
           },
-          gap: PHI_SPACE.sm,
           margin: 0,
         },
       }),

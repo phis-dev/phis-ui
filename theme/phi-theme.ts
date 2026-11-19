@@ -69,6 +69,8 @@ export type PhiThemeTokens = {
   signedInPagePaddingRightDesktop: string;
   signedInPagePaddingBottomDesktop: string;
   signedInPagePaddingLeftDesktop: string;
+  /** The gap of a Layout that states none (`PHI_LAYOUT.layoutGap`), published as `--phi-layout-gap`. */
+  layoutGap: string;
   marginXXS: number;
   marginXS: number;
   marginSM: number;
@@ -142,6 +144,8 @@ function buildPhiThemeTokens(options: PhiThemeTokenOptions = {}): PhiThemeTokens
     signedInPagePaddingRightDesktop: PHI_SPACE[PHI_LAYOUT.signedInPagePadding.desktop],
     signedInPagePaddingBottomDesktop: PHI_SPACE[PHI_LAYOUT.signedInPagePadding.desktop],
     signedInPagePaddingLeftDesktop: PHI_SPACE[PHI_LAYOUT.signedInPagePadding.desktop],
+    // The gap of a Layout that states none, a step of the spacing scale (`PHI_LAYOUT.layoutGap`).
+    layoutGap: PHI_SPACE[PHI_LAYOUT.layoutGap],
     // Ant Design's second family, on the same scale: its own components read it (phi-tokens.ts).
     marginXXS: PHI_PADDING_VALUES.xxs,
     marginXS: PHI_PADDING_VALUES.xs,

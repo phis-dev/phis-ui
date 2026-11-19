@@ -1,6 +1,6 @@
 import { PhiCmsRegionType } from "../constants/phi-cms";
 
-import { PHI_PAGE, PHI_SPACE } from "../theme/antd-css-var-contract";
+import { PHI_LAYOUT_GAP, PHI_PAGE, PHI_SPACE } from "../theme/antd-css-var-contract";
 import { resolvePhiPageInset } from "./page-inset";
 import type { PhiCmsLayoutNode, PhiResolvedCmsPageTree } from "../types/cms";
 import {
@@ -71,6 +71,8 @@ const PAGE_INSET_SIDES = [["paddingTop", "top"], ["paddingRight", "right"], ["pa
 function stepOf(value: unknown): string | null {
   if (value === 0 || value === "0") return "none";
   if (PAGE_INSET_REFERENCES.has(value)) return "page";
+  // The Theme's Layout gap, what a Layout without a gap of its own takes (`PHI_LAYOUT_GAP`).
+  if (value === PHI_LAYOUT_GAP) return "layout-gap";
   for (const [step, reference] of Object.entries(PHI_SPACE)) {
     if (value === reference) return step;
   }

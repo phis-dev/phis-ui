@@ -19,6 +19,7 @@ const PHI_PADDING_WIDGET_LABEL_SET = definePhiLabelSet({
     field_right: PHI_PADDING_WIDGET_DEFAULT_LABELS.fields.right,
     field_bottom: PHI_PADDING_WIDGET_DEFAULT_LABELS.fields.bottom,
     placeholder_value: PHI_PADDING_WIDGET_DEFAULT_LABELS.placeholders.value,
+    gap_theme: PHI_PADDING_WIDGET_DEFAULT_LABELS.gapTheme,
     scale_size_none: PHI_PADDING_WIDGET_DEFAULT_LABELS.scaleSizes.none,
     scale_size_xxs: PHI_PADDING_WIDGET_DEFAULT_LABELS.scaleSizes.xxs,
     scale_size_xs: PHI_PADDING_WIDGET_DEFAULT_LABELS.scaleSizes.xs,
@@ -48,6 +49,7 @@ export async function getPhiPaddingWidgetLabels(
     placeholders: {
       value: labels.placeholder_value,
     },
+    gapTheme: labels.gap_theme,
     scaleSizes: {
       none: labels.scale_size_none,
       xxs: labels.scale_size_xxs,
