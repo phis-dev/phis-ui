@@ -315,7 +315,7 @@ assert.match(formHandlerResolutionSource, /isPhiCmsAreaKey\(area\)/u);
 assert.match(formHandlerResolutionSource, /canPhiViewerAccess\(/u);
 assert.doesNotMatch(formHandlerResolutionSource, /headers\.get\("referer"\)/u);
 assert.doesNotMatch(formHandlerResolutionSource, /segments\[1\]/u);
-assert.match(formHandlerResolutionSource, /buildPhiLocalCmsAreaPayload/u);
+assert.match(formHandlerResolutionSource, /readPhiAreaSelectionRuntimeModuleIds/u);
 await assert.rejects(() => readFile(new URL("../components/builder/clients/inspector-host.tsx", import.meta.url), "utf8"));
 await assert.rejects(() => readFile(new URL("../components/builder/controller-host.tsx", import.meta.url), "utf8"));
 assert.doesNotMatch(inspectorSectionSource, /PhiInspectorCollapsibleSections|PhiCollapsibleLayout|usePhiSignalListener/u);

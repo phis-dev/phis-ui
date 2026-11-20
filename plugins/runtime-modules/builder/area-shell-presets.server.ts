@@ -6,16 +6,25 @@ import { cookies } from "next/headers";
 
 import { PHI_BUILDER_AREA_KEYS } from "../../../constants/cms-areas";
 import type {
+  PhiCmsAreaModulesSelection,
   PhiCmsTreeControllerSettings,
   PhiResolvedCmsAreaPresetTree,
   PhiResolvedCmsPageTree,
 } from "../../../types/cms";
+import type {
+  PhiCmsAreaShellPresetBinding,
+  PhiCmsPresetIdentity,
+  PhiCmsPresetSource,
+} from "../../../types/cms-module-descriptors";
 import type { PhiRuntimeModuleCatalog, PhiRuntimeModuleId } from "../../../types";
 import type { PhiBlockRuntime } from "../../../types/widget-runtime";
-import { getSiteAreaStructures } from "../../../gateway/site-area";
-import { readPhiRuntimeModuleIdsForArea } from "../../../plugins/runtime-modules/settings";
+import { getExactSiteArea, getSiteAreaStructures } from "../../../gateway/site-area";
 import {
-  readPhiAreaPresetRuntimeModuleIds,
+  listPhiAlwaysActiveRuntimeModuleIds,
+  readPhiRuntimeModuleIdsForArea,
+} from "../../../plugins/runtime-modules/settings";
+import {
+  readPhiAreaSelectionRuntimeModuleIds,
   readPhiAreaPublicRoutePaths,
   readPhiAreaRootRoute,
   readPhiAreaMeta,
@@ -27,10 +36,13 @@ import {
 } from "../../../helpers/cms-area-config";
 import type { PhiDeveloperBuilderArea, PhiDeveloperBuilderRegionDraft } from "./developer-workspace-types";
 import { PHI_BUILDER_SHELL_REGION_KEYS } from "./region-keys";
+import type { PhiWorkspaceAreaShellState } from "../../../components/workspace/catalog-state";
 import { buildPhiProjectedBuilderRegionDrafts } from "./draft-background-assets.server";
 import { resolvePhiBuilderAreaAsCmsArea } from "../../../constants/cms-areas";
 import {
   instantiatePhiCmsAreaShellPreset,
+  listPhiCmsAreaShellProviders,
+  resolvePhiCmsAreaBaseShellPresetBinding,
   resolvePhiCmsAreaShellPresetBinding,
   resolvePhiCmsDescriptorCatalog,
 } from "../../../plugins/runtime-modules/descriptor-compiler";
@@ -52,8 +64,15 @@ const loadInstalledAreaShellPresetTrees = cache(async function loadInstalledArea
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
 ): Promise<ReadonlyMap<PhiDeveloperBuilderArea, PhiResolvedCmsPageTree>> {
   const catalog = resolvePhiCmsDescriptorCatalog(runtimeModuleCatalog);
+  const states = await loadPhiBuilderAreaStoredStates(
+    runtime.site.key,
+    runtime.locale.current,
+    readPhiServerApiCredentials().apiBaseUrl,
+    readPhiServerApiCredentials().internalToken,
+    runtimeModuleCatalog,
+  );
   const installed = (await Promise.all(PHI_BUILDER_AREA_KEYS.map(async (area) => {
-    const binding = resolvePhiCmsAreaShellPresetBinding(catalog, resolvePhiBuilderAreaAsCmsArea(area));
+    const binding = states.get(area)?.shellBinding ?? null;
     if (!binding) {
       return null;
     }
@@ -81,23 +100,6 @@ async function instantiateAreaShellPresetTree(
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
 ): Promise<PhiResolvedCmsPageTree | null> {
   return (await loadInstalledAreaShellPresetTrees(runtime, runtimeModuleCatalog)).get(area) ?? null;
-}
-
-function resolveAreaPresetSource(
-  area: PhiDeveloperBuilderArea,
-  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
-) {
-  const binding = resolvePhiCmsAreaShellPresetBinding(
-    resolvePhiCmsDescriptorCatalog(runtimeModuleCatalog),
-    resolvePhiBuilderAreaAsCmsArea(area),
-  );
-  if (!binding) {
-    throw new Error(`Builder target Area "${area}" has no shell preset binding.`);
-  }
-  return {
-    ownerModuleId: binding.descriptor.ownerModuleId,
-    presetKey: binding.descriptor.presetKey,
-  };
 }
 
 function buildInstalledShellDraftsForArea(
@@ -151,15 +153,14 @@ type PhiBuilderAreaModulesConfig = {
   publicRoutePaths: PhiPublicRoutePathAssignment[];
 };
 
-function readRuntimeModulesConfigFromStructureTree(
-  tree: PhiResolvedCmsPageTree | PhiResolvedCmsAreaPresetTree | null | undefined,
+function readRuntimeModulesConfig(
+  selection: PhiCmsAreaModulesSelection | null,
   area: PhiDeveloperBuilderArea,
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
 ): PhiBuilderAreaModulesConfig {
-  const presetTree = tree && "preset" in tree ? tree : null;
   const reading = readPhiRuntimeModuleIdsForArea(
     area,
-    readPhiAreaPresetRuntimeModuleIds(presetTree, area),
+    readPhiAreaSelectionRuntimeModuleIds(selection, area),
     [...runtimeModuleCatalog.values()].map((entry) => entry.definition),
   );
   if (reading.unresolved.length > 0) {
@@ -171,49 +172,142 @@ function readRuntimeModulesConfigFromStructureTree(
   return {
     moduleIds: reading.moduleIds,
     unresolvedModuleIds: reading.unresolved.map((entry) => entry.moduleId),
-    publicRoutePaths: readPhiAreaPublicRoutePaths(presetTree?.preset.config),
+    publicRoutePaths: readPhiAreaPublicRoutePaths(selection?.config),
   };
 }
 
+function toPresetIdentityKey(source: PhiCmsPresetIdentity) {
+  return `${source.ownerModuleId}\u001f${source.presetKey}`;
+}
+
+/** The Areas' structures and selections, as the Builder reads them once per request. */
+type PhiBuilderAreaStoredState = {
+  /** The selection the Builder edits: the open Module draft, else what is published, else none. */
+  modules: PhiCmsAreaModulesSelection | null;
+  /** Whether that selection is an open Module draft rather than what is published. */
+  modulesDraftOpen: boolean;
+  /**
+   * The one structure the Area stores, whatever shell it stands on: its open draft, else what is
+   * published. Null when the Area stores none.
+   */
+  stored: {
+    sourcePreset: PhiCmsPresetSource;
+    draft: PhiResolvedCmsAreaPresetTree | null;
+    published: PhiResolvedCmsAreaPresetTree | null;
+  } | null;
+  /** The shell the Area takes under `modules`: the active provider's, else the base Module's. */
+  shellBinding: PhiCmsAreaShellPresetBinding | null;
+  /** The stored structure where it stands on `shellBinding`; both halves null otherwise. */
+  draft: PhiResolvedCmsAreaPresetTree | null;
+  published: PhiResolvedCmsAreaPresetTree | null;
+};
+
+/** As many identities as Core answers in one structures read. */
+const PHI_BUILDER_AREA_STRUCTURES_READ_LIMIT = 16;
+
 /**
- * What the Site stores about every Area's Shell: per Area the open structure draft, else what is
- * published, else nothing. One request for all of them, once per request.
+ * The Area's effective shell under a selection, as the Builder sees it.
+ *
+ * The selection the Builder holds -- the open Module draft first -- with the Modules every Area runs
+ * anyway, so a Module that brings its own shell applies here as soon as it is selected, before the
+ * selection is published.
+ */
+function resolveBuilderAreaShellBinding(
+  area: PhiDeveloperBuilderArea,
+  selection: PhiCmsAreaModulesSelection | null,
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
+) {
+  const catalog = resolvePhiCmsDescriptorCatalog(runtimeModuleCatalog);
+  const cmsArea = resolvePhiBuilderAreaAsCmsArea(area);
+  const definitions = [...runtimeModuleCatalog.values()].map((entry) => entry.definition);
+  const activeModuleIds = new Set([
+    ...readRuntimeModulesConfig(selection, area, runtimeModuleCatalog).moduleIds,
+    ...listPhiAlwaysActiveRuntimeModuleIds(cmsArea, definitions),
+  ]);
+  return resolvePhiCmsAreaShellPresetBinding(catalog, cmsArea, activeModuleIds);
+}
+
+/**
+ * What the Site stores about every Area: per Area its Module selection and its one structure. One
+ * request for all of them, once per request.
  *
  * The Builder needs every Area on every view -- the Modules page edits their selections together, and
  * the Area switch carries the next Area's selection -- and read them with a draft read and, where no
  * draft was open, a published read per Area: eleven of a Builder view's seventeen Core calls
  * (AUDIT-2026-10-13, PM3). Keyed by the values the request turns on and never by an object, and read
- * whole, so the Shell drafts, the Area config and the Module selection all come from one revision. The
+ * whole, so the Shell drafts, the Area config and the Module selection all come from one answer. The
  * cookie header is read inside, where it is one value per request anyway.
+ *
+ * A structure answers only under the identity it is stored under, and an Area of `shellProviders:
+ * "module"` may stand on the base shell or on any Module's: so each Area is asked under every shell it
+ * could take, in the same request, and whichever answers is the one it stores. That is also how the
+ * Builder learns a structure stands on a shell the Area no longer takes.
  */
-const loadPhiBuilderAreaStructures = cache(async function loadPhiBuilderAreaStructures(
+const loadPhiBuilderAreaStoredStates = cache(async function loadPhiBuilderAreaStoredStates(
   siteKey: string,
   locale: string,
   apiBaseUrl: string,
   internalToken: string,
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
-): Promise<ReadonlyMap<PhiDeveloperBuilderArea, {
-  draft: PhiResolvedCmsAreaPresetTree | null;
-  published: PhiResolvedCmsAreaPresetTree | null;
-}>> {
-  const areas = PHI_BUILDER_AREA_KEYS.map((area) => ({ area, ...resolveAreaPresetSource(area, runtimeModuleCatalog) }));
+): Promise<ReadonlyMap<PhiDeveloperBuilderArea, PhiBuilderAreaStoredState>> {
+  const catalog = resolvePhiCmsDescriptorCatalog(runtimeModuleCatalog);
+  const requests = PHI_BUILDER_AREA_KEYS.flatMap((area) => {
+    const cmsArea = resolvePhiBuilderAreaAsCmsArea(area);
+    const base = resolvePhiCmsAreaBaseShellPresetBinding(catalog, cmsArea);
+    if (!base) {
+      throw new Error(`Builder target Area "${area}" has no shell preset binding.`);
+    }
+    return [base, ...listPhiCmsAreaShellProviders(catalog, cmsArea)].map(({ descriptor }) => ({
+      area,
+      ownerModuleId: descriptor.ownerModuleId,
+      presetKey: descriptor.presetKey,
+    }));
+  });
   const cookieHeader = (await cookies()).toString();
+  const chunks: (typeof requests)[] = [];
+  for (let index = 0; index < requests.length; index += PHI_BUILDER_AREA_STRUCTURES_READ_LIMIT) {
+    chunks.push(requests.slice(index, index + PHI_BUILDER_AREA_STRUCTURES_READ_LIMIT));
+  }
   // A failed read is not "never asked": answering with the preset default would let the Builder show and
   // save it over what the Area actually stores.
-  const structures = await getSiteAreaStructures({
+  const answers = (await Promise.all(chunks.map((areas) => getSiteAreaStructures({
     apiBaseUrl,
     internalToken,
     siteKey,
     locale,
     cookieHeader,
-    areas: areas.map(({ area, ownerModuleId, presetKey }) => ({ area, ownerModuleId, presetKey })),
-  }).catch((error) => {
-    throw new Error("Failed to resolve the builder structure of the Areas.", { cause: error });
-  });
-  return new Map(structures.map((structure, index) => [areas[index]!.area, {
-    draft: structure.draft?.preset ?? null,
-    published: structure.draft ? null : structure.published?.preset ?? null,
-  }]));
+    areas,
+  })))).flat();
+  const states = new Map<PhiDeveloperBuilderArea, PhiBuilderAreaStoredState>();
+  for (const area of PHI_BUILDER_AREA_KEYS) {
+    const entries = answers.filter((answer) => answer.area === area);
+    if (entries.length === 0) {
+      throw new Error(`The builder structure read did not answer for area "${area}".`);
+    }
+    const { modules } = entries[0]!;
+    const selection = modules.draft ?? modules.published;
+    const answered = entries.find((entry) => entry.draft != null || entry.published != null) ?? null;
+    const storedPayload = answered?.draft ?? answered?.published ?? null;
+    const stored = answered && storedPayload
+      ? {
+          sourcePreset: storedPayload.sourcePreset,
+          draft: answered.draft?.preset ?? null,
+          published: answered.draft ? null : answered.published?.preset ?? null,
+        }
+      : null;
+    const shellBinding = resolveBuilderAreaShellBinding(area, selection, runtimeModuleCatalog);
+    const standsOnShell = stored != null && shellBinding != null &&
+      toPresetIdentityKey(stored.sourcePreset) === toPresetIdentityKey(shellBinding.descriptor);
+    states.set(area, {
+      modules: selection,
+      modulesDraftOpen: modules.draft != null,
+      stored,
+      shellBinding,
+      draft: standsOnShell ? stored!.draft : null,
+      published: standsOnShell ? stored!.published : null,
+    });
+  }
+  return states;
 });
 
 /**
@@ -231,8 +325,8 @@ export async function readPhiBuilderAreasWithOpenDraft(
     internalToken: string;
   },
 ): Promise<PhiDeveloperBuilderArea[]> {
-  const structures = await loadPhiBuilderAreaStructures(siteKey, locale, apiBaseUrl, internalToken, runtimeModuleCatalog);
-  return PHI_BUILDER_AREA_KEYS.filter((area) => structures.get(area)?.draft != null);
+  const states = await loadPhiBuilderAreaStoredStates(siteKey, locale, apiBaseUrl, internalToken, runtimeModuleCatalog);
+  return PHI_BUILDER_AREA_KEYS.filter((area) => states.get(area)?.stored?.draft != null);
 }
 
 async function loadPhiBuilderAreaStructure(
@@ -242,14 +336,14 @@ async function loadPhiBuilderAreaStructure(
   internalToken: string,
   area: PhiDeveloperBuilderArea,
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
-): Promise<{ draft: PhiResolvedCmsAreaPresetTree | null; published: PhiResolvedCmsAreaPresetTree | null }> {
-  const structure = (
-    await loadPhiBuilderAreaStructures(siteKey, locale, apiBaseUrl, internalToken, runtimeModuleCatalog)
+): Promise<PhiBuilderAreaStoredState> {
+  const state = (
+    await loadPhiBuilderAreaStoredStates(siteKey, locale, apiBaseUrl, internalToken, runtimeModuleCatalog)
   ).get(area);
-  if (!structure) {
+  if (!state) {
     throw new Error(`The builder structure read did not answer for area "${area}".`);
   }
-  return structure;
+  return state;
 }
 
 const buildShellDraftsForArea = cache(async function buildShellDraftsForArea(
@@ -404,13 +498,12 @@ export const buildPhiBuilderStructureShellDraftsForArea = cache(async function b
 });
 
 /**
- * What an Area's Modules namespace says, as the Builder sees it: the draft first, then what is
- * published, then the preset the code ships. Both answers come from one load because they are one
- * config -- reading the assigned Public addresses separately would fetch the Area a second time and,
- * worse, could read a different revision than the Module selection it belongs to.
+ * What an Area's Module selection says, as the Builder sees it: the open Module draft, then what is
+ * published, then the default list the Area ships with. Both answers come from one load because they are
+ * one config -- reading the assigned Public addresses separately could read a different revision than
+ * the Module selection it belongs to.
  */
 const buildRuntimeModulesConfigForArea = cache(async function buildRuntimeModulesConfigForArea(
-  runtime: PhiBlockRuntime,
   siteKey: string,
   locale: string,
   apiBaseUrl: string,
@@ -418,7 +511,7 @@ const buildRuntimeModulesConfigForArea = cache(async function buildRuntimeModule
   area: PhiDeveloperBuilderArea,
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
 ): Promise<PhiBuilderAreaModulesConfig> {
-  const { draft, published } = await loadPhiBuilderAreaStructure(
+  const { modules } = await loadPhiBuilderAreaStructure(
     siteKey,
     locale,
     apiBaseUrl,
@@ -426,16 +519,7 @@ const buildRuntimeModulesConfigForArea = cache(async function buildRuntimeModule
     area,
     runtimeModuleCatalog,
   );
-  const stored = draft ?? published;
-  if (stored) {
-    return readRuntimeModulesConfigFromStructureTree(stored, area, runtimeModuleCatalog);
-  }
-
-  return readRuntimeModulesConfigFromStructureTree(
-    await instantiateAreaShellPresetTree(runtime, area, runtimeModuleCatalog),
-    area,
-    runtimeModuleCatalog,
-  );
+  return readRuntimeModulesConfig(modules, area, runtimeModuleCatalog);
 });
 
 export function buildPhiBuilderRuntimeModulesConfigForArea(
@@ -444,7 +528,6 @@ export function buildPhiBuilderRuntimeModulesConfigForArea(
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
 ) {
   return buildRuntimeModulesConfigForArea(
-    runtime,
     runtime.site.key,
     runtime.locale.current,
     readPhiServerApiCredentials().apiBaseUrl,
@@ -457,9 +540,10 @@ export function buildPhiBuilderRuntimeModulesConfigForArea(
 /**
  * The Modules the published Area answers with, as opposed to the draft the Builder edits.
  *
- * Without a published revision the shell preset's default list decides, which is what a visitor is
- * served in that case too. Read for the collision dialog, which has to say whether an address it asks to
- * move already stands on the live Site.
+ * Without a published selection the Area's default list decides, which is what a visitor is served in
+ * that case too. Read for the collision dialog, which has to say whether an address it asks to move
+ * already stands on the live Site. The structures read answers the published selection only where no
+ * Module draft is open; with one open, the live read says what is published.
  */
 export const buildPhiBuilderPublishedRuntimeModuleIdsForArea = cache(async function buildPhiBuilderPublishedRuntimeModuleIdsForArea(
   runtime: PhiBlockRuntime,
@@ -467,7 +551,7 @@ export const buildPhiBuilderPublishedRuntimeModuleIdsForArea = cache(async funct
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
 ): Promise<PhiRuntimeModuleId[]> {
   const { apiBaseUrl, internalToken } = readPhiServerApiCredentials();
-  const { published } = await loadPhiBuilderAreaStructure(
+  const state = await loadPhiBuilderAreaStructure(
     runtime.site.key,
     runtime.locale.current,
     apiBaseUrl,
@@ -475,8 +559,16 @@ export const buildPhiBuilderPublishedRuntimeModuleIdsForArea = cache(async funct
     area,
     runtimeModuleCatalog,
   );
-  const tree = published ?? await instantiateAreaShellPresetTree(runtime, area, runtimeModuleCatalog);
-  return readRuntimeModulesConfigFromStructureTree(tree, area, runtimeModuleCatalog).moduleIds;
+  const published = state.modulesDraftOpen
+    ? (await getExactSiteArea({
+        apiBaseUrl,
+        internalToken,
+        siteKey: runtime.site.key,
+        path: resolveStructureAreaPath(area),
+        locale: runtime.locale.current,
+      }))?.modules ?? null
+    : state.modules;
+  return readRuntimeModulesConfig(published, area, runtimeModuleCatalog).moduleIds;
 });
 
 export async function buildPhiBuilderRuntimeModuleIdsForArea(
@@ -576,8 +668,8 @@ export async function buildPhiBuilderAreaMetaByArea(
 
 /**
  * What every Area's Shell tells its Controllers, from the same chain the drafts come from: the open
- * structure draft, else what is published, else the code-owned Shell. Carried into every structure save
- * and every Module save baseline, which state the tree whole.
+ * structure draft, else what is published, else the code-owned Shell. Carried into every structure save,
+ * which states the tree whole.
  */
 export async function buildPhiBuilderAreaControllerSettingsByArea(
   runtime: PhiBlockRuntime,
@@ -617,4 +709,64 @@ export async function buildPhiBuilderStructureShellPresetDraftsByArea(
   );
 
   return Object.fromEntries(entries) as Record<PhiDeveloperBuilderArea, Record<string, PhiDeveloperBuilderRegionDraft>>;
+}
+
+/**
+ * The shell every Area takes, as the identity a structure save, a draft read and a Revisions scope name:
+ * the shell of the one Module that brings one and is selected there, else the base Module's.
+ */
+export async function buildPhiBuilderAreaPresetSourcesByArea(
+  runtime: PhiBlockRuntime,
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
+): Promise<Partial<Record<PhiDeveloperBuilderArea, PhiCmsPresetSource>>> {
+  const states = await loadPhiBuilderAreaStoredStates(
+    runtime.site.key,
+    runtime.locale.current,
+    readPhiServerApiCredentials().apiBaseUrl,
+    readPhiServerApiCredentials().internalToken,
+    runtimeModuleCatalog,
+  );
+  const sources: Partial<Record<PhiDeveloperBuilderArea, PhiCmsPresetSource>> = {};
+  for (const area of PHI_BUILDER_AREA_KEYS) {
+    const descriptor = states.get(area)?.shellBinding?.descriptor;
+    if (descriptor) {
+      sources[area] = {
+        ownerModuleId: descriptor.ownerModuleId,
+        presetKey: descriptor.presetKey,
+        sourcePresetVersion: descriptor.shellPresetVersion,
+      };
+    }
+  }
+  return sources;
+}
+
+/**
+ * Per Area, which Modules bring a shell for it and which shell its stored structure stands on.
+ *
+ * The first is what the Modules table refuses a second provider by; the second is what it warns about
+ * when a provider is switched on over a stored structure of another shell, and what "Clear Area" and a
+ * refused structure save name.
+ */
+export async function buildPhiBuilderAreaShellsByArea(
+  runtime: PhiBlockRuntime,
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
+): Promise<Partial<Record<PhiDeveloperBuilderArea, PhiWorkspaceAreaShellState>>> {
+  const catalog = resolvePhiCmsDescriptorCatalog(runtimeModuleCatalog);
+  const states = await loadPhiBuilderAreaStoredStates(
+    runtime.site.key,
+    runtime.locale.current,
+    readPhiServerApiCredentials().apiBaseUrl,
+    readPhiServerApiCredentials().internalToken,
+    runtimeModuleCatalog,
+  );
+  const shells: Partial<Record<PhiDeveloperBuilderArea, PhiWorkspaceAreaShellState>> = {};
+  for (const area of PHI_BUILDER_AREA_KEYS) {
+    const stored = states.get(area)?.stored?.sourcePreset ?? null;
+    shells[area] = {
+      providerModuleIds: listPhiCmsAreaShellProviders(catalog, resolvePhiBuilderAreaAsCmsArea(area))
+        .map((binding) => binding.moduleId),
+      storedSource: stored ? { ownerModuleId: stored.ownerModuleId, presetKey: stored.presetKey } : null,
+    };
+  }
+  return shells;
 }

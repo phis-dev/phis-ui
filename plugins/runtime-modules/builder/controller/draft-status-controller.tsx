@@ -85,6 +85,18 @@ function resolveTarget(
     if (!state.catalogHydrated) {
       return null;
     }
+    /*
+     * The Module selection has its own Draft, stored apart from the structure and naming no shell, so it
+     * reports its own status: asking the structure endpoint here would show the shell's Draft on a page
+     * that cannot save one. The structure's Draft is asked under the shell the Area takes.
+     */
+    if (workspace === "modules") {
+      return {
+        url: `/api/site/cms/area/modules/draft?${new URLSearchParams({ area }).toString()}`,
+        subject: area === "public" ? "/" : `${area}/`,
+        historyContext: createPhiBuilderHistoryContext({ workspace }),
+      };
+    }
     const sourcePreset = state.areaPresetSourcesByArea[area] ?? null;
     if (!sourcePreset) {
       throw new Error(`Builder target Area "${area}" has no source preset identity.`);
@@ -94,14 +106,8 @@ function resolveTarget(
       ownerModuleId: sourcePreset.ownerModuleId,
       presetKey: sourcePreset.presetKey,
     }).toString();
-    /*
-     * The Module selection has its own Draft on the same Area revision, so it reports its own status:
-     * asking the structure endpoint here would show the shell's Draft on a page that cannot save one.
-     */
     return {
-      url: workspace === "modules"
-        ? `/api/site/cms/area/modules/draft?${query}`
-        : `/api/site/cms/area/draft?${query}`,
+      url: `/api/site/cms/area/draft?${query}`,
       subject: area === "public" ? "/" : `${area}/`,
       historyContext: createPhiBuilderHistoryContext({ workspace, area }),
     };

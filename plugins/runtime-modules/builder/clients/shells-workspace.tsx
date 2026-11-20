@@ -91,6 +91,17 @@ export function PhiDeveloperBuilderShellsWorkspaceWidgetClient({
     (drafts: Record<string, PhiDeveloperBuilderRegionDraft>) => drafts[siderLeftDraftKey] ?? null,
     [siderLeftDraftKey],
   ));
+  /*
+   * Whose shell this is: the base Module's, or the one an active Module brings in its place. Named under
+   * the top Region, because editing it stores a structure for exactly that shell.
+   */
+  const shellOwnerModuleId = usePhiDeveloperBuilderStateValue((state) => state.areaPresetSourcesByArea[area]?.ownerModuleId ?? null);
+  const shellOwnerTitle = usePhiDeveloperBuilderStateValue((state) => shellOwnerModuleId
+    ? state.runtimeModuleDefinitions.find((definition) => definition.moduleId === shellOwnerModuleId)?.title ?? shellOwnerModuleId
+    : null);
+  const shellOwnerSubtitle = shellOwnerTitle
+    ? regionLabels.structure.surface.shellOwner.replace("%1", shellOwnerTitle)
+    : null;
   const siderLeftFullHeight = hasPhiConfigFlag(
     (siderLeftDraft ?? structureShellDrafts?.[siderLeftDraftKey])?.regionConfig,
     PhiCmsFlags.FullHeight,
@@ -131,7 +142,7 @@ export function PhiDeveloperBuilderShellsWorkspaceWidgetClient({
       <div style={{ minWidth: 0, width: "100%", minHeight: 0, flex: "1 1 auto" }}>
         <PhiStructureRegionLayout
         labels={regionLabels}
-        headerTop={renderStructureRegion("header_top", regionLabels.regions.headerTop.title)}
+        headerTop={renderStructureRegion("header_top", regionLabels.regions.headerTop.title, shellOwnerSubtitle)}
         headerMain={renderStructureRegion("header_main", regionLabels.regions.headerMain.title)}
         siderLeft={renderStructureRegion(
           "sider_left",

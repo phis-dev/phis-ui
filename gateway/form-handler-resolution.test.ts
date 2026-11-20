@@ -35,12 +35,14 @@ vi.mock("../plugins/runtime-modules/descriptor-compiler", () => ({
         area: "public",
         baseModuleId: "@phis/ui/modules/public",
         shellPresetKey: "public",
+        shellProviders: "module",
         accessPolicy: PHI_VIEWER_ACCESS_ANYONE,
       }],
       ["app", {
         area: "app",
         baseModuleId: "@phis/ui/modules/app",
         shellPresetKey: "app",
+        shellProviders: "module",
         accessPolicy: PHI_VIEWER_ACCESS_AUTHENTICATED,
       }],
     ]),
@@ -56,7 +58,7 @@ vi.mock("../server-helpers/site-locale", () => ({
 vi.mock("./site-area", () => ({
   getExactSiteArea: async (options: { area: string; locale: string }) => {
     scope.areaReads.push({ area: options.area, locale: options.locale });
-    return { preset: { preset: { config: {} } } };
+    return { areaMask: 1, modules: null, structure: null };
   },
 }));
 vi.mock("../server-helpers/runtime", () => ({
@@ -64,15 +66,10 @@ vi.mock("../server-helpers/runtime", () => ({
     scope.contextLoads += 1;
     return { viewer: scope.viewer, serverCapabilities: {}, site: { id: "site" } };
   },
-  buildPhiBlockRuntime: () => ({}),
 }));
-vi.mock("../server-helpers/request-runtime", () => ({
-  runWithPhiRequestRuntime: async (_runtime: unknown, run: () => unknown) => run(),
-}));
-vi.mock("../server-helpers/cms-area", () => ({ buildPhiLocalCmsAreaPayload: async () => null }));
 vi.mock("./server-capabilities", () => ({ getPhiCapabilitySnapshot: async () => ({}) }));
 vi.mock("../plugins/runtime-modules/settings", () => ({ resolvePhiRuntimeModuleIdsForArea: () => [] }));
-vi.mock("../helpers/cms-area-config", () => ({ readPhiAreaPresetRuntimeModuleIds: () => [] }));
+vi.mock("../helpers/cms-area-config", () => ({ readPhiAreaSelectionRuntimeModuleIds: () => [] }));
 vi.mock("../plugins/runtime-modules/resolver", () => ({
   resolvePhiRuntimeModuleSet: async () => ({
     activeModuleIds: new Set([PROVIDER.ownerModuleId]),

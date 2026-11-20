@@ -197,6 +197,7 @@ describe("navigation anchors", () => {
     area: "app",
     baseModuleId: BASE_ID,
     shellPresetKey: "base-shell",
+    shellProviders: "module",
     accessPolicy: { access: "anyone" },
     navigationSurfaces: [{
       navKey: "app:sidebar",

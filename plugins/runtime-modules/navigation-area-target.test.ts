@@ -47,6 +47,7 @@ function adminDefinition(
     area: "admin",
     baseModuleId: ADMIN_ID,
     shellPresetKey: "admin-shell",
+    shellProviders: "base",
     accessPolicy: { access: "anyone" },
     navigationSurfaces: [{
       navKey: "admin:sidebar",
@@ -64,6 +65,7 @@ const builderDefinition: PhiCmsAreaDefinition = {
   area: "builder",
   baseModuleId: BUILDER_ID,
   shellPresetKey: "builder-shell",
+  shellProviders: "base",
   accessPolicy: BUILDER_POLICY,
   navigationSurfaces: [],
 };

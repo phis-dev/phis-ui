@@ -46,7 +46,7 @@ const resolvePhiCmsPageRenderBase = cache(async (
   const runtimeModuleScope = await resolvePhiCmsAreaRuntimeModuleScope({
     cmsBridge,
     area: resolvedRequest.runtime.area,
-    areaPreset: resolvedRequest.areaPreset,
+    areaModules: resolvedRequest.areaModules,
     serverCapabilities: resolvedRequest.serverCapabilities,
   });
   /*

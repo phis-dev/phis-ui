@@ -3,7 +3,7 @@ import type { PhiBuilderAreaKey } from "../constants/cms-areas";
 import { createPhiDefaultAreaRuntimeModuleIds } from "../plugins/runtime-modules/area-module-defaults";
 import { readPhiRuntimeModuleIds } from "../plugins/runtime-modules/settings";
 import type { PhiRuntimeModuleId } from "../types";
-import type { PhiResolvedCmsAreaPresetTree } from "../types/cms";
+import type { PhiCmsAreaModulesSelection } from "../types/cms";
 import type { PhiCmsInstanceId } from "../types/cms-instance-id";
 import {
   createPhiPresetCmsPageId,
@@ -16,9 +16,9 @@ import {
  * The two halves of an Area preset config, expressed as a path rather than as a list of field names.
  *
  * An Area is edited from two workspaces that own different things: its structure on `/builder/shells`,
- * its Module selection on `/builder/modules`. Which one may write a given value used to be a convention
- * kept by the client and a comment in the server's publish merge; naming the halves makes it a path,
- * and the write routes reject a payload that carries the other one.
+ * its Module selection on `/builder/modules`. The two are stored apart: `config.shell` in the structure
+ * revisions, `config.modules` in the Modules revisions, and each write route rejects a payload that
+ * carries the other one.
  *
  * A Shell Background is not in here, and that is not an oversight: it belongs to a Region and travels
  * in the structure tree. What lives under `shell` is what the Shell states about itself rather than
@@ -43,38 +43,23 @@ function readPhiAreaConfigNamespace(
 }
 
 /**
- * The Module selection an Area preset carries.
+ * The Modules an Area's selection activates.
  *
- * `runtimeModuleIds` is the resolved field the payload already carries when it has one; the stored
- * config is what a Site that persisted its Area falls back to. Both readings sit here so the namespace
- * appears once rather than at every call site that needs the selection.
+ * The selection is stored apart from the structure (`PhiCmsAreaModulesSelection`, one Modules revision
+ * whose config is `{ modules }`), because the shell an Area takes depends on it and so it has to be read
+ * before the shell is known. A structure tree never carries it.
+ *
+ * Absent and empty are different answers and are read as different answers: no selection stored is an
+ * Area that was never asked, and it gets the default list (`createPhiDefaultAreaRuntimeModuleIds`); `[]`
+ * is a Builder who switched everything off, and it gets nothing.
  */
-function readPhiAreaPresetRuntimeModules(
-  tree: Pick<PhiResolvedCmsAreaPresetTree, "runtimeModuleIds" | "preset"> | null | undefined,
-) {
-  return tree?.runtimeModuleIds
-    ?? readPhiAreaConfigNamespace(tree?.preset.config, PHI_AREA_CONFIG_MODULES_NAMESPACE)?.runtimeModules;
-}
-
-/**
- * The Modules an Area preset actually activates.
- *
- * Absent and empty are different answers and are read as different answers: nothing stated is an Area
- * that was never asked, and it gets the selection its preset ships with; `[]` is a Builder who
- * switched everything off, and it gets nothing.
- *
- * The distinction is load-bearing rather than pedantic. A stored Area preset need not carry the
- * Modules namespace at all -- the structure draft owns `config.shell` and writes only that -- so
- * reading an absent selection as an empty one would let the first structure save of an Area whose
- * Modules were never published turn every optional Module off, silently, and take the Pages they carry
- * with them.
- */
-export function readPhiAreaPresetRuntimeModuleIds(
-  tree: Pick<PhiResolvedCmsAreaPresetTree, "runtimeModuleIds" | "preset"> | null | undefined,
+export function readPhiAreaSelectionRuntimeModuleIds(
+  selection: Pick<PhiCmsAreaModulesSelection, "config"> | null | undefined,
   area: PhiBuilderAreaKey,
 ): PhiRuntimeModuleId[] {
-  return readPhiRuntimeModuleIds(readPhiAreaPresetRuntimeModules(tree))
-    ?? createPhiDefaultAreaRuntimeModuleIds(area);
+  return readPhiRuntimeModuleIds(
+    readPhiAreaConfigNamespace(selection?.config, PHI_AREA_CONFIG_MODULES_NAMESPACE)?.runtimeModules,
+  ) ?? createPhiDefaultAreaRuntimeModuleIds(area);
 }
 
 export const PHI_AREA_ROOT_ROUTE_KEY = "rootRoute" as const;

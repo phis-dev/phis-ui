@@ -261,6 +261,54 @@ function signInLabel(params: Record<string, unknown> | undefined) {
     "Run phis auth restore-preset --site <site key> to bring it back.";
 }
 
+/** What the Modules table says when a Module that brings its own shell is switched on over a stored one. */
+export const PHI_BUILDER_SHELL_PROVIDER_NOTICE =
+  "This Module brings its own Header and Footer. The saved structure stays and comes back when the Module is switched off.";
+
+/**
+ * The Module that already brings the shell of one of these Areas, if switching this one on there would
+ * make it the second. One provider per Area (MODULES.md): the newcomer is refused with the holder named,
+ * the way a Site Page on its package path refuses it (`package-path-taken`).
+ */
+export function findPhiBuilderShellProviderHolder(
+  state: Pick<PhiDeveloperBuilderWorkspaceState, "runtimeModuleIdsByArea" | "runtimeModuleDefinitions" | "areaShellsByArea">,
+  moduleId: PhiRuntimeModuleId,
+  cmsAreas: readonly PhiCmsAreaKey[],
+): { areaKey: PhiCmsAreaKey; holderModuleId: PhiRuntimeModuleId } | null {
+  for (const areaKey of cmsAreas) {
+    if (!isPhiBuilderAreaKey(areaKey)) continue;
+    const providers = state.areaShellsByArea?.[areaKey]?.providerModuleIds ?? [];
+    if (!providers.includes(moduleId)) continue;
+    const holderModuleId = providers.find((candidate) => {
+      if (candidate === moduleId) return false;
+      const definition = state.runtimeModuleDefinitions.find((entry) => entry.moduleId === candidate);
+      return definition != null && isModuleActiveInArea(state, definition, areaKey);
+    });
+    if (holderModuleId) return { areaKey, holderModuleId };
+  }
+  return null;
+}
+
+/**
+ * Whether switching this Module on in these Areas puts its shell over a structure the Area stores for
+ * another shell. Nothing is lost -- the structure is kept and applies again once the Module is off --
+ * but what the Area looks like changes at once, so it is said.
+ */
+export function coversPhiBuilderStoredShellStructure(
+  state: Pick<PhiDeveloperBuilderWorkspaceState, "areaShellsByArea">,
+  moduleId: PhiRuntimeModuleId,
+  cmsAreas: readonly PhiCmsAreaKey[],
+) {
+  return cmsAreas.some((areaKey) => {
+    if (!isPhiBuilderAreaKey(areaKey)) return false;
+    const shells = state.areaShellsByArea?.[areaKey];
+    return shells != null &&
+      shells.providerModuleIds.includes(moduleId) &&
+      shells.storedSource != null &&
+      shells.storedSource.ownerModuleId !== moduleId;
+  });
+}
+
 /**
  * Whether switching this Module off in these Areas leaves Public with no Auth UI provider.
  *
@@ -595,6 +643,25 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
         }
         return null;
       };
+      const refuseShellProviderTaken = (cmsAreas: readonly PhiCmsAreaKey[]) => {
+        if (!proposedActive) return null;
+        const held = findPhiBuilderShellProviderHolder(builderState, definition.moduleId, cmsAreas);
+        if (!held) return null;
+        const holderTitle = builderState.runtimeModuleDefinitions
+          .find((entry) => entry.moduleId === held.holderModuleId)?.title ?? held.holderModuleId;
+        return {
+          status: "rejected" as const,
+          invalidation: "none" as const,
+          errorCode: "shell-provider-taken",
+          message: `"${definition.title}" brings its own Header and Footer for Area ${areaLabelFor(held.areaKey, request.params)}, `
+            + `where "${holderTitle}" already brings them. Switch "${holderTitle}" off there first.`,
+        };
+      };
+      // Said once the switch is accepted: the Area's look changes, and the structure it stored is kept.
+      const shellProviderNotice = (cmsAreas: readonly PhiCmsAreaKey[]) =>
+        proposedActive && coversPhiBuilderStoredShellStructure(builderState, definition.moduleId, cmsAreas)
+          ? { message: PHI_BUILDER_SHELL_PROVIDER_NOTICE }
+          : {};
       const refusePackagePathTaken = (held: { areaKey: string; prefix: string; path: string }) => ({
         status: "rejected" as const,
         invalidation: "none" as const,
@@ -689,6 +756,8 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
             message: `"${definition.title}" is Area "${baseAreaKey}"'s Base module and always runs there.`,
           };
         }
+        const shellProviderTaken = refuseShellProviderTaken(definition.eligibleAreas);
+        if (shellProviderTaken) return shellProviderTaken;
         const heldPackagePath = await findSitePageOnPackagePath(definition.eligibleAreas);
         if (heldPackagePath) return refusePackagePathTaken(heldPackagePath);
         if (askAboutPublicAddresses(definition.eligibleAreas)) {
@@ -711,7 +780,12 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
             message: error instanceof Error ? error.message : "Invalid Module selection.",
           };
         }
-        return { status: "accepted", invalidation: "view", rowPatch: { active: proposedActive } };
+        return {
+          status: "accepted",
+          invalidation: "view",
+          rowPatch: { active: proposedActive },
+          ...shellProviderNotice(definition.eligibleAreas),
+        };
       }
 
       // An area_* checkbox: one Area's own choice.
@@ -735,6 +809,8 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
           message: `"${definition.title}" is not eligible for Area "${areaKey}".`,
         };
       }
+      const areaShellProviderTaken = refuseShellProviderTaken([areaKey]);
+      if (areaShellProviderTaken) return areaShellProviderTaken;
       const heldAreaPackagePath = await findSitePageOnPackagePath([areaKey]);
       if (heldAreaPackagePath) return refusePackagePathTaken(heldAreaPackagePath);
       if (askAboutPublicAddresses([areaKey])) {
@@ -757,7 +833,12 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
           message: error instanceof Error ? error.message : "Invalid Module selection.",
         };
       }
-      return { status: "accepted", invalidation: "view", rowPatch: { [request.fieldKey]: proposedActive } };
+      return {
+        status: "accepted",
+        invalidation: "view",
+        rowPatch: { [request.fieldKey]: proposedActive },
+        ...shellProviderNotice([areaKey]),
+      };
     };
 
     return {

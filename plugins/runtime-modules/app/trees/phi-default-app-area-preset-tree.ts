@@ -4,7 +4,6 @@ import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import { buildPhiAreaShellSiderLeftNodes } from "../../../../components/regions/presets/phi-area-shell-preset-nodes";
 import type { PhiResolvedCmsPageTree, PhiCmsPageNode } from "../../../../types/cms";
 import type { PhiBlockRuntime } from "../../../../types";
-import { createPhiDefaultAreaRuntimeModuleIds } from "../../area-module-defaults";
 
 const SYNTHETIC_APP_REGION_IDS = {
   regionSiderLeft: -160,
@@ -45,7 +44,6 @@ export async function buildPhiDefaultAppAreaPresetTree({
   const nodes = createPhiCmsPresetNodes(page);
   return {
     page,
-    runtimeModuleIds: createPhiDefaultAreaRuntimeModuleIds("app"),
     overlays: [],
     ...buildPhiAreaShellSiderLeftNodes({
       nodes,

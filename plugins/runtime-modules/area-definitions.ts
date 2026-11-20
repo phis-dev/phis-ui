@@ -187,6 +187,7 @@ export const PHI_PUBLIC_RUNTIME_AREA_DEFINITIONS = [
     area: "public",
     baseModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
     shellPresetKey: PHI_DEFAULT_PUB_AREA_PRESET_KEY,
+    shellProviders: "module",
     accessPolicy: PHI_VIEWER_ACCESS_ANYONE,
     navigationSurfaces: publicNavigationSurfaces,
   },
@@ -200,6 +201,7 @@ export const PHI_APP_RUNTIME_AREA_DEFINITIONS = [
     area: "app",
     baseModuleId: PHI_APP_RUNTIME_MODULE_ID,
     shellPresetKey: "app-area-preset",
+    shellProviders: "module",
     accessPolicy: PHI_VIEWER_ACCESS_AUTHENTICATED,
     navigationSurfaces: [
       {
@@ -273,6 +275,7 @@ export const PHI_ACCOUNTING_RUNTIME_AREA_DEFINITIONS = [
     area: "accounting",
     baseModuleId: PHI_ACCOUNTING_RUNTIME_MODULE_ID,
     shellPresetKey: "accounting-area-preset",
+    shellProviders: "base",
     accessPolicy: PHI_VIEWER_ACCESS_ACCOUNTING,
     navigationSurfaces: [{
       navKey: "accounting:sidebar",
@@ -302,6 +305,7 @@ export const PHI_ADMIN_RUNTIME_AREA_DEFINITIONS = [
     area: "admin",
     baseModuleId: PHI_ADMIN_RUNTIME_MODULE_ID,
     shellPresetKey: "admin-area-preset",
+    shellProviders: "base",
     accessPolicy: PHI_VIEWER_ACCESS_DEVELOPER_TOOLS,
     navigationSurfaces: [
       {
@@ -349,6 +353,7 @@ export const PHI_EDITOR_RUNTIME_AREA_DEFINITIONS = [
     area: "editor",
     baseModuleId: PHI_EDITOR_RUNTIME_MODULE_ID,
     shellPresetKey: "editor-area-preset",
+    shellProviders: "base",
     accessPolicy: PHI_VIEWER_ACCESS_CONTENT_EDITING,
     /*
      * The surface, and nothing in it: every Page in this Area is contributed by the Module that owns its
@@ -370,6 +375,7 @@ const PHI_BUILDER_RUNTIME_AREA_DEFINITIONS = [
     area: "builder",
     baseModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
     shellPresetKey: "builder-area-preset",
+    shellProviders: "base",
     accessPolicy: PHI_VIEWER_ACCESS_STRUCTURE_AUTHORING,
     navigationSurfaces: [{
       navKey: "builder:sidebar",

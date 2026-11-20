@@ -1,4 +1,4 @@
-import type { PhiRuntimeControllerSetting, PhiRuntimeModuleId } from "./cms-plugins";
+import type { PhiRuntimeControllerSetting } from "./cms-plugins";
 import type { PhiCmsAreaKey } from "@phis/contracts/cms";
 import type { PhiCmsInstanceId } from "./cms-instance-id";
 import type { PhiCmsPresetSource } from "./cms-module-descriptors";
@@ -143,7 +143,6 @@ export type PhiCmsContentWidgetNode = PhiCmsNodeBase & {
 export type PhiResolvedCmsPageTree = {
   page: PhiCmsPageNode;
   pageMeta?: PhiCmsResolvedPageMeta | null;
-  runtimeModuleIds?: PhiRuntimeModuleId[] | null;
   regions: PhiCmsRegionNode[];
   overlays: PhiCmsOverlayNode[];
   layoutNodes: PhiCmsLayoutNode[];
@@ -199,7 +198,6 @@ export type PhiCmsAreaPresetNode = {
 
 export type PhiResolvedCmsAreaPresetTree = {
   preset: PhiCmsAreaPresetNode;
-  runtimeModuleIds?: PhiRuntimeModuleId[] | null;
   regions: PhiCmsRegionNode[];
   overlays: PhiCmsOverlayNode[];
   layoutNodes: PhiCmsLayoutNode[];
@@ -211,6 +209,16 @@ export type PhiResolvedCmsAreaPresetPayload = {
   areaMask: number;
   sourcePreset: PhiCmsPresetSource;
   preset: PhiResolvedCmsAreaPresetTree;
+};
+
+/**
+ * An Area's Module selection as Core stores it, apart from the structure: one Modules revision, whose
+ * `config` is `{ modules: { runtimeModules, publicRoutePaths, ... } }`. It names no shell identity --
+ * which shell the Area takes is decided from it (CMS.md, "The Area's Module selection").
+ */
+export type PhiCmsAreaModulesSelection = {
+  revisionId: number;
+  config: Record<string, unknown>;
 };
 
 export type PhiCmsLayoutRenderNode = PhiCmsLayoutNode & {

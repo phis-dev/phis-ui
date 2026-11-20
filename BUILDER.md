@@ -184,8 +184,9 @@ This distinction is not just UI. It is the persistence and hydration boundary fo
 
 Load rules:
 
-- if a persisted area shell exists in the DB for the selected area, the workspace must load that DB shell as-is
-- if no persisted area shell exists in the DB for the selected area, the workspace must load the full `phis-ui` fallback preset for that area
+- the workspace edits the Area's effective shell: the shell of the one selected Module that brings one (Public and App), else the base Module's ([MODULES.md](./MODULES.md#a-modules-own-area-shell)); it names that shell's owner Module under the top Region. The selection read is the open Module draft, else what is published, so a provider applies here as soon as it is selected
+- if a persisted area shell exists in the DB for the selected area and stands on the effective shell, the workspace must load that DB shell as-is
+- if no persisted area shell exists for the effective shell -- none at all, or one saved for another shell -- the workspace must load the full fallback preset of the effective shell
 - `/builder/phis/ui/shells` must not build a mixed region-by-region merge of DB and preset content
 - page-owned regions are out of scope for this workspace and must not be loaded here
 
@@ -201,8 +202,24 @@ Save rules:
 - saving `/builder/phis/ui/shells` persists the full current shell snapshot for the selected area
 - this persisted snapshot may still contain widgets or layout structures that originally came from the fallback preset
 - after the first successful save, the DB snapshot becomes the only source of truth for that area shell
-- the fallback preset is ignored after that, until the Site's override is deleted: Revisions offers it for an Area ("Clear Area", which takes the Module selection back to the default list too) and for a Module's Page ("Reset to preset"). Deleting the override changes what is live at once and is the Publisher's act; the preset answers again with the same `PhiCmsInstanceId` values, and content written for its nodes stays bound to them (phis-server `CONTENT.md`, Reset)
+- an Area stores one structure: a save under the effective shell while a structure of another shell is stored is refused by Core (409), and the Builder offers to clear the stored one first ("Clear and save"); the Module selection stays
+- the fallback preset is ignored after that, until the Site's override is deleted: Revisions offers it for an Area ("Clear Area", which removes the structure and keeps the Module selection: the selection is stored apart, in Modules revisions of its own) and for a Module's Page ("Reset to preset"). Deleting the override changes what is live at once and is the Publisher's act; the preset answers again with the same `PhiCmsInstanceId` values, and content written for its nodes stays bound to them (phis-server `CONTENT.md`, Reset)
 - the toolbar's reset command never resets: it discards the open Working Draft of the shell, a Page or a Navigation and shows what is published again. A Module selection has no reset; putting a preset into a draft and publishing it would freeze a copy no later Module update reaches
+
+### Module selection
+
+The Modules workspace edits each Area's Module selection, which is stored apart from the structure: a
+Modules revision of the Area (`POST /api/site/cms/area/modules` with `{ area, draft?, config: { modules
+} }`, published by `POST /api/site/cms/area/modules/publish` with `{ area, revisionId? }`). It names no
+shell identity and never writes or freezes a structure, so an Area that only had its Modules saved keeps
+running on its code-owned shell and the next shell preset still reaches it. In Revisions, an Area's
+history lists both kinds; a Modules revision has no `sourcePreset`, is restored into the Module draft, and
+never carries "Preset update available".
+
+The Modules table refuses to switch on a second Module that brings an Area's shell, naming the Module
+that holds it (`shell-provider-taken`). Switching on one over a structure the Area stores for another
+shell is accepted and said: "This Module brings its own Header and Footer. The saved structure stays and
+comes back when the Module is switched off."
 - the first structural insertion into an in-memory preset creates the owning Area Draft before allocating the new node from that Draft revision's shared `nextNodeSequence`
 
 ### `/builder/phis/ui/navigation` workspace contract

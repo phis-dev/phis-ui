@@ -68,6 +68,7 @@ const areaDefinition: PhiCmsAreaDefinition = {
   area: "public",
   baseModuleId: BASE_MODULE_ID,
   shellPresetKey: "base-shell",
+  shellProviders: "module",
   accessPolicy: { access: "anyone" },
   navigationSurfaces: [{
     navKey: "public:header",

@@ -8,7 +8,7 @@ import { getPhiExactSiteArea } from "./cms";
 import { getPhiCapabilitySnapshot } from "../gateway/server-capabilities";
 import { resolvePhiRequestLocale } from "./request-locale";
 import {
-  resolvePhiCmsAreaShellPresetBinding,
+  resolvePhiCmsAreaBaseShellPresetBinding,
   resolvePhiCmsDescriptorCatalog,
   resolvePhiCmsRoutePresetByPageId,
 } from "../plugins/runtime-modules/descriptor-compiler";
@@ -64,8 +64,7 @@ export const resolvePhiPublicLoginHref = cache(async function resolvePhiPublicLo
   serverCapabilities?: PhiCapabilitySnapshot | null,
 ): Promise<string | null> {
   const catalog = resolvePhiCmsDescriptorCatalog(cmsBridge.runtimeModuleCatalog);
-  const shellBinding = resolvePhiCmsAreaShellPresetBinding(catalog, "public");
-  if (!shellBinding) {
+  if (!resolvePhiCmsAreaBaseShellPresetBinding(catalog, "public")) {
     /**
      * This bridge does not carry the Public Area definition -- a staff Area catalog deliberately does
      * not, which is what keeps its module graph small. The route cannot be verified from here, and
@@ -77,22 +76,18 @@ export const resolvePhiPublicLoginHref = cache(async function resolvePhiPublicLo
   }
 
   const cookieStore = await cookies();
-  const areaPreset = await getPhiExactSiteArea({
+  const storedArea = await getPhiExactSiteArea({
     path: "/",
     ...readPhiBridgeApiOptions(cmsBridge),
     locale,
     cookieHeader: cookieStore.toString(),
-    sourcePreset: {
-      ownerModuleId: shellBinding.descriptor.ownerModuleId,
-      presetKey: shellBinding.descriptor.presetKey,
-    },
   });
 
-    const { routeTable } = resolvePhiAreaRouteScope({
+  const { routeTable } = resolvePhiAreaRouteScope({
     runtimeModuleCatalog: cmsBridge.runtimeModuleCatalog,
     catalog,
     area: "public",
-    preset: areaPreset?.preset ?? null,
+    read: storedArea,
     serverCapabilities: serverCapabilities ?? null,
   });
 

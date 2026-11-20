@@ -2219,6 +2219,32 @@ is the Site's, which is what no marker means.
   Widget in a dialog, no `page-title` Widget, and no Widget of the Module's own that draws tables, button
   rows or dialogs ([Before you start](#before-you-start-a-staff-page-is-composed-not-drawn)).
 
+## 6c. A Public or App shell a Site package brings
+
+A Site package may bring the frame its Pages stand in: the Header, Siders and Footer of Public or App,
+with their Regions, Layouts and Widgets ([MODULES.md](./MODULES.md#a-modules-own-area-shell)).
+
+- Declare one `areaShells` descriptor per Area on the catalog entry, beside `routes`: a
+  `PhiCmsAreaShellPresetDescriptor` with the Module's own `ownerModuleId`, a `presetKey` of its own (for
+  example `"public-shell"`), `shellPresetVersion: 1`, the `area`, and `loadTree`. `loadTree` returns the
+  whole tree the way a Builder save writes it -- Regions (`header_top`, `header_main`, `sider_left`,
+  `footer_main`, `footer_bottom`), Layouts, Widgets, Overlays, controller settings -- built with
+  `createPhiCmsPresetNodes` as a Page tree is, ids minted like the package's other preset ids. To keep part
+  of phis-ui's shell, name it in `composition` and omit what the package replaces (`omitRegionTypes`,
+  `omitNodeKeys` within the base's `exportedNodeKeys`).
+- Only Public and App take a Module's shell. A descriptor for `admin`, `editor`, `accounting` or
+  `builder` is refused when the catalog is compiled.
+- It applies when the Module is switched on in that Area, never by being installed: the delivered Site
+  keeps phis-ui's shell, activating the package lays its shell over it, switching it off gives phis-ui's
+  back. `areaOverlays` of active Modules are laid over it as over the base shell.
+- One provider per Area. The Builder refuses to switch on a second package that brings the same Area's
+  shell, naming the one that holds it.
+- A Site may still edit the shell in the Builder; that stores a structure for the package's shell. A
+  structure the Site stored for phis-ui's shell before is kept and comes back when the package is off;
+  the Builder asks to clear it before a structure for the package's shell can be saved.
+- A new `shellPresetVersion` reaches every Site that stores no structure for the package's shell at once;
+  one that does sees "Preset update available" in Revisions.
+
 ## 7. Export the Server contributions
 
 A package hands its Modules over under fixed names, one per boundary. The root entrypoint exports the

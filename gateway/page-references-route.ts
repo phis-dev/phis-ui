@@ -7,7 +7,7 @@ import { isPhiBuilderAreaKey, isPhiCmsAreaKey } from "../constants/cms-areas";
 import { canPhiViewerAccess, PHI_VIEWER_ACCESS_CONTENT_EDITING, PHI_VIEWER_ACCESS_STRUCTURE_AUTHORING } from "../types/access";
 import { resolvePhiBuilderActivePageCatalog } from "../helpers/cms-page-catalog";
 import {
-  resolvePhiCmsAreaShellPresetBinding,
+  resolvePhiCmsAreaBaseShellPresetBinding,
   resolvePhiCmsDescriptorCatalog,
 } from "../plugins/runtime-modules/descriptor-compiler";
 import { buildPhiAreaActivePresetPages } from "../helpers/cms-preset-page-tree";
@@ -66,8 +66,7 @@ export function buildPhiPageReferencesRouteHandler({
 
     try {
       const catalog = resolvePhiCmsDescriptorCatalog(bridge.runtimeModuleCatalog);
-      const shellBinding = resolvePhiCmsAreaShellPresetBinding(catalog, area);
-      const areaPreset = shellBinding
+      const storedArea = resolvePhiCmsAreaBaseShellPresetBinding(catalog, area)
         ? await getPhiExactSiteArea({
             path: area === "public" ? "/" : `/${area}`,
             apiBaseUrl: runtime.apiBaseUrl,
@@ -75,17 +74,13 @@ export function buildPhiPageReferencesRouteHandler({
             siteKey: runtime.siteKey,
             locale,
             cookieHeader,
-            sourcePreset: {
-              ownerModuleId: shellBinding.descriptor.ownerModuleId,
-              presetKey: shellBinding.descriptor.presetKey,
-            },
           })
         : null;
-            const { routeTable } = resolvePhiAreaRouteScope({
+      const { routeTable } = resolvePhiAreaRouteScope({
         runtimeModuleCatalog: bridge.runtimeModuleCatalog,
         catalog,
         area,
-        preset: areaPreset?.preset ?? null,
+        read: storedArea,
         serverCapabilities: requestContext.serverCapabilities,
       });
       const persistedPages = await getSiteCmsPageCatalog({

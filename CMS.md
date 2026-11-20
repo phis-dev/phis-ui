@@ -10,8 +10,9 @@ route files are [NEXT_INTEGRATION.md](./NEXT_INTEGRATION.md), and preset descrip
 
 The Areas are exactly `public`, `app`, `admin`, `builder`, `editor`, and `accounting`
 (`PHI_CMS_AREA_KEYS`, `constants/cms-areas.ts`). Each is defined in
-`plugins/runtime-modules/area-definitions.ts` with one locked base Module, one shell preset, its
-navigation surfaces, and an access policy ([ACCESS.md](./ACCESS.md#3-core-access-matrices)):
+`plugins/runtime-modules/area-definitions.ts` with one locked base Module, one shell preset, who may
+bring its shell (`shellProviders`), its navigation surfaces, and an access policy
+([ACCESS.md](./ACCESS.md#3-core-access-matrices)):
 
 | Area | Addressed as | Access policy |
 | --- | --- | --- |
@@ -36,8 +37,10 @@ navigation surfaces, and an access policy ([ACCESS.md](./ACCESS.md#3-core-access
 
 ## The CMS tree
 
-- An Area draws its shell preset: Area-owned Regions (`header_top`, `header_main`, `sider_left`,
-  `footer_main`, `footer_bottom`) plus Area Overlays.
+- An Area draws its shell: Area-owned Regions (`header_top`, `header_main`, `sider_left`, `footer_main`,
+  `footer_bottom`) plus Area Overlays. The shell is the base Module's, or -- in Public and App, whose
+  definitions say `shellProviders: "module"` -- the shell an active Module brings in its place; one
+  provider per Area ([MODULES.md](./MODULES.md#a-modules-own-area-shell)).
 - A Page supplies payload for the page-owned Regions `header_bottom`, `hero`, `sider_right`, `footer_top`,
   `drawer_right`, and `content` (`PhiCmsPageNode`). A `null` root for one of them is a valid empty state.
   Placement belongs to the stable shell slots, not to the Page.
@@ -58,6 +61,36 @@ navigation surfaces, and an access policy ([ACCESS.md](./ACCESS.md#3-core-access
 - Renderers receive only request-resolved active registries. A node whose type is unavailable renders the
   node-local diagnostic ([MODULES.md](./MODULES.md#render-modes-and-diagnostics)).
 
+
+## The Area's Module selection
+
+An Area stores two things apart, each with its own drafts and publishes (phis-server `DB.md`):
+
+- **The Module selection**: a Modules revision whose tree is `{ area, preset: { config: { modules } } }`
+  -- `runtimeModules`, `publicRoutePaths` and what the Builder derives from them. It names no shell
+  identity. `PhiCmsAreaModulesSelection` (`types/cms.ts`) is what phis-ui reads of it, and
+  `readPhiAreaSelectionRuntimeModuleIds` reads its Modules: no selection stored is the Area's default list
+  (`createPhiDefaultAreaRuntimeModuleIds`), `[]` is everything off.
+- **The structure**: Regions, Layouts, Widgets, Overlays and `config.shell`, under the `sourcePreset`
+  identity of the shell it was saved from. A structure tree never carries `config.modules`; Core refuses
+  it there, as the Modules write refuses `config.shell`.
+
+The selection decides which shell the Area takes, so it is read first:
+
+1. A page view makes one live Area read without an identity (`GET /api/v1/site/area?path=...`, gateway
+   `getExactSiteArea`). Core answers the selection (`modules`) and the one stored structure under
+   whatever identity it stands on (`preset`, with that identity as `sourcePreset`), each or neither.
+2. `resolvePhiAreaRouteScope` (`server-helpers/cms-request.ts`) derives the active Modules from the
+   selection (`resolveActivePresetModuleKeys`), the effective shell from them
+   (`resolvePhiCmsAreaShellPresetBinding`), and keeps the stored structure only when its identity is the
+   effective shell's. Without one, the effective shell's preset answers (`buildPhiLocalCmsAreaPayload`).
+3. A revision or review read of the Area (`revision`, `reviewKind=area`) answers a structure only under
+   the identity it names. `readPhiCmsAreaForRequest` reads the live Area first, asks the reviewed revision
+   under the shell the live selection chooses, and takes, under the shell the reviewed selection chooses,
+   the reviewed structure or else the live one. Only previews pay this second read.
+
+Clearing an Area's structure ("Clear Area" in Revisions, `DELETE /api/site/cms/area/override`) removes the
+structure only; the selection stays. A selection has no reset: it is changed and published.
 ## Renderable blocks
 
 Layouts, Widgets, and Regions share `PhiRenderableBlockBase` (`types/renderable-block.ts`):

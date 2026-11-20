@@ -23,6 +23,7 @@ function createDefaultWorkspaceCatalogState(scopeKey: string): PhiWorkspaceCatal
     persistedPageCatalogByArea: {},
     navigationSurfacesByArea: {},
     areaPresetSourcesByArea: {},
+    areaShellsByArea: {},
     runtimeModuleDefinitions: [],
     runtimeModuleIdsByArea: {},
     unresolvedModuleIdsByArea: {},

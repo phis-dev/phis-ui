@@ -28,6 +28,7 @@ import type {
   PhiCmsAreaOverlayPresetDescriptor,
   PhiCmsAreaShellPresetBinding,
   PhiCmsAreaShellPresetDescriptor,
+  PhiCmsAreaShellProviderBinding,
   PhiCmsCompiledDescriptorCatalog,
   PhiCmsCompiledRoutePattern,
   PhiCmsNavigationAnchor,
@@ -330,6 +331,13 @@ function assertAreaDefinitions(
       );
     }
     normalizeRequiredKey(definition.shellPresetKey, `${definition.area} shell preset key`);
+    if (definition.shellProviders !== "base" && definition.shellProviders !== "module") {
+      throw new Error(`Area "${definition.area}" must say who brings its shell ("base" or "module").`);
+    }
+    // The Builder repairs a broken shell; a shell a Module brought could lock the Site out of it.
+    if (definition.area === "builder" && definition.shellProviders !== "base") {
+      throw new Error('Area "builder" takes its shell from its base Module only.');
+    }
     const navKeys = new Set<string>();
     for (const surface of definition.navigationSurfaces ?? []) {
       if (surface.navKey !== surface.navKey.trim().toLowerCase()) {
@@ -392,7 +400,8 @@ export function compilePhiCmsDescriptorCatalog({
   areaDefinitions: readonly PhiCmsAreaDefinition[];
 }): PhiCmsCompiledDescriptorCatalog {
   const definitionsByArea = assertAreaDefinitions(areaDefinitions, catalog);
-  const areaShellByArea = new Map<PhiCmsAreaKey, PhiCmsAreaShellPresetBinding>();
+  const areaBaseShellByArea = new Map<PhiCmsAreaKey, PhiCmsAreaShellPresetBinding>();
+  const areaShellProvidersByArea = new Map<PhiCmsAreaKey, Map<PhiRuntimeModuleId, PhiCmsAreaShellProviderBinding>>();
   const areaShellByIdentity = new Map<string, PhiCmsAreaShellPresetBinding>();
   const areaOverlaysByArea = new Map<PhiCmsAreaKey, PhiCmsAreaOverlayPresetDescriptor[]>();
   const routeByIdentity = new Map<string, PhiCmsRoutePresetDescriptor>();
@@ -445,20 +454,39 @@ export function compilePhiCmsDescriptorCatalog({
           `${moduleId}/${descriptor.presetKey}: owner module is not eligible for Area "${descriptor.area}".`,
         );
       }
-      if (
-        areaDefinition.baseModuleId !== moduleId ||
-        areaDefinition.shellPresetKey !== descriptor.presetKey
-      ) {
+      if (areaDefinition.baseModuleId === moduleId) {
+        if (areaDefinition.shellPresetKey !== descriptor.presetKey) {
+          throw new Error(
+            `${moduleId}/${descriptor.presetKey}: shell preset does not match Area "${descriptor.area}" base definition.`,
+          );
+        }
+        const identity = registerIdentity(descriptor.presetKey);
+        if (areaBaseShellByArea.has(descriptor.area)) {
+          throw new Error(`Area "${descriptor.area}" has more than one shell preset.`);
+        }
+        const binding = { descriptor };
+        areaBaseShellByArea.set(descriptor.area, binding);
+        areaShellByIdentity.set(identity, binding);
+        continue;
+      }
+      /*
+       * Another Module's shell for the Area: allowed only where the Area's definition takes one, and kept
+       * apart from the base shell. It stands in for the base while its Module is active there
+       * (`resolvePhiCmsAreaShellPresetBinding`); being installed changes nothing.
+       */
+      if (areaDefinition.shellProviders !== "module") {
         throw new Error(
-          `${moduleId}/${descriptor.presetKey}: shell preset does not match Area "${descriptor.area}" base definition.`,
+          `${moduleId}/${descriptor.presetKey}: Area "${descriptor.area}" takes its shell from its base Module only.`,
         );
       }
       const identity = registerIdentity(descriptor.presetKey);
-      if (areaShellByArea.has(descriptor.area)) {
-        throw new Error(`Area "${descriptor.area}" has more than one shell preset.`);
+      const providers = areaShellProvidersByArea.get(descriptor.area) ?? new Map();
+      if (providers.has(moduleId)) {
+        throw new Error(`${moduleId}: more than one shell preset for Area "${descriptor.area}".`);
       }
-      const binding = { descriptor };
-      areaShellByArea.set(descriptor.area, binding);
+      const binding = { descriptor, moduleId };
+      providers.set(moduleId, binding);
+      areaShellProvidersByArea.set(descriptor.area, providers);
       areaShellByIdentity.set(identity, binding);
     }
 
@@ -535,7 +563,7 @@ export function compilePhiCmsDescriptorCatalog({
   }
 
   for (const [area, definition] of definitionsByArea) {
-    if (!areaShellByArea.has(area)) {
+    if (!areaBaseShellByArea.has(area)) {
       throw new Error(
         `Area "${area}" is missing shell preset "${definition.baseModuleId}/${definition.shellPresetKey}".`,
       );
@@ -908,7 +936,8 @@ export function compilePhiCmsDescriptorCatalog({
 
   return {
     areaDefinitions: definitionsByArea,
-    areaShellByArea,
+    areaBaseShellByArea,
+    areaShellProvidersByArea,
     areaShellByIdentity,
     areaOverlaysByArea,
     moduleNavigationByArea,
@@ -1904,11 +1933,46 @@ export function resolvePhiCmsRoutePresetByPageId(
   return descriptor ? { descriptor, params: {} } : null;
 }
 
-export function resolvePhiCmsAreaShellPresetBinding(
+/** The shell of the Area's base Module, whatever the Area runs: what it takes while no active Module brings one. */
+export function resolvePhiCmsAreaBaseShellPresetBinding(
   catalog: PhiCmsCompiledDescriptorCatalog,
   area: PhiCmsAreaKey,
 ) {
-  return catalog.areaShellByArea.get(area) ?? null;
+  return catalog.areaBaseShellByArea.get(area) ?? null;
+}
+
+/** The shells optional Modules bring for the Area, active or not. */
+export function listPhiCmsAreaShellProviders(
+  catalog: PhiCmsCompiledDescriptorCatalog,
+  area: PhiCmsAreaKey,
+): readonly PhiCmsAreaShellProviderBinding[] {
+  return [...(catalog.areaShellProvidersByArea.get(area)?.values() ?? [])];
+}
+
+/**
+ * The Area's effective shell: the shell of the one active Module that brings one, otherwise the base
+ * shell. The active Modules are the Area's selection as `resolveActivePresetModuleKeys` reads it, so a
+ * provider that is installed but not selected -- or selected but off for want of its server half --
+ * changes nothing.
+ *
+ * Two active providers is a selection the Builder refuses to make (one provider per Area); a stored one
+ * that holds two anyway is refused here rather than settled by catalog order, which would hand the
+ * Area to whichever package happened to be listed first.
+ */
+export function resolvePhiCmsAreaShellPresetBinding(
+  catalog: PhiCmsCompiledDescriptorCatalog,
+  area: PhiCmsAreaKey,
+  activeModuleIds: ReadonlySet<PhiRuntimeModuleId>,
+): PhiCmsAreaShellPresetBinding | null {
+  const active = listPhiCmsAreaShellProviders(catalog, area)
+    .filter((binding) => activeModuleIds.has(binding.moduleId));
+  if (active.length > 1) {
+    throw new Error(
+      `Area "${area}" has more than one active Module that brings its shell: ` +
+      `${active.map((binding) => binding.moduleId).join(", ")}. Switch all but one off.`,
+    );
+  }
+  return active[0] ?? resolvePhiCmsAreaBaseShellPresetBinding(catalog, area);
 }
 
 export function resolvePhiCmsRoutePresetByIdentity(

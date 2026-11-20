@@ -9,11 +9,11 @@ import type {
 } from "../types/cms";
 import type { PhiBlockRuntime } from "../types";
 import type { PhiRuntimeModuleCatalog } from "../types/cms-plugins";
+import type { PhiCmsAreaShellPresetBinding } from "../types/cms-module-descriptors";
 import { applyPhiPresetTreePublishedContent } from "./cms-bound-content";
 import { createPhiModuleMediaLoader } from "../gateway/server-module-media";
 import {
   instantiatePhiCmsAreaShellPreset,
-  resolvePhiCmsAreaShellPresetBinding,
   resolvePhiCmsDescriptorCatalog,
 } from "../plugins/runtime-modules/descriptor-compiler";
 
@@ -59,18 +59,25 @@ function buildAreaPresetPayloadFromTree({
       layoutNodes: tree.layoutNodes,
       contentWidgets: tree.contentWidgets,
       controllerSettings: tree.controllerSettings ?? [],
-      runtimeModuleIds: tree.runtimeModuleIds ?? null,
     },
   };
 }
 
+/**
+ * The Area's shell as its preset builds it, for an Area that stores no structure on that shell.
+ *
+ * `binding` is the Area's effective shell (`resolvePhiAreaRouteScope`): the base Module's, or the one
+ * an active Module brings. A stored structure of another shell is not this Area's answer and is not read.
+ */
 export async function buildPhiLocalCmsAreaPayload({
+  binding,
   areaMask,
   siteId,
   path,
   runtime,
   runtimeModuleCatalog,
 }: {
+  binding: PhiCmsAreaShellPresetBinding;
   areaMask: number;
   siteId: number;
   path: string;
@@ -80,15 +87,11 @@ export async function buildPhiLocalCmsAreaPayload({
   const areaKey = resolvePhiCmsAreaKey(areaMask);
   const resolvedAreaMask = resolvePhiCmsAreaMask(areaKey);
 
-  if (resolvedAreaMask !== areaMask) {
+  if (resolvedAreaMask !== areaMask || binding.descriptor.area !== areaKey) {
     return null;
   }
 
   const catalog = resolvePhiCmsDescriptorCatalog(runtimeModuleCatalog);
-  const binding = resolvePhiCmsAreaShellPresetBinding(catalog, areaKey);
-  if (!binding) {
-    return null;
-  }
   const tree = await applyPhiPresetTreePublishedContent(
     await instantiatePhiCmsAreaShellPreset({
       binding,

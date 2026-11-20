@@ -14,7 +14,7 @@ vi.mock("../../plugins/runtime-modules/settings", () => ({
   },
 }));
 vi.mock("../../helpers/cms-area-config", () => ({
-  readPhiAreaPresetRuntimeModuleIds: (preset: { ids: string[] } | null) => preset?.ids ?? ["default"],
+  readPhiAreaSelectionRuntimeModuleIds: (selection: { ids: string[] } | null) => selection?.ids ?? ["default"],
 }));
 vi.mock("../../plugins/runtime-modules/resolver", () => ({
   resolvePhiRuntimeModuleSet: async (input: unknown) => {
@@ -28,7 +28,7 @@ import type { PhiCmsSiteBridge } from "../../types/cms-plugins";
 import { resolvePhiCmsAreaRuntimeModuleScope } from "./phi-cms-runtime-registry";
 
 describe("resolvePhiCmsAreaRuntimeModuleScope", () => {
-  it("resolves the Module scope from the selection the Area preset states", async () => {
+  it("resolves the Module scope from the Area's Module selection", async () => {
     const definition = { id: "selected" };
     const catalog = new Map([["selected", { definition }]]);
     const cmsBridge = { runtimeModuleCatalog: catalog } as unknown as PhiCmsSiteBridge;
@@ -36,7 +36,7 @@ describe("resolvePhiCmsAreaRuntimeModuleScope", () => {
     const scope = await resolvePhiCmsAreaRuntimeModuleScope({
       cmsBridge,
       area: "admin",
-      areaPreset: { ids: ["selected"] } as never,
+      areaModules: { ids: ["selected"] } as never,
       serverCapabilities: null,
     });
 

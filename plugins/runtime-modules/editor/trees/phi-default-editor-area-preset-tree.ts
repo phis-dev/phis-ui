@@ -8,7 +8,6 @@ import {
 } from "../../../../components/regions/presets/phi-area-shell-preset-nodes";
 import type { PhiResolvedCmsPageTree, PhiCmsPageNode } from "../../../../types/cms";
 import type { PhiBlockRuntime } from "../../../../types";
-import { createPhiDefaultAreaRuntimeModuleIds } from "../../area-module-defaults";
 
 const SYNTHETIC_EDITOR_REGION_IDS = {
   regionHeaderTop: -140,
@@ -47,7 +46,6 @@ export async function buildPhiDefaultEditorAreaPresetTree({
   const ids = { ...SYNTHETIC_EDITOR_REGION_IDS, ...SYNTHETIC_EDITOR_LAYOUT_IDS, ...SYNTHETIC_EDITOR_WIDGET_IDS };
   return {
     page,
-    runtimeModuleIds: createPhiDefaultAreaRuntimeModuleIds("editor"),
     overlays: [],
     ...concatPhiAreaShellPresetNodes(
       buildPhiAreaShellHeaderNodes({ nodes, runtime, labelPrefix: "editor", ids }),

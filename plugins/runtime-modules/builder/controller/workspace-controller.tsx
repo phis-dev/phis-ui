@@ -180,6 +180,7 @@ type PhiDeveloperBuilderWorkspaceControllerOptions = {
   runtimeModuleIdsByArea?: Record<string, PhiRuntimeModuleId[]>;
   modulePresetPagesByArea?: PhiWorkspaceCatalogState["modulePresetPagesByArea"];
   areaPresetSourcesByArea?: PhiWorkspaceCatalogState["areaPresetSourcesByArea"];
+  areaShellsByArea?: PhiWorkspaceCatalogState["areaShellsByArea"];
   navigationSurfacesByArea?: PhiWorkspaceCatalogState["navigationSurfacesByArea"];
   unresolvedModuleIdsByArea?: PhiWorkspaceCatalogState["unresolvedModuleIdsByArea"];
   serverUnavailableModules?: PhiWorkspaceCatalogState["serverUnavailableModules"];
@@ -195,6 +196,7 @@ type PhiDeveloperBuilderWorkspaceControllerOptions = {
 };
 const EMPTY_RUNTIME_MODULE_IDS_BY_AREA: Partial<Record<PhiDeveloperBuilderArea, PhiRuntimeModuleId[]>> = {};
 const EMPTY_SERVER_UNAVAILABLE_MODULES: PhiWorkspaceCatalogState["serverUnavailableModules"] = {};
+const EMPTY_AREA_SHELLS: PhiWorkspaceCatalogState["areaShellsByArea"] = {};
 const EMPTY_MODULE_PRESET_PAGES_BY_AREA = createEmptyPhiBuilderModulePresetPagesByArea();
 const EMPTY_PUBLIC_ROUTE_CLAIMS: PhiWorkspaceCatalogState["publicRouteClaims"] = [];
 const EMPTY_PUBLIC_ROUTE_PATHS: PhiWorkspaceCatalogState["publicRoutePaths"] = [];
@@ -334,6 +336,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     runtimeModuleIdsByArea = {},
     modulePresetPagesByArea = EMPTY_MODULE_PRESET_PAGES_BY_AREA,
     areaPresetSourcesByArea = {},
+    areaShellsByArea = EMPTY_AREA_SHELLS,
     navigationSurfacesByArea = {},
     unresolvedModuleIdsByArea = EMPTY_RUNTIME_MODULE_IDS_BY_AREA,
     serverUnavailableModules = EMPTY_SERVER_UNAVAILABLE_MODULES,
@@ -433,7 +436,6 @@ function usePhiDeveloperBuilderWorkspaceController(
     captureHistoryHead,
     hasUnsavedChanges,
     reportSaved,
-    shellPresetDraftsByArea,
     state,
     historyLabels,
   });
@@ -473,6 +475,10 @@ function usePhiDeveloperBuilderWorkspaceController(
   const areaPresetSourcesPreloadKey = useMemo(
     () => JSON.stringify(areaPresetSourcesByArea),
     [areaPresetSourcesByArea],
+  );
+  const areaShellsPreloadKey = useMemo(
+    () => JSON.stringify(areaShellsByArea),
+    [areaShellsByArea],
   );
   const navigationSurfacesPreloadKey = useMemo(
     () => JSON.stringify(activePreloadCatalogs.navigationSurfacesByArea),
@@ -729,6 +735,7 @@ function usePhiDeveloperBuilderWorkspaceController(
       runtimeModuleDefinitions,
       runtimeModuleIdsByArea,
       areaPresetSourcesByArea,
+      areaShellsByArea,
       unresolvedModuleIdsByArea,
       serverUnavailableModules,
       publicRouteClaims,
@@ -738,6 +745,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         runtimeModuleDefinitions: runtimeModuleDefinitionsPreloadKey,
         modulePresetPagesByArea: modulePresetPagesPreloadKey,
         areaPresetSourcesByArea: areaPresetSourcesPreloadKey,
+        areaShellsByArea: areaShellsPreloadKey,
         navigationSurfacesByArea: navigationSurfacesPreloadKey,
         unresolvedModuleIdsByArea: unresolvedModuleIdsPreloadKey,
         publicRouteClaims: publicRouteClaimsPreloadKey,
@@ -767,6 +775,8 @@ function usePhiDeveloperBuilderWorkspaceController(
     publicRoutePathsPreloadKey,
     areaPresetSourcesByArea,
     areaPresetSourcesPreloadKey,
+    areaShellsByArea,
+    areaShellsPreloadKey,
     activePreloadCatalogs,
     navigationSurfacesByArea,
     navigationSurfacesPreloadKey,
@@ -1931,6 +1941,7 @@ export type PhiDeveloperBuilderWorkspaceControllerProps = {
   runtimeModuleIdsByArea?: Record<string, PhiRuntimeModuleId[]>;
   modulePresetPagesByArea?: PhiWorkspaceCatalogState["modulePresetPagesByArea"];
   areaPresetSourcesByArea?: PhiWorkspaceCatalogState["areaPresetSourcesByArea"];
+  areaShellsByArea?: PhiWorkspaceCatalogState["areaShellsByArea"];
   navigationSurfacesByArea?: PhiWorkspaceCatalogState["navigationSurfacesByArea"];
   unresolvedModuleIdsByArea?: PhiWorkspaceCatalogState["unresolvedModuleIdsByArea"];
   serverUnavailableModules?: PhiWorkspaceCatalogState["serverUnavailableModules"];
@@ -1951,6 +1962,7 @@ export function PhiDeveloperBuilderWorkspaceController({
   runtimeModuleIdsByArea = {},
   modulePresetPagesByArea = EMPTY_MODULE_PRESET_PAGES_BY_AREA,
   areaPresetSourcesByArea = {},
+  areaShellsByArea = EMPTY_AREA_SHELLS,
   navigationSurfacesByArea = {},
   unresolvedModuleIdsByArea = EMPTY_RUNTIME_MODULE_IDS_BY_AREA,
   serverUnavailableModules = EMPTY_SERVER_UNAVAILABLE_MODULES,
@@ -1969,6 +1981,7 @@ export function PhiDeveloperBuilderWorkspaceController({
     runtimeModuleIdsByArea,
     modulePresetPagesByArea,
     areaPresetSourcesByArea,
+    areaShellsByArea,
     navigationSurfacesByArea,
     unresolvedModuleIdsByArea,
     serverUnavailableModules,

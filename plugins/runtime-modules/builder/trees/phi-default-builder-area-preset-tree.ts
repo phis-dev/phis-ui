@@ -46,7 +46,6 @@ import {
   PHI_BUILDER_MODULES_TABLE_FILTER_KEYS,
 } from "../data-providers";
 import { PHI_BUILDER_NAVIGATION_DND_TYPE_PAGE } from "../../../../constants/builder-navigation-dnd";
-import { createPhiDefaultAreaRuntimeModuleIds } from "../../area-module-defaults";
 import { getPhiBuilderChromeWidgetLabels } from "../../../../components/widgets/label-sets/builder-chrome";
 import { PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS } from "../../../../components/widgets/label-types/builder-chrome";
 import type { PhiBuilderChromeWidgetLabels } from "../../../../components/widgets/label-types/builder-chrome";
@@ -466,7 +465,6 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
       },
       description: null,
     },
-    runtimeModuleIds: createPhiDefaultAreaRuntimeModuleIds("builder"),
     /*
      * The Shell's own receivers: the header's Area selector and debug switch, which the Controller arms
      * on the Pages that use them. The Inspector Overlay contribution adds its receivers to this setting

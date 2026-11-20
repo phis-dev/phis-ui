@@ -15,7 +15,7 @@ import {
   resolvePhiRuntimeRenderRegistry,
 } from "../../plugins/runtime-modules/resolver";
 import { resolvePhiRuntimeModuleIdsForArea } from "../../plugins/runtime-modules/settings";
-import { readPhiAreaPresetRuntimeModuleIds } from "../../helpers/cms-area-config";
+import { readPhiAreaSelectionRuntimeModuleIds } from "../../helpers/cms-area-config";
 
 const resolvePhiCmsRuntimeModuleScopeForRequest = cache(
   async (
@@ -67,7 +67,7 @@ function resolvePhiCmsRuntimeModuleScope({
 }
 
 /**
- * The Module scope of an Area, from the selection its preset states.
+ * The Module scope of an Area, from its Module selection (stored apart from its structure).
  *
  * Which Modules this Area runs, and not which ones this person may see. A Module is area-bound and
  * never switched off for a reader (ACCESS.md); what its Widgets show may still differ per person.
@@ -75,17 +75,17 @@ function resolvePhiCmsRuntimeModuleScope({
 export function resolvePhiCmsAreaRuntimeModuleScope({
   cmsBridge,
   area,
-  areaPreset,
+  areaModules,
   serverCapabilities,
 }: {
   cmsBridge: PhiCmsSiteBridge;
   area: PhiCmsAreaKey;
-  areaPreset: Parameters<typeof readPhiAreaPresetRuntimeModuleIds>[0];
+  areaModules: Parameters<typeof readPhiAreaSelectionRuntimeModuleIds>[0];
   serverCapabilities: PhiCapabilitySnapshot | null;
 }) {
   const moduleIds = resolvePhiRuntimeModuleIdsForArea(
     area,
-    readPhiAreaPresetRuntimeModuleIds(areaPreset, area),
+    readPhiAreaSelectionRuntimeModuleIds(areaModules, area),
     [...cmsBridge.runtimeModuleCatalog.values()].map((entry) => entry.definition),
   );
   return resolvePhiCmsRuntimeModuleScope({ cmsBridge, moduleIds, area, serverCapabilities });

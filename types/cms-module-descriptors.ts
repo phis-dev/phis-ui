@@ -30,6 +30,12 @@ export type PhiCmsAreaDefinition = {
   area: PhiCmsAreaKey;
   baseModuleId: PhiRuntimeModuleId;
   shellPresetKey: string;
+  /**
+   * Who may bring the Area's shell. `"base"`: only the base Module's `shellPresetKey`. `"module"`: an
+   * active Module eligible for the Area may bring its own `areaShells` descriptor, and while one does it
+   * replaces the base shell; one provider per Area (MODULES.md, "A Module's own Area shell").
+   */
+  shellProviders: "base" | "module";
   accessPolicy: PhiViewerAccessPolicy;
   navigationSurfaces?: readonly PhiCmsNavigationSurfaceDescriptor[];
 };
@@ -498,6 +504,11 @@ export type PhiCmsAreaShellPresetBinding = {
   descriptor: PhiCmsAreaShellPresetDescriptor;
 };
 
+/** A shell an optional Module brings for an Area whose definition takes one (`shellProviders: "module"`). */
+export type PhiCmsAreaShellProviderBinding = PhiCmsAreaShellPresetBinding & {
+  moduleId: PhiRuntimeModuleId;
+};
+
 export type PhiCmsRoutePresetBinding = {
   descriptor: PhiCmsRoutePresetDescriptor;
   params: Readonly<Record<string, string>>;
@@ -531,7 +542,14 @@ export type PhiCmsCompiledRoutePattern = {
 
 export type PhiCmsCompiledDescriptorCatalog = {
   areaDefinitions: ReadonlyMap<PhiCmsAreaKey, PhiCmsAreaDefinition>;
-  areaShellByArea: ReadonlyMap<PhiCmsAreaKey, PhiCmsAreaShellPresetBinding>;
+  /** The shell of the Area's base Module: what the Area takes while no active Module brings one. */
+  areaBaseShellByArea: ReadonlyMap<PhiCmsAreaKey, PhiCmsAreaShellPresetBinding>;
+  /** The shells optional Modules bring, by Area and Module; only for `shellProviders: "module"`. */
+  areaShellProvidersByArea: ReadonlyMap<
+    PhiCmsAreaKey,
+    ReadonlyMap<PhiRuntimeModuleId, PhiCmsAreaShellProviderBinding>
+  >;
+  /** Every shell, base and provider alike, by identity: what `composition` and identity lookups read. */
   areaShellByIdentity: ReadonlyMap<string, PhiCmsAreaShellPresetBinding>;
   areaOverlaysByArea: ReadonlyMap<PhiCmsAreaKey, readonly PhiCmsAreaOverlayPresetDescriptor[]>;
   /** Navigation contributed by a Module that owns no Page in that Area. */

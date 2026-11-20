@@ -1,7 +1,11 @@
 # A Site's own Public and App shell
 
-Status: approved by the operator on 2026-11-20, being built. The parts that are built move into MODULES.md, CMS.md, SHELL.md, BUILDER.md,
-THIRD_PARTY_MODULES.md and phis-server's DB.md.
+Status: approved by the operator on 2026-11-20. Built on 2026-11-20 (steps 1 and 2 of [Order](#order)): the
+contract now lives in [MODULES.md](../MODULES.md#a-modules-own-area-shell), [CMS.md](../CMS.md#the-areas-module-selection),
+[SHELL.md](../SHELL.md#ownership-boundary), [BUILDER.md](../BUILDER.md#module-selection),
+[THIRD_PARTY_MODULES.md](../THIRD_PARTY_MODULES.md#6c-a-public-or-app-shell-a-site-package-brings) and
+phis-server's DB.md. Steps 3 to 5 (the dev install's sweep and test shell, `@phis/phisys`, the release) are
+open; this file stays until they are done.
 
 ## Why
 
@@ -56,11 +60,13 @@ structure.
     the Module selection is known;
   - the Builder's shell workspace (`area-shell-presets.server.ts`) does the same.
 - `areaOverlays` from active Modules are laid over the effective shell as they are now.
-- A stored structure override is keyed by its `sourcePreset` identity, as today, and the server returns
-  it only when it matches the requested one. A Site that stored a base structure and then activates a
-  provider therefore sees the provider's shell, and its own stored structure again after deactivating.
-  The stored structure is kept, not lost. Editing the provider's shell in the Builder stores a structure
-  under the provider's identity.
+- An Area stores one structure, under the `sourcePreset` identity it was saved from. A page view reads the
+  selection and the stored structure in one request (the live read without an identity answers both) and
+  uses the structure only if its identity is the effective shell's; otherwise it renders the effective
+  shell's preset. A Site that stored a base structure and then activates a provider therefore sees the
+  provider's shell, and its stored structure again after deactivating. Saving a structure under the
+  provider while a base structure is stored is refused (409): the Builder offers to clear the stored one
+  first. Keeping one structure per identity is not built.
 
 ### 2. The Module selection is stored apart from the structure
 
@@ -83,15 +89,16 @@ own revisions.
   - The structure publish moves `published_revision_id` and no longer merges a selection in.
   - `mergePhiAreaTreeForPublish` goes.
 - **Reads.** The live Area read returns the selection (published or, for a review, the draft) independently
-  of the identity, and the structure only when the identity matches. phis-ui reads the selection first,
+  of the identity; the structure under a named identity only when it matches, and without an identity
+  whatever it is stored under, with that identity as `sourcePreset`. phis-ui reads the selection first,
   derives the active Modules (`resolveActivePresetModuleKeys`) and the effective shell, and only then
   takes the stored structure or the preset.
 - **The materializers** (`materializeSiteMediaAvailabilityWithDb`, `materializeSiteThreadKindsWithDb`,
   `materializeSiteModuleSeedsWithDb`) and `listPhiSiteActiveModuleIdsWithDb` read the published Modules
   revision instead of `published_revision_id`.
 - **Clearing a structure** (`DELETE /api/site/cms/area/override`) removes the structure revisions and
-  both structure pointers only; the selection stays. It then runs the three materializers, which it does
-  not do today. The Builder's "Clear Area" says that it keeps the Modules. A Module selection still has no
+  both structure pointers only; the selection stays. Nothing the three materializers read changes, so it
+  does not run them. The Builder's "Clear Area" says that it keeps the Modules. A Module selection still has no
   reset: it is changed and published.
 
 ### 3. Builder

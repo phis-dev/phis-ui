@@ -601,6 +601,14 @@ The important distinction is:
 
 Those two concepts must not share the same persistence or hydration key just because both happen to be called "content" in casual conversation.
 
+Who supplies the Area-owned Regions is the Area's shell, and in Public and App that may be a Module's
+rather than the base Module's: an active Module that declares an `areaShells` descriptor for the Area
+brings the whole shell -- Regions with or without Siders, their Layouts, Widgets, Overlays and controller
+settings -- and the base shell answers again once it is off. One provider per Area. The working Areas
+(Admin, Editor, Accounting, Builder) always draw their base shell. The topology and the ownership split
+above hold for either: a provider's shell is an Area shell like the base one, and Pages keep their own
+Regions ([MODULES.md](./MODULES.md#a-modules-own-area-shell)).
+
 ## Practical Rule
 
 - `root.css` = global baseline

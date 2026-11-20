@@ -5,6 +5,7 @@ import type {
   PhiPresetPageNode,
 } from "../../helpers/cms-page-catalog";
 import type {
+  PhiCmsPresetIdentity,
   PhiCmsPresetSource,
   PhiCmsResolvedNavigationSurface,
 } from "../../types/cms-module-descriptors";
@@ -29,6 +30,17 @@ export type PhiWorkspaceServerUnavailableModule = {
   missingCapabilities: readonly string[];
 };
 
+/** What the Builder knows about an Area's shell beyond the one it takes (`areaPresetSourcesByArea`). */
+export type PhiWorkspaceAreaShellState = {
+  /** The installed Modules that bring a shell for the Area, selected or not. At most one may be selected. */
+  providerModuleIds: PhiRuntimeModuleId[];
+  /**
+   * The identity the Area's one stored structure stands on, whatever shell the Area takes now; null when
+   * it stores none. A structure of another shell is kept and comes back when that shell applies again.
+   */
+  storedSource: PhiCmsPresetIdentity | null;
+};
+
 export type PhiWorkspaceCatalogState = {
   /** The Area being worked on. */
   area: PhiWorkspaceCatalogArea;
@@ -45,7 +57,13 @@ export type PhiWorkspaceCatalogState = {
   navigationSurfacesByArea: Partial<
     Record<PhiWorkspaceCatalogArea, readonly PhiCmsResolvedNavigationSurface[]>
   >;
+  /**
+   * The shell each Area takes: the shell of the one selected Module that brings one, else the base
+   * Module's. What a structure save, a draft read and a Revisions scope name.
+   */
   areaPresetSourcesByArea: Partial<Record<PhiWorkspaceCatalogArea, PhiCmsPresetSource>>;
+  /** Per Area, the Modules that bring a shell for it and the shell its stored structure stands on. */
+  areaShellsByArea: Partial<Record<PhiWorkspaceCatalogArea, PhiWorkspaceAreaShellState>>;
   runtimeModuleDefinitions: PhiRuntimeModuleDefinition[];
   runtimeModuleIdsByArea: Partial<Record<PhiWorkspaceCatalogArea, PhiRuntimeModuleId[]>>;
   /**

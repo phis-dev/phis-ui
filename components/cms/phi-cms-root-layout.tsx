@@ -250,6 +250,7 @@ export async function PhiCmsAreaBoundary({
     await warmPhiAreaRootDoor({
       area: resolvedRoute.area,
       config: rootScope.resolvedAreaPreset?.preset.config,
+      routeTable: rootScope.routeTable,
       runtime,
       catalog: resolvePhiCmsDescriptorCatalog(cmsBridge.runtimeModuleCatalog),
       activeModuleIds: runtimeModuleScope.moduleSet.activeModuleIds,

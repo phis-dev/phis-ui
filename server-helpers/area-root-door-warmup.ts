@@ -2,20 +2,14 @@ import "server-only";
 
 import { peekPhiAreaRootDoor, rememberPhiAreaRootDoor } from "../gateway/area-root-door";
 import { findFirstPhiCmsNavigationLinkPath } from "../components/regions/presets/navigation-redirect";
-import {
-  compilePhiCmsActiveRouteTable,
-  resolvePhiCmsActiveNavigationSurfaces,
-} from "../plugins/runtime-modules/descriptor-compiler";
+import { resolvePhiCmsActiveNavigationSurfaces } from "../plugins/runtime-modules/descriptor-compiler";
 import { resolvePhiAreaRootRouteNavKey } from "../plugins/runtime-modules/area-root-route";
 import { resolvePhiAreaRootRouteDecision } from "./area-root-route";
-import {
-  readPhiAreaLandingSelection,
-  readPhiAreaPublicRoutePaths,
-} from "../helpers/cms-area-config";
 import { localizeAreaPath } from "../helpers/locale";
 import type { PhiCmsAreaKey } from "../constants/cms-areas";
 import type { PhiBlockRuntime } from "../types";
 import type {
+  PhiCmsActiveRouteTable,
   PhiCmsCompiledDescriptorCatalog,
   PhiRuntimeModuleId,
 } from "../types/cms-module-descriptors";
@@ -47,12 +41,16 @@ import type {
 export async function warmPhiAreaRootDoor({
   area,
   config,
+  routeTable,
   runtime,
   catalog,
   activeModuleIds,
 }: {
   area: PhiCmsAreaKey;
+  /** The Area structure's config, where the root route is stated. */
   config: Record<string, unknown> | null | undefined;
+  /** The table the root render compiled, from the Module selection and that structure. */
+  routeTable: PhiCmsActiveRouteTable;
   runtime: PhiBlockRuntime;
   catalog: PhiCmsCompiledDescriptorCatalog;
   activeModuleIds: ReadonlySet<PhiRuntimeModuleId>;
@@ -70,13 +68,6 @@ export async function warmPhiAreaRootDoor({
    * nothing to remember: the proxy stays cold for this Area and the render answers, which is correct
    * because the render does not forward either.
    */
-  const routeTable = compilePhiCmsActiveRouteTable({
-    catalog,
-    area,
-    activeModuleIds,
-    publicRoutePaths: readPhiAreaPublicRoutePaths(config),
-    landingSelection: readPhiAreaLandingSelection(config),
-  });
   const decision = await resolvePhiAreaRootRouteDecision({
     config,
     requestedStoragePath: "/",

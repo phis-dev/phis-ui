@@ -12,6 +12,8 @@ export type PhiRegionWidgetLabels = {
       /** What the left Sider is doing right now, one of the two, under its title on the canvas. */
       siderSpansShell: string;
       siderBesideContent: string;
+      /** Which Module's shell the Area takes, under the top Region on the canvas; `%1` is its title. */
+      shellOwner: string;
       selectedPageHeaderBand: string;
       pageSidebar: string;
       contentTitle: string;
@@ -39,6 +41,7 @@ export const PHI_REGION_WIDGET_DEFAULT_LABELS: PhiRegionWidgetLabels = {
       siderFullHeight: "Sider full height",
       siderSpansShell: "Spans header to footer",
       siderBesideContent: "Beside the content only",
+      shellOwner: "The shell of %1",
       selectedPageHeaderBand: "Selected page header band",
       pageSidebar: "Page sidebar beside hero and content",
       contentTitle: "Page body viewport",

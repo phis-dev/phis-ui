@@ -116,14 +116,20 @@ function PhiRevisionsControllerMount({
   ]);
 
   /*
-   * Deletes the Area's own shell, then asks the workspace for everything again.
+   * Deletes the Area's own structure, then asks the workspace for everything again. Its Module selection
+   * is stored apart and stays.
    *
-   * What stands afterwards is the Module preset, and this client holds none of it -- not the Regions,
-   * not the root route, not the SEO answers. Every one of them is now a value only the server knows.
+   * What stands afterwards is the preset of the shell the Area takes, and this client holds none of it
+   * -- not the Regions, not the root route, not the SEO answers. Every one of them is now a value only the
+   * server knows. The identity named is the one the stored structure stands on, which need not be the
+   * shell the Area takes now: a structure of the base shell outlives switching on a Module that brings
+   * its own.
    */
   const deleteAreaShell = useCallback(async (area: PhiBuilderAreaKey, correlationId?: string) => {
-    const source = getPhiWorkspaceCatalogSnapshot()
-      .areaPresetSourcesByArea?.[area] ?? null;
+    const catalog = getPhiWorkspaceCatalogSnapshot();
+    const source = catalog.areaShellsByArea?.[area]?.storedSource
+      ?? catalog.areaPresetSourcesByArea?.[area]
+      ?? null;
     try {
       await deleteCmsDraft("/api/site/cms/area/override", {
         area,
@@ -132,7 +138,7 @@ function PhiRevisionsControllerMount({
       });
       emitCapability("deleteAreaClose", null, correlationId);
       emitCapability("historyReload", null, correlationId);
-      showMessage({ level: "success", content: `Cleared ${area} back to its preset.` });
+      showMessage({ level: "success", content: `Cleared the ${area} structure back to its preset. Its Modules are kept.` });
       router.refresh();
     } catch (error) {
       showMessage({
@@ -173,7 +179,7 @@ function PhiRevisionsControllerMount({
       const area = getPhiWorkspaceCatalogSnapshot().area;
       emitCapability(
         "deleteAreaWarning",
-        `Everything this Site stored for ${area} is cleared -- its Shell and its Module selection, drafts and published alike. What is live changes at once, the Module preset takes the Area back, and no revision is left to restore it from. It cannot be undone.`,
+        `The structure this Site stored for ${area} is cleared -- its Shell, drafts and published alike. What is live changes at once, the shell's preset takes the Area back, and no revision is left to restore it from. It cannot be undone. The Module selection is kept.`,
         signal.correlationId,
       );
       emitCapability("deleteAreaOpen", null, signal.correlationId);

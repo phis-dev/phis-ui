@@ -198,11 +198,12 @@ globalThis.fetch = (async (input: unknown, init?: RequestInit) => {
   const path = url.slice(UPSTREAM.length).split("?", 1)[0] ?? "";
 
   if (path === "/api/v1/site/area") {
+    // The live Area read: the Module selection, stored apart from the structure, which is all a Form asks.
     return Response.json({
-      preset: {
-        preset: { config: { runtimeModules: activeModuleIds } },
-        runtimeModuleIds: activeModuleIds,
-      },
+      areaMask: 1,
+      sourcePreset: null,
+      preset: null,
+      modules: { revisionId: 1, config: { modules: { runtimeModules: activeModuleIds } } },
     });
   }
   if (path === "/api/v1/site/capabilities") {

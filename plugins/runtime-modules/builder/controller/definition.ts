@@ -91,6 +91,7 @@ export type PhiBuilderRuntimeControllerPreload = {
   areaControllerSettingsByArea: Record<string, PhiCmsTreeControllerSettings>;
   modulePresetPagesByArea: PhiBuilderModulePresetPagesByArea;
   areaPresetSourcesByArea: Partial<Record<PhiBuilderAreaKey, PhiCmsPresetSource>>;
+  areaShellsByArea: PhiWorkspaceCatalogState["areaShellsByArea"];
   navigationSurfacesByArea: Partial<
     Record<PhiBuilderAreaKey, readonly PhiCmsResolvedNavigationSurface[]>
   >;

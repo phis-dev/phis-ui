@@ -53,7 +53,7 @@ export async function resolvePhiCmsLookup({
     requestContext,
     runtimeModuleCatalog: bridge.runtimeModuleCatalog,
     purpose: "lookup",
-    loadExactCmsArea: (requestPath, sourcePreset) =>
+    loadCmsArea: (requestPath, { sourcePreset }) =>
       getPhiExactSiteArea({
         path: requestPath,
         siteKey,

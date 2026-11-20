@@ -626,9 +626,11 @@ const buildTestCatalog = (
     area: "public",
     baseModuleId: TEST_MODULE_ID,
     shellPresetKey: "shell",
+    shellProviders: "module" as const,
     accessPolicy: { access: "anyone" as const },
   }]]),
-  areaShellByArea: new Map(),
+  areaBaseShellByArea: new Map(),
+  areaShellProvidersByArea: new Map(),
   areaShellByIdentity: new Map(),
   areaOverlaysByArea: new Map(),
   routeByIdentity: new Map(),
@@ -687,7 +689,7 @@ assert.equal(
 
 console.log(
   `Module descriptors valid: ${catalog.areaDefinitions.size} Areas, ` +
-  `${catalog.areaShellByArea.size} shell presets, ` +
+  `${catalog.areaShellByIdentity.size} shell presets, ` +
   `${[...catalog.routesByArea.values()].flat().length} route presets, ` +
   `${catalog.themeByKey.size} theme presets, ` +
   `${navigationSurfaceCount} navigation surfaces.`,

@@ -28,6 +28,7 @@ import { buildPhiBuilderLiveHref,
   previewPhiDeveloperBuilderDraft,
   publishPhiDeveloperBuilderDraft,
   savePhiDeveloperBuilderDraft,
+  PhiBuilderAreaStructureTakenError,
 } from "../persistence";
 import {
   clearPhiBuilderNavigationDraft,
@@ -57,7 +58,6 @@ import {
 import type {
   PhiDeveloperBuilderArea,
   PhiDeveloperBuilderCommandWorkspace,
-  PhiDeveloperBuilderRegionDraft,
   PhiDeveloperBuilderWorkspaceState,
 } from "../developer-workspace-types";
 import { findPhiBuilderNavigationSurface } from "../../../../helpers/cms-navigation-catalog";
@@ -91,7 +91,6 @@ export function usePhiBuilderDraftCommandController({
   captureHistoryHead,
   reportSaved,
   hasUnsavedChanges,
-  shellPresetDraftsByArea,
   state,
   historyLabels,
 }: {
@@ -109,7 +108,6 @@ export function usePhiBuilderDraftCommandController({
   ) => void;
   /** Whether the workspace on screen holds edits no stored revision has. */
   hasUnsavedChanges: boolean;
-  shellPresetDraftsByArea: Record<string, Record<string, PhiDeveloperBuilderRegionDraft>>;
   state: PhiDeveloperBuilderWorkspaceState;
   /** What an undo or redo says it moved, in the author's language. */
   historyLabels: PhiHistoryLabels;
@@ -239,12 +237,9 @@ export function usePhiBuilderDraftCommandController({
      * author there was nothing to publish while a draft stood.
      */
     const asked = await Promise.all(
-      Object.entries(state.areaPresetSourcesByArea).flatMap(([area, source]) => source
-        ? [getPhiDeveloperBuilderModulesDraftAllocation({
-            area: area as PhiDeveloperBuilderArea,
-            areaPresetSource: source,
-          }).then((allocation) => allocation ? area as PhiDeveloperBuilderArea : null)]
-        : []),
+      Object.keys(state.areaPresetSourcesByArea).map((area) => getPhiDeveloperBuilderModulesDraftAllocation({
+        area: area as PhiDeveloperBuilderArea,
+      }).then((allocation) => allocation ? area as PhiDeveloperBuilderArea : null)),
     );
     return asked.filter((area): area is PhiDeveloperBuilderArea => area !== null);
   }
@@ -261,22 +256,7 @@ export function usePhiBuilderDraftCommandController({
       const savedAt = captureHistoryHead();
       let lastRevisionId: number | null = null;
       for (const area of areas) {
-        const modulesResult = await savePhiDeveloperBuilderModulesDraft(
-          state,
-          getPhiDeveloperRegionDraftsSnapshot(),
-          {
-            builderPlugins: builderModuleMetas.plugins,
-            scope: { area },
-            /*
-             * The Area's code-owned Shell, which this controller holds on every Builder page -- the same
-             * drafts "reset shell" restores from. A Module selection for an Area nobody has saved yet
-             * needs a Shell baseline, and the Modules workspace hydrates no region drafts of its own: it
-             * edits a selection rather than a structure. Without this the save asked the operator to go
-             * and create a Shell that already exists in code.
-             */
-            shellPresetDrafts: shellPresetDraftsByArea[area] ?? null,
-          },
-        );
+        const modulesResult = await savePhiDeveloperBuilderModulesDraft(state, { scope: { area } });
         lastRevisionId = modulesResult.revisionId;
       }
       reportSaved("draft", lastRevisionId, savedAt);
@@ -338,15 +318,7 @@ export function usePhiBuilderDraftCommandController({
       }
       const savedAt = captureHistoryHead();
       for (const area of areas) {
-        await publishPhiDeveloperBuilderModulesDraft(
-          state,
-          getPhiDeveloperRegionDraftsSnapshot(),
-          {
-            builderPlugins: builderModuleMetas.plugins,
-            scope: { area },
-            shellPresetDrafts: shellPresetDraftsByArea[area] ?? null,
-          },
-        );
+        await publishPhiDeveloperBuilderModulesDraft(state, { scope: { area } });
       }
       clearPhiBuilderModuleAreasDirty();
       reportSaved("published", null, savedAt);
@@ -646,6 +618,55 @@ export function usePhiBuilderDraftCommandController({
     });
   }
 
+  /**
+   * A structure save Core refused because the Area stores its one structure under another shell -- the
+   * base shell's, saved before a Module that brings its own was switched on. The stored structure is
+   * cleared only when asked, and the Module selection stays; then the command runs again.
+   */
+  function confirmClearStoredStructure(
+    error: PhiBuilderAreaStructureTakenError,
+    command: "save" | "publish",
+    workspaceKind: Exclude<PhiDeveloperBuilderCommandWorkspace, "theme" | null>,
+  ) {
+    confirm({
+      title: "Clear the stored structure?",
+      content:
+        `${error.message} Clearing removes the structure saved for that shell, with its drafts and ` +
+        "revisions, and changes nothing live while that shell is not the one the Area takes. Then this " +
+        "structure is saved.",
+      confirmLabel: "Clear and save",
+      danger: true,
+      cancelLabel: "Cancel",
+      onConfirm: async () => {
+        if (activeDraftActionRef.current != null) {
+          return;
+        }
+        setActiveDraftAction(command);
+        try {
+          await deleteCmsDraft("/api/site/cms/area/override", {
+            area: error.area,
+            ownerModuleId: error.storedSource.ownerModuleId,
+            presetKey: error.storedSource.presetKey,
+          });
+          clearPhiDeveloperBuilderDraftAllocation({
+            area: error.area,
+            pageKey: effectivePageKey,
+            workspaceKind: "structure",
+          });
+          await (command === "save" ? runSaveCommand(workspaceKind) : runPublishCommand(workspaceKind));
+        } catch (retryError) {
+          showMessage({
+            level: "error",
+            content: retryError instanceof Error ? retryError.message : "Clearing the stored structure failed.",
+          });
+          throw retryError;
+        } finally {
+          setActiveDraftAction(null);
+        }
+      },
+    });
+  }
+
   function runResetCommand(
     workspaceKind: Exclude<PhiDeveloperBuilderCommandWorkspace, "theme" | null>,
   ) {
@@ -748,6 +769,10 @@ export function usePhiBuilderDraftCommandController({
 
     action
       .catch((error) => {
+        if (error instanceof PhiBuilderAreaStructureTakenError && (command === "save" || command === "publish")) {
+          confirmClearStoredStructure(error, command, workspaceKind);
+          return;
+        }
         const fallback =
           command === "save"
             ? "CMS draft save failed."

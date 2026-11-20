@@ -326,6 +326,7 @@ const PHI_WORKSPACE_CATALOG_KEYS = [
   "persistedPageCatalogByArea",
   "navigationSurfacesByArea",
   "areaPresetSourcesByArea",
+  "areaShellsByArea",
   "runtimeModuleDefinitions",
   "runtimeModuleIdsByArea",
   "unresolvedModuleIdsByArea",

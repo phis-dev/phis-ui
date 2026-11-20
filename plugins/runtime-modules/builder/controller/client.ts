@@ -20,6 +20,7 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_PLUGIN = {
       !preloadData.runtimeModuleIdsByArea ||
       !preloadData.modulePresetPagesByArea ||
       !preloadData.areaPresetSourcesByArea ||
+      !preloadData.areaShellsByArea ||
       !preloadData.navigationSurfacesByArea ||
       !preloadData.unresolvedModuleIdsByArea ||
       !preloadData.serverUnavailableModules ||
@@ -41,6 +42,7 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_PLUGIN = {
       runtimeModuleIdsByArea: preloadData.runtimeModuleIdsByArea,
       modulePresetPagesByArea: preloadData.modulePresetPagesByArea,
       areaPresetSourcesByArea: preloadData.areaPresetSourcesByArea,
+      areaShellsByArea: preloadData.areaShellsByArea,
       navigationSurfacesByArea: preloadData.navigationSurfacesByArea,
       unresolvedModuleIdsByArea: preloadData.unresolvedModuleIdsByArea,
       serverUnavailableModules: preloadData.serverUnavailableModules,

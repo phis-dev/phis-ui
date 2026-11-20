@@ -8,7 +8,6 @@ import {
 } from "../../../../components/regions/presets/phi-area-shell-preset-nodes";
 import type { PhiResolvedCmsPageTree, PhiCmsPageNode } from "../../../../types/cms";
 import type { PhiBlockRuntime } from "../../../../types";
-import { createPhiDefaultAreaRuntimeModuleIds } from "../../area-module-defaults";
 
 /*
  * The staff shell, as Admin's: the header bar with the Page title as a caption, the Tour button and the
@@ -51,7 +50,6 @@ export async function buildPhiDefaultAccountingAreaPresetTree({
   const nodes = createPhiCmsPresetNodes(page);
   return {
     page: nodes.page(),
-    runtimeModuleIds: createPhiDefaultAreaRuntimeModuleIds("accounting"),
     overlays: [],
     ...concatPhiAreaShellPresetNodes(
       buildPhiAreaShellHeaderNodes({

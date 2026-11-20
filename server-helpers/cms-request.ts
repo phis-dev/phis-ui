@@ -9,10 +9,16 @@ import {
   type PhiCmsAreaKey,
 } from "../constants/cms-areas";
 import type {
+  PhiCmsAreaModulesSelection,
   PhiCmsResolvedPageMeta,
   PhiResolvedCmsAreaPresetPayload,
   PhiResolvedCmsPagePayload,
 } from "../types/cms";
+import type {
+  PhiCmsAreaShellPresetBinding,
+  PhiCmsPresetIdentity,
+} from "../types/cms-module-descriptors";
+import type { PhiSiteAreaRead } from "../gateway/site-area";
 import type { PhiBlockRuntime } from "../types";
 import { canPhiViewerAccess } from "../types/access";
 import type {
@@ -70,8 +76,8 @@ import {
 import { trForLocale } from "./translate";
 import {
   readPhiAreaLandingSelection,
-  readPhiAreaPresetRuntimeModuleIds,
   readPhiAreaPublicRoutePaths,
+  readPhiAreaSelectionRuntimeModuleIds,
 } from "../helpers/cms-area-config";
 import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
 import { createPhiModuleMediaLoader } from "../gateway/server-module-media";
@@ -81,10 +87,15 @@ type LoadPhiResolvedCmsPage = (
   path: string,
   sourcePreset?: { ownerModuleId: PhiRuntimeModuleId; presetKey: string } | null,
 ) => Promise<PhiResolvedCmsPagePayload | null>;
-type LoadPhiExactSiteArea = (
+/**
+ * The Area read a resolution makes: `"live"` is what a visitor is served, `"requested"` the revision or
+ * review the request names, if it names one of the Area. Without `sourcePreset` the live read answers the
+ * selection and the one stored structure together (`PhiSiteAreaRead`).
+ */
+type LoadPhiCmsArea = (
   path: string,
-  sourcePreset: { ownerModuleId: PhiRuntimeModuleId; presetKey: string },
-) => Promise<PhiResolvedCmsAreaPresetPayload | null>;
+  request: { sourcePreset: PhiCmsPresetIdentity | null; stage: "live" | "requested" },
+) => Promise<PhiSiteAreaRead | null>;
 
 type PhiCmsPresetPageBuildArgs = {
   requestedPath: string;
@@ -104,7 +115,9 @@ export type ResolvePhiCmsRequestArgs = {
   requestContext?: PhiSiteRequestContext;
   searchParams?: Record<string, string | undefined>;
   loadResolvedCmsPage: LoadPhiResolvedCmsPage;
-  loadExactCmsArea: LoadPhiExactSiteArea;
+  loadCmsArea: LoadPhiCmsArea;
+  /** Whether the request names a revision or a review of the Area, which the `"requested"` read answers. */
+  previewsArea?: boolean;
   runtimeModuleCatalog: PhiRuntimeModuleCatalog;
   /**
    * `"render"` resolves the request being answered: it binds the request-scoped runtime and
@@ -181,41 +194,131 @@ function resolveAreaOwnedStoragePath(path: string, areaMask: number) {
   return null;
 }
 
+/** What an Area stores, as far as answering a request goes: its Module selection and its structure. */
+export type PhiCmsAreaStoredRead = Pick<PhiSiteAreaRead, "modules" | "structure">;
+
+function isPhiCmsAreaShellStructure(
+  structure: PhiResolvedCmsAreaPresetPayload | null | undefined,
+  binding: PhiCmsAreaShellPresetBinding,
+): structure is PhiResolvedCmsAreaPresetPayload {
+  return structure != null
+    && structure.sourcePreset?.ownerModuleId === binding.descriptor.ownerModuleId
+    && structure.sourcePreset?.presetKey === binding.descriptor.presetKey;
+}
+
 /**
- * What an Area answers under a preset: the active Module ids and the route table compiled from them.
+ * What an Area answers: the active Module ids, the effective shell, the stored structure where it
+ * stands on that shell, and the route table compiled from them.
+ *
+ * In that order, because each step needs the one before. The selection decides the active Modules; the
+ * active Modules decide the shell (`resolvePhiCmsAreaShellPresetBinding`: the one active Module that
+ * brings one, otherwise the base); and a stored structure applies only when its identity is that
+ * shell's -- a Site that stored a base structure and then switched a shell provider on sees the
+ * provider's shell, and its own structure again once the provider is off. `structure` is null where
+ * the shell's preset answers; the caller builds it (`buildPhiLocalCmsAreaPayload`) only if it needs it.
  *
  * Nine readers -- the page request, the root shell, the dashboard cards, the navigation targets, the
- * page references, the public login, the search index and two more -- each wrote these two steps out,
- * and the two reads of the Area config between them. Stated once, the readers cannot drift in which
- * config they compile from.
+ * page references, the public login, the search index and two more -- each wrote these steps out.
+ * Stated once, the readers cannot drift in which shell and which config they compile from.
  */
 export function resolvePhiAreaRouteScope(input: {
   runtimeModuleCatalog: PhiRuntimeModuleCatalog;
   catalog: ReturnType<typeof resolvePhiCmsDescriptorCatalog>;
   area: PhiCmsAreaKey;
-  preset: PhiResolvedCmsAreaPresetPayload["preset"] | null;
+  read: PhiCmsAreaStoredRead | null;
   serverCapabilities: PhiCapabilitySnapshot | null;
 }) {
   const activeModuleIds = resolveActivePresetModuleKeys(
     input.runtimeModuleCatalog,
     input.area,
-    input.preset ? { preset: input.preset } : null,
+    input.read?.modules ?? null,
     input.serverCapabilities,
   );
+  const shellBinding = resolvePhiCmsAreaShellPresetBinding(input.catalog, input.area, activeModuleIds);
+  if (!shellBinding) {
+    throw new Error(`Area "${input.area}" has no shell preset binding.`);
+  }
+  const structure = isPhiCmsAreaShellStructure(input.read?.structure, shellBinding)
+    ? input.read!.structure!
+    : null;
   const routeTable = compilePhiCmsActiveRouteTable({
     catalog: input.catalog,
     area: input.area,
     activeModuleIds,
-    publicRoutePaths: readPhiAreaPublicRoutePaths(input.preset?.preset.config),
-    landingSelection: readPhiAreaLandingSelection(input.preset?.preset.config),
+    publicRoutePaths: readPhiAreaPublicRoutePaths(input.read?.modules?.config),
+    landingSelection: readPhiAreaLandingSelection(structure?.preset.preset.config),
   });
-  return { activeModuleIds, routeTable };
+  return { activeModuleIds, routeTable, shellBinding, structure };
 }
 
-export function resolveActivePresetModuleKeys(
+/**
+ * What the Area stores for a request that may preview or review one of its revisions.
+ *
+ * A live request is one read without an identity: the selection and the one stored structure come
+ * together, and `resolvePhiAreaRouteScope` drops the structure if it stands on another shell. A
+ * revision or a review of the Area answers a structure only under the identity it names, and the shell
+ * that identity has to be depends on the selection -- which the reviewed revision may itself be. So it
+ * reads the live Area first, asks the reviewed revision under the shell the live selection chooses, and
+ * takes, under the shell the reviewed selection chooses, the reviewed structure or else the live one.
+ * Only previews pay the second read.
+ */
+export async function readPhiCmsAreaForRequest({
+  loadArea,
+  previewsArea,
+  resolveShellSource,
+}: {
+  loadArea: (request: { sourcePreset: PhiCmsPresetIdentity | null; stage: "live" | "requested" }) =>
+    Promise<PhiSiteAreaRead | null>;
+  previewsArea: boolean;
+  resolveShellSource: (modules: PhiCmsAreaModulesSelection | null) =>
+    PhiCmsPresetIdentity | Promise<PhiCmsPresetIdentity>;
+}): Promise<PhiCmsAreaStoredRead> {
+  const live = await loadArea({ sourcePreset: null, stage: "live" });
+  const liveRead: PhiCmsAreaStoredRead = { modules: live?.modules ?? null, structure: live?.structure ?? null };
+  if (!previewsArea) {
+    return liveRead;
+  }
+  const reviewed = await loadArea({
+    sourcePreset: await resolveShellSource(liveRead.modules),
+    stage: "requested",
+  });
+  // Not there, or a structure revision of a shell the Area does not take: what is live answers.
+  if (!reviewed) {
+    return liveRead;
+  }
+  const shellSource = await resolveShellSource(reviewed.modules);
+  const standsOnShell = (structure: PhiResolvedCmsAreaPresetPayload | null) =>
+    structure?.sourcePreset.ownerModuleId === shellSource.ownerModuleId
+    && structure.sourcePreset.presetKey === shellSource.presetKey;
+  return {
+    modules: reviewed.modules,
+    structure: [reviewed.structure, liveRead.structure].find(standsOnShell) ?? null,
+  };
+}
+
+/** The identity of the shell an Area takes under a selection, for `readPhiCmsAreaForRequest`. */
+export function resolvePhiCmsAreaShellSource(input: {
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog;
+  area: PhiCmsAreaKey;
+  modules: PhiCmsAreaModulesSelection | null;
+  serverCapabilities: PhiCapabilitySnapshot | null;
+}): PhiCmsPresetIdentity {
+  const catalog = resolvePhiCmsDescriptorCatalog(input.runtimeModuleCatalog);
+  const binding = resolvePhiCmsAreaShellPresetBinding(
+    catalog,
+    input.area,
+    resolveActivePresetModuleKeys(input.runtimeModuleCatalog, input.area, input.modules, input.serverCapabilities),
+  );
+  if (!binding) {
+    throw new Error(`Area "${input.area}" has no shell preset binding.`);
+  }
+  return { ownerModuleId: binding.descriptor.ownerModuleId, presetKey: binding.descriptor.presetKey };
+}
+
+function resolveActivePresetModuleKeys(
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
   area: PhiCmsAreaKey,
-  areaPreset: Pick<PhiResolvedCmsAreaPresetPayload, "preset"> | null,
+  modules: PhiCmsAreaModulesSelection | null,
   serverCapabilities: PhiCapabilitySnapshot | null,
 ) {
   const platformModuleId = runtimeModuleCatalog.platformModuleId;
@@ -229,7 +332,7 @@ export function resolveActivePresetModuleKeys(
     throw new Error(`Area "${area}" is not declared in the runtime module catalog.`);
   }
   activeModuleKeys.add(areaDefinition.baseModuleId);
-  const configuredModuleKeys = readPhiAreaPresetRuntimeModuleIds(areaPreset?.preset, area);
+  const configuredModuleKeys = readPhiAreaSelectionRuntimeModuleIds(modules, area);
   const moduleDefinitions = [...runtimeModuleCatalog.values()].map((entry) => entry.definition);
   // The Modules declared `activation: "always"` come first and on the same terms as the selected ones:
   // the active set here has to be the one `resolvePhiRuntimeModuleSet` builds for the render.
@@ -339,7 +442,8 @@ export async function resolvePhiCmsRequest({
   requestContext,
   searchParams,
   loadResolvedCmsPage,
-  loadExactCmsArea,
+  loadCmsArea,
+  previewsArea = false,
   runtimeModuleCatalog,
   purpose = "render",
 }: ResolvePhiCmsRequestArgs): Promise<PhiResolvedCmsRequest | null> {
@@ -379,19 +483,38 @@ export async function resolvePhiCmsRequest({
 
   const catalog = resolvePhiCmsDescriptorCatalog(runtimeModuleCatalog);
   const requestedAreaKey = resolvePhiCmsAreaKey(areaMask);
-  const areaShellBinding = resolvePhiCmsAreaShellPresetBinding(catalog, requestedAreaKey);
-  if (!areaShellBinding) {
-    throw new Error(`Area "${requestedAreaKey}" has no shell preset binding.`);
-  }
-  const areaSourcePreset = {
-    ownerModuleId: areaShellBinding.descriptor.ownerModuleId,
-    presetKey: areaShellBinding.descriptor.presetKey,
-  };
-  const exactAreaPreset = await loadExactCmsArea(path, areaSourcePreset);
-  // Only where nothing is stored; see the same step in `cms-root.ts`.
+  const areaOwnedStoragePath = resolveAreaOwnedStoragePath(path, areaMask);
+  /*
+   * The selection first, then the shell it chooses, then the stored structure if it stands on that
+   * shell -- one read for a page view (`readPhiCmsAreaForRequest`).
+   */
+  const storedArea = await readPhiCmsAreaForRequest({
+    loadArea: (request) => loadCmsArea(path, request),
+    previewsArea,
+    resolveShellSource: (modules) => resolvePhiCmsAreaShellSource({
+      runtimeModuleCatalog,
+      area: requestedAreaKey,
+      modules,
+      serverCapabilities: resolvedRequestContext.serverCapabilities,
+    }),
+  });
+  const {
+    activeModuleIds: activeModuleKeys,
+    routeTable,
+    shellBinding: areaShellBinding,
+    structure: exactAreaPreset,
+  } = resolvePhiAreaRouteScope({
+    runtimeModuleCatalog,
+    catalog,
+    area: requestedAreaKey,
+    read: storedArea,
+    serverCapabilities: resolvedRequestContext.serverCapabilities,
+  });
+  // Only where nothing is stored on this shell; see the same step in `cms-root.ts`.
   const localAreaPreset = exactAreaPreset
     ? null
     : await buildPhiLocalCmsAreaPayload({
+      binding: areaShellBinding,
       areaMask,
       siteId: resolvedRequestContext.site.id,
       path,
@@ -400,14 +523,6 @@ export async function resolvePhiCmsRequest({
     });
   const effectiveAreaPreset = exactAreaPreset ?? localAreaPreset;
   const siteId = localAreaPreset?.preset.preset.siteId ?? resolvedRequestContext.site.id;
-  const areaOwnedStoragePath = resolveAreaOwnedStoragePath(path, areaMask);
-  const { activeModuleIds: activeModuleKeys, routeTable } = resolvePhiAreaRouteScope({
-    runtimeModuleCatalog,
-    catalog,
-    area: requestedAreaKey,
-    preset: effectiveAreaPreset?.preset ?? null,
-    serverCapabilities: resolvedRequestContext.serverCapabilities,
-  });
   const runtimeWithAuthProvider: PhiBlockRuntime = {
     ...runtime,
     authUiProvider: resolvePhiAuthUiRuntimeProjection(
@@ -574,6 +689,7 @@ export async function resolvePhiCmsRequest({
   if (purpose === "lookup") {
     return {
       areaPreset: effectiveAreaPreset?.preset ?? null,
+      areaModules: storedArea.modules,
       page: resolvedContent.page,
       runtime: resolvedRuntime,
       serverCapabilities: resolvedRequestContext.serverCapabilities,
@@ -604,6 +720,7 @@ export async function resolvePhiCmsRequest({
 
   return {
     areaPreset: areaPresetTree && applyPhiBackgroundAssetProjection(areaPresetTree, backgroundAssets),
+    areaModules: storedArea.modules,
     page: applyPhiBackgroundAssetProjection(resolvedContent.page, backgroundAssets),
     runtime: resolvedRuntime,
     serverCapabilities: resolvedRequestContext.serverCapabilities,
@@ -644,14 +761,14 @@ export const loadPhiResolvedCmsRequest = cache(async function loadPhiResolvedCms
     searchParams,
     purpose,
     runtimeModuleCatalog,
-    loadExactCmsArea: (requestPath, sourcePreset) =>
+    previewsArea: revision != null || review?.kind === "area",
+    loadCmsArea: (requestPath, { sourcePreset, stage }) =>
       getPhiExactSiteArea({
         path: requestPath,
         siteKey,
         apiBaseUrl,
         internalToken,
-        revision,
-        review,
+        ...(stage === "requested" ? { revision, review } : {}),
         cookieHeader,
         sourcePreset,
       }),

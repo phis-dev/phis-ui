@@ -99,7 +99,7 @@ export async function PhiCmsErrorPage({ code, cmsBridge, area, locale: staticLoc
   const runtimeModuleScope = await resolvePhiCmsAreaRuntimeModuleScope({
     cmsBridge,
     area: resolvedRequest.runtime.area,
-    areaPreset: resolvedRequest.areaPreset,
+    areaModules: resolvedRequest.areaModules,
     serverCapabilities: resolvedRequest.serverCapabilities,
   });
   const runtimeRegistry = await resolvePhiCmsTreeRuntimeRegistry({

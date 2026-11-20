@@ -43,7 +43,7 @@ vi.mock("../plugins/runtime-modules/descriptor-compiler", () => ({
   resolvePhiCmsDescriptorCatalog: () => ({
     areaDefinitions: new Map([["admin", { accessPolicy: null }]]),
   }),
-  resolvePhiCmsAreaShellPresetBinding: () => ({
+  resolvePhiCmsAreaBaseShellPresetBinding: () => ({
     descriptor: { ownerModuleId: "@phis/ui/modules/admin", presetKey: "admin-area-preset" },
   }),
 }));

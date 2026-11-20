@@ -122,21 +122,22 @@ function toReleaseRow(item: Record<string, unknown>): ReleaseRow | null {
         reject: null,
       };
     }
-    case "area":
-      return {
-        id: `area:${String(item.area)}:${String(item.part)}`,
-        kind: "area",
-        what: String(item.part ?? ""),
-        where: String(item.area ?? ""),
-        by: readPerson(item.savedBy),
-        at: item.savedAt,
-        // The Area's publish names the Shell preset it stands on; a draft without one has nothing to name.
-        publishable: Boolean(readText(item.ownerModuleId) && readText(item.presetKey)),
-        rejectable: false,
-        publish: readText(item.ownerModuleId) && readText(item.presetKey)
+    case "area": {
+      /*
+       * A structure's publish names the Shell preset it stands on; a structure draft without one has
+       * nothing to name. A Module selection names no shell and is published by its Area alone.
+       */
+      const modules = item.part === "modules";
+      const publish = modules
+        ? {
+            path: "/api/site/cms/area/modules/publish",
+            method: "POST" as const,
+            body: { area: item.area, revisionId: item.revisionId },
+          }
+        : readText(item.ownerModuleId) && readText(item.presetKey)
           ? {
-              path: item.part === "modules" ? "/api/site/cms/area/modules/publish" : "/api/site/cms/area/publish",
-              method: "POST",
+              path: "/api/site/cms/area/publish",
+              method: "POST" as const,
               body: {
                 area: item.area,
                 revisionId: item.revisionId,
@@ -144,9 +145,20 @@ function toReleaseRow(item: Record<string, unknown>): ReleaseRow | null {
                 presetKey: item.presetKey,
               },
             }
-          : null,
+          : null;
+      return {
+        id: `area:${String(item.area)}:${String(item.part)}`,
+        kind: "area",
+        what: String(item.part ?? ""),
+        where: String(item.area ?? ""),
+        by: readPerson(item.savedBy),
+        at: item.savedAt,
+        publishable: publish != null,
+        rejectable: false,
+        publish,
         reject: null,
       };
+    }
     default:
       return null;
   }

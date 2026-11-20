@@ -124,6 +124,7 @@ export function restorePhiWorkspaceCatalog(fields: Partial<PhiWorkspaceCatalogSt
 export type PhiWorkspaceCatalogPreload = Pick<
   PhiWorkspaceCatalogState,
   | "areaPresetSourcesByArea"
+  | "areaShellsByArea"
   | "unresolvedModuleIdsByArea"
   | "serverUnavailableModules"
   | "publicRouteClaims"
@@ -142,6 +143,7 @@ export type PhiWorkspaceCatalogPreload = Pick<
     runtimeModuleDefinitions: string;
     modulePresetPagesByArea: string;
     areaPresetSourcesByArea: string;
+    areaShellsByArea: string;
     navigationSurfacesByArea: string;
     unresolvedModuleIdsByArea: string;
     publicRouteClaims: string;
@@ -163,6 +165,7 @@ export function applyPhiWorkspaceCatalogPreload(preload: PhiWorkspaceCatalogPrel
     const definitionsChanged = JSON.stringify(current.runtimeModuleDefinitions ?? []) !== preload.keys.runtimeModuleDefinitions;
     const modulePresetPagesChanged = JSON.stringify(current.modulePresetPagesByArea) !== preload.keys.modulePresetPagesByArea;
     const areaPresetSourcesChanged = JSON.stringify(current.areaPresetSourcesByArea) !== preload.keys.areaPresetSourcesByArea;
+    const areaShellsChanged = JSON.stringify(current.areaShellsByArea) !== preload.keys.areaShellsByArea;
     const navigationSurfacesChanged = JSON.stringify(current.navigationSurfacesByArea) !== preload.keys.navigationSurfacesByArea;
     const unresolvedModuleIdsChanged = JSON.stringify(current.unresolvedModuleIdsByArea) !== preload.keys.unresolvedModuleIdsByArea;
     const publicRouteClaimsChanged = JSON.stringify(current.publicRouteClaims) !== preload.keys.publicRouteClaims;
@@ -186,7 +189,7 @@ export function applyPhiWorkspaceCatalogPreload(preload: PhiWorkspaceCatalogPrel
       }
     }
     openedPageKey = initialPageChanged ? initialPageKey : null;
-    return changed || definitionsChanged || modulePresetPagesChanged || areaPresetSourcesChanged ||
+    return changed || definitionsChanged || modulePresetPagesChanged || areaPresetSourcesChanged || areaShellsChanged ||
       navigationSurfacesChanged || unresolvedModuleIdsChanged || serverUnavailableModulesChanged ||
       publicRouteClaimsChanged || publicRoutePathsChanged || catalogHydrationChanged || initialPageChanged
       ? {
@@ -197,6 +200,7 @@ export function applyPhiWorkspaceCatalogPreload(preload: PhiWorkspaceCatalogPrel
           catalogHydrated: true,
           modulePresetPagesByArea: preload.activeCatalogs.modulePresetPagesByArea,
           areaPresetSourcesByArea: preload.areaPresetSourcesByArea,
+          areaShellsByArea: preload.areaShellsByArea,
           navigationSurfacesByArea: preload.activeCatalogs.navigationSurfacesByArea,
           unresolvedModuleIdsByArea: preload.unresolvedModuleIdsByArea,
           serverUnavailableModules: preload.serverUnavailableModules,

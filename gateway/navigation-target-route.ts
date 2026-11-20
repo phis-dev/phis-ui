@@ -10,7 +10,7 @@ import {
 import { canPhiViewerAccess } from "../types/access";
 import {
   normalizePhiCmsRoutePath,
-  resolvePhiCmsAreaShellPresetBinding,
+  resolvePhiCmsAreaBaseShellPresetBinding,
   resolvePhiCmsDescriptorCatalog,
   resolvePhiCmsRoutePreset,
 } from "../plugins/runtime-modules/descriptor-compiler";
@@ -118,33 +118,27 @@ export function buildPhiNavigationTargetRouteHandler({
       );
       const catalog = resolvePhiCmsDescriptorCatalog(bridge.runtimeModuleCatalog);
       const areaDefinition = catalog.areaDefinitions.get(area);
-      const shellBinding = resolvePhiCmsAreaShellPresetBinding(catalog, area);
       if (
         !areaDefinition ||
-        !shellBinding ||
+        !resolvePhiCmsAreaBaseShellPresetBinding(catalog, area) ||
         !canPhiViewerAccess(requestContext.viewer, areaDefinition.accessPolicy)
       ) {
         return jsonResponse({ available: false });
       }
 
-      const sourcePreset = {
-        ownerModuleId: shellBinding.descriptor.ownerModuleId,
-        presetKey: shellBinding.descriptor.presetKey,
-      };
-      const areaPreset = await getPhiExactSiteArea({
+      const storedArea = await getPhiExactSiteArea({
         path: resolvedRoute.cmsPath,
         apiBaseUrl: bridge.runtime.apiBaseUrl,
         internalToken: bridge.runtime.internalToken,
         siteKey: bridge.runtime.siteKey,
         locale: resolvedRoute.locale,
         cookieHeader,
-        sourcePreset,
       });
-            const { routeTable } = resolvePhiAreaRouteScope({
+      const { routeTable } = resolvePhiAreaRouteScope({
         runtimeModuleCatalog: bridge.runtimeModuleCatalog,
         catalog,
         area,
-        preset: areaPreset?.preset ?? null,
+        read: storedArea,
         serverCapabilities: requestContext.serverCapabilities,
       });
       const storagePath = resolveAreaStoragePath(resolvedRoute.cmsPath, area);

@@ -6,8 +6,10 @@ import {
   type PhiBuilderRuntimeControllerPreload,
 } from "./definition";
 import {
+  buildPhiBuilderAreaPresetSourcesByArea,
   buildPhiBuilderAreaRootRoutesByArea,
   buildPhiBuilderAreaMetaByArea,
+  buildPhiBuilderAreaShellsByArea,
   buildPhiBuilderAreaControllerSettingsByArea,
   buildPhiBuilderPublicRoutePaths,
   buildPhiBuilderPublishedRuntimeModuleIdsForArea,
@@ -17,7 +19,6 @@ import {
 } from "../area-shell-presets.server";
 import type { PhiRuntimeControllerDefinition } from "../../../../types";
 import {
-  buildPhiBuilderAreaPresetSourcesByArea,
   buildPhiBuilderModulePresetPagesByArea,
   buildPhiBuilderPublicRouteClaims,
 } from "../page-preset-catalog.server";
@@ -50,6 +51,8 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_SERVER_DEFINITION = {
       builderLabels,
       historyLabels,
       livePublicModuleIds,
+      areaPresetSourcesByArea,
+      areaShellsByArea,
     ] = await Promise.all([
       buildPhiBuilderStructureShellPresetDraftsByArea(
         runtime,
@@ -67,6 +70,8 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_SERVER_DEFINITION = {
       getPhiBuilderChromeWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
       getPhiHistoryLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
       buildPhiBuilderPublishedRuntimeModuleIdsForArea(runtime, "public", runtimeModuleCatalog),
+      buildPhiBuilderAreaPresetSourcesByArea(runtime, runtimeModuleCatalog),
+      buildPhiBuilderAreaShellsByArea(runtime, runtimeModuleCatalog),
     ]);
 
     const requestedArea = normalizePhiBuilderAreaSearchParam(
@@ -122,7 +127,8 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_SERVER_DEFINITION = {
       modulePresetPagesByArea: buildPhiBuilderModulePresetPagesByArea(
         runtimeModuleCatalog,
       ),
-      areaPresetSourcesByArea: buildPhiBuilderAreaPresetSourcesByArea(runtimeModuleCatalog),
+      areaPresetSourcesByArea,
+      areaShellsByArea,
       navigationSurfacesByArea: await buildPhiBuilderNavigationSurfacesByArea(
         runtime,
         runtimeModuleCatalog,

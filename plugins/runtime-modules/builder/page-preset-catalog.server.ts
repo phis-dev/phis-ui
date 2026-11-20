@@ -4,7 +4,6 @@ import { PHI_BUILDER_AREA_KEYS, type PhiBuilderAreaKey } from "../../../constant
 import type { PhiRuntimeModuleCatalog } from "../../../types";
 import { resolvePhiCmsDescriptorCatalog } from "../../../plugins/runtime-modules/descriptor-compiler";
 import type { PhiBuilderModulePresetPagesByArea } from "../../../helpers/cms-page-catalog";
-import type { PhiCmsPresetSource } from "../../../types/cms-module-descriptors";
 import type { PhiPublicRouteClaim } from "../../../helpers/public-route-claims";
 import { insertPhiPresetPageTarget } from "../../../helpers/cms-preset-page-tree";
 
@@ -67,25 +66,4 @@ export function buildPhiBuilderPublicRouteClaims(
   }
 
   return claims;
-}
-
-export function buildPhiBuilderAreaPresetSourcesByArea(
-  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
-) {
-  const sources: Partial<Record<PhiBuilderAreaKey, PhiCmsPresetSource>> = {};
-  const catalog = resolvePhiCmsDescriptorCatalog(runtimeModuleCatalog);
-
-  for (const { descriptor } of catalog.areaShellByArea.values()) {
-    const area = resolveBuilderArea(descriptor.area);
-    if (!area) {
-      continue;
-    }
-    sources[area] = {
-      ownerModuleId: descriptor.ownerModuleId,
-      presetKey: descriptor.presetKey,
-      sourcePresetVersion: descriptor.shellPresetVersion,
-    };
-  }
-
-  return sources;
 }

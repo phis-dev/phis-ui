@@ -20,7 +20,7 @@ import {
 } from "../helpers/cms-access-policy";
 import { collectPhiSitemapCandidates } from "../helpers/phi-seo";
 import {
-  resolvePhiCmsAreaShellPresetBinding,
+  resolvePhiCmsAreaBaseShellPresetBinding,
   resolvePhiCmsDescriptorCatalog,
 } from "../plugins/runtime-modules/descriptor-compiler";
 import { resolvePhiCmsAreaRuntimeModuleScope } from "../components/cms/phi-cms-runtime-registry";
@@ -215,15 +215,10 @@ async function indexArea({
 }) {
   const { apiBaseUrl, internalToken, siteKey } = credentials;
   const catalog = resolvePhiCmsDescriptorCatalog(bridge.runtimeModuleCatalog);
-  const shellBinding = resolvePhiCmsAreaShellPresetBinding(catalog, area);
-  if (!shellBinding) {
+  if (!resolvePhiCmsAreaBaseShellPresetBinding(catalog, area)) {
     console.warn(`[phis-ui] The ${area} Area has no shell preset; nothing to index.`);
     return;
   }
-  const sourcePreset = {
-    ownerModuleId: shellBinding.descriptor.ownerModuleId,
-    presetKey: shellBinding.descriptor.presetKey,
-  };
   const areaMask = area === "public" ? 1 : 2;
 
   // The Site's languages and its server, read once as the anonymous reader; the locale is per set.
@@ -231,19 +226,18 @@ async function indexArea({
   // The Site config's change markers, from the same answer the context above was built from.
   const { readMarker, translationMarkers } = await getResolvedSiteConfig({ apiBaseUrl, internalToken, siteKey });
   const locales = anonymous.site.availableLocales.map((option) => option.code);
-  const { area: areaPreset, publishedPages } = await getSiteAreaWithPublishedPages({
+  const { area: storedArea, publishedPages } = await getSiteAreaWithPublishedPages({
     apiBaseUrl,
     internalToken,
     siteKey,
     locale: anonymous.site.defaultLocale,
-    sourcePreset,
     area,
   });
-    const { activeModuleIds, routeTable } = resolvePhiAreaRouteScope({
+  const { activeModuleIds, routeTable, structure } = resolvePhiAreaRouteScope({
     runtimeModuleCatalog: bridge.runtimeModuleCatalog,
     catalog,
     area,
-    preset: areaPreset?.preset ?? null,
+    read: storedArea,
     serverCapabilities: anonymous.serverCapabilities,
   });
   if (!activeModuleIds.has(PHI_SEARCH_RUNTIME_MODULE_ID)) return;
@@ -267,18 +261,19 @@ async function indexArea({
     build: getPhiSiteBuildId(),
     area,
     publishedPages,
-    areaPreset: areaPreset?.preset ?? null,
+    areaPreset: structure?.preset ?? null,
+    areaModules: storedArea.modules,
     activeModuleIds: [...activeModuleIds].sort(),
     locales,
     readMarker,
     translationMarkers,
   })).digest("hex");
 
-  // The Area's Module scope as the live render resolves it: the preset's selection, the locked ones implied.
+  // The Area's Module scope as the live render resolves it: its selection, the locked ones implied.
   const { moduleSet } = await resolvePhiCmsAreaRuntimeModuleScope({
     cmsBridge: bridge,
     area,
-    areaPreset: areaPreset?.preset ?? null,
+    areaModules: storedArea.modules,
     serverCapabilities: anonymous.serverCapabilities,
   });
   // The same access registry the live render filters a Page's tree with (phi-cms-page-render-scope.tsx).

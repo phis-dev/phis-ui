@@ -6,9 +6,7 @@ import { resolvePhiCmsPageRedirect } from "../components/cms/phi-cms-page-redire
 import { getSiteAreaWithPublishedPages, type PhiPublishedPage } from "../gateway/site-area";
 import {
   PHI_AREA_META_PUBLIC_DEFAULTS,
-  readPhiAreaLandingSelection,
   readPhiAreaMeta,
-  readPhiAreaPublicRoutePaths,
 } from "../helpers/cms-area-config";
 import {
   collectPhiSitemapCandidates,
@@ -21,18 +19,16 @@ import {
 import { createPhiFingerprintCache } from "../helpers/phi-sitemap-cache";
 import { readPhiSiteRuntimeConfigSync } from "../helpers/site-runtime";
 import {
-  compilePhiCmsActiveRouteTable,
-  resolvePhiCmsAreaShellPresetBinding,
+  resolvePhiCmsAreaBaseShellPresetBinding,
   resolvePhiCmsDescriptorCatalog,
 } from "../plugins/runtime-modules/descriptor-compiler";
 import { getPhiExactSiteArea } from "../server-helpers/cms";
-import { resolveActivePresetModuleKeys } from "../server-helpers/cms-request";
+import { resolvePhiAreaRouteScope, type PhiCmsAreaStoredRead } from "../server-helpers/cms-request";
 import { resolvePhiCmsLookup } from "../server-helpers/cms-lookup";
 import { loadPhiSiteRequestContext } from "../server-helpers/runtime";
 import type { PhiSiteRequestContext } from "../types/site-request-context";
 import { fetchSiteLocaleConfig } from "../server-helpers/site-locale";
 import type { PhiCmsSiteBridge } from "../types/cms-plugins";
-import type { PhiRuntimeModuleId } from "../types/cms-module-descriptors";
 
 const PHI_SITEMAP_PATH = "/sitemap.xml";
 /** How many candidates are resolved at once. Each one is a page lookup against the server. */
@@ -43,7 +39,10 @@ type PhiPublicSeoContext = {
   requestContext: PhiSiteRequestContext;
   locale: string;
   publicBase: string | null;
-  areaPreset: Awaited<ReturnType<typeof getPhiExactSiteArea>>;
+  /** What the Public Area stores: its Module selection and its structure. */
+  storedArea: PhiCmsAreaStoredRead | null;
+  /** The Area as a visitor is served it: active Modules, route table and the structure that applies. */
+  scope: ReturnType<typeof resolvePhiAreaRouteScope>;
   /** Asked only by the sitemap; robots.txt needs the switches and nothing else. */
   publishedPages: PhiPublishedPage[];
   /** Whether this Site has a sitemap at all: a public base, and a Public Area that is indexed and listed. */
@@ -69,16 +68,11 @@ async function loadPhiPublicSeoContext(
   const locale = localeConfig.defaultLocale;
   const requestContext = await loadPhiSiteRequestContext(siteKey, locale, "", apiBaseUrl, internalToken);
   const catalog = resolvePhiCmsDescriptorCatalog(bridge.runtimeModuleCatalog);
-  const shellBinding = resolvePhiCmsAreaShellPresetBinding(catalog, "public");
-  if (!shellBinding) {
+  if (!resolvePhiCmsAreaBaseShellPresetBinding(catalog, "public")) {
     return null;
   }
-  const sourcePreset = {
-    ownerModuleId: shellBinding.descriptor.ownerModuleId,
-    presetKey: shellBinding.descriptor.presetKey,
-  };
-  const { area: areaPreset, publishedPages } = withPublishedPages
-    ? await getSiteAreaWithPublishedPages({ apiBaseUrl, internalToken, siteKey, locale, sourcePreset })
+  const { area: storedArea, publishedPages } = withPublishedPages
+    ? await getSiteAreaWithPublishedPages({ apiBaseUrl, internalToken, siteKey, locale })
     : {
         area: await getPhiExactSiteArea({
           path: "/",
@@ -87,11 +81,17 @@ async function loadPhiPublicSeoContext(
           internalToken,
           locale,
           cookieHeader: "",
-          sourcePreset,
         }),
         publishedPages: [],
       };
-  const meta = readPhiAreaMeta(areaPreset?.preset.preset.config);
+  const scope = resolvePhiAreaRouteScope({
+    runtimeModuleCatalog: bridge.runtimeModuleCatalog,
+    catalog,
+    area: "public",
+    read: storedArea,
+    serverCapabilities: requestContext.serverCapabilities,
+  });
+  const meta = readPhiAreaMeta(scope.structure?.preset.preset.config);
   const publicBase = resolvePhiSitePublicBase(
     requestContext.site.publicUrl,
     readPhiSiteRuntimeConfigSync().site.publicUrl,
@@ -102,7 +102,8 @@ async function loadPhiPublicSeoContext(
     requestContext,
     locale,
     publicBase,
-    areaPreset,
+    storedArea,
+    scope,
     publishedPages,
     sitemapEnabled: Boolean(publicBase)
       && (meta?.index ?? PHI_AREA_META_PUBLIC_DEFAULTS.index)
@@ -158,16 +159,8 @@ async function filterPhiSitemapCandidates(
 async function buildPhiSitemapDocuments(
   bridge: PhiCmsSiteBridge,
   context: PhiPublicSeoContext & { publicBase: string },
-  activeModuleIds: ReadonlySet<PhiRuntimeModuleId>,
 ): Promise<string[]> {
-  const { requestContext, areaPreset, publishedPages } = context;
-  const routeTable = compilePhiCmsActiveRouteTable({
-    catalog: resolvePhiCmsDescriptorCatalog(bridge.runtimeModuleCatalog),
-    area: "public",
-    activeModuleIds,
-    publicRoutePaths: readPhiAreaPublicRoutePaths(areaPreset?.preset.preset.config),
-    landingSelection: readPhiAreaLandingSelection(areaPreset?.preset.preset.config),
-  });
+  const { requestContext, scope: { routeTable }, publishedPages } = context;
   const candidates = collectPhiSitemapCandidates({
     moduleRoutes: [...routeTable.exactByPath].map(([path, descriptor]) => [path, descriptor] as const),
     publishedPages,
@@ -190,14 +183,12 @@ async function buildPhiSitemapDocuments(
  * What it leaves out -- the installed Module catalog -- changes only with a new Site process, and a
  * new process starts with an empty cache.
  */
-function buildPhiSitemapFingerprint(
-  context: PhiPublicSeoContext,
-  activeModuleIds: ReadonlySet<PhiRuntimeModuleId>,
-) {
+function buildPhiSitemapFingerprint(context: PhiPublicSeoContext) {
   return createHash("sha256").update(JSON.stringify({
     publishedPages: context.publishedPages,
-    area: context.areaPreset?.preset ?? null,
-    activeModuleIds: [...activeModuleIds].sort(),
+    area: context.scope.structure?.preset ?? null,
+    modules: context.storedArea?.modules ?? null,
+    activeModuleIds: [...context.scope.activeModuleIds].sort(),
     publicBase: context.publicBase,
     availableLocales: context.requestContext.site.availableLocales.map((option) => option.code),
     defaultLocale: context.requestContext.site.defaultLocale,
@@ -223,15 +214,9 @@ export function buildPhiSitemapRouteHandler({ bridge }: { bridge: PhiCmsSiteBrid
     if (!context?.sitemapEnabled || !publicBase) {
       return new Response("Not Found", { status: 404, headers: { "cache-control": "no-store" } });
     }
-    const activeModuleIds = resolveActivePresetModuleKeys(
-      bridge.runtimeModuleCatalog,
-      "public",
-      context.areaPreset ? { preset: context.areaPreset.preset } : null,
-      context.requestContext.serverCapabilities,
-    );
     const documents = await cache.resolve(
-      buildPhiSitemapFingerprint(context, activeModuleIds),
-      () => buildPhiSitemapDocuments(bridge, { ...context, publicBase }, activeModuleIds),
+      buildPhiSitemapFingerprint(context),
+      () => buildPhiSitemapDocuments(bridge, { ...context, publicBase }),
     );
     /*
      * One file answers on its own address. More than one -- above 50,000 URLs or 45 MB -- turns

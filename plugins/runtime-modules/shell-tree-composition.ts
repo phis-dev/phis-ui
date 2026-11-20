@@ -117,9 +117,6 @@ export function mergePhiCmsShellTrees(
     ...base,
     ...overlay,
     pageMeta: Object.prototype.hasOwnProperty.call(overlay, "pageMeta") ? overlay.pageMeta : base.pageMeta,
-    runtimeModuleIds: Object.prototype.hasOwnProperty.call(overlay, "runtimeModuleIds")
-      ? overlay.runtimeModuleIds
-      : base.runtimeModuleIds,
     regions: [...base.regions, ...overlay.regions],
     overlays: [...base.overlays, ...overlay.overlays],
     layoutNodes: [...base.layoutNodes, ...overlay.layoutNodes],

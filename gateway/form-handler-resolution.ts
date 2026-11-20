@@ -2,7 +2,7 @@ import "server-only";
 
 import type { NextRequest } from "next/server";
 
-import { isPhiCmsAreaKey, resolvePhiCmsAreaMask, type PhiCmsAreaKey } from "../constants/cms-areas";
+import { isPhiCmsAreaKey, type PhiCmsAreaKey } from "../constants/cms-areas";
 import { canPhiViewerAccess, type PhiAccessViewer } from "../types/access";
 import { getResolvedFormDefinition } from "./form-registry";
 import { getExactSiteArea } from "./site-area";
@@ -11,11 +11,9 @@ import { resolvePhiCmsDescriptorCatalog } from "../plugins/runtime-modules/descr
 import { resolvePhiRuntimeModuleSet } from "../plugins/runtime-modules/resolver";
 import { resolvePhiRuntimeModuleIdsForArea } from "../plugins/runtime-modules/settings";
 import type { PhiRuntimeModuleCatalog } from "../plugins/runtime-modules/contracts";
-import { buildPhiLocalCmsAreaPayload } from "../server-helpers/cms-area";
-import { buildPhiBlockRuntime, loadPhiSiteRequestContext } from "../server-helpers/runtime";
-import { runWithPhiRequestRuntime } from "../server-helpers/request-runtime";
+import { loadPhiSiteRequestContext } from "../server-helpers/runtime";
 import type { PhiFormHandlerPhase, PhiFormHandlerProviderDescriptor } from "../types/form-descriptor";
-import { readPhiAreaPresetRuntimeModuleIds } from "../helpers/cms-area-config";
+import { readPhiAreaSelectionRuntimeModuleIds } from "../helpers/cms-area-config";
 import { fetchResolvedSiteLocale } from "../server-helpers/site-locale";
 
 export type PhiResolvedServerFormHandler = {
@@ -98,7 +96,7 @@ export async function resolvePhiServerFormHandler(options: {
 
   const locale = await resolveRequestLocale(options.request, options);
   const cookieHeader = options.request.headers.get("cookie") ?? "";
-  // Read at most once, and only when something needs the viewer: an admitting Area or a preset fallback.
+  // Read at most once, and only when something needs the viewer or the server: an admitting Area, the capabilities.
   const siteRequest: { context: Awaited<ReturnType<typeof loadPhiSiteRequestContext>> | null } = {
     context: null,
   };
@@ -117,7 +115,11 @@ export async function resolvePhiServerFormHandler(options: {
     return null;
   }
 
-  const areaPayload = await getExactSiteArea({
+  /*
+   * The Area's Module selection, stored apart from its structure: which Modules may answer is all this
+   * needs, and an Area that never stored one runs its default list -- no shell is built to find out.
+   */
+  const storedArea = await getExactSiteArea({
     apiBaseUrl: options.upstreamBaseUrl,
     internalToken: options.internalToken,
     siteKey: options.siteKey,
@@ -125,35 +127,10 @@ export async function resolvePhiServerFormHandler(options: {
     path: resolveAreaPath(area),
     locale,
     cookieHeader,
-    sourcePreset: {
-      ownerModuleId: areaDefinition.baseModuleId,
-      presetKey: areaDefinition.shellPresetKey,
-    },
   });
-  let tree = areaPayload?.preset ?? null;
-  if (!tree) {
-    const requestContext = await loadSiteRequestContext();
-    const areaMask = resolvePhiCmsAreaMask(area);
-    const runtime = buildPhiBlockRuntime({
-      requestContext,
-      areaMask,
-    });
-    // The code-owned preset trees resolve their labels through the request runtime store. The page
-    // render path populates it in the root layout; this route handler runs outside the React render,
-    // so the store must be scoped explicitly around the instantiation — otherwise the first label
-    // lookup after a cold start fails the whole dispatch once the label cache no longer masks it.
-    tree = (await runWithPhiRequestRuntime(runtime, () => buildPhiLocalCmsAreaPayload({
-      areaMask,
-      siteId: requestContext.site.id,
-      path: resolveAreaPath(area),
-      runtime,
-      runtimeModuleCatalog: catalog,
-    })))?.preset ?? null;
-  }
-  if (!tree) return null;
   const optionalModuleIds = resolvePhiRuntimeModuleIdsForArea(
     area,
-    readPhiAreaPresetRuntimeModuleIds(tree, area),
+    readPhiAreaSelectionRuntimeModuleIds(storedArea?.modules, area),
     [...catalog.values()].map((entry) => entry.definition),
   );
   const serverCapabilities = siteRequest.context?.serverCapabilities ??

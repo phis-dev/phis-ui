@@ -145,8 +145,8 @@ export const PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS: PhiBuilderRevisionsWid
   },
   deleteArea: {
     title: "Clear this Area back to its preset?",
-    warning: "Everything this Site stored for the Area is cleared -- its Shell and its Module selection, drafts and published alike. What is live changes at once, the Module preset takes the Area back, and no revision is left to restore it from. It cannot be undone.",
-    survives: "The Area keeps its Pages, its Navigation and its Theme. Its Shell and its Module selection go back to the preset.",
+    warning: "The structure this Site stored for the Area is cleared -- its Shell, drafts and published alike. What is live changes at once, the shell's preset takes the Area back, and no revision is left to restore it from. It cannot be undone. The Module selection is kept.",
+    survives: "The Area keeps its Module selection, its Pages, its Navigation and its Theme. Only its Shell goes back to the preset.",
     field: "Type the Area key to confirm",
     fieldRequired: "Write the Area key out to confirm.",
     confirm: "Clear Area",

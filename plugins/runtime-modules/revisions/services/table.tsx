@@ -498,12 +498,19 @@ function buildTableData(
   result: PhiBuilderRevisionHistoryResponse,
 ): PhiTableProviderQueryResult {
   const rows = result.rows.map((row, index) => {
+    /*
+     * An Area's history holds its structure revisions and its Modules revisions side by side. A Modules
+     * revision names no preset (`sourcePreset` null) and is published or drafted by its own pointers,
+     * which the row states; `current` speaks of the structure only, so it says nothing about such a row.
+     */
+    const isAreaModulesRevision = params.scope.kind === "area" && !row.sourcePreset;
     const isPublished =
-      row.isPublished || result.current.publishedRevisionId === row.revisionId;
+      row.isPublished || (!isAreaModulesRevision && result.current.publishedRevisionId === row.revisionId);
     const isWorkingDraft =
       row.isWorkingDraft ||
-      result.current.workingDraftRevisionId === row.revisionId ||
+      (!isAreaModulesRevision && result.current.workingDraftRevisionId === row.revisionId) ||
       (
+        !isAreaModulesRevision &&
         result.current.workingDraftRevisionId == null &&
         index === 0 &&
         !isPublished

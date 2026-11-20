@@ -944,7 +944,10 @@ export type PhiCmsSiteRuntime = {
 };
 
 export type PhiResolvedCmsRequest = {
+  /** The Area's structure: the stored one where it stands on the effective shell, else that shell's preset. */
   areaPreset: PhiResolvedCmsAreaPresetTree | null;
+  /** The Area's Module selection, stored apart from the structure; null where the Area never stored one. */
+  areaModules: import("./cms").PhiCmsAreaModulesSelection | null;
   page: PhiResolvedCmsPageTree;
   runtime: PhiBlockRuntime;
   serverCapabilities: import("./server-capabilities").PhiCapabilitySnapshot | null;

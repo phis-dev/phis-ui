@@ -47,7 +47,7 @@ const loadPhiCmsAreaRenderScopeCached = cache(async function loadPhiCmsAreaRende
   const runtimeModuleScope = await resolvePhiCmsAreaRuntimeModuleScope({
     cmsBridge,
     area: runtime.area,
-    areaPreset: layoutTree,
+    areaModules: rootScope.areaModules,
     serverCapabilities: rootScope.requestContext.serverCapabilities,
   });
   const filteredLayoutTree = layoutTree

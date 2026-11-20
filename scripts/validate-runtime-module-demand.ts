@@ -289,12 +289,14 @@ const areaDefinitions: readonly PhiCmsAreaDefinition[] = [{
   area: "public",
   baseModuleId: BASE_MODULE_ID,
   shellPresetKey: "public-shell",
+  shellProviders: "module",
   accessPolicy: { access: "anyone" },
   navigationSurfaces: [],
 }, {
   area: "builder",
   baseModuleId: BUILDER_BASE_MODULE_ID,
   shellPresetKey: "builder-shell",
+  shellProviders: "base",
   accessPolicy: { access: "anyone" },
   navigationSurfaces: [],
 }];

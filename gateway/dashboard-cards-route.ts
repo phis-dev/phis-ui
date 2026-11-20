@@ -12,7 +12,7 @@ import { canPhiViewerAccess } from "../types/access";
 import { localizeAreaPath } from "../helpers/locale";
 import {
   compilePhiCmsActiveRouteTable,
-  resolvePhiCmsAreaShellPresetBinding,
+  resolvePhiCmsAreaBaseShellPresetBinding,
   resolvePhiCmsDescriptorCatalog,
 } from "../plugins/runtime-modules/descriptor-compiler";
 import { resolvePhiAreaRouteScope } from "../server-helpers/cms-request";
@@ -111,32 +111,27 @@ async function resolveDashboardCardScope({
   );
   const catalog = resolvePhiCmsDescriptorCatalog(bridge.runtimeModuleCatalog);
   const areaDefinition = catalog.areaDefinitions.get(area);
-  const shellBinding = resolvePhiCmsAreaShellPresetBinding(catalog, area);
   if (
     !areaDefinition ||
-    !shellBinding ||
+    !resolvePhiCmsAreaBaseShellPresetBinding(catalog, area) ||
     !canPhiViewerAccess(requestContext.viewer, areaDefinition.accessPolicy)
   ) {
     return null;
   }
 
-  const areaPreset = await getPhiExactSiteArea({
+  const storedArea = await getPhiExactSiteArea({
     path,
     apiBaseUrl,
     internalToken,
     siteKey,
     locale,
     cookieHeader,
-    sourcePreset: {
-      ownerModuleId: shellBinding.descriptor.ownerModuleId,
-      presetKey: shellBinding.descriptor.presetKey,
-    },
   });
-    const { activeModuleIds, routeTable } = resolvePhiAreaRouteScope({
+  const { activeModuleIds, routeTable } = resolvePhiAreaRouteScope({
     runtimeModuleCatalog: bridge.runtimeModuleCatalog,
     catalog,
     area,
-    preset: areaPreset?.preset ?? null,
+    read: storedArea,
     serverCapabilities: requestContext.serverCapabilities,
   });
 

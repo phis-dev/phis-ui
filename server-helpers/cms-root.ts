@@ -28,11 +28,15 @@ import { buildPhiBlockRuntime, loadPhiSiteRequestContext } from "./runtime";
 import { createPhiModuleMediaLoader } from "../gateway/server-module-media";
 import {
   composePhiCmsActiveAreaOverlayPresets,
-  resolvePhiCmsAreaShellPresetBinding,
   resolvePhiCmsDescriptorCatalog,
 } from "../plugins/runtime-modules/descriptor-compiler";
 import { resolvePhiAuthUiRuntimeProjection } from "./auth-ui-provider";
-import { resolvePhiAreaRouteScope } from "./cms-request";
+import {
+  readPhiCmsAreaForRequest,
+  resolvePhiAreaRouteScope,
+  resolvePhiCmsAreaShellSource,
+} from "./cms-request";
+import type { PhiCmsPresetIdentity } from "../types/cms-module-descriptors";
 import {
   applyPhiBackgroundAssetProjection,
   resolvePhiBackgroundAssetProjection,
@@ -155,31 +159,30 @@ const loadPhiCmsRootScopeCached = cache(async function loadPhiCmsRootScopeCached
   const resolvedAreaMask = resolvePhiCmsAreaMask(resolvedRoute.area);
   const review = resolvePhiCmsReviewParams(request.searchParams);
   const descriptorCatalog = resolvePhiCmsDescriptorCatalog(cmsBridge.runtimeModuleCatalog);
-  const areaShellBinding = resolvePhiCmsAreaShellPresetBinding(descriptorCatalog, resolvedRoute.area);
-  if (!areaShellBinding) {
-    throw new Error(`Area "${resolvedRoute.area}" has no shell preset binding.`);
-  }
-  /*
-   * The stored Area needs the route, the cookie and the review, none of which the request context
-   * supplies, so its read starts here and travels beside the context's. A failure is kept for the
-   * `await` below; the empty handler only stops it from being reported as unhandled when the context
-   * read fails first and that `await` is never reached.
-   */
-  const exactAreaPresetRead = getPhiExactSiteArea({
+  const revision = resolvePhiCmsRevisionFromSearchParams(request.searchParams);
+  const loadArea = ({ sourcePreset, stage }: {
+    sourcePreset: PhiCmsPresetIdentity | null;
+    stage: "live" | "requested";
+  }) => getPhiExactSiteArea({
     path: resolvedRoute.cmsPath,
     apiBaseUrl: bridgeRuntime?.apiBaseUrl,
     internalToken: bridgeRuntime?.internalToken,
     siteKey,
     locale: resolvedRoute.locale,
-    revision: resolvePhiCmsRevisionFromSearchParams(request.searchParams),
-    review,
+    ...(stage === "requested" ? { revision, review } : {}),
     cookieHeader,
-    sourcePreset: {
-      ownerModuleId: areaShellBinding.descriptor.ownerModuleId,
-      presetKey: areaShellBinding.descriptor.presetKey,
-    },
+    sourcePreset,
   });
-  exactAreaPresetRead.catch(() => undefined);
+  /*
+   * The stored Area needs the route, the cookie and the review, none of which the request context
+   * supplies, so its live read starts here and travels beside the context's. It is the read without an
+   * identity -- the selection and the one stored structure together -- because which shell applies is
+   * decided from the selection. A failure is kept for the `await` below; the empty handler only stops
+   * it from being reported as unhandled when the context read fails first and that `await` is never
+   * reached.
+   */
+  const liveAreaRead = loadArea({ sourcePreset: null, stage: "live" });
+  liveAreaRead.catch(() => undefined);
   const baseRequestContext = await loadPhiSiteRequestContext(
     siteKey,
     resolvedRoute.locale,
@@ -198,15 +201,44 @@ const loadPhiCmsRootScopeCached = cache(async function loadPhiCmsRootScopeCached
     request,
   });
   setPhiRequestRuntime(runtime);
-  const exactAreaPreset = await exactAreaPresetRead;
+  const storedArea = await readPhiCmsAreaForRequest({
+    loadArea: (areaRequest) => areaRequest.stage === "live" && areaRequest.sourcePreset === null
+      ? liveAreaRead
+      : loadArea(areaRequest),
+    previewsArea: revision != null || review?.kind === "area",
+    resolveShellSource: (modules) => resolvePhiCmsAreaShellSource({
+      runtimeModuleCatalog: cmsBridge.runtimeModuleCatalog,
+      area: resolvedRoute.area,
+      modules,
+      serverCapabilities: requestContext.serverCapabilities,
+    }),
+  });
   /*
-   * The code-owned Shell only where the Site has none stored. Building it beside the read, to save the
-   * round trip on a Site that never saved its Area, cost every other Site a full Shell instantiation --
-   * tree loaders, translations, the preset contract check -- on every request, thrown away unread.
+   * The same table the page request compiles, from the same selection and the same shell: what the
+   * shell's navigation links has to be what the request answers, assigned Public addresses and the
+   * awarded root included.
+   */
+  const {
+    activeModuleIds,
+    routeTable,
+    shellBinding: areaShellBinding,
+    structure: exactAreaPreset,
+  } = resolvePhiAreaRouteScope({
+    runtimeModuleCatalog: cmsBridge.runtimeModuleCatalog,
+    catalog: descriptorCatalog,
+    area: resolvedRoute.area,
+    read: storedArea,
+    serverCapabilities: requestContext.serverCapabilities,
+  });
+  /*
+   * The code-owned Shell only where the Site has none stored on it. Building it beside the read, to save
+   * the round trip on a Site that never saved its Area, cost every other Site a full Shell instantiation
+   * -- tree loaders, translations, the preset contract check -- on every request, thrown away unread.
    */
   const localAreaPreset = exactAreaPreset
     ? null
     : await buildPhiLocalCmsAreaPayload({
+      binding: areaShellBinding,
       areaMask: resolvedAreaMask,
       siteId: requestContext.site.id,
       path: resolvedRoute.cmsPath,
@@ -215,17 +247,6 @@ const loadPhiCmsRootScopeCached = cache(async function loadPhiCmsRootScopeCached
     });
   const baseResolvedAreaPreset: PhiResolvedCmsAreaPresetTree | null =
     exactAreaPreset?.preset ?? localAreaPreset?.preset ?? null;
-  /*
-   * The same table the page request compiles, from the same Area config: what the shell's navigation
-   * links has to be what the request answers, assigned Public addresses and the awarded root included.
-   */
-  const { activeModuleIds, routeTable } = resolvePhiAreaRouteScope({
-    runtimeModuleCatalog: cmsBridge.runtimeModuleCatalog,
-    catalog: descriptorCatalog,
-    area: resolvedRoute.area,
-    preset: baseResolvedAreaPreset,
-    serverCapabilities: requestContext.serverCapabilities,
-  });
   const composedAreaPreset = baseResolvedAreaPreset
     ? await composePhiCmsActiveAreaOverlayPresets({
         tree: baseResolvedAreaPreset,
@@ -269,6 +290,8 @@ const loadPhiCmsRootScopeCached = cache(async function loadPhiCmsRootScopeCached
   return {
     resolvedRoute,
     resolvedAreaPreset,
+    areaModules: storedArea.modules,
+    routeTable,
     request,
     runtime: runtimeWithAuthProvider,
     cookieHeader,
@@ -379,6 +402,8 @@ const loadPhiCmsRootRequestCached = cache(async function loadPhiCmsRootRequestCa
     runtime: rootScope.runtime,
     requestContext: rootScope.requestContext,
     resolvedAreaPreset: rootScope.resolvedAreaPreset,
+    areaModules: rootScope.areaModules,
+    routeTable: rootScope.routeTable,
     resolvedRequest: effectiveResolvedRequest,
   };
 });

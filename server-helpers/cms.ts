@@ -1,10 +1,10 @@
 import "server-only";
 
-import { getExactSiteArea } from "../gateway/site-area";
+import { getExactSiteArea, type PhiSiteAreaRead } from "../gateway/site-area";
 import { getResolvedCmsPage } from "../gateway/site-page";
 import { resolvePhiRuntimeConfig } from "../helpers/phis-runtime";
 import type { PhiCmsReviewParams } from "./cms-review";
-import type { PhiResolvedCmsAreaPresetPayload, PhiResolvedCmsPagePayload } from "../types/cms";
+import type { PhiResolvedCmsPagePayload } from "../types/cms";
 import { maybeGetPhiRequestRuntime } from "./request-runtime";
 import type { PhiCmsPresetIdentity } from "../types/cms-module-descriptors";
 import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
@@ -55,9 +55,8 @@ export async function getPhiCmsPage({
   });
 }
 
-export type GetPhiCmsAreaOptions = GetPhiCmsPageOptions & {
-  sourcePreset: PhiCmsPresetIdentity;
-};
+/** Without `sourcePreset` the Area answers its selection and its one stored structure, whatever identity it has. */
+export type GetPhiCmsAreaOptions = GetPhiCmsPageOptions;
 
 export async function getPhiExactSiteArea({
   path,
@@ -69,7 +68,7 @@ export async function getPhiExactSiteArea({
   review,
   cookieHeader,
   sourcePreset,
-}: GetPhiCmsAreaOptions): Promise<PhiResolvedCmsAreaPresetPayload | null> {
+}: GetPhiCmsAreaOptions): Promise<PhiSiteAreaRead | null> {
   const runtime = maybeGetPhiRequestRuntime();
   const resolvedRuntime = resolvePhiRuntimeConfig(
     {

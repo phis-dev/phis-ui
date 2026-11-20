@@ -19,7 +19,6 @@ import { createPhiCmsPresetNodes } from "../../helpers/cms-preset-nodes";
 import { resolvePhiShellHeaderHeight, resolvePhiShellMetric } from "../../helpers/shell-region-style";
 import { resolvePhiLayoutCreationPreset } from "../../helpers/cms-layout-defaults";
 import { PHI_DEFAULT_PUB_AREA_PRESET } from "./pub-area-preset";
-import { createPhiDefaultAreaRuntimeModuleIds } from "./area-module-defaults";
 import {
   PHI_DEFAULT_PUB_AREA_LAYOUT_NODE_KEYS,
   PHI_DEFAULT_PUB_AREA_WIDGET_NODE_KEYS,
@@ -103,7 +102,6 @@ export async function buildPhiDefaultSiteAreaPresetTree({
   const nodes = createPhiCmsPresetNodes(page);
   return {
     page,
-    runtimeModuleIds: createPhiDefaultAreaRuntimeModuleIds(runtimeModuleArea),
     overlays: [],
     regions: [
       ...(headerMainRegion

@@ -4,7 +4,7 @@ import {
   applyPhiAreaRootRouteDecision,
   resolvePhiAreaModulePageReferencePath,
 } from "../../helpers/cms-area-root-route";
-import { readPhiAreaPresetRuntimeModuleIds, readPhiAreaRootRoute } from "../../helpers/cms-area-config";
+import { readPhiAreaRootRoute, readPhiAreaSelectionRuntimeModuleIds } from "../../helpers/cms-area-config";
 import { PhiCmsPageType } from "../../constants/phi-cms";
 import { createPhiBuilderRuntimeModuleCatalog } from "./catalog";
 import { createPhiDefaultAreaRuntimeModuleIds } from "./area-module-defaults";
@@ -174,29 +174,24 @@ describe("applying the decision", () => {
   });
 });
 
-describe("the Modules an Area preset activates", () => {
-  const treeWith = (config: Record<string, unknown> | null) => ({
-    runtimeModuleIds: undefined,
-    preset: { config },
-  } as unknown as Parameters<typeof readPhiAreaPresetRuntimeModuleIds>[0]);
+describe("the Modules an Area's selection activates", () => {
+  const selectionWith = (modules: Record<string, unknown>) => ({ revisionId: 1, config: { modules } });
 
-  it("takes the Area's own default when the preset states nothing", () => {
-    // The case the Shell namespace made reachable: a structure save stores `config.shell` and no
-    // Modules namespace, and reading that as "none" would switch every optional Module off.
-    expect(readPhiAreaPresetRuntimeModuleIds(treeWith({ shell: { rootRoute: { mode: "landing" } } }), "admin"))
+  it("takes the Area's own default when no selection is stored", () => {
+    expect(readPhiAreaSelectionRuntimeModuleIds(null, "admin"))
       .toEqual(createPhiDefaultAreaRuntimeModuleIds("admin"));
-    expect(readPhiAreaPresetRuntimeModuleIds(treeWith(null), "builder"))
+    expect(readPhiAreaSelectionRuntimeModuleIds({ config: {} }, "builder"))
       .toEqual(createPhiDefaultAreaRuntimeModuleIds("builder"));
   });
 
   it("takes an empty selection literally, which is a Builder switching everything off", () => {
-    expect(readPhiAreaPresetRuntimeModuleIds(treeWith({ modules: { runtimeModules: [] } }), "admin"))
+    expect(readPhiAreaSelectionRuntimeModuleIds(selectionWith({ runtimeModules: [] }), "admin"))
       .toEqual([]);
   });
 
-  it("takes what the preset states", () => {
-    expect(readPhiAreaPresetRuntimeModuleIds(
-      treeWith({ modules: { runtimeModules: [PHI_DASHBOARD_RUNTIME_MODULE_ID] } }),
+  it("takes what the selection states", () => {
+    expect(readPhiAreaSelectionRuntimeModuleIds(
+      selectionWith({ runtimeModules: [PHI_DASHBOARD_RUNTIME_MODULE_ID] }),
       "admin",
     )).toEqual([PHI_DASHBOARD_RUNTIME_MODULE_ID]);
   });

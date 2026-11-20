@@ -322,7 +322,8 @@ Installation is build-time; activation is per Site and Area.
   selected or persisted.
 - Every Area has exactly one locked base Module and one versioned shell preset
   (`plugins/runtime-modules/area-definitions.ts`). The base Module is always active in its Area, is shown
-  locked in the Module selector, and is never persisted.
+  locked in the Module selector, and is never persisted. Public and App may take their shell from an
+  active optional Module instead ([A Module's own Area shell](#a-modules-own-area-shell)).
 - A Module declared `activation: "always"` is active in every Area it is eligible for. Nobody selects or
   deselects it, the Module selector shows it locked like a base Module, and it is never persisted. It is
   for what the platform cannot work without: the Asset Module is the one there is, because every image
@@ -866,10 +867,46 @@ The Module owns its Area-shell, Area-Overlay, route, Theme, navigation, and path
 one stable `(ownerModuleId, presetKey)` identity and version. Route paths and navigation contributions are
 compiled centrally from active Module descriptors.
 
-An optional Module contributes Area-owned Overlay subtrees only through its server-safe `areaOverlays`
+An optional Module contributes Area-owned Overlay subtrees through its server-safe `areaOverlays`
 descriptors. Each descriptor targets one eligible Area and loads only Area-domain Overlay, Layout, and
 Widget nodes. Core composes contributions from active Modules into the resolved Area tree after module
-selection; an optional Module never replaces the locked `areaShells` descriptor or patches a base preset.
+selection, over whichever shell the Area takes; an optional Module never patches a base preset. Where the
+Area's definition allows it, an optional Module may bring the whole shell instead (next section).
+
+### A Module's own Area shell
+
+Whether an Area takes its shell from a Module is a statement of its Area definition,
+`PhiCmsAreaDefinition.shellProviders`: `"module"` for Public and App, `"base"` for every other Area. A
+working Area's shell carries the anchors Modules hang their sidebar entries on, the Tour button and the
+page title, and the Builder repairs a broken shell, so `admin`, `editor`, `accounting` and `builder` keep
+the base-only rule (the compiler refuses `"module"` for the Builder outright).
+
+- **The descriptor.** A Module eligible for such an Area may declare one `areaShells` descriptor per Area
+  (`PhiCmsAreaShellPresetDescriptor`): its own `(ownerModuleId, presetKey)`, a `shellPresetVersion`, and
+  `loadTree`, which returns the whole tree the way a Builder save writes it -- Regions with or without
+  Siders, Layouts with their config and Surface, Widgets, Overlays and controller settings. It may compose
+  the base shell through `composition` (`omitRegionTypes`, and `omitNodeKeys` within the base's
+  `exportedNodeKeys`) or build everything itself with `createPhiCmsPresetNodes`. The compiler registers it
+  apart from the base shell (`areaShellProvidersByArea`, and in `areaShellByIdentity` for composition and
+  identity lookups), and refuses one for a `"base"` Area or a second one of the same Module for one Area.
+- **It applies on activation, never on install.** The Area's effective shell is the shell of the one
+  active Module that brings one, otherwise the base shell (`resolvePhiCmsAreaShellPresetBinding(catalog,
+  area, activeModuleIds)`; the base alone is `resolvePhiCmsAreaBaseShellPresetBinding`). The active
+  Modules are the Area's selection as `resolveActivePresetModuleKeys` reads it, so a provider that is
+  installed but not selected, or selected but off for want of its server half, changes nothing.
+  Deactivating it gives the base shell back. `areaOverlays` of active Modules are laid over the effective
+  shell.
+- **One provider per Area.** The Builder's Modules table refuses to switch on a second Module that brings
+  the shell of an Area where one is active, naming the holder (`shell-provider-taken`, as
+  `package-path-taken`). A stored selection that holds two anyway is refused when the shell is resolved,
+  rather than settled by catalog order.
+- **One stored structure.** An Area stores one structure, under the identity it was saved from. A page
+  view reads the selection and that structure in one request and uses the structure only if its
+  identity is the effective shell's ([CMS.md](./CMS.md#the-areas-module-selection)); otherwise the
+  effective shell's preset answers. A Site that stored a base structure and then activates a provider sees
+  the provider's shell, and its stored structure again once the provider is off. Saving a structure under
+  the provider while a structure of another shell is stored is refused by Core (409); the Builder offers
+  to clear the stored one first. Keeping one structure per identity is not built.
 
 A placement says four things: what it is, where it sits, what it is called, how it is configured.
 `createPhiCmsPresetNodes` supplies the rest -- `siteId`, `visibilityMask`, `status`, `flags`,
@@ -939,12 +976,13 @@ A route and its navigation entry are computed per request from the compiled cata
 materialized anywhere, so neither has a publish of its own: add a route, change its `path`, change its
 `navigation`, and the next request has it.
 
-What *is* stored is which Modules an Area carries. `config.modules.runtimeModules` on the Area preset is
-the whole switch. The Builder writes it as a module-change draft and it takes effect when that draft is
-published. An Area that has never been asked carries no such config at all, and then the code-owned
-default applies (`createPhiDefaultAreaRuntimeModuleIds`) -- which is the shipped selection and says
-nothing about what a Site has chosen. `[]` is a different answer again: every optional Module off. A
-Module declared `activation: "always"` is in neither: it is active whatever the config says.
+What *is* stored is which Modules an Area carries: the Area's Module selection, `config.modules` of its
+Modules revision, stored apart from its structure ([CMS.md](./CMS.md#the-areas-module-selection)).
+`runtimeModules` there is the whole switch. The Builder writes it as a Module draft and it takes effect
+when that draft is published. An Area that has never been asked stores no selection at all, and then the
+code-owned default applies (`createPhiDefaultAreaRuntimeModuleIds`) -- which is the shipped selection and
+says nothing about what a Site has chosen. `[]` is a different answer again: every optional Module off. A
+Module declared `activation: "always"` is in neither: it is active whatever the selection says.
 
 So the sequence for a new Module page is: activate the Module for the Area, save, publish the module
 change. Nothing about the route or the entry is published separately and nothing is swept.

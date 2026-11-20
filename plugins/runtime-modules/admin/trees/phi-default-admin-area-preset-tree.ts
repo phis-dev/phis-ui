@@ -8,7 +8,6 @@ import {
 } from "../../../../components/regions/presets/phi-area-shell-preset-nodes";
 import type { PhiResolvedCmsPageTree, PhiCmsPageNode } from "../../../../types/cms";
 import type { PhiBlockRuntime } from "../../../../types";
-import { createPhiDefaultAreaRuntimeModuleIds } from "../../area-module-defaults";
 
 const SYNTHETIC_ADMIN_REGION_IDS = {
   regionHeaderTop: -126,
@@ -46,7 +45,6 @@ export async function buildPhiDefaultAdminAreaPresetTree({
   const nodes = createPhiCmsPresetNodes(page);
   return {
     page: nodes.page(),
-    runtimeModuleIds: createPhiDefaultAreaRuntimeModuleIds("admin"),
     overlays: [],
     ...concatPhiAreaShellPresetNodes(
       buildPhiAreaShellHeaderNodes({
