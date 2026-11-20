@@ -19,6 +19,7 @@ import {
   filterPhiCmsRenderableTreeForViewer,
 } from "../helpers/cms-access-policy";
 import { collectPhiSitemapCandidates } from "../helpers/phi-seo";
+import { phiAreaPath } from "../helpers/locale";
 import {
   resolvePhiCmsAreaBaseShellPresetBinding,
   resolvePhiCmsDescriptorCatalog,
@@ -384,11 +385,16 @@ async function readDocument({
   accessRegistry: PhiSearchAccessRegistry;
   failures: PhiSearchWidgetFailures;
 }): Promise<PhiSearchDocument | null> {
+  /*
+   * The candidates are Area-local (`/phis/ui/dashboard`), and a request names its Area by the path's
+   * first segment outside Public. Resolving the local path read Public's Area for every App Page -- its
+   * selection under App's catalog, and no Page -- so the App index stayed empty.
+   */
   const resolved = await resolvePhiCmsLookup({
     bridge,
     area,
     locale,
-    path,
+    path: area === "public" ? path : phiAreaPath(area, path),
     cookieHeader: "",
     requestContext: context,
   });
