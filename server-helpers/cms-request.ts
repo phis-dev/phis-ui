@@ -75,6 +75,7 @@ import {
 } from "./runtime";
 import { trForLocale } from "./translate";
 import {
+  buildPhiAreaShellPresetConfig,
   readPhiAreaLandingSelection,
   readPhiAreaPublicRoutePaths,
   readPhiAreaSelectionRuntimeModuleIds,
@@ -246,7 +247,10 @@ export function resolvePhiAreaRouteScope(input: {
     area: input.area,
     activeModuleIds,
     publicRoutePaths: readPhiAreaPublicRoutePaths(input.read?.modules?.config),
-    landingSelection: readPhiAreaLandingSelection(structure?.preset.preset.config),
+    // The stored answer, else what the shell proposes (`settings`): the same config the root route reads.
+    landingSelection: readPhiAreaLandingSelection(
+      structure ? structure.preset.preset.config : buildPhiAreaShellPresetConfig(shellBinding.descriptor.settings),
+    ),
   });
   return { activeModuleIds, routeTable, shellBinding, structure };
 }

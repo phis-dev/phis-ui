@@ -109,6 +109,16 @@ own revisions.
   switched off."
 - The shell workspace shows the effective shell and names its owner.
 
+### 3a. The shell's proposed Area settings
+
+Added on 2026-11-20 after the first look at dev.phis.dev. The Area's settings -- `config.shell`: `meta`
+and `rootRoute` -- belong with the structure, not with the Module selection: they are what a Builder save
+writes together with the shell, and a stored structure of another shell steps back with its settings.
+What was missing is the package's side of it: a shell preset carried no config, so a Site package could
+change the frame but not the defaults the frame is found by. The descriptor now takes `settings`
+(`meta`, `rootRoute`), which replace phis-ui's defaults while nothing is stored on that shell and which
+the Builder's first save keeps (MODULES.md, "A Module's own Area shell").
+
 ### 4. Existing installations (no fallback before v1)
 
 There is no reader for the old shape. Each installation is swept once by hand, as other changes before v1:
@@ -127,6 +137,12 @@ There is no reader for the old shape. Each installation is swept once by hand, a
   shell is now simply allowed to come from the active Site package.
 - `sourcePresetVersion` and the "Preset update available" tag work as today, per provider.
 - Theme, navigation injections and route presets are untouched.
+
+## Later: showing whether an Area is the preset
+
+Asked for on 2026-11-20, for a second run: the Builder should say whether an Area's shell and settings
+are the preset as delivered or a stored change, and offer a button that puts the Area back to the
+preset (today "Clear Area", which keeps the Module selection).
 
 ## Later: an Intra Area
 

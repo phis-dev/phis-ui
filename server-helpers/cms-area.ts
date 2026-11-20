@@ -12,17 +12,21 @@ import type { PhiRuntimeModuleCatalog } from "../types/cms-plugins";
 import type { PhiCmsAreaShellPresetBinding } from "../types/cms-module-descriptors";
 import { applyPhiPresetTreePublishedContent } from "./cms-bound-content";
 import { createPhiModuleMediaLoader } from "../gateway/server-module-media";
+import { buildPhiAreaShellPresetConfig } from "../helpers/cms-area-config";
 import {
   instantiatePhiCmsAreaShellPreset,
   resolvePhiCmsDescriptorCatalog,
 } from "../plugins/runtime-modules/descriptor-compiler";
 
+/** The Area row a shell preset stands for: no stored id, and the config the shell proposes. */
 function createSyntheticAreaPreset({
   siteId,
   areaMask,
+  config,
 }: {
   siteId: number;
   areaMask: number;
+  config: Record<string, unknown>;
 }): PhiCmsAreaPresetNode {
   return {
     id: -(9000 + areaMask),
@@ -31,7 +35,7 @@ function createSyntheticAreaPreset({
     status: PhiCmsStatus.Published,
     flags: 0,
     visibilityMask: areaMask,
-    config: {},
+    config,
   };
 }
 
@@ -40,11 +44,13 @@ function buildAreaPresetPayloadFromTree({
   siteId,
   tree,
   sourcePreset,
+  config,
 }: {
   areaMask: number;
   siteId: number;
   tree: PhiResolvedCmsPageTree;
   sourcePreset: PhiResolvedCmsAreaPresetPayload["sourcePreset"];
+  config: Record<string, unknown>;
 }): PhiResolvedCmsAreaPresetPayload {
   return {
     areaMask,
@@ -53,6 +59,7 @@ function buildAreaPresetPayloadFromTree({
       preset: createSyntheticAreaPreset({
         siteId,
         areaMask,
+        config,
       }),
       regions: tree.regions,
       overlays: tree.overlays,
@@ -113,5 +120,6 @@ export async function buildPhiLocalCmsAreaPayload({
       presetKey: binding.descriptor.presetKey,
       sourcePresetVersion: binding.descriptor.shellPresetVersion,
     },
+    config: buildPhiAreaShellPresetConfig(binding.descriptor.settings),
   });
 }

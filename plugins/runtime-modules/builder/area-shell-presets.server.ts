@@ -24,6 +24,7 @@ import {
   readPhiRuntimeModuleIdsForArea,
 } from "../../../plugins/runtime-modules/settings";
 import {
+  buildPhiAreaShellPresetConfig,
   readPhiAreaSelectionRuntimeModuleIds,
   readPhiAreaPublicRoutePaths,
   readPhiAreaRootRoute,
@@ -392,9 +393,10 @@ const buildShellDraftsForArea = cache(async function buildShellDraftsForArea(
  * The config an Area currently states about its Shell, from the same three sources the drafts come from.
  *
  * An open structure draft first, because that is what the Builder is looking at; then what is
- * published; then nothing, which is the Area saying it has never been asked and letting the code-owned
- * preset answer. The installed preset is deliberately not consulted: it carries no config, and reading
- * a value out of it would put a stored-looking answer in front of a Builder who never stored one.
+ * published; then what the effective shell proposes (`PhiCmsAreaShellPresetDescriptor.settings`), which
+ * is what a visitor is served while nothing is stored on that shell. The dialog shows that proposal as
+ * the current answer, so the first save writes it rather than losing it. A shell that proposes nothing
+ * answers null: the Area was never asked, and phis-ui's defaults stand.
  *
  * Read once and read whole, because everything the Shell says about itself arrives in the same
  * revision: the root route and the two SEO answers are one fetch, not one each.
@@ -404,7 +406,7 @@ async function buildPhiBuilderAreaPresetConfig(
   area: PhiDeveloperBuilderArea,
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
 ): Promise<Record<string, unknown> | null> {
-  const { draft, published } = await loadPhiBuilderAreaStructure(
+  const { draft, published, shellBinding } = await loadPhiBuilderAreaStructure(
     runtime.site.key,
     runtime.locale.current,
     readPhiServerApiCredentials().apiBaseUrl,
@@ -412,7 +414,12 @@ async function buildPhiBuilderAreaPresetConfig(
     area,
     runtimeModuleCatalog,
   );
-  return (draft ?? published)?.preset.config ?? null;
+  const stored = draft ?? published;
+  if (stored) {
+    return stored.preset.config ?? null;
+  }
+  const proposed = buildPhiAreaShellPresetConfig(shellBinding?.descriptor.settings);
+  return Object.keys(proposed).length > 0 ? proposed : null;
 }
 
 /** What an Area says its `/` resolves to. */

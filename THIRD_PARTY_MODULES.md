@@ -2244,6 +2244,10 @@ with their Regions, Layouts and Widgets ([MODULES.md](./MODULES.md#a-modules-own
   the Builder asks to clear it before a structure for the package's shell can be saved.
 - A new `shellPresetVersion` reaches every Site that stores no structure for the package's shell at once;
   one that does sees "Preset update available" in Revisions.
+- The descriptor may also propose the Area's settings in `settings`: `meta` (`index`, `sitemap`,
+  `defaultTitle`, `titleTemplate` with `%s`) and `rootRoute`. They replace phis-ui's defaults until the Site
+  saves in the Builder, whose first save keeps what was proposed. A key the package leaves out keeps
+  phis-ui's default; an unknown key or a value of the wrong type is refused when the catalog is compiled.
 
 ## 7. Export the Server contributions
 

@@ -325,6 +325,80 @@ export function readPhiAreaMeta(
   };
 }
 
+/**
+ * What an Area shell preset may propose for the Area's settings (`PhiCmsAreaShellPresetDescriptor`),
+ * under the keys a Builder save stores them under in `config.shell`.
+ */
+export type PhiAreaShellSettings = {
+  meta?: PhiAreaMeta;
+  rootRoute?: PhiAreaRootRoute;
+};
+
+/**
+ * A shell preset's proposal as the Area config it stands for, read by the same readers as a stored one.
+ *
+ * Empty for a shell that proposes nothing, which is phis-ui's defaults answering. The answer of an Area
+ * that stores a structure on its shell, never this, wherever that structure exists: a Site that saved
+ * once has answered, even where it answered with what was proposed.
+ */
+export function buildPhiAreaShellPresetConfig(
+  settings: PhiAreaShellSettings | null | undefined,
+): Record<string, unknown> {
+  if (!settings || (settings.meta === undefined && settings.rootRoute === undefined)) {
+    return {};
+  }
+  return {
+    [PHI_AREA_CONFIG_SHELL_NAMESPACE]: {
+      ...(settings.meta !== undefined ? { [PHI_AREA_META_KEY]: settings.meta } : {}),
+      ...(settings.rootRoute !== undefined ? { [PHI_AREA_ROOT_ROUTE_KEY]: settings.rootRoute } : {}),
+    },
+  };
+}
+
+/**
+ * Why a shell preset's proposal cannot be read as it is written, or null when it can.
+ *
+ * Strict on purpose (a wrong type is an error, never a silent default): what a package declares here is
+ * what every Site that switches it on is served until it saves, so a key the readers drop would be a
+ * setting the package believes it made.
+ */
+export function describePhiAreaShellSettingsError(settings: unknown): string | null {
+  if (settings === undefined) {
+    return null;
+  }
+  if (!isPhiRecord(settings)) {
+    return "settings must be an object";
+  }
+  const unknownKey = Object.keys(settings).find((key) => key !== PHI_AREA_META_KEY && key !== PHI_AREA_ROOT_ROUTE_KEY);
+  if (unknownKey) {
+    return `settings.${unknownKey} is not an Area setting (meta, rootRoute)`;
+  }
+  const config = buildPhiAreaShellPresetConfig(settings as PhiAreaShellSettings);
+  if (settings.meta !== undefined) {
+    if (!isPhiRecord(settings.meta)) {
+      return "settings.meta must be an object";
+    }
+    const read = readPhiAreaMeta(config) ?? {};
+    const dropped = Object.keys(settings.meta).find((key) =>
+      (read as Record<string, unknown>)[key] !== (settings.meta as Record<string, unknown>)[key]);
+    if (dropped) {
+      return `settings.meta.${dropped} is not a readable Area meta value`;
+    }
+    if (read.titleTemplate !== undefined && !read.titleTemplate.includes(PHI_AREA_TITLE_TEMPLATE_PLACEHOLDER)) {
+      return `settings.meta.titleTemplate must hold "${PHI_AREA_TITLE_TEMPLATE_PLACEHOLDER}"`;
+    }
+  }
+  if (settings.rootRoute !== undefined) {
+    const read = readPhiAreaRootRoute(config);
+    const written = settings.rootRoute as Record<string, unknown>;
+    // A landing reads even with an unreadable target (as none), so the target is checked on its own.
+    if (!read || read.mode !== written.mode || (read.mode === "landing" && written.target !== undefined && !read.target)) {
+      return "settings.rootRoute is not a readable root route";
+    }
+  }
+  return null;
+}
+
 export const PHI_AREA_PUBLIC_ROUTE_PATHS_KEY = "publicRoutePaths" as const;
 
 /**

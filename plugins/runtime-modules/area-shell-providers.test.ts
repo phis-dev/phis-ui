@@ -170,6 +170,40 @@ describe("a Module's own Area shell, as the compiler takes it", () => {
   });
 });
 
+describe("what a shell proposes for the Area's settings", () => {
+  const withSettings = (settings: unknown) => ({ ...shell(SITE_ID, "public-shell", "public"), settings }) as
+    PhiCmsAreaShellPresetDescriptor;
+
+  it("takes meta and a root route a reader reads as written", () => {
+    const catalog = compile([entry(SITE_ID, ["public"], [withSettings({
+      meta: { titleTemplate: "%s · Acme", index: false },
+      rootRoute: { mode: "landing" },
+    })])]);
+    expect(listPhiCmsAreaShellProviders(catalog, "public")[0]?.descriptor.settings?.meta?.titleTemplate)
+      .toBe("%s · Acme");
+  });
+
+  it("refuses a key that is no Area setting", () => {
+    expect(() => compile([entry(SITE_ID, ["public"], [withSettings({ modules: {} })])]))
+      .toThrow(/settings\.modules is not an Area setting/);
+  });
+
+  it("refuses a meta value of the wrong type rather than dropping it", () => {
+    expect(() => compile([entry(SITE_ID, ["public"], [withSettings({ meta: { index: "no" } })])]))
+      .toThrow(/settings\.meta\.index is not a readable Area meta value/);
+  });
+
+  it("refuses a title template without the Page title placeholder", () => {
+    expect(() => compile([entry(SITE_ID, ["public"], [withSettings({ meta: { titleTemplate: "Acme" } })])]))
+      .toThrow(/titleTemplate must hold "%s"/);
+  });
+
+  it("refuses a root route no reader reads", () => {
+    expect(() => compile([entry(SITE_ID, ["public"], [withSettings({ rootRoute: { mode: "elsewhere" } })])]))
+      .toThrow(/settings\.rootRoute is not a readable root route/);
+  });
+});
+
 describe("the effective shell of an Area", () => {
   const catalog = compile([
     entry(SITE_ID, ["public"], [shell(SITE_ID, "public-shell", "public")]),

@@ -5,6 +5,7 @@ import { createHash } from "node:crypto";
 import { resolvePhiCmsPageRedirect } from "../components/cms/phi-cms-page-redirect";
 import { getSiteAreaWithPublishedPages, type PhiPublishedPage } from "../gateway/site-area";
 import {
+  buildPhiAreaShellPresetConfig,
   PHI_AREA_META_PUBLIC_DEFAULTS,
   readPhiAreaMeta,
 } from "../helpers/cms-area-config";
@@ -91,7 +92,10 @@ async function loadPhiPublicSeoContext(
     read: storedArea,
     serverCapabilities: requestContext.serverCapabilities,
   });
-  const meta = readPhiAreaMeta(scope.structure?.preset.preset.config);
+  // The stored answer, else what the effective shell proposes (`settings`), as the Page render reads it.
+  const meta = readPhiAreaMeta(
+    scope.structure ? scope.structure.preset.preset.config : buildPhiAreaShellPresetConfig(scope.shellBinding.descriptor.settings),
+  );
   const publicBase = resolvePhiSitePublicBase(
     requestContext.site.publicUrl,
     readPhiSiteRuntimeConfigSync().site.publicUrl,

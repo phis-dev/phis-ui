@@ -907,6 +907,15 @@ the base-only rule (the compiler refuses `"module"` for the Builder outright).
   the provider's shell, and its stored structure again once the provider is off. Saving a structure under
   the provider while a structure of another shell is stored is refused by Core (409); the Builder offers
   to clear the stored one first. Keeping one structure per identity is not built.
+- **What the shell proposes for the Area's settings.** The descriptor may carry `settings`
+  (`PhiAreaShellSettings`): `meta` (index, sitemap, default title, title template) and `rootRoute`, the
+  same values a Builder save stores in `config.shell`. They stand in for phis-ui's defaults while the Area
+  stores no structure on that shell, and every reader takes them from there: the root route, the landing
+  selection, the Page metadata, robots and the sitemap (`buildPhiAreaShellPresetConfig`). The Builder's
+  settings dialog shows them as the current answer, so the first save writes them rather than losing
+  them; from then on the stored `config.shell` is the Site's answer, structure and settings together. A
+  key left out keeps phis-ui's default. The compiler refuses a key that is no Area setting and a value no
+  reader reads as written (`describePhiAreaShellSettingsError`); `config.modules` is never part of it.
 
 A placement says four things: what it is, where it sits, what it is called, how it is configured.
 `createPhiCmsPresetNodes` supplies the rest -- `siteId`, `visibilityMask`, `status`, `flags`,

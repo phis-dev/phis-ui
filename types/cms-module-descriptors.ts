@@ -14,6 +14,7 @@ import type { PhiSignalRoute } from "./signals";
 import type { PhiCmsInstanceId } from "./cms-instance-id";
 import type { PhiRuntimeModuleFormDefinition } from "../components/forms/form-registry";
 import type { PhiModuleMediaResolver } from "./module-media";
+import type { PhiAreaShellSettings } from "../helpers/cms-area-config";
 
 export type PhiRuntimeModuleId = `${string}/${string}`;
 
@@ -65,6 +66,16 @@ export type PhiCmsAreaShellPresetDescriptor = PhiCmsPresetIdentity & {
   loadTree: (
     context: PhiCmsDescriptorBuildContext,
   ) => PhiResolvedCmsPageTree | Promise<PhiResolvedCmsPageTree>;
+  /**
+   * What this shell proposes for the Area's settings -- how it is found (`meta`) and what its `/` does
+   * (`rootRoute`) -- in place of phis-ui's defaults.
+   *
+   * A proposal, like the shell itself: it stands while the Area stores no structure on this shell, and
+   * the Builder's settings dialog shows it as the current answer. The first save writes what the dialog
+   * showed, this proposal included, into the stored `config.shell`; from then on the Site's answer
+   * stands and a newer proposal no longer reaches it. A key left out keeps phis-ui's default.
+   */
+  settings?: PhiAreaShellSettings;
 };
 
 export type PhiCmsAreaOverlayPresetDescriptor = PhiCmsPresetIdentity & {

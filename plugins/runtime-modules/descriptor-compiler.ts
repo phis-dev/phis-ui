@@ -76,6 +76,7 @@ import { resolvePhiRuntimeModuleAreaRoutePath } from "../../helpers/runtime-modu
 import { createPhiPageReference } from "../../types/references";
 import {
   choosePhiAreaRootApplicant,
+  describePhiAreaShellSettingsError,
   orderPhiAreaPathClaimsByCover,
   isPhiAssignablePublicRoutePath,
   type PhiAreaLandingSelection,
@@ -445,6 +446,10 @@ export function compilePhiCmsDescriptorCatalog({
         descriptor.shellPresetVersion,
         `${moduleId}/${descriptor.presetKey} shellPresetVersion`,
       );
+      const settingsError = describePhiAreaShellSettingsError(descriptor.settings);
+      if (settingsError) {
+        throw new Error(`${moduleId}/${descriptor.presetKey}: ${settingsError}.`);
+      }
       const areaDefinition = definitionsByArea.get(descriptor.area);
       if (!areaDefinition) {
         throw new Error(`${moduleId}/${descriptor.presetKey}: Area "${descriptor.area}" is not declared.`);
