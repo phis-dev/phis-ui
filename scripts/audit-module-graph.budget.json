@@ -83,6 +83,10 @@
       "runtimeBytes": 1526831,
       "clientBytes": 1505801
     },
+    "./controls/bullet-list": {
+      "runtimeBytes": 280054,
+      "clientBytes": 52891
+    },
     "./controls/config": {
       "runtimeBytes": 67094,
       "clientBytes": 0

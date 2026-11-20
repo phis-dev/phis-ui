@@ -75,7 +75,7 @@ The root export (`@phis/ui`) is not an integration surface; import from the grou
 | CMS rendering | `cms`, `cms/root-layout`, `cms/root-page`, `cms/root-slot-page`, `cms/error-page`, `cms/request`, `cms/plugins`, `cms/plugins/<area>` |
 | Module packages | `module`, `module/client`, `module/authoring-client`, `module/labels`, `module/dashboard-cards`, `module/records`, `module/page-check`, `module/references`, `module/projection`, `module/projection/client`, `module/projection/authoring-client`, `module/site-modules`, `module/site-modules-client` |
 | Runtime Clients | `runtime`, `runtime/controller-client`, `runtime/render-client`, `runtime/signal-client`, `runtime/data-provider-client`, `runtime/authoring-client`, `runtime/authoring-manifest-client`, `runtime/calendar-adapter-client`, `runtime/user-state-client`, `runtime/client-manifests/<area>` |
-| UI | `widgets`, `core-widgets`, `widget-config`, `controls`, `controls/config`, `controls/date-time`, `layouts`, `shells`, `root`, `navigation`, `forms`, `forms/client`, `media`, `references`, `state`, `theme` |
+| UI | `widgets`, `core-widgets`, `widget-config`, `controls`, `controls/config`, `controls/date-time`, `controls/bullet-list`, `layouts`, `shells`, `root`, `navigation`, `forms`, `forms/client`, `media`, `references`, `state`, `theme` |
 | Builder | `builder-api-route` |
 | Contracts and helpers | `types`, `constants`, `helpers`, `helpers/site-runtime`, `server-helpers`, `net` |
 | Plugin helpers | `plugins/factories/widget-builder-plugin`, `plugins/registries/runtime-controller-core`, `plugins/registries/runtime-controllers` |

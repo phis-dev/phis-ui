@@ -65,6 +65,12 @@
       "types": "./control-config.ts",
       "default": "./control-config.ts"
     },
+    "./controls/bullet-list": {
+      "import": "./controls-bullet-list.ts",
+      "require": "./controls-bullet-list.ts",
+      "types": "./controls-bullet-list.ts",
+      "default": "./controls-bullet-list.ts"
+    },
     "./controls/date-time": {
       "import": "./controls-date-time.ts",
       "require": "./controls-date-time.ts",
