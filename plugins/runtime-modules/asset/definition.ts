@@ -30,7 +30,8 @@ export const PHI_ASSET_RUNTIME_MODULE_DEFINITION = {
   controller: buildPhiRuntimeModuleControllerDescriptor(PHI_ASSET_RUNTIME_CONTROLLER_DEFINITION),
   title: "Assets",
   description: "Media, upload, asset picking, and asset-backed data orchestration.",
-  category: "media",
+  // Listed with Core and the base Modules: it is always active and never selected, like them.
+  category: "foundation",
   iconFamily: "media",
   /*
    * On demand, because the Module is active everywhere: a Page that draws no Media mounts nothing for
