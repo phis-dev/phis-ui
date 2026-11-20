@@ -239,18 +239,30 @@ beside them):
 
 - Text and input: `PhiTextControl`, `PhiLabeledControl`, `PhiNumberControl`, `PhiSliderControl`,
   `PhiRateControl`, `PhiOtpControl`, `PhiDimensionControl`, `PhiLengthControl`, `PhiColorControl`,
-  `PhiIconPickerControl`.
+  `PhiIconPickerControl`, `PhiColorFieldControl` (the colour field with the Site's Theme and custom
+  colours as presets, a Theme default and, if asked, a Theme role stored instead of a colour),
+  `PhiMoneyControl` (an amount in minor units with its currency), `PhiBoundRadiusControl`,
+  `PhiPresetSizeControl` (the Inspector's corner radius and size-step fields).
 - Choosing: `PhiSelectControl`, `PhiMultiSelectControl`, `PhiSegmentedControl`, `PhiSwitchControl`,
   `PhiCheckboxControl`, `PhiCheckboxGroupControl`, `PhiRadioGroupControl`, `PhiCascaderControl`,
-  `PhiTreeSelectControl`.
+  `PhiTreeCascaderControl` (several nodes of a tree you hand it, such as Pages), `PhiTreeSelectControl`.
 - Commands and menus: `PhiButtonControl`, `PhiToolbarControl`, `PhiCompactGroupControl`,
   `PhiViewportVisibilityControl`, `PhiPlacementMatrixControl`, `PhiEntryListControl`, `PhiAmountListControl`,
   `PhiFileDropControl`, `PhiFloatButtonControl`, `PhiDropdownControl`,
   `PhiPillDropdownControl`, `PhiMenuControl`, `PhiConfirmControl`, `PhiPopoverControl`, `PhiTabsControl`,
-  `PhiPaginationControl`.
+  `PhiPaginationControl`, `PhiBreadcrumbControl`, `PhiAnchorNavControl` (in-page targets that light up
+  as they are reached).
 - Display: `PhiTypographyControl`, `PhiTagControl`, `PhiCardControl`, `PhiFlexControl`, `PhiEmptyControl`,
   `PhiSkeletonControl`, `PhiAlertControl`, `PhiStepsControl`, `PhiTimelineControl`, `PhiImageControl`,
-  `PhiVideoEmbedControl`.
+  `PhiVideoEmbedControl`, `PhiBulletListControl` (a list with the Theme's markers; an entry's `state`
+  draws a tick for included and a dash for excluded, as a plan card's features), `PhiDescriptionListControl`
+  (named values about one thing), `PhiDividerControl`, `PhiStatisticControl`, `PhiProgressControl`,
+  `PhiSpinControl`, `PhiAvatarControl`, `PhiStatusDotControl` (a state as a dot, its word in the tooltip),
+  `PhiNameControl` (a graphic that says what it is, such as an icon as a column header),
+  `PhiResultControl` (the end of a journey: an outcome and what to do now), `PhiRibbonControl`,
+  `PhiRibbonWrapControl` (a band on a box's corner), `PhiQrCodeControl`, `PhiSeriesChartControl` (figures
+  over time as lines), `PhiCollapseControl` and `PhiAccordionControl` (sections that fold; a Page's own
+  folding sections are the Collapsible Layout).
 - Dialogs and forms: `PhiDialogControl`, `PhiFormControl`.
 - Data: `PhiTableControl`, `PhiTreeControl`, `PhiTreeActionButton`, `PhiCollectionLayoutControl`,
   `PhiCollectionHeaderControl`, `PhiCollectionViewControl`, `PhiMediaPickerControl`,
@@ -266,7 +278,7 @@ beside them):
   `resolvePhiImagePresentation`, `PHI_ICON_PICKER_CONTROL_DEFAULT_LABELS`,
   `PHI_MEDIA_PICKER_COLUMN_WIDTH_STEP`, `PHI_MEDIA_PICKER_DEFAULT_COLUMN_WIDTH`,
   `PHI_MEDIA_PICKER_MAX_COLUMN_WIDTH`, `PHI_MEDIA_PICKER_MIN_COLUMN_WIDTH`,
-  `normalizePhiMediaPickerMinColumnWidth`.
+  `normalizePhiMediaPickerMinColumnWidth`, `PHI_RADIUS_CONTROL_DEFAULT_LABELS`.
 
 #### `PhiAmountListControl`: amounts in one column
 
@@ -1306,6 +1318,9 @@ Inside the Builder's own chrome the library is always readable, whatever the edi
 availability is declared by the owning Module through `availableToAuthoringChrome` on its provider
 descriptor, not listed anywhere in the Builder. A `phis:asset/...` reference is resolved by the core
 reference resolver and needs no Module at all.
+
+An image a Widget of yours shows that opens larger over the page when clicked is `PhiLightboxImageControl`,
+from `@phis/ui/media`: the overlay, the zoom and the close come with it.
 
 ### Offering a media source
 

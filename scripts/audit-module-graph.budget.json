@@ -80,12 +80,8 @@
       "clientBytes": 0
     },
     "./controls": {
-      "runtimeBytes": 1526831,
-      "clientBytes": 1505801
-    },
-    "./controls/bullet-list": {
-      "runtimeBytes": 280054,
-      "clientBytes": 52891
+      "runtimeBytes": 1604996,
+      "clientBytes": 1535212
     },
     "./controls/config": {
       "runtimeBytes": 67094,
@@ -120,8 +116,8 @@
       "clientBytes": 324658
     },
     "./media": {
-      "runtimeBytes": 985747,
-      "clientBytes": 971347
+      "runtimeBytes": 988515,
+      "clientBytes": 973822
     },
     "./module": {
       "runtimeBytes": 173653,

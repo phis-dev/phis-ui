@@ -34,3 +34,7 @@ export {
   type PhiMediaUploadPlan,
   type PhiMediaUploadProgressHandler,
 } from "./components/media/media-upload-flow";
+
+/* An image that opens larger over the page when clicked: the overlay, the zoom and the close. */
+export { PhiLightboxImageControl } from "./components/controls/phi-lightbox-image-control";
+export type { PhiLightboxImageControlProps } from "./components/controls/phi-lightbox-image-control";

@@ -253,6 +253,7 @@ export { PhiTreeSelectControl } from "./components/controls/phi-tree-select-cont
 export type { PhiTreeSelectControlProps } from "./components/controls/phi-tree-select-control";
 export {
   PhiCascaderControl,
+  PhiTreeCascaderControl,
   normalizePhiCascaderValue,
 } from "./components/controls/phi-cascader-control";
 export type {
@@ -270,3 +271,60 @@ export type {
   PhiControlOptionsProviderLoadMode,
   PhiControlOptionsProviderSearchConfig,
 } from "./components/controls/phi-control-options";
+
+/*
+ * The Controls a Module's own Widget draws with, beside the ones above: lists, figures, outcomes,
+ * sections that fold, money, codes and charts, and the labelled colour field. A dialog in code is
+ * `PhiDialogControl`; the Modal and Drawer shells under it stay the Overlay container's. A Module draws
+ * them rather than Ant Design or bare elements, so they wear the Theme like the house's own. A Widget
+ * that only places them on a Page needs none of this: it names the Core Widget in its preset.
+ */
+export { PhiAccordionControl } from "./components/controls/phi-accordion-control";
+export type { PhiAccordionControlProps, PhiAccordionControlSection } from "./components/controls/phi-accordion-control";
+export { PhiAnchorNavControl } from "./components/controls/phi-anchor-nav-control";
+export type { PhiAnchorNavControlItem, PhiAnchorNavControlProps } from "./components/controls/phi-anchor-nav-control";
+export { PhiAvatarControl } from "./components/controls/phi-avatar-control";
+export type { PhiAvatarControlProps } from "./components/controls/phi-avatar-control";
+export { PHI_RADIUS_CONTROL_DEFAULT_LABELS, PhiBoundRadiusControl } from "./components/controls/phi-bound-radius-control";
+export type {
+  PhiBoundRadiusControlProps,
+  PhiBoundRadiusValue,
+  PhiRadiusControlLabels,
+  PhiRadiusOptionValue,
+} from "./components/controls/phi-bound-radius-control";
+export { PhiBreadcrumbControl } from "./components/controls/phi-breadcrumb-control";
+export type { PhiBreadcrumbControlItem, PhiBreadcrumbControlProps } from "./components/controls/phi-breadcrumb-control";
+export { PhiBulletListControl } from "./components/controls/phi-bullet-list-control";
+export type { PhiBulletListControlProps } from "./components/controls/phi-bullet-list-control";
+export type { PhiBulletListEntryState, PhiBulletListNode } from "./components/widgets/shared/bullet-list-vocabulary";
+export { PhiCollapseControl } from "./components/controls/phi-collapse-control";
+export type { PhiCollapseControlProps, PhiCollapseControlSection } from "./components/controls/phi-collapse-control";
+export { PhiColorFieldControl } from "./components/controls/phi-color-field-control";
+export type { PhiColorFieldControlProps } from "./components/controls/phi-color-field-control";
+export { PhiDescriptionListControl } from "./components/controls/phi-description-list-control";
+export type { PhiDescriptionListControlProps, PhiDescriptionListItem } from "./components/controls/phi-description-list-control";
+export { PhiDividerControl } from "./components/controls/phi-divider-control";
+export type { PhiDividerControlProps } from "./components/controls/phi-divider-control";
+export { PhiMoneyControl } from "./components/controls/phi-money-control";
+export type { PhiMoneyControlProps } from "./components/controls/phi-money-control";
+export { PhiNameControl } from "./components/controls/phi-name-control";
+export type { PhiNameControlProps } from "./components/controls/phi-name-control";
+export { PhiPresetSizeControl } from "./components/controls/phi-preset-size-control";
+export type { PhiPresetSizeControlProps, PhiPresetSizeOption } from "./components/controls/phi-preset-size-control";
+export { PhiProgressControl } from "./components/controls/phi-progress-control";
+export type { PhiProgressControlProps } from "./components/controls/phi-progress-control";
+export { PhiQrCodeControl } from "./components/controls/phi-qr-code-control";
+export type { PhiQrCodeControlProps } from "./components/controls/phi-qr-code-control";
+export { PhiResultControl } from "./components/controls/phi-result-control";
+export type { PhiResultControlProps } from "./components/controls/phi-result-control";
+export { PhiRibbonControl } from "./components/controls/phi-ribbon-control";
+export type { PhiRibbonControlProps } from "./components/controls/phi-ribbon-control";
+export { PhiRibbonWrapControl } from "./components/controls/phi-ribbon-wrap-control";
+export type { PhiRibbonWrapControlProps } from "./components/controls/phi-ribbon-wrap-control";
+export { PhiSeriesChartControl } from "./components/controls/phi-series-chart-control";
+export type { PhiSeriesChartControlProps, PhiSeriesChartControlSeries } from "./components/controls/phi-series-chart-control";
+export { PhiSpinControl } from "./components/controls/phi-spin-control";
+export type { PhiSpinControlProps } from "./components/controls/phi-spin-control";
+export { PhiStatisticControl } from "./components/controls/phi-statistic-control";
+export type { PhiStatisticControlProps } from "./components/controls/phi-statistic-control";
+export { PhiStatusDotControl } from "./components/controls/phi-status-dot-control";
