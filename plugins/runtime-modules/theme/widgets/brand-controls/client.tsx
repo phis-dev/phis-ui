@@ -3484,6 +3484,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
    */
   const previewPaneShadows = resolvePhiShellChromePaneShadows(previewThemeResolved.root);
   const previewTextColor = readAliasTokenString(previewEffectiveToken, "colorText");
+  const previewTextHeadingColor = readAliasTokenString(previewEffectiveToken, "colorTextHeading");
   const previewTextSecondaryColor = readAliasTokenString(previewEffectiveToken, "colorTextSecondary");
   const previewTextTertiaryColor = readAliasTokenString(previewEffectiveToken, "colorTextTertiary");
   const previewLinkColor = readAliasTokenString(previewEffectiveToken, "colorLink");
@@ -3714,10 +3715,10 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
           <PhiFlexControl gap={clientToken.padding} wrap="wrap">
             <PhiFlexControl vertical gap={clientToken.paddingXS} style={{ flex: "1 1 260px", minWidth: 0 }}>
               {/* An `h3`, so the same rule that sets a page's headings sets this one. */}
-              <PhiTypographyControl presentation="title" level={3} style={{ margin: 0, color: previewTextColor }}>
+              <PhiTypographyControl presentation="title" level={3} style={{ margin: 0, color: previewTextHeadingColor }}>
                 Heading
               </PhiTypographyControl>
-              <PhiTypographyControl presentation="title" level={5} style={{ margin: 0, color: previewTextColor }}>
+              <PhiTypographyControl presentation="title" level={5} style={{ margin: 0, color: previewTextHeadingColor }}>
                 Header
               </PhiTypographyControl>
               <PhiTypographyControl style={{ color: previewTextColor }}>Text</PhiTypographyControl>
