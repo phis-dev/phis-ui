@@ -25,6 +25,18 @@
 }
 
 /*
+ * Nothing makes the page wider than the window. A viewport effect moves and turns a block by a share of its
+ * own size, so a picture that fits its slot may be drawn past the window's edge -- and a transform counts
+ * toward the scrollable width, which gave the page a horizontal scroll at the widths where the block sat
+ * close to the edge. `clip`, not `hidden`: it starts no scroll container, so a sticky Header, Sider or
+ * Footer still sticks to the window, and the vertical overflow stays visible.
+ */
+.shell-sider-full,
+.shell-sider-embedded {
+  overflow-x: clip;
+}
+
+/*
  * A device band, not a content threshold, although it is written as a container query.
  *
  * `phi-render-viewport` is the window less the sider, so what these three measure is the screen. They

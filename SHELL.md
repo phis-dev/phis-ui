@@ -44,6 +44,8 @@ The shared shell currently supports two topology variants:
 
 These variants describe topology only. They must not encode region chrome.
 
+Both clip their horizontal overflow (`overflow-x: clip`): a block a viewport effect moves or turns past the window's edge is cut there instead of widening the page into a horizontal scroll. `clip` starts no scroll container, so the sticky Header, Sider and Footer bands keep sticking to the window.
+
 The shell implementation must stay plain HTML/CSS at the container level.
 
 - `sider_left` is not an Ant Design `Layout.Sider` contract.
