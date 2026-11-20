@@ -22,6 +22,9 @@ into the matching contract document, and open work is tracked in [TODOS.md](../T
 - [RESPONSIVE_BLOCK_GEOMETRY.md](./RESPONSIVE_BLOCK_GEOMETRY.md) -- letting a block state a size per
   profile, decided by a container query on the room it is offered rather than by anything that measures.
   Built; the contract is LAYOUTING.md, "Block geometry per profile", and this keeps the reasoning.
+- [SITE_SHELLS.md](./SITE_SHELLS.md) -- a Site package bringing the Public and App shell on activation, and
+  the Area's Module selection stored apart from its structure so a saved selection no longer freezes it.
+  Decided 2026-11-20, not built.
 - [STATE_MACHINES.md](./STATE_MACHINES.md) -- a shared description of multi-step work: states,
   transitions, server-owned projections, and where a flow's state lives.
 - [TOURS.md](./TOURS.md) -- guided UI Tours, visual-anchor resolution, and user progress.
