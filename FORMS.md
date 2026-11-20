@@ -755,9 +755,10 @@ Resolution for every request (`gateway/form-handler-resolution.ts`):
    set it. The locale the Area is read in is what the Site resolves for the request (`phis_locale`, the
    account, `Accept-Language`, the Site default), always one of the Site's locales, never a path
    segment. An endpoint, Module id, or anything else in the request is never read.
-2. The Area's effective tree is the persisted Area revision, or the code-owned shell preset when none is
-   persisted. Its `runtimeModules`, the Area's locked base Module, and the server capability snapshot give
-   the active Module set.
+2. The Area's Module selection gives the active Module set: its `runtimeModules` (stored apart from the
+   Area's structure, [CMS.md](./CMS.md#the-areas-module-selection); the Area's defaults when none is
+   stored), the Area's locked base Module, and the server capability snapshot. Which shell the Area draws
+   plays no part in it.
 3. The Form resolves from that set as in [Registry and identity](#registry-and-identity). Its owner must
    be active.
 4. The handler key for the phase selects the Provider with the same `phase` and `handlerKey`; its owner

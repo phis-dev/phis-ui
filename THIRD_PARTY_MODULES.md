@@ -2903,6 +2903,8 @@ Rebuild the Site and test at least:
 
 - one Area with the Module inactive and the same Area with it active;
 - the code-owned Area baseline on a Site with no persisted Area revision;
+- for a package that brings a Public or App shell: the Area with the Module on (its shell, and its
+  `settings` where it proposes any) and off again (phis-ui's shell back), and a Builder save on its shell;
 - Runtime and Preview rendering of every contributed Widget;
 - Builder Picker, Inspector, Canvas, and Authoring output;
 - Controller mounting and the declared signal routes;

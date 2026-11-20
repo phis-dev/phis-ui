@@ -238,7 +238,10 @@ round-trip, nothing visible on a second visit.
 **Placement** is the Footer region of the Public Area shell preset
 ([plugins/runtime-modules/phi-default-site-area-preset-tree.ts](../plugins/runtime-modules/phi-default-site-area-preset-tree.ts)),
 which `mergePhiCmsShellTrees` joins to every page tree in that Area -- the existing way to be on every
-page. Two consequences: it is Area-scoped, so covering App as well means an entry in that shell too, and
+page. Since 2026-11-20 a Site package may replace the Public and App shell (MODULES.md, "A Module's own
+Area shell"), so a banner placed in phis-ui's Footer alone would vanish on such a Site: when it is built,
+it belongs where every shell gets it -- an `areaOverlays` contribution, which is laid over the effective
+shell, or a Region every shell is required to keep. Two consequences: it is Area-scoped, so covering App as well means an entry in that shell too, and
 there is no banner Overlay type. `PHI_CMS_OVERLAY_TYPES` is `modal` and `drawer`, both with a backdrop and
 a focus trap, and a modal cookie banner is the listed breach of having to decide before one can read the
 privacy notice. A banner is a region-placed Widget that positions itself, not an Overlay.

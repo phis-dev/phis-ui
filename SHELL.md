@@ -231,7 +231,11 @@ The site-owned Shell Chrome Overlay is its counterpart in front of the scrolling
   states structure only -- which Regions exist, what they hold, whether they stick, and which slots a Page
   may inject into. Every Area, the Builder's working surface included, therefore starts on the Site's
   Theme; out of the box that is the core Set `phis`, glass frame over the `phis` ground. A look of its own
-  is something a Site authors, never something a preset decides for every Site that follows it
+  is something a Site authors, never something a preset decides for every Site that follows it. A Site
+  package's own Public or App shell ([MODULES.md](./MODULES.md#a-modules-own-area-shell)) is that Site
+  authoring, shipped as code: it is the frame of one Site, applies only where that Site switched the
+  package on, and may state what a Builder save of the same Regions would -- a Surface, a tone, a Region
+  height -- as `@phis/dev`'s Footer does. The rule above binds the shells phis-ui ships
 - reads "authored" as painting something, not as the field being present. Builder persistence writes a
   Background config onto every Region draft it stores, so a config whose Base is `none` and that carries
   no Overlay counts as no ground at all. Otherwise switching a Region's own pane off would lock it out
@@ -607,7 +611,10 @@ Who supplies the Area-owned Regions is the Area's shell, and in Public and App t
 rather than the base Module's: an active Module that declares an `areaShells` descriptor for the Area
 brings the whole shell -- Regions with or without Siders, their Layouts, Widgets, Overlays and controller
 settings -- and the base shell answers again once it is off. One provider per Area. The working Areas
-(Admin, Editor, Accounting, Builder) always draw their base shell. The topology and the ownership split
+(Admin, Editor, Accounting, Builder) always draw their base shell. Such a shell may also propose the
+Area's settings (`settings`: meta and root route) in place of phis-ui's defaults, until the Site saves
+its own. Look and frame both come from the package then: the Regions it declares, their Surfaces and
+heights, the Layouts and Widgets in them; the Theme still supplies everything a Region leaves unset. The topology and the ownership split
 above hold for either: a provider's shell is an Area shell like the base one, and Pages keep their own
 Regions ([MODULES.md](./MODULES.md#a-modules-own-area-shell)).
 

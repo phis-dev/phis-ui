@@ -123,12 +123,14 @@ A Form being installed is not the same as its owner Module being active. All of 
    modules are derived and must not be listed there); and
 4. the Site build manifest contains the Module's Server and applicable Client projections for that Area.
 
-Before a Site has persisted an Area revision, the package-owned shell preset is the effective Published
-baseline. Page rendering, Form discovery, controller/provider resolution, and `/api/site/forms` dispatch
-must all resolve the same effective Area tree: exact persisted Area override first, then the code-owned
-shell preset. A gateway or controller resolver must not interpret a missing database override as an empty
-module selection. Once an Area override exists, its `runtimeModules` selection is authoritative; adding a
-package or importing its Form does not activate it.
+Which Modules are active comes from the Area's Module selection, which is stored apart from its
+structure ([CMS.md](../../CMS.md#the-areas-module-selection)). Before a Site has stored one, the Area's
+default selection answers. Page rendering, Form discovery, controller/provider resolution, and
+`/api/site/forms` dispatch must all read the same selection. A gateway or controller resolver must not
+interpret a missing stored selection as an empty one. Once a selection is stored, its `runtimeModules`
+are authoritative; adding a package or importing its Form does not activate it. The shell is a separate
+question: the stored structure on the Area's effective shell, else that shell's preset -- the base
+Module's, or in Public and App the one an active Module brings.
 
 The Site-local gateway derives the request Area from the same-Site Referer. Behind a reverse proxy,
 same-Site validation compares the Referer host with the forwarded/request host because the internal and
@@ -670,8 +672,8 @@ package preset itself.
 - Declare every referenced field, validation, options, record, and phase-specific handler provider on
   active modules.
 - Add the Form to `catalogEntry.forms`; never register it globally.
-- Verify each intended Area twice: with the package-owned shell baseline before any database revision and
-  with a persisted Area override whose `runtimeModules` selection is authoritative.
+- Verify each intended Area twice: with the Area's default Module selection before any is stored, and
+  with a stored selection whose `runtimeModules` are authoritative.
 - Place it through the generic Form Widget with `formId`; never create a domain Form Widget alias.
 - Where the Form is meant to stand in a box, configure the Widget's `card`; draw no box of your own.
 - Give the Form Widget a stable CMS instance id and place visible actions as sibling Button/Command
