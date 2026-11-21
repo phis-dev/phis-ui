@@ -2,6 +2,7 @@ export type PhiColorPickerLabels = {
   custom: string;
   colors: {
     primary: string;
+    status: string;
     text: string;
     red: string;
     volcano: string;
@@ -23,6 +24,7 @@ export const PHI_COLOR_PICKER_DEFAULT_LABELS: PhiColorPickerLabels = {
   custom: "Custom",
   colors: {
     primary: "Primary",
+    status: "Status",
     text: "Text",
     red: "Red",
     volcano: "Volcano",

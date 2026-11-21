@@ -16,6 +16,7 @@ const PHI_COLOR_PICKER_LABEL_SET = definePhiLabelSet({
   labels: {
     custom: PHI_COLOR_PICKER_DEFAULT_LABELS.custom,
     color_primary: PHI_COLOR_PICKER_DEFAULT_LABELS.colors.primary,
+    color_status: PHI_COLOR_PICKER_DEFAULT_LABELS.colors.status,
     color_text: PHI_COLOR_PICKER_DEFAULT_LABELS.colors.text,
     color_red: PHI_COLOR_PICKER_DEFAULT_LABELS.colors.red,
     color_volcano: PHI_COLOR_PICKER_DEFAULT_LABELS.colors.volcano,
@@ -39,6 +40,7 @@ export async function getPhiColorPickerLabels(options: PhiGlobalTranslatorOption
     custom: labels.custom,
     colors: {
       primary: labels.color_primary,
+      status: labels.color_status,
       text: labels.color_text,
       red: labels.color_red,
       volcano: labels.color_volcano,

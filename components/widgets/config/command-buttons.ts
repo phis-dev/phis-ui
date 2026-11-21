@@ -66,6 +66,7 @@ function readCommandButtonConfig(reader: PhiConfigReader): PhiCommandButtonConfi
     label: readPhiControlLabel(reader.record.label),
     tooltip: reader.string("tooltip"),
     icon: reader.string("icon"),
+    iconColor: reader.string("iconColor"),
     display: reader.oneOf("display", ["icon", "label", "icon-label"] as const),
     danger: reader.boolean("danger"),
     disabled: reader.boolean("disabled"),
@@ -199,6 +200,8 @@ export function buildPhiCommandButtonsField({
       },
       { key: "tooltip", type: "string", label: "Tooltip" },
       { key: "icon", type: "icon", label: "Icon" },
+      // Left empty, the button's own colour, which follows its variant and Danger.
+      { key: "iconColor", type: "color", label: "Icon color", mode: "single" },
       ...extraItemFields,
       ...(omitted.has("danger") ? [] : [{ key: "danger", type: "boolean", label: "Danger" } satisfies PhiCmsConfigField]),
       { key: "readOnly", type: "boolean", label: "Read only" },

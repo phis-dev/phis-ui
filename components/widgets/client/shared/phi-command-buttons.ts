@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { createElement, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 
 import type { PhiSignal, PhiSignalAddress, PhiSignalRoute, PhiSignalValue } from "../../../../types";
 import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
@@ -121,6 +121,15 @@ export function resolvePhiCommandButtonVariant(
   action: { variant?: PhiButtonVariant } | null | undefined,
 ): PhiButtonVariant | undefined {
   return button.variant ?? action?.variant;
+}
+
+/*
+ * The icon in its own colour, where the button names one: the glyph takes `currentColor`, so a span
+ * around it colours the icon and leaves the button's words and frame as its variant draws them.
+ */
+function colorPhiCommandButtonIcon(icon: ReactNode, color: string | undefined): ReactNode {
+  if (!color || icon == null) return icon;
+  return createElement("span", { style: { display: "inline-flex", color } }, icon);
 }
 
 export function usePhiCommandButtons({
@@ -391,7 +400,7 @@ export function usePhiCommandButtons({
       disabled: button.disabled === true || buttonState.enabled === false,
       readOnly: button.readOnly === true,
       loading: buttonState.loading,
-      icon: button.display === "label" ? null : resolvedIcon,
+      icon: button.display === "label" ? null : colorPhiCommandButtonIcon(resolvedIcon, button.iconColor),
       visible: buttonState.visible,
       badge: resolveButtonBadge(button, buttonState.badge),
     };

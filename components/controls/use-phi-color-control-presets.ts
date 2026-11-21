@@ -23,6 +23,14 @@ const PHI_PRIMARY_COLOR_TOKEN_KEYS = [
   "colorPrimaryTextActive",
 ] as const;
 
+/* What a colour says rather than what it looks like: done, careful, wrong, of note -- as Alerts and Tags say it. */
+const PHI_STATUS_COLOR_TOKEN_KEYS = [
+  "colorSuccess",
+  "colorWarning",
+  "colorError",
+  "colorInfo",
+] as const;
+
 const PHI_TEXT_COLOR_TOKEN_KEYS = [
   "colorTextBase",
   "colorText",
@@ -48,8 +56,8 @@ function resolvePhiColorTokenReference(tokenKey: string) {
 }
 
 /**
- * The colour picker's swatches: the Theme's custom colours, its primary and text ladders, then the fixed
- * palettes.
+ * The colour picker's swatches: the Theme's custom colours, its primary ladder, its status colours and its
+ * text ladder, then the fixed palettes.
  *
  * With `storeThemeRoles`, a Theme swatch stores the role it shows (`PHI_COLOR.custom3`,
  * `PHI_COLOR.primaryBg`) rather than its colour, so what an author picks follows the Theme and the mode.
@@ -95,6 +103,13 @@ export function usePhiColorControlPresets({
       colors: PHI_PRIMARY_COLOR_TOKEN_KEYS.map((key) => token[key]),
       colorLabels: [...PHI_PRIMARY_COLOR_TOKEN_KEYS],
       ...(storeThemeRoles ? { colorReferences: PHI_PRIMARY_COLOR_TOKEN_KEYS.map(resolvePhiColorTokenReference) } : {}),
+    },
+    {
+      key: "phi-status",
+      label: labels.colors.status,
+      colors: PHI_STATUS_COLOR_TOKEN_KEYS.map((key) => token[key]),
+      colorLabels: [...PHI_STATUS_COLOR_TOKEN_KEYS],
+      ...(storeThemeRoles ? { colorReferences: PHI_STATUS_COLOR_TOKEN_KEYS.map(resolvePhiColorTokenReference) } : {}),
     },
     {
       key: "phi-text",

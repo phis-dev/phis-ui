@@ -280,7 +280,11 @@ Generic control Widgets reuse the capability sets in `signals/control-signal-cap
   (`gradient1`-`gradient3`, absent means the first; `PhiButtonWidgetPlacement` in
   `types/core-widget-placements.ts`). A toolbar draws its buttons by primitive type alone, so there a
   `gradient` button stands as the primary one it is underneath and a `glass` one as the plain one
-  (`client/shared/phi-command-buttons.ts`). The toolbar knows no workspace, page, or publish semantics; Controllers attach context. A button listens
+  (`client/shared/phi-command-buttons.ts`). An `action` answers for a button's words and, where the
+  button states no `variant`, its look; a stated `variant` wins, so a dialog footer's Save beside
+  `variant: "primary"` leads it. `iconColor` colours the icon alone, as the colour field stores it (a
+  Theme role such as `var(--phi-color-error)`, or a colour of the Site's); the button keeps its frame and
+  words. The toolbar knows no workspace, page, or publish semantics; Controllers attach context. A button listens
   as its subcontrol for `enabled`, `loading`, `visibility`, `badge`, `icon`, `label`, and `tooltip`
   (`change`, `string` for the last two); a received tooltip replaces the one the button was placed with
   until another arrives -- the Builder's Undo names the step it would take back that way.

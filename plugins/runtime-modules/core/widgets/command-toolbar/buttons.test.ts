@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { PHI_COMMAND_TOOLBAR_BUTTON_BOUNDS, PHI_COMMAND_TOOLBAR_WIDGET_DEFINITION } from "./config";
 import {
   createPhiCommandButton,
+  readPhiCommandButtons,
   resizePhiCommandButtons,
 } from "../../../../../components/widgets/config/command-buttons";
 
@@ -37,5 +38,15 @@ describe("a Command Toolbar's buttons", () => {
     expect(createPhiCommandButton([
       { key: "button2", label: "B", emits: [] },
     ]).key).toBe("button3");
+  });
+
+  it("reads an icon colour of its own, and none where it names none", () => {
+    const emits = [{ capabilityId: "command", value: "delete" }];
+    const [coloured, plain] = readPhiCommandButtons([
+      { key: "delete", icon: "delete", iconColor: "var(--phi-color-error)", emits },
+      { key: "save", icon: "save", emits },
+    ]);
+    expect(coloured?.iconColor).toBe("var(--phi-color-error)");
+    expect(plain?.iconColor).toBeUndefined();
   });
 });

@@ -512,6 +512,12 @@ export type PhiCommandButtonConfig = PhiControlBadgeConfig & {
   label?: string;
   tooltip?: string;
   icon?: string;
+  /**
+   * The icon's colour, as the colour field stores it -- a Theme role (primary, success, warning, error,
+   * info, the text colours) or a colour of the Site's. Absent, the button's own. The button around it
+   * keeps its look: Danger and the variant still answer for the frame and the words.
+   */
+  iconColor?: string;
   display?: "icon" | "label" | "icon-label";
   danger?: boolean;
   disabled?: boolean;
