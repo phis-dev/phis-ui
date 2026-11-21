@@ -127,6 +127,7 @@ function normalizePhiCmsCollectionViewWidgetConfig(config: unknown): PhiCmsColle
   const search = isPhiRecord(features.search) ? features.search : null;
   const actions = isPhiRecord(features.actions) ? features.actions : {};
   const pagination = isPhiRecord(features.pagination) ? features.pagination : null;
+  const reorder = isPhiRecord(features.reorder) ? features.reorder : null;
   return {
     presentation: {
       title: readString(presentation.title),
@@ -152,6 +153,10 @@ function normalizePhiCmsCollectionViewWidgetConfig(config: unknown): PhiCmsColle
       } : undefined,
       filters: readFilters(features.filters),
       actions: { toolbar: readToolbarActions(actions.toolbar) },
+      reorder: reorder ? {
+        enabled: readBoolean(reorder.enabled) ?? false,
+        actionKey: readString(reorder.actionKey)?.trim() || undefined,
+      } : undefined,
       pagination: pagination ? {
         enabled: readBoolean(pagination.enabled) ?? true,
         pageSize: readNumber(pagination.pageSize),
@@ -356,6 +361,12 @@ export const PHI_COLLECTION_VIEW_WIDGET_DEFINITION = {
         },
       ],
     },
+    /*
+     * Drag reordering through the bound Provider's action (`itemKeys`, every key in the new order); off
+     * in masonry, while a search or a filter narrows the list, and while it spans more than one page.
+     */
+    { key: "features.reorder.enabled", type: "boolean", label: "Drag Reordering" },
+    { key: "features.reorder.actionKey", type: "string", label: "Reorder Action Key", placeholder: "reorder" },
     { key: "features.pagination.enabled", type: "boolean", label: "Pagination" },
     { key: "features.pagination.pageSize", type: "number", label: "Page Size", min: 1, precision: 0 },
     { key: "features.pagination.compact", type: "boolean", label: "Compact Pagination" },

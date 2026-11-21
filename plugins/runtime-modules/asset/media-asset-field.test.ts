@@ -7,6 +7,7 @@ import {
   readPhiMediaAssetFieldConfig,
   readPhiMediaAssetFieldUploadRefusal,
   readPhiMediaAssetFieldValue,
+  resolvePhiMediaAssetFieldFolderPath,
 } from "./media-asset-field";
 
 function configError(config: Record<string, unknown> | undefined) {
@@ -41,6 +42,10 @@ describe("the media-asset field's config", () => {
     expect(configError({ mediaType: PhiMediaKind.Archive })).toBe("config.mediaType");
     expect(configError({ publicOnly: "yes" })).toBe("config.publicOnly");
     expect(configError({ folderPath: ["Shop Images"] })).toBe("config.folderPath");
+    expect(configError({ folderPath: "Shop Images / {}" })).toBe("config.folderPath");
+    expect(configError({ folderPath: "Shop Images / {category" })).toBe("config.folderPath");
+    expect(configError({ folderPath: "Shop Images / category}" })).toBe("config.folderPath");
+    expect(configError({ folderPath: "Shop Images / {a{b}}" })).toBe("config.folderPath");
   });
 });
 
@@ -91,5 +96,37 @@ describe("what an upload in the picker made", () => {
     expect(readPhiMediaAssetFieldUploadRefusal(readPhiMediaAssetFieldConfig({}), privateImage)).toBeNull();
     expect(readPhiMediaAssetFieldUploadRefusal(readPhiMediaAssetFieldConfig({ publicOnly: true }), privateImage))
       .toBe("notPublic");
+  });
+});
+
+describe("a Folder path with placeholders", () => {
+  const template = readPhiMediaAssetFieldConfig({ folderPath: "Shop Images / {category} / {product}" }).folderPath;
+
+  it("reads the names as written, placeholders unresolved", () => {
+    expect(template).toEqual(["Shop Images", "{category}", "{product}"]);
+  });
+
+  it("puts the Form's values in, trimmed, a number as written", () => {
+    expect(resolvePhiMediaAssetFieldFolderPath(template, { category: "  Shoes ", product: 42 }))
+      .toEqual(["Shop Images", "Shoes", "42"]);
+  });
+
+  it("leaves out a whole name whose value is empty or missing", () => {
+    expect(resolvePhiMediaAssetFieldFolderPath(template, { product: "Runner" })).toEqual(["Shop Images", "Runner"]);
+    expect(resolvePhiMediaAssetFieldFolderPath(template, { category: "  ", product: "Runner" })).toEqual(["Shop Images", "Runner"]);
+    expect(resolvePhiMediaAssetFieldFolderPath(template, { category: ["a"], product: null })).toEqual(["Shop Images"]);
+    const mixed = readPhiMediaAssetFieldConfig({ folderPath: "Products / Item {sku}" }).folderPath;
+    expect(resolvePhiMediaAssetFieldFolderPath(mixed, {})).toEqual(["Products"]);
+    expect(resolvePhiMediaAssetFieldFolderPath(mixed, { sku: "A-1" })).toEqual(["Products", "Item A-1"]);
+  });
+
+  it("never lets a value add a level: its / becomes -", () => {
+    expect(resolvePhiMediaAssetFieldFolderPath(template, { category: "Men/Shoes", product: " a / b " }))
+      .toEqual(["Shop Images", "Men-Shoes", "a - b"]);
+  });
+
+  it("reads a dotted key into a value that is a record", () => {
+    const nested = readPhiMediaAssetFieldConfig({ folderPath: "Shop / {product.slug}" }).folderPath;
+    expect(resolvePhiMediaAssetFieldFolderPath(nested, { product: { slug: "runner" } })).toEqual(["Shop", "runner"]);
   });
 });

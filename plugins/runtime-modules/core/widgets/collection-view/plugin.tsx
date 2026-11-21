@@ -10,10 +10,11 @@ import {
 
 export const PHI_COLLECTION_VIEW_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsCollectionViewWidgetConfig> = {
   ...PHI_COLLECTION_VIEW_WIDGET_DEFINITION,
-  render: ({ widget, runtime, config }) => (
+  render: ({ widget, runtime, registry, config }) => (
     <PhiCollectionViewWidgetServer
       key={`widget-${widget.id}`}
       runtime={runtime}
+      registry={registry}
       config={config}
       widgetId={widget.id}
       renderMode={readPhiRuntimeTreeRenderMode(widget.config)}

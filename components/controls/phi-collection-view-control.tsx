@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 
 import type { PhiControlSize } from "../../types/control";
 import { PHI_VISUAL_ANCHOR_PART_ATTRIBUTE } from "../../types/visual-anchors";
@@ -9,6 +9,11 @@ import { PhiCollectionHeaderControl } from "./phi-collection-header-control";
 import { PhiCollectionLayoutControl } from "./phi-collection-layout-control";
 import { PhiPaginationControl } from "./phi-pagination-control";
 import { PhiSkeletonControl } from "./phi-skeleton-control";
+import { usePhiCollectionReorder } from "./phi-collection-reorder-context";
+
+// Loaded where a Collection offers reordering, so a Collection that does not carries no drag code.
+const PhiCollectionSortableLayoutControl = lazy(() =>
+  import("./phi-collection-sortable-layout-control").then((module) => ({ default: module.PhiCollectionSortableLayoutControl })));
 
 export type PhiCollectionViewControlProps = {
   title?: ReactNode;
@@ -50,20 +55,40 @@ export function PhiCollectionViewControl({
 }: PhiCollectionViewControlProps) {
   const { token } = usePhiConfig();
   const resolvedGap = gap ?? token.paddingSM;
+  /*
+   * Reordering offered around this Collection (`PhiCollectionReorderContext`, the `collection-view`
+   * Widget's `features.reorder`) puts a handle on each item, in grid and stack. Only where the items are
+   * the ones the keys name -- one each, the renderer's own `body` not in their place.
+   */
+  const reorder = usePhiCollectionReorder();
+  const itemList = [...(items ?? [])];
+  const sortable = reorder != null && body == null && mode !== "masonry" && itemList.length > 0 &&
+    itemList.length === reorder.itemKeys.length;
+  const layout = (
+    <PhiCollectionLayoutControl
+      mode={mode}
+      gap={resolvedGap}
+      minColumnWidth={minColumnWidth ?? 102}
+      items={itemList}
+    />
+  );
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: token.paddingSM, width: "100%", minWidth: 0 }}>
       <PhiCollectionHeaderControl title={title} description={description} filters={filters} toolbar={toolbar} />
       {panel}
       {diagnostics}
       <div {...{ [PHI_VISUAL_ANCHOR_PART_ATTRIBUTE]: "items" }} style={{ width: "100%", minWidth: 0 }}>
-        {body ?? (
-          <PhiCollectionLayoutControl
-            mode={mode}
-            gap={resolvedGap}
-            minColumnWidth={minColumnWidth ?? 102}
-            items={[...(items ?? [])]}
-          />
-        )}
+        {body ?? (sortable ? (
+          <Suspense fallback={layout}>
+            <PhiCollectionSortableLayoutControl
+              mode={mode === "stack" ? "stack" : "grid"}
+              gap={resolvedGap}
+              minColumnWidth={minColumnWidth ?? 102}
+              items={itemList}
+              reorder={reorder}
+            />
+          </Suspense>
+        ) : layout)}
       </div>
       {pagination ? (
         <div

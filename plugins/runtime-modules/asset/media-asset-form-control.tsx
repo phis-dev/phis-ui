@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type ComponentType } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from "react";
 
 import { PhiButtonControl } from "../../../components/controls/phi-button-control";
 import { PhiFlexControl } from "../../../components/controls/phi-flex-control";
@@ -32,6 +32,7 @@ import {
   readPhiMediaAssetFieldConfig,
   readPhiMediaAssetFieldUploadRefusal,
   readPhiMediaAssetFieldValue,
+  resolvePhiMediaAssetFieldFolderPath,
 } from "./media-asset-field";
 
 const DEFAULT_LABELS = {
@@ -114,6 +115,18 @@ export const PhiMediaAssetFormControl: ComponentType<PhiFormFieldProviderProps> 
     return () => formContext.holdSubmit(field.key, null);
   }, [field.key, formContext, pendingLabel, uploading]);
 
+  /*
+   * The start Folder as the Form's values name it when the picker opens (`{key}` placeholders), kept for
+   * the upload into it: the path the picker opened on is the path the file goes to.
+   */
+  const startFolderPath = config.folderPath;
+  const startFolderPathRef = useRef<readonly string[]>([]);
+  const openOnFolder = useCallback(async (signal: AbortSignal) => {
+    const path = resolvePhiMediaAssetFieldFolderPath(startFolderPath, formContext?.getValues() ?? {});
+    startFolderPathRef.current = path;
+    return path.length > 0 ? readPhiMediaUploadFolderPathReach(path, signal) : { folderId: null, complete: true };
+  }, [formContext, startFolderPath]);
+
   const upload = useMemo<PhiMediaPickerUploadBinding>(() => ({
     accept: transfer.accept,
     progress: uploadProgress,
@@ -121,7 +134,7 @@ export const PhiMediaAssetFormControl: ComponentType<PhiFormFieldProviderProps> 
     send: async (file, folderId, intoStartFolder) => {
       setUploadNotice(null);
       // No Space is named, which Core answers with the Site Space -- the only one the field offers.
-      const asset = await sendFile(file, intoStartFolder ? { folderPath: config.folderPath } : { folderId });
+      const asset = await sendFile(file, intoStartFolder ? { folderPath: startFolderPathRef.current } : { folderId });
       if (!asset) return null;
       const tile = normalizePhiImagePreviewTile(asset, []);
       const refusal = readPhiMediaAssetFieldUploadRefusal(config, tile);
@@ -133,12 +146,6 @@ export const PhiMediaAssetFormControl: ComponentType<PhiFormFieldProviderProps> 
     },
     cancel: cancelUpload,
   }), [cancelUpload, config, notPublic, refusals, sendFile, transfer.accept, uploadNotice, uploadProgress]);
-
-  const startFolderPath = config.folderPath;
-  const openOnFolder = useCallback(
-    (signal: AbortSignal) => readPhiMediaUploadFolderPathReach(startFolderPath, signal),
-    [startFolderPath],
-  );
 
   // The picker's words come from the Media Label Set, which the Form Widget read for this Form
   // (`resolvePhiFormFieldLabels`); outside a Form that read them, the English defaults stand.

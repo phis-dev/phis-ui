@@ -428,6 +428,16 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
     failed read is said above the tiles and the picker opens on the root. Empty or absent: the picker
     opens on the Folder it showed last, at first the root.
 
+    A name may hold placeholders, `{key}`, filled from the Form's values as they are when the picker
+    opens -- what the author typed and what the Form loaded from its record alike
+    (`formContext.getValues()`; a dotted key reads into a value that is a record):
+    `"Shop Images / {category} / {product}"`. A value is a text or a number, trimmed; a `/` in it becomes
+    `-`, so a value names a Folder and never adds a level. A name whose placeholder has no value --
+    absent, empty, anything else -- is left out whole: without a category the path is
+    `"Shop Images / <product>"`. The path resolved on opening is the one an upload from there creates and
+    goes into (`resolvePhiMediaAssetFieldFolderPath`). A brace that opens no placeholder (`{}`, `{a`, `a}`)
+    is a `PhiConfigError` on `config.folderPath`.
+
   The field offers the **Site Space only**, in every Area: there is no Space selector, and the query names
   no Space, which Core answers with the Site Space. A picture whose id is stored for everybody who reads the
   value has no business in somebody's personal or a group's Space. This and `publicOnly` are the interface.

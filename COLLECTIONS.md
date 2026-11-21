@@ -145,6 +145,7 @@ features
 ├── search
 ├── ordered filters (key, control select | multi-select | cascader, widths, companion actions)
 ├── ordered toolbar action presentation
+├── reorder: enabled, optional actionKey (default "reorder")
 └── pagination
 
 initialQuery
@@ -173,6 +174,39 @@ visibility. An unknown filter, action, renderer, or panel capability is a contra
 Module presets may persist a translated, serializable resource-label object under presentation; the
 generic Widget passes it to the selected resource adapter as opaque presentation and never interprets its
 domain keys. An absent label object resolves to module-owned English source fallbacks.
+
+## Drag reordering
+
+`features.reorder` (`{ enabled: boolean; actionKey?: string }`) lets a reader drag the items into another
+order, and the bound Provider store it. The Widget stores nothing about order: the Provider's order is
+the order, before and after.
+
+- **Where.** In `grid` and `stack`, never `masonry`, and only while the items shown are the whole
+  collection, because a drop has to name all of them: no search text, no filter apart from the ones
+  the Widget's own `initialQuery` sets (those are what the collection is), every item on the one page
+  (`total` no more than the items answered, so pagination with a second page turns it off), and every
+  item with a key of its own at the resource's `itemIdentityPath` (a string or a number, no two the
+  same). The key path is read from the resource's declaration on the Server and handed to the Widget's
+  Client; a render without the Area's registry offers no reordering. Pure rules:
+  `resolvePhiCollectionReorderKeys` (`components/widgets/client/shared/phi-collection-reorder.ts`).
+- **A drop** calls the Provider action through the Binding:
+  `activate({ actionKey, itemKeys })`, `actionKey` the configured one or `"reorder"`, `itemKeys` every
+  item key in the new order (`PhiCollectionProviderActionRequest.itemKeys`). The new order is shown at
+  once -- the renderer is handed the Binding with its items in that order -- and nothing is dragged
+  until the Provider answers. Its answer is the collection as it now stands and takes the dropped
+  order's place. A refusal (the action throws, or answers `error`) puts the Provider's order back by
+  reading again, and is said the way a Collection's other refused actions are: an application message
+  (`usePhiApplicationFeedback`), the Provider's words where it gave some, else the Widget's
+  `widget:collection-view` text. A Provider that offers reordering declares the action
+  (`scope: "resource"`) and checks the keys it receives: the whole collection, each once.
+- **The handles** are drawn by `PhiCollectionViewControl` around whatever the resource View draws: the
+  Widget offers the reordering through `PhiCollectionReorderContext`
+  (`components/controls/phi-collection-reorder-context.ts`), and the Control, where the View's items are
+  one per key and it draws no `body` of its own in their place, puts a drag handle on each item
+  (`phi-collection-sortable-layout-control.tsx`, loaded only then). `@dnd-kit` with pointer and keyboard,
+  as the Table Control sorts rows: only the handle starts a drag, so an item's own click, links and
+  buttons stay its own. A View that lays its items out some other way offers no reordering. An item that
+  draws a Collection of its own does not hand that one the reordering.
 
 ## Integrated tool panels
 

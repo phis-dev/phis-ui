@@ -114,6 +114,13 @@ export type PhiCollectionProviderActionRequest = {
   itemKey?: string | number | null;
   item?: Record<string, unknown> | null;
   selectedItemKeys?: (string | number)[];
+  /**
+   * Every item key of the collection, in the order a reader dragged them into (`collection-view`'s
+   * `features.reorder`): the whole collection, never a page of it or a search's share. Sent with the
+   * reorder action's key; the Provider stores the order or refuses, and answers the collection as it
+   * now stands.
+   */
+  itemKeys?: (string | number)[];
   query?: PhiCollectionProviderQuery;
   params?: Record<string, unknown>;
   signal: AbortSignal;

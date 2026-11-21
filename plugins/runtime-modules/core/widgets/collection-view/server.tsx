@@ -6,6 +6,7 @@ import type { PhiRenderableBlockRenderMode } from "../../../../../types/renderab
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS } from "../../../../../constants/media-library-provider-keys";
 import { getPhiMediaWidgetLabels } from "../../../../../components/media/label-sets/media";
+import { getPhiCollectionViewWidgetLabels } from "../../../../../components/widgets/label-sets/collection-view";
 import { buildPhiWidgetLabelTranslatorOptions } from "../../../../../components/widgets/label-sets/runtime-options";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import { readPhiCollectionViewDeclaredFailure } from "../../../../../components/widgets/shared/collection-source-failure";
@@ -13,7 +14,10 @@ import { PhiWidgetFailureServer } from "../../../../../components/widgets/shared
 
 export type PhiCollectionViewWidgetServerProps = {
   runtime: Pick<PhiBlockRuntime, "locale">;
-  /** The Area's declarations, which the preview judges the binding against; absent outside a page render. */
+  /**
+   * The Area's declarations: the preview judges the binding against them, and a Widget that offers
+   * reordering reads the bound resource's `itemIdentityPath` there. Absent outside a page render.
+   */
   registry?: Pick<PhiCmsRuntimeRenderRegistry, "dataProviderDescriptorsByKey">;
   config?: PhiCmsCollectionViewWidgetConfig | null;
   widgetId?: PhiCmsInstanceId | null;
@@ -67,14 +71,28 @@ export async function PhiCollectionViewWidgetServer({
    * Foundation's and loaded here -- only for a Widget bound to that collection, so no other source pays.
    * `config.presentation.labels` still lays over them.
    */
-  const labels = config?.source?.providerKey === PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection
-    ? await getPhiMediaWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime))
-    : undefined;
+  const translatorOptions = buildPhiWidgetLabelTranslatorOptions(runtime);
+  const [labels, reorderLabels] = await Promise.all([
+    config?.source?.providerKey === PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection
+      ? getPhiMediaWidgetLabels(translatorOptions)
+      : undefined,
+    // The Widget's own words, only for one that offers reordering.
+    config?.features.reorder?.enabled ? getPhiCollectionViewWidgetLabels(translatorOptions) : undefined,
+  ]);
+  /*
+   * Which field of an item is its key, as the bound resource declares it: what a reorder sends as
+   * `itemKeys`. The Provider's Client registration does not carry it, the declaration does.
+   */
+  const source = config?.source;
+  const providerDescriptor = source ? registry?.dataProviderDescriptorsByKey.get(source.providerKey) : undefined;
+  const itemIdentityPath = config?.features.reorder?.enabled && providerDescriptor?.kind === "collection"
+    ? providerDescriptor.resources.find((resource) => resource.resourceKey === source?.resourceKey)?.itemIdentityPath ?? null
+    : null;
 
   return (
     <PhiRuntimeModuleRenderClientHost
       type={PhiCmsWidgetType.CollectionView}
-      componentProps={{ config, widgetId, renderMode, preview: false, labels }}
+      componentProps={{ config, widgetId, renderMode, preview: false, labels, reorderLabels, itemIdentityPath }}
     />
   );
 }

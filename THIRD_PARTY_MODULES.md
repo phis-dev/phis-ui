@@ -391,7 +391,7 @@ there wherever your Page stands, and none of it is in the Core table above.
 
 | I need | Use | What it gives back | Code |
 | --- | --- | --- | --- |
-| An author picks one Asset in a Form (a logo, a cover), or uploads it right there | form field `media-asset` | The Asset id as a number, `null` for none; Site Space only. Its picker uploads a file into the Folder it shows, which is chosen then; `folderPath` (`"Shop Images / Products"`) is the Folder it opens on (the deepest part that exists; read only), the missing Folders created by the first upload into it. | `asset/form-providers.ts`, `asset/media-asset-form-control.tsx`, [FORMS.md](./FORMS.md#field-and-validation-providers) |
+| An author picks one Asset in a Form (a logo, a cover), or uploads it right there | form field `media-asset` | The Asset id as a number, `null` for none; Site Space only. Its picker uploads a file into the Folder it shows, which is chosen then; `folderPath` (`"Shop Images / Products"`, or with Form values in it, `"Shop Images / {category} / {product}"`) is the Folder it opens on (the deepest part that exists; read only), the missing Folders created by the first upload into it. | `asset/form-providers.ts`, `asset/media-asset-form-control.tsx`, [FORMS.md](./FORMS.md#field-and-validation-providers) |
 | Somebody attaches a file to a Form | form field `upload` (Core) | The Asset ids of the finished uploads; `space` picks the Site's or the viewer's Space, not a Folder. | `components/forms/upload-form-control.tsx`, [FORMS.md](./FORMS.md#field-and-validation-providers) |
 | Files dropped into a Folder on a Page | Widget `area-upload` | Uploads into the Folder its `folderPath` names (a path of names in the Site Space, `"Shop Images / Products"`, resolved at each upload, missing Folders created on the first), without one into the Folder the Asset Controller holds, inside the Media library into the open one; an upload wall with delete. Demands the Asset Controller and the Media collection Provider. | `asset/widgets/area-upload/`, `components/media/phi-area-upload-widget.tsx` |
 | A Media library: Folders, upload, new Folder, lock | Widget `collection-view` with the Asset binding, as the Builder's Media page (`builder-media-page`) places it | Uploads into the open Folder; creating and locking a Folder are its actions. | `core/widgets/collection-view/asset-binding.tsx`, `asset/trees/phi-default-builder-media-page-tree.ts`, [COLLECTIONS.md](./COLLECTIONS.md) |
@@ -442,6 +442,7 @@ Known gaps ([TODOS.md](./TODOS.md), "Media and Theme"):
 | Upload files into a Media Folder | Widget `area-upload`, or the Media library page | [Media](#media-what-the-asset-module-already-does) |
 | A list or table of records | `table` on a provider you register | [TABLES.md](./TABLES.md) |
 | Records as cards | `collection-view` (the Card Widget as a Collection) | [COLLECTIONS.md](./COLLECTIONS.md) |
+| Records a reader drags into an order | `collection-view` with `features.reorder` (`{ enabled: true, actionKey? }`, grid or stack): a drop calls your collection Provider's action (`"reorder"` unless `actionKey` names another, declared `scope: "resource"`) with `itemKeys`, every item key of the collection in the new order, keys read at the resource's `itemIdentityPath`. Store the order and answer the collection as it now stands, or refuse (throw, or answer `error`): the Widget shows the order at once and takes it back on a refusal. Off while a search or a reader's filter narrows the list and while it spans more than one page | [COLLECTIONS.md](./COLLECTIONS.md#drag-reordering) |
 | A form | The `form` Widget on a Preset Form | [FORMS.md](./FORMS.md), [6](#6-add-a-preset-form) |
 | Where the reader is | `breadcrumb` (Site, Area, path segments; the last one the record's title on a record Page) | [components/widgets/README.md](./components/widgets/README.md#content-widgets) |
 | A dialog | `dialog` on `createPhiCmsPresetNodes`; `PhiDialogControl` in code | [Dialogs](#dialogs), [OVERLAYS.md](./OVERLAYS.md) |
@@ -1367,7 +1368,9 @@ so a Widget that needs a picker where no Form fits has to ask for that binding r
 The field's picker also uploads a file from the author's machine into the Folder it shows, in the Site
 Space, and chooses what it made; `config.folderPath` (`"Shop Images / Products"`) is the Folder it opens on
 -- the deepest part of the path that exists, read without writing -- and an upload from there creates the
-missing Folders and goes into the whole path. A `publicOnly` field leaves an uploaded Asset that is not public unchosen, as it
+missing Folders and goes into the whole path. A name may hold `{key}` placeholders filled from the Form's
+values when the picker opens (`"Shop Images / {category} / {product}"`; a name without its value is left
+out, a `/` in a value becomes `-`). A `publicOnly` field leaves an uploaded Asset that is not public unchosen, as it
 greys out a listed one ([Media](#media-what-the-asset-module-already-does), [FORMS.md](./FORMS.md)).
 
 Inside the Builder's own chrome the library is always readable, whatever the edited Area activates. That

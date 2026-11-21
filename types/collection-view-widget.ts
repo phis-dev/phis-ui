@@ -47,6 +47,17 @@ export type PhiCmsCollectionViewWidgetConfig = PhiCmsWidgetConfigBase & {
     actions?: {
       toolbar?: PhiCmsCollectionToolbarActionPresentation[];
     };
+    /**
+     * Drag reordering of the items, written back through the bound Provider's action `actionKey`
+     * (`"reorder"` by default) with every item key in the new order (`itemKeys`). The Widget stores no
+     * order: the Provider's is the order, applied at once on a drop and taken back if refused. Offered
+     * in `grid` and `stack` only, and only while the whole collection is shown -- no search text, no
+     * filter set apart from the Widget's own initial query, everything on one page.
+     */
+    reorder?: {
+      enabled: boolean;
+      actionKey?: string;
+    };
     pagination?: {
       enabled: boolean;
       pageSize?: number;

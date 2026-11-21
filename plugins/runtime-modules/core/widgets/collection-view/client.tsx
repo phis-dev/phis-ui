@@ -4,6 +4,13 @@ import { createElement } from "react";
 
 import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
 import { PhiCollectionViewSkeletonControl } from "../../../../../components/controls/phi-collection-view-control";
+import { PhiCollectionReorderContext } from "../../../../../components/controls/phi-collection-reorder-context";
+import { usePhiCollectionReorderBinding } from "../../../../../components/widgets/client/shared/phi-collection-reorder";
+import { usePhiApplicationFeedback } from "../../../../../components/runtime/use-phi-application-feedback";
+import {
+  PHI_COLLECTION_VIEW_WIDGET_DEFAULT_LABELS,
+  type PhiCollectionViewWidgetLabels,
+} from "../../../../../components/widgets/label-types/collection-view";
 import { normalizePhiCssSize } from "../../../../../components/layouts/phi-layout-contract";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { usePhiRuntimeModuleState } from "../../../../../components/runtime/runtime-module-context";
@@ -34,6 +41,10 @@ export type PhiCollectionViewWidgetProps = {
   config?: PhiCmsCollectionViewWidgetConfig | null;
   widgetId?: PhiCmsInstanceId | null;
   labels?: unknown;
+  /** The Widget's own words (the reorder handle and refusal), loaded where `features.reorder` is on. */
+  reorderLabels?: PhiCollectionViewWidgetLabels;
+  /** The bound resource's item key path, from its declaration; only where `features.reorder` is on. */
+  itemIdentityPath?: string | null;
   /** Where this draws; the parsed config does not carry it, so the plugin reads it off the node. */
   renderMode: PhiRenderableBlockRenderMode;
   preview?: boolean;
@@ -93,6 +104,8 @@ function PhiCollectionViewWidgetPreview({
 function PhiCollectionViewWidgetLive({
   config,
   labels,
+  reorderLabels,
+  itemIdentityPath,
   widgetId,
   renderMode,
 }: PhiCollectionViewWidgetProps) {
@@ -110,6 +123,19 @@ function PhiCollectionViewWidgetLive({
   // The provider ships a renderer with its resource; a Site may name another Module's instead. Both are
   // ordinary Render Clients, so neither side has to know the other exists.
   const rendererKey = config?.itemRendererKey ?? resource?.itemRendererKey ?? null;
+  /*
+   * Drag reordering (`features.reorder`) goes around whatever the renderer draws: the renderer gets the
+   * binding with the items in the dropped order while the Provider writes it, and its Collection Control
+   * puts the handles on (`PhiCollectionReorderContext`). The Widget keeps no order of its own.
+   */
+  const { showMessage } = usePhiApplicationFeedback();
+  const { binding: presentedBinding, reorder } = usePhiCollectionReorderBinding({
+    config,
+    binding,
+    itemIdentityPath: itemIdentityPath ?? null,
+    labels: reorderLabels ?? PHI_COLLECTION_VIEW_WIDGET_DEFAULT_LABELS,
+    showMessage,
+  });
   const ItemRenderer = usePhiRuntimeModuleRenderClient(rendererKey);
   usePhiControlSignalController<string>({
     key: "collectionReload",
@@ -146,7 +172,11 @@ function PhiCollectionViewWidgetLive({
   // component in tag position reads to React -- and to `react-hooks/static-components` -- as a new
   // component per render. This is the same call `PhiRuntimeModuleRenderClientHost` makes for a Widget.
   // `renderMode` goes along so a renderer's own configuration failures are said the same way.
-  return createElement(ItemRenderer, { config, binding, labels, widgetId, renderMode });
+  return (
+    <PhiCollectionReorderContext.Provider value={reorder}>
+      {createElement(ItemRenderer, { config, binding: presentedBinding, labels, widgetId, renderMode })}
+    </PhiCollectionReorderContext.Provider>
+  );
 }
 
 export function PhiCollectionViewWidget(props: PhiCollectionViewWidgetProps) {

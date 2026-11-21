@@ -478,6 +478,11 @@ export type PhiCollectionViewWidgetPlacement = PhiWidgetPlacementBase & {
     actions?: {
       toolbar?: PhiCmsCollectionToolbarActionPresentation[];
     };
+    /** Drag reordering through the bound Provider's action (`PhiCmsCollectionViewWidgetConfig`). */
+    reorder?: {
+      enabled: boolean;
+      actionKey?: string;
+    };
     pagination?: {
       enabled: boolean;
       pageSize?: number;

@@ -2,6 +2,7 @@ import { PhiMediaKind, isPhiMediaAssetPublic } from "../../../constants/media";
 import type { PhiMediaAssetTile, PhiMediaKindValue } from "../../../types/media";
 import { createPhiConfigReader } from "../../../components/widgets/config/strict-config-reader";
 import { splitPhiMediaFolderNamePath } from "../../../components/media/media-folder-name-path";
+import { readPhiDotPath } from "../../../helpers/dot-path";
 
 /*
  * The `media-asset` field: one Asset of the Site's Media library, chosen with the library's picker.
@@ -24,6 +25,10 @@ export type PhiMediaAssetFieldConfig = {
    * Products"): it opens on the deepest of them that is there, and an upload from there creates the
    * missing ones and goes into the whole path. Empty: the Folder the picker last showed, at first the
    * root. A path and not an id, so a Module's Form states it for every Site.
+   *
+   * A name may hold placeholders, `{key}`, read from the Form's values when the picker opens
+   * (`resolvePhiMediaAssetFieldFolderPath`): "Shop Images / {category} / {product}". These are the names
+   * as written, placeholders unresolved.
    */
   folderPath: readonly string[];
 };
@@ -39,9 +44,10 @@ const MEDIA_ASSET_FIELD_KINDS = [
 
 /**
  * The field's config, read strictly (`strict-config-reader.ts`): a kind the picker does not list, a
- * `publicOnly` that is not a boolean or a `folderPath` that is not a text is a `PhiConfigError` naming
- * the field, never a default put in its place -- a typo in `mediaType` would otherwise quietly offer
- * another kind of file.
+ * `publicOnly` that is not a boolean, or a `folderPath` that is not a text or holds a brace that opens no
+ * placeholder (`{}`, `{a`, `a}`, `{a{b}}`) is a `PhiConfigError` naming the field, never a default put in
+ * its place -- a typo in `mediaType` would otherwise quietly offer another kind of file, and a broken
+ * placeholder would become a Folder named after it.
  */
 export function readPhiMediaAssetFieldConfig(
   config: Readonly<Record<string, unknown>> | undefined,
@@ -50,8 +56,49 @@ export function readPhiMediaAssetFieldConfig(
   return {
     mediaType: reader.oneOf("mediaType", MEDIA_ASSET_FIELD_KINDS) ?? PhiMediaKind.Image,
     publicOnly: reader.boolean("publicOnly") ?? false,
-    folderPath: splitPhiMediaFolderNamePath(reader.string("folderPath")),
+    folderPath: splitPhiMediaFolderNamePath(reader.value(
+      "folderPath",
+      "a Folder path whose placeholders read {key}",
+      (value) => typeof value === "string" && isPhiMediaAssetFolderPathTemplate(value) ? value : undefined,
+    )),
   };
+}
+
+/* `{key}`: a Form value's key, a dotted path into it for a value that is a record. */
+const PHI_MEDIA_ASSET_FOLDER_PATH_PLACEHOLDER = /\{([A-Za-z0-9_.-]+)\}/gu;
+
+function isPhiMediaAssetFolderPathTemplate(value: string) {
+  return !/[{}]/u.test(value.replace(PHI_MEDIA_ASSET_FOLDER_PATH_PLACEHOLDER, ""));
+}
+
+/*
+ * A Form value as a Folder name: a text or a number, trimmed, and a `/` in it a `-`, so a value can name
+ * a Folder but never add a level of them. Anything else -- empty, absent, a list, a record -- is no name.
+ */
+function readPhiMediaAssetFolderPathValue(value: unknown) {
+  const text = typeof value === "string" ? value : typeof value === "number" && Number.isFinite(value) ? String(value) : "";
+  return text.replace(/\//gu, "-").replace(/\s+/gu, " ").trim();
+}
+
+/**
+ * The Folder path a `folderPath` names for the Form's values as they are now: each `{key}` the value
+ * under `key` (the Form's current values, those loaded from its record included). A name whose
+ * placeholder has no value is left out whole -- "Shop Images / {category} / {product}" without a
+ * category is "Shop Images / <product>" -- and a name that comes out empty is left out too.
+ */
+export function resolvePhiMediaAssetFieldFolderPath(
+  folderPath: readonly string[],
+  values: Readonly<Record<string, unknown>>,
+): string[] {
+  return folderPath.flatMap((segment) => {
+    let missing = false;
+    const resolved = segment.replace(PHI_MEDIA_ASSET_FOLDER_PATH_PLACEHOLDER, (_placeholder, key: string) => {
+      const value = readPhiMediaAssetFolderPathValue(readPhiDotPath(values, key));
+      if (!value) missing = true;
+      return value;
+    }).replace(/\s+/gu, " ").trim();
+    return missing || !resolved ? [] : [resolved];
+  });
 }
 
 /**
