@@ -391,7 +391,7 @@ there wherever your Page stands, and none of it is in the Core table above.
 
 | I need | Use | What it gives back | Code |
 | --- | --- | --- | --- |
-| An author picks one Asset in a Form (a logo, a cover) | form field `media-asset` | The Asset id as a number, `null` for none; Site Space only. | `asset/form-providers.ts`, `asset/media-asset-form-control.tsx`, [FORMS.md](./FORMS.md#field-and-validation-providers) |
+| An author picks one Asset in a Form (a logo, a cover), or uploads it right there | form field `media-asset` | The Asset id as a number, `null` for none; Site Space only. Its picker uploads a file into the Folder it shows, which is chosen then; `folderPath` (`"Shop Images / Products"`) is the Folder it opens on, created when missing. | `asset/form-providers.ts`, `asset/media-asset-form-control.tsx`, [FORMS.md](./FORMS.md#field-and-validation-providers) |
 | Somebody attaches a file to a Form | form field `upload` (Core) | The Asset ids of the finished uploads; `space` picks the Site's or the viewer's Space, not a Folder. | `components/forms/upload-form-control.tsx`, [FORMS.md](./FORMS.md#field-and-validation-providers) |
 | Files dropped into a Folder on a Page | Widget `area-upload` | Uploads into the Folder its `folderPath` names (a path of names in the Site Space, `"Shop Images / Products"`, resolved at each upload, missing Folders created on the first), without one into the Folder the Asset Controller holds, inside the Media library into the open one; an upload wall with delete. Demands the Asset Controller and the Media collection Provider. | `asset/widgets/area-upload/`, `components/media/phi-area-upload-widget.tsx` |
 | A Media library: Folders, upload, new Folder, lock | Widget `collection-view` with the Asset binding, as the Builder's Media page (`builder-media-page`) places it | Uploads into the open Folder; creating and locking a Folder are its actions. | `core/widgets/collection-view/asset-binding.tsx`, `asset/trees/phi-default-builder-media-page-tree.ts`, [COLLECTIONS.md](./COLLECTIONS.md) |
@@ -409,13 +409,13 @@ Every upload goes the same way: `usePhiMediaUpload` and `runPhiMediaUploadSessio
 and a `folderId` and call Core's `POST /api/site/media/uploads/init` (`folderId` in the body, `spaceId` in
 the query), then the bytes, then finalize. A `folderPath` instead of a `folderId` is resolved in the Site
 Space first, over Core's `GET`/`POST /api/site/media/folders` (`resolvePhiMediaUploadFolderPathId`); a
-Folder that cannot be created below a locked one reads as the lock refusal. An Add-on that reserved a place with `assets:v1` uploads with
-`runPhiAddonAssetUpload` from `@phis/ui/media`.
+Folder that cannot be created below a locked one reads as the lock refusal. The `media-asset` field's picker
+sends its file the same way, with the Folder it shows as the `folderId` and no Space named, so it lands in the
+Site Space, whose Assets Core delivers publicly from the start (the init takes no delivery policy). An Add-on
+that reserved a place with `assets:v1` uploads with `runPhiAddonAssetUpload` from `@phis/ui/media`.
 
 Known gaps ([TODOS.md](./TODOS.md), "Media and Theme"):
 
-- The `media-asset` field's picker chooses; it cannot upload a file in place. The file goes up on the Media
-  page first.
 - `usePhiMediaPickerBinding` is not a public door, so a picker outside a Form is the Foundation's to give.
 
 ### I need ... use ...
@@ -1360,11 +1360,14 @@ field is available wherever a Form stands. The field offers the Site Space only,
 for none), which is what your handler receives. `config.mediaType` names the kind (`image` by default) and
 `config.publicOnly` greys out Assets that are not delivered publicly. Both are the interface; your handler
 is what decides which Asset it accepts, so read the Asset there before storing its id. `PhiMediaPickerControl` is public but
-controlled only (it takes the Assets, the Folders and the paging as props, and `isAssetSelectable` to grey
-out Assets); the binding that feeds it from the library (`usePhiMediaPickerBinding`) is Foundation-internal,
+controlled only (it takes the Assets, the Folders and the paging as props, `isAssetSelectable` to grey
+out Assets, and `onUpload` with `uploadAccept`, `uploadProgress` and `uploadNotice` where it is to offer an
+upload); the binding that feeds it from the library (`usePhiMediaPickerBinding`) is Foundation-internal,
 so a Widget that needs a picker where no Form fits has to ask for that binding rather than rebuild it.
-The field's picker chooses from what the library holds and uploads nothing; a file goes into a Folder
-through the `area-upload` Widget or the Media page ([Media](#media-what-the-asset-module-already-does)).
+The field's picker also uploads a file from the author's machine into the Folder it shows, in the Site
+Space, and chooses what it made; `config.folderPath` (`"Shop Images / Products"`) is the Folder it opens on,
+created where it is missing. A `publicOnly` field leaves an uploaded Asset that is not public unchosen, as it
+greys out a listed one ([Media](#media-what-the-asset-module-already-does), [FORMS.md](./FORMS.md)).
 
 Inside the Builder's own chrome the library is always readable, whatever the edited Area activates. That
 availability is declared by the owning Module through `availableToAuthoringChrome` on its provider

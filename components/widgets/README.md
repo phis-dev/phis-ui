@@ -484,6 +484,13 @@ record's source text instead of its localized version.
   editor (`plugins/runtime-modules/asset/labels.ts`). Which Widget, field or route picks, uploads or
   targets a Folder, what each gives back and what is still missing is the map in
   [THIRD_PARTY_MODULES.md](../../THIRD_PARTY_MODULES.md#media-what-the-asset-module-already-does).
+- **Upload in the picker.** `PhiMediaPickerControl` draws an Upload button beside Reload where it is given
+  `onUpload` (with `uploadAccept`, `uploadProgress` and `uploadNotice`), and chooses the Asset `onUpload`
+  answers as it would a tile. The transport stays with the host: `usePhiMediaPickerBinding` takes an
+  `upload` (`PhiMediaPickerUploadBinding`) from a host that runs `usePhiMediaUpload`, sends into the
+  Folder in view, offers it on the Site Space only and stops it when the picker closes; `openOnFolder`
+  names the Folder it opens on. The `media-asset` field is the host today (FORMS.md); the `media-picker`
+  Widget and the authoring pickers bring none, so they carry no upload.
 - **Media sources in the picker.** `usePhiMediaPickerBinding` owns the state, so every host gets a source
   switch without being touched, and `PhiMediaPickerControl` only draws it: `sources`, `sourceValue` and
   `onSourceChange` in the style of `spaces`, `spaceValue` and `onSpaceChange`, and the source's items,

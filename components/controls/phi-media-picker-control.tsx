@@ -10,6 +10,7 @@ import type { PhiControlOption } from "./phi-control-options";
 import { PhiButtonControl } from "./phi-button-control";
 import { PhiCascaderControl } from "./phi-cascader-control";
 import { PhiEmptyControl } from "./phi-empty-control";
+import { PhiFileDropControl } from "./phi-file-drop-control";
 import { PhiSelectControl } from "./phi-select-control";
 import { PhiCollectionLayoutControl } from "./phi-collection-layout-control";
 import {
@@ -61,6 +62,18 @@ export type PhiMediaPickerControlProps = PhiPickerTransactionCallbacks<number | 
   importingItemId?: string | null;
   /** Why the last import did not work, said above the tiles. */
   sourceNotice?: string | null;
+  /**
+   * A file from the reader's machine was chosen to go into the library, where the picker offers that.
+   * Answers the Asset it became -- chosen then as if it had been picked in the library -- or null where
+   * nothing is to be chosen and the picker stays as it is. Absent, the picker offers no upload.
+   */
+  onUpload?: (file: File) => Promise<PhiMediaAssetTile | null>;
+  /** What the file dialog offers, as a MIME or extension list. */
+  uploadAccept?: string;
+  /** How far the upload on its way is, in per cent; null while none is. */
+  uploadProgress?: number | null;
+  /** Why the last upload did not work, said above the library's tiles. */
+  uploadNotice?: string | null;
   folders?: readonly PhiControlOption[];
   folderValue?: string;
   query?: string;
@@ -93,6 +106,7 @@ export type PhiMediaPickerControlProps = PhiPickerTransactionCallbacks<number | 
     source: string;
     importing: string;
     loadMore: string;
+    upload: string;
   }>;
   getPopupContainer?: (triggerNode: HTMLElement) => HTMLElement;
   popupRootClassName?: string;
@@ -123,6 +137,10 @@ export function PhiMediaPickerControl({
   sourceHasMore = false,
   importingItemId = null,
   sourceNotice = null,
+  onUpload,
+  uploadAccept,
+  uploadProgress = null,
+  uploadNotice = null,
   folders = [],
   folderValue = "/",
   query = "",
@@ -172,6 +190,7 @@ export function PhiMediaPickerControl({
   // A source is shown while one other than the library is named; its items stand where the tiles do.
   const sourceActive = sources.length > 1 && sourceValue !== "";
   const importing = importingItemId != null;
+  const uploading = uploadProgress != null;
   const sourceTileItems = sourceItems.map((item) => (
     <PhiMediaSourceItemTileControl
       key={item.id}
@@ -287,9 +306,34 @@ export function PhiMediaPickerControl({
           disabled={locked}
           onClick={onReload}
         />
+        {onUpload && !sourceActive ? (
+          <PhiFileDropControl
+            accept={uploadAccept}
+            disabled={locked || uploading}
+            onFile={(file) => {
+              void onUpload(file).then((asset) => {
+                if (!asset) return;
+                picker.changeValue(asset.id);
+                picker.closePicker("commit");
+              });
+            }}
+          >
+            <PhiButtonControl
+              icon={<PhiIcon name="upload" size="inherit" />}
+              label={uploading ? `${uploadProgress}%` : labels?.upload ?? "Upload"}
+              ariaLabel={labels?.upload ?? "Upload"}
+              size="small"
+              loading={uploading}
+              disabled={locked || uploading}
+            />
+          </PhiFileDropControl>
+        ) : null}
       </Flex>
       {sourceActive && sourceNotice ? (
         <Typography.Text type="danger" role="alert">{sourceNotice}</Typography.Text>
+      ) : null}
+      {!sourceActive && uploadNotice ? (
+        <Typography.Text type="danger" role="alert">{uploadNotice}</Typography.Text>
       ) : null}
       <div style={{ flex: "1 1 auto", minHeight: 0, overflow: "auto" }}>
         {sourceActive ? (

@@ -392,7 +392,8 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   "This field is not available in this area." only where the Module is off because the server part it
   needs is missing (see above; a stored Asset id is kept and sent unchanged). It is one Asset of the
   Site's Media library, for a Form that stores a picture (a logo, a
-  cover) rather than receiving a file -- `upload` is the field for a file somebody brings. The value is
+  cover) rather than receiving a file -- `upload` is the field for files a Form receives as attachments,
+  while this field's picker brings a new file into the library only to choose it (below). The value is
   the Asset id as a number and `null` for none, so a save that removes the picture says so and `required`
   means "an Asset". The field shows the chosen Asset as a preview with its name; "Choose" (or "Change",
   once there is one) opens the library's own picker -- the same binding the Theme logo and the Inspector's
@@ -407,26 +408,53 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
     `deliveryPolicy` and `lifecycleStatus` for each Asset, and `isPhiMediaAssetPublic` is the question), so
     they stay visible but cannot be chosen. An already stored Asset that is not public is flagged beside
     the preview. The Core list route has no filter for the delivery; the Assets are marked, not hidden.
+  - `folderPath`: the Folder of the Site Space the picker opens on, by its path of names from the root
+    (`"Shop Images / Products"`, read like `area-upload`'s). It is resolved each time the picker opens
+    (`resolvePhiMediaUploadFolderPathId`: `GET /api/site/media/folders`, and `POST` for each Folder it names
+    that is missing, so the first opening on a Site brings the Folders into being), and the listing waits
+    for it. The author may move to another Folder from there. A Folder that cannot be created reads as the
+    upload's refusal above the tiles -- below a locked Folder, the lock refusal -- and the picker opens on
+    the root. Empty or absent: the picker opens on the Folder it showed last, at first the root.
 
   The field offers the **Site Space only**, in every Area: there is no Space selector, and the query names
   no Space, which Core answers with the Site Space. A picture whose id is stored for everybody who reads the
   value has no business in somebody's personal or a group's Space. This and `publicOnly` are the interface.
+
+  **Upload in the picker.** Beside Reload the picker has an Upload button: one file from the author's
+  machine goes into the Folder the picker shows (the root where it shows none), through the upload every
+  surface sends with (`usePhiMediaUpload`, Core's `POST /api/site/media/uploads/init` with that `folderId`,
+  the bytes, finalize), and the Asset it made is chosen as a picked tile is and the picker closes. The
+  file dialog offers the field's `mediaType`. The rules that bind a pick bind the upload:
+  - **Space.** The upload names no Space, which Core answers with the Site Space -- the only one the field
+    offers. The button is shown only while the picker stands on the Site Space, as an import's switch is.
+  - **`publicOnly`.** Core gives an Asset of the Site Space the public delivery from the start
+    (`defaultMediaDeliveryPolicy` in phis-server); the init takes no delivery policy, so the field asks for
+    none. What comes back is asked what a listed Asset is asked (`readPhiMediaAssetFieldUploadRefusal`):
+    one that is not public and ready is not chosen; it stays in the list greyed out and the field says
+    `mediaAssetNotPublic`. The same holds for an Asset of another kind than `mediaType` (a file whose type
+    the browser could not name reaches Core unrefused), which reads as the upload's type refusal.
+  - **Refusals** read as every upload's do (`readPhiMediaUploadErrorMessage`), said above the tiles: too
+    large, the wrong type, no room, and a locked Folder (`folder_locked` from the init,
+    `media_folder_locked` from a Folder `folderPath` would create) as the lock refusal.
+  - While the file is on its way the Form's submit is held (`formContext.holdSubmit`, the upload field's
+    `uploadPending` sentence), and closing the picker stops it; nothing is chosen afterwards.
   What is enforced is enforced by the Server that takes the value: a handler that must hold the line reads
   the Asset (its Space and its delivery policy) before it stores the id, because a request does not have to
   come through this field. The handler receives the id as a JSON number (`{ "logo": 42 }`, or `null`).
   Wording is the Label Set keys in `PHI_FORM_MEDIA_ASSET_LABEL_KEYS` (`mediaAssetChoose`,
   `mediaAssetChange`, `mediaAssetRemove`, `mediaAssetPublicOnlyHint`, `mediaAssetNotPublic`,
   `mediaAssetUnavailable`), falling back to English. The picker's own wording is the Media Label Set's
-  (`widget:media`): the Form Widget reads it for every Form with a `media-asset` field
-  (`form-field-labels.ts`) and hands it to the control under `PHI_FORM_MEDIA_ASSET_PICKER_LABEL_KEYS`
-  (`components/forms/media-asset-field-keys.ts`), so a Module that places the field translates none of it. A Page
+  (`widget:media`, the Upload button its upload toggle, `mediaAssetPickerUpload`): the Form Widget reads it
+  for every Form with a `media-asset` field (`form-field-labels.ts`) and hands it to the control under
+  `PHI_FORM_MEDIA_ASSET_PICKER_LABEL_KEYS` (`components/forms/media-asset-field-keys.ts`), and with it the
+  upload's refusals and hold from `widget:upload` under the upload field's keys
+  (`PHI_FORM_UPLOAD_LABEL_KEYS`), so a Module that places the field translates none of it. A Page
   that renders a Form with a `media-asset` field mounts the Media library Provider for it
   (`PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection`; the resolver's scan of the Form's descriptor), where a
   Module of the Area serves it -- the Asset Module, which is also what makes the field available. The
   field's picker sends nothing to the Asset Controller, so a Form with this field mounts no Controller
-  for it. The picker chooses from what the library holds; it cannot upload a file in place (TODOS.md). A
-  file goes into a Folder through the Asset Module's `area-upload` Widget (the Folder its `folderPath`
-  names, or the one its Controller holds) or the Media page
+  for it. Other ways a file goes into a Folder are the Asset Module's `area-upload` Widget (the Folder its
+  `folderPath` names, or the one its Controller holds) and the Media page
   ([THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#media-what-the-asset-module-already-does)).
 
   ```ts
@@ -434,7 +462,7 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
     key: "logo",
     fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.mediaAsset,
     label: label("logo", "Logo"),
-    config: { mediaType: "image", publicOnly: true },
+    config: { mediaType: "image", publicOnly: true, folderPath: "Shop Images / Products" },
     validation: required("logoRequired", "Choose a logo."),
   }
   ```

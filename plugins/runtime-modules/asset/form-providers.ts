@@ -69,5 +69,11 @@ export const PHI_ASSET_MEDIA_ASSET_FORM_PROVIDER_DESCRIPTOR = {
       label: "Public only",
       description: "Offer only Assets that are delivered publicly. The picker greys out the others; the Server that takes the value decides.",
     },
+    {
+      key: "folderPath",
+      type: "string",
+      label: "Folder path",
+      description: "The Site Folder the picker opens on and uploads into, by its path (\"Shop Images / Products\"); missing Folders are created. Empty: the root.",
+    },
   ],
 } satisfies PhiFormFieldTypeProviderDescriptor;

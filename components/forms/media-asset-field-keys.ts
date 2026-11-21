@@ -7,7 +7,8 @@
  * Module that places the field translates none of them. A Foundation file for the same reason
  * `upload-field-keys.ts` is: the Server reads it without the Asset Module, and the Module's control reads
  * it without the Server. Where the field's own wording is the Form's -- Choose, Change, Remove -- the keys
- * are the Module's (`PHI_FORM_MEDIA_ASSET_LABEL_KEYS`).
+ * are the Module's (`PHI_FORM_MEDIA_ASSET_LABEL_KEYS`). The upload inside the picker says its refusals and
+ * its hold under the upload field's keys (`PHI_FORM_UPLOAD_LABEL_KEYS`), read for this field as well.
  */
 export const PHI_FORM_MEDIA_ASSET_PICKER_LABEL_KEYS = {
   popoverTitle: "mediaAssetPickerTitle",
@@ -24,4 +25,6 @@ export const PHI_FORM_MEDIA_ASSET_PICKER_LABEL_KEYS = {
   importingLabel: "mediaAssetPickerImporting",
   importFailedText: "mediaAssetPickerImportFailed",
   loadMoreLabel: "mediaAssetPickerLoadMore",
+  /** The picker's upload button (the Media Label Set's upload toggle). */
+  uploadLabel: "mediaAssetPickerUpload",
 } as const;

@@ -46,6 +46,30 @@ import {
 } from "./phi-media-sources";
 import { usePhiCollectionProviderAction } from "../widgets/client/shared/phi-collection-provider";
 
+/**
+ * An upload of a file from the reader's machine, offered inside the picker by a host that brings the
+ * transport (`usePhiMediaUpload`), so that a picker without one does not carry it.
+ *
+ * The binding says where the file goes -- the Folder in view -- and chooses what came back; the host
+ * sends it, words what went wrong and decides whether the Asset is one to choose (`send` answers null
+ * for a refusal, a stopped upload, and an Asset the host does not let be chosen).
+ *
+ * Offered on the Site Space only, as an import is: the file goes without a Space named, which Core
+ * answers with the Site Space, so a picker standing on another Space shows no upload.
+ */
+export type PhiMediaPickerUploadBinding = {
+  /** What the file dialog offers (`usePhiMediaUpload`'s `accept`). */
+  accept: string;
+  /** How far the upload on its way is, in per cent; null while none is. */
+  progress: number | null;
+  /** Why the last upload did not work, or the Asset it made cannot be chosen. */
+  notice: string | null;
+  /** One file into this Folder of the Site Space (null: its root). */
+  send: (file: File, folderId: number | null) => Promise<PhiMediaAssetTile | null>;
+  /** Stops what is on its way; the picker was closed. */
+  cancel: () => void;
+};
+
 export type PhiMediaPickerBindingProps = {
   config?: PhiCmsMediaPickerWidgetConfig | null;
   labels: PhiAssetWidgetLabels;
@@ -75,6 +99,16 @@ export type PhiMediaPickerBindingProps = {
    * reader can see exists.
    */
   isAssetSelectable?: (asset: PhiMediaAssetTile) => boolean;
+  /** An upload inside the picker, into the Folder it shows (`PhiMediaPickerUploadBinding`). */
+  upload?: PhiMediaPickerUploadBinding | null;
+  /**
+   * The Folder the picker opens on, asked for each time it opens: the listing waits for the answer, and
+   * the reader may leave it for another Folder as from any. For a `siteSpaceOnly` host whose setting
+   * names a Folder by its path (the `media-asset` field's `folderPath`); the host resolves it, the way an
+   * upload resolves a path, so this binding does not carry the upload transport. A refusal is said where
+   * an upload's would be, and the picker opens on the root.
+   */
+  openOnFolder?: ((signal: AbortSignal) => Promise<number>) | null;
 };
 
 export function usePhiMediaPickerBinding({
@@ -94,6 +128,8 @@ export function usePhiMediaPickerBinding({
   popupRootClassName,
   siteSpaceOnly = false,
   isAssetSelectable,
+  upload,
+  openOnFolder,
 }: PhiMediaPickerBindingProps) {
   const [localOpen, setLocalOpen] = useState(false);
   const [localValue, setLocalValue] = useState<number | null>(controlledValue ?? null);
@@ -128,6 +164,15 @@ export function usePhiMediaPickerBinding({
   const [sourceFailed, setSourceFailed] = useState(false);
   const [importingItemId, setImportingItemId] = useState<string | null>(null);
   const [importFailure, setImportFailure] = useState<string | null>(null);
+  // True while the Folder the picker opens on is being asked for; the listing waits for it.
+  const [startFolderPending, setStartFolderPending] = useState(false);
+  const [startFolderFailure, setStartFolderFailure] = useState<string | null>(null);
+  const startFolderRequestRef = useRef<AbortController | null>(null);
+  // The host's upload as of the last render, for the close below, which must not run again per render.
+  const uploadRef = useRef(upload);
+  useEffect(() => {
+    uploadRef.current = upload;
+  }, [upload]);
   const sourceRequestRef = useRef<AbortController | null>(null);
   const importRequestRef = useRef<AbortController | null>(null);
   const [total, setTotal] = useState(0);
@@ -197,6 +242,8 @@ export function usePhiMediaPickerBinding({
     if (!provider || !source) return;
     // The source's items stand where the library's tiles do; the library is read again when it comes back.
     if (activeSource) return;
+    // The Folder it opens on is not known yet; reading the root first would ask twice.
+    if (startFolderPending) return;
     const abortController = new AbortController();
     const load = async () => {
       setLoading(true);
@@ -236,7 +283,7 @@ export function usePhiMediaPickerBinding({
     };
     void load();
     return () => abortController.abort();
-  }, [activeSource, isOpen, locale, provider, query, refreshToken, source, timeZone]);
+  }, [activeSource, isOpen, locale, provider, query, refreshToken, source, startFolderPending, timeZone]);
 
   const activeSourceId = activeSource?.id ?? null;
   const readSourcePage = useCallback(async (cursor: string | null, signal: AbortSignal) => {
@@ -281,16 +328,23 @@ export function usePhiMediaPickerBinding({
     };
   }, [activeSourceId, isOpen, readSourcePage]);
 
-  // A closed picker stops what it asked: the listing and an import on its way.
+  /*
+   * A closed picker stops what it asked: the listing, an import or an upload on its way -- nothing is to
+   * choose for it afterwards -- and the Folder it opens on.
+   */
   useEffect(() => {
     if (isOpen) return;
+    uploadRef.current?.cancel();
     sourceRequestRef.current?.abort();
     importRequestRef.current?.abort();
     importRequestRef.current = null;
+    startFolderRequestRef.current?.abort();
+    startFolderRequestRef.current = null;
   }, [isOpen]);
   useEffect(() => () => {
     sourceRequestRef.current?.abort();
     importRequestRef.current?.abort();
+    startFolderRequestRef.current?.abort();
   }, []);
 
   const loadMoreSourceItems = () => {
@@ -366,12 +420,61 @@ export function usePhiMediaPickerBinding({
 
   const resolvedAssets = provider && source ? assets : [];
 
+  /** Asks for the Folder the picker opens on (`openOnFolder`); the listing waits until it is answered. */
+  const openOnStartFolder = () => {
+    if (!openOnFolder) return;
+    startFolderRequestRef.current?.abort();
+    const abortController = new AbortController();
+    startFolderRequestRef.current = abortController;
+    setStartFolderPending(true);
+    setStartFolderFailure(null);
+    void (async () => {
+      try {
+        const startFolderId = await openOnFolder(abortController.signal);
+        if (abortController.signal.aborted) return;
+        setFolderId(startFolderId);
+        setPage(1);
+      } catch (error) {
+        if (abortController.signal.aborted) return;
+        console.error("Media picker could not open its Folder.", error);
+        setFolderId(null);
+        setPage(1);
+        setStartFolderFailure(readPhiMediaSourceImportErrorMessage(error, labels.upload.refusals, labels.upload.refusals.errorGeneric));
+      } finally {
+        if (startFolderRequestRef.current === abortController) startFolderRequestRef.current = null;
+        // Closed or opened again meanwhile: a newer question is pending, or none is wanted.
+        if (startFolderRequestRef.current == null) setStartFolderPending(false);
+      }
+    })();
+  };
+
+  /*
+   * The upload goes into the Folder in view, on the Site Space only (`PhiMediaPickerUploadBinding`). The
+   * list is read again whatever came of it, so a finished upload stands among the tiles -- greyed out,
+   * where the host does not let it be chosen -- and what comes back is chosen like a picked tile.
+   */
+  const uploadOffered = upload != null && onSiteSpace;
+  const sendUpload = async (file: File): Promise<PhiMediaAssetTile | null> => {
+    if (!upload) return null;
+    let tile: PhiMediaAssetTile | null = null;
+    try {
+      tile = await upload.send(file, folderId);
+    } catch (error) {
+      console.error("Media picker upload failed.", error);
+    }
+    setRefreshToken((current) => current + 1);
+    if (!tile) return null;
+    assetCacheRef.current.set(tile.id, tile);
+    return tile;
+  };
+
   const updateOpen = (next: boolean) => {
     if (controlledOpen == null) setLocalOpen(next);
     if (next) {
       // A picker opens on the Site's library, whatever source the last opening ended in.
       setSourceId("");
       setImportFailure(null);
+      openOnStartFolder();
       setRefreshToken((current) => current + 1);
       reloadSignals.emitCapability("reload", null);
       kindSignals.emitCapability("kind", mediaType);
@@ -414,6 +517,10 @@ export function usePhiMediaPickerBinding({
     sourceHasMore: activeSource != null && sourceCursor != null,
     importingItemId,
     sourceNotice: importFailure,
+    onUpload: uploadOffered ? sendUpload : undefined,
+    uploadAccept: uploadOffered ? upload.accept : undefined,
+    uploadProgress: uploadOffered ? upload.progress : null,
+    uploadNotice: uploadOffered ? startFolderFailure ?? upload.notice : startFolderFailure,
     folders: provider && source ? folderOptions : [],
     folderValue,
     query: searchQuery,
@@ -426,7 +533,7 @@ export function usePhiMediaPickerBinding({
     showFolderFilter: config?.showFolderFilter ?? true,
     showPagination: config?.showPagination ?? true,
     trigger,
-    labels: { trigger: labels.picker.triggerLabel, title: labels.picker.popoverTitle, search: labels.tool.searchPlaceholder ?? searchLabels.placeholder, folder: labels.tool.folderLabel, space: labels.space.label, empty: bindingError ?? (loadFailed ? labels.picker.loadFailedDescription : labels.picker.emptyDescription), sourceEmpty: sourceFailed ? labels.picker.sourceFailedText : labels.picker.emptyDescription, clear: labels.picker.clearLabel, reload: labels.tool.reloadLabel, tileSize: labels.picker.tileSizeLabel, source: labels.picker.sourceLabel, importing: labels.picker.importingLabel, loadMore: labels.picker.loadMoreLabel },
+    labels: { trigger: labels.picker.triggerLabel, title: labels.picker.popoverTitle, search: labels.tool.searchPlaceholder ?? searchLabels.placeholder, folder: labels.tool.folderLabel, space: labels.space.label, empty: bindingError ?? (loadFailed ? labels.picker.loadFailedDescription : labels.picker.emptyDescription), sourceEmpty: sourceFailed ? labels.picker.sourceFailedText : labels.picker.emptyDescription, clear: labels.picker.clearLabel, reload: labels.tool.reloadLabel, tileSize: labels.picker.tileSizeLabel, source: labels.picker.sourceLabel, importing: labels.picker.importingLabel, loadMore: labels.picker.loadMoreLabel, upload: labels.upload.uploadToggleLabel },
     getPopupContainer,
     popupRootClassName,
     isAssetSelectable,

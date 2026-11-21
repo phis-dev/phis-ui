@@ -196,12 +196,6 @@ and `scripts/validate-todos-wants.ts` refuses the entry once the catalog has one
   Widget cannot open the library. Wanted, if asked for: the binding as a public door, restrictable to the
   Site's Space and to publicly delivered Assets. The picker's query has no filter on the delivery policy
   today; `publicOnly` greys out instead.
-- **The `media-asset` field's picker cannot upload in place.** It chooses from what the library holds;
-  a file somebody has on their machine goes up on the Media page first (the `area-upload` Widget and the
-  Media library's Asset binding upload into a Folder, THIRD_PARTY_MODULES.md, "Media"). Wanted: an upload
-  inside the picker, into the Folder it shows, through `usePhiMediaUpload` -- the media-source import
-  already lands there. Contract question: whether the field's Site-Space-only rule and `publicOnly` also
-  bind what is uploaded.
 - **Media Inspector variant hand-over.** The Inspector always simulates the variant crop from the original
   (`components/media/phi-asset-inspector-section.tsx`) and never shows the generated variant. Decide
   whether that stays and the contract says so, or whether unsaved focal edits get an owner and the preview

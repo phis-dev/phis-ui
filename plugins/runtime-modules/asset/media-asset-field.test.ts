@@ -5,6 +5,7 @@ import { isPhiConfigError } from "../../../components/widgets/config/strict-conf
 import {
   isPhiMediaAssetFieldSelectable,
   readPhiMediaAssetFieldConfig,
+  readPhiMediaAssetFieldUploadRefusal,
   readPhiMediaAssetFieldValue,
 } from "./media-asset-field";
 
@@ -19,19 +20,27 @@ function configError(config: Record<string, unknown> | undefined) {
 
 describe("the media-asset field's config", () => {
   it("offers images, and every Asset, when nothing is set", () => {
-    expect(readPhiMediaAssetFieldConfig(undefined)).toEqual({ mediaType: PhiMediaKind.Image, publicOnly: false });
-    expect(readPhiMediaAssetFieldConfig({})).toEqual({ mediaType: PhiMediaKind.Image, publicOnly: false });
+    const none = { mediaType: PhiMediaKind.Image, publicOnly: false, folderPath: [] };
+    expect(readPhiMediaAssetFieldConfig(undefined)).toEqual(none);
+    expect(readPhiMediaAssetFieldConfig({})).toEqual(none);
   });
 
   it("reads the kind and publicOnly as written", () => {
     expect(readPhiMediaAssetFieldConfig({ mediaType: PhiMediaKind.Pdf, publicOnly: true }))
-      .toEqual({ mediaType: PhiMediaKind.Pdf, publicOnly: true });
+      .toEqual({ mediaType: PhiMediaKind.Pdf, publicOnly: true, folderPath: [] });
+  });
+
+  it("reads the Folder path as names from the root, and a blank one as none", () => {
+    expect(readPhiMediaAssetFieldConfig({ folderPath: " Shop Images /  Products " }).folderPath)
+      .toEqual(["Shop Images", "Products"]);
+    expect(readPhiMediaAssetFieldConfig({ folderPath: " / " }).folderPath).toEqual([]);
   });
 
   it("refuses a kind the picker does not list and a publicOnly that is no boolean, naming the field", () => {
     expect(configError({ mediaType: "imag" })).toBe("config.mediaType");
     expect(configError({ mediaType: PhiMediaKind.Archive })).toBe("config.mediaType");
     expect(configError({ publicOnly: "yes" })).toBe("config.publicOnly");
+    expect(configError({ folderPath: ["Shop Images"] })).toBe("config.folderPath");
   });
 });
 
@@ -63,5 +72,24 @@ describe("which Assets the picker lets be chosen", () => {
     expect(isPhiMediaAssetFieldSelectable(config, publicAsset)).toBe(true);
     expect(isPhiMediaAssetFieldSelectable(config, privateAsset)).toBe(false);
     expect(isPhiMediaAssetFieldSelectable(config, { ...publicAsset, lifecycleStatus: PhiMediaLifecycleStatus.Pending })).toBe(false);
+  });
+});
+
+describe("what an upload in the picker made", () => {
+  const ready = PhiMediaLifecycleStatus.Ready;
+  const image = { kind: PhiMediaKind.Image, deliveryPolicy: PhiMediaDeliveryPolicy.Public, lifecycleStatus: ready };
+
+  it("is chosen when it is of the field's kind, and public where the field asks for that", () => {
+    expect(readPhiMediaAssetFieldUploadRefusal(readPhiMediaAssetFieldConfig({}), image)).toBeNull();
+    expect(readPhiMediaAssetFieldUploadRefusal(readPhiMediaAssetFieldConfig({ publicOnly: true }), image)).toBeNull();
+  });
+
+  it("is left unchosen when it is of another kind, or not public for a publicOnly field", () => {
+    expect(readPhiMediaAssetFieldUploadRefusal(readPhiMediaAssetFieldConfig({}), { ...image, kind: PhiMediaKind.Other }))
+      .toBe("kind");
+    const privateImage = { ...image, deliveryPolicy: PhiMediaDeliveryPolicy.Authenticated };
+    expect(readPhiMediaAssetFieldUploadRefusal(readPhiMediaAssetFieldConfig({}), privateImage)).toBeNull();
+    expect(readPhiMediaAssetFieldUploadRefusal(readPhiMediaAssetFieldConfig({ publicOnly: true }), privateImage))
+      .toBe("notPublic");
   });
 });

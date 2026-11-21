@@ -7,6 +7,7 @@ import { PhiIntlLocaleProvider } from "../root/phi-intl-locale";
 import { PHI_SEARCH_WIDGET_DEFAULT_LABELS } from "../widgets/label-types/search";
 import { PHI_MEDIA_WIDGET_DEFAULT_LABELS } from "./media-widget-labels";
 import type { PhiMediaSource } from "./phi-media-sources";
+import type { PhiMediaPickerUploadBinding } from "./phi-media-picker-binding";
 
 /**
  * What the picker does with a media source: the switch only where an import may land, the source's
@@ -273,5 +274,97 @@ describe("a source in view", () => {
     await act(async () => { expect(await pending).toBeNull(); });
     expect((importSignal as AbortSignal | null)?.aborted).toBe(true);
     expect(result.current.sourceNotice).toBeNull();
+  });
+});
+
+describe("an upload inside the picker", () => {
+  const uploaded = { id: 77, title: "Fresh", altText: null, kind: "image" } as never;
+
+  function fakeUpload(overrides: Partial<PhiMediaPickerUploadBinding> = {}) {
+    const cancel = vi.fn();
+    const send = vi.fn(async (_file: File, _folderId: number | null): Promise<never | null> => uploaded);
+    return { accept: "image/*", progress: null, notice: null, send, cancel, ...overrides, mocks: { send, cancel } };
+  }
+  const file = { name: "fresh.png", type: "image/png", size: 10 } as File;
+
+  it("is offered only where a host brings one, with its accept, its progress and its words", async () => {
+    const bare = render();
+    await waitFor(() => expect(libraryQueries).toHaveLength(1));
+    expect(bare.result.current.onUpload).toBeUndefined();
+
+    const upload = fakeUpload({ progress: 40, notice: "Too large." });
+    const { result } = render({ upload });
+    await waitFor(() => expect(result.current.onUpload).toBeDefined());
+    expect(result.current.uploadAccept).toBe("image/*");
+    expect(result.current.uploadProgress).toBe(40);
+    expect(result.current.uploadNotice).toBe("Too large.");
+    expect(result.current.labels.upload).toBe(PHI_MEDIA_WIDGET_DEFAULT_LABELS.upload.uploadToggleLabel);
+  });
+
+  it("is hidden while another Space than the Site's is shown, as an import is", async () => {
+    spaceSelection.current = true;
+    const { result } = render({ upload: fakeUpload() });
+    await waitFor(() => expect(result.current.onUpload).toBeDefined());
+    act(() => result.current.onSpaceChange("user:2"));
+    await waitFor(() => expect(result.current.onUpload).toBeUndefined());
+  });
+
+  it("sends into the Folder shown, reads the list again and chooses what came back like a picked tile", async () => {
+    const onAssetSelect = vi.fn();
+    const upload = fakeUpload();
+    const { result } = render({ upload, onAssetSelect });
+    await waitFor(() => expect(libraryQueries).toHaveLength(1));
+    let answered: unknown;
+    await act(async () => { answered = await result.current.onUpload!(file); });
+    expect(answered).toBe(uploaded);
+    expect(upload.mocks.send).toHaveBeenCalledWith(file, null);
+    await waitFor(() => expect(libraryQueries).toHaveLength(2));
+    act(() => result.current.onChange(77));
+    expect(onAssetSelect).toHaveBeenCalledWith(uploaded);
+  });
+
+  it("chooses nothing where the host answers nothing, and still reads the list again", async () => {
+    const upload = fakeUpload({ send: vi.fn(async () => null) });
+    const { result } = render({ upload });
+    await waitFor(() => expect(libraryQueries).toHaveLength(1));
+    let answered: unknown = "unset";
+    await act(async () => { answered = await result.current.onUpload!(file); });
+    expect(answered).toBeNull();
+    await waitFor(() => expect(libraryQueries).toHaveLength(2));
+  });
+
+  it("stops the upload when the picker closes", async () => {
+    const upload = fakeUpload();
+    const { rerender } = render({ upload });
+    await waitFor(() => expect(libraryQueries).toHaveLength(1));
+    upload.mocks.cancel.mockClear();
+    rerender({ upload, open: false });
+    await waitFor(() => expect(upload.mocks.cancel).toHaveBeenCalled());
+  });
+});
+
+describe("the Folder the picker opens on", () => {
+  it("is asked for when it opens, and the listing waits for it", async () => {
+    let answer: (folderId: number) => void = () => {};
+    const openOnFolder = vi.fn(() => new Promise<number>((resolve) => { answer = resolve; }));
+    const { result } = render({ open: undefined, openOnFolder });
+    act(() => result.current.onOpenChange(true));
+    expect(openOnFolder).toHaveBeenCalledTimes(1);
+    await act(async () => { await Promise.resolve(); });
+    expect(libraryQueries).toHaveLength(0);
+    await act(async () => { answer(9); });
+    await waitFor(() => expect(libraryQueries).toHaveLength(1));
+    expect(libraryQueries[0]!.query).toMatchObject({ filters: { folderId: 9 } });
+  });
+
+  it("opens on the root and says why where it is refused, in the upload's words", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const refusal = Object.assign(new Error("locked"), { code: "media_folder_locked" });
+    const openOnFolder = vi.fn(async () => { throw refusal; });
+    const { result } = render({ open: undefined, openOnFolder });
+    act(() => result.current.onOpenChange(true));
+    await waitFor(() => expect(libraryQueries).toHaveLength(1));
+    expect(libraryQueries[0]!.query).toMatchObject({ filters: { folderId: null } });
+    expect(result.current.uploadNotice).toBe(PHI_MEDIA_WIDGET_DEFAULT_LABELS.upload.refusals.errorFolderLocked);
   });
 });

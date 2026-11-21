@@ -1,19 +1,30 @@
 import { PhiMediaKind, isPhiMediaAssetPublic } from "../../../constants/media";
 import type { PhiMediaAssetTile, PhiMediaKindValue } from "../../../types/media";
 import { createPhiConfigReader } from "../../../components/widgets/config/strict-config-reader";
+import { splitPhiMediaFolderNamePath } from "../../../components/media/media-folder-name-path";
 
 /*
  * The `media-asset` field: one Asset of the Site's Media library, chosen with the library's picker.
  *
  * The value is the Asset id as a number, `null` for none -- so `required` means "an Asset", and a save
- * that clears the field says so. Only the Site Space is ever offered (`FORMS.md`).
+ * that clears the field says so. Only the Site Space is ever offered (`FORMS.md`), and a file uploaded in
+ * the picker goes there too, into the Folder the picker shows.
  */
 
 export type PhiMediaAssetFieldConfig = {
   /** Which kind of Asset the picker lists. */
   mediaType: PhiMediaKindValue;
-  /** Whether Assets that are not delivered publicly are greyed out in the picker. */
+  /**
+   * Whether Assets that are not delivered publicly are greyed out in the picker -- and an uploaded one
+   * that is not is left unchosen. Core delivers what goes into the Site Space publicly by default.
+   */
   publicOnly: boolean;
+  /**
+   * The Folder of the Site Space the picker opens on, by its path of names from the root ("Shop Images /
+   * Products"), the Folders it names that are missing created when it opens; empty: the Folder the picker
+   * last showed, at first the root. A path and not an id, so a Module's Form states it for every Site.
+   */
+  folderPath: readonly string[];
 };
 
 const MEDIA_ASSET_FIELD_KINDS = [
@@ -26,9 +37,10 @@ const MEDIA_ASSET_FIELD_KINDS = [
 ] as const satisfies readonly PhiMediaKindValue[];
 
 /**
- * The field's config, read strictly (`strict-config-reader.ts`): a kind the picker does not list, or a
- * `publicOnly` that is not a boolean, is a `PhiConfigError` naming the field, never a default put in its
- * place -- a typo in `mediaType` would otherwise quietly offer another kind of file.
+ * The field's config, read strictly (`strict-config-reader.ts`): a kind the picker does not list, a
+ * `publicOnly` that is not a boolean or a `folderPath` that is not a text is a `PhiConfigError` naming
+ * the field, never a default put in its place -- a typo in `mediaType` would otherwise quietly offer
+ * another kind of file.
  */
 export function readPhiMediaAssetFieldConfig(
   config: Readonly<Record<string, unknown>> | undefined,
@@ -37,6 +49,7 @@ export function readPhiMediaAssetFieldConfig(
   return {
     mediaType: reader.oneOf("mediaType", MEDIA_ASSET_FIELD_KINDS) ?? PhiMediaKind.Image,
     publicOnly: reader.boolean("publicOnly") ?? false,
+    folderPath: splitPhiMediaFolderNamePath(reader.string("folderPath")),
   };
 }
 
@@ -54,4 +67,18 @@ export function isPhiMediaAssetFieldSelectable(
   asset: Pick<PhiMediaAssetTile, "deliveryPolicy" | "lifecycleStatus">,
 ) {
   return !config.publicOnly || isPhiMediaAssetPublic(asset.deliveryPolicy, asset.lifecycleStatus);
+}
+
+/**
+ * Whether an Asset uploaded in the field's picker is one it lets be chosen, and if not, why: of the kind
+ * the picker lists, and public where the field offers public Assets only. The same question a pick
+ * answers, asked of what the upload made -- Core does not know the field's kind, and a file the browser
+ * could not name reaches it unrefused.
+ */
+export function readPhiMediaAssetFieldUploadRefusal(
+  config: PhiMediaAssetFieldConfig,
+  asset: Pick<PhiMediaAssetTile, "kind" | "deliveryPolicy" | "lifecycleStatus">,
+): "kind" | "notPublic" | null {
+  if (asset.kind !== config.mediaType) return "kind";
+  return isPhiMediaAssetFieldSelectable(config, asset) ? null : "notPublic";
 }

@@ -130,6 +130,8 @@ type PhiMediaUploadItem = {
   status: "uploading" | "done" | "error";
   error: string | null;
   assetId: number | null;
+  /** Where this one file was sent, where its caller named it (`upload(file, options)`); a retry sends it there again. */
+  initOptions?: PhiMediaUploadInitOptions;
 };
 
 /**
@@ -143,6 +145,10 @@ type PhiMediaUploadItem = {
  * form unmounted -- every upload still running is stopped and reported `cancelled`, so no Asset is
  * finalized that nobody will enter anywhere. `cancel()` does the same while the surface stays. A stopped
  * upload leaves the list and calls neither `onUploaded` nor `onRejected`: nobody is waiting for it.
+ *
+ * `upload(file, options)` sends one file where `options` says instead of where `initOptions` does, for a
+ * surface whose target moves while it stands -- the `media-asset` field's picker uploads into the Folder
+ * it shows, which the reader changes.
  *
  * `uploading` is true while any file is still on its way. A surface whose value is only complete once the
  * upload settled -- a form field that receives the Asset id in `onUploaded` -- reads it to hold back
@@ -189,7 +195,7 @@ export function usePhiMediaUpload<TAsset extends { id: number } = { id: number }
   }, []);
 
   /** One file into one item: a new item, or -- for a retry -- the failed one it had. */
-  const run = useCallback(async (file: File, retryLocalId?: string) => {
+  const run = useCallback(async (file: File, retryLocalId?: string, fileInitOptions?: PhiMediaUploadInitOptions) => {
     const rejection = readPhiMediaUploadRejection(file, acceptance, labels);
     if (rejection) {
       onRejected?.(rejection, file);
@@ -200,7 +206,15 @@ export function usePhiMediaUpload<TAsset extends { id: number } = { id: number }
       sequence.current += 1;
       localId = `upload-${sequence.current}`;
     }
-    const startedItem: PhiMediaUploadItem = { localId, file, progress: 0, status: "uploading", error: null, assetId: null };
+    const startedItem: PhiMediaUploadItem = {
+      localId,
+      file,
+      progress: 0,
+      status: "uploading",
+      error: null,
+      assetId: null,
+      ...(fileInitOptions ? { initOptions: fileInitOptions } : {}),
+    };
     setItems((current) => [startedItem, ...current.filter((item) => item.localId !== localId)]);
     const controller = new AbortController();
     running.current.add(controller);
@@ -209,7 +223,7 @@ export function usePhiMediaUpload<TAsset extends { id: number } = { id: number }
       ({ asset } = await runSession(
         file,
         (progress) => patch(localId, { progress }),
-        initOptions,
+        fileInitOptions ?? initOptions,
         controller.signal,
       ));
     } catch (error) {
@@ -238,11 +252,14 @@ export function usePhiMediaUpload<TAsset extends { id: number } = { id: number }
     return asset;
   }, [acceptance, initOptions, labels, onRejected, onUploaded, patch, runSession]);
 
-  const upload = useCallback((file: File) => run(file), [run]);
+  const upload = useCallback(
+    (file: File, fileInitOptions?: PhiMediaUploadInitOptions) => run(file, undefined, fileInitOptions),
+    [run],
+  );
   /** Starts a failed item's file again, in the place it had. */
   const retry = useCallback((localId: string) => {
     const failed = items.find((item) => item.localId === localId && item.status === "error");
-    return failed ? run(failed.file, localId) : Promise.resolve(null);
+    return failed ? run(failed.file, localId, failed.initOptions) : Promise.resolve(null);
   }, [items, run]);
 
   const cancel = useCallback(() => {

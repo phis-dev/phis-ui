@@ -14,7 +14,8 @@ import type { PhiFormRenderContext } from "./form-resolution";
  * What a Form's field types say for themselves, under the keys their controls read.
  *
  * The `media-asset` field is the same: the picker it opens says the Media Label Set's words, read here
- * for every Form that has such a field (`media-asset-field-keys.ts`).
+ * for every Form that has such a field (`media-asset-field-keys.ts`), and the upload inside it says the
+ * upload's refusals and its hold under the upload field's keys.
  *
  * A field type whose control speaks -- the upload field's trigger, its drop hint, its holds and the
  * refusals of the upload -- says it from Core's `widget:upload` Label Set, read here for every Form that
@@ -39,7 +40,7 @@ export async function resolvePhiFormFieldLabels(
     locale: context.runtime.locale.current,
   };
   const [upload, media] = await Promise.all([
-    hasUpload ? readUploadFieldLabels(options) : {},
+    hasUpload || hasMediaAsset ? readUploadFieldLabels(options) : {},
     hasMediaAsset ? readMediaAssetFieldLabels(options) : {},
   ]);
   return { ...upload, ...media };
@@ -66,7 +67,7 @@ async function readUploadFieldLabels(options: PhiGlobalTranslatorOptions): Promi
 }
 
 async function readMediaAssetFieldLabels(options: PhiGlobalTranslatorOptions): Promise<Record<string, string>> {
-  const { tool, picker, space } = await getPhiMediaWidgetLabels(options);
+  const { tool, picker, space, upload } = await getPhiMediaWidgetLabels(options);
   const keys = PHI_FORM_MEDIA_ASSET_PICKER_LABEL_KEYS;
   return {
     [keys.popoverTitle]: picker.popoverTitle,
@@ -83,5 +84,6 @@ async function readMediaAssetFieldLabels(options: PhiGlobalTranslatorOptions): P
     [keys.importingLabel]: picker.importingLabel,
     [keys.importFailedText]: picker.importFailedText,
     [keys.loadMoreLabel]: picker.loadMoreLabel,
+    [keys.uploadLabel]: upload.uploadToggleLabel,
   };
 }

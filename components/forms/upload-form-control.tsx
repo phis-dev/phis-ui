@@ -11,13 +11,10 @@ import { PhiProgressControl } from "../controls/phi-progress-control";
 import { PhiTagControl } from "../controls/phi-tag-control";
 import { PhiTypographyControl } from "../controls/phi-typography-control";
 import { PhiIcon } from "../shell/phi-icon";
-import {
-  PHI_MEDIA_UPLOAD_DEFAULT_LABELS,
-  PHI_MEDIA_UPLOAD_FIELD_DEFAULT_LABELS,
-  type PhiMediaUploadLabels,
-} from "../media/media-upload-labels";
+import { PHI_MEDIA_UPLOAD_FIELD_DEFAULT_LABELS } from "../media/media-upload-labels";
 import { usePhiMediaUpload } from "../media/phi-media-upload";
 import { PHI_FORM_UPLOAD_LABEL_KEYS } from "./form-provider-contract";
+import { readPhiFormUploadRefusalLabels } from "./upload-field-refusal-labels";
 import type { PhiFormFieldProviderProps } from "./form-provider-registry";
 
 /*
@@ -89,36 +86,6 @@ function readUploadSettings(config: Readonly<Record<string, unknown>> | undefine
   };
 }
 
-function resolveUploadLabels(labels: Readonly<Record<string, string>> | undefined): PhiMediaUploadLabels {
-  const read = (key: string, fallback: string) => labels?.[key]?.trim() || fallback;
-  return {
-    errorGeneric: read(PHI_FORM_UPLOAD_LABEL_KEYS.errorGeneric, PHI_MEDIA_UPLOAD_DEFAULT_LABELS.errorGeneric),
-    errorNetwork: read(PHI_FORM_UPLOAD_LABEL_KEYS.errorNetwork, PHI_MEDIA_UPLOAD_DEFAULT_LABELS.errorNetwork),
-    errorTooLarge: read(PHI_FORM_UPLOAD_LABEL_KEYS.errorTooLarge, PHI_MEDIA_UPLOAD_DEFAULT_LABELS.errorTooLarge),
-    errorDuplicate: read(PHI_FORM_UPLOAD_LABEL_KEYS.errorDuplicate, PHI_MEDIA_UPLOAD_DEFAULT_LABELS.errorDuplicate),
-    errorTypeNotAllowed: read(
-      PHI_FORM_UPLOAD_LABEL_KEYS.errorTypeNotAllowed,
-      PHI_MEDIA_UPLOAD_DEFAULT_LABELS.errorTypeNotAllowed,
-    ),
-    errorQuotaExceeded: read(
-      PHI_FORM_UPLOAD_LABEL_KEYS.errorQuotaExceeded,
-      PHI_MEDIA_UPLOAD_DEFAULT_LABELS.errorQuotaExceeded,
-    ),
-    errorSpaceUnavailable: read(
-      PHI_FORM_UPLOAD_LABEL_KEYS.errorSpaceUnavailable,
-      PHI_MEDIA_UPLOAD_DEFAULT_LABELS.errorSpaceUnavailable,
-    ),
-    errorStorageUnreachable: read(
-      PHI_FORM_UPLOAD_LABEL_KEYS.errorStorageUnreachable,
-      PHI_MEDIA_UPLOAD_DEFAULT_LABELS.errorStorageUnreachable,
-    ),
-    errorFolderLocked: read(
-      PHI_FORM_UPLOAD_LABEL_KEYS.errorFolderLocked,
-      PHI_MEDIA_UPLOAD_DEFAULT_LABELS.errorFolderLocked,
-    ),
-  };
-}
-
 /**
  * The shared upload field Control: attach a file, watch it arrive, take it back out again.
  *
@@ -150,7 +117,7 @@ export function PhiUploadFormControl({
   formContext,
 }: PhiFormFieldProviderProps) {
   const settings = useMemo(() => readUploadSettings(field.config), [field.config]);
-  const uploadLabels = useMemo(() => resolveUploadLabels(labels), [labels]);
+  const uploadLabels = useMemo(() => readPhiFormUploadRefusalLabels(labels), [labels]);
   const [refusal, setRefusal] = useState<string | null>(null);
   const assetIds = readPhiFormUploadAssetIds(value);
 
