@@ -69,6 +69,11 @@ not one that was only hard to find. It names things and points at the document t
 not repeat them. Every typeKey and Control name below is checked against the code by
 `plugins/runtime-modules/core/third-party-modules-reference.test.ts`.
 
+The Foundation is Core and the Modules that are active in every Area. A domain's capabilities are its
+owning Module's, so a Media question is answered by the Asset Module ([Media](#media-what-the-asset-module-already-does)),
+not by the one field or Widget you started from. How to check before you call something missing is in
+[AGENTS.md](./AGENTS.md#before-you-call-something-missing).
+
 ### Layouts
 
 A Layout arranges the Widgets and Layouts in its slots. Every one takes the shared `padding` field (the
@@ -377,6 +382,41 @@ A Widget's placement adds two more (`PhiWidgetPlacementBase`, [4b](#4b-place-cor
   fields above travel as `visibility/change` and the other renderable-block signals
   ([SIGNALS.md](./SIGNALS.md#renderable-block-channels)).
 
+### Media: what the Asset Module already does
+
+The Asset Module (`@phis/ui/modules/asset`, `plugins/runtime-modules/asset/`) owns the Media library:
+picking, uploading, Folders. It is active in every Area (`activation: "always"`), so everything below is
+there wherever your Page stands, and none of it is in the Core table above.
+
+| I need | Use | What it gives back | Code |
+| --- | --- | --- | --- |
+| An author picks one Asset in a Form (a logo, a cover) | form field `media-asset` | The Asset id as a number, `null` for none; Site Space only. | `asset/form-providers.ts`, `asset/media-asset-form-control.tsx`, [FORMS.md](./FORMS.md#field-and-validation-providers) |
+| Somebody attaches a file to a Form | form field `upload` (Core) | The Asset ids of the finished uploads; `space` picks the Site's or the viewer's Space, not a Folder. | `components/forms/upload-form-control.tsx`, [FORMS.md](./FORMS.md#field-and-validation-providers) |
+| Files dropped into a Folder on a Page | Widget `area-upload` | Uploads into the Folder the Asset Controller holds, inside the Media library into the open one; an upload wall with delete. Demands the Asset Controller and the Media collection Provider. | `asset/widgets/area-upload/`, `components/media/phi-area-upload-widget.tsx` |
+| A Media library: Folders, upload, new Folder, lock | Widget `collection-view` with the Asset binding, as the Builder's Media page (`builder-media-page`) places it | Uploads into the open Folder; creating and locking a Folder are its actions. | `core/widgets/collection-view/asset-binding.tsx`, `asset/trees/phi-default-builder-media-page-tree.ts`, [COLLECTIONS.md](./COLLECTIONS.md) |
+| Browse and choose on a Page, wired to other Widgets | Widget `media-picker` | Emits `selection` (`PhiMediaAssetSelection`: `assetId`, `asset`, `variantKey`), `path`, `query`, `pagination`. Imports a media source's item into the Folder it shows; uploads no local file. | `asset/widgets/media-picker/`, `components/media/phi-media-picker-binding.tsx` |
+| A picker inside a Widget of mine | `PhiMediaPickerControl`, controlled | What you pass it; the binding that feeds it is internal ([Offering an image picker](#offering-an-image-picker)). | `@phis/ui/controls` |
+| A picture's details and focal rectangle | Widgets `image-inspector`, `asset-focal-rect`; field `asset-focal-rect` | The Builder's Media page inspector and its Form. | `asset/widgets/`, `asset/metadata-form.ts` |
+| A file in a slot of an Add-on's row | Core Widget `slot-upload` | The slot's files. | [`slot-upload`](#slot-upload-files-on-a-row) |
+| The picture of the record a Page is about | A `picture`/`pictures` record field, drawn by `image` or `gallery` with `recordField` | `{ src, alt? }` per picture. | [Records a Page is about](#records-a-page-is-about) |
+| The pictures of one Folder | `gallery` on Core's `folderImages` Provider (no Asset Module needed) | The Folder's public pictures, with its subfolders. | [MODULES.md](./MODULES.md#record-providers) |
+| Pictures my package ships | `phis.media` in `package.json` | Media Assets on the Site. | [Pictures a Module ships](#pictures-a-module-ships) |
+| Files from somewhere else (a DAM, a stock archive) | A media source | Imported Assets. | [Offering a media source](#offering-a-media-source) |
+
+Every upload goes the same way: `usePhiMediaUpload` and `runPhiMediaUploadSession`
+(`components/media/phi-media-upload.ts`, `components/media/media-upload-flow.ts`, both internal) take a Space
+and a `folderId` and call Core's `POST /api/site/media/uploads/init` (`folderId` in the body, `spaceId` in
+the query), then the bytes, then finalize. An Add-on that reserved a place with `assets:v1` uploads with
+`runPhiAddonAssetUpload` from `@phis/ui/media`.
+
+Known gaps ([TODOS.md](./TODOS.md), "Media and Theme"):
+
+- The `media-asset` field's picker chooses; it cannot upload a file in place. The file goes up on the Media
+  page first.
+- `area-upload`'s `folderPath` is offered in the Inspector, parsed and shown on the canvas, and read by
+  nothing: the Folder is always the Controller's.
+- `usePhiMediaPickerBinding` is not a public door, so a picker outside a Form is the Foundation's to give.
+
 ### I need ... use ...
 
 | I need | Use | Where |
@@ -397,6 +437,8 @@ A Widget's placement adds two more (`PhiWidgetPlacementBase`, [4b](#4b-place-cor
 | Several pictures | `gallery` | `gallery/config.ts` |
 | A main picture with thumbnails under it | `gallery` with `thumbnails` and one picture visible | [LAYOUTING.md](./LAYOUTING.md#carousel-movement) |
 | A picture | `image`; `PhiImageControl` in a Widget of mine | `image/config.ts` |
+| An author chooses a picture in a Form | form field `media-asset` (the Asset id) | [Media](#media-what-the-asset-module-already-does) |
+| Upload files into a Media Folder | Widget `area-upload`, or the Media library page | [Media](#media-what-the-asset-module-already-does) |
 | A list or table of records | `table` on a provider you register | [TABLES.md](./TABLES.md) |
 | Records as cards | `collection-view` (the Card Widget as a Collection) | [COLLECTIONS.md](./COLLECTIONS.md) |
 | A form | The `form` Widget on a Preset Form | [FORMS.md](./FORMS.md), [6](#6-add-a-preset-form) |
@@ -407,8 +449,9 @@ A Widget's placement adds two more (`PhiWidgetPlacementBase`, [4b](#4b-place-cor
 | Tiles that fill a row | Layout `grid`, or `masonry` for uneven heights | [LAYOUTING.md](./LAYOUTING.md), "Grid slot placement" |
 | An icon | `PhiIcon` by name | [8d](#8d-icons-a-module-brings) |
 
-What is not listed here either does not exist or is missing from this list. In both cases propose it to the
-operator ([Where a Core Widget or Control lacks something](#before-you-start-the-foundations-widgets-and-controls-come-first));
+What is not listed here either does not exist or is missing from this list. Before you say which, check the
+Module that owns the domain as [AGENTS.md](./AGENTS.md#before-you-call-something-missing) says, and name what
+you checked. Then propose it to the operator ([Where a Core Widget or Control lacks something](#before-you-start-the-foundations-widgets-and-controls-come-first));
 do not build your way around it.
 
 ## Before you start: Public pages are rendered once for everybody
@@ -1315,6 +1358,8 @@ is what decides which Asset it accepts, so read the Asset there before storing i
 controlled only (it takes the Assets, the Folders and the paging as props, and `isAssetSelectable` to grey
 out Assets); the binding that feeds it from the library (`usePhiMediaPickerBinding`) is Foundation-internal,
 so a Widget that needs a picker where no Form fits has to ask for that binding rather than rebuild it.
+The field's picker chooses from what the library holds and uploads nothing; a file goes into a Folder
+through the `area-upload` Widget or the Media page ([Media](#media-what-the-asset-module-already-does)).
 
 Inside the Builder's own chrome the library is always readable, whatever the edited Area activates. That
 availability is declared by the owning Module through `availableToAuthoringChrome` on its provider
@@ -2399,6 +2444,10 @@ To make the Page a template an author can rebuild in the Builder
   each Provider parameter to the route parameter that fills it.
 - Build the starting tree from Core Widgets bound with `recordField` (and `linkRecordField`,
   `valueRecordField`), not from Widgets of the Module that carry the slug.
+- A Widget of yours whose own content is bound (`contentBinding`) and that can show a record field in its
+  place names that config field in `contentBinding.recordField`, as Markdown, Image and Simple Text do.
+  Without it, on a Page about a record the Widget is judged by its own content and left out as unpublished
+  where it has none ([components/widgets/README.md](./components/widgets/README.md)).
 - Do not read the record or call `notFound()` in `loadTree`: Core reads the record once per request and
   answers the 404, for the Module's tree and a stored override alike. The Builder opens `loadTree` with
   `params: {}`. `loadTree` runs before the record is read and gets no Registry, and `runtime.page.record` is
@@ -2890,6 +2939,11 @@ for the provider and still discloses the page it comes from.
 - Controller fields and the `Controller` Client are either complete as one group or absent as one group.
 - Every controllerless Module contributes at least one meaningful owned artifact and no no-op Controller.
 - Widgets use Phi Controls, providers, signaling, and the shared Canvas scaffold contracts.
+- Every field a Widget offers in `fields` and reads in its parser is used by its render or its Client. A
+  field that is parsed and then read by nothing tells the author something happens that does not
+  (`area-upload`'s `folderPath` is the standing case).
+- A capability reported as missing names the owning Module and what of it was checked -- Widgets,
+  Controller, field Providers, data Providers, Core routes ([AGENTS.md](./AGENTS.md#before-you-call-something-missing)).
 - A Widget draws itself in the Builder only with meaningful content (sample values, the shape of its
   settings); otherwise it leaves `renderEditor` out and declares `preview: "visualPlaceholder"`, and draws
   no skeleton of its own.

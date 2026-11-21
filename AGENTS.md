@@ -77,6 +77,35 @@ navigation overlays, translations. Stored state amends the descriptors; it does 
 - If the documents do not answer where a thing comes from, that is a documentation gap: say so and add
   it to the owner document once the answer is known.
 
+## Before you call something missing
+
+A capability belongs to the Module that owns its domain, not to the field, Control or Widget you happened
+to start from. "The picker cannot upload" read off one form field is not "phis-ui cannot upload into a
+folder". Before a gap is reported or a proposal written:
+
+1. **Name the owning Module.** The table in [MODULES.md](./MODULES.md#first-party-modules) says who owns
+   what; Modules with `activation: "always"` -- the Asset Module for Media -- are in every Area, so their
+   Widgets, fields and Providers are always there. Media (picking, uploading, folders, a record's
+   pictures) is the Asset Module's, `plugins/runtime-modules/asset/`; its map is
+   [THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#media-what-the-asset-module-already-does).
+2. **Check every door of that Module, in the code**: its Widgets (`widgets.ts`), its Controller
+   (`controller/`), its form field Providers and handlers (`formProviders` in `definition.ts`), its data
+   Providers (`data-providers.ts`) and route presets (`presets.ts`), and the Core routes behind them
+   (`/api/site/...` in `phis-server`). Then the Core Widgets that bind to its Providers -- the Media
+   library page is the `collection-view` Widget with the Asset binding
+   (`plugins/runtime-modules/core/widgets/collection-view/asset-binding.tsx`).
+3. **Check the Foundation list**: [THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#before-you-start-what-the-foundation-already-has)
+   names every Layout, Core Widget and Control, held to the code by a test.
+4. **Report the gap at its real size, with what you checked**: the Module, the files, and the one piece
+   that is missing ("the `media-asset` field's picker cannot upload in place"), not the domain. A claim
+   without that list is not a finding.
+
+On 2026-11-21 an analysis reported that the Media picker could not upload into a folder and that
+phis-ui needed upload and a target folder. Both existed: the Asset Module's `area-upload` Widget and the
+Media library page upload into the open Folder, and the upload flow and Core's init take a `folderId`.
+What was missing was narrower -- no upload inside the `media-asset` field's picker -- and the report had
+read the field's documentation, not the Module's.
+
 ## Working rules
 
 - Use `pnpm` for local commands. Documentation is written in English.

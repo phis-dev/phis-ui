@@ -24,7 +24,8 @@ something that happens to work:
 
 - a field is one of the field Providers in
   [FORMS.md](../../FORMS.md#field-and-validation-providers) -- text and choice, toggle and date, slider
-  and cascader, the compound Table and Tree, storage size, upload;
+  and cascader, the compound Table and Tree, storage size, upload, and the Asset Module's `media-asset`
+  (one Asset of the library, as its id);
 - what renders it is a canonical `Phi*Control`, never Ant Design directly;
 - the Form is placed through the one generic Form Widget and never through a Form Widget of your own;
 - the submit is a declared handler Provider behind `/api/site/forms`, never a `fetch` written into a
@@ -661,6 +662,7 @@ package preset itself.
 | Overlay closes before persistence succeeds | The workflow closes on the Save command instead of the correlated `submitSuccess` result. |
 | Signal mode sends no values | The Form lacks an emitted `submitValues` route or the receiver/controller capability does not accept the `formValues` schema. |
 | Select options are unavailable | The field's Options Provider is not declared or demanded by the active Form descriptor/module set. |
+| A field seems to lack a capability ("the picker cannot upload", "no target Folder") | The field is one door of its domain's owning Module, not the domain. Check that Module's Widgets, Controller and Core routes before calling it missing ([AGENTS.md](../../AGENTS.md#before-you-call-something-missing)); for Media the map is [THIRD_PARTY_MODULES.md](../../THIRD_PARTY_MODULES.md#media-what-the-asset-module-already-does). |
 
 ## Checklist
 

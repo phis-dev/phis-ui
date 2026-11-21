@@ -680,7 +680,8 @@ are not part of this field.
   it follows the Theme and the mode; consumers do not reconstruct them from CSS otherwise or substitute
   semantic tokens. The Theme workspace is the only place that supplies an unpublished draft palette
   explicitly.
-- The colour picker offers the Theme's custom colours and its primary and text ladders. In a field that
+- The colour picker offers the Theme's custom colours, its primary ladder, its status colours (`colorSuccess`,
+  `colorWarning`, `colorError`, `colorInfo`, a group of their own) and its text ladder. In a field that
   styles content -- the Inspector's colour fields, a Background, a Border, a text colour -- a Theme swatch
   stores its role (`var(--phi-color-primary-bg)`, `var(--phi-custom-3)`) rather than its colour, so what
   an author picks from the Theme follows it (`usePhiColorControlPresets`, `storeThemeRoles`). A colour from

@@ -129,6 +129,8 @@ Toolbars. A non-compact `PhiToolbarControl` uses `xs` gap between its controls.
 A footer's own commands are a compact group. Cancel and Save are the two ends of a single decision, and a
 gap between them reads as two unrelated offers; wrapping follows from that and is not stated, because a
 compact group does not wrap. A Toolbar that carries unrelated actions is the case for a non-compact one.
+The Save a footer leads with states `variant: "primary"` beside `action: "save"`; a button's own variant
+wins over its action's look ([components/widgets/README.md](./components/widgets/README.md)).
 
 There is no generic Overlay actions list. Actions are normal Phi
 Widgets in the Footer Layout and use their declared signal routes. A Form rendered anywhere in an Overlay

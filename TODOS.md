@@ -174,12 +174,24 @@ built. Remove an entry when it is done.
 
 ## Media and Theme
 
-- **A Module cannot offer "choose a picture from the Media library" (found by @phis/shop, 2026-11-17).**
-  `PhiMediaPickerControl` is public and fully controlled; what feeds it -- the provider query, folders,
-  Spaces, paging (`components/media/phi-media-picker-binding.tsx`) -- is reachable from inside only, and
-  there is no form field for an Asset. Wanted: a field type `media-asset` (value: the Asset id) or the
-  binding as a public door, restrictable to the Site's Space and to publicly delivered Assets. The picker's
-  query has no filter on the delivery policy today.
+- **A picker outside a Form has no public binding (found by @phis/shop, 2026-11-17).** A Form chooses an
+  Asset with the Asset Module's `media-asset` field (FORMS.md). `PhiMediaPickerControl` is public and fully
+  controlled; what feeds it -- the provider query, folders, Spaces, paging
+  (`components/media/phi-media-picker-binding.tsx`) -- is reachable from inside only, so a Module's own
+  Widget cannot open the library. Wanted, if asked for: the binding as a public door, restrictable to the
+  Site's Space and to publicly delivered Assets. The picker's query has no filter on the delivery policy
+  today; `publicOnly` greys out instead.
+- **The `media-asset` field's picker cannot upload in place.** It chooses from what the library holds;
+  a file somebody has on their machine goes up on the Media page first (the `area-upload` Widget and the
+  Media library's Asset binding upload into a Folder, THIRD_PARTY_MODULES.md, "Media"). Wanted: an upload
+  inside the picker, into the Folder it shows, through `usePhiMediaUpload` -- the media-source import
+  already lands there. Contract question: whether the field's Site-Space-only rule and `publicOnly` also
+  bind what is uploaded.
+- **`area-upload`'s `folderPath` is read by nothing.** The Widget offers it in the Inspector, parses it
+  (`plugins/runtime-modules/asset/widgets/area-upload/config.ts`) and shows it on the canvas
+  (`authoring.tsx`), but `PhiAreaUploadBinding` (`components/media/phi-area-upload-widget.tsx`) uploads into
+  the Asset Controller's Folder, or the Media library's open one, and never reads it. Either wire it (a
+  Folder reference, not a path: Folders are renamed) or remove the field; operator decision.
 - **Media Inspector variant hand-over.** The Inspector always simulates the variant crop from the original
   (`components/media/phi-asset-inspector-section.tsx`) and never shows the generated variant. Decide
   whether that stays and the contract says so, or whether unsaved focal edits get an owner and the preview

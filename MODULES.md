@@ -41,9 +41,9 @@ Terminology across the Site/server boundary is strict:
 | `@phis/ui/modules/app` | Area base | `app` | App shell, navigation surfaces, authenticated application routes |
 | `@phis/ui/modules/admin` | Area base | `admin` | Admin shell, navigation surface, root route, Admin settings |
 | `@phis/ui/modules/editor` | Area base | `editor` | Editor shell, content editor Widgets and workflows |
-| `@phis/ui/modules/accounting` | Area base | `accounting` | Accounting shell, navigation surface, workspace route |
+| `@phis/ui/modules/accounting` | Area base | `accounting` | Accounting shell, navigation surface, root route (no Page of its own; the root lands on the first Module entry, the Dashboard's) |
 | `@phis/ui/modules/builder` | Area base | `builder` | Builder shell, workspaces, Canvas, drafts, Inspector, wiring |
-| `@phis/ui/modules/asset` | always active | all | Media, upload, asset picking, asset data |
+| `@phis/ui/modules/asset` | always active | all | Media, upload, asset picking, asset data; what it offers: [THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#media-what-the-asset-module-already-does) |
 | `@phis/ui/modules/auth` | optional | `public`, `admin`, `app` | Site login and authentication workflows ([AUTHENTICATION.md](./AUTHENTICATION.md)) |
 | `@phis/ui/modules/blog` | optional | `public`, `editor` | the face of Core's `blog` content kind: its three Pages (read in Public, written in the Editor) and two Forms; the list and detail Widgets are Core's ([CONTENT_ENTRIES.md](./CONTENT_ENTRIES.md)) |
 | `@phis/ui/modules/avatar` | optional | `app` | a personal picture in the person's own Media Space |
@@ -1039,7 +1039,7 @@ folded into the registry on 14.11.2026, its users renamed. An unknown name is re
 (`[phi-icon] ... names no icon`), in the Site service's journal where it is rendered on the server and in
 the browser console otherwise, and `validate-preset-icon-vocabulary` fails on a preset's `antd:` or short
 `icon` name the registry does not know. It found `antd:send` on the News editor and `antd:cluster` on the
-Groups cards, and later `antd:audit` on the Accounting overview entry, all blank until then.
+Groups cards, and later `antd:audit` on the Accounting overview entry (since removed), all blank until then.
 
 ### Navigation surfaces
 

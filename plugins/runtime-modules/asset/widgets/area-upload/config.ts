@@ -55,6 +55,7 @@ export const PHI_AREA_UPLOAD_WIDGET_DEFINITION = {
     { key: "allowDelete", type: "boolean", label: "Allow Delete" },
     { key: "multiple", type: "boolean", label: "Multiple" },
     { key: "accept", type: "string", label: "Accept" },
+    // Parsed and shown on the canvas, read by nothing: the upload goes into the Asset Controller's Folder (TODOS.md).
     { key: "folderPath", type: "string", label: "Folder Path" },
     { key: "presentationFlags", type: "number", label: "Flags", min: 0, precision: 0 },
   ],
