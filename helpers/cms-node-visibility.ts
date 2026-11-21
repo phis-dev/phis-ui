@@ -1,6 +1,7 @@
 import {
   collectPhiRuntimeValueConditions,
   evaluatePhiRuntimeConditionExpression,
+  matchesPhiRuntimeValueCondition,
   readPhiRuntimeConditionExpression,
   type PhiRuntimeConditionExpression,
   type PhiRuntimeFeatureState,
@@ -59,6 +60,54 @@ export function readPhiCmsServerPageConditionState(
     if (typeof value === "string") query[key] = value;
   }
   return { path: runtime.page?.path ?? "", query };
+}
+
+/** Whether a condition reads the record the Page is about, which only the server can answer. */
+export function readsPhiCmsNodeRecord(visibleWhen: PhiRuntimeConditionExpression | null): boolean {
+  return collectPhiRuntimeValueConditions(visibleWhen).some((condition) => condition.source === "record");
+}
+
+/**
+ * What a `record` condition is judged against in one render.
+ *
+ * `fields` is the record the Page is about, each field as the value it has -- the same fields, by the same
+ * keys, a Widget's `recordField` reads -- or null on a Page that is about no record. `live` is whether the
+ * node renders for the live Site: there, a node that asks about a record that is not there stays away.
+ * In the Builder it is drawn, because a template open without a record is still to be edited, and its
+ * bound Widgets show their own content in the record's place.
+ */
+export type PhiCmsNodeRecordConditionState = {
+  fields: Readonly<Record<string, unknown>> | null;
+  live: boolean;
+};
+
+/**
+ * A node's condition with every `record` part answered, before anything else of it is.
+ *
+ * `false` is a condition that cannot hold whatever the rest of it says, `null` one that holds whatever
+ * the rest says (or no condition at all), and an expression is what is left to answer -- the parts that
+ * do not read the record, as `resolvePhiCmsNodeVisibility` and, where it has to, the gate take them.
+ * The record is answered here and taken out, not handed on: the gate runs in the browser, which never
+ * sees the record, so a part about it would leave the node waiting for an answer nobody can give.
+ */
+export function settlePhiCmsNodeRecordConditions(
+  visibleWhen: PhiRuntimeConditionExpression | null,
+  record: PhiCmsNodeRecordConditionState,
+): PhiRuntimeConditionExpression | null | false {
+  if (!visibleWhen || !readsPhiCmsNodeRecord(visibleWhen)) return visibleWhen;
+  if ("source" in visibleWhen) {
+    if (record.fields == null) return record.live ? false : null;
+    return matchesPhiRuntimeValueCondition(visibleWhen, { record: record.fields }) ? null : false;
+  }
+  const decisive = visibleWhen.match === "all" ? false : null;
+  const rest: PhiRuntimeConditionExpression[] = [];
+  for (const condition of visibleWhen.conditions) {
+    const settled = settlePhiCmsNodeRecordConditions(condition, record);
+    if (settled === decisive) return decisive;
+    if (settled) rest.push(settled);
+  }
+  if (rest.length === 0) return visibleWhen.match === "all" ? null : false;
+  return rest.length === 1 ? rest[0]! : { match: visibleWhen.match, conditions: rest };
 }
 
 export type PhiCmsNodeVisibility = "render" | "omit" | "gate";

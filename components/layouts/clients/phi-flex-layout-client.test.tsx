@@ -12,7 +12,7 @@ import {
  * What the Flex Layout gives each slot on its main axis, read from the markup it renders. A child states
  * its sizing the way a frame does: through the data attributes.
  */
-function child(policy: "fill" | "rest", config: Record<string, unknown> = {}): ReactNode {
+function child(policy: "fill" | "rest" | "intrinsic", config: Record<string, unknown> = {}): ReactNode {
   const sizing = resolvePhiSlotChildSizingForConfig("widget", policy, config);
   return createElement("div", {
     ...buildPhiSlotChildDataAttributes(sizing.policy, {
@@ -48,5 +48,39 @@ describe.each([
 
   it("does not let a rest child with a stated main size take the rest", () => {
     expect(slotGrows(vertical, [child("rest", mainSize), child("fill")])).toEqual([0, 1]);
+  });
+});
+
+/** Each slot's shrink and minimum width on a row, read from the style the Layout gives it. */
+function rowSlotShrink(slots: ReactNode[], props: Record<string, unknown> = {}) {
+  const markup = renderToStaticMarkup(createElement(PhiFlexLayout, { layoutKind: "flex", slots, ...props }));
+  return [...markup.matchAll(/<div style="flex-grow:\d+;flex-shrink:(\d+);[^"]*?min-width:([^;"]+)/gu)]
+    .map((match) => `${match[1]} ${match[2]}`);
+}
+
+/*
+ * A row that does not wrap and a child that is its content: a long title beside a small picture. Held at
+ * its content size, the title ran past a phone's edge; it gives way now, down to what its content can be,
+ * which leaves a picture of a set width as it is.
+ */
+describe("a Flex row that does not wrap and a child that is its content", () => {
+  it("lets the child give way, no further than its content", () => {
+    expect(rowSlotShrink([child("intrinsic"), child("intrinsic")])).toEqual(["1 auto", "1 auto"]);
+  });
+
+  it("keeps a filling child as it was: it grows from nothing and gives way to nothing", () => {
+    expect(rowSlotShrink([child("intrinsic"), child("fill")])).toEqual(["1 auto", "1 0"]);
+  });
+
+  it("keeps a child with a width of its own at that width", () => {
+    expect(rowSlotShrink([child("intrinsic", { size: { width: 34 } })])).toEqual(["0 0"]);
+  });
+
+  it("moves a child to the next line of a row that wraps, rather than letting it give way", () => {
+    expect(rowSlotShrink([child("intrinsic")], { wrap: true })).toEqual(["0 0"]);
+  });
+
+  it("leaves a collapsed slot as narrow as nothing", () => {
+    expect(rowSlotShrink([child("intrinsic")], { initialSlotStates: ["collapsed"] })).toEqual(["0 0"]);
   });
 });

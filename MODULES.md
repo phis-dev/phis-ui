@@ -836,6 +836,20 @@ serve every record: its Widgets name a *field of the page record*, never the rec
   (`contentBinding.recordField`), so that on a Page about a record it is never left out as unpublished
   content: a template's Markdown with an empty text of its own still shows the record's description.
   `list` and `tag` are declared kinds no Core Widget draws yet.
+- **A node that is there only with a field.** A Widget that draws nothing still stands in its slot with
+  its frame, and a Flex Layout's gap stays around it ([LAYOUTING.md](./LAYOUTING.md#slots)). A node that
+  should take its frame and gap with it states `visibleWhen` on the source `record`:
+  `{ source: "record", valuePath: "icon", operator: "truthy" }`. `valuePath` names a declared field by
+  its key -- the key a `recordField` names -- and reads the value `resolvePhiPageRecordFields` answers
+  for it (a picture is `{ src, alt? }`, so `icon.src` reads its address); a field the record lacks is not
+  there. The condition is settled on the server before the node renders, from the same memoised read, and
+  never reaches the browser (`settlePhiCmsNodeRecordConditions`, `helpers/cms-node-visibility.ts`): on a
+  Page about a record a node whose condition does not hold is left out with its frame; on a live Page
+  about no record it does not hold, whatever the operator; the Builder's Preview judges it by its sample
+  record and draws the node where it has none, and the Editor canvas always draws it, so the template stays
+  editable. A record whose fields could not be read answers as one without any. `record` is a node's
+  source only: a Form descriptor refuses it, and a condition the browser evaluates (a Table's, a Form's)
+  finds no record and reads it as unavailable.
 - **Samples.** The server half may offer `loadSamples`: a function from the same context to a few
   `{ label, params }`, where `params` are the Provider's own parameters (`{ slug: "chair" }`), not the
   route's. The catalog allows it only where the descriptor declares `record` fields. The Builder's Preview
@@ -1091,11 +1105,13 @@ addressed by its path.
   `activeModuleIds` and the route's `params`, and nothing else: no Registry, so no Provider can be read
   with `resolvePhiRecordSource` from there, and `runtime.page` is not yet set, so `runtime.page.record`
   is absent. The Builder opens the same function by the Page's id and passes `params: {}`. A tree
-  therefore cannot make a node's `visibility` depend on the record. A section that is to be absent for a
-  record without its content is done the other way round: its Widgets are bound to fields the record
+  therefore cannot decide anything about the record while it is built. A section that is to be absent for
+  a record without its content is done the other way round: its Widgets are bound to fields the record
   has only when it has the content, and a Widget bound to a field the record lacks draws nothing
   ([The fields of a record](#the-fields-of-a-record-and-the-record-a-page-is-about), "Core Widgets that
-  show a field"). `runtime.page.path`, once set, is the path of the request as it was asked
+  show a field"). Where the section's frame and the gap around it should go too, the node states
+  `visibleWhen` on `record`, which the renderer answers once the record is read ("A node that is there
+  only with a field"). `runtime.page.path`, once set, is the path of the request as it was asked
   (`/shop/p/chair`), never the route's pattern (`/shop/p/:slug`): the Page is stamped with the requested
   path before the runtime is built (`instantiatePhiRoutePresetPage`, `buildPhiRuntimePage`).
 - `compilePhiCmsDescriptorCatalog` validates the installed descriptor set -- ownership, versions, route

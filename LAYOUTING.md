@@ -497,7 +497,10 @@ composition, not alternate Layout kinds.
   `display: flex` box) is part of that child, so a Widget that draws nothing -- a bound Widget whose record
   lacks the field -- still leaves its frame in the slot, and the gap is applied around it. The only node
   that takes its frame with it is one with a `visibleWhen` that does not hold: the gate sits outside the
-  frame (`wrapPhiRenderedSlotChild`, `components/cms/phi-cms-layout-renderer.tsx`). The same holds for a
+  frame (`wrapPhiRenderedSlotChild`, `components/cms/phi-cms-layout-renderer.tsx`). A record-bound Widget
+  that should leave no gap states it on the record, `visibleWhen: { source: "record", valuePath: "<field>",
+  operator: "truthy" }`, which the server settles before the node is drawn
+  ([MODULES.md](./MODULES.md#the-fields-of-a-record-and-the-record-a-page-is-about)). The same holds for a
   Layout whose Widgets all draw nothing: it is still drawn, with its own frame, padding and Surface, so its
   parent's gap stands around it. A parent Grid shares its gap out per slot and was not checked for this.
 - A Layout in the editor draws exactly one insert affordance, at the next free `slotIndex`, and draws it
@@ -569,6 +572,14 @@ The parent slot policy is authoritative; child defaults cannot override it.
   Everywhere else -- Grid, Stack, Carousel, Split Card, Three Column, Masonry, Content, Collapsible,
   Regions and Overlay zones -- `rest` is the `fill` it normalizes to. There is only room to take where
   the main axis has a definite size. The Spacer states `rest`.
+- In a Flex row that does not wrap, a child that is its content on the inline axis (no `fill`, no width
+  of its own) gives way when the row is too narrow, but no further than its content can go: its slot is
+  `flex-shrink: 1` with `min-width: auto`, or the minimum the child states. A text wraps inside the room
+  the row leaves it, while a picture of a set width or a label kept on one line has nothing to give. So a
+  row of a small Image and a `page-title` keeps the picture and lets the title wrap beside it, where the
+  title used to run past a phone's edge. A child with a width of its own, a filling child and a collapsed
+  slot are as before, and in a row that wraps a child moves to the next line instead
+  (`components/layouts/clients/phi-flex-layout-client.tsx`). Nothing here touches a Grid's items.
 - The top Layout of a Region and of an Overlay zone stands in a frame that names no policy, so it takes
   the Layout default, `fill` on both axes: it is the Region's or the zone's whole box, edge to edge, and
   a Region with a height of its own (a Hero, a full-height Sider) hands that height to it. Nested

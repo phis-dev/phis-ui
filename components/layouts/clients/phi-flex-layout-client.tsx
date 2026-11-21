@@ -282,6 +282,16 @@ export function PhiFlexLayout({
     const shouldWrap = resolvedWrap != null && resolvedWrap !== "nowrap";
     const usesMinMainBasis = shouldWrap && minMainSize != null;
     const canShrinkWithinMax = shouldWrap && maxMainSize != null;
+    /*
+     * A child that is its own content on the main axis gives way in a row that does not wrap, but no
+     * further than its content can go (`min-width: auto`, or the minimum it states): a text wraps inside
+     * the room the row has left, while a picture of a set width or a label kept on one line has nothing
+     * to give and stays as it is. Held at its content size it ran past the row's edge instead -- a page
+     * title beside an icon, on a phone. A child with a width of its own keeps it, and in a row that wraps
+     * a child moves to the next line rather than giving way. A collapsed slot is as narrow as nothing.
+     */
+    const givesWayToContent = slotState === "expanded" && !shouldWrap &&
+      !slotSizing.stretchesInline && !slotSizing.hasExplicitWidth;
     const flexBasis =
       usesMinMainBasis
         ? minMainSize
@@ -304,11 +314,11 @@ export function PhiFlexLayout({
         data-phi-layout-has-content={phiLayoutSlotContentMarker(isAuthoringRender, true)}
         style={{
           flexGrow: shouldFillMainAxis ? 1 : 0,
-          flexShrink: shouldFillMainAxis || usesMinMainBasis || canShrinkWithinMax ? 1 : 0,
+          flexShrink: shouldFillMainAxis || usesMinMainBasis || canShrinkWithinMax || givesWayToContent ? 1 : 0,
           flexBasis,
           ...collapsedStyle,
           height: shouldFillCrossAxis ? "100%" : undefined,
-          minWidth: minMainSize ?? 0,
+          minWidth: minMainSize ?? (givesWayToContent ? "auto" : 0),
           minHeight: minCrossSize ?? 0,
           maxWidth: maxMainSize,
           /*

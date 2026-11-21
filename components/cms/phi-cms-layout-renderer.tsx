@@ -60,6 +60,7 @@ import {
   readPhiCmsNodeVisibleWhen,
   readPhiCmsServerPageConditionState,
   resolvePhiCmsNodeVisibility,
+  settlePhiCmsNodeRecordConditions,
 } from "../../helpers/cms-node-visibility";
 import { logRuntimeEvent } from "../../net/log";
 import type {
@@ -90,6 +91,16 @@ async function resolvePhiCmsTreeFeatures(
   >
 ) {
   const { resolvePhiCmsTreeFeatures: resolve } = await import("../../server-helpers/cms-node-features");
+  return resolve(...args);
+}
+
+/* The fields a `record` condition reads, loaded the same way and for the same reason. */
+async function resolvePhiCmsTreeRecordConditionFields(
+  ...args: Parameters<
+    typeof import("../../server-helpers/cms-node-record")["resolvePhiCmsTreeRecordConditionFields"]
+  >
+) {
+  const { resolvePhiCmsTreeRecordConditionFields: resolve } = await import("../../server-helpers/cms-node-record");
   return resolve(...args);
 }
 
@@ -286,6 +297,11 @@ type PhiCmsRenderContext = Pick<PhiCmsLayoutRendererProps, "runtime" | "tree"> &
   features: PhiRuntimeFeatureState | null;
   /** The namespaces this tree asked about that have no answer, with the reason. */
   featureFailures: ReadonlyMap<string, string>;
+  /**
+   * The fields of the record the Page is about, as its `record` conditions read them; null on a Page
+   * about no record, or where no node of the tree asks.
+   */
+  recordFields: Readonly<Record<string, unknown>> | null;
   /** Where this tree's Page targets lead, resolved in one pass, or null if it links to none. */
   links: PhiResolvedLinkTargets | null;
 };
@@ -457,6 +473,7 @@ export type PhiCmsOverlayRenderContext = {
   signalRuntime: PhiRenderableBlockRuntime;
   features: PhiRuntimeFeatureState | null;
   featureFailures: ReadonlyMap<string, string>;
+  recordFields: Readonly<Record<string, unknown>> | null;
   links: Awaited<ReturnType<typeof resolvePhiCmsTreeLinkTargets>>;
 };
 
@@ -471,8 +488,9 @@ export async function preparePhiCmsOverlayRenderContext({
   registry: PhiResolvedRuntimeRenderRegistry;
   signalScope: Extract<PhiSignalScope, "area" | "page">;
 }): Promise<PhiCmsOverlayRenderContext> {
-  const [featureResolution, links, translatedTree] = await Promise.all([
+  const [featureResolution, recordFields, links, translatedTree] = await Promise.all([
     resolvePhiCmsTreeFeatures(tree, registry, runtime),
+    resolvePhiCmsTreeRecordConditionFields(tree, registry, runtime),
     resolvePhiCmsTreeLinkTargets(tree, runtime),
     translatePhiCmsTreeWidgetTexts(tree, registry, runtime),
   ]);
@@ -494,6 +512,7 @@ export async function preparePhiCmsOverlayRenderContext({
     },
     features: featureResolution.features,
     featureFailures: featureResolution.failures,
+    recordFields,
     links,
   };
 }
@@ -529,6 +548,7 @@ export function renderPhiCmsOverlayZones(
       signalParticipants,
       features: context.features,
       featureFailures: context.featureFailures,
+      recordFields: context.recordFields,
       links: context.links,
     }), {
       kind: "layout",
@@ -901,6 +921,21 @@ function wrapPhiRenderedSlotChild(
     : framed;
 }
 
+/**
+ * A child's condition with its `record` parts answered here (`settlePhiCmsNodeRecordConditions`), or
+ * `false` where they already rule the child out. The live Site leaves out a node that asks about a record
+ * the Page is not about; a Preview or the canvas draws it.
+ */
+function readRenderedChildVisibleWhen(
+  child: { config: Record<string, unknown> },
+  context: PhiCmsRenderContext,
+) {
+  return settlePhiCmsNodeRecordConditions(readPhiCmsNodeVisibleWhen(child.config), {
+    fields: context.recordFields,
+    live: readPhiRuntimeTreeRenderMode(child.config) === "live",
+  });
+}
+
 function buildRenderedChildEntries(
   node: PhiCmsLayoutRenderNode,
   context: PhiCmsRenderContext,
@@ -910,7 +945,8 @@ function buildRenderedChildEntries(
   const failures = context.featureFailures;
   return [
     ...node.childLayouts.flatMap((child): PhiRenderedChildEntry[] => {
-      const visibleWhen = readPhiCmsNodeVisibleWhen(child.config);
+      const visibleWhen = readRenderedChildVisibleWhen(child, context);
+      if (visibleWhen === false) return [];
       const visibility = resolvePhiCmsNodeVisibility(visibleWhen, page, features);
       if (visibility === "omit") return [];
       const resolvedLayoutPlugin = resolvePhiRuntimeLayoutPluginByTypeKey(child.widgetType, context.layoutPluginsByType);
@@ -957,7 +993,8 @@ function buildRenderedChildEntries(
       }];
     }),
     ...node.childWidgets.flatMap((child): PhiRenderedChildEntry[] => {
-      const visibleWhen = readPhiCmsNodeVisibleWhen(child.config);
+      const visibleWhen = readRenderedChildVisibleWhen(child, context);
+      if (visibleWhen === false) return [];
       const visibility = resolvePhiCmsNodeVisibility(visibleWhen, page, features);
       if (visibility === "omit") return [];
       const namespaces = collectPhiCmsNodeFeatureNamespaces(visibleWhen);
@@ -1163,8 +1200,9 @@ export async function PhiCmsLayoutRenderer({
     viewer: runtime.viewer,
     registry,
   });
-  const [{ features, failures: featureFailures }, links, filteredTree] = await Promise.all([
+  const [{ features, failures: featureFailures }, recordFields, links, filteredTree] = await Promise.all([
     resolvePhiCmsTreeFeatures(viewerTree, registry, runtime),
+    resolvePhiCmsTreeRecordConditionFields(viewerTree, registry, runtime),
     resolvePhiCmsTreeLinkTargets(viewerTree, runtime),
     translatePhiCmsTreeWidgetTexts(viewerTree, registry, runtime),
   ]);
@@ -1204,6 +1242,7 @@ export async function PhiCmsLayoutRenderer({
           signalParticipants,
           features,
           featureFailures,
+          recordFields,
           links,
         }), {
           kind: "layout",

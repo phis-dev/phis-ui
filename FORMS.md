@@ -189,7 +189,8 @@ visibleWhen: {
 
 - A Form descriptor accepts only `source: "form"` (values of the same Form instance) and
   `source: "controller"` with a `controllerAddress` (state of that Controller). Any other source is
-  rejected.
+  rejected, `record` among them: the record a Page is about is a node's condition, settled on the server
+  ([MODULES.md](./MODULES.md#the-fields-of-a-record-and-the-record-a-page-is-about)).
 - The Form Widget asks for Controller state with its `conditionStateRequest` output and accepts the
   answer on `conditionStateChange`; naming a Controller in a condition adds that Controller to the Widget's
   demanded Controllers. It never activates a Module.

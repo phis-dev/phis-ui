@@ -4,6 +4,7 @@ import {
   readPhiCmsNodeVisibleWhen,
   readPhiCmsServerPageConditionState,
   resolvePhiCmsNodeVisibility,
+  settlePhiCmsNodeRecordConditions,
 } from "./cms-node-visibility";
 import {
   evaluatePhiRuntimeConditionExpression,
@@ -173,5 +174,101 @@ describe("resolvePhiCmsNodeVisibility with a fallback for silent senders", () =>
     expect(evaluatePhiRuntimeConditionExpression(noWorkflowRunning, {
       widgets: { [noWorkflowRunning.widgetAddress]: { active: true } },
     })).toBe("not-matched");
+  });
+});
+
+const hasIcon = {
+  source: "record",
+  valuePath: "icon",
+  operator: "truthy",
+} as const satisfies PhiRuntimeConditionExpression;
+
+/*
+ * The record the Page is about, which the server reads before anything renders and the browser never sees.
+ *
+ * A Widget bound to a field the record lacks draws nothing, but its frame stays in the slot and the gap
+ * stands around it. Asked on the node instead, the question is answered before the node is drawn, and a
+ * node that is not to be there is left out with its frame -- so the answer may never wait for a browser
+ * that cannot give it.
+ */
+describe("settlePhiCmsNodeRecordConditions", () => {
+  const icon = { src: "https://cdn.example/icon.svg", alt: "" };
+  const live = (fields: Record<string, unknown> | null) => ({ fields, live: true });
+  const canvas = (fields: Record<string, unknown> | null) => ({ fields, live: false });
+
+  it("keeps a node whose record has the field, with no condition left to ask", () => {
+    expect(settlePhiCmsNodeRecordConditions(hasIcon, live({ icon }))).toBeNull();
+  });
+
+  it("leaves a node out whose record lacks the field", () => {
+    expect(settlePhiCmsNodeRecordConditions(hasIcon, live({ title: "Chair" }))).toBe(false);
+    expect(settlePhiCmsNodeRecordConditions(hasIcon, live({}))).toBe(false);
+  });
+
+  it("reads a field as the value a recordField reads, a part of it by its path", () => {
+    expect(settlePhiCmsNodeRecordConditions(
+      { source: "record", valuePath: "icon.src", operator: "contains", value: ".svg" },
+      live({ icon }),
+    )).toBeNull();
+    expect(settlePhiCmsNodeRecordConditions(
+      { source: "record", valuePath: "icon", operator: "falsy" },
+      live({}),
+    )).toBeNull();
+  });
+
+  it("leaves the node out of a live Page that is about no record, whatever the operator", () => {
+    expect(settlePhiCmsNodeRecordConditions(hasIcon, live(null))).toBe(false);
+    expect(settlePhiCmsNodeRecordConditions({ ...hasIcon, operator: "falsy" }, live(null))).toBe(false);
+  });
+
+  // A template open in the Builder without a record is still to be edited; its Widgets show their own content.
+  it("draws the node where no record is at hand outside the live Site", () => {
+    expect(settlePhiCmsNodeRecordConditions(hasIcon, canvas(null))).toBeNull();
+  });
+
+  it("judges a Preview by the sample record it has", () => {
+    expect(settlePhiCmsNodeRecordConditions(hasIcon, canvas({ icon }))).toBeNull();
+    expect(settlePhiCmsNodeRecordConditions(hasIcon, canvas({}))).toBe(false);
+  });
+
+  it("hands a condition that does not read the record on as it is", () => {
+    expect(settlePhiCmsNodeRecordConditions(withToken, live(null))).toBe(withToken);
+    expect(settlePhiCmsNodeRecordConditions(null, live(null))).toBeNull();
+  });
+
+  /*
+   * The gate gets what is left once the record has answered. Handed the record part, it would wait for a
+   * source it has no way to read, and the node would never appear.
+   */
+  it("takes the record out of a group, leaving the browser's half for the gate", () => {
+    const iconAndPending = { match: "all", conditions: [hasIcon, previewIsPending] } as const;
+    expect(settlePhiCmsNodeRecordConditions(iconAndPending, live({ icon }))).toEqual(previewIsPending);
+    expect(settlePhiCmsNodeRecordConditions(iconAndPending, live({}))).toBe(false);
+
+    const iconOrPending = { match: "any", conditions: [hasIcon, previewIsPending] } as const;
+    expect(settlePhiCmsNodeRecordConditions(iconOrPending, live({ icon }))).toBeNull();
+    expect(settlePhiCmsNodeRecordConditions(iconOrPending, live({}))).toEqual(previewIsPending);
+
+    const remaining = settlePhiCmsNodeRecordConditions(
+      { match: "all", conditions: [hasIcon, previewIsPending, withToken] },
+      live({ icon }),
+    );
+    expect(remaining).toEqual({ match: "all", conditions: [previewIsPending, withToken] });
+    expect(resolvePhiCmsNodeVisibility(remaining || null, { path: "/p/chair", query: {} })).toBe("omit");
+  });
+
+  it("settles a group the record answers alone", () => {
+    expect(settlePhiCmsNodeRecordConditions(
+      { match: "any", conditions: [hasIcon, { source: "record", valuePath: "pictures", operator: "truthy" }] },
+      live({ title: "Chair" }),
+    )).toBe(false);
+    expect(settlePhiCmsNodeRecordConditions(
+      { match: "all", conditions: [hasIcon, { source: "record", valuePath: "title", operator: "truthy" }] },
+      live({ icon, title: "Chair" }),
+    )).toBeNull();
+  });
+
+  it("reads a record condition off the node's config like any other", () => {
+    expect(readPhiCmsNodeVisibleWhen({ visibleWhen: hasIcon })).toEqual(hasIcon);
   });
 });

@@ -367,10 +367,12 @@ node's `config`, and [CMS.md](./CMS.md#renderable-blocks) describes them.
 A Widget's placement adds two more (`PhiWidgetPlacementBase`, [4b](#4b-place-core-widgets)):
 
 - `visibleWhen` shows the Widget only while a condition holds. The condition reads one source: `row`,
-  `form`, `controller`, `page`, `widget` or `feature` (`PHI_RUNTIME_CONDITION_SOURCES` in
+  `form`, `controller`, `page`, `widget`, `feature` or `record` (`PHI_RUNTIME_CONDITION_SOURCES` in
   `@phis/contracts/conditions`), and judges it with `truthy`, `falsy`, `equals` or `contains`. The grammar
   is in [FORMS.md](./FORMS.md#conditions), and a condition on the query is why such a request is never
-  static ([STATIC_RENDERING.md](./STATIC_RENDERING.md)).
+  static ([STATIC_RENDERING.md](./STATIC_RENDERING.md)). `record` reads a field of the record the Page is
+  about, by its key, and is settled on the server
+  ([MODULES.md](./MODULES.md#the-fields-of-a-record-and-the-record-a-page-is-about)).
 - `signalRoutes` wires the Widget to the signal bus ([SIGNALS.md](./SIGNALS.md)). Runtime changes to the
   fields above travel as `visibility/change` and the other renderable-block signals
   ([SIGNALS.md](./SIGNALS.md#renderable-block-channels)).
@@ -382,7 +384,7 @@ A Widget's placement adds two more (`PhiWidgetPlacementBase`, [4b](#4b-place-cor
 | Two cards side by side | Layout `split-card` (the cards are its Surface) | [LAYOUTING.md](./LAYOUTING.md#layout-config) |
 | A box around an area | `surface` on the Layout (`PHI_SURFACE_CARD`, `PHI_SURFACE_WASH`), with `padding` | [LAYOUTING.md](./LAYOUTING.md#surface) |
 | Hide a section | The block's `visibility` (`visible`, `collapsed`, `hidden`) | [CMS.md](./CMS.md#renderable-blocks) |
-| A section that is absent when the record has no content for it | Widgets bound to fields that exist only with content; `visibility` cannot read the record | [MODULES.md](./MODULES.md#descriptor-identity-and-instantiation) |
+| A section that is absent when the record has no content for it | Widgets bound to fields that exist only with content; `visibleWhen` on `record` where its frame and gap should go too | [MODULES.md](./MODULES.md#the-fields-of-a-record-and-the-record-a-page-is-about) |
 | Read a record field in a Widget of mine | `resolvePhiPageRecordFields`, then `result.fields.get(key)` | [MODULES.md](./MODULES.md#the-fields-of-a-record-and-the-record-a-page-is-about) |
 | A picture of a record | A `picture`/`pictures` field whose `src` is an `http(s)` URL or a Site path; no `data:` URI, no file of the Module | [MODULES.md](./MODULES.md#the-fields-of-a-record-and-the-record-a-page-is-about) |
 | Show a section only when something holds | `visibleWhen` on the Widget | [FORMS.md](./FORMS.md#conditions), [4b](#4b-place-core-widgets) |
@@ -2400,12 +2402,16 @@ To make the Page a template an author can rebuild in the Builder
 - Do not read the record or call `notFound()` in `loadTree`: Core reads the record once per request and
   answers the 404, for the Module's tree and a stored override alike. The Builder opens `loadTree` with
   `params: {}`. `loadTree` runs before the record is read and gets no Registry, and `runtime.page.record` is
-  not set there, so the tree cannot let a node's `visibility` depend on the record; a section a record
+  not set there, so the tree decides nothing about the record while it is built; a section a record
   without the content should lack is made of Widgets bound to fields that exist only with content
-  ([When the tree is built](./MODULES.md#descriptor-identity-and-instantiation)).
+  ([When the tree is built](./MODULES.md#descriptor-identity-and-instantiation)), and a node that is to go
+  with it states `visibleWhen: { source: "record", valuePath: "<field>", operator: "truthy" }`, which
+  the renderer answers once Core has read the record.
 - Mind what an empty section leaves behind: a bound Widget with no field draws nothing, but its frame, and a
   Layout around Widgets that all draw nothing, stay in the slot and the parent Flex Layout's `gap` is still
-  applied around them ([LAYOUTING.md](./LAYOUTING.md#slots)).
+  applied around them ([LAYOUTING.md](./LAYOUTING.md#slots)). State `visibleWhen` on `record` on the node
+  -- the Widget, or the Layout around the section -- and it is left out with its frame where the record
+  lacks the field; on the Builder's canvas it is always drawn.
 - `runtime.page.path` is the path of the request (`/shop/p/chair`), not the route's pattern
   (`/shop/p/:slug`).
 - A `picture`/`pictures` field carries `src` as an `http(s)` URL or a Site-relative path; a `data:` URI makes
