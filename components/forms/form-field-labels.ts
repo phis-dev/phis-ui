@@ -8,6 +8,9 @@ import { phiRuntime } from "../../server-helpers/phi-runtime";
 import type { PhiFormDescriptor } from "../../types/form-descriptor";
 import { PHI_FORM_MEDIA_ASSET_PICKER_LABEL_KEYS } from "./media-asset-field-keys";
 import { PHI_FORM_UPLOAD_FIELD_PROVIDER_KEY, PHI_FORM_UPLOAD_LABEL_KEYS } from "./upload-field-keys";
+import { getPhiTableFormFieldLabels } from "../widgets/label-sets/table";
+import { PHI_FORM_TABLE_FIELD_PROVIDER_KEY } from "./table-field-keys";
+import { PHI_FORM_TABLE_LABEL_KEYS } from "./table-field-labels";
 import type { PhiFormRenderContext } from "./form-resolution";
 
 /**
@@ -15,7 +18,8 @@ import type { PhiFormRenderContext } from "./form-resolution";
  *
  * The `media-asset` field is the same: the picker it opens says the Media Label Set's words, read here
  * for every Form that has such a field (`media-asset-field-keys.ts`), and the upload inside it says the
- * upload's refusals and its hold under the upload field's keys.
+ * upload's refusals and its hold under the upload field's keys. The `table` field says its add, remove and
+ * empty words from Core's `widget:table` set (`table-field-labels.ts`) where its config names none.
  *
  * A field type whose control speaks -- the upload field's trigger, its drop hint, its holds and the
  * refusals of the upload -- says it from Core's `widget:upload` Label Set, read here for every Form that
@@ -32,18 +36,20 @@ export async function resolvePhiFormFieldLabels(
 ): Promise<Record<string, string>> {
   const hasUpload = descriptor.fields.some((field) => field.fieldProviderKey === PHI_FORM_UPLOAD_FIELD_PROVIDER_KEY);
   const hasMediaAsset = descriptor.fields.some((field) => field.fieldProviderKey === PHI_MEDIA_ASSET_FORM_FIELD_PROVIDER_KEY);
-  if (!hasUpload && !hasMediaAsset) return {};
+  const hasTable = descriptor.fields.some((field) => field.fieldProviderKey === PHI_FORM_TABLE_FIELD_PROVIDER_KEY);
+  if (!hasUpload && !hasMediaAsset && !hasTable) return {};
   const rt = phiRuntime(context.runtime);
   const options = {
     apiBaseUrl: rt.apiBaseUrl,
     internalToken: rt.internalToken,
     locale: context.runtime.locale.current,
   };
-  const [upload, media] = await Promise.all([
+  const [upload, media, table] = await Promise.all([
     hasUpload || hasMediaAsset ? readUploadFieldLabels(options) : {},
     hasMediaAsset ? readMediaAssetFieldLabels(options) : {},
+    hasTable ? readTableFieldLabels(options) : {},
   ]);
-  return { ...upload, ...media };
+  return { ...upload, ...media, ...table };
 }
 
 async function readUploadFieldLabels(options: PhiGlobalTranslatorOptions): Promise<Record<string, string>> {
@@ -64,6 +70,12 @@ async function readUploadFieldLabels(options: PhiGlobalTranslatorOptions): Promi
     [keys.errorStorageUnreachable]: refusals.errorStorageUnreachable,
     [keys.errorFolderLocked]: refusals.errorFolderLocked,
   };
+}
+
+async function readTableFieldLabels(options: PhiGlobalTranslatorOptions): Promise<Record<string, string>> {
+  const { add, remove, empty } = await getPhiTableFormFieldLabels(options);
+  const keys = PHI_FORM_TABLE_LABEL_KEYS;
+  return { [keys.add]: add, [keys.remove]: remove, [keys.empty]: empty };
 }
 
 async function readMediaAssetFieldLabels(options: PhiGlobalTranslatorOptions): Promise<Record<string, string>> {

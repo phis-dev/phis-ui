@@ -73,7 +73,7 @@ export const PHI_ASSET_MEDIA_ASSET_FORM_PROVIDER_DESCRIPTOR = {
       key: "folderPath",
       type: "string",
       label: "Folder path",
-      description: "The Site Folder the picker opens on and uploads into, by its path (\"Shop Images / Products\"); missing Folders are created. Empty: the root.",
+      description: "The Site Folder the picker opens on and uploads into, by its path (\"Shop Images / Products\"); missing Folders are created on the first upload. Empty: the root.",
     },
   ],
 } satisfies PhiFormFieldTypeProviderDescriptor;

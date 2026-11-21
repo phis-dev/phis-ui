@@ -291,7 +291,7 @@ const effectsDescriptors = {
           columns: transitionColumns,
           add: {
             enabled: true,
-            label: "Add",
+            label: label("add", "Add"),
             defaultRow: {
               type: "fade",
               mode: "in",
@@ -335,10 +335,10 @@ const effectsDescriptors = {
               transitionEasing: "ease-out",
             },
           },
-          remove: { enabled: true, label: "Remove transition" },
+          remove: { enabled: true, label: label("removeTransition", "Remove transition") },
           reorder: true,
           bordered: true,
-          emptyText: "No transitions configured.",
+          emptyText: label("table.emptyTransitions", "No transitions configured."),
           layout: { mode: "auto", overflowX: "auto" },
         },
       },
@@ -429,7 +429,7 @@ const effectsDescriptors = {
           columns: viewportColumns,
           add: {
             enabled: true,
-            label: "Add",
+            label: label("add", "Add"),
             defaultRow: {
               property: "translate",
               axis: "y",
@@ -467,10 +467,10 @@ const effectsDescriptors = {
               viewportPerspectivePx: 800,
             },
           },
-          remove: { enabled: true, label: "Remove viewport effect" },
+          remove: { enabled: true, label: label("removeViewportEffect", "Remove viewport effect") },
           reorder: true,
           bordered: true,
-          emptyText: "No viewport effects configured.",
+          emptyText: label("table.emptyViewportEffects", "No viewport effects configured."),
           layout: { mode: "auto", overflowX: "auto" },
         },
       },

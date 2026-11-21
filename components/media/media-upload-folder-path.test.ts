@@ -4,6 +4,7 @@ import type { PhiMediaAssetFolder } from "../../types/media";
 import { PHI_MEDIA_UPLOAD_DEFAULT_LABELS } from "./media-upload-labels";
 import { findPhiMediaFolderByNamePath, splitPhiMediaFolderNamePath } from "./media-folder-name-path";
 import {
+  readPhiMediaUploadFolderPathReach,
   resolvePhiMediaUploadFolderPathId,
   resolvePhiMediaUploadInitOptions,
 } from "./media-upload-flow";
@@ -141,5 +142,24 @@ describe("resolvePhiMediaUploadFolderPathId", () => {
     const refusal = await resolvePhiMediaUploadFolderPathId(["Shop Images", "Products"]).catch((error: unknown) => error);
     expect(readPhiMediaUploadErrorMessage(refusal, PHI_MEDIA_UPLOAD_DEFAULT_LABELS))
       .toBe(PHI_MEDIA_UPLOAD_DEFAULT_LABELS.errorFolderLocked);
+  });
+});
+
+describe("readPhiMediaUploadFolderPathReach", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("answers the whole path where it is there", async () => {
+    const calls = stubFolderRoutes([folder(1, "Shop Images"), folder(2, "Products", 1)]);
+    await expect(readPhiMediaUploadFolderPathReach(["shop images", "products"])).resolves.toEqual({ folderId: 2, complete: true });
+    expect(calls).toEqual([{ method: "GET", url: "/api/site/media/folders", body: {} }]);
+  });
+
+  it("answers the deepest Folder that is there, the root where none is, and creates nothing", async () => {
+    const calls = stubFolderRoutes([folder(1, "Shop Images")]);
+    await expect(readPhiMediaUploadFolderPathReach(["Shop Images", "Products"])).resolves.toEqual({ folderId: 1, complete: false });
+    await expect(readPhiMediaUploadFolderPathReach(["Banners"])).resolves.toEqual({ folderId: null, complete: false });
+    expect(calls.every((call) => call.method === "GET")).toBe(true);
   });
 });

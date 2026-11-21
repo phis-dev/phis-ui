@@ -21,8 +21,9 @@ export type PhiMediaAssetFieldConfig = {
   publicOnly: boolean;
   /**
    * The Folder of the Site Space the picker opens on, by its path of names from the root ("Shop Images /
-   * Products"), the Folders it names that are missing created when it opens; empty: the Folder the picker
-   * last showed, at first the root. A path and not an id, so a Module's Form states it for every Site.
+   * Products"): it opens on the deepest of them that is there, and an upload from there creates the
+   * missing ones and goes into the whole path. Empty: the Folder the picker last showed, at first the
+   * root. A path and not an id, so a Module's Form states it for every Site.
    */
   folderPath: readonly string[];
 };

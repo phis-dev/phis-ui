@@ -449,7 +449,8 @@ export type PhiMediaUploadInitOptions = {
   folderId?: number | null;
   /**
    * A Folder of the Site Space named by its path of names from the root, for a surface whose setting
-   * names one -- the `area-upload` Widget's `folderPath`. A setting holds the path and not an id, because
+   * names one -- the `area-upload` Widget's `folderPath`, and the `media-asset` field's picker while it
+   * stands on its start Folder whose path is not all there yet. A setting holds the path and not an id, because
    * a preset states the same path on every Site, and it is resolved to the Folder's id each time a session
    * is begun, never kept resolved (`resolvePhiMediaUploadFolderPathId`). Where it is given it stands in
    * for `folderId` and for `spaceAddress`: a path is read in the Site Space, whatever Space is in view.
@@ -586,6 +587,23 @@ function readPhiMediaUploadFolderPathFolders(value: unknown) {
     }
     return { id, parentId, name };
   });
+}
+
+/**
+ * How far a path of names leads through the Site Space's Folders as they are now, read and nothing
+ * written (`GET /api/site/media/folders`): the deepest Folder it reaches, `null` for the root, and whether
+ * that is the whole path. For a surface that opens on a path before anything is uploaded -- the
+ * `media-asset` field's picker -- and which a reader without Media write authority may open as well; the
+ * missing Folders are created by the upload (`resolvePhiMediaUploadFolderPathId`).
+ */
+export async function readPhiMediaUploadFolderPathReach(folderPath: readonly string[], signal?: AbortSignal) {
+  const listing = await readJsonResponse<{ folders?: unknown; error?: string }>(await fetch(PHI_MEDIA_FOLDERS_PATH, {
+    headers: buildPhiMediaRequestHeaders({ Accept: "application/json" }),
+    cache: "no-store",
+    ...(signal ? { signal } : {}),
+  }));
+  const reached = findPhiMediaFolderByNamePath(readPhiMediaUploadFolderPathFolders(listing.folders), folderPath);
+  return { folderId: reached.folderId, complete: reached.depth === folderPath.length };
 }
 
 async function createPhiMediaUploadFolderPath(folderPath: readonly string[]) {

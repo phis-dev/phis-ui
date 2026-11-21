@@ -7,6 +7,7 @@ import { createPhiModuleScopedKey } from "../../constants/runtime-module-ownersh
 import { PhiMediaKind } from "../../constants/media";
 import { PHIS_PAYMENT_CURRENCY_EXPONENTS } from "@phis/contracts/payments";
 import { PHI_FORM_UPLOAD_FIELD_PROVIDER_KEY } from "./upload-field-keys";
+import { PHI_FORM_TABLE_FIELD_PROVIDER_KEY } from "./table-field-keys";
 
 export function createPhiSharedFormProviderKey(
   kind: "field" | "validation" | "handler",
@@ -39,7 +40,7 @@ export const PHI_FORM_FIELD_PROVIDER_KEYS = {
   switch: createPhiSharedFormProviderKey("field", "switch"),
   segmented: createPhiSharedFormProviderKey("field", "segmented"),
   cascader: createPhiSharedFormProviderKey("field", "cascader"),
-  table: createPhiSharedFormProviderKey("field", "table"),
+  table: PHI_FORM_TABLE_FIELD_PROVIDER_KEY,
   tree: createPhiSharedFormProviderKey("field", "tree"),
   // Spelled beside its label keys, which the Form Widget reads on the Server without this whole file.
   upload: PHI_FORM_UPLOAD_FIELD_PROVIDER_KEY,

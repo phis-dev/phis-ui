@@ -18,7 +18,7 @@ import {
 import { normalizePhiImagePreviewTile } from "../../../components/media/phi-image-preview-data";
 import { usePhiMediaUpload } from "../../../components/media/phi-media-upload";
 import {
-  resolvePhiMediaUploadFolderPathId,
+  readPhiMediaUploadFolderPathReach,
   type PhiMediaUploadSessionResult,
 } from "../../../components/media/media-upload-flow";
 import { PHI_MEDIA_UPLOAD_FIELD_DEFAULT_LABELS } from "../../../components/media/media-upload-labels";
@@ -60,9 +60,11 @@ const PREVIEW_SIZE = 72;
  * another kind (a file the browser could not name reaches Core unrefused) or, for a `publicOnly` field,
  * one that is not public is left in the list unchosen, and the field says why. While the file is on its
  * way the Form's submit is held, as the upload field holds it, and closing the picker stops it.
- * `config.folderPath` names the Folder the picker opens on ("Shop Images / Products"), resolved in the
- * Site Space each time it opens and created where it is missing, the way an upload resolves a path
- * (`resolvePhiMediaUploadFolderPathId`).
+ * `config.folderPath` names the Folder the picker opens on ("Shop Images / Products"): read in the Site
+ * Space each time it opens, without writing anything (`readPhiMediaUploadFolderPathReach`), so a reader
+ * who may only choose opens and picks without a refusal; the picker opens on the deepest Folder of the
+ * path that is there. An upload from there goes into the whole path, the missing Folders created the way
+ * `area-upload` creates them (`resolvePhiMediaUploadFolderPathId`).
  *
  * Only the Site Space is offered, in every Area (`siteSpaceOnly`): a Form stores a reference everybody
  * who reads the stored value will follow, and a personal or a group Space cannot honestly stand behind
@@ -116,10 +118,10 @@ export const PhiMediaAssetFormControl: ComponentType<PhiFormFieldProviderProps> 
     accept: transfer.accept,
     progress: uploadProgress,
     notice: uploadNotice,
-    send: async (file, folderId) => {
+    send: async (file, folderId, intoStartFolder) => {
       setUploadNotice(null);
       // No Space is named, which Core answers with the Site Space -- the only one the field offers.
-      const asset = await sendFile(file, { folderId });
+      const asset = await sendFile(file, intoStartFolder ? { folderPath: config.folderPath } : { folderId });
       if (!asset) return null;
       const tile = normalizePhiImagePreviewTile(asset, []);
       const refusal = readPhiMediaAssetFieldUploadRefusal(config, tile);
@@ -134,7 +136,7 @@ export const PhiMediaAssetFormControl: ComponentType<PhiFormFieldProviderProps> 
 
   const startFolderPath = config.folderPath;
   const openOnFolder = useCallback(
-    (signal: AbortSignal) => resolvePhiMediaUploadFolderPathId(startFolderPath, signal),
+    (signal: AbortSignal) => readPhiMediaUploadFolderPathReach(startFolderPath, signal),
     [startFolderPath],
   );
 

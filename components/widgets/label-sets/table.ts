@@ -4,6 +4,7 @@ import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../
 import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 import type { PhiTableWidgetLabels } from "../label-types/table";
 import { getPhiIntervalLabels } from "./interval";
+import { PHI_FORM_TABLE_DEFAULT_LABELS } from "../../forms/table-field-labels";
 
 const PHI_TABLE_WIDGET_LABEL_SET = definePhiLabelSet({
   key: "widget:table",
@@ -28,6 +29,10 @@ const PHI_TABLE_WIDGET_LABEL_SET = definePhiLabelSet({
     drag_row: "Drag row",
     move_row_up: "Move row up",
     move_row_down: "Move row down",
+    // The Core `table` form field's words where its config names none (`table-field-labels.ts`).
+    form_add: PHI_FORM_TABLE_DEFAULT_LABELS.add,
+    form_remove: PHI_FORM_TABLE_DEFAULT_LABELS.remove,
+    form_empty: definePhiMessageLabel(PHI_FORM_TABLE_DEFAULT_LABELS.empty),
   },
 });
 
@@ -59,4 +64,10 @@ export async function getPhiTableWidgetLabels(
     moveRowDown: labels.move_row_down,
     interval,
   };
+}
+
+/** The Core `table` form field's add, remove and empty words, which the Form Widget hands to the field. */
+export async function getPhiTableFormFieldLabels(options: PhiGlobalTranslatorOptions) {
+  const labels = await getPhiLabelSet(options, PHI_TABLE_WIDGET_LABEL_SET);
+  return { add: labels.form_add, remove: labels.form_remove, empty: labels.form_empty };
 }

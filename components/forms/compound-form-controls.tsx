@@ -20,6 +20,7 @@ import type { PhiControlOption } from "../controls/phi-control-options";
 import { readPhiDotPath as readPath } from "../../helpers/dot-path";
 import { movePhiTableBindingRows } from "../../helpers/table-binding";
 import { PhiIcon } from "../shell/phi-icon";
+import { readPhiFormTableFieldText as readTableFieldText } from "./table-field-text";
 
 type RecordValue = Record<string, unknown>;
 
@@ -134,6 +135,7 @@ export function PhiCompoundTableFormControl({
   disabled,
   readOnly,
   formContext,
+  labels,
 }: PhiFormFieldProviderProps) {
   const rows = useMemo(() => readRecords(value), [value]);
   const nextRowSequenceRef = useRef(0);
@@ -148,8 +150,9 @@ export function PhiCompoundTableFormControl({
     : null;
   const addEnabled = addConfig?.enabled === true;
   const removeEnabled = removeConfig?.enabled === true;
-  const addLabel = typeof addConfig?.label === "string" ? addConfig.label : "Add";
-  const removeLabel = typeof removeConfig?.label === "string" ? removeConfig.label : "Remove";
+  const addLabel = readTableFieldText(addConfig?.label, labels, "add");
+  const removeLabel = readTableFieldText(removeConfig?.label, labels, "remove");
+  const emptyText = readTableFieldText(config.emptyText, labels, "empty");
   const addSourceFields = isPhiRecord(addConfig?.sourceFields)
     ? addConfig.sourceFields as RecordValue
     : null;
@@ -254,7 +257,7 @@ export function PhiCompoundTableFormControl({
         bordered={config.bordered === true}
         striped={config.striped === true}
         size="small"
-        emptyText={typeof config.emptyText === "string" ? config.emptyText : undefined}
+        emptyText={emptyText}
         layout={layout}
         rowReordering={config.reorder === true && !locked ? {
           enabled: true,

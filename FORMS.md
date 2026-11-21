@@ -262,7 +262,15 @@ A field provider may render `PhiTableControl` or `PhiTreeControl` when the whole
 in the submitted record (the Core `table` and `tree` field providers). Local editing, add/remove,
 selection, and local reordering are allowed; the complete value is submitted and reset with the Form. The
 Table field reads `rowIdentityPath`, `columns`, `add` (`enabled`, `label`, `defaultRow`, optional
-`sourceFields` and `resetFields` naming sibling fields), and `remove` from its `config`. Provider queries,
+`sourceFields` and `resetFields` naming sibling fields), `remove` (`enabled`, `label`) and `emptyText` from
+its `config`. Its three words -- `add.label`, `remove.label`, `emptyText` -- are texts as a field's own
+label is: a label reference (`label("rows.add", "Add a row")`, read from the Form's labels) or a literal
+(`{ kind: "literal", value }`); a plain string is not read, because it would be English in every
+language (`components/forms/table-field-text.ts`). Where the config names none, the field says the
+Form's word under `PHI_FORM_TABLE_LABEL_KEYS` (`tableAdd`, `tableRemove`, `tableEmpty`,
+`components/forms/table-field-labels.ts`), which the Form Widget fills from Core's `widget:table` Label Set
+for every Form with a table field (`form-field-labels.ts`), so a Form translates none of them unless it
+means other words. Provider queries,
 server pagination, Provider actions, per-row persistence, and a Draft lifecycle are not available in this
 mode; such a collection is a separate Table or Tree Widget coordinated with the Form through signals. The
 Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md).
@@ -409,12 +417,16 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
     they stay visible but cannot be chosen. An already stored Asset that is not public is flagged beside
     the preview. The Core list route has no filter for the delivery; the Assets are marked, not hidden.
   - `folderPath`: the Folder of the Site Space the picker opens on, by its path of names from the root
-    (`"Shop Images / Products"`, read like `area-upload`'s). It is resolved each time the picker opens
-    (`resolvePhiMediaUploadFolderPathId`: `GET /api/site/media/folders`, and `POST` for each Folder it names
-    that is missing, so the first opening on a Site brings the Folders into being), and the listing waits
-    for it. The author may move to another Folder from there. A Folder that cannot be created reads as the
-    upload's refusal above the tiles -- below a locked Folder, the lock refusal -- and the picker opens on
-    the root. Empty or absent: the picker opens on the Folder it showed last, at first the root.
+    (`"Shop Images / Products"`, read like `area-upload`'s). Each time the picker opens the path is read
+    and nothing is written (`readPhiMediaUploadFolderPathReach`, `GET /api/site/media/folders` -- the
+    Media read the listing needs anyway), so somebody without Media write authority opens and picks
+    without a refusal; the listing waits for it. The picker opens on the deepest Folder of the path that
+    is there, the root where none is. While it stands there and the path goes further, an upload goes into
+    the whole path: the missing Folders are created then, as `area-upload` creates them
+    (`resolvePhiMediaUploadFolderPathId`, `POST /api/site/media/folders` per missing name), and the picker
+    shows the Folder the file landed in. Once the author moves to another Folder, an upload goes there. A
+    failed read is said above the tiles and the picker opens on the root. Empty or absent: the picker
+    opens on the Folder it showed last, at first the root.
 
   The field offers the **Site Space only**, in every Area: there is no Space selector, and the query names
   no Space, which Core answers with the Site Space. A picture whose id is stored for everybody who reads the
@@ -435,7 +447,7 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
     the browser could not name reaches Core unrefused), which reads as the upload's type refusal.
   - **Refusals** read as every upload's do (`readPhiMediaUploadErrorMessage`), said above the tiles: too
     large, the wrong type, no room, and a locked Folder (`folder_locked` from the init,
-    `media_folder_locked` from a Folder `folderPath` would create) as the lock refusal.
+    `media_folder_locked` from a Folder an upload into `folderPath` would create) as the lock refusal.
   - While the file is on its way the Form's submit is held (`formContext.holdSubmit`, the upload field's
     `uploadPending` sentence), and closing the picker stops it; nothing is chosen afterwards.
   What is enforced is enforced by the Server that takes the value: a handler that must hold the line reads

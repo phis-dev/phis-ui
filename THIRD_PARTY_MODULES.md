@@ -391,7 +391,7 @@ there wherever your Page stands, and none of it is in the Core table above.
 
 | I need | Use | What it gives back | Code |
 | --- | --- | --- | --- |
-| An author picks one Asset in a Form (a logo, a cover), or uploads it right there | form field `media-asset` | The Asset id as a number, `null` for none; Site Space only. Its picker uploads a file into the Folder it shows, which is chosen then; `folderPath` (`"Shop Images / Products"`) is the Folder it opens on, created when missing. | `asset/form-providers.ts`, `asset/media-asset-form-control.tsx`, [FORMS.md](./FORMS.md#field-and-validation-providers) |
+| An author picks one Asset in a Form (a logo, a cover), or uploads it right there | form field `media-asset` | The Asset id as a number, `null` for none; Site Space only. Its picker uploads a file into the Folder it shows, which is chosen then; `folderPath` (`"Shop Images / Products"`) is the Folder it opens on (the deepest part that exists; read only), the missing Folders created by the first upload into it. | `asset/form-providers.ts`, `asset/media-asset-form-control.tsx`, [FORMS.md](./FORMS.md#field-and-validation-providers) |
 | Somebody attaches a file to a Form | form field `upload` (Core) | The Asset ids of the finished uploads; `space` picks the Site's or the viewer's Space, not a Folder. | `components/forms/upload-form-control.tsx`, [FORMS.md](./FORMS.md#field-and-validation-providers) |
 | Files dropped into a Folder on a Page | Widget `area-upload` | Uploads into the Folder its `folderPath` names (a path of names in the Site Space, `"Shop Images / Products"`, resolved at each upload, missing Folders created on the first), without one into the Folder the Asset Controller holds, inside the Media library into the open one; an upload wall with delete. Demands the Asset Controller and the Media collection Provider. | `asset/widgets/area-upload/`, `components/media/phi-area-upload-widget.tsx` |
 | A Media library: Folders, upload, new Folder, lock | Widget `collection-view` with the Asset binding, as the Builder's Media page (`builder-media-page`) places it | Uploads into the open Folder; creating and locking a Folder are its actions. | `core/widgets/collection-view/asset-binding.tsx`, `asset/trees/phi-default-builder-media-page-tree.ts`, [COLLECTIONS.md](./COLLECTIONS.md) |
@@ -1365,8 +1365,9 @@ out Assets, and `onUpload` with `uploadAccept`, `uploadProgress` and `uploadNoti
 upload); the binding that feeds it from the library (`usePhiMediaPickerBinding`) is Foundation-internal,
 so a Widget that needs a picker where no Form fits has to ask for that binding rather than rebuild it.
 The field's picker also uploads a file from the author's machine into the Folder it shows, in the Site
-Space, and chooses what it made; `config.folderPath` (`"Shop Images / Products"`) is the Folder it opens on,
-created where it is missing. A `publicOnly` field leaves an uploaded Asset that is not public unchosen, as it
+Space, and chooses what it made; `config.folderPath` (`"Shop Images / Products"`) is the Folder it opens on
+-- the deepest part of the path that exists, read without writing -- and an upload from there creates the
+missing Folders and goes into the whole path. A `publicOnly` field leaves an uploaded Asset that is not public unchosen, as it
 greys out a listed one ([Media](#media-what-the-asset-module-already-does), [FORMS.md](./FORMS.md)).
 
 Inside the Builder's own chrome the library is always readable, whatever the edited Area activates. That

@@ -278,11 +278,11 @@ describe("a source in view", () => {
 });
 
 describe("an upload inside the picker", () => {
-  const uploaded = { id: 77, title: "Fresh", altText: null, kind: "image" } as never;
+  const uploaded = { id: 77, title: "Fresh", altText: null, kind: "image", folderId: 12 } as never;
 
   function fakeUpload(overrides: Partial<PhiMediaPickerUploadBinding> = {}) {
     const cancel = vi.fn();
-    const send = vi.fn(async (_file: File, _folderId: number | null): Promise<never | null> => uploaded);
+    const send = vi.fn(async (_file: File, _folderId: number | null, _intoStartFolder: boolean): Promise<never | null> => uploaded);
     return { accept: "image/*", progress: null, notice: null, send, cancel, ...overrides, mocks: { send, cancel } };
   }
   const file = { name: "fresh.png", type: "image/png", size: 10 } as File;
@@ -317,7 +317,7 @@ describe("an upload inside the picker", () => {
     let answered: unknown;
     await act(async () => { answered = await result.current.onUpload!(file); });
     expect(answered).toBe(uploaded);
-    expect(upload.mocks.send).toHaveBeenCalledWith(file, null);
+    expect(upload.mocks.send).toHaveBeenCalledWith(file, null, false);
     await waitFor(() => expect(libraryQueries).toHaveLength(2));
     act(() => result.current.onChange(77));
     expect(onAssetSelect).toHaveBeenCalledWith(uploaded);
@@ -345,26 +345,64 @@ describe("an upload inside the picker", () => {
 
 describe("the Folder the picker opens on", () => {
   it("is asked for when it opens, and the listing waits for it", async () => {
-    let answer: (folderId: number) => void = () => {};
-    const openOnFolder = vi.fn(() => new Promise<number>((resolve) => { answer = resolve; }));
+    let answer: (folder: { folderId: number | null; complete: boolean }) => void = () => {};
+    const openOnFolder = vi.fn(() => new Promise<{ folderId: number | null; complete: boolean }>((resolve) => { answer = resolve; }));
     const { result } = render({ open: undefined, openOnFolder });
     act(() => result.current.onOpenChange(true));
     expect(openOnFolder).toHaveBeenCalledTimes(1);
     await act(async () => { await Promise.resolve(); });
     expect(libraryQueries).toHaveLength(0);
-    await act(async () => { answer(9); });
+    await act(async () => { answer({ folderId: 9, complete: true }); });
     await waitFor(() => expect(libraryQueries).toHaveLength(1));
     expect(libraryQueries[0]!.query).toMatchObject({ filters: { folderId: 9 } });
   });
 
-  it("opens on the root and says why where it is refused, in the upload's words", async () => {
+  it("opens on the root and says why where it cannot be read", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
-    const refusal = Object.assign(new Error("locked"), { code: "media_folder_locked" });
+    const refusal = Object.assign(new Error("gone"), { code: "space_not_found" });
     const openOnFolder = vi.fn(async () => { throw refusal; });
     const { result } = render({ open: undefined, openOnFolder });
     act(() => result.current.onOpenChange(true));
     await waitFor(() => expect(libraryQueries).toHaveLength(1));
     expect(libraryQueries[0]!.query).toMatchObject({ filters: { folderId: null } });
-    expect(result.current.uploadNotice).toBe(PHI_MEDIA_WIDGET_DEFAULT_LABELS.upload.refusals.errorFolderLocked);
+    expect(result.current.uploadNotice).toBe(PHI_MEDIA_WIDGET_DEFAULT_LABELS.upload.refusals.errorSpaceUnavailable);
+  });
+
+  const uploadedIntoPath = { id: 78, title: "Shoe", altText: null, kind: "image", folderId: 12 } as never;
+  function pathUpload() {
+    const send = vi.fn(async (_file: File, _folderId: number | null, _intoStartFolder: boolean): Promise<never | null> => uploadedIntoPath);
+    return { accept: "image/*", progress: null, notice: null, send, cancel: vi.fn() };
+  }
+  const file = { name: "shoe.png", type: "image/png", size: 10 } as File;
+
+  it("sends an upload into the whole path while the picker stands on the part of it that is there, then shows where it landed", async () => {
+    const upload = pathUpload();
+    const openOnFolder = vi.fn(async () => ({ folderId: 3, complete: false }));
+    const { result } = render({ open: undefined, openOnFolder, upload });
+    act(() => result.current.onOpenChange(true));
+    await waitFor(() => expect(libraryQueries).toHaveLength(1));
+    expect(libraryQueries[0]!.query).toMatchObject({ filters: { folderId: 3 } });
+    await act(async () => { await result.current.onUpload!(file); });
+    expect(upload.send).toHaveBeenCalledWith(file, 3, true);
+    await waitFor(() => expect(libraryQueries.at(-1)!.query).toMatchObject({ filters: { folderId: 12 } }));
+    await act(async () => { await result.current.onUpload!(file); });
+    expect(upload.send).toHaveBeenLastCalledWith(file, 12, false);
+  });
+
+  it("sends into the Folder shown once the reader has left the start Folder, and where the path is all there", async () => {
+    const upload = pathUpload();
+    const { result } = render({ open: undefined, openOnFolder: vi.fn(async () => ({ folderId: 3, complete: false })), upload });
+    act(() => result.current.onOpenChange(true));
+    await waitFor(() => expect(libraryQueries).toHaveLength(1));
+    act(() => result.current.onFolderChange("/"));
+    await act(async () => { await result.current.onUpload!(file); });
+    expect(upload.send).toHaveBeenCalledWith(file, null, false);
+
+    const whole = pathUpload();
+    const second = render({ open: undefined, openOnFolder: vi.fn(async () => ({ folderId: 4, complete: true })), upload: whole });
+    act(() => second.result.current.onOpenChange(true));
+    await waitFor(() => expect(libraryQueries.at(-1)!.query).toMatchObject({ filters: { folderId: 4 } }));
+    await act(async () => { await second.result.current.onUpload!(file); });
+    expect(whole.send).toHaveBeenCalledWith(file, 4, false);
   });
 });

@@ -64,8 +64,12 @@ export type PhiMediaPickerUploadBinding = {
   progress: number | null;
   /** Why the last upload did not work, or the Asset it made cannot be chosen. */
   notice: string | null;
-  /** One file into this Folder of the Site Space (null: its root). */
-  send: (file: File, folderId: number | null) => Promise<PhiMediaAssetTile | null>;
+  /**
+   * One file into this Folder of the Site Space (null: its root). `intoStartFolder` is true while the
+   * picker stands where `openOnFolder` put it and that Folder's path is not all there yet: the host sends
+   * the file into the whole path, creating what is missing, as `area-upload` does.
+   */
+  send: (file: File, folderId: number | null, intoStartFolder: boolean) => Promise<PhiMediaAssetTile | null>;
   /** Stops what is on its way; the picker was closed. */
   cancel: () => void;
 };
@@ -104,11 +108,13 @@ export type PhiMediaPickerBindingProps = {
   /**
    * The Folder the picker opens on, asked for each time it opens: the listing waits for the answer, and
    * the reader may leave it for another Folder as from any. For a `siteSpaceOnly` host whose setting
-   * names a Folder by its path (the `media-asset` field's `folderPath`); the host resolves it, the way an
-   * upload resolves a path, so this binding does not carry the upload transport. A refusal is said where
-   * an upload's would be, and the picker opens on the root.
+   * names a Folder by its path (the `media-asset` field's `folderPath`); the host reads it without
+   * writing anything, so a reader who may only choose opens it as well, and answers the deepest Folder of
+   * the path that is there (`null`, the root) and whether that is the whole path -- if not, an upload from
+   * there goes into the whole path (`PhiMediaPickerUploadBinding.send`). A failed read is said where an
+   * upload's refusal would be, and the picker opens on the root.
    */
-  openOnFolder?: ((signal: AbortSignal) => Promise<number>) | null;
+  openOnFolder?: ((signal: AbortSignal) => Promise<{ folderId: number | null; complete: boolean }>) | null;
 };
 
 export function usePhiMediaPickerBinding({
@@ -167,6 +173,8 @@ export function usePhiMediaPickerBinding({
   // True while the Folder the picker opens on is being asked for; the listing waits for it.
   const [startFolderPending, setStartFolderPending] = useState(false);
   const [startFolderFailure, setStartFolderFailure] = useState<string | null>(null);
+  // The picker stands where `openOnFolder` put it, and the path it was asked for goes further.
+  const [onIncompleteStartFolder, setOnIncompleteStartFolder] = useState(false);
   const startFolderRequestRef = useRef<AbortController | null>(null);
   // The host's upload as of the last render, for the close below, which must not run again per render.
   const uploadRef = useRef(upload);
@@ -230,7 +238,7 @@ export function usePhiMediaPickerBinding({
   }), [presentationFlags, folderId, mediaType, page, pageSize, requestedSpaceAddress, searchQuery, spaceSelectionAllowed]);
 
   const querySignals = usePhiControlSignalController<string>({ key: PHI_ASSET_SIGNAL_CHANNELS.query, signalRoutes: config?.signalRoutes, valueType: "string", typeKey: "media-picker-query", clearValue: "", onSetValue: (next) => { setSearchQuery(next); setPage(1); }, coerceValue: (next) => typeof next === "string" ? next : null });
-  const pathSignals = usePhiControlSignalController<string>({ key: PHI_ASSET_SIGNAL_CHANNELS.path, signalRoutes: config?.signalRoutes, valueType: "path", typeKey: "media-picker-path", clearValue: "/", onSetValue: (next) => { setFolderId(resolvePhiMediaFolderIdFromValue(folders, next)); setPage(1); }, coerceValue: (next) => typeof next === "string" ? next : null });
+  const pathSignals = usePhiControlSignalController<string>({ key: PHI_ASSET_SIGNAL_CHANNELS.path, signalRoutes: config?.signalRoutes, valueType: "path", typeKey: "media-picker-path", clearValue: "/", onSetValue: (next) => { setFolderId(resolvePhiMediaFolderIdFromValue(folders, next)); setOnIncompleteStartFolder(false); setPage(1); }, coerceValue: (next) => typeof next === "string" ? next : null });
   const reloadSignals = usePhiControlSignalController<string>({ key: PHI_ASSET_SIGNAL_CHANNELS.reload, signalRoutes: config?.signalRoutes, typeKey: "media-picker-reload", onReceiveCapability: (capabilityId) => { if (capabilityId !== "reload") return false; setRefreshToken((current) => current + 1); return true; } });
   const kindSignals = usePhiControlSignalController<string>({ key: PHI_ASSET_SIGNAL_CHANNELS.kind, signalRoutes: config?.signalRoutes, valueType: "string", typeKey: "media-picker-kind", coerceValue: (next) => typeof next === "string" ? next : null });
   const flagsSignals = usePhiControlSignalController<number[]>({ key: PHI_ASSET_SIGNAL_CHANNELS.presentationFlags, signalRoutes: config?.signalRoutes, valueType: "number[]", typeKey: "media-picker-presentationFlags", clearValue: [], coerceValue: (next) => Array.isArray(next) && next.every((entry) => typeof entry === "number") ? next : null });
@@ -428,11 +436,13 @@ export function usePhiMediaPickerBinding({
     startFolderRequestRef.current = abortController;
     setStartFolderPending(true);
     setStartFolderFailure(null);
+    setOnIncompleteStartFolder(false);
     void (async () => {
       try {
-        const startFolderId = await openOnFolder(abortController.signal);
+        const startFolder = await openOnFolder(abortController.signal);
         if (abortController.signal.aborted) return;
-        setFolderId(startFolderId);
+        setFolderId(startFolder.folderId);
+        setOnIncompleteStartFolder(!startFolder.complete);
         setPage(1);
       } catch (error) {
         if (abortController.signal.aborted) return;
@@ -449,18 +459,26 @@ export function usePhiMediaPickerBinding({
   };
 
   /*
-   * The upload goes into the Folder in view, on the Site Space only (`PhiMediaPickerUploadBinding`). The
-   * list is read again whatever came of it, so a finished upload stands among the tiles -- greyed out,
-   * where the host does not let it be chosen -- and what comes back is chosen like a picked tile.
+   * The upload goes into the Folder in view, on the Site Space only (`PhiMediaPickerUploadBinding`) --
+   * into the start Folder's whole path while the picker stands on the part of it that is there, and the
+   * picker then shows the Folder the file landed in. The list is read again whatever came of it, so a
+   * finished upload stands among the tiles -- greyed out, where the host does not let it be chosen -- and
+   * what comes back is chosen like a picked tile.
    */
   const uploadOffered = upload != null && onSiteSpace;
   const sendUpload = async (file: File): Promise<PhiMediaAssetTile | null> => {
     if (!upload) return null;
+    const intoStartFolder = onIncompleteStartFolder;
     let tile: PhiMediaAssetTile | null = null;
     try {
-      tile = await upload.send(file, folderId);
+      tile = await upload.send(file, folderId, intoStartFolder);
     } catch (error) {
       console.error("Media picker upload failed.", error);
+    }
+    if (tile && intoStartFolder) {
+      setFolderId(tile.folderId);
+      setOnIncompleteStartFolder(false);
+      setPage(1);
     }
     setRefreshToken((current) => current + 1);
     if (!tile) return null;
@@ -547,6 +565,7 @@ export function usePhiMediaPickerBinding({
       setSpaceAddress(nextSpace);
       setRequestedSpaceAddress(nextSpace);
       setFolderId(null);
+      setOnIncompleteStartFolder(false);
       setPage(1);
     },
     onSourceChange: (nextSource: string) => {
@@ -558,7 +577,7 @@ export function usePhiMediaPickerBinding({
     },
     onSourceItemSelect: importSourceItem,
     onSourceLoadMore: loadMoreSourceItems,
-    onFolderChange: (nextFolder: string) => { setFolderId(resolvePhiMediaFolderIdFromValue(folders, nextFolder)); setPage(1); pathSignals.emitCapability("path", nextFolder); },
+    onFolderChange: (nextFolder: string) => { setFolderId(resolvePhiMediaFolderIdFromValue(folders, nextFolder)); setOnIncompleteStartFolder(false); setPage(1); pathSignals.emitCapability("path", nextFolder); },
     onPageChange: (nextPage: number, nextPageSize: number) => { setPage(nextPage); setPageSize(nextPageSize); paginationSignals.emitCapability("pagination", { page: nextPage, pageSize: nextPageSize, total }); },
     onMinColumnWidthChange: setMinColumnWidth,
     onReload: () => { setRefreshToken((current) => current + 1); reloadSignals.emitCapability("reload", null); },
