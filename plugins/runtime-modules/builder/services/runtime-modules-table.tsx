@@ -153,6 +153,7 @@ export function buildRuntimeModuleRows(
             .replaceAll("%1", unavailable.missingCapabilities.join(", ") || unavailable.diagnosticCode),
           category: serverUnavailableLabels?.category ?? "Server part missing",
           isBaseModule: false,
+          alwaysActive: false,
           baseAreaKey: null,
           ...Object.fromEntries(PHI_CMS_AREA_KEYS.map((areaKey) => [`area_${areaKey}`, null])),
         };
@@ -174,6 +175,8 @@ export function buildRuntimeModuleRows(
         description: definition.description,
         category: categoryLabels?.[readPhiRuntimeModuleCategory(definition.category)] ?? definition.category,
         isBaseModule: baseAreaKey != null,
+        // Its Area checkboxes hold no choice either: they show where it runs, disabled as a Base module's own Area is.
+        alwaysActive: definition.activation === "always",
         baseAreaKey,
         ...Object.fromEntries(PHI_CMS_AREA_KEYS.map((areaKey) => [
           `area_${areaKey}`,
@@ -238,6 +241,7 @@ function buildUnresolvedRuntimeModuleRows(
     description: labels?.missingHint ?? "Not part of this build. The next save drops it from the Site.",
     category: labels?.missing ?? "Not in this build",
     isBaseModule: false,
+    alwaysActive: false,
     baseAreaKey: null,
     ...Object.fromEntries(PHI_CMS_AREA_KEYS.map((areaKey) => [
       `area_${areaKey}`,

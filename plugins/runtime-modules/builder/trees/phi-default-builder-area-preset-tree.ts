@@ -1712,7 +1712,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                        * One checkbox column per Area: the switch is the Module everywhere, these are
                        * the per-Area refinement. A Module not eligible for an Area carries null there
                        * and the cell renders empty; the Area whose Base module the row is stays
-                       * checked and disabled.
+                       * checked and disabled, and so does every Area of a Module that is always active.
                        */
                       ...PHI_CMS_AREA_KEYS.map((areaKey) => ({
                         key: `area_${areaKey}`,
@@ -1722,10 +1722,11 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                         editor: {
                           control: "checkbox" as const,
                           disabledWhen: {
-                            source: "row" as const,
-                            valuePath: "baseAreaKey",
-                            operator: "equals" as const,
-                            value: areaKey,
+                            match: "any" as const,
+                            conditions: [
+                              { source: "row" as const, valuePath: "baseAreaKey", operator: "equals" as const, value: areaKey },
+                              { source: "row" as const, valuePath: "alwaysActive", operator: "truthy" as const },
+                            ],
                           },
                         },
                       })),

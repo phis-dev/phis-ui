@@ -173,6 +173,7 @@ export const PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
         { key: "description", title: "Description", type: "string" },
         { key: "category", title: "Category", type: "string" },
         { key: "isBaseModule", title: "Area Base module", type: "boolean", required: true },
+        { key: "alwaysActive", title: "Always active", type: "boolean", required: true },
         { key: "baseAreaKey", title: "Base area", type: "string" },
         /*
          * One optional boolean per Area: `true`/`false` is the Module's activation there, absence
