@@ -34,11 +34,18 @@ export function resolvePhiCmsWidgetContentBindingForConfig(
  * Whether a bound Widget has nothing to show on the live Site: no published content and no value of its
  * own. That is a Widget the Site created whose content was never published -- the Builder's placeholder
  * is not live until somebody publishes it. A preset node keeps its shipped value and is never empty.
+ *
+ * A Widget that names a field of the page record (`binding.recordField`) on a Page about a record is
+ * not judged: it shows the record's field there, not content of its own, and draws nothing itself where
+ * the record lacks the field. Its own content only stands in on a Page about no record, and is judged there.
  */
 export function isPhiCmsWidgetContentUnpublished(
   binding: PhiCmsWidgetContentBinding | null | undefined,
   widget: Pick<PhiCmsContentWidgetNode, "config" | "resolvedContent">,
+  page: { aboutRecord: boolean },
 ) {
   const applied = resolvePhiCmsWidgetContentBindingForConfig(binding, widget.config);
-  return applied != null && widget.resolvedContent == null && !hasConfigValue(widget.config, applied.sourceField);
+  if (applied == null) return false;
+  if (page.aboutRecord && applied.recordField && hasConfigValue(widget.config, applied.recordField)) return false;
+  return widget.resolvedContent == null && !hasConfigValue(widget.config, applied.sourceField);
 }

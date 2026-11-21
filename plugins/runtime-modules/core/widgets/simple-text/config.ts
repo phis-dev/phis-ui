@@ -109,6 +109,7 @@ export const PHI_SIMPLE_TEXT_WIDGET_DEFINITION = {
     storage: "text",
     sourceField: "text",
     translatable: true,
+    recordField: "recordField",
   },
   fields: [
     ...PHI_RENDERABLE_BLOCK_GEOMETRY_FIELDS,

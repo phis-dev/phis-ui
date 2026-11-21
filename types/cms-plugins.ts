@@ -454,6 +454,12 @@ export type PhiCmsWidgetContentBinding = {
     field: string;
     value: string | number | boolean | null;
   };
+  /**
+   * The config field (a `record-field` field) that names a field of the page record in the content's
+   * place. On a Page about a record a Widget that names one shows that field, or nothing where the record
+   * lacks it, so it keeps no content of its own there and is never left out as unpublished.
+   */
+  recordField?: string;
 };
 
 export type PhiCmsWidgetPluginRenderArgs<TConfig> = {

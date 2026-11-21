@@ -190,6 +190,7 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
       field: "sourceMode",
       value: "url",
     },
+    recordField: "recordField",
   },
   fields: [
     { key: "eyebrow", type: "string", heading: "Text", label: "Eyebrow" },

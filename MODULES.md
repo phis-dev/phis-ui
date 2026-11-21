@@ -832,6 +832,9 @@ serve every record: its Widgets name a *field of the page record*, never the rec
   the field takes the place of the Widget's own content, and a record without the field leaves nothing
   drawn; where the Page has none -- the template on the Builder's canvas -- the Widget's own content
   stands in. A Button that names both a value and a link field is not drawn when either is missing.
+  A Widget whose own content is bound content (`contentBinding`) names its record field there as well
+  (`contentBinding.recordField`), so that on a Page about a record it is never left out as unpublished
+  content: a template's Markdown with an empty text of its own still shows the record's description.
   `list` and `tag` are declared kinds no Core Widget draws yet.
 - **Samples.** The server half may offer `loadSamples`: a function from the same context to a few
   `{ label, params }`, where `params` are the Provider's own parameters (`{ slug: "chair" }`), not the

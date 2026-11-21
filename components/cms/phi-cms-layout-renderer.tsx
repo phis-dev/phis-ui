@@ -635,7 +635,13 @@ function renderContentWidget(
     : null;
   const widgetPlugin = runtimePlugin ?? previewPlugin;
   // Bound content that was never published is not on the live Site, and neither is its Widget.
-  if (renderMode === "live" && widgetPlugin && isPhiCmsWidgetContentUnpublished(widgetPlugin.contentBinding, widget)) {
+  if (
+    renderMode === "live" &&
+    widgetPlugin &&
+    isPhiCmsWidgetContentUnpublished(widgetPlugin.contentBinding, widget, {
+      aboutRecord: context.runtime.page?.record != null,
+    })
+  ) {
     return null;
   }
 

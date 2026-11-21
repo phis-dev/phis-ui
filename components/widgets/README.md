@@ -88,7 +88,9 @@ and loading are [MODULES.md](../../MODULES.md); signal capabilities, routes, and
   id, and drafts and publishes it apart from structure (phis-server `CONTENT.md`). The Builder forwards
   the binding in the write payload with the version it read (`contentVersionId`); `phis` persists
   against it and never branches on a Widget type. On the live Site a bound Widget whose content was
-  never published renders nothing.
+  never published renders nothing -- except where it names a field of the page record in the content's
+  place (`recordField`, the key of its `record-field` field) on a Page about a record: it shows that
+  field there and keeps no content of its own.
 - `requiredRuntimeControllers` and `requiredDataProviders` declare dependencies; they never change
   ownership or enable a Module.
 

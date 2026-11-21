@@ -218,6 +218,7 @@ export const PHI_IMAGE_WIDGET_DEFINITION = {
     sourceField: "assetId",
     translatable: true,
     skipWhenConfigFieldValue: { field: "sourceKind", value: "url" },
+    recordField: "recordField",
   },
   defaultConfig: normalizePhiImageWidgetConfig(null),
   parseConfig: parsePhiCmsImageWidgetConfig,
