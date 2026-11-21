@@ -16,7 +16,7 @@ import { registerPhiSignalInstance } from "../../../runtime/runtime-signal-regis
 import { usePhiSignalRuntimePartition } from "../../../runtime/runtime-signal-partition";
 import type { PhiToolbarControlItem } from "../../../controls/phi-toolbar-control";
 import type { PhiControlBadgePresentation } from "../../../controls/phi-button-control";
-import { resolvePhiButtonVariantPresentation } from "../../config/button-variant";
+import { resolvePhiButtonVariantPresentation, type PhiButtonVariant } from "../../config/button-variant";
 import type { PhiCommonControlLabels } from "../../label-types/common-controls";
 import { resolvePhiCommonControlAction } from "./phi-common-controls";
 import { resolvePhiButtonIcon } from "./phi-button-icons";
@@ -107,6 +107,21 @@ export type PhiCommandButtonsResult = {
   disabled: boolean;
   activate: (buttonKey: string) => void;
 };
+
+/**
+ * How a command button stands out: its own variant where it states one, else its action's.
+ *
+ * An action answers for a button's words; its look is only the default. Save is a plain button on a
+ * Builder toolbar, and the one a dialog's footer leads with -- the footer says `variant: "primary"`
+ * beside `action: "save"`, and that is what it means. The Inspector clears the variant when an action is
+ * picked, so a button authored there keeps its action's look.
+ */
+export function resolvePhiCommandButtonVariant(
+  button: Pick<PhiCommandButtonConfig, "variant">,
+  action: { variant?: PhiButtonVariant } | null | undefined,
+): PhiButtonVariant | undefined {
+  return button.variant ?? action?.variant;
+}
 
 export function usePhiCommandButtons({
   buttons,
@@ -371,7 +386,7 @@ export function usePhiCommandButtons({
        * A toolbar draws its buttons by primitive type alone, so a `gradient` command button stands as the
        * primary one it is underneath and a `glass` one as the plain one.
        */
-      type: resolvePhiButtonVariantPresentation(action ? action.variant : button.variant).type ?? "default",
+      type: resolvePhiButtonVariantPresentation(resolvePhiCommandButtonVariant(button, action)).type ?? "default",
       danger: action ? action.danger === true : button.danger === true,
       disabled: button.disabled === true || buttonState.enabled === false,
       readOnly: button.readOnly === true,
