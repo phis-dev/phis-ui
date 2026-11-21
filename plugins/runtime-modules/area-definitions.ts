@@ -280,21 +280,21 @@ export const PHI_ACCOUNTING_RUNTIME_AREA_DEFINITIONS = [
     navigationSurfaces: [{
       navKey: "accounting:sidebar",
       label: label("Accounting sidebar navigation"),
-      items: [{
-        itemKey: "@phis/ui/modules/accounting/nav/home",
-        label: label("Overview"),
-        icon: "antd:audit",
-        routePresetKey: "accounting-overview-page",
-      },
-      // The way into the Admin, as the Builder has one; shown to whoever the Admin lets in.
-      {
-        itemKey: "@phis/ui/modules/accounting/nav/admin",
-        label: label("Admin"),
-        icon: "antd:cluster",
-        standing: "last",
-        target: { kind: "area", area: "admin" },
-      }],
-      exportedItemKeys: ["@phis/ui/modules/accounting/nav/home"],
+      /*
+       * No entry of its own for the Area, as in the App: the root forwards to the first Module entry a
+       * viewer can see -- the Dashboard's -- and the Overview that used to stand here was a placeholder.
+       */
+      items: [
+        // The way into the Admin, as the Builder has one; shown to whoever the Admin lets in.
+        {
+          itemKey: "@phis/ui/modules/accounting/nav/admin",
+          label: label("Admin"),
+          icon: "antd:cluster",
+          standing: "last",
+          target: { kind: "area", area: "admin" },
+        },
+      ],
+      exportedItemKeys: [],
       anchors: sidebarAnchors(),
     }, accountNavigationSurface(PHI_ACCOUNTING_ACCOUNT_NAV_ITEM_KEY, "accounting:account")],
   },

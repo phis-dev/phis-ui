@@ -3,13 +3,16 @@ import type {
   PhiCmsDescriptorBuildContext,
   PhiCmsRoutePresetDescriptor,
 } from "../../../types/cms-module-descriptors";
-import { PHI_BASE_PAGE_LAYOUT_VERSION } from "../../../components/regions/presets/phi-base-page-layout";
 import { buildPhiAreaRootRoutePresetDescriptor } from "../area-root-route";
 import { PhiCmsRegionType } from "../../../constants/phi-cms";
 import { PHI_DEFAULT_PUB_AREA_COMPOSITION_NODE_KEYS } from "../preset-contracts/pub-area";
 import { PHI_ACCOUNTING_RUNTIME_MODULE_ID } from "./ids";
 
-/* What the Accounting base Module brings: the Site shell for its Area, the Area root and the overview. */
+/*
+ * What the Accounting base Module brings: the Site shell for its Area and the Area root. No Page of its
+ * own -- the Dashboard Module's entry stands first in the sidebar, so the root lands there, and every other
+ * Accounting Page is a Module's.
+ */
 
 export const PHI_ACCOUNTING_RUNTIME_MODULE_AREA_SHELLS = [
   {
@@ -61,15 +64,4 @@ export const PHI_ACCOUNTING_RUNTIME_MODULE_ROUTES = [
     area: "accounting",
     title: "Accounting",
   }),
-  {
-    ownerModuleId: PHI_ACCOUNTING_RUNTIME_MODULE_ID,
-    presetKey: "accounting-overview-page",
-    presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
-    area: "accounting",
-    title: "Overview",
-    path: "/overview",
-    loadTree: ({ page, runtime }: PhiCmsDescriptorBuildContext) =>
-      import("./trees/phi-default-accounting-page-tree")
-        .then((module) => module.buildPhiDefaultAccountingPageTree({ page, runtime })),
-  },
 ] satisfies readonly PhiCmsRoutePresetDescriptor[];

@@ -8,7 +8,7 @@ export const PHI_ACCOUNTING_RUNTIME_MODULE_DEFINITION = definePhiAreaBaseRuntime
   area: "accounting",
   moduleId: PHI_ACCOUNTING_RUNTIME_MODULE_ID,
   serverBinding: PHI_CORE_SERVER_BINDING,
-  description: "Locked Accounting Area shell, navigation surface, and accounting workspace route.",
+  description: "Locked Accounting Area shell, navigation surface, and root route.",
   category: "foundation",
   icon: "antd:profile",
 });
