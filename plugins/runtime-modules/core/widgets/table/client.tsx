@@ -104,6 +104,7 @@ type DateRangeValue = { start?: string; end?: string };
 type TableFilterValue = string | boolean | readonly string[] | DateRangeValue | undefined;
 type ResolvedTableAction = PhiTableActionDefinition;
 const PHI_TABLE_ACTION_BUTTON_STYLE = { whiteSpace: "nowrap" } as const;
+const PHI_TABLE_ACTION_CLICK_GUARD_STYLE = { display: "inline-flex" } as const;
 
 export type PhiTableWidgetClientProps = {
   config: PhiTableWidgetConfig;
@@ -1282,9 +1283,15 @@ function TableAction({ action, disabled = false, disabledReason, templateValue, 
    * A row is clickable, and an action inside it must not also activate the row, so the click stops at
    * the element around the button. A confirmed action still gets a handler of its own: the button is
    * what opens the confirmation, and a button with nothing to call renders disabled.
+   *
+   * The element around it is exactly the button's box (`inline-flex`). As a block it was a line of the
+   * surrounding text tall, and the button sat on that line's baseline: where the line was taller than
+   * the button -- a Table in a Collapsible, whose panel sets a line height of 1.5 -- a toolbar action
+   * stood lower than the Reload beside it, which has no such element. It keeps a box of its own because
+   * a confirmation opens against it.
    */
   const content = (
-    <span onClick={(event) => event.stopPropagation()}>
+    <span style={PHI_TABLE_ACTION_CLICK_GUARD_STYLE} onClick={(event) => event.stopPropagation()}>
       <PhiButtonControl
         size={size}
         type={buttonType}
