@@ -21,8 +21,32 @@ import {
 import { PhiSkeletonControl } from "./phi-skeleton-control";
 import { PhiIcon } from "../shell/phi-icon";
 
-export type PhiMediaAssetTileControlProps = {
-  asset: PhiMediaAssetTile;
+/**
+ * What a tile reads of an Asset, and nothing more: a whole `PhiMediaAssetTile` fits, and so does an
+ * Asset a Module holds in a shape of its own with these fields (`width`/`height` for the dimensions
+ * label, `deliveryPolicy`/`lifecycleStatus` for whether the picture is public and may be optimised).
+ */
+export type PhiMediaAssetTileControlAsset = Pick<
+  PhiMediaAssetTile,
+  | "id"
+  | "kind"
+  | "originalName"
+  | "title"
+  | "altText"
+  | "contentType"
+  | "deliveryUrl"
+  | "thumbnailUrl"
+  | "previewUrl"
+  | "deliveryPolicy"
+  | "lifecycleStatus"
+  | "width"
+  | "height"
+  | "blurDataUrl"
+>;
+
+/** `onSelect` and `onDelete` hand back the Asset as it was passed in, in its own type. */
+export type PhiMediaAssetTileControlProps<TAsset extends PhiMediaAssetTileControlAsset = PhiMediaAssetTileControlAsset> = {
+  asset: TAsset;
   minColumnWidth: string | number;
   selected?: boolean;
   mode?: "grid" | "masonry" | "stack";
@@ -35,8 +59,8 @@ export type PhiMediaAssetTileControlProps = {
    * where it was started. The button reports it and refuses a second press while it stands.
    */
   deleting?: boolean;
-  onSelect?: (asset: PhiMediaAssetTile) => void;
-  onDelete?: (asset: PhiMediaAssetTile) => void;
+  onSelect?: (asset: TAsset) => void;
+  onDelete?: (asset: TAsset) => void;
   deleteLabel?: string;
   showTypeLabel?: boolean;
   showDeleteAction?: boolean;
@@ -44,7 +68,7 @@ export type PhiMediaAssetTileControlProps = {
   showIdLabel?: boolean;
 };
 
-export function PhiMediaAssetTileControl({
+export function PhiMediaAssetTileControl<TAsset extends PhiMediaAssetTileControlAsset = PhiMediaAssetTileControlAsset>({
   asset,
   minColumnWidth,
   selected = false,
@@ -59,7 +83,7 @@ export function PhiMediaAssetTileControl({
   showDeleteAction = false,
   showDimensions = true,
   showIdLabel = false,
-}: PhiMediaAssetTileControlProps) {
+}: PhiMediaAssetTileControlProps<TAsset>) {
   const { token } = usePhiConfig();
   const compact = size === "small";
   const assetTileIconSize = compact ? 20 : 24;

@@ -272,7 +272,9 @@ beside them):
 - Dialogs and forms: `PhiDialogControl`, `PhiFormControl`.
 - Data: `PhiTableControl`, `PhiTreeControl`, `PhiTreeActionButton`, `PhiCollectionLayoutControl`,
   `PhiCollectionHeaderControl`, `PhiCollectionViewControl`, `PhiMediaPickerControl`,
-  `PhiMediaAssetTileControl`, `PhiMediaAssetCollectionSkeletonControl`, `PhiMediaSourceItemTileControl`,
+  `PhiMediaAssetTileControl` (its `asset` is `PhiMediaAssetTileControlAsset`, the fields a tile reads,
+  so an Asset in a shape of your own with those fits, and `onSelect`/`onDelete` hand it back as passed),
+  `PhiMediaAssetCollectionSkeletonControl`, `PhiMediaSourceItemTileControl`,
   `PhiMaskPickerControl`,
   `PhiDragHandleControl`. A list of records is a `table` Widget on a provider, not a `PhiTableControl` of
   yours ([a staff page is composed](#before-you-start-a-staff-page-is-composed-not-drawn)).
@@ -442,6 +444,7 @@ Known gaps ([TODOS.md](./TODOS.md), "Media and Theme"):
 | Upload files into a Media Folder | Widget `area-upload`, or the Media library page | [Media](#media-what-the-asset-module-already-does) |
 | A list or table of records | `table` on a provider you register | [TABLES.md](./TABLES.md) |
 | Records as cards | `collection-view` (the Card Widget as a Collection) | [COLLECTIONS.md](./COLLECTIONS.md) |
+| A Collection for the record a Controller opened it for (a dialog with one listing's pictures) | `collection-view` with a listen route `capabilityId: "bindingParamsChange"`; the Controller sends `{ params: { id } }`, laid over `source.params` and handed to your Provider, the list read again from the first page | [COLLECTIONS.md](./COLLECTIONS.md#loading-and-signals) |
 | Records a reader drags into an order | `collection-view` with `features.reorder` (`{ enabled: true, actionKey? }`, grid or stack): a drop calls your collection Provider's action (`"reorder"` unless `actionKey` names another, declared `scope: "resource"`) with `itemKeys`, every item key of the collection in the new order, keys read at the resource's `itemIdentityPath`. Store the order and answer the collection as it now stands, or refuse (throw, or answer `error`): the Widget shows the order at once and takes it back on a refusal. Off while a search or a reader's filter narrows the list and while it spans more than one page | [COLLECTIONS.md](./COLLECTIONS.md#drag-reordering) |
 | A form | The `form` Widget on a Preset Form | [FORMS.md](./FORMS.md), [6](#6-add-a-preset-form) |
 | Where the reader is | `breadcrumb` (Site, Area, path segments; the last one the record's title on a record Page) | [components/widgets/README.md](./components/widgets/README.md#content-widgets) |

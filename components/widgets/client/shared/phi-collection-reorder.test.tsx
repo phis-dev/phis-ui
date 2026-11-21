@@ -77,14 +77,14 @@ describe("orderPhiCollectionItems", () => {
 });
 
 describe("a drop", () => {
-  function setup(action: () => Promise<PhiCollectionProviderData>) {
+  function setup(action: () => Promise<PhiCollectionProviderData>, loading = false) {
     const activate = vi.fn(action);
     const reload = vi.fn();
     const showMessage = vi.fn();
     const binding = {
       query: { page: 1, pageSize: 20, filters: {} },
       data: data(),
-      loading: false,
+      loading,
       error: null,
       openPanelKey: null,
       setQuery: vi.fn(),
@@ -131,5 +131,10 @@ describe("a drop", () => {
     expect(refused.showMessage).toHaveBeenCalledWith(expect.objectContaining({
       content: PHI_COLLECTION_VIEW_WIDGET_DEFAULT_LABELS.reorderFailed,
     }));
+  });
+
+  it("is not offered while the list is being read, which may answer other params", () => {
+    const { result } = setup(async () => data(), true);
+    expect(result.current.reorder).toBeNull();
   });
 });

@@ -202,6 +202,8 @@ export const PHI_COLLECTION_VIEW_WIDGET_DEFINITION = {
     ],
     listens: [
       { id: "reload", channel: "reload", action: "activate", valueType: "none" },
+      // Laid over `source.params` and handed to the Provider, as the Table takes them.
+      { id: "bindingParamsChange", channel: "bindingParams", action: "change", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableBindingParams },
     ],
   },
   fields: [

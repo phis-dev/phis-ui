@@ -1,6 +1,6 @@
 "use client";
 
-import { createElement } from "react";
+import { createElement, useCallback, useMemo, useState } from "react";
 
 import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
 import { PhiCollectionViewSkeletonControl } from "../../../../../components/controls/phi-collection-view-control";
@@ -28,6 +28,10 @@ import {
 } from "../../../../../components/widgets/shared/collection-source-failure";
 import { PhiWidgetFailure } from "../../../../../components/widgets/shared/widget-failure-client";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
+import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
+import { findPhiSignalListenRoute, resolvePhiSignalListenFilter } from "../../../../../helpers/signal-listen-routes";
+import { readPhiTableBindingParamsSignalValue } from "../../../../../types/table-signal-values";
+import { isPhiRecord } from "../../../../../helpers/is-record";
 import type { PhiRenderableBlockRenderMode } from "../../../../../types/renderable-block";
 
 /**
@@ -114,7 +118,37 @@ function PhiCollectionViewWidgetLive({
     signalIdentity.receiver?.startsWith("cms:") ? signalIdentity.receiver as PhiVisualAnchorAddress : null,
     PHI_COLLECTION_VIEW_VISUAL_ANCHOR_PARTS,
   );
-  const source = config?.source ?? null;
+  /*
+   * The binding params, as the Table takes them (`bindingParamsChange`): the configured `source.params`
+   * until a received `{ params }` is laid over them, and handed to the Provider as `source.params`. A
+   * new set starts the list over -- first page, the initial query, nothing of the old answer shown
+   * (`usePhiCollectionViewBinding`). The chosen set is tagged with the configuration it was laid over, so
+   * a Builder edit of the configured params is a new starting point.
+   */
+  const configuredSource = config?.source ?? null;
+  const configuredBindingParams = useMemo<Record<string, unknown>>(
+    () => isPhiRecord(configuredSource?.params) ? configuredSource.params : {},
+    [configuredSource],
+  );
+  const bindingParamsSeed = JSON.stringify(configuredBindingParams);
+  const [chosenBindingParams, setChosenBindingParams] =
+    useState<{ seed: string; params: Record<string, unknown> } | null>(null);
+  const bindingParams = chosenBindingParams?.seed === bindingParamsSeed
+    ? chosenBindingParams.params
+    : configuredBindingParams;
+  const source = useMemo(
+    () => configuredSource ? { ...configuredSource, params: bindingParams } : null,
+    [bindingParams, configuredSource],
+  );
+  // What the renderer reads of the binding is the source the Provider is asked with.
+  const resolvedConfig = useMemo(() => config ? { ...config, source } : config, [config, source]);
+  const listenRoutes = useMemo(() => config?.signalRoutes?.listens ?? [], [config?.signalRoutes?.listens]);
+  usePhiSignalListener(useCallback((signal) => {
+    const route = findPhiSignalListenRoute(listenRoutes, signal, signalIdentity.receiver);
+    if (route?.capabilityId !== "bindingParamsChange") return;
+    const next = readPhiTableBindingParamsSignalValue(signal.value);
+    if (next) setChosenBindingParams({ seed: bindingParamsSeed, params: { ...bindingParams, ...next.params } });
+  }, [bindingParams, bindingParamsSeed, listenRoutes, signalIdentity.receiver]), useMemo(() => resolvePhiSignalListenFilter(listenRoutes), [listenRoutes]), signalIdentity.receiver);
   const { resource, bindingError, queryError, binding } = usePhiCollectionViewBinding({
     source,
     initialQuery: config?.initialQuery,
@@ -130,7 +164,7 @@ function PhiCollectionViewWidgetLive({
    */
   const { showMessage } = usePhiApplicationFeedback();
   const { binding: presentedBinding, reorder } = usePhiCollectionReorderBinding({
-    config,
+    config: resolvedConfig,
     binding,
     itemIdentityPath: itemIdentityPath ?? null,
     labels: reorderLabels ?? PHI_COLLECTION_VIEW_WIDGET_DEFAULT_LABELS,
@@ -174,7 +208,7 @@ function PhiCollectionViewWidgetLive({
   // `renderMode` goes along so a renderer's own configuration failures are said the same way.
   return (
     <PhiCollectionReorderContext.Provider value={reorder}>
-      {createElement(ItemRenderer, { config, binding: presentedBinding, labels, widgetId, renderMode })}
+      {createElement(ItemRenderer, { config: resolvedConfig ?? config, binding: presentedBinding, labels, widgetId, renderMode })}
     </PhiCollectionReorderContext.Provider>
   );
 }

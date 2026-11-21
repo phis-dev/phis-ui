@@ -103,3 +103,28 @@ describe("usePhiCollectionViewBinding", () => {
     }
   });
 });
+
+describe("binding params", () => {
+  it("asks with the source's params, and starts the list over on the first page when they change", async () => {
+    pending.query.length = 0;
+    queryRequests.length = 0;
+    const withParams = (id: number) => ({ ...source, params: { id } });
+    const { result, rerender } = renderHook(
+      ({ current }: { current: ReturnType<typeof withParams> }) => usePhiCollectionViewBinding({ source: current }),
+      { wrapper, initialProps: { current: withParams(1) } },
+    );
+    await waitFor(() => expect(queryRequests.length).toBeGreaterThan(0));
+    expect(queryRequests.at(-1)?.params).toEqual({ id: 1 });
+    await act(async () => pending.query.at(-1)?.resolve(data("listing 1")));
+    act(() => result.current.binding.setQuery((current) => ({ ...current, page: 3 })));
+    await waitFor(() => expect(queryRequests.at(-1)?.query.page).toBe(3));
+    await act(async () => pending.query.at(-1)?.resolve(data("listing 1, page 3")));
+
+    rerender({ current: withParams(2) });
+    await waitFor(() => expect(queryRequests.at(-1)).toMatchObject({ params: { id: 2 }, query: { page: 1 } }));
+    // Nothing of the other listing stands while this one is read.
+    expect(result.current.binding.data).toBeNull();
+    await act(async () => pending.query.at(-1)?.resolve(data("listing 2")));
+    expect(result.current.binding.data?.items).toEqual([{ label: "listing 2" }]);
+  });
+});

@@ -79,6 +79,7 @@ export {
 } from "./components/controls/phi-media-asset-tile-control";
 export type {
   PhiMediaAssetCollectionSkeletonControlProps,
+  PhiMediaAssetTileControlAsset,
   PhiMediaAssetTileControlProps,
 } from "./components/controls/phi-media-asset-tile-control";
 export { PhiMediaSourceItemTileControl } from "./components/controls/phi-media-source-item-tile-control";

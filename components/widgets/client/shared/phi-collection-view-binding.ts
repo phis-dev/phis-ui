@@ -55,7 +55,8 @@ export function usePhiCollectionViewBinding({
    */
   const latestRequestRef = useRef(0);
   const initialQueryKey = JSON.stringify(buildInitialQuery(initialQuery, pageSize));
-  const sourceKey = `${source?.providerKey ?? ""}:${source?.resourceKey ?? ""}`;
+  // The params belong to the source: a new set (the Widget's `bindingParamsChange`) starts the list over.
+  const sourceKey = JSON.stringify([source?.providerKey ?? "", source?.resourceKey ?? "", source?.params ?? null]);
   const requestKey = useMemo(() => JSON.stringify([
     source?.providerKey ?? null,
     source?.resourceKey ?? null,

@@ -243,10 +243,18 @@ The Widget declares exactly these capabilities:
 ```text
 emits    selection        change:json<media-asset-selection>
 emits    actionActivate   activate:json<collection-action>
-listens  reload           reload/activate:none
+listens  reload               reload/activate:none
+listens  bindingParamsChange  bindingParams/change:json<table-binding-params>
 ```
 
-The Widget itself handles `reload`. The resource View emits `selection` and `actionActivate` through the
+The Widget itself handles `reload` and `bindingParamsChange`. The second is the Table's
+([TABLES.md](./TABLES.md)): a received `{ params }` is laid over the configured `source.params` and the
+Provider is asked with the result as `source.params` -- the query, the actions (a reorder's included) and
+the `config.source` the resource View is handed. A new set starts the list over: the initial query, the
+first page, no item of the old answer shown, and no reordering until the new answer is there. The chosen
+set belongs to the configuration it was laid over; a Builder edit of `source.params` starts from that
+again. A Controller that opens a Collection for one record -- a dialog with a listing's pictures -- sends
+`{ params: { id } }` on the route a placement declares with `capabilityId: "bindingParamsChange"`. The resource View emits `selection` and `actionActivate` through the
 Widget's routes; a View that has no selection or actions emits nothing. Search, filter, pagination, and
 panel state are Binding state inside the View and are not signalled.
 

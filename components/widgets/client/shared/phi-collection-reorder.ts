@@ -101,11 +101,12 @@ export function usePhiCollectionReorderBinding({
   showMessage: (value: PhiCoreRuntimeMessageValue) => void;
 }) {
   const [pendingOrder, setPendingOrder] = useState<PhiCollectionItemKey[] | null>(null);
+  // Not while the list is being read: what is shown may be the answer to another question (new params).
   const itemKeys = useMemo(
-    () => config && itemIdentityPath != null
+    () => config && itemIdentityPath != null && !binding.loading
       ? resolvePhiCollectionReorderKeys({ config, query: binding.query, data: binding.data, itemIdentityPath })
       : null,
-    [binding.data, binding.query, config, itemIdentityPath],
+    [binding.data, binding.loading, binding.query, config, itemIdentityPath],
   );
   const actionKey = config?.features.reorder?.actionKey ?? PHI_COLLECTION_REORDER_DEFAULT_ACTION_KEY;
   const { activate, reload } = binding;
