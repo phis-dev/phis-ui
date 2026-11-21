@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
 import type { PhiCmsConfigField } from "../types/cms-plugins";
+import { writtenConfigPaths } from "./lib/config-field-keys";
 
 /**
  * Each Core Widget's placement type says what its Inspector writes, and nothing it does not.
@@ -72,37 +73,6 @@ const PLACEMENT_ONLY_KEYS: Readonly<Record<string, Readonly<Record<string, strin
 const CONFIG_MODULES: Readonly<Record<string, string>> = {
   "tab-bar": "../components/widgets/config/stack-tabs",
 };
-
-function writtenPaths(field: PhiCmsConfigField): string[] {
-  const patched = [
-    ...("patchOnChange" in field && field.patchOnChange ? Object.keys(field.patchOnChange) : []),
-    ...("optionPresets" in field && field.optionPresets
-      ? [...field.optionPresets.locks, ...(field.optionPresets.prefills ?? [])]
-      : []),
-  ];
-  if (field.type === "radius") {
-    return [field.topLeftKey, field.topRightKey, field.bottomLeftKey, field.bottomRightKey, ...patched];
-  }
-  if (field.type === "padding") {
-    const keys = [
-      field.paddingKey,
-      field.gapKey,
-      field.paddingTopKey,
-      field.paddingRightKey,
-      field.paddingBottomKey,
-      field.paddingLeftKey,
-    ].filter((key): key is string => key !== undefined);
-    return [...(keys.length > 0 ? keys : [field.key]), ...patched];
-  }
-  if (field.type === "image") {
-    return ["sourceKind", "assetId", "variantKey", "variantVersion", "sourceUrl", "alt", ...patched];
-  }
-  if (field.type === "dimension" && (field.widthKey || field.heightKey)) {
-    const keys = [field.widthKey, field.heightKey].filter((key): key is string => key !== undefined);
-    return [...keys, ...patched];
-  }
-  return [field.key, ...patched];
-}
 
 const program = ts.createProgram([placementsPath], {
   strict: true,
@@ -189,7 +159,7 @@ for (const [typeKey, property] of placements) {
   const placement = typeOfProperty(property);
   const written = new Set<string>();
   for (const field of definition.fields) {
-    for (const path of writtenPaths(field)) {
+    for (const path of writtenConfigPaths(field)) {
       written.add(path.split(".")[0]!);
       if (!resolvesPath(placement, path.split("."))) {
         problems.push(

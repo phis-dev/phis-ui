@@ -75,7 +75,6 @@ export type PhiCmsMarkdownWidgetConfig = PhiCmsWidgetConfigBase & {
   /** How the text's lists are set. */
   list?: PhiBulletListStyle;
   resolvedContent?: PhiCmsResolvedContent | null;
-  preferSource?: boolean;
 };
 
 const PHI_MARKDOWN_TEXT_ALIGN_OPTIONS: Array<{ value: PhiMarkdownTextAlign; label: string }> = [

@@ -119,7 +119,8 @@ read the field's documentation, not the Module's.
 - Verify with the quiet runner, which prints only failures:
   - `pnpm -s verify` (profile `changed`) picks the smallest check set from the current Git changes; use
     it before a commit.
-  - `pnpm -s verify <profile>` runs a fixed set: `docs` (whitespace), `code` (TypeScript, ESLint and
+  - `pnpm -s verify <profile>` runs a fixed set: `docs` (whitespace, and the `Wants:` lines of TODOS.md
+    against the catalog), `code` (TypeScript, ESLint and
     the module graph budget, `pnpm audit:graph --check`), `runtime` (adds `runtime-modules:check`),
     `antd` (adds the Ant Design doctor), `package` (ESLint, the graph budget and the distribution build
     with validation), `all`.
@@ -127,6 +128,13 @@ read the field's documentation, not the Module's.
     source, Client barrel import or duplicate file, on a Client reaching `server-only`, and on a package
     entry's graph growing past a small headroom. Intended growth is recorded with
     `pnpm audit:graph --update-budget` and said why in the commit.
+  - `runtime-modules:check` also holds a Widget's config to its render
+    (`scripts/validate-widget-config-reads.ts`: every key `fields`, `defaultConfig` or `parseConfig`
+    offers is read by a file the Widget renders, not only by the parser, the canvas or the Inspector;
+    `--explain <typeKey>.<key>` shows where) and TODOS.md to the catalog
+    (`scripts/validate-todos-wants.ts`: an entry's `Wants:` line names no Widget or Form field type
+    that exists). THIRD_PARTY_MODULES.md's Foundation list names every Widget and Form field type of a
+    Module declared `activation: "always"`, held by `third-party-modules-reference.test.ts`.
   - Use `runtime` after changing Module ownership or lazy descriptors. Do not run `all`, a full build, or
     the Ant Design doctor for an unrelated small change.
   - While a consuming Site runs `next dev`, do not use `next build` as routine verification. Run

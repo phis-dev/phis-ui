@@ -300,7 +300,8 @@ only through the public doors, and is wired into a Site by `phis module add` -- 
 9. **Run `pnpm runtime-modules:check` and `pnpm typecheck`.** `runtime-modules:check` runs every
    contract verifier listed in `package.json` (the `scripts/validate-*` files); they catch what
    typecheck cannot — route grammar, ownership collisions, Area synchronisation, projection boundaries,
-   provider/loader pairing, signal wiring and correlation.
+   provider/loader pairing, signal wiring and correlation, and a Widget config key that nothing the
+   Widget renders reads.
 
 ## Identity and ownership rules
 

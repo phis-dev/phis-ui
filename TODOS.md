@@ -2,7 +2,9 @@
 
 Open work only, grouped by area. Binding contracts live in the contract documents; designs live in
 [design/](./design/README.md). A contract extension named here still needs operator approval before it is
-built. Remove an entry when it is done.
+built. Remove an entry when it is done. An entry that asks for a Widget or a Form field type that does not
+exist yet names it on a line of its own -- `` Wants: Widget `<typeKey>` ``, `` Wants: form field `<key>` `` --
+and `scripts/validate-todos-wants.ts` refuses the entry once the catalog has one by that key.
 
 ## At the next release
 
@@ -74,6 +76,19 @@ built. Remove an entry when it is done.
   yet the only node-construction authority.
 
 ## Layouts and Widgets
+
+- **Widget config keys nothing renders reads.** `scripts/validate-widget-config-reads.ts` found them when
+  it was written (2026-11-21) and lists them as `UNDECIDED`; each is parsed and read by no file the Widget
+  renders. Read it or remove it, then drop its line there. The Control state and size that
+  `parsePhiControlConfig` hands every Control (`key`, `readOnly`, `disabled`, and `controlSize` on the Float
+  Button) reach neither `command-toolbar` nor `float-button`; `command-toolbar.key` is also a
+  placement-only key in `types/core-widget-placements.ts` (contract). The shared choice parser's
+  `description`, `placeholder`, `presentation`, `allowCustom` (and `label` on `tab-bar`) are drawn by none of
+  `segmented`, `steps`, `tab-bar`. `auth-logout` and `auth-security` parse `padding` and their Clients
+  ignore it, where `account-avatar` applies it. The brand Widgets parse a signal `key` they never use
+  (they listen by routes), `builder-inspector-header` and `builder-mode-switch` parse `signalRoutes` they
+  never read, and the Card's image field writes `variantVersion`, which the Card replaces with the
+  resolved Asset's own.
 
 - **Control badge adoption from real use cases.** The badge contract exists for button and toolbar.
   Evaluate basket, support inbox, and similar domain buttons one by one; migrate only where the generic

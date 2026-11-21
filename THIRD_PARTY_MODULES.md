@@ -67,7 +67,8 @@ and its own button. It lines up differently, misses what the Card gains, and has
 Look here before you ask for anything. What follows lists what exists, so a missing piece is a real one and
 not one that was only hard to find. It names things and points at the document that explains each; it does
 not repeat them. Every typeKey and Control name below is checked against the code by
-`plugins/runtime-modules/core/third-party-modules-reference.test.ts`.
+`plugins/runtime-modules/third-party-modules-reference.test.ts`, the Widgets and Form field types of
+every Module declared `activation: "always"` included.
 
 The Foundation is Core and the Modules that are active in every Area. A domain's capabilities are its
 owning Module's, so a Media question is answered by the Asset Module ([Media](#media-what-the-asset-module-already-does)),
@@ -396,7 +397,7 @@ there wherever your Page stands, and none of it is in the Core table above.
 | A Media library: Folders, upload, new Folder, lock | Widget `collection-view` with the Asset binding, as the Builder's Media page (`builder-media-page`) places it | Uploads into the open Folder; creating and locking a Folder are its actions. | `core/widgets/collection-view/asset-binding.tsx`, `asset/trees/phi-default-builder-media-page-tree.ts`, [COLLECTIONS.md](./COLLECTIONS.md) |
 | Browse and choose on a Page, wired to other Widgets | Widget `media-picker` | Emits `selection` (`PhiMediaAssetSelection`: `assetId`, `asset`, `variantKey`), `path`, `query`, `pagination`. Imports a media source's item into the Folder it shows; uploads no local file. | `asset/widgets/media-picker/`, `components/media/phi-media-picker-binding.tsx` |
 | A picker inside a Widget of mine | `PhiMediaPickerControl`, controlled | What you pass it; the binding that feeds it is internal ([Offering an image picker](#offering-an-image-picker)). | `@phis/ui/controls` |
-| A picture's details and focal rectangle | Widgets `image-inspector`, `asset-focal-rect`; field `asset-focal-rect` | The Builder's Media page inspector and its Form. | `asset/widgets/`, `asset/metadata-form.ts` |
+| A picture's details and focal rectangle | Widgets `image-inspector`, `asset-focal-rect`; form field `focal-rect` (`@phis/ui/modules/asset/form-field/focal-rect`) | The Builder's Media page inspector and its Form. | `asset/widgets/`, `asset/metadata-form.ts` |
 | A file in a slot of an Add-on's row | Core Widget `slot-upload` | The slot's files. | [`slot-upload`](#slot-upload-files-on-a-row) |
 | The picture of the record a Page is about | A `picture`/`pictures` record field, drawn by `image` or `gallery` with `recordField` | `{ src, alt? }` per picture. | [Records a Page is about](#records-a-page-is-about) |
 | The pictures of one Folder | `gallery` on Core's `folderImages` Provider (no Asset Module needed) | The Folder's public pictures, with its subfolders. | [MODULES.md](./MODULES.md#record-providers) |
@@ -1123,6 +1124,10 @@ What a throw does is the same for every Widget, Core's or yours, and whatever it
 
 The older lenient readers (`readString`, `readNumber`, ...) are still exported for parsers that have not
 moved; they turn a wrong value into `undefined` and should not be used in a new Widget.
+
+Parse only what the Widget draws. A key the Inspector offers, `defaultConfig` sets or `parseConfig` returns
+and only the canvas reads is a setting an author makes and the page ignores. First-party Widgets are held
+to that by `scripts/validate-widget-config-reads.ts`; hold your own the same way.
 
 A Provider binding in a config -- `{ providerKey, scopeKey?, params? }` -- is read with
 `readPhiRuntimeDataProviderBinding` from `@phis/ui/types`, the reader Core's own Widgets use, so the

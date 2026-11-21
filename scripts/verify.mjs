@@ -31,6 +31,11 @@ const CHECKS = {
     command: "pnpm",
     args: ["-s", "audit:graph", "--check"],
   },
+  todos: {
+    label: "TODOS.md wants against the catalog",
+    command: "pnpm",
+    args: ["-s", "todos:check"],
+  },
   runtime: {
     label: "Runtime module contracts",
     command: "pnpm",
@@ -64,7 +69,7 @@ const CHECKS = {
 };
 
 const EXPLICIT_PROFILES = {
-  docs: ["diff"],
+  docs: ["diff", "todos"],
   code: ["diff", "typecheck", "lint", "graph"],
   runtime: ["diff", "typecheck", "lint", "graph", "runtime"],
   antd: ["diff", "typecheck", "lint", "antd", "antdCss"],
@@ -79,7 +84,7 @@ if (requestedProfile === "--help" || requestedProfile === "help") {
 
 Profiles:
   changed  Select the smallest relevant check set from Git changes (default)
-  docs     Whitespace check only
+  docs     Whitespace check and TODOS.md wants against the catalog
   code     TypeScript, ESLint and the module graph budget
   runtime  Code checks plus Runtime module contract validation
   antd     Code checks plus Ant Design doctor and the static structure
@@ -137,6 +142,9 @@ async function resolveChangedChecks() {
   }
   if (hasRuntimeChange) {
     selectedChecks.add("runtime");
+  } else if (changedFiles.includes("TODOS.md")) {
+    // Runtime contracts run it too; alone, a TODOS.md edit still has its wants checked.
+    selectedChecks.add("todos");
   }
   if (hasAntdChange) {
     selectedChecks.add("antd");
