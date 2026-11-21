@@ -1610,7 +1610,10 @@ as `body.form` -- its definition from your `forms`, or `{ descriptor }` -- and i
 without it, `dialog` takes `PHI_DIALOG_WIDTH`. Where the Form is not yours to hand over (Core's Reply Form,
 say), state `width: PHI_DIALOG_WIDTH_SINGLE_COLUMN` in `config`. The descriptor compiler refuses a modal at
 `PHI_DIALOG_WIDTH` whose Forms are all one column (OVERLAYS.md, "The imperative exemption, and how narrow
-it is").
+it is"), and on a live Site that refusal is a 500 for the whole Page. Two Forms of one column side by side
+on a Split Card are still all one column: state the width the body needs. Run
+`checkPhiPresetTreeContract` with your own Forms in your tests
+([Checking a Page preset](#checking-a-page-preset)); it refuses the same dialog there.
 
 ## 4c. Messaging
 
@@ -2273,6 +2276,43 @@ config without saying whose words they are (`textSource: "preset"` or `"site"`,
 every tree its presets build, beside the Page rule. A Site's own package does not: every word in its Pages
 is the Site's, which is what no marker means.
 
+`checkPhiPresetTreeContract(tree, { page, forms })`, from the same door, holds a tree to every rule the
+descriptor compiler holds it to while a Site serves the Page -- the same code, so a tree it reports is one
+the compiler refuses, and the Page answers 500. The rules: every node carries a preset instance id
+(`createPhiPresetCmsInstanceIdMap`), none twice; every parent, Region root, Overlay root and Page root is
+in the tree; the base page layout node is the canonical one; an Overlay's actions Footer is the canonical
+Flex preset; a modal's body and actions are the dialog's (`PHI_DIALOG_BODY_CONFIG`,
+`PHI_DIALOG_COMMANDS_CONFIG`); and a modal at `PHI_DIALOG_WIDTH` holds not only Forms of one column
+([Dialogs](#dialogs)). `page` is the Page row the test handed `loadTree`: a tree whose Page or Regions
+belong to another is reported. `forms` are your Module's Form definitions (`definePhiRuntimeModuleForm`),
+or a `Map` of `{ descriptor }` by Form id; the dialog width is judged only for the Forms you hand over, as
+the compiler judges only the Forms of the Modules it has, so hand over every Form your package ships.
+Each finding names the `node` (its id, or `"page"`) and the compiler's own `message`. Run it over every
+tree your presets build, as a viewer who sees the most -- a manager's tree holds the dialogs a visitor's
+leaves out:
+
+```ts
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("server-only", () => ({}));
+
+import { checkPhiPresetTreeContract } from "@phis/ui/module/page-check";
+
+import { ACME_STATUS_FORMS } from "../forms";
+import { ACME_STATUS_ROUTES } from "../presets";
+
+// `page`, a manager's `runtime` and `media` (createPhiDeclaredMediaResolver) as the other checks build them.
+describe("every preset tree keeps the tree contract", () => {
+  for (const route of ACME_STATUS_ROUTES) {
+    it(`${route.area} ${route.path}`, async () => {
+      const tree = await route.loadTree({ page, runtime, params: {}, media } as never);
+      const findings = checkPhiPresetTreeContract(tree, { page, forms: ACME_STATUS_FORMS });
+      expect(findings.map((finding) => `${finding.node}: ${finding.message}`)).toEqual([]);
+    });
+  }
+});
+```
+
 ### Checklist for a Page preset
 
 - One `flex-vertical` Page column under `content`, `padding` none, `gap` `PHI_SPACE.md`.
@@ -2281,6 +2321,9 @@ is the Site's, which is what no marker means.
   `checkPhiPagePresetLayout` reports it.
 - Every Widget with text states `textSource` (`"preset"` or `"site"`); `checkPhiPresetTextSources`
   reports it. A Site's own package leaves it out.
+- Every tree passes `checkPhiPresetTreeContract` with every Form the package ships, run as the viewer who
+  sees the most: ids, parents and roots resolve, dialogs keep the dialog's body, actions and width. On a
+  live Site a finding is a 500.
 - No route beneath another of the same Area, except a list's entries (`/blog/:slug`) directly beneath
   the list; an overview stands beside its Pages and the container names it with `folderTarget`
   ([Addresses and folders](#addresses-and-folders)). `checkPhiRouteAddresses` reports it.

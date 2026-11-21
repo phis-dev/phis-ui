@@ -8,6 +8,7 @@ import {
   PHI_FORM_RESPONSIVE_MIN_WIDTH,
 } from "../components/forms/form-descriptor-contract";
 import { PhiCmsPageType, PhiCmsStatus } from "../constants/phi-cms";
+import { checkPhiPresetTreeContract } from "../module-page-check";
 import { assertPhiCmsPresetTreeContract } from "../plugins/runtime-modules/descriptor-compiler";
 import { PHI_LAYOUT } from "../theme/phi-tokens";
 import { PHI_VIEWER_ACCESS_ANYONE } from "../types/access";
@@ -99,7 +100,7 @@ const ids = createPhiPresetCmsInstanceIdMap({
   domain: "page",
   ownerModuleId: "@phis/ui/modules/dialog-width-test",
   presetKey: "dialog-width-test",
-}, ["overlay", "body", "form"]);
+}, ["overlay", "body", "form", "secondForm"]);
 
 const FORM_ID = "@phis/ui/modules/dialog-width-test/forms/one";
 
@@ -143,8 +144,10 @@ describe("dialog on createPhiCmsPresetNodes", () => {
   });
 });
 
+/** The Forms by id, as the compiler holds the ones its Modules ship. */
+const forms = (descriptor: PhiFormDescriptor) => new Map([[FORM_ID, { descriptor }]]);
+
 describe("the descriptor compiler's dialog width", () => {
-  const forms = (descriptor: PhiFormDescriptor) => new Map([[FORM_ID, { descriptor }]]);
 
   it("refuses a one-column Form at the default full width", () => {
     expect(() => assertPhiCmsPresetTreeContract(dialogTree({}), page, forms(ONE_COLUMN)))
@@ -156,5 +159,62 @@ describe("the descriptor compiler's dialog width", () => {
     expect(() => assertPhiCmsPresetTreeContract(dialogTree({}), page, forms(TWO_COLUMNS))).not.toThrow();
     expect(() => assertPhiCmsPresetTreeContract(dialogTree({ width: 720 }), page, forms(ONE_COLUMN))).not.toThrow();
     expect(() => assertPhiCmsPresetTreeContract(dialogTree({}), page, new Map())).not.toThrow();
+  });
+});
+
+/*
+ * The same rules from the verify-time door, as findings: what a Module runs in its own tests with its own
+ * Forms (THIRD_PARTY_MODULES.md, "Checking a Page preset"). phis-shop 0.8.13 shipped a dialog of two
+ * one-column Forms at the default width; the compiler refused it on a live Site, the package's tests could not.
+ */
+describe("checkPhiPresetTreeContract", () => {
+  const SECOND_FORM_ID = "@phis/ui/modules/dialog-width-test/forms/two";
+  const definitions = (descriptor: PhiFormDescriptor) => [
+    { formId: FORM_ID, descriptor },
+    { formId: SECOND_FORM_ID, descriptor },
+  ];
+  /** Two Forms in one dialog body, as the shop's Gallery dialog held them. */
+  function twoFormDialog(width?: unknown): PhiResolvedCmsPageTree {
+    const tree = dialogTree(width === undefined ? {} : { width });
+    const first = tree.contentWidgets[0]!;
+    return {
+      ...tree,
+      contentWidgets: [first, { ...first, id: ids.secondForm, slotIndex: 1, label: "second form", config: { formId: SECOND_FORM_ID } }],
+    };
+  }
+
+  it("reports a dialog at PHI_DIALOG_WIDTH holding only one-column Forms, on the Overlay", () => {
+    const findings = checkPhiPresetTreeContract(twoFormDialog(), { page, forms: definitions(ONE_COLUMN) });
+    expect(findings).toHaveLength(1);
+    expect(findings[0]).toMatchObject({ node: ids.overlay });
+    expect(findings[0]!.message).toMatch(/one-column Form .* PHI_DIALOG_WIDTH_SINGLE_COLUMN/u);
+    // The compiler throws the same words.
+    expect(() => assertPhiCmsPresetTreeContract(twoFormDialog(), page, new Map(definitions(ONE_COLUMN).map((entry) => [entry.formId, entry]))))
+      .toThrow(findings[0]!.message);
+  });
+
+  it("finds nothing where the width is stated, a Form has two columns, or no Form is handed over", () => {
+    expect(checkPhiPresetTreeContract(twoFormDialog(PHI_DIALOG_WIDTH_SINGLE_COLUMN), { page, forms: definitions(ONE_COLUMN) })).toEqual([]);
+    expect(checkPhiPresetTreeContract(twoFormDialog({ compact: "calc(100vw - 32px)", medium: 960 }), { page, forms: definitions(ONE_COLUMN) }))
+      .toEqual([]);
+    expect(checkPhiPresetTreeContract(twoFormDialog(), { page, forms: definitions(TWO_COLUMNS) })).toEqual([]);
+    expect(checkPhiPresetTreeContract(twoFormDialog(), { page })).toEqual([]);
+  });
+
+  it("takes the Forms by id as the compiler holds them, too", () => {
+    expect(checkPhiPresetTreeContract(dialogTree({}), { page, forms: forms(ONE_COLUMN) })).toHaveLength(1);
+  });
+
+  it("holds the tree to the rest of the contract as well, finding by finding", () => {
+    const tree = dialogTree({ form: ONE_COLUMN });
+    const broken: PhiResolvedCmsPageTree = {
+      ...tree,
+      page: { ...tree.page, path: "/admin/elsewhere" },
+      contentWidgets: [{ ...tree.contentWidgets[0]!, parentLayoutNodeId: ids.secondForm }],
+    };
+    expect(checkPhiPresetTreeContract(broken, { page }).map((finding) => finding.message)).toEqual([
+      "Preset loader returned a Page outside its requested context.",
+      `Preset widget "${ids.form}" has unresolved parent "${ids.secondForm}".`,
+    ]);
   });
 });

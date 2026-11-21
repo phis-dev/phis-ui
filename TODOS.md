@@ -8,6 +8,14 @@ and `scripts/validate-todos-wants.ts` refuses the entry once the catalog has one
 
 ## At the next release
 
+- **`checkPhiPresetTreeContract` in `@phis/ui/module/page-check`**: the rules the descriptor compiler holds
+  every preset tree to (ids, parents, roots, the dialog's body, actions and width) as findings, the same
+  code the compiler throws from (`helpers/preset-tree-contract-check.ts`). A Module runs it in its tests with
+  its own Forms (THIRD_PARTY_MODULES.md, "Checking a Page preset"); `@phis/shop` does. Graph budget of
+  `./module/page-check` raised by about 77 KiB: the door now carries the contract and what it reads (the
+  dialog configs and the Form column reading, the base page layout node and the preset node factories,
+  the Layout and Widget type keys); it is verify-time and never loaded by a Site.
+
 - **0.5.7: a floated Markdown picture has a width step, an Overlay's ink is a colour or a gradient with a
   direction, and a field edits an Overlay alone.** `imageFloatWidth` on the Markdown Widget and `width=` in
   a picture's address take `small`, `medium`, `large` (the default, as before) or `xlarge` (LAYOUTING.md).

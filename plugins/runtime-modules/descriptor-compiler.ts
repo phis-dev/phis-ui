@@ -8,11 +8,9 @@ import type { PhiFormDescriptor } from "@phis/contracts/forms";
 import type { PhiRuntimeModuleFormDefinition } from "../../components/forms/form-registry";
 import { collectPhiTourDefinitionErrors } from "../../types/tours";
 import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../constants/phi-cms";
-import { PhiCmsLayoutType } from "../../constants/cms-layout-type-keys";
 import {
   createPhiPresetCmsInstanceId,
   createPhiPresetCmsPageId,
-  isPhiCmsInstanceId,
   readPhiCmsInstanceIdDescriptor,
   type PhiCmsInstanceId,
 } from "../../types/cms-instance-id";
@@ -55,7 +53,6 @@ import type {
   PhiRuntimeModuleId,
 } from "../../types/cms-module-descriptors";
 import type {
-  PhiCmsLayoutNode,
   PhiCmsPageNode,
   PhiResolvedCmsAreaPresetTree,
   PhiResolvedCmsPageTree,
@@ -82,19 +79,7 @@ import {
   type PhiAreaLandingSelection,
   type PhiPublicRoutePathAssignment,
 } from "../../helpers/cms-area-config";
-import { resolvePhiLayoutCreationPreset } from "../../helpers/cms-layout-defaults";
-import {
-  PHI_DIALOG_BLEED_BODY_CONFIG,
-  PHI_DIALOG_BODY_CONFIG,
-  PHI_DIALOG_COMMANDS_CONFIG,
-  PHI_DIALOG_WIDTH,
-  isPhiFormSingleColumn,
-} from "../../helpers/cms-dialog";
-import { PhiCmsWidgetType } from "../../constants/cms-widget-types";
-import {
-  buildPhiBasePageLayoutNode,
-  PHI_BASE_PAGE_LAYOUT_NODE_ID,
-} from "../../components/regions/presets/phi-base-page-layout";
+import { checkPhiPresetTreeContract } from "../../helpers/preset-tree-contract-check";
 import { concatPhiCmsTreeControllerSettings } from "../../helpers/cms-tree-controller-settings";
 import { createPhiModuleMediaResolver } from "../../helpers/module-media";
 import type { PhiModuleMediaLoader } from "../../types/module-media";
@@ -2092,54 +2077,14 @@ function createSyntheticPresetPage({
   };
 }
 
-function stablePresetNodeJson(value: unknown): string {
-  if (Array.isArray(value)) {
-    return `[${value.map(stablePresetNodeJson).join(",")}]`;
-  }
-  if (value && typeof value === "object") {
-    return `{${Object.entries(value as Record<string, unknown>)
-      .filter(([, entry]) => entry !== undefined)
-      .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
-      .map(([key, entry]) => `${JSON.stringify(key)}:${stablePresetNodeJson(entry)}`)
-      .join(",")}}`;
-  }
-  return JSON.stringify(value) ?? "undefined";
-}
-
-/**
- * Equal id must mean equal node: the shared page scaffold carries the same instance id in every
- * built-in preset tree, which stays sound only while every copy is the canonical node. A preset that
- * wants different chrome gets its own Layout node in a slot -- a deviating copy of the scaffold is a
- * contract violation, not a customisation.
- */
-function assertPhiCmsBasePageLayoutNode(
-  tree: PhiResolvedCmsPageTree,
-  layoutsById: ReadonlyMap<string, PhiCmsLayoutNode>,
-) {
-  for (const node of [...tree.overlays, ...tree.contentWidgets]) {
-    if (node.id === PHI_BASE_PAGE_LAYOUT_NODE_ID) {
-      throw new Error("The base page layout instance id is reserved for the scaffold Layout node.");
-    }
-  }
-  const node = layoutsById.get(PHI_BASE_PAGE_LAYOUT_NODE_ID);
-  if (!node) {
-    return;
-  }
-  const canonical = buildPhiBasePageLayoutNode(tree.page);
-  const mismatch = (Object.keys(canonical) as (keyof PhiCmsLayoutNode)[])
-    .find((key) => stablePresetNodeJson(node[key]) !== stablePresetNodeJson(canonical[key]));
-  if (mismatch) {
-    throw new Error(
-      `Preset tree carries a deviating base page layout node: "${String(mismatch)}" is ` +
-      `${stablePresetNodeJson(node[mismatch])}, canonical is ${stablePresetNodeJson(canonical[mismatch])}.`,
-    );
-  }
-}
-
 /** What the tree contract reads of a Form a Module ships: its descriptor, for a dialog's width. */
 type PhiCmsPresetTreeForm = { descriptor: PhiFormDescriptor };
 
 /**
+ * The preset tree contract, enforced: the first of `checkPhiPresetTreeContract`'s findings
+ * (`helpers/preset-tree-contract-check.ts`, which a Module runs in its own tests from
+ * `@phis/ui/module/page-check`) is thrown, and the Page answers 500.
+ *
  * `forms` are the Forms the compiler can see -- the ones the catalog's Modules ship, by id. A Form it
  * cannot see (one stored on the Site, one of a Module outside the catalog) is not judged.
  */
@@ -2148,112 +2093,9 @@ export function assertPhiCmsPresetTreeContract(
   expectedPage?: PhiCmsPageNode,
   forms?: ReadonlyMap<string, PhiCmsPresetTreeForm>,
 ) {
-  const layoutIds = new Set<string>();
-  const allIds = new Set<string>();
-  if (
-    expectedPage &&
-    (tree.page.siteId !== expectedPage.siteId ||
-      tree.page.areaMask !== expectedPage.areaMask ||
-      tree.page.path !== expectedPage.path)
-  ) {
-    throw new Error("Preset loader returned a Page outside its requested context.");
-  }
-  for (const node of tree.overlays) {
-    if (!isPhiCmsInstanceId(node.id) || readPhiCmsInstanceIdDescriptor(node.id)?.origin !== "preset") {
-      throw new Error(`Preset Overlay has invalid instance id "${String(node.id)}".`);
-    }
-    if (allIds.has(node.id)) {
-      throw new Error(`Preset tree contains duplicate instance id "${node.id}".`);
-    }
-    allIds.add(node.id);
-  }
-  for (const node of tree.layoutNodes) {
-    if (!isPhiCmsInstanceId(node.id) || readPhiCmsInstanceIdDescriptor(node.id)?.origin !== "preset") {
-      throw new Error(`Preset layout node has invalid instance id "${String(node.id)}".`);
-    }
-    if (allIds.has(node.id)) {
-      throw new Error(`Preset tree contains duplicate instance id "${node.id}".`);
-    }
-    allIds.add(node.id);
-    layoutIds.add(node.id);
-  }
-  for (const node of tree.contentWidgets) {
-    if (!isPhiCmsInstanceId(node.id) || readPhiCmsInstanceIdDescriptor(node.id)?.origin !== "preset") {
-      throw new Error(`Preset widget node has invalid instance id "${String(node.id)}".`);
-    }
-    if (allIds.has(node.id)) {
-      throw new Error(`Preset tree contains duplicate instance id "${node.id}".`);
-    }
-    allIds.add(node.id);
-  }
-  for (const node of tree.layoutNodes) {
-    if (node.parentLayoutNodeId != null && !layoutIds.has(node.parentLayoutNodeId)) {
-      throw new Error(`Preset layout "${node.id}" has unresolved parent "${node.parentLayoutNodeId}".`);
-    }
-  }
-  for (const node of tree.contentWidgets) {
-    if (!layoutIds.has(node.parentLayoutNodeId)) {
-      throw new Error(`Preset widget "${node.id}" has unresolved parent "${node.parentLayoutNodeId}".`);
-    }
-  }
-  for (const region of tree.regions) {
-    if (expectedPage && region.pageId !== expectedPage.id) {
-      throw new Error(`Preset region "${region.regionType}" belongs to a different Page.`);
-    }
-    if (!layoutIds.has(region.rootLayoutNodeId)) {
-      throw new Error(`Preset region "${region.regionType}" has unresolved root "${region.rootLayoutNodeId}".`);
-    }
-  }
-  const layoutsById = new Map(tree.layoutNodes.map((node) => [node.id, node]));
-  assertPhiCmsBasePageLayoutNode(tree, layoutsById);
-  for (const overlay of tree.overlays) {
-    if (!layoutIds.has(overlay.bodyLayoutNodeId)) {
-      throw new Error(`Preset Overlay "${overlay.id}" has unresolved Body root "${overlay.bodyLayoutNodeId}".`);
-    }
-    if (overlay.headerLayoutNodeId != null && !layoutIds.has(overlay.headerLayoutNodeId)) {
-      throw new Error(`Preset Overlay "${overlay.id}" has unresolved Header root "${overlay.headerLayoutNodeId}".`);
-    }
-    if (overlay.footerPresentation === "none") {
-      continue;
-    }
-    const footerLayout = layoutsById.get(overlay.footerLayoutNodeId);
-    if (!footerLayout) {
-      throw new Error(`Preset Overlay "${overlay.id}" has unresolved Footer root "${overlay.footerLayoutNodeId}".`);
-    }
-    if (overlay.footerPresentation === "actions") {
-      if (footerLayout.widgetType !== PhiCmsLayoutType.Flex) {
-        throw new Error(`Preset Overlay "${overlay.id}" actions Footer must use the Phi Flex Layout.`);
-      }
-      const expectedConfig = resolvePhiLayoutCreationPreset("flex", "overlay-actions");
-      const mismatch = Object.entries(expectedConfig).find(([key, value]) =>
-        JSON.stringify(footerLayout.config[key]) !== JSON.stringify(value));
-      if (mismatch) {
-        throw new Error(
-          `Preset Overlay "${overlay.id}" actions Footer does not match the canonical Layout preset at "${mismatch[0]}".`,
-        );
-      }
-      if (overlay.overlayType === "modal") {
-        assertPhiCmsDialogCommands(overlay.id, footerLayout.id, tree.contentWidgets);
-      }
-    }
-  }
-  for (const overlay of tree.overlays) {
-    if (overlay.overlayType === "modal") {
-      assertPhiCmsDialogBody(overlay.id, layoutsById.get(overlay.bodyLayoutNodeId)!);
-      if (forms) assertPhiCmsDialogWidth(overlay, tree, forms);
-    }
-  }
-  for (const rootLayoutNodeId of [
-    tree.page.heroRootLayoutNodeId,
-    tree.page.headerBottomRootLayoutNodeId,
-    tree.page.siderRightRootLayoutNodeId,
-    tree.page.footerTopRootLayoutNodeId,
-    tree.page.drawerRightRootLayoutNodeId,
-    tree.page.contentRootLayoutNodeId,
-  ]) {
-    if (rootLayoutNodeId != null && !layoutIds.has(rootLayoutNodeId)) {
-      throw new Error(`Preset Page has unresolved root "${rootLayoutNodeId}".`);
-    }
+  const [finding] = checkPhiPresetTreeContract(tree, { page: expectedPage, forms });
+  if (finding) {
+    throw new Error(finding.message);
   }
 }
 
@@ -2479,78 +2321,4 @@ export async function instantiatePhiCmsRoutePreset({
       };
   assertPhiCmsPresetTreeContract(tree, page, catalog.formDefinitionsById);
   return tree;
-}
-
-/*
- * A dialog's body and actions are one answer for every dialog (`helpers/cms-dialog.ts`), checked here as
- * the footer Layout is: a Preset that builds its dialog node by node must arrive at the same look as one
- * that calls `dialog`. A vertical Flex carries the whole body config; a Layout of another kind -- a Stack
- * of tabs -- carries the ground and the inset, which are what make it the dialog's body.
- */
-function assertPhiCmsDialogBody(overlayId: string, body: { id: string; widgetType: string; config: Record<string, unknown> }) {
-  // The bleed body is the other answer, for content that runs to the edge; it is matched whole.
-  const bleed = PHI_DIALOG_BLEED_BODY_CONFIG.padding === body.config.padding;
-  const required: Record<string, unknown> = bleed
-    ? PHI_DIALOG_BLEED_BODY_CONFIG
-    : body.widgetType === PhiCmsLayoutType.FlexVertical
-      ? PHI_DIALOG_BODY_CONFIG
-      : { surface: PHI_DIALOG_BODY_CONFIG.surface, padding: PHI_DIALOG_BODY_CONFIG.padding };
-  const mismatch = Object.entries(required).find(([key, value]) =>
-    JSON.stringify(body.config[key]) !== JSON.stringify(value));
-  if (mismatch) {
-    throw new Error(
-      `Preset Overlay "${overlayId}" Body "${body.id}" does not match the dialog body (${bleed ? "PHI_DIALOG_BLEED_BODY_CONFIG" : "PHI_DIALOG_BODY_CONFIG"}) at "${mismatch[0]}".`,
-    );
-  }
-}
-
-function assertPhiCmsDialogCommands(
-  overlayId: string,
-  footerLayoutId: string,
-  widgets: readonly { id: string; widgetType: string; parentLayoutNodeId: string; config: Record<string, unknown> }[],
-) {
-  for (const widget of widgets) {
-    if (widget.parentLayoutNodeId !== footerLayoutId || widget.widgetType !== PhiCmsWidgetType.CommandToolbar) continue;
-    const mismatch = Object.entries(PHI_DIALOG_COMMANDS_CONFIG).find(([key, value]) => widget.config[key] !== value);
-    if (mismatch) {
-      throw new Error(
-        `Preset Overlay "${overlayId}" actions "${widget.id}" do not match the dialog actions (PHI_DIALOG_COMMANDS_CONFIG) at "${mismatch[0]}".`,
-      );
-    }
-  }
-}
-
-/*
- * A dialog is as wide as its Form needs (`helpers/cms-dialog.ts`): one column takes
- * `PHI_DIALOG_WIDTH_SINGLE_COLUMN`, two keep `PHI_DIALOG_WIDTH`. What is refused is the one width a Preset
- * did not choose -- the default, holding nothing but Forms of one column. Any other width was stated, by a
- * caller that knows what else the body holds; a Form the compiler cannot see is not judged.
- */
-function assertPhiCmsDialogWidth(
-  overlay: { id: string; bodyLayoutNodeId: string; config: Record<string, unknown> },
-  tree: PhiResolvedCmsPageTree,
-  forms: ReadonlyMap<string, PhiCmsPresetTreeForm>,
-) {
-  if (stablePresetNodeJson(overlay.config.width) !== stablePresetNodeJson(PHI_DIALOG_WIDTH)) return;
-  const bodyLayoutIds = new Set<string>([overlay.bodyLayoutNodeId]);
-  for (let grown = true; grown;) {
-    grown = false;
-    for (const node of tree.layoutNodes) {
-      if (node.parentLayoutNodeId != null && bodyLayoutIds.has(node.parentLayoutNodeId) && !bodyLayoutIds.has(node.id)) {
-        bodyLayoutIds.add(node.id);
-        grown = true;
-      }
-    }
-  }
-  const formIds = tree.contentWidgets
-    .filter((widget) => widget.widgetType === PhiCmsWidgetType.Form && bodyLayoutIds.has(widget.parentLayoutNodeId))
-    .map((widget) => widget.config.formId);
-  if (formIds.length === 0) return;
-  const descriptors = formIds.map((formId) => (typeof formId === "string" ? forms.get(formId) : undefined)?.descriptor);
-  if (descriptors.every((descriptor) => descriptor != null && isPhiFormSingleColumn(descriptor))) {
-    throw new Error(
-      `Preset Overlay "${overlay.id}" holds the one-column Form "${String(formIds[0])}" at the full dialog width ` +
-      "(PHI_DIALOG_WIDTH). Hand the Form to `dialog` as `body.form`, or state `width: PHI_DIALOG_WIDTH_SINGLE_COLUMN`.",
-    );
-  }
 }

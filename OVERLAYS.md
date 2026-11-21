@@ -514,7 +514,8 @@ second one beside it, and that is two columns (`isPhiFormSingleColumn`).
 `config` is the caller's own and always wins. The descriptor compiler checks the result against the Forms
 the active Modules ship: a modal at exactly `PHI_DIALOG_WIDTH` whose body holds only Forms of one column is
 refused. Any other stated width passes, and a Form the compiler cannot see -- one stored on the Site -- is
-not judged.
+not judged. A Module runs the same rules in its own tests with `checkPhiPresetTreeContract` and its own
+Forms (`@phis/ui/module/page-check`; THIRD_PARTY_MODULES.md, "Checking a Page preset").
 
 A Builder-only prompt is not exempt for being Builder-only. `mountPolicy` and the Area preset are where a
 workspace dialog belongs just as much as a public one; "it only shows up in the Builder" describes who
