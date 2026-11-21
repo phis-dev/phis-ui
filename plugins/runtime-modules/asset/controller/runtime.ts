@@ -36,6 +36,7 @@ import {
   resolvePhiMediaFolderIdFromValue,
   combinePhiMediaFlagValues,
 } from "../../../../components/media/media-folder-options";
+import { splitPhiMediaFolderNamePath } from "../../../../components/media/media-folder-name-path";
 
 const ASSET_FORM_FLAG_VALUES = Object.values(PhiMediaAssetFlags);
 
@@ -48,13 +49,6 @@ type PhiAssetFolderRequest = {
   correlationId: string;
   parentPath: string;
 };
-
-function splitPhiMediaFolderNamePath(value: string | null | undefined) {
-  return (value ?? "")
-    .split("/")
-    .map((segment) => segment.trim())
-    .filter(Boolean);
-}
 
 function buildPhiMediaFolderNamePath(folders: PhiMediaAssetFolder[], folderId: number | null) {
   const names = buildPhiMediaFolderNamesById(folders, folderId);

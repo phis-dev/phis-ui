@@ -392,7 +392,7 @@ there wherever your Page stands, and none of it is in the Core table above.
 | --- | --- | --- | --- |
 | An author picks one Asset in a Form (a logo, a cover) | form field `media-asset` | The Asset id as a number, `null` for none; Site Space only. | `asset/form-providers.ts`, `asset/media-asset-form-control.tsx`, [FORMS.md](./FORMS.md#field-and-validation-providers) |
 | Somebody attaches a file to a Form | form field `upload` (Core) | The Asset ids of the finished uploads; `space` picks the Site's or the viewer's Space, not a Folder. | `components/forms/upload-form-control.tsx`, [FORMS.md](./FORMS.md#field-and-validation-providers) |
-| Files dropped into a Folder on a Page | Widget `area-upload` | Uploads into the Folder the Asset Controller holds, inside the Media library into the open one; an upload wall with delete. Demands the Asset Controller and the Media collection Provider. | `asset/widgets/area-upload/`, `components/media/phi-area-upload-widget.tsx` |
+| Files dropped into a Folder on a Page | Widget `area-upload` | Uploads into the Folder its `folderPath` names (a path of names in the Site Space, `"Shop Images / Products"`, resolved at each upload, missing Folders created on the first), without one into the Folder the Asset Controller holds, inside the Media library into the open one; an upload wall with delete. Demands the Asset Controller and the Media collection Provider. | `asset/widgets/area-upload/`, `components/media/phi-area-upload-widget.tsx` |
 | A Media library: Folders, upload, new Folder, lock | Widget `collection-view` with the Asset binding, as the Builder's Media page (`builder-media-page`) places it | Uploads into the open Folder; creating and locking a Folder are its actions. | `core/widgets/collection-view/asset-binding.tsx`, `asset/trees/phi-default-builder-media-page-tree.ts`, [COLLECTIONS.md](./COLLECTIONS.md) |
 | Browse and choose on a Page, wired to other Widgets | Widget `media-picker` | Emits `selection` (`PhiMediaAssetSelection`: `assetId`, `asset`, `variantKey`), `path`, `query`, `pagination`. Imports a media source's item into the Folder it shows; uploads no local file. | `asset/widgets/media-picker/`, `components/media/phi-media-picker-binding.tsx` |
 | A picker inside a Widget of mine | `PhiMediaPickerControl`, controlled | What you pass it; the binding that feeds it is internal ([Offering an image picker](#offering-an-image-picker)). | `@phis/ui/controls` |
@@ -406,15 +406,15 @@ there wherever your Page stands, and none of it is in the Core table above.
 Every upload goes the same way: `usePhiMediaUpload` and `runPhiMediaUploadSession`
 (`components/media/phi-media-upload.ts`, `components/media/media-upload-flow.ts`, both internal) take a Space
 and a `folderId` and call Core's `POST /api/site/media/uploads/init` (`folderId` in the body, `spaceId` in
-the query), then the bytes, then finalize. An Add-on that reserved a place with `assets:v1` uploads with
+the query), then the bytes, then finalize. A `folderPath` instead of a `folderId` is resolved in the Site
+Space first, over Core's `GET`/`POST /api/site/media/folders` (`resolvePhiMediaUploadFolderPathId`); a
+Folder that cannot be created below a locked one reads as the lock refusal. An Add-on that reserved a place with `assets:v1` uploads with
 `runPhiAddonAssetUpload` from `@phis/ui/media`.
 
 Known gaps ([TODOS.md](./TODOS.md), "Media and Theme"):
 
 - The `media-asset` field's picker chooses; it cannot upload a file in place. The file goes up on the Media
   page first.
-- `area-upload`'s `folderPath` is offered in the Inspector, parsed and shown on the canvas, and read by
-  nothing: the Folder is always the Controller's.
 - `usePhiMediaPickerBinding` is not a public door, so a picker outside a Form is the Foundation's to give.
 
 ### I need ... use ...
@@ -2940,8 +2940,7 @@ for the provider and still discloses the page it comes from.
 - Every controllerless Module contributes at least one meaningful owned artifact and no no-op Controller.
 - Widgets use Phi Controls, providers, signaling, and the shared Canvas scaffold contracts.
 - Every field a Widget offers in `fields` and reads in its parser is used by its render or its Client. A
-  field that is parsed and then read by nothing tells the author something happens that does not
-  (`area-upload`'s `folderPath` is the standing case).
+  field that is parsed and then read by nothing tells the author something happens that does not.
 - A capability reported as missing names the owning Module and what of it was checked -- Widgets,
   Controller, field Providers, data Providers, Core routes ([AGENTS.md](./AGENTS.md#before-you-call-something-missing)).
 - A Widget draws itself in the Builder only with meaningful content (sample values, the shape of its

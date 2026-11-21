@@ -138,6 +138,7 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
   const collectionFolderId = collectionContext?.folderId ?? null;
   const collectionPresentationFlags = collectionContext?.presentationFlags ?? null;
   const hasCollectionContext = collectionContext != null;
+  const configFolderPath = config?.folderPath ?? null;
   const uploadInitOptions = useMemo(() => resolvePhiMediaUploadInitOptions({
     collectionContext: hasCollectionContext
       ? { folderId: collectionFolderId, presentationFlags: collectionPresentationFlags }
@@ -147,12 +148,15 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
       presentationFlags: previewState.presentationFlags,
     },
     configPresentationFlags: config?.presentationFlags,
+    // A Folder this Widget names is where it uploads, whichever one the Controller has open.
+    configFolderPath,
     // Whatever Space the listing last answered with -- an upload follows the eye, not a separate choice.
     activeSpaceAddress: previewState.activeSpace?.address ?? null,
   }), [
     collectionFolderId,
     collectionPresentationFlags,
     config?.presentationFlags,
+    configFolderPath,
     hasCollectionContext,
     previewState.activeSpace?.address,
     previewState.presentationFlags,

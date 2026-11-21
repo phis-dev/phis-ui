@@ -1,5 +1,6 @@
 import { isPhiRecord } from "../../helpers/is-record";
 import type { PhiImagePreviewApiRecord } from "./phi-image-preview-data";
+import { findPhiMediaFolderByNamePath, splitPhiMediaFolderNamePath } from "./media-folder-name-path";
 import { buildPhiMediaClientDigest } from "./media-upload-digest";
 import { PHIS_AREA_HEADER, buildPhiMediaRequestHeaders } from "./phi-media-request-headers";
 
@@ -446,6 +447,14 @@ function readPlanTarget(plan: PhiMediaUploadPlan) {
 
 export type PhiMediaUploadInitOptions = {
   folderId?: number | null;
+  /**
+   * A Folder of the Site Space named by its path of names from the root, for a surface whose setting
+   * names one -- the `area-upload` Widget's `folderPath`. A setting holds the path and not an id, because
+   * a preset states the same path on every Site, and it is resolved to the Folder's id each time a session
+   * is begun, never kept resolved (`resolvePhiMediaUploadFolderPathId`). Where it is given it stands in
+   * for `folderId` and for `spaceAddress`: a path is read in the Site Space, whatever Space is in view.
+   */
+  folderPath?: readonly string[] | null;
   presentationFlags?: number | null;
   /**
    * The Space the surface is currently reading, as the control plane named it.
@@ -473,13 +482,30 @@ export type PhiMediaUploadContext = {
  * The Space is inherited whole and separately, because it is not a filter a panel owns: it is the Space
  * the control plane said it served. An upload started while looking at a group's library therefore goes
  * to that group instead of silently to the Site Space.
+ *
+ * A Folder the Widget's own setting names (`configFolderPath`, "Shop Images / Products") is the one
+ * exception to inheriting: it is where this Widget puts what it takes, whichever Folder the panel or the
+ * Controller has open, and it is a Folder of the Site Space. It travels as the path; the session resolves
+ * it. The flags are inherited as before. A blank setting is no setting.
  */
 export function resolvePhiMediaUploadInitOptions(input: {
   collectionContext?: PhiMediaUploadContext | null;
   previewState: PhiMediaUploadContext;
   configPresentationFlags?: number | null;
+  configFolderPath?: string | null;
   activeSpaceAddress?: string | null;
 }): PhiMediaUploadInitOptions {
+  const folderPath = splitPhiMediaFolderNamePath(input.configFolderPath);
+  if (folderPath.length > 0) {
+    return {
+      folderId: null,
+      folderPath,
+      presentationFlags: input.collectionContext
+        ? input.collectionContext.presentationFlags ?? 0
+        : input.previewState.presentationFlags ?? input.configPresentationFlags ?? 0,
+      spaceAddress: null,
+    };
+  }
   const spaceAddress = input.activeSpaceAddress?.trim() || null;
   if (input.collectionContext) {
     return {
@@ -505,14 +531,103 @@ async function readJsonResponse<T extends { error?: string }>(response: Response
   return payload;
 }
 
+const PHI_MEDIA_FOLDERS_PATH = "/api/site/media/folders";
+
+/** Paths being resolved right now, so files dropped together create a missing Folder once, not once each. */
+const pendingPhiMediaUploadFolderPaths = new Map<string, Promise<number>>();
+
+/**
+ * The id of the Site Space's Folder a path of names leads to, the Folders it names that are not there yet
+ * created on the way, below the deepest one that is.
+ *
+ * Read afresh for every session rather than kept, because a Folder is renamed, moved or deleted between
+ * two uploads and the path is what the setting means. Creating is what makes a preset's Folder work on a
+ * Site that has never had it: the first upload brings it into being, with the same authority the upload
+ * itself needs, since writing into the Site Space is Media administration either way. A locked Folder on
+ * the way is not written into: Core refuses the new Folder (`media_folder_locked`) or the upload
+ * (`folder_locked`), and both read as the lock refusal.
+ *
+ * Two files dropped at once ask for the same path at once. They share one resolution, which is not
+ * stopped by either of them: a Folder half created is not worth stopping for, and the other file still
+ * needs it. Each caller stops waiting for itself.
+ */
+export async function resolvePhiMediaUploadFolderPathId(folderPath: readonly string[], signal?: AbortSignal) {
+  const key = folderPath.map((name) => name.toLowerCase()).join("/");
+  let pending = pendingPhiMediaUploadFolderPaths.get(key);
+  if (!pending) {
+    pending = createPhiMediaUploadFolderPath(folderPath).finally(() => {
+      pendingPhiMediaUploadFolderPaths.delete(key);
+    });
+    pendingPhiMediaUploadFolderPaths.set(key, pending);
+  }
+  const folderId = await pending;
+  throwIfPhiMediaUploadAborted(signal);
+  return folderId;
+}
+
+/**
+ * The three things of a listed Folder a path is walked by, read strictly: a listing that does not carry
+ * them is refused rather than walked, since a guess here creates a Folder twice. Not the library's full
+ * Folder reader, which every upload surface would then carry for the one that names a path.
+ */
+function readPhiMediaUploadFolderPathFolders(value: unknown) {
+  if (!Array.isArray(value)) {
+    throw new PhiMediaUploadError("The media folders route answered without its Folders.", null, 500);
+  }
+  return value.map((entry: unknown) => {
+    const folder = isPhiRecord(entry) ? entry : {};
+    const { id, parentId, name } = folder;
+    if (
+      typeof id !== "number" || !Number.isInteger(id)
+      || (parentId !== null && (typeof parentId !== "number" || !Number.isInteger(parentId)))
+      || typeof name !== "string"
+    ) {
+      throw new PhiMediaUploadError("The media folders route answered a Folder without its id, parent or name.", null, 500);
+    }
+    return { id, parentId, name };
+  });
+}
+
+async function createPhiMediaUploadFolderPath(folderPath: readonly string[]) {
+  const listing = await readJsonResponse<{ folders?: unknown; error?: string }>(await fetch(PHI_MEDIA_FOLDERS_PATH, {
+    headers: buildPhiMediaRequestHeaders({ Accept: "application/json" }),
+    cache: "no-store",
+  }));
+  const reached = findPhiMediaFolderByNamePath(readPhiMediaUploadFolderPathFolders(listing.folders), folderPath);
+  let folderId = reached.folderId;
+  for (const name of folderPath.slice(reached.depth)) {
+    const body = new FormData();
+    body.set("name", name);
+    if (folderId != null) body.set("parentId", String(folderId));
+    const created = await readJsonResponse<{ folder?: { id?: unknown }; error?: string }>(await fetch(PHI_MEDIA_FOLDERS_PATH, {
+      method: "POST",
+      headers: buildPhiMediaRequestHeaders({ Accept: "application/json" }),
+      cache: "no-store",
+      body,
+    }));
+    const createdId = created.folder?.id;
+    if (typeof createdId !== "number" || !Number.isInteger(createdId) || createdId <= 0) {
+      throw new PhiMediaUploadError("The media folders route answered a created Folder without its id.", null, 500);
+    }
+    folderId = createdId;
+  }
+  if (folderId == null) {
+    throw new PhiMediaUploadError("An empty Folder path names no Folder.", null, 400);
+  }
+  return folderId;
+}
+
 export async function initPhiMediaUploadSession(
   file: File,
   options?: PhiMediaUploadInitOptions,
   signal?: AbortSignal,
 ): Promise<PhiMediaUploadInitSession> {
-  const folderId = Number.isInteger(options?.folderId) && (options?.folderId ?? 0) > 0
-    ? options?.folderId
-    : null;
+  const folderPath = options?.folderPath?.length ? options.folderPath : null;
+  const folderId = folderPath
+    ? await resolvePhiMediaUploadFolderPathId(folderPath, signal)
+    : Number.isInteger(options?.folderId) && (options?.folderId ?? 0) > 0
+      ? options?.folderId
+      : null;
   const presentationFlags = Number.isInteger(options?.presentationFlags) && (options?.presentationFlags ?? 0) >= 0 ? options?.presentationFlags : null;
   const meta =
     isPhiRecord(options?.meta)
@@ -520,7 +635,7 @@ export async function initPhiMediaUploadSession(
       : null;
   // The Space is named the way every Media route names one -- as a query parameter -- while the Folder
   // and the flags travel in the body, because those describe the Asset rather than the Space it lands in.
-  const spaceAddress = options?.spaceAddress?.trim() || null;
+  const spaceAddress = folderPath ? null : options?.spaceAddress?.trim() || null;
   /*
    * Hashed before the session is asked for, because the Server signs the digest into the upload request
    * and cannot do that after it has issued one. Null where the browser cannot hash -- an upload without a

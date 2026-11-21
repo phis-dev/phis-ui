@@ -187,11 +187,6 @@ built. Remove an entry when it is done.
   inside the picker, into the Folder it shows, through `usePhiMediaUpload` -- the media-source import
   already lands there. Contract question: whether the field's Site-Space-only rule and `publicOnly` also
   bind what is uploaded.
-- **`area-upload`'s `folderPath` is read by nothing.** The Widget offers it in the Inspector, parses it
-  (`plugins/runtime-modules/asset/widgets/area-upload/config.ts`) and shows it on the canvas
-  (`authoring.tsx`), but `PhiAreaUploadBinding` (`components/media/phi-area-upload-widget.tsx`) uploads into
-  the Asset Controller's Folder, or the Media library's open one, and never reads it. Either wire it (a
-  Folder reference, not a path: Folders are renamed) or remove the field; operator decision.
 - **Media Inspector variant hand-over.** The Inspector always simulates the variant crop from the original
   (`components/media/phi-asset-inspector-section.tsx`) and never shows the generated variant. Decide
   whether that stays and the contract says so, or whether unsaved focal edits get an owner and the preview

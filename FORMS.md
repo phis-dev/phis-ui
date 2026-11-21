@@ -425,7 +425,8 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   Module of the Area serves it -- the Asset Module, which is also what makes the field available. The
   field's picker sends nothing to the Asset Controller, so a Form with this field mounts no Controller
   for it. The picker chooses from what the library holds; it cannot upload a file in place (TODOS.md). A
-  file goes into a Folder through the Asset Module's `area-upload` Widget or the Media page
+  file goes into a Folder through the Asset Module's `area-upload` Widget (the Folder its `folderPath`
+  names, or the one its Controller holds) or the Media page
   ([THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#media-what-the-asset-module-already-does)).
 
   ```ts

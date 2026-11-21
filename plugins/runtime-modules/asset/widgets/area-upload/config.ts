@@ -43,7 +43,7 @@ export const PHI_AREA_UPLOAD_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("area-upload"),
   typeKey: "area-upload",
-  // An upload goes into the folder the Asset Controller holds, so the Controller is where this is.
+  // Without a folderPath an upload goes into the folder the Asset Controller holds, so the Controller is where this is.
   requiredRuntimeControllers: requirePhiAssetController,
   title: "Area Upload",
   description: "Dropzone and temporary upload wall for area-scoped media assets.",
@@ -55,7 +55,12 @@ export const PHI_AREA_UPLOAD_WIDGET_DEFINITION = {
     { key: "allowDelete", type: "boolean", label: "Allow Delete" },
     { key: "multiple", type: "boolean", label: "Multiple" },
     { key: "accept", type: "string", label: "Accept" },
-    // Parsed and shown on the canvas, read by nothing: the upload goes into the Asset Controller's Folder (TODOS.md).
+    /*
+     * A Folder of the Site Space by its path of names, "Shop Images / Products": every upload goes there,
+     * whichever Folder the Controller has open, and the Folders it names that are missing are created on
+     * the first upload. A path and not an id, so a preset can state it for every Site; it is resolved
+     * when an upload begins (`resolvePhiMediaUploadInitOptions`). Empty: the Controller's Folder.
+     */
     { key: "folderPath", type: "string", label: "Folder Path" },
     { key: "presentationFlags", type: "number", label: "Flags", min: 0, precision: 0 },
   ],

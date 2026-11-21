@@ -1,4 +1,4 @@
-import { PHI_MEDIA_UPLOAD_FOLDER_LOCKED_CODE } from "./media-folder-lock";
+import { PHI_MEDIA_FOLDER_LOCKED_CODE, PHI_MEDIA_UPLOAD_FOLDER_LOCKED_CODE } from "./media-folder-lock";
 import type { PhiMediaUploadLabels } from "./media-upload-labels";
 
 /**
@@ -24,7 +24,10 @@ export function readPhiMediaUploadRefusalMessage(code: unknown, labels: PhiMedia
     // Provider, so this is deliberately not the same reading as a network failure.
     case "storage_unreachable":
     case "storage_rejected": return labels.errorStorageUnreachable;
-    case PHI_MEDIA_UPLOAD_FOLDER_LOCKED_CODE: return labels.errorFolderLocked;
+    // The second is Core's word for a Folder that is not created below a locked one, which an upload
+    // into a Folder named by its path meets on the way (`resolvePhiMediaUploadFolderPathId`).
+    case PHI_MEDIA_UPLOAD_FOLDER_LOCKED_CODE:
+    case PHI_MEDIA_FOLDER_LOCKED_CODE: return labels.errorFolderLocked;
     default: return null;
   }
 }
