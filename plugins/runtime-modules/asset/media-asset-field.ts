@@ -1,6 +1,9 @@
 import { PhiMediaKind, isPhiMediaAssetPublic } from "../../../constants/media";
 import type { PhiMediaAssetTile, PhiMediaKindValue } from "../../../types/media";
-import { createPhiConfigReader } from "../../../components/widgets/config/strict-config-reader";
+import {
+  createPhiConfigReader,
+  type PhiConfigReader,
+} from "../../../components/widgets/config/strict-config-reader";
 import {
   isPhiMediaFolderPathTemplate,
   splitPhiMediaFolderNamePath,
@@ -56,8 +59,21 @@ export function readPhiMediaAssetFieldConfig(
 ): PhiMediaAssetFieldConfig {
   const reader = createPhiConfigReader(config ?? {}, "config");
   return {
-    mediaType: reader.oneOf("mediaType", MEDIA_ASSET_FIELD_KINDS) ?? PhiMediaKind.Image,
+    ...readPhiMediaFieldTarget(reader),
     publicOnly: reader.boolean("publicOnly") ?? false,
+  };
+}
+
+/**
+ * What the `media-asset` and the `media-assets` field read alike: the kind the picker lists and the
+ * upload takes (images where none is named), and the Folder path it opens on and uploads into, with its
+ * placeholders unresolved -- by the same strict rules, so the two fields cannot read one setting two ways.
+ */
+export function readPhiMediaFieldTarget(
+  reader: PhiConfigReader,
+): Pick<PhiMediaAssetFieldConfig, "mediaType" | "folderPath"> {
+  return {
+    mediaType: reader.oneOf("mediaType", MEDIA_ASSET_FIELD_KINDS) ?? PhiMediaKind.Image,
     folderPath: splitPhiMediaFolderNamePath(reader.value(
       "folderPath",
       "a Folder path whose placeholders read {key}",

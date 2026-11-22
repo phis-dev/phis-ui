@@ -44,6 +44,7 @@ import { PhiCmsWidgetType } from "../../constants/cms-widget-types";
 import { parsePhiFormWidgetConfig } from "../../components/forms/form-widget-config";
 import {
   PHI_MEDIA_ASSET_FORM_FIELD_PROVIDER_KEY,
+  PHI_MEDIA_ASSETS_FORM_FIELD_PROVIDER_KEY,
   PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS,
   PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY,
 } from "../../constants/media-library-provider-keys";
@@ -624,12 +625,15 @@ export function collectPhiRuntimeDataProviderKeys({
             collected,
           );
           /*
-           * A `media-asset` field reads the Media library through the picker, and a field descriptor names
-           * no Provider of its own to find it by. The field type is what needs it, so the scan says so
-           * once, here, instead of every Form that has one repeating the Provider in its descriptor.
+           * A `media-asset` field reads the Media library through the picker, a `media-assets` field its
+           * tiles and picker too, and a field descriptor names no Provider of its own to find it by. The
+           * field type is what needs it, so the scan says so once, here, instead of every Form that has
+           * one repeating the Provider in its descriptor.
            */
           if (
-            form.descriptor.fields.some((field) => field.fieldProviderKey === PHI_MEDIA_ASSET_FORM_FIELD_PROVIDER_KEY) &&
+            form.descriptor.fields.some((field) =>
+              field.fieldProviderKey === PHI_MEDIA_ASSET_FORM_FIELD_PROVIDER_KEY ||
+              field.fieldProviderKey === PHI_MEDIA_ASSETS_FORM_FIELD_PROVIDER_KEY) &&
             knownProviderKeys.has(PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection)
           ) {
             collected.add(PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection);

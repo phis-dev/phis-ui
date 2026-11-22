@@ -494,12 +494,91 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   ```ts
   {
     key: "logo",
-    fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.mediaAsset,
+    fieldProviderKey: PHI_MEDIA_ASSET_FORM_FIELD_PROVIDER_KEY,
     label: label("logo", "Logo"),
     config: { mediaType: "image", folderPath: "Shop Images / Products" },
     validation: required("logoRequired", "Choose a logo."),
   }
   ```
+- `media-assets` is the many-picture counterpart of `media-asset`: **several Assets** of the Site's Media
+  library for a record that has several (a product's gallery, a post's pictures, a team's portraits),
+  edited inside the record's Form -- so the Form gives the draft, the dirty state, Save and Cancel and the
+  validation, and the handler receives the list on save. It is **owned by the Asset Module** on the same
+  terms (`@phis/ui/modules/asset/form-field/media-assets`, `PHI_MEDIA_ASSETS_FORM_FIELD_PROVIDER_KEY` in
+  `constants/media-library-provider-keys.ts`, declared in the Module's `formProviders.fieldTypes`, the
+  control loaded when the field first renders). Its value is the Asset ids **in the order shown**, a JSON
+  list of numbers (`valueType: "json"`, as the `upload` field's list of ids is: the Form contract's value
+  types have no list of numbers), and `[]` for none, so a save that removes every picture says so and
+  `required` means "at least one" (Ant Design's required rule refuses an empty list). A value is read
+  leniently into ids (`readPhiMediaAssetsFieldValue`): entries that are not positive whole numbers are
+  dropped, an id held twice is held once. A list that acts at once, every action written as it is
+  taken, is not this field but a Collection View with the Media renderer
+  ([COLLECTIONS.md](./COLLECTIONS.md#the-media-renderer)).
+
+  The field is drawn from what that renderer draws, not a copy of it: the Media tiles in the Collection
+  Control (`PhiMediaAssetTileControl` in `PhiCollectionViewControl`), and above them "Choose from Media
+  library" and Upload.
+  - **Remove** is each tile's delete button: it takes the id out of the value and does nothing else -- no
+    confirm, no request, nothing released. What happens to an Asset no longer named is the handler's to
+    decide on save.
+  - **Order** is the Collection's own drag handles (`PhiCollectionReorderContext`, pointer and keyboard,
+    from two tiles on): the order dropped is the value's new order.
+  - **Choose from Media library** opens the library's picker (`usePhiMediaLibraryAddPicker`, the one the
+    Media renderer's toolbar action `add` opens): the Site Space only, the field's `mediaType`, on the
+    Folder `folderPath` names. A pick joins the value at its end; an Asset the value holds already is
+    greyed out.
+  - **Upload** opens the Media library's multi-upload wall (`PhiAreaUploadBinding`) between the buttons and
+    the tiles, into the Folder `folderPath` names (the missing Folders created on the first upload), in the
+    Site Space. Each Asset that arrived leaves the wall and joins the value at its end, so nothing shows
+    twice; one of another kind than `mediaType` (a file the browser could not name reaches Core unrefused)
+    is not added and the field says the upload's type refusal. While a file is on its way the Form's
+    submit is held (`formContext.holdSubmit`, the upload field's `uploadPending`); closing the wall stops
+    what is on its way.
+  - **Tiles** for the ids the field has no tile for yet -- an initial value -- are read in one request:
+    the Media list with the ids repeated (`GET /api/site/media?id=1&id=2…`, at most 100, the usual list
+    shape), through the Media library's collection Provider (`filters.id`, the ids as a list). They are
+    shown in the value's order, not the answer's; an id the list does not answer (released, or not the
+    reader's to see) is an unavailable tile, named `mediaAssetsUnavailable`, that can still be removed. A
+    pick or an upload brings its own tile, so adding reads nothing.
+
+  Settings, read strictly (`plugins/runtime-modules/asset/media-assets-field.ts`, a wrong value is a
+  `PhiConfigError` naming the setting):
+  - `mediaType` and `folderPath`: as `media-asset`'s, read by the same reader
+    (`readPhiMediaFieldTarget`). The `{key}` placeholders are filled from the Form's values when the picker
+    or the upload opens, so a product's pictures go to `"Shop Images / {category} / {product}"` of that
+    product.
+  - `max`: the most Assets the value holds, a whole number from 1 to 100 (`PHI_MEDIA_ASSETS_FIELD_MOST`,
+    the most the list answers by id in one read), 100 where none is named. Once the value is full neither
+    the picker nor the upload is offered; a file the value has no room for, counting those on their way,
+    is refused before it is sent, and a pick beyond it is not added -- both say `mediaAssetsTooMany`. A
+    value beyond `max` (one that came in) holds the Form's submit with the same sentence, shown on the
+    field. A Module whose records allow so many pictures states it here.
+
+  There is no `publicOnly`: the field offers the Site Space only, and Core delivers every Asset of the Site
+  Space publicly from the start (`defaultMediaDeliveryPolicy` in phis-server). As with `media-asset`, what
+  is enforced is enforced by the Server that takes the value: the handler checks the Assets (Space, kind,
+  how many) before it stores them. The handler receives the ids as a JSON list of numbers
+  (`{ "images": [42, 17, 8] }`, `[]` for none). Wording is the Label Set keys in
+  `PHI_FORM_MEDIA_ASSETS_LABEL_KEYS` (`mediaAssetsRemove`, `mediaAssetsReorder` for the drag handle,
+  `mediaAssetsUnavailable`, `mediaAssetsTooMany` with `%1` for `max`), falling back to English. The buttons,
+  the picker and the upload wall say the Media Label Set's words, which the Form Widget reads for every Form
+  with a `media-asset` or a `media-assets` field and hands over under
+  `PHI_FORM_MEDIA_ASSET_PICKER_LABEL_KEYS` ("Choose from Media library" as
+  `mediaAssetPickerChooseFromLibrary`, Upload as `mediaAssetPickerUpload`), with the upload's refusals and
+  hold under the upload field's keys. A Page that renders such a Form mounts the Media library Provider for
+  it, as for `media-asset`.
+
+  ```ts
+  // A Shop product's gallery: the pictures in order, at most twelve, in the product's own Folder.
+  {
+    key: "images",
+    fieldProviderKey: PHI_MEDIA_ASSETS_FORM_FIELD_PROVIDER_KEY,
+    label: label("images", "Pictures"),
+    config: { mediaType: "image", folderPath: "Shop Images / {category} / {slug}", max: 12 },
+  }
+  ```
+  The handler that saves the product receives `images` as `number[]` and writes the gallery in that
+  order: the Assets now named in, the ones no longer named out (released or kept, its decision).
 - A field Provider whose value is only complete later holds the submit itself through
   `formContext.holdSubmit(fieldKey, reason)` and releases it with `null`. `PhiFormControl` refuses a
   submit while any hold stands; the handler is not called.

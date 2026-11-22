@@ -58,13 +58,11 @@ import {
 } from "../../../../../components/media/media-folder-lock";
 import { PhiAreaUploadBinding } from "../../../../../components/media/phi-area-upload-widget";
 import { PhiMediaPickerControl } from "../../../../../components/controls/phi-media-picker-control";
-import { usePhiMediaPickerBinding } from "../../../../../components/media/phi-media-picker-binding";
-import { readPhiMediaUploadFolderPathReach } from "../../../../../components/media/media-upload-flow";
+import { usePhiMediaLibraryAddPicker } from "../../../../../components/media/use-media-library-add-picker";
 import {
   resolvePhiMediaFolderPathTemplate,
   splitPhiMediaFolderNamePath,
 } from "../../../../../components/media/media-folder-name-path";
-import { PHI_SEARCH_WIDGET_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/search";
 import {
   PHI_MEDIA_RENDERER_UPLOAD_PANEL_KEY,
   readPhiMediaRendererResourceActions,
@@ -308,23 +306,12 @@ export function PhiAssetCollectionViewBinding({
    * in phis-server), so there is nothing to grey out; what the resource's `add` takes, it decides. A pick
    * is added; the picker has no upload of its own here -- the Collection's upload panel is that.
    */
-  const pickerOpenOnFolder = useCallback(
-    (signal: AbortSignal) => readPhiMediaUploadFolderPathReach(folderPath, signal),
-    [folderPath],
-  );
-  const libraryPicker = usePhiMediaPickerBinding({
-    config: {
-      mediaType: mediaType ?? PhiMediaKind.Image,
-      pageSize: 12,
-      showPagination: true,
-      showSearchBar: true,
-    },
+  const readFolderPath = useCallback(() => folderPath, [folderPath]);
+  const libraryPicker = usePhiMediaLibraryAddPicker({
+    mediaType,
     labels,
-    searchLabels: PHI_SEARCH_WIDGET_DEFAULT_LABELS,
-    value: null,
-    siteSpaceOnly: true,
+    folderPath: folderPath.length > 0 ? readFolderPath : null,
     onAssetSelect: (picked) => { void addAssets([picked.id]); },
-    openOnFolder: folderPath.length > 0 ? pickerOpenOnFolder : null,
   });
 
   if (toolFailure) {

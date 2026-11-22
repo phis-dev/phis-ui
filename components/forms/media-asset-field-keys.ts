@@ -1,5 +1,5 @@
 /**
- * The `media-asset` field's picker words, under the keys its control reads them from.
+ * The `media-asset` and `media-assets` fields' picker words, under the keys their controls read them from.
  *
  * The field opens the Media library's own picker, and the picker's words are the Media Label Set's
  * (`getPhiMediaWidgetLabels`). The Form Widget reads that set on the Server for every Form that has a
@@ -25,6 +25,8 @@ export const PHI_FORM_MEDIA_ASSET_PICKER_LABEL_KEYS = {
   importingLabel: "mediaAssetPickerImporting",
   importFailedText: "mediaAssetPickerImportFailed",
   loadMoreLabel: "mediaAssetPickerLoadMore",
+  /** The `media-assets` field's button that opens the picker (the Media Label Set's "Choose from Media library"). */
+  chooseFromLibraryLabel: "mediaAssetPickerChooseFromLibrary",
   /** The picker's upload button (the Media Label Set's upload toggle). */
   uploadLabel: "mediaAssetPickerUpload",
   /*

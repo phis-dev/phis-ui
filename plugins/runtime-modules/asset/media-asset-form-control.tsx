@@ -5,12 +5,9 @@ import { useCallback, useEffect, useMemo, useState, type ComponentType } from "r
 import { PhiButtonControl } from "../../../components/controls/phi-button-control";
 import { PhiFlexControl } from "../../../components/controls/phi-flex-control";
 import { PhiMediaAssetTileControl } from "../../../components/controls/phi-media-asset-tile-control";
-import { PHI_FORM_MEDIA_ASSET_PICKER_LABEL_KEYS } from "../../../components/forms/media-asset-field-keys";
 import { PHI_FORM_UPLOAD_LABEL_KEYS } from "../../../components/forms/upload-field-keys";
-import { readPhiFormUploadRefusalLabels } from "../../../components/forms/upload-field-refusal-labels";
 import { PhiMediaPickerControl } from "../../../components/controls/phi-media-picker-control";
 import { PhiTypographyControl } from "../../../components/controls/phi-typography-control";
-import { PHI_MEDIA_WIDGET_DEFAULT_LABELS } from "../../../components/media/media-widget-labels";
 import {
   usePhiMediaPickerBinding,
   type PhiMediaPickerUploadBinding,
@@ -24,6 +21,7 @@ import { PHI_SEARCH_WIDGET_DEFAULT_LABELS } from "../../../components/widgets/la
 import { isPhiMediaAssetPublic } from "../../../constants/media";
 import type { PhiFormFieldProviderProps } from "../../../components/forms/form-provider-registry";
 import { PHI_FORM_MEDIA_ASSET_LABEL_KEYS } from "./form-providers";
+import { readPhiMediaFieldPickerLabels } from "./media-field-picker-labels";
 import {
   isPhiMediaAssetFieldSelectable,
   readPhiMediaAssetFieldConfig,
@@ -92,8 +90,8 @@ export const PhiMediaAssetFormControl: ComponentType<PhiFormFieldProviderProps> 
   const change = read("change");
   const notPublic = read("notPublic");
 
-  // The upload's refusals and its hold are the upload field's words, read for this field too.
-  const refusals = useMemo(() => readPhiFormUploadRefusalLabels(labels), [labels]);
+  // The upload's hold is the upload field's sentence, read for this field too; its refusals are in the
+  // picker's upload words (`readPhiMediaFieldPickerLabels`).
   const pendingLabel = labels?.[PHI_FORM_UPLOAD_LABEL_KEYS.pending]?.trim() || PHI_MEDIA_UPLOAD_FIELD_DEFAULT_LABELS.pending;
   const [uploadNotice, setUploadNotice] = useState<string | null>(null);
   const acceptance = useMemo(() => ({ kinds: [config.mediaType], multiple: false }), [config.mediaType]);
@@ -119,25 +117,8 @@ export const PhiMediaAssetFormControl: ComponentType<PhiFormFieldProviderProps> 
 
   // The picker's words come from the Media Label Set, which the Form Widget read for this Form
   // (`resolvePhiFormFieldLabels`); outside a Form that read them, the English defaults stand.
-  const readPicker = useCallback(
-    (key: keyof typeof PHI_FORM_MEDIA_ASSET_PICKER_LABEL_KEYS, fallback: string) =>
-      labels?.[PHI_FORM_MEDIA_ASSET_PICKER_LABEL_KEYS[key]]?.trim() || fallback,
-    [labels],
-  );
-  const pickerUploadLabels = useMemo(() => {
-    const base = PHI_MEDIA_WIDGET_DEFAULT_LABELS.upload;
-    return {
-      ...base,
-      uploadToggleLabel: readPicker("uploadLabel", base.uploadToggleLabel),
-      dropTitle: readPicker("uploadDropTitle", base.dropTitle),
-      dropHint: readPicker("uploadDropHint", base.dropHint),
-      retryLabel: readPicker("uploadRetryLabel", base.retryLabel),
-      doneLabel: readPicker("uploadDoneLabel", base.doneLabel),
-      failedLabel: readPicker("uploadFailedLabel", base.failedLabel),
-      uploadSuccessTemplate: readPicker("uploadSuccessTemplate", base.uploadSuccessTemplate),
-      refusals,
-    };
-  }, [readPicker, refusals]);
+  const mediaLabels = useMemo(() => readPhiMediaFieldPickerLabels(labels), [labels]);
+  const pickerUploadLabels = mediaLabels.upload;
 
   /*
    * The upload is the Media library's own surface (`PhiAreaUploadBinding`), one file: the drop area and
@@ -162,41 +143,17 @@ export const PhiMediaAssetFormControl: ComponentType<PhiFormFieldProviderProps> 
         onUploadingChange={setUploading}
         onAssetUploaded={(tile) => {
           const refusal = readPhiMediaAssetFieldUploadRefusal(config, tile);
-          setUploadNotice(refusal === "kind" ? refusals.errorTypeNotAllowed : refusal ? notPublic : null);
+          setUploadNotice(refusal === "kind" ? pickerUploadLabels.refusals.errorTypeNotAllowed : refusal ? notPublic : null);
           onUploaded(refusal ? null : tile);
         }}
       />
     ),
-  }), [acceptance, config, notPublic, openedFolderPath, pickerUploadLabels, refusals, uploadNotice]);
+  }), [acceptance, config, notPublic, openedFolderPath, pickerUploadLabels, uploadNotice]);
 
-  const pickerLabels = useMemo(() => {
-    const base = PHI_MEDIA_WIDGET_DEFAULT_LABELS;
-    return {
-      ...base,
-      tool: {
-        ...base.tool,
-        searchPlaceholder: readPicker("searchPlaceholder", base.tool.searchPlaceholder),
-        folderLabel: readPicker("folderLabel", base.tool.folderLabel),
-        reloadLabel: readPicker("reloadLabel", base.tool.reloadLabel),
-      },
-      picker: {
-        ...base.picker,
-        triggerLabel: assetId == null ? choose : change,
-        popoverTitle: readPicker("popoverTitle", base.picker.popoverTitle),
-        emptyDescription: readPicker("emptyDescription", base.picker.emptyDescription),
-        loadFailedDescription: readPicker("loadFailedDescription", base.picker.loadFailedDescription),
-        clearLabel: readPicker("clearLabel", base.picker.clearLabel),
-        tileSizeLabel: readPicker("tileSizeLabel", base.picker.tileSizeLabel),
-        sourceLabel: readPicker("sourceLabel", base.picker.sourceLabel),
-        sourceFailedText: readPicker("sourceFailedText", base.picker.sourceFailedText),
-        importingLabel: readPicker("importingLabel", base.picker.importingLabel),
-        importFailedText: readPicker("importFailedText", base.picker.importFailedText),
-        loadMoreLabel: readPicker("loadMoreLabel", base.picker.loadMoreLabel),
-      },
-      upload: pickerUploadLabels,
-      space: { ...base.space, label: readPicker("spaceLabel", base.space.label) },
-    };
-  }, [assetId, change, choose, pickerUploadLabels, readPicker]);
+  const pickerLabels = useMemo(
+    () => ({ ...mediaLabels, picker: { ...mediaLabels.picker, triggerLabel: assetId == null ? choose : change } }),
+    [assetId, change, choose, mediaLabels],
+  );
 
   const picker = usePhiMediaPickerBinding({
     config: {

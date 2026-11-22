@@ -2,7 +2,10 @@ import "server-only";
 
 import { getPhiMediaWidgetLabels } from "../media/label-sets/media";
 import { getPhiMediaUploadLabels } from "../media/label-sets/media-upload";
-import { PHI_MEDIA_ASSET_FORM_FIELD_PROVIDER_KEY } from "../../constants/media-library-provider-keys";
+import {
+  PHI_MEDIA_ASSET_FORM_FIELD_PROVIDER_KEY,
+  PHI_MEDIA_ASSETS_FORM_FIELD_PROVIDER_KEY,
+} from "../../constants/media-library-provider-keys";
 import type { PhiGlobalTranslatorOptions } from "../../gateway/tr";
 import { phiRuntime } from "../../server-helpers/phi-runtime";
 import type { PhiFormDescriptor } from "../../types/form-descriptor";
@@ -16,9 +19,9 @@ import type { PhiFormRenderContext } from "./form-resolution";
 /**
  * What a Form's field types say for themselves, under the keys their controls read.
  *
- * The `media-asset` field is the same: the picker it opens says the Media Label Set's words, read here
- * for every Form that has such a field (`media-asset-field-keys.ts`), and the upload inside it says the
- * upload's refusals and its hold under the upload field's keys. The `table` field says its add, remove and
+ * The `media-asset` and `media-assets` fields are the same: the picker they open and the upload surface
+ * say the Media Label Set's words, read here for every Form that has such a field
+ * (`media-asset-field-keys.ts`), and the upload says its refusals and its hold under the upload field's keys. The `table` field says its add, remove and
  * empty words from Core's `widget:table` set (`table-field-labels.ts`) where its config names none.
  *
  * A field type whose control speaks -- the upload field's trigger, its drop hint, its holds and the
@@ -35,7 +38,9 @@ export async function resolvePhiFormFieldLabels(
   descriptor: PhiFormDescriptor,
 ): Promise<Record<string, string>> {
   const hasUpload = descriptor.fields.some((field) => field.fieldProviderKey === PHI_FORM_UPLOAD_FIELD_PROVIDER_KEY);
-  const hasMediaAsset = descriptor.fields.some((field) => field.fieldProviderKey === PHI_MEDIA_ASSET_FORM_FIELD_PROVIDER_KEY);
+  const hasMediaAsset = descriptor.fields.some((field) =>
+    field.fieldProviderKey === PHI_MEDIA_ASSET_FORM_FIELD_PROVIDER_KEY ||
+    field.fieldProviderKey === PHI_MEDIA_ASSETS_FORM_FIELD_PROVIDER_KEY);
   const hasTable = descriptor.fields.some((field) => field.fieldProviderKey === PHI_FORM_TABLE_FIELD_PROVIDER_KEY);
   if (!hasUpload && !hasMediaAsset && !hasTable) return {};
   const rt = phiRuntime(context.runtime);
@@ -96,6 +101,7 @@ async function readMediaAssetFieldLabels(options: PhiGlobalTranslatorOptions): P
     [keys.importingLabel]: picker.importingLabel,
     [keys.importFailedText]: picker.importFailedText,
     [keys.loadMoreLabel]: picker.loadMoreLabel,
+    [keys.chooseFromLibraryLabel]: tool.chooseFromLibraryLabel,
     [keys.uploadLabel]: upload.uploadToggleLabel,
     [keys.uploadDropTitle]: upload.dropTitle,
     [keys.uploadDropHint]: upload.dropHint,

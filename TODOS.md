@@ -8,6 +8,20 @@ and `scripts/validate-todos-wants.ts` refuses the entry once the catalog has one
 
 ## At the next release
 
+- **0.7.4: the `media-assets` Form field** (FORMS.md, "Field and validation Providers"): several Assets of
+  the Media library as an ordered list of ids (`valueType: "json"`, `[]` for none), owned by the Asset
+  Module (`PHI_MEDIA_ASSETS_FORM_FIELD_PROVIDER_KEY`), config `mediaType`, `folderPath` (`{key}` from the
+  Form's values), `max` (1 to 100, `PHI_MEDIA_ASSETS_FIELD_MOST`), Label Set keys
+  `PHI_FORM_MEDIA_ASSETS_LABEL_KEYS` and the new picker key `mediaAssetPickerChooseFromLibrary`. It reads
+  its tiles in one request with the Media list's `id` repeated (`filters.id` of the Media collection
+  Provider), so it **needs the phis-server release whose `GET /api/site/media` takes `id`**; an older
+  Server answers its ordinary first page instead, and the value's tiles show as unavailable. `PhiAreaUploadBinding` gained
+  `refuseFile`. `@phis/shop` moves its product gallery from the Collection View onto this field. Graph
+  budgets of the area Clients and the Client manifests raised by 26 KiB: the field's control (loaded when
+  such a field first renders, as `media-asset`'s is), its config reader and the label and picker helpers it
+  shares with `media-asset` and the Media renderer; `./widgets` and `./media` by under 2 KiB (the shared
+  picker hook, `refuseFile`).
+
 - **The Media renderer draws any Provider's collection of Assets** (COLLECTIONS.md, "The Media
   renderer"). A resource names `PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY`, answers `PhiMediaCollectionItem`s and
   declares `add` (`itemKeys`, Asset ids), `delete`, `reorder`, `upload` (`panelKey: "upload"`); the

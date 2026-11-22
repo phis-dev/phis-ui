@@ -4,7 +4,7 @@ import { resolvePhiMediaAssetTypeLabel } from "./asset-type-label";
 import { PhiTagControl } from "../controls/phi-tag-control";
 import { PhiButtonControl } from "../controls/phi-button-control";
 import NextImage from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { PhiCmsAreaUploadWidgetConfig } from "../../types/media";
 import { PhiCollectionLayoutControl } from "../controls/phi-collection-layout-control";
@@ -82,6 +82,13 @@ export type PhiAreaUploadWidgetProps = {
   /** Whether a file is on its way, for a host that holds something back meanwhile (a Form's submit). */
   onUploadingChange?: (uploading: boolean) => void;
   /**
+   * The host's own refusal of a file before it is sent, asked of each file dropped or chosen with the
+   * number of files this surface has on their way (the ones let through in the same selection included):
+   * the sentence, said as the upload's refusals are (an application message), or `null` to send it. For a
+   * host whose list has room for so many (the `media-assets` field's `max`).
+   */
+  refuseFile?: (file: File, sending: number) => string | null;
+  /**
    * Uploads into the Site Space, whatever Space the Media library's listing last showed: for a host that
    * stores a reference everybody follows. A `config.folderPath` is read in the Site Space either way.
    */
@@ -153,6 +160,7 @@ export function PhiAreaUploadBinding({
   showFinished = true,
   onAssetUploaded,
   onUploadingChange,
+  refuseFile,
   siteSpaceOnly = false,
   collectionContext,
 }: PhiAreaUploadWidgetProps) {
@@ -256,6 +264,7 @@ export function PhiAreaUploadBinding({
     onRejected: (message) => showUploadMessage("error", message),
   });
   const accept = acceptance ? upload.accept : configAccept;
+  const sendingRef = useRef(0);
   const uploading = upload.uploading;
   useEffect(() => {
     if (!onUploadingChange) return;
@@ -277,7 +286,18 @@ export function PhiAreaUploadBinding({
         accept={accept}
         title={labels.dropTitle}
         hint={labels.dropHint}
-        onFile={(file) => void upload.upload(file)}
+        onFile={(file) => {
+          const refusal = refuseFile?.(file, sendingRef.current) ?? null;
+          if (refusal) {
+            showUploadMessage("error", refusal);
+            return;
+          }
+          // Counted rather than read off the items: a selection of several arrives file by file in one tick.
+          sendingRef.current += 1;
+          void upload.upload(file).finally(() => {
+            sendingRef.current -= 1;
+          });
+        }}
       />
 
       <PhiCollectionLayoutControl

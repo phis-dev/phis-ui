@@ -135,8 +135,16 @@ resource whose items are Assets.
 that names it, on the resource (`itemRendererKey`) or on the placement. The Media library's own resource
 is stated once in the Foundation (`PHI_MEDIA_LIBRARY_ASSET_RESOURCE`,
 `components/media/media-library-resource.ts`): the Asset Module declares it, and the Media preview grid
-(`PhiAssetPreviewGridWidget`), which renders without a page's registry, hands it to the renderer. What it
-needs from the resource:
+(`PhiAssetPreviewGridWidget`), which renders without a page's registry, hands it to the renderer.
+
+It is a list that **acts at once**: every upload, pick, removal and drop goes to the Provider as it is
+made, and there is no Save. A record's pictures edited together with the record -- a draft, Save and
+Cancel, the handler receiving the ids -- are the Asset Module's `media-assets` Form field instead
+([FORMS.md](./FORMS.md#field-and-validation-providers)), which draws the same tiles, picker
+(`usePhiMediaLibraryAddPicker`, shared with this renderer's toolbar action `add`), upload wall and drag
+handles around a value of the Form rather than a Provider.
+
+What it needs from the resource:
 
 - **Items** in the shape `PhiMediaCollectionItem` (`@phis/ui/types`): what a tile reads of an Asset
   (`PhiMediaAssetTileControlAsset` -- `id`, `kind`, `originalName`, `title`, `altText`, `contentType`,

@@ -50,6 +50,17 @@ function buildMediaQuery(query: PhiCollectionProviderQuery) {
   if (typeof presentationFlags === "number" && Number.isInteger(presentationFlags) && presentationFlags !== 0) search.set("presentationFlags", String(presentationFlags));
   if (typeof since === "string" && since) search.set("since", since);
   if (typeof until === "string" && until) search.set("until", until);
+  /*
+   * Named Assets (`filters.id`, the ids as a list): the list answers those, in its usual shape, at most
+   * 100 of them -- the read a `media-assets` field draws its tiles from. A program's filter and not an
+   * author's, so the resource does not declare it among its `filterFields`.
+   */
+  const id = readFilter(query, "id");
+  if (Array.isArray(id)) {
+    id.forEach((entry) => {
+      if (typeof entry === "number" && Number.isSafeInteger(entry) && entry > 0) search.append("id", String(entry));
+    });
+  }
   return search;
 }
 

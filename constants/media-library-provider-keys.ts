@@ -60,3 +60,12 @@ export const PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY =
  */
 export const PHI_MEDIA_ASSET_FORM_FIELD_PROVIDER_KEY =
   createPhiModuleScopedKey("form-field", "media-asset") as PhiFormProviderKey;
+
+/**
+ * The `media-assets` Form field type: several Assets of the Site's Media library, as an ordered list of
+ * their ids -- the many-picture counterpart of `media-asset`, for a record that has several (a product's
+ * gallery). Named on the same terms: the Asset Module owns, declares and serves it (FORMS.md), and the
+ * resolver reads this key to mount the library Provider its picker and tiles read.
+ */
+export const PHI_MEDIA_ASSETS_FORM_FIELD_PROVIDER_KEY =
+  createPhiModuleScopedKey("form-field", "media-assets") as PhiFormProviderKey;
