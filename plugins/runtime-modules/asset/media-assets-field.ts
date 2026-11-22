@@ -3,6 +3,7 @@ import type { PhiMediaCollectionItem } from "../../../types/media";
 import { createPhiConfigReader } from "../../../components/widgets/config/strict-config-reader";
 import { PHI_MEDIA_ASSETS_FIELD_MOST } from "./form-providers";
 import { readPhiMediaAssetFieldValue, readPhiMediaFieldTarget, type PhiMediaAssetFieldConfig } from "./media-asset-field";
+import type { PhiAddonMediaLimits } from "../../../types/server-capabilities";
 
 /*
  * The `media-assets` field: several Assets of the Site's Media library, as an ordered list of their ids --
@@ -40,6 +41,20 @@ export function readPhiMediaAssetsFieldConfig(
         : undefined,
     ) ?? PHI_MEDIA_ASSETS_FIELD_MOST,
   };
+}
+
+/**
+ * The field's config under the Media limits of the Add-on behind the Form: its own `max` stands where it
+ * is lower than the Add-on's `maxPerField`, and the Add-on's where the field's would be higher -- a field
+ * may hold fewer than the Add-on takes, never more. Everything that reads `max` (full, the refusal before
+ * a file is sent, the hold on a value beyond it, the sentence that says so) then reads the one it may hold.
+ */
+export function limitPhiMediaAssetsFieldConfig(
+  config: PhiMediaAssetsFieldConfig,
+  limits: PhiAddonMediaLimits | undefined,
+): PhiMediaAssetsFieldConfig {
+  const most = limits?.maxPerField;
+  return most != null && most < config.max ? { ...config, max: most } : config;
 }
 
 /**

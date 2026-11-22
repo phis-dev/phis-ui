@@ -6,6 +6,7 @@ import type {
   PhiCapabilitySnapshot,
   PhiCapabilityState,
 } from "../types/server-capabilities";
+import { readPhiCapabilityProviderMediaLimits } from "./capability-media-limits";
 import { fetchPhiSiteApi } from "./site-api-request";
 import { readPhiSiteReadCache } from "./site-read-cache";
 
@@ -54,11 +55,14 @@ function parseProvider(value: unknown): PhiCapabilityProvider {
   ) {
     throw new Error("Invalid server capability provider.");
   }
+  // The Add-on's manifest `media`, which the Media fields of its Module apply (FORMS.md); absent for Core.
+  const media = readPhiCapabilityProviderMediaLimits(record.media);
   return {
     providerId: record.providerId as PhiCapabilityProvider["providerId"],
     state: record.state as PhiCapabilityState,
     diagnosticCode: record.diagnosticCode as string | null,
     capabilities: record.capabilities.map(parseCapability),
+    ...(media ? { media } : {}),
   };
 }
 

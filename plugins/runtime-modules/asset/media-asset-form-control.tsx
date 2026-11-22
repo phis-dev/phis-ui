@@ -24,9 +24,11 @@ import { PHI_FORM_MEDIA_ASSET_LABEL_KEYS } from "./form-providers";
 import { readPhiMediaFieldPickerLabels } from "./media-field-picker-labels";
 import {
   isPhiMediaAssetFieldSelectable,
+  isPhiMediaFieldKindTaken,
   readPhiMediaAssetFieldConfig,
   readPhiMediaAssetFieldUploadRefusal,
   readPhiMediaAssetFieldValue,
+  readPhiMediaFieldUploadAcceptance,
 } from "./media-asset-field";
 
 const DEFAULT_LABELS = {
@@ -55,6 +57,10 @@ const PREVIEW_SIZE = 72;
  * or, for a `publicOnly` field, one that is not public is left in the list unchosen, and the field says
  * why. While the file is on its way the Form's submit is held, as the upload field holds it, and closing
  * the picker stops it.
+ * The Media limits of the Add-on behind the Form (`mediaLimits`, FORMS.md) are applied before a file is
+ * sent: one larger than its `maxFileBytes` is refused as too large, and where its `kinds` leave out the
+ * field's kind every file is refused as of a type not allowed -- the upload's own refusals, in the
+ * picker's upload words.
  * `config.folderPath` names the Folder the picker opens on ("Shop Images / Products"): read in the Site
  * Space each time it opens, without writing anything (`readPhiMediaUploadFolderPathReach`), so a reader
  * who may only choose opens and picks without a refusal; the picker opens on the deepest Folder of the
@@ -79,6 +85,7 @@ export const PhiMediaAssetFormControl: ComponentType<PhiFormFieldProviderProps> 
   readOnly,
   onChange,
   formContext,
+  mediaLimits,
 }) => {
   const config = useMemo(() => readPhiMediaAssetFieldConfig(field.config), [field.config]);
   const assetId = readPhiMediaAssetFieldValue(value);
@@ -94,7 +101,11 @@ export const PhiMediaAssetFormControl: ComponentType<PhiFormFieldProviderProps> 
   // picker's upload words (`readPhiMediaFieldPickerLabels`).
   const pendingLabel = labels?.[PHI_FORM_UPLOAD_LABEL_KEYS.pending]?.trim() || PHI_MEDIA_UPLOAD_FIELD_DEFAULT_LABELS.pending;
   const [uploadNotice, setUploadNotice] = useState<string | null>(null);
-  const acceptance = useMemo(() => ({ kinds: [config.mediaType], multiple: false }), [config.mediaType]);
+  const acceptance = useMemo(
+    () => readPhiMediaFieldUploadAcceptance(config.mediaType, false, mediaLimits),
+    [config.mediaType, mediaLimits],
+  );
+  const kindTaken = isPhiMediaFieldKindTaken(config.mediaType, mediaLimits);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -137,6 +148,7 @@ export const PhiMediaAssetFormControl: ComponentType<PhiFormFieldProviderProps> 
         }}
         labels={pickerUploadLabels}
         acceptance={acceptance}
+        {...(kindTaken ? {} : { refuseFile: () => pickerUploadLabels.refusals.errorTypeNotAllowed })}
         showFinished={false}
         siteSpaceOnly
         collectionContext={{ folders: [], folderId, presentationFlags: null, query: {} }}
@@ -148,7 +160,7 @@ export const PhiMediaAssetFormControl: ComponentType<PhiFormFieldProviderProps> 
         }}
       />
     ),
-  }), [acceptance, config, notPublic, openedFolderPath, pickerUploadLabels, uploadNotice]);
+  }), [acceptance, config, kindTaken, notPublic, openedFolderPath, pickerUploadLabels, uploadNotice]);
 
   const pickerLabels = useMemo(
     () => ({ ...mediaLabels, picker: { ...mediaLabels.picker, triggerLabel: assetId == null ? choose : change } }),

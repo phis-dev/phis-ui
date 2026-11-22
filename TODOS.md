@@ -25,11 +25,21 @@ and `scripts/validate-todos-wants.ts` refuses the entry once the catalog has one
   Core's `409` for a product that moved on since stands above the record. Needs the phis-server release that
   reads the body; an older Server ignores it and releases unchecked.
 
-- **An Add-on's Media limits are not applied yet** (`@phis/contracts` 0.8.9 manifest `media`: the Site UI
-  applies `maxFileBytes`, `kinds` and `maxPerField` in the `media-asset` and `media-assets` fields of the
-  Add-on's Module). The Site learns of an Add-on from the capability snapshot, whose provider shape
-  (`PhiCapabilityProvider`) has no field for them, so nothing here can read them; it waits for that contract
-  decision (phis-server TODOS.md, "At the next release").
+- **An Add-on's Media limits are applied in its Module's Media fields** (FORMS.md, `media-asset` and
+  `media-assets`): the capability snapshot reader takes `PhiCapabilityProvider.media` (`@phis/contracts`
+  0.8.9) strictly (`gateway/capability-media-limits.ts`), the Form Widget hands the limits of the Add-on its
+  Form's Module is bound to to every field as `mediaLimits`, and the fields refuse a file too large or of a
+  kind not taken before it is sent and cap `max` at `maxPerField`. **Needs the phis-server release that
+  fills `media` in the snapshot**; an older Server states none, and the fields apply no limits of the
+  Add-on's.
+
+- **Core's Site member picker** (FORMS.md, "Fields"): the options Provider
+  `PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteMembers` offers the Site's members by user id (as text) and name
+  to any Module's Form, searched on the server. **Needs the phis-server release with
+  `GET /api/site/members`** (for the holders of the Site access `accounting` or `support`); an older Server
+  answers 404 and the field warns and offers nothing. It names no held value off the page it answers (the
+  route takes no ids), so a Form that opens with a person already chosen shows the id until it is found;
+  the one Form that uses it so far (`@phis/licenses`' grant) opens empty.
 
 - **The `record` Widget acts on the record it shows** (TABLES.md, "The record Widget"): `actions` (Provider
   row actions of its source: `key`, `mode` normal/danger, optional `confirm`), the input `actionActivate`

@@ -40,6 +40,11 @@ export const PHI_CORE_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS = [
     loadLive: async () => (await import("./content-entries/tags")).PhiContentEntryTagsOptionsProviderClient,
   },
   {
+    key: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteMembers,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    loadLive: async () => (await import("./services/site-members-options")).PhiSiteMembersOptionsProviderClient,
+  },
+  {
     key: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntryAuthors,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     loadLive: async () =>

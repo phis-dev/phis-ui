@@ -83,6 +83,8 @@ export type PhiFormControlProps = {
    * dropped: what the form holds for it goes out with the submit unchanged.
    */
   unavailableFieldKeys?: readonly string[];
+  /** The Media limits of the Add-on the Form's Module is bound to, handed to every field (`PhiFormFieldProviderProps`). */
+  mediaLimits?: PhiFormFieldProviderProps["mediaLimits"];
   form?: PhiFormControlFormInstance;
   onValuesChange?: (
     changedValues: Record<string, unknown>,
@@ -199,6 +201,7 @@ function PhiResolvedFormFieldControl({
   onChange,
   formContext,
   formValues,
+  mediaLimits,
 }: {
   /** Set by the Form Item this sits in, from the form's name and the field's key. */
   id?: string;
@@ -213,7 +216,7 @@ function PhiResolvedFormFieldControl({
   placeholder?: string;
   disabled?: boolean;
   readOnly?: boolean;
-} & Pick<PhiFormFieldProviderProps, "value" | "checked" | "onChange" | "formContext">) {
+} & Pick<PhiFormFieldProviderProps, "value" | "checked" | "onChange" | "formContext" | "mediaLimits">) {
   const staticOptions = useMemo(
     () => field.options?.map((option) => ({
       ...option,
@@ -302,6 +305,7 @@ function PhiResolvedFormFieldControl({
         checked={checked}
         onChange={onChange}
         formContext={formContext}
+        {...(mediaLimits ? { mediaLimits } : {})}
       />
       {resolvedOptions.warning ? (
         <PhiAlertControl level="warning" showIcon title={resolvedOptions.warning} />
@@ -326,6 +330,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
   readOnly = false,
   conditionControllerStates = PHI_FORM_NO_CONTROLLER_STATES,
   unavailableFieldKeys,
+  mediaLimits,
   form: providedForm,
   onValuesChange,
   onSubmit,
@@ -842,6 +847,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
                   readOnly={readOnly}
                   formContext={fieldFormContext}
                   formValues={formValues}
+                  mediaLimits={mediaLimits}
                 />
               </Form.Item>
             </div>

@@ -26,8 +26,10 @@ import { usePhiConfig } from "../../../components/root/phi-config-provider";
 import type { PhiMediaCollectionItem } from "../../../types/media";
 import { PHI_FORM_MEDIA_ASSETS_LABEL_KEYS, PHI_MEDIA_ASSETS_FIELD_MOST } from "./form-providers";
 import { readPhiMediaFieldPickerLabels } from "./media-field-picker-labels";
+import { isPhiMediaFieldKindTaken, readPhiMediaFieldUploadAcceptance } from "./media-asset-field";
 import {
   addPhiMediaAssetsFieldIds,
+  limitPhiMediaAssetsFieldConfig,
   orderPhiMediaAssetsFieldTiles,
   readPhiMediaAssetsFieldConfig,
   readPhiMediaAssetsFieldValue,
@@ -63,6 +65,11 @@ const TILE_MIN_WIDTH = 102;
  * offered, a file beyond it is refused before it is sent, and a value beyond it -- one that came in --
  * holds the Form's submit with the sentence the field shows.
  *
+ * The Media limits of the Add-on behind the Form (`mediaLimits`, FORMS.md) narrow that: its `maxPerField`
+ * is the most where `config.max` would be higher (`limitPhiMediaAssetsFieldConfig`), a file larger than its
+ * `maxFileBytes` is refused as too large before it is sent, and where its `kinds` leave out the field's kind
+ * every file is refused as of a type not allowed -- the upload's own refusals, in its upload words.
+ *
  * The tiles are read in one request for the ids the field has no tile for yet (the Media list with `id`
  * repeated, through the Media library's collection Provider), shown in the value's order; an id the list
  * does not answer is an unavailable tile that can still be removed. A pick or an upload brings its tile.
@@ -75,9 +82,13 @@ export const PhiMediaAssetsFormControl: ComponentType<PhiFormFieldProviderProps>
   readOnly,
   onChange,
   formContext,
+  mediaLimits,
 }) => {
   const { token } = usePhiConfig();
-  const config = useMemo(() => readPhiMediaAssetsFieldConfig(field.config), [field.config]);
+  const config = useMemo(
+    () => limitPhiMediaAssetsFieldConfig(readPhiMediaAssetsFieldConfig(field.config), mediaLimits),
+    [field.config, mediaLimits],
+  );
   const ids = readPhiMediaAssetsFieldValue(value);
   const locked = disabled === true || readOnly === true;
   const full = ids.length >= config.max;
@@ -184,7 +195,11 @@ export const PhiMediaAssetsFormControl: ComponentType<PhiFormFieldProviderProps>
    * would overfill it sends only what fits.
    */
   const [uploadFolderPath, setUploadFolderPath] = useState<readonly string[] | null>(null);
-  const acceptance = useMemo(() => ({ kinds: [config.mediaType], multiple: config.max > 1 }), [config.mediaType, config.max]);
+  const acceptance = useMemo(
+    () => readPhiMediaFieldUploadAcceptance(config.mediaType, config.max > 1, mediaLimits),
+    [config.mediaType, config.max, mediaLimits],
+  );
+  const kindTaken = isPhiMediaFieldKindTaken(config.mediaType, mediaLimits);
   const uploadPanel = uploadFolderPath && !locked ? (
     <PhiAreaUploadBinding
       labels={mediaLabels.upload}
@@ -194,7 +209,9 @@ export const PhiMediaAssetsFormControl: ComponentType<PhiFormFieldProviderProps>
       siteSpaceOnly
       collectionContext={{ folders: [], folderId: null, folderPath: null, presentationFlags: null, query: {} }}
       onUploadingChange={setUploading}
-      refuseFile={(_file, sending) => readIdsNow().length + sending >= config.max ? tooMany : null}
+      refuseFile={(_file, sending) => !kindTaken
+        ? mediaLabels.upload.refusals.errorTypeNotAllowed
+        : readIdsNow().length + sending >= config.max ? tooMany : null}
       onAssetUploaded={(asset) => {
         // Core does not know the field's kind, and a file the browser could not name reaches it unrefused.
         if (asset.kind !== config.mediaType) {

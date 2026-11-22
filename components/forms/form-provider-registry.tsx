@@ -17,6 +17,7 @@ import type {
   PhiFormValidationRuleDescriptor,
 } from "../../types/form-descriptor";
 import type { PhiControlOption } from "../controls/phi-control-options";
+import type { PhiAddonMediaLimits } from "../../types/server-capabilities";
 
 export type PhiFormFieldProviderProps = {
   /**
@@ -53,6 +54,13 @@ export type PhiFormFieldProviderProps = {
   };
   /** What the Widget was placed with, for text a field takes from its placement rather than its form. */
   formConfig?: Readonly<Record<string, unknown>>;
+  /**
+   * The Media limits of the Add-on the Form's Module is bound to, as its manifest states them and the
+   * capability snapshot hands them on (`PhiCapabilityProvider.media`). Absent for a Form of a Core-bound
+   * Module and for an Add-on that states none. The Media fields apply them (FORMS.md); other fields have
+   * nothing to do with them.
+   */
+  mediaLimits?: PhiAddonMediaLimits;
 };
 
 export type PhiFormFieldTypeProvider = Omit<PhiFormFieldTypeProviderDescriptor, "ownerModuleId"> & {

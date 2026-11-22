@@ -13,6 +13,7 @@ export const PHI_CORE_SERVER_CAPABILITY = {
  * which is a question phis never asks.
  */
 export type {
+  PhiAddonMediaLimits,
   PhiCapabilityDescriptor,
   PhiCapabilityId,
   PhiCapabilityProvider,

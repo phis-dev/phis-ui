@@ -13,6 +13,7 @@ import { PhiRuntimeModuleRenderClientHost } from "../runtime/runtime-module-rend
 import { PhiRuntimeRenderClientType } from "../../constants/runtime-render-client-types";
 import type { PhiFormId } from "../../types/form-id";
 import { readPhiFormFieldProviderModules } from "./form-field-provider-modules";
+import { resolvePhiFormMediaLimits } from "./form-media-limits";
 import type { PhiCmsFormWidgetConfig } from "./form-widget-config";
 import { resolvePhiFormText } from "./form-descriptor-contract";
 import { PHI_FORM_DEFAULT_SUBMIT_LABEL } from "../../types/form-descriptor";
@@ -31,6 +32,8 @@ export type PhiFormWidgetProps = {
     | "uiProviderModuleIds"
     | "activeModuleIds"
     | "ownerModuleIdByFormFieldTypeKey"
+    | "runtimeModuleCatalog"
+    | "serverCapabilities"
   >;
   formId: PhiFormId;
   formInstanceKey?: string | number | null;
@@ -90,6 +93,9 @@ export async function PhiFormWidget({
     activeModuleIds: registry.activeModuleIds,
     uiProviderModuleIds: registry.uiProviderModuleIds,
   });
+
+  // What the Add-on behind the Form's Module takes as Media, for its Media fields (FORMS.md).
+  const mediaLimits = resolvePhiFormMediaLimits(registry, ownerModuleId);
 
   /*
    * Both reads happen here, on the server, and both are the form's own: what it is called, and what it
@@ -173,6 +179,7 @@ export async function PhiFormWidget({
         formControllerAddress: renderOptions.formControllerAddress,
         widgetConfig: config,
         ...(unavailableFieldKeys.length > 0 ? { unavailableFieldKeys } : {}),
+        ...(mediaLimits ? { mediaLimits } : {}),
       }}
     />
   );

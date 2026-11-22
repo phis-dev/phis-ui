@@ -169,6 +169,20 @@ export const PHI_CORE_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
     description: "The tags one content kind's entries already carry; the field names the kind.",
   },
   /*
+   * The Site's members by user id, for any Module's Form that names a person (a grant on their behalf).
+   * Core's and not User Management's: that Module is the Admin Area's, and the staff who act on a member's
+   * behalf work in Accounting and Support, where only Core is sure to be active.
+   */
+  {
+    key: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteMembers,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    kind: "options",
+    executionMode: "live",
+    authoringMode: "none",
+    title: "Site members",
+    description: "The Site's members by user id, searched by name or address, for staff acting on a member's behalf.",
+  },
+  /*
    * The offer the curation Form picks from: who may be named as an entry's author, and the categories it
    * may be filed under. One endpoint answers both, so they read it under one load key.
    */

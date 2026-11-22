@@ -430,6 +430,17 @@ sends its file the same way, with the Folder it shows as the `folderId` and no S
 Site Space, whose Assets Core delivers publicly from the start (the init takes no delivery policy). An Add-on
 that reserved a place with `assets:v1` uploads with `runPhiAddonAssetUpload` from `@phis/ui/media`.
 
+**Your Add-on's Media limits.** Where your package's Add-on half states `media` in its manifest
+(`{ maxFileBytes?, kinds?, maxPerField? }`, phis-server SERVER_ADDONS.md, "Media limits"), the
+`media-asset` and `media-assets` fields of your Module's Forms apply it without any config of yours: the
+Site reads it off your Add-on's entry in the capability snapshot (`PhiCapabilityProvider.media`, matched by
+your Module's server binding `providerId`). A file larger than `maxFileBytes`, or any file where `kinds`
+leaves out the field's `mediaType`, is refused before it is sent with the upload's own refusals, and
+`maxPerField` caps a `media-assets` field whose `max` would be higher -- a field's `max` may be lower, never
+higher ([FORMS.md](./FORMS.md#field-and-validation-providers)). Your handlers enforce the limits again where
+they store the value: a request does not have to come through a Form, and Core does not check an upload
+against them.
+
 Known gaps ([TODOS.md](./TODOS.md), "Media and Theme"):
 
 - `usePhiMediaPickerBinding` is not a public door, so a picker outside a Form is the Foundation's to give.
@@ -454,6 +465,7 @@ Known gaps ([TODOS.md](./TODOS.md), "Media and Theme"):
 | Several pictures | `gallery` | `gallery/config.ts` |
 | A main picture with thumbnails under it | `gallery` with `thumbnails` and one picture visible | [LAYOUTING.md](./LAYOUTING.md#carousel-movement) |
 | A picture | `image`; `PhiImageControl` in a Widget of mine | `image/config.ts` |
+| A Form names a member of the Site (a grant on their behalf) | `select` on Core's options Provider `PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteMembers` with `loadMode: "server"` and `search`; the value is the user id as text, offered to staff holding `accounting` or `support` | [FORMS.md](./FORMS.md#fields) |
 | An author chooses a picture in a Form | form field `media-asset` (the Asset id) | [Media](#media-what-the-asset-module-already-does) |
 | An author chooses several pictures in a Form, in order | form field `media-assets` (the Asset ids) | [Media](#media-what-the-asset-module-already-does) |
 | Upload files into a Media Folder | Widget `area-upload`, or the Media library page | [Media](#media-what-the-asset-module-already-does) |

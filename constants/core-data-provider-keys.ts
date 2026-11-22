@@ -23,4 +23,11 @@ export const PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS = {
   contentEntryCategories: createPhiSharedRuntimeDataProviderKey("tables", "content-entry-categories"),
   /** One published entry and its relatives, read on the server; the binding names the kind and slug. */
   contentEntry: createPhiSharedRuntimeDataProviderKey("records", "content-entry"),
+  /**
+   * The Site's members, for a select that names a person by user id -- a licence granted on somebody's
+   * behalf: searched by name or address on the server, a page at a time, each option the user id as
+   * text and the name the person is shown under. For staff holding the Site access `accounting` or
+   * `support`; anybody else is refused by Core and gets no options (FORMS.md, "Options providers").
+   */
+  siteMembers: createPhiSharedRuntimeDataProviderKey("options", "core-site-members"),
 } as const;

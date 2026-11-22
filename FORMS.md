@@ -211,6 +211,32 @@ errors: {
   that asks a route answers after hydration.
 - The Options Providers named anywhere in the descriptor of a placed Form are part of that page's data
   Provider demand (`collectPhiRuntimeDataProviderKeys`); a Form that is not placed loads none.
+- **A person by user id** is a `select` on Core's Site member picker,
+  `PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteMembers` (`@phis/ui/constants`, key
+  `@phis/ui/modules/core/options/site-members`): Core's, so it answers in every Area, in any Module's
+  Form. It asks phis-server's `GET /api/site/members` with what is typed (`q`, matched on the name and the
+  e-mail addresses) and offers the first page of matches, each option the user id as text and the name
+  the person is shown under (`#<id>` without one; never an address). Declare the search on the field, as
+  the route answers it: `loadMode: "server"`, `search: { enabled: true, minChars }`. Core lets the holders
+  of the Site access `accounting` or `support` ask (Admin, Maintainer, Accountant, Supporter) -- the staff
+  `entitlements:v1` names a member to -- and anybody else's load fails, so the field warns and offers
+  nothing. The handler receives the id as text (`{ "userId": "42" }`), as a select holds it. The Groups
+  Module's member candidates are a different question (who a group's Manager may add, with whether they
+  are in that group) and stay its own.
+
+  ```ts
+  {
+    key: "userId",
+    fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
+    label: label("person", "Person"),
+    optionsProvider: {
+      providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteMembers,
+      loadMode: "server",
+      search: { enabled: true, minChars: 2 },
+    },
+    validation: required("personRequired", "Choose a person."),
+  }
+  ```
 
 ### Conditions
 
@@ -517,9 +543,21 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
     cannot be chosen is said above the tiles.
   - While the file is on its way the Form's submit is held (`formContext.holdSubmit`, the upload field's
     `uploadPending` sentence), and closing the picker stops it; nothing is chosen afterwards.
+  - **The Add-on's Media limits.** A Form of a Module bound to an Add-on whose manifest states `media`
+    (`maxFileBytes`, `kinds`, `maxPerField`; phis-server SERVER_ADDONS.md, "Media limits") applies them
+    here: the Form Widget reads them off the Add-on's entry in the capability snapshot
+    (`PhiCapabilityProvider.media`, by the Form's own Module's server binding `providerId`,
+    `resolvePhiFormMediaLimits` in `components/forms/form-media-limits.ts`) and hands them to every field
+    as `mediaLimits` (`PhiFormFieldProviderProps`). A file larger than `maxFileBytes` is refused before it
+    is sent as too large (the upload's `maxBytes`), and where `kinds` leaves out the field's `mediaType`
+    every file is refused as of a type not allowed (`refuseFile`) -- the upload's own refusals, in its
+    Label Set. A Form of a Core-bound Module, or of an Add-on that states none, has no limits beyond
+    Core's. The Form's Module decides, not the field's: this field belongs to the Media library and stands
+    in Forms of any Module, and the limits are those of whoever stores the value.
   What is enforced is enforced by the Server that takes the value: a handler that must hold the line reads
   the Asset (its Space and its delivery policy) before it stores the id, because a request does not have to
-  come through this field. The handler receives the id as a JSON number (`{ "logo": 42 }`, or `null`).
+  come through this field -- an Add-on enforces its Media limits there again. The handler receives the id
+  as a JSON number (`{ "logo": 42 }`, or `null`).
   Wording is the Label Set keys in `PHI_FORM_MEDIA_ASSET_LABEL_KEYS` (`mediaAssetChoose`,
   `mediaAssetChange`, `mediaAssetRemove`, `mediaAssetNotPublic`, `mediaAssetUnavailable`), falling back
   to English. The picker's own wording is the Media Label Set's (`widget:media`, the Upload button its
@@ -600,6 +638,12 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
     is refused before it is sent, and a pick beyond it is not added -- both say `mediaAssetsTooMany`. A
     value beyond `max` (one that came in) holds the Form's submit with the same sentence, shown on the
     field. A Module whose records allow so many pictures states it here.
+
+  **The Add-on's Media limits** apply as in `media-asset` (above, `mediaLimits`): `maxFileBytes` and
+  `kinds` refuse a file before it is sent with the upload's own refusals, and `maxPerField` is the most the
+  value holds where `max` would be higher (`limitPhiMediaAssetsFieldConfig`): a field's own `max` may be
+  lower than the Add-on's, never higher, and everything `max` governs -- full, the refusal of a file
+  beyond it, the hold on a value beyond it, `mediaAssetsTooMany`'s `%1` -- reads the lower of the two.
 
   There is no `publicOnly`: the field offers the Site Space only, and Core delivers every Asset of the Site
   Space publicly from the start (`defaultMediaDeliveryPolicy` in phis-server). As with `media-asset`, what

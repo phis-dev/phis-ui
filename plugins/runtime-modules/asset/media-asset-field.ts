@@ -8,6 +8,8 @@ import {
   isPhiMediaFolderPathTemplate,
   splitPhiMediaFolderNamePath,
 } from "../../../components/media/media-folder-name-path";
+import type { PhiMediaUploadAcceptance } from "../../../components/media/phi-media-upload";
+import type { PhiAddonMediaLimits } from "../../../types/server-capabilities";
 
 /*
  * The `media-asset` field: one Asset of the Site's Media library, chosen with the library's picker.
@@ -110,4 +112,34 @@ export function readPhiMediaAssetFieldUploadRefusal(
 ): "kind" | "notPublic" | null {
   if (asset.kind !== config.mediaType) return "kind";
   return isPhiMediaAssetFieldSelectable(config, asset) ? null : "notPublic";
+}
+
+/**
+ * Whether the Add-on behind the Form takes the field's kind at all (`PhiAddonMediaLimits.kinds`). A field
+ * whose kind it does not take refuses every file before it is sent, with the upload's own "type not
+ * allowed": the kind is the field's, so no file of another kind is what it was opened for either.
+ */
+export function isPhiMediaFieldKindTaken(
+  mediaType: PhiMediaKindValue,
+  limits: PhiAddonMediaLimits | undefined,
+) {
+  return limits?.kinds == null || limits.kinds.includes(mediaType);
+}
+
+/**
+ * What an upload in a Media field takes: files of the field's kind, one or several, and -- where the
+ * Add-on behind the Form states one -- no larger than its `maxFileBytes`, refused before it is sent with
+ * the upload's own "too large" (`readPhiMediaUploadRejection`). Shared by `media-asset` and
+ * `media-assets`, so the two fields cannot apply one limit two ways.
+ */
+export function readPhiMediaFieldUploadAcceptance(
+  mediaType: PhiMediaKindValue,
+  multiple: boolean,
+  limits: PhiAddonMediaLimits | undefined,
+): PhiMediaUploadAcceptance {
+  return {
+    kinds: [mediaType],
+    multiple,
+    ...(limits?.maxFileBytes != null ? { maxBytes: limits.maxFileBytes } : {}),
+  };
 }

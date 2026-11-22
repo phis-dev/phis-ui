@@ -20,7 +20,7 @@ import { readPhiRuntimeConditionStateSignalValue } from "../../types/runtime-con
 import { collectPhiRuntimeValueConditions } from "../../types/runtime-condition";
 import { usePhiTableProvider } from "../widgets/client/shared/phi-table-provider";
 import { usePhiIntlLocale, usePhiIntlTimeZone } from "../root/phi-intl-locale";
-import { PhiFormControl, type PhiFormControlFormInstance } from "../controls/phi-form-control";
+import { PhiFormControl, type PhiFormControlFormInstance, type PhiFormControlProps } from "../controls/phi-form-control";
 import { readPhiRuntimeFormValuesSignalValue } from "./runtime-form-state";
 import { resolvePhiFormErrorText, resolvePhiFormText } from "./form-descriptor-contract";
 import { PHI_FORM_RECORD_TITLE_CAPABILITY, resolvePhiFormRecordTitle } from "./form-record-title";
@@ -56,6 +56,8 @@ export type PhiFormDescriptorRuntimeClientProps = {
   widgetConfig?: PhiCmsFormWidgetConfig;
   /** The fields whose field type belongs to a Module that is not active in this Area. */
   unavailableFieldKeys?: readonly string[];
+  /** The Media limits of the Add-on the Form's Module is bound to, for its Media fields (FORMS.md). */
+  mediaLimits?: PhiFormControlProps["mediaLimits"];
 };
 
 export function PhiFormDescriptorRuntimeClient({
@@ -66,6 +68,7 @@ export function PhiFormDescriptorRuntimeClient({
   formControllerAddress,
   widgetConfig,
   unavailableFieldKeys,
+  mediaLimits,
 }: PhiFormDescriptorRuntimeClientProps) {
   const formClient = usePhiRuntimeFormClient({ controllerAddress: formControllerAddress });
   const formRef = useRef<PhiFormControlFormInstance | null>(null);
@@ -574,6 +577,7 @@ export function PhiFormDescriptorRuntimeClient({
         }}
         conditionControllerStates={conditionControllerStates}
         unavailableFieldKeys={unavailableFieldKeys}
+        mediaLimits={mediaLimits}
         onValuesChange={(changed, all) => {
           // A value moved, so whatever validation refused before is no longer what is being asked.
           rejectedRef.current = false;
