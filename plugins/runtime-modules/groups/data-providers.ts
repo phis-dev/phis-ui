@@ -137,7 +137,7 @@ export const PHI_GROUPS_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
           /*
            * Only here, never on the App's own list: a retired group grants nothing, so it cannot appear
            * among the groups someone is in. The way back therefore sits where retired groups are
-           * visible at all -- which is the Site-wide scope, and that scope is Developer or Admin.
+           * visible at all -- which is the Site-wide scope, and that scope is Maintainer or Admin.
            */
           {
             key: "reactivate", title: "Reactivate", scope: "row",

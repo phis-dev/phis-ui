@@ -377,7 +377,7 @@ assert.deepEqual(
 /*
  * An entry hides on its own statement, never on the policy of the route it points at.
  *
- * The Users entry declares none, so it is shown to everyone the Admin Area lets in -- a Developer reads
+ * The Users entry declares none, so it is shown to everyone the Admin Area lets in -- a Maintainer reads
  * the page and an Admin writes it, which is the read-only projection in the page's controller and not a
  * routing question. Asserting the sidebar is the same list for every reader is what keeps the Area root
  * a published fact: the front door is its first entry.
@@ -404,13 +404,13 @@ assert.deepEqual(
 /*
  * Every entry that states no policy is shown to everybody the Area let in -- the four pages above are
  * the Admin Area's own, and none of them narrows further. What does narrow is the Settings container's
- * only child, `General`, which is Site Admin's; a Developer therefore sees no Settings group, because a
+ * only child, `General`, which is Site Admin's; a Maintainer therefore sees no Settings group, because a
  * container with nothing under it is not an entry.
  *
  * This is the whole of what may differ per reader. The route table beside it does not (above), which is
  * what keeps the Area root a published fact.
  */
-for (const role of [PhiBaseRole.Developer, PhiBaseRole.Builder]) {
+for (const role of [PhiBaseRole.Maintainer, PhiBaseRole.Builder]) {
   assert.deepEqual(
     adminNavigationPathsForRole(role),
     ["/phis/ui/dashboard", "/phis/ui/locales", "/phis/ui/logs", "/phis/ui/users", "/builder"],

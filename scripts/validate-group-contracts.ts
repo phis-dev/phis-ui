@@ -18,7 +18,7 @@ const claim = (flags: number) => ({
 
 /**
  * A control that can only ever be refused is worse than no control, so the column is left out rather
- * than shown disabled. Managing any listed group earns it; Developer and Admin administer every group
+ * than shown disabled. Managing any listed group earns it; Maintainer and Admin administer every group
  * and so always have it.
  */
 assert.equal(
@@ -39,7 +39,7 @@ assert.equal(
 assert.equal(
   canPhiViewerManageSomeGroup({ siteWide: true, groupClaims: [] }),
   true,
-  "Developer and Admin administer every group.",
+  "Maintainer and Admin administer every group.",
 );
 
 // ---------------------------------------------------------------------------
@@ -91,7 +91,7 @@ assert.equal(
  * asks first. The way back is deliberately not offered beside it on the App: a retired group grants
  * nothing, so it leaves the actor's own list the moment it is retired -- and with it the Manager level
  * that would have allowed the return. Reactivation is therefore declared only on the Site-wide
- * resource, whose scope the control plane already restricts to Developer and Admin.
+ * resource, whose scope the control plane already restricts to Maintainer and Admin.
  */
 {
   const table = PHI_GROUPS_RUNTIME_DATA_PROVIDER_DESCRIPTORS

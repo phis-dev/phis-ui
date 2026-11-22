@@ -15,7 +15,7 @@ import {
   PHI_VIEWER_ACCESS_ANYONE,
   PHI_VIEWER_ACCESS_AUTHENTICATED,
   PHI_VIEWER_ACCESS_CONTENT_EDITING,
-  PHI_VIEWER_ACCESS_DEVELOPER_TOOLS,
+  PHI_VIEWER_ACCESS_SITE_MAINTENANCE,
   PHI_VIEWER_ACCESS_STRUCTURE_AUTHORING,
   PHI_VIEWER_ACCESS_SITE_ADMIN,
 } from "../../types/access";
@@ -306,7 +306,7 @@ export const PHI_ADMIN_RUNTIME_AREA_DEFINITIONS = [
     baseModuleId: PHI_ADMIN_RUNTIME_MODULE_ID,
     shellPresetKey: "admin-area-preset",
     shellProviders: "base",
-    accessPolicy: PHI_VIEWER_ACCESS_DEVELOPER_TOOLS,
+    accessPolicy: PHI_VIEWER_ACCESS_SITE_MAINTENANCE,
     navigationSurfaces: [
       {
         navKey: "admin:sidebar",

@@ -264,8 +264,8 @@ assert.throws(
 /**
  * The account menu offers the Areas a person may enter, so the list must agree with the Area policies
  * exactly. It used to re-derive visibility from base roles and from `viewer.resolvedArea`, which
- * disagreed: a Developer saw only App and Admin although the `Structure authoring`, `Content editing`
- * and `Accounting` masks all include Developer.
+ * disagreed: a Maintainer saw only App and Admin although the `Structure authoring`, `Content editing`
+ * and `Accounting` masks all include Maintainer.
  *
  * Public is in the list. It is the Area anyone may enter, and from a staff shell it is the way back to
  * the Site -- the Area menu Widget that left it out was placed in staff shells only, and it is gone.
@@ -278,7 +278,7 @@ const accessibleAreasFor = (roleFlags: number) =>
   });
 
 assert.deepEqual(
-  accessibleAreasFor(PhiBaseRole.Developer),
+  accessibleAreasFor(PhiBaseRole.Maintainer),
   ["public", "app", "accounting", "admin", "editor", "builder"],
 );
 assert.deepEqual(accessibleAreasFor(PhiBaseRole.Builder), ["public", "app", "builder"]);

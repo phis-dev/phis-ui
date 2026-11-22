@@ -26,7 +26,7 @@ export const PHI_GROUPS_RUNTIME_MODULE_DEFINITION = {
   eligibleAreas: ["admin", "app"] as const satisfies readonly PhiCmsAreaKey[],
   serverBinding: PHI_CORE_SERVER_BINDING,
   // No Module-wide policy: the two Areas answer different questions and carry their own. Administration
-  // is Developer and Admin; the App page is for anyone signed in, because "you are in no group" is an
+  // is Maintainer and Admin; the App page is for anyone signed in, because "you are in no group" is an
   // answer too.
   controllerType: PHI_GROUPS_CONTROLLER_TYPE,
   controller: buildPhiRuntimeModuleControllerDescriptor(PHI_GROUPS_RUNTIME_CONTROLLER_DEFINITION),

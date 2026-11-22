@@ -22,7 +22,7 @@ import {
   buildPhiGroupsFooter,
 } from "./group-tables";
 import { canPhiViewerManageSomeGroup } from "../page-visibility";
-import { canPhiViewerAccess, PHI_VIEWER_ACCESS_DEVELOPER_TOOLS } from "../../../../types/access";
+import { canPhiViewerAccess, PHI_VIEWER_ACCESS_SITE_MAINTENANCE } from "../../../../types/access";
 import { PHI_GROUPS_FORM_IDS } from "../forms";
 import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 
@@ -51,7 +51,7 @@ export async function buildPhiDefaultAppGroupsPageTree({
   const membersTableAddress = createPhiSignalAddress("cms", PHI_APP_GROUPS_PAGE_WIDGET_IDS.widgetMembersTable);
   const membershipFormAddress = createPhiSignalAddress("cms", PHI_APP_GROUPS_PAGE_WIDGET_IDS.widgetMembershipForm);
   const managesSomeGroup = canPhiViewerManageSomeGroup({
-    siteWide: canPhiViewerAccess(runtime.viewer, PHI_VIEWER_ACCESS_DEVELOPER_TOOLS),
+    siteWide: canPhiViewerAccess(runtime.viewer, PHI_VIEWER_ACCESS_SITE_MAINTENANCE),
     groupClaims: runtime.viewer.groupClaims,
   });
   const levelOptions = buildPhiGroupLevelValueMap(labels);

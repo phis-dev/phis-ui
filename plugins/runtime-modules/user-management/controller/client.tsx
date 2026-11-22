@@ -58,7 +58,7 @@ function PhiUserManagementControllerView({
   const { provider } = usePhiTableProvider(source);
   const locale = usePhiIntlLocale();
   const timeZone = usePhiIntlTimeZone();
-  // The route lets a Developer in; only a Site admin may change anything. Stated as the policy the
+  // The route lets a Maintainer in; only a Site admin may change anything. Stated as the policy the
   // rest of the system speaks rather than as a role check, so a widened admin mask carries here too.
   const readOnly = !canPhiViewerAccess(runtime.viewer, PHI_VIEWER_ACCESS_SITE_ADMIN);
   const [workflowState, setWorkflowState] = useState<UserManagementWorkflowState | null>(null);

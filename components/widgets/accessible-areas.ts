@@ -9,7 +9,7 @@ import type { PhiAccountAreaEntry } from "../shell/shell-types";
  * filtered by `canPhiViewerAccess` against its own `accessPolicy`.
  *
  * It must not re-derive visibility from base roles. That answered the question a second way and
- * disagreed with the policies — a Developer holds `Structure authoring`, `Content editing` and
+ * disagreed with the policies — a Maintainer holds `Structure authoring`, `Content editing` and
  * `Accounting`, yet saw neither Builder nor Editor nor Accounting. And it must not consult
  * `viewer.resolvedArea`, which ACCESS.md defines as a landing destination, not an authorization
  * boundary; in the old menu it papered over the incomplete role check for one Area per viewer.

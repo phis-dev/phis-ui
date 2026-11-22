@@ -38,7 +38,7 @@ const PHI_AUTH_ADMIN_SETTINGS_LABEL_SET = definePhiLabelSet({
     totp_roles_label: "Required for roles",
     totp_roles_hint: definePhiMessageLabel("Leave empty to require two-factor authentication for every site member."),
     role_admin: "Admin",
-    role_developer: "Developer",
+    role_maintainer: "Maintainer",
     role_builder: "Builder",
     role_author: "Author",
     role_publisher: "Publisher",
@@ -155,7 +155,7 @@ export async function getPhiAuthAdminSettingsLabels(options: PhiGlobalTranslator
     },
     roles: {
       admin: labels.role_admin,
-      developer: labels.role_developer,
+      maintainer: labels.role_maintainer,
       builder: labels.role_builder,
       author: labels.role_author,
       publisher: labels.role_publisher,

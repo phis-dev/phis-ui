@@ -340,7 +340,7 @@ const resolveReferences = (input: {
 }) => {
   const runtime = referenceRuntime(
     input.area ?? "admin",
-    input.roleFlags ?? PhiBaseRole.Developer,
+    input.roleFlags ?? PhiBaseRole.Maintainer,
     input.locale,
   );
   return withRequestScope(runtime, input.activeModuleIds ?? allModuleIds, () =>
@@ -427,7 +427,7 @@ await assert.rejects(
 
 /**
  * `admin-users-page` is the worked example of the split: it lives in the `admin` Area and carries the
- * Developer-tools policy. A Module reference resolves only when all three of Area, activation and
+ * Site-maintenance policy. A Module reference resolves only when all three of Area, activation and
  * access agree -- the server projection never answers for Module targets.
  */
 const usersReference = createPhiPageReference({
@@ -474,7 +474,7 @@ assert.equal(
  * ACCESS.md now settles it: a route is in or out by Module selection, and what a Module is willing to
  * show is decided inside the Page. So the same reference resolves to the same path at every role.
  */
-for (const roleFlags of [0, PhiBaseRole.Developer, PhiBaseRole.Admin, PhiBaseRole.Builder]) {
+for (const roleFlags of [0, PhiBaseRole.Maintainer, PhiBaseRole.Admin, PhiBaseRole.Builder]) {
   installReferenceProjection({ resolved: [] });
   assert.deepEqual(
     [...(await resolveReferences({ roleFlags, pageReferences: [usersReference] })).pagePaths.values()],
@@ -551,7 +551,7 @@ const resolveHtml = (input: {
 }) => {
   const runtime = referenceRuntime(
     input.area ?? "admin",
-    input.roleFlags ?? PhiBaseRole.Developer,
+    input.roleFlags ?? PhiBaseRole.Maintainer,
     input.locale,
   );
   return withRequestScope(runtime, allModuleIds, () =>

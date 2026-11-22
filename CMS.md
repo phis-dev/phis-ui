@@ -19,7 +19,7 @@ bring its shell (`shellProviders`), its navigation surfaces, and an access polic
 | `public` | `/<locale>/...` | anyone |
 | `app` | `/app/...` | authenticated |
 | `accounting` | `/accounting/...` | accounting |
-| `admin` | `/admin/...` | developer tools (and Admin through the Core override) |
+| `admin` | `/admin/...` | Site maintenance (and Admin through the Core override) |
 | `editor` | `/editor/...` | content editing |
 | `builder` | `/builder/...` | structure authoring |
 

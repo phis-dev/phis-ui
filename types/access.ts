@@ -49,35 +49,35 @@ export const PHI_VIEWER_ACCESS_SITE_ADMIN = {
   providerId: PHI_CORE_ROLE_PROVIDER_ID,
   allowedRoleFlags: PhiBaseRole.Admin,
 } as const satisfies PhiViewerAccessPolicy;
-export const PHI_VIEWER_ACCESS_DEVELOPER_TOOLS = {
+export const PHI_VIEWER_ACCESS_SITE_MAINTENANCE = {
   access: "roles",
   providerId: PHI_CORE_ROLE_PROVIDER_ID,
-  allowedRoleFlags: PhiBaseRole.Developer,
+  allowedRoleFlags: PhiBaseRole.Maintainer,
 } as const satisfies PhiViewerAccessPolicy;
 export const PHI_VIEWER_ACCESS_STRUCTURE_AUTHORING = {
   access: "roles",
   providerId: PHI_CORE_ROLE_PROVIDER_ID,
-  allowedRoleFlags: PhiBaseRole.Developer | PhiBaseRole.Builder,
+  allowedRoleFlags: PhiBaseRole.Maintainer | PhiBaseRole.Builder,
 } as const satisfies PhiViewerAccessPolicy;
 export const PHI_VIEWER_ACCESS_CONTENT_EDITING = {
   access: "roles",
   providerId: PHI_CORE_ROLE_PROVIDER_ID,
-  allowedRoleFlags: PhiBaseRole.Developer | PhiBaseRole.Author | PhiBaseRole.Publisher,
+  allowedRoleFlags: PhiBaseRole.Maintainer | PhiBaseRole.Author | PhiBaseRole.Publisher,
 } as const satisfies PhiViewerAccessPolicy;
 export const PHI_VIEWER_ACCESS_PUBLISHING = {
   access: "roles",
   providerId: PHI_CORE_ROLE_PROVIDER_ID,
-  allowedRoleFlags: PhiBaseRole.Developer | PhiBaseRole.Publisher,
+  allowedRoleFlags: PhiBaseRole.Maintainer | PhiBaseRole.Publisher,
 } as const satisfies PhiViewerAccessPolicy;
 export const PHI_VIEWER_ACCESS_SUPPORT = {
   access: "roles",
   providerId: PHI_CORE_ROLE_PROVIDER_ID,
-  allowedRoleFlags: PhiBaseRole.Developer | PhiBaseRole.Supporter,
+  allowedRoleFlags: PhiBaseRole.Maintainer | PhiBaseRole.Supporter,
 } as const satisfies PhiViewerAccessPolicy;
 export const PHI_VIEWER_ACCESS_ACCOUNTING = {
   access: "roles",
   providerId: PHI_CORE_ROLE_PROVIDER_ID,
-  allowedRoleFlags: PhiBaseRole.Developer | PhiBaseRole.Accountant,
+  allowedRoleFlags: PhiBaseRole.Maintainer | PhiBaseRole.Accountant,
 } as const satisfies PhiViewerAccessPolicy;
 
 /**

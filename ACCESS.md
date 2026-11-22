@@ -133,18 +133,18 @@ authorization, operator authority, or cross-Site boundaries.
 ## 3. Core access matrices
 
 Frequently reused Core matrices are exported from `types/access.ts` as `PHI_VIEWER_ACCESS_SITE_ADMIN`,
-`PHI_VIEWER_ACCESS_DEVELOPER_TOOLS`, `PHI_VIEWER_ACCESS_STRUCTURE_AUTHORING`,
+`PHI_VIEWER_ACCESS_SITE_MAINTENANCE`, `PHI_VIEWER_ACCESS_STRUCTURE_AUTHORING`,
 `PHI_VIEWER_ACCESS_CONTENT_EDITING`, `PHI_VIEWER_ACCESS_PUBLISHING`, `PHI_VIEWER_ACCESS_SUPPORT`, and
 `PHI_VIEWER_ACCESS_ACCOUNTING`:
 
 ```text
 Site administration  = Admin only
-Developer tools      = Developer
-Structure authoring  = Developer | Builder
-Content editing      = Developer | Author | Publisher
-Publishing           = Developer | Publisher
-Support              = Developer | Supporter
-Accounting           = Developer | Accountant
+Site maintenance     = Maintainer
+Structure authoring  = Maintainer | Builder
+Content editing      = Maintainer | Author | Publisher
+Publishing           = Maintainer | Publisher
+Support              = Maintainer | Supporter
+Accounting           = Maintainer | Accountant
 ```
 
 Admin is omitted from ordinary masks because `canPhiViewerAccess` applies the explicit Site-superuser
@@ -176,7 +176,7 @@ evaluation fails closed for a persisted policy whose provider is neither Core no
 artifact's bound provider.
 
 This lets an Add-on-backed Module inject an Admin page using Core Admin roles, a Dev page using Core
-Developer roles, and provider-specific content using its own roles.
+Maintainer roles, and provider-specific content using its own roles.
 
 ## 5. Policy placement and inheritance
 
@@ -239,11 +239,11 @@ filtered from the server-rendered config before the Client toolbar receives it.
 The `admin` Area is the shared Site control-plane host. It is not synonymous with the Core `Admin`
 role:
 
-- the Area policy allows Core `Developer`; the Core Admin override also grants access;
-- Core `Developer` resolves to `/admin` as its landing Area;
+- the Area policy allows Core `Maintainer`; the Core Admin override also grants access;
+- Core `Maintainer` resolves to `/admin` as its landing Area;
 - changing users, roles, accounting, and Site administration remains Core-Admin-only; where a
-  Developer may inspect such a surface, entry and capability are split as in section 6;
-- logs, observability, and developer tooling use the Core Developer policy;
+  Maintainer may inspect such a surface, entry and capability are split as in section 6;
+- logs, observability, and Site maintenance use the Core Maintainer policy;
 - third-party contributions use Core roles or roles from their own bound provider.
 
 There is no separate `dev` Area, route host, visibility bit, base module, or compatibility alias in v1.
@@ -274,9 +274,9 @@ routes; a disabled control is a courtesy, never the boundary.
 
 User management is the worked example, and it is what the whole of section 5 is for. Its `/users` route
 (`/admin/phis/ui/users`) states no policy at all: entry is the Admin Area's question and it answered it
-already. What differs between a Developer and an Admin is capability, not reachability -- the controller
+already. What differs between a Maintainer and an Admin is capability, not reachability -- the controller
 projects `permissions.readOnly`, and the page binds cell editing, the create toolbar action, and the
-edit and delete row actions to it. `@phis/server` mirrors the split per method: GET behind the Developer
+edit and delete row actions to it. `@phis/server` mirrors the split per method: GET behind the Maintainer
 guard, every mutating method behind the Admin-only one.
 
 The users Table also shows **Add-on roles** (Core 0.4.1; [phis-server AUTHORIZATION.md](https://github.com/phis-dev/phis-server/blob/main/AUTHORIZATION.md), "Add-on roles"):

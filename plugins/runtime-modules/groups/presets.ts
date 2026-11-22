@@ -9,7 +9,7 @@ export const PHI_GROUPS_RUNTIME_MODULE_ROUTES = [
     ownerModuleId: PHI_GROUPS_RUNTIME_MODULE_ID,
     presetKey: "admin-groups-page",
     title: "Groups",
-    // Entry is Developer, which the Core Admin override widens to Admin -- a group is an authorization
+    // Entry is Maintainer, which the Core Admin override widens to Admin -- a group is an authorization
     // unit Pages, Navigation, and Assets refer to, so making one is Site administration. A group's own
     // Manager administers their group where they work, not here.
     path: "/groups",

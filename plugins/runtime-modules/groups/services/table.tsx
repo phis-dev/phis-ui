@@ -29,7 +29,7 @@ import {
  */
 /*
  * One address for the resource; the scope says which question is being asked. `?scope=site` is every
- * group on the Site and needs Developer or Admin; the bare route is the groups this actor is in.
+ * group on the Site and needs Maintainer or Admin; the bare route is the groups this actor is in.
  */
 const API_PATH = "/api/site/groups";
 // Administration is the one surface that asks for retired groups: the key stays taken, so the place

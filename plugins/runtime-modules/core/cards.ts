@@ -17,8 +17,8 @@ import { PHI_CORE_RUNTIME_MODULE_ID } from "./ids";
  * The runtime the Site itself is running in.
  *
  * It belongs to the platform Module rather than to Observability, and the reason is who sees it: the
- * Admin Dashboard showed this figure to every administrator, and Observability is gated on developer
- * tools. Moving the card there would have taken it away from most of the people who had it, which is a
+ * Admin Dashboard showed this figure to every administrator, and Observability is gated on Site
+ * maintenance. Moving the card there would have taken it away from most of the people who had it, which is a
  * change nobody asked for. What the figure is has not changed either -- the card resolves in the Site
  * process, which is the process this uptime is of.
  */

@@ -372,7 +372,7 @@ async function loadLabels(
     totpRoles: labels.totp.roles,
     totpRolesHint: labels.totp.rolesHint,
     role_admin: labels.roles.admin,
-    role_developer: labels.roles.developer,
+    role_maintainer: labels.roles.maintainer,
     role_builder: labels.roles.builder,
     role_author: labels.roles.author,
     role_publisher: labels.roles.publisher,

@@ -58,7 +58,7 @@ function readOptionValue(row: Record<string, unknown>, key: string) {
 
 /*
  * Candidates come from the group-manager route rather than the Site's user list, which is
- * Developer-only: a Manager has to be able to find a colleague without being an administrator. The
+ * Maintainer-only: a Manager has to be able to find a colleague without being an administrator. The
  * answer carries the name and the company, never the address -- and the company is what tells two
  * people of the same name apart.
  *

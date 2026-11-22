@@ -56,7 +56,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
     controllerAddress,
     valuePath: "permissions.readOnly",
     operator: "truthy" as const,
-    reason: "Developers can inspect users but cannot change them.",
+    reason: "Maintainers can inspect users but cannot change them.",
   };
   const selfEnabledCondition = {
     source: "row" as const,
@@ -336,7 +336,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
                 sizing: { mode: "content" },
                 tagColorMap: {
                   admin: "error",
-                  developer: "error",
+                  maintainer: "error",
                   editor: "processing",
                   author: "processing",
                   publisher: "warning",
