@@ -8,6 +8,20 @@ and `scripts/validate-todos-wants.ts` refuses the entry once the catalog has one
 
 ## At the next release
 
+- **The `record` Widget acts on the record it shows** (TABLES.md, "The record Widget"): `actions` (Provider
+  row actions of its source: `key`, `mode` normal/danger, optional `confirm`), the input `actionActivate`
+  (`action/activate:string`, the action's key), the outputs `actionSuccess` (`activate:json<table-action>`)
+  and `recordTitle` (`change:string`, from the new `titleFromRecord { template, field }`). A
+  `confirmation: "required"` capability is confirmed by the dialog that shows the record; `confirm` is a
+  second question for where it is not. The Accounting product directory releases from its terms dialog
+  ("Terms: <id>", footer Release and Cancel); the Compare terms row action and the release's own question
+  are gone. Graph budgets raised by what this adds (`pnpm audit:graph --update-budget`): every Area Client
+  and Client manifest by about 19.5 KiB (the Widget's action run and title, `helpers/record-widget.ts`,
+  `helpers/record-title.ts`, the request helpers shared with the Table's Binding), the Area server graphs
+  by about 10.6 KiB (the definition's fields and readers) and the Accounting ones by 15 KiB (the dialog's
+  footer and routes), the Builder's by 16.6 KiB, and the shared entries by 2 to 7 KiB
+  (`checkPhiTableProviderActionRequest` in `types/table-widget.ts`, the preset check's Record titles).
+
 - **0.7.4: the `media-assets` Form field** (FORMS.md, "Field and validation Providers"): several Assets of
   the Media library as an ordered list of ids (`valueType: "json"`, `[]` for none), owned by the Asset
   Module (`PHI_MEDIA_ASSETS_FORM_FIELD_PROVIDER_KEY`), config `mediaType`, `folderPath` (`{key}` from the
@@ -308,13 +322,6 @@ and `scripts/validate-todos-wants.ts` refuses the entry once the catalog has one
   although its rows carry `iconPath` and `imagePath`, and `@phis/products` noted the same gap. It would be
   one more `PhiTableValueRenderer` (an `image` over a `string` field, small and square, shared with the
   `record` Widget through `renderPhiValueContent`), not a renderer of a Module's own.
-- **An act on the row a dialog shows.** A dialog opened by a Table row action can show the row (the
-  `record` Widget reads it by its identity) but cannot act on it: the `record` Widget carries no actions,
-  and a Form's handler posts to a fixed `upstreamPath` that cannot name the row. The product directory's
-  "Release terms" is therefore the row's own Provider action with a confirmation, beside a "Compare terms"
-  dialog that sets the terms in force and the ones waiting side by side, instead of one dialog that
-  compares and confirms. Either the `record` Widget takes Provider row actions of its source, or a dialog
-  forwards the row identity it was opened with to the Table's `action/activate` input.
 - **The supplier filter of the product directory is a text field.** Choosing a supplier from a list needs
   an Options Provider over the Site's suppliers, and no Core route answers them (`GET /api/site/products`
   answers rows, not their distinct suppliers).

@@ -1,5 +1,5 @@
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../../constants/cms-layout-types";
-import { PhiCmsPageType } from "../../../../constants/phi-cms";
+import { PhiCmsFlags, PhiCmsPageType } from "../../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import type { PhiBlockRuntime } from "../../../../types";
@@ -22,8 +22,11 @@ import { getPhiAccountingProductsPageLabels } from "./accounting-products-label-
 
 const SYNTHETIC_ACCOUNTING_PRODUCTS_REGION_IDS = { regionContent: -571 } as const;
 
-/** The row action that opens the terms side by side; the dialog and the record both answer to it. */
-const TERMS_ACTION_KEY = "terms";
+/**
+ * The row action that opens the terms side by side, and the Provider action the dialog's Release runs: the
+ * dialog and its record answer to the row's announcement, the record runs the action of the same key.
+ */
+const RELEASE_ACTION_KEY = "release";
 
 const STATE_COLORS = {
   draft: "default",
@@ -41,8 +44,10 @@ const STATE_COLORS = {
  * picture stay the supplier's and are not edited here.
  *
  * The icon is not a column: no Table renderer draws a picture from an address (`imagePath`, `iconPath`).
- * Comparing the terms opens a dialog whose record sets the terms in force beside the ones waiting; the
- * release itself is the row's own act and asks once more, because a record carries no act.
+ * Releasing opens a dialog named after the product, whose record sets the terms in force beside the ones
+ * waiting; its Release runs the Provider's release on that record, and the dialog closes and the Table
+ * reads again. The dialog is the confirmation, so the release asks nothing more; lock and unlock stay the
+ * row's own acts with a question naming the product.
  */
 export async function buildPhiDefaultAccountingProductsPageTree({
   page,
@@ -59,6 +64,7 @@ export async function buildPhiDefaultAccountingProductsPageTree({
   const nodes = createPhiCmsPresetNodes(page);
   const termsOverlayAddress = createPhiSignalAddress("cms", PHI_ACCOUNTING_PRODUCTS_PAGE_OVERLAY_IDS.overlayTerms);
   const termsRecordAddress = createPhiSignalAddress("cms", PHI_ACCOUNTING_PRODUCTS_PAGE_WIDGET_IDS.widgetTerms);
+  const tableAddress = createPhiSignalAddress("cms", PHI_ACCOUNTING_PRODUCTS_PAGE_WIDGET_IDS.widgetTable);
 
   const columns: PhiTableColumnDefinition[] = [
     { key: "title", fieldKey: "title", title: labels.columns.title, sizing: { mode: "fill", minWidth: 200 } },
@@ -117,10 +123,11 @@ export async function buildPhiDefaultAccountingProductsPageTree({
     label: "accounting product terms modal",
     body: { config: { anchor: { horizontal: "left", vertical: "top" } } },
     config: {
+      // Until the record names the product ("Terms: @acme/books:pro").
       title: labels.terms.title,
       mountPolicy: "lazy-keep",
       // Which row action this dialog is for; left unsaid, a Table action opens nothing.
-      openActionKey: TERMS_ACTION_KEY,
+      openActionKey: RELEASE_ACTION_KEY,
       signalRoutes: {
         emits: [{
           routeKey: "accounting-products-terms-open-change",
@@ -140,7 +147,63 @@ export async function buildPhiDefaultAccountingProductsPageTree({
           valueType: "json",
           valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
           receiver: termsOverlayAddress,
+        }, {
+          routeKey: "accounting-products-terms-title",
+          capabilityId: "title",
+          scope: "page",
+          channel: "title",
+          action: "change",
+          valueType: "string",
+          receiver: termsOverlayAddress,
+        }, {
+          routeKey: "accounting-products-terms-close",
+          capabilityId: "close",
+          scope: "page",
+          channel: "dialog",
+          action: "close",
+          valueType: "none",
+          receiver: termsOverlayAddress,
         }],
+      },
+    },
+    commands: {
+      footerLayoutNodeId: PHI_ACCOUNTING_PRODUCTS_PAGE_LAYOUT_IDS.layoutTermsFooter,
+      widgetId: PHI_ACCOUNTING_PRODUCTS_PAGE_WIDGET_IDS.widgetTermsCommands,
+      label: "accounting product terms commands",
+      // The Label Set's words, already in the reader's language.
+      flags: PhiCmsFlags.NoTranslate,
+      config: {
+        key: "accounting-products-terms-commands",
+        buttons: [
+          { key: "cancel", emits: [{ capabilityId: "close", value: null }], label: labels.actions.cancel, icon: "close" },
+          {
+            key: "release",
+            // The record runs the action of this key on the product it shows.
+            emits: [{ capabilityId: "release", value: RELEASE_ACTION_KEY }],
+            label: labels.terms.release,
+            variant: "primary",
+            icon: "antd:safety-certificate",
+          },
+        ],
+        signalRoutes: {
+          emits: [{
+            routeKey: "accounting-products-terms-cancel",
+            capabilityId: "close",
+            scope: "page",
+            channel: "dialog",
+            action: "close",
+            valueType: "none",
+            receiver: termsOverlayAddress,
+          }, {
+            routeKey: "accounting-products-terms-release",
+            capabilityId: "release",
+            scope: "page",
+            channel: "action",
+            action: "activate",
+            valueType: "string",
+            receiver: termsRecordAddress,
+          }],
+        },
       },
     },
   });
@@ -215,25 +278,13 @@ export async function buildPhiDefaultAccountingProductsPageTree({
               rowLayout: "compact",
               row: [
                 {
-                  key: TERMS_ACTION_KEY,
-                  label: labels.actions.terms,
-                  icon: "antd:column-width",
-                  display: "icon",
-                  execution: "signal",
-                },
-                {
-                  key: "release",
+                  // Opens the terms dialog, whose Release runs the Provider's action of this key.
+                  key: RELEASE_ACTION_KEY,
                   label: labels.actions.release,
                   icon: "antd:safety-certificate",
                   display: "icon",
-                  execution: "provider",
+                  execution: "signal",
                   disabledWhen: { source: "row", valuePath: "awaitingRelease", operator: "falsy" },
-                  confirm: {
-                    title: labels.release.title,
-                    description: labels.release.description,
-                    okText: labels.actions.release,
-                    cancelText: labels.actions.cancel,
-                  },
                 },
                 {
                   key: "lock",
@@ -287,22 +338,45 @@ export async function buildPhiDefaultAccountingProductsPageTree({
               valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
               receiver: termsOverlayAddress,
             }],
+            // Read again once the dialog released a product's terms.
+            listens: [{
+              routeKey: "accounting-products-table-reload",
+              capabilityId: "reload",
+              scope: "page",
+              channel: "reload",
+              action: "activate",
+              valueType: "none",
+              receiver: tableAddress,
+            }],
           },
         },
+      }),
+      ...termsDialog.widgets,
+      // What the release does, which the row's own question used to say.
+      nodes.widget({
+        id: PHI_ACCOUNTING_PRODUCTS_PAGE_WIDGET_IDS.widgetTermsNote,
+        parentLayoutNodeId: PHI_ACCOUNTING_PRODUCTS_PAGE_LAYOUT_IDS.layoutTerms,
+        typeKey: "simple-text",
+        slotIndex: 0,
+        label: "accounting product terms note",
+        flags: PhiCmsFlags.NoTranslate,
+        config: { text: labels.release.description, tone: "secondary" },
       }),
       nodes.widget({
         id: PHI_ACCOUNTING_PRODUCTS_PAGE_WIDGET_IDS.widgetTerms,
         parentLayoutNodeId: PHI_ACCOUNTING_PRODUCTS_PAGE_LAYOUT_IDS.layoutTerms,
         typeKey: "record",
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-        sortOrder: 0,
+        slotIndex: 1,
         label: "accounting product terms record",
         config: {
           source: {
             providerKey: PHI_ACCOUNTING_PRODUCTS_DATA_PROVIDER_KEY,
             resourceKey: PHI_ACCOUNTING_PRODUCTS_RESOURCE_KEY,
           },
-          openActionKey: TERMS_ACTION_KEY,
+          openActionKey: RELEASE_ACTION_KEY,
+          // The dialog's Release: the Provider's release, on the product shown.
+          actions: [{ key: RELEASE_ACTION_KEY }],
+          titleFromRecord: { template: labels.terms.titleOf, field: "id" },
           presentation: {
             appearance: "grid",
             columns: 2,
@@ -317,6 +391,32 @@ export async function buildPhiDefaultAccountingProductsPageTree({
             ],
           },
           signalRoutes: {
+            emits: [{
+              routeKey: "accounting-products-terms-record-title",
+              capabilityId: "recordTitle",
+              scope: "page",
+              channel: "title",
+              action: "change",
+              valueType: "string",
+              receiver: termsOverlayAddress,
+            }, {
+              // Released: the dialog is done, and the row has left what the filters may show.
+              routeKey: "accounting-products-terms-released-close",
+              capabilityId: "actionSuccess",
+              scope: "page",
+              channel: "dialog",
+              action: "close",
+              valueType: "none",
+              receiver: termsOverlayAddress,
+            }, {
+              routeKey: "accounting-products-terms-released-reload",
+              capabilityId: "actionSuccess",
+              scope: "page",
+              channel: "reload",
+              action: "activate",
+              valueType: "none",
+              receiver: tableAddress,
+            }],
             listens: [{
               routeKey: "accounting-products-terms-record-open",
               capabilityId: "recordOpen",
@@ -333,6 +433,14 @@ export async function buildPhiDefaultAccountingProductsPageTree({
               channel: "state",
               action: "change",
               valueType: "boolean",
+              receiver: termsRecordAddress,
+            }, {
+              routeKey: "accounting-products-terms-record-release",
+              capabilityId: "actionActivate",
+              scope: "page",
+              channel: "action",
+              action: "activate",
+              valueType: "string",
               receiver: termsRecordAddress,
             }],
           },

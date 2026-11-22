@@ -195,7 +195,7 @@ the config a type of your own with `satisfies`.
 | `table` | A provider-backed table with columns, rows and actions ([TABLES.md](./TABLES.md)). | - | typed |
 | `tree` | A provider-backed hierarchical tree ([TREES.md](./TREES.md)). | - | unchecked |
 | `collection-view` | A provider-backed visual collection with tools and pagination ([COLLECTIONS.md](./COLLECTIONS.md)). | - | typed |
-| `record` | One row of a Table Provider as named values, opened by a row action. | - | unchecked |
+| `record` | One row of a Table Provider as named values, opened by a row action; runs that row's Provider actions on a press ([TABLES.md](./TABLES.md#the-record-widget)). | - | unchecked |
 | `form` | A Preset Form a Module contributes ([FORMS.md](./FORMS.md)). | - | typed |
 | `form-preview` | What the token in the address is about, beside the form that spends it. | - | unchecked |
 | `slot-upload` | Puts a file into a declared slot on a row of an Add-on's table: a drop area, and the slot's files with preview and remove ([below](#slot-upload-files-on-a-row)). | - | unchecked |
@@ -1645,6 +1645,12 @@ A dialog that edits a row names the row in its title through its record Form's `
 route from the Form's `recordTitle` to the Overlay's `title` ([FORMS.md](./FORMS.md#form-widget)); it
 needs no Controller.
 
+A dialog that shows a row and acts on it -- releases, approves, locks it -- holds a `record` Widget with the
+Provider row actions of its source in `actions` and its own `titleFromRecord`; the footer's Command Toolbar
+sends the action's key to the Widget's `action/activate:string` input, and the Widget's `actionSuccess`
+closes the dialog and reloads the Table. No Controller, no Form, no handler path that has to name the row
+([TABLES.md](./TABLES.md#the-record-widget)).
+
 ## 4c. Messaging
 
 A conversation is Core's, whichever Module runs it: threads, messages, who may read them and the Add-on
@@ -2313,8 +2319,8 @@ the compiler refuses, and the Page answers 500. The rules: every node carries a 
 in the tree; the base page layout node is the canonical one; an Overlay's actions Footer is the canonical
 Flex preset; a modal's body and actions are the dialog's (`PHI_DIALOG_BODY_CONFIG`,
 `PHI_DIALOG_COMMANDS_CONFIG`); and a modal at `PHI_DIALOG_WIDTH` holds not only Forms of one column
-([Dialogs](#dialogs)); a Form's `titleFromRecord` has a `source`, names one of the Form's fields, and is
-routed to an Overlay that hears it on `title`. `page` is the Page row the test handed `loadTree`: a tree whose Page or Regions
+([Dialogs](#dialogs)); a Form's or a record Widget's `titleFromRecord` has a `source`, is routed to an
+Overlay that hears it on `title`, and on a Form names one of the Form's fields. `page` is the Page row the test handed `loadTree`: a tree whose Page or Regions
 belong to another is reported. `forms` are your Module's Form definitions (`definePhiRuntimeModuleForm`),
 or a `Map` of `{ descriptor }` by Form id; the dialog width is judged only for the Forms you hand over, as
 the compiler judges only the Forms of the Modules it has, so hand over every Form your package ships.

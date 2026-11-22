@@ -17,6 +17,7 @@ import {
   PHI_FORM_RECORD_TITLE_CAPABILITY,
   readPhiFormWidgetTitleFromRecord,
 } from "../components/forms/form-record-title";
+import { readPhiRecordWidgetTitleFromRecord } from "./record-widget";
 
 /**
  * The rules every preset tree is held to (THIRD_PARTY_MODULES.md, "Checking a Page preset"), as findings.
@@ -29,8 +30,8 @@ import {
  * The rules: every node a preset instance id, none twice, every parent, Region root, Overlay root and Page
  * root resolved; the base page layout node only as the canonical scaffold; an actions Footer the canonical
  * Flex preset; a modal's body and actions the dialog's (`helpers/cms-dialog.ts`), and a modal at the default
- * `PHI_DIALOG_WIDTH` not holding only Forms of one column; a Form's title from its record read, sent, and
- * heard where it goes. The findings come in the order the compiler used to throw them, so its first is the
+ * `PHI_DIALOG_WIDTH` not holding only Forms of one column; a Form's or a record Widget's title from its
+ * record read, sent, and heard where it goes. The findings come in the order the compiler used to throw them, so its first is the
  * error it always gave.
  *
  * `page` is the Page the tree was asked for: a tree whose Page or Regions belong to another is refused.
@@ -164,7 +165,7 @@ export function checkPhiPresetTreeContract(
     if (body) checkDialogBody(overlay.id, body, report);
     if (forms) checkDialogWidth(overlay, tree, forms, report);
   }
-  checkFormRecordTitles(tree, forms, report);
+  checkRecordTitles(tree, forms, report);
   for (const rootLayoutNodeId of [
     tree.page.heroRootLayoutNodeId,
     tree.page.headerBottomRootLayoutNodeId,
@@ -305,20 +306,24 @@ function readRoutes(config: Record<string, unknown>, side: "emits" | "listens"):
 }
 
 /*
- * A Form's title from its record (`components/forms/form-record-title.ts`), end to end, since every break
- * is silent: no `source` reads nothing, no `recordTitle` route names nothing, a route without the option
- * carries nothing, an Overlay not listening on `title` drops it. Where the Form is known, the field is one
- * of its own -- a record answers for the Form's fields.
+ * A title from the record shown (`helpers/record-title.ts`), end to end, for the record Form and the record
+ * Widget alike, since every break is silent: no `source` reads nothing, no `recordTitle` route names
+ * nothing, a route without the option carries nothing, an Overlay not listening on `title` drops it. Where
+ * the Form is known, the field is one of its own -- a record answers for the Form's fields; a record
+ * Widget reads the whole row its Provider answers, so any field of it may name the dialog.
  */
-function checkFormRecordTitles(tree: PhiResolvedCmsPageTree, forms: ReadonlyMap<string, PresetTreeForm> | undefined, report: Report) {
+function checkRecordTitles(tree: PhiResolvedCmsPageTree, forms: ReadonlyMap<string, PresetTreeForm> | undefined, report: Report) {
   const overlaysById = new Map(tree.overlays.map((overlay) => [`cms:${overlay.id}`, overlay]));
   for (const widget of tree.contentWidgets) {
-    if (widget.widgetType !== PhiCmsWidgetType.Form) continue;
-    const name = `Preset Form "${widget.id}"`;
+    const isForm = widget.widgetType === PhiCmsWidgetType.Form;
+    if (!isForm && widget.widgetType !== PhiCmsWidgetType.Record) continue;
+    const name = `Preset ${isForm ? "Form" : "Record"} "${widget.id}"`;
     const routes = readRoutes(widget.config, "emits").filter((route) => route.capabilityId === PHI_FORM_RECORD_TITLE_CAPABILITY);
-    let title: ReturnType<typeof readPhiFormWidgetTitleFromRecord>;
+    let title: { field: string } | null;
     try {
-      title = readPhiFormWidgetTitleFromRecord(widget.config.titleFromRecord);
+      title = isForm
+        ? readPhiFormWidgetTitleFromRecord(widget.config.titleFromRecord)
+        : readPhiRecordWidgetTitleFromRecord(widget.config.titleFromRecord);
     } catch (error) {
       report(widget.id, `${name}: ${(error as Error).message}`);
       continue;
@@ -330,7 +335,7 @@ function checkFormRecordTitles(tree: PhiResolvedCmsPageTree, forms: ReadonlyMap<
     if (widget.config.source == null) report(widget.id, `${name} takes its title from a record it never reads: titleFromRecord needs a source.`);
     if (routes.length === 0) report(widget.id, `${name} takes a titleFromRecord that goes nowhere: no route on "recordTitle".`);
     const formId = String(widget.config.formId);
-    const descriptor = forms?.get(formId)?.descriptor;
+    const descriptor = isForm ? forms?.get(formId)?.descriptor : undefined;
     if (descriptor && !descriptor.fields.some((field) => field.key === title.field)) {
       report(widget.id, `${name} takes its title from "${title.field}", which is no field of "${formId}".`);
     }

@@ -913,6 +913,53 @@ export function readPhiTableProviderMutationResult(value: unknown): PhiTableProv
 }
 
 /**
+ * Whether a Provider action may be asked for as stated: declared by the resource, with the row or the
+ * selection its scope needs, and a value of the type it declares. The one check every Widget that runs a
+ * Provider action makes before the Provider Client is called -- the Table's Binding and the record
+ * Widget alike -- answered as the error the Widget shows, or null.
+ */
+export function checkPhiTableProviderActionRequest(
+  resource: Pick<PhiTableProviderResourceDescriptor, "resourceKey" | "actions"> | null | undefined,
+  request: Pick<PhiTableProviderActionMutationRequest, "actionKey" | "rowIdentity" | "selectedRowIdentities" | "actionValue">,
+): PhiTableProviderError | null {
+  const action = resource?.actions?.find((candidate) => candidate.key === request.actionKey);
+  if (!action) {
+    return new PhiTableProviderError(
+      "action-not-declared",
+      `Table action "${request.actionKey}" is not declared by resource "${resource?.resourceKey ?? "unknown"}".`,
+    );
+  }
+  const hasRow = request.rowIdentity != null;
+  const hasSelection = (request.selectedRowIdentities?.length ?? 0) > 0;
+  if ((action.scope === "row" && !hasRow) || (action.scope === "selection" && !hasSelection)) {
+    return new PhiTableProviderError(
+      "action-scope-invalid",
+      `Table action "${request.actionKey}" requires ${action.scope} identity context.`,
+    );
+  }
+  const value = request.actionValue;
+  const valueValid = action.valueType === undefined || action.valueType === "none"
+    ? value === undefined || value === null
+    : action.valueType === "string"
+      ? typeof value === "string"
+      : action.valueType === "number"
+        ? typeof value === "number" && Number.isFinite(value)
+        : action.valueType === "boolean"
+          ? typeof value === "boolean"
+          : action.valueType === "string[]"
+            ? Array.isArray(value) && value.every((entry) => typeof entry === "string")
+            : action.valueType === "number[]"
+              ? Array.isArray(value) && value.every((entry) => typeof entry === "number" && Number.isFinite(entry))
+              : isPhiRecord(value);
+  return valueValid
+    ? null
+    : new PhiTableProviderError(
+        "action-value-invalid",
+        `Table action "${request.actionKey}" received an incompatible value.`,
+      );
+}
+
+/**
  * The choices a row offers for a field that declares `rowOptionsPath`, or null when the row offers none.
  * A generic reader: an entry without a string value and a string label is dropped, not repaired.
  */

@@ -36,7 +36,7 @@ const PHI_ACCOUNTING_PRODUCTS_PAGE_PRESET = {
 
 export const PHI_ACCOUNTING_PRODUCTS_PAGE_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap(
   PHI_ACCOUNTING_PRODUCTS_PAGE_PRESET,
-  ["layoutTerms"],
+  ["layoutTerms", "layoutTermsFooter"],
 );
 
 export const PHI_ACCOUNTING_PRODUCTS_PAGE_OVERLAY_IDS = createPhiPresetCmsInstanceIdMap(
@@ -46,5 +46,5 @@ export const PHI_ACCOUNTING_PRODUCTS_PAGE_OVERLAY_IDS = createPhiPresetCmsInstan
 
 export const PHI_ACCOUNTING_PRODUCTS_PAGE_WIDGET_IDS = createPhiPresetCmsInstanceIdMap(
   PHI_ACCOUNTING_PRODUCTS_PAGE_PRESET,
-  ["widgetTable", "widgetTerms"],
+  ["widgetTable", "widgetTerms", "widgetTermsNote", "widgetTermsCommands"],
 );

@@ -1,6 +1,7 @@
 import { resolvePhiFormText, type PhiFormTextDescriptor } from "@phis/contracts/forms";
 
 import { isPhiRecord } from "../../helpers/is-record";
+import { checkPhiRecordTitleTemplate, fillPhiRecordTitle } from "../../helpers/record-title";
 
 /*
  * A dialog named by the record its Form reads ("Gallery: Private Cloud"), with no Controller and no second
@@ -37,11 +38,8 @@ export function readPhiFormWidgetTitleFromRecord(value: unknown): PhiFormWidgetT
   const field = typeof value.field === "string" ? value.field.trim() : "";
   if (!field) throw new Error("Form titleFromRecord.field must name the record field the title takes its value from.");
   const template = readTemplate(value.template);
-  const source = template.kind === "literal" ? template.value : template.fallback;
-  const placeholders = source.match(/%\d+/gu) ?? [];
-  if (placeholders.length !== 1 || placeholders[0] !== "%1") {
-    throw new Error(`Form titleFromRecord.template must hold %1 exactly once and no other placeholder: ${JSON.stringify(source)}.`);
-  }
+  const templateError = checkPhiRecordTitleTemplate(template.kind === "literal" ? template.value : template.fallback);
+  if (templateError) throw new Error(`Form titleFromRecord.template ${templateError}`);
   return { template, field };
 }
 
@@ -52,8 +50,6 @@ export function resolvePhiFormRecordTitle(
   labels?: Readonly<Record<string, string>>,
   formConfig?: Readonly<Record<string, unknown>>,
 ): string {
-  const raw = record?.[titleFromRecord.field];
-  const value = typeof raw === "string" ? raw.trim() : typeof raw === "number" && Number.isFinite(raw) ? String(raw) : "";
-  // A replacer, so a `$` in the value stays the value.
-  return value ? resolvePhiFormText(titleFromRecord.template, labels, formConfig).replace("%1", () => value) : "";
+  const value = record?.[titleFromRecord.field];
+  return fillPhiRecordTitle(resolvePhiFormText(titleFromRecord.template, labels, formConfig), value);
 }

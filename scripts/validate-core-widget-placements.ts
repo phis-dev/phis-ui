@@ -62,7 +62,9 @@ const PLACEMENT_ONLY_KEYS: Readonly<Record<string, Readonly<Record<string, strin
   "thread-conversation": { padding: "the card's inset, where a Preset needs another than the Theme's" },
   "theme-mode-switch": {},
   "draft-status": {},
-  record: {},
+  record: {
+    titleFromRecord: "a dialog's title from the record, wired to an Overlay the Builder does not author",
+  },
   "slot-upload": {},
   "tab-bar": { key: "the Control's signal identity, as for the Button" },
 };

@@ -1,6 +1,5 @@
 "use client";
 
-import { isPhiRecord } from "../../../helpers/is-record";
 import {
   useCallback,
   useEffect,
@@ -26,9 +25,9 @@ import type {
 } from "../../../types/table-widget";
 import type { PhiProviderResourceSource } from "../../../types/runtime-data-provider";
 import {
+  checkPhiTableProviderActionRequest,
   PhiTableProviderError,
   readPhiTableProviderError,
-  readPhiTableProviderMutationResult,
   readPhiTableProviderQueryResult,
   validatePhiTableProviderFieldValue,
 } from "../../../types/table-widget";
@@ -41,7 +40,11 @@ import {
   readPhiTableRowValue,
   restorePhiTableBindingRowOrder,
 } from "../../../helpers/table-binding";
-import { usePhiTableProvider } from "../../widgets/client/shared/phi-table-provider";
+import {
+  requestPhiTableProviderMutation,
+  usePhiTableProvider,
+  type PhiTableProviderMutationInput,
+} from "../../widgets/client/shared/phi-table-provider";
 import { usePhiIntlLocale, usePhiIntlTimeZone } from "../../root/phi-intl-locale";
 
 type TableRow = Record<string, unknown>;
@@ -168,9 +171,7 @@ function resolvePhiTableQuery(
   };
 }
 
-type MutationInput<TRequest extends PhiTableProviderMutationRequest> = TRequest extends unknown
-  ? Omit<TRequest, "resourceKey" | "params" | "signal">
-  : never;
+type MutationInput<TRequest extends PhiTableProviderMutationRequest> = PhiTableProviderMutationInput<TRequest>;
 
 export type PhiTableBindingInput = {
   source: PhiProviderResourceSource | null;
@@ -619,16 +620,7 @@ export function usePhiTableBinding({
       setRows(restored);
     };
     try {
-      const rawResult = await provider.mutate({
-        ...request,
-        resourceKey: source.resourceKey,
-        params: source.params,
-        signal: abortController.signal,
-      } as unknown as PhiTableProviderMutationRequest);
-      const result = readPhiTableProviderMutationResult(rawResult);
-      if (!result) {
-        throw new PhiTableProviderError("invalid-mutation-result", "Table Provider returned an invalid mutation result.");
-      }
+      const result = await requestPhiTableProviderMutation(provider, source, request, abortController.signal);
       const summaryError = validateProviderSummary(resource, result.summaryPatch);
       if (summaryError) {
         throw new PhiTableProviderError("invalid-summary-patch", summaryError);
@@ -710,46 +702,10 @@ export function usePhiTableBinding({
   }, [bindingError, provider, resolvedQuery.filters, resolvedQuery.sorts, resource, revalidate, source, updateMutationTargetPending]);
 
   const executeAction = useCallback((request: MutationInput<PhiTableProviderActionMutationRequest>) => {
-    const action = resource?.actions?.find((candidate) => candidate.key === request.actionKey);
-    if (!action) {
-      const actionError = new PhiTableProviderError(
-        "action-not-declared",
-        `Table action "${request.actionKey}" is not declared by resource "${resource?.resourceKey ?? "unknown"}".`,
-      );
-      setError(actionError);
-      return Promise.reject(actionError);
-    }
-    const hasRow = request.rowIdentity != null;
-    const hasSelection = (request.selectedRowIdentities?.length ?? 0) > 0;
-    if ((action.scope === "row" && !hasRow) || (action.scope === "selection" && !hasSelection)) {
-      const scopeError = new PhiTableProviderError(
-        "action-scope-invalid",
-        `Table action "${request.actionKey}" requires ${action.scope} identity context.`,
-      );
-      setError(scopeError);
-      return Promise.reject(scopeError);
-    }
-    const value = request.actionValue;
-    const valueValid = action.valueType === undefined || action.valueType === "none"
-      ? value === undefined || value === null
-      : action.valueType === "string"
-        ? typeof value === "string"
-        : action.valueType === "number"
-          ? typeof value === "number" && Number.isFinite(value)
-          : action.valueType === "boolean"
-            ? typeof value === "boolean"
-            : action.valueType === "string[]"
-              ? Array.isArray(value) && value.every((entry) => typeof entry === "string")
-              : action.valueType === "number[]"
-                ? Array.isArray(value) && value.every((entry) => typeof entry === "number" && Number.isFinite(entry))
-                : isPhiRecord(value);
-    if (!valueValid) {
-      const valueError = new PhiTableProviderError(
-        "action-value-invalid",
-        `Table action "${request.actionKey}" received an incompatible value.`,
-      );
-      setError(valueError);
-      return Promise.reject(valueError);
+    const requestError = checkPhiTableProviderActionRequest(resource, request);
+    if (requestError) {
+      setError(requestError);
+      return Promise.reject(requestError);
     }
     return runMutation(
       request,

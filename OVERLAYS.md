@@ -326,7 +326,9 @@ different Form, Layout tree, submit path, or business operation implicitly.
 A dialog that edits a row is named by that row without a Controller: its record Form's `titleFromRecord`
 announces "Gallery: Private Cloud" on `recordTitle` after it read the row, and an empty title as the next
 row is asked for or where the row has no value, so neither another row's name nor a blank stands over the
-dialog ([FORMS.md](./FORMS.md#form-widget), with the two routes). The create dialog keeps its title.
+dialog ([FORMS.md](./FORMS.md#form-widget), with the two routes). The create dialog keeps its title. A
+dialog that shows a row through the `record` Widget is named the same way, by the record Widget's
+`titleFromRecord` ([TABLES.md](./TABLES.md#the-record-widget)).
 
 Intrinsic Modal block-size changes animate in the Core Control with the active Ant Design motion tokens,
 including changes caused by authored Header, Body, Footer, Stack, or Form content. The animation never
@@ -426,6 +428,15 @@ a Site can rearrange them. A loading state on the Save button and refusing to cl
 flight need none either: the Form's `submitting` output goes to the Save button's `loading` and to the
 Overlay's `busy` -- two more routes. A Controller earns its place only where a decision needs state
 beyond that.
+
+A dialog that shows a row can act on exactly that row the same way. The `record` Widget in the Body names
+Provider row actions of its own source in `actions`, and the footer's button sends the action's key to its
+`action/activate:string` input; the Widget runs that action on the record it holds, through the same
+Provider Client the Table asks, and on success its `actionSuccess` closes the Overlay (`dialog/close:none`)
+and tells the Table to read again (`reload/activate:none`). The dialog is the confirmation: the record on
+screen, named in the title, and the press beside it -- a row action that opens such a dialog asks no
+question of its own, or the reader is asked twice ([TABLES.md](./TABLES.md#the-record-widget), with the
+routes). A refusal stays in the dialog, above the record.
 News paid for a Controller of that kind with three silent failures in one afternoon -- a Controller nobody mounted, one
 whose senders it did not recognise, and one that heard what it sent -- and now has none. The Settings Page
 shell and the Auth Installations Page are the shape to copy.

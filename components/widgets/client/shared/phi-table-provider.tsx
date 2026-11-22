@@ -13,13 +13,15 @@ import {
   isPhiRuntimeDataProviderKey,
   type PhiRuntimeDataProviderKey,
 } from "../../../../types/runtime-data-provider";
-import type {
-  PhiTableProviderMutationRequest,
-  PhiTableProviderMutationResult,
-  PhiTableProviderRecordRequest,
-  PhiTableProviderQueryRequest,
-  PhiTableProviderQueryResult,
-  PhiTableProviderResourceDescriptor,
+import {
+  PhiTableProviderError,
+  readPhiTableProviderMutationResult,
+  type PhiTableProviderMutationRequest,
+  type PhiTableProviderMutationResult,
+  type PhiTableProviderRecordRequest,
+  type PhiTableProviderQueryRequest,
+  type PhiTableProviderQueryResult,
+  type PhiTableProviderResourceDescriptor,
 } from "../../../../types/table-widget";
 import type { PhiProviderResourceSource } from "../../../../types/runtime-data-provider";
 
@@ -129,4 +131,36 @@ export function usePhiTableProvider(source: PhiProviderResourceSource | null) {
           ? `Table resource "${source.resourceKey}" is not declared by provider "${source.providerKey}".`
         : null,
   };
+}
+
+/** A mutation as a Widget states it: the source it is bound to adds the resource, its params and the abort. */
+export type PhiTableProviderMutationInput<
+  TRequest extends PhiTableProviderMutationRequest = PhiTableProviderMutationRequest,
+> = TRequest extends unknown ? Omit<TRequest, "resourceKey" | "params" | "signal"> : never;
+
+/**
+ * One mutation through a bound source's Provider Client, and its answer read strictly: a Provider without
+ * `mutate` is read-only, and an answer outside `PhiTableProviderMutationResult` is the Provider's failure,
+ * not an accepted change. What the answer then means for what is on screen -- rows patched, a view read
+ * again, a dialog closed -- is the caller's: the Table's Binding and the record Widget both ask here.
+ */
+export async function requestPhiTableProviderMutation(
+  provider: PhiTableProviderRegistration,
+  source: PhiProviderResourceSource,
+  request: PhiTableProviderMutationInput,
+  signal: AbortSignal,
+): Promise<PhiTableProviderMutationResult> {
+  if (!provider.mutate) {
+    throw new PhiTableProviderError("provider-read-only", `Table Provider "${source.providerKey}" is read-only.`);
+  }
+  const result = readPhiTableProviderMutationResult(await provider.mutate({
+    ...request,
+    resourceKey: source.resourceKey,
+    params: source.params,
+    signal,
+  } as PhiTableProviderMutationRequest));
+  if (!result) {
+    throw new PhiTableProviderError("invalid-mutation-result", "Table Provider returned an invalid mutation result.");
+  }
+  return result;
 }

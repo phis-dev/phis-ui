@@ -244,6 +244,10 @@ export type PhiRecordWidgetPlacement = PhiWidgetPlacementBase & {
   source?: PhiRecordWidgetConfig["source"];
   openActionKey?: PhiRecordWidgetConfig["openActionKey"];
   presentation?: Partial<PhiRecordWidgetPresentation>;
+  /** Provider row actions of the source, run on the record shown by their key on `action/activate`. */
+  actions?: PhiRecordWidgetConfig["actions"];
+  /** A title from the record shown, announced on `recordTitle`, for the Overlay's `title` (TABLES.md). */
+  titleFromRecord?: PhiRecordWidgetConfig["titleFromRecord"];
 };
 
 // Slot upload

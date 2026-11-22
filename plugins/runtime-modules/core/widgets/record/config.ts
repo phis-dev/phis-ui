@@ -1,8 +1,11 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import { readBoolean, readInteger, readString } from "../../../../../components/widgets/config/parser-primitives";
+import { createPhiConfigReader, type PhiConfigReader } from "../../../../../components/widgets/config/strict-config-reader";
 import type { PhiCmsWidgetPlugin } from "../../../../../types/cms-plugins";
+import { readPhiRecordWidgetTitleFromRecord } from "../../../../../helpers/record-widget";
 import type {
   PhiRecordFieldDefinition,
+  PhiRecordWidgetAction,
   PhiRecordWidgetConfig,
 } from "../../../../../types/record-widget";
 import { isPhiRuntimeDataProviderKey } from "../../../../../types/runtime-data-provider";
@@ -71,6 +74,25 @@ function readRecordField(value: unknown): PhiRecordFieldDefinition | null {
   };
 }
 
+/** A required text: absent is as wrong as the wrong type, because the entry means nothing without it. */
+function requireText(reader: PhiConfigReader, key: string) {
+  return reader.string(key)?.trim() || reader.fail(key, "a text", reader.record[key]);
+}
+
+function readRecordAction(reader: PhiConfigReader): PhiRecordWidgetAction {
+  const confirm = reader.object("confirm", (confirmReader) => ({
+    title: requireText(confirmReader, "title"),
+    description: confirmReader.string("description"),
+    okText: confirmReader.string("okText"),
+    cancelText: confirmReader.string("cancelText"),
+  }));
+  return {
+    key: requireText(reader, "key"),
+    mode: reader.oneOf("mode", ["normal", "danger"] as const) ?? "normal",
+    ...(confirm ? { confirm } : {}),
+  };
+}
+
 function parsePhiRecordWidgetConfig(
   rawConfig: Record<string, unknown>,
 ): PhiRecordWidgetConfig {
@@ -79,6 +101,8 @@ function parsePhiRecordWidgetConfig(
   const resourceKey = readString(source.resourceKey)?.trim() ?? "";
   const presentation = isPhiRecord(rawConfig.presentation) ? rawConfig.presentation : {};
   const columns = readInteger(presentation.columns);
+  // Strict, as every newer key: an action stated wrong is the author's to correct, not to drop.
+  const reader = createPhiConfigReader(rawConfig);
 
   return {
     source: isPhiRuntimeDataProviderKey(providerKey) && resourceKey
@@ -100,6 +124,8 @@ function parsePhiRecordWidgetConfig(
           })
         : [],
     },
+    actions: reader.list("actions", readRecordAction) ?? [],
+    titleFromRecord: readPhiRecordWidgetTitleFromRecord(rawConfig.titleFromRecord),
     signalRoutes: readPhiSignalRouteSet(rawConfig.signalRoutes),
   };
 }
@@ -109,13 +135,22 @@ export const PHI_RECORD_WIDGET_DEFINITION = {
   pluginKey: resolvePhiCmsWidgetPluginKey("record"),
   typeKey: "record",
   title: "Record",
-  description: "Shows one row of a Table Provider as named values, opened by a row action.",
+  description: "Shows one row of a Table Provider as named values, opened by a row action, and runs its Provider row actions on a press.",
   category: "data",
   tags: ["record", "detail", "data"],
   icon: "antd:profile",
   slotSizePolicy: "fill-inline",
   runtimeSignals: {
-    emits: [],
+    emits: [
+      /*
+       * An action of `actions` went through on the record shown: which one, on which row. A dialog
+       * closes on it and the Table beside it reads again -- each a route of its own, `dialog/close:none`
+       * and `reload/activate:none`, which carry nothing of the value.
+       */
+      { id: "actionSuccess", action: "activate", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction },
+      // The title the record gives the dialog, after every read (`titleFromRecord`), for the Overlay's `title`.
+      { id: "recordTitle", action: "change", valueType: "string" },
+    ],
     listens: [
       {
         id: "recordOpen",
@@ -125,6 +160,11 @@ export const PHI_RECORD_WIDGET_DEFINITION = {
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
       },
       { id: "close", channel: "state", action: "change", valueType: "boolean" },
+      /*
+       * Run one of `actions` on the record shown: the value is the action's key, the words this command
+       * channel answers. A footer button sends it; the row is the one the Widget holds.
+       */
+      { id: "actionActivate", channel: "action", action: "activate", valueType: "string" },
     ],
   },
   fields: [
@@ -220,10 +260,40 @@ export const PHI_RECORD_WIDGET_DEFINITION = {
         },
       ],
     },
+    {
+      key: "actions",
+      type: "collection",
+      presentation: "overlay",
+      label: "Actions",
+      description: "Provider row actions of the source, run on the record shown when their key arrives on action/activate.",
+      itemKeyField: "key",
+      itemLabelField: "key",
+      addLabel: "Add action",
+      emptyLabel: "No actions",
+      editLabel: "Edit actions",
+      defaultItem: { key: "action", mode: "normal" },
+      itemFields: [
+        { key: "key", type: "string", label: "Provider Action", required: true },
+        {
+          key: "mode",
+          type: "choice",
+          label: "Mode",
+          options: [
+            { value: "normal", label: "Normal" },
+            { value: "danger", label: "Danger" },
+          ],
+        },
+        { key: "confirm.title", type: "string", label: "Confirm Title" },
+        { key: "confirm.description", type: "string", label: "Confirm Description" },
+        { key: "confirm.okText", type: "string", label: "Confirm OK Text" },
+        { key: "confirm.cancelText", type: "string", label: "Confirm Cancel Text" },
+      ],
+    },
   ],
   defaultConfig: {
     source: null,
     openActionKey: "view",
+    actions: [],
     presentation: {
       appearance: "grid",
       columns: 2,

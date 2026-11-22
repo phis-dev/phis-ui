@@ -42,6 +42,37 @@ export type PhiRecordWidgetPresentation = {
 };
 
 /**
+ * A Provider action of the record's own resource, run on the record shown (TABLES.md, "The record
+ * Widget").
+ *
+ * The Table's row action without what drawing it takes: the record Widget draws no button -- a press
+ * arrives on its `action/activate` input as the action's key, from a Command Toolbar in the dialog's
+ * footer or any Control beside it, and that Control carries the words and the icon. What stays is what
+ * running it takes: which action, whether it is the danger a destructive one must be drawn as, and the
+ * question to ask first where showing the record is not question enough.
+ */
+export type PhiRecordWidgetAction = {
+  /** The action's key in the resource's `actions`; its scope is `row`. */
+  key: string;
+  /** `danger` for an action whose intent is `destructive`, which is also how its question is drawn. */
+  mode?: "normal" | "danger";
+  /** A question before it runs, `%1` the record's identity -- for a press that is not answer enough. */
+  confirm?: {
+    title: string;
+    description?: string;
+    okText?: string;
+    cancelText?: string;
+  };
+};
+
+/**
+ * The dialog's title from the record shown: `template` with `%1` once, the value of `field` (dotted for a
+ * nested one) standing there, announced on `recordTitle` after every read (`helpers/record-title.ts`).
+ * The sentence is the placement's own, already in the reader's language like the field labels.
+ */
+export type PhiRecordWidgetTitleFromRecord = { template: string; field: string };
+
+/**
  * **Which record to show arrives as a signal.** The Widget does not know the table it belongs to and
  * does not read a store: a row action carries a row identity onto the bus, and whoever listens on that
  * route loads it. That is what lets the same Widget sit in an Overlay beside a table, on a page of its
@@ -52,5 +83,8 @@ export type PhiRecordWidgetConfig = {
   /** The row action whose signal opens a record -- `view` in every first-party table so far. */
   openActionKey: string;
   presentation: PhiRecordWidgetPresentation;
+  /** What may be done to the record shown, each run when its key arrives on `action/activate`. */
+  actions: readonly PhiRecordWidgetAction[];
+  titleFromRecord: PhiRecordWidgetTitleFromRecord | null;
   signalRoutes?: PhiSignalRouteSet | null;
 };

@@ -998,6 +998,97 @@ Provider request/response is a typed asynchronous call through the Binding, not 
 Signals remain appropriate for cross-object coordination where no accepted/rejected/canonical-value
 transaction response is required.
 
+### The record Widget
+
+The `record` Widget (`plugins/runtime-modules/core/widgets/record/`) shows one row of a Table Provider
+resource that declares `recordRead: true` as named values. It never learns which Table sent the row: a
+row action's `action/activate:json<table-action>` arrives on its `recordOpen` input, it keeps the row
+identity when the `actionKey` is its `openActionKey`, and reads that record through the Provider Client's
+`readRecord`. Its fields are Table columns without the table (`PhiRecordFieldDefinition`), drawn by the
+same `renderPhiValueContent`. `state/change:boolean` `false` on `close` forgets the record.
+
+It can act on the record it shows, so a dialog opened by a row action can do that row's business without
+a Controller. `actions` names Provider actions of its own source's resource, in the Table's vocabulary
+without what drawing a button takes (`PhiRecordWidgetAction`):
+
+| Key | Meaning |
+| --- | --- |
+| `key` | A Provider action of the resource, of scope `row`. |
+| `mode` | `normal` (default) or `danger`; a capability of intent `destructive` requires `danger`. |
+| `confirm` | Optional `{ title, description?, okText?, cancelText? }`, `%1` the record's identity: a question asked before it runs. |
+
+The Widget draws no button. A press arrives on its `actionActivate` input, `action/activate:string`,
+whose value is the action's key -- a string command channel whose receiver lists the words it answers
+(SIGNALS.md, "Actions"): the keys in `actions`. A Command Toolbar button in the dialog's footer sends it
+with `emits: [{ capabilityId, value: "<key>" }]` and a route on that channel; the button carries the
+words and the icon. A key the Widget does not list, a press while no record is shown, and a second press
+while the first is on its way do nothing. The run is the Table's Binding's request: the descriptor check
+`checkPhiTableProviderActionRequest`, then `requestPhiTableProviderMutation` on the same Provider Client
+with `{ kind: "action", actionKey, rowIdentity, selectedRowIdentities: [], query: {} }` -- the identity the
+Widget holds, no query, because a record is not a view of rows.
+
+`validatePhiRecordWidgetBinding` (`helpers/record-widget.ts`) holds `actions` to the resource as
+`validatePhiTableWidgetBinding` holds the Table's: each declared, of scope `row`, named once, a
+destructive one in danger presentation; the first finding is shown in the record's place, as a Table
+shows its contract error. A confirmation the resource requires (`confirmation: "required"`) is not asked
+again: the record on screen, named in the dialog's title, and the press beside it are that confirmation,
+and a `confirm` would make it a second question. `confirm` is for a press that is not answer enough.
+
+What the Provider answers is said as the Table says it: a rejected mutation, or a failure on the way,
+stands above the record in an error Alert until the next press or the next record; an accepted one with a
+`message` is announced as an info message. On acceptance the Widget emits `actionSuccess` and reads the
+record again.
+
+A record dialog is named by its record: `titleFromRecord: { template, field }` takes a sentence with `%1`
+exactly once, already in the reader's language like the field labels, and the field (dotted for a nested
+one) whose value stands there. After every read the Widget announces the sentence on `recordTitle`, and an
+empty one as a row is asked for and where the record has no text or number there; routed to the Overlay's
+`title` input (OVERLAYS.md), an empty title is the Overlay's own. It is the Form's `titleFromRecord`
+(FORMS.md) with the placement's sentence in place of a Form text (`helpers/record-title.ts` is the rule
+both share), and the descriptor compiler checks it the same way: malformed, without a `source`, without a
+`recordTitle` route, a route that is not `change`/`string`, or sent to an Overlay of the tree that does
+not hear it on `title`.
+
+Inputs (`runtimeSignals.listens`):
+
+```text
+recordOpen      action/activate:json<table-action>
+close           state/change:boolean
+actionActivate  action/activate:string
+```
+
+Outputs, the channel chosen by each route:
+
+```text
+actionSuccess   activate:json<table-action>   { actionKey, rowIdentity, selectedRowIdentities: [] }
+recordTitle     change:string
+```
+
+A dialog that releases what it shows wires five routes beside the row action's two: the footer's button to
+`actionActivate`, Cancel to the Overlay's `dialog/close:none`, `recordTitle` to the Overlay's
+`title/change:string`, and `actionSuccess` twice, as `dialog/close:none` to the Overlay and as
+`reload/activate:none` to the Table, routes that carry nothing of the value. The Accounting product
+directory (`plugins/runtime-modules/accounting/trees/phi-default-accounting-products-page-tree.ts`) is the
+shape to copy:
+
+```ts
+// The record, in the dialog's body:
+actions: [{ key: "release" }],
+titleFromRecord: { template: labels.terms.titleOf /* "Terms: %1" */, field: "id" },
+signalRoutes: {
+  emits: [
+    { routeKey: "terms-title", capabilityId: "recordTitle", scope: "page", channel: "title", action: "change", valueType: "string", receiver: overlay },
+    { routeKey: "terms-done", capabilityId: "actionSuccess", scope: "page", channel: "dialog", action: "close", valueType: "none", receiver: overlay },
+    { routeKey: "terms-reload", capabilityId: "actionSuccess", scope: "page", channel: "reload", action: "activate", valueType: "none", receiver: table },
+  ],
+  listens: [/* recordOpen, close, and: */
+    { routeKey: "terms-release-in", capabilityId: "actionActivate", scope: "page", channel: "action", action: "activate", valueType: "string", receiver: record },
+  ],
+},
+// The footer's Release button: { key: "release", emits: [{ capabilityId: "release", value: "release" }], variant: "primary" },
+// and its route: { routeKey: "terms-release", capabilityId: "release", scope: "page", channel: "action", action: "activate", valueType: "string", receiver: record }
+```
+
 ## Editable static resources
 
 The static Provider implementation is immutable package code. Authoring edits a concrete static Table

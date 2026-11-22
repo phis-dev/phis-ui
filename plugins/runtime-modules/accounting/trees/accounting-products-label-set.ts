@@ -6,7 +6,7 @@ import { PHI_ACCOUNTING_RUNTIME_MODULE_IDENTITY } from "../ids";
 
 /**
  * What the product directory in the Accounting Area says: its frame, the Table's columns, filters and
- * footer, the terms side by side, and the three acts.
+ * footer, the terms side by side in the dialog that releases them, and the three acts.
  */
 const PHI_ACCOUNTING_PRODUCTS_PAGE_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_ACCOUNTING_RUNTIME_MODULE_IDENTITY, {
   key: "preset:accounting-products-page",
@@ -40,12 +40,10 @@ const PHI_ACCOUNTING_PRODUCTS_PAGE_LABEL_SET = definePhiRuntimeModuleLabelSet(PH
     footer: "%1 products",
     empty_title: definePhiMessageLabel("No product matches."),
     empty_text: definePhiMessageLabel("The Site's Add-ons register their products here; none does yet, or the filters leave none."),
-    action_terms: "Compare terms",
     action_release: "Release terms",
     action_lock: "Lock",
     action_unlock: "Unlock",
     action_cancel: "Cancel",
-    release_title: "Release the terms of %1?",
     release_description: definePhiMessageLabel(
       "The terms waiting for release take effect now, and the Add-ons that sell it are told.",
     ),
@@ -58,6 +56,8 @@ const PHI_ACCOUNTING_PRODUCTS_PAGE_LABEL_SET = definePhiRuntimeModuleLabelSet(PH
       "It becomes withdrawn: entitlements count again, nobody acquires it until its supplier makes it active.",
     ),
     terms_title: "Terms",
+    terms_title_of: "Terms: %1",
+    terms_release: "Release",
     terms_product: "Product",
     terms_sale_in_force: "Sale in force",
     terms_sale_waiting: "Sale waiting for release",
@@ -107,17 +107,18 @@ export async function getPhiAccountingProductsPageLabels(options: PhiGlobalTrans
     footer: labels.footer,
     empty: { title: labels.empty_title, text: labels.empty_text },
     actions: {
-      terms: labels.action_terms,
       release: labels.action_release,
       lock: labels.action_lock,
       unlock: labels.action_unlock,
       cancel: labels.action_cancel,
     },
-    release: { title: labels.release_title, description: labels.release_description },
+    release: { description: labels.release_description },
     lock: { title: labels.lock_title, description: labels.lock_description },
     unlock: { title: labels.unlock_title, description: labels.unlock_description },
     terms: {
       title: labels.terms_title,
+      titleOf: labels.terms_title_of,
+      release: labels.terms_release,
       product: labels.terms_product,
       sale: { inForce: labels.terms_sale_in_force, waiting: labels.terms_sale_waiting },
       referral: { inForce: labels.terms_referral_in_force, waiting: labels.terms_referral_waiting },
