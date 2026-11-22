@@ -71,6 +71,17 @@ export type PhiControlOptionsProviderContext<TValue extends string | number = st
    */
   dependencies: Record<string, unknown>;
   /**
+   * The values the control holds right now: one for a single choice, every one for a multiple choice,
+   * none while nothing is chosen.
+   *
+   * For a provider that answers with one page of a longer list. What the field holds need not be on
+   * that page, and a control that cannot find a value among its options shows the raw value -- an id
+   * instead of a name. Such a provider loads the names of these values alongside the page. Not part of
+   * the default load key: a provider that answers with everything it has would ask again on every
+   * choice for nothing, so one that needs them takes them into `resolveLoadKey` itself.
+   */
+  selected: readonly TValue[];
+  /**
    * The reader's language and the Site's time zone (`usePhiIntlLocale`, `usePhiIntlTimeZone`), for a
    * provider whose option labels are words, amounts or dates. The hook puts both into every load key,
    * outside `resolveLoadKey` like the dependencies, so a live language switch asks again.
@@ -113,6 +124,9 @@ const PhiControlOptionsProviderRegistryContext = createContext<
 const EMPTY_PROVIDER_SNAPSHOT = null;
 /** Shared, so a provider without dependencies keeps the same object across renders. */
 const EMPTY_DEPENDENCY_VALUES: Record<string, unknown> = Object.freeze({});
+/** Shared for the same reason: a control that holds nothing hands every provider the same list. */
+const EMPTY_SELECTED_VALUES: readonly never[] = Object.freeze([]);
+const EMPTY_REMEMBERED_OPTIONS: ReadonlyMap<string | number, PhiControlOption<string | number>> = new Map();
 /** One pause, not one request per keystroke. */
 const PHI_OPTIONS_SEARCH_DEBOUNCE_MS = 250;
 const IN_FLIGHT_PROVIDER_LOADS = new WeakMap<
@@ -161,6 +175,48 @@ function normalizeStaticOptions<TValue extends string | number>(
     icon: option.icon,
     parentValue: option.parentValue,
   }));
+}
+
+/**
+ * What a control holds, as `selected`: read here once, like the search policy. `null` and the `""` a
+ * cleared select reports are no value, and only a string or a number can be an option's value.
+ */
+function readSelectedValues(value: unknown): (string | number)[] {
+  const entries: unknown[] = Array.isArray(value) ? value : [value];
+  return entries.filter((entry): entry is string | number =>
+    (typeof entry === "string" && entry !== "") || (typeof entry === "number" && Number.isFinite(entry)));
+}
+
+function areSameControlOptions(left: object, right: object) {
+  const leftEntries = Object.entries(left);
+  return leftEntries.length === Object.keys(right).length
+    && leftEntries.every(([key, entry]) => Object.is(entry, (right as Record<string, unknown>)[key]));
+}
+
+/**
+ * The last option seen for each chosen value; a value no longer chosen is forgotten. Answers with
+ * `remembered` itself while nothing changed -- by content, as a resolver may build options afresh -- so
+ * storing it during the render does not render again.
+ */
+function rememberSelectedOptions<TValue extends string | number>(
+  remembered: ReadonlyMap<TValue, PhiControlOption<TValue>>,
+  selected: readonly TValue[],
+  options: readonly PhiControlOption<TValue>[],
+): ReadonlyMap<TValue, PhiControlOption<TValue>> {
+  if (selected.length === 0) {
+    return remembered.size === 0 ? remembered : EMPTY_REMEMBERED_OPTIONS as ReadonlyMap<TValue, PhiControlOption<TValue>>;
+  }
+  const next = new Map<TValue, PhiControlOption<TValue>>();
+  for (const value of selected) {
+    const known = options.find((option) => option.value === value) ?? remembered.get(value);
+    if (known) next.set(value, known);
+  }
+  const unchanged = next.size === remembered.size
+    && [...next].every(([value, option]) => {
+      const previous = remembered.get(value);
+      return previous !== undefined && (previous === option || areSameControlOptions(previous, option));
+    });
+  return unchanged ? remembered : next;
 }
 
 export function readPhiControlOptionsProviderParam(
@@ -287,6 +343,7 @@ export function usePhiControlOptionsProvider<TValue extends string | number = st
   sourceConfig,
   searchDraft = "",
   formValues,
+  selectedValues,
 }: {
   options?: readonly { value: TValue; label?: string; disabled?: boolean; description?: string; icon?: string; parentValue?: TValue }[] | null;
   optionsProvider?: PhiControlOptionsProviderConfig | null;
@@ -301,9 +358,19 @@ export function usePhiControlOptionsProvider<TValue extends string | number = st
    * passes none, and a `form` dependency simply has no value there.
    */
   formValues?: Record<string, unknown> | null;
+  /** What the control holds -- one value, a list, or nothing -- as it holds it; read into `selected`. */
+  selectedValues?: unknown;
 }): PhiResolvedControlOptions<TValue> & { search: PhiControlOptionsSearchState } {
   const registry = useContext(PhiControlOptionsProviderRegistryContext);
   const staticOptions = useMemo(() => normalizeStaticOptions(options), [options]);
+  // Keyed by content, so a value list built afresh on every render is still the same `selected`.
+  const selectedKey = JSON.stringify(readSelectedValues(selectedValues));
+  const selected = useMemo<readonly TValue[]>(
+    () => selectedKey === "[]"
+      ? EMPTY_SELECTED_VALUES
+      : Object.freeze(JSON.parse(selectedKey) as TValue[]),
+    [selectedKey],
+  );
   /*
    * The declared search policy, applied in one place. A field states whether its provider can be
    * searched and from how many characters; the load mode states who narrows the list. Debouncing lives
@@ -368,6 +435,8 @@ export function usePhiControlOptionsProvider<TValue extends string | number = st
     // keystroke, so taking the search into account is the searching provider's own decision.
     search,
     dependencies: dependencyValues,
+    // Not in the default load key either: a provider that answers with all it has must not reload per choice.
+    selected,
     locale,
     timeZone,
     snapshot: providerSnapshot,
@@ -425,7 +494,7 @@ export function usePhiControlOptionsProvider<TValue extends string | number = st
     registeredProvider,
   ]);
 
-  return useMemo(() => {
+  const resolved = useMemo((): PhiResolvedControlOptions<TValue> & { search: PhiControlOptionsSearchState } => {
     if (!optionsProvider?.providerKey) {
       return { options: staticOptions, search: searchState };
     }
@@ -463,6 +532,7 @@ export function usePhiControlOptionsProvider<TValue extends string | number = st
         sourceConfig,
         search,
         dependencies: dependencyValues,
+        selected,
         locale,
         timeZone,
         snapshot: providerSnapshot,
@@ -475,6 +545,7 @@ export function usePhiControlOptionsProvider<TValue extends string | number = st
     searchState,
     dependenciesSatisfied,
     dependencyValues,
+    selected,
     locale,
     timeZone,
     asyncData,
@@ -486,4 +557,32 @@ export function usePhiControlOptionsProvider<TValue extends string | number = st
     sourceConfig,
     staticOptions,
   ]);
+
+  /*
+   * A chosen value keeps the option it was last seen with, for every provider: any answer can leave it
+   * out -- the empty list while a new search loads, the next page -- and the control would show the raw
+   * value. Added to the list, because the Select finds a chosen value's label among `options`. Filtering
+   * locally, the Select hides it like any option that does not match; where the provider answered the
+   * search (`filterLocally: false`) it stays at the end, marked as chosen -- the price of keeping its
+   * name, and a multiple choice shows its tags while the person types. Stored during the render, so the
+   * label survives the very render that drops it; empty until an option resolved, on the server as on
+   * the client, so hydration matches.
+   */
+  const [rememberedOptions, setRememberedOptions] = useState<ReadonlyMap<TValue, PhiControlOption<TValue>>>(
+    EMPTY_REMEMBERED_OPTIONS as ReadonlyMap<TValue, PhiControlOption<TValue>>,
+  );
+  const nextRememberedOptions = rememberSelectedOptions(rememberedOptions, selected, resolved.options);
+  if (nextRememberedOptions !== rememberedOptions) {
+    setRememberedOptions(nextRememberedOptions);
+  }
+
+  return useMemo(() => {
+    const missing = selected
+      .filter((value) => !resolved.options.some((option) => option.value === value))
+      .flatMap((value) => {
+        const option = nextRememberedOptions.get(value);
+        return option ? [option] : [];
+      });
+    return missing.length === 0 ? resolved : { ...resolved, options: [...resolved.options, ...missing] };
+  }, [nextRememberedOptions, resolved, selected]);
 }

@@ -248,6 +248,7 @@ function PhiResolvedFormFieldControl({
     sourceConfig,
     searchDraft,
     formValues,
+    selectedValues: value,
   });
   /*
    * A required parent changed, so what this field holds was chosen from a list that no longer applies.

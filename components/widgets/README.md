@@ -322,6 +322,20 @@ Generic control Widgets reuse the capability sets in `signals/control-signal-cap
   language and the Site's time zone from the page's Intl context, for a provider whose labels are
   words, amounts or dates. The hook puts both into every load key, outside `resolveLoadKey` like the
   dependencies, so a live language switch loads again and no provider can forget to.
+- `selected` in the same context is what the control holds: one value for a single choice, every value
+  of a multiple choice, an empty list while nothing is chosen (`null`, `undefined` and `""` are no
+  value). A provider that answers with one page of a longer list -- `loadMode: "server"` with
+  `search.enabled` -- loads the names of these values with the page, so a held value that is not on it
+  shows its label instead of its raw value. It is not part of the default load key, so a provider that
+  answers with everything does not ask again on every choice; one that needs it takes it into
+  `resolveLoadKey()` itself.
+- The hook keeps the last option it saw for each held value, whatever the provider, and adds it to the
+  end of an answer that leaves the value out -- the empty list while a new search loads, the next page
+  -- for as long as the value stays held; a value no longer held is forgotten. Where the Select filters
+  locally it hides the kept option like any other that does not match; where the provider answered
+  the search the kept option stays in the list, marked as chosen, because the Select finds a held
+  value's label among its options. Nothing is kept before the control has resolved an option, so the
+  Server render and hydration agree.
 - The emitted signal `value` is the option value; receivers never rely on labels.
 
 ## Content Widgets

@@ -76,8 +76,8 @@ for (const path of [
  */
 assert.match(
   source,
-  /search,\n\s*dependencies: dependencyValues,\n\s*locale,\n\s*timeZone,\n\s*snapshot: providerSnapshot,/u,
-  "The load context must carry the search text, the resolved dependencies, the locale and the time zone.",
+  /search,\n\s*dependencies: dependencyValues,\n(?:\s*\/\/.*\n)*\s*selected,\n\s*locale,\n\s*timeZone,\n\s*snapshot: providerSnapshot,/u,
+  "The load context must carry the search text, the resolved dependencies, the held values, the locale and the time zone.",
 );
 /*
  * The reader's language and the Site's zone reach every provider, and every load key, outside
@@ -93,6 +93,11 @@ assert.doesNotMatch(
   source,
   /defaultProviderLoadKey = JSON\.stringify\(\{[^}]*search/u,
   "The default load key must not include the search, or every provider reloads on each keystroke.",
+);
+assert.doesNotMatch(
+  source,
+  /defaultProviderLoadKey = JSON\.stringify\(\{[^}]*selected/u,
+  "The default load key must not include the held values, or every provider reloads on each choice.",
 );
 assert.match(
   source,
@@ -235,7 +240,8 @@ assert.match(
   );
 
   const control = await readFile(new URL("../components/controls/phi-form-control.tsx", import.meta.url), "utf8");
-  assert.match(control, /formValues,\n\s*\}\);/u, "The form hands its live values to the options hook.");
+  assert.match(control, /formValues,\n\s*selectedValues: value,\n\s*\}\);/u,
+    "The form hands its live values, and what the field holds, to the options hook.");
   assert.match(
     control,
     /\.filter\(\(dependency\) => dependency\.required && dependency\.source === "form"\)/u,

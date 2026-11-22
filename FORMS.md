@@ -157,6 +157,10 @@ type PhiFormTextDescriptor =
   options depend on another value declares `optionsProvider.dependencies`. An option's `parentValue`
   names the option it stands under (see [components/widgets/README.md](components/widgets/README.md));
   a Control that cannot draw a hierarchy lists the options as they come.
+- A field's Options Provider hears what the field holds (`selected` in its context, one value or the
+  list of a multiple field), so one that answers a search with a page of matches can name a held value
+  that is not among them, and a held value keeps the option it was last seen with while a later answer
+  leaves it out. See [components/widgets/README.md, "Options Providers"](components/widgets/README.md#options-providers).
 - Options resolution reads the field's own `config` with the placement's `formConfig` layered over it,
   the placement winning where both name a key. A descriptor is registered once and reads the same on
   every Site; a list that varies by Site is what the placement knows, and it belongs there. Because this

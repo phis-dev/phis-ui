@@ -38,6 +38,17 @@ export type PhiChoiceControllerResult = {
   publish: (nextValue: string) => void;
 };
 
+type PhiChoicePick = { source: string; value: string };
+
+/**
+ * What a choice holds, as far as known before its options resolve: a configured value is the fallback a
+ * pick holds against. Without one the fallback is the provider's own answer, so only a pick is told.
+ */
+function readPhiChoiceHeldValue(picked: PhiChoicePick | null, configuredValue: string | undefined) {
+  if (configuredValue == null) return picked?.value;
+  return picked?.source === configuredValue ? picked.value : configuredValue;
+}
+
 export function usePhiChoiceController<TConfig extends PhiChoiceControlConfig>({
   config,
   signalsEnabled = true,
@@ -45,17 +56,16 @@ export function usePhiChoiceController<TConfig extends PhiChoiceControlConfig>({
   defaultKey,
   sender,
 }: PhiChoiceControllerOptions<TConfig>): PhiChoiceControllerResult {
+  // A pick, held against the fallback it replaced; declared first so the provider hears it.
+  const [picked, setPicked] = useState<PhiChoicePick | null>(null);
   const resolvedOptions = usePhiControlOptionsProvider({
     options: config?.options,
     optionsProvider: config?.optionsProvider,
+    selectedValues: readPhiChoiceHeldValue(picked, config?.value),
   });
   const fallbackValue = config?.value ?? resolvedOptions.value ?? resolvedOptions.options.at(0)?.value ?? "";
   const readOnly = config?.readOnly === true;
-  const [state, setState] = useState(() => ({
-    source: fallbackValue,
-    value: fallbackValue,
-  }));
-  const value = state.source === fallbackValue ? state.value : fallbackValue;
+  const value = picked?.source === fallbackValue ? picked.value : fallbackValue;
   /*
    * Options a sender replaced, held against the configured list they replaced. When the configuration
    * brings a different list, that one is what the Control was given last, so the sent one steps aside.
@@ -78,7 +88,7 @@ export function usePhiChoiceController<TConfig extends PhiChoiceControlConfig>({
     initialDisabled: config?.disabled === true,
     initialReadOnly: readOnly,
     clearValue: fallbackValue,
-    onSetValue: (nextValue) => setState({ source: fallbackValue, value: nextValue }),
+    onSetValue: (nextValue) => setPicked({ source: fallbackValue, value: nextValue }),
     onReceiveCapability: (capabilityId, signal) => {
       if (capabilityId !== "options") {
         return false;
@@ -96,7 +106,7 @@ export function usePhiChoiceController<TConfig extends PhiChoiceControlConfig>({
     if (readOnly) {
       return;
     }
-    setState({
+    setPicked({
       source: fallbackValue,
       value: nextValue,
     });
@@ -144,19 +154,18 @@ export function usePhiStackChoiceController<TConfig extends PhiStackChoiceContro
   defaultKey,
   sender,
 }: PhiStackChoiceControllerOptions<TConfig>): PhiStackChoiceControllerResult {
+  // A pick, held against the fallback it replaced; declared first so the provider hears it.
+  const [picked, setPicked] = useState<PhiChoicePick | null>(null);
   const resolvedOptions = usePhiControlOptionsProvider({
     options: config?.options,
     optionsProvider: config?.optionsProvider,
+    selectedValues: readPhiChoiceHeldValue(picked, config?.value),
   });
   const stackMode = config?.valueMode === "stack-slot-index";
   const fallbackValue = config?.value ?? resolvedOptions.value ?? resolvedOptions.options.at(0)?.value ?? "";
   const readOnly = config?.readOnly === true;
-  const [state, setState] = useState(() => ({
-    source: fallbackValue,
-    value: fallbackValue,
-  }));
   const [stackOptions, setStackOptions] = useState<PhiControlOption[]>([]);
-  const value = state.source === fallbackValue ? state.value : fallbackValue;
+  const value = picked?.source === fallbackValue ? picked.value : fallbackValue;
   const stackMetaListenRoute = findPhiSignalRoutesByCapabilityId(config?.signalRoutes?.listens, "stackMeta")[0] ?? null;
   /*
    * The Stack this Choice follows: the one its `stackMeta` request is addressed to. Every Stack answers
@@ -176,7 +185,7 @@ export function usePhiStackChoiceController<TConfig extends PhiStackChoiceContro
     initialDisabled: config?.disabled === true,
     initialReadOnly: readOnly,
     clearValue: fallbackValue,
-    onSetValue: (nextValue) => setState({ source: fallbackValue, value: nextValue }),
+    onSetValue: (nextValue) => setPicked({ source: fallbackValue, value: nextValue }),
     coerceValue: (nextValue) => (typeof nextValue === "string" ? nextValue : nextValue == null ? "" : String(nextValue)),
   });
   const emitControlCapability = controlSignals.emitCapability;
@@ -210,8 +219,8 @@ export function usePhiStackChoiceController<TConfig extends PhiStackChoiceContro
 
       setStackOptions(mapPhiStackSlotsToChoiceOptions(message) ?? []);
       const nextValue = String(message.value.activeSlotIndex);
-      setState((current) =>
-        current.source === fallbackValue && current.value === nextValue
+      setPicked((current) =>
+        current?.source === fallbackValue && current.value === nextValue
           ? current
           : { source: fallbackValue, value: nextValue },
       );
@@ -229,7 +238,7 @@ export function usePhiStackChoiceController<TConfig extends PhiStackChoiceContro
     if (readOnly) {
       return;
     }
-    setState({
+    setPicked({
       source: fallbackValue,
       value: nextValue,
     });

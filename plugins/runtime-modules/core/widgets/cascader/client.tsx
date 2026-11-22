@@ -21,20 +21,22 @@ export function PhiCascaderWidget({
 }) {
   const { token } = usePhiConfig();
   const minWidth = token.controlHeight * 6;
-  const resolvedOptions = usePhiControlOptionsProvider({
-    options: config?.options,
-    optionsProvider: config?.optionsProvider,
-  });
-  const fallbackValue = normalizePhiCascaderValue(config?.value ?? resolvedOptions.value);
   const separator = config?.separator ?? "/";
   const rootValue = config?.rootValue ?? "/";
   const normalize = config?.normalize ?? "raw";
-  const normalizedFallbackValue = normalizePhiCascaderValue(fallbackValue, { separator, rootValue, normalize });
-  const [state, setState] = useState(() => ({
-    source: normalizedFallbackValue,
-    value: normalizedFallbackValue,
-  }));
-  const value = state.source === normalizedFallbackValue ? state.value : normalizedFallbackValue;
+  const normalizeFallback = (raw: string | null | undefined) =>
+    normalizePhiCascaderValue(normalizePhiCascaderValue(raw), { separator, rootValue, normalize });
+  // A pick, held against the fallback it replaced; declared first so the provider hears what is held.
+  // Without a configured value the fallback is the provider's own answer, so only a pick is told.
+  const [picked, setPicked] = useState<{ source: string; value: string } | null>(null);
+  const configuredValue = config?.value == null ? null : normalizeFallback(config.value);
+  const resolvedOptions = usePhiControlOptionsProvider({
+    options: config?.options,
+    optionsProvider: config?.optionsProvider,
+    selectedValues: configuredValue == null || picked?.source === configuredValue ? picked?.value : configuredValue,
+  });
+  const normalizedFallbackValue = normalizeFallback(config?.value ?? resolvedOptions.value);
+  const value = picked?.source === normalizedFallbackValue ? picked.value : normalizedFallbackValue;
   const controlSignals = usePhiControlSignalController<string>({
     key: config?.key ?? "cascader",
     signalRoutes: config?.signalRoutes,
@@ -45,7 +47,7 @@ export function PhiCascaderWidget({
     initialReadOnly: config?.readOnly === true,
     clearValue: config?.allowRoot === false ? normalizedFallbackValue : rootValue,
     onSetValue: (nextValue) =>
-      setState({
+      setPicked({
         source: normalizedFallbackValue,
         value: normalizePhiCascaderValue(nextValue, { separator, rootValue, normalize }),
       }),
@@ -59,7 +61,7 @@ export function PhiCascaderWidget({
     }
 
     const normalizedNextValue = normalizePhiCascaderValue(nextValue, { separator, rootValue, normalize });
-    setState({
+    setPicked({
       source: normalizedFallbackValue,
       value: normalizedNextValue,
     });

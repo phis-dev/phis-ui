@@ -600,11 +600,21 @@ function PhiInspectorChoiceFieldControl({
   // The Inspector's own fields declare searchability too -- the navigation pickers have said
   // `search: { enabled: true }` for a while -- so the raw text goes to the hook here as well.
   const [searchDraft, setSearchDraft] = useState("");
+  // What the field holds, read once for the provider and for the control below.
+  const multiple = field.mode === "multiple" || field.valueType === "string[]";
+  const emptyOptionValue = field.emptyOption?.value;
+  const selectedValues = multiple ? readInspectorChoiceMultiValue(value, defaultValue) : [];
+  const selectedValue = multiple
+    ? undefined
+    : value == null
+      ? emptyOptionValue ?? readInspectorChoiceSingleValue(undefined, defaultValue)
+      : readInspectorChoiceSingleValue(value, defaultValue);
   const providerResult = usePhiControlOptionsProvider({
     options: staticOptions,
     optionsProvider: field.filter?.widgetType ? null : field.optionsProvider,
     sourceConfig: field.filter?.widgetType ? null : config,
     searchDraft,
+    selectedValues: multiple ? selectedValues : selectedValue,
   });
 
   const renderChoiceRow = (control: ReactNode) => renderPhiInspectorConfigFieldControl(
@@ -626,8 +636,7 @@ function PhiInspectorChoiceFieldControl({
     [field.presentation, resolvedOptions],
   );
 
-  if (field.mode === "multiple" || field.valueType === "string[]") {
-    const selectedValues = readInspectorChoiceMultiValue(value, defaultValue);
+  if (multiple) {
     const options = selectedValues.reduce<PhiControlOption[]>(
       (items, entry) => ensureInspectorChoiceOption(items, entry),
       resolvedOptions,
@@ -648,12 +657,6 @@ function PhiInspectorChoiceFieldControl({
       />,
     );
   }
-
-  const emptyOptionValue = field.emptyOption?.value;
-  const selectedValue =
-    value == null
-      ? emptyOptionValue ?? readInspectorChoiceSingleValue(undefined, defaultValue)
-      : readInspectorChoiceSingleValue(value, defaultValue);
 
   /*
    * The options as a hierarchy by their `parentValue`. Every level can be chosen -- a Folder that holds

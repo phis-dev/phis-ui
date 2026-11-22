@@ -28,10 +28,6 @@ export function PhiCheckboxGroupWidget({
   signalsEnabled?: boolean;
   onChange?: (value: string[]) => void;
 }) {
-  const resolvedOptions = usePhiControlOptionsProvider({
-    options: config?.options,
-    optionsProvider: config?.optionsProvider,
-  });
   const fallbackValue = useMemo(
     () => controlledValue ?? config?.value ?? [],
     [config?.value, controlledValue],
@@ -39,6 +35,11 @@ export function PhiCheckboxGroupWidget({
   const fallbackKey = fallbackValue.join("\u001f");
   const [state, setState] = useState(() => ({ sourceKey: fallbackKey, value: fallbackValue }));
   const value = state.sourceKey === fallbackKey ? state.value : fallbackValue;
+  const resolvedOptions = usePhiControlOptionsProvider({
+    options: config?.options,
+    optionsProvider: config?.optionsProvider,
+    selectedValues: value,
+  });
   const controlSignals = usePhiControlSignalController<string[]>({
     key: config?.key ?? "checkbox-group",
     signalRoutes: config?.signalRoutes,

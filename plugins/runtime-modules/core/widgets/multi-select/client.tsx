@@ -71,10 +71,6 @@ export function PhiMultiSelectWidget({
   const { token } = usePhiConfig();
   const minWidth = token.controlHeight * 5;
   const valueType = config?.valueType ?? "enum[]";
-  const resolvedOptions = usePhiControlOptionsProvider({
-    options: config?.options,
-    optionsProvider: config?.optionsProvider,
-  });
   const fallbackValue = useMemo(
     () => normalizeMultiSelectValue(controlledValue ?? config?.value ?? [], valueType),
     [config?.value, controlledValue, valueType],
@@ -85,6 +81,12 @@ export function PhiMultiSelectWidget({
     value: fallbackValue,
   }));
   const value = state.sourceKey === fallbackValueKey ? state.value : fallbackValue;
+  const resolvedOptions = usePhiControlOptionsProvider({
+    options: config?.options,
+    optionsProvider: config?.optionsProvider,
+    // As the Select is handed them, so they meet the options the way the Select's own lookup does.
+    selectedValues: valuesToSelectValues(value),
+  });
   const maxTagCount =
     config?.maxTagCount === "responsive" && value.length <= 1
       ? undefined
