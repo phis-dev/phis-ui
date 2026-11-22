@@ -105,8 +105,7 @@ const MEDIA_KINDS = Object.values(PhiMediaKind);
 
 /*
  * The Media renderer's settings (`features.media`), read strictly: a path whose braces open no
- * placeholder, a kind the Media library does not know, or a `publicOnly` that is not a boolean is a
- * `PhiConfigError` naming the key, never a default put in its place -- a broken placeholder would
+ * placeholder or a kind the Media library does not know is a `PhiConfigError` naming the key, never a default put in its place -- a broken placeholder would
  * become a Folder named after it.
  */
 function readMediaFeatures(value: Record<string, unknown>): NonNullable<PhiCmsCollectionViewWidgetConfig["features"]["media"]> {
@@ -117,11 +116,9 @@ function readMediaFeatures(value: Record<string, unknown>): NonNullable<PhiCmsCo
     (entry) => typeof entry === "string" && isPhiMediaFolderPathTemplate(entry) ? entry.trim() : undefined,
   );
   const mediaType = reader.oneOf("mediaType", MEDIA_KINDS);
-  const publicOnly = reader.boolean("publicOnly");
   return {
     ...(folderPath ? { folderPath } : {}),
     ...(mediaType ? { mediaType } : {}),
-    ...(publicOnly === undefined ? {} : { publicOnly }),
   };
 }
 
@@ -412,7 +409,6 @@ export const PHI_COLLECTION_VIEW_WIDGET_DEFINITION = {
       emptyOption: { value: "", label: "Every kind" },
       emptyValue: null,
     },
-    { key: "features.media.publicOnly", type: "boolean", label: "Public Media Only" },
     { key: "features.pagination.enabled", type: "boolean", label: "Pagination" },
     { key: "features.pagination.pageSize", type: "number", label: "Page Size", min: 1, precision: 0 },
     { key: "features.pagination.compact", type: "boolean", label: "Compact Pagination" },

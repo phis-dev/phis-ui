@@ -175,8 +175,6 @@ needs from the resource:
     Media library's own Collection, the Site Space's root for any other.
   - `mediaType`: the one kind the upload takes and the picker lists (absent: the upload takes every kind,
     the picker lists images).
-  - `publicOnly`: the picker greys out the Assets that are not delivered publicly; the resource's `add`
-    decides what it takes.
 - **Uploads.** For the Media library's own Collection a finished upload stays in the wall as a tile, with
   its delete, and the listing is read again. For a resource that declares `add`, each Asset that arrived
   is added and leaves the wall -- the wall shows only what is on its way or failed -- so nothing shows
@@ -239,7 +237,7 @@ features
 ├── ordered filters (key, control select | multi-select | cascader, widths, companion actions)
 ├── ordered toolbar action presentation
 ├── reorder: enabled, optional actionKey (default "reorder")
-├── media: folderPath, mediaType, publicOnly (the Media renderer's, see above)
+├── media: folderPath, mediaType (the Media renderer's, see above)
 └── pagination
 
 initialQuery

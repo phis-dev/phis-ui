@@ -11,8 +11,8 @@ and `scripts/validate-todos-wants.ts` refuses the entry once the catalog has one
 - **The Media renderer draws any Provider's collection of Assets** (COLLECTIONS.md, "The Media
   renderer"). A resource names `PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY`, answers `PhiMediaCollectionItem`s and
   declares `add` (`itemKeys`, Asset ids), `delete`, `reorder`, `upload` (`panelKey: "upload"`); the
-  placement's new `features.media` (`folderPath` with `{param}` from the binding params, `mediaType`,
-  `publicOnly`) and toolbar action `add` ("Choose from Media library") go with it; the renderer receives
+  placement's new `features.media` (`folderPath` with `{param}` from the binding params, `mediaType`) and
+  toolbar action `add` ("Choose from Media library") go with it; the renderer receives
   the resource's declaration as `resource`, labels are loaded by renderer. A tool the resource does not
   declare is now a Widget failure. `PhiMediaPickerControl` lost `onUpload`, `uploadAccept` and
   `uploadProgress` for `uploadPanel` (the Media library's upload surface, `PhiAreaUploadBinding`, which
@@ -216,18 +216,6 @@ and `scripts/validate-todos-wants.ts` refuses the entry once the catalog has one
   Widget cannot open the library. Wanted, if asked for: the binding as a public door, restrictable to the
   Site's Space and to publicly delivered Assets. A collection a picker adds to is the Media renderer's
   (its toolbar action `add`), which needs no door.
-- **Pickers should not list Assets that cannot be chosen (owner, 2026-11-22).** Where only publicly
-  delivered Assets may be chosen (`publicOnly` on the `media-asset` field and on the Media renderer's
-  `features.media`), the picker greys the others out; the owner wants them left out. Core's list has no
-  filter for it: `GET /api/site/media` (phis-server `src/app/api/site/media/route.ts`) reads `q`, `page`,
-  `pageSize`, `id`, `folderId`, `presentationFlags`, `kind`, `since`, `until`, `sort` and nothing on the
-  delivery. Needed: a list parameter (e.g. `delivery=public`) read by that route and passed to
-  `listMediaAssetsBySiteWithFilters` and `countMediaAssetsBySiteWithFilters` (`src/db/media.ts`) as
-  `lifecycle_status = Ready AND delivery_policy = Public` -- the condition
-  `listPublicSiteSpaceMediaAssetsByIds` already uses --, then a `deliveryPolicy` filter in the Media
-  collection Provider's `buildMediaQuery` (`asset/services/collection.tsx`) and its descriptor's
-  `filterFields`, and the picker binding sending it for `publicOnly` instead of `isAssetSelectable`. A Core
-  route and its answer change, so it waits for the owner's go.
 - **Media Inspector variant hand-over.** The Inspector always simulates the variant crop from the original
   (`components/media/phi-asset-inspector-section.tsx`) and never shows the generated variant. Decide
   whether that stays and the contract says so, or whether unsaved focal edits get an owner and the preview

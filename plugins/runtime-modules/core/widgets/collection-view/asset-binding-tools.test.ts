@@ -128,13 +128,13 @@ describe("features.media", () => {
   const parse = (media: unknown) => PHI_COLLECTION_VIEW_WIDGET_DEFINITION.parseConfig({ features: { media } }).features.media;
 
   it("is read as written", () => {
-    expect(parse({ folderPath: " Shop Images / {category} / {product} ", mediaType: "image", publicOnly: true }))
-      .toEqual({ folderPath: "Shop Images / {category} / {product}", mediaType: "image", publicOnly: true });
+    expect(parse({ folderPath: " Shop Images / {category} / {product} ", mediaType: "image" }))
+      .toEqual({ folderPath: "Shop Images / {category} / {product}", mediaType: "image" });
     expect(parse(undefined)).toBeUndefined();
   });
 
-  it("refuses a broken placeholder, an unknown kind and a publicOnly that is not a boolean", () => {
-    for (const media of [{ folderPath: "Shop / {category" }, { mediaType: "picture" }, { publicOnly: "yes" }]) {
+  it("refuses a broken placeholder and an unknown kind", () => {
+    for (const media of [{ folderPath: "Shop / {category" }, { mediaType: "picture" }]) {
       let failure: unknown = null;
       try {
         parse(media);

@@ -485,13 +485,12 @@ export type PhiCollectionViewWidgetPlacement = PhiWidgetPlacementBase & {
       actionKey?: string;
     };
     /**
-     * The Media renderer's upload Folder (`{param}` from the binding params), the kind it takes and its
-     * picker lists, and whether only public Assets may be added (`PhiCmsCollectionViewWidgetConfig`).
+     * The Media renderer's upload Folder (`{param}` from the binding params) and the kind it takes and its
+     * picker lists (`PhiCmsCollectionViewWidgetConfig`).
      */
     media?: {
       folderPath?: string;
       mediaType?: PhiMediaKindValue;
-      publicOnly?: boolean;
     };
     pagination?: {
       enabled: boolean;

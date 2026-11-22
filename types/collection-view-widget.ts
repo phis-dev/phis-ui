@@ -76,11 +76,6 @@ export type PhiCmsCollectionViewWidgetConfig = PhiCmsWidgetConfigBase & {
       folderPath?: string;
       /** The one kind the upload takes and the picker lists. Absent: the upload takes every kind, the picker lists images. */
       mediaType?: PhiMediaKindValue;
-      /**
-       * The picker greys out the Assets that are not delivered publicly; the resource's `add` decides
-       * what it takes. Core delivers what goes into the Site Space publicly by default.
-       */
-      publicOnly?: boolean;
     };
     pagination?: {
       enabled: boolean;

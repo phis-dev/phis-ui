@@ -412,12 +412,13 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   (`plugins/runtime-modules/asset/media-asset-field.ts`: a wrong value throws a `PhiConfigError` naming the setting):
   - `mediaType`: the kind the picker lists, one of `image` (the default), `video`, `audio`, `pdf`,
     `markdown`, `font`.
-  - `publicOnly`: `true` greys out the Assets whose delivery is not public (the list states
+  - `publicOnly`: `true` greys out the Assets that are not public and ready (the list states
     `deliveryPolicy` and `lifecycleStatus` for each Asset, and `isPhiMediaAssetPublic` is the question), so
     they stay visible but cannot be chosen; the field says nothing beneath itself about it. An already
-    stored Asset that is not public is flagged beside the preview. The Core list route has no filter for
-    the delivery; the Assets are marked, not hidden (TODOS.md, "Pickers should not list Assets that cannot
-    be chosen").
+    stored Asset that is not public is flagged beside the preview. Core delivers every Asset of the Site
+    Space -- the only Space the field offers -- publicly from the start (`defaultMediaDeliveryPolicy` in
+    phis-server; only a personal or a group Space restricts), so in this field it catches nothing but an
+    upload still under way or failed. No list filter for the delivery is needed for it.
   - `folderPath`: the Folder of the Site Space the picker opens on, by its path of names from the root
     (`"Shop Images / Products"`, read like `area-upload`'s). Each time the picker opens the path is read
     and nothing is written (`readPhiMediaUploadFolderPathReach`, `GET /api/site/media/folders` -- the
@@ -495,7 +496,7 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
     key: "logo",
     fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.mediaAsset,
     label: label("logo", "Logo"),
-    config: { mediaType: "image", publicOnly: true, folderPath: "Shop Images / Products" },
+    config: { mediaType: "image", folderPath: "Shop Images / Products" },
     validation: required("logoRequired", "Choose a logo."),
   }
   ```

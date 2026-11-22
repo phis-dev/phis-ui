@@ -3,7 +3,7 @@
 import { isPhiRecord } from "../../../../../helpers/is-record";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { PhiMediaAssetFlags, PhiMediaKind, isPhiMediaAssetPublic } from "../../../../../constants/media";
+import { PhiMediaAssetFlags, PhiMediaKind } from "../../../../../constants/media";
 import { PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS } from "../../../../../constants/media-library-provider-keys";
 import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
 import type {
@@ -251,7 +251,6 @@ export function PhiAssetCollectionViewBinding({
     [bindingParams, features.media?.folderPath],
   );
   const mediaType = features.media?.mediaType ?? null;
-  const publicOnly = features.media?.publicOnly === true;
   const uploadAcceptance = useMemo(() => mediaType ? { kinds: [mediaType] } : undefined, [mediaType]);
   const folderOptions = useMemo(
     () => buildPhiMediaFolderCascaderOptions(state.folders, { lockedLabel: labels.tool.folderLockedLabel }),
@@ -305,8 +304,9 @@ export function PhiAssetCollectionViewBinding({
   /*
    * The Media library's picker, for the toolbar action `add`: the Site Space only, opening on the
    * resolved Folder path (read, nothing written), the kind `features.media.mediaType` names (images where
-   * none), the not public ones greyed out where `publicOnly`. A pick is added; the picker has no upload of
-   * its own here -- the Collection's upload panel is that.
+   * none). Every Asset of the Site Space is delivered publicly from the start (`defaultMediaDeliveryPolicy`
+   * in phis-server), so there is nothing to grey out; what the resource's `add` takes, it decides. A pick
+   * is added; the picker has no upload of its own here -- the Collection's upload panel is that.
    */
   const pickerOpenOnFolder = useCallback(
     (signal: AbortSignal) => readPhiMediaUploadFolderPathReach(folderPath, signal),
@@ -323,9 +323,6 @@ export function PhiAssetCollectionViewBinding({
     searchLabels: PHI_SEARCH_WIDGET_DEFAULT_LABELS,
     value: null,
     siteSpaceOnly: true,
-    isAssetSelectable: publicOnly
-      ? (candidate) => isPhiMediaAssetPublic(candidate.deliveryPolicy, candidate.lifecycleStatus)
-      : undefined,
     onAssetSelect: (picked) => { void addAssets([picked.id]); },
     openOnFolder: folderPath.length > 0 ? pickerOpenOnFolder : null,
   });
