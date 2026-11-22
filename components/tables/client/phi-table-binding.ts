@@ -103,6 +103,54 @@ function createPhiTableQueryKey(query: PhiTableQuery) {
   });
 }
 
+/*
+ * The list a page of a cursor-paged resource belongs to: the source and the query without its page. A
+ * cursor is a place in that list and in no other, so a new search, sort, filter, page size, source or
+ * binding param starts a list whose cursors are not known yet -- only its first page is.
+ */
+function createPhiTablePagingKey(sourceKey: string, query: PhiTableQuery) {
+  const filters = Object.fromEntries(
+    Object.entries(query.filters ?? {}).sort(([left], [right]) => left.localeCompare(right)),
+  );
+  return JSON.stringify({
+    sourceKey,
+    pageSize: query.pageSize ?? null,
+    search: query.search ?? "",
+    sorts: query.sorts ?? [],
+    filters,
+  });
+}
+
+type PhiTablePageCursors = {
+  pagingKey: string;
+  /** The cursor each known page is read with: page 1 with none, page N+1 with what page N answered. */
+  cursors: ReadonlyMap<number, string | null>;
+};
+
+/**
+ * What a cursor-paged list knows of its pages once one of them answered.
+ *
+ * The page keeps the cursor it was read with, and the page after it is the `nextCursor` it answered --
+ * or none, where it answered none. The pages after that follow from the next page's own answer, so they
+ * are let go: going back to page 2 and forward again reads page 3 with what page 2 says now.
+ */
+function rememberPhiTablePageCursors(
+  known: PhiTablePageCursors | null,
+  pagingKey: string,
+  page: number,
+  cursor: string | null,
+  nextCursor: string | null,
+): PhiTablePageCursors {
+  const cursors = new Map<number, string | null>(
+    known?.pagingKey === pagingKey
+      ? [...known.cursors].filter(([knownPage]) => knownPage < page)
+      : [[1, null]],
+  );
+  cursors.set(page, cursor);
+  if (nextCursor !== null) cursors.set(page + 1, nextCursor);
+  return { pagingKey, cursors };
+}
+
 function resolvePhiTableQuery(
   query: PhiTableQuery,
   externalQuery: PhiTableQuery | undefined,
@@ -221,6 +269,16 @@ export function usePhiTableBinding({
   const rowsRef = useRef(rows);
   const onDataRef = useRef(onData);
   const onMutationRef = useRef(onMutation);
+  /*
+   * The cursor each page of a cursor-paged resource was read with (`rememberPhiTablePageCursors`).
+   *
+   * Such a Provider cannot be asked for page 3 by its number; it reads on from where a page ended. So
+   * turning the page hands it the cursor remembered for that page, and "back" the one the earlier page
+   * was read with. Held with the list it belongs to (`createPhiTablePagingKey`) rather than cleared at
+   * each place that starts another list, so a search, a sort, a filter, a page size or a source -- from
+   * the Table's own tools, a signal or the host -- leaves no cursor of the old list behind.
+   */
+  const pageCursors = useRef<PhiTablePageCursors | null>(null);
   const sourceKey = useMemo(() => JSON.stringify(source), [source]);
 
   useEffect(() => { onDataRef.current = onData; }, [onData]);
@@ -280,6 +338,10 @@ export function usePhiTableBinding({
     () => createPhiTableQueryKey(resolvedQuery),
     [resolvedQuery],
   );
+  const pagingKey = useMemo(
+    () => createPhiTablePagingKey(sourceKey, resolvedQuery),
+    [resolvedQuery, sourceKey],
+  );
 
   const updateMutationTargetPending = useCallback((targetKey: string, pending: boolean) => {
     const current = pendingMutationCountsByTarget.current.get(targetKey) ?? 0;
@@ -301,7 +363,8 @@ export function usePhiTableBinding({
     }
   }, []);
 
-  const applyData = useCallback((data: PhiTableProviderQueryResult) => {
+  /** `answeredQuery`: the query the rows answer -- the request's, with the Provider's `resolvedQuery` merged in. */
+  const applyData = useCallback((data: PhiTableProviderQueryResult, answeredQuery: PhiTableQuery) => {
     if (!resource) return;
     if (data.rows.some((row) => readPhiTableRowIdentity(row, resource.rowIdentityPath) == null)) {
       setRows([]);
@@ -336,8 +399,21 @@ export function usePhiTableBinding({
     // A resource that does not page answers every row at once, so its rows are its count.
     const pages = resource.query.pagination === "offset" || resource.query.pagination === "cursor";
     setTotal(data.total ?? (pages ? null : data.rows.length));
-    const pageSize = data.pageSize ?? resolvedQuery.pageSize;
-    setHasMore(data.nextCursor != null || (data.total == null && pageSize != null && data.rows.length >= pageSize));
+    if (resource.query.pagination === "cursor") {
+      // A page follows exactly where a cursor to it came back: a full page without one is the last.
+      const nextCursor = data.nextCursor ?? null;
+      pageCursors.current = rememberPhiTablePageCursors(
+        pageCursors.current,
+        createPhiTablePagingKey(sourceKey, answeredQuery),
+        answeredQuery.page ?? 1,
+        answeredQuery.cursor ?? null,
+        nextCursor,
+      );
+      setHasMore(nextCursor !== null);
+    } else {
+      const pageSize = data.pageSize ?? resolvedQuery.pageSize;
+      setHasMore(data.nextCursor != null || (data.total == null && pageSize != null && data.rows.length >= pageSize));
+    }
     setSummary(data.summary ?? {});
     setQueryLoading(false);
     setError(null);
@@ -350,7 +426,7 @@ export function usePhiTableBinding({
       setSelectedRowIdentities((current) => current.filter((identity) => available.has(String(identity))));
     }
     onDataRef.current?.(data);
-  }, [preserveSelectedRowIdentities, resolvedQuery.pageSize, resource]);
+  }, [preserveSelectedRowIdentities, resolvedQuery.pageSize, resource, sourceKey]);
 
   useEffect(() => {
     if (!source || !provider || !resource || resourceError) return;
@@ -405,6 +481,7 @@ export function usePhiTableBinding({
       }
       if (!abortController.signal.aborted) {
         const resolvedQueryPatch = data.resolvedQuery;
+        let answeredQuery = resolvedQuery;
         if (resolvedQueryPatch) {
           const canonicalInternalQuery = mergePhiTableQuery(query, resolvedQueryPatch);
           const canonicalQuery = resolvePhiTableQuery(
@@ -414,6 +491,7 @@ export function usePhiTableBinding({
             expandedRowIdentities,
             stableFixedFilters,
           );
+          answeredQuery = canonicalQuery;
           const canonicalQueryKey = createPhiTableQueryKey(canonicalQuery);
           if (canonicalQueryKey !== resolvedQueryKey) {
             acceptedResolvedQuery.current = {
@@ -423,7 +501,7 @@ export function usePhiTableBinding({
             setQuery((current) => mergePhiTableQuery(current, resolvedQueryPatch));
           }
         }
-        applyData(data);
+        applyData(data, answeredQuery);
       }
     }).catch((queryError: unknown) => {
       if (!abortController.signal.aborted) {
@@ -431,7 +509,7 @@ export function usePhiTableBinding({
           setRows([]);
           rowsRef.current = [];
           setTotal(null);
-      setHasMore(false);
+          setHasMore(false);
           setSummary({});
         }
         setQueryLoading(false);
@@ -451,6 +529,30 @@ export function usePhiTableBinding({
     revision: current.revision + 1,
     background: true,
   })), []);
+
+  /*
+   * Turning the page, as the pagination reports it: the page and the page size.
+   *
+   * An offset-paged resource is asked for the page by its number. A cursor-paged one is handed the
+   * cursor that page was read with (`pageCursors`), so only a page it has a cursor for can be reached --
+   * the first, those read before, and the one after the page shown where it answered a `nextCursor`. A
+   * page without one is not a place in the list, and asking for it does nothing. Another page size is
+   * another list, and starts at its first page.
+   */
+  const changePage = useCallback((page: number, pageSize: number) => {
+    if (resource?.query.pagination !== "cursor") {
+      setQuery((current) => ({ ...current, page, pageSize, cursor: null }));
+      return;
+    }
+    if (pageSize !== resolvedQuery.pageSize) {
+      setQuery((current) => ({ ...current, page: 1, pageSize, cursor: null }));
+      return;
+    }
+    const known = pageCursors.current?.pagingKey === pagingKey ? pageCursors.current.cursors : null;
+    const cursor = page === 1 ? null : known?.get(page);
+    if (cursor === undefined) return;
+    setQuery((current) => ({ ...current, page, pageSize, cursor }));
+  }, [pagingKey, resolvedQuery.pageSize, resource]);
 
   const runMutation = useCallback(async (
     request: MutationInput<PhiTableProviderMutationRequest>,
@@ -767,6 +869,7 @@ export function usePhiTableBinding({
     query,
     resolvedQuery,
     setQuery,
+    changePage,
     selectedRowIdentities,
     setSelectedRowIdentities,
     expandedRowIdentities,

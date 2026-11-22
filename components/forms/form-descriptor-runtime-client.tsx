@@ -22,7 +22,7 @@ import { usePhiTableProvider } from "../widgets/client/shared/phi-table-provider
 import { usePhiIntlLocale, usePhiIntlTimeZone } from "../root/phi-intl-locale";
 import { PhiFormControl, type PhiFormControlFormInstance } from "../controls/phi-form-control";
 import { readPhiRuntimeFormValuesSignalValue } from "./runtime-form-state";
-import { resolvePhiFormText } from "./form-descriptor-contract";
+import { resolvePhiFormErrorText, resolvePhiFormText } from "./form-descriptor-contract";
 import { PHI_FORM_RECORD_TITLE_CAPABILITY, resolvePhiFormRecordTitle } from "./form-record-title";
 import { PhiFormWidgetSubmitOutlet, usePhiFormWidgetSubmit } from "./phi-form-widget-frame";
 import { usePhiRuntimeFormClient } from "./runtime-form-client";
@@ -633,13 +633,14 @@ export function PhiFormDescriptorRuntimeClient({
               /*
                * The code first: it is the only part of a refusal that can be said in the visitor's
                * language, because the descriptor maps it to a label. `error` is what the handler wrote
-               * for a log, and it stands in only where the code is absent or nothing maps it.
+               * for a log, and it stands in only where the code is absent or nothing maps it. A mapped
+               * text may name values of the same answer (`product`), filled after it is translated.
                */
               const code = typeof result.payload?.code === "string" ? result.payload.code : null;
               if (code === PHI_FORM_GUARD_EXPIRED_CODE && descriptor.guard) renewGuard();
               const declared = code ? descriptor.errors?.[code] : undefined;
               const message = declared
-                ? resolvePhiFormText(declared, labels)
+                ? resolvePhiFormErrorText(declared, result.payload, labels)
                 : typeof result.payload?.error === "string"
                   ? result.payload.error
                   : "Form submission failed.";

@@ -72,6 +72,7 @@ export {
   phiFormGridRangesOverlap,
   resolvePhiFormLayout,
   resolvePhiFormResponsiveGridRange,
+  resolvePhiFormErrorText,
   resolvePhiFormText,
   parsePhiFormDescriptor,
 } from "./components/forms/form-descriptor-contract";

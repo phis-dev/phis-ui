@@ -226,6 +226,22 @@ A select filter may declare static options or one normal Options Provider bindin
 resolution uses the active Module provider registry exactly like other Phi choice Controls; the Table
 must not fetch or branch on a domain Provider key to populate a filter.
 
+A select filter asks its Options Provider as a Form field asks it (`usePhiTableFilterOptions` over
+`usePhiControlOptionsProvider`, the same hook `PhiFormControl` uses), so a source that answers one page
+of a longer list behaves the same in both places:
+
+- the value the filter holds goes to the Provider as `selected`, so a chosen value that is on no page the
+  Provider answers is still named rather than shown as its raw value, and the hook keeps the name a
+  chosen value was last seen with while an answer leaves it out;
+- where the binding declares `search` -- with `loadMode: "server"`, the Provider answers it -- the single
+  select filter has a search box, debounced and held to `search.minChars` by the hook, and a Provider
+  that answers the search is not narrowed again by the Select. A multiple select filter passes `selected`
+  but has no Provider search, like the Form's multiple select field.
+
+The filter holds an option's value as its source names it: static options are texts, and an Options
+Provider may name its choices by number -- a category by its id -- which the query then carries as that
+number.
+
 Every self-contained query Control is controlled by the Binding's resolved query. A Widget must not keep
 a second filter-value store beside the Binding. Initial filter defaults are merged into the Binding's
 initial query, signal-driven query changes update the same state, and Provider-resolved defaults are
@@ -275,9 +291,9 @@ rows or renders either surface.
 Counting is a query of its own on a large table, so a paging resource answers `total` only where its
 descriptor says `query.total: true`; a resource that does not page answers every row at once, and its
 rows are its count. A Table bound to a paging resource without a count may not show `totalRows` or
-`pageCount` -- the binding check refuses it -- and pages without one: back, the current page, next, with
-next offered while a `nextCursor` comes back or the page is full. The rows of one page are never put in
-place of the count.
+`pageCount` -- the binding check refuses it -- and pages without one: back, the current page, next. An
+offset-paged resource offers next while the page is full; a cursor-paged one while a `nextCursor` comes
+back, and only then ("Paging", below). The rows of one page are never put in place of the count.
 
 The Table receives an already locale-resolved template and only formats its values. A code-owned Preset
 must resolve the complete template through its owner's global Label Set while building the Preset; a
@@ -512,6 +528,34 @@ and the Ant Design strings `ascend` and `descend` are implementation details, no
 Pagination is on unless `features.pagination.enabled` is `false`. `features.pagination.pageSizes` lists the
 page sizes a reader may switch between; without it the Table offers no choice and keeps `pageSize`. The
 header row shows unless `presentation.header` is `false`.
+
+### Paging
+
+The resource says how it pages (`query.pagination`), and the Binding turns the page accordingly
+(`changePage(page, pageSize)`, what the pagination calls):
+
+- **`offset`**: the query carries the page and the page size, `cursor: null`, and any page may be asked
+  for by its number.
+- **`cursor`**: the Provider reads on from where a page ended and cannot be asked for page 3 by its
+  number -- every paged Add-on query of Core is of this kind. The Binding remembers the cursor each page
+  was read with: page 1 none, page N+1 the `nextCursor` page N answered. Turning to a page hands the
+  Provider that page's cursor, so back is read with the cursor the earlier page was read with, and next
+  with the one the page shown answered. A page whose cursor is not known is no place in the list: the
+  pagination offers back, the current page and next -- next only while a `nextCursor` came back -- and no
+  page number beyond, also where the resource counts (a count says how many pages there are, not where
+  page 7 begins), and `changePage` to such a page does nothing.
+
+The remembered cursors belong to one list: the source with its binding params, the page size, the
+search, the sorts and the filters -- the resolved query, whichever side set them (the Table's tools, a
+signal, the host, `fixedFilters`). Any of them changing is another list, of which only page 1 is known
+until it answers: the Binding offers none of the old list's cursors. The Table's search, sort, filter,
+Reset and binding-param changes, and the `searchChange`, `searchClear`, `filtersChange` and
+`bindingParamsChange` capabilities, start it at its first page (`page: 1, cursor: null`); a
+`queryChange` value or a host's `externalQuery` that names a page names its cursor with it. Another page
+size starts at page 1 as well. A reload -- the Reload tool, the `reload` capability after a Form saved, a
+revalidation after a mutation -- reads the page shown again with its own cursor and stays on it.
+Answering the page again, it says anew where the next one begins; the pages after that are read from
+there.
 
 ### Row selection
 

@@ -36,6 +36,7 @@ export {
   parsePhiFormDescriptor,
   phiFormFlowHalfColumns,
   resolvePhiFormLayout,
+  resolvePhiFormErrorText,
   resolvePhiFormResponsiveGridRange,
   resolvePhiFormText,
   type PhiFormResponsiveMode,

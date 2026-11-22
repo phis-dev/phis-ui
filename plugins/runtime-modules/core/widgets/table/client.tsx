@@ -41,6 +41,7 @@ import type { PhiVisualAnchorAddress } from "../../../../../types/visual-anchors
 import { usePhiApplicationFeedback } from "../../../../../components/runtime/use-phi-application-feedback";
 import { usePhiTableBinding } from "../../../../../components/tables/client/phi-table-binding";
 import { PhiTableBindingControl } from "../../../../../components/tables/client/phi-table-binding-control";
+import { usePhiTableFilterOptions } from "../../../../../components/tables/client/phi-table-filter-options";
 import { clearPhiDataDragPayload, readPhiDataDragPayload } from "../../../../../components/runtime/client/phi-data-dnd";
 import { renderPhiValueContent, type PhiRenderedValueLabels } from "../../../../../components/widgets/client/shared/phi-rendered-value";
 import { formatPhiTranslation } from "../../../../../helpers/translation-format";
@@ -101,7 +102,11 @@ const PHI_TABLE_VISUAL_ANCHOR_PARTS = ["filters", "toolbar", "header", "row-acti
 
 type TableRow = Record<string, unknown>;
 type DateRangeValue = { start?: string; end?: string };
-type TableFilterValue = string | boolean | readonly string[] | DateRangeValue | undefined;
+/*
+ * A select filter holds an option's value as its source names it: the static options are texts, and an
+ * Options Provider may name its choices by number -- a category by its id.
+ */
+type TableFilterValue = string | number | boolean | readonly string[] | readonly number[] | DateRangeValue | undefined;
 type ResolvedTableAction = PhiTableActionDefinition;
 const PHI_TABLE_ACTION_BUTTON_STYLE = { whiteSpace: "nowrap" } as const;
 const PHI_TABLE_ACTION_CLICK_GUARD_STYLE = { display: "inline-flex" } as const;
@@ -224,10 +229,19 @@ function buildQueryFilters(
       typeof value === "boolean" ||
       (Array.isArray(value) && value.length > 0)
     ) {
-      result[filter.key] = Array.isArray(value) ? [...value] : value;
+      result[filter.key] = Array.isArray(value) ? value.slice() : value;
     }
   }
   return result;
+}
+
+/** A multiple select filter's values, all of one kind as the query holds a list. */
+function readTableFilterChoices(value: unknown): readonly string[] | readonly number[] {
+  if (!Array.isArray(value)) return [];
+  const numbers = value.filter((entry): entry is number => typeof entry === "number" && Number.isFinite(entry));
+  return numbers.length > 0 && numbers.length === value.length
+    ? numbers
+    : value.filter((entry): entry is string => typeof entry === "string");
 }
 
 function readTableFilterValue(
@@ -244,9 +258,8 @@ function readTableFilterValue(
   }
   const value = filters?.[filter.key];
   if (filter.type === "boolean") return typeof value === "boolean" ? value : undefined;
-  if (filter.type === "select" && filter.multiple) {
-    return Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string") : [];
-  }
+  if (filter.type === "select" && filter.multiple) return readTableFilterChoices(value);
+  if (filter.type === "select" && typeof value === "number" && Number.isFinite(value)) return value;
   return typeof value === "string" ? value : undefined;
 }
 
@@ -268,10 +281,11 @@ function updateTableQueryFilters(
   }
   if (
     (typeof value === "string" && value !== "") ||
+    (typeof value === "number" && Number.isFinite(value)) ||
     typeof value === "boolean" ||
     (Array.isArray(value) && value.length > 0)
   ) {
-    next[filter.key] = Array.isArray(value) ? [...value] : value;
+    next[filter.key] = Array.isArray(value) ? value.slice() : value;
   } else {
     delete next[filter.key];
   }
@@ -476,6 +490,7 @@ export function PhiTableWidgetClient({
     query,
     resolvedQuery,
     setQuery,
+    changePage,
     selectedRowIdentities,
     setSelectedRowIdentities,
     expandedRowIdentities,
@@ -1146,11 +1161,15 @@ export function PhiTableWidgetClient({
         pagination={features.pagination?.enabled === false ? false : {
           page: resolvedQuery.page ?? 1,
           pageSize: resolvedQuery.pageSize ?? 20,
-          total: total ?? undefined,
+          /*
+           * A cursor-paged list is paged back and forward even where it is counted: a count says how many
+           * pages there are, not where page 7 begins, so no page number past the next is offered.
+           */
+          total: resource?.query.pagination === "cursor" ? undefined : total ?? undefined,
           hasMore,
           pageSizeOptions: features.pagination?.pageSizes,
           showSizeChanger: (features.pagination?.pageSizes?.length ?? 0) > 0,
-          onChange: (page, pageSize) => setQuery((current) => ({ ...current, page, pageSize, cursor: null })),
+          onChange: changePage,
         }}
         tree={structure ? {
           parentRowIdentityPath: structure.parentRowIdentityPath,
@@ -1483,25 +1502,19 @@ function TableFilter({ filter, field, sourceConfig, value, size, onChange, label
   // A label with nowhere to go still has something to say: it becomes the Control's placeholder, so a
   // cleared filter reads as the question it asks rather than as an empty box.
   const hiddenLabelPlaceholder = filter.labelPlacement === "none" ? filter.label : undefined;
-  const fieldWithOptions = field?.type === "enum" || field?.type === "enum[]" ? field : null;
-  const resolvedOptions = usePhiControlOptionsProvider<string>({
-    options: filter.type === "select" && (filter.options?.length ?? 0) > 0
-      ? filter.options
-      : fieldWithOptions?.options as readonly import("../../../../../components/controls/phi-control-options").PhiControlOption<string>[] | undefined,
-    optionsProvider: filter.type === "select"
-      ? filter.optionsProvider ?? fieldWithOptions?.optionsProvider
-      : undefined,
-    sourceConfig,
-  });
+  // Searched and named as a Form field's choices are (`usePhiTableFilterOptions`).
+  const resolvedOptions = usePhiTableFilterOptions({ filter, field, sourceConfig, value });
   if (filter.type === "select") {
     return filter.multiple ? (
-      <PhiMultiSelectControl allowClear value={Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string") : []}
+      <PhiMultiSelectControl<string | number> allowClear value={readTableFilterChoices(value)}
         disabled={Boolean(resolvedOptions.warning)} options={resolvedOptions.options} size={size}
-        placeholder={hiddenLabelPlaceholder} onChange={onChange} style={{ minWidth: 180 }}
+        placeholder={hiddenLabelPlaceholder} onChange={(next) => onChange(readTableFilterChoices(next))} style={{ minWidth: 180 }}
       />
     ) : (
-      <PhiSelectControl allowClear value={typeof value === "string" ? value : undefined}
+      <PhiSelectControl<string | number> allowClear
+        value={typeof value === "string" || typeof value === "number" ? value : undefined}
         disabled={Boolean(resolvedOptions.warning)} options={resolvedOptions.options} size={size}
+        onSearch={resolvedOptions.onSearch} filterOptionsLocally={resolvedOptions.filterOptionsLocally}
         placeholder={hiddenLabelPlaceholder} onChange={onChange} style={{ minWidth: 180 }}
       />
     );

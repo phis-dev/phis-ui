@@ -95,7 +95,7 @@ type PhiFormDescriptor = {
   fields: readonly PhiFormFieldDescriptor[];
   layout?: PhiFormLayoutDescriptor;
   success?: { title: PhiFormTextDescriptor; text?: PhiFormTextDescriptor; reset?: boolean };
-  errors?: Readonly<Record<string, PhiFormTextDescriptor>>;   // keyed by the handler's error `code`
+  errors?: Readonly<Record<string, PhiFormErrorTextDescriptor>>;   // keyed by the handler's error `code`
   persistDraft?: boolean;
   guard?: boolean;
   submit?: {                    // what the Form's own submit looks like, where one is drawn
@@ -124,6 +124,8 @@ with the same parser.
   code nothing maps falls back to the body's `error` line, which is English and written for a log. A
   handler that wants its refusal read by a person answers `{ code, error }` -- `code` alone is the
   contract, `error` alone reaches the visitor untranslated.
+- A code's text may name values of the refusal: `{ template, params, otherwise }` instead of a text; see
+  [Refusal values](#refusal-values).
 - `persistDraft: true` keeps typed values in session storage for the tab, keyed by `descriptor.key`, and
   clears them when a submit is accepted.
 - `guard: true` makes the Form carry a guard token; see [Guard](#guard).
@@ -144,6 +146,47 @@ type PhiFormTextDescriptor =
 - Field labels, control labels, placeholders, descriptions, option labels and descriptions, custom
   validation messages, and success text all use this type.
 - A field `description` renders as a tooltip icon beside the label.
+
+### Refusal values
+
+A refusal can say what it refused. The handler answers the value beside its `code`, and the Form's text
+for that code names it:
+
+```ts
+type PhiFormErrorTextDescriptor =
+  | PhiFormTextDescriptor
+  | {
+      template: PhiFormTextDescriptor;   // `%1` to `%n`, one for each of `params`
+      params: readonly string[];         // names of fields of the refusal's body, in placeholder order
+      otherwise: PhiFormTextDescriptor;  // the text where a value is not there
+    };
+
+// The shop answers 400 { error, code: "out_of_stock", product: "Private Cloud" }:
+errors: {
+  out_of_stock: {
+    template: { kind: "label", key: "errors.outOfStockProduct", fallback: "\"%1\" is not in stock in that quantity." },
+    params: ["product"],
+    otherwise: { kind: "label", key: "errors.outOfStock", fallback: "Something in your cart is not in stock in that quantity." },
+  },
+}
+// -> "Private Cloud" is not in stock in that quantity.   (German label: „Private Cloud“ ist in dieser Menge nicht vorrätig.)
+```
+
+- The template is translated and the values are not ([TRANSLATIONS.md](TRANSLATIONS.md)): the label is
+  read in the visitor's language first, and `%1` to `%n` are filled afterwards in one pass, so a value
+  that contains `%2` stays the value. A placeholder the translation adds beyond `params` stays standing.
+- A value counts where the body holds it as a non-empty string (trimmed) or a finite number, written as
+  it came. A value missing, empty, or of any other type makes the Form say `otherwise` instead -- the
+  code's general text. The template is never shown with a gap or a standing `%1`, and the body's `error`
+  line does not stand in, because it is the log's English. `otherwise` is required for that reason:
+  there is no implicit answer to choose.
+- The parser refuses an entry whose source text (`value` of a `literal`, `fallback` of a `label` or
+  `config`) does not hold exactly the placeholders `%1` to `%n` for its `n` params (one may repeat), a
+  `params` that is empty, repeats a name or holds anything but a field name (`[A-Za-z_][A-Za-z0-9_]*`,
+  a top-level field: no paths), an entry without `otherwise` or with a placeholder in it, and
+  `params`/`otherwise` beside a plain text.
+- `resolvePhiFormErrorText(entry, body, labels, formConfig)` (`@phis/ui/forms`) is the resolver the Form
+  uses; a plain text resolves as `resolvePhiFormText` does.
 
 ### Fields
 

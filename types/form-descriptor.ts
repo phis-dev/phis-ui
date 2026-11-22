@@ -17,6 +17,8 @@ export {
   PHI_FORM_DESCRIPTOR_SCHEMA_VERSION,
   PHI_FORM_GRID_TRACKS,
   type PhiFormDescriptor,
+  type PhiFormErrorTemplateDescriptor,
+  type PhiFormErrorTextDescriptor,
   type PhiFormFieldDescriptor,
   type PhiFormFieldPlacementDescriptor,
   type PhiFormGridRange,
