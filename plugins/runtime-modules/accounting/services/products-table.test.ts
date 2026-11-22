@@ -123,4 +123,50 @@ describe("the product directory's Provider", () => {
       kind: "action", resourceKey: "products", actionKey: "delete", rowIdentity: ID, query: {}, signal,
     } as never)).rejects.toThrow(/never edited/);
   });
+
+  it("releases the version of the record the terms dialog read, and nothing it never read", async () => {
+    let version = 7;
+    const fetch = vi.fn(async (url: string, init?: RequestInit) => {
+      void init;
+      const body = url.endsWith("/release") ? { outcome: "applied" } : { rows: [product({ id: "@acme/licences:other", version: 1 }), product({ version })], total: 2 };
+      return new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
+    });
+    vi.stubGlobal("fetch", fetch);
+    const { PHI_ACCOUNTING_PRODUCTS_TABLE_PROVIDER_REGISTRATION: provider } = await import("./products-table");
+    const signal = new AbortController().signal;
+    const release = (rowIdentity: string) => provider.mutate!({
+      kind: "action", resourceKey: "products", actionKey: "release", rowIdentity, query: {}, signal,
+    } as never);
+
+    await expect(release("@acme/licences:never-read")).rejects.toThrow(/were not read/);
+    expect(fetch).not.toHaveBeenCalled();
+
+    await provider.readRecord!({ resourceKey: "products", rowIdentity: ID, signal } as never);
+    // The Table's list reads another version; the release names the one the dialog shows.
+    version = 9;
+    await provider.query({ resourceKey: "products", query: {}, signal } as never);
+    await release(ID);
+    const [url, init] = fetch.mock.calls[2]!;
+    expect(url).toBe("/api/site/products/%40acme%2Flicences%3Apro.yearly/release");
+    expect(init).toMatchObject({ method: "POST", body: JSON.stringify({ expectedVersion: 7 }) });
+    expect(new Headers(init!.headers).get("content-type")).toBe("application/json");
+
+    // Lock and unlock send no body.
+    await provider.mutate!({ kind: "action", resourceKey: "products", actionKey: "lock", rowIdentity: ID, query: {}, signal } as never);
+    expect(fetch.mock.calls[3]![1]?.body).toBeUndefined();
+  });
+
+  it("says Core's refusal of a release whose product moved on", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => url.endsWith("/release")
+      ? new Response(JSON.stringify({ error: `${ID} is at version 8, not 4: it changed since it was read; read it again before releasing.` }), {
+        status: 409, headers: { "content-type": "application/json" },
+      })
+      : new Response(JSON.stringify({ rows: [product()], total: 1 }), { status: 200, headers: { "content-type": "application/json" } })));
+    const { PHI_ACCOUNTING_PRODUCTS_TABLE_PROVIDER_REGISTRATION: provider } = await import("./products-table");
+    const signal = new AbortController().signal;
+    await provider.readRecord!({ resourceKey: "products", rowIdentity: ID, signal } as never);
+    await expect(provider.mutate!({
+      kind: "action", resourceKey: "products", actionKey: "release", rowIdentity: ID, query: {}, signal,
+    } as never)).rejects.toThrow(/at version 8, not 4/);
+  });
 });

@@ -19,6 +19,18 @@ and `scripts/validate-todos-wants.ts` refuses the entry once the catalog has one
   `iconListPath`** of `GET /api/site/products`, which an older Server does not answer (the column stays
   empty, the title bare).
 
+- **The product directory releases the version it shows**: the Accounting Provider keeps the version of
+  each product as the terms dialog last read it and sends it as `expectedVersion` with
+  `POST /api/site/products/{id}/release`; a release without a read record is refused before it is sent, and
+  Core's `409` for a product that moved on since stands above the record. Needs the phis-server release that
+  reads the body; an older Server ignores it and releases unchecked.
+
+- **An Add-on's Media limits are not applied yet** (`@phis/contracts` 0.8.9 manifest `media`: the Site UI
+  applies `maxFileBytes`, `kinds` and `maxPerField` in the `media-asset` and `media-assets` fields of the
+  Add-on's Module). The Site learns of an Add-on from the capability snapshot, whose provider shape
+  (`PhiCapabilityProvider`) has no field for them, so nothing here can read them; it waits for that contract
+  decision (phis-server TODOS.md, "At the next release").
+
 - **The `record` Widget acts on the record it shows** (TABLES.md, "The record Widget"): `actions` (Provider
   row actions of its source: `key`, `mode` normal/danger, optional `confirm`), the input `actionActivate`
   (`action/activate:string`, the action's key), the outputs `actionSuccess` (`activate:json<table-action>`)

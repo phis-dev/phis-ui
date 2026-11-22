@@ -33,6 +33,14 @@ const DEFAULT_PAGE_SIZE = 25;
 const RECORD_SEARCH_PAGE_SIZE = 100;
 const COMMANDS = new Set(["release", "lock", "unlock"]);
 
+/*
+ * The version of each product as the terms dialog last read it (`readProductRecord`), which is what a
+ * release names: the operator releases the terms they compared, and Core refuses (409) a product that has
+ * moved on since -- the publisher changed its terms again while the dialog stood open. The Table's own
+ * list does not write it: the dialog's record is the one the release runs from.
+ */
+const versionsShown = new Map<string, number>();
+
 type Terms = {
   sale?: unknown;
   referralUrl?: unknown;
@@ -132,8 +140,13 @@ async function readProductRecord({ resourceKey, rowIdentity, signal }: PhiTableP
   const result = await readDirectory(params, signal);
   const product = readPhiTableRows(result?.rows).find((row) => row.id === rowIdentity);
   if (!product) {
+    versionsShown.delete(rowIdentity);
     throw new PhiTableProviderError("record-not-found", `The Site has no product ${rowIdentity}.`);
   }
+  if (typeof product.version !== "number" || !Number.isSafeInteger(product.version) || product.version < 1) {
+    throw new PhiTableProviderError("invalid-response", `Product ${rowIdentity} has no version.`);
+  }
+  versionsShown.set(rowIdentity, product.version);
   return toPhiAccountingProductRow(product);
 }
 
@@ -144,7 +157,9 @@ export function buildPhiAccountingProductCommandPath(productId: string, command:
 
 /*
  * The operator's three acts. Each can move the row out of what the filters show -- a lock out of the
- * active ones, a release out of those waiting -- so the view is read again rather than patched.
+ * active ones, a release out of those waiting -- so the view is read again rather than patched. A release
+ * sends the version of the record the terms dialog shows (`versionsShown`); with none read there is
+ * nothing the operator compared, and it is refused here rather than sent without one.
  */
 async function mutateProducts(request: PhiTableProviderMutationRequest) {
   requireResource(request.resourceKey);
@@ -155,8 +170,20 @@ async function mutateProducts(request: PhiTableProviderMutationRequest) {
     throw new PhiTableProviderError("invalid-query", "A product id is required.");
   }
   const init = createPhiTableProviderRequestInit(request.signal);
+  let body: string | undefined;
+  if (request.actionKey === "release") {
+    const expectedVersion = versionsShown.get(request.rowIdentity);
+    if (expectedVersion === undefined) {
+      throw new PhiTableProviderError("invalid-query", `The terms of ${request.rowIdentity} were not read; open them before releasing.`);
+    }
+    body = JSON.stringify({ expectedVersion });
+  }
   await readPhiTableProviderResponse<unknown>(
-    await fetch(buildPhiAccountingProductCommandPath(request.rowIdentity, request.actionKey), { ...init, method: "POST" }),
+    await fetch(buildPhiAccountingProductCommandPath(request.rowIdentity, request.actionKey), {
+      ...init,
+      method: "POST",
+      ...(body === undefined ? {} : { body, headers: { ...init.headers, "content-type": "application/json" } }),
+    }),
     RESPONSE_OPTIONS,
   );
   return { status: "accepted" as const, invalidation: "view" as const };
