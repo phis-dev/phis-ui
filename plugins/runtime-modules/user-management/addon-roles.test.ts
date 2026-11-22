@@ -4,9 +4,12 @@ import {
   PHI_USER_MANAGEMENT_ADDON_ALL_ROLES_TAG,
   buildPhiAddonFilterOptions,
   buildPhiAddonRoleChoiceOptions,
+  buildPhiAddonRoleImpliedOptions,
   buildPhiAddonRoleTags,
   readPhiAddonRoleAssignments,
   readPhiAddonRoleCatalog,
+  readPhiAddonRoleTexts,
+  readPhiAddonRolesHeldThroughSiteAccess,
 } from "./addon-roles";
 
 const catalog = readPhiAddonRoleCatalog({
@@ -143,5 +146,87 @@ describe("the Add-on roles the edit form offers", () => {
         ["@acme/market:vendor", true],
         ["@acme/shop:clerk", true],
       ]);
+  });
+});
+
+/*
+ * A role a Site access implies (`impliedBy`): held by whoever holds the access, without a stored grant. The
+ * catalog says so of the role, a person's answer lists what they hold that way, and nothing of it is ever a
+ * value the save sends as a stored role.
+ */
+describe("Add-on roles held through a Site access", () => {
+  const texts = readPhiAddonRoleTexts({
+    via: "%1 (über %2)",
+    impliedBy: "Enthalten in %1",
+    siteAccess: { accounting: "Buchhaltung", support: 7 },
+  });
+  const books = readPhiAddonRoleCatalog({
+    addons: [{
+      addonId: "@acme/books",
+      title: "Books",
+      roles: [
+        { name: "licence-manager", description: "Manages licences.", impliedBy: { siteAccess: "accounting" }, grantable: true },
+        { name: "clerk", impliedBy: { siteAccess: "Not An Access" }, grantable: true },
+        { name: "helpdesk", impliedBy: { siteAccess: "support" }, grantable: true },
+      ],
+    }],
+  });
+
+  it("reads a catalog role's impliedBy as declared, and drops one that names no access", () => {
+    expect(books[0]!.roles.map((role) => role.impliedBy)).toEqual([{ siteAccess: "accounting" }, undefined, { siteAccess: "support" }]);
+  });
+
+  it("says in the choice's description which access implies the role, in the placement's words", () => {
+    expect(buildPhiAddonRoleChoiceOptions(books, [], texts).map((option) => [option.value, option.description])).toEqual([
+      ["@acme/books:licence-manager", "Manages licences. · Enthalten in Buchhaltung"],
+      ["@acme/books:clerk", undefined],
+      // An access the placement names no word for is shown by its key.
+      ["@acme/books:helpdesk", "Enthalten in support"],
+    ]);
+  });
+
+  it("reads what a person holds that way, and leaves out an entry without its access", () => {
+    expect(readPhiAddonRolesHeldThroughSiteAccess([
+      { addonId: "@acme/books", role: "licence-manager", through: { siteAccess: "accounting" } },
+      { addonId: "@acme/books", role: "clerk" },
+      { addonId: "@acme/books", role: "clerk", through: {} },
+      null,
+    ])).toEqual([{ addonId: "@acme/books", role: "licence-manager", siteAccess: "accounting" }]);
+    expect(readPhiAddonRolesHeldThroughSiteAccess(undefined)).toEqual([]);
+  });
+
+  it("offers each held role as a disabled choice labelled with its access, under its Add-on", () => {
+    expect(buildPhiAddonRoleImpliedOptions(books, [
+      { addonId: "@acme/books", role: "licence-manager", siteAccess: "accounting" },
+      { addonId: "@acme/gone", role: "x", siteAccess: "support" },
+    ], texts)).toEqual([
+      { value: "@acme/books:licence-manager", label: "licence-manager (über Buchhaltung)", group: "Books", disabled: true },
+      { value: "@acme/gone:x", label: "x (über support)", group: "@acme/gone", disabled: true },
+    ]);
+  });
+
+  it("speaks the source language where the placement names no words", () => {
+    expect(buildPhiAddonRoleImpliedOptions(books, [
+      { addonId: "@acme/books", role: "licence-manager", siteAccess: "accounting" },
+    ])[0]!.label).toBe("licence-manager (via accounting)");
+  });
+
+  it("adds a row tag per Add-on and access beside the stored roles, and none for a Site Admin", () => {
+    const row = {
+      enabled: true,
+      roleTags: ["accountant"],
+      addonRoles: [{ addonId: "@acme/books", role: "clerk" }],
+      impliedAddonRoles: [
+        { addonId: "@acme/books", role: "licence-manager", through: { siteAccess: "accounting" } },
+        { addonId: "@acme/books", role: "clerk", through: { siteAccess: "accounting" } },
+        { addonId: "@acme/books", role: "helpdesk", through: { siteAccess: "support" } },
+      ],
+    };
+    expect(buildPhiAddonRoleTags(row, texts)).toEqual([
+      "@acme/books: clerk",
+      "@acme/books: licence-manager, clerk (über Buchhaltung)",
+      "@acme/books: helpdesk (über support)",
+    ]);
+    expect(buildPhiAddonRoleTags({ ...row, roleTags: ["admin"] }, texts)).toEqual([PHI_USER_MANAGEMENT_ADDON_ALL_ROLES_TAG]);
   });
 });

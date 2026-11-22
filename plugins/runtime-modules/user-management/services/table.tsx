@@ -2,7 +2,13 @@
 
 import { isPhiRecord } from "../../../../helpers/is-record";
 import { PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
-import { buildPhiAddonRoleTags } from "../addon-roles";
+import {
+  PHI_USER_MANAGEMENT_ADDON_ROLE_TEXTS_KEY,
+  buildPhiAddonRoleTags,
+  formatPhiAddonRoleValue,
+  readPhiAddonRoleTexts,
+  readPhiAddonRolesHeldThroughSiteAccess,
+} from "../addon-roles";
 import {
   createPhiTableProviderRequestInit,
   readPhiPositiveInteger,
@@ -40,6 +46,7 @@ const RESPONSE_OPTIONS: ReadPhiTableProviderResponseOptions = { subject: "User M
 
 async function loadUsers({
   query,
+  params: bindingParams,
   signal,
 }: PhiTableProviderQueryRequest): Promise<PhiTableProviderQueryResult> {
   const params = buildPhiUserManagementUsersQueryParams(query);
@@ -47,7 +54,9 @@ async function loadUsers({
     await fetch(`${API_PATH}?${params.toString()}`, createPhiTableProviderRequestInit(signal)),
     RESPONSE_OPTIONS,
   );
-  const rows = readPhiTableRows(result?.rows).map((row) => ({ ...row, addonRoleTags: buildPhiAddonRoleTags(row) }));
+  // The words for roles held through a Site access come from the placement (`source.params`).
+  const texts = readPhiAddonRoleTexts(bindingParams?.[PHI_USER_MANAGEMENT_ADDON_ROLE_TEXTS_KEY]);
+  const rows = readPhiTableRows(result?.rows).map((row) => ({ ...row, addonRoleTags: buildPhiAddonRoleTags(row, texts) }));
   if (typeof result?.siteTotal !== "number" || !Number.isFinite(result.siteTotal) || result.siteTotal < 0) {
     throw new PhiTableProviderError("invalid-response", "User Management site total is invalid.");
   }
@@ -108,6 +117,8 @@ async function readUserRecord({ rowIdentity, signal }: PhiTableProviderRecordReq
     throw new PhiTableProviderError("invalid-response", "User record response is invalid.");
   }
   const user = result.user as Record<string, unknown>;
+  const implied = readPhiAddonRolesHeldThroughSiteAccess(user.impliedAddonRoles)
+    .map(({ addonId, role }) => formatPhiAddonRoleValue(addonId, role));
   return {
     ...user,
     userId: String(userId),
@@ -116,6 +127,11 @@ async function readUserRecord({ rowIdentity, signal }: PhiTableProviderRecordReq
     addonRoles: Array.isArray(user.addonRoles)
       ? user.addonRoles.filter((entry): entry is string => typeof entry === "string")
       : [],
+    /*
+     * The roles a Site access gives, in the same form, for the read-only field beside them; null rather than
+     * an empty list where there are none, so the field's `visibleWhen` hides it.
+     */
+    impliedAddonRoles: implied.length > 0 ? implied : null,
     changePassword: false,
   };
 }

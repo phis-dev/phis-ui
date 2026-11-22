@@ -1,12 +1,20 @@
 "use client";
 
-import { createPhiControlOptionsProviderClient } from "../../../../components/controls/phi-options-provider";
+import {
+  createPhiControlOptionsProviderClient,
+  readPhiControlOptionsProviderParam,
+} from "../../../../components/controls/phi-options-provider";
 import { isPhiRecord } from "../../../../helpers/is-record";
 import {
+  PHI_USER_MANAGEMENT_ADDON_ROLE_IMPLIED_LIST,
+  PHI_USER_MANAGEMENT_ADDON_ROLE_TEXTS_KEY,
   buildPhiAddonFilterOptions,
   buildPhiAddonRoleChoiceOptions,
+  buildPhiAddonRoleImpliedOptions,
   readPhiAddonRoleAssignments,
   readPhiAddonRoleCatalog,
+  readPhiAddonRoleTexts,
+  readPhiAddonRolesHeldThroughSiteAccess,
 } from "../addon-roles";
 import { PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
 
@@ -50,6 +58,10 @@ function readUserId(value: unknown) {
  * The Core refuses that question to an actor who may grant no role at all; such an actor is offered nothing,
  * and the plain catalog lists every role disabled, which keeps whatever the person holds. So does an answer
  * without a user to ask about.
+ *
+ * With `params.list` `implied` the same answer gives the read-only list beside it: the roles the person holds
+ * through a Site access (`implied`, `buildPhiAddonRoleImpliedOptions`), one load for both fields. The words
+ * for the access come from the placement (`PHI_USER_MANAGEMENT_ADDON_ROLE_TEXTS_KEY` in the form's config).
  */
 export const PhiUserManagementAddonRoleChoiceOptionsProviderClient = createPhiControlOptionsProviderClient({
   key: PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS.addonRoleChoiceOptions,
@@ -63,9 +75,13 @@ export const PhiUserManagementAddonRoleChoiceOptionsProviderClient = createPhiCo
   },
   resolveLoadKey: () => "user-management-addon-role-choices",
   resolve: (context) => {
-    const held = isPhiRecord(context.asyncData) && Array.isArray(context.asyncData.held)
-      ? readPhiAddonRoleAssignments(context.asyncData.held)
-      : null;
-    return { options: buildPhiAddonRoleChoiceOptions(readPhiAddonRoleCatalog(context.asyncData), held) };
+    const catalog = readPhiAddonRoleCatalog(context.asyncData);
+    const texts = readPhiAddonRoleTexts(context.sourceConfig?.[PHI_USER_MANAGEMENT_ADDON_ROLE_TEXTS_KEY]);
+    const answer = isPhiRecord(context.asyncData) ? context.asyncData : null;
+    if (readPhiControlOptionsProviderParam(context.optionsProvider, "list") === PHI_USER_MANAGEMENT_ADDON_ROLE_IMPLIED_LIST) {
+      return { options: buildPhiAddonRoleImpliedOptions(catalog, readPhiAddonRolesHeldThroughSiteAccess(answer?.implied), texts) };
+    }
+    const held = answer && Array.isArray(answer.held) ? readPhiAddonRoleAssignments(answer.held) : null;
+    return { options: buildPhiAddonRoleChoiceOptions(catalog, held, texts) };
   },
 });

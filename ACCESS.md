@@ -286,7 +286,10 @@ The users Table also shows **Add-on roles** (Core 0.4.1; [phis-server AUTHORIZAT
   whose `roleTags` hold `admin` -- *holds* every declared role of every enabled Add-on without a stored
   assignment, so the row shows the single tag "all roles" instead (`buildPhiAddonRoleTags`,
   `plugins/runtime-modules/user-management/addon-roles.ts`); assignments stored for a Site Admin apply once the
-  person is no longer one and are not listed there.
+  person is no longer one and are not listed there. After the stored tags, one tag per Add-on and Site access
+  lists the roles the person holds through that access without a grant (the row's `impliedAddonRoles`, a role
+  declaring `impliedBy` and what it includes): `<addonId>: <role>, <role> (via <access>)`. A role both stored and
+  held that way is in both tags, because taking the grant back leaves it held.
 - Filter "Add-on", one select whose options come from `GET /api/site/addon-roles` (options Provider
   `@phis/ui/modules/user-management/options/addon-roles`): one option per Add-on, never a single role, labelled
   with the Add-on's `title` and its id as description where the two differ (`buildPhiAddonFilterOptions`). It
@@ -301,8 +304,19 @@ The users Table also shows **Add-on roles** (Core 0.4.1; [phis-server AUTHORIZAT
   `GET /api/site/addon-roles?userId=`) offers the roles the acting user may grant (`grantable`) and lists a role
   the person holds that the actor may not grant as a disabled option, so it stays in the value and is sent
   unchanged (`buildPhiAddonRoleChoiceOptions`). Disabled when the page is read-only, for the actor's own account,
-  and while the form's Core roles hold `admin` (a Site Admin holds every Add-on role). The create form has no
-  such field: the Core's create takes no Add-on roles.
+  and while the form's Core roles hold `admin` (a Site Admin holds every Add-on role). A role the catalog marks
+  `impliedBy` says so in its description ("Implied by Accounting"); choosing it stores a grant beside the
+  access. The create form has no such field: the Core's create takes no Add-on roles.
+- Field "Add-on roles through Core roles" under it (edit only): the roles the person holds through a Site
+  access, from the record's `impliedAddonRoles`, as disabled tags labelled with the access
+  (`<role> (via <access>)`, `buildPhiAddonRoleImpliedOptions`), so they read as held and nobody removes them;
+  hidden where there are none. The same Provider answers it with `params.list` `implied` from the same
+  `GET /api/site/addon-roles?userId=` answer (`implied`). The save carries it under its own key, which the Core
+  does not read: only the access gives such a role and takes it away.
+- The words of both -- "%1 (via %2)", "Implied by %1" and one name per Site access -- are the users page Label
+  Set's (`widget:admin-users-table`). The Providers are Client code without a Label Set, so the page preset hands
+  them over as `addonRoleTexts` (`PHI_USER_MANAGEMENT_ADDON_ROLE_TEXTS_KEY`) in the Table's `source.params` and
+  the edit form's `formConfig`.
 
 That split is the pattern for every case that used to reach for a route policy. Where a Module must go
 further than read-only and show nothing at all, it returns a different tree rather than a different

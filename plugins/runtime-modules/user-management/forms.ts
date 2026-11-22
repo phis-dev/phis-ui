@@ -19,6 +19,7 @@ import {
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
 import { createPhiUserManagementControllerAddress } from "./controller/address";
 import { phiFormLabel as label, phiFormRequired as required } from "../../../components/forms/form-descriptor-text";
+import { PHI_USER_MANAGEMENT_ADDON_ROLE_IMPLIED_LIST } from "./addon-roles";
 
 export const PHI_USER_MANAGEMENT_FORM_IDS = {
   create: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "user-management/create"),
@@ -176,6 +177,28 @@ function descriptor(
             conditions: [readOnlyCondition, selfRoleCondition, siteAdminTargetCondition],
           } as const,
         },
+        /*
+         * What a Site access gives without a grant, beside the grants: shown, never edited. The record carries
+         * it as `"<addonId>:<role>"` strings (null where there are none, which hides the field); the options are
+         * the same answer's `implied`, each labelled with its access. The save sends the field along under its
+         * own key, which the Core does not read, so nothing here is ever stored or taken back.
+         */
+        {
+          key: "impliedAddonRoles",
+          fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.multiSelect,
+          label: label("impliedAddonRoles", "Add-on roles through Core roles"),
+          description: label(
+            "impliedAddonRolesHint",
+            "Held without a grant while the person has the Core role that implies them. They cannot be removed here.",
+          ),
+          optionsProvider: {
+            providerKey: PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS.addonRoleChoiceOptions,
+            params: { list: PHI_USER_MANAGEMENT_ADDON_ROLE_IMPLIED_LIST },
+            dependencies: [{ param: "userId", source: "form" as const, valuePath: "userId", required: true }],
+          },
+          config: { disabled: true },
+          visibleWhen: { source: "form", valuePath: "impliedAddonRoles", operator: "truthy" } as const,
+        },
         {
           key: "enabled",
           fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.switch,
@@ -215,6 +238,8 @@ const loadLabels = createPhiFormLabelSetLoader(
     addonRoles: labels.editor.addonRoles,
     addonRolesPlaceholder: labels.editor.addonRolesPlaceholder,
     addonRolesHint: labels.editor.addonRolesHint,
+    impliedAddonRoles: labels.editor.impliedAddonRoles,
+    impliedAddonRolesHint: labels.editor.impliedAddonRolesHint,
     authOnlyHint: labels.editor.authOnlyHint,
     createPasswordHint: labels.editor.createPasswordHint,
     enabled: labels.columns.enabled,

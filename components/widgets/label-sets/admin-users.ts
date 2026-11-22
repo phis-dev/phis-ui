@@ -2,6 +2,7 @@ import "server-only";
 
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
 import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
+import type { PhisSiteAccess } from "@phis/contracts/addon";
 
 const PHI_ADMIN_USERS_TABLE_WIDGET_LABEL_SET = definePhiLabelSet({
   key: "widget:admin-users-table",
@@ -28,6 +29,15 @@ const PHI_ADMIN_USERS_TABLE_WIDGET_LABEL_SET = definePhiLabelSet({
     column_roles: "Roles",
     column_addon_roles: "Add-on roles",
     addon_roles_all: "all roles",
+    addon_role_via: "%1 (via %2)",
+    addon_role_implied_by: "Implied by %1",
+    site_access_site_maintenance: "Site maintenance",
+    site_access_structure_authoring: "Structure authoring",
+    site_access_content_editing: "Content editing",
+    site_access_publishing: "Publishing",
+    site_access_site_media: "Site media",
+    site_access_support: "Support",
+    site_access_accounting: "Accounting",
     filter_addon_role: "Add-on",
     filter_addon_role_hint: definePhiMessageLabel("Show users who hold any role of an Add-on. Site Admins hold every role."),
     column_user_flags: "User flags",
@@ -64,6 +74,8 @@ const PHI_ADMIN_USERS_TABLE_WIDGET_LABEL_SET = definePhiLabelSet({
     editor_addon_roles: "Add-on roles",
     editor_addon_roles_placeholder: "Choose Add-on roles",
     editor_addon_roles_hint: definePhiMessageLabel("A Site Admin holds every Add-on role. Your own Add-on roles cannot be changed here."),
+    editor_implied_addon_roles: "Add-on roles through Core roles",
+    editor_implied_addon_roles_hint: definePhiMessageLabel("Held without a grant while the person has the Core role that implies them. They cannot be removed here."),
     editor_change_password: "Require password reset",
     editor_create_password_hint: definePhiMessageLabel("New users are created with a temporary password and receive a reset link."),
     editor_auth_only_hint: definePhiMessageLabel("Leave roles empty for an auth-only account."),
@@ -112,6 +124,24 @@ export async function getPhiAdminUsersTableWidgetLabels(options: PhiGlobalTransl
     },
     addonRoles: {
       all: labels.addon_roles_all,
+    },
+    /*
+     * The words for an Add-on role held through a Site access (`PhiAddonRoleTexts`), which the users page
+     * preset hands to the Table's and the edit form's Providers. One word per Site access an Add-on may hang a
+     * role on: every one but site-admin, who holds every role already.
+     */
+    addonRoleTexts: {
+      via: labels.addon_role_via,
+      impliedBy: labels.addon_role_implied_by,
+      siteAccess: {
+        "site-maintenance": labels.site_access_site_maintenance,
+        "structure-authoring": labels.site_access_structure_authoring,
+        "content-editing": labels.site_access_content_editing,
+        publishing: labels.site_access_publishing,
+        "site-media": labels.site_access_site_media,
+        support: labels.site_access_support,
+        accounting: labels.site_access_accounting,
+      } satisfies Record<Exclude<PhisSiteAccess, "site-admin">, string>,
     },
     filters: {
       addonRole: labels.filter_addon_role,
@@ -168,6 +198,8 @@ export async function getPhiAdminUsersTableWidgetLabels(options: PhiGlobalTransl
       addonRoles: labels.editor_addon_roles,
       addonRolesPlaceholder: labels.editor_addon_roles_placeholder,
       addonRolesHint: labels.editor_addon_roles_hint,
+      impliedAddonRoles: labels.editor_implied_addon_roles,
+      impliedAddonRolesHint: labels.editor_implied_addon_roles_hint,
       changePassword: labels.editor_change_password,
       createPasswordHint: labels.editor_create_password_hint,
       authOnlyHint: labels.editor_auth_only_hint,

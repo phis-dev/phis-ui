@@ -10,7 +10,7 @@ import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from ".
 import { getPhiAdminUsersPageLabels } from "./admin-users-label-set";
 import { getPhiAdminUsersTableWidgetLabels } from "../../../../components/widgets/label-sets/admin-users";
 import { PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
-import { PHI_USER_MANAGEMENT_ADDON_ALL_ROLES_TAG } from "../addon-roles";
+import { PHI_USER_MANAGEMENT_ADDON_ALL_ROLES_TAG, PHI_USER_MANAGEMENT_ADDON_ROLE_TEXTS_KEY } from "../addon-roles";
 import { createPhiSignalAddress, createPhiSignalSubcontrolAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
 import {
   createPhiUserManagementControllerAddress,
@@ -306,6 +306,8 @@ export async function buildPhiDefaultAdminUsersPageTree({
           source: {
             providerKey: PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS.table,
             resourceKey: "users",
+            // The words for roles held through a Site access, in the page's language; the Provider reads them.
+            params: { [PHI_USER_MANAGEMENT_ADDON_ROLE_TEXTS_KEY]: widgetLabels.addonRoleTexts },
           },
           presentation: {
             controlSize: "small",
@@ -514,7 +516,10 @@ export async function buildPhiDefaultAdminUsersPageTree({
         label: `admin users ${mode} form`,
         config: {
           formId,
-          formConfig: mode === "create" ? { initialValues: { roles: [] } } : {},
+          formConfig: mode === "create"
+            ? { initialValues: { roles: [] } }
+            // The words the Add-on role Providers label roles held through a Site access with.
+            : { [PHI_USER_MANAGEMENT_ADDON_ROLE_TEXTS_KEY]: widgetLabels.addonRoleTexts },
           execution: { mode: "handler" },
           source: mode === "edit" ? {
             providerKey: PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS.table,

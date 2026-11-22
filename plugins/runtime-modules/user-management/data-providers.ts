@@ -56,6 +56,7 @@ export const PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
           { key: "accountType", title: "Account type", type: "string" },
           { key: "roleTags", title: "Roles", type: "json" },
           { key: "addonRoles", title: "Add-on role assignments", type: "json" },
+          { key: "impliedAddonRoles", title: "Add-on roles through a Site access", type: "json" },
           { key: "addonRoleTags", title: "Add-on roles", type: "json" },
           { key: "userFlagTags", title: "User flags", type: "json" },
           { key: "siteFlagTags", title: "Site flags", type: "json" },
