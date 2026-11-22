@@ -438,6 +438,30 @@ assert.match(validatePhiTableWidgetBinding({
       index === 0 ? { ...column, renderer: "switch" as const } : column),
   },
 }, resource)[0] ?? "", /renderer is incompatible/);
+// A picture is an address, so `image` and `imageFieldKey` take a `string` field and nothing else.
+{
+  const withFirstColumn = (patch: Partial<PhiTableWidgetConfig["presentation"]["columns"][number]>) => ({
+    ...config,
+    presentation: {
+      ...config.presentation,
+      columns: config.presentation.columns.map((column, index) => index === 0 ? { ...column, ...patch } : column),
+    },
+  });
+  assert.deepEqual(validatePhiTableWidgetBinding(withFirstColumn({ fieldKey: "name", renderer: "image" }), resource), []);
+  assert.match(
+    validatePhiTableWidgetBinding(withFirstColumn({ fieldKey: "rank", renderer: "image" }), resource).join("\n"),
+    /renderer is incompatible/,
+  );
+  assert.deepEqual(validatePhiTableWidgetBinding(withFirstColumn({ imageFieldKey: "name" }), resource), []);
+  assert.match(
+    validatePhiTableWidgetBinding(withFirstColumn({ imageFieldKey: "rank" }), resource).join("\n"),
+    /image field "rank" must be a string field/,
+  );
+  assert.match(
+    validatePhiTableWidgetBinding(withFirstColumn({ imageFieldKey: "cover" }), resource).join("\n"),
+    /undeclared image field "cover"/,
+  );
+}
 assert.deepEqual(validatePhiTableWidgetBinding({
   ...config,
   presentation: {
@@ -616,6 +640,7 @@ assert.throws(
 for (const [config, path] of [
   [{ presentation: { columns: [{ key: "a", fieldKey: "a", title: "A", sizing: { mode: "fixed" } }] } }, "presentation.columns[0].sizing.width"],
   [{ presentation: { columns: [{ key: "a", fieldKey: "a", title: "A", renderer: "sparkline" }] } }, "presentation.columns[0].renderer"],
+  [{ presentation: { columns: [{ key: "a", fieldKey: "a", title: "A", imageFieldKey: 7 }] } }, "presentation.columns[0].imageFieldKey"],
   [{ presentation: { columns: [{ fieldKey: "a", title: "A" }] } }, "presentation.columns[0].key"],
   [{ features: { filters: [{ key: "f", label: "F", type: "slider" }] } }, "features.filters[0].type"],
   [{ presentation: { layout: { mode: "grid" } } }, "presentation.layout.mode"],

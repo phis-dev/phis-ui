@@ -8,6 +8,17 @@ and `scripts/validate-todos-wants.ts` refuses the entry once the catalog has one
 
 ## At the next release
 
+- **Small pictures in Tables and records** (TABLES.md, "Read renderers"): the read renderer `image` (a
+  `string` field holding a Site-relative address the server built -- for a list the Media library's `icon`
+  variant -- drawn as a plain lazy `<img>` in a fixed 32 px square, `PHI_RENDERED_IMAGE_SIZE`, fitted whole,
+  decorative `alt=""`; anything but an address on this Site draws nothing), for Table columns and `record`
+  fields, and the Table column's `imageFieldKey`, a picture ahead of the column's value as `iconFieldKey`
+  puts an icon there (`renderPhiValueWithLead` in `phi-rendered-value.tsx`, which now draws both). The
+  Inspector offers both keys as "Icon Field" and "Image Field". The Accounting product directory shows the
+  picture as a column and the icon ahead of the title, **from phis-server's `imageListPath` and
+  `iconListPath`** of `GET /api/site/products`, which an older Server does not answer (the column stays
+  empty, the title bare).
+
 - **The `record` Widget acts on the record it shows** (TABLES.md, "The record Widget"): `actions` (Provider
   row actions of its source: `key`, `mode` normal/danger, optional `confirm`), the input `actionActivate`
   (`action/activate:string`, the action's key), the outputs `actionSuccess` (`activate:json<table-action>`)
@@ -317,11 +328,11 @@ and `scripts/validate-todos-wants.ts` refuses the entry once the catalog has one
 
 ## Tables and Markdown
 
-- **A picture in a Table cell.** No read renderer draws an image from an address, so the Accounting
-  product directory (`accounting/trees/phi-default-accounting-products-page-tree.ts`) shows no icon column
-  although its rows carry `iconPath` and `imagePath`, and `@phis/products` noted the same gap. It would be
-  one more `PhiTableValueRenderer` (an `image` over a `string` field, small and square, shared with the
-  `record` Widget through `renderPhiValueContent`), not a renderer of a Module's own.
+- **`@phis/products`' own product table has no list pictures.** The `image` renderer and `imageFieldKey`
+  draw a server's variant address (TABLES.md, "Read renderers"), and the Accounting directory gets
+  `imageListPath`/`iconListPath` from `GET /api/site/products`; `products:v1` hands an Add-on only
+  `imagePath`/`iconPath`, the originals. Its table needs the `icon` variant's address in the capability
+  first (phis-server), not a renderer of a Module's own.
 - **The supplier filter of the product directory is a text field.** Choosing a supplier from a list needs
   an Options Provider over the Site's suppliers, and no Core route answers them (`GET /api/site/products`
   answers rows, not their distinct suppliers).

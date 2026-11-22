@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { formatPhisMoney, type PhisPaymentMoney } from "@phis/contracts/payments";
 
 import { formatPhiDate, formatPhiDateTime } from "../../../../helpers/format-date-time";
+import { readPhiInternalPath } from "../../../../helpers/internal-path";
 import { readPhiMoneyValue } from "../../../../helpers/money-amount";
 import { formatPhiInterval, readPhiIntervalValue, type PhiIntervalLabels } from "../../label-types/interval";
 import { usePhiIntlLocale, usePhiIntlTimeZone } from "../../../root/phi-intl-locale";
@@ -17,6 +18,7 @@ import { PhiTagControl } from "../../../controls/phi-tag-control";
 import { PhiTypographyControl } from "../../../controls/phi-typography-control";
 import { PhiLink } from "../../../navigation/phi-link";
 import { PhiIcon } from "../../../shell/phi-icon";
+import { usePhiConfig } from "../../../root/phi-config-provider";
 import { isPhiRecord } from "../../../../helpers/is-record";
 
 /**
@@ -92,6 +94,79 @@ function PhiRenderedMoney({ value }: { value: PhisPaymentMoney }) {
   return formatPhisMoney(value, usePhiIntlLocale());
 }
 
+/**
+ * The square a picture is drawn in, in a cell and in a record alike: a line of a list. The server's `icon`
+ * variant is 64 x 64, two device pixels for each of these on a high-density screen.
+ */
+const PHI_RENDERED_IMAGE_SIZE = 32;
+
+/**
+ * **A picture in a list is the address the server answered, drawn as it is.**
+ *
+ * The value is a Site-relative address that already names a variant cut to size and carries its cache
+ * revision, so the browser loads it once and keeps it; anything else -- an absolute address, another
+ * host, an Asset id -- draws nothing, so a Provider cannot make a list load pictures from elsewhere. A
+ * plain `<img>` and not `next/image`: the variant is already the size it is shown at, and the optimiser
+ * would fetch it again without the reader's session and cut it a second time. Lazy and decoded off the
+ * main thread, because a page of a hundred rows holds a hundred of them.
+ *
+ * The `alt` is empty: in a list the picture stands beside the name it belongs to -- ahead of the value it
+ * illustrates, or in a column whose heading says what it is, with the row's name in its own cell --
+ * so it is decorative, and a screen reader that read a name again for it would read every row twice.
+ * Fitted whole, never cropped: an icon or a logo that loses an edge is another mark. The corner is the
+ * small step of the scale, as for any element inside a surface (THEME.md, "Control shape").
+ */
+function PhiRenderedImage({ address }: { address: string }) {
+  const { token } = usePhiConfig();
+  return (
+    <img
+      alt=""
+      src={address}
+      width={PHI_RENDERED_IMAGE_SIZE}
+      height={PHI_RENDERED_IMAGE_SIZE}
+      loading="lazy"
+      decoding="async"
+      style={{
+        display: "block",
+        flexShrink: 0,
+        width: PHI_RENDERED_IMAGE_SIZE,
+        height: PHI_RENDERED_IMAGE_SIZE,
+        objectFit: "contain",
+        borderRadius: token.borderRadiusSM,
+      }}
+    />
+  );
+}
+
+/** The picture an address names, or nothing for a value that is no address on this Site. */
+function renderPhiImage(value: unknown): ReactNode {
+  const address = readPhiInternalPath(value);
+  return address ? <PhiRenderedImage address={address} /> : null;
+}
+
+/**
+ * What stands ahead of a value: a named icon (`iconFieldKey`) and a picture (`imageFieldKey`), read off
+ * the same row. A name and the mark standing for it read as one thing, not as two columns that happen to
+ * be adjacent. Neither there, the value is returned as it was.
+ */
+export type PhiRenderedValueLead = {
+  icon?: unknown;
+  image?: unknown;
+};
+
+export function renderPhiValueWithLead(content: ReactNode, lead: PhiRenderedValueLead): ReactNode {
+  const icon = typeof lead.icon === "string" && lead.icon.trim() ? <PhiIcon name={lead.icon} /> : null;
+  const image = renderPhiImage(lead.image);
+  if (!icon && !image) return content;
+  return (
+    <PhiFlexControl align="center" gap={6} style={{ display: "inline-flex" }}>
+      {image}
+      {icon}
+      {content}
+    </PhiFlexControl>
+  );
+}
+
 export function renderPhiValueContent(
   value: unknown,
   definition: PhiRenderedValueDefinition,
@@ -111,6 +186,7 @@ export function renderPhiValueContent(
     const interval = readPhiIntervalValue(value);
     return interval ? formatPhiInterval(interval, labels.interval) : null;
   }
+  if (definition.renderer === "image") return renderPhiImage(value);
   const normalizedValue = normalizePhiRenderedText(value);
   const displayValue = definition.valueMap?.[normalizedValue] ?? normalizedValue;
   if (definition.renderer === "email" || definition.renderer === "link") {

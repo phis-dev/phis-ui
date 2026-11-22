@@ -15,6 +15,7 @@ const PHI_ACCOUNTING_PRODUCTS_PAGE_LABEL_SET = definePhiRuntimeModuleLabelSet(PH
     page_title: "Products",
     page_description: definePhiMessageLabel("Every product the Site's Add-ons supply: release their terms, lock and unlock them."),
     widget_label: "products",
+    column_picture: "Picture",
     column_title: "Title",
     column_id: "ID",
     column_supplier: "Supplier",
@@ -79,6 +80,7 @@ export async function getPhiAccountingProductsPageLabels(options: PhiGlobalTrans
     pageDescription: labels.page_description,
     widgetLabel: labels.widget_label,
     columns: {
+      picture: labels.column_picture,
       title: labels.column_title,
       id: labels.column_id,
       supplier: labels.column_supplier,

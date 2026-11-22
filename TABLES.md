@@ -334,6 +334,10 @@ A column may declare presentation metadata such as:
   `outlined`
 - `sortable`
 - the Provider field selected for sorting when it differs from the displayed field
+- `iconFieldKey`, a declared `icon` field whose named icon stands ahead of the column's own value, and
+  `imageFieldKey`, a declared `string` field whose picture stands there, drawn as the `image` renderer
+  draws it (below): a name and the mark standing for it read as one thing, not as two adjacent columns.
+  With both, the picture comes first, then the icon, then the value
 
 The column does not redefine the Provider field's data type, mutability, validation, or option source.
 A renderer is presentation only: badge, tag, link, code, or formatted text presentation cannot change
@@ -361,6 +365,7 @@ renderer accepts only the Provider field types listed here, and anything else is
 | `json` | `json` | inline code in a cell, indented in a record |
 | `switch`, `checkbox` | `boolean` | a read-only mark |
 | `icon` | `icon` | the named icon |
+| `image` | `string` | a small picture from a Site-relative address |
 | `money` | `json` | an amount of money in the reader's locale |
 | `interval` | `json` | a period in Core's words |
 
@@ -377,6 +382,21 @@ for one, "every 3 months" for several. The words come from the Label Set rather 
 names, which say a length ("3 months") where a price needs a period, and which no translator can reach.
 The Table and record Widgets read the set on the server in the page's language and hand it to their
 Client half with their own labels.
+
+`image` reads a Site-relative address the Provider answers ready to load: an image variant the server
+built, with its cache revision in the query, never an Asset id that the browser would turn into an
+address. For a list that is the Media library's `icon` variant (`PhiImageAssetVariantKey.Icon`, 64 x 64,
+fitted whole on a transparent ground, so an app icon or a logo keeps its edges); phis-server builds such
+addresses with `resolvePhiMediaVariantUrl`, as `imageListPath` and `iconListPath` of `GET
+/api/site/products` do. Only an address on this Site is drawn (`readPhiInternalPath`); an absolute one,
+another host or anything else draws nothing, so no Provider makes a list load pictures from elsewhere. It
+is a plain `<img>` at a fixed 32 px square (`PHI_RENDERED_IMAGE_SIZE`), the same in a cell and in a record,
+`object-fit: contain`, with the small corner of the scale (`borderRadiusSM`), `loading="lazy"` and
+`decoding="async"`. It is not `next/image`: the variant already is the size it is shown at, and the
+optimiser would fetch it again without the reader's session. The `alt` is empty, as for a decorative
+picture: in a list it stands beside the name it belongs to -- ahead of it through `imageFieldKey`, or in a
+column whose heading says what it is, with the row's name in a cell of its own -- and a screen reader
+that read the name again would read every row twice. An empty value is an empty cell.
 
 A value that is not of its renderer's shape draws nothing rather than its JSON.
 

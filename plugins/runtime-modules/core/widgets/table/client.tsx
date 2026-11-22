@@ -43,7 +43,11 @@ import { usePhiTableBinding } from "../../../../../components/tables/client/phi-
 import { PhiTableBindingControl } from "../../../../../components/tables/client/phi-table-binding-control";
 import { usePhiTableFilterOptions } from "../../../../../components/tables/client/phi-table-filter-options";
 import { clearPhiDataDragPayload, readPhiDataDragPayload } from "../../../../../components/runtime/client/phi-data-dnd";
-import { renderPhiValueContent, type PhiRenderedValueLabels } from "../../../../../components/widgets/client/shared/phi-rendered-value";
+import {
+  renderPhiValueContent,
+  renderPhiValueWithLead,
+  type PhiRenderedValueLabels,
+} from "../../../../../components/widgets/client/shared/phi-rendered-value";
 import { formatPhiTranslation } from "../../../../../helpers/translation-format";
 import {
   readPhiTableFilters,
@@ -144,19 +148,10 @@ function renderTableValue(
   labels: PhiRenderedValueLabels,
 ): ReactNode {
   const content = renderPhiValueContent(value, column, labels);
-  if (!column.iconFieldKey) {
-    return content;
-  }
-  const iconName = row?.[column.iconFieldKey];
-  if (typeof iconName !== "string" || !iconName.trim()) {
-    return content;
-  }
-  return (
-    <PhiFlexControl align="center" gap={6} style={{ display: "inline-flex" }}>
-      <PhiIcon name={iconName} />
-      {content}
-    </PhiFlexControl>
-  );
+  return renderPhiValueWithLead(content, {
+    icon: column.iconFieldKey ? row?.[column.iconFieldKey] : undefined,
+    image: column.imageFieldKey ? row?.[column.imageFieldKey] : undefined,
+  });
 }
 
 function renderTableSummaryItem(item: PhiTableSummaryItemDefinition, value: PhiTableSummaryValue | undefined) {

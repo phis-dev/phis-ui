@@ -43,7 +43,8 @@ const STATE_COLORS = {
  * asks of each act. The operator releases a publisher's terms and locks or unlocks; title, summary and
  * picture stay the supplier's and are not edited here.
  *
- * The icon is not a column: no Table renderer draws a picture from an address (`imagePath`, `iconPath`).
+ * The picture is a small column of its own and the icon stands ahead of the title, both the server's `icon`
+ * variant (`imageListPath`, `iconListPath`: 64 x 64, fitted whole, with their cache revisions).
  * Releasing opens a dialog named after the product, whose record sets the terms in force beside the ones
  * waiting; its Release runs the Provider's release on that record, and the dialog closes and the Table
  * reads again. The dialog is the confirmation, so the release asks nothing more; lock and unlock stay the
@@ -67,7 +68,21 @@ export async function buildPhiDefaultAccountingProductsPageTree({
   const tableAddress = createPhiSignalAddress("cms", PHI_ACCOUNTING_PRODUCTS_PAGE_WIDGET_IDS.widgetTable);
 
   const columns: PhiTableColumnDefinition[] = [
-    { key: "title", fieldKey: "title", title: labels.columns.title, sizing: { mode: "fill", minWidth: 200 } },
+    {
+      key: "picture",
+      fieldKey: "imageListPath",
+      title: labels.columns.picture,
+      renderer: "image",
+      sizing: { mode: "content" },
+    },
+    // The icon stands for the product, so it stands ahead of its name rather than in a column of its own.
+    {
+      key: "title",
+      fieldKey: "title",
+      imageFieldKey: "iconListPath",
+      title: labels.columns.title,
+      sizing: { mode: "fill", minWidth: 200 },
+    },
     { key: "id", fieldKey: "id", title: labels.columns.id, renderer: "code", sizing: { mode: "content" } },
     { key: "supplier", fieldKey: "supplier", title: labels.columns.supplier, renderer: "code", sizing: { mode: "content" } },
     { key: "type", fieldKey: "type", title: labels.columns.kind, renderer: "badge", sizing: { mode: "content" } },

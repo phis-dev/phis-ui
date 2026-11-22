@@ -63,6 +63,14 @@ describe("the product directory's Provider", () => {
     });
   });
 
+  it("hands the server's list pictures on as they came, for the picture column and the title's icon", () => {
+    const row = toPhiAccountingProductRow(product({
+      imageListPath: "/api/site/media/12/variants/10?r=3&v=2",
+      iconListPath: null,
+    }));
+    expect(row).toMatchObject({ imageListPath: "/api/site/media/12/variants/10?r=3&v=2", iconListPath: null });
+  });
+
   it("has nothing waiting for the Site's own product, and marks a lock", () => {
     const row = toPhiAccountingProductRow(product({ publisher: null, state: "locked" }));
     expect(row).toMatchObject({ awaitingRelease: false, locked: true, pendingSale: null, pendingFree: null });

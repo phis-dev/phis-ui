@@ -168,7 +168,7 @@ const PHI_TABLE_ACTION_CONFIG_FIELDS: PhiCmsConfigField[] = [
 
 const PHI_TABLE_COLUMN_RENDERERS = [
   "text", "email", "date", "datetime", "badge", "tags", "link", "code", "json", "switch", "checkbox", "icon",
-  "money", "interval",
+  "image", "money", "interval",
 ] as const;
 const PHI_TABLE_COLUMN_EDITOR_CONTROLS = [
   "switch", "checkbox", "select", "radio", "segmented", "multi-select", "checkbox-group", "icon-picker", "textarea",
@@ -325,6 +325,7 @@ function readColumn(reader: PhiConfigReader): PhiTableColumnDefinition {
     fieldKey: requireString(reader, "fieldKey"),
     sortField: reader.string("sortField"),
     iconFieldKey: reader.string("iconFieldKey"),
+    imageFieldKey: reader.string("imageFieldKey"),
     titleIcon: reader.string("titleIcon"),
     titleDisplay: reader.oneOf("titleDisplay", ["icon"] as const),
     description: reader.string("description"),
@@ -717,6 +718,8 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
         { key: "title", type: "string", label: "Title", required: true },
         { key: "description", type: "string", label: "Hint" },
         { key: "sortField", type: "string", label: "Provider Sort Field" },
+        { key: "iconFieldKey", type: "string", label: "Icon Field" },
+        { key: "imageFieldKey", type: "string", label: "Image Field" },
         {
           key: "renderer",
           type: "choice",
@@ -734,6 +737,7 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
             { value: "switch", label: "Switch" },
             { value: "checkbox", label: "Checkbox" },
             { value: "icon", label: "Icon" },
+            { value: "image", label: "Image" },
             { value: "money", label: "Money" },
             { value: "interval", label: "Interval" },
           ],

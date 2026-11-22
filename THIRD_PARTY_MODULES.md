@@ -522,12 +522,18 @@ and row actions, with no client Widget of its own.
 5. **An icon is a name**, by the one rule every icon name follows: a short name is the Ant Design name
    from `PHI_ANTD_ICON_NAMES` (`plus`, `edit`, `delete`, `reload`), there are no aliases, and an unknown
    name draws nothing ([MODULES.md](./MODULES.md), "Presets, paths, and navigation").
+6. **A picture in a list is an address your server answers**, drawn by the Table's `image` renderer (a
+   column of its own over a `string` field) or ahead of a column's value through `imageFieldKey`, the way
+   `iconFieldKey` puts a named icon there ([TABLES.md](./TABLES.md), "Read renderers"). The row carries a
+   Site-relative address of an image variant with its cache revision, built on the server -- for a list the
+   Media library's `icon` variant, 64 x 64 and fitted whole -- never an Asset id your Provider turns into
+   an address in the browser. A Widget of your own that draws the picture is not needed for it.
 
 The reference is the Admin Users page,
 `plugins/runtime-modules/user-management/trees/phi-default-admin-users-page-tree.ts`: one table on a
 provider, a create action in its toolbar, history, edit and delete in its rows, create and edit as Form
 dialogs, wired by routes and the user-management Controller where a decision needs state. A Widget of your own is for what no Core Widget
-draws -- a product picture, a calendar, a chart of your data. Where a Core Widget lacks something a staff
+draws -- a calendar, a chart of your data. Where a Core Widget lacks something a staff
 page needs, that is a finding for `@phis/ui`, proposed to the operator, not a reason to draw the page
 yourself.
 

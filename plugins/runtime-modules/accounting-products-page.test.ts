@@ -131,6 +131,12 @@ describe("the product directory page", () => {
     // The dialog is the release's question; the row asks none of its own.
     expect(actions[0]?.confirm).toBeUndefined();
     expect(config.features.filters.map((filter) => filter.key)).toEqual(["supplier", "state", "pendingTerms"]);
+    // The picture is a small column of its own, the icon stands ahead of the title: the server's list variants.
+    const columns = (table!.config as { presentation: { columns: Record<string, unknown>[] } }).presentation.columns;
+    expect(columns.slice(0, 2)).toEqual([
+      expect.objectContaining({ key: "picture", fieldKey: "imageListPath", renderer: "image" }),
+      expect.objectContaining({ key: "title", fieldKey: "title", imageFieldKey: "iconListPath" }),
+    ]);
     const [resource] = PHI_ACCOUNTING_RUNTIME_DATA_PROVIDER_DESCRIPTORS[0].resources;
     // The binding check the Table runs before it queries: actions, filters and the counted footer.
     const parsed = PHI_TABLE_WIDGET_DEFINITION.parseConfig(table!.config as Record<string, unknown>);

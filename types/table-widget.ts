@@ -104,6 +104,13 @@ export type PhiTableValueRenderer =
   | "checkbox"
   | "icon"
   /**
+   * A small picture from a Site-relative address the Provider answers ready to load -- an image variant
+   * the server built with its cache revision (phis-server `resolvePhiMediaVariantUrl`, the `icon`
+   * variant for a list), never an Asset id put together here. Drawn at a fixed square box, fitted whole,
+   * lazily; any other address draws nothing. Bound to a `string` field.
+   */
+  | "image"
+  /**
    * An amount of money, `{ currency, minor }` -- the payment contract's `PhisPaymentMoney`, with `minor`
    * an integer string or a safe integer of minor units -- written in the reader's language with the
    * currency's own number of places (`formatPhisMoney`). Bound to a `json` field.
@@ -132,6 +139,12 @@ export type PhiTableColumnDefinition = {
    * Control's node `iconFieldKey`.
    */
   iconFieldKey?: string;
+  /**
+   * A picture field drawn ahead of this column's own value, as `iconFieldKey` draws a named icon: the
+   * declared `string` field holding the Site-relative address the `image` renderer draws -- a product's
+   * icon beside its title. It stands for the value beside it, so it is decorative (empty `alt`).
+   */
+  imageFieldKey?: string;
   /**
    * An icon for the column heading itself, from the same icon vocabulary as everything else
    * (`antd:info-circle`, `@phis/ui/widgets:table`).
@@ -1128,6 +1141,14 @@ export function validatePhiTableWidgetBinding(
         errors.push(`Table column "${column.key}" icon field "${column.iconFieldKey}" must be an icon field.`);
       }
     }
+    if (column.imageFieldKey !== undefined) {
+      const imageField = fieldsByKey.get(column.imageFieldKey);
+      if (!imageField) {
+        errors.push(`Table column "${column.key}" references undeclared image field "${column.imageFieldKey}".`);
+      } else if (imageField.type !== "string") {
+        errors.push(`Table column "${column.key}" image field "${column.imageFieldKey}" must be a string field.`);
+      }
+    }
     if (column.editor && field?.type === "json") {
       errors.push(`Table column "${column.key}" cannot use an implicit JSON editor.`);
     }
@@ -1147,6 +1168,7 @@ export function validatePhiTableWidgetBinding(
       (column.renderer === "switch" && field?.type === "boolean") ||
       (column.renderer === "checkbox" && field?.type === "boolean") ||
       (column.renderer === "icon" && field?.type === "icon") ||
+      (column.renderer === "image" && field?.type === "string") ||
       ((column.renderer === "date" || column.renderer === "datetime") && field?.type === column.renderer) ||
       (column.renderer === "json" && field?.type === "json") ||
       (column.renderer === "tags" && (field?.type === "json" || field?.type === "enum[]")) ||

@@ -85,6 +85,9 @@ export const PHI_ACCOUNTING_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
           ...termFields("pending", "waiting for release"),
           { key: "imagePath", title: "Picture", type: "string" },
           { key: "iconPath", title: "Icon", type: "string" },
+          // The same two as the server's small `icon` variant, ready for a line of the list.
+          { key: "imageListPath", title: "Picture (list)", type: "string" },
+          { key: "iconListPath", title: "Icon (list)", type: "string" },
           { key: "version", title: "Version", type: "number" },
         ],
         query: {

@@ -30,6 +30,7 @@ const PHI_RECORD_VALUE_RENDERERS = [
   "switch",
   "checkbox",
   "icon",
+  "image",
   "money",
   "interval",
 ] as const satisfies readonly PhiTableValueRenderer[];
@@ -237,6 +238,7 @@ export const PHI_RECORD_WIDGET_DEFINITION = {
             { value: "switch", label: "Switch" },
             { value: "checkbox", label: "Checkbox" },
             { value: "icon", label: "Icon" },
+            { value: "image", label: "Image" },
             { value: "money", label: "Money" },
             { value: "interval", label: "Interval" },
           ],
