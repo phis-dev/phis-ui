@@ -41,7 +41,7 @@ Terminology across the Site/server boundary is strict:
 | `@phis/ui/modules/app` | Area base | `app` | App shell, navigation surfaces, authenticated application routes |
 | `@phis/ui/modules/admin` | Area base | `admin` | Admin shell, navigation surface, root route, Admin settings |
 | `@phis/ui/modules/editor` | Area base | `editor` | Editor shell, content editor Widgets and workflows |
-| `@phis/ui/modules/accounting` | Area base | `accounting` | Accounting shell, navigation surface, root route (no Page of its own; the root lands on the first Module entry, the Dashboard's) |
+| `@phis/ui/modules/accounting` | Area base | `accounting` | Accounting shell, navigation surface, root route (it lands on the first sidebar entry a viewer sees, the Dashboard's where it is on), and the Site's product directory (`/products`: phis-server `products:v1`, released, locked and unlocked by the operator over `/api/site/products`, with no shop needed) |
 | `@phis/ui/modules/builder` | Area base | `builder` | Builder shell, workspaces, Canvas, drafts, Inspector, wiring |
 | `@phis/ui/modules/asset` | always active | all | Media, upload, asset picking, asset data; what it offers: [THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#media-what-the-asset-module-already-does) |
 | `@phis/ui/modules/auth` | optional | `public`, `admin`, `app` | Site login and authentication workflows ([AUTHENTICATION.md](./AUTHENTICATION.md)) |

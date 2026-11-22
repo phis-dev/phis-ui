@@ -14,6 +14,7 @@ describe("the Table Providers that read their resources from a descriptor list",
     ["Auth installations", () => import("./auth/services/installations-table")],
     ["Observability", () => import("./observability/services/table")],
     ["Editor releases", () => import("./editor/services/releases-table")],
+    ["Accounting products", () => import("./accounting/services/products-table")],
   ])("%s loads", async (_name, load) => {
     await expect(load()).resolves.toBeDefined();
   });

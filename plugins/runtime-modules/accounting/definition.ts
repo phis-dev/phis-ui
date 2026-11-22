@@ -1,14 +1,16 @@
 import { definePhiAreaBaseRuntimeModuleDefinition } from "../area-base-definition";
-import { PHI_ACCOUNTING_RUNTIME_MODULE_ID } from "./ids";
+import { PHI_ACCOUNTING_RUNTIME_MODULE_IDENTITY } from "./ids";
+import { PHI_ACCOUNTING_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "./data-providers";
 import {
   PHI_CORE_SERVER_BINDING,
 } from "../../../types/server-capabilities";
 
 export const PHI_ACCOUNTING_RUNTIME_MODULE_DEFINITION = definePhiAreaBaseRuntimeModuleDefinition({
   area: "accounting",
-  moduleId: PHI_ACCOUNTING_RUNTIME_MODULE_ID,
+  ...PHI_ACCOUNTING_RUNTIME_MODULE_IDENTITY,
   serverBinding: PHI_CORE_SERVER_BINDING,
-  description: "Locked Accounting Area shell, navigation surface, and root route.",
+  description: "Locked Accounting Area shell, navigation surface, root route, and the Site's product directory.",
   category: "foundation",
   icon: "antd:profile",
+  dataProviders: PHI_ACCOUNTING_RUNTIME_DATA_PROVIDER_DESCRIPTORS,
 });

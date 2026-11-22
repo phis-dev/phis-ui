@@ -258,6 +258,8 @@ const PHI_RUNTIME_MODULE_OWNERSHIP: Readonly<Record<string, readonly [module: st
   "signals/timeline-binding-params": ["core", "timeline-binding-params"],
   "signals/tree-mutation": ["core", "tree-mutation"],
   "signals/tree-state": ["core", "tree-state"],
+  // The Site's product directory, the Accounting Area's own Page.
+  "tables/accounting-products": ["accounting", "products"],
   "tables/builder-navigation": ["builder", "navigation"],
   "tables/runtime-modules": ["builder", "runtime-modules"],
   "tables/builder-signal-routes": ["builder", "signal-routes"],

@@ -127,11 +127,11 @@ describe("an Area root", () => {
     });
   });
 
-  // Accounting has no Page of its own in the sidebar, so the root goes on to the next Module's entry.
-  it("moves Accounting to the next Module's entry when the Dashboard Module is switched off", async () => {
+  // Without the Dashboard the root goes on to the next entry: the Area's own product directory.
+  it("moves Accounting to the product directory when the Dashboard Module is switched off", async () => {
     const resolved = await resolveRootRedirect("accounting", { withoutDashboard: true });
     expect(resolved.layoutConfig.redirect).toMatchObject({
-      target: { area: "accounting", path: "/phis/ui/conversations" },
+      target: { area: "accounting", path: "/phis/ui/products" },
     });
   });
 

@@ -4,14 +4,15 @@ import type {
   PhiCmsRoutePresetDescriptor,
 } from "../../../types/cms-module-descriptors";
 import { buildPhiAreaRootRoutePresetDescriptor } from "../area-root-route";
+import { buildPhiSidebarRoutePresetDescriptor } from "../sidebar-route";
 import { PhiCmsRegionType } from "../../../constants/phi-cms";
 import { PHI_DEFAULT_PUB_AREA_COMPOSITION_NODE_KEYS } from "../preset-contracts/pub-area";
-import { PHI_ACCOUNTING_RUNTIME_MODULE_ID } from "./ids";
+import { PHI_ACCOUNTING_PRODUCTS_PAGE_PRESET_KEY, PHI_ACCOUNTING_RUNTIME_MODULE_ID } from "./ids";
 
 /*
- * What the Accounting base Module brings: the Site shell for its Area and the Area root. No Page of its
- * own -- the Dashboard Module's entry stands first in the sidebar, so the root lands there, and every other
- * Accounting Page is a Module's.
+ * What the Accounting base Module brings: the Site shell for its Area, the Area root, and the Site's
+ * product directory. The root lands on the first sidebar entry a viewer can see -- the Dashboard
+ * Module's where it is on, the directory where it is not.
  */
 
 export const PHI_ACCOUNTING_RUNTIME_MODULE_AREA_SHELLS = [
@@ -63,5 +64,24 @@ export const PHI_ACCOUNTING_RUNTIME_MODULE_ROUTES = [
     ownerModuleId: PHI_ACCOUNTING_RUNTIME_MODULE_ID,
     area: "accounting",
     title: "Accounting",
+  }),
+  /*
+   * The product directory, the Area's own Page: every supplier Add-on's products land in it, so it
+   * belongs to none of them, and it works with no shop at all (phis-server SERVER_ADDONS.md,
+   * `products:v1`). Whoever the Area lets in holds Core's `accounting` access, which is what Core asks
+   * of every request the Page makes.
+   */
+  buildPhiSidebarRoutePresetDescriptor({
+    area: "accounting",
+    anchor: "main",
+    ownerModuleId: PHI_ACCOUNTING_RUNTIME_MODULE_ID,
+    presetKey: PHI_ACCOUNTING_PRODUCTS_PAGE_PRESET_KEY,
+    title: "Products",
+    path: "/products",
+    itemKey: "@phis/ui/modules/accounting/nav/accounting/products",
+    icon: "antd:appstore",
+    loadTree: ({ page, runtime }) =>
+      import("./trees/phi-default-accounting-products-page-tree")
+        .then((module) => module.buildPhiDefaultAccountingProductsPageTree({ page, runtime })),
   }),
 ] satisfies readonly PhiCmsRoutePresetDescriptor[];

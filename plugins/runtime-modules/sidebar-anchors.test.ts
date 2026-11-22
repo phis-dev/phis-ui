@@ -97,7 +97,7 @@ describe("the first-party sidebars", () => {
       "  General",
       "Admin",
     ]);
-    expect(sidebarOf("accounting")).toEqual(["Dashboard", "Conversations", "Admin"]);
+    expect(sidebarOf("accounting")).toEqual(["Dashboard", "Products", "Conversations", "Admin"]);
     /*
      * Modules' entries and nothing of the Area's own: Dashboard anchors itself to `start`, the others to
      * `main`, and entries sharing an anchor are ordered by the Module that injected them -- which is why
