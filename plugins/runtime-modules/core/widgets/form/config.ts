@@ -7,6 +7,7 @@ import {
   parsePhiFormWidgetConfig,
   type PhiCmsFormWidgetConfig,
 } from "../../../../../components/forms/form-widget-config";
+import { PHI_FORM_RECORD_TITLE_CAPABILITY } from "../../../../../components/forms/form-record-title";
 import { PHI_LAYOUT } from "../../../../../theme/phi-tokens";
 import { PHI_AUTHORING_OPTION_PROVIDER_KEYS } from "../../../../../constants/authoring-option-provider-keys";
 
@@ -88,6 +89,8 @@ export const PHI_FORM_WIDGET_DEFINITION = {
        * has to ask rather than be told.
        */
       { id: "valuesRequest", action: "reload", valueType: "none" },
+      // The title its record gives the dialog, after every read (`titleFromRecord`), for the Overlay's `title`.
+      { id: PHI_FORM_RECORD_TITLE_CAPABILITY, action: "change", valueType: "string" },
     ],
     listens: [
       { id: "submit", channel: "submit", action: "activate", valueType: "none" },

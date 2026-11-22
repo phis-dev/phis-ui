@@ -660,6 +660,7 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
 | `execution` | `{ mode: "handler" \| "signal", phase: "submit" \| "confirm" }`, default `handler` / `submit`. |
 | `source` | Optional Table Provider binding `{ providerKey, resourceKey, params }` whose resource declares `recordRead: true`. |
 | `openActionKey` | The Table action key that opens a record, default `edit`. |
+| `titleFromRecord` | Optional `{ template, field }`: a title made of the record the `source` reads, announced on `recordTitle`. See below. |
 | `signalRoutes` | The Widget's routes. |
 | `maxFormWidth` | How wide the form itself may get, measured at the fields rather than around the box. Defaults to `PHI_LAYOUT.contentMax`; see below. |
 | block geometry | `maxSize`, `minSize`, `size`, `surface` -- read from the node like any other Widget. They measure the block the slot frame draws, which is the box *around* the Form's own. |
@@ -734,6 +735,25 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
   Form reads its thread from a record and keeps the placement's `internalAllowed`. With `source` and an `openActionKey`, a Table action with a row identity
   arriving on `recordOpen` loads that record; without `openActionKey` the record is read once on mount.
   After a successful handler submit the last opened record is read again.
+- **A record dialog is named by its record.** `titleFromRecord` takes a Form text with `%1` once, in the
+  Form's label set like its other texts, and the record field whose value stands there. After every read
+  the Form announces the sentence on its `recordTitle` output -- the value as the record has it, never
+  translated -- and an empty one as a row is asked for and where the record has no value for it. The Page
+  routes `recordTitle` to the Overlay's `title` input (OVERLAYS.md), which shows its own title for an
+  empty one; the Form does not look for its Overlay. The create dialog's Form has no record and no
+  `titleFromRecord`, so its dialog keeps its title. The descriptor compiler refuses the option without a
+  `source`, without a `recordTitle` route, with a field that is not one of the Form's (a record answers for
+  the Form's fields: a value only the title reads is a hidden field), and a route to an Overlay of the tree
+  that does not listen on its `title`:
+
+  ```ts
+  // On the Form placement, beside source and openActionKey:
+  titleFromRecord: { template: { kind: "label", key: "galleryOf", fallback: "Gallery: %1" }, field: "product" },
+  signalRoutes: { emits: [{ routeKey: "gallery-title", capabilityId: "recordTitle", scope: "page",
+    channel: "title", action: "change", valueType: "string", receiver: overlayAddress }] },
+  // On the Overlay: { routeKey: "gallery-title-in", capabilityId: "title", scope: "page", channel: "title",
+  //   action: "change", valueType: "string", receiver: overlayAddress }
+  ```
 - What a placement only knows at run time -- the group selected in a Table next to the dialog -- is asked
   for, not pushed: the Form sends `valuesRequest` once as it mounts, and whoever knows answers `valuesSet`.
   A dialog with `mountPolicy: "remount"` holds no Form when the choice is made, so a value sent then
@@ -791,6 +811,7 @@ Outputs (`runtimeSignals.emits`):
 | `cancel` | `close` | `none` |
 | `conditionStateRequest` | `reload` | `none` |
 | `valuesRequest` | `reload` | `none`; sent once on mount, answered with `valuesSet` |
+| `recordTitle` | `change` | `string`; after every record read with `titleFromRecord`, empty as a row is asked for or without a value |
 
 Submit runs client validation first. All feedback of one submit or reset keeps the correlation id of the
 signal that started it. A Controller closes an Overlay on the correlated `submitSuccess`, never on the

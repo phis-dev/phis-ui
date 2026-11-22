@@ -11,6 +11,7 @@ import {
 } from "../../types/runtime-data-provider";
 import { isPhiFormId, normalizePhiFormId, type PhiFormId } from "../../types/form-id";
 import { readPhiSignalRouteSet } from "../../types/signals";
+import { readPhiFormWidgetTitleFromRecord, type PhiFormWidgetTitleFromRecord } from "./form-record-title";
 import {
   readRenderableBlockConfig,
   type PhiCmsWidgetConfigBase,
@@ -76,6 +77,8 @@ export type PhiCmsFormWidgetConfig = PhiCmsWidgetConfigBase & {
    * in the Builder starts as the Table-driven kind.
    */
   openActionKey?: string;
+  /** The title its record gives the dialog, announced on `recordTitle` (`form-record-title.ts`). */
+  titleFromRecord: PhiFormWidgetTitleFromRecord | null;
   signalRoutes: ReturnType<typeof readPhiSignalRouteSet>;
 };
 
@@ -197,6 +200,7 @@ export function parsePhiFormWidgetConfig(rawConfig: Record<string, unknown>): Ph
     openActionKey: typeof rawConfig.openActionKey === "string" && rawConfig.openActionKey.trim()
       ? rawConfig.openActionKey.trim()
       : undefined,
+    titleFromRecord: readPhiFormWidgetTitleFromRecord(rawConfig.titleFromRecord),
     signalRoutes: readPhiSignalRouteSet(rawConfig.signalRoutes),
   };
 }

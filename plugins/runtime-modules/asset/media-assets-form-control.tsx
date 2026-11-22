@@ -208,10 +208,10 @@ export const PhiMediaAssetsFormControl: ComponentType<PhiFormFieldProviderProps>
 
   const shown = orderPhiMediaAssetsFieldTiles(ids, tiles, unavailableName);
   const toolbar = locked ? null : (
-    <PhiToolbarControl compact size="small">
+    // The Form's own size, as every other field of it has; a field draws no smaller buttons of its own.
+    <PhiToolbarControl compact>
       <PhiButtonControl
         label={mediaLabels.upload.uploadToggleLabel}
-        size="small"
         type={uploadFolderPath ? "primary" : "default"}
         disabled={full && !uploadFolderPath}
         onClick={() => setUploadFolderPath((current) => current ? null : resolveFolderPath())}

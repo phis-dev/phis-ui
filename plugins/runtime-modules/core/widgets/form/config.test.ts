@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { PHI_LAYOUT } from "../../../../../theme/phi-tokens";
 import { parsePhiFormWidgetConfig } from "../../../../../components/forms/form-widget-config";
+import { PHI_FORM_RECORD_TITLE_CAPABILITY } from "../../../../../components/forms/form-record-title";
 import { PHI_FORM_WIDGET_DEFINITION } from "./config";
 
 /*
@@ -110,5 +111,20 @@ describe("the Form Widget's Enter", () => {
   it("is the placement's where it states one", () => {
     expect(parsePhiFormWidgetConfig({ submitOnEnter: true }).submitOnEnter).toBe(true);
     expect(parsePhiFormWidgetConfig({ submitOnEnter: false }).submitOnEnter).toBe(false);
+  });
+});
+
+/*
+ * The title a record gives its dialog (`titleFromRecord`, `components/forms/form-record-title.test.ts`),
+ * announced on an output a Page can route to the Overlay's `title` input (`title/change`, `string`).
+ */
+describe("the Form Widget's record title", () => {
+  it("is a declared output of the Overlay title's shape", () => {
+    expect(PHI_FORM_WIDGET_DEFINITION.runtimeSignals.emits).toContainEqual({ id: PHI_FORM_RECORD_TITLE_CAPABILITY, action: "change", valueType: "string" });
+  });
+
+  it("is taken only where the placement states it", () => {
+    expect(PHI_FORM_WIDGET_DEFINITION.defaultConfig).not.toHaveProperty("titleFromRecord");
+    expect(parsePhiFormWidgetConfig({}).titleFromRecord).toBeNull();
   });
 });

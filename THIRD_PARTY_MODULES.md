@@ -1641,6 +1641,10 @@ on a Split Card are still all one column: state the width the body needs. Run
 `checkPhiPresetTreeContract` with your own Forms in your tests
 ([Checking a Page preset](#checking-a-page-preset)); it refuses the same dialog there.
 
+A dialog that edits a row names the row in its title through its record Form's `titleFromRecord` and one
+route from the Form's `recordTitle` to the Overlay's `title` ([FORMS.md](./FORMS.md#form-widget)); it
+needs no Controller.
+
 ## 4c. Messaging
 
 A conversation is Core's, whichever Module runs it: threads, messages, who may read them and the Add-on
@@ -2309,7 +2313,8 @@ the compiler refuses, and the Page answers 500. The rules: every node carries a 
 in the tree; the base page layout node is the canonical one; an Overlay's actions Footer is the canonical
 Flex preset; a modal's body and actions are the dialog's (`PHI_DIALOG_BODY_CONFIG`,
 `PHI_DIALOG_COMMANDS_CONFIG`); and a modal at `PHI_DIALOG_WIDTH` holds not only Forms of one column
-([Dialogs](#dialogs)). `page` is the Page row the test handed `loadTree`: a tree whose Page or Regions
+([Dialogs](#dialogs)); a Form's `titleFromRecord` has a `source`, names one of the Form's fields, and is
+routed to an Overlay that hears it on `title`. `page` is the Page row the test handed `loadTree`: a tree whose Page or Regions
 belong to another is reported. `forms` are your Module's Form definitions (`definePhiRuntimeModuleForm`),
 or a `Map` of `{ descriptor }` by Form id; the dialog width is judged only for the Forms you hand over, as
 the compiler judges only the Forms of the Modules it has, so hand over every Form your package ships.

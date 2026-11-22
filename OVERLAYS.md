@@ -317,10 +317,16 @@ persists its transient value.
 
 Every Modal and Drawer exposes the generic `title` listen capability. A connected listen route uses
 `action: "change"` and `valueType: "string"`. A valid signal replaces only the mounted Overlay's transient
-title; it does not mutate the persisted Overlay config. An empty string hides the visible title, while the
-authored title remains the fallback after the Overlay config changes or the instance remounts. Controllers
-may use this capability when one Overlay and one Body workflow serve several presentation modes, but the
-signal must not select a different Form, Layout tree, submit path, or business operation implicitly.
+title; it does not mutate the persisted Overlay config. A told title stands for one opening: closing forgets
+it, and so does an empty string, a config change or a remount -- each shows the authored title again. A
+title told while the Overlay is closed is for the opening that follows. Controllers may use this capability
+when one Overlay and one Body workflow serve several presentation modes, but the signal must not select a
+different Form, Layout tree, submit path, or business operation implicitly.
+
+A dialog that edits a row is named by that row without a Controller: its record Form's `titleFromRecord`
+announces "Gallery: Private Cloud" on `recordTitle` after it read the row, and an empty title as the next
+row is asked for or where the row has no value, so neither another row's name nor a blank stands over the
+dialog ([FORMS.md](./FORMS.md#form-widget), with the two routes). The create dialog keeps its title.
 
 Intrinsic Modal block-size changes animate in the Core Control with the active Ant Design motion tokens,
 including changes caused by authored Header, Body, Footer, Stack, or Form content. The animation never

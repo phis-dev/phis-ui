@@ -23,6 +23,7 @@ import { usePhiIntlLocale, usePhiIntlTimeZone } from "../root/phi-intl-locale";
 import { PhiFormControl, type PhiFormControlFormInstance } from "../controls/phi-form-control";
 import { readPhiRuntimeFormValuesSignalValue } from "./runtime-form-state";
 import { resolvePhiFormText } from "./form-descriptor-contract";
+import { PHI_FORM_RECORD_TITLE_CAPABILITY, resolvePhiFormRecordTitle } from "./form-record-title";
 import { PhiFormWidgetSubmitOutlet, usePhiFormWidgetSubmit } from "./phi-form-widget-frame";
 import { usePhiRuntimeFormClient } from "./runtime-form-client";
 import { PhiAlertControl } from "../controls/phi-alert-control";
@@ -188,6 +189,30 @@ export function PhiFormDescriptorRuntimeClient({
   }, [emitSignal, widgetConfig]);
 
   /*
+   * The title the record gives the dialog, where the placement takes one (`titleFromRecord`): announced
+   * after every read, and empty as a row is asked for, so the last row's name does not stand over the
+   * next one while it loads. Empty is the Overlay's own title.
+   */
+  const titleFromRecord = widgetConfig?.titleFromRecord ?? null;
+  const formConfig = widgetConfig?.formConfig;
+  const announceRecordTitle = useCallback((
+    values: Record<string, unknown> | null,
+    correlationId?: string | null,
+  ) => {
+    if (!titleFromRecord) return;
+    emitCapability(
+      PHI_FORM_RECORD_TITLE_CAPABILITY,
+      resolvePhiFormRecordTitle(titleFromRecord, values, labels, formConfig),
+      correlationId,
+    );
+  }, [emitCapability, formConfig, labels, titleFromRecord]);
+  // For the read on mount, which must not run again because the words around it changed.
+  const announceRecordTitleRef = useRef(announceRecordTitle);
+  useEffect(() => {
+    announceRecordTitleRef.current = announceRecordTitle;
+  }, [announceRecordTitle]);
+
+  /*
    * That the values now in the form have already been rejected, and nothing has changed since.
    *
    * It exists because a submit changes the state it is triggered by: validation writes its errors onto
@@ -246,7 +271,10 @@ export function PhiFormDescriptorRuntimeClient({
     recordLoadRef.current = null;
   }, []);
 
-  const loadRecord = useCallback(async (rowIdentity: PhiTableRowIdentity | null) => {
+  const loadRecord = useCallback(async (
+    rowIdentity: PhiTableRowIdentity | null,
+    correlationId?: string | null,
+  ) => {
     setLoading(true);
     setError(null);
     const abortController = beginRecordLoad();
@@ -257,6 +285,7 @@ export function PhiFormDescriptorRuntimeClient({
       recordIdentityRef.current = rowIdentity;
       setRecord(values);
       setRecordKey(rowIdentity == null ? "singleton" : String(rowIdentity));
+      announceRecordTitle(values, correlationId);
     } catch (readError) {
       if (!signal.aborted) {
         setError(readError instanceof Error ? readError.message : "Form record loading failed.");
@@ -264,7 +293,7 @@ export function PhiFormDescriptorRuntimeClient({
     } finally {
       if (!signal.aborted) setLoading(false);
     }
-  }, [beginRecordLoad, readRecord]);
+  }, [announceRecordTitle, beginRecordLoad, readRecord]);
 
   useEffect(() => {
     if (!source || widgetConfig?.openActionKey) return;
@@ -275,6 +304,7 @@ export function PhiFormDescriptorRuntimeClient({
       setRecord(values);
       setRecordKey("singleton");
       setError(null);
+      announceRecordTitleRef.current(values);
     }).catch((readError: unknown) => {
       if (!abortController.signal.aborted) {
         setError(readError instanceof Error ? readError.message : "Form record loading failed.");
@@ -307,14 +337,15 @@ export function PhiFormDescriptorRuntimeClient({
     if (route.capabilityId === "recordOpen") {
       const action = readPhiTableActionSignalValue(signal.value);
       if (!action || action.actionKey !== (widgetConfig?.openActionKey ?? "edit") || action.rowIdentity == null) return;
-      void loadRecord(action.rowIdentity);
+      announceRecordTitle(null, signal.correlationId);
+      void loadRecord(action.rowIdentity, signal.correlationId);
       emitCapability("conditionStateRequest", null, signal.correlationId);
     } else if (route.capabilityId === "close") {
       requestReset(signal.correlationId);
       emitCapability("cancel", null, signal.correlationId);
     } else if (route.capabilityId === "reload") {
       const rowIdentity = recordIdentityRef.current;
-      if (rowIdentity != null) void loadRecord(rowIdentity);
+      if (rowIdentity != null) void loadRecord(rowIdentity, signal.correlationId);
     } else if (route.capabilityId === "submit") {
       /*
        * Asked again for values already refused, with nothing changed since, this is not a second
@@ -343,7 +374,7 @@ export function PhiFormDescriptorRuntimeClient({
         setConditionControllerStates((current) => ({ ...current, [signal.sender!]: next.state }));
       }
     }
-  }, [conditionControllerAddresses, emitCapability, formControllerAddress, identity.receiver, loadRecord, requestReset, requestSubmit, widgetConfig]), useMemo(() => {
+  }, [announceRecordTitle, conditionControllerAddresses, emitCapability, formControllerAddress, identity.receiver, loadRecord, requestReset, requestSubmit, widgetConfig]), useMemo(() => {
     const listenRoutes = widgetConfig?.signalRoutes?.listens ?? [];
     return listenRoutes.length === 0 ? null : {
       scopes: Array.from(new Set(listenRoutes.map((route) => route.scope))),
@@ -622,7 +653,7 @@ export function PhiFormDescriptorRuntimeClient({
             reportSuccess(correlationId);
             const rowIdentity = recordIdentityRef.current;
             if (source && (rowIdentity != null || !widgetConfig?.openActionKey)) {
-              void loadRecord(rowIdentity);
+              void loadRecord(rowIdentity, correlationId);
             }
           } catch (submitError) {
             const message = submitError instanceof Error ? submitError.message : "Form submission failed.";

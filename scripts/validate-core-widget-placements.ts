@@ -55,6 +55,7 @@ const PLACEMENT_ONLY_KEYS: Readonly<Record<string, Readonly<Record<string, strin
     feedback: "whether a Settings panel reports a save; the shell decides it",
     links: "the ways out of a sign-in, placed by the Module that owns them",
     formConfig: "prepared for the Form Builder, which will edit it",
+    titleFromRecord: "a dialog's title from the record, wired to an Overlay the Builder does not author",
   },
   "collection-view": { initialQuery: "the query a Preset opens the Collection with" },
   "command-toolbar": { key: "the Control's signal identity, as for the Button" },

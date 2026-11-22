@@ -36,6 +36,7 @@ import { PhiDrawerControl } from "../controls/phi-drawer-control";
 import { PhiAlertControl } from "../controls/phi-alert-control";
 import { usePhiOverlayZonesLoaderIfAny } from "./phi-overlay-zones-loader";
 import { PhiDialogBodyProvider } from "./phi-dialog-body-context";
+import { usePhiOverlayTitle } from "./phi-overlay-title";
 import type {
   PhiCmsLoadedOverlayZones,
   PhiCmsOverlayZones,
@@ -144,10 +145,7 @@ export function PhiOverlayContainerClient({
     config: typeof config;
     value: PhiRenderableBlockSize;
   } | null>(null);
-  const [runtimeTitleOverride, setRuntimeTitleOverride] = useState<{
-    config: typeof config;
-    value: string | null;
-  } | null>(null);
+  const { title: runtimeTitle, tell: tellTitle, forget: forgetTitle } = usePhiOverlayTitle(config);
   /*
    * Whether work the Overlay holds is under way -- a Form in the Body saving. While it is, a reader's
    * dismissal (close button, mask, Escape) is not taken: closing would abandon the save's answer. A
@@ -161,9 +159,6 @@ export function PhiOverlayContainerClient({
   const runtimeSize = runtimeSizeOverride?.config === config
     ? runtimeSizeOverride.value
     : null;
-  const runtimeTitle = runtimeTitleOverride?.config === config
-    ? runtimeTitleOverride.value
-    : config.title;
   const emittedOpenRef = useRef(false);
   const openedAtPathname = useRef<string | null>(null);
   const pathname = usePhiPathname();
@@ -204,8 +199,10 @@ export function PhiOverlayContainerClient({
     if (!nextOpen) setLoadedZones((current) => current && "failure" in current ? null : current);
     // A closed Overlay holds no work; a busy state left behind would refuse the next dismissal.
     if (!nextOpen) setBusy(false);
+    // Nor a title told for the opening that ends: the next one starts from its own (`usePhiOverlayTitle`).
+    if (!nextOpen) forgetTitle();
     setOpen(nextOpen);
-  }, []);
+  }, [forgetTitle]);
 
   /*
    * The zones of a deferred Overlay, asked for when it opens and kept afterwards.
@@ -298,8 +295,7 @@ export function PhiOverlayContainerClient({
     } else if (route.capabilityId === "toggle") {
       updateOpen(typeof signal.value === "boolean" ? signal.value : !open);
     } else if (route.capabilityId === "title" && signal.valueType === "string") {
-      const nextTitle = typeof signal.value === "string" ? signal.value.trim() : "";
-      setRuntimeTitleOverride({ config, value: nextTitle || null });
+      tellTitle(signal.value);
     } else if (route.capabilityId === "controlSize" && overlayType === "modal") {
       const nextControlSize = readPhiControlSize(signal.value);
       if (nextControlSize) {
@@ -315,7 +311,7 @@ export function PhiOverlayContainerClient({
       const nextSize = readPhiDimensionValue(signal.value);
       if (nextSize) setRuntimeSizeOverride({ config, value: nextSize });
     }
-  }, [config, listenRoutes, open, overlayType, receiver, updateOpen]), useMemo(() => ({
+  }, [config, listenRoutes, open, overlayType, receiver, tellTitle, updateOpen]), useMemo(() => ({
     scopes: [signalScope],
     receiver,
   }), [receiver, signalScope]), receiver);

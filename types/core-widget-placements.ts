@@ -15,6 +15,7 @@ import type { PhiMediaKindValue } from "./media";
 import type { PhiCollectionProviderQuery } from "./collection-provider";
 import type { PhiProviderResourceSource } from "./runtime-data-provider";
 import type { PhiFormId } from "./form-id";
+import type { PhiFormWidgetTitleFromRecord } from "../components/forms/form-record-title";
 import type { PhiLinkTarget } from "./references";
 import type { PhiMediaImageSourceConfig } from "./media";
 import type { PhiViewerAccessPolicy } from "./access";
@@ -378,6 +379,8 @@ export type PhiFormWidgetPlacement = PhiWidgetPlacementBase & {
   source?: PhiProviderResourceSource | null;
   /** Absent is a single-record form; the Form Widget's config says why that is an answer. */
   openActionKey?: string;
+  /** A title from the record `source` reads, announced on `recordTitle`, for the Overlay's `title` (FORMS.md). */
+  titleFromRecord?: PhiFormWidgetTitleFromRecord | null;
 };
 
 // Collection View

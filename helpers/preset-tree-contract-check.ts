@@ -13,6 +13,10 @@ import {
   isPhiFormSingleColumn,
 } from "./cms-dialog";
 import { resolvePhiLayoutCreationPreset } from "./cms-layout-defaults";
+import {
+  PHI_FORM_RECORD_TITLE_CAPABILITY,
+  readPhiFormWidgetTitleFromRecord,
+} from "../components/forms/form-record-title";
 
 /**
  * The rules every preset tree is held to (THIRD_PARTY_MODULES.md, "Checking a Page preset"), as findings.
@@ -25,8 +29,9 @@ import { resolvePhiLayoutCreationPreset } from "./cms-layout-defaults";
  * The rules: every node a preset instance id, none twice, every parent, Region root, Overlay root and Page
  * root resolved; the base page layout node only as the canonical scaffold; an actions Footer the canonical
  * Flex preset; a modal's body and actions the dialog's (`helpers/cms-dialog.ts`), and a modal at the default
- * `PHI_DIALOG_WIDTH` not holding only Forms of one column. The findings come in the order the compiler used
- * to throw them, so its first is the error it always gave.
+ * `PHI_DIALOG_WIDTH` not holding only Forms of one column; a Form's title from its record read, sent, and
+ * heard where it goes. The findings come in the order the compiler used to throw them, so its first is the
+ * error it always gave.
  *
  * `page` is the Page the tree was asked for: a tree whose Page or Regions belong to another is refused.
  * `forms` are the Forms the caller can see, by id or as definitions; a Form not among them -- one stored on
@@ -159,6 +164,7 @@ export function checkPhiPresetTreeContract(
     if (body) checkDialogBody(overlay.id, body, report);
     if (forms) checkDialogWidth(overlay, tree, forms, report);
   }
+  checkFormRecordTitles(tree, forms, report);
   for (const rootLayoutNodeId of [
     tree.page.heroRootLayoutNodeId,
     tree.page.headerBottomRootLayoutNodeId,
@@ -288,5 +294,58 @@ function checkDialogWidth(
       `Preset Overlay "${overlay.id}" holds the one-column Form "${String(formIds[0])}" at the full dialog width ` +
       "(PHI_DIALOG_WIDTH). Hand the Form to `dialog` as `body.form`, or state `width: PHI_DIALOG_WIDTH_SINGLE_COLUMN`.",
     );
+  }
+}
+
+type Route = Partial<Record<"routeKey" | "capabilityId" | "scope" | "channel" | "action" | "valueType" | "receiver", unknown>>;
+
+function readRoutes(config: Record<string, unknown>, side: "emits" | "listens"): Route[] {
+  const routes = (config.signalRoutes as Partial<Record<typeof side, unknown>> | null | undefined)?.[side];
+  return Array.isArray(routes) ? routes.filter((route): route is Route => route != null && typeof route === "object") : [];
+}
+
+/*
+ * A Form's title from its record (`components/forms/form-record-title.ts`), end to end, since every break
+ * is silent: no `source` reads nothing, no `recordTitle` route names nothing, a route without the option
+ * carries nothing, an Overlay not listening on `title` drops it. Where the Form is known, the field is one
+ * of its own -- a record answers for the Form's fields.
+ */
+function checkFormRecordTitles(tree: PhiResolvedCmsPageTree, forms: ReadonlyMap<string, PresetTreeForm> | undefined, report: Report) {
+  const overlaysById = new Map(tree.overlays.map((overlay) => [`cms:${overlay.id}`, overlay]));
+  for (const widget of tree.contentWidgets) {
+    if (widget.widgetType !== PhiCmsWidgetType.Form) continue;
+    const name = `Preset Form "${widget.id}"`;
+    const routes = readRoutes(widget.config, "emits").filter((route) => route.capabilityId === PHI_FORM_RECORD_TITLE_CAPABILITY);
+    let title: ReturnType<typeof readPhiFormWidgetTitleFromRecord>;
+    try {
+      title = readPhiFormWidgetTitleFromRecord(widget.config.titleFromRecord);
+    } catch (error) {
+      report(widget.id, `${name}: ${(error as Error).message}`);
+      continue;
+    }
+    if (!title) {
+      if (routes.length > 0) report(widget.id, `${name} routes "recordTitle" but takes no titleFromRecord, so it announces nothing.`);
+      continue;
+    }
+    if (widget.config.source == null) report(widget.id, `${name} takes its title from a record it never reads: titleFromRecord needs a source.`);
+    if (routes.length === 0) report(widget.id, `${name} takes a titleFromRecord that goes nowhere: no route on "recordTitle".`);
+    const formId = String(widget.config.formId);
+    const descriptor = forms?.get(formId)?.descriptor;
+    if (descriptor && !descriptor.fields.some((field) => field.key === title.field)) {
+      report(widget.id, `${name} takes its title from "${title.field}", which is no field of "${formId}".`);
+    }
+    for (const route of routes) {
+      if (route.action !== "change" || route.valueType !== "string") {
+        report(widget.id, `${name} route "${String(route.routeKey)}" must carry "recordTitle" as change/string.`);
+        continue;
+      }
+      // An Overlay of this tree hears it on its `title` input; another receiver is the Page's choice.
+      const overlay = overlaysById.get(String(route.receiver));
+      const keys = ["receiver", "scope", "channel", "action", "valueType"] as const;
+      if (overlay && !readRoutes(overlay.config, "listens").some((listen) =>
+        listen.capabilityId === "title" && keys.every((key) => listen[key] === route[key]))) {
+        report(widget.id, `${name} sends its title to Overlay "${overlay.id}", which has no "title" route on ${String(route.scope)} ${String(route.channel)}/change.`);
+      }
+    }
   }
 }
