@@ -47,31 +47,36 @@ import {
 import { usePhiCollectionProviderAction } from "../widgets/client/shared/phi-collection-provider";
 
 /**
+ * Where a file uploaded in the picker goes, as the binding hands it to the host's upload surface
+ * (`PhiMediaPickerUploadBinding.renderPanel`): the Folder in view of the Site Space (`null`, its root),
+ * and `intoStartFolder` while the picker stands where `openOnFolder` put it and that Folder's path is
+ * not all there yet -- the host then sends the file into the whole path, creating what is missing, as
+ * `area-upload` does. `onUploaded` takes the Asset that arrived, or `null` where the host does not let it
+ * be chosen: the picker reads its list again, follows the file into its Folder, and chooses it.
+ */
+export type PhiMediaPickerUploadTarget = {
+  folderId: number | null;
+  intoStartFolder: boolean;
+  onUploaded: (asset: PhiMediaAssetTile | null) => void;
+};
+
+/**
  * An upload of a file from the reader's machine, offered inside the picker by a host that brings the
- * transport (`usePhiMediaUpload`), so that a picker without one does not carry it.
+ * upload surface -- the Media library's own (`PhiAreaUploadBinding`, one file, its wall showing only
+ * what is on its way), so there is one upload interface in the house and a picker without one does not
+ * carry the transport.
  *
- * The binding says where the file goes -- the Folder in view -- and chooses what came back; the host
- * sends it, words what went wrong and decides whether the Asset is one to choose (`send` answers null
- * for a refusal, a stopped upload, and an Asset the host does not let be chosen).
+ * The binding says where the file goes and chooses what came back; the host draws the surface for that
+ * target, words what went wrong and decides whether the Asset is one to choose. The surface is drawn
+ * only while the picker is open, so closing it stops what is on its way.
  *
  * Offered on the Site Space only, as an import is: the file goes without a Space named, which Core
  * answers with the Site Space, so a picker standing on another Space shows no upload.
  */
 export type PhiMediaPickerUploadBinding = {
-  /** What the file dialog offers (`usePhiMediaUpload`'s `accept`). */
-  accept: string;
-  /** How far the upload on its way is, in per cent; null while none is. */
-  progress: number | null;
-  /** Why the last upload did not work, or the Asset it made cannot be chosen. */
+  renderPanel: (target: PhiMediaPickerUploadTarget) => ReactNode;
+  /** Why the Asset the last upload made cannot be chosen, said above the tiles. */
   notice: string | null;
-  /**
-   * One file into this Folder of the Site Space (null: its root). `intoStartFolder` is true while the
-   * picker stands where `openOnFolder` put it and that Folder's path is not all there yet: the host sends
-   * the file into the whole path, creating what is missing, as `area-upload` does.
-   */
-  send: (file: File, folderId: number | null, intoStartFolder: boolean) => Promise<PhiMediaAssetTile | null>;
-  /** Stops what is on its way; the picker was closed. */
-  cancel: () => void;
 };
 
 export type PhiMediaPickerBindingProps = {
@@ -176,11 +181,6 @@ export function usePhiMediaPickerBinding({
   // The picker stands where `openOnFolder` put it, and the path it was asked for goes further.
   const [onIncompleteStartFolder, setOnIncompleteStartFolder] = useState(false);
   const startFolderRequestRef = useRef<AbortController | null>(null);
-  // The host's upload as of the last render, for the close below, which must not run again per render.
-  const uploadRef = useRef(upload);
-  useEffect(() => {
-    uploadRef.current = upload;
-  }, [upload]);
   const sourceRequestRef = useRef<AbortController | null>(null);
   const importRequestRef = useRef<AbortController | null>(null);
   const [total, setTotal] = useState(0);
@@ -337,12 +337,12 @@ export function usePhiMediaPickerBinding({
   }, [activeSourceId, isOpen, readSourcePage]);
 
   /*
-   * A closed picker stops what it asked: the listing, an import or an upload on its way -- nothing is to
-   * choose for it afterwards -- and the Folder it opens on.
+   * A closed picker stops what it asked: the listing, an import -- nothing is to choose for it
+   * afterwards -- and the Folder it opens on. An upload on its way stops with its surface, which the
+   * Control draws only while the picker is open.
    */
   useEffect(() => {
     if (isOpen) return;
-    uploadRef.current?.cancel();
     sourceRequestRef.current?.abort();
     importRequestRef.current?.abort();
     importRequestRef.current = null;
@@ -466,25 +466,21 @@ export function usePhiMediaPickerBinding({
    * what comes back is chosen like a picked tile.
    */
   const uploadOffered = upload != null && onSiteSpace;
-  const sendUpload = async (file: File): Promise<PhiMediaAssetTile | null> => {
-    if (!upload) return null;
-    const intoStartFolder = onIncompleteStartFolder;
-    let tile: PhiMediaAssetTile | null = null;
-    try {
-      tile = await upload.send(file, folderId, intoStartFolder);
-    } catch (error) {
-      console.error("Media picker upload failed.", error);
-    }
-    if (tile && intoStartFolder) {
-      setFolderId(tile.folderId);
-      setOnIncompleteStartFolder(false);
-      setPage(1);
-    }
-    setRefreshToken((current) => current + 1);
-    if (!tile) return null;
-    assetCacheRef.current.set(tile.id, tile);
-    return tile;
-  };
+  const uploadPanel = (choose: (assetId: number) => void) => upload?.renderPanel({
+    folderId,
+    intoStartFolder: onIncompleteStartFolder,
+    onUploaded: (tile) => {
+      if (tile && onIncompleteStartFolder) {
+        setFolderId(tile.folderId);
+        setOnIncompleteStartFolder(false);
+        setPage(1);
+      }
+      setRefreshToken((current) => current + 1);
+      if (!tile) return;
+      assetCacheRef.current.set(tile.id, tile);
+      choose(tile.id);
+    },
+  });
 
   const updateOpen = (next: boolean) => {
     if (controlledOpen == null) setLocalOpen(next);
@@ -535,9 +531,7 @@ export function usePhiMediaPickerBinding({
     sourceHasMore: activeSource != null && sourceCursor != null,
     importingItemId,
     sourceNotice: importFailure,
-    onUpload: uploadOffered ? sendUpload : undefined,
-    uploadAccept: uploadOffered ? upload.accept : undefined,
-    uploadProgress: uploadOffered ? upload.progress : null,
+    uploadPanel: uploadOffered ? uploadPanel : undefined,
     uploadNotice: uploadOffered ? startFolderFailure ?? upload.notice : startFolderFailure,
     folders: provider && source ? folderOptions : [],
     folderValue,

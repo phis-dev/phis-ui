@@ -9,6 +9,7 @@ import type { PhiCollectionProviderQuery } from "./collection-provider";
 import type { PhiProviderResourceSource } from "./runtime-data-provider";
 import type { PhiSignalRouteSet } from "./signals";
 import type { PhiCssLength } from "./length";
+import type { PhiMediaKindValue } from "./media";
 import type { PhiCmsWidgetConfigBase } from "../components/widgets/config/parser-primitives";
 
 /**
@@ -57,6 +58,29 @@ export type PhiCmsCollectionViewWidgetConfig = PhiCmsWidgetConfigBase & {
     reorder?: {
       enabled: boolean;
       actionKey?: string;
+    };
+    /**
+     * Read by the Media renderer (`PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY`) and by no other, whichever
+     * Provider it draws: where an upload from its upload panel goes and where its "Choose from Media
+     * library" picker opens, and what both offer.
+     */
+    media?: {
+      /**
+       * A Folder of the Site Space by its path of names ("Shop Images / {category} / {product}"): an
+       * upload goes into it, the missing Folders created, and the picker opens on the deepest of it that
+       * is there. `{key}` is the binding param `key` (`source.params` with what `bindingParamsChange`
+       * laid over them): a text or a number, trimmed, a `/` in it a `-`, and a name whose placeholder has
+       * no value left out whole (`resolvePhiMediaFolderPathTemplate`). Absent: for the Media library's
+       * own Collection the Folder its listing has open, for any other the root of the Site Space.
+       */
+      folderPath?: string;
+      /** The one kind the upload takes and the picker lists. Absent: the upload takes every kind, the picker lists images. */
+      mediaType?: PhiMediaKindValue;
+      /**
+       * The picker greys out the Assets that are not delivered publicly; the resource's `add` decides
+       * what it takes. Core delivers what goes into the Site Space publicly by default.
+       */
+      publicOnly?: boolean;
     };
     pagination?: {
       enabled: boolean;

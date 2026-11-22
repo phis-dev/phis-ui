@@ -663,12 +663,15 @@ package preset itself.
 | Overlay closes before persistence succeeds | The workflow closes on the Save command instead of the correlated `submitSuccess` result. |
 | Signal mode sends no values | The Form lacks an emitted `submitValues` route or the receiver/controller capability does not accept the `formValues` schema. |
 | Select options are unavailable | The field's Options Provider is not declared or demanded by the active Form descriptor/module set. |
+| A Form beside a Collection adds to it ("Add a picture" above a gallery), and the Collection beside it is drawn by a renderer of the Module's own | An own renderer duplicating a shipped one. A Collection of Media library Assets is drawn by the Media renderer (`PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY`), whose upload wall and "Choose from Media library" call the resource's `add` action; the Form, its handler, its route and the renderer go ([COLLECTIONS.md](../../COLLECTIONS.md#one-collection-view-for-every-source-shipped-renderers-first)). |
 | A field seems to lack a capability ("the picker cannot upload", "no target Folder") | The field is one door of its domain's owning Module, not the domain. Check that Module's Widgets, Controller and Core routes before calling it missing ([AGENTS.md](../../AGENTS.md#before-you-call-something-missing)); for Media the map is [THIRD_PARTY_MODULES.md](../../THIRD_PARTY_MODULES.md#media-what-the-asset-module-already-does). |
 
 ## Checklist
 
 - Build no field, no validation, no submit, and no wording that a Provider or Label Set already owns;
   where one is missing, agree it with the operator and add it centrally instead of beside the Form.
+- Build no Form whose only job is to add to a Collection: the Collection's renderer adds through its
+  Provider's action (the Media renderer's `add`, from its upload and its picker).
 - Use `createPhiFormId(ownerModuleId, formKey)` and keep `descriptor.key` identical.
 - Export one pure `definePhiRuntimeModuleForm(...)` definition from a Server entry and name its `areas`.
 - Choose `handler` or `signal` execution explicitly; do not combine them.

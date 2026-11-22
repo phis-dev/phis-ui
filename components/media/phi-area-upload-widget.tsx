@@ -4,7 +4,7 @@ import { resolvePhiMediaAssetTypeLabel } from "./asset-type-label";
 import { PhiTagControl } from "../controls/phi-tag-control";
 import { PhiButtonControl } from "../controls/phi-button-control";
 import NextImage from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { PhiCmsAreaUploadWidgetConfig } from "../../types/media";
 import { PhiCollectionLayoutControl } from "../controls/phi-collection-layout-control";
@@ -23,7 +23,7 @@ import {
   resolvePhiMediaUploadInitOptions,
   type PhiMediaUploadSessionResult,
 } from "./media-upload-flow";
-import { resolvePhiUploadStatusLabel, usePhiMediaUpload } from "./phi-media-upload";
+import { resolvePhiUploadStatusLabel, usePhiMediaUpload, type PhiMediaUploadAcceptance } from "./phi-media-upload";
 import { usePhiImagePreviewStore, type PhiImagePreviewStoreState } from "./phi-image-preview-store";
 import { PHI_ASSET_CONTROLLER_STORE_KEY } from "./asset-controller-signals";
 import {
@@ -65,6 +65,27 @@ export type PhiAreaUploadWidgetProps = {
   config?: PhiCmsAreaUploadWidgetConfig | null;
   labels: PhiAreaUploadWidgetLabels;
   onUploadComplete?: () => void;
+  /**
+   * What the surface takes (`usePhiMediaUpload`'s acceptance): a file of another kind is refused before
+   * it is sent, and the file dialog offers these kinds. Absent: `config.accept`, every file by default.
+   */
+  acceptance?: PhiMediaUploadAcceptance;
+  /**
+   * Whether an Asset that arrived stays in the wall as a tile, with its delete -- the Media library's own
+   * upload panel. `false` for a surface whose Collection shows what arrived itself (a Collection View of
+   * another Provider that adds it, the picker that chooses it): only the files on their way and the
+   * failed ones stand here, so nothing shows twice. Default `true`.
+   */
+  showFinished?: boolean;
+  /** The Asset that arrived, for a host that does something with it (adds it, chooses it). */
+  onAssetUploaded?: (asset: PhiMediaAssetTile) => void;
+  /** Whether a file is on its way, for a host that holds something back meanwhile (a Form's submit). */
+  onUploadingChange?: (uploading: boolean) => void;
+  /**
+   * Uploads into the Site Space, whatever Space the Media library's listing last showed: for a host that
+   * stores a reference everybody follows. A `config.folderPath` is read in the Site Space either way.
+   */
+  siteSpaceOnly?: boolean;
   collectionContext?: {
     folders: PhiImagePreviewStoreState["folders"];
     folderId: number | null;
@@ -124,7 +145,17 @@ function resolveUploadWallDisplayDimensions(item: Pick<UploadWallItem, "contentT
   return resolvePhiMediaAssetDisplayDimensions(item);
 }
 
-export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collectionContext }: PhiAreaUploadWidgetProps) {
+export function PhiAreaUploadBinding({
+  config,
+  labels,
+  onUploadComplete,
+  acceptance,
+  showFinished = true,
+  onAssetUploaded,
+  onUploadingChange,
+  siteSpaceOnly = false,
+  collectionContext,
+}: PhiAreaUploadWidgetProps) {
   const { token } = usePhiConfig();
   const { showMessage } = usePhiApplicationFeedback();
   const uploadTileFrameSize = token.controlHeight * 3;
@@ -133,7 +164,7 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
   const activateCollectionAction = usePhiCollectionProviderAction(PHI_ASSET_COLLECTION_DATA_SOURCE);
   const [uploadWall, setUploadWall] = useState<UploadWallItem[]>([]);
   const allowDelete = config?.allowDelete ?? true;
-  const accept = config?.accept?.trim() || "*/*";
+  const configAccept = config?.accept?.trim() || "*/*";
   const multiple = config?.multiple ?? true;
   const collectionFolderId = collectionContext?.folderId ?? null;
   const collectionPresentationFlags = collectionContext?.presentationFlags ?? null;
@@ -150,8 +181,9 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
     configPresentationFlags: config?.presentationFlags,
     // A Folder this Widget names is where it uploads, whichever one the Controller has open.
     configFolderPath,
-    // Whatever Space the listing last answered with -- an upload follows the eye, not a separate choice.
-    activeSpaceAddress: previewState.activeSpace?.address ?? null,
+    // Whatever Space the listing last answered with -- an upload follows the eye, not a separate choice --
+    // unless the host stores what arrives for everybody, which only the Site Space can stand behind.
+    activeSpaceAddress: siteSpaceOnly ? null : previewState.activeSpace?.address ?? null,
   }), [
     collectionFolderId,
     collectionPresentationFlags,
@@ -161,6 +193,7 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
     previewState.activeSpace?.address,
     previewState.presentationFlags,
     previewState.folderId,
+    siteSpaceOnly,
   ]);
 
   function showUploadMessage(type: "success" | "error", content: string) {
@@ -209,15 +242,26 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
    */
   const upload = usePhiMediaUpload<PhiMediaUploadSessionResult["asset"]>({
     labels: labels.refusals,
+    ...(acceptance ? { acceptance } : {}),
     initOptions: uploadInitOptions,
     onUploaded: (asset, file) => {
       const uploadedTile = normalizePhiImagePreviewTile(asset, []);
-      setUploadWall((current) => [buildUploadWallItem(uploadedTile, `asset-${uploadedTile.id}`), ...current]);
+      if (showFinished) {
+        setUploadWall((current) => [buildUploadWallItem(uploadedTile, `asset-${uploadedTile.id}`), ...current]);
+      }
       onUploadComplete?.();
       showUploadMessage("success", labels.uploadSuccessTemplate.replace("%1", file.name));
+      onAssetUploaded?.(uploadedTile);
     },
     onRejected: (message) => showUploadMessage("error", message),
   });
+  const accept = acceptance ? upload.accept : configAccept;
+  const uploading = upload.uploading;
+  useEffect(() => {
+    if (!onUploadingChange) return;
+    onUploadingChange(uploading);
+  }, [onUploadingChange, uploading]);
+  useEffect(() => () => onUploadingChange?.(false), [onUploadingChange]);
   // The shared items are on their way or failed; an arrived one is a tile in the wall instead.
   const wallItems = [
     ...upload.items

@@ -97,5 +97,11 @@ async function readMediaAssetFieldLabels(options: PhiGlobalTranslatorOptions): P
     [keys.importFailedText]: picker.importFailedText,
     [keys.loadMoreLabel]: picker.loadMoreLabel,
     [keys.uploadLabel]: upload.uploadToggleLabel,
+    [keys.uploadDropTitle]: upload.dropTitle,
+    [keys.uploadDropHint]: upload.dropHint,
+    [keys.uploadRetryLabel]: upload.retryLabel,
+    [keys.uploadDoneLabel]: upload.doneLabel,
+    [keys.uploadFailedLabel]: upload.failedLabel,
+    [keys.uploadSuccessTemplate]: upload.uploadSuccessTemplate,
   };
 }

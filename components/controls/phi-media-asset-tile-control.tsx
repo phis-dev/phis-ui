@@ -8,7 +8,7 @@ import type { CSSProperties } from "react";
 import { PhiMediaKind, isPhiMediaAssetOriginalOptimizable, isPhiMediaAssetPublic } from "../../constants/media";
 import { resolvePhiThemeBorderLine } from "../../helpers/border-widget-style";
 import type { PhiControlSize } from "../../types/control";
-import type { PhiMediaAssetTile } from "../../types/media";
+import type { PhiMediaCollectionItem } from "../../types/media";
 import { resolvePhiMediaAssetDisplayDimensions } from "../media/phi-image-preview-data";
 import { PhiMediaKindIcon } from "../media/phi-media-kind-icon";
 import { PhiMediaRestrictedIcon } from "../media/phi-media-restricted-icon";
@@ -24,25 +24,10 @@ import { PhiIcon } from "../shell/phi-icon";
 /**
  * What a tile reads of an Asset, and nothing more: a whole `PhiMediaAssetTile` fits, and so does an
  * Asset a Module holds in a shape of its own with these fields (`width`/`height` for the dimensions
- * label, `deliveryPolicy`/`lifecycleStatus` for whether the picture is public and may be optimised).
+ * label, `deliveryPolicy`/`lifecycleStatus` for whether the picture is public and may be optimised). The
+ * item a Collection hands the Media renderer is this and its Folder (`PhiMediaCollectionItem`).
  */
-export type PhiMediaAssetTileControlAsset = Pick<
-  PhiMediaAssetTile,
-  | "id"
-  | "kind"
-  | "originalName"
-  | "title"
-  | "altText"
-  | "contentType"
-  | "deliveryUrl"
-  | "thumbnailUrl"
-  | "previewUrl"
-  | "deliveryPolicy"
-  | "lifecycleStatus"
-  | "width"
-  | "height"
-  | "blurDataUrl"
->;
+export type PhiMediaAssetTileControlAsset = Omit<PhiMediaCollectionItem, "folderId">;
 
 /** `onSelect` and `onDelete` hand back the Asset as it was passed in, in its own type. */
 export type PhiMediaAssetTileControlProps<TAsset extends PhiMediaAssetTileControlAsset = PhiMediaAssetTileControlAsset> = {

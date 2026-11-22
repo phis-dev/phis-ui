@@ -11,6 +11,7 @@ import type { PhiRuntimeConditionExpression } from "./runtime-condition";
 import type { PhiSignalRoute, PhiSignalValue } from "./signals";
 import type { PhiCssLength } from "./length";
 import type { PhiControlSize } from "./control";
+import type { PhiMediaKindValue } from "./media";
 import type { PhiCollectionProviderQuery } from "./collection-provider";
 import type { PhiProviderResourceSource } from "./runtime-data-provider";
 import type { PhiFormId } from "./form-id";
@@ -482,6 +483,15 @@ export type PhiCollectionViewWidgetPlacement = PhiWidgetPlacementBase & {
     reorder?: {
       enabled: boolean;
       actionKey?: string;
+    };
+    /**
+     * The Media renderer's upload Folder (`{param}` from the binding params), the kind it takes and its
+     * picker lists, and whether only public Assets may be added (`PhiCmsCollectionViewWidgetConfig`).
+     */
+    media?: {
+      folderPath?: string;
+      mediaType?: PhiMediaKindValue;
+      publicOnly?: boolean;
     };
     pagination?: {
       enabled: boolean;

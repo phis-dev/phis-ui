@@ -27,4 +27,14 @@ export const PHI_FORM_MEDIA_ASSET_PICKER_LABEL_KEYS = {
   loadMoreLabel: "mediaAssetPickerLoadMore",
   /** The picker's upload button (the Media Label Set's upload toggle). */
   uploadLabel: "mediaAssetPickerUpload",
+  /*
+   * The upload surface the button shows, the Media library's own (`PhiAreaUploadBinding`): its drop area,
+   * the state of the file on its way, and the message once it arrived (`widget:upload`'s `area_*`).
+   */
+  uploadDropTitle: "mediaAssetPickerUploadDropTitle",
+  uploadDropHint: "mediaAssetPickerUploadDropHint",
+  uploadRetryLabel: "mediaAssetPickerUploadRetry",
+  uploadDoneLabel: "mediaAssetPickerUploadDone",
+  uploadFailedLabel: "mediaAssetPickerUploadFailed",
+  uploadSuccessTemplate: "mediaAssetPickerUploadSuccess",
 } as const;

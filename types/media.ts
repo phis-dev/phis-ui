@@ -163,6 +163,39 @@ export type PhiMediaAssetTile = {
   folder?: Pick<PhiMediaAssetFolder, "id" | "name"> | null;
 };
 
+/**
+ * An item of a Collection the Media library's renderer draws (`PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY`), of
+ * whichever Provider: what a Media tile reads of an Asset (`PhiMediaAssetTileControlAsset` is this without
+ * `folderId`), keyed by the Asset id (`id`, so the resource's `itemIdentityPath` is `"id"`). `kind` is the
+ * Media kind of `contentType` (`resolvePhiMediaKindFromContentType`); `deliveryPolicy` and
+ * `lifecycleStatus` say whether a visitor is served it, which the tile shows. `folderId` is read where an
+ * item has one, for the lock of its Folder; a Collection of references to Assets leaves it out. The
+ * renderer reads every item strictly (`readPhiMediaCollectionItems`): an item without one of the
+ * required fields is a failure naming the field, never a tile with a filler. `deliveryUrl` is empty for a
+ * reference whose Asset the library no longer answers; the tile shows the kind's icon.
+ *
+ * A whole `PhiMediaAssetTile` -- the Media library's own Collection -- is one of these.
+ */
+export type PhiMediaCollectionItem = Pick<
+  PhiMediaAssetTile,
+  | "id"
+  | "kind"
+  | "originalName"
+  | "title"
+  | "altText"
+  | "contentType"
+  | "deliveryUrl"
+  | "thumbnailUrl"
+  | "previewUrl"
+  | "deliveryPolicy"
+  | "lifecycleStatus"
+  | "width"
+  | "height"
+  | "blurDataUrl"
+> & {
+  folderId?: number | null;
+};
+
 export type PhiMediaPickerState = {
   query: string;
   folderId: number | null;

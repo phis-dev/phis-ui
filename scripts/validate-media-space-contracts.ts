@@ -953,9 +953,10 @@ await assert.rejects(
     "The Collection view writes a Space into its query only from that selector.",
   );
 
-  // An upload follows the Space the surface is reading rather than asking for one of its own.
+  // An upload follows the Space the surface is reading rather than asking for one of its own -- or goes
+  // to the Site Space, for a host that stores a reference (`siteSpaceOnly`), never to a Space it names.
   const upload = await readSource("components/media/phi-area-upload-widget.tsx");
-  assert.match(upload, /activeSpaceAddress: previewState\.activeSpace\?\.address \?\? null/u);
+  assert.match(upload, /activeSpaceAddress: siteSpaceOnly \? null : previewState\.activeSpace\?\.address \?\? null/u);
 }
 
 // ---------------------------------------------------------------------------

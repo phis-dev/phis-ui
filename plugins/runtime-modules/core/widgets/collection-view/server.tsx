@@ -4,7 +4,7 @@ import type { PhiCmsCollectionViewWidgetConfig } from "../../../../../types/coll
 import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
 import type { PhiRenderableBlockRenderMode } from "../../../../../types/renderable-block";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
-import { PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS } from "../../../../../constants/media-library-provider-keys";
+import { PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY } from "../../../../../constants/media-library-provider-keys";
 import { getPhiMediaWidgetLabels } from "../../../../../components/media/label-sets/media";
 import { getPhiCollectionViewWidgetLabels } from "../../../../../components/widgets/label-sets/collection-view";
 import { buildPhiWidgetLabelTranslatorOptions } from "../../../../../components/widgets/label-sets/runtime-options";
@@ -15,8 +15,9 @@ import { PhiWidgetFailureServer } from "../../../../../components/widgets/shared
 export type PhiCollectionViewWidgetServerProps = {
   runtime: Pick<PhiBlockRuntime, "locale">;
   /**
-   * The Area's declarations: the preview judges the binding against them, and a Widget that offers
-   * reordering reads the bound resource's `itemIdentityPath` there. Absent outside a page render.
+   * The Area's declarations: the preview judges the binding against them, and the live Widget reads the
+   * bound resource's declaration there -- its renderer, `itemIdentityPath` and tools. Absent outside a
+   * page render.
    */
   registry?: Pick<PhiCmsRuntimeRenderRegistry, "dataProviderDescriptorsByKey">;
   config?: PhiCmsCollectionViewWidgetConfig | null;
@@ -66,33 +67,36 @@ export async function PhiCollectionViewWidgetServer({
   }
 
   /*
-   * The Media collection's renderer says the Media Label Set's words (the toolbar, the flag filter, the
-   * grid, the upload surface) and Core may not import the Asset Module to get them, so they are the
-   * Foundation's and loaded here -- only for a Widget bound to that collection, so no other source pays.
-   * `config.presentation.labels` still lays over them.
-   */
-  const translatorOptions = buildPhiWidgetLabelTranslatorOptions(runtime);
-  const [labels, reorderLabels] = await Promise.all([
-    config?.source?.providerKey === PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection
-      ? getPhiMediaWidgetLabels(translatorOptions)
-      : undefined,
-    // The Widget's own words, only for one that offers reordering.
-    config?.features.reorder?.enabled ? getPhiCollectionViewWidgetLabels(translatorOptions) : undefined,
-  ]);
-  /*
-   * Which field of an item is its key, as the bound resource declares it: what a reorder sends as
-   * `itemKeys`. The Provider's Client registration does not carry it, the declaration does.
+   * The bound resource as the Area's Modules declare it: the renderer it names, the key path of its
+   * items (what a reorder sends as `itemKeys`) and the actions, filters and panels its tools may offer.
+   * The Provider's Client registration does not carry them, the declaration does, so the Server hands
+   * it on and the renderer offers what the resource declares (`PhiCollectionProviderResourceDescriptor`).
    */
   const source = config?.source;
   const providerDescriptor = source ? registry?.dataProviderDescriptorsByKey.get(source.providerKey) : undefined;
-  const itemIdentityPath = config?.features.reorder?.enabled && providerDescriptor?.kind === "collection"
-    ? providerDescriptor.resources.find((resource) => resource.resourceKey === source?.resourceKey)?.itemIdentityPath ?? null
+  const resourceDescriptor = providerDescriptor?.kind === "collection"
+    ? providerDescriptor.resources.find((resource) => resource.resourceKey === source?.resourceKey) ?? null
     : null;
+  const rendererKey = config?.itemRendererKey ?? resourceDescriptor?.itemRendererKey ?? null;
+
+  /*
+   * The Media renderer says the Media Label Set's words (the toolbar, the flag filter, the grid, the
+   * upload surface) and Core may not import the Asset Module to get them, so they are the Foundation's
+   * and loaded here -- for a Widget whose items that renderer draws, whichever Provider it is bound to
+   * (the Media library, a gallery of references), and for no other. `config.presentation.labels` still
+   * lays over them.
+   */
+  const translatorOptions = buildPhiWidgetLabelTranslatorOptions(runtime);
+  const [labels, reorderLabels] = await Promise.all([
+    rendererKey === PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY ? getPhiMediaWidgetLabels(translatorOptions) : undefined,
+    // The Widget's own words, only for one that offers reordering.
+    config?.features.reorder?.enabled ? getPhiCollectionViewWidgetLabels(translatorOptions) : undefined,
+  ]);
 
   return (
     <PhiRuntimeModuleRenderClientHost
       type={PhiCmsWidgetType.CollectionView}
-      componentProps={{ config, widgetId, renderMode, preview: false, labels, reorderLabels, itemIdentityPath }}
+      componentProps={{ config, widgetId, renderMode, preview: false, labels, reorderLabels, resourceDescriptor }}
     />
   );
 }

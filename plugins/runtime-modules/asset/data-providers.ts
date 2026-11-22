@@ -1,7 +1,7 @@
 import type { PhiRuntimeModuleDataProviderDescriptor } from "../contracts";
 import type { PhiTableProviderResourceDescriptor } from "../../../types/table-widget";
-import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
-import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS, PHI_ASSET_RUNTIME_ITEM_RENDERER_KEY } from "./ids";
+import { PHI_MEDIA_LIBRARY_ASSET_RESOURCE } from "../../../components/media/media-library-resource";
+import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "./ids";
 import { PHI_ASSET_RUNTIME_MODULE_ID } from "./ids";
 
 
@@ -97,35 +97,7 @@ export const PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
     // The Builder's own pickers read this regardless of whether the edited Area activates
     // this Module: a phis:asset reference resolves through the core resolver either way.
     availableToAuthoringChrome: true,
-    resources: [
-      {
-        resourceKey: "assets",
-        title: "Assets",
-        itemIdentityPath: "id",
-        itemRendererKey: PHI_ASSET_RUNTIME_ITEM_RENDERER_KEY,
-        selectionValueSchema: PHI_SIGNAL_VALUE_SCHEMAS.mediaAssetSelection,
-        defaultForWidget: true,
-        query: {
-          search: true,
-          pagination: true,
-          filterFields: [
-            { key: "kind", title: "Kind", type: "enum[]" },
-            { key: "presentationFlags", title: "Flags", type: "enum[]" },
-            { key: "folderId", title: "Folder", type: "path" },
-          ],
-        },
-        actions: [
-          { key: "createFolder", title: "Create folder", scope: "resource" },
-          // The Folder the listing is filtered to; Core refuses every change to what a locked one holds.
-          { key: "lockFolder", title: "Lock folder", scope: "resource" },
-          { key: "unlockFolder", title: "Unlock folder", scope: "resource" },
-          { key: "upload", title: "Upload", scope: "resource", panelKey: "upload" },
-          { key: "refresh", title: "Reload", scope: "resource" },
-          { key: "update", title: "Update", scope: "item" },
-          { key: "delete", title: "Delete", scope: "item" },
-        ],
-        panels: [{ key: "upload", title: "Upload assets" }],
-      },
-    ],
+    // The Foundation states the resource, because its Media preview grid hands it to the renderer too.
+    resources: [PHI_MEDIA_LIBRARY_ASSET_RESOURCE],
   },
 ] satisfies readonly PhiRuntimeModuleDataProviderDescriptor[];

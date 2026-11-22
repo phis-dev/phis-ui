@@ -92,8 +92,10 @@ folder". Before a gap is reported or a proposal written:
    (`controller/`), its form field Providers and handlers (`formProviders` in `definition.ts`), its data
    Providers (`data-providers.ts`) and route presets (`presets.ts`), and the Core routes behind them
    (`/api/site/...` in `phis-server`). Then the Core Widgets that bind to its Providers -- the Media
-   library page is the `collection-view` Widget with the Asset binding
-   (`plugins/runtime-modules/core/widgets/collection-view/asset-binding.tsx`).
+   library page is the `collection-view` Widget with the Media renderer
+   (`plugins/runtime-modules/core/widgets/collection-view/asset-binding.tsx`), which draws any
+   Provider's collection of Assets as well: a renderer of a Module's own that draws Media tiles is a copy
+   of it ([COLLECTIONS.md](./COLLECTIONS.md#the-media-renderer)).
 3. **Check the Foundation list**: [THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#before-you-start-what-the-foundation-already-has)
    names every Layout, Core Widget and Control, held to the code by a test.
 4. **Report the gap at its real size, with what you checked**: the Module, the files, and the one piece

@@ -25,8 +25,11 @@ PhiCollectionViewControl and other Phi Controls
 - `usePhiCollectionViewBinding` resolves one Provider resource and owns its query/request lifecycle,
   cancellation, pagination, reload, and the open panel key. It returns a `PhiCollectionViewBindingModel`
   (`types/collection-provider.ts`).
-- the **resource View** is the component the Provider Client registers for each resource. The Widget
-  renders it with the Widget config, the Binding model, labels, and the Widget id. It owns the Collection
+- the **resource View** is the Render Client the resource names (`itemRendererKey`), or the one a
+  placement names instead. The Widget renders it with the Widget config, the Binding model, labels, the
+  Widget id, the render mode, and `resource`: the resource's declaration as the Area's registry holds it
+  (`PhiCollectionProviderResourceDescriptor`, read on the Server; `null` where the Area declares none), so
+  the View offers the tools the resource declares and no others. It owns the Collection
   Header, filters, toolbar, item presentation, and panels of that resource, and composes
   `PhiCollectionViewControl` (`components/controls/phi-collection-view-control.tsx`), which lays out items
   and pagination and has no CMS, route, persistence, Provider-key, or domain knowledge.
@@ -38,6 +41,26 @@ PhiCollectionViewControl and other Phi Controls
 
 Domain-named collection Widgets, direct endpoint branches in Core, nested CMS Widgets inside a
 Collection View, and loose preset Controls that duplicate a self-contained Collection View are forbidden.
+
+### One Collection View for every source, shipped renderers first
+
+A Collection View is meant for **any** Provider: the Media library's Assets, a Dashboard's cards, a
+Module's gallery of references to Assets. What differs between them is the Provider -- what it reads,
+which actions it has -- not the View. So a Module that shows a collection of things the house already
+draws reuses the shipped renderer and writes a Provider, never a renderer of its own:
+
+- **Media library Assets** (a gallery, an attachment list, a Module's own pictures): the Media renderer,
+  `PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY` (`@phis/ui/constants`). The resource names it as its
+  `itemRendererKey` and answers its items in the Media tile shape -- see
+  [The Media renderer](#the-media-renderer).
+- **Cards** (a list of records with a title, a picture, a figure, a plan): `PhiCardCollectionViewBinding`
+  with `presentation.card` ([Card presentation](#card-presentation-and-resource-owned-views)).
+
+A Module registers a renderer of its own only for items no shipped renderer draws, and it states why in
+its own documentation. A Module renderer that draws `PhiMediaAssetTileControl`s, a confirm dialog and an
+empty state for a collection of Assets is a copy of the Media renderer with fewer tools and its own words:
+it drifts from the Media library the first time either changes (THIRD_PARTY_MODULES.md, failure guide,
+"An own renderer duplicating a shipped one").
 
 ## Provider resource
 
@@ -100,8 +123,78 @@ mark at a foreign address is not drawn: the house draws marks by name, and a pic
 shown as a mark is served from the Site.
 
 Only the card View reads `presentation.card`; another View ignores it. A resource whose items are not
-cards registers its own View instead. The Media library (`PhiAssetCollectionViewBinding`,
-`plugins/runtime-modules/core/widgets/collection-view/asset-binding.tsx`) is such a View.
+cards names another View. The Media renderer (`PhiAssetCollectionViewBinding`,
+`plugins/runtime-modules/core/widgets/collection-view/asset-binding.tsx`) is such a View, for any
+resource whose items are Assets.
+
+### The Media renderer
+
+`PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY` draws the items of a Collection as Media tiles
+(`PhiMediaAssetTileControl`), whichever Provider answers them: the Media library's own Collection
+(`PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection`, the Builder's Media page) and any other resource
+that names it, on the resource (`itemRendererKey`) or on the placement. The Media library's own resource
+is stated once in the Foundation (`PHI_MEDIA_LIBRARY_ASSET_RESOURCE`,
+`components/media/media-library-resource.ts`): the Asset Module declares it, and the Media preview grid
+(`PhiAssetPreviewGridWidget`), which renders without a page's registry, hands it to the renderer. What it
+needs from the resource:
+
+- **Items** in the shape `PhiMediaCollectionItem` (`@phis/ui/types`): what a tile reads of an Asset
+  (`PhiMediaAssetTileControlAsset` -- `id`, `kind`, `originalName`, `title`, `altText`, `contentType`,
+  `deliveryUrl`, `thumbnailUrl`, `previewUrl`, `deliveryPolicy`, `lifecycleStatus`, `width`, `height`,
+  `blurDataUrl`) and, where an item has one, its `folderId`. `id` is the Asset id and the item's identity,
+  so `itemIdentityPath` is `"id"`. They are read strictly (`readPhiMediaCollectionItems`,
+  `components/media/phi-image-preview-data.ts`): a missing required field or one of the wrong type is a
+  failure naming the field. `deliveryUrl` may be empty for a reference whose Asset the library no longer
+  answers; the tile then shows the kind's icon. `kind` is `resolvePhiMediaKindFromContentType` of the
+  type, and a picture a visitor is served is `deliveryPolicy: Public` and `lifecycleStatus: Ready`.
+- **Actions** the renderer calls by these keys, offered only where the resource declares them:
+  - `delete` (scope `item`, `itemKey` the Asset id): each tile's delete button. For the Media library it
+    deletes the file; for a Collection of references it takes the item out (a gallery releases it).
+  - `add` (scope `resource`, `itemKeys` the Asset ids, `PhiCollectionProviderActionRequest.itemKeys`):
+    Assets of the Media library joined to the resource -- what an upload made, and what the toolbar's
+    "Choose from Media library" picked. The Provider answers the collection as it now stands, which is
+    shown at once; then the Collection is read again.
+  - `upload` (scope `resource`, `panelKey: "upload"`, and a panel `upload`): the toolbar's upload opens
+    the Media library's multi-upload wall (`PhiAreaUploadBinding`) between the header and the tiles.
+  - `reorder`: the Collection View's drag reordering ([Drag reordering](#drag-reordering)), around the
+    tiles.
+  - `createFolder`, `lockFolder` with `unlockFolder`, and the filters `kind`, `presentationFlags` and
+    `folderId`: the Media library's own tools.
+- **Tools** are what the placement names, and each one must be declared by the resource: a toolbar
+  action `upload` or `add`, a filter or a Folder companion action the resource does not declare, or one
+  the renderer has no control for, is a failure of the Widget (`readPhiMediaRendererToolFailure`,
+  `asset-binding-tools.ts`) -- an error card in the Builder, nothing live -- never a control that does
+  nothing. A tile's delete is shown where the resource declares `delete`. The toolbar action `add` is the
+  Media library's picker (`PhiMediaPickerControl`, the Site Space only).
+- **Placement settings** (`features.media`, read by this renderer only, strictly):
+  - `folderPath`: the Folder of the Site Space an upload goes into (the missing Folders created) and the
+    picker opens on (the deepest part that is there), by its path of names. A `{param}` is the binding
+    param `param` -- `source.params` with what `bindingParamsChange` laid over them -- filled by the
+    `media-asset` field's rules (`resolvePhiMediaFolderPathTemplate`): a text or a number, trimmed, a `/`
+    in it a `-`, a name whose placeholder has no value left out whole. Absent: the open Folder for the
+    Media library's own Collection, the Site Space's root for any other.
+  - `mediaType`: the one kind the upload takes and the picker lists (absent: the upload takes every kind,
+    the picker lists images).
+  - `publicOnly`: the picker greys out the Assets that are not delivered publicly; the resource's `add`
+    decides what it takes.
+- **Uploads.** For the Media library's own Collection a finished upload stays in the wall as a tile, with
+  its delete, and the listing is read again. For a resource that declares `add`, each Asset that arrived
+  is added and leaves the wall -- the wall shows only what is on its way or failed -- so nothing shows
+  twice. For any other the Collection is read again, for a Provider that lists the Folder it uploads into.
+  An upload into another Collection than the Media library goes into the Site Space.
+- **Labels** are the Media Label Set (`widget:media`, `getPhiMediaWidgetLabels`), loaded on the Server
+  for every Collection View this renderer draws -- by renderer, not by Provider -- and laid over key by key
+  by the placement's `presentation.labels` (`tool`, `upload`, `grid`, `picker`, `space`). A Collection of
+  references says its delete in its own words there: `grid.deleteLabel` ("Remove from gallery"),
+  `grid.deleteSuccessTemplate` (`%1` the Asset's title or name), `grid.deleteFailedText`; the toolbar's
+  `add` says `tool.chooseFromLibraryLabel` unless its action names a label; a refused `add` says the
+  Provider's words, else `grid.addFailedText`.
+- **The Asset Controller's store** (the selection the Inspector reads, the Spaces a viewer may switch
+  between) is fed by the Media library's own Collection only. A tile of another Collection is not
+  selected, and no Space selector is drawn for it.
+
+A Page with a Collection View this renderer draws mounts the Media library's Provider for its picker and
+upload wall (`collectPhiRuntimeDataProviderKeys`), where a Module of the Area serves it.
 
 Provider query results (`PhiCollectionProviderData`) contain `resourceKey`, `items`, authoritative
 `total`, `loading`, `error`, and optional Provider-owned `meta`. Presentation config is never sent to the Provider. Filtering and pagination
@@ -146,6 +239,7 @@ features
 ├── ordered filters (key, control select | multi-select | cascader, widths, companion actions)
 ├── ordered toolbar action presentation
 ├── reorder: enabled, optional actionKey (default "reorder")
+├── media: folderPath, mediaType, publicOnly (the Media renderer's, see above)
 └── pagination
 
 initialQuery
@@ -224,7 +318,10 @@ The Asset Module applies this contract as follows: Kind, Flags, Folder, and Sear
 self-contained filters; Upload and Reload are the right Toolbar; Upload opens the controller-owned upload
 area inside the Collection View; the Folder Filter may pair its Cascader with the Provider-declared Create
 Folder action; and pagination remains bottom-right. The Asset Inspector reuses the selectable Folder
-semantics without exposing that Create action.
+semantics without exposing that Create action. A Collection of references to Assets in another Module (a
+Shop listing's gallery) uses the same upload area through the Media renderer: Upload and "Choose from
+Media library" are its Toolbar, and what arrives is added to its resource ([The Media
+renderer](#the-media-renderer)).
 
 The trusted Asset Provider context owns the active Media Space. Builder and Editor presets are pinned to
 the Site Space; App collections may expose only the User or Group Spaces returned as accessible by the

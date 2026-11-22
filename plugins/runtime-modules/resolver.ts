@@ -45,7 +45,9 @@ import { parsePhiFormWidgetConfig } from "../../components/forms/form-widget-con
 import {
   PHI_MEDIA_ASSET_FORM_FIELD_PROVIDER_KEY,
   PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS,
+  PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY,
 } from "../../constants/media-library-provider-keys";
+import { isPhiRecord } from "../../helpers/is-record";
 import { buildPhiRecordDeclarationsByKey } from "../../helpers/record-fields";
 
 function loadRuntimeWidgetPlugin(entry: PhiRuntimeModuleWidgetDefinition) {
@@ -552,6 +554,21 @@ function collectDataProviderKeysFromValue(
   }
 }
 
+/** The renderer a Collection View's items are drawn by: its own `itemRendererKey`, else its resource's. */
+function readPhiCollectionViewItemRendererKey(
+  config: Readonly<Record<string, unknown>>,
+  moduleSet: Pick<PhiResolvedRuntimeModuleSet, "dataProviderDescriptorsByKey">,
+) {
+  if (typeof config.itemRendererKey === "string" && config.itemRendererKey) return config.itemRendererKey;
+  const source = isPhiRecord(config.source) ? config.source : null;
+  const descriptor = typeof source?.providerKey === "string"
+    ? moduleSet.dataProviderDescriptorsByKey.get(source.providerKey as PhiRuntimeDataProviderKey)
+    : undefined;
+  return descriptor?.kind === "collection"
+    ? descriptor.resources.find((resource) => resource.resourceKey === source?.resourceKey)?.itemRendererKey ?? null
+    : null;
+}
+
 export function collectPhiRuntimeDataProviderKeys({
   moduleSet,
   trees,
@@ -583,6 +600,19 @@ export function collectPhiRuntimeDataProviderKeys({
         if (knownProviderKeys.has(providerKey)) {
           collected.add(providerKey);
         }
+      }
+      /*
+       * A Collection View the Media renderer draws -- the Media library's own, or another Provider's
+       * Collection of Assets whose resource or placement names that renderer -- opens the Media library's
+       * picker and its upload wall, which read the library. The renderer is what needs it, so the scan says
+       * so here rather than every such resource naming the library's Provider.
+       */
+      if (
+        widget.widgetType === PhiCmsWidgetType.CollectionView &&
+        knownProviderKeys.has(PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection) &&
+        readPhiCollectionViewItemRendererKey(widgetConfig, moduleSet) === PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY
+      ) {
+        collected.add(PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection);
       }
       if (widget.widgetType === PhiCmsWidgetType.Form) {
         const formId = parsePhiFormWidgetConfig(widgetConfig).formId;

@@ -3,10 +3,14 @@
 import { isPhiRecord } from "../../../../../helpers/is-record";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { PhiMediaAssetFlags, PhiMediaKind } from "../../../../../constants/media";
+import { PhiMediaAssetFlags, PhiMediaKind, isPhiMediaAssetPublic } from "../../../../../constants/media";
+import { PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS } from "../../../../../constants/media-library-provider-keys";
 import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
-import type { PhiCollectionViewBindingModel } from "../../../../../types/collection-provider";
-import type { PhiMediaAssetTile, PhiMediaKindValue } from "../../../../../types/media";
+import type {
+  PhiCollectionProviderResourceDescriptor,
+  PhiCollectionViewBindingModel,
+} from "../../../../../types/collection-provider";
+import type { PhiMediaCollectionItem, PhiMediaKindValue } from "../../../../../types/media";
 import { createPhiSignalSubcontrolAddress } from "../../../../../types/signals";
 import { normalizePhiCssSize } from "../../../../../components/layouts/phi-layout-contract";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
@@ -42,13 +46,30 @@ import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiRenderableBlockRenderMode } from "../../../../../types/renderable-block";
 import { PHI_ASSET_CONTROLLER_STORE_KEY } from "../../../../../components/media/asset-controller-signals";
 import { applyPhiAssetCollectionData } from "../../../../../components/media/asset-collection-runtime";
-import { readPhiMediaAssetTiles, readPhiMediaFolders } from "../../../../../components/media/phi-image-preview-data";
+import {
+  readPhiMediaAssetTiles,
+  readPhiMediaCollectionItems,
+  readPhiMediaFolders,
+} from "../../../../../components/media/phi-image-preview-data";
 import { PhiAssetFolderControl } from "../../../../../components/media/phi-asset-folder-control";
 import {
   isPhiMediaFolderIdLocked,
   isPhiMediaFolderLockedError,
 } from "../../../../../components/media/media-folder-lock";
 import { PhiAreaUploadBinding } from "../../../../../components/media/phi-area-upload-widget";
+import { PhiMediaPickerControl } from "../../../../../components/controls/phi-media-picker-control";
+import { usePhiMediaPickerBinding } from "../../../../../components/media/phi-media-picker-binding";
+import { readPhiMediaUploadFolderPathReach } from "../../../../../components/media/media-upload-flow";
+import {
+  resolvePhiMediaFolderPathTemplate,
+  splitPhiMediaFolderNamePath,
+} from "../../../../../components/media/media-folder-name-path";
+import { PHI_SEARCH_WIDGET_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/search";
+import {
+  PHI_MEDIA_RENDERER_UPLOAD_PANEL_KEY,
+  readPhiMediaRendererResourceActions,
+  readPhiMediaRendererToolFailure,
+} from "./asset-binding-tools";
 import { PHI_MEDIA_WIDGET_DEFAULT_LABELS, type PhiAssetWidgetLabels } from "../../../../../components/media/media-widget-labels";
 import { setPhiImagePreviewSelection, usePhiImagePreviewStore } from "../../../../../components/media/phi-image-preview-store";
 
@@ -87,12 +108,35 @@ function overlayPhiAssetLabels<T>(base: T, override: unknown): T {
   return result as T;
 }
 
+/**
+ * The Media renderer (`PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY`): the items of a Collection as Media tiles,
+ * for whichever Provider names it -- the Media library's own Collection, and any Collection of Assets
+ * (a gallery of references) whose resource names it as its `itemRendererKey`, or whose placement does.
+ *
+ * - **Items** are read in the Media tile shape (`PhiMediaCollectionItem`, `readPhiMediaCollectionItems`);
+ *   the Media library's own as its whole tiles.
+ * - **Tools** follow what the resource declares (`readPhiMediaRendererToolFailure`): a Folder, lock,
+ *   new-Folder or flag tool the placement names but the resource does not declare is a failure, not a
+ *   control that does nothing. A tile's delete is the resource's `delete`, in the words the placement's
+ *   `presentation.labels.grid` gives (a gallery's "Remove from gallery").
+ * - **Upload** is the resource's `upload` panel, the Media library's multi-upload wall, into
+ *   `features.media.folderPath` with `{param}` filled from the binding params. Where the resource
+ *   declares `add`, what arrived is added to it (`itemKeys`, the Asset ids) -- the Provider's answer shows
+ *   it at once, then the Collection is read again -- and leaves the wall, so it is not shown twice.
+ * - **Choose from Media library** (toolbar action `add`) opens the library's picker on the same Folder;
+ *   the pick goes to the same `add` action.
+ * - **The Asset Controller's store** (the selection, the Space selector) is fed by the Media library's
+ *   own Collection only; a tile of another Collection is not selected.
+ *
+ * Drag reordering (`features.reorder`) is the Collection View's, around these tiles.
+ */
 export function PhiAssetCollectionViewBinding({
   config,
   binding,
   labels: rawLabels,
   widgetId,
   renderMode,
+  resource,
 }: {
   config: PhiCmsCollectionViewWidgetConfig;
   binding: PhiCollectionViewBindingModel;
@@ -100,6 +144,8 @@ export function PhiAssetCollectionViewBinding({
   widgetId?: PhiCmsInstanceId | null;
   /** Handed on by the Collection View, so a configuration this renderer cannot serve is said its way. */
   renderMode: PhiRenderableBlockRenderMode;
+  /** The bound resource as the Area declares it (the Collection View's Server half read it); `null`: none. */
+  resource?: PhiCollectionProviderResourceDescriptor | null;
 }) {
   /*
    * The English defaults, under what the server half loaded for this Widget (`rawLabels`, the Media Label
@@ -114,17 +160,30 @@ export function PhiAssetCollectionViewBinding({
   );
   const { token } = usePhiConfig();
   const { showMessage } = usePhiApplicationFeedback();
-  const selectionState = usePhiImagePreviewStore(PHI_ASSET_CONTROLLER_STORE_KEY);
+  // The Media library's own Collection, the one whose answer is the Asset Controller's store.
+  const isMediaLibrary = config.source?.providerKey === PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection;
+  const resourceActions = readPhiMediaRendererResourceActions(resource);
+  const toolFailure = readPhiMediaRendererToolFailure({ config, resource });
+  const storeState = usePhiImagePreviewStore(PHI_ASSET_CONTROLLER_STORE_KEY);
   const query = binding.query;
   const setQuery = binding.setQuery;
+  const sourceName = `The collection "${config.source?.resourceKey ?? "unknown"}"`;
   // A Collection carries items of no particular type; they are read as tiles, not cast to them.
-  const assets = useMemo(() => readPhiMediaAssetTiles(binding.data?.items ?? []), [binding.data?.items]);
+  const mediaTiles = useMemo(
+    () => isMediaLibrary ? readPhiMediaAssetTiles(binding.data?.items ?? []) : null,
+    [binding.data?.items, isMediaLibrary],
+  );
+  const assets = useMemo<readonly PhiMediaCollectionItem[]>(
+    () => mediaTiles ?? readPhiMediaCollectionItems(binding.data?.items ?? [], sourceName),
+    [binding.data?.items, mediaTiles, sourceName],
+  );
   const folders = useMemo(() => readPhiMediaFolders(binding.data?.meta?.folders), [binding.data?.meta?.folders]);
   const queryKind = query.filters?.kind;
   const queryFlags = query.filters?.presentationFlags;
   const queryFolderId = query.filters?.folderId;
   const state = {
-    ...selectionState,
+    selectedAssetId: isMediaLibrary ? storeState.selectedAssetId : null,
+    selectedVariantKey: storeState.selectedVariantKey,
     searchQuery: query.search ?? "",
     folderId: typeof queryFolderId === "number" ? queryFolderId : null,
     kinds: readAssetKinds(queryKind),
@@ -137,13 +196,13 @@ export function PhiAssetCollectionViewBinding({
     pagination: { total: binding.data?.total ?? 0 },
     loading: binding.loading,
     error: binding.error,
-    uploadPanelOpen: binding.openPanelKey === "upload",
+    uploadPanelOpen: binding.openPanelKey === PHI_MEDIA_RENDERER_UPLOAD_PANEL_KEY,
   };
   useEffect(() => {
-    if (binding.data) {
+    if (isMediaLibrary && binding.data) {
       applyPhiAssetCollectionData(binding.data);
     }
-  }, [binding.data]);
+  }, [binding.data, isMediaLibrary]);
   const onSearchChange = useCallback(
     (search: string) => setQuery((current) => ({ ...current, page: 1, search })),
     [setQuery],
@@ -165,10 +224,11 @@ export function PhiAssetCollectionViewBinding({
   const spaceSelectionAllowed = usePhiMediaSpaceSelectionAllowed();
   const activeSpaceAddress = typeof query.filters?.spaceId === "string" && query.filters.spaceId
     ? query.filters.spaceId
-    : selectionState.activeSpace?.address ?? null;
+    : storeState.activeSpace?.address ?? null;
+  // The Spaces are the Media library's to answer; another Collection's items are of the Site Space.
   const spaceOptions = useMemo(
-    () => buildPhiMediaSpaceOptions(selectionState.spaces, labels.space),
-    [labels.space, selectionState.spaces],
+    () => buildPhiMediaSpaceOptions(isMediaLibrary ? storeState.spaces : [], labels.space),
+    [isMediaLibrary, labels.space, storeState.spaces],
   );
   const presentation = config.presentation;
   const features = config.features;
@@ -177,14 +237,22 @@ export function PhiAssetCollectionViewBinding({
   const gap = normalizePhiCssSize(presentation.gap) ?? token.paddingSM;
   const minColumnWidth = normalizePhiCssSize(presentation.minColumnWidth) ?? 102;
   const selfContained = features.tools.mode === "self-contained";
-  const unsupportedFilter = features.filters?.find((filter) =>
-    !["kind", "presentationFlags", "folderId"].includes(filter.key));
-  const configuredActions = [
-    ...(features.actions?.toolbar ?? []),
-    ...(features.filters ?? []).flatMap((filter) => filter.actions ?? []),
-  ];
-  const unsupportedAction = configuredActions.find((action) =>
-    action.key !== "upload" && action.key !== "createFolder" && action.key !== "lockFolder");
+  /*
+   * Where an upload goes and the picker opens (`features.media.folderPath`), its `{param}` names filled
+   * from the binding params the Provider is asked with -- what a Controller told this Collection about the
+   * record it shows. Resolved per render, so a new set of params moves both.
+   */
+  const bindingParams = config.source?.params;
+  const folderPath = useMemo(
+    () => resolvePhiMediaFolderPathTemplate(
+      splitPhiMediaFolderNamePath(features.media?.folderPath),
+      isPhiRecord(bindingParams) ? bindingParams : {},
+    ),
+    [bindingParams, features.media?.folderPath],
+  );
+  const mediaType = features.media?.mediaType ?? null;
+  const publicOnly = features.media?.publicOnly === true;
+  const uploadAcceptance = useMemo(() => mediaType ? { kinds: [mediaType] } : undefined, [mediaType]);
   const folderOptions = useMemo(
     () => buildPhiMediaFolderCascaderOptions(state.folders, { lockedLabel: labels.tool.folderLockedLabel }),
     [labels.tool.folderLockedLabel, state.folders],
@@ -215,15 +283,60 @@ export function PhiAssetCollectionViewBinding({
     typeKey: "collection-action",
   });
 
-  if (unsupportedFilter || unsupportedAction) {
+  /*
+   * Adds Assets of the Media library to the bound resource (its `add` action, `itemKeys` the Asset ids):
+   * what an upload made, or what was picked. The Provider answers the Collection as it now stands, which
+   * the binding shows at once; then it is read again.
+   */
+  const addAssets = useCallback(async (assetIds: readonly number[]) => {
+    try {
+      const data = await binding.activate({ actionKey: "add", itemKeys: [...assetIds], query });
+      if (data.error) throw new Error(data.error);
+      binding.reload();
+    } catch (error) {
+      showMessage({
+        level: "error",
+        content: error instanceof Error && error.message ? error.message : labels.grid.addFailedText,
+        durationSeconds: 2.8,
+      });
+    }
+  }, [binding, labels.grid.addFailedText, query, showMessage]);
+
+  /*
+   * The Media library's picker, for the toolbar action `add`: the Site Space only, opening on the
+   * resolved Folder path (read, nothing written), the kind `features.media.mediaType` names (images where
+   * none), the not public ones greyed out where `publicOnly`. A pick is added; the picker has no upload of
+   * its own here -- the Collection's upload panel is that.
+   */
+  const pickerOpenOnFolder = useCallback(
+    (signal: AbortSignal) => readPhiMediaUploadFolderPathReach(folderPath, signal),
+    [folderPath],
+  );
+  const libraryPicker = usePhiMediaPickerBinding({
+    config: {
+      mediaType: mediaType ?? PhiMediaKind.Image,
+      pageSize: 12,
+      showPagination: true,
+      showSearchBar: true,
+    },
+    labels,
+    searchLabels: PHI_SEARCH_WIDGET_DEFAULT_LABELS,
+    value: null,
+    siteSpaceOnly: true,
+    isAssetSelectable: publicOnly
+      ? (candidate) => isPhiMediaAssetPublic(candidate.deliveryPolicy, candidate.lifecycleStatus)
+      : undefined,
+    onAssetSelect: (picked) => { void addAssets([picked.id]); },
+    openOnFolder: folderPath.length > 0 ? pickerOpenOnFolder : null,
+  });
+
+  if (toolFailure) {
     return (
       <PhiWidgetFailure
         renderMode={renderMode}
         widgetType={PhiCmsWidgetType.CollectionView}
         widgetId={widgetId}
-        title={unsupportedFilter
-          ? `Asset collection filter "${unsupportedFilter.key}" is not supported.`
-          : `Asset collection action "${unsupportedAction?.key ?? "unknown"}" is not supported.`}
+        title={toolFailure}
       />
     );
   }
@@ -255,7 +368,7 @@ export function PhiAssetCollectionViewBinding({
     }
   }
 
-  async function deleteAsset(asset: PhiMediaAssetTile) {
+  async function deleteAsset(asset: PhiMediaCollectionItem) {
     setDeletingAssetIds((current) => current.includes(asset.id) ? current : [...current, asset.id]);
     try {
       const data = await binding.activate({ actionKey: "delete", itemKey: asset.id, query });
@@ -276,9 +389,12 @@ export function PhiAssetCollectionViewBinding({
     }
   }
 
-  function selectAsset(asset: PhiMediaAssetTile) {
-    setPhiImagePreviewSelection(PHI_ASSET_CONTROLLER_STORE_KEY, asset.id, state.selectedVariantKey ?? null, asset);
-    selectionSignals.emitCapability("selection", { area: PHI_ASSET_CONTROLLER_STORE_KEY, assetId: asset.id });
+  // The Media library's own tiles only: a selection is the Asset Controller's, which reads that library.
+  function selectAsset(asset: PhiMediaCollectionItem) {
+    const tile = mediaTiles?.find((entry) => entry.id === asset.id);
+    if (!tile) return;
+    setPhiImagePreviewSelection(PHI_ASSET_CONTROLLER_STORE_KEY, tile.id, state.selectedVariantKey ?? null, tile);
+    selectionSignals.emitCapability("selection", { area: PHI_ASSET_CONTROLLER_STORE_KEY, assetId: tile.id });
   }
 
   const filters = selfContained ? (
@@ -427,8 +543,12 @@ export function PhiAssetCollectionViewBinding({
     <PhiToolbarControl compact size={controlSize}>
       {(features.actions?.toolbar ?? []).map((action) => {
         const display = action.display ?? "icon";
-        const label = action.label ?? (action.key === "upload" ? labels.upload.uploadToggleLabel : action.key);
-        return (
+        const label = action.label ?? (
+          action.key === "upload" ? labels.upload.uploadToggleLabel
+            : action.key === "add" ? labels.tool.chooseFromLibraryLabel
+              : action.key
+        );
+        const button = (
           <PhiButtonControl
             key={action.key}
             label={display === "icon" ? undefined : label}
@@ -440,10 +560,14 @@ export function PhiAssetCollectionViewBinding({
             size={controlSize}
             disabled={action.key === "upload" && currentFolderLocked}
             onClick={action.key === "upload" ? () => binding.setOpenPanelKey(
-              state.uploadPanelOpen ? null : "upload",
+              state.uploadPanelOpen ? null : PHI_MEDIA_RENDERER_UPLOAD_PANEL_KEY,
             ) : undefined}
           />
         );
+        // The picker opens from its own button: the popover's trigger.
+        return action.key === "add"
+          ? <PhiMediaPickerControl key={action.key} {...libraryPicker} trigger={<span>{button}</span>} />
+          : button;
       })}
       {features.tools.reset ? (
         <PhiButtonControl
@@ -478,25 +602,44 @@ export function PhiAssetCollectionViewBinding({
     <PhiEmptyControl description={presentation.emptyDescription ?? labels.grid.emptyDescription} />
   ) : undefined;
 
+  /*
+   * The upload panel: the Media library's wall, into the resolved Folder path where the placement names
+   * one. For the Media library's own Collection what arrived stays in the wall, with its delete, and the
+   * listing is read again; for a resource that adds, what arrived is added and leaves the wall; for any
+   * other the Collection is read again, in case its Provider lists what arrived itself.
+   */
+  const uploadPanel = state.uploadPanelOpen ? (
+    <PhiAreaUploadBinding
+      labels={labels.upload}
+      config={folderPath.length > 0 ? { folderPath: folderPath.join(" / ") } : null}
+      acceptance={uploadAcceptance}
+      showFinished={isMediaLibrary}
+      siteSpaceOnly={!isMediaLibrary}
+      onUploadComplete={resourceActions.add ? undefined : binding.reload}
+      onAssetUploaded={resourceActions.add ? (asset) => { void addAssets([asset.id]); } : undefined}
+      collectionContext={isMediaLibrary ? {
+        folders: state.folders,
+        folderId: state.folderId,
+        folderPath: null,
+        presentationFlags: state.presentationFlags,
+        query,
+      } : {
+        folders: [],
+        folderId: null,
+        folderPath: null,
+        presentationFlags: null,
+        query,
+      }}
+    />
+  ) : null;
+
   return (
     <PhiCollectionViewControl
       title={presentation.title}
       description={presentation.description}
       filters={filters}
       toolbar={toolbar}
-      panel={state.uploadPanelOpen ? (
-        <PhiAreaUploadBinding
-          labels={labels.upload}
-          onUploadComplete={binding.reload}
-          collectionContext={{
-            folders: state.folders,
-            folderId: state.folderId,
-            folderPath: null,
-            presentationFlags: state.presentationFlags,
-            query,
-          }}
-        />
-      ) : null}
+      panel={uploadPanel}
       /*
        * Only what an action left behind reaches this: a failed read of the source ends the Collection
        * View before this renderer is drawn. A refusal is the acting person's to read, live or not.
@@ -509,18 +652,18 @@ export function PhiAssetCollectionViewBinding({
       ) : null}
       body={body}
       items={state.assets.map((asset) => (
-        <PhiMediaAssetTileControl
+        <PhiMediaAssetTileControl<PhiMediaCollectionItem>
           key={asset.id}
           asset={asset}
           minColumnWidth={minColumnWidth}
           selected={state.selectedAssetId === asset.id}
           mode={mode}
           deleting={deletingAssetIds.includes(asset.id)}
-          onSelect={selectAsset}
+          {...(isMediaLibrary ? { onSelect: selectAsset } : {})}
           onDelete={(nextAsset) => { void deleteAsset(nextAsset); }}
           deleteLabel={labels.grid.deleteLabel}
           showTypeLabel
-          showDeleteAction={!isPhiMediaFolderIdLocked(state.folders, asset.folderId)}
+          showDeleteAction={resourceActions.delete && !isPhiMediaFolderIdLocked(state.folders, asset.folderId)}
           showDimensions
           showIdLabel
         />

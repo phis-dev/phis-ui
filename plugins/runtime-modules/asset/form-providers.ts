@@ -31,8 +31,6 @@ export const PHI_FORM_MEDIA_ASSET_LABEL_KEYS = {
   choose: "mediaAssetChoose",
   change: "mediaAssetChange",
   remove: "mediaAssetRemove",
-  /** Beneath the field when it offers public Assets only (`config.publicOnly`). */
-  publicOnlyHint: "mediaAssetPublicOnlyHint",
   /** Beside a chosen Asset that is not public, where the field offers public ones only. */
   notPublic: "mediaAssetNotPublic",
   /** Where the preview would be, when the Asset could not be read. */

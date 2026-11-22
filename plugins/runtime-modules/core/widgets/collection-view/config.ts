@@ -21,6 +21,9 @@ import { PHI_AUTHORING_OPTION_PROVIDER_KEYS } from "../../../../../constants/aut
 import { readPhiLengthValue } from "../../../../../types/length";
 import { readBoolean, readNumber, readNumberList, readString, type PhiCmsWidgetConfigBase } from "../../../../../components/widgets/config/parser-primitives";
 import { isPhiRecord } from "../../../../../helpers/is-record";
+import { PhiMediaKind } from "../../../../../constants/media";
+import { isPhiMediaFolderPathTemplate } from "../../../../../components/media/media-folder-name-path";
+import { createPhiConfigReader } from "../../../../../components/widgets/config/strict-config-reader";
 import type { PhiCmsCollectionViewWidgetConfig } from "../../../../../types/collection-view-widget";
 
 export type PhiCmsAssetPreviewGridWidgetConfig = PhiCmsWidgetConfigBase & {
@@ -98,6 +101,30 @@ function readToolbarActions(value: unknown): PhiCmsCollectionToolbarActionPresen
   });
 }
 
+const MEDIA_KINDS = Object.values(PhiMediaKind);
+
+/*
+ * The Media renderer's settings (`features.media`), read strictly: a path whose braces open no
+ * placeholder, a kind the Media library does not know, or a `publicOnly` that is not a boolean is a
+ * `PhiConfigError` naming the key, never a default put in its place -- a broken placeholder would
+ * become a Folder named after it.
+ */
+function readMediaFeatures(value: Record<string, unknown>): NonNullable<PhiCmsCollectionViewWidgetConfig["features"]["media"]> {
+  const reader = createPhiConfigReader(value, "features.media");
+  const folderPath = reader.value(
+    "folderPath",
+    "a Folder path whose placeholders read {key}",
+    (entry) => typeof entry === "string" && isPhiMediaFolderPathTemplate(entry) ? entry.trim() : undefined,
+  );
+  const mediaType = reader.oneOf("mediaType", MEDIA_KINDS);
+  const publicOnly = reader.boolean("publicOnly");
+  return {
+    ...(folderPath ? { folderPath } : {}),
+    ...(mediaType ? { mediaType } : {}),
+    ...(publicOnly === undefined ? {} : { publicOnly }),
+  };
+}
+
 function readInitialQuery(value: unknown): PhiCollectionProviderQuery | undefined {
   if (!isPhiRecord(value)) return undefined;
   const page = readNumber(value.page);
@@ -128,6 +155,7 @@ function normalizePhiCmsCollectionViewWidgetConfig(config: unknown): PhiCmsColle
   const actions = isPhiRecord(features.actions) ? features.actions : {};
   const pagination = isPhiRecord(features.pagination) ? features.pagination : null;
   const reorder = isPhiRecord(features.reorder) ? features.reorder : null;
+  const media = isPhiRecord(features.media) ? features.media : null;
   return {
     presentation: {
       title: readString(presentation.title),
@@ -157,6 +185,7 @@ function normalizePhiCmsCollectionViewWidgetConfig(config: unknown): PhiCmsColle
         enabled: readBoolean(reorder.enabled) ?? false,
         actionKey: readString(reorder.actionKey)?.trim() || undefined,
       } : undefined,
+      media: media ? readMediaFeatures(media) : undefined,
       pagination: pagination ? {
         enabled: readBoolean(pagination.enabled) ?? true,
         pageSize: readNumber(pagination.pageSize),
@@ -369,6 +398,21 @@ export const PHI_COLLECTION_VIEW_WIDGET_DEFINITION = {
      */
     { key: "features.reorder.enabled", type: "boolean", label: "Drag Reordering" },
     { key: "features.reorder.actionKey", type: "string", label: "Reorder Action Key", placeholder: "reorder" },
+    /*
+     * The Media renderer's: where its upload goes and its picker opens (placeholders from the binding
+     * params), the kind both offer, and whether only public Assets may be added. Other renderers ignore them.
+     */
+    { key: "features.media.folderPath", type: "string", label: "Media Folder Path", placeholder: "Shop Images / {category}" },
+    {
+      key: "features.media.mediaType",
+      type: "choice",
+      label: "Media Kind",
+      presentation: "select",
+      options: MEDIA_KINDS.map((kind) => ({ value: kind, label: kind })),
+      emptyOption: { value: "", label: "Every kind" },
+      emptyValue: null,
+    },
+    { key: "features.media.publicOnly", type: "boolean", label: "Public Media Only" },
     { key: "features.pagination.enabled", type: "boolean", label: "Pagination" },
     { key: "features.pagination.pageSize", type: "number", label: "Page Size", min: 1, precision: 0 },
     { key: "features.pagination.compact", type: "boolean", label: "Compact Pagination" },

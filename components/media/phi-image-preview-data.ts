@@ -7,6 +7,7 @@ import type {
   PhiMediaAssetFolder,
   PhiMediaAssetTile,
   PhiMediaAssetVariant,
+  PhiMediaCollectionItem,
   PhiMediaPickerPagination,
   PhiMediaSpaceOption,
 } from "../../types/media";
@@ -201,6 +202,36 @@ export function readPhiMediaAssetTiles(value: unknown, source = PHI_MEDIA_LISTIN
       focalRect: readPhiMediaFocalRectField(reader),
       font: readPhiMediaFontField(reader),
       folder: folder ?? null,
+    };
+  }) ?? [];
+}
+
+/**
+ * The items of a Collection the Media renderer draws, from any Provider (`PhiMediaCollectionItem`): read
+ * field by field as the Media library's own tiles are, so an item without its id, name, type, kind or
+ * delivery state, or with a field of the wrong type, is an error naming the field. `deliveryUrl` is a
+ * text, empty for a reference whose Asset the library no longer answers. `source` names the Collection.
+ */
+export function readPhiMediaCollectionItems(value: unknown, source: string): PhiMediaCollectionItem[] {
+  return createPhiResponseReader({ items: value }, source).list("items", (reader): PhiMediaCollectionItem => {
+    const folderId = reader.integer("folderId");
+    return {
+      id: requiredInteger(reader, "id"),
+      originalName: requiredString(reader, "originalName"),
+      title: nullableString(reader, "title"),
+      altText: nullableString(reader, "altText"),
+      // Empty for a reference whose Asset the library no longer answers: the tile shows the kind's icon.
+      deliveryUrl: typeof reader.record.deliveryUrl === "string" ? reader.record.deliveryUrl : reader.fail("deliveryUrl", "a text"),
+      thumbnailUrl: nullableString(reader, "thumbnailUrl"),
+      previewUrl: nullableString(reader, "previewUrl"),
+      blurDataUrl: nullableString(reader, "blurDataUrl"),
+      contentType: requiredString(reader, "contentType"),
+      kind: requirePhiField(reader, "kind", "a media kind", (key) => reader.oneOf(key, PHI_MEDIA_KINDS)),
+      width: nullableNumber(reader, "width"),
+      height: nullableNumber(reader, "height"),
+      lifecycleStatus: requiredInteger(reader, "lifecycleStatus"),
+      deliveryPolicy: requiredInteger(reader, "deliveryPolicy"),
+      ...(folderId === undefined ? {} : { folderId }),
     };
   }) ?? [];
 }

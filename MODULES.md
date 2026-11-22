@@ -709,6 +709,14 @@ Preset Forms are explicit `forms` entries in the Module's Server Area contributi
 select namespaced field, validation, options, read, and handler providers. The CMS tree places only the
 generic Form Widget with a `formId`; a Module must not add a domain Form Widget alias.
 
+A Collection View is meant for any Provider, and a resource names a **shipped renderer** wherever one
+draws its items: the Media renderer (`PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY`) for Assets of the Media
+library, whoever keeps them -- its items `PhiMediaCollectionItem`, its tools the resource's declared
+actions `add`, `delete`, `reorder`, `upload` -- and the card View for records shown as cards
+([COLLECTIONS.md](./COLLECTIONS.md#one-collection-view-for-every-source-shipped-renderers-first)). A
+renderer of the Module's own is for items none of them draws; one that copies a shipped renderer drifts
+from it and is removed.
+
 A Collection resource names the Render Client that draws its items (`itemRendererKey`) instead of
 carrying the component, and that key is owned like any other first-party identifier
 (`"renderers/<key>"` in `constants/runtime-module-ownership.ts`). Because the renderer is an ordinary

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Flex, Typography } from "antd";
 import type { PhisMediaSourceItem } from "@phis/contracts/media-source";
 
@@ -10,7 +10,6 @@ import type { PhiControlOption } from "./phi-control-options";
 import { PhiButtonControl } from "./phi-button-control";
 import { PhiCascaderControl } from "./phi-cascader-control";
 import { PhiEmptyControl } from "./phi-empty-control";
-import { PhiFileDropControl } from "./phi-file-drop-control";
 import { PhiSelectControl } from "./phi-select-control";
 import { PhiCollectionLayoutControl } from "./phi-collection-layout-control";
 import {
@@ -63,16 +62,14 @@ export type PhiMediaPickerControlProps = PhiPickerTransactionCallbacks<number | 
   /** Why the last import did not work, said above the tiles. */
   sourceNotice?: string | null;
   /**
-   * A file from the reader's machine was chosen to go into the library, where the picker offers that.
-   * Answers the Asset it became -- chosen then as if it had been picked in the library -- or null where
-   * nothing is to be chosen and the picker stays as it is. Absent, the picker offers no upload.
+   * The upload surface, where the picker offers one: the Upload button beside Reload shows it above the
+   * library's tiles -- the Media library's own upload surface (`PhiAreaUploadBinding`, one file), which
+   * the host draws, so a picker without upload carries no transport. It is drawn only while the picker is
+   * open and the panel shown, so closing either stops what is on its way. `choose` chooses an Asset that
+   * arrived as if it had been picked in the library, and closes the picker. Absent, no upload is offered.
    */
-  onUpload?: (file: File) => Promise<PhiMediaAssetTile | null>;
-  /** What the file dialog offers, as a MIME or extension list. */
-  uploadAccept?: string;
-  /** How far the upload on its way is, in per cent; null while none is. */
-  uploadProgress?: number | null;
-  /** Why the last upload did not work, said above the library's tiles. */
+  uploadPanel?: (choose: (assetId: number) => void) => ReactNode;
+  /** Why the last upload did not work, or the Folder could not be opened, said above the library's tiles. */
   uploadNotice?: string | null;
   folders?: readonly PhiControlOption[];
   folderValue?: string;
@@ -137,9 +134,7 @@ export function PhiMediaPickerControl({
   sourceHasMore = false,
   importingItemId = null,
   sourceNotice = null,
-  onUpload,
-  uploadAccept,
-  uploadProgress = null,
+  uploadPanel,
   uploadNotice = null,
   folders = [],
   folderValue = "/",
@@ -190,7 +185,8 @@ export function PhiMediaPickerControl({
   // A source is shown while one other than the library is named; its items stand where the tiles do.
   const sourceActive = sources.length > 1 && sourceValue !== "";
   const importing = importingItemId != null;
-  const uploading = uploadProgress != null;
+  const [uploadShown, setUploadShown] = useState(false);
+  const uploadOffered = uploadPanel != null && !sourceActive;
   const sourceTileItems = sourceItems.map((item) => (
     <PhiMediaSourceItemTileControl
       key={item.id}
@@ -306,29 +302,23 @@ export function PhiMediaPickerControl({
           disabled={locked}
           onClick={onReload}
         />
-        {onUpload && !sourceActive ? (
-          <PhiFileDropControl
-            accept={uploadAccept}
-            disabled={locked || uploading}
-            onFile={(file) => {
-              void onUpload(file).then((asset) => {
-                if (!asset) return;
-                picker.changeValue(asset.id);
-                picker.closePicker("commit");
-              });
-            }}
-          >
-            <PhiButtonControl
-              icon={<PhiIcon name="upload" size="inherit" />}
-              label={uploading ? `${uploadProgress}%` : labels?.upload ?? "Upload"}
-              ariaLabel={labels?.upload ?? "Upload"}
-              size="small"
-              loading={uploading}
-              disabled={locked || uploading}
-            />
-          </PhiFileDropControl>
+        {uploadOffered ? (
+          <PhiButtonControl
+            icon={<PhiIcon name="upload" size="inherit" />}
+            ariaLabel={labels?.upload ?? "Upload"}
+            tooltip={labels?.upload ?? "Upload"}
+            type={uploadShown ? "primary" : "default"}
+            size="small"
+            disabled={locked}
+            onClick={() => setUploadShown((current) => !current)}
+          />
         ) : null}
       </Flex>
+      {uploadOffered && uploadShown && picker.open && !locked ? uploadPanel((assetId) => {
+        setUploadShown(false);
+        picker.changeValue(assetId);
+        picker.closePicker("commit");
+      }) : null}
       {sourceActive && sourceNotice ? (
         <Typography.Text type="danger" role="alert">{sourceNotice}</Typography.Text>
       ) : null}

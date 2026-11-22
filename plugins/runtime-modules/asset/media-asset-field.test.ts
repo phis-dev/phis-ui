@@ -7,8 +7,8 @@ import {
   readPhiMediaAssetFieldConfig,
   readPhiMediaAssetFieldUploadRefusal,
   readPhiMediaAssetFieldValue,
-  resolvePhiMediaAssetFieldFolderPath,
 } from "./media-asset-field";
+import { resolvePhiMediaFolderPathTemplate } from "../../../components/media/media-folder-name-path";
 
 function configError(config: Record<string, unknown> | undefined) {
   try {
@@ -107,26 +107,26 @@ describe("a Folder path with placeholders", () => {
   });
 
   it("puts the Form's values in, trimmed, a number as written", () => {
-    expect(resolvePhiMediaAssetFieldFolderPath(template, { category: "  Shoes ", product: 42 }))
+    expect(resolvePhiMediaFolderPathTemplate(template, { category: "  Shoes ", product: 42 }))
       .toEqual(["Shop Images", "Shoes", "42"]);
   });
 
   it("leaves out a whole name whose value is empty or missing", () => {
-    expect(resolvePhiMediaAssetFieldFolderPath(template, { product: "Runner" })).toEqual(["Shop Images", "Runner"]);
-    expect(resolvePhiMediaAssetFieldFolderPath(template, { category: "  ", product: "Runner" })).toEqual(["Shop Images", "Runner"]);
-    expect(resolvePhiMediaAssetFieldFolderPath(template, { category: ["a"], product: null })).toEqual(["Shop Images"]);
+    expect(resolvePhiMediaFolderPathTemplate(template, { product: "Runner" })).toEqual(["Shop Images", "Runner"]);
+    expect(resolvePhiMediaFolderPathTemplate(template, { category: "  ", product: "Runner" })).toEqual(["Shop Images", "Runner"]);
+    expect(resolvePhiMediaFolderPathTemplate(template, { category: ["a"], product: null })).toEqual(["Shop Images"]);
     const mixed = readPhiMediaAssetFieldConfig({ folderPath: "Products / Item {sku}" }).folderPath;
-    expect(resolvePhiMediaAssetFieldFolderPath(mixed, {})).toEqual(["Products"]);
-    expect(resolvePhiMediaAssetFieldFolderPath(mixed, { sku: "A-1" })).toEqual(["Products", "Item A-1"]);
+    expect(resolvePhiMediaFolderPathTemplate(mixed, {})).toEqual(["Products"]);
+    expect(resolvePhiMediaFolderPathTemplate(mixed, { sku: "A-1" })).toEqual(["Products", "Item A-1"]);
   });
 
   it("never lets a value add a level: its / becomes -", () => {
-    expect(resolvePhiMediaAssetFieldFolderPath(template, { category: "Men/Shoes", product: " a / b " }))
+    expect(resolvePhiMediaFolderPathTemplate(template, { category: "Men/Shoes", product: " a / b " }))
       .toEqual(["Shop Images", "Men-Shoes", "a - b"]);
   });
 
   it("reads a dotted key into a value that is a record", () => {
     const nested = readPhiMediaAssetFieldConfig({ folderPath: "Shop / {product.slug}" }).folderPath;
-    expect(resolvePhiMediaAssetFieldFolderPath(nested, { product: { slug: "runner" } })).toEqual(["Shop", "runner"]);
+    expect(resolvePhiMediaFolderPathTemplate(nested, { product: { slug: "runner" } })).toEqual(["Shop", "runner"]);
   });
 });

@@ -2,6 +2,7 @@ import type { PhiCmsAssetPreviewGridWidgetConfig } from "./config";
 import type { PhiAssetPreviewGridWidgetLabels, PhiAssetWidgetLabels } from "../../../../../components/media/media-widget-labels";
 import { PHI_MEDIA_WIDGET_DEFAULT_LABELS } from "../../../../../components/media/media-widget-labels";
 import { PHI_ASSET_COLLECTION_DATA_SOURCE } from "../../../../../components/media/asset-collection-runtime";
+import { PHI_MEDIA_LIBRARY_ASSET_RESOURCE } from "../../../../../components/media/media-library-resource";
 import type { PhiRenderableBlockRenderMode } from "../../../../../types/renderable-block";
 import { PhiCollectionViewWidget } from "./client";
 
@@ -32,6 +33,8 @@ export function PhiAssetPreviewGridWidget({ config, labels, mediaLabels, renderM
         source: PHI_ASSET_COLLECTION_DATA_SOURCE,
       }}
       labels={{ ...(mediaLabels ?? PHI_MEDIA_WIDGET_DEFAULT_LABELS), grid: labels }}
+      // No page registry reaches this: the resource's declaration is handed over, so its tiles keep their delete.
+      resourceDescriptor={PHI_MEDIA_LIBRARY_ASSET_RESOURCE}
       renderMode={renderMode}
     />
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from "react";
+import { useCallback, useEffect, useMemo, useState, type ComponentType } from "react";
 
 import { PhiButtonControl } from "../../../components/controls/phi-button-control";
 import { PhiFlexControl } from "../../../components/controls/phi-flex-control";
@@ -15,12 +15,9 @@ import {
   usePhiMediaPickerBinding,
   type PhiMediaPickerUploadBinding,
 } from "../../../components/media/phi-media-picker-binding";
-import { normalizePhiImagePreviewTile } from "../../../components/media/phi-image-preview-data";
-import { usePhiMediaUpload } from "../../../components/media/phi-media-upload";
-import {
-  readPhiMediaUploadFolderPathReach,
-  type PhiMediaUploadSessionResult,
-} from "../../../components/media/media-upload-flow";
+import { PhiAreaUploadBinding } from "../../../components/media/phi-area-upload-widget";
+import { readPhiMediaUploadFolderPathReach } from "../../../components/media/media-upload-flow";
+import { resolvePhiMediaFolderPathTemplate } from "../../../components/media/media-folder-name-path";
 import { PHI_MEDIA_UPLOAD_FIELD_DEFAULT_LABELS } from "../../../components/media/media-upload-labels";
 import { usePhiAuthoringAssetDetails } from "../../../components/media/use-authoring-asset-details";
 import { PHI_SEARCH_WIDGET_DEFAULT_LABELS } from "../../../components/widgets/label-types/search";
@@ -32,14 +29,12 @@ import {
   readPhiMediaAssetFieldConfig,
   readPhiMediaAssetFieldUploadRefusal,
   readPhiMediaAssetFieldValue,
-  resolvePhiMediaAssetFieldFolderPath,
 } from "./media-asset-field";
 
 const DEFAULT_LABELS = {
   choose: "Choose",
   change: "Change",
   remove: "Remove",
-  publicOnlyHint: "Only publicly delivered files can be chosen.",
   notPublic: "This file is not delivered publicly.",
   unavailable: "The file could not be read.",
 } as const;
@@ -54,13 +49,14 @@ const PREVIEW_SIZE = 72;
  * value is the Asset id as a number, `null` for none, and the field keeps no copy of it: what it keeps is
  * the picker's open state.
  *
- * Inside the picker a file from the reader's machine can go up too, into the Folder the picker shows, by
- * the upload every surface sends with (`usePhiMediaUpload`, Core's upload session); what it made is
- * chosen as a picked tile would be. It goes into the Site Space, like everything the field offers, and
- * Core delivers what goes there publicly. What comes back is asked what a pick is asked: an Asset of
- * another kind (a file the browser could not name reaches Core unrefused) or, for a `publicOnly` field,
- * one that is not public is left in the list unchosen, and the field says why. While the file is on its
- * way the Form's submit is held, as the upload field holds it, and closing the picker stops it.
+ * Inside the picker a file from the reader's machine can go up too, into the Folder the picker shows,
+ * through the Media library's own upload surface (`PhiAreaUploadBinding`, one file, Core's upload
+ * session); what it made is chosen as a picked tile would be. It goes into the Site Space, like
+ * everything the field offers, and Core delivers what goes there publicly. What comes back is asked what
+ * a pick is asked: an Asset of another kind (a file the browser could not name reaches Core unrefused)
+ * or, for a `publicOnly` field, one that is not public is left in the list unchosen, and the field says
+ * why. While the file is on its way the Form's submit is held, as the upload field holds it, and closing
+ * the picker stops it.
  * `config.folderPath` names the Folder the picker opens on ("Shop Images / Products"): read in the Site
  * Space each time it opens, without writing anything (`readPhiMediaUploadFolderPathReach`), so a reader
  * who may only choose opens and picks without a refusal; the picker opens on the deepest Folder of the
@@ -101,13 +97,7 @@ export const PhiMediaAssetFormControl: ComponentType<PhiFormFieldProviderProps> 
   const pendingLabel = labels?.[PHI_FORM_UPLOAD_LABEL_KEYS.pending]?.trim() || PHI_MEDIA_UPLOAD_FIELD_DEFAULT_LABELS.pending;
   const [uploadNotice, setUploadNotice] = useState<string | null>(null);
   const acceptance = useMemo(() => ({ kinds: [config.mediaType], multiple: false }), [config.mediaType]);
-  const transfer = usePhiMediaUpload<PhiMediaUploadSessionResult["asset"]>({
-    labels: refusals,
-    acceptance,
-    onRejected: (message) => setUploadNotice(message),
-  });
-  const { upload: sendFile, cancel: cancelUpload, uploading } = transfer;
-  const uploadProgress = transfer.items.find((item) => item.status === "uploading")?.progress ?? null;
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (!formContext || !uploading) return;
@@ -120,38 +110,66 @@ export const PhiMediaAssetFormControl: ComponentType<PhiFormFieldProviderProps> 
    * the upload into it: the path the picker opened on is the path the file goes to.
    */
   const startFolderPath = config.folderPath;
-  const startFolderPathRef = useRef<readonly string[]>([]);
+  const [openedFolderPath, setOpenedFolderPath] = useState<readonly string[]>([]);
   const openOnFolder = useCallback(async (signal: AbortSignal) => {
-    const path = resolvePhiMediaAssetFieldFolderPath(startFolderPath, formContext?.getValues() ?? {});
-    startFolderPathRef.current = path;
+    const path = resolvePhiMediaFolderPathTemplate(startFolderPath, formContext?.getValues() ?? {});
+    setOpenedFolderPath(path);
     return path.length > 0 ? readPhiMediaUploadFolderPathReach(path, signal) : { folderId: null, complete: true };
   }, [formContext, startFolderPath]);
 
-  const upload = useMemo<PhiMediaPickerUploadBinding>(() => ({
-    accept: transfer.accept,
-    progress: uploadProgress,
-    notice: uploadNotice,
-    send: async (file, folderId, intoStartFolder) => {
-      setUploadNotice(null);
-      // No Space is named, which Core answers with the Site Space -- the only one the field offers.
-      const asset = await sendFile(file, intoStartFolder ? { folderPath: startFolderPathRef.current } : { folderId });
-      if (!asset) return null;
-      const tile = normalizePhiImagePreviewTile(asset, []);
-      const refusal = readPhiMediaAssetFieldUploadRefusal(config, tile);
-      if (refusal) {
-        setUploadNotice(refusal === "kind" ? refusals.errorTypeNotAllowed : notPublic);
-        return null;
-      }
-      return tile;
-    },
-    cancel: cancelUpload,
-  }), [cancelUpload, config, notPublic, refusals, sendFile, transfer.accept, uploadNotice, uploadProgress]);
-
   // The picker's words come from the Media Label Set, which the Form Widget read for this Form
   // (`resolvePhiFormFieldLabels`); outside a Form that read them, the English defaults stand.
+  const readPicker = useCallback(
+    (key: keyof typeof PHI_FORM_MEDIA_ASSET_PICKER_LABEL_KEYS, fallback: string) =>
+      labels?.[PHI_FORM_MEDIA_ASSET_PICKER_LABEL_KEYS[key]]?.trim() || fallback,
+    [labels],
+  );
+  const pickerUploadLabels = useMemo(() => {
+    const base = PHI_MEDIA_WIDGET_DEFAULT_LABELS.upload;
+    return {
+      ...base,
+      uploadToggleLabel: readPicker("uploadLabel", base.uploadToggleLabel),
+      dropTitle: readPicker("uploadDropTitle", base.dropTitle),
+      dropHint: readPicker("uploadDropHint", base.dropHint),
+      retryLabel: readPicker("uploadRetryLabel", base.retryLabel),
+      doneLabel: readPicker("uploadDoneLabel", base.doneLabel),
+      failedLabel: readPicker("uploadFailedLabel", base.failedLabel),
+      uploadSuccessTemplate: readPicker("uploadSuccessTemplate", base.uploadSuccessTemplate),
+      refusals,
+    };
+  }, [readPicker, refusals]);
+
+  /*
+   * The upload is the Media library's own surface (`PhiAreaUploadBinding`), one file: the drop area and
+   * the file on its way, no finished tiles -- what arrived is chosen, or stays in the picker's list
+   * greyed out. No Space is named, which Core answers with the Site Space -- the only one the field
+   * offers. What comes back is asked what a pick is asked (`readPhiMediaAssetFieldUploadRefusal`).
+   */
+  const upload = useMemo<PhiMediaPickerUploadBinding>(() => ({
+    notice: uploadNotice,
+    renderPanel: ({ folderId, intoStartFolder, onUploaded }) => (
+      <PhiAreaUploadBinding
+        config={{
+          multiple: false,
+          allowDelete: false,
+          ...(intoStartFolder ? { folderPath: openedFolderPath.join(" / ") } : {}),
+        }}
+        labels={pickerUploadLabels}
+        acceptance={acceptance}
+        showFinished={false}
+        siteSpaceOnly
+        collectionContext={{ folders: [], folderId, presentationFlags: null, query: {} }}
+        onUploadingChange={setUploading}
+        onAssetUploaded={(tile) => {
+          const refusal = readPhiMediaAssetFieldUploadRefusal(config, tile);
+          setUploadNotice(refusal === "kind" ? refusals.errorTypeNotAllowed : refusal ? notPublic : null);
+          onUploaded(refusal ? null : tile);
+        }}
+      />
+    ),
+  }), [acceptance, config, notPublic, openedFolderPath, pickerUploadLabels, refusals, uploadNotice]);
+
   const pickerLabels = useMemo(() => {
-    const keys = PHI_FORM_MEDIA_ASSET_PICKER_LABEL_KEYS;
-    const readPicker = (key: keyof typeof keys, fallback: string) => labels?.[keys[key]]?.trim() || fallback;
     const base = PHI_MEDIA_WIDGET_DEFAULT_LABELS;
     return {
       ...base,
@@ -175,14 +193,10 @@ export const PhiMediaAssetFormControl: ComponentType<PhiFormFieldProviderProps> 
         importFailedText: readPicker("importFailedText", base.picker.importFailedText),
         loadMoreLabel: readPicker("loadMoreLabel", base.picker.loadMoreLabel),
       },
-      upload: {
-        ...base.upload,
-        uploadToggleLabel: readPicker("uploadLabel", base.upload.uploadToggleLabel),
-        refusals,
-      },
+      upload: pickerUploadLabels,
       space: { ...base.space, label: readPicker("spaceLabel", base.space.label) },
     };
-  }, [assetId, change, choose, labels, refusals]);
+  }, [assetId, change, choose, pickerUploadLabels, readPicker]);
 
   const picker = usePhiMediaPickerBinding({
     config: {
@@ -239,9 +253,6 @@ export const PhiMediaAssetFormControl: ComponentType<PhiFormFieldProviderProps> 
           )}
         </PhiFlexControl>
       )}
-      {config.publicOnly && !readOnly ? (
-        <PhiTypographyControl type="secondary">{read("publicOnlyHint")}</PhiTypographyControl>
-      ) : null}
     </PhiFlexControl>
   );
 };

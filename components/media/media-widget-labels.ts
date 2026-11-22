@@ -16,6 +16,12 @@ export type PhiAssetPreviewToolWidgetLabels = {
   kindLabel: string;
   resetLabel: string;
   reloadLabel: string;
+  /**
+   * The Media renderer's toolbar action `add`: the Media library's picker, whose pick goes to the bound
+   * resource's `add` action. A Collection of references to Assets offers it (a gallery); the Media
+   * library's own does not.
+   */
+  chooseFromLibraryLabel: string;
   imageKindLabel: string;
   videoKindLabel: string;
   audioKindLabel: string;
@@ -53,9 +59,16 @@ export type PhiAreaUploadWidgetLabels = {
 
 export type PhiAssetPreviewGridWidgetLabels = {
   emptyDescription: string;
+  /**
+   * A tile's delete, the bound resource's `delete` action: the Media library deletes the file, a
+   * Collection of references takes it out -- whose placement says so in its own words
+   * (`presentation.labels.grid`).
+   */
   deleteLabel: string;
   deleteSuccessTemplate: string;
   deleteFailedText: string;
+  /** Said where the resource's `add` action refused an Asset picked or uploaded, without words of its own. */
+  addFailedText: string;
 };
 
 export type PhiAssetInspectorWidgetLabels = {
@@ -161,6 +174,7 @@ export const PHI_MEDIA_WIDGET_DEFAULT_LABELS: PhiAssetWidgetLabels = {
     kindLabel: "Kind",
     resetLabel: "Reset",
     reloadLabel: "Reload",
+    chooseFromLibraryLabel: "Choose from Media library",
     imageKindLabel: "image",
     videoKindLabel: "video",
     audioKindLabel: "audio",
@@ -194,6 +208,7 @@ export const PHI_MEDIA_WIDGET_DEFAULT_LABELS: PhiAssetWidgetLabels = {
     deleteLabel: "Delete asset",
     deleteSuccessTemplate: "Asset %1 deleted.",
     deleteFailedText: "Delete failed.",
+    addFailedText: "The file could not be added.",
   },
   picker: {
     triggerLabel: "Mediathek",

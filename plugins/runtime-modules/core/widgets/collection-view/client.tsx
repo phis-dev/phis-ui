@@ -18,6 +18,7 @@ import { usePhiRuntimeModuleRenderClient } from "../../../../../components/runti
 import { usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
 import { usePhiVisualAnchorParts } from "../../../../../components/runtime/runtime-visual-anchors";
 import type { PhiCmsCollectionViewWidgetConfig } from "../../../../../types/collection-view-widget";
+import type { PhiCollectionProviderResourceDescriptor } from "../../../../../types/collection-provider";
 import { createPhiSignalAddress } from "../../../../../types/signals";
 import type { PhiVisualAnchorAddress } from "../../../../../types/visual-anchors";
 import { usePhiControlSignalController } from "../../../../../components/widgets/client/shared/phi-control-signals";
@@ -47,8 +48,12 @@ export type PhiCollectionViewWidgetProps = {
   labels?: unknown;
   /** The Widget's own words (the reorder handle and refusal), loaded where `features.reorder` is on. */
   reorderLabels?: PhiCollectionViewWidgetLabels;
-  /** The bound resource's item key path, from its declaration; only where `features.reorder` is on. */
-  itemIdentityPath?: string | null;
+  /**
+   * The bound resource as the Area's Modules declare it, read by the Server from the Area's registry:
+   * its item key path (what a reorder sends) and the actions, filters and panels its renderer's tools may
+   * offer. Handed on to the renderer as `resource`. `null` where the Area declares no such resource.
+   */
+  resourceDescriptor?: PhiCollectionProviderResourceDescriptor | null;
   /** Where this draws; the parsed config does not carry it, so the plugin reads it off the node. */
   renderMode: PhiRenderableBlockRenderMode;
   preview?: boolean;
@@ -109,7 +114,7 @@ function PhiCollectionViewWidgetLive({
   config,
   labels,
   reorderLabels,
-  itemIdentityPath,
+  resourceDescriptor,
   widgetId,
   renderMode,
 }: PhiCollectionViewWidgetProps) {
@@ -166,7 +171,7 @@ function PhiCollectionViewWidgetLive({
   const { binding: presentedBinding, reorder } = usePhiCollectionReorderBinding({
     config: resolvedConfig,
     binding,
-    itemIdentityPath: itemIdentityPath ?? null,
+    itemIdentityPath: resourceDescriptor?.itemIdentityPath ?? null,
     labels: reorderLabels ?? PHI_COLLECTION_VIEW_WIDGET_DEFAULT_LABELS,
     showMessage,
   });
@@ -205,10 +210,18 @@ function PhiCollectionViewWidgetLive({
   // `createElement` rather than a JSX tag: the renderer is looked up, not written down, and a looked-up
   // component in tag position reads to React -- and to `react-hooks/static-components` -- as a new
   // component per render. This is the same call `PhiRuntimeModuleRenderClientHost` makes for a Widget.
-  // `renderMode` goes along so a renderer's own configuration failures are said the same way.
+  // `renderMode` goes along so a renderer's own configuration failures are said the same way, and the
+  // resource's declaration so its tools follow what the resource offers (`resource`, null where none).
   return (
     <PhiCollectionReorderContext.Provider value={reorder}>
-      {createElement(ItemRenderer, { config: resolvedConfig ?? config, binding: presentedBinding, labels, widgetId, renderMode })}
+      {createElement(ItemRenderer, {
+        config: resolvedConfig ?? config,
+        binding: presentedBinding,
+        labels,
+        widgetId,
+        renderMode,
+        resource: resourceDescriptor ?? null,
+      })}
     </PhiCollectionReorderContext.Provider>
   );
 }

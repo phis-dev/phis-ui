@@ -58,9 +58,21 @@ of your own:
    rebuilt, and the next edit undoes it or cannot reach it. This holds for presets written by hand and
    by an AI alike: only what the Builder can express is built.
 
+5. **A collection is a `collection-view` on your Provider, drawn by a shipped renderer.** A Collection
+   View is meant for any data source; what your Module brings is the Provider (what it reads, which
+   actions it has), not a renderer. Items that are Assets of the Media library -- a gallery, a set of
+   pictures, attachments -- name the Media renderer (`PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY`) as the
+   resource's `itemRendererKey` and are answered in its item shape; records shown as cards use the card
+   View. A renderer of your own is for items no shipped renderer draws
+   ([COLLECTIONS.md](./COLLECTIONS.md#one-collection-view-for-every-source-shipped-renderers-first)).
+
 `@phis/shop`'s catalogue is what breaking this looks like: its product list is a Widget of its own that
 draws cards the Core Card Widget already draws as a Collection (`body: "plan"`), with its own price line
-and its own button. It lines up differently, misses what the Card gains, and has to be rebuilt.
+and its own button. It lines up differently, misses what the Card gains, and has to be rebuilt. Its first
+listing gallery (0.8.13) was the same mistake one level down: a Render Client of its own drawing
+`PhiMediaAssetTileControl`s with its own confirm dialog, empty state and words, and a Form beside it to
+add a picture -- a copy of the Media renderer with neither its upload wall nor its picker. It is now the
+Shop's Provider drawn by the Media renderer.
 
 ## Before you start: what the Foundation already has
 
@@ -396,7 +408,8 @@ there wherever your Page stands, and none of it is in the Core table above.
 | An author picks one Asset in a Form (a logo, a cover), or uploads it right there | form field `media-asset` | The Asset id as a number, `null` for none; Site Space only. Its picker uploads a file into the Folder it shows, which is chosen then; `folderPath` (`"Shop Images / Products"`, or with Form values in it, `"Shop Images / {category} / {product}"`) is the Folder it opens on (the deepest part that exists; read only), the missing Folders created by the first upload into it. | `asset/form-providers.ts`, `asset/media-asset-form-control.tsx`, [FORMS.md](./FORMS.md#field-and-validation-providers) |
 | Somebody attaches a file to a Form | form field `upload` (Core) | The Asset ids of the finished uploads; `space` picks the Site's or the viewer's Space, not a Folder. | `components/forms/upload-form-control.tsx`, [FORMS.md](./FORMS.md#field-and-validation-providers) |
 | Files dropped into a Folder on a Page | Widget `area-upload` | Uploads into the Folder its `folderPath` names (a path of names in the Site Space, `"Shop Images / Products"`, resolved at each upload, missing Folders created on the first), without one into the Folder the Asset Controller holds, inside the Media library into the open one; an upload wall with delete. Demands the Asset Controller and the Media collection Provider. | `asset/widgets/area-upload/`, `components/media/phi-area-upload-widget.tsx` |
-| A Media library: Folders, upload, new Folder, lock | Widget `collection-view` with the Asset binding, as the Builder's Media page (`builder-media-page`) places it | Uploads into the open Folder; creating and locking a Folder are its actions. | `core/widgets/collection-view/asset-binding.tsx`, `asset/trees/phi-default-builder-media-page-tree.ts`, [COLLECTIONS.md](./COLLECTIONS.md) |
+| A Media library: Folders, upload, new Folder, lock | Widget `collection-view` with the Media renderer, as the Builder's Media page (`builder-media-page`) places it | Uploads into the open Folder; creating and locking a Folder are its actions. | `core/widgets/collection-view/asset-binding.tsx`, `asset/trees/phi-default-builder-media-page-tree.ts`, [COLLECTIONS.md](./COLLECTIONS.md#the-media-renderer) |
+| A collection of Assets my Module keeps (a gallery of references, a record's pictures), with upload, choosing from the library, removing and ordering | Widget `collection-view` on your collection Provider whose resource names `PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY`; items as `PhiMediaCollectionItem`; actions `add` (`itemKeys`, Asset ids), `delete`, `reorder`, `upload` (`panelKey: "upload"`); placement `features.media` (`folderPath` with `{param}` from the binding params, `mediaType`, `publicOnly`), toolbar actions `upload` and `add`, the delete's words in `presentation.labels.grid` | The Media library's own upload wall (what arrived is added through `add`), its picker on the same Folder, its tiles; no renderer of yours. | [COLLECTIONS.md](./COLLECTIONS.md#the-media-renderer), `@phis/shop` `manage/gallery/provider.ts` |
 | Browse and choose on a Page, wired to other Widgets | Widget `media-picker` | Emits `selection` (`PhiMediaAssetSelection`: `assetId`, `asset`, `variantKey`), `path`, `query`, `pagination`. Imports a media source's item into the Folder it shows; uploads no local file. | `asset/widgets/media-picker/`, `components/media/phi-media-picker-binding.tsx` |
 | A picker inside a Widget of mine | `PhiMediaPickerControl`, controlled | What you pass it; the binding that feeds it is internal ([Offering an image picker](#offering-an-image-picker)). | `@phis/ui/controls` |
 | A picture's details and focal rectangle | Widgets `image-inspector`, `asset-focal-rect`; form field `focal-rect` (`@phis/ui/modules/asset/form-field/focal-rect`) | The Builder's Media page inspector and its Form. | `asset/widgets/`, `asset/metadata-form.ts` |
@@ -444,6 +457,7 @@ Known gaps ([TODOS.md](./TODOS.md), "Media and Theme"):
 | Upload files into a Media Folder | Widget `area-upload`, or the Media library page | [Media](#media-what-the-asset-module-already-does) |
 | A list or table of records | `table` on a provider you register | [TABLES.md](./TABLES.md) |
 | Records as cards | `collection-view` (the Card Widget as a Collection) | [COLLECTIONS.md](./COLLECTIONS.md) |
+| Media library Assets as a collection of my Module's (a gallery) | `collection-view` drawn by the Media renderer (`PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY`), never a renderer of your own | [COLLECTIONS.md](./COLLECTIONS.md#the-media-renderer) |
 | A Collection for the record a Controller opened it for (a dialog with one listing's pictures) | `collection-view` with a listen route `capabilityId: "bindingParamsChange"`; the Controller sends `{ params: { id } }`, laid over `source.params` and handed to your Provider, the list read again from the first page | [COLLECTIONS.md](./COLLECTIONS.md#loading-and-signals) |
 | Records a reader drags into an order | `collection-view` with `features.reorder` (`{ enabled: true, actionKey? }`, grid or stack): a drop calls your collection Provider's action (`"reorder"` unless `actionKey` names another, declared `scope: "resource"`) with `itemKeys`, every item key of the collection in the new order, keys read at the resource's `itemIdentityPath`. Store the order and answer the collection as it now stands, or refuse (throw, or answer `error`): the Widget shows the order at once and takes it back on a refusal. Off while a search or a reader's filter narrows the list and while it spans more than one page | [COLLECTIONS.md](./COLLECTIONS.md#drag-reordering) |
 | A form | The `form` Widget on a Preset Form | [FORMS.md](./FORMS.md), [6](#6-add-a-preset-form) |
@@ -1365,11 +1379,15 @@ for none), which is what your handler receives. `config.mediaType` names the kin
 `config.publicOnly` greys out Assets that are not delivered publicly. Both are the interface; your handler
 is what decides which Asset it accepts, so read the Asset there before storing its id. `PhiMediaPickerControl` is public but
 controlled only (it takes the Assets, the Folders and the paging as props, `isAssetSelectable` to grey
-out Assets, and `onUpload` with `uploadAccept`, `uploadProgress` and `uploadNotice` where it is to offer an
-upload); the binding that feeds it from the library (`usePhiMediaPickerBinding`) is Foundation-internal,
-so a Widget that needs a picker where no Form fits has to ask for that binding rather than rebuild it.
-The field's picker also uploads a file from the author's machine into the Folder it shows, in the Site
-Space, and chooses what it made; `config.folderPath` (`"Shop Images / Products"`) is the Folder it opens on
+out Assets, and `uploadPanel` with `uploadNotice` where it is to offer an upload: a render function that
+draws the Media library's own upload surface, `PhiAreaUploadBinding` with one file, and is handed the
+`choose` that picks what arrived); the binding that feeds it from the library
+(`usePhiMediaPickerBinding`) is Foundation-internal, so a Widget that needs a picker where no Form fits
+has to ask for that binding rather than rebuild it. A collection of Assets that a picker adds to is a
+Collection View drawn by the Media renderer, whose toolbar action `add` is that picker
+([COLLECTIONS.md](./COLLECTIONS.md#the-media-renderer)). The field's picker also uploads a file from the
+author's machine into the Folder it shows, in the Site Space, through the Media library's upload surface
+(the drop area, one file), and chooses what it made; `config.folderPath` (`"Shop Images / Products"`) is the Folder it opens on
 -- the deepest part of the path that exists, read without writing -- and an upload from there creates the
 missing Folders and goes into the whole path. A name may hold `{key}` placeholders filled from the Form's
 values when the picker opens (`"Shop Images / {category} / {product}"`; a name without its value is left
@@ -2338,6 +2356,11 @@ describe("every preset tree keeps the tree contract", () => {
 - On a staff page: every list is a `table` Widget on a provider with its actions, every form a Form
   Widget in a dialog, no `page-title` Widget, and no Widget of the Module's own that draws tables, button
   rows or dialogs ([Before you start](#before-you-start-a-staff-page-is-composed-not-drawn)).
+- Every `collection-view` is drawn by a shipped renderer where one draws its items -- the Media renderer
+  for Assets of the Media library, the card View for records as cards -- and its Provider declares the
+  actions that renderer offers (for the Media renderer `add`, `delete`, `reorder`, `upload`). No Render
+  Client of the Module's own draws Media tiles, and no Form beside the Collection adds to it: adding is
+  the Collection's `add` ([COLLECTIONS.md](./COLLECTIONS.md#one-collection-view-for-every-source-shipped-renderers-first)).
 
 ## 6c. A Public or App shell a Site package brings
 
@@ -2997,6 +3020,10 @@ for the provider and still discloses the page it comes from.
 - Controller fields and the `Controller` Client are either complete as one group or absent as one group.
 - Every controllerless Module contributes at least one meaningful owned artifact and no no-op Controller.
 - Widgets use Phi Controls, providers, signaling, and the shared Canvas scaffold contracts.
+- A collection item renderer of the Module's own (`collectionItemRenderers`, a Render Client named as a
+  resource's `itemRendererKey`) draws items no shipped renderer draws. A collection of Media library
+  Assets names `PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY` and answers `PhiMediaCollectionItem`s
+  ([COLLECTIONS.md](./COLLECTIONS.md#the-media-renderer)).
 - Every field a Widget offers in `fields` and reads in its parser is used by its render or its Client. A
   field that is parsed and then read by nothing tells the author something happens that does not.
 - A capability reported as missing names the owning Module and what of it was checked -- Widgets,
