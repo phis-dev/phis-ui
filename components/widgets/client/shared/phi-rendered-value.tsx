@@ -5,7 +5,7 @@ import { formatPhisMoney, type PhisPaymentMoney } from "@phis/contracts/payments
 
 import { formatPhiDate, formatPhiDateTime } from "../../../../helpers/format-date-time";
 import { readPhiInternalPath } from "../../../../helpers/internal-path";
-import { readPhiMoneyValue } from "../../../../helpers/money-amount";
+import { readPhiMoneyValues } from "../../../../helpers/money-amount";
 import { formatPhiInterval, readPhiIntervalValue, type PhiIntervalLabels } from "../../label-types/interval";
 import { usePhiIntlLocale, usePhiIntlTimeZone } from "../../../root/phi-intl-locale";
 import type {
@@ -90,8 +90,10 @@ function PhiRenderedDate({ value, withTime }: { value: string; withTime: boolean
 }
 
 /** The reader's locale, not the server's or the browser's, and the currency's own places. */
-function PhiRenderedMoney({ value }: { value: PhisPaymentMoney }) {
-  return formatPhisMoney(value, usePhiIntlLocale());
+/** One amount, or a price list's amounts in its order, side by side. */
+function PhiRenderedMoney({ value }: { value: readonly PhisPaymentMoney[] }) {
+  const locale = usePhiIntlLocale();
+  return value.map((amount) => formatPhisMoney(amount, locale)).join(" · ");
 }
 
 /**
@@ -179,7 +181,7 @@ export function renderPhiValueContent(
    * nothing rather than its JSON -- a cell that says `{"currency":"CHF"}` is no amount of money.
    */
   if (definition.renderer === "money") {
-    const money = readPhiMoneyValue(value);
+    const money = readPhiMoneyValues(value);
     return money ? <PhiRenderedMoney value={money} /> : null;
   }
   if (definition.renderer === "interval") {

@@ -371,7 +371,10 @@ renderer accepts only the Provider field types listed here, and anything else is
 
 `money` reads `{ currency, minor }`, the payment contract's `PhisPaymentMoney`, with `minor` an integer
 string or a safe non-negative integer of minor units, in a currency `PHIS_PAYMENT_CURRENCY_EXPONENTS`
-names. It is written with `formatPhisMoney` (`@phis/contracts/payments`) in the reader's locale
+names -- or a price list as the `money` Form field holds one, minor units per currency code
+(`{ CHF: "1990", GBP: "1590" }`), whose amounts stand side by side in the list's order, so one column
+shows a product's prices in every currency it has one in. A list with an entry that is not an amount
+draws nothing, as a value that is no amount does. It is written with `formatPhisMoney` (`@phis/contracts/payments`) in the reader's locale
 (`usePhiIntlLocale`), with exactly the currency's own places -- two for the franc, none for the yen,
 three for the dinar -- and no digit passes through a float. A Provider hands over the amount, never a
 formatted string, so every Table, record and Module writes the same amount the same way.

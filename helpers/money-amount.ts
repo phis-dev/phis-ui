@@ -46,6 +46,20 @@ export function readPhiMoneyValue(value: unknown): PhisPaymentMoney | null {
   return isPhiMinorAmount(text) ? { currency, minor: text } : null;
 }
 
+/**
+ * The amounts a value handed over as money holds, in its order, or `null` where it is none: one amount as
+ * `readPhiMoneyValue` reads it, or a price list as the `money` Form field holds one -- minor units per
+ * currency code (`{ CHF: "1990", GBP: "1590" }`), each a currency a payment accepts. A list with no entry,
+ * or with one entry that is not an amount, is none: half a price list drawn would read as the whole.
+ */
+export function readPhiMoneyValues(value: unknown): readonly PhisPaymentMoney[] | null {
+  const one = readPhiMoneyValue(value);
+  if (one) return [one];
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
+  const amounts = Object.entries(value).map(([currency, minor]) => readPhiMoneyValue({ currency, minor }));
+  return amounts.length > 0 && amounts.every((amount) => amount !== null) ? amounts as PhisPaymentMoney[] : null;
+}
+
 /** `-1`, `0` or `1` as `left` is less than, equal to or more than `right`; both minor amounts. */
 export function comparePhiMinorAmounts(left: string, right: string): number {
   const difference = BigInt(left) - BigInt(right);

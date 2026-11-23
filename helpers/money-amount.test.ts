@@ -7,6 +7,7 @@ import {
   phiMajorToMinorAmount,
   readPhiCurrencyExponent,
   readPhiMoneyValue,
+  readPhiMoneyValues,
   resolvePhiCurrencyAffix,
 } from "./money-amount";
 import { formatPhisMoney, phisMinorToMajorAmount } from "@phis/contracts/payments";
@@ -112,6 +113,16 @@ describe("money amounts", () => {
     expect(readPhiMoneyValue({ currency: "XYZ", minor: "1990" })).toBeNull();
     expect(readPhiMoneyValue({ CHF: "1990" })).toBeNull();
     expect(readPhiMoneyValue("CHF 19.90")).toBeNull();
+  });
+
+  it("reads one amount or a price list as the amounts to show, in the list's order", () => {
+    expect(readPhiMoneyValues({ currency: "CHF", minor: "1990" })).toEqual([{ currency: "CHF", minor: "1990" }]);
+    expect(readPhiMoneyValues({ GBP: "1590", CHF: 1990 })).toEqual([{ currency: "GBP", minor: "1590" }, { currency: "CHF", minor: "1990" }]);
+    expect(readPhiMoneyValues({})).toBeNull();
+    expect(readPhiMoneyValues({ CHF: "1990", XYZ: "100" })).toBeNull();
+    expect(readPhiMoneyValues({ CHF: "19.90" })).toBeNull();
+    expect(readPhiMoneyValues([{ currency: "CHF", minor: "1990" }])).toBeNull();
+    expect(readPhiMoneyValues("CHF 19.90")).toBeNull();
   });
 
   it("refuses what is not a payment's money", () => {
