@@ -21,6 +21,11 @@ import { createPhiConfigReader, type PhiConfigReader } from "../widgets/config/s
  *   (`{ CHF: "1990", EUR: "1850" }`), each entry converted by the same rules. A currency left empty is
  *   absent from the list; the list is not padded with zeros, because no price and a price of nothing are
  *   different answers.
+ * - neither, on a field with an `optionsProvider` -- the same price list, its currencies the values of
+ *   the options the Provider answers, in its order: for a list the Form cannot know when it is written,
+ *   such as the currencies a Shop's destinations name. A currency the value holds and the options no
+ *   longer name is still shown after them, so a price nobody offers any more can be seen and cleared
+ *   instead of being dropped on the next save.
  *
  * With nothing entered the field holds `null` in either shape, so the `required` rule means "an
  * amount" -- or, for a list, "at least one" -- as it does for every other field. Whether empty is
@@ -30,8 +35,10 @@ import { createPhiConfigReader, type PhiConfigReader } from "../widgets/config/s
 export type PhiMoneyFieldConfig = {
   /** The one currency of a single amount, or absent for a list. */
   currency?: string;
-  /** The currencies of a list, in the order they are shown, or absent for a single amount. */
+  /** The currencies of a list, in the order they are shown; absent for a single amount and for a list from the options. */
   currencies?: readonly string[];
+  /** A price list whose currencies are the options' values: the field has an `optionsProvider` and neither of the two. */
+  currenciesFromOptions?: true;
   /** The least and the most an amount may be, in minor units; every entry of a list is held to them. */
   min?: string;
   max?: string;
@@ -55,14 +62,22 @@ function readMinorBound(reader: PhiConfigReader, key: string) {
 
 /**
  * The field's config, read strictly (`strict-config-reader.ts`): a value present and wrong is a
- * `PhiConfigError` naming the field, never a default put in its place.
+ * `PhiConfigError` naming the field, never a default put in its place. `hasOptionsProvider` says whether
+ * the field names an `optionsProvider`; with one, neither `currency` nor `currencies` may be set, because
+ * a list given twice would leave open which one counts.
  */
-export function readPhiMoneyFieldConfig(config: Readonly<Record<string, unknown>> | undefined): PhiMoneyFieldConfig {
+export function readPhiMoneyFieldConfig(
+  config: Readonly<Record<string, unknown>> | undefined,
+  { hasOptionsProvider = false }: { hasOptionsProvider?: boolean } = {},
+): PhiMoneyFieldConfig {
   const reader = createPhiConfigReader(config ?? {}, "config");
   const hasCurrency = reader.has("currency");
   const hasCurrencies = reader.has("currencies");
-  if (hasCurrency === hasCurrencies) {
-    return reader.fail("currency", "either `currency` (one amount) or `currencies` (one amount per currency)", config?.currency);
+  if (hasOptionsProvider && (hasCurrency || hasCurrencies)) {
+    return reader.fail(hasCurrency ? "currency" : "currencies", "nothing: the currencies are the options of the field's optionsProvider", config?.[hasCurrency ? "currency" : "currencies"]);
+  }
+  if (!hasOptionsProvider && hasCurrency === hasCurrencies) {
+    return reader.fail("currency", "either `currency` (one amount), `currencies` (one amount per currency) or an `optionsProvider` naming them", config?.currency);
   }
   const min = readMinorBound(reader, "min");
   const max = readMinorBound(reader, "max");
@@ -70,6 +85,7 @@ export function readPhiMoneyFieldConfig(config: Readonly<Record<string, unknown>
     reader.fail("max", `at least the minimum ${min}`);
   }
   const bounds = { ...(min === undefined ? {} : { min }), ...(max === undefined ? {} : { max }) };
+  if (hasOptionsProvider) return { currenciesFromOptions: true, ...bounds };
   if (hasCurrency) {
     return { currency: readCurrency(reader, "currency", reader.string("currency")), ...bounds };
   }
@@ -78,6 +94,32 @@ export function readPhiMoneyFieldConfig(config: Readonly<Record<string, unknown>
   currencies.forEach((currency, index) => readCurrency(reader, `currencies[${index}]`, currency));
   if (new Set(currencies).size !== currencies.length) reader.fail("currencies", "each currency once");
   return { currencies, ...bounds };
+}
+
+/**
+ * The currencies of a list from the options: each option's value an ISO 4217 code a payment accepts, in
+ * the Provider's order, then every currency the value holds that the options leave out. An option that
+ * is not such a code throws -- the Provider answered something that is not a currency, and guessing past
+ * it would show a price under the wrong name.
+ */
+export function readPhiMoneyFieldOptionCurrencies(
+  options: readonly { value: unknown }[] | undefined,
+  value: unknown,
+): readonly string[] {
+  const currencies: string[] = [];
+  for (const option of options ?? []) {
+    const code = option.value;
+    if (typeof code !== "string" || readPhiCurrencyExponent(code) === undefined) {
+      throw new Error(`A money field's options name ${describe(code)}; each option's value is an ISO 4217 currency code a payment accepts.`);
+    }
+    if (!currencies.includes(code)) currencies.push(code);
+  }
+  if (isPhiRecord(value)) {
+    for (const code of Object.keys(value)) {
+      if (!currencies.includes(code) && readPhiCurrencyExponent(code) !== undefined) currencies.push(code);
+    }
+  }
+  return currencies;
 }
 
 function describe(value: unknown) {

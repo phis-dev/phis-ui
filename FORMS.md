@@ -417,7 +417,13 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
     one input per currency in the order listed. A currency left empty is absent from the list, because no
     price and a price of nothing are different answers.
 
-  Exactly one of the two is set. `minor` is a canonical integer string, as everywhere in the payment
+  - for neither, on a field with an `optionsProvider`, the same price list, its currencies the values of
+    the options the Provider answers, in its order -- for a list the Form cannot know when it is written,
+    such as the currencies a Shop's destinations name. Each option's value is an ISO 4217 code a payment
+    accepts, or the field throws. A currency the value holds and the options no longer name is shown after
+    them, so a price nobody offers any more can still be seen and cleared rather than lost on save.
+
+  Exactly one of the three is set: `currency`, `currencies`, or an `optionsProvider`. `minor` is a canonical integer string, as everywhere in the payment
   contract, and how many places a currency has is its ISO 4217 exponent (`PHIS_PAYMENT_CURRENCY_EXPONENTS`:
   two for CHF, none for JPY, three for BHD), never a fixed hundred. The Control (`PhiMoneyControl`)
   converts on the digits (`helpers/money-amount.ts`), never through a float; it writes the number the way

@@ -302,8 +302,8 @@ export const PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS = [
   /*
    * An amount of money: minor units in the value, major units on screen beside the currency's code.
    * `json`, because the value is the contract's money (`{ currency, minor }`) for one `currency`, or a
-   * price list (`{ CHF: "1990" }`) for several `currencies` -- see `money-field.ts`. `min` and `max`
-   * are minor units.
+   * price list (`{ CHF: "1990" }`) for several `currencies`, or for the currencies an `optionsProvider`
+   * answers -- see `money-field.ts`. `min` and `max` are minor units.
    */
   {
     key: PHI_FORM_FIELD_PROVIDER_KEYS.money,

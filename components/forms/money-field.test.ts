@@ -5,6 +5,7 @@ import {
   readPhiMoneyFieldAmount,
   readPhiMoneyFieldAmounts,
   readPhiMoneyFieldConfig,
+  readPhiMoneyFieldOptionCurrencies,
   updatePhiMoneyFieldAmounts,
 } from "./money-field";
 
@@ -35,6 +36,28 @@ describe("the money field's config", () => {
     expect(configError({ currency: "CHF", min: -1 })).toBe("config.min");
     expect(configError({ currency: "CHF", min: "100" })).toBe("config.min");
     expect(configError({ currency: "CHF", min: 500, max: 100 })).toBe("config.max");
+  });
+});
+
+describe("a price list whose currencies come from the field's options", () => {
+  it("reads neither currency nor currencies on a field with an optionsProvider, and refuses either", () => {
+    expect(readPhiMoneyFieldConfig({ min: 0 }, { hasOptionsProvider: true })).toEqual({ currenciesFromOptions: true, min: "0" });
+    expect(readPhiMoneyFieldConfig(undefined, { hasOptionsProvider: true })).toEqual({ currenciesFromOptions: true });
+    expect(() => readPhiMoneyFieldConfig({ currency: "CHF" }, { hasOptionsProvider: true })).toThrow(/optionsProvider/);
+    expect(() => readPhiMoneyFieldConfig({ currencies: ["CHF"] }, { hasOptionsProvider: true })).toThrow(/optionsProvider/);
+  });
+
+  it("lists the options' currencies in their order, then those only the value still holds", () => {
+    const options = [{ value: "GBP" }, { value: "CHF" }, { value: "GBP" }];
+    expect(readPhiMoneyFieldOptionCurrencies(options, null)).toEqual(["GBP", "CHF"]);
+    expect(readPhiMoneyFieldOptionCurrencies(options, { EUR: "900", CHF: "900" })).toEqual(["GBP", "CHF", "EUR"]);
+    expect(readPhiMoneyFieldOptionCurrencies(undefined, { EUR: "900" })).toEqual(["EUR"]);
+    expect(readPhiMoneyFieldOptionCurrencies([], null)).toEqual([]);
+  });
+
+  it("refuses an option that is not a currency a payment accepts", () => {
+    expect(() => readPhiMoneyFieldOptionCurrencies([{ value: "chf" }], null)).toThrow(/ISO 4217/);
+    expect(() => readPhiMoneyFieldOptionCurrencies([{ value: 756 }], null)).toThrow(/ISO 4217/);
   });
 });
 

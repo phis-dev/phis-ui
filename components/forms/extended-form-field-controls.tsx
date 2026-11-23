@@ -13,6 +13,7 @@ import {
   readPhiMoneyFieldAmount,
   readPhiMoneyFieldAmounts,
   readPhiMoneyFieldConfig,
+  readPhiMoneyFieldOptionCurrencies,
   updatePhiMoneyFieldAmounts,
 } from "./money-field";
 import { usePhiIntlLocale } from "../root/phi-intl-locale";
@@ -162,11 +163,11 @@ export const PhiStorageSizeFormControl: ComponentType<PhiFormFieldProviderProps>
  * contract's money and nothing else. The shapes and the config are `money-field.ts`.
  */
 export const PhiMoneyFormControl: ComponentType<PhiFormFieldProviderProps> = ({
-  id, field, value, onChange, label, placeholder, disabled, readOnly,
+  id, field, value, onChange, label, placeholder, disabled, readOnly, options,
 }) => {
   const locale = usePhiIntlLocale();
-  const config = readPhiMoneyFieldConfig(field.config);
-  const { currency, currencies, min, max } = config;
+  const config = readPhiMoneyFieldConfig(field.config, { hasOptionsProvider: field.optionsProvider !== undefined });
+  const { currency, currencies, currenciesFromOptions, min, max } = config;
   if (currency !== undefined) {
     return (
       <PhiMoneyControl
@@ -184,7 +185,7 @@ export const PhiMoneyFormControl: ComponentType<PhiFormFieldProviderProps> = ({
       />
     );
   }
-  const list = currencies ?? [];
+  const list = currenciesFromOptions ? readPhiMoneyFieldOptionCurrencies(options, value) : currencies ?? [];
   const amounts = readPhiMoneyFieldAmounts(value, list);
   return (
     <PhiFlexControl vertical gap="small">
