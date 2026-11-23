@@ -16,12 +16,9 @@ export const PHI_APP_RUNTIME_MODULE_AREA_SHELLS = [
     shellPresetVersion: 1,
     area: "app",
     /*
-     * The Site shell with a left sider added, rather than a shell of its own.
-     *
-     * App's header and footer are Public's -- one Brand, one account trigger, one description of both.
-     * What App has that Public does not is somewhere for the Modules a signed-in person works with,
-     * and that is the whole of the overlay. Nothing is omitted from the base, so the two trees cannot
-     * disagree about a Region: composition refuses a Region type stated twice.
+     * The App variant of the Site shell, with the App's left sider added. The Site shell owns the
+     * header and footer and the overlay owns the sidebar. Composition refuses a Region type stated
+     * twice.
      */
     loadTree: async ({ page, runtime }: PhiCmsDescriptorBuildContext) => {
       const [

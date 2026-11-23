@@ -44,6 +44,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
   ownerModuleId: PhiRuntimeModuleId;
   runtimeModuleArea: PhiBuilderAreaKey;
 }): Promise<PhiResolvedCmsPageTree> {
+  const isApp = runtimeModuleArea === "app";
   const PHI_DEFAULT_PUB_AREA_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap({
     domain: "area",
     ownerModuleId,
@@ -194,7 +195,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
         label: "pub header main three column",
         config: {
           ...resolvePhiLayoutCreationPreset("threecol", "panel"),
-          balancedSides: false,
+          balancedSides: isApp,
           justify: "space-between",
           contentAlign: "center",
         },
@@ -321,30 +322,36 @@ export async function buildPhiDefaultSiteAreaPresetTree({
         config: {},
         contentVersionId: null,
       },
-      {
-        id: PHI_DEFAULT_PUB_AREA_WIDGET_IDS.widgetNav,
-        siteId: page.siteId,
-        parentLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutHeaderMain,
-        widgetType: buildPhiCmsWidgetNamespacedTypeKey(resolvePhiCmsWidgetPluginKey("header-navigation"), "header-navigation"),
-        slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
-        sortOrder: 10,
-        status: 1,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
-        label: "pub header main navigation",
-        /* The current entry on a rounded ground rather than a bar under it, in either mode. */
-        config: {
-          navKey: `${runtimeModuleArea}:header`,
-          selectionStyle: "pill",
-        },
-        contentVersionId: null,
-      },
-      /*
-       * The magnifier, in Public only: the Area every visitor reads, and the one whose results Page it
-       * opens. The App carries its box in its Sider where its preset puts one; the operator's Areas are
-       * not searched. Before the locale switch, in the slot nothing else of this preset takes.
-       */
-      ...(runtimeModuleArea === "public"
+      isApp
+        ? nodes.widget({
+            typeKey: "page-title",
+            id: PHI_DEFAULT_PUB_AREA_WIDGET_IDS.widgetPageTitle,
+            parentLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutHeaderMain,
+            slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
+            sortOrder: 10,
+            label: "Page title",
+            config: { display: "label" },
+          })
+        : {
+            id: PHI_DEFAULT_PUB_AREA_WIDGET_IDS.widgetNav,
+            siteId: page.siteId,
+            parentLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutHeaderMain,
+            widgetType: buildPhiCmsWidgetNamespacedTypeKey(resolvePhiCmsWidgetPluginKey("header-navigation"), "header-navigation"),
+            slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
+            sortOrder: 10,
+            status: 1,
+            flags: 0,
+            visibilityMask: page.visibilityMask,
+            label: "pub header main navigation",
+            /* The current entry on a rounded ground rather than a bar under it, in either mode. */
+            config: {
+              navKey: `${runtimeModuleArea}:header`,
+              selectionStyle: "pill",
+            },
+            contentVersionId: null,
+          },
+      // The magnifier leads to this Area's results Page wherever the Search Module is active.
+      ...(runtimeModuleArea === "public" || isApp
         ? [{
             id: PHI_DEFAULT_PUB_AREA_WIDGET_IDS.widgetSearch,
             siteId: page.siteId,
@@ -360,20 +367,20 @@ export async function buildPhiDefaultSiteAreaPresetTree({
             contentVersionId: null,
           }]
         : []),
-      {
-        id: PHI_DEFAULT_PUB_AREA_WIDGET_IDS.widgetLocale,
-        siteId: page.siteId,
-        parentLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutHeaderActions,
-        widgetType: buildPhiCmsWidgetNamespacedTypeKey(resolvePhiCmsWidgetPluginKey("locale"), "locale"),
-        slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
-        sortOrder: 10,
-        status: 1,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
-        label: "pub header main locale",
-        config: {},
-        contentVersionId: null,
-      },
+      ...(!isApp ? [{
+          id: PHI_DEFAULT_PUB_AREA_WIDGET_IDS.widgetLocale,
+          siteId: page.siteId,
+          parentLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutHeaderActions,
+          widgetType: buildPhiCmsWidgetNamespacedTypeKey(resolvePhiCmsWidgetPluginKey("locale"), "locale"),
+          slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
+          sortOrder: 10,
+          status: 1,
+          flags: 0,
+          visibilityMask: page.visibilityMask,
+          label: "pub header main locale",
+          config: {},
+          contentVersionId: null,
+        }] : []),
       /*
        * The account trigger, in every Area that shares this preset.
        *
@@ -387,7 +394,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
         siteId: page.siteId,
         parentLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutHeaderActions,
         widgetType: buildPhiCmsWidgetNamespacedTypeKey(resolvePhiCmsWidgetPluginKey("account"), "account"),
-        slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[2].slotIndex,
+        slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[isApp ? 1 : 2].slotIndex,
         sortOrder: 20,
         status: 1,
         flags: 0,

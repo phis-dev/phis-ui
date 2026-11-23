@@ -1060,7 +1060,8 @@ Which Widget reads which surface is a property of the shipped Area shells, not o
 | --- | --- | --- | --- |
 | Public | `public:header` | Header Navigation Widget in the Public shell's header | `after` / `before` `@phis/ui/modules/public/nav/terms`, or `parentItemKey: null` alone |
 | Public | `public:footer` | Quick Links Widget ("Quick Links") in the Public shell's `footer_main` | the same, and `after` / `before` `@phis/ui/modules/public/nav/privacy`; the footer stands Privacy, Terms, Contact |
-| App | `app:header`, `app:footer` | Header Navigation and Quick Links Widgets in the App shell, the same shell tree as Public | `parentItemKey: null`; nothing is exported |
+| App | `app:header` | Header Navigation Widget when a Site places one with this `navKey` | `parentItemKey: null`; nothing is exported |
+| App | `app:footer` | Quick Links Widget in the App shell's `footer_main` | `parentItemKey: null`; nothing is exported |
 | App | `app:quicklinks` | no shipped Widget; a Quick Links Widget a Site places with this `navKey` | `parentItemKey: null` |
 | App, Accounting, Admin, Editor, Builder | `<area>:sidebar` | the Area shell's sidebar | an anchor: `start`, `main`, `settings`, `end` ([THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#8a-what-a-module-package-exports), Navigation) |
 | every Area | `<area>:account` | the Account Widget's menu | `parentItemKey` `@phis/ui/modules/<area>/nav/account` |

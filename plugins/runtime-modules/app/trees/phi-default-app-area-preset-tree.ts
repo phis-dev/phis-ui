@@ -19,20 +19,17 @@ const SYNTHETIC_APP_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
   domain: "area",
   ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
   presetKey: "app-area-preset",
-}, ["widgetSiderLeftNav", "widgetSiderLeftSearch"]);
+}, ["widgetSiderLeftNav"]);
 
 /**
  * The App's own left sider, laid over the Site shell rather than replacing it.
  *
- * App shares its header and its footer with Public -- the same Brand, the same account trigger -- and
- * the one thing it does not share is a place for the Modules a signed-in person works with. This adds
- * that place and nothing else, so the Site shell stays the single description of everything above and
- * below it.
+ * The Site shell builds the App's header and footer. This overlay gives the signed-in person's
+ * Modules a place in the App's own sidebar.
  *
  * The sider is where the Area's navigation belongs, and the reason is in SETTINGS.md section 3: a
  * shell Region outlives a move between Pages, while a Page-owned one is built again for each of them.
- * Navigation placed in the latter rebuilds itself under the hand that just used it. The search box
- * stands above it for the same reason (SEARCH.md): a member searches from wherever they are.
+ * Navigation placed in the latter rebuilds itself under the hand that just used it.
  */
 export async function buildPhiDefaultAppAreaPresetTree({
   page,
