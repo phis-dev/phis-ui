@@ -1,12 +1,14 @@
 "use client";
 
 import { resolvePhiBuilderAreaAsCmsArea } from "../../../constants/cms-areas";
+import { isPhiCmsErrorPagePath } from "../../../constants/cms-error-pages";
 import {
   choosePhiAreaRootApplicant,
   resolvePhiAreaLandingSelection,
 } from "../../../helpers/cms-area-config";
 import {
   findPhiBuilderPageKeyFromStoragePath,
+  findPhiPageNodePath,
   normalizePhiBuilderCmsCatalogPath,
   resolvePhiBuilderActivePageCatalog,
   resolvePhiBuilderActivePageKey,
@@ -16,6 +18,7 @@ import {
   type PhiPresetPageNode,
 } from "../../../helpers/cms-page-catalog";
 import { findFirstPhiCmsNavigationLinkPath } from "../../../components/regions/presets/navigation-redirect";
+import { canPhiViewerAccess, type PhiAccessViewer } from "../../../types/access";
 import type { PhiPageReference } from "../../../types/references";
 import { resolvePhiRuntimeAreaDefinition } from "../area-definitions";
 import { resolvePhiAreaRootRouteNavKey } from "../area-root-route";
@@ -309,17 +312,55 @@ export function resolvePhiBuilderOfferedPageKey(
     return { pages, pageKey: requested };
   }
 
-  const rootRoute = readPhiBuilderStoredAreaRootRoute(state, area);
-  const forwardTargetKey = rootRoute?.mode === "redirect"
-    ? findPageKeyByReference(pages, rootRoute.targetLinkTarget.reference)
-    : null;
-
   return {
     pages,
-    pageKey: forwardTargetKey
+    pageKey: findAreaForwardTargetPageKey(state, area, pages)
       ?? findAreaNavigationEntryPageKey(state, area, pages)
       ?? resolvePhiBuilderActivePageKey(null, pages),
   };
+}
+
+function findAreaForwardTargetPageKey(
+  state: PhiBuilderOfferedCatalogState,
+  area: PhiBuilderPageCatalogArea,
+  pages: readonly PhiPresetPageNode[],
+) {
+  const rootRoute = readPhiBuilderStoredAreaRootRoute(state, area);
+  return rootRoute?.mode === "redirect"
+    ? findPageKeyByReference(pages, rootRoute.targetLinkTarget.reference)
+    : null;
+}
+
+/** The shell is drawn on the Page its Area leads to, below the landing at `/`. */
+export function resolvePhiBuilderShellPreviewPage(
+  state: PhiBuilderOfferedCatalogState,
+  area: PhiBuilderPageCatalogArea,
+  viewer: PhiAccessViewer,
+): { pages: PhiPresetPageNode[]; pageKey: string | null } {
+  const pages = resolvePhiBuilderOfferedPageCatalog(state, area);
+  const isPreviewablePage = (key: string | null) => {
+    const page = key ? findPhiPageNodePath(pages, key)?.at(-1) : null;
+    if (!page?.storagePath || page.tombstoned || page.routeParameter) {
+      return false;
+    }
+    const path = normalizePhiBuilderCmsCatalogPath(page.storagePath);
+    return path !== "/" && !isPhiCmsErrorPagePath(path);
+  };
+
+  const forwardTargetKey = findAreaForwardTargetPageKey(state, area, pages);
+  if (isPreviewablePage(forwardTargetKey)) {
+    return { pages, pageKey: forwardTargetKey };
+  }
+
+  // Public has its Home entry in the header. Staff and App Area roots follow their own sidebar.
+  const navKey = area === "public" ? "public:header" : resolvePhiAreaRootRouteNavKey(resolvePhiBuilderAreaAsCmsArea(area));
+  const surface = state.navigationSurfacesByArea[area]?.find((candidate) => candidate.navKey === navKey);
+  const findPageKey = (path: string) => findPhiBuilderPageKeyFromStoragePath(area, path, pages);
+  const path = findFirstPhiCmsNavigationLinkPath(surface?.items ?? [], "/", {
+    isVisible: (item) => canPhiViewerAccess(viewer, item.accessPolicy),
+    acceptsPath: (candidate) => isPreviewablePage(findPageKey(candidate)),
+  });
+  return { pages, pageKey: path ? findPageKey(path) : null };
 }
 
 /**

@@ -1,8 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PhiRuntimeModuleDefinition, PhiRuntimeModuleId } from "../../../types";
+import { createEmptyPhiBuilderModulePresetPagesByArea } from "../../../helpers/cms-page-catalog";
+import type { PhiViewerAccessPolicy } from "../../../types/access";
+import { createPhiPresetCmsInstanceId } from "../../../types/cms-instance-id";
+import type { PhiCmsResolvedNavigationItem } from "../../../types/cms-module-descriptors";
 import {
   PhiBuilderAreaStructureTakenError,
+  previewPhiDeveloperBuilderDraft,
   publishPhiDeveloperBuilderModulesDraft,
   savePhiDeveloperBuilderDraft,
   savePhiDeveloperBuilderModulesDraft,
@@ -39,6 +44,99 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+});
+
+function navigationLink(path: string, accessPolicy?: PhiViewerAccessPolicy): PhiCmsResolvedNavigationItem {
+  return {
+    id: createPhiPresetCmsInstanceId({ ...BASE, domain: "navigation", nodeKey: path }),
+    ownerModuleId: BASE.ownerModuleId,
+    kind: "link",
+    label: { defaultMessage: path },
+    target: { kind: "custom", path },
+    accessPolicy,
+    children: [],
+  };
+}
+
+function previewState(items: PhiCmsResolvedNavigationItem[]): Parameters<typeof previewPhiDeveloperBuilderDraft>[0] {
+  return {
+    area: "public",
+    pageKey: "error",
+    modulePresetPagesByArea: {
+      ...createEmptyPhiBuilderModulePresetPagesByArea(),
+      public: [
+        { key: "error", title: "Forbidden", storagePath: "/error/403" },
+        { key: "private", title: "Private", storagePath: "/private" },
+        { key: "home", title: "Home", storagePath: "/home" },
+        { key: "other", title: "Other", storagePath: "/other" },
+      ],
+    },
+    navigationSurfacesByArea: {
+      public: [{ area: "public", navKey: "public:header", label: { defaultMessage: "Header" }, items }],
+    },
+    customPages: {},
+    persistedPageCatalogByArea: {},
+    areaPresetSourcesByArea: { public: PROVIDER },
+    areaRootRoutes: {},
+    runtimeModuleIdsByArea: {},
+    runtimeModuleDefinitions: [],
+  };
+}
+
+describe("previewing the Area Shell on its linked entry page", () => {
+  const viewer = { access: "public" } as const;
+  const navigation = [
+    navigationLink("/"),
+    navigationLink("/error/403"),
+    navigationLink("/missing"),
+    navigationLink("/private", { access: "authenticated" }),
+    navigationLink("/home"),
+    navigationLink("/other"),
+  ];
+
+  it("opens the first reachable link with the saved Area revision", async () => {
+    answer = () => ({ status: 200, body: { revisionId: 7, version: 1, nextNodeSequence: 1, sourcePreset: PROVIDER } });
+    expect(await previewPhiDeveloperBuilderDraft(previewState(navigation), "structure", { viewer }))
+      .toEqual({ revisionId: 7, previewHref: "/home?revision=7" });
+    expect(new URL(calls[0]!.path).pathname).toBe("/api/site/cms/area/draft");
+  });
+
+  it("opens the same published page if there is no draft", async () => {
+    answer = () => ({ status: 404, body: {} });
+    expect(await previewPhiDeveloperBuilderDraft(previewState(navigation), "structure", { viewer }))
+      .toEqual({ revisionId: null, previewHref: "/home" });
+  });
+
+  it("uses the sidebar and storage path of the selected App Area", async () => {
+    answer = () => ({ status: 404, body: {} });
+    const state = previewState(navigation);
+    state.modulePresetPagesByArea.app = [{ key: "dashboard", title: "Dashboard", storagePath: "/phis/ui/dashboard" }];
+    state.navigationSurfacesByArea.app = [{
+      area: "app",
+      navKey: "app:sidebar",
+      label: { defaultMessage: "Sidebar" },
+      items: [navigationLink("/phis/ui/dashboard")],
+    }];
+    expect(await previewPhiDeveloperBuilderDraft(state, "structure", {
+      viewer,
+      scope: { area: "app", pageKey: "error" },
+    })).toEqual({ revisionId: null, previewHref: "/app/phis/ui/dashboard" });
+  });
+
+  it("reports when the entry navigation has no reachable page", async () => {
+    await expect(previewPhiDeveloperBuilderDraft(previewState(navigation.slice(0, 4)), "structure", { viewer }))
+      .rejects.toThrow("No linked page in the public Area is available for the shell preview.");
+    expect(calls).toEqual([]);
+  });
+
+  it("still previews the selected page in the Pages workspace", async () => {
+    answer = () => ({ status: 404, body: {} });
+    expect(await previewPhiDeveloperBuilderDraft(previewState(navigation), "pages", {
+      viewer,
+      scope: { area: "public", pageKey: "other" },
+    })).toEqual({ revisionId: null, previewHref: "/other" });
+    expect(new URL(calls[0]!.path).pathname).toBe("/api/site/cms/page/draft");
+  });
 });
 
 const siteDefinition = {

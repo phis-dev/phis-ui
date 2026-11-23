@@ -81,12 +81,13 @@ export function PhiSpacerWidget({
       }}
     >
       <div
+        className={isEditor ? "phi-builder-spacer-box" : undefined}
         style={{
           position: "relative",
           width: "100%",
           height: "100%",
-          minWidth: 0,
-          minHeight: 0,
+          minWidth: isEditor ? undefined : 0,
+          minHeight: isEditor ? undefined : 0,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",

@@ -224,6 +224,13 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_DEFINITION = {
         valueType: "none",
       },
       {
+        id: "revisionDraftStatus",
+        channel: "draftStatus",
+        action: "change",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.revisionsDraftStatus,
+      },
+      {
         id: "builderMode",
         channel: "builderMode",
         action: "change",

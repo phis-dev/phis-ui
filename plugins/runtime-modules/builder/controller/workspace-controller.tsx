@@ -169,12 +169,14 @@ import {
   type PhiBuilderPageMetaPresentationLabels,
 } from "../controller/definition";
 import type { PhiCmsTreeControllerSettings } from "../../../../types/cms";
+import type { PhiAccessViewer } from "../../../../types/access";
 import {
   formatPhiHistoryTooltip,
   type PhiHistoryLabels,
 } from "../../../../components/widgets/label-types/history";
 
 type PhiDeveloperBuilderWorkspaceControllerOptions = {
+  viewer: PhiAccessViewer;
   shellPresetDraftsByArea?: Record<string, Record<string, PhiDeveloperBuilderRegionDraft>>;
   runtimeModuleDefinitions?: readonly PhiRuntimeModuleDefinition[];
   runtimeModuleIdsByArea?: Record<string, PhiRuntimeModuleId[]>;
@@ -331,6 +333,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     values: Partial<Record<PhiBuilderEffectsSection, unknown>>;
   } | null>(null);
   const {
+    viewer,
     shellPresetDraftsByArea = {},
     runtimeModuleDefinitions = [],
     runtimeModuleIdsByArea = {},
@@ -437,6 +440,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     hasUnsavedChanges,
     reportSaved,
     state,
+    viewer,
     historyLabels,
   });
   const currentRuntimeModuleIdsByArea =
@@ -494,25 +498,21 @@ function usePhiDeveloperBuilderWorkspaceController(
     [serverUnavailableModules],
   );
   const publicRoutePathsPreloadKey = useMemo(() => JSON.stringify(publicRoutePaths), [publicRoutePaths]);
-  const areaRootRoutesPreloadKey = useMemo(() => JSON.stringify(areaRootRoutesByArea), [areaRootRoutesByArea]);
   /*
    * The Areas' root routes, handed to every workspace rather than to /shells alone.
    *
    * It is a baseline and not a draft: /pages reads it to leave `/` out of its page selector while the
-   * root forwards, and nothing about that is an edit.
+   * root forwards. A save can update the client baseline between preloads, so a fresh server answer
+   * must be applied even when its content matches the answer the Controller received before that save.
    */
   useEffect(() => {
     setPhiDeveloperBuilderAreaRootRoutes(areaRootRoutesByArea);
-    // The serialized preload is the identity that matters; the object is rebuilt on every render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [areaRootRoutesPreloadKey]);
+  }, [areaRootRoutesByArea]);
 
   // What the Areas said about being found, read from the same revision and set the same way.
-  const areaMetaPreloadKey = useMemo(() => JSON.stringify(areaMetaByArea), [areaMetaByArea]);
   useEffect(() => {
     setPhiDeveloperBuilderAreaMetaBaseline(areaMetaByArea);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [areaMetaPreloadKey]);
+  }, [areaMetaByArea]);
 
   // What each Shell tells its Controllers, carried into every save that states the Shell whole.
   const areaControllerSettingsPreloadKey = useMemo(
@@ -1936,6 +1936,7 @@ function usePhiDeveloperBuilderWorkspaceController(
 }
 
 export type PhiDeveloperBuilderWorkspaceControllerProps = {
+  viewer: PhiAccessViewer;
   shellPresetDraftsByArea?: Record<string, Record<string, PhiDeveloperBuilderRegionDraft>>;
   runtimeModuleDefinitions?: readonly PhiRuntimeModuleDefinition[];
   runtimeModuleIdsByArea?: Record<string, PhiRuntimeModuleId[]>;
@@ -1957,6 +1958,7 @@ export type PhiDeveloperBuilderWorkspaceControllerProps = {
 };
 
 export function PhiDeveloperBuilderWorkspaceController({
+  viewer,
   shellPresetDraftsByArea = {},
   runtimeModuleDefinitions = [],
   runtimeModuleIdsByArea = {},
@@ -1976,6 +1978,7 @@ export function PhiDeveloperBuilderWorkspaceController({
   signalRoutes = null,
 }: PhiDeveloperBuilderWorkspaceControllerProps) {
   const controller = usePhiDeveloperBuilderWorkspaceController({
+    viewer,
     shellPresetDraftsByArea,
     runtimeModuleDefinitions,
     runtimeModuleIdsByArea,

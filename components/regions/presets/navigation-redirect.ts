@@ -24,15 +24,22 @@ import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms"
 export function findFirstPhiCmsNavigationLinkPath(
   items: readonly PhiCmsResolvedNavigationItem[],
   skipPath?: string,
+  options?: {
+    isVisible?: (item: PhiCmsResolvedNavigationItem) => boolean;
+    acceptsPath?: (path: string) => boolean;
+  },
 ): string | null {
   for (const item of items) {
+    if (options?.isVisible && !options.isVisible(item)) {
+      continue;
+    }
     const path = (item.target?.kind === "custom" && item.target.external === true) || item.target?.kind === "area"
       ? null
       : readPhiCmsNavigationTargetPath(item.target);
-    if (item.kind === "link" && path && path !== skipPath) {
+    if (item.kind === "link" && path && path !== skipPath && (options?.acceptsPath?.(path) ?? true)) {
       return path;
     }
-    const childPath = findFirstPhiCmsNavigationLinkPath(item.children, skipPath);
+    const childPath = findFirstPhiCmsNavigationLinkPath(item.children, skipPath, options);
     if (childPath) {
       return childPath;
     }

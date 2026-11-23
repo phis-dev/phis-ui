@@ -26,6 +26,8 @@ import type { PhiCmsWidgetContentBinding } from "../../../types/cms-plugins";
 import { resolvePhiCmsWidgetContentBindingForConfig } from "../../../helpers/cms-content-binding";
 import { resolvePhiCmsRegionType } from "../../../helpers/cms-region-keys";
 import type { PhiRuntimeModuleDefinition, PhiRuntimeModuleId } from "../../../types";
+import type { PhiAccessViewer } from "../../../types/access";
+import { resolvePhiBuilderShellPreviewPage, type PhiBuilderOfferedCatalogState } from "./offered-page-catalog";
 import {
   resolvePhiAuthUiProviderModuleId,
   resolvePhiDeclaredMediaSpaces,
@@ -1200,10 +1202,11 @@ export async function createPhiDeveloperBuilderPageDraft(input: {
 export async function previewPhiDeveloperBuilderDraft(
   state: Pick<
     PhiDeveloperBuilderWorkspaceState,
-    "area" | "pageKey" | "modulePresetPagesByArea" | "customPages" | "persistedPageCatalogByArea" | "areaPresetSourcesByArea"
-  >,
+    "area" | "pageKey" | "areaPresetSourcesByArea"
+  > & PhiBuilderOfferedCatalogState,
   workspaceKind: PhiDeveloperBuilderWorkspaceKind,
-  options?: {
+  options: {
+    viewer: PhiAccessViewer;
     pathname?: string | null;
     scope?: {
       area: PhiDeveloperBuilderArea;
@@ -1211,9 +1214,15 @@ export async function previewPhiDeveloperBuilderDraft(
     };
   },
 ) {
-  const area = options?.scope?.area ?? state.area;
-  const pageKey = options?.scope?.pageKey ?? state.pageKey;
-  const pages = resolvePhiBuilderActivePageCatalog(
+  const area = options.scope?.area ?? state.area;
+  const shellPreview = workspaceKind === "structure"
+    ? resolvePhiBuilderShellPreviewPage(state, area, options.viewer)
+    : null;
+  if (shellPreview?.pageKey === null) {
+    throw new Error(`No linked page in the ${area} Area is available for the shell preview.`);
+  }
+  const pageKey = shellPreview?.pageKey ?? options.scope?.pageKey ?? state.pageKey;
+  const pages = shellPreview?.pages ?? resolvePhiBuilderActivePageCatalog(
     area,
     state.modulePresetPagesByArea,
     state.customPages,

@@ -385,6 +385,33 @@
   height: 100%;
 }
 
+/* The glyph is out of flow. Its box supplies a cross-axis minimum only for an editable Flex slot. */
+:is(
+  :where([data-layout-axis="horizontal"][data-phi-block-render-mode="editor"])
+    > .phi-layout-scaffold-slot
+    > .phi-builder-widget-scaffold
+    > .phi-builder-widget-scaffold__content
+    > *
+    > .phi-builder-spacer-box
+) {
+  box-sizing: border-box;
+  min-height: 24px;
+  --phi-builder-spacer-padding-block: var(--phi-padding-xxs);
+}
+
+:is(
+  :where([data-layout-axis="vertical"][data-phi-block-render-mode="editor"])
+    > .phi-layout-scaffold-slot
+    > .phi-builder-widget-scaffold
+    > .phi-builder-widget-scaffold__content
+    > *
+    > .phi-builder-spacer-box
+) {
+  box-sizing: border-box;
+  min-width: 24px;
+  --phi-builder-spacer-padding-inline: var(--phi-padding-xxs);
+}
+
 :where(
   [data-phi-slot-size-inline="fill"] > .phi-builder-widget-scaffold__content > .phi-widget-preview-fallback,
   [data-phi-slot-size-inline="fixed"][data-phi-layout-explicit-width="true"] > .phi-builder-widget-scaffold__content > .phi-widget-preview-fallback

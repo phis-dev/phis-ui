@@ -305,6 +305,8 @@ Content contract:
 
 The revision table reads the selected scope from its binding params. The Revisions Provider owns history
 loading, derived row state, review links, restore, deletion, and active-revision guards.
+After a successful clear or restore, the Builder discards the affected Shell or Page's cached draft and
+undo history. Shells and Pages load that context from the server when opened again.
 
 Dynamic selector options should come from generic option providers where the selector can be modeled as a normal select, cascader, segmented control, or similar generic widget. A specialized workspace selector is acceptable only when the visible control type itself depends on the selected revision kind.
 
@@ -929,6 +931,9 @@ The builder must support a clear change lifecycle.
 ### Live preview
 
 - `Live preview` opens the saved draft as a revision preview of the page or the shell.
+- The Shell workspace opens the Area's configured forward or the first eligible Page linked from its
+  entry navigation. Public uses the header navigation. The other Areas use their own sidebars. If no
+  linked Page can show the shell, the command reports that in the Builder.
 - With no saved draft it opens the published page: what the preview has to show is then what is live, so
   nothing saved is not a failure (`previewPhiDeveloperBuilderDraft` in
   `plugins/runtime-modules/builder/persistence.ts`). Only a draft read that failed is an error -- that is

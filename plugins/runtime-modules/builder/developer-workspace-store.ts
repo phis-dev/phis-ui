@@ -32,7 +32,14 @@ import type {
 import type { PhiRenderableBlockEffects } from "../../../types/renderable-block";
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import type { PhiAnchorWidgetPlacement } from "../../../components/controls/phi-anchor-control-contract";
-import { phiBuilderHistory, type PhiBuilderHistoryRecording } from "./history";
+import { createPhiBuilderHistoryContext, phiBuilderHistory, type PhiBuilderHistoryRecording } from "./history";
+import { createPhiBuilderDraftAllocationKey } from "./draft-allocation-key";
+import {
+  getPhiBuilderPageDraftKey,
+  getPhiBuilderRegionDraftKey,
+  PHI_BUILDER_PAGE_REGION_KEYS,
+  PHI_BUILDER_SHELL_REGION_KEYS,
+} from "./region-keys";
 import type { PhiAreaRootRoute, PhiAreaMeta } from "../../../helpers/cms-area-config";
 import {
   openPhiWorkspacePage,
@@ -306,6 +313,12 @@ const builderRegionDraftStore = createPhiPluginStateStore<Record<string, PhiDeve
   "@phis/ui/developer-region-drafts",
   () => ({}),
 );
+
+const builderDraftContextGenerations = new Map<string, number>();
+
+export function getPhiBuilderDraftContextGeneration(context: string) {
+  return builderDraftContextGenerations.get(context) ?? 0;
+}
 
 export function patchPhiDeveloperBuilderState(
   next: Partial<Pick<PhiDeveloperBuilderState, "pickerWidgetCategoryFilters">>,
@@ -1100,6 +1113,45 @@ export function clearPhiBuilderDraftAllocation(allocationKey: string) {
     delete draftAllocations[allocationKey];
     return { ...current, draftAllocations };
   });
+}
+
+/** A successful revision action supersedes the canvas and undo history of just that draft. */
+export function invalidatePhiBuilderDraftContext(scope:
+  | { workspace: "structure"; area: PhiDeveloperBuilderArea }
+  | { workspace: "pages"; area: PhiDeveloperBuilderArea; pageKey: string },
+) {
+  const { area, workspace } = scope;
+  const context = createPhiBuilderHistoryContext(scope);
+  builderDraftContextGenerations.set(context, getPhiBuilderDraftContextGeneration(context) + 1);
+  const pageKey = workspace === "pages" ? scope.pageKey : null;
+  const regions = workspace === "pages" ? PHI_BUILDER_PAGE_REGION_KEYS : PHI_BUILDER_SHELL_REGION_KEYS;
+  restorePhiDeveloperRegionDrafts(Object.fromEntries(
+    regions.map((region) => [getPhiBuilderRegionDraftKey(area, region, pageKey), null]),
+  ));
+
+  if (pageKey === null) {
+    setPhiDeveloperBuilderAreaRootRoute(area, undefined);
+    restorePhiDeveloperBuilderAreaMeta(area, undefined);
+  } else {
+    const metaKey = getPhiBuilderPageDraftKey(area, "page_meta", pageKey);
+    const deleteKey = getPhiBuilderPageDraftKey(area, "page_delete", pageKey);
+    builderWorkspaceStore.patch(PHI_WORKSPACE_CATALOG_SCOPE, (current) => {
+      const pageMetaDrafts = { ...current.pageMetaDrafts };
+      const deletedPageDrafts = { ...current.deletedPageDrafts };
+      const pageControllerSettings = { ...current.pageControllerSettings };
+      delete pageMetaDrafts[metaKey];
+      delete deletedPageDrafts[deleteKey];
+      delete pageControllerSettings[metaKey];
+      return { ...current, pageMetaDrafts, deletedPageDrafts, pageControllerSettings };
+    });
+  }
+
+  clearPhiBuilderDraftAllocation(createPhiBuilderDraftAllocationKey(
+    area,
+    pageKey ?? "",
+    workspace === "pages" ? "page" : "area",
+  ));
+  phiBuilderHistory.clear(context);
 }
 
 /** Takes the next node sequence of a Draft, answering the allocation it was taken from. */

@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { useRouter } from "next/navigation";
+import type { PhiAccessViewer } from "../../../../types/access";
 
 import { usePhiConfirmDialog } from "../../../../components/controls/phi-confirm-dialog";
 import {
@@ -92,6 +93,7 @@ export function usePhiBuilderDraftCommandController({
   reportSaved,
   hasUnsavedChanges,
   state,
+  viewer,
   historyLabels,
 }: {
   effectiveArea: PhiDeveloperBuilderArea;
@@ -109,6 +111,7 @@ export function usePhiBuilderDraftCommandController({
   /** Whether the workspace on screen holds edits no stored revision has. */
   hasUnsavedChanges: boolean;
   state: PhiDeveloperBuilderWorkspaceState;
+  viewer: PhiAccessViewer;
   /** What an undo or redo says it moved, in the author's language. */
   historyLabels: PhiHistoryLabels;
 }) {
@@ -415,6 +418,7 @@ export function usePhiBuilderDraftCommandController({
      * before it opens, and which of the two it shows.
      */
     const result = await previewPhiDeveloperBuilderDraft(state, workspaceKind, {
+      viewer,
       pathname,
       scope: previewScope,
     });

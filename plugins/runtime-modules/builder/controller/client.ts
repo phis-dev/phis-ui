@@ -13,7 +13,7 @@ import {
 
 export const PHI_BUILDER_RUNTIME_CONTROLLER_PLUGIN = {
   ...PHI_BUILDER_RUNTIME_CONTROLLER_DEFINITION,
-  renderController: ({ preloadData, config }) => {
+  renderController: ({ preloadData, config, runtime }) => {
     if (
       !preloadData?.shellPresetDraftsByArea ||
       !preloadData.runtimeModuleDefinitions ||
@@ -36,6 +36,7 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_PLUGIN = {
     }
 
     return createElement(PhiDeveloperBuilderWorkspaceControllerMount, {
+      viewer: runtime.viewer,
       signalRoutes: config.signalRoutes,
       shellPresetDraftsByArea: preloadData.shellPresetDraftsByArea,
       runtimeModuleDefinitions: preloadData.runtimeModuleDefinitions,

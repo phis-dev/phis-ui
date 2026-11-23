@@ -270,6 +270,11 @@
   gap: var(--phi-builder-content-body-gap);
 }
 
+:where(.phi-builder-spacer-box) {
+  min-width: 0;
+  min-height: 0;
+}
+
 :where(.phi-builder-spacer) {
   position: absolute;
   inset: 0;
@@ -280,7 +285,8 @@
   gap: 8px;
   min-width: 0;
   min-height: 0;
-  padding: var(--phi-padding-sm);
+  padding-block: var(--phi-builder-spacer-padding-block, var(--phi-padding-sm));
+  padding-inline: var(--phi-builder-spacer-padding-inline, var(--phi-padding-sm));
   box-sizing: border-box;
   pointer-events: none;
 }

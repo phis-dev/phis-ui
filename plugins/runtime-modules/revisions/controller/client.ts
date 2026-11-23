@@ -28,6 +28,7 @@ import {
   resolvePhiBuilderRevisionPagePath,
 } from "../types";
 import {
+  findPhiBuilderPageKeyFromStoragePath,
   resolvePhiBuilderActivePageCatalog,
   resolvePhiBuilderActivePageKey,
   resolvePhiBuilderPageKeyFromCatalogPath,
@@ -62,6 +63,20 @@ function PhiRevisionsControllerMount({
     value: PhiSignalValue,
     correlationId?: string | null,
   ) => dispatchPhiSignalCapability(dispatchSignal, address, emitRoutes, capabilityId, value, correlationId), [address, dispatchSignal, emitRoutes]);
+  const reportDraftStatus = useCallback((value: PhiSignalValue, correlationId?: string) => {
+    dispatchSignal({
+      scope: "area",
+      channel: "draftStatus",
+      action: "change",
+      value,
+      valueType: "json",
+      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.revisionsDraftStatus,
+      sender: address,
+      receiver: "broadcast",
+      correlationId,
+      timestamp: Date.now(),
+    });
+  }, [address, dispatchSignal]);
   const { showMessage } = usePhiApplicationFeedback();
   const pathname = usePhiPathname();
   const router = useRouter();
@@ -136,6 +151,7 @@ function PhiRevisionsControllerMount({
         ownerModuleId: source?.ownerModuleId,
         presetKey: source?.presetKey,
       });
+      reportDraftStatus({ status: "published", revisionId: null, area }, correlationId);
       emitCapability("deleteAreaClose", null, correlationId);
       emitCapability("historyReload", null, correlationId);
       showMessage({ level: "success", content: `Cleared the ${area} structure back to its preset. Its Modules are kept.` });
@@ -146,7 +162,7 @@ function PhiRevisionsControllerMount({
         content: error instanceof Error ? error.message : "Clearing the Area failed.",
       });
     }
-  }, [emitCapability, router, showMessage]);
+  }, [emitCapability, reportDraftStatus, router, showMessage]);
 
   usePhiSignalListener(useCallback((signal) => {
     if (
@@ -238,67 +254,44 @@ function PhiRevisionsControllerMount({
       const payload = signal.value as Record<string, unknown>;
       const action = isPhiRecord(payload.value) ? payload.value : null;
       const key = typeof action?.key === "string" ? action.key : "";
-      if (key === "restore") {
+      const scope = isPhiRecord(action?.scope) ? action.scope : null;
+      const kind = normalizePhiBuilderRevisionsKindSearchParam(scope?.kind);
+      const area = scope?.area;
+      if (key === "restore" || key === "resetPage") {
+        const structural = (kind === "area" || kind === "page") && isPhiBuilderAreaKey(area);
+        let pageKey: string | null = null;
+        if (kind === "page" && isPhiBuilderAreaKey(area) && typeof scope?.path === "string") {
+          const state = getPhiWorkspaceCatalogSnapshot();
+          const pages = resolvePhiBuilderActivePageCatalog(
+            area,
+            state.modulePresetPagesByArea,
+            state.customPages,
+            state.persistedPageCatalogByArea,
+          );
+          pageKey = findPhiBuilderPageKeyFromStoragePath(area, scope.path, pages)
+            ?? resolvePhiBuilderPageKeyFromCatalogPath(area, scope.path, pages);
+        }
+        reportDraftStatus({
+          status: key === "restore" ? "draft" : "published",
+          revisionId: typeof action?.restoredRevisionId === "number" ? action.restoredRevisionId : null,
+          ...(kind === "navigation" ? { navKey: scope?.navKey } : {}),
+          ...(kind === "theme" ? { themeKey: scope?.themeKey } : {}),
+          ...(structural ? { area } : {}),
+          ...(pageKey !== null ? { pageKey } : {}),
+          ...(action?.areaModules === true ? { areaModules: true } : {}),
+        }, signal.correlationId);
+        if (structural) {
+          router.refresh();
+        }
         showMessage(
-          { level: "success", content: `Restored revision #${String(action?.revisionId ?? "")}.` },
-          { correlationId: signal.correlationId },
-        );
-        const state = getPhiWorkspaceCatalogSnapshot();
-        const search = new URLSearchParams(window.location.search);
-        const kind = normalizePhiBuilderRevisionsKindSearchParam(
-          search.get(PHI_BUILDER_REVISIONS_KIND_SEARCH_PARAM),
-        ) ?? "area";
-        const revisionScope = search.get(PHI_BUILDER_REVISIONS_SCOPE_SEARCH_PARAM)?.trim() ?? "";
-        const pages = resolvePhiBuilderActivePageCatalog(
-          state.area,
-          state.modulePresetPagesByArea,
-          state.customPages,
-          state.persistedPageCatalogByArea,
-        );
-        dispatchSignal({
-          scope: "area",
-          channel: "draftStatus",
-          action: "change",
-          value: {
-            status: "draft",
-            revisionId: typeof action?.restoredRevisionId === "number" ? action.restoredRevisionId : null,
-            ...(kind === "navigation"
-              ? { navKey: resolvePhiBuilderRevisionNavScopeKey(
-                  state.area,
-                  revisionScope.includes(":")
-                    ? revisionScope
-                    : search.get(PHI_BUILDER_NAVIGATION_KEY_SEARCH_PARAM),
-                ) }
-              : kind === "theme"
-                ? { themeKey: revisionScope || search.get(PHI_BUILDER_THEME_KEY_SEARCH_PARAM) || "default" }
-                : kind === "page"
-                  ? {
-                      area: state.area,
-                      pageKey: revisionScope.startsWith("/")
-                        ? resolvePhiBuilderPageKeyFromCatalogPath(state.area, revisionScope, pages)
-                        : normalizePhiBuilderPageSearchParam(
-                            search.get(PHI_BUILDER_PAGE_SEARCH_PARAM),
-                          ) ?? state.pageKey,
-                    }
-                  : {
-                      area: normalizePhiBuilderAreaSearchParam(revisionScope) ?? state.area,
-                    }),
+          {
+            level: "success",
+            content: key === "restore"
+              ? `Restored revision #${String(action?.revisionId ?? "")}.`
+              : "The Page is back to its Module's preset.",
           },
-          valueType: "json",
-          valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.revisionsDraftStatus,
-          sender: address,
-          receiver: "broadcast",
-          correlationId: signal.correlationId,
-          timestamp: Date.now(),
-        });
-      }
-      else if (key === "resetPage") {
-        showMessage(
-          { level: "success", content: "The Page is back to its Module's preset." },
           { correlationId: signal.correlationId },
         );
-        // What stands now is the preset, which only the server knows how to build.
-        router.refresh();
       }
       else if (key === "delete") showMessage(
         { level: "success", content: `Deleted revision #${String(action?.revisionId ?? "")}.` },
@@ -309,7 +302,7 @@ function PhiRevisionsControllerMount({
         { correlationId: signal.correlationId },
       );
     }
-  }, [address, deleteAreaShell, dispatchSignal, emitCapability, pathname, router, showMessage]), {
+  }, [address, deleteAreaShell, emitCapability, pathname, reportDraftStatus, router, showMessage]), {
     scopes: ["area", "page"],
     channels: ["areaSelection", "bindingParams", "command", "formValues", "mutation"],
   },

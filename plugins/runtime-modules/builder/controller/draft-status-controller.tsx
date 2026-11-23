@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { PHI_SIGNAL_VALUE_SCHEMAS, type PhiSignalAddress } from "../../../../types/signals";
-import type { PhiDraftStatusSignalValue } from "../../../../types/draft-status";
+import { readPhiDraftStatusSignalValue, type PhiDraftStatusSignalValue } from "../../../../types/draft-status";
+import { isPhiBuilderAreaKey } from "../../../../constants/cms-areas";
+import { isPhiRecord } from "../../../../helpers/is-record";
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../components/runtime/runtime-signal-bus";
 import { resolvePhiBuilderCmsStoragePath } from "../../../../helpers/cms-paths";
 import {
@@ -12,6 +14,12 @@ import {
 } from "../../../../helpers/cms-page-catalog";
 import { createPhiBuilderControllerAddress } from "../controller/address";
 import { createPhiBuilderHistoryContext, phiBuilderHistory } from "../history";
+import {
+  clearPhiBuilderDraftAllocation,
+  getPhiBuilderDraftContextGeneration,
+  invalidatePhiBuilderDraftContext,
+} from "../developer-workspace-store";
+import { createPhiBuilderDraftAllocationKey } from "../draft-allocation-key";
 import type {
   PhiDeveloperBuilderArea,
   PhiDeveloperBuilderCommandWorkspace,
@@ -153,18 +161,21 @@ export function usePhiBuilderDraftStatusController({
   const targetUrl = target?.url ?? null;
   const subject = target?.subject ?? null;
   const historyContext = target?.historyContext ?? null;
+  const requestKey = targetUrl === null || historyContext === null
+    ? null
+    : `${targetUrl}:${getPhiBuilderDraftContextGeneration(historyContext)}`;
   const [stored, setStored] = useState<PhiBuilderStoredDraftStatus | null>(null);
   /*
    * The history head each target was last saved or first read at. The status is read again whenever the
    * target changes -- an Area switched away from and back -- and taking the head at that moment called
    * every edit made before it saved: back on an Area with an unsaved edit, the badge said "Published".
-   * A target keeps the head it was read or saved at until it is saved again.
+   * A target keeps its saved head until a revision action replaces that editing context.
    */
-  const savedHeadsRef = useRef(new Map<string, unknown>());
+  const savedHeadsRef = useRef(new Map<string, { requestKey: string; head: unknown }>());
   const historyHead = phiBuilderHistory.useHead(historyContext ?? PHI_BUILDER_NO_DRAFT_HISTORY_CONTEXT);
 
   useEffect(() => {
-    if (targetUrl === null) {
+    if (targetUrl === null || requestKey === null || historyContext === null) {
       return;
     }
     let cancelled = false;
@@ -172,19 +183,11 @@ export function usePhiBuilderDraftStatusController({
       if (cancelled) {
         return;
       }
-      setStored({
-        requestKey: targetUrl,
-        ...next,
-        savedHead: (() => {
-          if (!savedHeadsRef.current.has(targetUrl)) {
-            savedHeadsRef.current.set(
-              targetUrl,
-              historyContext === null ? null : phiBuilderHistory.getHead(historyContext),
-            );
-          }
-          return savedHeadsRef.current.get(targetUrl);
-        })(),
-      });
+      const saved = savedHeadsRef.current.get(targetUrl);
+      const savedHead = saved?.requestKey === requestKey ? saved.head
+        : saved ? null : phiBuilderHistory.getHead(historyContext);
+      savedHeadsRef.current.set(targetUrl, { requestKey, head: savedHead });
+      setStored({ requestKey, ...next, savedHead });
     };
 
     void fetch(targetUrl, { method: "GET", cache: "no-store" })
@@ -214,10 +217,10 @@ export function usePhiBuilderDraftStatusController({
     return () => {
       cancelled = true;
     };
-  }, [historyContext, targetUrl]);
+  }, [historyContext, requestKey, targetUrl]);
 
   const current: PhiDraftStatusSignalValue | null =
-    stored === null || stored.requestKey !== targetUrl || subject === null
+    stored === null || stored.requestKey !== requestKey || subject === null
       ? null
       : stored.status === "error"
         ? { status: "error", revisionId: null, subject, error: stored.error }
@@ -254,6 +257,30 @@ export function usePhiBuilderDraftStatusController({
   usePhiSignalListener(
     (signal) => {
       if (
+        signal.scope === "area" &&
+        signal.channel === "draftStatus" &&
+        signal.action === "change" &&
+        signal.valueSchema === PHI_SIGNAL_VALUE_SCHEMAS.revisionsDraftStatus &&
+        signal.receiver === "broadcast" &&
+        signal.sender !== createPhiBuilderControllerAddress() &&
+        isPhiRecord(signal.value)
+      ) {
+        // Revisions names the exact draft it replaced. Ordinary status messages describe the canvas.
+        const { area, pageKey, areaModules } = signal.value as Record<string, unknown>;
+        const status = readPhiDraftStatusSignalValue(signal.value)?.status;
+        if (!isPhiBuilderAreaKey(area) || (status !== "draft" && status !== "published")) {
+          return;
+        }
+        if (areaModules === true) {
+          clearPhiBuilderDraftAllocation(createPhiBuilderDraftAllocationKey(area, "", "modules"));
+        } else if (typeof pageKey === "string") {
+          invalidatePhiBuilderDraftContext({ workspace: "pages", area, pageKey });
+        } else {
+          invalidatePhiBuilderDraftContext({ workspace: "structure", area });
+        }
+        return;
+      }
+      if (
         signal.scope !== "area" ||
         signal.channel !== "draftStatus" ||
         signal.action !== "activate" ||
@@ -287,12 +314,12 @@ export function usePhiBuilderDraftStatusController({
     revisionId: number | null,
     savedAt: PhiBuilderSavedHistoryHead,
   ) {
-    if (targetUrl === null) {
+    if (targetUrl === null || requestKey === null) {
       return;
     }
-    savedHeadsRef.current.set(targetUrl, savedAt.head);
+    savedHeadsRef.current.set(targetUrl, { requestKey, head: savedAt.head });
     setStored({
-      requestKey: targetUrl,
+      requestKey,
       status,
       revisionId,
       error: null,

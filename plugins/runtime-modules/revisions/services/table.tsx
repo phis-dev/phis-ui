@@ -590,7 +590,7 @@ async function mutateRevision(request: PhiTableProviderMutationRequest) {
     return {
       status: "accepted" as const,
       invalidation: "view" as const,
-      value: { key: request.actionKey },
+      value: { key: request.actionKey, scope: params.scope },
     };
   }
   const current = await loadRevisionHistory(params.scope, request.signal);
@@ -608,6 +608,10 @@ async function mutateRevision(request: PhiTableProviderMutationRequest) {
       key: request.actionKey,
       revisionId,
       restoredRevisionId: result.revisionId,
+      scope: params.scope,
+      areaModules: params.scope.kind === "area" && current.rows.some(
+        (row) => row.revisionId === revisionId && !row.sourcePreset,
+      ),
     };
   } else if (request.actionKey === "delete") {
     const revisionId = readRevisionId(request.rowIdentity);
