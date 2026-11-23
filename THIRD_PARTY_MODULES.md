@@ -2324,6 +2324,18 @@ package declares in `phis.media`. A declared key answers a stable placeholder id
 integers); an undeclared key answers `null` and is recorded. It returns `{ media, findings() }`, and a
 finding -- "asset `<key>` is not declared in the package's `phis.media`" -- fails the check.
 
+`checkPhiPresetTables(tree, { dataProviders })`, from the same door, reads every Table of the tree bound to
+one of your Table Providers (`dataProviders`: your Module's Provider descriptors, each with its `key` and
+`resources`) as the Table reads itself in the browser before its first request: its binding to its
+resource (`validatePhiTableWidgetBinding`: columns, filters, sorting, the counted footer, every Provider
+action declared in its scope with the confirmation and danger the resource asks for) and every icon its
+actions and binding tools name (`isPhiIconNameKnown`). In the browser such a finding leaves the Widget
+unavailable -- no table at all, only a console warning -- while the Page renders, so it is your test's to
+find. Run it beside `checkPhiPresetTreeContract` over every tree, with every Table Provider your package
+ships; a Table on a Provider you do not hand over is not judged. It is apart from the contract check because
+that one also runs while a Site serves a Page, where an unavailable Table must stay one Widget and not
+become a 500 for the whole Page.
+
 `checkPhiPresetTextSources(tree)`, from the same door, reports every Widget that writes text into its
 config without saying whose words they are (`textSource: "preset"` or `"site"`,
 [TRANSLATIONS.md, "Widget config text"](./TRANSLATIONS.md#widget-config-text)). A Module runs it over

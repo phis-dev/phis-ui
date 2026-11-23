@@ -23,6 +23,7 @@ import {
 } from "./accounting/ids";
 import { PHI_ACCOUNTING_RUNTIME_MODULE_ROUTES } from "./accounting/presets";
 import { checkPhiPresetTreeContract } from "../../helpers/preset-tree-contract-check";
+import { checkPhiPresetTables } from "../../helpers/preset-table-check";
 import { PhiCmsPageType, PhiCmsStatus } from "../../constants/phi-cms";
 import { PHI_VIEWER_ACCESS_ANYONE } from "../../types/access";
 import type { PhiRuntimeModuleId } from "../../types/cms-module-descriptors";
@@ -96,6 +97,43 @@ describe("the product directory page", () => {
   it("holds to the preset tree contract the descriptor compiler throws on", async () => {
     const tree = await loadTree();
     expect(checkPhiPresetTreeContract(tree, { page: PRODUCTS_PAGE, forms: [] })).toEqual([]);
+  });
+
+  /*
+   * The Table check reads every Table bound to one of them as the Table
+   * reads itself in the browser, where a finding leaves the Widget unavailable without a word on the Page:
+   * an action the resource does not declare, a resource the Provider does not have, an icon PhiIcon does not
+   * know.
+   */
+  it("checks a Table against its Provider's resource and its icons", async () => {
+    const tree = await loadTree();
+    const dataProviders = PHI_ACCOUNTING_RUNTIME_DATA_PROVIDER_DESCRIPTORS;
+    expect(checkPhiPresetTables(tree, { dataProviders })).toEqual([]);
+    const table = tree.contentWidgets.find((widget) => widget.widgetType.endsWith("/table"))!;
+    const config = table.config as { source: Record<string, unknown>; features: { actions: { row: Record<string, unknown>[] } } };
+    const withTable = (next: typeof config) => ({
+      ...tree,
+      contentWidgets: tree.contentWidgets.map((widget) => (widget.id === table.id ? { ...widget, config: next } : widget)),
+    });
+    const [firstRow, ...rest] = config.features.actions.row;
+    const unknownIcon = withTable({
+      ...config,
+      features: { ...config.features, actions: { ...config.features.actions, row: [{ ...firstRow, icon: "close-circle", display: "icon" }, ...rest] } },
+    });
+    expect(checkPhiPresetTables(unknownIcon, { dataProviders }).map((finding) => finding.message))
+      .toEqual([`Table action "${String(firstRow!.key)}" names the icon "close-circle", which PhiIcon does not know.`]);
+    const unknownResource = withTable({ ...config, source: { ...config.source, resourceKey: "nothing" } });
+    expect(checkPhiPresetTables(unknownResource, { dataProviders }).map((finding) => finding.message))
+      .toEqual([`Table is bound to resource "nothing", which "${String(config.source.providerKey)}" does not declare.`]);
+    const undeclaredAction = withTable({
+      ...config,
+      features: { ...config.features, actions: { ...config.features.actions, row: [...config.features.actions.row, { key: "vanish", label: "Vanish", execution: "provider" }] } },
+    });
+    expect(checkPhiPresetTables(undeclaredAction, { dataProviders }).length).toBeGreaterThan(0);
+    // The contract check, which the compiler also runs while a Site serves the Page, leaves Tables alone.
+    expect(checkPhiPresetTreeContract(unknownIcon, { page: PRODUCTS_PAGE, forms: [] })).toEqual([]);
+    // A Table on a Provider not handed over is not judged.
+    expect(checkPhiPresetTables(unknownIcon, { dataProviders: [] })).toEqual([]);
   });
 
   it("binds its Table and the terms record to a Provider the Accounting Area loads in the browser", async () => {

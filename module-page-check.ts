@@ -18,5 +18,6 @@
 export { createPhiDeclaredMediaResolver, type PhiModuleMediaFinding } from "./helpers/module-media-check";
 export { checkPhiPagePresetLayout, type PhiPageLayoutFinding } from "./helpers/page-layout-check";
 export { checkPhiPresetTextSources, type PhiPresetTextSourceFinding } from "./helpers/preset-text-source-check";
+export { checkPhiPresetTables } from "./helpers/preset-table-check";
 export { checkPhiPresetTreeContract, type PhiPresetTreeContractFinding } from "./helpers/preset-tree-contract-check";
 export { checkPhiRouteAddresses, type PhiRouteAddressFinding, type PhiRouteAddressSubject } from "./helpers/route-address-check";

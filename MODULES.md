@@ -1038,9 +1038,9 @@ are deliberate:
   difference either.
 
 One more behaved the same way without being deliberate: an icon name the registry does not know renders
-nothing at all. `PHI_ANTD_ICON_NAMES` in `components/shell/phi-antd-icon.tsx` is the one registry, each
+nothing at all. `PHI_ANTD_ICON_NAMES` in `components/shell/phi-icon-names.ts` is the one registry, each
 icon loaded as its own chunk where it is drawn, and every place that takes an icon name resolves it by the
-same rule (`isPhiIconNameKnown` in `components/shell/phi-icon.tsx`): `PhiIcon`, a string given to
+same rule (`isPhiIconNameKnown` in `components/shell/phi-icon-names.ts`): `PhiIcon`, a string given to
 `PhiButtonControl`'s `icon`, a Table action, a Command Toolbar button. A short name (`plus`) is the Ant
 Design icon of that name and means the same as `antd:plus`; one name per icon, case counts, and there are
 no aliases -- the Button resolver's own list (`add`, `cancel`, `trash`, `settings` drawn as a pen) was

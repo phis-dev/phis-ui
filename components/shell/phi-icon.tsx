@@ -9,7 +9,10 @@ import {
 } from "react";
 
 import { PHI_MODULE_ICON_NAMESPACE } from "../../constants/module-identity";
-import { PHI_ANTD_ICON_NAMES, PhiAntdIcon, type PhiAntdIconPresentation } from "./phi-antd-icon";
+import { PhiAntdIcon, type PhiAntdIconPresentation } from "./phi-antd-icon";
+import { isPhiBuilderIconNamespace, isPhiIconNameKnown, PHI_ANTD_ICON_NAMES } from "./phi-icon-names";
+
+export { isPhiIconNameKnown };
 import { PhiModuleIcon } from "./phi-module-icons";
 
 type PhiIconifyProps = {
@@ -68,35 +71,7 @@ function renderIconFallback(size: number | string) {
   );
 }
 
-function isPhiBuilderIconNamespace(namespace: string) {
-  return namespace.endsWith("/layouts") || namespace.endsWith("/widgets");
-}
 
-/**
- * Whether `PhiIcon` draws something for `name`: the one rule every icon name in this house follows.
- *
- * A name without a prefix is an Ant Design icon from `PHI_ANTD_ICON_NAMES` and means the same as
- * `antd:<name>`. One name per icon, and the same name in a Button, a Table action, a Command Toolbar and a
- * preset: there are no aliases (`add`, `cancel`, `trash`) beside it, and case counts. `module:`,
- * `iconify:`, `asset:` and the Builder's motif namespaces are drawn by their own owners, which say for
- * themselves whether the name exists, so here they count as known.
- */
-export function isPhiIconNameKnown(name: string) {
-  const [namespace, ...rest] = name.split(":");
-  const value = rest.join(":");
-  if (!value) return Object.hasOwn(PHI_ANTD_ICON_NAMES, name);
-  if (isPhiBuilderIconNamespace(namespace)) return true;
-  switch (namespace) {
-    case PHI_MODULE_ICON_NAMESPACE:
-    case "iconify":
-    case "asset":
-      return true;
-    case "antd":
-      return Object.hasOwn(PHI_ANTD_ICON_NAMES, value);
-    default:
-      return false;
-  }
-}
 
 const reportedUnknownIconNames = new Set<string>();
 
@@ -112,7 +87,7 @@ export function reportPhiUnknownIconName(name: string) {
   reportedUnknownIconNames.add(name);
   console.warn(
     `[phi-icon] "${name}" names no icon and draws nothing. Use a name from PHI_ANTD_ICON_NAMES `
-      + "(components/shell/phi-antd-icon.tsx), with or without `antd:`, or a `module:`, `iconify:` or `asset:` name.",
+      + "(components/shell/phi-icon-names.ts), with or without `antd:`, or a `module:`, `iconify:` or `asset:` name.",
   );
 }
 

@@ -59,9 +59,9 @@ const forbiddenIconPrefixes = new Map([
  * runs without compiling TypeScript.
  */
 async function readResolvableAntdIconNames() {
-  const registrySource = await readFile(path.join(repositoryRoot, "components/shell/phi-antd-icon.tsx"), "utf8");
+  const registrySource = await readFile(path.join(repositoryRoot, "components/shell/phi-icon-names.ts"), "utf8");
   const registry = registrySource.match(/PHI_ANTD_ICON_NAMES[^=]*=\s*\{([\s\S]*?)\n\};/u);
-  if (!registry) throw new Error("PHI_ANTD_ICON_NAMES not found in components/shell/phi-antd-icon.tsx.");
+  if (!registry) throw new Error("PHI_ANTD_ICON_NAMES not found in components/shell/phi-icon-names.ts.");
   return new Set([...registry[1].matchAll(/^\s*"?([a-z0-9-]+)"?\s*:/gmu)].map((match) => match[1]));
 }
 
@@ -142,7 +142,7 @@ for (const file of presetFiles) {
       failures.push(
         `${file}:${lineOf(source, antdMatch.index)} names \`antd:${antdMatch[1]}\`, which no icon registry `
           + "resolves -- it would render as a blank. Use a name from PHI_ANTD_ICON_NAMES "
-          + "(components/shell/phi-antd-icon.tsx), or add the icon there.",
+          + "(components/shell/phi-icon-names.ts), or add the icon there.",
       );
     }
     antdMatch = antdPattern.exec(source);
@@ -156,7 +156,7 @@ for (const file of presetFiles) {
       failures.push(
         `${file}:${lineOf(source, shortMatch.index)} names the icon \`${shortMatch[1]}\`, which no icon registry `
           + "resolves -- it would render as a blank. A short name is an Ant Design name from "
-          + "PHI_ANTD_ICON_NAMES (components/shell/phi-antd-icon.tsx); there are no aliases.",
+          + "PHI_ANTD_ICON_NAMES (components/shell/phi-icon-names.ts); there are no aliases.",
       );
     }
     shortMatch = shortPattern.exec(source);
