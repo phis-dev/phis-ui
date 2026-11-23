@@ -52,6 +52,12 @@ export type PhiFormFieldProviderProps = {
      */
     holdSubmit(fieldKey: string, reason: string | null): void;
   };
+  /**
+   * The live values of the fields this Form watches -- those a `visibleWhen`, `disabledWhen` or options
+   * dependency reads, and a money field's `currencyField` -- for a field whose own drawing follows a
+   * sibling. Only those keys: any other is absent, however it is filled.
+   */
+  formValues?: Readonly<Record<string, unknown>>;
   /** What the Widget was placed with, for text a field takes from its placement rather than its form. */
   formConfig?: Readonly<Record<string, unknown>>;
   /**

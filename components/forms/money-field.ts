@@ -9,6 +9,8 @@ import {
 } from "../../helpers/money-amount";
 import { createPhiConfigReader, type PhiConfigReader } from "../widgets/config/strict-config-reader";
 
+export { readPhiMoneyFieldCurrencyFieldKey } from "./money-field-currency-key";
+
 /*
  * The `money` field: an amount in minor units, shown and typed in major units beside its currency.
  *
@@ -21,6 +23,10 @@ import { createPhiConfigReader, type PhiConfigReader } from "../widgets/config/s
  *   (`{ CHF: "1990", EUR: "1850" }`), each entry converted by the same rules. A currency left empty is
  *   absent from the list; the list is not padded with zeros, because no price and a price of nothing are
  *   different answers.
+ * - `currencyField: "currency"` -- one amount, as for `currency`, in the currency another field of the
+ *   same Form holds: a destination's shipping in the destination's currency, a promotion's amount in
+ *   its. Until that field names a currency there is nothing to type; when it names another, an amount
+ *   entered for the old one is cleared, because it was never a price in the new one.
  * - neither, on a field with an `optionsProvider` -- the same price list, its currencies the values of
  *   the options the Provider answers, in its order: for a list the Form cannot know when it is written,
  *   such as the currencies a Shop's destinations name. A currency the value holds and the options no
@@ -39,6 +45,8 @@ export type PhiMoneyFieldConfig = {
   currencies?: readonly string[];
   /** A price list whose currencies are the options' values: the field has an `optionsProvider` and neither of the two. */
   currenciesFromOptions?: true;
+  /** The key of the Form field whose value is the one amount's currency, in place of `currency`. */
+  currencyField?: string;
   /** The least and the most an amount may be, in minor units; every entry of a list is held to them. */
   min?: string;
   max?: string;
@@ -73,11 +81,17 @@ export function readPhiMoneyFieldConfig(
   const reader = createPhiConfigReader(config ?? {}, "config");
   const hasCurrency = reader.has("currency");
   const hasCurrencies = reader.has("currencies");
-  if (hasOptionsProvider && (hasCurrency || hasCurrencies)) {
-    return reader.fail(hasCurrency ? "currency" : "currencies", "nothing: the currencies are the options of the field's optionsProvider", config?.[hasCurrency ? "currency" : "currencies"]);
-  }
-  if (!hasOptionsProvider && hasCurrency === hasCurrencies) {
-    return reader.fail("currency", "either `currency` (one amount), `currencies` (one amount per currency) or an `optionsProvider` naming them", config?.currency);
+  const hasCurrencyField = reader.has("currencyField");
+  const set = [hasCurrency, hasCurrencies, hasCurrencyField, hasOptionsProvider].filter(Boolean).length;
+  if (set !== 1) {
+    const key = hasOptionsProvider
+      ? (hasCurrency ? "currency" : hasCurrencies ? "currencies" : "currencyField")
+      : hasCurrencyField && (hasCurrency || hasCurrencies) ? "currencyField" : "currency";
+    return reader.fail(
+      key,
+      "exactly one of `currency` (one amount), `currencyField` (one amount in the currency another field holds), `currencies` (one amount per currency) or an `optionsProvider` naming the currencies",
+      config?.[key],
+    );
   }
   const min = readMinorBound(reader, "min");
   const max = readMinorBound(reader, "max");
@@ -86,6 +100,10 @@ export function readPhiMoneyFieldConfig(
   }
   const bounds = { ...(min === undefined ? {} : { min }), ...(max === undefined ? {} : { max }) };
   if (hasOptionsProvider) return { currenciesFromOptions: true, ...bounds };
+  if (hasCurrencyField) {
+    const currencyField = reader.string("currencyField");
+    return currencyField ? { currencyField, ...bounds } : reader.fail("currencyField", "the key of another field of the Form", currencyField);
+  }
   if (hasCurrency) {
     return { currency: readCurrency(reader, "currency", reader.string("currency")), ...bounds };
   }
@@ -120,6 +138,17 @@ export function readPhiMoneyFieldOptionCurrencies(
     }
   }
   return currencies;
+}
+
+/**
+ * The currency a `currencyField` amount is in: the other field's value, `null` while it names none. A
+ * value that is a code a payment does not accept throws, as a config naming one does.
+ */
+export function readPhiMoneyFieldLinkedCurrency(currencyField: string, values: Readonly<Record<string, unknown>> | null | undefined): string | null {
+  const code = values?.[currencyField];
+  if (code === undefined || code === null || code === "") return null;
+  if (typeof code === "string" && readPhiCurrencyExponent(code) !== undefined) return code;
+  throw new Error(`A money field takes its currency from "${currencyField}", which holds ${describe(code)}; it holds an ISO 4217 currency code a payment accepts.`);
 }
 
 function describe(value: unknown) {

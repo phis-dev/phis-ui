@@ -417,13 +417,19 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
     one input per currency in the order listed. A currency left empty is absent from the list, because no
     price and a price of nothing are different answers.
 
+  - for `config.currencyField` (the key of another field of the same Form), the same money as for
+    `currency`, in the currency that field holds: a destination's shipping in the destination's currency,
+    a promotion's amount in its. Until the field names a currency there is no input; when it names
+    another, an amount entered for the old one is cleared, as a dependent choice is when its parent
+    changes. A key that is no other field of the Form throws when the Form is drawn, and a value that is
+    not a code a payment accepts throws in the field.
   - for neither, on a field with an `optionsProvider`, the same price list, its currencies the values of
     the options the Provider answers, in its order -- for a list the Form cannot know when it is written,
     such as the currencies a Shop's destinations name. Each option's value is an ISO 4217 code a payment
     accepts, or the field throws. A currency the value holds and the options no longer name is shown after
     them, so a price nobody offers any more can still be seen and cleared rather than lost on save.
 
-  Exactly one of the three is set: `currency`, `currencies`, or an `optionsProvider`. `minor` is a canonical integer string, as everywhere in the payment
+  Exactly one of the four is set: `currency`, `currencyField`, `currencies`, or an `optionsProvider`. `minor` is a canonical integer string, as everywhere in the payment
   contract, and how many places a currency has is its ISO 4217 exponent (`PHIS_PAYMENT_CURRENCY_EXPONENTS`:
   two for CHF, none for JPY, three for BHD), never a fixed hundred. The Control (`PhiMoneyControl`)
   converts on the digits (`helpers/money-amount.ts`), never through a float; it writes the number the way

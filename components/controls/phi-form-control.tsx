@@ -56,6 +56,7 @@ import {
   resolvePhiFormText,
   shouldPhiFormSubmitOnKeyDown,
 } from "../forms/form-descriptor-contract";
+import { readPhiMoneyFieldCurrencyFieldKey } from "../forms/money-field-currency-key";
 import { PHI_SHARED_FORM_PROVIDER_REGISTRY } from "../forms/shared-form-provider-registry";
 import {
   resolvePhiControlOptionsDependencies,
@@ -168,6 +169,16 @@ function collectPhiFormWatchedKeys(fields: PhiFormDescriptor["fields"]): readonl
     }
     for (const dependency of field.optionsProvider?.dependencies ?? []) {
       if (dependency.source === "form") keys.add(dependency.valuePath.split(".")[0] ?? "");
+    }
+    const currencyField = field.fieldProviderKey === PHI_FORM_FIELD_PROVIDER_KEYS.money
+      ? readPhiMoneyFieldCurrencyFieldKey(field.config)
+      : null;
+    if (currencyField !== null) {
+      // A key no field of the Form has would leave the amount with no currency for good, silently.
+      if (currencyField === field.key || !fields.some((other) => other.key === currencyField)) {
+        throw new Error(`The money field "${field.key}" takes its currency from "${currencyField}", which is no other field of its Form.`);
+      }
+      keys.add(currencyField);
     }
   }
   keys.delete("");
@@ -305,6 +316,7 @@ function PhiResolvedFormFieldControl({
         checked={checked}
         onChange={onChange}
         formContext={formContext}
+        {...(formValues ? { formValues } : {})}
         {...(mediaLimits ? { mediaLimits } : {})}
       />
       {resolvedOptions.warning ? (

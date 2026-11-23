@@ -1,6 +1,6 @@
 "use client";
 
-import type { ComponentType } from "react";
+import { useEffect, type ComponentType } from "react";
 
 import { PhiCascaderControl } from "../controls/phi-cascader-control";
 import { PhiFlexControl } from "../controls/phi-flex-control";
@@ -13,6 +13,7 @@ import {
   readPhiMoneyFieldAmount,
   readPhiMoneyFieldAmounts,
   readPhiMoneyFieldConfig,
+  readPhiMoneyFieldLinkedCurrency,
   readPhiMoneyFieldOptionCurrencies,
   updatePhiMoneyFieldAmounts,
 } from "./money-field";
@@ -163,16 +164,29 @@ export const PhiStorageSizeFormControl: ComponentType<PhiFormFieldProviderProps>
  * contract's money and nothing else. The shapes and the config are `money-field.ts`.
  */
 export const PhiMoneyFormControl: ComponentType<PhiFormFieldProviderProps> = ({
-  id, field, value, onChange, label, placeholder, disabled, readOnly, options,
+  id, field, value, onChange, label, placeholder, disabled, readOnly, options, formValues,
 }) => {
   const locale = usePhiIntlLocale();
   const config = readPhiMoneyFieldConfig(field.config, { hasOptionsProvider: field.optionsProvider !== undefined });
-  const { currency, currencies, currenciesFromOptions, min, max } = config;
-  if (currency !== undefined) {
+  const { currencies, currenciesFromOptions, currencyField, min, max } = config;
+  const currency = currencyField === undefined ? config.currency : readPhiMoneyFieldLinkedCurrency(currencyField, formValues);
+  /*
+   * An amount the value holds in another currency than the one its field now names was entered for the
+   * old one: it is no price in the new one, so it is shown empty and cleared, as a dependent choice is
+   * when its parent changes. Only a `currencyField` amount can get there; a fixed currency that does not
+   * match is a record that does not fit the Form and throws below.
+   */
+  const stale = currencyField !== undefined && value != null
+    && !(typeof value === "object" && (value as { currency?: unknown }).currency === currency);
+  useEffect(() => {
+    if (stale) onChange?.(null);
+  }, [onChange, stale]);
+  if (currencyField !== undefined && currency === null) return null;
+  if (currency !== undefined && currency !== null) {
     return (
       <PhiMoneyControl
         id={id}
-        value={readPhiMoneyFieldAmount(value, currency)?.minor ?? null}
+        value={stale ? null : readPhiMoneyFieldAmount(value, currency)?.minor ?? null}
         currency={currency}
         locale={locale}
         min={min}
