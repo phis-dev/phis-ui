@@ -487,8 +487,10 @@ Installations Page states both, side by side.
 An Overlay opened by a Table's row action names that action itself, in `openActionKey`. A Table announces
 one thing -- a row action happened, and here is which one -- so each listener decides for itself whether
 it was meant: the Record or Form Widget in the Body by its own `openActionKey`, and the Overlay by this
-field. `matchesOpenAction` refuses an `open` route carrying the `tableAction` schema whenever the key is
-absent, because an Overlay that opens for every announcement opens when a row is deleted; the cost of
+field. A Collection View announces its item and toolbar actions the same way (`collectionAction`,
+`{ actionKey, itemKey }`), and an `open` route under that schema is filtered by the same field
+(`readPhiAnnouncedAction`, `helpers/announced-action.ts`). `matchesOpenAction` refuses an `open` route
+carrying either schema whenever the key is absent, because an Overlay that opens for every announcement opens when a row is deleted; the cost of
 that choice is that a forgotten key is silent -- no exception, nothing in the journal, a dialog that
 simply never comes up, which the Logs page carried for as long as it existed. Both halves are checked:
 the shell's overlay descriptor requires the field in its type, and

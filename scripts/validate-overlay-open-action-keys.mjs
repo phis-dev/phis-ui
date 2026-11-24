@@ -7,7 +7,8 @@ import { listSourceFiles, repositoryRelativeListing } from "./lib/source-files.m
 import { lineOf } from "./lib/text.mjs";
 
 /**
- * An Overlay that opens on a Table's action says which action it is.
+ * An Overlay that opens on a Table's action says which action it is -- and one that opens on a Collection
+ * View's (`collection-action`), which names its action the same way.
  *
  * A Table announces one thing -- a row action happened, and here is which one -- and every listener
  * decides for itself whether it was meant: a Record Widget by its `openActionKey`, an Overlay by the
@@ -37,7 +38,8 @@ const moduleRoot = "plugins/runtime-modules";
 /** What marks an object as an Overlay node, and what the two halves of the pairing look like in source. */
 const overlayMarker = "overlayType:";
 const openRoutePattern = /capabilityId:\s*"open"/u;
-const tableActionSchema = "PHI_SIGNAL_VALUE_SCHEMAS.tableAction";
+// A Table's row action or a Collection View's item action: both name the action in the message.
+const actionSchemas = ["PHI_SIGNAL_VALUE_SCHEMAS.tableAction", "PHI_SIGNAL_VALUE_SCHEMAS.collectionAction"];
 const openActionKeyPattern = /\bopenActionKey\s*:/u;
 // Stated as nothing is stated as nothing: `parsePhiCmsOverlayConfig` reads a missing key and a `null`
 // one into the same `null`, and `matchesOpenAction` refuses both.
@@ -128,7 +130,7 @@ function readOpenRoutes(overlayText, braces, offset) {
       .map((brace) => ({ ...brace, index: brace.index - offset })), match.index);
     routes.push({
       index: match.index,
-      tableShaped: route ? route.text.includes(tableActionSchema) : false,
+      tableShaped: route ? actionSchemas.some((schema) => route.text.includes(schema)) : false,
     });
     match = pattern.exec(overlayText);
   }

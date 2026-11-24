@@ -837,8 +837,8 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
 | `links` | `[{ key, href, requiresFeature? }]`, drawn below the submit. The text is `actions.<key>Label` of the Form's label set; a link whose `requiresFeature` is not published by an active Module is left out. |
 | `formConfig` | Placement config: `initialValues`, `initialValuesFromQuery`, values read by `config` text, and values an `optionsProvider` reads (see [Fields](#fields)). |
 | `execution` | `{ mode: "handler" \| "signal", phase: "submit" \| "confirm" }`, default `handler` / `submit`. |
-| `source` | Optional Table Provider binding `{ providerKey, resourceKey, params }` whose resource declares `recordRead: true`. |
-| `openActionKey` | The Table action key that opens a record, default `edit`. |
+| `source` | Optional Table or Collection Provider binding `{ providerKey, resourceKey, params }` whose resource declares `recordRead: true`. |
+| `openActionKey` | The action key that opens a record -- a Table's row action or a Collection View's item action -- default `edit`. |
 | `titleFromRecord` | Optional `{ template, field }`: a title made of the record the `source` reads, announced on `recordTitle`. See below. |
 | `signalRoutes` | The Widget's routes. |
 | `maxFormWidth` | How wide the form itself may get, measured at the fields rather than around the box. Defaults to `PHI_LAYOUT.contentMax`; see below. |
@@ -914,6 +914,22 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
   Form reads its thread from a record and keeps the placement's `internalAllowed`. With `source` and an `openActionKey`, a Table action with a row identity
   arriving on `recordOpen` loads that record; without `openActionKey` the record is read once on mount.
   After a successful handler submit the last opened record is read again.
+- **A record opened from a Collection View.** `recordOpen` also takes a Collection View's item action,
+  `action/activate:json<collection-action>` (`{ actionKey, itemKey }`, `PhiCollectionActionSignalValue`):
+  the Form keeps it when `actionKey` is its `openActionKey`, takes `itemKey` as the record's key and reads
+  the record through the same `source`. The source is then a Collection Provider's resource that declares
+  `recordRead: true`, and its Client has `readRecord` -- the Table Provider's record read, in its request
+  shape (`PhiCollectionProviderRecordRequest` is `PhiTableProviderRecordRequest`: `rowIdentity` the item's
+  key) -- which `createPhiCollectionProviderClient` requires of such a resource
+  ([COLLECTIONS.md](./COLLECTIONS.md#provider-resource)). A Provider key names one kind, so the Form asks
+  the Table Provider under it where there is one and the Collection Provider otherwise
+  (`resolvePhiFormRecordSource`, `components/forms/form-record-source.ts`). The two are one capability
+  declared twice, once per schema, as SIGNALS.md allows inputs that differ only in their schema; the
+  Builder's wiring offers `recordOpen` for a Collection View's `actionActivate` and writes the route under
+  `collection-action`, and the Inspector's Record source lists Table and Collection Providers. The Overlay
+  around the Form opens on the same announcement (`openActionKey`, [OVERLAYS.md](./OVERLAYS.md)), and a
+  Settings shell dialog says so with `openValueSchema: PHI_SIGNAL_VALUE_SCHEMAS.collectionAction`. The App
+  profile's addresses are the first user: a tile's Change opens the change dialog on that address.
 - **A record dialog is named by its record.** `titleFromRecord` takes a Form text with `%1` once, in the
   Form's label set like its other texts, and the record field whose value stands there. After every read
   the Form announces the sentence on its `recordTitle` output -- the value as the record has it, never
@@ -961,7 +977,7 @@ Inputs (`runtimeSignals.listens`):
 | --- | --- | --- |
 | `submit` | `submit/activate` | `none`; ignored while the values in the form are ones validation has already refused (see below) |
 | `reset` | `reset/activate` | `none` |
-| `recordOpen` | `action/activate` | `json`, `table-action` schema |
+| `recordOpen` | `action/activate` | `json`, `table-action` schema, or `collection-action` (a Collection View's item action; see above) |
 | `close` | `dialog/close` | `none`; resets the Form and emits `cancel` |
 | `reload` | `reload/activate` | `none`; reloads the open record |
 | `valuesSet` | `values/change` | `json`, `form-values` schema; lays the values over the named fields without making the Form dirty |

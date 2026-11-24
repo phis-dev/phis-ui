@@ -32,6 +32,7 @@ import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
 import { findPhiSignalListenRoute, resolvePhiSignalListenFilter } from "../../../../../helpers/signal-listen-routes";
 import { readPhiTableBindingParamsSignalValue } from "../../../../../types/table-signal-values";
+import { layPhiCollectionBindingParams } from "../../../../../components/widgets/client/shared/phi-collection-binding-params";
 import { isPhiRecord } from "../../../../../helpers/is-record";
 import type { PhiRenderableBlockRenderMode } from "../../../../../types/renderable-block";
 
@@ -152,7 +153,9 @@ function PhiCollectionViewWidgetLive({
     const route = findPhiSignalListenRoute(listenRoutes, signal, signalIdentity.receiver);
     if (route?.capabilityId !== "bindingParamsChange") return;
     const next = readPhiTableBindingParamsSignalValue(signal.value);
-    if (next) setChosenBindingParams({ seed: bindingParamsSeed, params: { ...bindingParams, ...next.params } });
+    // The same set again is no change: nothing starts over, nothing is asked again.
+    const params = next ? layPhiCollectionBindingParams(bindingParams, next.params) : null;
+    if (params) setChosenBindingParams({ seed: bindingParamsSeed, params });
   }, [bindingParams, bindingParamsSeed, listenRoutes, signalIdentity.receiver]), useMemo(() => resolvePhiSignalListenFilter(listenRoutes), [listenRoutes]), signalIdentity.receiver);
   const { resource, bindingError, queryError, binding } = usePhiCollectionViewBinding({
     source,

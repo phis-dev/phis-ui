@@ -74,6 +74,8 @@ namespaced itemRendererKey
 query: search, filterFields (key, title, type string | enum | enum[] | path), pagination
 actions: key, title, scope resource | item | selection, optional panelKey
 panels: key, title
+optional selectionValueSchema
+optional recordRead
 defaultForWidget (at most one per Provider)
 ```
 
@@ -81,8 +83,17 @@ The Widget's `source` is a `PhiProviderResourceSource` (`types/runtime-data-prov
 (`providerKey`, optional `scopeKey`, optional `params`) plus `resourceKey`.
 
 The executable Client is created with `createPhiCollectionProviderClient` from
-`@phis/ui/runtime/data-provider-client`. Its registration supplies `query`, optional `action`, and one
-`View` component per resource. A panel is not a Widget: it is a controlled part of the resource View and
+`@phis/ui/runtime/data-provider-client`. Its registration supplies `query`, optional `action`, optional
+`readRecord`, and the renderer key per resource.
+
+`recordRead: true` says one item can be read on its own, by its key: the registration then has
+`readRecord`, the Table Provider's record read in its request shape (`PhiCollectionProviderRecordRequest`
+is `PhiTableProviderRecordRequest`, `rowIdentity` the item's key at `itemIdentityPath`), and
+`createPhiCollectionProviderClient` refuses the resource without it, as the Table Provider's Client does.
+It is what a record-bound Form opened from one of the View's items reads
+([FORMS.md](./FORMS.md#form-widget), "A record opened from a Collection View"): the View announces the
+item action, `{ actionKey, itemKey }` on `actionActivate`, and the Form whose `openActionKey` it names
+reads that item through the same `source`. A panel is not a Widget: it is a controlled part of the resource View and
 shares the Binding's open panel state.
 
 A query (`PhiCollectionProviderQueryRequest`) carries `resourceKey`, the binding's `params`, the
@@ -360,6 +371,32 @@ again. A Controller that opens a Collection for one record -- a dialog with a li
 `{ params: { id } }` on the route a placement declares with `capabilityId: "bindingParamsChange"`. The resource View emits `selection` and `actionActivate` through the
 Widget's routes; a View that has no selection or actions emits nothing. Search, filter, pagination, and
 panel state are Binding state inside the View and are not signalled.
+
+What `actionActivate` carries is `PhiCollectionActionSignalValue` (`collection-action`): `actionKey`, the
+item's key as `itemKey` for an item action (none for a toolbar action), and optionally the View's `query`.
+`readPhiCollectionActionSignalValue` (`types/collection-signal-values.ts`) reads it; a record-bound Form's
+`recordOpen` and an Overlay's `open` take it beside a Table's `table-action` and filter it by their
+`openActionKey` (`readPhiAnnouncedAction`, `helpers/announced-action.ts`), so a tile's Change opens a
+dialog on that item exactly as a row's pencil does.
+
+### Filtered by another Widget's choice
+
+A Collection View shows what another Widget chose -- the customer file's addresses of the member its person
+Table picked -- through a **Controller that forwards the choice as binding params**: the Controller already
+listening to the choice sends `{ params: { userId } }` on a route to the View's `bindingParamsChange`, and
+the Provider reads `params.userId`. The View lays the set over its configured `source.params`, and the same
+set again changes nothing -- no new request, no start over (`layPhiCollectionBindingParams`,
+`components/widgets/client/shared/phi-collection-binding-params.ts`) -- so a Controller may forward on every
+change of the choice. Nothing else is needed: the input is the one the View already has, and every Module's
+Controller can send it.
+
+The other way, a `query/change` input taking a Table's query as the Table's own does, was not built: it is
+the larger of the two. It would add an input and a second meaning for the View's query -- a received Table
+query (`PhiTableQuery`) translated into a Collection query, merged with the View's own search, filters and
+page, and kept apart from them on a reset -- for a choice that is not a filter of the View at all but which
+record the View is about, which is what binding params are for. A Page without a Controller in the middle
+wires the choosing Widget's output to a Controller of its Module that forwards it; the Builder offers
+`bindingParamsChange` as the View's input for any output of `table-binding-params`.
 
 Signals coordinate the Widget with Controllers and external Controls; Provider reads and mutations remain
 typed Binding calls and never gain a second signal transaction path. The action value contains the stable

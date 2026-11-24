@@ -129,6 +129,12 @@ export type PhiSettingsPageShellOverlay = {
    * derives from `nodeKey`, which the caller derives the same way -- the preset identity is shared.
    */
   openActionKey: string;
+  /**
+   * Who announces that action: a Table (`tableAction`, the default) or a Collection View
+   * (`collectionAction`, an item's or the toolbar's action). The Overlay listens under that schema and
+   * filters by `openActionKey` either way.
+   */
+  openValueSchema?: typeof PHI_SIGNAL_VALUE_SCHEMAS.tableAction | typeof PHI_SIGNAL_VALUE_SCHEMAS.collectionAction;
   formId: PhiFormId;
   label: string;
   formConfig?: Record<string, unknown>;
@@ -582,8 +588,8 @@ export function buildPhiSettingsPageShellTree({
         signalRoutes: {
           listens: [
             /*
-             * The Table's own action channel, filtered by `openActionKey`. Without the filter this
-             * Overlay would open for every action the Table announces, delete included.
+             * The Table's own action channel, or the Collection View's, filtered by `openActionKey`.
+             * Without the filter this Overlay would open for every action announced, delete included.
              */
             {
               routeKey: `${overlay.nodeKey}-open`,
@@ -592,7 +598,7 @@ export function buildPhiSettingsPageShellTree({
               channel: "action",
               action: "activate",
               valueType: "json",
-              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
+              valueSchema: overlay.openValueSchema ?? PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
               receiver: createPhiSignalAddress("cms", overlayIds[overlay.nodeKey]!),
             },
             {

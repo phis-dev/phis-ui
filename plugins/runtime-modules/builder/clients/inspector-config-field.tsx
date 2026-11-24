@@ -1134,6 +1134,16 @@ function renderPhiInspectorConfigFieldBody({
     const supportsStaticOptions = !field.providerKind || field.providerKind === "options" || field.providerKind === "timeline";
     const selectedProvider = dataProviderDescriptors.find((descriptor) =>
       descriptor.key === (field.providerKey ?? providerConfig?.providerKey)) ?? null;
+    // One kind, or the kinds a binding takes (a record source reads a Table's rows or a Collection's items).
+    const acceptedKinds: readonly string[] | null = field.providerKind == null
+      ? null
+      : typeof field.providerKind === "string" ? [field.providerKind] : field.providerKind;
+    // The kind that decides how a resource is chosen: the chosen Provider's, where the field takes several.
+    const kindOf = (providerKey: string | null | undefined) => typeof field.providerKind === "string"
+      ? field.providerKind
+      : dataProviderDescriptors.find((descriptor) => descriptor.key === providerKey)?.kind;
+    const selectedKind = kindOf(selectedProvider?.key);
+    const choosesResource = (kind: string | undefined) => kind === "table" || kind === "tree" || kind === "collection";
     const options = [
       ...(supportsStaticOptions
         ? [{
@@ -1142,7 +1152,7 @@ function renderPhiInspectorConfigFieldBody({
           }]
         : []),
       ...dataProviderDescriptors
-        .filter((descriptor) => !field.providerKind || descriptor.kind === field.providerKind)
+        .filter((descriptor) => !acceptedKinds || acceptedKinds.includes(descriptor.kind))
         .map((descriptor) => ({
           value: descriptor.key,
           label: descriptor.title,
@@ -1162,13 +1172,13 @@ function renderPhiInspectorConfigFieldBody({
           onChange={(providerKey) => onChange?.({
             [field.key]: providerKey === PHI_STATIC_OPTIONS_PROVIDER_VALUE
               ? null
-              : field.providerKind === "table" || field.providerKind === "tree" || field.providerKind === "collection"
+              : choosesResource(kindOf(providerKey))
                 ? {
                     providerKey,
                     resourceKey: (() => {
                       const resources = dataProviderDescriptors.find((descriptor) =>
                         descriptor.key === providerKey)?.resources ?? [];
-                      if (field.providerKind !== "collection") return resources[0]?.resourceKey ?? "";
+                      if (kindOf(providerKey) !== "collection") return resources[0]?.resourceKey ?? "";
                       return resources.find((resource) =>
                         "defaultForWidget" in resource && resource.defaultForWidget === true)?.resourceKey ??
                         (resources.length === 1 ? resources[0]?.resourceKey : "") ?? "";
@@ -1183,16 +1193,16 @@ function renderPhiInspectorConfigFieldBody({
                     : { ...providerConfig, providerKey },
           })}
         />
-        {(field.providerKind === "table" || field.providerKind === "tree" || field.providerKind === "collection") && selectedProvider ? (
+        {choosesResource(selectedKind) && selectedProvider ? (
           <PhiSelectControl
             options={(selectedProvider.resources ?? []).map((resource) => ({
               value: resource.resourceKey,
               label: resource.title,
               description: resource.description,
             }))}
-            placeholder={field.providerKind === "tree"
+            placeholder={selectedKind === "tree"
               ? fieldLabels.selectTreeResource
-              : field.providerKind === "collection"
+              : selectedKind === "collection"
                 ? fieldLabels.selectCollectionResource
                 : fieldLabels.selectTableResource}
             value={typeof rawProviderConfig.resourceKey === "string" ? rawProviderConfig.resourceKey : undefined}

@@ -6,7 +6,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PhiSignalAddress, PhiSignalValue } from "../../types/signals";
 import type { PhiFormDescriptor } from "../../types/form-descriptor";
 import type { PhiTableRowIdentity } from "../../types/table-widget";
-import { readPhiTableActionSignalValue } from "../../types/table-signal-values";
 import type { PhiCmsFormWidgetConfig } from "./form-widget-config";
 import { usePhiSignalListener } from "../runtime/runtime-signal-bus";
 import { createPhiSignalCorrelationId } from "../runtime/runtime-signal-bus";
@@ -18,7 +17,7 @@ import {
 import { isPhiControllerSignalAddress } from "../../types/signals";
 import { readPhiRuntimeConditionStateSignalValue } from "../../types/runtime-condition";
 import { collectPhiRuntimeValueConditions } from "../../types/runtime-condition";
-import { usePhiTableProvider } from "../widgets/client/shared/phi-table-provider";
+import { readPhiFormRecordOpenKey, usePhiFormRecordSource } from "./form-record-source";
 import { usePhiIntlLocale, usePhiIntlTimeZone } from "../root/phi-intl-locale";
 import { PhiFormControl, type PhiFormControlFormInstance, type PhiFormControlProps } from "../controls/phi-form-control";
 import { readPhiRuntimeFormValuesSignalValue } from "./runtime-form-state";
@@ -82,7 +81,8 @@ export function PhiFormDescriptorRuntimeClient({
   const inDialogBody = usePhiInDialogBody();
   const emitSignal = usePhiSignalEmitter(identity.sender);
   const source = widgetConfig?.source ?? null;
-  const { provider, resource, bindingError } = usePhiTableProvider(source);
+  // A Table resource's or a Collection resource's, whichever Provider answers the source's key.
+  const recordSource = usePhiFormRecordSource(source);
   /*
    * Sent with the record read, but held in a ref rather than made part of what starts one: a Form's
    * values are what somebody is editing, and a language switch that read the record again would throw
@@ -245,17 +245,17 @@ export function PhiFormDescriptorRuntimeClient({
     if (!source) {
       return configuredInitialValues;
     }
-    if (bindingError || resource?.recordRead !== true || !provider?.readRecord) {
-      throw new Error(bindingError ?? `Table resource "${source.resourceKey}" is not a Form record read source.`);
+    if (!recordSource.read) {
+      throw new Error(recordSource.error ?? `Resource "${source.resourceKey}" is not a Form record read source.`);
     }
-    return provider.readRecord({
+    return recordSource.read({
       resourceKey: source.resourceKey,
       rowIdentity,
       params: source.params,
       ...intlRef.current,
       signal,
     });
-  }, [bindingError, configuredInitialValues, provider, resource?.recordRead, source]);
+  }, [configuredInitialValues, recordSource, source]);
 
   /*
    * The one record read in flight. Every new read aborts the one before it, and unmount aborts the
@@ -338,10 +338,11 @@ export function PhiFormDescriptorRuntimeClient({
       (candidate.valueType !== "json" || candidate.valueSchema === signal.valueSchema));
     if (!route) return;
     if (route.capabilityId === "recordOpen") {
-      const action = readPhiTableActionSignalValue(signal.value);
-      if (!action || action.actionKey !== (widgetConfig?.openActionKey ?? "edit") || action.rowIdentity == null) return;
+      // A Table's row action or a Collection View's item action, whichever the route carries.
+      const recordKey = readPhiFormRecordOpenKey(route.valueSchema, signal.value, widgetConfig?.openActionKey ?? "edit");
+      if (recordKey == null) return;
       announceRecordTitle(null, signal.correlationId);
-      void loadRecord(action.rowIdentity, signal.correlationId);
+      void loadRecord(recordKey, signal.correlationId);
       emitCapability("conditionStateRequest", null, signal.correlationId);
     } else if (route.capabilityId === "close") {
       requestReset(signal.correlationId);

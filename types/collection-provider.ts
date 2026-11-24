@@ -1,4 +1,5 @@
 import type { PhiSignalValueSchema } from "./signals";
+import type { PhiTableProviderRecordRequest } from "./table-widget";
 
 /**
  * A renderer a Module offers for Collection items, its own or somebody else's.
@@ -57,6 +58,13 @@ export type PhiCollectionProviderResourceDescriptor = {
    * Absent means this resource announces no selection, and the Builder offers no route for one.
    */
   selectionValueSchema?: PhiSignalValueSchema;
+  /**
+   * Whether one item can be read on its own, by its key, as a Table resource's `recordRead` says it of a
+   * row: the Provider Client then has `readRecord`, and a record-bound Form opened from one of the
+   * View's items reads the item through it (FORMS.md, "A record opened from a Collection View"). Absent
+   * is no record read, and a Form bound to the resource fails with the reason rather than open empty.
+   */
+  recordRead?: boolean;
   defaultForWidget?: boolean;
   query: {
     search?: boolean;
@@ -124,6 +132,27 @@ export type PhiCollectionProviderActionRequest = {
   query?: PhiCollectionProviderQuery;
   params?: Record<string, unknown>;
   signal: AbortSignal;
+};
+
+/**
+ * One item read on its own (`readRecord` on the Provider Client), the shape a Table Provider's record
+ * read already has: the resource, the item's key as `rowIdentity`, the binding's params, the reader's
+ * language and the Site's time zone, and the abort. One shape for both kinds, so a record-bound Form
+ * asks either the same way and a Provider that serves both writes one function.
+ */
+export type PhiCollectionProviderRecordRequest = PhiTableProviderRecordRequest;
+
+/**
+ * What a Collection View announces on its `actionActivate` output (`collection-action`): which action,
+ * and for an item action the item's key, as the resource's `itemIdentityPath` reads it. A toolbar action
+ * names no item. `query` is the View's query as it stood, for a Controller that acts in its context (the
+ * Media library's new Folder in the open one). Read with `readPhiCollectionActionSignalValue`
+ * (`types/collection-signal-values.ts`).
+ */
+export type PhiCollectionActionSignalValue = {
+  actionKey: string;
+  itemKey?: string | number | null;
+  query?: PhiCollectionProviderQuery;
 };
 
 export type PhiCollectionViewBindingModel = {

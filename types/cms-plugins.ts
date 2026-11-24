@@ -206,7 +206,12 @@ export type PhiCmsConfigField =
     })
   | (PhiCmsConfigFieldBase & {
       type: "data-provider";
-      providerKind?: PhiRuntimeDataProviderKind;
+      /**
+       * Which kind of Provider the binding names, or the kinds it takes: a record-bound Form reads a Table
+       * resource's row or a Collection resource's item, whichever declares `recordRead`. The resource is
+       * chosen the way the chosen Provider's kind chooses one.
+       */
+      providerKind?: PhiRuntimeDataProviderKind | readonly PhiRuntimeDataProviderKind[];
       /**
        * The one record Provider this binding names, for a Widget that can only read one: a Gallery
        * reads a Folder, an entry header an entry. The Inspector then offers no choice of Provider -- a list

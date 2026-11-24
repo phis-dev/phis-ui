@@ -51,7 +51,12 @@ export function resolvePhiBuilderSignalWiringRoutes(
   const output = sender?.emits.find((capability) => capability.id === session.senderCapabilityId) ?? null;
   const receiver = resolvePhiBuilderReceiverSignalEndpoints(state)
     .find((endpoint) => endpoint.address === session.receiverAddress) ?? null;
-  const input = receiver?.listens.find((capability) => capability.id === session.receiverCapabilityId) ?? null;
+  /*
+   * One input id may stand for several schemas -- a Form's `recordOpen` takes a Table's row action and a
+   * Collection View's item action -- so the input is the one of that id this output can reach.
+   */
+  const input = receiver?.listens.find((capability) =>
+    capability.id === session.receiverCapabilityId && phiSignalCapabilitiesMatch(output, capability)) ?? null;
   if (!output || !receiver || !input || !phiSignalCapabilitiesMatch(output, input)) {
     return { kind: "mismatched" };
   }

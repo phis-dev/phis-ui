@@ -243,9 +243,16 @@ function resolveReceiverCapabilityOptions(context: PhiControlOptionsProviderCont
   const sender = findEndpoint(resolvePhiBuilderSelectedSignalEndpoints(state), state.signalWiring.senderAddress);
   const output = sender?.emits.find((capability) => capability.id === state.signalWiring.senderCapabilityId) ?? null;
   const receiver = findEndpoint(resolvePhiBuilderReceiverSignalEndpoints(state), state.signalWiring.receiverAddress);
+  const inputs = (receiver?.listens ?? [])
+    .filter((input) => output == null || phiSignalCapabilitiesMatch(output, input));
   return {
-    options: (receiver?.listens ?? [])
-      .filter((input) => output == null || phiSignalCapabilitiesMatch(output, input))
+    /*
+     * An id names one choice: a Form's `recordOpen` is declared once per announcer it takes (a Table's
+     * row action, a Collection View's item action), and before an output is chosen both would be offered
+     * under the same value. Once it is chosen, only the one it reaches is left.
+     */
+    options: inputs
+      .filter((input, index) => inputs.findIndex((candidate) => candidate.id === input.id) === index)
       .map((capability) => ({ value: capability.id, label: formatInputCapability(capability) })),
   };
 }

@@ -18,6 +18,7 @@ import type {
   PhiCollectionProviderActionRequest,
   PhiCollectionProviderData,
   PhiCollectionProviderQueryRequest,
+  PhiCollectionProviderRecordRequest,
 } from "../../../../types/collection-provider";
 import type { PhiProviderResourceSource } from "../../../../types/runtime-data-provider";
 import { PhiCollectionSourceFailureText } from "../../shared/collection-source-failure";
@@ -26,6 +27,12 @@ export type PhiCollectionProviderRegistration = {
   key: PhiRuntimeDataProviderKey;
   query: (request: PhiCollectionProviderQueryRequest) => Promise<PhiCollectionProviderData>;
   action?: (request: PhiCollectionProviderActionRequest) => Promise<PhiCollectionProviderData>;
+  /**
+   * One item by its key, for a record-bound Form opened from one of the View's items (FORMS.md, "A
+   * record opened from a Collection View"): the Table Provider's `readRecord`, in its request shape. Only
+   * for a resource that declares `recordRead: true`, and required by one.
+   */
+  readRecord?: (request: PhiCollectionProviderRecordRequest) => Promise<Record<string, unknown>>;
   resources: readonly {
     resourceKey: string;
     /**
@@ -37,6 +44,8 @@ export type PhiCollectionProviderRegistration = {
      * ships; `PhiCmsCollectionViewWidgetConfig.itemRendererKey` names a different one.
      */
     itemRendererKey: `${string}/${string}`;
+    /** As the resource's declaration says it (`PhiCollectionProviderResourceDescriptor.recordRead`). */
+    recordRead?: boolean;
   }[];
 };
 
@@ -59,6 +68,13 @@ export function createPhiCollectionProviderClient(
     registration.resources.some((resource) =>
       !resource.resourceKey.trim() || !isPhiNamespacedRuntimeKey(resource.itemRendererKey))) {
     throw new Error(`Collection provider "${registration.key}" has invalid Client resources.`);
+  }
+  // As a Table Provider's: a record read declared and not served is worse than one never offered.
+  const unserved = registration.resources.find((resource) => resource.recordRead === true);
+  if (unserved && !registration.readRecord) {
+    throw new Error(
+      `Collection provider "${registration.key}" declares recordRead on resource "${unserved.resourceKey}" but has no readRecord.`,
+    );
   }
 
   return function PhiBoundCollectionProviderClient({ children }) {

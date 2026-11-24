@@ -102,6 +102,18 @@ export const PHI_FORM_WIDGET_DEFINITION = {
         valueType: "json",
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
       },
+      /*
+       * The same open from a Collection View's item action (`{ actionKey, itemKey }`), the item's key the
+       * record's: one capability, two announcers, told apart by the schema the route carries (SIGNALS.md,
+       * inputs are unique by channel, action, value type and schema).
+       */
+      {
+        id: "recordOpen",
+        channel: "action",
+        action: "activate",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.collectionAction,
+      },
       { id: "close", channel: "dialog", action: "close", valueType: "none" },
       { id: "reload", channel: "reload", action: "activate", valueType: "none" },
       /*
@@ -169,7 +181,8 @@ export const PHI_FORM_WIDGET_DEFINITION = {
     {
       key: "source",
       type: "data-provider",
-      providerKind: "table",
+      // A Table's rows or a Collection's items, whichever resource declares `recordRead`.
+      providerKind: ["table", "collection"],
       label: "Record source",
     },
     { key: "openActionKey", type: "string", label: "Open action key" },
