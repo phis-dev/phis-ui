@@ -248,6 +248,9 @@ export function isPhiBuilderIconNamespace(namespace: string) {
  * preset: there are no aliases (`add`, `cancel`, `trash`) beside it, and case counts. `module:`,
  * `iconify:`, `asset:` and the Builder's motif namespaces are drawn by their own owners, which say for
  * themselves whether the name exists, so here they count as known.
+ *
+ * Asked where a name is chosen -- a preset's checks, the Builder's save (`helpers/widget-binding-check.ts`)
+ * -- and not by `PhiIcon` on a live page, which draws what it was handed (owner, 2026-11-24).
  */
 export function isPhiIconNameKnown(name: string) {
   const [namespace, ...rest] = name.split(":");

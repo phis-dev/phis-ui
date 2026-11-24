@@ -27,7 +27,6 @@ import {
 import { PhiWidgetFailure } from "../../../../../components/widgets/shared/widget-failure-client";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { fillPhiRecordTitle } from "../../../../../helpers/record-title";
-import { validatePhiRecordWidgetBinding } from "../../../../../helpers/record-widget-binding";
 import type { PhiRecordWidgetConfig } from "../../../../../types/record-widget";
 import type { PhiRenderableBlockRenderMode } from "../../../../../types/renderable-block";
 import type { PhiSignalValue } from "../../../../../types/signals";
@@ -72,11 +71,6 @@ export function PhiRecordWidgetClient({
   ) => emitPhiSignalCapability(emitSignal, emitRoutes, capabilityId, value, correlationId), [emitRoutes, emitSignal]);
   const { showMessage } = usePhiApplicationFeedback();
   const { provider, resource, bindingError } = usePhiTableProvider(config.source);
-  // The actions measured against the resource, said where the record would stand (Table: contractError).
-  const contractError = useMemo(
-    () => resource ? validatePhiRecordWidgetBinding(config, resource)[0] ?? null : null,
-    [config, resource],
-  );
   // Sent with the read and part of what makes one new: an open record is read again after a switch.
   const locale = usePhiIntlLocale();
   const timeZone = usePhiIntlTimeZone();
@@ -229,9 +223,8 @@ export function PhiRecordWidgetClient({
    * Every error here is the source's -- no binding, a resource that reads no single records, a read that
    * failed -- and none of them is the reader's to fix, so it goes the way of every such failure.
    */
-  const failure = contractError ?? error;
-  if (failure) {
-    return <PhiWidgetFailure renderMode={renderMode} widgetType={PhiCmsWidgetType.Record} title={failure} />;
+  if (error) {
+    return <PhiWidgetFailure renderMode={renderMode} widgetType={PhiCmsWidgetType.Record} title={error} />;
   }
   if (!record) {
     return <PhiEmptyControl description={labels.empty} />;

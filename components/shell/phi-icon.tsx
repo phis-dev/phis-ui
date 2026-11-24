@@ -10,9 +10,7 @@ import {
 
 import { PHI_MODULE_ICON_NAMESPACE } from "../../constants/module-identity";
 import { PhiAntdIcon, type PhiAntdIconPresentation } from "./phi-antd-icon";
-import { isPhiBuilderIconNamespace, isPhiIconNameKnown, PHI_ANTD_ICON_NAMES } from "./phi-icon-names";
-
-export { isPhiIconNameKnown };
+import { isPhiBuilderIconNamespace, PHI_ANTD_ICON_NAMES } from "./phi-icon-names";
 import { PhiModuleIcon } from "./phi-module-icons";
 
 type PhiIconifyProps = {
@@ -68,26 +66,6 @@ function renderIconFallback(size: number | string) {
         height: size,
       }}
     />
-  );
-}
-
-
-
-const reportedUnknownIconNames = new Set<string>();
-
-/**
- * Says once per name that it names no icon, where somebody reads it.
- *
- * An unknown name draws nothing -- no word, no placeholder -- so without this a typo is a blank nobody
- * notices. Rendered on the server the warning lands in the Site service's journal, in the browser in its
- * console. `validate-preset-icon-vocabulary` catches the same mistake in a preset before it ships.
- */
-export function reportPhiUnknownIconName(name: string) {
-  if (reportedUnknownIconNames.has(name)) return;
-  reportedUnknownIconNames.add(name);
-  console.warn(
-    `[phi-icon] "${name}" names no icon and draws nothing. Use a name from PHI_ANTD_ICON_NAMES `
-      + "(components/shell/phi-icon-names.ts), with or without `antd:`, or a `module:`, `iconify:` or `asset:` name.",
   );
 }
 
@@ -157,12 +135,15 @@ function PhiIconifyIcon({ icon, size }: { icon: string; size: number | string })
   return <IconifyIcon icon={icon} width={size} height={size} inline />;
 }
 
+/**
+ * The icon a name names, or nothing.
+ *
+ * A name is not looked up against the vocabulary first: where it is chosen -- a preset, a Builder save
+ * -- it is checked (`isPhiIconNameKnown`, owner 2026-11-24), and a live page trusts it. A name that names
+ * nothing still draws nothing, because each namespace below answers only what it has.
+ */
 export function PhiIcon({ name, size = 16, ...presentation }: PhiIconProps) {
   if (!name) {
-    return null;
-  }
-  if (!isPhiIconNameKnown(name)) {
-    reportPhiUnknownIconName(name);
     return null;
   }
   const resolvedSize = size === "inherit" ? "1em" : size;

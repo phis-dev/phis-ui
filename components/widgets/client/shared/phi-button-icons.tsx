@@ -1,21 +1,18 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { isPhiIconNameKnown, PhiIcon, reportPhiUnknownIconName } from "../../../shell/phi-icon";
+import { PhiIcon } from "../../../shell/phi-icon";
 
 /**
- * The icon a Button, a Table action or a Command Toolbar names, or null where the name draws nothing.
+ * The icon a Button, a Table action or a Command Toolbar names, as an element, or null where it names
+ * none.
  *
- * The same rule as `PhiIcon` (`isPhiIconNameKnown`): a short name is the Ant Design icon of that name,
- * one name per icon. Null rather than an empty element, because a Table falls back to the action's label
- * where its icon does not resolve and asks this to find out.
+ * The same names as `PhiIcon`: a short name is the Ant Design icon of that name, one name per icon. The
+ * name is not looked up here: a preset's is checked by its tests and the Builder's by its save
+ * (`isPhiIconNameKnown`), so a live page draws what it was handed, and a name that names nothing draws
+ * nothing.
  */
 export function resolvePhiButtonIcon(icon: string | null | undefined): ReactNode {
   const name = icon?.trim();
-  if (!name) return null;
-  if (!isPhiIconNameKnown(name)) {
-    reportPhiUnknownIconName(name);
-    return null;
-  }
-  return <PhiIcon name={name} size="1em" />;
+  return name ? <PhiIcon name={name} size="1em" /> : null;
 }

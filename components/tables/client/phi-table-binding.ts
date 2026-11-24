@@ -186,7 +186,6 @@ export type PhiTableBindingInput = {
   initialExpandedRowIdentities?: readonly PhiTableRowIdentity[];
   onData?: (data: PhiTableProviderQueryResult) => void;
   onMutation?: (result: PhiTableProviderMutationResult) => void;
-  validateResource?: (resource: PhiTableProviderResourceDescriptor) => string | null;
 };
 
 export function usePhiTableBinding({
@@ -201,7 +200,6 @@ export function usePhiTableBinding({
   initialExpandedRowIdentities = [],
   onData,
   onMutation,
-  validateResource,
 }: PhiTableBindingInput) {
   const { provider, resource, bindingError } = usePhiTableProvider(source);
   /*
@@ -210,7 +208,6 @@ export function usePhiTableBinding({
    */
   const locale = usePhiIntlLocale();
   const timeZone = usePhiIntlTimeZone();
-  const resourceError = resource ? validateResource?.(resource) ?? null : null;
   const [query, setQuery] = useState<PhiTableQuery>(() => ({
     page: initialQuery.page ?? 1,
     pageSize: initialQuery.pageSize ?? defaultPageSize,
@@ -257,7 +254,6 @@ export function usePhiTableBinding({
     provider: unknown;
     resource: unknown;
     source: unknown;
-    resourceError: unknown;
     resolvedQueryKey: string;
     refreshKey: unknown;
     locale: string;
@@ -430,7 +426,7 @@ export function usePhiTableBinding({
   }, [preserveSelectedRowIdentities, resolvedQuery.pageSize, resource, sourceKey]);
 
   useEffect(() => {
-    if (!source || !provider || !resource || resourceError) return;
+    if (!source || !provider || !resource) return;
     if (
       acceptedResolvedQuery.current?.queryKey === resolvedQueryKey &&
       acceptedResolvedQuery.current.refreshRevision === refreshRequest.revision
@@ -440,7 +436,6 @@ export function usePhiTableBinding({
         provider,
         resource,
         source,
-        resourceError,
         resolvedQueryKey,
         refreshKey,
         locale,
@@ -453,13 +448,12 @@ export function usePhiTableBinding({
       previous.provider === provider &&
       previous.resource === resource &&
       previous.source === source &&
-      previous.resourceError === resourceError &&
       previous.resolvedQueryKey === resolvedQueryKey &&
       previous.refreshKey === refreshKey &&
       previous.locale === locale &&
       previous.timeZone === timeZone;
     const background = refreshRequest.background && sameQueryInputs && rowsRef.current.length > 0;
-    previousQueryInputs.current = { provider, resource, source, resourceError, resolvedQueryKey, refreshKey, locale, timeZone };
+    previousQueryInputs.current = { provider, resource, source, resolvedQueryKey, refreshKey, locale, timeZone };
     const abortController = new AbortController();
     queueMicrotask(() => {
       if (!abortController.signal.aborted) {
@@ -520,7 +514,7 @@ export function usePhiTableBinding({
       }
     });
     return () => abortController.abort();
-  }, [applyData, expandedRowIdentities, externalQuery, externalSearch, locale, provider, query, refreshKey, refreshRequest, resolvedQuery, resolvedQueryKey, resource, resourceError, source, stableFixedFilters, timeZone]);
+  }, [applyData, expandedRowIdentities, externalQuery, externalSearch, locale, provider, query, refreshKey, refreshRequest, resolvedQuery, resolvedQueryKey, resource, source, stableFixedFilters, timeZone]);
 
   const reload = useCallback(() => setRefreshRequest((current) => ({
     revision: current.revision + 1,
@@ -818,8 +812,7 @@ export function usePhiTableBinding({
     total,
     hasMore,
     summary,
-    contractError: resourceError,
-    loading: queryLoading && !bindingError && !resourceError,
+    loading: queryLoading && !bindingError,
     error,
     queryError: queryFailure,
     query,

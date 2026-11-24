@@ -93,7 +93,6 @@ import {
   type PhiSignalValue,
 } from "../../../../../types/signals";
 import { resolvePhiButtonIcon } from "../../../../../components/widgets/client/shared/phi-button-icons";
-import { validatePhiTableWidgetBinding } from "../../../../../helpers/table-widget-binding";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiRevealOnceDialogControl } from "../../../../../components/controls/phi-reveal-once-dialog-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
@@ -424,21 +423,6 @@ export function PhiTableWidgetClient({
     value: PhiSignalValue,
     correlationId?: string,
   ) => emitPhiSignalCapability(emitSignal, emitRoutes, capabilityId, value, correlationId), [emitRoutes, emitSignal]);
-  const validateResource = useCallback((candidate: import("../../../../../types/table-widget").PhiTableProviderResourceDescriptor) => {
-    const contractError = validatePhiTableWidgetBinding(config, candidate)[0];
-    if (contractError) return contractError;
-    const iconAction = [
-      ...(config.features.actions?.toolbar ?? []),
-      ...(config.features.actions?.row ?? []),
-      ...(config.features.actions?.bulk ?? []),
-    ].find((action) => action.display !== "label" && action.icon && !resolvePhiButtonIcon(action.icon));
-    if (iconAction) return `Table action "${iconAction.key}" references an unavailable icon.`;
-    const iconBindingTool = config.features.tools?.bindingFields?.find((tool) =>
-      tool.create?.display !== "label" && tool.create?.icon && !resolvePhiButtonIcon(tool.create.icon));
-    return iconBindingTool
-      ? `Table binding field "${iconBindingTool.key}" create tool references an unavailable icon.`
-      : null;
-  }, [config]);
   const binding = usePhiTableBinding({
     source: resolvedSource,
     initialQuery: { ...initialQuery, sorts: defaultSorts, filters: initialFilters },
@@ -472,12 +456,10 @@ export function PhiTableWidgetClient({
       const { revealValue: _shownOnce, ...announced } = result;
       emitCapability("mutationChange", announced as unknown as Record<string, unknown>);
     },
-    validateResource,
   });
   const {
     resource,
     bindingError,
-    contractError,
     rows,
     total,
     hasMore,
@@ -526,7 +508,7 @@ export function PhiTableWidgetClient({
         : []),
   ), [bulkActions, features.editing?.disabledWhen, features.rowSelection?.disabledWhen, presentation.columns, presentation.row?.mutedWhen, resource?.fields, rowActions, toolbarActions]);
 
-  const effectiveLoading = loading && !bindingError && !contractError;
+  const effectiveLoading = loading && !bindingError;
 
   useEffect(() => {
     if (features.search?.enabled !== true || query.search === searchDraft) return undefined;
@@ -1054,12 +1036,13 @@ export function PhiTableWidgetClient({
   ) : null;
 
   /*
-   * The source's failures end the Table here: a binding that does not hold, a resource the
-   * configuration does not fit, a read that failed. A refused edit is not one of them -- it stays in
-   * `error` alone and is said above the rows to the person who made it.
+   * The source's failures end the Table here: a Provider the Area does not offer, a read that failed.
+   * A refused edit is not one of them -- it stays in `error` alone and is said above the rows to the
+   * person who made it. Whether the configuration fits the resource is not asked here: that is checked
+   * where the config is made (`checkPhiPresetTables`, the Builder's save), and a live Table trusts it.
    */
   const refusal = isPhiTableProviderRefusal(queryError) ? queryError : null;
-  const sourceFailure = bindingError ?? contractError ?? (refusal ? null : queryError?.message) ?? null;
+  const sourceFailure = bindingError ?? (refusal ? null : queryError?.message) ?? null;
   if (sourceFailure) {
     return (
       <PhiWidgetFailure

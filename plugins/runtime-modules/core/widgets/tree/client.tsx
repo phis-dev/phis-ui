@@ -12,7 +12,6 @@ import type {
   PhiTreeWidgetConfig,
 } from "../../../../../types/tree-widget";
 import { readPhiTreeProviderError } from "../../../../../types/tree-widget";
-import { validatePhiTreeWidgetBinding } from "../../../../../helpers/tree-widget-binding";
 import type { PhiControlSize } from "../../../../../types/control";
 import { usePhiTreeBinding } from "../../../../../components/trees/client/phi-tree-binding";
 import { PhiTreeActionButton, PhiTreeControl } from "../../../../../components/controls/phi-tree-control";
@@ -153,7 +152,6 @@ export function PhiTreeWidgetClient({ config, labels, renderMode }: {
     binding.setQuery({ ...(config.initialQuery ?? {}) });
     emitCapability("bindingParamsChange", { params: nextParams });
   }, [binding, config.initialQuery, config.source?.params, emitCapability, setBindingParams]);
-  const contractError = binding.resource ? validatePhiTreeWidgetBinding(config, binding.resource)[0] ?? null : null;
   const treeQuery = binding.query;
   const setTreeQuery = binding.setQuery;
   const activate = useCallback((
@@ -312,11 +310,12 @@ export function PhiTreeWidgetClient({ config, labels, renderMode }: {
   ) : null;
 
   /*
-   * The source's failures end the Tree here: a binding that does not hold, a resource the configuration
-   * does not fit, a read that failed. A refused change stays in `binding.error` alone, said above the
-   * nodes to the person who made it.
+   * The source's failures end the Tree here: a Provider the Area does not offer, a read that failed. A
+   * refused change stays in `binding.error` alone, said above the nodes to the person who made it. The
+   * configuration against the resource is checked where it is made (`checkPhiPresetTables`, the
+   * Builder's save), not here.
    */
-  const sourceFailure = binding.bindingError ?? contractError ?? binding.queryError?.message ?? null;
+  const sourceFailure = binding.bindingError ?? binding.queryError?.message ?? null;
   if (sourceFailure) {
     return (
       <PhiWidgetFailure
