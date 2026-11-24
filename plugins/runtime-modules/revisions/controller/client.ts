@@ -33,6 +33,7 @@ import {
 import { resolvePhiRevisionsDraftContextTarget } from "./draft-context-target";
 import { deleteCmsDraft } from "../../../../helpers/cms-draft-delete";
 import { isPhiRecord } from "../../../../helpers/is-record";
+import { matchesPhiTypedConfirmation } from "../../../../helpers/typed-confirmation";
 import { usePhiPathname } from "../../../../components/runtime/use-phi-pathname";
 
 function PhiRevisionsControllerMount({
@@ -194,16 +195,32 @@ function PhiRevisionsControllerMount({
         `The structure this Site stored for ${area} is cleared -- its Shell, drafts and published alike. What is live changes at once, the shell's preset takes the Area back, and no revision is left to restore it from. It cannot be undone. The Module selection is kept.`,
         signal.correlationId,
       );
+      emitCapability("deleteAreaKey", area, signal.correlationId);
+      emitCapability("deleteAreaConfirmEnabled", false, signal.correlationId);
       emitCapability("deleteAreaOpen", null, signal.correlationId);
+      return;
+    }
+
+    /*
+     * The key as it is typed: the confirm button wakes the moment it matches and sleeps again when it
+     * no longer does, so pressing it is never answered with "that is not the key".
+     */
+    if (signal.channel === "deleteAreaTyped" && signal.action === "change") {
+      const payload = isPhiRecord(signal.value) ? signal.value as Record<string, unknown> : null;
+      const values = isPhiRecord(payload?.values) ? payload.values : null;
+      emitCapability(
+        "deleteAreaConfirmEnabled",
+        matchesPhiTypedConfirmation(values?.areaKey, getPhiWorkspaceCatalogSnapshot().area),
+        signal.correlationId,
+      );
       return;
     }
 
     if (signal.channel === "formValues" && signal.action === "change") {
       const payload = isPhiRecord(signal.value) ? signal.value as Record<string, unknown> : null;
       const values = isPhiRecord(payload?.values) ? payload.values : null;
-      const typed = typeof values?.areaKey === "string" ? values.areaKey.trim() : "";
       const area = getPhiWorkspaceCatalogSnapshot().area;
-      if (typed !== area) {
+      if (!matchesPhiTypedConfirmation(values?.areaKey, area)) {
         // The Overlay stays open: what is wrong is the answer, not the question.
         showMessage(
           { level: "error", content: "That is not the Area key." },
@@ -301,7 +318,7 @@ function PhiRevisionsControllerMount({
     }
   }, [address, deleteAreaShell, emitCapability, handBinding, pathname, reportDraftStatus, router, showMessage]), {
     scopes: ["area", "page"],
-    channels: ["areaSelection", "bindingParams", "command", "formValues", "mutation"],
+    channels: ["areaSelection", "bindingParams", "command", "deleteAreaTyped", "formValues", "mutation"],
   },
   /*
    * The address this listener answers for.

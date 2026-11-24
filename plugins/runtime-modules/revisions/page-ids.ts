@@ -39,5 +39,8 @@ export const PHI_REVISIONS_DELETE_AREA_LAYOUT_IDS = createPhiPresetCmsInstanceId
 );
 export const PHI_REVISIONS_DELETE_AREA_WIDGET_IDS = createPhiPresetCmsInstanceIdMap(
   PHI_REVISIONS_PAGE_DIALOG_ID_CONTEXT,
-  ["deleteAreaWarning", "deleteAreaSurvives", "deleteAreaForm", "deleteAreaCommands"],
+  [
+    "deleteAreaWarning", "deleteAreaSurvives", "deleteAreaTypeToConfirm", "deleteAreaKey", "deleteAreaForm",
+    "deleteAreaCommands",
+  ],
 );

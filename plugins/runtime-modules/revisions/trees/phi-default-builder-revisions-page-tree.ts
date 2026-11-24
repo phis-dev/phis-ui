@@ -12,6 +12,7 @@ import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/c
 import {
   PHI_SIGNAL_VALUE_SCHEMAS,
   createPhiSignalAddress,
+  createPhiSignalSubcontrolAddress,
   type PhiBlockRuntime,
 } from "../../../../types";
 import { PHI_SPACE } from "../../../../theme/antd-css-var-contract";
@@ -73,6 +74,12 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
     getPhiBuilderRevisionsWidgetLabels(credentials),
   ]);
   const deleteAreaOverlay = createPhiSignalAddress("cms", PHI_REVISIONS_DELETE_AREA_OVERLAY_IDS.overlayDeleteArea);
+  // The dialog's confirm button, which stays greyed out until the Area key is typed.
+  const deleteAreaConfirm = createPhiSignalSubcontrolAddress(
+    "cms",
+    PHI_REVISIONS_DELETE_AREA_WIDGET_IDS.deleteAreaCommands,
+    "confirm",
+  );
 
   return {
     page: nodes.page(),
@@ -110,6 +117,24 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
               action: "change",
               valueType: "string",
               receiver: createPhiSignalAddress("cms", PHI_REVISIONS_DELETE_AREA_WIDGET_IDS.deleteAreaWarning),
+            },
+            {
+              routeKey: "builder-revisions-controller-delete-area-key",
+              capabilityId: "deleteAreaKey",
+              scope: "area",
+              channel: "text",
+              action: "change",
+              valueType: "string",
+              receiver: createPhiSignalAddress("cms", PHI_REVISIONS_DELETE_AREA_WIDGET_IDS.deleteAreaKey),
+            },
+            {
+              routeKey: "builder-revisions-controller-delete-area-confirm-enabled",
+              capabilityId: "deleteAreaConfirmEnabled",
+              scope: "page",
+              channel: "enabled",
+              action: "change",
+              valueType: "boolean",
+              receiver: deleteAreaConfirm,
             },
             { routeKey: "builder-revisions-controller-delete-area-open", capabilityId: "deleteAreaOpen", scope: "area", channel: "dialog", action: "activate", valueType: "none", receiver: deleteAreaOverlay },
             { routeKey: "builder-revisions-controller-delete-area-close", capabilityId: "deleteAreaClose", scope: "area", channel: "dialog", action: "close", valueType: "none", receiver: deleteAreaOverlay },
@@ -334,12 +359,41 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
           tone: "secondary",
         },
       }),
+      /*
+       * The exact word to type, shown rather than described: asked for "the Area key", nobody knew its
+       * spelling or its case. The key stands on a line of its own in code type, where it is read at a
+       * glance and selected with one double click; the Controller writes it in as the dialog opens, as
+       * it does the warning, and the comparison takes it in any case (`matchesPhiTypedConfirmation`).
+       */
+      nodes.widget({
+        typeKey: "simple-text",
+        /* Label set text, translated already; a second pass would hand the translator a non-source text. */
+        flags: PhiCmsFlags.NoTranslate,
+        id: PHI_REVISIONS_DELETE_AREA_WIDGET_IDS.deleteAreaTypeToConfirm,
+        parentLayoutNodeId: PHI_REVISIONS_DELETE_AREA_LAYOUT_IDS.deleteAreaBody,
+        slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[2].slotIndex,
+        sortOrder: 2,
+        label: "Builder delete area type to confirm",
+        config: { text: revisionsLabels.deleteArea.typeToConfirm },
+      }),
+      nodes.widget({
+        typeKey: "simple-text",
+        // A key, never words to translate.
+        flags: PhiCmsFlags.NoTranslate,
+        id: PHI_REVISIONS_DELETE_AREA_WIDGET_IDS.deleteAreaKey,
+        parentLayoutNodeId: PHI_REVISIONS_DELETE_AREA_LAYOUT_IDS.deleteAreaBody,
+        slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[3].slotIndex,
+        sortOrder: 3,
+        label: "Builder delete area key",
+        // Never empty, for the same reason as the warning; the Controller's key replaces it.
+        config: { text: "area", marks: ["bold", "code"], fontSize: "lg" },
+      }),
       nodes.widget({
         typeKey: "form",
         id: PHI_REVISIONS_DELETE_AREA_WIDGET_IDS.deleteAreaForm,
         parentLayoutNodeId: PHI_REVISIONS_DELETE_AREA_LAYOUT_IDS.deleteAreaBody,
-        slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[2].slotIndex,
-        sortOrder: 2,
+        slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[4].slotIndex,
+        sortOrder: 4,
         label: "Builder delete area form",
         config: {
           formId: PHI_REVISIONS_FORM_IDS.deleteArea,
@@ -356,6 +410,17 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
                 capabilityId: "submitValues",
                 scope: "area",
                 channel: "formValues",
+                action: "change",
+                valueType: "json",
+                valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
+                receiver: createPhiRevisionsControllerAddress(),
+              },
+              // The key while it is typed, so the confirm button wakes the moment it matches.
+              {
+                routeKey: "builder-delete-area-typed",
+                capabilityId: "valuesChange",
+                scope: "area",
+                channel: "deleteAreaTyped",
                 action: "change",
                 valueType: "json",
                 valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
@@ -405,6 +470,8 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
               emits: [{ capabilityId: "submit", value: null }],
               label: revisionsLabels.deleteArea.confirm,
               danger: true,
+              // Until the Area key is typed; the Controller switches it on (`deleteAreaConfirmEnabled`).
+              disabled: true,
             },
           ],
           signalRoutes: {
@@ -432,6 +499,17 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
                   "cms",
                   PHI_REVISIONS_DELETE_AREA_WIDGET_IDS.deleteAreaForm,
                 ),
+              },
+            ],
+            listens: [
+              {
+                routeKey: "builder-delete-area-confirm-enabled",
+                capabilityId: "enabled",
+                scope: "page",
+                channel: "enabled",
+                action: "change",
+                valueType: "boolean",
+                receiver: deleteAreaConfirm,
               },
             ],
           },

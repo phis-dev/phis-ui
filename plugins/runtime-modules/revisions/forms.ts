@@ -38,7 +38,7 @@ const PHI_REVISIONS_DELETE_AREA_FORM_DESCRIPTOR: PhiFormDescriptor = {
     {
       key: "areaKey",
       fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text,
-      label: label("areaKey", "Type the Area key to confirm"),
+      label: label("areaKey", "Area key"),
       validation: [{
         providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.required,
         message: label("areaKeyRequired", "Write the Area key out to confirm."),

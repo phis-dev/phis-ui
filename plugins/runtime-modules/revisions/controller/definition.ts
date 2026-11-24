@@ -39,6 +39,9 @@ export const PHI_REVISIONS_RUNTIME_CONTROLLER_DEFINITION = {
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.revisionsDraftStatus,
       },
       { id: "deleteAreaWarning", action: "change", valueType: "string" },
+      /* The Area key the dialog shows to be typed, and its confirm button, awake only while it matches. */
+      { id: "deleteAreaKey", action: "change", valueType: "string" },
+      { id: "deleteAreaConfirmEnabled", action: "change", valueType: "boolean" },
       { id: "deleteAreaOpen", action: "activate", valueType: "none" },
       { id: "deleteAreaClose", action: "close", valueType: "none" },
       /* The history is out of date once an Area is cleared: every revision it listed is gone. */
@@ -75,6 +78,13 @@ export const PHI_REVISIONS_RUNTIME_CONTROLLER_DEFINITION = {
       /* The typed Area key, handed over by the delete Form in signal mode rather than a gateway. */
       id: "formValues",
       channel: "formValues",
+      action: "change",
+      valueType: "json",
+      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
+    }, {
+      /* The same Form's values while the key is typed (`valuesChange`), for the confirm button. */
+      id: "deleteAreaTyped",
+      channel: "deleteAreaTyped",
       action: "change",
       valueType: "json",
       valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,

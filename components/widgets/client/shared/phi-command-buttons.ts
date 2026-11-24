@@ -143,6 +143,18 @@ function colorPhiCommandButtonIcon(icon: ReactNode, color: string | undefined): 
   return createElement("span", { style: { display: "inline-flex", color } }, icon);
 }
 
+/**
+ * Whether a button is greyed out: its stated Disabled until `enabled/change` says otherwise, as the
+ * toolbar's own Disabled is (`resolvedDisabled`). A confirm button placed greyed out and woken by a
+ * Controller stayed grey, since the signal could only ever switch a button off.
+ */
+export function resolvePhiCommandButtonDisabled(
+  button: Pick<PhiCommandButtonConfig, "disabled">,
+  state: Pick<PhiCommandButtonRuntimeState, "enabled">,
+) {
+  return state.enabled === undefined ? button.disabled === true : !state.enabled;
+}
+
 export function usePhiCommandButtons({
   buttons,
   key,
@@ -417,7 +429,7 @@ export function usePhiCommandButtons({
        */
       type: resolvePhiButtonVariantPresentation(resolvePhiCommandButtonVariant(button, action)).type ?? "default",
       danger: action ? action.danger === true : button.danger === true,
-      disabled: button.disabled === true || buttonState.enabled === false,
+      disabled: resolvePhiCommandButtonDisabled(button, buttonState),
       readOnly: button.readOnly === true,
       loading: buttonState.loading,
       icon: button.display === "label" ? null : colorPhiCommandButtonIcon(resolvedIcon, button.iconColor),

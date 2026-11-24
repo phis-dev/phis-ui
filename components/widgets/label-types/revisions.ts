@@ -68,6 +68,8 @@ export type PhiBuilderRevisionsWidgetLabels = {
     /** What is lost, until the Controller names the Area in it when the dialog opens. */
     warning: string;
     survives: string;
+    /** Above the Area key the dialog shows to be typed, which the Controller writes in as it opens. */
+    typeToConfirm: string;
     field: string;
     fieldRequired: string;
     confirm: string;
@@ -147,7 +149,8 @@ export const PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS: PhiBuilderRevisionsWid
     title: "Clear this Area back to its preset?",
     warning: "The structure this Site stored for the Area is cleared -- its Shell, drafts and published alike. What is live changes at once, the shell's preset takes the Area back, and no revision is left to restore it from. It cannot be undone. The Module selection is kept.",
     survives: "The Area keeps its Module selection, its Pages, its Navigation and its Theme. Only its Shell goes back to the preset.",
-    field: "Type the Area key to confirm",
+    typeToConfirm: "Type this Area key to confirm:",
+    field: "Area key",
     fieldRequired: "Write the Area key out to confirm.",
     confirm: "Clear Area",
     cancel: "Cancel",
