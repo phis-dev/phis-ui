@@ -328,11 +328,10 @@ export async function buildPhiDefaultAdminUsersPageTree({
                 renderer: "badge",
                 sizing: { mode: "content" },
                 valueMap: {
-                  customer: widgetLabels.accountTypes.external,
                   roles: widgetLabels.accountTypes.roles,
                   auth: widgetLabels.accountTypes.auth,
                 },
-                tagColorMap: { customer: "processing", roles: "error", auth: "warning" },
+                tagColorMap: { roles: "error", auth: "warning" },
               },
               {
                 key: "roleTags",
@@ -385,7 +384,6 @@ export async function buildPhiDefaultAdminUsersPageTree({
                 label: widgetLabels.columns.account,
                 defaultValue: "roles",
                 options: [
-                  { value: "customer", label: widgetLabels.accountTypes.external },
                   { value: "roles", label: widgetLabels.accountTypes.roles },
                   { value: "auth", label: widgetLabels.accountTypes.auth },
                 ],
@@ -436,10 +434,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
                   icon: "edit",
                   display: "icon",
                   execution: "signal",
-                  disabledWhen: { match: "any", conditions: [
-                    readOnlyCondition,
-                    { source: "row", valuePath: "medusaCustomerId", operator: "truthy", reason: widgetLabels.actions.editDisabled },
-                  ] },
+                  disabledWhen: readOnlyCondition,
                 },
                 {
                   key: "delete",

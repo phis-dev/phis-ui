@@ -64,7 +64,6 @@ export const PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
           { key: "lastLoginAt", title: "Last login", type: "datetime" },
           { key: "createdAt", title: "Created", type: "datetime" },
           { key: "self", title: "Current user", type: "boolean" },
-          { key: "medusaCustomerId", title: "Medusa customer", type: "string" },
         ],
         query: {
           search: true,
@@ -79,7 +78,6 @@ export const PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
             disabledWhen: { match: "any", conditions: [
               { source: "controller", controllerAddress: createPhiUserManagementControllerAddress(), valuePath: "permissions.readOnly", operator: "truthy" },
               { source: "row", valuePath: "self", operator: "truthy" },
-              { source: "row", valuePath: "medusaCustomerId", operator: "truthy" },
             ] },
             intent: "destructive",
             confirmation: "required",
