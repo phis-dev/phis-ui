@@ -1,6 +1,5 @@
-import seedToken from "antd/es/theme/themes/seed";
 
-import { resolvePhiAntdAliasTokens } from "./phi-antd-token-resolver";
+import { readPhiAntdDefaultSeedToken, resolvePhiAntdAliasTokens } from "./phi-antd-token-resolver";
 import { isSamePhiThemeColor } from "./phi-theme-color";
 import {
   resolvePhiThemeColorTokens,
@@ -89,8 +88,9 @@ function phiThemePaletteEntryChangesNothing(
    * A seed goes into the derivation as Ant Design's default seed, which is what to compare with: the
    * alias token of the same name is a colour derived from it, and in the dark mode not the seed itself.
    */
-  const inPlace = Object.prototype.hasOwnProperty.call(seedToken, entry.key)
-    ? (seedToken as unknown as Record<string, unknown>)[entry.key]
+  const defaultSeed = readPhiAntdDefaultSeedToken(entry.key);
+  const inPlace = defaultSeed
+    ? defaultSeed.value
     : (resolvePhiAntdAliasTokens(mode, { ...baseTokens, ...left }) as Record<string, unknown>)[entry.key];
   return isSamePhiThemeColor(stated[entry.key], inPlace);
 }

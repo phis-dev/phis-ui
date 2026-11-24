@@ -63,6 +63,17 @@ function withPhiDarkHoverSteps<T extends object>(seed: SeedToken, derived: T): T
   };
 }
 
+/**
+ * Ant Design's default seed for a token key, or `undefined` where the key is no seed. What a seed is put
+ * in place of when nobody states it, read here so the deep import into Ant Design's theme stays in this
+ * file.
+ */
+export function readPhiAntdDefaultSeedToken(key: string): { value: unknown } | undefined {
+  return Object.prototype.hasOwnProperty.call(seedToken, key)
+    ? { value: (seedToken as unknown as Record<string, unknown>)[key] }
+    : undefined;
+}
+
 export function resolvePhiAntdAliasTokens(
   mode: PhiThemeMode,
   token: Record<string, unknown>,
