@@ -1,3 +1,5 @@
+import type { PhiCountLabel } from "../../../helpers/translation-format";
+
 export type PhiEffectsWidgetLabels = {
   modalTitle: string;
   openEditor: string;
@@ -18,8 +20,8 @@ export type PhiEffectsWidgetLabels = {
   };
   status: {
     off: string;
-    configured: string;
-    configuredPlural: string;
+    /** `%1` is how many are configured. */
+    configured: PhiCountLabel;
   };
   fields: {
     amount: string;
@@ -130,8 +132,7 @@ export const PHI_EFFECTS_WIDGET_DEFAULT_LABELS: PhiEffectsWidgetLabels = {
   },
   status: {
     off: "Off",
-    configured: "1 configured",
-    configuredPlural: "{count} configured",
+    configured: { one: "%1 configured", other: "%1 configured" },
   },
   fields: {
     amount: "Amount",

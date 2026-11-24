@@ -5,9 +5,10 @@ import type { PhiSearchSnippetSegment } from "@phis/contracts/search";
 import { PhiEmptyControl } from "../../../../../components/controls/phi-empty-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 import { PhiLink } from "../../../../../components/navigation/phi-link";
+import { usePhiIntlLocale } from "../../../../../components/root/phi-intl-locale";
 import type { PhiSearchResultsWidgetLabels } from "../../../../../components/widgets/label-types/search-results";
 import type { PhiCmsAreaKey } from "../../../../../constants/cms-areas";
-import { formatPhiTranslation } from "../../../../../helpers/translation-format";
+import { formatPhiCountLabel, formatPhiTranslation } from "../../../../../helpers/translation-format";
 import { PHI_SPACE } from "../../../../../theme/antd-css-var-contract";
 import type { PhiClientBlockBaseProps } from "../../../../../types";
 
@@ -54,6 +55,7 @@ function PhiSearchSnippet({ segments }: { segments: PhiSearchSnippetSegment[] })
  * answered, so a reader who arrived by a pasted link knows what they are looking at.
  */
 export function PhiSearchResultsWidgetClient({ labels, config }: PhiSearchResultsWidgetClientProps) {
+  const locale = usePhiIntlLocale();
   if (!config) return null;
 
   if (config.state === "idle") {
@@ -68,7 +70,7 @@ export function PhiSearchResultsWidgetClient({ labels, config }: PhiSearchResult
   }
 
   const heading = config.title ?? formatPhiTranslation(labels.heading, [config.query]);
-  const count = config.total === 1 ? labels.countOne : formatPhiTranslation(labels.count, [String(config.total)]);
+  const count = formatPhiCountLabel(labels.count, config.total, locale);
 
   return (
     <section aria-label={labels.region} style={{ display: "flex", flexDirection: "column", gap: PHI_SPACE.sm }}>

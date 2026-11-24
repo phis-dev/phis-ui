@@ -12,10 +12,12 @@
  */
 
 export {
+  definePhiCountLabel,
   definePhiLabelSet,
   definePhiMessageLabel,
   definePhiRuntimeModuleLabelSet,
   getPhiLabelSet,
+  type PhiLabelSetCountEntry,
   type PhiLabelSetDefinition,
   type PhiLabelSetEntry,
   type PhiLabelSetLabels,

@@ -1,7 +1,7 @@
 import "server-only";
 
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
-import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
+import { definePhiCountLabel, definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 import {
   PHI_EFFECTS_WIDGET_DEFAULT_LABELS,
   type PhiEffectsWidgetLabels,
@@ -24,8 +24,7 @@ const PHI_EFFECTS_WIDGET_LABEL_SET = definePhiLabelSet({
     description_transitions: definePhiMessageLabel(PHI_EFFECTS_WIDGET_DEFAULT_LABELS.descriptions.transitions),
     description_viewport_effects: definePhiMessageLabel(PHI_EFFECTS_WIDGET_DEFAULT_LABELS.descriptions.viewportEffects),
     status_off: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.status.off,
-    status_configured: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.status.configured,
-    status_configured_plural: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.status.configuredPlural,
+    status_configured: definePhiCountLabel(PHI_EFFECTS_WIDGET_DEFAULT_LABELS.status.configured),
     field_amount: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.fields.amount,
     field_trigger: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.fields.trigger,
     field_once: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.fields.once,
@@ -129,7 +128,6 @@ export async function getPhiEffectsWidgetLabels(options: PhiGlobalTranslatorOpti
     status: {
       off: labels.status_off,
       configured: labels.status_configured,
-      configuredPlural: labels.status_configured_plural,
     },
     fields: {
       amount: labels.field_amount,

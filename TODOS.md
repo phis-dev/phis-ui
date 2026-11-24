@@ -318,10 +318,9 @@ and `scripts/validate-todos-wants.ts` refuses the entry once the catalog has one
 
 ## Translations and preferences
 
-- **Count-aware plural translation.** Add one plural contract to the central translation and placeholder
-  formatter before Widgets branch on singular/plural locally -- two already do (`count_one` in
-  components/widgets/label-sets/search-results.ts, `configuredPlural` in
-  components/widgets/label-types/effects.ts). Providers keep returning scalar counts.
+- **Count labels in locales with more plural forms.** A count label (TRANSLATIONS.md, "Count labels")
+  whose English source gives `one` and `other` reads `other` for Polish or Russian `few` and `many`;
+  requesting the missing forms from the translator under their own `plural category` context would close it.
 - **User-profile Tooltip preference.** A per-user setting to disable optional Tooltips, resolved centrally
   and applied through the Phi Control adapters; essential validation, warning, confirmation, and
   accessibility text stays available.

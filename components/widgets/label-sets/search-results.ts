@@ -1,6 +1,6 @@
 import "server-only";
 
-import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
+import { definePhiCountLabel, definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 import {
   PHI_TR_CTX_WEB_UI_LABEL,
   type PhiGlobalTranslatorOptions,
@@ -19,8 +19,7 @@ const PHI_SEARCH_RESULTS_WIDGET_LABEL_SET = definePhiLabelSet({
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
     heading: PHI_SEARCH_RESULTS_WIDGET_DEFAULT_LABELS.heading,
-    count: PHI_SEARCH_RESULTS_WIDGET_DEFAULT_LABELS.count,
-    count_one: PHI_SEARCH_RESULTS_WIDGET_DEFAULT_LABELS.countOne,
+    count: definePhiCountLabel(PHI_SEARCH_RESULTS_WIDGET_DEFAULT_LABELS.count),
     empty: definePhiMessageLabel(PHI_SEARCH_RESULTS_WIDGET_DEFAULT_LABELS.empty),
     short: definePhiMessageLabel(PHI_SEARCH_RESULTS_WIDGET_DEFAULT_LABELS.short),
     idle: definePhiMessageLabel(PHI_SEARCH_RESULTS_WIDGET_DEFAULT_LABELS.idle),
@@ -36,7 +35,6 @@ export async function getPhiSearchResultsWidgetLabels(
   return {
     heading: labels.heading,
     count: labels.count,
-    countOne: labels.count_one,
     empty: labels.empty,
     short: labels.short,
     idle: labels.idle,

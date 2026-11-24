@@ -11,10 +11,12 @@ export {
 } from "./server-helpers/translate";
 export { phiRuntime } from "./server-helpers/phi-runtime";
 export {
+  definePhiCountLabel,
   definePhiLabelSet,
   definePhiMessageLabel,
   definePhiRuntimeModuleLabelSet,
   getPhiLabelSet,
+  type PhiLabelSetCountEntry,
   type PhiLabelSetDefinition,
   type PhiLabelSetEntry,
   type PhiLabelSetLabels,

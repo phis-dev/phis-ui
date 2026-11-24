@@ -10,6 +10,11 @@ import {
   isPhiLocaleReadableAsSource,
   resolvePhiTranslationLocale,
 } from "../helpers/locale";
+import {
+  PHI_PLURAL_CATEGORIES,
+  type PhiCountLabel,
+  type PhiPluralCategory,
+} from "../helpers/translation-format";
 import type { PhiRuntimeModuleDefinition } from "../types/cms-plugins";
 import { resolvePhiRuntimeModuleSourceLocale } from "../types/runtime-module-locale";
 
@@ -21,7 +26,15 @@ import { resolvePhiRuntimeModuleSourceLocale } from "../types/runtime-module-loc
  * a sentence, and a translator told it were a Web UI label shortens it into a caption. The register is
  * part of a translation's identity, so the same English text under two registers keeps two answers.
  */
-export type PhiLabelSetEntry = string | { text: string; ctx: string };
+export type PhiLabelSetEntry = string | { text: string; ctx: string } | PhiLabelSetCountEntry;
+
+/**
+ * A label that says a count: one template per plural category, `other` required (TRANSLATIONS.md,
+ * "Count labels"). It reads back as a `PhiCountLabel` and is formatted with `formatPhiCountLabel`, never
+ * by a Widget's own `count === 1` branch. `ctx` names its register as a `{ text, ctx }` entry does;
+ * absent, it takes the set's.
+ */
+export type PhiLabelSetCountEntry = { count: PhiCountLabel; ctx?: string };
 
 export type PhiLabelSetLabels = Record<string, PhiLabelSetEntry>;
 
@@ -35,8 +48,15 @@ export function definePhiMessageLabel(text: string): PhiLabelSetEntry {
   return { text, ctx: PHI_TR_CTX_WEB_UI_MESSAGE };
 }
 
-/** What a set reads as once translated: the same keys, all of them plain text. */
-export type PhiLabelSetTexts<TLabels extends PhiLabelSetLabels> = { [K in keyof TLabels]: string };
+/** A count label, `{ one: "%1 page", other: "%1 pages" }`, in the set's register unless `ctx` names another. */
+export function definePhiCountLabel(count: PhiCountLabel, ctx?: string): PhiLabelSetCountEntry {
+  return ctx === undefined ? { count } : { count, ctx };
+}
+
+/** What a set reads as once translated: the same keys, plain text, and a count label for a count label. */
+export type PhiLabelSetTexts<TLabels extends PhiLabelSetLabels> = {
+  [K in keyof TLabels]: TLabels[K] extends PhiLabelSetCountEntry ? PhiCountLabel : string;
+};
 
 export type PhiLabelSetDefinition<TLabels extends PhiLabelSetLabels> = {
   key: string;
@@ -46,10 +66,52 @@ export type PhiLabelSetDefinition<TLabels extends PhiLabelSetLabels> = {
   labels: TLabels;
 };
 
-function readLabelSetEntry(entry: PhiLabelSetEntry, setContext: string) {
-  return typeof entry === "string"
-    ? { text: entry, ctx: setContext }
-    : { text: entry.text, ctx: entry.ctx };
+/** One text the set sends: a label, or one category of a count label. */
+type LabelSetUnit = { key: string; category: PhiPluralCategory | null; text: string; ctx: string };
+
+/**
+ * The register a count label's category is translated in: the label's own, saying which form it is. The
+ * category belongs to the translation's identity because English often writes two forms alike -- "%1
+ * configured" is `one` and `other` both -- where a translator's language does not; under the bare register
+ * they would be one message with one answer. It also tells the translator which form to write.
+ */
+function readCountCategoryContext(ctx: string, category: PhiPluralCategory) {
+  return `${ctx}, plural category ${category}`;
+}
+
+function readLabelSetUnits(key: string, entry: PhiLabelSetEntry, setContext: string): LabelSetUnit[] {
+  if (typeof entry === "string") {
+    return [{ key, category: null, text: entry, ctx: setContext }];
+  }
+  if ("count" in entry) {
+    const ctx = entry.ctx ?? setContext;
+    return PHI_PLURAL_CATEGORIES.flatMap((category) => {
+      const text = entry.count[category];
+      return text === undefined
+        ? []
+        : [{ key, category, text, ctx: readCountCategoryContext(ctx, category) }];
+    });
+  }
+  return [{ key, category: null, text: entry.text, ctx: entry.ctx }];
+}
+
+/** The units read back into the set's shape: a label's text, or a count label's categories. */
+function assembleLabelSetTexts<TLabels extends PhiLabelSetLabels>(
+  units: LabelSetUnit[],
+  readText: (unit: LabelSetUnit, index: number) => string,
+): PhiLabelSetTexts<TLabels> {
+  const labels: Record<string, string | Record<string, string>> = {};
+  units.forEach((unit, index) => {
+    const text = readText(unit, index);
+    if (unit.category === null) {
+      labels[unit.key] = text;
+      return;
+    }
+    const count = (labels[unit.key] ?? {}) as Record<string, string>;
+    count[unit.category] = text;
+    labels[unit.key] = count;
+  });
+  return labels as PhiLabelSetTexts<TLabels>;
 }
 
 export function definePhiLabelSet<TLabels extends PhiLabelSetLabels>(
@@ -82,41 +144,36 @@ export async function getPhiLabelSet<TLabels extends PhiLabelSetLabels>(
     definition.sourceLocale ?? options.sourceLocale ?? PHI_CANONICAL_SOURCE_LOCALE,
   );
   const targetLocale = resolvePhiTranslationLocale(options.locale);
-  const entries = Object.entries(definition.labels)
-    .map(([key, value]) => [key, readLabelSetEntry(value, definition.ctx)] as const);
+  const units = Object.entries(definition.labels)
+    .flatMap(([key, value]) => readLabelSetUnits(key, value, definition.ctx));
   if (isPhiLocaleReadableAsSource(targetLocale, sourceLocale)) {
-    const labels = Object.fromEntries(
-      entries.map(([key, entry]) => [key, entry.text]),
-    ) as PhiLabelSetTexts<TLabels>;
-    return labels;
+    return assembleLabelSetTexts<TLabels>(units, (unit) => unit.text);
   }
 
   /*
    * One request per register rather than one per label: a set is nearly all one register, so this is
    * the same single batch it always was plus one more for the handful of entries that are a sentence
-   * rather than a caption. The batches run together, and each keeps its own translation identity.
+   * rather than a caption, and one per plural category a count label states. The batches run together,
+   * and each keeps its own translation identity; each answer goes back to its unit by position.
    */
-  const entriesByContext = new Map<string, { key: string; text: string }[]>();
-  for (const [key, entry] of entries) {
-    const group = entriesByContext.get(entry.ctx) ?? [];
-    group.push({ key, text: entry.text });
-    entriesByContext.set(entry.ctx, group);
-  }
+  const unitsByContext = new Map<string, number[]>();
+  units.forEach((unit, index) => {
+    const group = unitsByContext.get(unit.ctx) ?? [];
+    group.push(index);
+    unitsByContext.set(unit.ctx, group);
+  });
 
   const translator = createGlobalTranslator({ ...options, sourceLocale });
-  const translatedByKey = new Map<string, string>();
-  await Promise.all([...entriesByContext].map(async ([context, group]) => {
-    const translated = await translator.trBulk(group.map((entry) => entry.text), context);
+  const translatedByUnit: (string | undefined)[] = [];
+  await Promise.all([...unitsByContext].map(async ([context, group]) => {
+    const translated = await translator.trBulk(group.map((index) => units[index]!.text), context);
     if (translated.length !== group.length) {
       throw new Error(`Label set length mismatch for "${definition.key}".`);
     }
-    group.forEach((entry, index) => {
-      translatedByKey.set(entry.key, translated[index] ?? entry.text);
+    group.forEach((unitIndex, index) => {
+      translatedByUnit[unitIndex] = translated[index];
     });
   }));
 
-  const labels = Object.fromEntries(
-    entries.map(([key, entry]) => [key, translatedByKey.get(key) ?? entry.text]),
-  ) as PhiLabelSetTexts<TLabels>;
-  return labels;
+  return assembleLabelSetTexts<TLabels>(units, (unit, index) => translatedByUnit[index] ?? unit.text);
 }

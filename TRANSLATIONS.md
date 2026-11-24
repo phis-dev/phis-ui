@@ -115,7 +115,8 @@ The helpers:
 
 - `definePhiLabelSet({ key, ctx, sourceLocale?, labels })` declares a set. `labels` maps semantic keys to
   default text. An entry may name its own register as `{ text, ctx }`; `definePhiMessageLabel(text)` marks
-  a sentence inside a set of captions.
+  a sentence inside a set of captions. `definePhiCountLabel({ one, other }, ctx?)` declares a label that
+  says a count ([Count labels](#count-labels)).
 - `definePhiRuntimeModuleLabelSet(moduleDefinition, { key, ctx, labels })` declares a Module-owned set.
   Its key becomes `module:<moduleId>:<key>` and its source locale is the Module's `sourceLocale`.
 - `getPhiLabelSet(options, definition)` returns the texts under the same semantic keys. It sends one
@@ -135,6 +136,35 @@ The helpers:
   `PhiNoLabels` type (`types/widget-runtime.ts`) instead of passing an empty `labels` object.
 - Semantic commands such as save, publish, review, restore, reset, reload, and upload are Phi copy from
   the common-controls Label Set (`components/widgets/label-sets/common-controls.ts`).
+
+## Count labels
+
+A text that says how many -- "%1 pages", "%1 configured" -- is one count label with a template per plural
+category, and the category is chosen by one formatter, never by a Widget's own `count === 1` branch.
+Providers keep answering a scalar count; which words it takes is decided where it is shown.
+
+- **Shape.** `PhiCountLabel` (`helpers/translation-format.ts`) maps CLDR plural categories (`zero`,
+  `one`, `two`, `few`, `many`, `other`) to templates; `other` is required, the rest optional. A Label Set
+  declares one with `definePhiCountLabel({ one: "%1 page", other: "%1 pages" }, ctx?)`, in the set's
+  register unless `ctx` names another, and reads it back as a `PhiCountLabel` under the same key.
+- **The count is `%1` in every template, `one` included.** `one` is not the number 1 everywhere: French
+  reads 0 as `one`, Russian 21. A literal "1 page" would be wrong in exactly the locales the category is
+  there for.
+- **Formatting.** `formatPhiCountLabel(label, count, locale)` (`@phis/ui/helpers`, Client-safe) selects the
+  category with `Intl.PluralRules(locale)`, falls back to `other` for a category the label does not state,
+  and puts the count in as `%1`, written with `Intl.NumberFormat(locale)`. `locale` is the reader's: the
+  page's Intl locale (`usePhiIntlLocale()` in a Client, the request locale on the server), never the
+  browser's, so the server render and the hydrated page say the same words.
+- **Source categories.** The source language is English, which states `one` and `other`. A locale with
+  more categories -- Polish and Russian `few` and `many`, Arabic `zero` and `two` -- reads `other` for
+  them; a label states them only where its source language has them. A category the reader's locale does
+  not have (`one` in Japanese) is never selected.
+- **Translation.** Each stated category is one message, translated under the label's register followed
+  by `, plural category <category>` (`Web UI label, plural category one`). The category is part of the
+  translation's identity because English often writes two forms alike -- "%1 configured" is `one` and
+  `other` both -- where the reader's language does not, and under the bare register they would be one
+  message with one answer. It also tells the translator which form it is writing. Each register,
+  category registers included, is one bulk request of the set ([Label Sets](#label-sets)).
 
 ## Site copy placeholders
 
