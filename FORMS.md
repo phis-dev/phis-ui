@@ -242,7 +242,8 @@ errors: {
 
 `visibleWhen` and `disabledWhen` use the shared runtime-condition expression (`types/runtime-condition.ts`).
 A leaf names `source`, `valuePath`, and `operator` (`truthy`, `falsy`, `equals`, `contains`, the last two
-with a string `value`); a group names `match: "all" | "any"` and nested `conditions`.
+with a string `value`, and `optionFlag` with a numeric `flag`, below); a group names `match: "all" | "any"`
+and nested `conditions`.
 
 ```ts
 visibleWhen: {
@@ -260,6 +261,29 @@ visibleWhen: {
 }
 ```
 
+- **What a choice is, not which value it has: `optionFlag`.** A leaf `{ source: "form", valuePath:
+  "<field key>", operator: "optionFlag", flag: <bits> }` holds where the option chosen in that field
+  carries every bit of `flag` in its `flags` (`PhiControlOption.flags`, a whole number from 1 to
+  `PHI_CONTROL_OPTION_FLAGS_MAX`; absent is none). It takes no `value`, and `valuePath` names another
+  field of the same Form that offers options, written out or from an Options Provider -- the parser
+  refuses any other. The bits mean what whoever answers for the options says they mean: `@phis/support`'s
+  request types answer `PhisSupportTicketTypeFlag.External`, so the consent checkbox stands only under a
+  type whose conversation leaves the Site, without the descriptor having to list which types those are.
+  Written-out options are known while the Form renders, on the server too; a Provider's are known once
+  the field has resolved them, and until then -- and while a held value is among none of its options --
+  the condition is unavailable, which hides under `visibleWhen` unless the leaf sets `whenUnavailable`.
+  Several values chosen in one field answer with all their options' flags together; nothing chosen is 0.
+  A field hidden this way is hidden as by any other condition: what it holds is submitted as before.
+  Contract addition (`@phis/contracts/conditions` and `/controls`, with the next contracts release).
+
+  ```ts
+  {
+    key: "acknowledgedExternal",
+    fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.checkbox,
+    controlLabel: label("requestExternal", "I understand this may be shared outside this Site"),
+    visibleWhen: { source: "form", valuePath: "typeKey", operator: "optionFlag", flag: PhisSupportTicketTypeFlag.External },
+  }
+  ```
 - A Form descriptor accepts only `source: "form"` (values of the same Form instance) and
   `source: "controller"` with a `controllerAddress` (state of that Controller). Any other source is
   rejected, `record` among them: the record a Page is about is a node's condition, settled on the server

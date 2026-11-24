@@ -57,6 +57,10 @@ import {
   shouldPhiFormSubmitOnKeyDown,
 } from "../forms/form-descriptor-contract";
 import { readPhiMoneyFieldCurrencyFieldKey } from "../forms/money-field-currency-key";
+import {
+  collectFormOptionFlagFieldKeys,
+  resolveFormChosenOptionFlags,
+} from "../forms/form-option-flags";
 import { PHI_SHARED_FORM_PROVIDER_REGISTRY } from "../forms/shared-form-provider-registry";
 import {
   resolvePhiControlOptionsDependencies,
@@ -213,9 +217,15 @@ function PhiResolvedFormFieldControl({
   formContext,
   formValues,
   mediaLimits,
+  onChosenOptionFlags,
 }: {
   /** Set by the Form Item this sits in, from the form's name and the field's key. */
   id?: string;
+  /**
+   * Told the flags of the option this field holds, for a field whose options come from a Provider and
+   * that an `optionFlag` condition reads; `undefined` while nobody knows them, and when it unmounts.
+   */
+  onChosenOptionFlags?: (flags: number | undefined) => void;
   provider: PhiFormFieldTypeProvider;
   field: PhiFormFieldDescriptor;
   /** The live values of this form, for a field whose options depend on a sibling. */
@@ -291,6 +301,13 @@ function PhiResolvedFormFieldControl({
     if (last.key === requiredDependencyKey || !Object.is(last.value, value)) return;
     if (value != null && value !== "") onChange?.(undefined);
   }, [onChange, requiredDependencyKey, value]);
+  const chosenOptionFlags = onChosenOptionFlags
+    ? resolveFormChosenOptionFlags(resolvedOptions.options, value)
+    : undefined;
+  useEffect(() => {
+    onChosenOptionFlags?.(chosenOptionFlags);
+  }, [chosenOptionFlags, onChosenOptionFlags]);
+  useEffect(() => () => onChosenOptionFlags?.(undefined), [onChosenOptionFlags]);
   const Control = provider.Control;
   const controlLabel = field.controlLabel
     ? resolvePhiFormText(field.controlLabel, labels, formConfig)
@@ -529,6 +546,34 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
     () => watchedFormValues ?? pickPhiFormWatchedValues(resolvedInitialValues, watchedFormKeys),
     [resolvedInitialValues, watchedFormKeys, watchedFormValues],
   );
+  /*
+   * What an `optionFlag` condition reads: the flags of the option chosen in each field one of them names.
+   * Written-out options are known here and answered during the render, the server's included; a
+   * Provider's are known only to the field that resolved them, which reports them once it has.
+   */
+  const optionFlagFieldKeys = useMemo(() => collectFormOptionFlagFieldKeys(descriptor.fields), [descriptor.fields]);
+  const [reportedOptionFlags, setReportedOptionFlags] = useState<Readonly<Record<string, number>>>({});
+  const optionFlagReporters = useMemo(() => new Map([...optionFlagFieldKeys].map((key) => [
+    key,
+    (flags: number | undefined) => setReportedOptionFlags((current) => {
+      if (current[key] === flags) return current;
+      const next = { ...current };
+      if (flags === undefined) delete next[key];
+      else next[key] = flags;
+      return next;
+    }),
+  ])), [optionFlagFieldKeys]);
+  const formOptionFlags = useMemo(() => {
+    const flags: Record<string, number> = {};
+    for (const key of optionFlagFieldKeys) {
+      const field = descriptor.fields.find((entry) => entry.key === key);
+      const chosen = field?.optionsProvider
+        ? reportedOptionFlags[key]
+        : resolveFormChosenOptionFlags(field?.options, formValues[key]);
+      if (chosen !== undefined) flags[key] = chosen;
+    }
+    return flags;
+  }, [descriptor.fields, formValues, optionFlagFieldKeys, reportedOptionFlags]);
   const fieldFormContext = useMemo(() => ({
     getValues: () => form.getFieldsValue(true),
     holdSubmit: (fieldKey: string, reason: string | null) => {
@@ -565,9 +610,10 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
     !field.visibleWhen ||
     evaluatePhiRuntimeConditionExpression(field.visibleWhen, {
       form: formValues,
+      formOptionFlags,
       controllers: conditionControllerStates,
     }) === "matched"),
-  [activeRegistry, conditionControllerStates, descriptor.fields, formValues]);
+  [activeRegistry, conditionControllerStates, descriptor.fields, formOptionFlags, formValues]);
 
   /*
    * Where every part of every field lies, at each of the three widths, worked out before anything is
@@ -764,6 +810,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
         const fieldDisabled = field.disabledWhen
           ? evaluatePhiRuntimeConditionExpression(field.disabledWhen, {
               form: formValues,
+              formOptionFlags,
               controllers: conditionControllerStates,
             })
           : "not-matched";
@@ -860,6 +907,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
                   formContext={fieldFormContext}
                   formValues={formValues}
                   mediaLimits={mediaLimits}
+                  onChosenOptionFlags={field.optionsProvider ? optionFlagReporters.get(field.key) : undefined}
                 />
               </Form.Item>
             </div>

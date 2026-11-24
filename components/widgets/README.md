@@ -223,6 +223,10 @@ exports complete Widgets only.
   folder choices Provider (`PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.folderChoices`) answers in this shape --
   each Folder by id, under its own name, with its parent Folder's id as `parentValue` -- and the Gallery's
   Folder setting is such a cascader.
+- An option may carry `flags`, bits whose meaning whoever answers for the options names. No Control draws
+  them; a Form condition reads them of the option chosen in another field (`optionFlag`,
+  [FORMS.md](../../FORMS.md), "Conditions"), so a static list and an Options Provider's answer both keep
+  them on the way to the Control.
 - `PhiCollectionLayoutControl` and `PhiMediaAssetTileControl` are the one grid/masonry/stack
   presentation and the one media tile; asset surfaces compose them instead of new tile renderers.
 - `PhiMenuControl` is the one navigation menu, stacked in a Sider and horizontal in a header bar. A
