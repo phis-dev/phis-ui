@@ -150,6 +150,7 @@ import { resolvePhiImagePresentation } from "../../../../../components/media/ima
 import { usePhiAuthoringAssetDetails } from "../../../../../components/media/use-authoring-asset-details";
 import { PhiImageControl } from "../../../../../components/controls/phi-image-control";
 import { resolvePhiSiteDescription } from "../../../../../helpers/phi-site-description";
+import { omitPhiThemePaletteDefaults } from "../../../../../theme/phi-theme-palette-defaults";
 import { readPhiXAccount } from "../../../../../types/link-preview";
 import { PhiPresetSizeControl, type PhiPresetSizeOption } from "../../../../../components/controls/phi-preset-size-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
@@ -1472,11 +1473,21 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
     const selectedPreset = resolveThemePayloadPreset(state.draft, themePresets);
     /*
      * What the tab shows is what the Site renders: the palette block with the draft's palette on top,
-     * resolved for the mode being edited. The seeds the author owns are the ones present in the draft's
-     * palette, shared or under this mode; the derived overrides live under this mode alone.
+     * resolved for the mode being edited. The seeds the author owns are the ones the draft's palette
+     * states, shared or under this mode, other than the Theme gives them; the derived overrides live
+     * under this mode alone.
      */
     const colorToken = resolvePhiThemeColorTokens(selectedPreset, state.draft.palette, previewMode);
-    const ownPalette = state.draft.palette ?? {};
+    /*
+     * What the author owns is what changes something: a colour the draft states exactly as the Theme
+     * gives it -- a Module palette taken over on save, a picker put back on the Theme's value -- is no
+     * decision of theirs, offers no reset, and is not stored on the next save.
+     */
+    const ownPalette = omitPhiThemePaletteDefaults(
+      selectedPreset,
+      state.draft.palette,
+      buildPhiEffectiveNonColorThemeTokens(state.draft),
+    );
     const ownOverrides = ownPalette.modes?.[previewMode]?.overrides ?? {};
     /*
      * The same colour without the author's derived overrides: what a derived control falls back to, and

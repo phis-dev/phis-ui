@@ -51,6 +51,7 @@ import {
   createInitialBrandThemeState,
   isSameThemePayload,
   mergeThemeSetChoice,
+  omitThemeFields,
 } from "../brand-theme-model";
 import type {
   ThemePayload,
@@ -58,6 +59,23 @@ import type {
   ThemeWriteResponse,
   BrandThemeState,
 } from "../brand-theme-model";
+import { omitPhiThemePaletteDefaults } from "../../../../theme/phi-theme-palette-defaults";
+import type { PhiThemePresetPlugin } from "../../../../theme/phi-theme-presets";
+
+/*
+ * The colours a draft states as the Theme gives them anyway are not stored: they are no decision, and
+ * kept they would read as one wherever the record is read. Dropped ahead of the save's takeover of
+ * Module blocks, which copies a Module's palette in whole again; a core palette is then simply followed.
+ */
+function omitThemePaletteDefaults(theme: ThemePayload, presets: readonly PhiThemePresetPlugin[]): ThemePayload {
+  if (!theme.palette) return theme;
+  const palette = omitPhiThemePaletteDefaults(
+    resolveThemePayloadPreset(theme, presets),
+    theme.palette,
+    theme.style?.token ?? {},
+  );
+  return Object.keys(palette).length > 0 ? { ...theme, palette } : omitThemeFields(theme, "palette");
+}
 
 /*
  * `correlationId` is the exchange this state belongs to: the command that saved, published or reset,
@@ -475,7 +493,7 @@ export function PhiThemeControllerRuntime({
     draftTheme = stateRef.current.draft,
     options?: { notify?: boolean; correlationId?: string },
   ) {
-    let nextTheme = ensurePhiThemeDerivation(draftTheme);
+    let nextTheme = omitThemePaletteDefaults(ensurePhiThemeDerivation(draftTheme), themePresets);
     setSaving(true);
     try {
       const current = stateRef.current;

@@ -14,6 +14,8 @@
  * wherever it stands without asking which one that is.
  */
 
+import { parsePhiThemeColor, type PhiThemeRgba } from "./phi-theme-color";
+
 export const PHI_THEME_GRADIENT_KEYS = ["gradient1", "gradient2", "gradient3"] as const;
 export type PhiThemeGradientKey = (typeof PHI_THEME_GRADIENT_KEYS)[number];
 
@@ -127,26 +129,7 @@ export const PHI_GRADIENT_HOVER_FILTER = "brightness(1.18) saturate(1.15)";
 const PHI_GRADIENT_ACTIVE_FILTER = "brightness(0.88)";
 
 type Rgb = { r: number; g: number; b: number };
-type Rgba = Rgb & { a: number };
-
-/* Enough of CSS colour for what a palette states: hex in its four lengths and `rgb()`/`rgba()`. */
-function parseColor(value: string): Rgba | null {
-  const text = value.trim().toLowerCase();
-  const hex = /^#([0-9a-f]{3,8})$/.exec(text)?.[1];
-  if (hex) {
-    const full = hex.length <= 4 ? [...hex].map((digit) => digit + digit).join("") : hex;
-    return {
-      r: Number.parseInt(full.slice(0, 2), 16),
-      g: Number.parseInt(full.slice(2, 4), 16),
-      b: Number.parseInt(full.slice(4, 6), 16),
-      a: full.length >= 8 ? Number.parseInt(full.slice(6, 8), 16) / 255 : 1,
-    };
-  }
-  const rgb = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)(?:[\s,/]+([\d.]+)(%?))?/.exec(text);
-  if (!rgb) return null;
-  const alpha = rgb[4] == null ? 1 : Number(rgb[4]) / (rgb[5] ? 100 : 1);
-  return { r: Number(rgb[1]), g: Number(rgb[2]), b: Number(rgb[3]), a: Math.min(1, Math.max(0, alpha)) };
-}
+type Rgba = PhiThemeRgba;
 
 /** A translucent text colour as it lands on its ground: the near-black `0.88` text is not black. */
 function composite(top: Rgba, ground: Rgb): Rgb {
@@ -184,7 +167,7 @@ export function resolvePhiThemeGradientInks(token: Record<string, unknown>): Phi
   const light = tokenColor(token, "colorTextLightSolid", PHI_GRADIENT_LIGHT_TEXT);
   const candidates = [tokenColor(token, "colorText", PHI_GRADIENT_DARK_TEXT), tokenColor(token, "colorBgBase", PHI_GRADIENT_DARK_TEXT)];
   const darkness = (colour: string) => {
-    const parsed = parseColor(colour);
+    const parsed = parsePhiThemeColor(colour);
     return parsed ? relativeLuminance(composite(parsed, { r: 255, g: 255, b: 255 })) : Number.POSITIVE_INFINITY;
   };
   const dark = candidates.reduce((darkest, next) => (darkness(next) < darkness(darkest) ? next : darkest));
@@ -206,11 +189,11 @@ export type PhiThemeGradientContrast = {
  * (`hsl()`, a variable): the Theme workspace then says nothing rather than something wrong.
  */
 export function resolvePhiThemeGradientContrast(gradient: PhiThemeGradient, text: string): PhiThemeGradientContrast | null {
-  const words = parseColor(text);
+  const words = parsePhiThemeColor(text);
   if (!words) return null;
   let worst: PhiThemeGradientContrast | null = null;
   for (const [stopIndex, stop] of gradient.stops.entries()) {
-    const ground = parseColor(stop.color);
+    const ground = parsePhiThemeColor(stop.color);
     if (!ground) return null;
     for (const hover of [false, true]) {
       const factor = hover ? PHI_GRADIENT_HOVER_BRIGHTNESS : 1;

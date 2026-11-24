@@ -88,6 +88,14 @@ the block key stays in `blocks` as provenance. A picture a Module ground carries
 Site's Media library by the same save, and so are a Module Set's Logo and Signet. Core blocks are followed,
 never copied -- the Set included, so the placeholder Logo never becomes a Site's own Asset.
 
+**An adopted colour is not an override.** A palette entry the Site states exactly as the block gives it --
+every adopted seed, a picker put back on the Theme's value, `#1677FF` for `#1677ff` -- changes nothing, and
+the Theme workspace reads ownership off what changes something (`omitPhiThemePaletteDefaults`,
+`theme/phi-theme-palette-defaults.ts`; colours compared by value, `isSamePhiThemeColor`): such an entry offers
+no "Reset to Theme" or "Reset override". The save drops these entries before the adoption, which copies a
+Module's palette in whole again, so a Site on a core palette stores only what differs. A seed equal to the
+block's that releases derived colours the block states outright does change the render and stays.
+
 ### Signet
 
 The Signet is the square mark a browser tab, a home screen and a bookmark wear -- the favicon. A Set
