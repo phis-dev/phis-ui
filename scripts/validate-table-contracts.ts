@@ -563,6 +563,16 @@ const parsedSticky = parsePhiTableWidgetConfig({
   },
   features: { rowSelection: { mode: "multiple" } },
 });
+// TABLES.md, "Loading": three skeleton rows unless the Table states its own count, a whole number up to 25.
+const loadingRowsOf = (loadingRows: unknown) => parsePhiTableWidgetConfig({
+  presentation: { layout: { mode: "auto", overflowX: "auto" }, columns: [{ key: "name", fieldKey: "name", title: "Name" }], loadingRows },
+  features: {},
+}).presentation.loadingRows;
+assert.equal(loadingRowsOf(undefined), undefined);
+assert.equal(loadingRowsOf(10), 10);
+for (const refused of [0, 26, 2.5, "10"]) {
+  assert.throws(() => loadingRowsOf(refused), (error: unknown) => isPhiConfigError(error), `loadingRows ${String(refused)} is refused`);
+}
 const parsedFooter = parsePhiTableWidgetConfig({
   presentation: {
     footer: {

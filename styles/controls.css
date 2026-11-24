@@ -594,9 +594,11 @@ h5.phi-typography, .phi-typography h5 {
  * Not while the table is empty. With no rows Ant Design has measured nothing and leaves the header's
  * `<colgroup>` without widths, so fixed layout took them from the header cells instead: every `content`
  * column got its 1% -- a dozen pixels, its title cut to one letter -- and the `fill` column the rest.
- * Without rows there is nothing to line up with, and `auto` gives each title its own width.
+ * Without rows there is nothing to line up with, and `auto` gives each title its own width. The same
+ * holds while the skeleton rows stand in for the rows (`--loading`): Ant Design measures no column of
+ * them either, and the header kept one title of a dozen.
  */
-.phi-table-control.phi-table-control--sticky-header:not(.phi-table-control--empty) [class~="ant-table-sticky-holder"] > table {
+.phi-table-control.phi-table-control--sticky-header:not(.phi-table-control--empty):not(.phi-table-control--loading) [class~="ant-table-sticky-holder"] > table {
   table-layout: fixed !important;
 }
 

@@ -1278,6 +1278,7 @@ export function PhiTableWidgetClient({
             }
           : undefined}
         loading={effectiveLoading}
+        loadingRows={presentation.loadingRows}
         bordered={presentation.borders}
         striped={presentation.row?.striped}
         showHeader={presentation.header}

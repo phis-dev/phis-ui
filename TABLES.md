@@ -329,6 +329,24 @@ Footer and summary may coexist. Their persisted config cannot contain functions,
 or arbitrary Ant Design properties. Trees have no matching native footer or summary contract; a tree-like
 Table may use these Table contracts, while `PhiTreeControl` and `PhiTreeWidget` do not acquire them.
 
+### Loading
+
+While its rows load, a Table draws skeleton rows in their place: **three** unless it says otherwise
+(`PHI_TABLE_LOADING_ROWS`, `constants/table-loading.ts`). Few on purpose: most Tables hold a handful of
+rows, and a Table that loaded as a page of eight and then showed two shrank under the reader's eyes and
+pulled the Page below it up. Three rows grow into what arrives, and growing is what a reader expects of a
+list that fills. A Table known to fill its page -- a paged listing of many -- may state its own count in
+`presentation.loadingRows`, a whole number from 1 to `PHI_TABLE_LOADING_ROWS_MAX` (25); the count is never
+more than a page holds. It is presentation only: the Provider, the query and the page size do not change.
+
+The width stays: the columns are the ones the rows will have, each skeleton as wide as its column's fixed
+or minimum width, and a Table with row selection keeps its selection column while it loads, its controls
+disabled and nothing chosen, so the columns do not move when the rows arrive; a column that sizes to its
+content gets a skeleton a short word wide rather than collapsing. A sticky header row, a table of its own
+whose widths Ant Design measures from the rows, keeps its titles' own widths while there are none to
+measure (`phi-table-control--loading`, `styles/controls.css`), as it does while the Table is empty. The
+header, the toolbar and the pagination stand as they are; the footer and summary come with the rows.
+
 ## Columns
 
 Each column has one stable `key`. The `columns` array order is the canonical Authoring order; a second
@@ -930,8 +948,8 @@ Table loading Skeleton, or block unrelated cells and rows. Row, action, move, an
 the same target-scoped principle.
 
 Foreground query loading is rendered by `PhiTableControl` as Skeleton cells across every visible Table
-column, including the actions column, while retaining the configured headers, sizing, and a representative
-row count. Tables never replace their body with an Alert, Typography loading label, Ant Design Spin, or a
+column, including the actions and selection columns, while retaining the configured headers and sizing,
+in three rows unless the Table states `presentation.loadingRows` ([Loading](#loading)). Tables never replace their body with an Alert, Typography loading label, Ant Design Spin, or a
 single full-width Skeleton paragraph. Feature modules pass `loading`; they do not own loading presentation.
 
 When an accepted local patch touches a field used by the active filter or sort, the Binding applies the

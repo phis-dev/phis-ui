@@ -1,4 +1,5 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import { PHI_TABLE_LOADING_ROWS_MAX } from "../../../../../constants/table-loading";
 import { readPhiProviderResourceSource } from "../../../../../types/runtime-data-provider";
 import {
   PHI_TABLE_TAG_COLORS,
@@ -560,6 +561,11 @@ export function parsePhiTableWidgetConfig(config: Record<string, unknown>): PhiT
       stickyHeader: presentation.boolean("stickyHeader"),
       footer: presentation.object("footer", readTableFooter),
       footerOmitted: presentation.string("footerOmitted"),
+      loadingRows: presentation.value(
+        "loadingRows",
+        `a whole number from 1 to ${PHI_TABLE_LOADING_ROWS_MAX}`,
+        (value) => typeof value === "number" && Number.isInteger(value) && value >= 1 && value <= PHI_TABLE_LOADING_ROWS_MAX ? value : undefined,
+      ),
       summary: presentation.object("summary", readTableSummary),
       row: {
         striped: row.boolean("striped"),

@@ -476,6 +476,13 @@ export type PhiTableWidgetPresentation = PhiControlPresentationConfig & {
    * cell. `checkPhiPresetTables` takes it in place of the footer and refuses it beside one.
    */
   footerOmitted?: string;
+  /**
+   * How many skeleton rows stand in for the rows while they load: three where this says nothing
+   * (`PHI_TABLE_LOADING_ROWS`), at most `PHI_TABLE_LOADING_ROWS_MAX` and never more than a page holds. Few by
+   * default so a Table grows when its rows arrive rather than shrinks; a paged listing known to fill its
+   * page may say so (TABLES.md, "Loading").
+   */
+  loadingRows?: number;
   summary?: PhiTableSummaryConfig;
   row?: {
     striped?: boolean;

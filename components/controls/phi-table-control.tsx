@@ -49,6 +49,7 @@ import type { PhiControlSize, PhiControlVariant } from "../../types/control";
 import type { PhiCalendarAdapterKey, PhiTemporalSelection } from "../../types/calendar";
 import { PHI_GREGORY_CALENDAR_ADAPTER_KEY } from "../../types/calendar-keys";
 import { PHI_VISUAL_ANCHOR_PART_ATTRIBUTE } from "../../types/visual-anchors";
+import { PHI_TABLE_LOADING_ROWS, PHI_TABLE_LOADING_ROWS_MAX } from "../../constants/table-loading";
 import type {
   PhiTableColumnEditorControl,
   PhiTableProviderFieldType,
@@ -358,6 +359,12 @@ export type PhiTableControlProps<TRow extends Record<string, unknown>> = {
   rowReordering?: PhiTableControlRowReordering;
   editing?: PhiTableControlRowEditing<TRow>;
   loading?: boolean;
+  /**
+   * How many skeleton rows stand in for the rows while they load: three unless a Table says otherwise
+   * (`PHI_TABLE_LOADING_ROWS`). Few on purpose -- a Table grows when its rows arrive rather than shrinks,
+   * and most Tables hold a handful of rows (TABLES.md, "Loading").
+   */
+  loadingRows?: number;
   bordered?: boolean;
   striped?: boolean;
   showHeader?: boolean;
@@ -530,7 +537,8 @@ function buildLoadingSkeletonStyle(
   width: CSSProperties["width"],
   cellPaddingInline: number,
 ): CSSProperties {
-  if (width == null) return { display: "block", width: "100%", minWidth: 24 };
+  // A column that sizes to its content gets a skeleton a short word wide, so it does not collapse to nothing.
+  if (width == null) return { display: "block", width: "100%", minWidth: 48 };
   const contentWidth = typeof width === "number"
     ? Math.max(24, width - cellPaddingInline * 2)
     : `max(24px, calc(${width} - ${cellPaddingInline * 2}px))`;
@@ -773,6 +781,7 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
   rowReordering,
   editing,
   loading = false,
+  loadingRows: loadingRowCount = PHI_TABLE_LOADING_ROWS,
   bordered,
   striped = false,
   stickyHeader = false,
@@ -1221,9 +1230,11 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
       : dataSource,
     [dataSource, rowIdentityPath, tree],
   );
-  const loadingSkeletonRows = pagination === false
-    ? 5
-    : Math.min(8, Math.max(3, pagination.pageSize));
+  // Never more than a page holds: a Table that pages by five does not load as ten.
+  const loadingSkeletonRows = Math.max(1, Math.min(
+    Math.trunc(loadingRowCount),
+    pagination === false ? PHI_TABLE_LOADING_ROWS_MAX : pagination.pageSize,
+  )) || PHI_TABLE_LOADING_ROWS;
   const loadingRows = useMemo(() => Array.from({ length: loadingSkeletonRows }, (_, index) => ({
     [PHI_TABLE_LOADING_ROW]: index,
   }) as unknown as TRow), [loadingSkeletonRows]);
@@ -1250,12 +1261,13 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
   const controlColumns = useMemo<TableColumnsType<TRow>>(() => {
     return [
       ...rowDragColumn,
-      ...(rowSelection && !loading ? [Table.SELECTION_COLUMN] : []),
+      // Kept while loading, its controls disabled, so the columns do not move when the rows arrive.
+      ...(rowSelection ? [Table.SELECTION_COLUMN] : []),
       ...antdColumns,
       ...rowEditingColumn,
       ...fallbackRowOrderingColumn,
     ];
-  }, [antdColumns, fallbackRowOrderingColumn, loading, rowDragColumn, rowEditingColumn, rowSelection]);
+  }, [antdColumns, fallbackRowOrderingColumn, rowDragColumn, rowEditingColumn, rowSelection]);
   const loadingSkeletonWidths = useMemo(() => new Map<string, CSSProperties["width"]>(
     orderedColumns.flatMap((column) => {
       const width = column.sizing?.mode === "fixed"
@@ -1535,6 +1547,18 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
         getCheckboxProps: (row) => ({ disabled: rowSelection.isRowDisabled?.(row) ?? false }),
       } satisfies TableRowSelection<TRow>)
     : undefined;
+  /*
+   * The selection column of a loading Table: the same column, nothing chosen and nothing to choose, so
+   * the skeleton has the width the rows will have.
+   */
+  const loadingRowSelection = antdRowSelection
+    ? ({
+        type: antdRowSelection.type,
+        fixed: antdRowSelection.fixed,
+        selectedRowKeys: [],
+        getCheckboxProps: () => ({ disabled: true }),
+      } satisfies TableRowSelection<TRow>)
+    : undefined;
 
   /*
    * Whether something of the Table's own stands at its bottom edge. A sticky-top summary does not: it
@@ -1573,6 +1597,7 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
         stickyHeader && showHeader !== false ? "phi-table-control--sticky-header" : null,
         // No rows, nothing measured: the sticky header's fixed layout would have no widths to fix.
         !loading && dataSource.length === 0 ? "phi-table-control--empty" : null,
+        loading ? "phi-table-control--loading" : null,
       ]
         .filter(Boolean)
         .join(" ")}
@@ -1587,7 +1612,7 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
       tableLayout={layout.mode}
       size={size}
       rowClassName={(_row, index) => striped && index % 2 === 1 ? "phi-table-control__row--striped" : ""}
-      rowSelection={loading ? undefined : antdRowSelection}
+      rowSelection={loading ? loadingRowSelection : antdRowSelection}
       components={rowReordering?.enabled && !loading ? { body: { row: PhiTableSortableRow } } : undefined}
       scroll={layout.overflowX === "auto" ? { x: true } : undefined}
       sticky={stickyHeader && showHeader !== false ? true : undefined}
