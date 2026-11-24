@@ -41,6 +41,7 @@ import { usePhiVisualAnchorParts } from "../../../../../components/runtime/runti
 import type { PhiVisualAnchorAddress } from "../../../../../types/visual-anchors";
 import { usePhiApplicationFeedback } from "../../../../../components/runtime/use-phi-application-feedback";
 import { usePhiTableBinding } from "../../../../../components/tables/client/phi-table-binding";
+import { usePhiTableBindingParams } from "../../../../../components/tables/client/phi-table-binding-params";
 import { PhiTableBindingControl } from "../../../../../components/tables/client/phi-table-binding-control";
 import { usePhiTableFilterOptions } from "../../../../../components/tables/client/phi-table-filter-options";
 import { isTableQueryNarrowedByReader } from "./reader-query";
@@ -361,21 +362,16 @@ export function PhiTableWidgetClient({
   const config = useMemo(() => JSON.parse(configKey) as PhiTableWidgetConfig, [configKey]);
   const { presentation, features, source } = config;
   /*
-   * What the reader set, tagged with the configuration it was set against. A Builder edit of the
-   * configured params or columns is a new starting point; the reader's earlier choice belonged to the old
-   * one and would otherwise outlive it -- an order missing the new column, which every reorder then
-   * refused.
+   * What the reader set, tagged with the configuration it was set against (`usePhiTableBindingParams`).
+   * A Builder edit of the configured params or columns is a new starting point; the reader's earlier
+   * choice belonged to the old one and would otherwise outlive it -- an order missing the new column,
+   * which every reorder then refused.
    */
   const configuredBindingParams = useMemo<Record<string, unknown>>(
     () => isPhiRecord(source?.params) ? source.params : {},
     [source],
   );
-  const bindingParamsSeed = JSON.stringify(configuredBindingParams);
-  const [chosenBindingParams, setChosenBindingParams] =
-    useState<{ seed: string; params: Record<string, unknown> } | null>(null);
-  const bindingParams = chosenBindingParams?.seed === bindingParamsSeed
-    ? chosenBindingParams.params
-    : configuredBindingParams;
+  const { bindingParams, changeBindingParams } = usePhiTableBindingParams(configuredBindingParams);
   const resolvedSource = useMemo(() => source ? { ...source, params: bindingParams } : null, [bindingParams, source]);
   const resolvedControlSize = presentation.controlSize ??
     (features.tools?.mode !== "external" ? "small" : undefined);
@@ -605,8 +601,10 @@ export function PhiTableWidgetClient({
     emitSelection(selectedRowIdentities);
   }, [emitFields, emitSelection, readSelectedRows, selectedRowIdentities]);
 
-  const updateBindingParams = useCallback((next: Record<string, unknown>, correlationId?: string) => {
-    setChosenBindingParams({ seed: bindingParamsSeed, params: next });
+  /* A change to the params; the same params again change nothing and hand nothing on. */
+  const updateBindingParams = useCallback((patch: Record<string, unknown>, correlationId?: string) => {
+    const next = changeBindingParams(patch);
+    if (!next) return;
     setQuery((current) => ({ ...current, page: 1, cursor: null }));
     setSelectedRowIdentities([]);
     setExpandedRowIdentities([]);
@@ -620,22 +618,20 @@ export function PhiTableWidgetClient({
           : [];
       })),
     }, correlationId);
-  }, [bindingParamsSeed, configuredBindingFields, emitCapability, setExpandedRowIdentities, setQuery, setSelectedRowIdentities]);
+  }, [changeBindingParams, configuredBindingFields, emitCapability, setExpandedRowIdentities, setQuery, setSelectedRowIdentities]);
 
   useEffect(() => {
     if (!resource?.bindingFields?.length) return;
-    const next = { ...bindingParams };
-    let changed = false;
+    const defaults: Record<string, unknown> = {};
     for (const field of resource.bindingFields) {
-      if (next[field.key] === undefined && field.defaultValue !== undefined) {
-        next[field.key] = field.defaultValue;
-        changed = true;
+      if (bindingParams[field.key] === undefined && field.defaultValue !== undefined) {
+        defaults[field.key] = field.defaultValue;
       }
     }
-    if (!changed) return;
+    if (Object.keys(defaults).length === 0) return;
     let cancelled = false;
     queueMicrotask(() => {
-      if (!cancelled) updateBindingParams(next);
+      if (!cancelled) updateBindingParams(defaults);
     });
     return () => { cancelled = true; };
   }, [bindingParams, resource?.bindingFields, updateBindingParams]);
@@ -699,7 +695,7 @@ export function PhiTableWidgetClient({
       if (filters) setQuery((current) => ({ ...current, page: 1, cursor: null, filters }));
     } else if (route.capabilityId === "bindingParamsChange") {
       const next = readPhiTableBindingParamsSignalValue(signal.value);
-      if (next) updateBindingParams({ ...bindingParams, ...next.params }, signal.correlationId);
+      if (next) updateBindingParams(next.params, signal.correlationId);
     } else if (route.capabilityId === "reload") {
       reload();
     } else if (route.capabilityId === "selectionClear") {
@@ -753,7 +749,7 @@ export function PhiTableWidgetClient({
         setConditionControllerStates((current) => ({ ...current, [signal.sender!]: next.state }));
       }
     }
-  }, [activateAction, bindingParams, bulkActions, conditionControllerAddresses, confirm, listenRoutes, reload, resource, rowActions, rows, setQuery, signalIdentity.receiver, toolbarActions, updateBindingParams, updateColumnOrder, updateExpandedRows, updateSelection]), useMemo(() => resolvePhiSignalListenFilter(listenRoutes), [listenRoutes]), signalIdentity.receiver);
+  }, [activateAction, bulkActions, conditionControllerAddresses, confirm, listenRoutes, reload, resource, rowActions, rows, setQuery, signalIdentity.receiver, toolbarActions, updateBindingParams, updateColumnOrder, updateExpandedRows, updateSelection]), useMemo(() => resolvePhiSignalListenFilter(listenRoutes), [listenRoutes]), signalIdentity.receiver);
 
   useEffect(() => {
     if (conditionControllerAddresses.size > 0) {
@@ -962,7 +958,7 @@ export function PhiTableWidgetClient({
           sourceConfig={bindingParams}
           value={bindingParams[field.key]}
           size={resolvedControlSize}
-          onChange={(value) => updateBindingParams({ ...bindingParams, [field.key]: value })}
+          onChange={(value) => updateBindingParams({ [field.key]: value })}
           onCreate={field.create && tool.create ? async (value) => {
             const result = await executeAction({
               kind: "action",
@@ -975,7 +971,7 @@ export function PhiTableWidgetClient({
               (typeof result.canonicalValue !== "string" && typeof result.canonicalValue !== "number")) {
               return null;
             }
-            updateBindingParams({ ...bindingParams, [field.key]: result.canonicalValue });
+            updateBindingParams({ [field.key]: result.canonicalValue });
             return result.canonicalValue;
           } : undefined}
         />

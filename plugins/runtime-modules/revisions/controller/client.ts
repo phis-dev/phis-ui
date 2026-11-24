@@ -1,6 +1,6 @@
 "use client";
 
-import { createElement, useCallback, useEffect, useMemo } from "react";
+import { createElement, useCallback, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { PhiRuntimeControllerPlugin, PhiSignalAddress } from "../../../../types";
 import { PHI_SIGNAL_VALUE_SCHEMAS, type PhiSignalValue } from "../../../../types/signals";
@@ -15,28 +15,22 @@ import {
   usePhiWorkspaceCatalogValue,
 } from "../../../../components/workspace/catalog-store";
 import {
-  PHI_BUILDER_NAVIGATION_KEY_SEARCH_PARAM,
-  PHI_BUILDER_PAGE_SEARCH_PARAM,
   PHI_BUILDER_REVISIONS_KIND_SEARCH_PARAM,
   PHI_BUILDER_REVISIONS_SCOPE_SEARCH_PARAM,
-  PHI_BUILDER_THEME_KEY_SEARCH_PARAM,
-  normalizePhiBuilderAreaSearchParam,
-  normalizePhiBuilderPageSearchParam,
   normalizePhiBuilderRevisionsKindSearchParam,
 } from "../../../../helpers/cms-scope-search-params";
 import {
-  resolvePhiBuilderRevisionPagePath,
-} from "../types";
-import {
-  resolvePhiBuilderActivePageCatalog,
-  resolvePhiBuilderActivePageKey,
-} from "../../../../helpers/cms-page-catalog";
+  isPhiRevisionsCatalogReady,
+  readPhiRevisionsAddressKind,
+  readPhiRevisionsTableBinding,
+  resolvePhiRevisionsControllerBinding,
+  type PhiRevisionsTableBinding,
+} from "./binding";
 import {
   PHI_REVISIONS_RUNTIME_CONTROLLER_DEFINITION,
   type PhiRevisionsControllerConfig,
 } from "../controller/definition";
 import { resolvePhiRevisionsDraftContextTarget } from "./draft-context-target";
-import { resolvePhiBuilderRevisionNavScopeKey } from "../../../../helpers/cms-navigation-scope-key";
 import { deleteCmsDraft } from "../../../../helpers/cms-draft-delete";
 import { isPhiRecord } from "../../../../helpers/is-record";
 import { usePhiPathname } from "../../../../components/runtime/use-phi-pathname";
@@ -86,46 +80,42 @@ function PhiRevisionsControllerMount({
   const customPages = usePhiWorkspaceCatalogValue((state) => state.customPages);
   const persistedPageCatalogByArea = usePhiWorkspaceCatalogValue((state) => state.persistedPageCatalogByArea,
   );
+  const catalogHydrated = usePhiWorkspaceCatalogValue((state) => state.catalogHydrated);
+  const pageCatalogHydratedByArea = usePhiWorkspaceCatalogValue((state) => state.pageCatalogHydratedByArea);
 
+  /*
+   * The scope the address names, handed to the Table once the catalog stands for that address.
+   *
+   * Before, it was resolved on the catalog's first answer, which names the default Area (`public`)
+   * until the Builder has read the address: a Module Page of the App was handed as a Public Page,
+   * then again as the App's, each a history read. The catalog changes many times more while the
+   * Builder opens, and after every Page action, and each change hands the scope again; the Table
+   * takes the same scope as no change (`updateBindingParams`), so only another scope is read.
+   */
+  /*
+   * The last scope handed, to know it when the Table hands it back: the Table announces every change
+   * of its binding, this Controller's own among them, and written into the address the scope that was
+   * read off the address (or the open Page standing in for it) is one more fetch of the Page for nothing.
+   */
+  const handedBindingKey = useRef<string | null>(null);
+  const handBinding = useCallback((binding: PhiRevisionsTableBinding, correlationId?: string | null) => {
+    handedBindingKey.current = JSON.stringify(binding);
+    emitCapability("bindingParamsChange", { params: binding }, correlationId);
+  }, [emitCapability]);
   useEffect(() => {
-    const state = getPhiWorkspaceCatalogSnapshot();
-    const pages = resolvePhiBuilderActivePageCatalog(
-      state.area,
-      state.modulePresetPagesByArea,
-      state.customPages,
-      state.persistedPageCatalogByArea,
+    const binding = resolvePhiRevisionsControllerBinding(
+      getPhiWorkspaceCatalogSnapshot(),
+      new URLSearchParams(window.location.search),
     );
-    const search = new URLSearchParams(window.location.search);
-    const pageKey = resolvePhiBuilderActivePageKey(
-      normalizePhiBuilderPageSearchParam(search.get(PHI_BUILDER_PAGE_SEARCH_PARAM)) ?? state.pageKey,
-      pages,
-    );
-    if (!pageKey) return;
-    const kind = normalizePhiBuilderRevisionsKindSearchParam(
-      search.get(PHI_BUILDER_REVISIONS_KIND_SEARCH_PARAM),
-    ) ?? "area";
-    const requestedScope = search.get(PHI_BUILDER_REVISIONS_SCOPE_SEARCH_PARAM)?.trim() ?? "";
-    const scopeKey = kind === "page"
-      ? requestedScope.startsWith("/")
-        ? requestedScope
-        : resolvePhiBuilderRevisionPagePath(state.area, pageKey, pages)
-      : kind === "navigation"
-        ? requestedScope.includes(":")
-          ? requestedScope
-          : resolvePhiBuilderRevisionNavScopeKey(
-              state.area,
-              search.get(PHI_BUILDER_NAVIGATION_KEY_SEARCH_PARAM),
-            )
-        : kind === "theme"
-          ? requestedScope || search.get(PHI_BUILDER_THEME_KEY_SEARCH_PARAM) || "default"
-          : normalizePhiBuilderAreaSearchParam(requestedScope) ?? state.area;
-    emitCapability("bindingParamsChange", { params: { area: state.area, kind, scopeKey } });
+    if (binding) handBinding(binding);
   }, [
     builderArea,
     builderPageKey,
+    catalogHydrated,
     customPages,
-    emitCapability,
+    handBinding,
     modulePresetPagesByArea,
+    pageCatalogHydratedByArea,
     persistedPageCatalogByArea,
   ]);
 
@@ -170,11 +160,18 @@ function PhiRevisionsControllerMount({
       isPhiBuilderAreaKey(signal.value)
     ) {
       const search = new URLSearchParams(window.location.search);
-      const kind = normalizePhiBuilderRevisionsKindSearchParam(
-        search.get(PHI_BUILDER_REVISIONS_KIND_SEARCH_PARAM),
-      ) ?? "area";
-      if (kind !== "area") return;
-      emitCapability("bindingParamsChange", { params: { kind: "area", scopeKey: signal.value } }, signal.correlationId);
+      /*
+       * Not before the catalog stands for the address: the Area select says which Area it shows when it
+       * mounts, which is the catalog's default until the Builder has read the address -- the App's
+       * Revisions read the Public Area's history first.
+       */
+      if (
+        readPhiRevisionsAddressKind(search) !== "area" ||
+        !isPhiRevisionsCatalogReady(getPhiWorkspaceCatalogSnapshot(), search)
+      ) {
+        return;
+      }
+      handBinding({ area: signal.value, kind: "area", scopeKey: signal.value }, signal.correlationId);
       return;
     }
 
@@ -219,31 +216,33 @@ function PhiRevisionsControllerMount({
     }
 
     if (signal.channel === "bindingParams" && signal.action === "change") {
-      const binding = readPhiTableBindingParamsSignalValue(signal.value);
-      const kind = normalizePhiBuilderRevisionsKindSearchParam(binding?.params.kind);
-      const scopeKey = typeof binding?.params.scopeKey === "string"
-        ? binding.params.scopeKey.trim()
-        : "";
-      if (!kind || !pathname) return;
+      /*
+       * A whole scope only. The Table's kind select answers before its scope select does, and the kind
+       * beside the scope of the kind before it names nothing; written into the address it was a
+       * navigation, and the scope's answer a second one.
+       */
+      const binding = readPhiRevisionsTableBinding({
+        area: getPhiWorkspaceCatalogSnapshot().area,
+        ...readPhiTableBindingParamsSignalValue(signal.value)?.params,
+      });
+      if (!binding || !pathname || JSON.stringify(binding) === handedBindingKey.current) return;
+      const { kind, scopeKey } = binding;
       const search = new URLSearchParams(window.location.search);
       const currentKind = normalizePhiBuilderRevisionsKindSearchParam(
         search.get(PHI_BUILDER_REVISIONS_KIND_SEARCH_PARAM),
       );
-      if (
-        kind === "area" &&
-        isPhiBuilderAreaKey(scopeKey) &&
-        (currentKind == null || currentKind === "area")
-      ) {
+      /*
+       * An Area's history is not written into the address beyond its kind, and an absent kind is the
+       * Area: nothing to navigate to. Asked to write `revisionKind=area` the Controller fetched the Page
+       * anew for an address that meant the same.
+       */
+      if (kind === "area" && (currentKind == null || currentKind === "area")) {
         return;
       }
       search.set(PHI_BUILDER_REVISIONS_KIND_SEARCH_PARAM, kind);
-      if (kind === "area" && isPhiBuilderAreaKey(scopeKey)) {
+      if (kind === "area") {
         search.delete(PHI_BUILDER_REVISIONS_SCOPE_SEARCH_PARAM);
-      } else if (kind === "page" && scopeKey.startsWith("/")) {
-        search.set(PHI_BUILDER_REVISIONS_SCOPE_SEARCH_PARAM, scopeKey);
-      } else if (kind === "navigation" && scopeKey.includes(":")) {
-        search.set(PHI_BUILDER_REVISIONS_SCOPE_SEARCH_PARAM, scopeKey);
-      } else if (kind === "theme" && scopeKey) {
+      } else {
         search.set(PHI_BUILDER_REVISIONS_SCOPE_SEARCH_PARAM, scopeKey);
       }
       /*
@@ -300,7 +299,7 @@ function PhiRevisionsControllerMount({
         { correlationId: signal.correlationId },
       );
     }
-  }, [address, deleteAreaShell, emitCapability, pathname, reportDraftStatus, router, showMessage]), {
+  }, [address, deleteAreaShell, emitCapability, handBinding, pathname, reportDraftStatus, router, showMessage]), {
     scopes: ["area", "page"],
     channels: ["areaSelection", "bindingParams", "command", "formValues", "mutation"],
   },

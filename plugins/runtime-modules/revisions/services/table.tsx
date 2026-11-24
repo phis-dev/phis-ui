@@ -3,7 +3,7 @@
 import { PHI_REVISIONS_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
 import { deleteCmsDraft } from "../../../../helpers/cms-draft-delete";
 import { readNumber } from "../../../../components/widgets/config/parser-primitives";
-import { isPhiBuilderAreaKey, isPhiCmsAreaKey } from "../../../../constants/cms-areas";
+import { isPhiCmsAreaKey, type PhiBuilderAreaKey } from "../../../../constants/cms-areas";
 import { hasPhiCmsPresetUpdate } from "../../../../plugins/runtime-modules/preset-version";
 import {
   PhiTableProviderError,
@@ -33,11 +33,9 @@ import {
 } from "../../../../helpers/cms-page-catalog";
 import {
   PHI_BUILDER_NAVIGATION_KEY_SEARCH_PARAM,
-  PHI_BUILDER_REVISIONS_SCOPE_SEARCH_PARAM,
-  PHI_BUILDER_REVISIONS_KIND_SEARCH_PARAM,
   PHI_BUILDER_THEME_KEY_SEARCH_PARAM,
-  normalizePhiBuilderRevisionsKindSearchParam,
 } from "../../../../helpers/cms-scope-search-params";
+import { readPhiRevisionsTableBinding } from "../controller/binding";
 import {
   resolvePhiBuilderRevisionPagePath,
   resolvePhiBuilderRevisionScope,
@@ -91,7 +89,16 @@ function readRevisionScope(value: unknown): PhiBuilderRevisionScope | null {
   };
 }
 
-function readParams(value: unknown): RevisionsTableParams {
+/**
+ * What a request asks about, or null while it asks about nothing yet.
+ *
+ * The Table mounts with its labels alone; the scope is the Revisions Controller's to hand, once the
+ * workspace catalog stands for the address (`resolvePhiRevisionsControllerBinding`). This read used to
+ * make one up meanwhile, from the address and whatever the catalog held -- the default Area's, before
+ * the Builder had read the address -- and the Table asked for that history, then for the one handed a
+ * moment later: two reads on every open, and a Module Page of the App asked for as a Public Page.
+ */
+function readParams(value: unknown): RevisionsTableParams | null {
   if (
     !isPhiRecord(value) || !isPhiRecord(value.labels) || typeof value.locale !== "string"
     || typeof value.timeZone !== "string"
@@ -100,20 +107,13 @@ function readParams(value: unknown): RevisionsTableParams {
   }
   const locale = value.locale;
   const timeZone = value.timeZone;
-  if (!isPhiRecord(value.scope) && typeof window !== "undefined") {
+  if (!isPhiRecord(value.scope)) {
+    const binding = readPhiRevisionsTableBinding(value);
+    if (!binding || typeof window === "undefined") return null;
+    const { kind, scopeKey: configuredScopeKey } = binding;
     const state = getPhiWorkspaceCatalogSnapshot();
     const search = new URLSearchParams(window.location.search);
-    const kind = normalizePhiBuilderRevisionsKindSearchParam(value.kind) ??
-      normalizePhiBuilderRevisionsKindSearchParam(search.get(PHI_BUILDER_REVISIONS_KIND_SEARCH_PARAM)) ??
-      "area";
-    const configuredScopeKey = typeof value.scopeKey === "string" && value.scopeKey.trim()
-      ? value.scopeKey.trim()
-      : search.get(PHI_BUILDER_REVISIONS_SCOPE_SEARCH_PARAM)?.trim() ?? "";
-    const scopeArea = kind === "area"
-      ? isPhiBuilderAreaKey(configuredScopeKey)
-        ? configuredScopeKey
-        : state.area
-      : state.area;
+    const scopeArea = kind === "area" ? configuredScopeKey as PhiBuilderAreaKey : binding.area;
     const pages = resolvePhiBuilderActivePageCatalog(
       scopeArea,
       state.modulePresetPagesByArea,
@@ -129,10 +129,8 @@ function readParams(value: unknown): RevisionsTableParams {
      *
      * Three of them never read one: `resolvePhiBuilderRevisionScope` takes the area, the nav key or the
      * theme key and leaves the page alone, so demanding one made an Area whose pages all come from
-     * Modules unable to show the revisions it does have. And the fourth reaches this before anything is
-     * loaded: opening `/builder/revisions` directly means the page catalog is still empty, which is a
-     * moment rather than a fault. A page scope without a page asks for nothing and shows nothing, and
-     * fills in as soon as there is one.
+     * Modules unable to show the revisions it does have. A page scope whose Page the catalog does not
+     * hold asks for nothing and shows nothing.
      */
     /*
      * The Page a page scope names, by the address it answers on: the Page Select, the Controller and the
@@ -141,17 +139,17 @@ function readParams(value: unknown): RevisionsTableParams {
      * `/dashboard`) was found nowhere, read as a Site Page of that path and asked for by a path its row
      * does not have -- so its history was empty and "Reset to preset" had no preset to name.
      */
-    const pageKey = kind === "page" && configuredScopeKey.startsWith("/")
+    const pageKey = kind === "page"
       ? findPhiBuilderPageKeyFromStoragePath(scopeArea, configuredScopeKey, pages)
         ?? resolvePhiBuilderPageKeyFromCatalogPath(scopeArea, configuredScopeKey, pages)
       : activePageKey ?? "";
-    const navScopeKey = kind === "navigation" && configuredScopeKey
+    const navScopeKey = kind === "navigation"
       ? resolvePhiBuilderRevisionNavScopeKey(scopeArea, configuredScopeKey)
       : resolvePhiBuilderRevisionNavScopeKey(
           scopeArea,
           search.get(PHI_BUILDER_NAVIGATION_KEY_SEARCH_PARAM),
         );
-    const themeKey = kind === "theme" && configuredScopeKey
+    const themeKey = kind === "theme"
       ? configuredScopeKey
       : search.get(PHI_BUILDER_THEME_KEY_SEARCH_PARAM) ?? "default";
     const scope = resolvePhiBuilderRevisionScope(
@@ -559,11 +557,24 @@ function buildTableData(
   };
 }
 
+/**
+ * Answers once there is a question: a request without a scope stays open, the Table showing that it
+ * loads, until the scope handed to it replaces the request -- which aborts it. Answered empty instead,
+ * the Table drew "no revisions" between its skeleton and the history.
+ */
+function untilAborted(signal: AbortSignal) {
+  return new Promise<never>((_, reject) => {
+    if (signal.aborted) reject(signal.reason);
+    else signal.addEventListener("abort", () => reject(signal.reason), { once: true });
+  });
+}
+
 async function queryRevisions(request: PhiTableProviderQueryRequest) {
   if (request.resourceKey !== "history") {
     throw new PhiTableProviderError("resource-not-found", `Unknown Revisions resource "${request.resourceKey}".`);
   }
   const params = readParams(request.params);
+  if (!params) return untilAborted(request.signal);
   return buildTableData(params, await loadRevisionHistory(params.scope, request.signal));
 }
 
@@ -583,6 +594,9 @@ async function mutateRevision(request: PhiTableProviderMutationRequest) {
     throw new PhiTableProviderError("resource-not-found", `Unknown Revisions resource "${request.resourceKey}".`);
   }
   const params = readParams(request.params);
+  if (!params) {
+    throw new Error("Choose what to show the history of first.");
+  }
   if (request.actionKey === "resetPage") {
     /*
      * Not a revision act: the override these revisions belong to goes as a whole, and the Module's preset

@@ -16,6 +16,7 @@ import {
   PHI_BUILDER_REVISIONS_SCOPE_SEARCH_PARAM,
 } from "../../../../helpers/cms-scope-search-params";
 import { resolvePhiBuilderRevisionPagePath } from "../types";
+import { isPhiRevisionsCatalogReady, readPhiRevisionsAddressKind } from "../controller/binding";
 import {
   createPhiControlOptionsProviderClient,
   readPhiControlOptionsProviderParam,
@@ -51,6 +52,17 @@ function resolveKind(context: PhiControlOptionsProviderContext) {
 function resolveOptions(context: PhiControlOptionsProviderContext): PhiResolvedControlOptions {
   const snapshot = readSnapshot(context);
   const mode = readPhiControlOptionsProviderParam(context.optionsProvider, "mode");
+  const search = typeof window === "undefined" ? null : new URLSearchParams(window.location.search);
+  /*
+   * Nothing to offer until the catalog stands for the address, as the Controller hands no scope before
+   * then (`resolvePhiRevisionsControllerBinding`). A select that answers a value is set to it, and
+   * the Table hands the value on: the kind select answered `area` whatever the address said, before the
+   * Controller had said `page`, and the Controller wrote the Area's history into the address -- a
+   * Module Page's Revisions opened on the Area's.
+   */
+  if (!search || !isPhiRevisionsCatalogReady(snapshot, search)) {
+    return { options: [] };
+  }
   if (mode === "kind") {
     return {
       options: [
@@ -59,7 +71,7 @@ function resolveOptions(context: PhiControlOptionsProviderContext): PhiResolvedC
         { value: "navigation", label: "Navigation" },
         { value: "theme", label: "Theme" },
       ],
-      value: "area",
+      value: readPhiRevisionsAddressKind(search),
     };
   }
 
@@ -68,9 +80,7 @@ function resolveOptions(context: PhiControlOptionsProviderContext): PhiResolvedC
   const currentValue = typeof context.sourceConfig?.scopeKey === "string"
     ? context.sourceConfig.scopeKey
     : null;
-  const requestedScope = typeof window === "undefined"
-    ? null
-    : new URLSearchParams(window.location.search).get(PHI_BUILDER_REVISIONS_SCOPE_SEARCH_PARAM);
+  const requestedScope = search.get(PHI_BUILDER_REVISIONS_SCOPE_SEARCH_PARAM);
   if (kind === "area") {
     return {
       options: [...PHI_BUILDER_AREA_OPTIONS],
