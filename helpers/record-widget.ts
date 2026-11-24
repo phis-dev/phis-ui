@@ -1,15 +1,12 @@
-import type {
-  PhiRecordWidgetConfig,
-  PhiRecordWidgetTitleFromRecord,
-} from "../types/record-widget";
-import type { PhiTableProviderResourceDescriptor } from "../types/table-widget";
+import type { PhiRecordWidgetTitleFromRecord } from "../types/record-widget";
 import { isPhiRecord } from "./is-record";
 import { checkPhiRecordTitleTemplate } from "./record-title";
 
 /*
- * The record Widget's two readers that the descriptor compiler and the Widget share: its title from the
- * record and its actions against the resource (TABLES.md, "The record Widget"). Apart from
- * `types/record-widget.ts`, so the type stays a type for everything that only names it.
+ * The record Widget's reader that the descriptor compiler and the Widget share: its title from the
+ * record (TABLES.md, "The record Widget"). Apart from `types/record-widget.ts`, so the type stays a type
+ * for everything that only names it. Its actions against the resource are checked where a config is
+ * made (`helpers/record-widget-binding.ts`), not here.
  */
 
 /**
@@ -26,36 +23,4 @@ export function readPhiRecordWidgetTitleFromRecord(value: unknown): PhiRecordWid
   const templateError = checkPhiRecordTitleTemplate(template);
   if (templateError) throw new Error(`Record titleFromRecord.template ${templateError}`);
   return { template, field };
-}
-
-/**
- * What the record Widget's actions ask of its resource, as the errors it shows instead of the record --
- * the Table's binding check (`validatePhiTableWidgetBinding`) for the one scope a record has. Each action
- * is the resource's, of scope `row`, named once, and drawn as the danger a destructive one is. A
- * confirmation the resource requires is not asked for here: the record on screen, named in the dialog's
- * title, and the press beside it are that confirmation, and a `confirm` would ask a second time.
- */
-export function validatePhiRecordWidgetBinding(
-  config: Pick<PhiRecordWidgetConfig, "actions">,
-  resource: Pick<PhiTableProviderResourceDescriptor, "resourceKey" | "actions">,
-): string[] {
-  const errors: string[] = [];
-  const declared = new Map(resource.actions?.map((action) => [action.key, action]) ?? []);
-  const seen = new Set<string>();
-  for (const action of config.actions) {
-    if (seen.has(action.key)) {
-      errors.push(`Record action "${action.key}" is configured more than once.`);
-      continue;
-    }
-    seen.add(action.key);
-    const capability = declared.get(action.key);
-    if (!capability) {
-      errors.push(`Record action "${action.key}" is not declared by resource "${resource.resourceKey}".`);
-    } else if (capability.scope !== "row") {
-      errors.push(`Record action "${action.key}" cannot run on a record: its scope is "${capability.scope}".`);
-    } else if (capability.intent === "destructive" && action.mode !== "danger") {
-      errors.push(`Destructive Record action "${action.key}" requires danger presentation.`);
-    }
-  }
-  return errors;
 }

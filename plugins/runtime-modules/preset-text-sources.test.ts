@@ -68,18 +68,22 @@ import { resolvePhiCmsDescriptorCatalog } from "./descriptor-compiler";
 import { resolvePhiCmsAreaMask, type PhiCmsAreaKey } from "../../constants/cms-areas";
 import { PhiCmsPageType, PhiCmsStatus } from "../../constants/phi-cms";
 import { createPhiModuleMediaResolver } from "../../helpers/module-media";
-import { checkPhiPresetTextSources } from "../../module-page-check";
+import { checkPhiPresetForms, checkPhiPresetTables, checkPhiPresetTextSources } from "../../module-page-check";
 import type { PhiBlockRuntime } from "../../types";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../types/cms";
 import type { PhiRuntimeModuleId } from "../../types/cms-module-descriptors";
 import { PHI_EMPTY_MODULE_MEDIA_LOADER } from "../../types/module-media";
 
 /**
- * Whose words phis-ui's own Presets write (`helpers/preset-text-source-check.ts`).
+ * Whose words phis-ui's own Presets write (`helpers/preset-text-source-check.ts`), and whether their
+ * bound Widgets hold (`checkPhiPresetTables`).
  *
  * Every route, Area shell and Area overlay a first-party Module ships is built and checked: a Widget
  * with text has to say whether its words are the Module's (`"preset"`) or the Site's (`"site"`). Left
- * unsaid, a Module's words would be translated per Site as if an author had written them.
+ * unsaid, a Module's words would be translated per Site as if an author had written them. And every
+ * Table, Tree and record Widget bound to a first-party Provider is read against the resource it names,
+ * as a package's own tests read theirs: the browser no longer checks a binding, so this is where a
+ * first-party preset's is caught. Every first-party Form is held to its money and flags fields' rules.
  */
 
 const ALL_BASE_ROLE_FLAGS = 0b111_1111;
@@ -202,28 +206,50 @@ function collectPresetLoads(): PresetLoad[] {
   return [...loads.values()];
 }
 
+/** Every data Provider a first-party Module declares, Table and Tree alike. */
+const firstPartyDataProviders = [...PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG.values()]
+  .flatMap((entry) => entry.definition.dataProviders ?? []);
+
+async function collectProblems(check: (tree: PhiResolvedCmsPageTree) => readonly { node: string; message: string }[]) {
+  const loads = collectPresetLoads();
+  expect(loads.length).toBeGreaterThan(0);
+  for (const key of Object.keys(UNBUILDABLE)) {
+    expect(loads.some((load) => load.key === key), `${key} is excused but no longer shipped`).toBe(true);
+  }
+
+  const problems: string[] = [];
+  for (const { key, load } of loads) {
+    if (UNBUILDABLE[key]) continue;
+    let tree: PhiResolvedCmsPageTree;
+    try {
+      tree = await load();
+    } catch (error) {
+      problems.push(`${key}: does not build (${error instanceof Error ? error.message : String(error)})`);
+      continue;
+    }
+    for (const finding of check(tree)) {
+      problems.push(`${key} -> ${finding.node}: ${finding.message}`);
+    }
+  }
+  return problems;
+}
+
 describe("phis-ui's Presets", () => {
   it("say of every Widget with text whose words it holds", async () => {
-    const loads = collectPresetLoads();
-    expect(loads.length).toBeGreaterThan(0);
-    for (const key of Object.keys(UNBUILDABLE)) {
-      expect(loads.some((load) => load.key === key), `${key} is excused but no longer shipped`).toBe(true);
-    }
+    const problems = await collectProblems(checkPhiPresetTextSources);
+    expect(problems, problems.join("\n")).toEqual([]);
+  });
 
-    const problems: string[] = [];
-    for (const { key, load } of loads) {
-      if (UNBUILDABLE[key]) continue;
-      let tree: PhiResolvedCmsPageTree;
-      try {
-        tree = await load();
-      } catch (error) {
-        problems.push(`${key}: does not build (${error instanceof Error ? error.message : String(error)})`);
-        continue;
-      }
-      for (const finding of checkPhiPresetTextSources(tree)) {
-        problems.push(`${key} -> ${finding.node}: ${finding.message}`);
-      }
-    }
+  it("bind every Table, Tree and record Widget to what its Provider declares", async () => {
+    expect(firstPartyDataProviders.length).toBeGreaterThan(0);
+    const problems = await collectProblems((tree) => checkPhiPresetTables(tree, { dataProviders: firstPartyDataProviders }));
+    expect(problems, problems.join("\n")).toEqual([]);
+  });
+
+  it("ship Forms whose money and flags fields keep their Controls' rules", () => {
+    const forms = [...PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG.values()].flatMap((entry) => entry.forms ?? []);
+    expect(forms.length).toBeGreaterThan(0);
+    const problems = checkPhiPresetForms(forms).map((finding) => `${finding.node}: ${finding.message}`);
     expect(problems, problems.join("\n")).toEqual([]);
   });
 });

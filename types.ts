@@ -177,7 +177,6 @@ export {
   readPhiTreeProviderError,
   readPhiTreeProviderQueryResult,
   readPhiTreeProviderMutationResult,
-  validatePhiTreeWidgetBinding,
 } from "./types/tree-widget";
 export type * from "./types/media";
 export type * from "./types/threads";

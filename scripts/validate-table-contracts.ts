@@ -25,12 +25,12 @@ import {
   readPhiTableQuery,
   readPhiTableRowOptions,
   validatePhiTableProviderFieldValue,
-  validatePhiTableWidgetBinding,
   type PhiTableProviderActionCapability,
   type PhiTableProviderFieldDefinition,
   type PhiTableProviderResourceDescriptor,
   type PhiTableWidgetConfig,
 } from "../types/table-widget";
+import { validatePhiTableWidgetBinding } from "../helpers/table-widget-binding";
 import {
   readPhiTableColumnOrderSignalValue,
   readPhiTableBindingParamsSignalValue,

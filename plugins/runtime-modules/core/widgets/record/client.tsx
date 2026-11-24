@@ -27,7 +27,7 @@ import {
 import { PhiWidgetFailure } from "../../../../../components/widgets/shared/widget-failure-client";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { fillPhiRecordTitle } from "../../../../../helpers/record-title";
-import { validatePhiRecordWidgetBinding } from "../../../../../helpers/record-widget";
+import { validatePhiRecordWidgetBinding } from "../../../../../helpers/record-widget-binding";
 import type { PhiRecordWidgetConfig } from "../../../../../types/record-widget";
 import type { PhiRenderableBlockRenderMode } from "../../../../../types/renderable-block";
 import type { PhiSignalValue } from "../../../../../types/signals";

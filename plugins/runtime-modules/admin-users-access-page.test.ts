@@ -10,7 +10,7 @@ import { PHI_VIEWER_ACCESS_ANYONE, PHI_VIEWER_ACCESS_SITE_ADMIN } from "../../ty
 import type { PhiCmsPageNode } from "../../types/cms";
 import { checkPhiPresetTables } from "../../helpers/preset-table-check";
 import { checkPhiPresetTreeContract } from "../../helpers/preset-tree-contract-check";
-import { validatePhiTableWidgetBinding } from "../../types/table-widget";
+import { validatePhiTableWidgetBinding } from "../../helpers/table-widget-binding";
 import { PHI_TABLE_WIDGET_DEFINITION } from "./core/widgets/table/config";
 import { PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "./user-management/data-providers";
 import {

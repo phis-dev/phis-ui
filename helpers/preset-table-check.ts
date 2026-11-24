@@ -1,83 +1,57 @@
 import { PhiCmsWidgetType } from "../constants/cms-widget-types";
-import { isPhiIconNameKnown } from "../components/shell/phi-icon-names";
 import type { PhiResolvedCmsPageTree } from "../types/cms";
-import {
-  validatePhiTableWidgetBinding,
-  type PhiTableProviderResourceDescriptor,
-  type PhiTableWidgetConfig,
-} from "../types/table-widget";
+import type { PhiTableWidgetConfig } from "../types/table-widget";
 import type { PhiPresetTreeContractFinding } from "./preset-tree-contract-check";
 import type { PhiRuntimeModuleDefinition } from "../types/cms-plugins";
+import { validatePhiTableWidgetBinding } from "./table-widget-binding";
+import { checkPhiWidgetBinding, type PhiBindingCheckProvider } from "./widget-binding-check";
 
 /**
- * Every Table of a preset tree, read as the Table reads itself in the browser before its first request
- * (THIRD_PARTY_MODULES.md, "Checking a Page preset"): its binding to its Provider's resource
- * (`validatePhiTableWidgetBinding`) and every icon its actions and binding tools name (`isPhiIconNameKnown`).
- * And one rule of the house the browser does not enforce: a Table that shows its header row ends in its
- * footer (`presentation.footer`, the count or paging line), and a Table without a header -- one that only
- * lays out rows or aligns columns -- needs none (TABLES.md, "Footer and summary"); the rare Table with a
- * header and nothing to count says why in `footerOmitted`. New Pages kept leaving the footer out, and
- * nothing but a reader missing the count noticed.
+ * Every bound Widget of a preset tree -- Table, Tree and record Widget -- read against the resource its
+ * Provider declares (THIRD_PARTY_MODULES.md, "Checking a Page preset"), by the same check the Builder's
+ * save runs (`checkPhiWidgetBinding`): a Table's columns, filters, sorting, counted footer and actions
+ * (`validatePhiTableWidgetBinding`) and every icon its actions and binding tools name
+ * (`isPhiIconNameKnown`), a Tree's node fields, tools, actions and drag and drop
+ * (`validatePhiTreeWidgetBinding`), a record Widget's actions (`validatePhiRecordWidgetBinding`). And one
+ * rule of the house: a Table that shows its header row ends in its footer (`presentation.footer`, the
+ * count or paging line), and a Table without a header -- one that only lays out rows or aligns columns --
+ * needs none (TABLES.md, "Footer and summary"); the rare Table with a header and nothing to count says why
+ * in `footerOmitted`. New Pages kept leaving the footer out, and nothing but a reader missing the count
+ * noticed.
  *
- * In the browser a finding leaves the Widget unavailable -- no table at all, only a console warning --
- * while the Page around it renders, so nobody sees it until somebody misses the table. A package runs this
- * in its own tests over every tree its presets build, beside `checkPhiPresetTreeContract`, with every Table
- * Provider it ships. A Table on a Provider not handed over is not judged.
+ * Nothing in the browser checks a binding (owner, 2026-11-24): a live Widget trusts the config it is
+ * handed, so a binding that does not hold is a Widget that draws the wrong thing, and this check is where
+ * it is caught. A package runs it in its own tests over every tree its presets build, beside
+ * `checkPhiPresetTreeContract`, with every data Provider it ships (`dataProviders`: its Module's Provider
+ * descriptors, Table and Tree alike). A Widget on a Provider not handed over is not judged.
  *
  * Verify-time only, and apart from the contract check on purpose: that one also runs while a Site serves
- * a Page, where an unavailable Table stays one Widget and must not become a 500 for the whole Page.
+ * a Page, which must not pay for checks that belong where the config is made.
  */
 export function checkPhiPresetTables(
   tree: PhiResolvedCmsPageTree,
-  options: { dataProviders: Iterable<PresetTreeTableProvider> },
+  options: { dataProviders: Iterable<PhiBindingCheckProvider> },
 ): PhiPresetTreeContractFinding[] {
   const findings: PhiPresetTreeContractFinding[] = [];
-  checkTables(tree, options.dataProviders, (node, message) => findings.push({ node, message }));
-  return findings;
-}
-
-type Report = (node: string, message: string) => void;
-
-/** A Table Provider as a package declares it: its key and the resources a Table binds to. */
-export type PresetTreeTableProvider = { key: string; resources?: readonly PhiTableProviderResourceDescriptor[] };
-
-function checkTables(tree: PhiResolvedCmsPageTree, dataProviders: Iterable<PresetTreeTableProvider>, report: Report) {
-  const providers = new Map([...dataProviders].map((provider) => [provider.key, provider]));
+  const providers = new Map([...options.dataProviders].map((provider) => [provider.key, provider]));
   for (const widget of tree.contentWidgets) {
+    // The config as the preset wrote it, which is what the Widget receives: a preset states the whole shape.
+    const bindingFindings = checkPhiWidgetBinding(widget.widgetType, widget.config, providers);
+    for (const message of bindingFindings) findings.push({ node: widget.id, message });
     if (widget.widgetType !== PhiCmsWidgetType.Table) continue;
-    // The config as the preset wrote it, which is what the Table receives: a preset states the whole shape.
     const config = widget.config as unknown as PhiTableWidgetConfig;
-    const source = config.source;
-    const provider = source?.providerKey ? providers.get(source.providerKey) : undefined;
-    if (!source || !provider) continue;
-    const resource = provider.resources?.find((candidate) => candidate.resourceKey === source.resourceKey);
-    if (!resource) {
-      report(widget.id, `Table is bound to resource "${source.resourceKey}", which "${provider.key}" does not declare.`);
-      continue;
-    }
-    for (const error of validatePhiTableWidgetBinding(config, resource)) report(widget.id, error);
+    const provider = config.source?.providerKey ? providers.get(config.source.providerKey) : undefined;
+    const declared = provider?.resources?.some((candidate) =>
+      (candidate as { resourceKey?: unknown }).resourceKey === config.source?.resourceKey);
+    if (!declared) continue;
     const footerOmitted = config.presentation?.footerOmitted?.trim();
     if (config.presentation?.footer && footerOmitted) {
-      report(widget.id, "Table states a footer and `footerOmitted` beside it; a reason for leaving the footer out is for a Table without one.");
+      findings.push({ node: widget.id, message: "Table states a footer and `footerOmitted` beside it; a reason for leaving the footer out is for a Table without one." });
     } else if (config.presentation?.header !== false && !config.presentation?.footer && !footerOmitted) {
-      report(widget.id, "Table shows a header and no footer: a Table with a header row ends in `presentation.footer` (TABLES.md, \"Footer and summary\"); one that only lays out rows says `header: false`, and one with a header and nothing to count says why in `footerOmitted`.");
-    }
-    const actions = [
-      ...(config.features?.actions?.toolbar ?? []),
-      ...(config.features?.actions?.row ?? []),
-      ...(config.features?.actions?.bulk ?? []),
-    ];
-    for (const action of actions) {
-      if (action.display !== "label" && action.icon && !isPhiIconNameKnown(action.icon.trim())) {
-        report(widget.id, `Table action "${action.key}" names the icon "${action.icon}", which PhiIcon does not know.`);
-      }
-    }
-    for (const tool of config.features?.tools?.bindingFields ?? []) {
-      if (tool.create?.display !== "label" && tool.create?.icon && !isPhiIconNameKnown(tool.create.icon.trim())) {
-        report(widget.id, `Table binding field "${tool.key}" names the create icon "${tool.create.icon}", which PhiIcon does not know.`);
-      }
+      findings.push({ node: widget.id, message: "Table shows a header and no footer: a Table with a header row ends in `presentation.footer` (TABLES.md, \"Footer and summary\"); one that only lays out rows says `header: false`, and one with a header and nothing to count says why in `footerOmitted`." });
     }
   }
+  return findings;
 }
 
 const hasStaticOptions = (field: { options?: readonly unknown[]; optionsProvider?: unknown }) =>

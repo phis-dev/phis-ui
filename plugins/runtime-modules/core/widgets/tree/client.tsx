@@ -11,7 +11,8 @@ import type {
   PhiTreeProviderBindingFieldDefinition,
   PhiTreeWidgetConfig,
 } from "../../../../../types/tree-widget";
-import { readPhiTreeProviderError, validatePhiTreeWidgetBinding } from "../../../../../types/tree-widget";
+import { readPhiTreeProviderError } from "../../../../../types/tree-widget";
+import { validatePhiTreeWidgetBinding } from "../../../../../helpers/tree-widget-binding";
 import type { PhiControlSize } from "../../../../../types/control";
 import { usePhiTreeBinding } from "../../../../../components/trees/client/phi-tree-binding";
 import { PhiTreeActionButton, PhiTreeControl } from "../../../../../components/controls/phi-tree-control";

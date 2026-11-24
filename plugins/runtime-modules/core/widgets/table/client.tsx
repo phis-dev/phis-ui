@@ -56,7 +56,6 @@ import {
   readPhiTableFilters,
   readPhiTableQuery,
   readPhiTableRowOptions,
-  validatePhiTableWidgetBinding,
   type PhiTableActionDefinition,
   type PhiTableBindingToolDefinition,
   type PhiTableColumnDefinition,
@@ -94,6 +93,7 @@ import {
   type PhiSignalValue,
 } from "../../../../../types/signals";
 import { resolvePhiButtonIcon } from "../../../../../components/widgets/client/shared/phi-button-icons";
+import { validatePhiTableWidgetBinding } from "../../../../../helpers/table-widget-binding";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiRevealOnceDialogControl } from "../../../../../components/controls/phi-reveal-once-dialog-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";

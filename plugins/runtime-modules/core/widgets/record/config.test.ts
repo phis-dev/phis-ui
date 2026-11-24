@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { validatePhiRecordWidgetBinding } from "../../../../../helpers/record-widget";
+import { validatePhiRecordWidgetBinding } from "../../../../../helpers/record-widget-binding";
 import { assertPhiSignalPluginMetaContract } from "../../../../../types/signals";
 import type { PhiTableProviderResourceDescriptor } from "../../../../../types/table-widget";
 import { PHI_RECORD_WIDGET_DEFINITION } from "./config";
