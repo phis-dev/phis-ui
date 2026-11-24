@@ -1,4 +1,4 @@
-import { PHI_RECORD_TEXT_FIELD_KINDS } from "../../../../../helpers/record-fields";
+import { PHI_RECORD_TEXT_FIELD_KINDS } from "../../../../../constants/record-field-kinds";
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import { readPhiTextSource, type PhiTextSource } from "../../../../../helpers/text-source";
 import { PHI_SIMPLE_TEXT_MARKS, type PhiSimpleTextMark } from "../../../../../types/core-widget-placements";

@@ -2,6 +2,7 @@ import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
 import { PhiWidgetInertPreview } from "../../../../../components/widgets/built-in/widget-preview";
 import { resolveMarkdownRenderData } from "../../../../../components/widgets/shared/markdown-render";
 import { PhiCmsFlags } from "../../../../../constants/phi-cms";
+import { PhiRecordMarkdownFlag } from "../../../../../constants/record-field-kinds";
 import { hasPhiFlag } from "../../../../../helpers/flags";
 import { readPhiMarkdownSearchText, translatePhiSearchWidgetTexts } from "../../../../../server-helpers/search-text";
 import { resolvePhiWidgetRecordField } from "../../../../../server-helpers/record-fields";
@@ -36,16 +37,26 @@ export const PHI_MARKDOWN_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsMarkdown
   },
   render: async ({ widget, config, runtime, registry }) => {
     /*
-     * A field of the page record takes the text's place: inline, in the page's language already, and
-     * nothing where the record does not have it.
+     * A field of the page record takes the text's place, inline, and nothing where the record does not have
+     * it. A `text` is in the page's language already. A `markdown` says its language: source text is
+     * translated from it paragraph by paragraph, as any Markdown is, and a person's translation
+     * (`Translated`) is drawn as written -- so is any text where the node says `NoTranslate`.
      */
     const recordField = await resolvePhiWidgetRecordField({ registry, runtime, key: config.recordField, kinds: ["markdown", "text"] });
     if (recordField.bound) {
-      return recordField.field?.value.trim()
+      const field = recordField.field;
+      const source = field?.kind === "markdown"
+        ? {
+          markdown: field.value.text,
+          sourceLocale: field.value.sourceLocale,
+          translate: !hasPhiFlag(field.value.flags, PhiRecordMarkdownFlag.Translated) && !hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate),
+        }
+        : { markdown: field?.value ?? "", translate: false };
+      return source.markdown.trim()
         ? (
           <PhiMarkdownWidget
             key={`widget-${widget.id}`}
-            config={{ ...config, widgetId: widget.id, sourceMode: "inline", markdown: recordField.field.value, resolvedContent: null, translate: false }}
+            config={{ ...config, widgetId: widget.id, sourceMode: "inline", resolvedContent: null, ...source }}
             runtime={runtime}
           />
         )

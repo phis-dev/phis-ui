@@ -791,7 +791,11 @@ serve every record: its Widgets name a *field of the page record*, never the rec
   string of minor units in a currency `PHIS_PAYMENT_CURRENCY_EXPONENTS` names). Core formats all three
   in the page's language: a date on the Site's time zone (`formatPhiDate`), money with its currency's own
   places (`formatPhisMoney`). Everything else a domain formats itself -- a tax note, a period said in
-  words -- is a `text` the Module hands over finished.
+  words -- is a `text` the Module hands over finished. A `markdown` is `{ text, sourceLocale, flags }`
+  (`PhiRecordMarkdown`): the text, the locale key it is written in, and `PhiRecordMarkdownFlag` bits
+  (`@phis/ui/module/records`). Without `Translated` the text is source text and the Markdown Widget
+  translates it from `sourceLocale`; with it the text is a person's translation into the page's language
+  and is drawn as written ([TRANSLATIONS.md](./TRANSLATIONS.md#a-markdown-field-of-a-record)).
 - **What a link to the Page shows.** The declaration may mark fields for a link preview:
   `record: { audience, fields, share: { titleField?, descriptionField?, imageField? } }`, the first two
   naming `text` fields and the third a `picture`; the catalog refuses a mark that names no declared field
@@ -831,7 +835,8 @@ serve every record: its Widgets name a *field of the page record*, never the rec
   `ReadonlyMap<string, PhiRecordField>` keyed by the declared field key, or `none` (the Page is about no
   record), `missing` or `unavailable`. `result.fields.get(key)` is the field -- `{ kind, value }`, the
   kind narrowing the value -- or `undefined` where the record has none; `PhiRecordField`,
-  `PhiRecordPicture`, `PhiRecordLink` and `PhiRecordTag` are exported beside it. The same door has what
+  `PhiRecordPicture`, `PhiRecordLink`, `PhiRecordTag`, `PhiRecordMarkdown` and `PhiRecordMarkdownFlag`
+  are exported beside it. The same door has what
   Core's own Widgets use to pick a field by kind: `readPhiPageRecordField(result, key, kinds)` answers the
   field where the record has one of that key and one of those kinds, and `resolvePhiWidgetRecordField({ registry,
   runtime, key, kinds })` is the whole step of a bound Widget (`PhiWidgetRecordField`), with the types
@@ -852,7 +857,8 @@ serve every record: its Widgets name a *field of the page record*, never the rec
   draws; the Inspector offers the fields of those kinds that the edited Page's record Provider declares,
   and shows no such row on a Page that is about no record. Simple Text takes a `text`, `number`, `date`
   or `money` (`recordField`, written by `formatPhiRecordFieldText` in the page's locale and the Site's
-  time zone), Markdown a `markdown` or `text`, Image a `picture`, a Button's signal value a
+  time zone), Markdown a `markdown` (translated from its `sourceLocale` unless it is `Translated` or the
+  node says `NoTranslate`) or a `text` (as written), Image a `picture`, a Button's signal value a
   `text` (`valueRecordField`) and its link a `link` (`linkRecordField`: the field's `href`, and its
   `label` where the Button's own is empty, untranslated), and the Gallery `pictures` (`recordField`:
   each picture by its address, with its alt text as the record gave it; the Gallery's `source` stays and
@@ -869,11 +875,12 @@ serve every record: its Widgets name a *field of the page record*, never the rec
   should take its frame and gap with it states `visibleWhen` on the source `record`:
   `{ source: "record", valuePath: "icon", operator: "truthy" }`. `valuePath` names a declared field by
   its key -- the key a `recordField` names -- and reads the value `resolvePhiPageRecordFields` answers
-  for it (a picture is `{ src, alt? }`, so `icon.src` reads its address); a field the record lacks is not
-  there. The condition is settled on the server before the node renders, from the same memoised read, and
-  never reaches the browser (`settlePhiCmsNodeRecordConditions`, `helpers/cms-node-visibility.ts`): on a
-  Page about a record a node whose condition does not hold is left out with its frame; on a live Page
-  about no record it does not hold, whatever the operator; the Builder's Preview judges it by its sample
+  for it (a picture is `{ src, alt? }`, so `icon.src` reads its address; a `markdown` is an object as
+  well, so `description.text` reads its text); a field the record lacks is not there. The condition is
+  settled on the server before the node renders, from the same memoised read, and never reaches the
+  browser (`settlePhiCmsNodeRecordConditions`, `helpers/cms-node-visibility.ts`): on a Page about a
+  record a node whose condition does not hold is left out with its frame; on a live Page about no record
+  it does not hold, whatever the operator; the Builder's Preview judges it by its sample
   record and draws the node where it has none, and the Editor canvas always draws it, so the template stays
   editable. A record whose fields could not be read answers as one without any. `record` is a node's
   source only: a Form descriptor refuses it, and a condition the browser evaluates (a Table's, a Form's)

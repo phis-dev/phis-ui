@@ -1,5 +1,6 @@
 import { formatPhisMoney, type PhisPaymentMoney } from "@phis/contracts/payments";
 
+import { PHI_RECORD_MARKDOWN_KNOWN_FLAGS, type PHI_RECORD_TEXT_FIELD_KINDS } from "../constants/record-field-kinds";
 import type { PhiRuntimeModuleCatalogEntry } from "../types/cms-plugins";
 import type { PhiRuntimeDataProviderKey } from "../types/runtime-data-provider";
 import type {
@@ -8,9 +9,11 @@ import type {
   PhiRecordFieldKind,
   PhiRecordFieldValueByKind,
   PhiRecordLink,
+  PhiRecordMarkdown,
   PhiRecordPicture,
   PhiRecordTag,
 } from "../types/record-provider";
+import { isPhiRuntimeModuleSourceLocale } from "../types/runtime-module-locale";
 import { formatPhiDate } from "./format-date-time";
 import { isPhiMinorAmount, readPhiCurrencyExponent } from "./money-amount";
 
@@ -56,6 +59,18 @@ function readLink(value: unknown): PhiRecordLink | undefined {
   return typeof value.label === "string" && value.label ? { href, label: value.label } : { href };
 }
 
+/** A text, the locale key it is written in, and flags of no other bits than `PhiRecordMarkdownFlag` names. */
+function readMarkdown(value: unknown): PhiRecordMarkdown | undefined {
+  if (!isRecord(value) || typeof value.text !== "string" || !isPhiRuntimeModuleSourceLocale(value.sourceLocale)) {
+    return undefined;
+  }
+  const { flags } = value;
+  if (typeof flags !== "number" || !Number.isInteger(flags) || flags < 0 || (flags & ~PHI_RECORD_MARKDOWN_KNOWN_FLAGS) !== 0) {
+    return undefined;
+  }
+  return { text: value.text, sourceLocale: value.sourceLocale.trim(), flags };
+}
+
 /** The contract's money exactly: a currency a payment accepts and `minor` as an integer string. */
 function readMoney(value: unknown): PhisPaymentMoney | undefined {
   if (!isRecord(value) || typeof value.currency !== "string" || readPhiCurrencyExponent(value.currency) === undefined) {
@@ -78,8 +93,9 @@ export function readPhiRecordFieldValue<K extends PhiRecordFieldKind>(
 export function readPhiRecordFieldValue(kind: PhiRecordFieldKind, value: unknown): unknown {
   switch (kind) {
     case "text":
-    case "markdown":
       return typeof value === "string" ? value : undefined;
+    case "markdown":
+      return readMarkdown(value);
     case "picture":
       return readPicture(value);
     case "pictures":
@@ -98,12 +114,6 @@ export function readPhiRecordFieldValue(kind: PhiRecordFieldKind, value: unknown
       return readLink(value);
   }
 }
-
-/**
- * The kinds a line of text can show: a text as it is, a number, a date and an amount of money in the
- * page's language.
- */
-export const PHI_RECORD_TEXT_FIELD_KINDS = ["text", "number", "date", "money"] as const satisfies readonly PhiRecordFieldKind[];
 
 /**
  * A text, number, date or money field as the words a page shows, written for `locale`; a date on the

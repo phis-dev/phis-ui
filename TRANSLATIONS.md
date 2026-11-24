@@ -237,6 +237,8 @@ resolved Site locale to an Ant Design locale key and loads it through an explici
   may use another declared Module source locale.
 - External Markdown and HTML Widgets persist one plain `sourceLocale` in Widget config. It may differ
   from the Site's available target locales.
+- A `markdown` field of a record carries its own `sourceLocale` beside its text
+  ([A Markdown field of a record](#a-markdown-field-of-a-record)).
 - `sourceLocale` is forwarded as its own request field. It must never be encoded into `ctx`.
 - If the active provider cannot translate the configured external source, the Widget renders the original
   document and does not redetect on every render.
@@ -320,6 +322,19 @@ message to the store, and only the first of them was ever translated.
   answer before it stores it -- the same `%n` tokens as often as in the source, `<b>`, `<i>`, `<s>` and
   `<a>` balanced, every `href="%n"` of the source intact -- and treats one that fails like a provider
   failure for that unit: a stand-in, shown in the source and never stored ([phis-server TRANSLATIONS.md, "Markdown and HTML"](https://github.com/phis-dev/phis-server/blob/main/TRANSLATIONS.md#markdown-and-html)).
+
+### A Markdown field of a record
+
+A record field of kind `markdown` is `{ text, sourceLocale, flags }` (`PhiRecordMarkdown`,
+`@phis/ui/module/records`), never a bare string: `sourceLocale` is the locale key the text is written in
+(`fr`, `pt-BR`), and `flags` are `PhiRecordMarkdownFlag` bits. `Translated` says the text already is in the
+page's language -- a person's translation the Module keeps -- and the Markdown Widget bound to the field
+draws it as written. Without it the text is source text: the Widget translates it unit by unit as above,
+sending the field's `sourceLocale` with every unit, so Core takes the external route where it differs
+from the Site's source locale. A Widget whose node says `NoTranslate` draws either as written. A value
+that lacks a locale key or has unknown bits is no `markdown` field and is dropped
+(`cms.record.field_invalid`). A `text` field bound to the same Widget is in the page's language already
+and is drawn as written.
 
 The HTML Widget sends its own sanitized markup as units (`components/widgets/helpers/semantic-html-translation.ts`),
 with `code` and `pre` marked `translate="no"`; it does not use this table.

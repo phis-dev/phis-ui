@@ -19,11 +19,12 @@
 
 import "server-only";
 
-export type { PhiRecordFieldKind } from "./constants/record-field-kinds";
+export { PhiRecordMarkdownFlag, type PhiRecordFieldKind } from "./constants/record-field-kinds";
 export type {
   PhiRecordField,
   PhiRecordFieldValueByKind,
   PhiRecordLink,
+  PhiRecordMarkdown,
   PhiRecordPicture,
   PhiRecordSample,
   PhiRecordTag,

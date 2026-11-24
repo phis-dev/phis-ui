@@ -78,6 +78,12 @@ export type PhiRecordPicture = { src: string; alt?: string };
 /** A short state said in a word, with the tone it is said in. */
 export type PhiRecordTag = { label: string; tone?: "default" | "success" | "warning" | "error" };
 
+/**
+ * A Markdown field as a record answers it: the text, the language it is written in (a locale key, `fr`,
+ * `pt-BR`), and what it is (`PhiRecordMarkdownFlag` bits, `constants/record-field-kinds.ts`).
+ */
+export type PhiRecordMarkdown = { text: string; sourceLocale: string; flags: number };
+
 /** Somewhere a record leads: an address, Site-relative or absolute, and the words for it. */
 export type PhiRecordLink = { href: string; label?: string };
 
@@ -89,7 +95,7 @@ export type PhiRecordLink = { href: string; label?: string };
  */
 export type PhiRecordFieldValueByKind = {
   text: string;
-  markdown: string;
+  markdown: PhiRecordMarkdown;
   picture: PhiRecordPicture;
   pictures: readonly PhiRecordPicture[];
   list: readonly string[];

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { PhiRecordMarkdownFlag } from "../constants/record-field-kinds";
 import { readPhiRecordFieldValue } from "./record-fields";
 
 describe("a record field's value against its kind", () => {
@@ -13,6 +14,22 @@ describe("a record field's value against its kind", () => {
     expect(readPhiRecordFieldValue("tag", { label: "Available", tone: "success" })).toEqual({ label: "Available", tone: "success" });
     expect(readPhiRecordFieldValue("link", { href: "/downloads/a", label: "Download" })).toEqual({ href: "/downloads/a", label: "Download" });
     expect(readPhiRecordFieldValue("money", { currency: "CHF", minor: "1990" })).toEqual({ currency: "CHF", minor: "1990" });
+    expect(readPhiRecordFieldValue("markdown", { text: "# Chaise", sourceLocale: "fr", flags: 0 }))
+      .toEqual({ text: "# Chaise", sourceLocale: "fr", flags: 0 });
+    expect(readPhiRecordFieldValue("markdown", { text: "# Cadeira", sourceLocale: "pt-BR", flags: PhiRecordMarkdownFlag.Translated }))
+      .toEqual({ text: "# Cadeira", sourceLocale: "pt-BR", flags: PhiRecordMarkdownFlag.Translated });
+  });
+
+  it("refuses a markdown that does not say its language and what it is", () => {
+    // The text alone is no markdown field: without its language it cannot be translated.
+    expect(readPhiRecordFieldValue("markdown", "# Chaise")).toBeUndefined();
+    expect(readPhiRecordFieldValue("markdown", { text: "# Chaise", flags: 0 })).toBeUndefined();
+    expect(readPhiRecordFieldValue("markdown", { text: "# Chaise", sourceLocale: "", flags: 0 })).toBeUndefined();
+    expect(readPhiRecordFieldValue("markdown", { text: "# Chaise", sourceLocale: "fr" })).toBeUndefined();
+    expect(readPhiRecordFieldValue("markdown", { text: "# Chaise", sourceLocale: "fr", flags: -1 })).toBeUndefined();
+    expect(readPhiRecordFieldValue("markdown", { text: "# Chaise", sourceLocale: "fr", flags: 0.5 })).toBeUndefined();
+    expect(readPhiRecordFieldValue("markdown", { text: "# Chaise", sourceLocale: "fr", flags: 1 << 5 })).toBeUndefined();
+    expect(readPhiRecordFieldValue("markdown", { text: 12, sourceLocale: "fr", flags: 0 })).toBeUndefined();
   });
 
   it("refuses a value of another kind", () => {
