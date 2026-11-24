@@ -268,7 +268,7 @@
       "clientBytes": 527960
     },
     "./next/route-handlers": {
-      "runtimeBytes": 1189350,
+      "runtimeBytes": 1230056,
       "clientBytes": 0
     },
     "./next/runtime-module-client-boundary": {

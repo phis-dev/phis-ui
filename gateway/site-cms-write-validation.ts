@@ -7,6 +7,11 @@ import { isPhiRecord } from "../helpers/is-record";
 import { buildPhiRuntimeModuleWidgetType } from "../plugins/runtime-modules/contracts";
 import type { PhiCmsWidgetPluginDefinition, PhiRuntimeModuleCatalog } from "../types/cms-plugins";
 import { isPhiConfigError } from "../components/widgets/config/strict-config-reader";
+import {
+  checkPhiWidgetBinding,
+  checkPhiWidgetConfigIcons,
+  type PhiBindingCheckProvider,
+} from "../helpers/widget-binding-check";
 import { jsonResponse } from "./route-handler-helpers";
 import type { PhiSiteAreaBridgeLoader } from "./site-area-bridges";
 
@@ -20,9 +25,17 @@ import type { PhiSiteAreaBridgeLoader } from "./site-area-bridges";
  * the author is told what to correct instead of saving something that disappears.
  *
  * Whatever `parseConfig` throws refuses the write: a Widget that cannot read its config is not rendered,
- * however it says so. The check is the Widget's `parseConfig` and nothing else, run against the catalog of the Area the
+ * however it says so. The check is the Widget's `parseConfig`, run against the catalog of the Area the
  * write is for. A Widget type that catalog does not know is left alone: whether a type may be stored at
  * all is Core's and the Module system's question, not this one's.
+ *
+ * And what a live Widget no longer checks for itself (owner, 2026-11-24: contract checks belong where a
+ * config is made, never in the browser): a Table, Tree or record Widget bound to a resource its Provider
+ * does not declare or does not fit (`checkPhiWidgetBinding`, the check a package's preset tests run), and
+ * an icon `PhiIcon` does not know in a field the Inspector offers as an icon -- a Button's, a Collection
+ * View action's (`checkPhiWidgetConfigIcons`). The Providers are the ones the Area's catalog declares; a
+ * Widget bound to a Provider no Module of the catalog declares is the Area's state, not the config's, and
+ * passes. This runs on the Builder's save of a Page, an Area or an Overlay, never while a page is drawn.
  */
 
 type PhiCmsWriteConfigIssue = {
@@ -31,6 +44,14 @@ type PhiCmsWriteConfigIssue = {
   path: string | null;
   message: string;
 };
+
+function buildDataProvidersByKey(catalog: PhiRuntimeModuleCatalog) {
+  const providers = new Map<string, PhiBindingCheckProvider>();
+  for (const entry of catalog.values()) {
+    for (const provider of entry.definition.dataProviders ?? []) providers.set(provider.key, provider);
+  }
+  return providers;
+}
 
 function buildWidgetDefinitionsByType(catalog: PhiRuntimeModuleCatalog) {
   const definitions = new Map<string, PhiCmsWidgetPluginDefinition<unknown>>();
@@ -45,6 +66,7 @@ function buildWidgetDefinitionsByType(catalog: PhiRuntimeModuleCatalog) {
 function findConfigIssue(
   body: unknown,
   definitions: ReadonlyMap<string, PhiCmsWidgetPluginDefinition<unknown>>,
+  providers: ReadonlyMap<string, PhiBindingCheckProvider>,
 ): PhiCmsWriteConfigIssue | null {
   const pending: unknown[] = [body];
   while (pending.length > 0) {
@@ -59,8 +81,9 @@ function findConfigIssue(
     if (typeof widgetType === "string" && isPhiRecord(config)) {
       const definition = definitions.get(widgetType);
       if (definition) {
+        let parsed: unknown;
         try {
-          definition.parseConfig(config);
+          parsed = definition.parseConfig(config);
         } catch (error) {
           /*
            * Any error, not only the strict reader's: a Widget from another package may refuse its config
@@ -73,6 +96,12 @@ function findConfigIssue(
             path: isPhiConfigError(error) ? error.path : null,
             message: error instanceof Error ? error.message : String(error),
           };
+        }
+        const [icon] = checkPhiWidgetConfigIcons(definition.fields, config);
+        const [binding] = checkPhiWidgetBinding(widgetType, isPhiRecord(parsed) ? parsed : config, providers);
+        const message = binding ?? icon;
+        if (message) {
+          return { widgetType, nodeId: value.id ?? null, path: null, message };
         }
       }
     }
@@ -96,7 +125,11 @@ export async function validatePhiCmsStructureWrite(
   if (!isPhiCmsAreaKey(area)) return null;
   const bridge = await loadAreaBridge(area);
   if (!bridge) return null;
-  const issue = findConfigIssue(body, buildWidgetDefinitionsByType(bridge.runtimeModuleCatalog));
+  const issue = findConfigIssue(
+    body,
+    buildWidgetDefinitionsByType(bridge.runtimeModuleCatalog),
+    buildDataProvidersByKey(bridge.runtimeModuleCatalog),
+  );
   if (!issue) return null;
   return jsonResponse({
     error: `${issue.widgetType}: ${issue.message}`,
