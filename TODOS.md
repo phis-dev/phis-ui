@@ -246,30 +246,17 @@ file (THREADS.md section 10) leave open:
 
 ## Verification
 
-- **Contract checks belong in build and dev, not in the browser or per request (owner, 2026-11-24).**
-  Config-against-contract checks run today in production browser code, and a failure hides the Widget in
-  live mode with only a browser-side log (`PhiWidgetFailure`, `components/widgets/shared/widget-failure.tsx`)
-  -- @phis/support's Linked work Table was invisible that way until f5bbd545. Moving them to the server
-  render is no answer either: it would run them on every request. They belong where a config is made:
-  package and preset tests, catalog compile, `pnpm verify`, and the Builder's save (which refuses an
-  invalid config, as the strict config readers decided). Production code then trusts a checked config and
-  ships no checker. Found (survey 2026-11-24):
-  - Bindings, in production: Table (`core/widgets/table/client.tsx:427`, `validatePhiTableWidgetBinding`
-    plus icon checks; twin `checkPhiPresetTables`), Tree (`tree/client.tsx:155`,
-    `validatePhiTreeWidgetBinding`; **no build-time twin**), Record (`record/client.tsx:76`,
-    `validatePhiRecordWidgetBinding`; twin in tests only, not in `checkPhiPresetTables`).
-  - Icons: `resolvePhiButtonIcon` / `PhiIcon` draw nothing for an unknown name after one console warning;
-    presets are checked (`validate-preset-icon-vocabulary.mjs`, `checkPhiPresetTables`), Builder-set icons
-    of Buttons and Collection View actions are not.
-  - Form Controls that throw during render: `PhiMoneyControl` (non-ISO currency),
-    `phi-form-control.tsx:183` (`currencyField` missing or itself), `components/forms/flags-field.ts`
-    (bits), a missing validation provider (`phi-form-control.tsx:825`); no preset check for any of them.
-  - Stay at runtime, because they are runtime state, not config: a Provider that is not available
-    (`bindingError`), an Overlay that could not load, the signal bus's dev-only reports.
-  To do: give Tree, Record, the Form Control rules and Builder-set icons their build-time and save-time
-  checks; then drop the checks from the browser (and the checker code from the bundle), keeping only what
-  is runtime state. A config that still slips through fails visibly for staff (error card) and is reported,
-  never silently hidden from them.
+- **What is left of moving contract checks out of the browser (owner, 2026-11-24).** Bindings, icons and the
+  Form field rules are checked where a config is made (TABLES.md and FORMS.md, "Checked where it is made";
+  `checkPhiPresetTables`, `checkPhiPresetForms`, the Builder's save in `gateway/site-cms-write-validation.ts`)
+  and no live Client checks them; a Widget that still fails shows its card to Staff on a live page. Open:
+  - a failure found in the browser is written to the browser console only (`cms.widget.unavailable`); no
+    existing path carries a browser report to the Site's log, and building one needs an endpoint;
+  - the card of a failure the server decides (`PhiWidgetFailureServer`, the renderer's diagnostic) is drawn
+    by the browser, which alone knows the viewer is Staff, so its text is in a visitor's page too, undrawn;
+    deciding it on the server needs the viewer in the failure's props (a change of `PhiWidgetFailureProps`);
+  - the Builder canvas does not show a binding that does not hold while the author works; the save refuses it
+    and says why.
 
 - **The one cold door that is left.** A forwarding Area root is answered by the proxy with a real 307 once
   the door is known (`gateway/area-root-door.ts`, `server-helpers/area-root-door-warmup.ts`), and a cold

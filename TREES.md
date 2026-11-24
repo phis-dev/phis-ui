@@ -86,6 +86,12 @@ Widget config contains only:
 - initial query/selection/expansion/check state;
 - standard signal routes.
 
+The config is checked against its resource where it is made, as a Table's is
+([TABLES.md](./TABLES.md#checked-where-it-is-made)): `validatePhiTreeWidgetBinding` (from
+`@phis/ui/module/page-check`) reads the node fields shown and edited, binding tools, search, every Provider
+action in its scope with the confirmation it asks for, and drag and drop, in `checkPhiPresetTables` and in
+the Builder's save. A live Tree does not check it again.
+
 Self-contained tools use the Collection Header defined in
 [TABLES.md](./TABLES.md#presentation-and-content-are-separate). Tree-specific: a Binding Control may
 declare its token-compatible `width`, and Search takes the remaining header width with a `10rem` minimum.

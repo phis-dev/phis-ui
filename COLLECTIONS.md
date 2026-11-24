@@ -278,8 +278,9 @@ recognize an Asset Provider key or impose a domain ordering.
 The selected binding remains persisted when its Module is disabled or uninstalled, and the Widget never
 switches to another Provider automatically. What it shows for the unavailable Provider/resource depends on
 who is looking: in the Builder it renders an error card (`PhiAlertControl`) naming the cause, because the
-author can rebind it; on a live page, a revision preview included, it renders nothing, because a visitor
-cannot, and an error or an empty frame would read as a broken Site. Both log a `cms.widget.unavailable`
+author can rebind it; on a live page, a revision preview included, it renders the same card for Staff and
+nothing for a visitor, who cannot rebind it, and to whom an error or an empty frame would read as a broken
+Site. Both log a `cms.widget.unavailable`
 warning. The split is one shared piece, `components/widgets/shared/widget-failure.tsx`, in two variants:
 `PhiWidgetFailureServer` for a failure found during the server render and `PhiWidgetFailure` for one found
 in the browser. A Module package's own Widgets use the same pieces from `@phis/ui/module/records` (Server)

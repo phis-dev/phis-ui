@@ -478,8 +478,10 @@ A Widget that renders but cannot show what it was placed to show -- the Provider
 offered, the binding does not hold, the record cannot be read, the read itself failed -- follows the same
 split through one shared piece (`components/widgets/shared/widget-failure.tsx`). In the Builder the Widget's
 place holds an error card (`PhiAlertControl`) with the cause, because the author can rebind it. On a live
-page, a revision preview included, the Widget is absent and the rest of the page stands: a heading over an
-error, or over an empty frame, reads to a visitor as a broken Site. Either way a `cms.widget.unavailable`
+page, a revision preview included, Staff (whoever holds a Core role) see the same card, and for a visitor
+the Widget is absent and the rest of the page stands: a heading over an error, or over an empty frame,
+reads to a visitor as a broken Site. Whether the viewer is Staff the Area's boundary decides once from the
+viewer it resolved (`PhiWidgetFailureAudienceProvider`); a Widget does not ask. Either way a `cms.widget.unavailable`
 warning is logged, which is where an operator finds it. There are two variants so that the warning is
 written once: `PhiWidgetFailureServer` logs during the server render, `PhiWidgetFailure` from an effect,
 once per distinct failure while the Widget is mounted. A Module package reaches them through
@@ -1065,15 +1067,16 @@ are deliberate:
 
 One more behaved the same way without being deliberate: an icon name the registry does not know renders
 nothing at all. `PHI_ANTD_ICON_NAMES` in `components/shell/phi-icon-names.ts` is the one registry, each
-icon loaded as its own chunk where it is drawn, and every place that takes an icon name resolves it by the
-same rule (`isPhiIconNameKnown` in `components/shell/phi-icon-names.ts`): `PhiIcon`, a string given to
+icon loaded as its own chunk where it is drawn, and every place that takes an icon name follows the same
+rule (`isPhiIconNameKnown` in `components/shell/phi-icon-names.ts`): `PhiIcon`, a string given to
 `PhiButtonControl`'s `icon`, a Table action, a Command Toolbar button. A short name (`plus`) is the Ant
 Design icon of that name and means the same as `antd:plus`; one name per icon, case counts, and there are
 no aliases -- the Button resolver's own list (`add`, `cancel`, `trash`, `settings` drawn as a pen) was
-folded into the registry on 14.11.2026, its users renamed. An unknown name is reported once
-(`[phi-icon] ... names no icon`), in the Site service's journal where it is rendered on the server and in
-the browser console otherwise, and `validate-preset-icon-vocabulary` fails on a preset's `antd:` or short
-`icon` name the registry does not know. It found `antd:send` on the News editor and `antd:cluster` on the
+folded into the registry on 14.11.2026, its users renamed. An unknown name is refused where it is chosen
+(owner, 2026-11-24): `validate-preset-icon-vocabulary` fails on a preset's `antd:` or short `icon` name the
+registry does not know, `checkPhiPresetTables` on a Table's, and the Builder's save on any field a Widget's
+Inspector offers as an icon. A live page does not look a name up: `PhiIcon` draws it through the namespace
+that owns it, and a name nothing owns draws nothing. It found `antd:send` on the News editor and `antd:cluster` on the
 Groups cards, and later `antd:audit` on the Accounting overview entry (since removed), all blank until then.
 
 ### Navigation surfaces

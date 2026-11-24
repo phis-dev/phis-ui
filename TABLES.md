@@ -382,7 +382,8 @@ A column may declare presentation metadata such as:
 The column does not redefine the Provider field's data type, mutability, validation, or option source.
 A renderer is presentation only: badge, tag, link, code, or formatted text presentation cannot change
 the underlying field type. A configured renderer or editor must be compatible with the selected field,
-and an incompatibility is a visible contract error.
+and an incompatibility is a contract error, refused where the config is made
+([Checked where it is made](#checked-where-it-is-made)).
 
 `valueMap` maps raw Provider values to localized display labels. `tagColorMap` independently maps raw
 values to Ant Design's Tag status or preset colors and is used only by the `badge` and `tags` renderers.
@@ -485,7 +486,7 @@ and not to the title: a header saying "Window (days)" leaves the number unitless
 | `icon` | `icon-picker` | `icon-picker` |
 | `enum` | `select`, `radio`, `segmented` | `select` |
 | `enum[]` | `multi-select`, `checkbox-group` | `multi-select` |
-| `string` | `textarea`; `select` with row options | single-line text input |
+| `string` | `textarea`; `select` with row options or the placement's own `editor.options` | single-line text input |
 
 `textarea` edits a `string` field over several lines, for values longer than a column is wide -- a
 translation, a description. The area is as tall as its text and wraps it; Enter commits as in every
@@ -999,7 +1000,8 @@ must require confirmation unless it declares itself `undoable`, and its Widget a
 presentation either way. `undoable` is the Provider's promise that the workspace history takes the
 mutation back; like the confirmation policy it is declared rather than verified, and a Widget may still
 configure a confirmation for an undoable action. Icon and icon-label
-display require a resolvable icon; a missing icon is a contract error rather than a blank action.
+display require a resolvable icon; a missing or unknown icon is a contract error rather than a blank
+action, refused where the config is made ([Checked where it is made](#checked-where-it-is-made)).
 Dynamic confirmation
 values come from declared serializable Binding/action context and are inserted with the central
 translation formatter after the current UI-language template has been resolved. Complete rows and
@@ -1124,12 +1126,13 @@ while the first is on its way do nothing. The run is the Table's Binding's reque
 with `{ kind: "action", actionKey, rowIdentity, selectedRowIdentities: [], query: {} }` -- the identity the
 Widget holds, no query, because a record is not a view of rows.
 
-`validatePhiRecordWidgetBinding` (`helpers/record-widget.ts`) holds `actions` to the resource as
+`validatePhiRecordWidgetBinding` (`helpers/record-widget-binding.ts`) holds `actions` to the resource as
 `validatePhiTableWidgetBinding` holds the Table's: each declared, of scope `row`, named once, a
-destructive one in danger presentation; the first finding is shown in the record's place, as a Table
-shows its contract error. A confirmation the resource requires (`confirmation: "required"`) is not asked
-again: the record on screen, named in the dialog's title, and the press beside it are that confirmation,
-and a `confirm` would make it a second question. `confirm` is for a press that is not answer enough.
+destructive one in danger presentation. Like the Table's, it runs where the config is made
+([Checked where it is made](#checked-where-it-is-made)), not in the browser. A confirmation the resource
+requires (`confirmation: "required"`) is not asked again: the record on screen, named in the dialog's
+title, and the press beside it are that confirmation, and a `confirm` would make it a second question.
+`confirm` is for a press that is not answer enough.
 
 What the Provider answers is said as the Table says it: a rejected mutation, or a failure on the way,
 stands above the record in an error Alert until the next press or the next record; an accepted one with a
@@ -1302,7 +1305,7 @@ a column editor, a fixed filter or parameter that names no filter field or bindi
 parameter that sets what the source or a fixed filter already fixes, a parameter whose field is not text, a
 number, a yes or no, or a choice the parameter can check -- a choice list a Provider serves cannot be checked
 -- `maxRows` on a resource that does not page or outside 1 to 100, and a required binding field neither fixed
-nor settable. As for a Preset's Table, the browser checks the binding again before the first request.
+nor settable. The browser does not check the binding again ([Checked where it is made](#checked-where-it-is-made)).
 
 **Drawing one** is the Markdown Widget's: the parser rule is in `components/widgets/shared/markdown-render.ts`,
 the resolution in the Widget's `table-embeds.server.ts`, asked once per text with every embed in it.
@@ -1341,8 +1344,9 @@ that quotes one mounts a Provider, never a Table.
 - A preset Table that shows its header states its footer, the `%1 …` line from its Label Set
   ([Footer and summary](#footer-and-summary)); a Table without a header needs none, and a Table with a
   header and nothing to count says why in `presentation.footerOmitted`. `checkPhiPresetTables`
-  (`@phis/ui/module/page-check`) refuses a Table that does neither, as it refuses a broken binding: a
-  package's tests run it over every tree its presets build.
+  (`@phis/ui/module/page-check`) refuses a Table that does neither, as it refuses a broken binding of a
+  Table, a Tree or a record Widget: a package's tests run it over every tree its presets build, with
+  every data Provider it ships.
 - A normal record Form remains the correct host when the interaction is a Form submit/reset lifecycle.
   Inline Table editing uses the Table mutation lifecycle and must not be routed through a hidden Form.
 - A Form field provider may use the controlled compound-value exception when the complete local row array
@@ -1358,8 +1362,32 @@ that quotes one mounts a Provider, never a Table.
   or missing generic Table capabilities.
 - Core, Builder, and presets must not compare a Provider key, Module id, route key, or Widget type to
   select Table behavior.
-- Missing Provider, resource, capability, field, action, or signal compatibility is a visible contract
-  error. No direct-fetch, local business-mutation, duplicated Form, or legacy Widget fallback is permitted.
+- Missing Provider, resource, capability, field, action, or signal compatibility is a contract error,
+  refused where the config is made ([Checked where it is made](#checked-where-it-is-made)). No
+  direct-fetch, local business-mutation, duplicated Form, or legacy Widget fallback is permitted.
+
+### Checked where it is made
+
+A Table's, a Tree's and a record Widget's config is checked against the resource its Provider declares
+where the config is made, and only there (owner, 2026-11-24): columns, filters, sorting, the counted
+footer, every Provider action in its scope with the confirmation and danger the resource asks for, binding
+tools, a Tree's node fields, editors and drag and drop, and every icon the Table's actions and binding tools
+name (`validatePhiTableWidgetBinding`, `validatePhiTreeWidgetBinding`, `validatePhiRecordWidgetBinding`,
+run together by `checkPhiWidgetBinding` in `helpers/widget-binding-check.ts`). The places:
+
+- a package's tests, `checkPhiPresetTables` from `@phis/ui/module/page-check` over every tree its presets
+  build, and phis-ui's own over every first-party preset (`plugins/runtime-modules/preset-text-sources.test.ts`);
+- `checkPhiEmbeddableTables` for the Tables a Module offers to Markdown;
+- the Builder's save of a Page, an Area or an Overlay (`gateway/site-cms-write-validation.ts`), which
+  answers 422 `invalid-config` with the Widget, the node and the cause, and stores nothing; it also refuses
+  an icon `PhiIcon` does not know in any field a Widget's Inspector offers as an icon.
+
+A live Table, Tree or record Widget trusts the config it is handed and ships no checker: the validators
+are in no Client graph. What it still shows as a failure is runtime state -- a Provider the Area does not
+offer (`bindingError`), a read that failed -- and a config stored before these checks; on a live page
+that failure card is drawn for Staff and for nobody else (`PhiWidgetFailure`, `components/widgets/README.md`).
+A Widget bound to a Provider no Module of the Area declares passes the save: that is the Area's state, not
+the config's.
 
 `scripts/validate-table-contracts.ts` and `scripts/validate-control-boundaries.mjs` reject direct Ant
 Design Table imports outside `PhiTableControl` and domain Table Widget aliases.

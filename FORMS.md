@@ -451,8 +451,9 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
     `currency`, in the currency that field holds: a destination's shipping in the destination's currency,
     a promotion's amount in its. Until the field names a currency there is no input; when it names
     another, an amount entered for the old one is cleared, as a dependent choice is when its parent
-    changes. A key that is no other field of the Form throws when the Form is drawn, and a value that is
-    not a code a payment accepts throws in the field.
+    changes. A key that is no other field of the Form is refused where the Form is made
+    ([Checked where it is made](#checked-where-it-is-made)) and throws when the Form is drawn, and a value
+    that is not a code a payment accepts throws in the field.
   - for neither, on a field with an `optionsProvider`, the same price list, its currencies the values of
     the options the Provider answers, in its order -- for a list the Form cannot know when it is written,
     such as the currencies a Shop's destinations name. Each option's value is an ISO 4217 code a payment
@@ -498,7 +499,9 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   number (`"1"`, `"2"`, `"4"`), the value the sum of the bits checked, `0` for none; bits the field does
   not offer are kept as they were. `config.requires` maps an option's value to the option it needs (`{ "4":
   "1" }`): it is offered only while that one is checked and cleared with it. An option that is no bit, a bit
-  named twice and a dependency on no option throw. Drawn as a checkbox group, one option per line.
+  named twice and a dependency on no option throw, and are refused where the Form is made when its options
+  are written out ([Checked where it is made](#checked-where-it-is-made)). Drawn as a checkbox group, one
+  option per line.
 - `upload` is what somebody attached. Its value is the list of Media Asset ids the finished uploads left
   behind, and with nothing attached the field holds no value at all rather than an empty list, so
   `required` means what it says. The transport is the shared one (`usePhiMediaUpload`), so the Site's
@@ -753,6 +756,21 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
 - A `honeypot` field is moved off screen and hidden from assistive technology; the handler rejects a
   filled honeypot.
 - Client validation is interaction feedback, never a security boundary.
+
+### Checked where it is made
+
+What a field's Control would throw on while a page is drawn is checked where the Form is made (owner,
+2026-11-24), by `checkPhiPresetForms(forms)` from `@phis/ui/module/page-check`
+(`components/forms/form-descriptor-field-check.ts`): a `money` field's config as the Control reads it --
+exactly one of `currency`, `currencyField`, `currencies` or an `optionsProvider`, every currency stated an
+ISO 4217 code a payment accepts, whole minor-unit bounds -- and a `currencyField` naming another field of
+the same Form; a `flags` field's written options as bits named once, with `requires` naming two of them.
+Each finding names the Form id. A package runs it in its tests over every Form it ships, as phis-ui runs it
+over its own (`plugins/runtime-modules/preset-text-sources.test.ts`); a Site never loads it. A rule naming
+a validation Provider no active Module declares is refused by catalog construction
+(`plugins/runtime-modules/resolver.ts`), which knows the Area's Providers. Values that only arrive at
+runtime -- the currency another field holds, the options an Options Provider answers -- are still read
+strictly by the Control, which throws rather than guess.
 
 ## Handler Providers
 

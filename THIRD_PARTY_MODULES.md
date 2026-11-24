@@ -1190,8 +1190,11 @@ visitor. Render the shared failure piece instead of drawing an alert of your own
 from `@phis/ui/runtime/data-provider-client` where a Client finds it after hydration. Both take
 `{ renderMode, widgetType, widgetId?, title, description?, error? }` (`PhiWidgetFailureProps`) and do what
 Core's Widgets do: in the Builder an error card with `title` and `description` stands in the Widget's
-place, on a live page -- a revision preview included -- the Widget is absent and the rest of the page
-stands, and either way one `cms.widget.unavailable` warning is logged with `error` attached. The render
+place, on a live page -- a revision preview included -- the same card stands there for Staff (whoever holds
+a Core role) and for a visitor the Widget is absent and the rest of the page stands, and either way one
+`cms.widget.unavailable` warning is logged with `error` attached. A config that does not fit its resource
+is not such a failure: it is checked where the config is made ([Checking a Page preset](#checking-a-page-preset)),
+and a live Widget does not check it again. The render
 mode is `widget.config.renderMode` in the render arguments, `"preview"` or `"editor"`, and live
 otherwise; pass it to a Client half as a prop. The Server variant logs during the render, the Client
 variant from an effect once per distinct failure, so pick the one where the failure is found. What a
@@ -2346,20 +2349,29 @@ package declares in `phis.media`. A declared key answers a stable placeholder id
 integers); an undeclared key answers `null` and is recorded. It returns `{ media, findings() }`, and a
 finding -- "asset `<key>` is not declared in the package's `phis.media`" -- fails the check.
 
-`checkPhiPresetTables(tree, { dataProviders })`, from the same door, reads every Table of the tree bound to
-one of your Table Providers (`dataProviders`: your Module's Provider descriptors, each with its `key` and
-`resources`) as the Table reads itself in the browser before its first request: its binding to its
-resource (`validatePhiTableWidgetBinding`: columns, filters, sorting, the counted footer, every Provider
-action declared in its scope with the confirmation and danger the resource asks for) and every icon its
-actions and binding tools name (`isPhiIconNameKnown`). It also holds the house rule the browser does not:
-a Table that shows its header ends in its footer (`presentation.footer`, the `%1 …` line of your Label
-Set); a Table with `header: false` needs none, and one with a header and nothing to count says why in
-`presentation.footerOmitted` ([TABLES.md](./TABLES.md#footer-and-summary)). In the browser a binding finding leaves the Widget
-unavailable -- no table at all, only a console warning -- while the Page renders, so it is your test's to
-find. Run it beside `checkPhiPresetTreeContract` over every tree, with every Table Provider your package
-ships; a Table on a Provider you do not hand over is not judged. It is apart from the contract check because
-that one also runs while a Site serves a Page, where an unavailable Table must stay one Widget and not
-become a 500 for the whole Page.
+`checkPhiPresetTables(tree, { dataProviders })`, from the same door, reads every Table, Tree and record
+Widget of the tree bound to one of your data Providers (`dataProviders`: your Module's Provider descriptors,
+each with its `key` and `resources`, Table and Tree alike) against the resource it names: a Table's binding
+(`validatePhiTableWidgetBinding`: columns, filters, sorting, the counted footer, every Provider action
+declared in its scope with the confirmation and danger the resource asks for) and every icon its actions
+and binding tools name (`isPhiIconNameKnown`); a Tree's node fields, editors, binding tools, search, actions
+and drag and drop (`validatePhiTreeWidgetBinding`, exported from the same door); a record Widget's actions
+(`validatePhiRecordWidgetBinding`). It also holds the house rule for a Table: one that shows its header ends
+in its footer (`presentation.footer`, the `%1 …` line of your Label Set); a Table with `header: false` needs
+none, and one with a header and nothing to count says why in `presentation.footerOmitted`
+([TABLES.md](./TABLES.md#footer-and-summary)). Nothing in the browser checks a binding
+([TABLES.md](./TABLES.md#checked-where-it-is-made)): a live Widget trusts its config, so a binding that does
+not hold draws the wrong thing, and your test is where it is caught -- the Builder's save refuses the same
+findings for a Page an author edits. Run it beside `checkPhiPresetTreeContract` over every tree, with every
+data Provider your package ships; a Widget on a Provider you do not hand over is not judged. It is apart
+from the contract check because that one also runs while a Site serves a Page, which must not pay for checks
+that belong where a config is made.
+
+`checkPhiPresetForms(forms)`, from the same door, holds every Form your package ships
+(`definePhiRuntimeModuleForm` definitions) to the rules its fields' Controls read them by: a `money`
+field's currency, `currencyField` and bounds, a `flags` field's written options as bits
+([FORMS.md](./FORMS.md#checked-where-it-is-made)). Each finding's `node` is the Form id. Run it once over
+your Forms beside the tree checks.
 
 `checkPhiEmbeddableTables(definition)`, from the same door, reads the Tables your Module offers to Markdown
 (`embeddableTables`, [TABLES.md](./TABLES.md#tables-in-markdown)) the same way, against the resources your
@@ -2438,6 +2450,11 @@ describe("every preset tree keeps the tree contract", () => {
   from the Table's Label Set; a Table without a header has none, and one with a header and nothing to
   count says why in `presentation.footerOmitted`. `checkPhiPresetTables` reports it
   ([TABLES.md](./TABLES.md#footer-and-summary)).
+- Every Table, Tree and record Widget holds against the resource it is bound to, and every icon it names
+  is one `PhiIcon` knows: `checkPhiPresetTables` with every data Provider the package ships reports both.
+  The browser does not check them ([TABLES.md](./TABLES.md#checked-where-it-is-made)).
+- Every Form the package ships passes `checkPhiPresetForms`: a money field's currency and `currencyField`,
+  a flags field's bits ([FORMS.md](./FORMS.md#checked-where-it-is-made)).
 - On a staff page: every list is a `table` Widget on a provider with its actions, every form a Form
   Widget in a dialog, no `page-title` Widget, and no Widget of the Module's own that draws tables, button
   rows or dialogs ([Before you start](#before-you-start-a-staff-page-is-composed-not-drawn)).
