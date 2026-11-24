@@ -1,5 +1,6 @@
 import type { PhiRuntimeModuleId } from "../types";
 import type { PhiPublicRoutePathAssignment } from "./cms-area-config";
+import { isPhiRouteAddressBeneath } from "./route-address-check";
 
 /**
  * A Public address a Module route wants, and what already answers there.
@@ -32,6 +33,13 @@ export type PhiPublicRoutePathCollision = {
   /** The address contested: the assignment this Site already made, or the declared path. */
   path: string;
   heldBy: PhiPublicRouteAddressHolder;
+  /**
+   * How the two addresses meet: the same address, or one beneath the other -- a Page and a folder at once
+   * (`isPhiRouteAddressBeneath`, THIRD_PARTY_MODULES.md "Addresses and folders").
+   */
+  relation: "same" | "beneath" | "above";
+  /** The holder's address: `path` itself, or the one above or beneath it. */
+  heldPath: string;
 };
 
 function buildPhiPublicRouteIdentity(ownerModuleId: string, presetKey: string) {
@@ -92,7 +100,8 @@ export function buildPhiPublicRouteAddressMap({
 }
 
 /**
- * The addresses a Module could not have if it were switched on now.
+ * The addresses a Module could not have if it were switched on now: one another holder answers on, or one
+ * beneath or above another holder's -- a Site Page's or another Module's route.
  *
  * `/` is left out on purpose: it is an application for the Area root slot, not a route of the Module's
  * own, and several applicants are a list to choose from rather than a conflict.
@@ -114,9 +123,27 @@ export function findPhiPublicRoutePathCollisions({
       continue;
     }
     const path = resolvePhiPublicRoutePath(claim, assignments);
+    const foreign = (holder: PhiPublicRouteAddressHolder) =>
+      !(holder.kind === "module" && holder.claim.ownerModuleId === moduleId);
     const heldBy = addresses.get(path);
-    if (heldBy && !(heldBy.kind === "module" && heldBy.claim.ownerModuleId === moduleId)) {
-      collisions.push({ claim, path, heldBy });
+    if (heldBy && foreign(heldBy)) {
+      collisions.push({ claim, path, heldBy, relation: "same", heldPath: path });
+      continue;
+    }
+    /*
+     * An address that is free can still lie beneath another one, or above it: a route assigned
+     * `/contracts/terms` under a Site Page `/contracts` makes that Page a folder, which equality alone
+     * never saw.
+     */
+    for (const [heldPath, holder] of addresses) {
+      if (!foreign(holder)) continue;
+      const relation = isPhiRouteAddressBeneath(heldPath, path)
+        ? "beneath"
+        : isPhiRouteAddressBeneath(path, heldPath) ? "above" : null;
+      if (relation) {
+        collisions.push({ claim, path, heldBy: holder, relation, heldPath });
+        break;
+      }
     }
   }
   return collisions;

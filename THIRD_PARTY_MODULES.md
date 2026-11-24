@@ -878,7 +878,14 @@ Builder's Navigation table, replaces yours; the Builder shows yours until it doe
 a Module's forward off by choosing "nowhere": that choice is read as no choice, and your target answers.
 
 `checkPhiRouteAddresses(routes)` (`@phis/ui/module/page-check`) reports every route beneath another of
-the same Area. Run it over your route descriptors in your verify step and fail on a finding.
+the same Area. Run it over your route descriptors in your verify step and fail on a finding. The rule
+holds across packages too: a route of yours beneath another package's route of the same Area breaks it
+as much as one beneath your own. Compiling the catalog will refuse an installed package whose routes break
+it (`refusePhiCatalogRouteAddresses` in `helpers/route-address-check.ts`, the rule over every installed
+route; not yet wired, until every first-party package keeps it). On Public, where a Site assigns another
+address when two Modules want one, the Builder's dialog holds the assigned address to it as well: an address
+beneath or above a Site Page or another Module's route is contested like a taken one, and the proposal it
+opens with is neither.
 
 ## 1. Define stable ids
 
@@ -1648,13 +1655,19 @@ which returns the Overlay, its Layouts and its Command Toolbar for your tree's `
 whose body or actions say otherwise. A dialog whose content runs to its edges -- an image to crop, a canvas
 -- takes `PHI_DIALOG_BLEED_BODY_CONFIG` instead: the same ground, no inset, and its content draws no corner.
 
-A dialog is as wide as its Form needs: one column takes `PHI_DIALOG_WIDTH_SINGLE_COLUMN`, two columns keep
-`PHI_DIALOG_WIDTH`, a table or an editor states a wider width. Hand the Form your dialog holds to `dialog`
-as `body.form` -- its definition from your `forms`, or `{ descriptor }` -- and it picks the width itself;
-without it, `dialog` takes `PHI_DIALOG_WIDTH`. Where the Form is not yours to hand over (Core's Reply Form,
-say), state `width: PHI_DIALOG_WIDTH_SINGLE_COLUMN` in `config`. The descriptor compiler refuses a modal at
-`PHI_DIALOG_WIDTH` whose Forms are all one column (OVERLAYS.md, "The imperative exemption, and how narrow
-it is"), and on a live Site that refusal is a 500 for the whole Page. Two Forms of one column side by side
+A dialog is as wide as its Form needs, and an Overlay states its width as a block does, as its `size`
+(OVERLAYS.md, "Geometry"): one column takes `PHI_DIALOG_WIDTH_SINGLE_COLUMN`, two columns keep
+`PHI_DIALOG_WIDTH`, a table or an editor states a wider width -- `size: { width: 980 }`, with
+`maxSize: { width: "90vw" }` where it should never take more of the window than that. Both constants are
+one length; the Modal holds any width inside the viewport itself, so a dialog states no phone width. Hand
+the Form your dialog holds to `dialog` as `body.form` -- its definition from your `forms`, or
+`{ descriptor }` -- and it picks the width itself; without it, `dialog` takes `PHI_DIALOG_WIDTH`. Where
+the Form is not yours to hand over (Core's Reply Form, say), state
+`size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN }` in `config`. There is no `width` on an Overlay: the
+descriptor compiler refuses one, and a `size`, `minSize` or `maxSize` written as one bare length. It
+refuses a modal at `size: { width: PHI_DIALOG_WIDTH }` whose Forms are all one column (OVERLAYS.md, "The
+imperative exemption, and how narrow it is"), and on a live Site either refusal is a 500 for the whole
+Page. Two Forms of one column side by side
 on a Split Card are still all one column: state the width the body needs. Run
 `checkPhiPresetTreeContract` with your own Forms in your tests
 ([Checking a Page preset](#checking-a-page-preset)); it refuses the same dialog there.
@@ -2347,8 +2360,9 @@ descriptor compiler holds it to while a Site serves the Page -- the same code, s
 the compiler refuses, and the Page answers 500. The rules: every node carries a preset instance id
 (`createPhiPresetCmsInstanceIdMap`), none twice; every parent, Region root, Overlay root and Page root is
 in the tree; the base page layout node is the canonical one; an Overlay's actions Footer is the canonical
-Flex preset; a modal's body and actions are the dialog's (`PHI_DIALOG_BODY_CONFIG`,
-`PHI_DIALOG_COMMANDS_CONFIG`); and a modal at `PHI_DIALOG_WIDTH` holds not only Forms of one column
+Flex preset; an Overlay states its geometry as the block's pairs, never as `width` or one bare length; a
+modal's body and actions are the dialog's (`PHI_DIALOG_BODY_CONFIG`, `PHI_DIALOG_COMMANDS_CONFIG`); and a
+modal at `size: { width: PHI_DIALOG_WIDTH }` holds not only Forms of one column
 ([Dialogs](#dialogs)); a Form's or a record Widget's `titleFromRecord` has a `source`, is routed to an
 Overlay that hears it on `title`, and on a Form names one of the Form's fields. `page` is the Page row the test handed `loadTree`: a tree whose Page or Regions
 belong to another is reported. `forms` are your Module's Form definitions (`definePhiRuntimeModuleForm`),

@@ -7,6 +7,7 @@ import {
 import {
   isPhiAssignablePublicRoutePath,
 } from "../../../helpers/cms-area-config";
+import { isPhiRouteAddressBeneath } from "../../../helpers/route-address-check";
 import { assignPhiWorkspacePublicRoutePaths } from "./workspace-catalog-actions";
 import type { PhiRuntimeModuleId } from "../../../types";
 import { listPhiAlwaysActiveRuntimeModuleIds } from "../settings";
@@ -84,12 +85,15 @@ function suggestPhiPublicRoutePath(
   taken: ReadonlyMap<string, PhiPublicRouteAddressHolder>,
 ) {
   const namespaced = `${buildPhiRuntimeModulePackageRoutePrefix(moduleId)}${declaredPath}`;
-  if (!taken.has(namespaced)) {
+  // Free, and neither beneath nor above an address another holds.
+  const free = (candidate: string) => !taken.has(candidate) && ![...taken.keys()].some((held) =>
+    isPhiRouteAddressBeneath(held, candidate) || isPhiRouteAddressBeneath(candidate, held));
+  if (free(namespaced)) {
     return namespaced;
   }
   for (let attempt = 2; attempt < 20; attempt += 1) {
     const candidate = `${namespaced}-${attempt}`;
-    if (!taken.has(candidate)) {
+    if (free(candidate)) {
       return candidate;
     }
   }
@@ -141,7 +145,9 @@ export function resolvePhiBuilderPublicRouteCollisionAnswers(
       presetKey: collision.claim.presetKey,
       title: collision.claim.title,
       declaredPath: collision.path,
-      heldBy: describePhiPublicRouteAddressHolder(collision.heldBy, moduleTitles),
+      heldBy: collision.relation === "same"
+        ? describePhiPublicRouteAddressHolder(collision.heldBy, moduleTitles)
+        : `${describePhiPublicRouteAddressHolder(collision.heldBy, moduleTitles)} (${collision.heldPath})`,
       published: collision.heldBy.kind === "page" ? collision.heldBy.published : collision.heldBy.claim.live === true,
       path,
     };

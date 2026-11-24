@@ -155,4 +155,21 @@ describe("which addresses are free", () => {
       assignments: [],
     })).toEqual([]);
   });
+
+  it("holds an assigned address to the folder rule: never beneath or above another holder's", () => {
+    const assignments = [{ ownerModuleId: SITE, presetKey: "example-login-page", path: "/contracts/login" }];
+    const addresses = buildPhiPublicRouteAddressMap({
+      claims,
+      activeModuleIds: new Set([AUTH]),
+      assignments,
+      sitePages: [{ path: "/contracts", title: "Contracts", published: true }],
+    });
+    const collisions = findPhiPublicRoutePathCollisions({ moduleId: SITE, claims, addresses, assignments });
+    expect(collisions.find((collision) => collision.claim.presetKey === "example-login-page")).toMatchObject({
+      path: "/contracts/login",
+      relation: "beneath",
+      heldPath: "/contracts",
+      heldBy: { kind: "page", title: "Contracts" },
+    });
+  });
 });

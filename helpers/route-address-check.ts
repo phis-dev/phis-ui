@@ -18,8 +18,12 @@ import type { PhiCmsAreaKey } from "../constants/cms-areas";
  * Compared by segment, a parameter by its name like any other segment: `/shop/:slug` and `/shop/cart`
  * are siblings. `/` is the Area's root slot and no folder.
  *
- * Verify-time only, from `@phis/ui/module/page-check`: a package runs it over its own routes, and
- * phis-ui over the first-party ones. The Site's own Pages are refused by phis-server when written.
+ * From `@phis/ui/module/page-check`: a package runs it over its own routes, and phis-ui over the
+ * first-party ones. `refusePhiCatalogRouteAddresses` is the same rule over a compiled catalog, every
+ * installed package's routes together, for the descriptor compiler to refuse a package that breaks it
+ * (not wired into compiling yet: `@phis/dev` still breaks it, TODOS.md). The addresses a Site assigns on
+ * Public are held to it in the Builder (`findPhiPublicRoutePathCollisions`). The Site's own Pages are
+ * refused by phis-server when written.
  */
 
 export type PhiRouteAddressSubject = {
@@ -40,17 +44,25 @@ function segments(path: string) {
   return path.split("/").filter(Boolean);
 }
 
+/**
+ * Whether `lowerPath` lies beneath `upperPath` so that the upper one would be a Page and a folder at once:
+ * by segment, `/` never above anything, a list's entries -- one parameter directly beneath -- excepted.
+ */
+export function isPhiRouteAddressBeneath(upperPath: string, lowerPath: string): boolean {
+  const upper = segments(upperPath);
+  const own = segments(lowerPath);
+  if (upper.length === 0 || upper.length >= own.length) return false;
+  if (!upper.every((segment, index) => segment === own[index])) return false;
+  // A list's entries, one parameter directly beneath it.
+  return !(own.length === upper.length + 1 && own[own.length - 1]!.startsWith(":"));
+}
+
 export function checkPhiRouteAddresses(routes: readonly PhiRouteAddressSubject[]): PhiRouteAddressFinding[] {
   const findings: PhiRouteAddressFinding[] = [];
   for (const route of routes) {
-    const own = segments(route.path);
     for (const other of routes) {
       if (other === route || other.area !== route.area) continue;
-      const upper = segments(other.path);
-      if (upper.length === 0 || upper.length >= own.length) continue;
-      if (!upper.every((segment, index) => segment === own[index])) continue;
-      // A list's entries, one parameter directly beneath it.
-      if (own.length === upper.length + 1 && own[own.length - 1]!.startsWith(":")) continue;
+      if (!isPhiRouteAddressBeneath(other.path, route.path)) continue;
       findings.push({
         route: route.presetKey,
         above: other.presetKey,
@@ -60,4 +72,25 @@ export function checkPhiRouteAddresses(routes: readonly PhiRouteAddressSubject[]
     }
   }
   return findings;
+}
+
+/** Every route of a compiled catalog as the rule reads it, Area by Area. */
+export function listPhiCatalogRouteAddressSubjects(
+  routesByArea: ReadonlyMap<PhiCmsAreaKey, readonly { descriptor: PhiRouteAddressSubject }[]>,
+): PhiRouteAddressSubject[] {
+  return [...routesByArea.values()].flatMap((routes) =>
+    routes.map(({ descriptor }) => ({ area: descriptor.area, path: descriptor.path, presetKey: descriptor.presetKey })));
+}
+
+/**
+ * The rule over a compiled catalog, as compiling it would refuse it: throws naming every route that lies
+ * beneath another of its Area, whichever packages the two come from.
+ */
+export function refusePhiCatalogRouteAddresses(
+  routesByArea: ReadonlyMap<PhiCmsAreaKey, readonly { descriptor: PhiRouteAddressSubject }[]>,
+): void {
+  const findings = checkPhiRouteAddresses(listPhiCatalogRouteAddressSubjects(routesByArea));
+  if (findings.length > 0) {
+    throw new Error(`Module routes break the address rule:\n- ${findings.map((finding) => finding.message).join("\n- ")}`);
+  }
 }
