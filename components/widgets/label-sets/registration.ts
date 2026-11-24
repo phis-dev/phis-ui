@@ -32,7 +32,6 @@ const PHI_REGISTRATION_FORM_LABEL_SET = definePhiLabelSet({
     terms_text: "I agree to the %1",
     terms_link_label: "Terms & Conditions",
     terms_required: definePhiMessageLabel("You must accept the terms to continue."),
-    newsletter: definePhiMessageLabel("Send me product and platform updates."),
     notice: definePhiMessageLabel("This form sends a verification email first. The live customer account is created only after confirmation."),
     generic_error: definePhiMessageLabel("The registration request could not be completed."),
     account_exists_error: definePhiMessageLabel("Account already exists."),
@@ -91,7 +90,6 @@ export async function getPhiRegistrationFormLabels(options: PhiGlobalTranslatorO
       termsLinkLabel: labels.terms_link_label,
       terms: labels.terms_text,
       termsRequired: labels.terms_required,
-      newsletter: labels.newsletter,
     },
     actions: {
       submitLabel: labels.submit_label,

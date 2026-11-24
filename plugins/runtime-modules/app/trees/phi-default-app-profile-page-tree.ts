@@ -22,8 +22,7 @@ const PROFILE_PRESET_KEY = "app-profile-page";
  *
  * It is a mounted Settings page like any other now (SETTINGS.md section 4), so it is built from the
  * one shared shell: a Collapsible whose panels open one at a time, each panel one coherent thing to
- * decide. The overview panel is gone -- it showed the name that the panel below it already holds and
- * a newsletter switch that now has a panel of its own.
+ * decide.
  *
  * Every panel is a registered Form reaching the server through its handler Provider. Language carries
  * the Site's locales in its placement config, because a registered Form is the same on every Site and
@@ -182,21 +181,6 @@ export async function buildPhiDefaultAppProfilePageTree({
                 receiver: createPhiCoreRuntimeControllerAddress(),
               }],
             },
-          },
-        }],
-      },
-      {
-        nodeKey: "panelNewsletter",
-        title: labels.subscriptions,
-        sections: [{
-          kind: "form",
-          nodeKey: "widgetNewsletter",
-          formId: PHI_APP_FORM_IDS.profileNewsletter,
-          label: labels.newsletter,
-          submitOnChange: true,
-          savedMessage: labels.saved,
-          initialValues: {
-            newsletterOptIn: Boolean(runtime.viewer.newsletterOptIn),
           },
         }],
       },

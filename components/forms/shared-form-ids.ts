@@ -29,7 +29,7 @@ export const PHI_SHARED_FORM_IDS = {
   /**
    * The two credentials a signed-in person changes about themselves.
    *
-   * They belong beside the sign-in Forms rather than with the profile's name and newsletter, for the
+   * They belong beside the sign-in Forms rather than with the profile's name and language, for the
    * same reason the security Page belongs to this Module: a password and the address it is tied to are
    * how somebody proves who they are, and whoever answers that question owns the Forms that change it.
    */

@@ -213,9 +213,9 @@ What is stored instead, in three parts:
    history, so it does not rotate. Together with the status in the browser this is what discharges
    accountability -- we can show what was asked, and the visitor's device holds what they answered.
 3. **The person, when there is one.** For a signed-in account the record belongs where account-bound
-   decisions already live: a bit in `user_site_flags`. The precedent is literally the same kind of fact --
-   `USER_SITE_FLAG_NEWSLETTER_OPT_IN` in `phis-server/src/lib/user-site-flags.ts`, with `DB.md` describing
-   the path from `registration_intents.flags` into the membership.
+   decisions already live: a bit in `user_site_flags`, beside `USER_SITE_FLAG_DISABLED` in
+   `phis-server/src/lib/user-site-flags.ts`. Core keeps no newsletter consent there any more (owner,
+   2026-11-24): a consent somebody gives at registration for an Add-on's offer belongs to that Add-on.
 
 If counts are ever wanted ("how many refused"), they are aggregates per Site and banner revision. No row
 per visit, therefore no personal data and no retention question.
@@ -270,7 +270,7 @@ having one.
 
 The Area only starts to matter if a Site wants the answer remembered. For a visitor that is a cookie and
 everything under "What is stored"; for a signed-in person it is a bit in `user_site_flags`, the same shape
-as newsletter consent, and the surface is Settings rather than a bar on every page.
+as the Site's Disabled beside it, and the surface is Settings rather than a bar on every page.
 
 ## How the decision travels
 

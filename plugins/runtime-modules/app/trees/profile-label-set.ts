@@ -15,18 +15,8 @@ const PHI_PROFILE_PAGE_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_APP_RUNTIM
     language: "Language",
     appearance: "Appearance",
     /*
-     * The panel is named after what it collects, not after the one switch in it today. A panel titled
-     * "Newsletter" holding a switch labelled "Newsletter" says the same word twice and has room for
-     * nothing else; named for the subject, a second thing somebody can subscribe to moves in beside
-     * the first without renaming anything.
-     */
-    subscriptions: "Subscriptions",
-    /** The switch's own subject, and the authoring name of the Form that holds it. */
-    newsletter: "Newsletter",
-    /*
-     * What a panel says when it saved and its Form has no wording of its own -- the language select
-     * and the newsletter switch, which say nothing in place because there is nothing in place to say
-     * it in.
+     * What a panel says when it saved and its Form has no wording of its own -- the language select,
+     * which says nothing in place because there is nothing in place to say it in.
      */
     saved: "Saved",
   },
@@ -40,8 +30,6 @@ export async function getPhiProfilePageLabels(options: PhiGlobalTranslatorOption
     phone: labels.phone,
     language: labels.language,
     appearance: labels.appearance,
-    subscriptions: labels.subscriptions,
-    newsletter: labels.newsletter,
     saved: labels.saved,
   };
 }

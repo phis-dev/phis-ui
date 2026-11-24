@@ -28,7 +28,7 @@ still true, and is now the list of neighbours this store deliberately did not ta
   else. `phis.user_profiles` is a fixed set of name and address columns. `phis.user_site_memberships`
   holds `user_site_flags`, `authorization_revision` and `last_login_at`.
 - Account-bound decisions are therefore bit flags today: the Theme halves are `1 << 2` and `1 << 3` in
-  `user_accounts.flags`, newsletter consent is a bit in `user_site_flags`. That is right and stays right
+  `user_accounts.flags`, a Site's Disabled is a bit in `user_site_flags`. That is right and stays right
   for what Core itself owns.
 - It does not extend to Modules. A bit is a centrally allocated, closed resource; there is no way to hand
   bits to an unknown number of Modules with an unknown number of cards. That boundary is where this

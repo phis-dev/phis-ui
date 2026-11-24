@@ -68,25 +68,6 @@ const PHI_PROFILE_PHONE_WIDGET_LABEL_SET = definePhiLabelSet({
   },
 });
 
-const PHI_PROFILE_OVERVIEW_WIDGET_LABEL_SET = definePhiLabelSet({
-  key: "widget:profile-overview",
-  ctx: PHI_TR_CTX_WEB_UI_LABEL,
-  labels: {
-    title: "Overview",
-    description: definePhiMessageLabel("Manage your account details and site preferences from one place."),
-    account_label: "Account",
-    newsletter_label: "Newsletter",
-    newsletter_description: definePhiMessageLabel("Receive product and platform updates for this site."),
-    newsletter_on: "Enabled",
-    newsletter_off: "Disabled",
-    error_title: "Newsletter update failed",
-    error_network: definePhiMessageLabel("Network error while updating your newsletter preference."),
-    error_generic: definePhiMessageLabel("The newsletter preference could not be updated."),
-    success_title: "Newsletter updated",
-    success_text: definePhiMessageLabel("Your newsletter preference has been saved."),
-  },
-});
-
 export async function getPhiProfileLocaleWidgetLabels(options: PhiGlobalTranslatorOptions) {
   const labels = await getPhiLabelSet(options, PHI_PROFILE_LOCALE_WIDGET_LABEL_SET);
   return {
@@ -121,26 +102,6 @@ export async function getPhiProfileNameWidgetLabels(options: PhiGlobalTranslator
     },
     currentLabel: labels.current_label,
     submitLabel: labels.submit_label,
-    feedback: {
-      errorTitle: labels.error_title,
-      errorNetwork: labels.error_network,
-      errorGeneric: labels.error_generic,
-      successTitle: labels.success_title,
-      successText: labels.success_text,
-    },
-  };
-}
-
-export async function getPhiProfileOverviewWidgetLabels(options: PhiGlobalTranslatorOptions) {
-  const labels = await getPhiLabelSet(options, PHI_PROFILE_OVERVIEW_WIDGET_LABEL_SET);
-  return {
-    title: labels.title,
-    description: labels.description,
-    accountLabel: labels.account_label,
-    newsletterLabel: labels.newsletter_label,
-    newsletterDescription: labels.newsletter_description,
-    newsletterOn: labels.newsletter_on,
-    newsletterOff: labels.newsletter_off,
     feedback: {
       errorTitle: labels.error_title,
       errorNetwork: labels.error_network,

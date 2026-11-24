@@ -196,12 +196,6 @@ export const PHI_REGISTRATION_FORM_DESCRIPTOR = {
         href: { kind: "config", key: "termsHref", fallback: "/terms-and-conditions" },
       },
     },
-    {
-      key: "newsletter",
-      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.checkbox,
-      controlLabel: label("consent.newsletter", "Send me product and platform updates."),
-      placement: PHI_FORM_STACKED_FULL,
-    },
   ],
   success: {
     title: label("feedback.successTitle", "Account created"),

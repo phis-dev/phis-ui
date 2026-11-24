@@ -34,7 +34,6 @@ export const PHI_APP_FORM_IDS = {
   profilePhone: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "app/profile-phone"),
   addressCreate: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "app/address-create"),
   addressEdit: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "app/address-edit"),
-  profileNewsletter: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "app/profile-newsletter"),
   profileLocale: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "app/profile-locale"),
   profileTheme: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "app/profile-theme"),
 } as const;
@@ -44,7 +43,6 @@ const PHI_APP_FORM_HANDLER_KEYS = {
   profilePhone: "site.app.profile-phone",
   addressCreate: "site.app.address-create",
   addressEdit: "site.app.address-edit",
-  profileNewsletter: "site.app.profile-newsletter",
   profileLocale: "site.app.profile-locale",
   profileTheme: "site.app.profile-theme",
 } as const;
@@ -52,7 +50,6 @@ const PHI_APP_FORM_HANDLER_KEYS = {
 const NAME_LABEL_SET_KEY = "@phis/ui/modules/app/labels/profile-name" as const;
 const PHONE_LABEL_SET_KEY = "@phis/ui/modules/app/labels/profile-phone" as const;
 const ADDRESS_LABEL_SET_KEY = "@phis/ui/modules/app/labels/address" as const;
-const NEWSLETTER_LABEL_SET_KEY = "@phis/ui/modules/app/labels/profile-newsletter" as const;
 const LOCALE_LABEL_SET_KEY = "@phis/ui/modules/app/labels/profile-locale" as const;
 const THEME_LABEL_SET_KEY = "@phis/ui/modules/app/labels/profile-theme" as const;
 
@@ -192,30 +189,6 @@ function addressDescriptor(formId: PhiFormId, mode: "create" | "edit"): PhiFormD
 }
 
 /**
- * One switch, and therefore no Save button: the Preset routes the Form's own `stateChange` back to
- * its `submit` channel, so flipping it is the submit. A panel holding more than one field states a
- * Save instead -- two fields changed one at a time would otherwise be two writes and one of them a
- * half-finished thought.
- *
- * It says nothing on success for the same reason. A switch that stays where it was put has already
- * told the person it worked; an alert under it would be a second answer to a question nobody asked.
- */
-const newsletterDescriptor: PhiFormDescriptor = {
-  schemaVersion: 1,
-  key: PHI_APP_FORM_IDS.profileNewsletter,
-  labelSetKey: NEWSLETTER_LABEL_SET_KEY,
-  fields: [
-    {
-      key: "newsletterOptIn",
-      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.switch,
-      controlLabel: label("newsletter", "Newsletter"),
-      description: label("newsletterDescription", "Receive product and platform updates for this site."),
-    },
-  ],
-  layout: { gap: { compact: "sm", medium: "base" } },
-};
-
-/**
  * The one language question, whose answers only the Site knows.
  *
  * The options are not in this descriptor, because a registered Form is the same on every Site and the
@@ -313,14 +286,6 @@ const loadAddressLabels = createPhiFormLabelSetLoader(
   (labels) => ({ ...labels.form, actions: { submitLabel: labels.save } }),
 );
 
-const loadNewsletterLabels = createPhiFormLabelSetLoader(
-  () => import("../../../components/widgets/label-sets/profile").then((module) => module.getPhiProfileOverviewWidgetLabels),
-  (labels) => ({
-    newsletter: labels.newsletterLabel,
-    newsletterDescription: labels.newsletterDescription,
-  }),
-);
-
 const loadLocaleLabels = createPhiFormLabelSetLoader(
   () => import("../../../components/widgets/label-sets/profile").then((module) => module.getPhiProfileLocaleWidgetLabels),
   (labels) => ({
@@ -394,20 +359,6 @@ export const PHI_APP_RUNTIME_MODULE_FORMS = [
     descriptor: addressDescriptor(PHI_APP_FORM_IDS.addressEdit, "edit"),
     submitHandlerKey: PHI_APP_FORM_HANDLER_KEYS.addressEdit,
     loadLabels: loadAddressLabels,
-  }),
-  definePhiRuntimeModuleForm({
-    ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
-    areas: ["app"],
-    formId: PHI_APP_FORM_IDS.profileNewsletter,
-    version: 1,
-    flags: 0,
-    title: "Newsletter",
-    description: "Whether this account receives product and platform updates.",
-    category: "forms",
-    tags: ["profile", "account"],
-    descriptor: newsletterDescriptor,
-    submitHandlerKey: PHI_APP_FORM_HANDLER_KEYS.profileNewsletter,
-    loadLabels: loadNewsletterLabels,
   }),
   definePhiRuntimeModuleForm({
     ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
@@ -509,21 +460,6 @@ export const PHI_APP_FORM_HANDLER_PROVIDER_DESCRIPTORS = [
     upstreamPath: "/api/site/account/addresses/{id}",
     csrfPath: null,
     requiresCsrf: false,
-    credentialPolicy: "site-session",
-  },
-  {
-    key: createPhiSharedFormProviderKey("handler", "app-profile-newsletter"),
-    ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
-    title: "Profile newsletter",
-    phase: "submit",
-    handlerKey: PHI_APP_FORM_HANDLER_KEYS.profileNewsletter,
-    category: "site",
-    transport: "relay",
-    method: "PATCH",
-    endpointKey: null,
-    upstreamPath: "/api/v1/auth/profile/newsletter",
-    csrfPath: "/api/v1/auth/csrf",
-    requiresCsrf: true,
     credentialPolicy: "site-session",
   },
   {

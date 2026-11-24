@@ -98,7 +98,6 @@ export type PhiBlockRuntimeViewer = {
    * the session until it is set, and each Page shows the change in front of itself.
    */
   mustChangePassword?: boolean;
-  newsletterOptIn?: boolean | null;
   profile?: {
     firstName?: string | null;
     lastName?: string | null;
