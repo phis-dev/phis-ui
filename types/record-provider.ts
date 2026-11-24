@@ -115,10 +115,23 @@ export type PhiRecordFieldDescriptor = {
  */
 export type PhiRecordAudience = "public" | "viewer";
 
+/**
+ * Which declared fields a link to a Page about the record shows (NEXT_INTEGRATION.md, "Link previews"):
+ * `titleField` and `descriptionField` name `text` fields, `imageField` a `picture`. Each is optional, and
+ * a field the record lacks leaves the Page's own answer standing. The picture is shown only where it is a
+ * publicly delivered image of the Site Space (`/api/site/media/<id>/...`), as its share variant.
+ */
+export type PhiRecordShareDeclaration = {
+  titleField?: string;
+  descriptionField?: string;
+  imageField?: string;
+};
+
 /** What a `record` descriptor declares about its record. */
 export type PhiRecordDeclaration = {
   audience: PhiRecordAudience;
   fields: readonly PhiRecordFieldDescriptor[];
+  share?: PhiRecordShareDeclaration;
 };
 
 /**

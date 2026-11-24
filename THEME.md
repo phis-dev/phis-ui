@@ -326,6 +326,15 @@ preset.
   one. The Theme editor sets the colour of the mode it is showing; a mode with none draws the part in the
   colour around it.
 
+- `shareImage?: { assetId: number, alt?: string }` -- the picture a link to the Site shows where neither
+  the record a Page is about nor the Page itself names one ([NEXT_INTEGRATION.md](./NEXT_INTEGRATION.md#link-previews)).
+  A publicly delivered image of the Site Space, drawn as its 1200 x 630 share variant; anything else shows
+  no picture. `alt` falls back to the Asset's own alt text. The Theme editor sets it under Brand › Link
+  preview, where the picker offers the Site Space and greys out every Asset that is not public.
+- `xAccount?: string` -- the Site's account on X, `@` and up to 15 letters, digits or underscores
+  (`@phisys`), stated as `twitter:site` beside every link preview. Empty, or not such a name, states
+  nothing; the editor says so under the field.
+
 A placement never restates any of this. The Brand Widget is asked one thing -- `mode`, which of
 `lockup` | `logo` | `wordmark` | `slogan` | `location` it draws here -- and reads the rest from the
 record. There is no per-instance title, eyebrow, logo toggle or offset; a Brand that differs between two

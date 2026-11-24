@@ -8,8 +8,12 @@ and `scripts/validate-todos-wants.ts` refuses the entry once the catalog has one
 
 ## At the next release
 
-Nothing waits on a Server or contracts release. Steps an installation takes with a release stand under
-[Operations](#operations).
+- **Link previews need the next contracts and Core release (2026-11-24).** `@phis/ui` names the share
+  variant (`PhiImageAssetVariantKey.Share`, `PhiImageAssetVariantSpec.flags`) from `@phis/contracts/media`,
+  and only a Core that renders variant 11 serves the picture; an older Core answers 404 for it, and a
+  preview shows the title and description without a picture. Release contracts, then Core, then `@phis/ui`.
+
+Steps an installation takes with a release stand under [Operations](#operations).
 
 ## People data (`users:v1`)
 
@@ -147,6 +151,15 @@ file (THREADS.md section 10) leave open:
   (`PATCH /api/site/media/{id}`, plain `error` text) and the Folder Form (`/api/v1/forms/media-folder`,
   `ok: false` with text); the upload route says `folder_locked` where the others say
   `media_folder_locked`. Core change, then the Asset metadata and Folder Forms map it.
+
+- **Link previews: what is left (2026-11-24, NEXT_INTEGRATION.md "Link previews").** The Page's own share
+  picture (`page.layoutConfig.shareImage`) has no field in the Builder's page-meta dialog yet ("first only
+  for AI"); the dialog draft already carries it (`PhiDeveloperBuilderPageMetaDraft.shareImage`), so a field
+  only has to edit it. A record picture is shown only when it is a public Asset of the Site Space: the
+  reference projection answers no other Space, so a product picture in a supplier's Add-on Space gives no
+  preview picture. `@phis/shop`'s product Provider marks no share fields yet (`record.share`: title,
+  summary, cover would be the obvious three), and Core's content entry Provider declares no record fields
+  at all, so neither record page has a record preview today.
 
 ## Threads
 

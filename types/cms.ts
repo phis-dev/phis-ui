@@ -105,6 +105,16 @@ export type PhiCmsResolvedPageMetaField = {
 export type PhiCmsResolvedPageMeta = {
   title: PhiCmsResolvedPageMetaField | null;
   description: PhiCmsResolvedPageMetaField | null;
+  /**
+   * What a link to a Page about a record shows of that record, from the fields its Provider marks
+   * (`record.share`, NEXT_INTEGRATION.md "Link previews"). Set by the render, never stored: absent on a
+   * Page about no record.
+   */
+  preview?: {
+    title: string | null;
+    description: string | null;
+    image: import("./record-provider").PhiRecordPicture | null;
+  } | null;
 };
 
 export type PhiCmsResolvedContent = {

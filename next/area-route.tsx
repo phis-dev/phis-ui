@@ -6,6 +6,9 @@ import { readPhiAreaMeta } from "../helpers/cms-area-config";
 import { buildPhiAreaPageMetadata } from "../helpers/phi-metadata";
 import { resolvePhiSitePublicBase } from "../helpers/phi-seo";
 import { readPhiSiteRuntimeConfigSync } from "../helpers/site-runtime";
+import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
+import { readPhiMediaDeliveryAssetId, resolvePhiLinkPreviewImage } from "../server-helpers/link-preview-image";
+import { PHI_PAGE_SHARE_IMAGE_CONFIG_KEY, readPhiShareImage } from "../types/link-preview";
 
 import { PhiCmsErrorPage } from "../components/cms/phi-cms-error-page";
 import type { PhiCmsErrorPageProps } from "../components/cms/phi-cms-error-page";
@@ -315,6 +318,30 @@ export function createPhiNextDynamicRootPage(cmsBridge: PhiCmsSiteBridge) {
       return {};
     }
 
+    const { runtime, page } = resolvedRequest;
+    const publicBase = resolvePhiSitePublicBase(runtime.site.publicUrl, readPhiSiteRuntimeConfigSync().site.publicUrl);
+    const brand = runtime.site.theme?.brand;
+    const preview = page.pageMeta?.preview ?? null;
+    const recordImageAssetId = preview?.image ? readPhiMediaDeliveryAssetId(preview.image.src, publicBase) : null;
+    const credentials = readPhiServerApiCredentials();
+    /*
+     * The preview's picture, in the order the Page answers: the record's, the Page's own, the Theme's
+     * (NEXT_INTEGRATION.md, "Link previews"). Only Public is shared; another Area states no preview.
+     */
+    const image = resolvedRoute.area === "public"
+      ? await resolvePhiLinkPreviewImage({
+          ...credentials,
+          siteKey: runtime.site.key,
+          publicBase,
+          candidates: [
+            recordImageAssetId ? { assetId: recordImageAssetId, alt: preview?.image?.alt ?? null } : null,
+            readPhiShareImage(page.page.layoutConfig?.[PHI_PAGE_SHARE_IMAGE_CONFIG_KEY]),
+            readPhiShareImage(brand?.shareImage),
+          ],
+          fallbackAlt: preview?.title ?? page.pageMeta?.title?.value ?? runtime.site.name ?? "",
+        })
+      : null;
+
     return buildPhiAreaPageMetadata({
       area: resolvedRoute.area,
       meta: readPhiAreaMeta(rootRequest.resolvedAreaPreset?.preset.config),
@@ -322,11 +349,15 @@ export function createPhiNextDynamicRootPage(cmsBridge: PhiCmsSiteBridge) {
       pageTitle: resolvedRequest.page.pageMeta?.title?.value,
       pageDescription: resolvedRequest.page.pageMeta?.description?.value,
       pageNoindex: resolvedRequest.runtime.page?.noindex,
+      linkPreview: {
+        recordTitle: preview?.title,
+        recordDescription: preview?.description,
+        slogan: brand?.slogan?.label,
+        image,
+        xAccount: brand?.xAccount,
+      },
       publicAddress: {
-        publicBase: resolvePhiSitePublicBase(
-          resolvedRequest.runtime.site.publicUrl,
-          readPhiSiteRuntimeConfigSync().site.publicUrl,
-        ),
+        publicBase,
         path: resolvedRoute.cmsPath,
         locale: resolvedRoute.locale,
         availableLocales: resolvedRequest.runtime.site.availableLocales.map((option) => option.code),

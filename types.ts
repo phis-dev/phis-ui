@@ -188,6 +188,7 @@ export type * from "./types/user-state";
 export type * from "./types/widget-runtime";
 export * from "./types/runtime-module-locale";
 export type * from "./types/site-theme";
+export type * from "./types/link-preview";
 export * from "./types/server-capabilities";
 export * from "./types/core-runtime-controller";
 export * from "./types/signals";

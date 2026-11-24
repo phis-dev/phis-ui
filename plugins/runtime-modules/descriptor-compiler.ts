@@ -83,6 +83,7 @@ import { checkPhiPresetTreeContract } from "../../helpers/preset-tree-contract-c
 import { refusePhiCatalogRouteAddresses } from "../../helpers/route-address-check";
 import { concatPhiCmsTreeControllerSettings } from "../../helpers/cms-tree-controller-settings";
 import { createPhiModuleMediaResolver } from "../../helpers/module-media";
+import { PHI_PAGE_SHARE_IMAGE_CONFIG_KEY } from "../../types/link-preview";
 import type { PhiModuleMediaLoader } from "../../types/module-media";
 
 const PHI_CMS_REGION_TYPE_VALUES = new Set<number>(Object.values(PhiCmsRegionType));
@@ -205,6 +206,13 @@ export function compilePhiCmsRoutePattern(
     throw new Error(
       `${descriptor.ownerModuleId}/${descriptor.presetKey}: a route may contain at most one dynamic segment.`,
     );
+  }
+  // The route's own meta is stated or left out, never stated empty.
+  if (descriptor.description !== undefined && !descriptor.description.trim()) {
+    throw new Error(`${descriptor.ownerModuleId}/${descriptor.presetKey}: a route's description must not be empty.`);
+  }
+  if (descriptor.shareImage !== undefined && !descriptor.shareImage.asset?.trim()) {
+    throw new Error(`${descriptor.ownerModuleId}/${descriptor.presetKey}: a route's share image must name a picture of the package.`);
   }
   // A page record is filled in from the address, so every route parameter it names has to be in the path.
   if (descriptor.pageRecord) {
@@ -2281,7 +2289,7 @@ export async function instantiatePhiCmsRoutePreset({
   path,
   runtime,
   loadModuleMedia,
-  resolveMissingPageTitle,
+  translateRouteText,
 }: {
   binding: PhiCmsRoutePresetBinding;
   catalog: PhiCmsCompiledDescriptorCatalog;
@@ -2290,7 +2298,7 @@ export async function instantiatePhiCmsRoutePreset({
   path: string;
   runtime: PhiBlockRuntime;
   loadModuleMedia: PhiModuleMediaLoader;
-  resolveMissingPageTitle?: (sourceTitle: string) => string | Promise<string>;
+  translateRouteText?: (source: string) => string | Promise<string>;
 }) {
   const descriptor = binding.descriptor;
   const page = createSyntheticPresetPage({
@@ -2299,29 +2307,46 @@ export async function instantiatePhiCmsRoutePreset({
     path,
     flags: descriptor.defaultPageFlags ?? 0,
   });
+  const media = createPhiModuleMediaResolver(descriptor.ownerModuleId, loadModuleMedia);
   const loadedTree = await descriptor.loadTree({
     page,
     runtime: resolveTargetRuntime(runtime, descriptor.area),
     catalog,
     activeModuleIds,
     params: binding.params,
-    media: createPhiModuleMediaResolver(descriptor.ownerModuleId, loadModuleMedia),
+    media,
   });
-  const tree = loadedTree.pageMeta?.title
-    ? loadedTree
-    : {
-        ...loadedTree,
-        pageMeta: {
-          title: {
-            msgId: 0,
-            source: descriptor.title,
-            value: resolveMissingPageTitle
-              ? (await resolveMissingPageTitle(descriptor.title)).trim() || descriptor.title
-              : descriptor.title,
+  /*
+   * The route's own meta fills in what the tree leaves out: its title and description, translated as the
+   * Module's text, and its share picture, resolved like any picture of the package. What the tree states
+   * wins, field by field.
+   */
+  const translate = async (source: string) => translateRouteText
+    ? (await translateRouteText(source)).trim() || source
+    : source;
+  const metaField = async (source: string) => ({ msgId: 0, source, value: await translate(source) });
+  const title = loadedTree.pageMeta?.title ?? await metaField(descriptor.title);
+  const description = loadedTree.pageMeta?.description
+    ?? (descriptor.description ? await metaField(descriptor.description) : null);
+  const shareImageAssetId = descriptor.shareImage
+    && loadedTree.page.layoutConfig?.[PHI_PAGE_SHARE_IMAGE_CONFIG_KEY] === undefined
+    ? await media.asset(descriptor.shareImage.asset)
+    : null;
+  const tree = {
+    ...loadedTree,
+    ...(shareImageAssetId !== null
+      ? {
+          page: {
+            ...loadedTree.page,
+            layoutConfig: {
+              ...loadedTree.page.layoutConfig,
+              [PHI_PAGE_SHARE_IMAGE_CONFIG_KEY]: { assetId: shareImageAssetId },
+            },
           },
-          description: loadedTree.pageMeta?.description ?? null,
-        },
-      };
+        }
+      : {}),
+    pageMeta: { ...loadedTree.pageMeta, title, description },
+  };
   assertPhiCmsPresetTreeContract(tree, page, catalog.formDefinitionsById);
   return tree;
 }

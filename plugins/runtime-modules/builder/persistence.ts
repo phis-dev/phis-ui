@@ -3,6 +3,7 @@
 import { phiAreaPath } from "../../../helpers/locale";
 import { resolvePhiBuilderAreaAsCmsArea, resolvePhiBuilderAreaMask } from "../../../constants/cms-areas";
 import { PhiCmsFlags, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PHI_PAGE_SHARE_IMAGE_CONFIG_KEY } from "../../../types/link-preview";
 import type {
   PhiCmsContentWidgetNode,
   PhiCmsLayoutNode,
@@ -878,6 +879,8 @@ export async function savePhiDeveloperBuilderDraft(
   const currentPagePresetSource = resolvePhiBuilderPagePresetSource(pageKey, pages);
   const currentAreaPresetSource = state.areaPresetSourcesByArea[area] ?? null;
   const pageMetaDraft = state.pageMetaDrafts?.[getPhiBuilderPageDraftKey(area, "page_meta", pageKey)] ?? null;
+  // The Page's config beside its Regions: the share picture it holds travels with every save.
+  const pageShareImage = pageMetaDraft?.shareImage ? { [PHI_PAGE_SHARE_IMAGE_CONFIG_KEY]: pageMetaDraft.shareImage } : {};
   /*
    * The Page flags travel apart from the rest of the meta draft: the titles become translated
    * messages and this is a column on the row, so the payload splits them even though the dialog
@@ -993,6 +996,7 @@ export async function savePhiDeveloperBuilderDraft(
         drawerRightRootLayoutNodeId: pageRootIds.drawer_right ?? null,
         layoutConfig: {
           pageRegionConfigs,
+          ...pageShareImage,
         },
       },
       overlays: [],

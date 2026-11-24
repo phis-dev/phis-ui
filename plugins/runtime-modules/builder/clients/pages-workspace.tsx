@@ -50,6 +50,7 @@ export function PhiDeveloperBuilderPagesWorkspaceWidgetClient({
         title: pageMeta?.title ?? null,
         description: pageMeta?.description ?? null,
         index: pageMeta?.index ?? true,
+        shareImage: pageMeta?.shareImage ?? null,
       },
     });
     mergePhiDeveloperDeletedPageDrafts(pageMetaArea, {
@@ -59,6 +60,7 @@ export function PhiDeveloperBuilderPagesWorkspaceWidgetClient({
     pageMeta?.description,
     pageMeta?.index,
     pageMeta?.isDeleted,
+    pageMeta?.shareImage,
     pageMeta?.title,
     pageMetaArea,
     pageMetaPageKey,

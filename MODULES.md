@@ -792,6 +792,16 @@ serve every record: its Widgets name a *field of the page record*, never the rec
   in the page's language: a date on the Site's time zone (`formatPhiDate`), money with its currency's own
   places (`formatPhisMoney`). Everything else a domain formats itself -- a tax note, a period said in
   words -- is a `text` the Module hands over finished.
+- **What a link to the Page shows.** The declaration may mark fields for a link preview:
+  `record: { audience, fields, share: { titleField?, descriptionField?, imageField? } }`, the first two
+  naming `text` fields and the third a `picture`; the catalog refuses a mark that names no declared field
+  of that kind. On a Page about the record, the marked title and description take the place of the Page's
+  in `og:title` and `og:description`, and the marked picture comes first among the preview pictures --
+  shown only where its address is a Media delivery address of the Site (`/api/site/media/<id>/...`)
+  whose Asset is a publicly delivered image of the Site Space, as its 1200 x 630 share variant; otherwise
+  the Page's own and then the Theme's picture stand ([NEXT_INTEGRATION.md](./NEXT_INTEGRATION.md#link-previews)).
+  A field the record lacks leaves the Page's own answer. The marks are no part of the Page's title, which
+  stays the route's `titleField`, and they cost no read: they are taken from the same memoised one.
 - **The field reader.** The server half gains `loadFields`: a function from the record its resolver
   answered to the declared fields' values. The catalog refuses declared fields without a reader and a
   reader without declared fields. A value that is not of its declared kind is left out and logged

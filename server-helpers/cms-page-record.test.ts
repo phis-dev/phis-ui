@@ -33,14 +33,19 @@ import { readPhiPageRecordField, resolvePhiRecordFields } from "./record-fields"
 import type { PhiBlockRuntime } from "../types";
 import type { PhiCmsRoutePresetBinding } from "../types/cms-module-descriptors";
 import type { PhiRuntimeModuleCatalog, PhiRuntimeModuleId } from "../types/cms-plugins";
-import type { PhiRecordAudience } from "../types/record-provider";
+import type { PhiRecordAudience, PhiRecordShareDeclaration } from "../types/record-provider";
 
 const runtime = { site: { key: "site" }, locale: { current: "en" }, area: "public" } as unknown as PhiBlockRuntime;
 const moduleId = "@acme/shop/modules/shop" as PhiRuntimeModuleId;
 const providerKey = "@acme/shop/records/product" as const;
 const chair = { name: "Chair", about: "A chair.", price: 1200 };
 
-function catalogWith(options: { record?: unknown; audience?: PhiRecordAudience; fields?: Record<string, unknown> } = {}) {
+function catalogWith(options: {
+  record?: unknown;
+  audience?: PhiRecordAudience;
+  fields?: Record<string, unknown>;
+  share?: PhiRecordShareDeclaration;
+} = {}) {
   return new Map([[moduleId, {
     definition: {
       moduleId,
@@ -52,7 +57,9 @@ function catalogWith(options: { record?: unknown; audience?: PhiRecordAudience; 
             { key: "title", label: "Title", kind: "text" },
             { key: "summary", label: "Summary", kind: "text" },
             { key: "price", label: "Price", kind: "text" },
+            { key: "cover", label: "Cover", kind: "picture" },
           ],
+          ...(options.share ? { share: options.share } : {}),
         },
       }],
     },
@@ -87,7 +94,32 @@ describe("resolvePhiCmsPageRecord", () => {
       binding: { providerKey, params: { slug: "chair" }, titleField: "title", descriptionField: "summary" },
       title: "Chair",
       description: "A chair.",
+      preview: { title: null, description: null, image: null },
     });
+  });
+
+  it("hands over what the Provider marks for a link preview, and nothing for a field the record lacks", async () => {
+    const result = await resolvePhiCmsPageRecord({
+      binding: bindingFor("chair"),
+      runtime,
+      runtimeModuleCatalog: catalogWith({
+        share: { titleField: "title", descriptionField: "price", imageField: "cover" },
+        fields: { title: "Chair", summary: "A chair.", price: "From 12", cover: { src: "/api/site/media/7/content?r=2", alt: "A chair" } },
+      }),
+      activeModuleIds: active,
+    });
+    expect(result).toMatchObject({
+      status: "ok",
+      preview: { title: "Chair", description: "From 12", image: { src: "/api/site/media/7/content?r=2", alt: "A chair" } },
+    });
+    request.n += 1;
+    const bare = await resolvePhiCmsPageRecord({
+      binding: bindingFor("chair"),
+      runtime,
+      runtimeModuleCatalog: catalogWith({ share: { imageField: "cover" }, fields: { title: "Chair" } }),
+      activeModuleIds: active,
+    });
+    expect(bare).toMatchObject({ status: "ok", preview: { title: null, description: null, image: null } });
   });
 
   it("carries the route's field names in the binding, and leaves out those the route does not name", async () => {

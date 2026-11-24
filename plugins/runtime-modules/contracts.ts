@@ -1101,6 +1101,14 @@ function assertPhiRecordDeclaration(owner: string, declaration: PhiRecordDeclara
       throw new Error(`${owner} field "${field.key}" has no label.`);
     }
   }
+  // A link preview names declared fields of the kind it shows: a title and a description are text.
+  const kinds = new Map(declaration.fields.map((field) => [field.key, field.kind]));
+  for (const [role, kind] of [["titleField", "text"], ["descriptionField", "text"], ["imageField", "picture"]] as const) {
+    const key = declaration.share?.[role];
+    if (key !== undefined && kinds.get(key) !== kind) {
+      throw new Error(`${owner} share.${role} "${key}" is no declared ${kind} field.`);
+    }
+  }
 }
 
 function assertPhiRuntimeModuleRecordProviders(

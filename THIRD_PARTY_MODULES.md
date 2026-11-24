@@ -1878,9 +1878,17 @@ no route.
 - `landingPage: true` on a Public route at `/` offers the Page as the Area's landing; it is an offer and
   not a claim ([MODULES.md](./MODULES.md#who-owns-an-address)).
 - `title` is the Page's name in the Builder's Page tree and in link pickers, and its document title
-  where the tree's `page.pageMeta` names none; it is translated through the Site-scoped path. A
-  description, or a title label of its own, the tree returns through `pageMeta`
-  ([NEXT_INTEGRATION.md](./NEXT_INTEGRATION.md#page-metadata-indexing-and-sitemap)).
+  where the tree's `page.pageMeta` names none; it is translated through the Site-scoped path.
+  `description` is the Page's description where the tree's `pageMeta` names none, translated the same
+  way; a title or description label of its own the tree returns through `pageMeta`
+  ([NEXT_INTEGRATION.md](./NEXT_INTEGRATION.md#page-metadata-indexing-and-sitemap)). Neither may be empty.
+- `shareImage: { asset: "<key>" }` names the picture a shared link to the Page shows, by the key of one of
+  the package's own pictures ([Pictures a Module ships](#pictures-a-module-ships)); Core resolves it as
+  `media.asset(key)` and writes `{ assetId }` into the Page's `layoutConfig.shareImage` where the tree
+  states none, and a key the Site has not imported states nothing. The Asset's alt text is what the
+  picture says, and it is shown only while the Site delivers it publicly
+  ([NEXT_INTEGRATION.md](./NEXT_INTEGRATION.md#link-previews)). A tree may state
+  `page.layoutConfig.shareImage` itself, from the same `media` resolver.
   `defaultPageFlags` sets the `PhiCmsFlags` a Page of this route starts with -- `NoIndex` keeps it out
   of the sitemap and the index. It is copied onto the Page when the route is instantiated; once the Site
   changes it, the record answers and the descriptor is not consulted again.

@@ -3,7 +3,7 @@ import "server-only";
 import type { PhiBlockRuntime } from "../types";
 import type { PhiCmsRoutePresetBinding } from "../types/cms-module-descriptors";
 import type { PhiCmsRuntimeRenderRegistry, PhiRuntimeModuleCatalog, PhiRuntimeModuleId } from "../types/cms-plugins";
-import type { PhiPageRecordBinding } from "../types/record-provider";
+import type { PhiPageRecordBinding, PhiRecordPicture } from "../types/record-provider";
 import type { PhiRuntimeDataProviderBinding } from "../types/runtime-data-provider";
 import { buildPhiRecordDeclarationsByKey } from "../helpers/record-fields";
 import { readPhiPageRecordField, resolvePhiRecordFields } from "./record-fields";
@@ -18,7 +18,21 @@ import { resolvePhiRecordSource } from "./record-source";
  */
 export type PhiCmsPageRecord =
   | { status: "missing" }
-  | { status: "ok"; binding: PhiPageRecordBinding; title: string | null; description: string | null };
+  | {
+    status: "ok";
+    binding: PhiPageRecordBinding;
+    title: string | null;
+    description: string | null;
+    /** What a link to the Page shows of the record, from the fields its Provider marks (`record.share`). */
+    preview: PhiCmsPageRecordPreview;
+  };
+
+/** The record's own answer for a link preview; each `null` where the Provider marks no field or the record lacks it. */
+export type PhiCmsPageRecordPreview = {
+  title: string | null;
+  description: string | null;
+  image: PhiRecordPicture | null;
+};
 
 /** What the record Providers of the active Modules offer, as a render's registry holds it. */
 function buildRecordRegistry(
@@ -77,5 +91,15 @@ export async function resolvePhiCmsPageRecord({ binding, runtime, runtimeModuleC
     ...(declaration.titleField ? { titleField: declaration.titleField } : {}),
     ...(declaration.descriptionField ? { descriptionField: declaration.descriptionField } : {}),
   };
-  return { status: "ok", binding: pageBinding, title: text(declaration.titleField), description: text(declaration.descriptionField) };
+  return {
+    status: "ok",
+    binding: pageBinding,
+    title: text(declaration.titleField),
+    description: text(declaration.descriptionField),
+    preview: {
+      title: text(declared.share?.titleField),
+      description: text(declared.share?.descriptionField),
+      image: readPhiPageRecordField(fields, declared.share?.imageField, ["picture"])?.value ?? null,
+    },
+  };
 }

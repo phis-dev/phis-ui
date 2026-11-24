@@ -1,5 +1,6 @@
 import "server-only";
 
+import { PHI_PAGE_SHARE_IMAGE_CONFIG_KEY, readPhiShareImage, type PhiShareImage } from "../../../types/link-preview";
 import { applyPhiPresetTreeCurrentContent } from "../../../server-helpers/cms-bound-content";
 import { cache } from "react";
 import { cookies } from "next/headers";
@@ -77,6 +78,12 @@ export type PhiBuilderPageMeta = {
    * Carried into the Page's next save, which states the tree whole.
    */
   controllerSettings: PhiCmsTreeControllerSettings;
+  /**
+   * The picture a link to the Page shows (`page.layoutConfig.shareImage`), from the same chain. No dialog
+   * field states it yet -- a preset, a Module or an agent does -- so it is carried into the next save, which
+   * states the Page's config whole.
+   */
+  shareImage: PhiShareImage | null;
 };
 
 /**
@@ -554,6 +561,7 @@ async function buildPageMetaForScope(
       isDeleted: draftPage.page.page.status === PhiCmsStatus.Deleted,
       index: readPageIndexFlag(draftPage.page.page.flags),
       controllerSettings: draftPage.page.controllerSettings ?? [],
+      shareImage: readPageShareImage(draftPage.page.page),
     };
   }
 
@@ -564,6 +572,7 @@ async function buildPageMetaForScope(
       isDeleted: draftPage.page.page.status === PhiCmsStatus.Deleted,
       index: readPageIndexFlag(draftPage.page.page.flags),
       controllerSettings: draftPage.page.controllerSettings ?? [],
+      shareImage: readPageShareImage(draftPage.page.page),
     };
   }
 
@@ -574,6 +583,7 @@ async function buildPageMetaForScope(
       isDeleted: resolvedPage.page.page.status === PhiCmsStatus.Deleted,
       index: readPageIndexFlag(resolvedPage.page.page.flags),
       controllerSettings: resolvedPage.page.controllerSettings ?? [],
+      shareImage: readPageShareImage(resolvedPage.page.page),
     };
   }
 
@@ -601,8 +611,9 @@ async function buildPageMetaForScope(
    * the first source that holds titles, and a resolved Page without them still holds the tree.
    */
   const controllerSettings = resolvedPage?.page?.controllerSettings ?? presetTree?.controllerSettings ?? [];
+  const shareImage = readPageShareImage(resolvedPage?.page?.page ?? presetTree?.page);
   if (!presetTree?.pageMeta) {
-    return { title: null, description: null, index: presetIndex, controllerSettings };
+    return { title: null, description: null, index: presetIndex, controllerSettings, shareImage };
   }
 
   return {
@@ -610,7 +621,12 @@ async function buildPageMetaForScope(
     description: presetTree.pageMeta.description?.value ?? null,
     index: presetIndex,
     controllerSettings,
+    shareImage,
   };
+}
+
+function readPageShareImage(page: { layoutConfig?: Record<string, unknown> | null } | null | undefined) {
+  return readPhiShareImage(page?.layoutConfig?.[PHI_PAGE_SHARE_IMAGE_CONFIG_KEY]);
 }
 
 function readPageIndexFlag(flags: number | null | undefined) {

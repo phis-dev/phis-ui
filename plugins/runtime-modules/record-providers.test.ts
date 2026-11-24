@@ -54,6 +54,36 @@ describe("record providers", () => {
     }))).toThrow(/offers samples, but its descriptor declares no fields/);
   });
 
+  it("refuses a link preview mark that names no declared field of the kind it shows", () => {
+    const withShare = (share: object) => catalogWithCore((entry) => ({
+      ...entry,
+      definition: {
+        ...entry.definition,
+        dataProviders: entry.definition.dataProviders!.map((provider) =>
+          provider.key === PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntry
+            ? {
+                ...provider,
+                record: {
+                  audience: "public" as const,
+                  fields: [
+                    { key: "title", label: "Title", kind: "text" as const },
+                    { key: "cover", label: "Cover", kind: "picture" as const },
+                  ],
+                  share,
+                },
+              }
+            : provider),
+      },
+      recordProviders: entry.recordProviders!.map((provider) =>
+        provider.key === PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentEntry
+          ? { ...provider, loadFields: async () => () => ({}) }
+          : provider),
+    }));
+    expect(withShare({ titleField: "title", imageField: "cover" })).not.toThrow();
+    expect(withShare({ imageField: "title" })).toThrow(/share\.imageField "title" is no declared picture field/);
+    expect(withShare({ descriptionField: "summary" })).toThrow(/share\.descriptionField "summary" is no declared text field/);
+  });
+
   it("mounts nothing in the browser for a binding to a record", async () => {
     const moduleSet = await resolvePhiRuntimeModuleSet({
       catalog: createPhiPublicRuntimeModuleCatalog(),

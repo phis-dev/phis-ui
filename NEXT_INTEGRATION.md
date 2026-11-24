@@ -213,8 +213,8 @@ out of the index.
 ## Page metadata, indexing, and sitemap
 
 - A Page's title and description come from its record (`titleMsgId`, `descriptionMsgId`). A code-owned
-  route preset returns them through `pageMeta`; without a title label its descriptor title is translated
-  through the Site-scoped path. The Area's defaults fill in where the Page states nothing, as described
+  route preset returns them through `pageMeta`; where the tree states none, its descriptor's `title` and
+  `description` are translated through the Site-scoped path. The Area's defaults fill in where the Page states nothing, as described
   above; the Site name is the last fallback.
 - Whether a Page may be indexed is the `PhiCmsFlags.NoIndex` bit on the Page record, set in the Builder's
   page-meta dialog. A route preset only states what a new Page starts as, through `defaultPageFlags`,
@@ -234,6 +234,42 @@ out of the index.
   ids, Area preset, active Modules, locales, public base), which every request reads.
 - `robots.txt` allows everything and names the sitemap when there is one. It lists no staff Area --
   those stay out of the index through `noindex` -- and answers even when the Site cannot be read.
+
+## Link previews
+
+A link to a Public Page shared in a messenger or a feed shows what the Page's head says in Open Graph
+tags. `buildPhiAreaPageMetadata` states them for every Public Page with an address, indexable or not --
+a link is shared whether a search engine may file it or not -- through Next's Metadata API, so they are
+server-rendered head and nothing reaches the browser bundle. No other Area states a preview.
+
+- `og:type` is `website`, `og:site_name` the Site's name, `og:url` the Page's canonical address in its
+  locale, `og:locale` that locale and `og:locale:alternate` the Site's others, spelt `pt_BR` for `pt-BR`.
+- `og:title` is the Page's own title without the Area's template (the tab says `Contact | phis.dev`, the
+  preview `Contact` beside the site name). `og:description` is the Page's description, else the Theme's
+  slogan, else the starter's placeholder (`PHI_DEFAULT_SITE_DESCRIPTION`): "Default description of the
+  phis starter. Set your own in the Page meta or as the Theme's slogan." The Root Layout's
+  `<meta name="description">` falls back the same way.
+- A Page about a record ([MODULES.md](./MODULES.md#the-fields-of-a-record-and-the-record-a-page-is-about))
+  answers first where its Provider marks fields for it (`record.share`): their title and description
+  take the place of the Page's.
+- `og:image`, with `og:image:width`, `og:image:height`, `og:image:alt` and `og:image:type`, is the first of
+  these that names a picture the Site delivers publicly: the record's marked picture, the Page's own
+  setting (`page.layoutConfig.shareImage`, `{ assetId, alt? }`), the Theme's (`brand.shareImage`). It is
+  served as the Asset's share variant (`PhiImageAssetVariantKey.Share`, 1200 x 630, cropped around the
+  focal rectangle, a JPEG, always exactly that size) at its normal delivery address on the Site's public
+  base. The candidates are asked about in one request to the public reference projection, which answers
+  only ready, publicly delivered images of the Site Space: anything else -- a private Asset, a record
+  picture that is no Media address of the Site, a Site without a public base -- gives way to the next,
+  and none states no picture. The answer is kept in the Site's read cache like every other reference.
+- `twitter:card` is `summary_large_image` with a picture and `summary` without; `twitter:site` is the
+  Theme's `brand.xAccount` where it is an X account name. Nothing else is stated for X: it reads the Open
+  Graph tags, and Next copies title, description and picture into `twitter:title`, `twitter:description`
+  and `twitter:image` on its own, which the Metadata API offers no way to leave out.
+
+The Page's setting has no field in the Builder's page-meta dialog yet. A route preset states it -- the
+tree as `page.layoutConfig.shareImage`, or the route descriptor as `shareImage: { asset: "<media key>" }`
+([THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md)) -- and so does any writer of the Page's tree; the
+Builder carries it into every save of the Page, so editing the Page keeps it.
 
 ## Fonts
 

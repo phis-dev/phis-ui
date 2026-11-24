@@ -54,7 +54,7 @@ import { logRuntimeEvent } from "../net/log";
 import { getPhiCmsPage, getPhiExactSiteArea } from "./cms";
 import { buildPhiLocalCmsAreaPayload } from "./cms-area";
 import { applyPhiPresetTreePublishedContent } from "./cms-bound-content";
-import { resolvePhiCmsPageRecord } from "./cms-page-record";
+import { resolvePhiCmsPageRecord, type PhiCmsPageRecord } from "./cms-page-record";
 import { resolvePhiAreaPageReferencePath, resolvePhiAreaRootRouteDecision } from "./area-root-route";
 import { fetchSiteNavigationFolderTarget } from "../gateway/site-nav";
 import type { PhiPageReference } from "../types/references";
@@ -167,10 +167,10 @@ async function instantiatePhiRoutePresetPage({
       path: requestedPath,
       runtime,
       loadModuleMedia: createPhiModuleMediaLoader(runtime.site.key),
-      // The route's title is the owning Module's text, written in that Module's language.
-      resolveMissingPageTitle: (sourceTitle) => trForLocale(
+      // The route's title and description are the owning Module's text, written in that Module's language.
+      translateRouteText: (source) => trForLocale(
         runtime.locale.current,
-        sourceTitle,
+        source,
         0,
         0,
         "text",
@@ -398,13 +398,15 @@ function mapResolvedPageToRequestedContext(
 /** The record's own title and description on the Page; `msgId: 0`, because they are no Site message. */
 function applyPhiPageRecordMeta(
   pagePayload: PhiResolvedCmsPagePayload,
-  record: { title: string | null; description: string | null },
+  record: Extract<PhiCmsPageRecord, { status: "ok" }>,
 ): PhiResolvedCmsPagePayload {
-  if (!record.title && !record.description) {
-    return pagePayload;
-  }
   const field = (value: string) => ({ msgId: 0, source: value, value });
   const pageMeta = pagePayload.page.pageMeta;
+  const { preview } = record;
+  const hasPreview = preview.title !== null || preview.description !== null || preview.image !== null;
+  if (!record.title && !record.description && !hasPreview) {
+    return pagePayload;
+  }
   return {
     ...pagePayload,
     page: {
@@ -412,6 +414,7 @@ function applyPhiPageRecordMeta(
       pageMeta: {
         title: record.title ? field(record.title) : pageMeta?.title ?? null,
         description: record.description ? field(record.description) : pageMeta?.description ?? null,
+        ...(hasPreview ? { preview } : {}),
       },
     },
   };

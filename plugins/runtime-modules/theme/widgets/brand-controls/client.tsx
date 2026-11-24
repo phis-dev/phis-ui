@@ -141,9 +141,11 @@ import { usePhiMediaPickerLabels } from "../../../../../components/media/phi-med
 import { PHI_SEARCH_WIDGET_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/search";
 import {
   buildPhiMediaAssetContentDeliveryUrl,
+  isPhiMediaAssetPublic,
   PhiMediaAssetFlags,
   PhiMediaKind,
 } from "../../../../../constants/media";
+import { readPhiXAccount } from "../../../../../types/link-preview";
 import { PhiPresetSizeControl, type PhiPresetSizeOption } from "../../../../../components/controls/phi-preset-size-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiCheckboxControl } from "../../../../../components/controls/phi-checkbox-control";
@@ -226,7 +228,7 @@ const BRAND_THEME_STYLE_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.styleCol
 const BRAND_THEME_BACKGROUND_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.backgroundCollapse.activeKey";
 const BRAND_THEME_BACKGROUND_SECTION_KEYS = ["root", "chrome", "inverse", "shadow"] as const;
 const BRAND_THEME_IDENTITY_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.identityCollapse.activeKey";
-const BRAND_THEME_IDENTITY_SECTION_KEYS = ["logo", "wordmark", "lines"] as const;
+const BRAND_THEME_IDENTITY_SECTION_KEYS = ["logo", "wordmark", "lines", "share"] as const;
 const BRAND_THEME_STYLE_SECTION_KEYS = [
   "shapes",
   "buttonShadow",
@@ -3046,6 +3048,78 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                     line={brand.location}
                     onChange={(next) => publishDraft(mergeThemeBrand(state.draft, { location: next }))}
                   />
+                </PhiFlexControl>
+              ),
+            },
+            {
+              /*
+               * What a link to the Site shows in a messenger or a feed where the Page says nothing of its
+               * own (NEXT_INTEGRATION.md, "Link previews"). Only a picture every visitor is served can be
+               * shown there, so the picker offers the Site Space and greys out the rest.
+               */
+              key: "share",
+              label: <PhiTypographyControl strong>Link preview</PhiTypographyControl>,
+              children: (
+                <PhiFlexControl
+                  vertical
+                  gap={clientToken.paddingXS}
+                  style={{
+                    "--phi-labeled-control-label-width": "33.333333%",
+                    "--phi-labeled-control-width": "100%",
+                  } as CSSProperties}
+                >
+                  <PhiTypographyControl type="secondary">
+                    The picture a shared link shows where its Page states none, cut to 1200 x 630 around its
+                    focus. Only a publicly delivered picture can be chosen.
+                  </PhiTypographyControl>
+                  <PhiMediaPickerBinding
+                    config={{
+                      mediaType: PhiMediaKind.Image,
+                      pageSize: 12,
+                      showPagination: true,
+                      showGroupFilter: true,
+                      showSearchBar: true,
+                    }}
+                    labels={mediaPickerLabels}
+                    searchLabels={PHI_SEARCH_WIDGET_DEFAULT_LABELS}
+                    siteSpaceOnly
+                    isAssetSelectable={(asset) => isPhiMediaAssetPublic(asset.deliveryPolicy, asset.lifecycleStatus)}
+                    value={brand.shareImage?.assetId ?? null}
+                    onAssetSelect={(asset) => publishDraft(mergeThemeBrand(state.draft, {
+                      shareImage: { assetId: asset.id, ...(brand.shareImage?.alt ? { alt: brand.shareImage.alt } : {}) },
+                    }))}
+                    onAssetClear={() => publishDraft(mergeThemeBrand(state.draft, { shareImage: null }))}
+                  />
+                  {/* What the picture says to somebody who cannot see it; the Asset's own alt text where empty. */}
+                  <PhiLabeledControl label="Alt" fill>
+                    <PhiTextControl
+                      value={brand.shareImage?.alt ?? ""}
+                      placeholder="Alt text"
+                      ariaLabel="Link preview alt text"
+                      allowClear={false}
+                      disabled={!brand.shareImage}
+                      onChange={(next) => brand.shareImage && publishDraft(mergeThemeBrand(state.draft, {
+                        shareImage: next?.trim()
+                          ? { assetId: brand.shareImage.assetId, alt: next }
+                          : { assetId: brand.shareImage.assetId },
+                      }))}
+                    />
+                  </PhiLabeledControl>
+                  {/* Stated as `twitter:site`; empty states nothing, and so does a name X would not take. */}
+                  <PhiLabeledControl label="X account" fill>
+                    <PhiTextControl
+                      value={brand.xAccount ?? ""}
+                      placeholder="@account"
+                      ariaLabel="X account"
+                      allowClear={false}
+                      onChange={(next) => publishDraft(mergeThemeBrand(state.draft, { xAccount: next?.trim() ?? "" }))}
+                    />
+                  </PhiLabeledControl>
+                  {brand.xAccount && !readPhiXAccount(brand.xAccount) ? (
+                    <PhiTypographyControl type="danger">
+                      An X account is @ and up to 15 letters, digits or underscores. This one is not stated.
+                    </PhiTypographyControl>
+                  ) : null}
                 </PhiFlexControl>
               ),
             },

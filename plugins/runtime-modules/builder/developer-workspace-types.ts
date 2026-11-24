@@ -56,6 +56,11 @@ export type PhiDeveloperBuilderPageMetaDraft = {
    * why it is resolved apart from them at save time.
    */
   index?: boolean;
+  /**
+   * The picture a link to the Page shows, as the Page holds it (`page.layoutConfig.shareImage`). No
+   * dialog field edits it yet; it is carried from the Page into its next save so a save keeps it.
+   */
+  shareImage?: import("../../../types/link-preview").PhiShareImage | null;
 };
 
 export type PhiDeveloperBuilderDraftAllocation = {

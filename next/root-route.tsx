@@ -13,7 +13,7 @@ import { collectPhiThemeDescriptorContributions } from "../plugins/runtime-modul
 import { resolvePhiThemeComposition, type PhiThemeBlockCatalog } from "../theme/phi-theme-composition";
 import { composePhiFontCatalogue } from "../theme/phi-font-catalogue";
 import { PHI_REM_ROOT_PX } from "../theme/phi-css-vars";
-import { buildPhiRootMetadata } from "../helpers/phi-metadata";
+import { buildPhiRootMetadata, resolvePhiSiteDescription } from "../helpers/phi-metadata";
 import { describePhiSignetHead } from "../helpers/phi-signet-head";
 import { localizePath } from "../helpers/locale";
 import {
@@ -108,14 +108,11 @@ function buildPhiNextRootMetadata(
     applicationName: site.name,
     titleTemplate: `%s | ${site.name}`,
     defaultTitle: site.name,
-    defaultDescription:
-      site.theme?.brand?.slogan?.label ??
-      "Canonical starter structure for PHIS-powered sites.",
+    // The Page's own description wins where it states one (`buildPhiAreaPageMetadata`).
+    defaultDescription: resolvePhiSiteDescription(site.theme?.brand?.slogan?.label),
     site: {
       title: site.name,
-      description:
-        site.theme?.brand?.slogan?.label ??
-        "Canonical starter structure for PHIS-powered sites.",
+      description: resolvePhiSiteDescription(site.theme?.brand?.slogan?.label),
     },
     /*
      * The Signet the Site wears, resolved the way the Brand Widget resolves the Logo -- the Site's own,

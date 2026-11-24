@@ -199,6 +199,17 @@ export type PhiSiteThemeBrand = {
   slogan?: PhiSiteThemeBrandLine | null;
   location?: PhiSiteThemeBrandLine | null;
   wordmark?: PhiSiteThemeWordmark | null;
+  /**
+   * The picture a link to this Site shows where the Page says nothing of its own (NEXT_INTEGRATION.md,
+   * "Link previews"): a publicly delivered image of the Site Space, drawn as its 1200 x 630 share variant.
+   * Absent is no picture.
+   */
+  shareImage?: import("./link-preview").PhiShareImage | null;
+  /**
+   * The Site's account on X, `@` and the name (`@phisys`), stated as `twitter:site` beside every link
+   * preview. Absent, or not an X account name, states nothing.
+   */
+  xAccount?: string | null;
 };
 
 export type PhiWidgetFontFamilyKey =

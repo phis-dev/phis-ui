@@ -106,6 +106,18 @@ export type PhiCmsRoutePresetDescriptor = PhiCmsPresetIdentity & {
   landingPage?: true;
   title: string;
   /**
+   * The Page's description where the tree's `pageMeta` names none: what the document head and a link
+   * preview say of it, translated through the Site-scoped path as `title` is.
+   */
+  description?: string;
+  /**
+   * The picture a link to the Page shows, by the key of one of the package's own pictures (`phis.media`,
+   * THIRD_PARTY_MODULES.md "Pictures a Module ships"). Written into the Page's config as its `shareImage`
+   * where the tree states none; a key the Site has not imported states nothing. The Asset's alt text is
+   * what the picture says.
+   */
+  shareImage?: { asset: string };
+  /**
    * The `PhiCmsFlags` a Page of this route starts out with.
    *
    * A default, not a decision. It is written onto the Page when the route is instantiated and copied

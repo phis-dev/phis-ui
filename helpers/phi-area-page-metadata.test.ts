@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildPhiAreaPageMetadata } from "./phi-metadata";
+import { PHI_DEFAULT_SITE_DESCRIPTION, buildPhiAreaPageMetadata } from "./phi-metadata";
 
 /**
  * What an Area writes into the head of one of its Pages.
@@ -129,5 +129,92 @@ describe("the head of a Page in an Area", () => {
       meta: null,
       publicAddress: { ...address, publicBase: null },
     }).alternates).toBeUndefined();
+  });
+});
+
+/**
+ * What a link to a Public Page shows (NEXT_INTEGRATION.md, "Link previews"): the Open Graph tags, and
+ * the card and account X reads beside them.
+ */
+describe("the link preview of a Public Page", () => {
+  const address = {
+    publicBase: "https://phis.dev",
+    path: "/kontakt",
+    locale: "pt-BR",
+    availableLocales: ["pt-BR", "en", "de"],
+    defaultLocale: "en",
+  };
+  const image = {
+    url: "https://phis.dev/api/site/media/7/variants/11?v=0&r=2",
+    width: 1200,
+    height: 630,
+    alt: "The office",
+    type: "image/jpeg",
+  };
+
+  it("says the Page's own title without the template, its description, its address and its languages", () => {
+    const metadata = buildPhiAreaPageMetadata({
+      area: "public",
+      meta: null,
+      siteName: "phis.dev",
+      pageTitle: "Kontakt",
+      pageDescription: "Wo wir sind.",
+      pageNoindex: true,
+      publicAddress: address,
+      linkPreview: { image, xAccount: "@phisys" },
+    });
+    expect(metadata.openGraph).toEqual({
+      type: "website",
+      siteName: "phis.dev",
+      title: "Kontakt",
+      description: "Wo wir sind.",
+      url: "https://phis.dev/pt-BR/kontakt",
+      locale: "pt_BR",
+      alternateLocale: ["en", "de"],
+      images: [image],
+    });
+    expect(metadata.twitter).toEqual({ card: "summary_large_image", site: "@phisys" });
+  });
+
+  it("lets the record answer first, and falls back to the slogan and then the placeholder", () => {
+    expect(buildPhiAreaPageMetadata({
+      area: "public",
+      meta: null,
+      siteName: "phis.dev",
+      pageTitle: "Product",
+      publicAddress: address,
+      linkPreview: { recordTitle: "Chair", recordDescription: "A chair." },
+    }).openGraph).toMatchObject({ title: "Chair", description: "A chair." });
+    expect(buildPhiAreaPageMetadata({
+      area: "public",
+      meta: null,
+      siteName: "phis.dev",
+      publicAddress: address,
+      linkPreview: { slogan: "Built by AI." },
+    }).openGraph).toMatchObject({ title: "phis.dev", description: "Built by AI." });
+    expect(buildPhiAreaPageMetadata({
+      area: "public",
+      meta: null,
+      siteName: "phis.dev",
+      publicAddress: address,
+      linkPreview: {},
+    }).openGraph).toMatchObject({ description: PHI_DEFAULT_SITE_DESCRIPTION });
+  });
+
+  it("states a small card without a picture, and no account that is not an X account name", () => {
+    const metadata = buildPhiAreaPageMetadata({
+      area: "public",
+      meta: null,
+      publicAddress: address,
+      linkPreview: { xAccount: "phisys" },
+    });
+    expect(metadata.twitter).toEqual({ card: "summary" });
+    expect((metadata.openGraph as { images?: unknown }).images).toBeUndefined();
+  });
+
+  it("states no preview outside Public, nor without an address", () => {
+    expect(buildPhiAreaPageMetadata({ area: "app", meta: null, publicAddress: address, linkPreview: {} }).openGraph)
+      .toBeUndefined();
+    expect(buildPhiAreaPageMetadata({ area: "public", meta: null, linkPreview: {} }).openGraph).toBeUndefined();
   });
 });
