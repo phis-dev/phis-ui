@@ -27,6 +27,7 @@ import {
 } from "../../../../components/workspace/catalog-store";
 import {
   resolvePhiBuilderActivePageCatalog,
+  findPhiBuilderPageKeyFromStoragePath,
   resolvePhiBuilderActivePageKey,
   resolvePhiBuilderPageKeyFromCatalogPath,
 } from "../../../../helpers/cms-page-catalog";
@@ -133,8 +134,16 @@ function readParams(value: unknown): RevisionsTableParams {
      * moment rather than a fault. A page scope without a page asks for nothing and shows nothing, and
      * fills in as soon as there is one.
      */
+    /*
+     * The Page a page scope names, by the address it answers on: the Page Select, the Controller and the
+     * `revisionScope` search parameter all hand the storage path, package namespace included. Matched
+     * against the path the Builder shows instead, a Module Page (`/phis/ui/dashboard`, shown as
+     * `/dashboard`) was found nowhere, read as a Site Page of that path and asked for by a path its row
+     * does not have -- so its history was empty and "Reset to preset" had no preset to name.
+     */
     const pageKey = kind === "page" && configuredScopeKey.startsWith("/")
-      ? resolvePhiBuilderPageKeyFromCatalogPath(scopeArea, configuredScopeKey, pages)
+      ? findPhiBuilderPageKeyFromStoragePath(scopeArea, configuredScopeKey, pages)
+        ?? resolvePhiBuilderPageKeyFromCatalogPath(scopeArea, configuredScopeKey, pages)
       : activePageKey ?? "";
     const navScopeKey = kind === "navigation" && configuredScopeKey
       ? resolvePhiBuilderRevisionNavScopeKey(scopeArea, configuredScopeKey)
@@ -226,13 +235,14 @@ async function loadRevisionHistory(scope: PhiBuilderRevisionScope, signal: Abort
    * Nothing is being asked about yet.
    *
    * Both cases are the same moment: a panel opened before the workspace catalog arrived. A page scope
-   * has no page and an Area scope has no preset source -- and the Area scope is refused by the server
+   * has no page -- neither a Site Page's path nor a Module Page's preset -- and an Area scope has no
+   * preset source -- and the Area scope is refused by the server
    * rather than the client, because a revision belongs to a preset and an Area without one names
    * nothing. Asking anyway answers a surface that is waiting with an error; the scope key carries the
    * preset, so the question is asked again by itself once there is one.
    */
   if (
-    (scope.kind === "page" && !scope.path) ||
+    (scope.kind === "page" && !scope.path && !scope.sourcePreset) ||
     (scope.kind === "area" && !scope.sourcePreset)
   ) {
     return {

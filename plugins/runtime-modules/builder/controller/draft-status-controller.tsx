@@ -10,6 +10,7 @@ import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../compon
 import { usePhiApplicationFeedback } from "../../../../components/runtime/use-phi-application-feedback";
 import { resolvePhiBuilderCmsStoragePath } from "../../../../helpers/cms-paths";
 import {
+  findPhiPageNodePath,
   resolvePhiBuilderActivePageCatalog,
   resolvePhiBuilderPagePresetSource,
 } from "../../../../helpers/cms-page-catalog";
@@ -76,6 +77,16 @@ function resolveTarget(
       state.customPages,
       state.persistedPageCatalogByArea,
     );
+    /*
+     * A Page key the Area's catalog does not hold yet is a moment, like the catalog not being hydrated:
+     * opened as `/builder/phis/ui/pages?phiBuilderArea=app`, the server stands on the Area's root, which
+     * the client's catalog leaves out while it forwards, and the workspace moves to an offered Page right
+     * after. Asking the catalog for the storage path of that key threw during render and took the whole
+     * Builder down with a 500.
+     */
+    if (!findPhiPageNodePath(pages, pageKey)) {
+      return null;
+    }
     const storagePath = resolvePhiBuilderCmsStoragePath(area, pageKey, pages);
     /*
      * Addressed the way a save addresses it: a Module Page by its preset identity, which survives a

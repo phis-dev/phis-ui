@@ -246,6 +246,14 @@ function PhiRevisionsControllerMount({
       } else if (kind === "theme" && scopeKey) {
         search.set(PHI_BUILDER_REVISIONS_SCOPE_SEARCH_PARAM, scopeKey);
       }
+      /*
+       * Only a changed address is a navigation. The Table hands every scope it is given back to this
+       * Controller, and replacing the address with itself still fetches the Page from the server, whose
+       * answer refreshes the workspace catalog, which makes this Controller hand the scope to the Table
+       * again: a page scope asked for its history and the Page about once a second for as long as it
+       * stood open.
+       */
+      if (search.toString() === window.location.search.replace(/^\?/, "")) return;
       router.replace(`${pathname}?${search.toString()}`, { scroll: false });
       return;
     }

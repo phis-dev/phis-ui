@@ -304,7 +304,13 @@ Content contract:
 - the Table emits binding params and mutation results to the Revisions Controller
 
 The revision table reads the selected scope from its binding params. The Revisions Provider owns history
-loading, derived row state, review links, restore, deletion, and active-revision guards.
+loading, derived row state, review links, restore, deletion, and active-revision guards. A Page scope's
+`scopeKey` is the Page's storage path, package namespace included, as the Page select, the Controller and
+the `revisionScope` search parameter all write it; the Provider finds the Page by it
+(`findPhiBuilderPageKeyFromStoragePath`) and asks for a Module's Page by its preset identity
+(`ownerModuleId`, `presetKey`), since its row has no path -- for its history, a restore and "Reset to
+preset" alike. The Controller replaces the address only when it changes: the Table hands every scope back
+to it, and replacing the address with itself fetched the Page again and started the round once more.
 After a successful clear or restore, the Builder discards the affected Shell or Page's cached draft and
 undo history. Shells and Pages load that context from the server when opened again.
 The Revisions Controller names that context in its `draftStatus` broadcast: `area` alone is the Shell,
