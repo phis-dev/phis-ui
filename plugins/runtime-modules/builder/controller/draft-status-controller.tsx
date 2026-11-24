@@ -7,6 +7,7 @@ import { readPhiDraftStatusSignalValue, type PhiDraftStatusSignalValue } from ".
 import { isPhiBuilderAreaKey } from "../../../../constants/cms-areas";
 import { isPhiRecord } from "../../../../helpers/is-record";
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../components/runtime/runtime-signal-bus";
+import { usePhiApplicationFeedback } from "../../../../components/runtime/use-phi-application-feedback";
 import { resolvePhiBuilderCmsStoragePath } from "../../../../helpers/cms-paths";
 import {
   resolvePhiBuilderActivePageCatalog,
@@ -20,6 +21,8 @@ import {
   invalidatePhiBuilderDraftContext,
 } from "../developer-workspace-store";
 import { createPhiBuilderDraftAllocationKey } from "../draft-allocation-key";
+import { loadPhiBuilderPersistedPageCatalog } from "../page-catalog-client";
+import { storePhiWorkspacePersistedPages } from "../workspace-catalog-actions";
 import type {
   PhiDeveloperBuilderArea,
   PhiDeveloperBuilderCommandWorkspace,
@@ -151,6 +154,7 @@ export function usePhiBuilderDraftStatusController({
   state: PhiDeveloperBuilderWorkspaceState;
 }) {
   const dispatchSignal = usePhiSignalDispatcher();
+  const { showMessage } = usePhiApplicationFeedback();
   const target = resolveTarget(
     commandWorkspace,
     effectiveArea,
@@ -275,6 +279,19 @@ export function usePhiBuilderDraftStatusController({
           clearPhiBuilderDraftAllocation(createPhiBuilderDraftAllocationKey(area, "", "modules"));
         } else if (typeof pageKey === "string") {
           invalidatePhiBuilderDraftContext({ workspace: "pages", area, pageKey });
+          /*
+           * The Page's entry in the Area's catalog -- its scope id, pointers, deletion and pending path --
+           * is the server's as well: a reset deletes the scope, a restore moves its working draft. The
+           * catalog is read once per Area, so it is read again here, or Pages keeps the replaced entry.
+           */
+          void loadPhiBuilderPersistedPageCatalog(area, { refresh: true })
+            .then((pages) => storePhiWorkspacePersistedPages(area, pages))
+            .catch((error: unknown) => {
+              showMessage({
+                level: "error",
+                content: error instanceof Error ? error.message : "Failed to load page catalog.",
+              });
+            });
         } else {
           invalidatePhiBuilderDraftContext({ workspace: "structure", area });
         }

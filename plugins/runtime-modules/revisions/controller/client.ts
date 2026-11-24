@@ -28,15 +28,14 @@ import {
   resolvePhiBuilderRevisionPagePath,
 } from "../types";
 import {
-  findPhiBuilderPageKeyFromStoragePath,
   resolvePhiBuilderActivePageCatalog,
   resolvePhiBuilderActivePageKey,
-  resolvePhiBuilderPageKeyFromCatalogPath,
 } from "../../../../helpers/cms-page-catalog";
 import {
   PHI_REVISIONS_RUNTIME_CONTROLLER_DEFINITION,
   type PhiRevisionsControllerConfig,
 } from "../controller/definition";
+import { resolvePhiRevisionsDraftContextTarget } from "./draft-context-target";
 import { resolvePhiBuilderRevisionNavScopeKey } from "../../../../helpers/cms-navigation-scope-key";
 import { deleteCmsDraft } from "../../../../helpers/cms-draft-delete";
 import { isPhiRecord } from "../../../../helpers/is-record";
@@ -259,26 +258,17 @@ function PhiRevisionsControllerMount({
       const area = scope?.area;
       if (key === "restore" || key === "resetPage") {
         const structural = (kind === "area" || kind === "page") && isPhiBuilderAreaKey(area);
-        let pageKey: string | null = null;
-        if (kind === "page" && isPhiBuilderAreaKey(area) && typeof scope?.path === "string") {
-          const state = getPhiWorkspaceCatalogSnapshot();
-          const pages = resolvePhiBuilderActivePageCatalog(
-            area,
-            state.modulePresetPagesByArea,
-            state.customPages,
-            state.persistedPageCatalogByArea,
-          );
-          pageKey = findPhiBuilderPageKeyFromStoragePath(area, scope.path, pages)
-            ?? resolvePhiBuilderPageKeyFromCatalogPath(area, scope.path, pages);
-        }
+        const target = resolvePhiRevisionsDraftContextTarget(
+          scope,
+          action?.areaModules === true,
+          getPhiWorkspaceCatalogSnapshot(),
+        );
         reportDraftStatus({
           status: key === "restore" ? "draft" : "published",
           revisionId: typeof action?.restoredRevisionId === "number" ? action.restoredRevisionId : null,
           ...(kind === "navigation" ? { navKey: scope?.navKey } : {}),
           ...(kind === "theme" ? { themeKey: scope?.themeKey } : {}),
-          ...(structural ? { area } : {}),
-          ...(pageKey !== null ? { pageKey } : {}),
-          ...(action?.areaModules === true ? { areaModules: true } : {}),
+          ...(target ?? {}),
         }, signal.correlationId);
         if (structural) {
           router.refresh();

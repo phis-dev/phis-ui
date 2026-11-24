@@ -307,6 +307,13 @@ The revision table reads the selected scope from its binding params. The Revisio
 loading, derived row state, review links, restore, deletion, and active-revision guards.
 After a successful clear or restore, the Builder discards the affected Shell or Page's cached draft and
 undo history. Shells and Pages load that context from the server when opened again.
+The Revisions Controller names that context in its `draftStatus` broadcast: `area` alone is the Shell,
+`area` with `pageKey` one Page, `area` with `areaModules` the Module selection. A Page is found in the
+Area's page catalog by its storage path, a Module's Page -- whose scope has no path -- by its preset
+identity (`findPhiBuilderPageKeyFromPresetSource`); a Page scope that names no Page of the catalog names
+no context, never the Shell (`resolvePhiRevisionsDraftContextTarget`). For a Page, the Builder also reads
+the Area's persisted page catalog again, since a reset deletes the Page's scope and a restore moves its
+working draft.
 
 Dynamic selector options should come from generic option providers where the selector can be modeled as a normal select, cascader, segmented control, or similar generic widget. A specialized workspace selector is acceptable only when the visible control type itself depends on the selected revision kind.
 

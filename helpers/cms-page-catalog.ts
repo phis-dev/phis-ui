@@ -374,6 +374,31 @@ export function findPhiBuilderPageKeyFromStoragePath(
   return visit(pages);
 }
 
+/**
+ * The key of the Module Page a preset identity names, wherever its path stands now.
+ *
+ * A Module Page is stored and addressed by `ownerModuleId` + `presetKey`, never by path: a revision scope
+ * of one carries no path at all, so looking it up by path finds nothing.
+ */
+export function findPhiBuilderPageKeyFromPresetSource(
+  source: { ownerModuleId: string; presetKey: string },
+  pages: readonly PhiPresetPageNode[],
+): string | null {
+  for (const node of pages) {
+    if (
+      node.sourcePreset?.ownerModuleId === source.ownerModuleId &&
+      node.sourcePreset.presetKey === source.presetKey
+    ) {
+      return node.key;
+    }
+    const childKey = node.children ? findPhiBuilderPageKeyFromPresetSource(source, node.children) : null;
+    if (childKey) {
+      return childKey;
+    }
+  }
+  return null;
+}
+
 export function resolvePhiBuilderPageKeyFromCatalogPath(
   area: PhiBuilderPageCatalogArea,
   path: string,
