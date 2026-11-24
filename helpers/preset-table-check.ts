@@ -13,6 +13,11 @@ import type { PhiRuntimeModuleDefinition } from "../types/cms-plugins";
  * Every Table of a preset tree, read as the Table reads itself in the browser before its first request
  * (THIRD_PARTY_MODULES.md, "Checking a Page preset"): its binding to its Provider's resource
  * (`validatePhiTableWidgetBinding`) and every icon its actions and binding tools name (`isPhiIconNameKnown`).
+ * And one rule of the house the browser does not enforce: a Table that shows its header row ends in its
+ * footer (`presentation.footer`, the count or paging line), and a Table without a header -- one that only
+ * lays out rows or aligns columns -- needs none (TABLES.md, "Footer and summary"); the rare Table with a
+ * header and nothing to count says why in `footerOmitted`. New Pages kept leaving the footer out, and
+ * nothing but a reader missing the count noticed.
  *
  * In the browser a finding leaves the Widget unavailable -- no table at all, only a console warning --
  * while the Page around it renders, so nobody sees it until somebody misses the table. A package runs this
@@ -51,6 +56,12 @@ function checkTables(tree: PhiResolvedCmsPageTree, dataProviders: Iterable<Prese
       continue;
     }
     for (const error of validatePhiTableWidgetBinding(config, resource)) report(widget.id, error);
+    const footerOmitted = config.presentation?.footerOmitted?.trim();
+    if (config.presentation?.footer && footerOmitted) {
+      report(widget.id, "Table states a footer and `footerOmitted` beside it; a reason for leaving the footer out is for a Table without one.");
+    } else if (config.presentation?.header !== false && !config.presentation?.footer && !footerOmitted) {
+      report(widget.id, "Table shows a header and no footer: a Table with a header row ends in `presentation.footer` (TABLES.md, \"Footer and summary\"); one that only lays out rows says `header: false`, and one with a header and nothing to count says why in `footerOmitted`.");
+    }
     const actions = [
       ...(config.features?.actions?.toolbar ?? []),
       ...(config.features?.actions?.row ?? []),

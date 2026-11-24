@@ -2350,7 +2350,10 @@ one of your Table Providers (`dataProviders`: your Module's Provider descriptors
 `resources`) as the Table reads itself in the browser before its first request: its binding to its
 resource (`validatePhiTableWidgetBinding`: columns, filters, sorting, the counted footer, every Provider
 action declared in its scope with the confirmation and danger the resource asks for) and every icon its
-actions and binding tools name (`isPhiIconNameKnown`). In the browser such a finding leaves the Widget
+actions and binding tools name (`isPhiIconNameKnown`). It also holds the house rule the browser does not:
+a Table that shows its header ends in its footer (`presentation.footer`, the `%1 …` line of your Label
+Set); a Table with `header: false` needs none, and one with a header and nothing to count says why in
+`presentation.footerOmitted` ([TABLES.md](./TABLES.md#footer-and-summary)). In the browser a binding finding leaves the Widget
 unavailable -- no table at all, only a console warning -- while the Page renders, so it is your test's to
 find. Run it beside `checkPhiPresetTreeContract` over every tree, with every Table Provider your package
 ships; a Table on a Provider you do not hand over is not judged. It is apart from the contract check because
@@ -2430,6 +2433,10 @@ describe("every preset tree keeps the tree contract", () => {
 - On every page: nothing a Core Widget draws is drawn by a Widget of the Module's own, and a gap in a Core
   Widget is a proposal to the operator, not a workaround
   ([Before you start](#before-you-start-the-foundations-widgets-and-controls-come-first)).
+- Every Table that shows its header has its footer -- the count or paging line, its `%1 …` template
+  from the Table's Label Set; a Table without a header has none, and one with a header and nothing to
+  count says why in `presentation.footerOmitted`. `checkPhiPresetTables` reports it
+  ([TABLES.md](./TABLES.md#footer-and-summary)).
 - On a staff page: every list is a `table` Widget on a provider with its actions, every form a Form
   Widget in a dialog, no `page-title` Widget, and no Widget of the Module's own that draws tables, button
   rows or dialogs ([Before you start](#before-you-start-a-staff-page-is-composed-not-drawn)).

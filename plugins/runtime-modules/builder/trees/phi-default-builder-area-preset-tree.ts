@@ -1838,6 +1838,11 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                       { key: "where", fieldKey: "where", title: modulesLabels?.usage.where ?? "Page", sizing: { mode: "fill", minWidth: 200 } },
                       { key: "blocks", fieldKey: "blocks", title: modulesLabels?.usage.blocks ?? "Blocks", align: "right" as const, sizing: { mode: "content" } },
                     ],
+                    footer: {
+                      template: modulesLabels?.usage.footer ?? "%1 places draw it",
+                      values: [{ key: "places", value: { source: "core" as const, fieldKey: "totalRows" as const } }],
+                      align: "start" as const,
+                    },
                     controlSize: "small",
                   },
                   features: {
@@ -1936,6 +1941,11 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                         editor: {},
                       },
                     ],
+                    footer: {
+                      template: modulesLabels?.publicRoutes.footer ?? "%1 addresses taken",
+                      values: [{ key: "addresses", value: { source: "core" as const, fieldKey: "totalRows" as const } }],
+                      align: "start" as const,
+                    },
                     controlSize: "small",
                   },
                   features: {
@@ -2001,6 +2011,9 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   },
                   presentation: {
                     borders: true,
+                    // Caption and answer side by side: the rows are the heading, so there is none, and no
+                    // footer either (TABLES.md, "Footer and summary").
+                    header: false,
                     layout: { mode: "auto", overflowX: "auto" },
                     columns: [
                       { key: "label", fieldKey: "label", title: modulesLabels?.detail.field ?? "Field" },
@@ -2012,7 +2025,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                      * with it.
                      *
                      * A summary row rather than the free-text footer, so it keeps the columns the list
-                     * is read in -- caption left, answer right, under the same two headings. The footer
+                     * is read in -- caption left, answer right, in the same two columns. The footer
                      * would have set the same sentence adrift across the full width.
                      */
                     summary: {

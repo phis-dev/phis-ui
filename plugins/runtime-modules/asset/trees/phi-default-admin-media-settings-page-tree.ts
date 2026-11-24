@@ -87,6 +87,11 @@ export async function buildPhiDefaultAdminMediaSettingsPageTree({
           { key: "usedMegabytes", fieldKey: "usedMegabytes", title: labels.spaces.used, sizing: { mode: "content" }, align: "right" },
         ],
         emptyState: { title: labels.spaces.empty },
+        footer: {
+          template: labels.spaces.footer,
+          values: [{ key: "spaces", value: { source: "core", fieldKey: "totalRows" } }],
+          align: "start",
+        },
       },
       features: {
         search: { enabled: true, placeholder: labels.spaces.search, debounceMs: 250 },

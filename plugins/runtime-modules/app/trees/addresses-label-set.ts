@@ -24,6 +24,7 @@ const PHI_APP_ADDRESSES_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_APP_RUNTI
     purpose_default_shipping: "Default shipping",
     empty_title: definePhiMessageLabel("No address yet."),
     empty_text: definePhiMessageLabel("Add one for invoices or deliveries; it is kept for this site only."),
+    footer: "%1 addresses",
     action_add: "Add address",
     action_edit: "Change",
     action_default_billing: "Use for billing by default",
@@ -72,6 +73,7 @@ export async function getPhiAppAddressesLabels(options: PhiGlobalTranslatorOptio
       defaultShipping: labels.purpose_default_shipping,
     },
     empty: { title: labels.empty_title, text: labels.empty_text },
+    footer: labels.footer,
     actions: {
       add: labels.action_add,
       edit: labels.action_edit,

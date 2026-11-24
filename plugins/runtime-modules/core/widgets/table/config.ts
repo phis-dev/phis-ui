@@ -559,6 +559,7 @@ export function parsePhiTableWidgetConfig(config: Record<string, unknown>): PhiT
       header: presentation.boolean("header"),
       stickyHeader: presentation.boolean("stickyHeader"),
       footer: presentation.object("footer", readTableFooter),
+      footerOmitted: presentation.string("footerOmitted"),
       summary: presentation.object("summary", readTableSummary),
       row: {
         striped: row.boolean("striped"),

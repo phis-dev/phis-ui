@@ -468,6 +468,14 @@ export type PhiTableWidgetPresentation = PhiControlPresentationConfig & {
   /** Whether the header row stays at the top while the rows scroll under it; on unless this says `false`. */
   stickyHeader?: boolean;
   footer?: PhiTableFooterConfig;
+  /**
+   * Why a Table that shows its header has no footer, said by the preset that placed it: a reason for the
+   * next person reading the preset, never drawn and never translated. A Table with a header ends in its
+   * footer (TABLES.md, "Footer and summary"); one without a header needs neither, so this is only for the
+   * rare Table that has a header and nothing a footer could say -- the one setting of a panel, edited in its
+   * cell. `checkPhiPresetTables` takes it in place of the footer and refuses it beside one.
+   */
+  footerOmitted?: string;
   summary?: PhiTableSummaryConfig;
   row?: {
     striped?: boolean;

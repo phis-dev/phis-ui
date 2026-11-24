@@ -37,6 +37,8 @@ export type PhiSignalsWidgetLabels = {
     update: string;
     edit: string;
     delete: string;
+    /** The routes Table's footer; %1 the routes listed. */
+    footer: string;
   };
 };
 
@@ -79,5 +81,6 @@ export const PHI_SIGNALS_WIDGET_DEFAULT_LABELS: PhiSignalsWidgetLabels = {
     update: "Update route",
     edit: "Edit",
     delete: "Delete",
+    footer: "%1 routes",
   },
 };

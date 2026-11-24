@@ -64,6 +64,9 @@ const PHI_ADMIN_USERS_ACCESS_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_USER
     cancel: "Cancel",
     addons_empty: definePhiMessageLabel("No installed Add-on reads people."),
     log_empty: definePhiMessageLabel("Nothing was read, or the filters leave nothing."),
+    addons_footer: "%1 Add-ons",
+    // The log pages without a count: what a page holds, and which page it is.
+    log_footer: "%1 entries on page %2",
     filter_subject: "Person",
     filter_subject_placeholder: "Subject",
     filter_addon: "Add-on",
@@ -113,6 +116,7 @@ export async function getPhiAdminUsersAccessLabels(options: PhiGlobalTranslatorO
     revoke: { title: labels.revoke_title, text: labels.revoke_text, ok: labels.confirm_revoke },
     cancel: labels.cancel,
     empty: { addons: labels.addons_empty, log: labels.log_empty },
+    footers: { addons: labels.addons_footer, log: labels.log_footer },
     filters: {
       subject: labels.filter_subject,
       subjectPlaceholder: labels.filter_subject_placeholder,

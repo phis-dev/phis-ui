@@ -69,6 +69,11 @@ export async function buildPhiDefaultAdminUsersAccessPageTree({
                 { key: "grantedAt", fieldKey: "grantedAt", title: labels.columns.grantedAt, renderer: "datetime", sizing: { mode: "content" } },
               ],
               emptyState: { title: labels.empty.addons },
+              footer: {
+                template: labels.footers.addons,
+                values: [{ key: "addons", value: { source: "core", fieldKey: "totalRows" } }],
+                align: "start",
+              },
             },
             features: {
               pagination: { enabled: false },
@@ -113,6 +118,8 @@ export async function buildPhiDefaultAdminUsersAccessPageTree({
             source: { providerKey: PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS.usersAccess, resourceKey: RESOURCES.retention },
             presentation: {
               controlSize: "small",
+              // The heading names the one value; the panel says what it is for.
+              footerOmitted: "One setting edited in its cell: there is nothing to count.",
               layout: { mode: "auto", overflowX: "auto" },
               columns: [{
                 key: "days",
@@ -156,6 +163,14 @@ export async function buildPhiDefaultAdminUsersAccessPageTree({
                 { key: "fields", fieldKey: "fields", title: labels.columns.logFields, ...fieldTags },
               ],
               emptyState: { title: labels.empty.log },
+              footer: {
+                template: labels.footers.log,
+                values: [
+                  { key: "entries", value: { source: "core", fieldKey: "pageRows" } },
+                  { key: "page", value: { source: "core", fieldKey: "page" } },
+                ],
+                align: "start",
+              },
             },
             features: {
               pagination: { enabled: true, pageSize: 25, pageSizes: [25, 50, 100] },

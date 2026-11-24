@@ -673,6 +673,11 @@ export async function buildPhiDefaultAdminUsersPageTree({
               { key: "userAgent", fieldKey: "userAgent", title: widgetLabels.columns.userAgent, sizing: { mode: "fill" } },
             ],
             emptyState: { title: widgetLabels.history.empty, description: "" },
+            footer: {
+              template: widgetLabels.history.footer,
+              values: [{ key: "logins", value: { source: "core", fieldKey: "totalRows" } }],
+              align: "start",
+            },
           },
           features: {
             pagination: { enabled: false, pageSize: 25 },

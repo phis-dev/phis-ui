@@ -39,6 +39,7 @@ const PHI_EDITOR_TRANSLATIONS_WIDGET_LABEL_SET = definePhiRuntimeModuleLabelSet(
     delete_description: definePhiMessageLabel("Delete this translated variant?"),
     empty_title: definePhiMessageLabel("No translations found."),
     empty_text: definePhiMessageLabel("No source messages match the current filters."),
+    footer_count: "%1 source messages",
     load_error: definePhiMessageLabel("Failed to load translations."),
     save_error: definePhiMessageLabel("Failed to save translation."),
     required_translation: definePhiMessageLabel("A translation is required."),
@@ -96,6 +97,7 @@ export async function getPhiEditorTranslationsWidgetLabels(
       title: labels.empty_title,
       text: labels.empty_text,
     },
+    footer: labels.footer_count,
     feedback: {
       saveSuccess: labels.save_success,
       deleteSuccess: labels.delete_success,
@@ -153,6 +155,8 @@ export type PhiEditorTranslationsWidgetLabels = {
     title: string;
     text: string;
   };
+  /** The Table's footer; %1 the source messages the query finds. */
+  footer: string;
   feedback: {
     saveSuccess: string;
     deleteSuccess: string;

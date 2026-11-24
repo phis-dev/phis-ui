@@ -313,6 +313,18 @@ must never translate the template again or infer its source owner. Values are es
 never inject HTML. Splitting a footer sentence into separately translated labels or persisting separator and
 label-placement fragments is forbidden.
 
+**A Table with a header ends in its footer.** A Table that shows its header row (`presentation.header`
+not `false`) states `presentation.footer`: the line under its rows that says how many there are or which
+page this is -- "%1 addresses", "%1 users of %2 total", "%1 on page %2" for a resource that pages without
+a count -- its template the `%1 …` footer label of the Table's own Label Set, translated while the preset
+is built. A Table without a header needs no footer: it lays out rows or aligns columns (a field and its
+value, side by side), and neither part has anything to say there; the missing header is the whole
+exemption. Only a Table with a header and truly nothing to count -- the one setting of a panel, edited in
+its cell -- leaves the footer out, and says why in `presentation.footerOmitted`, a reason for the next
+reader of the preset that is never drawn and never translated (Admin -> Settings -> People data, the
+retention). New Pages kept leaving the footer out; `checkPhiPresetTables` refuses such a preset Table
+([Module and preset obligations](#module-and-preset-obligations)).
+
 Footer and summary may coexist. Their persisted config cannot contain functions, JSX, actions, editors,
 or arbitrary Ant Design properties. Trees have no matching native footer or summary contract; a tree-like
 Table may use these Table contracts, while `PhiTreeControl` and `PhiTreeWidget` do not acquire them.
@@ -1308,6 +1320,11 @@ that quotes one mounts a Provider, never a Table.
 
 - Modules expose domain data through Table Provider descriptors and scoped executable Clients.
 - Presets place the generic Table Widget and persist only presentation, source binding, and signal routes.
+- A preset Table that shows its header states its footer, the `%1 …` line from its Label Set
+  ([Footer and summary](#footer-and-summary)); a Table without a header needs none, and a Table with a
+  header and nothing to count says why in `presentation.footerOmitted`. `checkPhiPresetTables`
+  (`@phis/ui/module/page-check`) refuses a Table that does neither, as it refuses a broken binding: a
+  package's tests run it over every tree its presets build.
 - A normal record Form remains the correct host when the interaction is a Form submit/reset lifecycle.
   Inline Table editing uses the Table mutation lifecycle and must not be routed through a hidden Form.
 - A Form field provider may use the controlled compound-value exception when the complete local row array

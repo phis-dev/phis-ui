@@ -188,6 +188,11 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
               { key: "updatedAt", fieldKey: "updatedAt", title: widgetLabels.columns.updated, renderer: "datetime", sizing: { mode: "content", minWidth: 168 } },
             ],
             emptyState: { title: widgetLabels.empty.title, description: widgetLabels.empty.text },
+            footer: {
+              template: widgetLabels.footer,
+              values: [{ key: "messages", value: { source: "core", fieldKey: "totalRows" } }],
+              align: "start",
+            },
             controlSize: "small",
           },
           features: {

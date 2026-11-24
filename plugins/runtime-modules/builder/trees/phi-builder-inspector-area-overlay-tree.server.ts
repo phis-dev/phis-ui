@@ -597,6 +597,11 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
              * has no routes yet, which is a normal starting point and not an error.
              */
             emptyState: { title: signalsLabels.routes.title },
+            footer: {
+              template: signalsLabels.routes.footer,
+              values: [{ key: "routes", value: { source: "core", fieldKey: "totalRows" } }],
+              align: "start",
+            },
             controlSize: "small",
           },
           features: {

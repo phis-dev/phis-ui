@@ -136,6 +136,31 @@ describe("the product directory page", () => {
     expect(checkPhiPresetTables(unknownIcon, { dataProviders: [] })).toEqual([]);
   });
 
+  // TABLES.md, "Footer and summary": a Table with a header ends in its footer; without a header it needs none.
+  it("wants the footer of a Table that shows its header, and only of that one", async () => {
+    const tree = await loadTree();
+    const dataProviders = PHI_ACCOUNTING_RUNTIME_DATA_PROVIDER_DESCRIPTORS;
+    const table = tree.contentWidgets.find((widget) => widget.widgetType.endsWith("/table"))!;
+    const config = table.config as { presentation: Record<string, unknown> };
+    const { footer, ...withoutFooter } = config.presentation;
+    expect(footer).toBeDefined();
+    const withPresentation = (presentation: Record<string, unknown>) => ({
+      ...tree,
+      contentWidgets: tree.contentWidgets.map((widget) => (widget.id === table.id ? { ...widget, config: { ...config, presentation } } : widget)),
+    });
+    const messages = (presentation: Record<string, unknown>) =>
+      checkPhiPresetTables(withPresentation(presentation), { dataProviders }).map((finding) => finding.message);
+    expect(messages(withoutFooter)).toEqual([expect.stringContaining("Table shows a header and no footer")]);
+    expect(messages({ ...withoutFooter, header: true })).toHaveLength(1);
+    // No header, no footer: the missing header is the exemption.
+    expect(messages({ ...withoutFooter, header: false })).toEqual([]);
+    // A header and nothing to count, said why; not beside a footer, and not as an empty reason.
+    expect(messages({ ...withoutFooter, footerOmitted: "One setting edited in its cell." })).toEqual([]);
+    expect(messages({ ...withoutFooter, footerOmitted: "  " })).toHaveLength(1);
+    expect(messages({ ...config.presentation, footerOmitted: "Nothing to count." }))
+      .toEqual([expect.stringContaining("states a footer and `footerOmitted`")]);
+  });
+
   it("binds its Table and the terms record to a Provider the Accounting Area loads in the browser", async () => {
     const tree = await loadTree();
     const source = { providerKey: PHI_ACCOUNTING_PRODUCTS_DATA_PROVIDER_KEY, resourceKey: PHI_ACCOUNTING_PRODUCTS_RESOURCE_KEY };

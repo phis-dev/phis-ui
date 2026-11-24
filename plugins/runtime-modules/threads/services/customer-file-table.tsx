@@ -153,7 +153,10 @@ async function queryCustomerFile({ resourceKey, query, params, signal }: PhiTabl
   }
   // Nobody chosen yet: nothing is asked for, so nothing is written to the access log.
   const userId = readPhiPositiveInteger(query.filters?.userId);
-  if (!userId) return resourceKey === RESOURCES.threads ? { rows: [] } : { rows: [], total: 0 };
+  if (!userId) {
+    if (resourceKey === RESOURCES.threads) return { rows: [] };
+    return resourceKey === RESOURCES.person ? { rows: [], total: 0, summary: { userId: null } } : { rows: [], total: 0 };
+  }
   // The person and their addresses are the same on every page; they ask for the first, as the threads
   // Table does on a choice, so the three reads are one route.
   const paged = buildPhiTablePageParams(resourceKey === RESOURCES.threads ? query : {}, THREADS_PAGE_SIZE);
@@ -170,7 +173,8 @@ async function queryCustomerFile({ resourceKey, query, params, signal }: PhiTabl
     throw new PhiTableProviderError("invalid-response", "The customer file answer is invalid.");
   }
   if (resourceKey === RESOURCES.person) {
-    return { rows: [toPhiCustomerFilePersonRow(result.person)], total: 1 };
+    const row = toPhiCustomerFilePersonRow(result.person);
+    return { rows: [row], total: 1, summary: { userId: typeof row.userId === "number" ? row.userId : null } };
   }
   if (resourceKey === RESOURCES.addresses) {
     const rows = readPhiTableRows(result.person.addresses).map(toPhiSiteAddressRow);

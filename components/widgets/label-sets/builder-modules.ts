@@ -60,6 +60,7 @@ const PHI_BUILDER_MODULES_PAGE_LABEL_SET = definePhiLabelSet({
     usage_sign_in: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.usage.signIn,
     usage_confirm: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.usage.confirm,
     usage_cancel: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.usage.cancel,
+    usage_footer: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.usage.footer,
     public_routes_title: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.publicRoutes.title,
     public_routes_intro: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.publicRoutes.intro,
     public_routes_page: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.publicRoutes.page,
@@ -71,6 +72,7 @@ const PHI_BUILDER_MODULES_PAGE_LABEL_SET = definePhiLabelSet({
     public_routes_address: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.publicRoutes.address,
     public_routes_assign: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.publicRoutes.assign,
     public_routes_cancel: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.publicRoutes.cancel,
+    public_routes_footer: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.publicRoutes.footer,
   },
 });
 
@@ -147,6 +149,7 @@ export async function getPhiBuilderModulesPageLabels(
       signIn: labels.usage_sign_in,
       confirm: labels.usage_confirm,
       cancel: labels.usage_cancel,
+      footer: labels.usage_footer,
     },
     publicRoutes: {
       title: labels.public_routes_title,
@@ -160,6 +163,7 @@ export async function getPhiBuilderModulesPageLabels(
       address: labels.public_routes_address,
       assign: labels.public_routes_assign,
       cancel: labels.public_routes_cancel,
+      footer: labels.public_routes_footer,
     },
   };
 }

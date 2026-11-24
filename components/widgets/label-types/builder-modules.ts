@@ -60,6 +60,8 @@ export type PhiBuilderModulesPageLabels = {
     signIn: string;
     confirm: string;
     cancel: string;
+    /** The Table's footer; %1 the places listed. */
+    footer: string;
   };
   /** The one question enabling a Module can ask: a Public address it wants is taken. */
   publicRoutes: {
@@ -75,6 +77,8 @@ export type PhiBuilderModulesPageLabels = {
     address: string;
     assign: string;
     cancel: string;
+    /** The Table's footer; %1 the addresses listed. */
+    footer: string;
   };
 };
 
@@ -150,6 +154,7 @@ export const PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS: PhiBuilderModulesPageLabel
       "Run phis auth restore-preset --site <site key> on the server to bring it back.",
     confirm: "Switch off anyway",
     cancel: "Keep it on",
+    footer: "%1 places draw it",
   },
   publicRoutes: {
     title: "Public addresses are taken",
@@ -164,5 +169,6 @@ export const PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS: PhiBuilderModulesPageLabel
     address: "Address",
     assign: "Enable with these addresses",
     cancel: "Cancel",
+    footer: "%1 addresses taken",
   },
 };

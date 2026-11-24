@@ -47,6 +47,8 @@ export const PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
           { key: "phone", title: "Business phone", type: "string" },
           { key: "mobile", title: "Mobile", type: "string" },
         ],
+        // The member's number, for the line under the person: the one Core, the access log and support name.
+        summaryFields: [{ key: "userId", title: "Member number", type: "number" }],
         query: { search: false, filterFields: ["userId"], sorting: "none", pagination: "none" },
       },
       {

@@ -83,6 +83,7 @@ const PHI_ADMIN_USERS_TABLE_WIDGET_LABEL_SET = definePhiLabelSet({
     history_title_with_name: "Login history for %1",
     history_loading: "Loading login history...",
     history_empty: definePhiMessageLabel("No logins found."),
+    history_footer: "%1 logins",
     history_error_title: "Login history failed",
     delete_confirm_title: definePhiMessageLabel("Delete user?"),
     delete_confirm_self: definePhiMessageLabel("You cannot delete your own account here."),
@@ -207,6 +208,7 @@ export async function getPhiAdminUsersTableWidgetLabels(options: PhiGlobalTransl
       loading: labels.history_loading,
       empty: labels.history_empty,
       errorTitle: labels.history_error_title,
+      footer: labels.history_footer,
     },
     actions: {
       edit: labels.action_edit_label,

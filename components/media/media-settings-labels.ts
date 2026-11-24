@@ -66,6 +66,7 @@ const PHI_MEDIA_SETTINGS_PAGE_LABEL_SET = definePhiLabelSet({
     spaces_used: "Used",
     spaces_search: "Search",
     spaces_empty: definePhiMessageLabel("No Space of this kind exists yet."),
+    spaces_footer: "%1 Spaces",
   },
 });
 
@@ -142,6 +143,7 @@ export async function getPhiMediaSettingsPageLabels(options: PhiGlobalTranslator
       used: labels.spaces_used,
       search: labels.spaces_search,
       empty: labels.spaces_empty,
+      footer: labels.spaces_footer,
     },
     submitLabel: labels.submit_label,
   };

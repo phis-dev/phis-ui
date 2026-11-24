@@ -46,6 +46,7 @@ const PHI_SIGNALS_WIDGET_LABEL_SET = definePhiLabelSet({
     routes_update: PHI_SIGNALS_WIDGET_DEFAULT_LABELS.routes.update,
     routes_edit: PHI_SIGNALS_WIDGET_DEFAULT_LABELS.routes.edit,
     routes_delete: PHI_SIGNALS_WIDGET_DEFAULT_LABELS.routes.delete,
+    routes_footer: PHI_SIGNALS_WIDGET_DEFAULT_LABELS.routes.footer,
   },
 });
 
@@ -92,6 +93,7 @@ export async function getPhiSignalsWidgetLabels(
       update: labels.routes_update,
       edit: labels.routes_edit,
       delete: labels.routes_delete,
+      footer: labels.routes_footer,
     },
   };
 }

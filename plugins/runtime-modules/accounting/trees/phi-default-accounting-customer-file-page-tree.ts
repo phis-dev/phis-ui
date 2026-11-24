@@ -232,6 +232,13 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
               { key: "mobile", fieldKey: "mobile", title: labels.person.columns.mobile, sizing: { mode: "content" } },
             ],
             emptyState: { title: labels.person.empty },
+            footer: {
+              template: labels.person.footer,
+              values: [{ key: "member", value: { source: "provider", fieldKey: "userId" } }],
+              // Nobody chosen: nothing to say under the picker.
+              variants: [{ when: { value: { source: "provider", fieldKey: "userId" }, operator: "falsy" }, template: "" }],
+              align: "start",
+            },
           },
           features: {
             // The two lists below take this query, so it pages as they do.
@@ -276,6 +283,11 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
             layout: { mode: "auto", overflowX: "auto" },
             columns: addressColumns,
             emptyState: { title: labels.addresses.empty },
+            footer: {
+              template: labels.addresses.footer,
+              values: [{ key: "addresses", value: { source: "core", fieldKey: "totalRows" } }],
+              align: "start",
+            },
           },
           features: {
             pagination: { enabled: false },
@@ -329,6 +341,14 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
               { key: "latestMessageAt", fieldKey: "latestMessageAt", title: labels.threads.columns.activity, renderer: "datetime", sizing: { mode: "fixed", width: 180 } },
             ],
             emptyState: { title: labels.threads.empty },
+            footer: {
+              template: labels.threads.footer,
+              values: [
+                { key: "threads", value: { source: "core", fieldKey: "pageRows" } },
+                { key: "page", value: { source: "core", fieldKey: "page" } },
+              ],
+              align: "start",
+            },
           },
           features: {
             rowSelection: { mode: "single", preserveSelectedRowIdentities: true },

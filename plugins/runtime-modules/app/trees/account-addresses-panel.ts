@@ -81,6 +81,11 @@ export function buildPhiAccountAddressesPanel(labels: Labels, presetKey: string)
               },
             ],
             emptyState: { title: labels.empty.title, description: labels.empty.text },
+            footer: {
+              template: labels.footer,
+              values: [{ key: "addresses", value: { source: "core", fieldKey: "totalRows" } }],
+              align: "start",
+            },
           },
           features: {
             pagination: { enabled: false },
