@@ -48,3 +48,29 @@ export const PHI_ACCOUNTING_PRODUCTS_PAGE_WIDGET_IDS = createPhiPresetCmsInstanc
   PHI_ACCOUNTING_PRODUCTS_PAGE_PRESET,
   ["widgetTable", "widgetTerms", "widgetTermsNote", "widgetTermsCommands"],
 );
+
+/**
+ * Staff's customer file on one member (phis-server `GET /api/site/members/{userId}/file`), a Page of the
+ * Accounting Area beside the product directory.
+ */
+export const PHI_ACCOUNTING_CUSTOMER_FILE_PAGE_PRESET_KEY = "accounting-customer-file-page";
+
+const PHI_ACCOUNTING_CUSTOMER_FILE_PAGE_PRESET = {
+  domain: "page",
+  ownerModuleId: PHI_ACCOUNTING_RUNTIME_MODULE_ID,
+  presetKey: PHI_ACCOUNTING_CUSTOMER_FILE_PAGE_PRESET_KEY,
+} as const;
+
+/** The three Tables, the conversation, and the Reply dialog with its Form -- every one named in a route by another. */
+export const PHI_ACCOUNTING_CUSTOMER_FILE_PAGE_IDS = {
+  widgets: createPhiPresetCmsInstanceIdMap(PHI_ACCOUNTING_CUSTOMER_FILE_PAGE_PRESET, [
+    "widgetPerson",
+    "widgetAddresses",
+    "widgetThreads",
+    "widgetConversation",
+    "widgetReplyForm",
+    "widgetReplyCommands",
+  ]),
+  overlays: createPhiPresetCmsInstanceIdMap(PHI_ACCOUNTING_CUSTOMER_FILE_PAGE_PRESET, ["overlayReply"]),
+  layouts: createPhiPresetCmsInstanceIdMap(PHI_ACCOUNTING_CUSTOMER_FILE_PAGE_PRESET, ["layoutReply", "layoutReplyFooter"]),
+};

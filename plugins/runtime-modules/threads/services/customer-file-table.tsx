@@ -20,11 +20,8 @@ import { PhisThreadKind, PhisThreadStatus } from "../../../../constants/threads"
 import { toPhiSiteAddressRow } from "../../../../helpers/site-address-row";
 import { readPhiThreadInboxRow } from "../../../../helpers/thread-inbox-row";
 import { PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../data-providers";
-import { PHI_CUSTOMER_FILE_SUBJECT_PARAM } from "./customer-file-subject";
-import {
-  PHI_THREADS_CUSTOMER_FILE_RESOURCE_KEYS as RESOURCES,
-  PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS,
-} from "../ids";
+import { PHI_CUSTOMER_FILE_RESOURCE_KEYS as RESOURCES, PHI_CUSTOMER_FILE_SUBJECT_PARAM } from "../../../../constants/customer-file";
+import { PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
 
 const RESPONSE_OPTIONS: ReadPhiTableProviderResponseOptions = { subject: "Customer file" };
 // The Page names the same size; Core takes up to 100.

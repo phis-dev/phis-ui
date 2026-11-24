@@ -3,6 +3,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 
 import { PHI_ASSET_CONTROLLER_TYPE } from "../components/media/asset-controller-address";
+import { PHI_THREADS_CONTROLLER_TYPE } from "../constants/threads-controller-address";
 import { PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/catalog";
 import { repositoryRoot } from "./lib/repo-root.mjs";
 import { listPhiPresetTreeFiles } from "./preset-tree-files";
@@ -53,6 +54,15 @@ assert.match(
 );
 
 const PHI_ASSET_CONTROLLER_ADDRESS_MODULE = "components/media/asset-controller-address";
+/*
+ * The Controller addresses that live in the Foundation rather than in their Module's folder, by the
+ * Controller's type: the Asset Controller's, which pickers in the Foundation, the Builder and the Theme
+ * Module send to, and the Conversations Controller's, which the Accounting Module's customer file mounts.
+ */
+const PHI_FOUNDATION_CONTROLLER_ADDRESS_MODULES: ReadonlyMap<string, string> = new Map([
+  [PHI_ASSET_CONTROLLER_TYPE, PHI_ASSET_CONTROLLER_ADDRESS_MODULE],
+  [PHI_THREADS_CONTROLLER_TYPE, "constants/threads-controller-address"],
+]);
 
 /** Controller type by the address module that exports it, for the Modules that mount on demand. */
 const demandControllerTypesByAddressModule = new Map<string, { moduleId: string; controllerType: string }>();
@@ -70,14 +80,11 @@ for (const [moduleId, entry] of PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG) {
     moduleId,
     controllerType: definition.controllerType,
   });
-  /*
-   * The Asset Controller's address is not in its Module's folder: pickers in the Foundation, the Builder
-   * and the Theme Module send to it, so it lives beside them (`components/media/asset-controller-address.ts`).
-   * A tree importing it is wiring to that Controller all the same.
-   */
-  if (definition.controllerType === PHI_ASSET_CONTROLLER_TYPE) {
+  /* A tree importing a Foundation address is wiring to that Controller all the same. */
+  const foundationAddressModule = PHI_FOUNDATION_CONTROLLER_ADDRESS_MODULES.get(definition.controllerType);
+  if (foundationAddressModule) {
     demandControllerTypesByAddressModule.set(
-      path.join(repositoryRoot, PHI_ASSET_CONTROLLER_ADDRESS_MODULE),
+      path.join(repositoryRoot, foundationAddressModule),
       { moduleId, controllerType: definition.controllerType },
     );
   }
@@ -112,7 +119,7 @@ function readTreeWithLocalBuilders(file: string, source: string) {
 const failures: string[] = [];
 for (const file of listPhiPresetTreeFiles(repositoryRoot)) {
   const source = readFileSync(file, "utf8");
-  for (const match of source.matchAll(/from\s+"([^"]*\/(?:controller\/address|asset-controller-address))"/gu)) {
+  for (const match of source.matchAll(/from\s+"([^"]*\/(?:controller\/address|asset-controller-address|threads-controller-address))"/gu)) {
     const resolved = path.resolve(path.dirname(file), match[1]!);
     const owner = demandControllerTypesByAddressModule.get(resolved);
     if (!owner) continue;

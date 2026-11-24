@@ -12,9 +12,9 @@ const PHI_ACCOUNTING_PRODUCTS_PAGE_LABEL_SET = definePhiRuntimeModuleLabelSet(PH
   key: "preset:accounting-products-page",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
-    page_title: "Products",
+    page_title: "Product directory",
     page_description: definePhiMessageLabel("Every product the Site's Add-ons supply: release their terms, lock and unlock them."),
-    widget_label: "products",
+    widget_label: "product directory",
     column_picture: "Picture",
     column_title: "Title",
     column_id: "ID",

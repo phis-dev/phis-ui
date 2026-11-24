@@ -15,7 +15,7 @@ import {
   createPhiThreadsControllerAddress,
   PHI_THREADS_CONTROLLER_INSTANCE_KEY,
   PHI_THREADS_CONTROLLER_TYPE,
-} from "../controller/address";
+} from "../../../../constants/threads-controller-address";
 import { createPhiThreadsPageIds } from "../addresses";
 import type { PhiSidebarAreaKey } from "../../sidebar-route";
 import { PHI_THREADS_FORM_IDS } from "../forms";

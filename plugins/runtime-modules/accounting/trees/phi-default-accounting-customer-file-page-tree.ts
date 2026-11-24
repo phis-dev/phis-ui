@@ -17,21 +17,28 @@ import {
   createPhiThreadsControllerAddress,
   PHI_THREADS_CONTROLLER_INSTANCE_KEY,
   PHI_THREADS_CONTROLLER_TYPE,
-} from "../controller/address";
-import { createPhiCustomerFilePageIds } from "../addresses";
-import { PHI_THREADS_CUSTOMER_FILE_ACCESS } from "../customer-file-access";
-import { PHI_THREADS_CUSTOMER_FILE_RESOURCE_KEYS as RESOURCES, PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
-import { getPhiCustomerFilePageLabels, getPhiThreadPageLabels } from "../labels";
-import { PHI_CUSTOMER_FILE_SUBJECT_PARAM } from "../services/customer-file-subject";
+} from "../../../../constants/threads-controller-address";
+import {
+  PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS,
+  PHI_CUSTOMER_FILE_RESOURCE_KEYS as RESOURCES,
+  PHI_CUSTOMER_FILE_SUBJECT_PARAM,
+} from "../../../../constants/customer-file";
+import { PHI_ACCOUNTING_CUSTOMER_FILE_PAGE_IDS } from "../ids";
+import { PHI_ACCOUNTING_CUSTOMER_FILE_ACCESS } from "../customer-file-access";
+import { getPhiAccountingCustomerFilePageLabels } from "./accounting-customer-file-label-set";
 
-/** The content region of each Area's customer file Page. */
-const SYNTHETIC_CUSTOMER_FILE_REGION_ID_BY_AREA = { app: -458, accounting: -459 } as const;
+/** The content region of the customer file Page. */
+const SYNTHETIC_CUSTOMER_FILE_REGION_ID = -459;
 
 /**
  * Staff's customer file on one member (phis-server `GET /api/site/members/{userId}/file`): who they are and
  * how to reach them, where they live, their file and the conversations they are in.
  *
- * Built from what the conversations Page already is. The person Table's filter is Core's member picker
+ * A Page of the Accounting Module, beside the product directory, built from what the conversations Page
+ * already is and bound by Foundation names only (`constants/customer-file.ts`,
+ * `constants/threads-controller-address.ts`): the Table Provider and the Conversations Controller are the
+ * conversations Module's, which is active in the Accounting Area by default and has to be for this Page
+ * to read anything. The person Table's filter is Core's member picker
  * (the `site-members` options with Core's search, which matches names, e-mail addresses and telephone
  * numbers); its query goes to the addresses and the threads Tables, so one choice fills all three. The
  * threads Table lists the person's file first, and choosing a row is the conversations Page's choreography
@@ -39,33 +46,28 @@ const SYNTHETIC_CUSTOMER_FILE_REGION_ID_BY_AREA = { app: -458, accounting: -459 
  * Reply opens Core's Reply Form in a dialog -- with the internal note offered, which is every message of a
  * file anyway.
  *
- * Core answers the route to the holders of `accounting` or `support`, and the fields to what each may read:
- * support no addresses. A viewer the Area admits who holds neither is told so in the Page and nothing is
- * read for them.
+ * The Page is for the holders of `accounting` (`PHI_ACCOUNTING_CUSTOMER_FILE_ACCESS`), who read every
+ * field, the addresses included. A viewer the Area admits without it is told so in the Page and nothing is
+ * read for them; a Supporter's file is the Support Module's Page over the same route.
  */
-export async function buildPhiDefaultCustomerFilePageTree({
+export async function buildPhiDefaultAccountingCustomerFilePageTree({
   page,
   runtime,
-  area,
 }: {
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
-  area: "app" | "accounting";
 }): Promise<PhiResolvedCmsPageTree> {
-  const { widgets: widgetIds, overlays: overlayIds, layouts: layoutIds } = createPhiCustomerFilePageIds(area);
+  const { widgets: widgetIds, overlays: overlayIds, layouts: layoutIds } = PHI_ACCOUNTING_CUSTOMER_FILE_PAGE_IDS;
   const credentials = readPhiServerApiCredentials();
   const labelOptions = {
     apiBaseUrl: credentials.apiBaseUrl,
     internalToken: credentials.internalToken,
     locale: runtime.locale.current,
   };
-  const [labels, threadLabels] = await Promise.all([
-    getPhiCustomerFilePageLabels(labelOptions),
-    getPhiThreadPageLabels(labelOptions),
-  ]);
+  const labels = await getPhiAccountingCustomerFilePageLabels(labelOptions);
 
   const nodes = createPhiCmsPresetNodes(page);
-  const scaffold = buildPhiBasePageContentScaffold({ page, regionId: SYNTHETIC_CUSTOMER_FILE_REGION_ID_BY_AREA[area] });
+  const scaffold = buildPhiBasePageContentScaffold({ page, regionId: SYNTHETIC_CUSTOMER_FILE_REGION_ID });
   const pageMeta = {
     title: { msgId: 0, source: "Customer file", value: labels.title },
     description: {
@@ -74,7 +76,7 @@ export async function buildPhiDefaultCustomerFilePageTree({
       value: labels.description,
     },
   };
-  if (!canPhiViewerAccess(runtime.viewer, PHI_THREADS_CUSTOMER_FILE_ACCESS)) {
+  if (!canPhiViewerAccess(runtime.viewer, PHI_ACCOUNTING_CUSTOMER_FILE_ACCESS)) {
     return {
       page: nodes.page({ pageType: PhiCmsPageType.Standard }),
       pageMeta,
@@ -119,7 +121,7 @@ export async function buildPhiDefaultCustomerFilePageTree({
     route(routeKey, capabilityId, "action", "activate", receiver, "json", PHI_SIGNAL_VALUE_SCHEMAS.tableAction);
   const threadRoute = (routeKey: string, capabilityId: string, action: "change" | "reload", receiver: PhiSignalReceiver) =>
     route(routeKey, capabilityId, "thread", action, receiver, "json", PHI_SIGNAL_VALUE_SCHEMAS.threadSelection);
-  const prefix = `${area}-customer-file`;
+  const prefix = "accounting-customer-file";
 
   const replyDialog = nodes.dialog({
     id: overlayIds.overlayReply,
@@ -151,7 +153,7 @@ export async function buildPhiDefaultCustomerFilePageTree({
           {
             key: "submit",
             emits: [{ capabilityId: "submit", value: null }],
-            label: threadLabels.replySendLabel,
+            label: labels.replySendLabel,
             variant: "primary",
             icon: "antd:send-outlined",
           },
@@ -211,7 +213,7 @@ export async function buildPhiDefaultCustomerFilePageTree({
         sortOrder: 0,
         label: labels.person.label,
         config: {
-          source: { providerKey: PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS.customerFile, resourceKey: RESOURCES.person },
+          source: { providerKey: PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS.table, resourceKey: RESOURCES.person },
           presentation: {
             title: labels.person.title,
             controlSize: "small",
@@ -260,7 +262,7 @@ export async function buildPhiDefaultCustomerFilePageTree({
         sortOrder: 1,
         label: labels.addresses.label,
         config: {
-          source: { providerKey: PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS.customerFile, resourceKey: RESOURCES.addresses },
+          source: { providerKey: PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS.table, resourceKey: RESOURCES.addresses },
           presentation: {
             title: labels.addresses.title,
             controlSize: "small",
@@ -286,36 +288,36 @@ export async function buildPhiDefaultCustomerFilePageTree({
         label: labels.threads.label,
         config: {
           // The file's own subject, which Core does not answer: in the reader's language, from this Page.
-          source: { providerKey: PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS.customerFile, resourceKey: RESOURCES.threads, params: { [PHI_CUSTOMER_FILE_SUBJECT_PARAM]: labels.fileSubject } },
+          source: { providerKey: PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS.table, resourceKey: RESOURCES.threads, params: { [PHI_CUSTOMER_FILE_SUBJECT_PARAM]: labels.fileSubject } },
           presentation: {
             title: labels.threads.title,
             controlSize: "small",
             layout: { mode: "fixed", overflowX: "auto" },
             columns: [
-              { key: "subject", fieldKey: "subject", title: threadLabels.columns.subject, ellipsis: true, sizing: { mode: "fill", minWidth: 200 } },
+              { key: "subject", fieldKey: "subject", title: labels.threads.columns.subject, ellipsis: true, sizing: { mode: "fill", minWidth: 200 } },
               {
                 key: "kind",
                 fieldKey: "kind",
-                title: threadLabels.columns.kind,
+                title: labels.threads.columns.kind,
                 sizing: { mode: "fixed", width: 140 },
                 valueMap: {
-                  [String(PhisThreadKind.Direct)]: threadLabels.kinds.direct,
-                  [String(PhisThreadKind.Group)]: threadLabels.kinds.group,
-                  [String(PhisThreadKind.CrossGroup)]: threadLabels.kinds.crossGroup,
-                  [String(PhisThreadKind.Support)]: threadLabels.kinds.support,
-                  [String(PhisThreadKind.File)]: labels.kindFile,
+                  [String(PhisThreadKind.Direct)]: labels.threads.kinds.direct,
+                  [String(PhisThreadKind.Group)]: labels.threads.kinds.group,
+                  [String(PhisThreadKind.CrossGroup)]: labels.threads.kinds.crossGroup,
+                  [String(PhisThreadKind.Support)]: labels.threads.kinds.support,
+                  [String(PhisThreadKind.File)]: labels.threads.kinds.file,
                 },
               },
               {
                 key: "state",
                 fieldKey: "state",
-                title: threadLabels.columns.state,
+                title: labels.threads.columns.state,
                 renderer: "badge",
                 sizing: { mode: "fixed", width: 120 },
-                valueMap: threadLabels.states,
+                valueMap: labels.threads.states,
                 tagColorMap: { unread: "processing", open: "default", archived: "default", locked: "warning" },
               },
-              { key: "latestMessageAt", fieldKey: "latestMessageAt", title: threadLabels.columns.activity, renderer: "datetime", sizing: { mode: "fixed", width: 180 } },
+              { key: "latestMessageAt", fieldKey: "latestMessageAt", title: labels.threads.columns.activity, renderer: "datetime", sizing: { mode: "fixed", width: 180 } },
             ],
             emptyState: { title: labels.threads.empty },
           },

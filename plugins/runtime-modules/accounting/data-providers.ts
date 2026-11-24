@@ -44,7 +44,7 @@ export const PHI_ACCOUNTING_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
     kind: "table",
     executionMode: "live",
     authoringMode: "none",
-    title: "Products",
+    title: "Product directory",
     description: "The Site's product directory: every supplier's products, their terms and their state.",
     resources: [
       {

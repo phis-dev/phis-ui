@@ -1,8 +1,7 @@
 import { PHI_BASE_PAGE_LAYOUT_VERSION } from "../../../components/regions/presets/phi-base-page-layout";
 import type { PhiCmsRoutePresetDescriptor } from "../../../types/cms-module-descriptors";
 import { buildPhiSidebarRoutePresetDescriptor, type PhiSidebarAreaKey } from "../sidebar-route";
-import { getPhiCustomerFilePagePresetKey, getPhiThreadsPagePresetKey } from "./addresses";
-import { PHI_THREADS_CUSTOMER_FILE_ACCESS } from "./customer-file-access";
+import { getPhiThreadsPagePresetKey } from "./addresses";
 import { PHI_THREADS_RUNTIME_MODULE_ID } from "./ids";
 
 /**
@@ -41,36 +40,3 @@ export const PHI_THREADS_RUNTIME_MODULE_ROUTES = PHI_THREADS_PAGE_AREAS.map((are
         .then((module) => module.buildPhiDefaultThreadsPageTree({ page, runtime, area })),
   })
 ) satisfies readonly PhiCmsRoutePresetDescriptor[];
-
-/**
- * Staff's customer file, where the staff it is for already work: the App, where a Supporter answers Support
- * (`/support` is the App's), and the Accounting Area, where an Accountant works. Neither Admin nor any other
- * Area admits a Supporter, and Accounting admits no Supporter, so the App is the one place both reach; the
- * Accounting entry spares an Accountant the change of Area.
- *
- * In the App the entry is offered only to the holders of `support` or `accounting`, as Core's route
- * answers; the Accounting Area admits nobody else. The Page itself tells anybody else it is not theirs.
- */
-export const PHI_THREADS_CUSTOMER_FILE_ROUTES = (["app", "accounting"] as const).map((area) => {
-  const descriptor = buildPhiSidebarRoutePresetDescriptor({
-    area,
-    anchor: "main",
-    ownerModuleId: PHI_THREADS_RUNTIME_MODULE_ID,
-    presetKey: getPhiCustomerFilePagePresetKey(area),
-    presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
-    title: "Customer file",
-    path: "/customer-file",
-    itemKey: `@phis/ui/modules/threads/nav/${area}/customer-file`,
-    icon: "antd:idcard",
-    loadTree: ({ page, runtime }) =>
-      import("./trees/phi-default-customer-file-page-tree")
-        .then((module) => module.buildPhiDefaultCustomerFilePageTree({ page, runtime, area })),
-  });
-  return {
-    ...descriptor,
-    navigation: descriptor.navigation?.map((injection) => ({
-      ...injection,
-      item: { ...injection.item, accessPolicy: PHI_THREADS_CUSTOMER_FILE_ACCESS },
-    })),
-  };
-}) satisfies readonly PhiCmsRoutePresetDescriptor[];

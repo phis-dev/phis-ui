@@ -128,11 +128,11 @@ than a Widget type, which is the same promise in a smaller surface.
 | contribution | what it is |
 | --- | --- |
 | Widgets | `thread-conversation` |
-| Data Provider | the customer file Table Provider (`tables/threads-customer-file`, resources `person`, `addresses`, `threads`); the thread library Table Provider, resource `inbox`, is Core's |
+| Data Provider | the customer file Table Provider (`tables/threads-customer-file`, resources `person`, `addresses`, `threads`, named in the Foundation by `constants/customer-file.ts`); the thread library Table Provider, resource `inbox`, is Core's |
 | Options Provider | conversation candidates -- who this viewer may write to |
 | Forms | the new-conversation Form and the reply Form, with a handler Provider each |
-| Route presets | `<area>-threads-page` at `/conversations` in every sidebar Area, each with its sidebar entry; `<area>-customer-file-page` at `/customer-file` in the App and in Accounting (section 10) |
-| Controller | the translation above, mounted on demand |
+| Route presets | `<area>-threads-page` at `/conversations` in every sidebar Area, each with its sidebar entry; the customer file Page is the Accounting Module's (section 10) |
+| Controller | the translation above, mounted on demand; its address is a Foundation name (`constants/threads-controller-address.ts`), so another Module's Page mounts it by type |
 | Media Space | the User Space kinds in section 5 |
 | Dashboard card | unread conversations, on the App Dashboard |
 
@@ -320,10 +320,18 @@ actor read them (support without addresses), their file -- the thread kind `File
 every message in it Internal -- and the threads the actor sees that the person takes part in. Core writes
 every read to the Site's access log.
 
-**Where.** `/customer-file` in the App and in the Accounting Area (`<area>-customer-file-page`). A Supporter
-works in the App, where `/support` is, and no staff Area admits one; an Accountant works in Accounting. The
-App's entry is offered to the holders of either access only; the Page tells anybody else it is not theirs
-and reads nothing for them.
+**Where.** `/customer-file` in the Accounting Area (`accounting-customer-file-page`), a Page of the
+Accounting Module beside the product directory, for the holders of `accounting` (Maintainer, Accountant;
+an Admin through the Site-superuser rule): its entry states that access and the Page tells anybody else
+the Area admits that it is not theirs, reading nothing for them. Core answers the same route to `support`
+without addresses; a Supporter's file is the Support Module's own Page over that route, not this one.
+
+**Who answers what.** The Page binds this Module's Table Provider and Controller by their Foundation
+names (`PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS`, `PHI_CUSTOMER_FILE_RESOURCE_KEYS`,
+`PHI_CUSTOMER_FILE_SUBJECT_PARAM` in `constants/customer-file.ts`; `PHI_THREADS_CONTROLLER_TYPE` in
+`constants/threads-controller-address.ts`), importing nothing of this Module, so the conversations Module
+has to be active in the Area the Page stands in -- the Accounting default. Any Module's preset binds the
+Provider the same way, by the key, in an Area where this Module is active.
 
 **What it is made of.** Nothing of its own but a Provider. The Page is the conversations Page's three
 surfaces with a choice in front of them:
@@ -331,7 +339,7 @@ surfaces with a choice in front of them:
 ```text
 person      a Table on resource `person`; its `userId` filter is Core's member picker
             (`site-members`, searched on the server: name, e-mail, telephone digits)
-addresses   a Table on resource `addresses`, empty for support
+addresses   a Table on resource `addresses`
 threads     a Table on resource `threads`: the file first, then the person's conversations
 conversation, Reply dialog   as on the conversations Page, the Reply offering the internal note
 ```

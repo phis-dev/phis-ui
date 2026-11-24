@@ -2,7 +2,7 @@ import { PHI_CMS_AREA_KEYS } from "../../../constants/cms-areas";
 import { buildPhiRuntimeModuleControllerDescriptor, type PhiRuntimeModuleDefinition } from "../contracts";
 import { PHI_CORE_SERVER_BINDING } from "../../../types/server-capabilities";
 import { PHI_THREADS_RUNTIME_MODULE_IDENTITY } from "./ids";
-import { PHI_THREADS_CONTROLLER_TYPE } from "./controller/address";
+import { PHI_THREADS_CONTROLLER_TYPE } from "../../../constants/threads-controller-address";
 import { PHI_THREADS_RUNTIME_CONTROLLER_DEFINITION } from "./controller/definition";
 import { PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "./data-providers";
 import { PHI_THREADS_FORM_HANDLER_PROVIDER_DESCRIPTORS } from "./forms";

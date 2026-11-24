@@ -7,7 +7,7 @@ import type { PhiRuntimeControllerDefinition } from "../../../../types/cms-plugi
 import {
   PHI_THREADS_CONTROLLER_KEY,
   PHI_THREADS_CONTROLLER_PLUGIN_KEY,
-} from "./address";
+} from "../../../../constants/threads-controller-address";
 
 export type PhiThreadsControllerConfig = {
   /**

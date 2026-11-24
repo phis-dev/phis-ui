@@ -16,9 +16,11 @@ import { checkPhiPresetTreeContract } from "../../helpers/preset-tree-contract-c
 import { validatePhiTableWidgetBinding } from "../../types/table-widget";
 import { PHI_TABLE_WIDGET_DEFINITION } from "./core/widgets/table/config";
 import { PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "./threads/data-providers";
-import { PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS } from "./threads/ids";
-import { PHI_THREADS_CUSTOMER_FILE_ROUTES } from "./threads/presets";
-import { PHI_THREADS_CUSTOMER_FILE_ACCESS } from "./threads/customer-file-access";
+import { PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS } from "../../constants/customer-file";
+import { PHI_ACCOUNTING_RUNTIME_MODULE_ROUTES } from "./accounting/presets";
+import { PHI_ACCOUNTING_CUSTOMER_FILE_PAGE_PRESET_KEY } from "./accounting/ids";
+import { PHI_ACCOUNTING_CUSTOMER_FILE_ACCESS } from "./accounting/customer-file-access";
+import { PHI_THREADS_RUNTIME_MODULE_ROUTES } from "./threads/presets";
 import {
   buildPhiCustomerFilePath,
   toPhiCustomerFilePersonRow,
@@ -52,29 +54,28 @@ const viewer = (flags: number) => ({
   groupClaims: [],
 });
 
-async function loadTree(area: "app" | "accounting", flags: number) {
-  const route = PHI_THREADS_CUSTOMER_FILE_ROUTES.find((entry) => entry.area === area)!;
-  return route.loadTree({ page: PAGE, runtime: { locale: { current: "en" }, viewer: viewer(flags) } } as never);
+const ROUTE = PHI_ACCOUNTING_RUNTIME_MODULE_ROUTES.find((entry) => entry.presetKey === PHI_ACCOUNTING_CUSTOMER_FILE_PAGE_PRESET_KEY)!;
+
+async function loadTree(flags: number) {
+  return ROUTE.loadTree({ page: PAGE, runtime: { locale: { current: "en" }, viewer: viewer(flags) } } as never);
 }
 
 /** Staff's customer file (phis-server `GET /api/site/members/{userId}/file`). */
 describe("the customer file page", () => {
-  it("stands in the App and in Accounting, its entry offered to support and accounting", () => {
-    expect(PHI_THREADS_CUSTOMER_FILE_ROUTES.map((route) => [route.area, route.path])).toEqual([
-      ["app", "/customer-file"], ["accounting", "/customer-file"],
-    ]);
-    for (const route of PHI_THREADS_CUSTOMER_FILE_ROUTES) {
-      expect(route.navigation?.[0]?.item.accessPolicy).toEqual(PHI_THREADS_CUSTOMER_FILE_ACCESS);
-    }
+  it("is the Accounting Module's, in Accounting only, its entry offered to accounting", () => {
+    expect([ROUTE.area, ROUTE.path]).toEqual(["accounting", "/customer-file"]);
+    expect(ROUTE.navigation?.[0]?.item.accessPolicy).toEqual(PHI_ACCOUNTING_CUSTOMER_FILE_ACCESS);
+    expect(PHI_ACCOUNTING_CUSTOMER_FILE_ACCESS.allowedRoleFlags & PhiBaseRole.Supporter).toBe(0);
+    expect(PHI_THREADS_RUNTIME_MODULE_ROUTES.some((route) => route.path === "/customer-file")).toBe(false);
   });
 
   it("picks the member with Core's member picker and hands the choice to the other two lists", async () => {
-    const tree = await loadTree("app", PhiBaseRole.Supporter);
+    const tree = await loadTree(PhiBaseRole.Accountant);
     expect(checkPhiPresetTreeContract(tree, { page: PAGE, forms: [] })).toEqual([]);
     expect(checkPhiPresetTables(tree, { dataProviders: PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS })).toEqual([]);
     const tables = tree.contentWidgets.filter((widget) => widget.widgetType.endsWith("/table"));
     const provider = PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS
-      .find((entry) => entry.key === PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS.customerFile)!;
+      .find((entry) => entry.key === PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS.table)!;
     for (const table of tables) {
       const parsed = PHI_TABLE_WIDGET_DEFINITION.parseConfig(table.config as Record<string, unknown>);
       const resource = provider.resources!.find((entry) => entry.resourceKey === parsed.source!.resourceKey)!;
@@ -94,10 +95,21 @@ describe("the customer file page", () => {
     expect(tree.controllerSettings?.length).toBe(1);
   });
 
-  it("reads nothing for a viewer who holds neither access", async () => {
-    const tree = await loadTree("app", 0);
-    expect(tree.contentWidgets.map((widget) => widget.widgetType.split("/").pop())).toEqual(["simple-text"]);
-    expect(tree.controllerSettings).toBeUndefined();
+  it("reads nothing for a viewer without accounting, a Supporter included", async () => {
+    for (const flags of [0, PhiBaseRole.Supporter]) {
+      const tree = await loadTree(flags);
+      expect(tree.contentWidgets.map((widget) => widget.widgetType.split("/").pop())).toEqual(["simple-text"]);
+      expect(tree.controllerSettings).toBeUndefined();
+    }
+  });
+
+  it("places the addresses for every viewer it is for", async () => {
+    for (const flags of [PhiBaseRole.Accountant, PhiBaseRole.Maintainer]) {
+      const tree = await loadTree(flags);
+      expect(tree.contentWidgets.filter((widget) => widget.widgetType.endsWith("/table"))
+        .map((widget) => (widget.config.source as { resourceKey: string }).resourceKey))
+        .toEqual(["person", "addresses", "threads"]);
+    }
   });
 
   it("reads Core's answer: the person, and the file first on the first page", () => {

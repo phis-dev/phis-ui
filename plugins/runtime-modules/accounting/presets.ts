@@ -7,11 +7,17 @@ import { buildPhiAreaRootRoutePresetDescriptor } from "../area-root-route";
 import { buildPhiSidebarRoutePresetDescriptor } from "../sidebar-route";
 import { PhiCmsRegionType } from "../../../constants/phi-cms";
 import { PHI_DEFAULT_PUB_AREA_COMPOSITION_NODE_KEYS } from "../preset-contracts/pub-area";
-import { PHI_ACCOUNTING_PRODUCTS_PAGE_PRESET_KEY, PHI_ACCOUNTING_RUNTIME_MODULE_ID } from "./ids";
+import type { PhiViewerAccessPolicy } from "../../../types/access";
+import {
+  PHI_ACCOUNTING_CUSTOMER_FILE_PAGE_PRESET_KEY,
+  PHI_ACCOUNTING_PRODUCTS_PAGE_PRESET_KEY,
+  PHI_ACCOUNTING_RUNTIME_MODULE_ID,
+} from "./ids";
+import { PHI_ACCOUNTING_CUSTOMER_FILE_ACCESS } from "./customer-file-access";
 
 /*
- * What the Accounting base Module brings: the Site shell for its Area, the Area root, and the Site's
- * product directory. The root lands on the first sidebar entry a viewer can see -- the Dashboard
+ * What the Accounting base Module brings: the Site shell for its Area, the Area root, the Site's
+ * product directory and staff's customer file. The root lands on the first sidebar entry a viewer can see -- the Dashboard
  * Module's where it is on, the directory where it is not.
  */
 
@@ -76,7 +82,7 @@ export const PHI_ACCOUNTING_RUNTIME_MODULE_ROUTES = [
     anchor: "main",
     ownerModuleId: PHI_ACCOUNTING_RUNTIME_MODULE_ID,
     presetKey: PHI_ACCOUNTING_PRODUCTS_PAGE_PRESET_KEY,
-    title: "Products",
+    title: "Product directory",
     path: "/products",
     itemKey: "@phis/ui/modules/accounting/nav/accounting/products",
     icon: "antd:appstore",
@@ -84,4 +90,35 @@ export const PHI_ACCOUNTING_RUNTIME_MODULE_ROUTES = [
       import("./trees/phi-default-accounting-products-page-tree")
         .then((module) => module.buildPhiDefaultAccountingProductsPageTree({ page, runtime })),
   }),
+  /*
+   * Staff's customer file on one member, for the holders of `accounting`, whom the Area admits anyway:
+   * the entry states the access as the Page and Core's route do. A Supporter's file is the Support
+   * Module's own Page over the same Core route, not this one.
+   */
+  withPhiNavigationAccess(buildPhiSidebarRoutePresetDescriptor({
+    area: "accounting",
+    anchor: "main",
+    ownerModuleId: PHI_ACCOUNTING_RUNTIME_MODULE_ID,
+    presetKey: PHI_ACCOUNTING_CUSTOMER_FILE_PAGE_PRESET_KEY,
+    title: "Customer file",
+    path: "/customer-file",
+    itemKey: "@phis/ui/modules/accounting/nav/accounting/customer-file",
+    icon: "antd:idcard",
+    loadTree: ({ page, runtime }) =>
+      import("./trees/phi-default-accounting-customer-file-page-tree")
+        .then((module) => module.buildPhiDefaultAccountingCustomerFilePageTree({ page, runtime })),
+  }), PHI_ACCOUNTING_CUSTOMER_FILE_ACCESS),
 ] satisfies readonly PhiCmsRoutePresetDescriptor[];
+
+function withPhiNavigationAccess(
+  descriptor: PhiCmsRoutePresetDescriptor,
+  accessPolicy: PhiViewerAccessPolicy,
+): PhiCmsRoutePresetDescriptor {
+  return {
+    ...descriptor,
+    navigation: descriptor.navigation?.map((injection) => ({
+      ...injection,
+      item: { ...injection.item, accessPolicy },
+    })),
+  };
+}

@@ -1,10 +1,10 @@
 import type { PhiRuntimeModuleDataProviderDescriptor } from "../contracts";
 import {
-  PHI_THREADS_CUSTOMER_FILE_RESOURCE_KEYS,
   PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS,
   PHI_THREADS_RUNTIME_MODULE_ID,
 } from "./ids";
 import { PhisThreadKind, PhisThreadStatus } from "../../../constants/threads";
+import { PHI_CUSTOMER_FILE_RESOURCE_KEYS } from "../../../constants/customer-file";
 
 /** Who this viewer may write to, for this Module's own Form that opens a conversation. */
 export const PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
@@ -35,7 +35,7 @@ export const PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
     description: "One member as staff may read them: contact details, addresses, their file and their conversations.",
     resources: [
       {
-        resourceKey: PHI_THREADS_CUSTOMER_FILE_RESOURCE_KEYS.person,
+        resourceKey: PHI_CUSTOMER_FILE_RESOURCE_KEYS.person,
         title: "Person",
         rowIdentityPath: "userId",
         fields: [
@@ -50,7 +50,7 @@ export const PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
         query: { search: false, filterFields: ["userId"], sorting: "none", pagination: "none" },
       },
       {
-        resourceKey: PHI_THREADS_CUSTOMER_FILE_RESOURCE_KEYS.addresses,
+        resourceKey: PHI_CUSTOMER_FILE_RESOURCE_KEYS.addresses,
         title: "Addresses",
         rowIdentityPath: "id",
         fields: [
@@ -68,7 +68,7 @@ export const PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
         query: { search: false, filterFields: ["userId"], sorting: "none", pagination: "none" },
       },
       {
-        resourceKey: PHI_THREADS_CUSTOMER_FILE_RESOURCE_KEYS.threads,
+        resourceKey: PHI_CUSTOMER_FILE_RESOURCE_KEYS.threads,
         title: "Threads",
         rowIdentityPath: "id",
         // Choosing one opens it in the conversation beside the list, as the inbox does.
