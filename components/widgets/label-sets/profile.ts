@@ -49,6 +49,25 @@ const PHI_PROFILE_NAME_WIDGET_LABEL_SET = definePhiLabelSet({
   },
 });
 
+/*
+ * The two numbers beside the name: a business telephone and a mobile, each as the person writes it. Core
+ * keeps them on the profile, so they are the same on every Site, and a person without a name yet is
+ * asked for one first (409), which is why they stand in the name's panel.
+ */
+const PHI_PROFILE_PHONE_WIDGET_LABEL_SET = definePhiLabelSet({
+  key: "widget:profile-phone",
+  ctx: PHI_TR_CTX_WEB_UI_LABEL,
+  labels: {
+    phone_label: "Business phone",
+    mobile_label: "Mobile",
+    phone_invalid: "Enter a telephone number.",
+    too_long: "At most 64 characters.",
+    submit_label: "Save",
+    success_title: "Numbers updated",
+    success_text: definePhiMessageLabel("Your telephone numbers have been saved."),
+  },
+});
+
 const PHI_PROFILE_OVERVIEW_WIDGET_LABEL_SET = definePhiLabelSet({
   key: "widget:profile-overview",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
@@ -263,5 +282,16 @@ export async function getPhiProfilePasswordFormLabels(options: PhiGlobalTranslat
     fields: labels.fields,
     actions: { submitLabel: labels.submitLabel },
     feedback: labels.feedback,
+  };
+}
+
+export async function getPhiProfilePhoneWidgetLabels(options: PhiGlobalTranslatorOptions) {
+  const labels = await getPhiLabelSet(options, PHI_PROFILE_PHONE_WIDGET_LABEL_SET);
+  return {
+    fields: { phone: labels.phone_label, mobile: labels.mobile_label },
+    phoneInvalid: labels.phone_invalid,
+    tooLong: labels.too_long,
+    submitLabel: labels.submit_label,
+    feedback: { successTitle: labels.success_title, successText: labels.success_text },
   };
 }

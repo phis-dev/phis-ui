@@ -26,4 +26,10 @@ export const PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS = [
       (await import("../../../plugins/runtime-modules/user-management/services/table"))
         .PhiUserManagementTableProviderClient,
   },
+  {
+    key: PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS.usersAccess,
+    ownerModuleId: PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
+    loadLive: async () =>
+      (await import("./services/users-access-table")).PhiUserManagementUsersAccessTableProviderClient,
+  },
 ] satisfies readonly PhiRuntimeModuleDataProviderClientDefinition[];

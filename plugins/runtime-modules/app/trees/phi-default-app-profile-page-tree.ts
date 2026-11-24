@@ -4,6 +4,8 @@ import type { PhiBlockRuntime } from "../../../../types";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import { buildPhiSettingsPageShellTree } from "../../../../components/regions/presets/phi-settings-page-shell-tree";
 import { getPhiProfilePageLabels } from "./profile-label-set";
+import { getPhiAppAddressesLabels } from "./addresses-label-set";
+import { buildPhiAccountAddressesPanel } from "./account-addresses-panel";
 import {
   getPhiProfileLocaleWidgetLabels,
   getPhiProfileThemeWidgetLabels,
@@ -13,6 +15,7 @@ import { createPhiCoreRuntimeControllerAddress } from "../../../../components/ru
 import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 
 const REGION_CONTENT_ID = -286;
+const PROFILE_PRESET_KEY = "app-profile-page";
 
 /**
  * What the account says about itself, as Settings panels rather than as a page of Widgets.
@@ -38,11 +41,13 @@ export async function buildPhiDefaultAppProfilePageTree({
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
   const labelOptions = buildPhiWidgetLabelTranslatorOptions(runtime);
-  const [labels, localeLabels, themeLabels] = await Promise.all([
+  const [labels, localeLabels, themeLabels, addressLabels] = await Promise.all([
     getPhiProfilePageLabels(labelOptions),
     getPhiProfileLocaleWidgetLabels(labelOptions),
     getPhiProfileThemeWidgetLabels(labelOptions),
+    getPhiAppAddressesLabels(labelOptions),
   ]);
+  const addresses = buildPhiAccountAddressesPanel(addressLabels, PROFILE_PRESET_KEY);
   const availableLocales = runtime.site.availableLocales.map(
     (option) => ({ code: option.code, label: option.label }),
   );
@@ -55,7 +60,7 @@ export async function buildPhiDefaultAppProfilePageTree({
   const tree = buildPhiSettingsPageShellTree({
     page,
     ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
-    presetKey: "app-profile-page",
+    presetKey: PROFILE_PRESET_KEY,
     regionId: REGION_CONTENT_ID,
     label: labels.page,
     panels: [
@@ -78,8 +83,27 @@ export async function buildPhiDefaultAppProfilePageTree({
             displayName: runtime.viewer.profile?.displayName ?? "",
             companyName: runtime.viewer.profile?.companyName ?? "",
           },
+        }, {
+          /*
+           * The numbers beside the name, as their own Form because Core writes them on their own route.
+           * Both start as strings, never absent: the route takes both at once, and an empty one is
+           * cleared rather than left out.
+           */
+          kind: "form",
+          nodeKey: "widgetPhone",
+          formId: PHI_APP_FORM_IDS.profilePhone,
+          label: labels.phone,
+          initialValues: {
+            phone: runtime.viewer.profile?.phone ?? "",
+            mobile: runtime.viewer.profile?.mobile ?? "",
+          },
         }],
       },
+      /*
+       * The account's addresses on this Site, after the name and numbers they are made out to: the
+       * address book is the Site's, so another Site lists its own.
+       */
+      addresses.panel,
       {
         nodeKey: "panelLanguage",
         title: labels.language,
@@ -177,6 +201,7 @@ export async function buildPhiDefaultAppProfilePageTree({
         }],
       },
     ],
+    overlays: addresses.overlays,
   });
 
   return {

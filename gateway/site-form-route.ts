@@ -10,6 +10,7 @@ import type { PhiRuntimeModuleCatalog } from "../plugins/runtime-modules/contrac
 import { PHIS_FORM_RELAY_HEADER, PHIS_SITE_KEY_HEADER } from "../constants/http-headers";
 import type { PhiSiteAreaBridgeLoader } from "./site-area-bridges";
 import { isPhiRecord } from "../helpers/is-record";
+import { shapePhiFormHandlerRequest } from "./form-handler-request";
 
 /**
  * How the catalog of the Area a Form was submitted from is reached.
@@ -394,10 +395,19 @@ export function buildPhiSiteFormRouteHandlers({
         appendCookieHeader(proxyHeaders, `${PHI_CSRF_COOKIE_NAME}=${csrfToken}`);
       }
 
-      const upstreamResponse = await fetch(`${upstreamBaseUrl}${target.upstreamPath}`, {
+      // The values as the handler's route takes them: its path filled, its objects and flags formed.
+      const shaped = shapePhiFormHandlerRequest({
+        upstreamPath: target.upstreamPath ?? "",
+        request: resolved.provider.request,
+        values: body.values,
+      });
+      if ("error" in shaped) {
+        return toJsonResponse({ ok: false, error: shaped.error }, 400);
+      }
+      const upstreamResponse = await fetch(`${upstreamBaseUrl}${shaped.path}`, {
         method: descriptor.method,
         headers: headersToPlainObject(proxyHeaders),
-        body: JSON.stringify(body.values ?? {}),
+        body: JSON.stringify(shaped.body),
         cache: "no-store",
         signal: AbortSignal.timeout(timeoutMs),
       });

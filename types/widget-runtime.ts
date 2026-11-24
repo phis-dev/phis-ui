@@ -105,6 +105,9 @@ export type PhiBlockRuntimeViewer = {
     /** The name a reader is shown -- a byline -- where it is not the first and last name. */
     displayName?: string | null;
     companyName?: string | null;
+    /** Business telephone, as the person typed it (`PATCH /api/v1/auth/profile/phone`). */
+    phone?: string | null;
+    mobile?: string | null;
   } | null;
 };
 

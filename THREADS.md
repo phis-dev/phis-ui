@@ -128,10 +128,10 @@ than a Widget type, which is the same promise in a smaller surface.
 | contribution | what it is |
 | --- | --- |
 | Widgets | `thread-conversation` |
-| Data Provider | the thread library Table Provider, resource `inbox` |
+| Data Provider | the customer file Table Provider (`tables/threads-customer-file`, resources `person`, `addresses`, `threads`); the thread library Table Provider, resource `inbox`, is Core's |
 | Options Provider | conversation candidates -- who this viewer may write to |
 | Forms | the new-conversation Form and the reply Form, with a handler Provider each |
-| Route presets | `<area>-threads-page` at `/conversations` in every sidebar Area, each with its sidebar entry |
+| Route presets | `<area>-threads-page` at `/conversations` in every sidebar Area, each with its sidebar entry; `<area>-customer-file-page` at `/customer-file` in the App and in Accounting (section 10) |
 | Controller | the translation above, mounted on demand |
 | Media Space | the User Space kinds in section 5 |
 | Dashboard card | unread conversations, on the App Dashboard |
@@ -312,7 +312,40 @@ In order:
 The body sent is `body_markdown ?? body_text`. Markdown passes through as text and the control codes
 survive, so the richer body is the one to send, and the answer is rendered the way the original is.
 
-## 10. Open
+## 10. The customer file
+
+Staff's file on one member of the Site is phis-server's `GET /api/site/members/{userId}/file`, for the
+holders of the Site access `accounting` or `support`: the person as the staff road of `users:v1` lets the
+actor read them (support without addresses), their file -- the thread kind `File`, opened on first asking,
+every message in it Internal -- and the threads the actor sees that the person takes part in. Core writes
+every read to the Site's access log.
+
+**Where.** `/customer-file` in the App and in the Accounting Area (`<area>-customer-file-page`). A Supporter
+works in the App, where `/support` is, and no staff Area admits one; an Accountant works in Accounting. The
+App's entry is offered to the holders of either access only; the Page tells anybody else it is not theirs
+and reads nothing for them.
+
+**What it is made of.** Nothing of its own but a Provider. The Page is the conversations Page's three
+surfaces with a choice in front of them:
+
+```text
+person      a Table on resource `person`; its `userId` filter is Core's member picker
+            (`site-members`, searched on the server: name, e-mail, telephone digits)
+addresses   a Table on resource `addresses`, empty for support
+threads     a Table on resource `threads`: the file first, then the person's conversations
+conversation, Reply dialog   as on the conversations Page, the Reply offering the internal note
+```
+
+The person Table's `queryChange` is routed to the `query/change` input of the other two, so one choice
+fills all three; the threads Table's selection reaches the Conversations Controller, which makes it a thread
+for the conversation exactly as on the conversations Page, and a note written in the Reply dialog reloads
+both. Core answers the file's id beside the list rather than in it, so the Provider puts the file first on
+the first page under the subject the Page hands it in its binding params (`fileSubject`).
+
+Each Table reads the route for the member chosen, so one choice is three requests and three entries in the
+access log; nothing is read before a member is chosen ([TODOS.md](./TODOS.md)).
+
+## 11. Open
 
 - **Virtualisation.** A conversation read upwards rather than a page at a time is the case
   [TODOS.md](./TODOS.md) names for it. Even there the first answer is loading on scroll by cursor;

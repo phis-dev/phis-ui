@@ -1,5 +1,6 @@
 import { definePhiAreaBaseRuntimeModuleDefinition } from "../area-base-definition";
 import { PHI_APP_FORM_HANDLER_PROVIDER_DESCRIPTORS } from "./forms";
+import { PHI_APP_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "./data-providers";
 import { PHI_APP_RUNTIME_MODULE_IDENTITY } from "./ids";
 import {
   PHI_CORE_SERVER_BINDING,
@@ -15,4 +16,5 @@ export const PHI_APP_RUNTIME_MODULE_DEFINITION = definePhiAreaBaseRuntimeModuleD
   formProviders: {
     handlers: PHI_APP_FORM_HANDLER_PROVIDER_DESCRIPTORS,
   },
+  dataProviders: PHI_APP_RUNTIME_DATA_PROVIDER_DESCRIPTORS,
 });

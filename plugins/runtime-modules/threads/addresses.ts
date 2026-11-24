@@ -40,3 +40,32 @@ export function createPhiThreadsPageIds(area: PhiSidebarAreaKey) {
     layouts: createPhiPresetCmsInstanceIdMap(identity, ["layoutNew", "layoutNewFooter", "layoutReply", "layoutReplyFooter"]),
   };
 }
+
+/** The customer file Page of one Area, by its preset key: `<area>-customer-file-page`. */
+export function getPhiCustomerFilePagePresetKey(area: "app" | "accounting") {
+  return `${area}-customer-file-page` as const;
+}
+
+/**
+ * Stable instance ids for one Area's customer file Page: the three Tables, the conversation, and the
+ * Reply dialog with its Form -- every one named in a route by another.
+ */
+export function createPhiCustomerFilePageIds(area: "app" | "accounting") {
+  const identity = {
+    domain: "page",
+    ownerModuleId: PHI_THREADS_RUNTIME_MODULE_ID,
+    presetKey: getPhiCustomerFilePagePresetKey(area),
+  } as const;
+  return {
+    widgets: createPhiPresetCmsInstanceIdMap(identity, [
+      "widgetPerson",
+      "widgetAddresses",
+      "widgetThreads",
+      "widgetConversation",
+      "widgetReplyForm",
+      "widgetReplyCommands",
+    ]),
+    overlays: createPhiPresetCmsInstanceIdMap(identity, ["overlayReply"]),
+    layouts: createPhiPresetCmsInstanceIdMap(identity, ["layoutReply", "layoutReplyFooter"]),
+  };
+}

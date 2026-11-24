@@ -10,6 +10,8 @@ const PHI_PROFILE_PAGE_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_APP_RUNTIM
   labels: {
     page: "Profile",
     name: "Name",
+    /** The authoring name of the Form beside the name that holds the two telephone numbers. */
+    phone: "Telephone numbers",
     language: "Language",
     appearance: "Appearance",
     /*
@@ -35,6 +37,7 @@ export async function getPhiProfilePageLabels(options: PhiGlobalTranslatorOption
   return {
     page: labels.page,
     name: labels.name,
+    phone: labels.phone,
     language: labels.language,
     appearance: labels.appearance,
     subscriptions: labels.subscriptions,

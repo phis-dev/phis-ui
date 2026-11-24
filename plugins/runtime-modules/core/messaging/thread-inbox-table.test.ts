@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { PhisThreadFlag, PhisThreadStatus } from "../../../../constants/threads";
-import { readPhiThreadInboxActionBody, readPhiThreadInboxRow } from "./thread-inbox-table";
+import { readPhiThreadInboxActionBody } from "./thread-inbox-table";
+import { readPhiThreadInboxRow } from "../../../../helpers/thread-inbox-row";
 
 function row(input: { status?: number; flags?: number; unread?: boolean }) {
   return { id: 7, kind: 1, status: PhisThreadStatus.Open, flags: 0, unread: false, ...input };

@@ -8,6 +8,24 @@ and `scripts/validate-todos-wants.ts` refuses the entry once the catalog has one
 
 ## At the next release
 
+- **`users:v1` in the UI** (phis-server 0.6.0 routes): the App Profile page's telephone numbers
+  (`PATCH /api/v1/auth/profile/phone`, `viewer.profile.phone`/`mobile`) and the account's addresses
+  (`/api/site/account/addresses`, its own Table Provider and two Forms); Admin -> Settings -> People data
+  (`/api/site/admin/users-access`: background grants, retention, the access log); staff's customer file in
+  the App and Accounting (`GET /api/site/members/{userId}/file`, THREADS.md section 10). The relay forms a
+  handler's request where a Core route is not shaped like a Form (FORMS.md, "Request shape"). **Needs
+  `@phis/server` 0.6.0**; an older Server answers 404 on every one of these routes. Left open:
+  - The customer file reads the route once per Table, so one choice of a member is three requests and three
+    access log entries; one read shared by the three Tables (or one resource answering the person and their
+    addresses) is the follow-up, and a cache only with the owner's agreement.
+  - The address country is a two-letter text field: no country picker exists to offer names.
+  - The access log filters take a subject and an Add-on id as typed; a picker of the Site's people by subject
+    and of the Add-ons that read people would be options Providers of their own.
+  - A grant gives an Add-on everything it asks in the background; granting a part of it (the route takes
+    any non-empty part) has no dialog yet.
+  - A Maintainer opening Settings -> People data by its address sees the Tables' refusals; the page does not
+    yet answer that inside itself, as the customer file does.
+
 - **Small pictures in Tables and records** (TABLES.md, "Read renderers"): the read renderer `image` (a
   `string` field holding a Site-relative address the server built -- for a list the Media library's `icon`
   variant -- drawn as a plain lazy `<img>` in a fixed 32 px square, `PHI_RENDERED_IMAGE_SIZE`, fitted whole,

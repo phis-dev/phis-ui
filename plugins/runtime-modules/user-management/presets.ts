@@ -1,6 +1,6 @@
 import type { PhiCmsRoutePresetDescriptor } from "../../../types/cms-module-descriptors";
 import { buildPhiSidebarRoutePresetDescriptor } from "../sidebar-route";
-import { PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID } from "./ids";
+import { PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID, PHI_USER_MANAGEMENT_USERS_ACCESS_PAGE_PRESET_KEY } from "./ids";
 
 export const PHI_USER_MANAGEMENT_RUNTIME_MODULE_ROUTES = [
   buildPhiSidebarRoutePresetDescriptor({
@@ -20,5 +20,22 @@ export const PHI_USER_MANAGEMENT_RUNTIME_MODULE_ROUTES = [
     loadTree: ({ page, runtime }) =>
       import("./trees/phi-default-admin-users-page-tree")
         .then((module) => module.buildPhiDefaultAdminUsersPageTree({ page, runtime })),
+  }),
+  /*
+   * What Add-ons may read of people, in the Admin's Settings: the entry is a Site Admin's, as the routes
+   * behind it are (`/api/site/admin/users-access`). Beside Users, because it is about the same people.
+   */
+  buildPhiSidebarRoutePresetDescriptor({
+    area: "admin",
+    anchor: "settings",
+    ownerModuleId: PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
+    presetKey: PHI_USER_MANAGEMENT_USERS_ACCESS_PAGE_PRESET_KEY,
+    title: "People data",
+    path: "/settings/people-data",
+    itemKey: "@phis/ui/modules/user-management/nav/admin/settings/people-data",
+    icon: "antd:safety-certificate",
+    loadTree: ({ page, runtime }) =>
+      import("./trees/phi-default-admin-users-access-page-tree")
+        .then((module) => module.buildPhiDefaultAdminUsersAccessPageTree({ page, runtime })),
   }),
 ] satisfies readonly PhiCmsRoutePresetDescriptor[];

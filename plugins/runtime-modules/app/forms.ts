@@ -7,12 +7,15 @@ import { createPhiFormId } from "../../../types/form-id";
 import { PHI_SHARED_PACKAGE_NAME } from "../../../types/signals";
 import {
   PHI_FORM_FIELD_PROVIDER_KEYS,
+  PHI_FORM_VALIDATION_PROVIDER_KEYS,
   createPhiSharedFormProviderKey,
 } from "../../../components/forms/form-provider-contract";
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../constants/core-data-provider-keys";
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
 import { PHI_APP_RUNTIME_MODULE_ID } from "./ids";
-import { phiFormLabel as label } from "../../../components/forms/form-descriptor-text";
+import { phiFormLabel as label, phiFormRequired as required } from "../../../components/forms/form-descriptor-text";
+import { PhisSiteAddressFlags } from "@phis/contracts/users";
+import type { PhiFormId } from "../../../types/form-id";
 
 /**
  * What a signed-in person can settle about their own account, as Forms rather than as Widgets.
@@ -28,6 +31,9 @@ import { phiFormLabel as label } from "../../../components/forms/form-descriptor
  */
 export const PHI_APP_FORM_IDS = {
   profileName: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "app/profile-name"),
+  profilePhone: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "app/profile-phone"),
+  addressCreate: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "app/address-create"),
+  addressEdit: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "app/address-edit"),
   profileNewsletter: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "app/profile-newsletter"),
   profileLocale: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "app/profile-locale"),
   profileTheme: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "app/profile-theme"),
@@ -35,12 +41,17 @@ export const PHI_APP_FORM_IDS = {
 
 const PHI_APP_FORM_HANDLER_KEYS = {
   profileName: "site.app.profile-name",
+  profilePhone: "site.app.profile-phone",
+  addressCreate: "site.app.address-create",
+  addressEdit: "site.app.address-edit",
   profileNewsletter: "site.app.profile-newsletter",
   profileLocale: "site.app.profile-locale",
   profileTheme: "site.app.profile-theme",
 } as const;
 
 const NAME_LABEL_SET_KEY = "@phis/ui/modules/app/labels/profile-name" as const;
+const PHONE_LABEL_SET_KEY = "@phis/ui/modules/app/labels/profile-phone" as const;
+const ADDRESS_LABEL_SET_KEY = "@phis/ui/modules/app/labels/address" as const;
 const NEWSLETTER_LABEL_SET_KEY = "@phis/ui/modules/app/labels/profile-newsletter" as const;
 const LOCALE_LABEL_SET_KEY = "@phis/ui/modules/app/labels/profile-locale" as const;
 const THEME_LABEL_SET_KEY = "@phis/ui/modules/app/labels/profile-theme" as const;
@@ -91,6 +102,125 @@ const nameDescriptor: PhiFormDescriptor = {
   },
   layout: { gap: { compact: "sm", medium: "base" } },
 };
+
+/**
+ * The two numbers beside the name, a Form of their own because Core keeps them behind their own write
+ * (`PATCH /api/v1/auth/profile/phone`), which takes both at once: what is sent is what is kept, an empty
+ * field clears its number. They are written as the person writes them -- spaces, a leading `+`, an
+ * extension -- so the rule is the Core's own length and nothing about the digits; the member picker finds a
+ * person by them either way.
+ */
+const PHONE_MAX_LENGTH = 64;
+const phoneDescriptor: PhiFormDescriptor = {
+  schemaVersion: 1,
+  key: PHI_APP_FORM_IDS.profilePhone,
+  labelSetKey: PHONE_LABEL_SET_KEY,
+  fields: [
+    {
+      key: "phone",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.tel,
+      label: label("phone", "Business phone"),
+      autoComplete: "work tel",
+      validation: [{
+        providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.maxLength,
+        message: label("tooLong", "At most 64 characters."),
+        config: { max: PHONE_MAX_LENGTH },
+      }],
+    },
+    {
+      key: "mobile",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.tel,
+      label: label("mobile", "Mobile"),
+      autoComplete: "mobile tel",
+      validation: [{
+        providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.maxLength,
+        message: label("tooLong", "At most 64 characters."),
+        config: { max: PHONE_MAX_LENGTH },
+      }],
+    },
+  ],
+  success: {
+    title: label("successTitle", "Numbers updated"),
+    text: label("successText", "Your telephone numbers have been saved."),
+  },
+  layout: { gap: { compact: "sm", medium: "base" } },
+};
+
+/**
+ * One address of the account's book, added or changed (`users:v1`, phis-server
+ * `/api/site/account/addresses`): the same fields twice, the change with the hidden id of the version it
+ * replaces. Core takes `{ address, flags }`, the parts under `address` and what the address is for as
+ * `PhisSiteAddressFlags`, so the handler states that shape (`request`) and the Form keeps one field per
+ * part. A default asks its purpose first: Core refuses a default for a purpose the address does not have.
+ */
+const ADDRESS_TEXT_FIELDS = ["companyName", "name", "line1", "line2", "postalCode", "city", "region", "country"] as const;
+const ADDRESS_FLAG_BITS = {
+  billing: PhisSiteAddressFlags.Billing,
+  shipping: PhisSiteAddressFlags.Shipping,
+  defaultBilling: PhisSiteAddressFlags.DefaultBilling,
+  defaultShipping: PhisSiteAddressFlags.DefaultShipping,
+} as const;
+const ADDRESS_REQUEST = {
+  objects: { address: ADDRESS_TEXT_FIELDS },
+  flags: { flags: ADDRESS_FLAG_BITS },
+} as const;
+
+function addressDescriptor(formId: PhiFormId, mode: "create" | "edit"): PhiFormDescriptor {
+  const text = (key: string, fallback: string, autoComplete: string) => ({
+    key,
+    fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text,
+    label: label(key, fallback),
+    autoComplete,
+  });
+  return {
+    schemaVersion: 1,
+    key: formId,
+    labelSetKey: ADDRESS_LABEL_SET_KEY,
+    fields: [
+      ...(mode === "edit" ? [{ key: "id", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.hidden }] : []),
+      { ...text("name", "Name", "name"), validation: required("nameRequired", "Enter the name the address is made out to.") },
+      text("companyName", "Company", "organization"),
+      { ...text("line1", "Street and number", "address-line1"), validation: required("line1Required", "Enter the street and number.") },
+      text("line2", "Address line 2", "address-line2"),
+      text("postalCode", "Postal code", "postal-code"),
+      { ...text("city", "City", "address-level2"), validation: required("cityRequired", "Enter the city.") },
+      text("region", "Region", "address-level1"),
+      {
+        ...text("country", "Country", "country"),
+        description: label("countryHint", "The two-letter code, such as CH, DE or US."),
+        validation: [
+          ...required("countryInvalid", "Enter a two-letter country code."),
+          {
+            providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.pattern,
+            message: label("countryInvalid", "Enter a two-letter country code."),
+            config: { source: "^[A-Za-z]{2}$" },
+          },
+        ],
+      },
+      { key: "billing", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.checkbox, controlLabel: label("billing", "Billing address"), initialValue: mode === "create" },
+      { key: "shipping", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.checkbox, controlLabel: label("shipping", "Shipping address"), initialValue: mode === "create" },
+      {
+        key: "defaultBilling",
+        fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.checkbox,
+        controlLabel: label("defaultBilling", "Default for billing"),
+        initialValue: false,
+        disabledWhen: { source: "form", valuePath: "billing", operator: "falsy" },
+      },
+      {
+        key: "defaultShipping",
+        fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.checkbox,
+        controlLabel: label("defaultShipping", "Default for shipping"),
+        initialValue: false,
+        disabledWhen: { source: "form", valuePath: "shipping", operator: "falsy" },
+      },
+    ],
+    success: {
+      title: label("successTitle", "Address saved"),
+      text: label("successText", "Your address has been saved."),
+    },
+    layout: { gap: { compact: "sm", medium: "base" } },
+  };
+}
 
 /**
  * One switch, and therefore no Save button: the Preset routes the Form's own `stateChange` back to
@@ -197,6 +327,23 @@ const loadNameLabels = createPhiFormLabelSetLoader(
   }),
 );
 
+const loadPhoneLabels = createPhiFormLabelSetLoader(
+  () => import("../../../components/widgets/label-sets/profile").then((module) => module.getPhiProfilePhoneWidgetLabels),
+  (labels) => ({
+    phone: labels.fields.phone,
+    mobile: labels.fields.mobile,
+    tooLong: labels.tooLong,
+    successTitle: labels.feedback.successTitle,
+    successText: labels.feedback.successText,
+    actions: { submitLabel: labels.submitLabel },
+  }),
+);
+
+const loadAddressLabels = createPhiFormLabelSetLoader(
+  () => import("./trees/addresses-label-set").then((module) => module.getPhiAppAddressesLabels),
+  (labels) => ({ ...labels.form, actions: { submitLabel: labels.save } }),
+);
+
 const loadNewsletterLabels = createPhiFormLabelSetLoader(
   () => import("../../../components/widgets/label-sets/profile").then((module) => module.getPhiProfileOverviewWidgetLabels),
   (labels) => ({
@@ -236,6 +383,48 @@ export const PHI_APP_RUNTIME_MODULE_FORMS = [
     descriptor: nameDescriptor,
     submitHandlerKey: PHI_APP_FORM_HANDLER_KEYS.profileName,
     loadLabels: loadNameLabels,
+  }),
+  definePhiRuntimeModuleForm({
+    ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
+    areas: ["app"],
+    formId: PHI_APP_FORM_IDS.profilePhone,
+    version: 1,
+    flags: 0,
+    title: "Telephone numbers",
+    description: "The business telephone and mobile number this account can be reached at.",
+    category: "forms",
+    tags: ["profile", "account"],
+    descriptor: phoneDescriptor,
+    submitHandlerKey: PHI_APP_FORM_HANDLER_KEYS.profilePhone,
+    loadLabels: loadPhoneLabels,
+  }),
+  definePhiRuntimeModuleForm({
+    ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
+    areas: ["app"],
+    formId: PHI_APP_FORM_IDS.addressCreate,
+    version: 1,
+    flags: 0,
+    title: "Add address",
+    description: "A billing or shipping address of this account on this site.",
+    category: "forms",
+    tags: ["profile", "account", "address"],
+    descriptor: addressDescriptor(PHI_APP_FORM_IDS.addressCreate, "create"),
+    submitHandlerKey: PHI_APP_FORM_HANDLER_KEYS.addressCreate,
+    loadLabels: loadAddressLabels,
+  }),
+  definePhiRuntimeModuleForm({
+    ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
+    areas: ["app"],
+    formId: PHI_APP_FORM_IDS.addressEdit,
+    version: 1,
+    flags: 0,
+    title: "Change address",
+    description: "A new version of one of this account's addresses, replacing it.",
+    category: "forms",
+    tags: ["profile", "account", "address"],
+    descriptor: addressDescriptor(PHI_APP_FORM_IDS.addressEdit, "edit"),
+    submitHandlerKey: PHI_APP_FORM_HANDLER_KEYS.addressEdit,
+    loadLabels: loadAddressLabels,
   }),
   definePhiRuntimeModuleForm({
     ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
@@ -303,6 +492,58 @@ export const PHI_APP_FORM_HANDLER_PROVIDER_DESCRIPTORS = [
     csrfPath: "/api/v1/auth/csrf",
     requiresCsrf: true,
     credentialPolicy: "site-session",
+  },
+  {
+    key: createPhiSharedFormProviderKey("handler", "app-profile-phone"),
+    ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
+    title: "Profile telephone numbers",
+    phase: "submit",
+    handlerKey: PHI_APP_FORM_HANDLER_KEYS.profilePhone,
+    category: "site",
+    transport: "relay",
+    method: "PATCH",
+    endpointKey: null,
+    upstreamPath: "/api/v1/auth/profile/phone",
+    csrfPath: "/api/v1/auth/csrf",
+    requiresCsrf: true,
+    credentialPolicy: "site-session",
+  },
+  /*
+   * The address book's two writes. Core's routes are not shaped like a Form: the parts go under `address`,
+   * the purposes into one flags number, and a change names the version it replaces in its path -- which
+   * the handler states, so the relay forms the request and the Form keeps one field per part.
+   */
+  {
+    key: createPhiSharedFormProviderKey("handler", "app-address-create"),
+    ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
+    title: "Add address",
+    phase: "submit",
+    handlerKey: PHI_APP_FORM_HANDLER_KEYS.addressCreate,
+    category: "site",
+    transport: "relay",
+    method: "POST",
+    endpointKey: null,
+    upstreamPath: "/api/site/account/addresses",
+    csrfPath: null,
+    requiresCsrf: false,
+    credentialPolicy: "site-session",
+    request: ADDRESS_REQUEST,
+  },
+  {
+    key: createPhiSharedFormProviderKey("handler", "app-address-edit"),
+    ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
+    title: "Change address",
+    phase: "submit",
+    handlerKey: PHI_APP_FORM_HANDLER_KEYS.addressEdit,
+    category: "site",
+    transport: "relay",
+    method: "PUT",
+    endpointKey: null,
+    upstreamPath: "/api/site/account/addresses/{id}",
+    csrfPath: null,
+    requiresCsrf: false,
+    credentialPolicy: "site-session",
+    request: ADDRESS_REQUEST,
   },
   {
     key: createPhiSharedFormProviderKey("handler", "app-profile-newsletter"),

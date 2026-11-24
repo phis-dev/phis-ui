@@ -25,4 +25,13 @@ export const PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS = {
   // Not a Foundation name: who this viewer may write to is what this Module's own form asks, and a
   // Module offering its own inbox asks the Core route the same way rather than borrowing this key.
   candidates: createPhiSharedRuntimeDataProviderKey("options", "thread-candidates"),
+  /** Staff's customer file on one member (phis-server `GET /api/site/members/{userId}/file`). */
+  customerFile: createPhiSharedRuntimeDataProviderKey("tables", "threads-customer-file"),
+} as const;
+
+/** The customer file's three resources, each one answer of the same route read for one member. */
+export const PHI_THREADS_CUSTOMER_FILE_RESOURCE_KEYS = {
+  person: "person",
+  addresses: "addresses",
+  threads: "threads",
 } as const;

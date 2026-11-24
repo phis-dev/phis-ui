@@ -21,4 +21,15 @@ export const PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS = {
   table: createPhiSharedRuntimeDataProviderKey("tables", "user-management"),
   addonRoleOptions: createPhiSharedRuntimeDataProviderKey("options", "user-management-addon-roles"),
   addonRoleChoiceOptions: createPhiSharedRuntimeDataProviderKey("options", "user-management-addon-role-choices"),
+  /** What the Site lets Add-ons read of people (`users:v1`): the grants, the log and how long it is kept. */
+  usersAccess: createPhiSharedRuntimeDataProviderKey("tables", "user-management-users-access"),
 } as const;
+
+/** The three resources of the people-data access Provider. */
+export const PHI_USER_MANAGEMENT_USERS_ACCESS_RESOURCE_KEYS = {
+  addons: "addons",
+  retention: "retention",
+  log: "log",
+} as const;
+
+export const PHI_USER_MANAGEMENT_USERS_ACCESS_PAGE_PRESET_KEY = "admin-users-access-page";

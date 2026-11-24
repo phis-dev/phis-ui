@@ -190,6 +190,8 @@ async function getPhiCmsRuntimeInfo({
         lastName?: string | null;
         displayName?: string | null;
         companyName?: string | null;
+        phone?: string | null;
+        mobile?: string | null;
       } | null;
     };
   };

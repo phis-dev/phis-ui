@@ -1,7 +1,7 @@
 import { definePhiRuntimeModuleServerAreaContribution } from "../area-contributions";
 import { PHI_THREADS_RUNTIME_MODULE_DEFINITION } from "./definition";
 import { PHI_THREADS_RUNTIME_MODULE_WIDGETS } from "./widgets";
-import { PHI_THREADS_RUNTIME_MODULE_ROUTES } from "./presets";
+import { PHI_THREADS_CUSTOMER_FILE_ROUTES, PHI_THREADS_RUNTIME_MODULE_ROUTES } from "./presets";
 import { PHI_THREADS_RUNTIME_MODULE_FORMS } from "./forms";
 
 export function createPhiThreadsRuntimeModuleServerAreaContribution() {
@@ -13,7 +13,7 @@ export function createPhiThreadsRuntimeModuleServerAreaContribution() {
       forms: PHI_THREADS_RUNTIME_MODULE_FORMS,
       layouts: [],
       areaOverlays: [],
-      routes: PHI_THREADS_RUNTIME_MODULE_ROUTES,
+      routes: [...PHI_THREADS_RUNTIME_MODULE_ROUTES, ...PHI_THREADS_CUSTOMER_FILE_ROUTES],
       dashboardCards: {
         areas: ["app"],
         load: () => import("./cards")

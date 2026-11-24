@@ -70,6 +70,18 @@ export type PhiFormHandlerProviderDescriptor = {
   csrfPath: string | null;
   requiresCsrf: boolean;
   credentialPolicy: PhiFormHandlerCredentialPolicy;
+  /**
+   * How the relay turns the Form's flat values into the request a Core route takes, where it is not the
+   * values as they are (FORMS.md, "Request shape"). A `{key}` segment of `upstreamPath` is the value of
+   * that field, percent-encoded, and leaves the body; `objects` gathers the named fields under one body
+   * key; `flags` folds the named boolean fields into one bit-flag number under one body key, a bit per
+   * field that is `true`. A field the shape does not name stays at the top of the body. Absent, the
+   * values are the body, as they always were.
+   */
+  request?: {
+    objects?: Readonly<Record<string, readonly string[]>>;
+    flags?: Readonly<Record<string, Readonly<Record<string, number>>>>;
+  };
 };
 
 export type PhiRuntimeModuleFormProviderDescriptors = {
