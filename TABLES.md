@@ -262,6 +262,16 @@ expression. A matching expression applies the Core muted-row treatment without c
 editor mutability, selection, or action availability. Domain field names and meanings remain in the
 Provider and preset; the Control receives only the resolved row style.
 
+A Table without rows shows `presentation.emptyState`: its `title` (Core's "No rows found." where none is set)
+and its `description` where one is set. Without a `description`, Core's generic hint ("Adjust the table
+filters and try again.") shows only while the reader's query narrows the rows: a search text, or one of
+the Table's own `features.filters` holding a value -- a `defaultValue` and a boolean `false` included,
+since both narrow the query and the reader can change them. A key pinned by `fixedFilters` does not count,
+and neither does a filter key a Controller or another Widget sets by signal that is none of
+`features.filters` (a list narrowed to the row selected above it): there is nothing in the Table to
+adjust. A Table whose emptiness says something of its own -- "Select a key to see its devices." -- says it
+in its `title` or `description`.
+
 ### Footer and summary
 
 Table footer and column summary are separate native Table presentation contracts:
@@ -402,6 +412,13 @@ column whose heading says what it is, with the row's name in a cell of its own -
 that read the name again would read every row twice. An empty value is an empty cell.
 
 A value that is not of its renderer's shape draws nothing rather than its JSON.
+
+A `badge` or `tags` Tag does not wrap, and it is never wider than the place it stands in: where a `fixed`
+width, a `maxWidth`, `ellipsis` or a narrow record leaves less room than its word, the Tag ends at that
+edge and the word in an ellipsis, said whole in the house tooltip. A `content` column still measures the
+whole Tag. A column cut off at the right edge of a Table that scrolls sideways is not this: there the
+sticky actions column covers the last data columns until the reader scrolls, and the remedy is a Table
+that fits its place (fewer or narrower columns, a lower `minWidth` on a `fill` column).
 
 ### Provider field schema and cell editors
 

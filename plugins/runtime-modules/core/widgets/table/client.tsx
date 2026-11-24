@@ -42,6 +42,7 @@ import { usePhiApplicationFeedback } from "../../../../../components/runtime/use
 import { usePhiTableBinding } from "../../../../../components/tables/client/phi-table-binding";
 import { PhiTableBindingControl } from "../../../../../components/tables/client/phi-table-binding-control";
 import { usePhiTableFilterOptions } from "../../../../../components/tables/client/phi-table-filter-options";
+import { isTableQueryNarrowedByReader } from "./reader-query";
 import { clearPhiDataDragPayload, readPhiDataDragPayload } from "../../../../../components/runtime/client/phi-data-dnd";
 import {
   renderPhiValueContent,
@@ -920,6 +921,9 @@ export function PhiTableWidgetClient({
   const childAcceptanceField = resource?.hierarchy?.canAcceptChildrenField;
   const selfContainedTools = features.tools?.mode !== "external";
   const hasQueryTools = (features.search?.enabled ?? false) || (features.filters?.length ?? 0) > 0;
+  // The Page's own words always; the generic "adjust the filters" only where a filter of the reader's is set.
+  const emptyDescription = presentation.emptyState?.description ??
+    (isTableQueryNarrowedByReader(features.filters, resolvedQuery, config.fixedFilters) ? labels.emptyDescription : undefined);
   const hasSelfContainedTools = selfContainedTools && (
     configuredBindingFields.length > 0 ||
     hasQueryTools ||
@@ -1268,7 +1272,7 @@ export function PhiTableWidgetClient({
         emptyText={(
           <PhiFlexControl vertical gap="small">
             <PhiTypographyControl strong>{presentation.emptyState?.title ?? labels.emptyTitle}</PhiTypographyControl>
-            <PhiTypographyControl type="secondary">{presentation.emptyState?.description ?? labels.emptyDescription}</PhiTypographyControl>
+            {emptyDescription ? <PhiTypographyControl type="secondary">{emptyDescription}</PhiTypographyControl> : null}
           </PhiFlexControl>
         )}
         layout={presentation.layout}

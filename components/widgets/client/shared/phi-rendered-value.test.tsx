@@ -65,3 +65,17 @@ describe("what stands ahead of a value", () => {
     expect(renderPhiValueWithLead("Studio Pro", { image: "https://elsewhere.test/a.png" })).toBe("Studio Pro");
   });
 });
+
+describe("the tag renderers", () => {
+  it("keeps a badge inside its place and ends a word that does not fit in an ellipsis", () => {
+    const html = render(renderPhiValueContent("unregistered", { renderer: "badge", valueMap: { unregistered: "Not registered" } }, labels));
+    expect(html).toMatch(/class="[^"]*ant-tag[^"]*"[^>]*style="[^"]*max-width:100%/);
+    expect(html).toMatch(/<span style="[^"]*overflow:hidden;text-overflow:ellipsis;white-space:nowrap[^"]*">Not registered<\/span>/);
+  });
+
+  it("caps every tag of a tags value, and the row of tags itself", () => {
+    const html = render(renderPhiValueContent(["a", "b"], { renderer: "tags" }, labels));
+    expect(html.match(/max-width:100%;min-width:0/g)).toHaveLength(2);
+    expect(html).toMatch(/display:inline-flex;max-width:100%/);
+  });
+});

@@ -15,6 +15,7 @@ import type {
 } from "../../../../types/table-widget";
 import { PhiFlexControl } from "../../../controls/phi-flex-control";
 import { PhiTagControl } from "../../../controls/phi-tag-control";
+import { PhiTruncatedHoverText } from "../../../controls/phi-truncated-hover-text";
 import { PhiTypographyControl } from "../../../controls/phi-typography-control";
 import { PhiLink } from "../../../navigation/phi-link";
 import { PhiIcon } from "../../../shell/phi-icon";
@@ -80,6 +81,41 @@ function normalizePhiRenderedText(value: unknown): string {
 
 function resolveTagColor(color: PhiTableTagColor | undefined) {
   return typeof color === "object" ? color.value : color;
+}
+
+const PHI_RENDERED_TAG_STYLE = { maxWidth: "100%", minWidth: 0 } as const;
+const PHI_RENDERED_TAG_TEXT_STYLE = {
+  display: "inline-block",
+  maxWidth: "100%",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+  // Top, not baseline: a box that hides its overflow sits on its bottom edge and would make the row taller.
+  verticalAlign: "top",
+} as const;
+
+/**
+ * One Tag of a `badge` or `tags` value, never wider than the place it stands in.
+ *
+ * A Tag does not wrap: it is one unbreakable box as wide as its word. Where the place is narrower -- a
+ * `fixed` column, a `maxWidth`, a cell with `ellipsis`, a narrow record -- the box ran past it: over the
+ * next cell, or clipped mid-letter by a cell that hides its overflow. The box now ends at the place's edge
+ * and the word ends in an ellipsis, said whole in the house tooltip when pointed at. Where nothing narrows
+ * it, as in a `content` column, the Tag is exactly as wide as before: a percentage cap adds nothing to the
+ * width a column measures.
+ */
+function PhiRenderedTag({ text, color, variant }: {
+  text: string;
+  color: string | undefined;
+  variant: PhiTableTagVariant;
+}) {
+  return (
+    <PhiTagControl color={color} variant={variant} style={PHI_RENDERED_TAG_STYLE}>
+      <PhiTruncatedHoverText title={text}>
+        <span style={PHI_RENDERED_TAG_TEXT_STYLE}>{text}</span>
+      </PhiTruncatedHoverText>
+    </PhiTagControl>
+  );
 }
 
 /** A component rather than a call, because the page's locale and the Site's zone are read from context. */
@@ -198,17 +234,16 @@ export function renderPhiValueContent(
   if (definition.renderer === "tags") {
     const values = Array.isArray(value) ? value : [value];
     return (
-      <PhiFlexControl align="center" gap={4} wrap style={{ display: "inline-flex" }}>
+      <PhiFlexControl align="center" gap={4} wrap style={{ display: "inline-flex", maxWidth: "100%" }}>
         {values.map((entry, index) => {
           const normalizedEntry = normalizePhiRenderedText(entry);
           return (
-            <PhiTagControl
+            <PhiRenderedTag
               color={resolveTagColor(definition.tagColorMap?.[normalizedEntry])}
               key={`${normalizedEntry}:${index}`}
               variant={definition.tagVariant ?? "outlined"}
-            >
-              {definition.valueMap?.[normalizedEntry] ?? normalizedEntry}
-            </PhiTagControl>
+              text={definition.valueMap?.[normalizedEntry] ?? normalizedEntry}
+            />
           );
         })}
       </PhiFlexControl>
@@ -229,12 +264,11 @@ export function renderPhiValueContent(
   }
   if (definition.renderer === "badge") {
     return (
-      <PhiTagControl
+      <PhiRenderedTag
         color={resolveTagColor(definition.tagColorMap?.[normalizedValue])}
         variant={definition.tagVariant ?? "outlined"}
-      >
-        {displayValue}
-      </PhiTagControl>
+        text={displayValue}
+      />
     );
   }
   if (definition.renderer === "switch" || definition.renderer === "checkbox") {
