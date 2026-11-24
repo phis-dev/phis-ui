@@ -331,7 +331,9 @@ names (`PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS`, `PHI_CUSTOMER_FILE_RESOURCE_KEYS`
 `PHI_CUSTOMER_FILE_SUBJECT_PARAM` in `constants/customer-file.ts`; `PHI_THREADS_CONTROLLER_TYPE` in
 `constants/threads-controller-address.ts`), importing nothing of this Module, so the conversations Module
 has to be active in the Area the Page stands in -- the Accounting default. Any Module's preset binds the
-Provider the same way, by the key, in an Area where this Module is active.
+Provider the same way, by the key, in an Area where this Module is active: a package imports the three
+names from `@phis/ui/constants`, as it imports `PHI_THREAD_LIBRARY_DATA_PROVIDER_KEYS` -- the Support
+Module's own file in the App, where Core answers a Supporter without addresses.
 
 **What it is made of.** Nothing of its own but a Provider. The Page is the conversations Page's three
 surfaces with a choice in front of them:

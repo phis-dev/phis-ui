@@ -31,6 +31,12 @@ export * from "./constants/cms-plugin-categories";
 export * from "./constants/runtime-module-categories";
 // The conversations a viewer is in, for every Module that lists its own kind of them (`fixedFilters`).
 export { PHI_THREAD_LIBRARY_DATA_PROVIDER_KEYS } from "./constants/thread-library-provider-keys";
+// Staff's customer file on one member, for a Module's own file Page over the same Core route (THREADS.md, 10).
+export {
+  PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS,
+  PHI_CUSTOMER_FILE_RESOURCE_KEYS,
+  PHI_CUSTOMER_FILE_SUBJECT_PARAM,
+} from "./constants/customer-file";
 export {
   PHIS_AREA_HEADER,
   PHIS_FORM_RELAY_HEADER,
