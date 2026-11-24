@@ -73,6 +73,64 @@ export function toPhiCustomerFileThreadRows(result: Record<string, unknown>, pag
   }, ...threads.filter((row) => (row as Record<string, unknown>).id !== fileThreadId)];
 }
 
+type CustomerFileRead = {
+  promise: Promise<Record<string, unknown> | null>;
+  controller: AbortController;
+  waiters: number;
+};
+
+/*
+ * The reads of one route in flight, by its path. The Page's three Tables ask for the same member at the
+ * same time -- the person Table's choice reaches the other two as their query -- and one request answers
+ * them all, so one choice is one entry in the access log. Nothing outlives the request: once it settles
+ * its entry is gone, and the next read, a reload or another member asks again.
+ */
+const customerFileReads = new Map<string, CustomerFileRead>();
+
+function abortReason(signal: AbortSignal) {
+  return signal.reason ?? new DOMException("The read was aborted.", "AbortError");
+}
+
+/**
+ * The route's answer for this caller. A caller that aborts leaves the request to the others; the request
+ * itself is aborted only when the last of them has gone, and is then no longer joined.
+ */
+function readCustomerFile(path: string, signal: AbortSignal | undefined) {
+  if (signal?.aborted) return Promise.reject(abortReason(signal));
+  let read = customerFileReads.get(path);
+  if (!read) {
+    const controller = new AbortController();
+    const entry: CustomerFileRead = {
+      controller,
+      waiters: 0,
+      promise: (async () => readPhiTableProviderResponse<Record<string, unknown>>(
+        await fetch(path, createPhiTableProviderRequestInit(controller.signal)),
+        RESPONSE_OPTIONS,
+      ))().finally(() => {
+        if (customerFileReads.get(path) === entry) customerFileReads.delete(path);
+      }),
+    };
+    // A request every caller left rejects with nobody listening.
+    entry.promise.catch(() => undefined);
+    customerFileReads.set(path, entry);
+    read = entry;
+  }
+  const shared = read;
+  shared.waiters += 1;
+  if (!signal) return shared.promise;
+  return new Promise<Record<string, unknown> | null>((resolve, reject) => {
+    const leave = () => {
+      shared.waiters -= 1;
+      reject(abortReason(signal));
+      if (shared.waiters > 0) return;
+      if (customerFileReads.get(path) === shared) customerFileReads.delete(path);
+      shared.controller.abort(abortReason(signal));
+    };
+    signal.addEventListener("abort", leave, { once: true });
+    shared.promise.then(resolve, reject).finally(() => signal.removeEventListener("abort", leave));
+  });
+}
+
 async function queryCustomerFile({ resourceKey, query, params, signal }: PhiTableProviderQueryRequest) {
   if (!Object.values(RESOURCES).includes(resourceKey as never)) {
     throw new PhiTableProviderError("resource-not-found", `Unknown customer file resource "${resourceKey}".`);
@@ -80,11 +138,10 @@ async function queryCustomerFile({ resourceKey, query, params, signal }: PhiTabl
   // Nobody chosen yet: nothing is asked for, so nothing is written to the access log.
   const userId = readPhiPositiveInteger(query.filters?.userId);
   if (!userId) return resourceKey === RESOURCES.threads ? { rows: [] } : { rows: [], total: 0 };
-  const paged = resourceKey === RESOURCES.threads ? buildPhiTablePageParams(query, THREADS_PAGE_SIZE) : null;
-  const result = await readPhiTableProviderResponse<Record<string, unknown>>(
-    await fetch(buildPhiCustomerFilePath(userId, paged), createPhiTableProviderRequestInit(signal)),
-    RESPONSE_OPTIONS,
-  );
+  // The person and their addresses are the same on every page; they ask for the first, as the threads
+  // Table does on a choice, so the three reads are one route.
+  const paged = buildPhiTablePageParams(resourceKey === RESOURCES.threads ? query : {}, THREADS_PAGE_SIZE);
+  const result = await readCustomerFile(buildPhiCustomerFilePath(userId, paged), signal);
   if (!isPhiRecord(result) || !isPhiRecord(result.person)) {
     throw new PhiTableProviderError("invalid-response", "The customer file answer is invalid.");
   }
@@ -95,7 +152,7 @@ async function queryCustomerFile({ resourceKey, query, params, signal }: PhiTabl
     const rows = readPhiTableRows(result.person.addresses).map(toPhiSiteAddressRow);
     return { rows, total: rows.length };
   }
-  const page = Number(paged?.get("page")) || 1;
+  const page = Number(paged.get("page")) || 1;
   const subject = typeof params?.[PHI_CUSTOMER_FILE_SUBJECT_PARAM] === "string" ? params[PHI_CUSTOMER_FILE_SUBJECT_PARAM] as string : "";
   return { rows: toPhiCustomerFileThreadRows(result, page, subject) };
 }

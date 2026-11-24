@@ -16,14 +16,6 @@ Nothing waits on a Server or contracts release. Steps an installation takes with
 What the App profile's numbers and addresses, Admin -> Settings -> People data and the Accounting customer
 file (THREADS.md section 10) leave open:
 
-- **The customer file reads once per Table**, so one choice of a member is three requests and three access
-  log entries. The owner agreed to one read by the Page's Controller, handed to the three Tables, with no
-  cache; a Table cannot be fed rows today -- its only source is a Table Provider (`source.providerKey`,
-  TABLES.md), and neither its inputs nor the `record` Widget's take rows by signal (both read through the
-  Provider Client). Smallest extension, to be approved before it is built: a Table source of kind
-  `signal` whose rows arrive on one new input (`rows/change:json<table-rows>`, rows plus total under the
-  resource's declared fields, validated as a Provider's answer is), paging and sorting local; the
-  Controller reads `GET /api/site/members/{userId}/file` once per choice and emits the three resources.
 - The access log filters take a subject and an Add-on id as typed; a picker of the Site's people by subject
   and of the Add-ons that read people would be options Providers of their own.
 - A grant gives an Add-on everything it asks in the background; granting a part of it (the route takes any

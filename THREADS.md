@@ -352,8 +352,12 @@ for the conversation exactly as on the conversations Page, and a note written in
 both. Core answers the file's id beside the list rather than in it, so the Provider puts the file first on
 the first page under the subject the Page hands it in its binding params (`fileSubject`).
 
-Each Table reads the route for the member chosen, so one choice is three requests and three entries in the
-access log; nothing is read before a member is chosen ([TODOS.md](./TODOS.md)).
+Each Table reads through the Provider, and the Provider's client answers the reads of one route in flight
+with one request: the person and their addresses ask for the first page, as the threads Table does on a
+choice, so one choice is one request and one entry in the access log. It is no cache -- once the request
+settles nothing is kept, and a reload, another page of threads or the next choice asks again; a Table that
+aborts its read leaves the request to the others, which is aborted only when every one of them has. Nothing
+is read before a member is chosen.
 
 ## 11. Open
 
