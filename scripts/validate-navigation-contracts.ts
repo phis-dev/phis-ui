@@ -223,7 +223,8 @@ function createCatalog(
     presetVersion: 1,
     area: "public",
     title: "Settings",
-    path: "/settings",
+    // Beside the mounted Module's /settings/module-c, never above it: a Page is never a folder.
+    path: "/settings/general",
     loadTree: async () => {
       throw new Error("Navigation contract route trees are not loaded.");
     },
