@@ -1,4 +1,8 @@
 import { PHI_INTERVAL_DEFAULT_LABELS, type PhiIntervalLabels } from "./interval";
+import {
+  PHI_REVEAL_ONCE_DIALOG_DEFAULT_LABELS,
+  type PhiRevealOnceDialogLabels,
+} from "../../controls/phi-reveal-once-dialog-labels";
 
 export type PhiTableWidgetLabels = {
   search: string;
@@ -21,6 +25,8 @@ export type PhiTableWidgetLabels = {
   moveRowDown: string;
   /** The words of the `interval` renderer, from their own Label Set. */
   interval: PhiIntervalLabels;
+  /** The buttons of the Dialog that shows an action's value once (`reveal`). */
+  reveal: PhiRevealOnceDialogLabels;
 };
 
 export const PHI_TABLE_WIDGET_DEFAULT_LABELS: PhiTableWidgetLabels = {
@@ -43,6 +49,7 @@ export const PHI_TABLE_WIDGET_DEFAULT_LABELS: PhiTableWidgetLabels = {
   moveRowUp: "Move row up",
   moveRowDown: "Move row down",
   interval: PHI_INTERVAL_DEFAULT_LABELS,
+  reveal: PHI_REVEAL_ONCE_DIALOG_DEFAULT_LABELS,
 };
 
 export function formatPhiTableWidgetLabel(

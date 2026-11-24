@@ -719,6 +719,7 @@ assert.deepEqual(parsedProviderAction.features.actions?.toolbar, [{
   newTab: undefined,
   visibleWhen: undefined,
   disabledWhen: undefined,
+  reveal: undefined,
   confirm: undefined,
 }]);
 assert.deepEqual(parsedProviderAction.features.tools?.bindingFields, [{

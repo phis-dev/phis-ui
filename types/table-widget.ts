@@ -284,6 +284,14 @@ export type PhiTableActionDefinition = {
   link?: { href: string; newTab: boolean; external: boolean } | null;
   visibleWhen?: PhiRuntimeConditionExpression;
   disabledWhen?: PhiRuntimeConditionExpression;
+  /**
+   * A `provider` action whose answer carries a value shown once (`revealValue`): the words of the Dialog
+   * that shows it, already in the reader's language. Without it such a value is not shown.
+   */
+  reveal?: {
+    title: string;
+    description?: string;
+  };
   confirm?: {
     title: string;
     description?: string;
@@ -728,6 +736,12 @@ export type PhiTableProviderMutationResult = {
   value?: Record<string, unknown> | null;
   errorCode?: string;
   message?: string;
+  /**
+   * A value the person sees once and nowhere again -- a new key's activation code, stored as its hash. An
+   * action that states `reveal` shows it in a Dialog that copies it and closes
+   * (`PhiRevealOnceDialogControl`); the Table keeps it nowhere and never sends it on a signal.
+   */
+  revealValue?: string;
 };
 
 type PhiTableProviderMutationRequestBase = {

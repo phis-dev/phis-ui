@@ -93,6 +93,7 @@ import {
 } from "../../../../../types/signals";
 import { resolvePhiButtonIcon } from "../../../../../components/widgets/client/shared/phi-button-icons";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
+import { PhiRevealOnceDialogControl } from "../../../../../components/controls/phi-reveal-once-dialog-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 import { PhiCompactGroupControl } from "../../../../../components/controls/phi-compact-group-control";
 import { isPhiRecord } from "../../../../../helpers/is-record";
@@ -384,6 +385,8 @@ export function PhiTableWidgetClient({
     ...(initialQuery.filters ?? {}),
   };
   const [searchDraft, setSearchDraft] = useState(initialQuery.search ?? "");
+  // A value an action answered to be shown once (`reveal`), held only while its Dialog is open.
+  const [revealed, setRevealed] = useState<{ title: string; description?: string; value: string } | null>(null);
   const [conditionControllerStates, setConditionControllerStates] = useState<
     Record<string, Record<string, unknown>>
   >({});
@@ -468,7 +471,9 @@ export function PhiTableWidgetClient({
       if (result.status === "accepted" && result.message?.trim()) {
         showMessage({ level: "info", content: result.message.trim() });
       }
-      emitCapability("mutationChange", result as unknown as Record<string, unknown>);
+      // A value shown once never leaves the Table: the result goes on without it.
+      const { revealValue: _shownOnce, ...announced } = result;
+      emitCapability("mutationChange", announced as unknown as Record<string, unknown>);
     },
     validateResource,
   });
@@ -669,6 +674,10 @@ export function PhiTableWidgetClient({
       selectedRowIdentities: identities,
       actionValue,
       query: resolvedQuery,
+    }).then((result) => {
+      if (action.reveal && result.status === "accepted" && typeof result.revealValue === "string" && result.revealValue) {
+        setRevealed({ title: action.reveal.title, description: action.reveal.description, value: result.revealValue });
+      }
     }).catch(() => undefined);
   }, [emitCapability, executeAction, onAction, resolvedQuery, resource]);
 
@@ -1071,6 +1080,13 @@ export function PhiTableWidgetClient({
       style={{ minWidth: 0, width: "100%" }}
     >
       {confirmDialog}
+      <PhiRevealOnceDialogControl
+        value={revealed?.value ?? null}
+        title={revealed?.title ?? ""}
+        description={revealed?.description}
+        labels={labels.reveal}
+        onClose={() => setRevealed(null)}
+      />
       <PhiCollectionHeaderControl
         title={presentation.title}
         description={presentation.description}

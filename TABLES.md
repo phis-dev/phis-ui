@@ -961,6 +961,19 @@ values come from declared serializable Binding/action context and are inserted w
 translation formatter after the current UI-language template has been resolved. Complete rows and
 untranslated string concatenation are forbidden.
 
+**A value shown once.** Some acts answer with something nobody can read again: a licence key's activation
+code is stored as its hash and answered once. The Provider returns it as `revealValue` on the accepted
+mutation (`PhiTableProviderMutationResult`), and the action that may receive one states `reveal: { title,
+description? }`, in the reader's language like the confirmation's words. The Table then shows the value in
+`PhiRevealOnceDialogControl` (`components/controls/phi-reveal-once-dialog-control.tsx`): the value in a code
+box, Close, and "Copy and close", which writes it to the clipboard and closes -- where the browser refuses
+the copy the Dialog stays open and says so, the value still selectable. The buttons' words are the Table
+Label Set's (`reveal_copy_and_close`, `reveal_close`, `reveal_copy_failed`). The Table keeps the value only
+while the Dialog is open and never sends it on a signal: `mutationChange` carries the result without it. A
+`revealValue` answered for an action without `reveal` is not shown, and an action's `message` is announced
+as before. It is the one result of an act the Table shows in a Dialog, so a Form result, a record action or
+an Add-on page that must show a value once uses the same Control.
+
 Non-Provider Table affordances select one of two execution classes:
 
 - `signal`: emit a generic Table action intent through persisted `signalRoutes`;

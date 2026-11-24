@@ -152,6 +152,8 @@ const PHI_TABLE_ACTION_CONFIG_FIELDS: PhiCmsConfigField[] = [
   { key: "newTab", type: "boolean", label: "Open In New Tab", visibleWhen: { field: "execution", equals: "link" } },
   ...buildPhiTableConditionExpressionConfigFields("visibleWhen", "Visible Conditions", "all", "Always visible"),
   ...buildPhiTableConditionExpressionConfigFields("disabledWhen", "Disabled Conditions", "any", "No disabled conditions"),
+  { key: "reveal.title", type: "string", label: "Shown Once Title", visibleWhen: { field: "execution", equals: "provider" } },
+  { key: "reveal.description", type: "string", label: "Shown Once Description", visibleWhen: { field: "execution", equals: "provider" } },
   { key: "confirm.title", type: "string", label: "Confirm Title" },
   { key: "confirm.description", type: "string", label: "Confirm Description" },
   { key: "confirm.alert.level", type: "choice", label: "Confirm Alert Level", options: [
@@ -429,6 +431,10 @@ function readAction(reader: PhiConfigReader): PhiTableActionDefinition {
     newTab: reader.boolean("newTab"),
     visibleWhen: readCondition(reader, "visibleWhen"),
     disabledWhen: readCondition(reader, "disabledWhen"),
+    reveal: reader.object("reveal", (revealReader) => ({
+      title: requireString(revealReader, "title"),
+      description: revealReader.string("description"),
+    })),
     confirm: reader.object("confirm", (confirmReader) => ({
       title: requireString(confirmReader, "title"),
       description: confirmReader.string("description"),

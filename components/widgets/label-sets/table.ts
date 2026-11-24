@@ -29,6 +29,10 @@ const PHI_TABLE_WIDGET_LABEL_SET = definePhiLabelSet({
     drag_row: "Drag row",
     move_row_up: "Move row up",
     move_row_down: "Move row down",
+    // The Dialog that shows an action's value once.
+    reveal_copy_and_close: "Copy and close",
+    reveal_close: "Close",
+    reveal_copy_failed: definePhiMessageLabel("The value could not be copied. Select it and copy it by hand before closing."),
     // The Core `table` form field's words where its config names none (`table-field-labels.ts`).
     form_add: PHI_FORM_TABLE_DEFAULT_LABELS.add,
     form_remove: PHI_FORM_TABLE_DEFAULT_LABELS.remove,
@@ -63,6 +67,11 @@ export async function getPhiTableWidgetLabels(
     moveRowUp: labels.move_row_up,
     moveRowDown: labels.move_row_down,
     interval,
+    reveal: {
+      copyAndClose: labels.reveal_copy_and_close,
+      close: labels.reveal_close,
+      copyFailed: labels.reveal_copy_failed,
+    },
   };
 }
 
