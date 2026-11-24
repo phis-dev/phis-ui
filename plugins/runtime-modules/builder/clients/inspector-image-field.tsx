@@ -52,6 +52,8 @@ export function PhiInspectorImageFieldControl({
         }}
         labels={mediaPickerLabels}
         searchLabels={PHI_SEARCH_WIDGET_DEFAULT_LABELS}
+        // The Inspector stands at the window's right: the library opens over the canvas.
+        placement="left"
         value={assetId}
         onAssetSelect={editable
           ? (picked) => onChange?.({

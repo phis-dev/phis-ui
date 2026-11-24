@@ -82,11 +82,13 @@ export type PhiMediaPickerControlProps = PhiPickerTransactionCallbacks<number | 
   disabled?: boolean;
   readOnly?: boolean;
   /**
-   * Where the picker opens; below the trigger unless the caller says otherwise. The library is wider than
-   * most of the panels it is opened from, so beside the trigger it ran past the window's edge and the
-   * page scrolled sideways (the Theme's Link preview, 2026-11-24). Centred below, Ant Design's overflow
-   * adjustment slides it sideways and upwards into the window (a corner placement such as `bottomLeft`
-   * is not slid upwards), and its width is capped to the window.
+   * Where the picker opens, which the host decides: it knows where the room is. A panel at the window's
+   * right, the Builder Inspector, says `left`, towards the canvas. Absent, it opens centred below: the
+   * library is wider than most panels, and opened beside a panel at the window's left it ran past the
+   * window's edge and the page scrolled sideways (the Theme's Link preview, 2026-11-24). Ant Design's
+   * overflow adjustment is on for every placement (`PhiPopoverControl`), and the width is capped to the
+   * window; centred below it slides sideways and upwards into the window, which a corner placement such
+   * as `bottomLeft` does not.
    */
   placement?: PhiPickerPlacement;
   showSearchBar?: boolean;

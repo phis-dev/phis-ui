@@ -17,6 +17,7 @@ import { usePhiCollectionProvider } from "../widgets/client/shared/phi-collectio
 import { usePhiIntlLocale, usePhiIntlTimeZone } from "../root/phi-intl-locale";
 import { PhiMediaPickerControl } from "../controls/phi-media-picker-control";
 import { normalizePhiMediaPickerMinColumnWidth } from "../controls/phi-media-picker-control-contract";
+import type { PhiPickerPlacement } from "../controls/phi-picker-control-contract";
 import type { PhiAssetWidgetLabels } from "./media-widget-labels";
 import { PHI_ASSET_COLLECTION_DATA_SOURCE } from "./asset-collection-runtime";
 import {
@@ -92,6 +93,12 @@ export type PhiMediaPickerBindingProps = {
   onDiscard?: (originalAssetId: number | null) => void;
   onPopupOpenChange?: (open: boolean) => void;
   trigger?: ReactNode;
+  /**
+   * Where the picker opens beside its trigger, which only the host can know: the Builder Inspector, a
+   * panel at the window's right, opens it to the left over the canvas; absent, the Control's default,
+   * centred below (`PhiMediaPickerControlProps.placement`).
+   */
+  placement?: PhiPickerPlacement;
   getPopupContainer?: (triggerNode: HTMLElement) => HTMLElement;
   popupRootClassName?: string;
   /**
@@ -135,6 +142,7 @@ export function usePhiMediaPickerBinding({
   onDiscard,
   onPopupOpenChange,
   trigger,
+  placement,
   getPopupContainer,
   popupRootClassName,
   siteSpaceOnly = false,
@@ -545,6 +553,7 @@ export function usePhiMediaPickerBinding({
     showFolderFilter: config?.showFolderFilter ?? true,
     showPagination: config?.showPagination ?? true,
     trigger,
+    ...(placement ? { placement } : {}),
     labels: { trigger: labels.picker.triggerLabel, title: labels.picker.popoverTitle, search: labels.tool.searchPlaceholder ?? searchLabels.placeholder, folder: labels.tool.folderLabel, space: labels.space.label, empty: bindingError ?? (loadFailed ? labels.picker.loadFailedDescription : labels.picker.emptyDescription), sourceEmpty: sourceFailed ? labels.picker.sourceFailedText : labels.picker.emptyDescription, clear: labels.picker.clearLabel, reload: labels.tool.reloadLabel, tileSize: labels.picker.tileSizeLabel, source: labels.picker.sourceLabel, importing: labels.picker.importingLabel, loadMore: labels.picker.loadMoreLabel, upload: labels.upload.uploadToggleLabel },
     getPopupContainer,
     popupRootClassName,

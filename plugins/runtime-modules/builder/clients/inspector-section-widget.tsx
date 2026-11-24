@@ -272,6 +272,8 @@ function usePhiBuilderInspectorSectionState(signalRoutes?: PhiSignalRouteSet) {
       }}
       labels={mediaPickerLabels}
       searchLabels={PHI_SEARCH_WIDGET_DEFAULT_LABELS}
+      // Every Background of the Inspector, Region, Layout and Widget: the library opens over the canvas.
+      placement="left"
       value={props.value}
       open={props.open}
       trigger={props.trigger}
