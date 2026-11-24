@@ -118,6 +118,7 @@ Internally persisted Markdown and HTML may encode typed references with the rese
 ```text
 phis:page/<opaque-page-reference>
 phis:asset/<positive-asset-id>
+phis:table/<embed-key>?<param>=<value>&...
 ```
 
 Examples of authored Markdown are `[Account](phis:page/<reference>)` and
@@ -142,6 +143,15 @@ the structured reference unchanged.
 Internally persisted content must use `phis:page` for a same-Site Page and `phis:asset` for a Site Asset.
 Plain root-relative Page links and local Asset paths are invalid internal authoring output. Normal
 absolute external URLs remain allowed under the HTML/Markdown sanitizer policy.
+
+`phis:table/` names a Table a Module offers to Markdown, by the key it declared, as the address of a
+picture standing alone in its paragraph: `![Caption](phis:table/@acme/prices/table-embeds/price-list?currency=CHF)`
+([TABLES.md](./TABLES.md#tables-in-markdown)). It is a Markdown form only -- the HTML subset has none, and
+the server's sanitizer drops it there with every other unknown `phis:` address. It names no stored
+identity: the key is a Module's declaration, the parameters are text the render reads against it, and
+there is nothing a delete could leave dangling, so the reference index does not collect it. Like the two
+above it is read only in internally persisted text; an external document never embeds a Table, and the
+render resolves it on the server, so no `phis:table` address reaches the browser.
 
 ## External document trust boundary
 

@@ -112,6 +112,9 @@ export function readPhiMarkdownSearchText(blocks: readonly PhiMarkdownBlock[]): 
       case "image":
         push(block.image.alt);
         break;
+      case "table_embed":
+        push(block.caption);
+        break;
       case "divider":
         break;
     }

@@ -202,18 +202,6 @@ file (THREADS.md section 10) leave open:
   an Options Provider over the Site's suppliers, and no Core route answers them (`GET /api/site/products`
   answers rows, not their distinct suppliers).
 
-- **Provider-backed Markdown table embeds: the descriptor is named, not defined.** TABLES.md ("Markdown
-  reuse") asks for a closed embed descriptor of a validated Provider/resource reference plus approved
-  presentation data, resolved through the active Module registry, access and the Table renderer, and
-  rejects code-fence or JSON discovery -- which holds today: a fence is a code sample, an unknown `phis:`
-  link keeps its text only. Undefined, so no parser was written (2026-11-24): the Markdown syntax
-  (REFERENCES.md closes `phis:` to `page` and `asset`; a paragraph holding only
-  `![Caption](phis:table/<reference>)`, as figures are promoted, is one candidate), what the reference is
-  (`{ providerKey, resourceKey }` checked against the registered Provider's declared resources, or a shared
-  resource identity; `params` or not), which presentation fields are approved and where the columns come
-  from, and how a bound Table renders inside a Markdown body (a block kind `table_embed` drawn by the Table
-  Binding, or a stated "not rendered yet"). Operator decision first; then the parser, its typed node and
-  refusals are a contained change in `components/widgets/shared/markdown-*.ts`.
 - **A wide Table's pinned Actions column covers the columns before it.** The licence rules Table
   (`@phis/licenses`, ten columns) needs about 1,100 px and gets about 1,000 at a 1,280 px window, so it scrolls
   sideways and the Actions column pinned at the right edge covers State; Admin -> Users shows the same with

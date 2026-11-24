@@ -1,5 +1,5 @@
 import { PHI_SHARED_PACKAGE_NAME } from "../../constants/package";
-import { createPhiRuntimeModuleId } from "../../constants/module-identity";
+import { createPhiRuntimeModuleId, isPhiModuleScopedIdentifier, readPhiRuntimeModulePackageName } from "../../constants/module-identity";
 import type {
   PhiCmsPreviewWidgetPlugin,
   PhiCmsRuntimeWidgetPlugin,
@@ -706,6 +706,7 @@ export function createPhiRuntimeModuleCatalog(
   const ownerModuleIdByFormValidationKey = new Map<PhiFormProviderKey, PhiRuntimeModuleId>();
   const ownerModuleIdByFormHandlerKey = new Map<PhiFormProviderKey, PhiRuntimeModuleId>();
   const ownerModuleIdByFormId = new Map<string, PhiRuntimeModuleId>();
+  const ownerModuleIdByTableEmbedKey = new Map<string, PhiRuntimeModuleId>();
   let platformModuleId: PhiRuntimeModuleId | null = null;
 
   for (const entry of entries) {
@@ -820,6 +821,21 @@ export function createPhiRuntimeModuleCatalog(
         );
       }
       ownerModuleIdByDataProviderKey.set(provider.key, definition.moduleId);
+    }
+    // TABLES.md; columns and parameters are `checkPhiEmbeddableTables`'s.
+    for (const embed of definition.embeddableTables ?? []) {
+      const subject = `${definition.moduleId}: embeddable Table "${embed.key}"`;
+      const provider = definition.dataProviders?.find((candidate) => candidate.key === embed.source?.providerKey);
+      const owner = embed.key.slice(0, embed.key.indexOf("/table-embeds/"));
+      if (!isPhiModuleScopedIdentifier("table-embeds", embed.key) || ![definition.moduleId, readPhiRuntimeModulePackageName(definition.moduleId)].includes(owner)) {
+        throw new Error(`${subject} needs a table-embeds key of its own Module.`);
+      }
+      if (provider?.kind !== "table" || !provider.resources.some((resource) => resource.resourceKey === embed.source.resourceKey)) {
+        throw new Error(`${subject} reads a resource no table Provider of this Module declares.`);
+      }
+      if (ownerModuleIdByTableEmbedKey.has(embed.key)) throw new Error(`${subject} is owned twice.`);
+      assertOwnedAccessPolicy(definition.moduleId, ownerProviderId, embed.accessPolicy, `embeddable Table "${embed.key}"`);
+      ownerModuleIdByTableEmbedKey.set(embed.key, definition.moduleId);
     }
     for (const adapter of definition.calendarAdapters ?? []) {
       if (!isPhiCalendarAdapterKey(adapter.key)) {

@@ -1137,6 +1137,17 @@ export type PhiRuntimeModuleDefinition = {
   controllerMountPolicy?: PhiRuntimeModuleControllerMountPolicy;
   dataProviders?: readonly PhiRuntimeModuleDataProviderDescriptor[];
   /**
+   * Tables this Module offers to Markdown: `![Caption](phis:table/<key>?<param>=<value>)` in a paragraph of
+   * its own draws one (TABLES.md, "Tables in Markdown").
+   *
+   * Each reads a `table` Provider this Module declares in `dataProviders`; the catalog refuses a key,
+   * Provider or resource that is not the Module's, and `checkPhiEmbeddableTables` (`@phis/ui/module/page-check`)
+   * checks the columns and parameters where a Preset's Tables are checked. Markdown sets the caption and the
+   * declared `params` and nothing more; the key is the Module's (`<package>[/modules/<module>]/table-embeds/
+   * <name>`), and an Area where the Module is not active draws the caption alone.
+   */
+  embeddableTables?: readonly import("./table-embed").PhiEmbeddableTableDescriptor[];
+  /**
    * The Media Spaces this Module needs, and what it needs to put in them.
    *
    * A declaration is a need, never a switch: the Site's availability is the union of the declarations

@@ -7,7 +7,7 @@ import { trBulk, trBulkForLocale } from "../../../server-helpers/translate";
 import type { PhiBlockRuntime, PhiRenderableBlockRenderMode } from "../../../types";
 import type { PhiCmsResolvedContent } from "../../../types/cms";
 import type { PhiMarkdownTocHeading } from "../../../types/markdown";
-import type { PhiMarkdownBlock, PhiMarkdownFigure, PhiMarkdownInline, PhiMarkdownTableAlign } from "./markdown-body-client";
+import type { PhiMarkdownBlock, PhiMarkdownFigure, PhiMarkdownInline, PhiMarkdownTableAlign, PhiMarkdownTableEmbed } from "./markdown-body-client";
 import type { PhiPublicMediaAssetReference } from "../../../types/media";
 import type { PhiMarkdownImageFloat } from "../../../types/core-widget-placements";
 import { resolvePhiImagePresentation } from "../../media/image-presentation";
@@ -23,6 +23,7 @@ import {
 } from "./markdown-image-vocabulary";
 import { resolvePhiCodeLanguage, tokenizePhiCode } from "./markdown-code-tokens";
 import { readPhiInternalReference, type PhiPageReference } from "../../../types/references";
+import type { PhiTableEmbedReference } from "../../../types/table-embed";
 import { resolvePhiWidgetInternalReferences } from "../helpers/internal-reference-resolver.server";
 import { protectPhiMailHref, splitPhiMailAddresses } from "../../../helpers/protected-mail";
 import { resolvePhiWidgetSourceUrl } from "../helpers/widget-source-url";
@@ -100,6 +101,11 @@ type MarkdownFigureSource = {
   float?: PhiMarkdownFigureFloat;
   floatWidth?: PhiMarkdownImageFloatWidth;
 };
+
+/** Who draws a text's Table embeds (TABLES.md); absent, each is its caption. */
+export type PhiMarkdownTableEmbedResolver = (
+  embeds: readonly { caption: string; reference: PhiTableEmbedReference }[],
+) => Promise<readonly PhiMarkdownTableEmbed[]>;
 
 const MARKDOWN_DEFAULT_REVALIDATE_SECONDS = 14400;
 
@@ -232,10 +238,11 @@ function projectExternalMarkdownNodes(
 async function projectInternalMarkdownNodes(
   tree: MarkdownNode,
   runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer">,
-): Promise<Map<string, MarkdownFigureSource>> {
+): Promise<{ figures: Map<string, MarkdownFigureSource>; embeds: Map<string, PhiTableEmbedReference> }> {
   const pageReferences: PhiPageReference[] = [];
   const assetIds: number[] = [];
   const figures = new Map<string, MarkdownFigureSource>();
+  const embeds = new Map<string, PhiTableEmbedReference>();
   const collect = (nodes: MarkdownNode[] | undefined) => {
     for (const node of nodes ?? []) {
       if (node.type === "link" || node.type === "image") {
@@ -248,8 +255,8 @@ async function projectInternalMarkdownNodes(
   };
   collect(tree.children);
   const resolved = await resolvePhiWidgetInternalReferences({ runtime, pageReferences, assetIds });
-  const project = (nodes: MarkdownNode[] | undefined): MarkdownNode[] => (nodes ?? []).flatMap((node) => {
-    const children = project(node.children);
+  const project = (nodes: MarkdownNode[] | undefined, lone = false): MarkdownNode[] => (nodes ?? []).flatMap((node) => {
+    const children = project(node.children, node.type === "paragraph" && node.children?.filter((child) => child.value?.trim() !== "").length === 1);
     if (node.type === "link") {
       const reference = readPhiInternalReference(node.url);
       if (reference?.kind === "page") {
@@ -260,6 +267,14 @@ async function projectInternalMarkdownNodes(
       return [{ ...node, children }];
     }
     if (node.type === "image") {
+      // A Module's Table (TABLES.md): alone in a paragraph it keeps an address, as a figure does; else its caption.
+      const table = node.url?.trim().match(/^phis:table\/([^?]*)\??(.*)$/su);
+      if (table && !lone) return [{ type: "text", value: node.alt ?? "" }];
+      if (table) {
+        const src = `phi-table-embed:${embeds.size}`;
+        embeds.set(src, { embedKey: table[1]!, params: [...new URLSearchParams(table[2])] });
+        return [{ ...node, url: src, children }];
+      }
       const address = readPhiMarkdownImageAddress(node.url ?? "");
       const reference = readPhiInternalReference(address.reference);
       if (reference?.kind === "asset") {
@@ -284,27 +299,35 @@ async function projectInternalMarkdownNodes(
     return [{ ...node, ...(node.children ? { children } : {}) }];
   });
   tree.children = project(tree.children);
-  return figures;
+  return { figures, embeds };
 }
 
 /*
  * A paragraph that is one Media picture and nothing else is a figure: a block of its own, drawn by the
  * house's picture Control -- optimised, sized, its box reserved and its corners the Theme's. A picture in
- * the middle of a sentence, or one on somebody else's server, stays the plain picture it was.
+ * the middle of a sentence, or one on somebody else's server, stays the plain picture it was. A lone embed is a Table.
  */
 function promoteMarkdownFigures(
   blocks: PhiMarkdownBlock[],
   figures: ReadonlyMap<string, MarkdownFigureSource>,
   defaults: MarkdownImageDefaults,
+  embeds: ReadonlyMap<string, PhiTableEmbedReference>,
+  found: [PhiMarkdownTableEmbed, PhiTableEmbedReference][],
 ): PhiMarkdownBlock[] {
-  if (figures.size === 0) return blocks;
+  if (figures.size + embeds.size === 0) return blocks;
   return blocks.map((block): PhiMarkdownBlock => {
-    if (block.kind === "blockquote") return { ...block, children: promoteMarkdownFigures(block.children, figures, defaults) };
-    if (block.kind === "list") return { ...block, items: block.items.map((item) => promoteMarkdownFigures(item, figures, defaults)) };
+    if (block.kind === "blockquote") return { ...block, children: promoteMarkdownFigures(block.children, figures, defaults, embeds, found) };
+    if (block.kind === "list") return { ...block, items: block.items.map((item) => promoteMarkdownFigures(item, figures, defaults, embeds, found)) };
     if (block.kind !== "paragraph") return block;
     const content = block.inlines.filter((inline) => !(inline.kind === "text" && !inline.text.trim()));
     const only = content.length === 1 ? content[0] : null;
     const source = only?.kind === "image" ? figures.get(only.src) : undefined;
+    const reference = only?.kind === "image" ? embeds.get(only.src) : undefined;
+    if (only?.kind === "image" && reference) {
+      const embed = { kind: "table_embed" as const, caption: only.alt.trim(), table: null, notice: null };
+      found.push([embed, reference]);
+      return embed;
+    }
     if (!only || only.kind !== "image" || !source) return block;
     return { kind: "image", image: buildMarkdownFigure(only, source, defaults) };
   });
@@ -642,6 +665,7 @@ export async function resolveMarkdownSource(
 export async function resolveMarkdownRenderData(
   config: PhiMarkdownSourceConfig | undefined,
   runtime?: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer">,
+  options: { tableEmbeds?: PhiMarkdownTableEmbedResolver } = {},
 ): Promise<MarkdownRenderData | { error: string }> {
   const resolvedSource = await resolveMarkdownSource(config, runtime?.site.publicUrl);
 
@@ -688,6 +712,7 @@ export async function resolveMarkdownRenderData(
       ...(config?.imageFloat ? { float: config.imageFloat } : {}),
       ...(config?.imageFloatWidth ? { floatWidth: config.imageFloatWidth } : {}),
     },
+    options.tableEmbeds,
   );
 }
 
@@ -702,6 +727,7 @@ async function resolveMarkdownRenderDataFromSource(
   extent: "document" | "first-paragraph" = "document",
   headingOffset = 0,
   imageDefaults: MarkdownImageDefaults = {},
+  tableEmbeds?: PhiMarkdownTableEmbedResolver,
 ): Promise<MarkdownRenderData> {
   const tree = parseMarkdown(markdown);
   if (extent === "first-paragraph") {
@@ -710,10 +736,11 @@ async function resolveMarkdownRenderDataFromSource(
     tree.children = paragraph ? [paragraph] : [];
   }
   let figures: ReadonlyMap<string, MarkdownFigureSource> = new Map();
+  let embeds: ReadonlyMap<string, PhiTableEmbedReference> = new Map();
   if (sourceMode === "url" && sourceUrl) {
     tree.children = projectExternalMarkdownNodes(tree.children, sourceUrl);
   } else if (runtime) {
-    figures = await projectInternalMarkdownNodes(tree, runtime);
+    ({ figures, embeds } = await projectInternalMarkdownNodes(tree, runtime));
   }
   const context: MarkdownMapContext = {
     sourceLines: markdown.split(/\r?\n/),
@@ -723,11 +750,18 @@ async function resolveMarkdownRenderDataFromSource(
     headingOffset,
   };
   const inlineMap = await buildMarkdownInlineMap(tree, translate, sourceLocale, runtime?.locale.current, runtime);
+  const found: [PhiMarkdownTableEmbed, PhiTableEmbedReference][] = [];
   const blocks = promoteMarkdownFigures(
     protectMarkdownMail(mapBlockNodes(tree.children, context, inlineMap)),
     figures,
     imageDefaults,
+    embeds,
+    found,
   );
+  if (found.length > 0 && tableEmbeds) {
+    const answers = await tableEmbeds(found.map(([block, reference]) => ({ caption: block.caption, reference })));
+    found.forEach(([block], index) => Object.assign(block, answers[index]));
+  }
 
   return { blocks, headings: context.headings };
 }

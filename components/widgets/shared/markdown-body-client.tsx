@@ -19,6 +19,11 @@ import { PhiPlainTable } from "../../tables/phi-plain-table";
 import { PhiTypographyControl } from "../../controls/phi-typography-control";
 import { PhiDividerControl } from "../../controls/phi-divider-control";
 import { PhiBulletListControl } from "../../controls/phi-bullet-list-control";
+import { PhiRuntimeModuleRenderClientHost } from "../../runtime/runtime-module-render-client-manifest";
+import { PhiCmsWidgetType } from "../../../constants/cms-widget-types";
+import type { PhiTableWidgetConfig } from "../../../types/table-widget";
+import type { PhiTableWidgetLabels } from "../label-types/table";
+import type { PhiRenderableBlockRenderMode } from "../../../types/renderable-block";
 import {
   resolvePhiMarkdownFoldLevel,
   splitPhiMarkdownSegments,
@@ -99,7 +104,25 @@ export type PhiMarkdownBlock =
       nowrap: boolean[];
     }
   | { kind: "divider" }
-  | { kind: "image"; image: PhiMarkdownFigure };
+  | { kind: "image"; image: PhiMarkdownFigure }
+  | ({ kind: "table_embed" } & PhiMarkdownTableEmbed);
+
+/**
+ * A Table a Module offers, standing on its own in the text (`![Caption](phis:table/<key>?...)`), resolved on
+ * the server (TABLES.md, "Tables in Markdown"): the Table Widget's config and words, or nothing where the
+ * embed was refused.
+ */
+export type PhiMarkdownTableEmbed = {
+  /** The picture's alt text, translated as the text is: the Table's title when it is drawn. */
+  caption: string;
+  table: {
+    config: PhiTableWidgetConfig;
+    labels: PhiTableWidgetLabels;
+    renderMode: PhiRenderableBlockRenderMode;
+  } | null;
+  /** Why it was refused, for the author; set only where the text is authored, never live. */
+  notice: string | null;
+};
 
 export type PhiMarkdownWidgetClientProps = PhiClientBlockBaseProps<
   /** The label above the text, translated on the server. */
@@ -334,6 +357,14 @@ function renderBlocks(
         );
       case "divider":
         return <PhiDividerControl key={key} style={{ margin: 0 }} />;
+      case "table_embed":
+        return (
+          <PhiMarkdownTableEmbedBlock
+            key={key}
+            embed={block}
+            spacing={{ marginBlockStart: paragraphBlockStyle.marginBlockStart, marginBlockEnd: paragraphBlockStyle.marginBlockEnd }}
+          />
+        );
       case "table":
         /*
          * A plain table, not the Table Control: Markdown only shows rows, and the Control's editors,
@@ -550,5 +581,37 @@ function PhiMarkdownFigureBlock({ figure }: { figure: PhiMarkdownFigure }) {
         />
       </div>
     </figure>
+  );
+}
+
+/*
+ * An embedded Table: the Table Widget's own Render Client, by its type in the Area's manifest, which loads it
+ * with `next/dynamic` where one is drawn -- the Table's code is in no chunk of the Markdown Widget, and a
+ * text without an embed never asks for it. Refused, the caption stands as a paragraph, with the reason
+ * beneath it where the text is authored.
+ */
+export function PhiMarkdownTableEmbedBlock({
+  embed,
+  spacing,
+}: {
+  embed: PhiMarkdownTableEmbed;
+  spacing: Pick<CSSProperties, "marginBlockStart" | "marginBlockEnd">;
+}) {
+  if (embed.table) {
+    return (
+      <figure className="phi-markdown-table-embed" style={{ margin: 0, minWidth: 0, ...spacing }}>
+        <PhiRuntimeModuleRenderClientHost type={PhiCmsWidgetType.Table} componentProps={embed.table} />
+      </figure>
+    );
+  }
+  return (
+    <>
+      {embed.caption ? (
+        <PhiTypographyControl presentation="paragraph" style={{ margin: 0, ...spacing }}>{embed.caption}</PhiTypographyControl>
+      ) : null}
+      {embed.notice ? (
+        <PhiTypographyControl presentation="paragraph" type="warning" style={{ margin: 0, ...spacing }}>{embed.notice}</PhiTypographyControl>
+      ) : null}
+    </>
   );
 }

@@ -45,6 +45,7 @@ import {
 } from "../plugins/runtime-modules/settings";
 import { resolvePhiAuthUiRuntimeProjection } from "../server-helpers/auth-ui-provider";
 import { createPhiRuntimeModuleCatalog } from "../plugins/runtime-modules/contracts";
+import { checkPhiEmbeddableTables } from "../helpers/preset-table-check";
 import { normalizePhiCmsRouteSegment } from "../helpers/cms-routing";
 import {
   createPhiDraftCmsInstanceId,
@@ -685,6 +686,12 @@ assert.equal(
     identities(catalog.themeBlockByKey.values()),
     "the document shell's Theme blocks must be the Builder catalog's",
   );
+}
+
+// The Tables a Module offers to Markdown, checked as a Preset's Tables are (TABLES.md, "Tables in Markdown"):
+// the catalog refused a wrong key, Provider or resource already; this is the columns and the parameters.
+for (const definition of runtimeModuleDefinitions) {
+  assert.deepEqual(checkPhiEmbeddableTables(definition), [], `${definition.moduleId}: embeddable Tables`);
 }
 
 console.log(

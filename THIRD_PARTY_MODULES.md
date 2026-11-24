@@ -2349,6 +2349,12 @@ ships; a Table on a Provider you do not hand over is not judged. It is apart fro
 that one also runs while a Site serves a Page, where an unavailable Table must stay one Widget and not
 become a 500 for the whole Page.
 
+`checkPhiEmbeddableTables(definition)`, from the same door, reads the Tables your Module offers to Markdown
+(`embeddableTables`, [TABLES.md](./TABLES.md#tables-in-markdown)) the same way, against the resources your
+definition's `dataProviders` declare, and what makes them embeds besides: no column editor, every parameter
+and fixed filter a binding field or filter field of the resource with values it can check, `maxRows` on a
+resource that pages. Pass it your definition; an empty list is a pass.
+
 `checkPhiPresetTextSources(tree)`, from the same door, reports every Widget that writes text into its
 config without saying whose words they are (`textSource: "preset"` or `"site"`,
 [TRANSLATIONS.md, "Widget config text"](./TRANSLATIONS.md#widget-config-text)). A Module runs it over

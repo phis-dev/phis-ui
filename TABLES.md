@@ -1209,12 +1209,83 @@ Their columns follow three rules (`components/widgets/shared/markdown-render.ts`
   still reads an ordinary table. Equal dashes state nothing and leave the widths to the browser. A table
   with widths keeps no column on one line: its author has decided.
 
-A reusable Provider-backed Table embedded in Markdown uses a closed Phi embed descriptor containing a
-validated Provider/resource reference plus approved presentation data. Markdown must not execute
-arbitrary Provider keys, URLs, callbacks, React components, or module code. The embed is resolved through
-the same active Module registry, access checks, Provider contract, and Table renderer as a normal
-`PhiTableWidget`. Provider-backed embeds are not built; arbitrary JSON or code-fence Provider discovery is
-rejected rather than kept as a late-loading path.
+### Tables in Markdown
+
+A Module may offer a Provider-backed Table to Markdown. A text names it in a paragraph of its own, as a
+Media picture standing alone becomes a figure:
+
+```markdown
+![Our prices in francs](phis:table/@acme/prices/table-embeds/price-list?currency=CHF&category=hosting)
+```
+
+Every other Markdown renderer shows the caption. Here the paragraph becomes a `table_embed` block, drawn by
+the generic Table Widget's own path -- `PhiTableWidget`'s Render Client, `PhiTableBinding`, the Provider --
+read-only. Markdown never names a Provider, a resource, a column or a URL: it names what a Module declared,
+and sets nothing but the caption and the parameters that declaration allows.
+
+**The declaration** is `embeddableTables` on the Module's definition (`types/table-embed.ts`):
+
+```ts
+embeddableTables: [{
+  key: "@acme/prices/table-embeds/price-list", // <package>[/modules/<module>]/table-embeds/<name>, the Module's own
+  title: "Price list",                         // for an author; not drawn
+  source: { providerKey: "@acme/prices/tables/prices", resourceKey: "prices" }, // a table Provider of this Module
+  presentation: { columns: [...], layout: { mode: "auto", overflowX: "auto" } }, // the Table Widget's own
+  sorting: { mode: "single", defaultSorts: [...] }, // optional, as the Table Widget's
+  fixedFilters: { active: true },              // optional, as the Table Widget's
+  params: {                                    // what Markdown may set, by the name it writes
+    currency: { binding: "currency" },         // a binding field the resource declares
+    category: { filter: "category" },          // a filter field of the resource, held like a fixed filter
+  },
+  maxRows: 10,                                 // optional: one page of this size and no pager
+  accessPolicy: PHI_VIEWER_ACCESS_AUTHENTICATED, // optional, owned like a node's accessPolicy
+}]
+```
+
+`source`, `presentation`, `sorting` and `fixedFilters` are the Table Widget's config types, and the embed is
+drawn with exactly that config: no search, filters, row selection, actions, tools, editing, reordering or
+signal routes, so nothing an embed shows can change a row. A resource that does not page is drawn whole,
+without a pager, as is the one page of `maxRows`.
+
+**What refuses a declaration.** Compiling the catalog (`plugins/runtime-modules/contracts.ts`) refuses a key
+that is not the declaring Module's, one key offered twice, a Provider that is not a `table` Provider of the
+same Module, a resource that Provider does not declare, and an access policy of another role provider. The
+rest needs the Table's own code and is checked where a Preset's Tables are (THIRD_PARTY_MODULES.md,
+"Checking a Page preset"): `checkPhiEmbeddableTables(definition)` from `@phis/ui/module/page-check`, which a
+package runs in its tests beside `checkPhiPresetTables`, and which `validate-module-descriptors` runs over the
+first-party catalog. It reads the columns against the resource with `validatePhiTableWidgetBinding`, refuses
+a column editor, a fixed filter or parameter that names no filter field or binding field of the resource, a
+parameter that sets what the source or a fixed filter already fixes, a parameter whose field is not text, a
+number, a yes or no, or a choice the parameter can check -- a choice list a Provider serves cannot be checked
+-- `maxRows` on a resource that does not page or outside 1 to 100, and a required binding field neither fixed
+nor settable. As for a Preset's Table, the browser checks the binding again before the first request.
+
+**Drawing one** is the Markdown Widget's: the parser rule is in `components/widgets/shared/markdown-render.ts`,
+the resolution in the Widget's `table-embeds.server.ts`, asked once per text with every embed in it.
+
+- The key is looked up among the Modules active in the Area; an unknown key, or one whose Module is not
+  active there, is refused.
+- The viewer is checked as for a Table Widget on that Page: the Table Widget's own access policy, then the
+  embed's `accessPolicy`. The Provider still decides what its rows are, as it does for every Table.
+- Each parameter must be declared and is read as its field takes it: a choice among the field's options, a
+  number, `true` or `false`, a text of at most 200 characters. A name given twice, an undeclared name, a value
+  the field does not take, and a required binding field left open refuse the embed.
+- Only a lone image in a paragraph -- inside a quote or a list as well -- is an embed. In a sentence, a
+  heading or a table cell the address is dropped and the caption stays as text.
+- Only the Markdown Widget's own text, inline or from its Content record, draws a Table. A record field
+  standing in for the text, an entry's body, a teaser and the search index have the caption alone.
+- A refusal is the caption as a paragraph. Where the text is authored -- the Builder's preview, the Editor --
+  the reason stands beneath it; live there is no reason, as a hidden node gives none.
+- The caption is the Table's title. It is the Site's words, translated with the rest of the text in the
+  Site's store; the Module's title and column titles are a Preset's words, translated in the platform's
+  store. The Table's own words are its Label Set's.
+
+**Budget.** The Table's code is in no chunk of the Markdown Widget. The embed block hands its config to the
+Table Widget's Render Client by type (`PhiRuntimeModuleRenderClientHost`), which the Area's Client manifest
+loads with `next/dynamic` where one is drawn, so a page whose Markdown embeds nothing loads no Table code.
+The page mounts the embed's Provider Client as for any Table: the Provider scan
+(`collectPhiRuntimeDataProviderKeys`) reads the embed keys in a Markdown Widget's source -- a code sample
+that quotes one mounts a Provider, never a Table.
 
 ## Module and preset obligations
 

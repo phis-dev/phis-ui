@@ -705,6 +705,15 @@ the same ownership and descriptor/implementation separation. Live-only data neve
 Editable static resources use generic Provider Authoring capabilities rather than a Module-local Builder
 screen.
 
+A Module offers a Table to Markdown by declaring it in `embeddableTables` on its definition: a key of its
+own (`<package>[/modules/<module>]/table-embeds/<name>`), one of its own `table` Providers and resources,
+the Table Widget's presentation, and the parameters a text may set -- each a binding field or a filter field
+of that resource. A text names it as `![Caption](phis:table/<key>?<param>=<value>)` in a paragraph of its
+own, and an Area where the Module is not active draws the caption alone. The catalog refuses a key, Provider
+or resource that is not the Module's; the columns and parameters are checked with
+`checkPhiEmbeddableTables` where Preset Tables are checked. The contract is TABLES.md,
+[Tables in Markdown](./TABLES.md#tables-in-markdown).
+
 Preset Forms are explicit `forms` entries in the Module's Server Area contribution. Their descriptors
 select namespaced field, validation, options, read, and handler providers. The CMS tree places only the
 generic Form Widget with a `formId`; a Module must not add a domain Form Widget alias.

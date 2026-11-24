@@ -6,6 +6,8 @@ import { hasPhiFlag } from "../../../../../helpers/flags";
 import { readPhiMarkdownSearchText, translatePhiSearchWidgetTexts } from "../../../../../server-helpers/search-text";
 import { resolvePhiWidgetRecordField } from "../../../../../server-helpers/record-fields";
 import { PhiMarkdownWidget } from "./server";
+import { createPhiMarkdownTableEmbedResolver } from "./table-embeds.server";
+import { readPhiRuntimeTreeRenderMode } from "../../../render-mode";
 import {
   PHI_MARKDOWN_WIDGET_DEFINITION,
   PHI_MARKDOWN_WIDGET_PLUGIN_TYPE,
@@ -59,10 +61,11 @@ export const PHI_MARKDOWN_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsMarkdown
           translate: !hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate),
         }}
         runtime={runtime}
+        tableEmbeds={registry && createPhiMarkdownTableEmbedResolver({ registry, runtime, renderMode: readPhiRuntimeTreeRenderMode(widget.config) })}
       />
     );
   },
-  renderPreview: ({ widget, config, runtime }) => (
+  renderPreview: ({ widget, config, runtime, registry }) => (
     <PhiWidgetInertPreview>
       <PhiMarkdownWidget
         key={`widget-preview-${widget.id}`}
@@ -73,6 +76,7 @@ export const PHI_MARKDOWN_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsMarkdown
           renderMode: "preview",
         }}
         runtime={runtime}
+        tableEmbeds={registry && createPhiMarkdownTableEmbedResolver({ registry, runtime, renderMode: "preview" })}
       />
     </PhiWidgetInertPreview>
   ),

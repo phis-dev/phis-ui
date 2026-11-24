@@ -248,7 +248,9 @@ locale. What a Widget's config states for an address arrives translated with the
 ([Widget config text](#widget-config-text)). The Image and Card Widgets translate the Media library's
 description of an Asset in the Site's store; a Content record's text arrives translated and is taken as
 it is. The Gallery translates each picture's description in one bulk call. The Brand Widget translates
-the Theme's `logoAlt` in the Site's store, and the default "Brand logo" in the global one.
+the Theme's `logoAlt` in the Site's store, and the default "Brand logo" in the global one. A Table embedded in
+Markdown takes its caption -- the picture's alt text -- with the text, in the Site's store, and the Module's
+title and column titles as a Preset's, in the global one ([TABLES.md](./TABLES.md#tables-in-markdown)).
 
 ## Context and format
 

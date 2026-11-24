@@ -615,6 +615,22 @@ export function collectPhiRuntimeDataProviderKeys({
       ) {
         collected.add(PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection);
       }
+      /*
+       * A Markdown text's Table embeds read the Provider their active Module names (TABLES.md), found in its
+       * source -- its own or its Content record's. One a code sample quotes mounts a Provider, never a Table.
+       */
+      if (widget.widgetType === PhiCmsWidgetType.Markdown) {
+        const sources = [(widgetConfig as { markdown?: unknown }).markdown, widget.resolvedContent?.textFields.markdown?.source];
+        const keys = sources.flatMap((source) => typeof source === "string"
+          ? [...source.matchAll(/!\[[^\]\n]*\]\(\s*<?phis:table\/([^\s?#)>]+)/gu)].map((match) => match[1])
+          : []);
+        for (const key of keys) {
+          for (const definition of moduleSet.moduleDefinitionsById.values()) {
+            const providerKey = definition.embeddableTables?.find((embed) => embed.key === key)?.source.providerKey;
+            if (providerKey && knownProviderKeys.has(providerKey)) collected.add(providerKey);
+          }
+        }
+      }
       if (widget.widgetType === PhiCmsWidgetType.Form) {
         const formId = parsePhiFormWidgetConfig(widgetConfig).formId;
         const form = formId ? moduleSet.formDefinitionsById.get(formId) : null;

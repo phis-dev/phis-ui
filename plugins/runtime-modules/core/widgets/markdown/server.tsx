@@ -2,20 +2,24 @@ import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { trBulk, trBulkForLocale } from "../../../../../server-helpers/translate";
 import type { PhiNoLabels, PhiServerBlockBaseProps } from "../../../../../types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
-import { resolveMarkdownRenderData } from "../../../../../components/widgets/shared/markdown-render";
+import { resolveMarkdownRenderData, type PhiMarkdownTableEmbedResolver } from "../../../../../components/widgets/shared/markdown-render";
 import { buildPhiMarkdownFaqStructuredData, resolvePhiMarkdownFoldLevel } from "../../../../../components/widgets/shared/markdown-sections";
 import type { PhiCmsMarkdownWidgetConfig } from "./config";
 
 export type PhiMarkdownWidgetProps = PhiServerBlockBaseProps<
   PhiNoLabels,
   PhiCmsMarkdownWidgetConfig
->;
+> & {
+  /** Who draws the Tables the text embeds (TABLES.md); absent, each is its caption. */
+  tableEmbeds?: PhiMarkdownTableEmbedResolver;
+};
 
 export async function PhiMarkdownWidget({
   config,
   runtime,
+  tableEmbeds,
 }: PhiMarkdownWidgetProps) {
-  const renderData = await resolveMarkdownRenderData(config, runtime);
+  const renderData = await resolveMarkdownRenderData(config, runtime, { tableEmbeds });
 
   if ("error" in renderData) {
     return (
