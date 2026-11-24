@@ -1232,7 +1232,9 @@ export function validatePhiTableWidgetBinding(
     const placeholderIndexes = new Set(
       [...footer.template.matchAll(/%([1-9]\d*)/g)].map((match) => Number(match[1])),
     );
-    if (!footer.template.trim() || footer.values.length === 0 ||
+    // A sentence of its own is a footer too (the reader and PhiTableFooterVariant allow `values: []`):
+    // only its placeholders and its values must match.
+    if (!footer.template.trim() ||
       footer.values.some((_value, index) => !placeholderIndexes.has(index + 1)) ||
       [...placeholderIndexes].some((index) => index > footer.values.length)) {
       errors.push("Table footer template placeholders must match its ordered values.");
