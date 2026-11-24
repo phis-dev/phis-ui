@@ -1,4 +1,5 @@
 import type { PhiControlOption } from "../controls/phi-control-options";
+import { isPhiRecord } from "../../helpers/is-record";
 
 /**
  * The `flags` field: several yes-or-no answers held as one bit-flag number, the shape every yes-or-no
@@ -36,7 +37,7 @@ export function readPhiFlagsFieldConfig(
   const requires = new Map<number, number>();
   const stated = config?.requires;
   if (stated !== undefined) {
-    if (!stated || typeof stated !== "object" || Array.isArray(stated)) {
+    if (!isPhiRecord(stated)) {
       throw new Error("The flags field's requires is no map of option values.");
     }
     for (const [dependent, needed] of Object.entries(stated)) {

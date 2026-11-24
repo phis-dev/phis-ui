@@ -22,7 +22,7 @@ export const PHI_FORM_ADDRESS_LABEL_KEYS = {
   tooLong: "addressTooLong",
 } as const satisfies Record<PhiAddressPart | `${"name" | "line1" | "city" | "country"}Required` | "tooLong", string>;
 
-export const PHI_FORM_ADDRESS_DEFAULT_LABELS = {
+const PHI_FORM_ADDRESS_DEFAULT_LABELS = {
   name: "Name",
   companyName: "Company",
   line1: "Street and number",
