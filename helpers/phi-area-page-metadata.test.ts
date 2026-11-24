@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { PHI_DEFAULT_SITE_DESCRIPTION, buildPhiAreaPageMetadata } from "./phi-metadata";
+import { buildPhiAreaPageMetadata } from "./phi-metadata";
+import { PHI_DEFAULT_SITE_DESCRIPTION } from "./phi-site-description";
 
 /**
  * What an Area writes into the head of one of its Pages.

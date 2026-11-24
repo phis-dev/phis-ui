@@ -142,9 +142,14 @@ import { PHI_SEARCH_WIDGET_DEFAULT_LABELS } from "../../../../../components/widg
 import {
   buildPhiMediaAssetContentDeliveryUrl,
   isPhiMediaAssetPublic,
+  PhiImageAssetVariantKey,
   PhiMediaAssetFlags,
   PhiMediaKind,
 } from "../../../../../constants/media";
+import { resolvePhiImagePresentation } from "../../../../../components/media/image-presentation";
+import { usePhiAuthoringAssetDetails } from "../../../../../components/media/use-authoring-asset-details";
+import { PhiImageControl } from "../../../../../components/controls/phi-image-control";
+import { resolvePhiSiteDescription } from "../../../../../helpers/phi-site-description";
 import { readPhiXAccount } from "../../../../../types/link-preview";
 import { PhiPresetSizeControl, type PhiPresetSizeOption } from "../../../../../components/controls/phi-preset-size-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
@@ -2637,6 +2642,21 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
 
   const brand = state.draft.brand ?? {};
   /*
+   * The link preview's picture as a shared link shows it: the Asset's share variant (1200 x 630, cut
+   * around its focus), drawn the way every picture of the house is drawn. The Asset's facts give the
+   * variant's version and the alt text the head falls back to.
+   */
+  const shareImageId = brand.shareImage?.assetId ?? null;
+  const shareAsset = usePhiAuthoringAssetDetails(shareImageId);
+  const shareImagePresentation = shareImageId == null ? null : resolvePhiImagePresentation({
+    sourceKind: "asset",
+    assetId: shareImageId,
+    variantKey: PhiImageAssetVariantKey.Share,
+    variantVersion: shareAsset?.variantVersion ?? null,
+    deliveryRevision: shareAsset?.deliveryRevision ?? null,
+    originalUrl: shareAsset?.deliveryUrl?.trim() || buildPhiMediaAssetContentDeliveryUrl(shareImageId),
+  });
+  /*
    * The Logo shows what the Site draws, which is the Set's wherever the record says nothing about the
    * mode. Picking one takes the mode over; the reset hands it back to the Set.
    */
@@ -3072,29 +3092,77 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                     The picture a shared link shows where its Page states none, cut to 1200 x 630 around its
                     focus. Only a publicly delivered picture can be chosen.
                   </PhiTypographyControl>
-                  <PhiMediaPickerBinding
-                    config={{
-                      mediaType: PhiMediaKind.Image,
-                      pageSize: 12,
-                      showPagination: true,
-                      showGroupFilter: true,
-                      showSearchBar: true,
-                    }}
-                    labels={mediaPickerLabels}
-                    searchLabels={PHI_SEARCH_WIDGET_DEFAULT_LABELS}
-                    siteSpaceOnly
-                    isAssetSelectable={(asset) => isPhiMediaAssetPublic(asset.deliveryPolicy, asset.lifecycleStatus)}
-                    value={brand.shareImage?.assetId ?? null}
-                    onAssetSelect={(asset) => publishDraft(mergeThemeBrand(state.draft, {
-                      shareImage: { assetId: asset.id, ...(brand.shareImage?.alt ? { alt: brand.shareImage.alt } : {}) },
-                    }))}
-                    onAssetClear={() => publishDraft(mergeThemeBrand(state.draft, { shareImage: null }))}
-                  />
+                  {/*
+                    The chosen picture in a link card as a messenger draws one: the picture, the host, a
+                    title and the description. The title and description are the Site's, which a Page
+                    replaces with its own; the description is the one the head falls back to.
+                  */}
+                  {shareImagePresentation?.url ? (
+                    <PhiCardControl
+                      size="small"
+                      padding={clientToken.paddingXS}
+                      cover={(
+                        <PhiImageControl
+                          presentation={shareImagePresentation}
+                          source="asset"
+                          alt={brand.shareImage?.alt || shareAsset?.altText || "Link preview picture"}
+                          width={1200}
+                          height={630}
+                          blurDataUrl={shareAsset?.blurDataUrl ?? null}
+                          sizes="400px"
+                        />
+                      )}
+                    >
+                      <PhiFlexControl vertical gap={clientToken.paddingXXS} style={{ minWidth: 0 }}>
+                        {runtime.site.hostname ? (
+                          <PhiTypographyControl type="secondary" style={{ fontSize: clientToken.fontSizeSM }}>
+                            {runtime.site.hostname}
+                          </PhiTypographyControl>
+                        ) : null}
+                        <PhiTypographyControl strong>{runtime.site.name || "Page title"}</PhiTypographyControl>
+                        <PhiTypographyControl type="secondary" style={{ fontSize: clientToken.fontSizeSM }}>
+                          {resolvePhiSiteDescription(brand.slogan?.label)}
+                        </PhiTypographyControl>
+                      </PhiFlexControl>
+                    </PhiCardControl>
+                  ) : null}
+                  {/* The library replaces the picture; Remove takes it out, as the picker's own Clear does. */}
+                  <PhiFlexControl align="center" gap={clientToken.paddingXS} style={{ minWidth: 0 }}>
+                    <div style={{ flex: "1 1 auto", minWidth: 0 }}>
+                      <PhiMediaPickerBinding
+                        config={{
+                          mediaType: PhiMediaKind.Image,
+                          pageSize: 12,
+                          showPagination: true,
+                          showGroupFilter: true,
+                          showSearchBar: true,
+                        }}
+                        labels={mediaPickerLabels}
+                        searchLabels={PHI_SEARCH_WIDGET_DEFAULT_LABELS}
+                        siteSpaceOnly
+                        isAssetSelectable={(asset) => isPhiMediaAssetPublic(asset.deliveryPolicy, asset.lifecycleStatus)}
+                        value={brand.shareImage?.assetId ?? null}
+                        onAssetSelect={(asset) => publishDraft(mergeThemeBrand(state.draft, {
+                          shareImage: { assetId: asset.id, ...(brand.shareImage?.alt ? { alt: brand.shareImage.alt } : {}) },
+                        }))}
+                        onAssetClear={() => publishDraft(mergeThemeBrand(state.draft, { shareImage: null }))}
+                      />
+                    </div>
+                    {brand.shareImage ? (
+                      <PhiButtonControl
+                        size="small"
+                        type="link"
+                        style={{ flexShrink: 0, paddingInline: 0 }}
+                        onClick={() => publishDraft(mergeThemeBrand(state.draft, { shareImage: null }))}
+                        label="Remove"
+                      />
+                    ) : null}
+                  </PhiFlexControl>
                   {/* What the picture says to somebody who cannot see it; the Asset's own alt text where empty. */}
                   <PhiLabeledControl label="Alt" fill>
                     <PhiTextControl
                       value={brand.shareImage?.alt ?? ""}
-                      placeholder="Alt text"
+                      placeholder={shareAsset?.altText || "Alt text"}
                       ariaLabel="Link preview alt text"
                       allowClear={false}
                       disabled={!brand.shareImage}

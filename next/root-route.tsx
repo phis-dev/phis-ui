@@ -13,7 +13,8 @@ import { collectPhiThemeDescriptorContributions } from "../plugins/runtime-modul
 import { resolvePhiThemeComposition, type PhiThemeBlockCatalog } from "../theme/phi-theme-composition";
 import { composePhiFontCatalogue } from "../theme/phi-font-catalogue";
 import { PHI_REM_ROOT_PX } from "../theme/phi-css-vars";
-import { buildPhiRootMetadata, resolvePhiSiteDescription } from "../helpers/phi-metadata";
+import { buildPhiRootMetadata } from "../helpers/phi-metadata";
+import { resolvePhiSiteDescription } from "../helpers/phi-site-description";
 import { describePhiSignetHead } from "../helpers/phi-signet-head";
 import { localizePath } from "../helpers/locale";
 import {

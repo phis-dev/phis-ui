@@ -9,19 +9,7 @@ import {
 import type { PhiSignetHead } from "./phi-signet-head";
 import { buildPhiPublicPageAlternates, type PhiPublicPageAddress } from "./phi-seo";
 import { readPhiXAccount } from "../types/link-preview";
-
-/**
- * What the head says of a Site that has said nothing: neither the Page's description nor the Theme's
- * slogan. Worded as the placeholder it is, so a link shared before anybody replaced it tells the operator
- * where to.
- */
-export const PHI_DEFAULT_SITE_DESCRIPTION =
-  "Default description of the phis starter. Set your own in the Page meta or as the Theme's slogan.";
-
-/** The Site's description: the Theme's slogan, else the starter's placeholder. */
-export function resolvePhiSiteDescription(slogan: string | null | undefined) {
-  return slogan?.trim() || PHI_DEFAULT_SITE_DESCRIPTION;
-}
+import { resolvePhiSiteDescription } from "./phi-site-description";
 
 /** The picture of a link preview, resolved: its absolute address, its exact size and what it shows. */
 export type PhiLinkPreviewImage = {
