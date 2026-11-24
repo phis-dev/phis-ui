@@ -286,8 +286,9 @@ export type PhiCmsConfigField =
   | (PhiCmsConfigFieldBase & {
       /**
        * A picture: an Asset from the media library in a chosen rendition, or an address, with its alt
-       * text. Writes the image source keys (`sourceKind`, `assetId`, `variantKey`, `variantVersion`,
-       * `sourceUrl`) and `alt`, not a key of its own; `key` only names the field.
+       * text. Writes the image source keys (`sourceKind`, `assetId`, `variantKey`, `sourceUrl`) and `alt`,
+       * not a key of its own; `key` only names the field. No `variantVersion`: the Widget draws the
+       * resolved Asset's own.
        */
       type: "image";
     })

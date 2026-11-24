@@ -4,6 +4,6 @@ import { PHI_BUILDER_MODE_SWITCH_WIDGET_DEFINITION, type PhiBuilderChromeWidgetC
 
 export const PHI_BUILDER_MODE_SWITCH_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiBuilderChromeWidgetConfig> = {
   ...PHI_BUILDER_MODE_SWITCH_WIDGET_DEFINITION,
-  render: ({ runtime }) => <PhiBuilderModeSwitchWidget runtime={runtime} />,
+  render: ({ runtime, config }) => <PhiBuilderModeSwitchWidget runtime={runtime} signalRoutes={config?.signalRoutes} />,
   renderPreview: ({ runtime }) => <PhiBuilderModeSwitchWidget runtime={runtime} disabled />,
 };

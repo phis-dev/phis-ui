@@ -24,10 +24,13 @@ export function PhiCommandToolbarWidget({
 }) {
   const commands = usePhiCommandButtons({
     buttons: config?.buttons ?? NO_BUTTONS,
+    key: config?.key,
     signalRoutes: config?.signalRoutes,
     blockId,
     labels,
     disabled,
+    initialDisabled: config?.disabled === true,
+    initialReadOnly: config?.readOnly === true,
     signalsEnabled,
   });
 

@@ -59,8 +59,11 @@ export function PhiAuthSecurityWidgetClient({
   runtime,
   labels,
   workflowLabels,
+  config,
 }: {
   apiPath?: string;
+  /** The Widget's padding, as the account avatar applies it, around every state it draws. */
+  config?: { padding?: number | string };
   /** The page's locale, which dates are written in; the browser's own language is not the Site's. */
   runtime: Pick<PhiBlockRuntime, "locale">;
   labels: PhiAuthSecurityWidgetLabels;
@@ -135,26 +138,36 @@ export function PhiAuthSecurityWidgetClient({
     );
   }
 
+  const padding = config?.padding;
   if (enrolling) {
     return (
-      <Suspense fallback={<PhiSkeletonControl lines={4} />}>
-        <PhiAuthWorkflowBody
-          mode="enroll"
-          next={pathname}
-          labels={workflowLabels}
-          onComplete={async () => {
-            setEnrolling(false);
-            await load();
-          }}
-        />
-      </Suspense>
+      <PhiFlexControl vertical style={{ padding }}>
+        <Suspense fallback={<PhiSkeletonControl lines={4} />}>
+          <PhiAuthWorkflowBody
+            mode="enroll"
+            next={pathname}
+            labels={workflowLabels}
+            onComplete={async () => {
+              setEnrolling(false);
+              await load();
+            }}
+          />
+        </Suspense>
+      </PhiFlexControl>
     );
   }
-  if (loading) return <PhiSkeletonControl lines={8} withTitle />;
-  if (!payload) return <PhiAlertControl level="error" showIcon title={error ?? labels.errors.unavailable} />;
+  if (loading || !payload) {
+    return (
+      <PhiFlexControl vertical style={{ padding }}>
+        {loading
+          ? <PhiSkeletonControl lines={8} withTitle />
+          : <PhiAlertControl level="error" showIcon title={error ?? labels.errors.unavailable} />}
+      </PhiFlexControl>
+    );
+  }
 
   return (
-    <PhiFlexControl vertical gap="large">
+    <PhiFlexControl vertical gap="large" style={{ padding }}>
       {/* No heading: the Settings panel this stands in is titled with what it is. */}
       <PhiTypographyControl presentation="paragraph" type="secondary">
         {labels.intro}

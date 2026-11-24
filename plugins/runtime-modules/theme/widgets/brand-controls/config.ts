@@ -3,12 +3,11 @@ import { PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS } from "../../../../../constants/m
 import { PHI_THEME_SIGNAL_CHANNELS } from "../../../../../plugins/runtime-modules/theme/controller/signals";
 import { createPhiCmsWidgetDefinition } from "../../../../../components/widgets/config/helpers";
 import { readString } from "../../../../../components/widgets/config/parser-primitives";
-import {
-  parsePhiControlSignalConfig,
-  type PhiControlSignalConfig,
-} from "../../../../../components/widgets/config/control-signal-config";
+import { readPhiSignalRouteSet } from "../../../../../types/signals";
+import type { PhiControlSignalConfig } from "../../../../../components/widgets/config/control-signal-config";
 
-export type PhiBuilderBrandWidgetConfig = Pick<PhiControlSignalConfig, "key" | "signalRoutes"> & {
+/** Routes only: a panel listens and never emits, so it has no signal identity of its own. */
+export type PhiBuilderBrandWidgetConfig = Pick<PhiControlSignalConfig, "signalRoutes"> & {
   themeKey?: string;
 };
 
@@ -19,7 +18,7 @@ function parseBuilderBrandWidgetConfig(config: Record<string, unknown>): PhiBuil
      * wrote, so a route an author adds in the Builder works as well. The parser dropped them once and
      * the panels listened to a hard-coded broadcast, which left the declared input decoration.
      */
-    ...parsePhiControlSignalConfig(config, { key: "brandPreviewThemeMode" }),
+    signalRoutes: readPhiSignalRouteSet(config.signalRoutes),
     themeKey: readString(config.themeKey),
   };
 }

@@ -9,6 +9,8 @@ import {
   type PhiCmsWidgetConfigBase,
 } from "../../../../../components/widgets/config/parser-primitives";
 import {
+  PHI_COMPACT_CONTROL_PRESENTATION_FIELDS,
+  PHI_CONTROL_STATE_FIELDS,
   parsePhiControlConfig,
   type PhiControlConfig,
 } from "../../../../../components/widgets/config/control-signal-config";
@@ -22,6 +24,7 @@ import {
 import type {
   PhiFloatButtonControlGroup,
   PhiFloatButtonControlPlacement,
+  PhiFloatButtonControlSize,
 } from "../../../../../components/controls/phi-float-button-control";
 
 /**
@@ -31,7 +34,7 @@ import type {
  * runtime -- and only how they stand is this Widget's. It sits in a slot of the Page it belongs to and
  * takes no room there; a Float Button for every Page of an Area is the Area's Pages each placing one.
  */
-export type PhiFloatButtonWidgetConfig = PhiCmsWidgetConfigBase & PhiControlConfig & {
+export type PhiFloatButtonWidgetConfig = PhiCmsWidgetConfigBase & PhiControlConfig<PhiFloatButtonControlSize> & {
   buttons: PhiCommandButtonConfig[];
   placement?: PhiFloatButtonControlPlacement;
   offsetBlock?: PhiCssLength;
@@ -42,6 +45,7 @@ export type PhiFloatButtonWidgetConfig = PhiCmsWidgetConfigBase & PhiControlConf
   groupDirection?: NonNullable<PhiFloatButtonControlGroup["direction"]>;
 };
 
+const PHI_FLOAT_BUTTON_SIZES = ["small", "medium"] as const satisfies readonly PhiFloatButtonControlSize[];
 const PHI_FLOAT_BUTTON_PLACEMENTS = ["bottom-end", "bottom-start", "top-end", "top-start"] as const;
 const PHI_FLOAT_BUTTON_GROUP_DIRECTIONS = ["top", "bottom", "left", "right"] as const;
 
@@ -53,7 +57,7 @@ function readOneOf<T extends string>(value: unknown, allowed: readonly T[]): T |
 function parsePhiFloatButtonWidgetConfig(config: Record<string, unknown>): PhiFloatButtonWidgetConfig {
   return {
     ...readRenderableBlockConfig(config),
-    ...parsePhiControlConfig(config, { key: "float" }),
+    ...parsePhiControlConfig(config, { key: "float" }, PHI_FLOAT_BUTTON_SIZES),
     buttons: readPhiCommandButtons(config.buttons),
     placement: readOneOf(config.placement, PHI_FLOAT_BUTTON_PLACEMENTS) ?? "bottom-end",
     offsetBlock: readPhiLengthValue(config.offsetBlock) ?? undefined,
@@ -160,6 +164,8 @@ export const PHI_FLOAT_BUTTON_WIDGET_DEFINITION = {
         { value: "right", label: "Right" },
       ],
     },
+    ...PHI_COMPACT_CONTROL_PRESENTATION_FIELDS,
+    ...PHI_CONTROL_STATE_FIELDS,
   ],
   defaultConfig: {
     key: "float",

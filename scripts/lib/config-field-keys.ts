@@ -27,7 +27,7 @@ export function writtenConfigPaths(field: PhiCmsConfigField): string[] {
     return [...(keys.length > 0 ? keys : [field.key]), ...patched];
   }
   if (field.type === "image") {
-    return ["sourceKind", "assetId", "variantKey", "variantVersion", "sourceUrl", "alt", ...patched];
+    return ["sourceKind", "assetId", "variantKey", "sourceUrl", "alt", ...patched];
   }
   if (field.type === "dimension" && (field.widthKey || field.heightKey)) {
     const keys = [field.widthKey, field.heightKey].filter((key): key is string => key !== undefined);

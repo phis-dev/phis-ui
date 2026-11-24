@@ -94,16 +94,27 @@ function resolveButtonBadge(
 
 export type PhiCommandButtonsOptions = {
   buttons: readonly PhiCommandButtonConfig[];
+  /** The Widget's control key, as every Control states one (`parsePhiControlConfig`). */
+  key?: string | null;
   signalRoutes?: PhiSignalRouteSet | null;
   blockId?: PhiCmsInstanceId | null;
   labels?: PhiCommonControlLabels | null;
   disabled?: boolean;
+  /** The Widget's own Disabled, until `enabled/change` says otherwise -- as on the Button Widget. */
+  initialDisabled?: boolean;
+  /** The Widget's own Read only: every button shows, inert, and none of them sends. */
+  initialReadOnly?: boolean;
   signalsEnabled?: boolean;
 };
 
 export type PhiCommandButtonsResult = {
+  /** The control key, `command` where none is stated -- what the signal controller of a Control answers. */
+  key: string;
   items: PhiToolbarControlItem[];
-  /** The whole Widget's answer: disabled from outside, or switched off by `enabled/change`. */
+  /**
+   * The whole Widget's answer: disabled from outside, by its own Disabled or Read only, or switched off
+   * by `enabled/change`.
+   */
   disabled: boolean;
   activate: (buttonKey: string) => void;
 };
@@ -134,12 +145,16 @@ function colorPhiCommandButtonIcon(icon: ReactNode, color: string | undefined): 
 
 export function usePhiCommandButtons({
   buttons,
+  key,
   signalRoutes,
   blockId,
   labels,
   disabled,
+  initialDisabled = false,
+  initialReadOnly = false,
   signalsEnabled = true,
 }: PhiCommandButtonsOptions): PhiCommandButtonsResult {
+  const resolvedKey = key?.trim() || "command";
   const signalIdentity = usePhiSignalIdentity();
   const signalPartition = usePhiSignalRuntimePartition();
   const emitSignal = usePhiSignalEmitter(null);
@@ -147,7 +162,12 @@ export function usePhiCommandButtons({
   const listenRoutes = useMemo(() => signalRoutes?.listens ?? [], [signalRoutes?.listens]);
   const [commandDisabled, setCommandDisabled] = useState<boolean | null>(null);
   const [buttonStateByKey, setButtonStateByKey] = useState<Record<string, PhiCommandButtonRuntimeState>>({});
-  const resolvedDisabled = disabled === true || commandDisabled === true;
+  /*
+   * A signal's `enabled/change` overrides the stated Disabled, as `usePhiControlSignalController` does.
+   * Read only is drawn as disabled, as on the Button Widget: a button that shows alive and does nothing
+   * when pressed cannot be told from one that has nothing wired.
+   */
+  const resolvedDisabled = disabled === true || (commandDisabled ?? initialDisabled) || initialReadOnly;
   const widgetReceiver = signalIdentity.sender;
   const buttonAddresses = useMemo(
     () => new Map(buttons.map((button) => [button.key, resolveButtonSubcontrolAddress(blockId, button.key)])),
@@ -197,7 +217,7 @@ export function usePhiCommandButtons({
   );
 
   function activate(buttonKey: string) {
-    if (!signalsEnabled) {
+    if (!signalsEnabled || initialReadOnly) {
       return;
     }
 
@@ -406,5 +426,5 @@ export function usePhiCommandButtons({
     };
   });
 
-  return { items, disabled: resolvedDisabled, activate };
+  return { key: resolvedKey, items, disabled: resolvedDisabled, activate };
 }

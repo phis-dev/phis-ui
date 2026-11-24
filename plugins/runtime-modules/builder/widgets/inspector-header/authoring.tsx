@@ -3,10 +3,10 @@
 import type { PhiCmsBuilderWidgetPlugin } from "../../../../../types";
 import {
   PHI_BUILDER_INSPECTOR_HEADER_WIDGET_DEFINITION,
-  type PhiBuilderChromeWidgetConfig,
+  type PhiBuilderChromeStateWidgetConfig,
 } from "../chrome/config";
 
-export const PHI_BUILDER_INSPECTOR_HEADER_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugin<PhiBuilderChromeWidgetConfig> = {
+export const PHI_BUILDER_INSPECTOR_HEADER_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugin<PhiBuilderChromeStateWidgetConfig> = {
   ...PHI_BUILDER_INSPECTOR_HEADER_WIDGET_DEFINITION,
   renderEditor: () => null,
 };

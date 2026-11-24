@@ -59,7 +59,6 @@ type PhiCardImageSource =
       sourceKind: "asset";
       assetId?: number;
       variantKey?: PhiImageAssetVariantKeyValue | null;
-      variantVersion?: number | null;
     };
 
 export type PhiCmsCardWidgetConfig = PhiCmsWidgetConfigBase & PhiCardImageSource & {
@@ -206,7 +205,6 @@ function parsePhiCmsCardWidgetConfig(config: Record<string, unknown>): PhiCmsCar
         sourceKind: "asset",
         assetId: source.assetId,
         variantKey: source.variantKey,
-        variantVersion: source.variantVersion,
       }
     : { ...normalized, sourceKind: "url", sourceUrl: source.sourceUrl };
 }

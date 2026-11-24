@@ -15,6 +15,7 @@ import { PhiSpinControl } from "../../../../../components/controls/phi-spin-cont
 export function PhiAuthLogoutWidgetClient({
   runtime,
   labels,
+  config,
 }: PhiClientBlockBaseProps<
   PhiAuthLogoutWidgetLabels,
   { padding?: number | string },
@@ -50,7 +51,7 @@ export function PhiAuthLogoutWidgetClient({
   }, [failedLabel, locale, siteKey]);
 
   return (
-    <PhiFlexControl vertical align="center" gap="middle">
+    <PhiFlexControl vertical align="center" gap="middle" style={{ padding: config?.padding }}>
       {error ? (
         <>
           <PhiAlertControl level="error" showIcon title={error} />

@@ -35,7 +35,7 @@ import { forEachDescendant } from "./lib/ts-ast";
  *   signature with no property of that name) cannot be followed and counts as read.
  *
  * The block envelope (`PhiRenderableBlockBase`: visibility, size, surface, ...) is the block renderer's
- * and not checked here. Two lists name the rest, each entry with its reason, and both shrink with the
+ * and not checked here. Three lists name the rest, each entry with its reason, and all shrink with the
  * code: an entry whose key is read now, or that the Widget no longer offers, fails as well.
  *
  * `--explain <typeKey>.<key>[,...]` prints the way a key is read, hand-off by hand-off.
@@ -54,45 +54,26 @@ const READ_ELSEWHERE: Readonly<Record<string, string>> = {
  * operator's decision -- read each one or remove it (TODOS.md, "Widget config keys nothing renders
  * reads"). Empty is the normal state; nothing is added here to make a new key pass.
  */
-const CONTROL_STATE = "parsePhiControlConfig's state and size; the Widget's Client reads none of them";
-const CHOICE = "the shared choice Control parser's fields; this Widget draws none of them";
-const PADDING_ONLY = "parsePhiPaddingOnlyWidgetConfig; the Client ignores its config";
-const BRAND_KEY = "parsePhiControlSignalConfig's signal identity; the brand Widgets listen by their routes";
-const CHROME_ROUTES = "the Builder chrome parser's routes; this Widget's Client reads none";
-const UNDECIDED: Readonly<Record<string, string>> = {
-  "card.variantVersion": "the image field writes it; the Card draws the resolved Asset's own version",
-  "command-toolbar.key": CONTROL_STATE,
-  "command-toolbar.readOnly": CONTROL_STATE,
-  "command-toolbar.disabled": CONTROL_STATE,
-  "float-button.key": CONTROL_STATE,
-  "float-button.readOnly": CONTROL_STATE,
-  "float-button.disabled": CONTROL_STATE,
-  "float-button.controlSize": CONTROL_STATE,
-  "segmented.description": CHOICE,
-  "segmented.placeholder": CHOICE,
-  "segmented.presentation": CHOICE,
-  "segmented.allowCustom": CHOICE,
-  "steps.description": CHOICE,
-  "steps.placeholder": CHOICE,
-  "steps.allowCustom": CHOICE,
-  "tab-bar.label": CHOICE,
-  "tab-bar.description": CHOICE,
-  "tab-bar.placeholder": CHOICE,
-  "tab-bar.presentation": CHOICE,
-  "tab-bar.allowCustom": CHOICE,
-  "auth-logout.padding": PADDING_ONLY,
-  "auth-security.padding": PADDING_ONLY,
-  "builder-brand-style-controls.key": BRAND_KEY,
-  "builder-brand-theme-controls.key": BRAND_KEY,
-  "builder-brand-background-controls.key": BRAND_KEY,
-  "builder-brand-identity-controls.key": BRAND_KEY,
-  "builder-brand-theme-preview.key": BRAND_KEY,
-  "builder-inspector-header.signalRoutes": CHROME_ROUTES,
-  "builder-mode-switch.signalRoutes": CHROME_ROUTES,
+const UNDECIDED: Readonly<Record<string, string>> = {};
+
+/*
+ * Offered and parsed on purpose, read by nothing yet: a key the operator keeps for a use that is decided
+ * and not built. Each names that use; an entry is removed when the key is read.
+ */
+const STACK_CHOICE_PREPARED =
+  "prepared for the stack choice Controls' presentation variants (operator, 2026-11-24); drawn by none of them yet";
+const PREPARED: Readonly<Record<string, string>> = {
+  "segmented.description": STACK_CHOICE_PREPARED,
+  "segmented.presentation": STACK_CHOICE_PREPARED,
+  "steps.description": STACK_CHOICE_PREPARED,
+  "tab-bar.label": STACK_CHOICE_PREPARED,
+  "tab-bar.description": STACK_CHOICE_PREPARED,
+  "tab-bar.presentation": STACK_CHOICE_PREPARED,
 };
 const LISTED: ReadonlyMap<string, string> = new Map([
   ...Object.keys(READ_ELSEWHERE).map((entry) => [entry, "READ_ELSEWHERE"] as const),
   ...Object.keys(UNDECIDED).map((entry) => [entry, "UNDECIDED"] as const),
+  ...Object.keys(PREPARED).map((entry) => [entry, "PREPARED"] as const),
 ]);
 const offeredEntries = new Set<string>();
 

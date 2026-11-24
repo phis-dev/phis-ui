@@ -1,4 +1,5 @@
 import type { PhiBlockRuntime } from "../../../types";
+import type { PhiSignalRouteSet } from "../../../types/signals";
 import { getPhiBuilderChromeWidgetLabels } from "../label-sets/builder-chrome";
 import { PhiRuntimeRenderClientType } from "../../../constants/runtime-render-client-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../runtime/runtime-module-render-client-manifest";
@@ -16,12 +17,13 @@ async function getLabels(runtime: PhiBuilderChromeWidgetProps["runtime"]) {
 export async function PhiBuilderModeSwitchWidget({
   runtime,
   disabled,
-}: PhiBuilderChromeWidgetProps) {
+  signalRoutes,
+}: PhiBuilderChromeWidgetProps & { signalRoutes?: PhiSignalRouteSet | null }) {
   const labels = await getLabels(runtime);
   return (
     <PhiRuntimeModuleRenderClientHost
       type={PhiRuntimeRenderClientType.BuilderModeSwitch}
-      componentProps={{ disabled, labels }}
+      componentProps={{ disabled, labels, signalRoutes: signalRoutes ?? null }}
     />
   );
 }

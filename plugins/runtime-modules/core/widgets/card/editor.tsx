@@ -166,7 +166,7 @@ export function PhiCardWidgetEditor({ config, onChange }: PhiCardWidgetEditorPro
       mediaAspectRatio: config.mediaAspectRatio,
     }),
     frameAspectRatio: resolvePhiCardMediaAspectRatioValue(config.mediaAspectRatio),
-    variantVersion: asset?.variantVersion ?? (config.sourceKind === "asset" ? config.variantVersion : null),
+    variantVersion: asset?.variantVersion ?? null,
     deliveryRevision: asset?.deliveryRevision,
     originalUrl: assetId == null ? null : buildPhiMediaAssetContentDeliveryUrl(assetId),
     sourceUrl: config.sourceKind === "url" ? config.sourceUrl : undefined,

@@ -10,8 +10,15 @@ function parseBuilderChromeWidgetConfig(config: Record<string, unknown>): PhiBui
   return { signalRoutes: readPhiSignalRouteSet(config.signalRoutes) ?? undefined };
 }
 
-type PhiBuilderChromeWidgetDefinition = Pick<
-  PhiCmsWidgetPlugin<PhiBuilderChromeWidgetConfig>,
+/** A chrome Widget that only draws Builder state -- the Inspector's heading -- reads no config at all. */
+export type PhiBuilderChromeStateWidgetConfig = Record<string, never>;
+
+function parseBuilderChromeStateWidgetConfig(): PhiBuilderChromeStateWidgetConfig {
+  return {};
+}
+
+type PhiBuilderChromeWidgetDefinition<TConfig = PhiBuilderChromeWidgetConfig> = Pick<
+  PhiCmsWidgetPlugin<TConfig>,
   | "kind"
   | "pluginKey"
   | "typeKey"
@@ -25,13 +32,14 @@ type PhiBuilderChromeWidgetDefinition = Pick<
   | "parseConfig"
 >;
 
-function createBuilderChromeWidgetDefinition(options: {
+function createBuilderChromeWidgetDefinition<TConfig = PhiBuilderChromeWidgetConfig>(options: {
   typeKey: string;
   title: string;
   description: string;
-  runtimeSignals?: PhiBuilderChromeWidgetDefinition["runtimeSignals"];
-  slotSizePolicy: PhiBuilderChromeWidgetDefinition["slotSizePolicy"];
-}): PhiBuilderChromeWidgetDefinition {
+  runtimeSignals?: PhiBuilderChromeWidgetDefinition<TConfig>["runtimeSignals"];
+  slotSizePolicy: PhiBuilderChromeWidgetDefinition<TConfig>["slotSizePolicy"];
+  parseConfig: PhiBuilderChromeWidgetDefinition<TConfig>["parseConfig"];
+}): PhiBuilderChromeWidgetDefinition<TConfig> {
   return {
     kind: "widget",
     pluginKey: resolvePhiCmsWidgetPluginKey(options.typeKey),
@@ -43,7 +51,7 @@ function createBuilderChromeWidgetDefinition(options: {
     runtimeSignals: options.runtimeSignals,
     slotSizePolicy: options.slotSizePolicy,
     fields: [],
-    parseConfig: parseBuilderChromeWidgetConfig,
+    parseConfig: options.parseConfig,
   };
 }
 
@@ -52,13 +60,19 @@ export const PHI_BUILDER_MODE_SWITCH_WIDGET_DEFINITION = createBuilderChromeWidg
   slotSizePolicy: "intrinsic",
   title: "Builder Mode Switch",
   description: "Editor and preview switch for Builder workspaces.",
+  /* The mode chosen, along the routes its tree writes: the Builder Controller enters the editor or the preview. */
+  runtimeSignals: {
+    emits: [{ id: "change", action: "change", valueType: "string" }],
+  },
+  parseConfig: parseBuilderChromeWidgetConfig,
 });
 
-export const PHI_BUILDER_INSPECTOR_HEADER_WIDGET_DEFINITION = createBuilderChromeWidgetDefinition({
+export const PHI_BUILDER_INSPECTOR_HEADER_WIDGET_DEFINITION = createBuilderChromeWidgetDefinition<PhiBuilderChromeStateWidgetConfig>({
   typeKey: "builder-inspector-header",
   slotSizePolicy: "intrinsic",
   title: "Builder Inspector Header",
   description: "Dynamic node kind and type heading for Builder inspector overlays.",
+  parseConfig: parseBuilderChromeStateWidgetConfig,
 });
 
 export type PhiBuilderInspectorSectionWidgetSpec = {
@@ -103,5 +117,6 @@ export const PHI_BUILDER_INSPECTOR_SECTION_WIDGET_DEFINITIONS =
           valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.builderInspector,
         }],
       },
+      parseConfig: parseBuilderChromeWidgetConfig,
     }),
   }));

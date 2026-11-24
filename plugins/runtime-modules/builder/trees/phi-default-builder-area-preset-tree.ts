@@ -2215,7 +2215,20 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Left,
               sortOrder: 0,
               label: "dev builder mode switch",
-              config: {},
+              config: {
+                // The mode chosen goes to the Builder Controller, which enters the editor or the preview.
+                signalRoutes: {
+                  emits: [{
+                    routeKey: "builder-mode-change",
+                    capabilityId: "change",
+                    scope: "area",
+                    channel: "builderMode",
+                    action: "change",
+                    valueType: "string",
+                    receiver: createPhiBuilderControllerAddress(),
+                  }],
+                },
+              },
             }),
           ]
         : []),

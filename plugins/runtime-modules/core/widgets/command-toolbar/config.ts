@@ -9,6 +9,7 @@ import {
 } from "../../../../../components/widgets/config/parser-primitives";
 import {
   PHI_CONTROL_PRESENTATION_FIELDS,
+  PHI_CONTROL_STATE_FIELDS,
   parsePhiControlConfig,
   type PhiControlConfig,
 } from "../../../../../components/widgets/config/control-signal-config";
@@ -78,9 +79,8 @@ export const PHI_COMMAND_TOOLBAR_WIDGET_DEFINITION = {
       },
     ] }),
     /*
-     * What holds for every button. No Read only or Disabled of the whole toolbar here: each button
-     * has its own, and switching all of them at once is what a signal is for -- every renderable block
-     * receives `enabled/change`.
+     * What holds for every button. Read only and Disabled of the whole toolbar sit beside each button's
+     * own, as on every Control; `enabled/change` still switches the toolbar at runtime.
      */
     { key: "compact", type: "boolean", label: "Compact", heading: "Toolbar" },
     /*
@@ -91,6 +91,7 @@ export const PHI_COMMAND_TOOLBAR_WIDGET_DEFINITION = {
     { key: "wrap", type: "boolean", label: "Wrap", visibleWhen: { field: "compact", equals: false } },
     { key: "showLabels", type: "boolean", label: "Show Labels" },
     ...PHI_CONTROL_PRESENTATION_FIELDS,
+    ...PHI_CONTROL_STATE_FIELDS,
   ],
   defaultConfig: {
     key: "command",

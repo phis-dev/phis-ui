@@ -19,7 +19,8 @@ const PHI_IMAGE_FIELD_ORIGINAL_VARIANT = "__original__";
  * Background control uses; this adds only what a picture placed on its own also needs.
  *
  * It writes the keys every image source is read from (`readPhiMediaImageSourceConfig`) -- `sourceKind`,
- * `assetId`, `variantKey`, `variantVersion`, `sourceUrl` -- and `alt`. An Asset is picked from the media
+ * `assetId`, `variantKey`, `sourceUrl` -- and `alt`. No `variantVersion`: the Card draws the resolved
+ * Asset's own, so a stored one only went stale; choosing a picture clears one an older field wrote. An Asset is picked from the media
  * library; without one, an address stands for a picture from elsewhere. Removing the picture clears both,
  * so nothing of the old one is left to come back.
  */
@@ -57,7 +58,7 @@ export function PhiInspectorImageFieldControl({
               sourceKind: "asset",
               assetId: picked.id,
               variantKey: PhiImageAssetVariantKey.Card,
-              variantVersion: picked.variantVersion ?? null,
+              variantVersion: undefined,
               sourceUrl: undefined,
             })
           : undefined}

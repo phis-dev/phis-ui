@@ -548,10 +548,10 @@ export type PhiCommandButtonConfig = PhiControlBadgeConfig & {
 };
 
 /**
- * Without the Control's own Read only and Disabled: each button has its own, and the whole toolbar is
- * switched by `enabled/change`, which every renderable block receives.
+ * The Control's own Read only and Disabled hold for every button, beside each button's own; the whole
+ * toolbar is also switched by `enabled/change`, which every renderable block receives.
  */
-export type PhiCommandToolbarWidgetPlacement = PhiWidgetPlacementBase & Omit<PhiControlPlacement, "readOnly" | "disabled"> & {
+export type PhiCommandToolbarWidgetPlacement = PhiWidgetPlacementBase & PhiControlPlacement & {
   compact?: boolean;
   wrap?: boolean;
   showLabels?: boolean;

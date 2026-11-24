@@ -29,7 +29,16 @@ export type PhiChoiceControlConfig = PhiControlConfig & PhiChoiceOptionsConfig &
   allowCustom?: boolean;
 };
 
-export type PhiStackChoiceControlConfig = PhiChoiceControlConfig & {
+/**
+ * The choice Controls that switch a stack -- Segmented, Steps, Tab Bar: options, a value and the Control's
+ * state, and none of the select's text entry. `label`, `description` and `presentation` are prepared for
+ * presentation variants of their own and drawn by none of them yet.
+ */
+export type PhiStackChoiceControlConfig = PhiControlConfig & PhiChoiceOptionsConfig & {
+  label?: string;
+  description?: string;
+  value?: string;
+  presentation?: "select" | "autocomplete";
   valueMode?: PhiChoiceValueMode;
 };
 
@@ -117,8 +126,14 @@ export function parsePhiChoiceControlConfig(
 export function parsePhiStackChoiceControlConfig(
   config: Record<string, unknown>,
 ): PhiStackChoiceControlConfig {
+  const reader = createPhiConfigReader(config);
   return {
-    ...parsePhiChoiceControlConfig(config),
-    valueMode: createPhiConfigReader(config).oneOf("valueMode", ["raw", "stack-slot-index"] as const satisfies readonly PhiChoiceValueMode[]) ?? "raw",
+    ...parsePhiControlConfig(config, { key: "choice" }),
+    label: reader.string("label"),
+    description: reader.string("description"),
+    value: reader.string("value"),
+    presentation: reader.oneOf("presentation", ["select", "autocomplete"] as const) ?? "select",
+    ...parsePhiChoiceOptionsConfig(config),
+    valueMode: reader.oneOf("valueMode", ["raw", "stack-slot-index"] as const satisfies readonly PhiChoiceValueMode[]) ?? "raw",
   };
 }

@@ -7,8 +7,16 @@ import { FloatButton } from "antd";
 import { PhiIcon } from "../shell/phi-icon";
 import type { PhiToolbarControlItem } from "./phi-toolbar-control";
 import { usePhiHydrated } from "../state/use-phi-hydrated";
+import { PHI_CONTROL } from "../../theme/antd-css-var-contract";
 
 export type PhiFloatButtonControlPlacement = "bottom-end" | "bottom-start" | "top-end" | "top-start";
+
+/**
+ * How large the buttons are. A Float Button is drawn at the large control height by Ant Design; that is
+ * `medium` here, and `small` steps one down the Theme's control heights. The ladder has no step above
+ * it, so there is no `large`.
+ */
+export type PhiFloatButtonControlSize = "small" | "medium";
 
 export type PhiFloatButtonControlGroup = {
   /** How the group opens. Left out, it is always open: every button stands in the corner. */
@@ -32,9 +40,24 @@ export type PhiFloatButtonControlProps = {
    * floating over the editor could neither be seen in its slot nor selected there.
    */
   inPlace?: boolean;
+  size?: PhiFloatButtonControlSize;
   disabled?: boolean;
   onActivate?: (key: string) => void;
 };
+
+/*
+ * Ant Design sizes the button by its own variable (`--ant-float-btn-size`, under the component prefix, as
+ * the Select's are) and opens a group's list from the trigger by the same length plus the padding.
+ */
+function resolveSizeStyle(size: PhiFloatButtonControlSize | undefined): CSSProperties | undefined {
+  if (size !== "small") return undefined;
+  return { "--ant-float-btn-size": PHI_CONTROL.md } as CSSProperties;
+}
+
+function resolveGroupSizeStyle(size: PhiFloatButtonControlSize | undefined): CSSProperties | undefined {
+  if (size !== "small") return undefined;
+  return { "--ant-float-btn-list-trigger-offset": `calc(${PHI_CONTROL.md} + var(--phi-padding))` } as CSSProperties;
+}
 
 /**
  * Where a fixed button is drawn: on `document.body`, outside every box of the page.
@@ -92,9 +115,11 @@ export function PhiFloatButtonControl({
   shape = "circle",
   group,
   inPlace = false,
+  size,
   disabled,
   onActivate,
 }: PhiFloatButtonControlProps) {
+  const sizeStyle = resolveSizeStyle(size);
   const visibleItems = items.filter((item) => item.visible !== false);
   if (visibleItems.length === 0) {
     return null;
@@ -123,7 +148,7 @@ export function PhiFloatButtonControl({
             }
           : undefined}
         /* A single button carries the corner itself; inside a group, the group does. */
-        style={visibleItems.length === 1 && index === 0 ? cornerStyle : undefined}
+        style={visibleItems.length === 1 && index === 0 ? { ...cornerStyle, ...sizeStyle } : sizeStyle}
         onClick={item.readOnly || !onActivate ? undefined : () => onActivate(item.key)}
       />
     );
@@ -135,7 +160,7 @@ export function PhiFloatButtonControl({
       icon={group?.icon ? <PhiIcon name={group.icon} size="inherit" /> : undefined}
       placement={group?.direction ?? (placement.startsWith("top") ? "bottom" : "top")}
       shape={shape}
-      style={cornerStyle}
+      style={{ ...cornerStyle, ...resolveGroupSizeStyle(size) }}
     >
       {buttons}
     </FloatButton.Group>

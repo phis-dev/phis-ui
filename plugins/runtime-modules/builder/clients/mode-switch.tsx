@@ -10,33 +10,24 @@ import {
 import { usePhiControlSignalController } from "../../../../components/widgets/client/shared/phi-control-signals";
 import { usePhiConfig } from "../../../../components/root/phi-config-provider";
 import { PhiFlexControl } from "../../../../components/controls/phi-flex-control";
+import type { PhiSignalRouteSet } from "../../../../types/signals";
 
 export function PhiBuilderModeSwitchWidgetClient({
   disabled = false,
   labels = PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS,
+  signalRoutes = null,
 }: {
   disabled?: boolean;
   labels?: PhiBuilderChromeWidgetLabels;
+  /** The routes its tree writes for `change`: to the Builder Controller, which enters the mode. */
+  signalRoutes?: PhiSignalRouteSet | null;
 }) {
   const { token } = usePhiConfig();
   const builderMode = usePhiDeveloperBuilderStateValue((state) => state.builderMode);
   const isDisabled = disabled;
   const controlSignals = usePhiControlSignalController<string>({
     key: "builderMode",
-    // The Widget's own address: the Builder Controller does not answer what was sent under its own.
-    signalRoutes: {
-      emits: [
-        {
-          routeKey: "builder-mode-change",
-          capabilityId: "change",
-          scope: "area",
-          channel: "builderMode",
-          action: "change",
-          valueType: "string",
-          receiver: "broadcast",
-        },
-      ],
-    },
+    signalRoutes,
     typeKey: "segmented",
     initialDisabled: isDisabled,
     clearValue: builderMode,

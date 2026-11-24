@@ -4,11 +4,11 @@ import { getPhiInspectorWidgetLabels } from "../../../../../components/widgets/l
 import { getPhiRegionWidgetLabels } from "../../../../../components/widgets/label-sets/region";
 import {
   PHI_BUILDER_INSPECTOR_HEADER_WIDGET_DEFINITION,
-  type PhiBuilderChromeWidgetConfig,
+  type PhiBuilderChromeStateWidgetConfig,
 } from "../chrome/config";
 import { buildPhiWidgetLabelTranslatorOptions } from "../../../../../components/widgets/label-sets/runtime-options";
 
-export const PHI_BUILDER_INSPECTOR_HEADER_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiBuilderChromeWidgetConfig> = {
+export const PHI_BUILDER_INSPECTOR_HEADER_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiBuilderChromeStateWidgetConfig> = {
   ...PHI_BUILDER_INSPECTOR_HEADER_WIDGET_DEFINITION,
   render: async ({ runtime }) => {
     const options = buildPhiWidgetLabelTranslatorOptions(runtime);
