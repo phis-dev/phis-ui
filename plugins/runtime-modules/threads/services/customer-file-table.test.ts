@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { PHI_CUSTOMER_FILE_RESOURCE_KEYS as RESOURCES } from "../../../../constants/customer-file";
+import { PHI_CUSTOMER_FILE_OWN_FILE_PARAM, PHI_CUSTOMER_FILE_RESOURCE_KEYS as RESOURCES } from "../../../../constants/customer-file";
+import { PHI_TABLE_PROVIDER_REFUSED_CODE } from "../../../../components/widgets/client/shared/phi-table-provider-refusal";
 import { PHI_THREADS_CUSTOMER_FILE_TABLE_PROVIDER_REGISTRATION as PROVIDER } from "./customer-file-table";
 
 const FILE = {
@@ -89,5 +90,24 @@ describe("the customer file's Provider", () => {
     const fetchMock = stubFetch();
     await PROVIDER.query({ resourceKey: RESOURCES.person, query: {} } as never);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("refuses the reader's own file as a refused read, in the Page's words where it gave them", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => Response.json({ error: "Nobody reaches their own file." }, { status: 403 })));
+    const notice = "This is your own record; it is not shown here.";
+    await expect(PROVIDER.query({
+      resourceKey: RESOURCES.person,
+      query: { filters: { userId: 5 } },
+      params: { [PHI_CUSTOMER_FILE_OWN_FILE_PARAM]: notice },
+    } as never)).rejects.toMatchObject({ code: PHI_TABLE_PROVIDER_REFUSED_CODE, message: notice });
+    await expect(read(RESOURCES.addresses)).rejects.toMatchObject({
+      code: PHI_TABLE_PROVIDER_REFUSED_CODE,
+      message: "Nobody reaches their own file.",
+    });
+  });
+
+  it("fails any other refusal as the source's failure", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => Response.json({ error: "No member of this Site has this id." }, { status: 404 })));
+    await expect(read(RESOURCES.person)).rejects.toMatchObject({ code: "request-failed" });
   });
 });

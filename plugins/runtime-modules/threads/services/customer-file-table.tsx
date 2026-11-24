@@ -1,6 +1,7 @@
 "use client";
 
 import { isPhiRecord } from "../../../../helpers/is-record";
+import { readPhiJsonError, readPhiJsonPayload } from "../../../../helpers/client-json-request";
 import {
   buildPhiTablePageParams,
   createPhiTableProviderRequestInit,
@@ -20,7 +21,12 @@ import { PhisThreadKind, PhisThreadStatus } from "../../../../constants/threads"
 import { toPhiSiteAddressRow } from "../../../../helpers/site-address-row";
 import { readPhiThreadInboxRow } from "../../../../helpers/thread-inbox-row";
 import { PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../data-providers";
-import { PHI_CUSTOMER_FILE_RESOURCE_KEYS as RESOURCES, PHI_CUSTOMER_FILE_SUBJECT_PARAM } from "../../../../constants/customer-file";
+import {
+  PHI_CUSTOMER_FILE_OWN_FILE_PARAM,
+  PHI_CUSTOMER_FILE_RESOURCE_KEYS as RESOURCES,
+  PHI_CUSTOMER_FILE_SUBJECT_PARAM,
+} from "../../../../constants/customer-file";
+import { PHI_TABLE_PROVIDER_REFUSED_CODE } from "../../../../components/widgets/client/shared/phi-table-provider-refusal";
 import { PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
 
 const RESPONSE_OPTIONS: ReadPhiTableProviderResponseOptions = { subject: "Customer file" };
@@ -73,6 +79,12 @@ export function toPhiCustomerFileThreadRows(result: Record<string, unknown>, pag
   }, ...threads.filter((row) => (row as Record<string, unknown>).id !== fileThreadId)];
 }
 
+/*
+ * Core's refusal of the reader's own file (`403`): the route answers that and nothing else to someone who
+ * may open files at all, and nobody else reaches this Page or its member picker.
+ */
+class PhiCustomerFileOwnFileRefusal extends Error {}
+
 type CustomerFileRead = {
   promise: Promise<Record<string, unknown> | null>;
   controller: AbortController;
@@ -103,10 +115,14 @@ function readCustomerFile(path: string, signal: AbortSignal | undefined) {
     const entry: CustomerFileRead = {
       controller,
       waiters: 0,
-      promise: (async () => readPhiTableProviderResponse<Record<string, unknown>>(
-        await fetch(path, createPhiTableProviderRequestInit(controller.signal)),
-        RESPONSE_OPTIONS,
-      ))().finally(() => {
+      promise: (async () => {
+        const response = await fetch(path, createPhiTableProviderRequestInit(controller.signal));
+        if (response.status === 403) {
+          const refused = await readPhiJsonPayload<unknown>(response);
+          throw new PhiCustomerFileOwnFileRefusal(readPhiJsonError(refused, "Nobody reaches their own file."));
+        }
+        return readPhiTableProviderResponse<Record<string, unknown>>(response, RESPONSE_OPTIONS);
+      })().finally(() => {
         if (customerFileReads.get(path) === entry) customerFileReads.delete(path);
       }),
     };
@@ -141,7 +157,15 @@ async function queryCustomerFile({ resourceKey, query, params, signal }: PhiTabl
   // The person and their addresses are the same on every page; they ask for the first, as the threads
   // Table does on a choice, so the three reads are one route.
   const paged = buildPhiTablePageParams(resourceKey === RESOURCES.threads ? query : {}, THREADS_PAGE_SIZE);
-  const result = await readCustomerFile(buildPhiCustomerFilePath(userId, paged), signal);
+  const result = await readCustomerFile(buildPhiCustomerFilePath(userId, paged), signal).catch((error: unknown) => {
+    if (!(error instanceof PhiCustomerFileOwnFileRefusal)) throw error;
+    // Said where the rows would be, in the Page's words where it gave them, and the picker stays.
+    const notice = params?.[PHI_CUSTOMER_FILE_OWN_FILE_PARAM];
+    throw new PhiTableProviderError(
+      PHI_TABLE_PROVIDER_REFUSED_CODE,
+      typeof notice === "string" && notice.trim() ? notice : error.message,
+    );
+  });
   if (!isPhiRecord(result) || !isPhiRecord(result.person)) {
     throw new PhiTableProviderError("invalid-response", "The customer file answer is invalid.");
   }

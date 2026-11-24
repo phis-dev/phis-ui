@@ -47,7 +47,14 @@ describe("a Table embedded in Markdown, in the browser", () => {
     const html = draw({ caption: "Prices", table: { config, labels: PHI_TABLE_WIDGET_DEFAULT_LABELS, renderMode: "live" }, notice: null });
     expect(html).toContain('data-stand-in="table"');
     expect(html).toMatch(/^<figure class="phi-markdown-table-embed"/u);
-    expect(received).toEqual([{ config, labels: PHI_TABLE_WIDGET_DEFAULT_LABELS, renderMode: "live" }]);
+    expect(received).toEqual([{
+      config,
+      labels: PHI_TABLE_WIDGET_DEFAULT_LABELS,
+      renderMode: "live",
+      onStateChange: expect.any(Function),
+    }]);
+    // The caption is the Table's title while the Table draws, and not said twice.
+    expect(html).not.toContain(">Prices<");
   });
 
   it("draws a refused embed as its caption, and its notice where one is given, without asking for the Table", () => {

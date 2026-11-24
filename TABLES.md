@@ -753,6 +753,11 @@ Execution mode and Authoring mode are independent:
 - `authoringMode: "read"` permits side-effect-free Canvas reads.
 - `authoringMode: "edit"` permits the generic Builder resource editor to create and mutate Draft data.
 
+In the Builder's canvas a `none` Provider of the edited Area stands in with its declaration and an empty
+answer (`plugins/runtime-modules/builder/clients/metadata-table-provider-stand-ins.tsx`): a Table bound to it
+draws its columns, tools and binding fields as the author arranges them and reads nothing, where it used to
+say the Provider was not available. A record read through the stand-in is refused.
+
 A Provider resource descriptor owns content semantics:
 
 ```text
@@ -869,6 +874,15 @@ change must return `invalidation: "none"`. The Binding applies that canonical re
 cell or row and must not issue another Provider query. `view` and `resource` invalidation are reserved for
 changes whose visible consequences cannot be represented by the returned canonical patch, such as row
 membership, ordering, totals, or data outside the current binding.
+
+### A refused read
+
+A read the Provider refuses for this reader on purpose -- the staff's customer file on the reader's own record,
+which Core never opens -- is no failure of the source. The Provider throws `PhiTableProviderError` with the
+code `refused` (`PHI_TABLE_PROVIDER_REFUSED_CODE`, `components/widgets/client/shared/phi-table-provider-refusal.ts`)
+and the sentence the reader is told; the Table draws itself, live as in the Builder, with that sentence where
+its rows would be, and keeps its tools, so the reader can ask for something else. Every other failed read
+ends the Table as before: the cause in the Builder, nothing but the log live.
 
 ### Binding and inline-edit lifecycle
 
@@ -1276,7 +1290,10 @@ the resolution in the Widget's `table-embeds.server.ts`, asked once per text wit
   standing in for the text, an entry's body, a teaser and the search index have the caption alone.
 - A refusal is the caption as a paragraph. Where the text is authored -- the Builder's preview, the Editor --
   the reason stands beneath it; live there is no reason, as a hidden node gives none.
-- The caption is the Table's title. It is the Site's words, translated with the rest of the text in the
+- The caption is the Table's title. A Table that cannot draw -- live, a read that fails, such as a viewer
+  the Provider refuses with `401` -- says so in its state (`errorCode`), and the caption then stands as a
+  paragraph rather than going with it; a refused read the Provider explains draws the Table, title and all.
+  It is the Site's words, translated with the rest of the text in the
   Site's store; the Module's title and column titles are a Preset's words, translated in the platform's
   store. The Table's own words are its Label Set's.
 

@@ -21,6 +21,7 @@ const PHI_CUSTOMER_FILE_PAGE_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_ACCO
     person_picker: "Member",
     person_picker_hint: definePhiMessageLabel("Search by name, e-mail address or telephone number."),
     person_empty: definePhiMessageLabel("Choose a member to open their file."),
+    own_file: definePhiMessageLabel("This is your own record; it is not shown here."),
     column_display_name: "Shown as",
     column_name: "Name",
     column_company: "Company",
@@ -117,6 +118,7 @@ export async function getPhiAccountingCustomerFilePageLabels(options: PhiGlobalT
       },
     },
     fileSubject: labels.file_subject,
+    ownFile: labels.own_file,
     noteLabel: labels.note_label,
     replySendLabel: labels.reply_send_label,
   };

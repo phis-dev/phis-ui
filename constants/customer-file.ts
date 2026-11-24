@@ -22,3 +22,9 @@ export const PHI_CUSTOMER_FILE_RESOURCE_KEYS = {
 
 /** The binding param a customer file Page writes the file's own subject into, already in the reader's language. */
 export const PHI_CUSTOMER_FILE_SUBJECT_PARAM = "fileSubject";
+
+/**
+ * The binding param a customer file Page writes its sentence for the reader's own file into, already in the
+ * reader's language: Core refuses that file (`403`), and each Table says this where its rows would be.
+ */
+export const PHI_CUSTOMER_FILE_OWN_FILE_PARAM = "ownFileNotice";

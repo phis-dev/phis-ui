@@ -21,6 +21,7 @@ import {
 import {
   PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS,
   PHI_CUSTOMER_FILE_RESOURCE_KEYS as RESOURCES,
+  PHI_CUSTOMER_FILE_OWN_FILE_PARAM,
   PHI_CUSTOMER_FILE_SUBJECT_PARAM,
 } from "../../../../constants/customer-file";
 import { PHI_ACCOUNTING_CUSTOMER_FILE_PAGE_IDS } from "../ids";
@@ -122,6 +123,8 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
   const threadRoute = (routeKey: string, capabilityId: string, action: "change" | "reload", receiver: PhiSignalReceiver) =>
     route(routeKey, capabilityId, "thread", action, receiver, "json", PHI_SIGNAL_VALUE_SCHEMAS.threadSelection);
   const prefix = "accounting-customer-file";
+  // What each Table says where its rows would be when the reader chooses themselves (Core refuses that file).
+  const ownFile = { [PHI_CUSTOMER_FILE_OWN_FILE_PARAM]: labels.ownFile };
 
   const replyDialog = nodes.dialog({
     id: overlayIds.overlayReply,
@@ -215,7 +218,7 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
         flags: PhiCmsFlags.NoTranslate,
         label: labels.person.label,
         config: {
-          source: { providerKey: PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS.table, resourceKey: RESOURCES.person },
+          source: { providerKey: PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS.table, resourceKey: RESOURCES.person, params: ownFile },
           presentation: {
             title: labels.person.title,
             controlSize: "small",
@@ -266,7 +269,7 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
         flags: PhiCmsFlags.NoTranslate,
         label: labels.addresses.label,
         config: {
-          source: { providerKey: PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS.table, resourceKey: RESOURCES.addresses },
+          source: { providerKey: PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS.table, resourceKey: RESOURCES.addresses, params: ownFile },
           presentation: {
             title: labels.addresses.title,
             controlSize: "small",
@@ -294,7 +297,7 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
         label: labels.threads.label,
         config: {
           // The file's own subject, which Core does not answer: in the reader's language, from this Page.
-          source: { providerKey: PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS.table, resourceKey: RESOURCES.threads, params: { [PHI_CUSTOMER_FILE_SUBJECT_PARAM]: labels.fileSubject } },
+          source: { providerKey: PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS.table, resourceKey: RESOURCES.threads, params: { ...ownFile, [PHI_CUSTOMER_FILE_SUBJECT_PARAM]: labels.fileSubject } },
           presentation: {
             title: labels.threads.title,
             controlSize: "small",

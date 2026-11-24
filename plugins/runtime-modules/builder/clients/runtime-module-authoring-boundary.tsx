@@ -13,6 +13,7 @@ import type { PhiDeveloperBuilderArea } from "../developer-workspace-types";
 import type { PhiRuntimeDataProviderKey } from "../../../../types/runtime-data-provider";
 import type { PhiModuleIconSet } from "../../../../types/module-icons";
 import { PhiModuleIconsProvider } from "../../../../components/shell/phi-module-icons";
+import { PhiBuilderMetadataTableProviders } from "./metadata-table-provider-stand-ins";
 
 export function PhiBuilderRuntimeModuleAuthoringBoundary({
   targetArea,
@@ -127,15 +128,20 @@ export function PhiBuilderRuntimeModuleAuthoringBoundary({
           providerKeys={pickerDataProviderKeys}
           mode="live"
         >
-          <PhiRuntimeModuleAuthoringClientHost moduleIds={moduleIds}>
-            {/*
-              * The target Area's icons replace the Builder Area's own, and one whose Module is not
-              * active there is flagged in the canvas rather than left blank.
-              */}
-            <PhiModuleIconsProvider sets={iconSets} flagUnavailable>
-              {children}
-            </PhiModuleIconsProvider>
-          </PhiRuntimeModuleAuthoringClientHost>
+          <PhiBuilderMetadataTableProviders
+            descriptors={dataProviderDescriptors}
+            mountedProviderKeys={pickerDataProviderKeys}
+          >
+            <PhiRuntimeModuleAuthoringClientHost moduleIds={moduleIds}>
+              {/*
+                * The target Area's icons replace the Builder Area's own, and one whose Module is not
+                * active there is flagged in the canvas rather than left blank.
+                */}
+              <PhiModuleIconsProvider sets={iconSets} flagUnavailable>
+                {children}
+              </PhiModuleIconsProvider>
+            </PhiRuntimeModuleAuthoringClientHost>
+          </PhiBuilderMetadataTableProviders>
         </PhiRuntimeModuleDataProviderClientHost>
       </PhiRuntimeModuleAuthoringDataProviderHost>
     </PhiRuntimeModuleProvider>

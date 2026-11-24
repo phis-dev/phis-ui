@@ -10,6 +10,7 @@ import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState, type
 import { PhiMultiSelectControl } from "../../../../../components/controls/phi-multi-select-control";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { PhiWidgetFailure } from "../../../../../components/widgets/shared/widget-failure-client";
+import { isPhiTableProviderRefusal } from "../../../../../components/widgets/client/shared/phi-table-provider-refusal";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiRenderableBlockRenderMode } from "../../../../../types/renderable-block";
 import { usePhiConfirmDialog } from "../../../../../components/controls/phi-confirm-dialog";
@@ -1061,7 +1062,8 @@ export function PhiTableWidgetClient({
    * configuration does not fit, a read that failed. A refused edit is not one of them -- it stays in
    * `error` alone and is said above the rows to the person who made it.
    */
-  const sourceFailure = bindingError ?? contractError ?? queryError?.message ?? null;
+  const refusal = isPhiTableProviderRefusal(queryError) ? queryError : null;
+  const sourceFailure = bindingError ?? contractError ?? (refusal ? null : queryError?.message) ?? null;
   if (sourceFailure) {
     return (
       <PhiWidgetFailure
@@ -1108,7 +1110,7 @@ export function PhiTableWidgetClient({
         )}
       />
       ) : null}
-      {error ? <PhiAlertControl level="error" showIcon title={error.message} /> : null}
+      {error && !isPhiTableProviderRefusal(error) ? <PhiAlertControl level="error" showIcon title={error.message} /> : null}
       <PhiTableBindingControl
         rows={rows}
         fields={resource?.fields ?? []}
@@ -1287,8 +1289,9 @@ export function PhiTableWidgetClient({
         size={resolvedControlSize}
         emptyText={(
           <PhiFlexControl vertical gap="small">
-            <PhiTypographyControl strong>{presentation.emptyState?.title ?? labels.emptyTitle}</PhiTypographyControl>
-            {emptyDescription ? <PhiTypographyControl type="secondary">{emptyDescription}</PhiTypographyControl> : null}
+            {/* A refused read says why where the rows would be, instead of the empty words. */}
+            <PhiTypographyControl strong>{refusal?.message ?? presentation.emptyState?.title ?? labels.emptyTitle}</PhiTypographyControl>
+            {emptyDescription && !refusal ? <PhiTypographyControl type="secondary">{emptyDescription}</PhiTypographyControl> : null}
           </PhiFlexControl>
         )}
         layout={presentation.layout}

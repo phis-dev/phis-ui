@@ -21,7 +21,8 @@ import { PhiDividerControl } from "../../controls/phi-divider-control";
 import { PhiBulletListControl } from "../../controls/phi-bullet-list-control";
 import { PhiRuntimeModuleRenderClientHost } from "../../runtime/runtime-module-render-client-manifest";
 import { PhiCmsWidgetType } from "../../../constants/cms-widget-types";
-import type { PhiTableWidgetConfig } from "../../../types/table-widget";
+import type { PhiTableWidgetConfig, PhiTableWidgetState } from "../../../types/table-widget";
+import { PHI_TABLE_PROVIDER_REFUSED_CODE } from "../client/shared/phi-table-provider-refusal";
 import type { PhiTableWidgetLabels } from "../label-types/table";
 import type { PhiRenderableBlockRenderMode } from "../../../types/renderable-block";
 import {
@@ -597,10 +598,28 @@ export function PhiMarkdownTableEmbedBlock({
   embed: PhiMarkdownTableEmbed;
   spacing: Pick<CSSProperties, "marginBlockStart" | "marginBlockEnd">;
 }) {
-  if (embed.table) {
+  /*
+   * The caption is the Table's title, so a Table that cannot draw takes it along: live, a failed read --
+   * a viewer the Provider refuses -- draws nothing at all. The Table says so in its state, and the caption
+   * then stands as the paragraph it is everywhere else. A refused read the Provider explains is no such
+   * failure: that Table draws itself, title and all.
+   */
+  const [tableFailed, setTableFailed] = useState(false);
+  const componentProps = useMemo(() => embed.table
+    ? {
+        ...embed.table,
+        onStateChange: (state: PhiTableWidgetState) => setTableFailed(
+          state.errorCode != null && state.errorCode !== PHI_TABLE_PROVIDER_REFUSED_CODE,
+        ),
+      }
+    : null, [embed.table]);
+  if (componentProps) {
     return (
       <figure className="phi-markdown-table-embed" style={{ margin: 0, minWidth: 0, ...spacing }}>
-        <PhiRuntimeModuleRenderClientHost type={PhiCmsWidgetType.Table} componentProps={embed.table} />
+        {tableFailed && embed.caption ? (
+          <PhiTypographyControl presentation="paragraph" style={{ margin: 0 }}>{embed.caption}</PhiTypographyControl>
+        ) : null}
+        <PhiRuntimeModuleRenderClientHost type={PhiCmsWidgetType.Table} componentProps={componentProps} />
       </figure>
     );
   }
