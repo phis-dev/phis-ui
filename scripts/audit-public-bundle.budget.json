@@ -1,0 +1,13 @@
+{
+  "baseline": {
+    "scripts": 34,
+    "rawBytes": 1094274,
+    "gzipBytes": 352166,
+    "measuredOn": "2026-11-18"
+  },
+  "headroom": {
+    "scripts": 0,
+    "rawBytes": 5320,
+    "gzipBytes": 1457
+  }
+}

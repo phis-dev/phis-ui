@@ -389,12 +389,6 @@ and `scripts/validate-todos-wants.ts` refuses the entry once the catalog has one
   that learns a door publishes it, the proxy asks Core on a local miss -- would close it, and needs an
   endpoint and operator approval.
 
-- **The Public bundle drifts upward unremarked.** 2026-09-21 to 2026-09-24: **+5,320 raw and +1,457
-  gzip**, same script count, measured against a production server. Small, but it has only
-  ever gone one way, and the guard reports contents rather than size, so nothing fails when it grows.
-  `TODOS.md` already carries "freeze the module-graph audit"; a size budget belongs beside it, set from
-  the figures above.
-
 - **An own Button inside `PhiButtonControl`.** The antd Button is on every Public page, and with it
   Collapse and the color-picker: `antd/es/button/style/token.js` imports `isBright` from
   `color-picker/components/ColorPresets`, which imports `Collapse` and `@rc-component/color-picker`. On the
@@ -407,8 +401,6 @@ and `scripts/validate-todos-wants.ts` refuses the entry once the catalog has one
   Popconfirm, `Input.Search`, DatePicker, Upload) keep the antd Button and bring it when they load.
   Check every submit path (`htmlType`, form footers) before building. An upstream PR moving `isBright` to
   `color-picker/util` would remove the chain alone: ant-design/ant-design#59461 (02.10.).
-- **Generated-output budget report** for the Skeleton's development build, separating Turbopack cache,
-  source maps, server chunks, and browser chunks.
 
 ## Contracts
 

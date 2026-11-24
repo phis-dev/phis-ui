@@ -130,6 +130,14 @@ read the field's documentation, not the Module's.
     source, Client barrel import or duplicate file, on a Client reaching `server-only`, and on a package
     entry's graph growing past a small headroom. Intended growth is recorded with
     `pnpm audit:graph --update-budget` and said why in the commit.
+  - Beside it, two size budgets measured on a Site: `pnpm audit:public-bundle` holds the Public browser
+    bundle a production build serves -- the summary line of phis-site-skeleton's `pnpm bundle:check:public`,
+    piped in -- to `scripts/audit-public-bundle.budget.json` (the last measurement plus the three-day drift
+    that once went unnoticed, +5,320 raw and +1,457 gzip bytes); `pnpm audit:dev-output` reports what the
+    Skeleton's development build wrote under `.next/dev` -- Turbopack cache, source maps, server chunks,
+    browser chunks -- and `--check` holds each to `scripts/report-dev-build-output.budget.json`. Neither
+    builds anything; a production measurement is taken as the browser-test notes describe, never while the
+    dev service runs. Recording a new baseline (`--update-budget`) is said why in the commit.
   - `runtime-modules:check` also holds a Widget's config to its render
     (`scripts/validate-widget-config-reads.ts`: every key `fields`, `defaultConfig` or `parseConfig`
     offers is read by a file the Widget renders, not only by the parser, the canvas or the Inspector;

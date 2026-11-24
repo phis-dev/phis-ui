@@ -1,0 +1,11 @@
+{
+  "headroomRatio": 0.25,
+  "recorded": {
+    "measuredOn": "2026-11-24",
+    "cache": 2124966157,
+    "sourceMaps": 539498271,
+    "serverChunks": 373977420,
+    "browserChunks": 174290612,
+    "other": 8020295
+  }
+}
