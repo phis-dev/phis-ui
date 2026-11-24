@@ -252,6 +252,26 @@ sparse: readers normalize absent values.
     ([LAYOUTING.md](./LAYOUTING.md#the-themes-ground)).
   - `root.chrome.shadow.header | sider | footer` -- the Shadow each Chrome family casts at its outer edge
     (`PhiShadow`), independent of mode.
+  - `root.inverse.light` / `root.inverse.dark` (`PhiSiteThemeInverseGround`) -- the Inverse Ground: one
+    opaque CSS colour per mode, what a Surface toned `inverse` stands on when it is drawn in that mode
+    (`dark` is the ground of an inverse box on a light page, `light` the one on a dark page). A mode that
+    states none stands on its own container ground, `colorBgContainer` of that mode, derived when the Theme
+    resolves (`theme/phi-theme-inverse-ground.ts`); nothing is stored for it, so a Theme that never states
+    one paints what an inverse box always painted. The reader is strict
+    (`readPhiThemeInverseGround`): a value that is not a record of the two modes, a mode it does not know,
+    or a colour that is not a hex or colour-function value without transparency (alpha below one,
+    `transparent`, a name, a `var()`) is an error, never a ground quietly dropped. It merges per mode over
+    the ground block like the Chrome Overlay.
+    It rides as the token `inverseGround` (`--phi-inverse-ground`), written per mode and under every tone
+    class like every other token, so inside an inverse box it is the other mode's ground. An inverse box
+    paints it where its Background paints nothing (`resolvePhiSurfaceToneGround`), and where its Background
+    is the Theme's it replaces the other mode's Chrome colour: the tone rules in `styles/shell.css` set
+    `--phi-shell-chrome-color` to it under `.phi-tone-inverse` and drop the pane's filter, while the other
+    mode's Chrome picture still lies over it ([LAYOUTING.md](./LAYOUTING.md#the-themes-ground)). A ground of
+    its own because the Chrome is the frame's and may be glass: phis.dev's 55 % ink pane gave an inverse
+    Footer's light words the light page beneath. Brand tab: Ground, "Inverse Ground" -- a colour per mode
+    with no alpha, the reset handing the mode back to the ground block, and no copy to the other mode,
+    since the two are grounds of opposite modes.
 
   What each layer may contain, which Regions paint it, and how a Region overrides it are owned by
   [SHELL.md](./SHELL.md#root-background-and-shell-backdrop-layers). The ground is site-wide; there is no Area

@@ -17,6 +17,7 @@ import {
   type PhiThemeStyleBlock,
 } from "./phi-theme-blocks";
 import { readPhiThemeSiteSignet, type PhiThemeSignet } from "./phi-theme-signet";
+import { readPhiThemeInverseGround } from "./phi-theme-inverse-ground";
 import type {
   PhiSiteFontSlots,
   PhiSiteThemeBrandLogos,
@@ -264,11 +265,19 @@ export function resolvePhiThemeEffectiveRoot(
     dark: authored?.chrome?.dark ?? base.chrome?.dark ?? null,
     ...(shadow.header || shadow.sider || shadow.footer ? { shadow } : {}),
   };
+  // Read strictly: a stored Inverse Ground of the wrong shape is an error, not a ground quietly dropped.
+  const authoredInverse = readPhiThemeInverseGround(authored?.inverse);
+  const baseInverse = readPhiThemeInverseGround(base.inverse);
+  const inverse = {
+    light: authoredInverse?.light ?? baseInverse?.light ?? null,
+    dark: authoredInverse?.dark ?? baseInverse?.dark ?? null,
+  };
 
   return {
     ...base,
     ...(authored ?? {}),
     background,
     chrome,
+    inverse,
   };
 }

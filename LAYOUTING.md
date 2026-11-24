@@ -197,13 +197,16 @@ on a page is the same mode. `inherit`, the default, is never stored.
 - The slot frame does this for a Widget whose Surface it draws, `PhiLayoutSurfaceBox` and the Client
   Layouts for a Layout, the Region renderers for a Region, the Builder's structure Region for the draft.
   An Overlay's Surface does not take a tone yet: its box is the Drawer's or Modal's own.
-- A tone turns the ground as well. A Surface whose Background paints nothing takes the mode's own
-  container ground (`PHI_SURFACE_TONE_GROUND`, `var(--phi-color-bg-container)`, from
-  `resolvePhiSurfaceStyle`), which resolves under the box's tone class; a stated ground wins, so a photo
-  under a dark tone stays a photo. An Overlay draws no tone and so paints no tone ground.
+- A tone turns the ground as well. A Surface whose Background paints nothing takes its tone's ground
+  (`resolvePhiSurfaceToneGround`, from `resolvePhiSurfaceStyle`), which resolves under the box's tone
+  class: `light` and `dark` the mode's own container ground (`PHI_SURFACE_TONE_GROUND`,
+  `var(--phi-color-bg-container)`), `inverse` the Theme's Inverse Ground (`PHI_INVERSE_GROUND`,
+  `var(--phi-inverse-ground)`, THEME.md "Ground"), which is that container ground unless the Theme states
+  another. A stated ground wins, so a photo under a dark tone stays a photo. An Overlay draws no tone and
+  so paints no tone ground.
 - Regions follow the same rule: the Region shell asks `phiSurfaceTakesToneGround`, the predicate
-  `resolvePhiSurfaceStyle` uses, and paints `PHI_SURFACE_TONE_GROUND` on the Region's root element, which
-  carries the tone class. That ground is the Region's own, so the Shell's ground beneath it -- the Shell
+  `resolvePhiSurfaceStyle` uses, and paints `resolvePhiSurfaceToneGround` on the Region's root element,
+  which carries the tone class. That ground is the Region's own, so the Shell's ground beneath it -- the Shell
   record's, the Chrome Overlay, a pane frosting either -- does not show. A Region's Shell ground and a
   Layout's own chrome that is painted from JavaScript tokens otherwise read the page's mode.
 
@@ -223,15 +226,20 @@ or motion stored beside it resolves away, because the Theme's Overlay brings its
   viewport like the Chrome Regions, never on a ground layer. Without a tone that is the Overlay of the
   page's mode. With one, the tone's class publishes the Overlay of the tone's mode again
   (`styles/shell.css`), from the per-mode `--phi-shell-chrome-*-light` / `-dark` variables the Root
-  Layout carries: `light` and `dark` take their mode, `inverse` the other mode than the page's, read off
-  the Root Layout's `data-phi-theme-mode` the way the tone scope reads it. So an `inverse` Footer is the
-  dark Overlay on a light page and the light one on a dark page, and turns with the mode switch without a
-  re-render. An untoned box inside a toned one reads its tone's Overlay too.
+  Layout carries: `light` and `dark` take their mode. `inverse` stands on the Theme's Inverse Ground
+  (THEME.md "Ground") instead of the other mode's Chrome colour, because the Chrome may be glass and a
+  glass pane let the page's own ground through under the inverted words: `--phi-shell-chrome-color` is
+  `var(--phi-inverse-ground)` there and the pane's filter is `none`. The other mode's Chrome picture --
+  read off the Root Layout's `data-phi-theme-mode` the way the tone scope reads it -- still lies over the
+  ground. So an `inverse` Footer is opaque in the dark mode's Inverse Ground on a light page and in the
+  light one's on a dark page, and turns with the mode switch without a re-render. An untoned box inside a
+  toned one reads its tone's Overlay too.
 - A mode without an Overlay publishes the Overlay's neutral values: the box paints nothing, which is what
   that mode's Chrome shows.
 - Outside the Root Layout -- inside a Modal or Drawer, which are portalled to `<body>` -- no Overlay is
   published, and the box falls back to the container ground of its mode (`PHI_SURFACE_TONE_GROUND`): the
-  tone's ground under a tone, the page's container ground without one. An Overlay's own container takes
+  tone's ground under a tone, the page's container ground without one. An `inverse` box there stands on the
+  Inverse Ground as well, which is a token and not a Root Layout value. An Overlay's own container takes
   no tone, so a `theme` Background there is the container ground.
 - A Chrome Region (Header, Sider, Footer bands) without a tone takes it exactly as a Region without a
   Background takes the Overlay -- the `data-phi-shell-chrome` marker, so where the Shell draws its panes

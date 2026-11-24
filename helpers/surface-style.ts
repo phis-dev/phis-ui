@@ -10,6 +10,7 @@ import {
   resolvePhiBackgroundWidgetStyle,
   type PhiCmsBackgroundWidgetConfig,
 } from "../components/widgets/config/background";
+import { PHI_INVERSE_GROUND } from "../theme/phi-theme-inverse-ground";
 import { resolvePhiCmsBorderSource } from "../types/cms-border-source";
 import { resolvePhiSurfaceToneClassName, type PhiSurface } from "../types/surface";
 import { resolvePhiSourcedBorderStyle } from "./border-widget-style";
@@ -68,8 +69,18 @@ export type PhiSurfaceStyleOptions = {
   groundLayer?: boolean;
 };
 
-/** The ground a toned Surface paints where it states none: the container ground of the tone's mode. */
+/** The ground a `light` or `dark` Surface paints where it states none: the container ground of the tone's mode. */
 export const PHI_SURFACE_TONE_GROUND = PHI_BACKGROUND_CONTAINER_GROUND;
+
+/**
+ * The ground a toned Surface paints where it states none (`phiSurfaceTakesToneGround`): an `inverse` one
+ * stands on the Theme's Inverse Ground (THEME.md "Ground"), which is that mode's container ground unless
+ * the Theme states another; `light` and `dark` on their mode's container ground. Both resolve under the
+ * tone's class the box carries.
+ */
+export function resolvePhiSurfaceToneGround(tone: PhiSurface["tone"] | null | undefined): string {
+  return tone === "inverse" ? PHI_INVERSE_GROUND : PHI_SURFACE_TONE_GROUND;
+}
 
 /**
  * Whether a Surface takes its tone's ground (`PHI_SURFACE_TONE_GROUND`): it asks for a mode of its own and
@@ -175,7 +186,7 @@ export function resolvePhiSurfaceStyle(
   return {
     style: {
       ...hostPaint,
-      ...(toneGround ? { backgroundColor: PHI_SURFACE_TONE_GROUND } : {}),
+      ...(toneGround ? { backgroundColor: resolvePhiSurfaceToneGround(surface.tone) } : {}),
       ...(line == null ? {} : { border: line }),
       ...resolvePhiSurfaceCorners(options.cornerFallback, configuredCorners),
       ...(boxShadow == null ? {} : { boxShadow }),

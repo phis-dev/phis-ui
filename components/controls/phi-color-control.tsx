@@ -60,6 +60,8 @@ export type PhiColorControlProps = PhiPickerTransactionCallbacks<string | null> 
   defaultValue?: string;
   disabled?: boolean;
   allowClear?: boolean;
+  /** Offer no transparency: the alpha slider is gone and a picked colour with alpha is made opaque. */
+  disabledAlpha?: boolean;
   mode?: PhiColorPickerMode;
   open?: boolean;
   showText?: boolean;
@@ -110,6 +112,7 @@ export function PhiColorControl({
   defaultValue = "#f0f0f0",
   disabled,
   allowClear,
+  disabledAlpha,
   mode = "single",
   open,
   showText,
@@ -171,6 +174,7 @@ export function PhiColorControl({
       open={picker.open}
       disabled={disabled}
       allowClear={allowClear}
+      disabledAlpha={disabledAlpha}
       trigger={trigger}
       placement={placement === "auto" ? undefined : placement}
       size={size}

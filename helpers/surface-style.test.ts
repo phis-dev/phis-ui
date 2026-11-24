@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { PHI_BACKGROUND_BLUR_FILTER } from "../components/widgets/config/background";
 import { readPhiSurface } from "../types/surface";
+import { PHI_INVERSE_GROUND } from "../theme/phi-theme-inverse-ground";
 import { PHI_SURFACE_TONE_GROUND, phiSurfaceDrawsChrome, resolvePhiSurfaceStyle } from "./surface-style";
 import { PHI_THEME_BORDER_LINE } from "./border-widget-style";
 import { PHI_SURFACE_CARD, PHI_SURFACE_WASH, resolvePhiSurfacePresetId } from "./surface-presets";
@@ -146,11 +147,17 @@ describe("a Surface in another mode", () => {
   });
 
   it("paints the tone's own ground where the Background paints none", () => {
-    expect(resolvePhiSurfaceStyle({ tone: "inverse" }).style.backgroundColor).toBe(PHI_SURFACE_TONE_GROUND);
     expect(resolvePhiSurfaceStyle({ tone: "dark", background: { base: { kind: "none" } } }).style.backgroundColor)
       .toBe(PHI_SURFACE_TONE_GROUND);
     expect(resolvePhiSurfaceStyle({ shadow: "soft" }).style.backgroundColor).toBeUndefined();
     expect(phiSurfaceDrawsChrome({ tone: "light" })).toBe(true);
+  });
+
+  it("stands an inverse box on the Theme's Inverse Ground where the Background paints none", () => {
+    expect(resolvePhiSurfaceStyle({ tone: "inverse" }).style.backgroundColor).toBe(PHI_INVERSE_GROUND);
+    expect(resolvePhiSurfaceStyle({ tone: "inverse", background: { base: { kind: "none" } } }).style.backgroundColor)
+      .toBe(PHI_INVERSE_GROUND);
+    expect(resolvePhiSurfaceStyle({ tone: "light" }).style.backgroundColor).toBe(PHI_SURFACE_TONE_GROUND);
   });
 
   it("keeps a stated ground under a tone", () => {

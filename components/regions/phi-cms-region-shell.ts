@@ -29,7 +29,7 @@ import type {
 import { resolvePhiCmsBorderSource } from "../../types/cms-border-source";
 import type { PhiSurface } from "../../types/surface";
 import {
-  PHI_SURFACE_TONE_GROUND,
+  resolvePhiSurfaceToneGround,
   phiSurfaceTakesToneGround,
   type PhiSurfaceGround,
 } from "../../helpers/surface-style";
@@ -471,7 +471,7 @@ export function resolvePhiCmsRegionShell({
     : toneGround
     ? {
       ...(surfaceBackground ? resolvePhiBackgroundWidgetStyle(surfaceBackground) : {}),
-      backgroundColor: PHI_SURFACE_TONE_GROUND,
+      backgroundColor: resolvePhiSurfaceToneGround(surface?.tone),
     }
     : backgroundConfig == null || ground != null
       ? null

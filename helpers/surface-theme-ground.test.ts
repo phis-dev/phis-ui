@@ -107,14 +107,31 @@ describe("the Overlay in a tone's mode", () => {
   it.each([
     [":where([data-phi-root-layout=\"true\"]) :where(.phi-tone-light)", "light"],
     [":where([data-phi-root-layout=\"true\"]) :where(.phi-tone-dark)", "dark"],
-    [":where([data-phi-root-layout=\"true\"]:not([data-phi-theme-mode=\"dark\"])) :where(.phi-tone-inverse)", "dark"],
-    [":where([data-phi-root-layout=\"true\"][data-phi-theme-mode=\"dark\"]) :where(.phi-tone-inverse)", "light"],
   ])("%s publishes the %s Overlay", (selector, mode) => {
     const body = ruleFor(selector);
     expect(body).not.toBeNull();
     for (const name of ["image", "size", "position", "repeat", "color", "filter"]) {
       expect(body).toContain(`--phi-shell-chrome-${name}: var(--phi-shell-chrome-${name}-${mode},`);
     }
+  });
+
+  it.each([
+    [":where([data-phi-root-layout=\"true\"]:not([data-phi-theme-mode=\"dark\"])) :where(.phi-tone-inverse)", "dark"],
+    [":where([data-phi-root-layout=\"true\"][data-phi-theme-mode=\"dark\"]) :where(.phi-tone-inverse)", "light"],
+  ])("%s publishes the %s Overlay's picture and not its colour or pane", (selector, mode) => {
+    const body = ruleFor(selector);
+    expect(body).not.toBeNull();
+    for (const name of ["image", "size", "position", "repeat"]) {
+      expect(body).toContain(`--phi-shell-chrome-${name}: var(--phi-shell-chrome-${name}-${mode},`);
+    }
+    expect(body).not.toContain("--phi-shell-chrome-color");
+    expect(body).not.toContain("--phi-shell-chrome-filter");
+  });
+
+  it("stands an inverse box on the Inverse Ground, unfrosted, inside the Root Layout or out of it", () => {
+    const body = ruleFor(":where(.phi-tone-inverse)");
+    expect(body).toContain("--phi-shell-chrome-color: var(--phi-inverse-ground);");
+    expect(body).toContain("--phi-shell-chrome-filter: none;");
   });
 });
 

@@ -87,6 +87,7 @@ import {
   type PhiThemeHeadingFont,
 } from "../../../../../theme/phi-theme-typography";
 import { resolvePhiThemeRuntimePayload } from "../../../../../theme/phi-theme-runtime";
+import { buildPhiThemeInverseGroundTokens } from "../../../../../theme/phi-theme-inverse-ground";
 import { resolvePhiAntdAliasTokens } from "../../../../../theme/phi-antd-token-resolver";
 import { buildPhiThemeStructuralTokens } from "../../../../../theme/phi-theme";
 import type { PhiControlOption } from "../../../../../components/controls/phi-control-options";
@@ -223,7 +224,7 @@ const PHI_THEME_CHROME_SHADOW_EDGES = [
 const BRAND_THEME_COLOR_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.colorCollapse.activeKey";
 const BRAND_THEME_STYLE_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.styleCollapse.activeKey";
 const BRAND_THEME_BACKGROUND_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.backgroundCollapse.activeKey";
-const BRAND_THEME_BACKGROUND_SECTION_KEYS = ["root", "chrome", "shadow"] as const;
+const BRAND_THEME_BACKGROUND_SECTION_KEYS = ["root", "chrome", "inverse", "shadow"] as const;
 const BRAND_THEME_IDENTITY_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.identityCollapse.activeKey";
 const BRAND_THEME_IDENTITY_SECTION_KEYS = ["logo", "wordmark", "lines"] as const;
 const BRAND_THEME_STYLE_SECTION_KEYS = [
@@ -750,6 +751,7 @@ function resolveBrandDraftAliasTokens(
     }),
     ...buildPhiThemeLinkTokens(resolvedTheme.links),
     ...buildPhiSurfaceShadowTokens(resolvedTheme.shadows, mode),
+    ...buildPhiThemeInverseGroundTokens(resolvedTheme.root?.inverse, mode, aliasTokens),
   };
 }
 
@@ -828,6 +830,27 @@ function mergeThemeRootSurface(
       ...(theme.root ?? {}),
       [surface]: {
         ...(theme.root?.[surface] ?? {}),
+        [mode]: value,
+      },
+    },
+  };
+}
+
+/**
+ * One mode's Inverse Ground set, the other mode's kept. Opaque by construction: the picker offers no
+ * alpha, and the Theme's reader refuses a colour with any.
+ */
+function mergeThemeInverseGround(
+  theme: ThemePayload,
+  mode: "light" | "dark",
+  value: string,
+): ThemePayload {
+  return {
+    ...theme,
+    root: {
+      ...(theme.root ?? {}),
+      inverse: {
+        ...(theme.root?.inverse ?? {}),
         [mode]: value,
       },
     },
@@ -2409,7 +2432,7 @@ function formatShapeLabel(shape: PhiControlShape) {
  */
 function clearThemeRootSurface(
   theme: ThemePayload,
-  surface: "background" | "chrome" | "shadow",
+  surface: "background" | "chrome" | "inverse" | "shadow",
   mode: "light" | "dark",
 ): ThemePayload {
   const root = theme.root ?? {};
@@ -2418,6 +2441,9 @@ function clearThemeRootSurface(
 
   if (surface === "background") {
     return { ...theme, root: { ...root, background: without(root.background, mode) } };
+  }
+  if (surface === "inverse") {
+    return { ...theme, root: { ...root, inverse: without(root.inverse, mode) } };
   }
   return {
     ...theme,
@@ -3048,12 +3074,33 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
   runtime: PhiBlockRuntime;
   config?: PhiBuilderBrandWidgetConfig | null;
 }) {
-  const { token: clientToken } = usePhiConfig();
+  const { presets: themePresets, token: clientToken } = usePhiConfig();
   const themeBlocks = usePhiThemeBlockCatalog();
   const themeKey = resolveThemeKey(config);
   const { state, publishDraft, editTransaction } = usePhiBrandThemeDraft(runtime, themeKey);
   const mode = usePhiBrandPreviewMode(resolveThemePayloadMode(state.draft), config?.signalRoutes);
   const composition = resolvePhiThemeComposition(state.draft, themeBlocks);
+  /*
+   * The Inverse Ground the mode being authored paints, as the live render resolves it: the stated colour,
+   * else the mode's own container ground. The control shows that, so an author sees what an inverse box
+   * stands on before anybody stated one.
+   */
+  const inverseGround = useMemo(() => {
+    const resolvedDraft = resolvePhiThemeRuntimePayload(state.draft, themeBlocks).theme;
+    return String(resolveBrandDraftAliasTokens(
+      resolvedDraft,
+      resolveThemePayloadPreset(resolvedDraft, themePresets),
+      mode,
+    ).inverseGround);
+  }, [mode, state.draft, themeBlocks, themePresets]);
+  const inverseGroundCustomColors = useMemo(() => {
+    const palette = resolveThemeCustomPalette(state.draft, resolveThemePayloadPreset(state.draft, themePresets), mode);
+    return PHI_THEME_CUSTOM_COLOR_KEYS.map((key, index) => ({ key, label: `Custom ${index + 1}`, value: palette[key] }));
+  }, [mode, state.draft, themePresets]);
+  const inverseGroundPresets = usePhiColorControlPresets({
+    customColors: inverseGroundCustomColors,
+    presets: PHI_COLOR_PICKER_PRESETS,
+  });
   const [activeBackgroundSection, changeActiveBackgroundSection] = usePhiBrandAccordionSection(
     BRAND_THEME_BACKGROUND_COLLAPSE_STORAGE_KEY,
     BRAND_THEME_BACKGROUND_SECTION_KEYS,
@@ -3167,6 +3214,39 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
                     renderMediaPicker={renderPhiThemeRootBackgroundMediaPicker}
                     editTransaction={editTransaction}
                     onChange={(value) => publishDraft(mergeThemeRootSurface(state.draft, "chrome", mode, value))}
+                  />
+                </PhiFlexControl>
+              ),
+            },
+            {
+              key: "inverse",
+              label: <PhiTypographyControl strong>Inverse Ground</PhiTypographyControl>,
+              children: (
+                <PhiFlexControl vertical gap={clientToken.paddingXS}>
+                  {/*
+                    No copy to the other mode: the two are the grounds of opposite modes, a dark box on a
+                    light page and a light one on a dark page, and one colour is rarely right for both.
+                  */}
+                  <PhiFlexControl align="center" justify="space-between" gap={clientToken.paddingXS}>
+                    <PhiTypographyControl type="secondary">
+                      {modeLabel}. What a Surface toned Inverse stands on when it is drawn in this mode, on a
+                      page in the other one. Always opaque; unset, it is this mode&apos;s container colour.
+                    </PhiTypographyControl>
+                    <PhiBrandBlockResetButton
+                      disabled={state.draft.root?.inverse?.[mode] == null}
+                      blockTitle={composition.ground.title}
+                      onReset={() => publishDraft(clearThemeRootSurface(state.draft, "inverse", mode))}
+                    />
+                  </PhiFlexControl>
+                  <PhiColorControl
+                    key={`inverse-${mode}`}
+                    mode="single"
+                    disabledAlpha
+                    value={inverseGround}
+                    presets={inverseGroundPresets}
+                    onChange={(next) => {
+                      if (next) publishDraft(mergeThemeInverseGround(state.draft, mode, next));
+                    }}
                   />
                 </PhiFlexControl>
               ),

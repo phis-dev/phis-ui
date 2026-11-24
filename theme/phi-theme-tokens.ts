@@ -190,6 +190,7 @@ export const PHI_THEME_TOKEN_KEYS = [
  * palette's custom colours, laid over the same way (theme/phi-theme-palette.ts). `linkExternalMark` is
  * the `display` of the mark behind a link that leaves the Site (theme/phi-link-mark.ts). The
  * `surfaceShadow*` names are what a Surface's `soft` and `strong` steps draw (theme/phi-surface-shadow.ts).
+ * `inverseGround` is what a Surface toned `inverse` stands on (theme/phi-theme-inverse-ground.ts).
  */
 export const PHI_THEME_OWN_TOKEN_KEYS = [
   "paddingXXL",
@@ -232,6 +233,7 @@ export const PHI_THEME_OWN_TOKEN_KEYS = [
   "linkExternalMark",
   "surfaceShadowSoft",
   "surfaceShadowStrong",
+  "inverseGround",
   "custom1",
   "custom2",
   "custom3",

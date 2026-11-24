@@ -2,6 +2,7 @@ import { PhiCmsFlags } from "../../constants/phi-cms";
 import { describe, expect, it } from "vitest";
 
 import { PHI_SURFACE_TONE_GROUND } from "../../helpers/surface-style";
+import { PHI_INVERSE_GROUND } from "../../theme/phi-theme-inverse-ground";
 import {
   phiCmsRegionRootLayoutPaintsGround,
   phiCmsRegionSiderSticks,
@@ -158,7 +159,8 @@ describe("region shell tone ground", () => {
     });
 
     for (const shell of [published, live]) {
-      expect(shell.style.backgroundColor).toBe(PHI_SURFACE_TONE_GROUND);
+      // An inverse Region stands on the Theme's Inverse Ground (THEME.md "Ground").
+      expect(shell.style.backgroundColor).toBe(PHI_INVERSE_GROUND);
       expect(shell.style.backgroundImage).toBeUndefined();
       expect(shell.attributes.className.split(" ")).toContain("phi-tone-inverse");
       expect(shell.tone).toBe("inverse");

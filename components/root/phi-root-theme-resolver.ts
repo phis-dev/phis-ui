@@ -28,6 +28,7 @@ import { applyPhiButtonShadowComponentTokens } from "../../theme/phi-button-shad
 import { buildPhiThemeGradientTokens, readPhiThemeGradientKey } from "../../theme/phi-theme-gradients";
 import { buildPhiThemeLinkTokens } from "../../theme/phi-link-mark";
 import { buildPhiSurfaceShadowTokens } from "../../theme/phi-surface-shadow";
+import { buildPhiThemeInverseGroundTokens } from "../../theme/phi-theme-inverse-ground";
 import { buildPhiThemeCustomColorTokens } from "../../theme/phi-theme-palette";
 import {
   applyPhiControlShapeComponentTokens,
@@ -173,6 +174,8 @@ export function resolvePhiRootTheme({
     }),
     ...buildPhiThemeLinkTokens(siteTheme?.links),
     ...buildPhiSurfaceShadowTokens(siteTheme?.shadows, mode),
+    // What an inverse box stands on in this mode: the Theme's stated colour, else this mode's container ground.
+    ...buildPhiThemeInverseGroundTokens(siteTheme?.root?.inverse, mode, effectiveThemeTokens),
   };
   return {
     mode,

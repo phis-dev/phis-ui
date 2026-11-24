@@ -223,7 +223,8 @@ The site-owned Shell Chrome Overlay is its counterpart in front of the scrolling
   Such a Region paints over the Theme, which is how a Site gives one Region its own chrome. A Background
   whose Base is `theme` states the overlay instead: an untoned Chrome Region then takes it over any Shell
   record ground, and a toned one paints the overlay of its tone's mode itself (LAYOUTING.md "The Theme's
-  ground"). The tone classes republish the `--phi-shell-chrome-*` properties for their mode inside the
+  ground"); an `inverse` one paints it over the Theme's opaque Inverse Ground in place of the Overlay's
+  colour (THEME.md "Ground"). The tone classes republish the `--phi-shell-chrome-*` properties for their mode inside the
   Root Layout for that; the Root Layout's own values, which the Regions and panes read, are untouched
 - is never locked out by a shipped Area shell. Area shell presets -- Public, App, Accounting, Admin,
   Editor, and the Builder alike -- author no Surface or colour mode on their

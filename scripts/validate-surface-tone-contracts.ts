@@ -88,4 +88,17 @@ const variableOf = (className: string) =>
 assert.equal(variableOf("phi-tone-dark"), darkGround, "The dark tone's variables are written under its class.");
 assert.equal(variableOf("phi-tone-inverse"), darkGround, "Every inverse Surface shares one set of variables.");
 
+/*
+ * THEME.md "Ground": an inverse Surface stands on the Inverse Ground of the mode it is drawn in, written
+ * under the tone's class like every other token. A Theme that states none stands on that mode's own
+ * container ground, so the probe's Theme, which states none, must read the dark container ground there.
+ */
+const inverseGroundOf = (className: string) =>
+  css.match(new RegExp(`\\.${className}[^{]*\\{[^}]*--phi-inverse-ground:\\s*([^;]+);`, "u"))?.[1] ?? null;
+assert.equal(
+  inverseGroundOf("phi-tone-inverse"),
+  darkGround,
+  "An inverse Surface on a light page stands on the dark mode's Inverse Ground, derived from its container ground.",
+);
+
 console.log("Surface tone contracts validated: tokens and variables follow the tone on the server.");

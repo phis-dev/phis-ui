@@ -295,12 +295,6 @@ and `scripts/validate-todos-wants.ts` refuses the entry once the catalog has one
   (`PATCH /api/site/media/{id}`, plain `error` text) and the Folder Form (`/api/v1/forms/media-folder`,
   `ok: false` with text); the upload route says `folder_locked` where the others say
   `media_folder_locked`. Core change, then the Asset metadata and Folder Forms map it.
-- **`inverse` has no ground of its own.** A Surface toned `inverse` paints the other mode's Chrome
-  Overlay (`styles/shell.css`, the tone rules). A Theme whose Chrome is glass -- phis.dev's is 55 % white or
-  ink -- gives an inverse box a near-transparent ground, and its inverted text sits on the page's own
-  ground: light text on a light page. Seen on the phis.dev footer (2026-11-13), now a stated colour per
-  mode instead. A Theme needs a way to say what an inverted box stands on -- an opaque ground per mode
-  for `inverse`, or the rule that `inverse` never reads a translucent Chrome. Contract question.
 
 ## Threads
 

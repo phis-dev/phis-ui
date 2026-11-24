@@ -41,6 +41,23 @@ export type PhiSiteThemeRoot = {
       footer?: PhiShadow | null;
     } | null;
   } | null;
+  /**
+   * The Inverse Ground (THEME.md "Ground", LAYOUTING.md "Surface tone"): what a Surface toned `inverse`
+   * stands on, one opaque colour per mode the inverse box is drawn in -- `dark` is the ground of an
+   * inverse box on a light page, `light` the one on a dark page.
+   *
+   * A ground of its own because the Chrome Overlay it read before is the frame's, and a frame may be
+   * glass: a 55 % ink pane over a light page gave light words a near-white ground. A mode that states
+   * none stands on that mode's container ground (`colorBgContainer`), derived per mode
+   * (`theme/phi-theme-inverse-ground.ts`), so a Theme that never states it is unchanged.
+   */
+  inverse?: PhiSiteThemeInverseGround | null;
+};
+
+/** One opaque colour per mode for the Inverse Ground. A colour with any transparency is refused. */
+export type PhiSiteThemeInverseGround = {
+  light?: string | null;
+  dark?: string | null;
 };
 
 /**

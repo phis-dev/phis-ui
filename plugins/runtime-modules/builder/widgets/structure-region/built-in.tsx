@@ -114,7 +114,7 @@ import { PhiTypographyControl } from "../../../../../components/controls/phi-typ
 import { PhiIcon } from "../../../../../components/shell/phi-icon";
 import { PhiSurfaceTone } from "../../../../../components/surface/phi-surface-tone";
 import { resolvePhiSurfaceToneClassName } from "../../../../../types/surface";
-import { PHI_SURFACE_TONE_GROUND, phiSurfaceTakesToneGround } from "../../../../../helpers/surface-style";
+import { phiSurfaceTakesToneGround, resolvePhiSurfaceToneGround } from "../../../../../helpers/surface-style";
 import { joinPhiClassNames } from "../../../../../helpers/class-names";
 
 export type PhiStructureRegionWidgetConfig = {
@@ -634,7 +634,7 @@ export function PhiStructureRegionScaffold({
     ...(effectiveDraft?.surface?.background
       ? resolvePhiBackgroundWidgetStyle(effectiveDraft.surface.background)
       : {}),
-    ...(toneGround ? { backgroundColor: PHI_SURFACE_TONE_GROUND } : {}),
+    ...(toneGround ? { backgroundColor: resolvePhiSurfaceToneGround(effectiveDraft?.surface?.tone) } : {}),
   };
   const slotBorderStyle = effectiveDraft?.surface?.border ? resolvePhiBorderWidgetStyle(effectiveDraft.surface.border) : {};
   const regionConfig = (effectiveDraft?.regionConfig ?? null) as PhiCmsRegionConfig | null;

@@ -352,13 +352,11 @@
 
 /* The Overlay in a tone's mode (LAYOUTING.md "Surface tone"), for a box whose Background is the Theme's
    (`PHI_BACKGROUND_THEME_STYLE`). The tone's class publishes the Overlay of the mode it asks for, so the
-   box -- and an untoned box inside it -- reads that mode's variables; `inverse` is read against the page's
-   mode, as the tone scope reads it, and turns with the mode switch. Inside the Root Layout only: a Modal
+   box -- and an untoned box inside it -- reads that mode's variables. Inside the Root Layout only: a Modal
    or Drawer portalled to `<body>` has no Overlay published, and its box falls back to the container
    ground of the tone's mode. The Root Layout's own values above stay what the Chrome Regions and panes
    read; those are computed on the Root Layout and inherited, so a tone below cannot touch them. */
-:where([data-phi-root-layout="true"]) :where(.phi-tone-light),
-:where([data-phi-root-layout="true"][data-phi-theme-mode="dark"]) :where(.phi-tone-inverse) {
+:where([data-phi-root-layout="true"]) :where(.phi-tone-light) {
   --phi-shell-chrome-image: var(--phi-shell-chrome-image-light, none);
   --phi-shell-chrome-size: var(--phi-shell-chrome-size-light, auto);
   --phi-shell-chrome-position: var(--phi-shell-chrome-position-light, 0 0);
@@ -367,14 +365,40 @@
   --phi-shell-chrome-filter: var(--phi-shell-chrome-filter-light, none);
 }
 
-:where([data-phi-root-layout="true"]) :where(.phi-tone-dark),
-:where([data-phi-root-layout="true"]:not([data-phi-theme-mode="dark"])) :where(.phi-tone-inverse) {
+:where([data-phi-root-layout="true"]) :where(.phi-tone-dark) {
   --phi-shell-chrome-image: var(--phi-shell-chrome-image-dark, none);
   --phi-shell-chrome-size: var(--phi-shell-chrome-size-dark, auto);
   --phi-shell-chrome-position: var(--phi-shell-chrome-position-dark, 0 0);
   --phi-shell-chrome-repeat: var(--phi-shell-chrome-repeat-dark, repeat);
   --phi-shell-chrome-color: var(--phi-shell-chrome-color-dark, transparent);
   --phi-shell-chrome-filter: var(--phi-shell-chrome-filter-dark, none);
+}
+
+/* `inverse` stands on the Theme's Inverse Ground (THEME.md "Ground"), not on the other mode's Chrome
+   colour: the Chrome is the frame's and may be glass, and a glass pane over the page's own ground put
+   the inverted words on a ground of the page's mode. The other mode's picture -- read against the page's
+   mode, as the tone scope reads it, so it turns with the mode switch -- still lies over the ground; the
+   pane's filter does not, since an opaque box has nothing behind it to frost. */
+:where([data-phi-root-layout="true"][data-phi-theme-mode="dark"]) :where(.phi-tone-inverse) {
+  --phi-shell-chrome-image: var(--phi-shell-chrome-image-light, none);
+  --phi-shell-chrome-size: var(--phi-shell-chrome-size-light, auto);
+  --phi-shell-chrome-position: var(--phi-shell-chrome-position-light, 0 0);
+  --phi-shell-chrome-repeat: var(--phi-shell-chrome-repeat-light, repeat);
+}
+
+:where([data-phi-root-layout="true"]:not([data-phi-theme-mode="dark"])) :where(.phi-tone-inverse) {
+  --phi-shell-chrome-image: var(--phi-shell-chrome-image-dark, none);
+  --phi-shell-chrome-size: var(--phi-shell-chrome-size-dark, auto);
+  --phi-shell-chrome-position: var(--phi-shell-chrome-position-dark, 0 0);
+  --phi-shell-chrome-repeat: var(--phi-shell-chrome-repeat-dark, repeat);
+}
+
+/* The ground itself holds everywhere, a portalled Overlay included: `--phi-inverse-ground` is a Theme
+   token, written under the tone's class in the other mode, so it is that mode's ground wherever the box
+   stands. */
+:where(.phi-tone-inverse) {
+  --phi-shell-chrome-color: var(--phi-inverse-ground);
+  --phi-shell-chrome-filter: none;
 }
 
 /* A Chrome Region carries the marker only while it authored no ground of its own, so there is nothing

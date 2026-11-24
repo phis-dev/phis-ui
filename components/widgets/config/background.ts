@@ -70,8 +70,9 @@ export type PhiBackgroundBaseNone = {
  *
  * The box paints what the Theme workspace calls the Chrome Overlay -- its colour or picture and its glass
  * pane -- instead of a ground of its own. It carries nothing else: the Overlay is the Theme's, per mode
- * (`root.chrome[mode]`), and the box reads the mode it stands in. A Surface `tone` is that mode, so an
- * `inverse` Footer is the dark Overlay on a light page and the light one on a dark page. It is a stated
+ * (`root.chrome[mode]`), and the box reads the mode it stands in. A Surface `tone` is that mode; an
+ * `inverse` Footer stands on the Theme's opaque Inverse Ground (`root.inverse[mode]`) with the other mode's
+ * Chrome picture over it, since that mode's Chrome colour may be glass. It is a stated
  * ground: a tone does not paint its own container ground beneath it.
  */
 export type PhiBackgroundBaseTheme = {
