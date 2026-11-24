@@ -243,6 +243,8 @@ export async function buildPhiDefaultAccountingProductsPageTree({
         typeKey: "table",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
+        // The Module's Label Set, translated already.
+        flags: PhiCmsFlags.NoTranslate,
         label: labels.widgetLabel,
         config: {
           source: {
@@ -382,6 +384,8 @@ export async function buildPhiDefaultAccountingProductsPageTree({
         parentLayoutNodeId: PHI_ACCOUNTING_PRODUCTS_PAGE_LAYOUT_IDS.layoutTerms,
         typeKey: "record",
         slotIndex: 1,
+        // The Module's Label Set, translated already.
+        flags: PhiCmsFlags.NoTranslate,
         label: "accounting product terms record",
         config: {
           source: {

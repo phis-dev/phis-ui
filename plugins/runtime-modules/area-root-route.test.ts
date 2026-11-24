@@ -127,11 +127,12 @@ describe("an Area root", () => {
     });
   });
 
-  // Without the Dashboard the root goes on to the next entry: the Area's own product directory.
-  it("moves Accounting to the product directory when the Dashboard Module is switched off", async () => {
+  // Without the Dashboard the root goes on to the next entry: the Area's own customer file, which the
+  // Accounting Module's entries list before its product directory (by preset key).
+  it("moves Accounting to the customer file when the Dashboard Module is switched off", async () => {
     const resolved = await resolveRootRedirect("accounting", { withoutDashboard: true });
     expect(resolved.layoutConfig.redirect).toMatchObject({
-      target: { area: "accounting", path: "/phis/ui/products" },
+      target: { area: "accounting", path: "/phis/ui/customer-file" },
     });
   });
 

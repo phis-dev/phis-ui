@@ -7,6 +7,7 @@ import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { PHI_LAYOUT } from "../../../theme/phi-tokens";
 import type { PhiCmsPageNode, PhiCmsContentWidgetNode, PhiCmsLayoutNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiRuntimeModuleId } from "../../../types/cms-module-descriptors";
+import type { PhiRenderableBlockSize } from "../../../types/renderable-block";
 import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id";
 import type {
   PhiFormWidgetPlacement,
@@ -142,8 +143,11 @@ export type PhiSettingsPageShellOverlay = {
    */
   submitLabel?: string;
   cancelLabel?: string;
-  /** Responsive Modal width, for a Form that needs more or less than the Modal's own default. */
-  width?: Record<string, unknown> | number | string;
+  /**
+   * The Modal's `size`, for a Form that needs more or less than the Modal's own default: a block's pair,
+   * a dialog's width as `{ width: PHI_DIALOG_WIDTH_SINGLE_COLUMN }` (OVERLAYS.md, "Presentation config").
+   */
+  size?: PhiRenderableBlockSize;
 };
 
 /**
@@ -562,7 +566,7 @@ export function buildPhiSettingsPageShellTree({
       label: overlay.title,
       config: {
         title: overlay.title,
-        ...(overlay.width === undefined ? {} : { width: overlay.width }),
+        ...(overlay.size === undefined ? {} : { size: overlay.size }),
         /*
          * `remount` rather than `lazy-keep`: a dialog that creates a record and one that edits a row
          * both start from what they were given, and a body kept from the last time would open showing

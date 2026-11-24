@@ -16,9 +16,10 @@ import { lineOf } from "./lib/text.mjs";
  * this keeps it gone: nothing reads it any more, so a config written that way is silently ignored,
  * which is the kind of mistake that survives a long time.
  *
- * Only Layout nodes are examined, and only their own `config`. An Overlay's responsive `width`, a
- * modal's width, a table column and a toolbar field are different vocabularies belonging to different
- * things, and they are out of reach here by construction rather than by a list somebody has to keep.
+ * Only Layout nodes are examined, and only their own `config`. A table column and a toolbar field are
+ * different vocabularies belonging to different things, and they are out of reach here by construction
+ * rather than by a list somebody has to keep. An Overlay states the block's pairs too, and the descriptor
+ * compiler refuses its old `width` (`checkPhiPresetTreeContract`, helpers/preset-tree-contract-check.ts).
  */
 
 const scannedDirectories = [

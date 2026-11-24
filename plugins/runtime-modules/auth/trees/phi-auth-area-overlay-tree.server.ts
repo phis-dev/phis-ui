@@ -85,9 +85,11 @@ export async function buildPhiAuthAreaLoginOverlayTree({
          * A login asks for two short lines and is not a page. The width has a floor rather than a
          * preference, though: the form inside decides its own columns from its own measured width, and
          * under 360px it puts every label back above its input. What is left over for chrome is about
-         * a dozen pixels, so 400 keeps the two columns with room to spare.
+         * a dozen pixels, so 400 keeps the two columns with room to spare -- the floor is `minSize`,
+         * and the Modal still gives way to a phone narrower than it (OVERLAYS.md, "Presentation config").
          */
-        width: { compact: "calc(100vw - 32px)", medium: 400, wide: 420 },
+        size: { width: 420 },
+        minSize: { width: 400 },
         mountPolicy: "lazy-keep",
         closeMode: "request",
         signalRoutes: {

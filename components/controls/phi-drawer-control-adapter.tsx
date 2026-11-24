@@ -10,6 +10,7 @@ import { Drawer } from "antd";
 import { PHI_FONT_SIZE, PHI_SPACE } from "../../theme/antd-css-var-contract";
 import {
   PHI_OVERLAY_DEFAULT_MASK,
+  resolvePhiDrawerGeometry,
   resolvePhiOverlayDismissSource,
   resolvePhiOverlayMaskPresentation,
 } from "./phi-overlay-control-contract";
@@ -32,6 +33,7 @@ export function PhiDrawerControlAdapter({
   mountPolicy = "remount",
   placement = "right",
   size,
+  minSize,
   maxSize,
   resizable = false,
   push = false,
@@ -43,6 +45,7 @@ export function PhiDrawerControlAdapter({
 }: PhiDrawerControlProps) {
   const hydrated = usePhiHydrated();
   const resolvedMask = resolvePhiOverlayMaskPresentation(mask);
+  const geometry = resolvePhiDrawerGeometry({ size, minSize, maxSize, placement });
   const closeAtInlineStart = placement === "right";
   // A drawer with nothing to say in its header draws none: no title, no header content, no close button.
   const hasHeaderContent = header != null || title != null;
@@ -69,8 +72,8 @@ export function PhiDrawerControlAdapter({
       destroyOnHidden={mountPolicy === "remount"}
       forceRender={hydrated && mountPolicy === "eager"}
       placement={placement}
-      size={size}
-      maxSize={maxSize}
+      size={geometry.size}
+      maxSize={geometry.resizeMaxSize}
       resizable={resizable}
       push={push}
       zIndex={zIndex}
@@ -87,6 +90,7 @@ export function PhiDrawerControlAdapter({
            */
           background: "var(--phi-color-bg-elevated)",
           ...containerStyle,
+          ...geometry.style,
           padding: 0,
         },
         section: {

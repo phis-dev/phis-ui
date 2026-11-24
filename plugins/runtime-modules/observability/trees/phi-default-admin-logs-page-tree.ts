@@ -1,7 +1,7 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../../types/cms-instance-id";
 import { PHI_OBSERVABILITY_RUNTIME_MODULE_ID } from "../ids";
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../../constants/cms-layout-types";
-import { PhiCmsPageType } from "../../../../constants/phi-cms";
+import { PhiCmsFlags, PhiCmsPageType } from "../../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import type { PhiBlockRuntime } from "../../../../types";
@@ -72,7 +72,7 @@ export async function buildPhiDefaultAdminLogsPageTree({
       label: "observability log detail modal",
       config: {
         title: widgetLabels.detail.title,
-        width: 960,
+        size: { width: 960 },
         mountPolicy: "lazy-keep",
         /*
          * Which row action this modal is for, which it has to say itself.
@@ -130,6 +130,8 @@ export async function buildPhiDefaultAdminLogsPageTree({
         typeKey: "table",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
+        // The Module's Label Set, translated already.
+        flags: PhiCmsFlags.NoTranslate,
         label: labels.tableLabel,
         config: {
           source: {
@@ -264,6 +266,8 @@ export async function buildPhiDefaultAdminLogsPageTree({
         typeKey: "record",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
+        // The Module's Label Set, translated already.
+        flags: PhiCmsFlags.NoTranslate,
         label: "observability log record",
         config: {
           source: {

@@ -36,13 +36,13 @@ const geometryReaders = new Map([
   ["plugins/runtime-modules/builder/widgets/structure-region/built-in.tsx", "a Region slot on the Structure Canvas"],
   ["plugins/runtime-modules/builder/widgets/hello-world/client.tsx", "the Hello World Widget's own minimum height"],
   ["plugins/runtime-modules/core/widgets/icon/client.tsx", "the glyph's measurement, which is the block's size field doing double duty"],
+  ["components/controls/phi-overlay-control-contract.ts", "a Modal's and a Drawer's own geometry, for their Control adapters"],
 ]);
 
 /** The files that touch the three fields without drawing them, and why each may. */
 const structuralReaders = new Map([
   ["components/cms/phi-cms-root-layout.tsx", "reads a Header band's height for the Chrome pane's sticky travel; it measures, it does not draw"],
   ["components/controls/phi-geometry-control.tsx", "the Inspector control that edits the three fields"],
-  ["components/controls/phi-modal-control-adapter.tsx", "the Overlay's own `size`, a different vocabulary until the Overlay adopts block geometry (TODOS.md)"],
   ["plugins/runtime-modules/builder/controller/region-controller.ts", "Builder commands that ask whether a draft states a height"],
   ["plugins/runtime-modules/builder/region-hydration.ts", "copies a draft's geometry into a Region config, field for field"],
 ]);

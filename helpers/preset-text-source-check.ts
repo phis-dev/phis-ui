@@ -17,7 +17,10 @@ import { hasPhiFlag } from "./flags";
  * own package does not run it: every word in its Pages is the Site's, which is what no marker means.
  *
  * It reads the config as stated, by the field names alone (`helpers/config-text-fields.ts`), so it needs
- * no Widget definition: a text under a text's name, at the top or inside a list's entries.
+ * no Widget definition: a text under a text's name, at the top, inside a list's entries or inside a nested
+ * object -- a Table's `presentation.columns[].title`, `features.filters[].label` and
+ * `presentation.emptyState.title` are words as much as a Button's label. A Table whose texts come from the
+ * Module's Label Set, already in the reader's language, says so with `NoTranslate` on its node.
  */
 
 export type PhiPresetTextSourceFinding = {
@@ -27,7 +30,7 @@ export type PhiPresetTextSourceFinding = {
 };
 
 function findTextKey(value: unknown, depth = 0): string | null {
-  if (depth > 4 || value == null || typeof value !== "object") return null;
+  if (depth > 6 || value == null || typeof value !== "object") return null;
   if (Array.isArray(value)) {
     for (const item of value) {
       const found = findTextKey(item, depth + 1);
@@ -40,6 +43,9 @@ function findTextKey(value: unknown, depth = 0): string | null {
     if (Array.isArray(entry)) {
       const found = findTextKey(entry, depth + 1);
       if (found) return `${key}[].${found}`;
+    } else if (entry !== null && typeof entry === "object") {
+      const found = findTextKey(entry, depth + 1);
+      if (found) return `${key}.${found}`;
     }
   }
   return null;

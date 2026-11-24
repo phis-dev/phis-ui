@@ -1,6 +1,6 @@
 import { PHI_TEXT_SOURCE_PRESET } from "../../../../helpers/text-source";
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../../constants/cms-layout-types";
-import { PhiCmsPageType } from "../../../../constants/phi-cms";
+import { PhiCmsFlags, PhiCmsPageType } from "../../../../constants/phi-cms";
 import { PHI_GROUPS_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
@@ -346,6 +346,8 @@ export async function buildPhiDefaultAdminGroupsPageTree({
         typeKey: "table",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
+        // The Module's Label Set, translated already.
+        flags: PhiCmsFlags.NoTranslate,
         label: labels.groups.title,
         config: {
           source: {
@@ -471,6 +473,8 @@ export async function buildPhiDefaultAdminGroupsPageTree({
         // Its own slot: one slot holds one direct node, so the two tables stack rather than collide.
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 1,
         sortOrder: 1,
+        // The Module's Label Set, translated already.
+        flags: PhiCmsFlags.NoTranslate,
         label: labels.members.title,
         config: {
           ...buildPhiGroupMembersTable({

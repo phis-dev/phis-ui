@@ -857,7 +857,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
         label: "Builder area settings",
         config: {
           title: labels.areaSettings.title,
-          width: PHI_DIALOG_WIDTH_SINGLE_COLUMN,
+          size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN },
           /*
            * Mounted with the Page rather than on first open, because the controls inside show state
            * rather than ask for it.
@@ -887,7 +887,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
         label: "Builder page metadata",
         config: {
           title: labels.pages.pageMeta,
-          width: PHI_DIALOG_WIDTH_SINGLE_COLUMN,
+          size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN },
           mountPolicy: "lazy-keep",
           closeMode: "immediate",
           signalRoutes: {
@@ -908,7 +908,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
         label: "Builder module detail",
         config: {
           title: modulesLabels?.detail.title ?? "Module details",
-          width: { compact: "calc(100vw - 32px)", medium: 560, wide: 640 },
+          size: { width: 640 },
           mountPolicy: "lazy-keep",
           closeMode: "immediate",
           signalRoutes: {
@@ -929,7 +929,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
         label: "Builder module usage",
         config: {
           title: modulesLabels?.usage.title ?? "This Module draws on pages",
-          width: { compact: "calc(100vw - 32px)", medium: 600, wide: 680 },
+          size: { width: 680 },
           mountPolicy: "lazy-keep",
           closeMode: "immediate",
           signalRoutes: {
@@ -950,7 +950,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
         label: "Builder public route collision",
         config: {
           title: modulesLabels?.publicRoutes.title ?? "Public addresses are taken",
-          width: { compact: "calc(100vw - 32px)", medium: 640, wide: 720 },
+          size: { width: 720 },
           mountPolicy: "lazy-keep",
           closeMode: "immediate",
           signalRoutes: {
@@ -1376,6 +1376,8 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFields,
               slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
               sortOrder: 0,
+              // The Builder's Label Set, translated already.
+              flags: PhiCmsFlags.NoTranslate,
               label: "dev area settings form",
               config: {
                 formId: PHI_BUILDER_AREA_SETTINGS_FORM_ID,
@@ -1669,6 +1671,8 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 id: PHI_BUILDER_MODULES_TABLE_WIDGET_ID,
                 parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutContent,
                 slotIndex: 0,
+                // The Builder's Label Set, translated already.
+                flags: PhiCmsFlags.NoTranslate,
                 label: "dev modules table",
                 config: {
                   source: {
@@ -1817,6 +1821,8 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 parentLayoutNodeId: PHI_BUILDER_MODULE_USAGE_LAYOUT_IDS.moduleUsageBody,
                 slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
                 sortOrder: 1,
+                // The Builder's Label Set, translated already.
+                flags: PhiCmsFlags.NoTranslate,
                 label: "Builder module usage rows",
                 config: {
                   source: {
@@ -1894,6 +1900,8 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 parentLayoutNodeId: PHI_BUILDER_PUBLIC_ROUTES_LAYOUT_IDS.publicRoutesBody,
                 slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
                 sortOrder: 1,
+                // The Builder's Label Set, translated already.
+                flags: PhiCmsFlags.NoTranslate,
                 label: "Builder public route collision rows",
                 config: {
                   source: {
@@ -1977,6 +1985,8 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 parentLayoutNodeId: PHI_BUILDER_MODULE_DETAIL_LAYOUT_IDS.body,
                 slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
                 sortOrder: 0,
+                // The Builder's Label Set, translated already.
+                flags: PhiCmsFlags.NoTranslate,
                 label: "dev module detail fields",
                 config: {
                   source: {
@@ -2046,6 +2056,8 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 id: SYNTHETIC_DEV_WIDGET_IDS.widgetNavigationSource,
                 parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutContent,
                 slotIndex: 0,
+                // The Builder's Label Set, translated already.
+                flags: PhiCmsFlags.NoTranslate,
                 label: "dev navigation source",
                 config: {
                   source: {
@@ -2087,6 +2099,8 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 id: SYNTHETIC_DEV_WIDGET_IDS.widgetNavigationItems,
                 parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutContent,
                 slotIndex: 1,
+                // The Builder's Label Set, translated already.
+                flags: PhiCmsFlags.NoTranslate,
                 label: "dev navigation items",
                 config: {
                   source: {

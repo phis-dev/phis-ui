@@ -106,7 +106,7 @@ export async function buildPhiDefaultThreadsPageTree({
     config: {
       title: labels.composerLabel,
       // Core's Reply Form is one column, and not this Module's to hand to `dialog` (`body.form`).
-      width: PHI_DIALOG_WIDTH_SINGLE_COLUMN,
+      size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN },
       mountPolicy: "remount",
       closeMode: "immediate",
       openActionKey: "reply",
@@ -298,7 +298,7 @@ export async function buildPhiDefaultThreadsPageTree({
       label: "app-threads-new-modal",
       config: {
         title: labels.newConversationLabel,
-        width: PHI_DIALOG_WIDTH_SINGLE_COLUMN,
+        size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN },
         mountPolicy: "remount",
         closeMode: "request",
         signalRoutes: {
@@ -383,6 +383,8 @@ export async function buildPhiDefaultThreadsPageTree({
          */
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
+        // The Module's Label Set, translated already.
+        flags: PhiCmsFlags.NoTranslate,
         label: labels.inboxTitle,
         config: {
           source: {

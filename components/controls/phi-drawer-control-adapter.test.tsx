@@ -38,3 +38,18 @@ describe("the drawer's header", () => {
     expect(document.querySelector(".ant-drawer-header")).toBeNull();
   });
 });
+
+describe("the drawer's geometry", () => {
+  it("is as wide as its stated size, between its bounds, at the side", () => {
+    render(<PhiDrawerControl open placement="right" size={{ width: 377 }} minSize={{ width: 300 }} maxSize={{ width: "80vw" }} body={null} />);
+    expect(wrapper()?.style.width).toBe("377px");
+    expect(wrapper()?.style.minWidth).toBe("300px");
+    expect(wrapper()?.style.maxWidth).toBe("80vw");
+  });
+
+  it("is as tall as its stated height at the bottom, and draws no width there", () => {
+    render(<PhiDrawerControl open placement="bottom" size={{ width: 377, height: 240 }} body={null} />);
+    expect(wrapper()?.style.height).toBe("240px");
+    expect(wrapper()?.style.width).toBe("");
+  });
+});

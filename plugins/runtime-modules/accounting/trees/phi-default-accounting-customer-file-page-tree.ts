@@ -130,7 +130,7 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
     label: `${prefix}-reply-modal`,
     config: {
       title: labels.noteLabel,
-      width: PHI_DIALOG_WIDTH_SINGLE_COLUMN,
+      size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN },
       mountPolicy: "remount",
       closeMode: "immediate",
       openActionKey: "reply",
@@ -211,6 +211,8 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
         typeKey: "table",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
+        // The Module's Label Set, translated already.
+        flags: PhiCmsFlags.NoTranslate,
         label: labels.person.label,
         config: {
           source: { providerKey: PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS.table, resourceKey: RESOURCES.person },
@@ -260,6 +262,8 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
         typeKey: "table",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 1,
         sortOrder: 1,
+        // The Module's Label Set, translated already.
+        flags: PhiCmsFlags.NoTranslate,
         label: labels.addresses.label,
         config: {
           source: { providerKey: PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS.table, resourceKey: RESOURCES.addresses },
@@ -285,6 +289,8 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
         typeKey: "table",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 2,
         sortOrder: 2,
+        // The Module's Label Set, translated already.
+        flags: PhiCmsFlags.NoTranslate,
         label: labels.threads.label,
         config: {
           // The file's own subject, which Core does not answer: in the reader's language, from this Page.

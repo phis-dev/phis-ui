@@ -112,7 +112,7 @@ function galleryTree(input: {
     bodyLayoutNodeId: ids.body,
     sortOrder: 0,
     label: "gallery",
-    config: { title: "Gallery", width: 720, signalRoutes: { listens: input.overlayListens ?? [TITLE_ROUTE] } },
+    config: { title: "Gallery", size: { width: 720 }, signalRoutes: { listens: input.overlayListens ?? [TITLE_ROUTE] } },
   });
   return {
     page: nodes.page({}),

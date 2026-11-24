@@ -1,5 +1,5 @@
 import { PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS } from "../../../../constants/cms-layout-types";
-import { PhiCmsPageType } from "../../../../constants/phi-cms";
+import { PhiCmsFlags, PhiCmsPageType } from "../../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 import { canPhiViewerAccess, PHI_VIEWER_ACCESS_PUBLISHING } from "../../../../types/access";
@@ -90,6 +90,8 @@ export async function buildPhiDefaultEditorReleasesPageTree({
         typeKey: "table",
         slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
         sortOrder: 10,
+        // The Module's Label Set, translated already.
+        flags: PhiCmsFlags.NoTranslate,
         label: labels.widgetLabel,
         config: {
           source: {

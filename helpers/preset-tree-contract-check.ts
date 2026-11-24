@@ -13,6 +13,7 @@ import {
   isPhiFormSingleColumn,
 } from "./cms-dialog";
 import { resolvePhiLayoutCreationPreset } from "./cms-layout-defaults";
+import { isPhiRecord } from "./is-record";
 import {
   PHI_FORM_RECORD_TITLE_CAPABILITY,
   readPhiFormWidgetTitleFromRecord,
@@ -29,8 +30,9 @@ import { readPhiRecordWidgetTitleFromRecord } from "./record-widget";
  *
  * The rules: every node a preset instance id, none twice, every parent, Region root, Overlay root and Page
  * root resolved; the base page layout node only as the canonical scaffold; an actions Footer the canonical
- * Flex preset; a modal's body and actions the dialog's (`helpers/cms-dialog.ts`), and a modal at the default
- * `PHI_DIALOG_WIDTH` not holding only Forms of one column; a Form's or a record Widget's title from its
+ * Flex preset; an Overlay's geometry the block's pairs, never `width` or one bare length; a modal's body
+ * and actions the dialog's (`helpers/cms-dialog.ts`), and a modal at the default `PHI_DIALOG_WIDTH` not
+ * holding only Forms of one column; a Form's or a record Widget's title from its
  * record read, sent, and heard where it goes. The findings come in the order the compiler used to throw them, so its first is the
  * error it always gave.
  *
@@ -160,6 +162,7 @@ export function checkPhiPresetTreeContract(
     }
   }
   for (const overlay of tree.overlays) {
+    checkOverlayGeometry(overlay, report);
     if (overlay.overlayType !== "modal") continue;
     const body = layoutsById.get(overlay.bodyLayoutNodeId);
     if (body) checkDialogBody(overlay.id, body, report);
@@ -261,11 +264,45 @@ function checkDialogCommands(
   }
 }
 
+/** The keys an Overlay states its geometry in: the block's three pairs. */
+const PHI_OVERLAY_GEOMETRY_KEYS = ["size", "minSize", "maxSize"] as const;
+
+/*
+ * An Overlay is sized like a block: `size`, `minSize` and `maxSize`, each a `{ width?, height? }` pair
+ * (OVERLAYS.md, "Presentation config"). The Modal's `width` and the Drawer's single length are gone, and
+ * nothing reads them -- so a preset still writing either would open a dialog at a width nobody chose,
+ * with nothing said. Refused instead, with the spelling that replaces it. A bare length is refused too,
+ * although the block reader takes it as a width: a Drawer at the top or bottom opens along its height,
+ * and a bare `size: 377` there is the old single length meaning the wrong axis.
+ */
+function checkOverlayGeometry(
+  overlay: { id: string; config: Record<string, unknown> },
+  report: Report,
+) {
+  if (overlay.config.width !== undefined) {
+    report(
+      overlay.id,
+      `Preset Overlay "${overlay.id}" states \`width\`; an Overlay is sized like a block. ` +
+      "State `size: { width }` (a dialog: `size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN }`), and a viewport limit as `maxSize`.",
+    );
+  }
+  for (const key of PHI_OVERLAY_GEOMETRY_KEYS) {
+    const value = overlay.config[key];
+    if (value != null && !isPhiRecord(value)) {
+      report(
+        overlay.id,
+        `Preset Overlay "${overlay.id}" states \`${key}\` as one length; state the pair, \`${key}: { width }\` or \`${key}: { height }\`.`,
+      );
+    }
+  }
+}
+
 /*
  * A dialog is as wide as its Form needs (`helpers/cms-dialog.ts`): one column takes
- * `PHI_DIALOG_WIDTH_SINGLE_COLUMN`, two keep `PHI_DIALOG_WIDTH`. What is refused is the one width a Preset
- * did not choose -- the default, holding nothing but Forms of one column. Any other width was stated, by a
- * caller that knows what else the body holds; a Form the caller cannot see is not judged.
+ * `PHI_DIALOG_WIDTH_SINGLE_COLUMN`, two keep `PHI_DIALOG_WIDTH`, either as the width of the Overlay's
+ * `size`. What is refused is the one width a Preset did not choose -- the default, holding nothing but
+ * Forms of one column. Any other width was stated, by a caller that knows what else the body holds; a
+ * Form the caller cannot see is not judged.
  */
 function checkDialogWidth(
   overlay: { id: string; bodyLayoutNodeId: string; config: Record<string, unknown> },
@@ -273,7 +310,7 @@ function checkDialogWidth(
   forms: ReadonlyMap<string, PresetTreeForm>,
   report: Report,
 ) {
-  if (stablePresetNodeJson(overlay.config.width) !== stablePresetNodeJson(PHI_DIALOG_WIDTH)) return;
+  if (stablePresetNodeJson(overlay.config.size) !== stablePresetNodeJson({ width: PHI_DIALOG_WIDTH })) return;
   const bodyLayoutIds = new Set<string>([overlay.bodyLayoutNodeId]);
   for (let grown = true; grown;) {
     grown = false;
@@ -293,7 +330,7 @@ function checkDialogWidth(
     report(
       overlay.id,
       `Preset Overlay "${overlay.id}" holds the one-column Form "${String(formIds[0])}" at the full dialog width ` +
-      "(PHI_DIALOG_WIDTH). Hand the Form to `dialog` as `body.form`, or state `width: PHI_DIALOG_WIDTH_SINGLE_COLUMN`.",
+      "(PHI_DIALOG_WIDTH). Hand the Form to `dialog` as `body.form`, or state `size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN }`.",
     );
   }
 }

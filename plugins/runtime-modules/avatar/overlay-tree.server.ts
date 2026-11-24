@@ -39,7 +39,7 @@ export async function buildPhiAvatarAreaPickerOverlayTree({
       config: {
         title: labels.overlayTitle,
         controlSize: "medium",
-        width: { compact: "calc(100vw - 32px)", medium: 480, wide: 520 },
+        size: { width: 520 },
         /*
          * `immediate`, not `request`. Request mode keeps the Overlay open and emits a `closeRequest`
          * for a Controller to answer -- and this Module has no Controller, so the X and the mask were

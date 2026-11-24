@@ -174,7 +174,7 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
       config: {
         title: null,
         placement: "right",
-        size: 377,
+        size: { width: 377 },
         mountPolicy: "lazy-keep",
         surface: { background: { base: { kind: "none" }, filter: "glass" } },
         mask: { appearance: "transparent" },
@@ -569,6 +569,8 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
         // it the Form instance the overlay waits for before it opens.
         slotIndex: 1,
         sortOrder: 0,
+        // The Builder's Label Set, translated already.
+        flags: PhiCmsFlags.NoTranslate,
         label: "Signal routes",
         config: {
           /*

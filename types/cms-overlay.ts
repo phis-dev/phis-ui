@@ -6,7 +6,8 @@ import {
   readPhiCmsMountPolicy,
   type PhiCmsMountPolicy,
 } from "./cms-mount-policy";
-import type { PhiResponsiveValue } from "./responsive";
+import type { PhiRenderableBlockSize } from "./renderable-block";
+import { normalizePhiRenderableBlockSize } from "../helpers/renderable-block-normalizers";
 import { readPhiControlSize, type PhiControlSize } from "./control";
 import { PhiCmsFlags } from "@phis/contracts/cms";
 import { hasPhiFlag, readPhiFlags } from "../helpers/flags";
@@ -37,9 +38,8 @@ export type PhiOverlayMaskBehaviour = PhiCmsOverlayMaskConfig & {
 /** Whether a Drawer pushes a nested one aside, and how far when it says. */
 export type PhiOverlayPushBehaviour = boolean | { distance: PhiCmsOverlaySize };
 
+/** One length, a bare number in pixels: how far a pushing Drawer moves the one beneath. */
 export type PhiCmsOverlaySize = string | number;
-/** A Modal width per responsive mode; unset modes cascade from the nearest smaller one that is set. */
-export type PhiCmsOverlayResponsiveSize = PhiResponsiveValue<PhiCmsOverlaySize>;
 
 export const PHI_OVERLAY_CLOSE_SOURCES = ["close-button", "mask", "escape"] as const;
 export type PhiOverlayCloseSource = (typeof PHI_OVERLAY_CLOSE_SOURCES)[number];
@@ -63,10 +63,18 @@ export type PhiCmsOverlayConfig = PhiOverlayChromeConfig & {
   flags: number;
   mountPolicy: PhiCmsMountPolicy;
   mask: PhiCmsOverlayMaskConfig;
-  width?: PhiCmsOverlaySize | PhiCmsOverlayResponsiveSize;
-  size?: PhiCmsOverlaySize;
+  /**
+   * The Overlay's geometry, stated as a block states it (`size`, `minSize`, `maxSize`, each a
+   * `{ width?, height? }` pair read by `normalizePhiRenderableBlockSize`) and drawn through
+   * `resolvePhiRenderableBlockGeometry`. One value per axis, as a Region's own geometry: the room an
+   * Overlay is offered is the viewport, and a Modal that hangs on the window says so with a `maxSize` in
+   * `vw`, not with a profile. A Modal reads both axes; a Drawer the one it opens along -- `width` at
+   * `left`/`right`, `height` at `top`/`bottom` (OVERLAYS.md, "Presentation config").
+   */
+  size?: PhiRenderableBlockSize;
+  minSize?: PhiRenderableBlockSize;
+  maxSize?: PhiRenderableBlockSize;
   placement: "top" | "right" | "bottom" | "left";
-  maxSize?: number;
   /** How far a pushing Drawer (`Push`) moves the one beneath; unset leaves it the Control's distance. */
   pushDistance?: PhiCmsOverlaySize;
   closeMode: "immediate" | "request";
@@ -94,19 +102,6 @@ function readSize(value: unknown) {
     : typeof value === "string" && value.trim()
       ? value.trim()
       : undefined;
-}
-
-function readResponsiveSize(value: unknown): PhiCmsOverlayResponsiveSize | undefined {
-  if (!isPhiRecord(value)) return undefined;
-  const record = value as Record<string, unknown>;
-  const size = {
-    compact: readSize(record.compact),
-    medium: readSize(record.medium),
-    wide: readSize(record.wide),
-  };
-  return size.compact === undefined && size.medium === undefined && size.wide === undefined
-    ? undefined
-    : size;
 }
 
 function readMask(value: unknown): PhiCmsOverlayMaskConfig {
@@ -163,24 +158,20 @@ export function parsePhiCmsOverlayConfig(
   overlayType: PhiCmsOverlayType = "modal",
 ): PhiCmsOverlayConfig {
   const placement = rawConfig.placement;
-  const maxSize = typeof rawConfig.maxSize === "number" && Number.isFinite(rawConfig.maxSize)
-    ? rawConfig.maxSize
-    : undefined;
   return {
     title: typeof rawConfig.title === "string" && rawConfig.title.trim() ? rawConfig.title.trim() : null,
-    controlSize: readPhiControlSize(rawConfig.controlSize),
+    // The Modal's width step; a Drawer is sized by `size` alone.
+    controlSize: overlayType === "modal" ? readPhiControlSize(rawConfig.controlSize) : undefined,
     flags: readPhiFlags(rawConfig.flags),
     // An Overlay is shut far more often than it is open, so the cheap end is the right default.
     mountPolicy: readPhiCmsMountPolicy(rawConfig.mountPolicy, "remount"),
     mask: readMask(rawConfig.mask),
-    width: overlayType === "modal"
-      ? readSize(rawConfig.width) ?? readResponsiveSize(rawConfig.width)
-      : undefined,
-    size: overlayType === "drawer" ? readSize(rawConfig.size) : undefined,
+    size: normalizePhiRenderableBlockSize(rawConfig.size),
+    minSize: normalizePhiRenderableBlockSize(rawConfig.minSize),
+    maxSize: normalizePhiRenderableBlockSize(rawConfig.maxSize),
     placement: placement === "top" || placement === "bottom" || placement === "left" || placement === "right"
       ? placement
       : "right",
-    maxSize,
     pushDistance: readSize(rawConfig.pushDistance),
     closeMode: rawConfig.closeMode === "request" ? "request" : "immediate",
     openActionKey: typeof rawConfig.openActionKey === "string" && rawConfig.openActionKey.trim()

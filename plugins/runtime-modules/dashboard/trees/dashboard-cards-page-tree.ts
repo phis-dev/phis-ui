@@ -3,7 +3,7 @@ import {
   PHI_DASHBOARD_CARD_DATA_PROVIDER_KEY,
   PHI_DASHBOARD_CARD_RESOURCE_KEY,
 } from "../../../../constants/dashboard-card-provider-keys";
-import { PhiCmsPageType } from "../../../../constants/phi-cms";
+import { PhiCmsFlags, PhiCmsPageType } from "../../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
@@ -34,6 +34,8 @@ export function buildPhiDashboardCardsWidget({
     typeKey: "collection-view",
     slotIndex,
     sortOrder: 0,
+    // `emptyDescription` is the Dashboard's Label Set, translated already.
+    flags: PhiCmsFlags.NoTranslate,
     label: `${area} dashboard cards`,
     config: {
       presentation: {

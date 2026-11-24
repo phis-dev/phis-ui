@@ -18,7 +18,7 @@ import { PHI_ACCOUNTING_CUSTOMER_FILE_ACCESS } from "./customer-file-access";
 /*
  * What the Accounting base Module brings: the Site shell for its Area, the Area root, the Site's
  * product directory and staff's customer file. The root lands on the first sidebar entry a viewer can see -- the Dashboard
- * Module's where it is on, the directory where it is not.
+ * Module's where it is on, the customer file where it is not (the Module's entries stand in preset-key order).
  */
 
 export const PHI_ACCOUNTING_RUNTIME_MODULE_AREA_SHELLS = [

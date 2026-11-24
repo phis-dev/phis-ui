@@ -167,10 +167,11 @@ Common serializable config may express:
   mask stops the pointer and whether a click on it dismisses are the two mask flags, so visual
   presentation, outside interaction, and dismissal stay independent semantic axes shared by Modal and
   Drawer;
-- shared size bounds and a Surface (background with its filter, border, shadow);
+- shared geometry -- `size`, `minSize` and `maxSize`, stated as a block states them
+  ([Geometry](#geometry)) -- and a Surface (background with its filter, border, shadow);
 - Modal-specific centering (`Centered`) and canonical `controlSize`;
-- Drawer-specific placement, size, maximum size, resizing (`Resizable`), and nested push behavior
-  (`Push`, with `pushDistance` stating how far);
+- Drawer-specific placement, resizing (`Resizable`), and nested push behavior (`Push`, with
+  `pushDistance` stating how far);
 - persisted signal routes.
 
 `resolvePhiCmsOverlayBehaviour` (types/cms-overlay.ts) reads the flags into the words the Controls take:
@@ -288,32 +289,77 @@ functions, portals, raw Ant Design render callbacks, raw semantic-DOM styles/cla
 and arbitrary z-index values are renderer concerns and are not CMS config. Standard visual values resolve
 through Ant Design tokens and the global Phi effect/shadow contracts.
 
-Modal uses the shared `PhiControlSize` vocabulary through `controlSize`: `small`, `medium`, or `large`.
-Core maps those values to globally defined Modal widths and always clamps the result to the available
-viewport with one `base` spacing token on both inline sides, including below Ant Design's small-screen
-breakpoint. Presets do not persist Ant Design breakpoint names or reproduce responsive Modal sizing
-through Body Layout widths.
+### Geometry
 
-A Modal `width` is one length or a responsive value `{ compact?, medium?, wide? }`. The modes come off
-the container scale, not Ant Design's device breakpoints: `medium` from 377px and `wide` from 610px of
-available viewport width (`PHI_MODAL_RESPONSIVE_MIN_WIDTH`, the same pair the Form switches at). Any
-subset may be stated; an unset mode cascades from the nearest smaller one that is set, and a mode below
-every stated one takes the `controlSize` width (or the Modal default when there is none). A runtime
-`size.width` overrides it at every mode.
+An Overlay is a block, and it is sized like one. `size`, `minSize` and `maxSize` are the block's pairs
+(`PhiRenderableBlockSize`, `{ width?, height? }`, CMS.md and LAYOUTING.md, "Block geometry is read
+once"), read by the block's reader (`normalizePhiRenderableBlockSize`) and drawn through the block's
+resolver (`resolvePhiRenderableBlockGeometry`, by `resolvePhiModalGeometry` and `resolvePhiDrawerGeometry`
+in `components/controls/phi-overlay-control-contract.ts`). Lengths are the block's: a bare number is
+pixels, a string on the length vocabulary is decoded, a keyword or an expression passes through.
+
+Each axis states one value, as a Region's own geometry does. A profile is measured against the room a
+block is offered, and the room an Overlay is offered is the viewport: a Modal that genuinely hangs on the
+window says so with a `maxSize` in `vw` (`maxSize: { width: "90vw" }`), not with a second profile
+system. A profile value (`{ compact?, medium?, wide? }`) on an Overlay's pair states nothing.
+
+```ts
+config: {
+  size: { width: 980 },          // the width it asks for
+  minSize: { width: 400 },       // a floor, where the content needs one
+  maxSize: { width: "90vw" },    // a viewport limit
+}
+```
+
+- **Modal.** Its width is the `size` width, else the `controlSize` width, else the Modal default; its
+  height the `size` height, else its content's, up to the viewport. Core holds every one of the lengths
+  inside the viewport -- one `base` spacing token clear on both inline sides, one `lg` on both block
+  sides -- a minimum included, so a floor that keeps a Form in two columns on a desk gives way on a phone
+  narrower than it, and with no `maxSize` stated the viewport room is the maximum. That is why a dialog
+  states no phone width: below its `size` the viewport decides. Presets do not persist Ant Design
+  breakpoint names or reproduce responsive Modal sizing through Body Layout widths.
+- **Drawer.** It opens along one axis and is sized along that one: `width` at `left` and `right`,
+  `height` at `top` and `bottom`. The other axis is the viewport's, and what a config states for it is
+  not drawn. The minimum and maximum reach the panel as CSS in any unit; a `Resizable` Drawer is dragged
+  no further than a maximum in pixels, the one unit a drag counts in.
+
+There is no `width` on an Overlay and no single length for a Drawer: the descriptor compiler refuses a
+preset Overlay that states `width`, or `size`, `minSize` or `maxSize` as one bare length
+(`checkPhiPresetTreeContract`): the block's reader takes a bare length as a width, which for a Drawer
+at the top or bottom is the wrong axis. Stored Overlays were swept to the pairs; nothing reads `width`.
+
+Modal uses the shared `PhiControlSize` vocabulary through `controlSize`: `small`, `medium`, or `large`.
+Core maps those values to globally defined Modal widths (`PHI_MODAL_WIDTH_BY_CONTROL_SIZE`) for a Modal
+whose `size` names no width. A Drawer takes no `controlSize`.
 
 Every Modal exposes the generic `controlSize` listen capability. A connected listen route uses `action: "change"`,
 `valueType: "string"`, and accepts only the existing `PhiControlSize` values `small`, `medium`, or
 `large`. A valid signal changes only the mounted Modal's transient presentation; it does not mutate the
 persisted Overlay config or admit arbitrary pixel widths. The route chooses its normal signal channel,
-scope, and concrete Overlay receiver. Drawer sizing remains on the separate Drawer size contract.
+scope, and concrete Overlay receiver. A stated `size` width stands over `controlSize`, from the config
+and from the signal alike.
 
 Every Modal also exposes the existing generic `size` listen capability. A connected listen route uses
 `action: "change"` and `valueType: "size"`. Its canonical value is the shared `PhiRenderableBlockSize` shape
-`{ width?, height? }`; normal Phi length parsing and non-negative-value validation apply. The runtime
-`width` overrides the current config or `controlSize` width, while `height` sizes the viewport-capped
-Modal container and leaves overflow with the Body scroll area. A later valid `controlSize` input clears
-only an active runtime width override and preserves an independent runtime height. Neither receiver
-persists its transient value.
+`{ width?, height? }`; normal Phi length parsing and non-negative-value validation apply. Each axis it
+names stands over the stated `size` on that axis: the runtime `width` overrides the stated or
+`controlSize` width, while `height` sizes the viewport-capped Modal container and leaves overflow with
+the Body scroll area. The stated `minSize` and `maxSize` still bound both. A later valid `controlSize`
+input clears only an active runtime width override and preserves an independent runtime height. Neither
+receiver persists its transient value.
+
+Intrinsic Modal block-size changes animate in the Core Control with the active Ant Design motion tokens,
+including changes caused by authored Header, Body, Footer, Stack, or Form content. The animation never
+becomes persisted state, never replaces intrinsic measurement, respects reduced-motion preference, and
+retains the viewport cap plus the Body-owned scroll area.
+
+Modal and Drawer containers are intrinsically sized until they reach the available browser block size.
+They must never grow the document beyond that viewport bound. Header and Footer remain fixed Overlay
+zones; Body is a flex item with `min-block-size: 0` and owns the internal block-axis scroll area. A zone
+Layout does not become a second scroll owner merely because it is mounted in an Overlay. Modal and Drawer
+use the same logical behavior even when Ant Design exposes different semantic DOM nodes for them.
+
+### Title
 
 Every Modal and Drawer exposes the generic `title` listen capability. A connected listen route uses
 `action: "change"` and `valueType: "string"`. A valid signal replaces only the mounted Overlay's transient
@@ -329,17 +375,6 @@ row is asked for or where the row has no value, so neither another row's name no
 dialog ([FORMS.md](./FORMS.md#form-widget), with the two routes). The create dialog keeps its title. A
 dialog that shows a row through the `record` Widget is named the same way, by the record Widget's
 `titleFromRecord` ([TABLES.md](./TABLES.md#the-record-widget)).
-
-Intrinsic Modal block-size changes animate in the Core Control with the active Ant Design motion tokens,
-including changes caused by authored Header, Body, Footer, Stack, or Form content. The animation never
-becomes persisted state, never replaces intrinsic measurement, respects reduced-motion preference, and
-retains the viewport cap plus the Body-owned scroll area.
-
-Modal and Drawer containers are intrinsically sized until they reach the available browser block size.
-They must never grow the document beyond that viewport bound. Header and Footer remain fixed Overlay
-zones; Body is a flex item with `min-block-size: 0` and owns the internal block-axis scroll area. A zone
-Layout does not become a second scroll owner merely because it is mounted in an Overlay. Modal and Drawer
-use the same logical behavior even when Ant Design exposes different semantic DOM nodes for them.
 
 ### Mask behavior
 
@@ -504,7 +539,7 @@ The shape a structured dialog takes is the ordinary one, because an Overlay is a
 
 ```text
 overlays[]
-└── one Overlay node          title, width, mountPolicy, closeMode, signal routes
+└── one Overlay node          title, size, mountPolicy, closeMode, signal routes
     ├── bodyLayoutNodeId   -> flex-vertical, `panel`         gap + padding + background
     │   ├── Widget                                            an alert, a message, a table
     │   └── Widget                                            a Form
@@ -517,20 +552,21 @@ Overlay, and the Widgets sit in their slots at sequential slot indexes. The foot
 Command Toolbar, not buttons the container draws; a button that must wait for the body enables itself
 through the normal `enabled` channel from whatever in the body decides it.
 
-A dialog is as wide as its Form needs (`helpers/cms-dialog.ts`). A Form of one column takes
-`PHI_DIALOG_WIDTH_SINGLE_COLUMN`: `contentMaxNarrow` -- the 377px from which a Form puts its labels beside
-its fields (`PHI_FORM_RESPONSIVE_MIN_WIDTH.medium`) -- plus the body's `base` inset on both sides, so the
-Form keeps that width inside the body. A Form of two columns keeps `PHI_DIALOG_WIDTH`, the reading measure
-`contentMax`; a table, a preview or an editor states a wider width of its own. Both answer
-`calc(100vw - 32px)` at `compact`. A Form is one column when no field, at `medium` or `wide`, leaves part
-of its row free -- a field whose label and control together do not span the whole grid leaves room for a
-second one beside it, and that is two columns (`isPhiFormSingleColumn`).
+A dialog is as wide as its Form needs (`helpers/cms-dialog.ts`), and states it as its `size` width. A Form
+of one column takes `PHI_DIALOG_WIDTH_SINGLE_COLUMN`: `contentMaxNarrow` -- the 377px from which a Form
+puts its labels beside its fields (`PHI_FORM_RESPONSIVE_MIN_WIDTH.medium`) -- plus the body's `base` inset
+on both sides, so the Form keeps that width inside the body. A Form of two columns keeps
+`PHI_DIALOG_WIDTH`, the reading measure `contentMax`; a table, a preview or an editor states a wider width
+of its own, and a viewport limit as `maxSize` where it has one. Both are one length: on a phone the Modal
+holds either inside the viewport ([Geometry](#geometry)). A Form is one column when no field, at `medium`
+or `wide`, leaves part of its row free -- a field whose label and control together do not span the whole
+grid leaves room for a second one beside it, and that is two columns (`isPhiFormSingleColumn`).
 
 `dialog` on `createPhiCmsPresetNodes` picks the width itself from the Form it is handed as `body.form`
-(its definition, or `{ descriptor }`); handed none, it keeps `PHI_DIALOG_WIDTH`, and a `width` in its
-`config` is the caller's own and always wins. The descriptor compiler checks the result against the Forms
-the active Modules ship: a modal at exactly `PHI_DIALOG_WIDTH` whose body holds only Forms of one column is
-refused. Any other stated width passes, and a Form the compiler cannot see -- one stored on the Site -- is
+(its definition, or `{ descriptor }`) and writes it as `size: { width }`; handed none, it keeps
+`PHI_DIALOG_WIDTH`, and a `size` in its `config` is the caller's own and always wins, whole. The
+descriptor compiler checks the result against the Forms the active Modules ship: a modal whose `size` is
+exactly `{ width: PHI_DIALOG_WIDTH }` and whose body holds only Forms of one column is refused. Any other stated width passes, and a Form the compiler cannot see -- one stored on the Site -- is
 not judged. A Module runs the same rules in its own tests with `checkPhiPresetTreeContract` and its own
 Forms (`@phis/ui/module/page-check`; THIRD_PARTY_MODULES.md, "Checking a Page preset").
 

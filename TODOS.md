@@ -84,13 +84,6 @@ file (THREADS.md section 10) leave open:
   `hero.bottom`, `footer_top.top`. Closed shape catalog (wave, layered wave, zigzag, curve, slope) with
   validated ids and bounded parameters, never raw SVG or path data. Static inline SVG outside Region layout
   metrics; optional transform-only, reduced-motion-safe animation that a static Region never loads.
-- **An Overlay is a block, and should be sized like one.** Responsive block geometry is built
-  (design/RESPONSIVE_BLOCK_GEOMETRY.md). Remaining: `PhiCmsOverlayConfig` adopts `size`/`minSize`/`maxSize`
-  from the block contract (a Modal states its viewport limit as `maxSize` in `vw`), the presets restate
-  their 400-720px widths and the auth floor as `minSize`, and then `width` goes -- with it the viewport
-  `{xs, md, lg}` / `PHI_MODAL_RESPONSIVE_MIN_WIDTH` handed to antd, the Drawer's single-length `size`
-  and its bare-number `maxSize`. `controlSize` stays.
-
 - **What the Shell is on a phone.** The Sider becomes a drawer below 768px (`MobileDrawer`, SHELL.md);
   other Regions are still only hidden by `viewportFlags`. Idea, not design: gather the navigation items
   header, sider and footer contribute into one menu. To decide first: which Regions contribute, what
@@ -236,6 +229,11 @@ file (THREADS.md section 10) leave open:
   from, and how a bound Table renders inside a Markdown body (a block kind `table_embed` drawn by the Table
   Binding, or a stated "not rendered yet"). Operator decision first; then the parser, its typed node and
   refusals are a contained change in `components/widgets/shared/markdown-*.ts`.
+- **A wide Table's pinned Actions column covers the columns before it.** The licence rules Table
+  (`@phis/licenses`, ten columns) needs about 1,100 px and gets about 1,000 at a 1,280 px window, so it scrolls
+  sideways and the Actions column pinned at the right edge covers State; Admin -> Users shows the same with
+  "Last login". Either the package's preset fits its space (Parts without `minWidth: 200`, the code columns
+  capped) or phis-ui gives the scroll a stronger cue or stops pinning Actions -- a decision for the owner.
 - **Code samples are coloured by a scanner, not by a grammar.** `components/widgets/shared/markdown-code-tokens.ts`
   reads six languages -- TypeScript, JSON, Bash, SQL, YAML and CSS -- and a fence naming anything else is
   printed plain, which is the stated answer rather than a gap. What the scanner cannot see is a tag: HTML
@@ -292,6 +290,13 @@ file (THREADS.md section 10) leave open:
   emitters only. Add a runtime schema registry once the controller and Widget schema inventory is stable.
 
 ## Operations
+
+- **Overlay geometry sweep, per installation.** An Overlay is sized like a block (OVERLAYS.md, "Geometry"):
+  stored `overlays[].config.width`, and a Drawer's scalar `size`/`maxSize`, are read by nothing and refused
+  in presets. Run `scripts/sweeps/overlay-geometry.sql` (one transaction over `phis.site_area_revisions`
+  and `phis.site_page_revisions`, ending with a check that should answer 0 for both) on each installation
+  with the release. dev.phis.dev stores no Overlay (dry run 2026-11-24, 0 rows); a swept auth dialog gets no
+  400 px floor, which only the preset carries.
 
 - **Theme variables `--ant-*` became `--phi-*` (0.5.3), per installation.** Stored configs that name a
   variable as text keep the old name until swept:

@@ -1,20 +1,18 @@
 import type { CSSProperties, ReactNode } from "react";
 
-import {
-  PHI_CONTAINER_BREAKPOINT_COL3,
-  PHI_CONTAINER_BREAKPOINT_CONTENT,
-} from "../../theme/phi-container-breakpoints";
+import { PHI_SPACE } from "../../theme/antd-css-var-contract";
+import type { PhiControlSize } from "../../types/control";
 import type { PhiCmsMountPolicy } from "../../types/cms-mount-policy";
 import type {
-  PhiCmsOverlaySize,
+  PhiCmsOverlayConfig,
   PhiOverlayCloseSource,
   PhiOverlayMaskBehaviour,
 } from "../../types/cms-overlay";
+import type { PhiRenderableBlockSize } from "../../types/renderable-block";
 import {
-  resolvePhiResponsiveValue,
-  type PhiResolvedResponsiveValue,
-  type PhiResponsiveValue,
-} from "../../types/responsive";
+  resolvePhiRenderableBlockGeometry,
+  type PhiResolvedBlockLength,
+} from "../../types/renderable-block-geometry";
 
 export type PhiOverlayControlDismissEvent = {
   target: EventTarget | null;
@@ -79,47 +77,118 @@ export function resolvePhiOverlayMaskPresentation(mask: PhiOverlayMaskBehaviour)
   };
 }
 
-export type PhiModalWidth = PhiCmsOverlaySize | PhiResponsiveValue<PhiCmsOverlaySize>;
+/**
+ * An Overlay's geometry as a Control takes it: the block's own three pairs (`PhiCmsOverlayConfig`), one
+ * value per axis.
+ */
+export type PhiOverlayControlGeometryProps = {
+  size?: PhiRenderableBlockSize | null;
+  minSize?: PhiRenderableBlockSize | null;
+  maxSize?: PhiRenderableBlockSize | null;
+};
 
-export type PhiModalResponsiveMode = keyof PhiResolvedResponsiveValue<unknown>;
+/** The width each `controlSize` step gives a Modal whose `size` names none. */
+export const PHI_MODAL_WIDTH_BY_CONTROL_SIZE: Record<PhiControlSize, number> = {
+  small: 520,
+  medium: 720,
+  large: 960,
+};
 
 /**
- * Where a Modal's width switches from `compact` to `medium` and from `medium` to `wide`.
- *
- * The container scale, the same pair the Form switches at, and not Ant Design's device breakpoints
- * (768/992): a Modal's box is the viewport it floats in, and a width stated per mode means "this much
- * room is there", which is the question the container scale answers.
+ * The room a Modal never leaves: one `base` step clear of the viewport on both inline sides, one `lg`
+ * step on both block sides. Every stated length is held inside it, a minimum included, so a floor that
+ * keeps a Form in two columns on a desk does not push the dialog off a phone.
  */
-export const PHI_MODAL_RESPONSIVE_MIN_WIDTH = {
-  medium: PHI_CONTAINER_BREAKPOINT_COL3,
-  wide: PHI_CONTAINER_BREAKPOINT_CONTENT,
-} as const;
+const PHI_MODAL_VIEWPORT_INLINE = `calc(100vw - ${PHI_SPACE.base} - ${PHI_SPACE.base})`;
+const PHI_MODAL_VIEWPORT_BLOCK = `calc(100dvh - ${PHI_SPACE.lg} - ${PHI_SPACE.lg})`;
 
-export function resolvePhiModalResponsiveMode(availableWidth: number): PhiModalResponsiveMode {
-  if (availableWidth >= PHI_MODAL_RESPONSIVE_MIN_WIDTH.wide) return "wide";
-  if (availableWidth >= PHI_MODAL_RESPONSIVE_MIN_WIDTH.medium) return "medium";
-  return "compact";
+function withinViewport(length: PhiResolvedBlockLength | null, viewport: string) {
+  return length == null ? undefined : `min(${length.css}, ${viewport})`;
 }
 
+/** What a Modal draws of its geometry, as CSS: the dialog's width and box, and its container's height. */
+export type PhiModalGeometry = {
+  /** Handed to the Modal as its width; undefined leaves it Ant Design's default. */
+  width: string | undefined;
+  minWidth: string | undefined;
+  maxWidth: string;
+  blockSize: string | undefined;
+  minBlockSize: string | undefined;
+  maxBlockSize: string;
+};
+
 /**
- * The one width a Modal takes at one mode.
+ * A Modal's geometry, read once through the block's resolver.
  *
- * A responsive width cascades like every responsive value (`resolvePhiResponsiveValue`): an unset mode
- * takes the nearest smaller one that is set, and a mode below every stated one takes `fallback` -- the
- * width `controlSize` gives, or none, which leaves the Modal its own default.
+ * The width is the one a Signal told (`toldSize`, the `size` input), else the stated `size`, else the
+ * `controlSize` step; the height the told one, else the stated one, else none -- the Modal is as tall as
+ * its content up to the viewport. A minimum and a maximum are the stated ones, each held inside the
+ * viewport room, and with no maximum stated the viewport room is the maximum.
  */
-export function resolvePhiModalWidth(
-  width: PhiModalWidth | undefined,
-  fallback: PhiCmsOverlaySize | undefined,
-  mode: PhiModalResponsiveMode,
-): PhiCmsOverlaySize | undefined {
-  if (width == null) return fallback;
-  if (typeof width !== "object") return width;
-  return resolvePhiResponsiveValue<PhiCmsOverlaySize | undefined>(width, {
-    compact: fallback,
-    medium: fallback,
-    wide: fallback,
-  })[mode];
+export function resolvePhiModalGeometry({
+  size,
+  minSize,
+  maxSize,
+  toldSize,
+  controlSize,
+}: PhiOverlayControlGeometryProps & {
+  toldSize?: PhiRenderableBlockSize | null;
+  controlSize?: PhiControlSize;
+}): PhiModalGeometry {
+  const stated = resolvePhiRenderableBlockGeometry({ size, minSize, maxSize });
+  const told = resolvePhiRenderableBlockGeometry({ size: toldSize });
+  const width = told.inline.size?.css
+    ?? stated.inline.size?.css
+    ?? (controlSize == null ? undefined : `${PHI_MODAL_WIDTH_BY_CONTROL_SIZE[controlSize]}px`);
+  return {
+    width,
+    minWidth: withinViewport(stated.inline.min, PHI_MODAL_VIEWPORT_INLINE),
+    maxWidth: withinViewport(stated.inline.max, PHI_MODAL_VIEWPORT_INLINE) ?? PHI_MODAL_VIEWPORT_INLINE,
+    blockSize: told.block.size?.css ?? stated.block.size?.css,
+    minBlockSize: withinViewport(stated.block.min, PHI_MODAL_VIEWPORT_BLOCK),
+    maxBlockSize: withinViewport(stated.block.max, PHI_MODAL_VIEWPORT_BLOCK) ?? PHI_MODAL_VIEWPORT_BLOCK,
+  };
+}
+
+/** What a Drawer draws of its geometry: the length along the axis it opens on, and its bounds. */
+export type PhiDrawerGeometry = {
+  /**
+   * Handed to the Drawer as its `size`, a pixel length as a number (the Drawer warns on a string that is
+   * one); undefined leaves it Ant Design's default.
+   */
+  size: number | string | undefined;
+  /** How far a resizable Drawer may be dragged, where the stated maximum is in pixels. */
+  resizeMaxSize: number | undefined;
+  /** The bounds on the panel (`min-width`/`max-width`, or the height pair at `top` and `bottom`). */
+  style: CSSProperties;
+};
+
+/**
+ * A Drawer's geometry, read once through the block's resolver.
+ *
+ * A Drawer opens along one axis: `width` at `left` and `right`, `height` at `top` and `bottom`. The other
+ * axis is the viewport's, and what a config states for it is not drawn. The maximum reaches the panel as
+ * CSS whatever its unit, and Ant Design's resize as a limit only where it is in pixels, the one unit a
+ * drag counts in.
+ */
+export function resolvePhiDrawerGeometry({
+  size,
+  minSize,
+  maxSize,
+  placement,
+}: PhiOverlayControlGeometryProps & { placement: PhiCmsOverlayConfig["placement"] }): PhiDrawerGeometry {
+  const geometry = resolvePhiRenderableBlockGeometry({ size, minSize, maxSize });
+  const horizontal = placement === "left" || placement === "right";
+  const axis = horizontal ? geometry.inline : geometry.block;
+  const min = axis.min?.css;
+  const max = axis.max?.css;
+  return {
+    size: axis.size?.part?.unit === "px" ? axis.size.part.value : axis.size?.css,
+    resizeMaxSize: axis.max?.part?.unit === "px" ? axis.max.part.value : undefined,
+    style: horizontal
+      ? { ...(min == null ? null : { minWidth: min }), ...(max == null ? null : { maxWidth: max }) }
+      : { ...(min == null ? null : { minHeight: min }), ...(max == null ? null : { maxHeight: max }) },
+  };
 }
 
 export function resolvePhiOverlayDismissSource(

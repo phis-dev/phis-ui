@@ -105,16 +105,16 @@ export type PhiCmsPresetOverlayInput = {
  * What it decides is what differs between dialogs: its ids, its title and wiring, what extra the body
  * Layout carries (a form's label column, say), and its buttons. How the body and the actions look is the
  * one answer every dialog shares (`helpers/cms-dialog.ts`), so it is not an input. Nor is the width, as
- * long as the dialog can see the Form it holds: given `body.form`, it takes the width that Form needs
- * (`resolvePhiDialogFormWidth`); given none, `PHI_DIALOG_WIDTH`. A width in `config` is the caller's
- * own, for a table or an editor that needs more.
+ * long as the dialog can see the Form it holds: given `body.form`, its `size` takes the width that Form
+ * needs (`resolvePhiDialogFormWidth`); given none, `PHI_DIALOG_WIDTH`. A `size` in `config` is the
+ * caller's own, for a table or an editor that needs more, and replaces the pair whole.
  */
 export type PhiCmsPresetDialogInput = {
   id: PhiCmsInstanceId;
   bodyLayoutNodeId: PhiCmsInstanceId;
   sortOrder: number;
   label: string | null;
-  /** The Overlay's config: title, mount and close policy, open action, routes. `width` follows `body.form`. */
+  /** The Overlay's config: title, mount and close policy, open action, routes. `size` follows `body.form`. */
   config: Record<string, unknown>;
   headerLayoutNodeId?: PhiCmsInstanceId | null;
   /**
@@ -249,7 +249,7 @@ function createPhiCmsPresetNodeSet(defaults: PhiCmsPresetNodeDefaults) {
         config: { ...input.body?.config, ...PHI_DIALOG_BODY_CONFIG },
       });
       const form = input.body?.form;
-      const config = { width: form ? resolvePhiDialogFormWidth(form.descriptor) : PHI_DIALOG_WIDTH, ...input.config };
+      const config = { size: { width: form ? resolvePhiDialogFormWidth(form.descriptor) : PHI_DIALOG_WIDTH }, ...input.config };
       const commands = input.commands;
       if (!commands) {
         return {

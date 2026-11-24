@@ -2,9 +2,10 @@ import { PHI_TEXT_SOURCE_PRESET } from "../../../../helpers/text-source";
 import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
 } from "../../../../constants/cms-layout-types";
-import { PhiCmsPageType } from "../../../../constants/phi-cms";
+import { PhiCmsFlags, PhiCmsPageType } from "../../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import type { PhiResolvedCmsPageTree, PhiCmsPageNode } from "../../../../types/cms";
+import type { PhiCmsOverlayConfig } from "../../../../types/cms-overlay";
 import type { PhiBlockRuntime } from "../../../../types";
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "../../../../components/regions/presets/phi-base-page-layout";
 import { getPhiAdminUsersPageLabels } from "./admin-users-label-set";
@@ -76,7 +77,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
     id: typeof PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS[keyof typeof PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS],
     rootLayoutNodeId: typeof PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS[keyof typeof PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS],
     title: string,
-    width: Readonly<Record<string, string | number>>,
+    geometry: Pick<PhiCmsOverlayConfig, "size" | "maxSize">,
     key: string,
     formMode?: "create" | "edit",
   ) => nodes.overlay({
@@ -101,7 +102,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
     label: key,
     config: {
       title,
-      width,
+      ...geometry,
       mountPolicy: "remount",
       closeMode: formMode ? "request" : "immediate",
       signalRoutes: {
@@ -240,7 +241,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
         PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS.overlayCreate,
         PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS.layoutCreate,
         widgetLabels.editor.addTitle,
-        PHI_DIALOG_WIDTH_SINGLE_COLUMN,
+        { size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN } },
         "admin-users-create-modal",
         "create",
       ),
@@ -248,7 +249,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
         PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS.overlayEdit,
         PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS.layoutEdit,
         widgetLabels.editor.editTitle,
-        PHI_DIALOG_WIDTH_SINGLE_COLUMN,
+        { size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN } },
         "admin-users-edit-modal",
         "edit",
       ),
@@ -256,7 +257,8 @@ export async function buildPhiDefaultAdminUsersPageTree({
         PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS.overlayHistory,
         PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS.layoutHistory,
         widgetLabels.history.title,
-        { compact: "calc(100vw - 32px)", medium: "90vw", wide: 980 },
+        // A log of changes reads across: wide where the window is, and never more of it than nine tenths.
+        { size: { width: 980 }, maxSize: { width: "90vw" } },
         "admin-users-history-modal",
       ),
     ],
@@ -301,6 +303,8 @@ export async function buildPhiDefaultAdminUsersPageTree({
         typeKey: "table",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
+        // The Module's Label Set, translated already.
+        flags: PhiCmsFlags.NoTranslate,
         label: labels.tableLabel,
         config: {
           source: {
@@ -655,6 +659,8 @@ export async function buildPhiDefaultAdminUsersPageTree({
         typeKey: "table",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
+        // The Module's Label Set, translated already.
+        flags: PhiCmsFlags.NoTranslate,
         label: "admin users login history table",
         config: {
           source: {

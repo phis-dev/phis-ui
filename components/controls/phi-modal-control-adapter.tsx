@@ -6,53 +6,20 @@
  * that open one, not by every page that could.
  */
 
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useRef } from "react";
 import { Modal } from "antd";
 
 import { PHI_CONTROL, PHI_SPACE } from "../../theme/antd-css-var-contract";
-import type { PhiControlSize } from "../../types/control";
 import { resolvePhiMotionDurationMs } from "../../helpers/motion";
 import { usePhiConfig } from "../root/phi-config-provider";
 import {
-  PHI_MODAL_RESPONSIVE_MIN_WIDTH,
   PHI_OVERLAY_DEFAULT_MASK,
-  resolvePhiModalResponsiveMode,
-  resolvePhiModalWidth,
+  resolvePhiModalGeometry,
   resolvePhiOverlayDismissSource,
   resolvePhiOverlayMaskPresentation,
-  type PhiModalResponsiveMode,
 } from "./phi-overlay-control-contract";
 import type { PhiModalControlProps } from "./phi-modal-control";
 import { usePhiHydrated } from "../state/use-phi-hydrated";
-
-const PHI_MODAL_MODE_QUERIES = [
-  `(min-width: ${PHI_MODAL_RESPONSIVE_MIN_WIDTH.medium}px)`,
-  `(min-width: ${PHI_MODAL_RESPONSIVE_MIN_WIDTH.wide}px)`,
-];
-
-/** The viewport crosses one of the Modal's two thresholds far less often than it resizes. */
-function subscribeModalMode(onChange: () => void) {
-  const queries = PHI_MODAL_MODE_QUERIES.map((query) => window.matchMedia(query));
-  for (const query of queries) query.addEventListener("change", onChange);
-  return () => {
-    for (const query of queries) query.removeEventListener("change", onChange);
-  };
-}
-
-function readModalMode(): PhiModalResponsiveMode {
-  return resolvePhiModalResponsiveMode(window.innerWidth);
-}
-
-function readServerModalMode(): PhiModalResponsiveMode {
-  return "compact";
-}
-
-
-const PHI_MODAL_WIDTH_BY_CONTROL_SIZE: Record<PhiControlSize, number> = {
-  small: 520,
-  medium: 720,
-  large: 960,
-};
 
 /** What a dialog opens on: the first thing to type into or choose from, never a button or a hint. */
 const PHI_MODAL_FIRST_FIELD_SELECTOR = [
@@ -91,7 +58,9 @@ export function PhiModalControlAdapter({
   centered = false,
   controlSize,
   size,
-  width,
+  minSize,
+  maxSize,
+  toldSize,
   rootClassName,
   containerStyle,
   onDismiss,
@@ -100,7 +69,8 @@ export function PhiModalControlAdapter({
 }: PhiModalControlProps) {
   const { token } = usePhiConfig();
   const hydrated = usePhiHydrated();
-  const mode = useSyncExternalStore(subscribeModalMode, readModalMode, readServerModalMode);
+  const geometry = resolvePhiModalGeometry({ size, minSize, maxSize, toldSize, controlSize });
+  const blockSize = geometry.blockSize;
   const bodyMeasureRef = useRef<HTMLDivElement | null>(null);
   const bodyContentRef = useRef<HTMLDivElement | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
@@ -108,7 +78,7 @@ export function PhiModalControlAdapter({
   useEffect(() => {
     const bodyMeasure = bodyMeasureRef.current;
     const bodyContent = bodyContentRef.current;
-    if (!open || !bodyMeasure || !bodyContent || size?.height != null || typeof ResizeObserver === "undefined") {
+    if (!open || !bodyMeasure || !bodyContent || blockSize != null || typeof ResizeObserver === "undefined") {
       return undefined;
     }
 
@@ -146,7 +116,7 @@ export function PhiModalControlAdapter({
       resizeAnimationRef.current?.cancel();
       resizeAnimationRef.current = null;
     };
-  }, [open, size?.height, token.motionDurationMid, token.motionEaseInOut]);
+  }, [open, blockSize, token.motionDurationMid, token.motionEaseInOut]);
   /*
    * Ant Design's lock moves the focus to the first focusable element, which is the close button, so a
    * dialog with a Form could not be typed into until Tab was pressed. The field may mount a few frames
@@ -206,11 +176,6 @@ export function PhiModalControlAdapter({
       )}
     </div>
   );
-  const resolvedWidth = size?.width ?? resolvePhiModalWidth(
-    width,
-    controlSize == null ? undefined : PHI_MODAL_WIDTH_BY_CONTROL_SIZE[controlSize],
-    mode,
-  );
   // The wrapper covers the viewport; letting the pointer through means opening it, not just the mask.
   const passesOutsidePointer = !resolvedMask.capturesOutsidePointer;
 
@@ -224,9 +189,10 @@ export function PhiModalControlAdapter({
       destroyOnHidden={mountPolicy === "remount"}
       forceRender={hydrated && mountPolicy === "eager"}
       centered={centered}
-      width={resolvedWidth}
+      width={geometry.width}
       style={{
-        maxWidth: `calc(100vw - ${PHI_SPACE.base} - ${PHI_SPACE.base})`,
+        ...(geometry.minWidth == null ? null : { minWidth: geometry.minWidth }),
+        maxWidth: geometry.maxWidth,
         transition: `width ${token.motionDurationMid} ${token.motionEaseInOut}`,
       }}
       rootClassName={rootClassName}
@@ -240,8 +206,9 @@ export function PhiModalControlAdapter({
           display: "flex",
           flexDirection: "column",
           gap: 0,
-          ...(size?.height == null ? {} : { blockSize: size.height }),
-          maxBlockSize: `calc(100dvh - ${PHI_SPACE.lg} - ${PHI_SPACE.lg})`,
+          ...(blockSize == null ? {} : { blockSize }),
+          ...(geometry.minBlockSize == null ? {} : { minBlockSize: geometry.minBlockSize }),
+          maxBlockSize: geometry.maxBlockSize,
           overflow: "hidden",
           ...containerStyle,
           padding: 0,
@@ -316,7 +283,7 @@ export function PhiModalControlAdapter({
           minWidth: 0,
           overflow: "hidden",
           width: "100%",
-          ...(size?.height == null ? {} : { minBlockSize: "100%" }),
+          ...(blockSize == null ? {} : { minBlockSize: "100%" }),
         }}
       >
         <div

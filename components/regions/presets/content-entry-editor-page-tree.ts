@@ -1,4 +1,4 @@
-import { PHI_TEXT_SOURCE_PRESET } from "../../../helpers/text-source";
+import { PHI_TEXT_SOURCE_PRESET, PHI_TEXT_SOURCE_SITE } from "../../../helpers/text-source";
 import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
   PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS,
@@ -7,7 +7,7 @@ import type { PhiContentEntryKind } from "../../../constants/content-entry-kinds
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../constants/core-data-provider-keys";
 import { canPhiViewerAccess, PHI_VIEWER_ACCESS_PUBLISHING } from "../../../types/access";
 import type { PhiTableActionDefinition } from "../../../types/table-widget";
-import { PhiCmsPageType } from "../../../constants/phi-cms";
+import { PhiCmsFlags, PhiCmsPageType } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 import { createPhiPresetCmsInstanceIdMap, type PhiCmsInstanceId } from "../../../types/cms-instance-id";
@@ -128,6 +128,11 @@ type EntryDialogInput = {
   bindsRecord: boolean;
   /** What the Form's fields read from their placement: the Site's languages, for one. */
   formConfig?: Record<string, unknown>;
+  /**
+   * Whose words `formConfig` holds: `"label-set"` for the Module's Label Set, already in the reader's
+   * language (the Form's node is `NoTranslate`), `"site"` for what the Site configured -- its languages.
+   */
+  formConfigWords?: "label-set" | "site";
   saveLabel: string;
   cancelLabel: string;
   ids: {
@@ -177,7 +182,7 @@ function buildEntryDialogNodes(
       config: {
         title: input.title,
         // Every Form of an entry is one column (helpers/cms-dialog.ts).
-        width: PHI_DIALOG_WIDTH_SINGLE_COLUMN,
+        size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN },
         mountPolicy: "remount",
         /*
          * `immediate`: there is nobody to ask. `request` exists so a Controller can refuse while a save
@@ -228,9 +233,11 @@ function buildEntryDialogNodes(
         typeKey: "form",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 10,
+        ...(input.formConfigWords === "label-set" ? { flags: PhiCmsFlags.NoTranslate } : {}),
         label: `${input.routePrefix} ${input.key} form`,
         config: {
           formId: input.formId,
+          ...(input.formConfigWords === "site" ? { textSource: PHI_TEXT_SOURCE_SITE } : {}),
           /*
            * The Table's own resource, so the Form reads the row that was pressed rather than asking Core a
            * second time, and `openActionKey` decides which action it reads for. A Form with no source has
@@ -423,6 +430,7 @@ export async function buildPhiContentEntryEditorPageTree({
     openActionKey: "new",
     bindsRecord: false,
     formConfig: entryFormConfig,
+    formConfigWords: "site",
     saveLabel: widgetLabels.form.save,
     cancelLabel: widgetLabels.form.cancel,
     ids: {
@@ -441,6 +449,7 @@ export async function buildPhiContentEntryEditorPageTree({
     openActionKey: "edit",
     bindsRecord: true,
     formConfig: entryFormConfig,
+    formConfigWords: "site",
     saveLabel: widgetLabels.form.save,
     cancelLabel: widgetLabels.form.cancel,
     ids: {
@@ -496,6 +505,8 @@ export async function buildPhiContentEntryEditorPageTree({
         typeKey: "table",
         slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
         sortOrder: 10,
+        // The kind's Label Set, translated already.
+        flags: PhiCmsFlags.NoTranslate,
         label: kindLabels.widgetLabel,
         config: {
           source,
@@ -748,6 +759,7 @@ function buildPublisherParts({
       [PHI_CONTENT_ENTRY_CURATION_NONE_CONFIG_KEYS.author]: widgetLabels.curation.authorNone,
       [PHI_CONTENT_ENTRY_CURATION_NONE_CONFIG_KEYS.category]: widgetLabels.curation.categoryNone,
     },
+    formConfigWords: "label-set",
     saveLabel: widgetLabels.form.save,
     cancelLabel: widgetLabels.form.cancel,
     ids: {
@@ -799,6 +811,8 @@ function buildPublisherParts({
     typeKey: "table",
     slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[2].slotIndex,
     sortOrder: 20,
+    // The kind's Label Set, translated already.
+    flags: PhiCmsFlags.NoTranslate,
     label: labels.widgetLabel,
     config: {
       source: categoriesSource,

@@ -85,7 +85,7 @@ export type PhiDialogControlProps = {
   presentation?: "modal" | "drawer";
   /** The edge a Drawer comes from. */
   placement?: PhiDrawerControlProps["placement"];
-  /** A Drawer's width (or height, from the top or bottom). */
+  /** A Drawer's size, a block's pair: its `width`, or its `height` from the top or bottom. */
   size?: PhiDrawerControlProps["size"];
   onDismiss?: (source: PhiOverlayCloseSource) => void;
   afterOpenChange?: (open: boolean) => void;

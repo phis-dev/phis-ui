@@ -3,7 +3,7 @@ import { PHI_LOCALIZATION_RUNTIME_MODULE_ID } from "../ids";
 import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
 } from "../../../../constants/cms-layout-types";
-import { PhiCmsPageType } from "../../../../constants/phi-cms";
+import { PhiCmsFlags, PhiCmsPageType } from "../../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import type { PhiBlockRuntime } from "../../../../types";
@@ -144,6 +144,8 @@ export async function buildPhiDefaultAdminLocalesPageTree({
         parentLayoutNodeId: SYNTHETIC_ADMIN_LOCALES_LAYOUT_IDS.layoutGrid,
         typeKey: "table",
         slotIndex: 1,
+        // The Module's Label Set, translated already.
+        flags: PhiCmsFlags.NoTranslate,
         label: labels.widgetLabel,
         config: {
           source: {

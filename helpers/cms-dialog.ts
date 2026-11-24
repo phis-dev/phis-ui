@@ -26,8 +26,10 @@ import { PHI_LAYOUT } from "../theme/phi-tokens";
  * - The actions are one compact group, labelled, at the medium size: a dialog asks one question and its
  *   answers belong together.
  * - The width is as wide as its Form needs: the reading measure for a Form of two columns, the narrowest
- *   width that keeps a Form's labels beside its fields for one of one column, full width less the gutter
- *   on a phone either way. A table or an editor states a wider one.
+ *   width that keeps a Form's labels beside its fields for one of one column. A table or an editor states
+ *   a wider one. It is the width of the Overlay's `size`, a block's length (OVERLAYS.md, "Presentation config"),
+ *   and the Modal holds it inside the viewport itself, so a phone gets the full width less the gutter
+ *   without a second value.
  */
 
 /** The body Layout's config: a vertical Flex with the `panel` creation preset under it. */
@@ -54,13 +56,10 @@ export const PHI_DIALOG_COMMANDS_CONFIG = {
 /**
  * A dialog's width where it names none and its Form needs two columns: the reading measure, which is also
  * where a Form's own cap lies, so a Form fills the dialog it opens in. A wider one -- a table, a preview
- * -- says so, and takes its width from the same sequence (`PHI_LAYOUT`).
+ * -- says so, and takes its width from the same sequence (`PHI_LAYOUT`). A dialog states it as
+ * `size: { width: PHI_DIALOG_WIDTH }`.
  */
-export const PHI_DIALOG_WIDTH = {
-  compact: "calc(100vw - 32px)",
-  medium: PHI_LAYOUT.contentMax,
-  wide: PHI_LAYOUT.contentMax,
-} as const;
+export const PHI_DIALOG_WIDTH = PHI_LAYOUT.contentMax;
 
 /**
  * A dialog's width where its Form stands in one column.
@@ -71,11 +70,8 @@ export const PHI_DIALOG_WIDTH = {
  * (`PHI_FORM_RESPONSIVE_MIN_WIDTH.medium`, the same 377), and the Form stands inside the body's inset.
  * So it is that measure plus the inset on both sides -- the Theme's `base` step, whatever it is set to.
  */
-export const PHI_DIALOG_WIDTH_SINGLE_COLUMN = {
-  compact: PHI_DIALOG_WIDTH.compact,
-  medium: `calc(${PHI_LAYOUT.contentMaxNarrow}px + 2 * ${PHI_DIALOG_BODY_CONFIG.padding})`,
-  wide: `calc(${PHI_LAYOUT.contentMaxNarrow}px + 2 * ${PHI_DIALOG_BODY_CONFIG.padding})`,
-} as const;
+export const PHI_DIALOG_WIDTH_SINGLE_COLUMN =
+  `calc(${PHI_LAYOUT.contentMaxNarrow}px + 2 * ${PHI_DIALOG_BODY_CONFIG.padding})`;
 
 /** The widths at which a Form's labels stand beside its fields, and so the ones that have columns. */
 const PHI_DIALOG_FORM_COLUMN_MODES = ["medium", "wide"] as const;
@@ -100,6 +96,6 @@ export function isPhiFormSingleColumn(descriptor: PhiFormDescriptor) {
 }
 
 /** The width a dialog takes for the Form in its body: `PHI_DIALOG_WIDTH_SINGLE_COLUMN` or `PHI_DIALOG_WIDTH`. */
-export function resolvePhiDialogFormWidth(descriptor: PhiFormDescriptor) {
+export function resolvePhiDialogFormWidth(descriptor: PhiFormDescriptor): number | string {
   return isPhiFormSingleColumn(descriptor) ? PHI_DIALOG_WIDTH_SINGLE_COLUMN : PHI_DIALOG_WIDTH;
 }

@@ -3,14 +3,16 @@
 import dynamic from "next/dynamic";
 import { useState } from "react";
 
-import type { PhiCmsOverlayConfig, PhiCmsOverlaySize, PhiOverlayPushBehaviour } from "../../types/cms-overlay";
-import type { PhiOverlayControlCommonProps } from "./phi-overlay-control-contract";
+import type { PhiCmsOverlayConfig, PhiOverlayPushBehaviour } from "../../types/cms-overlay";
+import type { PhiOverlayControlCommonProps, PhiOverlayControlGeometryProps } from "./phi-overlay-control-contract";
 import { usePhiHydrated } from "../state/use-phi-hydrated";
 
-export type PhiDrawerControlProps = PhiOverlayControlCommonProps & {
+/**
+ * `size`, `minSize` and `maxSize` are the block's pairs; the Drawer draws the axis it opens along
+ * (`resolvePhiDrawerGeometry`).
+ */
+export type PhiDrawerControlProps = PhiOverlayControlCommonProps & PhiOverlayControlGeometryProps & {
   placement?: PhiCmsOverlayConfig["placement"];
-  size?: PhiCmsOverlaySize;
-  maxSize?: number;
   resizable?: boolean;
   push?: PhiOverlayPushBehaviour;
   zIndex?: number;

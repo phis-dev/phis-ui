@@ -161,22 +161,31 @@ assert.equal(evaluatePhiRuntimeConditionExpression(formCondition, {
 
 const overlay = parsePhiCmsOverlayConfig({
   controlSize: "medium",
-  width: { compact: "90%", medium: 720 },
+  size: { width: 720 },
+  minSize: { width: 400 },
+  maxSize: { width: "90vw" },
   closeMode: "request",
   padding: 999,
 });
 assert.equal(overlay.controlSize, "medium");
-assert.deepEqual(overlay.width, { compact: "90%", medium: 720, wide: undefined });
+// An Overlay is sized like a block: the three pairs, read by the block's reader, and no `width` beside them.
+assert.deepEqual(overlay.size, { width: 720 });
+assert.deepEqual(overlay.minSize, { width: 400 });
+assert.deepEqual(overlay.maxSize, { width: "90vw" });
+assert.equal("width" in overlay, false);
+assert.equal("width" in parsePhiCmsOverlayConfig({ width: { compact: "90%", medium: 720 } }), false);
 assert.equal(overlay.closeMode, "request");
 assert.equal("padding" in overlay, false);
 assert.deepEqual(readPhiOverlayCloseRequest({ source: "close-button" }), {
   source: "close-button",
 });
 assert.equal(readPhiOverlayCloseRequest({ intent: "close", source: "button" }), null);
-assert.equal(parsePhiCmsOverlayConfig({ width: { compact: "90%", medium: 720 } }, "drawer").width, undefined);
-assert.equal(parsePhiCmsOverlayConfig({ size: 480 }, "drawer").size, 480);
-assert.equal(parsePhiCmsOverlayConfig({ size: 480 }, "modal").size, undefined);
+assert.deepEqual(parsePhiCmsOverlayConfig({ size: { width: 377 }, maxSize: { width: 600 } }, "drawer").size, { width: 377 });
+assert.deepEqual(parsePhiCmsOverlayConfig({ size: { height: 240 }, placement: "bottom" }, "drawer").size, { height: 240 });
+// One value per axis: a profile is not an Overlay's, and states nothing.
+assert.equal(parsePhiCmsOverlayConfig({ size: { width: { compact: 300, wide: 720 } } }).size, undefined);
 assert.equal(parsePhiCmsOverlayConfig({ controlSize: "wide" }).controlSize, undefined);
+assert.equal(parsePhiCmsOverlayConfig({ controlSize: "medium" }, "drawer").controlSize, undefined);
 assert.deepEqual(parsePhiCmsOverlayConfig({}).mask, { appearance: "normal" });
 assert.deepEqual(resolvePhiCmsOverlayBehaviour(parsePhiCmsOverlayConfig({})).mask, {
   appearance: "normal",

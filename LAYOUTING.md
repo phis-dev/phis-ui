@@ -745,7 +745,9 @@ reasoning). The pieces:
   "Room" switch reads `< 377`, `≥ 377`, `≥ 610`, the width of the room in pixels -- narrow first, and
   shows what the cascade puts in an empty field as its placeholder. It keeps the smallest stored form
   that means the same: a length that names only `compact` is stored plain. A Region's own geometry is
-  not a slot child's and is edited at one value (`showProfiles={false}`).
+  not a slot child's and is edited at one value (`showProfiles={false}`). An Overlay's is one value too:
+  the room it is offered is the viewport, and a viewport limit is a `maxSize` in `vw`
+  ([OVERLAYS.md](./OVERLAYS.md#geometry)).
 - What it costs: a `phi-slot` container is layout-contained -- a stacking context and the containing
   block of absolute and fixed descendants. Popups belong in a portal for that reason; the design lists
   what the inventory found.

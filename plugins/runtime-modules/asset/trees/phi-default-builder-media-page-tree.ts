@@ -167,7 +167,7 @@ export async function buildPhiDefaultBuilderMediaPageTree({
         config: {
           title: assetLabels.inspector.inspectorTitle ?? "Asset inspector",
           placement: "right",
-          size: 377,
+          size: { width: 377 },
           mountPolicy: "lazy-keep",
           // A clear pane: the Canvas shows through, frosted.
           surface: { background: { base: { kind: "color", color: "transparent" }, filter: "glass" } },
@@ -246,7 +246,7 @@ export async function buildPhiDefaultBuilderMediaPageTree({
         config: {
           title: assetLabels.editor.createFolderTitle ?? "Create folder",
           controlSize: "medium",
-          width: PHI_DIALOG_WIDTH_SINGLE_COLUMN,
+          size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN },
           flags: PhiCmsFlags.Centered,
           mountPolicy: "remount",
           closeMode: "immediate",
@@ -431,6 +431,8 @@ export async function buildPhiDefaultBuilderMediaPageTree({
         id: PHI_ASSET_MEDIA_PAGE_WIDGET_IDS.widgetMediaPreview,
         parentLayoutNodeId: PHI_ASSET_MEDIA_PAGE_LAYOUT_IDS.layoutContent,
         slotIndex: 0,
+        // The Media label set's words, translated already.
+        flags: PhiCmsFlags.NoTranslate,
         label: "dev media preview",
         config: {
           presentation: {

@@ -42,8 +42,12 @@ const TWO_COLUMNS = form([field("first", PHI_FORM_SIDE_START_HALF), field("last"
 describe("PHI_DIALOG_WIDTH_SINGLE_COLUMN", () => {
   it("leaves a Form the width at which its labels stand beside its fields, inside the body's inset", () => {
     expect(PHI_LAYOUT.contentMaxNarrow).toBe(PHI_FORM_RESPONSIVE_MIN_WIDTH.medium);
-    const narrow = `calc(${PHI_FORM_RESPONSIVE_MIN_WIDTH.medium}px + 2 * ${PHI_DIALOG_BODY_CONFIG.padding})`;
-    expect(PHI_DIALOG_WIDTH_SINGLE_COLUMN).toEqual({ compact: PHI_DIALOG_WIDTH.compact, medium: narrow, wide: narrow });
+    expect(PHI_DIALOG_WIDTH_SINGLE_COLUMN)
+      .toBe(`calc(${PHI_FORM_RESPONSIVE_MIN_WIDTH.medium}px + 2 * ${PHI_DIALOG_BODY_CONFIG.padding})`);
+  });
+
+  it("is one length, as the reading measure is: the Modal holds either inside the viewport itself", () => {
+    expect(PHI_DIALOG_WIDTH).toBe(PHI_LAYOUT.contentMax);
   });
 });
 
@@ -104,14 +108,14 @@ const ids = createPhiPresetCmsInstanceIdMap({
 
 const FORM_ID = "@phis/ui/modules/dialog-width-test/forms/one";
 
-function dialogTree(input: { form?: PhiFormDescriptor; width?: unknown }): PhiResolvedCmsPageTree {
+function dialogTree(input: { form?: PhiFormDescriptor; config?: Record<string, unknown> }): PhiResolvedCmsPageTree {
   const nodes = createPhiCmsPresetNodes(page);
   const dialog = nodes.dialog({
     id: ids.overlay,
     bodyLayoutNodeId: ids.body,
     sortOrder: 0,
     label: "dialog",
-    config: { title: "Dialog", ...(input.width === undefined ? {} : { width: input.width }) },
+    config: { title: "Dialog", ...input.config },
     ...(input.form ? { body: { form: { descriptor: input.form } } } : {}),
   });
   return {
@@ -132,15 +136,16 @@ function dialogTree(input: { form?: PhiFormDescriptor; width?: unknown }): PhiRe
 }
 
 describe("dialog on createPhiCmsPresetNodes", () => {
-  it("takes the width of the Form it is handed, and the reading measure without one", () => {
-    expect(dialogTree({ form: ONE_COLUMN }).overlays[0]!.config.width).toBe(PHI_DIALOG_WIDTH_SINGLE_COLUMN);
-    expect(dialogTree({ form: TWO_COLUMNS }).overlays[0]!.config.width).toBe(PHI_DIALOG_WIDTH);
-    expect(dialogTree({}).overlays[0]!.config.width).toBe(PHI_DIALOG_WIDTH);
+  it("states the width of the Form it is handed as its size, and the reading measure without one", () => {
+    expect(dialogTree({ form: ONE_COLUMN }).overlays[0]!.config.size).toEqual({ width: PHI_DIALOG_WIDTH_SINGLE_COLUMN });
+    expect(dialogTree({ form: TWO_COLUMNS }).overlays[0]!.config.size).toEqual({ width: PHI_DIALOG_WIDTH });
+    expect(dialogTree({}).overlays[0]!.config.size).toEqual({ width: PHI_DIALOG_WIDTH });
+    expect("width" in dialogTree({}).overlays[0]!.config).toBe(false);
   });
 
-  it("keeps a width the caller states", () => {
-    const wide = { compact: "calc(100vw - 32px)", medium: 960 };
-    expect(dialogTree({ form: ONE_COLUMN, width: wide }).overlays[0]!.config.width).toBe(wide);
+  it("keeps a size the caller states, whole", () => {
+    const wide = { width: 960 };
+    expect(dialogTree({ form: ONE_COLUMN, config: { size: wide } }).overlays[0]!.config.size).toBe(wide);
   });
 });
 
@@ -157,7 +162,8 @@ describe("the descriptor compiler's dialog width", () => {
   it("passes the width `dialog` chose, a Form of two columns, a stated width and a Form it cannot see", () => {
     expect(() => assertPhiCmsPresetTreeContract(dialogTree({ form: ONE_COLUMN }), page, forms(ONE_COLUMN))).not.toThrow();
     expect(() => assertPhiCmsPresetTreeContract(dialogTree({}), page, forms(TWO_COLUMNS))).not.toThrow();
-    expect(() => assertPhiCmsPresetTreeContract(dialogTree({ width: 720 }), page, forms(ONE_COLUMN))).not.toThrow();
+    expect(() => assertPhiCmsPresetTreeContract(dialogTree({ config: { size: { width: 720 } } }), page, forms(ONE_COLUMN)))
+      .not.toThrow();
     expect(() => assertPhiCmsPresetTreeContract(dialogTree({}), page, new Map())).not.toThrow();
   });
 });
@@ -174,8 +180,8 @@ describe("checkPhiPresetTreeContract", () => {
     { formId: SECOND_FORM_ID, descriptor },
   ];
   /** Two Forms in one dialog body, as the shop's Gallery dialog held them. */
-  function twoFormDialog(width?: unknown): PhiResolvedCmsPageTree {
-    const tree = dialogTree(width === undefined ? {} : { width });
+  function twoFormDialog(size?: Record<string, unknown>): PhiResolvedCmsPageTree {
+    const tree = dialogTree(size === undefined ? {} : { config: { size } });
     const first = tree.contentWidgets[0]!;
     return {
       ...tree,
@@ -194,9 +200,9 @@ describe("checkPhiPresetTreeContract", () => {
   });
 
   it("finds nothing where the width is stated, a Form has two columns, or no Form is handed over", () => {
-    expect(checkPhiPresetTreeContract(twoFormDialog(PHI_DIALOG_WIDTH_SINGLE_COLUMN), { page, forms: definitions(ONE_COLUMN) })).toEqual([]);
-    expect(checkPhiPresetTreeContract(twoFormDialog({ compact: "calc(100vw - 32px)", medium: 960 }), { page, forms: definitions(ONE_COLUMN) }))
+    expect(checkPhiPresetTreeContract(twoFormDialog({ width: PHI_DIALOG_WIDTH_SINGLE_COLUMN }), { page, forms: definitions(ONE_COLUMN) }))
       .toEqual([]);
+    expect(checkPhiPresetTreeContract(twoFormDialog({ width: 960 }), { page, forms: definitions(ONE_COLUMN) })).toEqual([]);
     expect(checkPhiPresetTreeContract(twoFormDialog(), { page, forms: definitions(TWO_COLUMNS) })).toEqual([]);
     expect(checkPhiPresetTreeContract(twoFormDialog(), { page })).toEqual([]);
   });
@@ -216,5 +222,31 @@ describe("checkPhiPresetTreeContract", () => {
       "Preset loader returned a Page outside its requested context.",
       `Preset widget "${ids.form}" has unresolved parent "${ids.secondForm}".`,
     ]);
+  });
+});
+
+/*
+ * An Overlay is sized like a block, and the two spellings it had before -- the Modal's `width`, the
+ * Drawer's one length -- are read by nothing. A preset still writing them is told so rather than opening
+ * at a width nobody chose.
+ */
+describe("the descriptor compiler's Overlay geometry", () => {
+  it("refuses a `width`, and names the spelling that replaces it", () => {
+    const findings = checkPhiPresetTreeContract(dialogTree({ form: ONE_COLUMN, config: { width: 420 } }), { page });
+    expect(findings.map((finding) => finding.message)).toEqual([
+      expect.stringMatching(/states `width`; an Overlay is sized like a block\. State `size: \{ width \}`/u),
+    ]);
+    expect(findings[0]).toMatchObject({ node: ids.overlay });
+  });
+
+  it("refuses one bare length for size, minSize or maxSize, and passes the pairs", () => {
+    for (const key of ["size", "minSize", "maxSize"]) {
+      expect(checkPhiPresetTreeContract(dialogTree({ form: ONE_COLUMN, config: { [key]: 377 } }), { page })
+        .map((finding) => finding.message)).toEqual([expect.stringContaining(`states \`${key}\` as one length`)]);
+    }
+    expect(checkPhiPresetTreeContract(dialogTree({
+      form: ONE_COLUMN,
+      config: { size: { width: 420 }, minSize: { width: 400 }, maxSize: { width: "90vw" } },
+    }), { page })).toEqual([]);
   });
 });

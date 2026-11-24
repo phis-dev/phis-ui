@@ -374,6 +374,7 @@ export function PhiOverlayContainerClient({
         mountPolicy={config.mountPolicy}
         placement={config.placement}
         size={config.size}
+        minSize={config.minSize}
         maxSize={config.maxSize}
         resizable={behaviour.resizable}
         push={behaviour.push}
@@ -400,8 +401,10 @@ export function PhiOverlayContainerClient({
       mountPolicy={config.mountPolicy}
       centered={behaviour.centered}
       controlSize={runtimeControlSize ?? config.controlSize}
-      size={runtimeSize}
-      width={config.width}
+      size={config.size}
+      minSize={config.minSize}
+      maxSize={config.maxSize}
+      toldSize={runtimeSize}
       containerStyle={surfaceStyle}
       onDismiss={requestClose}
       panelRef={panelRef}

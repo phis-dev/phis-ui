@@ -129,7 +129,7 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
         label: "Builder delete area",
         config: {
           title: revisionsLabels.deleteArea.title,
-          width: PHI_DIALOG_WIDTH_SINGLE_COLUMN,
+          size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN },
           /*
            * `remount` rather than `lazy-keep`: the field is the confirmation, and a dialog that kept a
            * half-typed Area key from the last time it was opened would carry an answer across to a
@@ -442,6 +442,8 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
         id: PHI_REVISIONS_TABLE_WIDGET_ID,
         parentLayoutNodeId: PHI_REVISIONS_PAGE_LAYOUT_IDS.layoutContent,
         slotIndex: 0,
+        // The Module's Label Set, translated already.
+        flags: PhiCmsFlags.NoTranslate,
         label: "dev revisions table",
         config: {
           source: {

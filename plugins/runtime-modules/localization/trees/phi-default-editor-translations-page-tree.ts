@@ -3,7 +3,7 @@ import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
   PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS,
 } from "../../../../constants/cms-layout-types";
-import { PhiCmsPageType } from "../../../../constants/phi-cms";
+import { PhiCmsFlags, PhiCmsPageType } from "../../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import type { PhiBlockRuntime } from "../../../../types";
@@ -93,7 +93,7 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
       label: "editor translation edit modal",
       config: {
         title: widgetLabels.actions.edit,
-        width: { compact: "calc(100vw - 32px)", medium: 640, wide: 720 },
+        size: { width: 720 },
         mountPolicy: "remount",
         closeMode: "request",
         signalRoutes: {
@@ -162,6 +162,8 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
         typeKey: "table",
         slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
         sortOrder: 10,
+        // The Module's Label Set, translated already.
+        flags: PhiCmsFlags.NoTranslate,
         label: labels.widgetLabel,
         config: {
           source: {

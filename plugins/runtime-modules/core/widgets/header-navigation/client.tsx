@@ -136,7 +136,7 @@ export function PhiHeaderNavigationWidgetClient({
             open={drawerOpen}
             presentation="drawer"
             placement="right"
-            size="min(20rem, 85vw)"
+            size={{ width: "min(20rem, 85vw)" }}
             onDismiss={closeDrawer}
           >
             <nav aria-label="Navigation" onClickCapture={closeOnLink}>

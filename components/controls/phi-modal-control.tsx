@@ -5,15 +5,15 @@ import { useState } from "react";
 
 import type { PhiControlSize } from "../../types/control";
 import type { PhiRenderableBlockSize } from "../../types/renderable-block";
-import type { PhiModalWidth, PhiOverlayControlCommonProps } from "./phi-overlay-control-contract";
+import type { PhiOverlayControlCommonProps, PhiOverlayControlGeometryProps } from "./phi-overlay-control-contract";
 import { usePhiHydrated } from "../state/use-phi-hydrated";
 
-export type PhiModalControlProps = PhiOverlayControlCommonProps & {
+export type PhiModalControlProps = PhiOverlayControlCommonProps & PhiOverlayControlGeometryProps & {
   centered?: boolean;
+  /** The width step where `size` names no width (`PHI_MODAL_WIDTH_BY_CONTROL_SIZE`). */
   controlSize?: PhiControlSize;
-  size?: PhiRenderableBlockSize | null;
-  /** One width, or one per responsive mode on the container scale (`PHI_MODAL_RESPONSIVE_MIN_WIDTH`). */
-  width?: PhiModalWidth;
+  /** What a `size` Signal told the open Modal; each axis it names stands over the stated `size`. */
+  toldSize?: PhiRenderableBlockSize | null;
   rootClassName?: string;
 };
 

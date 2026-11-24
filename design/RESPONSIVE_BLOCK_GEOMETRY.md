@@ -240,8 +240,9 @@ without either noticing. An unnamed container would be caught by unnamed queries
 ## What this does not do
 
 - No viewport profiles. A Modal that genuinely hangs on the window says so with `maxSize` in `vw`, not
-  with a second profile system. The Overlay's `{ xs, md, lg }` handed to Ant Design is what goes, once
-  the Overlay adopts block geometry -- which follows this, not the other way round.
+  with a second profile system. The Overlay adopted block geometry on that rule (2026-11-24): `size`,
+  `minSize` and `maxSize` at one value per axis, and its responsive `width` handed to Ant Design is gone
+  (OVERLAYS.md, "Geometry").
 - No per-block thresholds, for the reason above.
 - No profile for `collapsedSizeHint`, `anchor`, padding or gap. Those are separate cases and each would
   need its own argument.
