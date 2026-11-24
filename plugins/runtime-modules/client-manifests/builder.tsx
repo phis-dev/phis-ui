@@ -39,6 +39,18 @@ export const PHI_BUILDER_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
         dynamic(() => import("../../../components/media/phi-asset-focal-rect-widget").then((module) => module.PhiAssetFocalRectWidget)),
       ),
       ],
+      ...([
+        [PhiRuntimeRenderClientType.BuilderBrandThemeControls, "PhiBuilderBrandThemeControlsWidgetClient"],
+        [PhiRuntimeRenderClientType.BuilderBrandThemePreview, "PhiBuilderBrandThemePreviewWidgetClient"],
+        [PhiRuntimeRenderClientType.BuilderBrandStyleControls, "PhiBuilderBrandStyleControlsWidgetClient"],
+        [PhiRuntimeRenderClientType.BuilderBrandBackgroundControls, "PhiBuilderBrandBackgroundControlsWidgetClient"],
+        [PhiRuntimeRenderClientType.BuilderBrandIdentityControls, "PhiBuilderBrandIdentityControlsWidgetClient"],
+      ] as const).map(([type, name]) => [
+        type,
+        definePhiRuntimeModuleRenderClient(
+          dynamic(() => import("../../../plugins/runtime-modules/theme/widgets/brand-controls/client").then((module) => module[name])),
+        ),
+      ] as const),
       [
         PhiRuntimeRenderClientType.BuilderModeSwitch,
         definePhiRuntimeModuleRenderClient(

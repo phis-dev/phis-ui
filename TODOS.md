@@ -389,15 +389,6 @@ and `scripts/validate-todos-wants.ts` refuses the entry once the catalog has one
   that learns a door publishes it, the proxy asks Core on a local miss -- would close it, and needs an
   endpoint and operator approval.
 
-- **The Builder got heavier and nobody said why.** Measured against production builds two weeks apart,
-  between 2026-09-09 and 2026-09-24, the Builder gained **18 scripts, 169 kB over the wire and 479 kB
-  decoded** on a cold load of `/builder/phis/ui/dashboard`. In the same fortnight
-  Public and the landing page each *lost* around 180 kB over the wire and 600 kB decoded.
-
-  The Builder is the surface with the smallest audience and the largest load, so a rise there is the one
-  that should be argued for rather than noticed later. Find what joined its graph and either justify it
-  here or move it out.
-
 - **The Public bundle drifts upward unremarked.** 2026-09-21 to 2026-09-24: **+5,320 raw and +1,457
   gzip**, same script count, measured against a production server. Small, but it has only
   ever gone one way, and the guard reports contents rather than size, so nothing fails when it grows.
