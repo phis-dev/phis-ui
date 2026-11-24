@@ -52,6 +52,9 @@ export function PhiPopoverControl({
       title={title}
       trigger={trigger}
       placement={(placement === "auto" ? undefined : placement) as PopoverProps["placement"]}
+      // Stated rather than left to the default: a popup wider than the room beside its trigger is moved
+      // into the window instead of pushing the page into a sideways scroll.
+      autoAdjustOverflow
       destroyOnHidden={destroyOnHidden}
       arrow={arrow === false ? false : arrow === "point-at-center" ? { pointAtCenter: true } : undefined}
       styles={{

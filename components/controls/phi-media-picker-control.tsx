@@ -81,6 +81,13 @@ export type PhiMediaPickerControlProps = PhiPickerTransactionCallbacks<number | 
   loading?: boolean;
   disabled?: boolean;
   readOnly?: boolean;
+  /**
+   * Where the picker opens; below the trigger unless the caller says otherwise. The library is wider than
+   * most of the panels it is opened from, so beside the trigger it ran past the window's edge and the
+   * page scrolled sideways (the Theme's Link preview, 2026-11-24). Centred below, Ant Design's overflow
+   * adjustment slides it sideways and upwards into the window (a corner placement such as `bottomLeft`
+   * is not slid upwards), and its width is capped to the window.
+   */
   placement?: PhiPickerPlacement;
   showSearchBar?: boolean;
   showFolderFilter?: boolean;
@@ -146,7 +153,7 @@ export function PhiMediaPickerControl({
   loading,
   disabled,
   readOnly,
-  placement = "left",
+  placement = "bottom",
   showSearchBar = true,
   showFolderFilter = true,
   showPagination = true,
