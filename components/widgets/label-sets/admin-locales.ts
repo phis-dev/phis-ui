@@ -42,7 +42,7 @@ const PHI_ADMIN_LOCALES_WIDGET_LABEL_SET = definePhiLabelSet({
     delete_selected_title: definePhiMessageLabel("Delete %1 selected translations?"),
     delete_selected_description: definePhiMessageLabel("The selected translated variants will be deleted permanently."),
     empty_title: definePhiMessageLabel("No translations found."),
-    empty_text: definePhiMessageLabel("No site translations exist for this language yet."),
+    empty_text: definePhiMessageLabel("No site translations exist for this language yet. New translations are entered in Editor > Translations."),
     load_error: definePhiMessageLabel("Failed to load locale data."),
     save_error: definePhiMessageLabel("Failed to save locale data."),
     required_available_locales: definePhiMessageLabel("Select at least one language."),

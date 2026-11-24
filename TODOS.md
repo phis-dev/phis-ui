@@ -319,12 +319,6 @@ and `scripts/validate-todos-wants.ts` refuses the entry once the catalog has one
   and applied through the Phi Control adapters; essential validation, warning, confirmation, and
   accessibility text stays available.
 
-- **admin/locales: say where new translations are made.** The list shows only translations that exist
-  (`listSiteTranslations` joins from `tr_site_lang`), so a locale without any -- English on a German-source
-  Site -- shows "No site translations exist for this language yet." and nothing more. The empty state
-  should say that new translations are entered in Editor > Translations and link there
-  (components/widgets/label-sets/admin-locales.ts `empty_text`). The split stays: Admin manages, the
-  Editor translates.
 - **Last use of a text in the translation Tables.** The data exists -- do not build or measure it again:
   phis-server keeps the day a message was last read in `phis.tr_msg_usage` / `phis.tr_site_msg_usage`
   (`msg_id`, `last_used_on DATE`), written at most once per message and day by
