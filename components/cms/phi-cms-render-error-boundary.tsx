@@ -20,6 +20,8 @@ export type PhiCmsRenderErrorBoundaryProps = {
    * be taken out of the tree it broke.
    */
   renderDiagnostic?: (diagnostic: ReactNode) => ReactNode;
+  /** The block is on a live page, where only Staff read its diagnostic (`PhiCmsRenderDiagnostic`). */
+  live?: boolean;
   children: ReactNode;
 };
 
@@ -57,7 +59,7 @@ export class PhiCmsRenderErrorBoundary extends Component<
         blockId: this.props.blockId,
         moduleId: this.props.moduleId,
         detail: this.state.error.message,
-      }} />;
+      }} live={this.props.live} />;
       return this.props.renderDiagnostic ? this.props.renderDiagnostic(diagnostic) : diagnostic;
     }
 

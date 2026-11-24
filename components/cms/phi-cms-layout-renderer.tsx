@@ -205,10 +205,14 @@ function resolveLayoutRegistryType(type: string) {
  * A block that cannot be drawn, said to the person who can do something about it.
  *
  * In a workspace that is the author: the diagnostic sits in the block's own place, names the type and
- * the Module, and the hole is visible where it has to be repaired. On a live page it is nobody: a
- * visitor cannot switch a Module back on and has no business reading a Module id off a page, so the
- * block is simply absent and the rest of the page stands. The warning is written either way, which is
- * where an operator finds it.
+ * the Module, and the hole is visible where it has to be repaired. On a live page it is Staff, who see
+ * the same card without the notification (`PhiCmsRenderDiagnostic` with `live`): a config that slipped
+ * past the checks where configs are made, a renderer that failed, a node the tree does not hold is a
+ * failure nobody would see otherwise (owner, 2026-11-24). A Module switched off in the Area is not one
+ * -- its blocks leave with it on purpose -- and stays absent for everybody. A visitor sees nothing: they
+ * cannot switch a Module back on and have no business reading a Module id off a page, so the block is
+ * simply absent and the rest of the page stands. The warning is written either way, which is where an
+ * operator finds it.
  */
 function renderCmsDiagnostic(
   issue: PhiCmsRenderIssue,
@@ -223,7 +227,8 @@ function renderCmsDiagnostic(
     error,
     meta: { code: issue.code, detail: issue.detail ?? null, renderMode },
   });
-  return renderMode === "live" ? null : <PhiCmsRenderDiagnostic issue={issue} />;
+  if (renderMode !== "live") return <PhiCmsRenderDiagnostic issue={issue} />;
+  return issue.code === "missing-module" ? null : <PhiCmsRenderDiagnostic issue={issue} live />;
 }
 
 /**
@@ -847,6 +852,8 @@ function wrapPhiRenderedSlotChild(
   if (!isRenderableNode(node)) {
     return node;
   }
+  // On a live page a failed block's diagnostic is Staff's alone (`PhiCmsRenderDiagnostic`).
+  const live = readPhiRuntimeTreeRenderMode((options.config ?? {}) as Record<string, unknown>) === "live";
 
   if (isThenable(node)) {
     /*
@@ -862,7 +869,7 @@ function wrapPhiRenderedSlotChild(
     return node.then(
       (resolvedNode) => wrapPhiRenderedSlotChild(resolvedNode, options),
       (error: unknown) => wrapPhiRenderedSlotChild(
-        <PhiCmsRenderDiagnostic issue={buildPhiRenderFailureIssue(error, options)} />,
+        <PhiCmsRenderDiagnostic issue={buildPhiRenderFailureIssue(error, options)} live={live} />,
         options,
       ),
     ) as unknown as ReactNode;
@@ -885,6 +892,7 @@ function wrapPhiRenderedSlotChild(
         blockId={options.blockId}
         typeKey={options.typeKey}
         moduleId={options.moduleId}
+        live={live}
       >
         {node}
       </PhiCmsRenderErrorBoundary>

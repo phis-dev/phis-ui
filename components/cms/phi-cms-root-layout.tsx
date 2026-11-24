@@ -35,6 +35,8 @@ import {
 import { isPhiCmsGatewayAuthError } from "../../gateway/errors";
 import { PhiRuntimeControllerServerHost } from "../runtime/runtime-controller-server-host";
 import { PhiRuntimeModuleProvider } from "../runtime/runtime-module-context";
+import { PhiWidgetFailureAudienceProvider } from "../widgets/shared/widget-failure-audience";
+import { canPhiViewerReadWidgetFailures } from "../widgets/shared/widget-failure-staff";
 import { PhiModuleIconsProvider } from "../shell/phi-module-icons";
 import { collectPhiModuleIconSets } from "../../helpers/module-icons";
 import { PhiRuntimeModuleDataProviderHost } from "../runtime/runtime-module-data-provider-host";
@@ -290,30 +292,36 @@ export async function PhiCmsAreaBoundary({
         <PhiModuleIconsProvider
           sets={collectPhiModuleIconSets(runtimeModuleScope.moduleSet.moduleDefinitionsById.values())}
         >
-          <PhiRuntimeModuleDataProviderHost
-            providerKeys={[...scope.runtimeRegistry.dataProviderDescriptorsByKey.keys()]}
-          >
-            {areaControllers.registeredControllerSettings && areaControllers.registeredControllerSettings.length > 0 ? (
-              <PhiRuntimeControllerServerHost
-                controllers={areaControllers.registeredControllerSettings}
-                runtime={runtime}
-                registry={areaControllers.controllerDefinitionsByType}
-                controllerModuleIdsByType={runtimeModuleScope.moduleSet.ownerModuleIdByControllerType}
-                runtimeModuleCatalog={scope.runtimeRegistry.runtimeModuleCatalog}
-                serverCapabilities={scope.runtimeRegistry.serverCapabilities}
-              />
-            ) : null}
-            {children}
-            {filteredLayoutTree ? (
-              <PhiCmsOverlayRenderer
-                tree={filteredLayoutTree}
-                runtime={runtime}
-                registry={scope.runtimeRegistry}
-                signalScope="area"
-                deferredOrigin={{ area: runtime.area, root, path: path ?? pagePath ?? null }}
-              />
-            ) : null}
-          </PhiRuntimeModuleDataProviderHost>
+          {/*
+            * Whether a Widget that fails on this live page says so: to Staff, from the viewer this render
+            * already resolved, and to nobody else (components/widgets/shared/widget-failure.tsx).
+            */}
+          <PhiWidgetFailureAudienceProvider staff={canPhiViewerReadWidgetFailures(runtime.viewer)}>
+            <PhiRuntimeModuleDataProviderHost
+              providerKeys={[...scope.runtimeRegistry.dataProviderDescriptorsByKey.keys()]}
+            >
+              {areaControllers.registeredControllerSettings && areaControllers.registeredControllerSettings.length > 0 ? (
+                <PhiRuntimeControllerServerHost
+                  controllers={areaControllers.registeredControllerSettings}
+                  runtime={runtime}
+                  registry={areaControllers.controllerDefinitionsByType}
+                  controllerModuleIdsByType={runtimeModuleScope.moduleSet.ownerModuleIdByControllerType}
+                  runtimeModuleCatalog={scope.runtimeRegistry.runtimeModuleCatalog}
+                  serverCapabilities={scope.runtimeRegistry.serverCapabilities}
+                />
+              ) : null}
+              {children}
+              {filteredLayoutTree ? (
+                <PhiCmsOverlayRenderer
+                  tree={filteredLayoutTree}
+                  runtime={runtime}
+                  registry={scope.runtimeRegistry}
+                  signalScope="area"
+                  deferredOrigin={{ area: runtime.area, root, path: path ?? pagePath ?? null }}
+                />
+              ) : null}
+            </PhiRuntimeModuleDataProviderHost>
+          </PhiWidgetFailureAudienceProvider>
         </PhiModuleIconsProvider>
       </PhiRuntimeModuleProvider>
     </PhiSignalRuntimePartitionProvider>

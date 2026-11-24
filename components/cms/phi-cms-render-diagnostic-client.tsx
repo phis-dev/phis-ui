@@ -41,7 +41,8 @@ function buildIssueKey(issue: PhiCmsRenderIssue) {
   return [issue.kind, issue.type, issue.code, issue.moduleId ?? "unknown"].join(":");
 }
 
-export function PhiCmsRenderDiagnostic({ issue }: { issue: PhiCmsRenderIssue }) {
+/** `quiet` draws the card without the notification, for Staff reading a live page. */
+export function PhiCmsRenderDiagnostic({ issue, quiet = false }: { issue: PhiCmsRenderIssue; quiet?: boolean }) {
   const { showNotification } = usePhiApplicationFeedback();
   const issueKey = buildIssueKey(issue);
   const title = buildIssueTitle(issue);
@@ -52,7 +53,7 @@ export function PhiCmsRenderDiagnostic({ issue }: { issue: PhiCmsRenderIssue }) 
       `[phi-cms-render-diagnostic] ${title}: ${description} ` +
       `(code=${issue.code}, blockId=${issue.blockId ?? "unknown"})`,
     );
-    if (issue.code === "missing-module") {
+    if (quiet || issue.code === "missing-module") {
       return;
     }
     if (notifiedIssueKeys.has(issueKey)) {
@@ -67,7 +68,7 @@ export function PhiCmsRenderDiagnostic({ issue }: { issue: PhiCmsRenderIssue }) 
       placement: "bottomRight",
       durationSeconds: 6,
     });
-  }, [description, issue.blockId, issue.code, issue.detail, issue.kind, issue.moduleId, issue.type, issueKey, showNotification, title]);
+  }, [description, issue.blockId, issue.code, issue.detail, issue.kind, issue.moduleId, issue.type, issueKey, quiet, showNotification, title]);
 
   return (
     <div

@@ -2,7 +2,9 @@
 
 import { useEffect, useEffectEvent } from "react";
 
-import { logPhiWidgetFailure, renderPhiWidgetFailureNotice, type PhiWidgetFailureProps } from "./widget-failure";
+import { logPhiWidgetFailure, type PhiWidgetFailureProps } from "./widget-failure";
+import { usePhiWidgetFailureStaff } from "./widget-failure-audience";
+import { renderPhiWidgetFailureNotice } from "./widget-failure-notice";
 
 /**
  * A Widget's data or configuration failure, found in the browser -- a Provider the Area does not offer,
@@ -14,10 +16,11 @@ import { logPhiWidgetFailure, renderPhiWidgetFailureNotice, type PhiWidgetFailur
  */
 export function PhiWidgetFailure(props: PhiWidgetFailureProps) {
   const { renderMode, widgetType, widgetId, title, description } = props;
+  const staff = usePhiWidgetFailureStaff();
   // `error` is read, not watched: it is a new object whenever the same failure is raised again.
   const log = useEffectEvent(() => logPhiWidgetFailure(props));
   useEffect(() => {
     log();
   }, [description, renderMode, title, widgetId, widgetType]);
-  return renderPhiWidgetFailureNotice(props);
+  return renderPhiWidgetFailureNotice(props, staff);
 }
