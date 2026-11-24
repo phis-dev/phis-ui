@@ -49,8 +49,12 @@ export type PhiFormFieldProviderProps = {
      * shows if somebody submits anyway; `null` releases it. For a value that only arrives later -- an
      * upload whose Asset id comes once the body is there. A submit while a hold stands does not reach
      * the handler: it fails the way a rule fails, on this field and through `onValidationFailed`.
+     *
+     * A field whose parts each say what is wrong with them (the address) passes `onRefused`: a refused
+     * submit then calls it instead of writing the sentence under the whole field, so no part's sentence
+     * stands a second time below the last part.
      */
-    holdSubmit(fieldKey: string, reason: string | null): void;
+    holdSubmit(fieldKey: string, reason: string | null, onRefused?: () => void): void;
   };
   /**
    * The live values of the fields this Form watches -- those a `visibleWhen`, `disabledWhen` or options

@@ -483,13 +483,14 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
    * Fields whose value is not complete yet, and what each says about it (`formContext.holdSubmit`).
    * A ref and not state: it is read at the moment of a submit, and holding one must not render the form.
    */
-  const submitHoldsRef = useRef(new Map<string, string>());
+  const submitHoldsRef = useRef(new Map<string, { reason: string; onRefused?: () => void }>());
 
   async function submit(values: Record<string, unknown>) {
     const holds = [...submitHoldsRef.current];
     if (holds.length > 0) {
-      form.setFields(holds.map(([name, reason]) => ({ name, errors: [reason] })));
-      onValidationFailed?.({ valid: false, errors: Object.fromEntries(holds.map(([name, reason]) => [name, [reason]])) });
+      form.setFields(holds.flatMap(([name, { reason, onRefused }]) => onRefused ? [] : [{ name, errors: [reason] }]));
+      for (const [, { onRefused }] of holds) onRefused?.();
+      onValidationFailed?.({ valid: false, errors: Object.fromEntries(holds.map(([name, { reason }]) => [name, [reason]])) });
       return;
     }
     setSubmitting(true);
@@ -576,18 +577,18 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
   }, [descriptor.fields, formValues, optionFlagFieldKeys, reportedOptionFlags]);
   const fieldFormContext = useMemo(() => ({
     getValues: () => form.getFieldsValue(true),
-    holdSubmit: (fieldKey: string, reason: string | null) => {
+    holdSubmit: (fieldKey: string, reason: string | null, onRefused?: () => void) => {
       const holds = submitHoldsRef.current;
       const held = holds.get(fieldKey);
       if (reason == null) {
         holds.delete(fieldKey);
         // The sentence a refused submit left on the field goes with the hold; any other error stays.
-        if (held != null && form.getFieldError(fieldKey).includes(held)) {
+        if (held != null && form.getFieldError(fieldKey).includes(held.reason)) {
           form.setFields([{ name: fieldKey, errors: [] }]);
         }
         return;
       }
-      holds.set(fieldKey, reason);
+      holds.set(fieldKey, onRefused ? { reason, onRefused } : { reason });
     },
     setValues: (values: Record<string, unknown>) => {
       form.setFields(Object.entries(values).map(([name, value]) => ({ name, value, touched: true })));

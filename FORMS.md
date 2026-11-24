@@ -480,7 +480,8 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   (`helpers/address-field.ts`: `name`, `line1`, `city` and `country` required, the column widths of
   `phis.site_addresses` -- 256, 32 for the postal code, 128 for city and region -- and a country of the
   list): while a part is not, it holds the Form's submit with the first sentence
-  (`formContext.holdSubmit`), and a part says what is wrong with it once it has been left. Its words are
+  (`formContext.holdSubmit`), and a part says what is wrong with it once it has been left or a submit was
+  refused -- under that part only, never again under the whole field. Its words are
   the Form's Label Set's under `PHI_FORM_ADDRESS_LABEL_KEYS` (`components/forms/structured-field-labels.ts`:
   `addressName`, `addressCompanyName`, `addressLine1`, `addressLine2`, `addressPostalCode`, `addressCity`,
   `addressRegion`, `addressCountry`, `addressNameRequired`, `addressLine1Required`, `addressCityRequired`,
@@ -734,7 +735,9 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   order: the Assets now named in, the ones no longer named out (released or kept, its decision).
 - A field Provider whose value is only complete later holds the submit itself through
   `formContext.holdSubmit(fieldKey, reason)` and releases it with `null`. `PhiFormControl` refuses a
-  submit while any hold stands; the handler is not called.
+  submit while any hold stands; the handler is not called. The reason is written under the field, unless
+  the hold passes `onRefused` (`holdSubmit(fieldKey, reason, onRefused)`): a field whose parts each say what
+  is wrong with them -- the address -- is called instead, and shows every part's own sentence.
 - Core validation providers: `required`, `email`, `min-length`, `max-length`, `exact-length`,
   `min-letters`, `matches-field`, `url`, `tel`, `pattern`, `number`. They build Ant Design rules inside
   `PhiFormControl`. `pattern` takes `source` (at most 512 characters) and `flags` from `i`, `m`, `s`, `u`.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ComponentType } from "react";
+import { useCallback, useEffect, useMemo, useState, type ComponentType } from "react";
 
 import { PhiAddressControl } from "../controls/phi-address-control";
 import { PhiCheckboxGroupControl } from "../controls/phi-checkbox-group-control";
@@ -62,10 +62,15 @@ export const PhiAddressFormControl: ComponentType<PhiFormFieldProviderProps> = (
   const [left, setLeft] = useState<ReadonlySet<PhiAddressPart>>(() => new Set());
   const hold = problems[0] ? describeProblem(problems[0], words) : null;
   const holdSubmit = formContext?.holdSubmit;
+  /*
+   * A refused submit leaves every part, so each wrong part says its own sentence under itself. Written
+   * under the whole field as well, the first sentence stood a second time below the country.
+   */
+  const showEveryPart = useCallback(() => setLeft(new Set(PHI_ADDRESS_PARTS)), [setLeft]);
 
   useEffect(() => {
-    holdSubmit?.(field.key, hold);
-  }, [field.key, hold, holdSubmit]);
+    holdSubmit?.(field.key, hold, showEveryPart);
+  }, [field.key, hold, holdSubmit, showEveryPart]);
   useEffect(() => () => holdSubmit?.(field.key, null), [field.key, holdSubmit]);
 
   const errors: Partial<Record<PhiAddressPart, string>> = {};
