@@ -1,9 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { PHI_CUSTOMER_FILE_OWN_FILE_PARAM, PHI_CUSTOMER_FILE_RESOURCE_KEYS as RESOURCES } from "../../../../constants/customer-file";
+import {
+  PHI_CUSTOMER_FILE_MEMBER_PARAM,
+  PHI_CUSTOMER_FILE_OWN_FILE_PARAM,
+  PHI_CUSTOMER_FILE_RESOURCE_KEYS as RESOURCES,
+} from "../../../../constants/customer-file";
 import { PHI_TABLE_PROVIDER_REFUSED_CODE } from "../../../../components/widgets/client/shared/phi-table-provider-refusal";
 import { PHI_THREADS_CUSTOMER_FILE_TABLE_PROVIDER_REGISTRATION as PROVIDER } from "./customer-file-table";
 import { readPhiCustomerFileThreadId } from "./customer-file-read";
+import { queryPhiCustomerFileAddresses } from "./customer-file-addresses";
 
 const FILE = {
   person: {
@@ -28,16 +33,26 @@ function read(resourceKey: string, signal?: AbortSignal) {
   return PROVIDER.query({ resourceKey, query: { filters: { userId: 5 } }, signal } as never);
 }
 
+/** The addresses tiles' Collection, the member as the binding param the Controller forwards. */
+function readAddresses(signal?: AbortSignal, params: Record<string, unknown> = {}) {
+  return queryPhiCustomerFileAddresses({
+    resourceKey: RESOURCES.addresses,
+    query: {},
+    params: { [PHI_CUSTOMER_FILE_MEMBER_PARAM]: 5, ...params },
+    signal,
+  } as never);
+}
+
 afterEach(() => {
   vi.unstubAllGlobals();
 });
 
 describe("the customer file's Provider", () => {
-  it("answers the three resources and the file read for one member at once with one request, and asks again after it settled", async () => {
+  it("answers the person, the conversations, the addresses tiles and the file read for one member at once with one request, and asks again after it settled", async () => {
     const fetchMock = stubFetch();
     const [person, addresses, threads, fileThreadId] = await Promise.all([
       read(RESOURCES.person, new AbortController().signal),
-      read(RESOURCES.addresses, new AbortController().signal),
+      readAddresses(new AbortController().signal),
       read(RESOURCES.threads, new AbortController().signal),
       // The Conversations Controller opening the member's file joins the same request.
       readPhiCustomerFileThreadId(5, new AbortController().signal),
@@ -45,7 +60,7 @@ describe("the customer file's Provider", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0]![0]).toBe("/api/site/members/5/file?page=1&pageSize=25");
     expect(person.rows).toEqual([expect.objectContaining({ userId: 5, displayName: "Ada" })]);
-    expect(addresses.rows).toHaveLength(1);
+    expect(addresses.items).toEqual([expect.objectContaining({ id: 1, line1: "Main Street 1" })]);
     // The file is no row of the conversations: it has a panel of its own.
     expect(threads.rows).toEqual([]);
     expect(fileThreadId).toBe(9);
@@ -71,11 +86,11 @@ describe("the customer file's Provider", () => {
     const first = new AbortController();
     const second = new AbortController();
     const aborted = read(RESOURCES.person, first.signal);
-    const kept = read(RESOURCES.addresses, second.signal);
+    const kept = read(RESOURCES.threads, second.signal);
     first.abort();
     await expect(aborted).rejects.toMatchObject({ name: "AbortError" });
     expect((fetchMock.mock.calls[0]![1] as RequestInit).signal!.aborted).toBe(false);
-    await expect(kept).resolves.toMatchObject({ total: 1 });
+    await expect(kept).resolves.toMatchObject({ rows: [] });
 
     const third = new AbortController();
     const fourth = new AbortController();
@@ -94,6 +109,8 @@ describe("the customer file's Provider", () => {
   it("reads nothing before a member is chosen", async () => {
     const fetchMock = stubFetch();
     await PROVIDER.query({ resourceKey: RESOURCES.person, query: {} } as never);
+    await expect(queryPhiCustomerFileAddresses({ resourceKey: RESOURCES.addresses, query: {}, params: { userId: null } } as never))
+      .resolves.toMatchObject({ items: [], total: 0 });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -105,10 +122,13 @@ describe("the customer file's Provider", () => {
       query: { filters: { userId: 5 } },
       params: { [PHI_CUSTOMER_FILE_OWN_FILE_PARAM]: notice },
     } as never)).rejects.toMatchObject({ code: PHI_TABLE_PROVIDER_REFUSED_CODE, message: notice });
-    await expect(read(RESOURCES.addresses)).rejects.toMatchObject({
+    await expect(read(RESOURCES.threads)).rejects.toMatchObject({
       code: PHI_TABLE_PROVIDER_REFUSED_CODE,
       message: "Nobody reaches their own file.",
     });
+    // The tiles answer no addresses and say the Page's sentence where they would be.
+    await expect(readAddresses(undefined, { [PHI_CUSTOMER_FILE_OWN_FILE_PARAM]: notice }))
+      .resolves.toMatchObject({ items: [], meta: { emptyDescription: notice } });
   });
 
   it("opens no file for the reader's own, and fails any other refusal", async () => {
@@ -121,5 +141,10 @@ describe("the customer file's Provider", () => {
   it("fails any other refusal as the source's failure", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => Response.json({ error: "No member of this Site has this id." }, { status: 404 })));
     await expect(read(RESOURCES.person)).rejects.toMatchObject({ code: "request-failed" });
+    await expect(readAddresses()).rejects.toMatchObject({ code: "request-failed" });
+  });
+
+  it("no longer answers addresses as a Table: they are the tiles' Collection", async () => {
+    await expect(read(RESOURCES.addresses)).rejects.toMatchObject({ code: "resource-not-found" });
   });
 });

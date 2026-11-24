@@ -12,13 +12,17 @@ import type { getPhiAppAddressesLabels } from "./addresses-label-set";
 type Labels = Awaited<ReturnType<typeof getPhiAppAddressesLabels>>;
 
 /**
- * The account's addresses on the Profile page: one panel holding the Table, and the two dialogs it opens.
+ * The account's addresses on the Profile page: one panel holding the address tiles, and the two dialogs
+ * they open.
  *
- * Arranged as the Admin's provider installations are (the Settings shell's overlays): `+` in the Table's
- * toolbar opens the add dialog, the row's pencil the change dialog, whose Form reads the row it was opened
- * on; either Form's success reads the Table again. Removing and the two defaults are the Table's own
- * Provider acts. An address is a row of a list somebody keeps, not a part of the page, so a panel per
- * Form would describe things nobody is looking at.
+ * A Collection View drawn by Core's address renderer (`PHI_SITE_ADDRESS_ITEM_RENDERER_KEY`, COLLECTIONS.md
+ * "The address renderer"), arranged as the Admin's provider installations are (the Settings shell's
+ * overlays): `+` in its toolbar announces `create` and opens the add dialog, a tile's pencil announces
+ * `edit` with the address id and opens the change dialog, whose Form reads that address through the same
+ * Provider (`recordOpen` on `collection-action`, FORMS.md "A record opened from a Collection View"); either
+ * Form's success reads the tiles again. Removing (after its confirmation) and the two defaults are the
+ * Provider's actions, each answered by the list as it now stands. An address is an item of a list somebody
+ * keeps, not a part of the page, so a panel per Form would describe things nobody is looking at.
  */
 export function buildPhiAccountAddressesPanel(labels: Labels, presetKey: string): {
   panel: PhiSettingsPageShellPanel;
@@ -29,7 +33,7 @@ export function buildPhiAccountAddressesPanel(labels: Labels, presetKey: string)
     { domain: "page", ownerModuleId: PHI_APP_RUNTIME_MODULE_ID, presetKey },
     ["widgetAddresses", "overlayAddressCreate", "overlayAddressEdit", "overlayAddressEditForm"],
   );
-  const tableAddress = createPhiSignalAddress("cms", ids.widgetAddresses);
+  const viewAddress = createPhiSignalAddress("cms", ids.widgetAddresses);
   const editFormAddress = createPhiSignalAddress("cms", ids.overlayAddressEditForm);
   const source = { providerKey: PHI_APP_ADDRESSES_DATA_PROVIDER_KEY, resourceKey: PHI_APP_ADDRESSES_RESOURCE_KEY };
   const actionTo = (routeKey: string, receiver: string) => ({
@@ -39,18 +43,18 @@ export function buildPhiAccountAddressesPanel(labels: Labels, presetKey: string)
     channel: "action",
     action: "activate" as const,
     valueType: "json" as const,
-    valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
+    valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.collectionAction,
     receiver,
   });
-  // The Table's reload takes no value, and a listener matches on the value type too.
-  const reloadTable = (routeKey: string) => ({
+  // The View's reload takes no value, and a listener matches on the value type too.
+  const reloadView = (routeKey: string) => ({
     routeKey,
     capabilityId: "submitSuccess",
     scope: "page" as const,
     channel: "reload",
     action: "activate" as const,
     valueType: "none" as const,
-    receiver: tableAddress,
+    receiver: viewAddress,
   });
 
   return {
@@ -60,79 +64,32 @@ export function buildPhiAccountAddressesPanel(labels: Labels, presetKey: string)
       description: labels.panel.description,
       sections: [{
         nodeKey: "widgetAddresses",
-        typeKey: "table",
+        typeKey: "collection-view",
         label: labels.tableLabel,
         config: {
           source,
           presentation: {
+            mode: "grid",
             controlSize: "small",
-            layout: { mode: "auto", overflowX: "auto" },
-            columns: [
-              { key: "name", fieldKey: "name", title: labels.columns.name, sizing: { mode: "content" } },
-              { key: "lines", fieldKey: "lines", title: labels.columns.address, sizing: { mode: "fill" } },
-              {
-                key: "purposes",
-                fieldKey: "purposes",
-                title: labels.columns.purposes,
-                renderer: "tags",
-                sizing: { mode: "content" },
-                valueMap: labels.purposes,
-                tagColorMap: { billing: "default", shipping: "default", defaultBilling: "processing", defaultShipping: "processing" },
+            emptyDescription: `${labels.empty.title} ${labels.empty.text}`,
+            // The tiles' words, from the Module's Label Set (the renderer's English under them).
+            labels: {
+              purposes: labels.purposes,
+              actions: {
+                edit: labels.actions.edit,
+                remove: labels.actions.remove,
+                defaultBilling: labels.actions.defaultBilling,
+                defaultShipping: labels.actions.defaultShipping,
               },
-            ],
-            emptyState: { title: labels.empty.title, description: labels.empty.text },
-            footer: {
-              template: labels.footer,
-              values: [{ key: "addresses", value: { source: "core", fieldKey: "totalRows" } }],
-              align: "start",
+              remove: { title: labels.remove.title, text: labels.remove.text, ok: labels.remove.ok, cancel: labels.cancel },
             },
           },
           features: {
-            pagination: { enabled: false },
-            sorting: { mode: "none" },
             tools: { mode: "self-contained", reset: false, reload: false },
             actions: {
-              rowLayout: "compact",
-              toolbar: [{
-                key: "create",
-                label: labels.actions.add,
-                icon: "plus",
-                display: "icon",
-                mode: "primary",
-                execution: "signal",
-              }],
-              row: [
-                { key: "edit", label: labels.actions.edit, icon: "edit", display: "icon", execution: "signal" },
-                {
-                  key: "makeDefaultBilling",
-                  label: labels.actions.defaultBilling,
-                  icon: "antd:file-text",
-                  display: "icon",
-                  execution: "provider",
-                },
-                {
-                  key: "makeDefaultShipping",
-                  label: labels.actions.defaultShipping,
-                  icon: "antd:shopping",
-                  display: "icon",
-                  execution: "provider",
-                },
-                {
-                  key: "delete",
-                  label: labels.actions.remove,
-                  icon: "antd:delete",
-                  display: "icon",
-                  mode: "danger",
-                  execution: "provider",
-                  confirm: {
-                    title: labels.remove.title,
-                    description: labels.remove.text,
-                    okText: labels.remove.ok,
-                    cancelText: labels.cancel,
-                  },
-                },
-              ],
+              toolbar: [{ key: "create", label: labels.actions.add, icon: "plus", display: "icon", mode: "primary" }],
             },
+            pagination: { enabled: false },
           },
           signalRoutes: {
             // One announcement, three listeners; each decides by the action key whether it was meant.
@@ -148,7 +105,7 @@ export function buildPhiAccountAddressesPanel(labels: Labels, presetKey: string)
               channel: "reload",
               action: "activate",
               valueType: "none",
-              receiver: tableAddress,
+              receiver: viewAddress,
             }],
           },
         },
@@ -159,28 +116,30 @@ export function buildPhiAccountAddressesPanel(labels: Labels, presetKey: string)
         nodeKey: "overlayAddressCreate",
         title: labels.addTitle,
         openActionKey: "create",
+        openValueSchema: PHI_SIGNAL_VALUE_SCHEMAS.collectionAction,
         formId: PHI_APP_FORM_IDS.addressCreate,
         size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN },
         label: labels.addTitle,
         submitLabel: labels.save,
         cancelLabel: labels.cancel,
-        configOverrides: { signalRoutes: { emits: [reloadTable("app-address-create-success")] } },
+        configOverrides: { signalRoutes: { emits: [reloadView("app-address-create-success")] } },
       },
       {
         nodeKey: "overlayAddressEdit",
         title: labels.editTitle,
         openActionKey: "edit",
+        openValueSchema: PHI_SIGNAL_VALUE_SCHEMAS.collectionAction,
         formId: PHI_APP_FORM_IDS.addressEdit,
         size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN },
         label: labels.editTitle,
         submitLabel: labels.save,
         cancelLabel: labels.cancel,
         configOverrides: {
-          // The Form reads the row the same action opened the dialog with; both filter on this key.
+          // The Form reads the address the same action opened the dialog with; both filter on this key.
           source,
           openActionKey: "edit",
           signalRoutes: {
-            emits: [reloadTable("app-address-edit-success")],
+            emits: [reloadView("app-address-edit-success")],
             listens: [{
               routeKey: "app-address-edit-open",
               capabilityId: "recordOpen",
@@ -188,7 +147,7 @@ export function buildPhiAccountAddressesPanel(labels: Labels, presetKey: string)
               channel: "action",
               action: "activate",
               valueType: "json",
-              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.collectionAction,
               receiver: editFormAddress,
             }],
           },

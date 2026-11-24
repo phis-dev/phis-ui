@@ -77,6 +77,15 @@ export type PhiCmsCollectionViewWidgetConfig = PhiCmsWidgetConfigBase & {
       /** The one kind the upload takes and the picker lists. Absent: the upload takes every kind, the picker lists images. */
       mediaType?: PhiMediaKindValue;
     };
+    /**
+     * Choosing an item, prepared for the Shop's checkout (an address to deliver to) and read by the address
+     * renderer (`PHI_SITE_ADDRESS_ITEM_RENDERER_KEY`) only: `single` lets one tile be chosen, and the choice
+     * goes out on the Widget's `selection` output as `{ addressId }` (`site-address-selection`, the
+     * resource's `selectionValueSchema`). Absent: nothing is chosen. Nothing reads the choice yet.
+     */
+    selection?: {
+      mode: "single";
+    };
     pagination?: {
       enabled: boolean;
       pageSize?: number;

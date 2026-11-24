@@ -5,8 +5,8 @@ import { definePhiMessageLabel, definePhiRuntimeModuleLabelSet, getPhiLabelSet }
 import { PHI_APP_RUNTIME_MODULE_IDENTITY } from "../ids";
 
 /**
- * What the account's addresses say: the panel, the Table's columns and acts, and the two dialogs that add
- * an address and change one. One set for all of it, because the Forms and the Table name the same parts.
+ * What the account's addresses say: the panel, the tiles' marks and acts, and the two dialogs that add an
+ * address and change one. One set for all of it, because the Forms and the tiles name the same parts.
  */
 const PHI_APP_ADDRESSES_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_APP_RUNTIME_MODULE_IDENTITY, {
   key: "preset:account-addresses",
@@ -15,16 +15,12 @@ const PHI_APP_ADDRESSES_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_APP_RUNTI
     panel_title: "Addresses",
     panel_description: definePhiMessageLabel("Where invoices are made out to and orders are sent on this site."),
     table_label: "addresses",
-    column_name: "Name",
-    column_address: "Address",
-    column_purposes: "Used for",
     purpose_billing: "Billing",
     purpose_shipping: "Shipping",
     purpose_default_billing: "Default billing",
     purpose_default_shipping: "Default shipping",
     empty_title: definePhiMessageLabel("No address yet."),
     empty_text: definePhiMessageLabel("Add one for invoices or deliveries; it is kept for this site only."),
-    footer: "%1 addresses",
     action_add: "Add address",
     action_edit: "Change",
     action_default_billing: "Use for billing by default",
@@ -65,7 +61,6 @@ export async function getPhiAppAddressesLabels(options: PhiGlobalTranslatorOptio
   return {
     panel: { title: labels.panel_title, description: labels.panel_description },
     tableLabel: labels.table_label,
-    columns: { name: labels.column_name, address: labels.column_address, purposes: labels.column_purposes },
     purposes: {
       billing: labels.purpose_billing,
       shipping: labels.purpose_shipping,
@@ -73,7 +68,6 @@ export async function getPhiAppAddressesLabels(options: PhiGlobalTranslatorOptio
       defaultShipping: labels.purpose_default_shipping,
     },
     empty: { title: labels.empty_title, text: labels.empty_text },
-    footer: labels.footer,
     actions: {
       add: labels.action_add,
       edit: labels.action_edit,

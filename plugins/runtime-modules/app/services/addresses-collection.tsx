@@ -12,15 +12,15 @@ import {
   type ReadPhiTableProviderResponseOptions,
 } from "../../../../components/widgets/client/shared/phi-table-provider-response";
 import {
-  createPhiTableProviderClient,
-  type PhiTableProviderRegistration,
-} from "../../../../components/widgets/client/shared/phi-table-provider";
-import {
-  PhiTableProviderError,
-  type PhiTableProviderMutationRequest,
-  type PhiTableProviderQueryRequest,
-  type PhiTableProviderRecordRequest,
-} from "../../../../types/table-widget";
+  createPhiCollectionProviderClient,
+  type PhiCollectionProviderRegistration,
+} from "../../../../components/widgets/client/shared/phi-collection-provider";
+import type {
+  PhiCollectionProviderActionRequest,
+  PhiCollectionProviderData,
+  PhiCollectionProviderQueryRequest,
+  PhiCollectionProviderRecordRequest,
+} from "../../../../types/collection-provider";
 import { PHI_APP_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../data-providers";
 import { PHI_APP_ADDRESSES_DATA_PROVIDER_KEY, PHI_APP_ADDRESSES_RESOURCE_KEY } from "../ids";
 import { PHI_SITE_ADDRESS_TEXT_KEYS, toPhiSiteAddressRow } from "../../../../helpers/site-address-row";
@@ -38,7 +38,7 @@ const listed = new Map<number, Record<string, unknown>>();
 
 function requireResource(resourceKey: string) {
   if (resourceKey !== PHI_APP_ADDRESSES_RESOURCE_KEY) {
-    throw new PhiTableProviderError("resource-not-found", `Unknown addresses resource "${resourceKey}".`);
+    throw new Error(`Unknown addresses resource "${resourceKey}".`);
   }
 }
 
@@ -56,18 +56,23 @@ async function readAddresses(signal: AbortSignal | undefined) {
   return items;
 }
 
-async function queryAddresses({ resourceKey, signal }: PhiTableProviderQueryRequest) {
-  requireResource(resourceKey);
-  const rows = (await readAddresses(signal)).map(toPhiSiteAddressRow);
-  return { rows, total: rows.length };
+async function listAddresses(signal: AbortSignal | undefined): Promise<PhiCollectionProviderData> {
+  const items = (await readAddresses(signal)).map(toPhiSiteAddressRow);
+  return { resourceKey: PHI_APP_ADDRESSES_RESOURCE_KEY, items, total: items.length, loading: false, error: null };
 }
 
-async function readAddressRecord({ resourceKey, rowIdentity, signal }: PhiTableProviderRecordRequest) {
+async function queryAddresses({ resourceKey, signal }: PhiCollectionProviderQueryRequest) {
+  requireResource(resourceKey);
+  return listAddresses(signal);
+}
+
+/** One address for the change Form, opened from its tile: read from the list, as Core has no single read. */
+async function readAddressRecord({ resourceKey, rowIdentity, signal }: PhiCollectionProviderRecordRequest) {
   requireResource(resourceKey);
   const id = readPhiPositiveInteger(rowIdentity);
   const address = (await readAddresses(signal)).find((item) => item.id === id);
   if (!id || !address) {
-    throw new PhiTableProviderError("record-not-found", "This address is no longer one of yours.");
+    throw new Error("This address is no longer one of yours.");
   }
   return toPhiSiteAddressRow(address);
 }
@@ -86,13 +91,15 @@ export function buildPhiAppAddressDefaultRequest(address: Record<string, unknown
   };
 }
 
-async function mutateAddresses(request: PhiTableProviderMutationRequest) {
+/*
+ * A removal and the two defaults, each answered by the list as it now stands: a default moves from the
+ * address that held it, and a removal takes a tile. `create` and `edit` are announced by the tiles and
+ * open the Module's two Forms; they never reach here.
+ */
+async function actOnAddress(request: PhiCollectionProviderActionRequest): Promise<PhiCollectionProviderData> {
   requireResource(request.resourceKey);
-  if (request.kind !== "action") {
-    throw new PhiTableProviderError("mutation-not-supported", "Addresses are changed through their dialog, never in a cell.");
-  }
-  const id = readPhiPositiveInteger(request.rowIdentity);
-  if (!id) throw new PhiTableProviderError("invalid-query", "An address id is required.");
+  const id = readPhiPositiveInteger(request.itemKey);
+  if (!id) throw new Error("An address id is required.");
   const init = createPhiTableProviderRequestInit(request.signal);
   if (request.actionKey === "delete") {
     await readPhiTableProviderResponse<unknown>(
@@ -101,7 +108,7 @@ async function mutateAddresses(request: PhiTableProviderMutationRequest) {
     );
   } else if (request.actionKey === "makeDefaultBilling" || request.actionKey === "makeDefaultShipping") {
     const address = listed.get(id);
-    if (!isPhiRecord(address)) throw new PhiTableProviderError("record-not-found", "This address is no longer listed.");
+    if (!isPhiRecord(address)) throw new Error("This address is no longer listed.");
     await readPhiTableProviderResponse<unknown>(
       await fetch(PHI_APP_ADDRESSES_PATH, {
         ...init,
@@ -112,21 +119,22 @@ async function mutateAddresses(request: PhiTableProviderMutationRequest) {
       RESPONSE_OPTIONS,
     );
   } else {
-    throw new PhiTableProviderError("action-not-supported", `Unsupported addresses action "${request.actionKey}".`);
+    throw new Error(`Unsupported addresses action "${request.actionKey}".`);
   }
-  // A default moves from the address that held it, and a removal takes a row: the view is read again.
-  return { status: "accepted" as const, invalidation: "view" as const };
+  return listAddresses(request.signal);
 }
 
 const resources = PHI_APP_RUNTIME_DATA_PROVIDER_DESCRIPTORS
   .find((descriptor) => descriptor.key === PHI_APP_ADDRESSES_DATA_PROVIDER_KEY)?.resources ?? [];
 
-export const PHI_APP_ADDRESSES_TABLE_PROVIDER_REGISTRATION = {
+export const PHI_APP_ADDRESSES_COLLECTION_PROVIDER_REGISTRATION = {
   key: PHI_APP_ADDRESSES_DATA_PROVIDER_KEY,
   resources,
   query: queryAddresses,
   readRecord: readAddressRecord,
-  mutate: mutateAddresses,
-} satisfies PhiTableProviderRegistration;
+  action: actOnAddress,
+} satisfies PhiCollectionProviderRegistration;
 
-export const PhiAppAddressesTableProviderClient = createPhiTableProviderClient(PHI_APP_ADDRESSES_TABLE_PROVIDER_REGISTRATION);
+export const PhiAppAddressesCollectionProviderClient = createPhiCollectionProviderClient(
+  PHI_APP_ADDRESSES_COLLECTION_PROVIDER_REGISTRATION,
+);

@@ -18,9 +18,10 @@ export const PHI_APP_RUNTIME_MODULE_IDENTITY = {
 
 /**
  * The signed-in person's own addresses on this Site (phis-server `GET /api/site/account/addresses`,
- * `users:v1`), as the account lists, adds, changes and removes them.
+ * `users:v1`), as the account lists, adds, changes and removes them: a Collection drawn as address tiles
+ * (`PHI_SITE_ADDRESS_ITEM_RENDERER_KEY`).
  */
-export const PHI_APP_ADDRESSES_DATA_PROVIDER_KEY = createPhiSharedRuntimeDataProviderKey("tables", "app-addresses");
+export const PHI_APP_ADDRESSES_DATA_PROVIDER_KEY = createPhiSharedRuntimeDataProviderKey("collections", "app-addresses");
 
 /** The one resource the addresses Provider answers. */
 export const PHI_APP_ADDRESSES_RESOURCE_KEY = "addresses";

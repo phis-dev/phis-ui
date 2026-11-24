@@ -55,6 +55,9 @@ draws reuses the shipped renderer and writes a Provider, never a renderer of its
   [The Media renderer](#the-media-renderer).
 - **Cards** (a list of records with a title, a picture, a figure, a plan): `PhiCardCollectionViewBinding`
   with `presentation.card` ([Card presentation](#card-presentation-and-resource-owned-views)).
+- **Addresses of a Site's book** (an account's own, a customer file's, a checkout's choice): the address
+  renderer, `PHI_SITE_ADDRESS_ITEM_RENDERER_KEY` (`@phis/ui/constants`), items in the shape
+  `toPhiSiteAddressRow` gives them -- see [The address renderer](#the-address-renderer).
 
 A Module registers a renderer of its own only for items no shipped renderer draws, and it states why in
 its own documentation. A Module renderer that draws `PhiMediaAssetTileControl`s, a confirm dialog and an
@@ -213,6 +216,54 @@ What it needs from the resource:
 A Page with a Collection View this renderer draws mounts the Media library's Provider for its picker and
 upload wall (`collectPhiRuntimeDataProviderKeys`), where a Module of the Area serves it.
 
+### The address renderer
+
+`PHI_SITE_ADDRESS_ITEM_RENDERER_KEY` (`constants/site-address.ts`, owned by Core) draws a Collection's
+items as the addresses of a Site's book (`PhisSiteAddress`), one `PhiCardControl` each in the View's grid
+-- `presentation.mode`, `gap` and `minColumnWidth` as for any View, no layout of its own
+(`plugins/runtime-modules/core/widgets/collection-view/site-address-binding.tsx`). Its first users are the
+App profile's Addresses panel (`collections/app-addresses`) and the Accounting customer file
+(`collections/threads-customer-file-addresses`, read-only); the Shop's checkout is to be the next.
+
+- **Items** in the shape `toPhiSiteAddressRow` answers (`helpers/site-address-row.ts`): `id`, the parts
+  (`companyName`, `name`, `line1`, `line2`, `postalCode`, `city`, `region`, `country`), `purposes` and the
+  four marks. `id` is the address id and the item's key, so `itemIdentityPath` is `"id"`; an item without a
+  positive whole id is not drawn. A tile's heading is the company where there is one, else the name; the
+  body is the name under a company, then each part a line, the country named in the reader's language;
+  the purposes and defaults are tags, the defaults in the Theme's processing colour
+  (`readPhiSiteAddressTile`, `site-address-tiles.ts`).
+- **Item actions**, offered only where the resource declares them at item scope -- a resource that
+  declares none, as the customer file's, is read-only:
+  - `edit`: announced on `actionActivate` as `{ actionKey: "edit", itemKey }`. A record-bound Form with
+    `openActionKey: "edit"` on the same `source` opens on it and reads the address through the Provider's
+    `readRecord` (the resource declares `recordRead: true`), and an Overlay with the same key opens around
+    it ([FORMS.md](./FORMS.md#form-widget), "A record opened from a Collection View").
+  - `makeDefaultBilling`, `makeDefaultShipping`: the Provider's actions (`itemKey` the address id), each
+    offered only on a tile that does not already hold that default.
+  - `delete`: the Provider's action, after a confirmation in the placement's words.
+
+  The Provider answers each with the collection as it now stands, which is shown at once. A refusal is
+  said as an application message, the Provider's words where it gave some, else `labels.failed`.
+- **Toolbar actions** (`features.actions.toolbar`, the View's header) are announced as
+  `{ actionKey, query }` -- the App's `create` opens its add dialog. Each must be declared by the resource
+  at resource scope; one it does not declare is the Widget's failure (`readPhiSiteAddressToolFailure`),
+  never a button that does nothing. `features.tools.reload` adds the reload.
+- **Choosing an address, prepared**: `features.selection: { mode: "single" }` puts a Choose on every tile
+  and says the chosen address on the View's `selection` output as `{ addressId }`, under the resource's
+  `selectionValueSchema`, `PHI_SIGNAL_VALUE_SCHEMAS.siteAddressSelection` (`site-address-selection`). It is
+  read by this renderer only, strictly (a mode other than `single` is a config error), and a resource that
+  declares no `selectionValueSchema` makes it the Widget's failure. Nothing reads the choice yet: it is
+  there for the Shop's checkout, which is not built.
+- **Labels** are the placement's `presentation.labels`, in the reader's language from the Page's Label
+  Set, laid over the renderer's English group by group (`PhiSiteAddressRendererLabels`): `purposes`
+  (`billing`, `shipping`, `defaultBilling`, `defaultShipping`), `actions` (`edit`, `remove`,
+  `defaultBilling`, `defaultShipping`, `select`, `reload`), `remove` (`title`, `text`, `ok`, `cancel`),
+  `empty` and `failed`. `presentation.emptyDescription` is the sentence for no addresses, unless the
+  Provider answers one of its own in `meta.emptyDescription` -- the customer file's for the reader's own
+  file, which Core refuses.
+- **No footer.** A Table's footer rule (`checkPhiPresetTables`) is a Table's: it judges `table` Widgets
+  only, and a Collection View is not one of them.
+
 Provider query results (`PhiCollectionProviderData`) contain `resourceKey`, `items`, authoritative
 `total`, `loading`, `error`, and optional Provider-owned `meta`. Presentation config is never sent to the Provider. Filtering and pagination
 always operate on stable query values, and a filter or search change resets `page` to `1`.
@@ -257,6 +308,7 @@ features
 ├── ordered toolbar action presentation
 ├── reorder: enabled, optional actionKey (default "reorder")
 ├── media: folderPath, mediaType (the Media renderer's, see above)
+├── selection: mode single (the address renderer's, prepared, see above)
 └── pagination
 
 initialQuery

@@ -27,7 +27,7 @@ export function buildPhiCustomerFilePath(userId: number, page: URLSearchParams |
  * The first page, as every reader of one choice asks for it: the person, their addresses, the file panel
  * and the conversations Table on a new choice all name this path, so they share one request.
  */
-function buildPhiCustomerFileFirstPagePath(userId: number) {
+export function buildPhiCustomerFileFirstPagePath(userId: number) {
   return buildPhiCustomerFilePath(userId, buildPhiTablePageParams({}, PHI_CUSTOMER_FILE_THREADS_PAGE_SIZE));
 }
 

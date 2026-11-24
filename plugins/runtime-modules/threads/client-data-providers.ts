@@ -16,4 +16,10 @@ export const PHI_THREADS_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS = [
     loadLive: async () =>
       (await import("./services/customer-file-table")).PhiThreadsCustomerFileTableProviderClient,
   },
+  {
+    key: PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS.customerFileAddresses,
+    ownerModuleId: PHI_THREADS_RUNTIME_MODULE_ID,
+    loadLive: async () =>
+      (await import("./services/customer-file-addresses")).PhiThreadsCustomerFileAddressesProviderClient,
+  },
 ] satisfies readonly PhiRuntimeModuleDataProviderClientDefinition[];

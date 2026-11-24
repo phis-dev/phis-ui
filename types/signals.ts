@@ -138,6 +138,8 @@ export const PHI_SIGNAL_VALUE_SCHEMAS = {
   runtimeConditionState: createPhiSharedSignalValueSchema("runtime-condition-state"),
   runtimeNavigation: createPhiSharedSignalValueSchema("runtime-navigation"),
   runtimeTheme: createPhiSharedSignalValueSchema("runtime-theme"),
+  /** One address of a Site's book chosen among the address tiles: `{ addressId }` (COLLECTIONS.md, "The address renderer"). */
+  siteAddressSelection: createPhiSharedSignalValueSchema("site-address-selection"),
   authWorkflowState: createPhiSharedSignalValueSchema("auth-workflow-state"),
   stackMeta: createPhiSharedSignalValueSchema("stack-meta"),
   tableAction: createPhiSharedSignalValueSchema("table-action"),

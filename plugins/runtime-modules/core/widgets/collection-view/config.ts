@@ -122,6 +122,13 @@ function readMediaFeatures(value: Record<string, unknown>): NonNullable<PhiCmsCo
   };
 }
 
+/* Choosing an item (`features.selection`), read strictly: a mode the renderer does not know is a `PhiConfigError`. */
+function readSelectionFeatures(value: Record<string, unknown>): NonNullable<PhiCmsCollectionViewWidgetConfig["features"]["selection"]> {
+  const reader = createPhiConfigReader(value, "features.selection");
+  const mode = reader.oneOf("mode", ["single"] as const);
+  return { mode: mode ?? reader.fail("mode", "single") };
+}
+
 function readInitialQuery(value: unknown): PhiCollectionProviderQuery | undefined {
   if (!isPhiRecord(value)) return undefined;
   const page = readNumber(value.page);
@@ -153,6 +160,7 @@ function normalizePhiCmsCollectionViewWidgetConfig(config: unknown): PhiCmsColle
   const pagination = isPhiRecord(features.pagination) ? features.pagination : null;
   const reorder = isPhiRecord(features.reorder) ? features.reorder : null;
   const media = isPhiRecord(features.media) ? features.media : null;
+  const selection = isPhiRecord(features.selection) ? features.selection : null;
   return {
     presentation: {
       title: readString(presentation.title),
@@ -183,6 +191,7 @@ function normalizePhiCmsCollectionViewWidgetConfig(config: unknown): PhiCmsColle
         actionKey: readString(reorder.actionKey)?.trim() || undefined,
       } : undefined,
       media: media ? readMediaFeatures(media) : undefined,
+      selection: selection ? readSelectionFeatures(selection) : undefined,
       pagination: pagination ? {
         enabled: readBoolean(pagination.enabled) ?? true,
         pageSize: readNumber(pagination.pageSize),

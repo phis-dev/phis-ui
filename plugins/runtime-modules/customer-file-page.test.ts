@@ -17,6 +17,7 @@ import { validatePhiTableWidgetBinding } from "../../types/table-widget";
 import { PHI_TABLE_WIDGET_DEFINITION } from "./core/widgets/table/config";
 import { PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "./threads/data-providers";
 import { PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS } from "../../constants/customer-file";
+import { PHI_SITE_ADDRESS_ITEM_RENDERER_KEY } from "../../constants/site-address";
 import { PHI_ACCOUNTING_RUNTIME_MODULE_ROUTES } from "./accounting/presets";
 import { PHI_ACCOUNTING_CUSTOMER_FILE_PAGE_PRESET_KEY } from "./accounting/ids";
 import { PHI_ACCOUNTING_CUSTOMER_FILE_ACCESS } from "./accounting/customer-file-access";
@@ -73,29 +74,46 @@ describe("the customer file page", () => {
   it("picks the member with Core's member picker and hands the choice to the lists and the file", async () => {
     const tree = await loadTree(PhiBaseRole.Accountant);
     expect(checkPhiPresetTreeContract(tree, { page: PAGE, forms: [] })).toEqual([]);
-    expect(checkPhiPresetTables(tree, { dataProviders: PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS })).toEqual([]);
-    const tables = tree.contentWidgets.filter((widget) => widget.widgetType.endsWith("/table"));
     const provider = PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS
       .find((entry) => entry.key === PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS.table)!;
+    if (provider.kind !== "table") throw new Error("The customer file Provider is a Table Provider.");
+    // The footer rule is the Tables': the addresses tiles are no Table and are not judged by it.
+    expect(checkPhiPresetTables(tree, { dataProviders: [provider] })).toEqual([]);
+    const tables = tree.contentWidgets.filter((widget) => widget.widgetType.endsWith("/table"));
     for (const table of tables) {
       const parsed = PHI_TABLE_WIDGET_DEFINITION.parseConfig(table.config as Record<string, unknown>);
-      const resource = provider.resources!.find((entry) => entry.resourceKey === parsed.source!.resourceKey)!;
+      const resource = provider.resources.find((entry) => entry.resourceKey === parsed.source!.resourceKey)!;
       expect(validatePhiTableWidgetBinding(parsed, resource)).toEqual([]);
     }
-    const [person, addresses, threads] = tables;
+    const [person, threads] = tables;
+    const addresses = tree.contentWidgets.find((widget) => widget.widgetType.endsWith("/collection-view"))!;
+    expect(addresses.config.source).toMatchObject({
+      providerKey: PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS.addresses,
+      resourceKey: "addresses",
+    });
+    // Read-only: the resource offers the tiles no action, and the placement names none.
+    const addressesProvider = PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS
+      .find((entry) => entry.key === PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS.addresses)!;
+    expect(addressesProvider.kind === "collection" ? "actions" in addressesProvider.resources[0]! : null).toBe(false);
+    expect(addressesProvider.kind === "collection" ? addressesProvider.resources[0]!.itemRendererKey : null).toBe(PHI_SITE_ADDRESS_ITEM_RENDERER_KEY);
     const filters = (person!.config.features as { filters: { key: string; optionsProvider: { providerKey: string } }[] }).filters;
     expect(filters.map((filter) => [filter.key, filter.optionsProvider.providerKey]))
       .toEqual([["userId", PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteMembers]]);
     const emits = (person!.config.signalRoutes as { emits: { capabilityId: string; channel: string; receiver: string }[] }).emits;
-    expect(emits.map((entry) => [entry.capabilityId, entry.channel])).toEqual([["queryChange", "query"], ["queryChange", "query"], ["queryChange", "member"]]);
+    expect(emits.map((entry) => [entry.capabilityId, entry.channel])).toEqual([["queryChange", "query"], ["queryChange", "member"]]);
     const controller = createPhiThreadsControllerAddress();
-    expect(emits.map((entry) => entry.receiver)).toEqual([`cms:${addresses!.id}`, `cms:${threads!.id}`, controller]);
+    expect(emits.map((entry) => entry.receiver)).toEqual([`cms:${threads!.id}`, controller]);
     // Two readers: the file, which the Controller opens for the member, and the conversation chosen below it.
     const readers = tree.contentWidgets.filter((widget) => widget.widgetType.endsWith("/thread-conversation"));
     expect(readers.map((widget) => widget.config.title ?? null)).toEqual(["File", null]);
     const controllerEmits = (tree.controllerSettings![0]!.config!.signalRoutes as { emits: { capabilityId: string; receiver: string }[] }).emits;
     expect(controllerEmits.filter((entry) => entry.capabilityId.startsWith("file")).map((entry) => entry.receiver))
       .toEqual([`cms:${readers[0]!.id}`, `cms:${readers[0]!.id}`]);
+    // The member reaches the addresses tiles from the Controller, as binding params they listen for.
+    const memberParams = controllerEmits.filter((entry) => entry.capabilityId === "memberParamsChange");
+    expect(memberParams.map((entry) => entry.receiver)).toEqual([`cms:${addresses.id}`]);
+    expect((addresses.config.signalRoutes as { listens: { capabilityId: string; channel: string }[] }).listens
+      .map((entry) => [entry.capabilityId, entry.channel])).toEqual([["bindingParamsChange", "bindingParams"]]);
     // Each Reply reaches its own dialog's Form and the Controller, which so knows where the message landed.
     for (const reader of readers) {
       const replies = (reader.config.signalRoutes as { emits: { capabilityId: string; receiver: string }[] }).emits
@@ -122,7 +140,7 @@ describe("the customer file page", () => {
   it("places the addresses for every viewer it is for", async () => {
     for (const flags of [PhiBaseRole.Accountant, PhiBaseRole.Maintainer]) {
       const tree = await loadTree(flags);
-      expect(tree.contentWidgets.filter((widget) => widget.widgetType.endsWith("/table"))
+      expect(tree.contentWidgets.filter((widget) => /\/(table|collection-view)$/u.test(widget.widgetType))
         .map((widget) => (widget.config.source as { resourceKey: string }).resourceKey))
         .toEqual(["person", "addresses", "threads"]);
     }

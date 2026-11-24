@@ -70,5 +70,7 @@ export * from "./constants/support";
 export * from "./constants/threads";
 export * from "./constants/user-state";
 export * from "./constants/media-library-provider-keys";
+// The address tiles, for any Module whose Collection's items are addresses of a Site's book (COLLECTIONS.md).
+export * from "./constants/site-address";
 export * from "./constants/module-identity";
 export { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "./constants/core-data-provider-keys";

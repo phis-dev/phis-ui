@@ -11,14 +11,26 @@ import { createPhiSharedRuntimeDataProviderKey } from "./runtime-data-provider-k
  */
 export const PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS = {
   table: createPhiSharedRuntimeDataProviderKey("tables", "threads-customer-file"),
+  /**
+   * The member's addresses as tiles (a Collection drawn by `PHI_SITE_ADDRESS_ITEM_RENDERER_KEY`), read-only,
+   * from the same read: the member arrives as the binding param `userId` (`PHI_CUSTOMER_FILE_MEMBER_PARAM`),
+   * which the Conversations Controller forwards from the person Table's choice.
+   */
+  addresses: createPhiSharedRuntimeDataProviderKey("collections", "threads-customer-file-addresses"),
 } as const;
 
-/** The Provider's three resources, each one answer of the same route read for one member. */
+/**
+ * The resources, each one answer of the same route read for one member: the Table Provider's person and
+ * threads, and the addresses Collection's addresses.
+ */
 export const PHI_CUSTOMER_FILE_RESOURCE_KEYS = {
   person: "person",
   addresses: "addresses",
   threads: "threads",
 } as const;
+
+/** The binding param the addresses Collection reads its member from: `{ params: { userId } }`. */
+export const PHI_CUSTOMER_FILE_MEMBER_PARAM = "userId";
 
 /**
  * The binding param a customer file Page writes its sentence for the reader's own file into, already in the

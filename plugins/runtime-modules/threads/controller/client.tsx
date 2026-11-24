@@ -25,6 +25,7 @@ import {
 import { isPhiRecord } from "../../../../helpers/is-record";
 import { readPhiPositiveInteger } from "../../../../components/widgets/client/shared/phi-table-provider-request";
 import { readPhiCustomerFileThreadId } from "../services/customer-file-read";
+import { PHI_CUSTOMER_FILE_MEMBER_PARAM } from "../../../../constants/customer-file";
 
 type ControllerRenderArgs = Parameters<NonNullable<
   PhiRuntimeControllerPlugin<PhiThreadsControllerConfig>["renderController"]
@@ -150,7 +151,8 @@ function PhiThreadsControllerView({
   /*
    * Another member chosen: their file, read from the request the Page's Tables make for the same choice
    * (it joins that one, so a choice stays one entry in the access log), handed to the file panel. Nobody
-   * chosen, the reader's own file and a failed read all close the panel; the Tables say why.
+   * chosen, the reader's own file and a failed read all close the panel; the Tables say why. The member
+   * also goes to whatever shows something of theirs by binding params -- the addresses tiles.
    */
   const openMemberFile = useCallback((userId: number | null, correlationId: string) => {
     if (memberRead.current.userId === userId) return;
@@ -158,6 +160,8 @@ function PhiThreadsControllerView({
     const controller = userId == null ? null : new AbortController();
     memberRead.current = { userId, controller };
     setFileThreadId(null);
+    // The addresses ask in their next render, while the read below is under way, and join it.
+    emitCapability("memberParamsChange", { params: { [PHI_CUSTOMER_FILE_MEMBER_PARAM]: userId } }, correlationId);
     emitCapability("fileThreadChange", { threadId: null }, correlationId);
     if (userId == null || !controller) return;
     readPhiCustomerFileThreadId(userId, controller.signal).then((threadId) => {

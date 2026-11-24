@@ -128,7 +128,7 @@ than a Widget type, which is the same promise in a smaller surface.
 | contribution | what it is |
 | --- | --- |
 | Widgets | `thread-conversation` |
-| Data Provider | the customer file Table Provider (`tables/threads-customer-file`, resources `person`, `addresses`, `threads`, named in the Foundation by `constants/customer-file.ts`); the thread library Table Provider, resource `inbox`, is Core's |
+| Data Provider | the customer file Table Provider (`tables/threads-customer-file`, resources `person`, `threads`) and its addresses Collection Provider (`collections/threads-customer-file-addresses`, resource `addresses`, drawn by Core's address tiles), both named in the Foundation by `constants/customer-file.ts`; the thread library Table Provider, resource `inbox`, is Core's |
 | Options Provider | conversation candidates -- who this viewer may write to |
 | Forms | the new-conversation Form and the reply Form, with a handler Provider each |
 | Route presets | `<area>-threads-page` at `/conversations` in every sidebar Area, each with its sidebar entry; the customer file Page is the Accounting Module's (section 10) |
@@ -326,7 +326,7 @@ an Admin through the Site-superuser rule): its entry states that access and the 
 the Area admits that it is not theirs, reading nothing for them. Core answers the same route to `support`
 without addresses; a Supporter's file is the Support Module's own Page over that route, not this one.
 
-**Who answers what.** The Page binds this Module's Table Provider and Controller by their Foundation
+**Who answers what.** The Page binds this Module's Table and Collection Providers and Controller by their Foundation
 names (`PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS`, `PHI_CUSTOMER_FILE_RESOURCE_KEYS` in
 `constants/customer-file.ts`; `PHI_THREADS_CONTROLLER_TYPE` in `constants/threads-controller-address.ts`),
 importing nothing of this Module, so the conversations Module has to be active in the Area the Page stands
@@ -335,14 +335,16 @@ where this Module is active: a package imports the names from `@phis/ui/constant
 `PHI_THREAD_LIBRARY_DATA_PROVIDER_KEYS` -- the Support Module's own file in the App, where Core answers a
 Supporter without addresses.
 
-**What it is made of.** Nothing of its own but a Provider. The Page is the conversations Page's surfaces
+**What it is made of.** Nothing of its own but two Providers. The Page is the conversations Page's surfaces
 with a choice in front of them and the member's file between them:
 
 ```text
 person         a Table on resource `person`; its `userId` filter is Core's member picker
                (`site-members`, searched on the server: name, e-mail, telephone digits);
                its footer the member's number (summary field `userId`)
-addresses      a Table on resource `addresses`
+addresses      a Collection View on the addresses Collection, drawn by Core's address tiles
+               (`PHI_SITE_ADDRESS_ITEM_RENDERER_KEY`, COLLECTIONS.md), read-only: the resource
+               declares no action
 file           a conversation reader on the member's file, headed File, its Reply "Add note",
                opening a note dialog of its own (Core's Reply Form; every file message is internal)
 conversations  a Table on resource `threads`: the conversations the person is in that the reader
@@ -350,8 +352,13 @@ conversations  a Table on resource `threads`: the conversations the person is in
 conversation, Reply dialog   as on the conversations Page, the Reply offering the internal note
 ```
 
-The person Table's `queryChange` is routed to the `query/change` input of the two Tables and to the
-Conversations Controller's `memberChange` input (`member/change`). The Controller reads the file's id from
+The person Table's `queryChange` is routed to the conversations Table's `query/change` input and to the
+Conversations Controller's `memberChange` input (`member/change`). The Controller hands the member on to
+the addresses as binding params, `{ params: { userId } }` on its `memberParamsChange` output to the View's
+`bindingParamsChange` (`PHI_CUSTOMER_FILE_MEMBER_PARAM`; COLLECTIONS.md, "Filtered by another Widget's
+choice"), once per member chosen, and the Collection Provider reads `params.userId`; for the reader's own
+file it answers no addresses with the Page's own-file sentence as the tiles' empty sentence
+(`meta.emptyDescription`). The Controller reads the file's id from
 the same request the Tables make for the choice (`readPhiCustomerFileThreadId`,
 `threads/services/customer-file-read.ts`, which joins it rather than asking again) and hands it to the file
 panel as `fileThreadChange`, `{ threadId: null }` for nobody and for the reader's own file. The
@@ -364,8 +371,8 @@ its Reply, `emptyDescription` while nothing is chosen): a note reloads the file 
 rather than in it; a row of the file the list carries is left out.
 
 Every reader of a choice reads through the Provider's client, and the client answers the reads of one route
-in flight with one request: the person, their addresses and the Controller opening the file ask for the
-first page, as the conversations Table does on a choice, so one choice is one request to
+in flight with one request: the person, the addresses Collection and the Controller opening the file ask
+for the first page, as the conversations Table does on a choice, so one choice is one request to
 `GET /api/site/members/{userId}/file` and one entry in the access log, plus the file panel's own read of
 the file (`GET /api/site/threads/{id}`). It is no cache -- once the request settles nothing is kept, and a
 reload, another page of conversations or the next choice asks again; a reader that aborts its read leaves

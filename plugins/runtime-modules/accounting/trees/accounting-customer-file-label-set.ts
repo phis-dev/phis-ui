@@ -23,7 +23,6 @@ const PHI_CUSTOMER_FILE_PAGE_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_ACCO
     person_empty: definePhiMessageLabel("Choose a member to open their file."),
     own_file: definePhiMessageLabel("This is your own record; it is not shown here."),
     person_footer: definePhiMessageLabel("Member no. %1. Opening a file is written to the access log."),
-    addresses_footer: "%1 addresses",
     // Core pages the conversations without a count: what this page holds, and which page it is.
     threads_footer: "%1 on page %2",
     column_display_name: "Shown as",
@@ -35,9 +34,6 @@ const PHI_CUSTOMER_FILE_PAGE_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_ACCO
     addresses_title: "Addresses",
     addresses_label: "customer addresses",
     addresses_empty: definePhiMessageLabel("No address on file."),
-    column_address_name: "Name",
-    column_address: "Address",
-    column_purposes: "Used for",
     purpose_billing: "Billing",
     purpose_shipping: "Shipping",
     purpose_default_billing: "Default billing",
@@ -97,8 +93,6 @@ export async function getPhiAccountingCustomerFilePageLabels(options: PhiGlobalT
       title: labels.addresses_title,
       label: labels.addresses_label,
       empty: labels.addresses_empty,
-      footer: labels.addresses_footer,
-      columns: { name: labels.column_address_name, address: labels.column_address, purposes: labels.column_purposes },
       purposes: {
         billing: labels.purpose_billing,
         shipping: labels.purpose_shipping,

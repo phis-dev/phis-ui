@@ -13,6 +13,7 @@ import { PhiCmsLayoutType } from "../../../constants/cms-layout-type-keys";
 import { PhiRuntimeRenderClientType } from "../../../constants/runtime-render-client-types";
 import { PHI_ASSET_RUNTIME_MODULE_ID } from "../asset/ids";
 import { PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY } from "../../../constants/media-library-provider-keys";
+import { PHI_SITE_ADDRESS_ITEM_RENDERER_KEY } from "../../../constants/site-address";
 import { PHI_DASHBOARD_CARD_ITEM_RENDERER_KEY } from "../../../constants/dashboard-card-provider-keys";
 import { createPhiRuntimeModuleCalendarAdapterClientManifest } from "../../../components/runtime/runtime-module-calendar-adapter-client-manifest";
 import { PHI_CORE_CALENDAR_ADAPTER_CLIENT_DEFINITIONS } from "../core/client-calendar-adapters";
@@ -309,6 +310,13 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
       PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY,
       definePhiRuntimeModuleRenderClient(
         dynamic(() => import("../core/widgets/collection-view/asset-binding").then((module) => module.PhiAssetCollectionViewBinding)),
+      ),
+    ],
+    // The address tiles, on the same terms: Core's renderer for any Collection of a Site's addresses.
+    [
+      PHI_SITE_ADDRESS_ITEM_RENDERER_KEY,
+      definePhiRuntimeModuleRenderClient(
+        dynamic(() => import("../core/widgets/collection-view/site-address-binding").then((module) => module.PhiSiteAddressCollectionViewBinding)),
       ),
     ],
     [

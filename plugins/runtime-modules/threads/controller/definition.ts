@@ -91,6 +91,18 @@ export const PHI_THREADS_RUNTIME_CONTROLLER_DEFINITION = {
         valueType: "json",
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.threadSelection,
       },
+      /*
+       * The member a customer file Page chose, as binding params (`{ params: { userId } }`, `null` for
+       * nobody), for a Collection View that shows something of theirs -- the addresses tiles: the choice
+       * forwarded to the View's `bindingParamsChange` (COLLECTIONS.md, "Filtered by another Widget's
+       * choice"), once per member chosen.
+       */
+      {
+        id: "memberParamsChange",
+        action: "change",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableBindingParams,
+      },
       { id: "dialogOpen", action: "activate", valueType: "none" },
       { id: "dialogClose", action: "close", valueType: "none" },
       { id: "formSubmit", action: "activate", valueType: "none" },
@@ -125,7 +137,8 @@ export const PHI_THREADS_RUNTIME_CONTROLLER_DEFINITION = {
       /*
        * The member a customer file Page chose: its person Table's query, `filters.userId`. The file's id
        * comes from the same read the Page's Tables make for that choice, joined rather than asked again
-       * (`readPhiCustomerFileThreadId`), and goes out as `fileThreadChange`.
+       * (`readPhiCustomerFileThreadId`), and goes out as `fileThreadChange`; the member goes out as
+       * `memberParamsChange`.
        */
       {
         id: "memberChange",

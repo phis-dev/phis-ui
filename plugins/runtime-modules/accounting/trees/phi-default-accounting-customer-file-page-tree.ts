@@ -5,7 +5,6 @@ import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/c
 import type { PhiBlockRuntime } from "../../../../types";
 import { canPhiViewerAccess } from "../../../../types/access";
 import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS, type PhiSignalReceiver, type PhiSignalValueSchema } from "../../../../types/signals";
-import type { PhiTableColumnDefinition } from "../../../../types/table-widget";
 import { PHI_THREAD_LIBRARY_DATA_PROVIDER_KEYS } from "../../../../constants/thread-library-provider-keys";
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../../constants/core-data-provider-keys";
 import { PhisThreadKind } from "../../../../constants/threads";
@@ -36,13 +35,14 @@ const SYNTHETIC_CUSTOMER_FILE_REGION_ID = -459;
  *
  * A Page of the Accounting Module, beside the product directory, built from what the conversations Page
  * already is and bound by Foundation names only (`constants/customer-file.ts`,
- * `constants/threads-controller-address.ts`): the Table Provider and the Conversations Controller are the
- * conversations Module's, which is active in the Accounting Area by default and has to be for this Page
- * to read anything. The person Table's filter is Core's member picker
+ * `constants/threads-controller-address.ts`): the Table and Collection Providers and the Conversations
+ * Controller are the conversations Module's, which is active in the Accounting Area by default and has to
+ * be for this Page to read anything. The person Table's filter is Core's member picker
  * (the `site-members` options with Core's search, which matches names, e-mail addresses and telephone
- * numbers); its query goes to the addresses and the conversations Tables and to the Conversations
- * Controller, so one choice fills the Page with one request: the Controller joins the Tables' read for the
- * file's id and hands it to the file panel, a conversation reader whose "Add note" opens Core's Reply Form
+ * numbers); its query goes to the conversations Table and to the Conversations Controller, so one choice
+ * fills the Page with one request: the Controller hands the member to the addresses tiles as binding params
+ * (Core's address renderer, read-only), joins the Tables' read for the file's id and hands it to the file
+ * panel, a conversation reader whose "Add note" opens Core's Reply Form
  * in a dialog of its own (every message of a file is internal). The conversations Table lists the person's
  * conversations, the file not among them, and choosing a row is the conversations Page's choreography
  * unchanged: the Controller makes the selection a thread, the conversation reader below reads it, and its
@@ -244,20 +244,6 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
     };
   };
 
-  const addressColumns: PhiTableColumnDefinition[] = [
-    { key: "name", fieldKey: "name", title: labels.addresses.columns.name, sizing: { mode: "content" } },
-    { key: "lines", fieldKey: "lines", title: labels.addresses.columns.address, sizing: { mode: "fill" } },
-    {
-      key: "purposes",
-      fieldKey: "purposes",
-      title: labels.addresses.columns.purposes,
-      renderer: "tags",
-      sizing: { mode: "content" },
-      valueMap: labels.addresses.purposes,
-      tagColorMap: { billing: "default", shipping: "default", defaultBilling: "processing", defaultShipping: "processing" },
-    },
-  ];
-
   return {
     page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     pageMeta,
@@ -278,6 +264,8 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
             threadRoute(`${prefix}-controller-file`, "fileThreadChange", "change", fileAddress),
             threadRoute(`${prefix}-controller-file-reload`, "fileThreadReload", "reload", fileAddress),
             route(`${prefix}-controller-reload-threads`, "reload", "reload", "activate", threadsAddress),
+            // The member chosen, as the addresses tiles' binding params.
+            route(`${prefix}-controller-addresses`, "memberParamsChange", "bindingParams", "change", addressesAddress, "json", PHI_SIGNAL_VALUE_SCHEMAS.tableBindingParams),
           ],
         },
       },
@@ -339,48 +327,47 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
             }],
           },
           signalRoutes: {
-            // The member chosen, handed on as the query the lists read it from, and to the Controller,
-            // which opens their file.
+            // The member chosen, handed on as the query the conversations read it from, and to the
+            // Controller, which opens their file and hands the member to the addresses.
             emits: [
-              route(`${prefix}-person-to-addresses`, "queryChange", "query", "change", addressesAddress, "json", PHI_SIGNAL_VALUE_SCHEMAS.tableQuery),
               route(`${prefix}-person-to-threads`, "queryChange", "query", "change", threadsAddress, "json", PHI_SIGNAL_VALUE_SCHEMAS.tableQuery),
               route(`${prefix}-person-to-file`, "queryChange", "member", "change", controllerAddress, "json", PHI_SIGNAL_VALUE_SCHEMAS.tableQuery),
             ],
           },
         },
       }),
+      /*
+       * The member's addresses as Core's address tiles, read-only: the resource declares no action. The
+       * member arrives from the Controller as the binding param `userId`, and the read is the one the
+       * Tables and the Controller make for the choice, joined.
+       */
       nodes.widget({
         id: widgetIds.widgetAddresses,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
-        typeKey: "table",
+        typeKey: "collection-view",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 1,
         sortOrder: 1,
         // The Module's Label Set, translated already.
         flags: PhiCmsFlags.NoTranslate,
         label: labels.addresses.label,
         config: {
-          source: { providerKey: PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS.table, resourceKey: RESOURCES.addresses, params: ownFile },
+          source: { providerKey: PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS.addresses, resourceKey: RESOURCES.addresses, params: ownFile },
           presentation: {
             title: labels.addresses.title,
+            mode: "grid",
             controlSize: "small",
-            layout: { mode: "auto", overflowX: "auto" },
-            columns: addressColumns,
-            emptyState: { title: labels.addresses.empty },
-            footer: {
-              template: labels.addresses.footer,
-              values: [{ key: "addresses", value: { source: "core", fieldKey: "totalRows" } }],
-              // None, or none read (the reader's own file): the empty state says it.
-              variants: [{ when: { value: { source: "core", fieldKey: "totalRows" }, operator: "falsy" }, template: "" }],
-              align: "start",
-            },
+            emptyDescription: labels.addresses.empty,
+            labels: { purposes: labels.addresses.purposes },
           },
           features: {
-            pagination: { enabled: false },
-            sorting: { mode: "none" },
-            search: { enabled: false },
             tools: { mode: "self-contained", reset: false, reload: false },
+            pagination: { enabled: false },
           },
-          signalRoutes: { listens: [queryInput(`${prefix}-addresses-query`, addressesAddress)] },
+          signalRoutes: {
+            listens: [
+              route(`${prefix}-addresses-member`, "bindingParamsChange", "bindingParams", "change", addressesAddress, "json", PHI_SIGNAL_VALUE_SCHEMAS.tableBindingParams),
+            ],
+          },
         },
       }),
       // The member's file: its entries, internal notes and what Add-ons wrote with their links, and "Add note".

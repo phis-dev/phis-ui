@@ -11,7 +11,6 @@ import {
   type PhiTableProviderRegistration,
 } from "../../../../components/widgets/client/shared/phi-table-provider";
 import { PhiTableProviderError, type PhiTableProviderQueryRequest } from "../../../../types/table-widget";
-import { toPhiSiteAddressRow } from "../../../../helpers/site-address-row";
 import { readPhiThreadInboxRow } from "../../../../helpers/thread-inbox-row";
 import { PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../data-providers";
 import {
@@ -61,17 +60,17 @@ export function toPhiCustomerFileThreadRows(result: Record<string, unknown>) {
 }
 
 async function queryCustomerFile({ resourceKey, query, params, signal }: PhiTableProviderQueryRequest) {
-  if (!Object.values(RESOURCES).includes(resourceKey as never)) {
+  if (resourceKey !== RESOURCES.person && resourceKey !== RESOURCES.threads) {
     throw new PhiTableProviderError("resource-not-found", `Unknown customer file resource "${resourceKey}".`);
   }
   // Nobody chosen yet: nothing is asked for, so nothing is written to the access log.
   const userId = readPhiPositiveInteger(query.filters?.userId);
   if (!userId) {
     if (resourceKey === RESOURCES.threads) return { rows: [] };
-    return resourceKey === RESOURCES.person ? { rows: [], total: 0, summary: { userId: null } } : { rows: [], total: 0 };
+    return { rows: [], total: 0, summary: { userId: null } };
   }
-  // The person and their addresses are the same on every page; they ask for the first, as the
-  // conversations Table and the Controller opening the file do on a choice, so the reads are one route.
+  // The person is the same on every page; it asks for the first, as the conversations Table, the
+  // addresses Collection and the Controller opening the file do on a choice, so the reads are one route.
   const paged = buildPhiTablePageParams(resourceKey === RESOURCES.threads ? query : {}, PHI_CUSTOMER_FILE_THREADS_PAGE_SIZE);
   const result = await readPhiCustomerFile(buildPhiCustomerFilePath(userId, paged), signal).catch((error: unknown) => {
     if (!(error instanceof PhiCustomerFileOwnFileRefusal)) throw error;
@@ -89,15 +88,12 @@ async function queryCustomerFile({ resourceKey, query, params, signal }: PhiTabl
     const row = toPhiCustomerFilePersonRow(result.person);
     return { rows: [row], total: 1, summary: { userId: typeof row.userId === "number" ? row.userId : null } };
   }
-  if (resourceKey === RESOURCES.addresses) {
-    const rows = readPhiTableRows(result.person.addresses).map(toPhiSiteAddressRow);
-    return { rows, total: rows.length };
-  }
   return { rows: toPhiCustomerFileThreadRows(result) };
 }
 
-const resources = PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS
-  .find((descriptor) => descriptor.key === PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS.customerFile)?.resources ?? [];
+const descriptor = PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS
+  .find((candidate) => candidate.key === PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS.customerFile);
+const resources = descriptor?.kind === "table" ? descriptor.resources : [];
 
 export const PHI_THREADS_CUSTOMER_FILE_TABLE_PROVIDER_REGISTRATION = {
   key: PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS.customerFile,

@@ -62,8 +62,9 @@ of your own:
    View is meant for any data source; what your Module brings is the Provider (what it reads, which
    actions it has), not a renderer. Items that are Assets of the Media library -- a gallery, a set of
    pictures, attachments -- name the Media renderer (`PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY`) as the
-   resource's `itemRendererKey` and are answered in its item shape; records shown as cards use the card
-   View. A renderer of your own is for items no shipped renderer draws
+   resource's `itemRendererKey` and are answered in its item shape; addresses of a Site's book name the
+   address renderer (`PHI_SITE_ADDRESS_ITEM_RENDERER_KEY`) and are answered as `toPhiSiteAddressRow` shapes
+   them; records shown as cards use the card View. A renderer of your own is for items no shipped renderer draws
    ([COLLECTIONS.md](./COLLECTIONS.md#one-collection-view-for-every-source-shipped-renderers-first)).
 
 `@phis/shop`'s catalogue is what breaking this looks like: its product list is a Widget of its own that
@@ -2441,8 +2442,10 @@ describe("every preset tree keeps the tree contract", () => {
   Widget in a dialog, no `page-title` Widget, and no Widget of the Module's own that draws tables, button
   rows or dialogs ([Before you start](#before-you-start-a-staff-page-is-composed-not-drawn)).
 - Every `collection-view` is drawn by a shipped renderer where one draws its items -- the Media renderer
-  for Assets of the Media library, the card View for records as cards -- and its Provider declares the
-  actions that renderer offers (for the Media renderer `add`, `delete`, `reorder`, `upload`). No Render
+  for Assets of the Media library, the address renderer for a Site's addresses, the card View for records
+  as cards -- and its Provider declares the actions that renderer offers (for the Media renderer `add`,
+  `delete`, `reorder`, `upload`; for the address renderer `edit`, `makeDefaultBilling`,
+  `makeDefaultShipping`, `delete`). No Render
   Client of the Module's own draws Media tiles, and no Form beside the Collection adds to it: adding is
   the Collection's `add` ([COLLECTIONS.md](./COLLECTIONS.md#one-collection-view-for-every-source-shipped-renderers-first)).
 

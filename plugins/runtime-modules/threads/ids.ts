@@ -28,4 +28,6 @@ export const PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS = {
   candidates: createPhiSharedRuntimeDataProviderKey("options", "thread-candidates"),
   /** Staff's customer file on one member, the Foundation name (`constants/customer-file.ts`). */
   customerFile: PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS.table,
+  /** The member's addresses as tiles, the Foundation name too. */
+  customerFileAddresses: PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS.addresses,
 } as const;
