@@ -327,37 +327,55 @@ the Area admits that it is not theirs, reading nothing for them. Core answers th
 without addresses; a Supporter's file is the Support Module's own Page over that route, not this one.
 
 **Who answers what.** The Page binds this Module's Table Provider and Controller by their Foundation
-names (`PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS`, `PHI_CUSTOMER_FILE_RESOURCE_KEYS`,
-`PHI_CUSTOMER_FILE_SUBJECT_PARAM` in `constants/customer-file.ts`; `PHI_THREADS_CONTROLLER_TYPE` in
-`constants/threads-controller-address.ts`), importing nothing of this Module, so the conversations Module
-has to be active in the Area the Page stands in -- the Accounting default. Any Module's preset binds the
-Provider the same way, by the key, in an Area where this Module is active: a package imports the three
-names from `@phis/ui/constants`, as it imports `PHI_THREAD_LIBRARY_DATA_PROVIDER_KEYS` -- the Support
-Module's own file in the App, where Core answers a Supporter without addresses.
+names (`PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS`, `PHI_CUSTOMER_FILE_RESOURCE_KEYS` in
+`constants/customer-file.ts`; `PHI_THREADS_CONTROLLER_TYPE` in `constants/threads-controller-address.ts`),
+importing nothing of this Module, so the conversations Module has to be active in the Area the Page stands
+in -- the Accounting default. Any Module's preset binds the Provider the same way, by the key, in an Area
+where this Module is active: a package imports the names from `@phis/ui/constants`, as it imports
+`PHI_THREAD_LIBRARY_DATA_PROVIDER_KEYS` -- the Support Module's own file in the App, where Core answers a
+Supporter without addresses.
 
-**What it is made of.** Nothing of its own but a Provider. The Page is the conversations Page's three
-surfaces with a choice in front of them:
+**What it is made of.** Nothing of its own but a Provider. The Page is the conversations Page's surfaces
+with a choice in front of them and the member's file between them:
 
 ```text
-person      a Table on resource `person`; its `userId` filter is Core's member picker
-            (`site-members`, searched on the server: name, e-mail, telephone digits)
-addresses   a Table on resource `addresses`
-threads     a Table on resource `threads`: the file first, then the person's conversations
+person         a Table on resource `person`; its `userId` filter is Core's member picker
+               (`site-members`, searched on the server: name, e-mail, telephone digits);
+               its footer the member's number (summary field `userId`)
+addresses      a Table on resource `addresses`
+file           a conversation reader on the member's file, headed File, its Reply "Add note",
+               opening a note dialog of its own (Core's Reply Form; every file message is internal)
+conversations  a Table on resource `threads`: the conversations the person is in that the reader
+               may see, the file not among them
 conversation, Reply dialog   as on the conversations Page, the Reply offering the internal note
 ```
 
-The person Table's `queryChange` is routed to the `query/change` input of the other two, so one choice
-fills all three; the threads Table's selection reaches the Conversations Controller, which makes it a thread
-for the conversation exactly as on the conversations Page, and a note written in the Reply dialog reloads
-both. Core answers the file's id beside the list rather than in it, so the Provider puts the file first on
-the first page under the subject the Page hands it in its binding params (`fileSubject`).
+The person Table's `queryChange` is routed to the `query/change` input of the two Tables and to the
+Conversations Controller's `memberChange` input (`member/change`). The Controller reads the file's id from
+the same request the Tables make for the choice (`readPhiCustomerFileThreadId`,
+`threads/services/customer-file-read.ts`, which joins it rather than asking again) and hands it to the file
+panel as `fileThreadChange`, `{ threadId: null }` for nobody and for the reader's own file. The
+conversations Table's selection reaches the Controller, which makes it a thread for the conversation reader
+exactly as on the conversations Page. Each reader's Reply reaches its own dialog and Form and the
+Controller too, so a message that lands is read again where it was written (the conversation reader says
+what a placement makes of it: `title` in place of the subject Core leaves empty on a file, `replyLabel` for
+its Reply, `emptyDescription` while nothing is chosen): a note reloads the file panel
+(`fileThreadReload`), a reply the conversation and the listing. Core answers the file's id beside the list
+rather than in it; a row of the file the list carries is left out.
 
-Each Table reads through the Provider, and the Provider's client answers the reads of one route in flight
-with one request: the person and their addresses ask for the first page, as the threads Table does on a
-choice, so one choice is one request and one entry in the access log. It is no cache -- once the request
-settles nothing is kept, and a reload, another page of threads or the next choice asks again; a Table that
-aborts its read leaves the request to the others, which is aborted only when every one of them has. Nothing
-is read before a member is chosen.
+Every reader of a choice reads through the Provider's client, and the client answers the reads of one route
+in flight with one request: the person, their addresses and the Controller opening the file ask for the
+first page, as the conversations Table does on a choice, so one choice is one request to
+`GET /api/site/members/{userId}/file` and one entry in the access log, plus the file panel's own read of
+the file (`GET /api/site/threads/{id}`). It is no cache -- once the request settles nothing is kept, and a
+reload, another page of conversations or the next choice asks again; a reader that aborts its read leaves
+the request to the others, which is aborted only when every one of them has. Nothing is read before a
+member is chosen.
+
+**Documents, not yet.** A collector of every attachment of the member's file and conversations as Media
+tiles is wanted. Core has no answer for it: attachments are listed only inside a thread's own read, one
+thread at a time, and the Media library lists one Space, never the files of a person's threads. It waits
+for a Core read of its own (a proposal, not built); the Page does not read thread by thread for it.
 
 ## 11. Open
 

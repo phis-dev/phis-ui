@@ -568,6 +568,12 @@ export type PhiCommandToolbarWidgetPlacement = PhiWidgetPlacementBase & PhiContr
  */
 export type PhiThreadConversationWidgetPlacement = PhiWidgetPlacementBase & {
   reply?: boolean;
+  /** The heading in place of the conversation's subject, for a placement that shows one kind and names it. */
+  title?: string;
+  /** What the Reply says where the placement offers it as something else ("Add note"). */
+  replyLabel?: string;
+  /** The sentence while no conversation is chosen, in place of the Widget's own. */
+  emptyDescription?: string;
   padding?: number | string;
 };
 

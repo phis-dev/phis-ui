@@ -73,6 +73,24 @@ export const PHI_THREADS_RUNTIME_CONTROLLER_DEFINITION = {
         valueType: "json",
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.threadSelection,
       },
+      /*
+       * The member's file, on a customer file Page (THREADS.md, section 10): the file panel's conversation,
+       * apart from the one chosen in the listing, so the two readers never show each other's. Change when
+       * another member is chosen -- `{ threadId: null }` for nobody, or for the reader's own file, which
+       * Core refuses -- and reload after a note landed in it.
+       */
+      {
+        id: "fileThreadChange",
+        action: "change",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.threadSelection,
+      },
+      {
+        id: "fileThreadReload",
+        action: "reload",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.threadSelection,
+      },
       { id: "dialogOpen", action: "activate", valueType: "none" },
       { id: "dialogClose", action: "close", valueType: "none" },
       { id: "formSubmit", action: "activate", valueType: "none" },
@@ -104,6 +122,23 @@ export const PHI_THREADS_RUNTIME_CONTROLLER_DEFINITION = {
         valueType: "json",
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableSelection,
       },
+      /*
+       * The member a customer file Page chose: its person Table's query, `filters.userId`. The file's id
+       * comes from the same read the Page's Tables make for that choice, joined rather than asked again
+       * (`readPhiCustomerFileThreadId`), and goes out as `fileThreadChange`.
+       */
+      {
+        id: "memberChange",
+        channel: "member",
+        action: "change",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableQuery,
+      },
+      /*
+       * A Table's action, and a conversation's Reply, which a conversation says as a row action with the
+       * thread as its row: routed here too, the reply that lands is known to be the file's or the open
+       * conversation's, and only that one is read again.
+       */
       {
         id: "actionActivate",
         channel: "action",

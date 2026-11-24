@@ -1,43 +1,33 @@
 "use client";
 
 import { isPhiRecord } from "../../../../helpers/is-record";
-import { readPhiJsonError, readPhiJsonPayload } from "../../../../helpers/client-json-request";
 import {
   buildPhiTablePageParams,
-  createPhiTableProviderRequestInit,
   readPhiPositiveInteger,
   readPhiTableRows,
 } from "../../../../components/widgets/client/shared/phi-table-provider-request";
-import {
-  readPhiTableProviderResponse,
-  type ReadPhiTableProviderResponseOptions,
-} from "../../../../components/widgets/client/shared/phi-table-provider-response";
 import {
   createPhiTableProviderClient,
   type PhiTableProviderRegistration,
 } from "../../../../components/widgets/client/shared/phi-table-provider";
 import { PhiTableProviderError, type PhiTableProviderQueryRequest } from "../../../../types/table-widget";
-import { PhisThreadKind, PhisThreadStatus } from "../../../../constants/threads";
 import { toPhiSiteAddressRow } from "../../../../helpers/site-address-row";
 import { readPhiThreadInboxRow } from "../../../../helpers/thread-inbox-row";
 import { PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../data-providers";
 import {
   PHI_CUSTOMER_FILE_OWN_FILE_PARAM,
   PHI_CUSTOMER_FILE_RESOURCE_KEYS as RESOURCES,
-  PHI_CUSTOMER_FILE_SUBJECT_PARAM,
 } from "../../../../constants/customer-file";
 import { PHI_TABLE_PROVIDER_REFUSED_CODE } from "../../../../components/widgets/client/shared/phi-table-provider-refusal";
 import { PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
+import {
+  buildPhiCustomerFilePath,
+  PHI_CUSTOMER_FILE_THREADS_PAGE_SIZE,
+  PhiCustomerFileOwnFileRefusal,
+  readPhiCustomerFile,
+} from "./customer-file-read";
 
-const RESPONSE_OPTIONS: ReadPhiTableProviderResponseOptions = { subject: "Customer file" };
-// The Page names the same size; Core takes up to 100.
-const THREADS_PAGE_SIZE = 25;
-
-/** The member's file, a page of the threads they take part in included. */
-export function buildPhiCustomerFilePath(userId: number, page: URLSearchParams | null) {
-  const path = `/api/site/members/${userId}/file`;
-  return page ? `${path}?${page}` : path;
-}
+export { buildPhiCustomerFilePath } from "./customer-file-read";
 
 function text(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -59,92 +49,15 @@ export function toPhiCustomerFilePersonRow(person: Record<string, unknown>) {
 }
 
 /**
- * The threads as the listing shows them: the person's file first, on the first page only -- Core answers
- * its id beside the list, not in it -- then the conversations the actor sees that the person is in, as the
- * inbox reads its rows.
+ * The person's conversations as the listing shows them, read as the inbox reads its rows. Their file is
+ * not one of them: Core answers its id beside the list, and the Page reads the file in a panel of its own
+ * (THREADS.md, section 10), so a row of it that the list carries is left out.
  */
-export function toPhiCustomerFileThreadRows(result: Record<string, unknown>, page: number, fileSubject: string) {
+export function toPhiCustomerFileThreadRows(result: Record<string, unknown>) {
   const fileThreadId = readPhiPositiveInteger(result.fileThreadId);
-  const threads = readPhiTableRows(result.threads).map(readPhiThreadInboxRow);
-  if (page !== 1 || !fileThreadId) return threads;
-  return [{
-    id: fileThreadId,
-    subject: fileSubject,
-    kind: String(PhisThreadKind.File),
-    status: String(PhisThreadStatus.Open),
-    archived: false,
-    locked: false,
-    state: "open",
-    latestMessageAt: null,
-  }, ...threads.filter((row) => (row as Record<string, unknown>).id !== fileThreadId)];
-}
-
-/*
- * Core's refusal of the reader's own file (`403`): the route answers that and nothing else to someone who
- * may open files at all, and nobody else reaches this Page or its member picker.
- */
-class PhiCustomerFileOwnFileRefusal extends Error {}
-
-type CustomerFileRead = {
-  promise: Promise<Record<string, unknown> | null>;
-  controller: AbortController;
-  waiters: number;
-};
-
-/*
- * The reads of one route in flight, by its path. The Page's three Tables ask for the same member at the
- * same time -- the person Table's choice reaches the other two as their query -- and one request answers
- * them all, so one choice is one entry in the access log. Nothing outlives the request: once it settles
- * its entry is gone, and the next read, a reload or another member asks again.
- */
-const customerFileReads = new Map<string, CustomerFileRead>();
-
-function abortReason(signal: AbortSignal) {
-  return signal.reason ?? new DOMException("The read was aborted.", "AbortError");
-}
-
-/**
- * The route's answer for this caller. A caller that aborts leaves the request to the others; the request
- * itself is aborted only when the last of them has gone, and is then no longer joined.
- */
-function readCustomerFile(path: string, signal: AbortSignal | undefined) {
-  if (signal?.aborted) return Promise.reject(abortReason(signal));
-  let read = customerFileReads.get(path);
-  if (!read) {
-    const controller = new AbortController();
-    const entry: CustomerFileRead = {
-      controller,
-      waiters: 0,
-      promise: (async () => {
-        const response = await fetch(path, createPhiTableProviderRequestInit(controller.signal));
-        if (response.status === 403) {
-          const refused = await readPhiJsonPayload<unknown>(response);
-          throw new PhiCustomerFileOwnFileRefusal(readPhiJsonError(refused, "Nobody reaches their own file."));
-        }
-        return readPhiTableProviderResponse<Record<string, unknown>>(response, RESPONSE_OPTIONS);
-      })().finally(() => {
-        if (customerFileReads.get(path) === entry) customerFileReads.delete(path);
-      }),
-    };
-    // A request every caller left rejects with nobody listening.
-    entry.promise.catch(() => undefined);
-    customerFileReads.set(path, entry);
-    read = entry;
-  }
-  const shared = read;
-  shared.waiters += 1;
-  if (!signal) return shared.promise;
-  return new Promise<Record<string, unknown> | null>((resolve, reject) => {
-    const leave = () => {
-      shared.waiters -= 1;
-      reject(abortReason(signal));
-      if (shared.waiters > 0) return;
-      if (customerFileReads.get(path) === shared) customerFileReads.delete(path);
-      shared.controller.abort(abortReason(signal));
-    };
-    signal.addEventListener("abort", leave, { once: true });
-    shared.promise.then(resolve, reject).finally(() => signal.removeEventListener("abort", leave));
-  });
+  return readPhiTableRows(result.threads)
+    .map(readPhiThreadInboxRow)
+    .filter((row) => (row as Record<string, unknown>).id !== fileThreadId);
 }
 
 async function queryCustomerFile({ resourceKey, query, params, signal }: PhiTableProviderQueryRequest) {
@@ -157,10 +70,10 @@ async function queryCustomerFile({ resourceKey, query, params, signal }: PhiTabl
     if (resourceKey === RESOURCES.threads) return { rows: [] };
     return resourceKey === RESOURCES.person ? { rows: [], total: 0, summary: { userId: null } } : { rows: [], total: 0 };
   }
-  // The person and their addresses are the same on every page; they ask for the first, as the threads
-  // Table does on a choice, so the three reads are one route.
-  const paged = buildPhiTablePageParams(resourceKey === RESOURCES.threads ? query : {}, THREADS_PAGE_SIZE);
-  const result = await readCustomerFile(buildPhiCustomerFilePath(userId, paged), signal).catch((error: unknown) => {
+  // The person and their addresses are the same on every page; they ask for the first, as the
+  // conversations Table and the Controller opening the file do on a choice, so the reads are one route.
+  const paged = buildPhiTablePageParams(resourceKey === RESOURCES.threads ? query : {}, PHI_CUSTOMER_FILE_THREADS_PAGE_SIZE);
+  const result = await readPhiCustomerFile(buildPhiCustomerFilePath(userId, paged), signal).catch((error: unknown) => {
     if (!(error instanceof PhiCustomerFileOwnFileRefusal)) throw error;
     // Said where the rows would be, in the Page's words where it gave them, and the picker stays.
     const notice = params?.[PHI_CUSTOMER_FILE_OWN_FILE_PARAM];
@@ -180,9 +93,7 @@ async function queryCustomerFile({ resourceKey, query, params, signal }: PhiTabl
     const rows = readPhiTableRows(result.person.addresses).map(toPhiSiteAddressRow);
     return { rows, total: rows.length };
   }
-  const page = Number(paged.get("page")) || 1;
-  const subject = typeof params?.[PHI_CUSTOMER_FILE_SUBJECT_PARAM] === "string" ? params[PHI_CUSTOMER_FILE_SUBJECT_PARAM] as string : "";
-  return { rows: toPhiCustomerFileThreadRows(result, page, subject) };
+  return { rows: toPhiCustomerFileThreadRows(result) };
 }
 
 const resources = PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS

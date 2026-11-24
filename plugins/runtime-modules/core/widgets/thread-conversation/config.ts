@@ -62,7 +62,12 @@ export const PHI_THREAD_CONVERSATION_WIDGET_DEFINITION = {
       { id: "reply", action: "activate", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction },
     ],
   },
-  fields: [{ key: "reply", type: "boolean", label: "Offer a reply" }],
+  fields: [
+    { key: "reply", type: "boolean", label: "Offer a reply" },
+    { key: "replyLabel", type: "string", label: "Reply label" },
+    { key: "title", type: "string", label: "Heading" },
+    { key: "emptyDescription", type: "string", label: "Text without a conversation" },
+  ],
   parseConfig: parsePhiThreadWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiThreadWidgetConfig>,

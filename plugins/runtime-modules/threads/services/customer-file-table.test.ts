@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { PHI_CUSTOMER_FILE_OWN_FILE_PARAM, PHI_CUSTOMER_FILE_RESOURCE_KEYS as RESOURCES } from "../../../../constants/customer-file";
 import { PHI_TABLE_PROVIDER_REFUSED_CODE } from "../../../../components/widgets/client/shared/phi-table-provider-refusal";
 import { PHI_THREADS_CUSTOMER_FILE_TABLE_PROVIDER_REGISTRATION as PROVIDER } from "./customer-file-table";
+import { readPhiCustomerFileThreadId } from "./customer-file-read";
 
 const FILE = {
   person: {
@@ -32,18 +33,22 @@ afterEach(() => {
 });
 
 describe("the customer file's Provider", () => {
-  it("answers the three resources read for one member at once with one request, and asks again after it settled", async () => {
+  it("answers the three resources and the file read for one member at once with one request, and asks again after it settled", async () => {
     const fetchMock = stubFetch();
-    const [person, addresses, threads] = await Promise.all([
+    const [person, addresses, threads, fileThreadId] = await Promise.all([
       read(RESOURCES.person, new AbortController().signal),
       read(RESOURCES.addresses, new AbortController().signal),
       read(RESOURCES.threads, new AbortController().signal),
+      // The Conversations Controller opening the member's file joins the same request.
+      readPhiCustomerFileThreadId(5, new AbortController().signal),
     ]);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0]![0]).toBe("/api/site/members/5/file?page=1&pageSize=25");
     expect(person.rows).toEqual([expect.objectContaining({ userId: 5, displayName: "Ada" })]);
     expect(addresses.rows).toHaveLength(1);
-    expect(threads.rows).toEqual([expect.objectContaining({ id: 9 })]);
+    // The file is no row of the conversations: it has a panel of its own.
+    expect(threads.rows).toEqual([]);
+    expect(fileThreadId).toBe(9);
 
     await read(RESOURCES.person, new AbortController().signal);
     expect(fetchMock).toHaveBeenCalledTimes(2);
@@ -104,6 +109,13 @@ describe("the customer file's Provider", () => {
       code: PHI_TABLE_PROVIDER_REFUSED_CODE,
       message: "Nobody reaches their own file.",
     });
+  });
+
+  it("opens no file for the reader's own, and fails any other refusal", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => Response.json({ error: "Nobody reaches their own file." }, { status: 403 })));
+    await expect(readPhiCustomerFileThreadId(5, undefined)).resolves.toBeNull();
+    vi.stubGlobal("fetch", vi.fn(async () => Response.json({ error: "No member of this Site has this id." }, { status: 404 })));
+    await expect(readPhiCustomerFileThreadId(5, undefined)).rejects.toMatchObject({ code: "request-failed" });
   });
 
   it("fails any other refusal as the source's failure", async () => {

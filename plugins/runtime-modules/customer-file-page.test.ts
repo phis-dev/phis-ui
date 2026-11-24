@@ -21,6 +21,7 @@ import { PHI_ACCOUNTING_RUNTIME_MODULE_ROUTES } from "./accounting/presets";
 import { PHI_ACCOUNTING_CUSTOMER_FILE_PAGE_PRESET_KEY } from "./accounting/ids";
 import { PHI_ACCOUNTING_CUSTOMER_FILE_ACCESS } from "./accounting/customer-file-access";
 import { PHI_THREADS_RUNTIME_MODULE_ROUTES } from "./threads/presets";
+import { createPhiThreadsControllerAddress } from "../../constants/threads-controller-address";
 import {
   buildPhiCustomerFilePath,
   toPhiCustomerFilePersonRow,
@@ -69,7 +70,7 @@ describe("the customer file page", () => {
     expect(PHI_THREADS_RUNTIME_MODULE_ROUTES.some((route) => route.path === "/customer-file")).toBe(false);
   });
 
-  it("picks the member with Core's member picker and hands the choice to the other two lists", async () => {
+  it("picks the member with Core's member picker and hands the choice to the lists and the file", async () => {
     const tree = await loadTree(PhiBaseRole.Accountant);
     expect(checkPhiPresetTreeContract(tree, { page: PAGE, forms: [] })).toEqual([]);
     expect(checkPhiPresetTables(tree, { dataProviders: PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS })).toEqual([]);
@@ -85,13 +86,28 @@ describe("the customer file page", () => {
     const filters = (person!.config.features as { filters: { key: string; optionsProvider: { providerKey: string } }[] }).filters;
     expect(filters.map((filter) => [filter.key, filter.optionsProvider.providerKey]))
       .toEqual([["userId", PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteMembers]]);
-    const emits = (person!.config.signalRoutes as { emits: { capabilityId: string; receiver: string }[] }).emits;
-    expect(emits.map((entry) => entry.capabilityId)).toEqual(["queryChange", "queryChange"]);
-    expect(emits.map((entry) => entry.receiver)).toEqual([`cms:${addresses!.id}`, `cms:${threads!.id}`]);
-    // The conversation and Core's Reply Form, with the internal note offered.
-    expect(tree.contentWidgets.some((widget) => widget.widgetType.endsWith("/thread-conversation"))).toBe(true);
-    const reply = tree.contentWidgets.find((widget) => widget.widgetType.endsWith("/form"))!;
-    expect((reply.config.formConfig as { initialValues: unknown }).initialValues).toEqual({ internalAllowed: true });
+    const emits = (person!.config.signalRoutes as { emits: { capabilityId: string; channel: string; receiver: string }[] }).emits;
+    expect(emits.map((entry) => [entry.capabilityId, entry.channel])).toEqual([["queryChange", "query"], ["queryChange", "query"], ["queryChange", "member"]]);
+    const controller = createPhiThreadsControllerAddress();
+    expect(emits.map((entry) => entry.receiver)).toEqual([`cms:${addresses!.id}`, `cms:${threads!.id}`, controller]);
+    // Two readers: the file, which the Controller opens for the member, and the conversation chosen below it.
+    const readers = tree.contentWidgets.filter((widget) => widget.widgetType.endsWith("/thread-conversation"));
+    expect(readers.map((widget) => widget.config.title ?? null)).toEqual(["File", null]);
+    const controllerEmits = (tree.controllerSettings![0]!.config!.signalRoutes as { emits: { capabilityId: string; receiver: string }[] }).emits;
+    expect(controllerEmits.filter((entry) => entry.capabilityId.startsWith("file")).map((entry) => entry.receiver))
+      .toEqual([`cms:${readers[0]!.id}`, `cms:${readers[0]!.id}`]);
+    // Each Reply reaches its own dialog's Form and the Controller, which so knows where the message landed.
+    for (const reader of readers) {
+      const replies = (reader.config.signalRoutes as { emits: { capabilityId: string; receiver: string }[] }).emits
+        .filter((entry) => entry.capabilityId === "reply").map((entry) => entry.receiver);
+      expect(replies).toHaveLength(3);
+      expect(replies).toContain(controller);
+    }
+    // Core's Reply Form twice: the note's, where every message is internal, and the reply's, which offers it.
+    const forms = tree.contentWidgets.filter((widget) => widget.widgetType.endsWith("/form"));
+    expect(forms.map((form) => (form.config.formConfig as { initialValues: unknown } | undefined)?.initialValues ?? null))
+      .toEqual([null, { internalAllowed: true }]);
+    expect(tree.overlays).toHaveLength(2);
     expect(tree.controllerSettings?.length).toBe(1);
   });
 
@@ -112,13 +128,15 @@ describe("the customer file page", () => {
     }
   });
 
-  it("reads Core's answer: the person, and the file first on the first page", () => {
+  it("reads Core's answer: the person, and the conversations without the file", () => {
     expect(buildPhiCustomerFilePath(5, new URLSearchParams({ page: "1", pageSize: "25" }))).toBe("/api/site/members/5/file?page=1&pageSize=25");
     expect(toPhiCustomerFilePersonRow({ userId: 5, displayName: "Ada", name: { firstName: "Ada", lastName: "Lovelace", companyName: null }, phone: { phone: "1", mobile: null } }))
       .toEqual({ userId: 5, displayName: "Ada", fullName: "Ada Lovelace", companyName: "", email: "", phone: "1", mobile: "" });
     const answer = { fileThreadId: 9, threads: [{ id: 3, kind: PhisThreadKind.Support, status: PhisThreadStatus.Open, unread: true }] };
-    expect(toPhiCustomerFileThreadRows(answer, 1, "Customer file").map((row) => [(row as { id?: unknown }).id, row.kind, row.state]))
-      .toEqual([[9, String(PhisThreadKind.File), "open"], [3, String(PhisThreadKind.Support), "unread"]]);
-    expect(toPhiCustomerFileThreadRows(answer, 2, "Customer file").map((row) => (row as { id: number }).id)).toEqual([3]);
+    expect(toPhiCustomerFileThreadRows(answer).map((row) => [(row as { id?: unknown }).id, row.kind, row.state]))
+      .toEqual([[3, String(PhisThreadKind.Support), "unread"]]);
+    // A row of the file the list carries is left out: the file has its own panel.
+    const listed = { ...answer, threads: [{ id: 9, kind: PhisThreadKind.File, status: PhisThreadStatus.Open }, ...answer.threads] };
+    expect(toPhiCustomerFileThreadRows(listed).map((row) => (row as { id?: unknown }).id)).toEqual([3]);
   });
 });

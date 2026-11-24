@@ -71,7 +71,7 @@ export const PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
       },
       {
         resourceKey: PHI_CUSTOMER_FILE_RESOURCE_KEYS.threads,
-        title: "Threads",
+        title: "Conversations",
         rowIdentityPath: "id",
         // Choosing one opens it in the conversation beside the list, as the inbox does.
         rowActivation: true,

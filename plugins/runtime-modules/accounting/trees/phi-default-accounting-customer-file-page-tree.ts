@@ -22,7 +22,6 @@ import {
   PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS,
   PHI_CUSTOMER_FILE_RESOURCE_KEYS as RESOURCES,
   PHI_CUSTOMER_FILE_OWN_FILE_PARAM,
-  PHI_CUSTOMER_FILE_SUBJECT_PARAM,
 } from "../../../../constants/customer-file";
 import { PHI_ACCOUNTING_CUSTOMER_FILE_PAGE_IDS } from "../ids";
 import { PHI_ACCOUNTING_CUSTOMER_FILE_ACCESS } from "../customer-file-access";
@@ -41,11 +40,13 @@ const SYNTHETIC_CUSTOMER_FILE_REGION_ID = -459;
  * conversations Module's, which is active in the Accounting Area by default and has to be for this Page
  * to read anything. The person Table's filter is Core's member picker
  * (the `site-members` options with Core's search, which matches names, e-mail addresses and telephone
- * numbers); its query goes to the addresses and the threads Tables, so one choice fills all three. The
- * threads Table lists the person's file first, and choosing a row is the conversations Page's choreography
- * unchanged: the Conversations Controller makes the selection a thread, the conversation reads it, and its
- * Reply opens Core's Reply Form in a dialog -- with the internal note offered, which is every message of a
- * file anyway.
+ * numbers); its query goes to the addresses and the conversations Tables and to the Conversations
+ * Controller, so one choice fills the Page with one request: the Controller joins the Tables' read for the
+ * file's id and hands it to the file panel, a conversation reader whose "Add note" opens Core's Reply Form
+ * in a dialog of its own (every message of a file is internal). The conversations Table lists the person's
+ * conversations, the file not among them, and choosing a row is the conversations Page's choreography
+ * unchanged: the Controller makes the selection a thread, the conversation reader below reads it, and its
+ * Reply opens the Reply dialog with the internal note offered.
  *
  * The Page is for the holders of `accounting` (`PHI_ACCOUNTING_CUSTOMER_FILE_ACCESS`), who read every
  * field, the addresses included. A viewer the Area admits without it is told so in the Page and nothing is
@@ -99,8 +100,11 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
 
   const controllerAddress = createPhiThreadsControllerAddress();
   const addressesAddress = createPhiSignalAddress("cms", widgetIds.widgetAddresses);
+  const fileAddress = createPhiSignalAddress("cms", widgetIds.widgetFile);
   const threadsAddress = createPhiSignalAddress("cms", widgetIds.widgetThreads);
   const conversationAddress = createPhiSignalAddress("cms", widgetIds.widgetConversation);
+  const noteOverlayAddress = createPhiSignalAddress("cms", overlayIds.overlayNote);
+  const noteFormAddress = createPhiSignalAddress("cms", widgetIds.widgetNoteForm);
   const replyOverlayAddress = createPhiSignalAddress("cms", overlayIds.overlayReply);
   const replyFormAddress = createPhiSignalAddress("cms", widgetIds.widgetReplyForm);
   const route = (routeKey: string, capabilityId: string, channel: string, action: "change" | "activate" | "reload" | "close", receiver: PhiSignalReceiver, valueType: "json" | "none" = "none", valueSchema?: PhiSignalValueSchema) => ({
@@ -113,9 +117,6 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
     ...(valueSchema ? { valueSchema } : {}),
     receiver,
   });
-  // The member chosen above, handed on as the query the two lists below read it from.
-  const personQueryTo = (routeKey: string, receiver: PhiSignalReceiver) =>
-    route(routeKey, "queryChange", "query", "change", receiver, "json", PHI_SIGNAL_VALUE_SCHEMAS.tableQuery);
   const queryInput = (routeKey: string, receiver: PhiSignalReceiver) =>
     route(routeKey, "queryChange", "query", "change", receiver, "json", PHI_SIGNAL_VALUE_SCHEMAS.tableQuery);
   const tableAction = (routeKey: string, capabilityId: string, receiver: PhiSignalReceiver) =>
@@ -126,50 +127,122 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
   // What each Table says where its rows would be when the reader chooses themselves (Core refuses that file).
   const ownFile = { [PHI_CUSTOMER_FILE_OWN_FILE_PARAM]: labels.ownFile };
 
-  const replyDialog = nodes.dialog({
-    id: overlayIds.overlayReply,
-    bodyLayoutNodeId: layoutIds.layoutReply,
-    sortOrder: 0,
-    label: `${prefix}-reply-modal`,
-    config: {
-      title: labels.noteLabel,
-      size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN },
-      mountPolicy: "remount",
-      closeMode: "immediate",
-      openActionKey: "reply",
-      signalRoutes: {
-        listens: [
-          tableAction(`${prefix}-reply-open`, "open", replyOverlayAddress),
-          route(`${prefix}-reply-close`, "close", "dialog", "close", replyOverlayAddress),
-        ],
-      },
-    },
-    commands: {
-      footerLayoutNodeId: layoutIds.layoutReplyFooter,
-      widgetId: widgetIds.widgetReplyCommands,
-      label: labels.noteLabel,
-      flags: PhiCmsFlags.NoTranslate,
+  /*
+   * Core's Reply Form in a dialog, once for a note in the file and once for a reply in the conversation:
+   * each opens on its own reader's Reply and reads its thread from the row that Reply named. Every message
+   * of a file is internal (Core), so the note offers no audience; the reply offers the internal note.
+   */
+  const writeDialog = (kind: "note" | "reply") => {
+    const note = kind === "note";
+    const overlayAddress = note ? noteOverlayAddress : replyOverlayAddress;
+    const formAddress = note ? noteFormAddress : replyFormAddress;
+    const title = note ? labels.note.title : labels.reply.title;
+    const dialog = nodes.dialog({
+      id: note ? overlayIds.overlayNote : overlayIds.overlayReply,
+      bodyLayoutNodeId: note ? layoutIds.layoutNote : layoutIds.layoutReply,
+      sortOrder: note ? 0 : 1,
+      label: `${prefix}-${kind}-modal`,
       config: {
-        key: `${prefix}-reply-commands`,
-        buttons: [
-          { key: "cancel", emits: [{ capabilityId: "close", value: null }], action: "cancel", icon: "close" },
-          {
-            key: "submit",
-            emits: [{ capabilityId: "submit", value: null }],
-            label: labels.replySendLabel,
-            variant: "primary",
-            icon: "antd:send-outlined",
-          },
-        ],
+        title,
+        size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN },
+        mountPolicy: "remount",
+        closeMode: "immediate",
+        openActionKey: "reply",
         signalRoutes: {
-          emits: [
-            route(`${prefix}-reply-cancel`, "close", "dialog", "close", replyOverlayAddress),
-            route(`${prefix}-reply-commands-submit`, "submit", "submit", "activate", replyFormAddress),
+          listens: [
+            tableAction(`${prefix}-${kind}-open`, "open", overlayAddress),
+            route(`${prefix}-${kind}-close`, "close", "dialog", "close", overlayAddress),
           ],
         },
       },
-    },
-  });
+      commands: {
+        footerLayoutNodeId: note ? layoutIds.layoutNoteFooter : layoutIds.layoutReplyFooter,
+        widgetId: note ? widgetIds.widgetNoteCommands : widgetIds.widgetReplyCommands,
+        label: title,
+        flags: PhiCmsFlags.NoTranslate,
+        config: {
+          key: `${prefix}-${kind}-commands`,
+          buttons: [
+            { key: "cancel", emits: [{ capabilityId: "close", value: null }], action: "cancel", icon: "close" },
+            {
+              key: "submit",
+              emits: [{ capabilityId: "submit", value: null }],
+              label: note ? labels.note.save : labels.reply.send,
+              variant: "primary",
+              icon: note ? "save" : "antd:send-outlined",
+            },
+          ],
+          signalRoutes: {
+            emits: [
+              route(`${prefix}-${kind}-cancel`, "close", "dialog", "close", overlayAddress),
+              route(`${prefix}-${kind}-commands-submit`, "submit", "submit", "activate", formAddress),
+            ],
+          },
+        },
+      },
+    });
+    const form = nodes.widget({
+      id: formAddress === noteFormAddress ? widgetIds.widgetNoteForm : widgetIds.widgetReplyForm,
+      parentLayoutNodeId: note ? layoutIds.layoutNote : layoutIds.layoutReply,
+      typeKey: "form",
+      slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+      label: title,
+      flags: PhiCmsFlags.NoTranslate,
+      config: {
+        formId: PHI_SHARED_FORM_IDS.threadReply,
+        // A reply may be an internal note; in the file every message is one (Core), so there is nothing to choose.
+        ...(note ? {} : { formConfig: { initialValues: { internalAllowed: true } } }),
+        execution: { mode: "handler" },
+        source: { providerKey: PHI_THREAD_LIBRARY_DATA_PROVIDER_KEYS.table, resourceKey: "inbox" },
+        openActionKey: "reply",
+        feedback: { mode: "message" },
+        signalRoutes: {
+          emits: [
+            route(`${prefix}-${kind}-success`, "submitSuccess", "submit", "activate", controllerAddress, "json", PHI_SIGNAL_VALUE_SCHEMAS.formResult),
+            route(`${prefix}-${kind}-success-close`, "submitSuccess", "dialog", "close", overlayAddress),
+          ],
+          listens: [
+            route(`${prefix}-${kind}-submit`, "submit", "submit", "activate", formAddress),
+            tableAction(`${prefix}-${kind}-record-open`, "recordOpen", formAddress),
+          ],
+        },
+      },
+    });
+    return { dialog, form };
+  };
+  const noteDialog = writeDialog("note");
+  const replyDialog = writeDialog("reply");
+
+  /*
+   * A conversation reader: the file's, which the Controller hands the member's file, and the listing's,
+   * which it hands the chosen conversation. Each Reply opens its own dialog and reads its own Form, and
+   * reaches the Controller too, which then knows where the message landed.
+   */
+  const reader = (kind: "file" | "conversation") => {
+    const file = kind === "file";
+    const address = file ? fileAddress : conversationAddress;
+    const overlayAddress = file ? noteOverlayAddress : replyOverlayAddress;
+    const formAddress = file ? noteFormAddress : replyFormAddress;
+    return {
+      reply: true,
+      ...(file ? { title: labels.file.title, replyLabel: labels.file.add, emptyDescription: labels.file.empty } : { emptyDescription: labels.conversation.empty }),
+      signalRoutes: {
+        emits: [
+          ...(file ? [] : [
+            // A conversation opened from `?thread=` reaches the Controller, which knows it is open.
+            route(`${prefix}-conversation-opened`, "opened", "opened", "change", controllerAddress, "json", PHI_SIGNAL_VALUE_SCHEMAS.threadSelection),
+          ]),
+          tableAction(`${prefix}-${kind}-reply`, "reply", overlayAddress),
+          tableAction(`${prefix}-${kind}-reply-record`, "reply", formAddress),
+          tableAction(`${prefix}-${kind}-reply-controller`, "reply", controllerAddress),
+        ],
+        listens: [
+          threadRoute(`${prefix}-${kind}-select`, "select", "change", address),
+          threadRoute(`${prefix}-${kind}-reload`, "reload", "reload", address),
+        ],
+      },
+    };
+  };
 
   const addressColumns: PhiTableColumnDefinition[] = [
     { key: "name", fieldKey: "name", title: labels.addresses.columns.name, sizing: { mode: "content" } },
@@ -188,8 +261,11 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
   return {
     page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     pageMeta,
-    // The Conversations Controller, configured as on the conversations Page: the thread to the reader, and
-    // the list read again after a note landed.
+    /*
+     * The Conversations Controller, configured as on the conversations Page -- the chosen conversation to
+     * its reader, the listing read again after a reply -- and with this Page's part: the member's file to
+     * the file panel when the person Table chooses one, read again after a note.
+     */
     controllerSettings: [{
       type: PHI_THREADS_CONTROLLER_TYPE,
       instanceKey: PHI_THREADS_CONTROLLER_INSTANCE_KEY,
@@ -199,14 +275,16 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
           emits: [
             threadRoute(`${prefix}-controller-thread`, "threadChange", "change", conversationAddress),
             threadRoute(`${prefix}-controller-thread-reload`, "threadReload", "reload", conversationAddress),
+            threadRoute(`${prefix}-controller-file`, "fileThreadChange", "change", fileAddress),
+            threadRoute(`${prefix}-controller-file-reload`, "fileThreadReload", "reload", fileAddress),
             route(`${prefix}-controller-reload-threads`, "reload", "reload", "activate", threadsAddress),
           ],
         },
       },
     }],
-    overlays: [replyDialog.overlay],
+    overlays: [noteDialog.dialog.overlay, replyDialog.dialog.overlay],
     regions: [scaffold.region],
-    layoutNodes: [scaffold.layoutNode, ...replyDialog.layouts],
+    layoutNodes: [scaffold.layoutNode, ...noteDialog.dialog.layouts, ...replyDialog.dialog.layouts],
     contentWidgets: [
       nodes.widget({
         id: widgetIds.widgetPerson,
@@ -224,12 +302,12 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
             controlSize: "small",
             layout: { mode: "auto", overflowX: "auto" },
             columns: [
-              { key: "displayName", fieldKey: "displayName", title: labels.person.columns.displayName, sizing: { mode: "content" } },
-              { key: "fullName", fieldKey: "fullName", title: labels.person.columns.name, sizing: { mode: "content" } },
-              { key: "companyName", fieldKey: "companyName", title: labels.person.columns.company, sizing: { mode: "content" } },
-              { key: "email", fieldKey: "email", title: labels.person.columns.email, renderer: "email", sizing: { mode: "fill" } },
-              { key: "phone", fieldKey: "phone", title: labels.person.columns.phone, sizing: { mode: "content" } },
-              { key: "mobile", fieldKey: "mobile", title: labels.person.columns.mobile, sizing: { mode: "content" } },
+              { key: "displayName", fieldKey: "displayName", title: labels.person.columns.displayName, sizing: { mode: "content", minWidth: 120 } },
+              { key: "fullName", fieldKey: "fullName", title: labels.person.columns.name, sizing: { mode: "content", minWidth: 120 } },
+              { key: "companyName", fieldKey: "companyName", title: labels.person.columns.company, sizing: { mode: "content", minWidth: 120 } },
+              { key: "email", fieldKey: "email", title: labels.person.columns.email, renderer: "email", sizing: { mode: "fill", minWidth: 200 } },
+              { key: "phone", fieldKey: "phone", title: labels.person.columns.phone, sizing: { mode: "content", minWidth: 120 } },
+              { key: "mobile", fieldKey: "mobile", title: labels.person.columns.mobile, sizing: { mode: "content", minWidth: 120 } },
             ],
             emptyState: { title: labels.person.empty },
             footer: {
@@ -239,9 +317,11 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
               variants: [{ when: { value: { source: "provider", fieldKey: "userId" }, operator: "falsy" }, template: "" }],
               align: "start",
             },
+            // One row, the member chosen.
+            loadingRows: 1,
           },
           features: {
-            // The two lists below take this query, so it pages as they do.
+            // The other readers take this query, so it pages as they do.
             pagination: { enabled: false, pageSize: 25 },
             sorting: { mode: "none" },
             search: { enabled: false },
@@ -259,9 +339,12 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
             }],
           },
           signalRoutes: {
+            // The member chosen, handed on as the query the lists read it from, and to the Controller,
+            // which opens their file.
             emits: [
-              personQueryTo(`${prefix}-person-to-addresses`, addressesAddress),
-              personQueryTo(`${prefix}-person-to-threads`, threadsAddress),
+              route(`${prefix}-person-to-addresses`, "queryChange", "query", "change", addressesAddress, "json", PHI_SIGNAL_VALUE_SCHEMAS.tableQuery),
+              route(`${prefix}-person-to-threads`, "queryChange", "query", "change", threadsAddress, "json", PHI_SIGNAL_VALUE_SCHEMAS.tableQuery),
+              route(`${prefix}-person-to-file`, "queryChange", "member", "change", controllerAddress, "json", PHI_SIGNAL_VALUE_SCHEMAS.tableQuery),
             ],
           },
         },
@@ -286,6 +369,8 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
             footer: {
               template: labels.addresses.footer,
               values: [{ key: "addresses", value: { source: "core", fieldKey: "totalRows" } }],
+              // None, or none read (the reader's own file): the empty state says it.
+              variants: [{ when: { value: { source: "core", fieldKey: "totalRows" }, operator: "falsy" }, template: "" }],
               align: "start",
             },
           },
@@ -298,21 +383,33 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
           signalRoutes: { listens: [queryInput(`${prefix}-addresses-query`, addressesAddress)] },
         },
       }),
+      // The member's file: its entries, internal notes and what Add-ons wrote with their links, and "Add note".
       nodes.widget({
-        id: widgetIds.widgetThreads,
+        id: widgetIds.widgetFile,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
-        typeKey: "table",
+        typeKey: "thread-conversation",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 2,
         sortOrder: 2,
         // The Module's Label Set, translated already.
         flags: PhiCmsFlags.NoTranslate,
+        label: labels.file.label,
+        config: reader("file"),
+      }),
+      nodes.widget({
+        id: widgetIds.widgetThreads,
+        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
+        typeKey: "table",
+        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 3,
+        sortOrder: 3,
+        // The Module's Label Set, translated already.
+        flags: PhiCmsFlags.NoTranslate,
         label: labels.threads.label,
         config: {
-          // The file's own subject, which Core does not answer: in the reader's language, from this Page.
-          source: { providerKey: PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS.table, resourceKey: RESOURCES.threads, params: { ...ownFile, [PHI_CUSTOMER_FILE_SUBJECT_PARAM]: labels.fileSubject } },
+          source: { providerKey: PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS.table, resourceKey: RESOURCES.threads, params: ownFile },
           presentation: {
             title: labels.threads.title,
             controlSize: "small",
+            // Fixed, as on the conversations Page: the subject is the one column worth cutting short.
             layout: { mode: "fixed", overflowX: "auto" },
             columns: [
               { key: "subject", fieldKey: "subject", title: labels.threads.columns.subject, ellipsis: true, sizing: { mode: "fill", minWidth: 200 } },
@@ -326,7 +423,6 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
                   [String(PhisThreadKind.Group)]: labels.threads.kinds.group,
                   [String(PhisThreadKind.CrossGroup)]: labels.threads.kinds.crossGroup,
                   [String(PhisThreadKind.Support)]: labels.threads.kinds.support,
-                  [String(PhisThreadKind.File)]: labels.threads.kinds.file,
                 },
               },
               {
@@ -340,17 +436,20 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
               },
               { key: "latestMessageAt", fieldKey: "latestMessageAt", title: labels.threads.columns.activity, renderer: "datetime", sizing: { mode: "fixed", width: 180 } },
             ],
-            emptyState: { title: labels.threads.empty },
+            emptyState: { title: labels.threads.empty, description: labels.threads.emptyHint },
             footer: {
               template: labels.threads.footer,
               values: [
                 { key: "threads", value: { source: "core", fieldKey: "pageRows" } },
                 { key: "page", value: { source: "core", fieldKey: "page" } },
               ],
+              // Nothing on the page: the empty state says it.
+              variants: [{ when: { value: { source: "core", fieldKey: "pageRows" }, operator: "falsy" }, template: "" }],
               align: "start",
             },
           },
           features: {
+            // Choosing one opens it below, as on the conversations Page.
             rowSelection: { mode: "single", preserveSelectedRowIdentities: true },
             pagination: { enabled: true, pageSize: 25 },
             sorting: { mode: "none" },
@@ -374,57 +473,17 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
         id: widgetIds.widgetConversation,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "thread-conversation",
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 3,
-        sortOrder: 3,
-        label: labels.title,
-        config: {
-          reply: true,
-          signalRoutes: {
-            emits: [
-              // A conversation opened from `?thread=` reaches the Controller, which knows it is open.
-              route(`${prefix}-conversation-opened`, "opened", "opened", "change", controllerAddress, "json", PHI_SIGNAL_VALUE_SCHEMAS.threadSelection),
-              // Reply: one announcement, two listeners -- the dialog opens on it, the Form reads its row.
-              tableAction(`${prefix}-conversation-reply`, "reply", replyOverlayAddress),
-              tableAction(`${prefix}-conversation-reply-record`, "reply", replyFormAddress),
-            ],
-            listens: [
-              threadRoute(`${prefix}-conversation-select`, "select", "change", conversationAddress),
-              threadRoute(`${prefix}-conversation-reload`, "reload", "reload", conversationAddress),
-            ],
-          },
-        },
-      }),
-      /*
-       * Core's Reply Form, reading its thread from the row the conversation's Reply named, as on the
-       * conversations Page. Staff may mark a note internal; in the file every message is internal anyway.
-       */
-      nodes.widget({
-        id: widgetIds.widgetReplyForm,
-        parentLayoutNodeId: layoutIds.layoutReply,
-        typeKey: "form",
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-        label: labels.noteLabel,
+        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 4,
+        sortOrder: 4,
+        // The Module's Label Set, translated already.
         flags: PhiCmsFlags.NoTranslate,
-        config: {
-          formId: PHI_SHARED_FORM_IDS.threadReply,
-          formConfig: { initialValues: { internalAllowed: true } },
-          execution: { mode: "handler" },
-          source: { providerKey: PHI_THREAD_LIBRARY_DATA_PROVIDER_KEYS.table, resourceKey: "inbox" },
-          openActionKey: "reply",
-          feedback: { mode: "message" },
-          signalRoutes: {
-            emits: [
-              route(`${prefix}-reply-success`, "submitSuccess", "submit", "activate", controllerAddress, "json", PHI_SIGNAL_VALUE_SCHEMAS.formResult),
-              route(`${prefix}-reply-success-close`, "submitSuccess", "dialog", "close", replyOverlayAddress),
-            ],
-            listens: [
-              route(`${prefix}-reply-submit`, "submit", "submit", "activate", replyFormAddress),
-              tableAction(`${prefix}-reply-record-open`, "recordOpen", replyFormAddress),
-            ],
-          },
-        },
+        label: labels.conversation.label,
+        config: reader("conversation"),
       }),
-      ...replyDialog.widgets,
+      noteDialog.form,
+      replyDialog.form,
+      ...noteDialog.dialog.widgets,
+      ...replyDialog.dialog.widgets,
     ],
   };
 }

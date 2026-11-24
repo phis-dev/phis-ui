@@ -35,7 +35,6 @@ export { PHI_THREAD_LIBRARY_DATA_PROVIDER_KEYS } from "./constants/thread-librar
 export {
   PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS,
   PHI_CUSTOMER_FILE_RESOURCE_KEYS,
-  PHI_CUSTOMER_FILE_SUBJECT_PARAM,
 } from "./constants/customer-file";
 export {
   PHIS_AREA_HEADER,

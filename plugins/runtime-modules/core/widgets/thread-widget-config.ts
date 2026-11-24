@@ -28,8 +28,22 @@ export type PhiThreadWidgetConfig = {
    * conversation, which takes no new messages.
    */
   reply?: boolean;
+  /**
+   * The heading in place of the conversation's own subject, for a placement that always shows one kind of
+   * conversation and names it -- a customer file's File, which Core opens without a subject. Already in the
+   * reader's language.
+   */
+  title?: string;
+  /** What the Reply says, where the placement offers it as something else -- "Add note" in a file. */
+  replyLabel?: string;
+  /** The sentence where no conversation is chosen yet, in place of the Widget's own. */
+  emptyDescription?: string;
   signalRoutes?: PhiSignalRouteSet | null;
 };
+
+function readText(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
 
 export function parsePhiThreadWidgetConfig(
   rawConfig: Record<string, unknown> | null | undefined,
@@ -40,6 +54,9 @@ export function parsePhiThreadWidgetConfig(
   return {
     padding: typeof padding === "number" || typeof padding === "string" ? padding : undefined,
     reply: raw.reply === true,
+    title: readText(raw.title),
+    replyLabel: readText(raw.replyLabel),
+    emptyDescription: readText(raw.emptyDescription),
     signalRoutes: readPhiSignalRouteSet(raw.signalRoutes),
   };
 }

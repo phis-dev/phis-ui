@@ -544,7 +544,7 @@ export function PhiThreadConversationWidgetClient({
   if (threadId == null) {
     return (
       <PhiCardControl padding={config?.padding}>
-        <PhiTypographyControl type="secondary">{labels.noThreadText}</PhiTypographyControl>
+        <PhiTypographyControl type="secondary">{config?.emptyDescription ?? labels.noThreadText}</PhiTypographyControl>
       </PhiCardControl>
     );
   }
@@ -582,7 +582,7 @@ export function PhiThreadConversationWidgetClient({
         toolbar={config?.reply && !archived && !locked ? (
           // Small, like every control in a heading bar: it sits beside the title, not under the conversation.
           <PhiButtonControl
-            label={labels.replyLabel}
+            label={config?.replyLabel ?? labels.replyLabel}
             icon={<PhiIcon name="antd:message-outlined" size="inherit" />}
             size="small"
             onClick={reply}
@@ -590,7 +590,7 @@ export function PhiThreadConversationWidgetClient({
         ) : undefined}
         title={
           <PhiFlexControl align="center" gap="small" wrap>
-            {readThreadTitle(detail, labels)}
+            {config?.title ?? readThreadTitle(detail, labels)}
             {archived ? (
               <PhiTagControl>{labels.archivedLabel}</PhiTagControl>
             ) : null}

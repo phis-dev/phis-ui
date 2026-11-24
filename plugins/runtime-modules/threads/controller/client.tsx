@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { PhiRuntimeControllerPlugin } from "../../../../types";
 import {
@@ -22,6 +22,9 @@ import {
   PHI_THREADS_RUNTIME_CONTROLLER_DEFINITION,
   type PhiThreadsControllerConfig,
 } from "./definition";
+import { isPhiRecord } from "../../../../helpers/is-record";
+import { readPhiPositiveInteger } from "../../../../components/widgets/client/shared/phi-table-provider-request";
+import { readPhiCustomerFileThreadId } from "../services/customer-file-read";
 
 type ControllerRenderArgs = Parameters<NonNullable<
   PhiRuntimeControllerPlugin<PhiThreadsControllerConfig>["renderController"]
@@ -48,6 +51,12 @@ function readSelectedThreadId(value: unknown) {
  * what came back. Reading `{ thread: { thread: { id } } }` out of it is a statement about the Core
  * route's answer, which is exactly the kind of knowledge that belongs in the Module and nowhere else.
  */
+/** The member a customer file Page's person Table chose, from its query (`filters.userId`). */
+function readChosenMemberId(value: unknown) {
+  const filters = isPhiRecord(value) && isPhiRecord(value.filters) ? value.filters : null;
+  return filters ? readPhiPositiveInteger(filters.userId) : null;
+}
+
 function readCreatedThreadId(value: unknown) {
   const payload = (value as { payload?: unknown } | null)?.payload as
     { thread?: { thread?: { id?: unknown } } } | null | undefined;
@@ -70,6 +79,14 @@ function PhiThreadsControllerView({
    * it cannot merely pass through.
    */
   const [openThreadId, setOpenThreadId] = useState<number | null>(null);
+  /*
+   * A customer file Page's two readers apart: the member's file, and the conversation a Reply was last
+   * pressed in -- the file's or the listing's -- so the note that lands is read again where it was written.
+   */
+  const [fileThreadId, setFileThreadId] = useState<number | null>(null);
+  const [replyThreadId, setReplyThreadId] = useState<number | null>(null);
+  const memberRead = useRef<{ userId: number | null; controller: AbortController | null }>({ userId: null, controller: null });
+  useEffect(() => () => memberRead.current.controller?.abort(), []);
   const emitRoutes = useMemo(() => config.signalRoutes?.emits ?? [], [config.signalRoutes?.emits]);
 
   /*
@@ -130,6 +147,26 @@ function PhiThreadsControllerView({
     );
   }, [emitCapability]);
 
+  /*
+   * Another member chosen: their file, read from the request the Page's Tables make for the same choice
+   * (it joins that one, so a choice stays one entry in the access log), handed to the file panel. Nobody
+   * chosen, the reader's own file and a failed read all close the panel; the Tables say why.
+   */
+  const openMemberFile = useCallback((userId: number | null, correlationId: string) => {
+    if (memberRead.current.userId === userId) return;
+    memberRead.current.controller?.abort();
+    const controller = userId == null ? null : new AbortController();
+    memberRead.current = { userId, controller };
+    setFileThreadId(null);
+    emitCapability("fileThreadChange", { threadId: null }, correlationId);
+    if (userId == null || !controller) return;
+    readPhiCustomerFileThreadId(userId, controller.signal).then((threadId) => {
+      if (controller.signal.aborted) return;
+      setFileThreadId(threadId);
+      if (threadId != null) emitCapability("fileThreadChange", { threadId }, correlationId);
+    }, () => undefined);
+  }, [emitCapability]);
+
   const reloadInbox = useCallback((correlationId: string) =>
     emitCapability("reload", null, correlationId), [emitCapability]);
 
@@ -159,7 +196,12 @@ function PhiThreadsControllerView({
 
     // The toolbar's `+`. A Table says which action was run and on which row; what that means is here.
     if (signal.channel === "action" && signal.action === "activate") {
-      if (readPhiTableActionSignalValue(signal.value)?.actionKey !== "newConversation") return;
+      const tableAction = readPhiTableActionSignalValue(signal.value);
+      if (tableAction?.actionKey === "reply") {
+        setReplyThreadId(readPhiPositiveInteger(tableAction.rowIdentity));
+        return;
+      }
+      if (tableAction?.actionKey !== "newConversation") return;
       setSubmitting(false);
       emitCapability("dialogOpen", null, signal.correlationId);
       return;
@@ -212,6 +254,11 @@ function PhiThreadsControllerView({
          * A message landed in the open conversation, from the Reply dialog. The reader is asked to catch
          * up rather than to switch, and the listing is stale because its order is by last activity.
          */
+        // A note in the member's file: the file panel catches up, and the listing, which leaves it out, is as it was.
+        if (fileThreadId != null && replyThreadId === fileThreadId) {
+          emitCapability("fileThreadReload", { threadId: fileThreadId }, signal.correlationId);
+          return;
+        }
         reloadInbox(signal.correlationId);
         emitCapability("threadReload", { threadId: openThreadId }, signal.correlationId);
         return;
@@ -231,6 +278,11 @@ function PhiThreadsControllerView({
       return;
     }
 
+    if (signal.channel === "member" && signal.action === "change") {
+      openMemberFile(readChosenMemberId(signal.value), signal.correlationId);
+      return;
+    }
+
     if (signal.channel === "opened" && signal.action === "change") {
       const opened = readPhiThreadSignalValue(signal.value)?.threadId ?? null;
       if (opened != null) sendThread(opened, signal.correlationId, { tellReader: false });
@@ -240,8 +292,11 @@ function PhiThreadsControllerView({
     closeDialog,
     dialogFormAddresses,
     emitCapability,
+    fileThreadId,
+    openMemberFile,
     openThreadId,
     reloadInbox,
+    replyThreadId,
     resetForm,
     sendThread,
     submitting,
