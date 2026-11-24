@@ -880,9 +880,9 @@ a Module's forward off by choosing "nowhere": that choice is read as no choice, 
 `checkPhiRouteAddresses(routes)` (`@phis/ui/module/page-check`) reports every route beneath another of
 the same Area. Run it over your route descriptors in your verify step and fail on a finding. The rule
 holds across packages too: a route of yours beneath another package's route of the same Area breaks it
-as much as one beneath your own. Compiling the catalog will refuse an installed package whose routes break
-it (`refusePhiCatalogRouteAddresses` in `helpers/route-address-check.ts`, the rule over every installed
-route; not yet wired, until every first-party package keeps it). On Public, where a Site assigns another
+as much as one beneath your own. Compiling the catalog refuses an installed package whose routes break it
+(`refusePhiCatalogRouteAddresses` in `helpers/route-address-check.ts`, the rule over every installed
+route, called by `resolvePhiCmsDescriptorCatalog`). On Public, where a Site assigns another
 address when two Modules want one, the Builder's dialog holds the assigned address to it as well: an address
 beneath or above a Site Page or another Module's route is contested like a taken one, and the proposal it
 opens with is neither.

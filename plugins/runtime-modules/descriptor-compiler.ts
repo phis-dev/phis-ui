@@ -80,6 +80,7 @@ import {
   type PhiPublicRoutePathAssignment,
 } from "../../helpers/cms-area-config";
 import { checkPhiPresetTreeContract } from "../../helpers/preset-tree-contract-check";
+import { refusePhiCatalogRouteAddresses } from "../../helpers/route-address-check";
 import { concatPhiCmsTreeControllerSettings } from "../../helpers/cms-tree-controller-settings";
 import { createPhiModuleMediaResolver } from "../../helpers/module-media";
 import type { PhiModuleMediaLoader } from "../../types/module-media";
@@ -628,6 +629,8 @@ export function compilePhiCmsDescriptorCatalog({
     visitShell(identity);
   }
 
+  // A Page is never a folder, across every installed package (THIRD_PARTY_MODULES.md, "Addresses and folders").
+  refusePhiCatalogRouteAddresses(routesByArea);
   const routeDescriptors = [...routesByArea.values()].flat().map(({ descriptor }) => descriptor);
   const injectionKeysByOwnerAndSurface = new Map<string, Set<string>>();
   const allInjectionKeysBySurface = new Map<string, Set<string>>();

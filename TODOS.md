@@ -94,13 +94,6 @@ file (THREADS.md section 10) leave open:
 
 ## Builder
 
-- **Module routes nest only as a list's entries** (THIRD_PARTY_MODULES.md, "Addresses and folders"). Held
-  for phis-ui's routes, every first-party package but one, and the Public addresses the Builder assigns
-  (`findPhiPublicRoutePathCollisions`). `@phis/dev` breaks it twelve times: its overview `/docs` stands
-  above `/docs/architecture`, `/docs/server` and ten more (`phis-dev/src/presets.ts`); it moves to
-  `/docs/overview`, named the container's `folderTarget`. Then `refusePhiCatalogRouteAddresses`
-  (`helpers/route-address-check.ts`) is called from `resolvePhiCmsDescriptorCatalog`, so an installed
-  package that breaks the rule is refused -- not before, or the Skeleton's Public catalog fails with it.
 - **A container's title as a link, later.** Owner's idea (2026-11-16): a container with a folder target
   could lead there when its title is clicked, the chevron still opening it. Today every menu draws an
   entry with children as an opener only (`components/shell/menu-items.tsx`). Not before the owner asks;

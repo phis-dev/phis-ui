@@ -20,8 +20,8 @@ import type { PhiCmsAreaKey } from "../constants/cms-areas";
  *
  * From `@phis/ui/module/page-check`: a package runs it over its own routes, and phis-ui over the
  * first-party ones. `refusePhiCatalogRouteAddresses` is the same rule over a compiled catalog, every
- * installed package's routes together, for the descriptor compiler to refuse a package that breaks it
- * (not wired into compiling yet: `@phis/dev` still breaks it, TODOS.md). The addresses a Site assigns on
+ * installed package's routes together: the descriptor compiler refuses a catalog that breaks it, so an
+ * installed package that does is refused. The addresses a Site assigns on
  * Public are held to it in the Builder (`findPhiPublicRoutePathCollisions`). The Site's own Pages are
  * refused by phis-server when written.
  */
