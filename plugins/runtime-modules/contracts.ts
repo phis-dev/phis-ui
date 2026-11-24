@@ -45,7 +45,7 @@ import {
   isPhiRuntimeModuleSourceLocale,
   resolvePhiRuntimeModuleSourceLocale,
 } from "../../types/runtime-module-locale";
-import { readPhiFormHandlerRequestShapeError } from "../../gateway/form-handler-request";
+import { readPhiFormHandlerPathError } from "../../gateway/form-handler-request";
 
 /*
  * The Modules named here are named by id, as data. Importing their `ids.ts` bound every file that
@@ -913,10 +913,10 @@ export function createPhiRuntimeModuleCatalog(
           `${definition.moduleId}: form handler provider "${provider.key}" has invalid immutable execution metadata.`,
         );
       }
-      const requestShapeError = readPhiFormHandlerRequestShapeError(provider.upstreamPath, provider.request);
-      if (requestShapeError) {
+      const pathError = readPhiFormHandlerPathError(provider.upstreamPath);
+      if (pathError) {
         throw new Error(
-          `${definition.moduleId}: form handler provider "${provider.key}" has an invalid request shape: ${requestShapeError}.`,
+          `${definition.moduleId}: form handler provider "${provider.key}" has an invalid upstream path: ${pathError}.`,
         );
       }
       if (provider.credentialPolicy === "auth-link" && definition.moduleId !== PHI_AUTH_RUNTIME_MODULE_ID) {

@@ -13,7 +13,7 @@ import {
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../constants/core-data-provider-keys";
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
 import { PHI_APP_RUNTIME_MODULE_ID } from "./ids";
-import { phiFormLabel as label, phiFormRequired as required } from "../../../components/forms/form-descriptor-text";
+import { phiFormLabel as label } from "../../../components/forms/form-descriptor-text";
 import { PhisSiteAddressFlags } from "@phis/contracts/users";
 import type { PhiFormId } from "../../../types/form-id";
 
@@ -148,70 +148,39 @@ const phoneDescriptor: PhiFormDescriptor = {
 
 /**
  * One address of the account's book, added or changed (`users:v1`, phis-server
- * `/api/site/account/addresses`): the same fields twice, the change with the hidden id of the version it
- * replaces. Core takes `{ address, flags }`, the parts under `address` and what the address is for as
- * `PhisSiteAddressFlags`, so the handler states that shape (`request`) and the Form keeps one field per
- * part. A default asks its purpose first: Core refuses a default for a purpose the address does not have.
+ * `/api/site/account/addresses`): the same two fields twice, the change with the hidden id of the version
+ * it replaces in its address. Core takes `{ address, flags }`, and the fields are those two values: the
+ * `address` field holds the parts as `PhisSiteAddressInput` and its own rules, the `flags` field what the
+ * address is for as `PhisSiteAddressFlags`, a default offered only beside its purpose -- Core refuses a
+ * default for a purpose the address does not have.
  */
-const ADDRESS_TEXT_FIELDS = ["companyName", "name", "line1", "line2", "postalCode", "city", "region", "country"] as const;
-const ADDRESS_FLAG_BITS = {
-  billing: PhisSiteAddressFlags.Billing,
-  shipping: PhisSiteAddressFlags.Shipping,
-  defaultBilling: PhisSiteAddressFlags.DefaultBilling,
-  defaultShipping: PhisSiteAddressFlags.DefaultShipping,
-} as const;
-const ADDRESS_REQUEST = {
-  objects: { address: ADDRESS_TEXT_FIELDS },
-  flags: { flags: ADDRESS_FLAG_BITS },
-} as const;
+const ADDRESS_FLAG_OPTIONS = [
+  { value: String(PhisSiteAddressFlags.Billing), label: label("billing", "Billing address") },
+  { value: String(PhisSiteAddressFlags.Shipping), label: label("shipping", "Shipping address") },
+  { value: String(PhisSiteAddressFlags.DefaultBilling), label: label("defaultBilling", "Default for billing") },
+  { value: String(PhisSiteAddressFlags.DefaultShipping), label: label("defaultShipping", "Default for shipping") },
+];
 
 function addressDescriptor(formId: PhiFormId, mode: "create" | "edit"): PhiFormDescriptor {
-  const text = (key: string, fallback: string, autoComplete: string) => ({
-    key,
-    fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text,
-    label: label(key, fallback),
-    autoComplete,
-  });
   return {
     schemaVersion: 1,
     key: formId,
     labelSetKey: ADDRESS_LABEL_SET_KEY,
     fields: [
       ...(mode === "edit" ? [{ key: "id", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.hidden }] : []),
-      { ...text("name", "Name", "name"), validation: required("nameRequired", "Enter the name the address is made out to.") },
-      text("companyName", "Company", "organization"),
-      { ...text("line1", "Street and number", "address-line1"), validation: required("line1Required", "Enter the street and number.") },
-      text("line2", "Address line 2", "address-line2"),
-      text("postalCode", "Postal code", "postal-code"),
-      { ...text("city", "City", "address-level2"), validation: required("cityRequired", "Enter the city.") },
-      text("region", "Region", "address-level1"),
+      { key: "address", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.address },
       {
-        ...text("country", "Country", "country"),
-        description: label("countryHint", "The two-letter code, such as CH, DE or US."),
-        validation: [
-          ...required("countryInvalid", "Enter a two-letter country code."),
-          {
-            providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.pattern,
-            message: label("countryInvalid", "Enter a two-letter country code."),
-            config: { source: "^[A-Za-z]{2}$" },
+        key: "flags",
+        fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.flags,
+        label: label("purposes", "Used for"),
+        options: ADDRESS_FLAG_OPTIONS,
+        config: {
+          requires: {
+            [String(PhisSiteAddressFlags.DefaultBilling)]: String(PhisSiteAddressFlags.Billing),
+            [String(PhisSiteAddressFlags.DefaultShipping)]: String(PhisSiteAddressFlags.Shipping),
           },
-        ],
-      },
-      { key: "billing", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.checkbox, controlLabel: label("billing", "Billing address"), initialValue: mode === "create" },
-      { key: "shipping", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.checkbox, controlLabel: label("shipping", "Shipping address"), initialValue: mode === "create" },
-      {
-        key: "defaultBilling",
-        fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.checkbox,
-        controlLabel: label("defaultBilling", "Default for billing"),
-        initialValue: false,
-        disabledWhen: { source: "form", valuePath: "billing", operator: "falsy" },
-      },
-      {
-        key: "defaultShipping",
-        fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.checkbox,
-        controlLabel: label("defaultShipping", "Default for shipping"),
-        initialValue: false,
-        disabledWhen: { source: "form", valuePath: "shipping", operator: "falsy" },
+        },
+        ...(mode === "create" ? { initialValue: PhisSiteAddressFlags.Billing | PhisSiteAddressFlags.Shipping } : {}),
       },
     ],
     success: {
@@ -509,9 +478,8 @@ export const PHI_APP_FORM_HANDLER_PROVIDER_DESCRIPTORS = [
     credentialPolicy: "site-session",
   },
   /*
-   * The address book's two writes. Core's routes are not shaped like a Form: the parts go under `address`,
-   * the purposes into one flags number, and a change names the version it replaces in its path -- which
-   * the handler states, so the relay forms the request and the Form keeps one field per part.
+   * The address book's two writes. The Form's two values are Core's `{ address, flags }`; a change names
+   * the version it replaces in its path, the hidden `id` as `{id}`.
    */
   {
     key: createPhiSharedFormProviderKey("handler", "app-address-create"),
@@ -527,7 +495,6 @@ export const PHI_APP_FORM_HANDLER_PROVIDER_DESCRIPTORS = [
     csrfPath: null,
     requiresCsrf: false,
     credentialPolicy: "site-session",
-    request: ADDRESS_REQUEST,
   },
   {
     key: createPhiSharedFormProviderKey("handler", "app-address-edit"),
@@ -543,7 +510,6 @@ export const PHI_APP_FORM_HANDLER_PROVIDER_DESCRIPTORS = [
     csrfPath: null,
     requiresCsrf: false,
     credentialPolicy: "site-session",
-    request: ADDRESS_REQUEST,
   },
   {
     key: createPhiSharedFormProviderKey("handler", "app-profile-newsletter"),

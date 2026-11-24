@@ -19,6 +19,7 @@ import { PHI_APP_FORM_HANDLER_PROVIDER_DESCRIPTORS, PHI_APP_FORM_IDS, PHI_APP_RU
 import { buildPhiDefaultAppProfilePageTree } from "./app/trees/phi-default-app-profile-page-tree";
 import { buildPhiAppAddressDefaultRequest } from "./app/services/addresses-table";
 import { shapePhiFormHandlerRequest } from "../../gateway/form-handler-request";
+import { PHI_FORM_FIELD_PROVIDER_KEYS } from "../../components/forms/form-provider-contract";
 
 const PROFILE_PAGE = {
   id: 7,
@@ -84,19 +85,19 @@ describe("the account's numbers and addresses", () => {
     expect(tree.overlays.map((overlay) => overlay.config.openActionKey)).toEqual(["create", "edit"]);
   });
 
-  it("sends Core's shape: the parts under address, the purposes as PhisSiteAddressFlags, the version in the path", () => {
+  it("sends Core's shape: the address and its flags as the two fields hold them, the version in the path", () => {
     const edit = PHI_APP_FORM_HANDLER_PROVIDER_DESCRIPTORS.find((entry) => entry.handlerKey === "site.app.address-edit")!;
-    expect(shapePhiFormHandlerRequest({
-      upstreamPath: edit.upstreamPath!,
-      request: edit.request,
-      values: { id: 9, name: "Ada", companyName: "", line1: "Main 1", line2: "", postalCode: "3000", city: "Bern", region: "", country: "CH", billing: true, shipping: true, defaultBilling: false, defaultShipping: true },
-    })).toEqual({
-      path: "/api/site/account/addresses/9",
-      body: {
-        address: { companyName: "", name: "Ada", line1: "Main 1", line2: "", postalCode: "3000", city: "Bern", region: "", country: "CH" },
-        flags: PhisSiteAddressFlags.Billing | PhisSiteAddressFlags.Shipping | PhisSiteAddressFlags.DefaultShipping,
-      },
-    });
+    const address = { companyName: null, name: "Ada", line1: "Main 1", line2: null, postalCode: "3000", city: "Bern", region: null, country: "CH" };
+    const flags = PhisSiteAddressFlags.Billing | PhisSiteAddressFlags.Shipping | PhisSiteAddressFlags.DefaultShipping;
+    expect(shapePhiFormHandlerRequest({ upstreamPath: edit.upstreamPath!, values: { id: 9, address, flags } }))
+      .toEqual({ path: "/api/site/account/addresses/9", body: { address, flags } });
+    // The two Forms are the address and flags fields, the change with the hidden id.
+    const editForm = PHI_APP_RUNTIME_MODULE_FORMS.find((form) => form.formId === PHI_APP_FORM_IDS.addressEdit)!;
+    expect(editForm.descriptor.fields.map((field) => [field.key, field.fieldProviderKey])).toEqual([
+      ["id", PHI_FORM_FIELD_PROVIDER_KEYS.hidden],
+      ["address", PHI_FORM_FIELD_PROVIDER_KEYS.address],
+      ["flags", PHI_FORM_FIELD_PROVIDER_KEYS.flags],
+    ]);
   });
 
   it("reads an address's flags as marks and tags, and sets a default by sending it again", () => {

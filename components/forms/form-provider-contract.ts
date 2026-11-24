@@ -46,6 +46,9 @@ export const PHI_FORM_FIELD_PROVIDER_KEYS = {
   upload: PHI_FORM_UPLOAD_FIELD_PROVIDER_KEY,
   linkTarget: createPhiSharedFormProviderKey("field", "link-target"),
   money: createPhiSharedFormProviderKey("field", "money"),
+  country: createPhiSharedFormProviderKey("field", "country"),
+  address: createPhiSharedFormProviderKey("field", "address"),
+  flags: createPhiSharedFormProviderKey("field", "flags"),
 } as const;
 
 export const PHI_AUTH_FORM_FIELD_PROVIDER_KEYS = {
@@ -339,6 +342,39 @@ export const PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS = [
       { key: "min", type: "number", label: "Minimum", description: "In minor units: 100 is 1.00 CHF.", min: 0, precision: 0 },
       { key: "max", type: "number", label: "Maximum", description: "In minor units.", min: 0, precision: 0 },
     ],
+  },
+  /*
+   * A country of ISO 3166-1: the value is its alpha-2 code, uppercase, as Core stores an address's
+   * country; the options are named in the reader's language (`helpers/country-names.ts`) and searchable.
+   */
+  {
+    key: PHI_FORM_FIELD_PROVIDER_KEYS.country,
+    title: "Country",
+    valueType: "string",
+    presentation: "control",
+    settingsFields: [{ key: "allowClear", type: "boolean", label: "Allow clear" }],
+  },
+  /*
+   * One postal address as Core writes it (`PhisSiteAddressInput` of `@phis/contracts/users`): `json`, the
+   * parts in one object, an empty optional part `null`. The field holds each part to what Core takes
+   * (`helpers/address-field.ts`) and reads its words from the Form's Label Set
+   * (`PHI_FORM_ADDRESS_LABEL_KEYS`).
+   */
+  {
+    key: PHI_FORM_FIELD_PROVIDER_KEYS.address,
+    title: "Address",
+    valueType: "json",
+    presentation: "control",
+  },
+  /*
+   * Several yes-or-no answers as one bit-flag number: each option's value is its bit as a decimal number,
+   * `config.requires` an option another needs (`flags-field.ts`).
+   */
+  {
+    key: PHI_FORM_FIELD_PROVIDER_KEYS.flags,
+    title: "Flags",
+    valueType: "number",
+    presentation: "control",
   },
 ] as const satisfies readonly PhiSharedFormFieldTypeDescriptor[];
 

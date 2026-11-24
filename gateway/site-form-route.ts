@@ -395,10 +395,9 @@ export function buildPhiSiteFormRouteHandlers({
         appendCookieHeader(proxyHeaders, `${PHI_CSRF_COOKIE_NAME}=${csrfToken}`);
       }
 
-      // The values as the handler's route takes them: its path filled, its objects and flags formed.
+      // The values as the handler's route takes them: its path's `{key}` segments filled.
       const shaped = shapePhiFormHandlerRequest({
         upstreamPath: target.upstreamPath ?? "",
-        request: resolved.provider.request,
         values: body.values,
       });
       if ("error" in shaped) {

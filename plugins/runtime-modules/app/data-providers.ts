@@ -55,6 +55,9 @@ export const PHI_APP_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
           { key: "defaultBilling", title: "Default billing", type: "boolean" },
           { key: "defaultShipping", title: "Default shipping", type: "boolean" },
           { key: "createdAt", title: "Added", type: "datetime" },
+          // What the edit Form opens on: the parts as the `address` field holds them, the purposes as `flags`.
+          { key: "address", title: "Address parts", type: "json" },
+          { key: "flags", title: "Flags", type: "number" },
         ],
         query: { search: false, filterFields: [], sorting: "none", pagination: "none" },
         actions: [

@@ -390,7 +390,8 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   given; it never keeps a second value state and never renders a Widget or Layout.
 - Core field providers: `text`, `email`, `password`, `textarea`, `hidden`, `honeypot`, `checkbox`,
   `select`, `url`, `tel`, `number`, `slider`, `multi-select`, `checkbox-group`, `datetime`, `switch`,
-  `segmented`, `cascader`, `table`, `tree`, `storage-size`, `upload`, `link-target`, `money`. The Asset Module
+  `segmented`, `cascader`, `table`, `tree`, `storage-size`, `upload`, `link-target`, `money`, `country`,
+  `address`, `flags`. The Asset Module
   owns `media-asset` (below); it is not part of the shared registry.
 - A `select` field may be emptied when its `config.allowClear` is `true`, for a choice whose empty answer
   means something ("the Site's own language"); a `multi-select` takes typed values beside its options when
@@ -443,6 +444,31 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   maximum throws a `PhiConfigError`, and so does a value of the wrong shape, rather than showing it empty
   and saving nothing over it. A currency that comes from another field of the same Form (a destination's
   own currency) is not expressible: the field states its currency in its config.
+- `country` is a country of ISO 3166-1 (`constants/countries.ts`, all 249 codes). The value is its alpha-2
+  code in capitals (`"CH"`), as Core stores an address's country; the options are the codes named in the
+  page's language through `Intl.DisplayNames` and sorted as that language sorts
+  (`helpers/country-names.ts`, the locale `usePhiIntlLocale` gives, so the server and the browser draw the
+  same list), searchable by name and by code. `config.allowClear` lets it be emptied. Drawn by
+  `PhiCountrySelectControl`, the Select Control with that list.
+- `address` is one postal address as Core writes it, `PhisSiteAddressInput` of `@phis/contracts/users`:
+  `json`, `{ companyName, name, line1, line2, postalCode, city, region, country }`, an empty optional part
+  `null`, the country through the `country` Control. The field holds every part to what Core takes
+  (`helpers/address-field.ts`: `name`, `line1`, `city` and `country` required, the column widths of
+  `phis.site_addresses` -- 256, 32 for the postal code, 128 for city and region -- and a country of the
+  list): while a part is not, it holds the Form's submit with the first sentence
+  (`formContext.holdSubmit`), and a part says what is wrong with it once it has been left. Its words are
+  the Form's Label Set's under `PHI_FORM_ADDRESS_LABEL_KEYS` (`components/forms/structured-field-labels.ts`:
+  `addressName`, `addressCompanyName`, `addressLine1`, `addressLine2`, `addressPostalCode`, `addressCity`,
+  `addressRegion`, `addressCountry`, `addressNameRequired`, `addressLine1Required`, `addressCityRequired`,
+  `addressCountryRequired`, and `addressTooLong` with `%1` the part's label and `%2` the most characters),
+  each one left out in English. Drawn by `PhiAddressControl`. The account's two address Forms are its first
+  users; a checkout, Accounting and Support place the same field instead of fields of their own.
+- `flags` is several yes-or-no answers held as one bit-flag number, the shape every yes-or-no state of a
+  Core contract has (`components/forms/flags-field.ts`). Each option's `value` is its bit as a decimal
+  number (`"1"`, `"2"`, `"4"`), the value the sum of the bits checked, `0` for none; bits the field does
+  not offer are kept as they were. `config.requires` maps an option's value to the option it needs (`{ "4":
+  "1" }`): it is offered only while that one is checked and cleared with it. An option that is no bit, a bit
+  named twice and a dependency on no option throw. Drawn as a checkbox group, one option per line.
 - `upload` is what somebody attached. Its value is the list of Media Asset ids the finished uploads left
   behind, and with nothing attached the field holds no value at all rather than an empty list, so
   `required` means what it says. The transport is the shared one (`usePhiMediaUpload`), so the Site's
@@ -717,10 +743,6 @@ type PhiFormHandlerProviderDescriptor = {
   csrfPath: string | null;
   requiresCsrf: boolean;
   credentialPolicy: "none" | "site-session" | "auth-link";
-  request?: {
-    objects?: Record<string, readonly string[]>;
-    flags?: Record<string, Record<string, number>>;
-  };
 };
 ```
 
@@ -748,33 +770,23 @@ type PhiFormHandlerProviderDescriptor = {
 
 ### Request shape
 
-A Form's values are flat, one per field, and the relay sends them as the body unless the handler states
-otherwise. Some Core routes take another shape -- an id in the path, a nested object, a bit-flag number --
-and `request` on the handler Provider says how the relay forms it (`gateway/form-handler-request.ts`):
+A Form's values are sent as the body, one per field, each in the shape its field holds -- an `address`
+field's object, a `flags` field's number -- so a field that delivers the shape a Core route takes needs
+nothing of the handler. One thing a value cannot be is part of the address: a `{key}` segment of
+`upstreamPath` is the value of the field `key`, trimmed and percent-encoded, and that field leaves the body
+(`gateway/form-handler-request.ts`). A path value that is empty, or neither text nor a number, refuses the
+submit with 400 before anything is sent: without it the address is another route. Catalog construction
+refuses a path that names one field twice.
 
-- A `{key}` segment of `upstreamPath` is the value of the field `key`, trimmed and percent-encoded, and the
-  field leaves the body. A path value that is empty, or neither text nor a number, refuses the submit with
-  400 before anything is sent: without it the address is another route.
-- `objects: { address: ["name", "line1", ...] }` gathers the named fields under one body key.
-- `flags: { flags: { billing: 1, shipping: 2 } }` folds the named boolean fields into one number under one
-  body key, the bit of every field that is `true` -- the shape every Ja/Nein state of a Core contract has.
-- Every other field stays at the top of the body.
-
-Catalog construction refuses a shape that names one field twice (in the path, an object or a fold), a
-body key that is both an object and a fold, an empty object or fold, and a bit that is no positive power of
-two. The account's address book is the first user: `POST /api/site/account/addresses` and
-`PUT /api/site/account/addresses/{id}` take `{ address, flags }`, and the App's two address Forms keep one
-field per part.
+The account's address book is the first user: `POST /api/site/account/addresses` and
+`PUT /api/site/account/addresses/{id}` take `{ address, flags }`, which the App's two address Forms hold as
+an `address` field and a `flags` field, the change with the hidden `id` of the version it replaces.
 
 ```ts
 {
   // ...the descriptor fields above
   method: "PUT",
   upstreamPath: "/api/site/account/addresses/{id}",
-  request: {
-    objects: { address: ["companyName", "name", "line1", "line2", "postalCode", "city", "region", "country"] },
-    flags: { flags: { billing: PhisSiteAddressFlags.Billing, shipping: PhisSiteAddressFlags.Shipping } },
-  },
 }
 ```
 

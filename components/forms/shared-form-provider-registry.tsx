@@ -36,6 +36,13 @@ const PhiLazyStorageSizeFormControl = lazyPhiFormFieldControl(() =>
   import("./extended-form-field-controls").then((module) => module.PhiStorageSizeFormControl));
 const PhiLazyMoneyFormControl = lazyPhiFormFieldControl(() =>
   import("./extended-form-field-controls").then((module) => module.PhiMoneyFormControl));
+const PhiLazyCountryFormControl = lazyPhiFormFieldControl(() =>
+  import("./structured-form-field-controls").then((module) => module.PhiCountryFormControl));
+// Eight parts in six rows.
+const PhiLazyAddressFormControl = lazyPhiFormFieldControl(() =>
+  import("./structured-form-field-controls").then((module) => module.PhiAddressFormControl), 6);
+const PhiLazyFlagsFormControl = lazyPhiFormFieldControl(() =>
+  import("./structured-form-field-controls").then((module) => module.PhiFlagsFormControl), 2);
 const PhiLazySliderFormControl = lazyPhiFormFieldControl(() =>
   import("./extended-form-field-controls").then((module) => module.PhiSliderFormControl));
 const PhiLazyCascaderFormControl = lazyPhiFormFieldControl(() =>
@@ -279,6 +286,15 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
     }),
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.money, {
       Control: PhiLazyMoneyFormControl,
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.country, {
+      Control: PhiLazyCountryFormControl,
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.address, {
+      Control: PhiLazyAddressFormControl,
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.flags, {
+      Control: PhiLazyFlagsFormControl,
     }),
   ],
   validationRules: [
