@@ -295,8 +295,9 @@ The users Table also shows **Add-on roles** (Core 0.4.1; [phis-server AUTHORIZAT
   with the Add-on's `title` and its id as description where the two differ (`buildPhiAddonFilterOptions`). It
   finds users with at least one stored role of that Add-on and keeps every enabled Site Admin, which is the
   Core's rule; it sends the Core's `addonId` alone, never `addonRole`. It stands beside the Account filter
-  (Local roles / Auth, default Local roles, sent as `accountType`); the two filters work together, so
-  with the default a user with an Add-on role but no Core role is not listed until Account is widened.
+  (Staff / Customer, default Staff, sent as `accountType`: `staff` holds at least one Core role, `customer` none);
+  the two filters work together, so with the default a user with an Add-on role but no Core role is not listed
+  until Account is widened.
 - Field "Add-on roles" in the "Edit user" form, under the Core roles: one multi-select, grouped by Add-on, value
   `"<addonId>:<role>"` per role, prefilled from the record (`addonRoles`) and saved with the user as the Core's
   `addonRoles` -- the whole list the person is to hold afterwards. Its options Provider

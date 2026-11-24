@@ -8,14 +8,14 @@ describe("the users route's query", () => {
       page: 2,
       pageSize: 50,
       search: " ada ",
-      filters: { accountType: "roles", addonRole: " @acme/market ", enabled: "enabled" },
+      filters: { accountType: "staff", addonRole: " @acme/market ", enabled: "enabled" },
       sorts: [{ key: "name", direction: "descending" }],
     });
     expect(Object.fromEntries(params)).toEqual({
       page: "2",
       pageSize: "50",
       search: "ada",
-      accountType: "roles",
+      accountType: "staff",
       addonId: "@acme/market",
       enabled: "enabled",
       sortKey: "name",

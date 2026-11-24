@@ -328,10 +328,10 @@ export async function buildPhiDefaultAdminUsersPageTree({
                 renderer: "badge",
                 sizing: { mode: "content" },
                 valueMap: {
-                  roles: widgetLabels.accountTypes.roles,
-                  auth: widgetLabels.accountTypes.auth,
+                  staff: widgetLabels.accountTypes.staff,
+                  customer: widgetLabels.accountTypes.customer,
                 },
-                tagColorMap: { roles: "error", auth: "warning" },
+                tagColorMap: { staff: "error", customer: "warning" },
               },
               {
                 key: "roleTags",
@@ -382,10 +382,10 @@ export async function buildPhiDefaultAdminUsersPageTree({
                 key: "accountType",
                 type: "select",
                 label: widgetLabels.columns.account,
-                defaultValue: "roles",
+                defaultValue: "staff",
                 options: [
-                  { value: "roles", label: widgetLabels.accountTypes.roles },
-                  { value: "auth", label: widgetLabels.accountTypes.auth },
+                  { value: "staff", label: widgetLabels.accountTypes.staff },
+                  { value: "customer", label: widgetLabels.accountTypes.customer },
                 ],
               },
               {
