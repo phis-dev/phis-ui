@@ -25,3 +25,14 @@ describe("the Layout gap", () => {
     expect(resolvePhiLayoutCreationPreset("flex", "overlay-actions").gap).toBe(PHI_SPACE.xs);
   });
 });
+
+describe("an Overlay's action row", () => {
+  it("ends its buttons the xs step from the dialog's right edge and keeps base on the left", () => {
+    expect(resolvePhiLayoutCreationPreset("flex", "overlay-actions")).toMatchObject({
+      paddingTop: PHI_SPACE.xs,
+      paddingRight: PHI_SPACE.xs,
+      paddingBottom: PHI_SPACE.xs,
+      paddingLeft: PHI_SPACE.base,
+    });
+  });
+});

@@ -68,7 +68,7 @@ const PHI_FLEX_LAYOUT_OVERLAY_ACTIONS_PRESET = {
     separatorSpan: "75%",
     wrap: true,
     paddingTop: PHI_SPACE.xs,
-    paddingRight: PHI_SPACE.base,
+    paddingRight: PHI_SPACE.xs,
     paddingBottom: PHI_SPACE.xs,
     paddingLeft: PHI_SPACE.base,
     width: "100%",

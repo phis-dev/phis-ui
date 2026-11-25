@@ -224,7 +224,9 @@ Overlay runtime must not add another implicit content padding.
 
 Header, Body, and custom Footer Layouts retain the neutral Layout default of no padding and presets opt
 into Layout padding independently. An actions Footer receives its canonical padding only from the
-explicit `overlay-actions` root Layout. A missing Header or `none` Footer does not cause fallback padding.
+explicit `overlay-actions` root Layout: the Theme's `xs` step above, below and on the right, where the
+row of buttons ends near the dialog's edge, and the `base` step on the left (owner, 2026-11-25). A missing
+Header or `none` Footer does not cause fallback padding.
 Changing Overlay type, placement, mount policy, or ownership must not change this behavior.
 
 ### Shared container chrome
