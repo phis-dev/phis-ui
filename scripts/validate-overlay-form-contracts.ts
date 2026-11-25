@@ -41,6 +41,8 @@ import {
 } from "../plugins/runtime-modules/asset/metadata-form";
 import { PHI_ASSET_FOCAL_RECT_FORM_PROVIDER_DESCRIPTOR } from "../plugins/runtime-modules/asset/form-providers";
 import { createPhiRuntimeModuleCatalog } from "../plugins/runtime-modules/contracts";
+import { PHI_INSPECTOR_DRAWER_BODY_INSET } from "../helpers/cms-inspector-drawer";
+import { PHI_SPACE } from "../theme/antd-css-var-contract";
 
 const controllerAddress = createPhiControllerSignalAddress("@test/pkg/modules/user-management/controller", "users", "default");
 assert.deepEqual(PHI_OVERLAY_FOOTER_PRESENTATIONS, ["none", "actions", "custom"]);
@@ -387,7 +389,10 @@ assert.match(
 assert.match(builderPresetSource, /appearance: "transparent"/u);
 // The inspector Drawer keeps the pointer from the Canvas beneath it: no `MaskPassesPointer` on any Builder Overlay.
 assert.doesNotMatch(builderPresetSource, /MaskPassesPointer/u);
-assert.match(builderPresetSource, /innerPadding: PHI_SPACE\.sm/u);
+// Every inspector Drawer's sections take the one inset, `sm`, from the sections and none from the Layout.
+assert.deepEqual(PHI_INSPECTOR_DRAWER_BODY_INSET, { padding: 0, innerPadding: PHI_SPACE.sm });
+assert.match(builderPresetSource, /\.\.\.PHI_INSPECTOR_DRAWER_BODY_INSET/u);
+assert.match(assetMediaPagePresetSource, /\.\.\.PHI_INSPECTOR_DRAWER_BODY_INSET/u);
 assert.match(builderPresetSource, /defaultOpenSlotKeys: \["slot_0"\]/u);
 assert.match(
   builderPresetSource,

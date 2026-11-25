@@ -38,6 +38,7 @@ import { getPhiSignalsWidgetLabels } from "../../../../components/widgets/label-
 import type { PhiInspectorWidgetLabels } from "../../../../components/widgets/label-types/inspector";
 import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../../helpers/cms-dialog";
 import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
+import { PHI_INSPECTOR_DRAWER_BODY_INSET } from "../../../../helpers/cms-inspector-drawer";
 
 const PHI_BUILDER_INSPECTOR_SECTIONS = {
   region: [
@@ -288,8 +289,7 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
           // one past the fold. Settings stays the section that opens with the Drawer, so it mounts
           // and can hide its own slot when the layout declares nothing for it.
           accordion: true,
-          padding: PHI_SPACE.sm,
-          innerPadding: PHI_SPACE.sm,
+          ...PHI_INSPECTOR_DRAWER_BODY_INSET,
           slotTitles: sections.map(([, , sectionKey]) =>
             resolveBuilderInspectorSectionTitle(inspectorLabels, sectionKey)
           ),

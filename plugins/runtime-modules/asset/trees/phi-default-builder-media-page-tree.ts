@@ -39,6 +39,7 @@ import {
   PHI_DIALOG_WIDTH_SINGLE_COLUMN,
 } from "../../../../helpers/cms-dialog";
 import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
+import { PHI_INSPECTOR_DRAWER_BODY_INSET } from "../../../../helpers/cms-inspector-drawer";
 
 const PHI_ASSET_MEDIA_PAGE_REGION_IDS = {
   regionHeaderBottom: -511,
@@ -362,8 +363,7 @@ export async function buildPhiDefaultBuilderMediaPageTree({
         config: {
           ghost: true,
           bordered: false,
-          padding: PHI_SPACE.sm,
-          innerPadding: PHI_SPACE.sm,
+          ...PHI_INSPECTOR_DRAWER_BODY_INSET,
           slotTitles: [
             assetLabels.inspector.previewTitle ?? "Preview",
             assetLabels.inspector.metadataTitle ?? "Metadata",
