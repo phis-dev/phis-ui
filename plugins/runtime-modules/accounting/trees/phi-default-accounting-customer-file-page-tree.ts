@@ -37,11 +37,12 @@ const SYNTHETIC_CUSTOMER_FILE_REGION_ID = -459;
  * already is and bound by Foundation names only (`constants/customer-file.ts`,
  * `constants/threads-controller-address.ts`): the Table and Collection Providers and the Conversations
  * Controller are the conversations Module's, which is active in the Accounting Area by default and has to
- * be for this Page to read anything. The person Table's filter is Core's member picker
+ * be for this Page to read anything. Above everything stands the member select, Core's member picker
  * (the `site-members` options with Core's search, which matches names, e-mail addresses and telephone
- * numbers); its query goes to the conversations Table and to the Conversations Controller, so one choice
- * fills the Page with one request: the Controller hands the member to the addresses tiles as binding params
- * (Core's address renderer, read-only), joins the Tables' read for the file's id and hands it to the file
+ * numbers), because it is the input of everything below it; its value goes to the Conversations
+ * Controller, so one choice fills the Page with one request: the Controller hands the member to the person
+ * and the conversations Tables as filters and to the addresses tiles as binding params (Core's address
+ * renderer, read-only), joins the Tables' read for the file's id and hands it to the file
  * panel, a conversation reader whose "Add note" opens Core's Reply Form
  * in a dialog of its own (every message of a file is internal). The conversations Table lists the person's
  * conversations, the file not among them, and choosing a row is the conversations Page's choreography
@@ -101,13 +102,14 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
   const controllerAddress = createPhiThreadsControllerAddress();
   const addressesAddress = createPhiSignalAddress("cms", widgetIds.widgetAddresses);
   const fileAddress = createPhiSignalAddress("cms", widgetIds.widgetFile);
+  const personAddress = createPhiSignalAddress("cms", widgetIds.widgetPerson);
   const threadsAddress = createPhiSignalAddress("cms", widgetIds.widgetThreads);
   const conversationAddress = createPhiSignalAddress("cms", widgetIds.widgetConversation);
   const noteOverlayAddress = createPhiSignalAddress("cms", overlayIds.overlayNote);
   const noteFormAddress = createPhiSignalAddress("cms", widgetIds.widgetNoteForm);
   const replyOverlayAddress = createPhiSignalAddress("cms", overlayIds.overlayReply);
   const replyFormAddress = createPhiSignalAddress("cms", widgetIds.widgetReplyForm);
-  const route = (routeKey: string, capabilityId: string, channel: string, action: "change" | "activate" | "reload" | "close", receiver: PhiSignalReceiver, valueType: "json" | "none" = "none", valueSchema?: PhiSignalValueSchema) => ({
+  const route = (routeKey: string, capabilityId: string, channel: string, action: "change" | "activate" | "reload" | "close", receiver: PhiSignalReceiver, valueType: "json" | "string" | "none" = "none", valueSchema?: PhiSignalValueSchema) => ({
     routeKey,
     capabilityId,
     scope: "page" as const,
@@ -117,8 +119,8 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
     ...(valueSchema ? { valueSchema } : {}),
     receiver,
   });
-  const queryInput = (routeKey: string, receiver: PhiSignalReceiver) =>
-    route(routeKey, "queryChange", "query", "change", receiver, "json", PHI_SIGNAL_VALUE_SCHEMAS.tableQuery);
+  const memberFilters = (routeKey: string, receiver: PhiSignalReceiver) =>
+    route(routeKey, "filtersChange", "filters", "change", receiver, "json", PHI_SIGNAL_VALUE_SCHEMAS.tableFilters);
   const tableAction = (routeKey: string, capabilityId: string, receiver: PhiSignalReceiver) =>
     route(routeKey, capabilityId, "action", "activate", receiver, "json", PHI_SIGNAL_VALUE_SCHEMAS.tableAction);
   const threadRoute = (routeKey: string, capabilityId: string, action: "change" | "reload", receiver: PhiSignalReceiver) =>
@@ -250,7 +252,8 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
     /*
      * The Conversations Controller, configured as on the conversations Page -- the chosen conversation to
      * its reader, the listing read again after a reply -- and with this Page's part: the member's file to
-     * the file panel when the person Table chooses one, read again after a note.
+     * the file panel when the member select chooses one, read again after a note, and the member to
+     * the Tables and the addresses.
      */
     controllerSettings: [{
       type: PHI_THREADS_CONTROLLER_TYPE,
@@ -264,7 +267,9 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
             threadRoute(`${prefix}-controller-file`, "fileThreadChange", "change", fileAddress),
             threadRoute(`${prefix}-controller-file-reload`, "fileThreadReload", "reload", fileAddress),
             route(`${prefix}-controller-reload-threads`, "reload", "reload", "activate", threadsAddress),
-            // The member chosen, as the addresses tiles' binding params.
+            // The member chosen, as the Tables' filters and as the addresses tiles' binding params.
+            route(`${prefix}-controller-person`, "memberFiltersChange", "filters", "change", personAddress, "json", PHI_SIGNAL_VALUE_SCHEMAS.tableFilters),
+            route(`${prefix}-controller-threads`, "memberFiltersChange", "filters", "change", threadsAddress, "json", PHI_SIGNAL_VALUE_SCHEMAS.tableFilters),
             route(`${prefix}-controller-addresses`, "memberParamsChange", "bindingParams", "change", addressesAddress, "json", PHI_SIGNAL_VALUE_SCHEMAS.tableBindingParams),
           ],
         },
@@ -272,14 +277,61 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
     }],
     overlays: [noteDialog.dialog.overlay, replyDialog.dialog.overlay],
     regions: [scaffold.region],
-    layoutNodes: [scaffold.layoutNode, ...noteDialog.dialog.layouts, ...replyDialog.dialog.layouts],
+    layoutNodes: [
+      scaffold.layoutNode,
+      // The member select's row, first on the Page: it is the input of everything below it.
+      nodes.layout({
+        id: layoutIds.layoutMember,
+        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
+        creationPreset: { layoutKind: "flex", preset: "panel" },
+        typeKey: "flex",
+        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+        sortOrder: 0,
+        label: `${prefix} member row`,
+        // Flush with the Tables below: the Region holds the Page's inset.
+        config: { padding: 0, paddingLeft: 0, paddingRight: 0 },
+      }),
+      ...noteDialog.dialog.layouts,
+      ...replyDialog.dialog.layouts,
+    ],
     contentWidgets: [
+      /*
+       * Core's member picker as a select of its own, labelled in front, searched on the server. It may be
+       * cleared, so it starts with nobody chosen; its value, the user id as text (`""` once cleared), goes
+       * to the Controller, which hands it to everything below.
+       */
+      nodes.widget({
+        id: widgetIds.widgetMember,
+        parentLayoutNodeId: layoutIds.layoutMember,
+        typeKey: "select-box",
+        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+        sortOrder: 0,
+        // The Module's Label Set, translated already.
+        flags: PhiCmsFlags.NoTranslate,
+        label: labels.person.picker,
+        config: {
+          key: `${prefix}-member`,
+          label: labels.person.picker,
+          description: labels.person.pickerHint,
+          allowClear: true,
+          optionsProvider: {
+            providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteMembers,
+            loadMode: "server",
+            search: { enabled: true, minChars: 2 },
+          },
+          signalRoutes: {
+            emits: [
+              route(`${prefix}-member-to-controller`, "change", "member", "change", controllerAddress, "string"),
+            ],
+          },
+        },
+      }),
       nodes.widget({
         id: widgetIds.widgetPerson,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "table",
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-        sortOrder: 0,
+        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 1,
+        sortOrder: 1,
         // The Module's Label Set, translated already.
         flags: PhiCmsFlags.NoTranslate,
         label: labels.person.label,
@@ -301,7 +353,7 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
             footer: {
               template: labels.person.footer,
               values: [{ key: "member", value: { source: "provider", fieldKey: "userId" } }],
-              // Nobody chosen: nothing to say under the picker.
+              // Nobody chosen: nothing to say under the Table.
               variants: [{ when: { value: { source: "provider", fieldKey: "userId" }, operator: "falsy" }, template: "" }],
               align: "start",
             },
@@ -309,30 +361,15 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
             loadingRows: 1,
           },
           features: {
-            // The other readers take this query, so it pages as they do.
+            // The first page at the conversations Table's size, so the two read the member with one request.
             pagination: { enabled: false, pageSize: 25 },
             sorting: { mode: "none" },
             search: { enabled: false },
             tools: { mode: "self-contained", reset: false, reload: true },
-            filters: [{
-              key: "userId",
-              type: "select",
-              label: labels.person.picker,
-              description: labels.person.pickerHint,
-              optionsProvider: {
-                providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteMembers,
-                loadMode: "server",
-                search: { enabled: true, minChars: 2 },
-              },
-            }],
           },
           signalRoutes: {
-            // The member chosen, handed on as the query the conversations read it from, and to the
-            // Controller, which opens their file and hands the member to the addresses.
-            emits: [
-              route(`${prefix}-person-to-threads`, "queryChange", "query", "change", threadsAddress, "json", PHI_SIGNAL_VALUE_SCHEMAS.tableQuery),
-              route(`${prefix}-person-to-file`, "queryChange", "member", "change", controllerAddress, "json", PHI_SIGNAL_VALUE_SCHEMAS.tableQuery),
-            ],
+            // The member chosen, from the Controller, as the `userId` filter the Provider reads.
+            listens: [memberFilters(`${prefix}-person-member`, personAddress)],
           },
         },
       }),
@@ -345,8 +382,8 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
         id: widgetIds.widgetAddresses,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "collection-view",
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 1,
-        sortOrder: 1,
+        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 2,
+        sortOrder: 2,
         // The Module's Label Set, translated already.
         flags: PhiCmsFlags.NoTranslate,
         label: labels.addresses.label,
@@ -375,8 +412,8 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
         id: widgetIds.widgetFile,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "thread-conversation",
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 2,
-        sortOrder: 2,
+        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 3,
+        sortOrder: 3,
         // The Module's Label Set, translated already.
         flags: PhiCmsFlags.NoTranslate,
         label: labels.file.label,
@@ -386,8 +423,8 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
         id: widgetIds.widgetThreads,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "table",
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 3,
-        sortOrder: 3,
+        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 4,
+        sortOrder: 4,
         // The Module's Label Set, translated already.
         flags: PhiCmsFlags.NoTranslate,
         label: labels.threads.label,
@@ -450,7 +487,7 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
               route(`${prefix}-threads-condition`, "conditionStateRequest", "condition", "reload", controllerAddress),
             ],
             listens: [
-              queryInput(`${prefix}-threads-query`, threadsAddress),
+              memberFilters(`${prefix}-threads-member`, threadsAddress),
               route(`${prefix}-threads-reload`, "reload", "reload", "activate", threadsAddress),
             ],
           },
@@ -460,8 +497,8 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
         id: widgetIds.widgetConversation,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "thread-conversation",
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 4,
-        sortOrder: 4,
+        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 5,
+        sortOrder: 5,
         // The Module's Label Set, translated already.
         flags: PhiCmsFlags.NoTranslate,
         label: labels.conversation.label,

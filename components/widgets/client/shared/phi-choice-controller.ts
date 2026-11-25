@@ -36,6 +36,13 @@ export type PhiChoiceControllerResult = {
   emitFocus: () => void;
   emitBlur: () => void;
   publish: (nextValue: string) => void;
+  /**
+   * What is typed into the select, for an Options Provider that searches on the server (`loadMode:
+   * "server"`, `search`); absent where the source declares no search, so the select narrows what it holds.
+   */
+  onSearch?: (search: string) => void;
+  /** `false` where the provider's answer is already the result of the search. */
+  filterOptionsLocally: boolean;
 };
 
 type PhiChoicePick = { source: string; value: string };
@@ -58,12 +65,25 @@ export function usePhiChoiceController<TConfig extends PhiChoiceControlConfig>({
 }: PhiChoiceControllerOptions<TConfig>): PhiChoiceControllerResult {
   // A pick, held against the fallback it replaced; declared first so the provider hears it.
   const [picked, setPicked] = useState<PhiChoicePick | null>(null);
+  /*
+   * What is typed, handed to the provider as a Form field and a Table filter hand it: the hook debounces it
+   * and holds it to the declared minimum, so a provider answering one page of a longer list -- the Site's
+   * members -- is searched by its route rather than inside the page it answered.
+   */
+  const [searchDraft, setSearchDraft] = useState("");
   const resolvedOptions = usePhiControlOptionsProvider({
     options: config?.options,
     optionsProvider: config?.optionsProvider,
+    searchDraft,
     selectedValues: readPhiChoiceHeldValue(picked, config?.value),
   });
-  const fallbackValue = config?.value ?? resolvedOptions.value ?? resolvedOptions.options.at(0)?.value ?? "";
+  /*
+   * Without a value of its own a choice holds its first option -- except a select that may be emptied
+   * (`allowClear`), which starts as it ends when cleared: with nothing chosen. A member picker that held
+   * the first member of the list showed a choice nobody made, and picking that member then changed nothing.
+   */
+  const fallbackValue = config?.value ?? resolvedOptions.value ??
+    (config?.allowClear === true ? "" : resolvedOptions.options.at(0)?.value) ?? "";
   const readOnly = config?.readOnly === true;
   const value = picked?.source === fallbackValue ? picked.value : fallbackValue;
   /*
@@ -122,13 +142,15 @@ export function usePhiChoiceController<TConfig extends PhiChoiceControlConfig>({
     emitFocus: controlSignals.emitFocus,
     emitBlur: controlSignals.emitBlur,
     publish,
+    onSearch: resolvedOptions.search.enabled ? setSearchDraft : undefined,
+    filterOptionsLocally: resolvedOptions.search.filterLocally,
   };
 }
 
 export type PhiStackChoiceControllerOptions<TConfig extends PhiStackChoiceControlConfig> =
   PhiChoiceControllerOptions<TConfig>;
 
-export type PhiStackChoiceControllerResult = Omit<PhiChoiceControllerResult, "publish" | "options"> & {
+export type PhiStackChoiceControllerResult = Omit<PhiChoiceControllerResult, "publish" | "options" | "onSearch" | "filterOptionsLocally"> & {
   options: PhiControlOption[];
   stackMode: boolean;
   publish: (nextValue: string) => void;

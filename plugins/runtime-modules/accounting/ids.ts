@@ -62,11 +62,12 @@ const PHI_ACCOUNTING_CUSTOMER_FILE_PAGE_PRESET = {
 } as const;
 
 /**
- * The person and their addresses, the file and its note dialog, the conversations with the one chosen and
- * its Reply dialog -- every one named in a route by another.
+ * The member select and its row, the person and their addresses, the file and its note dialog, the
+ * conversations with the one chosen and its Reply dialog -- every one named in a route by another.
  */
 export const PHI_ACCOUNTING_CUSTOMER_FILE_PAGE_IDS = {
   widgets: createPhiPresetCmsInstanceIdMap(PHI_ACCOUNTING_CUSTOMER_FILE_PAGE_PRESET, [
+    "widgetMember",
     "widgetPerson",
     "widgetAddresses",
     "widgetFile",
@@ -79,6 +80,7 @@ export const PHI_ACCOUNTING_CUSTOMER_FILE_PAGE_IDS = {
   ]),
   overlays: createPhiPresetCmsInstanceIdMap(PHI_ACCOUNTING_CUSTOMER_FILE_PAGE_PRESET, ["overlayNote", "overlayReply"]),
   layouts: createPhiPresetCmsInstanceIdMap(PHI_ACCOUNTING_CUSTOMER_FILE_PAGE_PRESET, [
+    "layoutMember",
     "layoutNote",
     "layoutNoteFooter",
     "layoutReply",

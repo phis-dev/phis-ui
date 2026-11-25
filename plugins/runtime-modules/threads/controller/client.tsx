@@ -22,7 +22,6 @@ import {
   PHI_THREADS_RUNTIME_CONTROLLER_DEFINITION,
   type PhiThreadsControllerConfig,
 } from "./definition";
-import { isPhiRecord } from "../../../../helpers/is-record";
 import { readPhiPositiveInteger } from "../../../../components/widgets/client/shared/phi-table-provider-request";
 import { readPhiCustomerFileThreadId } from "../services/customer-file-read";
 import { PHI_CUSTOMER_FILE_MEMBER_PARAM } from "../../../../constants/customer-file";
@@ -52,12 +51,6 @@ function readSelectedThreadId(value: unknown) {
  * what came back. Reading `{ thread: { thread: { id } } }` out of it is a statement about the Core
  * route's answer, which is exactly the kind of knowledge that belongs in the Module and nowhere else.
  */
-/** The member a customer file Page's person Table chose, from its query (`filters.userId`). */
-function readChosenMemberId(value: unknown) {
-  const filters = isPhiRecord(value) && isPhiRecord(value.filters) ? value.filters : null;
-  return filters ? readPhiPositiveInteger(filters.userId) : null;
-}
-
 function readCreatedThreadId(value: unknown) {
   const payload = (value as { payload?: unknown } | null)?.payload as
     { thread?: { thread?: { id?: unknown } } } | null | undefined;
@@ -149,10 +142,11 @@ function PhiThreadsControllerView({
   }, [emitCapability]);
 
   /*
-   * Another member chosen: their file, read from the request the Page's Tables make for the same choice
-   * (it joins that one, so a choice stays one entry in the access log), handed to the file panel. Nobody
-   * chosen, the reader's own file and a failed read all close the panel; the Tables say why. The member
-   * also goes to whatever shows something of theirs by binding params -- the addresses tiles.
+   * Another member chosen: the Tables that read something of theirs are told as filters, whatever shows
+   * something of theirs by binding params -- the addresses tiles -- as binding params, and their file is
+   * read from the request the Tables make for the same choice (it joins that one, so a choice stays one
+   * entry in the access log) and handed to the file panel. Nobody chosen, the reader's own file and a
+   * failed read all close the panel; the Tables say why.
    */
   const openMemberFile = useCallback((userId: number | null, correlationId: string) => {
     if (memberRead.current.userId === userId) return;
@@ -160,7 +154,9 @@ function PhiThreadsControllerView({
     const controller = userId == null ? null : new AbortController();
     memberRead.current = { userId, controller };
     setFileThreadId(null);
-    // The addresses ask in their next render, while the read below is under way, and join it.
+    // The Tables and the addresses ask in their next render, while the read below is under way, and join it.
+    // The customer file Provider reads the member from the `userId` filter (`query.filters.userId`).
+    emitCapability("memberFiltersChange", { userId }, correlationId);
     emitCapability("memberParamsChange", { params: { [PHI_CUSTOMER_FILE_MEMBER_PARAM]: userId } }, correlationId);
     emitCapability("fileThreadChange", { threadId: null }, correlationId);
     if (userId == null || !controller) return;
@@ -283,7 +279,8 @@ function PhiThreadsControllerView({
     }
 
     if (signal.channel === "member" && signal.action === "change") {
-      openMemberFile(readChosenMemberId(signal.value), signal.correlationId);
+      // The member select's value: the user id as text, `""` for nobody.
+      openMemberFile(readPhiPositiveInteger(signal.value), signal.correlationId);
       return;
     }
 

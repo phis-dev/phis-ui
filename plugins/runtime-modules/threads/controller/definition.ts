@@ -103,6 +103,18 @@ export const PHI_THREADS_RUNTIME_CONTROLLER_DEFINITION = {
         valueType: "json",
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableBindingParams,
       },
+      /*
+       * The same member as a Table's filters (`{ userId }`, `null` for nobody), for the Tables that read
+       * something of theirs -- the person and the conversations: a select answers a user id as text, and a
+       * Table takes filters, so the choice is translated here, as the Groups Controller hands a chosen group
+       * to the membership Table.
+       */
+      {
+        id: "memberFiltersChange",
+        action: "change",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableFilters,
+      },
       { id: "dialogOpen", action: "activate", valueType: "none" },
       { id: "dialogClose", action: "close", valueType: "none" },
       { id: "formSubmit", action: "activate", valueType: "none" },
@@ -135,17 +147,16 @@ export const PHI_THREADS_RUNTIME_CONTROLLER_DEFINITION = {
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableSelection,
       },
       /*
-       * The member a customer file Page chose: its person Table's query, `filters.userId`. The file's id
-       * comes from the same read the Page's Tables make for that choice, joined rather than asked again
-       * (`readPhiCustomerFileThreadId`), and goes out as `fileThreadChange`; the member goes out as
-       * `memberParamsChange`.
+       * The member a customer file Page chose: its member select's value, the user id as text (`""` for
+       * nobody). It goes out to the Tables as `memberFiltersChange` and to the addresses as
+       * `memberParamsChange`; the file's id comes from the same read the Tables make for that choice, joined
+       * rather than asked again (`readPhiCustomerFileThreadId`), and goes out as `fileThreadChange`.
        */
       {
         id: "memberChange",
         channel: "member",
         action: "change",
-        valueType: "json",
-        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableQuery,
+        valueType: "string",
       },
       /*
        * A Table's action, and a conversation's Reply, which a conversation says as a row action with the

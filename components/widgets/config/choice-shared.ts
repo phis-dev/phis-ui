@@ -27,6 +27,8 @@ export type PhiChoiceControlConfig = PhiControlConfig & PhiChoiceOptionsConfig &
   placeholder?: string;
   presentation?: "select" | "autocomplete";
   allowCustom?: boolean;
+  /** A select that may be emptied again: its clear button announces the empty value. */
+  allowClear?: boolean;
 };
 
 /**
@@ -119,6 +121,7 @@ export function parsePhiChoiceControlConfig(
     placeholder: reader.string("placeholder"),
     presentation: reader.oneOf("presentation", ["select", "autocomplete"] as const) ?? "select",
     allowCustom: reader.boolean("allowCustom"),
+    allowClear: reader.boolean("allowClear"),
     ...parsePhiChoiceOptionsConfig(config),
   };
 }

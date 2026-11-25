@@ -242,7 +242,9 @@ receiver a payload it cannot read, which is worse than no route at all.
 The test is one question: **did domain code build this payload?** If it did, name it there. If Core
 built it, translate it in the Controller. The conversations Module does both -- its Collection renderer
 names its own selection, and its Controller turns a Table's selection and a Form's result into the same
-`threadSelection`.
+`threadSelection`. A generic Control's value is the same case: a select answers a user id as text, and the
+customer file's Controller makes it the `{ userId }` filters its Tables take (THREADS.md, section 10) -- a
+route carries a value as sent and never reshapes it.
 
 ## Capabilities and routes
 

@@ -47,22 +47,28 @@ export function PhiSelectBoxWidget({
     minWidth: fill ? 0 : minWidth,
     width: fill ? "100%" : undefined,
   };
-  const handleChange = (nextValue: string) => {
-    choice.publish(nextValue);
-    onChange?.(nextValue);
+  // Cleared, the select answers nothing; the Control holds and announces that as the empty value.
+  const handleChange = (nextValue: string | undefined) => {
+    const held = nextValue ?? "";
+    choice.publish(held);
+    onChange?.(held);
   };
   const control = (
     <PhiSelectControl
       label={resolvedConfig.label}
       description={resolvedConfig.description}
-      value={choice.value}
+      // Nothing chosen shows the placeholder, not an empty choice.
+      value={choice.value === "" ? undefined : choice.value}
       placeholder={resolvedConfig.placeholder}
       disabled={choice.disabled}
       readOnly={choice.readOnly}
       size={resolvedConfig.controlSize}
       presentation={resolvedConfig.presentation}
       allowCustom={resolvedConfig.allowCustom}
+      allowClear={resolvedConfig.allowClear}
       options={choice.options}
+      onSearch={choice.onSearch}
+      filterOptionsLocally={choice.filterOptionsLocally}
       onFocus={choice.emitFocus}
       onBlur={choice.emitBlur}
       onChange={handleChange}

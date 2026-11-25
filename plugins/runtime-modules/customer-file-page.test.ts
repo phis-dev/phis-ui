@@ -23,6 +23,7 @@ import { PHI_ACCOUNTING_CUSTOMER_FILE_PAGE_PRESET_KEY } from "./accounting/ids";
 import { PHI_ACCOUNTING_CUSTOMER_FILE_ACCESS } from "./accounting/customer-file-access";
 import { PHI_THREADS_RUNTIME_MODULE_ROUTES } from "./threads/presets";
 import { createPhiThreadsControllerAddress } from "../../constants/threads-controller-address";
+import { PHI_BASE_PAGE_LAYOUT_NODE_ID } from "../../components/regions/presets/phi-base-page-layout";
 import {
   buildPhiCustomerFilePath,
   toPhiCustomerFilePersonRow,
@@ -96,19 +97,37 @@ describe("the customer file page", () => {
       .find((entry) => entry.key === PHI_CUSTOMER_FILE_DATA_PROVIDER_KEYS.addresses)!;
     expect(addressesProvider.kind === "collection" ? "actions" in addressesProvider.resources[0]! : null).toBe(false);
     expect(addressesProvider.kind === "collection" ? addressesProvider.resources[0]!.itemRendererKey : null).toBe(PHI_SITE_ADDRESS_ITEM_RENDERER_KEY);
-    const filters = (person!.config.features as { filters: { key: string; optionsProvider: { providerKey: string } }[] }).filters;
-    expect(filters.map((filter) => [filter.key, filter.optionsProvider.providerKey]))
-      .toEqual([["userId", PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteMembers]]);
-    const emits = (person!.config.signalRoutes as { emits: { capabilityId: string; channel: string; receiver: string }[] }).emits;
-    expect(emits.map((entry) => [entry.capabilityId, entry.channel])).toEqual([["queryChange", "query"], ["queryChange", "member"]]);
+    // The member select stands first, alone in a Flex of its own: the input of everything below it.
+    const picker = tree.contentWidgets.find((widget) => widget.widgetType.endsWith("/select-box"))!;
+    const row = tree.layoutNodes.find((node) => node.id === picker.parentLayoutNodeId)!;
+    expect([row.widgetType.split("/").pop(), row.parentLayoutNodeId, row.slotIndex]).toEqual(["flex", PHI_BASE_PAGE_LAYOUT_NODE_ID, 0]);
+    expect(tree.contentWidgets.filter((widget) => widget.parentLayoutNodeId === PHI_BASE_PAGE_LAYOUT_NODE_ID)
+      .map((widget) => widget.slotIndex)).toEqual([1, 2, 3, 4, 5]);
+    expect(picker.config).toMatchObject({
+      label: "Member",
+      allowClear: true,
+      optionsProvider: { providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteMembers, loadMode: "server", search: { enabled: true } },
+    });
+    expect(picker.config.controlSize).toBeUndefined();
     const controller = createPhiThreadsControllerAddress();
-    expect(emits.map((entry) => entry.receiver)).toEqual([`cms:${threads!.id}`, controller]);
+    expect((picker.config.signalRoutes as { emits: { capabilityId: string; channel: string; valueType: string; receiver: string }[] }).emits
+      .map((entry) => [entry.capabilityId, entry.channel, entry.valueType, entry.receiver])).toEqual([["change", "member", "string", controller]]);
+    // The member search exists once: the person Table filters nothing of its own and sends nothing.
+    expect((person!.config.features as { filters?: unknown }).filters).toBeUndefined();
+    expect((person!.config.signalRoutes as { emits?: unknown }).emits).toBeUndefined();
     // Two readers: the file, which the Controller opens for the member, and the conversation chosen below it.
     const readers = tree.contentWidgets.filter((widget) => widget.widgetType.endsWith("/thread-conversation"));
     expect(readers.map((widget) => widget.config.title ?? null)).toEqual(["File", null]);
     const controllerEmits = (tree.controllerSettings![0]!.config!.signalRoutes as { emits: { capabilityId: string; receiver: string }[] }).emits;
     expect(controllerEmits.filter((entry) => entry.capabilityId.startsWith("file")).map((entry) => entry.receiver))
       .toEqual([`cms:${readers[0]!.id}`, `cms:${readers[0]!.id}`]);
+    // The member reaches both Tables from the Controller, as the filters they listen for.
+    expect(controllerEmits.filter((entry) => entry.capabilityId === "memberFiltersChange").map((entry) => entry.receiver))
+      .toEqual([`cms:${person!.id}`, `cms:${threads!.id}`]);
+    for (const table of [person!, threads!]) {
+      expect((table.config.signalRoutes as { listens: { capabilityId: string; channel: string }[] }).listens
+        .filter((entry) => entry.channel === "filters").map((entry) => entry.capabilityId)).toEqual(["filtersChange"]);
+    }
     // The member reaches the addresses tiles from the Controller, as binding params they listen for.
     const memberParams = controllerEmits.filter((entry) => entry.capabilityId === "memberParamsChange");
     expect(memberParams.map((entry) => entry.receiver)).toEqual([`cms:${addresses.id}`]);

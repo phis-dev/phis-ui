@@ -339,8 +339,11 @@ Supporter without addresses.
 with a choice in front of them and the member's file between them:
 
 ```text
-person         a Table on resource `person`; its `userId` filter is Core's member picker
-               (`site-members`, searched on the server: name, e-mail, telephone digits);
+member         a `select-box` first on the Page, alone in a horizontal Flex and labelled in
+               front ("Member"): Core's member picker (`site-members`, searched on the server:
+               name, e-mail, telephone digits), clearable and so starting empty -- the input of
+               everything below it
+person         a Table on resource `person`, filtered by the member (`userId`);
                its footer the member's number (summary field `userId`)
 addresses      a Collection View on the addresses Collection, drawn by Core's address tiles
                (`PHI_SITE_ADDRESS_ITEM_RENDERER_KEY`, COLLECTIONS.md), read-only: the resource
@@ -352,9 +355,13 @@ conversations  a Table on resource `threads`: the conversations the person is in
 conversation, Reply dialog   as on the conversations Page, the Reply offering the internal note
 ```
 
-The person Table's `queryChange` is routed to the conversations Table's `query/change` input and to the
-Conversations Controller's `memberChange` input (`member/change`). The Controller hands the member on to
-the addresses as binding params, `{ params: { userId } }` on its `memberParamsChange` output to the View's
+The member select's `change` (the user id as text, `""` for nobody) is routed to the Conversations
+Controller's `memberChange` input (`member/change`, `string`), and the Controller translates it for
+everything below, once per member chosen: to the person and the conversations Tables as filters,
+`{ userId }` on its `memberFiltersChange` output to their `filters/change` (the Provider reads
+`query.filters.userId`), as the Groups Controller hands a chosen group to the membership Table -- a select
+answers a value and a Table takes filters, and no route converts one into the other. It hands the member on
+to the addresses as binding params, `{ params: { userId } }` on its `memberParamsChange` output to the View's
 `bindingParamsChange` (`PHI_CUSTOMER_FILE_MEMBER_PARAM`; COLLECTIONS.md, "Filtered by another Widget's
 choice"), once per member chosen, and the Collection Provider reads `params.userId`; for the reader's own
 file it answers no addresses with the Page's own-file sentence as the tiles' empty sentence

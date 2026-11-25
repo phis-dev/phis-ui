@@ -45,6 +45,7 @@ export const PHI_SELECT_BOX_WIDGET_DEFINITION = {
       ],
     },
     { key: "allowCustom", type: "boolean", label: "Allow Custom Values" },
+    { key: "allowClear", type: "boolean", label: "Allow Clear" },
     ...buildPhiChoiceControlOptionFields("toolbar"),
     ...PHI_CHOICE_CONTROL_CONFIG_FIELDS,
   ],
