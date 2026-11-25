@@ -17,6 +17,11 @@ import { PhiCompactGroupControl } from "./phi-compact-group-control";
 export type PhiLengthControlProps = {
   value?: PhiCssLength | null;
   label?: string;
+  /**
+   * The accessible name where no visible label stands beside the field; it takes precedence over the
+   * placeholder and `label`. The unit list is named after it.
+   */
+  ariaLabel?: string;
   placeholder?: string;
   min?: number;
   max?: number;
@@ -37,6 +42,7 @@ export type PhiLengthControlProps = {
 export function PhiLengthControl({
   value,
   label,
+  ariaLabel,
   placeholder,
   min,
   max,
@@ -63,10 +69,11 @@ export function PhiLengthControl({
    * is kept shut and its change ignored instead.
    */
   const controlDisabled = disabled || (!onChange && !readOnly);
+  const accessibleName = ariaLabel ?? placeholder ?? label ?? "Length";
   const control = (
     <PhiCompactGroupControl block size={size} style={{ width: "100%", minWidth: 0, ...style }}>
       <InputNumber
-        aria-label={placeholder ?? label ?? "Length"}
+        aria-label={accessibleName}
         controls={false}
         disabled={controlDisabled}
         readOnly={readOnly}
@@ -82,7 +89,7 @@ export function PhiLengthControl({
         )}
       />
       <Select<PhiCssLengthUnit>
-        aria-label={`${placeholder ?? label ?? "Length"} unit`}
+        aria-label={`${accessibleName} unit`}
         disabled={controlDisabled}
         open={readOnly ? false : undefined}
         options={PHI_CSS_LENGTH_UNITS.map((option) => ({ value: option, label: option }))}

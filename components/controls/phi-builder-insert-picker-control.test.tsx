@@ -72,10 +72,11 @@ describe("the Builder's insert picker", () => {
     expect(markup).toContain("ant-select-sm");
   });
 
-  it("names its category filter, which has no visible label", () => {
+  it("names its filters and its section switch, which have no visible label", () => {
     const markup = render("widget");
     expect(markup).toContain('aria-label="Filter categories"');
     expect(markup).toContain('aria-label="Filter packages"');
+    expect(markup).toMatch(/<div[^>]*aria-label="Insert a layout or a widget"[^>]*class="[^"]*ant-segmented/u);
   });
 
   it("draws no square corner of its own", () => {

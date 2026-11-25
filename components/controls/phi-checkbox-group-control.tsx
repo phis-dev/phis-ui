@@ -7,6 +7,8 @@ import { PhiControlOptionContent } from "./phi-control-option-content";
 
 export type PhiCheckboxGroupControlProps<TValue extends string | number = string> = {
   value?: readonly TValue[];
+  /** The group's accessible name; the group has no visible label of its own. */
+  ariaLabel?: string;
   options: readonly PhiControlOption<TValue>[];
   disabled?: boolean;
   readOnly?: boolean;
@@ -16,6 +18,7 @@ export type PhiCheckboxGroupControlProps<TValue extends string | number = string
 
 export function PhiCheckboxGroupControl<TValue extends string | number = string>({
   value,
+  ariaLabel,
   options,
   disabled,
   readOnly,
@@ -24,6 +27,8 @@ export function PhiCheckboxGroupControl<TValue extends string | number = string>
 }: PhiCheckboxGroupControlProps<TValue>) {
   return (
     <Checkbox.Group
+      role="group"
+      aria-label={ariaLabel}
       value={[...(value ?? [])]}
       disabled={disabled || readOnly || !onChange}
       onChange={(nextValue) => onChange?.(nextValue as TValue[])}

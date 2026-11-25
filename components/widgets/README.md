@@ -215,7 +215,12 @@ exports complete Widgets only.
   explicit `ariaLabel` takes precedence, on every Control that takes one. A field with no visible label
   beside it -- a filter in a picker's header -- is named by `ariaLabel` alone. The input Controls that
   take it are `PhiTextControl`, `PhiNumberControl`, `PhiSliderControl`, `PhiRateControl`,
-  `PhiSelectControl`, `PhiMultiSelectControl`, `PhiTreeSelectControl` and `PhiCountrySelectControl`.
+  `PhiSelectControl`, `PhiMultiSelectControl`, `PhiTreeSelectControl`, `PhiCountrySelectControl`,
+  `PhiCascaderControl`, `PhiDatePickerControl`, `PhiSwitchControl`, `PhiColorControl`,
+  `PhiColorFieldControl` (whose `label` names the swatch otherwise) and `PhiLengthControl` (whose unit
+  list is named after it). A group is named on the group, not on a field inside it:
+  `PhiSegmentedControl` on its radio group, `PhiCheckboxGroupControl` and `PhiDimensionControl` on a
+  `role="group"` element. A calendar adapter receives the name as `ariaLabel` beside `ariaLabelledBy`.
 - Option-bearing consumers normalize static options to `PhiControlOption` and resolve dynamic options
   with `PhiControlOptionsProviderConfig` and `usePhiControlOptionsProvider`; the Control receives only
   resolved options.

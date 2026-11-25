@@ -13,6 +13,8 @@ import { PHI_SPACE } from "../../theme/antd-css-var-contract";
 
 export type PhiDimensionControlProps = {
   value?: PhiRenderableBlockSize | null;
+  /** The accessible name of the pair; each field keeps its own, its placeholder. */
+  ariaLabel?: string;
   disabled?: boolean;
   readOnly?: boolean;
   onChange?: (nextValue: PhiRenderableBlockSize | null) => void;
@@ -42,6 +44,7 @@ function resolveNextSize(
 
 export function PhiDimensionControl({
   value,
+  ariaLabel,
   disabled = false,
   readOnly = false,
   onChange,
@@ -54,6 +57,8 @@ export function PhiDimensionControl({
   const currentSize = value ?? null;
   return (
     <div
+      role="group"
+      aria-label={ariaLabel}
       style={{
         display: "grid",
         gridTemplateColumns: "repeat(2, minmax(0, 1fr))",

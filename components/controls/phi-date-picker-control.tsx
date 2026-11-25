@@ -11,7 +11,7 @@ export type PhiDatePickerControlProps = PhiCalendarAdapterDatePickerProps & {
 
 export function PhiDatePickerControl({ adapterKey, label, ...props }: PhiDatePickerControlProps) {
   const adapter = usePhiCalendarAdapterClient(adapterKey);
-  const { labelId, labelledBy } = usePhiControlLabel(label);
+  const { labelId, labelledBy } = usePhiControlLabel(label, props.ariaLabel);
   return (
     <PhiLabeledControl label={label} labelId={labelId} fill>
       {adapter.renderDatePicker({ ...props, ariaLabelledBy: labelledBy })}

@@ -57,6 +57,8 @@ export type PhiColorPickerPresets = readonly PhiColorPickerPreset[];
 
 export type PhiColorControlProps = PhiPickerTransactionCallbacks<string | null> & {
   value?: string | null;
+  /** The swatch's accessible name; the Control draws no label of its own. */
+  ariaLabel?: string;
   defaultValue?: string;
   disabled?: boolean;
   allowClear?: boolean;
@@ -109,6 +111,7 @@ function resolveAntdMode(mode: PhiColorPickerMode): ColorPickerProps["mode"] {
 
 export function PhiColorControl({
   value = null,
+  ariaLabel,
   defaultValue = "#f0f0f0",
   disabled,
   allowClear,
@@ -169,6 +172,7 @@ export function PhiColorControl({
 
   return (
     <ColorPicker
+      aria-label={ariaLabel}
       mode={resolveAntdMode(mode)}
       value={resolveAntdColorValue(resolvePhiColorReferences(picker.value, references), defaultValue)}
       open={picker.open}

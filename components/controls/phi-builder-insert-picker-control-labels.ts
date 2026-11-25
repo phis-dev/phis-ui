@@ -3,6 +3,8 @@ export type PhiBuilderInsertPickerControlLabels = {
   pickWidget: string;
   layouts: string;
   widgets: string;
+  /** The accessible name of the switch between Layouts and Widgets, which has no visible label. */
+  section: string;
   searchLayouts: string;
   searchWidgets: string;
   filterPackages: string;
@@ -17,6 +19,7 @@ export const PHI_BUILDER_INSERT_PICKER_CONTROL_DEFAULT_LABELS: PhiBuilderInsertP
   pickWidget: "Pick widget",
   layouts: "Layouts",
   widgets: "Widgets",
+  section: "Insert a layout or a widget",
   searchLayouts: "Search layouts",
   searchWidgets: "Search widgets",
   filterPackages: "Filter packages",

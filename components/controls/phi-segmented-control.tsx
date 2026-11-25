@@ -24,6 +24,11 @@ export type PhiSegmentedControlProps<TValue extends string | number = string> = 
    */
   value?: TValue | null;
   label?: string;
+  /**
+   * The accessible name of the group where no visible label stands beside it; it takes precedence over
+   * `label`. It names the radio group, not a segment.
+   */
+  ariaLabel?: string;
   options: readonly PhiControlOption<TValue>[];
   disabled?: boolean;
   readOnly?: boolean;
@@ -39,6 +44,7 @@ export type PhiSegmentedControlProps<TValue extends string | number = string> = 
 export function PhiSegmentedControl<TValue extends string | number = string>({
   value,
   label,
+  ariaLabel,
   options,
   disabled,
   readOnly,
@@ -49,10 +55,11 @@ export function PhiSegmentedControl<TValue extends string | number = string>({
   onBlur,
   onChange,
 }: PhiSegmentedControlProps<TValue>) {
-  const { labelId, labelledBy } = usePhiControlLabel(label);
+  const { labelId, labelledBy } = usePhiControlLabel(label, ariaLabel);
   const gradientVars = gradient ? PHI_THEME_GRADIENT_CSS_VARS[gradient] : null;
   const control = (
     <Segmented
+      aria-label={ariaLabel}
       aria-labelledby={labelledBy}
       block={block}
       value={value as TValue | undefined}

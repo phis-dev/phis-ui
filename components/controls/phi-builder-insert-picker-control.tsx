@@ -330,6 +330,7 @@ export function PhiBuilderInsertPickerControl<TItem extends PhiBuilderInsertPick
             />
           ) : null}
           <PhiSegmentedControl<PhiBuilderInsertPickerSection>
+            ariaLabel={labels.section}
             value={section}
             onChange={(nextSection) => {
               if (nextSection === "layout" && !allowLayoutSection) {

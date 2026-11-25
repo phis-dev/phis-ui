@@ -144,6 +144,11 @@ export type PhiCalendarAdapterDatePickerProps = {
    * by the Control around the picker, so the adapter cannot know it otherwise.
    */
   ariaLabelledBy?: string;
+  /**
+   * The picker's accessible name where no visible label stands beside it, for its input's `aria-label`.
+   * The Control passes `ariaLabelledBy` only where this is absent.
+   */
+  ariaLabel?: string;
   onChange?: (selection: PhiTemporalSelection) => void;
 };
 

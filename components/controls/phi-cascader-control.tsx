@@ -258,6 +258,7 @@ export function PhiCascaderControl({
   disabled = false,
   readOnly = false,
   label,
+  ariaLabel,
   placeholder,
   size,
   onChange,
@@ -285,6 +286,8 @@ export function PhiCascaderControl({
   disabled?: boolean;
   readOnly?: boolean;
   label?: string;
+  /** The accessible name where no visible label stands beside the field; it takes precedence over `label`. */
+  ariaLabel?: string;
   placeholder?: string;
   size?: PhiControlSize;
   onChange?: (nextValue: string) => void;
@@ -294,7 +297,7 @@ export function PhiCascaderControl({
   getPopupContainer?: CascaderProps["getPopupContainer"];
   style?: CSSProperties;
 }) {
-  const { labelId, labelledBy } = usePhiControlLabel(label);
+  const { labelId, labelledBy } = usePhiControlLabel(label, ariaLabel);
   const { token } = usePhiConfig();
   const resolvedSeparator = separator.trim() || "/";
   const resolvedRootValue = rootValue.trim() || "/";
@@ -352,6 +355,7 @@ export function PhiCascaderControl({
 
   const control = (
     <Cascader
+      aria-label={ariaLabel}
       aria-labelledby={labelledBy}
       allowClear={allowClear}
       changeOnSelect

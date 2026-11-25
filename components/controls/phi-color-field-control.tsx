@@ -20,6 +20,11 @@ import { PhiTypographyControl } from "./phi-typography-control";
 
 export type PhiColorFieldControlProps = {
   label?: string;
+  /**
+   * The swatch's accessible name where no visible label stands above it; it takes precedence over
+   * `label`, which names the swatch otherwise.
+   */
+  ariaLabel?: string;
   value?: string | null;
   defaultValue?: string;
   /** A Theme token to fall back to instead of `defaultValue`, read live so it follows the Theme. */
@@ -58,6 +63,7 @@ export type PhiColorFieldControlProps = {
  */
 export function PhiColorFieldControl({
   label,
+  ariaLabel,
   value,
   defaultValue: fixedDefaultValue = "#1677ff",
   defaultToken,
@@ -111,6 +117,7 @@ export function PhiColorFieldControl({
         </PhiTypographyControl>
       ) : null}
       <PhiColorControl
+        ariaLabel={ariaLabel ?? label}
         mode={mode}
         showText={showText}
         placement={placement}

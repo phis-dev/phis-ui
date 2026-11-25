@@ -12,6 +12,8 @@ export type PhiSwitchControlProps = {
   id?: string;
   checked?: boolean;
   label?: ReactNode;
+  /** The accessible name where no visible label stands beside the field; it takes precedence over `label`. */
+  ariaLabel?: string;
   disabled?: boolean;
   readOnly?: boolean;
   loading?: boolean;
@@ -29,6 +31,7 @@ export function PhiSwitchControl({
   id,
   checked,
   label,
+  ariaLabel,
   disabled,
   readOnly,
   loading,
@@ -38,11 +41,12 @@ export function PhiSwitchControl({
   gradient,
   onChange,
 }: PhiSwitchControlProps) {
-  const { labelId, labelledBy } = usePhiControlLabel(label);
+  const { labelId, labelledBy } = usePhiControlLabel(label, ariaLabel);
   return (
     <PhiLabeledControl label={label} labelId={labelId}>
       <Switch
         id={id}
+        aria-label={ariaLabel}
         aria-labelledby={labelledBy}
         checked={checked}
         disabled={disabled || readOnly || !onChange}
