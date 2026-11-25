@@ -162,6 +162,7 @@ export function PhiRegionVisibilityFields({
         ? renderPhiInspectorSettingsRow(
           labels.entries,
           <PhiTreeCascaderControl
+            ariaLabel={labels.entries}
             disabled={disabled}
             options={tree}
             placeholder={labels.entriesPlaceholder}
