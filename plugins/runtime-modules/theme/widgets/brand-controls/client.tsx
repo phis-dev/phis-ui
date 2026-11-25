@@ -156,6 +156,7 @@ import { PhiPresetSizeControl, type PhiPresetSizeOption } from "../../../../../c
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiCheckboxControl } from "../../../../../components/controls/phi-checkbox-control";
 import { PhiLabeledControl } from "../../../../../components/controls/phi-labeled-control";
+import { PhiDescriptionHint } from "../../../../../components/controls/phi-description-tooltip-icon";
 import { PhiNumberControl } from "../../../../../components/controls/phi-number-control";
 import { PhiPaddingControl } from "../../../../../components/controls/phi-padding-control";
 import { PhiColorControl } from "../../../../../components/controls/phi-color-control";
@@ -2470,6 +2471,26 @@ function clearThemeRootSurface(
 }
 
 /**
+ * A Brand section's title with its description behind (i), as a CollapsibleLayout panel title carries
+ * one. The hint sits in the header, and a header folds its section: reading the hint must not open or
+ * close what it describes, by pointer or by key.
+ */
+function PhiBrandSectionTitle({ title, description }: { title: string; description: ReactNode }) {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: PHI_SPACE.xs }}>
+      <PhiTypographyControl strong>{title}</PhiTypographyControl>
+      <span
+        style={{ display: "inline-flex" }}
+        onClick={(event) => event.stopPropagation()}
+        onKeyDown={(event) => event.stopPropagation()}
+      >
+        <PhiDescriptionHint description={description} />
+      </span>
+    </span>
+  );
+}
+
+/**
  * Handing one surface back to the block it follows.
  *
  * "Reset" here takes the author's layer away rather than restoring a copy, which is why it names the
@@ -2892,7 +2913,16 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
             },
             {
               key: "wordmark",
-              label: <PhiTypographyControl strong>Wordmark</PhiTypographyControl>,
+              label: (
+                <PhiBrandSectionTitle
+                  title="Wordmark"
+                  description={showsWordmark
+                    ? <>The Site name as it is set. One part per colour: a two-tone name is one word
+                      written in two. With no part at all the frame shows {fallbackWordmark}.</>
+                    : <>The Brand is the Logo alone. The name is not drawn, and neither is the
+                      Eyebrow above it.</>}
+                />
+              ),
               children: (
                 /*
                  * Labels in their own column, so the eye reads down one edge instead of hunting for
@@ -2907,13 +2937,6 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                     "--phi-labeled-control-width": "100%",
                   } as CSSProperties}
                 >
-                  <PhiTypographyControl type="secondary">
-                    {showsWordmark
-                      ? <>The Site name as it is set. One part per colour: a two-tone name is one word
-                        written in two. With no part at all the frame shows {fallbackWordmark}.</>
-                      : <>The Brand is the Logo alone. The name is not drawn, and neither is the
-                        Eyebrow above it.</>}
-                  </PhiTypographyControl>
                   {/* In the control column like every other row: it is a setting, not a section header. */}
                   <PhiSwitchControl
                     label="Show name"
@@ -3089,7 +3112,13 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                * shown there, so the picker offers the Site Space and greys out the rest.
                */
               key: "share",
-              label: <PhiTypographyControl strong>Link preview</PhiTypographyControl>,
+              label: (
+                <PhiBrandSectionTitle
+                  title="Link preview"
+                  description={"The picture a shared link shows where its Page states none, cut to 1200 x 630 "
+                    + "around its focus. Only a publicly delivered picture can be chosen."}
+                />
+              ),
               children: (
                 <PhiFlexControl
                   vertical
@@ -3099,10 +3128,6 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                     "--phi-labeled-control-width": "100%",
                   } as CSSProperties}
                 >
-                  <PhiTypographyControl type="secondary">
-                    The picture a shared link shows where its Page states none, cut to 1200 x 630 around its
-                    focus. Only a publicly delivered picture can be chosen.
-                  </PhiTypographyControl>
                   {/*
                     The chosen picture in a link card as a messenger draws one: the picture, the host, a
                     title and the description. The title and description are the Site's, which a Page
@@ -3137,7 +3162,7 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                       </PhiFlexControl>
                     </PhiCardControl>
                   ) : null}
-                  {/* The library replaces the picture; Remove takes it out, as the picker's own Clear does. */}
+                  {/* The library replaces the picture; the bin takes it out, as the picker's own Clear does. */}
                   <PhiFlexControl align="center" gap={clientToken.paddingXS} style={{ minWidth: 0 }}>
                     <div style={{ flex: "1 1 auto", minWidth: 0 }}>
                       <PhiMediaPickerBinding
@@ -3162,10 +3187,12 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                     {brand.shareImage ? (
                       <PhiButtonControl
                         size="small"
-                        type="link"
-                        style={{ flexShrink: 0, paddingInline: 0 }}
+                        type="text"
+                        danger
+                        style={{ flexShrink: 0 }}
+                        icon={<PhiIcon name="delete" size="inherit" />}
+                        ariaLabel="Remove"
                         onClick={() => publishDraft(mergeThemeBrand(state.draft, { shareImage: null }))}
-                        label="Remove"
                       />
                     ) : null}
                   </PhiFlexControl>

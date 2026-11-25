@@ -428,9 +428,14 @@ h5.phi-typography, .phi-typography h5 {
   font-size: var(--phi-font-size);
 }
 
-/* The cover runs to the frame's outer edge and takes its upper corners when nothing sits above it. */
+/*
+ * The cover runs to the frame's outer edge and takes its upper corners when nothing sits above it. It
+ * clips what it holds: a picture is a box with an image inside, and a corner set on the box alone leaves
+ * the image square above it.
+ */
 .phi-card-control__cover {
   margin: calc(var(--phi-line-width) * -1) calc(var(--phi-line-width) * -1) 0;
+  overflow: hidden;
 }
 
 .phi-card-control__cover > * {
