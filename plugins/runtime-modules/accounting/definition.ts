@@ -11,6 +11,5 @@ export const PHI_ACCOUNTING_RUNTIME_MODULE_DEFINITION = definePhiAreaBaseRuntime
   serverBinding: PHI_CORE_SERVER_BINDING,
   description: "Locked Accounting Area shell, navigation surface, root route, and the Site's product directory.",
   category: "foundation",
-  icon: "antd:profile",
   dataProviders: PHI_ACCOUNTING_RUNTIME_DATA_PROVIDER_DESCRIPTORS,
 });

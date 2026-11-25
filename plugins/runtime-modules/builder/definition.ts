@@ -14,7 +14,6 @@ export const PHI_BUILDER_RUNTIME_MODULE_DEFINITION = definePhiAreaBaseRuntimeMod
   controller: buildPhiRuntimeModuleControllerDescriptor(PHI_BUILDER_RUNTIME_CONTROLLER_DEFINITION),
   description: "Locked Builder Area shell, workspaces, Canvas orchestration, drafts, Inspector, wiring, and authoring chrome.",
   category: "foundation",
-  iconFamily: "builder",
   controllerMountPolicy: "area",
   dataProviders: PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS,
 });

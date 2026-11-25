@@ -10,11 +10,28 @@ const PHI_AREA_BASE_MODULE_TITLES = {
   editor: "Editor Base",
 } as const satisfies Record<PhiCmsAreaKey, string>;
 
+/**
+ * The icon an Area is shown by, which is its base Module's.
+ *
+ * One answer for both places that draw it: the base Module's own row in the Builder's Modules table and
+ * that Area's checkbox column heading beside it, where the icon stands alone and the Area's name is its
+ * tooltip. The base Module takes it from here rather than stating its own, so the two cannot drift
+ * apart. Names from the shared icon vocabulary (`@phis/ui/widgets:<family>` is a Widget family's icon).
+ */
+export const PHI_AREA_ICONS = {
+  public: "antd:global",
+  app: "antd:appstore",
+  accounting: "antd:profile",
+  admin: "@phis/ui/widgets:admin",
+  builder: "@phis/ui/widgets:builder",
+  editor: "@phis/ui/widgets:editor",
+} as const satisfies Record<PhiCmsAreaKey, string>;
+
 type PhiAreaBaseModuleTitle<TArea extends PhiCmsAreaKey> =
   (typeof PHI_AREA_BASE_MODULE_TITLES)[TArea];
 
 type PhiAreaBaseRuntimeModuleDefinitionInput<TArea extends PhiCmsAreaKey> =
-  Omit<PhiRuntimeModuleDefinition, "kind" | "eligibleAreas" | "title"> & {
+  Omit<PhiRuntimeModuleDefinition, "kind" | "eligibleAreas" | "title" | "icon" | "iconFamily"> & {
     area: TArea;
   };
 
@@ -25,6 +42,7 @@ export function definePhiAreaBaseRuntimeModuleDefinition<
   kind: "module";
   eligibleAreas: readonly [TArea];
   title: PhiAreaBaseModuleTitle<TArea>;
+  icon: string;
 } {
   const { area, ...metadata } = definition;
   return {
@@ -32,9 +50,11 @@ export function definePhiAreaBaseRuntimeModuleDefinition<
     kind: "module",
     eligibleAreas: [area],
     title: PHI_AREA_BASE_MODULE_TITLES[area],
+    icon: PHI_AREA_ICONS[area],
   } as Omit<TDefinition, "area"> & {
     kind: "module";
     eligibleAreas: readonly [TArea];
     title: PhiAreaBaseModuleTitle<TArea>;
+    icon: string;
   };
 }

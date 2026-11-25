@@ -11,6 +11,5 @@ export const PHI_PUBLIC_RUNTIME_MODULE_DEFINITION = definePhiAreaBaseRuntimeModu
   serverBinding: PHI_CORE_SERVER_BINDING,
   description: "Locked Public Area shell, navigation surfaces, root routes, and public form handlers.",
   category: "foundation",
-  icon: "antd:global",
   formProviders: { handlers: PHI_PUBLIC_FORM_HANDLER_PROVIDER_DESCRIPTORS },
 });

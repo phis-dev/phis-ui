@@ -12,7 +12,6 @@ export const PHI_APP_RUNTIME_MODULE_DEFINITION = definePhiAreaBaseRuntimeModuleD
   serverBinding: PHI_CORE_SERVER_BINDING,
   description: "Locked App Area shell, navigation surfaces, and authenticated application routes.",
   category: "foundation",
-  icon: "antd:appstore",
   formProviders: {
     handlers: PHI_APP_FORM_HANDLER_PROVIDER_DESCRIPTORS,
   },

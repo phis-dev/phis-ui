@@ -360,6 +360,10 @@ A column may declare presentation metadata such as:
 
 - the selected Provider `fieldKey`
 - `title`
+- `titleIcon`, an icon ahead of the heading, and `titleDisplay: "icon"`, which makes the icon the whole
+  heading: the title becomes its tooltip and accessible name, never dropped. For a column whose heading
+  is wider than anything under it -- the Builder's Modules table heads its Area checkbox columns with the
+  Area's icon and gives them one fixed width. `titleDisplay: "icon"` without `titleIcon` is refused.
 - `description`, a hint shown as the `(i)` tooltip beside the heading, never as a second line
 - a compatible read renderer
 - an optional permitted inline-edit mode

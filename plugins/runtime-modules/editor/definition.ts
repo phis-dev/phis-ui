@@ -9,6 +9,5 @@ export const PHI_EDITOR_RUNTIME_MODULE_DEFINITION = definePhiAreaBaseRuntimeModu
   serverBinding: PHI_CORE_SERVER_BINDING,
   description: "Locked Editor Area shell, content editor widgets, data, and workflows.",
   category: "foundation",
-  iconFamily: "editor",
   dataProviders: PHI_EDITOR_RUNTIME_DATA_PROVIDER_DESCRIPTORS,
 });

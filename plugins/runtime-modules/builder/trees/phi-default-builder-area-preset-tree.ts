@@ -10,6 +10,7 @@ import {
 } from "../../../../constants/cms-layout-types";
 import { PhiCmsFlags, PhiCmsRegionType, PhiCmsStatus } from "../../../../constants/phi-cms";
 import { PHI_CMS_AREA_KEYS } from "../../../../constants/cms-areas";
+import { PHI_AREA_ICONS } from "../../area-base-definition";
 import { buildPhiCmsLayoutNode } from "../../../../helpers/cms-node-factories";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import { buildPhiHeaderTopActionsLayoutNode } from "../../../../components/regions/presets/phi-header-top-actions-layout";
@@ -1715,11 +1716,18 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                        * the per-Area refinement. A Module not eligible for an Area carries null there
                        * and the cell renders empty; the Area whose Base module the row is stays
                        * checked and disabled, and so does every Area of a Module that is always active.
+                       *
+                       * Headed by the Area's icon alone, its name the tooltip and the accessible name,
+                       * and all of one width: the names differ in length (App, Accounting) and set six
+                       * checkbox columns to six widths, while what is under each is the same checkbox.
                        */
                       ...PHI_CMS_AREA_KEYS.map((areaKey) => ({
                         key: `area_${areaKey}`,
                         fieldKey: `area_${areaKey}`,
                         title: modulesLabels?.areas[areaKey] ?? areaKey,
+                        titleIcon: PHI_AREA_ICONS[areaKey],
+                        titleDisplay: "icon" as const,
+                        sizing: { mode: "fixed" as const, width: 44 },
                         align: "center" as const,
                         editor: {
                           control: "checkbox" as const,

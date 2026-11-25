@@ -9,6 +9,5 @@ export const PHI_ADMIN_RUNTIME_MODULE_DEFINITION = definePhiAreaBaseRuntimeModul
   serverBinding: PHI_CORE_SERVER_BINDING,
   description: "Locked Admin Area shell, navigation surface, root route, and Admin settings.",
   category: "foundation",
-  iconFamily: "admin",
   formProviders: { handlers: PHI_ADMIN_SETTINGS_FORM_HANDLER_PROVIDER_DESCRIPTORS },
 });
