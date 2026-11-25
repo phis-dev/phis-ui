@@ -950,6 +950,13 @@ offered and read only while `balancedSides` is on. `25` is the default and is st
 Inspector's "25 %" line writes nothing -- because it is the 1 : 2 : 1 the Layout always had, so a row that
 states nothing reads as before. Any other value is a config error, said in the Builder.
 
+The header Three Columns of the Area Presets (the top band of Admin, Editor, Accounting and Builder, the
+Builder's main band, and the main band of Public, App and every Area built on the Site Area Preset) state
+balanced sides at `33`: what stands in their middle never needs more than a third. So does the row above
+the canvas on the Builder's Pages and Shells pages. The Site Area Preset's footer bottom row is a Three
+Column at `20`, its copyright line in the middle. The Layout's default stays `25`, so every other Three
+Column reads as before.
+
 The share is a growth ratio, not a width: a side grows by its share and the middle by `100 - 2 * share`
 (`resolvePhiThreeColumnFlex`). The gaps come out of the row first and the rest is shared in that ratio,
 where three percent widths and two gaps would be wider than the row.

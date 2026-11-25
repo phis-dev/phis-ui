@@ -78,6 +78,8 @@ export function buildPhiAreaShellHeaderNodes({
         label: `${labelPrefix} header top three column`,
         config: {
           balancedSides: true,
+          // Three equal columns: the page title in the middle never needs more than a third.
+          sideShare: 33,
           contentAlign: "center",
           paddingLeft: PHI_SPACE.base,
           paddingRight: PHI_SPACE.base,

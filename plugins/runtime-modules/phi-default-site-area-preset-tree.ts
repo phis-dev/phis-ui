@@ -195,7 +195,9 @@ export async function buildPhiDefaultSiteAreaPresetTree({
         label: "pub header main three column",
         config: {
           ...resolvePhiLayoutCreationPreset("threecol", "panel"),
-          balancedSides: isApp,
+          // Three equal columns in every Area: the middle (navigation or page title) never needs more than a third.
+          balancedSides: true,
+          sideShare: 33,
           justify: "space-between",
           contentAlign: "center",
         },
@@ -283,23 +285,26 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               id: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutFooterBottom,
               siteId: page.siteId,
               parentLayoutNodeId: null,
-              widgetType: buildPhiCmsLayoutNamespacedTypeKey(resolvePhiCmsLayoutPluginKey("flex"), "flex"),
+              widgetType: buildPhiCmsLayoutNamespacedTypeKey(resolvePhiCmsLayoutPluginKey("three-column"), "three-column"),
               slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
               sortOrder: 40,
               status: 1,
               flags: 0,
               visibilityMask: page.visibilityMask,
-              label: "pub footer bottom flex",
+              label: "pub footer bottom three column",
+              /*
+               * 20 : 60 : 20, the copyright line in the middle. The sides stand empty for a Site to fill;
+               * on a phone empty sides take nothing and the middle the whole row (LAYOUTING.md).
+               */
               config: {
-                anchor: {
-                  horizontal: "center",
-                  vertical: "middle",
-                },
+                ...resolvePhiLayoutCreationPreset("threecol", "panel"),
+                balancedSides: true,
+                sideShare: 20,
+                contentAlign: "center",
                 paddingTop: PHI_SPACE.sm,
                 paddingRight: PHI_SPACE.base,
                 paddingBottom: PHI_SPACE.sm,
                 paddingLeft: PHI_SPACE.base,
-                wrap: true,
                 minSize: { height: 48 },
               },
             },
@@ -450,7 +455,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               siteId: page.siteId,
               parentLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutFooterBottom,
               widgetType: buildPhiCmsWidgetNamespacedTypeKey(resolvePhiCmsWidgetPluginKey("simple-text"), "simple-text"),
-              slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+              slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
               sortOrder: 0,
               status: 1,
               flags: 0,

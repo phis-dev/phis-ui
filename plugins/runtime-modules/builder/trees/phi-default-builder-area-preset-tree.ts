@@ -550,6 +550,8 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
         label: "dev header top three column",
         config: {
           balancedSides: true,
+          // Three equal columns: what stands in the middle never needs more than a third.
+          sideShare: 33,
           contentAlign: "center",
         },
       }),
@@ -563,6 +565,8 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
         label: "dev header main three column",
         config: {
           balancedSides: true,
+          // Three equal columns: what stands in the middle never needs more than a third.
+          sideShare: 33,
           contentAlign: "center",
         },
       }),
@@ -1115,6 +1119,8 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               label: isStructurePage ? "dev shells workspace header" : "dev pages workspace header",
               config: {
                 balancedSides: true,
+                // Three equal columns above the canvas, like the Area headers.
+                sideShare: 33,
                 contentAlign: "center",
                 padding: PHI_SPACE.xs,
                 paddingLeft: 0,
@@ -1711,7 +1717,8 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                           disabledWhen: { source: "row", valuePath: "locked", operator: "truthy" },
                         },
                       },
-                      { key: "title", fieldKey: "title", iconFieldKey: "icon", title: modulesLabels?.columns.title ?? "Module", sortable: true },
+                      // Next to the switch, so a scrolled row still says which Module it is.
+                      { key: "title", fieldKey: "title", iconFieldKey: "icon", title: modulesLabels?.columns.title ?? "Module", sortable: true, sticky: "left" },
                       /*
                        * One checkbox column per Area: the switch is the Module everywhere, these are
                        * the per-Area refinement. A Module not eligible for an Area carries null there
