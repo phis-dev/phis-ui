@@ -125,7 +125,8 @@ read the field's documentation, not the Module's.
     against the catalog), `code` (TypeScript, ESLint and
     the module graph budget, `pnpm audit:graph --check`), `runtime` (adds `runtime-modules:check`),
     `antd` (adds the Ant Design doctor), `package` (ESLint, the graph budget and the distribution build
-    with validation), `all`.
+    with validation), `all`. Every profile also checks `package.json#phis.testedWith` against
+    node_modules.
   - The module graph budget (`scripts/audit-module-graph.budget.json`) fails on a new unreachable
     source, Client barrel import or duplicate file, on a Client reaching `server-only`, and on a package
     entry's graph growing past a small headroom. Intended growth is recorded with
@@ -235,6 +236,12 @@ read the field's documentation, not the Module's.
 - `react`, `react-dom`, `next`, `antd`, and `@ant-design/icons` are peer
   dependencies. Never introduce a second runtime copy of them, and do not use `file:` dependencies as a
   development path.
+- `package.json#phis.testedWith` states the exact versions of those peers and of the Site toolchain
+  (`typescript`, `@types/node`, `@types/react`, `@types/react-dom`) that this package is built and tested
+  with; it ships in the published manifest, and `phis init` pins a new Site to it. It is never typed:
+  `pnpm tested-with:write` reads it from node_modules, and `pnpm verify` fails in every profile while it
+  says anything else -- so a release run whose install resolved a newer patch fails until the workspace
+  has been updated, tested and the field written again.
 - The distribution build emits unbundled ESM with declarations and CSS, preserves `"use client"`,
   lazy imports, and Area-specific manifests, and never bundles React, Next.js, or Ant Design.
 - `@phis/ui` defines no App Router entries (`page.tsx`, `layout.tsx`, `route.ts`, `loading.tsx`,

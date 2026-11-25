@@ -16,9 +16,11 @@ and `scripts/validate-todos-wants.ts` refuses the entry once the catalog has one
 - **Dependency pins from the phisys clean-install test (2026-11-25).** `sanitize-html` is pinned to 2.17.7,
   and a fresh Site's `npm audit` lists moderate advisories fixed in 2.18.0 (GHSA-x3q4-9hxx-gx8m,
   GHSA-374f-7chj-9948, GHSA-cv27-6wvh-8x7j); raise it together with `@phis/server` (package update round 1).
-  The peer range `next ^16.2.11` admits versions Next itself refuses to build (`SecurityFatalError` below
-  16.4.5); raise it to the `^16.4.6` the devDependency already uses. The Site scaffold's stale pins are
-  phis-server's (TODOS.md there, "Clean-install findings").
+- **`phis.testedWith` reaches Sites with this release.** The peer range of `next` is `^16.4.6` now, and
+  `package.json#phis.testedWith` ships in the manifest; 0.8.1 has neither, so until a release carries the
+  field `phis init` pins a new Site to the set phis-server recorded when its CLI was built. A Server
+  release builds its fallback set from the newest `@phis/ui` of its line on the registry, so this package
+  is released before the next Server (contracts, then `@phis/ui`, then Core).
 
 Steps an installation takes with a release stand under [Operations](#operations).
 

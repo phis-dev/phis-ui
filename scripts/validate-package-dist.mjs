@@ -65,6 +65,16 @@ for (const [name, range] of Object.entries(distManifest.dependencies ?? {})) {
   }
 }
 
+// `phis init` pins a new Site to these, read from the registry; a tarball without them leaves every new
+// Site on the Server's build-time set. That the source states what is installed is checked by
+// scripts/validate-tested-with.mjs, which `pnpm verify` runs in every profile.
+if (
+  JSON.stringify(distManifest.phis?.testedWith ?? null) !== JSON.stringify(sourceManifest.phis?.testedWith ?? null) ||
+  Object.keys(distManifest.phis?.testedWith ?? {}).length === 0
+) {
+  throw new Error("Built package must carry package.json#phis.testedWith as the workspace states it.");
+}
+
 if (distManifest.dependencies?.["server-only"] == null) {
   throw new Error('Built package must declare "server-only" as a runtime dependency.');
 }

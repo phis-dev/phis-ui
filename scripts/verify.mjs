@@ -31,6 +31,11 @@ const CHECKS = {
     command: "pnpm",
     args: ["-s", "audit:graph", "--check"],
   },
+  testedWith: {
+    label: "package.json#phis.testedWith against node_modules",
+    command: "node",
+    args: ["scripts/validate-tested-with.mjs"],
+  },
   todos: {
     label: "TODOS.md wants against the catalog",
     command: "pnpm",
@@ -68,13 +73,18 @@ const CHECKS = {
   },
 };
 
+/*
+ * `testedWith` is in every profile, the changed one included: what it compares can go stale without a
+ * file of this repository changing -- an install in the workspace moves node_modules -- and it reads nine
+ * manifests.
+ */
 const EXPLICIT_PROFILES = {
-  docs: ["diff", "todos"],
-  code: ["diff", "typecheck", "lint", "graph"],
-  runtime: ["diff", "typecheck", "lint", "graph", "runtime"],
-  antd: ["diff", "typecheck", "lint", "antd", "antdCss"],
-  package: ["diff", "lint", "graph", "package"],
-  all: ["diff", "lint", "graph", "runtime", "antd", "antdCss", "package"],
+  docs: ["diff", "testedWith", "todos"],
+  code: ["diff", "testedWith", "typecheck", "lint", "graph"],
+  runtime: ["diff", "testedWith", "typecheck", "lint", "graph", "runtime"],
+  antd: ["diff", "testedWith", "typecheck", "lint", "antd", "antdCss"],
+  package: ["diff", "testedWith", "lint", "graph", "package"],
+  all: ["diff", "testedWith", "lint", "graph", "runtime", "antd", "antdCss", "package"],
 };
 
 const requestedProfile = process.argv[2] ?? "changed";
@@ -90,6 +100,8 @@ Profiles:
   antd     Code checks plus Ant Design doctor and the static structure
   package  ESLint, the module graph budget and compiled distribution validation
   all      All checks
+
+Every profile also checks package.json#phis.testedWith against what node_modules holds.
 
 Successful verification stays silent. A failing tool prints only the captured output tail.`);
   process.exit(0);
@@ -123,7 +135,7 @@ for (const checkKey of checkKeys) {
 
 async function resolveChangedChecks() {
   const changedFiles = await readChangedFiles();
-  const selectedChecks = new Set(["diff"]);
+  const selectedChecks = new Set(["diff", "testedWith"]);
 
   if (changedFiles.length === 0) {
     return [...selectedChecks];

@@ -682,7 +682,7 @@ The Module half never imports the Add-on half, and the Add-on half never imports
   },
   "peerDependencies": {
     "@phis/ui": "^0.1.0",
-    "next": "^16.2.11",
+    "next": "^16.4.6",
     "react": "^19.2.8"
   }
 }

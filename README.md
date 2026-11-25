@@ -35,10 +35,13 @@ It does not own:
 
 | Package | Range |
 | --- | --- |
-| `next` | `^16.2.11` |
+| `next` | `^16.4.6` |
 | `react`, `react-dom` | `^19.2.8` |
-| `antd` | `^6.5.1` |
+| `antd` | `^6.7.1` |
 | `@ant-design/icons` | `^6.3.2` |
+
+The ranges say what the package accepts. The exact versions it is built and tested with stand in
+`package.json#phis.testedWith`, which ships with the package; `phis init` pins a new Site to them.
 
 ## For Site operators
 

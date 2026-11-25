@@ -128,6 +128,10 @@ const distManifest = {
   sideEffects: ["**/*.css"],
   peerDependencies: sourceManifest.peerDependencies,
   dependencies: await resolveWorkspaceDependencies(sourceManifest.dependencies),
+  // The exact framework versions this build was made and tested with (scripts/validate-tested-with.mjs).
+  // `phis init` reads them from the registry metadata of the `@phis/ui` it chooses and pins a new Site to
+  // them, so they travel with the published manifest. The rest of the `phis` block stays behind.
+  phis: { testedWith: sourceManifest.phis.testedWith },
 };
 
 await copyFile(
