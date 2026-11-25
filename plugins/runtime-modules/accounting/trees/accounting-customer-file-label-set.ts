@@ -22,7 +22,8 @@ const PHI_CUSTOMER_FILE_PAGE_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_ACCO
     person_picker_hint: definePhiMessageLabel("Search by name, e-mail address or telephone number."),
     person_empty: definePhiMessageLabel("Choose a member to open their file."),
     own_file: definePhiMessageLabel("This is your own record; it is not shown here."),
-    person_footer: definePhiMessageLabel("Member no. %1. Opening a file is written to the access log."),
+    // "Member ID", not "Member no.": the abbreviation read as the word "no" once translated.
+    person_footer: definePhiMessageLabel("Member ID %1. Opening a file is written to the access log."),
     // Core pages the conversations without a count: what this page holds, and which page it is.
     threads_footer: "%1 on page %2",
     column_display_name: "Shown as",

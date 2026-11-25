@@ -43,9 +43,14 @@ export function PhiSelectBoxWidget({
     sender,
   });
   const fill = mode === "control" || mode === "config";
+  /*
+   * As wide as the box it stands in. On a Page that box is the Widget's slot frame, which is as wide as
+   * its content unless the placement gives it a width (`size`) -- so an unsized select keeps its own
+   * width, at least four control heights, and a sized one fills what it was given, label included.
+   */
   const controlStyle = {
     minWidth: fill ? 0 : minWidth,
-    width: fill ? "100%" : undefined,
+    width: "100%",
   };
   // Cleared, the select answers nothing; the Control holds and announces that as the empty value.
   const handleChange = (nextValue: string | undefined) => {

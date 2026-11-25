@@ -285,7 +285,9 @@ Generic control Widgets reuse the capability sets in `signals/control-signal-cap
   hands what is typed to the provider, as a Form field and a Table filter do, so a provider answering one
   page of a longer list -- Core's Site members -- is searched by its route. `allowClear` lets the select be
   emptied again: cleared it holds and announces the empty value and shows its placeholder, and without a
-  `value` of its own it starts that way rather than on its first option.
+  `value` of its own it starts that way rather than on its first option. The select is as wide as its
+  slot frame: unsized that is its own width (at least four control heights), and a placement that gives
+  it a `size` gets a select that fills it, label included.
 - Badge chrome is an optional control capability: config `badgeEnabled`, `badgeText`, `badgeCount`,
   `badgeShowZero`, `badgeOverflowCount`, `badgeColor`; runtime updates arrive on `badge/change` as
   `string` or `number`. On a button that shows only its icon the count sits on the icon's top-right

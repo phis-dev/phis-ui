@@ -24,6 +24,7 @@ import {
 import type { PhiThreadConversationLabels } from "../../messaging/labels";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
+import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 
 export type PhiThreadConversationWidgetClientProps = PhiClientBlockBaseProps<
   PhiThreadConversationLabels,
@@ -134,6 +135,7 @@ export function PhiThreadConversationWidgetClient({
 }: PhiThreadConversationWidgetClientProps) {
   const searchParams = useSearchParams();
   const identity = usePhiSignalIdentity();
+  const { token } = usePhiConfig();
   const emitSignal = usePhiSignalEmitter();
 
   const listenRoutes = config?.signalRoutes?.listens;
@@ -577,14 +579,18 @@ export function PhiThreadConversationWidgetClient({
         * only thing saying "this is a heading". A heading bar with a rule under it says it in one line, so
         * the first message starts where the conversation starts.
         */}
+      {/*
+        * A section of the Page, headed as every section is -- a Table's or a Collection's title is the body
+        * text, strong -- so the heading bar is the Card's small one; the body keeps the Card's ordinary
+        * padding. The Reply is a button of its own size: it is what the reader came to press.
+        */}
       <PhiCardControl
-        padding={config?.padding}
+        size="small"
+        padding={config?.padding ?? token.padding}
         toolbar={config?.reply && !archived && !locked ? (
-          // Small, like every control in a heading bar: it sits beside the title, not under the conversation.
           <PhiButtonControl
             label={config?.replyLabel ?? labels.replyLabel}
             icon={<PhiIcon name="antd:message-outlined" size="inherit" />}
-            size="small"
             onClick={reply}
           />
         ) : undefined}

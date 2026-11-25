@@ -341,10 +341,10 @@ with a choice in front of them and the member's file between them:
 ```text
 member         a `select-box` first on the Page, alone in a horizontal Flex and labelled in
                front ("Member"): Core's member picker (`site-members`, searched on the server:
-               name, e-mail, telephone digits), clearable and so starting empty -- the input of
-               everything below it
+               name, e-mail, telephone digits), clearable and so starting empty, about half
+               the row wide (`size` in pixels) -- the input of everything below it
 person         a Table on resource `person`, filtered by the member (`userId`);
-               its footer the member's number (summary field `userId`)
+               its footer the member ID (summary field `userId`)
 addresses      a Collection View on the addresses Collection, drawn by Core's address tiles
                (`PHI_SITE_ADDRESS_ITEM_RENDERER_KEY`, COLLECTIONS.md), read-only: the resource
                declares no action

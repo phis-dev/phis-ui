@@ -314,6 +314,11 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
           label: labels.person.picker,
           description: labels.person.pickerHint,
           allowClear: true,
+          /*
+           * A search wants room to type in, about half the row, label included. In pixels: the Flex slot
+           * is as wide as what it holds, so a share of it would be a share of the select itself.
+           */
+          size: { width: { compact: 300, medium: 377, wide: 466 } },
           optionsProvider: {
             providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteMembers,
             loadMode: "server",

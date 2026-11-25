@@ -109,6 +109,8 @@ describe("the customer file page", () => {
       optionsProvider: { providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteMembers, loadMode: "server", search: { enabled: true } },
     });
     expect(picker.config.controlSize).toBeUndefined();
+    // Room to type: a width of its own, in pixels, since the Flex slot is as wide as what it holds.
+    expect(picker.config.size).toEqual({ width: { compact: 300, medium: 377, wide: 466 } });
     const controller = createPhiThreadsControllerAddress();
     expect((picker.config.signalRoutes as { emits: { capabilityId: string; channel: string; valueType: string; receiver: string }[] }).emits
       .map((entry) => [entry.capabilityId, entry.channel, entry.valueType, entry.receiver])).toEqual([["change", "member", "string", controller]]);
