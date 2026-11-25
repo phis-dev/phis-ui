@@ -1329,6 +1329,12 @@ function TableAction({ action, disabled = false, disabledReason, templateValue, 
   if (action.execution === "link" && action.link) {
     return disabled ? content : <PhiLink href={action.link.href} external={action.link.external} newTab={action.link.newTab}>{content}</PhiLink>;
   }
+  /*
+   * Below the button, its right edge on the button's: the actions stand at a Table's right end, and a
+   * confirmation beside them had nowhere to go on a phone -- placed to the left it ran past the window's
+   * left edge, and Ant Design neither moves such a box sideways nor finds room for it on the right. Above
+   * or below, it is flipped to where there is room and shifted along the edge into the window.
+   */
   return action.confirm && !disabled ? (
     <PhiConfirmControl title={formatTableActionTemplate(action.confirm.title, templateValue)}
       description={action.confirm.alert ? (
@@ -1344,7 +1350,7 @@ function TableAction({ action, disabled = false, disabledReason, templateValue, 
         </PhiFlexControl>
       ) : formatTableActionTemplate(action.confirm.description, templateValue)}
       confirmLabel={action.confirm.okText} cancelLabel={action.confirm.cancelText}
-      danger={danger} placement="left" onConfirm={onActivate}>
+      danger={danger} placement="bottomRight" onConfirm={onActivate}>
       {content}
     </PhiConfirmControl>
   ) : content;
