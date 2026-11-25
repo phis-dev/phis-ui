@@ -144,14 +144,22 @@ function validatingCmsStructureWrite(
 }
 
 /**
- * One part of a CDN upload, `PUT /api/site/admin/cdn/uploads/<token>/parts/<n>`: up to 16 MiB streamed
- * on to Core, which streams it on to the storage. It is bounded by the browser that sends it, not by the
- * proxy's clock -- on a slow link a part takes longer than any timeout that suits a read.
+ * A body on its way to storage through this door, bounded by the browser that sends it and not by the
+ * proxy's clock -- on a slow link it takes longer than any timeout that suits a read:
+ *
+ * - one part of a CDN upload, `PUT /api/site/admin/cdn/uploads/<token>/parts/<n>`, up to 16 MiB that Core
+ *   streams on to the bucket;
+ * - a Media body sent whole (`proxy-stream`, a Space on a Local Storage Profile),
+ *   `PUT /api/site/media/uploads/<token>`, up to the Site's largest object.
+ *
+ * Exactly these shapes and this verb: init, report and finalize keep the timeout.
  */
 export function isPhiUnboundedSiteRequest(request: Pick<Request, "method">, path: readonly string[] | undefined) {
-  return request.method === "PUT" &&
-    path?.length === 6 &&
+  if (request.method !== "PUT" || !path) return false;
+  const cdnPart = path.length === 6 &&
     path[0] === "admin" && path[1] === "cdn" && path[2] === "uploads" && path[4] === "parts";
+  const mediaBody = path.length === 3 && path[0] === "media" && path[1] === "uploads" && path[2] !== "init";
+  return cdnPart || mediaBody;
 }
 
 export function buildPhiSiteProxyHandlers(

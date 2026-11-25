@@ -163,12 +163,20 @@ describe("buildPhiSiteProxyHandlers", () => {
 });
 
 describe("isPhiUnboundedSiteRequest", () => {
-  it("names a CDN upload part and nothing else", () => {
+  it("names a CDN upload part and no other route of the CDN", () => {
     const part = ["admin", "cdn", "uploads", "tok", "parts", "2"];
     expect(isPhiUnboundedSiteRequest({ method: "PUT" }, part)).toBe(true);
     expect(isPhiUnboundedSiteRequest({ method: "POST" }, part)).toBe(false);
     expect(isPhiUnboundedSiteRequest({ method: "PUT" }, ["admin", "cdn", "uploads", "tok", "complete"])).toBe(false);
     expect(isPhiUnboundedSiteRequest({ method: "PUT" }, ["media", "uploads", "tok", "parts", "2"])).toBe(false);
     expect(isPhiUnboundedSiteRequest({ method: "PUT" }, undefined)).toBe(false);
+  });
+
+  it("names a Media body sent whole through the Site, and not the routes around it", () => {
+    expect(isPhiUnboundedSiteRequest({ method: "PUT" }, ["media", "uploads", "f4bf"])).toBe(true);
+    expect(isPhiUnboundedSiteRequest({ method: "POST" }, ["media", "uploads", "f4bf"])).toBe(false);
+    expect(isPhiUnboundedSiteRequest({ method: "PUT" }, ["media", "uploads", "init"])).toBe(false);
+    expect(isPhiUnboundedSiteRequest({ method: "PUT" }, ["media", "uploads", "f4bf", "finalize"])).toBe(false);
+    expect(isPhiUnboundedSiteRequest({ method: "PUT" }, ["media", "f4bf"])).toBe(false);
   });
 });
