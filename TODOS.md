@@ -13,6 +13,13 @@ and `scripts/validate-todos-wants.ts` refuses the entry once the catalog has one
   and only a Core that renders variant 11 serves the picture; an older Core answers 404 for it, and a
   preview shows the title and description without a picture. Release contracts, then Core, then `@phis/ui`.
 
+- **Dependency pins from the phisys clean-install test (2026-11-25).** `sanitize-html` is pinned to 2.17.7,
+  and a fresh Site's `npm audit` lists moderate advisories fixed in 2.18.0 (GHSA-x3q4-9hxx-gx8m,
+  GHSA-374f-7chj-9948, GHSA-cv27-6wvh-8x7j); raise it together with `@phis/server` (package update round 1).
+  The peer range `next ^16.2.11` admits versions Next itself refuses to build (`SecurityFatalError` below
+  16.4.5); raise it to the `^16.4.6` the devDependency already uses. The Site scaffold's stale pins are
+  phis-server's (TODOS.md there, "Clean-install findings").
+
 Steps an installation takes with a release stand under [Operations](#operations).
 
 ## People data (`users:v1`)
