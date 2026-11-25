@@ -195,9 +195,12 @@ export async function buildPhiDefaultSiteAreaPresetTree({
         label: "pub header main three column",
         config: {
           ...resolvePhiLayoutCreationPreset("threecol", "panel"),
-          // Three equal columns in every Area: the middle (navigation or page title) never needs more than a third.
-          balancedSides: true,
-          sideShare: 33,
+          /*
+           * App: three equal columns, the page title in the middle never needs more than a third. Public:
+           * unbalanced, the navigation in the middle takes what the brand and the actions leave.
+           */
+          balancedSides: isApp,
+          ...(isApp ? { sideShare: 33 } : {}),
           justify: "space-between",
           contentAlign: "center",
         },
