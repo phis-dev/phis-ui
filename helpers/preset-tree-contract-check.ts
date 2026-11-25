@@ -166,6 +166,7 @@ export function checkPhiPresetTreeContract(
     if (overlay.overlayType !== "modal") continue;
     const body = layoutsById.get(overlay.bodyLayoutNodeId);
     if (body) checkDialogBody(overlay.id, body, report);
+    checkDialogFormPlacement(overlay, tree, report);
     if (forms) checkDialogWidth(overlay, tree, forms, report);
   }
   checkRecordTitles(tree, forms, report);
@@ -243,6 +244,67 @@ function checkDialogBody(
       overlayId,
       `Preset Overlay "${overlayId}" Body "${body.id}" does not match the dialog body (${bleed ? "PHI_DIALOG_BLEED_BODY_CONFIG" : "PHI_DIALOG_BODY_CONFIG"}) at "${mismatch[0]}".`,
     );
+  }
+}
+
+/** The config keys by which a Layout insets what it holds. */
+const PHI_LAYOUT_INSET_KEYS = [
+  "padding", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft",
+  "margin", "marginTop", "marginRight", "marginBottom", "marginLeft",
+] as const;
+
+function isPhiLayoutInsetZero(value: unknown) {
+  return value == null || value === 0 || value === "" || value === "0" || value === "0px";
+}
+
+/*
+ * A dialog's Form stands in the dialog's body itself (owner, 2026-11-25; OVERLAYS.md, "The imperative
+ * exemption, and how narrow it is").
+ *
+ * The body is the template: it gives the Form the dialog's inset and ground, and the dialog's width is
+ * worked out for a Form standing in it. A Layout of the Preset's own between the two -- one that wraps
+ * the Form alone, or insets it -- builds the template a second time. The Builder's Area settings did:
+ * a `panel` Flex around the Form took the base step off the Form's width again, left it under 377px, and
+ * its labels stood above the fields in a dialog sized to keep them beside. A Layout that groups -- two
+ * Forms side by side on a Split Card -- holds more than one thing and insets nothing, and passes.
+ *
+ * Dialogs only: a Drawer's body is a panel of its own (the Asset inspector's is a Collapsible of sections),
+ * and the loop that calls this one skips every Overlay that is not a modal.
+ */
+function checkDialogFormPlacement(
+  overlay: { id: string; bodyLayoutNodeId: string },
+  tree: PhiResolvedCmsPageTree,
+  report: Report,
+) {
+  const layoutsById = new Map(tree.layoutNodes.map((node) => [node.id, node]));
+  const childCounts = new Map<string, number>();
+  for (const node of [...tree.layoutNodes, ...tree.contentWidgets]) {
+    if (node.parentLayoutNodeId == null) continue;
+    childCounts.set(node.parentLayoutNodeId, (childCounts.get(node.parentLayoutNodeId) ?? 0) + 1);
+  }
+  for (const widget of tree.contentWidgets) {
+    if (widget.widgetType !== PhiCmsWidgetType.Form || widget.parentLayoutNodeId === overlay.bodyLayoutNodeId) continue;
+    const between: PhiCmsLayoutNode[] = [];
+    let current = layoutsById.get(widget.parentLayoutNodeId);
+    while (current && current.id !== overlay.bodyLayoutNodeId) {
+      between.push(current);
+      current = current.parentLayoutNodeId == null ? undefined : layoutsById.get(current.parentLayoutNodeId);
+    }
+    // Not in this dialog's body at all.
+    if (!current) continue;
+    for (const layout of between) {
+      const layoutId = layout.id;
+      const insets = PHI_LAYOUT_INSET_KEYS.find((key) => !isPhiLayoutInsetZero(layout.config[key]));
+      const wraps = (childCounts.get(layoutId) ?? 0) === 1;
+      if (!insets && !wraps) continue;
+      report(
+        overlay.id,
+        `Preset Overlay "${overlay.id}" puts Layout "${layoutId}" between its body and the Form "${widget.id}", ` +
+        `${insets ? `and that Layout insets it ("${insets}")` : "and that Layout holds nothing else"}. A dialog's Form ` +
+        `stands in the body itself, which already gives it the dialog's inset: place it in "${overlay.bodyLayoutNodeId}".`,
+      );
+      break;
+    }
   }
 }
 

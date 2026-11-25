@@ -551,6 +551,16 @@ overlays[]
         └── Widget                                            a Command Toolbar
 ```
 
+A dialog's Form stands in the body Layout itself (owner, 2026-11-25). The body is the template: it gives
+the Form the dialog's inset and ground, and the dialog's width is worked out for a Form standing in it. A
+Layout of the Preset's own between the two -- one that holds the Form and nothing else, or one that
+insets it (a `padding` or `margin` that is not zero, such as the `panel` creation preset's) -- builds the
+template a second time, and the descriptor compiler refuses it. The Builder's Area settings did exactly
+that: a `panel` Flex around its Form took the base step off the Form's width again, left it under 377px,
+and its labels stood above the fields in a dialog sized to keep them beside. A Layout that groups -- two
+Forms side by side on a Split Card, with no inset of its own -- passes. Only modals are held to it: a
+Drawer's body is a panel of its own (the Asset inspector's is a Collapsible of sections).
+
 Both Layouts are declared as ordinary top-level Layout nodes by the same preset that declares the
 Overlay, and the Widgets sit in their slots at sequential slot indexes. The footer's commands are a
 Command Toolbar, not buttons the container draws; a button that must wait for the body enables itself

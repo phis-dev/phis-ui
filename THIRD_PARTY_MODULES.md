@@ -2442,8 +2442,9 @@ describe("every preset tree keeps the tree contract", () => {
 - Every Widget with text states `textSource` (`"preset"` or `"site"`); `checkPhiPresetTextSources`
   reports it. A Site's own package leaves it out.
 - Every tree passes `checkPhiPresetTreeContract` with every Form the package ships, run as the viewer who
-  sees the most: ids, parents and roots resolve, dialogs keep the dialog's body, actions and width. On a
-  live Site a finding is a 500.
+  sees the most: ids, parents and roots resolve, dialogs keep the dialog's body, actions and width, and a
+  dialog's Form stands in its body with no Layout of the package's own around it. On a live Site a finding
+  is a 500.
 - No route beneath another of the same Area, except a list's entries (`/blog/:slug`) directly beneath
   the list; an overview stands beside its Pages and the container names it with `folderTarget`
   ([Addresses and folders](#addresses-and-folders)). `checkPhiRouteAddresses` reports it.

@@ -104,7 +104,7 @@ const ids = createPhiPresetCmsInstanceIdMap({
   domain: "page",
   ownerModuleId: "@phis/ui/modules/dialog-width-test",
   presetKey: "dialog-width-test",
-}, ["overlay", "body", "form", "secondForm"]);
+}, ["overlay", "body", "form", "secondForm", "wrapper"]);
 
 const FORM_ID = "@phis/ui/modules/dialog-width-test/forms/one";
 
@@ -248,5 +248,58 @@ describe("the descriptor compiler's Overlay geometry", () => {
       form: ONE_COLUMN,
       config: { size: { width: 420 }, minSize: { width: 400 }, maxSize: { width: "90vw" } },
     }), { page })).toEqual([]);
+  });
+});
+
+/*
+ * A dialog's Form stands in the body itself (OVERLAYS.md, "The imperative exemption, and how narrow it is"). The Builder's Area
+ * settings wrapped its Form in a `panel` Flex of its own; the second inset left the Form under 377px, and
+ * its labels stood above the fields in a dialog sized to keep them beside.
+ */
+describe("the descriptor compiler's dialog Form placement", () => {
+  /** The dialog with a Layout of its own between the body and the Form. */
+  function wrappedDialog(wrapperConfig: Record<string, unknown>, extraChildren = 0): PhiResolvedCmsPageTree {
+    const tree = dialogTree({ form: ONE_COLUMN });
+    const nodes = createPhiCmsPresetNodes(page);
+    const wrapper = nodes.layout({
+      typeKey: "flex-vertical",
+      id: ids.wrapper,
+      parentLayoutNodeId: ids.body,
+      slotIndex: 0,
+      label: "wrapper",
+      config: wrapperConfig,
+    });
+    const first = { ...tree.contentWidgets[0]!, parentLayoutNodeId: ids.wrapper };
+    const others = Array.from({ length: extraChildren }, (_, index) => ({
+      ...first,
+      id: ids.secondForm,
+      slotIndex: index + 1,
+      label: "second form",
+    }));
+    return { ...tree, layoutNodes: [...tree.layoutNodes, wrapper], contentWidgets: [first, ...others] };
+  }
+
+  it("refuses a Layout that wraps the Form alone, and one that insets it, on the Overlay", () => {
+    const alone = checkPhiPresetTreeContract(wrappedDialog({}), { page });
+    expect(alone).toHaveLength(1);
+    expect(alone[0]).toMatchObject({ node: ids.overlay });
+    expect(alone[0]!.message).toMatch(/puts Layout ".*" between its body and the Form .* holds nothing else\. A dialog's Form stands in the body itself/u);
+    const inset = checkPhiPresetTreeContract(wrappedDialog({ padding: PHI_DIALOG_BODY_CONFIG.padding }, 1), { page });
+    expect(inset.map((finding) => finding.message)).toEqual([
+      expect.stringContaining('and that Layout insets it ("padding")'),
+      expect.stringContaining('and that Layout insets it ("padding")'),
+    ]);
+    // The compiler throws the same words.
+    expect(() => assertPhiCmsPresetTreeContract(wrappedDialog({}), page)).toThrow(alone[0]!.message);
+  });
+
+  it("passes a Form in the body, a Layout that groups two Forms without an inset, and a Drawer", () => {
+    expect(checkPhiPresetTreeContract(dialogTree({ form: ONE_COLUMN }), { page })).toEqual([]);
+    expect(checkPhiPresetTreeContract(wrappedDialog({ padding: 0 }, 1), { page })).toEqual([]);
+    const drawer = wrappedDialog({ padding: PHI_DIALOG_BODY_CONFIG.padding });
+    expect(checkPhiPresetTreeContract({
+      ...drawer,
+      overlays: drawer.overlays.map((overlay) => ({ ...overlay, overlayType: "drawer" as const })),
+    }, { page })).toEqual([]);
   });
 });
