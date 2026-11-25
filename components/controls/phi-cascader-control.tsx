@@ -445,6 +445,8 @@ export function PhiTreeCascaderControl({
   value,
   options,
   disabled = false,
+  label,
+  ariaLabel,
   placeholder,
   size,
   onChange,
@@ -454,12 +456,16 @@ export function PhiTreeCascaderControl({
   value?: readonly string[];
   options: readonly PhiTreeOption[];
   disabled?: boolean;
+  label?: string;
+  /** The accessible name where no visible label stands beside the field; it takes precedence over `label`. */
+  ariaLabel?: string;
   placeholder?: string;
   size?: PhiControlSize;
   onChange?: (nextValue: string[]) => void;
   getPopupContainer?: CascaderProps["getPopupContainer"];
   style?: CSSProperties;
 }) {
+  const { labelId, labelledBy } = usePhiControlLabel(label, ariaLabel);
   const { token } = usePhiConfig();
   const { cascaderOptions, pathByValue } = useMemo(() => {
     const paths = new Map<string, string[]>();
@@ -482,8 +488,10 @@ export function PhiTreeCascaderControl({
     return path ? [path] : [];
   });
 
-  return (
+  const control = (
     <Cascader
+      aria-label={ariaLabel}
+      aria-labelledby={labelledBy}
       multiple
       showCheckedStrategy={Cascader.SHOW_PARENT}
       rootClassName="phi-cascader-control"
@@ -510,5 +518,10 @@ export function PhiTreeCascaderControl({
       }}
       style={{ width: "100%", ...style }}
     />
+  );
+  return (
+    <PhiLabeledControl label={label} labelId={labelId} fill={style?.width === undefined || style.width === "100%"}>
+      {control}
+    </PhiLabeledControl>
   );
 }

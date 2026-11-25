@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 import { PHI_GREGORY_CALENDAR_ADAPTER_CLIENT } from "../calendar/gregory-calendar-adapter-client";
-import { PhiCascaderControl } from "./phi-cascader-control";
+import { PhiCascaderControl, PhiTreeCascaderControl } from "./phi-cascader-control";
 import { PhiCheckboxGroupControl } from "./phi-checkbox-group-control";
 import { PhiColorControl } from "./phi-color-control";
 import { PhiColorFieldControl } from "./phi-color-field-control";
@@ -74,6 +74,24 @@ describe("PhiCascaderControl", () => {
 
   it("is named by its label otherwise", () => {
     const markup = render(createElement(PhiCascaderControl, { label: "Folder", options: [], value: "/", onChange: () => {} }));
+    expect(markup).toContain("aria-labelledby");
+  });
+});
+
+describe("PhiTreeCascaderControl", () => {
+  const options = [{ value: "home", label: "Home" }];
+
+  it("names the field with ariaLabel, over label", () => {
+    const markup = render(createElement(PhiTreeCascaderControl, {
+      label: "Pages", ariaLabel: "Pages to show", options, value: [], onChange: () => {},
+    }));
+    expect(markup).toContain('aria-label="Pages to show"');
+    expect(markup).not.toContain("aria-labelledby");
+  });
+
+  it("is named by its visible label otherwise", () => {
+    const markup = render(createElement(PhiTreeCascaderControl, { label: "Pages", options, value: [], onChange: () => {} }));
+    expect(markup).toContain(">Pages<");
     expect(markup).toContain("aria-labelledby");
   });
 });
