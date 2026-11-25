@@ -630,7 +630,7 @@ export async function buildPhiDefaultBuilderMediaPageTree({
           showLabels: true,
           controlSize: "medium",
           buttons: [
-            { key: "save", emits: [{ capabilityId: "command", value: "save" }], action: "save" },
+            { key: "save", emits: [{ capabilityId: "command", value: "save" }], action: "save", variant: "primary" },
           ],
           signalRoutes: {
             emits: [{
