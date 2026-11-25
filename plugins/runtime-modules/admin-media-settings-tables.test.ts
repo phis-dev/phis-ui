@@ -73,8 +73,8 @@ describe("the Admin media settings page", () => {
       const parsed = parsePhiTableWidgetConfig(table.config);
       const profile = parsed.presentation.columns.find((column) => column.key === "storageProfileId");
       // Offered only: the list restricts the Site to Profile 2, and every Profile is still named.
-      expect(profile?.editor?.options).toEqual([{ value: "2", label: "s3 (@phis/storage-s3/s3)" }]);
-      expect(profile?.valueMap?.["1"]).toBe("local (@phis/server/storage-local)");
+      expect(profile?.editor?.options).toEqual([{ value: "2", label: "s3" }]);
+      expect(profile?.valueMap?.["1"]).toBe("local");
     }
   });
 });

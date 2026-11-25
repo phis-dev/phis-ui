@@ -49,8 +49,9 @@ export async function buildPhiDefaultAdminMediaSettingsPageTree({
   const offered = settings.storage.allowedProfileIds.length > 0
     ? settings.storage.profiles.filter((profile) => settings.storage.allowedProfileIds.includes(profile.id))
     : settings.storage.profiles;
+  // A Profile reads as the name the operator gave it; the Provider behind it is not part of the name.
   const profileNames = Object.fromEntries(
-    settings.storage.profiles.map((profile) => [String(profile.id), `${profile.key} (${profile.providerId})`]),
+    settings.storage.profiles.map((profile) => [String(profile.id), profile.key]),
   );
   const profileChoices = offered.map((profile) => ({ value: String(profile.id), label: profileNames[String(profile.id)]! }));
   const buildSpacesTable = (nodeKey: string, resourceKey: string, label: string, withEmail: boolean) => ({

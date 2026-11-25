@@ -126,8 +126,9 @@ async function loadStorageProfiles() {
 }
 
 /**
- * The Site's Storage Profiles as choices, by id. Named by key and Provider, because that is what the
- * operator gave them; the key alone does not say whether a Profile is local or a bucket.
+ * The Site's Storage Profiles as choices, by id. Named by the Profile's key -- the name the operator gave
+ * it, `local` for the Site's Local Profile -- with the Provider that stores it (the Add-on's provider id)
+ * as the option's description: what tells a bucket from the local disk, but not what the choice is.
  */
 export const PhiMediaStorageProfilesOptionsProviderClient = createPhiControlOptionsProviderClient({
   key: PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaStorageProfiles,
@@ -138,7 +139,7 @@ export const PhiMediaStorageProfilesOptionsProviderClient = createPhiControlOpti
       ? context.asyncData as { id: number; key: string; providerId: string }[]
       : [];
     return {
-      options: profiles.map((profile) => ({ value: String(profile.id), label: `${profile.key} (${profile.providerId})` })),
+      options: profiles.map((profile) => ({ value: String(profile.id), label: profile.key, description: profile.providerId })),
     };
   },
 });
