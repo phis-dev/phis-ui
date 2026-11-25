@@ -1209,17 +1209,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           },
         }),
         nodes.layout({
-          creationPreset: { layoutKind: "verticalflex", preset: "panel" },
-          typeKey: "flex-vertical",
-          id: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFields,
-          parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsBody,
-          slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-          sortOrder: 0,
-          label: "Builder area settings fields",
-          config: {
-          },
-        }),
-        nodes.layout({
           creationPreset: { layoutKind: "flex", preset: "overlay-actions" },
           typeKey: "flex",
           id: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFooter,
@@ -1379,7 +1368,9 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             nodes.widget({
               typeKey: "form",
               id: PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS.areaSettingsForm,
-              parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFields,
+              // In the dialog's body itself, as every dialog's Form stands: a Layout of its own between
+              // them was a second inset, which left the Form under 377px and its labels above the fields.
+              parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsBody,
               slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
               sortOrder: 0,
               // The Builder's Label Set, translated already.

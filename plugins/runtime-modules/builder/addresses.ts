@@ -28,7 +28,7 @@ export const PHI_BUILDER_AREA_SETTINGS_OVERLAY_IDS = createPhiPresetCmsInstanceI
 );
 export const PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap(
   AREA_SETTINGS_ID_CONTEXT,
-  ["areaSettingsBody", "areaSettingsFields", "areaSettingsFooter"],
+  ["areaSettingsBody", "areaSettingsFooter"],
 );
 export const PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS = createPhiPresetCmsInstanceIdMap(
   AREA_SETTINGS_ID_CONTEXT,
