@@ -41,7 +41,11 @@ It does not own:
 | `@ant-design/icons` | `^6.3.2` |
 
 The ranges say what the package accepts. The exact versions it is built and tested with stand in
-`package.json#phis.testedWith`, which ships with the package; `phis init` pins a new Site to them.
+`package.json#phis.testedWith`, which ships with the package; `phis init` pins a new Site to them. The
+field is read from node_modules, never typed: locally `pnpm tested-with:write` writes it and `pnpm verify`
+fails while it says anything else. The release workflow writes it again from what its own install
+resolved, right before verify, build and publish, so a patch released upstream since the last commit is
+recorded as the version the published package was actually built and verified with, not a reason to fail.
 
 ## For Site operators
 

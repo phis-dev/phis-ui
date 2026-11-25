@@ -240,8 +240,9 @@ read the field's documentation, not the Module's.
   (`typescript`, `@types/node`, `@types/react`, `@types/react-dom`) that this package is built and tested
   with; it ships in the published manifest, and `phis init` pins a new Site to it. It is never typed:
   `pnpm tested-with:write` reads it from node_modules, and `pnpm verify` fails in every profile while it
-  says anything else -- so a release run whose install resolved a newer patch fails until the workspace
-  has been updated, tested and the field written again.
+  says anything else. The release workflow is the one place it is written unasked: its install has no
+  lockfile, so it rewrites the field from what it installed right before `pnpm verify all`, the build and
+  the publish, and logs the change (`.github/workflows/release.yml`).
 - The distribution build emits unbundled ESM with declarations and CSS, preserves `"use client"`,
   lazy imports, and Area-specific manifests, and never bundles React, Next.js, or Ant Design.
 - `@phis/ui` defines no App Router entries (`page.tsx`, `layout.tsx`, `route.ts`, `loading.tsx`,

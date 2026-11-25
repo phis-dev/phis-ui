@@ -51,6 +51,20 @@ jobs:
 
       - run: pnpm typecheck
 
+      # `package.json#phis.testedWith` names the exact versions `phis init` pins a new Site to, so it must
+      # name what this run installed, typechecked, verified and built against. The install above has no
+      # lockfile and may resolve a newer patch of a peer or of the Site toolchain than the workspace that
+      # committed the field; instead of failing on that, the field is written again from node_modules here,
+      # before verify, the distribution build and the publish read it, and any rewrite is shown in the log.
+      # Locally `pnpm verify` stays strict: there a changed install fails until `pnpm tested-with:write` is
+      # run, the new versions are tested and the field is committed.
+      - name: State the versions this run installed (phis.testedWith)
+        run: |
+          pnpm tested-with:write
+          if ! git diff --exit-code -- package.json; then
+            echo "::notice title=phis.testedWith::rewritten from this run's install; the diff is above"
+          fi
+
       # Whitespace, ESLint, the runtime module contracts, the Ant Design doctor and the distribution
       # build with its validation: the package is published from what this step built.
       - run: pnpm verify all
