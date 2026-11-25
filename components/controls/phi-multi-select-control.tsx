@@ -16,6 +16,11 @@ export type PhiMultiSelectControlProps<TValue extends string | number = string> 
   value?: readonly TValue[];
   label?: string;
   description?: ReactNode;
+  /**
+   * The accessible name where no visible label stands beside the field -- a filter in a picker's header.
+   * It takes precedence over `label`, as on `PhiSelectControl`.
+   */
+  ariaLabel?: string;
   placeholder?: string;
   disabled?: boolean;
   readOnly?: boolean;
@@ -37,6 +42,7 @@ export function PhiMultiSelectControl<TValue extends string | number = string>({
   value,
   label,
   description,
+  ariaLabel,
   placeholder,
   disabled,
   readOnly,
@@ -52,7 +58,7 @@ export function PhiMultiSelectControl<TValue extends string | number = string>({
   onBlur,
   onChange,
 }: PhiMultiSelectControlProps<TValue>) {
-  const { labelId, labelledBy } = usePhiControlLabel(label);
+  const { labelId, labelledBy } = usePhiControlLabel(label, ariaLabel);
   // Options that name a group are listed under its heading, as the Select lists them.
   const selectOptions = useMemo(
     () => groupPhiSelectOptions(options.map((option) => ({
@@ -68,6 +74,7 @@ export function PhiMultiSelectControl<TValue extends string | number = string>({
   const control = (
     <Select
       id={id}
+      aria-label={ariaLabel}
       aria-labelledby={labelledBy}
       mode={allowCustom ? "tags" : "multiple"}
       allowClear={allowClear}

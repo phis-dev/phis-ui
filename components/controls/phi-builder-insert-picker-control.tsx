@@ -1,11 +1,12 @@
 "use client";
 
 import { useMemo, useState, type ReactElement } from "react";
-import { Flex, Select, Tag, Tooltip, Typography, theme as antdTheme } from "antd";
+import { Flex, Tag, Tooltip, Typography, theme as antdTheme } from "antd";
 
 import { PhiIcon } from "../shell/phi-icon";
 import type { PhiPickerPlacement } from "./phi-picker-control-contract";
 import { PhiFlexControl } from "./phi-flex-control";
+import { PhiMultiSelectControl } from "./phi-multi-select-control";
 import { PhiPopoverControl } from "./phi-popover-control";
 import { PhiSegmentedControl } from "./phi-segmented-control";
 import { PhiSelectControl } from "./phi-select-control";
@@ -315,17 +316,15 @@ export function PhiBuilderInsertPickerControl<TItem extends PhiBuilderInsertPick
             * itself is the choice between everything and everything.
             */}
           {section === "widget" && categoryOptions.length > 1 ? (
-            <Select
-              mode="multiple"
+            <PhiMultiSelectControl<string>
               size="small"
               variant="borderless"
               allowClear
-              showSearch={false}
-              value={[...widgetCategoryFilters]}
+              value={widgetCategoryFilters}
               onChange={onWidgetCategoryFiltersChange}
               options={categoryOptions.map((category) => ({ value: category, label: category }))}
               placeholder={labels.filterCategories}
-              aria-label={labels.filterCategories}
+              ariaLabel={labels.filterCategories}
               maxTagCount="responsive"
               style={{ flex: "1 1 0", minWidth: 0 }}
             />

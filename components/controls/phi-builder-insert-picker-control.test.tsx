@@ -23,7 +23,7 @@ function item(key: string, kind: "layout" | "widget", packageName: string): PhiB
     packageName,
     title: key,
     description: null,
-    category: kind === "widget" ? "content" : null,
+    category: kind === "widget" ? (key === "product" ? "commerce" : "content") : null,
     tags: null,
     icon: null,
   };
@@ -70,6 +70,12 @@ describe("the Builder's insert picker", () => {
     const markup = render("widget");
     expect(markup).toContain("ant-segmented-sm");
     expect(markup).toContain("ant-select-sm");
+  });
+
+  it("names its category filter, which has no visible label", () => {
+    const markup = render("widget");
+    expect(markup).toContain('aria-label="Filter categories"');
+    expect(markup).toContain('aria-label="Filter packages"');
   });
 
   it("draws no square corner of its own", () => {
