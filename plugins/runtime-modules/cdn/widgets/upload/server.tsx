@@ -5,6 +5,7 @@ import { buildPhiWidgetLabelTranslatorOptions } from "../../../../../components/
 import type { PhiBlockRuntime } from "../../../../../types";
 import { PHI_CDN_UPLOAD_WIDGET_TYPE, type PhiCdnUploadWidgetConfig } from "./config";
 import { getPhiCdnUploadWidgetLabels } from "./labels";
+import { getPhiMediaUploadLabels } from "../../../../../components/media/label-sets/media-upload";
 
 /** Handed to the Render Client by type, with its words read here in the page's language. */
 export async function PhiCdnUploadWidget({
@@ -14,11 +15,16 @@ export async function PhiCdnUploadWidget({
   config?: PhiCdnUploadWidgetConfig;
   runtime: PhiBlockRuntime;
 }) {
-  const labels = await getPhiCdnUploadWidgetLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
+  const translator = buildPhiWidgetLabelTranslatorOptions(runtime);
+  // The Media upload surface's own words (drop area, progress, refusals) and the CDN's for its fields.
+  const [labels, { upload: uploadLabels }] = await Promise.all([
+    getPhiCdnUploadWidgetLabels(translator),
+    getPhiMediaUploadLabels(translator),
+  ]);
   return (
     <PhiRuntimeModuleRenderClientHost
       type={PHI_CDN_UPLOAD_WIDGET_TYPE}
-      componentProps={{ config, labels }}
+      componentProps={{ config, labels, uploadLabels }}
     />
   );
 }

@@ -4,25 +4,27 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   PHIS_CDN_KEY_SEGMENT_PATTERN,
   PHIS_CDN_KEY_VERSION_PATTERN,
+  type PhisCdnAdminFileV1,
 } from "@phis/contracts/addon";
 
-import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
-import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiCheckboxGroupControl } from "../../../../../components/controls/phi-checkbox-group-control";
-import { PhiFileDropControl } from "../../../../../components/controls/phi-file-drop-control";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiLabeledControl } from "../../../../../components/controls/phi-labeled-control";
-import { PhiProgressControl } from "../../../../../components/controls/phi-progress-control";
 import { PhiSelectControl } from "../../../../../components/controls/phi-select-control";
-import { PhiStepsControl } from "../../../../../components/controls/phi-steps-control";
 import { PhiTextControl } from "../../../../../components/controls/phi-text-control";
-import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
-import { PhiIcon } from "../../../../../components/shell/phi-icon";
+import {
+  PhiAreaUploadBinding,
+  type PhiAreaUploadModuleTarget,
+} from "../../../../../components/media/phi-area-upload-widget";
+import type { PhiAreaUploadWidgetLabels } from "../../../../../components/media/media-widget-labels";
+import {
+  PhiMediaUploadError,
+  runPhiUploadSession,
+} from "../../../../../components/media/media-upload-flow";
 import {
   emitPhiSignalCapability,
   usePhiSignalEmitter,
 } from "../../../../../components/runtime/runtime-signal-identity";
-import { formatPhiTranslation } from "../../../../../helpers/translation-format";
 import {
   PHI_CDN_ARCH_KEYS,
   PHI_CDN_OS_KEYS,
@@ -32,35 +34,34 @@ import {
   writePhiCdnArchBits,
   writePhiCdnOsBits,
 } from "../../platform";
-import { formatPhiCdnBytes } from "../../bytes";
-import { usePhiIntlLocale } from "../../../../../components/root/phi-intl-locale";
 import {
   PHI_CDN_UPLOAD_DISCARD,
-  PhiCdnUploadError,
+  createPhiCdnUploadTarget,
   loadPhiCdnNames,
-  runPhiCdnUpload,
-  type PhiCdnUploadProgress,
 } from "../../services/upload";
 import type { PhiCdnUploadWidgetConfig } from "./config";
 import type { PhiCdnUploadWidgetLabels } from "./label-types";
 
+/**
+ * The CDN's upload: the Media library's upload surface (`PhiAreaUploadBinding`) with the CDN as its
+ * target. The surface draws the drop area, the file on its way with its progress, its refusal and its
+ * retry, and stops it when the dialog closes; what is the CDN's is in front of the file -- the name, the
+ * version, the file name and the platform the file is published under -- and where it goes.
+ */
+
 type Draft = { name: string; version: string; fileName: string; os: string[]; arch: string[] };
 
-type Run =
-  | { phase: "idle" }
-  | { phase: "running"; progress: PhiCdnUploadProgress }
-  | { phase: "published"; key: string }
-  | { phase: "failed"; message: string };
+const EMPTY_DRAFT: Draft = { name: "", version: "", fileName: "", os: [], arch: [] };
 
-/*
- * What a file was last started with, remembered in this browser by the file's name, size and date, so
- * picking the same file after a reload fills the fields it was started with -- the same key, the same
- * size and the same digests are what make Core answer with the open session and its parts. A convenience
- * of this browser only; without storage the fields start from the file name as usual.
- */
 /** The three text fields as wide as the dialog, the label beside each (`PhiLabeledControl`'s `fill`). */
 const FIELD_STYLE = { width: "100%" } as const;
 
+/*
+ * What a file was last started with, remembered in this browser by the file's name, size and date, so
+ * picking the same file after a reload fills the fields it was started with -- the same key, size and
+ * digests are what make Core answer with the open session and its parts. A convenience of this browser
+ * only; without storage the fields start from the file name as usual.
+ */
 const DRAFT_STORAGE_KEY = "phi-cdn-upload-drafts";
 
 function fileIdentity(file: File) {
@@ -87,10 +88,10 @@ function storeDraft(file: File, draft: Draft | null) {
   }
 }
 
-function draftFromFile(file: File): Draft {
+function draftFromFile(file: File, name: string): Draft {
   const platform = guessPhiCdnPlatform(file.name);
   return {
-    name: "",
+    name,
     version: "",
     fileName: file.name,
     os: readPhiCdnOsKeys(platform.os),
@@ -111,26 +112,23 @@ export function readPhiCdnSegmentProblem(
   return kind === "name" && trimmed === "api" ? labels.reservedName : null;
 }
 
-function readFailure(error: unknown, labels: PhiCdnUploadWidgetLabels) {
-  if (error instanceof PhiCdnUploadError && error.code === "checksum-unavailable") return labels.checksumUnavailable;
-  return error instanceof Error && error.message ? error.message : labels.failed;
-}
-
 export type PhiCdnUploadWidgetClientProps = {
   config?: PhiCdnUploadWidgetConfig;
   labels: PhiCdnUploadWidgetLabels;
+  /** The Media upload surface's own words. */
+  uploadLabels: PhiAreaUploadWidgetLabels;
 };
 
-export function PhiCdnUploadWidgetClient({ config, labels }: PhiCdnUploadWidgetClientProps) {
-  const locale = usePhiIntlLocale();
+export function PhiCdnUploadWidgetClient({ config, labels, uploadLabels }: PhiCdnUploadWidgetClientProps) {
   const emitRoutes = useMemo(() => config?.signalRoutes?.emits ?? [], [config?.signalRoutes?.emits]);
   const emitSignal = usePhiSignalEmitter();
   const [names, setNames] = useState<readonly string[]>([]);
-  const [file, setFile] = useState<File | null>(null);
-  const [draft, setDraft] = useState<Draft>({ name: "", version: "", fileName: "", os: [], arch: [] });
-  const [touched, setTouched] = useState(false);
-  const [run, setRun] = useState<Run>({ phase: "idle" });
-  const controller = useRef<AbortController | null>(null);
+  const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
+  // The draft the runner sends with, read when it starts rather than captured when it was made.
+  const draftRef = useRef(draft);
+  useEffect(() => {
+    draftRef.current = draft;
+  }, [draft]);
 
   useEffect(() => {
     const abort = new AbortController();
@@ -138,173 +136,112 @@ export function PhiCdnUploadWidgetClient({ config, labels }: PhiCdnUploadWidgetC
     return () => abort.abort();
   }, []);
 
-  // Leaving the dialog stops the upload and keeps the session, so the same file picked again resumes it.
-  useEffect(() => () => controller.current?.abort(), []);
-
   const problems = {
     name: readPhiCdnSegmentProblem(draft.name, "name", labels),
     version: readPhiCdnSegmentProblem(draft.version, "version", labels),
     fileName: readPhiCdnSegmentProblem(draft.fileName, "fileName", labels),
   };
-  const ready = file !== null && !problems.name && !problems.version && !problems.fileName;
-  const running = run.phase === "running";
 
-  const pick = useCallback((next: File) => {
-    setFile(next);
-    setTouched(false);
-    setRun({ phase: "idle" });
-    setDraft(readStoredDraft(next) ?? draftFromFile(next));
-  }, []);
-
-  const start = useCallback(async () => {
-    setTouched(true);
-    if (!file || !ready) return;
-    const abort = new AbortController();
-    controller.current = abort;
-    const input = {
-      file,
-      name: draft.name.trim(),
-      version: draft.version.trim(),
-      fileName: draft.fileName.trim(),
-      os: writePhiCdnOsBits(draft.os),
-      arch: writePhiCdnArchBits(draft.arch),
-    };
-    storeDraft(file, { ...draft, name: input.name, version: input.version, fileName: input.fileName });
-    setRun({ phase: "running", progress: { stage: "checksum" } });
-    try {
-      const published = await runPhiCdnUpload(input, {
-        signal: abort.signal,
-        onProgress: (progress) => setRun({ phase: "running", progress }),
-      });
-      storeDraft(file, null);
-      setRun({ phase: "published", key: published.key });
-      emitPhiSignalCapability(emitSignal, emitRoutes, "uploaded", null);
-    } catch (error) {
-      if (abort.signal.aborted) {
-        if (abort.signal.reason === PHI_CDN_UPLOAD_DISCARD) storeDraft(file, null);
-        setRun({ phase: "idle" });
-        return;
+  const runSession = useCallback<PhiAreaUploadModuleTarget<PhisCdnAdminFileV1>["runSession"]>(
+    async (file, onProgress, _options, signal, onPhase) => {
+      const current = draftRef.current;
+      const input = {
+        name: current.name.trim(),
+        version: current.version.trim(),
+        fileName: current.fileName.trim(),
+        os: writePhiCdnOsBits(current.os),
+        arch: writePhiCdnArchBits(current.arch),
+      };
+      storeDraft(file, { ...current, name: input.name, version: input.version, fileName: input.fileName });
+      try {
+        const published = await runPhiUploadSession(createPhiCdnUploadTarget(input), file, {
+          ...(onProgress ? { onProgress } : {}),
+          ...(onPhase ? { onPhase } : {}),
+          ...(signal ? { signal } : {}),
+        });
+        storeDraft(file, null);
+        return { asset: published };
+      } catch (error) {
+        if (signal?.aborted && signal.reason === PHI_CDN_UPLOAD_DISCARD) storeDraft(file, null);
+        throw error;
       }
-      setRun({ phase: "failed", message: readFailure(error, labels) });
-    } finally {
-      if (controller.current === abort) controller.current = null;
-    }
-  }, [draft, emitRoutes, emitSignal, file, labels, ready]);
+    },
+    [],
+  );
 
-  const cancel = useCallback(() => controller.current?.abort(PHI_CDN_UPLOAD_DISCARD), []);
-
-  const reset = useCallback(() => {
-    setFile(null);
-    setTouched(false);
-    setDraft({ name: "", version: "", fileName: "", os: [], arch: [] });
-    setRun({ phase: "idle" });
-    void loadPhiCdnNames().then(setNames, () => undefined);
-  }, []);
-
-  const nameOptions = useMemo(() => names.map((name) => ({ value: name, label: name })), [names]);
-  const osOptions = useMemo(() => PHI_CDN_OS_KEYS.map(([key]) => ({ value: key, label: labels.osNames[key] })), [labels.osNames]);
-  const archOptions = useMemo(() => PHI_CDN_ARCH_KEYS.map(([key]) => ({ value: key, label: labels.archNames[key] })), [labels.archNames]);
-  const problemOf = (key: keyof typeof problems) => (touched ? problems[key] : null);
-
-  if (run.phase === "published") {
-    return (
+  const moduleTarget = useMemo<PhiAreaUploadModuleTarget<PhisCdnAdminFileV1>>(() => ({
+    ready: !problems.name && !problems.version && !problems.fileName,
+    startLabel: labels.start,
+    cancelLabel: labels.cancel,
+    cancelReason: PHI_CDN_UPLOAD_DISCARD,
+    phaseLabels: { checksum: labels.steps.checksum, finish: labels.steps.verify },
+    runSession,
+    readError: (error) => {
+      if (error instanceof PhiMediaUploadError && error.code === "checksum-unavailable") return labels.checksumUnavailable;
+      // Core words its refusals for a person (`{ error, message }`); a transport failure says what failed.
+      return error instanceof PhiMediaUploadError && error.message ? error.message : null;
+    },
+    onFilePicked: (file) => setDraft((previous) => readStoredDraft(file) ?? draftFromFile(file, previous.name)),
+    onUploaded: () => {
+      setDraft(EMPTY_DRAFT);
+      void loadPhiCdnNames().then(setNames, () => undefined);
+      emitPhiSignalCapability(emitSignal, emitRoutes, "uploaded", null);
+    },
+    renderFields: ({ file, uploading }) => (
       <PhiFlexControl vertical gap={12}>
-        <PhiAlertControl level="success" showIcon title={formatPhiTranslation(labels.published, [run.key])} />
-        <PhiFlexControl justify="flex-end">
-          <PhiButtonControl label={labels.another} icon={<PhiIcon name="upload" />} onClick={reset} />
-        </PhiFlexControl>
+        <PhiSelectControl
+          label={labels.name}
+          description={(file && problems.name) || labels.nameHint}
+          presentation="autocomplete"
+          allowCustom
+          style={FIELD_STYLE}
+          value={draft.name}
+          options={names.map((name) => ({ value: name, label: name }))}
+          disabled={uploading}
+          onChange={(name) => setDraft((previous) => ({ ...previous, name: typeof name === "string" ? name : "" }))}
+        />
+        <PhiTextControl
+          label={labels.version}
+          style={FIELD_STYLE}
+          description={(file && problems.version) || undefined}
+          value={draft.version}
+          disabled={uploading}
+          onChange={(version) => setDraft((previous) => ({ ...previous, version: version ?? "" }))}
+        />
+        <PhiTextControl
+          label={labels.fileFileName}
+          style={FIELD_STYLE}
+          description={(file && problems.fileName) || undefined}
+          value={draft.fileName}
+          disabled={uploading || !file}
+          onChange={(fileName) => setDraft((previous) => ({ ...previous, fileName: fileName ?? "" }))}
+        />
+        <PhiLabeledControl label={labels.os}>
+          <PhiCheckboxGroupControl
+            value={draft.os}
+            options={PHI_CDN_OS_KEYS.map(([key]) => ({ value: key, label: labels.osNames[key] }))}
+            disabled={uploading}
+            onChange={(os) => setDraft((previous) => ({ ...previous, os: [...os] }))}
+          />
+        </PhiLabeledControl>
+        <PhiLabeledControl label={labels.arch}>
+          <PhiCheckboxGroupControl
+            value={draft.arch}
+            options={PHI_CDN_ARCH_KEYS.map(([key]) => ({ value: key, label: labels.archNames[key] }))}
+            disabled={uploading}
+            onChange={(arch) => setDraft((previous) => ({ ...previous, arch: [...arch] }))}
+          />
+        </PhiLabeledControl>
       </PhiFlexControl>
-    );
-  }
-
-  const stage = run.phase === "running" ? run.progress.stage : null;
-  const progress = run.phase === "running" && run.progress.stage === "uploading" ? run.progress : null;
-  const current = stage === "checksum" ? 0 : stage === "uploading" ? 1 : 2;
+    ),
+  }), [draft, emitRoutes, emitSignal, labels, names, problems.fileName, problems.name, problems.version, runSession]);
 
   return (
-    <PhiFlexControl vertical gap={12}>
-      <PhiFileDropControl dropZone disabled={running} onFile={pick}>
-        <PhiFlexControl vertical align="center" gap={4}>
-          <PhiIcon name="cloud-upload" size={24} />
-          <PhiTypographyControl>{file ? `${file.name} (${formatPhiCdnBytes(file.size, locale)})` : labels.fileDrop}</PhiTypographyControl>
-        </PhiFlexControl>
-      </PhiFileDropControl>
-      <PhiSelectControl
-        label={labels.name}
-        description={problemOf("name") ?? labels.nameHint}
-        presentation="autocomplete"
-        allowCustom
-        style={FIELD_STYLE}
-        value={draft.name}
-        options={nameOptions}
-        disabled={running}
-        onChange={(name) => setDraft((previous) => ({ ...previous, name: typeof name === "string" ? name : "" }))}
-      />
-      <PhiTextControl
-        label={labels.version}
-        style={FIELD_STYLE}
-        description={problemOf("version") ?? undefined}
-        value={draft.version}
-        disabled={running}
-        onChange={(version) => setDraft((previous) => ({ ...previous, version: version ?? "" }))}
-      />
-      <PhiTextControl
-        label={labels.fileFileName}
-        style={FIELD_STYLE}
-        description={problemOf("fileName") ?? undefined}
-        value={draft.fileName}
-        disabled={running || !file}
-        onChange={(fileName) => setDraft((previous) => ({ ...previous, fileName: fileName ?? "" }))}
-      />
-      <PhiLabeledControl label={labels.os}>
-        <PhiCheckboxGroupControl
-          value={draft.os}
-          options={osOptions}
-          disabled={running}
-          onChange={(os) => setDraft((previous) => ({ ...previous, os: [...os] }))}
-        />
-      </PhiLabeledControl>
-      <PhiLabeledControl label={labels.arch}>
-        <PhiCheckboxGroupControl
-          value={draft.arch}
-          options={archOptions}
-          disabled={running}
-          onChange={(arch) => setDraft((previous) => ({ ...previous, arch: [...arch] }))}
-        />
-      </PhiLabeledControl>
-      {stage ? (
-        <PhiFlexControl vertical gap={8}>
-          <PhiStepsControl
-            current={current}
-            size="small"
-            items={[
-              { key: "checksum", title: labels.steps.checksum },
-              { key: "upload", title: labels.steps.upload },
-              { key: "verify", title: labels.steps.verify },
-            ]}
-          />
-          {progress ? (
-            <PhiProgressControl percent={progress.totalBytes > 0 ? Math.floor((progress.loadedBytes / progress.totalBytes) * 100) : 100} />
-          ) : null}
-          {progress && progress.resumedParts > 0 ? (
-            <PhiTypographyControl type="secondary">
-              {formatPhiTranslation(labels.resumed, [progress.resumedParts, progress.partCount])}
-            </PhiTypographyControl>
-          ) : null}
-        </PhiFlexControl>
-      ) : null}
-      {run.phase === "failed" ? <PhiAlertControl level="error" showIcon title={labels.failed} description={run.message} /> : null}
-      <PhiFlexControl justify="flex-end" gap={8}>
-        {running ? <PhiButtonControl label={labels.cancel} onClick={cancel} /> : null}
-        <PhiButtonControl
-          type="primary"
-          label={run.phase === "failed" ? labels.retry : labels.start}
-          icon={<PhiIcon name="upload" />}
-          loading={running}
-          disabled={!file || running}
-          onClick={() => void start()}
-        />
-      </PhiFlexControl>
-    </PhiFlexControl>
+    <PhiAreaUploadBinding
+      labels={uploadLabels}
+      showFinished={false}
+      config={{ allowDelete: false, multiple: false, accept: "*/*" }}
+      moduleTarget={moduleTarget}
+    />
   );
 }
