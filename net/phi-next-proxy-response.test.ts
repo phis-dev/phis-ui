@@ -108,3 +108,33 @@ describe("the headers a proxy door answers with", () => {
     expect(headers.get("vary")).toBe("Accept-Encoding");
   });
 });
+
+describe("how long a proxy door waits", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  function proxyWith(unbounded: boolean, fetchMock: ReturnType<typeof vi.fn>) {
+    vi.stubGlobal("fetch", fetchMock);
+    return PhiNextProxy({
+      upstreamBaseUrl: "http://core.test",
+      upstreamPrefix: "/api/site",
+      timeoutMs: 1000,
+      logLabel: "test",
+      missingBaseUrlMessage: "missing",
+      buildHeaders: () => new Headers(),
+      unboundedRequest: () => unbounded,
+    });
+  }
+
+  it("bounds a request by the browser alone where the door says so, and by its timeout otherwise", async () => {
+    const fetchMock = vi.fn(async (_url: unknown, _init?: RequestInit) => new Response(null, { status: 204 }));
+    const request = new NextRequest("https://site.test/api/site/x", { method: "PUT", body: "part" });
+    await proxyWith(true, fetchMock).PUT(request, { params: Promise.resolve({ path: ["x"] }) });
+    expect(fetchMock.mock.calls[0]?.[1]?.signal).toBe(request.signal);
+
+    const bounded = new NextRequest("https://site.test/api/site/x", { method: "PUT", body: "part" });
+    await proxyWith(false, fetchMock).PUT(bounded, { params: Promise.resolve({ path: ["x"] }) });
+    expect(fetchMock.mock.calls[1]?.[1]?.signal).not.toBe(bounded.signal);
+  });
+});

@@ -59,7 +59,7 @@ vi.mock("./site-cms-write-validation", () => ({
   validatePhiCmsStructureWrite: async () => writeCheck.refusal,
 }));
 
-import { buildPhiSiteProxyHandlers } from "./site-proxy";
+import { buildPhiSiteProxyHandlers, isPhiUnboundedSiteRequest } from "./site-proxy";
 import { clearPhiSiteReadCache, readPhiSiteReadCache } from "./site-read-cache";
 
 const handlers = buildPhiSiteProxyHandlers({
@@ -159,5 +159,16 @@ describe("buildPhiSiteProxyHandlers", () => {
     ["forms", "anything"],
   ])("forwards %s to Core", async (...path) => {
     expect(await (await handlers.GET(request, at(...path))).text()).toBe("upstream");
+  });
+});
+
+describe("isPhiUnboundedSiteRequest", () => {
+  it("names a CDN upload part and nothing else", () => {
+    const part = ["admin", "cdn", "uploads", "tok", "parts", "2"];
+    expect(isPhiUnboundedSiteRequest({ method: "PUT" }, part)).toBe(true);
+    expect(isPhiUnboundedSiteRequest({ method: "POST" }, part)).toBe(false);
+    expect(isPhiUnboundedSiteRequest({ method: "PUT" }, ["admin", "cdn", "uploads", "tok", "complete"])).toBe(false);
+    expect(isPhiUnboundedSiteRequest({ method: "PUT" }, ["media", "uploads", "tok", "parts", "2"])).toBe(false);
+    expect(isPhiUnboundedSiteRequest({ method: "PUT" }, undefined)).toBe(false);
   });
 });

@@ -143,6 +143,17 @@ function validatingCmsStructureWrite(
   };
 }
 
+/**
+ * One part of a CDN upload, `PUT /api/site/admin/cdn/uploads/<token>/parts/<n>`: up to 16 MiB streamed
+ * on to Core, which streams it on to the storage. It is bounded by the browser that sends it, not by the
+ * proxy's clock -- on a slow link a part takes longer than any timeout that suits a read.
+ */
+export function isPhiUnboundedSiteRequest(request: Pick<Request, "method">, path: readonly string[] | undefined) {
+  return request.method === "PUT" &&
+    path?.length === 6 &&
+    path[0] === "admin" && path[1] === "cdn" && path[2] === "uploads" && path[4] === "parts";
+}
+
 export function buildPhiSiteProxyHandlers(
   options: BuildPhiSiteProxyHandlersOptions,
 ): PhiNextProxyHandlers {
@@ -161,6 +172,7 @@ export function buildPhiSiteProxyHandlers(
     missingBaseUrlMessage,
     buildHeaders,
     buildFetchInit: () => ({ cache: "no-store" }),
+    unboundedRequest: isPhiUnboundedSiteRequest,
   });
 
   // Built once per path and kept, so a Site that answers Forms all day pays the import a single time.

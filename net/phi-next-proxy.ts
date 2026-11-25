@@ -22,6 +22,13 @@ export type PhiNextProxyConfig = {
     request: NextRequest,
     path: PhiProxyPath,
   ) => Pick<RequestInit, "cache"> & { next?: { revalidate?: number; tags?: string[] } };
+  /**
+   * A request that may take longer than `timeoutMs` because its body is large, answered `null`: it is
+   * bounded by the browser alone -- aborted when the browser goes away (`request.signal`) -- and not
+   * by the clock. Every request this does not name keeps `timeoutMs`. A door names only what it must:
+   * a part of a CDN upload is 16 MiB on whatever link the person has, and eight seconds cut it.
+   */
+  unboundedRequest?: (request: NextRequest, path: PhiProxyPath) => boolean;
 };
 
 export type PhiNextProxyHandler = (
@@ -139,7 +146,7 @@ async function proxyRequest(
       ...(hasBody ? { body: request.body, duplex: "half" } : {}),
       ...(config.buildFetchInit?.(request, path) ?? { cache: "no-store" }),
       redirect: "manual",
-      signal: AbortSignal.timeout(config.timeoutMs),
+      signal: config.unboundedRequest?.(request, path) ? request.signal : AbortSignal.timeout(config.timeoutMs),
     } as RequestInit);
 
     const durationMs = Date.now() - startedAt;
