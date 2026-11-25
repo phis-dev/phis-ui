@@ -1,12 +1,15 @@
 "use client";
 
 import { useMemo, useState, type ReactElement } from "react";
-import { Flex, Input, Segmented, Select, Tag, Tooltip, Typography, theme as antdTheme } from "antd";
+import { Flex, Select, Tag, Tooltip, Typography, theme as antdTheme } from "antd";
 
 import { PhiIcon } from "../shell/phi-icon";
 import type { PhiPickerPlacement } from "./phi-picker-control-contract";
 import { PhiFlexControl } from "./phi-flex-control";
 import { PhiPopoverControl } from "./phi-popover-control";
+import { PhiSegmentedControl } from "./phi-segmented-control";
+import { PhiSelectControl } from "./phi-select-control";
+import { PhiTextControl } from "./phi-text-control";
 import { usePhiImmediatePicker } from "./use-phi-immediate-picker";
 import {
   PHI_BUILDER_INSERT_PICKER_CONTROL_DEFAULT_LABELS,
@@ -285,10 +288,9 @@ export function PhiBuilderInsertPickerControl<TItem extends PhiBuilderInsertPick
             * installed, the choice is between everything and everything.
             */}
           {packageOptions.length > 1 ? (
-            <Select<string>
+            <PhiSelectControl<string>
               size="small"
               variant="borderless"
-              showSearch={false}
               value={packageFilters[0] ?? PHI_INSERT_PICKER_ALL_PACKAGES}
               onChange={(nextPackage) =>
                 onPackageFiltersChange(
@@ -299,7 +301,7 @@ export function PhiBuilderInsertPickerControl<TItem extends PhiBuilderInsertPick
                 { value: PHI_INSERT_PICKER_ALL_PACKAGES, label: labels.allPackages },
                 ...packageOptions.map((packageName) => ({ value: packageName, label: packageName })),
               ]}
-              aria-label={labels.filterPackages}
+              ariaLabel={labels.filterPackages}
               style={{ flex: "1 1 0", minWidth: 0 }}
             />
           ) : null}
@@ -328,7 +330,7 @@ export function PhiBuilderInsertPickerControl<TItem extends PhiBuilderInsertPick
               style={{ flex: "1 1 0", minWidth: 0 }}
             />
           ) : null}
-          <Segmented<PhiBuilderInsertPickerSection>
+          <PhiSegmentedControl<PhiBuilderInsertPickerSection>
             value={section}
             onChange={(nextSection) => {
               if (nextSection === "layout" && !allowLayoutSection) {
@@ -345,25 +347,20 @@ export function PhiBuilderInsertPickerControl<TItem extends PhiBuilderInsertPick
           />
         </Flex>
 
-        <Input
+        <PhiTextControl
+          inputType="search"
+          size="small"
           autoFocus
           allowClear
           value={search}
-          onChange={(event) => setSearch(event.target.value)}
+          onChange={(nextSearch) => setSearch(nextSearch ?? "")}
           placeholder={placeholder}
-          variant="borderless"
-          style={{
-            borderBottom: `1px solid ${token.colorBorderSecondary}`,
-            borderRadius: 0,
-            paddingInline: 0,
-            boxShadow: "none",
-          }}
         />
 
         <div
           style={{
             border: `1px solid ${token.colorBorderSecondary}`,
-            borderRadius: 0,
+            borderRadius: token.borderRadius,
             background: token.colorBgElevated,
             padding: token.paddingSM,
             flex: "0 1 auto",
@@ -397,7 +394,7 @@ export function PhiBuilderInsertPickerControl<TItem extends PhiBuilderInsertPick
                           paddingInline: 0,
                           paddingBlock: token.paddingSM,
                           borderBottom: isLast ? "none" : `1px solid ${token.colorBorderSecondary}`,
-                          borderRadius: 0,
+                          borderRadius: token.borderRadiusSM,
                           background: isActive ? token.colorFillQuaternary : "transparent",
                           outline: isActive ? `1px solid ${token.colorPrimary}` : "none",
                           outlineOffset: -1,

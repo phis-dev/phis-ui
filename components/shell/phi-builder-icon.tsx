@@ -2,6 +2,8 @@
 
 import type { CSSProperties, ReactNode } from "react";
 
+import { usePhiConfig } from "../root/phi-config-provider";
+
 type PhiBuilderIconMotif =
   | "content"
   | "vertical"
@@ -33,7 +35,14 @@ function Frame({
   size: number | string;
   children: ReactNode;
 }) {
-  const radius = 0;
+  /*
+   * The Theme's small radius, as every small box beside it has -- the Insert picker's entries, a colour
+   * swatch. The frame is drawn in a 16-unit box, so a size in pixels converts the radius into those
+   * units and the corner is the Theme's on screen; a size in another unit cannot be converted here, and
+   * the radius stands at the icon's drawn 16px and scales with it.
+   */
+  const themeRadius = usePhiConfig().token.borderRadiusSM;
+  const radius = typeof size === "number" && size > 0 ? (themeRadius * 16) / size : themeRadius;
 
   return (
     <svg
