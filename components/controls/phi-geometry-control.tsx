@@ -287,7 +287,6 @@ export function PhiGeometryControl({
             labels.fields.profile,
             <PhiSegmentedControl<PhiGeometryProfile>
               value={selectedProfile}
-              size="small"
               block
               options={PHI_GEOMETRY_PROFILES.map((option) => ({
                 value: option,
