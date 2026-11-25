@@ -64,6 +64,7 @@ import {
 import type { PhiWidgetFontFamilyKey, PhiWidgetFontSizeKey } from "../../../types/site-theme";
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import { $createPhiHtmlImageNode, PhiHtmlImageNode } from "./html-editor-image-node";
+import { PhiHtmlLinkNode, PHI_HTML_LINK_NODE_REPLACEMENT } from "./html-editor-link-node";
 
 type PhiHtmlWidgetEditorProps = {
   blockId: PhiCmsInstanceId;
@@ -574,7 +575,7 @@ export function PhiHtmlWidgetEditor({
           LinkExtension,
           ListExtension,
         ],
-        nodes: [PhiHtmlImageNode],
+        nodes: [PhiHtmlImageNode, PhiHtmlLinkNode, PHI_HTML_LINK_NODE_REPLACEMENT],
         init(editorConfig) {
           editorConfig.namespace = `PhiHtmlWidgetEditor:${editorId}`;
           editorConfig.onError = (error) => {
