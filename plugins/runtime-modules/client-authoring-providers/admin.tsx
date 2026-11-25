@@ -5,6 +5,7 @@ import {
 } from "../authoring-contributions-client";
 import { PHI_ADMIN_RUNTIME_MODULE_ID } from "../admin/ids";
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "../auth/ids";
+import { PHI_CDN_RUNTIME_MODULE_ID } from "../cdn/ids";
 import { PHI_GROUPS_RUNTIME_MODULE_ID } from "../groups/ids";
 import { PHI_LOCALIZATION_RUNTIME_MODULE_ID } from "../localization/ids";
 import { PHI_OBSERVABILITY_RUNTIME_MODULE_ID } from "../observability/ids";
@@ -18,6 +19,11 @@ export const PHI_ADMIN_RUNTIME_MODULE_AUTHORING_CLIENT_CONTRIBUTIONS = [
       moduleId: PHI_AUTH_RUNTIME_MODULE_ID,
       loadAuthoring: () => import("../auth/authoring")
         .then((module) => module.PhiAuthRuntimeModuleAuthoringClient),
+    }),
+    definePhiRuntimeModuleAuthoringClientContribution({
+      moduleId: PHI_CDN_RUNTIME_MODULE_ID,
+      loadAuthoring: () => import("../cdn/authoring")
+        .then((module) => module.PhiCdnRuntimeModuleAuthoringClient),
     }),
     PHI_DASHBOARD_RUNTIME_MODULE_AUTHORING_CLIENT_CONTRIBUTION,
     definePhiRuntimeModuleAuthoringClientContribution({

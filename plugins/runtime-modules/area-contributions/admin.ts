@@ -4,6 +4,7 @@ import { createPhiLocalizationRuntimeModuleServerAreaContribution } from "../loc
 import { createPhiGroupsRuntimeModuleServerAreaContribution } from "../groups/server";
 import { PHI_USER_MANAGEMENT_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION } from "../user-management/server";
 import { PHI_OBSERVABILITY_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION } from "../observability/server";
+import { PHI_CDN_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION } from "../cdn/server";
 import { createPhiAuthRuntimeModuleServerAreaContribution } from "../auth/server";
 import { PHI_ADMIN_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION } from "../admin/server";
 
@@ -14,6 +15,7 @@ export const PHI_ADMIN_RUNTIME_MODULE_AREA_CONTRIBUTIONS = [
   createPhiGroupsRuntimeModuleServerAreaContribution(),
   createPhiLocalizationRuntimeModuleServerAreaContribution(),
   PHI_OBSERVABILITY_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION,
+  PHI_CDN_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION,
   PHI_USER_MANAGEMENT_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION,
   PHI_ADMIN_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION,
 ] as const;

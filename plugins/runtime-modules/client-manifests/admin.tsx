@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { createPhiRuntimeModuleControllerClientManifestFromAreaContributions } from "../area-contributions-controller-client";
 import { PHI_ADMIN_RUNTIME_MODULE_CONTROLLER_CLIENT_AREA_CONTRIBUTIONS } from "../client-area-contributions/admin";
 import { PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST } from "./common";
@@ -10,6 +11,12 @@ import { PHI_DASHBOARD_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "../dashb
 import { PHI_GROUPS_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "../groups/client-data-providers";
 import { PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "../localization/client-data-providers";
 import { PHI_OBSERVABILITY_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "../observability/client-data-providers";
+import { PHI_CDN_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "../cdn/client-data-providers";
+import {
+  definePhiRuntimeModuleRenderClient,
+  extendPhiRuntimeModuleRenderClientManifest,
+} from "../../../components/runtime/runtime-module-render-client-manifest";
+import { PhiCmsWidgetType } from "../../../constants/cms-widget-types";
 import { PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "../user-management/client-data-providers";
 export { PHI_COMMON_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST as PHI_ADMIN_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST } from "./common";
 export { PHI_COMMON_RUNTIME_MODULE_MEDIA_SOURCE_CLIENT_MANIFEST as PHI_ADMIN_RUNTIME_MODULE_MEDIA_SOURCE_CLIENT_MANIFEST } from "./common";
@@ -21,13 +28,24 @@ export const PHI_ADMIN_RUNTIME_MODULE_CONTROLLER_CLIENT_MANIFEST =
   );
 
 export const PHI_ADMIN_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
-  PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST;
+  extendPhiRuntimeModuleRenderClientManifest(
+    PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST,
+    [
+      [
+        PhiCmsWidgetType.CdnUpload,
+        definePhiRuntimeModuleRenderClient(
+          dynamic(() => import("../cdn/widgets/upload/client").then((module) => module.PhiCdnUploadWidgetClient)),
+        ),
+      ],
+    ],
+  );
 
 export const PHI_ADMIN_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST =
   extendPhiRuntimeModuleDataProviderClientManifest(
     PHI_COMMON_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST,
     [
       ...PHI_AUTH_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS,
+      ...PHI_CDN_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS,
       ...PHI_DASHBOARD_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS,
       ...PHI_GROUPS_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS,
       ...PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS,

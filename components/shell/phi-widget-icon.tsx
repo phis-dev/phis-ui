@@ -18,6 +18,7 @@ const WIDGET_ICON_REGISTRY = {
   auth: "user",
   admin: "setting",
   builder: "branches",
+  cdn: "cloud-upload",
   dashboard: "dashboard",
   developer: "code",
   editor: "edit",

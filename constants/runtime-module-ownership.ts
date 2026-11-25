@@ -276,6 +276,7 @@ const PHI_RUNTIME_MODULE_OWNERSHIP: Readonly<Record<string, readonly [module: st
   "tables/builder-navigation": ["builder", "navigation"],
   "tables/runtime-modules": ["builder", "runtime-modules"],
   "tables/builder-signal-routes": ["builder", "signal-routes"],
+  "tables/cdn": ["cdn", "cdn"],
   "tables/content": ["core", "content"],
   "tables/content-entries": ["core", "content-entries"],
   "tables/content-entry-categories": ["core", "content-entry-categories"],

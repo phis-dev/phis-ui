@@ -63,6 +63,7 @@ describe("the first-party sidebars", () => {
   it("open on the Dashboard and close on the Settings", () => {
     expect(sidebarOf("admin")).toEqual([
       "Dashboard",
+      "CDN",
       "Groups",
       "Locales",
       "Logs",
