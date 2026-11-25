@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { act, renderHook, waitFor } from "@testing-library/react";
-import type { ReactNode } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { useMemo, type ReactNode } from "react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { PhiIntlLocaleProvider } from "../../../root/phi-intl-locale";
 import type { PhiCollectionProviderData, PhiCollectionProviderQueryRequest } from "../../../../types/collection-provider";
@@ -46,6 +46,8 @@ const { usePhiCollectionViewBinding } = await import("./phi-collection-view-bind
 function data(label: string): PhiCollectionProviderData {
   return { items: [{ label }], total: 1, error: null } as unknown as PhiCollectionProviderData;
 }
+
+afterEach(() => vi.restoreAllMocks());
 
 const source = { providerKey: "@phis/test/collection", resourceKey: "items" } as const;
 
@@ -126,5 +128,75 @@ describe("binding params", () => {
     expect(result.current.binding.data).toBeNull();
     await act(async () => pending.query.at(-1)?.resolve(data("listing 2")));
     expect(result.current.binding.data?.items).toEqual([{ label: "listing 2" }]);
+  });
+});
+
+
+describe("immediate collection answers", () => {
+  it("keeps an immediate empty answer settled without a loading flash", async () => {
+    const empty = { resourceKey: "items", items: [], total: 0, loading: false, error: null };
+    vi.spyOn(provider, "query").mockResolvedValue(empty);
+    const states: boolean[] = [];
+    const { result, unmount } = renderHook(() => {
+      const state = usePhiCollectionViewBinding({ source });
+      states.push(state.binding.loading);
+      return state;
+    }, { wrapper });
+    await waitFor(() => expect(result.current.binding.data).toEqual(empty));
+    // Let the source-reset and loading timers finish as well: neither may erase the answer.
+    await act(async () => { await new Promise((resolve) => window.setTimeout(resolve, 0)); });
+    expect(result.current.binding.data).toEqual(empty);
+    expect(result.current.binding.loading).toBe(false);
+    expect(states).not.toContain(true);
+    unmount();
+  });
+
+  it("keeps an immediate populated answer after binding params change", async () => {
+    vi.spyOn(provider, "query").mockImplementation(async ({ params }) => data(String(params?.id)));
+    const { result, rerender, unmount } = renderHook(
+      ({ id }) => {
+        const current = useMemo(() => ({ ...source, params: { id } }), [id]);
+        return usePhiCollectionViewBinding({ source: current });
+      },
+      { wrapper, initialProps: { id: 1 } },
+    );
+    await waitFor(() => expect(result.current.binding.data?.items).toEqual([{ label: "1" }]));
+    rerender({ id: 2 });
+    await waitFor(() => expect(result.current.binding.data?.items).toEqual([{ label: "2" }]));
+    await act(async () => { await new Promise((resolve) => window.setTimeout(resolve, 0)); });
+    expect(result.current.binding.data?.items).toEqual([{ label: "2" }]);
+    expect(result.current.binding.loading).toBe(false);
+    unmount();
+  });
+
+  it("loads only for a chosen record and ignores its answer after the choice is cleared", async () => {
+    const empty = { resourceKey: "items", items: [], total: 0, loading: false, error: null };
+    let resolveRead: ((value: PhiCollectionProviderData) => void) | undefined;
+    vi.spyOn(provider, "query").mockImplementation(({ params }) => params?.id
+      ? new Promise((resolve) => { resolveRead = resolve; })
+      : Promise.resolve(empty));
+    const { result, rerender, unmount } = renderHook(
+      ({ id }: { id: number | null }) => {
+        const current = useMemo(() => ({ ...source, params: { id } }), [id]);
+        return usePhiCollectionViewBinding({ source: current });
+      },
+      { wrapper, initialProps: { id: null as number | null } },
+    );
+    await waitFor(() => expect(result.current.binding.data).toEqual(empty));
+    expect(result.current.binding.loading).toBe(false);
+    rerender({ id: 17 });
+    await waitFor(() => expect(result.current.binding.loading).toBe(true));
+    expect(result.current.binding.data).toBeNull();
+    await act(async () => resolveRead?.(data("record 17")));
+    expect(result.current.binding.data?.items).toEqual([{ label: "record 17" }]);
+    expect(result.current.binding.loading).toBe(false);
+    rerender({ id: 18 });
+    await waitFor(() => expect(result.current.binding.loading).toBe(true));
+    rerender({ id: null });
+    await waitFor(() => expect(result.current.binding.data).toEqual(empty));
+    expect(result.current.binding.loading).toBe(false);
+    await act(async () => resolveRead?.(data("obsolete record")));
+    expect(result.current.binding.data).toEqual(empty);
+    unmount();
   });
 });

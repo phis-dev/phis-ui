@@ -870,15 +870,16 @@ export function PhiTableWidgetClient({
     return pageSize > 0 ? Math.ceil(total / pageSize) : 0;
   }, [resolvedQuery.page, resolvedQuery.pageSize, rows.length, selectedRowIdentities.length, summary, total]);
   const footer = useMemo(() => {
-    if (!presentation.footer) return undefined;
+    if (presentation.header === false || presentation.footerOmitted) return undefined;
+    if (!presentation.footer) return { content: "" };
     // The first variant whose value holds says the line instead; see `PhiTableFooterVariant`.
     const variant = presentation.footer.variants?.find(({ when }) => {
       const held = Boolean(resolveSummaryValue({ key: "when", value: when.value }));
       return when.operator === "truthy" ? held : !held;
     });
     const template = variant?.template ?? presentation.footer.template;
-    // A variant with an empty template takes the footer away rather than drawing an empty bar.
-    if (!template.trim()) return undefined;
+    // An empty line keeps the Table's closing bar; only footerOmitted removes it.
+    if (!template.trim()) return { align: presentation.footer.align, content: "" };
     const values = variant ? variant.values ?? [] : presentation.footer.values;
     return {
       align: presentation.footer.align,
@@ -890,7 +891,7 @@ export function PhiTableWidgetClient({
         }),
       ),
     };
-  }, [presentation.footer, resolveSummaryValue]);
+  }, [presentation.footer, presentation.footerOmitted, presentation.header, resolveSummaryValue]);
   const tableSummary = useMemo(() => presentation.summary ? {
     ...presentation.summary,
     rows: presentation.summary.rows.map((row) => ({

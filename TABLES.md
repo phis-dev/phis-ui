@@ -281,8 +281,8 @@ Table footer and column summary are separate native Table presentation contracts
   placeholders, and optional alignment. It is the Table's visual bottom edge when present. Optional
   `variants` say the line differently while one value holds: each names a `when` -- a footer value
   binding's source and `truthy` or `falsy` -- and its own template and values, and the first that holds
-  replaces the declared line; an empty variant template hides the footer while it holds. A sentence that
-  changes with the state ("3 of 5 left" against "Used up") is
+  replaces the declared line; an empty variant template clears the text while keeping the footer bar.
+  A sentence that changes with the state ("3 of 5 left" against "Used up") is
   two templates rather than one with a condition inside, because the template fills placeholders and
   nothing else.
 - `presentation.summary` renders column-bound Ant Design Summary rows. Every cell addresses stable
@@ -317,8 +317,9 @@ label-placement fragments is forbidden.
 not `false`) states `presentation.footer`: the line under its rows that says how many there are or which
 page this is -- "%1 addresses", "%1 users of %2 total", "%1 on page %2" for a resource that pages without
 a count -- its template the `%1 …` footer label of the Table's own Label Set, translated while the preset
-is built. A Table without a header needs no footer: it lays out rows or aligns columns (a field and its
-value, side by side), and neither part has anything to say there; the missing header is the whole
+is built. The bar also stands when no footer text was configured; this runtime default does not replace
+the preset's obligation to declare its own line. A Table without a header draws no footer: it lays out
+rows or aligns columns (a field and its value, side by side), and neither part has anything to say there; the missing header is the whole
 exemption. Only a Table with a header and truly nothing to count -- the one setting of a panel, edited in
 its cell -- leaves the footer out, and says why in `presentation.footerOmitted`, a reason for the next
 reader of the preset that is never drawn and never translated (Admin -> Settings -> People data, the
@@ -345,7 +346,8 @@ disabled and nothing chosen, so the columns do not move when the rows arrive; a 
 content gets a skeleton a short word wide rather than collapsing. A sticky header row, a table of its own
 whose widths Ant Design measures from the rows, keeps its titles' own widths while there are none to
 measure (`phi-table-control--loading`, `styles/controls.css`), as it does while the Table is empty. The
-header, the toolbar and the pagination stand as they are; the footer and summary come with the rows.
+header, the toolbar and the pagination stand as they are. The footer bar stays in place with empty
+text while loading; its text and the summary come with the rows.
 
 ## Columns
 

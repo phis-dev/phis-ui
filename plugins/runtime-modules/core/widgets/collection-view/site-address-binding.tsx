@@ -330,7 +330,9 @@ export function PhiSiteAddressCollectionViewBinding({
     ? binding.data.meta.emptyDescription
     : presentation.emptyDescription ?? labels.empty;
   const body = binding.data == null ? (
-    binding.error ? null : <PhiCollectionViewSkeletonControl mode={mode} gap={gap} minColumnWidth={minColumnWidth} count={2} />
+    binding.loading && !binding.error
+      ? <PhiCollectionViewSkeletonControl mode={mode} gap={gap} minColumnWidth={minColumnWidth} count={3} />
+      : null
   ) : tiles.length === 0 ? (
     <PhiEmptyControl description={emptyDescription} />
   ) : undefined;

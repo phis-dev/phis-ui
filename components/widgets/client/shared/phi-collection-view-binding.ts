@@ -84,35 +84,41 @@ export function usePhiCollectionViewBinding({
     const abortController = new AbortController();
     const requestId = ++latestRequestRef.current;
     const isCurrent = () => !abortController.signal.aborted && requestId === latestRequestRef.current;
-    const loadingTimer = window.setTimeout(() => {
+    let loadingTimer: number | undefined;
+    const queryTimer = window.setTimeout(() => {
       if (abortController.signal.aborted) return;
-      setLoading(true);
       setError(null);
       setQueryError(null);
+      // Reset the source first, and only show loading if its answer actually remains pending.
+      loadingTimer = window.setTimeout(() => {
+        if (isCurrent()) setLoading(true);
+      }, 0);
+      void Promise.resolve().then(() => provider.query({
+        resourceKey: source.resourceKey,
+        query,
+        params: source.params,
+        locale,
+        timeZone,
+        signal: abortController.signal,
+      })).then((nextData) => {
+        if (!isCurrent()) return;
+        setData(nextData);
+        setError(nextData.error);
+        setQueryError(nextData.error);
+      }).catch((nextError: unknown) => {
+        if (isCurrent()) {
+          const message = nextError instanceof Error ? nextError.message : "Collection request failed.";
+          setError(message);
+          setQueryError(message);
+        }
+      }).finally(() => {
+        window.clearTimeout(loadingTimer);
+        // Superseded by an action is still finished loading; only a newer query takes the flag over.
+        if (!abortController.signal.aborted) setLoading(false);
+      });
     }, 0);
-    void provider.query({
-      resourceKey: source.resourceKey,
-      query,
-      params: source.params,
-      locale,
-      timeZone,
-      signal: abortController.signal,
-    }).then((nextData) => {
-      if (!isCurrent()) return;
-      setData(nextData);
-      setError(nextData.error);
-      setQueryError(nextData.error);
-    }).catch((nextError: unknown) => {
-      if (isCurrent()) {
-        const message = nextError instanceof Error ? nextError.message : "Collection request failed.";
-        setError(message);
-        setQueryError(message);
-      }
-    }).finally(() => {
-      // Superseded by an action is still finished loading; only a newer query takes the flag over.
-      if (!abortController.signal.aborted) setLoading(false);
-    });
     return () => {
+      window.clearTimeout(queryTimer);
       window.clearTimeout(loadingTimer);
       abortController.abort();
     };

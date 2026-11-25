@@ -579,7 +579,7 @@ export function PhiAssetCollectionViewBinding({
     </PhiToolbarControl>
   ) : null;
 
-  const awaitingInitialPayload = binding.data == null && !state.error;
+  const awaitingInitialPayload = binding.loading && binding.data == null && !state.error;
   const body = state.error ? null : awaitingInitialPayload ? (
     <PhiMediaAssetCollectionSkeletonControl mode={mode} gap={gap} minColumnWidth={minColumnWidth} />
   ) : state.assets.length === 0 ? (

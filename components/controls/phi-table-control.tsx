@@ -1564,8 +1564,8 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
    * Whether something of the Table's own stands at its bottom edge. A sticky-top summary does not: it
    * rides above the rows and leaves the last row to end the Table.
    */
-  const hasClosingBlock = !loading &&
-    (Boolean(footer) || (summary != null && summary.placement !== "sticky-top"));
+  const hasClosingBlock = Boolean(footer) ||
+    (!loading && summary != null && summary.placement !== "sticky-top");
 
   const frameRef = useRef<HTMLDivElement>(null);
   // Where the Shell's Header ends, which is where a sticky header row stops (`styles/controls.css`).
@@ -1638,15 +1638,16 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
         showSizeChanger: pagination.showSizeChanger,
         onChange: pagination.onChange,
       }}
-      footer={footer && !loading ? () => (
+      footer={footer ? () => (
         <Flex
           {...{ [PHI_VISUAL_ANCHOR_PART_ATTRIBUTE]: "footer" }}
           align="center"
           justify={footer.align ?? "start"}
+          style={{ minHeight: "1lh" }}
           gap="small"
           wrap
         >
-          {footer.content}
+          {loading ? null : footer.content}
         </Flex>
       ) : undefined}
       summary={summaryNode}

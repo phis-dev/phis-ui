@@ -404,6 +404,10 @@ governed exclusively by `phis-server/GROUPS_AND_STORAGE.md` and are not implied 
 
 Loading preserves the selected item layout and renders item skeletons rather than a spinner. Existing
 items may remain visible only when the Binding explicitly supports stale-while-refresh behavior.
+An absent payload alone is not loading: skeletons appear only while a query is pending. A Provider that
+answers an unbound parameter with an immediate empty result stays settled and does not flash loading;
+changing the binding params starts a real read. Source resets must precede that read so they cannot erase
+an immediately resolved answer. The Site-address renderer shows three tiles while its read is pending.
 
 The Widget declares exactly these capabilities:
 

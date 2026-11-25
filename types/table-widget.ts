@@ -422,8 +422,8 @@ export type PhiTableFooterValueBinding = {
  * The template fills placeholders and nothing else, so a sentence that changes with the state -- "3 of 5
  * left" against "Used up" -- is two templates, not one with a condition inside. The first variant whose
  * `when` holds replaces `template` and `values`; none holding leaves the footer as declared. A variant
- * may name no values: "Used up" has nothing to fill in. An empty template takes the footer away while it
- * holds -- a line about a limit has nothing to say where there is none.
+ * may name no values: "Used up" has nothing to fill in. An empty template clears the text while
+ * retaining the closing bar; only `footerOmitted` explicitly removes that bar.
  */
 export type PhiTableFooterVariant = {
   when: { value: PhiTableSummaryValueSource; operator: "truthy" | "falsy" };
