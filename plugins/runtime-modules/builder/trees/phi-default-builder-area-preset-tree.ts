@@ -1363,7 +1363,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
              *
              * A Form rather than six Controls in a column, for the one thing a Form does that a stack
              * cannot: it states the label column once -- `PHI_FORM_DEFAULT_LAYOUT` puts every caption
-             * in tracks 1-9 and every Control in 9-25 -- so the rows line up on an edge of their own
+             * in one range of tracks and every Control after it -- so the rows line up on an edge of their own
              * instead of each being indented by the width of its own caption. None of the questions
              * changed, and neither did what an answer is stored as.
              *

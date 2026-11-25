@@ -28,7 +28,7 @@ const text = (key: string, fallback: string) => ({ kind: "config", key, fallback
  * What an Area answers about itself, as one form rather than as six Controls that each carry a label.
  *
  * The form is what puts the labels in a column of their own: `PHI_FORM_DEFAULT_LAYOUT` gives every
- * field a label range of 1-9 and a control range of 9-25, so six rows line up on one edge instead of
+ * field one label range and one control range per width, so six rows line up on one edge instead of
  * each being indented by the width of its own caption. That is the whole reason this is a form and
  * not a stack -- the questions did not change.
  *

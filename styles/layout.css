@@ -356,8 +356,9 @@
 /*
  * A label breaks inside a word rather than run past its cell. The cell keeps to its tracks (`min-width:
  * 0`), but the label's words are a flex item of their own, which is never narrower than its longest
- * word: in the label column of a one-column dialog -- a third of 377px -- "Type the Area key to
- * confirm" left the input a few pixels, and a longer word of a translation ran under the input.
+ * word: in the label column of a one-column dialog -- then a third of 377px, ten twenty-fourths now --
+ * "Type the Area key to confirm" left the input a few pixels, and a longer word of a translation ran
+ * under the input.
  */
 .phi-form-cell--label {
   display: flex;

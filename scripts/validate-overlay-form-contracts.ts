@@ -106,8 +106,10 @@ assert.deepEqual(resolvePhiFormLayout(form.layout).gap, {
 // A form that says nothing stacks when it is measured narrow and stands beside its labels when it is
 // not, and both come out of the ranges alone -- there is no placement mode left to get wrong.
 assert.deepEqual(resolvePhiFormLayout().label.compact, { start: 1, end: 25 });
-assert.deepEqual(resolvePhiFormLayout().label.medium, { start: 1, end: 9 });
-assert.deepEqual(resolvePhiFormLayout().control.medium, { start: 9, end: 25 });
+assert.deepEqual(resolvePhiFormLayout().label.medium, { start: 1, end: 11 });
+assert.deepEqual(resolvePhiFormLayout().control.medium, { start: 11, end: 25 });
+assert.deepEqual(resolvePhiFormLayout().label.wide, { start: 1, end: 9 });
+assert.deepEqual(resolvePhiFormLayout().control.wide, { start: 9, end: 25 });
 assert.equal(
   resolvePhiFormFieldRanges(resolvePhiFormLayout(), undefined, "compact", "fields.x").stacked,
   true,

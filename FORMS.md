@@ -321,11 +321,13 @@ type PhiFormFieldPlacementDescriptor = {
 - A responsive value cascades from the nearest smaller mode that is set; an unset section uses the
   defaults.
 - Defaults (`PHI_FORM_DEFAULT_LAYOUT`): gap `sm` / `base` / `base`; `labelAlign: "start"`; label 1-25 in
-  `compact` and 1-9 otherwise; control 1-25 in `compact` and 9-25 otherwise -- a third of the width for
-  the labels, the same column the Login states for itself.
+  `compact`, 1-11 in `medium` and 1-9 in `wide`; control 1-25, 11-25 and 9-25. Wide, the labels take a
+  third of the width, the same column the Login states for itself. Medium -- 377 to 609px, where the Form
+  of a one-column dialog stands -- they take ten tracks of twenty-four, since a third of 377px broke two-word
+  labels such as "Installation key" over two lines (owner, 2026-11-25, on trial).
 - A label longer than its column wraps, and breaks inside a word where a word alone is wider
-  (`overflow-wrap: anywhere` on `.phi-form-cell--label`): in a one-column dialog the column is a third of
-  377px, and a long word of a translation used to run under the input. Keep such labels short and say
+  (`overflow-wrap: anywhere` on `.phi-form-cell--label`): in a one-column dialog the column is ten
+  twenty-fourths of 377px, and a long word of a translation used to run under the input. Keep such labels short and say
   the rest in the dialog's text -- the width rule (OVERLAYS.md, "Geometry") decides the dialog's width
   only, not what fits in its label column.
 - A field's `label` and `control` are column ranges, not content. What a placement states is read per

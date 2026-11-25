@@ -31,7 +31,7 @@ describe("the row the Widget's submit stands in", () => {
 
     // Compact is one column for every form: the labels are on top there too.
     expect(phiFormActionsGridColumn(layout, "compact")).toBe("1 / 25");
-    expect(phiFormActionsGridColumn(layout, "medium")).toBe("var(--phi-form-label-end, 9) / 25");
+    expect(phiFormActionsGridColumn(layout, "medium")).toBe("var(--phi-form-label-end, 11) / 25");
     expect(phiFormActionsGridColumn(layout, "wide")).toBe("var(--phi-form-label-end, 9) / 25");
   });
 

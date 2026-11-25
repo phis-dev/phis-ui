@@ -557,7 +557,9 @@ through the normal `enabled` channel from whatever in the body decides it.
 A dialog is as wide as its Form needs (`helpers/cms-dialog.ts`), and states it as its `size` width. A Form
 of one column takes `PHI_DIALOG_WIDTH_SINGLE_COLUMN`: `contentMaxNarrow` -- the 377px from which a Form
 puts its labels beside its fields (`PHI_FORM_RESPONSIVE_MIN_WIDTH.medium`) -- plus the body's `base` inset
-on both sides, so the Form keeps that width inside the body. A Form of two columns keeps
+on both sides, so the Form keeps that width inside the body. At that width the Form is `medium`, where
+`PHI_FORM_DEFAULT_LAYOUT` gives a side label ten tracks of twenty-four and the control fourteen; a third,
+the `wide` column, broke two-word labels there (FORMS.md, "Layout and placement"). A Form of two columns keeps
 `PHI_DIALOG_WIDTH`, the reading measure `contentMax`; a table, a preview or an editor states a wider width
 of its own, and a viewport limit as `maxSize` where it has one. Both are one length: on a phone the Modal
 holds either inside the viewport ([Geometry](#geometry)). A Form is one column when no field, at `medium`
