@@ -429,6 +429,14 @@ h5.phi-typography, .phi-typography h5 {
 }
 
 /*
+ * An accordion section's title may be taller than a line -- a title with swatches beside it -- and the
+ * arrow stands at its middle rather than at its top.
+ */
+.phi-accordion-control__header {
+  align-items: center;
+}
+
+/*
  * The cover runs to the frame's outer edge and takes its upper corners when nothing sits above it. It
  * clips what it holds: a picture is a box with an image inside, and a corner set on the box alone leaves
  * the image square above it.

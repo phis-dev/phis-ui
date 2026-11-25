@@ -4,12 +4,15 @@ import type { CSSProperties, ReactNode } from "react";
 import { Collapse, type CollapseProps } from "antd";
 
 import type { PhiControlSize } from "../../types/control";
+import { PHI_SPACE } from "../../theme/antd-css-var-contract";
+import { PhiDescriptionHint } from "./phi-description-tooltip-icon";
 
 /**
  * Sections that fold, each on its own or one at a time -- the whole surface the CollapsibleLayout needs.
  *
- * PhiAccordionControl is the narrow case (one open, nothing to decide); this is the wide one, and it is
- * a Control so that the Layout describes sections and the primitive stays in this folder.
+ * PhiAccordionControl is the narrow case (one open, nothing to decide) and draws through this one; this
+ * is the wide one, and it is a Control so that the Layout describes sections and the primitive stays in
+ * this folder.
  *
  * It is controlled: the Layout keeps the open keys where they survive a reload and travel as a signal,
  * and a Control keeping its own would be a second answer to the same question.
@@ -17,6 +20,12 @@ import type { PhiControlSize } from "../../types/control";
 export type PhiCollapseControlSection = {
   key: string;
   label: ReactNode;
+  /**
+   * What the section is about, behind (i) after its title -- the one place a folding section says it,
+   * for the Collapsible Layout's `slotDescriptions` and a Widget's accordion alike. Reading it does not
+   * fold the section.
+   */
+  description?: ReactNode;
   children: ReactNode;
   /** Render the body while folded, so what is inside keeps running. */
   forceRender?: boolean;
@@ -76,6 +85,27 @@ function resolveSectionStyles(
   };
 }
 
+/*
+ * The hint sits inside the header, and a header toggles its panel: reading the hint must not open or close
+ * what it describes, by pointer or by key.
+ */
+function renderSectionLabel(section: PhiCollapseControlSection): ReactNode {
+  const { label, description } = section;
+  if (description == null || description === "") return label;
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: PHI_SPACE.xs }}>
+      {label}
+      <span
+        style={{ display: "inline-flex" }}
+        onClick={(event) => event.stopPropagation()}
+        onKeyDown={(event) => event.stopPropagation()}
+      >
+        <PhiDescriptionHint description={description} />
+      </span>
+    </span>
+  );
+}
+
 export function PhiCollapseControl({
   sections,
   openKeys,
@@ -105,7 +135,7 @@ export function PhiCollapseControl({
       classNames={headerClassName ? { header: headerClassName } : undefined}
       items={sections.map((section) => ({
         key: section.key,
-        label: section.label,
+        label: renderSectionLabel(section),
         collapsible: collapsible === "row" ? undefined : collapsible,
         forceRender: section.forceRender,
         ...(section.hidden ? { style: { display: "none" } } : {}),

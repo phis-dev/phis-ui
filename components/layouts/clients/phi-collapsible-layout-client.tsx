@@ -12,8 +12,6 @@ import { usePhiSignalDispatcher, usePhiSignalListener } from "../../runtime/runt
 import { usePhiSignalIdentity } from "../../runtime/runtime-signal-identity";
 import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control-contract";
 import { PhiLayoutAnchoredOverlay } from "./phi-layout-anchored-overlay";
-import { PhiDescriptionHint } from "../../controls/phi-description-tooltip-icon";
-import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import {
   PhiCollapseControl,
   type PhiCollapseControlSection,
@@ -600,27 +598,10 @@ function PhiCollapsibleLayoutBody({
                 </button>
               )
           : title;
-      const description = slotDescriptions?.[slotIndex]?.trim();
       return {
         key: slotKey,
-        label: description
-          ? (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: PHI_SPACE.xs }}>
-                {label}
-                {/*
-                  The hint sits inside the header, and a header toggles its panel: reading the hint must
-                  not open or close what it describes, by pointer or by key.
-                */}
-                <span
-                  style={{ display: "inline-flex" }}
-                  onClick={(event) => event.stopPropagation()}
-                  onKeyDown={(event) => event.stopPropagation()}
-                >
-                  <PhiDescriptionHint description={description} />
-                </span>
-              </span>
-            )
-          : label,
+        label,
+        description: slotDescriptions?.[slotIndex]?.trim() || undefined,
         forceRender: isEditMode || isHiddenSlot,
         hidden: isHiddenSlot,
         children: childContent

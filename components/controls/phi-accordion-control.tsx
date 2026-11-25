@@ -1,7 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Collapse } from "antd";
+
+import { usePhiConfig } from "../root/phi-config-provider";
+import { PhiCollapseControl } from "./phi-collapse-control";
 
 /**
  * A stack of sections where one is open at a time.
@@ -19,10 +21,16 @@ import { Collapse } from "antd";
  *
  * It is controlled, because every caller already keeps the open section somewhere it survives a reload,
  * and a Control that also kept its own would give them two answers to the same question.
+ *
+ * **It draws through `PhiCollapseControl`**, the folding sections the Collapsible Layout draws with, so a
+ * section's `description` is the same (i) behind its title in both and the click on it folds nothing.
+ * What stays here is the undoing: no ground, no inline inset, the size of chrome.
  */
 export type PhiAccordionControlSection = {
   key: string;
   label: ReactNode;
+  /** What the section is about, behind (i) after its title (`PhiCollapseControlSection.description`). */
+  description?: ReactNode;
   children: ReactNode;
 };
 
@@ -38,25 +46,21 @@ export function PhiAccordionControl({
   openSection = "",
   onOpenSectionChange,
 }: PhiAccordionControlProps) {
+  const { token } = usePhiConfig();
   return (
-    <Collapse
+    <PhiCollapseControl
       accordion
-      bordered={false}
+      // The whole row folds, as the primitive's own default did.
+      collapsible="row"
       size="small"
-      activeKey={openSection}
-      // An accordion closes the last section as it opens the next, so the primitive still answers with a
-      // list and it is always the one key or none.
-      onChange={(keys) => onOpenSectionChange?.(Array.isArray(keys) ? keys[0] ?? "" : String(keys ?? ""))}
-      styles={{
-        root: { background: "transparent" },
-        header: { alignItems: "center", paddingInline: 0 },
-        body: { paddingInline: 0 },
-      }}
-      items={sections.map((section) => ({
-        key: section.key,
-        label: section.label,
-        children: section.children,
-      }))}
+      headerClassName="phi-accordion-control__header"
+      headerPadding={`${token.paddingXS}px 0`}
+      bodyPadding={`0 0 ${token.padding}px`}
+      style={{ background: "transparent" }}
+      openKeys={openSection ? [openSection] : []}
+      // An accordion closes the last section as it opens the next, so the list is always the one key or none.
+      onOpenKeysChange={(keys) => onOpenSectionChange?.(keys[0] ?? "")}
+      sections={sections}
     />
   );
 }

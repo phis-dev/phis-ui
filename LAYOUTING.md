@@ -521,7 +521,8 @@ composition, not alternate Layout kinds.
 - Titles live on the owning Layout (for example `slotTitles` on `PhiCollapsibleLayout`) and do not move
   with child drag and drop. The same holds for a slot's description (`slotDescriptions`, the hint behind a
   Collapsible panel's title): a `slot-texts` field, stored in slot order and edited in the Inspector with
-  one line per occupied slot.
+  one line per occupied slot. The Layout hands it to `PhiCollapseControl` as the section's `description`,
+  which draws the (i) -- the same one a Widget's `PhiAccordionControl` section carries.
 - Moving, replacing, or deleting a child does not move, rewrite, or delete either the source or target
   slot title. Authoring exposes title editing as an explicit Layout operation.
 - A title-bearing live renderer may omit an empty slot panel without deleting its configured title;

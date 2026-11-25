@@ -150,7 +150,7 @@ const controlledPrimitives = new Map([
   ["Card", "PhiCardControl"],
   ["Cascader", "PhiCascaderControl"],
   ["Checkbox", "PhiCheckboxControl"],
-  // The general one; `PhiAccordionControl` is the narrow case beside it, one section open at a time.
+  // The general one; `PhiAccordionControl` is the narrow case drawn through it, one section open at a time.
   ["Collapse", "PhiCollapseControl"],
   ["ColorPicker", "PhiColorControl"],
   ["DatePicker", "PhiDatePickerControl"],
