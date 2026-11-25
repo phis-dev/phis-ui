@@ -326,9 +326,16 @@ Dynamic selector options should come from generic option providers where the sel
 The Pages workspace's Page select is the Core `cascader` Widget with `expandTrigger: "hover"` and
 `select: "options"`: a folder of the Page tree (`/shop/product/:slug` makes `shop` and `product`) opens under
 the pointer and on a click, and chooses nothing; only a Page is offered as an option, and only an option is
-chosen. A folder key that still arrives -- an old address -- opens the first Page inside it
-(`resolvePhiBuilderRequestedPageKey`), never a Page with empty Regions. Without `select: "options"` the
-Widget keeps choosing every level, which is what a path picker wants.
+chosen. A folder stands under the folder icon the Page trees give a container (`antd:folder`), and
+neither `/` nor the current value is drawn unless it is on offer. A folder key that still arrives -- an
+old address -- opens the first Page inside it (`resolvePhiBuilderRequestedPageKey`), never a Page with
+empty Regions. Without `select: "options"` the Widget keeps choosing every level, which is what a path
+picker wants.
+
+`/` is on offer while the Area's root is a landing: stored as one, or stored as nothing while the
+applicant standing there is not the base Module's forward (Public's Welcome Page, a Site package's
+landing). The workspace opens an Area on that landing; where `/` forwards, on the Page it leads to
+(`resolvePhiBuilderOfferedPageKey`), never on whatever sorts first in the catalog.
 
 ### `/editor/phis/ui/translations` workspace contract
 

@@ -21,7 +21,7 @@ import { findFirstPhiCmsNavigationLinkPath } from "../../../components/regions/p
 import { canPhiViewerAccess, type PhiAccessViewer } from "../../../types/access";
 import type { PhiPageReference } from "../../../types/references";
 import { resolvePhiRuntimeAreaDefinition } from "../area-definitions";
-import { resolvePhiAreaRootRouteNavKey } from "../area-root-route";
+import { resolvePhiAreaRootRouteNavKey, resolvePhiAreaRootRoutePresetKey } from "../area-root-route";
 import { listPhiAlwaysActiveRuntimeModuleIds } from "../settings";
 import type { PhiRuntimeModuleId } from "../../../types/cms-module-descriptors";
 import { readPhiBuilderStoredAreaRootRoute } from "./developer-workspace-store";
@@ -220,6 +220,24 @@ function removePhiBuilderUnansweredPresetPages(
 }
 
 /**
+ * Whether the Page standing at `/` is the Area's own forward rather than a landing.
+ *
+ * The base Module of every Area behind a sign-in stands a forward there (`buildPhiAreaRootRoutePresetDescriptor`);
+ * Public's base stands its Welcome Page, and a Site package offers a landing of its own. Which of them
+ * answers an Area that stored nothing is the applicant chain's, so whether that Area forwards is a fact
+ * about the applicant, not about the absent answer.
+ */
+function isPhiBuilderAreaRootForward(
+  node: PhiPresetPageNode,
+  area: PhiBuilderPageCatalogArea,
+  baseModuleId: PhiRuntimeModuleId | null,
+) {
+  return node.sourcePreset != null &&
+    node.sourcePreset.ownerModuleId === baseModuleId &&
+    node.sourcePreset.presetKey === resolvePhiAreaRootRoutePresetKey(resolvePhiBuilderAreaAsCmsArea(area));
+}
+
+/**
  * The Pages of an Area that may actually be opened, which is not the same as the Pages it has.
  *
  * While `/` forwards it is not a Page anybody authors: the forward is the whole content of the root
@@ -227,6 +245,11 @@ function removePhiBuilderUnansweredPresetPages(
  * forward off without touching the Select that decides it. Taking the entry away is the whole fix: no
  * entry, no revision, no contradiction. It comes back with whatever it had when the Area is set to a
  * landing again, because nothing is cleaned up here either.
+ *
+ * `/` forwards when the Area stored a redirect, or when it stored nothing and the applicant that stands
+ * there is the base Module's forward. Nothing stored is not a forward by itself: Public's root is its
+ * Welcome Page then, or the landing a Site package offers, and reading the absent answer as a forward
+ * kept the one Page every Site starts with out of its own Page list.
  *
  * Otherwise exactly the one root that is served. Every other applicant leaves the list either way --
  * an entry that cannot be reached is worse than a missing one, and two entries both reading `/` would
@@ -244,8 +267,14 @@ export function resolvePhiBuilderOfferedPageCatalog(
   );
   const { baseModuleId, isActive } = resolvePhiBuilderAreaModuleActivation(state, area);
   const answered = removePhiBuilderUnansweredPresetPages(catalog, baseModuleId, isActive);
-  const forwards = readPhiBuilderStoredAreaRootRoute(state, area)?.mode !== "landing";
-  const rootPageNode = forwards ? null : resolvePhiBuilderAreaRootPageNode(state, area, answered);
+  const storedRootRoute = readPhiBuilderStoredAreaRootRoute(state, area);
+  const rootApplicant = storedRootRoute?.mode === "redirect"
+    ? null
+    : resolvePhiBuilderAreaRootPageNode(state, area, answered);
+  const rootPageNode = rootApplicant != null &&
+    (storedRootRoute?.mode === "landing" || !isPhiBuilderAreaRootForward(rootApplicant, area, baseModuleId))
+    ? rootApplicant
+    : null;
 
   return answered.filter((node) =>
     node.storagePath !== "/" || (rootPageNode != null && node === rootPageNode));
@@ -293,10 +322,11 @@ function findPageKeyByReference(
 /**
  * The Page the Builder should be on, given the one it asked for.
  *
- * The asked-for Page when the Area offers it. Otherwise where the front door leads, because that is
- * the answer to the question whoever set the forward just asked: `/` goes there, so that is the Page
- * they mean. Otherwise the first Page on offer, which without the step before it is an error Page --
- * whatever sorts first in a catalog is nobody's idea of a starting point.
+ * The asked-for Page when the Area offers it. Otherwise the Area's landing, the Page at `/`, wherever
+ * it is on offer: it is the front door, and the one Page every Area has. Otherwise where the front door
+ * leads, because that is the answer to the question whoever set the forward just asked: `/` goes there,
+ * so that is the Page they mean. Otherwise the first Page on offer, which without the steps before it
+ * is an error Page -- whatever sorts first in a catalog is nobody's idea of a starting point.
  *
  * One order, one place. The workspace moves the Builder by it and the Page Select displays by it, and
  * if they each kept their own the Select would name one Page while the canvas edited another.
@@ -314,7 +344,9 @@ export function resolvePhiBuilderOfferedPageKey(
 
   return {
     pages,
-    pageKey: findAreaForwardTargetPageKey(state, area, pages)
+    // Only the root the Area serves is left on the list at `/`, and only while it does not forward.
+    pageKey: pages.find((node) => node.storagePath === "/")?.key
+      ?? findAreaForwardTargetPageKey(state, area, pages)
       ?? findAreaNavigationEntryPageKey(state, area, pages)
       ?? resolvePhiBuilderActivePageKey(null, pages),
   };

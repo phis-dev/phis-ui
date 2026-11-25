@@ -7,10 +7,12 @@ import { useSearchParams } from "next/navigation";
 import {
   type PhiBuilderPageCatalogArea,
   findPhiPageNodePath,
-  resolvePhiBuilderActivePageKey,
   resolvePhiBuilderCatalogPathForCatalog,
 } from "../../../../helpers/cms-page-catalog";
-import { resolvePhiBuilderOfferedPageCatalog } from "../offered-page-catalog";
+import {
+  resolvePhiBuilderOfferedPageCatalog,
+  resolvePhiBuilderOfferedPageKey,
+} from "../offered-page-catalog";
 import {
   PHI_BUILDER_AREA_SEARCH_PARAM,
   PHI_BUILDER_PAGE_SEARCH_PARAM,
@@ -124,11 +126,6 @@ export function PhiDeveloperBuilderPagesHeaderSection({
     searchParams.get(PHI_BUILDER_PAGE_SEARCH_PARAM),
   );
   const area = (searchArea ?? currentArea) as PhiBuilderPageCatalogArea;
-  const pageKey =
-    searchPageKey ??
-    (searchArea != null && searchArea !== currentArea
-      ? (resolvePhiBuilderActivePageKey(null, modulePresetPagesByArea[searchArea]) ?? "")
-      : currentPageKey);
   const offeredCatalogState = {
     modulePresetPagesByArea,
     customPages: resolvedCustomPages,
@@ -138,6 +135,12 @@ export function PhiDeveloperBuilderPagesHeaderSection({
     runtimeModuleDefinitions,
     areaRootRoutes,
   };
+  // An Area the address names before the workspace moved to it opens where the Controller will open it.
+  const pageKey =
+    searchPageKey ??
+    (searchArea != null && searchArea !== currentArea
+      ? (resolvePhiBuilderOfferedPageKey(offeredCatalogState, searchArea, null).pageKey ?? "")
+      : currentPageKey);
   const pageTree = resolvePhiBuilderOfferedPageCatalog(offeredCatalogState, area);
   const pageSelectionReady = catalogHydrated && pageCatalogHydratedByArea[area] === true && pageKey.length > 0;
   const selectedPath = pageSelectionReady

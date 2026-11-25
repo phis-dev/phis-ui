@@ -177,8 +177,15 @@ export function applyPhiWorkspaceCatalogPreload(preload: PhiWorkspaceCatalogPrel
      */
     const publicRoutePathsChanged = JSON.stringify(current.publicRoutePaths) !== preload.keys.publicRoutePaths;
     const catalogHydrationChanged = !current.catalogHydrated;
+    /*
+     * The Area's landing, where it has one, rather than the first Page in the catalog -- which is an
+     * error Page as often as not. The Page list decides once the Area's root route is read: a root
+     * that forwards is not on offer there, and the workspace moves on to where it leads.
+     */
+    const areaPages = preload.activeCatalogs.modulePresetPagesByArea[current.area] ?? [];
     const initialPageKey = current.pageKey ||
-      resolvePhiBuilderActivePageKey(null, preload.activeCatalogs.modulePresetPagesByArea[current.area]) || "";
+      areaPages.find((node) => node.storagePath === "/")?.key ||
+      resolvePhiBuilderActivePageKey(null, areaPages) || "";
     const initialPageChanged = initialPageKey !== current.pageKey;
     const nextModuleIdsByArea = { ...(current.runtimeModuleIdsByArea ?? {}) };
     for (const [area, moduleIds] of Object.entries(preload.runtimeModuleIdsByArea)) {

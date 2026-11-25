@@ -46,8 +46,6 @@ import {
 } from "../inspector-actions";
 import {
   createEmptyPhiBuilderModulePresetPagesByArea,
-  resolvePhiBuilderActivePageCatalog,
-  resolvePhiBuilderActivePageKey,
   type PhiPresetPageNode,
 } from "../../../../helpers/cms-page-catalog";
 import { loadPhiBuilderPersistedPageCatalog } from "../page-catalog-client";
@@ -1163,14 +1161,12 @@ function usePhiDeveloperBuilderWorkspaceController(
         }
 
         const nextArea = signal.value;
-        const nextPages = resolvePhiBuilderActivePageCatalog(
-          nextArea,
-          state.modulePresetPagesByArea,
-          state.customPages ?? {},
-          state.persistedPageCatalogByArea,
-        );
-        // The first node that is a Page: with routes under their package the first root node is a folder.
-        const nextPageKey = resolvePhiBuilderActivePageKey(null, nextPages) ?? "";
+        /*
+         * The Page the shared order opens an Area on -- its landing, else where its root leads -- and
+         * not the first Page of its catalog, which is an error Page as often as not. Written to the
+         * address as a page key, it would be read back as the Page somebody asked for.
+         */
+        const nextPageKey = resolvePhiBuilderOfferedPageKey(offeredCatalogState, nextArea, null).pageKey ?? "";
 
         if (typeof pathname === "string") {
           const nextSearchParams = new URLSearchParams(searchParams.toString());

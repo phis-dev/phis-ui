@@ -26,6 +26,17 @@ export function resolvePhiAreaRootRouteNavKey(area: PhiCmsAreaKey) {
   return `${area}:sidebar` as const satisfies `${PhiCmsAreaKey}:${string}`;
 }
 
+/**
+ * The preset key of the forward an Area's base Module stands at `/`.
+ *
+ * Stated once because two sides read it: the descriptor below is declared under it, and the Builder has
+ * to tell this forward apart from a landing standing in the same slot -- with nothing stored, the slot's
+ * applicant decides whether `/` forwards or is a Page somebody authors, and only this preset forwards.
+ */
+export function resolvePhiAreaRootRoutePresetKey(area: PhiCmsAreaKey) {
+  return `${area}-root-page` as const;
+}
+
 export function buildPhiAreaRootRoutePresetDescriptor({
   ownerModuleId,
   area,
@@ -39,7 +50,7 @@ export function buildPhiAreaRootRoutePresetDescriptor({
 }): PhiCmsRoutePresetDescriptor {
   return {
     ownerModuleId,
-    presetKey: `${area}-root-page`,
+    presetKey: resolvePhiAreaRootRoutePresetKey(area),
     presetVersion: 1,
     area,
     title,

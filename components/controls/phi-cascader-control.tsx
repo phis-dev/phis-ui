@@ -179,6 +179,23 @@ function insertCascaderOption(
   });
 }
 
+/** What a level the Cascader made up stands under when it chooses nothing: a folder, as in the Page trees. */
+const PHI_CASCADER_GROUP_ICON = "antd:folder";
+
+/** Every level that holds others and is not an option of its own gets the folder icon. */
+function markCascaderGroups(options: DefaultOptionType[], choosableValues: ReadonlySet<string>) {
+  for (const option of options) {
+    const children = option.children as DefaultOptionType[] | undefined;
+    if (!children?.length) {
+      continue;
+    }
+    if (option.icon == null && !choosableValues.has(String(option.value))) {
+      option.icon = PHI_CASCADER_GROUP_ICON;
+    }
+    markCascaderGroups(children, choosableValues);
+  }
+}
+
 function buildCascaderOptions(
   configuredOptions: readonly PhiCascaderOption[],
   currentValue: string,
@@ -186,9 +203,16 @@ function buildCascaderOptions(
   separator: string,
   rootValue: string,
   normalize: PhiCascaderNormalizeMode,
+  choosableValues: ReadonlySet<string> | null,
 ) {
   const options: DefaultOptionType[] = [];
-  if (allowRoot) {
+  /*
+   * With `select: "options"` (`choosableValues` set) only what the options name is drawn as an entry of
+   * its own. The root and the current value are otherwise added whether or not anybody offered them, and
+   * a root nobody offered stood first in the list as a `/` that a click could not choose.
+   */
+  const offers = (value: string) => choosableValues == null || choosableValues.has(value);
+  if (allowRoot && offers(rootValue)) {
     const configuredRoot = configuredOptions.find((option) =>
       normalizePhiCascaderValue(option.value, { separator, rootValue, normalize }) === rootValue);
     insertCascaderOption(
@@ -205,14 +229,19 @@ function buildCascaderOptions(
     insertCascaderOption(options, option, allowRoot, separator, rootValue, normalize);
   }
 
-  insertCascaderOption(
-    options,
-    { value: currentValue, label: titleizeSegment(currentValue, rootValue) },
-    allowRoot,
-    separator,
-    rootValue,
-    normalize,
-  );
+  if (offers(currentValue)) {
+    insertCascaderOption(
+      options,
+      { value: currentValue, label: titleizeSegment(currentValue, rootValue) },
+      allowRoot,
+      separator,
+      rootValue,
+      normalize,
+    );
+  }
+  if (choosableValues != null) {
+    markCascaderGroups(options, choosableValues);
+  }
   return options;
 }
 
@@ -246,7 +275,8 @@ export function PhiCascaderControl({
   /**
    * What a click may choose. `any` (the default) takes every level, so a path picker can stop at a parent;
    * `options` takes only a value the options name, and a level the Cascader made up from deeper paths is a
-   * group that opens and chooses nothing -- a page picker, whose folders are no Pages.
+   * group that opens and chooses nothing, drawn under a folder icon -- a page picker, whose folders are no
+   * Pages. Neither the root nor the current value is drawn there unless the options name it.
    */
   select?: PhiCascaderSelect;
   separator?: string;
@@ -281,11 +311,6 @@ export function PhiCascaderControl({
    */
   const [open, setOpen] = useState(false);
   const keepOpen = useRef(false);
-  const cascaderOptions = useMemo(
-    () => buildCascaderOptions(options ?? [], normalizedValue, allowRoot, resolvedSeparator, resolvedRootValue, normalize),
-    [allowRoot, normalize, normalizedValue, options, resolvedRootValue, resolvedSeparator],
-  );
-  const cascaderValue = findOptionPath(cascaderOptions, normalizedValue, resolvedSeparator, resolvedRootValue) ?? [];
   const choosableValues = useMemo(
     () => new Set((options ?? []).map((option) => normalizePhiCascaderValue(option.value, {
       separator: resolvedSeparator,
@@ -294,6 +319,19 @@ export function PhiCascaderControl({
     }))),
     [normalize, options, resolvedRootValue, resolvedSeparator],
   );
+  const cascaderOptions = useMemo(
+    () => buildCascaderOptions(
+      options ?? [],
+      normalizedValue,
+      allowRoot,
+      resolvedSeparator,
+      resolvedRootValue,
+      normalize,
+      select === "options" ? choosableValues : null,
+    ),
+    [allowRoot, choosableValues, normalize, normalizedValue, options, resolvedRootValue, resolvedSeparator, select],
+  );
+  const cascaderValue = findOptionPath(cascaderOptions, normalizedValue, resolvedSeparator, resolvedRootValue) ?? [];
 
   function commit(nextValue: string) {
     const normalizedNextValue = normalizePhiCascaderValue(nextValue, {

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { PHI_BUILDER_AREA_KEYS, type PhiBuilderAreaKey } from "../../../constants/cms-areas";
 import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "../public/ids";
+import { PHI_APP_RUNTIME_MODULE_ID } from "../app/ids";
+import { resolvePhiAreaRootRoutePresetKey } from "../area-root-route";
 import type { PhiPresetPageNode } from "../../../helpers/cms-page-catalog";
 import type { PhiAreaRootRoute } from "../../../helpers/cms-area-config";
 import type { PhiRuntimeModuleId } from "../../../types";
@@ -9,6 +11,7 @@ import { createPhiPageReference } from "../../../types/references";
 import { createPhiPresetCmsPageId } from "../../../types/cms-instance-id";
 import {
   resolvePhiBuilderOfferedPageCatalog,
+  resolvePhiBuilderOfferedPageKey,
   resolvePhiBuilderOfferedPageKeyFromCatalogPath,
   type PhiBuilderOfferedCatalogState,
 } from "./offered-page-catalog";
@@ -249,5 +252,44 @@ describe("the Page a path in the Select stands for", () => {
       "public",
       "/terms",
     )).toBe(TERMS.key);
+  });
+});
+
+/**
+ * An Area that stored nothing about its root, which is every Area until somebody answers in `/shells`.
+ *
+ * Nothing stored is not a forward. Public's root is its Welcome Page then -- or the landing a Site
+ * package offers -- and it is the Page the Builder opens on; read as a forward, it was missing from the
+ * Select and the workspace opened on whatever sorted first, an error Page. Only an Area whose root is
+ * the base Module's forward keeps `/` off the list.
+ */
+describe("the root of an Area that stored nothing", () => {
+  it("is on offer in Public, and is where the Builder opens", () => {
+    const state = workspace({ stored: null });
+    expect(offeredPaths(state)).toContain("/");
+    expect(resolvePhiBuilderOfferedPageKey(state, "public", null).pageKey).toBe(HOME.key);
+  });
+
+  it("is the landing a switched-on package offers", () => {
+    const state = workspace({ stored: null, pages: [HOME, TERMS, OFFERED], moduleIds: [OFFEROR_ID] });
+    expect(offeredKeysAt(state, "/")).toEqual([OFFERED.key]);
+    expect(resolvePhiBuilderOfferedPageKey(state, "public", null).pageKey).toBe(OFFERED.key);
+  });
+
+  it("still yields to the Page somebody asked for", () => {
+    expect(resolvePhiBuilderOfferedPageKey(workspace({ stored: null }), "public", TERMS.key).pageKey)
+      .toBe(TERMS.key);
+  });
+
+  it("is not on offer where it is the base Module's forward", () => {
+    const forward = presetPage(PHI_APP_RUNTIME_MODULE_ID, resolvePhiAreaRootRoutePresetKey("app"), "/");
+    const dashboard = presetPage(PHI_APP_RUNTIME_MODULE_ID, "app-dashboard-page", "/phis/ui/dashboard");
+    const state: PhiBuilderOfferedCatalogState = {
+      ...workspace({ stored: null }),
+      modulePresetPagesByArea: { ...workspace({ stored: null }).modulePresetPagesByArea, app: [forward, dashboard] },
+      areaRootRoutes: { app: null },
+    };
+    expect(resolvePhiBuilderOfferedPageCatalog(state, "app").map((node) => node.key)).toEqual([dashboard.key]);
+    expect(resolvePhiBuilderOfferedPageKey(state, "app", null).pageKey).toBe(dashboard.key);
   });
 });
