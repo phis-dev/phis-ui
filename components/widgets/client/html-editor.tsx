@@ -25,7 +25,6 @@ import {
   FORMAT_ELEMENT_COMMAND,
   FORMAT_TEXT_COMMAND,
   REDO_COMMAND,
-  SELECTION_CHANGE_COMMAND,
   UNDO_COMMAND,
   type BaseSelection,
   type ElementFormatType,
@@ -498,18 +497,16 @@ function PhiHtmlWidgetEditorBridgePlugin({
       },
     });
 
+    /*
+     * Every commit reaches the update listener, a selection-only one included, and it reads the state
+     * just committed. `SELECTION_CHANGE_COMMAND` is no place for this: since Lexical 0.52 it runs inside
+     * the pending update, before reconciliation, where `editor.getEditorState()` is still the previous
+     * commit -- the toolbar would show the formats of the caret's last position, one move behind.
+     */
     return mergeRegister(
       editor.registerUpdateListener(() => {
         refreshBridgeState();
       }),
-      editor.registerCommand(
-        SELECTION_CHANGE_COMMAND,
-        () => {
-          refreshBridgeState();
-          return false;
-        },
-        COMMAND_PRIORITY_LOW,
-      ),
       editor.registerCommand(
         CAN_UNDO_COMMAND,
         (canUndo) => {

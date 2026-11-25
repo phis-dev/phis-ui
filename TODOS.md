@@ -13,9 +13,9 @@ and `scripts/validate-todos-wants.ts` refuses the entry once the catalog has one
   and only a Core that renders variant 11 serves the picture; an older Core answers 404 for it, and a
   preview shows the title and description without a picture. Release contracts, then Core, then `@phis/ui`.
 
-- **Dependency pins from the phisys clean-install test (2026-11-25).** `sanitize-html` is pinned to 2.17.7,
-  and a fresh Site's `npm audit` lists moderate advisories fixed in 2.18.0 (GHSA-x3q4-9hxx-gx8m,
-  GHSA-374f-7chj-9948, GHSA-cv27-6wvh-8x7j); raise it together with `@phis/server` (package update round 1).
+- **`sanitize-html` 2.18.2 reaches Sites with this release.** A fresh Site's `npm audit` listed moderate
+  advisories fixed in 2.18.0 (GHSA-x3q4-9hxx-gx8m, GHSA-374f-7chj-9948, GHSA-cv27-6wvh-8x7j) against the
+  2.17.7 pin; this package and `@phis/server` pin 2.18.2 since package update round 1 (2026-11-25).
 - **`phis.testedWith` reaches Sites with this release.** The peer range of `next` is `^16.4.6` now, and
   `package.json#phis.testedWith` ships in the manifest; 0.8.1 has neither, so until a release carries the
   field `phis init` pins a new Site to the set phis-server recorded when its CLI was built. A Server
