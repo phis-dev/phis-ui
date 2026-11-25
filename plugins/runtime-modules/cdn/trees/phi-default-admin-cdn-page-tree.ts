@@ -221,13 +221,18 @@ export async function buildPhiDefaultAdminCdnPageTree({
         config: {
           source,
           presentation: {
-            // Fixed, so a long file name and the checksum are cut to their columns and said whole on hover.
-            layout: { mode: "fixed", overflowX: "auto" },
+            /*
+             * Auto, so every column is as wide as what stands in it and the file name takes the rest, as in
+             * the other staff Tables. A fixed layout held each column at a width chosen once: a version or
+             * a name longer than that was cut, a short one left its column half empty, and the sum ran past
+             * the page into a sideways scroll under the sticky actions.
+             */
+            layout: { mode: "auto", overflowX: "auto" },
             columns: [
-              { key: "name", fieldKey: "name", title: labels.columns.name, sortable: true, ellipsis: true, sizing: { mode: "fixed", width: 140 }, sticky: "left" },
-              { key: "version", fieldKey: "version", title: labels.columns.version, ellipsis: true, sizing: { mode: "fixed", width: 110 } },
-              { key: "fileName", fieldKey: "fileName", title: labels.columns.file, ellipsis: true, sizing: { mode: "fill", minWidth: 200 } },
-              { key: "size", fieldKey: "sizeLabel", title: labels.columns.size, align: "right", sizing: { mode: "fixed", width: 96 } },
+              { key: "name", fieldKey: "name", title: labels.columns.name, sortable: true, sizing: { mode: "content" }, sticky: "left" },
+              { key: "version", fieldKey: "version", title: labels.columns.version, sizing: { mode: "content" } },
+              { key: "fileName", fieldKey: "fileName", title: labels.columns.file, sizing: { mode: "fill", minWidth: 200 } },
+              { key: "size", fieldKey: "sizeLabel", title: labels.columns.size, align: "right", sizing: { mode: "content" } },
               {
                 key: "storage",
                 fieldKey: "storage",
@@ -236,7 +241,7 @@ export async function buildPhiDefaultAdminCdnPageTree({
                 renderer: "badge",
                 valueMap: labels.storage,
                 tagColorMap: storageColors,
-                sizing: { mode: "fixed", width: 96 },
+                sizing: { mode: "content" },
               },
               {
                 key: "platform",
@@ -244,17 +249,24 @@ export async function buildPhiDefaultAdminCdnPageTree({
                 title: labels.columns.platform,
                 renderer: "tags",
                 valueMap: platformNames,
-                sizing: { mode: "fixed", width: 160 },
+                /*
+                 * Tags wrap where their column is narrower than them, and a `content` column is given no
+                 * more than its narrowest: this one shares the rest with the file, never below "Windows x64".
+                 */
+                sizing: { mode: "fill", minWidth: 128 },
               },
               {
-                // Cut to the column's width; the cell holds the whole checksum, so copying it copies all of it.
+                /*
+                 * Hidden: a checksum is 64 characters without a place to break, and only a fixed layout may
+                 * cut a column short. The file's details say it whole; the Builder can show it here.
+                 */
                 key: "sha256",
                 fieldKey: "sha256",
                 title: labels.columns.sha256,
                 description: labels.columns.sha256Hint,
                 renderer: "code",
-                ellipsis: true,
-                sizing: { mode: "fixed", width: 120 },
+                hidden: true,
+                sizing: { mode: "content" },
               },
               {
                 key: "state",
@@ -263,10 +275,10 @@ export async function buildPhiDefaultAdminCdnPageTree({
                 renderer: "badge",
                 valueMap: labels.states,
                 tagColorMap: stateColors,
-                sizing: { mode: "fixed", width: 116 },
+                sizing: { mode: "content" },
               },
-              { key: "origin", fieldKey: "origin", title: labels.columns.origin, valueMap: originNames, ellipsis: true, sizing: { mode: "fixed", width: 140 } },
-              { key: "publishedAt", fieldKey: "publishedAt", title: labels.columns.published, renderer: "datetime", sortable: true, sizing: { mode: "fixed", width: 180 } },
+              { key: "origin", fieldKey: "origin", title: labels.columns.origin, valueMap: originNames, sizing: { mode: "content" } },
+              { key: "publishedAt", fieldKey: "publishedAt", title: labels.columns.published, renderer: "datetime", sortable: true, sizing: { mode: "content" } },
             ],
             emptyState: { title: labels.emptyTitle, description: labels.emptyText },
             footer: {

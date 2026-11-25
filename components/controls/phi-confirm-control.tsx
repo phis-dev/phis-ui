@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 import { Popconfirm } from "antd";
 
+import { PHI_SPACE } from "../../theme/antd-css-var-contract";
+import { PHI_LAYOUT } from "../../theme/phi-tokens";
 import type { PhiControlSize } from "../../types/control";
 import type { PhiButtonType } from "./phi-button-types";
 import { PhiButtonControl } from "./phi-button-control";
@@ -43,6 +45,20 @@ export type PhiConfirmControlTrigger = {
   size?: PhiControlSize;
 };
 
+/*
+ * How wide a confirmation gets: a confirmation's measure (`contentMaxNarrow`), and never more than the
+ * window less its inset on both sides.
+ *
+ * Ant Design gives a Popconfirm no width of its own, so its text ran on as one line until the window
+ * stopped it -- a sentence of a few words drew a box across the whole page, and placed beside its trigger
+ * that box reached past the window's edge. A file name, a key or an address has no space to break at, so
+ * the text may also break inside a word.
+ */
+const PHI_CONFIRM_CONTAINER_STYLE = {
+  maxWidth: `min(${PHI_LAYOUT.contentMaxNarrow}px, calc(100vw - 2 * ${PHI_SPACE.base}))`,
+  overflowWrap: "anywhere",
+} as const;
+
 export function PhiConfirmControl({
   title,
   description,
@@ -63,6 +79,7 @@ export function PhiConfirmControl({
       okText={confirmLabel}
       cancelText={cancelLabel}
       okButtonProps={danger ? { danger: true } : undefined}
+      styles={{ container: PHI_CONFIRM_CONTAINER_STYLE }}
       disabled={disabled}
       placement={placement}
       onConfirm={onConfirm}

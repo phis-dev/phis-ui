@@ -15,6 +15,8 @@ type PhiConfirmDialogRequest = {
   onCancel?: () => void;
 };
 
+const PHI_CONFIRM_DIALOG_CONTENT_STYLE = { overflowWrap: "anywhere" } as const;
+
 /**
  * A confirmation that has nothing to hang on.
  *
@@ -96,7 +98,8 @@ export function usePhiConfirmDialog() {
       ]}
       onDismiss={cancel}
     >
-      {request?.content ?? null}
+      {/* A file name, a key or an address has no space to break at, and would push past the Dialog's edge. */}
+      {request?.content == null ? null : <div style={PHI_CONFIRM_DIALOG_CONTENT_STYLE}>{request.content}</div>}
     </PhiDialogControl>
   );
 
