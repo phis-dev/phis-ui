@@ -1658,9 +1658,13 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                     style={{ minWidth: 0 }}
                     {...{ [PHI_VISUAL_ANCHOR_PART_ATTRIBUTE]: "gradients" }}
                   >
-                    <PhiTypographyControl strong style={{ width: sectionLabelWidth }}>
-                      Gradients
-                    </PhiTypographyControl>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: PHI_SPACE.xs, width: sectionLabelWidth }}>
+                      <PhiTypographyControl strong>Gradients</PhiTypographyControl>
+                      <PhiThemeSectionHint
+                        description={<>Three runs Buttons, badges, tags and switches can be filled with. {previewMode === "dark" ? "Dark" : "Light"} mode;
+                          a slot left alone follows the palette&apos;s colours.</>}
+                      />
+                    </span>
                     <PhiFlexControl gap={clientToken.paddingXXS} aria-hidden>
                       {PHI_THEME_GRADIENT_KEYS.map((key) => (
                         <span
@@ -1679,10 +1683,6 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                 ),
                 children: (
                   <PhiFlexControl vertical gap={clientToken.padding}>
-                    <PhiTypographyControl type="secondary">
-                      Three runs Buttons, badges, tags and switches can be filled with. {previewMode === "dark" ? "Dark" : "Light"} mode;
-                      a slot left alone follows the palette&apos;s colours.
-                    </PhiTypographyControl>
                     {PHI_THEME_GRADIENT_KEYS.map((key, index) => {
                       const gradient = gradients[key];
                       // The run the author stated, and the text tone they chose -- either may stand alone.
@@ -2119,12 +2119,14 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
             },
             {
               key: "buttonShadow",
-              label: <PhiTypographyControl strong>Button Shadow</PhiTypographyControl>,
+              label: (
+                <PhiThemeSectionTitle
+                  title="Button Shadow"
+                  description="Under each kind of Button. Theme keeps the tinted line; applies to both modes."
+                />
+              ),
               children: (
                 <PhiFlexControl vertical gap={clientToken.paddingSM}>
-                  <PhiTypographyControl type="secondary">
-                    Under each kind of Button. Theme keeps the tinted line; applies to both modes.
-                  </PhiTypographyControl>
                   {PHI_THEME_BUTTON_SHADOW_KINDS.map((item) => (
                     <PhiSegmentedControl<PhiThemeButtonShadowChoice>
                       key={item.key}
@@ -2136,12 +2138,10 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                     />
                   ))}
                   <PhiDividerControl style={{ marginBlock: 0 }} />
-                  <PhiTypographyControl type="secondary">
-                    Fills every primary Button with one of the Theme&apos;s gradients (Color tab). A Button can still
-                    choose its own with the Gradient variant.
-                  </PhiTypographyControl>
                   <PhiSelectControl<PhiThemeGradientKey | "none">
                     label="Primary fill"
+                    description={"Fills every primary Button with one of the Theme's gradients (Color tab). A Button can "
+                      + "still choose its own with the Gradient variant."}
                     value={readPhiThemeGradientKey(state.draft.buttons?.primaryGradient) ?? "none"}
                     options={[
                       { value: "none", label: "Colour" },
@@ -2156,12 +2156,14 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
             },
             {
               key: "surfaceShadow",
-              label: <PhiTypographyControl strong>Surface Shadow</PhiTypographyControl>,
+              label: (
+                <PhiThemeSectionTitle
+                  title="Surface Shadow"
+                  description="How deep the Soft and Strong shadow of cards, layouts and pictures are; each mode has its own."
+                />
+              ),
               children: (
                 <PhiFlexControl vertical gap={clientToken.paddingSM}>
-                  <PhiTypographyControl type="secondary">
-                    How deep the Soft and Strong shadow of cards, layouts and pictures are; each mode has its own.
-                  </PhiTypographyControl>
                   {PHI_SURFACE_SHADOW_STEPS.map((step) => (
                     <PhiSegmentedControl<PhiSurfaceShadowDepth>
                       key={step}
@@ -2177,12 +2179,14 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
             },
             {
               key: "externalLinks",
-              label: <PhiTypographyControl strong>External Links</PhiTypographyControl>,
+              label: (
+                <PhiThemeSectionTitle
+                  title="External Links"
+                  description="An arrow after a link in text that leads to another site"
+                />
+              ),
               children: (
                 <PhiFlexControl align="center" justify="space-between" gap={clientToken.paddingSM} wrap="wrap">
-                  <PhiTypographyControl type="secondary">
-                    An arrow after a link in text that leads to another site
-                  </PhiTypographyControl>
                   <PhiSwitchControl
                     checked={readPhiThemeExternalLinkMark(state.draft.links)}
                     checkedLabel="On"
@@ -2212,7 +2216,21 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
             },
             {
               key: "fontFamily",
-              label: <PhiTypographyControl strong>Font Family</PhiTypographyControl>,
+              /*
+               * A typeface from the library is served in subsets cut to the characters a page uses, which
+               * changes the file. Some commercial webfont licences forbid exactly that, and the choice of a
+               * font is where an author can still act on it -- so the title says it while the library offers
+               * any.
+               */
+              label: (
+                <PhiThemeSectionTitle
+                  title="Font Family"
+                  description={siteFontAssets.options.length > 0
+                    ? "Typefaces from the media library are delivered as subsets, which modifies the font file. "
+                      + "Check that the font's licence permits subsetting before using it."
+                    : undefined}
+                />
+              ),
               children: (
                 <PhiFlexControl vertical gap={clientToken.paddingXS}>
                   {fontSlots.map((item) => (
@@ -2238,17 +2256,6 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                       />
                     </PhiFlexControl>
                   ))}
-                  {siteFontAssets.options.length > 0 ? (
-                    /*
-                      * A typeface from the library is served in subsets cut to the characters a page uses,
-                      * which changes the file. Some commercial webfont licences forbid exactly that, and the
-                      * choice of a font is where an author can still act on it.
-                      */
-                    <PhiTypographyControl type="secondary" style={{ fontSize: clientToken.fontSizeSM }}>
-                      Typefaces from the media library are delivered as subsets, which modifies the font file.
-                      Check that the font&apos;s licence permits subsetting before using it.
-                    </PhiTypographyControl>
-                  ) : null}
                   <PhiDividerControl style={{ marginBlock: clientToken.paddingXXS }} />
                   {/*
                     * Which of the families above the page's headings wear. Only `h1` to `h3` follow it:
@@ -2272,21 +2279,24 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
               children: (
                 <PhiFlexControl vertical gap={clientToken.paddingXS}>
                   <PhiFlexControl align="center" gap={clientToken.paddingSM} wrap="nowrap">
-                    <PhiTypographyControl style={{ flex: `0 0 ${fieldLabelWidth}px` }}>Font size</PhiTypographyControl>
+                    <PhiTypographyControl style={{ flex: `0 0 ${fieldLabelWidth}px` }}>
+                      Font size <PhiDescriptionHint description="The seed every other type size is derived from." />
+                    </PhiTypographyControl>
                     <PhiTypographyControl code>{baseFontSize}px</PhiTypographyControl>
                   </PhiFlexControl>
-                  <PhiTypographyControl type="secondary">
-                    The seed every other type size is derived from.
-                  </PhiTypographyControl>
                 </PhiFlexControl>
               ),
             },
             {
               key: "wireframe",
-              label: <PhiTypographyControl strong>Wireframe</PhiTypographyControl>,
+              label: (
+                <PhiThemeSectionTitle
+                  title="Wireframe"
+                  description="Dividing lines in dialogs and popovers, outlined steps and radios"
+                />
+              ),
               children: (
                 <PhiFlexControl align="center" justify="space-between" gap={clientToken.paddingSM} wrap="wrap">
-                  <PhiTypographyControl type="secondary">Dividing lines in dialogs and popovers, outlined steps and radios</PhiTypographyControl>
                   <PhiSwitchControl
                     checked={wireframe}
                     checkedLabel="On"
@@ -2307,7 +2317,12 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
               children: (
                 <PhiFlexControl vertical gap={clientToken.paddingXS}>
                   <PhiFlexControl align="center" gap={clientToken.paddingSM} wrap="nowrap">
-                    <PhiTypographyControl style={{ flex: `0 0 ${fieldLabelWidth}px` }}>Maximum</PhiTypographyControl>
+                    <PhiTypographyControl style={{ flex: `0 0 ${fieldLabelWidth}px` }}>
+                      Maximum <PhiDescriptionHint
+                        description={`How wide a Page gets on a wide screen. At least ${PHI_CONTAINER_BREAKPOINT_REGION}px, `
+                          + "the width from which a Region counts as wide."}
+                      />
+                    </PhiTypographyControl>
                     <PhiNumberControl
                       prefix="px"
                       value={pageMax}
@@ -2316,9 +2331,6 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                       onChange={(next) => updateToken({ pageMax: next == null ? undefined : next })}
                     />
                   </PhiFlexControl>
-                  <PhiTypographyControl type="secondary">
-                    How wide a Page gets on a wide screen. At least {PHI_CONTAINER_BREAKPOINT_REGION}px, the width from which a Region counts as wide.
-                  </PhiTypographyControl>
                 </PhiFlexControl>
               ),
             },
@@ -2330,7 +2342,13 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                * states its own padding keeps it.
                */
               key: "pagePadding",
-              label: <PhiTypographyControl strong>Page Padding</PhiTypographyControl>,
+              label: (
+                <PhiThemeSectionTitle
+                  title="Page Padding"
+                  description={"The default of a Page that does not set its own, in Public or in App and the staff Areas: "
+                    + "a phone below 768px, a tablet below 1200px."}
+                />
+              ),
               children: (
                 <PhiFlexControl vertical gap={clientToken.paddingXS}>
                   <PhiSegmentedControl<(typeof PHI_THEME_PAGE_PADDING_SCOPES)[number]>
@@ -2354,9 +2372,6 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                       return [`${pagePaddingScope}${side}${pagePaddingBand}`, value == null ? undefined : value];
                     })))}
                   />
-                  <PhiTypographyControl type="secondary">
-                    The default of a Page that does not set its own, in Public or in App and the staff Areas: a phone below 768px, a tablet below 1200px.
-                  </PhiTypographyControl>
                 </PhiFlexControl>
               ),
             },
@@ -2371,7 +2386,9 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
               children: (
                 <PhiFlexControl vertical gap={clientToken.paddingXS}>
                   <PhiFlexControl align="center" gap={clientToken.paddingSM} wrap="nowrap">
-                    <PhiTypographyControl style={{ flex: `0 0 ${fieldLabelWidth}px` }}>Gap</PhiTypographyControl>
+                    <PhiTypographyControl style={{ flex: `0 0 ${fieldLabelWidth}px` }}>
+                      Gap <PhiDescriptionHint description="Between the rows and columns of a Layout that does not set its own gap." />
+                    </PhiTypographyControl>
                     <PhiSelectControl<PhiSpacingScaleKey>
                       ariaLabel="Layout gap"
                       size="medium"
@@ -2383,9 +2400,6 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                       })}
                     />
                   </PhiFlexControl>
-                  <PhiTypographyControl type="secondary">
-                    Between the rows and columns of a Layout that does not set its own gap.
-                  </PhiTypographyControl>
                 </PhiFlexControl>
               ),
             },
@@ -2471,21 +2485,30 @@ function clearThemeRootSurface(
 }
 
 /**
- * A Brand section's title with its description behind (i), as a CollapsibleLayout panel title carries
- * one. The hint sits in the header, and a header folds its section: reading the hint must not open or
- * close what it describes, by pointer or by key.
+ * A Theme section's description behind (i) in its title, as a CollapsibleLayout panel title carries one;
+ * the accordion these sections stand in has no description of its own. The hint sits in the header, and
+ * a header folds its section: reading the hint must not open or close what it describes, by pointer or
+ * by key.
  */
-function PhiBrandSectionTitle({ title, description }: { title: string; description: ReactNode }) {
+function PhiThemeSectionHint({ description }: { description: ReactNode }) {
+  return (
+    <span
+      style={{ display: "inline-flex" }}
+      onClick={(event) => event.stopPropagation()}
+      onKeyDown={(event) => event.stopPropagation()}
+    >
+      <PhiDescriptionHint description={description} />
+    </span>
+  );
+}
+
+/** A Theme section's title with its description behind (i); see `PhiThemeSectionHint`. */
+function PhiThemeSectionTitle({ title, description }: { title: string; description?: ReactNode }) {
+  if (description == null) return <PhiTypographyControl strong>{title}</PhiTypographyControl>;
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: PHI_SPACE.xs }}>
       <PhiTypographyControl strong>{title}</PhiTypographyControl>
-      <span
-        style={{ display: "inline-flex" }}
-        onClick={(event) => event.stopPropagation()}
-        onKeyDown={(event) => event.stopPropagation()}
-      >
-        <PhiDescriptionHint description={description} />
-      </span>
+      <PhiThemeSectionHint description={description} />
     </span>
   );
 }
@@ -2914,7 +2937,7 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
             {
               key: "wordmark",
               label: (
-                <PhiBrandSectionTitle
+                <PhiThemeSectionTitle
                   title="Wordmark"
                   description={showsWordmark
                     ? <>The Site name as it is set. One part per colour: a two-tone name is one word
@@ -3113,7 +3136,7 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                */
               key: "share",
               label: (
-                <PhiBrandSectionTitle
+                <PhiThemeSectionTitle
                   title="Link preview"
                   description={"The picture a shared link shows where its Page states none, cut to 1200 x 630 "
                     + "around its focus. Only a publicly delivered picture can be chosen."}
