@@ -61,6 +61,11 @@ export const PHI_ASSET_METADATA_FORM_DESCRIPTOR = {
       label: label("focalRectLabel", "Focal rectangle"),
     },
   ],
+  /*
+   * Tracks of its own, against the house columns: this Form stands in the Asset inspector Drawer, 377px
+   * less the Collapsible's inset, which is `compact` -- where the default stacks its labels -- and an
+   * inspector keeps its labels beside the fields, as the Variants row above it does.
+   */
   layout: {
     gap: { compact: "sm", medium: "base" },
     label: {
@@ -102,18 +107,9 @@ export const PHI_ASSET_FOLDER_FORM_DESCRIPTOR = {
       config: { allowRoot: true, allowClear: false, separator: "/", rootValue: "/", normalize: "raw" },
     },
   ],
+  // The house columns (`PHI_FORM_DEFAULT_LAYOUT`), like every other side-label Form.
   layout: {
     gap: { compact: "sm", medium: "base" },
-    label: {
-      compact: { start: 1, end: 9 },
-      medium: { start: 1, end: 9 },
-      wide: { start: 1, end: 9 },
-    },
-    control: {
-      compact: { start: 9, end: 25 },
-      medium: { start: 9, end: 25 },
-      wide: { start: 9, end: 25 },
-    },
   },
 } as const satisfies PhiFormDescriptor;
 

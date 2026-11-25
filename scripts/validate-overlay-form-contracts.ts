@@ -296,6 +296,9 @@ assert.throws(
 );
 assert.deepEqual(PHI_ASSET_METADATA_FORM_DESCRIPTOR.layout.label.compact, { start: 1, end: 9 });
 assert.deepEqual(PHI_ASSET_METADATA_FORM_DESCRIPTOR.layout.control.compact, { start: 9, end: 25 });
+// The folder dialog's Form takes the house columns: no tracks of its own, so the contracts' default decides.
+assert.equal("label" in PHI_ASSET_FOLDER_FORM_DESCRIPTOR.layout, false);
+assert.equal("control" in PHI_ASSET_FOLDER_FORM_DESCRIPTOR.layout, false);
 const assetFolderField = PHI_ASSET_METADATA_FORM_DESCRIPTOR.fields.find((field) => field.key === "folderId");
 assert.equal(assetFolderField?.config?.allowClear, true);
 const assetFolderParentField = PHI_ASSET_FOLDER_FORM_DESCRIPTOR.fields.find((field) => field.key === "parentPath");
