@@ -130,7 +130,8 @@ export type PhiCmsConfigFieldChoicePresentation =
  * `inline` stacks the entries down the Inspector column, which is right for as long as an entry is two
  * or three short fields.
  *
- * `overlay` leaves only what is in the collection at the field's place and opens an Overlay to edit it.
+ * `overlay` leaves a row at the field's place -- its label and an Edit button -- and opens an Overlay to
+ * edit the entries; what the collection holds is read there, not in the Inspector column.
  * That is not a matter of taste: the Inspector column is narrow, and an entry carrying half a dozen
  * fields -- a table column with a key, a provider field, a title, a renderer, a width, an alignment --
  * becomes a column of truncated Controls in it. Which of the two a collection needs is known by the

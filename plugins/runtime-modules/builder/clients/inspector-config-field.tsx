@@ -976,24 +976,21 @@ function PhiInspectorCollectionFieldControl({
    * has its Cancel and Apply because it edits rows with identities and a validity rule of their own and
    * has something to hold back; here a second copy of the value would only be a second truth, and the
    * Builder's undo is already the way back. No actions, therefore, and so no Footer either.
+   *
+   * At the field's place it is a row like every other one: the field's words, and beside them the
+   * button that opens the Overlay, drawn at the Inspector's size. What the collection holds is read in
+   * the Overlay; a list of names squeezed into the control column said less than the Overlay does and
+   * pushed the button out of line with the rows around it.
    */
-  return renderPhiInspectorConfigFieldBlock(
+  return renderPhiInspectorConfigFieldControl(
     field,
     <>
-      <PhiFlexControl align="center" justify="space-between" gap={8} style={{ width: "100%", minWidth: 0 }}>
-        <PhiTypographyControl type="secondary" ellipsis style={{ minWidth: 0 }}>
-          {items.length === 0
-            ? field.emptyLabel ?? labels.noItems
-            : items.map(readItemLabel).join(", ")}
-        </PhiTypographyControl>
-        <PhiButtonControl
-          label={field.editLabel ?? labels.edit}
-          icon={<PhiIcon name="edit" />}
-          size="small"
-          disabled={disabled}
-          onClick={() => setOverlayOpen(true)}
-        />
-      </PhiFlexControl>
+      <PhiButtonControl
+        label={field.editLabel ?? labels.edit}
+        icon={<PhiIcon name="edit" />}
+        disabled={disabled}
+        onClick={() => setOverlayOpen(true)}
+      />
       <PhiDialogControl
         open={overlayOpen}
         title={field.label}
