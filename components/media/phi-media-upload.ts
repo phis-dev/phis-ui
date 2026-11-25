@@ -12,6 +12,7 @@ import {
   runPhiMediaUploadSession,
   type PhiMediaUploadSessionRunner,
   type PhiMediaUploadInitOptions,
+  type PhiUploadPhase,
 } from "./media-upload-flow";
 import { readPhiMediaUploadRefusalMessage } from "./media-upload-refusals";
 
@@ -127,6 +128,8 @@ type PhiMediaUploadItem = {
   localId: string;
   file: File;
   progress: number;
+  /** Where a file on its way stands (`PhiUploadPhase`); null before the session says. */
+  phase: PhiUploadPhase | null;
   status: "uploading" | "done" | "error";
   error: string | null;
   assetId: number | null;
@@ -154,7 +157,7 @@ type PhiMediaUploadItem = {
  * upload settled -- a form field that receives the Asset id in `onUploaded` -- reads it to hold back
  * whatever would act on the incomplete value.
  */
-export function usePhiMediaUpload<TAsset extends { id: number } = { id: number }>(input: {
+export function usePhiMediaUpload<TAsset extends { id?: unknown } = { id: number }>(input: {
   labels: PhiMediaUploadLabels;
   acceptance?: PhiMediaUploadAcceptance;
   initOptions?: PhiMediaUploadInitOptions;
@@ -172,8 +175,17 @@ export function usePhiMediaUpload<TAsset extends { id: number } = { id: number }
    */
   onUploaded?: (asset: TAsset, file: File) => void | Promise<void>;
   onRejected?: (message: string, file: File) => void;
+  /**
+   * The sentence a failure is shown with, for a runner whose target words its own refusals -- Core's CDN
+   * routes answer `{ error, message }` in a person's words. Null falls back to the Media refusals.
+   */
+  readError?: (error: unknown) => string | null;
 }) {
-  const { labels, acceptance, initOptions, onUploaded, onRejected } = input;
+  const { labels, acceptance, initOptions, onUploaded, onRejected, readError } = input;
+  const readFailure = useCallback(
+    (error: unknown) => readError?.(error) ?? readPhiMediaUploadErrorMessage(error, labels),
+    [labels, readError],
+  );
   const runSession = input.runSession
     ?? (runPhiMediaUploadSession as unknown as (...args: Parameters<PhiMediaUploadSessionRunner>) => Promise<{ asset: TAsset }>);
   const [items, setItems] = useState<readonly PhiMediaUploadItem[]>([]);
@@ -210,6 +222,7 @@ export function usePhiMediaUpload<TAsset extends { id: number } = { id: number }
       localId,
       file,
       progress: 0,
+      phase: null,
       status: "uploading",
       error: null,
       assetId: null,
@@ -225,13 +238,14 @@ export function usePhiMediaUpload<TAsset extends { id: number } = { id: number }
         (progress) => patch(localId, { progress }),
         fileInitOptions ?? initOptions,
         controller.signal,
+        (phase) => patch(localId, { phase }),
       ));
     } catch (error) {
       if (controller.signal.aborted || isPhiMediaUploadCancelled(error)) {
         setItems((current) => current.filter((item) => item.localId !== localId));
         return null;
       }
-      const message = readPhiMediaUploadErrorMessage(error, labels);
+      const message = readFailure(error);
       patch(localId, { progress: 100, status: "error", error: message });
       onRejected?.(message, file);
       return null;
@@ -240,17 +254,17 @@ export function usePhiMediaUpload<TAsset extends { id: number } = { id: number }
     }
     // Stopped while finalize was answering: the Asset exists, but nobody is waiting to enter it.
     if (controller.signal.aborted) return null;
-    patch(localId, { progress: 100, status: "done", assetId: asset.id });
+    patch(localId, { progress: 100, status: "done", assetId: typeof asset.id === "number" ? asset.id : null });
     try {
       await onUploaded?.(asset, file);
     } catch (error) {
-      const message = readPhiMediaUploadErrorMessage(error, labels);
+      const message = readFailure(error);
       patch(localId, { status: "error", error: message });
       onRejected?.(message, file);
       return null;
     }
     return asset;
-  }, [acceptance, initOptions, labels, onRejected, onUploaded, patch, runSession]);
+  }, [acceptance, initOptions, labels, onRejected, onUploaded, patch, readFailure, runSession]);
 
   const upload = useCallback(
     (file: File, fileInitOptions?: PhiMediaUploadInitOptions) => run(file, undefined, fileInitOptions),
@@ -262,8 +276,9 @@ export function usePhiMediaUpload<TAsset extends { id: number } = { id: number }
     return failed ? run(failed.file, localId, failed.initOptions) : Promise.resolve(null);
   }, [items, run]);
 
-  const cancel = useCallback(() => {
-    for (const controller of running.current) controller.abort();
+  /** Stops what is on its way; `reason` reaches the runner as the signal's (a target may read it). */
+  const cancel = useCallback((reason?: unknown) => {
+    for (const controller of running.current) controller.abort(reason);
   }, []);
   const reset = useCallback(() => setItems([]), []);
   const uploading = items.some((item) => item.status === "uploading");

@@ -431,6 +431,15 @@ sends its file the same way, with the Folder it shows as the `folderId` and no S
 Site Space, whose Assets Core delivers publicly from the start (the init takes no delivery policy). An Add-on
 that reserved a place with `assets:v1` uploads with `runPhiAddonAssetUpload` from `@phis/ui/media`.
 
+The sequence in the middle -- hash, open or take up again, keep the session alive while parts travel, send
+the parts the target does not hold yet (three at a time, each tried again after a transport failure or a
+`5xx`), settle -- is one function, `runPhiUploadSession(target, file)` (`media-upload-flow.ts`, internal),
+and Core's Media routes are one target of it. Inside this package a first-party Module that sends files
+somewhere else gives it a target of its own rather than a second sequence, and puts the Media library's
+upload surface in its dialog with its own fields in front of the file (`PhiAreaUploadBinding`'s
+`moduleTarget`): the CDN Module's upload is that (`plugins/runtime-modules/cdn/services/upload.ts`). Neither
+is a package export.
+
 **Your Add-on's Media limits.** Where your package's Add-on half states `media` in its manifest
 (`{ maxFileBytes?, kinds?, maxPerField? }`, phis-server SERVER_ADDONS.md, "Media limits"), the
 `media-asset` and `media-assets` fields of your Module's Forms apply it without any config of yours: the

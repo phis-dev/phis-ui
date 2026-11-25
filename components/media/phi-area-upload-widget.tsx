@@ -4,7 +4,7 @@ import { resolvePhiMediaAssetTypeLabel } from "./asset-type-label";
 import { PhiTagControl } from "../controls/phi-tag-control";
 import { PhiButtonControl } from "../controls/phi-button-control";
 import NextImage from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import type { PhiCmsAreaUploadWidgetConfig } from "../../types/media";
 import { PhiCollectionLayoutControl } from "../controls/phi-collection-layout-control";
@@ -22,6 +22,8 @@ import { PhiMediaKindIcon } from "./phi-media-kind-icon";
 import {
   resolvePhiMediaUploadInitOptions,
   type PhiMediaUploadSessionResult,
+  type PhiMediaUploadSessionRunner,
+  type PhiUploadPhase,
 } from "./media-upload-flow";
 import { resolvePhiUploadStatusLabel, usePhiMediaUpload, type PhiMediaUploadAcceptance } from "./phi-media-upload";
 import { usePhiImagePreviewStore, type PhiImagePreviewStoreState } from "./phi-image-preview-store";
@@ -56,6 +58,7 @@ type UploadWallItem = {
   height: number | null;
   presentationFlags: number;
   progress: number;
+  phase: PhiUploadPhase | null;
   status: "uploading" | "done" | "error";
   deleting: boolean;
   error: string | null;
@@ -102,6 +105,45 @@ export type PhiAreaUploadWidgetProps = {
   };
 };
 
+/**
+ * A Module's own upload through this surface, in place of the Media library's: its fields stand in front
+ * of the file, its runner takes the file somewhere else (`runPhiUploadSession` with the Module's target),
+ * and what arrived is the Module's to show. The drop area, the file's tile with its progress, its refusal
+ * and its retry, and the stop when the surface goes away stay this surface's. The CDN page's upload is
+ * the one that asked: a file published under a name, a version and a file name the person states.
+ *
+ * A file picked here is held until the person sends it (`startLabel`), because the Module's fields may
+ * start from it -- a file name, a platform read from the extension -- and are only complete once they do.
+ * One file at a time.
+ *
+ * Not part of `PhiAreaUploadWidgetProps`, which a Site can place: a target is code, never configuration.
+ */
+export type PhiAreaUploadModuleTarget<TResult> = {
+  /** The Module's fields, drawn in front of the file, told which file is held and whether one is on its way. */
+  renderFields: (state: { file: File | null; uploading: boolean }) => ReactNode;
+  /** A file was picked, for fields that start from it. */
+  onFilePicked?: (file: File) => void;
+  /** Whether the held file may be sent: the Module's fields hold what its target needs. */
+  ready: boolean;
+  startLabel: string;
+  cancelLabel: string;
+  /** Where the file goes (`usePhiMediaUpload`'s runner); its third argument, the Media init options, is unused. */
+  runSession: (...args: Parameters<PhiMediaUploadSessionRunner>) => Promise<{ asset: TResult }>;
+  /** The target's own words for a refusal; null falls back to the Media refusals. */
+  readError?: (error: unknown) => string | null;
+  /** What the file's tag says while it is hashed and while the target settles it, in place of a percentage. */
+  phaseLabels?: Partial<Record<PhiUploadPhase, string>>;
+  /** The abort reason Cancel stops the upload with, for a target that tells a stop from a discard. */
+  cancelReason?: unknown;
+  /** What arrived. The surface says so as it says it for an Asset, and holds no file any more. */
+  onUploaded: (result: TResult, file: File) => void;
+};
+
+export type PhiAreaUploadBindingProps = PhiAreaUploadWidgetProps & {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- each Module states its own result
+  moduleTarget?: PhiAreaUploadModuleTarget<any>;
+};
+
 function buildUploadWallItem(asset: PhiMediaAssetTile, localId: string): UploadWallItem {
   return {
     localId,
@@ -117,6 +159,7 @@ function buildUploadWallItem(asset: PhiMediaAssetTile, localId: string): UploadW
     height: asset.height ?? null,
     presentationFlags: asset.presentationFlags,
     progress: 100,
+    phase: null,
     status: "done",
     deleting: false,
     error: null,
@@ -125,7 +168,14 @@ function buildUploadWallItem(asset: PhiMediaAssetTile, localId: string): UploadW
 
 /** A file still on its way, or one that failed, drawn as a tile like the Assets that arrived. */
 function buildPendingWallItem(
-  item: { localId: string; file: File; progress: number; status: "uploading" | "done" | "error"; error: string | null },
+  item: {
+    localId: string;
+    file: File;
+    progress: number;
+    phase: PhiUploadPhase | null;
+    status: "uploading" | "done" | "error";
+    error: string | null;
+  },
   presentationFlags: number,
 ): UploadWallItem {
   return {
@@ -142,6 +192,7 @@ function buildPendingWallItem(
     height: null,
     presentationFlags,
     progress: item.progress,
+    phase: item.phase,
     status: item.status,
     deleting: false,
     error: item.error,
@@ -163,7 +214,8 @@ export function PhiAreaUploadBinding({
   refuseFile,
   siteSpaceOnly = false,
   collectionContext,
-}: PhiAreaUploadWidgetProps) {
+  moduleTarget,
+}: PhiAreaUploadBindingProps) {
   const { token } = usePhiConfig();
   const { showMessage } = usePhiApplicationFeedback();
   const uploadTileFrameSize = token.controlHeight * 3;
@@ -173,7 +225,8 @@ export function PhiAreaUploadBinding({
   const [uploadWall, setUploadWall] = useState<UploadWallItem[]>([]);
   const allowDelete = config?.allowDelete ?? true;
   const configAccept = config?.accept?.trim() || "*/*";
-  const multiple = config?.multiple ?? true;
+  const multiple = moduleTarget ? false : config?.multiple ?? true;
+  const [heldFile, setHeldFile] = useState<File | null>(null);
   const collectionFolderId = collectionContext?.folderId ?? null;
   const collectionPresentationFlags = collectionContext?.presentationFlags ?? null;
   const hasCollectionContext = collectionContext != null;
@@ -248,12 +301,20 @@ export function PhiAreaUploadBinding({
    * often than not -- so no Asset is finalized that nobody sees arrive. What is this Widget's own is the
    * wall: an Asset that arrived becomes a tile, and the listing behind it hears of it.
    */
-  const upload = usePhiMediaUpload<PhiMediaUploadSessionResult["asset"]>({
+  const upload = usePhiMediaUpload<{ id?: unknown }>({
     labels: labels.refusals,
     ...(acceptance ? { acceptance } : {}),
     initOptions: uploadInitOptions,
-    onUploaded: (asset, file) => {
-      const uploadedTile = normalizePhiImagePreviewTile(asset, []);
+    ...(moduleTarget ? { runSession: moduleTarget.runSession } : {}),
+    ...(moduleTarget?.readError ? { readError: moduleTarget.readError } : {}),
+    onUploaded: (result, file) => {
+      if (moduleTarget) {
+        setHeldFile(null);
+        showUploadMessage("success", labels.uploadSuccessTemplate.replace("%1", file.name));
+        moduleTarget.onUploaded(result, file);
+        return;
+      }
+      const uploadedTile = normalizePhiImagePreviewTile(result as PhiMediaUploadSessionResult["asset"], []);
       if (showFinished) {
         setUploadWall((current) => [buildUploadWallItem(uploadedTile, `asset-${uploadedTile.id}`), ...current]);
       }
@@ -281,12 +342,20 @@ export function PhiAreaUploadBinding({
 
   return (
     <PhiFlexControl vertical gap={12} style={{ width: "100%" }}>
+      {moduleTarget ? moduleTarget.renderFields({ file: heldFile, uploading }) : null}
       <PhiUploadDropArea
         multiple={multiple}
         accept={accept}
-        title={labels.dropTitle}
+        title={moduleTarget && heldFile ? heldFile.name : labels.dropTitle}
         hint={labels.dropHint}
         onFile={(file) => {
+          if (moduleTarget) {
+            // Held, not sent: the Module's fields may start from it and are complete only once they do.
+            if (uploading) return;
+            setHeldFile(file);
+            moduleTarget.onFilePicked?.(file);
+            return;
+          }
           const refusal = refuseFile?.(file, sendingRef.current) ?? null;
           if (refusal) {
             showUploadMessage("error", refusal);
@@ -299,6 +368,25 @@ export function PhiAreaUploadBinding({
           });
         }}
       />
+      {moduleTarget ? (
+        <PhiFlexControl justify="flex-end" gap={8}>
+          {uploading ? (
+            <PhiButtonControl label={moduleTarget.cancelLabel} onClick={() => upload.cancel(moduleTarget.cancelReason)} />
+          ) : null}
+          <PhiButtonControl
+            type="primary"
+            label={moduleTarget.startLabel}
+            icon={<PhiIcon name="upload" size="inherit" />}
+            loading={uploading}
+            disabled={!heldFile || !moduleTarget.ready || uploading}
+            onClick={() => {
+              if (!heldFile) return;
+              upload.reset();
+              void upload.upload(heldFile);
+            }}
+          />
+        </PhiFlexControl>
+      ) : null}
 
       <PhiCollectionLayoutControl
         mode="grid"
@@ -438,7 +526,8 @@ export function PhiAreaUploadBinding({
                 </PhiFlexControl>
                 <PhiFlexControl align="center" gap={6} wrap>
                   <PhiTagControl color={item.status === "error" ? "red" : item.status === "uploading" ? "blue" : "green"}>
-                    {resolvePhiUploadStatusLabel(item, labels)}
+                    {(item.status === "uploading" && item.phase && moduleTarget?.phaseLabels?.[item.phase])
+                      || resolvePhiUploadStatusLabel(item, labels)}
                   </PhiTagControl>
                   {item.status === "error" && item.file ? (
                     <PhiButtonControl

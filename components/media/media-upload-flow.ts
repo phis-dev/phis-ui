@@ -174,6 +174,7 @@ export type PhiMediaUploadSessionRunner = (
   onProgress?: PhiMediaUploadProgressHandler,
   options?: PhiMediaUploadInitOptions,
   signal?: AbortSignal,
+  onPhase?: (phase: PhiUploadPhase) => void,
 ) => Promise<{ asset: { id: number } }>;
 
 /**
@@ -239,7 +240,7 @@ type PhiMediaUploadInitSession = {
   heartbeat: PhiMediaUploadHeartbeat | null;
 };
 
-type PhiMediaUploadHeartbeat = { url: string; intervalMs: number };
+export type PhiMediaUploadHeartbeat = { url: string; intervalMs: number };
 
 function readPhiMediaUploadHeartbeat(value: PhiMediaUploadInitResponse["heartbeat"]): PhiMediaUploadHeartbeat | null {
   const url = value?.url;
@@ -726,6 +727,7 @@ async function uploadPhiMediaUploadPart(
   body: Blob,
   onPartProgress: (loadedBytes: number) => void,
   signal: AbortSignal,
+  receipt: PhiUploadPartReceipt = "etag",
 ): Promise<{ partNumber: number; eTag: string }> {
   let lastError: unknown = null;
 
@@ -759,8 +761,8 @@ async function uploadPhiMediaUploadPart(
             ));
             return;
           }
-          const eTag = (xhr.getResponseHeader("etag") ?? "").trim();
-          if (!eTag) {
+          const eTag = receipt === "etag" ? (xhr.getResponseHeader("etag") ?? "").trim() : "";
+          if (receipt === "etag" && !eTag) {
             reject(new PhiMediaUploadError(
               `Part ${part.partNumber} arrived without an entity tag, so it cannot be assembled.`,
               PHI_MEDIA_UPLOAD_FAILURE_REASONS.ClientError,
@@ -823,6 +825,7 @@ async function uploadPhiMediaUploadParts(
   /** What an earlier attempt already delivered, which this one neither sends nor waits for. */
   stored: readonly PhiMediaUploadStoredPart[] = [],
   signal?: AbortSignal,
+  receipt: PhiUploadPartReceipt = "etag",
 ): Promise<PhiMediaUploadUploadResponse> {
   const loadedByPart = new Map<number, number>();
   const report = () => onProgress?.(resolvePhiMediaUploadPartProgress(loadedByPart, file.size));
@@ -857,7 +860,7 @@ async function uploadPhiMediaUploadParts(
           if (stop.signal.aborted) return;
           loadedByPart.set(part.partNumber, loadedBytes);
           report();
-        }, stop.signal));
+        }, stop.signal, receipt));
       } catch (error) {
         // The first failure is the one reported; the others are this one stopping them.
         failures.push(error);
@@ -895,10 +898,12 @@ export async function uploadPhiMediaUploadBody(
   stored: readonly PhiMediaUploadStoredPart[] = [],
   /** Stops the body where it is; what is in flight is aborted and the call throws `cancelled`. */
   signal?: AbortSignal,
+  /** What a delivered part answers with (`PhiUploadPartReceipt`); a storage's entity tag unless said. */
+  receipt: PhiUploadPartReceipt = "etag",
 ) {
   throwIfPhiMediaUploadAborted(signal);
   if (plan.kind === "multipart-put") {
-    return await uploadPhiMediaUploadParts(plan, file, onProgress, stored, signal);
+    return await uploadPhiMediaUploadParts(plan, file, onProgress, stored, signal, receipt);
   }
   if (plan.kind !== "proxy-stream" && plan.kind !== "presigned-put") {
     // A newer control plane issued a plan this Client cannot carry out. Saying so is the only safe
@@ -1067,7 +1072,133 @@ async function readPhiMediaUploadCancellation<T>(run: () => Promise<T>, signal: 
 }
 
 /**
- * One file through Core's own upload routes.
+ * What a delivered part of a body answers with.
+ *
+ * `etag`: the storage's entity tag, which a completion names every part by -- a part delivered to a
+ * presigned storage address, whose tag the browser has to read and hand on. `none`: nothing to hand on --
+ * a part delivered to a route of this Site's server, which completes the assembly itself and asks the
+ * storage what it holds.
+ */
+export type PhiUploadPartReceipt = "etag" | "none";
+
+/**
+ * Where an upload stands, for a surface that says more than a percentage: the file is hashed and the
+ * session opened (`checksum`), its body travels (`transfer`, which the progress figures belong to), and
+ * the place it went settles it (`finish`) -- an Asset made, a file hashed whole and recorded.
+ */
+export type PhiUploadPhase = "checksum" | "transfer" | "finish";
+
+/** One upload, opened by its target: how the body travels, and how its target settles or drops it. */
+export type PhiUploadSession<TResult> = {
+  plan: PhiMediaUploadPlan;
+  /** Parts an earlier attempt delivered; the plan addresses only what is missing. */
+  uploaded: readonly PhiMediaUploadStoredPart[];
+  /** Null where the target asks for none. */
+  heartbeat: PhiMediaUploadHeartbeat | null;
+  /** What a delivered part answers with. `etag` where the target says nothing. */
+  partReceipt?: PhiUploadPartReceipt;
+  /**
+   * Called when the body starts to travel; returns the way to stop. For a target that tells its server
+   * when the page goes away mid-body (`pagehide`).
+   */
+  watchLeaving?: () => () => void;
+  /** The body did not arrive, for whichever reason the error says: what the target does about it. */
+  abandon: (error: unknown, signal: AbortSignal | undefined) => Promise<void>;
+  /** The body arrived: the target settles it, with what the transport reported back. */
+  finish: (completion: unknown, signal: AbortSignal | undefined) => Promise<TResult>;
+};
+
+/** Where an upload goes: Core's Media routes, or another place that takes a body the same way. */
+export type PhiUploadTarget<TResult> = {
+  /** Hashes what it needs and opens -- or takes up again -- the session for this file. */
+  open: (file: File, signal: AbortSignal | undefined) => Promise<PhiUploadSession<TResult>>;
+};
+
+/**
+ * One file through an upload target, from chosen to settled.
+ *
+ * The sequence every upload of this package runs, whichever target it is for: open (hashing first), keep
+ * the session alive while parts travel, send the body by its plan -- the parts the target does not hold
+ * yet, several at once, each tried again after a transport failure or a `5xx` -- and settle it. `signal`
+ * stops it up to the moment `finish` begins: an open in flight is aborted, a body in flight is aborted
+ * and reported `cancelled`, and the target is told (`abandon`). Once `finish` runs it is not stopped
+ * midway -- the target is already turning the body into what it stores, and stopping would only hide the
+ * answer; `finish` itself decides whether it still waits for one.
+ */
+export async function runPhiUploadSession<TResult>(
+  target: PhiUploadTarget<TResult>,
+  file: File,
+  {
+    onProgress,
+    onPhase,
+    signal,
+  }: {
+    onProgress?: PhiMediaUploadProgressHandler;
+    onPhase?: (phase: PhiUploadPhase) => void;
+    signal?: AbortSignal;
+  } = {},
+): Promise<TResult> {
+  onPhase?.("checksum");
+  const session = await readPhiMediaUploadCancellation(() => target.open(file, signal), signal);
+  const standDown = session.watchLeaving?.() ?? (() => {});
+  const stopBeating = keepPhiMediaUploadHeartbeat(session.heartbeat);
+  onPhase?.("transfer");
+  let upload;
+  try {
+    upload = await uploadPhiMediaUploadBody(session.plan, file, onProgress, session.uploaded, signal, session.partReceipt);
+    // Stopped after the last byte and before it was settled: the body is there, and nobody wants it.
+    throwIfPhiMediaUploadAborted(signal);
+  } catch (uploadError) {
+    stopBeating();
+    standDown();
+    await session.abandon(uploadError, signal);
+    throw uploadError;
+  }
+  /*
+   * Stood down before settling begins, and deliberately not after it answers.
+   *
+   * Once the Server holds the finalize request it copies the staged object onto its final key and closes
+   * the session; a beacon arriving in the middle of that would be a second request racing the first for
+   * the same row and the same object. A beacon arriving *after* it is harmless -- the row is gone, so the
+   * report answers 404 and touches nothing -- but the window in between is not worth leaving open for a
+   * body that has already arrived. What this gives up is the sliver where somebody leaves after the body
+   * landed and before finalize was sent, and expiry already answers for that.
+   */
+  stopBeating();
+  standDown();
+  onPhase?.("finish");
+  return await session.finish(upload.completion, signal);
+}
+
+/** Core's own Media upload routes as an upload target: init, the report of a failure, and finalize. */
+function createPhiMediaUploadTarget(
+  options: PhiMediaUploadInitOptions | undefined,
+): PhiUploadTarget<PhiMediaUploadSessionResult> {
+  return {
+    open: async (file, signal) => {
+      const init = await initPhiMediaUploadSession(file, options, signal);
+      return {
+        plan: init.plan,
+        uploaded: init.uploaded,
+        heartbeat: init.heartbeat,
+        watchLeaving: () => reportPhiMediaUploadAbandonmentOnLeaving(init.reportUrl, init.plan),
+        // The Server cannot see this leg, so it is told rather than left to infer it from an expiry.
+        abandon: (error) => reportPhiMediaUploadFailure(
+          init.reportUrl,
+          readPhiMediaUploadFailureReason(error),
+          error instanceof Error ? error.message : null,
+        ),
+        finish: async (completion) => {
+          const finalize = await finalizePhiMediaUploadSession(init.finalizeUrl, completion);
+          return { asset: finalize.asset, token: init.token };
+        },
+      };
+    },
+  };
+}
+
+/**
+ * One file through Core's own upload routes (`runPhiUploadSession` with Core's Media target).
  *
  * `signal` stops it up to the moment finalize is sent: an init in flight is aborted, a body in flight is
  * aborted and reported `cancelled`, so the Server clears up the reservation and whatever arrived. Once
@@ -1079,43 +1210,13 @@ export async function runPhiMediaUploadSession(
   onProgress?: PhiMediaUploadProgressHandler,
   options?: PhiMediaUploadInitOptions,
   signal?: AbortSignal,
+  onPhase?: (phase: PhiUploadPhase) => void,
 ): Promise<PhiMediaUploadSessionResult> {
-  const init = await readPhiMediaUploadCancellation(() => initPhiMediaUploadSession(file, options, signal), signal);
-  const standDown = reportPhiMediaUploadAbandonmentOnLeaving(init.reportUrl, init.plan);
-  const stopBeating = keepPhiMediaUploadHeartbeat(init.heartbeat);
-  let upload;
-  try {
-    upload = await uploadPhiMediaUploadBody(init.plan, file, onProgress, init.uploaded, signal);
-    // Stopped after the last byte and before finalize: the body is there, and nobody wants the Asset.
-    throwIfPhiMediaUploadAborted(signal);
-  } catch (uploadError) {
-    stopBeating();
-    standDown();
-    // The Server cannot see this leg, so it is told rather than left to infer it from an expiry.
-    await reportPhiMediaUploadFailure(
-      init.reportUrl,
-      readPhiMediaUploadFailureReason(uploadError),
-      uploadError instanceof Error ? uploadError.message : null,
-    );
-    throw uploadError;
-  }
-  /*
-   * Stood down before finalize is sent, and deliberately not after it answers.
-   *
-   * Once the Server holds the finalize request it copies the staged object onto its final key and closes
-   * the session; a beacon arriving in the middle of that would be a second request racing the first for
-   * the same row and the same object. A beacon arriving *after* it is harmless -- the row is gone, so the
-   * report answers 404 and touches nothing -- but the window in between is not worth leaving open for a
-   * body that has already arrived. What this gives up is the sliver where somebody leaves after the body
-   * landed and before finalize was sent, and expiry already answers for that.
-   */
-  stopBeating();
-  standDown();
-  const finalize = await finalizePhiMediaUploadSession(init.finalizeUrl, upload.completion);
-  return {
-    asset: finalize.asset,
-    token: init.token,
-  };
+  return await runPhiUploadSession(createPhiMediaUploadTarget(options), file, {
+    ...(onProgress ? { onProgress } : {}),
+    ...(onPhase ? { onPhase } : {}),
+    ...(signal ? { signal } : {}),
+  });
 }
 
 /**
