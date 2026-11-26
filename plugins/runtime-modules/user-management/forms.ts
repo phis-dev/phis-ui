@@ -24,12 +24,15 @@ import { PHI_USER_MANAGEMENT_ADDON_ROLE_IMPLIED_LIST } from "./addon-roles";
 export const PHI_USER_MANAGEMENT_FORM_IDS = {
   create: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "user-management/create"),
   edit: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "user-management/edit"),
+  usersAccessRetention: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "user-management/users-access-retention"),
 } as const;
 
 const PHI_USER_MANAGEMENT_FORM_HANDLER_KEYS = {
   create: "site.user-management.create",
   edit: "site.user-management.edit",
 } as const;
+
+const PHI_USER_MANAGEMENT_USERS_ACCESS_RETENTION_HANDLER_KEY = "site.user-management.users-access-retention";
 
 const LABEL_SET_KEY = "@phis/ui/modules/user-management/labels/forms" as const;
 const controllerAddress = createPhiUserManagementControllerAddress();
@@ -220,6 +223,45 @@ function descriptor(
   };
 }
 
+/**
+ * How many days the `users:v1` access log keeps an entry (Admin -> Settings, phis-server
+ * `PUT /api/site/admin/users-access/retention`, which takes `{ days }` and nothing else). One value, so one
+ * field and the Form's Save; the Page reads the current number and hands it in as the initial value.
+ *
+ * The bounds are the route's: a whole number from 1 to 3650 (`PHIS_USERS_ACCESS_LOG_MAX_DAYS`). They are a
+ * rule rather than the Control's `min`/`max`, because a Control with bounds puts a number out of range back
+ * inside them when the field is left -- 5000 would quietly become 3650 and be saved, where the reader should
+ * be told that 5000 is not offered.
+ */
+const USERS_ACCESS_LOG_MIN_DAYS = 1;
+const USERS_ACCESS_LOG_MAX_DAYS = 3650;
+const usersAccessRetentionDescriptor: PhiFormDescriptor = {
+  schemaVersion: 1,
+  key: PHI_USER_MANAGEMENT_FORM_IDS.usersAccessRetention,
+  labelSetKey: "@phis/ui/modules/user-management/labels/users-access-retention",
+  fields: [{
+    key: "days",
+    fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.number,
+    label: label("days", "Kept for"),
+    // The unit belongs to the value, not to the label.
+    config: { step: 1, precision: 0, prefix: label("daysUnit", "days") },
+    validation: [
+      ...required("daysRequired", "Enter how many days the log keeps an entry."),
+      {
+        providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.number,
+        message: label("daysInvalid", "A whole number of days from 1 to 3650."),
+        config: { min: USERS_ACCESS_LOG_MIN_DAYS, max: USERS_ACCESS_LOG_MAX_DAYS, integer: true },
+      },
+    ],
+  }],
+  layout: { gap: { compact: "sm", medium: "base" } },
+};
+
+const loadUsersAccessRetentionLabels = createPhiFormLabelSetLoader(
+  () => import("./trees/admin-users-access-label-set").then((module) => module.getPhiAdminUsersAccessLabels),
+  (labels) => ({ ...labels.retention, actions: { submitLabel: labels.retention.save } }),
+);
+
 const loadLabels = createPhiFormLabelSetLoader(
   () => import("../../../components/widgets/label-sets/admin-users").then((module) => module.getPhiAdminUsersTableWidgetLabels),
   (labels) => ({
@@ -282,9 +324,23 @@ export const PHI_USER_MANAGEMENT_RUNTIME_MODULE_FORMS = [
     submitHandlerKey: PHI_USER_MANAGEMENT_FORM_HANDLER_KEYS.edit,
     loadLabels,
   }),
+  definePhiRuntimeModuleForm({
+    ownerModuleId: PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
+    areas: ["admin"],
+    formId: PHI_USER_MANAGEMENT_FORM_IDS.usersAccessRetention,
+    version: 1,
+    flags: 0,
+    title: "Access log retention",
+    description: "How many days the access log of people's data keeps an entry.",
+    category: "forms",
+    tags: ["settings", "users", "admin"],
+    descriptor: usersAccessRetentionDescriptor,
+    submitHandlerKey: PHI_USER_MANAGEMENT_USERS_ACCESS_RETENTION_HANDLER_KEY,
+    loadLabels: loadUsersAccessRetentionLabels,
+  }),
 ] as const;
 
-export const PHI_USER_MANAGEMENT_FORM_HANDLER_PROVIDER_DESCRIPTORS = Object.entries(
+export const PHI_USER_MANAGEMENT_FORM_HANDLER_PROVIDER_DESCRIPTORS = [...Object.entries(
   PHI_USER_MANAGEMENT_FORM_HANDLER_KEYS,
 ).map(([key, handlerKey]) => ({
   key: createPhiSharedFormProviderKey("handler", `user-management-${key}`),
@@ -300,4 +356,18 @@ export const PHI_USER_MANAGEMENT_FORM_HANDLER_PROVIDER_DESCRIPTORS = Object.entr
   csrfPath: null,
   requiresCsrf: false,
   credentialPolicy: "site-session",
-})) satisfies readonly PhiFormHandlerProviderDescriptor[];
+}) as const), {
+  key: createPhiSharedFormProviderKey("handler", "user-management-users-access-retention"),
+  ownerModuleId: PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
+  title: "Access log retention",
+  phase: "submit",
+  handlerKey: PHI_USER_MANAGEMENT_USERS_ACCESS_RETENTION_HANDLER_KEY,
+  category: "site",
+  transport: "relay",
+  method: "PUT",
+  endpointKey: null,
+  upstreamPath: "/api/site/admin/users-access/retention",
+  csrfPath: null,
+  requiresCsrf: false,
+  credentialPolicy: "site-session",
+} as const] satisfies readonly PhiFormHandlerProviderDescriptor[];

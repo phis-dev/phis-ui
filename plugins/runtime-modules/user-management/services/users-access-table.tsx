@@ -29,7 +29,6 @@ import {
 /** Core's Site Admin routes for `users:v1` access (phis-server `/api/site/admin/users-access`). */
 export const PHI_USERS_ACCESS_PATH = "/api/site/admin/users-access";
 const RESPONSE_OPTIONS: ReadPhiTableProviderResponseOptions = { subject: "People data access" };
-const RETENTION_ROW_ID = "retention";
 // The Page names the same size; the route takes up to 100.
 const LOG_PAGE_SIZE = 25;
 
@@ -69,7 +68,7 @@ export function toPhiUsersAccessLogRow(row: Record<string, unknown>, index: numb
 const backgroundAsked = new Map<string, string[]>();
 
 async function readAccess(signal: AbortSignal | undefined) {
-  return readPhiTableProviderResponse<{ retentionDays?: unknown; addons?: unknown }>(
+  return readPhiTableProviderResponse<{ addons?: unknown }>(
     await fetch(PHI_USERS_ACCESS_PATH, createPhiTableProviderRequestInit(signal)),
     RESPONSE_OPTIONS,
   );
@@ -93,13 +92,6 @@ async function queryUsersAccess({ resourceKey, query, signal }: PhiTableProvider
       if (row.addonId) backgroundAsked.set(row.addonId, row.background);
     }
     return { rows, total: rows.length };
-  }
-  if (resourceKey === RESOURCES.retention) {
-    const days = (await readAccess(signal))?.retentionDays;
-    if (typeof days !== "number" || !Number.isSafeInteger(days)) {
-      throw new PhiTableProviderError("invalid-response", "The access log retention is invalid.");
-    }
-    return { rows: [{ id: RETENTION_ROW_ID, days }], total: 1 };
   }
   if (resourceKey === RESOURCES.log) {
     const params = buildPhiUsersAccessLogParams(query);
@@ -125,17 +117,6 @@ async function mutateUsersAccess(request: PhiTableProviderMutationRequest) {
     headers: { ...init.headers, "content-type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (request.resourceKey === RESOURCES.retention && request.kind === "field" && request.fieldKey === "days") {
-    const days = request.proposedValue;
-    if (typeof days !== "number" || !Number.isSafeInteger(days) || days < 1 || days > 3650) {
-      return { status: "rejected" as const, invalidation: "none" as const, errorCode: "invalid-field-value", message: "A whole number of days from 1 to 3650." };
-    }
-    const result = await readPhiTableProviderResponse<{ retentionDays?: unknown }>(
-      await fetch(`${PHI_USERS_ACCESS_PATH}/retention`, { ...json({ days }), method: "PUT" }),
-      RESPONSE_OPTIONS,
-    );
-    return { status: "accepted" as const, invalidation: "none" as const, canonicalValue: result?.retentionDays ?? days };
-  }
   if (request.resourceKey === RESOURCES.addons && request.kind === "action") {
     const addonId = typeof request.rowIdentity === "string" ? request.rowIdentity : "";
     if (!addonId) throw new PhiTableProviderError("invalid-query", "An Add-on id is required.");

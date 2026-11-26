@@ -1,3 +1,5 @@
+import { cookies } from "next/headers";
+
 import {
   PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS,
   PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
@@ -9,6 +11,8 @@ import type { PhiBlockRuntime } from "../../../../types";
 import { buildPhiSettingsPageShellTree } from "../../../../components/regions/presets/phi-settings-page-shell-tree";
 import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 import { getPhiAdminUsersAccessLabels } from "./admin-users-access-label-set";
+import { PHI_USER_MANAGEMENT_FORM_IDS } from "../forms";
+import { readPhiUsersAccessRetentionDays } from "../users-access-retention";
 
 const REGION_CONTENT_ID = -487;
 
@@ -20,11 +24,14 @@ const REGION_CONTENT_ID = -487;
  *   asks to read with nobody acting, what the Site granted and what still awaits a grant. Granting gives it
  *   what it asks; withdrawing ends it. A manifest asking for more later keeps the old grant until granted
  *   again, which is what `Awaiting` shows.
- * - **Retention**, the days the log keeps an entry, edited in its cell.
+ * - **Retention**, the days the log keeps an entry: one value, so an ordinary Form with one number field and
+ *   its Save (`PHI_USER_MANAGEMENT_FORM_IDS.usersAccessRetention`, `PUT .../users-access/retention`), opened
+ *   on the number Core holds, which this builder reads with the viewer's session.
  * - **Access log**, newest first, narrowed by a person's subject and an Add-on.
  *
  * Core answers these routes to a Site Admin only, and the Settings entry is offered to them alone; a
- * Maintainer who opens the address is refused by the routes, and the Tables say so.
+ * Maintainer who opens the address is refused by the routes, the retention read while the page is built
+ * first among them.
  */
 export async function buildPhiDefaultAdminUsersAccessPageTree({
   page,
@@ -33,7 +40,10 @@ export async function buildPhiDefaultAdminUsersAccessPageTree({
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
-  const labels = await getPhiAdminUsersAccessLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
+  const [labels, retentionDays] = await Promise.all([
+    getPhiAdminUsersAccessLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
+    readPhiUsersAccessRetentionDays({ siteKey: runtime.site.key, cookieHeader: (await cookies()).toString() }),
+  ]);
   const fieldTags = {
     renderer: "tags" as const,
     sizing: { mode: "content" as const },
@@ -111,33 +121,11 @@ export async function buildPhiDefaultAdminUsersAccessPageTree({
         title: labels.panels.retention.title,
         description: labels.panels.retention.description,
         sections: [{
-          nodeKey: "widgetRetention",
-          typeKey: "table",
+          kind: "form",
+          nodeKey: "widgetRetentionForm",
+          formId: PHI_USER_MANAGEMENT_FORM_IDS.usersAccessRetention,
           label: labels.widgets.retention,
-          config: {
-            source: { providerKey: PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS.usersAccess, resourceKey: RESOURCES.retention },
-            presentation: {
-              controlSize: "small",
-              // The heading names the one value; the panel says what it is for.
-              footerOmitted: "One setting edited in its cell: there is nothing to count.",
-              layout: { mode: "auto", overflowX: "auto" },
-              columns: [{
-                key: "days",
-                fieldKey: "days",
-                title: labels.columns.days,
-                // The unit belongs to the value, not to the heading (TABLES.md, cell editors).
-                editor: { prefix: labels.daysUnit },
-                sizing: { mode: "content" },
-                align: "right",
-              }],
-            },
-            features: {
-              pagination: { enabled: false },
-              sorting: { mode: "none" },
-              editing: { mode: "cell" },
-              tools: { mode: "self-contained", reset: false, reload: false },
-            },
-          },
+          initialValues: { days: retentionDays },
         }],
       },
       {

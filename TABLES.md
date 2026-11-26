@@ -343,9 +343,10 @@ a count -- its template the `%1 …` footer label of the Table's own Label Set, 
 is built. The bar also stands when no footer text was configured; this runtime default does not replace
 the preset's obligation to declare its own line. A Table without a header draws no footer: it lays out
 rows or aligns columns (a field and its value, side by side), and neither part has anything to say there; the missing header is the whole
-exemption. Only a Table with a header and truly nothing to count -- the one setting of a panel, edited in
-its cell -- leaves the footer out, and says why in `presentation.footerOmitted`, a reason for the next
-reader of the preset that is never drawn and never translated (Admin -> Settings -> People data, the
+exemption. Only a Table with a header and truly nothing to count leaves the footer out, and says why in
+`presentation.footerOmitted`, a reason for the next reader of the preset that is never drawn and never
+translated. A single setting is not such a Table: one value is set with an ordinary Form, one field and its
+Save, never a one-row Table edited in its cell (owner, 2026-11-26; Admin -> Settings -> People data, the
 retention). New Pages kept leaving the footer out; `checkPhiPresetTables` refuses such a preset Table
 ([Module and preset obligations](#module-and-preset-obligations)).
 
