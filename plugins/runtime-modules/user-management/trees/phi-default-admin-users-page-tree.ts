@@ -59,6 +59,17 @@ export async function buildPhiDefaultAdminUsersPageTree({
     operator: "truthy" as const,
     reason: "Maintainers can inspect users but cannot change them.",
   };
+  /*
+   * The actions that change people are not shown to a Maintainer at all (owner, 2026-11-26): they read the
+   * list and a user's login history, and a row of greyed-out buttons offers what they will never have.
+   * What stays visible and locked is the cell editing, whose cells are the values they read.
+   */
+  const writableCondition = {
+    source: "controller" as const,
+    controllerAddress,
+    valuePath: "permissions.readOnly",
+    operator: "falsy" as const,
+  };
   const selfEnabledCondition = {
     source: "row" as const,
     valuePath: "self",
@@ -417,7 +428,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
                 display: "icon",
                 mode: "primary",
                 execution: "signal",
-                disabledWhen: readOnlyCondition,
+                visibleWhen: writableCondition,
               }],
               row: [
                 {
@@ -434,7 +445,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
                   icon: "edit",
                   display: "icon",
                   execution: "signal",
-                  disabledWhen: readOnlyCondition,
+                  visibleWhen: writableCondition,
                 },
                 {
                   key: "delete",
@@ -443,6 +454,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
                   display: "icon",
                   mode: "danger",
                   execution: "provider",
+                  visibleWhen: writableCondition,
                   confirm: {
                     title: widgetLabels.confirm.deleteTitle,
                     description: widgetLabels.confirm.deleteShared,

@@ -75,8 +75,11 @@ export const PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
         actions: [
           {
             key: "delete", title: "Delete", scope: "row",
+            // Not there for a Maintainer, who reads the list and changes nothing; one's own row stays greyed.
+            visibleWhen: { match: "all", conditions: [
+              { source: "controller", controllerAddress: createPhiUserManagementControllerAddress(), valuePath: "permissions.readOnly", operator: "falsy" },
+            ] },
             disabledWhen: { match: "any", conditions: [
-              { source: "controller", controllerAddress: createPhiUserManagementControllerAddress(), valuePath: "permissions.readOnly", operator: "truthy" },
               { source: "row", valuePath: "self", operator: "truthy" },
             ] },
             intent: "destructive",

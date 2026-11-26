@@ -9,11 +9,12 @@ export const PHI_USER_MANAGEMENT_RUNTIME_MODULE_ROUTES = [
     ownerModuleId: PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
     presetKey: "admin-users-page",
     title: "Users",
-    // A Maintainer reads user management but changes nothing, matching what `phi-server` enforces:
-    // GET on /api/site/admin/users takes the maintainer guard, every mutating method the admin-only
-    // one. The page carries that split through the controller's `permissions.readOnly` projection and
-    // the `disabledWhen` conditions built on it, so entry is the route's decision and capability is
-    // the surface's.
+    // A Maintainer reads the user list and a user's login history but changes nothing, matching what
+    // `phi-server` enforces (owner, 2026-11-26): GET on /api/site/admin/users -- the list and
+    // `historyUserId` -- takes the maintainer guard; a user's record (`userId`, what the edit Form loads)
+    // and every mutating method the admin-only one. The page carries that split through the controller's
+    // `permissions.readOnly` projection: Create, Edit and Delete are hidden on it (`visibleWhen`), cell
+    // editing stays locked (`disabledWhen`). Entry is the route's decision, capability the surface's.
     path: "/users",
     itemKey: "@phis/ui/modules/user-management/nav/admin/users",
     icon: "antd:team",
