@@ -53,8 +53,6 @@ const TEMPORARY_EXCEPTIONS = new Map([
   ["components/media/phi-asset-inspector-section.tsx", { "control-label": 1 }],
   // HTML editor, image popover: Title, Alt text, Size.
   ["components/widgets/client/html-editor-image-node.tsx", { "control-label": 3 }],
-  // CDN upload dialog body (`renderFields`): name, version, file name, OS, architecture.
-  ["plugins/runtime-modules/cdn/widgets/upload/client.tsx", { "control-label": 5 }],
   // Table: a filter's inline label, and the label of a select or cascader tool.
   ["plugins/runtime-modules/core/widgets/table/client.tsx", { "control-label": 3 }],
   // Theme brand controls (colours, surfaces, identity, social, campaign preview).

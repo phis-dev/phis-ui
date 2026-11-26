@@ -17,6 +17,9 @@ import {
  * `check` is one run of the bucket against the catalogue, read when its dialog opens. Its rows are what
  * it found -- an object the catalogue does not hold, a file the bucket does not hold, a size that differs
  * -- and an unrecorded object Core can take into the catalogue offers `adopt`.
+ *
+ * `names` are the names the catalogue holds files under, as the choices of the upload Form's Name
+ * (`forms.ts`): one the CDN holds already, or a new one typed beside them.
  */
 export const PHI_CDN_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
   {
@@ -119,5 +122,14 @@ export const PHI_CDN_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
         ],
       },
     ],
+  },
+  {
+    key: PHI_CDN_RUNTIME_DATA_PROVIDER_KEYS.names,
+    ownerModuleId: PHI_CDN_RUNTIME_MODULE_ID,
+    kind: "options",
+    executionMode: "live",
+    authoringMode: "none",
+    title: "CDN names",
+    description: "The names the Site's CDN holds files under, for the upload's Name.",
   },
 ] satisfies readonly PhiRuntimeModuleDataProviderDescriptor[];

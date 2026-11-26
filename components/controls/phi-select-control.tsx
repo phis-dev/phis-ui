@@ -183,6 +183,7 @@ export function PhiSelectControl<TValue extends string | number = string>({
   if (canUseTextEntry) {
     const control = (
       <AutoComplete
+        id={id}
         aria-label={ariaLabel}
         aria-labelledby={labelledBy}
         value={value}

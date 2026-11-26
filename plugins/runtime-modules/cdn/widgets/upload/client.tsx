@@ -1,17 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  PHIS_CDN_KEY_SEGMENT_PATTERN,
-  PHIS_CDN_KEY_VERSION_PATTERN,
-  type PhisCdnAdminFileV1,
-} from "@phis/contracts/addon";
+import type { PhisCdnAdminFileV1 } from "@phis/contracts/addon";
 
-import { PhiCheckboxGroupControl } from "../../../../../components/controls/phi-checkbox-group-control";
-import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
-import { PhiLabeledControl } from "../../../../../components/controls/phi-labeled-control";
-import { PhiSelectControl } from "../../../../../components/controls/phi-select-control";
-import { PhiTextControl } from "../../../../../components/controls/phi-text-control";
+import {
+  PhiFormControl,
+  type PhiFormControlFormInstance,
+} from "../../../../../components/controls/phi-form-control";
 import {
   PhiAreaUploadBinding,
   type PhiAreaUploadModuleTarget,
@@ -25,20 +20,17 @@ import {
   emitPhiSignalCapability,
   usePhiSignalEmitter,
 } from "../../../../../components/runtime/runtime-signal-identity";
+import type { PhiFormDescriptor } from "../../../../../types/form-descriptor";
+import { writePhiCdnArchBits, writePhiCdnOsBits } from "../../platform";
+import { PHI_CDN_UPLOAD_DISCARD, createPhiCdnUploadTarget } from "../../services/upload";
 import {
-  PHI_CDN_ARCH_KEYS,
-  PHI_CDN_OS_KEYS,
-  guessPhiCdnPlatform,
-  readPhiCdnArchKeys,
-  readPhiCdnOsKeys,
-  writePhiCdnArchBits,
-  writePhiCdnOsBits,
-} from "../../platform";
-import {
-  PHI_CDN_UPLOAD_DISCARD,
-  createPhiCdnUploadTarget,
-  loadPhiCdnNames,
-} from "../../services/upload";
+  PHI_CDN_UPLOAD_EMPTY_DRAFT,
+  PHI_CDN_UPLOAD_FIELD_KEYS,
+  isPhiCdnUploadDraftComplete,
+  readPhiCdnUploadDraft,
+  readPhiCdnUploadDraftFromFile,
+  type PhiCdnUploadDraft,
+} from "../../upload-fields";
 import type { PhiCdnUploadWidgetConfig } from "./config";
 import type { PhiCdnUploadWidgetLabels } from "./label-types";
 
@@ -46,15 +38,17 @@ import type { PhiCdnUploadWidgetLabels } from "./label-types";
  * The CDN's upload: the Media library's upload surface (`PhiAreaUploadBinding`) with the CDN as its
  * target. The surface draws the drop area, the file on its way with its progress, its refusal and its
  * retry, and stops it when the dialog closes; what is the CDN's is in front of the file -- the name, the
- * version, the file name and the platform the file is published under -- and where it goes.
+ * version, the file name and the platform the file is published under, the fields of the registered
+ * upload Form (`forms.ts`) drawn by `PhiFormControl` -- and where it goes.
+ *
+ * The Form is never submitted: the surface's Upload sends the held file with what the Form holds, and is
+ * enabled once that is what Core takes (`isPhiCdnUploadDraftComplete`, the descriptor's rules).
  */
 
-type Draft = { name: string; version: string; fileName: string; os: string[]; arch: string[] };
+type Draft = PhiCdnUploadDraft;
 
-const EMPTY_DRAFT: Draft = { name: "", version: "", fileName: "", os: [], arch: [] };
-
-/** The three text fields as wide as the dialog, the label beside each (`PhiLabeledControl`'s `fill`). */
-const FIELD_STYLE = { width: "100%" } as const;
+/** What the Form starts with, every field empty -- one object, so the Form never takes it for new values. */
+const EMPTY_FORM_VALUES: Record<string, unknown> = { ...PHI_CDN_UPLOAD_EMPTY_DRAFT, [PHI_CDN_UPLOAD_FIELD_KEYS.heldFile]: "" };
 
 /*
  * What a file was last started with, remembered in this browser by the file's name, size and date, so
@@ -70,8 +64,9 @@ function fileIdentity(file: File) {
 
 function readStoredDraft(file: File): Draft | null {
   try {
-    const stored = JSON.parse(window.localStorage.getItem(DRAFT_STORAGE_KEY) ?? "{}") as Record<string, Draft>;
-    return stored[fileIdentity(file)] ?? null;
+    const stored = JSON.parse(window.localStorage.getItem(DRAFT_STORAGE_KEY) ?? "{}") as Record<string, unknown>;
+    const entry = stored[fileIdentity(file)];
+    return entry && typeof entry === "object" ? readPhiCdnUploadDraft(entry as Record<string, unknown>) : null;
   } catch {
     return null;
   }
@@ -88,59 +83,40 @@ function storeDraft(file: File, draft: Draft | null) {
   }
 }
 
-function draftFromFile(file: File, name: string): Draft {
-  const platform = guessPhiCdnPlatform(file.name);
-  return {
-    name,
-    version: "",
-    fileName: file.name,
-    os: readPhiCdnOsKeys(platform.os),
-    arch: readPhiCdnArchKeys(platform.arch),
-  };
-}
-
-/** What is wrong with one segment as the person typed it, before Core is asked; null where nothing is. */
-export function readPhiCdnSegmentProblem(
-  value: string,
-  kind: "name" | "version" | "fileName",
-  labels: Pick<PhiCdnUploadWidgetLabels, "required" | "invalidSegment" | "invalidVersion" | "reservedName">,
-) {
-  const trimmed = value.trim();
-  if (!trimmed) return labels.required;
-  if (kind === "version") return PHIS_CDN_KEY_VERSION_PATTERN.test(trimmed) ? null : labels.invalidVersion;
-  if (!PHIS_CDN_KEY_SEGMENT_PATTERN.test(trimmed)) return labels.invalidSegment;
-  return kind === "name" && trimmed === "api" ? labels.reservedName : null;
-}
-
 export type PhiCdnUploadWidgetClientProps = {
   config?: PhiCdnUploadWidgetConfig;
   labels: PhiCdnUploadWidgetLabels;
   /** The Media upload surface's own words. */
   uploadLabels: PhiAreaUploadWidgetLabels;
+  /** The registered upload Form (`forms.ts`) and its words, read on the server in the page's language. */
+  form: { descriptor: PhiFormDescriptor; labels: Readonly<Record<string, string>> };
 };
 
-export function PhiCdnUploadWidgetClient({ config, labels, uploadLabels }: PhiCdnUploadWidgetClientProps) {
+function ignoreSubmit() {
+  // Nothing submits this Form: the surface's Upload sends the file with what it holds.
+}
+
+export function PhiCdnUploadWidgetClient({ config, labels, uploadLabels, form }: PhiCdnUploadWidgetClientProps) {
   const emitRoutes = useMemo(() => config?.signalRoutes?.emits ?? [], [config?.signalRoutes?.emits]);
   const emitSignal = usePhiSignalEmitter();
-  const [names, setNames] = useState<readonly string[]>([]);
-  const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
+  const [draft, setDraft] = useState<Draft>(PHI_CDN_UPLOAD_EMPTY_DRAFT);
   // The draft the runner sends with, read when it starts rather than captured when it was made.
   const draftRef = useRef(draft);
   useEffect(() => {
     draftRef.current = draft;
   }, [draft]);
-
-  useEffect(() => {
-    const abort = new AbortController();
-    void loadPhiCdnNames(abort.signal).then(setNames, () => undefined);
-    return () => abort.abort();
+  /*
+   * The Form of the next file. Mounted anew once one was published, so it starts empty and its Name reads
+   * the catalogue again -- the name just used is then among its choices.
+   */
+  const [formGeneration, setFormGeneration] = useState(0);
+  const formRef = useRef<PhiFormControlFormInstance | null>(null);
+  const onFormReady = useCallback((instance: PhiFormControlFormInstance) => {
+    formRef.current = instance;
   }, []);
-
-  const problems = {
-    name: readPhiCdnSegmentProblem(draft.name, "name", labels),
-    version: readPhiCdnSegmentProblem(draft.version, "version", labels),
-    fileName: readPhiCdnSegmentProblem(draft.fileName, "fileName", labels),
-  };
+  const onValuesChange = useCallback((_changed: Record<string, unknown>, all: Record<string, unknown>) => {
+    setDraft(readPhiCdnUploadDraft(all));
+  }, []);
 
   const runSession = useCallback<PhiAreaUploadModuleTarget<PhisCdnAdminFileV1>["runSession"]>(
     async (file, onProgress, _options, signal, onPhase) => {
@@ -170,7 +146,7 @@ export function PhiCdnUploadWidgetClient({ config, labels, uploadLabels }: PhiCd
   );
 
   const moduleTarget = useMemo<PhiAreaUploadModuleTarget<PhisCdnAdminFileV1>>(() => ({
-    ready: !problems.name && !problems.version && !problems.fileName,
+    ready: isPhiCdnUploadDraftComplete(draft),
     startLabel: labels.start,
     cancelLabel: labels.cancel,
     cancelReason: PHI_CDN_UPLOAD_DISCARD,
@@ -181,60 +157,38 @@ export function PhiCdnUploadWidgetClient({ config, labels, uploadLabels }: PhiCd
       // Core words its refusals for a person (`{ error, message }`); a transport failure says what failed.
       return error instanceof PhiMediaUploadError && error.message ? error.message : null;
     },
-    onFilePicked: (file) => setDraft((previous) => readStoredDraft(file) ?? draftFromFile(file, previous.name)),
+    /*
+     * The fields start from the picked file -- what it was started with before, or its name and the
+     * platform its name states -- and say at once what is still missing, as they did when every problem
+     * stood under its field from the moment a file was held.
+     */
+    onFilePicked: (file) => {
+      const next = readStoredDraft(file) ?? readPhiCdnUploadDraftFromFile(file.name, draftRef.current.name);
+      setDraft(next);
+      const instance = formRef.current;
+      if (!instance) return;
+      instance.setFieldsValue({ ...next, [PHI_CDN_UPLOAD_FIELD_KEYS.heldFile]: file.name });
+      void instance.validateFields().catch(() => undefined);
+    },
     onUploaded: () => {
-      setDraft(EMPTY_DRAFT);
-      void loadPhiCdnNames().then(setNames, () => undefined);
+      setDraft(PHI_CDN_UPLOAD_EMPTY_DRAFT);
+      setFormGeneration((generation) => generation + 1);
       emitPhiSignalCapability(emitSignal, emitRoutes, "uploaded", null);
     },
-    renderFields: ({ file, uploading }) => (
-      <PhiFlexControl vertical gap={12}>
-        <PhiSelectControl
-          label={labels.name}
-          description={(file && problems.name) || labels.nameHint}
-          presentation="autocomplete"
-          allowCustom
-          style={FIELD_STYLE}
-          value={draft.name}
-          options={names.map((name) => ({ value: name, label: name }))}
-          disabled={uploading}
-          onChange={(name) => setDraft((previous) => ({ ...previous, name: typeof name === "string" ? name : "" }))}
-        />
-        <PhiTextControl
-          label={labels.version}
-          style={FIELD_STYLE}
-          description={(file && problems.version) || undefined}
-          value={draft.version}
-          disabled={uploading}
-          onChange={(version) => setDraft((previous) => ({ ...previous, version: version ?? "" }))}
-        />
-        <PhiTextControl
-          label={labels.fileFileName}
-          style={FIELD_STYLE}
-          description={(file && problems.fileName) || undefined}
-          value={draft.fileName}
-          disabled={uploading || !file}
-          onChange={(fileName) => setDraft((previous) => ({ ...previous, fileName: fileName ?? "" }))}
-        />
-        <PhiLabeledControl label={labels.os}>
-          <PhiCheckboxGroupControl
-            value={draft.os}
-            options={PHI_CDN_OS_KEYS.map(([key]) => ({ value: key, label: labels.osNames[key] }))}
-            disabled={uploading}
-            onChange={(os) => setDraft((previous) => ({ ...previous, os: [...os] }))}
-          />
-        </PhiLabeledControl>
-        <PhiLabeledControl label={labels.arch}>
-          <PhiCheckboxGroupControl
-            value={draft.arch}
-            options={PHI_CDN_ARCH_KEYS.map(([key]) => ({ value: key, label: labels.archNames[key] }))}
-            disabled={uploading}
-            onChange={(arch) => setDraft((previous) => ({ ...previous, arch: [...arch] }))}
-          />
-        </PhiLabeledControl>
-      </PhiFlexControl>
+    renderFields: ({ uploading }) => (
+      <PhiFormControl
+        key={formGeneration}
+        descriptor={form.descriptor}
+        labels={form.labels}
+        initialValues={EMPTY_FORM_VALUES}
+        submitOnEnter={false}
+        disabled={uploading}
+        onFormReady={onFormReady}
+        onValuesChange={onValuesChange}
+        onSubmit={ignoreSubmit}
+      />
     ),
-  }), [draft, emitRoutes, emitSignal, labels, names, problems.fileName, problems.name, problems.version, runSession]);
+  }), [draft, emitRoutes, emitSignal, form, formGeneration, labels, onFormReady, onValuesChange, runSession]);
 
   return (
     <PhiAreaUploadBinding

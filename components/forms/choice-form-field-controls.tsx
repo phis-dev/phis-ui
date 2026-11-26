@@ -15,6 +15,10 @@ import type { PhiFormFieldProviderProps } from "./form-provider-registry";
  * every Landing that offers a login. A form with a choice field pays one chunk when it renders.
  */
 
+/*
+ * `config.allowCustom`: a typed value beside the options -- a name that is either one already in use or
+ * a new one (the CDN upload's Name). The select then takes what is typed, offering the options as it does.
+ */
 export const PhiSelectFormControl: ComponentType<PhiFormFieldProviderProps> = ({
   id, field, value, onChange, options, placeholder, disabled, readOnly, onSearch, filterOptionsLocally,
 }) => (
@@ -22,6 +26,7 @@ export const PhiSelectFormControl: ComponentType<PhiFormFieldProviderProps> = ({
     id={id}
     value={typeof value === "string" ? value : undefined}
     placeholder={placeholder}
+    {...(field.config?.allowCustom === true ? { presentation: "autocomplete", allowCustom: true } as const : {})}
     allowClear={field.config?.allowClear === true}
     disabled={disabled}
     readOnly={readOnly}

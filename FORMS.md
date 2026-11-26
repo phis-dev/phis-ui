@@ -445,8 +445,10 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   `address`, `flags`. The Asset Module
   owns `media-asset` (below); it is not part of the shared registry.
 - A `select` field may be emptied when its `config.allowClear` is `true`, for a choice whose empty answer
-  means something ("the Site's own language"); a `multi-select` takes typed values beside its options when
-  `config.allowCustom` is `true`, for a vocabulary that grows by use, such as tags.
+  means something ("the Site's own language"), and takes a typed value beside its options when its
+  `config.allowCustom` is `true`, for a name that is either one already in use or a new one (the CDN
+  upload's Name); a `multi-select` takes typed values beside its options when `config.allowCustom` is
+  `true`, for a vocabulary that grows by use, such as tags.
 - A `number` field states its unit in `config.prefix`, beside the input rather than in the label: a
   symbol nobody translates as a string (`"ms"`), a word as a label reference (`{ kind: "label", key,
   fallback }`) read from the Form's labels like the field's own label.
@@ -937,6 +939,15 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
   568 inside a `card`, which puts it one layout mode below the cap it was given.
 - The Widget resolves the definition on the Server, loads labels and `loadInitialValues`, wraps the body
   in the owner Module's UI provider, and renders `PhiFormControl` in a client host.
+- **Fields in front of work that is no submit.** One Widget draws a registered Form itself: the CDN's
+  upload (the CDN Module's `cdn-upload` Widget), whose file is divided, hashed and sent from the
+  browser before anything could be submitted. Its fields are still the registered Form
+  `@phis/ui/modules/cdn/forms/upload` (no handler), drawn by `PhiFormControl` with the Form's labels, so
+  they stand where every Form's do; the Widget reads the values (`onValuesChange`), fills them from the
+  picked file (`onFormReady`'s instance) and sends the file with them, and the Form is never submitted.
+  The Widget states the Options Provider the descriptor names in its `requiredDataProviders`, since the
+  page's demand scan reads only a placed Form Widget's descriptor. Anything that is a submit is a Form
+  Widget.
 - `handler` mode submits through the Form controller and the [Relay](#relay). `signal` mode keeps the
   Form local: a valid submit emits `submitValues` with `{ values }` and `submitSuccess`, and calls no
   gateway. A signal-mode Form may have no `submitHandlerKey`.

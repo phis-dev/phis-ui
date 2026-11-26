@@ -16,6 +16,8 @@ export const PHI_CDN_RUNTIME_MODULE_IDENTITY = {
 
 export const PHI_CDN_RUNTIME_DATA_PROVIDER_KEYS = {
   table: createPhiSharedRuntimeDataProviderKey("tables", "cdn"),
+  /** The names the catalogue holds files under, as choices for the upload's Name. */
+  names: createPhiSharedRuntimeDataProviderKey("options", "cdn-names"),
 } as const;
 
 /** The resources of the table Provider: the catalogue, and what one check of the bucket found. */

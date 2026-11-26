@@ -10,4 +10,10 @@ export const PHI_CDN_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS = [
     loadLive: async () =>
       (await import("./services/table")).PhiCdnTableProviderClient,
   },
+  {
+    key: PHI_CDN_RUNTIME_DATA_PROVIDER_KEYS.names,
+    ownerModuleId: PHI_CDN_RUNTIME_MODULE_ID,
+    loadLive: async () =>
+      (await import("./services/names")).PhiCdnNamesOptionsProviderClient,
+  },
 ] satisfies readonly PhiRuntimeModuleDataProviderClientDefinition[];
