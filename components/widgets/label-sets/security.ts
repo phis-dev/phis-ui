@@ -43,6 +43,7 @@ const PHI_AUTH_SECURITY_WIDGET_LABEL_SET = definePhiLabelSet({
     sessions_active: "Active",
     sessions_revoke_confirm: definePhiMessageLabel("Revoke this session?"),
     sessions_revoke: "Revoke",
+    confirm_cancel: "Cancel",
   },
 });
 
@@ -52,6 +53,7 @@ export async function getPhiAuthSecurityWidgetLabels(
   const labels = await getPhiLabelSet(options, PHI_AUTH_SECURITY_WIDGET_LABEL_SET);
   return {
     intro: labels.intro,
+    confirmCancel: labels.confirm_cancel,
     errors: {
       unavailable: labels.error_unavailable,
       loadFailed: labels.error_load_failed,

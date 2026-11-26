@@ -196,6 +196,8 @@ export function PhiAuthSecurityWidgetClient({
               action: (
                 <PhiConfirmControl
                   title={labels.authenticators.removeConfirm}
+                  confirmLabel={labels.authenticators.remove}
+                  cancelLabel={labels.confirmCancel}
                   onConfirm={() => void removeFactor(factor.id)}
                   danger
                   trigger={{ label: labels.authenticators.remove, type: "link", danger: true }}
@@ -230,6 +232,8 @@ export function PhiAuthSecurityWidgetClient({
               ? (
                 <PhiConfirmControl
                   title={labels.sessions.revokeConfirm}
+                  confirmLabel={labels.sessions.revoke}
+                  cancelLabel={labels.confirmCancel}
                   onConfirm={() => void revokeSession(session.id)}
                   danger
                   trigger={{ label: labels.sessions.revoke, type: "link", danger: true }}

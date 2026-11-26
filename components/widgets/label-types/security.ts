@@ -1,5 +1,7 @@
 export type PhiAuthSecurityWidgetLabels = {
   intro: string;
+  /** The way out of either confirmation; each answers with the action's own word. */
+  confirmCancel: string;
   errors: {
     unavailable: string;
     loadFailed: string;

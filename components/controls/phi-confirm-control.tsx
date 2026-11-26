@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { Popconfirm } from "antd";
 
 import { PHI_SPACE } from "../../theme/antd-css-var-contract";
@@ -8,6 +8,8 @@ import { PHI_LAYOUT } from "../../theme/phi-tokens";
 import type { PhiControlSize } from "../../types/control";
 import type { PhiButtonType } from "./phi-button-types";
 import { PhiButtonControl } from "./phi-button-control";
+import { PhiCompactGroupControl } from "./phi-compact-group-control";
+import { PhiFlexControl } from "./phi-flex-control";
 import { PHI_POPUP_PLACEMENTS } from "./phi-picker-control-contract";
 
 export const PHI_CONFIRM_PLACEMENTS = PHI_POPUP_PLACEMENTS;
@@ -59,6 +61,14 @@ const PHI_CONFIRM_CONTAINER_STYLE = {
   overflowWrap: "anywhere",
 } as const;
 
+/*
+ * Ant Design's own pair stands apart, a gap between Cancel and the answer; this house draws a decision's
+ * two ends as one compact group, as a Dialog's footer does (`PhiDialogControl`). Ant Design has no slot
+ * for its buttons, so they are switched off and the group stands under the description instead.
+ */
+const PHI_CONFIRM_HIDDEN_BUTTON_PROPS = { style: { display: "none" } } as const;
+const PHI_CONFIRM_BODY_STYLE = { marginBottom: "calc(-1 * var(--phi-margin-xs))" } as const;
+
 export function PhiConfirmControl({
   title,
   description,
@@ -72,18 +82,78 @@ export function PhiConfirmControl({
   trigger,
   children,
 }: PhiConfirmControlProps) {
+  const [open, setOpen] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const confirmButtonRef = useRef<HTMLButtonElement | HTMLAnchorElement>(null);
+
+  const cancel = () => {
+    setOpen(false);
+    onCancel?.();
+  };
+  /*
+   * The answer may take a while: the button shows it working and takes no second press. A confirmation
+   * whose `onConfirm` throws stays open, because the question was not answered -- what to say about the
+   * failure is the caller's, as it was when Ant Design ran it.
+   */
+  const accept = () => {
+    if (confirming) return;
+    setConfirming(true);
+    void (async () => {
+      try {
+        await onConfirm();
+        setOpen(false);
+      } catch {
+        // Left open; the caller reports the failure.
+      } finally {
+        setConfirming(false);
+      }
+    })();
+  };
+
   return (
     <Popconfirm
+      open={open}
+      onOpenChange={(next) => {
+        if (!disabled) setOpen(next);
+      }}
+      // The answer has the focus once the question is up: Enter gives it, Escape takes the question back.
+      afterOpenChange={(next) => {
+        if (next) confirmButtonRef.current?.focus();
+      }}
       title={title}
-      description={description}
-      okText={confirmLabel}
-      cancelText={cancelLabel}
-      okButtonProps={danger ? { danger: true } : undefined}
+      description={(
+        <PhiFlexControl
+          vertical
+          gap="small"
+          // Ant Design keeps the gap under its message that its own buttons stood in; the group closes it.
+          style={PHI_CONFIRM_BODY_STYLE}
+          onKeyDown={(event) => {
+            if (event.key !== "Escape") return;
+            event.stopPropagation();
+            cancel();
+          }}
+        >
+          {description}
+          <PhiFlexControl justify="end">
+            <PhiCompactGroupControl size="small">
+              <PhiButtonControl label={cancelLabel ?? "Cancel"} disabled={confirming} onClick={cancel} />
+              <PhiButtonControl
+                ref={confirmButtonRef}
+                label={confirmLabel ?? "OK"}
+                type="primary"
+                danger={danger}
+                loading={confirming}
+                onClick={accept}
+              />
+            </PhiCompactGroupControl>
+          </PhiFlexControl>
+        </PhiFlexControl>
+      )}
+      showCancel={false}
+      okButtonProps={PHI_CONFIRM_HIDDEN_BUTTON_PROPS}
       styles={{ container: PHI_CONFIRM_CONTAINER_STYLE }}
       disabled={disabled}
       placement={placement}
-      onConfirm={onConfirm}
-      onCancel={onCancel}
     >
       {trigger ? (
         <PhiButtonControl
