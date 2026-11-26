@@ -994,7 +994,8 @@ membership, ordering, totals, or data outside the current binding.
 
 A read the Provider refuses for this reader on purpose -- the staff's customer file on the reader's own record,
 which Core never opens -- is no failure of the source. The Provider throws `PhiTableProviderError` with the
-code `refused` (`PHI_TABLE_PROVIDER_REFUSED_CODE`, `components/widgets/client/shared/phi-table-provider-refusal.ts`)
+code `refused` (`PHI_TABLE_PROVIDER_REFUSED_CODE`, `components/widgets/client/shared/phi-table-provider-refusal.ts`;
+a Module imports it from `@phis/ui/types`, beside `PhiTableProviderError`, and never spells the code itself)
 and the sentence the reader is told; the Table draws itself, live as in the Builder, with that sentence where
 its rows would be, and keeps its tools, so the reader can ask for something else. Every other failed read
 ends the Table as before: the cause in the Builder, nothing but the log live.

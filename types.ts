@@ -172,6 +172,8 @@ export {
   readPhiTableProviderError,
   readPhiTableQuery,
 } from "./types/table-widget";
+// The code a Provider throws `PhiTableProviderError` with for a read it refuses this reader (TABLES.md, "A refused read").
+export { PHI_TABLE_PROVIDER_REFUSED_CODE } from "./components/widgets/client/shared/phi-table-provider-refusal";
 export {
   PhiTreeProviderError,
   readPhiTreeProviderError,
