@@ -474,6 +474,18 @@ Ant Design = primitive
   ([FORMS.md](../../FORMS.md), "A field draws no label layout of its own").
 - A Control receives `value`, `onChange`, disabled/read-only state, and presentation props. It must not
   create a second persistent state model.
+- A Control draws every control it has in the `size` it receives, the Form's: inputs, buttons, a
+  picker's trigger, the words beside a box. It writes no size of its own, neither `small` nor a default
+  ([FORMS.md](../../FORMS.md), "Size"); `form-field-size.test.tsx` renders every registered field at both
+  sizes and refuses one that does not follow.
+- A picker, a popover or a small panel that asks for values is a `small` Form of descriptor fields:
+  `PhiFormControl` with `size="small"` and a descriptor in code, or the Form Widget with `controlSize:
+  "small"` where it is placed. Never a label and an input side by side of its own, a `PhiLabeledControl`
+  or a Control handed a `label`. A popover saving each change as it is made takes `onValuesChange` and an
+  `onSubmit` that does nothing, and mounts the Form afresh each time it opens (`key`), so it starts from
+  what it edits. In a popover's width the Form is `compact` and its labels stand above the inputs; that is
+  the template. The HTML editor's image popover (`components/widgets/client/html-editor-image-node.tsx`)
+  is the example.
 - Select-like fields use the generic options-provider ABI. Do not add field-specific option registries.
 - Runtime demand collection follows each placed Form Widget into its resolved active preset descriptor;
   every `fields[].optionsProvider.providerKey` is demanded through the same Area-local data-provider host
@@ -667,6 +679,7 @@ package preset itself.
 | The Page answers 500: `Preset Overlay "..." puts Layout "..." between its body and the Form "..."` | The dialog's Form stands in a Layout of the Preset's own -- one holding the Form alone, or one with a `padding` or `margin` (a `panel` creation preset has one). The body is the template and already insets the Form; a second inset leaves a Form of a one-column dialog under 377px, and its labels stack above the fields. Put the Form Widget in the body Layout itself (OVERLAYS.md, "The imperative exemption, and how narrow it is"). A Layout that groups two Forms without an inset passes. |
 | The Page answers 500: ``Preset Overlay "..." states `width`; an Overlay is sized like a block`` (or ``states `size` as one length``) | An Overlay is sized by the block's pairs, `size`, `minSize` and `maxSize`, each `{ width?, height? }` (OVERLAYS.md, "Geometry"). A dialog's `width: PHI_DIALOG_WIDTH_SINGLE_COLUMN` is `size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN }`; a responsive `{ compact: "calc(100vw - 32px)", medium, wide }` is `size: { width: <wide> }`, since the Modal holds every width inside the viewport; a `vw` cap is `maxSize: { width: "90vw" }`; a Drawer's `size: 377` is `size: { width: 377 }` (or `{ height }` at the top or bottom). |
 | One field of a dialog stands stacked -- its labels above the inputs -- while every other field has its label beside it | The field's Control lays out its own labels instead of the template's rows: the address did, drawing a `<label>` over each part inside the control column. Draw each part through `PhiFormFieldPart` and list the field type in `PHI_FORM_PART_ROWS_FIELD_PROVIDER_KEYS`; never a `<label>`, a caption or a Control's `label` in a field provider. `node scripts/validate-form-field-rows.mjs` names the place. |
+| In a small Form one field stands taller than the rows around it, or a button of a medium Form is small | The field's Control ignores the `size` it receives or writes one of its own. Hand `size` to every control it draws (`PhiFormFieldProviderProps.size`); `form-field-size.test.tsx` names the field. |
 | Form validates but handler mode fails | Check active Form/handler Provider resolution, immutable Provider target and credential policy, server add-on/route, authorization, and response. |
 | Overlay closes before persistence succeeds | The workflow closes on the Save command instead of the correlated `submitSuccess` result. |
 | Signal mode sends no values | The Form lacks an emitted `submitValues` route or the receiver/controller capability does not accept the `formValues` schema. |
@@ -708,7 +721,8 @@ package preset itself.
 - Keep executable UI behind the module's lazy UI provider and use Phi Controls.
 - Build every form from descriptor fields: no label, caption or `label` prop of a field Control's own in a
   field provider, a dialog, a popover or a panel; a value with labelled parts draws them through
-  `PhiFormFieldPart`.
+  `PhiFormFieldPart`. A picker or a popover is a `small` Form (`size="small"`, `controlSize: "small"`).
+- In a field provider, hand the `size` you receive to every control you draw; write none of your own.
 - Use the Core runtime Form controller unless the domain lifecycle is genuinely different.
 - Revalidate and authorize on the server; keep secrets and arbitrary endpoints out of descriptors.
 - Test descriptor parsing, catalog construction, missing-provider rejection, active-Area resolution,

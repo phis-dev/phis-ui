@@ -687,6 +687,10 @@ Field rows:
 - a field control never carries a `label` of its own: it would draw its words above itself and stand out of
   line with every row around it. `scripts/validate-inspector-field-rows.mjs` refuses it in the Builder's
   Inspector clients.
+- a Control's size is one shared field, `PHI_CONTROL_SIZE_FIELD` (`controlSize`: Small, Medium, Large) or
+  `PHI_COMPACT_CONTROL_SIZE_FIELD` without Large (`components/widgets/config/control-signal-config.ts`),
+  never a size field of a Widget's own. The Form Widget takes the compact one: its Size draws the Form's
+  fields, labels and submit small or medium (FORMS.md, "Size").
 - a field that chooses Pages stores their references and offers the Pages the Area answers
   (`usePhiBuilderOfferedPageCatalog`), never paths a person typed (REFERENCES.md).
 - a list is always edited in a dialog, never in the Inspector column (owner, 2026-11-25). A `collection`

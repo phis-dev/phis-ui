@@ -365,6 +365,34 @@ type PhiFormFieldPlacementDescriptor = {
   `--phi-form-part-*` (`phiFormPartProperties`, `.phi-form-parts` in `styles/layout.css`). A placement of
   its own narrows those tracks with it.
 
+### Size
+
+A Form is drawn at one of two sizes, the Controls' vocabulary without `large` (`PhiFormSize`):
+`medium`, which every Form is unless its placement says otherwise, and `small`, for a Form that stands
+among chrome -- a picker, a popover, a panel of tools. The size is the placement's, not the descriptor's:
+the same Form may be a page's question in one place and a popover's in another, and
+`PhiFormLayoutDescriptor` is `@phis/contracts/forms`, which carries no size.
+
+- Where it is said: the Form Widget's `controlSize` (`small` or `medium`, the Inspector's Size field;
+  `medium` where unstated) and `PhiFormControl`'s `size` prop, for a Form built in code -- the HTML editor's
+  image popover is one (`components/widgets/client/html-editor-image-node.tsx`).
+- `PhiFormControl` hands it to every field as `size` (`PhiFormFieldProviderProps`), and **a field draws
+  every control it has in it**: its inputs, its buttons, a picker's trigger, the sentence beside a
+  checkbox. A field never writes a size of its own -- a `medium` input in a `small` Form stands out of
+  every row around it, and a button written `size="small"` is small in every Form.
+  `components/forms/form-field-size.test.tsx` renders every registered field at both sizes and fails a
+  field whose controls do not follow; the only exceptions are written there with their reason (`table` and
+  `tree`, whose collection chrome is small at every size; a `hidden` or `honeypot` field draws nothing).
+  Ant Design's Slider has one size, so a `slider` field's rail stays as it is and its number input follows.
+- A `small` Form writes its labels in the small text size (`fontSizeSM`, `--phi-form-cell-label-font-size`
+  on the label cells and on a field's part labels), makes a label beside its control as tall as a small
+  control (`controlHeightSM`), and stands every gap of its layout one spacing step closer
+  (`PHI_FORM_SMALL_GAP_STEP`: `base` is `sm`, `sm` is `xs`, down to `xxs`), the way a small Card's inset is
+  `paddingSM`. The Form Widget's submit is a small button and stands a step closer to the fields.
+- The widths stay the Form's own: a small Form in a popover is usually under 377px, so it is `compact` and
+  its labels stand above their inputs. That is the template, not a fault (Layout and placement).
+- `medium` writes nothing new: no label size, the same gaps and the same submit as before sizes existed.
+
 ### Compound Table and Tree values
 
 A field provider may render `PhiTableControl` or `PhiTreeControl` when the whole collection is one value
@@ -424,6 +452,8 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   provider for its field type is a wiring fault and still fails as "Missing field provider".
 - A field provider renders Phi Controls and forwards the controlled `value`/`checked` and `onChange` it is
   given; it never keeps a second value state and never renders a Widget or Layout.
+- A field provider draws every control in the `size` it is given, the Form's ([Size](#size)), and writes
+  no size of its own.
 - **A field draws no label layout of its own.** A Form is built from descriptor fields, and where a
   field's label stands -- beside its control from 377px of Form width, above it below that -- is the
   Form's template (`PHI_FORM_DEFAULT_LAYOUT`, [Layout and placement](#layout-and-placement)), drawn by the
@@ -877,6 +907,7 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
 | `formId` | The Form to render. |
 | `submit` | `inline` or `external` (default). `inline` draws the button the descriptor's `submit` describes; `external` draws none, and the Form is submitted through its `submit` input or by Enter. |
 | `submitOnEnter` | Whether Enter in a single-line field submits. Unstated, it is on in a dialog's body (a Modal Overlay) and off anywhere else: a dialog asks one question, while a second Form or a search on a page or in a Drawer gives Enter more than one meaning. A placement that states it wins either way. |
+| `controlSize` | `small` or `medium` (default). How large the Form draws its fields, their labels and its submit ([Size](#size)). |
 | `card` | `{ presentation, title, padding }` or absent. The box the Widget draws around the Form, its submit and its links: `card` on a Page of its own, `panel` for the smaller inset of chrome, `wash` for a ground without a frame. Absent is no box, no ground and no inset. |
 | `feedback` | `{ mode, successText? }` or absent. Absent answers in place. `mode` is `message` (a transient message) or `notification`; `successText` is what a success says where the descriptor's `success` says nothing. Set, it moves the answer out of the Form rather than adding one. |
 | `links` | `[{ key, href, requiresFeature? }]`, drawn below the submit. The text is `actions.<key>Label` of the Form's label set; a link whose `requiresFeature` is not published by an active Module is left out. |
