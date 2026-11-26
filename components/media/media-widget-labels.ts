@@ -87,6 +87,8 @@ export type PhiAssetInspectorWidgetLabels = {
   logoVariantLabel: string;
   landscapeVariantLabel: string;
   portraitVariantLabel: string;
+  iconVariantLabel: string;
+  shareVariantLabel: string;
   publicUrlLabel: string;
   contentTypeLabel: string;
   originalNameLabel: string;
@@ -248,6 +250,8 @@ export const PHI_ASSET_MODULE_DEFAULT_LABELS: PhiAssetModuleLabels = {
     logoVariantLabel: "Logo",
     landscapeVariantLabel: "Landscape",
     portraitVariantLabel: "Portrait",
+    iconVariantLabel: "Icon",
+    shareVariantLabel: "Share",
     publicUrlLabel: "Public URL",
     contentTypeLabel: "Content type",
     originalNameLabel: "Original name",

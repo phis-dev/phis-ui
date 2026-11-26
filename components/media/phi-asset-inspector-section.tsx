@@ -26,6 +26,28 @@ import { PhiFlexControl } from "../controls/phi-flex-control";
 import { PhiTypographyControl } from "../controls/phi-typography-control";
 import { PhiIcon } from "../shell/phi-icon";
 
+/**
+ * The Inspector label of every variant the contracts name. Typed against the contracts' names, so a variant
+ * added there without a label here fails the typecheck instead of drawing an empty option.
+ */
+const PHI_ASSET_VARIANT_LABEL_KEYS = {
+  thumbnail: "thumbnailVariantLabel",
+  preview: "previewVariantLabel",
+  banner: "bannerVariantLabel",
+  header: "headerVariantLabel",
+  card: "cardVariantLabel",
+  hero: "heroVariantLabel",
+  avatar: "avatarVariantLabel",
+  logo: "logoVariantLabel",
+  landscape: "landscapeVariantLabel",
+  portrait: "portraitVariantLabel",
+  icon: "iconVariantLabel",
+  share: "shareVariantLabel",
+} as const satisfies Record<
+  (typeof PhiImageAssetVariantKeyName)[keyof typeof PhiImageAssetVariantKeyName],
+  keyof PhiAssetModuleLabels["inspector"]
+>;
+
 function formatBytes(bytes: number | null | undefined) {
   if (typeof bytes !== "number" || !Number.isFinite(bytes) || bytes <= 0) return null;
   const units = ["B", "KB", "MB", "GB"];
@@ -292,7 +314,7 @@ export function PhiAssetInspectorSection({
             { value: "original", label: labels.inspector.originalVariantLabel },
             ...Object.entries(PhiImageAssetVariantKeyName).map(([value, variantName]) => ({
               value,
-              label: labels.inspector[`${variantName.toLowerCase()}VariantLabel` as keyof typeof labels.inspector],
+              label: labels.inspector[PHI_ASSET_VARIANT_LABEL_KEYS[variantName as keyof typeof PHI_ASSET_VARIANT_LABEL_KEYS]],
             })),
           ]}
           onChange={(value) => onVariantKeyChange(value === "original" ? null : Number(value) as PhiImageAssetVariantKeyValue)}
