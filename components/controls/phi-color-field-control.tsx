@@ -11,6 +11,7 @@ import {
 import { PhiColorControl, type PhiColorPickerMode } from "./phi-color-control";
 import type { PhiPickerPlacement } from "./phi-picker-control-contract";
 import type { PhiThemeTokenKey } from "../../theme/phi-theme-tokens";
+import type { PhiControlSize } from "../../types/control";
 import {
   type PhiColorControlCustomColor,
   usePhiColorControlPresets,
@@ -32,6 +33,8 @@ export type PhiColorFieldControlProps = {
   /** Handed back with every change, so one handler can serve several fields. */
   tokenKey?: string;
   disabled?: boolean;
+  /** The swatch's size; a Form's `color` field passes the Form's. */
+  size?: PhiControlSize;
   mode?: PhiColorPickerMode;
   /** Whether the trigger writes the value out beside the swatch; left out, a single colour does. */
   showText?: boolean;
@@ -69,6 +72,7 @@ export function PhiColorFieldControl({
   defaultToken,
   tokenKey,
   disabled = false,
+  size,
   mode = "single",
   showText,
   placement,
@@ -122,6 +126,7 @@ export function PhiColorFieldControl({
         showText={showText}
         placement={placement}
         disabled={disabled}
+        size={size}
         allowClear={allowClear}
         value={resolvedValue}
         defaultValue={defaultValue}

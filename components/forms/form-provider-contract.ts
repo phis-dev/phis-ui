@@ -46,6 +46,7 @@ export const PHI_FORM_FIELD_PROVIDER_KEYS = {
   upload: PHI_FORM_UPLOAD_FIELD_PROVIDER_KEY,
   linkTarget: createPhiSharedFormProviderKey("field", "link-target"),
   dimension: createPhiSharedFormProviderKey("field", "dimension"),
+  color: createPhiSharedFormProviderKey("field", "color"),
   money: createPhiSharedFormProviderKey("field", "money"),
   country: createPhiSharedFormProviderKey("field", "country"),
   address: createPhiSharedFormProviderKey("field", "address"),
@@ -321,6 +322,16 @@ export const PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS = [
     key: PHI_FORM_FIELD_PROVIDER_KEYS.dimension,
     title: "Dimension",
     valueType: "json",
+    presentation: "control",
+  },
+  /*
+   * One colour, as the Inspector's colour field holds it: a CSS colour (`#rrggbb`, `rgb(...)`) or the
+   * Theme role a Theme swatch stores (`var(--phi-color-primary)`), `null` for none (`color-field.ts`).
+   */
+  {
+    key: PHI_FORM_FIELD_PROVIDER_KEYS.color,
+    title: "Color",
+    valueType: "string",
     presentation: "control",
   },
   /*

@@ -1,8 +1,8 @@
 import { generate } from "@ant-design/colors";
 
+import { PHI_THEME_CUSTOM_COLOR_KEYS } from "./phi-theme-custom-color-keys";
 import {
   mergePhiThemePalettes,
-  PHI_THEME_CUSTOM_COLOR_KEYS,
   resolvePhiThemePresetPlugin,
   type PhiThemeCustomColorPalette,
   type PhiThemeMode,

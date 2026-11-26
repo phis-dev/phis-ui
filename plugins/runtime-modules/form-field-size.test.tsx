@@ -119,6 +119,7 @@ const FIXTURES: Readonly<Record<string, Partial<PhiFormFieldProviderProps>>> = {
   [PHI_FORM_FIELD_PROVIDER_KEYS.money]: { value: { currency: "CHF", minor: "100" }, field: { config: { currency: "CHF" } } as never },
   [PHI_FORM_FIELD_PROVIDER_KEYS.country]: { value: "CH" },
   [PHI_FORM_FIELD_PROVIDER_KEYS.dimension]: { value: { width: "10px", height: "50%" } },
+  [PHI_FORM_FIELD_PROVIDER_KEYS.color]: { value: "#1677ff" },
   [PHI_AUTH_FORM_FIELD_PROVIDER_KEYS.termsConsent]: {
     checked: false,
     field: { config: { href: { kind: "literal", value: "/terms" }, linkLabel: { kind: "literal", value: "terms" } } } as never,
@@ -146,6 +147,7 @@ const SMALL_CLASS: Readonly<Record<string, string>> = {
   "ant-picker": "ant-picker-small",
   "ant-segmented": "ant-segmented-sm",
   "ant-switch": "ant-switch-small",
+  "ant-color-picker-trigger": "ant-color-picker-sm",
 };
 
 function classLists(html: string) {
@@ -285,6 +287,7 @@ const FLOATING: Readonly<Record<string, string>> = {
   [PHI_FORM_FIELD_PROVIDER_KEYS.dimension]: "the unit lists",
   [PHI_FORM_FIELD_PROVIDER_KEYS.country]: "the country list",
   [PHI_FORM_FIELD_PROVIDER_KEYS.address]: "the country list",
+  [PHI_FORM_FIELD_PROVIDER_KEYS.color]: "the colour panel",
   [PHI_ASSET_MEDIA_ASSET_FORM_PROVIDER_DESCRIPTOR.key]: "the Media picker",
   [PHI_ASSET_MEDIA_ASSETS_FORM_PROVIDER_DESCRIPTOR.key]: "the Media picker",
 };

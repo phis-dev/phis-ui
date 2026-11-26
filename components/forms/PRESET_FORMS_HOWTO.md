@@ -24,7 +24,8 @@ something that happens to work:
 
 - a field is one of the field Providers in
   [FORMS.md](../../FORMS.md#field-and-validation-providers) -- text and choice, toggle and date, slider
-  and cascader, the compound Table and Tree, storage size, upload, and the Asset Module's `media-asset`
+  and cascader, a colour or a width and height, the compound Table and Tree, storage size, upload, and
+  the Asset Module's `media-asset`
   (one Asset of the library, as its id);
 - what renders it is a canonical `Phi*Control`, never Ant Design directly;
 - the Form is placed through the one generic Form Widget and never through a Form Widget of your own;

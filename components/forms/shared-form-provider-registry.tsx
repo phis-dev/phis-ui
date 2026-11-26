@@ -43,6 +43,8 @@ const PhiLazyAddressFormControl = lazyPhiFormFieldControl(() =>
   import("./structured-form-field-controls").then((module) => module.PhiAddressFormControl), 6);
 const PhiLazyDimensionFormControl = lazyPhiFormFieldControl(() =>
   import("./structured-form-field-controls").then((module) => module.PhiDimensionFormControl));
+const PhiLazyColorFormControl = lazyPhiFormFieldControl(() =>
+  import("./color-form-control").then((module) => module.PhiColorFormControl));
 const PhiLazyFlagsFormControl = lazyPhiFormFieldControl(() =>
   import("./structured-form-field-controls").then((module) => module.PhiFlagsFormControl), 2);
 const PhiLazySliderFormControl = lazyPhiFormFieldControl(() =>
@@ -299,6 +301,9 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
     }),
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.dimension, {
       Control: PhiLazyDimensionFormControl,
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.color, {
+      Control: PhiLazyColorFormControl,
     }),
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.money, {
       Control: PhiLazyMoneyFormControl,

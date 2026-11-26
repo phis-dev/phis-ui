@@ -1,19 +1,9 @@
 import { PHI_THEME_COLOR_SEED_DERIVATIONS } from "./phi-theme-seed-derivation";
 import { assertPhiThemeVocabulary } from "./phi-theme-tokens";
 import type { PhiThemeGradientPalette } from "./phi-theme-gradients";
+import type { PhiThemeCustomColorKey } from "./phi-theme-custom-color-keys";
 
 export type PhiThemeMode = "light" | "dark";
-export type PhiThemeCustomColorKey =
-  | "custom1"
-  | "custom2"
-  | "custom3"
-  | "custom4"
-  | "custom5"
-  | "custom6"
-  | "custom7"
-  | "custom8"
-  | "custom9"
-  | "custom10";
 export type PhiThemeCustomColorPalette = Record<PhiThemeCustomColorKey, string>;
 
 /**
@@ -69,18 +59,6 @@ export function isPhiThemePaletteModeSeedKey(key: string) {
 
 export const PHI_DEFAULT_THEME_PRESET_KEY = "phis";
 export const PHI_DEFAULT_THEME_PRESET_VERSION = 1;
-export const PHI_THEME_CUSTOM_COLOR_KEYS = [
-  "custom1",
-  "custom2",
-  "custom3",
-  "custom4",
-  "custom5",
-  "custom6",
-  "custom7",
-  "custom8",
-  "custom9",
-  "custom10",
-] as const satisfies readonly PhiThemeCustomColorKey[];
 
 /**
  * The one palette phis-ui ships.

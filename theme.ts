@@ -1,15 +1,17 @@
 export {
   isPhiThemePaletteModeSeedKey,
   mergePhiThemePalettes,
-  PHI_THEME_CUSTOM_COLOR_KEYS,
   PHI_THEME_PALETTE_MODE_SEED_KEYS,
-  type PhiThemeCustomColorKey,
   type PhiThemeCustomColorPalette,
   type PhiThemeMode,
   type PhiThemePalette,
   type PhiThemePaletteMode,
   type PhiThemePresetPlugin,
 } from "./theme/phi-theme-presets";
+export {
+  PHI_THEME_CUSTOM_COLOR_KEYS,
+  type PhiThemeCustomColorKey,
+} from "./theme/phi-theme-custom-color-keys";
 export * from "./theme/phi-tokens";
 /*
  * The Theme's values as a preset writes them: a step of the spacing scale, a colour role, a corner.

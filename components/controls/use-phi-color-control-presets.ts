@@ -1,7 +1,7 @@
 "use client";
 
 import { PHI_COLOR } from "../../theme/antd-css-var-contract";
-import { PHI_THEME_CUSTOM_COLOR_KEYS } from "../../theme/phi-theme-presets";
+import { PHI_THEME_CUSTOM_COLOR_KEYS } from "../../theme/phi-theme-custom-color-keys";
 import { createPhiColorPickerPresets } from "../widgets/config/color-picker-presets";
 import {
   PHI_COLOR_PICKER_DEFAULT_LABELS,

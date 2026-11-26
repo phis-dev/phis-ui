@@ -24,6 +24,9 @@ import { createPhiThemeControllerAddress } from "../../../../../plugins/runtime-
 import { PHI_THEME_SIGNAL_CHANNELS } from "../../../../../plugins/runtime-modules/theme/controller/signals";
 import {
   PHI_THEME_CUSTOM_COLOR_KEYS,
+  type PhiThemeCustomColorKey,
+} from "../../../../../theme/phi-theme-custom-color-keys";
+import {
   isPhiThemePaletteModeSeedKey,
   mergePhiThemePalettes,
   resolvePhiThemeColorTokens,
@@ -32,7 +35,6 @@ import {
   type PhiThemePalette,
   type PhiThemePaletteMode,
   type PhiThemePresetPlugin,
-  type PhiThemeCustomColorKey,
   type PhiThemeCustomColorPalette,
 } from "../../../../../theme/phi-theme-presets";
 import {

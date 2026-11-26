@@ -434,7 +434,7 @@ A Form is drawn at one of two sizes, the Controls' vocabulary without `large` (`
 ### Popup container
 
 A field's floating layers -- a select's list, a picker's panel, a cascader's levels, the dimension's unit
-lists, the Media picker, a slider's tooltip -- are mounted where the Form says
+lists, the colour panel, the Media picker, a slider's tooltip -- are mounted where the Form says
 (owner, 2026-11-26).
 
 - `PhiFormControl`'s `getPopupContainer` (`(triggerNode) => HTMLElement`, the name every Control with a
@@ -533,8 +533,8 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   places that had one when it came stand in its temporary list until they are moved.
 - Core field providers: `text`, `email`, `password`, `textarea`, `hidden`, `honeypot`, `checkbox`,
   `select`, `url`, `tel`, `number`, `slider`, `multi-select`, `checkbox-group`, `datetime`, `switch`,
-  `segmented`, `cascader`, `table`, `tree`, `storage-size`, `upload`, `link-target`, `dimension`, `money`,
-  `country`, `address`, `flags`. The Asset Module
+  `segmented`, `cascader`, `table`, `tree`, `storage-size`, `upload`, `link-target`, `dimension`, `color`,
+  `money`, `country`, `address`, `flags`. The Asset Module
   owns `media-asset` (below); it is not part of the shared registry.
 - A `select` field may be emptied when its `config.allowClear` is `true`, for a choice whose empty answer
   means something ("the Site's own language"), and takes a typed value beside its options when its
@@ -659,6 +659,15 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   half). Its value is `{ width?, height? }` (`PhiRenderableBlockSize`) and `null` when both are empty;
   each half is named by its placeholder. It came for the HTML editor's image popover, whose Size had been
   a Dimension Control with a label of its own (owner, 2026-11-26: a popover is a Form of descriptor fields).
+- `color` is one colour, chosen with the colour field the Builder's Inspector uses
+  (`PhiColorFieldControl`: its swatch, the Site's palette and the Theme swatches), and holds what that
+  field holds (`readPhiColorFieldValue`, `color-field.ts`): a CSS colour as the picker writes it --
+  `#rrggbb`, `#rrggbbaa`, `rgb(...)`/`rgba(...)` -- or, where a Theme swatch was picked, the Theme role it
+  shows (`var(--phi-color-primary)`, `var(--phi-custom-3)`), which follows the Theme and the mode; `null`
+  for none. It is read strictly: any other value -- a number, a colour name, a gradient -- throws rather
+  than showing a colour nobody stored. `config.allowClear: true` lets it be emptied. Its `valueType` is
+  `string`. One colour only: the Inspector's gradient modes are not offered. Where it holds nothing, the
+  swatch shows the Control's default colour, as the Inspector's colour field does.
 - `media-asset` is **owned by the Asset Module** (`@phis/ui/modules/asset/form-field/media-asset`,
   `PHI_MEDIA_ASSET_FORM_FIELD_PROVIDER_KEY` in `constants/media-library-provider-keys.ts`, the Foundation's name for it), because
   that Module owns the Media library. It is declared in the Module's `formProviders.fieldTypes` and

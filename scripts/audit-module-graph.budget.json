@@ -78,8 +78,8 @@
       "clientBytes": 0
     },
     "./controls": {
-      "runtimeBytes": 1722822,
-      "clientBytes": 1647198
+      "runtimeBytes": 1702608,
+      "clientBytes": 1626984
     },
     "./controls/config": {
       "runtimeBytes": 68665,
@@ -98,8 +98,8 @@
       "clientBytes": 0
     },
     "./forms/client": {
-      "runtimeBytes": 1086697,
-      "clientBytes": 1086044
+      "runtimeBytes": 1108650,
+      "clientBytes": 1107997
     },
     "./helpers": {
       "runtimeBytes": 377155,
