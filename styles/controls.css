@@ -429,11 +429,20 @@ h5.phi-typography, .phi-typography h5 {
 }
 
 /*
- * An accordion section's title may be taller than a line -- a title with swatches beside it -- and the
- * arrow stands at its middle rather than at its top.
+ * The arrow stands at the first line of an accordion section's title, whatever else the title holds: a
+ * swatch or a field beside the words makes the row taller than a line and centres the words in it, and a
+ * long title wraps. Neither the top (Ant Design's `flex-start`) nor the middle (`center`) is that line in
+ * both cases; the first baseline is. The arrow's box gets a baseline of its own from a zero-width space,
+ * so it lines up as a line of text would rather than by its bottom edge. Ant Design sets the alignment on
+ * `.ant-collapse > .ant-collapse-item > .ant-collapse-header`, which a single class loses to, so the rule
+ * names that path with the header's own class on it.
  */
-.phi-accordion-control__header {
-  align-items: center;
+.ant-collapse > .ant-collapse-item > .ant-collapse-header.phi-accordion-control__header {
+  align-items: first baseline;
+}
+
+.phi-accordion-control__header > .ant-collapse-expand-icon::before {
+  content: "\200b";
 }
 
 /*
