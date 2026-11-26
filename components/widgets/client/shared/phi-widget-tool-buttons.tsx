@@ -1,7 +1,7 @@
 "use client";
 
 import { stopPhiOverlayEvent } from "../../../../helpers/overlay-events";
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { formatUrl } from "@lexical/link";
 
@@ -16,10 +16,13 @@ import { resizePhiDescriptionItems } from "./description-items";
 import type { PhiBulletListEntry } from "../../shared/bullet-list-vocabulary";
 import { PhiButtonControl } from "../../../controls/phi-button-control";
 import { PhiCheckboxControl } from "../../../controls/phi-checkbox-control";
-import { PhiNumberControl } from "../../../controls/phi-number-control";
+import { PhiFormControl, type PhiFormControlFormInstance } from "../../../controls/phi-form-control";
 import { PhiPopoverControl } from "../../../controls/phi-popover-control";
 import { PhiSelectControl } from "../../../controls/phi-select-control";
 import { PhiTextControl } from "../../../controls/phi-text-control";
+import { createPhiFormLiteralText } from "../../../forms/form-descriptor-contract";
+import { PHI_FORM_FIELD_PROVIDER_KEYS } from "../../../forms/form-provider-contract";
+import { PHI_FORM_DESCRIPTOR_SCHEMA_VERSION, type PhiFormDescriptor } from "../../../../types/form-descriptor";
 import { PhiWidgetIconPickerButton } from "./phi-widget-icon-picker";
 import {
   PHI_HTML_WIDGET_EDITOR_EMPTY_STATE,
@@ -40,7 +43,6 @@ import { PhiInternalAssetReferencePickerButton } from "./phi-widget-image-tool-b
 import { PHI_Z_INDEX } from "../../../../theme/phi-tokens";
 import { PhiFlexControl } from "../../../controls/phi-flex-control";
 import { PHI_HTML_LINK_SCHEMES } from "../../../../constants/html-link-schemes";
-import { PhiTypographyControl } from "../../../controls/phi-typography-control";
 import { PhiIcon } from "../../../shell/phi-icon";
 
 function preserveEditorSelectionMouseEvent(event: { preventDefault?: () => void; stopPropagation: () => void }) {
@@ -149,6 +151,26 @@ export function PhiWidgetColorToolButton({
   );
 }
 
+/* A popover's Form writes each change as it is made, so there is no submit (PRESET_FORMS_HOWTO.md). */
+function submitNothing() {}
+
+/*
+ * A popover's Form follows what it edits while it is open: an undo, or another editor, changes the value
+ * under it, and a field somebody has touched would otherwise keep what it last showed. The Form's own
+ * `initialValues` leave a touched field alone, so the values are written into it whenever they change.
+ */
+function usePhiPopoverFormValues(values: Record<string, unknown>) {
+  const formRef = useRef<PhiFormControlFormInstance | null>(null);
+  const onFormReady = useCallback((form: PhiFormControlFormInstance) => {
+    formRef.current = form;
+  }, []);
+  const key = JSON.stringify(values);
+  useEffect(() => {
+    formRef.current?.setFieldsValue(JSON.parse(key) as Record<string, unknown>);
+  }, [key]);
+  return onFormReady;
+}
+
 export type PhiWidgetTypographyToolButtonProps = {
   fontFamily?: PhiWidgetFontFamilyKey | null;
   fontSize?: PhiWidgetFontSizeKey | null;
@@ -171,6 +193,37 @@ export function PhiWidgetTypographyToolButton({
   const currentFontFamily = fontFamily ?? "inherit";
   const currentFontSize = fontSize ?? defaultFontSize;
   const popup = usePhiWidgetScaffoldPopup();
+  /*
+   * Font and Size, as a small Form of descriptor fields (FORMS.md, "Size"): a popover draws no label
+   * over a select of its own. Each choice is applied as it is made. The lists open inside the popover
+   * (`getNestedPopupContainer`), where a click on an entry is a click inside it.
+   */
+  const descriptor = useMemo<PhiFormDescriptor>(() => ({
+    schemaVersion: PHI_FORM_DESCRIPTOR_SCHEMA_VERSION,
+    key: "widget-text-style",
+    fields: [
+      {
+        key: "fontFamily",
+        fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
+        label: createPhiFormLiteralText(labels.text.font),
+        options: PHI_WIDGET_FONT_FAMILY_OPTIONS.map((option) => ({
+          value: option.value,
+          label: createPhiFormLiteralText(String(option.label)),
+        })),
+      },
+      {
+        key: "fontSize",
+        fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
+        label: createPhiFormLiteralText(labels.text.size),
+        options: PHI_WIDGET_FONT_SIZE_OPTIONS.map((option) => ({
+          value: option.value,
+          label: createPhiFormLiteralText(String(option.label)),
+        })),
+      },
+    ],
+  }), [labels.text.font, labels.text.size]);
+  const values = { fontFamily: currentFontFamily, fontSize: currentFontSize };
+  const onFormReady = usePhiPopoverFormValues(values);
 
   return (
     <PhiPopoverControl
@@ -181,51 +234,30 @@ export function PhiWidgetTypographyToolButton({
       onOpenChange={popup.setOpen}
       zIndex={PHI_Z_INDEX.authoringPopup}
       content={
-        <PhiFlexControl
-          vertical
-          gap={8}
+        <div
           style={{ minWidth: 220 }}
           onClick={stopPhiOverlayEvent}
           onMouseDown={stopPhiOverlayEvent}
           onPointerDown={stopPhiOverlayEvent}
         >
-          <label>
-            <PhiTypographyControl style={{ display: "block", marginBottom: 4 }}>
-              {labels.text.font}
-            </PhiTypographyControl>
-            <PhiSelectControl<PhiWidgetFontFamilyKey>
-              value={currentFontFamily}
-              options={PHI_WIDGET_FONT_FAMILY_OPTIONS}
-              getPopupContainer={popup.getPopupContainer}
-              popupRootClassName={popup.rootClassName}
-              popupZIndex={PHI_Z_INDEX.authoringPopupNested}
-              onChange={(nextValue) => {
-                onChange({
-                  fontFamily: nextValue,
-                });
-              }}
-              style={{ width: "100%" }}
-            />
-          </label>
-          <label>
-            <PhiTypographyControl style={{ display: "block", marginBottom: 4 }}>
-              {labels.text.size}
-            </PhiTypographyControl>
-            <PhiSelectControl<PhiWidgetFontSizeKey>
-              value={currentFontSize}
-              options={PHI_WIDGET_FONT_SIZE_OPTIONS}
-              getPopupContainer={popup.getPopupContainer}
-              popupRootClassName={popup.rootClassName}
-              popupZIndex={PHI_Z_INDEX.authoringPopupNested}
-              onChange={(nextValue) => {
-                onChange({
-                  fontSize: nextValue,
-                });
-              }}
-              style={{ width: "100%" }}
-            />
-          </label>
-        </PhiFlexControl>
+          <PhiFormControl
+            descriptor={descriptor}
+            size="small"
+            getPopupContainer={popup.getNestedPopupContainer}
+            submitOnEnter={false}
+            initialValues={values}
+            onFormReady={onFormReady}
+            onSubmit={submitNothing}
+            onValuesChange={(changed) => {
+              if (typeof changed.fontFamily === "string") {
+                onChange({ fontFamily: changed.fontFamily as PhiWidgetFontFamilyKey });
+              }
+              if (typeof changed.fontSize === "string") {
+                onChange({ fontSize: changed.fontSize as PhiWidgetFontSizeKey });
+              }
+            }}
+          />
+        </div>
       }
     >
       <span
@@ -626,12 +658,28 @@ export function PhiWidgetCountToolButton({
   const draftCount = draft.stored === count ? draft.count : count;
   const setDraftCount = (next: number | null) => setDraft({ stored: count, count: next });
   /* An emptied field on the way to a new number is not a count; out of range is held to the range. */
-  const commit = () => {
-    if (draftCount == null || !Number.isFinite(draftCount)) return;
-    const nextCount = Math.max(min, Math.min(max, Math.trunc(draftCount)));
+  const commit = (typed: number | null = draftCount) => {
+    if (typed == null || !Number.isFinite(typed)) return;
+    const nextCount = Math.max(min, Math.min(max, Math.trunc(typed)));
     if (nextCount === count) return;
     onChange(nextCount);
   };
+  /*
+   * The number as a small Form of one descriptor field (FORMS.md, "Size"): its label is the Form's, not
+   * a caption over an input of the popover's own. Enter submits the Form, which commits; so does leaving
+   * the field.
+   */
+  const descriptor = useMemo<PhiFormDescriptor>(() => ({
+    schemaVersion: PHI_FORM_DESCRIPTOR_SCHEMA_VERSION,
+    key: "widget-count",
+    fields: [{
+      key: "count",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.number,
+      label: createPhiFormLiteralText(label),
+      config: { min, max, precision: 0 },
+    }],
+  }), [label, max, min]);
+  const onFormReady = usePhiPopoverFormValues({ count });
 
   return (
     <PhiPopoverControl
@@ -642,27 +690,30 @@ export function PhiWidgetCountToolButton({
       onOpenChange={popup.setOpen}
       zIndex={PHI_Z_INDEX.authoringPopup}
       content={
-        <PhiFlexControl
-          vertical
-          gap={8}
+        <div
+          // A Form takes the width it is given and a popover gives what its content asks for: without one
+          // of its own the Form stood one letter wide.
+          style={{ minWidth: 160 }}
           onClick={stopPhiOverlayEvent}
           onMouseDown={stopPhiOverlayEvent}
           onPointerDown={stopPhiOverlayEvent}
+          // Every key stays in the popover: Delete or an arrow reaching the Canvas would act on the block.
+          onKeyDown={stopPhiOverlayEvent}
         >
-          <PhiTypographyControl type="secondary">{label}</PhiTypographyControl>
-          <PhiNumberControl
-            min={min}
-            max={max}
-            precision={0}
-            value={draftCount}
-            onChange={setDraftCount}
-            onBlur={commit}
-            onKeyDown={(event) => {
-              stopPhiOverlayEvent(event);
-              if (event.key === "Enter") commit();
+          <PhiFormControl
+            descriptor={descriptor}
+            size="small"
+            getPopupContainer={popup.getNestedPopupContainer}
+            submitOnEnter
+            initialValues={{ count }}
+            onFormReady={onFormReady}
+            onValuesChange={(changed) => {
+              if ("count" in changed) setDraftCount(typeof changed.count === "number" ? changed.count : null);
             }}
+            onBlurCapture={() => commit()}
+            onSubmit={(values) => commit(typeof values.count === "number" ? values.count : null)}
           />
-        </PhiFlexControl>
+        </div>
       }
     >
       <span

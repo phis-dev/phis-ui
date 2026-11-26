@@ -45,8 +45,6 @@ const TEMPLATE_FORM_FILES = new Set(["components/controls/phi-form-control.tsx"]
  * (a number above the hits fails too, so the list cannot go stale). Never a way to pass the check.
  */
 const TEMPORARY_EXCEPTIONS = new Map([
-  // Rich-text tools, text-style popover: Font and Size as a <label> around a caption and a select.
-  ["components/widgets/client/shared/phi-widget-tool-buttons.tsx", { "label-element": 2 }],
   // Surface control (Inspector composite): "background per mode" switch with its own label.
   ["components/controls/phi-surface-control.tsx", { "control-label": 1 }],
   // Asset Inspector section: the variants select under the Asset name, not an Inspector row.

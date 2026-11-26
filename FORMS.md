@@ -446,7 +446,7 @@ lists, the colour panel, the Media picker, a slider's tooltip -- are mounted whe
   the popover -- or the editor beneath it -- takes a click on an entry for a click elsewhere: in the HTML
   editor's image popover a click on a unit chose nothing (checked on dev.phis.dev). A Form in a scaffold
   popover passes `usePhiWidgetScaffoldPopup().getNestedPopupContainer`, which mounts each layer beside
-  its trigger and so inside the popover; the image popover does.
+  its trigger and so inside the popover; the image popover and the text tools' popovers do.
 - `plugins/runtime-modules/form-field-size.test.tsx` mounts every registered field with a container of
   its own, opens everything that opens a layer and fails a field whose layer stands outside it; the
   fields that have a layer are listed there, so one that opens nothing it lists, or something it does
