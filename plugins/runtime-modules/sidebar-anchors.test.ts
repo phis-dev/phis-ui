@@ -73,7 +73,7 @@ describe("the first-party sidebars", () => {
       "  General",
       "  Media",
       "  Authentication",
-      "  People data",
+      "  Customer data",
       "Builder",
     ]);
     expect(sidebarOf("app")).toEqual([

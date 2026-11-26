@@ -26,14 +26,14 @@ Steps an installation takes with a release stand under [Operations](#operations)
 
 ## People data (`users:v1`)
 
-What the App profile's numbers and addresses, Admin -> Settings -> People data and the Accounting customer
+What the App profile's numbers and addresses, Admin -> Settings -> Customer data and the Accounting customer
 file (THREADS.md section 10) leave open:
 
 - The access log filters take a subject and an Add-on id as typed; a picker of the Site's people by subject
   and of the Add-ons that read people would be options Providers of their own.
 - A grant gives an Add-on everything it asks in the background; granting a part of it (the route takes any
   non-empty part) has no dialog yet.
-- A Maintainer opening Settings -> People data by its address is refused while the page is built (the
+- A Maintainer opening Settings -> Customer data by its address is refused while the page is built (the
   retention Form's read is the Admin route); the page does not yet answer that inside itself, as the
   customer file does.
 - Core's Site member picker (`PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteMembers`) names no held value off the

@@ -38,7 +38,7 @@ const PAGE = {
   id: 31,
   siteId: 1,
   areaMask: 2,
-  path: "/settings/people-data",
+  path: "/settings/customer-data",
   pageType: PhiCmsPageType.Standard,
   status: PhiCmsStatus.Published,
   flags: 0,
@@ -72,11 +72,11 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-/** Admin -> Settings -> People data (phis-server `/api/site/admin/users-access`, Site Admin only). */
-describe("the people data access page", () => {
+/** Admin -> Settings -> Customer data (phis-server `/api/site/admin/users-access`, Site Admin only). */
+describe("the customer data access page", () => {
   it("is a Settings entry of the Admin offered to Site Admins", () => {
     expect(route.area).toBe("admin");
-    expect(route.path).toBe("/settings/people-data");
+    expect(route.path).toBe("/settings/customer-data");
     const [navigation] = route.navigation ?? [];
     expect(navigation).toMatchObject({ navKey: "admin:sidebar", anchor: "settings" });
     expect(navigation?.item.accessPolicy).toEqual(PHI_VIEWER_ACCESS_SITE_ADMIN);

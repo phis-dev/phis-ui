@@ -28,7 +28,7 @@ import {
 
 /** Core's Site Admin routes for `users:v1` access (phis-server `/api/site/admin/users-access`). */
 export const PHI_USERS_ACCESS_PATH = "/api/site/admin/users-access";
-const RESPONSE_OPTIONS: ReadPhiTableProviderResponseOptions = { subject: "People data access" };
+const RESPONSE_OPTIONS: ReadPhiTableProviderResponseOptions = { subject: "Customer data access" };
 // The Page names the same size; the route takes up to 100.
 const LOG_PAGE_SIZE = 25;
 
@@ -102,7 +102,7 @@ async function queryUsersAccess({ resourceKey, query, signal }: PhiTableProvider
     const page = Number(params.get("page")) || 1;
     return { rows: readPhiTableRows(result?.items).map((row, index) => toPhiUsersAccessLogRow(row, index, page)) };
   }
-  throw new PhiTableProviderError("resource-not-found", `Unknown people data access resource "${resourceKey}".`);
+  throw new PhiTableProviderError("resource-not-found", `Unknown customer data access resource "${resourceKey}".`);
 }
 
 /** The address of one Add-on's grant; the id is one segment, so its `@` and `/` are encoded. */
@@ -133,11 +133,11 @@ async function mutateUsersAccess(request: PhiTableProviderMutationRequest) {
         RESPONSE_OPTIONS,
       );
     } else {
-      throw new PhiTableProviderError("action-not-supported", `Unsupported people data access action "${request.actionKey}".`);
+      throw new PhiTableProviderError("action-not-supported", `Unsupported customer data access action "${request.actionKey}".`);
     }
     return { status: "accepted" as const, invalidation: "view" as const };
   }
-  throw new PhiTableProviderError("mutation-not-supported", "This people data access change is not offered.");
+  throw new PhiTableProviderError("mutation-not-supported", "This customer data access change is not offered.");
 }
 
 const resources = PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_DESCRIPTORS

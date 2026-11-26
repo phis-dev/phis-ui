@@ -5,15 +5,15 @@ import { definePhiMessageLabel, definePhiRuntimeModuleLabelSet, getPhiLabelSet }
 import { PHI_USER_MANAGEMENT_RUNTIME_MODULE_IDENTITY } from "../ids";
 
 /**
- * What Admin -> Settings -> People data says: which Add-ons read people with nobody acting and what the
+ * What Admin -> Settings -> Customer data says: which Add-ons read people with nobody acting and what the
  * Site granted them, how long the access log is kept, and the log.
  */
 const PHI_ADMIN_USERS_ACCESS_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_USER_MANAGEMENT_RUNTIME_MODULE_IDENTITY, {
   key: "preset:admin-users-access-page",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
-    page_title: "People data",
-    page_description: definePhiMessageLabel("Which Add-ons read people's data in the background, and every time anybody's was read."),
+    page_title: "Customer data",
+    page_description: definePhiMessageLabel("Which Add-ons read customer data in the background, and every time anybody's was read."),
     panel_background: "Background access",
     panel_background_description: definePhiMessageLabel(
       "An Add-on reads people with nobody acting -- in a job or an event -- only the fields granted here, and only while its manifest still asks for them.",

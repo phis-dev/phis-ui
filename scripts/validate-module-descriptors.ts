@@ -429,7 +429,7 @@ const adminSettingsContainer = adminNavigationItems?.at(-2);
 assert.equal(adminSettingsContainer?.kind, "container");
 assert.deepEqual(
   adminSettingsContainer?.children.map((item) => readPhiCmsNavigationTargetPath(item.target) ?? null),
-  ["/phis/ui/settings/general", "/phis/ui/settings/authentication", "/phis/ui/settings/people-data"],
+  ["/phis/ui/settings/general", "/phis/ui/settings/authentication", "/phis/ui/settings/customer-data"],
 );
 assert.equal(
   adminNavigationSurfaces.find((surface) => surface.navKey === "admin:settings"),

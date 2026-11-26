@@ -17,7 +17,7 @@ import { readPhiUsersAccessRetentionDays } from "../users-access-retention";
 const REGION_CONTENT_ID = -487;
 
 /**
- * Admin -> Settings -> People data: what the Site lets Add-ons read of people (`users:v1`), phis-server
+ * Admin -> Settings -> Customer data: what the Site lets Add-ons read of people (`users:v1`), phis-server
  * `/api/site/admin/users-access`. A Settings page like the others, three panels in the one shell:
  *
  * - **Background access**, one row per installed Add-on that reads people: what its manifest reads, what it
@@ -179,8 +179,8 @@ export async function buildPhiDefaultAdminUsersAccessPageTree({
   return {
     ...tree,
     pageMeta: {
-      title: { msgId: 0, source: "People data", value: labels.pageTitle },
-      description: { msgId: 0, source: "Which Add-ons read people's data in the background, and every time anybody's was read.", value: labels.pageDescription },
+      title: { msgId: 0, source: "Customer data", value: labels.pageTitle },
+      description: { msgId: 0, source: "Which Add-ons read customer data in the background, and every time anybody's was read.", value: labels.pageDescription },
     },
   };
 }

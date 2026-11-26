@@ -59,7 +59,7 @@ Terminology across the Site/server boundary is strict:
 | `@phis/ui/modules/theme` | optional | `builder` | Theme and brand editing ([THEME.md](./THEME.md)) |
 | `@phis/ui/modules/threads` | optional | `app` | conversations a person is in, and the one composer every Module writing into one reuses; the customer file's Table Provider and the Controller its Page mounts ([THREADS.md](./THREADS.md#10-the-customer-file)) |
 | `@phis/ui/modules/tour` | optional | all | the Controller that runs the guided Tours other Modules attach to their route presets, and each person's Tour progress; switched off, Tours are off for every Module alike |
-| `@phis/ui/modules/user-management` | optional | `admin` | users, roles, invites; Settings -> People data, what Add-ons may read of people (`users:v1`) and the access log |
+| `@phis/ui/modules/user-management` | optional | `admin` | users, roles, invites; Settings -> Customer data, what Add-ons may read of people (`users:v1`) and the access log |
 | `@phis/ui/modules/video` | optional | `public`, `app` | the video providers a Site may embed from, and the Widget that asks before it fetches one ([design/CONSENT.md](./design/CONSENT.md)) |
 
 The source of this table is each Module's `ids.ts` and `definition.ts`; the Area base Modules come from

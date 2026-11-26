@@ -25,7 +25,7 @@ export const PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS = {
   usersAccess: createPhiSharedRuntimeDataProviderKey("tables", "user-management-users-access"),
 } as const;
 
-/** The two resources of the people-data access Provider. */
+/** The two resources of the customer data access Provider. */
 export const PHI_USER_MANAGEMENT_USERS_ACCESS_RESOURCE_KEYS = {
   addons: "addons",
   log: "log",

@@ -117,7 +117,7 @@ export const PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
     kind: "table",
     executionMode: "live",
     authoringMode: "none",
-    title: "People data access",
+    title: "Customer data access",
     description: "Which Add-ons read people in the background, and the access log.",
     resources: [
       {

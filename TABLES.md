@@ -346,7 +346,7 @@ rows or aligns columns (a field and its value, side by side), and neither part h
 exemption. Only a Table with a header and truly nothing to count leaves the footer out, and says why in
 `presentation.footerOmitted`, a reason for the next reader of the preset that is never drawn and never
 translated. A single setting is not such a Table: one value is set with an ordinary Form, one field and its
-Save, never a one-row Table edited in its cell (owner, 2026-11-26; Admin -> Settings -> People data, the
+Save, never a one-row Table edited in its cell (owner, 2026-11-26; Admin -> Settings -> Customer data, the
 retention). New Pages kept leaving the footer out; `checkPhiPresetTables` refuses such a preset Table
 ([Module and preset obligations](#module-and-preset-obligations)).
 

@@ -24,14 +24,16 @@ export const PHI_USER_MANAGEMENT_RUNTIME_MODULE_ROUTES = [
   /*
    * What Add-ons may read of people, in the Admin's Settings: the entry is a Site Admin's, as the routes
    * behind it are (`/api/site/admin/users-access`). Beside Users, because it is about the same people.
+   * Named "Customer data" (owner, 2026-11-26); the item key and the preset key keep the page's first name,
+   * so the Site's stored navigation and revisions still find it.
    */
   buildPhiSidebarRoutePresetDescriptor({
     area: "admin",
     anchor: "settings",
     ownerModuleId: PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
     presetKey: PHI_USER_MANAGEMENT_USERS_ACCESS_PAGE_PRESET_KEY,
-    title: "People data",
-    path: "/settings/people-data",
+    title: "Customer data",
+    path: "/settings/customer-data",
     itemKey: "@phis/ui/modules/user-management/nav/admin/settings/people-data",
     icon: "antd:safety-certificate",
     loadTree: ({ page, runtime }) =>

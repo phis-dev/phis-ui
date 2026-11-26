@@ -331,7 +331,7 @@ export const PHI_USER_MANAGEMENT_RUNTIME_MODULE_FORMS = [
     version: 1,
     flags: 0,
     title: "Access log retention",
-    description: "How many days the access log of people's data keeps an entry.",
+    description: "How many days the access log of customer data keeps an entry.",
     category: "forms",
     tags: ["settings", "users", "admin"],
     descriptor: usersAccessRetentionDescriptor,
