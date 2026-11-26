@@ -202,6 +202,16 @@ places the Form hands it the Site's languages and the writer's default through
 `buildPhiThreadMessageFormConfig`; the registered Form knows neither. `@phis/support` spells the same two
 keys for its own Forms, as `@phis/products` does, because neither is a package export.
 
+The picker offers the Site's languages **plus one more, last and after a separator: "Other language"**
+(owner decision, 2026-11-26). Choosing it declares nothing: its value is `other` in the Form (an option
+cannot be empty), and the relay leaves `sourceLang` out of the request (`shapePhiFormHandlerRequest`), so
+Core sees no declaration and stores `source_lang` NULL. The value never reaches the server.
+"Translate" then shows for every reader, because the language is unknown, and the detection on the first
+translation fills it (`LangDetected`). It is the writer's way of saying "not one of yours": an English
+customer on a German-only Site picks it. The option is the field's own static option, which the Site
+locales provider appends after the languages. The picker also opens on it where neither the writer's
+language nor the page's is one the Site offers.
+
 Core's Site routes take it as an optional `sourceLang` and store it as it resolves, without
 `LangDetected`; a key the platform does not know is a 400 ([phis-server design/THREADS.md §14](https://github.com/phis-dev/phis-server/blob/main/design/THREADS.md)).
 

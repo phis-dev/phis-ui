@@ -3,6 +3,12 @@ import type { PhiFormFieldDescriptor, PhiFormTextDescriptor } from "../../types/
 import { PHI_FORM_FIELD_PROVIDER_KEYS } from "./form-provider-contract";
 import { PHI_SITE_LOCALES_CONFIG_KEY } from "./site-locales-config";
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../constants/core-data-provider-keys";
+import {
+  PHI_THREAD_MESSAGE_OTHER_LANGUAGE_VALUE,
+  PHI_THREAD_MESSAGE_SOURCE_LANG_FIELD_KEY,
+} from "./thread-message-source-lang";
+
+export { PHI_THREAD_MESSAGE_OTHER_LANGUAGE_VALUE, PHI_THREAD_MESSAGE_SOURCE_LANG_FIELD_KEY };
 
 /*
  * The language a message is written in, declared by whoever writes it (THREADS.md section 9).
@@ -21,23 +27,26 @@ import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../constants/core-data-p
  * layout either: it stands where the Form's own template puts a field.
  */
 
-/** The value's name, which is the name Core's Site routes take it under and `PhisThreadMessage` reads it back as. */
-export const PHI_THREAD_MESSAGE_SOURCE_LANG_FIELD_KEY = "sourceLang";
-
 /**
  * The picker, as a field of a Form that writes a message.
  *
  * No `required` rule and no way to clear it, for the reason the profile's language carries none: it
- * opens on a language and offers no way to empty it, so the rule could only pass and would print an
+ * opens on a language or on "Other language" and offers no way to empty it, so the rule could only pass and would print an
  * asterisk beside something nobody can leave blank. Core refuses a key it does not know, which is where
  * that answer belongs.
  */
-export function phiThreadMessageSourceLangField(label: PhiFormTextDescriptor): PhiFormFieldDescriptor {
+export function phiThreadMessageSourceLangField(
+  label: PhiFormTextDescriptor,
+  otherLanguageLabel: PhiFormTextDescriptor,
+): PhiFormFieldDescriptor {
   return {
     key: PHI_THREAD_MESSAGE_SOURCE_LANG_FIELD_KEY,
     fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
     label,
     optionsProvider: { providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteLocales },
+    // Last, after a separator (the Site locales provider sets it apart): declares nothing. The relay leaves the language out of the request, and
+    // Core stores NULL.
+    options: [{ value: PHI_THREAD_MESSAGE_OTHER_LANGUAGE_VALUE, label: otherLanguageLabel }],
   };
 }
 
@@ -45,15 +54,16 @@ export function phiThreadMessageSourceLangField(label: PhiFormTextDescriptor): P
  * What a writer is assumed to write in: the language they read in.
  *
  * Their own preference where they set one and the Site offers it, otherwise the locale this page is
- * rendered in -- the answer the Site gave when nobody had said anything, and always one of its own.
- * Most people never touch the picker, so this is what nearly every message declares.
+ * rendered in; where the Site offers neither, "Other language", which declares nothing. Most people
+ * never touch the picker, so this is what nearly every message declares.
  */
 export function resolvePhiThreadMessageSourceLang(
   runtime: Pick<PhiBlockRuntime, "site" | "locale" | "viewer">,
 ): string {
   const preferred = runtime.viewer.preferredLocale?.trim() ?? "";
   const offered = runtime.site.availableLocales.map((option) => option.code);
-  return preferred && offered.includes(preferred) ? preferred : runtime.locale.current;
+  if (preferred && offered.includes(preferred)) return preferred;
+  return offered.includes(runtime.locale.current) ? runtime.locale.current : PHI_THREAD_MESSAGE_OTHER_LANGUAGE_VALUE;
 }
 
 /**

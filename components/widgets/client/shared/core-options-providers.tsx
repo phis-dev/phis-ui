@@ -31,7 +31,11 @@ export const PhiSpacingScaleOptionsProviderClient = createPhiStaticControlOption
  * the field belongs to a registered descriptor that is the same on every Site, and this is not.
  */
 function resolveSiteLocalesOptionsProvider(context: PhiControlOptionsProviderContext) {
-  return { options: readPhiSiteLocaleOptions(context.sourceConfig) };
+  // The field's own static options stand after the languages, set apart by a separator: a Form that
+  // offers one more choice beside them -- "Other language" on a message -- declares it on the field
+  // instead of in every placement.
+  const extras = context.options.map((option, index) => (index === 0 ? { ...option, separator: "before" as const } : option));
+  return { options: [...readPhiSiteLocaleOptions(context.sourceConfig), ...extras] };
 }
 
 export const PhiSiteLocalesOptionsProviderClient = createPhiStaticControlOptionsProviderClient({

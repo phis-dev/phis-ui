@@ -20,6 +20,13 @@ describe("a handler's request", () => {
     })).toEqual({ path: "/api/site/account/addresses/42", body: { address: { name: "Ada" }, flags: 5 } });
   });
 
+  it("leaves a message's \"Other language\" out of the request, and keeps a declared one", () => {
+    expect(shapePhiFormHandlerRequest({ upstreamPath: "/api/site/threads/messages", values: { message: "Hi", sourceLang: "other" } }))
+      .toEqual({ path: "/api/site/threads/messages", body: { message: "Hi" } });
+    expect(shapePhiFormHandlerRequest({ upstreamPath: "/api/site/threads/messages", values: { message: "Hi", sourceLang: "de" } }))
+      .toEqual({ path: "/api/site/threads/messages", body: { message: "Hi", sourceLang: "de" } });
+  });
+
   it("percent-encodes a path value and refuses an empty one", () => {
     expect(shapePhiFormHandlerRequest({ upstreamPath: "/x/{key}", values: { key: "@a/b" } }))
       .toEqual({ path: "/x/%40a%2Fb", body: {} });

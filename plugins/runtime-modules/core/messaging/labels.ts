@@ -102,6 +102,8 @@ const PHI_THREAD_REPLY_FORM_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_CORE_
     reply_thread_required: definePhiMessageLabel("Choose a conversation first."),
     /* Beside the message: the language it is written in, which opens on the writer's own. */
     reply_language_label: "Written in",
+    /* The picker's last choice: declares nothing; the language is found when somebody translates it. */
+    reply_language_other_label: "Other language",
     /*
      * Who reads it, where the placement offers the choice. Said as who it reaches rather than as a
      * setting, because that is the question the writer is answering.
@@ -120,6 +122,7 @@ export async function getPhiThreadReplyFormLabels(options: PhiGlobalTranslatorOp
     replyRequired: labels.reply_required,
     replyThreadRequired: labels.reply_thread_required,
     replyLanguageLabel: labels.reply_language_label,
+    replyLanguageOtherLabel: labels.reply_language_other_label,
     audienceEveryone: labels.audience_everyone,
     audienceInternal: labels.audience_internal,
     replySendLabel: labels.reply_send_label,

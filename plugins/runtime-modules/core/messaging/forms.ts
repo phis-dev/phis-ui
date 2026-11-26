@@ -84,7 +84,10 @@ const PHI_THREAD_REPLY_FORM_DESCRIPTOR: PhiFormDescriptor = {
      * it the Site's languages and opens it on the writer's own (`buildPhiThreadMessageFormConfig`), so
      * leaving it alone is declaring. It is what keeps "Translate" off a message the reader can read.
      */
-    phiThreadMessageSourceLangField(label("replyLanguage", "Written in")),
+    phiThreadMessageSourceLangField(
+      label("replyLanguage", "Written in"),
+      label("replyLanguageOther", "Other language"),
+    ),
     /*
      * The attachment narrows nothing the Site has not narrowed already: the kinds are what the writer's
      * own Space accepts, which the control plane answers for. An area rather than a button, because a
@@ -109,6 +112,7 @@ const loadLabels = createPhiFormLabelSetLoader(
     replyRequired: labels.replyRequired,
     replyThreadRequired: labels.replyThreadRequired,
     replyLanguage: labels.replyLanguageLabel,
+    replyLanguageOther: labels.replyLanguageOtherLabel,
     audienceEveryone: labels.audienceEveryone,
     audienceInternal: labels.audienceInternal,
     replySend: labels.replySendLabel,

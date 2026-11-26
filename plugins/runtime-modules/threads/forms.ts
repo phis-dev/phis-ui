@@ -100,7 +100,7 @@ const PHI_THREADS_NEW_CONVERSATION_FORM_DESCRIPTOR: PhiFormDescriptor = {
       }],
     },
     // What the first message is written in, as for every message (THREADS.md section 9).
-    phiThreadMessageSourceLangField(label("language", "Written in")),
+    phiThreadMessageSourceLangField(label("language", "Written in"), label("languageOther", "Other language")),
   ],
   layout: {
     gap: { compact: "sm", medium: "base" },
@@ -121,6 +121,7 @@ const loadLabels = createPhiFormLabelSetLoader(
     messagePlaceholder: labels.messagePlaceholder,
     messageRequired: labels.messageRequired,
     language: labels.languageLabel,
+    languageOther: labels.languageOtherLabel,
   }),
 );
 
