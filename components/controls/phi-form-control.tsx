@@ -64,6 +64,8 @@ import {
   shouldPhiFormSubmitOnKeyDown,
   type PhiFormResponsiveMode,
 } from "../forms/form-descriptor-contract";
+import { resolvePhiFormDerivedProposals } from "../forms/form-derive";
+import type { PhiControlOption } from "./phi-control-options";
 import { PhiFormFieldLabelText } from "../forms/form-field-row";
 import { readPhiMoneyFieldCurrencyFieldKey } from "../forms/money-field-currency-key";
 import {
@@ -257,7 +259,13 @@ function PhiResolvedFormFieldControl({
   size,
   getPopupContainer,
   onChosenOptionFlags,
+  onResolvedOptions,
 }: {
+  /**
+   * Told the options this field offers, for a field whose options come from a Provider and whose chosen
+   * option's label a derived field proposes from (`derive.source: "optionLabel"`).
+   */
+  onResolvedOptions?: (options: readonly PhiControlOption<string | number>[]) => void;
   /** Set by the Form Item this sits in, from the form's name and the field's key. */
   id?: string;
   /**
@@ -372,6 +380,9 @@ function PhiResolvedFormFieldControl({
     onChosenOptionFlags?.(chosenOptionFlags);
   }, [chosenOptionFlags, onChosenOptionFlags]);
   useEffect(() => () => onChosenOptionFlags?.(undefined), [onChosenOptionFlags]);
+  useEffect(() => {
+    onResolvedOptions?.(resolvedOptions.options);
+  }, [onResolvedOptions, resolvedOptions.options]);
   const Control = provider.Control;
   const controlLabel = field.controlLabel
     ? resolvePhiFormText(field.controlLabel, labels, formConfig)
@@ -652,6 +663,35 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
     }
     return flags;
   }, [descriptor.fields, formValues, optionFlagFieldKeys, reportedOptionFlags]);
+  /*
+   * What a derived field proposes (FORMS.md, "Derived fields"): worked out after every change somebody
+   * makes (`resolvePhiFormDerivedProposals`), from the last proposal each field took. An option's label is
+   * the descriptor's for written-out options and, for a Provider's, the one the field resolved and reported.
+   */
+  const lastDerivedProposals = useRef(new Map<string, string>());
+  const reportedDerivedOptions = useRef(new Map<string, readonly PhiControlOption<string | number>[]>());
+  const derivedOptionReporters = useMemo(() => new Map(descriptor.fields.flatMap((field) =>
+    field.derive?.source === "optionLabel" ? [[
+      field.derive.from,
+      (options: readonly PhiControlOption<string | number>[]) => {
+        reportedDerivedOptions.current.set(field.derive!.from, options);
+      },
+    ] as const] : [])), [descriptor.fields]);
+  const deriveProposals = useCallback((changed: Record<string, unknown>, values: Record<string, unknown>) =>
+    resolvePhiFormDerivedProposals({
+      fields: descriptor.fields,
+      changed,
+      values,
+      lastProposals: lastDerivedProposals.current,
+      optionLabel: (fieldKey, value) => {
+        const source = descriptor.fields.find((field) => field.key === fieldKey);
+        if (source?.optionsProvider) {
+          return reportedDerivedOptions.current.get(fieldKey)?.find((option) => option.value === value)?.label;
+        }
+        const option = source?.options?.find((entry) => entry.value === value);
+        return option ? resolvePhiFormText(option.label, labels, formConfig) : undefined;
+      },
+    }), [descriptor.fields, formConfig, labels]);
   const fieldFormContext = useMemo(() => ({
     getValues: () => form.getFieldsValue(true),
     holdSubmit: (fieldKey: string, reason: string | null, onRefused?: () => void) => {
@@ -771,7 +811,14 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
         ...partProperties,
       } as CSSProperties}
       onValuesChange={(changedValues, allValues) => {
-        onValuesChange?.(changedValues, allValues);
+        const proposals = deriveProposals(changedValues, allValues);
+        if (Object.keys(proposals).length === 0) {
+          onValuesChange?.(changedValues, allValues);
+          return;
+        }
+        for (const [key, proposal] of Object.entries(proposals)) lastDerivedProposals.current.set(key, proposal);
+        form.setFieldsValue(proposals);
+        onValuesChange?.({ ...changedValues, ...proposals }, { ...allValues, ...proposals });
       }}
       onFieldsChange={() => {
         onStateChange?.({ dirty: form.isFieldsTouched(), valid: form.getFieldsError().every(({ errors }) => errors.length === 0) });
@@ -983,6 +1030,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
                   formValues={formValues}
                   mediaLimits={mediaLimits}
                   onChosenOptionFlags={field.optionsProvider ? optionFlagReporters.get(field.key) : undefined}
+                  onResolvedOptions={field.optionsProvider ? derivedOptionReporters.get(field.key) : undefined}
                 />
               </Form.Item>
             </div>

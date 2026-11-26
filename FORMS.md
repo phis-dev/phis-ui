@@ -271,6 +271,30 @@ page's, and where the Site offers neither it opens on "Other language" by having
 A required rule beside it says the empty option is no answer, which is the Form's choice to make; the
 picker above carries none.
 
+### Derived fields
+
+A field proposes its value from another field of the same Form with `derive` (`PhiFormFieldDeriveDescriptor`,
+contracts 0.8.15): an address from a name, typed once.
+
+```ts
+{ key: "slug", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text, derive: { from: "title", source: "value", transform: "slug" } }
+```
+
+- `transform: "slug"` is `toPhiSlug` (`@phis/contracts/forms`): lower case, ä/ö/ü/ß written out, other
+  marks taken off, every other run one hyphen -- the server's spelling as well, so the two never disagree.
+- `source: "value"` reads `from`'s value where it is a text or a number; `source: "optionLabel"` the label
+  of the option chosen there as the field shows it, written out (resolved like the field's own) or from
+  an Options Provider (the label the field resolved and reported, `onResolvedOptions`). Nothing chosen,
+  or a value of another kind, proposes nothing.
+- **A proposal, never a binding.** After every change somebody makes to `from` the field takes the new
+  proposal while it is empty or still holds the last proposal it took, and never otherwise: what
+  somebody wrote there stays, whatever `from` becomes, and a value the Form opened with (a stored slug)
+  is never replaced. Emptying the field lets the proposals back in. Nothing is recomputed on submit
+  (`components/forms/form-derive.ts`, in `PhiFormControl`'s value change, owner 2026-11-26).
+- The contract's parser holds `from` to another field of the Form that derives nothing itself, and for
+  `optionLabel` to one with options. The descriptor check (`checkPhiFormDescriptorFields`) holds the field
+  to one that holds a text: Core's `text` or `hidden`; a Module's own field type is not judged.
+
 ### Conditions
 
 `visibleWhen` and `disabledWhen` use the shared runtime-condition expression (`types/runtime-condition.ts`).

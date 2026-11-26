@@ -66,3 +66,33 @@ describe("a Form's fields against their Controls' rules", () => {
     }]);
   });
 });
+
+describe("a derived field", () => {
+  const derived = (fieldProviderKey: string): Field => ({
+    key: "slug",
+    fieldProviderKey,
+    derive: { from: "name", source: "value", transform: "slug" },
+  }) as Field;
+
+  it("holds a text: a text or hidden field of Core's, and a Module's own type is not judged", () => {
+    expect(checkPhiFormDescriptorFields({ fields: [text("name"), derived(PHI_FORM_FIELD_PROVIDER_KEYS.text)] })).toEqual([]);
+    expect(checkPhiFormDescriptorFields({ fields: [text("name"), derived(PHI_FORM_FIELD_PROVIDER_KEYS.hidden)] })).toEqual([]);
+    expect(checkPhiFormDescriptorFields({ fields: [text("name"), derived("@example/pkg/forms/field/slug")] })).toEqual([]);
+    expect(checkPhiFormDescriptorFields({ fields: [text("name"), derived(PHI_FORM_FIELD_PROVIDER_KEYS.number)] }))
+      .toEqual(['Field "slug" derives a slug, which only a text or hidden field holds.']);
+  });
+});
+
+describe("a flags field whose bits are numbers", () => {
+  it("reads a bit stated as a number as the same bit", () => {
+    const numeric = {
+      key: "purposes",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.flags,
+      options: [1, 2, 4].map((value) => ({ value, label: { kind: "literal", value: String(value) } })),
+      config: { requires: { "4": "1" } },
+    } as Field;
+    expect(checkPhiFormDescriptorFields({ fields: [numeric] })).toEqual([]);
+    expect(checkPhiFormDescriptorFields({ fields: [{ ...numeric, options: [{ value: 3, label: { kind: "literal", value: "3" } }] } as Field] })[0])
+      .toMatch(/"3" is no bit/u);
+  });
+});
