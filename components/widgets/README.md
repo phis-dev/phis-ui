@@ -118,12 +118,14 @@ and loading are [MODULES.md](../../MODULES.md); signal capabilities, routes, and
 ### Drawing itself, or the house placeholder
 
 **A Widget draws itself in the editor only when it can show meaningful content**: sample values (a buy
-area with a sample price, a product list with three sample cards, in the Module's source-language words,
-nothing clickable doing anything), or the shape of its settings (which entries a list will read, which
-video id was entered and whether it resolves). Where it can show neither -- its data is the signed-in
-viewer's own (orders, subscriptions, the account's security), or it exists only once a visitor arrives with
-something (a token, a second-factor step, a selected conversation) -- it leaves `renderEditor` out and
-declares the Preview policy `visualPlaceholder`.
+area with a sample price, a product list with three sample cards, a conversation reader with a made-up
+exchange tagged "Sample", in the Module's source-language words, nothing clickable doing anything), or
+the shape of its settings (which entries a list will read, which video id was entered and whether it
+resolves). Sample words live in the Widget's Label Set like its other words, and the canvas reads them
+from the source-language defaults the set is built from (`core/messaging/label-defaults.ts`). Where it
+can show neither -- its data is the signed-in viewer's own (orders, subscriptions, the account's
+security), or it exists only once a visitor arrives with something (a token, a second-factor step) -- it
+leaves `renderEditor` out and declares the Preview policy `visualPlaceholder`.
 
 - Without `renderEditor`, the canvas draws the house placeholder (`PhiWidgetEditorPlaceholder`): the
   Widget's name, its type and its `description`, still. The authoring loader then hands the definition

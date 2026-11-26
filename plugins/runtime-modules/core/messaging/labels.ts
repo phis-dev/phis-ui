@@ -3,6 +3,7 @@ import "server-only";
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../../gateway/tr";
 import { definePhiRuntimeModuleLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../../gateway/label-set";
 import { PHI_CORE_RUNTIME_MODULE_IDENTITY } from "../ids";
+import { PHI_THREAD_CONVERSATION_DEFAULT_LABELS, type PhiThreadConversationLabels } from "./label-defaults";
 
 /*
  * What a conversation and the reply to it say, wherever they are placed.
@@ -12,28 +13,28 @@ import { PHI_CORE_RUNTIME_MODULE_IDENTITY } from "../ids";
  * in the same words. A Module says what its own Page is called; it does not say "Reply" again.
  */
 
+const D = PHI_THREAD_CONVERSATION_DEFAULT_LABELS;
+
 const PHI_THREAD_CONVERSATION_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_CORE_RUNTIME_MODULE_IDENTITY, {
   key: "widget:thread-conversation",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
-    no_thread_text: definePhiMessageLabel("Choose a conversation to read."),
-    loading_text: definePhiMessageLabel("Loading the conversation."),
-    empty_text: definePhiMessageLabel("Nothing has been said here yet."),
-    subject_fallback: "Conversation",
-    older_label: "Show earlier messages",
-    archived_label: "Archived",
-    locked_label: "Locked",
+    no_thread_text: definePhiMessageLabel(D.noThreadText),
+    loading_text: definePhiMessageLabel(D.loadingText),
+    empty_text: definePhiMessageLabel(D.emptyText),
+    subject_fallback: D.subjectFallback,
+    older_label: D.olderLabel,
+    archived_label: D.archivedLabel,
+    locked_label: D.lockedLabel,
     /*
      * Where the Reply would have been. A locked conversation takes no new message from anybody, so the
      * way to write one is not offered at all rather than offered and then refused.
      */
-    locked_text: definePhiMessageLabel(
-      "This conversation is locked. Nobody can write in it until it is unlocked.",
-    ),
+    locked_text: definePhiMessageLabel(D.lockedText),
     /* The action in the conversation's heading that opens a reply. */
-    reply_label: "Reply",
+    reply_label: D.replyLabel,
     /* Before the names of who is in it, beneath a heading that is the subject. */
-    participants_label: "In this conversation",
+    participants_label: D.participantsLabel,
     /*
      * Said on the note itself rather than in a legend somewhere.
      *
@@ -41,7 +42,7 @@ const PHI_THREAD_CONVERSATION_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_COR
      * must never be in doubt is which of the two a message is. A marker on the message is the only
      * place a person actually looks while writing the next one.
      */
-    internal_label: "Internal note",
+    internal_label: D.internalLabel,
     /*
      * One word for the control, because there is one control.
      *
@@ -49,8 +50,8 @@ const PHI_THREAD_CONVERSATION_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_COR
      * only appears where that language can actually be produced. A picker beside every message would have
      * been a second control on every row for the sake of reading one message in a third language.
      */
-    translate_label: "Translate",
-    original_label: "Show the original",
+    translate_label: D.translateLabel,
+    original_label: D.originalLabel,
     /*
      * Said on the translation, because an unmarked one reads as what the person wrote.
      *
@@ -59,17 +60,30 @@ const PHI_THREAD_CONVERSATION_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_COR
      * beside it as its own name, where the provider reported one -- not woven into a sentence, which would
      * fix a word order that only holds in English.
      */
-    machine_translation_label: "Machine translation",
-    translation_error_text: definePhiMessageLabel("The translation could not be fetched."),
-    redacted_text: definePhiMessageLabel("This message was withdrawn."),
-    withheld_text: definePhiMessageLabel("This message is not shown to you."),
-    system_author_label: "System",
+    machine_translation_label: D.machineTranslationLabel,
+    translation_error_text: definePhiMessageLabel(D.feedback.errorTranslation),
+    redacted_text: definePhiMessageLabel(D.redactedText),
+    withheld_text: definePhiMessageLabel(D.withheldText),
+    system_author_label: D.systemAuthorLabel,
     /* A projection carries a display name or nothing; nothing is still somebody. */
-    unnamed_author_label: "Someone",
-    error_title: "That did not work",
-    error_generic: definePhiMessageLabel("The conversation could not be loaded."),
-    error_network: definePhiMessageLabel("The site could not be reached."),
-    error_not_found: definePhiMessageLabel("This conversation is not there, or is not yours to read."),
+    unnamed_author_label: D.unnamedAuthorLabel,
+    error_title: D.feedback.errorTitle,
+    error_generic: definePhiMessageLabel(D.feedback.errorGeneric),
+    error_network: definePhiMessageLabel(D.feedback.errorNetwork),
+    error_not_found: definePhiMessageLabel(D.feedback.errorNotFound),
+    // The Builder canvas's made-up conversation (`label-defaults.ts`, `sample`).
+    sample_tag: D.sample.tag,
+    sample_subject: D.sample.subject,
+    sample_member_name: D.sample.memberName,
+    sample_staff_name: D.sample.staffName,
+    sample_question: definePhiMessageLabel(D.sample.question),
+    sample_note: definePhiMessageLabel(D.sample.note),
+    sample_answer: definePhiMessageLabel(D.sample.answer),
+    sample_answer_attachment: D.sample.answerAttachment,
+    sample_file_call: definePhiMessageLabel(D.sample.fileCall),
+    sample_file_address: definePhiMessageLabel(D.sample.fileAddress),
+    sample_file_contract: definePhiMessageLabel(D.sample.fileContract),
+    sample_file_attachment: D.sample.fileAttachment,
   },
 });
 
@@ -109,7 +123,9 @@ export async function getPhiThreadReplyFormLabels(options: PhiGlobalTranslatorOp
   };
 }
 
-export async function getPhiThreadConversationLabels(options: PhiGlobalTranslatorOptions) {
+export async function getPhiThreadConversationLabels(
+  options: PhiGlobalTranslatorOptions,
+): Promise<PhiThreadConversationLabels> {
   const labels = await getPhiLabelSet(options, PHI_THREAD_CONVERSATION_LABEL_SET);
   return {
     noThreadText: labels.no_thread_text,
@@ -137,8 +153,19 @@ export async function getPhiThreadConversationLabels(options: PhiGlobalTranslato
       errorNotFound: labels.error_not_found,
       errorTranslation: labels.translation_error_text,
     },
+    sample: {
+      tag: labels.sample_tag,
+      subject: labels.sample_subject,
+      memberName: labels.sample_member_name,
+      staffName: labels.sample_staff_name,
+      question: labels.sample_question,
+      note: labels.sample_note,
+      answer: labels.sample_answer,
+      answerAttachment: labels.sample_answer_attachment,
+      fileCall: labels.sample_file_call,
+      fileAddress: labels.sample_file_address,
+      fileContract: labels.sample_file_contract,
+      fileAttachment: labels.sample_file_attachment,
+    },
   };
 }
-
-export type PhiThreadConversationLabels =
-  Awaited<ReturnType<typeof getPhiThreadConversationLabels>>;

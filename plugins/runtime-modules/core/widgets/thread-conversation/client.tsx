@@ -21,7 +21,7 @@ import {
   readPhiThreadAddressId,
   type PhiThreadWidgetConfig,
 } from "../thread-widget-config";
-import type { PhiThreadConversationLabels } from "../../messaging/labels";
+import type { PhiThreadConversationLabels } from "../../messaging/label-defaults";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
@@ -135,7 +135,6 @@ export function PhiThreadConversationWidgetClient({
 }: PhiThreadConversationWidgetClientProps) {
   const searchParams = useSearchParams();
   const identity = usePhiSignalIdentity();
-  const { token } = usePhiConfig();
   const emitSignal = usePhiSignalEmitter();
 
   const listenRoutes = config?.signalRoutes?.listens;
@@ -512,18 +511,6 @@ export function PhiThreadConversationWidgetClient({
     };
   }, [readingLocale]);
 
-  const currentLocale = runtime.locale.current;
-  const formatTime = useMemo(() => {
-    const formatter = new Intl.DateTimeFormat(currentLocale, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-    return (value: string) => {
-      const parsed = new Date(value);
-      return Number.isNaN(parsed.getTime()) ? value : formatter.format(parsed);
-    };
-  }, [currentLocale]);
-
   /*
    * The box is a Card, and the Card is the box.
    *
@@ -567,6 +554,74 @@ export function PhiThreadConversationWidgetClient({
     );
   }
 
+  return (
+    <PhiThreadConversationView
+      detail={detail}
+      labels={labels}
+      config={config}
+      locale={runtime.locale.current}
+      error={error}
+      loadingOlder={loadingOlder}
+      onLoadOlder={() => void loadOlder()}
+      onReply={reply}
+      translations={translations}
+      canTranslate={translationTarget != null}
+      onTranslate={translate}
+      formatLanguage={formatLanguage}
+    />
+  );
+}
+
+/**
+ * One conversation as it is read, once it is there: the Card with its heading and Reply, and the messages.
+ *
+ * Drawn from what it is handed and nothing else, so the live Widget and the Builder canvas -- which
+ * hands it a made-up conversation (`authoring.tsx`) -- draw the same thing. Fetching, marking read and
+ * translating stay with the live Widget; here they are callbacks.
+ */
+export function PhiThreadConversationView({
+  detail,
+  labels,
+  config,
+  locale,
+  error = null,
+  loadingOlder = false,
+  onLoadOlder,
+  onReply,
+  translations = {},
+  canTranslate = false,
+  onTranslate,
+  formatLanguage,
+  sampleLabel,
+}: {
+  detail: PhisThreadDetail;
+  labels: PhiThreadConversationLabels;
+  config: PhiThreadWidgetConfig | null | undefined;
+  /** The locale every date is written in. */
+  locale: string;
+  error?: string | null;
+  loadingOlder?: boolean;
+  onLoadOlder?: () => void;
+  onReply?: () => void;
+  translations?: Readonly<Record<number, PhiMessageTranslation>>;
+  canTranslate?: boolean;
+  onTranslate?: (messageId: number) => void;
+  formatLanguage?: (locale: string | null) => string | null;
+  /** A tag on the heading saying the conversation is a sample, where it is one. */
+  sampleLabel?: string;
+}) {
+  const { token } = usePhiConfig();
+  const formatTime = useMemo(() => {
+    const formatter = new Intl.DateTimeFormat(locale, {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+    return (value: string) => {
+      const parsed = new Date(value);
+      return Number.isNaN(parsed.getTime()) ? value : formatter.format(parsed);
+    };
+  }, [locale]);
+
   const archived = detail.thread.status === PhisThreadStatus.Archived;
   const locked = isPhiThreadLocked(detail);
 
@@ -582,21 +637,25 @@ export function PhiThreadConversationWidgetClient({
       {/*
         * A section of the Page, headed as every section is -- a Table's or a Collection's title is the body
         * text, strong -- so the heading bar is the Card's small one; the body keeps the Card's ordinary
-        * padding. The Reply is a button of its own size: it is what the reader came to press.
+        * padding. The Reply is a button of its own size: it is what the reader came to press. As wide as
+        * its slot (`fill-inline`) wherever it stands, the Builder canvas included, as the Table and the
+        * Record are.
         */}
       <PhiCardControl
         size="small"
         padding={config?.padding ?? token.padding}
+        style={{ minWidth: 0, width: "100%" }}
         toolbar={config?.reply && !archived && !locked ? (
           <PhiButtonControl
             label={config?.replyLabel ?? labels.replyLabel}
             icon={<PhiIcon name="antd:message-outlined" size="inherit" />}
-            onClick={reply}
+            onClick={onReply}
           />
         ) : undefined}
         title={
           <PhiFlexControl align="center" gap="small" wrap>
             {config?.title ?? readThreadTitle(detail, labels)}
+            {sampleLabel ? <PhiTagControl color="blue">{sampleLabel}</PhiTagControl> : null}
             {archived ? (
               <PhiTagControl>{labels.archivedLabel}</PhiTagControl>
             ) : null}
@@ -634,7 +693,7 @@ export function PhiThreadConversationWidgetClient({
               label={labels.olderLabel}
               type="link"
               loading={loadingOlder}
-              onClick={() => void loadOlder()}
+              onClick={onLoadOlder}
             />
           ) : null}
 
@@ -656,10 +715,10 @@ export function PhiThreadConversationWidgetClient({
                   message={message}
                   labels={labels}
                   formatTime={formatTime}
-                  formatLanguage={formatLanguage}
+                  formatLanguage={formatLanguage ?? readNoLanguage}
                   translation={translations[message.id] ?? null}
-                  canTranslate={translationTarget != null}
-                  onTranslate={translate}
+                  canTranslate={canTranslate}
+                  onTranslate={onTranslate}
                 />
               </Fragment>
             ))
@@ -668,6 +727,11 @@ export function PhiThreadConversationWidgetClient({
       </PhiCardControl>
     </>
   );
+}
+
+/** No language named, where nobody can say one. */
+function readNoLanguage() {
+  return null;
 }
 
 /** Whether Core takes new messages into this conversation; `PhisThreadFlag.Locked` says it does not. */
@@ -737,7 +801,7 @@ function PhiThreadMessageRow({
   formatLanguage: (locale: string | null) => string | null;
   translation: PhiMessageTranslation | null;
   canTranslate: boolean;
-  onTranslate: (messageId: number) => void;
+  onTranslate?: (messageId: number) => void;
 }) {
   const internal = (message.flags & PhisThreadMessageFlag.Internal) !== 0;
   const redacted = (message.flags & PhisThreadMessageFlag.Redacted) !== 0;
@@ -776,7 +840,7 @@ function PhiThreadMessageRow({
             type="link"
             size="small"
             loading={translation?.status === "pending"}
-            onClick={() => onTranslate(message.id)}
+            onClick={() => onTranslate?.(message.id)}
           />
         ) : null}
       </PhiFlexControl>

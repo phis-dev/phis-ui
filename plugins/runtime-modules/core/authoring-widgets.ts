@@ -346,7 +346,8 @@ export default createPhiAuthoringWidgetModule([
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_THREAD_CONVERSATION_WIDGET_DEFINITION,
-    () => Promise.resolve(PHI_THREAD_CONVERSATION_WIDGET_DEFINITION),
+    () => import("./widgets/thread-conversation/authoring")
+      .then((module) => module.PHI_THREAD_CONVERSATION_WIDGET_BUILDER_PLUGIN),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_FLOAT_BUTTON_WIDGET_DEFINITION,
