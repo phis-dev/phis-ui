@@ -2,7 +2,7 @@
 
 import { Fragment, useContext, useMemo, useState, type ReactNode } from "react";
 import { PhiBackgroundControl, type PhiBackgroundControlProps } from "../../../../components/controls/phi-background-control";
-import { readPhiDotPath } from "../../../../helpers/dot-path";
+import { readPhiDotPath, splitPhiDotPath, writePhiDotPath } from "../../../../helpers/dot-path";
 import { PhiCheckboxGroupControl } from "../../../../components/controls/phi-checkbox-group-control";
 import { PhiDividerControl } from "../../../../components/controls/phi-divider-control";
 import { usePhiConfig } from "../../../../components/root/phi-config-provider";
@@ -329,41 +329,6 @@ export function readPhiInspectorConfigPathValue(
   return readPhiDotPath(config, path);
 }
 
-function writePhiInspectorConfigPathValue(
-  config: Record<string, unknown>,
-  path: string,
-  value: unknown,
-) {
-  const segments = path.split(".").filter(Boolean);
-  if (segments.length === 0) {
-    return config;
-  }
-  /*
-   * A numeric segment into a list stays a list -- `emits.0.value` writes the first emit's value and
-   * keeps the rest, rather than turning `emits` into an object keyed "0".
-   */
-  const next = { ...config };
-  let target: Record<string, unknown> | unknown[] = next;
-  const write = (container: Record<string, unknown> | unknown[], segment: string, child: unknown) => {
-    if (Array.isArray(container)) container[Number(segment)] = child;
-    else container[segment] = child;
-  };
-  const read = (container: Record<string, unknown> | unknown[], segment: string) =>
-    Array.isArray(container) ? container[Number(segment)] : container[segment];
-  for (const segment of segments.slice(0, -1)) {
-    const current = read(target, segment);
-    const child: Record<string, unknown> | unknown[] = Array.isArray(current)
-      ? [...current]
-      : isPhiRecord(current)
-        ? { ...(current as Record<string, unknown>) }
-        : {};
-    write(target, segment, child);
-    target = child;
-  }
-  write(target, segments[segments.length - 1]!, value);
-  return next;
-}
-
 export function buildPhiInspectorConfigPathPatch(
   config: Record<string, unknown>,
   patch: Record<string, unknown>,
@@ -371,12 +336,12 @@ export function buildPhiInspectorConfigPathPatch(
   let nextConfig = config;
   const rootKeys = new Set<string>();
   for (const [path, value] of Object.entries(patch)) {
-    const rootKey = path.split(".").find(Boolean);
+    const rootKey = splitPhiDotPath(path)[0];
     if (!rootKey) {
       continue;
     }
     rootKeys.add(rootKey);
-    nextConfig = writePhiInspectorConfigPathValue(nextConfig, path, value);
+    nextConfig = writePhiDotPath(nextConfig, path, value);
   }
   return Object.fromEntries([...rootKeys].map((rootKey) => [rootKey, nextConfig[rootKey]]));
 }

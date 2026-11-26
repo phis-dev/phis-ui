@@ -1,4 +1,5 @@
 import type { PhiCmsConfigField, PhiCmsWidgetConfigText } from "../types/cms-plugins";
+import { readPhiDotPath, splitPhiDotPath } from "./dot-path";
 import { isPhiRecord } from "./is-record";
 
 /**
@@ -52,7 +53,8 @@ export function readPhiConfigTextRegisterByName(key: string): PhiConfigTextRegis
 export function readPhiConfigFieldTextRegister(field: PhiCmsConfigField): PhiConfigTextRegister | null {
   if (field.type !== "string") return null;
   if (field.text !== undefined) return field.text === false ? null : field.text;
-  return readPhiConfigTextRegisterByName(field.key);
+  // A dot path is named by its last segment: `presentation.emptyState.title` is a title.
+  return readPhiConfigTextRegisterByName(splitPhiDotPath(field.key).at(-1) ?? field.key);
 }
 
 /** One text a config holds: where it stands, and how a translator is told to read it. */
@@ -68,6 +70,12 @@ export type PhiConfigTextLocation = {
 /**
  * Every non-empty text a config holds, in field order: the fields themselves and, inside a
  * `collection`, each entry's -- a select's options are its `options[].label`.
+ *
+ * A field's key is a dot path, read as the Inspector writes it (`helpers/dot-path.ts`): a Table's
+ * `presentation.columns` is the list at `presentation.columns`, and an entry's `secondary.emptyText` the
+ * text inside the entry's `secondary`. Read as a flat key it named nothing, and a Table's Builder-set
+ * column titles, hints, empty texts and the rest of its nested words were never translated
+ * (owner, 2026-11-26).
  */
 export function collectPhiConfigTexts(
   fields: readonly PhiCmsConfigField[],
@@ -76,23 +84,20 @@ export function collectPhiConfigTexts(
 ): PhiConfigTextLocation[] {
   const found: PhiConfigTextLocation[] = [];
   for (const field of fields) {
-    const value = config[field.key];
+    const value = readPhiDotPath(config, field.key);
+    const path = [...prefix, ...splitPhiDotPath(field.key)];
     if (field.type === "collection") {
       if (!Array.isArray(value)) continue;
       value.forEach((item, index) => {
         if (isPhiRecord(item)) {
-          found.push(...collectPhiConfigTexts(
-            field.itemFields,
-            item,
-            [...prefix, field.key, index],
-          ));
+          found.push(...collectPhiConfigTexts(field.itemFields, item, [...path, index]));
         }
       });
       continue;
     }
     const register = readPhiConfigFieldTextRegister(field);
     if (register && typeof value === "string" && value.trim()) {
-      found.push({ path: [...prefix, field.key], register, text: value });
+      found.push({ path, register, text: value });
     }
   }
   return found;
@@ -108,10 +113,11 @@ export function collectPhiDeclaredConfigTexts(
 ): PhiConfigTextLocation[] {
   const found: PhiConfigTextLocation[] = [];
   for (const declaration of declarations) {
-    const value = config[declaration.key];
+    const value = readPhiDotPath(config, declaration.key);
+    const path = splitPhiDotPath(declaration.key);
     if (declaration.item === undefined) {
       if (typeof value === "string" && value.trim()) {
-        found.push({ path: [declaration.key], register: declaration.register, text: value });
+        found.push({ path, register: declaration.register, text: value });
       }
       continue;
     }
@@ -122,7 +128,7 @@ export function collectPhiDeclaredConfigTexts(
       if (typeof text !== "string" || !text.trim()) return;
       const values = declaration.values ? entry[declaration.values] : undefined;
       found.push({
-        path: [declaration.key, index, declaration.item!],
+        path: [...path, index, declaration.item!],
         register: declaration.register,
         text,
         ...(Array.isArray(values) ? { values: values.map((entry) => String(entry)) } : {}),

@@ -1160,7 +1160,8 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
       },
       itemFields: PHI_TABLE_FOOTER_VALUE_CONFIG_FIELDS,
     },
-    { key: "presentation.footer.template", type: "string", label: "Footer Template" },
+    // A sentence whose `%1` onwards the Table fills: translated as one, the tokens kept (TABLES.md, "Footer and summary").
+    { key: "presentation.footer.template", type: "string", label: "Footer Template", text: "message" },
     { key: "presentation.footer.align", type: "choice", label: "Footer Alignment", options: [
       { value: "start", label: "Start" },
       { value: "center", label: "Center" },

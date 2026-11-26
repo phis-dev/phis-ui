@@ -442,7 +442,9 @@ values, not their absence. A value that is there -- `0`, `false` -- is drawn as 
 stays empty. The parser reads it strictly: anything but a text is refused, and an empty text is absent.
 It is translated the way the column's `title` is: a Preset writes it in the reader's language from its
 Label Set, as it writes the title, and its Inspector field declares it a label (`text: "label"`), so the
-Widget text pass counts it with the title wherever it reaches the column.
+Widget text pass counts it with the title: a Builder-set column's `title`, `description`, `emptyText` and
+`secondary.emptyText`, the footer's `template` (a sentence, `%1` onwards kept) and the filters' and
+actions' words are all read through the Inspector's dot paths (TRANSLATIONS.md, "Widget config text").
 
 `secondary` draws a second value on a line under the column's own, from another field of the same row:
 a product's state under its title, where a column of its own would repeat one word per row and the state

@@ -1,4 +1,5 @@
 import type { PhiCmsConfigField } from "../types/cms-plugins";
+import { splitPhiDotPath } from "./dot-path";
 
 /**
  * What a Widget's own declaration already knows, checked before a value is written.
@@ -110,7 +111,7 @@ function readPhiCmsConfigFieldViolation(
  */
 function readStatedConfigValue(config: Record<string, unknown>, key: string): { stated: boolean; value: unknown } {
   let current: unknown = config;
-  for (const segment of key.split(".")) {
+  for (const segment of splitPhiDotPath(key)) {
     if (current === null || typeof current !== "object" || !Object.prototype.hasOwnProperty.call(current, segment)) {
       return { stated: false, value: undefined };
     }

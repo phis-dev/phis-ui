@@ -65,6 +65,12 @@ Which fields hold text is answered by the field's name (`helpers/config-text-fie
   `PHI_TR_CTX_WEB_UI_MESSAGE`.
 - Every other key -- `key`, `value`, `format`, `timeZone`, `separator`, ... -- is what the Widget works
   with and is never translated.
+- A field's key is a dot path, read as the Inspector writes it (`helpers/dot-path.ts`, the one reader for
+  the Inspector, the text pass and the config check, reading as conditions do): `presentation.columns` is
+  the list at `presentation.columns`, and a dotted key is named by its last segment --
+  `presentation.emptyState.title` is a title. Until 2026-11-26 the pass looked such a key up flat and
+  found nothing, so a Table's, Tree's, Collection View's and record's Builder-set words, and a Form's
+  `card.title`, went untranslated.
 - Only `string` fields count, and the rule reaches into a `collection`'s entries, so a select's
   `options[].label` and `options[].description` are translated with the Widget.
 - A field the name gets wrong states `text` on its definition: `text: false` for a field called like a
