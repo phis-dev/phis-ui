@@ -64,7 +64,15 @@ const WIDE_THREE_COLUMNS = form([
   field("b", wideOnly({ start: 9, end: 17 }, { start: 9, end: 17 })),
   field("c", wideOnly({ start: 17, end: 25 }, { start: 17, end: 25 })),
 ]);
-/* Three columns at `wide`, two at `medium`, one at `compact`: the ladder the existing steps can write. */
+/* Three columns at `spacious`, two at `wide`, one below: the ladder a Form of three columns states (contracts 0.8.15). */
+const SPACIOUS_LADDER = form(["a", "b", "c"].map((key, index) => field(key, {
+  control: {
+    compact: { start: 1, end: 25 },
+    wide: index === 2 ? { start: 1, end: 13 } : { start: 1 + index * 12, end: 13 + index * 12 },
+    spacious: { start: 1 + index * 8, end: 9 + index * 8 },
+  },
+})));
+/* Three columns at `wide`, two at `medium`, one at `compact`: the ladder the earlier three steps could write. */
 const LADDER = form(["a", "b", "c", "d"].map((key) => field(key, {
   control: { compact: { start: 1, end: 25 }, medium: key === "a" || key === "c" ? { start: 1, end: 13 } : { start: 13, end: 25 },
     wide: { a: { start: 1, end: 9 }, b: { start: 9, end: 17 }, c: { start: 17, end: 25 }, d: { start: 1, end: 9 } }[key]! },
@@ -188,6 +196,17 @@ describe("a dialog for a Form of columns", () => {
     const medium = resolvePhiFormGridPlacement(layout, entries, "medium").placements;
     expect(wide.get("language")!.labelRow).toBe(wide.get("key")!.labelRow);
     expect(medium.get("key")!.labelRow).toBeGreaterThan(medium.get("language")!.labelRow);
+  });
+
+  it("puts three columns at `spacious` in the widest dialog, and falls back three, two, one at 987 and 610", () => {
+    expect(resolvePhiFormColumnStep(SPACIOUS_LADDER)).toEqual({ mode: "spacious", columns: 3 });
+    expect(resolvePhiDialogFormGeometry(SPACIOUS_LADDER).size).toEqual({ width: PHI_LAYOUT.pageMax });
+    // The 1220 dialog leaves its Form more than 987 inside the largest inset a Theme sets.
+    expect(PHI_LAYOUT.pageMax - 2 * 34).toBeGreaterThan(PHI_FORM_RESPONSIVE_MIN_WIDTH.spacious);
+    expect(resolvePhiFormColumnCount(SPACIOUS_LADDER, "spacious")).toBe(3);
+    expect(resolvePhiFormColumnCount(SPACIOUS_LADDER, "wide")).toBe(2);
+    expect(resolvePhiFormColumnCount(SPACIOUS_LADDER, "medium")).toBe(1);
+    expect(PHI_FORM_RESPONSIVE_MIN_WIDTH).toEqual({ medium: 377, wide: 610, spacious: 987 });
   });
 
   it("falls back three, two, one across the steps a descriptor has", () => {

@@ -600,10 +600,9 @@ cap grows with the same columns (FORMS.md, "Form Widget"). Where the window is n
 narrows and so does the Form, and the Form lays itself out by its own width, never the viewport: under
 610px it is `medium` and its fields stand as its descriptor places them there -- one column for a Form
 whose columns stand only at `wide`, the halves for the `PHI_FORM_SIDE_*_HALF` pairs, which fall to one
-column only under 377px. Three columns fall back to two and to one only where the descriptor
-says so per step (`wide` three, `medium` two, `compact` one); the steps are 377 and 610 of Form, so three
-columns already stand from 610 -- about 200px each -- and a step of their own above that is a contract
-extension that is not there (FORMS.md, "Layout and placement").
+column only under 377px. Three columns fall back to two and to one where the descriptor says so per
+step: three at `spacious` (from 987px of Form, which the 1220 dialog leaves it), two at `wide`, one below
+(FORMS.md, "Layout and placement").
 
 `dialog` on `createPhiCmsPresetNodes` picks the width itself from the Form it is handed as `body.form`
 (its definition, or `{ descriptor }`) and writes it as `size: { width }`, with the `maxSize` of the table

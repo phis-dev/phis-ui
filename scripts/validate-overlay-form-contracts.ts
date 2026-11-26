@@ -104,6 +104,7 @@ assert.deepEqual(resolvePhiFormLayout(form.layout).gap, {
   compact: "sm",
   medium: "base",
   wide: "base",
+  spacious: "base",
 });
 // A form that says nothing stacks when it is measured narrow and stands beside its labels when it is
 // not, and both come out of the ranges alone -- there is no placement mode left to get wrong.

@@ -335,8 +335,8 @@ first line (1-24) and `end` the line the element stops before (2-25).
 
 ```ts
 type PhiFormLayoutDescriptor = {
-  gap?: { compact?: PhiSpacingToken; medium?: PhiSpacingToken; wide?: PhiSpacingToken };
-  columnGap?: { compact?: PhiSpacingToken; medium?: PhiSpacingToken; wide?: PhiSpacingToken };
+  gap?: PhiFormResponsiveValue<PhiSpacingToken>;       // { compact?, medium?, wide?, spacious? }
+  columnGap?: PhiFormResponsiveValue<PhiSpacingToken>;
   labelAlign?: "start" | "end";
   label?: PhiFormResponsiveGridRange;
   control?: PhiFormResponsiveGridRange;
@@ -347,10 +347,13 @@ type PhiFormFieldPlacementDescriptor = {
 };
 ```
 
-- The three responsive modes are `compact`, `medium`, and `wide`. They are chosen from the Form's own
-  width, never the viewport: `medium` from 377px, `wide` from 610px (`PHI_FORM_RESPONSIVE_MIN_WIDTH`,
-  implemented as container queries in `styles/layout.css`). The same descriptor therefore fits a page, an
-  Overlay, or a narrow slot.
+- The four responsive modes are `compact`, `medium`, `wide` and `spacious` (`PHI_FORM_RESPONSIVE_MODES`,
+  contracts 0.8.15). They are chosen from the Form's own width, never the viewport: `medium` from 377px,
+  `wide` from 610px, `spacious` from 987px (`PHI_FORM_RESPONSIVE_MIN_WIDTH`, implemented as container
+  queries in `styles/layout.css`, held to each other by `validate-container-breakpoint-contracts.ts`). The
+  same descriptor therefore fits a page, an Overlay, or a narrow slot. `spacious` is the width at which
+  three columns with their labels beside their fields have room; a descriptor that says nothing of it
+  draws there as at `wide`. The renderer writes every mode the contract lists, never three by name.
 - A responsive value cascades from the nearest smaller mode that is set; an unset section uses the
   defaults.
 - Defaults (`PHI_FORM_DEFAULT_LAYOUT`): gap `sm` / `base` / `base`; `labelAlign: "start"`; label 1-25 in
@@ -392,10 +395,9 @@ type PhiFormFieldPlacementDescriptor = {
   decides how wide a dialog is made for it (OVERLAYS.md, "Structured dialogs") and how far its own cap
   reaches ([Form Widget](#form-widget)).
 - Falling back is the descriptor's, step by step, and measured on the Form, never the viewport: a Form
-  in a dialog the window narrows turns `medium` under 610px and stands as it is placed there. Three
-  columns at `wide`, two at `medium` and one at `compact` is written with the steps there are; but three
-  columns then stand from 610px, about 200px each, and a step for them above that -- a fourth mode from
-  987px, say -- is not in the contract (`PhiResponsiveValue` has `compact`, `medium` and `wide` only).
+  in a dialog the window narrows turns `medium` under 610px and stands as it is placed there. A Form of
+  three columns states them at `spacious`, two at `wide` and one below, and falls back three, two, one at
+  987 and 610px of Form; three columns stated at `wide` already would stand from 610px, about 200px each.
 - `gap` uses the spacing tokens `none`, `xxs`, `xs`, `sm`, `base`, `md`, `lg`, `xl`, `xxl`. It is the
   spacing between one row of fields and the next, and half of it is the gutter between a label and the
   control beside it.

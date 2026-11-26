@@ -445,7 +445,7 @@
 }
 
 /*
- * The same numbers as `PHI_FORM_RESPONSIVE_MIN_WIDTH`, off the container-breakpoint scale in
+ * The same numbers as `PHI_FORM_RESPONSIVE_MIN_WIDTH` (377, 610 and 987 below), off the container-breakpoint scale in
  * `theme/phi-container-breakpoints.ts`. A container query cannot read a custom property for its
  * threshold, so the literal stands here and the contract states it in TypeScript; if one side moves,
  * the other has to move with it.
@@ -507,6 +507,41 @@
   .phi-form-part--control {
     grid-column: var(--phi-form-part-control-columns-wide, 1 / -1);
     margin-block-end: var(--phi-form-row-gap-wide, 0px);
+  }
+}
+
+/*
+ * From 987px of Form, `spacious` (contracts 0.8.15): the width at which a Form of three columns with its
+ * labels beside its fields has room for them (owner, 2026-11-26). Where a descriptor says nothing of it,
+ * its values are the `wide` ones (`resolvePhiFormResponsiveValue`), so a Form of two columns is unchanged.
+ */
+@container phi-form (min-width: 987px) {
+  .phi-form-cell {
+    grid-row: var(--phi-form-cell-row-spacious);
+    grid-column: var(--phi-form-cell-columns-spacious);
+    margin-block-end: var(--phi-form-cell-gap-spacious);
+    padding-inline-start: var(--phi-form-cell-lead-spacious, 0px);
+  }
+
+  .phi-form-cell--label {
+    min-height: var(--phi-form-label-slot-height-spacious);
+    padding-inline-end: var(--phi-form-label-pad-spacious);
+  }
+
+  .phi-form-descriptor-actions > .phi-form-cell {
+    grid-column: var(--phi-form-actions-columns-spacious);
+  }
+
+  .phi-form-part--label {
+    grid-column: var(--phi-form-part-label-columns-spacious, 1 / -1);
+    min-height: var(--phi-form-part-label-height-spacious, auto);
+    padding-inline-end: var(--phi-form-part-label-pad-spacious, 0px);
+    margin-block-end: var(--phi-form-part-label-gap-spacious, 0px);
+  }
+
+  .phi-form-part--control {
+    grid-column: var(--phi-form-part-control-columns-spacious, 1 / -1);
+    margin-block-end: var(--phi-form-row-gap-spacious, 0px);
   }
 }
 

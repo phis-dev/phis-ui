@@ -8,7 +8,7 @@ import {
   PHI_CONTAINER_BREAKPOINT_CONTENT,
   PHI_CONTAINER_BREAKPOINT_REGION,
 } from "../theme/phi-container-breakpoints";
-import { PHI_FORM_RESPONSIVE_MIN_WIDTH } from "../components/forms/form-descriptor-contract";
+import { PHI_FORM_RESPONSIVE_MIN_WIDTH, PHI_FORM_RESPONSIVE_MODES } from "../components/forms/form-descriptor-contract";
 import { PHI_GRID_RESPONSIVE_MIN_WIDTH } from "../components/layouts/phi-grid-contract";
 import { PHI_MASONRY_RESPONSIVE_MIN_WIDTH } from "../components/layouts/phi-masonry-contract";
 import { PHI_BLOCK_GEOMETRY_RESPONSIVE_MIN_WIDTH } from "../helpers/block-geometry-profiles";
@@ -48,7 +48,8 @@ const formThresholds = [...layoutStylesheet.matchAll(/@container phi-form \(min-
   .map((match) => Number(match[1]));
 assert.deepEqual(
   formThresholds,
-  [PHI_FORM_RESPONSIVE_MIN_WIDTH.medium, PHI_FORM_RESPONSIVE_MIN_WIDTH.wide],
+  // Every width the contract lists above `compact`, in its order: a fourth one in the contract is a fourth here.
+  PHI_FORM_RESPONSIVE_MODES.filter((mode) => mode !== "compact").map((mode) => PHI_FORM_RESPONSIVE_MIN_WIDTH[mode]),
   "styles/layout.css must compare against the same numbers PHI_FORM_RESPONSIVE_MIN_WIDTH declares, in that order.",
 );
 for (const threshold of Object.values(PHI_FORM_RESPONSIVE_MIN_WIDTH)) {

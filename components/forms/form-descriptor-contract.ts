@@ -5,6 +5,7 @@ import type {
 } from "@phis/contracts/forms";
 import {
   PHI_FORM_GRID_LAST_LINE,
+  PHI_FORM_RESPONSIVE_MODES,
   assertPhiFormGridRange,
   resolvePhiFormLayout,
   statedPhiFormGridRange,
@@ -15,6 +16,7 @@ import type { PhiSpacingToken } from "../../types/spacing";
 import {
   PHI_CONTAINER_BREAKPOINT_COL3,
   PHI_CONTAINER_BREAKPOINT_CONTENT,
+  PHI_CONTAINER_BREAKPOINT_REGION,
 } from "../../theme/phi-container-breakpoints";
 import { PHI_LAYOUT } from "../../theme/phi-tokens";
 
@@ -108,6 +110,8 @@ export function shouldPhiFormSubmitOnKeyDown(input: {
 export const PHI_FORM_RESPONSIVE_MIN_WIDTH = {
   medium: PHI_CONTAINER_BREAKPOINT_COL3,
   wide: PHI_CONTAINER_BREAKPOINT_CONTENT,
+  /** Three columns with their labels beside their fields: three times the 377 a labelled field needs, near enough. */
+  spacious: PHI_CONTAINER_BREAKPOINT_REGION,
 } as const;
 
 /**
@@ -430,11 +434,13 @@ export function resolvePhiFormColumnCount(descriptor: PhiFormDescriptor, mode: P
 export function resolvePhiFormColumnStep(
   descriptor: PhiFormDescriptor,
 ): { mode: Exclude<PhiFormResponsiveMode, "compact">; columns: number } | null {
-  const medium = resolvePhiFormColumnCount(descriptor, "medium");
-  const wide = resolvePhiFormColumnCount(descriptor, "wide");
-  const columns = Math.max(medium, wide);
-  if (columns < 2) return null;
-  return { mode: medium >= wide ? "medium" : "wide", columns };
+  let step: { mode: Exclude<PhiFormResponsiveMode, "compact">; columns: number } | null = null;
+  for (const mode of PHI_FORM_RESPONSIVE_MODES) {
+    if (mode === "compact") continue;
+    const columns = resolvePhiFormColumnCount(descriptor, mode);
+    if (columns >= 2 && columns > (step?.columns ?? 1)) step = { mode, columns };
+  }
+  return step;
 }
 
 /**
