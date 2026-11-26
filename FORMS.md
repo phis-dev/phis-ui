@@ -298,9 +298,22 @@ contracts 0.8.15): an address from a name, typed once.
 ### Conditions
 
 `visibleWhen` and `disabledWhen` use the shared runtime-condition expression (`types/runtime-condition.ts`).
-A leaf names `source`, `valuePath`, and `operator` (`truthy`, `falsy`, `equals`, `contains`, the last two
-with a string `value`, and `optionFlag` with a numeric `flag`, below); a group names `match: "all" | "any"`
-and nested `conditions`.
+A leaf names `source`, `valuePath`, and `operator` (`truthy`, `falsy`, `equals`, `notEquals`, `contains`,
+the last three with a `value` -- a text, a finite number, a yes or no, or null -- and `optionFlag` with a
+numeric `flag`, below); a group names `match: "all" | "any"` and nested `conditions`. They are evaluated by
+`@phis/contracts/conditions` (contracts 0.8.15):
+
+- `truthy` holds for what JavaScript calls truthy **except an empty list**, which is falsy: a multiple
+  choice with nothing chosen is no choice made. `falsy` is its opposite. Of the conditions the
+  first-party presets write, one judges a list: the user editor's "Add-on roles through Core roles"
+  (`impliedAddonRoles`, a multi-select, `truthy`), which stood with nothing in it and now stands only
+  where the person holds such a role. Every other `truthy`/`falsy` the presets of phis-ui, Shop, Support,
+  Licenses and Products write reads a yes/no, a text or a number (checked 2026-11-26); a condition a
+  Site wrote in the Builder is not checked.
+- `equals` holds where the value is `value`, its type included (`Object.is`: the number 2 is not the text
+  "2"); `notEquals` where it is not, which a value that is not there is not either. The Table's condition
+  editor offers `notEquals` and writes a text value; a number, a yes/no or null is a Preset's to write
+  until the Inspector's typed fields arrive.
 
 ```ts
 visibleWhen: {

@@ -53,9 +53,18 @@ const PHI_TABLE_DISABLED_CONDITION_CONFIG_FIELDS: PhiCmsConfigField[] = [
     { value: "truthy", label: "Truthy" },
     { value: "falsy", label: "Falsy" },
     { value: "equals", label: "Equals" },
+    { value: "notEquals", label: "Does not equal" },
     { value: "contains", label: "Contains" },
   ] },
-  { key: "value", type: "string", label: "String Value" },
+  /*
+   * The value `equals`, `notEquals` and `contains` compare with. The contract takes a text, a number, a
+   * yes or no, or null (contracts 0.8.15); this field writes a text, and a typed value is written by a
+   * Preset until the Inspector's typed fields arrive.
+   */
+  { key: "value", type: "string", label: "String Value", visibleWhen: [
+    { field: "operator", notEquals: "truthy" },
+    { field: "operator", notEquals: "falsy" },
+  ] },
   { key: "reason", type: "string", label: "Disabled Reason", text: "message" },
 ];
 
