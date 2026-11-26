@@ -175,7 +175,7 @@ export function PhiAuthSecurityWidgetClient({
       {error ? <PhiAlertControl level="error" showIcon title={error} dismissible onDismiss={() => setError(null)} /> : null}
       <PhiCardControl
         title={labels.authenticators.title}
-        toolbar={<PhiButtonControl type="primary" onClick={() => setEnrolling(true)} label={labels.authenticators.add} />}
+        toolbar={<PhiButtonControl type="primary" size="small" onClick={() => setEnrolling(true)} label={labels.authenticators.add} />}
       >
         <PhiEntryListControl
           emptyDescription={labels.authenticators.empty}

@@ -42,6 +42,15 @@ import { usePhiConfig } from "../root/phi-config-provider";
  * which is why this control already decides it. A caller that needs a different one says so here. The
  * alternative was a `div` wrapped around the Card to pad it from outside, which is a box around a box and
  * pads the wrong side of the frame -- if a Card needs a wrapper to be spaced, the prop was missing.
+ *
+ * **The heading bar follows the body's inset** (owner, 2026-11-26). The inset is written once, as
+ * `--phi-card-control-inset` on the box, and the body pads by it on every side and the heading bar along
+ * the line, so a title stands where the content under it starts -- the Theme's inset or a caller's
+ * `padding` alike. The bar had copied Ant Design's `paddingLG` sideways, and `paddingLG` on this scale is
+ * 55 (`PHI_PADDING`, `theme/phi-tokens.ts`): against a body at `padding` (21) the title stood 34 px further
+ * in than everything it named. Its height is a line of the heading size and `paddingSM` above and below,
+ * not `padding`: the bar names the card, it is not a section of its own, and at the base step it stood
+ * taller than the first row of the body. The small size was already on its own scale and keeps it.
  */
 export type PhiCardControlProps = {
   /** A heading in a bar of its own above the body, with a rule under it. */
@@ -59,7 +68,8 @@ export type PhiCardControlProps = {
    *
    * Absent is the Theme's -- `padding` at the ordinary size and `paddingSM` for chrome -- and that stays
    * the answer to "nothing was said" rather than becoming a ceiling. A Widget whose configuration carries
-   * a padding passes it straight through; nothing has to know which of the two it got.
+   * a padding passes it straight through; nothing has to know which of the two it got. One length, not a
+   * shorthand: the heading bar takes the same inset along its line.
    */
   padding?: number | string;
   style?: CSSProperties;
@@ -82,8 +92,13 @@ export function PhiCardControl({
     size === "small" ? "phi-card-control--small" : null,
     hoverable ? "phi-card-control--hoverable" : null,
   ].filter(Boolean).join(" ");
+  const inset = padding ?? (size === "small" ? token.paddingSM : token.padding);
+  const boxStyle = {
+    "--phi-card-control-inset": typeof inset === "number" ? `${inset}px` : inset,
+    ...style,
+  } as CSSProperties;
   return (
-    <div className={className} style={style}>
+    <div className={className} style={boxStyle}>
       {title != null || toolbar != null ? (
         <div className="phi-card-control__head">
           {title != null ? <div className="phi-card-control__title">{title}</div> : null}
@@ -91,12 +106,7 @@ export function PhiCardControl({
         </div>
       ) : null}
       {cover != null ? <div className="phi-card-control__cover">{cover}</div> : null}
-      <div
-        className="phi-card-control__body"
-        style={{ padding: padding ?? (size === "small" ? token.paddingSM : token.padding) }}
-      >
-        {children}
-      </div>
+      <div className="phi-card-control__body">{children}</div>
     </div>
   );
 }

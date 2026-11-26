@@ -376,7 +376,10 @@ h5.phi-typography, .phi-typography h5 {
 
 /*
  * The box Ant Design's Card drew, measured off the same tokens, without the Tabs it imports. The corner
- * is the Theme's surface step; everything else is the token variable the primitive read.
+ * is the Theme's surface step; everything else is the token variable the primitive read. The inset,
+ * `--phi-card-control-inset`, is the one exception: the control writes it on the box (the body's inset,
+ * the Theme's or the caller's), and the heading bar takes the same one inline, so a title stands where
+ * the body's content starts (`PhiCardControl`).
  */
 .phi-card-control {
   --phi-card-control-radius: var(--phi-surface-radius);
@@ -398,8 +401,9 @@ h5.phi-typography, .phi-typography h5 {
   display: flex;
   align-items: center;
   gap: var(--phi-padding-xs);
-  min-height: calc(var(--phi-font-size-lg) * var(--phi-line-height-lg) + var(--phi-padding) * 2);
-  padding: 0 var(--phi-padding-lg);
+  min-height: calc(var(--phi-font-size-lg) * var(--phi-line-height-lg) + var(--phi-padding-sm) * 2);
+  padding-block: 0;
+  padding-inline: var(--phi-card-control-inset);
   border-bottom: var(--phi-card-control-line);
   border-radius: var(--phi-card-control-radius) var(--phi-card-control-radius) 0 0;
   color: var(--phi-color-text-heading);
@@ -424,7 +428,6 @@ h5.phi-typography, .phi-typography h5 {
 
 .phi-card-control--small > .phi-card-control__head {
   min-height: calc(var(--phi-font-size) * var(--phi-line-height) + var(--phi-padding-xs) * 2);
-  padding: 0 var(--phi-padding-sm);
   font-size: var(--phi-font-size);
 }
 
@@ -475,6 +478,7 @@ h5.phi-typography, .phi-typography h5 {
  */
 .phi-card-control__body {
   flex: 1 0 0;
+  padding: var(--phi-card-control-inset);
   border-radius: 0 0 var(--phi-card-control-radius) var(--phi-card-control-radius);
 }
 
