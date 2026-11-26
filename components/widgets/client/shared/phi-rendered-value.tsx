@@ -21,6 +21,7 @@ import { PhiLink } from "../../../navigation/phi-link";
 import { PhiIcon } from "../../../shell/phi-icon";
 import { usePhiConfig } from "../../../root/phi-config-provider";
 import { isPhiRecord } from "../../../../helpers/is-record";
+import { PHI_COLOR, PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 
 /**
  * How one value out of a Provider is drawn: a date as a date, an address as a link, a set of words as
@@ -204,6 +205,42 @@ export function renderPhiValueWithLead(content: ReactNode, lead: PhiRenderedValu
       {icon}
       {content}
     </PhiFlexControl>
+  );
+}
+
+const PHI_RENDERED_STACK_STYLE = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "flex-start",
+  minWidth: 0,
+} as const;
+
+/*
+ * The line under a value: muted, a step smaller than the value it stands under, and set in by the
+ * smallest step of the spacing scale, so it reads as said about the value rather than as one more value.
+ * `smaller` and not a size of the scale: a Table's cells already write at the Theme's smallest text size
+ * (`fontSizeSM`), and the line has to stand below whatever its cell writes at.
+ */
+const PHI_RENDERED_SECONDARY_STYLE = {
+  color: PHI_COLOR.textSecondary,
+  fontSize: "smaller",
+  paddingInlineStart: PHI_SPACE.xxs,
+  maxWidth: "100%",
+} as const;
+
+/**
+ * A value with a second one under it (`PhiTableColumnSecondaryValue`): the value as it was drawn, and on a
+ * line of its own the second, muted and smaller. Nothing to say under it -- no value and no `emptyText` --
+ * and the value is returned as it was, so a row without the second field looks like a row of a column
+ * that has none.
+ */
+export function renderPhiValueWithSecondary(content: ReactNode, secondary: ReactNode): ReactNode {
+  if (secondary == null || secondary === "" || secondary === false) return content;
+  return (
+    <span style={PHI_RENDERED_STACK_STYLE}>
+      <span style={{ maxWidth: "100%" }}>{content}</span>
+      <span style={PHI_RENDERED_SECONDARY_STYLE}>{secondary}</span>
+    </span>
   );
 }
 

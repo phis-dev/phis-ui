@@ -6,7 +6,7 @@ import { PhiConfigProvider } from "../../../root/phi-config-provider";
 import { resolvePhiRootThemeState } from "../../../root/phi-root-theme-resolver";
 import { PHI_CORE_THEME_PRESET_PLUGINS } from "../../../../theme/phi-theme-presets";
 import { resolvePhiPublishedThemeCustomColors } from "../../../../theme/phi-theme-palette";
-import { renderPhiValueContent, renderPhiValueWithLead, type PhiRenderedValueLabels } from "./phi-rendered-value";
+import { renderPhiValueContent, renderPhiValueWithLead, renderPhiValueWithSecondary, type PhiRenderedValueLabels } from "./phi-rendered-value";
 
 const corners = { topLeft: "rounded", topRight: "rounded", bottomRight: "rounded", bottomLeft: "rounded" };
 const siteTheme = { preset: "phis", mode: "light", shape: { controls: corners } } as never;
@@ -99,5 +99,23 @@ describe("what an empty value says", () => {
   it("leaves an empty cell empty where the column says nothing", () => {
     expect(renderPhiValueContent(null, { renderer: "datetime" }, labels)).toBeNull();
     expect(renderPhiValueContent("", {}, labels)).toBeNull();
+  });
+});
+
+describe("a value with a second line", () => {
+  it("draws the second value under the first, muted, smaller and set in", () => {
+    const html = render(renderPhiValueWithSecondary("Studio Pro", renderPhiValueContent("draft", {
+      renderer: "badge", valueMap: { draft: "Draft" },
+    }, labels)));
+    expect(html.indexOf("Studio Pro")).toBeLessThan(html.indexOf("Draft"));
+    expect(html).toMatch(/display:flex;flex-direction:column/);
+    expect(html).toMatch(/color:var\(--phi-color-text-secondary\);font-size:smaller;padding-inline-start:var\(--phi-padding-xxs\)/);
+  });
+
+  it("leaves the value as it was where there is nothing to say under it, and says its empty text", () => {
+    expect(renderPhiValueWithSecondary("Studio Pro", renderPhiValueContent(null, { renderer: "datetime" }, labels))).toBe("Studio Pro");
+    expect(renderPhiValueWithSecondary("Studio Pro", null)).toBe("Studio Pro");
+    const html = render(renderPhiValueWithSecondary("Studio Pro", renderPhiValueContent(null, { renderer: "datetime", emptyText: "Never" }, labels)));
+    expect(html).toContain("Never");
   });
 });

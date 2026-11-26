@@ -129,6 +129,24 @@ export type PhiIntervalUnit = "day" | "week" | "month" | "year";
 /** A period of `count` (a whole number, one or more) `unit`s, as the `interval` renderer draws it. */
 export type PhiIntervalValue = { unit: PhiIntervalUnit; count: number };
 
+/**
+ * A second value under a column's own, from another field of the same row: a product's state under its
+ * title, where a column of its own would say one word per row (owner, 2026-11-26).
+ *
+ * Drawn on a line of its own, smaller and muted and set in a little, through the same renderers as a
+ * column (`renderPhiValueContent`) with the same `valueMap`, tag colours and `emptyText`. It is shown,
+ * nothing more: sorting and filtering stay with the column's own field.
+ */
+export type PhiTableColumnSecondaryValue = {
+  /** The Provider field it reads, of the same row; checked against the resource like the column's. */
+  fieldKey: string;
+  renderer?: PhiTableValueRenderer;
+  valueMap?: Readonly<Record<string, string>>;
+  tagColorMap?: Readonly<Record<string, PhiTableTagColor>>;
+  tagVariant?: PhiTableTagVariant;
+  emptyText?: string;
+};
+
 export type PhiTableColumnDefinition = {
   key: string;
   title: string;
@@ -200,6 +218,8 @@ export type PhiTableColumnDefinition = {
    * date to format and `valueMap` maps values, not their absence. Absent, the cell stays empty.
    */
   emptyText?: string;
+  /** A second value under this one, from another field of the row (`PhiTableColumnSecondaryValue`). */
+  secondary?: PhiTableColumnSecondaryValue;
 };
 
 export type PhiTableColumnEditorControl =

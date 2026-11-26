@@ -8,6 +8,7 @@ import {
   type PhiTableActionDefinition,
   type PhiTableColumnDefinition,
   type PhiTableColumnEditorControl,
+  type PhiTableColumnSecondaryValue,
   type PhiTableColumnSizing,
   type PhiTableTagColor,
   type PhiTableTagVariant,
@@ -167,6 +168,24 @@ const PHI_TABLE_COLUMN_RENDERERS = [
   "text", "email", "date", "datetime", "badge", "tags", "link", "code", "json", "switch", "checkbox", "icon",
   "image", "money", "interval",
 ] as const;
+/** The renderers as the Inspector offers them, for a column and for its second line. */
+const PHI_TABLE_RENDERER_OPTIONS = [
+  { value: "text", label: "Text" },
+  { value: "email", label: "Email" },
+  { value: "date", label: "Date" },
+  { value: "datetime", label: "Date & Time" },
+  { value: "badge", label: "Badge" },
+  { value: "tags", label: "Tags" },
+  { value: "link", label: "Link" },
+  { value: "code", label: "Code" },
+  { value: "json", label: "JSON" },
+  { value: "switch", label: "Switch" },
+  { value: "checkbox", label: "Checkbox" },
+  { value: "icon", label: "Icon" },
+  { value: "image", label: "Image" },
+  { value: "money", label: "Money" },
+  { value: "interval", label: "Interval" },
+] satisfies { value: (typeof PHI_TABLE_COLUMN_RENDERERS)[number]; label: string }[];
 const PHI_TABLE_COLUMN_EDITOR_CONTROLS = [
   "switch", "checkbox", "select", "radio", "segmented", "multi-select", "checkbox-group", "icon-picker", "textarea",
 ] as const;
@@ -290,7 +309,8 @@ function readTableColumnSizing(reader: PhiConfigReader): PhiTableColumnSizing {
   return { mode, minWidth: readLength(reader, "minWidth"), maxWidth: readLength(reader, "maxWidth") };
 }
 
-function readColumn(reader: PhiConfigReader): PhiTableColumnDefinition {
+/** What a stored value is called and which colour its Tag is: a column's, and its second value's. */
+function readValueMaps(reader: PhiConfigReader) {
   const valueMap = reader.object("valueMap", (mapReader) => Object.fromEntries(
     Object.keys(mapReader.record).map((key) => [key, mapReader.string(key) ?? ""]),
   ));
@@ -300,6 +320,24 @@ function readColumn(reader: PhiConfigReader): PhiTableColumnDefinition {
       mapReader.value(key, "a tag colour", readTableTagColor) ?? mapReader.fail(key, "a tag colour"),
     ]),
   ));
+  return { valueMap, tagColorMap };
+}
+
+/** A column's second value: another field of the row, drawn under the column's own (TABLES.md, "Columns"). */
+function readColumnSecondary(reader: PhiConfigReader): PhiTableColumnSecondaryValue {
+  const { valueMap, tagColorMap } = readValueMaps(reader);
+  return {
+    fieldKey: requireString(reader, "fieldKey"),
+    renderer: reader.oneOf("renderer", PHI_TABLE_COLUMN_RENDERERS) ?? "text",
+    valueMap,
+    tagColorMap,
+    tagVariant: reader.oneOf("tagVariant", PHI_TABLE_TAG_VARIANTS) as PhiTableTagVariant | undefined ?? "outlined",
+    emptyText: reader.string("emptyText"),
+  };
+}
+
+function readColumn(reader: PhiConfigReader): PhiTableColumnDefinition {
+  const { valueMap, tagColorMap } = readValueMaps(reader);
   const editor = reader.object("editor", (editorReader) => editorReader.boolean("enabled") === false
     ? undefined
     : {
@@ -338,6 +376,7 @@ function readColumn(reader: PhiConfigReader): PhiTableColumnDefinition {
     tagColorMap,
     tagVariant: reader.oneOf("tagVariant", PHI_TABLE_TAG_VARIANTS) as PhiTableTagVariant | undefined ?? "outlined",
     emptyText: reader.string("emptyText"),
+    secondary: reader.object("secondary", readColumnSecondary),
   };
 }
 
@@ -741,28 +780,11 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
         { key: "sortField", type: "string", label: "Provider Sort Field" },
         { key: "iconFieldKey", type: "string", label: "Icon Field" },
         { key: "imageFieldKey", type: "string", label: "Image Field" },
-        {
-          key: "renderer",
-          type: "choice",
-          label: "Renderer",
-          options: [
-            { value: "text", label: "Text" },
-            { value: "email", label: "Email" },
-            { value: "date", label: "Date" },
-            { value: "datetime", label: "Date & Time" },
-            { value: "badge", label: "Badge" },
-            { value: "tags", label: "Tags" },
-            { value: "link", label: "Link" },
-            { value: "code", label: "Code" },
-            { value: "json", label: "JSON" },
-            { value: "switch", label: "Switch" },
-            { value: "checkbox", label: "Checkbox" },
-            { value: "icon", label: "Icon" },
-            { value: "image", label: "Image" },
-            { value: "money", label: "Money" },
-            { value: "interval", label: "Interval" },
-          ],
-        },
+        { key: "renderer", type: "choice", label: "Renderer", options: PHI_TABLE_RENDERER_OPTIONS },
+        // A second value under the column's own, from another field of the row (TABLES.md, "Columns").
+        { key: "secondary.fieldKey", type: "string", label: "Second Line Field" },
+        { key: "secondary.renderer", type: "choice", label: "Second Line Renderer", options: PHI_TABLE_RENDERER_OPTIONS },
+        { key: "secondary.emptyText", type: "string", label: "Second Line Empty Text", text: "label" },
         {
           key: "tagVariant",
           type: "choice",

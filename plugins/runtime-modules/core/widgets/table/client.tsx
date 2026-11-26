@@ -48,6 +48,7 @@ import { isTableQueryNarrowedByReader } from "./reader-query";
 import { clearPhiDataDragPayload, readPhiDataDragPayload } from "../../../../../components/runtime/client/phi-data-dnd";
 import {
   renderPhiValueContent,
+  renderPhiValueWithSecondary,
   renderPhiValueWithLead,
   type PhiRenderedValueLabels,
 } from "../../../../../components/widgets/client/shared/phi-rendered-value";
@@ -150,11 +151,18 @@ function renderTableValue(
   row: Record<string, unknown> | undefined,
   labels: PhiRenderedValueLabels,
 ): ReactNode {
-  const content = renderPhiValueContent(value, column, labels);
-  return renderPhiValueWithLead(content, {
+  const content = renderPhiValueWithLead(renderPhiValueContent(value, column, labels), {
     icon: column.iconFieldKey ? row?.[column.iconFieldKey] : undefined,
     image: column.imageFieldKey ? row?.[column.imageFieldKey] : undefined,
   });
+  // The second value under it, from another field of the same row (TABLES.md, "Columns").
+  const secondary = column.secondary;
+  return secondary && row
+    ? renderPhiValueWithSecondary(
+        content,
+        renderPhiValueContent(readPhiTableControlValue(row, secondary.fieldKey), secondary, labels),
+      )
+    : content;
 }
 
 function renderTableSummaryItem(item: PhiTableSummaryItemDefinition, value: PhiTableSummaryValue | undefined) {

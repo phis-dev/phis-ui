@@ -405,6 +405,7 @@ A column may declare presentation metadata such as:
 - `hidden`
 - `valueMap`
 - `emptyText`, what the cell says where the row holds no value (below)
+- `secondary`, a second value under the column's own, from another field of the row (below)
 - `tagColorMap` using only Ant Design's closed Tag status values `default`, `success`, `processing`,
   `warning`, and `error`; its preset colors `magenta`, `red`, `volcano`, `orange`, `gold`, `lime`,
   `green`, `cyan`, `blue`, `geekblue`, and `purple`; or the explicit
@@ -439,6 +440,35 @@ stays empty. The parser reads it strictly: anything but a text is refused, and a
 It is translated the way the column's `title` is: a Preset writes it in the reader's language from its
 Label Set, as it writes the title, and its Inspector field declares it a label (`text: "label"`), so the
 Widget text pass counts it with the title wherever it reaches the column.
+
+`secondary` draws a second value on a line under the column's own, from another field of the same row:
+a product's state under its title, where a column of its own would repeat one word per row and the state
+is a filter already (owner, 2026-11-26). It is `PhiTableColumnSecondaryValue`:
+
+```ts
+secondary: {
+  fieldKey: "state",            // a declared field of the same resource
+  renderer: "badge",            // any read renderer the field allows, default `text`
+  valueMap: { draft: "Draft" }, // as a column's, in the reader's language
+  tagColorMap: { draft: "warning" },
+  tagVariant: "outlined",
+  emptyText: "No state",        // as a column's; absent, an empty value draws no second line
+}
+```
+
+- It is drawn by the same renderers as a column (`renderPhiValueContent`), so `datetime`, `badge` and
+  `valueMap` mean there what they mean in a column, and under the value and whatever leads it
+  (`renderPhiValueWithSecondary`): on a line of its own, in the Theme's secondary text colour, a step
+  smaller than the cell's text (`font-size: smaller` -- the cells already write at the Theme's smallest
+  size) and set in by the `xxs` spacing step.
+- It is shown and nothing more. Sorting, filtering and editing stay with the column's own field.
+- No value and no `emptyText` draws no second line, so such a row looks like one of a column without it.
+- The reader is strict: `fieldKey` is required, an unknown renderer, a `valueMap` word that is no text or
+  an `emptyText` that is no text is refused. The binding check holds `fieldKey` to the resource and the
+  renderer to the field's type, as for the column's own field ([Checked where it is made](#checked-where-it-is-made)).
+- Its words are translated the way a column's are: a Preset writes `valueMap` and `emptyText` from its
+  Label Set in the reader's language; the Inspector offers `secondary.fieldKey`, `secondary.renderer` and
+  `secondary.emptyText`, the last declared a label.
 
 ### Read renderers
 

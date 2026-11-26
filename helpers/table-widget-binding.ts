@@ -1,6 +1,7 @@
 import type {
   PhiTableProviderResourceDescriptor,
   PhiTableSummaryItemDefinition,
+  PhiTableValueRenderer,
   PhiTableWidgetConfig,
 } from "../types/table-widget";
 
@@ -14,6 +15,23 @@ import type {
  * request: a live Table trusts the config it is handed, and this file is kept out of every live Client
  * graph for that reason.
  */
+/** Whether a renderer can draw a field of this type (TABLES.md, "Read renderers"). */
+function isRendererCompatible(
+  renderer: PhiTableValueRenderer | undefined,
+  type: PhiTableProviderResourceDescriptor["fields"][number]["type"] | undefined,
+) {
+  return !renderer || renderer === "text" ||
+    ((renderer === "switch" || renderer === "checkbox") && type === "boolean") ||
+    (renderer === "icon" && type === "icon") ||
+    (renderer === "image" && type === "string") ||
+    ((renderer === "date" || renderer === "datetime") && type === renderer) ||
+    (renderer === "json" && type === "json") ||
+    (renderer === "tags" && (type === "json" || type === "enum[]")) ||
+    ((renderer === "money" || renderer === "interval") && type === "json") ||
+    ((renderer === "email" || renderer === "link" || renderer === "code" || renderer === "badge") &&
+      (type === "string" || type === "enum"));
+}
+
 export function validatePhiTableWidgetBinding(
   config: PhiTableWidgetConfig,
   resource: PhiTableProviderResourceDescriptor,
@@ -98,19 +116,18 @@ export function validatePhiTableWidgetBinding(
     if (column.editor && !editorControlCompatible) {
       errors.push(`Table column "${column.key}" editor is incompatible with field "${column.fieldKey}".`);
     }
-    const rendererCompatible = !column.renderer || column.renderer === "text" ||
-      (column.renderer === "switch" && field?.type === "boolean") ||
-      (column.renderer === "checkbox" && field?.type === "boolean") ||
-      (column.renderer === "icon" && field?.type === "icon") ||
-      (column.renderer === "image" && field?.type === "string") ||
-      ((column.renderer === "date" || column.renderer === "datetime") && field?.type === column.renderer) ||
-      (column.renderer === "json" && field?.type === "json") ||
-      (column.renderer === "tags" && (field?.type === "json" || field?.type === "enum[]")) ||
-      ((column.renderer === "money" || column.renderer === "interval") && field?.type === "json") ||
-      ((column.renderer === "email" || column.renderer === "link" || column.renderer === "code" ||
-        column.renderer === "badge") && (field?.type === "string" || field?.type === "enum"));
-    if (!rendererCompatible) {
+    if (!isRendererCompatible(column.renderer, field?.type)) {
       errors.push(`Table column "${column.key}" renderer is incompatible with field "${column.fieldKey}".`);
+    }
+    // The second line reads a field of the same row, held to the resource as the column's own is.
+    const secondary = column.secondary;
+    if (secondary) {
+      const secondaryField = fieldsByKey.get(secondary.fieldKey);
+      if (!secondaryField) {
+        errors.push(`Table column "${column.key}" second line references undeclared field "${secondary.fieldKey}".`);
+      } else if (!isRendererCompatible(secondary.renderer, secondaryField.type)) {
+        errors.push(`Table column "${column.key}" second line renderer is incompatible with field "${secondary.fieldKey}".`);
+      }
     }
     if (config.presentation.layout.mode === "fixed" && column.sizing?.mode === "content") {
       errors.push(`Table column "${column.key}" cannot use content sizing with fixed Table layout.`);
