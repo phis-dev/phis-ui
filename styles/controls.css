@@ -687,6 +687,8 @@ h5.phi-typography, .phi-typography h5 {
  * the scale moves these with it. Only the block axis changes: a header's title still stands over its
  * column's values. A header cell with the sort or reorder buttons grows to them, as a row with a control
  * in it does, and the sticky header measures the row it is (`ResizeObserver` in `phi-table-control.tsx`).
+ * An empty footer -- the closing bar alone, no text and no values -- keeps the rows' depth: one line
+ * high and a step shallower, it read as a seam rather than as the Table's end (owner, 2026-11-26).
  * The class is repeated because Ant Design weighs its size rule at the wrapper, the Table, its size and
  * the header, and its stylesheet comes after this one.
  */
@@ -703,7 +705,16 @@ h5.phi-typography, .phi-typography h5 {
 }
 
 .phi-table-control.phi-table-control.phi-table-control.phi-table-control
-  :is([class~="ant-table-thead"] > tr > th, [class~="ant-table-thead"] > tr > td, [class~="ant-table-footer"]) {
+  :is(
+    [class~="ant-table-thead"] > tr > th,
+    [class~="ant-table-thead"] > tr > td,
+    [class~="ant-table-footer"]:not(:has(> :empty))
+  ) {
+  padding-block: var(--phi-table-head-padding-block);
+}
+
+/* While the rows load the footer's text is held back, and its bar stands as it will with the text in it. */
+.phi-table-control.phi-table-control.phi-table-control.phi-table-control--loading [class~="ant-table-footer"] {
   padding-block: var(--phi-table-head-padding-block);
 }
 
